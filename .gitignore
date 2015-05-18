@@ -1,0 +1,9 @@
+games
+tools
+docs
+Debug
+wiiu/Debug
+*.user
+*.suo
+*.sdf
+*.opensdf
