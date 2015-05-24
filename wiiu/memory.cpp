@@ -16,14 +16,12 @@ void Memory::initialise()
 size_t Memory::translate(size_t address)
 {
    // TODO: Proper memory map
-   if (address >= ApplicationCode && address < ApplicationData) {
-   } else if (address >= ApplicationData && address < ApplicationMemoryEnd) {
-   } else if (address >= GraphicsResources && address <= GraphicsResourcesEnd) {
-   } else {
+   assert(address >= mVirtualAddress);
+
+   if (address > mVirtualAddress + mMemorySize) {
       return 0;
    }
 
-   assert(address >= mVirtualAddress);
    return (address - mVirtualAddress) + mAddress;
 }
 

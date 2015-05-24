@@ -23,6 +23,7 @@ enum class SymbolType
 struct Symbol
 {
    ElfSymbol header;
+   Section *section;
    std::string name;
    uint32_t value;
    SymbolType type;

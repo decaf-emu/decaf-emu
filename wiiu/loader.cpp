@@ -5,6 +5,7 @@
 #include <zlib.h>
 #include "bigendianview.h"
 #include "elf.h"
+#include "instructiondata.h"
 #include "loader.h"
 #include "log.h"
 #include "memory.h"
@@ -248,6 +249,7 @@ loadSymbols(Binary &bin)
 
       symbol.value = symbol.header.st_value;
       symbol.name = strSection.data.data() + symbol.header.st_name;
+      symbol.section = &impSection;
 
       switch (type) {
       case STT_SECTION:
@@ -259,7 +261,20 @@ loadSymbols(Binary &bin)
          // Relocate functions nearer to code
          if (impSection.virtualAddress != impSection.header.sh_addr) {
             symbol.value = impSection.virtualAddress + symbol.value - impSection.header.sh_addr;
+
+            // Setup trampoline as sc, bclr
+            auto addr = gMemory.translate(symbol.value);
+
+            auto sc = gInstructionTable.encode(InstructionID::sc);
+            sc.bd = i;
+
+            auto bclr = gInstructionTable.encode(InstructionID::bclr);
+            bclr.bo = 0x1f;
+
+            gMemory.write(symbol.value, sc.value);
+            gMemory.write(symbol.value + 4, bclr.value);
          }
+
          break;
       case STT_OBJECT:
          symbol.type = SymbolType::Object;
@@ -267,8 +282,6 @@ loadSymbols(Binary &bin)
       default:
          xError() << "Unhandled symbol type " << type;
       }
-
-      xDebug() << impSection.name << " " << symbol.name;
    }
 
    return true;
@@ -363,10 +376,6 @@ Loader::loadElf(Binary &bin, const char *buffer, size_t size)
       xError() << "Failed to loadRelocations";
       return false;
    }
-
-   // We should be ready to start now?
-   auto realEntryPoint = gMemory.translate(bin.header.e_entry);
-   xLog() << "Starting interpret at " << Log::hex(bin.header.e_entry) << " (" << Log::hex(realEntryPoint) << ")";
 
    return true;
 }

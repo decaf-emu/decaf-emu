@@ -54,6 +54,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -79,17 +80,34 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="branch.cpp" />
+    <ClCompile Include="condition.cpp" />
+    <ClCompile Include="disassembler.cpp" />
+    <ClCompile Include="instructiontable.cpp" />
+    <ClCompile Include="interpreter.cpp" />
+    <ClCompile Include="integer.cpp" />
     <ClCompile Include="loader.cpp" />
+    <ClCompile Include="loadstore.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="memory.cpp" />
+    <ClCompile Include="system.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bigendianview.h" />
-    <ClInclude Include="byte_swap.h" />
+    <ClInclude Include="bitutils.h" />
+    <ClInclude Include="disassembler.h" />
     <ClInclude Include="elf.h" />
+    <ClInclude Include="instruction.h" />
+    <ClInclude Include="instructiondata.h" />
+    <ClInclude Include="instructionid.h" />
+    <ClInclude Include="instructions.inl" />
+    <ClInclude Include="interpreter.h" />
     <ClInclude Include="loader.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="memory.h" />
+    <ClInclude Include="module.h" />
+    <ClInclude Include="ppc.h" />
+    <ClInclude Include="runtime.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

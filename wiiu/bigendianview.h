@@ -1,5 +1,5 @@
 #pragma once
-#include "byte_swap.h"
+#include "bitutils.h"
 
 class BigEndianView
 {
