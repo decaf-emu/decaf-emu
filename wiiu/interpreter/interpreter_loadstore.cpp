@@ -43,7 +43,7 @@ loadGeneric(ThreadState *state, Instruction instr)
 
    if (flags & LoadReserve) {
       state->reserve = true;
-      state->reserveAddress = gMemory.translate(ea);
+      state->reserveAddress = ea;
    }
 
    state->gpr[instr.rD] = d;

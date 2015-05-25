@@ -7,6 +7,8 @@
 #include "loader.h"
 #include "log.h"
 #include "memory.h"
+#include "modules/coreinit/coreinit.h"
+#include "system.h"
 
 int main(int argc, char **argv)
 {
@@ -14,6 +16,11 @@ int main(int argc, char **argv)
       xLog() << "Usage: " << argv[0] << " *.rpx";
       return -1;
    }
+
+   // Initialise emulator systems
+   gMemory.initialise();
+   gInstructionTable.initialise();
+   gSystem.registerModule("coreinit.rpl", new CoreInit);
 
    auto file = std::ifstream { argv[1], std::ifstream::binary };
    auto buffer = std::vector<char> {};
@@ -32,15 +39,12 @@ int main(int argc, char **argv)
    file.read(buffer.data(), size);
    assert(file.gcount() == size);
 
-   // Setup our virtual memory
-   gMemory.initialise();
-   gInstructionTable.initialise();
-
    // Load the elf
    auto loader = Loader {};
-   auto bin = Binary {};
+   auto module = Module {};
+   auto entry = EntryInfo {};
 
-   if (!loader.loadElf(bin, buffer.data(), buffer.size())) {
+   if (!loader.loadRPL(module, entry, buffer.data(), buffer.size())) {
       xError() << "Could not load elf file";
       return -1;
    }
@@ -52,13 +56,14 @@ int main(int argc, char **argv)
    memset(&state, 0, sizeof(ThreadState));
 
    // Setup state
-   state.bin = &bin;
-   state.cia = bin.header.e_entry;
+   state.module = &module;
+   state.cia = entry.address;
    state.nia = state.cia + 4;
 
+   // Setup stack
    auto stackSize = 65536u;
-   auto stack = 0x06000000;
-   state.gpr[1] = stack + stackSize; // Stack Base
+   auto stack = gMemory.allocData(entry.stackSize);
+   state.gpr[1] = stack + entry.stackSize;
 
    Interpreter interpreter;
    interpreter.initialise();

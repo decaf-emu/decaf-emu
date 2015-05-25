@@ -55,30 +55,30 @@ enum : uint32_t // sh_flags
 
 enum : uint32_t // sh_type
 {
-   SHT_NULL = 0,              // No associated section (inactive entry).
-   SHT_PROGBITS = 1,          // Program-defined contents.
-   SHT_SYMTAB = 2,            // Symbol table.
-   SHT_STRTAB = 3,            // String table.
-   SHT_RELA = 4,              // Relocation entries; explicit addends.
-   SHT_HASH = 5,              // Symbol hash table.
-   SHT_DYNAMIC = 6,           // Information for dynamic linking.
-   SHT_NOTE = 7,              // Information about the file.
-   SHT_NOBITS = 8,            // Data occupies no space in the file.
-   SHT_REL = 9,               // Relocation entries; no explicit addends.
-   SHT_SHLIB = 10,            // Reserved.
-   SHT_DYNSYM = 11,           // Symbol table.
-   SHT_INIT_ARRAY = 14,       // Pointers to initialization functions.
-   SHT_FINI_ARRAY = 15,       // Pointers to termination functions.
-   SHT_PREINIT_ARRAY = 16,    // Pointers to pre-init functions.
-   SHT_GROUP = 17,            // Section group.
-   SHT_SYMTAB_SHNDX = 18,     // Indices for SHN_XINDEX entries.
-   SHT_LOPROC = 0x70000000,   // Lowest processor arch-specific type.
-   SHT_HIPROC = 0x7fffffff,   // Highest processor arch-specific type.
-   SHT_LOUSER = 0x80000000,   // Lowest type reserved for applications.
+   SHT_NULL = 0,                 // No associated section (inactive entry).
+   SHT_PROGBITS = 1,             // Program-defined contents.
+   SHT_SYMTAB = 2,               // Symbol table.
+   SHT_STRTAB = 3,               // String table.
+   SHT_RELA = 4,                 // Relocation entries; explicit addends.
+   SHT_HASH = 5,                 // Symbol hash table.
+   SHT_DYNAMIC = 6,              // Information for dynamic linking.
+   SHT_NOTE = 7,                 // Information about the file.
+   SHT_NOBITS = 8,               // Data occupies no space in the file.
+   SHT_REL = 9,                  // Relocation entries; no explicit addends.
+   SHT_SHLIB = 10,               // Reserved.
+   SHT_DYNSYM = 11,              // Symbol table.
+   SHT_INIT_ARRAY = 14,          // Pointers to initialization functions.
+   SHT_FINI_ARRAY = 15,          // Pointers to termination functions.
+   SHT_PREINIT_ARRAY = 16,       // Pointers to pre-init functions.
+   SHT_GROUP = 17,               // Section group.
+   SHT_SYMTAB_SHNDX = 18,        // Indices for SHN_XINDEX entries.
+   SHT_LOPROC = 0x70000000,      // Lowest processor arch-specific type.
+   SHT_HIPROC = 0x7fffffff,      // Highest processor arch-specific type.
+   SHT_LOUSER = 0x80000000,      // Lowest type reserved for applications.
    SHT_RPL_IMPORTS = 0x80000002, // RPL Imports
    SHT_RPL_CRCS = 0x80000003,    // RPL CRCs
-   SHT_RPL_FILEINFO = 0x80000004, // RPL FileInfo
-   SHT_HIUSER = 0xffffffff    // Highest type reserved for applications.
+   SHT_RPL_FILEINFO = 0x80000004,// RPL FileInfo
+   SHT_HIUSER = 0xffffffff       // Highest type reserved for applications.
 };
 
 enum // st_info >> 4
@@ -224,6 +224,44 @@ struct ElfRela
    uint32_t r_offset;
    uint32_t r_info;
    int32_t r_addend;
+};
+
+struct RplFileInfo
+{
+   uint32_t rpl_min_version;
+   uint32_t rpl_text_size;
+   uint32_t rpl_text_align;
+   uint32_t rpl_data_size;
+   uint32_t rpl_data_align;
+   uint32_t rpl_loader_size;
+   uint32_t rpl_loader_info;
+   uint32_t rpl_temp_size;
+   uint32_t rpl_tramp_adjust; // uint16_t adjust / uint16_t addition
+   uint32_t rpl_sda_base;
+   uint32_t rpl_sda2_base;
+   uint32_t rpl_stack_size;
+   uint32_t rpl_filename;
+   uint32_t rpl_flags;
+   uint32_t rpl_heap_size;
+   uint32_t rpl_tags; // Offset to TAGS section, where is TAGS tho?
+   uint32_t rpl_unk1;
+   uint32_t rpl_compression_level;
+   uint32_t rpl_unk2;
+   uint32_t rpl_file_info_pad;
+   uint32_t rpl_cafe_os_sdk_version;
+   uint32_t rpl_cafe_os_sdk_revision;
+   uint32_t rpl_unk3;
+   uint32_t rpl_unk4;
+};
+
+struct RplFile
+{
+   ElfHeader header;
+   std::vector<ElfSectionHeader> sections;
+   std::vector<ElfSymbol> symbols;
+   std::vector<ElfRela> rela;
+   RplFileInfo fileInfo;
+   std::vector<uint32_t> crcs;
 };
 
 #pragma pack(pop)

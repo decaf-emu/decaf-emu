@@ -9,8 +9,15 @@
 #include "loader.h"
 #include "log.h"
 #include "memory.h"
+#include "system.h"
 
-// TODO: Support for relocatable binarys
+struct RplSection
+{
+   Section *section = nullptr;
+   ModuleSymbol *msym = nullptr;
+   ElfSectionHeader header;
+   std::vector<char> data;
+};
 
 static bool
 readHeader(BigEndianView &in, ElfHeader &header)
@@ -113,23 +120,66 @@ readRelocationAddend(BigEndianView &in, ElfRela &rela)
 }
 
 static bool
-readSections(BigEndianView &in, Binary &bin)
+readFileInfo(BigEndianView &in, RplFileInfo &info)
 {
-   bin.sections.resize(bin.header.e_shnum);
+   in.read(info.rpl_min_version);
+   in.read(info.rpl_text_size);
+   in.read(info.rpl_text_align);
+   in.read(info.rpl_data_size);
+   in.read(info.rpl_data_align);
+   in.read(info.rpl_loader_size);
+   in.read(info.rpl_loader_info);
+   in.read(info.rpl_temp_size);
+   in.read(info.rpl_tramp_adjust);
+   in.read(info.rpl_sda_base);
+   in.read(info.rpl_sda2_base);
+   in.read(info.rpl_stack_size);
+   in.read(info.rpl_filename);
+   in.read(info.rpl_flags);
+   in.read(info.rpl_heap_size);
+   in.read(info.rpl_tags);
+   in.read(info.rpl_unk1);
+   in.read(info.rpl_compression_level);
+   in.read(info.rpl_unk2);
+   in.read(info.rpl_file_info_pad);
+   in.read(info.rpl_cafe_os_sdk_version);
+   in.read(info.rpl_cafe_os_sdk_revision);
+   in.read(info.rpl_unk3);
+   in.read(info.rpl_unk4);
+   return true;
+}
 
-   for (auto i = 0; i < bin.header.e_shnum; ++i) {
-      auto &section = bin.sections[i];
-      section.index = i;
+static void
+loadFileInfo(RplFileInfo &info, std::vector<RplSection> &sections)
+{
+   for (auto &section : sections) {
+      if (section.header.sh_type != SHT_RPL_FILEINFO) {
+         continue;
+      }
 
-      // Read header
-      in.seek(bin.header.e_shoff + bin.header.e_shentsize * i);
+      auto in = BigEndianView { section.data.data(), section.data.size() };
+      readFileInfo(in, info);
+      break;
+   }
+}
+
+static bool
+readSections(BigEndianView &in, ElfHeader &header, std::vector<RplSection> &sections)
+{
+   sections.resize(header.e_shnum);
+
+   for (auto i = 0u; i < sections.size(); ++i) {
+      auto &section = sections[i];
+
+      // Read section header
+      in.seek(header.e_shoff + header.e_shentsize * i);
       readSectionHeader(in, section.header);
 
       if ((section.header.sh_type == SHT_NOBITS) || !section.header.sh_size) {
          continue;
       }
 
-      // Decompress if needed
+      // Read section data
       if (section.header.sh_flags & SHF_DEFLATED) {
          auto stream = z_stream {};
          auto ret = Z_OK;
@@ -174,207 +224,390 @@ readSections(BigEndianView &in, Binary &bin)
    return true;
 }
 
-static bool
-loadSections(Binary &bin)
+static void
+processSections(Module &module, std::vector<RplSection> &sections, const char *strData)
 {
-   auto rplImportVA = uint32_t { 0 };
-   auto &strSection = bin.sections[bin.header.e_shstrndx];
+   auto dataRange = std::make_pair(0u, 0u);
+   auto codeRange = std::make_pair(0u, 0u);
 
-   for (auto &section : bin.sections) {
-      section.name = strSection.data.data() + section.header.sh_name;
+   // Find all code & data sections and their address space
+   for (auto i = 0u; i < sections.size(); ++i) {
+      auto &rplSection = sections[i];
+      auto &header = rplSection.header;
 
-      // Place RPL_IMPORTS after .text
-      if (section.name.compare(".text") == 0) {
-         rplImportVA = ((section.header.sh_addr + section.data.size()) + 0xf) & ~0xf;
+      if (header.sh_type != SHT_PROGBITS && header.sh_type != SHT_NOBITS) {
+         continue;
       }
 
-      // Relocate RPL_IMPORTS, TODO: Full relocation
-      if (section.header.sh_type == SHT_RPL_IMPORTS) {
-         assert(section.header.sh_addr & 0xc0000000);
-         section.virtualAddress = rplImportVA;
-         rplImportVA += section.data.size();
+      auto section = new Section();
+      section->index = i;
+      section->address = header.sh_addr;
+      section->name = strData + header.sh_name;
+      section->size = rplSection.data.size();
+
+      if (header.sh_type == SHT_NOBITS) {
+         section->size = header.sh_size;
+      }
+
+      auto start = section->address;
+      auto end = section->address + section->size;
+
+      if (header.sh_flags & SHF_EXECINSTR) {
+         section->type = Section::Code;
+         
+         if (codeRange.first == 0 || start < codeRange.first) {
+            codeRange.first = start;
+         }
+
+         if (codeRange.second == 0 || end > codeRange.second) {
+            codeRange.second = end;
+         }
       } else {
-         section.virtualAddress = section.header.sh_addr;
-      }
+         section->type = Section::Data;
 
-      if (section.header.sh_flags & SHF_ALLOC) {
-         auto addr = section.virtualAddress;
+         if (dataRange.first == 0 || start < dataRange.first) {
+            dataRange.first = start;
+         }
 
-         if (section.header.sh_type == SHT_NOBITS) {
-            auto size = section.header.sh_size;
-            auto ptr = gMemory.allocate(addr, size);
-
-            if (ptr) {
-               memset(reinterpret_cast<void*>(ptr), 0, size);
-            }
-         } else {
-            auto size = section.data.size();
-            auto ptr = gMemory.allocate(addr, size);
-
-            if (ptr) {
-               memcpy(reinterpret_cast<void*>(ptr), section.data.data(), size);
-            }
+         if (dataRange.second == 0 || end > dataRange.second) {
+            dataRange.second = end;
          }
       }
 
-      xDebug() << section.name;
+      rplSection.section = section;
+      module.sections.push_back(section);
    }
 
-   return true;
+   // Create thunk sections for SHT_RPL_IMPORTS!
+   for (auto i = 0u; i < sections.size(); ++i) {
+      auto &rplSection = sections[i];
+      auto &header = rplSection.header;
+
+      if (header.sh_type != SHT_RPL_IMPORTS) {
+         continue;
+      }
+
+      auto section = new Section();
+      section->index = i;
+      section->name = strData + header.sh_name;
+      section->size = rplSection.data.size();
+
+      if (header.sh_type == SHT_NOBITS) {
+         section->size = header.sh_size;
+      }
+
+      // Relocate address
+      assert(header.sh_addr & 0xc0000000);
+      auto align = header.sh_addralign;
+
+      if (header.sh_flags & SHF_EXECINSTR) {
+         section->type = Section::CodeImports;
+         section->address = (codeRange.second + align) & ~align;
+         codeRange.second = section->address + section->size;
+      } else {
+         section->type = Section::DataImports;
+         section->address = (dataRange.second + align) & ~align;
+         dataRange.second = section->address + section->size;
+      }
+
+      rplSection.section = section;
+      module.sections.push_back(section);
+   }
+
+   // Allocate code & data sections in memory
+   module.codeAddressRange = codeRange;
+   module.dataAddressRange = dataRange;
 }
 
-static bool
-loadSymbols(Binary &bin)
+static void
+loadSections(Module &module, std::vector<RplSection> &sections)
 {
-   auto symSectionPtr = bin.findSection(".symtab");
+   for (auto &rplSection : sections) {
+      auto section = rplSection.section;
 
-   if (!symSectionPtr) {
-      return false;
+      if (!section) {
+         continue;
+      }
+
+      if (rplSection.header.sh_type == SHT_NOBITS) {
+         auto ptr = gMemory.translate(section->address);
+         memset(ptr, 0, section->size);
+      } else if (rplSection.section->type == Section::Code || rplSection.section->type == Section::Data) {
+         auto ptr = gMemory.translate(section->address);
+         memcpy(ptr, rplSection.data.data(), rplSection.data.size());
+      }
+   }
+}
+
+static SystemModule *
+findSystemModule(const char *name)
+{
+   if (strstr(name, ".fimport_") == name) {
+      name += strlen(".fimport_");
    }
 
-   auto &symSection = *symSectionPtr;
-   auto &strSection = bin.sections[symSection.header.sh_link];
-   auto symIn = BigEndianView { symSection.data.data(), symSection.data.size() };
+   if (strstr(name, ".dimport_") == name) {
+      name += strlen(".dimport_");
+   }
 
-   auto count = symSection.data.size() / sizeof(ElfSymbol);
-   bin.symbols.resize(count);
+   return gSystem.findModule(name);
+}
+
+static SystemFunction *
+findSystemFunction(ModuleSymbol *msym, const char *name)
+{
+   if (!msym || !msym->systemModule) {
+      return nullptr;
+   }
+
+   auto module = msym->systemModule;
+   auto sysexp = module->findExport(name);
+
+   if (!sysexp) {
+      return nullptr;
+   }
+
+   assert(sysexp->type == SystemExport::Function);
+   return reinterpret_cast<SystemFunction*>(sysexp);
+}
+
+static SystemData *
+findSystemData(ModuleSymbol *msym, const char *name)
+{
+   if (!msym || !msym->systemModule) {
+      return nullptr;
+   }
+
+   auto module = msym->systemModule;
+   auto sysexp = module->findExport(name);
+
+   if (!sysexp) {
+      return nullptr;
+   }
+
+   assert(sysexp->type == SystemExport::Data);
+   return reinterpret_cast<SystemData*>(sysexp);
+}
+
+static void
+writeFunctionThunk(uint32_t address, uint32_t id)
+{
+   // Write syscall with symbol id
+   auto sc = gInstructionTable.encode(InstructionID::sc);
+   sc.bd = id;
+   gMemory.write(address, sc.value);
+
+   // Return by Branch to LR
+   auto bclr = gInstructionTable.encode(InstructionID::bclr);
+   bclr.bo = 0x1f;
+   gMemory.write(address + 4, bclr.value);
+}
+
+static void
+writeDataThunk(uint32_t address, uint32_t id)
+{
+   // Write some invalid known value to show up when debugging
+   gMemory.write<uint32_t>(address, 0xdd000000 | id);
+}
+
+static void
+processSymbols(Module &module, RplSection &symtab, std::vector<RplSection> &sections)
+{
+   BigEndianView in = { symtab.data.data(), symtab.data.size() };
+   auto count = symtab.data.size() / sizeof(ElfSymbol);
+   auto &strtab = sections[symtab.header.sh_link];
+
+   // TODO: Support more than one symbol section
+   assert(module.symbols.size() == 0);
+   module.symbols.resize(count);
 
    for (auto i = 0u; i < count; ++i) {
-      auto &symbol = bin.symbols[i];
-      readSymbol(symIn, symbol.header);
+      ElfSymbol header;
+      readSymbol(in, header);
 
-      auto &impSection = bin.sections[symbol.header.st_shndx];
-      auto binding = symbol.header.st_info >> 4; // STB_*
-      auto type = symbol.header.st_info & 0xf;   // STT_*
+      auto binding = header.st_info >> 4; // STB_*
+      auto type = header.st_info & 0xf;   // STT_*
 
-      symbol.value = symbol.header.st_value;
-      symbol.name = strSection.data.data() + symbol.header.st_name;
-      symbol.section = &impSection;
+      // Calculate relocated address
+      auto &impsec = sections[header.st_shndx];
+      auto offset = header.st_value - impsec.header.sh_addr;
+      auto baseAddress = impsec.section ? impsec.section->address : 0;
+      auto virtAddress = baseAddress + offset;
 
-      switch (type) {
-      case STT_SECTION:
-         symbol.type = SymbolType::Section;
-         break;
-      case STT_FUNC:
-         symbol.type = SymbolType::Function;
+      // Create symbol data
+      SymbolInfo *symbol = nullptr;
+      auto name = strtab.data.data() + header.st_name;
 
-         // Relocate functions nearer to code
-         if (impSection.virtualAddress != impSection.header.sh_addr) {
-            symbol.value = impSection.virtualAddress + symbol.value - impSection.header.sh_addr;
+      if (type == STT_FUNC) {
+         auto fsym = new FunctionSymbol();
+         fsym->systemFunction = findSystemFunction(impsec.msym, name);
+         fsym->functionType = fsym->systemFunction ? FunctionSymbol::System : FunctionSymbol::User;
+         symbol = fsym;
+      } else if (type == STT_OBJECT) {
+         auto dsym = new DataSymbol();
+         dsym->systemData = findSystemData(impsec.msym, name);
+         dsym->dataType = dsym->systemData ? DataSymbol::System : DataSymbol::User;
+         symbol = dsym;
+      } else if (type == STT_SECTION) {
+         auto msym = new ModuleSymbol();
+         msym->systemModule = findSystemModule(name);
+         msym->moduleType = msym->systemModule ? ModuleSymbol::System : ModuleSymbol::User;
+         impsec.msym = msym;
+         symbol = msym;
+      } else {
+         symbol = new SymbolInfo();
+         symbol->type = SymbolInfo::Invalid;
+      }
 
-            // Setup trampoline as sc, bclr
-            auto addr = gMemory.translate(symbol.value);
+      assert(symbol);
+      symbol->index = i;
+      symbol->name = name;
+      symbol->address = virtAddress;
+      module.symbols[i] = symbol;
+      xLog() << Log::hex(symbol->address) << " " << symbol->name << " " << symbol->type;
 
-            auto sc = gInstructionTable.encode(InstructionID::sc);
-            sc.bd = i;
-
-            auto bclr = gInstructionTable.encode(InstructionID::bclr);
-            bclr.bo = 0x1f;
-
-            gMemory.write(symbol.value, sc.value);
-            gMemory.write(symbol.value + 4, bclr.value);
+      // Write thunks
+      if (symbol->address) {
+         if (type == STT_FUNC) {
+            writeFunctionThunk(symbol->address, symbol->index);
+         } else if (type == STT_OBJECT) {
+            writeDataThunk(symbol->address, symbol->index);
          }
-
-         break;
-      case STT_OBJECT:
-         symbol.type = SymbolType::Object;
-         break;
-      default:
-         xError() << "Unhandled symbol type " << type;
       }
    }
-
-   return true;
 }
 
-static bool
-loadRelocations(Binary &bin)
+static void
+processRelocations(Module &module, RplSection &section, std::vector<RplSection> &sections)
 {
-   for (auto &section : bin.sections) {
-      assert(section.header.sh_type != SHT_REL);
+   // TODO: Support more than one symbol section (symsec)
+   auto symsec = sections[section.header.sh_link];
+   auto in = BigEndianView { section.data.data(), section.data.size() };
 
-      if (section.header.sh_type == SHT_RELA) {
-         auto modifySection = bin.sections[section.header.sh_info];
-         auto symbolSection = bin.sections[section.header.sh_link];
-         auto in = BigEndianView { section.data.data(), section.data.size() };
-         auto count = section.data.size() / sizeof(ElfRela);
+   // Find our relocation section addresses
+   auto relsec = sections[section.header.sh_info];
+   auto baseAddress = relsec.header.sh_addr;
+   auto virtAddress = relsec.section->address;
 
-         // TODO: Not sure if this is always true, but we can lazily assume so for now
-         assert(symbolSection.name.compare(".symtab") == 0);
+   while (!in.eof()) {
+      ElfRela rela;
+      readRelocationAddend(in, rela);
 
-         for (auto i = 0u; i < count; ++i) {
-            ElfRela rela;
-            readRelocationAddend(in, rela);
+      auto index = rela.r_info >> 8;
+      auto type = rela.r_info & 0xff;
+      auto symbol = module.symbols[index];
+      if (!symbol) {
+         xLog() << "weird";
+      }
+      auto base = symbol ? symbol->address : 0;
+      auto value = base + rela.r_addend;
 
-            auto sym = rela.r_info >> 8;
-            auto type = rela.r_info & 0xff;
-            auto &symbol = bin.symbols[sym];
-            auto value = symbol.value + rela.r_addend;
+      auto addr = rela.r_offset - baseAddress + virtAddress;
+      auto ptr8 = gMemory.translate(addr);
+      auto ptr16 = reinterpret_cast<uint16_t*>(ptr8);
+      auto ptr32 = reinterpret_cast<uint32_t*>(ptr8);
 
-            // TODO: Use relocation address
-            auto addr = gMemory.translate(rela.r_offset);
-            auto ptr16 = reinterpret_cast<uint16_t*>(addr);
-            auto ptr32 = reinterpret_cast<uint32_t*>(addr);
-
-            switch (type) {
-            case R_PPC_ADDR32:
-               *ptr32 = byte_swap(value);
-               break;
-            case R_PPC_ADDR16_LO:
-               *ptr16 = byte_swap<uint16_t>(value & 0xffff);
-               break;
-            case R_PPC_ADDR16_HI:
-               *ptr16 = byte_swap<uint16_t>(value >> 16);
-               break;
-            case R_PPC_ADDR16_HA:
-               *ptr16 = byte_swap<uint16_t>((value + 0x8000) >> 16);
-               break;
-            case R_PPC_REL24:
-               *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03fffffc) | ((value - rela.r_offset) & 0x03fffffc));
-               break;
-            default:
-               xDebug() << "Unknown relocation type: " << type;
-            }
-         }
+      switch (type) {
+      case R_PPC_ADDR32:
+         *ptr32 = byte_swap(value);
+         break;
+      case R_PPC_ADDR16_LO:
+         *ptr16 = byte_swap<uint16_t>(value & 0xffff);
+         break;
+      case R_PPC_ADDR16_HI:
+         *ptr16 = byte_swap<uint16_t>(value >> 16);
+         break;
+      case R_PPC_ADDR16_HA:
+         *ptr16 = byte_swap<uint16_t>((value + 0x8000) >> 16);
+         break;
+      case R_PPC_REL24:
+         *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03fffffc) | ((value - rela.r_offset) & 0x03fffffc));
+         break;
+      default:
+         xDebug() << "Unknown relocation type: " << type;
       }
    }
-
-   return true;
 }
 
 bool
-Loader::loadElf(Binary &bin, const char *buffer, size_t size)
+Loader::loadRPL(Module &module, EntryInfo &entry, const char *buffer, size_t size)
 {
    auto in = BigEndianView { buffer, size };
+   auto header = ElfHeader { };
+   auto info = RplFileInfo { };
+   auto sections = std::vector<RplSection> { };
 
    // Read header
-   if (!readHeader(in, bin.header)) {
+   if (!readHeader(in, header)) {
       xError() << "Failed to readHeader";
       return false;
    }
 
-   // Read and decompress sections
-   if (!readSections(in, bin)) {
-      xError() << "Failed to readSections";
+   // Read sections
+   if (!readSections(in, header, sections)) {
+      xError() << "Failed to readRPLSections";
       return false;
    }
 
-   // Copy sections to virtual memory
-   if (!loadSections(bin)) {
-      xError() << "Failed to loadSections";
-      return false;
-   }
+   // String Table for section names
+   auto &strData = sections[header.e_shstrndx].data;
+
+   // Process sections, find our data and code sections
+   processSections(module, sections, sections[header.e_shstrndx].data.data());
+
+   // Update EntryInfo
+   loadFileInfo(info, sections);
+   entry.address = header.e_entry;
+   entry.stackSize = info.rpl_stack_size;
+
+   // Allocate code & data sections in memory
+   auto codeStart = module.codeAddressRange.first;
+   auto codeSize = module.codeAddressRange.second - codeStart;
+   gMemory.alloc(codeStart, codeSize);
+
+   auto dataStart = module.dataAddressRange.first;
+   auto dataSize = module.dataAddressRange.second - dataStart;
+   gMemory.alloc(dataStart, dataSize);
+
+   // Load sections into memory
+   loadSections(module, sections);
 
    // Process symbols
-   if (!loadSymbols(bin)) {
-      xError() << "Failed to loadSymbols";
-      return false;
+   // TODO: Support more than one symbol section
+   for (auto i = 0u; i < sections.size(); ++i) {
+      auto &section = sections[i];
+
+      if (section.header.sh_type != SHT_SYMTAB) {
+         continue;
+      }
+
+      processSymbols(module, section, sections);
    }
 
    // Process relocations
-   if (!loadRelocations(bin)) {
-      xError() << "Failed to loadRelocations";
-      return false;
+   for (auto i = 0u; i < sections.size(); ++i) {
+      auto &section = sections[i];
+
+      if (section.header.sh_type != SHT_RELA) {
+         continue;
+      }
+
+      processRelocations(module, section, sections);
+   }
+
+   // Log our module sections
+   xLog() << "Loaded module!";
+   xLog() << "Code: " << Log::hex(module.codeAddressRange.first) << ":" << Log::hex(module.codeAddressRange.second);
+   xLog() << "Data: " << Log::hex(module.dataAddressRange.first) << ":" << Log::hex(module.dataAddressRange.second);
+
+   for (auto i = 0u; i < module.sections.size(); ++i) {
+      auto section = module.sections[i];
+      xLog() << Log::hex(section->address) << " " << section->name << " " << Log::hex(section->size);
+   }
+
+   for (auto i = 0u; i < module.symbols.size(); ++i) {
+      auto &symbol = module.symbols[i];
+      xLog() << Log::hex(symbol->address) << " " << symbol->name;
    }
 
    return true;

@@ -249,7 +249,7 @@ enum class SprEncoding
 // TODO: Some system registers may not be thread-specific!
 struct ThreadState
 {
-   struct Binary *bin; // Module
+   struct Module *module;
 
    uint32_t cia;     // Current execution address
    uint32_t nia;     // Next execution address

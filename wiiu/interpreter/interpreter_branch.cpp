@@ -1,14 +1,6 @@
 #include "bitutils.h"
 #include "interpreter.h"
 
-/*
-// Branch
-INS(b, (), (li), (aa, lk), (opcd == 18), "")
-INS(bc, (), (bo, bi, bd), (aa, lk), (opcd == 16), "")
-INS(bcctr, (), (bo, bi), (lk), (opcd == 19, xo1 == 528), "")
-INS(bclr, (), (bo, bi), (lk), (opcd == 19, xo1 == 16), "")
-*/
-
 static void
 b(ThreadState *state, Instruction instr)
 {

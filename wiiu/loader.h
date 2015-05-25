@@ -1,56 +1,18 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "elf.h"
+#include "module.h"
 
-struct Section
+struct EntryInfo
 {
-   unsigned index;
-   std::string name;
-   ElfSectionHeader header;
-   std::vector<char> data;
-   size_t virtualAddress;
-};
-
-enum class SymbolType
-{
-   Unknown,
-   Section,
-   Function,
-   Object
-};
-
-struct Symbol
-{
-   ElfSymbol header;
-   Section *section;
-   std::string name;
-   uint32_t value;
-   SymbolType type;
-};
-
-struct Binary
-{
-   ElfHeader header;
-   std::vector<Symbol> symbols;
-   std::vector<Section> sections;
-
-   Section *findSection(const std::string &name)
-   {
-      for (auto &section : sections) {
-         if (section.name == name) {
-            return &section;
-         }
-      }
-
-      return nullptr;
-   }
+   uint32_t address;
+   uint32_t stackSize;
 };
 
 class Loader
 {
 public:
-   bool loadElf(Binary &binary, const char *buffer, size_t size);
+   bool loadRPL(Module &module, EntryInfo &entry, const char *buffer, size_t size);
 
 private:
 };

@@ -38,10 +38,17 @@ public:
       mOffset += sizeof(Type) * count;
    }
 
-   template<typename Type>
-   const Type *readRaw(size_t count)
+   std::string readNullTerminatedString()
    {
-      auto ptr = reinterpret_cast<const Type*>(mBuffer + mOffset);
+      const char *str = mBuffer + mOffset;
+      mOffset += strlen(str) + 1;
+      return str;
+   }
+
+   template<typename Type>
+   Type *readRaw(size_t count)
+   {
+      auto ptr = reinterpret_cast<Type*>(const_cast<char*>(mBuffer)+mOffset);
       mOffset += sizeof(Type) * count;
       return ptr;
    }
@@ -49,6 +56,11 @@ public:
    void seek(size_t pos)
    {
       mOffset = pos;
+   }
+
+   bool eof()
+   {
+      return mOffset >= mSize;
    }
 
 private:

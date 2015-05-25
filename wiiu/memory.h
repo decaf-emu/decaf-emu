@@ -1,65 +1,94 @@
 #pragma once
 #include <cassert>
+#include <vector>
 #include <Windows.h>
 #include "bitutils.h"
 #include "log.h"
 
-enum MemoryMap : size_t
+union PageEntry
 {
-   ApplicationCodeStart = 0x02000000,
-   ApplicationCodeEnd = 0x10000000,
-   ApplicationDataStart = 0x10000000,
-   ApplicationDataEnd = 0x02000000 + 0x40000000, // 1GB
-   ForegroundAreaStart = 0xE0000000,
-   ForegroundAreaEnd = 0xE4000000,
-   MEM1Start = ForegroundAreaStart,
-   MEM1End = ForegroundAreaEnd,
-   GraphicsResourcesStart = 0xF4000000,
-   GraphicsResourcesEnd = 0xF6000000
+   struct
+   {
+      uint32_t base : 20;           // First page in region
+      uint32_t count : 20;          // Number of pages in region (only valid in base page)
+      uint32_t allocated : 1;       // Is page allocated?
+      uint32_t : 22;
+   };
+
+   uint64_t value = 0;
+};
+
+struct MemoryView
+{
+   MemoryView() :
+      address(nullptr)
+   {
+   }
+
+   MemoryView(uint64_t start, uint64_t end, uint64_t pageSize) :
+      start(start), end(end), pageSize(pageSize), address(nullptr)
+   {
+   }
+
+   uint64_t start;
+   uint64_t end;
+   uint8_t *address;
+   size_t pageSize;
+   std::vector<PageEntry> pageTable;
 };
 
 class Memory
 {
-   struct Allocation
-   {
-      size_t physical;
-      size_t size;
-   };
-
 public:
-   void initialise();
-   size_t translate(size_t address);
-   size_t allocate(size_t address, size_t size);
-   void free(size_t address);
+   ~Memory();
 
+   bool initialise();
+   bool alloc(uint32_t address, size_t size);
+   bool free(uint32_t address);
+   uint32_t allocData(size_t size);
+
+   // Translate WiiU virtual address to host address
+   uint8_t *translate(uint32_t address) const
+   {
+      return mBase + address;
+   }
+
+   // Read Type from virtual address
    template<typename Type>
-   Type read(size_t address)
+   Type read(uint32_t address) const
    {
       return byte_swap(*reinterpret_cast<Type*>(translate(address)));
    }
 
+   // Read Type from virtual address with no endian byte_swap
    template<typename Type>
-   Type readNoSwap(size_t address)
+   Type readNoSwap(uint32_t address) const
    {
       return *reinterpret_cast<Type*>(translate(address));
    }
 
+   // Write Type to virtual address
    template<typename Type>
-   void write(size_t address, Type value)
+   void write(uint32_t address, Type value) const
    {
       *reinterpret_cast<Type*>(translate(address)) = byte_swap(value);
    }
 
+   // Write Type to virtual address with no endian byte_swap
    template<typename Type>
-   void writeNoSwap(size_t address, Type value)
+   void writeNoSwap(uint32_t address, Type value) const
    {
       *reinterpret_cast<Type*>(translate(address)) = value;
    }
 
 private:
-   size_t mVirtualAddress;
-   size_t mAddress;
-   size_t mMemorySize;
+   MemoryView *getView(uint32_t address);
+   bool tryMapViews(uint8_t *base);
+   void unmapViews();
+
+   uint8_t *mBase = nullptr;
+   HANDLE mFile = NULL;
+   std::vector<MemoryView> mViews;
 };
 
 extern Memory gMemory;
