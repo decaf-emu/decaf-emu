@@ -43,6 +43,7 @@ public:
    ~Memory();
 
    bool initialise();
+   bool valid(uint32_t address);
    bool alloc(uint32_t address, size_t size);
    bool free(uint32_t address);
    uint32_t allocData(size_t size);

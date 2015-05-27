@@ -66,6 +66,19 @@ MemoryView *Memory::getView(uint32_t address)
    return nullptr;
 }
 
+bool Memory::valid(uint32_t address)
+{
+   auto view = getView(address);
+
+   if (!view) {
+      return nullptr;
+   }
+
+   auto page = (address - reinterpret_cast<uint32_t>(view->address)) / view->pageSize;
+
+   return view->pageTable[page].allocated;
+}
+
 uint32_t Memory::allocData(size_t size)
 {
    MemoryView *view = &mViews[1]; // Application Data
