@@ -49,7 +49,7 @@ bcGeneric(ThreadState *state, Instruction instr)
    if (flags & BcCheckCtr) {
       if (!get_bit<NoCheckCtr>(bo)) {
          state->ctr--;
-         ctr_ok = (state->ctr != 0) ^ (get_bit<CtrValue>(bo));
+         ctr_ok = !!((state->ctr != 0) ^ (get_bit<CtrValue>(bo)));
       }
    }
 
@@ -57,7 +57,7 @@ bcGeneric(ThreadState *state, Instruction instr)
       if (!get_bit<NoCheckCond>(bo)) {
          auto crb = get_bit(state->cr.value, 31 - instr.bi);
          auto crv = get_bit<CondValue>(bo);
-         cond_ok = crb ^ crv;
+         cond_ok = (crb == crv);
       }
    }
 
