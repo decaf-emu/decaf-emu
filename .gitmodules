@@ -1,3 +1,6 @@
 [submodule "libraries/zlib"]
 	path = libraries/zlib
 	url = https://github.com/madler/zlib.git
+[submodule "libraries/ovsocket"]
+	path = libraries/ovsocket
+	url = https://github.com/exjam/ovsocket.git
