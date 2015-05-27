@@ -65,7 +65,7 @@ bcGeneric(ThreadState *state, Instruction instr)
       uint32_t nia;
 
       if (flags & BcBranchCTR) {
-         nia = state->ctr << 2;
+         nia = state->ctr & ~0x3;
       } else if (flags & BcBranchLR) {
          nia = state->lr & ~0x3;
       } else {
