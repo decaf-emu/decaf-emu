@@ -579,7 +579,7 @@ rlwGeneric(ThreadState *state, Instruction instr)
    }
 
    r = _rotl(s, n);
-   m = make_bitmask<uint32_t>(31 - instr.mb, 31 - instr.me);
+   m = make_bitmask<uint32_t>(instr.mb, instr.me);
 
    if (flags & RlwAnd) {
       a = (r & m);
