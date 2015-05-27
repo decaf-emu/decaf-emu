@@ -162,7 +162,7 @@ addicx(ThreadState *state, Instruction instr)
 static void
 addis(ThreadState *state, Instruction instr)
 {
-   return addGeneric<AddImmediate | AddShifted>(state, instr);
+   return addGeneric<AddImmediate | AddShifted | AddZeroRA>(state, instr);
 }
 
 static void
