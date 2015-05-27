@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include "bitutils.h"
+#include "gdbstub.h"
 #include "instructiondata.h"
 #include "interpreter.h"
 #include "loader.h"
@@ -61,12 +62,13 @@ int main(int argc, char **argv)
    state.nia = state.cia + 4;
 
    // Setup stack
-   auto stackSize = 65536u;
    auto stack = gMemory.allocData(entry.stackSize);
    state.gpr[1] = stack + entry.stackSize;
 
    Interpreter interpreter;
    interpreter.initialise();
+   startGDBStub(&interpreter);
+   interpreter.addBreakpoint(entry.address);
    interpreter.execute(&state);
 
    return 0;

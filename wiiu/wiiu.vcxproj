@@ -73,8 +73,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\libraries\zlib\build\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\Programming\Projects\libovsocket\libovsocket;$(ProjectDir);$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\libraries\zlib\build\Release;D:\Programming\Projects\libovsocket\x64\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -101,7 +101,7 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
@@ -109,7 +109,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zlib.lib;libovsocket.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -148,19 +148,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="disassembler.cpp" />
+    <ClCompile Include="gdbstub.cpp" />
     <ClCompile Include="instructiontable.cpp" />
     <ClCompile Include="interpreter.cpp" />
-    <ClCompile Include="interpreter\interpreterbranch.cpp" />
-    <ClCompile Include="interpreter\interpretercondition.cpp" />
-    <ClCompile Include="interpreter\interpreterinteger.cpp" />
-    <ClCompile Include="interpreter\interpreterloadstore.cpp" />
-    <ClCompile Include="interpreter\interpretersystem.cpp" />
+    <ClCompile Include="interpreter\interpreter_branch.cpp" />
+    <ClCompile Include="interpreter\interpreter_condition.cpp" />
+    <ClCompile Include="interpreter\interpreter_integer.cpp" />
+    <ClCompile Include="interpreter\interpreter_loadstore.cpp" />
+    <ClCompile Include="interpreter\interpreter_system.cpp" />
+    <ClCompile Include="interpreter_float.cpp" />
     <ClCompile Include="loader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="modules\coreinit\coreinit.cpp" />
-    <ClCompile Include="modules\coreinit\debug.cpp" />
-    <ClCompile Include="modules\coreinit\thread.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_debug.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_thread.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="systemmodule.cpp" />
   </ItemGroup>
@@ -170,6 +172,7 @@
     <ClInclude Include="disassembler.h" />
     <ClInclude Include="elf.h" />
     <ClInclude Include="function_traits.h" />
+    <ClInclude Include="gdbstub.h" />
     <ClInclude Include="instruction.h" />
     <ClInclude Include="instructiondata.h" />
     <ClInclude Include="instructionid.h" />
@@ -184,7 +187,6 @@
     <ClInclude Include="modules\coreinit\thread.h" />
     <ClInclude Include="modules\coreinit\types.h" />
     <ClInclude Include="ppc.h" />
-    <ClInclude Include="runtime.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="systemmodule.h" />
   </ItemGroup>

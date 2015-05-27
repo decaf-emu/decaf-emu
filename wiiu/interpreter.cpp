@@ -21,7 +21,11 @@ void Interpreter::registerInstruction(InstructionID id, fptr_t fptr)
 
 void Interpreter::execute(ThreadState *state)
 {
-   for (unsigned i = 0; i < 32; ++i) {
+   mActiveThread = state;
+   mStep = false;
+   mPaused = false;
+
+   for (unsigned i = 0; i < 1024 * 1024; ++i) {
       Disassembly dis;
       auto instr = gMemory.read<Instruction>(state->cia);
       auto data = gInstructionTable.decode(instr);
@@ -30,6 +34,12 @@ void Interpreter::execute(ThreadState *state)
       dis.address = state->cia;
       gDisassembler.disassemble(instr, dis);
       xLog() << Log::hex(state->cia) << " " << dis.text;
+
+      auto bpitr = std::find(mBreakpoints.begin(), mBreakpoints.end(), state->cia);
+
+      if (mStep || bpitr != mBreakpoints.end()) {
+         enterBreakpoint();
+      }
 
       if (!fptr) {
          xLog() << "Unimplemented interpreter instruction!";
@@ -40,4 +50,48 @@ void Interpreter::execute(ThreadState *state)
       state->cia = state->nia;
       state->nia = state->cia + 4;
    }
+}
+
+ThreadState *Interpreter::getThreadState(uint32_t tid)
+{
+   return mActiveThread;
+}
+
+void Interpreter::resume()
+{
+   mStep = false;
+   mDebugCV.notify_one();
+}
+
+void Interpreter::pause()
+{
+   mStep = true;
+}
+
+void Interpreter::step()
+{
+   mStep = true;
+   resume();
+}
+
+void Interpreter::removeBreakpoint(uint32_t addr)
+{
+   auto bpitr = std::find(mBreakpoints.begin(), mBreakpoints.end(), addr);
+
+   if (bpitr != mBreakpoints.end()) {
+      mBreakpoints.erase(bpitr);
+   }
+}
+
+void Interpreter::addBreakpoint(uint32_t addr)
+{
+   mBreakpoints.push_back(addr);
+}
+
+void Interpreter::enterBreakpoint()
+{
+   std::unique_lock<std::mutex> lock(mDebugMutex);
+   mPaused = true;
+   mDebugCV.wait(lock);
+   mPaused = false;
 }
