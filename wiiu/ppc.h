@@ -7,8 +7,7 @@ using gpr_t = uint32_t;
 // Floating-Point Registers
 union fpr_t
 {
-   float value32;
-   double value64;
+   double value;
 
    struct
    {

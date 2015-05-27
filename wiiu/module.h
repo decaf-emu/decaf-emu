@@ -35,7 +35,7 @@ struct SymbolInfo
       Data
    };
 
-   size_t index;
+   uint32_t index;
    Type type;
    std::string name;
    uint32_t address;

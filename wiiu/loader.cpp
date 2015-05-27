@@ -202,7 +202,7 @@ readSections(BigEndianView &in, ElfHeader &header, std::vector<RplSection> &sect
          } else {
             stream.avail_in = section.header.sh_size;
             stream.next_in = in.readRaw<Bytef>(section.header.sh_size);
-            stream.avail_out = section.data.size();
+            stream.avail_out = static_cast<uInt>(section.data.size());
             stream.next_out = reinterpret_cast<Bytef*>(section.data.data());
 
             ret = inflate(&stream, Z_FINISH);
@@ -243,7 +243,7 @@ processSections(Module &module, std::vector<RplSection> &sections, const char *s
       section->index = i;
       section->address = header.sh_addr;
       section->name = strData + header.sh_name;
-      section->size = rplSection.data.size();
+      section->size = static_cast<uint32_t>(rplSection.data.size());
 
       if (header.sh_type == SHT_NOBITS) {
          section->size = header.sh_size;
@@ -290,7 +290,7 @@ processSections(Module &module, std::vector<RplSection> &sections, const char *s
       auto section = new Section();
       section->index = i;
       section->name = strData + header.sh_name;
-      section->size = rplSection.data.size();
+      section->size = static_cast<uint32_t>(rplSection.data.size());
 
       if (header.sh_type == SHT_NOBITS) {
          section->size = header.sh_size;
@@ -320,7 +320,7 @@ processSections(Module &module, std::vector<RplSection> &sections, const char *s
 }
 
 static void
-loadSections(Module &module, std::vector<RplSection> &sections)
+loadSections(std::vector<RplSection> &sections)
 {
    for (auto &rplSection : sections) {
       auto section = rplSection.section;
@@ -549,9 +549,6 @@ Loader::loadRPL(Module &module, EntryInfo &entry, const char *buffer, size_t siz
       return false;
    }
 
-   // String Table for section names
-   auto &strData = sections[header.e_shstrndx].data;
-
    // Process sections, find our data and code sections
    processSections(module, sections, sections[header.e_shstrndx].data.data());
 
@@ -570,7 +567,7 @@ Loader::loadRPL(Module &module, EntryInfo &entry, const char *buffer, size_t siz
    gMemory.alloc(dataStart, dataSize);
 
    // Load sections into memory
-   loadSections(module, sections);
+   loadSections(sections);
 
    // Process symbols
    // TODO: Support more than one symbol section

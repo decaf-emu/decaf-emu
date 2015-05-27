@@ -187,7 +187,7 @@ bool Memory::tryMapViews(uint8_t *base)
 {
    for (auto &view : mViews) {
       auto lo = static_cast<DWORD>(view.start);
-      auto hi = static_cast<DWORD>(view.start >> 32);
+      auto hi = static_cast<DWORD>(0);
       auto size = static_cast<SIZE_T>(view.end - view.start);
       auto target = base + view.start;
 

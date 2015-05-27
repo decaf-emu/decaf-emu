@@ -47,7 +47,7 @@ static void
 mfspr(ThreadState *state, Instruction instr)
 {
    auto spr = decodeSPR(instr);
-   uint32_t value = -1;
+   auto value = 0u;
 
    switch (spr) {
    case SprEncoding::XER:
@@ -93,7 +93,7 @@ static void
 mftb(ThreadState *state, Instruction instr)
 {
    auto tbr = decodeSPR(instr);
-   uint32_t value = -1;
+   auto value = 0u;
 
    switch (tbr) {
    case SprEncoding::TBL:
@@ -195,7 +195,7 @@ sc(ThreadState *state, Instruction instr)
    assert(func->returnBytes <= 8);
 
    if (func->returnBytes > 0) {
-      state->gpr[3] = returnValue & make_bitmask(func->returnBytes / 8);
+      state->gpr[3] = static_cast<uint32_t>(returnValue & make_bitmask(static_cast<uint32_t>(func->returnBytes / 8)));
    }
 }
 

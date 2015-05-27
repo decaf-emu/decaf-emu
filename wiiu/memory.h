@@ -25,15 +25,15 @@ struct MemoryView
    {
    }
 
-   MemoryView(uint64_t start, uint64_t end, uint64_t pageSize) :
+   MemoryView(uint32_t start, uint32_t end, uint32_t pageSize) :
       start(start), end(end), pageSize(pageSize), address(nullptr)
    {
    }
 
-   uint64_t start;
-   uint64_t end;
+   uint32_t start;
+   uint32_t end;
    uint8_t *address;
-   size_t pageSize;
+   uint32_t pageSize;
    std::vector<PageEntry> pageTable;
 };
 

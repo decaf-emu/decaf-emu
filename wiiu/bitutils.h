@@ -88,6 +88,20 @@ make_bitmask()
    return static_cast<Type>((1ull << (bits)) - 1);
 }
 
+template<>
+inline uint32_t
+make_bitmask<32, uint32_t>()
+{
+   return 0xffffffff;
+}
+
+template<>
+inline uint64_t
+make_bitmask<64, uint64_t>()
+{
+   return 0xffffffffffffffffull;
+}
+
 // Creates a bitmask between begin and end
 template<typename Type>
 inline Type
