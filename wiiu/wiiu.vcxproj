@@ -73,8 +73,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Programming\Projects\libovsocket\libovsocket;$(ProjectDir);$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\libraries\zlib\build\Release;D:\Programming\Projects\libovsocket\x64\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir);$(SolutionDir)\libraries\ovsocket;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\libraries\zlib\build\Release;$(SolutionDir)\libraries\ovsocket\x64\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

@@ -413,7 +413,7 @@ writeDataThunk(uint32_t address, uint32_t id)
 static void
 processSymbols(Module &module, RplSection &symtab, std::vector<RplSection> &sections)
 {
-   BigEndianView in = { symtab.data.data(), symtab.data.size() };
+   auto in = BigEndianView { symtab.data.data(), symtab.data.size() };
    auto count = symtab.data.size() / sizeof(ElfSymbol);
    auto &strtab = sections[symtab.header.sh_link];
 
@@ -422,11 +422,9 @@ processSymbols(Module &module, RplSection &symtab, std::vector<RplSection> &sect
    module.symbols.resize(count);
 
    for (auto i = 0u; i < count; ++i) {
-      ElfSymbol header;
+      SymbolInfo *symbol = nullptr;
+      auto header = ElfSymbol { };
       readSymbol(in, header);
-
-      auto binding = header.st_info >> 4; // STB_*
-      auto type = header.st_info & 0xf;   // STT_*
 
       // Calculate relocated address
       auto &impsec = sections[header.st_shndx];
@@ -435,8 +433,9 @@ processSymbols(Module &module, RplSection &symtab, std::vector<RplSection> &sect
       auto virtAddress = baseAddress + offset;
 
       // Create symbol data
-      SymbolInfo *symbol = nullptr;
       auto name = strtab.data.data() + header.st_name;
+      auto binding = header.st_info >> 4;
+      auto type = header.st_info & 0xf;
 
       if (type == STT_FUNC) {
          auto fsym = new FunctionSymbol();
@@ -459,12 +458,10 @@ processSymbols(Module &module, RplSection &symtab, std::vector<RplSection> &sect
          symbol->type = SymbolInfo::Invalid;
       }
 
-      assert(symbol);
       symbol->index = i;
       symbol->name = name;
       symbol->address = virtAddress;
       module.symbols[i] = symbol;
-      xLog() << Log::hex(symbol->address) << " " << symbol->name << " " << symbol->type;
 
       // Write thunks
       if (symbol->address) {
@@ -481,11 +478,11 @@ static void
 processRelocations(Module &module, RplSection &section, std::vector<RplSection> &sections)
 {
    // TODO: Support more than one symbol section (symsec)
-   auto symsec = sections[section.header.sh_link];
+   auto &symsec = sections[section.header.sh_link];
    auto in = BigEndianView { section.data.data(), section.data.size() };
 
    // Find our relocation section addresses
-   auto relsec = sections[section.header.sh_info];
+   auto &relsec = sections[section.header.sh_info];
    auto baseAddress = relsec.header.sh_addr;
    auto virtAddress = relsec.section->address;
 
@@ -494,15 +491,12 @@ processRelocations(Module &module, RplSection &section, std::vector<RplSection> 
       readRelocationAddend(in, rela);
 
       auto index = rela.r_info >> 8;
-      auto type = rela.r_info & 0xff;
-      auto symbol = module.symbols[index];
-      if (!symbol) {
-         xLog() << "weird";
-      }
-      auto base = symbol ? symbol->address : 0;
-      auto value = base + rela.r_addend;
+      auto type  = rela.r_info & 0xff;
 
+      auto &symbol = module.symbols[index];
+      auto value = symbol->address + rela.r_addend;
       auto addr = rela.r_offset - baseAddress + virtAddress;
+
       auto ptr8 = gMemory.translate(addr);
       auto ptr16 = reinterpret_cast<uint16_t*>(ptr8);
       auto ptr32 = reinterpret_cast<uint32_t*>(ptr8);
@@ -603,7 +597,7 @@ Loader::loadRPL(Module &module, EntryInfo &entry, const char *buffer, size_t siz
    }
 
    for (auto i = 0u; i < module.symbols.size(); ++i) {
-      auto &symbol = module.symbols[i];
+      auto symbol = module.symbols[i];
       xLog() << Log::hex(symbol->address) << " " << symbol->name;
    }
 
