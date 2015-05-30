@@ -21,7 +21,7 @@ int main(int argc, char **argv)
    // Initialise emulator systems
    gMemory.initialise();
    gInstructionTable.initialise();
-   gSystem.registerModule("coreinit.rpl", new CoreInit);
+   gSystem.registerModule("coreinit", new CoreInit);
 
    auto file = std::ifstream { argv[1], std::ifstream::binary };
    auto buffer = std::vector<char> {};

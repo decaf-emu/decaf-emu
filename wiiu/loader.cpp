@@ -290,6 +290,7 @@ processSections(Module &module, std::vector<RplSection> &sections, const char *s
       auto section = new Section();
       section->index = i;
       section->name = strData + header.sh_name;
+      section->library = rplSection.data.data() + 8;
       section->size = static_cast<uint32_t>(rplSection.data.size());
 
       if (header.sh_type == SHT_NOBITS) {
@@ -342,14 +343,6 @@ loadSections(std::vector<RplSection> &sections)
 static SystemModule *
 findSystemModule(const char *name)
 {
-   if (strstr(name, ".fimport_") == name) {
-      name += strlen(".fimport_");
-   }
-
-   if (strstr(name, ".dimport_") == name) {
-      name += strlen(".dimport_");
-   }
-
    return gSystem.findModule(name);
 }
 
@@ -449,7 +442,11 @@ processSymbols(Module &module, RplSection &symtab, std::vector<RplSection> &sect
          symbol = dsym;
       } else if (type == STT_SECTION) {
          auto msym = new ModuleSymbol();
-         msym->systemModule = findSystemModule(name);
+
+         if (impsec.section) {
+            msym->systemModule = findSystemModule(impsec.section->library.c_str());
+         }
+
          msym->moduleType = msym->systemModule ? ModuleSymbol::System : ModuleSymbol::User;
          impsec.msym = msym;
          symbol = msym;

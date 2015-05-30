@@ -20,6 +20,7 @@ struct Section
 
    size_t index;
    std::string name;
+   std::string library;
    Type type;
    uint32_t address;
    uint32_t size;
