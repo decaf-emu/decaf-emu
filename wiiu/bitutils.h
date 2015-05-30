@@ -3,7 +3,7 @@
 #include <cstdlib>
 
 // reinterpret_cast for value types
-template<typename SrcType, typename DstType>
+template<typename DstType, typename SrcType>
 static inline DstType
 bit_cast(SrcType src)
 {
@@ -177,7 +177,7 @@ struct byte_swap_t<Type, 2>
 {
    static Type swap(Type src)
    {
-      return bit_cast<uint16_t, Type>(_byteswap_ushort(bit_cast<Type, uint16_t>(src)));
+      return bit_cast<Type>(_byteswap_ushort(bit_cast<uint16_t>(src)));
    }
 };
 
@@ -186,7 +186,7 @@ struct byte_swap_t<Type, 4>
 {
    static Type swap(Type src)
    {
-      return bit_cast<uint32_t, Type>(_byteswap_ulong(bit_cast<Type, uint32_t>(src)));
+      return bit_cast<Type>(_byteswap_ulong(bit_cast<uint32_t>(src)));
    }
 };
 
@@ -195,7 +195,7 @@ struct byte_swap_t<Type, 8>
 {
    static Type swap(Type src)
    {
-      return bit_cast<uint64_t, Type>(_byteswap_uint64(bit_cast<Type, uint64_t>(src)));
+      return bit_cast<Type>(_byteswap_uint64(bit_cast<uint64_t>(src)));
    }
 };
 

@@ -571,7 +571,7 @@ private:
 
       // FPR
       for (auto i = 0; i < 32; ++i) {
-         out.addHex64(bit_cast<fpr_t, uint64_t>(state->fpr[i]));
+         out.addHex64(bit_cast<uint64_t>(state->fpr[i]));
       }
 
       out.addHex32(state->cia);
