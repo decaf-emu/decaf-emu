@@ -44,8 +44,8 @@ loadGeneric(ThreadState *state, Instruction instr)
       if (flags & LoadPairedSingles) {
          state->fpr[instr.rD].value = static_cast<double>(d);
       } else {
+         state->fpr[instr.rD].paired0 = static_cast<float>(d);
          state->fpr[instr.rD].paired1 = static_cast<float>(d);
-         state->fpr[instr.rD].paired2 = static_cast<float>(d);
       }
    } else {
       if (flags & LoadSignExtend) {

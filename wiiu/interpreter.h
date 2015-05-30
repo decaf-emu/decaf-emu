@@ -33,6 +33,7 @@ private:
    void registerInstruction(InstructionID id, fptr_t fptr);
    void registerBranchInstructions();
    void registerConditionInstructions();
+   void registerFloatInstructions();
    void registerIntegerInstructions();
    void registerLoadStoreInstructions();
    void registerSystemInstructions();

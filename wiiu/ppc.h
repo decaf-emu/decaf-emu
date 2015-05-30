@@ -8,31 +8,41 @@ using gpr_t = uint32_t;
 union fpr_t
 {
    double value;
+   uint64_t idw;
 
    struct
    {
+      float paired0;
       float paired1;
-      float paired2;
+   };
+
+   struct
+   {
+      uint32_t iw0;
+      uint32_t iw1;
    };
 };
 
+namespace ConditionRegisterFlag
+{
 enum ConditionRegisterFlag : uint32_t
 {
-   Negative = 1 << 3,
-   Positive = 1 << 2,
-   Zero = 1 << 1,
-   SummaryOverflow = 1 << 0,
+   Negative          = 1 << 3,
+   Positive          = 1 << 2,
+   Zero              = 1 << 1,
+   SummaryOverflow   = 1 << 0,
 
-   LessThan = Negative,
-   GreaterThan = Positive,
-   Equal = Zero,
-   Unordered = SummaryOverflow,
+   LessThan          = Negative,
+   GreaterThan       = Positive,
+   Equal             = Zero,
+   Unordered         = SummaryOverflow,
 
-   FloatingPointException = Negative,
-   FloatingPointExceptionEnabled = Positive,
-   FloatingPointInvalidException = Zero,
-   FloatingPointOverflowException = SummaryOverflow,
+   FloatingPointException           = Negative,
+   FloatingPointExceptionEnabled    = Positive,
+   FloatingPointInvalidException    = Zero,
+   FloatingPointOverflowException   = SummaryOverflow,
 };
+}
 
 // Condition Register
 union cr_t
@@ -102,10 +112,44 @@ union msr_t
    };
 };
 
+namespace FloatingPointResultFlags
+{
+enum FloatingPointResultFlags : uint32_t
+{
+   ClassDescriptor   = 1 << 4,
+   Negative          = 1 << 3,
+   Positive          = 1 << 2,
+   Zero              = 1 << 1,
+   NaN               = 1 << 0,
+
+   LessThan          = Negative,
+   GreaterThan       = Positive,
+   Equal             = Zero,
+   Unordered         = NaN,
+};
+}
+
+namespace FloatingPointRoundMode
+{
+enum FloatingPointRoundMode : uint32_t
+{
+   Nearest  = 0,
+   Positive = 1,
+   Zero     = 2,
+   Negative = 3
+};
+}
+
 // Floating-Point Status and Control Register
 union fpscr_t
 {
    uint32_t value;
+
+   struct
+   {
+      uint32_t : 28;
+      uint32_t cr1 : 4;
+   };
 
    struct
    {
@@ -133,7 +177,7 @@ union fpscr_t
       uint32_t zx : 1;     // FP Zero Divide Exception
       uint32_t ux : 1;     // FP Underflow Exception
       uint32_t ox : 1;     // FP Overflow Exception
-      uint32_t vx : 1;     // FP Invalied Operation Exception Summary
+      uint32_t vx : 1;     // FP Invalid Operation Exception Summary
       uint32_t fex : 1;    // FP Enabled Exception Summary
       uint32_t fx : 1;     // FP Exception Summary
    };

@@ -9,6 +9,7 @@ void Interpreter::initialise()
    mInstructionMap.resize(static_cast<size_t>(InstructionID::InstructionCount), nullptr);
    registerBranchInstructions();
    registerConditionInstructions();
+   registerFloatInstructions();
    registerIntegerInstructions();
    registerLoadStoreInstructions();
    registerSystemInstructions();

@@ -153,10 +153,10 @@
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="interpreter\interpreter_branch.cpp" />
     <ClCompile Include="interpreter\interpreter_condition.cpp" />
+    <ClCompile Include="interpreter\interpreter_float.cpp" />
     <ClCompile Include="interpreter\interpreter_integer.cpp" />
     <ClCompile Include="interpreter\interpreter_loadstore.cpp" />
     <ClCompile Include="interpreter\interpreter_system.cpp" />
-    <ClCompile Include="interpreter_float.cpp" />
     <ClCompile Include="loader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="memory.cpp" />
@@ -171,6 +171,7 @@
     <ClInclude Include="bitutils.h" />
     <ClInclude Include="disassembler.h" />
     <ClInclude Include="elf.h" />
+    <ClInclude Include="floatutils.h" />
     <ClInclude Include="function_traits.h" />
     <ClInclude Include="gdbstub.h" />
     <ClInclude Include="instruction.h" />

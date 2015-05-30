@@ -81,7 +81,10 @@
     <ClCompile Include="gdbstub.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="interpreter_float.cpp">
+    <ClCompile Include="interpreter\interpreter_pairedsingle.cpp">
+      <Filter>Source Files\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="interpreter\interpreter_float.cpp">
       <Filter>Source Files\interpreter</Filter>
     </ClCompile>
   </ItemGroup>
@@ -150,6 +153,9 @@
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="gdbstub.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="floatutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,5 @@
 #include "bitutils.h"
+#include "floatutils.h"
 #include "interpreter.h"
 
 static std::pair<uint32_t, uint32_t>
@@ -101,6 +102,63 @@ static void
 cmpli(ThreadState *state, Instruction instr)
 {
    return cmpGeneric<uint32_t, CmpImmediate>(state, instr);
+}
+
+// Floating Compare
+enum FCmpFlags
+{
+   FCmpOrdered = 1 << 0,
+   FCmpUnordered = 1 << 1,
+};
+
+template<unsigned flags>
+static void
+fcmpGeneric(ThreadState *state, Instruction instr)
+{
+   double a, b;
+   uint32_t c;
+   bool vxsnan = false;
+
+   a = state->fpr[instr.frA].value;
+   b = state->fpr[instr.frB].value;
+   vxsnan = (is_signalling_nan(a) || is_signalling_nan(b));
+
+   if (a < b) {
+      c = ConditionRegisterFlag::LessThan;
+   } else if (a > b) {
+      c = ConditionRegisterFlag::GreaterThan;
+   } else if (a == b) {
+      c = ConditionRegisterFlag::Equal;
+   } else {
+      c = ConditionRegisterFlag::Unordered;
+
+      if (is_signalling_nan(a) || is_signalling_nan(b)) {
+         state->fpscr.vxsnan = 1;
+
+         if ((flags & FCmpOrdered) && state->fpscr.ve) {
+            state->fpscr.vxvc = 1;
+         }
+      } else if ((flags & FCmpOrdered)) {
+         state->fpscr.vxvc = 1;
+      }
+   }
+
+   setCRF(state, instr.crfD, c);
+   state->fpscr.cr1 = c;
+   state->fpscr.vx |= state->fpscr.vxvc;
+   state->fpscr.fx |= state->fpscr.vx;
+}
+
+static void
+fcmpo(ThreadState *state, Instruction instr)
+{
+   return fcmpGeneric<FCmpOrdered>(state, instr);
+}
+
+static void
+fcmpu(ThreadState *state, Instruction instr)
+{
+   return fcmpGeneric<FCmpUnordered>(state, instr);
 }
 
 // Condition Register AND
@@ -249,6 +307,8 @@ Interpreter::registerConditionInstructions()
    RegisterInstruction(cmpi);
    RegisterInstruction(cmpl);
    RegisterInstruction(cmpli);
+   RegisterInstruction(fcmpo);
+   RegisterInstruction(fcmpu);
    RegisterInstruction(crand);
    RegisterInstruction(crandc);
    RegisterInstruction(creqv);
