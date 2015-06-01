@@ -223,6 +223,7 @@ INS(dcbt, (), (ra, rb), (), (opcd == 31, xo1 == 278), "")
 INS(dcbtst, (), (ra, rb), (), (opcd == 31, xo1 == 246), "")
 INS(dcbz, (), (ra, rb), (), (opcd == 31, xo1 == 1014), "")
 INS(lcbi, (), (ra, rb), (), (opcd == 31, xo1 == 982), "")
+INS(dcbz_l, (), (ra, rb), (), (opcd == 4, xo1 == 1014), "")
 
 // Segment Register Manipulation
 INS(mfsr, (rd), (sr), (), (opcd == 31, xo1 == 595), "Move from Segment Register")
