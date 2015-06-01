@@ -36,6 +36,7 @@ private:
    void registerFloatInstructions();
    void registerIntegerInstructions();
    void registerLoadStoreInstructions();
+   void registerPairedInstructions();
    void registerSystemInstructions();
 
    std::vector<fptr_t> mInstructionMap;

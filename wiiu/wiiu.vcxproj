@@ -156,6 +156,7 @@
     <ClCompile Include="interpreter\interpreter_float.cpp" />
     <ClCompile Include="interpreter\interpreter_integer.cpp" />
     <ClCompile Include="interpreter\interpreter_loadstore.cpp" />
+    <ClCompile Include="interpreter\interpreter_pairedsingle.cpp" />
     <ClCompile Include="interpreter\interpreter_system.cpp" />
     <ClCompile Include="loader.cpp" />
     <ClCompile Include="main.cpp" />
@@ -179,6 +180,7 @@
     <ClInclude Include="instructionid.h" />
     <ClInclude Include="instructions.inl" />
     <ClInclude Include="interpreter.h" />
+    <ClInclude Include="interpreter\interpreter_float.h" />
     <ClInclude Include="loader.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="memory.h" />

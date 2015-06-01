@@ -158,5 +158,8 @@
     <ClInclude Include="floatutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="interpreter\interpreter_float.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -12,6 +12,7 @@ void Interpreter::initialise()
    registerFloatInstructions();
    registerIntegerInstructions();
    registerLoadStoreInstructions();
+   registerPairedInstructions();
    registerSystemInstructions();
 }
 
