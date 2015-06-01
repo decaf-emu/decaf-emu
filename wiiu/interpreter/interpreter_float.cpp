@@ -552,6 +552,64 @@ frsp(ThreadState *state, Instruction instr)
    }
 }
 
+// Floating Absolute Value
+static void
+fabs(ThreadState *state, Instruction instr)
+{
+   double b, d;
+
+   b = state->fpr[instr.frB].value;
+   d = std::fabs(b);
+   setFpr(state, instr.frD, d);
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
+}
+
+// Floating Negative Absolute Value
+static void
+fnabs(ThreadState *state, Instruction instr)
+{
+   double b, d;
+
+   b = state->fpr[instr.frB].value;
+   d = -std::fabs(b);
+   setFpr(state, instr.frD, d);
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
+}
+
+// Floating Move Register
+static void
+fmr(ThreadState *state, Instruction instr)
+{
+   double b;
+
+   b = state->fpr[instr.frB].value;
+   setFpr(state, instr.frD, b);
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
+}
+
+// Floating Negate
+static void
+fneg(ThreadState *state, Instruction instr)
+{
+   double b;
+
+   b = -state->fpr[instr.frB].value;
+   setFpr(state, instr.frD, b);
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
+}
+
 void
 Interpreter::registerFloatInstructions()
 {
@@ -577,4 +635,9 @@ Interpreter::registerFloatInstructions()
    RegisterInstruction(fctiw);
    RegisterInstruction(fctiwz);
    RegisterInstruction(frsp);
+   RegisterInstruction(fabs);
+   RegisterInstruction(fnabs);
+   RegisterInstruction(fmr);
+   RegisterInstruction(fabs);
+   RegisterInstruction(fneg);
 }

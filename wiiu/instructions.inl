@@ -175,10 +175,10 @@ INS(stfsx, (), (frs, ra, rb), (), (opcd == 31, xo1 == 663), "Store Floating-Poin
 INS(stfsux, (), (frs, ra, rb), (), (opcd == 31, xo1 == 695), "Store Floating-Point Single with Update Indexed")
 
 // Floating-Point Move
-INS(fabs, (frd), (frb), (rc), (opcd == 63, xo1 == 264), "")
-INS(fmr, (frd), (frb), (rc), (opcd == 63, xo1 == 72), "")
-INS(fnabs, (frd), (frb), (rc), (opcd == 63, xo1 == 136), "")
-INS(fneg, (frd), (frb), (rc), (opcd == 63, xo1 == 40), "")
+INS(fabs, (frd), (frb), (rc), (opcd == 63, xo1 == 264), "Floating Absolute Value")
+INS(fmr, (frd), (frb), (rc), (opcd == 63, xo1 == 72), "Floating Move Register")
+INS(fnabs, (frd), (frb), (rc), (opcd == 63, xo1 == 136), "Floating Negative Absolute Value")
+INS(fneg, (frd), (frb), (rc), (opcd == 63, xo1 == 40), "Floating Negate")
 
 // Branch
 INS(b, (), (li), (aa, lk), (opcd == 18), "Branch")
