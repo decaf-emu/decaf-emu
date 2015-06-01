@@ -150,7 +150,7 @@ INS(stswx, (), (rs, ra, rb), (), (opcd == 31, xo1 == 661), "Store String Word In
 INS(eieio, (), (), (), (opcd == 31, xo1 == 854), "")
 INS(isync, (), (), (), (opcd == 19, xo1 == 150), "")
 INS(lwarx, (rd), (ra, rb), (), (opcd == 31, xo1 == 20), "Load Word and Reserve Indexed")
-INS(stwcx, (), (rs, ra, rb), (), (opcd == 31, xo1 == 150), "Store Word Conditional Indexed") // TODO: Check if RC needed
+INS(stwcx, (), (rs, ra, rb), (), (opcd == 31, xo1 == 150), "Store Word Conditional Indexed")
 INS(sync, (), (), (), (opcd == 31, xo1 == 598), "")
 
 // Floating-Point Load

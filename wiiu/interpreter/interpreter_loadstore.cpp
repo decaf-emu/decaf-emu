@@ -327,6 +327,8 @@ storeGeneric(ThreadState *state, Instruction instr)
    }
 
    if (flags & StoreConditional) {
+      state->cr.cr0 = state->xer.so ? ConditionRegisterFlag::SummaryOverflow : 0;
+
       if (state->reserve) {
          // Store is succesful, clear reserve bit and set CR0[EQ]
          state->cr.cr0 |= ConditionRegisterFlag::Equal;
