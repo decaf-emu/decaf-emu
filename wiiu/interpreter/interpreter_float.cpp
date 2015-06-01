@@ -3,8 +3,9 @@
 #include "bitutils.h"
 #include "floatutils.h"
 #include "interpreter.h"
+#include "interpreter_float.h"
 
-static void
+void
 updateFPSCR(ThreadState *state)
 {
    auto except = std::fetestexcept(FE_ALL_EXCEPT);
@@ -28,39 +29,42 @@ updateFPSCR(ThreadState *state)
    fpscr.fr = !!(round & FE_UPWARD);
 
    // FP Enabled Exception Summary
-   fpscr.fex = (fpscr.vx & fpscr.ve)
-             | (fpscr.ox & fpscr.oe)
-             | (fpscr.ux & fpscr.ue)
-             | (fpscr.zx & fpscr.ze)
-             | (fpscr.xx & fpscr.xe);
+   fpscr.fex =
+        (fpscr.vx & fpscr.ve)
+      | (fpscr.ox & fpscr.oe)
+      | (fpscr.ux & fpscr.ue)
+      | (fpscr.zx & fpscr.ze)
+      | (fpscr.xx & fpscr.xe);
 
    // Invalid Operation Summary
-   fpscr.vx = fpscr.vxsnan
-            | fpscr.vxisi
-            | fpscr.vxidi
-            | fpscr.vxzdz
-            | fpscr.vximz
-            | fpscr.vxvc
-            | fpscr.vxsqrt
-            | fpscr.vxsoft
-            | fpscr.vxcvi;
+   fpscr.vx =
+        fpscr.vxsnan
+      | fpscr.vxisi
+      | fpscr.vxidi
+      | fpscr.vxzdz
+      | fpscr.vximz
+      | fpscr.vxvc
+      | fpscr.vxsqrt
+      | fpscr.vxsoft
+      | fpscr.vxcvi;
 
    // FP Exception Summary
-   fpscr.fx = fpscr.vx
-            | fpscr.ox
-            | fpscr.ux
-            | fpscr.zx
-            | fpscr.xx;
+   fpscr.fx =
+        fpscr.vx
+      | fpscr.ox
+      | fpscr.ux
+      | fpscr.zx
+      | fpscr.xx;
 }
 
 template<typename Type>
-static void
+void
 updateFPRF(ThreadState *state, Type value)
 {
    auto cls = std::fpclassify(value);
    auto neg = std::signbit(value);
    auto flags = 0u;
-   
+
    switch (cls) {
    case FP_NAN:
       flags |= FloatingPointResultFlags::ClassDescriptor;
@@ -88,37 +92,35 @@ updateFPRF(ThreadState *state, Type value)
    state->fpscr.fprf = flags;
 }
 
-static void
+void
 updateFloatConditionRegister(ThreadState *state)
 {
    state->cr.cr1 = state->fpscr.cr1;
 }
 
-template<typename Type>
-Type getFpr(ThreadState *state, unsigned fr)
-{
-   static_assert(0);
-}
-
 template<>
-float getFpr<float>(ThreadState *state, unsigned fr)
+float
+getFpr<float>(ThreadState *state, unsigned fr)
 {
    return state->fpr[fr].paired0;
 }
 
 template<>
-double getFpr<double>(ThreadState *state, unsigned fr)
+double
+getFpr<double>(ThreadState *state, unsigned fr)
 {
    return state->fpr[fr].value;
 }
 
-void setFpr(ThreadState *state, unsigned fr, float value)
+void
+setFpr(ThreadState *state, unsigned fr, float value)
 {
    state->fpr[fr].paired0 = value;
    state->fpr[fr].paired1 = value;
 }
 
-void setFpr(ThreadState *state, unsigned fr, double value)
+void
+setFpr(ThreadState *state, unsigned fr, double value)
 {
    state->fpr[fr].value = value;
 }
