@@ -300,11 +300,12 @@ lswx(ThreadState *state, Instruction instr)
 // Store
 enum StoreFlags
 {
-   StoreUpdate       = 1 << 0, // Save EA in rA
-   StoreIndexed      = 1 << 1, // Use rB instead of d
-   StoreByteReverse  = 1 << 2, // Swap Bytes
-   StoreConditional  = 1 << 3, // lward/stwcx Conditional
-   StoreZeroRA       = 1 << 4, // Use 0 instead of r0
+   StoreUpdate          = 1 << 0, // Save EA in rA
+   StoreIndexed         = 1 << 1, // Use rB instead of d
+   StoreByteReverse     = 1 << 2, // Swap Bytes
+   StoreConditional     = 1 << 3, // lward/stwcx Conditional
+   StoreZeroRA          = 1 << 4, // Use 0 instead of r0
+   StoreFloatAsInteger  = 1 << 5, // stfiwx
 };
 
 template<typename Type, unsigned flags = 0>
@@ -340,7 +341,9 @@ storeGeneric(ThreadState *state, Instruction instr)
       }
    }
 
-   if (std::is_floating_point<Type>::value) {
+   if (flags & StoreFloatAsInteger) {
+      s = static_cast<Type>(state->fpr[instr.rS].iw0);
+   } else if (std::is_floating_point<Type>::value) {
       s = static_cast<Type>(state->fpr[instr.rS].value);
    } else {
       s = static_cast<Type>(state->gpr[instr.rS]);
@@ -496,6 +499,12 @@ stfdx(ThreadState *state, Instruction instr)
    storeGeneric<double, StoreZeroRA | StoreIndexed>(state, instr);
 }
 
+static void
+stfiwx(ThreadState *state, Instruction instr)
+{
+   storeGeneric<uint32_t, StoreFloatAsInteger | StoreZeroRA | StoreIndexed>(state, instr);
+}
+
 // Store Multiple Words
 // Writes consecutive words to memory from rS to r31
 static void
@@ -623,4 +632,5 @@ void Interpreter::registerLoadStoreInstructions()
    RegisterInstruction(stfdu);
    RegisterInstruction(stfdx);
    RegisterInstruction(stfdux);
+   RegisterInstruction(stfiwx);
 }
