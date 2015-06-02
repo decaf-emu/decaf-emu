@@ -9,6 +9,7 @@
 #include "log.h"
 #include "memory.h"
 #include "modules/coreinit/coreinit.h"
+#include "modules/gx2/gx2.h"
 #include "system.h"
 
 int main(int argc, char **argv)
@@ -22,6 +23,7 @@ int main(int argc, char **argv)
    gMemory.initialise();
    gInstructionTable.initialise();
    gSystem.registerModule("coreinit", new CoreInit);
+   gSystem.registerModule("gx2", new GX2);
 
    auto file = std::ifstream { argv[1], std::ifstream::binary };
    auto buffer = std::vector<char> {};
