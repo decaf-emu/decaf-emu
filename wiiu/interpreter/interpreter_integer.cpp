@@ -571,6 +571,7 @@ rlwGeneric(ThreadState *state, Instruction instr)
    uint32_t s, n, r, m, a;
 
    s = state->gpr[instr.rS];
+   a = state->gpr[instr.rA];
 
    if (flags & RlwImmediate) {
       n = instr.sh;
@@ -579,12 +580,12 @@ rlwGeneric(ThreadState *state, Instruction instr)
    }
 
    r = _rotl(s, n);
-   m = make_bitmask<uint32_t>(instr.mb, instr.me);
+   m = make_bitmask<uint32_t>(31 - instr.me, 31 - instr.mb);
 
    if (flags & RlwAnd) {
       a = (r & m);
    } else if (flags & RlwInsert) {
-      a = (r & m) | (r & ~m);
+      a = (r & m) | (a & ~m);
    }
 
    state->gpr[instr.rA] = a;
