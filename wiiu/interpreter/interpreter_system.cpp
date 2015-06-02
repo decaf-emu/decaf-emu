@@ -28,11 +28,6 @@ INS(dcbtst, (), (ra, rb), (), (opcd == 31, xo1 == 246), "")
 INS(dcbz, (), (ra, rb), (), (opcd == 31, xo1 == 1014), "")
 INS(lcbi, (), (ra, rb), (), (opcd == 31, xo1 == 982), "")
 
-// Memory Synchronisation
-INS(eieio, (), (), (), (opcd == 31, xo1 == 854), "")
-INS(isync, (), (), (), (opcd == 19, xo1 == 150), "")
-INS(sync, (), (), (), (opcd == 31, xo1 == 598), "")
-
 // Lookaside Buffer Management
 INS(tlbie, (), (rb), (), (opcd == 31, xo1 == 306), "")
 INS(tlbsync, (), (), (), (opcd == 31, xo1 == 566), "")
@@ -41,6 +36,24 @@ INS(tlbsync, (), (), (), (opcd == 31, xo1 == 566), "")
 INS(eciwx, (rd), (ra, rb), (), (opcd == 31, xo1 == 310), "")
 INS(ecowx, (rd), (ra, rb), (), (opcd == 31, xo1 == 438), "")
 */
+
+// Enforce In-Order Execution of I/O
+static void
+eieio(ThreadState *state, Instruction instr)
+{
+}
+
+// Synchronise
+static void
+sync(ThreadState *state, Instruction instr)
+{
+}
+
+// Instruction Synchronise
+static void
+isync(ThreadState *state, Instruction instr)
+{
+}
 
 // Move from Special Purpose Register
 static void
@@ -202,6 +215,9 @@ sc(ThreadState *state, Instruction instr)
 void
 Interpreter::registerSystemInstructions()
 {
+   RegisterInstruction(eieio);
+   RegisterInstruction(isync);
+   RegisterInstruction(sync);
    RegisterInstruction(mfspr);
    RegisterInstruction(mtspr);
    RegisterInstruction(mftb);
