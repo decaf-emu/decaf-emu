@@ -26,7 +26,7 @@ INS(subfze, (rd), (ra), (oe, rc), (opcd == 31, xo2 == 200), "Subtract From Zero 
 INS(cmp, (crfd), (ra, rb), (l), (opcd == 31, xo1 == 0), "Compare")
 INS(cmpi, (crfd), (ra, simm), (l), (opcd == 11), "Compare Immediate")
 INS(cmpl, (crfd), (ra, rb), (l), (opcd == 31, xo1 == 32), "Compare Logical")
-INS(cmpli, (crfd), (ra, uimm), (l), (opcd == 11), "Compare Logical Immediate")
+INS(cmpli, (crfd), (ra, uimm), (l), (opcd == 10), "Compare Logical Immediate")
 
 // Integer Logical
 INS(and, (ra), (rs, rb), (rc), (opcd == 31, xo1 == 28), "AND")
