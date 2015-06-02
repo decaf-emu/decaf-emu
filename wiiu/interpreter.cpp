@@ -27,7 +27,7 @@ void Interpreter::execute(ThreadState *state)
    mStep = false;
    mPaused = false;
 
-   for (unsigned i = 0; i < 1024 * 1024; ++i) {
+   while(true) {
       Disassembly dis;
       auto instr = gMemory.read<Instruction>(state->cia);
       auto data = gInstructionTable.decode(instr);
