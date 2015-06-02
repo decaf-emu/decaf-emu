@@ -18,6 +18,15 @@ union PageEntry
    uint64_t value = 0;
 };
 
+enum class MemoryType
+{
+   SystemData,
+   ApplicationCode,
+   ApplicationData,
+   Foreground,
+   MEM1
+};
+
 struct MemoryView
 {
    MemoryView() :
@@ -25,11 +34,12 @@ struct MemoryView
    {
    }
 
-   MemoryView(uint32_t start, uint32_t end, uint32_t pageSize) :
-      start(start), end(end), pageSize(pageSize), address(nullptr)
+   MemoryView(MemoryType type, uint32_t start, uint32_t end, uint32_t pageSize) :
+      type(type), start(start), end(end), pageSize(pageSize), address(nullptr)
    {
    }
 
+   MemoryType type;
    uint32_t start;
    uint32_t end;
    uint8_t *address;
@@ -45,13 +55,28 @@ public:
    bool initialise();
    bool valid(uint32_t address);
    bool alloc(uint32_t address, size_t size);
+   uint32_t alloc(MemoryType type, size_t size);
    bool free(uint32_t address);
-   uint32_t allocData(size_t size);
 
    // Translate WiiU virtual address to host address
    uint8_t *translate(uint32_t address) const
    {
       return mBase + address;
+   }
+
+   template<typename Type>
+   Type *translatePtr(Type *ptr) const
+   {
+      return reinterpret_cast<Type*>(translate(reinterpret_cast<uint32_t>(ptr)));
+   }
+
+   // Translate host address to WiiU virtual address
+   uint32_t untranslate(void *ptr) const
+   {
+      auto sptr = reinterpret_cast<size_t>(ptr);
+      auto sbase = reinterpret_cast<size_t>(mBase);
+      assert(sptr > sbase);
+      return static_cast<uint32_t>(sptr - sbase);
    }
 
    // Read Type from virtual address
@@ -83,6 +108,7 @@ public:
    }
 
 private:
+   MemoryView *getView(MemoryType type);
    MemoryView *getView(uint32_t address);
    bool tryMapViews(uint8_t *base);
    void unmapViews();

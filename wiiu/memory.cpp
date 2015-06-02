@@ -19,10 +19,11 @@ bool Memory::initialise()
 {
    // Setup memory views
    mViews = {
-      { 0x02000000, 0x10000000, 128 * 1024 }, // Application Code [224mb]
-      { 0x10000000, 0x42000000, 4 * 1024 }, // Application Data [800mb]
-      { 0xe0000000, 0xe4000000, 4 * 1024 }, // Foreground [64mb]
-      { 0xf4000000, 0xf6000000, 4 * 1024 }, // MEM1 [32mb]
+      { MemoryType::SystemData,        0x01000000, 0x02000000,   4 * 1024 },
+      { MemoryType::ApplicationCode,   0x02000000, 0x10000000, 128 * 1024 },
+      { MemoryType::ApplicationData,   0x10000000, 0x42000000,   4 * 1024 },
+      { MemoryType::Foreground,        0xe0000000, 0xe4000000,   4 * 1024 },
+      { MemoryType::MEM1,              0xf4000000, 0xf6000000,   4 * 1024 },
    };
 
    // Create file map
@@ -55,6 +56,17 @@ bool Memory::initialise()
    return true;
 }
 
+MemoryView *Memory::getView(MemoryType type)
+{
+   for (auto &view : mViews) {
+      if (view.type == type) {
+         return &view;
+      }
+   }
+
+   return nullptr;
+}
+
 MemoryView *Memory::getView(uint32_t address)
 {
    for (auto &view : mViews) {
@@ -79,9 +91,9 @@ bool Memory::valid(uint32_t address)
    return view->pageTable[page].allocated;
 }
 
-uint32_t Memory::allocData(size_t size)
+uint32_t Memory::alloc(MemoryType type, size_t size)
 {
-   MemoryView *view = &mViews[1]; // Application Data
+   auto view = getView(type);
    auto n = size / view->pageSize;
    auto startPage = 0u;
    auto endPage = 0u;
@@ -116,7 +128,7 @@ uint32_t Memory::allocData(size_t size)
 
 bool Memory::alloc(uint32_t address, size_t size)
 {
-   MemoryView *view = getView(address);
+   auto view = getView(address);
 
    if (!view) {
       xError() << "Could not find valid memory view for allocation at " << Log::hex(address) << " [" << Log::hex(size) << "]";

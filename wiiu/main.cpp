@@ -62,7 +62,7 @@ int main(int argc, char **argv)
    state.nia = state.cia + 4;
 
    // Setup stack
-   auto stack = gMemory.allocData(entry.stackSize);
+   auto stack = gMemory.alloc(MemoryType::SystemData, entry.stackSize);
    state.gpr[1] = stack + entry.stackSize;
 
    Interpreter interpreter;
