@@ -81,6 +81,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(SolutionDir)\libraries\ovsocket;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\libraries\ovsocket\x64\Release;$(SolutionDir)\libraries\zlib\build\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -144,6 +146,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>zlib.lib;ovsocket.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -163,7 +166,12 @@
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="modules\coreinit\coreinit.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_debug.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_memory.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_mutex.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_systeminfo.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_thread.cpp" />
+    <ClCompile Include="modules\gx2\gx2.cpp" />
+    <ClCompile Include="modules\gx2\gx2_texture.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="systemmodule.cpp" />
   </ItemGroup>
@@ -173,8 +181,8 @@
     <ClInclude Include="disassembler.h" />
     <ClInclude Include="elf.h" />
     <ClInclude Include="floatutils.h" />
-    <ClInclude Include="function_traits.h" />
     <ClInclude Include="gdbstub.h" />
+    <ClInclude Include="integer_sequence.h" />
     <ClInclude Include="instruction.h" />
     <ClInclude Include="instructiondata.h" />
     <ClInclude Include="instructionid.h" />
@@ -186,12 +194,19 @@
     <ClInclude Include="memory.h" />
     <ClInclude Include="module.h" />
     <ClInclude Include="modules\coreinit\coreinit.h" />
-    <ClInclude Include="modules\coreinit\debug.h" />
-    <ClInclude Include="modules\coreinit\thread.h" />
-    <ClInclude Include="modules\coreinit\types.h" />
+    <ClInclude Include="modules\coreinit\coreinit_debug.h" />
+    <ClInclude Include="modules\coreinit\coreinit_memory.h" />
+    <ClInclude Include="modules\coreinit\coreinit_mutex.h" />
+    <ClInclude Include="modules\coreinit\coreinit_systeminfo.h" />
+    <ClInclude Include="modules\coreinit\coreinit_thread.h" />
+    <ClInclude Include="modules\gx2\gx2.h" />
+    <ClInclude Include="modules\gx2\gx2_texture.h" />
     <ClInclude Include="ppc.h" />
     <ClInclude Include="system.h" />
+    <ClInclude Include="systemexport.h" />
+    <ClInclude Include="systemfunction.h" />
     <ClInclude Include="systemmodule.h" />
+    <ClInclude Include="systemtypes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,14 +1,41 @@
-#include "modules/coreinit/coreinit.h"
-#include "modules/coreinit/thread.h"
+#include "coreinit.h"
+#include "coreinit_thread.h"
+#include "memory.h"
 
-struct OSThread;
-
-OSThread* OSGetCurrentThread()
+p32<OSThread>
+OSGetCurrentThread()
 {
-   return nullptr;
+   return make_p32<OSThread>(nullptr);
 }
 
-void CoreInit::registerThreadFunctions()
+void
+OSInitThreadQueue(p32<OSThreadQueue> pQueue)
+{
+   auto queue = p32_direct(pQueue);
+   queue->head = nullptr;
+   queue->tail = nullptr;
+   queue->parent = nullptr;
+   queue->unk1 = 0;
+}
+
+void
+OSInitThreadQueueEx(p32<OSThreadQueue> pQueue, p32<void> pParent)
+{
+   auto queue = p32_direct(pQueue);
+   queue->head = nullptr;
+   queue->tail = nullptr;
+   queue->parent = pParent;
+   queue->unk1 = 0;
+}
+
+static p32<void>
+coreinit_memcpy(p32<void> dst, p32<const void> src, size_t size)
+{
+   return dst;
+}
+
+void
+CoreInit::registerThreadFunctions()
 {
    RegisterSystemFunction(OSGetCurrentThread);
 }

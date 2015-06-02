@@ -1,6 +1,6 @@
 #include "systemmodule.h"
 
-void SystemModule::registerFunction(std::string name, SystemFunction *exp)
+void SystemModule::registerFunction(std::string name, SystemExport *exp)
 {
    mExport.insert(std::make_pair(name, exp));
 }

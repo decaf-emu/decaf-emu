@@ -28,6 +28,12 @@
     <Filter Include="Header Files\modules\coreinit">
       <UniqueIdentifier>{d0f73c84-a542-4d8b-a914-cc52fbd45fea}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\modules\gx2">
+      <UniqueIdentifier>{7540a965-6c9f-48ea-a9fb-16cc6110f005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\gx2">
+      <UniqueIdentifier>{8d97eeba-d583-4e7c-b20e-9dcdfe8ea718}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -87,6 +93,21 @@
     <ClCompile Include="interpreter\interpreter_float.cpp">
       <Filter>Source Files\interpreter</Filter>
     </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_memory.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\gx2\gx2.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\gx2\gx2_texture.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_mutex.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_systeminfo.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h">
@@ -137,20 +158,8 @@
     <ClInclude Include="modules\coreinit\coreinit.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\thread.h">
-      <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="function_traits.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="system.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\coreinit\debug.h">
-      <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\coreinit\types.h">
-      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="gdbstub.h">
       <Filter>Header Files</Filter>
@@ -160,6 +169,39 @@
     </ClInclude>
     <ClInclude Include="interpreter\interpreter_float.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_debug.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_memory.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_thread.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\gx2\gx2.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\gx2\gx2_texture.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_mutex.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="systemtypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="systemfunction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="integer_sequence.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="systemexport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_systeminfo.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

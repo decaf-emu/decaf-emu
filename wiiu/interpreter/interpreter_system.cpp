@@ -169,7 +169,9 @@ mtsrin(ThreadState *state, Instruction instr)
 // DODGY STUFF
 using fptr_ret32_arg0 = uint32_t(*)();
 using fptr_ret32_arg1 = uint32_t(*)(uint32_t);
-using fptr_ret32_arg2 = uint32_t(*)(uint32_t,uint32_t);
+using fptr_ret32_arg2 = uint32_t(*)(uint32_t, uint32_t);
+using fptr_ret32_arg3 = uint32_t(*)(uint32_t, uint32_t, uint32_t);
+using fptr_ret32_arg4 = uint32_t(*)(uint32_t, uint32_t, uint32_t, uint32_t);
 
 // System call
 static void
@@ -188,28 +190,7 @@ sc(ThreadState *state, Instruction instr)
       return;
    }
    
-   // TODO: Resolve symbol to real kernel func
-   auto func = reinterpret_cast<SystemFunction*>(fsym->systemFunction);
-
-   uint64_t returnValue = 0;
-
-   switch (func->arity) {
-   case 0:
-      returnValue = (*reinterpret_cast<fptr_ret32_arg0>(func->fptr))();
-      break;
-   case 1:
-      returnValue = (*reinterpret_cast<fptr_ret32_arg1>(func->fptr))(state->gpr[3]);
-      break;
-   case 2:
-      returnValue = (*reinterpret_cast<fptr_ret32_arg2>(func->fptr))(state->gpr[3], state->gpr[4]);
-      break;
-   }
-
-   assert(func->returnBytes <= 8);
-
-   if (func->returnBytes > 0) {
-      state->gpr[3] = static_cast<uint32_t>(returnValue & make_bitmask(static_cast<uint32_t>(func->returnBytes / 8)));
-   }
+   fsym->systemFunction->call(state);
 }
 
 void

@@ -8,5 +8,8 @@ public:
 
 private:
    void registerDebugFunctions();
+   void registerMemoryFunctions();
+   void registerMutexFunctions();
+   void registerSystemInfoFunctions();
    void registerThreadFunctions();
 };
