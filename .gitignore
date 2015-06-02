@@ -2,7 +2,11 @@ games
 tools
 docs
 Debug
+Release
+x64
 wiiu/Debug
+wiiu/Release
+wiiu/x64
 *.user
 *.suo
 *.sdf
