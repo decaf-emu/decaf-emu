@@ -354,7 +354,7 @@ private:
       std::cout << "recv[" << size << "] " << std::string(buffer, size) << std::endl;
 
       for (auto i = 0; i < size; ++i) {
-         unsigned char rsum, csum;
+         uint8_t rsum, csum;
 
          // Check for response to previous packet
          if (mLastPacket.size()) {
@@ -389,7 +389,7 @@ private:
             break;
          case ReadState::Checksum2:
             mChecksumBuffer.push_back(buffer[i]);
-            rsum = std::stoul(mChecksumBuffer, NULL, 16);
+            rsum = static_cast<uint8_t>(std::stoul(mChecksumBuffer, NULL, 16));
             csum = 0;
 
             for (auto c : mReceiveBuffer) {
@@ -461,9 +461,9 @@ private:
       auto addrs = packet.substr(c1 + 1, c2 - c1 - 1);
       auto kinds = packet.substr(c2 + 1);
 
-      auto type = std::stoull(types, NULL, 16);
-      auto addr = std::stoull(addrs, NULL, 16);
-      auto kind = std::stoull(kinds, NULL, 16);
+      auto type = std::stoul(types, NULL, 16);
+      auto addr = std::stoul(addrs, NULL, 16);
+      auto kind = std::stoul(kinds, NULL, 16);
 
       if (packet[0] == 'Z') {
          // Add
@@ -502,8 +502,8 @@ private:
    void gdbMemory(const std::string &packet)
    {
       auto sep = packet.find_first_of(',');
-      auto addr = std::stoull(packet.substr(1, sep - 1), NULL, 16);
-      auto length = std::stoull(packet.substr(sep + 1), NULL, 16);
+      auto addr = std::stoul(packet.substr(1, sep - 1), NULL, 16);
+      auto length = std::stoul(packet.substr(sep + 1), NULL, 16);
 
       if (!gMemory.valid(addr) || !gMemory.valid(addr + length))
       {
@@ -512,7 +512,7 @@ private:
          GdbPacket out;
          auto ptr = gMemory.translate(addr);
 
-         for (auto i = 0; i < length; ++i) {
+         for (auto i = 0u; i < length; ++i) {
             out.addHex8(ptr[i]);
          }
 
@@ -524,7 +524,7 @@ private:
    {
       GdbPacket out;
       auto state = mDebugger->getThreadState(0);
-      auto id = std::stoull(packet.data() + 1, NULL, 16);
+      auto id = std::stoul(packet.data() + 1, NULL, 16);
 
       if (id >= 0 && id < 32) {
          out.addHex32(state->gpr[id]);
@@ -654,7 +654,7 @@ private:
       mLastPacket.insert(mLastPacket.begin(), '$');
       mLastPacket.push_back('#');
       mLastPacket.resize(mLastPacket.size() + 2);
-      sprintf(&mLastPacket[mLastPacket.size() - 2], "%02X", csum);
+      sprintf_s(&mLastPacket[mLastPacket.size() - 2], 3, "%02X", csum);
       mClientSocket->send(mLastPacket.data(), mLastPacket.size());
    }
 
