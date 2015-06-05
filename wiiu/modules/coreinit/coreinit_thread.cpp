@@ -15,7 +15,6 @@ OSInitThreadQueue(p32<OSThreadQueue> pQueue)
    queue->head = nullptr;
    queue->tail = nullptr;
    queue->parent = nullptr;
-   queue->unk1 = 0;
 }
 
 void
@@ -25,7 +24,6 @@ OSInitThreadQueueEx(p32<OSThreadQueue> pQueue, p32<void> pParent)
    queue->head = nullptr;
    queue->tail = nullptr;
    queue->parent = pParent;
-   queue->unk1 = 0;
 }
 
 static p32<void>

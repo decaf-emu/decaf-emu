@@ -2,7 +2,6 @@
 #include "coreinit_systeminfo.h"
 #include "memory.h"
 
-// OSSystemInfo has to be in virtual memory!!!!
 p32<OSSystemInfo> gSystemInfo;
 
 p32<OSSystemInfo>
@@ -14,5 +13,6 @@ OSGetSystemInfo()
 void
 CoreInit::registerSystemInfoFunctions()
 {
+   gSystemInfo = make_p32<OSSystemInfo>(gMemory.alloc(MemoryType::SystemData, sizeof(OSSystemInfo)));
    RegisterSystemFunction(OSGetSystemInfo);
 }

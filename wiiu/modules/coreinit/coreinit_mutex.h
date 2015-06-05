@@ -4,19 +4,37 @@
 
 #pragma pack(push, 1)
 
+template<typename Type>
+struct OSLinkedListEntry
+{
+   be_ptr<Type> next;
+   be_ptr<Type> prev;
+};
+CHECK_OFFSET(OSLinkedListEntry<void>, 0x0, next);
+CHECK_OFFSET(OSLinkedListEntry<void>, 0x4, prev);
+CHECK_SIZE(OSLinkedListEntry<void>, 0x8);
+
+// OSInitMutexEx
+// OSLockMutex
 struct OSMutex
 {
    static const uint32_t Tag = 0x6D557458;
 
    be_val<uint32_t> tag;
    be_ptr<char> name;
-   be_val<uint32_t> unk1;
+   UNKNOWN(4);
    OSThreadQueue queue;
    be_ptr<OSThread> thread;
    be_val<int32_t> count;
-   be_val<uint32_t> unk2;
-   be_val<uint32_t> unk3;
+   OSLinkedListEntry<OSMutex> threadLink; // thread->queueMutex
 };
+CHECK_OFFSET(OSMutex, 0x0, tag);
+CHECK_OFFSET(OSMutex, 0x4, name);
+CHECK_OFFSET(OSMutex, 0xc, queue);
+CHECK_OFFSET(OSMutex, 0x1c, thread);
+CHECK_OFFSET(OSMutex, 0x20, count);
+CHECK_OFFSET(OSMutex, 0x24, threadLink);
+CHECK_SIZE(OSMutex, 0x2c);
 
 #pragma pack(pop)
 

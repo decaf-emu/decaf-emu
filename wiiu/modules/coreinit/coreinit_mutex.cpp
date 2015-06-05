@@ -7,9 +7,8 @@ OSInitMutex(p32<OSMutex> pMutex)
    auto mutex = p32_direct(pMutex);
    mutex->tag = OSMutex::Tag;
    mutex->name = nullptr;
-   mutex->unk1 = 0;
-   mutex->unk2 = 0;
-   mutex->unk3 = 0;
+   mutex->threadLink.next = nullptr;
+   mutex->threadLink.prev = nullptr;
    OSInitThreadQueueEx(make_p32(&mutex->queue), make_p32<void>(mutex));
 }
 
