@@ -166,13 +166,6 @@ mtsrin(ThreadState *state, Instruction instr)
    state->sr[sr] = state->gpr[instr.rS];
 }
 
-// DODGY STUFF
-using fptr_ret32_arg0 = uint32_t(*)();
-using fptr_ret32_arg1 = uint32_t(*)(uint32_t);
-using fptr_ret32_arg2 = uint32_t(*)(uint32_t, uint32_t);
-using fptr_ret32_arg3 = uint32_t(*)(uint32_t, uint32_t, uint32_t);
-using fptr_ret32_arg4 = uint32_t(*)(uint32_t, uint32_t, uint32_t, uint32_t);
-
 // System call
 static void
 sc(ThreadState *state, Instruction instr)
