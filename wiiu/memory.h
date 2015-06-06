@@ -1,7 +1,6 @@
 #pragma once
 #include <cassert>
 #include <vector>
-#include <Windows.h>
 #include "bitutils.h"
 #include "log.h"
 
@@ -114,7 +113,7 @@ private:
    void unmapViews();
 
    uint8_t *mBase = nullptr;
-   HANDLE mFile = NULL;
+   void *mFile = NULL;
    std::vector<MemoryView> mViews;
 };
 
