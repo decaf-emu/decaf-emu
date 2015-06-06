@@ -50,15 +50,21 @@ public:
 private:
    class Output
    {
+      bool newLine;
+
    public:
-      Output(const std::string &pre, bool newLine = true)
+      Output(const std::string &pre, bool newLine = true) :
+         newLine(newLine)
+      {
+         if (pre.length()) {
+            std::cout << pre << " ";
+         }
+      }
+
+      ~Output()
       {
          if (newLine) {
             std::cout << std::endl;
-         }
-
-         if (pre.length()) {
-            std::cout << pre << " ";
          }
       }
 
