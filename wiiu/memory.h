@@ -20,8 +20,7 @@ union PageEntry
 enum class MemoryType
 {
    SystemData,
-   ApplicationCode,
-   ApplicationData,
+   Application,
    Foreground,
    MEM1
 };

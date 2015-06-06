@@ -20,8 +20,7 @@ bool Memory::initialise()
    // Setup memory views
    mViews = {
       { MemoryType::SystemData,        0x01000000, 0x02000000,   4 * 1024 },
-      { MemoryType::ApplicationCode,   0x02000000, 0x10000000, 128 * 1024 },
-      { MemoryType::ApplicationData,   0x10000000, 0x42000000,   4 * 1024 },
+      { MemoryType::Application,       0x02000000, 0x42000000,   4 * 1024 },
       { MemoryType::Foreground,        0xe0000000, 0xe4000000,   4 * 1024 },
       { MemoryType::MEM1,              0xf4000000, 0xf6000000,   4 * 1024 },
    };
@@ -137,7 +136,7 @@ bool Memory::alloc(uint32_t address, size_t size)
 
    // Address is in view!
    auto start = address - view->start;
-   auto end = address + size - view->start;
+   auto end = address + size - view->start - 1;
    auto startPage = start / view->pageSize;
    auto endPage = end / view->pageSize;
    auto pageCount = endPage - startPage + 1;
