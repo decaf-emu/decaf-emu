@@ -11,6 +11,7 @@
 #include "modules/coreinit/coreinit.h"
 #include "modules/gx2/gx2.h"
 #include "system.h"
+#include "systemthread.h"
 
 int main(int argc, char **argv)
 {
@@ -20,6 +21,7 @@ int main(int argc, char **argv)
    }
 
    // Initialise emulator systems
+   gInterpreter.initialise();
    gMemory.initialise();
    gInstructionTable.initialise();
    gSystem.registerModule("coreinit", new CoreInit);
@@ -54,24 +56,10 @@ int main(int argc, char **argv)
 
    xLog() << "Succesfully loaded " << argv[1];
 
-   // Start up cpu!
-   ThreadState state;
-   memset(&state, 0, sizeof(ThreadState));
+   gInterpreter.addBreakpoint(0x237CD58);
 
-   // Setup state
-   state.module = &module;
-   state.cia = entry.address;
-   state.nia = state.cia + 4;
-
-   // Setup stack
-   auto stack = gMemory.alloc(MemoryType::SystemData, entry.stackSize);
-   state.gpr[1] = stack + entry.stackSize;
-
-   Interpreter interpreter;
-   interpreter.initialise();
-   startGDBStub(&interpreter);
-   interpreter.addBreakpoint(entry.address);
-   interpreter.execute(&state);
+   auto thread = new SystemThread(&module, entry.stackSize, entry.address);
+   thread->run(gInterpreter);
 
    return 0;
 }

@@ -1,4 +1,6 @@
+#include <algorithm>
 #include "system.h"
+#include "systemthread.h"
 
 System gSystem;
 
@@ -18,5 +20,17 @@ System::findModule(std::string name)
    } else {
       return itr->second;
    }
+}
+
+void
+System::addThread(SystemThread *thread)
+{
+   mThreads.push_back(thread);
+}
+
+void
+System::removeThread(SystemThread *thread)
+{
+   mThreads.erase(std::remove(mThreads.begin(), mThreads.end(), thread), mThreads.end());
 }
 

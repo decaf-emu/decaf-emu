@@ -20,7 +20,7 @@ class Interpreter : public IDebugInterface
 
 public:
    void initialise();
-   void execute(ThreadState *state);
+   void execute(ThreadState *state, uint32_t addr);
 
    virtual void addBreakpoint(uint32_t addr);
    virtual void removeBreakpoint(uint32_t addr);
@@ -49,3 +49,5 @@ private:
    std::condition_variable mDebugCV;
    void enterBreakpoint();
 };
+
+extern Interpreter gInterpreter;

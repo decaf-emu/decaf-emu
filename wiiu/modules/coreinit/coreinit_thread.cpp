@@ -1,39 +1,63 @@
 #include "coreinit.h"
 #include "coreinit_thread.h"
 #include "memory.h"
+#include "systemthread.h"
 
 p32<OSThread>
 OSGetCurrentThread()
 {
-   return make_p32<OSThread>(nullptr);
+   return SystemThread::getCurrentThread()->getOSThread();
 }
 
 void
-OSInitThreadQueue(p32<OSThreadQueue> pQueue)
+OSInitThreadQueue(OSThreadQueue *queue)
 {
-   auto queue = p32_direct(pQueue);
    queue->head = nullptr;
    queue->tail = nullptr;
    queue->parent = nullptr;
 }
 
 void
-OSInitThreadQueueEx(p32<OSThreadQueue> pQueue, p32<void> pParent)
+OSInitThreadQueueEx(OSThreadQueue *queue, void *parent)
 {
-   auto queue = p32_direct(pQueue);
    queue->head = nullptr;
    queue->tail = nullptr;
-   queue->parent = pParent;
+   queue->parent = parent;
 }
 
-static p32<void>
-coreinit_memcpy(p32<void> dst, p32<const void> src, size_t size)
+BOOL
+OSSetThreadPriority(OSThread *thread, uint32_t priority)
 {
-   return dst;
+   thread->basePriority = priority;
+   return TRUE;
+}
+
+uint32_t
+OSGetThreadPriority(OSThread *thread)
+{
+   return thread->basePriority;
+}
+
+uint32_t
+OSGetThreadSpecific(uint32_t id)
+{
+   return OSGetCurrentThread()->specific[id];
+}
+
+void
+OSSetThreadSpecific(uint32_t id, uint32_t value)
+{
+   OSGetCurrentThread()->specific[id] = value;
 }
 
 void
 CoreInit::registerThreadFunctions()
 {
    RegisterSystemFunction(OSGetCurrentThread);
+   RegisterSystemFunction(OSInitThreadQueue);
+   RegisterSystemFunction(OSInitThreadQueueEx);
+   RegisterSystemFunction(OSGetThreadSpecific);
+   RegisterSystemFunction(OSSetThreadSpecific);
+   RegisterSystemFunction(OSGetThreadPriority);
+   RegisterSystemFunction(OSSetThreadPriority);
 }

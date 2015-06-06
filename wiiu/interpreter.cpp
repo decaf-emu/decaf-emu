@@ -3,6 +3,8 @@
 #include "instructiondata.h"
 #include "memory.h"
 
+Interpreter gInterpreter;
+
 void Interpreter::initialise()
 {
    // Setup instruction map
@@ -21,26 +23,40 @@ void Interpreter::registerInstruction(InstructionID id, fptr_t fptr)
    mInstructionMap[static_cast<size_t>(id)] = fptr;
 }
 
-void Interpreter::execute(ThreadState *state)
+void Interpreter::execute(ThreadState *state, uint32_t addr)
 {
+   bool mTraceEnabled = false;
    mActiveThread = state;
    mStep = false;
    mPaused = false;
 
-   while(true) {
+   auto saveLR = state->lr;
+   auto saveCIA = state->cia;
+   auto saveNIA = state->nia;
+   state->lr = 0;
+
+   while(state->cia) {
       Disassembly dis;
       auto instr = gMemory.read<Instruction>(state->cia);
       auto data = gInstructionTable.decode(instr);
+
+      if (!data) {
+         xLog() << Log::hex(state->cia) << " " << Log::hex(instr.value);
+      }
+
       auto fptr = mInstructionMap[static_cast<size_t>(data->id)];
-
-      dis.address = state->cia;
-      gDisassembler.disassemble(instr, dis);
-      xLog() << Log::hex(state->cia) << " " << dis.text;
-
       auto bpitr = std::find(mBreakpoints.begin(), mBreakpoints.end(), state->cia);
 
       if (mStep || bpitr != mBreakpoints.end()) {
-         enterBreakpoint();
+         xLog() << "Hit breakpoint!";
+         mTraceEnabled = true;
+         //enterBreakpoint();
+      }
+
+      if (mTraceEnabled) {
+         dis.address = state->cia;
+         gDisassembler.disassemble(instr, dis);
+         xLog() << Log::hex(state->cia) << " " << Log::hex(instr.value) << " " << dis.text << "\t";
       }
 
       if (!fptr) {
@@ -49,9 +65,33 @@ void Interpreter::execute(ThreadState *state)
          fptr(state, instr);
       }
 
+      if (mTraceEnabled) {
+         for (auto &field : data->write) {
+            switch (field) {
+            case Field::rA:
+               xLog() << "r" << instr.rA << " = " << Log::hex(state->gpr[instr.rA]);
+               break;
+            case Field::rD:
+               xLog() << "r" << instr.rD << " = " << Log::hex(state->gpr[instr.rD]);
+               break;
+            case Field::frD:
+               xLog() << "fr" << instr.frD << " = " << state->fpr[instr.frD].value;
+               break;
+               // mtspr
+               // crb
+               // crf
+            }
+         }
+      }
+
       state->cia = state->nia;
       state->nia = state->cia + 4;
    }
+
+   state->lr = saveLR;
+   state->cia = saveCIA;
+   state->nia = saveNIA;
+   xLog() << "Finished!";
 }
 
 ThreadState *Interpreter::getThreadState(uint32_t tid)

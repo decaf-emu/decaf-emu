@@ -143,7 +143,19 @@ p32<OSThread>
 OSGetCurrentThread();
 
 void
-OSInitThreadQueue(p32<OSThreadQueue> pQueue);
+OSInitThreadQueue(OSThreadQueue *queue);
 
 void
-OSInitThreadQueueEx(p32<OSThreadQueue> pQueue, p32<void> pParent);
+OSInitThreadQueueEx(OSThreadQueue *queue, void *parent);
+
+BOOL
+OSSetThreadPriority(OSThread *thread, uint32_t priority);
+
+uint32_t
+OSGetThreadPriority(OSThread *thread);
+
+uint32_t
+OSGetThreadSpecific(uint32_t id);
+
+void
+OSSetThreadSpecific(uint32_t id, uint32_t value);
