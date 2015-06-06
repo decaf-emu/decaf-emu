@@ -147,11 +147,11 @@ INS(stswi, (), (rs, ra, nb), (), (opcd == 31, xo1 == 725), "Store String Word Im
 INS(stswx, (), (rs, ra, rb), (), (opcd == 31, xo1 == 661), "Store String Word Indexed")
 
 // Memory Synchronisation
-INS(eieio, (), (), (), (opcd == 31, xo1 == 854), "")
-INS(isync, (), (), (), (opcd == 19, xo1 == 150), "")
+INS(eieio, (), (), (), (opcd == 31, xo1 == 854), "Enforce In-Order Execution of I/O")
+INS(isync, (), (), (), (opcd == 19, xo1 == 150), "Instruction Synchronise")
 INS(lwarx, (rd), (ra, rb), (), (opcd == 31, xo1 == 20), "Load Word and Reserve Indexed")
 INS(stwcx, (), (rs, ra, rb), (), (opcd == 31, xo1 == 150), "Store Word Conditional Indexed")
-INS(sync, (), (), (), (opcd == 31, xo1 == 598), "")
+INS(sync, (), (), (), (opcd == 31, xo1 == 598), "Synchronise")
 
 // Floating-Point Load
 INS(lfd, (frd), (ra, d), (), (opcd == 50), "Load Floating-Point Double")
@@ -199,7 +199,7 @@ INS(mcrf, (crfd), (crfs), (), (opcd == 19, xo1 == 0), "Move Condition Register F
 
 // System Linkage
 INS(rfi, (), (), (), (opcd == 19, xo1 == 50), "")
-INS(sc, (), (), (), (opcd == 17), "") // TODO: NEED AA=1?
+INS(sc, (), (), (), (opcd == 17), "Syscall")
 
 // Trap
 INS(tw, (), (to, ra, rb), (), (opcd == 31, xo1 == 4), "")
@@ -240,10 +240,14 @@ INS(eciwx, (rd), (ra, rb), (), (opcd == 31, xo1 == 310), "")
 INS(ecowx, (rd), (ra, rb), (), (opcd == 31, xo1 == 438), "")
 
 // Paired-Single Load and Store
-INS(psq_lx, (frd), (ra, rb), (), (opcd == 4, xo3 == 6), "") // TODO: w, i
-INS(psq_stx, (frs), (ra, rb), (), (opcd == 4, xo3 == 7), "") // TODO: w, i
-INS(psq_lux, (frd), (ra, rb), (), (opcd == 4, xo3 == 38), "") // TODO: w, i
-INS(psq_stux, (frs), (ra, rb), (), (opcd == 4, xo3 == 39), "") // TODO: w, i
+INS(psq_l, (frd), (ra, d), (w, i), (opcd == 56), "Paired Single Load")
+INS(psq_lu, (frd), (ra, d), (w, i), (opcd == 57), "Paired Single Load with Update")
+INS(psq_lx, (frd), (ra, rb), (qw, qi), (opcd == 4, xo3 == 6), "Paired Single Load Indexed")
+INS(psq_lux, (frd), (ra, rb), (qw, qi), (opcd == 4, xo3 == 38), "Paired Single Load with Update Indexed")
+INS(psq_st, (frd), (ra, d), (w, i), (opcd == 60), "Paired Single Store")
+INS(psq_stu, (frd), (ra, d), (w, i), (opcd == 61), "Paired Single Store with Update")
+INS(psq_stx, (frs), (ra, rb), (qw, qi), (opcd == 4, xo3 == 7), "Paired Single Store Indexed")
+INS(psq_stux, (frs), (ra, rb), (qw, qi), (opcd == 4, xo3 == 39), "Paired Single Store with Update Indexed")
 
 // Paired-Single Floating Point Arithmetic
 INS(ps_add, (frd), (fra, frb), (rc), (opcd == 4, xo4 == 21), "Paired Single Add")

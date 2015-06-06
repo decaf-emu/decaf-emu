@@ -81,7 +81,7 @@ static BitRange gFieldBits[] = {
    { 6, 10 },  // frS
    { 17, 19 }, // i
    { 16, 19 }, // imm
-   { 10, 10 },  // l
+   { 10, 10 }, // l
    { 6, 29 },  // li
    { 31, 31 }, // lk
    { 21, 25 }, // mb
@@ -89,6 +89,8 @@ static BitRange gFieldBits[] = {
    { 16, 20 }, // nb
    { 21, 21 }, // oe
    { 0, 5 },   // opcd
+   { 22, 24 }, // qi
+   { 21, 21 }, // qw
    { 11, 15 }, // rA
    { 16, 20 }, // rB
    { 31, 31 }, // rc
@@ -101,6 +103,7 @@ static BitRange gFieldBits[] = {
    { 6, 10 },  // to
    { 11, 20 }, // tbr
    { 16, 31 }, // uimm
+   { 16, 16 }, // w
    { 21, 30 }, // xo1
    { 22, 30 }, // xo2
    { 25, 30 }, // xo3
@@ -227,6 +230,7 @@ void initTable()
 #define frc Field::frC
 #define frd Field::frD
 #define frs Field::frS
+#define i Field::i
 #define imm Field::imm
 #define l Field::l
 #define li Field::li
@@ -236,6 +240,8 @@ void initTable()
 #define nb Field::nb
 #define oe Field::oe
 #define opcd Field::opcd
+#define qi Field::qi
+#define qw Field::qw
 #define ra Field::rA
 #define rb Field::rB
 #define rc Field::rc
@@ -248,6 +254,7 @@ void initTable()
 #define to Field::to
 #define tbr Field::tbr
 #define uimm Field::uimm
+#define w Field::w
 #define xo1 Field::xo1
 #define xo2 Field::xo2
 #define xo3 Field::xo3

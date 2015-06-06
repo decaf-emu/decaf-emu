@@ -195,6 +195,34 @@ union pvr_t
    };
 };
 
+// gqr.st_type / gqr.ld_type
+enum class QuantizedDataType : uint32_t
+{
+   Floating    = 0,
+   Unsigned8   = 4,
+   Unsigned16  = 5,
+   Signed8     = 6,
+   Signed16    = 7
+};
+
+// Graphics Quantization Registers
+union gqr_t
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t st_type : 3;
+      uint32_t : 5;
+      uint32_t st_scale : 6;
+      uint32_t : 2;
+      uint32_t ld_type : 3;
+      uint32_t : 5;
+      uint32_t ld_scale : 6;
+      uint32_t : 2;
+   };
+};
+
 enum class SprEncoding
 {
    CTR = 9,
@@ -312,6 +340,8 @@ struct ThreadState
 
    uint32_t tbu;     // Time Base Upper
    uint32_t tbl;     // Time Base Lower
+
+   gqr_t gqr[8];     // Graphics Quantization Registers
 
    // Reserve for lwarx / stwcx.
    bool reserve;

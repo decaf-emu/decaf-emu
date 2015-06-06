@@ -169,6 +169,18 @@ union Instruction
    };
 
    struct {
+      uint32_t : 7;
+      uint32_t qi : 3;
+      uint32_t : 22;
+   };
+
+   struct {
+      uint32_t : 10;
+      uint32_t qw : 1;
+      uint32_t : 21;
+   };
+
+   struct {
       uint32_t : 16;
       uint32_t rA : 5;
       uint32_t : 11;
@@ -235,6 +247,12 @@ union Instruction
 
    struct {
       uint32_t uimm : 16;
+      uint32_t : 16;
+   };
+
+   struct {
+      uint32_t : 15;
+      uint32_t w : 1;
       uint32_t : 16;
    };
 

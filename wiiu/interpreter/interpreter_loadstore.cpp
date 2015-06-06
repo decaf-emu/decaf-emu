@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "bitutils.h"
 #include "interpreter.h"
 #include "memory.h"
@@ -574,6 +575,282 @@ stswx(ThreadState *state, Instruction instr)
    stswGeneric<StswIndexed>(state, instr);
 }
 
+// Tables copied from Dolphin source code
+const static float dequantizeTable[] =
+{
+   1.0 / (1ULL << 0), 1.0 / (1ULL << 1), 1.0 / (1ULL << 2), 1.0 / (1ULL << 3),
+   1.0 / (1ULL << 4), 1.0 / (1ULL << 5), 1.0 / (1ULL << 6), 1.0 / (1ULL << 7),
+   1.0 / (1ULL << 8), 1.0 / (1ULL << 9), 1.0 / (1ULL << 10), 1.0 / (1ULL << 11),
+   1.0 / (1ULL << 12), 1.0 / (1ULL << 13), 1.0 / (1ULL << 14), 1.0 / (1ULL << 15),
+   1.0 / (1ULL << 16), 1.0 / (1ULL << 17), 1.0 / (1ULL << 18), 1.0 / (1ULL << 19),
+   1.0 / (1ULL << 20), 1.0 / (1ULL << 21), 1.0 / (1ULL << 22), 1.0 / (1ULL << 23),
+   1.0 / (1ULL << 24), 1.0 / (1ULL << 25), 1.0 / (1ULL << 26), 1.0 / (1ULL << 27),
+   1.0 / (1ULL << 28), 1.0 / (1ULL << 29), 1.0 / (1ULL << 30), 1.0 / (1ULL << 31),
+   (1ULL << 32), (1ULL << 31), (1ULL << 30), (1ULL << 29),
+   (1ULL << 28), (1ULL << 27), (1ULL << 26), (1ULL << 25),
+   (1ULL << 24), (1ULL << 23), (1ULL << 22), (1ULL << 21),
+   (1ULL << 20), (1ULL << 19), (1ULL << 18), (1ULL << 17),
+   (1ULL << 16), (1ULL << 15), (1ULL << 14), (1ULL << 13),
+   (1ULL << 12), (1ULL << 11), (1ULL << 10), (1ULL << 9),
+   (1ULL << 8), (1ULL << 7), (1ULL << 6), (1ULL << 5),
+   (1ULL << 4), (1ULL << 3), (1ULL << 2), (1ULL << 1),
+};
+
+const static float quantizeTable[] =
+{
+   (1ULL << 0), (1ULL << 1), (1ULL << 2), (1ULL << 3),
+   (1ULL << 4), (1ULL << 5), (1ULL << 6), (1ULL << 7),
+   (1ULL << 8), (1ULL << 9), (1ULL << 10), (1ULL << 11),
+   (1ULL << 12), (1ULL << 13), (1ULL << 14), (1ULL << 15),
+   (1ULL << 16), (1ULL << 17), (1ULL << 18), (1ULL << 19),
+   (1ULL << 20), (1ULL << 21), (1ULL << 22), (1ULL << 23),
+   (1ULL << 24), (1ULL << 25), (1ULL << 26), (1ULL << 27),
+   (1ULL << 28), (1ULL << 29), (1ULL << 30), (1ULL << 31),
+   1.0 / (1ULL << 32), 1.0 / (1ULL << 31), 1.0 / (1ULL << 30), 1.0 / (1ULL << 29),
+   1.0 / (1ULL << 28), 1.0 / (1ULL << 27), 1.0 / (1ULL << 26), 1.0 / (1ULL << 25),
+   1.0 / (1ULL << 24), 1.0 / (1ULL << 23), 1.0 / (1ULL << 22), 1.0 / (1ULL << 21),
+   1.0 / (1ULL << 20), 1.0 / (1ULL << 19), 1.0 / (1ULL << 18), 1.0 / (1ULL << 17),
+   1.0 / (1ULL << 16), 1.0 / (1ULL << 15), 1.0 / (1ULL << 14), 1.0 / (1ULL << 13),
+   1.0 / (1ULL << 12), 1.0 / (1ULL << 11), 1.0 / (1ULL << 10), 1.0 / (1ULL << 9),
+   1.0 / (1ULL << 8), 1.0 / (1ULL << 7), 1.0 / (1ULL << 6), 1.0 / (1ULL << 5),
+   1.0 / (1ULL << 4), 1.0 / (1ULL << 3), 1.0 / (1ULL << 2), 1.0 / (1ULL << 1),
+};
+
+static float
+dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
+{
+   float scaleValue = dequantizeTable[scale];
+   float result;
+
+   switch (type) {
+   case QuantizedDataType::Floating:
+      result = gMemory.read<float>(ea);
+      break;
+   case QuantizedDataType::Unsigned8:
+      result = scaleValue * static_cast<float>(gMemory.read<uint8_t>(ea));
+      break;
+   case QuantizedDataType::Unsigned16:
+      result = scaleValue * static_cast<float>(gMemory.read<uint16_t>(ea));
+      break;
+   case QuantizedDataType::Signed8:
+      result = scaleValue * static_cast<float>(gMemory.read<int8_t>(ea));
+      break;
+   case QuantizedDataType::Signed16:
+      result = scaleValue * static_cast<float>(gMemory.read<int16_t>(ea));
+      break;
+   default:
+      assert("Unkown QuantizedDataType");
+   }
+
+   return result;
+}
+
+template<typename Type>
+static inline float
+clamp(float value)
+{
+   float min = static_cast<float>(std::numeric_limits<uint8_t>::min());
+   float max = static_cast<float>(std::numeric_limits<uint8_t>::max());
+   return std::max(min, std::min(value, max));
+}
+
+static void
+quantize(uint32_t ea, float value, QuantizedDataType type, uint32_t scale)
+{
+   float scaleValue = dequantizeTable[scale];
+
+   switch (type) {
+   case QuantizedDataType::Floating:
+      gMemory.write(ea, static_cast<float>(value));
+      break;
+   case QuantizedDataType::Unsigned8:
+      value = clamp<uint8_t>(value * scaleValue);
+      gMemory.write(ea, static_cast<uint8_t>(value));
+      break;
+   case QuantizedDataType::Unsigned16:
+      value = clamp<uint16_t>(value * scaleValue);
+      gMemory.write(ea, static_cast<uint16_t>(value));
+      break;
+   case QuantizedDataType::Signed8:
+      value = clamp<int8_t>(value * scaleValue);
+      gMemory.write(ea, static_cast<int8_t>(value));
+      break;
+   case QuantizedDataType::Signed16:
+      value = clamp<int16_t>(value * scaleValue);
+      gMemory.write(ea, static_cast<int16_t>(value));
+      break;
+   default:
+      assert("Unkown QuantizedDataType");
+   }
+}
+
+// Paired Single Load
+enum PsqLoadFlags
+{
+   PsqLoadZeroRA  = 1 << 0,
+   PsqLoadUpdate  = 1 << 1,
+   PsqLoadIndexed = 1 << 2,
+};
+
+template<unsigned flags = 0>
+static void
+psqLoad(ThreadState *state, Instruction instr)
+{
+   uint32_t ea, ls, c, i, w;
+   QuantizedDataType lt;
+
+   if ((flags & PsqLoadZeroRA) && instr.rA == 0) {
+      ea = 0;
+   } else {
+      ea = state->gpr[instr.rA];
+   }
+
+   if (flags & PsqLoadIndexed) {
+      ea += state->gpr[instr.rB];
+   } else {
+      ea += sign_extend<16, int32_t>(instr.d);
+   }
+
+   if (flags & PsqLoadIndexed) {
+      i = instr.qi;
+      w = instr.qw;
+   } else {
+      i = instr.i;
+      w = instr.w;
+   }
+
+   c = 4;
+   lt = static_cast<QuantizedDataType>(state->gqr[i].ld_type);
+   ls = state->gqr[i].ld_scale;
+
+   if (lt == QuantizedDataType::Unsigned8 || lt == QuantizedDataType::Signed8) {
+      c = 1;
+   } else if (lt == QuantizedDataType::Unsigned16 || lt == QuantizedDataType::Signed16) {
+      c = 2;
+   }
+
+   if (w == 0) {
+      state->fpr[instr.frD].paired0 = dequantize(ea, lt, ls);
+      state->fpr[instr.frD].paired1 = dequantize(ea + c, lt, ls);
+   } else {
+      state->fpr[instr.frD].paired0 = dequantize(ea, lt, ls);
+      state->fpr[instr.frD].paired1 = 1.0f;
+   }
+
+   if (flags & PsqLoadUpdate) {
+      state->gpr[instr.rA] = ea;
+   }
+}
+
+static void
+psq_l(ThreadState *state, Instruction instr)
+{
+   psqLoad<PsqLoadZeroRA>(state, instr);
+}
+
+static void
+psq_lu(ThreadState *state, Instruction instr)
+{
+   psqLoad<PsqLoadUpdate>(state, instr);
+}
+
+static void
+psq_lx(ThreadState *state, Instruction instr)
+{
+   psqLoad<PsqLoadZeroRA | PsqLoadIndexed>(state, instr);
+}
+
+static void
+psq_lux(ThreadState *state, Instruction instr)
+{
+   psqLoad<PsqLoadUpdate | PsqLoadIndexed>(state, instr);
+}
+
+// Paired Single Store
+enum PsqStoreFlags
+{
+   PsqStoreZeroRA    = 1 << 0,
+   PsqStoreUpdate    = 1 << 1,
+   PsqStoreIndexed   = 1 << 2,
+};
+
+template<unsigned flags = 0>
+static void
+psqStore(ThreadState *state, Instruction instr)
+{
+   uint32_t ea, sts, c, i, w;
+   QuantizedDataType stt;
+   float s0, s1;
+
+   if ((flags & PsqStoreZeroRA) && instr.rA == 0) {
+      ea = 0;
+   } else {
+      ea = state->gpr[instr.rA];
+   }
+
+   if (flags & PsqStoreIndexed) {
+      ea += state->gpr[instr.rB];
+   } else {
+      ea += sign_extend<16, int32_t>(instr.d);
+   }
+
+   if (flags & PsqStoreIndexed) {
+      i = instr.qi;
+      w = instr.qw;
+   } else {
+      i = instr.i;
+      w = instr.w;
+   }
+
+   c = 4;
+   stt = static_cast<QuantizedDataType>(state->gqr[instr.qi].st_type);
+   sts = state->gqr[instr.qi].st_scale;
+
+   if (stt == QuantizedDataType::Unsigned8 || stt == QuantizedDataType::Signed8) {
+      c = 1;
+   } else if (stt == QuantizedDataType::Unsigned16 || stt == QuantizedDataType::Signed16) {
+      c = 2;
+   }
+
+   s0 = state->fpr[instr.frS].paired0;
+   s1 = state->fpr[instr.frS].paired1;
+
+   if (instr.qw == 0) {
+      quantize(ea, s0, stt, sts);
+      quantize(ea + c, s1, stt, sts);
+   } else {
+      quantize(ea, s0, stt, sts);
+   }
+
+   if (flags & PsqStoreUpdate) {
+      state->gpr[instr.rA] = ea;
+   }
+}
+
+static void
+psq_st(ThreadState *state, Instruction instr)
+{
+   psqStore<PsqStoreZeroRA>(state, instr);
+}
+
+static void
+psq_stu(ThreadState *state, Instruction instr)
+{
+   psqStore<PsqLoadUpdate>(state, instr);
+}
+
+static void
+psq_stx(ThreadState *state, Instruction instr)
+{
+   psqStore<PsqStoreZeroRA | PsqStoreIndexed>(state, instr);
+}
+
+static void
+psq_stux(ThreadState *state, Instruction instr)
+{
+   psqStore<PsqStoreUpdate | PsqStoreIndexed>(state, instr);
+}
+
 void Interpreter::registerLoadStoreInstructions()
 {
    RegisterInstruction(lbz);
@@ -633,4 +910,12 @@ void Interpreter::registerLoadStoreInstructions()
    RegisterInstruction(stfdx);
    RegisterInstruction(stfdux);
    RegisterInstruction(stfiwx);
+   RegisterInstruction(psq_l);
+   RegisterInstruction(psq_lu);
+   RegisterInstruction(psq_lx);
+   RegisterInstruction(psq_lux);
+   RegisterInstruction(psq_st);
+   RegisterInstruction(psq_stu);
+   RegisterInstruction(psq_stx);
+   RegisterInstruction(psq_stux);
 }

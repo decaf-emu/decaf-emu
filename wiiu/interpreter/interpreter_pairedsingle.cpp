@@ -637,14 +637,4 @@ Interpreter::registerPairedInstructions()
    RegisterInstruction(ps_merge01);
    RegisterInstruction(ps_merge10);
    RegisterInstruction(ps_merge11);
-   /*
-   RegisterInstruction(ps_cmpu0);
-   RegisterInstruction(ps_cmpo0);
-   RegisterInstruction(ps_cmpu1);
-   RegisterInstruction(ps_cmpo1);
-   RegisterInstruction(psq_lx);
-   RegisterInstruction(psq_stx);
-   RegisterInstruction(psq_lux);
-   RegisterInstruction(psq_stux);
-   */
 }
