@@ -93,7 +93,7 @@ struct be_val
 template<typename Type>
 using be_ptr = be_val<p32<Type>>;
 
-// Ensure our structs are correct size & offsets to match Xbox360
+// Ensure our structs are correct size & offsets to match WiiU
 #define CHECK_SIZE(Type, Size) \
    static_assert(sizeof(Type) == Size, \
                  #Type " must be " #Size " bytes");
