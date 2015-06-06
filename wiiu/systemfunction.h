@@ -35,6 +35,15 @@ struct sysfunc_arg<p32<PtrType>>
 };
 
 template<typename Type>
+struct sysfunc_arg<Type *>
+{
+   static inline Type *convert(uint32_t v)
+   {
+      return reinterpret_cast<Type*>(gMemory.translate(v));
+   }
+};
+
+template<typename Type>
 struct sysfunc_arg
 {
    static inline Type convert(uint32_t v)
