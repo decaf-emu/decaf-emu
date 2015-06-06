@@ -44,6 +44,11 @@ struct p32
       return reinterpret_cast<Type*>(gMemory.translate(value));
    }
 
+   bool operator==(const p32<Type> &other) const
+   {
+      return value == other.value;
+   }
+
    uint32_t value;
 };
 
@@ -85,6 +90,28 @@ struct be_val
    operator Type() const
    {
       return byte_swap(value);
+   }
+
+   bool operator==(const be_val<Type> &other) const
+   {
+      return value == other.value;
+   }
+
+   bool operator==(const Type &other) const
+   {
+      return byte_swap(value) == other;
+   }
+
+   be_val<Type> &operator++()
+   {
+      ++value;
+      return *this;
+   }
+
+   be_val<Type> &operator--()
+   {
+      --value;
+      return *this;
    }
 
    Type value;
