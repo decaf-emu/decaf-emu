@@ -1,4 +1,5 @@
 #include "coreinit.h"
+#include "coreinit_memory.h"
 
 CoreInit::CoreInit()
 {
@@ -6,6 +7,7 @@ CoreInit::CoreInit()
    registerDynLoadFunctions();
    registerExpHeapFunctions();
    registerFrameHeapFunctions();
+   registerGhsFunctions();
    registerMemoryFunctions();
    registerMembaseFunctions();
    registerMutexFunctions();
@@ -19,6 +21,7 @@ CoreInit::CoreInit()
 void CoreInit::initialise()
 {
    initialiseMembase();
+   initialiseGHS();
    initialiseSystemInformation();
    initialiseDynLoad();
 }
