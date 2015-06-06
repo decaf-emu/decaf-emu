@@ -358,7 +358,7 @@ enum MulFlags
 };
 
 // Signed multiply
-template<MulFlags flags>
+template<unsigned flags>
 static void
 mulSignedGeneric(ThreadState *state, Instruction instr)
 {
@@ -423,7 +423,7 @@ mulhwu(ThreadState *state, Instruction instr)
 static void
 mulli(ThreadState *state, Instruction instr)
 {
-   return mulSignedGeneric<MulLow>(state, instr);
+   return mulSignedGeneric<MulImmediate | MulLow>(state, instr);
 }
 
 static void
