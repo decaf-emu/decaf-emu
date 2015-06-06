@@ -107,20 +107,31 @@ cmpli(ThreadState *state, Instruction instr)
 // Floating Compare
 enum FCmpFlags
 {
-   FCmpOrdered = 1 << 0,
-   FCmpUnordered = 1 << 1,
+   FCmpOrdered    = 1 << 0,
+   FCmpUnordered  = 1 << 1,
+   FCmpSingle0    = 1 << 2,
+   FCmpSingle1    = 1 << 3,
 };
 
-template<unsigned flags>
+template<typename Type, unsigned flags>
 static void
 fcmpGeneric(ThreadState *state, Instruction instr)
 {
-   double a, b;
+   Type a, b;
    uint32_t c;
    bool vxsnan = false;
 
-   a = state->fpr[instr.frA].value;
-   b = state->fpr[instr.frB].value;
+   if (flags & FCmpSingle0) {
+      a = static_cast<Type>(state->fpr[instr.frA].paired0);
+      b = static_cast<Type>(state->fpr[instr.frB].paired0);
+   } else if (flags & FCmpSingle1) {
+      a = static_cast<Type>(state->fpr[instr.frA].paired1);
+      b = static_cast<Type>(state->fpr[instr.frB].paired1);
+   } else {
+      a = static_cast<Type>(state->fpr[instr.frA].value);
+      b = static_cast<Type>(state->fpr[instr.frB].value);
+   }
+
    vxsnan = (is_signalling_nan(a) || is_signalling_nan(b));
 
    if (a < b) {
@@ -152,13 +163,37 @@ fcmpGeneric(ThreadState *state, Instruction instr)
 static void
 fcmpo(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<FCmpOrdered>(state, instr);
+   return fcmpGeneric<double, FCmpOrdered>(state, instr);
 }
 
 static void
 fcmpu(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<FCmpUnordered>(state, instr);
+   return fcmpGeneric<double, FCmpUnordered>(state, instr);
+}
+
+static void
+ps_cmpo0(ThreadState *state, Instruction instr)
+{
+   return fcmpGeneric<float, FCmpOrdered | FCmpSingle0>(state, instr);
+}
+
+static void
+ps_cmpo1(ThreadState *state, Instruction instr)
+{
+   return fcmpGeneric<float, FCmpOrdered | FCmpSingle1>(state, instr);
+}
+
+static void
+ps_cmpu0(ThreadState *state, Instruction instr)
+{
+   return fcmpGeneric<float, FCmpUnordered | FCmpSingle0>(state, instr);
+}
+
+static void
+ps_cmpu1(ThreadState *state, Instruction instr)
+{
+   return fcmpGeneric<float, FCmpUnordered | FCmpSingle1>(state, instr);
 }
 
 // Condition Register AND
@@ -321,4 +356,8 @@ Interpreter::registerConditionInstructions()
    RegisterInstruction(mcrxr);
    RegisterInstruction(mfcr);
    RegisterInstruction(mtcrf);
+   RegisterInstruction(ps_cmpu0);
+   RegisterInstruction(ps_cmpo0);
+   RegisterInstruction(ps_cmpu1);
+   RegisterInstruction(ps_cmpo1);
 }
