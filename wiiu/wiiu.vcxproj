@@ -151,6 +151,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="disassembler.cpp" />
+    <ClCompile Include="expandedheapmanager.cpp" />
+    <ClCompile Include="frameheapmanager.cpp" />
     <ClCompile Include="gdbstub.cpp" />
     <ClCompile Include="instructiontable.cpp" />
     <ClCompile Include="interpreter.cpp" />
@@ -166,22 +168,32 @@
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="modules\coreinit\coreinit.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_debug.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_dynload.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_expheap.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_frameheap.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_ghs.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_membase.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_memory.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_mutex.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_spinlock.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_systeminfo.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_thread.cpp" />
     <ClCompile Include="modules\gx2\gx2.cpp" />
     <ClCompile Include="modules\gx2\gx2_texture.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="systemmodule.cpp" />
+    <ClCompile Include="systemthread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bigendianview.h" />
     <ClInclude Include="bitutils.h" />
     <ClInclude Include="disassembler.h" />
     <ClInclude Include="elf.h" />
+    <ClInclude Include="expandedheapmanager.h" />
     <ClInclude Include="floatutils.h" />
+    <ClInclude Include="frameheapmanager.h" />
     <ClInclude Include="gdbstub.h" />
+    <ClInclude Include="heapmanager.h" />
     <ClInclude Include="integer_sequence.h" />
     <ClInclude Include="instruction.h" />
     <ClInclude Include="instructiondata.h" />
@@ -195,18 +207,27 @@
     <ClInclude Include="module.h" />
     <ClInclude Include="modules\coreinit\coreinit.h" />
     <ClInclude Include="modules\coreinit\coreinit_debug.h" />
+    <ClInclude Include="modules\coreinit\coreinit_dynload.h" />
+    <ClInclude Include="modules\coreinit\coreinit_expheap.h" />
+    <ClInclude Include="modules\coreinit\coreinit_frameheap.h" />
+    <ClInclude Include="modules\coreinit\coreinit_ghs.h" />
     <ClInclude Include="modules\coreinit\coreinit_memory.h" />
+    <ClInclude Include="modules\coreinit\coreinit_messagequeue.h" />
     <ClInclude Include="modules\coreinit\coreinit_mutex.h" />
+    <ClInclude Include="modules\coreinit\coreinit_spinlock.h" />
     <ClInclude Include="modules\coreinit\coreinit_systeminfo.h" />
     <ClInclude Include="modules\coreinit\coreinit_thread.h" />
     <ClInclude Include="modules\gx2\gx2.h" />
     <ClInclude Include="modules\gx2\gx2_texture.h" />
     <ClInclude Include="ppc.h" />
     <ClInclude Include="system.h" />
+    <ClInclude Include="systemdata.h" />
     <ClInclude Include="systemexport.h" />
     <ClInclude Include="systemfunction.h" />
     <ClInclude Include="systemmodule.h" />
     <ClInclude Include="systemtypes.h" />
+    <ClInclude Include="systemthread.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -3,7 +3,7 @@
 #include "log.h"
 
 void
-GX2InitTextureRegs(p32<GX2Texture> pTexture)
+GX2InitTextureRegs(GX2Texture *texture)
 {
    xLog() << "GX2InitTextureRegs";
 }

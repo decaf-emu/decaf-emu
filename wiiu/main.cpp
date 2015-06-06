@@ -27,6 +27,7 @@ int main(int argc, char **argv)
    gSystem.registerModule("coreinit", new CoreInit);
    gSystem.registerModule("gx2", new GX2);
    gSystem.loadThunks();
+   gSystem.initialiseModules();
 
    auto file = std::ifstream { argv[1], std::ifstream::binary };
    auto buffer = std::vector<char> {};

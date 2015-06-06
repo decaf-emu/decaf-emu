@@ -3,6 +3,7 @@
 #include "system.h"
 #include "systemmodule.h"
 #include "systemthread.h"
+#include "modules/coreinit/coreinit_memory.h"
 
 System gSystem;
 
@@ -20,6 +21,14 @@ System::registerModule(std::string name, SystemModule *module)
          func->syscallID = static_cast<uint32_t>(mSystemCalls.size());
          mSystemCalls.push_back(func);
       }
+   }
+}
+
+void
+System::initialiseModules()
+{
+   for (auto &mpair : mModules) {
+      mpair.second->initialise();
    }
 }
 
@@ -75,4 +84,45 @@ System::loadThunks()
 
       addr += 8;
    }
+}
+
+WHeapHandle
+System::addHeap(HeapManager *heap)
+{
+   for (auto i = 0u; i < mHeaps.size(); ++i) {
+      if (mHeaps[i] == nullptr) {
+         mHeaps[i] = heap;
+         return i + 1;
+      }
+   }
+
+   mHeaps.push_back(heap);
+   return static_cast<WHeapHandle>(mHeaps.size());
+}
+
+HeapManager *
+System::getHeap(WHeapHandle handle)
+{
+   return mHeaps[handle - 1];
+}
+
+HeapManager *
+System::getHeapByAddress(uint32_t vaddr)
+{
+   for (auto heap : mHeaps) {
+      auto base = heap->getAddress();
+      auto size = heap->getSize();
+
+      if (vaddr >= base && vaddr < base + size) {
+         return heap;
+      }
+   }
+
+   return nullptr;
+}
+
+void
+System::removeHeap(WHeapHandle handle)
+{
+   mHeaps[handle - 1] = nullptr;
 }

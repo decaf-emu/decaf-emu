@@ -9,6 +9,7 @@
 #include "loader.h"
 #include "log.h"
 #include "memory.h"
+#include "modules/coreinit/coreinit_dynload.h"
 #include "system.h"
 #include "systemmodule.h"
 #include "util.h"
@@ -565,13 +566,15 @@ Loader::loadRPL(Module &module, EntryInfo &entry, const char *buffer, size_t siz
    entry.stackSize = info.rpl_stack_size;
 
    // Allocate code & data sections in memory
-   auto codeStart = module.codeAddressRange.first;
-   auto codeSize = module.codeAddressRange.second - codeStart;
-   gMemory.alloc(codeStart, codeSize);
+   auto codeStart = 0x02000000u;
+   auto codeSize = 0xE000000u;
+   OSDynLoad_MemAlloc(codeSize, 4, &codeStart);
+   assert(codeStart == 0x02000000);
 
    auto dataStart = module.dataAddressRange.first;
    auto dataSize = module.dataAddressRange.second - dataStart;
-   gMemory.alloc(dataStart, dataSize);
+   OSDynLoad_MemAlloc(dataSize, 4, &dataStart);
+   assert(dataStart == 0x10000000);
 
    // Load sections into memory
    loadSections(sections);

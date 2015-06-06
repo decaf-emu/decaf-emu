@@ -61,4 +61,4 @@ CHECK_SIZE(GX2Texture, 0x9c);
 #pragma pack(pop)
 
 void
-GX2InitTextureRegs(p32<GX2Texture> texture);
+GX2InitTextureRegs(GX2Texture *texture);
