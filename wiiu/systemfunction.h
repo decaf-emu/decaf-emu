@@ -16,6 +16,8 @@ struct SystemFunction : SystemExport
    {
    }
 
+   uint32_t syscallID;
+   uint32_t vaddr;
    virtual void call(ThreadState *state) = 0;
 };
 

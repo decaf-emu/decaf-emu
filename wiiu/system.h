@@ -1,5 +1,12 @@
 #pragma once
-#include "systemmodule.h"
+#include <map>
+#include <string>
+#include <vector>
+#include <cstdint>
+
+class SystemThread;
+class SystemModule;
+struct SystemFunction;
 
 class System
 {
@@ -10,9 +17,13 @@ public:
    void addThread(SystemThread *thread);
    void removeThread(SystemThread *thread);
 
+   SystemFunction *getSyscall(uint32_t id);
+
+   void loadThunks();
 private:
    std::vector<SystemThread*> mThreads;
    std::map<std::string, SystemModule*> mModules;
+   std::vector<SystemFunction*> mSystemCalls;
 };
 
 extern System gSystem;

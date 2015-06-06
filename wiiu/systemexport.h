@@ -24,4 +24,5 @@ struct SystemExport
    }
 
    Type type;
+   const char *name;
 };

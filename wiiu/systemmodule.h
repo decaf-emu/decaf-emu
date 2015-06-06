@@ -3,30 +3,33 @@
 #include <map>
 #include "systemexport.h"
 #include "systemfunction.h"
-
-struct SystemData : public SystemExport
-{
-   SystemData() :
-      SystemExport(SystemExport::Data)
-   {
-   }
-};
+#include "systemdata.h"
 
 #define RegisterSystemFunction(fn) \
-   registerFunction(#fn, make_sysfunc(fn));
+   registerExport(#fn, make_sysfunc(fn));
 
 #define RegisterSystemFunctionName(name, fn) \
-   registerFunction(name, make_sysfunc(fn));
+   registerExport(name, make_sysfunc(fn));
 
 #define RegisterSystemFunctionManual(fn) \
-   registerFunction(#fn, make_manual_sysfunc(fn));
+   registerExport(#fn, make_manual_sysfunc(fn));
+
+#define RegisterSystemDataName(name, data) \
+   registerExport(name, make_sysdata(&data));
+
+#define RegisterSystemData(data) \
+   registerExport(#data, make_sysdata(&data));
 
 class SystemModule
 {
 public:
-   void registerFunction(std::string name, SystemExport *exp);
-   SystemExport *findExport(const std::string &name);
+   virtual void initialise() = 0;
 
-private:
+   void registerExport(const char *name, SystemExport *exp);
+   SystemExport *findExport(const std::string &name);
+   uint32_t findExportAddress(const std::string &name);
+
+protected:
+   friend class System;
    std::map<std::string, SystemExport*> mExport;
 };

@@ -4,6 +4,7 @@
 #include "loader.h"
 #include "log.h"
 #include "system.h"
+#include "systemfunction.h"
 
 static SprEncoding
 decodeSPR(Instruction instr)
@@ -170,20 +171,32 @@ mtsrin(ThreadState *state, Instruction instr)
 static void
 sc(ThreadState *state, Instruction instr)
 {
-   auto sym = state->module->symbols[instr.bd];
-   auto fsym = reinterpret_cast<FunctionSymbol*>(sym);
+   auto id = instr.bd;
 
-   if (sym->type != SymbolInfo::Function) {
-      xDebug() << "Attempted to call non-function symbol " << sym->name;
-      return;
+   SystemFunction *func = nullptr;
+
+   if (id & 0x2000) {
+      auto sym = state->module->symbols[id & 0x1fff];
+      auto fsym = reinterpret_cast<FunctionSymbol*>(sym);
+
+      if (sym->type != SymbolInfo::Function) {
+         xDebug() << "Attempted to call non-function symbol " << sym->name;
+         return;
+      }
+
+      if (!fsym->systemFunction) {
+         xDebug() << Log::hex(state->lr) << " unimplemented system function " << sym->name;
+         return;
+      }
+
+      assert(false);
+   } else {
+      func = gSystem.getSyscall(id);
    }
 
-   if (!fsym->systemFunction) {
-      xDebug() << "Unimplemented system function " << sym->name;
-      return;
-   }
-   
-   fsym->systemFunction->call(state);
+   assert(func);
+   xLog() << Log::hex(state->lr) << " " << func->name;
+   func->call(state);
 }
 
 void

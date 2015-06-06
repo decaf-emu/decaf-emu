@@ -10,6 +10,7 @@
 #include "log.h"
 #include "memory.h"
 #include "system.h"
+#include "systemmodule.h"
 #include "util.h"
 
 struct RplSection
@@ -397,7 +398,7 @@ static void
 writeDataThunk(uint32_t address, uint32_t id)
 {
    // Write some invalid known value to show up when debugging
-   gMemory.write<uint32_t>(address, 0xdd000000 | id);
+   gMemory.write<uint32_t>(address, 0xddddd000 | id);
 }
 
 static void
@@ -427,16 +428,33 @@ processSymbols(Module &module, RplSection &symtab, std::vector<RplSection> &sect
       auto binding = header.st_info >> 4;
       auto type = header.st_info & 0xf;
 
+      // TODO: Clean this up!
+      auto id = i;
+      bool makeThunk = true;
+
       if (type == STT_FUNC) {
          auto fsym = new FunctionSymbol();
-         fsym->systemFunction = findSystemFunction(impsec.msym, name);
-         fsym->functionType = fsym->systemFunction ? FunctionSymbol::System : FunctionSymbol::User;
+         auto fsys = findSystemFunction(impsec.msym, name);
+         fsym->systemFunction = fsys;
+         fsym->functionType = fsys ? FunctionSymbol::System : FunctionSymbol::User;
          symbol = fsym;
+         id = fsym->systemFunction ? fsym->systemFunction->syscallID : (0x2000 | i);
+
+         if (fsys) {
+            makeThunk = false;
+            virtAddress = fsys->vaddr;
+         }
       } else if (type == STT_OBJECT) {
          auto dsym = new DataSymbol();
-         dsym->systemData = findSystemData(impsec.msym, name);
-         dsym->dataType = dsym->systemData ? DataSymbol::System : DataSymbol::User;
+         auto dsys = findSystemData(impsec.msym, name);
+         dsym->systemData = dsys;
+         dsym->dataType = dsys ? DataSymbol::System : DataSymbol::User;
          symbol = dsym;
+
+         if (dsys) {
+            makeThunk = false;
+            virtAddress = dsys->vptr->value;
+         }
       } else if (type == STT_SECTION) {
          auto msym = new ModuleSymbol();
 
@@ -458,9 +476,10 @@ processSymbols(Module &module, RplSection &symtab, std::vector<RplSection> &sect
       module.symbols[i] = symbol;
 
       // Write thunks
-      if (symbol->address) {
+      if (makeThunk && symbol->address) {
          if (type == STT_FUNC) {
-            writeFunctionThunk(symbol->address, symbol->index);
+            // Backup thunk for when we have no syscall defined!
+            writeFunctionThunk(symbol->address, id);
          } else if (type == STT_OBJECT) {
             writeDataThunk(symbol->address, symbol->index);
          }
@@ -489,7 +508,7 @@ processRelocations(Module &module, RplSection &section, std::vector<RplSection> 
 
       auto &symbol = module.symbols[index];
       auto value = symbol->address + rela.r_addend;
-      auto addr = rela.r_offset - baseAddress + virtAddress;
+      auto addr = (rela.r_offset - baseAddress) + virtAddress;
 
       auto ptr8 = gMemory.translate(addr);
       auto ptr16 = reinterpret_cast<uint16_t*>(ptr8);
