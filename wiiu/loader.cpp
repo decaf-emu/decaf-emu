@@ -10,6 +10,7 @@
 #include "log.h"
 #include "memory.h"
 #include "system.h"
+#include "util.h"
 
 struct RplSection
 {
@@ -297,17 +298,13 @@ processSections(Module &module, std::vector<RplSection> &sections, const char *s
          section->size = header.sh_size;
       }
 
-      // Relocate address
-      assert(header.sh_addr & 0xc0000000);
-      auto align = header.sh_addralign;
-
       if (header.sh_flags & SHF_EXECINSTR) {
          section->type = Section::CodeImports;
-         section->address = (codeRange.second + align) & ~align;
+         section->address = alignUp(codeRange.second, header.sh_addralign);
          codeRange.second = section->address + section->size;
       } else {
          section->type = Section::DataImports;
-         section->address = (dataRange.second + align) & ~align;
+         section->address = alignUp(dataRange.second, header.sh_addralign);
          dataRange.second = section->address + section->size;
       }
 
