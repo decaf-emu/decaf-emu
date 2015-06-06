@@ -1,27 +1,82 @@
 #include "coreinit.h"
 #include "coreinit_mutex.h"
 
+// TODO: Ensure we can use custom OSMutex data instead of original
+
 void
-OSInitMutex(p32<OSMutex> pMutex)
+OSInitMutex(WMutex *mutex)
 {
-   auto mutex = p32_direct(pMutex);
-   mutex->tag = OSMutex::Tag;
+   new (mutex) WMutex();
+   mutex->tag = WMutex::Tag;
    mutex->name = nullptr;
-   mutex->threadLink.next = nullptr;
-   mutex->threadLink.prev = nullptr;
-   OSInitThreadQueueEx(make_p32(&mutex->queue), make_p32<void>(mutex));
 }
 
 void
-OSInitMutexEx(p32<OSMutex> pMutex, p32<char> pName)
+OSInitMutexEx(WMutex *mutex, char *name)
 {
-   auto mutex = p32_direct(pMutex);
-   OSInitMutex(pMutex);
-   mutex->name = pName;
+   OSInitMutex(mutex);
+   mutex->name = name;
+}
+
+void
+OSLockMutex(WMutex *mutex)
+{
+   assert(mutex->tag == WMutex::Tag);
+   mutex->mutex.lock();
+}
+
+BOOL
+OSTryLockMutex(WMutex *mutex)
+{
+   assert(mutex->tag == WMutex::Tag);
+   return mutex->mutex.try_lock();
+}
+
+void
+OSUnlockMutex(WMutex *mutex)
+{
+   assert(mutex->tag == WMutex::Tag);
+   mutex->mutex.unlock();
+}
+
+void
+OSInitCond(WCondition *cond)
+{
+   new (cond) WCondition();
+   cond->tag = WCondition::Tag;
+   cond->name = nullptr;
+}
+
+void
+OSInitCondEx(WCondition *cond, char *name)
+{
+   OSInitCond(cond);
+   cond->name = name;
+}
+
+void
+OSWaitCond(WCondition *cond, WMutex *mutex)
+{
+   std::unique_lock<std::recursive_mutex> lock { mutex->mutex };
+   cond->cvar.wait(lock);
+}
+
+void
+OSSignalCond(WCondition *cond)
+{
+   cond->cvar.notify_all();
 }
 
 void
 CoreInit::registerMutexFunctions()
 {
    RegisterSystemFunction(OSInitMutex);
+   RegisterSystemFunction(OSInitMutexEx);
+   RegisterSystemFunction(OSLockMutex);
+   RegisterSystemFunction(OSTryLockMutex);
+   RegisterSystemFunction(OSUnlockMutex);
+   RegisterSystemFunction(OSInitCond);
+   RegisterSystemFunction(OSInitCondEx);
+   RegisterSystemFunction(OSWaitCond);
+   RegisterSystemFunction(OSSignalCond);
 }
