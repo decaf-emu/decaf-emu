@@ -9,6 +9,7 @@ CoreInit::CoreInit()
    registerMemoryFunctions();
    registerMembaseFunctions();
    registerMutexFunctions();
+   registerSpinLockFunctions();
    registerSystemInfoFunctions();
    registerThreadFunctions();
 
