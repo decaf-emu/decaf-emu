@@ -98,27 +98,43 @@ struct OSThread
    OSContext context;
    be_val<uint32_t> tag;
    be_val<OS_THREAD_STATE> state;
-   be_val<uint8_t> attr;
-   UNKNOWN(2);//326
-   UNKNOWN(4);//suspend 328
+   be_val<uint8_t> attr; // OSSetThreadAffinity / OSCreateThread
+   UNKNOWN(6);
    be_val<uint32_t> priority;
    be_val<uint32_t> basePriority; // "ba" in DumpActiveThreads and returned in OSGetThreadPriority
-   UNKNOWN(0x57c - 0x334);
+   be_val<uint32_t> exitValue; // OSExitThread / OSJoinThread
+   UNKNOWN(0x394 - 0x338);
+   be_val<uint32_t> stackStart; // __OSSaveUserStackPointer
+   be_val<uint32_t> stackEnd; // __OSSaveUserStackPointer
+   be_val<uint32_t> entryPoint; // OSCreateThread
+   UNKNOWN(0x57c - 0x3a0);
    be_val<uint32_t> specific[0x10]; // OSGetThreadSpecific
    UNKNOWN(0x5c0 - 0x5bc);
    be_ptr<char> name; // OSGetThreadName
-   UNKNOWN(0x5d4 - 0x5c4);
+   UNKNOWN(0x4);
+   be_val<uint32_t> userStackPointer; // OSGetUserStackPointer
+   be_val<uint32_t> cleanupCallback; // OSSetThreadCleanupCallback
+   be_val<uint32_t> deallocator; // OSSetThreadDeallocator
    be_val<uint32_t> cancelState; // OSSetThreadCancelState
-   UNKNOWN(0x69c - 0x5d8)
+   be_val<uint32_t> requestFlag;
+   UNKNOWN(0x69c - 0x5dc)
 };
 CHECK_OFFSET(OSThread, 0x320, tag);
 CHECK_OFFSET(OSThread, 0x324, state);
 CHECK_OFFSET(OSThread, 0x325, attr);
 CHECK_OFFSET(OSThread, 0x32c, priority);
 CHECK_OFFSET(OSThread, 0x330, basePriority);
+CHECK_OFFSET(OSThread, 0x334, exitValue);
+CHECK_OFFSET(OSThread, 0x394, stackStart);
+CHECK_OFFSET(OSThread, 0x398, stackEnd);
+CHECK_OFFSET(OSThread, 0x39c, entryPoint);
 CHECK_OFFSET(OSThread, 0x57c, specific);
 CHECK_OFFSET(OSThread, 0x5c0, name);
+CHECK_OFFSET(OSThread, 0x5c8, userStackPointer);
+CHECK_OFFSET(OSThread, 0x5cc, cleanupCallback);
+CHECK_OFFSET(OSThread, 0x5d0, deallocator);
 CHECK_OFFSET(OSThread, 0x5d4, cancelState);
+CHECK_OFFSET(OSThread, 0x5d8, requestFlag);
 CHECK_SIZE(OSThread, 0x69c);
 
 #pragma pack(pop)
