@@ -18,6 +18,7 @@ CoreInit::CoreInit()
    registerSpinLockFunctions();
    registerSystemInfoFunctions();
    registerThreadFunctions();
+   registerTimeFunctions();
    registerUserConfigFunctions();
 
    CoreInitDefaultHeap();

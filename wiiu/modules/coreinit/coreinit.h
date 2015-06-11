@@ -25,6 +25,7 @@ private:
    void registerSpinLockFunctions();
    void registerSystemInfoFunctions();
    void registerThreadFunctions();
+   void registerTimeFunctions();
    void registerUserConfigFunctions();
 
    void initialiseDynLoad();
