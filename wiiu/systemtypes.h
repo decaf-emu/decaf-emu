@@ -23,7 +23,7 @@ struct p32
 {
    p32 &operator=(Type *other)
    {
-      value = reinterpret_cast<uint32_t>(other);
+      value = static_cast<uint32_t>(reinterpret_cast<size_t>(other));
       return *this;
    }
 
