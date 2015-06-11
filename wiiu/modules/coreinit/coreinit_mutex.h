@@ -38,7 +38,7 @@ CHECK_OFFSET(OSMutex, 0x20, count);
 CHECK_OFFSET(OSMutex, 0x24, threadLink);
 CHECK_SIZE(OSMutex, 0x2c);
 
-struct OSCond
+struct OSCondition
 {
    static const uint32_t Tag = 0x634E6456;
    be_val<uint32_t> tag;
@@ -46,10 +46,10 @@ struct OSCond
    UNKNOWN(4);
    OSThreadQueue queue;
 };
-CHECK_OFFSET(OSMutex, 0x0, tag);
-CHECK_OFFSET(OSMutex, 0x4, name);
-CHECK_OFFSET(OSMutex, 0xc, queue);
-CHECK_SIZE(OSCond, 0x1c);
+CHECK_OFFSET(OSCondition, 0x0, tag);
+CHECK_OFFSET(OSCondition, 0x4, name);
+CHECK_OFFSET(OSCondition, 0xc, queue);
+CHECK_SIZE(OSCondition, 0x1c);
 
 struct WMutex
 {
@@ -57,10 +57,9 @@ struct WMutex
 
    be_val<uint32_t> tag;
    be_ptr<char> name;
-   std::recursive_mutex mutex;
-   PADDING(0x24 - sizeof(std::recursive_mutex));
+   std::unique_ptr<std::recursive_mutex> mutex;
 };
-CHECK_SIZE(WMutex, 0x2c);
+static_assert(sizeof(WMutex) <= sizeof(OSMutex), "WMutex must fit in OSMutex");
 
 struct WCondition
 {
@@ -68,10 +67,9 @@ struct WCondition
 
    be_val<uint32_t> tag;
    be_ptr<char> name;
-   std::condition_variable_any cvar;
-   PADDING(0x14 - sizeof(std::condition_variable_any));
+   std::unique_ptr<std::condition_variable_any> cvar;
 };
-CHECK_SIZE(WCondition, 0x1c);
+static_assert(sizeof(WCondition) <= sizeof(OSCondition), "WCondition must fit in OSCondition");
 
 #pragma pack(pop)
 

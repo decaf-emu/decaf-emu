@@ -3,7 +3,8 @@
 #include "coreinit_systeminfo.h"
 #include "coreinit_memory.h"
 
-p32<OSSystemInfo> gSystemInfo;
+p32<OSSystemInfo>
+gSystemInfo;
 
 p32<OSSystemInfo>
 OSGetSystemInfo()

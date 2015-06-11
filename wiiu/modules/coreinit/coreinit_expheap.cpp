@@ -28,8 +28,7 @@ WHeapHandle MEMCreateExpHeap(p32<void> address, uint32_t size)
 
 WHeapHandle MEMCreateExpHeapEx(p32<void> address, uint32_t size, uint16_t flags)
 {
-   auto heap = new ExpandedHeapManager(address.value, size, static_cast<HeapFlags>(flags));
-   return gSystem.addHeap(heap);
+   return gSystem.addHeap(new ExpandedHeapManager(address.value, size, static_cast<HeapFlags>(flags)));
 }
 
 p32<void>
