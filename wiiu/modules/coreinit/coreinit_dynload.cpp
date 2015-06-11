@@ -49,8 +49,8 @@ int MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
    }
 
    uint32_t args[] = {
-      size,
-      alignment
+      static_cast<uint32_t>(size),
+      static_cast<uint32_t>(alignment)
    };
 
    *outPtr = OSExecuteCallback(pMEMAllocFromDefaultHeapEx->value, args);
