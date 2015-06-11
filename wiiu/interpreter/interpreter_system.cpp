@@ -194,8 +194,6 @@ sc(ThreadState *state, Instruction instr)
       func = gSystem.getSyscall(id);
    }
 
-   assert(func);
-   xLog() << Log::hex(state->lr) << " " << func->name;
    func->call(state);
 }
 
