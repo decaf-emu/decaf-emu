@@ -14,14 +14,18 @@ private:
    void registerDebugFunctions();
    void registerDynLoadFunctions();
    void registerExpHeapFunctions();
+   void registerFileSystemFunctions();
    void registerFrameHeapFunctions();
    void registerGhsFunctions();
+   void registerMcpFunctions();
    void registerMembaseFunctions();
    void registerMemoryFunctions();
    void registerMutexFunctions();
+   void registerSaveFunctions();
    void registerSpinLockFunctions();
    void registerSystemInfoFunctions();
    void registerThreadFunctions();
+   void registerUserConfigFunctions();
 
    void initialiseDynLoad();
    void initialiseGHS();

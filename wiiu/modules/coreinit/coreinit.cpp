@@ -7,14 +7,18 @@ CoreInit::CoreInit()
    registerDebugFunctions();
    registerDynLoadFunctions();
    registerExpHeapFunctions();
+   registerFileSystemFunctions();
    registerFrameHeapFunctions();
    registerGhsFunctions();
+   registerMcpFunctions();
    registerMemoryFunctions();
    registerMembaseFunctions();
    registerMutexFunctions();
+   registerSaveFunctions();
    registerSpinLockFunctions();
    registerSystemInfoFunctions();
    registerThreadFunctions();
+   registerUserConfigFunctions();
 
    CoreInitDefaultHeap();
 }
