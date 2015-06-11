@@ -13,6 +13,7 @@ CoreInit::CoreInit()
    registerMcpFunctions();
    registerMemoryFunctions();
    registerMembaseFunctions();
+   registerMessageQueueFunctions();
    registerMutexFunctions();
    registerSaveFunctions();
    registerSpinLockFunctions();
@@ -27,6 +28,7 @@ CoreInit::CoreInit()
 void CoreInit::initialise()
 {
    initialiseMembase();
+   initialiseMessageQueues();
    initialiseGHS();
    initialiseSystemInformation();
    initialiseDynLoad();

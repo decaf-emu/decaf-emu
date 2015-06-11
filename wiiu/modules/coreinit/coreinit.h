@@ -20,6 +20,7 @@ private:
    void registerMcpFunctions();
    void registerMembaseFunctions();
    void registerMemoryFunctions();
+   void registerMessageQueueFunctions();
    void registerMutexFunctions();
    void registerSaveFunctions();
    void registerSpinLockFunctions();
@@ -31,5 +32,6 @@ private:
    void initialiseDynLoad();
    void initialiseGHS();
    void initialiseMembase();
+   void initialiseMessageQueues();
    void initialiseSystemInformation();
 };
