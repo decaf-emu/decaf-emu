@@ -1,5 +1,6 @@
 #pragma once
 #include "systemmodule.h"
+#include "log.h"
 
 class CoreInit : public SystemModule
 {

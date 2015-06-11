@@ -58,8 +58,6 @@ int main(int argc, char **argv)
 
    xLog() << "Succesfully loaded " << argv[1];
 
-   gInterpreter.addBreakpoint(0x237CD58);
-
    auto thread = new SystemThread(&module, entry.stackSize, entry.address);
    thread->run(gInterpreter);
 

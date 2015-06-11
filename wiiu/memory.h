@@ -2,7 +2,6 @@
 #include <cassert>
 #include <vector>
 #include "bitutils.h"
-#include "log.h"
 
 union PageEntry
 {

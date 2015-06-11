@@ -2,6 +2,7 @@
 #include "interpreter.h"
 #include "instructiondata.h"
 #include "memory.h"
+#include "log.h"
 
 Interpreter gInterpreter;
 

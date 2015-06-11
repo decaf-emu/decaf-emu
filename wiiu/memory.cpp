@@ -1,4 +1,5 @@
 #include "memory.h"
+#include "log.h"
 #include <vector>
 #include <Windows.h>
 
