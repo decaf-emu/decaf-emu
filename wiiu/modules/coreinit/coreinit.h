@@ -10,6 +10,7 @@ public:
    virtual void initialise() override;
 
 private:
+   void registerCacheFunctions();
    void registerDebugFunctions();
    void registerDynLoadFunctions();
    void registerExpHeapFunctions();

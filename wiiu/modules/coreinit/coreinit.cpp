@@ -3,6 +3,7 @@
 
 CoreInit::CoreInit()
 {
+   registerCacheFunctions();
    registerDebugFunctions();
    registerDynLoadFunctions();
    registerExpHeapFunctions();
