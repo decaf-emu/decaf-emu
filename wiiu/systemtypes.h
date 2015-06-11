@@ -54,7 +54,7 @@ struct p32
 
 template<typename Type>
 inline p32<Type>
-make_p32(Type *src)
+make_p32(const Type *src)
 {
    p32<Type> result;
    result.value = src ? gMemory.untranslate(src) : 0;
@@ -120,6 +120,8 @@ struct be_val
 template<typename Type>
 using be_ptr = be_val<p32<Type>>;
 
+#pragma pack(pop)
+
 // Ensure our structs are correct size & offsets to match WiiU
 #define CHECK_SIZE(Type, Size) \
    static_assert(sizeof(Type) == Size, \
@@ -139,4 +141,4 @@ using be_ptr = be_val<p32<Type>>;
 #define UNKNOWN(Size) char PP_CAT(__unk, __COUNTER__) [Size];
 #define PADDING(Size) UNKNOWN(Size)
 
-#pragma pack(pop)
+#define UNKNOWN_ARGS void
