@@ -135,6 +135,42 @@
     <ClCompile Include="frameheapmanager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_messagequeue.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_time.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_fs.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_save.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_mcp.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_userconfig.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\gx2\gx2_core.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\gx2\gx2_display.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\gx2\gx2_renderstate.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\gx2\gx2_shaders.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_cache.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\gx2\gx2_displaylist.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h">
@@ -265,6 +301,42 @@
     </ClInclude>
     <ClInclude Include="frameheapmanager.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_time.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_fs.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_save.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_mcp.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_userconfig.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_ios.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\gx2\gx2_core.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\gx2\gx2_renderstate.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\gx2\gx2_display.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_cache.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\gx2\gx2_displaylist.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\gx2\gx2_shaders.h">
+      <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

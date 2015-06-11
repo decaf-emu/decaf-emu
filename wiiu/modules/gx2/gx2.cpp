@@ -2,6 +2,11 @@
 
 GX2::GX2()
 {
+   registerCoreFunctions();
+   registerDisplayFunctions();
+   registerDisplayListFunctions();
+   registerRenderStateFunctions();
+   registerShaderFunctions();
    registerTextureFunctions();
 }
 

@@ -10,5 +10,10 @@ public:
    virtual void initialise() override;
 
 private:
+   void registerCoreFunctions();
+   void registerDisplayFunctions();
+   void registerDisplayListFunctions();
+   void registerRenderStateFunctions();
+   void registerShaderFunctions();
    void registerTextureFunctions();
 };

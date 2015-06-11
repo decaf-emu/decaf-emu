@@ -5,7 +5,6 @@
 void
 GX2InitTextureRegs(GX2Texture *texture)
 {
-   xLog() << "GX2InitTextureRegs";
 }
 
 void
