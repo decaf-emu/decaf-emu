@@ -56,7 +56,7 @@ GX2GetCurrentDisplayList(p32<be_val<uint32_t>> outDisplayList, p32<be_val<uint32
       return FALSE;
    }
 
-   *outDisplayList = make_p32<void>(gCurrentDisplayList).value;
+   *outDisplayList = make_p32<void>(gCurrentDisplayList);
    *outSize = gCurrentDisplayListSize;
    return TRUE;
 }

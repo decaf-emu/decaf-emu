@@ -18,7 +18,7 @@ getExpandedHeap(WHeapHandle handle)
 static ExpandedHeapManager *
 getExpandedHeap(p32<void> addr)
 {
-   return reinterpret_cast<ExpandedHeapManager *>(gSystem.getHeapByAddress(addr.value));
+   return reinterpret_cast<ExpandedHeapManager *>(gSystem.getHeapByAddress(static_cast<uint32_t>(addr)));
 }
 
 WHeapHandle MEMCreateExpHeap(p32<void> address, uint32_t size)
@@ -28,7 +28,7 @@ WHeapHandle MEMCreateExpHeap(p32<void> address, uint32_t size)
 
 WHeapHandle MEMCreateExpHeapEx(p32<void> address, uint32_t size, uint16_t flags)
 {
-   return gSystem.addHeap(new ExpandedHeapManager(address.value, size, static_cast<HeapFlags>(flags)));
+   return gSystem.addHeap(new ExpandedHeapManager(static_cast<uint32_t>(address), size, static_cast<HeapFlags>(flags)));
 }
 
 p32<void>
@@ -60,7 +60,7 @@ MEMAllocFromExpHeapEx(WHeapHandle handle, uint32_t size, int alignment)
 void
 MEMFreeToExpHeap(WHeapHandle handle, p32<void> address)
 {
-   getExpandedHeap(handle)->free(address.value);
+   getExpandedHeap(handle)->free(static_cast<uint32_t>(address));
 }
 
 HeapMode
@@ -84,7 +84,7 @@ MEMAdjustExpHeap(WHeapHandle handle)
 uint32_t
 MEMResizeForMBlockExpHeap(WHeapHandle handle, p32<void> block, uint32_t size)
 {
-   return getExpandedHeap(handle)->resizeBlock(block.value, size);
+   return getExpandedHeap(handle)->resizeBlock(static_cast<uint32_t>(block), size);
 }
 
 uint32_t
@@ -120,19 +120,19 @@ MEMGetGroupIDForExpHeap(WHeapHandle handle)
 uint32_t
 MEMGetSizeForMBlockExpHeap(p32<void> block)
 {
-   return getExpandedHeap(block)->getBlockSize(block.value);
+   return getExpandedHeap(block)->getBlockSize(static_cast<uint32_t>(block));
 }
 
 uint16_t
 MEMGetGroupIDForMBlockExpHeap(p32<void> block)
 {
-   return getExpandedHeap(block)->getBlockGroup(block.value);
+   return getExpandedHeap(block)->getBlockGroup(static_cast<uint32_t>(block));
 }
 
 HeapDirection
 MEMGetAllocDirForMBlockExpHeap(p32<void> block)
 {
-   return getExpandedHeap(block)->getBlockDirection(block.value);
+   return getExpandedHeap(block)->getBlockDirection(static_cast<uint32_t>(block));
 }
 
 void

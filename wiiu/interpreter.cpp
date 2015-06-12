@@ -6,22 +6,33 @@
 
 Interpreter gInterpreter;
 
-void Interpreter::initialise()
+std::vector<Interpreter::instrfptr_t>
+Interpreter::sInstructionMap;
+
+void Interpreter::RegisterFunctions()
 {
-   // Setup instruction map
-   mInstructionMap.resize(static_cast<size_t>(InstructionID::InstructionCount), nullptr);
-   registerBranchInstructions();
-   registerConditionInstructions();
-   registerFloatInstructions();
-   registerIntegerInstructions();
-   registerLoadStoreInstructions();
-   registerPairedInstructions();
-   registerSystemInstructions();
+   static bool didInit = false;
+
+   if (!didInit) {
+      // Reserve instruction map
+      sInstructionMap.resize(static_cast<size_t>(InstructionID::InstructionCount), nullptr);
+
+      // Register instruction handlers
+      registerBranchInstructions();
+      registerConditionInstructions();
+      registerFloatInstructions();
+      registerIntegerInstructions();
+      registerLoadStoreInstructions();
+      registerPairedInstructions();
+      registerSystemInstructions();
+
+      didInit = true;
+   }
 }
 
-void Interpreter::registerInstruction(InstructionID id, fptr_t fptr)
+void Interpreter::registerInstruction(InstructionID id, instrfptr_t fptr)
 {
-   mInstructionMap[static_cast<size_t>(id)] = fptr;
+   sInstructionMap[static_cast<size_t>(id)] = fptr;
 }
 
 void Interpreter::execute(ThreadState *state, uint32_t addr)
@@ -45,7 +56,7 @@ void Interpreter::execute(ThreadState *state, uint32_t addr)
          xLog() << Log::hex(state->cia) << " " << Log::hex(instr.value);
       }
 
-      auto fptr = mInstructionMap[static_cast<size_t>(data->id)];
+      auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
       auto bpitr = std::find(mBreakpoints.begin(), mBreakpoints.end(), state->cia);
 
       if (mStep || bpitr != mBreakpoints.end()) {

@@ -179,7 +179,6 @@
     <ClCompile Include="modules\coreinit\coreinit_memory.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_messagequeue.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_mutex.cpp" />
-    <ClCompile Include="modules\coreinit\coreinit_save.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_spinlock.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_systeminfo.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_thread.cpp" />
@@ -192,9 +191,13 @@
     <ClCompile Include="modules\gx2\gx2_renderstate.cpp" />
     <ClCompile Include="modules\gx2\gx2_shaders.cpp" />
     <ClCompile Include="modules\gx2\gx2_texture.cpp" />
+    <ClCompile Include="modules\nn_save\nn_save.cpp" />
+    <ClCompile Include="modules\nn_save\nn_save_core.cpp" />
+    <ClCompile Include="modules\zlib125\zlib125.cpp" />
+    <ClCompile Include="modules\zlib125\zlib125_core.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="systemmodule.cpp" />
-    <ClCompile Include="systemthread.cpp" />
+    <ClCompile Include="thread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bigendianview.h" />
@@ -206,7 +209,6 @@
     <ClInclude Include="frameheapmanager.h" />
     <ClInclude Include="gdbstub.h" />
     <ClInclude Include="heapmanager.h" />
-    <ClInclude Include="integer_sequence.h" />
     <ClInclude Include="instruction.h" />
     <ClInclude Include="instructiondata.h" />
     <ClInclude Include="instructionid.h" />
@@ -216,11 +218,12 @@
     <ClInclude Include="loader.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="memory.h" />
-    <ClInclude Include="module.h" />
+    <ClInclude Include="usermodule.h" />
     <ClInclude Include="modules\coreinit\coreinit.h" />
     <ClInclude Include="modules\coreinit\coreinit_cache.h" />
     <ClInclude Include="modules\coreinit\coreinit_debug.h" />
     <ClInclude Include="modules\coreinit\coreinit_dynload.h" />
+    <ClInclude Include="modules\coreinit\coreinit_event.h" />
     <ClInclude Include="modules\coreinit\coreinit_expheap.h" />
     <ClInclude Include="modules\coreinit\coreinit_frameheap.h" />
     <ClInclude Include="modules\coreinit\coreinit_fs.h" />
@@ -230,7 +233,6 @@
     <ClInclude Include="modules\coreinit\coreinit_memory.h" />
     <ClInclude Include="modules\coreinit\coreinit_messagequeue.h" />
     <ClInclude Include="modules\coreinit\coreinit_mutex.h" />
-    <ClInclude Include="modules\coreinit\coreinit_save.h" />
     <ClInclude Include="modules\coreinit\coreinit_spinlock.h" />
     <ClInclude Include="modules\coreinit\coreinit_systeminfo.h" />
     <ClInclude Include="modules\coreinit\coreinit_thread.h" />
@@ -243,6 +245,10 @@
     <ClInclude Include="modules\gx2\gx2_renderstate.h" />
     <ClInclude Include="modules\gx2\gx2_shaders.h" />
     <ClInclude Include="modules\gx2\gx2_texture.h" />
+    <ClInclude Include="modules\nn_save\nn_save.h" />
+    <ClInclude Include="modules\nn_save\nn_save_core.h" />
+    <ClInclude Include="modules\zlib125\zlib125.h" />
+    <ClInclude Include="modules\zlib125\zlib125_core.h" />
     <ClInclude Include="ppc.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="systemdata.h" />
@@ -250,7 +256,7 @@
     <ClInclude Include="systemfunction.h" />
     <ClInclude Include="systemmodule.h" />
     <ClInclude Include="systemtypes.h" />
-    <ClInclude Include="systemthread.h" />
+    <ClInclude Include="thread.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

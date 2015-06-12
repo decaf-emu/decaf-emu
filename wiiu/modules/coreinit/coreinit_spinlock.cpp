@@ -22,7 +22,7 @@ OSAcquireSpinLock(OSSpinLock * spinlock)
    }
 
    // Spin until spinlock owner is nullptr
-   while (_InterlockedCompareExchange(reinterpret_cast<long*>(&spinlock->owner.value), curThread.value, 0));
+   while (_InterlockedCompareExchange(reinterpret_cast<long*>(&spinlock->owner.address), curThread.address, 0));
 
    return TRUE;
 }
@@ -37,7 +37,7 @@ OSTryAcquireSpinLock(OSSpinLock * spinlock)
       return TRUE;
    }
 
-   if (_InterlockedCompareExchange(reinterpret_cast<long*>(&spinlock->owner.value), curThread.value, 0)) {
+   if (_InterlockedCompareExchange(reinterpret_cast<long*>(&spinlock->owner.address), curThread.address, 0)) {
       return FALSE;
    } else {
       return TRUE;

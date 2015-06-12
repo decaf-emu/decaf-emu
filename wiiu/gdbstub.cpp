@@ -1,3 +1,4 @@
+#ifdef GDB_STUB
 #include <functional>
 #include <iostream>
 #include <string>
@@ -683,3 +684,4 @@ void startGDBStub(IDebugInterface *debug)
    gServer = new GdbServer { debug };
    gServer->start("127.0.0.1", "23946");
 }
+#endif

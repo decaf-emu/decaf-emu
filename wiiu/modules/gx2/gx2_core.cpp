@@ -42,7 +42,7 @@ GX2Invalidate(InvalidateMode mode, p32<void> buffer, uint32_t size)
 void
 GX2GetContextStateDisplayList(const GX2ContextState* state, p32<be_val<uint32_t>> outDisplayList, p32<be_val<uint32_t>> outSize)
 {
-   *outDisplayList = make_p32(&state->displayList).value;
+   *outDisplayList = make_p32(&state->displayList);
    *outSize = state->displayListSize;
 }
 
@@ -53,4 +53,5 @@ void GX2::registerCoreFunctions()
    RegisterSystemFunction(GX2SetupContextState);
    RegisterSystemFunction(GX2SetupContextStateEx);
    RegisterSystemFunction(GX2Invalidate);
+   RegisterSystemFunction(GX2GetContextStateDisplayList);
 }

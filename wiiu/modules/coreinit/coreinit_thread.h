@@ -146,7 +146,7 @@ void
 OSInitThreadQueue(OSThreadQueue *queue);
 
 void
-OSInitThreadQueueEx(OSThreadQueue *queue, void *parent);
+OSInitThreadQueueEx(OSThreadQueue *queue, p32<void> parent);
 
 BOOL
 OSSetThreadPriority(OSThread *thread, uint32_t priority);

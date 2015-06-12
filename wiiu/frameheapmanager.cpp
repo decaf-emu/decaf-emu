@@ -21,7 +21,7 @@ FrameHeapManager::FrameHeapManager(uint32_t address, uint32_t size, HeapFlags fl
    mTop = address + size;
    mBottom = address + sizeof(FrameHeapState);
 
-   mState.value = address;
+   mState = make_p32<FrameHeapState>(address);
    mState->tag = 0x11111111;
    mState->top = mTop;
    mState->bottom = mBottom;

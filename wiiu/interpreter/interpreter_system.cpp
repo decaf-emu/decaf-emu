@@ -5,6 +5,8 @@
 #include "log.h"
 #include "system.h"
 #include "systemfunction.h"
+#include "thread.h"
+#include "usermodule.h"
 
 static SprEncoding
 decodeSPR(Instruction instr)
@@ -176,7 +178,8 @@ sc(ThreadState *state, Instruction instr)
    SystemFunction *func = nullptr;
 
    if (id & 0x2000) {
-      auto sym = state->module->symbols[id & 0x1fff];
+      auto userModule = state->thread->getSystem()->getUserModule();
+      auto sym = userModule->symbols[id & 0x1fff];
       auto fsym = reinterpret_cast<FunctionSymbol*>(sym);
 
       if (sym->type != SymbolInfo::Function) {
@@ -189,6 +192,7 @@ sc(ThreadState *state, Instruction instr)
          return;
       }
 
+      return;
       assert(false);
    } else {
       func = gSystem.getSyscall(id);

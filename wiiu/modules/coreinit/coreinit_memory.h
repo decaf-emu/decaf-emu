@@ -22,6 +22,9 @@ enum class OSMemoryType : uint32_t
 void
 CoreInitDefaultHeap();
 
+void
+CoreFreeDefaultHeap();
+
 WHeapHandle
 MEMGetBaseHeapHandle(BaseHeapType arena);
 
@@ -39,6 +42,9 @@ OSFreeToSystem(p32<void> addr);
 
 p32<void>
 OSBlockMove(void *dst, const void *src, size_t size, BOOL flush);
+
+p32<void>
+OSBlockSet(void *dst, uint8_t val, size_t size);
 
 BOOL
 OSGetForegroundBucket(uint32_t *addr, uint32_t *size);

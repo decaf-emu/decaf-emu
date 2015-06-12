@@ -30,7 +30,7 @@ struct sysfunc_arg<p32<PtrType>>
    static inline p32<PtrType> convert(ThreadState *state, size_t &r, size_t &f)
    {
       p32<PtrType> ptr;
-      ptr.value = state->gpr[r++];
+      ptr.address = state->gpr[r++];
       return ptr;
    }
 };
@@ -88,7 +88,7 @@ struct sysfunc_result<p32<PtrType>>
 {
    static inline void update(ThreadState *state, p32<PtrType> v)
    {
-      state->gpr[3] = v.value;
+      state->gpr[3] = static_cast<uint32_t>(v);
    }
 };
 
@@ -111,14 +111,14 @@ template<typename Out, typename Type>
 static inline void
 logSyscallArgument(Out &out, p32<Type> &value)
 {
-   out << Log::hex(value.value);
+   out << Log::hex(static_cast<uint32_t>(value));
 }
 
 template<typename Out, typename Type>
 static inline void
 logSyscallArgument(Out &out, Type *value)
 {
-   out << Log::hex(make_p32(value).value);
+   out << Log::hex(static_cast<uint32_t>(make_p32(value)));
 }
 
 template<typename Out, typename Type>

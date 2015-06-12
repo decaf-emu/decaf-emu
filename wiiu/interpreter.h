@@ -16,10 +16,9 @@
 
 class Interpreter : public IDebugInterface
 {
-   using fptr_t = void(*)(ThreadState*, Instruction);
+   using instrfptr_t = void(*)(ThreadState*, Instruction);
 
 public:
-   void initialise();
    void execute(ThreadState *state, uint32_t addr);
 
    virtual void addBreakpoint(uint32_t addr);
@@ -30,17 +29,6 @@ public:
    virtual ThreadState *getThreadState(uint32_t tid);
 
 private:
-   void registerInstruction(InstructionID id, fptr_t fptr);
-   void registerBranchInstructions();
-   void registerConditionInstructions();
-   void registerFloatInstructions();
-   void registerIntegerInstructions();
-   void registerLoadStoreInstructions();
-   void registerPairedInstructions();
-   void registerSystemInstructions();
-
-   std::vector<fptr_t> mInstructionMap;
-
    ThreadState *mActiveThread;
    volatile bool mPaused;
    volatile bool mStep;
@@ -48,6 +36,21 @@ private:
    std::mutex mDebugMutex;
    std::condition_variable mDebugCV;
    void enterBreakpoint();
+
+public:
+   static void RegisterFunctions();
+
+private:
+   static void registerInstruction(InstructionID id, instrfptr_t fptr);
+   static void registerBranchInstructions();
+   static void registerConditionInstructions();
+   static void registerFloatInstructions();
+   static void registerIntegerInstructions();
+   static void registerLoadStoreInstructions();
+   static void registerPairedInstructions();
+   static void registerSystemInstructions();
+
+   static std::vector<instrfptr_t> sInstructionMap;
 };
 
 extern Interpreter gInterpreter;

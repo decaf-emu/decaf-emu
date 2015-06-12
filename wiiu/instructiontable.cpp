@@ -152,7 +152,7 @@ InstructionTable::decode(Instruction instr)
          auto start = getFieldStart(field);
          auto value = (instr & mask) >> start;
          table = &fieldMap.children[value];
-         
+
          if (table->instr || table->fieldMaps.size()) {
             break;
          }
@@ -164,6 +164,26 @@ InstructionTable::decode(Instruction instr)
    }
 
    return nullptr;
+}
+
+// Check if is a specific instruction
+bool
+InstructionTable::isA(InstructionID id, Instruction instr)
+{
+   auto &data = instructionData[static_cast<size_t>(id)];
+
+   for (auto &op : data.opcode) {
+      auto field = op.field;
+      auto value = op.value;
+      auto start = getFieldStart(field);
+      auto mask = getFieldBitmask(field);
+
+      if (((instr.value & mask) >> start) != value) {
+         return false;
+      }
+   }
+
+   return true;
 }
 
 Instruction
@@ -191,7 +211,8 @@ InstructionTable::initialise()
 }
 
 // Initialise instructionTable
-void initTable()
+void
+initTable()
 {
    for (auto &instr : instructionData) {
       TableEntry *table = &instructionTable;

@@ -32,7 +32,7 @@ DCZeroRange(p32<void> addr, uint32_t size)
 {
    // TODO: Check align direction is correct!
    size = alignDown(size, 32);
-   addr.value = alignUp(addr.value, 32);
+   addr = make_p32<void>(alignUp(static_cast<uint32_t>(addr), 32));
    memset(addr, 0, size);
 }
 

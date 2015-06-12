@@ -16,11 +16,11 @@
     <Filter Include="Source Files\interpreter">
       <UniqueIdentifier>{db86df2c-95f5-4641-8e36-60678d08610d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\modules">
-      <UniqueIdentifier>{783a79f2-1542-47e2-b26b-e1cacdbc1985}</UniqueIdentifier>
+    <Filter Include="Header Files\interpreter">
+      <UniqueIdentifier>{4ae275c9-5a4c-4137-a743-5359d521dab1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\modules\coreinit">
-      <UniqueIdentifier>{6a085612-0a41-4cfd-9588-06e478c184a8}</UniqueIdentifier>
+    <Filter Include="Header Files\ppc">
+      <UniqueIdentifier>{218a3501-38a3-41cf-bf13-8a79d70a0bfd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\modules">
       <UniqueIdentifier>{543deb93-600a-46cd-af7e-bb64e64765d6}</UniqueIdentifier>
@@ -31,8 +31,38 @@
     <Filter Include="Header Files\modules\gx2">
       <UniqueIdentifier>{7540a965-6c9f-48ea-a9fb-16cc6110f005}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\modules\nn_save">
+      <UniqueIdentifier>{b3e4a6a2-bd57-4e2f-a3ae-89b0a243bf91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\zlib125">
+      <UniqueIdentifier>{37d2f781-6c1c-45a6-a293-bf45ce7a5536}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\system">
+      <UniqueIdentifier>{4cfe8e72-73f4-4e2a-bf23-dad845a4fcf6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules">
+      <UniqueIdentifier>{783a79f2-1542-47e2-b26b-e1cacdbc1985}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\coreinit">
+      <UniqueIdentifier>{6a085612-0a41-4cfd-9588-06e478c184a8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\modules\gx2">
       <UniqueIdentifier>{8d97eeba-d583-4e7c-b20e-9dcdfe8ea718}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_save">
+      <UniqueIdentifier>{52c27dc3-eb10-4e57-9de1-cefec0731ed0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\zlib125">
+      <UniqueIdentifier>{e15b800e-59f9-40f8-bf71-3508459abb20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{f07bb6eb-0854-4198-85aa-ee57175b118e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppc">
+      <UniqueIdentifier>{aad165e0-f0a4-4040-b232-84b59983ec4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\system">
+      <UniqueIdentifier>{8c8252e9-b776-49cf-ab0a-ec5a801be21e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -40,24 +70,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="loader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="memory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="instructiontable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="interpreter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="disassembler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="systemmodule.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="system.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="modules\coreinit\coreinit.cpp">
@@ -111,9 +123,6 @@
     <ClCompile Include="modules\coreinit\coreinit_spinlock.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="systemthread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="modules\coreinit\coreinit_ghs.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
@@ -144,9 +153,6 @@
     <ClCompile Include="modules\coreinit\coreinit_fs.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_save.cpp">
-      <Filter>Source Files\modules\coreinit</Filter>
-    </ClCompile>
     <ClCompile Include="modules\coreinit\coreinit_mcp.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
@@ -171,66 +177,45 @@
     <ClCompile Include="modules\gx2\gx2_displaylist.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
+    <ClCompile Include="modules\nn_save\nn_save.cpp">
+      <Filter>Source Files\modules\nn_save</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\nn_save\nn_save_core.cpp">
+      <Filter>Source Files\modules\nn_save</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\zlib125\zlib125.cpp">
+      <Filter>Source Files\modules\zlib125</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\zlib125\zlib125_core.cpp">
+      <Filter>Source Files\modules\zlib125</Filter>
+    </ClCompile>
+    <ClCompile Include="disassembler.cpp">
+      <Filter>Source Files\ppc</Filter>
+    </ClCompile>
+    <ClCompile Include="instructiontable.cpp">
+      <Filter>Source Files\ppc</Filter>
+    </ClCompile>
+    <ClCompile Include="memory.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="system.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="systemmodule.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="thread.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="interpreter.cpp">
+      <Filter>Source Files\ppc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="log.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="bigendianview.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="memory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="elf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="loader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="instructions.inl">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="instructiondata.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="disassembler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="instruction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="bitutils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="instructionid.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="module.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="interpreter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ppc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="systemmodule.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="modules\coreinit\coreinit.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="system.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="gdbstub.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="floatutils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="interpreter\interpreter_float.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="modules\coreinit\coreinit_debug.h">
@@ -251,38 +236,14 @@
     <ClInclude Include="modules\coreinit\coreinit_mutex.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="systemtypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="systemfunction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="integer_sequence.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="systemexport.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="modules\coreinit\coreinit_systeminfo.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="modules\coreinit\coreinit_spinlock.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="systemthread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="modules\coreinit\coreinit_ghs.h">
       <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="systemdata.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="heapmanager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="expandedheapmanager.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="modules\coreinit\coreinit_expheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
@@ -296,19 +257,10 @@
     <ClInclude Include="modules\coreinit\coreinit_messagequeue.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="frameheapmanager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="modules\coreinit\coreinit_time.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="modules\coreinit\coreinit_fs.h">
-      <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_save.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="modules\coreinit\coreinit_mcp.h">
@@ -337,6 +289,102 @@
     </ClInclude>
     <ClInclude Include="modules\gx2\gx2_shaders.h">
       <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\nn_save\nn_save.h">
+      <Filter>Header Files\modules\nn_save</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\nn_save\nn_save_core.h">
+      <Filter>Header Files\modules\nn_save</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\zlib125\zlib125.h">
+      <Filter>Header Files\modules\zlib125</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\zlib125\zlib125_core.h">
+      <Filter>Header Files\modules\zlib125</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_event.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="instructiondata.h">
+      <Filter>Header Files\ppc</Filter>
+    </ClInclude>
+    <ClInclude Include="instructionid.h">
+      <Filter>Header Files\ppc</Filter>
+    </ClInclude>
+    <ClInclude Include="instructions.inl">
+      <Filter>Header Files\ppc</Filter>
+    </ClInclude>
+    <ClInclude Include="frameheapmanager.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="expandedheapmanager.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="elf.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="disassembler.h">
+      <Filter>Header Files\ppc</Filter>
+    </ClInclude>
+    <ClInclude Include="bigendianview.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="bitutils.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="floatutils.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="heapmanager.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="instruction.h">
+      <Filter>Header Files\ppc</Filter>
+    </ClInclude>
+    <ClInclude Include="loader.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="log.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="ppc.h">
+      <Filter>Header Files\ppc</Filter>
+    </ClInclude>
+    <ClInclude Include="usermodule.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="system.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="systemdata.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="systemexport.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="systemfunction.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="systemmodule.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="thread.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="memory.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="systemtypes.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="interpreter.h">
+      <Filter>Header Files\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="interpreter\interpreter_float.h">
+      <Filter>Header Files\interpreter</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

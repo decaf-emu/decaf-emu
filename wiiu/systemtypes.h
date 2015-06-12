@@ -21,35 +21,55 @@ using p32_raw = uint32_t;
 template<typename Type>
 struct p32
 {
+   p32()
+   {
+   }
+
+   explicit p32(std::nullptr_t) :
+      address(0)
+   {
+   }
+
+   template<typename Other>
+   p32(p32<Other> &other) :
+      address(other.address)
+   {
+   }
+
    p32 &operator=(Type *other)
    {
-      value = static_cast<uint32_t>(reinterpret_cast<size_t>(other));
+      address = static_cast<uint32_t>(reinterpret_cast<size_t>(other));
       return *this;
    }
 
    template<typename Other>
    p32 &operator=(p32<Other> other)
    {
-      value = other.value;
+      address = other.address;
       return *this;
    }
 
    Type *operator->() const
    {
-      return reinterpret_cast<Type*>(gMemory.translate(value));
+      return reinterpret_cast<Type*>(gMemory.translate(address));
    }
 
    operator Type *() const
    {
-      return reinterpret_cast<Type*>(gMemory.translate(value));
+      return reinterpret_cast<Type*>(gMemory.translate(address));
    }
 
    bool operator==(const p32<Type> &other) const
    {
-      return value == other.value;
+      return address == other.address;
    }
 
-   uint32_t value;
+   explicit operator uint32_t()
+   {
+      return address;
+   }
+
+   uint32_t address;
 };
 
 template<typename Type>
@@ -57,7 +77,7 @@ inline p32<Type>
 make_p32(const Type *src)
 {
    p32<Type> result;
-   result.value = src ? gMemory.untranslate(src) : 0;
+   result.address = src ? gMemory.untranslate(src) : 0;
    return result;
 }
 
@@ -66,7 +86,7 @@ inline p32<Type>
 make_p32(uint32_t vaddr)
 {
    p32<Type> result;
-   result.value = vaddr;
+   result.address = vaddr;
    return result;
 }
 
@@ -83,7 +103,7 @@ struct be_val
    template<typename OtherType>
    be_val &operator=(OtherType other)
    {
-      value = byte_swap(other);
+      value = static_cast<Type>(byte_swap(other));
       return *this;
    }
 

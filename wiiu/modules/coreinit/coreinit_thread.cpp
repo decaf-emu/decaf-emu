@@ -1,12 +1,12 @@
 #include "coreinit.h"
 #include "coreinit_thread.h"
 #include "memory.h"
-#include "systemthread.h"
+#include "thread.h"
 
 p32<OSThread>
 OSGetCurrentThread()
 {
-   return SystemThread::getCurrentThread()->getOSThread();
+   return Thread::getCurrentThread()->getOSThread();
 }
 
 void
@@ -18,7 +18,7 @@ OSInitThreadQueue(OSThreadQueue *queue)
 }
 
 void
-OSInitThreadQueueEx(OSThreadQueue *queue, void *parent)
+OSInitThreadQueueEx(OSThreadQueue *queue, p32<void> parent)
 {
    queue->head = nullptr;
    queue->tail = nullptr;

@@ -18,4 +18,6 @@ public:
    virtual ThreadState *getThreadState(uint32_t tid) = 0;
 };
 
+#ifdef GDB_STUB
 void startGDBStub(IDebugInterface *debug);
+#endif

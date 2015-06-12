@@ -15,7 +15,7 @@ class FrameHeapManager : public HeapManager
 {
 public:
    FrameHeapManager(uint32_t address, uint32_t size, HeapFlags flags = HeapFlags::None);
-   ~FrameHeapManager();
+   virtual ~FrameHeapManager();
 
    uint32_t alloc(uint32_t size, int alignment);
    void free(uint32_t addr, FrameHeapFreeMode freeMode);

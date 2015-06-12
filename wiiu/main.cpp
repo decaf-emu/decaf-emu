@@ -10,8 +10,11 @@
 #include "memory.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/gx2/gx2.h"
+#include "modules/nn_save/nn_save.h"
+#include "modules/zlib125/zlib125.h"
 #include "system.h"
-#include "systemthread.h"
+#include "thread.h"
+#include "usermodule.h"
 
 int main(int argc, char **argv)
 {
@@ -20,13 +23,20 @@ int main(int argc, char **argv)
       return -1;
    }
 
+   // Static module initialisation
+   Interpreter::RegisterFunctions();
+   CoreInit::RegisterFunctions();
+   GX2::RegisterFunctions();
+   NNSave::RegisterFunctions();
+   Zlib125::RegisterFunctions();
+
    // Initialise emulator systems
-   gInterpreter.initialise();
    gMemory.initialise();
    gInstructionTable.initialise();
-   gSystem.registerModule("coreinit", new CoreInit);
-   gSystem.registerModule("gx2", new GX2);
-   gSystem.loadThunks();
+   gSystem.registerModule("coreinit", new CoreInit {});
+   gSystem.registerModule("gx2", new GX2 {});
+   gSystem.registerModule("nn_save", new NNSave {});
+   gSystem.registerModule("zlib125", new Zlib125 {});
    gSystem.initialiseModules();
 
    auto file = std::ifstream { argv[1], std::ifstream::binary };
@@ -48,17 +58,19 @@ int main(int argc, char **argv)
 
    // Load the elf
    auto loader = Loader {};
-   auto module = Module {};
+   auto module = new UserModule {};
    auto entry = EntryInfo {};
+   gSystem.registerModule("redcarpet.rpx", module);
 
-   if (!loader.loadRPL(module, entry, buffer.data(), buffer.size())) {
+   if (!loader.loadRPL(*module, entry, buffer.data(), buffer.size())) {
       xError() << "Could not load elf file";
       return -1;
    }
 
    xLog() << "Succesfully loaded " << argv[1];
+   gInterpreter.addBreakpoint(0x2369750);
 
-   auto thread = new SystemThread(&module, entry.stackSize, entry.address);
+   auto thread = new Thread(&gSystem, entry.stackSize, entry.address);
    thread->run(gInterpreter);
 
    return 0;

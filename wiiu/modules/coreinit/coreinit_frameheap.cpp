@@ -18,7 +18,7 @@ MEMCreateFrmHeap(p32<void> addr, uint32_t size)
 WHeapHandle
 MEMCreateFrmHeapEx(p32<void> addr, uint32_t size, uint16_t flags)
 {
-   auto heap = new FrameHeapManager(addr.value, size, static_cast<HeapFlags>(flags));
+   auto heap = new FrameHeapManager(static_cast<uint32_t>(addr), size, static_cast<HeapFlags>(flags));
    return gSystem.addHeap(heap);
 }
 
@@ -75,7 +75,7 @@ MEMAdjustFrmHeap(WHeapHandle handle)
 uint32_t
 MEMResizeForMBlockFrmHeap(WHeapHandle handle, p32<void> addr, uint32_t size)
 {
-   return getFrameHeap(handle)->resizeBlock(addr.value, size);
+   return getFrameHeap(handle)->resizeBlock(static_cast<uint32_t>(addr), size);
 }
 
 uint32_t

@@ -27,12 +27,12 @@ enum class MemoryType
 struct MemoryView
 {
    MemoryView() :
-      address(nullptr)
+      address(0)
    {
    }
 
    MemoryView(MemoryType type, uint32_t start, uint32_t end, uint32_t pageSize) :
-      type(type), start(start), end(end), pageSize(pageSize), address(nullptr)
+      type(type), start(start), end(end), pageSize(pageSize), address(0)
    {
    }
 

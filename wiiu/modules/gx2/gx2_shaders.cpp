@@ -23,9 +23,15 @@ GX2CalcFetchShaderSizeEx(uint32_t attribs, FetchShaderType fetchShaderType, Tess
 }
 
 void
+GX2InitFetchShaderEx(GX2FetchShader *fetchShader, void *buffer, uint32_t count, const GX2AttribStream* attribs, FetchShaderType type, TessellationMode tessMode)
+{
+}
+
+void
 GX2::registerShaderFunctions()
 {
    RegisterSystemFunction(GX2CalcGeometryShaderInputRingBufferSize);
    RegisterSystemFunction(GX2CalcGeometryShaderOutputRingBufferSize);
    RegisterSystemFunction(GX2CalcFetchShaderSizeEx);
+   RegisterSystemFunction(GX2InitFetchShaderEx);
 }

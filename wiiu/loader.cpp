@@ -12,6 +12,7 @@
 #include "modules/coreinit/coreinit_dynload.h"
 #include "system.h"
 #include "systemmodule.h"
+#include "usermodule.h"
 #include "util.h"
 
 struct RplSection
@@ -228,7 +229,7 @@ readSections(BigEndianView &in, ElfHeader &header, std::vector<RplSection> &sect
 }
 
 static void
-processSections(Module &module, std::vector<RplSection> &sections, const char *strData)
+processSections(UserModule &module, std::vector<RplSection> &sections, const char *strData)
 {
    auto dataRange = std::make_pair(0u, 0u);
    auto codeRange = std::make_pair(0u, 0u);
@@ -402,8 +403,77 @@ writeDataThunk(uint32_t address, uint32_t id)
    gMemory.write<uint32_t>(address, 0xddddd000 | id);
 }
 
+static SymbolInfo *
+createFunctionSymbol(uint32_t index, ModuleSymbol *module, const char *name, uint32_t virtAddress)
+{
+   auto symbol = new FunctionSymbol();
+   symbol->index = index;
+   symbol->name = name;
+   symbol->systemFunction = findSystemFunction(module, name);
+
+   if (symbol->systemFunction) {
+      symbol->functionType = FunctionSymbol::System;
+      symbol->address = symbol->systemFunction->vaddr;
+   } else {
+      symbol->functionType = FunctionSymbol::User;
+      symbol->address = virtAddress;
+
+      if (symbol->address) {
+         writeFunctionThunk(symbol->address, index | FunctionSymbol::Unimplemented);
+      }
+   }
+
+   return symbol;
+}
+
+static SymbolInfo *
+createDataSymbol(uint32_t index, ModuleSymbol *module, const char *name, uint32_t virtAddress)
+{
+   auto symbol = new DataSymbol();
+   symbol->index = index;
+   symbol->name = name;
+   symbol->systemData = findSystemData(module, name);
+
+   if (symbol->systemData) {
+      symbol->dataType = DataSymbol::System;
+      symbol->address = static_cast<uint32_t>(*symbol->systemData->vptr);
+   } else {
+      symbol->dataType = DataSymbol::User;
+      symbol->address = virtAddress;
+
+      if (symbol->address) {
+         writeDataThunk(symbol->address, index);
+      }
+   }
+
+   return symbol;
+}
+
+static SymbolInfo *
+createModuleSymbol(uint32_t index, const char *library, const char *name, uint32_t virtAddress)
+{
+   auto symbol = new ModuleSymbol();
+   symbol->index = index;
+   symbol->name = name;
+   symbol->address = virtAddress;
+
+   if (library) {
+      symbol->systemModule = findSystemModule(library);
+   } else {
+      symbol->systemModule = nullptr;
+   }
+
+   if (symbol->systemModule) {
+      symbol->moduleType = ModuleSymbol::System;
+   } else {
+      symbol->moduleType = ModuleSymbol::User;
+   }
+
+   return symbol;
+}
+
 static void
-processSymbols(Module &module, RplSection &symtab, std::vector<RplSection> &sections)
+processSymbols(UserModule &module, RplSection &symtab, std::vector<RplSection> &sections)
 {
    auto in = BigEndianView { symtab.data.data(), symtab.data.size() };
    auto count = symtab.data.size() / sizeof(ElfSymbol);
@@ -429,67 +499,33 @@ processSymbols(Module &module, RplSection &symtab, std::vector<RplSection> &sect
       auto binding = header.st_info >> 4;
       auto type = header.st_info & 0xf;
 
-      // TODO: Clean this up!
-      auto id = i;
-      bool makeThunk = true;
-
       if (type == STT_FUNC) {
-         auto fsym = new FunctionSymbol();
-         auto fsys = findSystemFunction(impsec.msym, name);
-         fsym->systemFunction = fsys;
-         fsym->functionType = fsys ? FunctionSymbol::System : FunctionSymbol::User;
-         symbol = fsym;
-         id = fsym->systemFunction ? fsym->systemFunction->syscallID : (0x2000 | i);
-
-         if (fsys) {
-            makeThunk = false;
-            virtAddress = fsys->vaddr;
-         }
+         symbol = createFunctionSymbol(i, impsec.msym, name, virtAddress);
       } else if (type == STT_OBJECT) {
-         auto dsym = new DataSymbol();
-         auto dsys = findSystemData(impsec.msym, name);
-         dsym->systemData = dsys;
-         dsym->dataType = dsys ? DataSymbol::System : DataSymbol::User;
-         symbol = dsym;
-
-         if (dsys) {
-            makeThunk = false;
-            virtAddress = dsys->vptr->value;
-         }
+         symbol = createDataSymbol(i, impsec.msym, name, virtAddress);
       } else if (type == STT_SECTION) {
-         auto msym = new ModuleSymbol();
+         const char *library = nullptr;
 
          if (impsec.section) {
-            msym->systemModule = findSystemModule(impsec.section->library.c_str());
+            library = impsec.section->library.c_str();
          }
 
-         msym->moduleType = msym->systemModule ? ModuleSymbol::System : ModuleSymbol::User;
-         impsec.msym = msym;
-         symbol = msym;
+         symbol = createModuleSymbol(i, library, name, virtAddress);
+         impsec.msym = reinterpret_cast<ModuleSymbol*>(symbol);
       } else {
          symbol = new SymbolInfo();
          symbol->type = SymbolInfo::Invalid;
+         symbol->index = i;
+         symbol->name = name;
+         symbol->address = virtAddress;
       }
 
-      symbol->index = i;
-      symbol->name = name;
-      symbol->address = virtAddress;
       module.symbols[i] = symbol;
-
-      // Write thunks
-      if (makeThunk && symbol->address) {
-         if (type == STT_FUNC) {
-            // Backup thunk for when we have no syscall defined!
-            writeFunctionThunk(symbol->address, id);
-         } else if (type == STT_OBJECT) {
-            writeDataThunk(symbol->address, symbol->index);
-         }
-      }
    }
 }
 
 static void
-processRelocations(Module &module, RplSection &section, std::vector<RplSection> &sections)
+processRelocations(UserModule &module, RplSection &section, std::vector<RplSection> &sections)
 {
    // TODO: Support more than one symbol section (symsec)
    auto &symsec = sections[section.header.sh_link];
@@ -538,7 +574,7 @@ processRelocations(Module &module, RplSection &section, std::vector<RplSection> 
 }
 
 bool
-Loader::loadRPL(Module &module, EntryInfo &entry, const char *buffer, size_t size)
+Loader::loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t size)
 {
    auto in = BigEndianView { buffer, size };
    auto header = ElfHeader { };

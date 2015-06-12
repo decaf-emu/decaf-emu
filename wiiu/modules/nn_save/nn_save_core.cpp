@@ -1,5 +1,5 @@
-#include "coreinit.h"
-#include "coreinit_save.h"
+#include "nn_save.h"
+#include "nn_save_core.h"
 
 SaveError
 SAVEInit()
@@ -13,7 +13,7 @@ SAVEShutdown()
 }
 
 void
-CoreInit::registerSaveFunctions()
+NNSave::registerCoreFunctions()
 {
    RegisterSystemFunction(SAVEInit);
    RegisterSystemFunction(SAVEShutdown);

@@ -4,7 +4,7 @@
 #include "coreinit_memory.h"
 #include "coreinit_expheap.h"
 #include "interpreter.h"
-#include "systemthread.h"
+#include "thread.h"
 
 p32<be_val<uint32_t>>
 pOSDynLoad_MemAlloc;
@@ -16,7 +16,7 @@ template<unsigned N>
 static inline uint32_t
 OSExecuteCallback(uint32_t addr, uint32_t (&args)[N])
 {
-   auto state = SystemThread::getCurrentThread()->getThreadState();
+   auto state = Thread::getCurrentThread()->getThreadState();
    uint32_t save[N];
    uint32_t result;
 
@@ -60,7 +60,7 @@ int MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 void MEM_DynLoad_DefaultFree(p32<void> addr)
 {
    uint32_t args[] = {
-      addr.value
+      static_cast<uint32_t>(addr)
    };
 
    OSExecuteCallback(pMEMFreeToDefaultHeap->value, args);
@@ -91,12 +91,12 @@ int
 OSDynLoad_MemAlloc(int size, int alignment, uint32_t *outPtr)
 {
    auto handle = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
-   *outPtr = MEMAllocFromExpHeapEx(handle, size, alignment).value;
+   *outPtr = static_cast<uint32_t>(MEMAllocFromExpHeapEx(handle, size, alignment));
    return 0;
 
    // TODO: Fix user dynload callback
    /*
-   auto state = SystemThread::getCurrentThread()->getThreadState();
+   auto state = Thread::getCurrentThread()->getThreadState();
    state->gpr[1] -= 4;
 
    auto stack = state->gpr[1];
@@ -143,9 +143,6 @@ CoreInit::registerDynLoadFunctions()
 void
 CoreInit::initialiseDynLoad()
 {
-   RegisterSystemFunction(OSDynLoad_SetAllocator);
-   RegisterSystemFunction(OSDynLoad_GetAllocator);
-
    pOSDynLoad_MemAlloc = OSAllocFromSystem(sizeof(uint32_t), 4);
    *pOSDynLoad_MemAlloc = findExportAddress("MEM_DynLoad_DefaultAlloc");
 

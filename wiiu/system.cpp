@@ -2,18 +2,24 @@
 #include "instructiondata.h"
 #include "system.h"
 #include "systemmodule.h"
-#include "systemthread.h"
+#include "thread.h"
 #include "modules/coreinit/coreinit_memory.h"
 
 System gSystem;
 
-void
-System::registerModule(std::string name, SystemModule *module)
+System::System()
 {
-   mModules.insert(std::make_pair(name, module));
+}
 
-   // Map syscall id
-   for (auto &itr : module->mExport) {
+void
+System::registerModule(const char *name, SystemModule *module)
+{
+   mSystemModules.insert(std::make_pair(std::move(name), module));
+
+   // Map syscall IDs
+   auto exports = module->getExportMap();
+
+   for (auto &itr : exports) {
       auto exp = itr.second;
 
       if (exp->type == SystemExport::Function) {
@@ -25,19 +31,33 @@ System::registerModule(std::string name, SystemModule *module)
 }
 
 void
+System::registerModule(const char *name, UserModule *module)
+{
+   mUserModule = module;
+}
+
+UserModule *
+System::getUserModule() const
+{
+   return mUserModule;
+}
+
+void
 System::initialiseModules()
 {
-   for (auto &mpair : mModules) {
-      mpair.second->initialise();
+   loadThunks();
+
+   for (auto &pair : mSystemModules) {
+      pair.second->initialise();
    }
 }
 
 SystemModule *
-System::findModule(std::string name)
+System::findModule(const char *name) const
 {
-   auto itr = mModules.find(name);
+   auto itr = mSystemModules.find(name);
 
-   if (itr == mModules.end()) {
+   if (itr == mSystemModules.end()) {
       return nullptr;
    } else {
       return itr->second;
@@ -45,13 +65,13 @@ System::findModule(std::string name)
 }
 
 void
-System::addThread(SystemThread *thread)
+System::addThread(Thread *thread)
 {
    mThreads.push_back(thread);
 }
 
 void
-System::removeThread(SystemThread *thread)
+System::removeThread(Thread *thread)
 {
    mThreads.erase(std::remove(mThreads.begin(), mThreads.end(), thread), mThreads.end());
 }
@@ -65,8 +85,11 @@ System::getSyscall(uint32_t id)
 void
 System::loadThunks()
 {
+   uint32_t addr;
+
    // Allocate space for all thunks!
-   auto addr = OSAllocFromSystem(static_cast<uint32_t>(mSystemCalls.size() * 8), 4).value;
+   mSystemThunks = OSAllocFromSystem(static_cast<uint32_t>(mSystemCalls.size() * 8), 4);
+   addr = static_cast<uint32_t>(mSystemThunks);
 
    for (auto &func : mSystemCalls) {
       // Set the function virtual address

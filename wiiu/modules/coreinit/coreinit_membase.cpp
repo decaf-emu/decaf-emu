@@ -1,8 +1,9 @@
+#include <algorithm>
 #include "coreinit.h"
 #include "coreinit_memory.h"
 #include "coreinit_expheap.h"
 #include "coreinit_frameheap.h"
-#include <algorithm>
+#include "system.h"
 
 p32<be_val<uint32_t>>
 pMEMAllocFromDefaultHeap;
@@ -89,8 +90,8 @@ sMEMFreeToDefaultHeap(p32<void> block)
 void
 CoreInitDefaultHeap()
 {
-   uint32_t addr, size;
    WHeapHandle mem1, mem2, fg;
+   uint32_t addr, size;
 
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
@@ -121,6 +122,42 @@ CoreInitDefaultHeap()
 }
 
 void
+CoreFreeDefaultHeap()
+{
+   // Delete all base heaps
+   for (auto i = 0u; i < static_cast<size_t>(BaseHeapType::Max); ++i) {
+      if (gMemArenas[i]) {
+         auto heap = gSystem.getHeap(gMemArenas[i]);
+         gSystem.removeHeap(gMemArenas[i]);
+         delete heap;
+         gMemArenas[i] = 0;
+      }
+   }
+
+   // Delete system heap
+   auto sysHeap = gSystem.getHeap(gSystemHeap);
+   gSystem.removeHeap(gSystemHeap);
+   delete sysHeap;
+   gSystemHeap = 0;
+
+   // Free function pointers
+   if (pMEMAllocFromDefaultHeap) {
+      OSFreeToSystem(pMEMAllocFromDefaultHeap);
+      pMEMAllocFromDefaultHeap = 0;
+   }
+
+   if (pMEMAllocFromDefaultHeapEx) {
+      OSFreeToSystem(pMEMAllocFromDefaultHeap);
+      pMEMAllocFromDefaultHeap = 0;
+   }
+
+   if (pMEMFreeToDefaultHeap) {
+      OSFreeToSystem(pMEMAllocFromDefaultHeap);
+      pMEMAllocFromDefaultHeap = 0;
+   }
+}
+
+void
 CoreInit::registerMembaseFunctions()
 {
    memset(gMemArenas, 0, sizeof(WHeapHandle) * static_cast<size_t>(BaseHeapType::Max));
@@ -137,8 +174,6 @@ CoreInit::registerMembaseFunctions()
    RegisterSystemFunction(sMEMAllocFromDefaultHeap);
    RegisterSystemFunction(sMEMAllocFromDefaultHeapEx);
    RegisterSystemFunction(sMEMFreeToDefaultHeap);
-
-   RegisterSystemFunction(CoreInitDefaultHeap);
 }
 
 void

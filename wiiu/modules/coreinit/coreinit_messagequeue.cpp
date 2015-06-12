@@ -47,7 +47,7 @@ OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags flags
    }
 
    auto index = (queue->first + queue->count) % queue->size;
-   auto dst = make_p32<OSMessage>(queue->messages.value + index * sizeof(OSMessage));
+   auto dst = make_p32<OSMessage>(static_cast<uint32_t>(queue->messages) + index * sizeof(OSMessage));
 
    // Copy into message array
    memcpy(dst, message, sizeof(OSMessage));
@@ -84,7 +84,7 @@ OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags flags)
    }
 
    // Copy into message array
-   auto dst = make_p32<OSMessage>(queue->messages.value + index * sizeof(OSMessage));
+   auto dst = make_p32<OSMessage>(static_cast<uint32_t>(queue->messages) + index * sizeof(OSMessage));
    memcpy(dst, message, sizeof(OSMessage));
 
    // Update queue start and count
@@ -112,7 +112,7 @@ OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags fl
    }
 
    auto index = queue->first;
-   auto src = make_p32<OSMessage>(queue->messages.value + index * sizeof(OSMessage));
+   auto src = make_p32<OSMessage>(static_cast<uint32_t>(queue->messages) + index * sizeof(OSMessage));
 
    // Copy from message array
    memcpy(message, src, sizeof(OSMessage));
@@ -136,7 +136,7 @@ OSPeekMessage(WMessageQueue *queue, p32<OSMessage> message)
    }
 
    // Copy from message array
-   auto src = make_p32<OSMessage>(queue->messages.value + queue->first * sizeof(OSMessage));
+   auto src = make_p32<OSMessage>(static_cast<uint32_t>(queue->messages) + queue->first * sizeof(OSMessage));
    memcpy(message, src, sizeof(OSMessage));
    return TRUE;
 }

@@ -122,8 +122,6 @@ formatString(ThreadState *state, std::string &output, unsigned reg = 3)
          ++i;
       }
    }
-
-   xLog() << "Formatted " << fmt << " to " << output;
 }
 
 void
@@ -131,7 +129,7 @@ OSReport(ThreadState *state)
 {
    std::string str;
    formatString(state, str);
-   xLog() << str;
+   xDebug() << str;
 }
 
 void

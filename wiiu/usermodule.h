@@ -81,6 +81,8 @@ struct DataSymbol : public SymbolInfo
 
 struct FunctionSymbol : public SymbolInfo
 {
+   static const uint32_t Unimplemented = 0x2000;
+
    enum FunctionType
    {
       System,
@@ -97,11 +99,10 @@ struct FunctionSymbol : public SymbolInfo
    SystemFunction *systemFunction;
 };
 
-struct Module
+struct UserModule
 {
    std::pair<uint32_t, uint32_t> codeAddressRange;
    std::pair<uint32_t, uint32_t> dataAddressRange;
    std::vector<SymbolInfo*> symbols;
    std::vector<Section*> sections;
 };
-

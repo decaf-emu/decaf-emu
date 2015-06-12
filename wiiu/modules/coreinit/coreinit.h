@@ -2,36 +2,40 @@
 #include "systemmodule.h"
 #include "log.h"
 
-class CoreInit : public SystemModule
+class CoreInit : public SystemModuleImpl<CoreInit>
 {
 public:
    CoreInit();
+   virtual ~CoreInit() override;
 
    virtual void initialise() override;
 
 private:
-   void registerCacheFunctions();
-   void registerDebugFunctions();
-   void registerDynLoadFunctions();
-   void registerExpHeapFunctions();
-   void registerFileSystemFunctions();
-   void registerFrameHeapFunctions();
-   void registerGhsFunctions();
-   void registerMcpFunctions();
-   void registerMembaseFunctions();
-   void registerMemoryFunctions();
-   void registerMessageQueueFunctions();
-   void registerMutexFunctions();
-   void registerSaveFunctions();
-   void registerSpinLockFunctions();
-   void registerSystemInfoFunctions();
-   void registerThreadFunctions();
-   void registerTimeFunctions();
-   void registerUserConfigFunctions();
-
    void initialiseDynLoad();
    void initialiseGHS();
    void initialiseMembase();
    void initialiseMessageQueues();
    void initialiseSystemInformation();
+
+public:
+   static void RegisterFunctions();
+
+private:
+   static void registerCacheFunctions();
+   static void registerDebugFunctions();
+   static void registerDynLoadFunctions();
+   static void registerExpHeapFunctions();
+   static void registerFileSystemFunctions();
+   static void registerFrameHeapFunctions();
+   static void registerGhsFunctions();
+   static void registerMcpFunctions();
+   static void registerMembaseFunctions();
+   static void registerMemoryFunctions();
+   static void registerMessageQueueFunctions();
+   static void registerMutexFunctions();
+   static void registerSpinLockFunctions();
+   static void registerSystemInfoFunctions();
+   static void registerThreadFunctions();
+   static void registerTimeFunctions();
+   static void registerUserConfigFunctions();
 };

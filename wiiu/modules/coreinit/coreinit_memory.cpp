@@ -9,6 +9,20 @@ OSBlockMove(void *dst, const void *src, size_t size, BOOL flush)
    return make_p32(dst);
 }
 
+p32<void>
+OSBlockSet(void *dst, uint8_t val, size_t size)
+{
+   std::memset(dst, val, size);
+   return make_p32(dst);
+}
+
+static p32<void>
+coreinit_memmove(void *dst, const void *src, size_t size)
+{
+   std::memmove(dst, src, size);
+   return make_p32(dst);
+}
+
 static p32<void>
 coreinit_memcpy(void *dst, const void *src, size_t size)
 {
@@ -70,9 +84,11 @@ void
 CoreInit::registerMemoryFunctions()
 {
    RegisterSystemFunction(OSBlockMove);
+   RegisterSystemFunction(OSBlockSet);
    RegisterSystemFunction(OSGetMemBound);
    RegisterSystemFunction(OSGetForegroundBucket);
    RegisterSystemFunction(OSGetForegroundBucketFreeArea);
-   RegisterSystemFunctionName("memset", coreinit_memset);
    RegisterSystemFunctionName("memcpy", coreinit_memcpy);
+   RegisterSystemFunctionName("memset", coreinit_memset);
+   RegisterSystemFunctionName("memmove", coreinit_memmove);
 }

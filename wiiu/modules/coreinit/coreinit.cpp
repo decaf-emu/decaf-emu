@@ -3,6 +3,27 @@
 
 CoreInit::CoreInit()
 {
+   CoreInitDefaultHeap();
+}
+
+CoreInit::~CoreInit()
+{
+   CoreFreeDefaultHeap();
+}
+
+void
+CoreInit::initialise()
+{
+   initialiseMembase();
+   initialiseMessageQueues();
+   initialiseGHS();
+   initialiseSystemInformation();
+   initialiseDynLoad();
+}
+
+void
+CoreInit::RegisterFunctions()
+{
    registerCacheFunctions();
    registerDebugFunctions();
    registerDynLoadFunctions();
@@ -15,21 +36,9 @@ CoreInit::CoreInit()
    registerMembaseFunctions();
    registerMessageQueueFunctions();
    registerMutexFunctions();
-   registerSaveFunctions();
    registerSpinLockFunctions();
    registerSystemInfoFunctions();
    registerThreadFunctions();
    registerTimeFunctions();
    registerUserConfigFunctions();
-
-   CoreInitDefaultHeap();
-}
-
-void CoreInit::initialise()
-{
-   initialiseMembase();
-   initialiseMessageQueues();
-   initialiseGHS();
-   initialiseSystemInformation();
-   initialiseDynLoad();
 }

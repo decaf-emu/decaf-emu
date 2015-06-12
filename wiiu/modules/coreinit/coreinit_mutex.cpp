@@ -16,7 +16,7 @@ void
 OSInitMutexEx(WMutex *mutex, char *name)
 {
    OSInitMutex(mutex);
-   mutex->name = name;
+   mutex->name = make_p32(name);
 }
 
 void
@@ -53,7 +53,7 @@ void
 OSInitCondEx(WCondition *cond, char *name)
 {
    OSInitCond(cond);
-   cond->name = name;
+   cond->name = make_p32(name);
 }
 
 void

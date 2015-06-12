@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "module.h"
+
+struct UserModule;
 
 struct EntryInfo
 {
@@ -12,7 +13,7 @@ struct EntryInfo
 class Loader
 {
 public:
-   bool loadRPL(Module &module, EntryInfo &entry, const char *buffer, size_t size);
+   bool loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t size);
 
 private:
 };

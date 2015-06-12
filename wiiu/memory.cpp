@@ -13,10 +13,8 @@ Memory::~Memory()
    }
 }
 
-// Page size is 128kb?
-#define OSGetPageSize() (128 * 1024)
-
-bool Memory::initialise()
+bool
+Memory::initialise()
 {
    // Setup memory views
    mViews = {
@@ -56,7 +54,8 @@ bool Memory::initialise()
    return true;
 }
 
-MemoryView *Memory::getView(MemoryType type)
+MemoryView *
+Memory::getView(MemoryType type)
 {
    for (auto &view : mViews) {
       if (view.type == type) {
@@ -67,7 +66,8 @@ MemoryView *Memory::getView(MemoryType type)
    return nullptr;
 }
 
-MemoryView *Memory::getView(uint32_t address)
+MemoryView *
+Memory::getView(uint32_t address)
 {
    for (auto &view : mViews) {
       if (address >= view.start && address < view.end) {
@@ -78,7 +78,8 @@ MemoryView *Memory::getView(uint32_t address)
    return nullptr;
 }
 
-bool Memory::valid(uint32_t address)
+bool
+Memory::valid(uint32_t address)
 {
    auto view = getView(address);
 
@@ -86,12 +87,12 @@ bool Memory::valid(uint32_t address)
       return nullptr;
    }
 
-   auto page = (address - reinterpret_cast<uint32_t>(view->address)) / view->pageSize;
-
+   auto page = (address - view->start) / view->pageSize;
    return view->pageTable[page].allocated;
 }
 
-uint32_t Memory::alloc(MemoryType type, size_t size)
+uint32_t
+Memory::alloc(MemoryType type, size_t size)
 {
    auto view = getView(type);
    auto n = size / view->pageSize;
@@ -117,7 +118,7 @@ uint32_t Memory::alloc(MemoryType type, size_t size)
       }
    }
 
-   auto address = reinterpret_cast<uint32_t>(view->address) + startPage * view->pageSize;
+   auto address = view->start + startPage * view->pageSize;
 
    if (alloc(address, size)) {
       return address;
@@ -126,7 +127,8 @@ uint32_t Memory::alloc(MemoryType type, size_t size)
    }
 }
 
-bool Memory::alloc(uint32_t address, size_t size)
+bool
+Memory::alloc(uint32_t address, size_t size)
 {
    auto view = getView(address);
 
@@ -171,7 +173,8 @@ bool Memory::alloc(uint32_t address, size_t size)
    return true;
 }
 
-bool Memory::free(uint32_t address)
+bool
+Memory::free(uint32_t address)
 {
    MemoryView *view = getView(address);
 
@@ -208,7 +211,8 @@ bool Memory::free(uint32_t address)
    return true;
 }
 
-bool Memory::tryMapViews(uint8_t *base)
+bool
+Memory::tryMapViews(uint8_t *base)
 {
    for (auto &view : mViews) {
       auto lo = static_cast<DWORD>(view.start);
@@ -228,7 +232,8 @@ bool Memory::tryMapViews(uint8_t *base)
    return true;
 }
 
-void Memory::unmapViews()
+void
+Memory::unmapViews()
 {
    for (auto &view : mViews) {
       if (view.address) {

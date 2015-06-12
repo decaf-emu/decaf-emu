@@ -87,16 +87,31 @@ struct InstructionData
    std::vector<Field> flags;
 };
 
-uint32_t getFieldStart(Field field);
-uint32_t getFieldEnd(Field field);
-uint32_t getFieldWidth(Field field);
-uint32_t getFieldBitmask(Field field);
-
 struct InstructionTable
 {
    void initialise();
    InstructionData *decode(Instruction instr);
    Instruction encode(InstructionID id);
+   bool isA(InstructionID id, Instruction instr);
 };
 
 extern InstructionTable gInstructionTable;
+
+uint32_t
+getFieldStart(Field field);
+
+uint32_t
+getFieldEnd(Field field);
+
+uint32_t
+getFieldWidth(Field field);
+
+uint32_t
+getFieldBitmask(Field field);
+
+template<typename InstructionID>
+bool
+isA(Instruction instr)
+{
+   return gInstructionTable.isA(InstructionID id, instr);
+}
