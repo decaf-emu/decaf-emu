@@ -3,8 +3,7 @@
 #include <ctime>
 
 // TODO: Emulate time? Update time base registers?
-
-OSTime
+TimeClocks
 OSGetSystemTime()
 {
    return clock();

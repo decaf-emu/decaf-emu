@@ -2,6 +2,8 @@
 #include "systemtypes.h"
 
 using OSTime = int64_t;
+using TimeClocks = int64_t;
+using TimeNanoseconds = int64_t;
 
-OSTime
+TimeClocks
 OSGetSystemTime();
