@@ -213,6 +213,12 @@
     <ClCompile Include="modules\coreinit\coreinit_event.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_fastmutex.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_core.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="modules\coreinit\coreinit.h">
@@ -391,6 +397,12 @@
     </ClInclude>
     <ClInclude Include="systemobject.h">
       <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_fastmutex.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_core.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

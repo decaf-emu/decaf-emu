@@ -18,11 +18,13 @@ public:
    System *getSystem() const;
    ThreadState *getThreadState() const;
    p32<OSThread> getOSThread() const;
+   uint32_t getCoreID() const;
 
 public:
    static Thread *getCurrentThread();
 
 private:
+   uint32_t mCoreID;
    std::string mName;
    System *mSystem;
    uint32_t mStackBase;

@@ -24,6 +24,7 @@ CoreInit::initialise()
 void
 CoreInit::RegisterFunctions()
 {
+   registerCoreFunctions();
    registerCacheFunctions();
    registerDebugFunctions();
    registerDynLoadFunctions();

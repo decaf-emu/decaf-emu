@@ -6,7 +6,8 @@
 __declspec(thread) Thread *tCurrentThread = nullptr;
 
 Thread::Thread(System *system, uint32_t stackSize, uint32_t entryPoint) :
-   mSystem(system)
+   mSystem(system),
+   mCoreID(1)
 {
    // Setup stack
    mStackSize = stackSize;
@@ -59,6 +60,12 @@ p32<OSThread>
 Thread::getOSThread() const
 {
    return mOSThread;
+}
+
+uint32_t
+Thread::getCoreID() const
+{
+   return mCoreID;
 }
 
 void
