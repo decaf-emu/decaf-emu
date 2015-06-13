@@ -2,6 +2,20 @@
 #include "gx2_display.h"
 
 static uint32_t gSwapInterval;
+static BOOL gTVEnable;
+static BOOL gDRCEnable;
+
+void
+GX2SetTVEnable(BOOL enable)
+{
+   gTVEnable = enable;
+}
+
+void
+GX2SetDRCEnable(BOOL enable)
+{
+   gDRCEnable = enable;
+}
 
 void
 GX2CalcTVSize(TvRenderMode tvRenderMode, SurfaceFormat surfaceFormat, BufferingMode bufferingMode, be_val<uint32_t> *size, be_val<uint32_t> *unkOut)
@@ -49,6 +63,8 @@ GX2SetSwapInterval(uint32_t interval)
 void
 GX2::registerDisplayFunctions()
 {
+   RegisterSystemFunction(GX2SetTVEnable);
+   RegisterSystemFunction(GX2SetDRCEnable);
    RegisterSystemFunction(GX2CalcTVSize);
    RegisterSystemFunction(GX2SetTVBuffer);
    RegisterSystemFunction(GX2SetTVScale);

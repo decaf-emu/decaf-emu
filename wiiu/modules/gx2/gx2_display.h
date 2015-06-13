@@ -26,6 +26,12 @@ enum class BufferingMode : uint32_t
 };
 
 void
+GX2SetTVEnable(BOOL enable);
+
+void
+GX2SetDRCEnable(BOOL enable);
+
+void
 GX2CalcTVSize(TvRenderMode tvRenderMode, SurfaceFormat surfaceFormat, BufferingMode bufferingMode, be_val<uint32_t> *size, be_val<uint32_t> *unkOut);
 
 void
