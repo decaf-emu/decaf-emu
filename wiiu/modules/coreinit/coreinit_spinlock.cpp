@@ -1,28 +1,32 @@
 #include "coreinit.h"
 #include "coreinit_spinlock.h"
 #include "coreinit_thread.h"
+#include <atomic>
 
 // TODO: Rewrite using std::atomic
 
 void
 OSInitSpinLock(OSSpinLock * spinlock)
 {
-   spinlock->owner = nullptr;
+   spinlock->owner = 0;
    spinlock->recursion = 0;
 }
 
 BOOL
 OSAcquireSpinLock(OSSpinLock * spinlock)
 {
-   auto curThread = OSGetCurrentThread();
+   auto owner = static_cast<uint32_t>(OSGetCurrentThread());
+   auto expected = 0u;
 
-   if (spinlock->owner == curThread) {
+   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
       return TRUE;
    }
 
-   // Spin until spinlock owner is nullptr
-   while (_InterlockedCompareExchange(reinterpret_cast<long*>(&spinlock->owner.address), curThread.address, 0));
+   // Spin until acquired
+   while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
+      expected = 0;
+   }
 
    return TRUE;
 }
@@ -30,17 +34,18 @@ OSAcquireSpinLock(OSSpinLock * spinlock)
 BOOL
 OSTryAcquireSpinLock(OSSpinLock * spinlock)
 {
-   auto curThread = OSGetCurrentThread();
+   auto owner = static_cast<uint32_t>(OSGetCurrentThread());
+   auto expected = 0u;
 
-   if (spinlock->owner == curThread) {
+   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
       return TRUE;
    }
 
-   if (_InterlockedCompareExchange(reinterpret_cast<long*>(&spinlock->owner.address), curThread.address, 0)) {
-      return FALSE;
-   } else {
+   if (spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
       return TRUE;
+   } else {
+      return FALSE;
    }
 }
 
@@ -54,15 +59,15 @@ OSTryAcquireSpinLockWithTimeout(OSSpinLock * spinlock, int64_t timeout)
 BOOL
 OSReleaseSpinLock(OSSpinLock * spinlock)
 {
-   auto curThread = OSGetCurrentThread();
+   auto owner = static_cast<uint32_t>(OSGetCurrentThread());
 
    if (spinlock->recursion > 0) {
       --spinlock->recursion;
       return TRUE;
    }
 
-   if (spinlock->owner == curThread) {
-      spinlock->owner = nullptr;
+   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
+      spinlock->owner = 0;
       return TRUE;
    }
 

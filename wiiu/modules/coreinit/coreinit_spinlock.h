@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include "systemtypes.h"
 #include "coreinit_thread.h"
 
@@ -6,7 +7,7 @@
 
 struct OSSpinLock
 {
-   p32<OSThread> owner;
+   std::atomic<uint32_t> owner;
    UNKNOWN(0x4);
    be_val<uint32_t> recursion;
    UNKNOWN(0x4);
