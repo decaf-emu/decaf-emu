@@ -218,6 +218,7 @@
     <ClInclude Include="loader.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="memory.h" />
+    <ClInclude Include="systemobject.h" />
     <ClInclude Include="usermodule.h" />
     <ClInclude Include="modules\coreinit\coreinit.h" />
     <ClInclude Include="modules\coreinit\coreinit_cache.h" />

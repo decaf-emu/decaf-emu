@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "memory.h"
+#include "systemobject.h"
 
 #ifndef BOOL
 typedef int BOOL;

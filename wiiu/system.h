@@ -35,6 +35,41 @@ public:
    HeapManager *getHeapByAddress(uint32_t vaddr);
    void removeHeap(WHeapHandle handle);
 
+   // Create a system object for the virtual address
+   template<typename Type>
+   inline Type *
+   addSystemObject(p32<SystemObjectHeader> header)
+   {
+      auto object = new Type();
+
+      // Set object header values
+      header->tag = Type::Tag;
+      header->object = object;
+
+      // Add to object map
+      auto sysobj = reinterpret_cast<SystemObject*>(object);
+      sysobj->objectTag = Type::Tag;
+      sysobj->objectVirtualAddress = static_cast<uint32_t>(header);
+      mSystemObjects.insert(std::make_pair(sysobj->objectVirtualAddress, sysobj));
+
+      return object;
+   }
+
+   // Get the system object associated with virtual address
+   template<typename Type>
+   inline Type *
+   getSystemObject(p32<SystemObjectHeader> header)
+   {
+      assert(header->tag == Type::Tag);
+      return reinterpret_cast<Type*>(header->object);
+   }
+
+   // Free the system object associated with virtual address
+   bool freeSystemObject(p32<SystemObjectHeader> header);
+
+   // Finds and free all system objects within a range of memory addresses
+   void freeSystemObjects(uint32_t address, uint32_t size);
+
 protected:
    void loadThunks();
 
@@ -46,6 +81,8 @@ private:
 
    std::vector<HeapManager *> mHeaps;
    std::vector<Thread*> mThreads;
+
+   std::map<uint32_t, SystemObject *> mSystemObjects;
 };
 
 extern System gSystem;

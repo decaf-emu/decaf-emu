@@ -110,6 +110,36 @@ System::loadThunks()
    }
 }
 
+bool
+System::freeSystemObject(p32<SystemObjectHeader> header)
+{
+   auto itr = mSystemObjects.find(static_cast<uint32_t>(header));
+
+   if (itr == mSystemObjects.end()) {
+      return false;
+   }
+
+   // Destroy the system object
+   delete itr->second;
+   mSystemObjects.erase(itr);
+   return true;
+}
+
+// Finds and frees all system objects within a range of memory
+void
+System::freeSystemObjects(uint32_t address, uint32_t size)
+{
+   auto start = address;
+   auto end = address + size;
+   auto itr = mSystemObjects.begin();
+   auto pred = [start, end](auto &item) { return item.first >= start && item.first < end; };
+
+   while ((itr = std::find_if(itr, mSystemObjects.end(), pred)) != mSystemObjects.end()) {
+      delete itr->second;
+      mSystemObjects.erase(itr++);
+   }
+}
+
 WHeapHandle
 System::addHeap(HeapManager *heap)
 {

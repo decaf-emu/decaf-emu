@@ -386,5 +386,8 @@
     <ClInclude Include="interpreter\interpreter_float.h">
       <Filter>Header Files\interpreter</Filter>
     </ClInclude>
+    <ClInclude Include="systemobject.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

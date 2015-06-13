@@ -1,72 +1,71 @@
 #include "coreinit.h"
 #include "coreinit_mutex.h"
+#include "system.h"
 
 // TODO: Ensure we can use custom OSMutex data instead of original
 
 void
-OSInitMutex(WMutex *mutex)
+OSInitMutex(MutexHandle handle)
 {
-   new (mutex) WMutex();
-   mutex->tag = WMutex::Tag;
-   mutex->name = nullptr;
-   mutex->mutex = std::make_unique<std::recursive_mutex>();
+   OSInitMutexEx(handle, nullptr);
 }
 
 void
-OSInitMutexEx(WMutex *mutex, char *name)
+OSInitMutexEx(MutexHandle handle, char *name)
 {
-   OSInitMutex(mutex);
-   mutex->name = make_p32(name);
+   auto mutex = gSystem.addSystemObject<Mutex>(handle);
+   mutex->name = name;
 }
 
 void
-OSLockMutex(WMutex *mutex)
+OSLockMutex(MutexHandle handle)
 {
-   assert(mutex->tag == WMutex::Tag);
-   mutex->mutex->lock();
+   auto mutex = gSystem.getSystemObject<Mutex>(handle);
+   mutex->mutex.lock();
 }
 
 BOOL
-OSTryLockMutex(WMutex *mutex)
+OSTryLockMutex(MutexHandle handle)
 {
-   assert(mutex->tag == WMutex::Tag);
-   return mutex->mutex->try_lock();
+   auto mutex = gSystem.getSystemObject<Mutex>(handle);
+   return mutex->mutex.try_lock();
 }
 
 void
-OSUnlockMutex(WMutex *mutex)
+OSUnlockMutex(MutexHandle handle)
 {
-   assert(mutex->tag == WMutex::Tag);
-   mutex->mutex->unlock();
+   auto mutex = gSystem.getSystemObject<Mutex>(handle);
+   mutex->mutex.unlock();
+}
+
+
+void
+OSInitCond(ConditionHandle handle)
+{
+   OSInitCondEx(handle, nullptr);
 }
 
 void
-OSInitCond(WCondition *cond)
+OSInitCondEx(ConditionHandle handle, char *name)
 {
-   new (cond) WCondition();
-   cond->tag = WCondition::Tag;
-   cond->name = nullptr;
-   cond->cvar = std::make_unique<std::condition_variable_any>();
+   auto condition = gSystem.addSystemObject<Condition>(handle);
+   condition->name = name;
 }
 
 void
-OSInitCondEx(WCondition *cond, char *name)
+OSWaitCond(ConditionHandle conditionHandle, MutexHandle mutexHandle)
 {
-   OSInitCond(cond);
-   cond->name = make_p32(name);
+   auto condition = gSystem.getSystemObject<Condition>(conditionHandle);
+   auto mutex = gSystem.getSystemObject<Mutex>(mutexHandle);
+   auto lock = std::unique_lock<std::recursive_mutex> { mutex->mutex };
+   condition->condition.wait(lock);
 }
 
 void
-OSWaitCond(WCondition *cond, WMutex *mutex)
+OSSignalCond(ConditionHandle handle)
 {
-   std::unique_lock<std::recursive_mutex> lock { *mutex->mutex };
-   cond->cvar->wait(lock);
-}
-
-void
-OSSignalCond(WCondition *cond)
-{
-   cond->cvar->notify_all();
+   auto condition = gSystem.getSystemObject<Condition>(handle);
+   condition->condition.notify_all();
 }
 
 void

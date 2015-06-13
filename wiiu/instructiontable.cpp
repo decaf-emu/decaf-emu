@@ -57,8 +57,11 @@ struct TableEntry
 static std::vector<InstructionData> instructionData;
 static TableEntry instructionTable;
 
-static void initData();
-static void initTable();
+static void
+initData();
+
+static void
+initTable();
 
 static BitRange gFieldBits[] = {
    { -1, -1 },
