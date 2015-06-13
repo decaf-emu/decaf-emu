@@ -1,6 +1,8 @@
 #pragma once
 #include "systemtypes.h"
 
+using DynLoadModuleHandle = uint32_t;
+
 int
 OSDynLoad_SetAllocator(uint32_t allocFn, uint32_t freeFn);
 
@@ -12,3 +14,9 @@ OSDynLoad_MemAlloc(int size, int alignment, uint32_t *outPtr);
 
 void
 OSDynLoad_MemFree(p32<void> addr);
+
+int
+OSDynLoad_Acquire(char const *name, be_val<uint32_t> *outHandle);
+
+void
+OSDynLoad_Release(DynLoadModuleHandle handle);

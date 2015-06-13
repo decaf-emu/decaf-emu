@@ -131,9 +131,23 @@ OSDynLoad_MemFree(p32<void> addr)
    */
 }
 
+int
+OSDynLoad_Acquire(char const *name, be_val<uint32_t> *outHandle)
+{
+   *outHandle = 0;
+   return -1;
+}
+
+void
+OSDynLoad_Release(DynLoadModuleHandle handle)
+{
+}
+
 void
 CoreInit::registerDynLoadFunctions()
 {
+   RegisterSystemFunction(OSDynLoad_Acquire);
+   RegisterSystemFunction(OSDynLoad_Release);
    RegisterSystemFunction(OSDynLoad_SetAllocator);
    RegisterSystemFunction(OSDynLoad_GetAllocator);
    RegisterSystemFunction(MEM_DynLoad_DefaultAlloc);
