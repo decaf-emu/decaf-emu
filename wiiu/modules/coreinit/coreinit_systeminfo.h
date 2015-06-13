@@ -15,3 +15,9 @@ CHECK_SIZE(OSSystemInfo, 0x20);
 
 p32<OSSystemInfo>
 OSGetSystemInfo();
+
+BOOL
+OSSetScreenCapturePermission(BOOL enabled);
+
+BOOL
+OSGetScreenCapturePermission();

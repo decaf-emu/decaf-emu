@@ -3,8 +3,11 @@
 #include "coreinit_systeminfo.h"
 #include "coreinit_memory.h"
 
-p32<OSSystemInfo>
+static p32<OSSystemInfo>
 gSystemInfo;
+
+static BOOL
+gScreenCapturePermission;
 
 p32<OSSystemInfo>
 OSGetSystemInfo()
@@ -12,10 +15,26 @@ OSGetSystemInfo()
    return gSystemInfo;
 }
 
+BOOL
+OSSetScreenCapturePermission(BOOL enabled)
+{
+   auto old = gScreenCapturePermission;
+   gScreenCapturePermission = enabled;
+   return old;
+}
+
+BOOL
+OSGetScreenCapturePermission()
+{
+   return gScreenCapturePermission;
+}
+
 void
 CoreInit::registerSystemInfoFunctions()
 {
    RegisterSystemFunction(OSGetSystemInfo);
+   RegisterSystemFunction(OSSetScreenCapturePermission);
+   RegisterSystemFunction(OSGetScreenCapturePermission);
 }
 
 void
