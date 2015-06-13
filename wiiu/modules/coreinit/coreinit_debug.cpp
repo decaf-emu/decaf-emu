@@ -142,6 +142,14 @@ OSReport(ThreadState *state)
    xDebug() << str;
 }
 
+static void
+OSVReport(ThreadState *state)
+{
+   std::string str;
+   formatString(state, str);
+   xDebug() << str;
+}
+
 void
 CoreInit::registerDebugFunctions()
 {
@@ -149,4 +157,5 @@ CoreInit::registerDebugFunctions()
    RegisterSystemFunction(OSIsDebuggerInitialized);
    RegisterSystemFunctionManual(OSPanic);
    RegisterSystemFunctionManual(OSReport);
+   RegisterSystemFunctionManual(OSVReport);
 }
