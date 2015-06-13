@@ -114,6 +114,28 @@ logSyscallArgument(Out &out, p32<Type> &value)
    out << Log::hex(static_cast<uint32_t>(value));
 }
 
+template<typename Out>
+static inline void
+logSyscallArgument(Out &out, char *value)
+{
+   if (value) {
+      out << "\"" << value << "\"";
+   } else {
+      out << "{NULL}";
+   }
+}
+
+template<typename Out>
+static inline void
+logSyscallArgument(Out &out, const char *value)
+{
+   if (value) {
+      out << "\"" << value << "\"";
+   } else {
+      out << "{NULL}";
+   }
+}
+
 template<typename Out, typename Type>
 static inline void
 logSyscallArgument(Out &out, Type *value)
@@ -158,6 +180,7 @@ struct SystemFunctionImpl : SystemFunction
    template<class Out, class... Args>
    void dispatch(ThreadState *state, size_t &r, size_t &f, Out &out, type_list<>, Args... args)
    {
+      out << ")";
       auto result = wrapped_function(args...);
       sysfunc_result<Ret>::update(state, result);
    }
@@ -169,7 +192,6 @@ struct SystemFunctionImpl : SystemFunction
       auto out = Log::custom("SYS");
       out << this->name << "(";
       dispatch(state, r, f, out, type_list<Args...> {});
-      out << ")";
    }
 };
 
