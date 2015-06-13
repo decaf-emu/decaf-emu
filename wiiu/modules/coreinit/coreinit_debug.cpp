@@ -124,7 +124,17 @@ formatString(ThreadState *state, std::string &output, unsigned reg = 3)
    }
 }
 
-void
+static void
+OSPanic(ThreadState *state)
+{
+   char *file = make_p32<char>(state->gpr[3]);
+   int line = state->gpr[4];
+   std::string str;
+   formatString(state, str, 5);
+   xError() << file << ":" << line << " " << str;
+}
+
+static void
 OSReport(ThreadState *state)
 {
    std::string str;
@@ -137,5 +147,6 @@ CoreInit::registerDebugFunctions()
 {
    RegisterSystemFunction(OSIsDebuggerPresent);
    RegisterSystemFunction(OSIsDebuggerInitialized);
+   RegisterSystemFunctionManual(OSPanic);
    RegisterSystemFunctionManual(OSReport);
 }
