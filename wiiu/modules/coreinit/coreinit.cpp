@@ -29,6 +29,7 @@ CoreInit::RegisterFunctions()
    registerDynLoadFunctions();
    registerEventFunctions();
    registerExpHeapFunctions();
+   registerFastMutexFunctions();
    registerFileSystemFunctions();
    registerFrameHeapFunctions();
    registerGhsFunctions();

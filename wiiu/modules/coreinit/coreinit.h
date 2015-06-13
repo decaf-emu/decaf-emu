@@ -26,6 +26,7 @@ private:
    static void registerDynLoadFunctions();
    static void registerEventFunctions();
    static void registerExpHeapFunctions();
+   static void registerFastMutexFunctions();
    static void registerFileSystemFunctions();
    static void registerFrameHeapFunctions();
    static void registerGhsFunctions();
