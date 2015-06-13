@@ -123,6 +123,11 @@ struct be_val
       return byte_swap(value) == other;
    }
 
+   bool operator==(std::nullptr_t) const
+   {
+      return value == 0;
+   }
+
    be_val<Type> &operator++()
    {
       ++value;
