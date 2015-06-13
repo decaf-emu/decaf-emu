@@ -6,10 +6,10 @@
 #include "interpreter.h"
 #include "thread.h"
 
-p32<be_val<uint32_t>>
+static wfunc_ptr<int, int, int, be_val<uint32_t>*>
 pOSDynLoad_MemAlloc;
 
-p32<be_val<uint32_t>>
+static wfunc_ptr<void, p32<void>>
 pOSDynLoad_MemFree;
 
 template<unsigned N>
@@ -73,16 +73,16 @@ OSDynLoad_SetAllocator(uint32_t allocFn, uint32_t freeFn)
       return 0xBAD10017;
    }
 
-   *pOSDynLoad_MemAlloc = allocFn;
-   *pOSDynLoad_MemFree = freeFn;
+   pOSDynLoad_MemAlloc = allocFn;
+   pOSDynLoad_MemFree = freeFn;
    return 0;
 }
 
 int
 OSDynLoad_GetAllocator(be_val<uint32_t> *outAllocFn, be_val<uint32_t> *outFreeFn)
 {
-   *outAllocFn = *pOSDynLoad_MemAlloc;
-   *outFreeFn = *pOSDynLoad_MemFree;
+   *outAllocFn = static_cast<uint32_t>(pOSDynLoad_MemAlloc);
+   *outFreeFn = static_cast<uint32_t>(pOSDynLoad_MemFree);
    return 0;
 }
 
@@ -157,9 +157,6 @@ CoreInit::registerDynLoadFunctions()
 void
 CoreInit::initialiseDynLoad()
 {
-   pOSDynLoad_MemAlloc = OSAllocFromSystem(sizeof(uint32_t), 4);
-   *pOSDynLoad_MemAlloc = findExportAddress("MEM_DynLoad_DefaultAlloc");
-
-   pOSDynLoad_MemFree = OSAllocFromSystem(sizeof(uint32_t), 4);
-   *pOSDynLoad_MemFree = findExportAddress("MEM_DynLoad_DefaultFree");
+   pOSDynLoad_MemAlloc = findExportAddress("MEM_DynLoad_DefaultAlloc");
+   pOSDynLoad_MemFree = findExportAddress("MEM_DynLoad_DefaultFree");
 }
