@@ -69,9 +69,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="loader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="modules\coreinit\coreinit.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
@@ -129,9 +126,6 @@
     <ClCompile Include="modules\coreinit\coreinit_membase.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="expandedheapmanager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="modules\coreinit\coreinit_expheap.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
@@ -140,9 +134,6 @@
     </ClCompile>
     <ClCompile Include="modules\coreinit\coreinit_dynload.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
-    </ClCompile>
-    <ClCompile Include="frameheapmanager.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="modules\coreinit\coreinit_messagequeue.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
@@ -209,6 +200,18 @@
     </ClCompile>
     <ClCompile Include="interpreter.cpp">
       <Filter>Source Files\ppc</Filter>
+    </ClCompile>
+    <ClCompile Include="loader.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="frameheapmanager.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="expandedheapmanager.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_event.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

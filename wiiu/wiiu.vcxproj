@@ -170,6 +170,7 @@
     <ClCompile Include="modules\coreinit\coreinit_cache.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_debug.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_dynload.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_event.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_expheap.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_frameheap.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_fs.cpp" />

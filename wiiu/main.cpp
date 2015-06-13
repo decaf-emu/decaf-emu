@@ -68,7 +68,6 @@ int main(int argc, char **argv)
    }
 
    xLog() << "Succesfully loaded " << argv[1];
-   gInterpreter.addBreakpoint(0x2369750);
 
    auto thread = new Thread(&gSystem, entry.stackSize, entry.address);
    thread->run(gInterpreter);
