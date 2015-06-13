@@ -200,6 +200,7 @@ INS(mcrf, (crfd), (crfs), (), (opcd == 19, xo1 == 0), "Move Condition Register F
 // System Linkage
 INS(rfi, (), (), (), (opcd == 19, xo1 == 50), "")
 INS(sc, (), (), (), (opcd == 17), "Syscall")
+INS(kc, (), (li), (aa), (opcd == 1), "krncall")
 
 // Trap
 INS(tw, (), (to, ra, rb), (), (opcd == 31, xo1 == 4), "")

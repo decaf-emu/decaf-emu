@@ -96,9 +96,10 @@ System::loadThunks()
       func->vaddr = addr;
 
       // Write syscall with symbol id
-      auto sc = gInstructionTable.encode(InstructionID::sc);
-      sc.bd = func->syscallID;
-      gMemory.write(addr, sc.value);
+      auto kc = gInstructionTable.encode(InstructionID::kc);
+      kc.li = func->syscallID;
+      kc.aa = 1;
+      gMemory.write(addr, kc.value);
 
       // Return by Branch to LR
       auto bclr = gInstructionTable.encode(InstructionID::bclr);

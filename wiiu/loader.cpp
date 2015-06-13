@@ -386,9 +386,10 @@ static void
 writeFunctionThunk(uint32_t address, uint32_t id)
 {
    // Write syscall with symbol id
-   auto sc = gInstructionTable.encode(InstructionID::sc);
-   sc.bd = id;
-   gMemory.write(address, sc.value);
+   auto kc = gInstructionTable.encode(InstructionID::kc);
+   kc.li = id;
+   kc.aa = 0;
+   gMemory.write(address, kc.value);
 
    // Return by Branch to LR
    auto bclr = gInstructionTable.encode(InstructionID::bclr);

@@ -169,17 +169,18 @@ mtsrin(ThreadState *state, Instruction instr)
    state->sr[sr] = state->gpr[instr.rS];
 }
 
-// System call
+// Kernel call
 static void
-sc(ThreadState *state, Instruction instr)
+kc(ThreadState *state, Instruction instr)
 {
-   auto id = instr.bd;
+   auto id = instr.li;
+   auto implemented = instr.aa;
 
    SystemFunction *func = nullptr;
 
-   if (id & 0x2000) {
+   if (!implemented) {
       auto userModule = state->thread->getSystem()->getUserModule();
-      auto sym = userModule->symbols[id & 0x1fff];
+      auto sym = userModule->symbols[id];
       auto fsym = reinterpret_cast<FunctionSymbol*>(sym);
 
       if (sym->type != SymbolInfo::Function) {
@@ -216,5 +217,5 @@ Interpreter::registerSystemInstructions()
    RegisterInstruction(mfsrin);
    RegisterInstruction(mtsr);
    RegisterInstruction(mtsrin);
-   RegisterInstruction(sc);
+   RegisterInstruction(kc);
 }
