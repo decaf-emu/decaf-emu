@@ -40,6 +40,7 @@ struct SymbolInfo
    Type type;
    std::string name;
    uint32_t address;
+   uint32_t size;
 };
 
 // TODO: Support user loaded modules??
@@ -81,8 +82,6 @@ struct DataSymbol : public SymbolInfo
 
 struct FunctionSymbol : public SymbolInfo
 {
-   static const uint32_t Unimplemented = 0x2000;
-
    enum FunctionType
    {
       System,

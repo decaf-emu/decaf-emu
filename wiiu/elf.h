@@ -109,6 +109,16 @@ enum // st_info & f
    STT_HIPROC = 15      // Highest processor-specific symbol type
 };
 
+enum : uint16_t // st_shndx
+{
+   SHN_UNDEF      = 0,        // Undefined
+   SHN_LORESERVE  = 0xff00,   // Reserved range
+   SHN_ABS        = 0xfff1,   // Absolute symbols
+   SHN_COMMON     = 0xfff2,   // Common symbols
+   SHN_XINDEX     = 0xffff,   // Escape -- index stored elsewhere
+   SHN_HIRESERVE  = 0xffff
+};
+
 enum // r_info & 0xff
 {
    R_PPC_NONE = 0,
@@ -216,7 +226,7 @@ struct ElfSymbol
    uint32_t st_size;  // Size of the symbol
    uint8_t  st_info;  // Symbol's type and binding attributes
    uint8_t  st_other; // Must be zero; reserved
-   uint16_t st_shndx; // Which section (header table index) it's defined in
+   uint16_t st_shndx; // Which section (header table index) it's defined in (SHN_*)
 };
 
 struct ElfRela

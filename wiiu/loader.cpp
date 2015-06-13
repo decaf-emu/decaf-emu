@@ -405,58 +405,71 @@ writeDataThunk(uint32_t address, uint32_t id)
 }
 
 static SymbolInfo *
-createFunctionSymbol(uint32_t index, ModuleSymbol *module, const char *name, uint32_t virtAddress)
+createFunctionSymbol(uint32_t index, RplSection &section, const char *name, uint32_t virtAddress, uint32_t size)
 {
    auto symbol = new FunctionSymbol();
    symbol->index = index;
    symbol->name = name;
-   symbol->systemFunction = findSystemFunction(module, name);
+   symbol->size = size;
 
-   if (symbol->systemFunction) {
+   if (section.header.sh_type == SHT_RPL_IMPORTS) {
       symbol->functionType = FunctionSymbol::System;
-      symbol->address = symbol->systemFunction->vaddr;
+      symbol->systemFunction = findSystemFunction(section.msym, name);
+
+      if (symbol->systemFunction) {
+         symbol->address = symbol->systemFunction->vaddr;
+      } else {
+         symbol->address = virtAddress;
+
+         if (symbol->address) {
+            writeFunctionThunk(symbol->address, index);
+         }
+      }
    } else {
       symbol->functionType = FunctionSymbol::User;
       symbol->address = virtAddress;
-
-      if (symbol->address) {
-         writeFunctionThunk(symbol->address, index | FunctionSymbol::Unimplemented);
-      }
    }
 
    return symbol;
 }
 
 static SymbolInfo *
-createDataSymbol(uint32_t index, ModuleSymbol *module, const char *name, uint32_t virtAddress)
+createDataSymbol(uint32_t index, RplSection &section, const char *name, uint32_t virtAddress, uint32_t size)
 {
    auto symbol = new DataSymbol();
    symbol->index = index;
    symbol->name = name;
-   symbol->systemData = findSystemData(module, name);
+   symbol->size = size;
 
-   if (symbol->systemData) {
+   if (section.header.sh_type == SHT_RPL_IMPORTS) {
       symbol->dataType = DataSymbol::System;
-      symbol->address = static_cast<uint32_t>(*symbol->systemData->vptr);
+      symbol->systemData = findSystemData(section.msym, name);
+
+      if (symbol->systemData) {
+         symbol->address = static_cast<uint32_t>(*symbol->systemData->vptr);
+      } else {
+         symbol->address = virtAddress;
+
+         if (symbol->address) {
+            writeDataThunk(symbol->address, index);
+         }
+      }
    } else {
       symbol->dataType = DataSymbol::User;
       symbol->address = virtAddress;
-
-      if (symbol->address) {
-         writeDataThunk(symbol->address, index);
-      }
    }
 
    return symbol;
 }
 
 static SymbolInfo *
-createModuleSymbol(uint32_t index, const char *library, const char *name, uint32_t virtAddress)
+createModuleSymbol(uint32_t index, const char *library, const char *name, uint32_t virtAddress, uint32_t size)
 {
    auto symbol = new ModuleSymbol();
    symbol->index = index;
    symbol->name = name;
    symbol->address = virtAddress;
+   symbol->size = size;
 
    if (library) {
       symbol->systemModule = findSystemModule(library);
@@ -489,6 +502,10 @@ processSymbols(UserModule &module, RplSection &symtab, std::vector<RplSection> &
       auto header = ElfSymbol { };
       readSymbol(in, header);
 
+      if (header.st_shndx >= SHN_LORESERVE) {
+         continue;
+      }
+
       // Calculate relocated address
       auto &impsec = sections[header.st_shndx];
       auto offset = header.st_value - impsec.header.sh_addr;
@@ -501,9 +518,9 @@ processSymbols(UserModule &module, RplSection &symtab, std::vector<RplSection> &
       auto type = header.st_info & 0xf;
 
       if (type == STT_FUNC) {
-         symbol = createFunctionSymbol(i, impsec.msym, name, virtAddress);
+         symbol = createFunctionSymbol(i, impsec, name, virtAddress, header.st_size);
       } else if (type == STT_OBJECT) {
-         symbol = createDataSymbol(i, impsec.msym, name, virtAddress);
+         symbol = createDataSymbol(i, impsec, name, virtAddress, header.st_size);
       } else if (type == STT_SECTION) {
          const char *library = nullptr;
 
@@ -511,7 +528,7 @@ processSymbols(UserModule &module, RplSection &symtab, std::vector<RplSection> &
             library = impsec.section->library.c_str();
          }
 
-         symbol = createModuleSymbol(i, library, name, virtAddress);
+         symbol = createModuleSymbol(i, library, name, virtAddress, header.st_size);
          impsec.msym = reinterpret_cast<ModuleSymbol*>(symbol);
       } else {
          symbol = new SymbolInfo();
@@ -651,7 +668,10 @@ Loader::loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t
 
    for (auto i = 0u; i < module.symbols.size(); ++i) {
       auto symbol = module.symbols[i];
-      xLog() << Log::hex(symbol->address) << " " << symbol->name;
+
+      if (symbol && symbol->name.size()) {
+         xLog() << Log::hex(symbol->address) << " " << symbol->name;
+      }
    }
 
    return true;
