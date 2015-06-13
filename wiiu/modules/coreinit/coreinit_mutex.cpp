@@ -38,7 +38,6 @@ OSUnlockMutex(MutexHandle handle)
    mutex->mutex.unlock();
 }
 
-
 void
 OSInitCond(ConditionHandle handle)
 {

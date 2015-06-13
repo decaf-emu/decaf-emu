@@ -40,7 +40,13 @@ struct sysfunc_arg<Type *>
 {
    static inline Type *convert(ThreadState *state, size_t &r, size_t &f)
    {
-      return reinterpret_cast<Type*>(gMemory.translate(state->gpr[r++]));
+      auto value = state->gpr[r++];
+
+      if (value == 0) {
+         return nullptr;
+      } else {
+         return reinterpret_cast<Type*>(gMemory.translate(value));
+      }
    }
 };
 
