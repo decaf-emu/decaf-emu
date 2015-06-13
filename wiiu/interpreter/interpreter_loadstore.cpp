@@ -307,6 +307,7 @@ enum StoreFlags
    StoreConditional     = 1 << 3, // lward/stwcx Conditional
    StoreZeroRA          = 1 << 4, // Use 0 instead of r0
    StoreFloatAsInteger  = 1 << 5, // stfiwx
+   StoreSingle          = 1 << 6, // Single
 };
 
 template<typename Type, unsigned flags = 0>
@@ -345,7 +346,11 @@ storeGeneric(ThreadState *state, Instruction instr)
    if (flags & StoreFloatAsInteger) {
       s = static_cast<Type>(state->fpr[instr.rS].iw0);
    } else if (std::is_floating_point<Type>::value) {
-      s = static_cast<Type>(state->fpr[instr.rS].value);
+      if (flags & StoreSingle) {
+         s = static_cast<Type>(state->fpr[instr.rS].paired0);
+      } else {
+         s = static_cast<Type>(state->fpr[instr.rS].value);
+      }
    } else {
       s = static_cast<Type>(state->gpr[instr.rS]);
    }
@@ -455,25 +460,25 @@ stwcx(ThreadState *state, Instruction instr)
 static void
 stfs(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreZeroRA>(state, instr);
+   storeGeneric<float, StoreSingle | StoreZeroRA>(state, instr);
 }
 
 static void
 stfsu(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreUpdate>(state, instr);
+   storeGeneric<float, StoreSingle | StoreUpdate>(state, instr);
 }
 
 static void
 stfsux(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreUpdate | StoreIndexed>(state, instr);
+   storeGeneric<float, StoreSingle | StoreUpdate | StoreIndexed>(state, instr);
 }
 
 static void
 stfsx(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreZeroRA | StoreIndexed>(state, instr);
+   storeGeneric<float, StoreSingle | StoreZeroRA | StoreIndexed>(state, instr);
 }
 
 static void
