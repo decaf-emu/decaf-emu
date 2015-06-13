@@ -31,6 +31,8 @@ enum class FSError : int32_t
    Generic  = -0x400
 };
 
+using FSFileHandle = uint32_t;
+
 void
 FSInit();
 
@@ -48,3 +50,6 @@ FSGetStat(FSClient *client, FSCmdBlock *block, const char *filepath, FSStat *sta
 
 void
 FSSetStateChangeNotification(FSClient *client, FSStateChangeInfo *info);
+
+FSError
+FSOpenFile(FSClient *client, FSCmdBlock *block, const char *path, const char *mode, p32<FSFileHandle> *fileHandle, uint32_t flags);

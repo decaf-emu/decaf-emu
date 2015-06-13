@@ -33,6 +33,12 @@ FSSetStateChangeNotification(FSClient *client, FSStateChangeInfo *info)
 {
 }
 
+FSError
+FSOpenFile(FSClient *client, FSCmdBlock *block, const char *path, const char *mode, p32<FSFileHandle> *fileHandle, uint32_t flags)
+{
+   return FSError::Generic;
+}
+
 void
 CoreInit::registerFileSystemFunctions()
 {
@@ -42,4 +48,5 @@ CoreInit::registerFileSystemFunctions()
    RegisterSystemFunction(FSInitCmdBlock);
    RegisterSystemFunction(FSGetStat);
    RegisterSystemFunction(FSSetStateChangeNotification);
+   RegisterSystemFunction(FSOpenFile);
 }
