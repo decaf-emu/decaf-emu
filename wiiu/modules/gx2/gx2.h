@@ -16,7 +16,9 @@ private:
    static void registerCoreFunctions();
    static void registerDisplayFunctions();
    static void registerDisplayListFunctions();
+   static void registerResourceFunctions();
    static void registerRenderStateFunctions();
    static void registerShaderFunctions();
+   static void registerSurfaceFunctions();
    static void registerTextureFunctions();
 };

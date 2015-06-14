@@ -1,5 +1,6 @@
 #pragma once
 #include "systemtypes.h"
+#include "coreinit_time.h"
 
 #pragma pack(push, 1)
 
@@ -159,3 +160,6 @@ OSGetThreadSpecific(uint32_t id);
 
 void
 OSSetThreadSpecific(uint32_t id, uint32_t value);
+
+void
+OSSleepTicks(TimeTicks ticks);

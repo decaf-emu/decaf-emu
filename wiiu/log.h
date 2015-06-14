@@ -47,7 +47,6 @@ public:
       unsigned pad;
    };
 
-private:
    class Output
    {
    public:

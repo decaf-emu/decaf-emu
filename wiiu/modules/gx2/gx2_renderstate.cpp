@@ -50,11 +50,15 @@ GX2SetAlphaToMask(BOOL enabled, AlphaToMaskMode mode)
 void
 GX2SetViewport(float x1, float y1, float x2, float y2, float zNear, float zFar)
 {
+   // TODO: Ensure this is not x,y,w,h
+   assert(x1 == 0 && y1 == 0);
 }
 
 void
-GX2SetScissor(uint32_t r1, uint32_t r2, uint32_t r3, uint32_t r4)
+GX2SetScissor(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2)
 {
+   // TODO: Ensure this is not x,y,w,h
+   assert(x1 == 0 && y1 == 0);
 }
 
 void

@@ -51,6 +51,11 @@ OSSetThreadSpecific(uint32_t id, uint32_t value)
 }
 
 void
+OSSleepTicks(TimeTicks ticks)
+{
+}
+
+void
 CoreInit::registerThreadFunctions()
 {
    RegisterSystemFunction(OSGetCurrentThread);
