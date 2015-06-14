@@ -219,6 +219,12 @@
     <ClCompile Include="modules\coreinit\coreinit_core.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="modules\gx2\gx2r_resource.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\gx2\gx2_surface.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="modules\coreinit\coreinit.h">
@@ -403,6 +409,12 @@
     </ClInclude>
     <ClInclude Include="modules\coreinit\coreinit_core.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\gx2\gx2r_resource.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\gx2\gx2_surface.h">
+      <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
