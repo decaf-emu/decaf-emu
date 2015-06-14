@@ -75,6 +75,30 @@ mfspr(ThreadState *state, Instruction instr)
    case SprEncoding::CTR:
       value = state->ctr;
       break;
+   case SprEncoding::GQR0:
+      value = state->gqr[0].value;
+      break;
+   case SprEncoding::GQR1:
+      value = state->gqr[1].value;
+      break;
+   case SprEncoding::GQR2:
+      value = state->gqr[2].value;
+      break;
+   case SprEncoding::GQR3:
+      value = state->gqr[3].value;
+      break;
+   case SprEncoding::GQR4:
+      value = state->gqr[4].value;
+      break;
+   case SprEncoding::GQR5:
+      value = state->gqr[5].value;
+      break;
+   case SprEncoding::GQR6:
+      value = state->gqr[6].value;
+      break;
+   case SprEncoding::GQR7:
+      value = state->gqr[7].value;
+      break;
    default:
       xError() << "Invalid mfspr SPR " << static_cast<uint32_t>(spr);
    }
@@ -98,6 +122,30 @@ mtspr(ThreadState *state, Instruction instr)
       break;
    case SprEncoding::CTR:
       state->ctr = value;
+      break;
+   case SprEncoding::GQR0:
+      state->gqr[0].value = value;
+      break;
+   case SprEncoding::GQR1:
+      state->gqr[1].value = value;
+      break;
+   case SprEncoding::GQR2:
+      state->gqr[2].value = value;
+      break;
+   case SprEncoding::GQR3:
+      state->gqr[3].value = value;
+      break;
+   case SprEncoding::GQR4:
+      state->gqr[4].value = value;
+      break;
+   case SprEncoding::GQR5:
+      state->gqr[5].value = value;
+      break;
+   case SprEncoding::GQR6:
+      state->gqr[6].value = value;
+      break;
+   case SprEncoding::GQR7:
+      state->gqr[7].value = value;
       break;
    default:
       xError() << "Invalid mtspr SPR " << static_cast<uint32_t>(spr);
