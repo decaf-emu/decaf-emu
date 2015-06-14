@@ -47,3 +47,9 @@ GX2SetTargetChannelMasks(UNKNOWN_ARGS);
 
 void
 GX2SetAlphaToMask(BOOL enabled, AlphaToMaskMode mode);
+
+void
+GX2SetViewport(float x1, float y1, float x2, float y2, float zNear, float zFar);
+
+void
+GX2SetScissor(uint32_t r1, uint32_t r2, uint32_t r3, uint32_t r4);
