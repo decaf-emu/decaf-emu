@@ -11,6 +11,7 @@ class Thread;
 class SystemModule;
 struct UserModule;
 struct SystemFunction;
+class FileSystem;
 
 class System
 {
@@ -34,6 +35,9 @@ public:
    HeapManager *getHeap(WHeapHandle handle);
    HeapManager *getHeapByAddress(uint32_t vaddr);
    void removeHeap(WHeapHandle handle);
+
+   FileSystem *getFileSystem();
+   void setFileSystem(FileSystem *fs);
 
    // Create a system object for the virtual address
    template<typename Type>
@@ -83,6 +87,8 @@ private:
    std::vector<Thread*> mThreads;
 
    std::map<uint32_t, SystemObject *> mSystemObjects;
+
+   FileSystem *mFileSystem;
 };
 
 extern System gSystem;

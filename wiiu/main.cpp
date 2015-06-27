@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <pugixml.hpp>
 #include "bitutils.h"
 #include "gdbstub.h"
 #include "instructiondata.h"
@@ -15,11 +16,12 @@
 #include "system.h"
 #include "thread.h"
 #include "usermodule.h"
+#include "filesystem.h"
 
 int main(int argc, char **argv)
 {
    if (argc < 2) {
-      xLog() << "Usage: " << argv[0] << " *.rpx";
+      xLog() << "Usage: " << argv[0] << " <extracted game directory>";
       return -1;
    }
 
@@ -39,28 +41,43 @@ int main(int argc, char **argv)
    gSystem.registerModule("zlib125", new Zlib125 {});
    gSystem.initialiseModules();
 
-   auto file = std::ifstream { argv[1], std::ifstream::binary };
-   auto buffer = std::vector<char> {};
+   // Setup filesystem
+   VirtualFileSystem fs { "/" };
+   fs.mount("/vol", std::make_unique<HostFileSystem>(std::string(argv[1]) + "/data"));
+   gSystem.setFileSystem(&fs);
 
-   if (!file.is_open()) {
-      xError() << "Could not open file " << argv[1];
+   // Load cos.xml
+   pugi::xml_document doc;
+   auto cosFile = fs.openFile("/vol/code/cos.xml", FileSystem::Input | FileSystem::Binary);
+   auto size = cosFile->size();
+   auto buffer = std::vector<char>(size);
+   cosFile->read(buffer.data(), size);
+
+   auto result = doc.load_buffer_inplace(buffer.data(), buffer.size());
+
+   if (!result) {
+      xError() << "Error reading /vol/code/cos.xml";
+      return -1;
    }
 
-   // Get file size
-   file.seekg(0, std::istream::end);
-   auto size = (unsigned int)file.tellg();
-   file.seekg(0, std::istream::beg);
+   auto rpxPath = doc.child("app").child("argstr").child_value();
 
-   // Read whole file
-   buffer.resize(size);
-   file.read(buffer.data(), size);
-   assert(file.gcount() == size);
+   // Load rpx file
+   auto rpxFile = fs.openFile(std::string("/vol/code/") + rpxPath, FileSystem::Input | FileSystem::Binary);
+
+   if (!rpxFile) {
+      xError() << "Error opening file /vol/code/" << rpxPath;
+      return -1;
+   }
+
+   buffer.resize(rpxFile->size());
+   rpxFile->read(buffer.data(), buffer.size());
 
    // Load the elf
    auto loader = Loader {};
    auto module = new UserModule {};
    auto entry = EntryInfo {};
-   gSystem.registerModule("redcarpet.rpx", module);
+   gSystem.registerModule(rpxPath, module);
 
    if (!loader.loadRPL(*module, entry, buffer.data(), buffer.size())) {
       xError() << "Could not load elf file";

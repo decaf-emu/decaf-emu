@@ -425,5 +425,8 @@
     <ClInclude Include="modules\coreinit\coreinit_device.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
+    <ClInclude Include="filesystem.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

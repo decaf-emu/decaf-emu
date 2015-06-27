@@ -180,3 +180,14 @@ System::removeHeap(WHeapHandle handle)
 {
    mHeaps[handle - 1] = nullptr;
 }
+
+void
+System::setFileSystem(FileSystem *fs)
+{
+   mFileSystem = fs;
+}
+
+FileSystem *System::getFileSystem()
+{
+   return mFileSystem;
+}
