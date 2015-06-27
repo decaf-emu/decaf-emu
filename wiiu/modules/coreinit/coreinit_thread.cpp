@@ -52,13 +52,14 @@ OSSetThreadSpecific(uint32_t id, uint32_t value)
 }
 
 BOOL
-OSSetThreadAffinity(OSThread *thread, uint16_t affinity)
+OSSetThreadAffinity(OSThread *thread, Flags<OS_THREAD_ATTR> affinity)
 {
-   thread->attr = affinity;
+   Flags<OS_THREAD_ATTR> cur = thread->attr.value();
+   thread->attr = affinity | (cur & ~OS_THREAD_ATTR::AFFINITY_NONE);
    return TRUE;
 }
 
-uint16_t
+OS_THREAD_ATTR
 OSGetThreadAffinity(OSThread *thread)
 {
    return thread->attr;

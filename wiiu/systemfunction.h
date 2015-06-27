@@ -2,6 +2,7 @@
 #include "systemtypes.h"
 #include "ppc.h"
 #include "systemexport.h"
+#include "util.h"
 
 // System Function Export
 struct SystemFunction : SystemExport
@@ -144,6 +145,11 @@ logSyscallArgument(Out &out, const char *value)
 
 template<typename Out, typename Type>
 static inline void
+logSyscallArgument(Out &out, Flags<Type> value)
+{
+   out << Log::hex(static_cast<Flags<Type>::StorageType>(static_cast<Type>(value)));
+}
+
 logSyscallArgument(Out &out, Type *value)
 {
    out << Log::hex(static_cast<uint32_t>(make_p32(value)));

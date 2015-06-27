@@ -1,8 +1,9 @@
 #pragma once
+#include <condition_variable>
+#include <mutex>
 #include "systemtypes.h"
 #include "coreinit_thread.h"
-#include <mutex>
-#include <condition_variable>
+#include "util.h"
 
 #pragma pack(push, 1)
 
@@ -69,13 +70,13 @@ void
 OSInitMessageQueueEx(WMessageQueue *queue, p32<OSMessage> messages, int32_t size, char *name);
 
 BOOL
-OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags flags);
+OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags);
 
 BOOL
-OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags flags);
+OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags);
 
 BOOL
-OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags flags);
+OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags);
 
 BOOL
 OSPeekMessage(WMessageQueue *queue, p32<OSMessage> message);

@@ -1,6 +1,7 @@
 #pragma once
 #include "heapmanager.h"
 #include "systemtypes.h"
+#include "util.h"
 
 enum class FrameHeapFreeMode
 {
@@ -18,7 +19,7 @@ public:
    virtual ~FrameHeapManager();
 
    uint32_t alloc(uint32_t size, int alignment);
-   void free(uint32_t addr, FrameHeapFreeMode freeMode);
+   void free(uint32_t addr, Flags<FrameHeapFreeMode> freeMode);
 
    uint32_t trimHeap();
    uint32_t resizeBlock(uint32_t addr, uint32_t newSize);

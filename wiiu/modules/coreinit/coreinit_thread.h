@@ -1,6 +1,7 @@
 #pragma once
 #include "systemtypes.h"
 #include "coreinit_time.h"
+#include "util.h"
 
 #pragma pack(push, 1)
 
@@ -95,7 +96,7 @@ enum OS_THREAD_REQUEST_FLAG : uint32_t
 };
 
 // Strings
-enum OS_THREAD_ATTR : uint32_t
+enum OS_THREAD_ATTR : uint8_t
 {
    AFFINITY_NONE = 7, // If affinity_none is 7 = 0b111 then lets assume its a bitmask for now
    AFFINITY_CPU0 = 1,
@@ -108,7 +109,7 @@ struct OSThread
    OSContext context;
    be_val<uint32_t> tag;
    be_val<OS_THREAD_STATE> state;
-   be_val<uint8_t> attr; // OSSetThreadAffinity / OSCreateThread
+   be_val<OS_THREAD_ATTR> attr; // OSSetThreadAffinity / OSCreateThread
    UNKNOWN(6);
    be_val<uint32_t> priority;
    be_val<uint32_t> basePriority; // "ba" in DumpActiveThreads and returned in OSGetThreadPriority
@@ -170,9 +171,9 @@ uint32_t
 OSGetThreadPriority(OSThread *thread);
 
 BOOL
-OSSetThreadAffinity(OSThread *thread, uint16_t affinity);
+OSSetThreadAffinity(OSThread *thread, Flags<OS_THREAD_ATTR> affinity);
 
-uint16_t
+OS_THREAD_ATTR
 OSGetThreadAffinity(OSThread *thread);
 
 uint32_t

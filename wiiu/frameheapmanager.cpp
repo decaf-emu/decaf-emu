@@ -67,9 +67,9 @@ FrameHeapManager::alloc(uint32_t size, int alignment)
 }
 
 void
-FrameHeapManager::free(uint32_t addr, FrameHeapFreeMode freeMode)
+FrameHeapManager::free(uint32_t addr, Flags<FrameHeapFreeMode> freeMode)
 {
-   if (testFlag(freeMode, FrameHeapFreeMode::Tail)) {
+   if (freeMode & FrameHeapFreeMode::Tail) {
       if (mState->previous) {
          mState->top = mState->previous->top;
       } else {
@@ -77,7 +77,7 @@ FrameHeapManager::free(uint32_t addr, FrameHeapFreeMode freeMode)
       }
    }
 
-   if (testFlag(freeMode, FrameHeapFreeMode::Head)) {
+   if (freeMode & FrameHeapFreeMode::Head) {
       if (mState->previous) {
          mState->bottom = mState->previous->bottom;
       } else {

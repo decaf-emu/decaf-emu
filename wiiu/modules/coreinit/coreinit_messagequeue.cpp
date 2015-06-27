@@ -32,11 +32,11 @@ OSInitMessageQueueEx(WMessageQueue *queue, p32<OSMessage> messages, int32_t size
 
 // Insert at back of message queue
 BOOL
-OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags flags)
+OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags)
 {
    std::unique_lock<std::mutex> lock { *queue->mutex };
 
-   if (!testFlag(flags, OSMessageFlags::Blocking) && queue->count == queue->size) {
+   if (!(flags & OSMessageFlags::Blocking) && queue->count == queue->size) {
       // Do not wait for space
       return FALSE;
    }
@@ -61,12 +61,12 @@ OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags flags
 
 // Insert at front of message queue
 BOOL
-OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags flags)
+OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags)
 {
    std::unique_lock<std::mutex> lock { *queue->mutex };
    uint32_t index;
 
-   if (!testFlag(flags, OSMessageFlags::Blocking) && queue->count == queue->size) {
+   if (!(flags & OSMessageFlags::Blocking) && queue->count == queue->size) {
       // Do not wait for space
       return FALSE;
    }
@@ -99,11 +99,11 @@ OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags flags)
 
 // Read from front of message queue
 BOOL
-OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags flags)
+OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags)
 {
    std::unique_lock<std::mutex> lock { *queue->mutex };
 
-   if (!testFlag(flags, OSMessageFlags::Blocking) && queue->count == 0) {
+   if (!(flags & OSMessageFlags::Blocking) && queue->count == 0) {
       return FALSE;
    }
 
