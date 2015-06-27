@@ -16,9 +16,8 @@ typedef int BOOL;
 #endif
 
 #pragma pack(push, 1)
-
-using p32_raw = uint32_t;
-
+#include "be_types.h"
+/*
 template<typename Type>
 struct p32
 {
@@ -145,6 +144,7 @@ struct be_val
 
 template<typename Type>
 using be_ptr = be_val<p32<Type>>;
+*/
 
 template<typename ReturnType, typename... Args>
 struct wfunc_ptr

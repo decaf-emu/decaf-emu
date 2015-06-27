@@ -2,22 +2,22 @@
 #include "systemtypes.h"
 
 void
-DCInvalidateRange(p32<void> addr, uint32_t size);
+DCInvalidateRange(void *addr, uint32_t size);
 
 void
-DCFlushRange(p32<void> addr, uint32_t size);
+DCFlushRange(void *addr, uint32_t size);
 
 void
-DCStoreRange(p32<void> addr, uint32_t size);
+DCStoreRange(void *addr, uint32_t size);
 
 void
-DCFlushRangeNoSync(p32<void> addr, uint32_t size);
+DCFlushRangeNoSync(void *addr, uint32_t size);
 
 void
-DCStoreRangeNoSync(p32<void> addr, uint32_t size);
+DCStoreRangeNoSync(void *addr, uint32_t size);
 
 void
-DCZeroRange(p32<void> addr, uint32_t size);
+DCZeroRange(void *addr, uint32_t size);
 
 void
-DCTouchRange(p32<void>addr, uint32_t size);
+DCTouchRange(void *addr, uint32_t size);

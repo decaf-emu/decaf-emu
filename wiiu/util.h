@@ -7,14 +7,30 @@ testFlag(Type flags, Type flag)
    return !!(static_cast<unsigned>(flags) & static_cast<unsigned>(flag));
 }
 
-static inline uint32_t
-alignUp(uint32_t value, uint32_t alignment)
+template<typename Type>
+static inline Type
+alignUp(Type value, size_t alignment)
 {
-   return (value + (alignment - 1)) & ~(alignment - 1);
+   return static_cast<Type>((static_cast<size_t>(value) + (alignment - 1)) & ~(alignment - 1));
 }
 
-static inline uint32_t
-alignDown(uint32_t value, uint32_t alignment)
+template<typename Type>
+static inline Type
+alignDown(Type value, size_t alignment)
 {
-   return value & ~(alignment - 1);
+   return static_cast<Type>(static_cast<size_t>(value) & ~(alignment - 1));
+}
+
+template<typename Type>
+static inline Type *
+alignUp(Type *value, size_t alignment)
+{
+   return reinterpret_cast<Type>((reinterpret_cast<size_t>(value) + (alignment - 1)) & ~(alignment - 1));
+}
+
+template<typename Type>
+static inline Type *
+alignDown(Type *value, size_t alignment)
+{
+   return reinterpret_cast<Type>(reinterpret_cast<size_t>(value) & ~(alignment - 1));
 }
