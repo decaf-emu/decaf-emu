@@ -225,6 +225,9 @@
     <ClCompile Include="modules\gx2\gx2_surface.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_device.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="modules\coreinit\coreinit.h">
@@ -418,6 +421,9 @@
     </ClInclude>
     <ClInclude Include="be_types.h">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_device.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

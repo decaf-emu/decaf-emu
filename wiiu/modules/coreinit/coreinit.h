@@ -24,6 +24,7 @@ private:
    static void registerCoreFunctions();
    static void registerCacheFunctions();
    static void registerDebugFunctions();
+   static void registerDeviceFunctions();
    static void registerDynLoadFunctions();
    static void registerEventFunctions();
    static void registerExpHeapFunctions();
