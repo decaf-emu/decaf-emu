@@ -40,10 +40,10 @@ OSAllocFromSystem(uint32_t size, int alignment = 4);
 void
 OSFreeToSystem(p32<void> addr);
 
-p32<void>
+void *
 OSBlockMove(void *dst, const void *src, size_t size, BOOL flush);
 
-p32<void>
+void *
 OSBlockSet(void *dst, uint8_t val, size_t size);
 
 BOOL

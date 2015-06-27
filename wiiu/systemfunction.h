@@ -30,9 +30,7 @@ struct sysfunc_arg<p32<PtrType>>
 {
    static inline p32<PtrType> convert(ThreadState *state, size_t &r, size_t &f)
    {
-      p32<PtrType> ptr;
-      ptr.address = state->gpr[r++];
-      return ptr;
+      return make_p32<PtrType>(state->gpr[r++]);
    }
 };
 
@@ -100,6 +98,15 @@ struct sysfunc_result<p32<PtrType>>
 };
 
 template<typename Type>
+struct sysfunc_result<Type *>
+{
+   static inline void update(ThreadState *state, Type *ptr)
+   {
+      state->gpr[3] = gMemory.untranslate(ptr);
+   }
+};
+
+template<typename Type>
 struct sysfunc_result
 {
    static inline void update(ThreadState *state, Type v)
@@ -150,9 +157,11 @@ logSyscallArgument(Out &out, Flags<Type> value)
    out << Log::hex(static_cast<Flags<Type>::StorageType>(static_cast<Type>(value)));
 }
 
+template<typename Out, typename Type>
+static inline void
 logSyscallArgument(Out &out, Type *value)
 {
-   out << Log::hex(static_cast<uint32_t>(make_p32(value)));
+   out << Log::hex(gMemory.untranslate(value));
 }
 
 template<typename Out, typename Type>

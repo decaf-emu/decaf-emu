@@ -143,17 +143,17 @@ CoreFreeDefaultHeap()
    // Free function pointers
    if (pMEMAllocFromDefaultHeap) {
       OSFreeToSystem(pMEMAllocFromDefaultHeap);
-      pMEMAllocFromDefaultHeap = 0;
+      pMEMAllocFromDefaultHeap = nullptr;
    }
 
    if (pMEMAllocFromDefaultHeapEx) {
       OSFreeToSystem(pMEMAllocFromDefaultHeap);
-      pMEMAllocFromDefaultHeap = 0;
+      pMEMAllocFromDefaultHeap = nullptr;
    }
 
    if (pMEMFreeToDefaultHeap) {
       OSFreeToSystem(pMEMAllocFromDefaultHeap);
-      pMEMAllocFromDefaultHeap = 0;
+      pMEMAllocFromDefaultHeap = nullptr;
    }
 }
 

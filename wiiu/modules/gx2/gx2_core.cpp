@@ -3,13 +3,13 @@
 
 // Initialise graphics system and set current thread as the graphics thread
 void
-GX2Init(uint32_t *attributes)
+GX2Init(be_val<uint32_t> *attributes)
 {
    auto log = xDebug();
    log << "GX2Init attributes: ";
 
    while (attributes && *attributes) {
-      auto attrib = *attributes;
+      uint32_t attrib = *attributes;
       log << " " << attrib;
       ++attributes;
    }
@@ -40,9 +40,9 @@ GX2Invalidate(InvalidateMode mode, p32<void> buffer, uint32_t size)
 }
 
 void
-GX2GetContextStateDisplayList(const GX2ContextState* state, p32<be_val<uint32_t>> outDisplayList, p32<be_val<uint32_t>> outSize)
+GX2GetContextStateDisplayList(const GX2ContextState* state, be_val<uint32_t> *outDisplayList, be_val<uint32_t> *outSize)
 {
-   *outDisplayList = make_p32(&state->displayList);
+   *outDisplayList = gMemory.untranslate(&state->displayList);
    *outSize = state->displayListSize;
 }
 

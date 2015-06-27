@@ -24,7 +24,7 @@ BOOL
 GX2GetDisplayListWriteStatus();
 
 BOOL
-GX2GetCurrentDisplayList(p32<be_val<uint32_t>> outDisplayList, p32<be_val<uint32_t>> outSize);
+GX2GetCurrentDisplayList(be_val<uint32_t> *outDisplayList, be_val<uint32_t> *outSize);
 
 void
 GX2CopyDisplayList(GX2DisplayList *displayList, uint32_t size);

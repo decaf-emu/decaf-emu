@@ -24,7 +24,7 @@ enum class InvalidateMode : uint32_t
 };
 
 void
-GX2Init(uint32_t *attributes);
+GX2Init(be_val<uint32_t> *attributes);
 
 void
 GX2Shutdown();
@@ -39,4 +39,4 @@ void
 GX2Invalidate(InvalidateMode mode, p32<void> buffer, uint32_t size);
 
 void
-GX2GetContextStateDisplayList(const GX2ContextState* state, p32<be_val<uint32_t>> outDisplayList, p32<be_val<uint32_t>> outSize);
+GX2GetContextStateDisplayList(const GX2ContextState* state, be_val<uint32_t> *outDisplayList, be_val<uint32_t> *outSize);

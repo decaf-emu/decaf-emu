@@ -205,6 +205,7 @@
     <ClCompile Include="thread.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="be_types.h" />
     <ClInclude Include="bigendianview.h" />
     <ClInclude Include="bitutils.h" />
     <ClInclude Include="disassembler.h" />

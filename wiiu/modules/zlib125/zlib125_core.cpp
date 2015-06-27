@@ -44,40 +44,44 @@ struct WZHeader
    be_val<int> done;
 };
 
-// This is some real hack because copying between be_val<p32<Type>> <-> Type is dodgy...
-template<typename Type>
+// Some hack to help with copying between alloc_func/free_func <-> be_val<p32<void>>
+template<typename Type1, typename Type2>
 static inline void
-copy_be(be_val<Type> &src, Type &dst)
-{
-   dst = (Type)src;
-}
+copy_helper(Type1 &src, Type2 &dst);
 
-template<typename Type>
+template<typename Type2>
 static inline void
-copy_be(be_val<p32<Type>> &src, Type *dst)
+copy_helper(alloc_func &src, Type2 &dst)
 {
-   dst = static_cast<Type*>(static_cast<p32<Type>>(src));
+   dst = (void*)src;
 }
 
-template<typename Type>
+template<typename Type1>
 static inline void
-copy_be(Type *src, be_val<p32<Type>> &dst)
+copy_helper(Type1 &src, alloc_func &dst)
 {
-   dst = gMemory.untranslate(src);
+   dst = reinterpret_cast<alloc_func>(static_cast<void*>(src));
 }
 
-template<typename Type>
-static inline typename std::enable_if<!std::is_void<Type>::value, void>::type
-copy_be(be_val<p32<void>> &src, Type *dst)
+template<typename Type2>
+static inline void
+copy_helper(free_func &src, Type2 &dst)
 {
-   dst = static_cast<Type*>(static_cast<void*>(static_cast<p32<void>>(src)));
+   dst = (void*)src;
 }
 
-template<typename Type>
-static inline typename std::enable_if<!std::is_void<Type>::value, void>::type
-copy_be(Type *src, be_val<p32<void>> &dst)
+template<typename Type1>
+static inline void
+copy_helper(Type1 &src, free_func &dst)
 {
-   dst = make_p32<void>(reinterpret_cast<void*>(src));
+   dst = reinterpret_cast<free_func>(static_cast<void*>(src));
+}
+
+template<typename Type1, typename Type2>
+static inline void
+copy_helper(Type1 &src, Type2 &dst)
+{
+   dst = src;
 }
 
 template<typename SrcType, typename DstType>
@@ -89,20 +93,20 @@ swapZStream(SrcType *src, DstType *dst)
    assert(src->zfree == nullptr);
    assert(src->opaque == nullptr);
 
-   copy_be(src->next_in, dst->next_in);
+   dst->next_in = src->next_in;
    dst->avail_in = src->avail_in;
    dst->total_in = src->total_in;
 
-   copy_be(src->next_out, dst->next_out);
+   dst->next_out = src->next_out;
    dst->avail_out = src->avail_out;
    dst->total_out = src->total_out;
 
-   copy_be(src->msg, dst->msg);
-   copy_be(src->state, dst->state);
+   dst->msg = src->msg;
+   dst->state = src->state;
 
-   copy_be(src->zalloc, dst->zalloc);
-   copy_be(src->zfree, dst->zfree);
-   copy_be(src->opaque, dst->opaque);
+   copy_helper(src->zalloc, dst->zalloc);
+   copy_helper(src->zfree, dst->zfree);
+   dst->opaque = src->opaque;
 
    dst->data_type = src->data_type;
    dst->adler = src->adler;
@@ -117,12 +121,12 @@ swapZHeader(SrcType *src, DstType *dst)
    dst->time = src->time;
    dst->xflags = src->xflags;
    dst->os = src->os;
-   copy_be(src->extra, dst->extra);
+   dst->extra = src->extra;
    dst->extra_len = src->extra_len;
    dst->extra_max = src->extra_max;
-   copy_be(src->name, dst->name);
+   dst->name = src->name;
    dst->name_max = src->name_max;
-   copy_be(src->comment, dst->comment);
+   dst->comment = src->comment;
    dst->comm_max = src->comm_max;
    dst->hcrc = src->hcrc;
    dst->done = src->done;

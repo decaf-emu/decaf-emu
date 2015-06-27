@@ -53,7 +53,7 @@ int MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
       static_cast<uint32_t>(alignment)
    };
 
-   *outPtr = OSExecuteCallback(pMEMAllocFromDefaultHeapEx->value, args);
+   *outPtr = OSExecuteCallback(static_cast<addr_t>(pMEMAllocFromDefaultHeapEx), args);
    return 0;
 }
 
@@ -63,7 +63,7 @@ void MEM_DynLoad_DefaultFree(p32<void> addr)
       static_cast<uint32_t>(addr)
    };
 
-   OSExecuteCallback(pMEMFreeToDefaultHeap->value, args);
+   OSExecuteCallback(static_cast<addr_t>(pMEMFreeToDefaultHeap), args);
 }
 
 int

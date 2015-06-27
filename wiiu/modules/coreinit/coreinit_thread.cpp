@@ -85,7 +85,7 @@ OSSetThreadName(OSThread *thread, const char *name)
 const char *
 OSGetThreadName(OSThread *thread)
 {
-   return thread->name.value;
+   return thread->name;
 }
 
 uint32_t

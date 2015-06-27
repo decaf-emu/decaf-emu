@@ -67,9 +67,9 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
    xLog() << "aa: " << static_cast<GX2AAMode>(surface->aa);
    xLog() << "resourceFlags: " << surface->resourceFlags;
    xLog() << "imageSize: " << surface->imageSize;
-   xLog() << "image: " << Log::hex(((p32<void>)surface->image).address);
+   xLog() << "image: " << Log::hex(static_cast<uint32_t>(surface->image));
    xLog() << "mipmapSize: " << surface->mipmapSize;
-   xLog() << "mipmaps: " << Log::hex(((p32<void>)surface->mipmaps).address);
+   xLog() << "mipmaps: " << Log::hex(static_cast<uint32_t>(surface->mipmaps));
    xLog() << "tileMode: " << surface->tileMode;
    xLog() << "swizzle: " << surface->swizzle;
    xLog() << "alignment: " << surface->alignment;
