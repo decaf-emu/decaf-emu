@@ -78,7 +78,7 @@ ExpandedHeapManager::free(uint32_t addr)
       return;
    }
 
-   auto nextFree = findFreeBlockByEndOffset(block->offset + block->size);
+   auto nextFree = findFreeBlockByOffset(block->offset + block->size);
    auto prevFree = findFreeBlockByEndOffset(block->offset);
 
    if (nextFree && prevFree) {
@@ -421,7 +421,7 @@ ExpandedHeapManager::eraseUsedBlockByOffset(uint32_t offset)
 {
    for (auto itr = mUsedBlocks.begin(); itr != mUsedBlocks.end(); ++itr) {
       if (itr->offset == offset) {
-         mFreeBlocks.erase(itr);
+         mUsedBlocks.erase(itr);
          return;
       }
    }
