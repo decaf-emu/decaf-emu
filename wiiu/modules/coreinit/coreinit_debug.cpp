@@ -25,7 +25,7 @@ static std::vector<char> c_width = {
 };
 
 static std::vector<char> c_precision = {
-   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*'
+   '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*'
 };
 
 static std::vector<char> c_length = {
@@ -85,38 +85,37 @@ formatString(ThreadState *state, std::string &output, unsigned reg = 3)
          }
 
          std::string formatter = "%";
-         formatter += flags + width + length + precision + specifier;
+         formatter += flags + width + precision + length + specifier;
          buffer[0] = 0;
 
          switch (specifier) {
          case 'd':
          case 'i':
+         case 'u':
+         case 'o':
+         case 'x':
+         case 'X':
+         case 'g':
+         case 'G':
+         case 'f':
+         case 'F':
+         case 'e':
+         case 'E':
+         case 'a':
+         case 'A':
+         case 'c':
+         case 'p':
+         case 'n':
             sprintf_s(buffer, 32, formatter.c_str(), state->gpr[reg]);
             output.append(buffer);
             break;
          case 's':
             output.append(reinterpret_cast<char*>(gMemory.translate(state->gpr[reg])));
             break;
-         case 'u':
-         case 'o':
-         case 'x':
-         case 'X':
-         case 'f':
-         case 'F':
-         case 'e':
-         case 'E':
-         case 'g':
-         case 'G':
-         case 'a':
-         case 'A':
-         case 'c':
-         case 'p':
-         case 'n':
          default:
             xLog() << "Unimplemented format specifier: " << specifier;
             break;
          }
-
       } else {
          output.push_back(fmt[i]);
          ++i;
@@ -127,7 +126,7 @@ formatString(ThreadState *state, std::string &output, unsigned reg = 3)
 static void
 OSPanic(ThreadState *state)
 {
-   char *file = make_p32<char>(state->gpr[3]);
+   char *file = reinterpret_cast<char*>(gMemory.translate(state->gpr[3]));
    int line = state->gpr[4];
    std::string str;
    formatString(state, str, 5);
