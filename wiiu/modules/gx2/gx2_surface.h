@@ -154,3 +154,9 @@ GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, uint32_t unk1);
 
 void
 GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer);
+
+void
+GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer);
+
+void
+GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer);
