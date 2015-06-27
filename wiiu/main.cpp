@@ -49,6 +49,12 @@ int main(int argc, char **argv)
    // Load cos.xml
    pugi::xml_document doc;
    auto cosFile = fs.openFile("/vol/code/cos.xml", FileSystem::Input | FileSystem::Binary);
+
+   if (!cosFile) {
+      xError() << "Error opening /vol/code/cos.xml";
+      return -1;
+   }
+
    auto size = cosFile->size();
    auto buffer = std::vector<char>(size);
    cosFile->read(buffer.data(), size);
@@ -56,7 +62,7 @@ int main(int argc, char **argv)
    auto result = doc.load_buffer_inplace(buffer.data(), buffer.size());
 
    if (!result) {
-      xError() << "Error reading /vol/code/cos.xml";
+      xError() << "Error parsing /vol/code/cos.xml";
       return -1;
    }
 
@@ -66,7 +72,7 @@ int main(int argc, char **argv)
    auto rpxFile = fs.openFile(std::string("/vol/code/") + rpxPath, FileSystem::Input | FileSystem::Binary);
 
    if (!rpxFile) {
-      xError() << "Error opening file /vol/code/" << rpxPath;
+      xError() << "Error opening /vol/code/" << rpxPath;
       return -1;
    }
 
