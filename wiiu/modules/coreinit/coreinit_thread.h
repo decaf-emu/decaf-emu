@@ -94,6 +94,15 @@ enum OS_THREAD_REQUEST_FLAG : uint32_t
    OS_THREAD_REQUEST_FLAG_CANCEL    = 2,
 };
 
+// Strings
+enum OS_THREAD_ATTR : uint32_t
+{
+   AFFINITY_NONE = 7, // If affinity_none is 7 = 0b111 then lets assume its a bitmask for now
+   AFFINITY_CPU0 = 1,
+   AFFINITY_CPU1 = 2,
+   AFFINITY_CPU2 = 4,
+};
+
 struct OSThread
 {
    OSContext context;
@@ -140,8 +149,13 @@ CHECK_SIZE(OSThread, 0x69c);
 
 #pragma pack(pop)
 
+using ThreadEntryPoint = wfunc_ptr<uint32_t, void*>;
+
 p32<OSThread>
 OSGetCurrentThread();
+
+BOOL
+OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, void *stack, uint32_t stackSize, uint32_t priority, OS_THREAD_ATTR attributes);
 
 void
 OSInitThreadQueue(OSThreadQueue *queue);
@@ -155,6 +169,12 @@ OSSetThreadPriority(OSThread *thread, uint32_t priority);
 uint32_t
 OSGetThreadPriority(OSThread *thread);
 
+BOOL
+OSSetThreadAffinity(OSThread *thread, uint16_t affinity);
+
+uint16_t
+OSGetThreadAffinity(OSThread *thread);
+
 uint32_t
 OSGetThreadSpecific(uint32_t id);
 
@@ -162,4 +182,16 @@ void
 OSSetThreadSpecific(uint32_t id, uint32_t value);
 
 void
+OSSetThreadName(OSThread *thread, const char *name);
+
+const char *
+OSGetThreadName(OSThread *thread);
+
+void
 OSSleepTicks(TimeTicks ticks);
+
+uint32_t
+OSResumeThread(OSThread *thread);
+
+uint32_t
+OSSuspendThread(OSThread *thread);

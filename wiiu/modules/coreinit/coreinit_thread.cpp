@@ -2,6 +2,7 @@
 #include "coreinit_thread.h"
 #include "memory.h"
 #include "thread.h"
+#include <Windows.h>
 
 p32<OSThread>
 OSGetCurrentThread()
@@ -50,9 +51,52 @@ OSSetThreadSpecific(uint32_t id, uint32_t value)
    OSGetCurrentThread()->specific[id] = value;
 }
 
+BOOL
+OSSetThreadAffinity(OSThread *thread, uint16_t affinity)
+{
+   thread->attr = affinity;
+   return TRUE;
+}
+
+uint16_t
+OSGetThreadAffinity(OSThread *thread)
+{
+   return thread->attr;
+}
+
 void
 OSSleepTicks(TimeTicks ticks)
 {
+}
+
+BOOL
+OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, void *stack, uint32_t stackSize, uint32_t priority, OS_THREAD_ATTR attributes)
+{
+   return FALSE;
+}
+
+void
+OSSetThreadName(OSThread *thread, const char *name)
+{
+   thread->name = name;
+}
+
+const char *
+OSGetThreadName(OSThread *thread)
+{
+   return thread->name.value;
+}
+
+uint32_t
+OSResumeThread(OSThread *thread)
+{
+   return 0;
+}
+
+uint32_t
+OSSuspendThread(OSThread *thread)
+{
+   return 0;
 }
 
 void
@@ -65,4 +109,10 @@ CoreInit::registerThreadFunctions()
    RegisterSystemFunction(OSSetThreadSpecific);
    RegisterSystemFunction(OSGetThreadPriority);
    RegisterSystemFunction(OSSetThreadPriority);
+   RegisterSystemFunction(OSGetThreadAffinity);
+   RegisterSystemFunction(OSSetThreadAffinity);
+   RegisterSystemFunction(OSGetThreadName);
+   RegisterSystemFunction(OSSetThreadName);
+   RegisterSystemFunction(OSCreateThread);
+   RegisterSystemFunction(OSSleepTicks);
 }
