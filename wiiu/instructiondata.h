@@ -109,9 +109,9 @@ getFieldWidth(Field field);
 uint32_t
 getFieldBitmask(Field field);
 
-template<typename InstructionID>
+template<InstructionID id>
 bool
 isA(Instruction instr)
 {
-   return gInstructionTable.isA(InstructionID id, instr);
+   return gInstructionTable.isA(id, instr);
 }
