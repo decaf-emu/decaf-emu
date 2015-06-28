@@ -24,7 +24,7 @@ public:
       return value();
    }
 
-   be_val &operator=(const Type &rhs)
+   template<typename Other> std::enable_if_t<std::is_assignable<Type&, Other>::value, be_val&> operator =(const Other& rhs)
    {
       mValue = byte_swap(rhs);
       return *this;
@@ -33,13 +33,41 @@ public:
    // TODO: Full list of operators!
    be_val &operator++()
    {
-      ++mValue;
+      *this = value() + 1;
       return *this;
    }
 
    be_val &operator--()
    {
-      --mValue;
+      *this = value() - 1;
+      return *this;
+   }
+
+   be_val operator--(int)
+   {
+      auto old = *this;
+      *this = value() - 1;
+      return old;
+   }
+
+   be_val operator++(int)
+   {
+      auto old = *this;
+      *this = value() + 1;
+      return old;
+   }
+
+   template<typename Other>
+   be_val &operator|=(Other rhs)
+   {
+      *this = static_cast<Type>(value() | rhs);
+      return *this;
+   }
+
+   template<typename Other>
+   be_val &operator&=(Other rhs)
+   {
+      *this = static_cast<Type>(value() & rhs);
       return *this;
    }
 
@@ -52,6 +80,11 @@ class p32
 {
 public:
    p32()
+   {
+   }
+
+   p32(std::nullptr_t) :
+      mValue(0)
    {
    }
    
