@@ -61,7 +61,7 @@ OSWaitEvent(EventHandle handle)
 }
 
 BOOL
-OSWaitEventWithTimeout(EventHandle handle, TimeNanoseconds timeout)
+OSWaitEventWithTimeout(EventHandle handle, Time timeout)
 {
    auto event = gSystem.getSystemObject<Event>(handle);
    auto lock = std::unique_lock<std::mutex> { event->mutex };

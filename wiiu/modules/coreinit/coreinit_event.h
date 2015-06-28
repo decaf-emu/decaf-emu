@@ -42,4 +42,4 @@ void
 OSResetEvent(EventHandle handle);
 
 BOOL
-OSWaitEventWithTimeout(EventHandle handle, TimeNanoseconds timeout);
+OSWaitEventWithTimeout(EventHandle handle, Time timeout);
