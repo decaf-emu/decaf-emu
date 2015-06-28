@@ -23,13 +23,7 @@ INS(tw, (), (to, ra, rb), (), (opcd == 31, xo1 == 4), "")
 INS(twi, (), (to, ra, simm), (), (opcd == 3), "")
 
 // Cache Management
-INS(dcbf, (), (ra, rb), (), (opcd == 31, xo1 == 86), "")
-INS(dcbi, (), (ra, rb), (), (opcd == 31, xo1 == 470), "")
-INS(dcbst, (), (ra, rb), (), (opcd == 31, xo1 == 54), "")
-INS(dcbt, (), (ra, rb), (), (opcd == 31, xo1 == 278), "")
-INS(dcbtst, (), (ra, rb), (), (opcd == 31, xo1 == 246), "")
-INS(dcbz, (), (ra, rb), (), (opcd == 31, xo1 == 1014), "")
-INS(lcbi, (), (ra, rb), (), (opcd == 31, xo1 == 982), "")
+INS(icbi, (), (ra, rb), (), (opcd == 31, xo1 == 982), "")
 
 // Lookaside Buffer Management
 INS(tlbie, (), (rb), (), (opcd == 31, xo1 == 306), "")
@@ -39,6 +33,60 @@ INS(tlbsync, (), (), (), (opcd == 31, xo1 == 566), "")
 INS(eciwx, (rd), (ra, rb), (), (opcd == 31, xo1 == 310), "")
 INS(ecowx, (rd), (ra, rb), (), (opcd == 31, xo1 == 438), "")
 */
+
+// Data Cache Block Flush
+static void
+dcbf(ThreadState *state, Instruction instr)
+{
+}
+
+// Data Cache Block Invalidate
+static void
+dcbi(ThreadState *state, Instruction instr)
+{
+}
+
+// Data Cache Block Store
+static void
+dcbst(ThreadState *state, Instruction instr)
+{
+}
+
+// Data Cache Block Touch
+static void
+dcbt(ThreadState *state, Instruction instr)
+{
+}
+
+// Data Cache Block Touch for Store
+static void
+dcbtst(ThreadState *state, Instruction instr)
+{
+}
+
+// Data Cache Block Zero
+static void
+dcbz(ThreadState *state, Instruction instr)
+{
+   uint32_t addr;
+
+   if (instr.rA == 0) {
+      addr = 0;
+   } else {
+      addr = state->gpr[instr.rA];
+   }
+
+   addr += state->gpr[instr.rB];
+   addr = alignDown(addr, 32);
+   memset(gMemory.translate(addr), 0, 32);
+}
+
+// Data Cache Block Zero Locked
+static void
+dcbz_l(ThreadState *state, Instruction instr)
+{
+   dcbz(state, instr);
+}
 
 // Enforce In-Order Execution of I/O
 static void
@@ -253,6 +301,13 @@ kc(ThreadState *state, Instruction instr)
 void
 Interpreter::registerSystemInstructions()
 {
+   RegisterInstruction(dcbf);
+   RegisterInstruction(dcbi);
+   RegisterInstruction(dcbst);
+   RegisterInstruction(dcbt);
+   RegisterInstruction(dcbtst);
+   RegisterInstruction(dcbz);
+   RegisterInstruction(dcbz_l);
    RegisterInstruction(eieio);
    RegisterInstruction(isync);
    RegisterInstruction(sync);
