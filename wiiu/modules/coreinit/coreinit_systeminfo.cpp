@@ -29,12 +29,20 @@ OSGetScreenCapturePermission()
    return gScreenCapturePermission;
 }
 
+uint32_t
+OSGetConsoleType()
+{
+   // Value from a WiiU retail v4.0.0
+   return 0x3000050;
+}
+
 void
 CoreInit::registerSystemInfoFunctions()
 {
    RegisterSystemFunction(OSGetSystemInfo);
    RegisterSystemFunction(OSSetScreenCapturePermission);
    RegisterSystemFunction(OSGetScreenCapturePermission);
+   RegisterSystemFunction(OSGetConsoleType);
 }
 
 void

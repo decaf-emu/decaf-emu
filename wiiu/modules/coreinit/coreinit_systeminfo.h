@@ -21,3 +21,6 @@ OSSetScreenCapturePermission(BOOL enabled);
 
 BOOL
 OSGetScreenCapturePermission();
+
+uint32_t
+OSGetConsoleType();
