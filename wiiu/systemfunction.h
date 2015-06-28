@@ -106,6 +106,26 @@ struct sysfunc_result<Type *>
    }
 };
 
+template<>
+struct sysfunc_result<int64_t>
+{
+   static inline void update(ThreadState *state, int64_t v)
+   {
+      state->gpr[3] = static_cast<uint32_t>(v >> 32);
+      state->gpr[4] = static_cast<uint32_t>(v & 0xffffffff);
+   }
+};
+
+template<>
+struct sysfunc_result<uint64_t>
+{
+   static inline void update(ThreadState *state, uint64_t v)
+   {
+      state->gpr[3] = static_cast<uint32_t>(v >> 32);
+      state->gpr[4] = static_cast<uint32_t>(v & 0xffffffff);
+   }
+};
+
 template<typename Type>
 struct sysfunc_result
 {
