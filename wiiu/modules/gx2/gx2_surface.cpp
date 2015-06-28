@@ -79,8 +79,8 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
 void
 GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer, be_val<uint32_t> *outSize, be_val<uint32_t> *outAlignment)
 {
-   *outSize = 0;
-   *outAlignment = 0;
+   *outSize = depthBuffer->surface.imageSize / (8 * 8);
+   *outAlignment = 4;
 }
 
 void
