@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <mutex>
 #include <cstdint>
 #include "heapmanager.h"
 #include "systemtypes.h"
@@ -44,6 +45,7 @@ public:
    inline Type *
    addSystemObject(p32<SystemObjectHeader> header)
    {
+      std::lock_guard<std::mutex> lock(mSystemObjectMutex);
       auto object = new Type();
 
       // Set object header values
@@ -83,9 +85,13 @@ private:
    p32<void> mSystemThunks;
    std::vector<SystemFunction*> mSystemCalls;
 
+   std::mutex mHeapMutex;
    std::vector<HeapManager *> mHeaps;
+
+   std::mutex mThreadMutex;
    std::vector<Thread*> mThreads;
 
+   std::mutex mSystemObjectMutex;
    std::map<uint32_t, SystemObject *> mSystemObjects;
 
    FileSystem *mFileSystem;

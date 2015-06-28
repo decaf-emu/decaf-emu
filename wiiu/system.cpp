@@ -67,12 +67,14 @@ System::findModule(const char *name) const
 void
 System::addThread(Thread *thread)
 {
+   std::lock_guard<std::mutex> lock(mThreadMutex);
    mThreads.push_back(thread);
 }
 
 void
 System::removeThread(Thread *thread)
 {
+   std::lock_guard<std::mutex> lock(mThreadMutex);
    mThreads.erase(std::remove(mThreads.begin(), mThreads.end(), thread), mThreads.end());
 }
 
@@ -113,6 +115,7 @@ System::loadThunks()
 bool
 System::freeSystemObject(p32<SystemObjectHeader> header)
 {
+   std::lock_guard<std::mutex> lock(mSystemObjectMutex);
    auto itr = mSystemObjects.find(static_cast<uint32_t>(header));
 
    if (itr == mSystemObjects.end()) {
@@ -129,6 +132,7 @@ System::freeSystemObject(p32<SystemObjectHeader> header)
 void
 System::freeSystemObjects(uint32_t address, uint32_t size)
 {
+   std::lock_guard<std::mutex> lock(mSystemObjectMutex);
    auto start = address;
    auto end = address + size;
    auto itr = mSystemObjects.begin();
@@ -143,6 +147,8 @@ System::freeSystemObjects(uint32_t address, uint32_t size)
 WHeapHandle
 System::addHeap(HeapManager *heap)
 {
+   std::lock_guard<std::mutex> lock(mHeapMutex);
+
    for (auto i = 0u; i < mHeaps.size(); ++i) {
       if (mHeaps[i] == nullptr) {
          mHeaps[i] = heap;
@@ -163,6 +169,8 @@ System::getHeap(WHeapHandle handle)
 HeapManager *
 System::getHeapByAddress(uint32_t vaddr)
 {
+   std::lock_guard<std::mutex> lock(mHeapMutex);
+
    for (auto heap : mHeaps) {
       auto base = heap->getAddress();
       auto size = heap->getSize();
@@ -178,6 +186,7 @@ System::getHeapByAddress(uint32_t vaddr)
 void
 System::removeHeap(WHeapHandle handle)
 {
+   std::lock_guard<std::mutex> lock(mHeapMutex);
    mHeaps[handle - 1] = nullptr;
 }
 
