@@ -202,7 +202,6 @@
     <ClCompile Include="modules\zlib125\zlib125.cpp" />
     <ClCompile Include="modules\zlib125\zlib125_core.cpp" />
     <ClCompile Include="system.cpp" />
-    <ClCompile Include="systemmodule.cpp" />
     <ClCompile Include="thread.cpp" />
   </ItemGroup>
   <ItemGroup>

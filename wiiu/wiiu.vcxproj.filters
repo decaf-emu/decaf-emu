@@ -192,9 +192,6 @@
     <ClCompile Include="system.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="systemmodule.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="thread.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
