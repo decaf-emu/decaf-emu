@@ -27,6 +27,7 @@ private:
    static void registerDeviceFunctions();
    static void registerDynLoadFunctions();
    static void registerEventFunctions();
+   static void registerExceptionFunctions();
    static void registerExpHeapFunctions();
    static void registerFastMutexFunctions();
    static void registerFileSystemFunctions();
