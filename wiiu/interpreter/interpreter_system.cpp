@@ -275,7 +275,7 @@ kc(ThreadState *state, Instruction instr)
    SystemFunction *func = nullptr;
 
    if (!implemented) {
-      auto userModule = state->thread->getSystem()->getUserModule();
+      auto userModule = gSystem.getUserModule();
       auto sym = userModule->symbols[id];
       auto fsym = reinterpret_cast<FunctionSymbol*>(sym);
 
