@@ -1,14 +1,14 @@
 #pragma once
 #include "systemtypes.h"
+#include "modules/coreinit/coreinit_fs.h"
 
-enum class SaveError : int32_t
-{
-   OK = 0,
-   Error = -0x400
-};
+using SaveStatus = FSStatus;
 
-SaveError
+SaveStatus
 SAVEInit();
 
 void
 SAVEShutdown();
+
+SaveStatus
+SAVEInitSaveDir(uint8_t userID);
