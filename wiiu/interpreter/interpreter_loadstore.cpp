@@ -337,8 +337,7 @@ storeGeneric(ThreadState *state, Instruction instr)
          state->cr.cr0 |= ConditionRegisterFlag::Equal;
          state->reserve = false;
       } else {
-         // Reserve bit is not set, so clear CR0[EQ] and do not write
-         state->cr.cr0 &= ~ConditionRegisterFlag::Equal;
+         // Reserve bit is not set, do not write.
          return;
       }
    }
