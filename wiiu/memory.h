@@ -70,6 +70,10 @@ public:
    // Translate host address to WiiU virtual address
    uint32_t untranslate(const void *ptr) const
    {
+      if (!ptr) {
+         return 0;
+      }
+
       auto sptr = reinterpret_cast<size_t>(ptr);
       auto sbase = reinterpret_cast<size_t>(mBase);
       assert(sptr > sbase);
