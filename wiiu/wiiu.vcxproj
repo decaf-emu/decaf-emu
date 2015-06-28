@@ -198,6 +198,7 @@
     <ClCompile Include="modules\gx2\gx2_renderstate.cpp" />
     <ClCompile Include="modules\gx2\gx2_shaders.cpp" />
     <ClCompile Include="modules\gx2\gx2_surface.cpp" />
+    <ClCompile Include="modules\gx2\gx2_temp.cpp" />
     <ClCompile Include="modules\gx2\gx2_texture.cpp" />
     <ClCompile Include="modules\nn_save\nn_save.cpp" />
     <ClCompile Include="modules\nn_save\nn_save_core.cpp" />
@@ -234,6 +235,7 @@
     <ClInclude Include="modules\coreinit\coreinit_semaphore.h" />
     <ClInclude Include="modules\gx2\gx2r_resource.h" />
     <ClInclude Include="modules\gx2\gx2_surface.h" />
+    <ClInclude Include="modules\gx2\gx2_temp.h" />
     <ClInclude Include="systemobject.h" />
     <ClInclude Include="usermodule.h" />
     <ClInclude Include="modules\coreinit\coreinit.h" />

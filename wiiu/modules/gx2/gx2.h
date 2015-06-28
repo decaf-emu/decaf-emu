@@ -20,5 +20,6 @@ private:
    static void registerRenderStateFunctions();
    static void registerShaderFunctions();
    static void registerSurfaceFunctions();
+   static void registerTempFunctions();
    static void registerTextureFunctions();
 };

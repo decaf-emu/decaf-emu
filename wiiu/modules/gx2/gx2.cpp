@@ -17,5 +17,6 @@ void GX2::RegisterFunctions()
    registerResourceFunctions();
    registerShaderFunctions();
    registerSurfaceFunctions();
+   registerTempFunctions();
    registerTextureFunctions();
 }
