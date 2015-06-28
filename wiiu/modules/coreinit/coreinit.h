@@ -37,6 +37,7 @@ private:
    static void registerMemoryFunctions();
    static void registerMessageQueueFunctions();
    static void registerMutexFunctions();
+   static void registerSemaphoreFunctions();
    static void registerSpinLockFunctions();
    static void registerSystemInfoFunctions();
    static void registerThreadFunctions();
