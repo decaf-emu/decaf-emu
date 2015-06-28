@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_thread.h"
+#include "coreinit_systeminfo.h"
 #include "memory.h"
 #include "thread.h"
 #include "system.h"
@@ -72,6 +73,14 @@ OSGetThreadAffinity(OSThread *thread)
 void
 OSSleepTicks(Time ticks)
 {
+   // TODO: Figure out ticks to time translation
+   std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+}
+
+void
+OSYieldThread()
+{
+   std::this_thread::yield();
 }
 
 BOOL
@@ -176,4 +185,6 @@ CoreInit::registerThreadFunctions()
    RegisterSystemFunction(OSSleepTicks);
    RegisterSystemFunction(OSResumeThread);
    RegisterSystemFunction(OSRunThread);
+   RegisterSystemFunction(OSJoinThread);
+   RegisterSystemFunction(OSYieldThread);
 }

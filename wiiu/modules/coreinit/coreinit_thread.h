@@ -217,3 +217,6 @@ OSJoinThread(OSThread *thread, be_val<int> *exitValue);
 
 uint32_t
 OSSuspendThread(OSThread *thread);
+
+void
+OSYieldThread();
