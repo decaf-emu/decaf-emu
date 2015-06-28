@@ -17,6 +17,7 @@
 #include "thread.h"
 #include "usermodule.h"
 #include "filesystem.h"
+#include "modules/coreinit/coreinit_memory.h"
 
 int main(int argc, char **argv)
 {
@@ -92,8 +93,45 @@ int main(int argc, char **argv)
 
    xLog() << "Succesfully loaded " << argv[1];
 
-   auto thread = new Thread(&gSystem, entry.stackSize, entry.address);
-   thread->run(gInterpreter);
+   auto stackSize = entry.stackSize;
+
+   // Allocate OSThread structures and stacks
+   p32<OSThread> thread1 = OSAllocFromSystem(sizeof(OSThread));
+   p32<void> stack1 = OSAllocFromSystem(stackSize, 8);
+   p32<void> stack1top = make_p32<void>(reinterpret_cast<uint8_t*>(stack1.getPointer()) + stackSize);
+
+   p32<OSThread> thread0 = OSAllocFromSystem(sizeof(OSThread));
+   p32<void> stack0 = OSAllocFromSystem(stackSize, 8);
+   p32<void> stack0top = make_p32<void>(reinterpret_cast<uint8_t*>(stack0.getPointer()) + stackSize);
+
+   p32<OSThread> thread2 = OSAllocFromSystem(sizeof(OSThread));
+   p32<void> stack2 = OSAllocFromSystem(stackSize, 8);
+   p32<void> stack2top = make_p32<void>(reinterpret_cast<uint8_t*>(stack2.getPointer()) + stackSize);
+
+   // Create the idle threads for core0 and core2
+   OSCreateThread(thread0, 0, 0, nullptr, stack0top, stackSize, 16, OSThreadAttributes::AffinityCPU0);
+   OSCreateThread(thread2, 0, 0, nullptr, stack2top, stackSize, 16, OSThreadAttributes::AffinityCPU2);
+
+   // Create the main thread for core1
+   OSCreateThread(thread1, entry.address, 0, nullptr, stack1top, stackSize, 16, OSThreadAttributes::AffinityCPU1);
+
+   // Set the default threads
+   OSSetDefaultThread(0, thread0);
+   OSSetDefaultThread(1, thread1);
+   OSSetDefaultThread(2, thread2);
+
+   // Start thread 1 and wait for it to finish
+   be_val<int> exitValue;
+   OSResumeThread(thread1);
+   OSJoinThread(thread1, &exitValue);
+
+   // Free allocated data
+   OSFreeToSystem(thread0);
+   OSFreeToSystem(thread1);
+   OSFreeToSystem(thread2);
+   OSFreeToSystem(stack0);
+   OSFreeToSystem(stack1);
+   OSFreeToSystem(stack2);
 
    return 0;
 }

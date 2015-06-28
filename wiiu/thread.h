@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <thread>
 #include "ppc.h"
 #include "modules/coreinit/coreinit_thread.h"
 
@@ -10,15 +11,23 @@ struct ThreadState;
 class Thread
 {
 public:
-   Thread(System *system, uint32_t stackSize, uint32_t entryPoint);
+   Thread(p32<OSThread> thread, ThreadEntryPoint entry,
+          uint32_t argc, p32<void> argv,
+          p32<uint8_t> stack, uint32_t stackSize,
+          uint32_t priority, OSThreadAttributes::Flags attributes);
    ~Thread();
 
-   void run(Interpreter &interp);
-
-   System *getSystem() const;
+   uint32_t getCoreID() const;
    ThreadState *getThreadState() const;
    p32<OSThread> getOSThread() const;
-   uint32_t getCoreID() const;
+
+   uint32_t join();
+   void resume();
+   bool run(ThreadEntryPoint entry, uint32_t argc, p32<void> argv);
+   uint32_t execute(uint32_t address, size_t argc, uint32_t args[]);
+
+private:
+   void entry();
 
 public:
    static Thread *getCurrentThread();
@@ -26,11 +35,11 @@ public:
 private:
    uint32_t mCoreID;
    std::string mName;
-   System *mSystem;
    uint32_t mStackBase;
    uint32_t mStackSize;
    p32<OSThread> mOSThread;
 
    std::aligned_storage<sizeof(ThreadState), 16>::type mAlignedState;
    ThreadState *mState;
+   std::thread mThread;
 };

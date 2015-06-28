@@ -2,7 +2,11 @@
 #include "coreinit_thread.h"
 #include "memory.h"
 #include "thread.h"
+#include "system.h"
 #include <Windows.h>
+
+static OSThread *
+gDefaultThreads[3];
 
 p32<OSThread>
 OSGetCurrentThread()
@@ -52,28 +56,46 @@ OSSetThreadSpecific(uint32_t id, uint32_t value)
 }
 
 BOOL
-OSSetThreadAffinity(OSThread *thread, Flags<OS_THREAD_ATTR> affinity)
+OSSetThreadAffinity(OSThread *thread, uint32_t affinity)
 {
-   Flags<OS_THREAD_ATTR> cur = thread->attr.value();
-   thread->attr = affinity | (cur & ~OS_THREAD_ATTR::AFFINITY_NONE);
+   thread->attr &= ~OSThreadAttributes::AffinityNone;
+   thread->attr |= affinity;
    return TRUE;
 }
 
-OS_THREAD_ATTR
+uint32_t
 OSGetThreadAffinity(OSThread *thread)
 {
-   return thread->attr;
+   return thread->attr & OSThreadAttributes::AffinityNone;
 }
 
 void
-OSSleepTicks(TimeTicks ticks)
+OSSleepTicks(Time ticks)
 {
 }
 
 BOOL
-OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, void *stack, uint32_t stackSize, uint32_t priority, OS_THREAD_ATTR attributes)
+OSCreateThread(p32<OSThread> osThread, ThreadEntryPoint entry, uint32_t argc, p32<void> argv, p32<void> stack, uint32_t stackSize, uint32_t priority, OSThreadAttributes::Flags attributes)
 {
-   return FALSE;
+   auto thread = new Thread(osThread, entry, argc, argv, stack, stackSize, priority, attributes);
+   gSystem.addThread(thread);
+   return TRUE;
+}
+
+void
+OSSetDefaultThread(uint32_t coreID, OSThread *thread)
+{
+   gDefaultThreads[coreID] = thread;
+}
+
+OSThread *
+OSGetDefaultThread(uint32_t coreID)
+{
+   if (coreID >= 3) {
+      return nullptr;
+   }
+
+   return gDefaultThreads[coreID];
 }
 
 void
@@ -91,13 +113,48 @@ OSGetThreadName(OSThread *thread)
 uint32_t
 OSResumeThread(OSThread *thread)
 {
-   return 0;
+   auto counter = thread->suspendCounter;
+
+   thread->suspendCounter--;
+
+   if (thread->suspendCounter < 0) {
+      thread->suspendCounter = 0;
+   }
+
+   if (thread->suspendCounter == 0) {
+      thread->thread->resume();
+   } else {
+      assert(0);
+   }
+
+   return counter;
+}
+
+BOOL
+OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, p32<void> argv)
+{
+   return thread->thread->run(entry, argc, argv);
+}
+
+BOOL
+OSJoinThread(OSThread *thread, be_val<int> *exitValue)
+{
+   *exitValue = thread->thread->join();
+   return TRUE;
 }
 
 uint32_t
 OSSuspendThread(OSThread *thread)
 {
-   return 0;
+   auto old = thread->suspendCounter;
+   thread->suspendCounter++;
+
+   if (thread->suspendCounter > 0) {
+      // TODO: Suspend!
+      return -1;
+   }
+
+   return old;
 }
 
 void
@@ -106,6 +163,7 @@ CoreInit::registerThreadFunctions()
    RegisterSystemFunction(OSGetCurrentThread);
    RegisterSystemFunction(OSInitThreadQueue);
    RegisterSystemFunction(OSInitThreadQueueEx);
+   RegisterSystemFunction(OSGetDefaultThread);
    RegisterSystemFunction(OSGetThreadSpecific);
    RegisterSystemFunction(OSSetThreadSpecific);
    RegisterSystemFunction(OSGetThreadPriority);
@@ -116,4 +174,6 @@ CoreInit::registerThreadFunctions()
    RegisterSystemFunction(OSSetThreadName);
    RegisterSystemFunction(OSCreateThread);
    RegisterSystemFunction(OSSleepTicks);
+   RegisterSystemFunction(OSResumeThread);
+   RegisterSystemFunction(OSRunThread);
 }
