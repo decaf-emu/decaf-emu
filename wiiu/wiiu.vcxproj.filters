@@ -64,6 +64,9 @@
     <Filter Include="Source Files\system">
       <UniqueIdentifier>{8c8252e9-b776-49cf-ab0a-ec5a801be21e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\modules\nn_act">
+      <UniqueIdentifier>{99e874d6-385b-42d6-ba40-a1157f13fef9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -223,6 +226,12 @@
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
     <ClCompile Include="modules\coreinit\coreinit_device.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_semaphore.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\coreinit\coreinit_exception.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
   </ItemGroup>
@@ -424,6 +433,12 @@
     </ClInclude>
     <ClInclude Include="filesystem.h">
       <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_semaphore.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\coreinit\coreinit_exception.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

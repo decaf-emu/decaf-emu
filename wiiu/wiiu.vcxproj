@@ -173,6 +173,7 @@
     <ClCompile Include="modules\coreinit\coreinit_device.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_dynload.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_event.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_exception.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_expheap.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_fastmutex.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_frameheap.cpp" />
@@ -183,6 +184,7 @@
     <ClCompile Include="modules\coreinit\coreinit_memory.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_messagequeue.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_mutex.cpp" />
+    <ClCompile Include="modules\coreinit\coreinit_semaphore.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_spinlock.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_systeminfo.cpp" />
     <ClCompile Include="modules\coreinit\coreinit_thread.cpp" />
@@ -227,7 +229,9 @@
     <ClInclude Include="memory.h" />
     <ClInclude Include="modules\coreinit\coreinit_core.h" />
     <ClInclude Include="modules\coreinit\coreinit_device.h" />
+    <ClInclude Include="modules\coreinit\coreinit_exception.h" />
     <ClInclude Include="modules\coreinit\coreinit_fastmutex.h" />
+    <ClInclude Include="modules\coreinit\coreinit_semaphore.h" />
     <ClInclude Include="modules\gx2\gx2r_resource.h" />
     <ClInclude Include="modules\gx2\gx2_surface.h" />
     <ClInclude Include="systemobject.h" />
