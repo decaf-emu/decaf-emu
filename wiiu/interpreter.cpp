@@ -4,10 +4,11 @@
 #include "memory.h"
 #include "log.h"
 
-Interpreter gInterpreter;
+Interpreter
+gInterpreter;
 
-std::vector<Interpreter::instrfptr_t>
-Interpreter::sInstructionMap;
+static std::vector<instrfptr_t>
+sInstructionMap;
 
 void Interpreter::RegisterFunctions()
 {

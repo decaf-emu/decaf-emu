@@ -14,10 +14,10 @@
 #define RegisterInstructionFn(x, fn) \
    registerInstruction(InstructionID::##x, &fn)
 
+using instrfptr_t = void(*)(ThreadState*, Instruction);
+
 class Interpreter : public IDebugInterface
 {
-   using instrfptr_t = void(*)(ThreadState*, Instruction);
-
 public:
    void execute(ThreadState *state, uint32_t addr);
 
@@ -49,8 +49,6 @@ private:
    static void registerLoadStoreInstructions();
    static void registerPairedInstructions();
    static void registerSystemInstructions();
-
-   static std::vector<instrfptr_t> sInstructionMap;
 };
 
 extern Interpreter gInterpreter;
