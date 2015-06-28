@@ -89,6 +89,12 @@ FSInitCmdBlock(FSCmdBlock *block)
 {
 }
 
+FSStatus
+FSSetCmdPriority(FSCmdBlock *block, FSPriority priority)
+{
+   return FSStatus::OK;
+}
+
 void
 FSSetStateChangeNotification(FSClient *client, FSStateChangeInfo *info)
 {
@@ -166,6 +172,7 @@ CoreInit::registerFileSystemFunctions()
    RegisterSystemFunction(FSShutdown);
    RegisterSystemFunction(FSAddClient);
    RegisterSystemFunction(FSInitCmdBlock);
+   RegisterSystemFunction(FSSetCmdPriority);
    RegisterSystemFunction(FSGetStat);
    RegisterSystemFunction(FSGetStatFile);
    RegisterSystemFunction(FSSetStateChangeNotification);

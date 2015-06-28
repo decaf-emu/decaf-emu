@@ -99,6 +99,7 @@ enum class FSError : int32_t
 };
 
 using FSFileHandle = uint32_t;
+using FSPriority = uint32_t;
 
 void
 FSInit();
@@ -111,6 +112,9 @@ FSAddClient(FSClient *client, uint32_t flags);
 
 void
 FSInitCmdBlock(FSCmdBlock *block);
+
+FSStatus
+FSSetCmdPriority(FSCmdBlock *block, FSPriority priority);
 
 FSStatus
 FSGetStat(FSClient *client, FSCmdBlock *block, const char *filepath, FSStat *stat, uint32_t flags);
