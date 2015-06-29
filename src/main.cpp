@@ -1,23 +1,19 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
 #include <pugixml.hpp>
 #include "bitutils.h"
-#include "gdbstub.h"
+#include "filesystem.h"
 #include "instructiondata.h"
 #include "interpreter.h"
 #include "loader.h"
 #include "log.h"
 #include "memory.h"
 #include "modules/coreinit/coreinit.h"
+#include "modules/coreinit/coreinit_memory.h"
 #include "modules/gx2/gx2.h"
 #include "modules/nn_save/nn_save.h"
 #include "modules/zlib125/zlib125.h"
 #include "system.h"
 #include "thread.h"
 #include "usermodule.h"
-#include "filesystem.h"
-#include "modules/coreinit/coreinit_memory.h"
 
 int main(int argc, char **argv)
 {

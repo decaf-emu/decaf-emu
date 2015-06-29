@@ -1,9 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.22823.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wiiu", "wiiu\wiiu.vcxproj", "{D528F1B0-3DA2-496D-9E59-CE80141BD149}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "build\zlib.vcxproj", "{C0166DC5-84C8-466C-BD6C-037951915569}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libraries", "libraries", "{A7137181-83E5-46FB-A880-B4FB4F4BF3C3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "asmjit", "build\asmjit.vcxproj", "{94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pugixml", "build\pugixml.vcxproj", "{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wiiu", "build\wiiu.vcxproj", "{D528F1B0-3DA2-496D-9E59-CE80141BD149}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C0166DC5-84C8-466C-BD6C-037951915569} = {C0166DC5-84C8-466C-BD6C-037951915569}
+		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6} = {2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6}
+		{94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E} = {94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,6 +24,18 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C0166DC5-84C8-466C-BD6C-037951915569}.Debug|x64.ActiveCfg = Debug|x64
+		{C0166DC5-84C8-466C-BD6C-037951915569}.Debug|x64.Build.0 = Debug|x64
+		{C0166DC5-84C8-466C-BD6C-037951915569}.Release|x64.ActiveCfg = Release|x64
+		{C0166DC5-84C8-466C-BD6C-037951915569}.Release|x64.Build.0 = Release|x64
+		{94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E}.Debug|x64.ActiveCfg = Debug|x64
+		{94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E}.Debug|x64.Build.0 = Debug|x64
+		{94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E}.Release|x64.ActiveCfg = Release|x64
+		{94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E}.Release|x64.Build.0 = Release|x64
+		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6}.Debug|x64.ActiveCfg = Debug|x64
+		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6}.Debug|x64.Build.0 = Debug|x64
+		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6}.Release|x64.ActiveCfg = Release|x64
+		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6}.Release|x64.Build.0 = Release|x64
 		{D528F1B0-3DA2-496D-9E59-CE80141BD149}.Debug|x64.ActiveCfg = Debug|x64
 		{D528F1B0-3DA2-496D-9E59-CE80141BD149}.Debug|x64.Build.0 = Debug|x64
 		{D528F1B0-3DA2-496D-9E59-CE80141BD149}.Release|x64.ActiveCfg = Release|x64
@@ -18,5 +43,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C0166DC5-84C8-466C-BD6C-037951915569} = {A7137181-83E5-46FB-A880-B4FB4F4BF3C3}
+		{94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E} = {A7137181-83E5-46FB-A880-B4FB4F4BF3C3}
+		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6} = {A7137181-83E5-46FB-A880-B4FB4F4BF3C3}
 	EndGlobalSection
 EndGlobal

@@ -39,10 +39,6 @@ void Interpreter::registerInstruction(InstructionID id, instrfptr_t fptr)
 void Interpreter::execute(ThreadState *state, uint32_t addr)
 {
    bool mTraceEnabled = false;
-   mActiveThread = state;
-   mStep = false;
-   mPaused = false;
-
    auto saveLR = state->lr;
    auto saveCIA = state->cia;
    auto saveNIA = state->nia;
@@ -60,10 +56,9 @@ void Interpreter::execute(ThreadState *state, uint32_t addr)
       auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
       auto bpitr = std::find(mBreakpoints.begin(), mBreakpoints.end(), state->cia);
 
-      if (mStep || bpitr != mBreakpoints.end()) {
-         xLog() << "Hit breakpoint!";
+      if (bpitr != mBreakpoints.end()) {
+         xLog() << "Hit breakpoint, starting trace!";
          mTraceEnabled = true;
-         //enterBreakpoint();
       }
 
       if (mTraceEnabled) {
@@ -107,46 +102,7 @@ void Interpreter::execute(ThreadState *state, uint32_t addr)
    xLog() << "Finished!";
 }
 
-ThreadState *Interpreter::getThreadState(uint32_t tid)
-{
-   return mActiveThread;
-}
-
-void Interpreter::resume()
-{
-   mStep = false;
-   mDebugCV.notify_one();
-}
-
-void Interpreter::pause()
-{
-   mStep = true;
-}
-
-void Interpreter::step()
-{
-   mStep = true;
-   resume();
-}
-
-void Interpreter::removeBreakpoint(uint32_t addr)
-{
-   auto bpitr = std::find(mBreakpoints.begin(), mBreakpoints.end(), addr);
-
-   if (bpitr != mBreakpoints.end()) {
-      mBreakpoints.erase(bpitr);
-   }
-}
-
 void Interpreter::addBreakpoint(uint32_t addr)
 {
    mBreakpoints.push_back(addr);
-}
-
-void Interpreter::enterBreakpoint()
-{
-   std::unique_lock<std::mutex> lock(mDebugMutex);
-   mPaused = true;
-   mDebugCV.wait(lock);
-   mPaused = false;
 }

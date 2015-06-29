@@ -6,7 +6,6 @@
 #include "instruction.h"
 #include "instructionid.h"
 #include "ppc.h"
-#include "gdbstub.h"
 
 #define RegisterInstruction(x) \
    registerInstruction(InstructionID::##x, &x)
@@ -16,26 +15,14 @@
 
 using instrfptr_t = void(*)(ThreadState*, Instruction);
 
-class Interpreter : public IDebugInterface
+class Interpreter
 {
 public:
    void execute(ThreadState *state, uint32_t addr);
-
-   virtual void addBreakpoint(uint32_t addr);
-   virtual void removeBreakpoint(uint32_t addr);
-   virtual void pause();
-   virtual void resume();
-   virtual void step();
-   virtual ThreadState *getThreadState(uint32_t tid);
+   void addBreakpoint(uint32_t addr);
 
 private:
-   ThreadState *mActiveThread;
-   volatile bool mPaused;
-   volatile bool mStep;
    std::vector<uint32_t> mBreakpoints;
-   std::mutex mDebugMutex;
-   std::condition_variable mDebugCV;
-   void enterBreakpoint();
 
 public:
    static void RegisterFunctions();

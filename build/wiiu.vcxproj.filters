@@ -69,381 +69,375 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="..\src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="interpreter\interpreter_branch.cpp">
+    <ClCompile Include="..\src\interpreter\interpreter_branch.cpp">
       <Filter>Source Files\interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="interpreter\interpreter_condition.cpp">
+    <ClCompile Include="..\src\interpreter\interpreter_condition.cpp">
       <Filter>Source Files\interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="interpreter\interpreter_integer.cpp">
+    <ClCompile Include="..\src\interpreter\interpreter_integer.cpp">
       <Filter>Source Files\interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="interpreter\interpreter_loadstore.cpp">
+    <ClCompile Include="..\src\interpreter\interpreter_loadstore.cpp">
       <Filter>Source Files\interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="interpreter\interpreter_system.cpp">
+    <ClCompile Include="..\src\interpreter\interpreter_system.cpp">
       <Filter>Source Files\interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_debug.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_debug.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_thread.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_thread.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="gdbstub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="interpreter\interpreter_pairedsingle.cpp">
+    <ClCompile Include="..\src\interpreter\interpreter_pairedsingle.cpp">
       <Filter>Source Files\interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="interpreter\interpreter_float.cpp">
+    <ClCompile Include="..\src\interpreter\interpreter_float.cpp">
       <Filter>Source Files\interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_memory.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_memory.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\gx2\gx2.cpp">
+    <ClCompile Include="..\src\modules\gx2\gx2.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="modules\gx2\gx2_texture.cpp">
+    <ClCompile Include="..\src\modules\gx2\gx2_texture.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_mutex.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_mutex.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_systeminfo.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_systeminfo.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_spinlock.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_spinlock.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_ghs.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_ghs.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_membase.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_membase.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_expheap.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_expheap.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_frameheap.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_frameheap.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_dynload.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_dynload.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_messagequeue.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_messagequeue.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_time.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_time.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_fs.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_mcp.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_mcp.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_userconfig.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_userconfig.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\gx2\gx2_core.cpp">
+    <ClCompile Include="..\src\modules\gx2\gx2_core.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="modules\gx2\gx2_display.cpp">
+    <ClCompile Include="..\src\modules\gx2\gx2_display.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="modules\gx2\gx2_renderstate.cpp">
+    <ClCompile Include="..\src\modules\gx2\gx2_renderstate.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="modules\gx2\gx2_shaders.cpp">
+    <ClCompile Include="..\src\modules\gx2\gx2_shaders.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_cache.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_cache.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\gx2\gx2_displaylist.cpp">
+    <ClCompile Include="..\src\modules\gx2\gx2_displaylist.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="modules\nn_save\nn_save.cpp">
+    <ClCompile Include="..\src\modules\nn_save\nn_save.cpp">
       <Filter>Source Files\modules\nn_save</Filter>
     </ClCompile>
-    <ClCompile Include="modules\nn_save\nn_save_core.cpp">
+    <ClCompile Include="..\src\modules\nn_save\nn_save_core.cpp">
       <Filter>Source Files\modules\nn_save</Filter>
     </ClCompile>
-    <ClCompile Include="modules\zlib125\zlib125.cpp">
+    <ClCompile Include="..\src\modules\zlib125\zlib125.cpp">
       <Filter>Source Files\modules\zlib125</Filter>
     </ClCompile>
-    <ClCompile Include="modules\zlib125\zlib125_core.cpp">
+    <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp">
       <Filter>Source Files\modules\zlib125</Filter>
     </ClCompile>
-    <ClCompile Include="disassembler.cpp">
+    <ClCompile Include="..\src\disassembler.cpp">
       <Filter>Source Files\ppc</Filter>
     </ClCompile>
-    <ClCompile Include="instructiontable.cpp">
+    <ClCompile Include="..\src\instructiontable.cpp">
       <Filter>Source Files\ppc</Filter>
     </ClCompile>
-    <ClCompile Include="memory.cpp">
+    <ClCompile Include="..\src\memory.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="system.cpp">
+    <ClCompile Include="..\src\system.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="thread.cpp">
+    <ClCompile Include="..\src\thread.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="interpreter.cpp">
+    <ClCompile Include="..\src\interpreter.cpp">
       <Filter>Source Files\ppc</Filter>
     </ClCompile>
-    <ClCompile Include="loader.cpp">
+    <ClCompile Include="..\src\loader.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="frameheapmanager.cpp">
+    <ClCompile Include="..\src\frameheapmanager.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="expandedheapmanager.cpp">
+    <ClCompile Include="..\src\expandedheapmanager.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_event.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_event.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_fastmutex.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fastmutex.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_core.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_core.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\gx2\gx2r_resource.cpp">
+    <ClCompile Include="..\src\modules\gx2\gx2r_resource.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="modules\gx2\gx2_surface.cpp">
+    <ClCompile Include="..\src\modules\gx2\gx2_surface.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_device.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_device.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_semaphore.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_semaphore.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\coreinit\coreinit_exception.cpp">
+    <ClCompile Include="..\src\modules\coreinit\coreinit_exception.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="modules\gx2\gx2_temp.cpp">
+    <ClCompile Include="..\src\modules\gx2\gx2_temp.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="modules\coreinit\coreinit.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="gdbstub.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_debug.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_debug.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_memory.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_memory.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_thread.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_thread.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\gx2\gx2.h">
+    <ClInclude Include="..\src\modules\gx2\gx2.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="modules\gx2\gx2_texture.h">
+    <ClInclude Include="..\src\modules\gx2\gx2_texture.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_mutex.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_mutex.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_systeminfo.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_systeminfo.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_spinlock.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_spinlock.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_ghs.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_ghs.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_expheap.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_expheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_frameheap.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_frameheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_dynload.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_dynload.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_messagequeue.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_messagequeue.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_time.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_time.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_fs.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_mcp.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_mcp.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_userconfig.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_userconfig.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_ios.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_ios.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\gx2\gx2_core.h">
+    <ClInclude Include="..\src\modules\gx2\gx2_core.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="modules\gx2\gx2_renderstate.h">
+    <ClInclude Include="..\src\modules\gx2\gx2_renderstate.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="modules\gx2\gx2_display.h">
+    <ClInclude Include="..\src\modules\gx2\gx2_display.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_cache.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_cache.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\gx2\gx2_displaylist.h">
+    <ClInclude Include="..\src\modules\gx2\gx2_displaylist.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="modules\gx2\gx2_shaders.h">
+    <ClInclude Include="..\src\modules\gx2\gx2_shaders.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="modules\nn_save\nn_save.h">
+    <ClInclude Include="..\src\modules\nn_save\nn_save.h">
       <Filter>Header Files\modules\nn_save</Filter>
     </ClInclude>
-    <ClInclude Include="modules\nn_save\nn_save_core.h">
+    <ClInclude Include="..\src\modules\nn_save\nn_save_core.h">
       <Filter>Header Files\modules\nn_save</Filter>
     </ClInclude>
-    <ClInclude Include="modules\zlib125\zlib125.h">
+    <ClInclude Include="..\src\modules\zlib125\zlib125.h">
       <Filter>Header Files\modules\zlib125</Filter>
     </ClInclude>
-    <ClInclude Include="modules\zlib125\zlib125_core.h">
+    <ClInclude Include="..\src\modules\zlib125\zlib125_core.h">
       <Filter>Header Files\modules\zlib125</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_event.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_event.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="instructiondata.h">
+    <ClInclude Include="..\src\instructiondata.h">
       <Filter>Header Files\ppc</Filter>
     </ClInclude>
-    <ClInclude Include="instructionid.h">
+    <ClInclude Include="..\src\instructionid.h">
       <Filter>Header Files\ppc</Filter>
     </ClInclude>
-    <ClInclude Include="instructions.inl">
+    <ClInclude Include="..\src\instructions.inl">
       <Filter>Header Files\ppc</Filter>
     </ClInclude>
-    <ClInclude Include="frameheapmanager.h">
+    <ClInclude Include="..\src\frameheapmanager.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="expandedheapmanager.h">
+    <ClInclude Include="..\src\expandedheapmanager.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="elf.h">
+    <ClInclude Include="..\src\elf.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="disassembler.h">
+    <ClInclude Include="..\src\disassembler.h">
       <Filter>Header Files\ppc</Filter>
     </ClInclude>
-    <ClInclude Include="bigendianview.h">
+    <ClInclude Include="..\src\bigendianview.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="bitutils.h">
+    <ClInclude Include="..\src\bitutils.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="floatutils.h">
+    <ClInclude Include="..\src\floatutils.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="heapmanager.h">
+    <ClInclude Include="..\src\heapmanager.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="instruction.h">
+    <ClInclude Include="..\src\instruction.h">
       <Filter>Header Files\ppc</Filter>
     </ClInclude>
-    <ClInclude Include="loader.h">
+    <ClInclude Include="..\src\loader.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="log.h">
+    <ClInclude Include="..\src\log.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="ppc.h">
+    <ClInclude Include="..\src\ppc.h">
       <Filter>Header Files\ppc</Filter>
     </ClInclude>
-    <ClInclude Include="usermodule.h">
+    <ClInclude Include="..\src\usermodule.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="system.h">
+    <ClInclude Include="..\src\system.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="systemdata.h">
+    <ClInclude Include="..\src\systemdata.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="systemexport.h">
+    <ClInclude Include="..\src\systemexport.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="systemfunction.h">
+    <ClInclude Include="..\src\systemfunction.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="systemmodule.h">
+    <ClInclude Include="..\src\systemmodule.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="thread.h">
+    <ClInclude Include="..\src\thread.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="util.h">
+    <ClInclude Include="..\src\util.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="memory.h">
+    <ClInclude Include="..\src\memory.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="systemtypes.h">
+    <ClInclude Include="..\src\systemtypes.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="interpreter.h">
+    <ClInclude Include="..\src\interpreter.h">
       <Filter>Header Files\interpreter</Filter>
     </ClInclude>
-    <ClInclude Include="interpreter\interpreter_float.h">
+    <ClInclude Include="..\src\interpreter\interpreter_float.h">
       <Filter>Header Files\interpreter</Filter>
     </ClInclude>
-    <ClInclude Include="systemobject.h">
+    <ClInclude Include="..\src\systemobject.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_fastmutex.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fastmutex.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_core.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_core.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\gx2\gx2r_resource.h">
+    <ClInclude Include="..\src\modules\gx2\gx2r_resource.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="modules\gx2\gx2_surface.h">
+    <ClInclude Include="..\src\modules\gx2\gx2_surface.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="be_types.h">
+    <ClInclude Include="..\src\be_types.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_device.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_device.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="filesystem.h">
+    <ClInclude Include="..\src\filesystem.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_semaphore.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_semaphore.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\coreinit\coreinit_exception.h">
+    <ClInclude Include="..\src\modules\coreinit\coreinit_exception.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="modules\gx2\gx2_temp.h">
+    <ClInclude Include="..\src\modules\gx2\gx2_temp.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
   </ItemGroup>
