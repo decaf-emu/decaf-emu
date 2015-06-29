@@ -74,7 +74,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(SolutionDir)\libraries\pugixml\src;$(ProjectDir);$(SolutionDir)\libraries\ovsocket;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\libraries\zlib\build\Release;$(SolutionDir)\libraries\ovsocket\x64\Debug;$(SolutionDir)\libraries\pugixml\scripts\vs2015\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)\libraries\zlib\build\Debug;$(SolutionDir)\libraries\ovsocket\x64\Debug;$(SolutionDir)\libraries\pugixml\scripts\vs2015\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -111,7 +111,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>zlib.lib;ovsocket.lib;pugixmld.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zlibd.lib;ovsocket.lib;pugixmld.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
