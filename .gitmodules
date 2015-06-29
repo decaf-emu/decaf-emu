@@ -7,3 +7,6 @@
 [submodule "libraries/pugixml"]
 	path = libraries/pugixml
 	url = https://github.com/zeux/pugixml.git
+[submodule "libraries/asmjit"]
+	path = libraries/asmjit
+	url = https://github.com/kobalicek/asmjit.git
