@@ -131,5 +131,6 @@ int main(int argc, char **argv)
    OSFreeToSystem(stack1);
    OSFreeToSystem(stack2);
 
+   system("PAUSE");
    return 0;
 }

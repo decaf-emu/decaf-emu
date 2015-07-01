@@ -13,7 +13,9 @@
 #define RegisterInstructionFn(x, fn) \
    registerInstruction(InstructionID::##x, &fn)
 
-const int JIT_MAX_INST = 200;
+static const bool JIT_ENABLED = false;
+static const bool JIT_CONTINUE_ON_ERROR = false;
+static const int JIT_MAX_INST = 200;
 
 class PPCEmuAssembler : public asmjit::X86Assembler {
 public:
@@ -107,6 +109,7 @@ public:
 private:
    static void registerInstruction(InstructionID id, jitinstrfptr_t fptr);
    static void registerBranchInstructions();
+   static void registerConditionInstructions();
    static void registerIntegerInstructions();
    static void registerLoadStoreInstructions();
    static void registerSystemInstructions();

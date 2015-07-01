@@ -15,6 +15,7 @@ void JitManager::RegisterFunctions()
 
       // Register JIT instruction handlers
       registerBranchInstructions();
+      registerConditionInstructions();
       registerIntegerInstructions();
       registerLoadStoreInstructions();
       registerSystemInstructions();
@@ -53,20 +54,20 @@ bool JitManager::jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia, cons
    if (instr.lk) {
       a.mov(a.eax, cia + 4u);
       a.mov(a.ppclr, a.eax);
+
       a.mov(a.eax, nia);
       a.jmp(asmjit::Ptr(mFinaleFn));
+      return true;
    }
-   else {
-      auto i = jumpLabels.find(nia);
-      if (i == jumpLabels.end()) {
-         // This should never happen.
-         xLog() << "JIT bailing due to unidentified branch target " << Log::hex(nia);
-         return false;
-      }
 
+   auto i = jumpLabels.find(nia);
+   if (i != jumpLabels.end()) {
       a.jmp(i->second);
+      return true;
    }
 
+   a.mov(a.eax, nia);
+   a.jmp(asmjit::Ptr(mFinaleFn));
    return true;
 }
 
@@ -82,9 +83,10 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMa
          //state->ctr--;
          //ctr_ok = !!((state->ctr != 0) ^ (get_bit<CtrValue>(bo)));
 
-         a.sub(a.ppcctr, 1);
+         a.dec(a.ppcctr);
 
-         a.cmp(a.ppcctr, 0);
+         a.mov(a.eax, a.ppcctr);
+         a.cmp(a.eax, 0);
          if (get_bit<CtrValue>(bo)) {
             a.je(doCondFailLbl);
          } else {
@@ -95,12 +97,12 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMa
 
    if (flags & BcCheckCond) {
       if (!get_bit<NoCheckCond>(bo)) {
-         //auto crb = get_bit(state->cr.value, 31 - );
+         //auto crb = get_bit(state->cr.value, 31 - instr.bi);
          //auto crv = get_bit<CondValue>(bo);
          //cond_ok = (crb == crv);
 
          a.mov(a.eax, a.ppccr);
-         a.and_(a.eax, 1 << instr.bi);
+         a.and_(a.eax, 1 << (instr.bi-1));
          a.cmp(a.eax, 0);
 
          if (get_bit<CondValue>(bo)) {
@@ -112,7 +114,8 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMa
    }
 
    if (instr.lk) {
-      a.mov(a.ppclr, cia + 4);
+      a.mov(a.eax, cia + 4);
+      a.mov(a.ppclr, a.eax);
    }
 
    if (flags & BcBranchCTR) {
@@ -206,11 +209,20 @@ JitCode JitManager::gen(uint32_t addr) {
       auto instr = gMemory.read<Instruction>(lclCia);
       auto data = gInstructionTable.decode(instr);
 
-      auto fptr = sJitInstructionMap[static_cast<size_t>(data->id)];
-      if (false && !fptr) {
-         jitFailed = true;
-         xLog() << "JIT bailing due to unimplement JIT handler for " << data->name;
-         break;
+      if (!JIT_CONTINUE_ON_ERROR) {
+         // These ifs should match the generator loop below...
+         if (data->id == InstructionID::b) {
+         } else if (data->id == InstructionID::bc) {
+         } else if (data->id == InstructionID::bcctr) {
+         } else if (data->id == InstructionID::bclr) {
+         } else {
+            auto fptr = sJitInstructionMap[static_cast<size_t>(data->id)];
+            if (!fptr) {
+               xLog() << "JIT bailing due to unimplemented instruction: " << data->name;
+               jitFailed = true;
+               break;
+            }
+         }
       }
 
       uint32_t nia;
@@ -263,7 +275,7 @@ JitCode JitManager::gen(uint32_t addr) {
          if (get_bit<NoCheckCond>(instr.bo) && get_bit<NoCheckCtr>(instr.bo)) {
             if (lclCia > fnMax) {
                fnMax = lclCia;
-               fnEnd = fnMax;
+               fnEnd = fnMax + 4;
             }
          }
          break;
@@ -280,6 +292,7 @@ JitCode JitManager::gen(uint32_t addr) {
 
       if (((lclCia - fnStart) >> 2) > JIT_MAX_INST) {
          xLog() << "Bailing on JIT due to max instruction limit at " << Log::hex(lclCia);
+         jitFailed = true;
          break;
       }
    }
@@ -290,13 +303,13 @@ JitCode JitManager::gen(uint32_t addr) {
 
    xLog() << "Found end at " << Log::hex(lclCia);
 
-   xLog() << "Found jump-targets:";
-   for (auto i : jumpTargets) {
-      xLog() << "  " << Log::hex(i);
-   }
-
    std::map<uint32_t, asmjit::Label> jumpLabels;
    for (auto i : jumpTargets) {
+      // Don't generate labels for stuff outside this block.
+      if (i < fnStart || i > fnEnd) {
+         continue;
+      }
+
       jumpLabels[i] = asmjit::Label(a);
    }
 
@@ -309,7 +322,7 @@ JitCode JitManager::gen(uint32_t addr) {
    a.bind(codeStart);
 
    lclCia = fnStart;
-   while (lclCia <= fnEnd) {
+   while (lclCia < fnEnd) {
       auto ciaLbl = jumpLabels.find(lclCia);
       if (ciaLbl != jumpLabels.end()) {
          a.bind(ciaLbl->second);
@@ -320,41 +333,39 @@ JitCode JitManager::gen(uint32_t addr) {
       auto instr = gMemory.read<Instruction>(lclCia);
       auto data = gInstructionTable.decode(instr);
 
+      bool genSuccess = false;
       if (data->id == InstructionID::b) {
-         jit_b(a, instr, lclCia, jumpLabels);
-      }
-      else if (data->id == InstructionID::bc) {
-         jit_bc(a, instr, lclCia, jumpLabels);
-      }
-      else if (data->id == InstructionID::bcctr) {
-         jit_bcctr(a, instr, lclCia, jumpLabels);
-      }
-      else if (data->id == InstructionID::bclr) {
-         jit_bclr(a, instr, lclCia, jumpLabels);
-      }
-      else {
+         genSuccess = jit_b(a, instr, lclCia, jumpLabels);
+      } else if (data->id == InstructionID::bc) {
+         genSuccess = jit_bc(a, instr, lclCia, jumpLabels);
+      } else if (data->id == InstructionID::bcctr) {
+         genSuccess = jit_bcctr(a, instr, lclCia, jumpLabels);
+      } else if (data->id == InstructionID::bclr) {
+         genSuccess = jit_bclr(a, instr, lclCia, jumpLabels);
+      } else {
          auto fptr = sJitInstructionMap[static_cast<size_t>(data->id)];
-         if (!fptr) {
-            // Should be caught by block finder
-            xLog() << "JIT bailing due to unimplement JIT handler for " << data->name;
-            //jitFailed = true;
-            a.int3();
-            //break;
+         if (fptr) {
+            genSuccess = fptr(a, instr);
          }
-         else {
-            bool genSuccess = fptr(a, instr);
-            if (!genSuccess) {
-               xLog() << "JIT bailed due to generation failure on " << data->name;
-               //jitFailed = true;
-               a.int3();
-               //break;
-            }
+      }
+
+      if (!genSuccess) {
+         xLog() << "JIT bailed due to generation failure on " << data->name;
+         if (!JIT_CONTINUE_ON_ERROR) {
+            jitFailed = true;
+            break;
+         } else {
+            a.int3();
          }
       }
 
       a.nop();
 
       lclCia += 4;
+   }
+
+   if (jitFailed) {
+      return nullptr;
    }
 
    // Debug Check
@@ -364,15 +375,12 @@ JitCode JitManager::gen(uint32_t addr) {
       }
    }
 
-   if (jitFailed) {
-      return nullptr;
-   }
-
    a.mov(a.eax, fnEnd + 4);
    a.jmp(asmjit::Ptr(mFinaleFn));
 
    JitCode func = asmjit_cast<JitCode>(a.make());
    if (func == nullptr) {
+      xLog() << "JIT failed due to asmjit make failure";
       return nullptr;
    }
 

@@ -59,6 +59,54 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
    return true;
 }
 
+// Move to Special Purpose Register
+static bool
+mtspr(PPCEmuAssembler& a, Instruction instr)
+{
+   a.mov(a.eax, a.ppcgpr[instr.rD]);
+
+   auto spr = decodeSPR(instr);
+   switch (spr) {
+   case SprEncoding::XER:
+      a.mov(a.ppcxer, a.eax);
+      break;
+   case SprEncoding::LR:
+      a.mov(a.ppclr, a.eax);
+      break;
+   case SprEncoding::CTR:
+      a.mov(a.ppcctr, a.eax);
+      break;
+   case SprEncoding::GQR0:
+      a.mov(a.ppcgpr[0], a.eax);
+      break;
+   case SprEncoding::GQR1:
+      a.mov(a.ppcgpr[1], a.eax);
+      break;
+   case SprEncoding::GQR2:
+      a.mov(a.ppcgpr[2], a.eax);
+      break;
+   case SprEncoding::GQR3:
+      a.mov(a.ppcgpr[3], a.eax);
+      break;
+   case SprEncoding::GQR4:
+      a.mov(a.ppcgpr[4], a.eax);
+      break;
+   case SprEncoding::GQR5:
+      a.mov(a.ppcgpr[5], a.eax);
+      break;
+   case SprEncoding::GQR6:
+      a.mov(a.ppcgpr[6], a.eax);
+      break;
+   case SprEncoding::GQR7:
+      a.mov(a.ppcgpr[7], a.eax);
+      break;
+   default:
+      xError() << "Invalid mtspr SPR " << static_cast<uint32_t>(spr);
+   }
+
+   return true;
+}
+
 static void kcstub(ThreadState *state, SystemFunction *func) {
    func->call(state);
 }
@@ -104,5 +152,6 @@ void
 JitManager::registerSystemInstructions()
 {
    RegisterInstruction(mfspr);
+   RegisterInstruction(mtspr);
    RegisterInstruction(kc);
 }

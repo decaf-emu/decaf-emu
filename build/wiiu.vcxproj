@@ -102,6 +102,7 @@
     <ClCompile Include="..\src\interpreter\interpreter_system.cpp" />
     <ClCompile Include="..\src\jit.cpp" />
     <ClCompile Include="..\src\jit\jit_branch.cpp" />
+    <ClCompile Include="..\src\jit\jit_condition.cpp" />
     <ClCompile Include="..\src\jit\jit_integer.cpp" />
     <ClCompile Include="..\src\jit\jit_loadstore.cpp" />
     <ClCompile Include="..\src\jit\jit_system.cpp" />

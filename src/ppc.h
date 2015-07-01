@@ -27,10 +27,15 @@ namespace ConditionRegisterFlag
 {
 enum ConditionRegisterFlag : uint32_t
 {
-   Negative          = 1 << 3,
-   Positive          = 1 << 2,
-   Zero              = 1 << 1,
-   SummaryOverflow   = 1 << 0,
+   NegativeShift = 3,
+   PositiveShift = 2,
+   ZeroShift = 1,
+   SummaryOverflowShift = 0,
+
+   Negative          = 1 << NegativeShift,
+   Positive          = 1 << PositiveShift,
+   Zero              = 1 << ZeroShift,
+   SummaryOverflow   = 1 << SummaryOverflowShift,
 
    LessThan          = Negative,
    GreaterThan       = Positive,
@@ -64,9 +69,13 @@ union cr_t
 
 namespace XERegisterBits {
 enum XERegisterBits : uint32_t {
-   Carry = 1 << 2,
-   Overflow = 1 << 1,
-   StickyOV = 1 << 0,
+   CarryShift = 2,
+   OverflowShift = 1,
+   StickyOVShift = 0,
+
+   Carry = 1 << CarryShift,
+   Overflow = 1 << OverflowShift,
+   StickyOV = 1 << StickyOVShift,
 };
 }
 

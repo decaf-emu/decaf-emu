@@ -36,8 +36,6 @@ void Interpreter::registerInstruction(InstructionID id, instrfptr_t fptr)
    sInstructionMap[static_cast<size_t>(id)] = fptr;
 }
 
-const bool JIT_ENABLED = false;
-
 // Address used to signify a return to emulator-land.
 const uint32_t CALLBACK_ADDR = 0xFCA11C0D;
 

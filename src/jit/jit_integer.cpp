@@ -5,10 +5,10 @@
 static void
 updateConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& value, const asmjit::X86GpReg& tmp, const asmjit::X86GpReg& tmp2)
 {
-   asmjit::Label bbNegative;
-   asmjit::Label bbPositive;
-   asmjit::Label bbEnd;
-   asmjit::Label bbEnd2;
+   asmjit::Label bbNegative(a);
+   asmjit::Label bbPositive(a);
+   asmjit::Label bbEnd(a);
+   asmjit::Label bbEnd2(a);
 
    a.mov(tmp, a.ppccr);
    a.and_(tmp, 0xFFFFFFF0);
@@ -26,7 +26,6 @@ updateConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& value, const
 
    a.bind(bbPositive);
    a.or_(tmp, ConditionRegisterFlag::Positive);
-   a.jmp(bbEnd);
 
    a.bind(bbEnd);
 
@@ -59,80 +58,100 @@ template<unsigned flags = 0>
 static bool
 addGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   
-   return false; /*
-   uint32_t a, b, d;
-   uint64_t d64;
-
-   // Get a value
-   if ((flags & AddZeroRA) && instr.rA == 0) {
-      a = 0;
+   bool recordCarry = false;
+   bool recordOverflow = false;
+   bool recordCond = false;
+   if (flags & AddCarry) {
+      recordCarry = true;
    }
-   else {
-      a = state->gpr[instr.rA];
+   if (flags & AddAlwaysRecord) {
+      recordOverflow = true;
+      recordCond = true;
+   } else if (flags & AddCheckRecord) {
+      if (instr.oe) {
+         recordOverflow = true;
+      }
+      if (instr.rc) {
+         recordCond = true;
+      }
+   }
+
+   if ((flags & AddZeroRA) && instr.rA == 0) {
+      a.mov(a.eax, 0);
+   } else {
+      a.mov(a.eax, a.ppcgpr[instr.rA]);
    }
 
    if (flags & AddSubtract) {
-      a = ~a;
+      a.not_(a.eax);
    }
 
-   // Get b value
    if (flags & AddImmediate) {
-      b = sign_extend<16>(instr.simm);
-   }
-   else if (flags & AddToZero) {
-      b = 0;
-   }
-   else if (flags & AddToMinusOne) {
-      b = -1;
-   }
-   else {
-      b = state->gpr[instr.rB];
+      a.mov(a.ecx, sign_extend<16>(instr.simm));
+   } else if (flags & AddToZero) {
+      a.mov(a.ecx, 0);
+   } else if (flags & AddToMinusOne) {
+      a.mov(a.ecx, -1);
+   } else {
+      a.mov(a.ecx, a.ppcgpr[instr.rB]);
    }
 
    if (flags & AddShifted) {
-      b <<= 16;
+      a.shl(a.ecx, 16);
    }
 
-   // Calculate d
-   d = a + b;
-   d64 = static_cast<uint64_t>(a) + static_cast<uint64_t>(b);
-
-   // Add xer[ca] if needed
+   // Mark x64 CF based on PPC CF
    if (flags & AddExtended) {
-      d += state->xer.ca;
-      d64 += state->xer.ca;
-   }
-   else if (flags & AddSubtract) {
-      d += 1;
-      d64 += 1;
-   }
+      a.mov(a.edx, a.ppcxer);
+      a.and_(a.edx, XERegisterBits::Carry);
+      a.add(a.edx, 0xffffffff);
 
-   // Update rD
-   state->gpr[instr.rD] = d;
-
-   // Check for carry/overflow
-   auto carry = d < (d64 & 0xFFFFFFFF);
-   auto overflow = !!get_bit<31>((a ^ d) & (b ^ d));
-
-   if (flags & AddCarry) {
-      updateCarry(state, carry);
+      a.adc(a.eax, a.ecx);
+   } else {
+      a.add(a.eax, a.ecx);
    }
 
-   if (flags & AddAlwaysRecord) {
-      updateOverflow(state, overflow);
-      updateConditionRegister(state, d);
+   if (recordCarry && recordOverflow) {
+      a.mov(a.ecx, 0);
+      a.setc(a.ecx.r8());
+      a.mov(a.edx, 0);
+      a.seto(a.edx.r8());
+
+      a.shl(a.ecx, XERegisterBits::CarryShift);
+      a.shl(a.edx, XERegisterBits::OverflowShift);
+      a.or_(a.ecx, a.edx);
+   } else if (recordCarry) {
+      a.mov(a.ecx, 0);
+      a.setc(a.ecx.r8());
+      a.shl(a.ecx, XERegisterBits::CarryShift);
+   } else if (recordOverflow) {
+      a.mov(a.ecx, 0);
+      a.seto(a.ecx.r8());
+      a.shl(a.ecx, XERegisterBits::OverflowShift);
    }
-   else if (flags & AddCheckRecord) {
-      if (instr.oe) {
-         updateOverflow(state, overflow);
+   
+   if (recordCarry || recordOverflow) {
+      uint32_t mask = 0xFFFFFFFF;
+      if (recordCarry) {
+         mask &= ~XERegisterBits::Carry;
+      }
+      if (recordOverflow) {
+         mask &= ~XERegisterBits::Overflow;
       }
 
-      if (instr.rc) {
-         updateConditionRegister(state, d);
-      }
+      a.mov(a.edx, a.ppcxer);
+      a.and_(a.edx, mask);
+      a.or_(a.edx, a.ecx);
+      a.mov(a.ppcxer, a.edx);
    }
-   */
+
+   a.mov(a.ppcgpr[instr.rD], a.eax);
+
+   if (recordCond) {
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
+   }
+
+   return true;
 }
 
 static bool
@@ -609,35 +628,33 @@ template<unsigned flags>
 static bool
 rlwGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t s, n, r, m, a;
-
-   s = state->gpr[instr.rS];
-   a = state->gpr[instr.rA];
+   a.mov(a.eax, a.ppcgpr[instr.rS]);
 
    if (flags & RlwImmediate) {
-      n = instr.sh;
-   }
-   else {
-      n = state->gpr[instr.rB] & 0x1f;
+      a.rol(a.eax, instr.sh);
+   } else {
+      a.mov(a.edx, a.ppcgpr[instr.rB]);
+      a.and_(a.edx, 0x1f);
+      a.rol(a.eax, a.edx);
    }
 
-   r = _rotl(s, n);
-   m = make_bitmask<uint32_t>(31 - instr.me, 31 - instr.mb);
-
+   uint32_t m = make_bitmask<uint32_t>(31 - instr.me, 31 - instr.mb);
    if (flags & RlwAnd) {
-      a = (r & m);
+      a.and_(a.eax, m);
    }
-   else if (flags & RlwInsert) {
-      a = (r & m) | (a & ~m);
+   if (flags & RlwInsert) {
+      a.mov(a.ecx, a.ppcgpr[instr.rA]);
+      a.and_(a.ecx, ~m);
+      a.or_(a.eax, a.ecx);
    }
 
-   state->gpr[instr.rA] = a;
+   a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (instr.rc) {
-      updateConditionRegister(state, a);
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
    }
-   */
+
+   return true;
 }
 
 // Rotate Left Word Immediate then Mask Insert
