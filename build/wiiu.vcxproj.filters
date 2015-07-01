@@ -258,6 +258,12 @@
     <ClCompile Include="..\src\jit\jit_condition.cpp">
       <Filter>Source Files\jit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\elf.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\codetests.cpp">
+      <Filter>Source Files\ppc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -466,6 +472,9 @@
     </ClInclude>
     <ClInclude Include="..\src\jit.h">
       <Filter>Header Files\jit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\codetests.h">
+      <Filter>Header Files\ppc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -37,12 +37,14 @@ void Interpreter::registerInstruction(InstructionID id, instrfptr_t fptr)
 }
 
 // Address used to signify a return to emulator-land.
-const uint32_t CALLBACK_ADDR = 0xFCA11C0D;
+const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 
-void Interpreter::execute(ThreadState *state) {
+void
+Interpreter::execute(ThreadState *state)
+{
    bool hasJumped = false;
+
    while (state->nia != CALLBACK_ADDR) {
-      
       // JIT Attempt!
       if (JIT_ENABLED) {
          if (state->nia != state->cia + 4) {
@@ -77,14 +79,14 @@ void Interpreter::execute(ThreadState *state) {
 
       if (!fptr) {
          xLog() << "Unimplemented interpreter instruction!";
-      }
-      else {
+      } else {
          fptr(state, instr);
       }
    }
 }
 
-void Interpreter::execute(ThreadState *state, uint32_t addr)
+void
+Interpreter::execute(ThreadState *state, uint32_t addr)
 {
    auto saveLR = state->lr;
    auto saveCIA = state->cia;
@@ -98,7 +100,7 @@ void Interpreter::execute(ThreadState *state, uint32_t addr)
 
    state->lr = saveLR;
    state->cia = saveCIA;
-   state->nia = saveNIA; 
+   state->nia = saveNIA;
 }
 
 void Interpreter::addBreakpoint(uint32_t addr)

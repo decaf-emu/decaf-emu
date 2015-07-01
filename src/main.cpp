@@ -1,5 +1,6 @@
 #include <pugixml.hpp>
 #include "bitutils.h"
+#include "codetests.h"
 #include "filesystem.h"
 #include "instructiondata.h"
 #include "interpreter.h"
@@ -19,7 +20,33 @@
 int main(int argc, char **argv)
 {
    if (argc < 2) {
-      xLog() << "Usage: " << argv[0] << " <extracted game directory>";
+      xLog() << "Usage: " << argv[0] << " <play|test> <options...>";
+      return -1;
+   }
+
+   // Parse command line
+   std::string testDirectory;
+   std::string assemblerPath;
+   std::string gamePath;
+   std::string command = argv[1];
+
+   if (command.compare("play") == 0) {
+      if (argc < 3) {
+         xLog() << "Usage: " << argv[0] << " play <game directory>";
+         return -1;
+      }
+
+      gamePath = argv[2];
+   } else if (command.compare("test") == 0) {
+      if (argc < 4) {
+         xLog() << "Usage: " << argv[0] << " test <powerpc-eabi-as.exe> <test directory>";
+         return -1;
+      }
+
+      assemblerPath = argv[2];
+      testDirectory = argv[3];
+   } else {
+      xLog() << "Usage: " << argv[0] << " <play|test> <options...>";
       return -1;
    }
 
@@ -39,6 +66,11 @@ int main(int argc, char **argv)
    gSystem.registerModule("nn_save", new NNSave {});
    gSystem.registerModule("zlib125", new Zlib125 {});
    gSystem.initialiseModules();
+
+   // If user used test command, execute tests
+   if (assemblerPath.size() && testDirectory.size()){
+      return executeCodeTests(assemblerPath, testDirectory) ? 0 : -1;
+   }
 
    // Setup filesystem
    VirtualFileSystem fs { "/" };

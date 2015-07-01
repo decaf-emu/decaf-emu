@@ -7,25 +7,6 @@ class SystemModule;
 struct SystemFunction;
 struct SystemData;
 
-struct Section
-{
-   enum Type
-   {
-      Invalid,
-      Code,
-      Data,
-      CodeImports,
-      DataImports
-   };
-
-   size_t index;
-   std::string name;
-   std::string library;
-   Type type;
-   uint32_t address;
-   uint32_t size;
-};
-
 struct SymbolInfo
 {
    enum Type
@@ -100,6 +81,25 @@ struct FunctionSymbol : public SymbolInfo
 
 struct UserModule
 {
+   struct Section
+   {
+      enum Type
+      {
+         Invalid,
+         Code,
+         Data,
+         CodeImports,
+         DataImports
+      };
+
+      size_t index;
+      std::string name;
+      std::string library;
+      Type type;
+      uint32_t address;
+      uint32_t size;
+   };
+
    std::pair<uint32_t, uint32_t> codeAddressRange;
    std::pair<uint32_t, uint32_t> dataAddressRange;
    std::vector<SymbolInfo*> symbols;

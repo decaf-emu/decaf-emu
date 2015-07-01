@@ -88,7 +88,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\codetests.cpp" />
     <ClCompile Include="..\src\disassembler.cpp" />
+    <ClCompile Include="..\src\elf.cpp" />
     <ClCompile Include="..\src\expandedheapmanager.cpp" />
     <ClCompile Include="..\src\frameheapmanager.cpp" />
     <ClCompile Include="..\src\instructiontable.cpp" />
@@ -154,6 +156,7 @@
     <ClInclude Include="..\src\be_types.h" />
     <ClInclude Include="..\src\bigendianview.h" />
     <ClInclude Include="..\src\bitutils.h" />
+    <ClInclude Include="..\src\codetests.h" />
     <ClInclude Include="..\src\disassembler.h" />
     <ClInclude Include="..\src\elf.h" />
     <ClInclude Include="..\src\expandedheapmanager.h" />

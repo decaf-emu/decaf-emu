@@ -10,14 +10,14 @@ getCRFRange(uint32_t field)
    return { mb, me };
 }
 
-static uint32_t
+uint32_t
 getCRF(ThreadState *state, uint32_t field)
 {
    auto bits = getCRFRange(field);
    return (state->cr.value >> bits.first) & 0xf;
 }
 
-static void
+void
 setCRF(ThreadState *state, uint32_t field, uint32_t value)
 {
    auto cr = state->cr.value;
@@ -28,13 +28,13 @@ setCRF(ThreadState *state, uint32_t field, uint32_t value)
    state->cr.value = cr;
 }
 
-static uint32_t
+uint32_t
 getCRB(ThreadState *state, uint32_t bit)
 {
    return get_bit(state->cr.value, 31 - bit);
 }
 
-static void
+void
 setCRB(ThreadState *state, uint32_t bit, uint32_t value)
 {
    set_bit_value(state->cr.value, 31 - bit, value);
