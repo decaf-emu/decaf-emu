@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 
    // Setup filesystem
    VirtualFileSystem fs { "/" };
-   fs.mount("/vol", std::make_unique<HostFileSystem>(std::string(argv[1]) + "/data"));
+   fs.mount("/vol", std::make_unique<HostFileSystem>(gamePath + "/data"));
    gSystem.setFileSystem(&fs);
 
    // Load cos.xml
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
       return -1;
    }
 
-   xLog() << "Succesfully loaded " << argv[1];
+   xLog() << "Succesfully loaded " << gamePath;
 
    auto stackSize = entry.stackSize;
 
