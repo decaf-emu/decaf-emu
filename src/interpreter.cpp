@@ -36,16 +36,33 @@ void Interpreter::registerInstruction(InstructionID id, instrfptr_t fptr)
    sInstructionMap[static_cast<size_t>(id)] = fptr;
 }
 
-void Interpreter::execute(ThreadState *state, uint32_t addr)
-{
-   bool mTraceEnabled = false;
-   auto saveLR = state->lr;
-   auto saveCIA = state->cia;
-   auto saveNIA = state->nia;
-   state->lr = 0;
+const bool JIT_ENABLED = false;
 
-   while(state->cia) {
-      Disassembly dis;
+// Address used to signify a return to emulator-land.
+const uint32_t CALLBACK_ADDR = 0xFCA11C0D;
+
+void Interpreter::execute(ThreadState *state) {
+   bool hasJumped = false;
+   while (state->nia != CALLBACK_ADDR) {
+      
+      // JIT Attempt!
+      if (JIT_ENABLED) {
+         if (state->nia != state->cia + 4) {
+            // We jumped, try to enter JIT
+            JitCode jitFn = mJitManager.get(state->nia);
+            if (jitFn) {
+               auto newNia = mJitManager.execute(state, jitFn);
+               state->cia = 0;
+               state->nia = newNia;
+               continue;
+            }
+         }
+      }
+
+      // Interpreter Loop!
+      state->cia = state->nia;
+      state->nia = state->cia + 4;
+
       auto instr = gMemory.read<Instruction>(state->cia);
       auto data = gInstructionTable.decode(instr);
 
@@ -57,49 +74,33 @@ void Interpreter::execute(ThreadState *state, uint32_t addr)
       auto bpitr = std::find(mBreakpoints.begin(), mBreakpoints.end(), state->cia);
 
       if (bpitr != mBreakpoints.end()) {
-         xLog() << "Hit breakpoint, starting trace!";
-         mTraceEnabled = true;
-      }
-
-      if (mTraceEnabled) {
-         dis.address = state->cia;
-         gDisassembler.disassemble(instr, dis);
-         xLog() << Log::hex(state->cia) << " " << Log::hex(instr.value) << " " << dis.text << "\t";
+         xLog() << "Hit breakpoint!";
       }
 
       if (!fptr) {
          xLog() << "Unimplemented interpreter instruction!";
-      } else {
+      }
+      else {
          fptr(state, instr);
       }
-
-      if (mTraceEnabled) {
-         for (auto &field : data->write) {
-            switch (field) {
-            case Field::rA:
-               xLog() << "r" << instr.rA << " = " << Log::hex(state->gpr[instr.rA]);
-               break;
-            case Field::rD:
-               xLog() << "r" << instr.rD << " = " << Log::hex(state->gpr[instr.rD]);
-               break;
-            case Field::frD:
-               xLog() << "fr" << instr.frD << " = " << state->fpr[instr.frD].value;
-               break;
-               // mtspr
-               // crb
-               // crf
-            }
-         }
-      }
-
-      state->cia = state->nia;
-      state->nia = state->cia + 4;
    }
+}
+
+void Interpreter::execute(ThreadState *state, uint32_t addr)
+{
+   auto saveLR = state->lr;
+   auto saveCIA = state->cia;
+   auto saveNIA = state->nia;
+
+   state->lr = CALLBACK_ADDR;
+   state->cia = 0;
+   state->nia = addr;
+
+   execute(state);
 
    state->lr = saveLR;
    state->cia = saveCIA;
-   state->nia = saveNIA;
-   xLog() << "Finished!";
+   state->nia = saveNIA; 
 }
 
 void Interpreter::addBreakpoint(uint32_t addr)

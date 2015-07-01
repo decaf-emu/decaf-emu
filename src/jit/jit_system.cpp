@@ -2,6 +2,10 @@
 #include "bitutils.h"
 #include "jit.h"
 #include "log.h"
+#include "system.h"
+#include "systemfunction.h"
+#include "thread.h"
+#include "usermodule.h"
 
 static SprEncoding
 decodeSPR(Instruction instr)
@@ -55,8 +59,50 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
    return true;
 }
 
+static void kcstub(ThreadState *state, SystemFunction *func) {
+   func->call(state);
+}
+
+// Kernel call
+static bool
+kc(PPCEmuAssembler& a, Instruction instr)
+{
+   auto id = instr.li;
+   auto implemented = instr.aa;
+
+   SystemFunction *func = nullptr;
+
+   if (!implemented) {
+      auto userModule = gSystem.getUserModule();
+      auto sym = userModule->symbols[id];
+      auto fsym = reinterpret_cast<FunctionSymbol*>(sym);
+
+      if (sym->type != SymbolInfo::Function) {
+         xDebug() << "Attempted to call non-function symbol " << sym->name;
+         return false;
+      }
+
+      if (!fsym->systemFunction) {
+         xDebug() << "unimplemented system function " << sym->name;
+         return false;
+      }
+
+      return false;
+      assert(false);
+   }
+   else {
+      func = gSystem.getSyscall(id);
+   }
+
+   a.mov(a.zcx, a.state);
+   a.mov(a.zdx, asmjit::Ptr(func));
+   a.call(asmjit::Ptr(kcstub));
+   return true;
+}
+
 void
 JitManager::registerSystemInstructions()
 {
    RegisterInstruction(mfspr);
+   RegisterInstruction(kc);
 }

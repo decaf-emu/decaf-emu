@@ -6,6 +6,7 @@
 #include "instruction.h"
 #include "instructionid.h"
 #include "ppc.h"
+#include "jit.h"
 
 #define RegisterInstruction(x) \
    registerInstruction(InstructionID::##x, &x)
@@ -22,6 +23,8 @@ public:
    void addBreakpoint(uint32_t addr);
 
 private:
+   void execute(ThreadState *state);
+   JitManager mJitManager;
    std::vector<uint32_t> mBreakpoints;
 
 public:

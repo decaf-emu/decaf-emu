@@ -43,10 +43,12 @@ public:
       ppcreserveAddress = PPCTSReg(reserveAddress);
 #undef PPCTSReg
 
+      state = zbx;
       membase = zsi;
       cia = zdi;
    }
 
+   asmjit::X86GpReg state;
    asmjit::X86GpReg membase;
    asmjit::X86GpReg cia;
 

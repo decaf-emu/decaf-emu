@@ -70,19 +70,79 @@ bool JitManager::jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia, cons
    return true;
 }
 
+template<unsigned flags>
+static bool
+bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels, JitFinale finaleFn)
+{
+   uint32_t bo = instr.bo;
+   asmjit::Label doCondFailLbl(a);
+
+   if (flags & BcCheckCtr) {
+      if (!get_bit<NoCheckCtr>(bo)) {
+         //state->ctr--;
+         //ctr_ok = !!((state->ctr != 0) ^ (get_bit<CtrValue>(bo)));
+
+         a.sub(a.ppcctr, 1);
+
+         a.cmp(a.ppcctr, 0);
+         if (get_bit<CtrValue>(bo)) {
+            a.je(doCondFailLbl);
+         } else {
+            a.jne(doCondFailLbl);
+         }
+      }
+   }
+
+   if (flags & BcCheckCond) {
+      if (!get_bit<NoCheckCond>(bo)) {
+         //auto crb = get_bit(state->cr.value, 31 - );
+         //auto crv = get_bit<CondValue>(bo);
+         //cond_ok = (crb == crv);
+
+         a.mov(a.eax, a.ppccr);
+         a.and_(a.eax, 1 << instr.bi);
+         a.cmp(a.eax, 0);
+
+         if (get_bit<CondValue>(bo)) {
+            a.je(doCondFailLbl);
+         } else {
+            a.jne(doCondFailLbl);
+         }
+      }
+   }
+
+   if (instr.lk) {
+      a.mov(a.ppclr, cia + 4);
+   }
+
+   if (flags & BcBranchCTR) {
+      a.mov(a.eax, a.ppcctr);
+      a.and_(a.eax, ~0x3);
+   } else if (flags & BcBranchLR) {
+      a.mov(a.eax, a.ppclr);
+      a.and_(a.eax, ~0x3);
+   } else {
+      a.mov(a.eax, cia + sign_extend<16>(instr.bd << 2));
+   }
+   a.jmp(asmjit::Ptr(finaleFn));
+
+   a.bind(doCondFailLbl);
+   return true;
+}
+
 bool JitManager::jit_bc(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels)
 {
-   return false;
+   return bcGeneric<BcCheckCtr | BcCheckCond>(a, instr, cia, jumpLabels, mFinaleFn);
 }
 
 bool JitManager::jit_bcctr(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels)
 {
-   return false;
+   return bcGeneric<BcBranchCTR | BcCheckCond>(a, instr, cia, jumpLabels, mFinaleFn);
 }
 
 bool JitManager::jit_bclr(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels)
 {
-   return false;
+   return bcGeneric<BcBranchLR | BcCheckCtr | BcCheckCond>(a, instr, cia, jumpLabels, mFinaleFn);
 }
 
 JitManager::JitManager() {
@@ -308,7 +368,7 @@ JitCode JitManager::gen(uint32_t addr) {
       return nullptr;
    }
 
-   a.mov(a.zax, 0);
+   a.mov(a.eax, fnEnd + 4);
    a.jmp(asmjit::Ptr(mFinaleFn));
 
    JitCode func = asmjit_cast<JitCode>(a.make());
