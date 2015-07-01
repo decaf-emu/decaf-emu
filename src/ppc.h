@@ -62,6 +62,14 @@ union cr_t
    };
 };
 
+namespace XERegisterBits {
+enum XERegisterBits : uint32_t {
+   Carry = 1 << 2,
+   Overflow = 1 << 1,
+   StickyOV = 1 << 0,
+};
+}
+
 // XER Register
 union xer_t
 {

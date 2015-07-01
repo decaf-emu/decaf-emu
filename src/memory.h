@@ -55,6 +55,10 @@ public:
    uint32_t alloc(MemoryType type, size_t size);
    bool free(uint32_t address);
 
+   size_t base() const {
+      return (size_t)mBase;
+   }
+
    // Translate WiiU virtual address to host address
    uint8_t *translate(uint32_t address) const
    {

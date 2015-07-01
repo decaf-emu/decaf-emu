@@ -3,6 +3,7 @@
 #include "filesystem.h"
 #include "instructiondata.h"
 #include "interpreter.h"
+#include "jit.h"
 #include "loader.h"
 #include "log.h"
 #include "memory.h"
@@ -24,6 +25,7 @@ int main(int argc, char **argv)
 
    // Static module initialisation
    Interpreter::RegisterFunctions();
+   JitManager::RegisterFunctions();
    CoreInit::RegisterFunctions();
    GX2::RegisterFunctions();
    NNSave::RegisterFunctions();

@@ -100,6 +100,11 @@
     <ClCompile Include="..\src\interpreter\interpreter_loadstore.cpp" />
     <ClCompile Include="..\src\interpreter\interpreter_pairedsingle.cpp" />
     <ClCompile Include="..\src\interpreter\interpreter_system.cpp" />
+    <ClCompile Include="..\src\jit.cpp" />
+    <ClCompile Include="..\src\jit\jit_branch.cpp" />
+    <ClCompile Include="..\src\jit\jit_integer.cpp" />
+    <ClCompile Include="..\src\jit\jit_loadstore.cpp" />
+    <ClCompile Include="..\src\jit\jit_system.cpp" />
     <ClCompile Include="..\src\loader.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\memory.cpp" />
@@ -161,6 +166,7 @@
     <ClInclude Include="..\src\instructions.inl" />
     <ClInclude Include="..\src\interpreter.h" />
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
+    <ClInclude Include="..\src\jit.h" />
     <ClInclude Include="..\src\loader.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\memory.h" />

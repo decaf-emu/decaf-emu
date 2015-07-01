@@ -222,7 +222,7 @@ andGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-and(ThreadState *state, Instruction instr)
+and_(ThreadState *state, Instruction instr)
 {
    return andGeneric<AndCheckRecord>(state, instr);
 }
@@ -533,7 +533,7 @@ orGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-or(ThreadState *state, Instruction instr)
+or_(ThreadState *state, Instruction instr)
 {
    return orGeneric<OrCheckRecord>(state, instr);
 }
@@ -800,7 +800,7 @@ xorGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-xor(ThreadState *state, Instruction instr)
+xor_(ThreadState *state, Instruction instr)
 {
    return xorGeneric<XorCheckRecord>(state, instr);
 }
@@ -829,7 +829,7 @@ Interpreter::registerIntegerInstructions()
    RegisterInstruction(addis);
    RegisterInstruction(addme);
    RegisterInstruction(addze);
-   RegisterInstruction(and);
+   RegisterInstruction(and_);
    RegisterInstruction(andc);
    RegisterInstruction(andi);
    RegisterInstruction(andis);
@@ -845,7 +845,7 @@ Interpreter::registerIntegerInstructions()
    RegisterInstruction(nand);
    RegisterInstruction(neg);
    RegisterInstruction(nor);
-   RegisterInstruction(or);
+   RegisterInstruction(or_);
    RegisterInstruction(orc);
    RegisterInstruction(ori);
    RegisterInstruction(oris);
@@ -863,7 +863,7 @@ Interpreter::registerIntegerInstructions()
    RegisterInstruction(subfic);
    RegisterInstruction(subfme);
    RegisterInstruction(subfze);
-   RegisterInstruction(xor);
+   RegisterInstruction(xor_);
    RegisterInstruction(xori);
    RegisterInstruction(xoris);
 }
