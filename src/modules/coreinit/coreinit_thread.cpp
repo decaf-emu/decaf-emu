@@ -169,22 +169,22 @@ OSSuspendThread(OSThread *thread)
 void
 CoreInit::registerThreadFunctions()
 {
-   RegisterSystemFunction(OSGetCurrentThread);
-   RegisterSystemFunction(OSInitThreadQueue);
-   RegisterSystemFunction(OSInitThreadQueueEx);
-   RegisterSystemFunction(OSGetDefaultThread);
-   RegisterSystemFunction(OSGetThreadSpecific);
-   RegisterSystemFunction(OSSetThreadSpecific);
-   RegisterSystemFunction(OSGetThreadPriority);
-   RegisterSystemFunction(OSSetThreadPriority);
-   RegisterSystemFunction(OSGetThreadAffinity);
-   RegisterSystemFunction(OSSetThreadAffinity);
-   RegisterSystemFunction(OSGetThreadName);
-   RegisterSystemFunction(OSSetThreadName);
-   RegisterSystemFunction(OSCreateThread);
-   RegisterSystemFunction(OSSleepTicks);
-   RegisterSystemFunction(OSResumeThread);
-   RegisterSystemFunction(OSRunThread);
-   RegisterSystemFunction(OSJoinThread);
-   RegisterSystemFunction(OSYieldThread);
+   RegisterKernelFunction(OSGetCurrentThread);
+   RegisterKernelFunction(OSInitThreadQueue);
+   RegisterKernelFunction(OSInitThreadQueueEx);
+   RegisterKernelFunction(OSGetDefaultThread);
+   RegisterKernelFunction(OSGetThreadSpecific);
+   RegisterKernelFunction(OSSetThreadSpecific);
+   RegisterKernelFunction(OSGetThreadPriority);
+   RegisterKernelFunction(OSSetThreadPriority);
+   RegisterKernelFunction(OSGetThreadAffinity);
+   RegisterKernelFunction(OSSetThreadAffinity);
+   RegisterKernelFunction(OSGetThreadName);
+   RegisterKernelFunction(OSSetThreadName);
+   RegisterKernelFunction(OSCreateThread);
+   RegisterKernelFunction(OSSleepTicks);
+   RegisterKernelFunction(OSResumeThread);
+   RegisterKernelFunction(OSRunThread);
+   RegisterKernelFunction(OSJoinThread);
+   RegisterKernelFunction(OSYieldThread);
 }

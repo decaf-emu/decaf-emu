@@ -407,18 +407,6 @@
     <ClInclude Include="..\src\system.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\systemdata.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\systemexport.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\systemfunction.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\systemmodule.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\thread.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
@@ -452,9 +440,6 @@
     <ClInclude Include="..\src\modules\gx2\gx2_surface.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\be_types.h">
-      <Filter>Header Files\util</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_device.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
@@ -475,6 +460,33 @@
     </ClInclude>
     <ClInclude Include="..\src\codetests.h">
       <Filter>Header Files\ppc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernelexport.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernelfunction.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kerneldata.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernelmodule.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernelfunctionargs.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernelfunctionresult.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wfunc_ptr.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\p32.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\be_val.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

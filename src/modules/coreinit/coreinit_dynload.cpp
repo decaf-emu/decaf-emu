@@ -146,12 +146,12 @@ OSDynLoad_Release(DynLoadModuleHandle handle)
 void
 CoreInit::registerDynLoadFunctions()
 {
-   RegisterSystemFunction(OSDynLoad_Acquire);
-   RegisterSystemFunction(OSDynLoad_Release);
-   RegisterSystemFunction(OSDynLoad_SetAllocator);
-   RegisterSystemFunction(OSDynLoad_GetAllocator);
-   RegisterSystemFunction(MEM_DynLoad_DefaultAlloc);
-   RegisterSystemFunction(MEM_DynLoad_DefaultFree);
+   RegisterKernelFunction(OSDynLoad_Acquire);
+   RegisterKernelFunction(OSDynLoad_Release);
+   RegisterKernelFunction(OSDynLoad_SetAllocator);
+   RegisterKernelFunction(OSDynLoad_GetAllocator);
+   RegisterKernelFunction(MEM_DynLoad_DefaultAlloc);
+   RegisterKernelFunction(MEM_DynLoad_DefaultFree);
 }
 
 void

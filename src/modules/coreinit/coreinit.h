@@ -1,8 +1,8 @@
 #pragma once
-#include "systemmodule.h"
+#include "kernelmodule.h"
 #include "log.h"
 
-class CoreInit : public SystemModuleImpl<CoreInit>
+class CoreInit : public KernelModuleImpl<CoreInit>
 {
 public:
    CoreInit();

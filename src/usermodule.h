@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
-class SystemModule;
-struct SystemFunction;
-struct SystemData;
+class KernelModule;
+struct KernelFunction;
+struct KernelData;
 
 struct SymbolInfo
 {
@@ -40,43 +40,43 @@ struct ModuleSymbol : public SymbolInfo
    }
 
    ModuleType moduleType;
-   SystemModule *systemModule;
+   KernelModule *systemModule;
 };
 
 struct DataSymbol : public SymbolInfo
 {
    enum DataType
    {
-      System,
+      Kernel,
       User
    };
 
    DataSymbol() :
-      systemData(nullptr)
+      kernelData(nullptr)
    {
       type = SymbolInfo::Data;
    }
 
    DataType dataType;
-   SystemData *systemData;
+   KernelData *kernelData;
 };
 
 struct FunctionSymbol : public SymbolInfo
 {
    enum FunctionType
    {
-      System,
+      Kernel,
       User
    };
 
    FunctionSymbol() :
-      systemFunction(nullptr)
+      kernelFunction(nullptr)
    {
       type = SymbolInfo::Function;
    }
 
    FunctionType functionType;
-   SystemFunction *systemFunction;
+   KernelFunction *kernelFunction;
 };
 
 struct UserModule

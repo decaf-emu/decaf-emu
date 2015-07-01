@@ -50,11 +50,11 @@ OSFastCond_Signal(FastConditionHandle handle)
 void
 CoreInit::registerFastMutexFunctions()
 {
-   RegisterSystemFunction(OSFastMutex_Init);
-   RegisterSystemFunction(OSFastMutex_Lock);
-   RegisterSystemFunction(OSFastMutex_TryLock);
-   RegisterSystemFunction(OSFastMutex_Unlock);
-   RegisterSystemFunction(OSFastCond_Init);
-   RegisterSystemFunction(OSFastCond_Wait);
-   RegisterSystemFunction(OSFastCond_Signal);
+   RegisterKernelFunction(OSFastMutex_Init);
+   RegisterKernelFunction(OSFastMutex_Lock);
+   RegisterKernelFunction(OSFastMutex_TryLock);
+   RegisterKernelFunction(OSFastMutex_Unlock);
+   RegisterKernelFunction(OSFastCond_Init);
+   RegisterKernelFunction(OSFastCond_Wait);
+   RegisterKernelFunction(OSFastCond_Signal);
 }

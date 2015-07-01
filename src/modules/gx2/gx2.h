@@ -1,8 +1,8 @@
 #pragma once
-#include "systemmodule.h"
+#include "kernelmodule.h"
 #include "log.h"
 
-class GX2 : public SystemModuleImpl<GX2>
+class GX2 : public KernelModuleImpl<GX2>
 {
 public:
    GX2();

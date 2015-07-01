@@ -21,7 +21,7 @@ SAVEInitSaveDir(uint8_t userID)
 void
 NNSave::registerCoreFunctions()
 {
-   RegisterSystemFunction(SAVEInit);
-   RegisterSystemFunction(SAVEShutdown);
-   RegisterSystemFunction(SAVEInitSaveDir);
+   RegisterKernelFunction(SAVEInit);
+   RegisterKernelFunction(SAVEShutdown);
+   RegisterKernelFunction(SAVEInitSaveDir);
 }

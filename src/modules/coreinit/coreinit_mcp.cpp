@@ -21,7 +21,7 @@ MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings)
 void
 CoreInit::registerMcpFunctions()
 {
-   RegisterSystemFunction(MCP_Open);
-   RegisterSystemFunction(MCP_Close);
-   RegisterSystemFunction(MCP_GetSysProdSettings);
+   RegisterKernelFunction(MCP_Open);
+   RegisterKernelFunction(MCP_Close);
+   RegisterKernelFunction(MCP_GetSysProdSettings);
 }

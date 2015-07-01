@@ -44,8 +44,8 @@ OSGetTick()
 void
 CoreInit::registerTimeFunctions()
 {
-   RegisterSystemFunction(OSGetTime);
-   RegisterSystemFunction(OSGetTick);
-   RegisterSystemFunction(OSGetSystemTime);
-   RegisterSystemFunction(OSGetSystemTick);
+   RegisterKernelFunction(OSGetTime);
+   RegisterKernelFunction(OSGetTick);
+   RegisterKernelFunction(OSGetSystemTime);
+   RegisterKernelFunction(OSGetSystemTick);
 }

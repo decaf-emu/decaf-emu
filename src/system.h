@@ -9,9 +9,9 @@
 
 class Memory;
 class Thread;
-class SystemModule;
+class KernelModule;
 struct UserModule;
-struct SystemFunction;
+struct KernelFunction;
 class FileSystem;
 
 class System
@@ -21,8 +21,8 @@ public:
 
    void initialiseModules();
 
-   void registerModule(const char *name, SystemModule *module);
-   SystemModule *findModule(const char *name) const;
+   void registerModule(const char *name, KernelModule *module);
+   KernelModule *findModule(const char *name) const;
 
    void registerModule(const char *name, UserModule *module);
    UserModule *getUserModule() const;
@@ -30,7 +30,7 @@ public:
    void addThread(Thread *thread);
    void removeThread(Thread *thread);
 
-   SystemFunction *getSyscall(uint32_t id);
+   KernelFunction *getSyscall(uint32_t id);
 
    WHeapHandle addHeap(HeapManager *heap);
    HeapManager *getHeap(WHeapHandle handle);
@@ -81,9 +81,9 @@ protected:
 
 private:
    UserModule *mUserModule;
-   std::map<std::string, SystemModule*> mSystemModules;
+   std::map<std::string, KernelModule*> mSystemModules;
    p32<void> mSystemThunks;
-   std::vector<SystemFunction*> mSystemCalls;
+   std::vector<KernelFunction*> mSystemCalls;
 
    std::mutex mHeapMutex;
    std::vector<HeapManager *> mHeaps;

@@ -10,5 +10,5 @@ OSReadRegister16(uint32_t device, uint32_t id)
 void
 CoreInit::registerDeviceFunctions()
 {
-   RegisterSystemFunction(OSReadRegister16);
+   RegisterKernelFunction(OSReadRegister16);
 }

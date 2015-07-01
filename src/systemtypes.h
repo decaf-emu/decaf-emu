@@ -1,7 +1,10 @@
 #pragma once
 #include <cstdint>
+#include "be_val.h"
 #include "memory.h"
+#include "p32.h"
 #include "systemobject.h"
+#include "wfunc_ptr.h"
 
 #ifndef BOOL
 typedef int BOOL;
@@ -14,37 +17,6 @@ typedef int BOOL;
 #ifndef FALSE
 #define FALSE 0
 #endif
-
-#pragma pack(push, 1)
-#include "be_types.h"
-
-template<typename ReturnType, typename... Args>
-struct wfunc_ptr
-{
-   wfunc_ptr() :
-      address(0)
-   {
-   }
-
-   wfunc_ptr(uint32_t addr) :
-      address(addr)
-   {
-   }
-
-   wfunc_ptr(p32<void> addr) :
-      address(addr)
-   {
-   }
-
-   operator uint32_t() const
-   {
-      return address;
-   }
-
-   uint32_t address;
-};
-
-#pragma pack(pop)
 
 // Ensure our structs are correct size & offsets to match WiiU
 #define CHECK_SIZE(Type, Size) \

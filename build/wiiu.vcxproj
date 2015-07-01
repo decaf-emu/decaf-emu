@@ -153,7 +153,7 @@
     <ClCompile Include="..\src\thread.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\be_types.h" />
+    <ClInclude Include="..\src\be_val.h" />
     <ClInclude Include="..\src\bigendianview.h" />
     <ClInclude Include="..\src\bitutils.h" />
     <ClInclude Include="..\src\codetests.h" />
@@ -171,6 +171,8 @@
     <ClInclude Include="..\src\interpreter.h" />
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
     <ClInclude Include="..\src\jit.h" />
+    <ClInclude Include="..\src\kernelfunctionargs.h" />
+    <ClInclude Include="..\src\kernelfunctionresult.h" />
     <ClInclude Include="..\src\loader.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\memory.h" />
@@ -182,6 +184,7 @@
     <ClInclude Include="..\src\modules\gx2\gx2r_resource.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_surface.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_temp.h" />
+    <ClInclude Include="..\src\p32.h" />
     <ClInclude Include="..\src\systemobject.h" />
     <ClInclude Include="..\src\usermodule.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit.h" />
@@ -216,13 +219,14 @@
     <ClInclude Include="..\src\modules\zlib125\zlib125_core.h" />
     <ClInclude Include="..\src\ppc.h" />
     <ClInclude Include="..\src\system.h" />
-    <ClInclude Include="..\src\systemdata.h" />
-    <ClInclude Include="..\src\systemexport.h" />
-    <ClInclude Include="..\src\systemfunction.h" />
-    <ClInclude Include="..\src\systemmodule.h" />
+    <ClInclude Include="..\src\kerneldata.h" />
+    <ClInclude Include="..\src\kernelexport.h" />
+    <ClInclude Include="..\src\kernelfunction.h" />
+    <ClInclude Include="..\src\kernelmodule.h" />
     <ClInclude Include="..\src\systemtypes.h" />
     <ClInclude Include="..\src\thread.h" />
     <ClInclude Include="..\src\util.h" />
+    <ClInclude Include="..\src\wfunc_ptr.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

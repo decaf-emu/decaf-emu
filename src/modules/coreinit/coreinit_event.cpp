@@ -82,11 +82,11 @@ OSWaitEventWithTimeout(EventHandle handle, Time timeout)
 void
 CoreInit::registerEventFunctions()
 {
-   RegisterSystemFunction(OSInitEvent);
-   RegisterSystemFunction(OSInitEventEx);
-   RegisterSystemFunction(OSSignalEvent);
-   RegisterSystemFunction(OSSignalEventAll);
-   RegisterSystemFunction(OSResetEvent);
-   RegisterSystemFunction(OSWaitEvent);
-   RegisterSystemFunction(OSWaitEventWithTimeout);
+   RegisterKernelFunction(OSInitEvent);
+   RegisterKernelFunction(OSInitEventEx);
+   RegisterKernelFunction(OSSignalEvent);
+   RegisterKernelFunction(OSSignalEventAll);
+   RegisterKernelFunction(OSResetEvent);
+   RegisterKernelFunction(OSWaitEvent);
+   RegisterKernelFunction(OSWaitEventWithTimeout);
 }

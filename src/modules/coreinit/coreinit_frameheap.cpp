@@ -51,7 +51,7 @@ MEMAllocFromFrmHeapEx(WHeapHandle handle, uint32_t size, int alignment)
 void
 MEMFreeToFrmHeap(WHeapHandle handle, int mode)
 {
-   getFrameHeap(handle)->free(handle, static_cast<FrameHeapFreeMode>(mode));
+   getFrameHeap(handle)->free(handle, static_cast<FrameHeapFreeMode::Flags>(mode));
 }
 
 BOOL
@@ -93,16 +93,16 @@ MEMGetAllocatableSizeForFrmHeapEx(WHeapHandle handle, int alignment)
 void
 CoreInit::registerFrameHeapFunctions()
 {
-   RegisterSystemFunction(MEMCreateFrmHeap);
-   RegisterSystemFunction(MEMCreateFrmHeapEx);
-   RegisterSystemFunction(MEMDestroyFrmHeap);
-   RegisterSystemFunction(MEMAllocFromFrmHeap);
-   RegisterSystemFunction(MEMAllocFromFrmHeapEx);
-   RegisterSystemFunction(MEMFreeToFrmHeap);
-   RegisterSystemFunction(MEMRecordStateForFrmHeap);
-   RegisterSystemFunction(MEMFreeByStateToFrmHeap);
-   RegisterSystemFunction(MEMAdjustFrmHeap);
-   RegisterSystemFunction(MEMResizeForMBlockFrmHeap);
-   RegisterSystemFunction(MEMGetAllocatableSizeForFrmHeap);
-   RegisterSystemFunction(MEMGetAllocatableSizeForFrmHeapEx);
+   RegisterKernelFunction(MEMCreateFrmHeap);
+   RegisterKernelFunction(MEMCreateFrmHeapEx);
+   RegisterKernelFunction(MEMDestroyFrmHeap);
+   RegisterKernelFunction(MEMAllocFromFrmHeap);
+   RegisterKernelFunction(MEMAllocFromFrmHeapEx);
+   RegisterKernelFunction(MEMFreeToFrmHeap);
+   RegisterKernelFunction(MEMRecordStateForFrmHeap);
+   RegisterKernelFunction(MEMFreeByStateToFrmHeap);
+   RegisterKernelFunction(MEMAdjustFrmHeap);
+   RegisterKernelFunction(MEMResizeForMBlockFrmHeap);
+   RegisterKernelFunction(MEMGetAllocatableSizeForFrmHeap);
+   RegisterKernelFunction(MEMGetAllocatableSizeForFrmHeapEx);
 }

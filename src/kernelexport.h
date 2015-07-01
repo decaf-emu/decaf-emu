@@ -1,6 +1,6 @@
 #pragma once
 
-struct SystemExport
+struct KernelExport
 {
    enum Type
    {
@@ -9,17 +9,17 @@ struct SystemExport
       Data
    };
 
-   SystemExport() :
+   KernelExport() :
       type(Undefined)
    {
    }
 
-   SystemExport(Type type) :
+   KernelExport(Type type) :
       type(type)
    {
    }
 
-   virtual ~SystemExport()
+   virtual ~KernelExport()
    {
    }
 

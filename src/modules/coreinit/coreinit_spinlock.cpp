@@ -3,8 +3,6 @@
 #include "coreinit_thread.h"
 #include <atomic>
 
-// TODO: Rewrite using std::atomic
-
 void
 OSInitSpinLock(OSSpinLock * spinlock)
 {
@@ -101,14 +99,14 @@ OSUninterruptibleSpinLock_Release(OSSpinLock * spinlock)
 void
 CoreInit::registerSpinLockFunctions()
 {
-   RegisterSystemFunction(OSInitSpinLock);
-   RegisterSystemFunction(OSAcquireSpinLock);
-   RegisterSystemFunction(OSTryAcquireSpinLock);
-   RegisterSystemFunction(OSTryAcquireSpinLockWithTimeout);
-   RegisterSystemFunction(OSReleaseSpinLock);
+   RegisterKernelFunction(OSInitSpinLock);
+   RegisterKernelFunction(OSAcquireSpinLock);
+   RegisterKernelFunction(OSTryAcquireSpinLock);
+   RegisterKernelFunction(OSTryAcquireSpinLockWithTimeout);
+   RegisterKernelFunction(OSReleaseSpinLock);
 
-   RegisterSystemFunction(OSUninterruptibleSpinLock_Acquire);
-   RegisterSystemFunction(OSUninterruptibleSpinLock_TryAcquire);
-   RegisterSystemFunction(OSUninterruptibleSpinLock_TryAcquireWithTimeout);
-   RegisterSystemFunction(OSUninterruptibleSpinLock_Release);
+   RegisterKernelFunction(OSUninterruptibleSpinLock_Acquire);
+   RegisterKernelFunction(OSUninterruptibleSpinLock_TryAcquire);
+   RegisterKernelFunction(OSUninterruptibleSpinLock_TryAcquireWithTimeout);
+   RegisterKernelFunction(OSUninterruptibleSpinLock_Release);
 }

@@ -138,22 +138,22 @@ MEMGetAllocDirForMBlockExpHeap(p32<void> block)
 void
 CoreInit::registerExpHeapFunctions()
 {
-   RegisterSystemFunction(MEMCreateExpHeap);
-   RegisterSystemFunction(MEMCreateExpHeapEx);
-   RegisterSystemFunction(MEMDestroyExpHeap);
-   RegisterSystemFunction(MEMAllocFromExpHeap);
-   RegisterSystemFunction(MEMAllocFromExpHeapEx);
-   RegisterSystemFunction(MEMFreeToExpHeap);
-   RegisterSystemFunction(MEMSetAllocModeForExpHeap);
-   RegisterSystemFunction(MEMGetAllocModeForExpHeap);
-   RegisterSystemFunction(MEMAdjustExpHeap);
-   RegisterSystemFunction(MEMResizeForMBlockExpHeap);
-   RegisterSystemFunction(MEMGetTotalFreeSizeForExpHeap);
-   RegisterSystemFunction(MEMGetAllocatableSizeForExpHeap);
-   RegisterSystemFunction(MEMGetAllocatableSizeForExpHeapEx);
-   RegisterSystemFunction(MEMSetGroupIDForExpHeap);
-   RegisterSystemFunction(MEMGetGroupIDForExpHeap);
-   RegisterSystemFunction(MEMGetSizeForMBlockExpHeap);
-   RegisterSystemFunction(MEMGetGroupIDForMBlockExpHeap);
-   RegisterSystemFunction(MEMGetAllocDirForMBlockExpHeap);
+   RegisterKernelFunction(MEMCreateExpHeap);
+   RegisterKernelFunction(MEMCreateExpHeapEx);
+   RegisterKernelFunction(MEMDestroyExpHeap);
+   RegisterKernelFunction(MEMAllocFromExpHeap);
+   RegisterKernelFunction(MEMAllocFromExpHeapEx);
+   RegisterKernelFunction(MEMFreeToExpHeap);
+   RegisterKernelFunction(MEMSetAllocModeForExpHeap);
+   RegisterKernelFunction(MEMGetAllocModeForExpHeap);
+   RegisterKernelFunction(MEMAdjustExpHeap);
+   RegisterKernelFunction(MEMResizeForMBlockExpHeap);
+   RegisterKernelFunction(MEMGetTotalFreeSizeForExpHeap);
+   RegisterKernelFunction(MEMGetAllocatableSizeForExpHeap);
+   RegisterKernelFunction(MEMGetAllocatableSizeForExpHeapEx);
+   RegisterKernelFunction(MEMSetGroupIDForExpHeap);
+   RegisterKernelFunction(MEMGetGroupIDForExpHeap);
+   RegisterKernelFunction(MEMGetSizeForMBlockExpHeap);
+   RegisterKernelFunction(MEMGetGroupIDForMBlockExpHeap);
+   RegisterKernelFunction(MEMGetAllocDirForMBlockExpHeap);
 }

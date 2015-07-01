@@ -106,10 +106,10 @@ GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
 void
 GX2::registerSurfaceFunctions()
 {
-   RegisterSystemFunction(GX2CalcSurfaceSizeAndAlignment);
-   RegisterSystemFunction(GX2CalcDepthBufferHiZInfo);
-   RegisterSystemFunction(GX2SetColorBuffer);
-   RegisterSystemFunction(GX2SetDepthBuffer);
-   RegisterSystemFunction(GX2InitColorBufferRegs);
-   RegisterSystemFunction(GX2InitDepthBufferRegs);
+   RegisterKernelFunction(GX2CalcSurfaceSizeAndAlignment);
+   RegisterKernelFunction(GX2CalcDepthBufferHiZInfo);
+   RegisterKernelFunction(GX2SetColorBuffer);
+   RegisterKernelFunction(GX2SetDepthBuffer);
+   RegisterKernelFunction(GX2InitColorBufferRegs);
+   RegisterKernelFunction(GX2InitDepthBufferRegs);
 }

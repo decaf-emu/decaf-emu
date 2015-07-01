@@ -64,15 +64,15 @@ GX2SetScissor(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2)
 void
 GX2::registerRenderStateFunctions()
 {
-   RegisterSystemFunction(GX2SetDepthStencilControl);
-   RegisterSystemFunction(GX2SetStencilMask);
-   RegisterSystemFunction(GX2SetPolygonControl);
-   RegisterSystemFunction(GX2SetColorControl);
-   RegisterSystemFunction(GX2SetBlendControl);
-   RegisterSystemFunction(GX2SetBlendConstantColor);
-   RegisterSystemFunction(GX2SetAlphaTest);
-   RegisterSystemFunction(GX2SetTargetChannelMasks);
-   RegisterSystemFunction(GX2SetAlphaToMask);
-   RegisterSystemFunction(GX2SetViewport);
-   RegisterSystemFunction(GX2SetScissor);
+   RegisterKernelFunction(GX2SetDepthStencilControl);
+   RegisterKernelFunction(GX2SetStencilMask);
+   RegisterKernelFunction(GX2SetPolygonControl);
+   RegisterKernelFunction(GX2SetColorControl);
+   RegisterKernelFunction(GX2SetBlendControl);
+   RegisterKernelFunction(GX2SetBlendConstantColor);
+   RegisterKernelFunction(GX2SetAlphaTest);
+   RegisterKernelFunction(GX2SetTargetChannelMasks);
+   RegisterKernelFunction(GX2SetAlphaToMask);
+   RegisterKernelFunction(GX2SetViewport);
+   RegisterKernelFunction(GX2SetScissor);
 }

@@ -162,18 +162,18 @@ CoreInit::registerMembaseFunctions()
 {
    memset(gMemArenas, 0, sizeof(WHeapHandle) * static_cast<size_t>(BaseHeapType::Max));
 
-   RegisterSystemFunction(MEMGetBaseHeapHandle);
-   RegisterSystemFunction(MEMSetBaseHeapHandle);
-   RegisterSystemFunction(MEMGetArena);
-   RegisterSystemDataName("MEMAllocFromDefaultHeap", pMEMAllocFromDefaultHeap);
-   RegisterSystemDataName("MEMAllocFromDefaultHeapEx", pMEMAllocFromDefaultHeapEx);
-   RegisterSystemDataName("MEMFreeToDefaultHeap", pMEMFreeToDefaultHeap);
+   RegisterKernelFunction(MEMGetBaseHeapHandle);
+   RegisterKernelFunction(MEMSetBaseHeapHandle);
+   RegisterKernelFunction(MEMGetArena);
+   RegisterKernelDataName("MEMAllocFromDefaultHeap", pMEMAllocFromDefaultHeap);
+   RegisterKernelDataName("MEMAllocFromDefaultHeapEx", pMEMAllocFromDefaultHeapEx);
+   RegisterKernelDataName("MEMFreeToDefaultHeap", pMEMFreeToDefaultHeap);
 
    // These are default implementations for function pointers, register as exports
    // so we will have function thunks generated
-   RegisterSystemFunction(sMEMAllocFromDefaultHeap);
-   RegisterSystemFunction(sMEMAllocFromDefaultHeapEx);
-   RegisterSystemFunction(sMEMFreeToDefaultHeap);
+   RegisterKernelFunction(sMEMAllocFromDefaultHeap);
+   RegisterKernelFunction(sMEMAllocFromDefaultHeapEx);
+   RegisterKernelFunction(sMEMFreeToDefaultHeap);
 }
 
 void

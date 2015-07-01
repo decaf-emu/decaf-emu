@@ -3,12 +3,15 @@
 #include "systemtypes.h"
 #include "util.h"
 
-enum class FrameHeapFreeMode
+namespace FrameHeapFreeMode
+{
+enum Flags
 {
    Head  = 1 << 0,
    Tail  = 1 << 1,
    All   = Head | Tail
 };
+}
 
 struct FrameHeapState;
 
@@ -19,7 +22,7 @@ public:
    virtual ~FrameHeapManager();
 
    uint32_t alloc(uint32_t size, int alignment);
-   void free(uint32_t addr, Flags<FrameHeapFreeMode> freeMode);
+   void free(uint32_t addr, FrameHeapFreeMode::Flags freeMode);
 
    uint32_t trimHeap();
    uint32_t resizeBlock(uint32_t addr, uint32_t newSize);

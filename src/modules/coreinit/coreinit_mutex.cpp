@@ -2,8 +2,6 @@
 #include "coreinit_mutex.h"
 #include "system.h"
 
-// TODO: Ensure we can use custom OSMutex data instead of original
-
 void
 OSInitMutex(MutexHandle handle)
 {
@@ -70,13 +68,13 @@ OSSignalCond(ConditionHandle handle)
 void
 CoreInit::registerMutexFunctions()
 {
-   RegisterSystemFunction(OSInitMutex);
-   RegisterSystemFunction(OSInitMutexEx);
-   RegisterSystemFunction(OSLockMutex);
-   RegisterSystemFunction(OSTryLockMutex);
-   RegisterSystemFunction(OSUnlockMutex);
-   RegisterSystemFunction(OSInitCond);
-   RegisterSystemFunction(OSInitCondEx);
-   RegisterSystemFunction(OSWaitCond);
-   RegisterSystemFunction(OSSignalCond);
+   RegisterKernelFunction(OSInitMutex);
+   RegisterKernelFunction(OSInitMutexEx);
+   RegisterKernelFunction(OSLockMutex);
+   RegisterKernelFunction(OSTryLockMutex);
+   RegisterKernelFunction(OSUnlockMutex);
+   RegisterKernelFunction(OSInitCond);
+   RegisterKernelFunction(OSInitCondEx);
+   RegisterKernelFunction(OSWaitCond);
+   RegisterKernelFunction(OSSignalCond);
 }

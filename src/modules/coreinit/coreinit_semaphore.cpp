@@ -69,10 +69,10 @@ OSGetSemaphoreCount(SemaphoreHandle handle)
 void
 CoreInit::registerSemaphoreFunctions()
 {
-   RegisterSystemFunction(OSInitSemaphore);
-   RegisterSystemFunction(OSInitSemaphoreEx);
-   RegisterSystemFunction(OSWaitSemaphore);
-   RegisterSystemFunction(OSTryWaitSemaphore);
-   RegisterSystemFunction(OSSignalSemaphore);
-   RegisterSystemFunction(OSGetSemaphoreCount);
+   RegisterKernelFunction(OSInitSemaphore);
+   RegisterKernelFunction(OSInitSemaphoreEx);
+   RegisterKernelFunction(OSWaitSemaphore);
+   RegisterKernelFunction(OSTryWaitSemaphore);
+   RegisterKernelFunction(OSSignalSemaphore);
+   RegisterKernelFunction(OSGetSemaphoreCount);
 }

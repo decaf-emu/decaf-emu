@@ -1,8 +1,8 @@
 #pragma once
-#include "systemmodule.h"
+#include "kernelmodule.h"
 #include "log.h"
 
-class Zlib125 : public SystemModuleImpl<Zlib125>
+class Zlib125 : public KernelModuleImpl<Zlib125>
 {
 public:
    Zlib125();

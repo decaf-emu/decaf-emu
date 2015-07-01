@@ -5,8 +5,8 @@ enum class GX2RResourceFlags
 {
 };
 
-//using GX2RAllocFuncPtr = p32<void>(*)(GX2RResourceFlags flags, uint32_t size, uint32_t alignment);
-//using GX2RFreeFuncPtr = void(*)(GX2RResourceFlags flags, void *memory);
+using GX2RAllocFuncPtr = wfunc_ptr<p32<void>, GX2RResourceFlags, uint32_t, uint32_t>;
+using GX2RFreeFuncPtr = wfunc_ptr<void, GX2RResourceFlags, p32<void>>;
 
 void
-GX2RSetAllocator(uint32_t allocFn, uint32_t freeFn);
+GX2RSetAllocator(GX2RAllocFuncPtr allocFn, GX2RFreeFuncPtr freeFn);

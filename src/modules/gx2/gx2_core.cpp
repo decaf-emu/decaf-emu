@@ -48,10 +48,10 @@ GX2GetContextStateDisplayList(const GX2ContextState* state, be_val<uint32_t> *ou
 
 void GX2::registerCoreFunctions()
 {
-   RegisterSystemFunction(GX2Init);
-   RegisterSystemFunction(GX2Shutdown);
-   RegisterSystemFunction(GX2SetupContextState);
-   RegisterSystemFunction(GX2SetupContextStateEx);
-   RegisterSystemFunction(GX2Invalidate);
-   RegisterSystemFunction(GX2GetContextStateDisplayList);
+   RegisterKernelFunction(GX2Init);
+   RegisterKernelFunction(GX2Shutdown);
+   RegisterKernelFunction(GX2SetupContextState);
+   RegisterKernelFunction(GX2SetupContextStateEx);
+   RegisterKernelFunction(GX2Invalidate);
+   RegisterKernelFunction(GX2GetContextStateDisplayList);
 }

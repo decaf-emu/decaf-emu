@@ -450,40 +450,40 @@ void
 Zlib125::registerCoreFunctions()
 {
    // Functions we can do directly!
-   RegisterSystemFunction(adler32);
-   RegisterSystemFunction(crc32);
-   RegisterSystemFunction(compressBound);
-   RegisterSystemFunction(zlibCompileFlags);
+   RegisterKernelFunction(adler32);
+   RegisterKernelFunction(crc32);
+   RegisterKernelFunction(compressBound);
+   RegisterKernelFunction(zlibCompileFlags);
    
    // Need wrap
-   RegisterSystemFunctionName("compress", zlib125_compress);
-   RegisterSystemFunctionName("compress2", zlib125_compress2);
-   RegisterSystemFunctionName("deflate", zlib125_deflate);
-   RegisterSystemFunctionName("deflateBound", zlib125_deflateBound);
-   RegisterSystemFunctionName("deflateCopy", zlib125_deflateCopy);
-   RegisterSystemFunctionName("deflateEnd", zlib125_deflateEnd);
-   RegisterSystemFunctionName("deflateInit2_", zlib125_deflateInit2_);
-   RegisterSystemFunctionName("deflateInit_", zlib125_deflateInit_);
-   RegisterSystemFunctionName("deflateParams", zlib125_deflateParams);
-   RegisterSystemFunctionName("deflatePrime", zlib125_deflatePrime);
-   RegisterSystemFunctionName("deflateReset", zlib125_deflateReset);
-   RegisterSystemFunctionName("deflateSetDictionary", zlib125_deflateSetDictionary);
-   RegisterSystemFunctionName("deflateSetHeader", zlib125_deflateSetHeader);
-   RegisterSystemFunctionName("deflateTune", zlib125_deflateTune);
-   RegisterSystemFunctionName("inflate", zlib125_inflate);
-   RegisterSystemFunctionName("inflateBack", zlib125_inflateBack);
-   RegisterSystemFunctionName("inflateBackEnd", zlib125_inflateBackEnd);
-   RegisterSystemFunctionName("inflateBackInit_", zlib125_inflateBackInit_);
-   RegisterSystemFunctionName("inflateCopy", zlib125_inflateCopy);
-   RegisterSystemFunctionName("inflateEnd", zlib125_inflateEnd);
-   RegisterSystemFunctionName("inflateGetHeader", zlib125_inflateGetHeader);
-   RegisterSystemFunctionName("inflateInit2_", zlib125_inflateInit2_);
-   RegisterSystemFunctionName("inflateInit_", zlib125_inflateInit_);
-   RegisterSystemFunctionName("inflateMark", zlib125_inflateMark);
-   RegisterSystemFunctionName("inflatePrime", zlib125_inflatePrime);
-   RegisterSystemFunctionName("inflateReset", zlib125_inflateReset);
-   RegisterSystemFunctionName("inflateReset2", zlib125_inflateReset2);
-   RegisterSystemFunctionName("inflateSetDictionary", zlib125_inflateSetDictionary);
-   RegisterSystemFunctionName("inflateSync", zlib125_inflateSync);
-   RegisterSystemFunctionName("uncompress", zlib125_uncompress);
+   RegisterKernelFunctionName("compress", zlib125_compress);
+   RegisterKernelFunctionName("compress2", zlib125_compress2);
+   RegisterKernelFunctionName("deflate", zlib125_deflate);
+   RegisterKernelFunctionName("deflateBound", zlib125_deflateBound);
+   RegisterKernelFunctionName("deflateCopy", zlib125_deflateCopy);
+   RegisterKernelFunctionName("deflateEnd", zlib125_deflateEnd);
+   RegisterKernelFunctionName("deflateInit2_", zlib125_deflateInit2_);
+   RegisterKernelFunctionName("deflateInit_", zlib125_deflateInit_);
+   RegisterKernelFunctionName("deflateParams", zlib125_deflateParams);
+   RegisterKernelFunctionName("deflatePrime", zlib125_deflatePrime);
+   RegisterKernelFunctionName("deflateReset", zlib125_deflateReset);
+   RegisterKernelFunctionName("deflateSetDictionary", zlib125_deflateSetDictionary);
+   RegisterKernelFunctionName("deflateSetHeader", zlib125_deflateSetHeader);
+   RegisterKernelFunctionName("deflateTune", zlib125_deflateTune);
+   RegisterKernelFunctionName("inflate", zlib125_inflate);
+   RegisterKernelFunctionName("inflateBack", zlib125_inflateBack);
+   RegisterKernelFunctionName("inflateBackEnd", zlib125_inflateBackEnd);
+   RegisterKernelFunctionName("inflateBackInit_", zlib125_inflateBackInit_);
+   RegisterKernelFunctionName("inflateCopy", zlib125_inflateCopy);
+   RegisterKernelFunctionName("inflateEnd", zlib125_inflateEnd);
+   RegisterKernelFunctionName("inflateGetHeader", zlib125_inflateGetHeader);
+   RegisterKernelFunctionName("inflateInit2_", zlib125_inflateInit2_);
+   RegisterKernelFunctionName("inflateInit_", zlib125_inflateInit_);
+   RegisterKernelFunctionName("inflateMark", zlib125_inflateMark);
+   RegisterKernelFunctionName("inflatePrime", zlib125_inflatePrime);
+   RegisterKernelFunctionName("inflateReset", zlib125_inflateReset);
+   RegisterKernelFunctionName("inflateReset2", zlib125_inflateReset2);
+   RegisterKernelFunctionName("inflateSetDictionary", zlib125_inflateSetDictionary);
+   RegisterKernelFunctionName("inflateSync", zlib125_inflateSync);
+   RegisterKernelFunctionName("uncompress", zlib125_uncompress);
 }

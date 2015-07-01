@@ -43,10 +43,10 @@ OSGetConsoleType()
 void
 CoreInit::registerSystemInfoFunctions()
 {
-   RegisterSystemFunction(OSGetSystemInfo);
-   RegisterSystemFunction(OSSetScreenCapturePermission);
-   RegisterSystemFunction(OSGetScreenCapturePermission);
-   RegisterSystemFunction(OSGetConsoleType);
+   RegisterKernelFunction(OSGetSystemInfo);
+   RegisterKernelFunction(OSSetScreenCapturePermission);
+   RegisterKernelFunction(OSGetScreenCapturePermission);
+   RegisterKernelFunction(OSGetConsoleType);
 }
 
 void

@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "instructiondata.h"
 #include "system.h"
-#include "systemmodule.h"
+#include "kernelmodule.h"
 #include "thread.h"
 #include "modules/coreinit/coreinit_memory.h"
 
@@ -12,7 +12,7 @@ System::System()
 }
 
 void
-System::registerModule(const char *name, SystemModule *module)
+System::registerModule(const char *name, KernelModule *module)
 {
    mSystemModules.insert(std::make_pair(std::move(name), module));
 
@@ -22,8 +22,8 @@ System::registerModule(const char *name, SystemModule *module)
    for (auto &itr : exports) {
       auto exp = itr.second;
 
-      if (exp->type == SystemExport::Function) {
-         auto func = reinterpret_cast<SystemFunction*>(exp);
+      if (exp->type == KernelExport::Function) {
+         auto func = reinterpret_cast<KernelFunction*>(exp);
          func->syscallID = static_cast<uint32_t>(mSystemCalls.size());
          mSystemCalls.push_back(func);
       }
@@ -52,7 +52,7 @@ System::initialiseModules()
    }
 }
 
-SystemModule *
+KernelModule *
 System::findModule(const char *name) const
 {
    auto itr = mSystemModules.find(name);
@@ -78,7 +78,7 @@ System::removeThread(Thread *thread)
    mThreads.erase(std::remove(mThreads.begin(), mThreads.end(), thread), mThreads.end());
 }
 
-SystemFunction *
+KernelFunction *
 System::getSyscall(uint32_t id)
 {
    return mSystemCalls.at(id);

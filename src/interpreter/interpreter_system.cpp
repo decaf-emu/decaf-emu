@@ -4,7 +4,7 @@
 #include "loader.h"
 #include "log.h"
 #include "system.h"
-#include "systemfunction.h"
+#include "kernelfunction.h"
 #include "thread.h"
 #include "usermodule.h"
 
@@ -272,8 +272,6 @@ kc(ThreadState *state, Instruction instr)
    auto id = instr.li;
    auto implemented = instr.aa;
 
-   SystemFunction *func = nullptr;
-
    if (!implemented) {
       auto userModule = gSystem.getUserModule();
       auto sym = userModule->symbols[id];
@@ -284,17 +282,16 @@ kc(ThreadState *state, Instruction instr)
          return;
       }
 
-      if (!fsym->systemFunction) {
-         xDebug() << Log::hex(state->lr) << " unimplemented system function " << sym->name;
+      if (!fsym->kernelFunction) {
+         xDebug() << Log::hex(state->lr) << " unimplemented kernel function " << sym->name;
          return;
       }
 
       return;
       assert(false);
-   } else {
-      func = gSystem.getSyscall(id);
    }
 
+   auto func = gSystem.getSyscall(id);
    func->call(state);
 }
 

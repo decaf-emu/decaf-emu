@@ -63,14 +63,14 @@ GX2SetSwapInterval(uint32_t interval)
 void
 GX2::registerDisplayFunctions()
 {
-   RegisterSystemFunction(GX2SetTVEnable);
-   RegisterSystemFunction(GX2SetDRCEnable);
-   RegisterSystemFunction(GX2CalcTVSize);
-   RegisterSystemFunction(GX2SetTVBuffer);
-   RegisterSystemFunction(GX2SetTVScale);
-   RegisterSystemFunction(GX2CalcDRCSize);
-   RegisterSystemFunction(GX2SetDRCBuffer);
-   RegisterSystemFunction(GX2SetDRCScale);
-   RegisterSystemFunction(GX2SetSwapInterval);
-   RegisterSystemFunction(GX2GetSwapInterval);
+   RegisterKernelFunction(GX2SetTVEnable);
+   RegisterKernelFunction(GX2SetDRCEnable);
+   RegisterKernelFunction(GX2CalcTVSize);
+   RegisterKernelFunction(GX2SetTVBuffer);
+   RegisterKernelFunction(GX2SetTVScale);
+   RegisterKernelFunction(GX2CalcDRCSize);
+   RegisterKernelFunction(GX2SetDRCBuffer);
+   RegisterKernelFunction(GX2SetDRCScale);
+   RegisterKernelFunction(GX2SetSwapInterval);
+   RegisterKernelFunction(GX2GetSwapInterval);
 }

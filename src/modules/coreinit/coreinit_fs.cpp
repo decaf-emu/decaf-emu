@@ -168,15 +168,15 @@ FSCloseFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t f
 void
 CoreInit::registerFileSystemFunctions()
 {
-   RegisterSystemFunction(FSInit);
-   RegisterSystemFunction(FSShutdown);
-   RegisterSystemFunction(FSAddClient);
-   RegisterSystemFunction(FSInitCmdBlock);
-   RegisterSystemFunction(FSSetCmdPriority);
-   RegisterSystemFunction(FSGetStat);
-   RegisterSystemFunction(FSGetStatFile);
-   RegisterSystemFunction(FSSetStateChangeNotification);
-   RegisterSystemFunction(FSOpenFile);
-   RegisterSystemFunction(FSReadFile);
-   RegisterSystemFunction(FSCloseFile);
+   RegisterKernelFunction(FSInit);
+   RegisterKernelFunction(FSShutdown);
+   RegisterKernelFunction(FSAddClient);
+   RegisterKernelFunction(FSInitCmdBlock);
+   RegisterKernelFunction(FSSetCmdPriority);
+   RegisterKernelFunction(FSGetStat);
+   RegisterKernelFunction(FSGetStatFile);
+   RegisterKernelFunction(FSSetStateChangeNotification);
+   RegisterKernelFunction(FSOpenFile);
+   RegisterKernelFunction(FSReadFile);
+   RegisterKernelFunction(FSCloseFile);
 }

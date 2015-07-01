@@ -29,8 +29,8 @@ OSIsMainCore()
 void
 CoreInit::registerCoreFunctions()
 {
-   RegisterSystemFunction(OSGetCoreCount);
-   RegisterSystemFunction(OSGetCoreId);
-   RegisterSystemFunction(OSGetMainCoreId);
-   RegisterSystemFunction(OSIsMainCore);
+   RegisterKernelFunction(OSGetCoreCount);
+   RegisterKernelFunction(OSGetCoreId);
+   RegisterKernelFunction(OSGetMainCoreId);
+   RegisterKernelFunction(OSIsMainCore);
 }

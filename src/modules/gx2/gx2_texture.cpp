@@ -10,5 +10,5 @@ GX2InitTextureRegs(GX2Texture *texture)
 void
 GX2::registerTextureFunctions()
 {
-   RegisterSystemFunction(GX2InitTextureRegs);
+   RegisterKernelFunction(GX2InitTextureRegs);
 }

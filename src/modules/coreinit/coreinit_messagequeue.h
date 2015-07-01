@@ -57,11 +57,14 @@ static_assert(sizeof(WMessageQueue) <= sizeof(OSMessageQueue), "WMessageQueue mu
 
 #pragma pack(pop)
 
-enum class OSMessageFlags
+namespace OSMessageFlags
 {
-   Blocking       = 1 << 0,
-   HighPriority   = 1 << 1,
+enum Flags
+{
+   Blocking     = 1 << 0,
+   HighPriority = 1 << 1,
 };
+}
 
 void
 OSInitMessageQueue(WMessageQueue *queue, p32<OSMessage> messages, int32_t size);
@@ -70,13 +73,13 @@ void
 OSInitMessageQueueEx(WMessageQueue *queue, p32<OSMessage> messages, int32_t size, char *name);
 
 BOOL
-OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags);
+OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags flags);
 
 BOOL
-OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags);
+OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags flags);
 
 BOOL
-OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags);
+OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags flags);
 
 BOOL
 OSPeekMessage(WMessageQueue *queue, p32<OSMessage> message);

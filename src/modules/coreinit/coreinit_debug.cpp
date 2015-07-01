@@ -2,12 +2,10 @@
 #include "coreinit_debug.h"
 #include "log.h"
 
-// TODO: Return TRUE so we get OSDebug messages!
-
 BOOL
 OSIsDebuggerPresent(void)
 {
-   return FALSE;
+   return TRUE;
 }
 
 BOOL
@@ -152,9 +150,9 @@ OSVReport(ThreadState *state)
 void
 CoreInit::registerDebugFunctions()
 {
-   RegisterSystemFunction(OSIsDebuggerPresent);
-   RegisterSystemFunction(OSIsDebuggerInitialized);
-   RegisterSystemFunctionManual(OSPanic);
-   RegisterSystemFunctionManual(OSReport);
-   RegisterSystemFunctionManual(OSVReport);
+   RegisterKernelFunction(OSIsDebuggerPresent);
+   RegisterKernelFunction(OSIsDebuggerInitialized);
+   RegisterKernelFunctionManual(OSPanic);
+   RegisterKernelFunctionManual(OSReport);
+   RegisterKernelFunctionManual(OSVReport);
 }

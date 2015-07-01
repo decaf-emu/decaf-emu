@@ -22,6 +22,6 @@ OSSetExceptionCallbackEx(uint32_t unk1, ExceptionType exceptionType, ExceptionCa
 void
 CoreInit::registerExceptionFunctions()
 {
-   RegisterSystemFunction(OSSetExceptionCallback);
-   RegisterSystemFunction(OSSetExceptionCallbackEx);
+   RegisterKernelFunction(OSSetExceptionCallback);
+   RegisterKernelFunction(OSSetExceptionCallbackEx);
 }

@@ -3,7 +3,7 @@
 #include "jit.h"
 #include "log.h"
 #include "system.h"
-#include "systemfunction.h"
+#include "kernelfunction.h"
 #include "thread.h"
 #include "usermodule.h"
 
@@ -107,7 +107,9 @@ mtspr(PPCEmuAssembler& a, Instruction instr)
    return true;
 }
 
-static void kcstub(ThreadState *state, SystemFunction *func) {
+static void
+kcstub(ThreadState *state, KernelFunction *func)
+{
    func->call(state);
 }
 
@@ -117,8 +119,6 @@ kc(PPCEmuAssembler& a, Instruction instr)
 {
    auto id = instr.li;
    auto implemented = instr.aa;
-
-   SystemFunction *func = nullptr;
 
    if (!implemented) {
       auto userModule = gSystem.getUserModule();
@@ -130,18 +130,16 @@ kc(PPCEmuAssembler& a, Instruction instr)
          return false;
       }
 
-      if (!fsym->systemFunction) {
-         xDebug() << "unimplemented system function " << sym->name;
+      if (!fsym->kernelFunction) {
+         xDebug() << "unimplemented kernel function " << sym->name;
          return false;
       }
 
       return false;
       assert(false);
    }
-   else {
-      func = gSystem.getSyscall(id);
-   }
 
+   auto func = gSystem.getSyscall(id);
    a.mov(a.zcx, a.state);
    a.mov(a.zdx, asmjit::Ptr(func));
    a.call(asmjit::Ptr(kcstub));

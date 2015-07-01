@@ -56,75 +56,9 @@ struct storage_type_t<Type, 8>
    using value = uint64_t;
 };
 
-template<typename EnumType>
-class Flags
+template<typename...>
+struct type_list
 {
-public:
-   using StorageType = typename storage_type_t<EnumType>::value;
-
-public:
-   Flags() :
-      mValue(0)
-   {
-   }
-
-   Flags(StorageType value) :
-      mValue(value)
-   {
-   }
-
-   Flags(EnumType value) :
-      mValue(static_cast<StorageType>(value))
-   {
-   }
-
-   Flags<EnumType> operator |(const EnumType &other) const
-   {
-      return Flags<EnumType> { static_cast<StorageType>(mValue | static_cast<StorageType>(other)) };
-   }
-
-   Flags<EnumType> operator &(const EnumType &other) const
-   {
-      return Flags<EnumType> { static_cast<StorageType>(mValue & static_cast<StorageType>(other)) };
-   }
-
-   Flags<EnumType> operator ^(const EnumType &other) const
-   {
-      return Flags<EnumType> { static_cast<StorageType>(mValue ^ static_cast<StorageType>(other)) };
-   }
-
-   Flags<EnumType> operator |(int other) const
-   {
-      return Flags<EnumType> { static_cast<StorageType>(mValue | other) };
-   }
-
-   Flags<EnumType> operator &(int other) const
-   {
-      return Flags<EnumType> { static_cast<StorageType>(mValue & other) };
-   }
-
-   Flags<EnumType> operator ^(int other) const
-   {
-      return Flags<EnumType> { static_cast<StorageType>(mValue ^ other) };
-   }
-
-   bool operator !() const
-   {
-      return mValue == 0;
-   }
-
-   operator EnumType() const
-   {
-      return static_cast<EnumType>(mValue);
-   }
-
-   explicit operator bool() const
-   {
-      return mValue != 0;
-   }
-
-private:
-   StorageType mValue;
 };
 
 #pragma pack(pop)

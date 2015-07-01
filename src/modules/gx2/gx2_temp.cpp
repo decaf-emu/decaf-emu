@@ -10,6 +10,6 @@ GX2TempGetGPUVersion()
 void
 GX2::registerTempFunctions()
 {
-   RegisterSystemFunction(GX2TempGetGPUVersion);
+   RegisterKernelFunction(GX2TempGetGPUVersion);
 }
 

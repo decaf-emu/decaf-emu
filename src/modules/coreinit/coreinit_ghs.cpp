@@ -56,12 +56,12 @@ ghs_flock_file(uint32_t lockIx)
 void
 CoreInit::registerGhsFunctions()
 {
-   RegisterSystemFunctionName("__ghsLock", ghsLock);
-   RegisterSystemFunctionName("__ghsUnlock", ghsUnlock);
-   RegisterSystemFunctionName("__gh_set_errno", ghs_set_errno);
-   RegisterSystemFunctionName("__gh_get_errno", ghs_get_errno);
-   RegisterSystemFunctionName("__ghs_flock_ptr", ghs_flock_ptr);
-   RegisterSystemFunctionName("__ghs_flock_file", ghs_flock_file);
+   RegisterKernelFunctionName("__ghsLock", ghsLock);
+   RegisterKernelFunctionName("__ghsUnlock", ghsUnlock);
+   RegisterKernelFunctionName("__gh_set_errno", ghs_set_errno);
+   RegisterKernelFunctionName("__gh_get_errno", ghs_get_errno);
+   RegisterKernelFunctionName("__ghs_flock_ptr", ghs_flock_ptr);
+   RegisterKernelFunctionName("__ghs_flock_file", ghs_flock_file);
 }
 
 void

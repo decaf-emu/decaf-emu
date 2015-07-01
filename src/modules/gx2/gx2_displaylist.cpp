@@ -72,12 +72,12 @@ GX2CopyDisplayList(GX2DisplayList *displayList, uint32_t size)
 void
 GX2::registerDisplayListFunctions()
 {
-   RegisterSystemFunction(GX2BeginDisplayListEx);
-   RegisterSystemFunction(GX2BeginDisplayList);
-   RegisterSystemFunction(GX2EndDisplayList);
-   RegisterSystemFunction(GX2DirectCallDisplayList);
-   RegisterSystemFunction(GX2CallDisplayList);
-   RegisterSystemFunction(GX2GetDisplayListWriteStatus);
-   RegisterSystemFunction(GX2GetCurrentDisplayList);
-   RegisterSystemFunction(GX2CopyDisplayList);
+   RegisterKernelFunction(GX2BeginDisplayListEx);
+   RegisterKernelFunction(GX2BeginDisplayList);
+   RegisterKernelFunction(GX2EndDisplayList);
+   RegisterKernelFunction(GX2DirectCallDisplayList);
+   RegisterKernelFunction(GX2CallDisplayList);
+   RegisterKernelFunction(GX2GetDisplayListWriteStatus);
+   RegisterKernelFunction(GX2GetCurrentDisplayList);
+   RegisterKernelFunction(GX2CopyDisplayList);
 }

@@ -1,8 +1,8 @@
 #pragma once
-#include "systemmodule.h"
+#include "kernelmodule.h"
 #include "log.h"
 
-class NNSave : public SystemModuleImpl<NNSave>
+class NNSave : public KernelModuleImpl<NNSave>
 {
 public:
    NNSave();

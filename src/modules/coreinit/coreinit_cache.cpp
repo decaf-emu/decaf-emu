@@ -44,11 +44,11 @@ DCTouchRange(void *addr, uint32_t size)
 void
 CoreInit::registerCacheFunctions()
 {
-   RegisterSystemFunction(DCInvalidateRange);
-   RegisterSystemFunction(DCFlushRange);
-   RegisterSystemFunction(DCStoreRange);
-   RegisterSystemFunction(DCFlushRangeNoSync);
-   RegisterSystemFunction(DCStoreRangeNoSync);
-   RegisterSystemFunction(DCZeroRange);
-   RegisterSystemFunction(DCTouchRange);
+   RegisterKernelFunction(DCInvalidateRange);
+   RegisterKernelFunction(DCFlushRange);
+   RegisterKernelFunction(DCStoreRange);
+   RegisterKernelFunction(DCFlushRangeNoSync);
+   RegisterKernelFunction(DCStoreRangeNoSync);
+   RegisterKernelFunction(DCZeroRange);
+   RegisterKernelFunction(DCTouchRange);
 }

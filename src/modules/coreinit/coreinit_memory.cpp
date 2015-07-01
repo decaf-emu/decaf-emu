@@ -83,12 +83,12 @@ OSGetForegroundBucketFreeArea(uint32_t *addr, uint32_t *size)
 void
 CoreInit::registerMemoryFunctions()
 {
-   RegisterSystemFunction(OSBlockMove);
-   RegisterSystemFunction(OSBlockSet);
-   RegisterSystemFunction(OSGetMemBound);
-   RegisterSystemFunction(OSGetForegroundBucket);
-   RegisterSystemFunction(OSGetForegroundBucketFreeArea);
-   RegisterSystemFunctionName("memcpy", coreinit_memcpy);
-   RegisterSystemFunctionName("memset", coreinit_memset);
-   RegisterSystemFunctionName("memmove", coreinit_memmove);
+   RegisterKernelFunction(OSBlockMove);
+   RegisterKernelFunction(OSBlockSet);
+   RegisterKernelFunction(OSGetMemBound);
+   RegisterKernelFunction(OSGetForegroundBucket);
+   RegisterKernelFunction(OSGetForegroundBucketFreeArea);
+   RegisterKernelFunctionName("memcpy", coreinit_memcpy);
+   RegisterKernelFunctionName("memset", coreinit_memset);
+   RegisterKernelFunctionName("memmove", coreinit_memmove);
 }

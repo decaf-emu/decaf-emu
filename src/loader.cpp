@@ -11,7 +11,7 @@
 #include "memory.h"
 #include "modules/coreinit/coreinit_dynload.h"
 #include "system.h"
-#include "systemmodule.h"
+#include "kernelmodule.h"
 #include "usermodule.h"
 #include "util.h"
 
@@ -141,14 +141,14 @@ loadSections(std::vector<elf::Section> &sections)
    }
 }
 
-static SystemModule *
+static KernelModule *
 findSystemModule(const char *name)
 {
    return gSystem.findModule(name);
 }
 
-static SystemFunction *
-findSystemFunction(ModuleSymbol *msym, const char *name)
+static KernelFunction *
+findKernelFunction(ModuleSymbol *msym, const char *name)
 {
    if (!msym || !msym->systemModule) {
       return nullptr;
@@ -161,12 +161,12 @@ findSystemFunction(ModuleSymbol *msym, const char *name)
       return nullptr;
    }
 
-   assert(sysexp->type == SystemExport::Function);
-   return reinterpret_cast<SystemFunction*>(sysexp);
+   assert(sysexp->type == KernelExport::Function);
+   return reinterpret_cast<KernelFunction*>(sysexp);
 }
 
-static SystemData *
-findSystemData(ModuleSymbol *msym, const char *name)
+static KernelData *
+findKernelData(ModuleSymbol *msym, const char *name)
 {
    if (!msym || !msym->systemModule) {
       return nullptr;
@@ -179,8 +179,8 @@ findSystemData(ModuleSymbol *msym, const char *name)
       return nullptr;
    }
 
-   assert(sysexp->type == SystemExport::Data);
-   return reinterpret_cast<SystemData*>(sysexp);
+   assert(sysexp->type == KernelExport::Data);
+   return reinterpret_cast<KernelData*>(sysexp);
 }
 
 static void
@@ -214,11 +214,11 @@ createFunctionSymbol(uint32_t index, elf::Section &section, const char *name, ui
    symbol->size = size;
 
    if (section.header.type == elf::SHT_RPL_IMPORTS) {
-      symbol->functionType = FunctionSymbol::System;
-      symbol->systemFunction = findSystemFunction(section.msym, name);
+      symbol->functionType = FunctionSymbol::Kernel;
+      symbol->kernelFunction = findKernelFunction(section.msym, name);
 
-      if (symbol->systemFunction) {
-         symbol->address = symbol->systemFunction->vaddr;
+      if (symbol->kernelFunction) {
+         symbol->address = symbol->kernelFunction->vaddr;
       } else {
          symbol->address = virtAddress;
 
@@ -243,11 +243,11 @@ createDataSymbol(uint32_t index, elf::Section &section, const char *name, uint32
    symbol->size = size;
 
    if (section.header.type == elf::SHT_RPL_IMPORTS) {
-      symbol->dataType = DataSymbol::System;
-      symbol->systemData = findSystemData(section.msym, name);
+      symbol->dataType = DataSymbol::Kernel;
+      symbol->kernelData = findKernelData(section.msym, name);
 
-      if (symbol->systemData) {
-         symbol->address = static_cast<uint32_t>(*symbol->systemData->vptr);
+      if (symbol->kernelData) {
+         symbol->address = static_cast<uint32_t>(*symbol->kernelData->vptr);
       } else {
          symbol->address = virtAddress;
 

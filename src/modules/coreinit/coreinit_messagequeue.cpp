@@ -32,7 +32,7 @@ OSInitMessageQueueEx(WMessageQueue *queue, p32<OSMessage> messages, int32_t size
 
 // Insert at back of message queue
 BOOL
-OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags)
+OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags flags)
 {
    std::unique_lock<std::mutex> lock { *queue->mutex };
 
@@ -61,7 +61,7 @@ OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags
 
 // Insert at front of message queue
 BOOL
-OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags)
+OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags flags)
 {
    std::unique_lock<std::mutex> lock { *queue->mutex };
    uint32_t index;
@@ -99,7 +99,7 @@ OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags>
 
 // Read from front of message queue
 BOOL
-OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, Flags<OSMessageFlags> flags)
+OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags flags)
 {
    std::unique_lock<std::mutex> lock { *queue->mutex };
 
@@ -150,13 +150,13 @@ OSGetSystemMessageQueue()
 void
 CoreInit::registerMessageQueueFunctions()
 {
-   RegisterSystemFunction(OSInitMessageQueue);
-   RegisterSystemFunction(OSInitMessageQueueEx);
-   RegisterSystemFunction(OSSendMessage);
-   RegisterSystemFunction(OSJamMessage);
-   RegisterSystemFunction(OSReceiveMessage);
-   RegisterSystemFunction(OSPeekMessage);
-   RegisterSystemFunction(OSGetSystemMessageQueue);
+   RegisterKernelFunction(OSInitMessageQueue);
+   RegisterKernelFunction(OSInitMessageQueueEx);
+   RegisterKernelFunction(OSSendMessage);
+   RegisterKernelFunction(OSJamMessage);
+   RegisterKernelFunction(OSReceiveMessage);
+   RegisterKernelFunction(OSPeekMessage);
+   RegisterKernelFunction(OSGetSystemMessageQueue);
 }
 
 void

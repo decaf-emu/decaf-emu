@@ -21,7 +21,7 @@ UCReadSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
 void
 CoreInit::registerUserConfigFunctions()
 {
-   RegisterSystemFunction(UCOpen);
-   RegisterSystemFunction(UCClose);
-   RegisterSystemFunction(UCReadSysConfig);
+   RegisterKernelFunction(UCOpen);
+   RegisterKernelFunction(UCClose);
+   RegisterKernelFunction(UCReadSysConfig);
 }
