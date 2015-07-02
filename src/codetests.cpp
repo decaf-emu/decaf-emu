@@ -230,7 +230,7 @@ decodeValue(const std::string &in, Target &target, Value &value)
 
    if (in.find("0x") == 0) {
       value.type = Value::Uint32;
-      value.uint32Value = std::stoul(in.substr(2));
+      value.uint32Value = std::stoul(in.substr(2), 0, 16);
       return true;
    } else if (in.find("f") == in.size() - 1) {
       value.type = Value::Float;
