@@ -39,6 +39,7 @@ CoreInit::RegisterFunctions()
    registerMcpFunctions();
    registerMemoryFunctions();
    registerMembaseFunctions();
+   registerMemlistFunctions();
    registerMessageQueueFunctions();
    registerMutexFunctions();
    registerSemaphoreFunctions();

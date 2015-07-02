@@ -124,6 +124,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_ghs.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_mcp.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_membase.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_memlist.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_memory.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_messagequeue.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_mutex.cpp" />

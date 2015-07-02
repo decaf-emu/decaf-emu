@@ -23,13 +23,13 @@ gSystemHeap = 0;
 p32<void>
 OSAllocFromSystem(uint32_t size, int alignment)
 {
-   return MEMAllocFromExpHeapEx((ExpandedHeap*)(void*)gSystemHeap, size, alignment);
+   return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(gSystemHeap), size, alignment);
 }
 
 void
 OSFreeToSystem(p32<void> addr)
 {
-   MEMFreeToExpHeap((ExpandedHeap*)(void*)gSystemHeap, addr);
+   MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(gSystemHeap), addr);
 }
 
 HeapHandle
@@ -81,21 +81,21 @@ static p32<void>
 sMEMAllocFromDefaultHeap(uint32_t size)
 {
    auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
-   return MEMAllocFromExpHeap((ExpandedHeap*)(void*)heap, size);
+   return MEMAllocFromExpHeap(reinterpret_cast<ExpandedHeap*>(heap), size);
 }
 
 static p32<void>
 sMEMAllocFromDefaultHeapEx(uint32_t size, int alignment)
 {
-   auto handle = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
-   return MEMAllocFromExpHeapEx((ExpandedHeap*)(void*)handle, size, alignment);
+   auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
+   return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
 }
 
 static void
 sMEMFreeToDefaultHeap(p32<void> block)
 {
-   auto handle = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
-   return MEMFreeToExpHeap((ExpandedHeap*)(void*)handle, block);
+   auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
+   return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
 }
 
 void

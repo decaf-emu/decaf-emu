@@ -35,6 +35,7 @@ private:
    static void registerGhsFunctions();
    static void registerMcpFunctions();
    static void registerMembaseFunctions();
+   static void registerMemlistFunctions();
    static void registerMemoryFunctions();
    static void registerMessageQueueFunctions();
    static void registerMutexFunctions();

@@ -28,28 +28,26 @@ CHECK_SIZE(MemoryList, 0xc);
 
 #pragma pack(pop)
 
-// Offset to MemoryLink struct of object
 void
-MEMInitList(MemoryList* list, uint16_t offsetToMemoryLink);
-
-void
-MEMAppendListObject(MemoryList* list, void *object);
+MEMInitList(MemoryList *list, uint16_t offsetToMemoryLink);
 
 void
-MEMPrependListObject(MemoryList* list, void *object);
-
-// TODO: unk1 is probably object to insert before / after
-void
-MEMInsertListObject(MemoryList* list, void *unk1, void* object);
+MEMAppendListObject(MemoryList *list, void *object);
 
 void
-MEMRemoveListObject(MemoryList* list, void* object);
+MEMPrependListObject(MemoryList *list, void *object);
 
-void*
-MEMGetNextListObject(MemoryList* list, void* object);
+void
+MEMInsertListObject(MemoryList *list, void *before, void *object);
 
-void*
-MEMGetPrevListObject(MemoryList* list, void* object);
+void
+MEMRemoveListObject(MemoryList *list, void *object);
 
-void*
-MEMGetNthListObject(MemoryList* list, uint16_t n);
+void *
+MEMGetNextListObject(MemoryList *list, void *object);
+
+void *
+MEMGetPrevListObject(MemoryList *list, void *object);
+
+void *
+MEMGetNthListObject(MemoryList *list, uint16_t n);

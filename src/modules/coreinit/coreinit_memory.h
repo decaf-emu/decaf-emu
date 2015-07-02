@@ -67,7 +67,7 @@ CHECK_SIZE(MemoryHeapCommon, 0x34);
 
 #pragma pack(pop)
 
-using HeapHandle = p32<void>;
+using HeapHandle = void *;
 
 void
 CoreInitDefaultHeap();

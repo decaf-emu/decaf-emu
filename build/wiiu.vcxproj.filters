@@ -258,6 +258,9 @@
     <ClCompile Include="..\src\codetests.cpp">
       <Filter>Source Files\ppc</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_memlist.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
