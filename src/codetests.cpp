@@ -476,7 +476,7 @@ bool checkDoubleField(const TestStateField& field, double nv, double ov, const s
    return true;
 }
 
-bool executeCodeTest(ThreadState& state, uint32_t baseAddress, const TestData& test) {
+bool executeCodeTest(ThreadState& state, uint32_t baseAddress, const TestData& test, bool withJit) {
    TestState tState = testStateFromTest(test);
 
    for (auto i = 0; i < 32; ++i) {
@@ -514,7 +514,13 @@ bool executeCodeTest(ThreadState& state, uint32_t baseAddress, const TestData& t
    ThreadState originalState = state;
 
    // Execute test
-   gInterpreter.execute(&state, baseAddress + test.offset);
+   if (withJit) {
+      gInterpreter.setJitEnabled(true);
+      gInterpreter.execute(&state, baseAddress + test.offset);
+   } else {
+      gInterpreter.setJitEnabled(false);
+      gInterpreter.execute(&state, baseAddress + test.offset);
+   }
 
    bool result = true;
 
@@ -595,14 +601,24 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
          auto result = true;
 
          // Run test with all state set to 0x00
-         xLog() << "Running `" << test.first << "` with 0x00";
+         xLog() << "Running `" << test.first << "` with 0x00 and NO JIT";
          memset(&state, 0x00, sizeof(ThreadState));
-         result &= executeCodeTest(state, baseAddress, test.second);
+         result &= executeCodeTest(state, baseAddress, test.second, false);
+
+         // Run test with all state set to 0xFF
+         xLog() << "Running `" << test.first << "` with 0xFF and NO JIT";
+         memset(&state, 0xFF, sizeof(ThreadState));
+         result &= executeCodeTest(state, baseAddress, test.second, false);
+
+         // Run test with all state set to 0x00
+         xLog() << "Running `" << test.first << "` with 0x00 and JIT";
+         memset(&state, 0x00, sizeof(ThreadState));
+         result &= executeCodeTest(state, baseAddress, test.second, true);
      
          // Run test with all state set to 0xFF
-         xLog() << "Running `" << test.first << "` with 0xFF";
+         xLog() << "Running `" << test.first << "` with 0xFF and JIT";
          memset(&state, 0xFF, sizeof(ThreadState));
-         result &= executeCodeTest(state, baseAddress, test.second);
+         result &= executeCodeTest(state, baseAddress, test.second, true);
 
          // BUT WAS IT SUCCESS??
          if (!result) {
