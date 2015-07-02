@@ -11,21 +11,21 @@ updateConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& value, const
    asmjit::Label bbEnd2(a);
 
    a.mov(tmp, a.ppccr);
-   a.and_(tmp, 0xFFFFFFF0);
+   a.and_(tmp, 0x0FFFFFFF);
 
    a.cmp(value, 0);
    a.jl(bbNegative);
    a.jg(bbPositive);
    
-   a.or_(tmp, ConditionRegisterFlag::Zero);
+   a.or_(tmp, ConditionRegisterFlag::Zero << 28);
    a.jmp(bbEnd);
 
    a.bind(bbNegative);
-   a.or_(tmp, ConditionRegisterFlag::Negative);
+   a.or_(tmp, ConditionRegisterFlag::Negative << 28);
    a.jmp(bbEnd);
 
    a.bind(bbPositive);
-   a.or_(tmp, ConditionRegisterFlag::Positive);
+   a.or_(tmp, ConditionRegisterFlag::Positive << 28);
 
    a.bind(bbEnd);
 
@@ -33,7 +33,7 @@ updateConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& value, const
    a.and_(tmp2, XERegisterBits::StickyOV);
    a.cmp(tmp2, 0);
    a.je(bbEnd2);
-   a.or_(tmp, ConditionRegisterFlag::SummaryOverflow);
+   a.or_(tmp, ConditionRegisterFlag::SummaryOverflow << 28);
 
    a.bind(bbEnd2);
    a.mov(a.ppccr, tmp);
