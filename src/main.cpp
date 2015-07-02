@@ -38,13 +38,18 @@ int main(int argc, char **argv)
 
       gamePath = argv[2];
    } else if (command.compare("test") == 0) {
-      if (argc < 4) {
-         xLog() << "Usage: " << argv[0] << " test <powerpc-eabi-as.exe> <test directory>";
+      if (argc < 3) {
+         xLog() << "Usage: " << argv[0] << " test [<powerpc-eabi-as.exe>] <test directory>";
          return -1;
       }
 
-      assemblerPath = argv[2];
-      testDirectory = argv[3];
+      if (argc >= 4) {
+         assemblerPath = argv[2];
+         testDirectory = argv[3];
+      } else if (argc >= 3) {
+         assemblerPath = "powerpc-eabi-as.exe";
+         testDirectory = argv[2];
+      }
    } else {
       xLog() << "Usage: " << argv[0] << " <play|test> <options...>";
       return -1;
