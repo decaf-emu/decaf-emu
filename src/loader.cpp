@@ -384,7 +384,7 @@ processRelocations(UserModule &module, elf::Section &section, std::vector<elf::S
          *ptr16 = byte_swap<uint16_t>((value + 0x8000) >> 16);
          break;
       case elf::R_PPC_REL24:
-         *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03fffffc) | ((value - rela.offset) & 0x03fffffc));
+         *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03fffffc) | ((value - addr) & 0x03fffffc));
          break;
       default:
          xDebug() << "Unknown relocation type: " << type;
