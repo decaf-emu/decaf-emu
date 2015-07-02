@@ -38,13 +38,18 @@ int main(int argc, char **argv)
 
       gamePath = argv[2];
    } else if (command.compare("test") == 0) {
-      if (argc < 4) {
-         xLog() << "Usage: " << argv[0] << " test <powerpc-eabi-as.exe> <test directory>";
+      if (argc < 3) {
+         xLog() << "Usage: " << argv[0] << " test [<powerpc-eabi-as.exe>] <test directory>";
          return -1;
       }
 
-      assemblerPath = argv[2];
-      testDirectory = argv[3];
+      if (argc >= 4) {
+         assemblerPath = argv[2];
+         testDirectory = argv[3];
+      } else if (argc >= 3) {
+         assemblerPath = "powerpc-eabi-as.exe";
+         testDirectory = argv[2];
+      }
    } else {
       xLog() << "Usage: " << argv[0] << " <play|test> <options...>";
       return -1;
@@ -69,7 +74,10 @@ int main(int argc, char **argv)
 
    // If user used test command, execute tests
    if (assemblerPath.size() && testDirectory.size()){
-      return executeCodeTests(assemblerPath, testDirectory) ? 0 : -1;
+      auto testRes = executeCodeTests(assemblerPath, testDirectory);
+      xLog() << "";
+      system("PAUSE");
+      return testRes ? 0 : -1;
    }
 
    // Setup filesystem
@@ -163,6 +171,7 @@ int main(int argc, char **argv)
    OSFreeToSystem(stack1);
    OSFreeToSystem(stack2);
 
+   xLog() << "";
    system("PAUSE");
    return 0;
 }

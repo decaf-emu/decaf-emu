@@ -21,6 +21,10 @@ struct Target
       GPR,
       FPR,
       CRF,
+      XERSO,
+      XEROV,
+      XERCA,
+      XERBC
    };
 
    Type type;
@@ -202,6 +206,18 @@ decodeLHS(const std::string &in, Target &target)
       target.type = Target::CRF;
       target.id = std::stoul(in.substr(3));
       return true;
+   } else if (in == "xer.so") {
+      target.type = Target::XERSO;
+      return true;
+   } else if (in == "xer.ov") {
+      target.type = Target::XEROV;
+      return true;
+   } else if (in == "xer.ca") {
+      target.type = Target::XERCA;
+      return true;
+   } else if (in == "xer.bc") {
+      target.type = Target::XERBC;
+      return true;
    }
 
    return false;
@@ -323,12 +339,208 @@ parseTestSource(const std::string &path, TestFile &tests)
    return true;
 }
 
+struct TestStateField {
+   TestStateField() {
+      hasInput = false;
+      hasOutput = false;
+   }
+
+   void setInput(const Value& val) {
+      hasInput = true;
+      input = val;
+   }
+
+   void setOutput(const Value& val) {
+      hasOutput = true;
+      output = val;
+   }
+
+   bool hasInput;
+   bool hasOutput;
+   Value input;
+   Value output;
+};
+
+struct TestState {
+   TestStateField gpr[32];
+   TestStateField fpr[32];
+   TestStateField crf[8];
+   TestStateField xerso;
+   TestStateField xerov;
+   TestStateField xerca;
+   TestStateField xerbc;
+};
+
+TestState testStateFromTest(const TestData& test) {
+   TestState tState;
+
+   // Setup tState
+   for (auto &input : test.inputs) {
+      auto &target = input.first;
+      auto &value = input.second;
+
+      switch (target.type) {
+      case Target::GPR:
+         tState.gpr[target.id].setInput(value);
+         break;
+      case Target::FPR:
+         tState.fpr[target.id].setInput(value);
+         break;
+      case Target::CRF:
+         tState.crf[target.id].setInput(value);
+         break;
+      case Target::XERSO:
+         tState.xerso.setInput(value);
+         break;
+      case Target::XEROV:
+         tState.xerov.setInput(value);
+         break;
+      case Target::XERCA:
+         tState.xerca.setInput(value);
+         break;
+      case Target::XERBC:
+         tState.xerbc.setInput(value);
+         break;
+      }
+   }
+
+   for (auto &input : test.outputs) {
+      auto &target = input.first;
+      auto &value = input.second;
+
+      switch (target.type) {
+      case Target::GPR:
+         tState.gpr[target.id].setOutput(value);
+         break;
+      case Target::FPR:
+         tState.fpr[target.id].setOutput(value);
+         break;
+      case Target::CRF:
+         tState.crf[target.id].setOutput(value);
+         break;
+      case Target::XERSO:
+         tState.xerso.setOutput(value);
+         break;
+      case Target::XEROV:
+         tState.xerov.setOutput(value);
+         break;
+      case Target::XERCA:
+         tState.xerca.setOutput(value);
+         break;
+      case Target::XERBC:
+         tState.xerbc.setOutput(value);
+         break;
+      }
+   }
+
+   return tState;
+}
+
+bool checkIntField(const TestStateField& field, uint32_t nv, uint32_t ov, const std::string& name, int id = -1) {
+   std::string fullName = name;
+   if (id >= 0) {
+      fullName += "[" + std::to_string(id) + "]";
+   }
+
+   if (field.hasOutput) {
+      if (nv != field.output.uint32Value) {
+         xLog() << "Expected " << fullName << " to be " << Log::hex(field.output.uint32Value) << " but got " << Log::hex(nv);
+         return false;
+      }
+   } else {
+      if (nv != ov) {
+         xLog() << "Expected " << fullName << " to be unchanged (" << Log::hex(nv) << " != " << Log::hex(ov) << ")";
+         return false;
+      }
+   }
+   return true;
+}
+
+bool checkDoubleField(const TestStateField& field, double nv, double ov, const std::string& name, int id = -1) {
+   std::string fullName = name;
+   if (id >= 0) {
+      fullName += "[" + std::to_string(id) + "]";
+   }
+
+   if (field.hasOutput) {
+      if (nv != field.output.doubleValue) {
+         xLog() << "Expected " << fullName << " to be " << field.output.doubleValue << " but got " << nv;
+         return false;
+      }
+   } else {
+      if (*(uint64_t*)(&nv) != *(uint64_t*)(&ov)) {
+         xLog() << "Expected " << fullName << " to be unchanged (" << nv << " != " << ov << ")";
+         return false;
+      }
+   }
+   return true;
+}
+
+bool executeCodeTest(ThreadState& state, uint32_t baseAddress, const TestData& test) {
+   TestState tState = testStateFromTest(test);
+
+   for (auto i = 0; i < 32; ++i) {
+      auto field = tState.gpr[i];
+      if (field.hasInput) {
+         state.gpr[i] = field.input.uint32Value;
+      }
+   }
+   for (auto i = 0; i < 32; ++i) {
+      auto field = tState.fpr[i];
+      if (field.hasInput) {
+         state.fpr[i].value = field.input.doubleValue;
+      }
+   }
+   for (auto i = 0; i < 8; ++i) {
+      auto field = tState.crf[i];
+      if (field.hasInput) {
+         setCRF(&state, i, field.input.uint32Value);
+      }
+   }
+   if (tState.xerso.hasInput) {
+      state.xer.so = tState.xerso.input.uint32Value;
+   }
+   if (tState.xerov.hasInput) {
+      state.xer.ov = tState.xerov.input.uint32Value;
+   }
+   if (tState.xerca.hasInput) {
+      state.xer.ca = tState.xerca.input.uint32Value;
+   }
+   if (tState.xerbc.hasInput) {
+      state.xer.byteCount = tState.xerbc.input.uint32Value;
+   }
+
+   // Save the original state for comparison later
+   ThreadState originalState = state;
+
+   // Execute test
+   gInterpreter.execute(&state, baseAddress + test.offset);
+
+   bool result = true;
+
+   for (auto i = 0; i < 32; ++i) {
+      result &= checkIntField(tState.gpr[i], state.gpr[i], originalState.gpr[i], "GPR", i);
+   }
+   for (auto i = 0; i < 32; ++i) {
+      result &= checkDoubleField(tState.fpr[i], state.fpr[i].value, originalState.fpr[i].value, "FPR", i);
+   }
+   for (auto i = 0; i < 8; ++i) {
+      result &= checkIntField(tState.crf[i], getCRF(&state, i), getCRF(&originalState, i), "CRF", i);
+   }
+   result &= checkIntField(tState.xerso, state.xer.so, originalState.xer.so, "XER.SO");
+   result &= checkIntField(tState.xerov, state.xer.ov, originalState.xer.ov, "XER.OV");
+   result &= checkIntField(tState.xerca, state.xer.ca, originalState.xer.ca, "XER.CA");
+   result &= checkIntField(tState.xerbc, state.xer.byteCount, originalState.xer.byteCount, "XER.BC");
+  
+   return result;
+}
+
 bool
 executeCodeTests(const std::string &assembler, const std::string &directory)
 {
    uint32_t baseAddress;
 
-   if (!fs::exists(assembler)) {
+   if (std::system((assembler + " --version > nul").c_str()) != 0) {
       xError() << "Could not find assembler " << assembler;
       return false;
    }
@@ -378,51 +590,19 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
       memcpy(gMemory.translate(baseAddress), tests.code.data(), tests.code.size());
 
       // Execute tests
+      ThreadState state;
       for (auto &test : tests.tests) {
          auto result = true;
 
-         // Initialise thread state
-         ThreadState state;
-         memset(&state, 0, sizeof(ThreadState));
-
-         // Set inputs
-         for (auto &input : test.second.inputs) {
-            auto &target = input.first;
-            auto &value = input.second;
-
-            switch (target.type) {
-            case Target::GPR:
-               state.gpr[target.id] = value.uint32Value;
-               break;
-            case Target::FPR:
-               state.fpr[target.id].value = value.doubleValue;
-               break;
-            case Target::CRF:
-               setCRF(&state, target.id, value.uint32Value);
-               break;
-            }
-         }
-
-         // Execute test
-         gInterpreter.execute(&state, baseAddress + test.second.offset);
-
-         // Check outputs
-         for (auto &output : test.second.outputs) {
-            auto &target = output.first;
-            auto &value = output.second;
-
-            switch (target.type) {
-            case Target::GPR:
-               result &= (state.gpr[target.id] == value.uint32Value);
-               break;
-            case Target::FPR:
-               result &= (state.fpr[target.id].value == value.doubleValue);
-               break;
-            case Target::CRF:
-               result &= (getCRF(&state, target.id) == value.uint32Value);
-               break;
-            }
-         }
+         // Run test with all state set to 0x00
+         xLog() << "Running `" << test.first << "` with 0x00";
+         memset(&state, 0x00, sizeof(ThreadState));
+         result &= executeCodeTest(state, baseAddress, test.second);
+     
+         // Run test with all state set to 0xFF
+         xLog() << "Running `" << test.first << "` with 0xFF";
+         memset(&state, 0xFF, sizeof(ThreadState));
+         result &= executeCodeTest(state, baseAddress, test.second);
 
          // BUT WAS IT SUCCESS??
          if (!result) {
