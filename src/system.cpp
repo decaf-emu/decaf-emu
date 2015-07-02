@@ -3,7 +3,7 @@
 #include "system.h"
 #include "kernelmodule.h"
 #include "thread.h"
-#include "modules/coreinit/coreinit_memory.h"
+#include "modules/coreinit/coreinit_memheap.h"
 
 System gSystem;
 

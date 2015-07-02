@@ -2,7 +2,7 @@
 #include "thread.h"
 #include "interpreter.h"
 #include "system.h"
-#include "modules/coreinit/coreinit_memory.h"
+#include "modules/coreinit/coreinit_memheap.h"
 
 __declspec(thread) Thread *tCurrentThread = nullptr;
 static std::atomic<short> gThreadId = 1;

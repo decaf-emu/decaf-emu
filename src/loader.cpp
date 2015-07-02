@@ -470,7 +470,7 @@ Loader::loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t
    loadSections(sections);
 
    // Process symbols
-   // TODO: Support more than one symbol section
+   // TODO: Support more than one symbol section?
    for (auto i = 0u; i < sections.size(); ++i) {
       auto &section = sections[i];
 
@@ -495,22 +495,26 @@ Loader::loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t
 
       processRelocations(module, section, sections);
    }
+   
+   if (0) {
+      // Print address ranges
+      xLog() << "Loaded module!";
+      xLog() << "Code: " << Log::hex(module.codeAddressRange.first) << ":" << Log::hex(module.codeAddressRange.second);
+      xLog() << "Data: " << Log::hex(module.dataAddressRange.first) << ":" << Log::hex(module.dataAddressRange.second);
 
-   // Log our module sections
-   xLog() << "Loaded module!";
-   xLog() << "Code: " << Log::hex(module.codeAddressRange.first) << ":" << Log::hex(module.codeAddressRange.second);
-   xLog() << "Data: " << Log::hex(module.dataAddressRange.first) << ":" << Log::hex(module.dataAddressRange.second);
+      // Print all sections
+      for (auto i = 0u; i < module.sections.size(); ++i) {
+         auto section = module.sections[i];
+         xLog() << Log::hex(section->address) << " " << section->name << " " << Log::hex(section->size);
+      }
+      
+      // Print all symbols
+      for (auto i = 0u; i < module.symbols.size(); ++i) {
+         auto symbol = module.symbols[i];
 
-   for (auto i = 0u; i < module.sections.size(); ++i) {
-      auto section = module.sections[i];
-      xLog() << Log::hex(section->address) << " " << section->name << " " << Log::hex(section->size);
-   }
-
-   for (auto i = 0u; i < module.symbols.size(); ++i) {
-      auto symbol = module.symbols[i];
-
-      if (symbol && symbol->name.size()) {
-         xLog() << Log::hex(symbol->address) << " " << symbol->name;
+         if (symbol && symbol->name.size()) {
+            xLog() << Log::hex(symbol->address) << " " << symbol->name;
+         }
       }
    }
 

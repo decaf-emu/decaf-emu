@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "coreinit.h"
 #include "coreinit_dynload.h"
-#include "coreinit_memory.h"
+#include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
 #include "interpreter.h"
 #include "thread.h"

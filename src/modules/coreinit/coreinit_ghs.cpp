@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_ghs.h"
 #include "coreinit_spinlock.h"
-#include "coreinit_memory.h"
+#include "coreinit_memheap.h"
 
 static const auto GHS_FOPEN_MAX = 0x64;
 

@@ -1,7 +1,7 @@
 #include <chrono>
 #include "coreinit.h"
 #include "coreinit_systeminfo.h"
-#include "coreinit_memory.h"
+#include "coreinit_memheap.h"
 #include "coreinit_time.h"
 #include <Windows.h>
 

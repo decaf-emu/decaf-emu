@@ -1,5 +1,5 @@
 #include "coreinit.h"
-#include "coreinit_memory.h"
+#include "coreinit_memheap.h"
 
 CoreInit::CoreInit()
 {

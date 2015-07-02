@@ -123,7 +123,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_fs.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_ghs.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_mcp.cpp" />
-    <ClCompile Include="..\src\modules\coreinit\coreinit_membase.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_memheap.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_memlist.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_memory.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_messagequeue.cpp" />
@@ -176,6 +176,7 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_device.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_exception.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_fastmutex.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_memheap.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_memlist.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_semaphore.h" />
     <ClInclude Include="..\src\modules\gx2\gx2r_resource.h" />

@@ -65,7 +65,6 @@ OSGetMemBound(OSMemoryType type, uint32_t *addr, uint32_t *size)
 BOOL
 OSGetForegroundBucket(uint32_t *addr, uint32_t *size)
 {
-   // TODO: Return true if calling process is in foreground area
    *addr = byte_swap<uint32_t>(0xe0000000);
    *size = byte_swap<uint32_t>(0x04000000);
    return TRUE;
@@ -74,7 +73,6 @@ OSGetForegroundBucket(uint32_t *addr, uint32_t *size)
 BOOL
 OSGetForegroundBucketFreeArea(uint32_t *addr, uint32_t *size)
 {
-   // TODO: Return true if calling process is in foreground area
    *addr = byte_swap<uint32_t>(0xe0000000);
    *size = byte_swap<uint32_t>(0x02800000);
    return TRUE;

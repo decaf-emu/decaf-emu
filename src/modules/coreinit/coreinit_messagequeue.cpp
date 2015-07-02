@@ -1,13 +1,13 @@
 #include "coreinit.h"
-#include "coreinit_memory.h"
+#include "coreinit_memheap.h"
 #include "coreinit_messagequeue.h"
 #include "system.h"
 #include "util.h"
 
-MessageQueueHandle
+static MessageQueueHandle
 gSystemMessageQueue;
 
-OSMessage *
+static OSMessage *
 gSystemMessageArray;
 
 void

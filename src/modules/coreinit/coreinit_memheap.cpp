@@ -1,6 +1,7 @@
 #include <algorithm>
 #include "coreinit.h"
 #include "coreinit_memory.h"
+#include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
 #include "coreinit_frameheap.h"
 #include "system.h"
@@ -28,52 +29,6 @@ gMEM1Memlist = nullptr;
 
 static MemoryList *
 gMEM2Memlist = nullptr;
-
-void *
-OSAllocFromSystem(uint32_t size, int alignment)
-{
-   return MEMAllocFromExpHeapEx(gSystemHeap, size, alignment);
-}
-
-void
-OSFreeToSystem(void *addr)
-{
-   MEMFreeToExpHeap(gSystemHeap, addr);
-}
-
-HeapHandle
-MEMGetBaseHeapHandle(BaseHeapType type)
-{
-   if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
-      return gMemArenas[static_cast<size_t>(type)];
-   } else {
-      return 0;
-   }
-}
-
-HeapHandle
-MEMSetBaseHeapHandle(BaseHeapType type, HeapHandle handle)
-{
-   if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
-      auto previous = gMemArenas[static_cast<size_t>(type)];
-      gMemArenas[static_cast<size_t>(type)] = handle;
-      return previous;
-   } else {
-      return 0;
-   }
-}
-
-BaseHeapType
-MEMGetArena(HeapHandle handle)
-{
-   for (auto i = 0u; i < static_cast<size_t>(BaseHeapType::Max); ++i) {
-      if (gMemArenas[i] == handle) {
-         return static_cast<BaseHeapType>(i);
-      }
-   }
-
-   return BaseHeapType::Invalid;
-}
 
 static MemoryList *
 findListContainingHeap(CommonHeap *heap)
@@ -167,6 +122,40 @@ MEMFindContainHeap(void *block)
    return nullptr;
 }
 
+BaseHeapType
+MEMGetArena(HeapHandle handle)
+{
+   for (auto i = 0u; i < static_cast<size_t>(BaseHeapType::Max); ++i) {
+      if (gMemArenas[i] == handle) {
+         return static_cast<BaseHeapType>(i);
+      }
+   }
+
+   return BaseHeapType::Invalid;
+}
+
+HeapHandle
+MEMGetBaseHeapHandle(BaseHeapType type)
+{
+   if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
+      return gMemArenas[static_cast<size_t>(type)];
+   } else {
+      return 0;
+   }
+}
+
+HeapHandle
+MEMSetBaseHeapHandle(BaseHeapType type, HeapHandle handle)
+{
+   if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
+      auto previous = gMemArenas[static_cast<size_t>(type)];
+      gMemArenas[static_cast<size_t>(type)] = handle;
+      return previous;
+   } else {
+      return 0;
+   }
+}
+
 static void *
 sMEMAllocFromDefaultHeap(uint32_t size)
 {
@@ -186,6 +175,18 @@ sMEMFreeToDefaultHeap(p32<void> block)
 {
    auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
    return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
+}
+
+void *
+OSAllocFromSystem(uint32_t size, int alignment)
+{
+   return MEMAllocFromExpHeapEx(gSystemHeap, size, alignment);
+}
+
+void
+OSFreeToSystem(void *addr)
+{
+   MEMFreeToExpHeap(gSystemHeap, addr);
 }
 
 void

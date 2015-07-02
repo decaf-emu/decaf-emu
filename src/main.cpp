@@ -9,7 +9,7 @@
 #include "log.h"
 #include "memory.h"
 #include "modules/coreinit/coreinit.h"
-#include "modules/coreinit/coreinit_memory.h"
+#include "modules/coreinit/coreinit_memheap.h"
 #include "modules/gx2/gx2.h"
 #include "modules/nn_save/nn_save.h"
 #include "modules/zlib125/zlib125.h"

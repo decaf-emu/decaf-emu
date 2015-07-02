@@ -1,4 +1,5 @@
 #include "coreinit.h"
+#include "coreinit_memheap.h"
 #include "coreinit_frameheap.h"
 #include "system.h"
 
