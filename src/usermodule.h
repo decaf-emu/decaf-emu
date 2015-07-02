@@ -100,6 +100,8 @@ struct UserModule
       uint32_t size;
    };
 
+   uint32_t entryPoint;
+   uint32_t defaultStackSize;
    std::pair<uint32_t, uint32_t> codeAddressRange;
    std::pair<uint32_t, uint32_t> dataAddressRange;
    std::vector<SymbolInfo*> symbols;

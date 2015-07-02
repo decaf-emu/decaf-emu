@@ -414,7 +414,7 @@ processRelocations(UserModule &module, elf::Section &section, std::vector<elf::S
 }
 
 bool
-Loader::loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t size)
+Loader::loadRPL(UserModule &module, const char *buffer, size_t size)
 {
    auto in = BigEndianView { buffer, size };
    auto header = elf::Header { };
@@ -445,8 +445,8 @@ Loader::loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t
 
    // Update EntryInfo
    loadFileInfo(info, sections);
-   entry.address = header.entry;
-   entry.stackSize = info.stackSize;
+   module.entryPoint = header.entry;
+   module.defaultStackSize = info.stackSize;
 
    // Allocate code & data sections in memory
    auto codeStart = module.codeAddressRange.first;
@@ -466,6 +466,18 @@ Loader::loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t
    module.dataAddressRange.first = dataStart;
    module.dataAddressRange.second = dataStart + dataSize;
 
+   // Relocate entry point
+   for (auto i = 0u; i < sections.size(); ++i) {
+      auto &section = sections[i];
+
+      if (section.header.addr <= header.entry && section.header.addr + section.data.size() > header.entry) {
+         auto offset = section.section->address - section.header.addr;
+         xLog() << "Code offset = " << Log::hex(offset);
+         module.entryPoint = header.entry + offset;
+         break;
+      }
+   }
+
    // Load sections into memory
    loadSections(sections);
 
@@ -473,10 +485,6 @@ Loader::loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t
    // TODO: Support more than one symbol section?
    for (auto i = 0u; i < sections.size(); ++i) {
       auto &section = sections[i];
-
-      if (section.header.addr <= header.entry && section.header.addr + section.data.size() > header.entry) {
-         entry.address = header.entry + (static_cast<int32_t>(section.section->address) - static_cast<int32_t>(section.header.addr));
-      }
 
       if (section.header.type != elf::SHT_SYMTAB) {
          continue;

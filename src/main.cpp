@@ -88,7 +88,7 @@ play(const std::string &path)
    fs.mount("/vol", std::make_unique<HostFileSystem>(path + "/data"));
    gSystem.setFileSystem(&fs);
 
-   // Load cos.xml
+   // Read cos.xml
    pugi::xml_document doc;
    auto cosFile = fs.openFile("/vol/code/cos.xml", FileSystem::Input | FileSystem::Binary);
 
@@ -101,16 +101,17 @@ play(const std::string &path)
    auto buffer = std::vector<char>(size);
    cosFile->read(buffer.data(), size);
 
-   auto result = doc.load_buffer_inplace(buffer.data(), buffer.size());
+   // Parse cos.xml
+   auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
 
-   if (!result) {
+   if (!parseResult) {
       xError() << "Error parsing /vol/code/cos.xml";
       return false;
    }
 
    auto rpxPath = doc.child("app").child("argstr").child_value();
 
-   // Load rpx file
+   // Read rpx file
    auto rpxFile = fs.openFile(std::string("/vol/code/") + rpxPath, FileSystem::Input | FileSystem::Binary);
 
    if (!rpxFile) {
@@ -121,40 +122,39 @@ play(const std::string &path)
    buffer.resize(rpxFile->size());
    rpxFile->read(buffer.data(), buffer.size());
 
-   // Load the elf
-   auto loader = Loader {};
-   auto module = new UserModule {};
-   auto entry = EntryInfo {};
-   gSystem.registerModule(rpxPath, module);
+   // Load the rpl into memory
+   Loader loader;
+   UserModule module;
+   gSystem.registerModule(rpxPath, &module);
 
-   if (!loader.loadRPL(*module, entry, buffer.data(), buffer.size())) {
+   if (!loader.loadRPL(module, buffer.data(), buffer.size())) {
       xError() << "Could not load elf file";
       return false;
    }
 
    xLog() << "Succesfully loaded " << path;
-
-   auto stackSize = entry.stackSize;
+   auto entryPoint = module.entryPoint;
+   auto stackSize = module.defaultStackSize;
 
    // Allocate OSThread structures and stacks
-   OSThread *thread1 = OSAllocFromSystem<OSThread>();
-   uint8_t *stack1 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-   uint8_t *stack1top = stack1 + stackSize;
+   auto thread1 = OSAllocFromSystem<OSThread>();
+   auto stack1 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+   auto stack1top = stack1 + stackSize;
 
-   OSThread *thread0 = OSAllocFromSystem<OSThread>();
-   uint8_t *stack0 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-   uint8_t *stack0top = stack0 + stackSize;
+   auto thread0 = OSAllocFromSystem<OSThread>();
+   auto stack0 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+   auto stack0top = stack0 + stackSize;
 
-   OSThread *thread2 = OSAllocFromSystem<OSThread>();
-   uint8_t *stack2 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-   uint8_t *stack2top = stack0 + stackSize;
+   auto thread2 = OSAllocFromSystem<OSThread>();
+   auto stack2 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+   auto stack2top = stack0 + stackSize;
 
    // Create the idle threads for core0 and core2
    OSCreateThread(thread0, 0, 0, nullptr, stack0top, stackSize, 16, OSThreadAttributes::AffinityCPU0);
    OSCreateThread(thread2, 0, 0, nullptr, stack2top, stackSize, 16, OSThreadAttributes::AffinityCPU2);
 
    // Create the main thread for core1
-   OSCreateThread(thread1, entry.address, 0, nullptr, stack1top, stackSize, 16, OSThreadAttributes::AffinityCPU1);
+   OSCreateThread(thread1, entryPoint, 0, nullptr, stack1top, stackSize, 16, OSThreadAttributes::AffinityCPU1);
 
    // Set the default threads
    OSSetDefaultThread(0, thread0);
