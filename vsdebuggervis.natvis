@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <!-- be_val 8 -->
+  <Type Name="be_val&lt;unsigned char&gt;">
+    <DisplayString>
+      {mValue}
+    </DisplayString>
+  </Type>
+  <Type Name="be_val&lt;char&gt;">
+    <DisplayString>
+      {mValue}
+    </DisplayString>
+  </Type>
+
+  <!-- be_val 16 -->
+  <Type Name="be_val&lt;unsigned short&gt;">
+    <DisplayString>
+      {(((mValue &amp; 0xFF00) &gt;&gt;  8) |
+        ((mValue &amp; 0x00FF) &lt;&lt;  8))}
+    </DisplayString>
+  </Type>
+  <Type Name="be_val&lt;short&gt;">
+    <DisplayString>
+      {(((mValue &amp; 0xFF00) &gt;&gt;  8) |
+        ((mValue &amp; 0x00FF) &lt;&lt;  8))}
+    </DisplayString>
+  </Type>
+
+  <!-- be_val 32 -->
+  <Type Name="be_val&lt;unsigned int&gt;">
+    <DisplayString>
+      {(((mValue &amp; 0xFF000000) &gt;&gt; 24) |
+        ((mValue &amp; 0x00FF0000) &gt;&gt;  8) |
+        ((mValue &amp; 0x0000FF00) &lt;&lt;  8) |
+        ((mValue &amp; 0x000000FF) &lt;&lt; 24))}
+    </DisplayString>
+  </Type>
+  <Type Name="be_val&lt;int&gt;">
+    <DisplayString>
+      {(((mValue &amp; 0xFF000000) &gt;&gt; 24) |
+        ((mValue &amp; 0x00FF0000) &gt;&gt;  8) |
+        ((mValue &amp; 0x0000FF00) &lt;&lt;  8) |
+        ((mValue &amp; 0x000000FF) &lt;&lt; 24))}
+    </DisplayString>
+  </Type>
+
+  <!-- p32 -->
+  <Type Name="p32&lt;*, 0&gt;">
+    <DisplayString>{ mValue }</DisplayString>
+    <Expand>
+      <ExpandedItem>
+        *($T1*)(gMemory.mBase + mValue)
+      </ExpandedItem>
+    </Expand>
+  </Type>
+
+  <!-- Big Endian p32 -->
+  <Type Name="p32&lt;*, 1&gt;">
+    <DisplayString>
+      {(((mValue &amp; 0xFF000000) &gt;&gt; 24) |
+        ((mValue &amp; 0x00FF0000) &gt;&gt;  8) |
+        ((mValue &amp; 0x0000FF00) &lt;&lt;  8) |
+        ((mValue &amp; 0x000000FF) &lt;&lt; 24))}
+      </DisplayString>
+    <Expand>
+      <ExpandedItem>*($T1*)(gMemory.mBase +
+        (((mValue &amp; 0xFF000000) &gt;&gt; 24) |
+         ((mValue &amp; 0x00FF0000) &gt;&gt;  8) |
+         ((mValue &amp; 0x0000FF00) &lt;&lt;  8) |
+         ((mValue &amp; 0x000000FF) &lt;&lt; 24)))
+      </ExpandedItem>
+    </Expand>
+  </Type>
+</AutoVisualizer>
