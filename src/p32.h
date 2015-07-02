@@ -14,10 +14,15 @@ public:
    {
    }
 
+   p32(Type *value)
+   {
+      setPointer(value);
+   }
+
    template<typename OtherType, bool OtherEndian>
    p32(const p32<OtherType, OtherEndian> &rhs)
    {
-      *this = rhs;
+      setPointer(rhs.getPointer());
    }
 
    Type *getPointer() const
@@ -28,7 +33,13 @@ public:
 
    void setPointer(addr_t address)
    {
-      mValue = address;
+      mValue = BigEndian ? byte_swap(address) : address;
+   }
+
+   void setPointer(const void *ptr)
+   {
+      auto address = gMemory.untranslate(ptr);
+      mValue = BigEndian ? byte_swap(address) : address;
    }
 
    Type *operator->() const
@@ -44,20 +55,20 @@ public:
 
    p32 &operator=(Type *ptr)
    {
-      mValue = ptr ? gMemory.untranslate(ptr) : 0;
+      setPointer(ptr);
       return *this;
    }
 
    p32 &operator=(const Type *ptr)
    {
-      mValue = ptr ? gMemory.untranslate(ptr) : 0;
+      setPointer(ptr);
       return *this;
    }
 
    template<typename OtherType, bool OtherEndian>
    p32 &operator=(const p32<OtherType, OtherEndian> &rhs)
    {
-      mValue = static_cast<addr_t>(rhs);
+      setPointer(rhs.getPointer());
       return *this;
    }
 
@@ -73,7 +84,7 @@ public:
 
    explicit operator addr_t() const
    {
-      return mValue;
+      return BigEndian ? byte_swap(mValue) : mValue;
    }
 
 protected:
