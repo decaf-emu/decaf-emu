@@ -164,11 +164,11 @@ CHECK_SIZE(OSThread, 0x69c);
 
 using ThreadEntryPoint = wfunc_ptr<uint32_t, uint32_t, void*>;
 
-p32<OSThread>
+OSThread *
 OSGetCurrentThread();
 
 BOOL
-OSCreateThread(p32<OSThread> thread, ThreadEntryPoint entry, uint32_t argc, p32<void> argv, p32<void> stack, uint32_t stackSize, uint32_t priority, OSThreadAttributes::Flags attributes);
+OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, uint32_t priority, OSThreadAttributes::Flags attributes);
 
 void
 OSSetDefaultThread(uint32_t coreID, OSThread *thread);

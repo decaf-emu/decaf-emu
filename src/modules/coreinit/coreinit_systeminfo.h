@@ -20,7 +20,7 @@ CHECK_SIZE(OSSystemInfo, 0x20);
 extern Time
 gEpochTime;
 
-p32<OSSystemInfo>
+OSSystemInfo *
 OSGetSystemInfo();
 
 BOOL

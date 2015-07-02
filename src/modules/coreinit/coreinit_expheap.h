@@ -13,14 +13,14 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags);
 ExpandedHeap *
 MEMDestroyExpHeap(ExpandedHeap *heap);
 
-p32<void>
+void *
 MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size);
 
-p32<void>
+void *
 MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment);
 
 void
-MEMFreeToExpHeap(ExpandedHeap *heap, p32<void> address);
+MEMFreeToExpHeap(ExpandedHeap *heap, void *block);
 
 HeapMode
 MEMSetAllocModeForExpHeap(ExpandedHeap *heap, HeapMode mode);

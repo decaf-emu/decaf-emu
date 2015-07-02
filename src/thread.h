@@ -11,15 +11,15 @@ struct ThreadState;
 class Thread
 {
 public:
-   Thread(p32<OSThread> thread, ThreadEntryPoint entry,
-          uint32_t argc, p32<void> argv,
-          p32<uint8_t> stack, uint32_t stackSize,
+   Thread(OSThread *thread, ThreadEntryPoint entry,
+          uint32_t argc, void *argv,
+          uint8_t *stack, uint32_t stackSize,
           uint32_t priority, OSThreadAttributes::Flags attributes);
    ~Thread();
 
    uint32_t getCoreID() const;
    ThreadState *getThreadState() const;
-   p32<OSThread> getOSThread() const;
+   OSThread *getOSThread() const;
 
    uint32_t join();
    void resume();
@@ -37,7 +37,7 @@ private:
    std::string mName;
    uint32_t mStackBase;
    uint32_t mStackSize;
-   p32<OSThread> mOSThread;
+   OSThread *mOSThread;
 
    std::aligned_storage<sizeof(ThreadState), 16>::type mAlignedState;
    ThreadState *mState;

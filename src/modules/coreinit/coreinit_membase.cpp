@@ -17,19 +17,28 @@ pMEMFreeToDefaultHeap;
 static HeapHandle
 gMemArenas[static_cast<size_t>(BaseHeapType::Max)];
 
-static HeapHandle
-gSystemHeap = 0;
+static ExpandedHeap *
+gSystemHeap = nullptr;
 
-p32<void>
+static MemoryList *
+gForegroundMemlist = nullptr;
+
+static MemoryList *
+gMEM1Memlist = nullptr;
+
+static MemoryList *
+gMEM2Memlist = nullptr;
+
+void *
 OSAllocFromSystem(uint32_t size, int alignment)
 {
-   return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(gSystemHeap), size, alignment);
+   return MEMAllocFromExpHeapEx(gSystemHeap, size, alignment);
 }
 
 void
-OSFreeToSystem(p32<void> addr)
+OSFreeToSystem(void *addr)
 {
-   MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(gSystemHeap), addr);
+   MEMFreeToExpHeap(gSystemHeap, addr);
 }
 
 HeapHandle
@@ -67,24 +76,24 @@ MEMGetArena(HeapHandle handle)
 }
 
 void
-MEMiInitHeapHead(MemoryHeapCommon *heap, HeapType type, uint32_t dataStart, uint32_t dataEnd)
+MEMiInitHeapHead(CommonHeap *heap, HeapType type, uint32_t dataStart, uint32_t dataEnd)
 {
    heap->tag = type;
-   MEMInitList(&heap->list, offsetof(MemoryHeapCommon, link));
+   MEMInitList(&heap->list, offsetof(CommonHeap, link));
    heap->dataStart = dataStart;
    heap->dataEnd = dataEnd;
    OSInitSpinLock(&heap->lock);
    heap->flags = 0;
 }
 
-static p32<void>
+static void *
 sMEMAllocFromDefaultHeap(uint32_t size)
 {
    auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
    return MEMAllocFromExpHeap(reinterpret_cast<ExpandedHeap*>(heap), size);
 }
 
-static p32<void>
+static void *
 sMEMAllocFromDefaultHeapEx(uint32_t size, int alignment)
 {
    auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
@@ -138,12 +147,27 @@ CoreFreeDefaultHeap()
    // Delete all base heaps
    for (auto i = 0u; i < static_cast<size_t>(BaseHeapType::Max); ++i) {
       if (gMemArenas[i]) {
-         // TODO: Call destroy heap
+         auto heap = reinterpret_cast<CommonHeap*>(gMemArenas[i]);
+         switch (heap->tag) {
+         case HeapType::ExpandedHeap:
+            MEMDestroyExpHeap(reinterpret_cast<ExpandedHeap*>(heap));
+            break;
+         case HeapType::FrameHeap:
+            MEMDestroyFrmHeap(reinterpret_cast<FrameHeap*>(heap));
+            break;
+         case HeapType::UnitHeap:
+         case HeapType::UserHeap:
+         case HeapType::BlockHeap:
+         default:
+            assert(false);
+         }
+
          gMemArenas[i] = nullptr;
       }
    }
 
    // Delete system heap
+   MEMDestroyExpHeap(gSystemHeap);
    gSystemHeap = nullptr;
 
    // Free function pointers
@@ -185,12 +209,16 @@ CoreInit::registerMembaseFunctions()
 void
 CoreInit::initialiseMembase()
 {
-   pMEMAllocFromDefaultHeap = OSAllocFromSystem(sizeof(uint32_t), 4);
+   pMEMAllocFromDefaultHeap = make_p32<void>(OSAllocFromSystem(sizeof(uint32_t)));
    *pMEMAllocFromDefaultHeap = findExportAddress("sMEMAllocFromDefaultHeap");
 
-   pMEMAllocFromDefaultHeapEx = OSAllocFromSystem(sizeof(uint32_t), 4);
+   pMEMAllocFromDefaultHeapEx = make_p32<void>(OSAllocFromSystem(sizeof(uint32_t)));
    *pMEMAllocFromDefaultHeapEx = findExportAddress("sMEMAllocFromDefaultHeapEx");
 
-   pMEMFreeToDefaultHeap = OSAllocFromSystem(sizeof(uint32_t), 4);
+   pMEMFreeToDefaultHeap = make_p32<void>(OSAllocFromSystem(sizeof(uint32_t)));
    *pMEMFreeToDefaultHeap = findExportAddress("sMEMFreeToDefaultHeap");
+
+   gForegroundMemlist = OSAllocFromSystem<MemoryList>();
+   gMEM1Memlist = OSAllocFromSystem<MemoryList>();
+   gMEM2Memlist = OSAllocFromSystem<MemoryList>();
 }

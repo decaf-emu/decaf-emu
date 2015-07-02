@@ -13,7 +13,7 @@ OSInitSpinLock(OSSpinLock * spinlock)
 BOOL
 OSAcquireSpinLock(OSSpinLock * spinlock)
 {
-   auto owner = static_cast<uint32_t>(OSGetCurrentThread());
+   auto owner = gMemory.untranslate(OSGetCurrentThread());
    auto expected = 0u;
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
@@ -32,7 +32,7 @@ OSAcquireSpinLock(OSSpinLock * spinlock)
 BOOL
 OSTryAcquireSpinLock(OSSpinLock * spinlock)
 {
-   auto owner = static_cast<uint32_t>(OSGetCurrentThread());
+   auto owner = gMemory.untranslate(OSGetCurrentThread());
    auto expected = 0u;
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
@@ -57,7 +57,7 @@ OSTryAcquireSpinLockWithTimeout(OSSpinLock * spinlock, int64_t timeout)
 BOOL
 OSReleaseSpinLock(OSSpinLock * spinlock)
 {
-   auto owner = static_cast<uint32_t>(OSGetCurrentThread());
+   auto owner = gMemory.untranslate(OSGetCurrentThread());
 
    if (spinlock->recursion > 0) {
       --spinlock->recursion;

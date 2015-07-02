@@ -134,17 +134,17 @@ int main(int argc, char **argv)
    auto stackSize = entry.stackSize;
 
    // Allocate OSThread structures and stacks
-   p32<OSThread> thread1 = OSAllocFromSystem(sizeof(OSThread));
-   p32<void> stack1 = OSAllocFromSystem(stackSize, 8);
-   p32<void> stack1top = make_p32<void>(reinterpret_cast<uint8_t*>(stack1.getPointer()) + stackSize);
+   OSThread *thread1 = OSAllocFromSystem<OSThread>();
+   uint8_t *stack1 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+   uint8_t *stack1top = stack1 + stackSize;
 
-   p32<OSThread> thread0 = OSAllocFromSystem(sizeof(OSThread));
-   p32<void> stack0 = OSAllocFromSystem(stackSize, 8);
-   p32<void> stack0top = make_p32<void>(reinterpret_cast<uint8_t*>(stack0.getPointer()) + stackSize);
+   OSThread *thread0 = OSAllocFromSystem<OSThread>();
+   uint8_t *stack0 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+   uint8_t *stack0top = stack0 + stackSize;
 
-   p32<OSThread> thread2 = OSAllocFromSystem(sizeof(OSThread));
-   p32<void> stack2 = OSAllocFromSystem(stackSize, 8);
-   p32<void> stack2top = make_p32<void>(reinterpret_cast<uint8_t*>(stack2.getPointer()) + stackSize);
+   OSThread *thread2 = OSAllocFromSystem<OSThread>();
+   uint8_t *stack2 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+   uint8_t *stack2top = stack0 + stackSize;
 
    // Create the idle threads for core0 and core2
    OSCreateThread(thread0, 0, 0, nullptr, stack0top, stackSize, 16, OSThreadAttributes::AffinityCPU0);

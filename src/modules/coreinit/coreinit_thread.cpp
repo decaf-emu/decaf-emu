@@ -9,7 +9,7 @@
 static OSThread *
 gDefaultThreads[3];
 
-p32<OSThread>
+OSThread *
 OSGetCurrentThread()
 {
    return Thread::getCurrentThread()->getOSThread();
@@ -84,7 +84,7 @@ OSYieldThread()
 }
 
 BOOL
-OSCreateThread(p32<OSThread> osThread, ThreadEntryPoint entry, uint32_t argc, p32<void> argv, p32<void> stack, uint32_t stackSize, uint32_t priority, OSThreadAttributes::Flags attributes)
+OSCreateThread(OSThread *osThread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, uint32_t priority, OSThreadAttributes::Flags attributes)
 {
    auto thread = new Thread(osThread, entry, argc, argv, stack, stackSize, priority, attributes);
    gSystem.addThread(thread);

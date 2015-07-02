@@ -8,13 +8,13 @@
 int64_t
 gEpochTime;
 
-static p32<OSSystemInfo>
+OSSystemInfo *
 gSystemInfo;
 
 static BOOL
 gScreenCapturePermission;
 
-p32<OSSystemInfo>
+OSSystemInfo *
 OSGetSystemInfo()
 {
    return gSystemInfo;
@@ -65,7 +65,7 @@ CoreInit::initialiseSystemInformation()
    */
 
    // Setup gSystemInfo
-   gSystemInfo = OSAllocFromSystem(sizeof(OSSystemInfo), 4);
+   gSystemInfo = OSAllocFromSystem<OSSystemInfo>();
    gSystemInfo->clockSpeed = static_cast<uint32_t>(CLOCK_SPEED);
 
    // Calculate the WiiU epoch (01/01/2000)

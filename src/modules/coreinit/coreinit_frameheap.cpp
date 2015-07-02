@@ -12,7 +12,7 @@ struct FrameHeapState
    p32<FrameHeapState> previous;
 };
 
-struct FrameHeap : MemoryHeapCommon
+struct FrameHeap : CommonHeap
 {
    uint32_t top;
    uint32_t bottom;

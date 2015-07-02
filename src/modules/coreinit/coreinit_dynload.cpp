@@ -91,7 +91,8 @@ int
 OSDynLoad_MemAlloc(int size, int alignment, uint32_t *outPtr)
 {
    auto handle = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
-   *outPtr = static_cast<uint32_t>(MEMAllocFromExpHeapEx((ExpandedHeap*)(void*)handle, size, alignment));
+   auto memory = MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(handle), size, alignment);
+   *outPtr = gMemory.untranslate(memory);
    return 0;
 
    // TODO: Fix user dynload callback

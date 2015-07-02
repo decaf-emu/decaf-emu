@@ -7,15 +7,15 @@
 __declspec(thread) Thread *tCurrentThread = nullptr;
 static std::atomic<short> gThreadId = 1;
 
-Thread::Thread(p32<OSThread> thread, ThreadEntryPoint entry,
-               uint32_t argc, p32<void> argv,
-               p32<uint8_t> stack, uint32_t stackSize,
+Thread::Thread(OSThread *thread, ThreadEntryPoint entry,
+               uint32_t argc, void *argv,
+               uint8_t *stack, uint32_t stackSize,
                uint32_t priority, OSThreadAttributes::Flags attributes) :
    mOSThread(thread)
 {
    // Setup stack
    mStackSize = stackSize;
-   mStackBase = static_cast<uint32_t>(stack) - stackSize;
+   mStackBase = gMemory.untranslate(stack) - stackSize;
 
    // Setup thread state
    mState = reinterpret_cast<ThreadState*>(&mAlignedState);
@@ -27,7 +27,7 @@ Thread::Thread(p32<OSThread> thread, ThreadEntryPoint entry,
    // Setup registers
    mState->gpr[1] = mStackBase + mStackSize;
    mState->gpr[3] = argc;
-   mState->gpr[4] = static_cast<uint32_t>(argv);
+   mState->gpr[4] = gMemory.untranslate(argv);
 
    // Fill out data of OSThread
    mOSThread->entryPoint = entry;
@@ -76,7 +76,7 @@ Thread::getThreadState() const
    return mState;
 }
 
-p32<OSThread>
+OSThread *
 Thread::getOSThread() const
 {
    return mOSThread;

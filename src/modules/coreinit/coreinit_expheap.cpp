@@ -14,7 +14,7 @@ struct ExpandedHeapBlock
    p32<ExpandedHeapBlock> prev;
 };
 
-struct ExpandedHeap : MemoryHeapCommon
+struct ExpandedHeap : CommonHeap
 {
    uint32_t size;
    uint32_t bottom;
@@ -152,13 +152,13 @@ MEMDestroyExpHeap(ExpandedHeap *heap)
    return heap;
 }
 
-p32<void>
+void *
 MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size)
 {
    return MEMAllocFromExpHeapEx(heap, size, 4);
 }
 
-p32<void>
+void *
 MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 {
    p32<ExpandedHeapBlock> freeBlock = nullptr, usedBlock = nullptr;
@@ -275,14 +275,16 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 }
 
 void
-MEMFreeToExpHeap(ExpandedHeap *heap, p32<void> address)
+MEMFreeToExpHeap(ExpandedHeap *heap, void *address)
 {
-   if (!address) {
+   auto base = gMemory.untranslate(address);
+
+   if (!base) {
       return;
    }
 
    // Get the block header
-   auto base = static_cast<uint32_t>(address) - static_cast<uint32_t>(sizeof(ExpandedHeapBlock));
+   base = base - static_cast<uint32_t>(sizeof(ExpandedHeapBlock));
    auto block = make_p32<ExpandedHeapBlock>(base);
 
    // Remove from used list

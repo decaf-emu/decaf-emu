@@ -45,7 +45,7 @@ enum class HeapType : uint32_t
 
 #pragma pack(push, 1)
 
-struct MemoryHeapCommon
+struct CommonHeap
 {
    be_val<HeapType> tag;
    MemoryLink link;
@@ -56,14 +56,14 @@ struct MemoryHeapCommon
    be_val<uint32_t> flags;
 };
 
-CHECK_OFFSET(MemoryHeapCommon, 0x0, tag);
-CHECK_OFFSET(MemoryHeapCommon, 0x4, link);
-CHECK_OFFSET(MemoryHeapCommon, 0xc, list);
-CHECK_OFFSET(MemoryHeapCommon, 0x18, dataStart);
-CHECK_OFFSET(MemoryHeapCommon, 0x1c, dataEnd);
-CHECK_OFFSET(MemoryHeapCommon, 0x20, lock);
-CHECK_OFFSET(MemoryHeapCommon, 0x30, flags);
-CHECK_SIZE(MemoryHeapCommon, 0x34);
+CHECK_OFFSET(CommonHeap, 0x0, tag);
+CHECK_OFFSET(CommonHeap, 0x4, link);
+CHECK_OFFSET(CommonHeap, 0xc, list);
+CHECK_OFFSET(CommonHeap, 0x18, dataStart);
+CHECK_OFFSET(CommonHeap, 0x1c, dataEnd);
+CHECK_OFFSET(CommonHeap, 0x20, lock);
+CHECK_OFFSET(CommonHeap, 0x30, flags);
+CHECK_SIZE(CommonHeap, 0x34);
 
 #pragma pack(pop)
 
@@ -76,7 +76,7 @@ void
 CoreFreeDefaultHeap();
 
 void
-MEMiInitHeapHead(MemoryHeapCommon *heap, HeapType type, uint32_t dataStart, uint32_t dataEnd);
+MEMiInitHeapHead(CommonHeap *heap, HeapType type, uint32_t dataStart, uint32_t dataEnd);
 
 HeapHandle
 MEMGetBaseHeapHandle(BaseHeapType arena);
@@ -87,11 +87,18 @@ MEMSetBaseHeapHandle(BaseHeapType arena, HeapHandle handle);
 BaseHeapType
 MEMGetArena(HeapHandle handle);
 
-p32<void>
+void *
 OSAllocFromSystem(uint32_t size, int alignment = 4);
 
+template<typename Type>
+Type *
+OSAllocFromSystem(int alignment = 4)
+{
+   return new (OSAllocFromSystem(sizeof(Type), alignment)) Type();
+}
+
 void
-OSFreeToSystem(p32<void> addr);
+OSFreeToSystem(void *addr);
 
 void *
 OSBlockMove(void *dst, const void *src, size_t size, BOOL flush);

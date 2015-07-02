@@ -5,8 +5,11 @@
 
 static const auto GHS_FOPEN_MAX = 0x64;
 
-p32<OSSpinLock> ghsSpinLock;
-thread_local uint32_t gErrno = 0;
+static OSSpinLock *
+ghsSpinLock;
+
+thread_local uint32_t
+ghsErrno = 0;
 
 BOOL
 ghsLock()
@@ -29,13 +32,13 @@ ghs_flock_ptr()
 uint32_t
 ghs_get_errno()
 {
-   return gErrno;
+   return ghsErrno;
 }
 
 void
 ghs_set_errno(uint32_t err)
 {
-   gErrno = err;
+   ghsErrno = err;
 }
 
 void
@@ -67,6 +70,6 @@ CoreInit::registerGhsFunctions()
 void
 CoreInit::initialiseGHS()
 {
-   ghsSpinLock = OSAllocFromSystem(sizeof(OSSpinLock), 4);
+   ghsSpinLock = OSAllocFromSystem<OSSpinLock>();
    OSInitSpinLock(ghsSpinLock);
 }
