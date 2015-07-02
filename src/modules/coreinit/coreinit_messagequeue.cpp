@@ -1,53 +1,51 @@
 #include "coreinit.h"
 #include "coreinit_memory.h"
 #include "coreinit_messagequeue.h"
+#include "system.h"
 #include "util.h"
 
-p32<WMessageQueue>
+MessageQueueHandle
 gSystemMessageQueue;
 
-p32<OSMessage>
+OSMessage *
 gSystemMessageArray;
 
 void
-OSInitMessageQueue(WMessageQueue *queue, p32<OSMessage> messages, int32_t size)
+OSInitMessageQueue(MessageQueueHandle handle, OSMessage *messages, int32_t size)
 {
-   OSInitMessageQueueEx(queue, messages, size, nullptr);
+   OSInitMessageQueueEx(handle, messages, size, nullptr);
 }
 
 void
-OSInitMessageQueueEx(WMessageQueue *queue, p32<OSMessage> messages, int32_t size, char *name)
+OSInitMessageQueueEx(MessageQueueHandle handle, OSMessage *messages, int32_t size, char *name)
 {
-   new (queue) WMessageQueue;
-   queue->tag = WMessageQueue::Tag;
+   auto queue = gSystem.addSystemObject<MessageQueue>(handle);
    queue->name = name;
    queue->first = 0;
    queue->count = 0;
    queue->size = size;
    queue->messages = messages;
-   queue->mutex = std::make_unique<std::mutex>();
-   queue->waitRead = std::make_unique<std::condition_variable>();
-   queue->waitSend = std::make_unique<std::condition_variable>();
 }
 
 // Insert at back of message queue
 BOOL
-OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags flags)
+OSSendMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags)
 {
-   std::unique_lock<std::mutex> lock { *queue->mutex };
+   auto queue = gSystem.getSystemObject<MessageQueue>(handle);
+   std::unique_lock<std::mutex> lock { queue->mutex };
 
-   if (!(flags & OSMessageFlags::Blocking) && queue->count == queue->size) {
+   if (!(flags & MessageFlags::Blocking) && queue->count == queue->size) {
       // Do not wait for space
       return FALSE;
    }
 
    // Wait for space
    while (queue->count == queue->size) {
-      queue->waitSend->wait(lock);
+      queue->waitSend.wait(lock);
    }
 
    auto index = (queue->first + queue->count) % queue->size;
-   auto dst = make_p32<OSMessage>(static_cast<uint32_t>(queue->messages) + index * sizeof(OSMessage));
+   auto dst = static_cast<OSMessage*>(queue->messages) + index;
 
    // Copy into message array
    memcpy(dst, message, sizeof(OSMessage));
@@ -55,25 +53,26 @@ OSSendMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flag
 
    // Wake up anyone waiting for message to read
    lock.unlock();
-   queue->waitRead->notify_one();
+   queue->waitRead.notify_one();
    return TRUE;
 }
 
 // Insert at front of message queue
 BOOL
-OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags flags)
+OSJamMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags)
 {
-   std::unique_lock<std::mutex> lock { *queue->mutex };
+   auto queue = gSystem.getSystemObject<MessageQueue>(handle);
+   std::unique_lock<std::mutex> lock { queue->mutex };
    uint32_t index;
 
-   if (!(flags & OSMessageFlags::Blocking) && queue->count == queue->size) {
+   if (!(flags & MessageFlags::Blocking) && queue->count == queue->size) {
       // Do not wait for space
       return FALSE;
    }
 
    // Wait for space
    while (queue->count == queue->size) {
-      queue->waitSend->wait(lock);
+      queue->waitSend.wait(lock);
    }
 
    // Get index before front
@@ -84,7 +83,7 @@ OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags
    }
 
    // Copy into message array
-   auto dst = make_p32<OSMessage>(static_cast<uint32_t>(queue->messages) + index * sizeof(OSMessage));
+   auto dst = static_cast<OSMessage*>(queue->messages) + index;
    memcpy(dst, message, sizeof(OSMessage));
 
    // Update queue start and count
@@ -93,26 +92,27 @@ OSJamMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags
 
    // Wake up anyone waiting for message to read
    lock.unlock();
-   queue->waitRead->notify_one();
+   queue->waitRead.notify_one();
    return TRUE;
 }
 
 // Read from front of message queue
 BOOL
-OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::Flags flags)
+OSReceiveMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags)
 {
-   std::unique_lock<std::mutex> lock { *queue->mutex };
+   auto queue = gSystem.getSystemObject<MessageQueue>(handle);
+   std::unique_lock<std::mutex> lock { queue->mutex };
 
-   if (!(flags & OSMessageFlags::Blocking) && queue->count == 0) {
+   if (!(flags & MessageFlags::Blocking) && queue->count == 0) {
       return FALSE;
    }
 
    while (queue->count == 0) {
-      queue->waitRead->wait(lock);
+      queue->waitRead.wait(lock);
    }
 
    auto index = queue->first;
-   auto src = make_p32<OSMessage>(static_cast<uint32_t>(queue->messages) + index * sizeof(OSMessage));
+   auto src = static_cast<OSMessage*>(queue->messages) + index;
 
    // Copy from message array
    memcpy(message, src, sizeof(OSMessage));
@@ -121,27 +121,28 @@ OSReceiveMessage(WMessageQueue *queue, p32<OSMessage> message, OSMessageFlags::F
 
    // Wake up anyone waiting for space to send
    lock.unlock();
-   queue->waitSend->notify_one();
+   queue->waitSend.notify_one();
    return TRUE;
 }
 
 // Peek from front of message queue
 BOOL
-OSPeekMessage(WMessageQueue *queue, p32<OSMessage> message)
+OSPeekMessage(MessageQueueHandle handle, OSMessage *message)
 {
-   std::unique_lock<std::mutex> lock { *queue->mutex };
+   auto queue = gSystem.getSystemObject<MessageQueue>(handle);
+   std::unique_lock<std::mutex> lock { queue->mutex };
 
    if (queue->count == 0) {
       return FALSE;
    }
 
    // Copy from message array
-   auto src = make_p32<OSMessage>(static_cast<uint32_t>(queue->messages) + queue->first * sizeof(OSMessage));
+   auto src = static_cast<OSMessage*>(queue->messages) + queue->first;
    memcpy(message, src, sizeof(OSMessage));
    return TRUE;
 }
 
-p32<WMessageQueue>
+MessageQueueHandle
 OSGetSystemMessageQueue()
 {
    return gSystemMessageQueue;
@@ -162,7 +163,7 @@ CoreInit::registerMessageQueueFunctions()
 void
 CoreInit::initialiseMessageQueues()
 {
-   gSystemMessageQueue = OSAllocFromSystem(sizeof(OSMessageQueue), 4);
-   gSystemMessageArray = OSAllocFromSystem(16 * sizeof(OSMessage), 4);
+   gSystemMessageQueue = make_p32<void>(OSAllocFromSystem<SystemObjectHeader>());
+   gSystemMessageArray = reinterpret_cast<OSMessage*>(OSAllocFromSystem(16 * sizeof(OSMessage)));
    OSInitMessageQueue(gSystemMessageQueue, gSystemMessageArray, 16);
 }
