@@ -10,6 +10,7 @@
 #include "log.h"
 #include "memory.h"
 #include "modules/coreinit/coreinit_dynload.h"
+#include "modules/coreinit/coreinit_memory.h"
 #include "system.h"
 #include "kernelmodule.h"
 #include "usermodule.h"
@@ -450,31 +451,39 @@ Loader::loadRPL(UserModule &module, const char *buffer, size_t size)
 
    // Allocate code & data sections in memory
    auto codeStart = module.codeAddressRange.first;
-   auto codeSize = 0x0e000000 - 0x43;
-   OSDynLoad_MemAlloc(codeSize, 4, &codeStart);
+   auto codeSize = 0x0e000000;
+   gMemory.alloc(codeStart, codeSize);
 
    auto dataStart = module.dataAddressRange.first;
    auto dataSize = module.dataAddressRange.second - module.dataAddressRange.first;
-   OSDynLoad_MemAlloc(dataSize, 4, &dataStart);
+   auto dataEnd = alignUp(dataStart + dataSize, 4096);
+   gMemory.alloc(dataStart, dataSize);
 
-   // Relocate sections
-   relocateSections(sections, module.codeAddressRange.first, codeStart, module.dataAddressRange.first, dataStart);
+   // Update MEM2 memory bounds
+   be_val<uint32_t> mem2start, mem2size;
+   OSGetMemBound(OSMemoryType::MEM2, &mem2start, &mem2size);
+   OSSetMemBound(OSMemoryType::MEM2, dataEnd, mem2size - (dataEnd - mem2start));
 
-   module.codeAddressRange.first = codeStart;
-   module.codeAddressRange.second = codeStart + codeSize;
+   if (0) {
+      // Relocate sections
+      relocateSections(sections, module.codeAddressRange.first, codeStart, module.dataAddressRange.first, dataStart);
 
-   module.dataAddressRange.first = dataStart;
-   module.dataAddressRange.second = dataStart + dataSize;
+      module.codeAddressRange.first = codeStart;
+      module.codeAddressRange.second = codeStart + codeSize;
 
-   // Relocate entry point
-   for (auto i = 0u; i < sections.size(); ++i) {
-      auto &section = sections[i];
+      module.dataAddressRange.first = dataStart;
+      module.dataAddressRange.second = dataStart + dataSize;
 
-      if (section.header.addr <= header.entry && section.header.addr + section.data.size() > header.entry) {
-         auto offset = section.section->address - section.header.addr;
-         xLog() << "Code offset = " << Log::hex(offset);
-         module.entryPoint = header.entry + offset;
-         break;
+      // Relocate entry point
+      for (auto i = 0u; i < sections.size(); ++i) {
+         auto &section = sections[i];
+
+         if (section.header.addr <= header.entry && section.header.addr + section.data.size() > header.entry) {
+            auto offset = section.section->address - section.header.addr;
+            xLog() << "Code offset = " << Log::hex(offset);
+            module.entryPoint = header.entry + offset;
+            break;
+         }
       }
    }
 

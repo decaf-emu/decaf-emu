@@ -3,7 +3,6 @@
 
 CoreInit::CoreInit()
 {
-   CoreInitDefaultHeap();
 }
 
 CoreInit::~CoreInit()

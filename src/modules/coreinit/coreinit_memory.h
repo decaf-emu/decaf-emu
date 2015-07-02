@@ -15,10 +15,13 @@ void *
 OSBlockSet(void *dst, uint8_t val, size_t size);
 
 BOOL
-OSGetForegroundBucket(uint32_t *addr, uint32_t *size);
+OSGetForegroundBucket(be_val<uint32_t> *addr, be_val<uint32_t> *size);
 
 BOOL
-OSGetForegroundBucketFreeArea(uint32_t *addr, uint32_t *size);
+OSGetForegroundBucketFreeArea(be_val<uint32_t> *addr, be_val<uint32_t> *size);
 
 int
-OSGetMemBound(OSMemoryType type, uint32_t *addr, uint32_t *size);
+OSGetMemBound(OSMemoryType type, be_val<uint32_t> *addr, be_val<uint32_t> *size);
+
+int
+OSSetMemBound(OSMemoryType type, uint32_t start, uint32_t size);

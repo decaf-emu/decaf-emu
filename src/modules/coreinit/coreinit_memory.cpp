@@ -37,21 +37,46 @@ coreinit_memset(void *dst, int val, size_t size)
    return dst;
 }
 
+uint32_t gMem1Start = 0xf4000000;
+uint32_t gMem1Size  = 0x02000000;
+
+uint32_t gMem2Start = 0x02000000;
+uint32_t gMem2Size  = 0x40000000;
+
 int
-OSGetMemBound(OSMemoryType type, uint32_t *addr, uint32_t *size)
+OSGetMemBound(OSMemoryType type, be_val<uint32_t> *addr, be_val<uint32_t> *size)
 {
    switch (type) {
    case OSMemoryType::MEM1:
-      *addr = byte_swap<uint32_t>(0xf4000000);
-      *size = byte_swap<uint32_t>(0x02000000);
+      *addr = gMem1Start;
+      *size = gMem1Size;
       break;
    case OSMemoryType::MEM2:
-      *addr = byte_swap<uint32_t>(0x02000000);
-      *size = byte_swap<uint32_t>(0x40000000);
+      *addr = gMem2Start;
+      *size = gMem2Size;
       break;
    case OSMemoryType::System:
-      *addr = byte_swap<uint32_t>(0x01000000);
-      *size = byte_swap<uint32_t>(0x01000000);
+      *addr = 0x01000000;
+      *size = 0x01000000;
+      break;
+   default:
+      return -1;
+   }
+
+   return 0;
+}
+
+int
+OSSetMemBound(OSMemoryType type, uint32_t start, uint32_t size)
+{
+   switch (type) {
+   case OSMemoryType::MEM1:
+      gMem1Start = start;
+      gMem1Size = size;
+      break;
+   case OSMemoryType::MEM2:
+      gMem2Start = start;
+      gMem2Size = size;
       break;
    default:
       return -1;
@@ -63,18 +88,18 @@ OSGetMemBound(OSMemoryType type, uint32_t *addr, uint32_t *size)
 // First 40mb of foreground is for applications
 // Last 24mb of foreground is saved for system use
 BOOL
-OSGetForegroundBucket(uint32_t *addr, uint32_t *size)
+OSGetForegroundBucket(be_val<uint32_t> *addr, be_val<uint32_t> *size)
 {
-   *addr = byte_swap<uint32_t>(0xe0000000);
-   *size = byte_swap<uint32_t>(0x04000000);
+   *addr = 0xe0000000;
+   *size = 0x04000000;
    return TRUE;
 }
 
 BOOL
-OSGetForegroundBucketFreeArea(uint32_t *addr, uint32_t *size)
+OSGetForegroundBucketFreeArea(be_val<uint32_t> *addr, be_val<uint32_t> *size)
 {
-   *addr = byte_swap<uint32_t>(0xe0000000);
-   *size = byte_swap<uint32_t>(0x02800000);
+   *addr = 0xe0000000;
+   *size = 0x02800000;
    return TRUE;
 }
 

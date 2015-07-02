@@ -107,3 +107,6 @@ CoreFreeDefaultHeap();
 
 void
 CoreInitDefaultHeap();
+
+void
+CoreInitSystemHeap();

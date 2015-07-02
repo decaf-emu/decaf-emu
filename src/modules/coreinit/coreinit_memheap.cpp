@@ -33,7 +33,7 @@ gMEM2Memlist = nullptr;
 static MemoryList *
 findListContainingHeap(CommonHeap *heap)
 {
-   uint32_t start, size, end;
+   be_val<uint32_t> start, size, end;
    OSGetForegroundBucket(&start, &size);
    end = start + size;
 
@@ -54,7 +54,7 @@ findListContainingHeap(CommonHeap *heap)
 static MemoryList *
 findListContainingBlock(void *block)
 {
-   uint32_t start, size, end;
+   be_val<uint32_t> start, size, end;
    uint32_t addr = gMemory.untranslate(block);
    OSGetForegroundBucket(&start, &size);
    end = start + size;
@@ -190,37 +190,35 @@ OSFreeToSystem(void *addr)
 }
 
 void
+CoreInitSystemHeap()
+{
+   be_val<uint32_t> addr, size;
+
+   // Create expanding heap for System
+   OSGetMemBound(OSMemoryType::System, &addr, &size);
+   gSystemHeap = MEMCreateExpHeap(make_p32<ExpandedHeap>(addr), size);
+}
+
+void
 CoreInitDefaultHeap()
 {
    HeapHandle mem1, mem2, fg;
-   uint32_t addr, size;
+   be_val<uint32_t> addr, size;
 
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
-   addr = byte_swap(addr);
-   size = byte_swap(size);
    mem2 = MEMCreateExpHeap(make_p32<ExpandedHeap>(addr), size);
    MEMSetBaseHeapHandle(BaseHeapType::MEM2, mem2);
 
    // Create frame heap for MEM1
    OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
-   addr = byte_swap(addr);
-   size = byte_swap(size);
    mem1 = MEMCreateFrmHeap(make_p32<FrameHeap>(addr), size);
    MEMSetBaseHeapHandle(BaseHeapType::MEM1, mem1);
 
    // Create frame heap for Foreground
    OSGetForegroundBucketFreeArea(&addr, &size);
-   addr = byte_swap(addr);
-   size = byte_swap(size);
    fg = MEMCreateFrmHeap(make_p32<FrameHeap>(addr), size);
    MEMSetBaseHeapHandle(BaseHeapType::FG, fg);
-
-   // Create expanding heap for System
-   OSGetMemBound(OSMemoryType::System, &addr, &size);
-   addr = byte_swap(addr);
-   size = byte_swap(size);
-   gSystemHeap = MEMCreateExpHeap(make_p32<ExpandedHeap>(addr), size);
 }
 
 void

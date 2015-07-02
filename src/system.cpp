@@ -45,6 +45,7 @@ System::getUserModule() const
 void
 System::initialiseModules()
 {
+   CoreInitSystemHeap();
    loadThunks();
 
    for (auto &pair : mSystemModules) {

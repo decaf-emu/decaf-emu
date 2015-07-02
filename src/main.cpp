@@ -140,6 +140,10 @@ play(const std::string &path)
    auto entryPoint = module.entryPoint;
    auto stackSize = module.defaultStackSize;
 
+   // Initialise default heaps
+   // TODO: Call __preinit_user
+   CoreInitDefaultHeap();
+
    // Allocate OSThread structures and stacks
    auto thread1 = OSAllocFromSystem<OSThread>();
    auto stack1 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
