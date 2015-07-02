@@ -53,6 +53,7 @@ MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags)
 void *
 MEMDestroyFrmHeap(FrameHeap *heap)
 {
+   MEMiFinaliseHeap(heap);
    gMemory.free(gMemory.untranslate(heap));
    return heap;
 }

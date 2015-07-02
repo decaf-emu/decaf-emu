@@ -148,6 +148,7 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
 ExpandedHeap *
 MEMDestroyExpHeap(ExpandedHeap *heap)
 {
+   MEMiFinaliseHeap(heap);
    gMemory.free(gMemory.untranslate(heap));
    return heap;
 }

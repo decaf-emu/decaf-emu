@@ -75,6 +75,65 @@ MEMGetArena(HeapHandle handle)
    return BaseHeapType::Invalid;
 }
 
+static MemoryList *
+findListContainingHeap(CommonHeap *heap)
+{
+   uint32_t start, size, end;
+   OSGetForegroundBucket(&start, &size);
+   end = start + size;
+
+   if (heap->dataStart >= start && heap->dataEnd < end) {
+      return gForegroundMemlist;
+   } else {
+      OSGetMemBound(OSMemoryType::MEM1, &start, &size);
+      end = start + size;
+
+      if (heap->dataStart >= start && heap->dataEnd < end) {
+         return gMEM1Memlist;
+      } else {
+         return gMEM2Memlist;
+      }
+   }
+}
+
+static MemoryList *
+findListContainingBlock(void *block)
+{
+   uint32_t start, size, end;
+   uint32_t addr = gMemory.untranslate(block);
+   OSGetForegroundBucket(&start, &size);
+   end = start + size;
+
+   if (addr >= start && addr < end) {
+      return gForegroundMemlist;
+   } else {
+      OSGetMemBound(OSMemoryType::MEM1, &start, &size);
+      end = start + size;
+
+      if (addr >= start && addr < end) {
+         return gMEM1Memlist;
+      } else {
+         return gMEM2Memlist;
+      }
+   }
+}
+
+static CommonHeap *
+findHeapContainingBlock(MemoryList *list, void *block)
+{
+   CommonHeap *heap = nullptr;
+   uint32_t addr = gMemory.untranslate(block);
+
+   while (heap = reinterpret_cast<CommonHeap*>(MEMGetNextListObject(list, heap))) {
+      if (addr >= heap->dataStart && addr < heap->dataEnd) {
+         auto child = findHeapContainingBlock(&heap->list, block);
+         return child ? child : heap;
+      }
+   }
+
+   return nullptr;
+}
+
 void
 MEMiInitHeapHead(CommonHeap *heap, HeapType type, uint32_t dataStart, uint32_t dataEnd)
 {
@@ -84,6 +143,28 @@ MEMiInitHeapHead(CommonHeap *heap, HeapType type, uint32_t dataStart, uint32_t d
    heap->dataEnd = dataEnd;
    OSInitSpinLock(&heap->lock);
    heap->flags = 0;
+
+   if (auto list = findListContainingHeap(heap)) {
+      MEMAppendListObject(list, heap);
+   }
+}
+
+void
+MEMiFinaliseHeap(CommonHeap *heap)
+{
+   if (auto list = findListContainingHeap(heap)) {
+      MEMRemoveListObject(list, heap);
+   }
+}
+
+HeapHandle
+MEMFindContainHeap(void *block)
+{
+   if (auto list = findListContainingBlock(block)) {
+      return findHeapContainingBlock(list, block);
+   }
+
+   return nullptr;
 }
 
 static void *
@@ -198,6 +279,9 @@ CoreInit::registerMembaseFunctions()
    RegisterKernelDataName("MEMAllocFromDefaultHeap", pMEMAllocFromDefaultHeap);
    RegisterKernelDataName("MEMAllocFromDefaultHeapEx", pMEMAllocFromDefaultHeapEx);
    RegisterKernelDataName("MEMFreeToDefaultHeap", pMEMFreeToDefaultHeap);
+   RegisterKernelFunction(MEMiInitHeapHead);
+   RegisterKernelFunction(MEMiFinaliseHeap);
+   RegisterKernelFunction(MEMFindContainHeap);
 
    // These are default implementations for function pointers, register as exports
    // so we will have function thunks generated
@@ -219,6 +303,11 @@ CoreInit::initialiseMembase()
    *pMEMFreeToDefaultHeap = findExportAddress("sMEMFreeToDefaultHeap");
 
    gForegroundMemlist = OSAllocFromSystem<MemoryList>();
+   MEMInitList(gForegroundMemlist, offsetof(CommonHeap, link));
+
    gMEM1Memlist = OSAllocFromSystem<MemoryList>();
+   MEMInitList(gMEM1Memlist, offsetof(CommonHeap, link));
+
    gMEM2Memlist = OSAllocFromSystem<MemoryList>();
+   MEMInitList(gMEM2Memlist, offsetof(CommonHeap, link));
 }

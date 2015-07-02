@@ -78,6 +78,12 @@ CoreFreeDefaultHeap();
 void
 MEMiInitHeapHead(CommonHeap *heap, HeapType type, uint32_t dataStart, uint32_t dataEnd);
 
+void
+MEMiFinaliseHeap(CommonHeap *heap);
+
+HeapHandle
+MEMFindContainHeap(void *block);
+
 HeapHandle
 MEMGetBaseHeapHandle(BaseHeapType arena);
 
