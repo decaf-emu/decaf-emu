@@ -446,6 +446,10 @@ Loader::loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t
    for (auto i = 0u; i < sections.size(); ++i) {
       auto &section = sections[i];
 
+      if (section.header.addr <= header.entry && section.header.addr + section.data.size() > header.entry) {
+         entry.address = header.entry + (static_cast<int32_t>(section.section->address) - static_cast<int32_t>(section.header.addr));
+      }
+
       if (section.header.type != elf::SHT_SYMTAB) {
          continue;
       }
