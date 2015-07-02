@@ -24,7 +24,7 @@ typedef int BOOL;
                  #Type " must be " #Size " bytes");
 
 #define CHECK_OFFSET(Type, Offset, Field) \
-   static_assert((unsigned long long)&((Type*)0)->Field == Offset, \
+   static_assert(offsetof(Type, Field) == Offset, \
                  #Type "::" #Field " must be at offset " #Offset);
 
 // Workaround weird macro concat ## behaviour
