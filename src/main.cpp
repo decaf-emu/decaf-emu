@@ -1,4 +1,5 @@
 #include <pugixml.hpp>
+#include <docopt.h>
 #include "bitutils.h"
 #include "codetests.h"
 #include "filesystem.h"
@@ -17,44 +18,45 @@
 #include "thread.h"
 #include "usermodule.h"
 
+void initialiseEmulator();
+bool test(const std::string &as, const std::string &path);
+bool play(const std::string &path);
+
+static const char USAGE[] =
+   R"(WiiU Emulator
+
+       Usage:
+         wiiu play <game directory>
+         wiiu test [--as=<ppcas>] <test directory>
+         wiiu (-h | --help)
+         wiiu --version
+
+       Options:
+         -h --help     Show this screen.
+         --version     Show version.
+         --as=<ppcas>  Path to PowerPC assembler [default: powerpc-eabi-as.exe].
+   )";
+
 int main(int argc, char **argv)
 {
-   if (argc < 2) {
-      xLog() << "Usage: " << argv[0] << " <play|test> <options...>";
-      return -1;
+   auto args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true, "WiiU 0.1");
+   bool result = false;
+
+   initialiseEmulator();
+
+   if (args["play"]) {
+      result = play(args["<game directory>"].asString());
+   } else if (args["test"]) {
+      result = test(args["--as"].asString(), args["<test directory>"].asString());
    }
 
-   // Parse command line
-   std::string testDirectory;
-   std::string assemblerPath;
-   std::string gamePath;
-   std::string command = argv[1];
+   system("PAUSE");
+   return result ? 0 : -1;
+}
 
-   if (command.compare("play") == 0) {
-      if (argc < 3) {
-         xLog() << "Usage: " << argv[0] << " play <game directory>";
-         return -1;
-      }
-
-      gamePath = argv[2];
-   } else if (command.compare("test") == 0) {
-      if (argc < 3) {
-         xLog() << "Usage: " << argv[0] << " test [<powerpc-eabi-as.exe>] <test directory>";
-         return -1;
-      }
-
-      if (argc >= 4) {
-         assemblerPath = argv[2];
-         testDirectory = argv[3];
-      } else if (argc >= 3) {
-         assemblerPath = "powerpc-eabi-as.exe";
-         testDirectory = argv[2];
-      }
-   } else {
-      xLog() << "Usage: " << argv[0] << " <play|test> <options...>";
-      return -1;
-   }
-
+static void
+initialiseEmulator()
+{
    // Static module initialisation
    Interpreter::RegisterFunctions();
    JitManager::RegisterFunctions();
@@ -71,18 +73,19 @@ int main(int argc, char **argv)
    gSystem.registerModule("nn_save", new NNSave {});
    gSystem.registerModule("zlib125", new Zlib125 {});
    gSystem.initialiseModules();
+}
 
-   // If user used test command, execute tests
-   if (assemblerPath.size() && testDirectory.size()){
-      auto testRes = executeCodeTests(assemblerPath, testDirectory);
-      xLog() << "";
-      system("PAUSE");
-      return testRes ? 0 : -1;
-   }
+static bool
+test(const std::string &as, const std::string &path)
+{   return executeCodeTests(as, path);
+}
 
+static bool
+play(const std::string &path)
+{
    // Setup filesystem
    VirtualFileSystem fs { "/" };
-   fs.mount("/vol", std::make_unique<HostFileSystem>(gamePath + "/data"));
+   fs.mount("/vol", std::make_unique<HostFileSystem>(path + "/data"));
    gSystem.setFileSystem(&fs);
 
    // Load cos.xml
@@ -91,7 +94,7 @@ int main(int argc, char **argv)
 
    if (!cosFile) {
       xError() << "Error opening /vol/code/cos.xml";
-      return -1;
+      return false;
    }
 
    auto size = cosFile->size();
@@ -102,7 +105,7 @@ int main(int argc, char **argv)
 
    if (!result) {
       xError() << "Error parsing /vol/code/cos.xml";
-      return -1;
+      return false;
    }
 
    auto rpxPath = doc.child("app").child("argstr").child_value();
@@ -112,7 +115,7 @@ int main(int argc, char **argv)
 
    if (!rpxFile) {
       xError() << "Error opening /vol/code/" << rpxPath;
-      return -1;
+      return false;
    }
 
    buffer.resize(rpxFile->size());
@@ -126,10 +129,10 @@ int main(int argc, char **argv)
 
    if (!loader.loadRPL(*module, entry, buffer.data(), buffer.size())) {
       xError() << "Could not load elf file";
-      return -1;
+      return false;
    }
 
-   xLog() << "Succesfully loaded " << gamePath;
+   xLog() << "Succesfully loaded " << path;
 
    auto stackSize = entry.stackSize;
 
@@ -171,7 +174,5 @@ int main(int argc, char **argv)
    OSFreeToSystem(stack1);
    OSFreeToSystem(stack2);
 
-   xLog() << "";
-   system("PAUSE");
-   return 0;
+   return exitValue == 0;
 }

@@ -7,3 +7,6 @@
 [submodule "libraries/asmjit"]
 	path = libraries/asmjit
 	url = https://github.com/kobalicek/asmjit.git
+[submodule "libraries/docopt"]
+	path = libraries/docopt
+	url = https://github.com/docopt/docopt.cpp.git
