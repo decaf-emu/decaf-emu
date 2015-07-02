@@ -75,6 +75,7 @@ int main(int argc, char **argv)
    // If user used test command, execute tests
    if (assemblerPath.size() && testDirectory.size()){
       auto testRes = executeCodeTests(assemblerPath, testDirectory);
+      xLog() << "";
       system("PAUSE");
       return testRes ? 0 : -1;
    }
@@ -170,6 +171,7 @@ int main(int argc, char **argv)
    OSFreeToSystem(stack1);
    OSFreeToSystem(stack2);
 
+   xLog() << "";
    system("PAUSE");
    return 0;
 }
