@@ -14,38 +14,38 @@ enum Flags
 
 struct FrameHeap;
 
-p32<FrameHeap>
-MEMCreateFrmHeap(p32<FrameHeap> heap, uint32_t size);
+FrameHeap *
+MEMCreateFrmHeap(FrameHeap *heap, uint32_t size);
 
-p32<FrameHeap>
-MEMCreateFrmHeapEx(p32<FrameHeap> heap, uint32_t size, uint16_t flags);
+FrameHeap *
+MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags);
 
-p32<void>
-MEMDestroyFrmHeap(p32<FrameHeap> heap);
+void *
+MEMDestroyFrmHeap(FrameHeap *heap);
 
-p32<void>
-MEMAllocFromFrmHeap(p32<FrameHeap> heap, uint32_t size);
+void *
+MEMAllocFromFrmHeap(FrameHeap *heap, uint32_t size);
 
-p32<void>
-MEMAllocFromFrmHeapEx(p32<FrameHeap> heap, uint32_t size, int alignment);
+void *
+MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment);
 
 void
-MEMFreeToFrmHeap(p32<FrameHeap> heap, FrameHeapFreeMode::Flags mode);
+MEMFreeToFrmHeap(FrameHeap *heap, FrameHeapFreeMode::Flags mode);
 
 BOOL
-MEMRecordStateForFrmHeap(p32<FrameHeap> heap, uint32_t tag);
+MEMRecordStateForFrmHeap(FrameHeap *heap, uint32_t tag);
 
 BOOL
-MEMFreeByStateToFrmHeap(p32<FrameHeap> heap, uint32_t tag);
+MEMFreeByStateToFrmHeap(FrameHeap *heap, uint32_t tag);
 
 uint32_t
-MEMAdjustFrmHeap(p32<FrameHeap> heap);
+MEMAdjustFrmHeap(FrameHeap *heap);
 
 uint32_t
-MEMResizeForMBlockFrmHeap(p32<FrameHeap> heap, uint32_t addr, uint32_t size);
+MEMResizeForMBlockFrmHeap(FrameHeap *heap, uint32_t addr, uint32_t size);
 
 uint32_t
-MEMGetAllocatableSizeForFrmHeap(p32<FrameHeap> heap);
+MEMGetAllocatableSizeForFrmHeap(FrameHeap *heap);
 
 uint32_t
-MEMGetAllocatableSizeForFrmHeapEx(p32<FrameHeap> heap, int alignment);
+MEMGetAllocatableSizeForFrmHeapEx(FrameHeap *heap, int alignment);

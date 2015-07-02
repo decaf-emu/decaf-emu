@@ -45,27 +45,22 @@ enum class HeapType : uint32_t
 
 #pragma pack(push, 1)
 
-struct MemoryLink
-{
-   be_ptr<void> prev;
-   be_ptr<void> next;
-};
-
 struct MemoryHeapCommon
 {
    be_val<HeapType> tag;
    MemoryLink link;
    MemoryList list;
-   be_val<uint32_t> start;
-   be_val<uint32_t> end;
+   be_val<uint32_t> dataStart;
+   be_val<uint32_t> dataEnd;
    OSSpinLock lock;
    be_val<uint32_t> flags;
 };
 
 CHECK_OFFSET(MemoryHeapCommon, 0x0, tag);
+CHECK_OFFSET(MemoryHeapCommon, 0x4, link);
 CHECK_OFFSET(MemoryHeapCommon, 0xc, list);
-CHECK_OFFSET(MemoryHeapCommon, 0x18, start);
-CHECK_OFFSET(MemoryHeapCommon, 0x1c, end);
+CHECK_OFFSET(MemoryHeapCommon, 0x18, dataStart);
+CHECK_OFFSET(MemoryHeapCommon, 0x1c, dataEnd);
 CHECK_OFFSET(MemoryHeapCommon, 0x20, lock);
 CHECK_OFFSET(MemoryHeapCommon, 0x30, flags);
 CHECK_SIZE(MemoryHeapCommon, 0x34);
@@ -79,6 +74,9 @@ CoreInitDefaultHeap();
 
 void
 CoreFreeDefaultHeap();
+
+void
+MEMiInitHeapHead(MemoryHeapCommon *heap, HeapType type, uint32_t dataStart, uint32_t dataEnd);
 
 HeapHandle
 MEMGetBaseHeapHandle(BaseHeapType arena);

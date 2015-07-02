@@ -3,6 +3,7 @@
 #include "system.h"
 
 #pragma pack(push, 1)
+
 struct ExpandedHeapBlock
 {
    uint32_t addr;
@@ -13,7 +14,7 @@ struct ExpandedHeapBlock
    p32<ExpandedHeapBlock> prev;
 };
 
-struct ExpandedHeap
+struct ExpandedHeap : MemoryHeapCommon
 {
    uint32_t size;
    uint32_t bottom;
@@ -23,6 +24,7 @@ struct ExpandedHeap
    p32<ExpandedHeapBlock> freeBlockList;
    p32<ExpandedHeapBlock> usedBlockList;
 };
+
 #pragma pack(pop)
 
 static const uint32_t
@@ -51,10 +53,9 @@ eraseBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> freeBlock)
 }
 
 static void
-insertBlock(p32<ExpandedHeapBlock> &head, ExpandedHeapBlock *usedBlock)
+insertBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> usedBlock)
 {
-   ExpandedHeapBlock *insertAfter = nullptr;
-   assert(usedBlock->size < 0xff000000);
+   p32<ExpandedHeapBlock> insertAfter = nullptr;
 
    for (auto block = head; block; block = block->next) {
       if (block->addr < usedBlock->addr) {
@@ -122,9 +123,11 @@ MEMCreateExpHeap(ExpandedHeap *heap, uint32_t size)
 ExpandedHeap *
 MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
 {
+   // Allocate memory
    auto base = gMemory.untranslate(heap);
    gMemory.alloc(base, size);
 
+   // Setup state
    heap->size = size;
    heap->bottom = base;
    heap->top = base + size;
@@ -136,6 +139,9 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
    heap->freeBlockList->size = heap->size - sizeof(ExpandedHeap);
    heap->freeBlockList->next = nullptr;
    heap->freeBlockList->prev = nullptr;
+
+   // Setup common header
+   MEMiInitHeapHead(heap, HeapType::ExpandedHeap, heap->freeBlockList->addr, heap->freeBlockList->addr + heap->freeBlockList->size);
    return heap;
 }
 

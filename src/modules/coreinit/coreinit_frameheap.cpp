@@ -3,6 +3,7 @@
 #include "system.h"
 
 #pragma pack(push, 1)
+
 struct FrameHeapState
 {
    uint32_t tag;
@@ -11,27 +12,30 @@ struct FrameHeapState
    p32<FrameHeapState> previous;
 };
 
-struct FrameHeap
+struct FrameHeap : MemoryHeapCommon
 {
    uint32_t top;
    uint32_t bottom;
    uint32_t size;
    p32<FrameHeapState> state;
 };
+
 #pragma pack(pop)
 
-p32<FrameHeap>
-MEMCreateFrmHeap(p32<FrameHeap> heap, uint32_t size)
+FrameHeap *
+MEMCreateFrmHeap(FrameHeap *heap, uint32_t size)
 {
    return MEMCreateFrmHeapEx(heap, size, 0);
 }
 
-p32<FrameHeap>
-MEMCreateFrmHeapEx(p32<FrameHeap> heap, uint32_t size, uint16_t flags)
+FrameHeap *
+MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags)
 {
-   auto base = static_cast<uint32_t>(heap);
+   // Allocate memory
+   auto base = gMemory.untranslate(heap);
    gMemory.alloc(base, size);
 
+   // Setup state
    heap->size = size;
    heap->top = base + size;
    heap->bottom = base + sizeof(FrameHeap) + sizeof(FrameHeapState);
@@ -40,24 +44,27 @@ MEMCreateFrmHeapEx(p32<FrameHeap> heap, uint32_t size, uint16_t flags)
    heap->state->top = heap->top;
    heap->state->bottom = heap->bottom;
    heap->state->previous = nullptr;
+
+   // Setup common header
+   MEMiInitHeapHead(heap, HeapType::FrameHeap, heap->bottom, heap->top);
    return heap;
 }
 
-p32<void>
-MEMDestroyFrmHeap(p32<FrameHeap> heap)
+void *
+MEMDestroyFrmHeap(FrameHeap *heap)
 {
-   gMemory.free(static_cast<uint32_t>(heap));
+   gMemory.free(gMemory.untranslate(heap));
    return heap;
 }
 
-p32<void>
-MEMAllocFromFrmHeap(p32<FrameHeap> heap, uint32_t size)
+void *
+MEMAllocFromFrmHeap(FrameHeap *heap, uint32_t size)
 {
    return MEMAllocFromFrmHeapEx(heap, size, 4);
 }
 
-p32<void>
-MEMAllocFromFrmHeapEx(p32<FrameHeap> heap, uint32_t size, int alignment)
+void *
+MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment)
 {
    auto direction = HeapDirection::FromBottom;
    auto offset = 0u;
@@ -90,7 +97,7 @@ MEMAllocFromFrmHeapEx(p32<FrameHeap> heap, uint32_t size, int alignment)
 }
 
 void
-MEMFreeToFrmHeap(p32<FrameHeap> heap, FrameHeapFreeMode::Flags mode)
+MEMFreeToFrmHeap(FrameHeap *heap, FrameHeapFreeMode::Flags mode)
 {
    if (mode & FrameHeapFreeMode::Top) {
       if (heap->state->previous) {
@@ -110,9 +117,9 @@ MEMFreeToFrmHeap(p32<FrameHeap> heap, FrameHeapFreeMode::Flags mode)
 }
 
 BOOL
-MEMRecordStateForFrmHeap(p32<FrameHeap> heap, uint32_t tag)
+MEMRecordStateForFrmHeap(FrameHeap *heap, uint32_t tag)
 {
-   p32<FrameHeapState> state = MEMAllocFromFrmHeapEx(heap, sizeof(FrameHeapState), 4);
+   FrameHeapState *state = reinterpret_cast<FrameHeapState*>(MEMAllocFromFrmHeapEx(heap, sizeof(FrameHeapState), 4));
    
    if (!state) {
       return FALSE;
@@ -127,7 +134,7 @@ MEMRecordStateForFrmHeap(p32<FrameHeap> heap, uint32_t tag)
 }
 
 BOOL
-MEMFreeByStateToFrmHeap(p32<FrameHeap> heap, uint32_t tag)
+MEMFreeByStateToFrmHeap(FrameHeap *heap, uint32_t tag)
 {
    if (tag == 0) {
       if (!heap->state->previous) {
@@ -153,7 +160,7 @@ MEMFreeByStateToFrmHeap(p32<FrameHeap> heap, uint32_t tag)
 }
 
 uint32_t
-MEMAdjustFrmHeap(p32<FrameHeap> heap)
+MEMAdjustFrmHeap(FrameHeap *heap)
 {
    if (heap->state->top != heap->top) {
       return heap->size;
@@ -161,12 +168,12 @@ MEMAdjustFrmHeap(p32<FrameHeap> heap)
 
    heap->top = heap->bottom;
    heap->state->top = heap->top;
-   heap->size = heap->state->top - static_cast<uint32_t>(heap);
+   heap->size = heap->state->top - gMemory.untranslate(heap);
    return heap->size;
 }
 
 uint32_t
-MEMResizeForMBlockFrmHeap(p32<FrameHeap> heap, uint32_t addr, uint32_t size)
+MEMResizeForMBlockFrmHeap(FrameHeap *heap, uint32_t addr, uint32_t size)
 {
    if (addr > heap->state->bottom || addr < heap->state->bottom) {
       xError() << "Invalid block address in MEMResizeForMBlockFrmHeap";
@@ -192,13 +199,13 @@ MEMResizeForMBlockFrmHeap(p32<FrameHeap> heap, uint32_t addr, uint32_t size)
 }
 
 uint32_t
-MEMGetAllocatableSizeForFrmHeap(p32<FrameHeap> heap)
+MEMGetAllocatableSizeForFrmHeap(FrameHeap *heap)
 {
    return MEMGetAllocatableSizeForFrmHeapEx(heap, 4);
 }
 
 uint32_t
-MEMGetAllocatableSizeForFrmHeapEx(p32<FrameHeap> heap, int alignment)
+MEMGetAllocatableSizeForFrmHeapEx(FrameHeap *heap, int alignment)
 {
    auto bottom = alignUp(heap->state->bottom, alignment);
    auto top = alignDown(heap->state->top, alignment);

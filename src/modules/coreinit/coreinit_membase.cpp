@@ -66,6 +66,17 @@ MEMGetArena(HeapHandle handle)
    return BaseHeapType::Invalid;
 }
 
+void
+MEMiInitHeapHead(MemoryHeapCommon *heap, HeapType type, uint32_t dataStart, uint32_t dataEnd)
+{
+   heap->tag = type;
+   MEMInitList(&heap->list, offsetof(MemoryHeapCommon, link));
+   heap->dataStart = dataStart;
+   heap->dataEnd = dataEnd;
+   OSInitSpinLock(&heap->lock);
+   heap->flags = 0;
+}
+
 static p32<void>
 sMEMAllocFromDefaultHeap(uint32_t size)
 {
@@ -104,14 +115,14 @@ CoreInitDefaultHeap()
    OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
    addr = byte_swap(addr);
    size = byte_swap(size);
-   mem1 = MEMCreateFrmHeap(make_p32<void>(addr), size);
+   mem1 = MEMCreateFrmHeap(make_p32<FrameHeap>(addr), size);
    MEMSetBaseHeapHandle(BaseHeapType::MEM1, mem1);
 
    // Create frame heap for Foreground
    OSGetForegroundBucketFreeArea(&addr, &size);
    addr = byte_swap(addr);
    size = byte_swap(size);
-   fg = MEMCreateFrmHeap(make_p32<void>(addr), size);
+   fg = MEMCreateFrmHeap(make_p32<FrameHeap>(addr), size);
    MEMSetBaseHeapHandle(BaseHeapType::FG, fg);
 
    // Create expanding heap for System

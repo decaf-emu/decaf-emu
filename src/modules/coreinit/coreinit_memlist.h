@@ -3,23 +3,34 @@
 
 #pragma pack(push, 1)
 
+struct MemoryLink
+{
+   be_ptr<void> prev;
+   be_ptr<void> next;
+};
+
+CHECK_OFFSET(MemoryLink, 0x0, prev);
+CHECK_OFFSET(MemoryLink, 0x4, next);
+CHECK_SIZE(MemoryLink, 0x8);
+
 struct MemoryList
 {
    be_ptr<void> head;
    be_ptr<void> tail;
    be_val<uint16_t> count;
-   be_val<uint16_t> unk1; // TODO: Reverse me!
+   be_val<uint16_t> offsetToMemoryLink;
 };
 CHECK_OFFSET(MemoryList, 0x0, head);
 CHECK_OFFSET(MemoryList, 0x4, tail);
 CHECK_OFFSET(MemoryList, 0x8, count);
-CHECK_OFFSET(MemoryList, 0xa, unk1);
+CHECK_OFFSET(MemoryList, 0xa, offsetToMemoryLink);
 CHECK_SIZE(MemoryList, 0xc);
 
 #pragma pack(pop)
 
+// Offset to MemoryLink struct of object
 void
-MEMInitList(MemoryList* list, uint16_t unk1); // MemoryList::unk1 = unk1
+MEMInitList(MemoryList* list, uint16_t offsetToMemoryLink);
 
 void
 MEMAppendListObject(MemoryList* list, void *object);
