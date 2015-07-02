@@ -14,25 +14,25 @@ pMEMAllocFromDefaultHeapEx;
 p32<be_val<uint32_t>>
 pMEMFreeToDefaultHeap;
 
-static WHeapHandle
+static HeapHandle
 gMemArenas[static_cast<size_t>(BaseHeapType::Max)];
 
-static WHeapHandle
+static HeapHandle
 gSystemHeap = 0;
 
 p32<void>
 OSAllocFromSystem(uint32_t size, int alignment)
 {
-   return MEMAllocFromExpHeapEx(gSystemHeap, size, alignment);
+   return MEMAllocFromExpHeapEx((ExpandedHeap*)(void*)gSystemHeap, size, alignment);
 }
 
 void
 OSFreeToSystem(p32<void> addr)
 {
-   MEMFreeToExpHeap(gSystemHeap, addr);
+   MEMFreeToExpHeap((ExpandedHeap*)(void*)gSystemHeap, addr);
 }
 
-WHeapHandle
+HeapHandle
 MEMGetBaseHeapHandle(BaseHeapType type)
 {
    if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
@@ -42,8 +42,8 @@ MEMGetBaseHeapHandle(BaseHeapType type)
    }
 }
 
-WHeapHandle
-MEMSetBaseHeapHandle(BaseHeapType type, WHeapHandle handle)
+HeapHandle
+MEMSetBaseHeapHandle(BaseHeapType type, HeapHandle handle)
 {
    if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
       auto previous = gMemArenas[static_cast<size_t>(type)];
@@ -55,7 +55,7 @@ MEMSetBaseHeapHandle(BaseHeapType type, WHeapHandle handle)
 }
 
 BaseHeapType
-MEMGetArena(WHeapHandle handle)
+MEMGetArena(HeapHandle handle)
 {
    for (auto i = 0u; i < static_cast<size_t>(BaseHeapType::Max); ++i) {
       if (gMemArenas[i] == handle) {
@@ -69,35 +69,35 @@ MEMGetArena(WHeapHandle handle)
 static p32<void>
 sMEMAllocFromDefaultHeap(uint32_t size)
 {
-   auto handle = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
-   return MEMAllocFromExpHeap(handle, size);
+   auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
+   return MEMAllocFromExpHeap((ExpandedHeap*)(void*)heap, size);
 }
 
 static p32<void>
 sMEMAllocFromDefaultHeapEx(uint32_t size, int alignment)
 {
    auto handle = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
-   return MEMAllocFromExpHeapEx(handle, size, alignment);
+   return MEMAllocFromExpHeapEx((ExpandedHeap*)(void*)handle, size, alignment);
 }
 
 static void
 sMEMFreeToDefaultHeap(p32<void> block)
 {
    auto handle = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
-   return MEMFreeToExpHeap(handle, block);
+   return MEMFreeToExpHeap((ExpandedHeap*)(void*)handle, block);
 }
 
 void
 CoreInitDefaultHeap()
 {
-   WHeapHandle mem1, mem2, fg;
+   HeapHandle mem1, mem2, fg;
    uint32_t addr, size;
 
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
    addr = byte_swap(addr);
    size = byte_swap(size);
-   mem2 = MEMCreateExpHeap(make_p32<void>(addr), size);
+   mem2 = MEMCreateExpHeap(make_p32<ExpandedHeap>(addr), size);
    MEMSetBaseHeapHandle(BaseHeapType::MEM2, mem2);
 
    // Create frame heap for MEM1
@@ -118,7 +118,7 @@ CoreInitDefaultHeap()
    OSGetMemBound(OSMemoryType::System, &addr, &size);
    addr = byte_swap(addr);
    size = byte_swap(size);
-   gSystemHeap = MEMCreateExpHeap(make_p32<void>(addr), size);
+   gSystemHeap = MEMCreateExpHeap(make_p32<ExpandedHeap>(addr), size);
 }
 
 void
@@ -127,18 +127,13 @@ CoreFreeDefaultHeap()
    // Delete all base heaps
    for (auto i = 0u; i < static_cast<size_t>(BaseHeapType::Max); ++i) {
       if (gMemArenas[i]) {
-         auto heap = gSystem.getHeap(gMemArenas[i]);
-         gSystem.removeHeap(gMemArenas[i]);
-         delete heap;
-         gMemArenas[i] = 0;
+         // TODO: Call destroy heap
+         gMemArenas[i] = nullptr;
       }
    }
 
    // Delete system heap
-   auto sysHeap = gSystem.getHeap(gSystemHeap);
-   gSystem.removeHeap(gSystemHeap);
-   delete sysHeap;
-   gSystemHeap = 0;
+   gSystemHeap = nullptr;
 
    // Free function pointers
    if (pMEMAllocFromDefaultHeap) {
@@ -160,7 +155,7 @@ CoreFreeDefaultHeap()
 void
 CoreInit::registerMembaseFunctions()
 {
-   memset(gMemArenas, 0, sizeof(WHeapHandle) * static_cast<size_t>(BaseHeapType::Max));
+   memset(gMemArenas, 0, sizeof(HeapHandle) * static_cast<size_t>(BaseHeapType::Max));
 
    RegisterKernelFunction(MEMGetBaseHeapHandle);
    RegisterKernelFunction(MEMSetBaseHeapHandle);

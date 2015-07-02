@@ -144,52 +144,6 @@ System::freeSystemObjects(uint32_t address, uint32_t size)
    }
 }
 
-WHeapHandle
-System::addHeap(HeapManager *heap)
-{
-   std::lock_guard<std::mutex> lock(mHeapMutex);
-
-   for (auto i = 0u; i < mHeaps.size(); ++i) {
-      if (mHeaps[i] == nullptr) {
-         mHeaps[i] = heap;
-         return i + 1;
-      }
-   }
-
-   mHeaps.push_back(heap);
-   return static_cast<WHeapHandle>(mHeaps.size());
-}
-
-HeapManager *
-System::getHeap(WHeapHandle handle)
-{
-   return mHeaps[handle - 1];
-}
-
-HeapManager *
-System::getHeapByAddress(uint32_t vaddr)
-{
-   std::lock_guard<std::mutex> lock(mHeapMutex);
-
-   for (auto heap : mHeaps) {
-      auto base = heap->getAddress();
-      auto size = heap->getSize();
-
-      if (vaddr >= base && vaddr < base + size) {
-         return heap;
-      }
-   }
-
-   return nullptr;
-}
-
-void
-System::removeHeap(WHeapHandle handle)
-{
-   std::lock_guard<std::mutex> lock(mHeapMutex);
-   mHeaps[handle - 1] = nullptr;
-}
-
 void
 System::setFileSystem(FileSystem *fs)
 {

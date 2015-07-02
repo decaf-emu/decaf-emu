@@ -1,58 +1,59 @@
 #pragma once
 #include "systemtypes.h"
 #include "coreinit_memory.h"
-#include "expandedheapmanager.h"
 
-WHeapHandle
-MEMCreateExpHeap(p32<void> address, uint32_t size);
+struct ExpandedHeap;
 
-WHeapHandle
-MEMCreateExpHeapEx(p32<void> address, uint32_t size, uint16_t flags);
+ExpandedHeap *
+MEMCreateExpHeap(ExpandedHeap *heap, uint32_t size);
 
-p32<void>
-MEMDestroyExpHeap(WHeapHandle handle);
+ExpandedHeap *
+MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags);
 
-p32<void>
-MEMAllocFromExpHeap(WHeapHandle handle, uint32_t size);
+ExpandedHeap *
+MEMDestroyExpHeap(ExpandedHeap *heap);
 
 p32<void>
-MEMAllocFromExpHeapEx(WHeapHandle heap, uint32_t size, int alignment);
+MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size);
+
+p32<void>
+MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment);
 
 void
-MEMFreeToExpHeap(WHeapHandle handle, p32<void> address);
+MEMFreeToExpHeap(ExpandedHeap *heap, p32<void> address);
 
 HeapMode
-MEMSetAllocModeForExpHeap(WHeapHandle handle, HeapMode mode);
+MEMSetAllocModeForExpHeap(ExpandedHeap *heap, HeapMode mode);
 
 HeapMode
-MEMGetAllocModeForExpHeap(WHeapHandle handle);
+MEMGetAllocModeForExpHeap(ExpandedHeap *heap);
 
 uint32_t
-MEMAdjustExpHeap(WHeapHandle handle);
+MEMAdjustExpHeap(ExpandedHeap *heap);
 
 uint32_t
-MEMResizeForMBlockExpHeap(WHeapHandle handle, p32<void> block, uint32_t size);
+MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> address, uint32_t size);
 
 uint32_t
-MEMGetTotalFreeSizeForExpHeap(WHeapHandle handle);
+MEMGetTotalFreeSizeForExpHeap(ExpandedHeap *heap);
 
 uint32_t
-MEMGetAllocatableSizeForExpHeap(WHeapHandle handle);
+MEMGetAllocatableSizeForExpHeap(ExpandedHeap *heap);
 
 uint32_t
-MEMGetAllocatableSizeForExpHeapEx(WHeapHandle handle, int alignment);
+MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap, int alignment);
 
 uint16_t
-MEMSetGroupIDForExpHeap(WHeapHandle handle, uint16_t id);
+MEMSetGroupIDForExpHeap(ExpandedHeap *heap, uint16_t id);
 
 uint16_t
-MEMGetGroupIDForExpHeap(WHeapHandle handle);
+MEMGetGroupIDForExpHeap(ExpandedHeap *heap);
 
 uint32_t
-MEMGetSizeForMBlockExpHeap(p32<void> block);
+MEMGetSizeForMBlockExpHeap(p32<void> addr);
 
 uint16_t
-MEMGetGroupIDForMBlockExpHeap(p32<void> block);
+MEMGetGroupIDForMBlockExpHeap(p32<void> addr);
 
 HeapDirection
-MEMGetAllocDirForMBlockExpHeap(p32<void> block);
+MEMGetAllocDirForMBlockExpHeap(p32<void> addr);

@@ -91,8 +91,6 @@
     <ClCompile Include="..\src\codetests.cpp" />
     <ClCompile Include="..\src\disassembler.cpp" />
     <ClCompile Include="..\src\elf.cpp" />
-    <ClCompile Include="..\src\expandedheapmanager.cpp" />
-    <ClCompile Include="..\src\frameheapmanager.cpp" />
     <ClCompile Include="..\src\instructiontable.cpp" />
     <ClCompile Include="..\src\interpreter.cpp" />
     <ClCompile Include="..\src\interpreter\interpreter_branch.cpp" />
@@ -159,11 +157,8 @@
     <ClInclude Include="..\src\codetests.h" />
     <ClInclude Include="..\src\disassembler.h" />
     <ClInclude Include="..\src\elf.h" />
-    <ClInclude Include="..\src\expandedheapmanager.h" />
     <ClInclude Include="..\src\filesystem.h" />
     <ClInclude Include="..\src\floatutils.h" />
-    <ClInclude Include="..\src\frameheapmanager.h" />
-    <ClInclude Include="..\src\heapmanager.h" />
     <ClInclude Include="..\src\instruction.h" />
     <ClInclude Include="..\src\instructiondata.h" />
     <ClInclude Include="..\src\instructionid.h" />
@@ -180,6 +175,7 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_device.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_exception.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_fastmutex.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_memlist.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_semaphore.h" />
     <ClInclude Include="..\src\modules\gx2\gx2r_resource.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_surface.h" />

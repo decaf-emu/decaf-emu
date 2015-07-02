@@ -4,7 +4,6 @@
 #include <vector>
 #include <mutex>
 #include <cstdint>
-#include "heapmanager.h"
 #include "systemtypes.h"
 
 class Memory;
@@ -31,11 +30,6 @@ public:
    void removeThread(Thread *thread);
 
    KernelFunction *getSyscall(uint32_t id);
-
-   WHeapHandle addHeap(HeapManager *heap);
-   HeapManager *getHeap(WHeapHandle handle);
-   HeapManager *getHeapByAddress(uint32_t vaddr);
-   void removeHeap(WHeapHandle handle);
 
    FileSystem *getFileSystem();
    void setFileSystem(FileSystem *fs);
@@ -84,9 +78,6 @@ private:
    std::map<std::string, KernelModule*> mSystemModules;
    p32<void> mSystemThunks;
    std::vector<KernelFunction*> mSystemCalls;
-
-   std::mutex mHeapMutex;
-   std::vector<HeapManager *> mHeaps;
 
    std::mutex mThreadMutex;
    std::vector<Thread*> mThreads;

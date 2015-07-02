@@ -13,6 +13,7 @@ struct OSSpinLock
    UNKNOWN(0x4);
 };
 CHECK_OFFSET(OSSpinLock, 0x0, owner);
+CHECK_OFFSET(OSSpinLock, 0x8, recursion);
 CHECK_SIZE(OSSpinLock, 0x10);
 
 #pragma pack(pop)

@@ -207,12 +207,6 @@
     <ClCompile Include="..\src\loader.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\frameheapmanager.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\expandedheapmanager.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_event.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
@@ -365,12 +359,6 @@
     <ClInclude Include="..\src\instructions.inl">
       <Filter>Header Files\ppc</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\frameheapmanager.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\expandedheapmanager.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\elf.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
@@ -385,9 +373,6 @@
     </ClInclude>
     <ClInclude Include="..\src\floatutils.h">
       <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\heapmanager.h">
-      <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\src\instruction.h">
       <Filter>Header Files\ppc</Filter>
@@ -487,6 +472,9 @@
     </ClInclude>
     <ClInclude Include="..\src\be_val.h">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_memlist.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

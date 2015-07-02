@@ -1,3 +1,4 @@
+#include <chrono>
 #include "coreinit.h"
 #include "coreinit_systeminfo.h"
 #include "coreinit_memory.h"
@@ -57,9 +58,9 @@ CoreInit::initialiseSystemInformation()
    uint32_t clockSpeed 248625000
    uint32_t 1243125000
    uint64_t baseTime 30373326953884705
-   uint32_t 524288
-   uint32_t 2097152
-   uint32_t 524288
+   uint32_t 524288 = 0x80000
+   uint32_t 2097152 = 0x200000
+   uint32_t 524288 = 0x80000
    uint32_t 1709422149632
    */
 

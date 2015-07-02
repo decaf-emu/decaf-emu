@@ -141,6 +141,27 @@ loadSections(std::vector<elf::Section> &sections)
    }
 }
 
+static void
+relocateSections(std::vector<elf::Section> &sections, uint32_t origCode, uint32_t newCode, uint32_t origData, uint32_t newData)
+{
+   int32_t diffCode = static_cast<int32_t>(newCode) - static_cast<int32_t>(origCode);
+   int32_t diffData = static_cast<int32_t>(newData) - static_cast<int32_t>(origData);
+
+   for (auto &rplSection : sections) {
+      auto section = rplSection.section;
+
+      if (!section) {
+         continue;
+      }
+
+      if (rplSection.section->type == UserModule::Section::Code) {
+         section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffCode);
+      } else if (rplSection.section->type == UserModule::Section::Data) {
+         section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffData);
+      }
+   }
+}
+
 static KernelModule *
 findSystemModule(const char *name)
 {
@@ -428,15 +449,22 @@ Loader::loadRPL(UserModule &module, EntryInfo &entry, const char *buffer, size_t
    entry.stackSize = info.stackSize;
 
    // Allocate code & data sections in memory
-   auto codeStart = 0x02000000u;
-   auto codeSize = 0xE000000u;
+   auto codeStart = module.codeAddressRange.first;
+   auto codeSize = 0x0e000000 - 0x43;
    OSDynLoad_MemAlloc(codeSize, 4, &codeStart);
-   assert(codeStart == 0x02000000);
 
    auto dataStart = module.dataAddressRange.first;
-   auto dataSize = module.dataAddressRange.second - dataStart;
+   auto dataSize = module.dataAddressRange.second - module.dataAddressRange.first;
    OSDynLoad_MemAlloc(dataSize, 4, &dataStart);
-   assert(dataStart == 0x10000000);
+
+   // Relocate sections
+   relocateSections(sections, module.codeAddressRange.first, codeStart, module.dataAddressRange.first, dataStart);
+
+   module.codeAddressRange.first = codeStart;
+   module.codeAddressRange.second = codeStart + codeSize;
+
+   module.dataAddressRange.first = dataStart;
+   module.dataAddressRange.second = dataStart + dataSize;
 
    // Load sections into memory
    loadSections(sections);
