@@ -19,12 +19,17 @@ using instrfptr_t = void(*)(ThreadState*, Instruction);
 class Interpreter
 {
 public:
+   Interpreter()
+      : mJitEnabled(false) {}
+
+   void setJitEnabled(bool val);
    void execute(ThreadState *state, uint32_t addr);
    void addBreakpoint(uint32_t addr);
 
 private:
    void execute(ThreadState *state);
    JitManager mJitManager;
+   bool mJitEnabled;
    std::vector<uint32_t> mBreakpoints;
 
 public:
