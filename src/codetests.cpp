@@ -328,7 +328,7 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
 {
    uint32_t baseAddress;
 
-   if (!fs::exists(assembler)) {
+   if (std::system((assembler + " --version > nul").c_str()) != 0) {
       xError() << "Could not find assembler " << assembler;
       return false;
    }

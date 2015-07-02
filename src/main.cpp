@@ -74,7 +74,9 @@ int main(int argc, char **argv)
 
    // If user used test command, execute tests
    if (assemblerPath.size() && testDirectory.size()){
-      return executeCodeTests(assemblerPath, testDirectory) ? 0 : -1;
+      auto testRes = executeCodeTests(assemblerPath, testDirectory);
+      system("PAUSE");
+      return testRes ? 0 : -1;
    }
 
    // Setup filesystem
