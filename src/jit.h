@@ -90,6 +90,7 @@ public:
 
    void initStubs();
    void clearCache();
+   bool prepare(uint32_t addr);
    JitCode get(uint32_t addr);
    uint32_t execute(ThreadState *state, JitCode block);
 

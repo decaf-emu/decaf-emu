@@ -198,6 +198,10 @@ void JitManager::clearCache() {
    initStubs();
 }
 
+bool JitManager::prepare(uint32_t addr) {
+   return get(addr) != nullptr;
+}
+
 JitCode JitManager::get(uint32_t addr) {
    static bool didInit = false;
    if (!didInit) {
