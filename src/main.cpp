@@ -26,14 +26,15 @@ static const char USAGE[] =
    R"(WiiU Emulator
 
        Usage:
-         wiiu play <game directory>
-         wiiu test [--as=<ppcas>] <test directory>
+         wiiu play [--jit] <game directory>
+         wiiu test [--jit] [--as=<ppcas>] <test directory>
          wiiu (-h | --help)
          wiiu --version
 
        Options:
          -h --help     Show this screen.
          --version     Show version.
+         --jit         Enables the JIT engine.
          --as=<ppcas>  Path to PowerPC assembler [default: powerpc-eabi-as.exe].
    )";
 
@@ -44,12 +45,15 @@ int main(int argc, char **argv)
 
    initialiseEmulator();
 
-   if (args["play"]) {
+   gInterpreter.setJitEnabled(args["--jit"].asBool());
+   
+   if (args["play"].asBool()) {
       result = play(args["<game directory>"].asString());
-   } else if (args["test"]) {
+   } else if (args["test"].asBool()) {
       result = test(args["--as"].asString(), args["<test directory>"].asString());
    }
 
+   xLog() << "";
    system("PAUSE");
    return result ? 0 : -1;
 }
