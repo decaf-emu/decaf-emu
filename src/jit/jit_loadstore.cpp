@@ -41,36 +41,39 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.eax, 0);
       a.mov(a.eax.r16(), asmjit::X86Mem(a.zdx, 0));
       if (!(flags & LoadByteReverse)) {
-         a.bswap(a.eax.r16());
+         a.xchg(a.eax.r8Hi(), a.eax.r8Lo());
       }
    } else if (sizeof(Type) == 4) {
       a.mov(a.eax, asmjit::X86Mem(a.zdx, 0));
       if (!(flags & LoadByteReverse)) {
          a.bswap(a.eax);
       }
+   } else if (sizeof(Type) == 8) {
+      a.mov(a.zax, asmjit::X86Mem(a.zdx, 0));
+      if (!(flags & LoadByteReverse)) {
+         a.bswap(a.zax);
+      }
    } else {
-      return false;
+      assert(0);
    }
 
    if (std::is_floating_point<Type>::value) {
       if (flags & LoadPairedSingles) {
-         return false;
-         //state->fpr[instr.rD].paired0 = static_cast<float>(d);
-         //state->fpr[instr.rD].paired1 = static_cast<float>(d);
+         a.mov(a.ppcfprps[instr.rD][0], a.eax);
+         a.mov(a.ppcfprps[instr.rD][1], a.eax);
       }
       else {
-         return false;
-         //state->fpr[instr.rD].value = static_cast<double>(d);
+         assert(sizeof(Type) == 8);
+         a.mov(a.ppcfpr[instr.rD], a.zax);
       }
    }
    else {
       if (flags & LoadSignExtend) {
-         return false;
-         //state->gpr[instr.rD] = static_cast<uint32_t>(sign_extend<bit_width<Type>::value, uint64_t>(static_cast<uint64_t>(d)));
+         assert(sizeof(Type) == 2);
+         a.movsx(a.eax, a.eax.r16());
       }
-      else {
-         a.mov(a.ppcgpr[instr.rD], a.eax);
-      }
+
+      a.mov(a.ppcgpr[instr.rD], a.eax);
    }
 
    if (flags & LoadReserve) {
@@ -339,17 +342,19 @@ static bool
 storeGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if ((flags & StoreZeroRA) && instr.rA == 0) {
-      a.mov(a.ecx, 0u);
-   }
-   else {
+      if (flags & StoreIndexed) {
+         a.mov(a.ecx, a.ppcgpr[instr.rB]);
+      } else {
+         a.mov(a.ecx, sign_extend<16, int32_t>(instr.d));
+      }
+   } else {
       a.mov(a.ecx, a.ppcgpr[instr.rA]);
-   }
 
-   if (flags & StoreIndexed) {
-      a.add(a.ecx, a.ppcgpr[instr.rB]);
-   }
-   else {
-      a.add(a.ecx, sign_extend<16, int32_t>(instr.d));
+      if (flags & StoreIndexed) {
+         a.add(a.ecx, a.ppcgpr[instr.rB]);
+      } else {
+         a.add(a.ecx, sign_extend<16, int32_t>(instr.d));
+      }
    }
 
    if (flags & StoreConditional) {
@@ -368,32 +373,59 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
       */
    }
 
+   a.mov(a.zdx, a.zcx);
+   a.add(a.zdx, a.membase);
+
    if (flags & StoreFloatAsInteger) {
       return false;
       //s = static_cast<Type>(state->fpr[instr.rS].iw0);
-   }
-   else if (std::is_floating_point<Type>::value) {
+   } else if (std::is_floating_point<Type>::value) {
       if (flags & StoreSingle) {
-         return false;
-         //s = static_cast<Type>(state->fpr[instr.rS].paired0);
+         assert(sizeof(Type) == 4);
+         a.mov(a.eax, a.ppcfprps[instr.rS][0]);
       }
       else {
-         return false;
-         //s = static_cast<Type>(state->fpr[instr.rS].value);
+         assert(sizeof(Type) == 8);
+         a.mov(a.zax, a.ppcfpr[instr.rS]);
       }
-   }
-   else {
-      a.mov(a.eax, a.ppcgpr[instr.rS]);
-      //s = static_cast<Type>(state->gpr[instr.rS]);
+   } else {
+      if (sizeof(Type) == 1) {
+         a.mov(a.eax.r8(), a.ppcgpr[instr.rS]);
+      } else if (sizeof(Type) == 2) {
+         a.mov(a.eax.r16(), a.ppcgpr[instr.rS]);
+      } else if (sizeof(Type) == 4) {
+         a.mov(a.eax, a.ppcgpr[instr.rS]);
+      } else {
+         assert(0);
+      }
    }
 
    if (!(flags & StoreByteReverse)) {
-      a.bswap(a.eax);
+      if (sizeof(Type) == 1) {
+         // Inverted reverse logic means we have
+         //    to check for this but do nothing.
+      } else if (sizeof(Type) == 2) {
+         a.xchg(a.eax.r8Hi(), a.eax.r8Lo());
+      } else if (sizeof(Type) == 4) {
+         a.bswap(a.eax);
+      } else if (sizeof(Type) == 8) {
+         a.bswap(a.zax);
+      } else {
+         assert(0);
+      }
    }
 
-   a.mov(a.zdx, a.zcx);
-   a.add(a.zdx, a.membase);
-   a.mov(asmjit::X86Mem(a.zdx, 0), a.eax);
+   if (sizeof(Type) == 1) {
+      a.mov(asmjit::X86Mem(a.zdx, 0), a.eax.r8());
+   } else if (sizeof(Type) == 2) {
+      a.mov(asmjit::X86Mem(a.zdx, 0), a.eax.r16());
+   } else if (sizeof(Type) == 4) {
+      a.mov(asmjit::X86Mem(a.zdx, 0), a.eax);
+   } else if (sizeof(Type) == 8) {
+      a.mov(asmjit::X86Mem(a.zdx, 0), a.zax);
+   } else {
+      assert(0);
+   }
 
    if (flags & StoreUpdate) {
       a.mov(a.ppcgpr[instr.rA], a.ecx);

@@ -20,8 +20,10 @@ void JitManager::RegisterFunctions()
       // Register JIT instruction handlers
       registerBranchInstructions();
       registerConditionInstructions();
+      registerFloatInstructions();
       registerIntegerInstructions();
       registerLoadStoreInstructions();
+      registerPairedInstructions();
       registerSystemInstructions();
 
       didInit = true;
@@ -122,9 +124,9 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMa
          a.mov(a.eax, a.ppcctr);
          a.cmp(a.eax, 0);
          if (get_bit<CtrValue>(bo)) {
-            a.je(doCondFailLbl);
-         } else {
             a.jne(doCondFailLbl);
+         } else {
+            a.je(doCondFailLbl);
          }
       }
    }

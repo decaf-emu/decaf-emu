@@ -134,8 +134,10 @@ private:
    static void registerInstruction(InstructionID id, jitinstrfptr_t fptr);
    static void registerBranchInstructions();
    static void registerConditionInstructions();
+   static void registerFloatInstructions();
    static void registerIntegerInstructions();
    static void registerLoadStoreInstructions();
+   static void registerPairedInstructions();
    static void registerSystemInstructions();
 
 };

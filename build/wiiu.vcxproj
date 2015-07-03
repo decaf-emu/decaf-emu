@@ -104,8 +104,10 @@
     <ClCompile Include="..\src\jit.cpp" />
     <ClCompile Include="..\src\jit\jit_branch.cpp" />
     <ClCompile Include="..\src\jit\jit_condition.cpp" />
+    <ClCompile Include="..\src\jit\jit_float.cpp" />
     <ClCompile Include="..\src\jit\jit_integer.cpp" />
     <ClCompile Include="..\src\jit\jit_loadstore.cpp" />
+    <ClCompile Include="..\src\jit\jit_pairedsingle.cpp" />
     <ClCompile Include="..\src\jit\jit_system.cpp" />
     <ClCompile Include="..\src\loader.cpp" />
     <ClCompile Include="..\src\main.cpp" />
@@ -174,6 +176,7 @@
     <ClInclude Include="..\src\interpreter.h" />
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
     <ClInclude Include="..\src\jit.h" />
+    <ClInclude Include="..\src\jit_float.h" />
     <ClInclude Include="..\src\kernelfunctionargs.h" />
     <ClInclude Include="..\src\kernelfunctionlog.h" />
     <ClInclude Include="..\src\kernelfunctionresult.h" />
