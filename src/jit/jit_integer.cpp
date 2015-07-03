@@ -226,38 +226,35 @@ template<unsigned flags>
 static bool
 andGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t s, a, b;
-
-   s = state->gpr[instr.rS];
+   a.mov(a.eax, a.ppcgpr[instr.rS]);
 
    if (flags & AndImmediate) {
-      b = instr.uimm;
+      a.mov(a.ecx, instr.uimm);
+   } else {
+      a.mov(a.ecx, a.ppcgpr[instr.rB]);
    }
-   else {
-      b = state->gpr[instr.rB];
-   }
-
+   
    if (flags & AndShifted) {
-      b <<= 16;
+      a.shl(a.ecx, 16);
    }
 
    if (flags & AndComplement) {
-      b = ~b;
+      a.not_(a.ecx);
    }
 
-   a = s & b;
-   state->gpr[instr.rA] = a;
+   a.and_(a.eax, a.ecx);
+
+   a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (flags & AndAlwaysRecord) {
-      updateConditionRegister(state, a);
-   }
-   else if (flags & AndCheckRecord) {
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
+   } else if (flags & AndCheckRecord) {
       if (instr.rc) {
-         updateConditionRegister(state, a);
+         updateConditionRegister(a, a.eax, a.ecx, a.edx);
       }
    }
-   */
+
+   return true;
 }
 
 static bool
