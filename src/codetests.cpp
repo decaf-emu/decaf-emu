@@ -453,13 +453,13 @@ bool checkField(const TestDataField& field, Target target, ThreadState& state, T
 
       if (nv.type == Value::Type::Uint32) {
          if (nv.uint32Value != field.output.uint32Value) {
-            xLog() << "Expected " << fieldName << " to be " 
+            xLog() << " * Expected " << fieldName << " to be " 
                << Log::hex(field.output.uint32Value) << " but got " << Log::hex(nv.uint32Value);
             return false;
          }
       } else if (nv.type == Value::Type::Double) {
          if (nv.doubleValue != field.output.doubleValue) {
-            xLog() << "Expected " << fieldName << " to be " 
+            xLog() << " * Expected " << fieldName << " to be " 
                << field.output.doubleValue << " but got " << nv.doubleValue;
             return false;
          }
@@ -469,13 +469,13 @@ bool checkField(const TestDataField& field, Target target, ThreadState& state, T
    } else {
       if (nv.type == Value::Type::Uint32) {
          if (nv.uint32Value != ov.uint32Value) {
-            xLog() << "Expected " << fieldName << " to be unchanged but" 
+            xLog() << " * Expected " << fieldName << " to be unchanged but" 
                << Log::hex(nv.uint32Value) << " != " << Log::hex(ov.uint32Value);
             return false;
          }
       } else if (nv.type == Value::Type::Double) {
          if (nv.uint32Value != ov.uint32Value) {
-            xLog() << "Expected " << fieldName << " to be unchanged but " 
+            xLog() << " * Expected " << fieldName << " to be unchanged but " 
                << nv.doubleValue << " != " << ov.doubleValue;
             return false;
          }
@@ -565,21 +565,25 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
       for (auto &test : tests.tests) {
          auto result = true;
 
+         xLog() << "Running test `" << test.first << "`";
+
+         gJitManager.prepare(baseAddress + test.second.offset);
+
          // Run test with all state set to 0x00
-         xLog() << "Running `" << test.first << "` with 0x00";
+         xLog() << "  Running with 0x00";
          memset(&state, 0x00, sizeof(ThreadState));
          result &= executeCodeTest(state, baseAddress, test.second);
 
          // Run test with all state set to 0xFF
-         xLog() << "Running `" << test.first << "` with 0xFF";
+         xLog() << "  Running with 0xFF";
          memset(&state, 0xFF, sizeof(ThreadState));
          result &= executeCodeTest(state, baseAddress, test.second);
 
          // BUT WAS IT SUCCESS??
          if (!result) {
-            xLog() << "FAILED " << test.first;
+            xLog() << " - FAILED ";
          } else {
-            xLog() << "PASSED " << test.first;
+            xLog() << " - PASSED";
          }
       }
 
