@@ -123,7 +123,17 @@ FSOpenFile(FSClient *client, FSCmdBlock *block, const char *path, const char *mo
 FSStatus
 FSGetStat(FSClient *client, FSCmdBlock *block, const char *filepath, FSStat *stat, uint32_t flags)
 {
-   return FSStatus::NotFound;
+   auto fs = gSystem.getFileSystem();
+   auto file = fs->openFile(filepath, FileSystem::Input | FileSystem::Binary);
+
+   if (!file) {
+      return FSStatus::NotFound;
+   }
+
+   stat->flags = 0;
+   stat->size = static_cast<uint32_t>(file->size());
+   file->close();
+   return FSStatus::OK;
 }
 
 FSStatus
@@ -135,6 +145,7 @@ FSGetStatFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, FSStat *
       return FSStatus::FatalError;
    }
 
+   stat->flags = 0;
    stat->size = static_cast<uint32_t>(fsFile->file->size());
    return FSStatus::OK;
 }

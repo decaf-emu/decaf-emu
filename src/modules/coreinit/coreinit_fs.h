@@ -15,10 +15,13 @@ struct FSCmdBlock
 
 struct FSStat
 {
-   UNKNOWN(0x10);
+   be_val<uint32_t> flags;
+   UNKNOWN(0xc);
    be_val<uint32_t> size;
    UNKNOWN(0x50);
 };
+CHECK_OFFSET(FSStat, 0x00, flags);
+CHECK_OFFSET(FSStat, 0x10, size);
 CHECK_SIZE(FSStat, 0x64); // 0x64 from memmove in FSAGetStatFile
 
 struct FSStateChangeInfo
