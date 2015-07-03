@@ -48,6 +48,12 @@ ghs_flock_file(uint32_t lockIx)
    // Lock mutex for file lockIx
 }
 
+void
+ghsExit(int code)
+{
+   assert(false);
+}
+
 /*
 .dimport __atexit_cleanup
 .dimport __cpp_exception_cleanup_ptr
@@ -65,6 +71,7 @@ CoreInit::registerGhsFunctions()
    RegisterKernelFunctionName("__gh_get_errno", ghs_get_errno);
    RegisterKernelFunctionName("__ghs_flock_ptr", ghs_flock_ptr);
    RegisterKernelFunctionName("__ghs_flock_file", ghs_flock_file);
+   RegisterKernelFunctionName("exit", ghsExit);
 }
 
 void
