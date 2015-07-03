@@ -60,6 +60,34 @@ GX2SetSwapInterval(uint32_t interval)
    gSwapInterval = interval;
 }
 
+TVScanMode
+GX2GetSystemTVScanMode()
+{
+   // My console returns 7
+   return TVScanMode::Last;
+}
+
+void
+GX2WaitForVsync()
+{
+}
+
+void
+GX2WaitForFlip()
+{
+}
+
+void
+GX2GetSwapStatus(be_val<uint32_t> *unk1, be_val<uint32_t> *unk2, be_val<uint64_t> *unk3, be_val<uint64_t> *unk4)
+{
+   // unk3 and unk4 are probably OSTime because they are 64 bit
+
+   // This gets us out of loops!
+   *unk1 = 1;
+   *unk2 = 1;
+}
+
+
 void
 GX2::registerDisplayFunctions()
 {
@@ -73,4 +101,8 @@ GX2::registerDisplayFunctions()
    RegisterKernelFunction(GX2SetDRCScale);
    RegisterKernelFunction(GX2SetSwapInterval);
    RegisterKernelFunction(GX2GetSwapInterval);
+   RegisterKernelFunction(GX2GetSystemTVScanMode);
+   RegisterKernelFunction(GX2WaitForVsync);
+   RegisterKernelFunction(GX2WaitForFlip);
+   RegisterKernelFunction(GX2GetSwapStatus);
 }

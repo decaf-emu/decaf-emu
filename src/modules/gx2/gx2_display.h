@@ -25,6 +25,13 @@ enum class BufferingMode : uint32_t
    Last = 4
 };
 
+enum class TVScanMode : uint32_t
+{
+   None = 0,
+   First = 0,
+   Last = 7
+};
+
 void
 GX2SetTVEnable(BOOL enable);
 
@@ -54,3 +61,15 @@ GX2GetSwapInterval();
 
 void
 GX2SetSwapInterval(uint32_t interval);
+
+TVScanMode
+GX2GetSystemTVScanMode();
+
+void
+GX2WaitForVsync();
+
+void
+GX2WaitForFlip();
+
+void
+GX2GetSwapStatus(be_val<uint32_t> *unk1, be_val<uint32_t> *unk2, be_val<uint64_t> *unk3, be_val<uint64_t> *unk4);

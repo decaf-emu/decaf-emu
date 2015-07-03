@@ -28,10 +28,35 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader, void *buffer, uint32_t count, 
 }
 
 void
+GX2SetFetchShader(GX2FetchShader *shader)
+{
+}
+
+void
+GX2SetVertexShader(GX2VertexShader *shader)
+{
+}
+
+void
+GX2SetPixelShader(GX2PixelShader *shader)
+{
+}
+
+void
+GX2SetGeometryShader(GX2GeometryShader *shader)
+{
+}
+
+
+void
 GX2::registerShaderFunctions()
 {
    RegisterKernelFunction(GX2CalcGeometryShaderInputRingBufferSize);
    RegisterKernelFunction(GX2CalcGeometryShaderOutputRingBufferSize);
    RegisterKernelFunction(GX2CalcFetchShaderSizeEx);
    RegisterKernelFunction(GX2InitFetchShaderEx);
+   RegisterKernelFunction(GX2SetFetchShader);
+   RegisterKernelFunction(GX2SetVertexShader);
+   RegisterKernelFunction(GX2SetPixelShader);
+   RegisterKernelFunction(GX2SetGeometryShader);
 }

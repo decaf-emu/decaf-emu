@@ -19,6 +19,9 @@ enum class AttribFormat : uint32_t
 };
 
 struct GX2FetchShader;
+struct GX2VertexShader;
+struct GX2PixelShader;
+struct GX2GeometryShader;
 
 #pragma pack(push, 1)
 
@@ -49,3 +52,15 @@ GX2CalcFetchShaderSizeEx(uint32_t attribs, FetchShaderType fetchShaderType, Tess
 
 void
 GX2InitFetchShaderEx(GX2FetchShader *fetchShader, void *buffer, uint32_t count, const GX2AttribStream* attribs, FetchShaderType type, TessellationMode tessMode);
+
+void
+GX2SetFetchShader(GX2FetchShader *shader);
+
+void
+GX2SetVertexShader(GX2VertexShader *shader);
+
+void
+GX2SetPixelShader(GX2PixelShader *shader);
+
+void
+GX2SetGeometryShader(GX2GeometryShader *shader);
