@@ -73,6 +73,18 @@
     <Filter Include="Header Files\jit">
       <UniqueIdentifier>{2e6ea203-c5d4-40fa-b606-aebdbc8570c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\modules\proc_ui">
+      <UniqueIdentifier>{0aa10194-42a7-4e39-9998-6af69405988a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\proc_ui">
+      <UniqueIdentifier>{72395e1c-4360-4eae-911c-852cf298c907}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\padscore">
+      <UniqueIdentifier>{2cdf8556-ef95-41f4-9e49-2808859ff48e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\padscore">
+      <UniqueIdentifier>{25ed9994-d801-4aee-bf49-dad286cdc7e3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -260,6 +272,21 @@
     </ClCompile>
     <ClCompile Include="..\src\main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\proc_ui\proc_ui.cpp">
+      <Filter>Source Files\modules\proc_ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\proc_ui\proc_ui_core.cpp">
+      <Filter>Source Files\modules\proc_ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\padscore\padscore_wpad.cpp">
+      <Filter>Source Files\modules\padscore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\padscore\padscore.cpp">
+      <Filter>Source Files\modules\padscore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\padscore\padscore_kpad.cpp">
+      <Filter>Source Files\modules\padscore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -481,6 +508,21 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_memheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\proc_ui\proc_ui.h">
+      <Filter>Header Files\modules\proc_ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\proc_ui\proc_ui_core.h">
+      <Filter>Header Files\modules\proc_ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\padscore\padscore.h">
+      <Filter>Header Files\modules\padscore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\padscore\padscore_wpad.h">
+      <Filter>Header Files\modules\padscore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\padscore\padscore_kpad.h">
+      <Filter>Header Files\modules\padscore</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -15,6 +15,7 @@
 #include "modules/nn_save/nn_save.h"
 #include "modules/zlib125/zlib125.h"
 #include "modules/proc_ui/proc_ui.h"
+#include "modules/padscore/padscore.h"
 #include "system.h"
 #include "thread.h"
 #include "usermodule.h"
@@ -75,6 +76,7 @@ initialiseEmulator()
    GX2::RegisterFunctions();
    NNSave::RegisterFunctions();
    ProcUI::RegisterFunctions();
+   PadScore::RegisterFunctions();
    Zlib125::RegisterFunctions();
 
    // Initialise emulator systems
@@ -85,18 +87,27 @@ initialiseEmulator()
    gSystem.registerModule("gx2", new GX2 {});
    gSystem.registerModule("nn_save", new NNSave {});
    gSystem.registerModule("proc_ui", new ProcUI {});
+   gSystem.registerModule("padscore", new PadScore {});
    gSystem.registerModule("zlib125", new Zlib125 {});
    gSystem.initialiseModules();
 }
 
 static bool
 test(const std::string &as, const std::string &path)
-{   return executeCodeTests(as, path);
+{
+   return executeCodeTests(as, path);
 }
 
 static bool
 play(const std::string &path)
 {
+   // Redirect stdout to text file
+   if (0) {
+      auto parentPath = std::experimental::filesystem::path(path).parent_path().generic_string();
+      auto out = std::string(path.substr(parentPath.size() + 1)) + ".txt";
+      freopen(out.c_str(), "w", stdout);
+   }
+
    // Setup filesystem
    VirtualFileSystem fs { "/" };
    fs.mount("/vol", std::make_unique<HostFileSystem>(path + "/data"));
