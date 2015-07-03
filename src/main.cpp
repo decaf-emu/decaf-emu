@@ -14,6 +14,7 @@
 #include "modules/gx2/gx2.h"
 #include "modules/nn_save/nn_save.h"
 #include "modules/zlib125/zlib125.h"
+#include "modules/proc_ui/proc_ui.h"
 #include "system.h"
 #include "thread.h"
 #include "usermodule.h"
@@ -73,6 +74,7 @@ initialiseEmulator()
    CoreInit::RegisterFunctions();
    GX2::RegisterFunctions();
    NNSave::RegisterFunctions();
+   ProcUI::RegisterFunctions();
    Zlib125::RegisterFunctions();
 
    // Initialise emulator systems
@@ -82,6 +84,7 @@ initialiseEmulator()
    gSystem.registerModule("coreinit", new CoreInit {});
    gSystem.registerModule("gx2", new GX2 {});
    gSystem.registerModule("nn_save", new NNSave {});
+   gSystem.registerModule("proc_ui", new ProcUI {});
    gSystem.registerModule("zlib125", new Zlib125 {});
    gSystem.initialiseModules();
 }

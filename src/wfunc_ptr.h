@@ -11,6 +11,16 @@ struct wfunc_ptr
    {
    }
 
+   wfunc_ptr(std::nullptr_t) :
+      address(0)
+   {
+   }
+
+   wfunc_ptr(int addr) :
+      address(addr)
+   {
+   }
+
    wfunc_ptr(uint32_t addr) :
       address(addr)
    {
