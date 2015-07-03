@@ -846,31 +846,28 @@ template<unsigned flags>
 static bool
 xorGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t s, a, b;
-
-   s = state->gpr[instr.rS];
+   a.mov(a.eax, a.ppcgpr[instr.rS]);
 
    if (flags & XorImmediate) {
-      b = instr.uimm;
-   }
-   else {
-      b = state->gpr[instr.rB];
+      a.mov(a.ecx, instr.uimm);
+   } else {
+      a.mov(a.ecx, a.ppcgpr[instr.rB]);
    }
 
    if (flags & XorShifted) {
-      b <<= 16;
+      a.shl(a.ecx, 16);
    }
 
-   a = s ^ b;
-   state->gpr[instr.rA] = a;
+   a.xor_(a.eax, a.ecx);
+   a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (flags & XorCheckRecord) {
       if (instr.rc) {
-         updateConditionRegister(state, a);
+         updateConditionRegister(a, a.eax, a.ecx, a.edx);
       }
    }
-   */
+   
+   return true;
 }
 
 static bool
