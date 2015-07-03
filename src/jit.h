@@ -30,6 +30,8 @@ public:
       }
       for (auto i = 0; i < 32; ++i) {
          ppcfpr[i] = PPCTSReg(fpr[i]);
+         ppcfprps[i][0] = PPCTSReg(fpr[i].paired0);
+         ppcfprps[i][1] = PPCTSReg(fpr[i].paired1);
       }
       ppccr = PPCTSReg(cr);
       ppcxer = PPCTSReg(xer.value);
@@ -58,6 +60,7 @@ public:
 
    asmjit::X86Mem ppcgpr[32];
    asmjit::X86Mem ppcfpr[32];
+   asmjit::X86Mem ppcfprps[32][2];
    asmjit::X86Mem ppccr;
    asmjit::X86Mem ppcxer;
    asmjit::X86Mem ppclr;
