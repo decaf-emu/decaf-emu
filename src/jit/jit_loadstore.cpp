@@ -34,10 +34,22 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
 
    a.mov(a.zdx, a.zcx);
    a.add(a.zdx, a.membase);
-   a.mov(a.eax, asmjit::X86Mem(a.zdx, 0));
-
-   if (!(flags & LoadByteReverse)) {
-      a.bswap(a.eax);
+   if (sizeof(Type) == 1) {
+      a.mov(a.eax, 0);
+      a.mov(a.eax.r8(), asmjit::X86Mem(a.zdx, 0));
+   } else if (sizeof(Type) == 2) {
+      a.mov(a.eax, 0);
+      a.mov(a.eax.r16(), asmjit::X86Mem(a.zdx, 0));
+      if (!(flags & LoadByteReverse)) {
+         a.bswap(a.eax.r16());
+      }
+   } else if (sizeof(Type) == 4) {
+      a.mov(a.eax, asmjit::X86Mem(a.zdx, 0));
+      if (!(flags & LoadByteReverse)) {
+         a.bswap(a.eax);
+      }
+   } else {
+      return false;
    }
 
    if (std::is_floating_point<Type>::value) {
@@ -239,14 +251,15 @@ lfdx(PPCEmuAssembler& a, Instruction instr)
 static bool
 lmw(PPCEmuAssembler& a, Instruction instr)
 {
+   auto o = sign_extend<16, int32_t>(instr.d);
    if (instr.rA) {
       a.mov(a.ecx, a.ppcgpr[instr.rA]);
+      a.add(a.ecx, o);
    }
    else {
-      a.mov(a.ecx, 0u);
+      a.mov(a.ecx, o);
    }
-   a.add(a.ecx, sign_extend<16, int32_t>(instr.d));
-   a.add(a.zcx, a.zsi);
+   a.add(a.zcx, a.membase);
 
    for (int r = instr.rD, d = 0; r <= 31; ++r, d += 4) {
       a.mov(a.eax, asmjit::X86Mem(a.zcx, d));
@@ -538,22 +551,21 @@ stfiwx(PPCEmuAssembler& a, Instruction instr)
 static bool
 stmw(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t b, ea, r;
-
+   auto o = sign_extend<16, int32_t>(instr.d);
    if (instr.rA) {
-      b = state->gpr[instr.rA];
+      a.mov(a.ecx, a.ppcgpr[instr.rA]);
+      a.add(a.ecx, o);
+   } else {
+      a.mov(a.ecx, o);
    }
-   else {
-      b = 0;
+   a.add(a.zcx, a.membase);
+   
+   for (int r = instr.rS, d = 0; r <= 31; ++r, d += 4) {
+      a.mov(a.eax, a.ppcgpr[r]);
+      a.bswap(a.eax);
+      a.mov(asmjit::X86Mem(a.zcx, d), a.eax);
    }
-
-   ea = b + sign_extend<16, int32_t>(instr.d);
-
-   for (r = instr.rS; r <= 31; ++r, ea += 4) {
-      gMemory.write<uint32_t>(ea, state->gpr[r]);
-   }
-   */
+   return true;
 }
 
 // Store String Word (byte-by-byte version of lmw)
