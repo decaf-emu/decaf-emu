@@ -469,7 +469,7 @@ bool checkField(const TestDataField& field, Target target, ThreadState& state, T
    } else {
       if (nv.type == Value::Type::Uint32) {
          if (nv.uint32Value != ov.uint32Value) {
-            xLog() << " * Expected " << fieldName << " to be unchanged but" 
+            xLog() << " * Expected " << fieldName << " to be unchanged but " 
                << Log::hex(nv.uint32Value) << " != " << Log::hex(ov.uint32Value);
             return false;
          }
