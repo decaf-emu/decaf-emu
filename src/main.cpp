@@ -72,6 +72,7 @@ initialiseEmulator()
    // Initialise emulator systems
    gMemory.initialise();
    gInstructionTable.initialise();
+   gJitManager.initialise();
    gSystem.registerModule("coreinit", new CoreInit {});
    gSystem.registerModule("gx2", new GX2 {});
    gSystem.registerModule("nn_save", new NNSave {});

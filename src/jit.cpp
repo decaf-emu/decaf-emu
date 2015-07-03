@@ -32,6 +32,36 @@ void JitManager::registerInstruction(InstructionID id, jitinstrfptr_t fptr)
    sJitInstructionMap[static_cast<size_t>(id)] = fptr;
 }
 
+bool JitManager::initialise() {
+   initStubs();
+   return true;
+}
+
+void JitManager::initStubs() {
+   PPCEmuAssembler a(mRuntime);
+
+   asmjit::Label introLabel(a);
+   asmjit::Label extroLabel(a);
+
+   a.bind(introLabel);
+   a.push(a.zbx);
+   a.push(a.zsi);
+   a.sub(a.zsp, 0x28);
+   a.mov(a.zbx, a.zcx);
+   a.mov(a.zsi, gMemory.base());
+   a.jmp(a.zdx);
+
+   a.bind(extroLabel);
+   a.add(a.zsp, 0x28);
+   a.pop(a.zsi);
+   a.pop(a.zbx);
+   a.ret();
+
+   auto basePtr = a.make();
+   mCallFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(introLabel));
+   mFinaleFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(extroLabel));
+}
+
 enum BoBits
 {
    CtrValue = 1,
@@ -66,11 +96,11 @@ bool JitManager::jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia, cons
    auto i = jumpLabels.find(nia);
    if (i != jumpLabels.end()) {
       a.jmp(i->second);
-      return true;
+   } else {
+      a.mov(a.eax, nia);
+      a.jmp(asmjit::Ptr(mFinaleFn));
    }
 
-   a.mov(a.eax, nia);
-   a.jmp(asmjit::Ptr(mFinaleFn));
    return true;
 }
 
@@ -105,7 +135,7 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMa
          //cond_ok = (crb == crv);
 
          a.mov(a.eax, a.ppccr);
-         a.and_(a.eax, 1 << (instr.bi-1));
+         a.and_(a.eax, 1 << (31 - instr.bi));
          a.cmp(a.eax, 0);
 
          if (get_bit<CondValue>(bo)) {
@@ -121,16 +151,27 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMa
       a.mov(a.ppclr, a.eax);
    }
 
+   // Make sure no JMP related instructions end up above
+   //   this if-block as we use a JMP instruction with
+   //   early exit in the else block...
    if (flags & BcBranchCTR) {
       a.mov(a.eax, a.ppcctr);
       a.and_(a.eax, ~0x3);
+      a.jmp(asmjit::Ptr(finaleFn));
    } else if (flags & BcBranchLR) {
       a.mov(a.eax, a.ppclr);
       a.and_(a.eax, ~0x3);
+      a.jmp(asmjit::Ptr(finaleFn));
    } else {
-      a.mov(a.eax, cia + sign_extend<16>(instr.bd << 2));
+      uint32_t nia = cia + sign_extend<16>(instr.bd << 2);
+      auto i = jumpLabels.find(nia);
+      if (i != jumpLabels.end()) {
+         a.jmp(i->second);
+      } else {
+         a.mov(a.eax, nia);
+         a.jmp(asmjit::Ptr(finaleFn));
+      }
    }
-   a.jmp(asmjit::Ptr(finaleFn));
 
    a.bind(doCondFailLbl);
    return true;
@@ -162,31 +203,6 @@ JitManager::~JitManager() {
    }
 }
 
-void JitManager::initStubs() {
-   PPCEmuAssembler a(mRuntime);
-
-   asmjit::Label introLabel(a);
-   asmjit::Label extroLabel(a);
-
-   a.bind(introLabel);
-   a.push(a.zbx);
-   a.push(a.zsi);
-   a.sub(a.zsp, 0x28);
-   a.mov(a.zbx, a.zcx);
-   a.mov(a.zsi, gMemory.base());
-   a.jmp(a.zdx);
-
-   a.bind(extroLabel);
-   a.add(a.zsp, 0x28);
-   a.pop(a.zsi);
-   a.pop(a.zbx);
-   a.ret();
-
-   auto basePtr = a.make();
-   mCallFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(introLabel));
-   mFinaleFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(extroLabel));
-}
-
 void JitManager::clearCache() {
    if (mRuntime) {
       delete mRuntime;
@@ -195,6 +211,7 @@ void JitManager::clearCache() {
    
    mRuntime = new asmjit::JitRuntime();
    mBlocks.clear();
+   mSingleBlocks.clear();
    initStubs();
 }
 
@@ -203,37 +220,67 @@ bool JitManager::prepare(uint32_t addr) {
 }
 
 JitCode JitManager::get(uint32_t addr) {
-   static bool didInit = false;
-   if (!didInit) {
-      initStubs();
-      didInit = true;
-   }
-
    auto i = mBlocks.find(addr);
    if (i != mBlocks.end()) {
       return i->second;
    }
-   return gen(addr);
-}
 
-JitCode JitManager::gen(uint32_t addr) {
    // Set it to nullptr first so we don't
    //   try to regenerate after a failed attempt.
    mBlocks[addr] = nullptr;
 
-   PPCEmuAssembler a(mRuntime);
+   JitBlock block(addr);
 
-   std::vector<uint32_t> jumpTargets;
-   jumpTargets.reserve(100);
+   xLog() << "Attempting to JIT " << Log::hex(block.start);
 
-   auto fnStart = addr;
-   auto fnMax = addr;
-   auto fnEnd = addr;
+   if (!identBlock(block)) {
+      return nullptr;
+   }
+
+   xLog() << "Found end at " << Log::hex(block.end);
+
+   if (!gen(block)) {
+      return nullptr;
+   }
+
+   mBlocks[block.start] = block.entry;
+   for (auto i = block.targets.cbegin(); i != block.targets.cend(); ++i) {
+      if (i->second) {
+         mBlocks[i->first] = i->second;
+      }
+   }
+   return block.entry;
+}
+
+JitCode JitManager::getSingle(uint32_t addr) {
+   auto i = mSingleBlocks.find(addr);
+   if (i != mSingleBlocks.end()) {
+      return i->second;
+   }
+
+   mSingleBlocks[addr] = nullptr;
+
+   JitBlock block(addr);
+   block.end = block.start + 4;
+
+   if (!gen(block)) {
+      return nullptr;
+   }
+
+   mSingleBlocks[addr] = block.entry;
+   return block.entry;
+}
+
+typedef std::vector<uint32_t> JumpTargetList;
+
+bool JitManager::identBlock(JitBlock& block) {
+   auto fnStart = block.start;
+   auto fnMax = fnStart;
+   auto fnEnd = fnStart;
    bool jitFailed = false;
+   JumpTargetList jumpTargets;
 
-   auto lclCia = addr;
-   xLog() << "Attempting to JIT " << Log::hex(lclCia);
-
+   auto lclCia = fnStart;
    while (lclCia) {
       auto instr = gMemory.read<Instruction>(lclCia);
       auto data = gInstructionTable.decode(instr);
@@ -327,19 +374,27 @@ JitCode JitManager::gen(uint32_t addr) {
    }
 
    if (jitFailed) {
-      return nullptr;
+      return false;
    }
 
-   xLog() << "Found end at " << Log::hex(lclCia);
+   block.end = fnEnd;
 
-   std::map<uint32_t, asmjit::Label> jumpLabels;
    for (auto i : jumpTargets) {
-      // Don't generate labels for stuff outside this block.
-      if (i < fnStart || i > fnEnd) {
-         continue;
-      }
+      block.targets[i] = nullptr;
+   }
+   return true;
+}
 
-      jumpLabels[i] = asmjit::Label(a);
+bool JitManager::gen(JitBlock& block)
+{
+   PPCEmuAssembler a(mRuntime);
+   bool jitFailed = false;
+
+   JumpLabelMap jumpLabels;
+   for (auto i = block.targets.begin(); i != block.targets.end(); ++i) {
+      if (i->first < block.start || i->first > block.end) {
+         jumpLabels[i->first] = asmjit::Label(a);
+      }
    }
 
    // Fix VS debug viewer...
@@ -350,8 +405,8 @@ JitCode JitManager::gen(uint32_t addr) {
    asmjit::Label codeStart(a);
    a.bind(codeStart);
 
-   lclCia = fnStart;
-   while (lclCia < fnEnd) {
+   auto lclCia = block.start;
+   while (lclCia < block.end) {
       auto ciaLbl = jumpLabels.find(lclCia);
       if (ciaLbl != jumpLabels.end()) {
          a.bind(ciaLbl->second);
@@ -394,7 +449,7 @@ JitCode JitManager::gen(uint32_t addr) {
    }
 
    if (jitFailed) {
-      return nullptr;
+      return false;
    }
 
    // Debug Check
@@ -404,21 +459,22 @@ JitCode JitManager::gen(uint32_t addr) {
       }
    }
 
-   a.mov(a.eax, fnEnd + 4);
+   a.mov(a.eax, block.end);
    a.jmp(asmjit::Ptr(mFinaleFn));
 
    JitCode func = asmjit_cast<JitCode>(a.make());
    if (func == nullptr) {
       xLog() << "JIT failed due to asmjit make failure";
-      return nullptr;
+      return false;
    }
 
    auto baseAddr = asmjit_cast<JitCode>(func, a.getLabelOffset(codeStart));
-   mBlocks[fnStart] = baseAddr;
+   block.entry = baseAddr;
    for (auto i = jumpLabels.cbegin(); i != jumpLabels.cend(); ++i) {
-      mBlocks[i->first] = asmjit_cast<JitCode>(func, a.getLabelOffset(i->second));
+      block.targets[i->first] = asmjit_cast<JitCode>(func, a.getLabelOffset(i->second));
    }
-   return baseAddr;
+   
+   return true;
 }
 
 uint32_t JitManager::execute(ThreadState *state, JitCode block) {

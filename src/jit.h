@@ -83,19 +83,37 @@ typedef uint32_t(*JitCall)(ThreadState*, JitCode);
 
 typedef std::map<uint32_t, asmjit::Label> JumpLabelMap;
 
+struct JitBlock {
+   JitBlock(uint32_t _start) {
+      start = _start;
+      end = _start;
+      entry = nullptr;
+   }
+
+   uint32_t start;
+   uint32_t end;
+
+   JitCode entry;
+   std::map<uint32_t, JitCode> targets;
+};
+
 class JitManager {
 public:
    JitManager();
    ~JitManager();
 
+   bool initialise();
+
    void initStubs();
    void clearCache();
    bool prepare(uint32_t addr);
    JitCode get(uint32_t addr);
+   JitCode getSingle(uint32_t addr);
    uint32_t execute(ThreadState *state, JitCode block);
 
 private:
-   JitCode gen(uint32_t addr);
+   bool identBlock(JitBlock& block);
+   bool gen(JitBlock& block);
    bool jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
    bool jit_bc(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
    bool jit_bcctr(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
@@ -103,6 +121,7 @@ private:
 
    asmjit::JitRuntime* mRuntime;
    std::map<uint32_t, JitCode> mBlocks;
+   std::map<uint32_t, JitCode> mSingleBlocks;
    JitCall mCallFn;
    JitFinale mFinaleFn;
 
