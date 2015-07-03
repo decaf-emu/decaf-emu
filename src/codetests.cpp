@@ -509,7 +509,7 @@ bool executeCodeTest(ThreadState& state, uint32_t baseAddress, const TestData& t
 bool
 executeCodeTests(const std::string &assembler, const std::string &directory)
 {
-   uint32_t baseAddress;
+   uint32_t baseAddress = 0x02000000;
 
    if (std::system((assembler + " --version > nul").c_str()) != 0) {
       xError() << "Could not find assembler " << assembler;
@@ -522,7 +522,7 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
    }
 
    // Allocate some memory to write code to
-   if (OSDynLoad_MemAlloc(4096, 4, &baseAddress) != 0 || !baseAddress) {
+   if (!gMemory.alloc(baseAddress, 4096)) {
       xError() << "Could not allocate memory for test code";
       return false;
    }
