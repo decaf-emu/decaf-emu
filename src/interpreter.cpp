@@ -155,6 +155,10 @@ Interpreter::execute(ThreadState *state)
                // Ensure compliance!
                std::vector<std::string> errors;
                if (!dbgStateCmp(&jstate, state, errors)) {
+                  xLog() << "Errors @ " << Log::hex(ostate.cia) << ":";
+                  for (auto err : errors) {
+                     xLog() << "  " << err;
+                  }
                   DebugBreak();
                }
             }
