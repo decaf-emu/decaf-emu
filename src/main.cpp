@@ -26,8 +26,8 @@ static const char USAGE[] =
    R"(WiiU Emulator
 
        Usage:
-         wiiu play [--jit] <game directory>
-         wiiu test [--jit] [--as=<ppcas>] <test directory>
+         wiiu play [--jit | --jitdebug] <game directory>
+         wiiu test [--jit | --jitdebug] [--as=<ppcas>] <test directory>
          wiiu (-h | --help)
          wiiu --version
 
@@ -45,7 +45,13 @@ int main(int argc, char **argv)
 
    initialiseEmulator();
 
-   gInterpreter.setJitEnabled(args["--jit"].asBool());
+   if (args["--jitdebug"].asBool()) {
+      gInterpreter.setJitMode(InterpJitMode::Debug);
+   } else if (args["--jit"].asBool()) {
+      gInterpreter.setJitMode(InterpJitMode::Enabled);
+   } else {
+      gInterpreter.setJitMode(InterpJitMode::Disabled);
+   }
    
    if (args["play"].asBool()) {
       result = play(args["<game directory>"].asString());

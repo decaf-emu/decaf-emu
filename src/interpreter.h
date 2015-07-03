@@ -16,19 +16,25 @@
 
 using instrfptr_t = void(*)(ThreadState*, Instruction);
 
+enum class InterpJitMode {
+   Enabled,
+   Disabled,
+   Debug
+};
+
 class Interpreter
 {
 public:
    Interpreter()
-      : mJitEnabled(false) {}
+      : mJitMode(InterpJitMode::Disabled) {}
 
-   void setJitEnabled(bool val);
+   void setJitMode(InterpJitMode val);
    void execute(ThreadState *state, uint32_t addr);
    void addBreakpoint(uint32_t addr);
 
 private:
    void execute(ThreadState *state);
-   bool mJitEnabled;
+   InterpJitMode mJitMode;
    std::vector<uint32_t> mBreakpoints;
 
 public:
