@@ -146,7 +146,7 @@ Interpreter::execute(ThreadState *state)
          // Fetch the JIT instruction block
          JitCode jitInstr = gJitManager.getSingle(state->cia);
          if (jitInstr == nullptr) {
-         	gLog->error("Failed to JIT debug instr @ {:08x}", ostate.cia);
+         	gLog->error("Failed to JIT debug instr {} @ {:08x}", data->name, ostate.cia);
             DebugBreak();
          }
 
@@ -161,7 +161,7 @@ Interpreter::execute(ThreadState *state)
             // Ensure compliance!
             std::vector<std::string> errors;
             if (!dbgStateCmp(&jstate, state, errors)) {
-               gLog->error("JIT Compliance errors at {:08x}", ostate.cia);
+               gLog->error("JIT Compliance errors w/ {} at {:08x}", data->name, ostate.cia);
                for (auto &err : errors) {
                   gLog->error(err);
                }
