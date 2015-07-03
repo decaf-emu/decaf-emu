@@ -77,6 +77,9 @@ MEMiInitHeapHead(CommonHeap *heap, HeapType type, uint32_t dataStart, uint32_t d
 void
 MEMiFinaliseHeap(CommonHeap *heap);
 
+void
+MEMDumpHeap(CommonHeap *heap);
+
 HeapHandle
 MEMFindContainHeap(void *block);
 

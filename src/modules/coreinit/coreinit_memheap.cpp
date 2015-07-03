@@ -112,6 +112,21 @@ MEMiFinaliseHeap(CommonHeap *heap)
    }
 }
 
+void
+MEMDumpHeap(CommonHeap *heap)
+{
+   switch (heap->tag) {
+   case HeapType::ExpandedHeap:
+      MEMiDumpExpHeap(reinterpret_cast<ExpandedHeap*>(heap));
+      break;
+   case HeapType::FrameHeap:
+   case HeapType::UnitHeap:
+   case HeapType::UserHeap:
+   case HeapType::BlockHeap:
+      xError() << "TODO: Unimplemented MEMDumpHeap type";
+   }
+}
+
 HeapHandle
 MEMFindContainHeap(void *block)
 {
@@ -281,6 +296,7 @@ CoreInit::registerMembaseFunctions()
    RegisterKernelFunction(MEMiInitHeapHead);
    RegisterKernelFunction(MEMiFinaliseHeap);
    RegisterKernelFunction(MEMFindContainHeap);
+   RegisterKernelFunction(MEMDumpHeap);
 
    // These are default implementations for function pointers, register as exports
    // so we will have function thunks generated

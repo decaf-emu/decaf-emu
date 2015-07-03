@@ -13,6 +13,9 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags);
 ExpandedHeap *
 MEMDestroyExpHeap(ExpandedHeap *heap);
 
+void
+MEMiDumpExpHeap(ExpandedHeap *heap);
+
 void *
 MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size);
 

@@ -153,6 +153,20 @@ MEMDestroyExpHeap(ExpandedHeap *heap)
    return heap;
 }
 
+void
+MEMiDumpExpHeap(ExpandedHeap *heap)
+{
+   xLog() << "Status Address  Size     Group";
+
+   for (auto block = heap->freeBlockList; block; block = block->next) {
+      xLog() << "FREE   " << Log::hex(block->addr) << " " << Log::hex(block->size) << " " << block->group;
+   }
+
+   for (auto block = heap->usedBlockList; block; block = block->next) {
+      xLog() << "USED   " << Log::hex(block->addr) << " " << Log::hex(block->size) << " " << block->group;
+   }
+}
+
 void *
 MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size)
 {
@@ -228,6 +242,8 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
    }
 
    if (!freeBlock) {
+      xError() << "MEMAllocFromExpHeapEx failed, no free block found";
+      MEMiDumpExpHeap(heap);
       return 0;
    }
 
