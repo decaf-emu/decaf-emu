@@ -57,7 +57,7 @@ bool dbgStateCmp(ThreadState* state, ThreadState* estate, std::vector<std::strin
       CHECKONEI(gpr[i], "GPR", i);
    }
    for (auto i = 0; i < 32; ++i) {
-      CHECKONEI(fpr[i].idw, "GPR", i);
+      CHECKONEI(fpr[i].idw, "FPR", i);
    }
    CHECKONE(cr.value, "CR");
    CHECKONE(xer.value, "XER");
