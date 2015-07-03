@@ -57,7 +57,6 @@ static void
 addGeneric(ThreadState *state, Instruction instr)
 {
    uint32_t a, b, d;
-   uint64_t d64;
 
    // Get a value
    if ((flags & AddZeroRA) && instr.rA == 0) {
@@ -87,22 +86,19 @@ addGeneric(ThreadState *state, Instruction instr)
 
    // Calculate d
    d = a + b;
-   d64 = static_cast<uint64_t>(a) + static_cast<uint64_t>(b);
 
    // Add xer[ca] if needed
    if (flags & AddExtended) {
       d += state->xer.ca;
-      d64 += state->xer.ca;
    } else if (flags & AddSubtract) {
       d += 1;
-      d64 += 1;
    }
 
    // Update rD
    state->gpr[instr.rD] = d;
 
    // Check for carry/overflow
-   auto carry = d < (d64 & 0xFFFFFFFF);
+   auto carry = d < a;
    auto overflow = !!get_bit<31>((a ^ d) & (b ^ d));
 
    if (flags & AddCarry) {
