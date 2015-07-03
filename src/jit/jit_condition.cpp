@@ -5,6 +5,7 @@
 enum CmpFlags
 {
    CmpImmediate = 1 << 0, // b = imm
+   CmpLogical = 1 << 1
 };
 
 template<typename Type, unsigned flags = 0>
@@ -33,12 +34,17 @@ cmpGeneric(PPCEmuAssembler& a, Instruction instr)
 
    if (flags & CmpImmediate) {
       if (std::is_signed<Type>::value) {
-         a.cmp(a.eax, sign_extend<16>(instr.simm));
+         a.mov(a.ecx, sign_extend<16>(instr.simm));
       } else {
-         a.cmp(a.eax, instr.uimm);
+         a.mov(a.ecx, instr.uimm);
       }
    } else {
       a.mov(a.ecx, a.ppcgpr[instr.rB]);
+   }
+
+   if (flags & CmpLogical) {
+      a.cmp(a.zax, a.zcx);
+   } else {
       a.cmp(a.eax, a.ecx);
    }
 
@@ -81,13 +87,13 @@ cmpi(PPCEmuAssembler& a, Instruction instr)
 static bool
 cmpl(PPCEmuAssembler& a, Instruction instr)
 {
-   return cmpGeneric<uint32_t>(a, instr);
+   return cmpGeneric<uint32_t, CmpLogical>(a, instr);
 }
 
 static bool
 cmpli(PPCEmuAssembler& a, Instruction instr)
 {
-   return cmpGeneric<uint32_t, CmpImmediate>(a, instr);
+   return cmpGeneric<uint32_t, CmpLogical | CmpImmediate>(a, instr);
 }
 
 // Move from Condition Register
