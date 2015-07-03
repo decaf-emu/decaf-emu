@@ -28,7 +28,6 @@ public:
 
 private:
    void execute(ThreadState *state);
-   JitManager mJitManager;
    bool mJitEnabled;
    std::vector<uint32_t> mBreakpoints;
 

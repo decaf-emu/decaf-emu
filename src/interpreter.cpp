@@ -53,9 +53,9 @@ Interpreter::execute(ThreadState *state)
       if (mJitEnabled) {
          if (state->nia != state->cia + 4) {
             // We jumped, try to enter JIT
-            JitCode jitFn = mJitManager.get(state->nia);
+            JitCode jitFn = gJitManager.get(state->nia);
             if (jitFn) {
-               auto newNia = mJitManager.execute(state, jitFn);
+               auto newNia = gJitManager.execute(state, jitFn);
                state->cia = 0;
                state->nia = newNia;
                continue;

@@ -2,6 +2,9 @@
 #include "interpreter.h"
 #include "instructiondata.h"
 
+JitManager
+gJitManager;
+
 static std::vector<jitinstrfptr_t>
 sJitInstructionMap;
 
@@ -148,35 +151,57 @@ bool JitManager::jit_bclr(PPCEmuAssembler& a, Instruction instr, uint32_t cia, c
    return bcGeneric<BcBranchLR | BcCheckCtr | BcCheckCond>(a, instr, cia, jumpLabels, mFinaleFn);
 }
 
-JitManager::JitManager() {
+JitManager::JitManager()
+   : mRuntime(new asmjit::JitRuntime()) {
+}
+
+JitManager::~JitManager() {
+   if (mRuntime) {
+      delete mRuntime;
+      mRuntime = nullptr;
+   }
+}
+
+void JitManager::initStubs() {
+   PPCEmuAssembler a(mRuntime);
+
+   asmjit::Label introLabel(a);
+   asmjit::Label extroLabel(a);
+
+   a.bind(introLabel);
+   a.push(a.zbx);
+   a.push(a.zsi);
+   a.sub(a.zsp, 0x28);
+   a.mov(a.zbx, a.zcx);
+   a.mov(a.zsi, gMemory.base());
+   a.jmp(a.zdx);
+
+   a.bind(extroLabel);
+   a.add(a.zsp, 0x28);
+   a.pop(a.zsi);
+   a.pop(a.zbx);
+   a.ret();
+
+   auto basePtr = a.make();
+   mCallFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(introLabel));
+   mFinaleFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(extroLabel));
+}
+
+void JitManager::clearCache() {
+   if (mRuntime) {
+      delete mRuntime;
+      mRuntime = nullptr;
+   }
    
+   mRuntime = new asmjit::JitRuntime();
+   mBlocks.clear();
+   initStubs();
 }
 
 JitCode JitManager::get(uint32_t addr) {
    static bool didInit = false;
    if (!didInit) {
-      PPCEmuAssembler a(&mRuntime);
-
-      asmjit::Label introLabel(a);
-      asmjit::Label extroLabel(a);
-
-      a.bind(introLabel);
-      a.push(a.zbx);
-      a.push(a.zsi);
-      a.sub(a.zsp, 0x28);
-      a.mov(a.zbx, a.zcx);
-      a.mov(a.zsi, gMemory.base());
-      a.jmp(a.zdx);
-
-      a.bind(extroLabel);
-      a.add(a.zsp, 0x28);
-      a.pop(a.zsi);
-      a.pop(a.zbx);
-      a.ret();
-
-      auto basePtr = a.make();
-      mCallFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(introLabel));
-      mFinaleFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(extroLabel));
+      initStubs();
       didInit = true;
    }
 
@@ -192,7 +217,7 @@ JitCode JitManager::gen(uint32_t addr) {
    //   try to regenerate after a failed attempt.
    mBlocks[addr] = nullptr;
 
-   PPCEmuAssembler a(&mRuntime);
+   PPCEmuAssembler a(mRuntime);
 
    std::vector<uint32_t> jumpTargets;
    jumpTargets.reserve(100);

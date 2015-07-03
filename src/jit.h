@@ -86,7 +86,10 @@ typedef std::map<uint32_t, asmjit::Label> JumpLabelMap;
 class JitManager {
 public:
    JitManager();
+   ~JitManager();
 
+   void initStubs();
+   void clearCache();
    JitCode get(uint32_t addr);
    uint32_t execute(ThreadState *state, JitCode block);
 
@@ -97,7 +100,7 @@ private:
    bool jit_bcctr(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
    bool jit_bclr(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
 
-   asmjit::JitRuntime mRuntime;
+   asmjit::JitRuntime* mRuntime;
    std::map<uint32_t, JitCode> mBlocks;
    JitCall mCallFn;
    JitFinale mFinaleFn;
@@ -114,3 +117,5 @@ private:
    static void registerSystemInstructions();
 
 };
+
+extern JitManager gJitManager;
