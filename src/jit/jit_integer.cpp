@@ -107,6 +107,10 @@ addGeneric(PPCEmuAssembler& a, Instruction instr)
       a.add(a.edx, 0xffffffff);
 
       a.adc(a.eax, a.ecx);
+   } else if (flags & AddSubtract) {
+      a.stc();
+
+      a.adc(a.eax, a.ecx);
    } else {
       a.add(a.eax, a.ecx);
    }
