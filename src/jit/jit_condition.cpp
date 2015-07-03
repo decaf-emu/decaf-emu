@@ -11,7 +11,7 @@ template<typename Type, unsigned flags = 0>
 static bool
 cmpGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   uint32_t crshift = instr.crfD * 4;
+   uint32_t crshift = (7 - instr.crfD) * 4;
 
    // Load CRF
    a.mov(a.edx, a.ppccr);
