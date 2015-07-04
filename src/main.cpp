@@ -80,7 +80,7 @@ int main(int argc, char **argv)
       gLog = spdlog::stdout_logger_mt("console");
    }
    
-   gLog->set_level(spdlog::level::debug);
+   gLog->set_level(spdlog::level::trace);
 
    if (args["play"].asBool()) {
       gLog->set_pattern("[%l] %v");
