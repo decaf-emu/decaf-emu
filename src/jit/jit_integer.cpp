@@ -418,31 +418,33 @@ template<unsigned flags>
 static bool
 mulSignedGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   int64_t a, b;
-   int32_t d;
-   a = static_cast<int32_t>(state->gpr[instr.rA]);
+   a.mov(a.eax, a.ppcgpr[instr.rA]);
 
    if (flags & MulImmediate) {
-      b = sign_extend<16>(instr.simm);
+      a.mov(a.ecx, sign_extend<16>(instr.simm));
+   } else {
+      a.mov(a.ecx, a.ppcgpr[instr.rB]);
    }
-   else {
-      b = static_cast<int32_t>(state->gpr[instr.rB]);
-   }
+
+   a.mul(a.zcx);
 
    if (flags & MulLow) {
-      d = static_cast<int32_t>(a * b);
-   }
-   else if (flags & MulHigh) {
-      d = (a * b) >> 32;
+      a.mov(a.ppcgpr[instr.rD], a.eax);
+
+      if (instr.rc) {
+         updateConditionRegister(a, a.eax, a.ecx, a.edx);
+      }
+   } else if (flags & MulHigh) {
+      a.mov(a.ppcgpr[instr.rD], a.edx);
+
+      if (instr.rc) {
+         updateConditionRegister(a, a.edx, a.ecx, a.eax);
+      }
+   } else {
+      assert(0);
    }
 
-   state->gpr[instr.rD] = d;
-
-   if (instr.rc) {
-      updateConditionRegister(state, d);
-   }
-   */
+   return true;
 }
 
 // Unsigned multiply
@@ -518,7 +520,33 @@ nand(PPCEmuAssembler& a, Instruction instr)
 static bool
 neg(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
+   a.mov(a.eax, a.ppcgpr[instr.rA]);
+
+   if (instr.oe) {
+      asmjit::Label lblNoOverflow(a);
+
+      // Reset overflow
+      a.mov(a.edx, a.ppcxer);
+
+      a.and_(a.edx, ~XERegisterBits::Overflow);
+      a.cmp(a.eax, 0x80000000);
+      a.jne(lblNoOverflow);
+
+      a.or_(a.edx, XERegisterBits::Overflow);
+      a.or_(a.edx, XERegisterBits::StickyOV);
+
+      a.bind(lblNoOverflow);
+      a.mov(a.ppcxer, a.edx);
+   }
+
+   a.neg(a.eax);
+   a.mov(a.ppcgpr[instr.rD], a.eax);
+
+   if (instr.rc) {
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
+   }
+
+   return true; /*
    uint32_t a, d;
 
    a = state->gpr[instr.rA];
