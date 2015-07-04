@@ -118,11 +118,44 @@ Thread::join()
    return mOSThread->exitValue;
 }
 
+LONG exceptionFilter(_EXCEPTION_POINTERS *info)
+{
+   printf("\n");
+   printf("[EXCEPTION] %X\n", info->ExceptionRecord->ExceptionCode);
+
+   for (auto i = 0u; i < info->ExceptionRecord->NumberParameters; ++i) {
+      printf("info[%u] = %08X\n", i, info->ExceptionRecord->ExceptionInformation[i]);
+   }
+
+   return (info->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH);
+}
+
 void
 Thread::entry()
 {
-   tCurrentThread = this;
-   mOSThread->exitValue = execute(mState->cia, 0, nullptr);
+   __try {
+      tCurrentThread = this;
+      mOSThread->exitValue = execute(mState->cia, 0, nullptr);
+   }
+   __except (exceptionFilter(GetExceptionInformation())) {
+      auto state = tCurrentThread->getThreadState();
+
+      printf("\nThread State:\n");
+      printf("CIA: %08X\n", state->cia);
+      printf("NIA: %08X\n", state->nia);
+      printf("LR:  %08X\n", state->lr);
+
+      for (auto i = 0u; i < 32; ++i) {
+         printf("gpr[% 2u]: %08X\n", i, state->gpr[i]);
+      }
+
+      printf("\nBacktrace:\n");
+      tracePrint(state, 32);
+      printf("\n");
+
+      system("PAUSE");
+      exit(-1);
+   }
 }
 
 uint32_t
