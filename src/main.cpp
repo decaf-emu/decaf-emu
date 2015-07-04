@@ -80,6 +80,8 @@ int main(int argc, char **argv)
       gLog = spdlog::stdout_logger_mt("console");
    }
    
+   gLog->set_level(spdlog::level::debug);
+
    if (args["play"].asBool()) {
       gLog->set_pattern("[%l] %v");
       result = play(args["<game directory>"].asString());
