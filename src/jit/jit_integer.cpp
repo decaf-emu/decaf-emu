@@ -285,18 +285,28 @@ andis(PPCEmuAssembler& a, Instruction instr)
 static bool
 cntlzw(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t a, s;
+   asmjit::Label lblZero(a);
 
-   s = state->gpr[instr.rS];
+   a.mov(a.ecx, a.ppcgpr[instr.rS]);
+   a.mov(a.eax, 32);
 
-   a = __lzcnt(s);
-   state->gpr[instr.rA] = a;
+   a.cmp(a.ecx, 0);
+   a.je(lblZero);
+
+   a.mov(a.edx, 0);
+   a.bsr(a.edx, a.ecx);
+
+   a.dec(a.eax);
+   a.sub(a.eax, a.edx);
+   
+   a.bind(lblZero);
+   a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (instr.rc) {
-      updateConditionRegister(state, a);
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
    }
-   */
+
+   return true;
 }
 
 // Divide
