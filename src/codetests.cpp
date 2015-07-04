@@ -453,12 +453,12 @@ bool checkField(const TestDataField& field, Target target, ThreadState& state, T
 
       if (nv.type == Value::Type::Uint32) {
          if (nv.uint32Value != field.output.uint32Value) {
-            gLog->error("Expected {} to be {:08x} but got {:08x}", fieldName, field.output.uint32Value, nv.uint32Value);
+            gLog->error(" * Expected {} to be {:08x} but got {:08x}", fieldName, field.output.uint32Value, nv.uint32Value);
             return false;
          }
       } else if (nv.type == Value::Type::Double) {
          if (nv.doubleValue != field.output.doubleValue) {
-            gLog->error("Expected {} to be {} but got {}", fieldName, field.output.doubleValue, nv.doubleValue);
+            gLog->error(" * Expected {} to be {} but got {}", fieldName, field.output.doubleValue, nv.doubleValue);
             return false;
          }
       } else {
@@ -467,12 +467,12 @@ bool checkField(const TestDataField& field, Target target, ThreadState& state, T
    } else {
       if (nv.type == Value::Type::Uint32) {
          if (nv.uint32Value != ov.uint32Value) {
-            gLog->error("Expected {} to be unchanged but {:08x} != {:08x}", fieldName, nv.uint32Value, ov.uint32Value);
+            gLog->error(" * Expected {} to be unchanged but {:08x} != {:08x}", fieldName, nv.uint32Value, ov.uint32Value);
             return false;
          }
       } else if (nv.type == Value::Type::Double) {
          if (nv.uint32Value != ov.uint32Value) {
-            gLog->error("Expected {} to be unchanged but {} != {}", fieldName, nv.doubleValue, ov.doubleValue);
+            gLog->error(" * Expected {} to be unchanged but {} != {}", fieldName, nv.doubleValue, ov.doubleValue);
             return false;
          }
       } else {
@@ -565,14 +565,14 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
          gJitManager.prepare(baseAddress + test.second.offset);
 
          // Run test with all state set to 0x00
-         gLog->debug("Running with 0x00");
+         gLog->debug(" Running with 0x00");
          memset(&state, 0x00, sizeof(ThreadState));
          state.thread = nullptr;
          state.tracer = nullptr;
          result &= executeCodeTest(state, baseAddress, test.second);
 
          // Run test with all state set to 0xFF
-         gLog->debug("Running with 0xFF");
+         gLog->debug(" Running with 0xFF");
          memset(&state, 0xFF, sizeof(ThreadState));
          state.thread = nullptr;
          state.tracer = nullptr;
@@ -580,9 +580,9 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
 
          // BUT WAS IT SUCCESS??
          if (!result) {
-            gLog->debug("FAILED");
+            gLog->debug(" - FAILED");
          } else {
-            gLog->debug("PASSED");
+            gLog->debug(" - PASSED");
          }
       }
 

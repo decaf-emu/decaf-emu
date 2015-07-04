@@ -79,13 +79,12 @@ int main(int argc, char **argv)
    } else {
       gLog = spdlog::stdout_logger_mt("console");
    }
-
-   // Set log format to [level] message
-   gLog->set_pattern("[%l] %v");
    
    if (args["play"].asBool()) {
+      gLog->set_pattern("[%l] %v");
       result = play(args["<game directory>"].asString());
    } else if (args["test"].asBool()) {
+      gLog->set_pattern("%v");
       result = test(args["--as"].asString(), args["<test directory>"].asString());
    }
 
