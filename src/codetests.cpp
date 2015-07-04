@@ -553,6 +553,9 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
          continue;
       }
 
+      // Clear JIT cache between tests.
+      gJitManager.clearCache();
+
       // Load code into memory
       memcpy(gMemory.translate(baseAddress), tests.code.data(), tests.code.size());
 
