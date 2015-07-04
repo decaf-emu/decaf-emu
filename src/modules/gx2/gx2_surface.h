@@ -38,12 +38,38 @@ enum class GX2SurfaceFormat
    Last = 0x83f,
 };
 
+static inline std::ostream&
+operator<<(std::ostream& os, const GX2SurfaceFormat& val)
+{
+   switch (val) {
+   case GX2SurfaceFormat::R8G8B8A8:
+      return os << "R8G8B8A8";
+   default:
+      return os << static_cast<int>(val);
+   }
+}
+
 enum class GX2SurfaceDim
 {
    Texture2D = 1,          // guessed from game ;D
    Texture2DMSAA = 6,      // GX2InitTextureRegs
    Texture2DMSAAArray = 7  // GX2InitTextureRegs
 };
+
+static inline std::ostream&
+operator<<(std::ostream& os, const GX2SurfaceDim& val)
+{
+   switch (val) {
+   case GX2SurfaceDim::Texture2D:
+      return os << "Texture2D";
+   case GX2SurfaceDim::Texture2DMSAA:
+      return os << "Texture2DMSAA";
+   case GX2SurfaceDim::Texture2DMSAAArray:
+      return os << "Texture2DMSAAArray";
+   default:
+      return os << static_cast<int>(val);
+   }
+}
 
 // GX2SetAAModeEx
 enum class GX2AAMode
@@ -53,12 +79,36 @@ enum class GX2AAMode
    Last = 3
 };
 
+static inline std::ostream&
+operator<<(std::ostream& os, const GX2AAMode& val)
+{
+   switch (val) {
+   case GX2AAMode::Mode1X:
+      return os << "Mode1X";
+   default:
+      return os << static_cast<int>(val);
+   }
+}
+
 // GX2GetSurfaceInfo GX2_TILE_MODE_LINEAR_SPECIAL
 enum class GX2TileMode
 {
    Default = 0,
    LinearSpecial = 0x10,
 };
+
+static inline std::ostream&
+operator<<(std::ostream& os, const GX2TileMode& val)
+{
+   switch (val) {
+   case GX2TileMode::Default:
+      return os << "Default";
+   case GX2TileMode::LinearSpecial:
+      return os << "LinearSpecial";
+   default:
+      return os << static_cast<int>(val);
+   }
+}
 
 // GX2SetColorBuffer
 enum class GX2SurfaceUse
@@ -67,6 +117,21 @@ enum class GX2SurfaceUse
    ColorBuffer = 1 << 1,
    DepthBuffer = 1 << 2,
 };
+
+static inline std::ostream&
+operator<<(std::ostream& os, const GX2SurfaceUse& val)
+{
+   switch (val) {
+   case GX2SurfaceUse::Texture:
+      return os << "Texture";
+   case GX2SurfaceUse::ColorBuffer:
+      return os << "ColorBuffer";
+   case GX2SurfaceUse::DepthBuffer:
+      return os << "DepthBuffer";
+   default:
+      return os << static_cast<int>(val);
+   }
+}
 
 // GX2InitTextureRegs
 // G2XRCreateSurface

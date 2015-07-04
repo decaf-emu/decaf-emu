@@ -3,6 +3,7 @@
 #include "kernelfunctionargs.h"
 #include "kernelfunctionresult.h"
 #include "kernelfunctionlog.h"
+#include "log.h"
 #include "systemtypes.h"
 #include "ppc.h"
 #include "util.h"
@@ -55,7 +56,7 @@ struct KernelFunctionImpl : KernelFunction
    template<class... Args>
    void dispatch(DispatchState &state, type_list<>, Args... args)
    {
-      xLog() << logCallEnd(state.log);
+      gLog->info(logCallEnd(state.log));
       auto result = wrapped_function(args...);
       setResult<Ret>(state.thread, result);
    }
@@ -88,7 +89,7 @@ struct KernelFunctionImpl<void, FuncArgs...> : KernelFunction
    template<class... Args>
    void dispatch(DispatchState &state, type_list<>, Args... args)
    {
-      xLog() << logCallEnd(state.log);
+      gLog->info(logCallEnd(state.log));
       wrapped_function(args...);
    }
 
@@ -112,7 +113,7 @@ struct KernelFunctionManual : KernelFunction
    {
       LogState log;
       logCall(log, this->name);
-      xLog() << logCallEnd(log);
+      gLog->info(logCallEnd(log));
       wrapped_function(thread);
    }
 };

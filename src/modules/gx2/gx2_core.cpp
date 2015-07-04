@@ -5,7 +5,7 @@
 void
 GX2Init(be_val<uint32_t> *attributes)
 {
-   auto log = xDebug();
+   auto log = gLog->debug();
    log << "GX2Init attributes: ";
 
    while (attributes && *attributes) {

@@ -5,7 +5,6 @@
 #include "instruction.h"
 #include "instructionid.h"
 #include "ppc.h"
-#include "log.h"
 
 #define RegisterInstruction(x) \
    registerInstruction(InstructionID::##x, &x)

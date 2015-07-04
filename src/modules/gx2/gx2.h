@@ -1,6 +1,5 @@
 #pragma once
 #include "kernelmodule.h"
-#include "log.h"
 
 class GX2 : public KernelModuleImpl<GX2>
 {

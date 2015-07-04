@@ -32,32 +32,27 @@ readHeader(BigEndianView &in, Header &header)
    in.read(header.shstrndx);
 
    if (header.magic != Header::Magic) {
-      xError() << "Unexpected elf magic "
-               << Log::hex(header.magic) << " != " << Log::hex(Header::Magic);
+      gLog->error("Unexpected elf magic, found {:08x} expected {:08x}", header.magic, Header::Magic);
       return false;
    }
 
    if (header.fileClass != ELFCLASS32) {
-      xError() << "Unexpected elf fileClass "
-               << Log::hex(header.fileClass) << " != " << Log::hex(ELFCLASS32);
+      gLog->error("Unexpected elf file class, found {:02x} expected {:02x}", header.fileClass, ELFCLASS32);
       return false;
    }
 
    if (header.encoding != ELFDATA2MSB) {
-      xError() << "Unexpected elf encoding "
-               << Log::hex(header.encoding) << " != " << Log::hex(ELFDATA2MSB);
+      gLog->error("Unexpected elf encoding, found {:02x} expected {:02x}", header.encoding, ELFDATA2MSB);
       return false;
    }
 
    if (header.machine != EM_PPC) {
-      xError() << "Unexpected elf machine "
-               << Log::hex(header.machine) << " != " << Log::hex(EM_PPC);
+      gLog->error("Unexpected elf machine, found {:04x} expected {:04x}", header.machine, EM_PPC);
       return false;
    }
 
    if (header.elfVersion != EV_CURRENT) {
-      xError() << "Unexpected elf e_elf_version "
-               << Log::hex(header.elfVersion) << " != " << Log::hex(EV_CURRENT);
+      gLog->error("Unexpected elf version, found {:02x} expected {:02x}", header.elfVersion, EV_CURRENT);
       return false;
    }
 
@@ -166,7 +161,7 @@ readSections(BigEndianView &in, Header &header, std::vector<Section> &sections)
          ret = inflateInit(&stream);
 
          if (ret != Z_OK) {
-            xError() << "Couldn't decompress .rpx section because inflateInit returned " << ret;
+            gLog->error("Couldn't decompress .rpx section because inflateInit returned {}", ret);
             section.data.clear();
          } else {
             stream.avail_in = section.header.size;
@@ -177,7 +172,7 @@ readSections(BigEndianView &in, Header &header, std::vector<Section> &sections)
             ret = inflate(&stream, Z_FINISH);
 
             if (ret != Z_OK && ret != Z_STREAM_END) {
-               xError() << "Couldn't decompress .rpx section because inflate returned " << ret;
+               gLog->error("Couldn't decompress .rpx section because inflate returned {}", ret);
                section.data.clear();
             }
 

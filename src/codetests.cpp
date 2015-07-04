@@ -124,13 +124,13 @@ loadTestElf(const std::string &path, TestFile &tests)
 
    // Read header
    if (!elf::readHeader(in, header)) {
-      xError() << "Failed to readHeader";
+      gLog->error("Failed elf::readHeader");
       return false;
    }
 
    // Read sections
    if (!elf::readSections(in, header, sections)) {
-      xError() << "Failed to readRPLSections";
+      gLog->error("Failed elf::readSections");
       return false;
    }
 
@@ -149,12 +149,12 @@ loadTestElf(const std::string &path, TestFile &tests)
    }
 
    if (!codeSection) {
-      xError() << "Could not find code section";
+      gLog->error("Could not find code section");
       return false;
    }
 
    if (!symbolSection) {
-      xError() << "Could not find symbol section";
+      gLog->error("Could not find symbol section");
       return false;
    }
 
@@ -453,14 +453,12 @@ bool checkField(const TestDataField& field, Target target, ThreadState& state, T
 
       if (nv.type == Value::Type::Uint32) {
          if (nv.uint32Value != field.output.uint32Value) {
-            xLog() << " * Expected " << fieldName << " to be " 
-               << Log::hex(field.output.uint32Value) << " but got " << Log::hex(nv.uint32Value);
+            gLog->error("Expected {} to be {:08x} but got {:08x}", fieldName, field.output.uint32Value, nv.uint32Value);
             return false;
          }
       } else if (nv.type == Value::Type::Double) {
          if (nv.doubleValue != field.output.doubleValue) {
-            xLog() << " * Expected " << fieldName << " to be " 
-               << field.output.doubleValue << " but got " << nv.doubleValue;
+            gLog->error("Expected {} to be {} but got {}", fieldName, field.output.doubleValue, nv.doubleValue);
             return false;
          }
       } else {
@@ -469,14 +467,12 @@ bool checkField(const TestDataField& field, Target target, ThreadState& state, T
    } else {
       if (nv.type == Value::Type::Uint32) {
          if (nv.uint32Value != ov.uint32Value) {
-            xLog() << " * Expected " << fieldName << " to be unchanged but " 
-               << Log::hex(nv.uint32Value) << " != " << Log::hex(ov.uint32Value);
+            gLog->error("Expected {} to be unchanged but {:08x} != {:08x}", fieldName, nv.uint32Value, ov.uint32Value);
             return false;
          }
       } else if (nv.type == Value::Type::Double) {
          if (nv.uint32Value != ov.uint32Value) {
-            xLog() << " * Expected " << fieldName << " to be unchanged but " 
-               << nv.doubleValue << " != " << ov.doubleValue;
+            gLog->error("Expected {} to be unchanged but {} != {}", fieldName, nv.doubleValue, ov.doubleValue);
             return false;
          }
       } else {
@@ -512,18 +508,18 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
    uint32_t baseAddress = 0x02000000;
 
    if (std::system((assembler + " --version > nul").c_str()) != 0) {
-      xError() << "Could not find assembler " << assembler;
+      gLog->error("Could not find assembler {}", assembler);
       return false;
    }
 
    if (!fs::exists(directory)) {
-      xError() << "Could not find test directory " << directory;
+      gLog->error("Could not find test directory {}", directory);
       return false;
    }
 
    // Allocate some memory to write code to
    if (!gMemory.alloc(baseAddress, 4096)) {
-      xError() << "Could not allocate memory for test code";
+      gLog->error("Could not allocate memory for test code");
       return false;
    }
 
@@ -534,7 +530,7 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
 
       // Pares the source file
       if (!parseTestSource(path, tests)) {
-         xError() << "Failed parsing source file for " << path;
+         gLog->error("Failed parsing source file {}", path);
          continue;
       }
 
@@ -547,13 +543,13 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
       auto result = std::system(as.c_str());
 
       if (result != 0) {
-         xError() << "Error assembling test " << path;
+         gLog->error("Error assembling test {}", path);
          continue;
       }
 
       // Load the elf
       if (!loadTestElf("tmp.elf", tests)) {
-         xError() << "Error loading assembled elf for " << path;
+         gLog->error("Error loading assembled elf for {}", path);
          continue;
       }
 
@@ -565,19 +561,18 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
       for (auto &test : tests.tests) {
          auto result = true;
 
-         xLog() << "Running test `" << test.first << "`";
-
+         gLog->debug("Running test '{}'", test.first);
          gJitManager.prepare(baseAddress + test.second.offset);
 
          // Run test with all state set to 0x00
-         xLog() << "  Running with 0x00";
+         gLog->debug("Running with 0x00");
          memset(&state, 0x00, sizeof(ThreadState));
          state.thread = nullptr;
          state.tracer = nullptr;
          result &= executeCodeTest(state, baseAddress, test.second);
 
          // Run test with all state set to 0xFF
-         xLog() << "  Running with 0xFF";
+         gLog->debug("Running with 0xFF");
          memset(&state, 0xFF, sizeof(ThreadState));
          state.thread = nullptr;
          state.tracer = nullptr;
@@ -585,9 +580,9 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
 
          // BUT WAS IT SUCCESS??
          if (!result) {
-            xLog() << " - FAILED ";
+            gLog->debug("FAILED");
          } else {
-            xLog() << " - PASSED";
+            gLog->debug("PASSED");
          }
       }
 

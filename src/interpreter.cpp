@@ -117,52 +117,56 @@ Interpreter::execute(ThreadState *state)
       auto data = gInstructionTable.decode(instr);
 
       if (!data) {
-         xLog() << Log::hex(state->cia) << " " << Log::hex(instr.value);
+         gLog->error("Could not decode instruction at {:08x} = {:08x}", state->cia, instr.value);
       }
+      assert(data);
 
       auto trace = traceInstructionStart(instr, data, state);
       auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
       auto bpitr = std::find(mBreakpoints.begin(), mBreakpoints.end(), state->cia);
 
       if (bpitr != mBreakpoints.end()) {
-         xLog() << "Hit breakpoint!";
+         gLog->debug("Hit breakpoint!");
       }
 
       if (!fptr) {
-         xLog() << "Unimplemented interpreter instruction!";
+         gLog->error("Unimplemented interpreter instruction {}", data->name);
+      }
+      assert(fptr);
+
+      if (mJitMode != InterpJitMode::Debug) {
+         fptr(state, instr);
       } else {
-         if (mJitMode != InterpJitMode::Debug) {
-            fptr(state, instr);
-         } else {
-            // Save original state for debugging
-            ThreadState ostate = *state;
+         // Save original state for debugging
+         ThreadState ostate = *state;
 
-            // Save thread-state for JIT run.
-            ThreadState jstate = *state;
+         // Save thread-state for JIT run.
+         ThreadState jstate = *state;
 
-            // Fetch the JIT instruction block
-            JitCode jitInstr = gJitManager.getSingle(state->cia);
-            if (jitInstr == nullptr) {
-               DebugBreak();
-            }
+         // Fetch the JIT instruction block
+         JitCode jitInstr = gJitManager.getSingle(state->cia);
+         if (jitInstr == nullptr) {
+            DebugBreak();
+         }
 
-            // Execute with Interpreter
-            fptr(state, instr);
+         // Execute with Interpreter
+         fptr(state, instr);
 
-            // Kernel calls are not stateless
-            if (data->id != InstructionID::kc) {
-               // Execute with JIT
-               jstate.nia = gJitManager.execute(&jstate, jitInstr);
+         // Kernel calls are not stateless
+         if (data->id != InstructionID::kc) {
+            // Execute with JIT
+            jstate.nia = gJitManager.execute(&jstate, jitInstr);
 
-               // Ensure compliance!
-               std::vector<std::string> errors;
-               if (!dbgStateCmp(&jstate, state, errors)) {
-                  xLog() << "Errors @ " << Log::hex(ostate.cia) << ":";
-                  for (auto err : errors) {
-                     xLog() << "  " << err;
-                  }
-                  DebugBreak();
+            // Ensure compliance!
+            std::vector<std::string> errors;
+            if (!dbgStateCmp(&jstate, state, errors)) {
+               gLog->error("JIT Compliance errors at {:08x}", ostate.cia);
+
+               for (auto &err : errors) {
+                  gLog->error(err);
                }
+
+               DebugBreak();
             }
          }
       }

@@ -1,4 +1,5 @@
 #include "jit.h"
+#include "log.h"
 #include "interpreter.h"
 #include "instructiondata.h"
 
@@ -231,13 +232,13 @@ JitCode JitManager::get(uint32_t addr) {
 
    JitBlock block(addr);
 
-   xLog() << "Attempting to JIT " << Log::hex(block.start);
+   gLog->debug("Attempting to JIT {:08x}", block.start);
 
    if (!identBlock(block)) {
       return nullptr;
    }
 
-   xLog() << "Found end at " << Log::hex(block.end);
+   gLog->debug("Found end at {:08x}", block.end);
 
    if (!gen(block)) {
       return nullptr;
@@ -293,8 +294,9 @@ bool JitManager::identBlock(JitBlock& block) {
          } else if (data->id == InstructionID::bclr) {
          } else {
             auto fptr = sJitInstructionMap[static_cast<size_t>(data->id)];
+
             if (!fptr) {
-               xLog() << "JIT bailing due to unimplemented instruction: " << data->name;
+               gLog->debug("JIT bailing due to unimplemented instruction {}", data->name);
                jitFailed = true;
                break;
             }
@@ -367,7 +369,7 @@ bool JitManager::identBlock(JitBlock& block) {
       lclCia += 4;
 
       if (((lclCia - fnStart) >> 2) > JIT_MAX_INST) {
-         xLog() << "Bailing on JIT due to max instruction limit at " << Log::hex(lclCia);
+         gLog->debug("Bailing on JIT due to max instruction limit at {:08x}", lclCia);
          jitFailed = true;
          break;
       }
@@ -434,7 +436,8 @@ bool JitManager::gen(JitBlock& block)
       }
 
       if (!genSuccess) {
-         xLog() << "JIT bailed due to generation failure on " << data->name;
+         gLog->debug("JIT bailed due to generation failure on {}", data->name);
+
          if (!JIT_CONTINUE_ON_ERROR) {
             jitFailed = true;
             break;
@@ -455,7 +458,7 @@ bool JitManager::gen(JitBlock& block)
    // Debug Check
    for (auto i = jumpLabels.begin(); i != jumpLabels.end(); ++i) {
       if (!a.isLabelValid(i->second) || !a.isLabelBound(i->second)) {
-         xLog() << "Jump target " << Log::hex(i->first) << " was never initialized...";
+         gLog->debug("Jump target {:08x} was never initialized...", i->first);
       }
    }
 
@@ -464,7 +467,7 @@ bool JitManager::gen(JitBlock& block)
 
    JitCode func = asmjit_cast<JitCode>(a.make());
    if (func == nullptr) {
-      xLog() << "JIT failed due to asmjit make failure";
+      gLog->error("JIT failed due to asmjit make failure");
       return false;
    }
 

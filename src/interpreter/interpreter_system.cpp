@@ -148,7 +148,7 @@ mfspr(ThreadState *state, Instruction instr)
       value = state->gqr[7].value;
       break;
    default:
-      xError() << "Invalid mfspr SPR " << static_cast<uint32_t>(spr);
+      gLog->error("Invalid mfspr SPR {}", static_cast<uint32_t>(spr));
    }
 
    state->gpr[instr.rD] = value;
@@ -196,7 +196,7 @@ mtspr(ThreadState *state, Instruction instr)
       state->gqr[7].value = value;
       break;
    default:
-      xError() << "Invalid mtspr SPR " << static_cast<uint32_t>(spr);
+      gLog->error("Invalid mtspr SPR {}", static_cast<uint32_t>(spr));
    }
 }
 
@@ -215,7 +215,7 @@ mftb(ThreadState *state, Instruction instr)
       value = state->tbu;
       break;
    default:
-      xError() << "Invalid mftb TBR " << static_cast<uint32_t>(tbr);
+      gLog->error("Invalid mftb TBR {}", static_cast<uint32_t>(tbr));
    }
 
    state->gpr[instr.rD] = value;
@@ -278,12 +278,12 @@ kc(ThreadState *state, Instruction instr)
       auto fsym = reinterpret_cast<FunctionSymbol*>(sym);
 
       if (sym->type != SymbolInfo::Function) {
-         xDebug() << "Attempted to call non-function symbol " << sym->name;
+         gLog->error("Attempted to call non-function symbol {}", sym->name);
          return;
       }
 
       if (!fsym->kernelFunction) {
-         xDebug() << Log::hex(state->lr) << " unimplemented kernel function " << sym->name;
+         gLog->debug("{:08x} unimplemented kernel function {}", state->lr, sym->name);
          return;
       }
 

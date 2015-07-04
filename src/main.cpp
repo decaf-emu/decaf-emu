@@ -20,6 +20,9 @@
 #include "thread.h"
 #include "usermodule.h"
 
+std::shared_ptr<spdlog::logger>
+gLog;
+
 void initialiseEmulator();
 bool test(const std::string &as, const std::string &path);
 bool play(const std::string &path);
@@ -28,8 +31,8 @@ static const char USAGE[] =
    R"(WiiU Emulator
 
        Usage:
-         wiiu play [--jit | --jitdebug] <game directory>
-         wiiu test [--jit | --jitdebug] [--as=<ppcas>] <test directory>
+         wiiu play [--jit | --jitdebug | --logfile] <game directory>
+         wiiu test [--jit | --jitdebug | --logfile] [--as=<ppcas>] <test directory>
          wiiu (-h | --help)
          wiiu --version
 
@@ -37,8 +40,16 @@ static const char USAGE[] =
          -h --help     Show this screen.
          --version     Show version.
          --jit         Enables the JIT engine.
+         --logfile     Redirect log output to file.
          --as=<ppcas>  Path to PowerPC assembler [default: powerpc-eabi-as.exe].
    )";
+
+static std::string
+getGameName(const std::string &directory)
+{
+   auto parent = std::experimental::filesystem::path(directory).parent_path().generic_string();
+   return directory.substr(parent.size() + 1);
+}
 
 int main(int argc, char **argv)
 {
@@ -54,6 +65,23 @@ int main(int argc, char **argv)
    } else {
       gInterpreter.setJitMode(InterpJitMode::Disabled);
    }
+
+   if (args["--logfile"].asBool()) {
+      std::string file;
+
+      if (args["play"].asBool()) {
+         file = getGameName(args["<game directory>"].asString()) + ".txt";
+      } else if (args["test"].asBool()) {
+         file = "tests.txt";
+      }
+
+      gLog = spdlog::daily_logger_mt("console", file);
+   } else {
+      gLog = spdlog::stdout_logger_mt("console");
+   }
+
+   // Set log format to [level] message
+   gLog->set_pattern("[%l] %v");
    
    if (args["play"].asBool()) {
       result = play(args["<game directory>"].asString());
@@ -61,7 +89,6 @@ int main(int argc, char **argv)
       result = test(args["--as"].asString(), args["<test directory>"].asString());
    }
 
-   xLog() << "";
    system("PAUSE");
    return result ? 0 : -1;
 }
@@ -101,13 +128,6 @@ test(const std::string &as, const std::string &path)
 static bool
 play(const std::string &path)
 {
-   // Redirect stdout to text file
-   if (0) {
-      auto parentPath = std::experimental::filesystem::path(path).parent_path().generic_string();
-      auto out = std::string(path.substr(parentPath.size() + 1)) + ".txt";
-      freopen(out.c_str(), "w", stdout);
-   }
-
    // Setup filesystem
    VirtualFileSystem fs { "/" };
    fs.mount("/vol", std::make_unique<HostFileSystem>(path + "/data"));
@@ -118,7 +138,7 @@ play(const std::string &path)
    auto cosFile = fs.openFile("/vol/code/cos.xml", FileSystem::Input | FileSystem::Binary);
 
    if (!cosFile) {
-      xError() << "Error opening /vol/code/cos.xml";
+      gLog->error("Error opening /vol/code/cos.xml");
       return false;
    }
 
@@ -130,7 +150,7 @@ play(const std::string &path)
    auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
 
    if (!parseResult) {
-      xError() << "Error parsing /vol/code/cos.xml";
+      gLog->error("Error parsing /vol/code/cos.xml");
       return false;
    }
 
@@ -140,7 +160,7 @@ play(const std::string &path)
    auto rpxFile = fs.openFile(std::string("/vol/code/") + rpxPath, FileSystem::Input | FileSystem::Binary);
 
    if (!rpxFile) {
-      xError() << "Error opening /vol/code/" << rpxPath;
+      gLog->error("Error opening /vol/code/{}", rpxPath);
       return false;
    }
 
@@ -153,11 +173,11 @@ play(const std::string &path)
    gSystem.registerModule(rpxPath, &module);
 
    if (!loader.loadRPL(module, buffer.data(), buffer.size())) {
-      xError() << "Could not load elf file";
+      gLog->error("Could not load {}", rpxPath);
       return false;
    }
 
-   xLog() << "Succesfully loaded " << path;
+   gLog->debug("Succesfully loaded {}", path);
    auto entryPoint = module.entryPoint;
    auto stackSize = module.defaultStackSize;
 

@@ -105,3 +105,10 @@ make_p32(uint32_t vaddr)
    result.setPointer(vaddr);
    return result;
 }
+
+template<typename Type, bool BigEndian>
+static inline std::ostream&
+operator<<(std::ostream& os, const p32<Type, BigEndian>& val)
+{
+   return os << static_cast<addr_t>(val);
+}

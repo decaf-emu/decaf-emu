@@ -52,7 +52,7 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.eax, a.ppcgpr[7]);
       break;
    default:
-      xError() << "Invalid mfspr SPR " << static_cast<uint32_t>(spr);
+      gLog->error("Invalid mfspr SPR {}", static_cast<uint32_t>(spr));
    }
 
    a.mov(a.ppcgpr[instr.rD], a.eax);
@@ -101,7 +101,7 @@ mtspr(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.ppcgpr[7], a.eax);
       break;
    default:
-      xError() << "Invalid mtspr SPR " << static_cast<uint32_t>(spr);
+      gLog->error("Invalid mtspr SPR {}", static_cast<uint32_t>(spr));
    }
 
    return true;
@@ -126,12 +126,12 @@ kc(PPCEmuAssembler& a, Instruction instr)
       auto fsym = reinterpret_cast<FunctionSymbol*>(sym);
 
       if (sym->type != SymbolInfo::Function) {
-         xDebug() << "Attempted to call non-function symbol " << sym->name;
+         gLog->error("Attempted to call non-function symbol {}", sym->name);
          return false;
       }
 
       if (!fsym->kernelFunction) {
-         xDebug() << "unimplemented kernel function " << sym->name;
+         gLog->debug("Unimplemented kernel function {}", sym->name);
          return false;
       }
 

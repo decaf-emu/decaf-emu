@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "p32.h"
 
 #pragma pack(push, 1)
 
@@ -21,7 +22,7 @@ struct wfunc_ptr
    {
    }
 
-   wfunc_ptr(uint32_t addr) :
+   wfunc_ptr(addr_t addr) :
       address(addr)
    {
    }
@@ -31,7 +32,7 @@ struct wfunc_ptr
    {
    }
 
-   operator uint32_t() const
+   operator addr_t() const
    {
       return address;
    }
@@ -40,3 +41,11 @@ struct wfunc_ptr
 };
 
 #pragma pack(pop)
+
+
+template<typename ReturnType, typename... Args>
+static inline std::ostream&
+operator<<(std::ostream& os, const wfunc_ptr<ReturnType, Args...>& val)
+{
+   return os << static_cast<addr_t>(val);
+}

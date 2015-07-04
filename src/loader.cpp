@@ -409,7 +409,7 @@ processRelocations(UserModule &module, elf::Section &section, std::vector<elf::S
          *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03fffffc) | ((value - addr) & 0x03fffffc));
          break;
       default:
-         xDebug() << "Unknown relocation type: " << type;
+         gLog->debug("Unknown relocation type {}", type);
       }
    }
 }
@@ -424,20 +424,19 @@ Loader::loadRPL(UserModule &module, const char *buffer, size_t size)
 
    // Read header
    if (!elf::readHeader(in, header)) {
-      xError() << "Failed to readHeader";
+      gLog->error("Failed elf::readHeader");
       return false;
    }
 
    // Check it is a CAFE abi rpl
    if (header.abi != elf::EABI_CAFE) {
-      xError() << "Unexpected elf abi "
-         << Log::hex(header.abi) << " != " << Log::hex(elf::EABI_CAFE);
+      gLog->error("Unexpected elf abi found {:02x} expected {:02x}", header.abi, elf::EABI_CAFE);
       return false;
    }
 
    // Read sections
    if (!elf::readSections(in, header, sections)) {
-      xError() << "Failed to readRPLSections";
+      gLog->error("Failed elf::readSections");
       return false;
    }
 
@@ -480,7 +479,6 @@ Loader::loadRPL(UserModule &module, const char *buffer, size_t size)
 
          if (section.header.addr <= header.entry && section.header.addr + section.data.size() > header.entry) {
             auto offset = section.section->address - section.header.addr;
-            xLog() << "Code offset = " << Log::hex(offset);
             module.entryPoint = header.entry + offset;
             break;
          }
@@ -515,22 +513,26 @@ Loader::loadRPL(UserModule &module, const char *buffer, size_t size)
    
    if (0) {
       // Print address ranges
-      xLog() << "Loaded module!";
-      xLog() << "Code: " << Log::hex(module.codeAddressRange.first) << ":" << Log::hex(module.codeAddressRange.second);
-      xLog() << "Data: " << Log::hex(module.dataAddressRange.first) << ":" << Log::hex(module.dataAddressRange.second);
+      gLog->debug("Loaded module!");
+      gLog->debug("Code {:08x} -> {:08x}", module.codeAddressRange.first, module.codeAddressRange.second);
+      gLog->debug("Data {:08x} -> {:08x}", module.dataAddressRange.first, module.dataAddressRange.second);
 
       // Print all sections
+      gLog->debug("Sections:");
+
       for (auto i = 0u; i < module.sections.size(); ++i) {
          auto section = module.sections[i];
-         xLog() << Log::hex(section->address) << " " << section->name << " " << Log::hex(section->size);
+         gLog->debug("{:08x} {} {:x}", section->address, section->name, section->size);
       }
       
       // Print all symbols
+      gLog->debug("Symbols:");
+
       for (auto i = 0u; i < module.symbols.size(); ++i) {
          auto symbol = module.symbols[i];
 
          if (symbol && symbol->name.size()) {
-            xLog() << Log::hex(symbol->address) << " " << symbol->name;
+            gLog->debug("{:08x} {}", symbol->address, symbol->name);
          }
       }
    }

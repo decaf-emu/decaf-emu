@@ -1,6 +1,5 @@
 #pragma once
 #include "kernelmodule.h"
-#include "log.h"
 
 class CoreInit : public KernelModuleImpl<CoreInit>
 {

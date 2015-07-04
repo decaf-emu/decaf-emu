@@ -38,7 +38,7 @@ Memory::initialise()
    }
 
    if (!mBase) {
-      xError() << "Could not find a valid base address for memory!";
+      gLog->error("Could not find a valid base address for memory!");
       return false;
    }
 
@@ -133,7 +133,7 @@ Memory::alloc(uint32_t address, size_t size)
    auto view = getView(address);
 
    if (!view) {
-      xError() << "Could not find valid memory view for allocation at " << Log::hex(address) << " [" << Log::hex(size) << "]";
+      gLog->error("Could not find valid memory view for allocating {} bytes at {}", size, address);
       return false;
    }
 
@@ -149,7 +149,7 @@ Memory::alloc(uint32_t address, size_t size)
       auto &page = view->pageTable[i];
 
       if (page.allocated) {
-         xError() << "Tried to reallocate an existing page";
+         gLog->debug("Tried to reallocate an existing page");
          return false;
       }
    }
@@ -158,7 +158,7 @@ Memory::alloc(uint32_t address, size_t size)
    auto result = VirtualAlloc(view->address + startPage * view->pageSize, pageCount * view->pageSize, MEM_COMMIT, PAGE_READWRITE);
 
    if (!result) {
-      xError() << "Failed to commit host memory";
+      gLog->error("Failed to commit host memory");
       return false;
    }
 
@@ -179,7 +179,7 @@ Memory::free(uint32_t address)
    MemoryView *view = getView(address);
 
    if (!view) {
-      xError() << "Could not find valid memory view for free at " << Log::hex(address);
+      gLog->error("Could not find valid memory view for free at {}", address);
       return false;
    }
 
@@ -189,7 +189,7 @@ Memory::free(uint32_t address)
    auto &page = view->pageTable[startPage];
 
    if (page.base != startPage) {
-      xError() << "Could not free memory as it is not a base page";
+      gLog->error("Could not free memory as it is not a base page");
       return false;
    }
 
@@ -197,7 +197,7 @@ Memory::free(uint32_t address)
    auto result = VirtualFree(view->address + startPage * view->pageSize, page.count * view->pageSize, MEM_DECOMMIT);
 
    if (!result) {
-      xError() << "Failed to decommit from host memory";
+      gLog->error("Failed to decommit from host memory");
       return false;
    }
 

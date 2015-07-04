@@ -1,56 +1,6 @@
 #include "gx2.h"
 #include "gx2_surface.h"
 
-Log::Output &
-operator <<(Log::Output &out, GX2SurfaceDim dim)
-{
-   switch (dim) {
-   case GX2SurfaceDim::Texture2D:
-      out << "Texture2D";
-      break;
-   case GX2SurfaceDim::Texture2DMSAA:
-      out << "Texture2DMSAA";
-      break;
-   case GX2SurfaceDim::Texture2DMSAAArray:
-      out << "Texture2DMSAAArray";
-      break;
-   default:
-      out << "Unknown (" << static_cast<uint32_t>(dim) << ")";
-   }
-
-   return out;
-}
-
-Log::Output &
-operator <<(Log::Output &out, GX2SurfaceFormat format)
-{
-   switch (format) {
-   case GX2SurfaceFormat::R8G8B8A8:
-      out << "R8G8B8A8";
-      break;
-      break;
-   default:
-      out << "Unknown (" << static_cast<uint32_t>(format) << ")";
-   }
-
-   return out;
-}
-
-Log::Output &
-operator <<(Log::Output &out, GX2AAMode mode)
-{
-   switch (mode) {
-   case GX2AAMode::Mode1X:
-      out << "Mode1X";
-      break;
-      break;
-   default:
-      out << "Unknown (" << static_cast<uint32_t>(mode) << ")";
-   }
-
-   return out;
-}
-
 void
 GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
 {
@@ -58,22 +8,22 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
    surface->imageSize = 4 * surface->width * surface->height;
    surface->pitch = surface->width;
 
-   xLog() << "dim: " << static_cast<GX2SurfaceDim>(surface->dim);
-   xLog() << "width: " << surface->width;
-   xLog() << "height: " << surface->height;
-   xLog() << "depth: " << surface->depth;
-   xLog() << "mipLevels: " << surface->mipLevels;
-   xLog() << "format: " << static_cast<GX2SurfaceFormat>(surface->format);
-   xLog() << "aa: " << static_cast<GX2AAMode>(surface->aa);
-   xLog() << "resourceFlags: " << surface->resourceFlags;
-   xLog() << "imageSize: " << surface->imageSize;
-   xLog() << "image: " << Log::hex(static_cast<uint32_t>(surface->image));
-   xLog() << "mipmapSize: " << surface->mipmapSize;
-   xLog() << "mipmaps: " << Log::hex(static_cast<uint32_t>(surface->mipmaps));
-   xLog() << "tileMode: " << surface->tileMode;
-   xLog() << "swizzle: " << surface->swizzle;
-   xLog() << "alignment: " << surface->alignment;
-   xLog() << "pitch: " << surface->pitch;
+   gLog->debug("dim: {}", surface->dim);
+   gLog->debug("width: {}", surface->width);
+   gLog->debug("height: {}", surface->height);
+   gLog->debug("depth: {}", surface->depth);
+   gLog->debug("mipLevels: {}", surface->mipLevels);
+   gLog->debug("format: {}", surface->format);
+   gLog->debug("aa: {}", surface->aa);
+   gLog->debug("resourceFlags: {}", surface->resourceFlags);
+   gLog->debug("imageSize: {}", surface->imageSize);
+   gLog->debug("image: {:%08x}", surface->image);
+   gLog->debug("mipmapSize: {}", surface->mipmapSize);
+   gLog->debug("mipmaps: {:%08x}", surface->mipmaps);
+   gLog->debug("tileMode: {}", surface->tileMode);
+   gLog->debug("swizzle: {}", surface->swizzle);
+   gLog->debug("alignment: {}", surface->alignment);
+   gLog->debug("pitch: {}", surface->pitch);
 }
 
 void

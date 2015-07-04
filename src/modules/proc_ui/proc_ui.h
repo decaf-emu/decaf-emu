@@ -1,6 +1,5 @@
 #pragma once
 #include "kernelmodule.h"
-#include "log.h"
 
 class ProcUI : public KernelModuleImpl<ProcUI>
 {

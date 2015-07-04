@@ -50,7 +50,7 @@ OSTryAcquireSpinLock(OSSpinLock * spinlock)
 BOOL
 OSTryAcquireSpinLockWithTimeout(OSSpinLock * spinlock, int64_t timeout)
 {
-   xError() << "TODO: OSTryAcquireSpinLockWithTimeout";
+   gLog->error("TODO: OSTryAcquireSpinLockWithTimeout");
    return FALSE;
 }
 

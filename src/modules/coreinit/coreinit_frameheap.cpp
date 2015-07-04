@@ -178,7 +178,7 @@ uint32_t
 MEMResizeForMBlockFrmHeap(FrameHeap *heap, uint32_t addr, uint32_t size)
 {
    if (addr > heap->state->bottom || addr < heap->state->bottom) {
-      xError() << "Invalid block address in MEMResizeForMBlockFrmHeap";
+      gLog->error("Invalid block address in MEMResizeForMBlockFrmHeap");
       return 0;
    }
 

@@ -111,7 +111,7 @@ formatString(ThreadState *state, std::string &output, unsigned reg = 3)
             output.append(reinterpret_cast<char*>(gMemory.translate(state->gpr[reg])));
             break;
          default:
-            xLog() << "Unimplemented format specifier: " << specifier;
+            gLog->error("Unimplemented format specifier: {}", specifier);
             break;
          }
       } else {
@@ -128,7 +128,7 @@ OSPanic(ThreadState *state)
    int line = state->gpr[4];
    std::string str;
    formatString(state, str, 5);
-   xError() << file << ":" << line << " " << str;
+   gLog->error("OSPanic {}:{} {}", file, line, str);
 }
 
 static void
@@ -136,7 +136,7 @@ OSReport(ThreadState *state)
 {
    std::string str;
    formatString(state, str);
-   xDebug() << str;
+   gLog->debug("OSReport {}", str);
 }
 
 static void
@@ -144,7 +144,7 @@ OSVReport(ThreadState *state)
 {
    std::string str;
    formatString(state, str);
-   xDebug() << str;
+   gLog->debug("OSVReport {}", str);
 }
 
 void
