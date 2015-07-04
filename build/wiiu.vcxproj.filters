@@ -273,6 +273,9 @@
     <ClCompile Include="..\src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\trace.cpp">
+      <Filter>Source Files\ppc</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\modules\proc_ui\proc_ui.cpp">
       <Filter>Source Files\modules\proc_ui</Filter>
     </ClCompile>
@@ -508,6 +511,9 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_memheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\trace.h">
+      <Filter>Header Files\ppc</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\proc_ui\proc_ui.h">
       <Filter>Header Files\modules\proc_ui</Filter>

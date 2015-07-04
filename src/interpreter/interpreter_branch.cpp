@@ -39,17 +39,17 @@ template<unsigned flags>
 static void
 bcGeneric(ThreadState *state, Instruction instr)
 {
-   uint32_t bo;
-   bool ctr_ok, cond_ok;
-
-   bo = instr.bo;
-   ctr_ok = true;
-   cond_ok = true;
+   auto bo = instr.bo;
+   auto ctr_ok = true;
+   auto cond_ok = true;
 
    if (flags & BcCheckCtr) {
       if (!get_bit<NoCheckCtr>(bo)) {
          state->ctr--;
-         ctr_ok = !!((state->ctr != 0) ^ (get_bit<CtrValue>(bo)));
+
+         auto ctb = static_cast<uint32_t>(state->ctr != 0);
+         auto ctv = get_bit<CtrValue>(bo);
+         ctr_ok = !!(ctb ^ ctv);
       }
    }
 

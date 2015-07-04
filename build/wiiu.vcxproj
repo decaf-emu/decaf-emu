@@ -78,10 +78,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;ASMJIT_EMBED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>asmjit.lib;docopt.lib;pugixml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -155,6 +156,7 @@
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
     <ClCompile Include="..\src\system.cpp" />
     <ClCompile Include="..\src\thread.cpp" />
+    <ClCompile Include="..\src\trace.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\be_val.h" />
@@ -194,6 +196,7 @@
     <ClInclude Include="..\src\modules\proc_ui\proc_ui_core.h" />
     <ClInclude Include="..\src\p32.h" />
     <ClInclude Include="..\src\systemobject.h" />
+    <ClInclude Include="..\src\trace.h" />
     <ClInclude Include="..\src\usermodule.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_cache.h" />

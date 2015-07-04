@@ -3,6 +3,7 @@
 #include "interpreter.h"
 #include "instructiondata.h"
 #include "memory.h"
+#include "trace.h"
 #include "log.h"
 
 Interpreter
@@ -119,6 +120,7 @@ Interpreter::execute(ThreadState *state)
          xLog() << Log::hex(state->cia) << " " << Log::hex(instr.value);
       }
 
+      auto trace = traceInstructionStart(instr, data, state);
       auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
       auto bpitr = std::find(mBreakpoints.begin(), mBreakpoints.end(), state->cia);
 
@@ -164,6 +166,8 @@ Interpreter::execute(ThreadState *state)
             }
          }
       }
+
+      traceInstructionEnd(trace, instr, data, state);
    }
 }
 

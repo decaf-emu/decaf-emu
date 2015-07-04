@@ -338,6 +338,7 @@ enum class SprEncoding
 struct ThreadState
 {
    class Thread *thread;
+   struct Tracer *tracer;
 
    uint32_t cia;     // Current execution address
    uint32_t nia;     // Next execution address

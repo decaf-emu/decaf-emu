@@ -572,11 +572,15 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
          // Run test with all state set to 0x00
          xLog() << "  Running with 0x00";
          memset(&state, 0x00, sizeof(ThreadState));
+         state.thread = nullptr;
+         state.tracer = nullptr;
          result &= executeCodeTest(state, baseAddress, test.second);
 
          // Run test with all state set to 0xFF
          xLog() << "  Running with 0xFF";
          memset(&state, 0xFF, sizeof(ThreadState));
+         state.thread = nullptr;
+         state.tracer = nullptr;
          result &= executeCodeTest(state, baseAddress, test.second);
 
          // BUT WAS IT SUCCESS??

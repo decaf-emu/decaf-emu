@@ -2,6 +2,7 @@
 #include "thread.h"
 #include "interpreter.h"
 #include "system.h"
+#include "trace.h"
 #include "modules/coreinit/coreinit_memheap.h"
 
 __declspec(thread) Thread *tCurrentThread = nullptr;
@@ -28,6 +29,9 @@ Thread::Thread(OSThread *thread, ThreadEntryPoint entry,
    mState->gpr[1] = mStackBase + mStackSize;
    mState->gpr[3] = argc;
    mState->gpr[4] = gMemory.untranslate(argv);
+
+   // Init tracer
+   traceInit(mState, 128);
 
    // Fill out data of OSThread
    mOSThread->entryPoint = entry;
