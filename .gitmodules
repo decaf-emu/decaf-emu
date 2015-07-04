@@ -10,3 +10,6 @@
 [submodule "libraries/docopt"]
 	path = libraries/docopt
 	url = https://github.com/docopt/docopt.cpp.git
+[submodule "libraries/spdlog"]
+	path = libraries/spdlog
+	url = https://github.com/gabime/spdlog.git
