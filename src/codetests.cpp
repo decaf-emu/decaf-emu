@@ -562,7 +562,10 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
          auto result = true;
 
          gLog->debug("Running test '{}'", test.first);
-         gJitManager.prepare(baseAddress + test.second.offset);
+
+         if (gInterpreter.getJitMode() == InterpJitMode::Enabled) {
+            gJitManager.prepare(baseAddress + test.second.offset);
+         }
 
          // Run test with all state set to 0x00
          gLog->debug(" Running with 0x00");

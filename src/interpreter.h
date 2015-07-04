@@ -32,6 +32,10 @@ public:
    void execute(ThreadState *state, uint32_t addr);
    void addBreakpoint(uint32_t addr);
 
+   InterpJitMode getJitMode() const {
+      return mJitMode;
+   }
+
 private:
    void execute(ThreadState *state);
    InterpJitMode mJitMode;
