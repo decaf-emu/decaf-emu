@@ -530,5 +530,8 @@
     <ClInclude Include="..\src\modules\padscore\padscore_kpad.h">
       <Filter>Header Files\modules\padscore</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\kernelfunctionlog.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

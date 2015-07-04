@@ -81,64 +81,6 @@ convertArgument(ThreadState *state, size_t &r, size_t &f)
    return arg_converter_t<Type>::convert(state, r, f);
 }
 
-// Log p32<Type>
-template<typename Out, typename Type>
-static inline void
-logArgument(Out &out, p32<Type> &value)
-{
-   out << Log::hex(static_cast<uint32_t>(value));
-}
-
-// Log char *
-template<typename Out>
-static inline void
-logArgument(Out &out, char *value)
-{
-   if (value) {
-      out << "\"" << value << "\"";
-   } else {
-      out << "NULL";
-   }
-}
-
-// Log const char *
-template<typename Out>
-static inline void
-logArgument(Out &out, const char *value)
-{
-   if (value) {
-      out << "\"" << value << "\"";
-   } else {
-      out << "NULL";
-   }
-}
-
-// Log Type *
-template<typename Out, typename Type>
-static inline void
-logArgument(Out &out, Type *value)
-{
-   out << Log::hex(gMemory.untranslate(value));
-}
-
-// Log enum (cast to int so stream out succeeds)
-template<typename Out, typename Type>
-static inline
-typename std::enable_if<std::is_enum<Type>::value, void>::type
-logArgument(Out &out, Type &value)
-{
-   out << static_cast<int>(value);
-}
-
-// Log generic
-template<typename Out, typename Type>
-static inline
-typename std::enable_if<!std::is_enum<Type>::value, void>::type
-logArgument(Out &out, Type &value)
-{
-   out << value;
-}
-
 }
 
 }

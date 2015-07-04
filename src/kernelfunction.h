@@ -2,6 +2,7 @@
 #include "kernelexport.h"
 #include "kernelfunctionargs.h"
 #include "kernelfunctionresult.h"
+#include "kernelfunctionlog.h"
 #include "systemtypes.h"
 #include "ppc.h"
 #include "util.h"
@@ -29,39 +30,44 @@ namespace kernel
 namespace functions
 {
 
+struct DispatchState
+{
+   ThreadState *thread;
+   LogState log;
+   size_t r;
+   size_t f;
+};
+
 // Function with non-void return type
 template<typename Ret, typename... Args>
 struct KernelFunctionImpl : KernelFunction
 {
    Ret(*wrapped_function)(Args...);
 
-   template<class Out, class Head, class... Tail, class... Args>
-   void dispatch(ThreadState *state, size_t &r, size_t &f, Out &out, type_list<Head, Tail...>, Args... values)
+   template<class Head, class... Tail, class... Args>
+   void dispatch(DispatchState &state, type_list<Head, Tail...>, Args... values)
    {
-      if (r != 3 || f != 1) {
-         out << ", ";
-      }
-
-      auto value = convertArgument<Head>(state, r, f);
-      logArgument(out, value);
-      dispatch(state, r, f, out, type_list<Tail...>{}, values..., value);
+      auto value = convertArgument<Head>(state.thread, state.r, state.f);
+      logArgument(state.log, value);
+      dispatch(state, type_list<Tail...>{}, values..., value);
    }
 
-   template<class Out, class... Args>
-   void dispatch(ThreadState *state, size_t &r, size_t &f, Out &out, type_list<>, Args... args)
+   template<class... Args>
+   void dispatch(DispatchState &state, type_list<>, Args... args)
    {
-      out << ")";
+      xLog() << logCallEnd(state.log);
       auto result = wrapped_function(args...);
-      setResult<Ret>(state, result);
+      setResult<Ret>(state.thread, result);
    }
 
-   virtual void call(ThreadState *state) override
+   virtual void call(ThreadState *thread) override
    {
-      size_t r = 3;
-      size_t f = 1;
-      auto out = Log::custom("SYS");
-      out << this->name << "(";
-      dispatch(state, r, f, out, type_list<Args...> {});
+      DispatchState state;
+      state.thread = thread;
+      state.r = 3;
+      state.f = 1;
+      logCall(state.log, this->name);
+      dispatch(state, type_list<Args...> {});
    }
 };
 
@@ -71,32 +77,29 @@ struct KernelFunctionImpl<void, FuncArgs...> : KernelFunction
 {
    void(*wrapped_function)(FuncArgs...);
 
-   template<class Out, class Head, class... Tail, class... Args>
-   void dispatch(ThreadState *state, size_t &r, size_t &f, Out &out, type_list<Head, Tail...>, Args... values)
+   template<class Head, class... Tail, class... Args>
+   void dispatch(DispatchState &state, type_list<Head, Tail...>, Args... values)
    {
-      if (r != 3 || f != 1) {
-         out << ", ";
-      }
-
-      auto value = convertArgument<Head>(state, r, f);
-      logArgument(out, value);
-      dispatch(state, r, f, out, type_list<Tail...>{}, values..., value);
+      auto value = convertArgument<Head>(state.thread, state.r, state.f);
+      logArgument(state.log, value);
+      dispatch(state, type_list<Tail...>{}, values..., value);
    }
 
-   template<class Out, class... Args>
-   void dispatch(ThreadState *state, size_t &r, size_t &f, Out &out, type_list<>, Args... args)
+   template<class... Args>
+   void dispatch(DispatchState &state, type_list<>, Args... args)
    {
+      xLog() << logCallEnd(state.log);
       wrapped_function(args...);
    }
 
-   virtual void call(ThreadState *state) override
+   virtual void call(ThreadState *thread) override
    {
-      size_t r = 3;
-      size_t f = 1;
-      auto out = Log::custom("SYS");
-      out << this->name << "(";
-      dispatch(state, r, f, out, type_list<FuncArgs...> {});
-      out << ")";
+      DispatchState state;
+      state.thread = thread;
+      state.r = 3;
+      state.f = 1;
+      logCall(state.log, this->name);
+      dispatch(state, type_list<FuncArgs...> {});
    }
 };
 
@@ -105,9 +108,12 @@ struct KernelFunctionManual : KernelFunction
 {
    void(*wrapped_function)(ThreadState *state);
 
-   virtual void call(ThreadState *state) override
+   virtual void call(ThreadState *thread) override
    {
-      wrapped_function(state);
+      LogState log;
+      logCall(log, this->name);
+      xLog() << logCallEnd(log);
+      wrapped_function(thread);
    }
 };
    

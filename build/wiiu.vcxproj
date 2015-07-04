@@ -175,6 +175,7 @@
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
     <ClInclude Include="..\src\jit.h" />
     <ClInclude Include="..\src\kernelfunctionargs.h" />
+    <ClInclude Include="..\src\kernelfunctionlog.h" />
     <ClInclude Include="..\src\kernelfunctionresult.h" />
     <ClInclude Include="..\src\loader.h" />
     <ClInclude Include="..\src\log.h" />
