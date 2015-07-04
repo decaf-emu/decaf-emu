@@ -249,7 +249,12 @@ cntlzw(ThreadState *state, Instruction instr)
 
    s = state->gpr[instr.rS];
 
-   a = __lzcnt(s);
+   if (s == 0) {
+      a = 32;
+   } else {
+      a = 31 - __lzcnt(s);
+   }
+
    state->gpr[instr.rA] = a;
 
    if (instr.rc) {
