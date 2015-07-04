@@ -56,7 +56,7 @@ struct KernelFunctionImpl : KernelFunction
    template<class... Args>
    void dispatch(DispatchState &state, type_list<>, Args... args)
    {
-      gLog->info(logCallEnd(state.log));
+      gLog->trace(logCallEnd(state.log));
       auto result = wrapped_function(args...);
       setResult<Ret>(state.thread, result);
    }
@@ -89,7 +89,7 @@ struct KernelFunctionImpl<void, FuncArgs...> : KernelFunction
    template<class... Args>
    void dispatch(DispatchState &state, type_list<>, Args... args)
    {
-      gLog->info(logCallEnd(state.log));
+      gLog->trace(logCallEnd(state.log));
       wrapped_function(args...);
    }
 
@@ -113,7 +113,7 @@ struct KernelFunctionManual : KernelFunction
    {
       LogState log;
       logCall(log, this->name);
-      gLog->info(logCallEnd(log));
+      gLog->trace(logCallEnd(log));
       wrapped_function(thread);
    }
 };
