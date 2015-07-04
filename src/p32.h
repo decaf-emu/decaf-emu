@@ -59,12 +59,6 @@ public:
       return *this;
    }
 
-   p32 &operator=(const Type *ptr)
-   {
-      setPointer(ptr);
-      return *this;
-   }
-
    template<typename OtherType, bool OtherEndian>
    p32 &operator=(const p32<OtherType, OtherEndian> &rhs)
    {
@@ -96,7 +90,7 @@ using be_ptr = p32<Type, true>;
 
 template<typename Type>
 inline p32<Type>
-make_p32(const Type *src)
+make_p32(Type *src)
 {
    p32<Type> result;
    result = src;

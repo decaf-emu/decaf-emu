@@ -131,7 +131,7 @@ struct OSThread
    UNKNOWN(0x57c - 0x3a0);
    be_val<uint32_t> specific[0x10]; // OSGetThreadSpecific
    UNKNOWN(0x5c0 - 0x5bc);
-   be_ptr<char> name; // OSGetThreadName
+   be_ptr<const char> name; // OSGetThreadName
    UNKNOWN(0x4);
    be_val<uint32_t> userStackPointer; // OSGetUserStackPointer
    be_val<uint32_t> cleanupCallback; // OSSetThreadCleanupCallback
