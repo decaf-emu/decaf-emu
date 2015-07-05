@@ -13,6 +13,13 @@ decodeSPR(Instruction instr)
    return static_cast<SprEncoding>(instr.sprl | (instr.spru << 5));
 }
 
+static bool
+tw(PPCEmuAssembler& a, Instruction instr)
+{
+   a.int3();
+   return true;
+}
+
 // Enforce In-Order Execution of I/O
 static bool
 eieio(PPCEmuAssembler& a, Instruction instr)
@@ -170,6 +177,7 @@ kc(PPCEmuAssembler& a, Instruction instr)
 void
 JitManager::registerSystemInstructions()
 {
+   RegisterInstruction(tw);
    RegisterInstruction(eieio);
    RegisterInstruction(isync);
    RegisterInstruction(sync);
