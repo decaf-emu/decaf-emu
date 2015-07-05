@@ -396,7 +396,7 @@ bool JitManager::gen(JitBlock& block)
 
    JumpLabelMap jumpLabels;
    for (auto i = block.targets.begin(); i != block.targets.end(); ++i) {
-      if (i->first < block.start || i->first > block.end) {
+      if (i->first >= block.start && i->first < block.end) {
          jumpLabels[i->first] = asmjit::Label(a);
       }
    }
