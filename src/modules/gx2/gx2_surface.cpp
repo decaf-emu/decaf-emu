@@ -17,9 +17,9 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
    gLog->debug("aa: {}", surface->aa);
    gLog->debug("resourceFlags: {}", surface->resourceFlags);
    gLog->debug("imageSize: {}", surface->imageSize);
-   gLog->debug("image: {:%08x}", surface->image);
+   gLog->debug("image: {}", surface->image.getPointer());
    gLog->debug("mipmapSize: {}", surface->mipmapSize);
-   gLog->debug("mipmaps: {:%08x}", surface->mipmaps);
+   gLog->debug("mipmaps: {}", surface->mipmaps.getPointer());
    gLog->debug("tileMode: {}", surface->tileMode);
    gLog->debug("swizzle: {}", surface->swizzle);
    gLog->debug("alignment: {}", surface->alignment);
