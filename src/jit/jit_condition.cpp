@@ -1,6 +1,34 @@
 #include "bitutils.h"
 #include "jit.h"
 
+void getTwoCRB(PPCEmuAssembler& a,
+      uint32_t bita, const asmjit::X86GpReg& da, 
+      uint32_t bitb, const asmjit::X86GpReg& db) {
+   auto shifta = 31 - bita;
+   auto shiftb = 31 - bitb;
+   a.mov(da, a.ppccr);
+   a.mov(db, da);
+   if (shifta > 0) {
+      a.shr(da, shifta);
+   }
+   if (shiftb > 0) {
+      a.shr(db, shiftb);
+   }
+   a.and_(da, 1);
+   a.and_(db, 1);
+}
+
+void setCRB(PPCEmuAssembler& a, uint32_t bit, const asmjit::X86GpReg& value, const asmjit::X86GpReg& tmp, const asmjit::X86GpReg& tmp2) {
+   auto shift = 31 - bit;
+   a.mov(tmp, a.ppccr);
+   a.and_(tmp, ~(1 << shift));
+   a.mov(tmp2, value);
+   a.and_(tmp2, 1);
+   a.shl(tmp2, shift);
+   a.or_(tmp, tmp2);
+   a.mov(a.ppccr, tmp);
+}
+
 // Compare
 enum CmpFlags
 {
@@ -96,6 +124,91 @@ cmpli(PPCEmuAssembler& a, Instruction instr)
    return cmpGeneric<uint32_t, CmpLogical | CmpImmediate>(a, instr);
 }
 
+// Condition Register AND
+static bool
+crand(PPCEmuAssembler& a, Instruction instr)
+{
+   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
+   a.and_(a.eax, a.ecx);
+   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   return true;
+}
+
+// Condition Register AND with Complement
+static bool
+crandc(PPCEmuAssembler& a, Instruction instr)
+{
+   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
+   a.not_(a.ecx);
+   a.and_(a.eax, a.ecx);
+   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   return true;
+}
+
+// Condition Register Equivalent
+static bool
+creqv(PPCEmuAssembler& a, Instruction instr)
+{
+   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
+   a.xor_(a.eax, a.ecx);
+   a.not_(a.eax);
+   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   return true;
+}
+
+// Condition Register NAND
+static bool
+crnand(PPCEmuAssembler& a, Instruction instr)
+{
+   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
+   a.and_(a.eax, a.ecx);
+   a.not_(a.eax);
+   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   return true;
+}
+
+// Condition Register NOR
+static bool
+crnor(PPCEmuAssembler& a, Instruction instr)
+{
+   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
+   a.or_(a.eax, a.ecx);
+   a.not_(a.eax);
+   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   return true;
+}
+
+// Condition Register OR
+static bool
+cror(PPCEmuAssembler& a, Instruction instr)
+{
+   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
+   a.or_(a.eax, a.ecx);
+   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   return true;
+}
+
+// Condition Register OR with Complement
+static bool
+crorc(PPCEmuAssembler& a, Instruction instr)
+{
+   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
+   a.not_(a.ecx);
+   a.or_(a.eax, a.ecx);
+   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   return true;
+}
+
+// Condition Register XOR
+static bool
+crxor(PPCEmuAssembler& a, Instruction instr)
+{
+   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
+   a.xor_(a.eax, a.ecx);
+   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   return true;
+}
+
 // Move from Condition Register
 static bool
 mfcr(PPCEmuAssembler& a, Instruction instr)
@@ -133,6 +246,14 @@ JitManager::registerConditionInstructions()
    RegisterInstruction(cmpi);
    RegisterInstruction(cmpl);
    RegisterInstruction(cmpli);
+   RegisterInstruction(crand);
+   RegisterInstruction(crandc);
+   RegisterInstruction(creqv);
+   RegisterInstruction(crnand);
+   RegisterInstruction(crnor);
+   RegisterInstruction(cror);
+   RegisterInstruction(crorc);
+   RegisterInstruction(crxor);
    RegisterInstruction(mfcr);
    RegisterInstruction(mtcrf);
 }
