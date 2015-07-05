@@ -16,7 +16,7 @@
    registerInstruction(InstructionID::##x, &jit_fallback)
 
 static const bool JIT_CONTINUE_ON_ERROR = false;
-static const int JIT_MAX_INST = 200;
+static const int JIT_MAX_INST = 20000;
 
 class PPCEmuAssembler : public asmjit::X86Assembler {
 public:
