@@ -314,27 +314,31 @@ template<typename Type>
 static bool
 divGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   Type a, b, d;
-   a = state->gpr[instr.rA];
-   b = state->gpr[instr.rB];
+   // Need to fallback due to overflow at the moment.
+   return jit_fallback(a, instr);
 
-   d = a / b;
-   state->gpr[instr.rD] = d;
+   /*
+   a.mov(a.eax, a.ppcgpr[instr.rA]);
+   a.mov(a.ecx, a.ppcgpr[instr.rB]);
 
-   auto overflow = (b == 0);
-
-   if (std::is_signed<Type>::value && (a == 0x80000000 && b == -1)) {
-      overflow = true;
+   if (std::is_signed<Type>::value) {
+      a.idiv(a.ecx);
+   } else {
+      a.div(a.ecx);
    }
+
+   a.mov(a.ppcgpr[instr.rD], a.eax);
 
    if (instr.oe) {
-      updateOverflow(state, overflow);
+      // updateOverflow(state, overflow);
+      assert(0);
+   }
+   
+   if (instr.rc) {
+      updateConditionRegister(a, a.ecx, a.eax, a.edx);
    }
 
-   if (instr.rc) {
-      updateConditionRegister(state, d);
-   }
+   return true;
    */
 }
 

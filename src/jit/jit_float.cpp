@@ -12,4 +12,31 @@ updateFloatConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& tmp, co
 void
 JitManager::registerFloatInstructions()
 {
+   RegisterInstructionFallback(fadd);
+   RegisterInstructionFallback(fadds);
+   RegisterInstructionFallback(fdiv);
+   RegisterInstructionFallback(fdivs);
+   RegisterInstructionFallback(fmul);
+   RegisterInstructionFallback(fmuls);
+   RegisterInstructionFallback(fsub);
+   RegisterInstructionFallback(fsubs);
+   RegisterInstructionFallback(fres);
+   RegisterInstructionFallback(frsqrte);
+   RegisterInstructionFallback(fsel);
+   RegisterInstructionFallback(fmadd);
+   RegisterInstructionFallback(fmadds);
+   RegisterInstructionFallback(fmsub);
+   RegisterInstructionFallback(fmsubs);
+   RegisterInstructionFallback(fnmadd);
+   RegisterInstructionFallback(fnmadds);
+   RegisterInstructionFallback(fnmsub);
+   RegisterInstructionFallback(fnmsubs);
+   RegisterInstructionFallback(fctiw);
+   RegisterInstructionFallback(fctiwz);
+   RegisterInstructionFallback(frsp);
+   RegisterInstructionFallback(fabs);
+   RegisterInstructionFallback(fnabs);
+   RegisterInstructionFallback(fmr);
+   RegisterInstructionFallback(fabs);
+   RegisterInstructionFallback(fneg);
 }
