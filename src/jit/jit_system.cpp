@@ -149,16 +149,15 @@ kc(PPCEmuAssembler& a, Instruction instr)
 
       if (sym->type != SymbolInfo::Function) {
          gLog->error("Attempted to call non-function symbol {}", sym->name);
-         return false;
+         return true;
       }
 
       if (!fsym->kernelFunction) {
          gLog->debug("Unimplemented kernel function {}", sym->name);
-         return false;
+         return true;
       }
 
-      return false;
-      assert(false);
+      a.int3();
    }
 
    auto func = gSystem.getSyscall(id);
