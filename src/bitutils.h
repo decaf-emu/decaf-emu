@@ -62,7 +62,7 @@ inline Type
 set_bit_value(Type src, unsigned bit, Type value)
 {
    src = clear_bit(src, bit);
-   return src | (value << bit);
+   return src | ((value & static_cast<Type>(1)) << bit);
 }
 
 template<unsigned bit, typename Type>
