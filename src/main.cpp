@@ -12,6 +12,8 @@
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/gx2/gx2.h"
+#include "modules/nn_ac/nn_ac.h"
+#include "modules/nn_act/nn_act.h"
 #include "modules/nn_save/nn_save.h"
 #include "modules/zlib125/zlib125.h"
 #include "modules/proc_ui/proc_ui.h"
@@ -56,8 +58,6 @@ int main(int argc, char **argv)
    auto args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true, "WiiU 0.1");
    bool result = false;
 
-   initialiseEmulator();
-
    if (args["--jitdebug"].asBool()) {
       gInterpreter.setJitMode(InterpJitMode::Debug);
    } else if (args["--jit"].asBool()) {
@@ -82,6 +82,8 @@ int main(int argc, char **argv)
    
    gLog->set_level(spdlog::level::trace);
 
+   initialiseEmulator();
+
    if (args["play"].asBool()) {
       gLog->set_pattern("[%l] %v");
       result = play(args["<game directory>"].asString());
@@ -97,14 +99,17 @@ int main(int argc, char **argv)
 static void
 initialiseEmulator()
 {
-   // Static module initialisation
    Interpreter::RegisterFunctions();
    JitManager::RegisterFunctions();
+
+   // Kernel modules
    CoreInit::RegisterFunctions();
    GX2::RegisterFunctions();
+   NNAc::RegisterFunctions();
+   NNAct::RegisterFunctions();
    NNSave::RegisterFunctions();
-   ProcUI::RegisterFunctions();
    PadScore::RegisterFunctions();
+   ProcUI::RegisterFunctions();
    Zlib125::RegisterFunctions();
 
    // Initialise emulator systems
@@ -113,9 +118,11 @@ initialiseEmulator()
    gJitManager.initialise();
    gSystem.registerModule("coreinit", new CoreInit {});
    gSystem.registerModule("gx2", new GX2 {});
+   gSystem.registerModule("nn_ac", new NNAc {});
+   gSystem.registerModule("nn_act", new NNAct {});
    gSystem.registerModule("nn_save", new NNSave {});
-   gSystem.registerModule("proc_ui", new ProcUI {});
    gSystem.registerModule("padscore", new PadScore {});
+   gSystem.registerModule("proc_ui", new ProcUI {});
    gSystem.registerModule("zlib125", new Zlib125 {});
    gSystem.initialiseModules();
 }

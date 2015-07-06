@@ -85,6 +85,15 @@
     <Filter Include="Header Files\modules\padscore">
       <UniqueIdentifier>{25ed9994-d801-4aee-bf49-dad286cdc7e3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\nn_act">
+      <UniqueIdentifier>{7a0f3ce7-ff2c-46c3-a241-a16fe45be793}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_ac">
+      <UniqueIdentifier>{a11e6dc7-f304-489b-9fc8-f4f4e875f534}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_ac">
+      <UniqueIdentifier>{cb366671-817d-4a6a-9d48-94be9fdd1e38}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -296,6 +305,18 @@
     </ClCompile>
     <ClCompile Include="..\src\jit\jit_pairedsingle.cpp">
       <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_act\nn_act.cpp">
+      <Filter>Source Files\modules\nn_act</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_act\nn_act_core.cpp">
+      <Filter>Source Files\modules\nn_act</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_ac\nn_ac.cpp">
+      <Filter>Source Files\modules\nn_ac</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_ac\nn_ac_core.cpp">
+      <Filter>Source Files\modules\nn_ac</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -541,6 +562,18 @@
     </ClInclude>
     <ClInclude Include="..\src\jit_float.h">
       <Filter>Header Files\jit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_act\nn_act.h">
+      <Filter>Header Files\modules\nn_act</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_act\nn_act_core.h">
+      <Filter>Header Files\modules\nn_act</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_ac\nn_ac.h">
+      <Filter>Header Files\modules\nn_ac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_ac\nn_ac_core.h">
+      <Filter>Header Files\modules\nn_ac</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
