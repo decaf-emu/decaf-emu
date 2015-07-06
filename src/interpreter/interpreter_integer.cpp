@@ -320,7 +320,7 @@ eqv(ThreadState *state, Instruction instr)
 
 // Extend Sign Byte
 static void
-extsh(ThreadState *state, Instruction instr)
+extsb(ThreadState *state, Instruction instr)
 {
    uint32_t a, s;
 
@@ -336,7 +336,7 @@ extsh(ThreadState *state, Instruction instr)
 
 // Extend Sign Half Word
 static void
-extsb(ThreadState *state, Instruction instr)
+extsh(ThreadState *state, Instruction instr)
 {
    uint32_t a, s;
 
