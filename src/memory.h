@@ -62,7 +62,11 @@ public:
    // Translate WiiU virtual address to host address
    uint8_t *translate(uint32_t address) const
    {
-      return mBase + address;
+      if (!address) {
+         return nullptr;
+      } else {
+         return mBase + address;
+      }
    }
 
    template<typename Type>
