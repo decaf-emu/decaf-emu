@@ -62,6 +62,17 @@ struct arg_converter_t<double>
    }
 };
 
+// bool
+template<>
+struct arg_converter_t<bool>
+{
+   static inline bool
+   convert(ThreadState *state, size_t &r, size_t &f)
+   {
+      return state->gpr[r++] != 0;
+   }
+};
+
 // Generic
 template<typename Type>
 struct arg_converter_t
