@@ -25,6 +25,14 @@ OSInitMessageQueueEx(MessageQueueHandle handle, OSMessage *messages, int32_t siz
    queue->count = 0;
    queue->size = size;
    queue->messages = messages;
+
+   queue->mutex = OSAllocMutex();
+   queue->waitRead = OSAllocCondition();
+   queue->waitSend = OSAllocCondition();
+
+   OSInitMutex(queue->mutex);
+   OSInitCond(queue->waitRead);
+   OSInitCond(queue->waitSend);
 }
 
 // Insert at back of message queue
@@ -32,7 +40,7 @@ BOOL
 OSSendMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags)
 {
    auto queue = gSystem.getSystemObject<MessageQueue>(handle);
-   std::unique_lock<std::mutex> lock { queue->mutex };
+   OSLockMutex(queue->mutex);
 
    if (!(flags & MessageFlags::Blocking) && queue->count == queue->size) {
       // Do not wait for space
@@ -41,7 +49,7 @@ OSSendMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags
 
    // Wait for space
    while (queue->count == queue->size) {
-      queue->waitSend.wait(lock);
+      OSWaitCond(queue->waitSend, queue->mutex);
    }
 
    auto index = (queue->first + queue->count) % queue->size;
@@ -52,8 +60,9 @@ OSSendMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags
    queue->count++;
 
    // Wake up anyone waiting for message to read
-   lock.unlock();
-   queue->waitRead.notify_one();
+   OSUnlockMutex(queue->mutex);
+   OSSignalCond(queue->waitRead);
+
    return TRUE;
 }
 
@@ -62,17 +71,18 @@ BOOL
 OSJamMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags)
 {
    auto queue = gSystem.getSystemObject<MessageQueue>(handle);
-   std::unique_lock<std::mutex> lock { queue->mutex };
    uint32_t index;
+   OSLockMutex(queue->mutex);
 
    if (!(flags & MessageFlags::Blocking) && queue->count == queue->size) {
       // Do not wait for space
+      OSUnlockMutex(queue->mutex);
       return FALSE;
    }
 
    // Wait for space
    while (queue->count == queue->size) {
-      queue->waitSend.wait(lock);
+      OSWaitCond(queue->waitSend, queue->mutex);
    }
 
    // Get index before front
@@ -91,8 +101,9 @@ OSJamMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags 
    queue->count++;
 
    // Wake up anyone waiting for message to read
-   lock.unlock();
-   queue->waitRead.notify_one();
+   OSUnlockMutex(queue->mutex);
+   OSSignalCond(queue->waitRead);
+
    return TRUE;
 }
 
@@ -101,14 +112,16 @@ BOOL
 OSReceiveMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags)
 {
    auto queue = gSystem.getSystemObject<MessageQueue>(handle);
-   std::unique_lock<std::mutex> lock { queue->mutex };
+   OSLockMutex(queue->mutex);
 
    if (!(flags & MessageFlags::Blocking) && queue->count == 0) {
+      // Do not wait for space
+      OSUnlockMutex(queue->mutex);
       return FALSE;
    }
 
    while (queue->count == 0) {
-      queue->waitRead.wait(lock);
+      OSWaitCond(queue->waitRead, queue->mutex);
    }
 
    auto index = queue->first;
@@ -120,8 +133,9 @@ OSReceiveMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Fl
    queue->count--;
 
    // Wake up anyone waiting for space to send
-   lock.unlock();
-   queue->waitSend.notify_one();
+   OSUnlockMutex(queue->mutex);
+   OSSignalCond(queue->waitSend);
+
    return TRUE;
 }
 
@@ -130,15 +144,18 @@ BOOL
 OSPeekMessage(MessageQueueHandle handle, OSMessage *message)
 {
    auto queue = gSystem.getSystemObject<MessageQueue>(handle);
-   std::unique_lock<std::mutex> lock { queue->mutex };
+   OSLockMutex(queue->mutex);
 
    if (queue->count == 0) {
+      OSUnlockMutex(queue->mutex);
       return FALSE;
    }
 
    // Copy from message array
    auto src = static_cast<OSMessage*>(queue->messages) + queue->first;
    memcpy(message, src, sizeof(OSMessage));
+
+   OSUnlockMutex(queue->mutex);
    return TRUE;
 }
 
@@ -163,7 +180,7 @@ CoreInit::registerMessageQueueFunctions()
 void
 CoreInit::initialiseMessageQueues()
 {
-   gSystemMessageQueue = make_p32<void>(OSAllocFromSystem<SystemObjectHeader>());
+   gSystemMessageQueue = OSAllocFromSystem<SystemObjectHeader>();
    gSystemMessageArray = reinterpret_cast<OSMessage*>(OSAllocFromSystem(16 * sizeof(OSMessage)));
    OSInitMessageQueue(gSystemMessageQueue, gSystemMessageArray, 16);
 }

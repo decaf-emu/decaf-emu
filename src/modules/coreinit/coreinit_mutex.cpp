@@ -1,6 +1,20 @@
 #include "coreinit.h"
 #include "coreinit_mutex.h"
+#include "coreinit_memheap.h"
 #include "system.h"
+#include "processor.h"
+
+MutexHandle
+OSAllocMutex()
+{
+   return OSAllocFromSystem<SystemObjectHeader>();
+}
+
+ConditionHandle
+OSAllocCondition()
+{
+   return OSAllocFromSystem<SystemObjectHeader>();
+}
 
 void
 OSInitMutex(MutexHandle handle)
@@ -13,27 +27,73 @@ OSInitMutexEx(MutexHandle handle, char *name)
 {
    auto mutex = gSystem.addSystemObject<Mutex>(handle);
    mutex->name = name;
+   mutex->count = 0;
+   mutex->owner = nullptr;
 }
 
 void
 OSLockMutex(MutexHandle handle)
 {
    auto mutex = gSystem.getSystemObject<Mutex>(handle);
-   mutex->mutex.lock();
+   auto fiber = gProcessor.getCurrentFiber();
+   
+   while (true) {
+      std::unique_lock<std::mutex> lock { mutex->mutex };
+
+      if (!mutex->owner || mutex->owner == fiber) {
+         break;
+      }
+
+      mutex->queue.push_back(fiber);
+      gProcessor.wait(lock);
+   }
+
+   mutex->count++;
+   mutex->owner = fiber;
 }
 
 BOOL
 OSTryLockMutex(MutexHandle handle)
 {
    auto mutex = gSystem.getSystemObject<Mutex>(handle);
-   return mutex->mutex.try_lock();
+   auto fiber = gProcessor.getCurrentFiber();
+
+   std::unique_lock<std::mutex> lock { mutex->mutex };
+
+   if (mutex->owner == fiber) {
+      mutex->count++;
+      return TRUE;
+   } else if (!mutex->owner) {
+      mutex->owner = fiber;
+      mutex->count = 1;
+      return TRUE;
+   }
+
+   return FALSE;
 }
 
 void
 OSUnlockMutex(MutexHandle handle)
 {
    auto mutex = gSystem.getSystemObject<Mutex>(handle);
-   mutex->mutex.unlock();
+   auto fiber = gProcessor.getCurrentFiber();
+
+   std::unique_lock<std::mutex> lock { mutex->mutex };
+   assert(mutex->owner == fiber);
+   
+   mutex->count--;
+
+   if (mutex->count) {
+      return;
+   }
+
+   mutex->owner = nullptr;
+
+   for (auto fiber : mutex->queue) {
+      gProcessor.queue(fiber);
+   }
+
+   mutex->queue.clear();
 }
 
 void
@@ -47,22 +107,55 @@ OSInitCondEx(ConditionHandle handle, char *name)
 {
    auto condition = gSystem.addSystemObject<Condition>(handle);
    condition->name = name;
+   condition->value = false;
 }
 
 void
 OSWaitCond(ConditionHandle conditionHandle, MutexHandle mutexHandle)
 {
    auto condition = gSystem.getSystemObject<Condition>(conditionHandle);
+   auto fiber = gProcessor.getCurrentFiber();
+   
+   // Unlock mutex
    auto mutex = gSystem.getSystemObject<Mutex>(mutexHandle);
-   auto lock = std::unique_lock<std::recursive_mutex> { mutex->mutex };
-   condition->condition.wait(lock);
+   auto count = mutex->count;
+   mutex->count = 1;
+   OSUnlockMutex(mutexHandle);
+
+   // Try acquire condition
+   while (true) {
+      std::unique_lock<std::mutex> lock { condition->mutex };
+
+      if (condition->value) {
+         break;
+      }
+
+      condition->queue.push_back(fiber);
+      gProcessor.wait(lock);
+   }
+
+   condition->value = false;
+
+   // Lock mutex
+   OSLockMutex(mutexHandle);
+   mutex->count = count;
 }
 
 void
 OSSignalCond(ConditionHandle handle)
 {
    auto condition = gSystem.getSystemObject<Condition>(handle);
-   condition->condition.notify_all();
+   std::unique_lock<std::mutex> lock { condition->mutex };
+
+   // Set condition
+   condition->value = true;
+
+   // Wake all waiting fibers
+   for (auto fiber : condition->queue) {
+      gProcessor.queue(fiber);
+   }
+
+   condition->queue.clear();
 }
 
 void

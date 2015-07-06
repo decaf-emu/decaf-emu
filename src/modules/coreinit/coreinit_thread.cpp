@@ -2,18 +2,13 @@
 #include "coreinit_thread.h"
 #include "coreinit_systeminfo.h"
 #include "memory.h"
-#include "thread.h"
+#include "processor.h"
+#include "trace.h"
 #include "system.h"
 #include <Windows.h>
 
 static OSThread *
 gDefaultThreads[3];
-
-OSThread *
-OSGetCurrentThread()
-{
-   return Thread::getCurrentThread()->getOSThread();
-}
 
 void
 OSInitThreadQueue(OSThreadQueue *queue)
@@ -31,10 +26,17 @@ OSInitThreadQueueEx(OSThreadQueue *queue, p32<void> parent)
    queue->parent = parent;
 }
 
+OSThread *
+OSGetCurrentThread()
+{
+   return gProcessor.getCurrentFiber()->thread;
+}
+
 BOOL
 OSSetThreadPriority(OSThread *thread, uint32_t priority)
 {
    thread->basePriority = priority;
+   gProcessor.reschedule();
    return TRUE;
 }
 
@@ -59,15 +61,16 @@ OSSetThreadSpecific(uint32_t id, uint32_t value)
 BOOL
 OSSetThreadAffinity(OSThread *thread, uint32_t affinity)
 {
-   thread->attr &= ~OSThreadAttributes::AffinityNone;
+   thread->attr &= ~OSThreadAttributes::AffinityAny;
    thread->attr |= affinity;
+   gProcessor.reschedule();
    return TRUE;
 }
 
 uint32_t
 OSGetThreadAffinity(OSThread *thread)
 {
-   return thread->attr & OSThreadAttributes::AffinityNone;
+   return thread->attr & OSThreadAttributes::AffinityAny;
 }
 
 void
@@ -80,14 +83,41 @@ OSSleepTicks(Time ticks)
 void
 OSYieldThread()
 {
-   std::this_thread::yield();
+   gProcessor.reschedule();
 }
 
+static uint32_t gThreadId = 1;
+
 BOOL
-OSCreateThread(OSThread *osThread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, uint32_t priority, OSThreadAttributes::Flags attributes)
+OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, uint32_t priority, OSThreadAttributes::Flags attributes)
 {
-   auto thread = new Thread(osThread, entry, argc, argv, stack, stackSize, priority, attributes);
-   gSystem.addThread(thread);
+   // Create new fiber
+   auto fiber = gProcessor.createFiber();
+
+   // Setup OSThread
+   thread->entryPoint = entry;
+   thread->stackEnd = gMemory.untranslate(stack);
+   thread->stackStart = thread->stackEnd - stackSize;
+   thread->basePriority = priority;
+   thread->attr = attributes;
+   thread->fiber = fiber;
+   thread->state = OSThreadState::Ready;
+   thread->id = gThreadId++;
+   thread->suspendCounter = 1;
+   fiber->thread = thread;
+
+   // Setup ThreadState
+   auto state = &fiber->state;
+   memset(state, 0, sizeof(ThreadState));
+   state->cia = thread->entryPoint;
+   state->nia = state->cia + 4;
+   state->gpr[1] = thread->stackEnd;
+   state->gpr[3] = argc;
+   state->gpr[4] = gMemory.untranslate(argv);
+
+   // Initialise tracer
+   traceInit(state, 128);
+
    return TRUE;
 }
 
@@ -131,7 +161,7 @@ OSResumeThread(OSThread *thread)
    }
 
    if (thread->suspendCounter == 0) {
-      thread->thread->resume();
+      gProcessor.queue(thread->fiber);
    } else {
       assert(0);
    }
@@ -142,19 +172,29 @@ OSResumeThread(OSThread *thread)
 BOOL
 OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, p32<void> argv)
 {
-   return thread->thread->run(entry, argc, argv);
+   auto fiber = thread->fiber;
+   auto state = &fiber->state;
+   state->cia = thread->entryPoint;
+   state->nia = state->cia + 4;
+   state->gpr[1] = thread->stackEnd;
+   state->gpr[3] = argc;
+   state->gpr[4] = static_cast<uint32_t>(argv);
+   gProcessor.queue(fiber);
+   return FALSE;
 }
 
 BOOL
 OSJoinThread(OSThread *thread, be_val<int> *exitValue)
 {
-   *exitValue = thread->thread->join();
+   auto fiber = thread->fiber;
+   *exitValue = gProcessor.join(fiber);
    return TRUE;
 }
 
 uint32_t
 OSSuspendThread(OSThread *thread)
 {
+   assert(false);
    auto old = thread->suspendCounter;
    thread->suspendCounter++;
 

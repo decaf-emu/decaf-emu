@@ -573,14 +573,14 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
          // Run test with all state set to 0x00
          gLog->debug(" Running with 0x00");
          memset(&state, 0x00, sizeof(ThreadState));
-         state.thread = nullptr;
+         state.fiber = nullptr;
          state.tracer = nullptr;
          result &= executeCodeTest(state, baseAddress, test.second);
 
          // Run test with all state set to 0xFF
          gLog->debug(" Running with 0xFF");
          memset(&state, 0xFF, sizeof(ThreadState));
-         state.thread = nullptr;
+         state.fiber = nullptr;
          state.tracer = nullptr;
          result &= executeCodeTest(state, baseAddress, test.second);
 

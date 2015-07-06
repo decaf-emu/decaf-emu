@@ -1,6 +1,7 @@
 #include "disassembler.h"
 #include "instruction.h"
 #include "instructiondata.h"
+#include "log.h"
 #include "memory.h"
 #include "ppc.h"
 #include "trace.h"
@@ -42,16 +43,16 @@ printFieldValue(Instruction instr, Field field, uint32_t value)
 {
    switch (field) {
    case Field::rA:
-      printf("    r%u = %08X\n", instr.rA, value);
+      gLog->emerg("    r{:02} = {:08x}", instr.rA, value);
       break;
    case Field::rB:
-      printf("    r%u = %08X\n", instr.rB, value);
+      gLog->emerg("    r{:02} = {:08x}", instr.rB, value);
       break;
    case Field::rS:
-      printf("    r%u = %08X\n", instr.rS, value);
+      gLog->emerg("    r{:02} = {:08x}", instr.rS, value);
       break;
    case Field::rD:
-      printf("    r%u = %08X\n", instr.rD, value);
+      gLog->emerg("    r{:02} = {:08x}", instr.rD, value);
       break;
    }
 }
@@ -123,7 +124,7 @@ tracePrint(ThreadState *state, size_t count)
          printFieldValue(trace.instr, trace.data->write[j], trace.write[j]);
       }
 
-      printf("  %08X %s\n", trace.cia, dis.text.c_str());
+      gLog->emerg("  {:08x} {}", trace.cia, dis.text.c_str());
 
       for (auto j = 0u; j < trace.data->read.size(); ++j) {
          printFieldValue(trace.instr, trace.data->read[j], trace.read[j]);

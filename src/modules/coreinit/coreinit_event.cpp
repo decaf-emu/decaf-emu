@@ -1,15 +1,17 @@
 #include "coreinit.h"
 #include "coreinit_event.h"
+#include "coreinit_thread.h"
 #include "system.h"
+#include "processor.h"
 
 void
-OSInitEvent(EventHandle handle, BOOL value, EventMode mode)
+OSInitEvent(EventHandle handle, bool value, EventMode mode)
 {
    OSInitEventEx(handle, value, mode, nullptr);
 }
 
 void
-OSInitEventEx(EventHandle handle, BOOL value, EventMode mode, char *name)
+OSInitEventEx(EventHandle handle, bool value, EventMode mode, char *name)
 {
    auto event = gSystem.addSystemObject<Event>(handle);
    event->mode = mode;
@@ -21,12 +23,31 @@ void
 OSSignalEvent(EventHandle handle)
 {
    auto event = gSystem.getSystemObject<Event>(handle);
+   std::unique_lock<std::mutex> lock { event->mutex };
+
    event->value = TRUE;
 
    if (event->mode == EventMode::ManualReset) {
-      event->condition.notify_all();
+      // Wake all waiting fibers
+      for (auto fiber : event->queue) {
+         gProcessor.queue(fiber);
+      }
+
+      event->queue.clear();
    } else if (event->mode == EventMode::AutoReset) {
-      event->condition.notify_one();
+      // Wake highest priority fiber
+      Fiber *highest = nullptr;
+
+      for (auto fiber : event->queue) {
+         if (!highest || fiber->thread->basePriority > highest->thread->basePriority) {
+            highest = fiber;
+         }
+      }
+
+      if (highest) {
+         gProcessor.queue(highest);
+         event->queue.erase(std::remove(event->queue.begin(), event->queue.end(), highest), event->queue.end());
+      }
    }
 }
 
@@ -34,14 +55,22 @@ void
 OSSignalEventAll(EventHandle handle)
 {
    auto event = gSystem.getSystemObject<Event>(handle);
+   std::unique_lock<std::mutex> lock { event->mutex };
    event->value = TRUE;
-   event->condition.notify_all();
+
+   // Wake all fibers
+   for (auto fiber : event->queue) {
+      gProcessor.queue(fiber);
+   }
+
+   event->queue.clear();
 }
 
 void
 OSResetEvent(EventHandle handle)
 {
    auto event = gSystem.getSystemObject<Event>(handle);
+   std::unique_lock<std::mutex> lock { event->mutex };
    event->value = FALSE;
 }
 
@@ -49,10 +78,17 @@ void
 OSWaitEvent(EventHandle handle)
 {
    auto event = gSystem.getSystemObject<Event>(handle);
-   auto lock = std::unique_lock<std::mutex> { event->mutex };
+   auto fiber = gProcessor.getCurrentFiber();
 
-   if (!event->value == TRUE) {
-      event->condition.wait(lock, [event] { return event->value; });
+   while (!event->value) {
+      std::unique_lock<std::mutex> lock { event->mutex };
+
+      if (event->value) {
+         break;
+      }
+
+      event->queue.push_back(fiber);
+      gProcessor.wait(lock);
    }
 
    if (event->mode == EventMode::AutoReset) {
@@ -64,12 +100,26 @@ BOOL
 OSWaitEventWithTimeout(EventHandle handle, Time timeout)
 {
    auto event = gSystem.getSystemObject<Event>(handle);
-   auto lock = std::unique_lock<std::mutex> { event->mutex };
+   auto fiber = gProcessor.getCurrentFiber();
+   auto start = std::chrono::system_clock::now();
 
-   if (!event->value == TRUE) {
-      if (!event->condition.wait_for(lock, std::chrono::nanoseconds(timeout), [event] { return event->value; })) {
+   while (!event->value) {
+      std::unique_lock<std::mutex> lock { event->mutex };
+
+      if (event->value) {
+         break;
+      }
+
+      // Check for timeout
+      auto diff = std::chrono::system_clock::now() - start;
+      auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count();
+
+      if (ns >= timeout) {
          return FALSE;
       }
+
+      event->queue.push_back(fiber);
+      gProcessor.wait(lock);
    }
 
    if (event->mode == EventMode::AutoReset) {

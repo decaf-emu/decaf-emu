@@ -5,6 +5,7 @@
 #include "filesystem.h"
 #include "instructiondata.h"
 #include "interpreter.h"
+#include "processor.h"
 #include "jit.h"
 #include "loader.h"
 #include "log.h"
@@ -19,7 +20,6 @@
 #include "modules/proc_ui/proc_ui.h"
 #include "modules/padscore/padscore.h"
 #include "system.h"
-#include "thread.h"
 #include "usermodule.h"
 
 std::shared_ptr<spdlog::logger>
@@ -195,6 +195,9 @@ play(const std::string &path)
    // Initialise default heaps
    // TODO: Call __preinit_user
    CoreInitDefaultHeap();
+
+   // Startup processor
+   gProcessor.start();
 
    // Allocate OSThread structures and stacks
    auto thread1 = OSAllocFromSystem<OSThread>();

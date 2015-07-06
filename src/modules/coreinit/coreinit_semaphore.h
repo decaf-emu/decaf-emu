@@ -1,8 +1,9 @@
 #pragma once
 #include <mutex>
-#include <condition_variable>
 #include "systemobject.h"
 #include "systemtypes.h"
+
+struct Fiber;
 
 struct Semaphore : public SystemObject
 {
@@ -11,10 +12,10 @@ struct Semaphore : public SystemObject
    char *name;
    int32_t count;
    std::mutex mutex;
-   std::condition_variable condition;
+   std::vector<Fiber *> queue;
 };
 
-using SemaphoreHandle = p32<SystemObjectHeader>;
+using SemaphoreHandle = SystemObjectHeader *;
 
 void
 OSInitSemaphore(SemaphoreHandle handle, int32_t count);

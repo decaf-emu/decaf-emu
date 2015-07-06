@@ -4,14 +4,14 @@
 #include <atomic>
 
 void
-OSInitSpinLock(OSSpinLock * spinlock)
+OSInitSpinLock(OSSpinLock *spinlock)
 {
    spinlock->owner = 0;
    spinlock->recursion = 0;
 }
 
 BOOL
-OSAcquireSpinLock(OSSpinLock * spinlock)
+OSAcquireSpinLock(OSSpinLock *spinlock)
 {
    auto owner = gMemory.untranslate(OSGetCurrentThread());
    auto expected = 0u;
@@ -30,7 +30,7 @@ OSAcquireSpinLock(OSSpinLock * spinlock)
 }
 
 BOOL
-OSTryAcquireSpinLock(OSSpinLock * spinlock)
+OSTryAcquireSpinLock(OSSpinLock *spinlock)
 {
    auto owner = gMemory.untranslate(OSGetCurrentThread());
    auto expected = 0u;
@@ -48,14 +48,14 @@ OSTryAcquireSpinLock(OSSpinLock * spinlock)
 }
 
 BOOL
-OSTryAcquireSpinLockWithTimeout(OSSpinLock * spinlock, int64_t timeout)
+OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock, int64_t timeout)
 {
    gLog->error("TODO: OSTryAcquireSpinLockWithTimeout");
    return FALSE;
 }
 
 BOOL
-OSReleaseSpinLock(OSSpinLock * spinlock)
+OSReleaseSpinLock(OSSpinLock *spinlock)
 {
    auto owner = gMemory.untranslate(OSGetCurrentThread());
 
@@ -73,25 +73,25 @@ OSReleaseSpinLock(OSSpinLock * spinlock)
 }
 
 BOOL
-OSUninterruptibleSpinLock_Acquire(OSSpinLock * spinlock)
+OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock)
 {
    return OSAcquireSpinLock(spinlock);
 }
 
 BOOL
-OSUninterruptibleSpinLock_TryAcquire(OSSpinLock * spinlock)
+OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock)
 {
    return OSTryAcquireSpinLock(spinlock);
 }
 
 BOOL
-OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock * spinlock, int64_t timeout)
+OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock, int64_t timeout)
 {
    return OSTryAcquireSpinLockWithTimeout(spinlock, timeout);
 }
 
 BOOL
-OSUninterruptibleSpinLock_Release(OSSpinLock * spinlock)
+OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock)
 {
    return OSReleaseSpinLock(spinlock);
 }

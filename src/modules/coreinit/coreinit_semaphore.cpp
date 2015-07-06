@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_semaphore.h"
+#include "processor.h"
 #include "system.h"
 
 void
@@ -20,43 +21,51 @@ int32_t
 OSWaitSemaphore(SemaphoreHandle handle)
 {
    auto semaphore = gSystem.getSystemObject<Semaphore>(handle);
-   auto lock = std::unique_lock<std::mutex> { semaphore->mutex };
-   auto previous = semaphore->count;
+   auto fiber = gProcessor.getCurrentFiber();
 
-   while (semaphore->count <= 0) {
-      semaphore->condition.wait(lock);
+   while (true) {
+      std::unique_lock<std::mutex> lock { semaphore->mutex };
+
+      if (semaphore->count > 0) {
+         break;
+      }
+
+      semaphore->queue.push_back(fiber);
+      gProcessor.wait(lock);
    }
 
-   --semaphore->count;
-   return previous;
+   return semaphore->count--;
 }
 
 int32_t
 OSTryWaitSemaphore(SemaphoreHandle handle)
 {
    auto semaphore = gSystem.getSystemObject<Semaphore>(handle);
-   auto lock = std::unique_lock<std::mutex> { semaphore->mutex };
-   auto previous = semaphore->count;
+   auto fiber = gProcessor.getCurrentFiber();
+   std::unique_lock<std::mutex> lock { semaphore->mutex };
 
-   if (semaphore->count > 0) {
-      --semaphore->count;
+   if (semaphore->count <= 0) {
+      return semaphore->count;
    }
 
-   return previous;
+   return semaphore->count--;
 }
 
 int32_t
 OSSignalSemaphore(SemaphoreHandle handle)
 {
    auto semaphore = gSystem.getSystemObject<Semaphore>(handle);
-   auto lock = std::unique_lock<std::mutex> { semaphore->mutex };
-   auto previous = semaphore->count;
+   auto fiber = gProcessor.getCurrentFiber();
+   std::unique_lock<std::mutex> lock { semaphore->mutex };
+   auto count = semaphore->count++;
 
-   // Increase count, wake up waiting threads
-   ++semaphore->count;
-   semaphore->condition.notify_one();
+   // Wakeup fibers
+   for (auto fiber : semaphore->queue) {
+      gProcessor.queue(fiber);
+   }
 
-   return previous;
+   semaphore->queue.clear();
+   return count;
 }
 
 int32_t

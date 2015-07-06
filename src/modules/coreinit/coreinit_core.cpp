@@ -1,17 +1,17 @@
 #include "coreinit.h"
 #include "coreinit_core.h"
-#include "thread.h"
+#include "processor.h"
 
 uint32_t
 OSGetCoreCount()
 {
-   return 3;
+   return gProcessor.getCoreCount();
 }
 
 uint32_t
 OSGetCoreId()
 {
-   return Thread::getCurrentThread()->getCoreID();
+   return gProcessor.getCoreID();
 }
 
 uint32_t

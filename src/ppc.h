@@ -337,7 +337,7 @@ enum class SprEncoding
 // TODO: Some system registers may not be thread-specific!
 struct ThreadState
 {
-   class Thread *thread;
+   struct Fiber *fiber;
    struct Tracer *tracer;
 
    uint32_t cia;     // Current execution address

@@ -4,12 +4,17 @@
 #include "systemobject.h"
 #include "coreinit_thread.h"
 
+struct Fiber;
+
 struct Mutex : public SystemObject
 {
    static const uint32_t Tag = 0x6D557458;
 
    char *name;
-   std::recursive_mutex mutex;
+   uint32_t count;
+   std::mutex mutex;
+   Fiber *owner;
+   std::vector<Fiber *> queue;
 };
 
 struct Condition : public SystemObject
@@ -17,11 +22,16 @@ struct Condition : public SystemObject
    static const uint32_t Tag = 0x634E6456;
 
    char *name;
-   std::condition_variable_any condition;
+   bool value;
+   std::mutex mutex;
+   std::vector<Fiber *> queue;
 };
 
-using MutexHandle = p32<SystemObjectHeader>;
-using ConditionHandle = p32<SystemObjectHeader>;
+using MutexHandle = SystemObjectHeader *;
+using ConditionHandle = SystemObjectHeader *;
+
+MutexHandle
+OSAllocMutex();
 
 void
 OSInitMutex(MutexHandle handle);
@@ -38,11 +48,14 @@ OSUnlockMutex(MutexHandle handle);
 BOOL
 OSTryLockMutex(MutexHandle handle);
 
+ConditionHandle
+OSAllocCondition();
+
 void
 OSInitCond(ConditionHandle handle);
 
 void
-OSInitCondEx(ConditionHandle handle, char *nname);
+OSInitCondEx(ConditionHandle handle, char *name);
 
 void
 OSWaitCond(ConditionHandle conditionHandle, MutexHandle mutexHandle);

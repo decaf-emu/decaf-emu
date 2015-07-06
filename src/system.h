@@ -26,9 +26,6 @@ public:
    void registerModule(const char *name, UserModule *module);
    UserModule *getUserModule() const;
 
-   void addThread(Thread *thread);
-   void removeThread(Thread *thread);
-
    KernelFunction *getSyscall(uint32_t id);
 
    FileSystem *getFileSystem();
@@ -78,9 +75,6 @@ private:
    std::map<std::string, KernelModule*> mSystemModules;
    p32<void> mSystemThunks;
    std::vector<KernelFunction*> mSystemCalls;
-
-   std::mutex mThreadMutex;
-   std::vector<Thread*> mThreads;
 
    std::mutex mSystemObjectMutex;
    std::map<uint32_t, SystemObject *> mSystemObjects;

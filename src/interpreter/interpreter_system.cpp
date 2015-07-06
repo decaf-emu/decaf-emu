@@ -5,7 +5,6 @@
 #include "log.h"
 #include "system.h"
 #include "kernelfunction.h"
-#include "thread.h"
 #include "usermodule.h"
 
 static SprEncoding

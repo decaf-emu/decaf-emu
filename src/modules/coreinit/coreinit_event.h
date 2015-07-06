@@ -1,6 +1,4 @@
 #pragma once
-#include <condition_variable>
-#include <mutex>
 #include "coreinit_time.h"
 #include "systemobject.h"
 
@@ -10,24 +8,26 @@ enum class EventMode
    AutoReset = 1
 };
 
+struct Fiber;
+
 struct Event : public SystemObject
 {
    static const uint32_t Tag = 0x65566E54;
 
    char *name;
    EventMode mode;
-   BOOL value;
+   std::atomic<bool> value;
    std::mutex mutex;
-   std::condition_variable condition;
+   std::vector<Fiber *> queue;
 };
 
-using EventHandle = p32<SystemObjectHeader>;
+using EventHandle = SystemObjectHeader *;
 
 void
-OSInitEvent(EventHandle handle, BOOL value, EventMode mode);
+OSInitEvent(EventHandle handle, bool value, EventMode mode);
 
 void
-OSInitEventEx(EventHandle handle, BOOL value, EventMode mode, char *name);
+OSInitEventEx(EventHandle handle, bool value, EventMode mode, char *name);
 
 void
 OSSignalEvent(EventHandle handle);

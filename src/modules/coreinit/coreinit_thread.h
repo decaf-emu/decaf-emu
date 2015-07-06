@@ -6,7 +6,7 @@
 #pragma pack(push, 1)
 
 struct OSThread;
-class Thread;
+struct Fiber;
 
 struct OSThreadQueue
 {
@@ -103,10 +103,10 @@ namespace OSThreadAttributes
 {
 enum Flags : uint8_t
 {
-   AffinityNone = 7, // If affinity_none is 7 = 0b111 then lets assume its a bitmask for now
-   AffinityCPU0 = 1,
-   AffinityCPU1 = 2,
-   AffinityCPU2 = 4,
+   AffinityCPU0 = 1 << 0,
+   AffinityCPU1 = 1 << 1,
+   AffinityCPU2 = 1 << 2,
+   AffinityAny = AffinityCPU0 | AffinityCPU1 | AffinityCPU2,
 };
 }
 
@@ -123,7 +123,7 @@ struct OSThread
    be_val<uint32_t> priority;
    be_val<uint32_t> basePriority; // "ba" in DumpActiveThreads and returned in OSGetThreadPriority
    be_val<uint32_t> exitValue; // OSExitThread / OSJoinThread
-   Thread *thread; // THIS IS CUSTOM! squueeezed in, hopefully not override anything important.
+   Fiber *fiber; // THIS IS CUSTOM! squueeezed in, hopefully not override anything important.
    UNKNOWN(0x394 - 0x340);
    be_val<uint32_t> stackStart; // __OSSaveUserStackPointer
    be_val<uint32_t> stackEnd; // __OSSaveUserStackPointer

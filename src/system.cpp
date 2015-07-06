@@ -2,7 +2,6 @@
 #include "instructiondata.h"
 #include "system.h"
 #include "kernelmodule.h"
-#include "thread.h"
 #include "modules/coreinit/coreinit_memheap.h"
 
 System gSystem;
@@ -63,20 +62,6 @@ System::findModule(const char *name) const
    } else {
       return itr->second;
    }
-}
-
-void
-System::addThread(Thread *thread)
-{
-   std::lock_guard<std::mutex> lock(mThreadMutex);
-   mThreads.push_back(thread);
-}
-
-void
-System::removeThread(Thread *thread)
-{
-   std::lock_guard<std::mutex> lock(mThreadMutex);
-   mThreads.erase(std::remove(mThreads.begin(), mThreads.end(), thread), mThreads.end());
 }
 
 KernelFunction *

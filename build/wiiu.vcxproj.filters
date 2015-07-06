@@ -213,9 +213,6 @@
     <ClCompile Include="..\src\system.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\thread.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\interpreter.cpp">
       <Filter>Source Files\ppc</Filter>
     </ClCompile>
@@ -317,6 +314,9 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\nn_ac\nn_ac_core.cpp">
       <Filter>Source Files\modules\nn_ac</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\processor.cpp">
+      <Filter>Source Files\system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -452,9 +452,6 @@
     <ClInclude Include="..\src\system.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\thread.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\util.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
@@ -574,6 +571,9 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_ac\nn_ac_core.h">
       <Filter>Header Files\modules\nn_ac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\processor.h">
+      <Filter>Header Files\system</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

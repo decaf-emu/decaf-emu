@@ -4,7 +4,6 @@
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
 #include "interpreter.h"
-#include "thread.h"
 
 static wfunc_ptr<int, int, int, be_val<uint32_t>*>
 pOSDynLoad_MemAlloc;
@@ -16,7 +15,9 @@ template<unsigned N>
 static inline uint32_t
 OSExecuteCallback(uint32_t addr, uint32_t (&args)[N])
 {
-   auto state = Thread::getCurrentThread()->getThreadState();
+   assert(false);
+   return 0;
+   /*auto state = Thread::getCurrentThread()->getThreadState();
    uint32_t save[N];
    uint32_t result;
 
@@ -33,11 +34,14 @@ OSExecuteCallback(uint32_t addr, uint32_t (&args)[N])
       state->gpr[3 + i] = save[i];
    }
 
-   return result;
+   return result;*/
 }
 
 int MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 {
+   assert(false);
+   return 0;
+   /*
    if (!outPtr) {
       return 0xBAD10017;
    }
@@ -54,16 +58,18 @@ int MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
    };
 
    *outPtr = OSExecuteCallback(static_cast<addr_t>(pMEMAllocFromDefaultHeapEx), args);
-   return 0;
+   return 0;*/
 }
 
 void MEM_DynLoad_DefaultFree(p32<void> addr)
 {
+   assert(false);
+   /*
    uint32_t args[] = {
       static_cast<uint32_t>(addr)
    };
 
-   OSExecuteCallback(static_cast<addr_t>(pMEMFreeToDefaultHeap), args);
+   OSExecuteCallback(static_cast<addr_t>(pMEMFreeToDefaultHeap), args);*/
 }
 
 int

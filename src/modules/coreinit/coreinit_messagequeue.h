@@ -1,8 +1,7 @@
 #pragma once
-#include <condition_variable>
-#include <mutex>
 #include "systemtypes.h"
 #include "coreinit_thread.h"
+#include "coreinit_mutex.h"
 #include "util.h"
 
 #pragma pack(push, 1)
@@ -33,12 +32,12 @@ struct MessageQueue : public SystemObject
    uint32_t count;
    uint32_t size;
    OSMessage *messages;
-   std::mutex mutex;
-   std::condition_variable waitSend;
-   std::condition_variable waitRead;
+   MutexHandle mutex;
+   ConditionHandle waitSend;
+   ConditionHandle waitRead;
 };
 
-using MessageQueueHandle = p32<SystemObjectHeader>;
+using MessageQueueHandle = SystemObjectHeader *;
 
 void
 OSInitMessageQueue(MessageQueueHandle handle, OSMessage *messages, int32_t size);
