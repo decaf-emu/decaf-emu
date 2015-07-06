@@ -81,6 +81,16 @@ public:
       return BigEndian ? byte_swap(mValue) : mValue;
    }
 
+   bool operator==(uint32_t addr) const
+   {
+      return mValue == addr;
+   }
+
+   bool operator==(std::nullptr_t) const
+   {
+      return mValue == 0;
+   }
+
 protected:
    addr_t mValue;
 };
