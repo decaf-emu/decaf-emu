@@ -364,7 +364,7 @@ extsb(PPCEmuAssembler& a, Instruction instr)
    a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (instr.rc) {
-      updateConditionRegister(a, a.edx, a.ecx, a.eax);
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
    }
 
    return true;
@@ -381,7 +381,7 @@ extsh(PPCEmuAssembler& a, Instruction instr)
    a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (instr.rc) {
-      updateConditionRegister(a, a.edx, a.ecx, a.eax);
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
    }
 
    return true;
