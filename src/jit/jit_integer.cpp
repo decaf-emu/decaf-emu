@@ -403,11 +403,12 @@ mulSignedGeneric(PPCEmuAssembler& a, Instruction instr)
    a.mov(a.eax, a.ppcgpr[instr.rA]);
 
    if (flags & MulImmediate) {
-      a.imul(sign_extend<16>(instr.simm));
+      a.mov(a.ecx, sign_extend<16>(instr.simm));
    } else {
       a.mov(a.ecx, a.ppcgpr[instr.rB]);
-      a.imul(a.ecx);
    }
+
+   a.imul(a.zcx);
 
    if (flags & MulLow) {
       a.mov(a.ppcgpr[instr.rD], a.eax);
@@ -436,11 +437,12 @@ mulUnsignedGeneric(PPCEmuAssembler& a, Instruction instr)
    a.mov(a.eax, a.ppcgpr[instr.rA]);
 
    if (flags & MulImmediate) {
-      a.mul(sign_extend<16>(instr.simm));
+      a.mov(a.ecx, sign_extend<16>(instr.simm));
    } else {
       a.mov(a.ecx, a.ppcgpr[instr.rB]);
-      a.mul(a.ecx);
    }
+
+   a.mul(a.zcx);
 
    if (flags & MulLow) {
       a.mov(a.ppcgpr[instr.rD], a.eax);
