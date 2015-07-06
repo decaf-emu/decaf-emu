@@ -6,6 +6,7 @@
 
 struct ExpandedHeapBlock
 {
+   char pad[16]; // TODO: Remove me
    uint32_t addr;
    uint32_t size;
    uint16_t group;
