@@ -58,6 +58,9 @@ template<unsigned flags = 0>
 static bool
 addGeneric(PPCEmuAssembler& a, Instruction instr)
 {
+   // Temporary until tested...
+   return jit_fallback(a, instr);
+   /*
    bool recordCarry = false;
    bool recordOverflow = false;
    bool recordCond = false;
@@ -156,6 +159,7 @@ addGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    return true;
+   */
 }
 
 static bool
@@ -733,33 +737,35 @@ template<unsigned flags>
 static bool
 shiftLogical(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t n, s, b, a;
-
-   s = state->gpr[instr.rS];
+   a.mov(a.eax, a.ppcgpr[instr.rS]);
 
    if (flags & ShiftImmediate) {
-      b = instr.sh;
-   }
-   else {
-      b = state->gpr[instr.rB];
+      if (flags & ShiftLeft) {
+         a.sal(a.eax, instr.sh);
+      } else if (flags & ShiftRight) {
+         a.sar(a.eax, instr.sh);
+      } else {
+         assert(0);
+      }
+   } else {
+      a.mov(a.ecx, a.ppcgpr[instr.rB]);
+
+      if (flags & ShiftLeft) {
+         a.sal(a.eax, a.ecx.r8());
+      } else if (flags & ShiftRight) {
+         a.sar(a.eax, a.ecx.r8());
+      } else {
+         assert(0);
+      }
    }
 
-   n = b & 0x1f;
-
-   if (flags & ShiftLeft) {
-      a = s << n;
-   }
-   else if (flags & ShiftRight) {
-      a = s >> n;
-   }
-
-   state->gpr[instr.rA] = a;
+   a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (instr.rc) {
-      updateConditionRegister(state, a);
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
    }
-   */
+
+   return true;
 }
 
 // Shift Left Word
@@ -781,50 +787,15 @@ template<unsigned flags>
 static bool
 shiftArithmetic(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   int32_t s, a, n, b;
-
-   s = state->gpr[instr.rS];
-
-   if (flags & ShiftImmediate) {
-      b = instr.sh;
-   }
-   else {
-      b = state->gpr[instr.rB];
+   if (flags & ShiftImmediate && instr.sh == 0) {
+      // Clear Carry Flag
+      a.mov(a.ecx, a.ppcxer);
+      a.and_(a.ecx, ~XERegisterBits::Carry);
+      a.mov(a.ppcxer, a.ecx);
+      return true;
    }
 
-   n = b & 0x1f;
-
-   if (flags & ShiftLeft) {
-      a = s << n;
-   }
-   else if (flags & ShiftRight) {
-      a = s >> n;
-   }
-
-   state->gpr[instr.rA] = a;
-
-   // XER[CA] is set if rS contains a negative number and any
-   // 1 bits are shifted out of position 31
-   bool carry = s < 0 && !get_bit<31>(a);
-
-   // Shift amounts from 32 to 63 give a result of 32 sign bits
-   // and cause XER[CA] to receive the sign bit of rS
-   if (b & 0x20) {
-      carry = !!get_bit<31>(s);
-   }
-
-   // A shift amount of zero causes rA = rS and XER[CA] cleared
-   if (n == 0) {
-      carry = false;
-   }
-
-   updateCarry(state, carry);
-
-   if (instr.rc) {
-      updateConditionRegister(state, a);
-   }
-   */
+   return jit_fallback(a, instr);
 }
 
 static bool
