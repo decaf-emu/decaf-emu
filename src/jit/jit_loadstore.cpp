@@ -282,35 +282,7 @@ template<unsigned flags = 0>
 static bool
 lswGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t ea, i, n, r;
-
-   ea = instr.rA ? state->gpr[instr.rA] : 0;
-
-   if (flags & LswIndexed) {
-      ea += state->gpr[instr.rB];
-      n = state->xer.byteCount;
-   }
-   else {
-      n = instr.nb ? instr.nb : 32;
-   }
-
-   r = instr.rD - 1;
-   i = 0;
-
-   while (n > 0) {
-      if (i == 0) {
-         r = (r + 1) % 32;
-         state->gpr[r] = 0;
-      }
-
-      state->gpr[r] |= gMemory.read<uint8_t>(ea) << (24 - i);
-
-      i = (i + 8) % 32;
-      ea = ea + 1;
-      n = n - 1;
-   }
-   */
+   return jit_fallback(a, instr);
 }
 
 static bool
@@ -341,6 +313,11 @@ template<typename Type, unsigned flags = 0>
 static bool
 storeGeneric(PPCEmuAssembler& a, Instruction instr)
 {
+   if (flags & StoreConditional) {
+      // Early out for if statement below.
+      return jit_fallback(a, instr);
+   }
+
    if ((flags & StoreZeroRA) && instr.rA == 0) {
       if (flags & StoreIndexed) {
          a.mov(a.ecx, a.ppcgpr[instr.rB]);
@@ -358,7 +335,6 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (flags & StoreConditional) {
-      return false;
       /*
       state->cr.cr0 = state->xer.so ? ConditionRegisterFlag::SummaryOverflow : 0;
 
@@ -610,34 +586,7 @@ template<unsigned flags = 0>
 static bool
 stswGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t ea, i, n, r;
-
-   ea = instr.rA ? state->gpr[instr.rA] : 0;
-
-   if (flags & LswIndexed) {
-      ea += state->gpr[instr.rB];
-      n = state->xer.byteCount;
-   }
-   else {
-      n = instr.nb ? instr.nb : 32;
-   }
-
-   r = instr.rS - 1;
-   i = 0;
-
-   while (n > 0) {
-      if (i == 0) {
-         r = (r + 1) % 32;
-      }
-
-      gMemory.write<uint8_t>(ea, (state->gpr[r] >> (24 - i)) & 0xff);
-
-      i = (i + 8) % 32;
-      ea = ea + 1;
-      n = n - 1;
-   }
-   */
+   return jit_fallback(a, instr);
 }
 
 static bool
@@ -652,115 +601,6 @@ stswx(PPCEmuAssembler& a, Instruction instr)
    return stswGeneric<StswIndexed>(a, instr);
 }
 
-// Tables copied from Dolphin source code
-const static float dequantizeTable[] =
-{
-   1.0 / (1ULL << 0), 1.0 / (1ULL << 1), 1.0 / (1ULL << 2), 1.0 / (1ULL << 3),
-   1.0 / (1ULL << 4), 1.0 / (1ULL << 5), 1.0 / (1ULL << 6), 1.0 / (1ULL << 7),
-   1.0 / (1ULL << 8), 1.0 / (1ULL << 9), 1.0 / (1ULL << 10), 1.0 / (1ULL << 11),
-   1.0 / (1ULL << 12), 1.0 / (1ULL << 13), 1.0 / (1ULL << 14), 1.0 / (1ULL << 15),
-   1.0 / (1ULL << 16), 1.0 / (1ULL << 17), 1.0 / (1ULL << 18), 1.0 / (1ULL << 19),
-   1.0 / (1ULL << 20), 1.0 / (1ULL << 21), 1.0 / (1ULL << 22), 1.0 / (1ULL << 23),
-   1.0 / (1ULL << 24), 1.0 / (1ULL << 25), 1.0 / (1ULL << 26), 1.0 / (1ULL << 27),
-   1.0 / (1ULL << 28), 1.0 / (1ULL << 29), 1.0 / (1ULL << 30), 1.0 / (1ULL << 31),
-   (1ULL << 32), (1ULL << 31), (1ULL << 30), (1ULL << 29),
-   (1ULL << 28), (1ULL << 27), (1ULL << 26), (1ULL << 25),
-   (1ULL << 24), (1ULL << 23), (1ULL << 22), (1ULL << 21),
-   (1ULL << 20), (1ULL << 19), (1ULL << 18), (1ULL << 17),
-   (1ULL << 16), (1ULL << 15), (1ULL << 14), (1ULL << 13),
-   (1ULL << 12), (1ULL << 11), (1ULL << 10), (1ULL << 9),
-   (1ULL << 8), (1ULL << 7), (1ULL << 6), (1ULL << 5),
-   (1ULL << 4), (1ULL << 3), (1ULL << 2), (1ULL << 1),
-};
-
-const static float quantizeTable[] =
-{
-   (1ULL << 0), (1ULL << 1), (1ULL << 2), (1ULL << 3),
-   (1ULL << 4), (1ULL << 5), (1ULL << 6), (1ULL << 7),
-   (1ULL << 8), (1ULL << 9), (1ULL << 10), (1ULL << 11),
-   (1ULL << 12), (1ULL << 13), (1ULL << 14), (1ULL << 15),
-   (1ULL << 16), (1ULL << 17), (1ULL << 18), (1ULL << 19),
-   (1ULL << 20), (1ULL << 21), (1ULL << 22), (1ULL << 23),
-   (1ULL << 24), (1ULL << 25), (1ULL << 26), (1ULL << 27),
-   (1ULL << 28), (1ULL << 29), (1ULL << 30), (1ULL << 31),
-   1.0 / (1ULL << 32), 1.0 / (1ULL << 31), 1.0 / (1ULL << 30), 1.0 / (1ULL << 29),
-   1.0 / (1ULL << 28), 1.0 / (1ULL << 27), 1.0 / (1ULL << 26), 1.0 / (1ULL << 25),
-   1.0 / (1ULL << 24), 1.0 / (1ULL << 23), 1.0 / (1ULL << 22), 1.0 / (1ULL << 21),
-   1.0 / (1ULL << 20), 1.0 / (1ULL << 19), 1.0 / (1ULL << 18), 1.0 / (1ULL << 17),
-   1.0 / (1ULL << 16), 1.0 / (1ULL << 15), 1.0 / (1ULL << 14), 1.0 / (1ULL << 13),
-   1.0 / (1ULL << 12), 1.0 / (1ULL << 11), 1.0 / (1ULL << 10), 1.0 / (1ULL << 9),
-   1.0 / (1ULL << 8), 1.0 / (1ULL << 7), 1.0 / (1ULL << 6), 1.0 / (1ULL << 5),
-   1.0 / (1ULL << 4), 1.0 / (1ULL << 3), 1.0 / (1ULL << 2), 1.0 / (1ULL << 1),
-};
-
-static float
-dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
-{
-   float scaleValue = dequantizeTable[scale];
-   float result;
-
-   switch (type) {
-   case QuantizedDataType::Floating:
-      result = gMemory.read<float>(ea);
-      break;
-   case QuantizedDataType::Unsigned8:
-      result = scaleValue * static_cast<float>(gMemory.read<uint8_t>(ea));
-      break;
-   case QuantizedDataType::Unsigned16:
-      result = scaleValue * static_cast<float>(gMemory.read<uint16_t>(ea));
-      break;
-   case QuantizedDataType::Signed8:
-      result = scaleValue * static_cast<float>(gMemory.read<int8_t>(ea));
-      break;
-   case QuantizedDataType::Signed16:
-      result = scaleValue * static_cast<float>(gMemory.read<int16_t>(ea));
-      break;
-   default:
-      assert("Unkown QuantizedDataType");
-   }
-
-   return result;
-}
-
-template<typename Type>
-static inline float
-clamp(float value)
-{
-   float min = static_cast<float>(std::numeric_limits<uint8_t>::min());
-   float max = static_cast<float>(std::numeric_limits<uint8_t>::max());
-   return std::max(min, std::min(value, max));
-}
-
-static bool
-quantize(uint32_t ea, float value, QuantizedDataType type, uint32_t scale)
-{
-   float scaleValue = dequantizeTable[scale];
-
-   switch (type) {
-   case QuantizedDataType::Floating:
-      gMemory.write(ea, static_cast<float>(value));
-      break;
-   case QuantizedDataType::Unsigned8:
-      value = clamp<uint8_t>(value * scaleValue);
-      gMemory.write(ea, static_cast<uint8_t>(value));
-      break;
-   case QuantizedDataType::Unsigned16:
-      value = clamp<uint16_t>(value * scaleValue);
-      gMemory.write(ea, static_cast<uint16_t>(value));
-      break;
-   case QuantizedDataType::Signed8:
-      value = clamp<int8_t>(value * scaleValue);
-      gMemory.write(ea, static_cast<int8_t>(value));
-      break;
-   case QuantizedDataType::Signed16:
-      value = clamp<int16_t>(value * scaleValue);
-      gMemory.write(ea, static_cast<int16_t>(value));
-      break;
-   default:
-      assert("Unkown QuantizedDataType");
-   }
-}
-
 // Paired Single Load
 enum PsqLoadFlags
 {
@@ -773,57 +613,7 @@ template<unsigned flags = 0>
 static bool
 psqLoad(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t ea, ls, c, i, w;
-   QuantizedDataType lt;
-
-   if ((flags & PsqLoadZeroRA) && instr.rA == 0) {
-      ea = 0;
-   }
-   else {
-      ea = state->gpr[instr.rA];
-   }
-
-   if (flags & PsqLoadIndexed) {
-      ea += state->gpr[instr.rB];
-   }
-   else {
-      ea += sign_extend<16, int32_t>(instr.d);
-   }
-
-   if (flags & PsqLoadIndexed) {
-      i = instr.qi;
-      w = instr.qw;
-   }
-   else {
-      i = instr.i;
-      w = instr.w;
-   }
-
-   c = 4;
-   lt = static_cast<QuantizedDataType>(state->gqr[i].ld_type);
-   ls = state->gqr[i].ld_scale;
-
-   if (lt == QuantizedDataType::Unsigned8 || lt == QuantizedDataType::Signed8) {
-      c = 1;
-   }
-   else if (lt == QuantizedDataType::Unsigned16 || lt == QuantizedDataType::Signed16) {
-      c = 2;
-   }
-
-   if (w == 0) {
-      state->fpr[instr.frD].paired0 = dequantize(ea, lt, ls);
-      state->fpr[instr.frD].paired1 = dequantize(ea + c, lt, ls);
-   }
-   else {
-      state->fpr[instr.frD].paired0 = dequantize(ea, lt, ls);
-      state->fpr[instr.frD].paired1 = 1.0f;
-   }
-
-   if (flags & PsqLoadUpdate) {
-      state->gpr[instr.rA] = ea;
-   }
-   */
+   return jit_fallback(a, instr);
 }
 
 static bool
@@ -862,60 +652,7 @@ template<unsigned flags = 0>
 static bool
 psqStore(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t ea, sts, c, i, w;
-   QuantizedDataType stt;
-   float s0, s1;
-
-   if ((flags & PsqStoreZeroRA) && instr.rA == 0) {
-      ea = 0;
-   }
-   else {
-      ea = state->gpr[instr.rA];
-   }
-
-   if (flags & PsqStoreIndexed) {
-      ea += state->gpr[instr.rB];
-   }
-   else {
-      ea += sign_extend<16, int32_t>(instr.d);
-   }
-
-   if (flags & PsqStoreIndexed) {
-      i = instr.qi;
-      w = instr.qw;
-   }
-   else {
-      i = instr.i;
-      w = instr.w;
-   }
-
-   c = 4;
-   stt = static_cast<QuantizedDataType>(state->gqr[instr.qi].st_type);
-   sts = state->gqr[instr.qi].st_scale;
-
-   if (stt == QuantizedDataType::Unsigned8 || stt == QuantizedDataType::Signed8) {
-      c = 1;
-   }
-   else if (stt == QuantizedDataType::Unsigned16 || stt == QuantizedDataType::Signed16) {
-      c = 2;
-   }
-
-   s0 = state->fpr[instr.frS].paired0;
-   s1 = state->fpr[instr.frS].paired1;
-
-   if (instr.qw == 0) {
-      quantize(ea, s0, stt, sts);
-      quantize(ea + c, s1, stt, sts);
-   }
-   else {
-      quantize(ea, s0, stt, sts);
-   }
-
-   if (flags & PsqStoreUpdate) {
-      state->gpr[instr.rA] = ea;
-   }
-   */
+   return jit_fallback(a, instr);
 }
 
 static bool

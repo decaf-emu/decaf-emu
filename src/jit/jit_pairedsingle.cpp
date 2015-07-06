@@ -61,6 +61,27 @@ ps_merge10(PPCEmuAssembler& a, Instruction instr)
 void
 JitManager::registerPairedInstructions()
 {
+   RegisterInstructionFallback(ps_add);
+   RegisterInstructionFallback(ps_div);
+   RegisterInstructionFallback(ps_mul);
+   RegisterInstructionFallback(ps_sub);
+   RegisterInstructionFallback(ps_abs);
+   RegisterInstructionFallback(ps_nabs);
+   RegisterInstructionFallback(ps_neg);
+   RegisterInstructionFallback(ps_sel);
+   RegisterInstructionFallback(ps_res);
+   RegisterInstructionFallback(ps_rsqrte);
+   RegisterInstructionFallback(ps_msub);
+   RegisterInstructionFallback(ps_madd);
+   RegisterInstructionFallback(ps_nmsub);
+   RegisterInstructionFallback(ps_nmadd);
+   RegisterInstructionFallback(ps_mr);
+   RegisterInstructionFallback(ps_sum0);
+   RegisterInstructionFallback(ps_sum1);
+   RegisterInstructionFallback(ps_muls0);
+   RegisterInstructionFallback(ps_muls1);
+   RegisterInstructionFallback(ps_madds0);
+   RegisterInstructionFallback(ps_madds1);
    RegisterInstruction(ps_merge00);
    RegisterInstruction(ps_merge01);
    RegisterInstruction(ps_merge10);
