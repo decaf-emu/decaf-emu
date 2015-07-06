@@ -66,20 +66,23 @@ int main(int argc, char **argv)
       gInterpreter.setJitMode(InterpJitMode::Disabled);
    }
 
+   // Create the logger
+   std::vector<spdlog::sink_ptr> sinks;
+   sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+
    if (args["--logfile"].asBool()) {
       std::string file;
 
       if (args["play"].asBool()) {
-         file = getGameName(args["<game directory>"].asString()) + ".txt";
+         file = getGameName(args["<game directory>"].asString());
       } else if (args["test"].asBool()) {
-         file = "tests.txt";
+         file = "tests";
       }
 
-      gLog = spdlog::daily_logger_mt("console", file);
-   } else {
-      gLog = spdlog::stdout_logger_mt("console");
+      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(file, "txt", 23, 59));
    }
-   
+
+   gLog = std::make_shared<spdlog::logger>("logger", begin(sinks), end(sinks));
    gLog->set_level(spdlog::level::trace);
 
    initialiseEmulator();
