@@ -69,6 +69,10 @@ union cr_t
 
 namespace XERegisterBits {
 enum XERegisterBits : uint32_t {
+   XRShift = 28,
+
+   XR = 0xFu << XRShift,
+
    CarryShift = 29,
    OverflowShift = 30,
    StickyOVShift = 31,

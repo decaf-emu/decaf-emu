@@ -124,6 +124,34 @@ cmpli(PPCEmuAssembler& a, Instruction instr)
    return cmpGeneric<uint32_t, CmpLogical | CmpImmediate>(a, instr);
 }
 
+// Floating Compare
+enum FCmpFlags
+{
+   FCmpOrdered = 1 << 0,
+   FCmpUnordered = 1 << 1,
+   FCmpSingle0 = 1 << 2,
+   FCmpSingle1 = 1 << 3,
+};
+
+template<typename Type, unsigned flags>
+static bool
+fcmpGeneric(PPCEmuAssembler& a, Instruction instr)
+{
+   return jit_fallback(a, instr);
+}
+
+static bool
+fcmpo(PPCEmuAssembler& a, Instruction instr)
+{
+   return fcmpGeneric<double, FCmpOrdered>(a, instr);
+}
+
+static bool
+fcmpu(PPCEmuAssembler& a, Instruction instr)
+{
+   return fcmpGeneric<double, FCmpUnordered>(a, instr);
+}
+
 // Condition Register AND
 static bool
 crand(PPCEmuAssembler& a, Instruction instr)
@@ -209,6 +237,53 @@ crxor(PPCEmuAssembler& a, Instruction instr)
    return true;
 }
 
+// Move Condition Register Field
+static bool
+mcrf(PPCEmuAssembler& a, Instruction instr)
+{
+   uint32_t crshifts = (7 - instr.crfS) * 4;
+   uint32_t crshiftd = (7 - instr.crfD) * 4;
+
+   a.mov(a.eax, a.ppccr);
+   a.mov(a.ecx, a.eax);
+   a.and_(a.ecx, ~(0xF << crshifts));
+   a.shr(a.ecx, crshifts);
+   a.shl(a.ecx, crshiftd);
+   a.and_(a.eax, ~(0xF << crshiftd));
+   a.or_(a.eax, a.ecx);
+   a.mov(a.ppccr, a.eax);
+
+   return true;
+}
+
+// Move to Condition Register from XER
+static bool
+mcrxr(PPCEmuAssembler& a, Instruction instr)
+{
+   uint32_t crshift = (7 - instr.crfD) * 4;
+
+   a.mov(a.eax, a.ppcxer);
+   a.mov(a.ecx, a.eax);
+
+   // Grab CRXR
+   a.shr(a.ecx, XERegisterBits::XRShift);
+   a.and_(a.ecx, 0xF);
+
+   // Clear XER CRXR
+   a.and_(a.eax, ~XERegisterBits::XR);
+   a.mov(a.ppcxer, a.eax);
+
+   // Set CRF
+   a.shl(a.ecx, crshift);
+   a.mov(a.eax, a.ppccr);
+   a.and_(a.eax, ~(0xF << crshift));
+   a.or_(a.eax, a.ecx);
+   a.mov(a.ppccr, a.eax);
+
+   return true;
+}
+
+
 // Move from Condition Register
 static bool
 mfcr(PPCEmuAssembler& a, Instruction instr)
@@ -246,6 +321,8 @@ JitManager::registerConditionInstructions()
    RegisterInstruction(cmpi);
    RegisterInstruction(cmpl);
    RegisterInstruction(cmpli);
+   RegisterInstruction(fcmpo);
+   RegisterInstruction(fcmpu);
    RegisterInstruction(crand);
    RegisterInstruction(crandc);
    RegisterInstruction(creqv);
@@ -254,6 +331,12 @@ JitManager::registerConditionInstructions()
    RegisterInstruction(cror);
    RegisterInstruction(crorc);
    RegisterInstruction(crxor);
+   RegisterInstruction(mcrf);
+   RegisterInstruction(mcrxr);
    RegisterInstruction(mfcr);
    RegisterInstruction(mtcrf);
+   RegisterInstructionFallback(ps_cmpu0);
+   RegisterInstructionFallback(ps_cmpo0);
+   RegisterInstructionFallback(ps_cmpu1);
+   RegisterInstructionFallback(ps_cmpo1);
 }
