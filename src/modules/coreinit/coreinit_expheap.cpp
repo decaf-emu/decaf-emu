@@ -43,62 +43,72 @@ findBlock(p32<ExpandedHeapBlock> head, uint32_t addr)
 }
 
 static void
-eraseBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> freeBlock)
+eraseBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> block)
 {
-   if (freeBlock == head) {
-      head = freeBlock->next;
+   if (block == head) {
+      head = block->next;
    } else {
-      freeBlock->prev->next = freeBlock->next;
+      if (block->prev) {
+         block->prev->next = block->next;
+      }
+
+      if (block->next) {
+         block->next->prev = block->prev;
+      }
    }
 }
 
 static void
-insertBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> usedBlock)
+insertBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> block)
 {
    p32<ExpandedHeapBlock> insertAfter = nullptr;
 
-   for (auto block = head; block; block = block->next) {
-      if (block->addr < usedBlock->addr) {
-         insertAfter = block;
+   for (auto itr = head; itr; itr = itr->next) {
+      if (itr->addr < block->addr) {
+         insertAfter = itr;
       } else {
          break;
       }
    }
 
    if (!insertAfter) {
-      usedBlock->next = head;
+      block->next = head;
+      block->prev = nullptr;
 
       if (head) {
-         head->prev = usedBlock;
+         head->prev = block;
       }
 
-      head = usedBlock;
+      head = block;
    } else {
-      usedBlock->next = insertAfter->next;
-      usedBlock->prev = insertAfter;
-      insertAfter->next = usedBlock;
+      if (insertAfter->next) {
+         insertAfter->next->prev = block;
+      }
+
+      block->next = insertAfter->next;
+      block->prev = insertAfter;
+      insertAfter->next = block;
    }
 }
 
 static void
-replaceBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> old, p32<ExpandedHeapBlock> freeBlock)
+replaceBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> old, p32<ExpandedHeapBlock> block)
 {
-   assert(freeBlock->size < 0xff000000);
    if (!old) {
-      insertBlock(head, freeBlock);
+      insertBlock(head, block);
    } else {
       if (head == old) {
-         head = freeBlock;
+         head = block;
       } else {
-         old->prev->next = freeBlock;
+         old->prev->next = block;
       }
 
       if (old->next) {
-         old->next->prev = freeBlock;
+         old->next->prev = block;
       }
 
-      freeBlock->next = old->next;
-      freeBlock->prev = old->prev;
+      block->next = old->next;
+      block->prev = old->prev;
    }
 }
 
@@ -135,7 +145,7 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
    heap->group = 0;
    heap->usedBlockList = nullptr;
    heap->freeBlockList = make_p32<ExpandedHeapBlock>(base + sizeof(ExpandedHeap));
-   heap->freeBlockList->addr = base + sizeof(ExpandedHeap);
+   heap->freeBlockList->addr = static_cast<uint32_t>(heap->freeBlockList);
    heap->freeBlockList->size = heap->size - sizeof(ExpandedHeap);
    heap->freeBlockList->next = nullptr;
    heap->freeBlockList->prev = nullptr;
@@ -174,9 +184,23 @@ MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size)
    return MEMAllocFromExpHeapEx(heap, size, 4);
 }
 
+struct ScopedStateDumper
+{
+   ~ScopedStateDumper()
+   {
+      // Filter by our target debugh eap
+      if (gMemory.untranslate(heap) == 0x1) {
+         MEMiDumpExpHeap(heap);
+      }
+   }
+
+   ExpandedHeap *heap;
+};
+
 void *
 MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 {
+   ScopedStateDumper dump = { heap };
    p32<ExpandedHeapBlock> freeBlock = nullptr, usedBlock = nullptr;
    auto direction = HeapDirection::FromBottom;
    uint32_t base;
@@ -260,14 +284,12 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
       } else {
          auto freeSize = freeBlock->size;
 
-         // Erase old block
-         eraseBlock(heap->freeBlockList, freeBlock);
-
-         // Create new free block
+         // Replace free block
+         auto old = freeBlock;
          freeBlock = make_p32<ExpandedHeapBlock>(base + size);
          freeBlock->addr = base + size;
          freeBlock->size = freeSize;
-         insertBlock(heap->freeBlockList, freeBlock);
+         replaceBlock(heap->freeBlockList, old, freeBlock);
       }
    } else if (direction == HeapDirection::FromTop) {
       // Reduce freeblock size
@@ -295,6 +317,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 void
 MEMFreeToExpHeap(ExpandedHeap *heap, void *address)
 {
+   ScopedStateDumper dump = { heap };
    auto base = gMemory.untranslate(address);
 
    if (!base) {
@@ -303,28 +326,33 @@ MEMFreeToExpHeap(ExpandedHeap *heap, void *address)
 
    // Get the block header
    base = base - static_cast<uint32_t>(sizeof(ExpandedHeapBlock));
-   auto block = make_p32<ExpandedHeapBlock>(base);
 
-   // Remove from used list
-   eraseBlock(heap->usedBlockList, block);
+   // Remove used blocked
+   auto usedBlock = make_p32<ExpandedHeapBlock>(base);
+   auto addr = usedBlock->addr;
+   auto size = usedBlock->size;
+   eraseBlock(heap->usedBlockList, usedBlock);
 
-   // Insert to free list
-   insertBlock(heap->freeBlockList, block);
+   // Create free block
+   auto freeBlock = make_p32<ExpandedHeapBlock>(addr);
+   freeBlock->addr = addr;
+   freeBlock->size = size;
+   insertBlock(heap->freeBlockList, freeBlock);
 
    // Merge with next free if contiguous
-   auto nextFree = block->next;
+   auto nextFree = freeBlock->next;
 
-   if (nextFree && nextFree->addr == block->addr + block->size) {
-      block->size += nextFree->size;
+   if (nextFree && nextFree->addr == freeBlock->addr + freeBlock->size) {
+      freeBlock->size += nextFree->size;
       eraseBlock(heap->freeBlockList, nextFree);
    }
 
    // Merge with previous free if contiguous
-   auto prevFree = block->prev;
+   auto prevFree = freeBlock->prev;
 
-   if (prevFree && block->addr == prevFree->addr + prevFree->size) {
-      prevFree->size += block->size;
-      eraseBlock(heap->freeBlockList, block);
+   if (prevFree && freeBlock->addr == prevFree->addr + prevFree->size) {
+      prevFree->size += freeBlock->size;
+      eraseBlock(heap->freeBlockList, freeBlock);
    }
 }
 
@@ -345,6 +373,7 @@ MEMGetAllocModeForExpHeap(ExpandedHeap *heap)
 uint32_t
 MEMAdjustExpHeap(ExpandedHeap *heap)
 {
+   ScopedStateDumper dump = { heap };
    // Find the last free block
    auto lastFree = getTail(heap->freeBlockList);
 
@@ -355,20 +384,27 @@ MEMAdjustExpHeap(ExpandedHeap *heap)
    // Erase the last free block
    heap->size -= lastFree->size;
    eraseBlock(heap->freeBlockList, lastFree);
+
    return heap->size;
 }
 
 uint32_t
-MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> address, uint32_t size)
+MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> mblock, uint32_t size)
 {
+   ScopedStateDumper dump = { heap };
    // Get the block header
-   auto base = static_cast<uint32_t>(address) - static_cast<uint32_t>(sizeof(ExpandedHeapBlock));
-   auto block = make_p32<ExpandedHeapBlock>(base);
+   auto address = static_cast<uint32_t>(mblock);
+   auto base = address - static_cast<uint32_t>(sizeof(ExpandedHeapBlock));
 
+   auto block = make_p32<ExpandedHeapBlock>(base);
    auto nextAddr = block->addr + block->size;
+
    auto freeBlock = findBlock(heap->freeBlockList, nextAddr);
    auto freeBlockSize = 0u;
-   auto difSize = static_cast<int32_t>(size) - static_cast<int32_t>(block->size);
+
+   auto dataSize = (block->addr + block->size) - address;
+   auto difSize = static_cast<int32_t>(size) - static_cast<int32_t>(dataSize);
+   auto newSize = block->size + difSize;
 
    if (difSize == 0) {
       // No difference, return current size
@@ -377,13 +413,14 @@ MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> address, uint32_t size)
       if (!freeBlock) {
          // No free block to expand into, return fail
          return 0;
-      } else if (freeBlock->size - difSize) {
+      } else if (freeBlock->size < static_cast<uint32_t>(difSize)) {
          // Free block is too small, return fail
          return 0;
       } else {
          if (freeBlock->size - difSize < minimumBlockSize) {
             // The free block will be smaller than minimum size, so just absorb it completely
             freeBlockSize = 0;
+            newSize = freeBlock->size;
          } else {
             // Free block is large enough, we just reduce its size
             freeBlockSize = freeBlock->size - difSize;
@@ -405,8 +442,8 @@ MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> address, uint32_t size)
    // Update free block
    if (freeBlockSize) {
       auto old = freeBlock;
-      freeBlock = make_p32<ExpandedHeapBlock>(base + size);
-      freeBlock->addr = base + size;
+      freeBlock = make_p32<ExpandedHeapBlock>(block->addr + newSize);
+      freeBlock->addr = block->addr + newSize;
       freeBlock->size = freeBlockSize;
       replaceBlock(heap->freeBlockList, old, freeBlock);
    } else {
@@ -415,7 +452,7 @@ MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> address, uint32_t size)
    }
 
    // Resize block
-   block->size = size;
+   block->size = newSize;
    return size;
 }
 
