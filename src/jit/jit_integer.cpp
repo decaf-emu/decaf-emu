@@ -653,6 +653,7 @@ rlwGeneric(PPCEmuAssembler& a, Instruction instr)
       a.and_(a.eax, m);
    }
    if (flags & RlwInsert) {
+      a.and_(a.eax, m);
       a.mov(a.ecx, a.ppcgpr[instr.rA]);
       a.and_(a.ecx, ~m);
       a.or_(a.eax, a.ecx);
