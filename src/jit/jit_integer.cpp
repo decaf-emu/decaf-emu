@@ -320,30 +320,6 @@ divGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    // Need to fallback due to overflow at the moment.
    return jit_fallback(a, instr);
-
-   /*
-   a.mov(a.eax, a.ppcgpr[instr.rA]);
-   a.mov(a.ecx, a.ppcgpr[instr.rB]);
-
-   if (std::is_signed<Type>::value) {
-      a.idiv(a.ecx);
-   } else {
-      a.div(a.ecx);
-   }
-
-   a.mov(a.ppcgpr[instr.rD], a.eax);
-
-   if (instr.oe) {
-      // updateOverflow(state, overflow);
-      assert(0);
-   }
-   
-   if (instr.rc) {
-      updateConditionRegister(a, a.ecx, a.eax, a.edx);
-   }
-
-   return true;
-   */
 }
 
 static bool
@@ -362,55 +338,53 @@ divwu(PPCEmuAssembler& a, Instruction instr)
 static bool
 eqv(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t a, s, b;
+   a.mov(a.eax, a.ppcgpr[instr.rS]);
+   a.mov(a.ecx, a.ppcgpr[instr.rB]);
 
-   s = state->gpr[instr.rS];
-   b = state->gpr[instr.rB];
+   a.xor_(a.eax, a.ecx);
+   a.not_(a.eax);
 
-   a = ~(s ^ b);
-   state->gpr[instr.rA] = a;
+   a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (instr.rc) {
-      updateConditionRegister(state, a);
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
    }
-   */
+
+   return true;
 }
 
 // Extend Sign Byte
 static bool
-extsh(PPCEmuAssembler& a, Instruction instr)
+extsb(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t a, s;
+   a.mov(a.eax, a.ppcgpr[instr.rS]);
 
-   s = state->gpr[instr.rS];
+   a.movsx(a.eax, a.eax.r8());
 
-   a = sign_extend<8>(s);
-   state->gpr[instr.rA] = a;
+   a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (instr.rc) {
-      updateConditionRegister(state, a);
+      updateConditionRegister(a, a.edx, a.ecx, a.eax);
    }
-   */
+
+   return true;
 }
 
 // Extend Sign Half Word
 static bool
-extsb(PPCEmuAssembler& a, Instruction instr)
+extsh(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t a, s;
+   a.mov(a.eax, a.ppcgpr[instr.rS]);
 
-   s = state->gpr[instr.rS];
+   a.movsx(a.eax, a.eax.r16());
 
-   a = sign_extend<16>(s);
-   state->gpr[instr.rA] = a;
+   a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (instr.rc) {
-      updateConditionRegister(state, a);
+      updateConditionRegister(a, a.edx, a.ecx, a.eax);
    }
-   */
+
+   return true;
 }
 
 // Multiply
@@ -425,6 +399,40 @@ enum MulFlags
 template<unsigned flags>
 static bool
 mulSignedGeneric(PPCEmuAssembler& a, Instruction instr)
+{
+   a.mov(a.eax, a.ppcgpr[instr.rA]);
+
+   if (flags & MulImmediate) {
+      a.mov(a.ecx, sign_extend<16>(instr.simm));
+   } else {
+      a.mov(a.ecx, a.ppcgpr[instr.rB]);
+   }
+
+   a.imul(a.zcx);
+
+   if (flags & MulLow) {
+      a.mov(a.ppcgpr[instr.rD], a.eax);
+
+      if (instr.rc) {
+         updateConditionRegister(a, a.eax, a.ecx, a.edx);
+      }
+   } else if (flags & MulHigh) {
+      a.mov(a.ppcgpr[instr.rD], a.edx);
+
+      if (instr.rc) {
+         updateConditionRegister(a, a.edx, a.ecx, a.eax);
+      }
+   } else {
+      assert(0);
+   }
+
+   return true;
+}
+
+// Unsigned multiply
+template<MulFlags flags>
+static bool
+mulUnsignedGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    a.mov(a.eax, a.ppcgpr[instr.rA]);
 
@@ -455,32 +463,6 @@ mulSignedGeneric(PPCEmuAssembler& a, Instruction instr)
    return true;
 }
 
-// Unsigned multiply
-template<MulFlags flags>
-static bool
-mulUnsignedGeneric(PPCEmuAssembler& a, Instruction instr)
-{
-   return false; /*
-   uint64_t a, b;
-   uint32_t d;
-   a = state->gpr[instr.rA];
-   b = state->gpr[instr.rB];
-
-   if (flags & MulLow) {
-      d = static_cast<uint32_t>(a * b);
-   }
-   else if (flags & MulHigh) {
-      d = (a * b) >> 32;
-   }
-
-   state->gpr[instr.rD] = d;
-
-   if (instr.rc) {
-      updateConditionRegister(state, d);
-   }
-   */
-}
-
 static bool
 mulhw(PPCEmuAssembler& a, Instruction instr)
 {
@@ -509,19 +491,19 @@ mullw(PPCEmuAssembler& a, Instruction instr)
 static bool
 nand(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t a, s, b;
+   a.mov(a.eax, a.ppcgpr[instr.rS]);
+   a.mov(a.ecx, a.ppcgpr[instr.rB]);
 
-   s = state->gpr[instr.rS];
-   b = state->gpr[instr.rB];
+   a.and_(a.eax, a.ecx);
+   a.not_(a.eax);
 
-   a = ~(s & b);
-   state->gpr[instr.rA] = a;
+   a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (instr.rc) {
-      updateConditionRegister(state, a);
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
    }
-   */
+
+   return true;
 }
 
 // Negate
@@ -554,43 +536,26 @@ neg(PPCEmuAssembler& a, Instruction instr)
       updateConditionRegister(a, a.eax, a.ecx, a.edx);
    }
 
-   return true; /*
-   uint32_t a, d;
-
-   a = state->gpr[instr.rA];
-
-   d = ~a + 1;
-   state->gpr[instr.rD] = d;
-
-   bool overflow = (a == 0x80000000);
-
-   if (instr.oe) {
-      updateOverflow(state, overflow);
-   }
-
-   if (instr.rc) {
-      updateConditionRegister(state, d);
-   }
-   */
+   return true;
 }
 
 // NOR
 static bool
 nor(PPCEmuAssembler& a, Instruction instr)
 {
-   return false; /*
-   uint32_t a, s, b;
+   a.mov(a.eax, a.ppcgpr[instr.rS]);
+   a.mov(a.ecx, a.ppcgpr[instr.rB]);
 
-   s = state->gpr[instr.rS];
-   b = state->gpr[instr.rB];
+   a.or_(a.eax, a.ecx);
+   a.not_(a.eax);
 
-   a = ~(s | b);
-   state->gpr[instr.rA] = a;
+   a.mov(a.ppcgpr[instr.rA], a.eax);
 
    if (instr.rc) {
-      updateConditionRegister(state, a);
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
    }
-   */
+
+   return true;
 }
 
 // OR
@@ -741,9 +706,9 @@ shiftLogical(PPCEmuAssembler& a, Instruction instr)
 
    if (flags & ShiftImmediate) {
       if (flags & ShiftLeft) {
-         a.sal(a.eax, instr.sh);
+         a.shl(a.eax, instr.sh);
       } else if (flags & ShiftRight) {
-         a.sar(a.eax, instr.sh);
+         a.shr(a.eax, instr.sh);
       } else {
          assert(0);
       }
@@ -751,9 +716,9 @@ shiftLogical(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.ecx, a.ppcgpr[instr.rB]);
 
       if (flags & ShiftLeft) {
-         a.sal(a.eax, a.ecx.r8());
+         a.shl(a.eax, a.ecx.r8());
       } else if (flags & ShiftRight) {
-         a.sar(a.eax, a.ecx.r8());
+         a.shr(a.eax, a.ecx.r8());
       } else {
          assert(0);
       }
