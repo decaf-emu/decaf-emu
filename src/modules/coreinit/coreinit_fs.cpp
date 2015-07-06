@@ -68,6 +68,9 @@ private:
 static OpenFileManager
 gOpenFiles;
 
+static std::string
+gWorkingDirectory = "/vol/code";
+
 void
 FSInit()
 {
@@ -164,6 +167,19 @@ FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, 
 }
 
 FSStatus
+FSSetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t pos, uint32_t flags)
+{
+   auto fsFile = gOpenFiles.get(handle);
+
+   if (!fsFile) {
+      return FSStatus::FatalError;
+   }
+
+   fsFile->file->seek(pos);
+   return FSStatus::OK;
+}
+
+FSStatus
 FSCloseFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t flags)
 {
    auto fsFile = gOpenFiles.get(handle);
@@ -173,6 +189,17 @@ FSCloseFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t f
    }
 
    gOpenFiles.close(handle);
+   return FSStatus::OK;
+}
+
+FSStatus
+FSGetCwd(FSClient *client, FSCmdBlock *block, char *buffer, uint32_t bufferSize, uint32_t flags)
+{
+   if (bufferSize < gWorkingDirectory.size() + 1) {
+      return FSStatus::Cancelled;
+   }
+
+   memcpy(buffer, gWorkingDirectory.c_str(), gWorkingDirectory.size() + 1);
    return FSStatus::OK;
 }
 
@@ -189,5 +216,7 @@ CoreInit::registerFileSystemFunctions()
    RegisterKernelFunction(FSSetStateChangeNotification);
    RegisterKernelFunction(FSOpenFile);
    RegisterKernelFunction(FSReadFile);
+   RegisterKernelFunction(FSSetPosFile);
    RegisterKernelFunction(FSCloseFile);
+   RegisterKernelFunction(FSGetCwd);
 }

@@ -126,13 +126,19 @@ void
 FSSetStateChangeNotification(FSClient *client, FSStateChangeInfo *info);
 
 FSStatus
-FSOpenFile(FSClient *client, FSCmdBlock *block, const char *path, const char *mode, be_val<FSFileHandle> *fileHandle, uint32_t flags);
+FSOpenFile(FSClient *client, FSCmdBlock *block, const char *path, const char *mode, be_val<FSFileHandle> *handle, uint32_t flags);
 
 FSStatus
-FSGetStatFile(FSClient *client, FSCmdBlock *block, FSFileHandle fileHandle, FSStat *stat, uint32_t flags);
+FSGetStatFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, FSStat *stat, uint32_t flags);
 
 FSStatus
-FSCloseFile(FSClient *client, FSCmdBlock *block, FSFileHandle fileHandle, uint32_t flags);
+FSCloseFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t flags);
 
 FSStatus
-FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle fileHandle, uint32_t unk1, uint32_t flags);
+FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle handle, uint32_t unk1, uint32_t flags);
+
+FSStatus
+FSSetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t pos, uint32_t flags);
+
+FSStatus
+FSGetCwd(FSClient *client, FSCmdBlock *block, char *buffer, uint32_t bufferSize, uint32_t flags);
