@@ -105,28 +105,28 @@ mtspr(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.ppcctr, a.eax);
       break;
    case SprEncoding::GQR0:
-      a.mov(a.ppcgpr[0], a.eax);
+      a.mov(a.ppcgqr[0], a.eax);
       break;
    case SprEncoding::GQR1:
-      a.mov(a.ppcgpr[1], a.eax);
+      a.mov(a.ppcgqr[1], a.eax);
       break;
    case SprEncoding::GQR2:
-      a.mov(a.ppcgpr[2], a.eax);
+      a.mov(a.ppcgqr[2], a.eax);
       break;
    case SprEncoding::GQR3:
-      a.mov(a.ppcgpr[3], a.eax);
+      a.mov(a.ppcgqr[3], a.eax);
       break;
    case SprEncoding::GQR4:
-      a.mov(a.ppcgpr[4], a.eax);
+      a.mov(a.ppcgqr[4], a.eax);
       break;
    case SprEncoding::GQR5:
-      a.mov(a.ppcgpr[5], a.eax);
+      a.mov(a.ppcgqr[5], a.eax);
       break;
    case SprEncoding::GQR6:
-      a.mov(a.ppcgpr[6], a.eax);
+      a.mov(a.ppcgqr[6], a.eax);
       break;
    case SprEncoding::GQR7:
-      a.mov(a.ppcgpr[7], a.eax);
+      a.mov(a.ppcgqr[7], a.eax);
       break;
    default:
       gLog->error("Invalid mtspr SPR {}", static_cast<uint32_t>(spr));
