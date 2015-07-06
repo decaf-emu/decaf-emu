@@ -353,8 +353,8 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
    a.add(a.zdx, a.membase);
 
    if (flags & StoreFloatAsInteger) {
-      return false;
-      //s = static_cast<Type>(state->fpr[instr.rS].iw0);
+      assert(sizeof(Type) == 4);
+      a.mov(a.eax, a.ppcfprps[instr.rS][0]);
    } else if (std::is_floating_point<Type>::value) {
       if (flags & StoreSingle) {
          assert(sizeof(Type) == 4);
