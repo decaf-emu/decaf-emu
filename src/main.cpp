@@ -33,8 +33,8 @@ static const char USAGE[] =
    R"(WiiU Emulator
 
        Usage:
-         wiiu play [--jit | --jitdebug | --logfile] <game directory>
-         wiiu test [--jit | --jitdebug | --logfile] [--as=<ppcas>] <test directory>
+         wiiu play [--jit | --jitdebug] [--logfile] <game directory>
+         wiiu test [--jit | --jitdebug] [--logfile] [--as=<ppcas>] <test directory>
          wiiu (-h | --help)
          wiiu --version
 
