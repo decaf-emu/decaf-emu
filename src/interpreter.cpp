@@ -93,11 +93,15 @@ void
 Interpreter::execute(ThreadState *state)
 {
    bool hasJumped = false;
+   bool forceJit = false;
 
    while (state->nia != CALLBACK_ADDR) {
+      // TankTankTank decryptor fn
+      //forceJit = state->nia >= 0x0250B648 && state->nia < 0x0250B8B8;
+
       // JIT Attempt!
-      if (mJitMode == InterpJitMode::Enabled) {
-         if (state->nia != state->cia + 4) {
+      if (forceJit || mJitMode == InterpJitMode::Enabled) {
+         if (forceJit || state->nia != state->cia + 4) {
             // We jumped, try to enter JIT
             JitCode jitFn = gJitManager.get(state->nia);
             if (jitFn) {
