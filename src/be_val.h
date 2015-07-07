@@ -25,52 +25,35 @@ public:
    }
 
    template<typename Other> std::enable_if_t<std::is_assignable<Type&, Other>::value, be_val&>
-   operator =(const Other& rhs)
+   operator =(const Other &rhs)
    {
       mValue = byte_swap(rhs);
       return *this;
    }
 
-   // TODO: Full list of operators!
-   be_val &operator++()
-   {
-      *this = value() + 1;
-      return *this;
-   }
+   be_val &operator++() { *this = value() + 1; return *this; }
+   be_val &operator--() { *this = value() - 1; return *this; }
+   be_val operator--(int) { auto old = *this; *this = value() - 1; return old; }
+   be_val operator++(int) { auto old = *this; *this = value() + 1; return old; }
 
-   be_val &operator--()
-   {
-      *this = value() - 1;
-      return *this;
-   }
+   bool operator == (const be_val &rhs) const { return mValue == rhs.mValue; }
+   bool operator != (const be_val &rhs) const { return mValue != rhs.mValue; }
 
-   be_val operator--(int)
-   {
-      auto old = *this;
-      *this = value() - 1;
-      return old;
-   }
+   template<typename Other> bool operator == (Other rhs) const { return value() == rhs; }
+   template<typename Other> bool operator != (Other rhs) const { return value() != rhs; }
+   template<typename Other> bool operator >= (Other rhs) const { return value() >= rhs; }
+   template<typename Other> bool operator <= (Other rhs) const { return value() <= rhs; }
+   template<typename Other> bool operator > (Other rhs) const { return value() > rhs; }
+   template<typename Other> bool operator < (Other rhs) const { return value() < rhs; }
 
-   be_val operator++(int)
-   {
-      auto old = *this;
-      *this = value() + 1;
-      return old;
-   }
-
-   template<typename Other>
-   be_val &operator|=(Other rhs)
-   {
-      *this = static_cast<Type>(value() | rhs);
-      return *this;
-   }
-
-   template<typename Other>
-   be_val &operator&=(Other rhs)
-   {
-      *this = static_cast<Type>(value() & rhs);
-      return *this;
-   }
+   template<typename Other> be_val &operator+=(Other rhs) { *this = static_cast<Type>(value() + rhs); return *this; }
+   template<typename Other> be_val &operator-=(Other rhs) { *this = static_cast<Type>(value() - rhs); return *this; }
+   template<typename Other> be_val &operator*=(Other rhs) { *this = static_cast<Type>(value() * rhs); return *this; }
+   template<typename Other> be_val &operator/=(Other rhs) { *this = static_cast<Type>(value() / rhs); return *this; }
+   template<typename Other> be_val &operator%=(Other rhs) { *this = static_cast<Type>(value() % rhs); return *this; }
+   template<typename Other> be_val &operator|=(Other rhs) { *this = static_cast<Type>(value() | rhs); return *this; }
+   template<typename Other> be_val &operator&=(Other rhs) { *this = static_cast<Type>(value() & rhs); return *this; }
+   template<typename Other> be_val &operator^=(Other rhs) { *this = static_cast<Type>(value() ^ rhs); return *this; }
 
 protected:
    Type mValue;
