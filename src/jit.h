@@ -18,6 +18,19 @@
 static const bool JIT_CONTINUE_ON_ERROR = false;
 static const int JIT_MAX_INST = 20000;
 
+/*
+Register Assignments:
+   RAX . Scratch
+   RCX . Scratch
+   RDX . Scratch
+   RDI . Scratch
+   RSI . gMemory.base()
+   RBX . ThreadState*
+   RBP . 
+   RSP . Emu Stack Pointer.
+   R8-R15 . PPCGPR Storage
+*/
+
 class PPCEmuAssembler : public asmjit::X86Assembler {
 public:
    PPCEmuAssembler(asmjit::Runtime* runtime)
