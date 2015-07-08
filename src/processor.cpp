@@ -1,7 +1,9 @@
+#include <algorithm>
 #include "interpreter.h"
 #include "processor.h"
 #include "ppc.h"
 #include "modules/coreinit/coreinit_thread.h"
+#include "modules/coreinit/coreinit_scheduler.h"
 
 Processor
 gProcessor { 3 };
@@ -9,7 +11,8 @@ gProcessor { 3 };
 __declspec(thread) Core *
 tCurrentCore = nullptr;
 
-void Fiber::fiberEntryPoint(void *param)
+void
+Fiber::fiberEntryPoint(void *param)
 {
    gProcessor.fiberEntryPoint(reinterpret_cast<Fiber*>(param));
 }
@@ -21,7 +24,8 @@ Processor::Processor(size_t cores)
    }
 }
 
-void Processor::start()
+void
+Processor::start()
 {
    mRunning = true;
 
@@ -30,108 +34,169 @@ void Processor::start()
    }
 }
 
-void Processor::join()
+void
+Processor::join()
 {
-   mRunning = false;
-
    for (auto core : mCores) {
       core->thread.join();
    }
 }
 
-uint32_t Processor::join(Fiber *fiber)
+Fiber *
+Processor::peekNextFiber(uint32_t core)
 {
-   std::unique_lock<std::mutex> lock(fiber->mutex);
+   auto bit = 1 << core;
 
-   while (fiber->thread->state != OSThreadState::Moribund) {
-      fiber->condition.wait(lock);
+   for (auto fiber : mFiberQueue) {
+      if (fiber->thread->state != OSThreadState::Ready) {
+         continue;
+      }
+
+      if (fiber->thread->suspendCounter > 0) {
+         continue;
+      }
+
+      if (fiber->thread->attr & bit) {
+         return fiber;
+      }
    }
-
-   // TODO: Delete fiber?
-
-   return fiber->state.gpr[3];
+   
+   return nullptr;
 }
 
-void Processor::coreEntryPoint(Core *core)
+void
+Processor::coreEntryPoint(Core *core)
 {
    tCurrentCore = core;
    core->primaryFiber = ConvertThreadToFiber(NULL);
 
    while (mRunning) {
       std::unique_lock<std::mutex> lock(mMutex);
-      Fiber *nextFiber = nullptr;
 
-      // Find highest priority fiber with matching affinity
-      for (auto fiber : mFiberQueue) {
-         if (fiber->thread->attr & (1 << core->id)) {
-            nextFiber = fiber;
-            break;
-         }
-      }
+      if (auto fiber = peekNextFiber(core->id)) {
+         // Remove fiber from schedule queue
+         mFiberQueue.erase(std::remove(mFiberQueue.begin(), mFiberQueue.end(), fiber), mFiberQueue.end());
 
-      if (!nextFiber) {
-         // Wait for a fiber
-         mCondition.wait(lock);
-      } else {
          // Switch to fiber
-         core->currentFiber = nextFiber;
-         core->currentFiber->parentFiber = core->primaryFiber;
-         core->currentFiber->thread->state = OSThreadState::Running;
+         core->currentFiber = fiber;
+         fiber->parentFiber = core->primaryFiber;
+         fiber->thread->state = OSThreadState::Running;
          lock.unlock();
-         SwitchToFiber(core->currentFiber->handle);
+         SwitchToFiber(fiber->handle);
+      } else {
+         // Wait for a valid fiber
+         mCondition.wait(lock);
       }
    }
 }
 
-void Processor::fiberEntryPoint(Fiber *fiber)
+void
+Processor::fiberEntryPoint(Fiber *fiber)
 {
    gInterpreter.execute(&fiber->state, fiber->state.cia);
-   fiber->thread->exitValue = fiber->state.gpr[3];
+   OSExitThread(fiber->state.gpr[3]);
+}
 
-   // Exit
+void
+Processor::exit()
+{
+   // Return to parent fiber
+   auto fiber = tCurrentCore->currentFiber;
    SwitchToFiber(fiber->parentFiber);
 }
 
-void Processor::queue(Fiber *fiber)
+void
+Processor::queue(Fiber *fiber)
 {
    std::lock_guard<std::mutex> lock(mMutex);
 
    auto compare =
       [](Fiber *lhs, Fiber *rhs) {
-      return lhs->thread->basePriority < rhs->thread->basePriority;
-   };
+         return lhs->thread->basePriority < rhs->thread->basePriority;
+      };
 
-   mFiberQueue.insert(std::upper_bound(mFiberQueue.begin(), mFiberQueue.end(), fiber, compare), fiber);
+   auto pos = std::upper_bound(mFiberQueue.begin(), mFiberQueue.end(), fiber, compare);
+   mFiberQueue.insert(pos, fiber);
    mCondition.notify_all();
 }
 
-void Processor::reschedule()
+void
+Processor::reschedule(bool hasSchedulerLock, bool yield)
 {
    auto core = tCurrentCore;
+
+   if (!tCurrentCore) {
+      // Run from host thread
+      return;
+   }
+
    auto fiber = tCurrentCore->currentFiber;
-   fiber->thread->state = OSThreadState::Waiting;
+   auto next = peekNextFiber(core->id);
+   auto thread = fiber->thread;
+   bool reschedule = true;
+
+   // Priority is 0 = highest, 31 = lowest
+   if (thread->suspendCounter <= 0 && thread->state == OSThreadState::Running) {
+      if (!next) {
+         // There is no thread to reschedule to
+         return;
+      }
+
+      if (yield) {
+         // Yield will transfer control to threads with equal or better priority
+         if (thread->basePriority < next->thread->basePriority) {
+            return;
+         }
+      } else {
+         // Only reschedule to more important threads
+         if (thread->basePriority <= next->thread->basePriority) {
+            return;
+         }
+      }
+   }
+
+   // Return to main scheduler fiber
    queue(fiber);
+
+   if (hasSchedulerLock) {
+      OSUnlockScheduler();
+   }
+
    SwitchToFiber(core->primaryFiber);
+
+   if (hasSchedulerLock) {
+      OSLockScheduler();
+   }
 }
 
-Fiber *Processor::createFiber()
+void
+Processor::yield()
+{
+   reschedule(false, true);
+}
+
+Fiber *
+Processor::createFiber()
 {
    auto fiber = new Fiber();
    mFiberList.push_back(fiber);
    return fiber;
 }
 
-Fiber *Processor::getCurrentFiber()
+Fiber *
+Processor::getCurrentFiber()
 {
    return tCurrentCore->currentFiber;
 }
 
-uint32_t Processor::getCoreID()
+uint32_t
+Processor::getCoreID()
 {
    return tCurrentCore->id;
 }
 
-uint32_t Processor::getCoreCount()
+uint32_t
+Processor::getCoreCount()
 {
    return static_cast<uint32_t>(mCores.size());
 }

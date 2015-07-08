@@ -1,6 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_spinlock.h"
 #include "coreinit_thread.h"
+#include "processor.h"
 #include <atomic>
 
 void
@@ -15,6 +16,7 @@ OSAcquireSpinLock(OSSpinLock *spinlock)
 {
    auto owner = gMemory.untranslate(OSGetCurrentThread());
    auto expected = 0u;
+   OSTestThreadCancel();
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
@@ -34,6 +36,7 @@ OSTryAcquireSpinLock(OSSpinLock *spinlock)
 {
    auto owner = gMemory.untranslate(OSGetCurrentThread());
    auto expected = 0u;
+   OSTestThreadCancel();
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
@@ -50,7 +53,8 @@ OSTryAcquireSpinLock(OSSpinLock *spinlock)
 BOOL
 OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock, int64_t timeout)
 {
-   gLog->error("TODO: OSTryAcquireSpinLockWithTimeout");
+   OSTestThreadCancel();
+   assert(false);
    return FALSE;
 }
 
@@ -58,18 +62,18 @@ BOOL
 OSReleaseSpinLock(OSSpinLock *spinlock)
 {
    auto owner = gMemory.untranslate(OSGetCurrentThread());
+   auto result = TRUE;
 
-   if (spinlock->recursion > 0) {
+   if (spinlock->recursion > 0u) {
       --spinlock->recursion;
-      return TRUE;
+   } else if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
+      spinlock->owner = 0u;
+   } else {
+      result = FALSE;
    }
 
-   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
-      spinlock->owner = 0;
-      return TRUE;
-   }
-
-   return FALSE;
+   OSTestThreadCancel();
+   return result;
 }
 
 BOOL

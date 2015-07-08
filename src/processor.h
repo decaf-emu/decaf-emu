@@ -5,6 +5,7 @@
 #include <thread>
 #include <vector>
 #include <Windows.h>
+#include "modules/coreinit/coreinit_mutex.h"
 
 struct OSThread;
 struct ThreadState;
@@ -27,8 +28,6 @@ struct Fiber
    void *parentFiber = nullptr;
    OSThread *thread = nullptr;
    ThreadState state;
-   std::mutex mutex;
-   std::condition_variable condition;
 };
 
 struct Core
@@ -49,26 +48,30 @@ class Processor
 public:
    Processor(size_t cores);
 
+   // Processor
    void start();
-
    void join();
-   uint32_t join(Fiber *fiber);
 
+   // Fiber
    void queue(Fiber *fiber);
-   void reschedule();
+   void reschedule(bool hasSchedulerLock, bool yield = false);
+   void yield();
+   void exit();
 
    Fiber *createFiber();
    Fiber *getCurrentFiber();
-
-   uint32_t getCoreID();
-   uint32_t getCoreCount();
+   Fiber *peekNextFiber(uint32_t core);
 
    template<typename LockType>
    void wait(LockType &lock)
    {
       lock.unlock();
-      reschedule();
+      reschedule(false);
    }
+
+   // Core
+   uint32_t getCoreID();
+   uint32_t getCoreCount();
 
 protected:
    friend Core;

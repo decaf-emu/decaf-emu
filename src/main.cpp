@@ -224,10 +224,11 @@ play(const std::string &path)
    OSSetDefaultThread(1, thread1);
    OSSetDefaultThread(2, thread2);
 
-   // Start thread 1 and wait for it to finish
-   be_val<int> exitValue;
+   // Start thread 1
    OSResumeThread(thread1);
-   OSJoinThread(thread1, &exitValue);
+
+   // Wait for all processor threads to exit
+   gProcessor.join();
 
    // Free allocated data
    OSFreeToSystem(thread0);
@@ -237,5 +238,5 @@ play(const std::string &path)
    OSFreeToSystem(stack1);
    OSFreeToSystem(stack2);
 
-   return exitValue == 0;
+   return true;
 }

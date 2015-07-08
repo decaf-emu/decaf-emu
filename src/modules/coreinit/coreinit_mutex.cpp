@@ -38,6 +38,7 @@ OSLockMutex(MutexHandle handle)
    auto fiber = gProcessor.getCurrentFiber();
    
    while (true) {
+      OSTestThreadCancel();
       std::unique_lock<std::mutex> lock { mutex->mutex };
 
       if (!mutex->owner || mutex->owner == fiber) {
@@ -80,20 +81,23 @@ OSUnlockMutex(MutexHandle handle)
 
    std::unique_lock<std::mutex> lock { mutex->mutex };
    assert(mutex->owner == fiber);
+   assert(mutex->count > 0);
    
    mutex->count--;
 
-   if (mutex->count) {
-      return;
+   if (!mutex->count) {
+      // Fully unlocked, wake up any waiting fibers
+      mutex->owner = nullptr;
+
+      for (auto fiber : mutex->queue) {
+         gProcessor.queue(fiber);
+      }
+
+      mutex->queue.clear();
    }
 
-   mutex->owner = nullptr;
-
-   for (auto fiber : mutex->queue) {
-      gProcessor.queue(fiber);
-   }
-
-   mutex->queue.clear();
+   lock.unlock();
+   OSTestThreadCancel();
 }
 
 void

@@ -318,6 +318,9 @@
     <ClCompile Include="..\src\processor.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_scheduler.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -574,6 +577,9 @@
     </ClInclude>
     <ClInclude Include="..\src\processor.h">
       <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_scheduler.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
