@@ -24,6 +24,7 @@ struct Fiber
 
    static void __stdcall fiberEntryPoint(void *param);
 
+   uint32_t coreID;
    void *handle = nullptr;
    void *parentFiber = nullptr;
    OSThread *thread = nullptr;

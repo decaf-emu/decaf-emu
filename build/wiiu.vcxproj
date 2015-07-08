@@ -113,6 +113,7 @@
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\memory.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_alarm.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_cache.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_core.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_debug.cpp" />
@@ -136,6 +137,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_spinlock.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_systeminfo.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_thread.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_threadqueue.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_time.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_userconfig.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2.cpp" />
@@ -188,14 +190,17 @@
     <ClInclude Include="..\src\loader.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\memory.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_alarm.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_core.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_device.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_exception.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_fastmutex.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_memheap.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_memlist.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_queue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_scheduler.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_semaphore.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_threadqueue.h" />
     <ClInclude Include="..\src\modules\gx2\gx2r_resource.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_surface.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_temp.h" />
@@ -210,7 +215,6 @@
     <ClInclude Include="..\src\modules\proc_ui\proc_ui_core.h" />
     <ClInclude Include="..\src\p32.h" />
     <ClInclude Include="..\src\processor.h" />
-    <ClInclude Include="..\src\systemobject.h" />
     <ClInclude Include="..\src\trace.h" />
     <ClInclude Include="..\src\usermodule.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit.h" />

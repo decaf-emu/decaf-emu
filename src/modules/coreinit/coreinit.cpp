@@ -13,11 +13,12 @@ CoreInit::~CoreInit()
 void
 CoreInit::initialise()
 {
+   initialiseDynLoad();
+   initialiseEvent();
+   initialiseGHS();
    initialiseMembase();
    initialiseMessageQueues();
-   initialiseGHS();
    initialiseSystemInformation();
-   initialiseDynLoad();
 }
 
 void

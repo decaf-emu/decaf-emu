@@ -1,38 +1,12 @@
 #pragma once
 #include "systemtypes.h"
 #include "coreinit_time.h"
-#include "util.h"
+#include "coreinit_threadqueue.h"
 
 #pragma pack(push, 1)
 
-struct OSThread;
 struct Fiber;
 
-struct OSThreadLink
-{
-   be_ptr<OSThread> prev;
-   be_ptr<OSThread> next;
-};
-CHECK_OFFSET(OSThreadLink, 0x00, prev);
-CHECK_OFFSET(OSThreadLink, 0x04, next);
-CHECK_SIZE(OSThreadLink, 0x8);
-
-struct OSThreadQueue
-{
-   be_ptr<OSThread> head;
-   be_ptr<OSThread> tail;
-   be_ptr<void> parent;
-   UNKNOWN(4);
-};
-CHECK_OFFSET(OSThreadQueue, 0x00, head);
-CHECK_OFFSET(OSThreadQueue, 0x04, tail);
-CHECK_OFFSET(OSThreadQueue, 0x08, parent);
-CHECK_SIZE(OSThreadQueue, 0x10);
-
-// OSDumpContext, OSLoadFPUContext, OSSaveContext
-// OSGetLastError
-// 0200F060 crash dump handler
-// OSCheckActiveThreads 0x201AAA0
 struct OSContext
 {
    static const uint64_t Tag1 = 0x4F53436F6E747874ull;
@@ -122,6 +96,31 @@ enum Flags : uint8_t
 };
 }
 
+struct OSMutex;
+
+struct OSMutexQueue
+{
+   be_ptr<OSMutex> head;
+   be_ptr<OSMutex> tail;
+   be_ptr<void> parent;
+   UNKNOWN(4);
+};
+CHECK_OFFSET(OSMutexQueue, 0x0, head);
+CHECK_OFFSET(OSMutexQueue, 0x4, tail);
+CHECK_OFFSET(OSMutexQueue, 0x8, parent);
+CHECK_SIZE(OSMutexQueue, 0x10);
+
+struct OSFastMutex;
+
+struct OSFastMutexQueue
+{
+   be_ptr<OSFastMutex> head;
+   be_ptr<OSFastMutex> tail;
+};
+CHECK_OFFSET(OSFastMutexQueue, 0x00, head);
+CHECK_OFFSET(OSFastMutexQueue, 0x04, tail);
+CHECK_SIZE(OSFastMutexQueue, 0x08);
+
 struct OSThread
 {
    static const uint32_t Tag = 0x74487244;
@@ -133,20 +132,21 @@ struct OSThread
    be_val<uint16_t> id;
    be_val<int32_t> suspendCounter;
    be_val<uint32_t> priority;
-   be_val<uint32_t> basePriority;   // "ba" in DumpActiveThreads and returned in OSGetThreadPriority
-   be_val<uint32_t> exitValue;      // Exit value of thread
-   Fiber *fiber;                    // Naughty
+   be_val<uint32_t> basePriority;         // "ba" in DumpActiveThreads and returned in OSGetThreadPriority
+   be_val<uint32_t> exitValue;            // Exit value of thread
+   Fiber *fiber;                          // Naughty, hopefully not overriding anything important
    UNKNOWN(0x35c - 0x340);
-   be_ptr<OSThreadQueue> queue;     // Queue the thread is on
-   OSThreadLink link;               // Thread queue link
-   OSThreadQueue joinQueue;         // Queue of threads waiting to join this
-   UNKNOWN(0x38c - 0x378);
-   OSThreadLink activeLink;         // Link on active thread queue
-   be_val<uint32_t> stackStart;     // Stack starting value (top, highest address)
-   be_val<uint32_t> stackEnd;       // Stack end value (bottom, lowest address)
-   be_val<uint32_t> entryPoint;     // Entry point from OSCreateThread
+   be_ptr<OSThreadQueue> queue;           // Queue the thread is on
+   OSThreadLink link;                     // Thread queue link
+   OSThreadQueue joinQueue;               // Queue of threads waiting to join this
+   be_ptr<OSMutex> mutex;                 // Mutex we are waiting to lock
+   OSMutexQueue mutexQueue;               // Mutexes owned by this thread
+   OSThreadLink activeLink;               // Link on active thread queue
+   be_val<uint32_t> stackStart;           // Stack starting value (top, highest address)
+   be_val<uint32_t> stackEnd;             // Stack end value (bottom, lowest address)
+   be_val<uint32_t> entryPoint;           // Entry point from OSCreateThread
    UNKNOWN(0x57c - 0x3a0);
-   be_val<uint32_t> specific[0x10]; // OSGetThreadSpecific
+   be_val<uint32_t> specific[0x10];
    UNKNOWN(0x5c0 - 0x5bc);
    be_ptr<const char> name;               // Thread name
    UNKNOWN(0x4);
@@ -171,6 +171,8 @@ CHECK_OFFSET(OSThread, 0x334, exitValue);
 CHECK_OFFSET(OSThread, 0x35c, queue);
 CHECK_OFFSET(OSThread, 0x360, link);
 CHECK_OFFSET(OSThread, 0x368, joinQueue);
+CHECK_OFFSET(OSThread, 0x378, mutex);
+CHECK_OFFSET(OSThread, 0x37c, mutexQueue);
 CHECK_OFFSET(OSThread, 0x38c, activeLink);
 CHECK_OFFSET(OSThread, 0x394, stackStart);
 CHECK_OFFSET(OSThread, 0x398, stackEnd);
@@ -238,15 +240,6 @@ OSGetThreadPriority(OSThread *thread);
 
 uint32_t
 OSGetThreadSpecific(uint32_t id);
-
-void
-OSInitThreadQueue(OSThreadQueue *queue);
-
-void
-OSInitThreadQueueEx(OSThreadQueue *queue, void *parent);
-
-void
-OSInsertThreadQueue(OSThreadQueue *queue, OSThread *thread);
 
 BOOL
 OSIsThreadSuspended(OSThread *thread);

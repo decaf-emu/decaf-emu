@@ -1,78 +1,88 @@
 #include "coreinit.h"
 #include "coreinit_semaphore.h"
-#include "processor.h"
-#include "system.h"
+#include "coreinit_scheduler.h"
 
 void
-OSInitSemaphore(SemaphoreHandle handle, int32_t count)
+OSInitSemaphore(OSSemaphore *semaphore, int32_t count)
 {
-   OSInitSemaphoreEx(handle, count, nullptr);
+   OSInitSemaphoreEx(semaphore, count, nullptr);
 }
 
 void
-OSInitSemaphoreEx(SemaphoreHandle handle, int32_t count, char *name)
+OSInitSemaphoreEx(OSSemaphore *semaphore, int32_t count, char *name)
 {
-   auto semaphore = gSystem.addSystemObject<Semaphore>(handle);
+   semaphore->tag = OSSemaphore::Tag;
    semaphore->name = name;
    semaphore->count = count;
+   OSInitThreadQueueEx(&semaphore->queue, semaphore);
 }
 
 int32_t
-OSWaitSemaphore(SemaphoreHandle handle)
+OSWaitSemaphore(OSSemaphore *semaphore)
 {
-   auto semaphore = gSystem.getSystemObject<Semaphore>(handle);
-   auto fiber = gProcessor.getCurrentFiber();
+   int32_t previous;
+   OSLockScheduler();
+   assert(semaphore && semaphore->tag == OSSemaphore::Tag);
 
-   while (true) {
-      std::unique_lock<std::mutex> lock { semaphore->mutex };
-
-      if (semaphore->count > 0) {
-         break;
-      }
-
-      semaphore->queue.push_back(fiber);
-      gProcessor.wait(lock);
+   while (semaphore->count <= 0) {
+      // Wait until we can decrease semaphore
+      OSSleepThreadNoLock(&semaphore->queue);
+      OSRescheduleNoLock();
    }
 
-   return semaphore->count--;
+   previous = semaphore->count--;
+   OSUnlockScheduler();
+   return previous;
 }
 
 int32_t
-OSTryWaitSemaphore(SemaphoreHandle handle)
+OSTryWaitSemaphore(OSSemaphore *semaphore)
 {
-   auto semaphore = gSystem.getSystemObject<Semaphore>(handle);
-   auto fiber = gProcessor.getCurrentFiber();
-   std::unique_lock<std::mutex> lock { semaphore->mutex };
+   int32_t previous;
+   OSLockScheduler();
+   assert(semaphore && semaphore->tag == OSSemaphore::Tag);
+   
+   // Try to decrease semaphore
+   previous = semaphore->count;
 
-   if (semaphore->count <= 0) {
-      return semaphore->count;
+   if (semaphore->count > 0) {
+      semaphore->count--;
    }
 
-   return semaphore->count--;
+   OSUnlockScheduler();
+   return previous;
 }
 
 int32_t
-OSSignalSemaphore(SemaphoreHandle handle)
+OSSignalSemaphore(OSSemaphore *semaphore)
 {
-   auto semaphore = gSystem.getSystemObject<Semaphore>(handle);
-   auto fiber = gProcessor.getCurrentFiber();
-   std::unique_lock<std::mutex> lock { semaphore->mutex };
-   auto count = semaphore->count++;
+   int32_t previous;
+   OSLockScheduler();
+   assert(semaphore && semaphore->tag == OSSemaphore::Tag);
 
-   // Wakeup fibers
-   for (auto fiber : semaphore->queue) {
-      gProcessor.queue(fiber);
-   }
+   // Increase semaphore
+   previous =  semaphore->count++;
 
-   semaphore->queue.clear();
+   // Wakeup any waiting threads
+   OSWakeupThreadNoLock(&semaphore->queue);
+   OSRescheduleNoLock();
+
+   OSUnlockScheduler();
+   return previous;
+}
+
+int32_t
+OSGetSemaphoreCount(OSSemaphore *semaphore)
+{
+   int32_t count;
+   OSLockScheduler();
+   assert(semaphore && semaphore->tag == OSSemaphore::Tag);
+
+   // Return count
+   count = semaphore->count;
+
+   OSUnlockScheduler();
    return count;
-}
-
-int32_t
-OSGetSemaphoreCount(SemaphoreHandle handle)
-{
-   auto semaphore = gSystem.getSystemObject<Semaphore>(handle);
-   return semaphore->count;
 }
 
 void

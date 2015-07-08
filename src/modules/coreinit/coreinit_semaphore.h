@@ -1,36 +1,36 @@
 #pragma once
-#include <mutex>
-#include "systemobject.h"
 #include "systemtypes.h"
+#include "coreinit_threadqueue.h"
 
-struct Fiber;
+#pragma pack(push, 1)
 
-struct Semaphore : public SystemObject
+struct OSSemaphore
 {
    static const uint32_t Tag = 0x73506852;
 
-   char *name;
-   int32_t count;
-   std::mutex mutex;
-   std::vector<Fiber *> queue;
+   be_val<uint32_t> tag;
+   be_ptr<const char> name;
+   UNKNOWN(4);
+   be_val<int32_t> count;
+   OSThreadQueue queue;
 };
 
-using SemaphoreHandle = SystemObjectHeader *;
+#pragma pack(pop)
 
 void
-OSInitSemaphore(SemaphoreHandle handle, int32_t count);
+OSInitSemaphore(OSSemaphore *semaphore, int32_t count);
 
 void
-OSInitSemaphoreEx(SemaphoreHandle handle, int32_t count, char *name);
+OSInitSemaphoreEx(OSSemaphore *semaphore, int32_t count, char *name);
 
 int32_t
-OSWaitSemaphore(SemaphoreHandle handle);
+OSWaitSemaphore(OSSemaphore *semaphore);
 
 int32_t
-OSTryWaitSemaphore(SemaphoreHandle handle);
+OSTryWaitSemaphore(OSSemaphore *semaphore);
 
 int32_t
-OSSignalSemaphore(SemaphoreHandle handle);
+OSSignalSemaphore(OSSemaphore *semaphore);
 
 int32_t
-OSGetSemaphoreCount(SemaphoreHandle handle);
+OSGetSemaphoreCount(OSSemaphore *semaphore);

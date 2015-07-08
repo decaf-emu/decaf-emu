@@ -79,6 +79,7 @@ Processor::coreEntryPoint(Core *core)
 
          // Switch to fiber
          core->currentFiber = fiber;
+         fiber->coreID = core->id;
          fiber->parentFiber = core->primaryFiber;
          fiber->thread->state = OSThreadState::Running;
          lock.unlock();

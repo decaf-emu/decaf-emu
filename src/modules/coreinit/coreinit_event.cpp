@@ -1,132 +1,196 @@
 #include "coreinit.h"
+#include "coreinit_alarm.h"
 #include "coreinit_event.h"
-#include "coreinit_thread.h"
+#include "coreinit_memheap.h"
+#include "coreinit_scheduler.h"
 #include "system.h"
-#include "processor.h"
 
 void
-OSInitEvent(EventHandle handle, bool value, EventMode mode)
+OSInitEvent(OSEvent *event, bool value, EventMode mode)
 {
-   OSInitEventEx(handle, value, mode, nullptr);
+   OSInitEventEx(event, value, mode, nullptr);
 }
 
 void
-OSInitEventEx(EventHandle handle, bool value, EventMode mode, char *name)
+OSInitEventEx(OSEvent *event, bool value, EventMode mode, char *name)
 {
-   auto event = gSystem.addSystemObject<Event>(handle);
+   event->tag = OSEvent::Tag;
    event->mode = mode;
    event->value = value;
    event->name = name;
+   OSInitThreadQueueEx(&event->queue, event);
 }
 
 void
-OSSignalEvent(EventHandle handle)
+OSSignalEvent(OSEvent *event)
 {
-   auto event = gSystem.getSystemObject<Event>(handle);
-   std::unique_lock<std::mutex> lock { event->mutex };
+   OSLockScheduler();
+   assert(event);
+   assert(event->tag == OSEvent::Tag);
 
-   event->value = TRUE;
-
-   if (event->mode == EventMode::ManualReset) {
-      // Wake all waiting fibers
-      for (auto fiber : event->queue) {
-         gProcessor.queue(fiber);
-      }
-
-      event->queue.clear();
-   } else if (event->mode == EventMode::AutoReset) {
-      // Wake highest priority fiber
-      Fiber *highest = nullptr;
-
-      for (auto fiber : event->queue) {
-         if (!highest || fiber->thread->basePriority > highest->thread->basePriority) {
-            highest = fiber;
-         }
-      }
-
-      if (highest) {
-         gProcessor.queue(highest);
-         event->queue.erase(std::remove(event->queue.begin(), event->queue.end(), highest), event->queue.end());
-      }
-   }
-}
-
-void
-OSSignalEventAll(EventHandle handle)
-{
-   auto event = gSystem.getSystemObject<Event>(handle);
-   std::unique_lock<std::mutex> lock { event->mutex };
-   event->value = TRUE;
-
-   // Wake all fibers
-   for (auto fiber : event->queue) {
-      gProcessor.queue(fiber);
+   if (event->value != FALSE) {
+      // Event has already been set
+      OSUnlockScheduler();
+      return;
    }
 
-   event->queue.clear();
+   // Set event
+   event->value = TRUE;
+
+   if (!OSIsThreadQueueEmpty(&event->queue)) {
+      if (event->mode == EventMode::AutoReset) {
+         // Reset value
+         event->value = FALSE;
+
+         // Wakeup one thread
+         auto thread = OSPopFrontThreadQueue(&event->queue);
+         OSWakeupOneThreadNoLock(thread);
+         OSRescheduleNoLock();
+      } else {
+         // Wakeup all threads
+         OSWakeupThreadNoLock(&event->queue);
+         OSRescheduleNoLock();
+      }
+   }
+
+   OSUnlockScheduler();
 }
 
 void
-OSResetEvent(EventHandle handle)
+OSSignalEventAll(OSEvent *event)
 {
-   auto event = gSystem.getSystemObject<Event>(handle);
-   std::unique_lock<std::mutex> lock { event->mutex };
+   OSLockScheduler();
+   assert(event);
+   assert(event->tag == OSEvent::Tag);
+
+   if (event->value != FALSE) {
+      // Event has already been set
+      OSUnlockScheduler();
+      return;
+   }
+
+   // Set event
+   event->value = TRUE;
+
+   if (!OSIsThreadQueueEmpty(&event->queue)) {
+      if (event->mode == EventMode::AutoReset) {
+         // Reset event
+         event->value = FALSE;
+      }
+
+      // Wakeup all threads
+      OSWakeupThreadNoLock(&event->queue);
+      OSRescheduleNoLock();
+   }
+
+   OSUnlockScheduler();
+}
+
+void
+OSResetEvent(OSEvent *event)
+{
+   OSLockScheduler();
+   assert(event);
+   assert(event->tag == OSEvent::Tag);
+
+   // Reset event
    event->value = FALSE;
+
+   OSUnlockScheduler();
 }
 
 void
-OSWaitEvent(EventHandle handle)
+OSWaitEvent(OSEvent *event)
 {
-   auto event = gSystem.getSystemObject<Event>(handle);
-   auto fiber = gProcessor.getCurrentFiber();
+   OSLockScheduler();
+   assert(event);
+   assert(event->tag == OSEvent::Tag);
 
-   while (!event->value) {
-      std::unique_lock<std::mutex> lock { event->mutex };
+   if (event->value) {
+      // Event is already set
 
-      if (event->value) {
-         break;
+      if (event->mode == EventMode::AutoReset) {
+         // Reset event
+         event->value = FALSE;
       }
 
-      event->queue.push_back(fiber);
-      gProcessor.wait(lock);
+      OSUnlockScheduler();
+      return;
+   } else {
+      // Wait for event to be set
+      OSSleepThreadNoLock(&event->queue);
+      OSRescheduleNoLock();
    }
 
-   if (event->mode == EventMode::AutoReset) {
-      event->value = FALSE;
-   }
+   OSUnlockScheduler();
+}
+
+static AlarmCallback
+pEventAlarmHandler = nullptr;
+
+struct EventAlarmData
+{
+   OSEvent *event;
+   OSThread *thread;
+   BOOL timeout;
+};
+
+void
+EventAlarmHandler(OSAlarm *alarm, OSContext *context)
+{
+   OSLockScheduler();
+
+   // Wakeup the thread waiting on this alarm
+   auto data = reinterpret_cast<EventAlarmData*>(OSGetAlarmUserData(alarm));
+   data->timeout = TRUE;
+   OSWakeupOneThreadNoLock(data->thread);
+
+   OSUnlockScheduler();
 }
 
 BOOL
-OSWaitEventWithTimeout(EventHandle handle, Time timeout)
+OSWaitEventWithTimeout(OSEvent *event, Time timeout)
 {
-   auto event = gSystem.getSystemObject<Event>(handle);
-   auto fiber = gProcessor.getCurrentFiber();
-   auto start = std::chrono::system_clock::now();
+   BOOL result = TRUE;
+   OSLockScheduler();
 
-   while (!event->value) {
-      std::unique_lock<std::mutex> lock { event->mutex };
-
-      if (event->value) {
-         break;
+   // Check if event is already set
+   if (event->value) {
+      if (event->mode == EventMode::AutoReset) {
+         // Reset event
+         event->value = FALSE;
       }
 
-      // Check for timeout
-      auto diff = std::chrono::system_clock::now() - start;
-      auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count();
-
-      if (ns >= timeout) {
-         return FALSE;
-      }
-
-      event->queue.push_back(fiber);
-      gProcessor.wait(lock);
+      OSUnlockScheduler();
+      return TRUE;
    }
 
-   if (event->mode == EventMode::AutoReset) {
-      event->value = FALSE;
+   // Setup some alarm data for callback
+   auto data = OSAllocFromSystem<EventAlarmData>();
+   data->event = event;
+   data->thread = OSGetCurrentThread();
+   data->timeout = FALSE;
+
+   // Create an alarm to trigger timeout
+   auto alarm = OSAllocFromSystem<OSAlarm>();
+   OSCreateAlarm(alarm);
+   OSSetAlarmUserData(alarm, data);
+   OSSetAlarm(alarm, timeout, pEventAlarmHandler);
+
+   // Wait for the event
+   OSSleepThreadNoLock(&event->queue);
+   OSRescheduleNoLock();
+
+   if (data->timeout) {
+      // Timed out, remove from wait queue
+      OSEraseFromThreadQueue(&event->queue, data->thread);
+      result = FALSE;
    }
 
-   return TRUE;
+   OSFreeToSystem(data);
+   OSFreeToSystem(alarm);
+   OSUnlockScheduler();
+   return result;
 }
 
 void
@@ -139,4 +203,11 @@ CoreInit::registerEventFunctions()
    RegisterKernelFunction(OSResetEvent);
    RegisterKernelFunction(OSWaitEvent);
    RegisterKernelFunction(OSWaitEventWithTimeout);
+   RegisterKernelFunction(EventAlarmHandler);
+}
+
+void
+CoreInit::initialiseEvent()
+{
+   pEventAlarmHandler = findExportAddress("EventAlarmHandler");
 }

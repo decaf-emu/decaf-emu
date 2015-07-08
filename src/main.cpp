@@ -216,6 +216,10 @@ play(const std::string &path)
    OSCreateThread(thread0, 0, 0, nullptr, stack0top, stackSize, 16, OSThreadAttributes::AffinityCPU0);
    OSCreateThread(thread2, 0, 0, nullptr, stack2top, stackSize, 16, OSThreadAttributes::AffinityCPU2);
 
+   // Set the two idle threads to inactive
+   thread0->state = OSThreadState::None;
+   thread2->state = OSThreadState::None;
+
    // Create the main thread for core1
    OSCreateThread(thread1, entryPoint, 0, nullptr, stack1top, stackSize, 16, OSThreadAttributes::AffinityCPU1);
 

@@ -77,7 +77,7 @@ System::loadThunks()
 
    // Allocate space for all thunks!
    mSystemThunks = OSAllocFromSystem(static_cast<uint32_t>(mSystemCalls.size() * 8), 4);
-   addr = static_cast<uint32_t>(mSystemThunks);
+   addr = gMemory.untranslate(mSystemThunks);
 
    for (auto &func : mSystemCalls) {
       // Set the function virtual address
@@ -95,38 +95,6 @@ System::loadThunks()
       gMemory.write(addr + 4, bclr.value);
 
       addr += 8;
-   }
-}
-
-bool
-System::freeSystemObject(p32<SystemObjectHeader> header)
-{
-   std::lock_guard<std::mutex> lock(mSystemObjectMutex);
-   auto itr = mSystemObjects.find(static_cast<uint32_t>(header));
-
-   if (itr == mSystemObjects.end()) {
-      return false;
-   }
-
-   // Destroy the system object
-   delete itr->second;
-   mSystemObjects.erase(itr);
-   return true;
-}
-
-// Finds and frees all system objects within a range of memory
-void
-System::freeSystemObjects(uint32_t address, uint32_t size)
-{
-   std::lock_guard<std::mutex> lock(mSystemObjectMutex);
-   auto start = address;
-   auto end = address + size;
-   auto itr = mSystemObjects.begin();
-   auto pred = [start, end](auto &item) { return item.first >= start && item.first < end; };
-
-   while ((itr = std::find_if(itr, mSystemObjects.end(), pred)) != mSystemObjects.end()) {
-      delete itr->second;
-      mSystemObjects.erase(itr++);
    }
 }
 

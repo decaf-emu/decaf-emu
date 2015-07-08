@@ -1,64 +1,85 @@
 #pragma once
-#include <mutex>
-#include <condition_variable>
-#include "systemobject.h"
-#include "coreinit_thread.h"
+#include "systemtypes.h"
+#include "coreinit_threadqueue.h"
 
-struct Fiber;
+#pragma pack(push, 1)
 
-struct Mutex : public SystemObject
+struct OSMutex;
+
+struct OSMutexLink
+{
+   be_ptr<OSMutex> next;
+   be_ptr<OSMutex> prev;
+};
+CHECK_OFFSET(OSMutexLink, 0x00, next);
+CHECK_OFFSET(OSMutexLink, 0x04, prev);
+CHECK_SIZE(OSMutexLink, 0x8);
+
+struct OSMutex
 {
    static const uint32_t Tag = 0x6D557458;
 
-   char *name;
-   uint32_t count;
-   std::mutex mutex;
-   Fiber *owner;
-   std::vector<Fiber *> queue;
+   be_val<uint32_t> tag;
+   be_ptr<const char> name;
+   UNKNOWN(4);
+   OSThreadQueue queue;
+   be_ptr<OSThread> owner;
+   be_val<int32_t> count;
+   OSMutexLink link;       // For thread's mutexQueue
 };
+CHECK_OFFSET(OSMutex, 0x00, tag);
+CHECK_OFFSET(OSMutex, 0x04, name);
+CHECK_OFFSET(OSMutex, 0x0c, queue);
+CHECK_OFFSET(OSMutex, 0x1c, owner);
+CHECK_OFFSET(OSMutex, 0x20, count);
+CHECK_OFFSET(OSMutex, 0x24, link);
+CHECK_SIZE(OSMutex, 0x2c);
 
-struct Condition : public SystemObject
+struct OSCondition
 {
    static const uint32_t Tag = 0x634E6456;
 
-   char *name;
-   bool value;
-   std::mutex mutex;
-   std::vector<Fiber *> queue;
+   be_val<uint32_t> tag;
+   be_ptr<const char> name;
+   UNKNOWN(4);
+   OSThreadQueue queue;
 };
+CHECK_OFFSET(OSCondition, 0x00, tag);
+CHECK_OFFSET(OSCondition, 0x04, name);
+CHECK_OFFSET(OSCondition, 0x0c, queue);
+CHECK_SIZE(OSCondition, 0x1c);
 
-using MutexHandle = SystemObjectHeader *;
-using ConditionHandle = SystemObjectHeader *;
-
-MutexHandle
-OSAllocMutex();
-
-void
-OSInitMutex(MutexHandle handle);
+#pragma pack(pop)
 
 void
-OSInitMutexEx(MutexHandle handle, char *name);
+OSInitMutex(OSMutex *mutex);
 
 void
-OSLockMutex(MutexHandle handle);
+OSInitMutexEx(OSMutex *mutex, const char *name);
 
 void
-OSUnlockMutex(MutexHandle handle);
+OSLockMutex(OSMutex *mutex);
+
+void
+OSLockMutexNoLock(OSMutex *mutex);
+
+void
+OSUnlockMutex(OSMutex *mutex);
+
+void
+OSUnlockMutexNoLock(OSMutex *mutex);
 
 BOOL
-OSTryLockMutex(MutexHandle handle);
-
-ConditionHandle
-OSAllocCondition();
+OSTryLockMutex(OSMutex *mutex);
 
 void
-OSInitCond(ConditionHandle handle);
+OSInitCond(OSCondition *condition);
 
 void
-OSInitCondEx(ConditionHandle handle, char *name);
+OSInitCondEx(OSCondition *condition, const char *name);
 
 void
-OSWaitCond(ConditionHandle conditionHandle, MutexHandle mutexHandle);
+OSWaitCond(OSCondition *condition, OSMutex *mutex);
 
 void
-OSSignalCond(ConditionHandle handle);
+OSSignalCond(OSCondition *condition);

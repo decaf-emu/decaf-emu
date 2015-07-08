@@ -8,9 +8,36 @@
 
 struct OSMessage
 {
-   p32<void> message;
-   uint32_t args[3];
+   be_ptr<void> message;
+   be_val<uint32_t> args[3];
 };
+CHECK_OFFSET(OSMessage, 0x00, message);
+CHECK_OFFSET(OSMessage, 0x04, args);
+CHECK_SIZE(OSMessage, 0x10);
+
+struct OSMessageQueue
+{
+   static const uint32_t Tag = 0x6D536751;
+
+   be_val<uint32_t> tag;
+   be_ptr<const char> name;
+   UNKNOWN(4);
+   OSThreadQueue sendQueue;
+   OSThreadQueue recvQueue;
+   be_ptr<OSMessage> messages;
+   be_val<uint32_t> size;
+   be_val<uint32_t> first;
+   be_val<uint32_t> used;
+};
+CHECK_OFFSET(OSMessageQueue, 0x00, tag);
+CHECK_OFFSET(OSMessageQueue, 0x04, name);
+CHECK_OFFSET(OSMessageQueue, 0x0c, sendQueue);
+CHECK_OFFSET(OSMessageQueue, 0x1c, recvQueue);
+CHECK_OFFSET(OSMessageQueue, 0x2c, messages);
+CHECK_OFFSET(OSMessageQueue, 0x30, size);
+CHECK_OFFSET(OSMessageQueue, 0x34, first);
+CHECK_OFFSET(OSMessageQueue, 0x38, used);
+CHECK_SIZE(OSMessageQueue, 0x3c);
 
 #pragma pack(pop)
 
@@ -23,39 +50,23 @@ enum Flags
 };
 }
 
-struct MessageQueue : public SystemObject
-{
-   static const uint32_t Tag = 0x6D536751;
-
-   char *name;
-   uint32_t first;
-   uint32_t count;
-   uint32_t size;
-   OSMessage *messages;
-   MutexHandle mutex;
-   ConditionHandle waitSend;
-   ConditionHandle waitRead;
-};
-
-using MessageQueueHandle = SystemObjectHeader *;
+void
+OSInitMessageQueue(OSMessageQueue *queue, OSMessage *messages, int32_t size);
 
 void
-OSInitMessageQueue(MessageQueueHandle handle, OSMessage *messages, int32_t size);
-
-void
-OSInitMessageQueueEx(MessageQueueHandle handle, OSMessage *messages, int32_t size, char *name);
+OSInitMessageQueueEx(OSMessageQueue *queue, OSMessage *messages, int32_t size, const char *name);
 
 BOOL
-OSSendMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags);
+OSSendMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags);
 
 BOOL
-OSJamMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags);
+OSJamMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags);
 
 BOOL
-OSReceiveMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags);
+OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags);
 
 BOOL
-OSPeekMessage(MessageQueueHandle handle, OSMessage *message);
+OSPeekMessage(OSMessageQueue *queue, OSMessage *message);
 
-MessageQueueHandle
+OSMessageQueue *
 OSGetSystemMessageQueue();

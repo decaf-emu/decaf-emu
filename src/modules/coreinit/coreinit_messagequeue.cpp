@@ -1,165 +1,157 @@
 #include "coreinit.h"
 #include "coreinit_memheap.h"
 #include "coreinit_messagequeue.h"
-#include "system.h"
-#include "util.h"
+#include "coreinit_scheduler.h"
 
-static MessageQueueHandle
+static OSMessageQueue *
 gSystemMessageQueue;
 
 static OSMessage *
 gSystemMessageArray;
 
 void
-OSInitMessageQueue(MessageQueueHandle handle, OSMessage *messages, int32_t size)
+OSInitMessageQueue(OSMessageQueue *queue, OSMessage *messages, int32_t size)
 {
-   OSInitMessageQueueEx(handle, messages, size, nullptr);
+   OSInitMessageQueueEx(queue, messages, size, nullptr);
 }
 
 void
-OSInitMessageQueueEx(MessageQueueHandle handle, OSMessage *messages, int32_t size, char *name)
+OSInitMessageQueueEx(OSMessageQueue *queue, OSMessage *messages, int32_t size, const char *name)
 {
-   auto queue = gSystem.addSystemObject<MessageQueue>(handle);
+   queue->tag = OSMessageQueue::Tag;
    queue->name = name;
-   queue->first = 0;
-   queue->count = 0;
-   queue->size = size;
    queue->messages = messages;
-
-   queue->mutex = OSAllocMutex();
-   queue->waitRead = OSAllocCondition();
-   queue->waitSend = OSAllocCondition();
-
-   OSInitMutex(queue->mutex);
-   OSInitCond(queue->waitRead);
-   OSInitCond(queue->waitSend);
+   queue->size = size;
+   queue->first = 0;
+   queue->used = 0;
+   OSInitThreadQueueEx(&queue->sendQueue, queue);
+   OSInitThreadQueueEx(&queue->recvQueue, queue);
 }
 
-// Insert at back of message queue
 BOOL
-OSSendMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags)
+OSSendMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags)
 {
-   auto queue = gSystem.getSystemObject<MessageQueue>(handle);
-   OSLockMutex(queue->mutex);
+   OSLockScheduler();
+   assert(queue && queue->tag == OSMessageQueue::Tag);
+   assert(message);
 
-   if (!(flags & MessageFlags::Blocking) && queue->count == queue->size) {
-      // Do not wait for space
+   if (!(flags & MessageFlags::Blocking) && queue->used == queue->size) {
+      // Do not block waiting for space to insert message
+      OSUnlockScheduler();
       return FALSE;
    }
 
-   // Wait for space
-   while (queue->count == queue->size) {
-      OSWaitCond(queue->waitSend, queue->mutex);
+   // Wait for space in the message queue
+   while (queue->used == queue->size) {
+      OSSleepThreadNoLock(&queue->sendQueue);
+      OSRescheduleNoLock();
    }
 
-   auto index = (queue->first + queue->count) % queue->size;
-   auto dst = static_cast<OSMessage*>(queue->messages) + index;
-
    // Copy into message array
+   auto index = (queue->first + queue->used) % queue->size;
+   auto dst = static_cast<OSMessage*>(queue->messages) + index;
    memcpy(dst, message, sizeof(OSMessage));
-   queue->count++;
+   queue->used++;
 
-   // Wake up anyone waiting for message to read
-   OSUnlockMutex(queue->mutex);
-   OSSignalCond(queue->waitRead);
+   // Wakeup threads waiting to read message
+   OSWakeupThreadNoLock(&queue->recvQueue);
+   OSRescheduleNoLock();
 
+   OSUnlockScheduler();
    return TRUE;
 }
 
-// Insert at front of message queue
 BOOL
-OSJamMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags)
+OSJamMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags)
 {
-   auto queue = gSystem.getSystemObject<MessageQueue>(handle);
-   uint32_t index;
-   OSLockMutex(queue->mutex);
+   OSLockScheduler();
+   assert(queue && queue->tag == OSMessageQueue::Tag);
+   assert(message);
 
-   if (!(flags & MessageFlags::Blocking) && queue->count == queue->size) {
-      // Do not wait for space
-      OSUnlockMutex(queue->mutex);
+   if (!(flags & MessageFlags::Blocking) && queue->used == queue->size) {
+      // Do not block waiting for space to insert message
+      OSUnlockScheduler();
       return FALSE;
    }
 
-   // Wait for space
-   while (queue->count == queue->size) {
-      OSWaitCond(queue->waitSend, queue->mutex);
+   // Wait for space in the message queue
+   while (queue->used == queue->size) {
+      OSSleepThreadNoLock(&queue->sendQueue);
+      OSRescheduleNoLock();
    }
 
-   // Get index before front
    if (queue->first == 0) {
-      index = queue->size - 1;
+      queue->first = queue->size - 1;
    } else {
-      index = queue->first - 1;
+      queue->first--;
    }
 
    // Copy into message array
-   auto dst = static_cast<OSMessage*>(queue->messages) + index;
+   auto dst = static_cast<OSMessage*>(queue->messages) + queue->first;
    memcpy(dst, message, sizeof(OSMessage));
+   queue->used++;
 
-   // Update queue start and count
-   queue->first = index;
-   queue->count++;
+   // Wakeup threads waiting to read message
+   OSWakeupThreadNoLock(&queue->recvQueue);
+   OSRescheduleNoLock();
 
-   // Wake up anyone waiting for message to read
-   OSUnlockMutex(queue->mutex);
-   OSSignalCond(queue->waitRead);
-
+   OSUnlockScheduler();
    return TRUE;
 }
 
-// Read from front of message queue
 BOOL
-OSReceiveMessage(MessageQueueHandle handle, OSMessage *message, MessageFlags::Flags flags)
+OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags)
 {
-   auto queue = gSystem.getSystemObject<MessageQueue>(handle);
-   OSLockMutex(queue->mutex);
+   OSLockScheduler();
+   assert(queue && queue->tag == OSMessageQueue::Tag);
+   assert(message);
 
-   if (!(flags & MessageFlags::Blocking) && queue->count == 0) {
-      // Do not wait for space
-      OSUnlockMutex(queue->mutex);
+   if (!(flags & MessageFlags::Blocking) && queue->used == 0) {
+      // Do not block waiting for a message to arrive
+      OSUnlockScheduler();
       return FALSE;
    }
 
-   while (queue->count == 0) {
-      OSWaitCond(queue->waitRead, queue->mutex);
+   // Wait for a message to appear in queue
+   while (queue->used == 0) {
+      OSSleepThreadNoLock(&queue->recvQueue);
+      OSRescheduleNoLock();
    }
-
-   auto index = queue->first;
-   auto src = static_cast<OSMessage*>(queue->messages) + index;
-
-   // Copy from message array
+   
+   // Copy into message array
+   auto src = static_cast<OSMessage*>(queue->messages) + queue->first;
    memcpy(message, src, sizeof(OSMessage));
    queue->first = (queue->first + 1) % queue->size;
-   queue->count--;
+   queue->used--;
 
-   // Wake up anyone waiting for space to send
-   OSUnlockMutex(queue->mutex);
-   OSSignalCond(queue->waitSend);
+   // Wakeup threads waiting for space to send message
+   OSWakeupThreadNoLock(&queue->sendQueue);
+   OSRescheduleNoLock();
 
+   OSUnlockScheduler();
    return TRUE;
 }
 
-// Peek from front of message queue
 BOOL
-OSPeekMessage(MessageQueueHandle handle, OSMessage *message)
+OSPeekMessage(OSMessageQueue *queue, OSMessage *message)
 {
-   auto queue = gSystem.getSystemObject<MessageQueue>(handle);
-   OSLockMutex(queue->mutex);
+   OSLockScheduler();
+   assert(queue && queue->tag == OSMessageQueue::Tag);
+   assert(message);
 
-   if (queue->count == 0) {
-      OSUnlockMutex(queue->mutex);
+   if (queue->used == 0) {
+      OSUnlockScheduler();
       return FALSE;
    }
 
-   // Copy from message array
    auto src = static_cast<OSMessage*>(queue->messages) + queue->first;
    memcpy(message, src, sizeof(OSMessage));
 
-   OSUnlockMutex(queue->mutex);
+   OSUnlockScheduler();
    return TRUE;
 }
 
-MessageQueueHandle
+OSMessageQueue *
 OSGetSystemMessageQueue()
 {
    return gSystemMessageQueue;
@@ -180,7 +172,7 @@ CoreInit::registerMessageQueueFunctions()
 void
 CoreInit::initialiseMessageQueues()
 {
-   gSystemMessageQueue = OSAllocFromSystem<SystemObjectHeader>();
+   gSystemMessageQueue = OSAllocFromSystem<OSMessageQueue>();
    gSystemMessageArray = reinterpret_cast<OSMessage*>(OSAllocFromSystem(16 * sizeof(OSMessage)));
    OSInitMessageQueue(gSystemMessageQueue, gSystemMessageArray, 16);
 }

@@ -19,7 +19,7 @@ struct LogState
 static inline void
 logCall(LogState &state, const char *name)
 {
-   auto len = sprintf_s(state.buffer, state.length, "%s(", name);
+   auto len = sprintf_s(state.buffer + state.pos, state.length, "%s(", name);
    state.length -= len;
    state.pos += len;
 }

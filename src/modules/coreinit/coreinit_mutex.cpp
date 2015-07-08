@@ -1,165 +1,159 @@
 #include "coreinit.h"
 #include "coreinit_mutex.h"
-#include "coreinit_memheap.h"
-#include "system.h"
-#include "processor.h"
+#include "coreinit_scheduler.h"
+#include "coreinit_thread.h"
+#include "coreinit_queue.h"
 
-MutexHandle
-OSAllocMutex()
+void
+OSInitMutex(OSMutex *mutex)
 {
-   return OSAllocFromSystem<SystemObjectHeader>();
-}
-
-ConditionHandle
-OSAllocCondition()
-{
-   return OSAllocFromSystem<SystemObjectHeader>();
+   OSInitMutexEx(mutex, nullptr);
 }
 
 void
-OSInitMutex(MutexHandle handle)
+OSInitMutexEx(OSMutex *mutex, const char *name)
 {
-   OSInitMutexEx(handle, nullptr);
-}
-
-void
-OSInitMutexEx(MutexHandle handle, char *name)
-{
-   auto mutex = gSystem.addSystemObject<Mutex>(handle);
+   mutex->tag = OSMutex::Tag;
    mutex->name = name;
-   mutex->count = 0;
    mutex->owner = nullptr;
+   mutex->count = 0;
+   OSInitThreadQueueEx(&mutex->queue, mutex);
+   OSInitQueueLink(&mutex->link);
 }
 
 void
-OSLockMutex(MutexHandle handle)
+OSLockMutex(OSMutex *mutex)
 {
-   auto mutex = gSystem.getSystemObject<Mutex>(handle);
-   auto fiber = gProcessor.getCurrentFiber();
-   
-   while (true) {
-      OSTestThreadCancel();
-      std::unique_lock<std::mutex> lock { mutex->mutex };
+   OSLockScheduler();
+   OSTestThreadCancelNoLock();
+   OSLockMutexNoLock(mutex);
+   OSUnlockScheduler();
+}
 
-      if (!mutex->owner || mutex->owner == fiber) {
-         break;
-      }
+void
+OSLockMutexNoLock(OSMutex *mutex)
+{
+   assert(mutex && mutex->tag == OSMutex::Tag);
+   auto thread = OSGetCurrentThread();
 
-      mutex->queue.push_back(fiber);
-      gProcessor.wait(lock);
+   if (mutex->owner && mutex->owner != thread) {
+      thread->mutex = mutex;
+
+      // Wait for other owner to unlock
+      OSSleepThreadNoLock(&mutex->queue);
+      OSRescheduleNoLock();
+
+      thread->mutex = nullptr;
    }
 
+   if (mutex->owner != thread) {
+      // Add to mutex queue
+      OSAppendQueue(&thread->mutexQueue, mutex);
+   }
+
+   mutex->owner = thread;
    mutex->count++;
-   mutex->owner = fiber;
 }
 
 BOOL
-OSTryLockMutex(MutexHandle handle)
+OSTryLockMutex(OSMutex *mutex)
 {
-   auto mutex = gSystem.getSystemObject<Mutex>(handle);
-   auto fiber = gProcessor.getCurrentFiber();
+   auto thread = OSGetCurrentThread();
+   OSLockScheduler();
+   OSTestThreadCancelNoLock();
 
-   std::unique_lock<std::mutex> lock { mutex->mutex };
-
-   if (mutex->owner == fiber) {
-      mutex->count++;
-      return TRUE;
-   } else if (!mutex->owner) {
-      mutex->owner = fiber;
-      mutex->count = 1;
-      return TRUE;
+   if (mutex->owner && mutex->owner != thread) {
+      // Someone else owns this mutex
+      OSUnlockScheduler();
+      return FALSE;
    }
 
-   return FALSE;
+   if (mutex->owner != thread) {
+      // Add to mutex queue
+      OSAppendQueue(&thread->mutexQueue, mutex);
+   }
+
+   mutex->owner = thread;
+   mutex->count++;
+   OSUnlockScheduler();
+
+   return TRUE;
 }
 
 void
-OSUnlockMutex(MutexHandle handle)
+OSUnlockMutex(OSMutex *mutex)
 {
-   auto mutex = gSystem.getSystemObject<Mutex>(handle);
-   auto fiber = gProcessor.getCurrentFiber();
+   OSLockScheduler();
+   OSUnlockMutexNoLock(mutex);
+   OSTestThreadCancelNoLock();
+   OSUnlockScheduler();
+}
 
-   std::unique_lock<std::mutex> lock { mutex->mutex };
-   assert(mutex->owner == fiber);
+void
+OSUnlockMutexNoLock(OSMutex *mutex)
+{
+   auto thread = OSGetCurrentThread();
+   assert(mutex && mutex->tag == OSMutex::Tag);
+   assert(mutex->owner == thread);
    assert(mutex->count > 0);
-   
    mutex->count--;
 
-   if (!mutex->count) {
-      // Fully unlocked, wake up any waiting fibers
+   if (mutex->count == 0) {
       mutex->owner = nullptr;
 
-      for (auto fiber : mutex->queue) {
-         gProcessor.queue(fiber);
-      }
+      // Remove mutex from thread's mutex queue
+      OSEraseFromQueue(&thread->mutexQueue, mutex);
 
-      mutex->queue.clear();
+      // Wakeup any threads trying to lock this mutex
+      OSWakeupThreadNoLock(&mutex->queue);
+      OSRescheduleNoLock();
    }
-
-   lock.unlock();
-   OSTestThreadCancel();
 }
 
 void
-OSInitCond(ConditionHandle handle)
+OSInitCond(OSCondition *condition)
 {
-   OSInitCondEx(handle, nullptr);
+   OSInitCondEx(condition, nullptr);
 }
 
 void
-OSInitCondEx(ConditionHandle handle, char *name)
+OSInitCondEx(OSCondition *condition, const char *name)
 {
-   auto condition = gSystem.addSystemObject<Condition>(handle);
+   condition->tag = OSCondition::Tag;
    condition->name = name;
-   condition->value = false;
+   OSInitThreadQueueEx(&condition->queue, condition);
 }
 
 void
-OSWaitCond(ConditionHandle conditionHandle, MutexHandle mutexHandle)
+OSWaitCond(OSCondition *condition, OSMutex *mutex)
 {
-   auto condition = gSystem.getSystemObject<Condition>(conditionHandle);
-   auto fiber = gProcessor.getCurrentFiber();
-   
-   // Unlock mutex
-   auto mutex = gSystem.getSystemObject<Mutex>(mutexHandle);
-   auto count = mutex->count;
+   auto thread = OSGetCurrentThread();
+   OSLockScheduler();
+   assert(mutex && mutex->tag == OSMutex::Tag);
+   assert(condition && condition->tag == OSCondition::Tag);
+   assert(mutex->owner == thread);
+
+   // Force an unlock
+   auto mutexCount = mutex->count;
    mutex->count = 1;
-   OSUnlockMutex(mutexHandle);
+   OSUnlockMutexNoLock(mutex);
 
-   // Try acquire condition
-   while (true) {
-      std::unique_lock<std::mutex> lock { condition->mutex };
+   // Sleep on the condition
+   OSSleepThreadNoLock(&condition->queue);
+   OSRescheduleNoLock();
 
-      if (condition->value) {
-         break;
-      }
+   // Restore lock
+   OSLockMutexNoLock(mutex);
+   mutex->count = mutexCount;
 
-      condition->queue.push_back(fiber);
-      gProcessor.wait(lock);
-   }
-
-   condition->value = false;
-
-   // Lock mutex
-   OSLockMutex(mutexHandle);
-   mutex->count = count;
+   OSUnlockScheduler();
 }
 
 void
-OSSignalCond(ConditionHandle handle)
+OSSignalCond(OSCondition *condition)
 {
-   auto condition = gSystem.getSystemObject<Condition>(handle);
-   std::unique_lock<std::mutex> lock { condition->mutex };
-
-   // Set condition
-   condition->value = true;
-
-   // Wake all waiting fibers
-   for (auto fiber : condition->queue) {
-      gProcessor.queue(fiber);
-   }
-
-   condition->queue.clear();
+   assert(condition && condition->tag == OSCondition::Tag);
+   OSWakeupThread(&condition->queue);
 }
 
 void

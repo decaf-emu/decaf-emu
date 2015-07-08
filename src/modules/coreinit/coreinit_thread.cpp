@@ -14,88 +14,7 @@ gDefaultThreads[3];
 static uint32_t
 gThreadId = 1;
 
-static void
-__OSSleepThreadNoLock(OSThreadQueue *queue)
-{
-   auto thread = OSGetCurrentThread();
-   thread->queue = queue;
-   thread->state = OSThreadState::Waiting;
-
-   if (queue) {
-      OSInsertThreadQueue(queue, thread);
-   }
-}
-
-static void
-__OSWakeupThreadNoLock(OSThreadQueue *queue)
-{
-   for (auto thread = queue->head; thread; thread = thread->link.next) {
-      gProcessor.queue(thread->fiber);
-   }
-}
-
-static void
-__OSWakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
-{
-   for (auto thread = queue->head; thread; thread = thread->link.next) {
-      thread->suspendResult = suspendResult;
-      gProcessor.queue(thread->fiber);
-   }
-}
-
-static int32_t
-__OSResumeThreadNoLock(OSThread *thread, int32_t counter)
-{
-   auto old = thread->suspendCounter;
-   thread->suspendCounter -= counter;
-
-   if (thread->suspendCounter < 0) {
-      thread->suspendCounter = 0;
-      return old;
-   }
-
-   if (thread->suspendCounter == 0) {
-      if (thread->state == OSThreadState::Ready) {
-         gProcessor.queue(thread->fiber);
-      }
-   }
-
-   return old;
-}
-
-static void
-__OSSuspendThreadNoLock(OSThread *thread)
-{
-   thread->requestFlag = OSThreadRequest::None;
-   thread->suspendCounter += thread->needSuspend;
-   thread->needSuspend = 0;
-   thread->state = OSThreadState::Ready;
-   __OSWakeupThreadNoLock(&thread->suspendQueue);
-}
-
-static void
-__OSRescheduleNoLock()
-{
-   gProcessor.reschedule(true);
-}
-
-static void
-__OSTestThreadCancelNoLock()
-{
-   auto thread = OSGetCurrentThread();
-
-   if (thread->cancelState) {
-      if (thread->requestFlag == OSThreadRequest::Suspend) {
-         __OSSuspendThreadNoLock(thread);
-         __OSRescheduleNoLock();
-      } else if (thread->requestFlag == OSThreadRequest::Cancel) {
-         OSUnlockScheduler();
-         OSExitThread(-1);
-      }
-   }
-}
-
-static void
+void
 __OSClearThreadStack32(OSThread *thread, uint32_t value)
 {
    uint32_t clearStart = 0, clearEnd = 0;
@@ -121,19 +40,19 @@ OSCancelThread(OSThread *thread)
    OSLockScheduler();
 
    if (thread->requestFlag == OSThreadRequest::Suspend) {
-      __OSWakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
+      OSWakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
       reschedule = true;
    }
 
    if (thread->suspendCounter != 0) {
       if (thread->cancelState == 0) {
-         __OSResumeThreadNoLock(thread, thread->suspendCounter);
+         OSResumeThreadNoLock(thread, thread->suspendCounter);
          reschedule = true;
       }
    }
 
    if (reschedule) {
-      __OSRescheduleNoLock();
+      OSRescheduleNoLock();
    }
 
    thread->suspendCounter = 0;
@@ -185,8 +104,8 @@ void
 OSContinueThread(OSThread *thread)
 {
    OSLockScheduler();
-   __OSResumeThreadNoLock(thread, thread->suspendCounter);
-   __OSRescheduleNoLock();
+   OSResumeThreadNoLock(thread, thread->suspendCounter);
+   OSRescheduleNoLock();
    OSUnlockScheduler();
 }
 
@@ -249,8 +168,8 @@ OSExitThread(int value)
       thread->state = OSThreadState::Moribund;
    }
 
-   __OSWakeupThreadNoLock(&thread->joinQueue);
-   __OSWakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
+   OSWakeupThreadNoLock(&thread->joinQueue);
+   OSWakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
    OSUnlockScheduler();
    gProcessor.exit();
 }
@@ -308,38 +227,6 @@ OSGetThreadSpecific(uint32_t id)
    return OSGetCurrentThread()->specific[id];
 }
 
-void
-OSInitThreadQueue(OSThreadQueue *queue)
-{
-   OSInitThreadQueueEx(queue, nullptr);
-}
-
-void
-OSInitThreadQueueEx(OSThreadQueue *queue, void *parent)
-{
-   queue->head = nullptr;
-   queue->tail = nullptr;
-   queue->parent = parent;
-}
-
-void
-OSInsertThreadQueue(OSThreadQueue *queue, OSThread *thread)
-{
-   thread->queue = queue;
-
-   if (!queue->head) {
-      thread->link.prev = nullptr;
-      thread->link.next = nullptr;
-      queue->head = thread;
-      queue->tail = thread;
-   } else {
-      queue->tail->link.next = thread;
-      thread->link.prev = queue->tail;
-      thread->link.next = nullptr;
-      queue->tail = thread;
-   }
-}
-
 BOOL
 OSIsThreadSuspended(OSThread *thread)
 {
@@ -364,8 +251,8 @@ OSJoinThread(OSThread *thread, be_val<int> *val)
    }
 
    if (thread->state != OSThreadState::Moribund) {
-      __OSSleepThreadNoLock(&thread->joinQueue);
-      __OSRescheduleNoLock();
+      OSSleepThreadNoLock(&thread->joinQueue);
+      OSRescheduleNoLock();
    }
    
    if (val) {
@@ -387,10 +274,10 @@ int32_t
 OSResumeThread(OSThread *thread)
 {
    OSLockScheduler();
-   auto old = __OSResumeThreadNoLock(thread, 1);
+   auto old = OSResumeThreadNoLock(thread, 1);
    
    if (thread->suspendCounter == 0) {
-      __OSRescheduleNoLock();
+      OSRescheduleNoLock();
    }
 
    OSUnlockScheduler();
@@ -401,13 +288,12 @@ BOOL
 OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, p32<void> argv)
 {
    BOOL result = false;
-
    OSLockScheduler();
 
    if (OSIsThreadTerminated(thread)) {
       // Setup state
       auto state = &thread->fiber->state;
-      state->cia = thread->entryPoint;
+      state->cia = entry;
       state->nia = state->cia + 4;
       state->gpr[1] = thread->stackStart;
       state->gpr[3] = argc;
@@ -419,8 +305,8 @@ OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, p32<void> a
       thread->requestFlag = OSThreadRequest::None;
       thread->needSuspend = 0;
 
-      __OSResumeThreadNoLock(thread, 1);
-      __OSRescheduleNoLock();
+      OSResumeThreadNoLock(thread, 1);
+      OSRescheduleNoLock();
    }
 
    OSUnlockScheduler();
@@ -441,7 +327,7 @@ OSSetThreadAffinity(OSThread *thread, uint32_t affinity)
    OSLockScheduler();
    thread->attr &= ~OSThreadAttributes::AffinityAny;
    thread->attr |= affinity;
-   __OSRescheduleNoLock();
+   OSRescheduleNoLock();
    OSUnlockScheduler();
    return TRUE;
 }
@@ -470,7 +356,7 @@ OSSetThreadPriority(OSThread* thread, uint32_t priority)
 
    OSLockScheduler();
    thread->basePriority = priority;
-   __OSRescheduleNoLock();
+   OSRescheduleNoLock();
    OSUnlockScheduler();
    return TRUE;
 }
@@ -512,8 +398,8 @@ void
 OSSleepThread(OSThreadQueue *queue)
 {
    OSLockScheduler();
-   __OSSleepThreadNoLock(queue);
-   __OSRescheduleNoLock();
+   OSSleepThreadNoLock(queue);
+   OSRescheduleNoLock();
    OSUnlockScheduler();
 }
 
@@ -523,8 +409,8 @@ OSSleepTicks(Time ticks)
    OSLockScheduler();
    // Create alarm
    // Set alarm interval
-   __OSSleepThreadNoLock(nullptr);
-   __OSRescheduleNoLock();
+   OSSleepThreadNoLock(nullptr);
+   OSRescheduleNoLock();
    OSUnlockScheduler();
 }
 
@@ -554,8 +440,8 @@ OSSuspendThread(OSThread *thread)
 
       thread->needSuspend++;
       result = thread->suspendCounter;
-      __OSSuspendThreadNoLock(thread);
-      __OSRescheduleNoLock();
+      OSSuspendThreadNoLock(thread);
+      OSRescheduleNoLock();
       goto exit;
    } else {
       if (thread->suspendCounter != 0) {
@@ -564,8 +450,8 @@ OSSuspendThread(OSThread *thread)
       } else {
          thread->needSuspend++;
          thread->requestFlag = OSThreadRequest::Suspend;
-         __OSSleepThreadNoLock(&thread->suspendQueue);
-         __OSRescheduleNoLock();
+         OSSleepThreadNoLock(&thread->suspendQueue);
+         OSRescheduleNoLock();
          result = thread->suspendResult;
       }
    }
@@ -579,7 +465,7 @@ void
 OSTestThreadCancel()
 {
    OSLockScheduler();
-   __OSTestThreadCancelNoLock();
+   OSTestThreadCancelNoLock();
    OSUnlockScheduler();
 }
 
@@ -587,7 +473,7 @@ void
 OSWakeupThread(OSThreadQueue *queue)
 {
    OSLockScheduler();
-   __OSWakeupThreadNoLock(queue);
+   OSWakeupThreadNoLock(queue);
    OSUnlockScheduler();
 }
 

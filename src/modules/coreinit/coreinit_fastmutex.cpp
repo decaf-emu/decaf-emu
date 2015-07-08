@@ -2,49 +2,48 @@
 #include "coreinit_fastmutex.h"
 #include "coreinit_mutex.h"
 
-// TODO: Fast Mutex is platform specific, lets just use normal mutex for now.
-// Linux: futex, Windows8+ WaitOnAddress
+// TODO: Implement fast mutex
 
 void
-OSFastMutex_Init(FastMutexHandle handle, char *name)
+OSFastMutex_Init(OSFastMutex *mutex, const char *name)
 {
-   OSInitMutexEx(handle, name);
+   OSInitMutexEx(reinterpret_cast<OSMutex*>(mutex), name);
 }
 
 void
-OSFastMutex_Lock(FastMutexHandle handle)
+OSFastMutex_Lock(OSFastMutex *mutex)
 {
-   OSLockMutex(handle);
+   OSLockMutex(reinterpret_cast<OSMutex*>(mutex));
 }
 
 void
-OSFastMutex_Unlock(FastMutexHandle handle)
+OSFastMutex_Unlock(OSFastMutex *mutex)
 {
-   OSUnlockMutex(handle);
+   OSUnlockMutex(reinterpret_cast<OSMutex*>(mutex));
 }
 
 BOOL
-OSFastMutex_TryLock(FastMutexHandle handle)
+OSFastMutex_TryLock(OSFastMutex *mutex)
 {
-   return OSTryLockMutex(handle);
+   return OSTryLockMutex(reinterpret_cast<OSMutex*>(mutex));
 }
 
 void
-OSFastCond_Init(FastConditionHandle handle, char *name)
+OSFastCond_Init(OSFastCondition *condition, const char *name)
 {
-   OSInitCondEx(handle, name);
+   OSInitCondEx(reinterpret_cast<OSCondition*>(condition), name);
 }
 
 void
-OSFastCond_Wait(FastConditionHandle conditionHandle, FastMutexHandle mutexHandle)
+OSFastCond_Wait(OSFastCondition *condition, OSFastMutex *mutex)
 {
-   OSWaitCond(conditionHandle, mutexHandle);
+   OSWaitCond(reinterpret_cast<OSCondition*>(condition), reinterpret_cast<OSMutex*>(mutex));
 }
 
 void
-OSFastCond_Signal(FastConditionHandle handle)
+OSFastCond_Signal(OSFastCondition *condition)
 {
-   OSSignalCond(handle);
+   OSSignalCond(reinterpret_cast<OSCondition*>(condition));
 }
 
 void

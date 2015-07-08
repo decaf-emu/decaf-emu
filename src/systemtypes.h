@@ -3,7 +3,6 @@
 #include "be_val.h"
 #include "memory.h"
 #include "p32.h"
-#include "systemobject.h"
 #include "wfunc_ptr.h"
 
 #ifndef BOOL

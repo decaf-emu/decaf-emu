@@ -1,45 +1,53 @@
 #pragma once
 #include "coreinit_time.h"
-#include "systemobject.h"
+#include "coreinit_threadqueue.h"
 
-enum class EventMode
+enum class EventMode : uint32_t
 {
    ManualReset = 0,
    AutoReset = 1
 };
 
-struct Fiber;
+#pragma pack(push, 1)
 
-struct Event : public SystemObject
+struct OSEvent
 {
    static const uint32_t Tag = 0x65566E54;
 
-   char *name;
-   EventMode mode;
-   std::atomic<bool> value;
-   std::mutex mutex;
-   std::vector<Fiber *> queue;
+   be_val<uint32_t> tag;
+   be_ptr<const char> name;
+   UNKNOWN(4);
+   be_val<uint32_t> value;
+   OSThreadQueue queue;
+   be_val<EventMode> mode;
 };
 
-using EventHandle = SystemObjectHeader *;
+CHECK_OFFSET(OSEvent, 0x0, tag);
+CHECK_OFFSET(OSEvent, 0x4, name);
+CHECK_OFFSET(OSEvent, 0xc, value);
+CHECK_OFFSET(OSEvent, 0x10, queue);
+CHECK_OFFSET(OSEvent, 0x20, mode);
+CHECK_SIZE(OSEvent, 0x24);
+
+#pragma pack(pop)
 
 void
-OSInitEvent(EventHandle handle, bool value, EventMode mode);
+OSInitEvent(OSEvent *event, bool value, EventMode mode);
 
 void
-OSInitEventEx(EventHandle handle, bool value, EventMode mode, char *name);
+OSInitEventEx(OSEvent *event, bool value, EventMode mode, char *name);
 
 void
-OSSignalEvent(EventHandle handle);
+OSSignalEvent(OSEvent *event);
 
 void
-OSSignalEventAll(EventHandle handle);
+OSSignalEventAll(OSEvent *event);
 
 void
-OSWaitEvent(EventHandle handle);
+OSWaitEvent(OSEvent *event);
 
 void
-OSResetEvent(EventHandle handle);
+OSResetEvent(OSEvent *event);
 
 BOOL
-OSWaitEventWithTimeout(EventHandle handle, Time timeout);
+OSWaitEventWithTimeout(OSEvent *event, Time timeout);
