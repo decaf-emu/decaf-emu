@@ -94,6 +94,12 @@
     <Filter Include="Source Files\modules\nn_ac">
       <UniqueIdentifier>{cb366671-817d-4a6a-9d48-94be9fdd1e38}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\nn_fp">
+      <UniqueIdentifier>{47bf8d66-1078-4899-a425-5f6ccc188f2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_fp">
+      <UniqueIdentifier>{178a2d6d-4321-43d7-a6df-e35e3e97d905}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -329,6 +335,12 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\padscore\padscore_vpad.cpp">
       <Filter>Source Files\modules\padscore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_fp\nn_fp.cpp">
+      <Filter>Source Files\modules\nn_fp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_fp\nn_fp_core.cpp">
+      <Filter>Source Files\modules\nn_fp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -598,6 +610,12 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\padscore\padscore_vpad.h">
       <Filter>Header Files\modules\padscore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_fp\nn_fp.h">
+      <Filter>Header Files\modules\nn_fp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_fp\nn_fp_core.h">
+      <Filter>Header Files\modules\nn_fp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

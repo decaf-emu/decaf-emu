@@ -15,6 +15,7 @@
 #include "modules/gx2/gx2.h"
 #include "modules/nn_ac/nn_ac.h"
 #include "modules/nn_act/nn_act.h"
+#include "modules/nn_fp/nn_fp.h"
 #include "modules/nn_save/nn_save.h"
 #include "modules/zlib125/zlib125.h"
 #include "modules/proc_ui/proc_ui.h"
@@ -110,6 +111,7 @@ initialiseEmulator()
    GX2::RegisterFunctions();
    NNAc::RegisterFunctions();
    NNAct::RegisterFunctions();
+   NNFp::RegisterFunctions();
    NNSave::RegisterFunctions();
    PadScore::RegisterFunctions();
    ProcUI::RegisterFunctions();
@@ -123,6 +125,7 @@ initialiseEmulator()
    gSystem.registerModule("gx2", new GX2 {});
    gSystem.registerModule("nn_ac", new NNAc {});
    gSystem.registerModule("nn_act", new NNAct {});
+   gSystem.registerModule("nn_fp", new NNFp {});
    gSystem.registerModule("nn_save", new NNSave {});
    gSystem.registerModule("padscore", new PadScore {});
    gSystem.registerModule("proc_ui", new ProcUI {});

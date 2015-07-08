@@ -154,6 +154,8 @@
     <ClCompile Include="..\src\modules\nn_act\nn_act_core.cpp" />
     <ClCompile Include="..\src\modules\nn_ac\nn_ac.cpp" />
     <ClCompile Include="..\src\modules\nn_ac\nn_ac_core.cpp" />
+    <ClCompile Include="..\src\modules\nn_fp\nn_fp.cpp" />
+    <ClCompile Include="..\src\modules\nn_fp\nn_fp_core.cpp" />
     <ClCompile Include="..\src\modules\nn_save\nn_save.cpp" />
     <ClCompile Include="..\src\modules\nn_save\nn_save_core.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore.cpp" />
@@ -209,6 +211,8 @@
     <ClInclude Include="..\src\modules\nn_act\nn_act_core.h" />
     <ClInclude Include="..\src\modules\nn_ac\nn_ac.h" />
     <ClInclude Include="..\src\modules\nn_ac\nn_ac_core.h" />
+    <ClInclude Include="..\src\modules\nn_fp\nn_fp.h" />
+    <ClInclude Include="..\src\modules\nn_fp\nn_fp_core.h" />
     <ClInclude Include="..\src\modules\padscore\padscore.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_kpad.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_vpad.h" />
