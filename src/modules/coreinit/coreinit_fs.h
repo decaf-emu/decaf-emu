@@ -113,6 +113,12 @@ FSShutdown();
 FSStatus
 FSAddClient(FSClient *client, uint32_t flags);
 
+FSStatus
+FSDelClient(FSClient *client, uint32_t flags);
+
+uint32_t
+FSGetClientNum();
+
 void
 FSInitCmdBlock(FSCmdBlock *block);
 

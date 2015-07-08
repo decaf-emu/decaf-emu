@@ -71,6 +71,9 @@ gOpenFiles;
 static std::string
 gWorkingDirectory = "/vol/code";
 
+static std::vector<FSClient*>
+gClients;
+
 void
 FSInit()
 {
@@ -84,7 +87,21 @@ FSShutdown()
 FSStatus
 FSAddClient(FSClient *client, uint32_t flags)
 {
+   gClients.push_back(client);
    return FSStatus::OK;
+}
+
+FSStatus
+FSDelClient(FSClient *client, uint32_t flags)
+{
+   gClients.erase(std::remove(gClients.begin(), gClients.end(), client), gClients.end());
+   return FSStatus::OK;
+}
+
+uint32_t
+FSGetClientNum()
+{
+   return static_cast<uint32_t>(gClients.size());
 }
 
 void
@@ -209,6 +226,8 @@ CoreInit::registerFileSystemFunctions()
    RegisterKernelFunction(FSInit);
    RegisterKernelFunction(FSShutdown);
    RegisterKernelFunction(FSAddClient);
+   RegisterKernelFunction(FSDelClient);
+   RegisterKernelFunction(FSGetClientNum);
    RegisterKernelFunction(FSInitCmdBlock);
    RegisterKernelFunction(FSSetCmdPriority);
    RegisterKernelFunction(FSGetStat);
