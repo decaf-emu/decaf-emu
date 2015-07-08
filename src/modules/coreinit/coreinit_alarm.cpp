@@ -4,14 +4,12 @@
 BOOL
 OSCancelAlarm(OSAlarm *alarm)
 {
-   assert(false);
    return FALSE;
 }
 
 void
 OSCancelAlarms(uint32_t alarmTag)
 {
-   assert(false);
 }
 
 void
@@ -38,14 +36,12 @@ OSGetAlarmUserData(OSAlarm *alarm)
 BOOL
 OSSetAlarm(OSAlarm *alarm, Time time, AlarmCallback callback)
 {
-   assert(false);
    return FALSE;
 }
 
 BOOL
 OSSetPeriodicAlarm(OSAlarm *alarm, Time start, Time interval, AlarmCallback callback)
 {
-   assert(false);
    return FALSE;
 }
 
@@ -64,6 +60,19 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data)
 BOOL
 OSWaitAlarm(OSAlarm *alarm)
 {
-   assert(false);
    return FALSE;
+}
+
+void CoreInit::registerAlarmFunctions()
+{
+   RegisterKernelFunction(OSCancelAlarm);
+   RegisterKernelFunction(OSCancelAlarms);
+   RegisterKernelFunction(OSCreateAlarm);
+   RegisterKernelFunction(OSCreateAlarmEx);
+   RegisterKernelFunction(OSGetAlarmUserData);
+   RegisterKernelFunction(OSSetAlarm);
+   RegisterKernelFunction(OSSetPeriodicAlarm);
+   RegisterKernelFunction(OSSetAlarmTag);
+   RegisterKernelFunction(OSSetAlarmUserData);
+   RegisterKernelFunction(OSWaitAlarm);
 }

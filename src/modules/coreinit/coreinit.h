@@ -21,6 +21,7 @@ public:
    static void RegisterFunctions();
 
 private:
+   static void registerAlarmFunctions();
    static void registerCoreFunctions();
    static void registerCacheFunctions();
    static void registerDebugFunctions();
