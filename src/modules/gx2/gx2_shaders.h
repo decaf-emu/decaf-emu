@@ -22,6 +22,7 @@ struct GX2FetchShader;
 struct GX2VertexShader;
 struct GX2PixelShader;
 struct GX2GeometryShader;
+struct GX2PixelSampler;
 
 #pragma pack(push, 1)
 
@@ -64,3 +65,6 @@ GX2SetPixelShader(GX2PixelShader *shader);
 
 void
 GX2SetGeometryShader(GX2GeometryShader *shader);
+
+void
+GX2SetPixelSampler(GX2PixelSampler *sampler, uint32_t id);

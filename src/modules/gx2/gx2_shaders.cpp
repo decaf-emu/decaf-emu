@@ -47,6 +47,10 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
 {
 }
 
+void
+GX2SetPixelSampler(GX2PixelSampler *sampler, uint32_t id)
+{
+}
 
 void
 GX2::registerShaderFunctions()
@@ -59,4 +63,5 @@ GX2::registerShaderFunctions()
    RegisterKernelFunction(GX2SetVertexShader);
    RegisterKernelFunction(GX2SetPixelShader);
    RegisterKernelFunction(GX2SetGeometryShader);
+   RegisterKernelFunction(GX2SetPixelSampler);
 }
