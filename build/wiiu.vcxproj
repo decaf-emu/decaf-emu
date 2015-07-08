@@ -158,6 +158,7 @@
     <ClCompile Include="..\src\modules\nn_save\nn_save_core.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore_kpad.cpp" />
+    <ClCompile Include="..\src\modules\padscore\padscore_vpad.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore_wpad.cpp" />
     <ClCompile Include="..\src\modules\proc_ui\proc_ui.cpp" />
     <ClCompile Include="..\src\modules\proc_ui\proc_ui_core.cpp" />
@@ -210,6 +211,7 @@
     <ClInclude Include="..\src\modules\nn_ac\nn_ac_core.h" />
     <ClInclude Include="..\src\modules\padscore\padscore.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_kpad.h" />
+    <ClInclude Include="..\src\modules\padscore\padscore_vpad.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_wpad.h" />
     <ClInclude Include="..\src\modules\proc_ui\proc_ui.h" />
     <ClInclude Include="..\src\modules\proc_ui\proc_ui_core.h" />

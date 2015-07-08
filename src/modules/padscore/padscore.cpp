@@ -13,5 +13,6 @@ void
 PadScore::RegisterFunctions()
 {
    registerKPADFunctions();
+   registerVPADFunctions();
    registerWPADFunctions();
 }
