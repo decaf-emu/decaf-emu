@@ -27,7 +27,7 @@ public:
    template<typename Other> std::enable_if_t<std::is_assignable<Type&, Other>::value, be_val&>
    operator =(const Other &rhs)
    {
-      mValue = byte_swap(rhs);
+      mValue = byte_swap(static_cast<Type>(rhs));
       return *this;
    }
 
