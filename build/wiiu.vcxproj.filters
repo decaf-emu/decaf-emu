@@ -100,6 +100,12 @@
     <Filter Include="Header Files\modules\nn_fp">
       <UniqueIdentifier>{178a2d6d-4321-43d7-a6df-e35e3e97d905}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\erreula">
+      <UniqueIdentifier>{323fa520-1886-44d4-a996-7cb1ead86177}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\erreula">
+      <UniqueIdentifier>{010c8799-d846-4e5d-b504-822d85fae6b4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -341,6 +347,12 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\nn_fp\nn_fp_core.cpp">
       <Filter>Source Files\modules\nn_fp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\erreula\erreula.cpp">
+      <Filter>Source Files\modules\erreula</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp">
+      <Filter>Source Files\modules\erreula</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -616,6 +628,12 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_fp\nn_fp_core.h">
       <Filter>Header Files\modules\nn_fp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\erreula\erreula.h">
+      <Filter>Header Files\modules\erreula</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\erreula\erreula_errorviewer.h">
+      <Filter>Header Files\modules\erreula</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -12,6 +12,7 @@
 #include "memory.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_memheap.h"
+#include "modules/erreula/erreula.h"
 #include "modules/gx2/gx2.h"
 #include "modules/nn_ac/nn_ac.h"
 #include "modules/nn_act/nn_act.h"
@@ -108,6 +109,7 @@ initialiseEmulator()
 
    // Kernel modules
    CoreInit::RegisterFunctions();
+   ErrEula::RegisterFunctions();
    GX2::RegisterFunctions();
    NNAc::RegisterFunctions();
    NNAct::RegisterFunctions();
@@ -122,6 +124,7 @@ initialiseEmulator()
    gInstructionTable.initialise();
    gJitManager.initialise();
    gSystem.registerModule("coreinit", new CoreInit {});
+   gSystem.registerModule("erreula.rpl", new ErrEula {});
    gSystem.registerModule("gx2", new GX2 {});
    gSystem.registerModule("nn_ac", new NNAc {});
    gSystem.registerModule("nn_act", new NNAct {});
