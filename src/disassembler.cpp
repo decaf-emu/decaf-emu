@@ -199,7 +199,7 @@ argumentToText(Disassembly::Argument &arg)
       } else if (arg.valueSigned > 9) {
          ss << "0x" << std::hex << arg.valueSigned;
       } else {
-         ss << arg.valueUnsigned;
+         ss << arg.valueSigned;
       }
       return ss.str();
    case Disassembly::Argument::ConstantUnsigned:
