@@ -408,7 +408,7 @@ mulSignedGeneric(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.ecx, a.ppcgpr[instr.rB]);
    }
 
-   a.imul(a.zcx);
+   a.imul(a.ecx);
 
    if (flags & MulLow) {
       a.mov(a.ppcgpr[instr.rD], a.eax);
@@ -442,7 +442,7 @@ mulUnsignedGeneric(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.ecx, a.ppcgpr[instr.rB]);
    }
 
-   a.mul(a.zcx);
+   a.mul(a.ecx);
 
    if (flags & MulLow) {
       a.mov(a.ppcgpr[instr.rD], a.eax);
