@@ -67,7 +67,7 @@ struct KernelFunctionImpl : KernelFunction
       state.thread = thread;
       state.r = 3;
       state.f = 1;
-      logCall(state.log, this->name);
+      logCall(state.log, thread->lr, this->name);
       dispatch(state, type_list<Args...> {});
    }
 };
@@ -99,7 +99,7 @@ struct KernelFunctionImpl<void, FuncArgs...> : KernelFunction
       state.thread = thread;
       state.r = 3;
       state.f = 1;
-      logCall(state.log, this->name);
+      logCall(state.log, thread->lr, this->name);
       dispatch(state, type_list<FuncArgs...> {});
    }
 };
@@ -112,7 +112,7 @@ struct KernelFunctionManual : KernelFunction
    virtual void call(ThreadState *thread) override
    {
       LogState log;
-      logCall(log, this->name);
+      logCall(log, thread->lr, this->name);
       gLog->trace(logCallEnd(log));
       wrapped_function(thread);
    }
