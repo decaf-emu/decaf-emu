@@ -13,6 +13,19 @@ struct UserModule;
 struct KernelFunction;
 class FileSystem;
 
+struct LoadedModule
+{
+   enum Type
+   {
+      Unknown,
+      User,
+      Kernel
+   };
+
+   Type type;
+   void *ptr;
+};
+
 class System
 {
 public:

@@ -48,7 +48,12 @@ System::initialiseModules()
    loadThunks();
 
    for (auto &pair : mSystemModules) {
-      pair.second->initialise();
+      auto module = pair.second;
+      auto handle = OSAllocFromSystem<LoadedModule>();
+      handle->type = LoadedModule::Kernel;
+      handle->ptr = module;
+      module->setHandle(handle);
+      module->initialise();
    }
 }
 

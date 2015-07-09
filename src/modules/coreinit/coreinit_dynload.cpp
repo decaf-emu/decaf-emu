@@ -4,6 +4,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
 #include "interpreter.h"
+#include "system.h"
 
 static wfunc_ptr<int, int, int, be_val<uint32_t>*>
 pOSDynLoad_MemAlloc;
@@ -141,8 +142,52 @@ OSDynLoad_MemFree(p32<void> addr)
 int
 OSDynLoad_Acquire(char const *name, be_val<uint32_t> *outHandle)
 {
-   *outHandle = 0;
-   return -1;
+   auto module = gSystem.findModule(name);
+
+   if (module) {
+      *outHandle = static_cast<uint32_t>(module->getHandle());
+      return 0;
+   } else {
+      *outHandle = 0;
+      return 0xBAD10001;
+   }
+}
+
+int
+OSDynLoad_FindExport(LoadedModule *module, int isData, char const *name, be_val<uint32_t> *outAddr)
+{
+   uint32_t addr = 0;
+
+   if (module->type == LoadedModule::Kernel) {
+      auto kmod = reinterpret_cast<KernelModule*>(module->ptr);
+      auto exp = kmod->findExport(name);
+
+      if (!exp) {
+         gLog->debug("OSDynLoad_FindExport export {} not found", name);
+      } else if (exp->type == KernelExport::Data) {
+         if (isData == 0) {
+            gLog->debug("OSDynLoad_FindExport isData == 0 for data export {}", name);
+         } else {
+            auto kdata = reinterpret_cast<KernelData *>(exp);
+            addr = static_cast<uint32_t>(*kdata->vptr);
+         }
+      } else if (exp->type == KernelExport::Function) {
+         if (isData == 1) {
+            gLog->debug("OSDynLoad_FindExport isData == 1 for function export {}", name);
+         } else {
+            auto kfunc = reinterpret_cast<KernelFunction *>(exp);
+            addr = kfunc->vaddr;
+         }
+      }
+   }
+
+   if (addr) {
+      *outAddr = addr;
+      return 0;
+   } else {
+      *outAddr = 0;
+      return 0xBAD10001;
+   }
 }
 
 void
@@ -154,6 +199,7 @@ void
 CoreInit::registerDynLoadFunctions()
 {
    RegisterKernelFunction(OSDynLoad_Acquire);
+   RegisterKernelFunction(OSDynLoad_FindExport);
    RegisterKernelFunction(OSDynLoad_Release);
    RegisterKernelFunction(OSDynLoad_SetAllocator);
    RegisterKernelFunction(OSDynLoad_GetAllocator);

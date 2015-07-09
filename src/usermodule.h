@@ -6,6 +6,7 @@
 class KernelModule;
 struct KernelFunction;
 struct KernelData;
+struct LoadedModule;
 
 struct SymbolInfo
 {

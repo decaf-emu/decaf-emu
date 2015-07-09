@@ -18,5 +18,8 @@ OSDynLoad_MemFree(p32<void> addr);
 int
 OSDynLoad_Acquire(char const *name, be_val<uint32_t> *outHandle);
 
+int
+OSDynLoad_FindExport(LoadedModule *module, int isData, char const *name, be_val<uint32_t> *outAddr);
+
 void
 OSDynLoad_Release(DynLoadModuleHandle handle);

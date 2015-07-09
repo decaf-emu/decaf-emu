@@ -22,6 +22,8 @@
 
 using KernelExportMap = std::map<std::string, KernelExport*>;
 
+struct LoadedModule;
+
 class KernelModule
 {
 public:
@@ -31,6 +33,20 @@ public:
    virtual const KernelExportMap &getExportMap() const = 0;
    virtual KernelExport *findExport(const char *name) const = 0;
    virtual uint32_t findExportAddress(const char *name) const = 0;
+
+   p32<LoadedModule>
+   getHandle() const
+   {
+      return mHandle;
+   }
+
+   void setHandle(p32<LoadedModule> handle)
+   {
+      mHandle = handle;
+   }
+
+protected:
+   p32<LoadedModule> mHandle;
 };
 
 template<typename ModuleType>
