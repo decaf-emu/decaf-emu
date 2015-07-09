@@ -89,7 +89,7 @@ int main(int argc, char **argv)
    initialiseEmulator();
 
    if (args["play"].asBool()) {
-      gLog->set_pattern("[%l] %v");
+      gLog->set_pattern("[%l:%t] %v");
       result = play(args["<game directory>"].asString());
    } else if (args["test"].asBool()) {
       gLog->set_pattern("%v");

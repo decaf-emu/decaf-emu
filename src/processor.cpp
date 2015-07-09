@@ -201,3 +201,27 @@ Processor::getCoreCount()
 {
    return static_cast<uint32_t>(mCores.size());
 }
+
+namespace spdlog
+{
+namespace details
+{
+namespace os
+{
+size_t thread_id()
+{
+   size_t coreID = 0, threadID = 0;
+
+   if (tCurrentCore) {
+      coreID = tCurrentCore->id;
+
+      if (tCurrentCore->currentFiber) {
+         threadID = tCurrentCore->currentFiber->thread->id;
+      }
+   }
+
+   return (coreID << 8) | threadID;
+}
+}
+}
+}
