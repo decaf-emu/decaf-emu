@@ -156,13 +156,19 @@ Processor::reschedule(bool hasSchedulerLock, bool yield)
       }
    }
 
-   // Return to main scheduler fiber
+   // Change state to ready, only if this thread is running
+   if (fiber->thread->state == OSThreadState::Running) {
+      fiber->thread->state = OSThreadState::Ready;
+   }
+
+   // Add this fiber to queue
    queue(fiber);
 
    if (hasSchedulerLock) {
       OSUnlockScheduler();
    }
 
+   // Return to main scheduler fiber
    SwitchToFiber(core->primaryFiber);
 
    if (hasSchedulerLock) {
