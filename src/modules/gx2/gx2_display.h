@@ -65,6 +65,9 @@ GX2SetSwapInterval(uint32_t interval);
 TVScanMode
 GX2GetSystemTVScanMode();
 
+BOOL
+GX2DrawDone();
+
 void
 GX2WaitForVsync();
 

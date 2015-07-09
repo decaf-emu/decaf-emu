@@ -67,6 +67,12 @@ GX2GetSystemTVScanMode()
    return TVScanMode::Last;
 }
 
+BOOL
+GX2DrawDone()
+{
+   return TRUE;
+}
+
 void
 GX2WaitForVsync()
 {
@@ -102,6 +108,7 @@ GX2::registerDisplayFunctions()
    RegisterKernelFunction(GX2SetSwapInterval);
    RegisterKernelFunction(GX2GetSwapInterval);
    RegisterKernelFunction(GX2GetSystemTVScanMode);
+   RegisterKernelFunction(GX2DrawDone);
    RegisterKernelFunction(GX2WaitForVsync);
    RegisterKernelFunction(GX2WaitForFlip);
    RegisterKernelFunction(GX2GetSwapStatus);
