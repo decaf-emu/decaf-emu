@@ -650,11 +650,11 @@ rlwGeneric(PPCEmuAssembler& a, Instruction instr)
       a.rol(a.eax, a.edx);
    }
 
-   uint32_t m = make_bitmask<uint32_t>(31 - instr.me, 31 - instr.mb);
+   auto m = make_ppc_bitmask(instr.mb, instr.me);
+
    if (flags & RlwAnd) {
       a.and_(a.eax, m);
-   }
-   if (flags & RlwInsert) {
+   } else if (flags & RlwInsert) {
       a.and_(a.eax, m);
       a.mov(a.ecx, a.ppcgpr[instr.rA]);
       a.and_(a.ecx, ~m);

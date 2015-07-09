@@ -117,6 +117,17 @@ make_bitmask()
    return make_bitmask<(end) - (begin) + 1, Type>() << (begin);
 }
 
+// Creates a bitmask between mb and me
+inline uint32_t
+make_ppc_bitmask(int mb, int me)
+{
+   uint32_t begin, end, mask;
+   begin = 0xFFFFFFFF >> mb;
+   end = me < 31 ? (0xFFFFFFFF >> (me + 1)) : 0;
+   mask = begin ^ end;
+   return (me < mb) ? ~mask : mask;
+}
+
 // Sign extend bits to int32_t
 template<typename Type>
 inline Type
