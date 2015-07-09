@@ -245,14 +245,15 @@ andis(ThreadState *state, Instruction instr)
 static void
 cntlzw(ThreadState *state, Instruction instr)
 {
-   uint32_t a, s;
+   unsigned long a;
+   uint32_t s;
 
    s = state->gpr[instr.rS];
 
-   if (s == 0) {
+   if (!_BitScanReverse(&a, s)) {
       a = 32;
    } else {
-      a = 31 - __lzcnt(s);
+      a = 31 - a;
    }
 
    state->gpr[instr.rA] = a;
