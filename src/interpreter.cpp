@@ -201,15 +201,6 @@ void Interpreter::addBreakpoint(uint32_t addr)
    mBreakpoints.push_back(addr);
 }
 
-struct jit_fallback_data {
-   instrfptr_t fptr;
-   Instruction instr;
-};
-static void jit_fallback_stub(ThreadState *state, jit_fallback_data* data)
-{
-   data->fptr(state, data->instr);
-}
-
 bool jit_fallback(PPCEmuAssembler& a, Instruction instr)
 {
    auto data = gInstructionTable.decode(instr);
@@ -218,23 +209,11 @@ bool jit_fallback(PPCEmuAssembler& a, Instruction instr)
       assert(0);
    }
 
-   asmjit::Label lblData(a);
-   asmjit::Label lblAfterData(a);
+   //printf("JIT Fallback for `%s`\n", data->name);
 
-   a.jmp(lblAfterData);
-   
-   for (auto i = 0; i < 6; ++i) a.nop();
-   
-   a.bind(lblData);
-   a.embed(&fptr, sizeof(fptr));
-   a.embed(&instr, sizeof(instr));
-
-   for (auto i = 0; i < 6; ++i) a.nop();
-
-   a.bind(lblAfterData);
    a.mov(a.ecx, a.state);
-   a.lea(a.edx, asmjit::X86Mem(lblData, 0));
-   a.call(asmjit::Ptr(jit_fallback_stub));
+   a.mov(a.edx, (uint32_t)instr);
+   a.call(asmjit::Ptr(fptr));
    
    return true;
 }
