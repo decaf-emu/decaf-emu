@@ -76,24 +76,23 @@ cmpGeneric(PPCEmuAssembler& a, Instruction instr)
       a.cmp(a.eax, a.ecx);
    }
 
-   asmjit::Label bbLessThan(a);
-   asmjit::Label bbGreaterThan(a);
-   asmjit::Label bbEnd(a);
+   a.lahf();
+   a.mov(a.ecx, 0);
+   a.sete(a.ecx.r8());
+   a.shl(a.ecx, crshift + ConditionRegisterFlag::ZeroShift);
+   a.or_(a.edx, a.ecx);
 
-   a.jl(bbLessThan);
-   a.jg(bbGreaterThan);
-
-   a.or_(a.edx, ConditionRegisterFlag::Equal << crshift);
-   a.jmp(bbEnd);
-
-   a.bind(bbLessThan);
-   a.or_(a.edx, ConditionRegisterFlag::LessThan << crshift);
-   a.jmp(bbEnd);
-
-   a.bind(bbGreaterThan);
-   a.or_(a.edx, ConditionRegisterFlag::GreaterThan << crshift);
-
-   a.bind(bbEnd);
+   a.sahf();
+   a.mov(a.ecx, 0);
+   a.setg(a.ecx.r8());
+   a.shl(a.ecx, crshift + ConditionRegisterFlag::PositiveShift);
+   a.or_(a.edx, a.ecx);
+   
+   a.sahf();
+   a.mov(a.ecx, 0);
+   a.setl(a.ecx.r8());
+   a.shl(a.ecx, crshift + ConditionRegisterFlag::NegativeShift);
+   a.or_(a.edx, a.ecx);
 
    a.mov(a.ppccr, a.edx);
 
