@@ -47,5 +47,17 @@ addoExtendedOverflow:
    blr
    # out r3 = 2
    # out crf0 = Positive | SummaryOverflow
-   # out xer.ov = 1
+   # out xer.ov = 0
    # out xer.ca = 1
+   
+addoExtendedOverflow2:
+   # in r1 = 2147483648
+   # in r2 = 4294967295
+   # in xer.so = 1
+   # in xer.ca = 1
+   addeo. r3, r1, r2
+   blr
+   # out r3 = 2147483648
+   # out crf0 = Negative | SummaryOverflow
+   # out xer.ov = 0
+   # out xer.ca = 0

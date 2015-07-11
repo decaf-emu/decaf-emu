@@ -31,7 +31,7 @@ addoSimpleOverflow:
    blr
    # out r3 = 3705032704
    # out crf0 = Negative | SummaryOverflow
-   # out xer.ov = 1
+   # out xer.ov = 0
 
 
 testCRF:
