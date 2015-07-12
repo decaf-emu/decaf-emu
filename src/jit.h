@@ -66,6 +66,14 @@ public:
       cia = zdi;
    }
 
+   void shiftTo(asmjit::X86GpReg reg, int s, int d) {
+      if (s > d) {
+         shr(reg, s - d);
+      } else if (d < s) {
+         shl(reg, d - s);
+      }
+   }
+
    asmjit::X86GpReg state;
    asmjit::X86GpReg membase;
    asmjit::X86GpReg cia;

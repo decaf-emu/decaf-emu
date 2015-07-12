@@ -29,7 +29,10 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
       a.add(a.ecx, a.ppcgpr[instr.rB]);
    }
    else {
-      a.add(a.ecx, sign_extend<16, int32_t>(instr.d));
+      auto x = sign_extend<16, int32_t>(instr.d);
+      if (x != 0) {
+         a.add(a.ecx, x);
+      }
    }
 
    a.mov(a.zdx, a.zcx);
@@ -257,7 +260,9 @@ lmw(PPCEmuAssembler& a, Instruction instr)
    auto o = sign_extend<16, int32_t>(instr.d);
    if (instr.rA) {
       a.mov(a.ecx, a.ppcgpr[instr.rA]);
-      a.add(a.ecx, o);
+      if (o != 0) {
+         a.add(a.ecx, o);
+      }
    }
    else {
       a.mov(a.ecx, o);
@@ -330,7 +335,10 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
       if (flags & StoreIndexed) {
          a.add(a.ecx, a.ppcgpr[instr.rB]);
       } else {
-         a.add(a.ecx, sign_extend<16, int32_t>(instr.d));
+         auto x = sign_extend<16, int32_t>(instr.d);
+         if (x != 0) {
+            a.add(a.ecx, x);
+         }
       }
    }
 
@@ -562,7 +570,9 @@ stmw(PPCEmuAssembler& a, Instruction instr)
    auto o = sign_extend<16, int32_t>(instr.d);
    if (instr.rA) {
       a.mov(a.ecx, a.ppcgpr[instr.rA]);
-      a.add(a.ecx, o);
+      if (o != 0) {
+         a.add(a.ecx, o);
+      }
    } else {
       a.mov(a.ecx, o);
    }

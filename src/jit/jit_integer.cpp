@@ -5,37 +5,37 @@
 static void
 updateConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& value, const asmjit::X86GpReg& tmp, const asmjit::X86GpReg& tmp2)
 {
-   asmjit::Label bbNegative(a);
-   asmjit::Label bbPositive(a);
-   asmjit::Label bbEnd(a);
-   asmjit::Label bbEnd2(a);
+   auto crtarget = 0;
+   auto crshift = (7 - crtarget) * 4;
 
    a.mov(tmp, a.ppccr);
-   a.and_(tmp, 0x0FFFFFFF);
+   a.and_(tmp, ~(0xF << crshift));
 
    a.cmp(value, 0);
-   a.jl(bbNegative);
-   a.jg(bbPositive);
-   
-   a.or_(tmp, ConditionRegisterFlag::Zero << 28);
-   a.jmp(bbEnd);
 
-   a.bind(bbNegative);
-   a.or_(tmp, ConditionRegisterFlag::Negative << 28);
-   a.jmp(bbEnd);
+   a.lahf();
+   a.mov(tmp2, 0);
+   a.sete(tmp2.r8());
+   a.shl(tmp2, crshift + ConditionRegisterFlag::ZeroShift);
+   a.or_(tmp, tmp2);
 
-   a.bind(bbPositive);
-   a.or_(tmp, ConditionRegisterFlag::Positive << 28);
+   a.sahf();
+   a.mov(tmp2, 0);
+   a.setg(tmp2.r8());
+   a.shl(tmp2, crshift + ConditionRegisterFlag::PositiveShift);
+   a.or_(tmp, tmp2);
 
-   a.bind(bbEnd);
+   a.sahf();
+   a.mov(tmp2, 0);
+   a.setl(tmp2.r8());
+   a.shl(tmp2, crshift + ConditionRegisterFlag::NegativeShift);
+   a.or_(tmp, tmp2);
 
    a.mov(tmp2, a.ppcxer);
    a.and_(tmp2, XERegisterBits::StickyOV);
-   a.cmp(tmp2, 0);
-   a.je(bbEnd2);
-   a.or_(tmp, ConditionRegisterFlag::SummaryOverflow << 28);
+   a.shiftTo(tmp2, XERegisterBits::StickyOVShift, crshift + ConditionRegisterFlag::SummaryOverflowShift);
+   a.or_(tmp, tmp2);
 
-   a.bind(bbEnd2);
    a.mov(a.ppccr, tmp);
 }
 
@@ -58,9 +58,10 @@ template<unsigned flags = 0>
 static bool
 addGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   // Temporary until tested...
-   return jit_fallback(a, instr);
-   /*
+   if (flags & AddSubtract) {
+      return jit_fallback(a, instr);
+   }
+
    bool recordCarry = false;
    bool recordOverflow = false;
    bool recordCond = false;
@@ -159,7 +160,6 @@ addGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    return true;
-   */
 }
 
 static bool
@@ -340,7 +340,7 @@ eqv(PPCEmuAssembler& a, Instruction instr)
 {
    a.mov(a.eax, a.ppcgpr[instr.rS]);
    a.mov(a.ecx, a.ppcgpr[instr.rB]);
-
+   
    a.xor_(a.eax, a.ecx);
    a.not_(a.eax);
 
@@ -511,26 +511,24 @@ static bool
 neg(PPCEmuAssembler& a, Instruction instr)
 {
    a.mov(a.eax, a.ppcgpr[instr.rA]);
+   a.neg(a.eax);
+   a.mov(a.ppcgpr[instr.rD], a.eax);
 
    if (instr.oe) {
-      asmjit::Label lblNoOverflow(a);
+      a.mov(a.ecx, 0);
+      a.seto(a.ecx.r8());
 
       // Reset overflow
       a.mov(a.edx, a.ppcxer);
-
       a.and_(a.edx, ~XERegisterBits::Overflow);
-      a.cmp(a.eax, 0x80000000);
-      a.jne(lblNoOverflow);
 
-      a.or_(a.edx, XERegisterBits::Overflow);
-      a.or_(a.edx, XERegisterBits::StickyOV);
+      a.shiftTo(a.ecx, 0, XERegisterBits::Overflow);
+      a.or_(a.edx, a.ecx);
+      a.shiftTo(a.ecx, XERegisterBits::Overflow, XERegisterBits::StickyOV);
+      a.or_(a.edx, a.ecx);
 
-      a.bind(lblNoOverflow);
       a.mov(a.ppcxer, a.edx);
    }
-
-   a.neg(a.eax);
-   a.mov(a.ppcgpr[instr.rD], a.eax);
 
    if (instr.rc) {
       updateConditionRegister(a, a.eax, a.ecx, a.edx);

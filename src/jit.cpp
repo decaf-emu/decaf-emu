@@ -288,6 +288,12 @@ bool JitManager::identBlock(JitBlock& block) {
       auto instr = gMemory.read<Instruction>(lclCia);
       auto data = gInstructionTable.decode(instr);
 
+      if (!data) {
+         // Looks like we found a tail call function :(
+         jitFailed = true;
+         break;
+      }
+
       if (!JIT_CONTINUE_ON_ERROR) {
          // These ifs should match the generator loop below...
          if (data->id == InstructionID::b) {
