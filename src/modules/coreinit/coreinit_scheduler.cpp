@@ -89,6 +89,7 @@ OSTestThreadCancelNoLock()
 void
 OSWakeupOneThreadNoLock(OSThread *thread)
 {
+   thread->state = OSThreadState::Ready;
    gProcessor.queue(thread->fiber);
 }
 
@@ -96,7 +97,7 @@ void
 OSWakeupThreadNoLock(OSThreadQueue *queue)
 {
    for (auto thread = queue->head; thread; thread = thread->link.next) {
-      gProcessor.queue(thread->fiber);
+      OSWakeupOneThreadNoLock(thread);
    }
 
    OSClearThreadQueue(queue);
