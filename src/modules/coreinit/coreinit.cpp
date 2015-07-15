@@ -19,6 +19,7 @@ CoreInit::initialise()
    initialiseMembase();
    initialiseMessageQueues();
    initialiseSystemInformation();
+   initialiseThread();
 }
 
 void
