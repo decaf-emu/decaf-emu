@@ -4,7 +4,7 @@
 #include "processor.h"
 
 static std::atomic_bool
-gSchedulerLock = false;
+gSchedulerLock { false };
 
 void
 OSLockScheduler()
