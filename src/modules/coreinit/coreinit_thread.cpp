@@ -8,7 +8,6 @@
 #include "processor.h"
 #include "trace.h"
 #include "system.h"
-#include <Windows.h>
 
 static OSThread *
 gDefaultThreads[3];
@@ -458,32 +457,30 @@ OSSuspendThread(OSThread *thread)
    int32_t result;
 
    if (thread->state == OSThreadState::Moribund || thread->state == OSThreadState::None) {
-      result = -1;
-      goto exit;
+      OSUnlockScheduler();
+      return -1;
    }
 
    if (thread->requestFlag == OSThreadRequest::Cancel) {
-      result = -1;
-      goto exit;
+      OSUnlockScheduler();
+      return -1;
    }
 
    auto curThread = OSGetCurrentThread();
 
    if (curThread == thread) {
       if (thread->cancelState) {
-         result = -1;
-         goto exit;
+         OSUnlockScheduler();
+         return -1;
       }
 
       thread->needSuspend++;
       result = thread->suspendCounter;
       OSSuspendThreadNoLock(thread);
       OSRescheduleNoLock();
-      goto exit;
    } else {
       if (thread->suspendCounter != 0) {
          result = thread->suspendCounter++;
-         goto exit;
       } else {
          thread->needSuspend++;
          thread->requestFlag = OSThreadRequest::Suspend;
@@ -493,7 +490,6 @@ OSSuspendThread(OSThread *thread)
       }
    }
 
-exit:
    OSUnlockScheduler();
    return result;
 }
