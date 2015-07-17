@@ -5,6 +5,8 @@
 #include "coreinit_scheduler.h"
 #include "system.h"
 
+const uint32_t OSEvent::Tag;
+
 void
 OSInitEvent(OSEvent *event, bool value, EventMode mode)
 {

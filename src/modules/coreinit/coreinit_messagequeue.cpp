@@ -3,6 +3,8 @@
 #include "coreinit_messagequeue.h"
 #include "coreinit_scheduler.h"
 
+const uint32_t OSMessageQueue::Tag;
+
 static OSMessageQueue *
 gSystemMessageQueue;
 

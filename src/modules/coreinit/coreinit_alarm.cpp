@@ -1,6 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 
+const uint32_t OSAlarm::Tag;
+
 BOOL
 OSCancelAlarm(OSAlarm *alarm)
 {

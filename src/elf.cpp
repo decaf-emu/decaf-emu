@@ -5,6 +5,8 @@
 #include <cassert>
 #include <vector>
 
+const unsigned elf::Header::Magic;
+
 namespace elf
 {
 

@@ -2,6 +2,8 @@
 #include "coreinit_semaphore.h"
 #include "coreinit_scheduler.h"
 
+const uint32_t OSSemaphore::Tag;
+
 void
 OSInitSemaphore(OSSemaphore *semaphore, int32_t count)
 {
