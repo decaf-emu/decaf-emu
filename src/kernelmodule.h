@@ -6,19 +6,19 @@
 #include "kerneldata.h"
 
 #define RegisterKernelFunction(fn) \
-   registerExport(#fn, kernel::makeFunction(fn));
+   registerExport(#fn, kernel::makeFunction(fn))
 
 #define RegisterKernelFunctionName(name, fn) \
-   registerExport(name, kernel::makeFunction(fn));
+   registerExport(name, kernel::makeFunction(fn))
 
 #define RegisterKernelFunctionManual(fn) \
-   registerExport(#fn, kernel::makeManualFunction(fn));
+   registerExport(#fn, kernel::makeManualFunction(fn))
 
 #define RegisterKernelDataName(name, data) \
-   registerExport(name, kernel::makeData(&data));
+   registerExport(name, kernel::makeData(&data))
 
 #define RegisterKernelData(data) \
-   registerExport(#data, kernel::makeData(&data));
+   registerExport(#data, kernel::makeData(&data))
 
 using KernelExportMap = std::map<std::string, KernelExport*>;
 

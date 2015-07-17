@@ -49,7 +49,7 @@ CHECK_OFFSET(OSContext, 0xb4, fpscr);
 CHECK_OFFSET(OSContext, 0xb8, fpr);
 CHECK_OFFSET(OSContext, 0x1b8, spinLockCount);
 CHECK_OFFSET(OSContext, 0x1ba, state);
-CHECK_OFFSET(OSContext, 0x1bc, gqr)
+CHECK_OFFSET(OSContext, 0x1bc, gqr);
 CHECK_OFFSET(OSContext, 0x1e0, psf);
 CHECK_OFFSET(OSContext, 0x2e0, coretime);
 CHECK_OFFSET(OSContext, 0x2f8, starttime);

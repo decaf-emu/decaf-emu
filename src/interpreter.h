@@ -9,10 +9,10 @@
 #include "jit.h"
 
 #define RegisterInstruction(x) \
-   registerInstruction(InstructionID::##x, &x)
+   registerInstruction(InstructionID::x, &x)
 
 #define RegisterInstructionFn(x, fn) \
-   registerInstruction(InstructionID::##x, &fn)
+   registerInstruction(InstructionID::x, &fn)
 
 using instrfptr_t = void(*)(ThreadState*, Instruction);
 

@@ -7,13 +7,13 @@
 #include "ppc.h"
 
 #define RegisterInstruction(x) \
-   registerInstruction(InstructionID::##x, &x)
+   registerInstruction(InstructionID::x, &x)
 
 #define RegisterInstructionFn(x, fn) \
-   registerInstruction(InstructionID::##x, &fn)
+   registerInstruction(InstructionID::x, &fn)
 
 #define RegisterInstructionFallback(x) \
-   registerInstruction(InstructionID::##x, &jit_fallback)
+   registerInstruction(InstructionID::x, &jit_fallback)
 
 static const bool JIT_CONTINUE_ON_ERROR = false;
 static const int JIT_MAX_INST = 20000;
