@@ -51,7 +51,7 @@ void JitManager::initStubs() {
    a.push(a.zsi);
    a.sub(a.zsp, 0x28);
    a.mov(a.zbx, a.zcx);
-   a.mov(a.zsi, gMemory.base());
+   a.mov(a.zsi, static_cast<uint64_t>(gMemory.base()));
    a.jmp(a.zdx);
 
    a.bind(extroLabel);
