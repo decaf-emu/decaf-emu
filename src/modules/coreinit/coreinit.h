@@ -16,6 +16,7 @@ private:
    void initialiseMembase();
    void initialiseMessageQueues();
    void initialiseSystemInformation();
+   void initialiseThread();
 
 public:
    static void RegisterFunctions();

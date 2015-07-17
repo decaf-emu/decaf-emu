@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "interpreter.h"
+#include "log.h"
 #include "processor.h"
 #include "ppc.h"
 #include "modules/coreinit/coreinit_thread.h"
@@ -83,9 +84,12 @@ Processor::coreEntryPoint(Core *core)
          fiber->parentFiber = core->primaryFiber;
          fiber->thread->state = OSThreadState::Running;
          lock.unlock();
+
+         gLog->trace("Core {} enter thread {}", core->id, fiber->thread->id);
          SwitchToFiber(fiber->handle);
       } else {
          // Wait for a valid fiber
+         gLog->trace("Core {} wait for thread", core->id);
          mCondition.wait(lock);
       }
    }
@@ -102,7 +106,9 @@ void
 Processor::exit()
 {
    // Return to parent fiber
+   auto core = tCurrentCore;
    auto fiber = tCurrentCore->currentFiber;
+   gLog->trace("Core {} exit thread {}", core->id, fiber->thread->id);
    SwitchToFiber(fiber->parentFiber);
 }
 
@@ -126,12 +132,12 @@ Processor::reschedule(bool hasSchedulerLock, bool yield)
 {
    auto core = tCurrentCore;
 
-   if (!tCurrentCore) {
-      // Run from host thread
+   if (!core) {
+      // Ran from host thread
       return;
    }
 
-   auto fiber = tCurrentCore->currentFiber;
+   auto fiber = core->currentFiber;
    auto next = peekNextFiber(core->id);
    auto thread = fiber->thread;
    bool reschedule = true;
@@ -167,6 +173,8 @@ Processor::reschedule(bool hasSchedulerLock, bool yield)
    if (hasSchedulerLock) {
       OSUnlockScheduler();
    }
+
+   gLog->trace("Core {} leave thread {}", core->id, fiber->thread->id);
 
    // Return to main scheduler fiber
    SwitchToFiber(core->primaryFiber);

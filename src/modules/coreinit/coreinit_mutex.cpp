@@ -36,7 +36,7 @@ OSLockMutexNoLock(OSMutex *mutex)
    assert(mutex && mutex->tag == OSMutex::Tag);
    auto thread = OSGetCurrentThread();
 
-   if (mutex->owner && mutex->owner != thread) {
+   while (mutex->owner && mutex->owner != thread) {
       thread->mutex = mutex;
 
       // Wait for other owner to unlock

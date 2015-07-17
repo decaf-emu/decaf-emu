@@ -1,7 +1,9 @@
 #include "coreinit.h"
-#include "coreinit_thread.h"
+#include "coreinit_alarm.h"
+#include "coreinit_memheap.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
+#include "coreinit_thread.h"
 #include "memory.h"
 #include "processor.h"
 #include "trace.h"
@@ -403,14 +405,49 @@ OSSleepThread(OSThreadQueue *queue)
    OSUnlockScheduler();
 }
 
+static AlarmCallback
+pSleepAlarmHandler = nullptr;
+
+struct SleepAlarmData
+{
+   OSThread *thread;
+};
+
+void
+SleepAlarmHandler(OSAlarm *alarm, OSContext *context)
+{
+   OSLockScheduler();
+
+   // Wakeup the thread waiting on this alarm
+   auto data = reinterpret_cast<SleepAlarmData*>(OSGetAlarmUserData(alarm));
+   OSWakeupOneThreadNoLock(data->thread);
+
+   OSUnlockScheduler();
+}
+
 void
 OSSleepTicks(Time ticks)
 {
+   auto thread = OSGetCurrentThread();
+
    OSLockScheduler();
-   // Create alarm
-   // Set alarm interval
+
+   // Create the alarm user data
+   auto data = OSAllocFromSystem<SleepAlarmData>();
+   data->thread = thread;
+
+   // Create an alarm to trigger wakeup
+   auto alarm = OSAllocFromSystem<OSAlarm>();
+   OSCreateAlarm(alarm);
+   OSSetAlarmUserData(alarm, data);
+   OSSetAlarm(alarm, ticks, pSleepAlarmHandler);
+
+   // Sleep thread
    OSSleepThreadNoLock(nullptr);
    OSRescheduleNoLock();
+
+   OSFreeToSystem(data);
+   OSFreeToSystem(alarm);
    OSUnlockScheduler();
 }
 
@@ -524,4 +561,11 @@ CoreInit::registerThreadFunctions()
    RegisterKernelFunction(OSTestThreadCancel);
    RegisterKernelFunction(OSWakeupThread);
    RegisterKernelFunction(OSYieldThread);
+   RegisterKernelFunction(SleepAlarmHandler);
+}
+
+void
+CoreInit::initialiseThread()
+{
+   pSleepAlarmHandler = findExportAddress("SleepAlarmHandler");
 }
