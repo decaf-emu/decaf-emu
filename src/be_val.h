@@ -2,8 +2,6 @@
 #include "bitutils.h"
 #include <type_traits>
 
-using addr_t = uint32_t;
-
 template<typename Type>
 class be_val
 {
