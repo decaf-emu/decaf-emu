@@ -1,5 +1,7 @@
 #pragma once
+#include <ostream>
 #include "be_val.h"
+#include "memory.h"
 
 template<typename Type, bool BigEndian = false>
 class p32
@@ -31,7 +33,7 @@ public:
       return reinterpret_cast<Type*>(gMemory.translate(address));
    }
 
-   void setPointer(addr_t address)
+   void setPointer(uint32_t address)
    {
       mValue = BigEndian ? byte_swap(address) : address;
    }
@@ -76,7 +78,7 @@ public:
       return !!mValue;
    }
 
-   explicit operator addr_t() const
+   explicit operator uint32_t() const
    {
       return BigEndian ? byte_swap(mValue) : mValue;
    }
@@ -92,7 +94,7 @@ public:
    }
 
 protected:
-   addr_t mValue;
+   uint32_t mValue;
 };
 
 template<typename Type>
@@ -120,5 +122,5 @@ template<typename Type, bool BigEndian>
 static inline std::ostream&
 operator<<(std::ostream& os, const p32<Type, BigEndian>& val)
 {
-   return os << static_cast<addr_t>(val);
+   return os << static_cast<uint32_t>(val);
 }

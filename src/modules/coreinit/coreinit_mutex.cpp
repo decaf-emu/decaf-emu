@@ -4,6 +4,9 @@
 #include "coreinit_thread.h"
 #include "coreinit_queue.h"
 
+const uint32_t OSMutex::Tag;
+const uint32_t OSCondition::Tag;
+
 void
 OSInitMutex(OSMutex *mutex)
 {

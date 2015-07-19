@@ -1,3 +1,4 @@
+#pragma once
 #include <atomic>
 #include <algorithm>
 #include <condition_variable>

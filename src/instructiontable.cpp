@@ -287,7 +287,7 @@ initTable()
 #define PRINTOPS(...) __VA_ARGS__
 #define INS(name, write, read, flags, opcodes, fullname) \
    instructionData.emplace_back(InstructionData { \
-                                   InstructionID::##name, #name, fullname, \
+                                   InstructionID::name, #name, fullname, \
                                    { PRINTOPS opcodes }, { PRINTOPS read }, \
                                    { PRINTOPS write }, { PRINTOPS flags } });
 

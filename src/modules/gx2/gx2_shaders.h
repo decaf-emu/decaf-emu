@@ -36,7 +36,7 @@ struct GX2AttribStream
    uint32_t endianSwap;
 };
 CHECK_OFFSET(GX2AttribStream, 0xc, format);
-CHECK_OFFSET(GX2AttribStream, 0x14, aluDivisor)
+CHECK_OFFSET(GX2AttribStream, 0x14, aluDivisor);
 CHECK_OFFSET(GX2AttribStream, 0x1c, endianSwap);
 CHECK_SIZE(GX2AttribStream, 0x20);
 
