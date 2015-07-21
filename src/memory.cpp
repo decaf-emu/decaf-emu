@@ -95,7 +95,7 @@ uint32_t
 Memory::alloc(MemoryType type, size_t size)
 {
    auto view = getView(type);
-   auto n = size / view->pageSize;
+   auto n = (size - 1) / view->pageSize;
    auto startPage = 0u;
    auto endPage = 0u;
 
