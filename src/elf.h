@@ -179,6 +179,7 @@ enum // r_info & 0xff
    R_PPC_GOT_DTPREL16_HA = 94,
    R_PPC_TLSGD = 95,
    R_PPC_TLSLD = 96,
+   R_PPC_EMB_SDA21 = 109,
    R_PPC_REL16 = 249,
    R_PPC_REL16_LO = 250,
    R_PPC_REL16_HI = 251,

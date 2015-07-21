@@ -365,6 +365,11 @@ processSymbols(UserModule &module, elf::Section &symtab, std::vector<elf::Sectio
    }
 }
 
+static bool
+isAddressInSection(elf::Section *section, uint32_t addr)
+{
+	return addr >= section->section->address && addr < (section->section->address + section->section->size);
+}
 static void
 processRelocations(UserModule &module, elf::Section &section, std::vector<elf::Section> &sections)
 {
@@ -376,6 +381,20 @@ processRelocations(UserModule &module, elf::Section &section, std::vector<elf::S
    auto &relsec = sections[section.header.info];
    auto baseAddress = relsec.header.addr;
    auto virtAddress = relsec.section->address;
+
+   // EABI sda sections
+   elf::Section *sdata = nullptr, *sbss = nullptr, *sdata2 = nullptr, *sbss2 = nullptr, *sdata0 = nullptr, *sbss0 = nullptr;
+   for (elf::Section& section : sections) {
+	   if (section.section == nullptr) continue;
+	   if (section.section->type != UserModule::Section::Data) continue;
+	   std::string& name = section.section->name;
+	   if (name == ".sdata") sdata = &section;
+	   else if (name == ".sbss") sbss = &section;
+	   else if (name == ".sdata2") sdata2 = &section;
+	   else if (name == ".sbss2") sbss2 = &section;
+	   else if (name == ".sdata0") sdata0 = &section;
+	   else if (name == ".sbss0") sbss0 = &section;
+   }
 
    while (!in.eof()) {
       elf::Rela rela;
@@ -408,6 +427,31 @@ processRelocations(UserModule &module, elf::Section &section, std::vector<elf::S
       case elf::R_PPC_REL24:
          *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03fffffc) | ((value - addr) & 0x03fffffc));
          break;
+      case elf::R_PPC_EMB_SDA21: {
+         uint32_t instr = byte_swap(*ptr32) & 0xffe00000; // top 6 bits of instruction + top 5 bits for destination register
+         uint32_t reg;
+         elf::Section* offsetsection = nullptr;
+         if (isAddressInSection(sdata, value) || isAddressInSection(sbss, value)) {
+            reg = 13;
+            offsetsection = sdata;
+         }
+         else if (isAddressInSection(sdata2, value) || isAddressInSection(sbss2, value)) {
+            reg = 2;
+            offsetsection = sdata2;
+         }
+         else if (isAddressInSection(sdata0, value) || isAddressInSection(sbss0, value)) {
+            reg = 0;
+            offsetsection = sdata0;
+         }
+         else {
+            gLog->critical("Invalid relocation for EMB_SDA21: symbol target addr {}", value);
+            break;
+         }
+         uint32_t off = (value - offsetsection->section->address) & 0xffff;
+         *ptr32 = byte_swap(instr | (reg << 16) | off);
+         break;
+      }
+
       default:
          gLog->debug("Unknown relocation type {}", type);
       }
