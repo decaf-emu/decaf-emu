@@ -8,6 +8,7 @@
 #include "processor.h"
 #include "trace.h"
 #include "system.h"
+#include "usermodule.h"
 
 static OSThread *
 gDefaultThreads[3];
@@ -141,6 +142,11 @@ OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *ar
    state->gpr[1] = thread->stackStart;
    state->gpr[3] = argc;
    state->gpr[4] = gMemory.untranslate(argv);
+   for each (UserModule::Section* section in gSystem.getUserModule()->sections) {
+	   if (section->name == ".sdata") state->gpr[13] = section->address;
+	   else if (section->name == ".sdata2") state->gpr[2] = section->address;
+	   else if (section->name == ".sdata0") state->gpr[0] = section->address;
+   }
 
    // Initialise tracer
    traceInit(state, 128);
