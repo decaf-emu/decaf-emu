@@ -1,5 +1,6 @@
 #define ZLIB_CONST
 #include <cassert>
+#include <limits>
 #include <string>
 #include <vector>
 #include <zlib.h>
@@ -82,6 +83,7 @@ processSections(UserModule &module, std::vector<elf::Section> &sections, const c
 
       rplSection.section = section;
       module.sections.push_back(section);
+      module.sectionMap[section->name] = section;
    }
 
    // Create thunk sections for SHT_RPL_IMPORTS!
@@ -115,11 +117,33 @@ processSections(UserModule &module, std::vector<elf::Section> &sections, const c
 
       rplSection.section = section;
       module.sections.push_back(section);
+      module.sectionMap[section->name] = section;
    }
 
    // Allocate code & data sections in memory
    module.codeAddressRange = codeRange;
    module.dataAddressRange = dataRange;
+}
+
+static void
+relocateSections(std::vector<elf::Section> &sections, uint32_t origCode, uint32_t newCode, uint32_t origData, uint32_t newData)
+{
+   int32_t diffCode = static_cast<int32_t>(newCode) - static_cast<int32_t>(origCode);
+   int32_t diffData = static_cast<int32_t>(newData) - static_cast<int32_t>(origData);
+
+   for (auto &rplSection : sections) {
+      auto section = rplSection.section;
+
+      if (!section) {
+         continue;
+      }
+
+      if (rplSection.section->type == UserModule::Section::Code) {
+         section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffCode);
+      } else if (rplSection.section->type == UserModule::Section::Data) {
+         section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffData);
+      }
+   }
 }
 
 static void
@@ -143,24 +167,49 @@ loadSections(std::vector<elf::Section> &sections)
 }
 
 static void
-relocateSections(std::vector<elf::Section> &sections, uint32_t origCode, uint32_t newCode, uint32_t origData, uint32_t newData)
+processSmallDataSections(UserModule &module)
 {
-   int32_t diffCode = static_cast<int32_t>(newCode) - static_cast<int32_t>(origCode);
-   int32_t diffData = static_cast<int32_t>(newData) - static_cast<int32_t>(origData);
+   auto findSectionRange = [](auto data, auto bss) {
+      uint32_t start, end;
 
-   for (auto &rplSection : sections) {
-      auto section = rplSection.section;
-
-      if (!section) {
-         continue;
+      if (data && bss) {
+         start = std::min(data->address, bss->address);
+         end = std::max(data->address + data->size, bss->address + bss->size);
+      } else if (data) {
+         start = data->address;
+         end = data->address + data->size;
+      } else if (bss) {
+         start = bss->address;
+         end = bss->address + bss->size;
+      } else {
+         start = 0;
+         end = 0;
       }
 
-      if (rplSection.section->type == UserModule::Section::Code) {
-         section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffCode);
-      } else if (rplSection.section->type == UserModule::Section::Data) {
-         section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffData);
-      }
+      return std::make_pair(start, end);
+   };
+
+   // Find _SDA_BASE_
+   auto data = module.findSection(".sdata");
+   auto bss = module.findSection(".sbss");
+   auto range = findSectionRange(data, bss);
+
+   if ((range.second - range.first) > 0xffff) {
+      gLog->error(".sdata and .sbss do not fit in a 16 bit range");
    }
+
+   module.sdaBase = ((range.second - range.first) / 2) + range.first;
+
+   // Find _SDA2_BASE_
+   data = module.findSection(".sdata2");
+   bss = module.findSection(".sbss2");
+   range = findSectionRange(data, bss);
+
+   if ((range.second - range.first) > 0xffff) {
+      gLog->error(".sdata and .sbss do not fit in a 16 bit range");
+   }
+
+   module.sda2Base = ((range.second - range.first) / 2) + range.first;
 }
 
 static KernelModule *
@@ -365,11 +414,6 @@ processSymbols(UserModule &module, elf::Section &symtab, std::vector<elf::Sectio
    }
 }
 
-static bool
-isAddressInSection(elf::Section *section, uint32_t addr)
-{
-	return addr >= section->section->address && addr < (section->section->address + section->section->size);
-}
 static void
 processRelocations(UserModule &module, elf::Section &section, std::vector<elf::Section> &sections)
 {
@@ -383,18 +427,12 @@ processRelocations(UserModule &module, elf::Section &section, std::vector<elf::S
    auto virtAddress = relsec.section->address;
 
    // EABI sda sections
-   elf::Section *sdata = nullptr, *sbss = nullptr, *sdata2 = nullptr, *sbss2 = nullptr, *sdata0 = nullptr, *sbss0 = nullptr;
-   for (elf::Section& section : sections) {
-	   if (section.section == nullptr) continue;
-	   if (section.section->type != UserModule::Section::Data) continue;
-	   std::string& name = section.section->name;
-	   if (name == ".sdata") sdata = &section;
-	   else if (name == ".sbss") sbss = &section;
-	   else if (name == ".sdata2") sdata2 = &section;
-	   else if (name == ".sbss2") sbss2 = &section;
-	   else if (name == ".sdata0") sdata0 = &section;
-	   else if (name == ".sbss0") sbss0 = &section;
-   }
+   auto sdata  = module.findSection(".sdata");
+   auto sbss   = module.findSection(".sbss");
+   auto sdata0 = module.findSection(".sdata0");
+   auto sbss0  = module.findSection(".sbss0");
+   auto sdata2 = module.findSection(".sdata2");
+   auto sbss2  = module.findSection(".sbss2");
 
    while (!in.eof()) {
       elf::Rela rela;
@@ -428,32 +466,38 @@ processRelocations(UserModule &module, elf::Section &section, std::vector<elf::S
          *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03fffffc) | ((value - addr) & 0x03fffffc));
          break;
       case elf::R_PPC_EMB_SDA21: {
-         uint32_t instr = byte_swap(*ptr32) & 0xffe00000; // top 6 bits of instruction + top 5 bits for destination register
-         uint32_t reg;
-         elf::Section* offsetsection = nullptr;
-         if (isAddressInSection(sdata, value) || isAddressInSection(sbss, value)) {
-            reg = 13;
-            offsetsection = sdata;
-         }
-         else if (isAddressInSection(sdata2, value) || isAddressInSection(sbss2, value)) {
-            reg = 2;
-            offsetsection = sdata2;
-         }
-         else if (isAddressInSection(sdata0, value) || isAddressInSection(sbss0, value)) {
-            reg = 0;
-            offsetsection = sdata0;
-         }
-         else {
-            gLog->critical("Invalid relocation for EMB_SDA21: symbol target addr {}", value);
+         auto ins = Instruction { byte_swap(*ptr32) };
+         auto section = module.findSection(value);
+         uint32_t base;
+         int32_t offset;
+
+         if (section == sdata || section == sbss) {
+            ins.rA = 13;
+            base = module.sdaBase;
+         } else if (section == sdata0 || section == sbss0) {
+            ins.rA = 0;
+            base = 0;
+         } else if (section == sdata2 || section == sbss2) {
+            ins.rA = 2;
+            base = module.sda2Base;
+         } else {
+            gLog->error("Invalid relocation for EMB_SDA21: symbol target addr {:x}", value);
             break;
          }
-         uint32_t off = (value - offsetsection->section->address) & 0xffff;
-         *ptr32 = byte_swap(instr | (reg << 16) | off);
+
+         offset = static_cast<int32_t>(value) - static_cast<int32_t>(base);
+
+         if (offset < std::numeric_limits<int16_t>::min() || offset > std::numeric_limits<int16_t>::max()) {
+            gLog->error("Expected SDA relocation {:x} to be within signed 16 bit offset of base {:x}", value, addr);
+            break;
+         }
+
+         ins.simm = offset;
+         *ptr32 = byte_swap(ins.value);
          break;
       }
-
       default:
-         gLog->debug("Unknown relocation type {}", type);
+         gLog->error("Unknown relocation type {}", type);
       }
    }
 }
@@ -531,6 +575,9 @@ Loader::loadRPL(UserModule &module, const char *buffer, size_t size)
 
    // Load sections into memory
    loadSections(sections);
+
+   // Process small data sections
+   processSmallDataSections(module);
 
    // Process symbols
    // TODO: Support more than one symbol section?

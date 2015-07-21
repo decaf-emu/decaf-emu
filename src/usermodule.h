@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <map>
 
 class KernelModule;
 struct KernelFunction;
@@ -107,4 +108,31 @@ struct UserModule
    std::pair<uint32_t, uint32_t> dataAddressRange;
    std::vector<SymbolInfo*> symbols;
    std::vector<Section*> sections;
+   std::map<std::string, Section *> sectionMap;
+   uint32_t sdaBase;
+   uint32_t sda2Base;
+
+   inline Section *
+   findSection(const std::string &name)
+   {
+      auto itr = sectionMap.find(name);
+
+      if (itr == sectionMap.end()) {
+         return nullptr;
+      } else {
+         return itr->second;
+      }
+   }
+
+   inline Section *
+   findSection(uint32_t address)
+   {
+      for (auto section : sections) {
+         if (address >= section->address && address <= section->address + section->size) {
+            return section;
+         }
+      }
+
+      return nullptr;
+   }
 };
