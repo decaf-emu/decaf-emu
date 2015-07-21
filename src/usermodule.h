@@ -128,7 +128,7 @@ struct UserModule
    findSection(uint32_t address)
    {
       for (auto section : sections) {
-         if (address >= section->address && address <= section->address + section->size) {
+         if (address >= section->address && address < section->address + section->size) {
             return section;
          }
       }
