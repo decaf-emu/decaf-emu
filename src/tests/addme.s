@@ -4,7 +4,7 @@ addMinusOneExtended:
    addme r3, r1
    blr
    # out r3 = 654653
-   # out xer.ca = 0
+   # out xer.ca = 1
    
 addMinusOneExtended2:
    # in r1 = 4294967295
