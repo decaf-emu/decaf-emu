@@ -1,3 +1,4 @@
+#include <limits>
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_memheap.h"
@@ -8,6 +9,7 @@
 #include "processor.h"
 #include "trace.h"
 #include "system.h"
+#include "usermodule.h"
 
 static OSThread *
 gDefaultThreads[3];
@@ -110,6 +112,30 @@ OSContinueThread(OSThread *thread)
    OSUnlockScheduler();
 }
 
+// Setup thread run state, shared by OSRunThread and OSCreateThread
+static void
+InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *argv)
+{
+   auto module = gSystem.getUserModule();
+   auto state = &thread->fiber->state;
+
+   // Setup state
+   state->cia = entry;
+   state->nia = state->cia + 4;
+   state->gpr[0] = 0;
+   state->gpr[1] = thread->stackStart;
+   state->gpr[2] = module->sda2Base;
+   state->gpr[3] = argc;
+   state->gpr[4] = gMemory.untranslate(argv);
+   state->gpr[13] = module->sdaBase;
+
+   // Setup thread
+   thread->state = OSThreadState::Ready;
+   thread->requestFlag = OSThreadRequest::None;
+   thread->suspendCounter = 1;
+   thread->needSuspend = 0;
+}
+
 BOOL
 OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, uint32_t priority, OSThreadAttributes::Flags attributes)
 {
@@ -125,25 +151,17 @@ OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *ar
    thread->basePriority = priority;
    thread->attr = attributes;
    thread->fiber = fiber;
-   thread->state = OSThreadState::Ready;
    thread->id = gThreadId++;
-   thread->suspendCounter = 1;
    fiber->thread = thread;
 
    // Write magic stack ending!
    gMemory.write(thread->stackEnd, 0xDEADBABE);
 
-   // Setup ThreadState
-   auto state = &fiber->state;
-   memset(state, 0, sizeof(ThreadState));
-   state->cia = thread->entryPoint;
-   state->nia = state->cia + 4;
-   state->gpr[1] = thread->stackStart;
-   state->gpr[3] = argc;
-   state->gpr[4] = gMemory.untranslate(argv);
+   // Setup thread state
+   InitialiseThreadState(thread, entry, argc, argv);
 
    // Initialise tracer
-   traceInit(state, 128);
+   traceInit(&fiber->state, 128);
 
    return TRUE;
 }
@@ -292,20 +310,7 @@ OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, p32<void> a
    OSLockScheduler();
 
    if (OSIsThreadTerminated(thread)) {
-      // Setup state
-      auto state = &thread->fiber->state;
-      state->cia = entry;
-      state->nia = state->cia + 4;
-      state->gpr[1] = thread->stackStart;
-      state->gpr[3] = argc;
-      state->gpr[4] = static_cast<uint32_t>(argv);
-
-      // Setup thread
-      thread->state = OSThreadState::Ready;
-      thread->suspendCounter = 1;
-      thread->requestFlag = OSThreadRequest::None;
-      thread->needSuspend = 0;
-
+      InitialiseThreadState(thread, entry, argc, argv);
       OSResumeThreadNoLock(thread, 1);
       OSRescheduleNoLock();
    }

@@ -62,9 +62,9 @@ eraseZStream(WZStream *in)
 static int
 zlib125_inflate(WZStream *wstrm, int flush)
 {
-   assert(wstrm->zalloc == nullptr);
-   assert(wstrm->zfree == nullptr);
-   assert(wstrm->opaque == nullptr);
+   //assert(wstrm->zalloc == nullptr);
+   //assert(wstrm->zfree == nullptr);
+   //assert(wstrm->opaque == nullptr);
 
    auto zstrm = getZStream(wstrm);
    zstrm->next_in = wstrm->next_in;
@@ -108,6 +108,12 @@ zlib125_inflateInit2_(WZStream *wstrm, int windowBits, const char *version, int 
 }
 
 static int
+zlib125_inflateInit_(WZStream *wstrm, const char *version, int stream_size)
+{
+   return zlib125_inflateInit2_(wstrm, 15 /* default window bits*/, version, stream_size);
+}
+
+static int
 zlib125_inflateEnd(WZStream *wstrm)
 {
    auto zstrm = getZStream(wstrm);
@@ -127,6 +133,7 @@ Zlib125::registerCoreFunctions()
    
    // Need wrap
    RegisterKernelFunctionName("inflate", zlib125_inflate);
+   RegisterKernelFunctionName("inflateInit_", zlib125_inflateInit_);
    RegisterKernelFunctionName("inflateInit2_", zlib125_inflateInit2_);
    RegisterKernelFunctionName("inflateEnd", zlib125_inflateEnd);
 }

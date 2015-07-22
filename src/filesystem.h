@@ -86,7 +86,7 @@ class HostFileSystem : public FileSystem
 
       void seek(int64_t pos) override
       {
-         if (pos > 0) {
+         if (pos >= 0) {
             mFile.seekg(pos, std::fstream::beg);
          } else {
             mFile.seekg(pos, std::fstream::end);
