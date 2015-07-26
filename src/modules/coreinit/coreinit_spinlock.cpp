@@ -4,6 +4,79 @@
 #include "processor.h"
 #include <atomic>
 
+static void
+spinLock(OSSpinLock *spinlock)
+{
+   uint32_t owner, expected;
+   auto thread = OSGetCurrentThread();
+
+   if (!thread) {
+      return;
+   }
+
+   owner = gMemory.untranslate(thread);
+
+   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
+      ++spinlock->recursion;
+      return;
+   }
+
+   expected = 0;
+
+   while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
+      expected = 0;
+   }
+}
+
+static BOOL
+spinTryLock(OSSpinLock *spinlock)
+{
+   uint32_t owner, expected;
+   auto thread = OSGetCurrentThread();
+
+   if (!thread) {
+      return FALSE;
+   }
+
+   owner = gMemory.untranslate(thread);
+
+   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
+      ++spinlock->recursion;
+      return TRUE;
+   }
+
+   expected = 0;
+
+   if (spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
+      return TRUE;
+   } else {
+      return FALSE;
+   }
+}
+
+static BOOL
+spinReleaseLock(OSSpinLock *spinlock)
+{
+   uint32_t owner;
+   auto thread = OSGetCurrentThread();
+
+   if (!thread) {
+      return FALSE;
+   }
+
+   owner = gMemory.untranslate(OSGetCurrentThread());
+
+   if (spinlock->recursion > 0u) {
+      --spinlock->recursion;
+      return TRUE;
+   } else if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
+      spinlock->owner = 0u;
+      return TRUE;
+   }
+
+   return FALSE;
+}
+
 void
 OSInitSpinLock(OSSpinLock *spinlock)
 {
@@ -14,40 +87,16 @@ OSInitSpinLock(OSSpinLock *spinlock)
 BOOL
 OSAcquireSpinLock(OSSpinLock *spinlock)
 {
-   auto owner = gMemory.untranslate(OSGetCurrentThread());
-   auto expected = 0u;
    OSTestThreadCancel();
-
-   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
-      ++spinlock->recursion;
-      return TRUE;
-   }
-
-   // Spin until acquired
-   while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
-      expected = 0;
-   }
-
+   spinLock(spinlock);
    return TRUE;
 }
 
 BOOL
 OSTryAcquireSpinLock(OSSpinLock *spinlock)
 {
-   auto owner = gMemory.untranslate(OSGetCurrentThread());
-   auto expected = 0u;
    OSTestThreadCancel();
-
-   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
-      ++spinlock->recursion;
-      return TRUE;
-   }
-
-   if (spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
-      return TRUE;
-   } else {
-      return FALSE;
-   }
+   return spinTryLock(spinlock);
 }
 
 BOOL
@@ -61,17 +110,7 @@ OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock, int64_t timeout)
 BOOL
 OSReleaseSpinLock(OSSpinLock *spinlock)
 {
-   auto owner = gMemory.untranslate(OSGetCurrentThread());
-   auto result = TRUE;
-
-   if (spinlock->recursion > 0u) {
-      --spinlock->recursion;
-   } else if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
-      spinlock->owner = 0u;
-   } else {
-      result = FALSE;
-   }
-
+   auto result = spinReleaseLock(spinlock);
    OSTestThreadCancel();
    return result;
 }
@@ -79,25 +118,27 @@ OSReleaseSpinLock(OSSpinLock *spinlock)
 BOOL
 OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock)
 {
-   return OSAcquireSpinLock(spinlock);
+   spinLock(spinlock);
+   return TRUE;
 }
 
 BOOL
 OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock)
 {
-   return OSTryAcquireSpinLock(spinlock);
+   return spinTryLock(spinlock);
 }
 
 BOOL
 OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock, int64_t timeout)
 {
-   return OSTryAcquireSpinLockWithTimeout(spinlock, timeout);
+   assert(false);
+   return FALSE;
 }
 
 BOOL
 OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock)
 {
-   return OSReleaseSpinLock(spinlock);
+   return spinReleaseLock(spinlock);
 }
 
 void
@@ -108,7 +149,6 @@ CoreInit::registerSpinLockFunctions()
    RegisterKernelFunction(OSTryAcquireSpinLock);
    RegisterKernelFunction(OSTryAcquireSpinLockWithTimeout);
    RegisterKernelFunction(OSReleaseSpinLock);
-
    RegisterKernelFunction(OSUninterruptibleSpinLock_Acquire);
    RegisterKernelFunction(OSUninterruptibleSpinLock_TryAcquire);
    RegisterKernelFunction(OSUninterruptibleSpinLock_TryAcquireWithTimeout);
