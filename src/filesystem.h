@@ -34,6 +34,7 @@ class IoStream
 {
 public:
    virtual ~IoStream() { }
+   virtual uint32_t tell() = 0;
    virtual void seek(int64_t pos) = 0;
    virtual void skip(size_t n) = 0;
    virtual size_t size() = 0;
@@ -82,6 +83,11 @@ class HostFileSystem : public FileSystem
          mFile.seekg(pos);
 
          return size;
+      }
+
+      uint32_t tell() override
+      {
+         return static_cast<uint32_t>(mFile.tellg());
       }
 
       void seek(int64_t pos) override

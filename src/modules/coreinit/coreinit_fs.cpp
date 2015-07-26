@@ -184,6 +184,19 @@ FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, 
 }
 
 FSStatus
+FSGetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, be_val<uint32_t> *pos, uint32_t flags)
+{
+   auto fsFile = gOpenFiles.get(handle);
+
+   if (!fsFile) {
+      return FSStatus::FatalError;
+   }
+
+   *pos = fsFile->file->tell();
+   return FSStatus::OK;
+}
+
+FSStatus
 FSSetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t pos, uint32_t flags)
 {
    auto fsFile = gOpenFiles.get(handle);
@@ -235,6 +248,7 @@ CoreInit::registerFileSystemFunctions()
    RegisterKernelFunction(FSSetStateChangeNotification);
    RegisterKernelFunction(FSOpenFile);
    RegisterKernelFunction(FSReadFile);
+   RegisterKernelFunction(FSGetPosFile);
    RegisterKernelFunction(FSSetPosFile);
    RegisterKernelFunction(FSCloseFile);
    RegisterKernelFunction(FSGetCwd);
