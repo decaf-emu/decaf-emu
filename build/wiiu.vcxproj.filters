@@ -354,6 +354,9 @@
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp">
       <Filter>Source Files\modules\erreula</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_shared.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -634,6 +637,9 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\erreula\erreula_errorviewer.h">
       <Filter>Header Files\modules\erreula</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_shared.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

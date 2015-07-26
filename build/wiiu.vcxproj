@@ -134,6 +134,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_mutex.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_scheduler.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_semaphore.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_shared.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_spinlock.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_systeminfo.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_thread.cpp" />
@@ -205,6 +206,7 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_queue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_scheduler.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_semaphore.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_shared.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_threadqueue.h" />
     <ClInclude Include="..\src\modules\erreula\erreula.h" />
     <ClInclude Include="..\src\modules\erreula\erreula_errorviewer.h" />
