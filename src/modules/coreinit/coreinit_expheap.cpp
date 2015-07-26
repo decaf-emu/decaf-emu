@@ -6,7 +6,6 @@
 
 struct ExpandedHeapBlock
 {
-   char pad[16]; // TODO: Remove me
    uint32_t addr;
    uint32_t size;
    uint16_t group;
@@ -186,24 +185,10 @@ MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size)
    return MEMAllocFromExpHeapEx(heap, size, 4);
 }
 
-struct ScopedStateDumper
-{
-   ~ScopedStateDumper()
-   {
-      // Filter by our target debugh eap
-      if (gMemory.untranslate(heap) == 0x1) {
-         MEMiDumpExpHeap(heap);
-      }
-   }
-
-   ExpandedHeap *heap;
-};
-
 void *
 MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 {
    ScopedSpinLock lock(&heap->lock);
-   ScopedStateDumper dump = { heap };
    p32<ExpandedHeapBlock> freeBlock = nullptr, usedBlock = nullptr;
    auto direction = HeapDirection::FromBottom;
    uint32_t base;
@@ -321,7 +306,6 @@ void
 MEMFreeToExpHeap(ExpandedHeap *heap, void *address)
 {
    ScopedSpinLock lock(&heap->lock);
-   ScopedStateDumper dump = { heap };
    auto base = gMemory.untranslate(address);
 
    if (!base) {
@@ -381,7 +365,6 @@ MEMAdjustExpHeap(ExpandedHeap *heap)
 {
    ScopedSpinLock lock(&heap->lock);
 
-   ScopedStateDumper dump = { heap };
    // Find the last free block
    auto lastFree = getTail(heap->freeBlockList);
 
@@ -401,7 +384,6 @@ MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> mblock, uint32_t size)
 {
    ScopedSpinLock lock(&heap->lock);
 
-   ScopedStateDumper dump = { heap };
    // Get the block header
    auto address = static_cast<uint32_t>(mblock);
    auto base = address - static_cast<uint32_t>(sizeof(ExpandedHeapBlock));
