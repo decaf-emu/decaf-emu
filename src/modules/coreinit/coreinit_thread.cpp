@@ -203,7 +203,8 @@ OSGetActiveThreadLink(OSThread *thread, OSThreadLink *link)
 OSThread *
 OSGetCurrentThread()
 {
-   return gProcessor.getCurrentFiber()->thread;
+   auto fiber = gProcessor.getCurrentFiber();
+   return fiber ? fiber->thread : nullptr;
 }
 
 OSThread *

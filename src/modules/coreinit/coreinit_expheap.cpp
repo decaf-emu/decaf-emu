@@ -182,6 +182,7 @@ MEMiDumpExpHeap(ExpandedHeap *heap)
 void *
 MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size)
 {
+   ScopedSpinLock lock(&heap->lock);
    return MEMAllocFromExpHeapEx(heap, size, 4);
 }
 
@@ -201,6 +202,7 @@ struct ScopedStateDumper
 void *
 MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 {
+   ScopedSpinLock lock(&heap->lock);
    ScopedStateDumper dump = { heap };
    p32<ExpandedHeapBlock> freeBlock = nullptr, usedBlock = nullptr;
    auto direction = HeapDirection::FromBottom;
@@ -318,6 +320,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 void
 MEMFreeToExpHeap(ExpandedHeap *heap, void *address)
 {
+   ScopedSpinLock lock(&heap->lock);
    ScopedStateDumper dump = { heap };
    auto base = gMemory.untranslate(address);
 
@@ -360,6 +363,7 @@ MEMFreeToExpHeap(ExpandedHeap *heap, void *address)
 HeapMode
 MEMSetAllocModeForExpHeap(ExpandedHeap *heap, HeapMode mode)
 {
+   ScopedSpinLock lock(&heap->lock);
    auto previous = heap->mode;
    heap->mode = mode;
    return previous;
@@ -368,12 +372,15 @@ MEMSetAllocModeForExpHeap(ExpandedHeap *heap, HeapMode mode)
 HeapMode
 MEMGetAllocModeForExpHeap(ExpandedHeap *heap)
 {
+   ScopedSpinLock lock(&heap->lock);
    return heap->mode;
 }
 
 uint32_t
 MEMAdjustExpHeap(ExpandedHeap *heap)
 {
+   ScopedSpinLock lock(&heap->lock);
+
    ScopedStateDumper dump = { heap };
    // Find the last free block
    auto lastFree = getTail(heap->freeBlockList);
@@ -392,6 +399,8 @@ MEMAdjustExpHeap(ExpandedHeap *heap)
 uint32_t
 MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> mblock, uint32_t size)
 {
+   ScopedSpinLock lock(&heap->lock);
+
    ScopedStateDumper dump = { heap };
    // Get the block header
    auto address = static_cast<uint32_t>(mblock);
@@ -460,6 +469,7 @@ MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> mblock, uint32_t size)
 uint32_t
 MEMGetTotalFreeSizeForExpHeap(ExpandedHeap *heap)
 {
+   ScopedSpinLock lock(&heap->lock);
    auto size = 0u;
 
    for (auto block = heap->freeBlockList; block; block = block->next) {
@@ -472,12 +482,14 @@ MEMGetTotalFreeSizeForExpHeap(ExpandedHeap *heap)
 uint32_t
 MEMGetAllocatableSizeForExpHeap(ExpandedHeap *heap)
 {
+   ScopedSpinLock lock(&heap->lock);
    return MEMGetAllocatableSizeForExpHeapEx(heap, 4);
 }
 
 uint32_t
 MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap, int alignment)
 {
+   ScopedSpinLock lock(&heap->lock);
    auto size = 0u;
 
    // Find largest block
@@ -501,6 +513,7 @@ MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap, int alignment)
 uint16_t
 MEMSetGroupIDForExpHeap(ExpandedHeap *heap, uint16_t id)
 {
+   ScopedSpinLock lock(&heap->lock);
    auto previous = heap->group;
    heap->group = id;
    return previous;
@@ -509,6 +522,7 @@ MEMSetGroupIDForExpHeap(ExpandedHeap *heap, uint16_t id)
 uint16_t
 MEMGetGroupIDForExpHeap(ExpandedHeap *heap)
 {
+   ScopedSpinLock lock(&heap->lock);
    return heap->group;
 }
 

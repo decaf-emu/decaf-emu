@@ -201,13 +201,13 @@ Processor::createFiber()
 Fiber *
 Processor::getCurrentFiber()
 {
-   return tCurrentCore->currentFiber;
+   return tCurrentCore ? tCurrentCore->currentFiber : nullptr;
 }
 
 uint32_t
 Processor::getCoreID()
 {
-   return tCurrentCore->id;
+   return tCurrentCore ? tCurrentCore->id : 4;
 }
 
 uint32_t
