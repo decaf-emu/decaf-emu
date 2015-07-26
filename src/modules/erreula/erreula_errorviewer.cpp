@@ -113,6 +113,22 @@ ErrEulaGetSelectButtonNumError()
    return 0;
 }
 
+void
+ErrEulaSetVersion(int version)
+{
+}
+
+void
+ErrEulaPlayAppearSE(bool value)
+{
+}
+
+bool
+ErrEulaJump(char const *, unsigned int)
+{
+   return false;
+}
+
 } // namespace Rpl
 
 void ErrEula::registerErrorViewerFunctions()
@@ -137,4 +153,7 @@ void ErrEula::registerErrorViewerFunctions()
    RegisterKernelFunctionName("ErrEulaGetResultType__3RplFv", Rpl::ErrEulaGetResultType);
    RegisterKernelFunctionName("ErrEulaGetResultCode__3RplFv", Rpl::ErrEulaGetResultCode);
    RegisterKernelFunctionName("ErrEulaGetSelectButtonNumError__3RplFv", Rpl::ErrEulaGetSelectButtonNumError);
+   RegisterKernelFunctionName("ErrEulaSetVersion__3RplFi", Rpl::ErrEulaSetVersion);
+   RegisterKernelFunctionName("ErrEulaPlayAppearSE__3RplFb", Rpl::ErrEulaPlayAppearSE);
+   RegisterKernelFunctionName("ErrEulaJump__3RplFPCcUi", Rpl::ErrEulaJump);
 }
