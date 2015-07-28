@@ -184,6 +184,13 @@ FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, 
 }
 
 FSStatus
+FSReadFileAsync(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle handle, uint32_t unk1, uint32_t flags, FSAsyncData *asyncData)
+{
+   gLog->warn("FSReadFileAsync using non-async read.");
+   return FSReadFile(client, block, buffer, size, count, handle, unk1, flags);
+}
+
+FSStatus
 FSGetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, be_val<uint32_t> *pos, uint32_t flags)
 {
    auto fsFile = gOpenFiles.get(handle);
@@ -248,6 +255,7 @@ CoreInit::registerFileSystemFunctions()
    RegisterKernelFunction(FSSetStateChangeNotification);
    RegisterKernelFunction(FSOpenFile);
    RegisterKernelFunction(FSReadFile);
+   RegisterKernelFunction(FSReadFileAsync);
    RegisterKernelFunction(FSGetPosFile);
    RegisterKernelFunction(FSSetPosFile);
    RegisterKernelFunction(FSCloseFile);

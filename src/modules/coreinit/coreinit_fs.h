@@ -1,36 +1,6 @@
 #pragma once
 #include "systemtypes.h"
 
-#pragma pack(push, 1)
-
-struct FSClient
-{
-   UNKNOWN(0x1700); // memset in FSAddClient
-};
-
-struct FSCmdBlock
-{
-   UNKNOWN(0xa80); // memset in FSInitCmdBlock
-};
-
-struct FSStat
-{
-   be_val<uint32_t> flags;
-   UNKNOWN(0xc);
-   be_val<uint32_t> size;
-   UNKNOWN(0x50);
-};
-CHECK_OFFSET(FSStat, 0x00, flags);
-CHECK_OFFSET(FSStat, 0x10, size);
-CHECK_SIZE(FSStat, 0x64); // 0x64 from memmove in FSAGetStatFile
-
-struct FSStateChangeInfo
-{
-   UNKNOWN(0xc); // Copy loop at FSSetStateChangeNotification
-};
-
-#pragma pack(pop)
-
 // Thank you cafe_tank for FS_STATUS_x
 enum class FSStatus : int32_t
 {
@@ -104,6 +74,48 @@ enum class FSError : int32_t
 using FSFileHandle = uint32_t;
 using FSPriority = uint32_t;
 
+#pragma pack(push, 1)
+
+struct FSClient
+{
+   UNKNOWN(0x1700); // memset in FSAddClient
+};
+
+struct FSCmdBlock
+{
+   UNKNOWN(0xa80); // memset in FSInitCmdBlock
+};
+
+struct FSStat
+{
+   be_val<uint32_t> flags;
+   UNKNOWN(0xc);
+   be_val<uint32_t> size;
+   UNKNOWN(0x50);
+};
+CHECK_OFFSET(FSStat, 0x00, flags);
+CHECK_OFFSET(FSStat, 0x10, size);
+CHECK_SIZE(FSStat, 0x64); // 0x64 from memmove in FSAGetStatFile
+
+struct FSStateChangeInfo
+{
+   UNKNOWN(0xc); // Copy loop at FSSetStateChangeNotification
+};
+
+using FSAsyncCallback = wfunc_ptr<void, FSClient *, FSCmdBlock *, FSStatus, uint32_t>;
+
+struct FSAsyncData
+{
+   be_val<uint32_t> callback;
+   be_val<uint32_t> param;
+   be_val<uint32_t> unk1;
+};
+CHECK_OFFSET(FSAsyncData, 0x00, callback);
+CHECK_OFFSET(FSAsyncData, 0x04, param);
+CHECK_SIZE(FSAsyncData, 0xC);
+
+#pragma pack(pop)
+
 void
 FSInit();
 
@@ -142,6 +154,12 @@ FSCloseFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t f
 
 FSStatus
 FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle handle, uint32_t unk1, uint32_t flags);
+
+FSStatus
+FSReadFileAsync(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle handle, uint32_t unk1, uint32_t flags, FSAsyncData *asyncData);
+
+FSStatus
+FSGetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle fileHandle, be_val<uint32_t> *pos, uint32_t flags);
 
 FSStatus
 FSSetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t pos, uint32_t flags);
