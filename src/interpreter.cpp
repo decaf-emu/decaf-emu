@@ -211,7 +211,7 @@ bool jit_fallback(PPCEmuAssembler& a, Instruction instr)
 
    //printf("JIT Fallback for `%s`\n", data->name);
 
-   a.mov(a.ecx, a.state);
+   a.mov(a.zcx, a.state);
    a.mov(a.edx, (uint32_t)instr);
    a.call(asmjit::Ptr(fptr));
    
