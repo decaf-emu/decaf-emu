@@ -1,5 +1,6 @@
 #include "zlib125.h"
 #include "zlib125_core.h"
+#include "processor.h"
 #include <zlib.h>
 
 static std::map<uint32_t, z_stream>
@@ -59,13 +60,28 @@ eraseZStream(WZStream *in)
    gStreamMap.erase(gMemory.untranslate(in));
 }
 
+using ZlibAllocFunc = wfunc_ptr<void*, void*, uint32_t, uint32_t>;
+using ZlibFreeFunc = wfunc_ptr<void, void*, void*>;
+
+static void *
+zlibAllocWrapper(void *opaque, unsigned items, unsigned size)
+{
+   auto wstrm = reinterpret_cast<WZStream *>(opaque);
+   ZlibAllocFunc allocFunc = static_cast<uint32_t>(wstrm->zalloc);
+   return allocFunc.call(&gProcessor.getCurrentFiber()->state, wstrm->opaque, items, size);
+}
+
+static void
+zlibFreeWrapper(void *opaque, void *address)
+{
+   auto wstrm = reinterpret_cast<WZStream *>(opaque);
+   ZlibFreeFunc freeFunc = static_cast<uint32_t>(wstrm->zalloc);
+   freeFunc.call(&gProcessor.getCurrentFiber()->state, wstrm->opaque, address);
+}
+
 static int
 zlib125_inflate(WZStream *wstrm, int flush)
 {
-   //assert(wstrm->zalloc == nullptr);
-   //assert(wstrm->zfree == nullptr);
-   //assert(wstrm->opaque == nullptr);
-
    auto zstrm = getZStream(wstrm);
    zstrm->next_in = wstrm->next_in;
    zstrm->avail_in = wstrm->avail_in;
@@ -77,7 +93,20 @@ zlib125_inflate(WZStream *wstrm, int flush)
 
    zstrm->data_type = wstrm->data_type;
    zstrm->adler = wstrm->adler;
-   
+   zstrm->opaque = wstrm;
+
+   if (wstrm->zalloc) {
+      zstrm->zalloc = &zlibAllocWrapper;
+   } else {
+      zstrm->zalloc = nullptr;
+   }
+
+   if (wstrm->zfree) {
+      zstrm->zfree = &zlibFreeWrapper;
+   } else {
+      zstrm->zfree = nullptr;
+   }
+
    auto result = inflate(zstrm, flush);
 
    wstrm->next_in = zstrm->next_in;
