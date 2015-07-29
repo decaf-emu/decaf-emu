@@ -15,6 +15,20 @@ struct _argumentsState
    size_t f;
 };
 
+class VarList {
+public:
+   VarList(_argumentsState& state) : mState(state) { }
+
+   template<typename Type>
+   Type next() {
+      return getArgument<Type>(mState.thread, mState.r, mState.f);
+   }
+
+protected:
+   _argumentsState& mState;
+
+};
+
 template<typename Head, typename... Tail>
 static inline void
 applyArguments2(_argumentsState& state, Head head, Tail... tail)
@@ -52,6 +66,15 @@ invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<Head, Ta
 
 template<typename FnReturnType, typename... FnArgs, typename... Args>
 static inline void
+invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<VarList&>, Args... values)
+{
+   VarList vargs(state);
+   logArgumentVargs(state.log);
+   invoke2(state, func, type_list<>{}, values..., vargs);
+}
+
+template<typename FnReturnType, typename... FnArgs, typename... Args>
+static inline void
 invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<>, Args... args)
 {
    gLog->trace(logCallEnd(state.log));
@@ -77,50 +100,6 @@ invoke(ThreadState *state, ReturnType func(Args...), const char *name = nullptr)
    argstate.f = 1;
    logCall(argstate.log, state->lr, name);
    invoke2(argstate, func, type_list<Args...> {});
-}
-
-class VarList {
-public:
-   VarList(_argumentsState& state) : mState(state) { }
-
-   template<typename Type>
-   Type next() {
-      return getArgument<Type>(mState.thread, mState.r, mState.f);
-   }
-
-protected:
-   _argumentsState& mState;
-
-};
-
-template<typename ReturnType>
-static inline void
-invokeVariadic2(_argumentsState& state, ReturnType func(VarList& args))
-{
-   VarList args(state);
-   auto res = func(args);
-   setResult<FnReturnType>(state.thread, result);
-}
-
-template<>
-static inline void
-invokeVariadic2(_argumentsState& state, void func(VarList& args))
-{
-   VarList args(state);
-   func(args);
-}
-
-template<typename ReturnType>
-static inline void
-invoke(ThreadState *state, ReturnType func(VarList& args), const char *name = nullptr)
-{
-   _argumentsState argstate;
-   argstate.thread = state;
-   argstate.r = 3;
-   argstate.f = 1;
-   logCall(argstate.log, state->lr, name);
-   gLog->trace(logCallEnd(argstate.log));
-   invokeVariadic2(argstate, func);
 }
 
 }

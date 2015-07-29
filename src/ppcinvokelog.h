@@ -42,6 +42,18 @@ logArgumentSeparator(LogState &state)
    state.argc++;
 }
 
+// ...
+static inline void
+logArgumentVargs(LogState &state)
+{
+   int len;
+   logArgumentSeparator(state);
+
+   len = sprintf_s(state.buffer + state.pos, state.length, "...");
+   state.length -= len;
+   state.pos += len;
+}
+
 // const char *
 static inline void
 logArgument(LogState &state, const char *value)
