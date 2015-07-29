@@ -16,6 +16,9 @@
 
 using instrfptr_t = void(*)(ThreadState*, Instruction);
 
+// Address used to signify a return to emulator-land.
+const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
+
 enum class InterpJitMode {
    Enabled,
    Disabled,

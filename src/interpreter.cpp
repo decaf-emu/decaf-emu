@@ -86,9 +86,6 @@ void Interpreter::setJitMode(InterpJitMode val) {
    mJitMode = val;
 }
 
-// Address used to signify a return to emulator-land.
-const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
-
 void
 Interpreter::execute(ThreadState *state)
 {

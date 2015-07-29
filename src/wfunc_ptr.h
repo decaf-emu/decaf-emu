@@ -67,17 +67,22 @@ ReturnType wfunc_ptr<ReturnType, Args...>::call(ThreadState *state, Args... args
    state->gpr[1] -= 4;
    gMemory.write(state->gpr[1], state->lr);
 
-   // Save NIA to LR
-   state->lr = state->nia;
+   // Save NIA to stack
+   state->gpr[1] -= 4;
+   gMemory.write(state->gpr[1], state->nia);
+
+   // Set LR to return to emulator code
+   state->lr = CALLBACK_ADDR;
 
    // Update NIA to Target
    state->cia = 0;
-   state->nia = addr;
+   state->nia = address;
 
    gInterpreter.execute(state);
 
-   // Restore NIA from LR
-   state->nia = state->lr;
+   // Restore NIA from Stack
+   state->nia = gMemory.read<uint32_t>(state->gpr[1]);
+   state->gpr[1] += 4;
 
    // Restore LR from Stack
    state->lr = gMemory.read<uint32_t>(state->gpr[1]);
