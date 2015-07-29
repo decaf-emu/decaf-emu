@@ -95,7 +95,7 @@ int main(int argc, char **argv)
    gLog = std::make_shared<spdlog::logger>("logger", begin(sinks), end(sinks));
    gLog->set_level(spdlog::level::trace);
 
-   auto log_level = args["--log-level"].asString();
+   auto log_level = args["--log-level"].isString()? args["--log-level"].asString(): "trace";
    for (int l = spdlog::level::trace; l <= spdlog::level::off; l++) {
       if (spdlog::level::to_str((spdlog::level::level_enum) l) == log_level) {
          gLog->set_level((spdlog::level::level_enum) l);
