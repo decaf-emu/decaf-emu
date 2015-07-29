@@ -493,7 +493,9 @@ bool executeCodeTest(ThreadState& state, uint32_t baseAddress, const TestData& t
    ThreadState originalState = state;
 
    // Execute test
-   gInterpreter.execute(&state, baseAddress + test.offset);
+   state.cia = 0;
+   state.nia = baseAddress + test.offset;
+   gInterpreter.execute(&state);
 
    bool result = true;
    for (auto i = 0; i < TargetId::Max; ++i) {

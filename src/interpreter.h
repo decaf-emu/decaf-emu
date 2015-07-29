@@ -29,7 +29,7 @@ public:
       : mJitMode(InterpJitMode::Disabled) {}
 
    void setJitMode(InterpJitMode val);
-   void execute(ThreadState *state, uint32_t addr);
+   void execute(ThreadState *state);
    void addBreakpoint(uint32_t addr);
 
    InterpJitMode getJitMode() const {
@@ -37,7 +37,6 @@ public:
    }
 
 private:
-   void execute(ThreadState *state);
    InterpJitMode mJitMode;
    std::vector<uint32_t> mBreakpoints;
 

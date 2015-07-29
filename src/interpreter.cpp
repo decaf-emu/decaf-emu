@@ -178,24 +178,6 @@ Interpreter::execute(ThreadState *state)
    }
 }
 
-void
-Interpreter::execute(ThreadState *state, uint32_t addr)
-{
-   auto saveLR = state->lr;
-   auto saveCIA = state->cia;
-   auto saveNIA = state->nia;
-
-   state->lr = CALLBACK_ADDR;
-   state->cia = 0;
-   state->nia = addr;
-
-   execute(state);
-
-   state->lr = saveLR;
-   state->cia = saveCIA;
-   state->nia = saveNIA;
-}
-
 void Interpreter::addBreakpoint(uint32_t addr)
 {
    mBreakpoints.push_back(addr);

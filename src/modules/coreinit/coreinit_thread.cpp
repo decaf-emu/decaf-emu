@@ -120,14 +120,15 @@ InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *arg
    auto state = &thread->fiber->state;
 
    // Setup state
-   state->cia = entry;
-   state->nia = state->cia + 4;
    state->gpr[0] = 0;
    state->gpr[1] = thread->stackStart - 4;
    state->gpr[2] = module->sda2Base;
-   state->gpr[3] = argc;
-   state->gpr[4] = gMemory.untranslate(argv);
    state->gpr[13] = module->sdaBase;
+
+   // Setup main()
+   state->cia = 0;
+   state->nia = entry;
+   ppctypes::applyArguments(state, argc, argv);
 
    // Setup thread
    thread->state = OSThreadState::Ready;

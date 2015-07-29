@@ -98,8 +98,8 @@ Processor::coreEntryPoint(Core *core)
 void
 Processor::fiberEntryPoint(Fiber *fiber)
 {
-   gInterpreter.execute(&fiber->state, fiber->state.cia);
-   OSExitThread(fiber->state.gpr[3]);
+   gInterpreter.execute(&fiber->state);
+   OSExitThread(ppctypes::getResult<int>(&fiber->state));
 }
 
 void

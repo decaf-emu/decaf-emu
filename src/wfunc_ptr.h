@@ -65,11 +65,28 @@ operator<<(std::ostream& os, const wfunc_ptr<ReturnType, Args...>& val)
 template<typename ReturnType, typename... Args>
 ReturnType wfunc_ptr<ReturnType, Args...>::call(ThreadState *state, Args... args) {
    // Push args
-   kernel::functions::applyArguments(state, args...);
+   ppctypes::applyArguments(state, args...);
 
-   // Reentrant interp call
-   gInterpreter.execute(state, address);
+   // Save LR to stack
+   state->gpr[1] -= 4;
+   gMemory.write(state->gpr[1], state->lr);
+
+   // Save NIA to LR
+   state->lr = state->nia;
+
+   // Update NIA to Target
+   state->cia = 0;
+   state->nia = addr;
+
+   gInterpreter.execute(state);
+
+   // Restore NIA from LR
+   state->nia = state->lr;
+
+   // Restore LR from Stack
+   state->lr = gMemory.read<uint32_t>(state->gpr[1]);
+   state->gpr[1] += 4;
 
    // Return the result
-   return kernel::functions::getResult<ReturnType>(state);
+   return ppctypes::getResult<ReturnType>(state);
 }
