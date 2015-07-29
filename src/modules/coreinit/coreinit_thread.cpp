@@ -128,6 +128,7 @@ InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *arg
    // Setup main()
    state->cia = 0;
    state->nia = entry;
+   state->lr = CALLBACK_ADDR;
    ppctypes::applyArguments(state, argc, argv);
 
    // Setup thread
