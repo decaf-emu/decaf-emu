@@ -11,9 +11,6 @@
 #define RegisterKernelFunctionName(name, fn) \
    registerExport(name, kernel::makeFunction(fn))
 
-#define RegisterKernelFunctionManual(fn) \
-   registerExport(#fn, kernel::makeManualFunction(fn))
-
 #define RegisterKernelDataName(name, data) \
    registerExport(name, kernel::makeData(&data))
 

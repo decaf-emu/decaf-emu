@@ -36,10 +36,10 @@ static std::vector<char> c_specifier = {
 };
 
 static void
-formatString(ThreadState *state, std::string &output, unsigned reg = 3)
+formatString(ppctypes::VarList &args, std::string &output)
 {
    char buffer[32];
-   const char *fmt = reinterpret_cast<const char*>(gMemory.translate(state->gpr[reg++]));
+   const char *fmt = args.next<const char*>();
    output.reserve(strlen(fmt));
 
    for (auto i = 0; i < strlen(fmt); ) {
@@ -104,11 +104,11 @@ formatString(ThreadState *state, std::string &output, unsigned reg = 3)
          case 'c':
          case 'p':
          case 'n':
-            sprintf_s(buffer, 32, formatter.c_str(), state->gpr[reg]);
+            sprintf_s(buffer, 32, formatter.c_str(), args.next<uint32_t>());
             output.append(buffer);
             break;
          case 's':
-            output.append(reinterpret_cast<char*>(gMemory.translate(state->gpr[reg])));
+            output.append(args.next<const char*>());
             break;
          default:
             gLog->error("Unimplemented format specifier: {}", specifier);
@@ -122,37 +122,37 @@ formatString(ThreadState *state, std::string &output, unsigned reg = 3)
 }
 
 static void
-OSPanic(ThreadState *state)
+OSPanic(ppctypes::VarList& args)
 {
-   char *file = reinterpret_cast<char*>(gMemory.translate(state->gpr[3]));
-   int line = state->gpr[4];
+   char *file = args.next<char*>();
+   int line = args.next<int>();
    std::string str;
-   formatString(state, str, 5);
+   formatString(args, str);
    gLog->error("OSPanic {}:{} {}", file, line, str);
 }
 
 static void
-OSReport(ThreadState *state)
+OSReport(ppctypes::VarList& args)
 {
    std::string str;
-   formatString(state, str);
+   formatString(args, str);
    gLog->debug("OSReport {}", str);
 }
 
 static void
-OSVReport(ThreadState *state)
+OSVReport(ppctypes::VarList& args)
 {
    std::string str;
-   formatString(state, str);
+   formatString(args, str);
    gLog->debug("OSVReport {}", str);
 }
 
 static void
-COSWarn(ThreadState *state)
+COSWarn(ppctypes::VarList& args)
 {
    std::string str;
-   auto module = state->gpr[3];
-   formatString(state, str, 4);
+   auto module = args.next<uint32_t>();
+   formatString(args, str);
    gLog->debug("COSWarn {} {}", module, str);
 }
 
@@ -161,8 +161,8 @@ CoreInit::registerDebugFunctions()
 {
    RegisterKernelFunction(OSIsDebuggerPresent);
    RegisterKernelFunction(OSIsDebuggerInitialized);
-   RegisterKernelFunctionManual(OSPanic);
-   RegisterKernelFunctionManual(OSReport);
-   RegisterKernelFunctionManual(OSVReport);
-   RegisterKernelFunctionManual(COSWarn);
+   RegisterKernelFunction(OSPanic);
+   RegisterKernelFunction(OSReport);
+   RegisterKernelFunction(OSVReport);
+   RegisterKernelFunction(COSWarn);
 }

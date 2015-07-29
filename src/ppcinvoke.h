@@ -119,7 +119,7 @@ invoke(ThreadState *state, ReturnType func(VarList& args), const char *name = nu
    argstate.r = 3;
    argstate.f = 1;
    logCall(argstate.log, state->lr, name);
-   gLog->trace(logCallEnd(log));
+   gLog->trace(logCallEnd(argstate.log));
    invokeVariadic2(argstate, func);
 }
 

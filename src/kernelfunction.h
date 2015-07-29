@@ -39,20 +39,6 @@ struct KernelFunctionImpl : KernelFunction
       ppctypes::invoke(thread, wrapped_function, this->name);
    }
 };
-
-// Manual system function, can be used for var arg funcs
-struct KernelFunctionManual : KernelFunction
-{
-   void(*wrapped_function)(ThreadState *state);
-
-   virtual void call(ThreadState *thread) override
-   {
-      ppctypes::LogState log;
-      logCall(log, thread->lr, this->name);
-      gLog->trace(logCallEnd(log));
-      wrapped_function(thread);
-   }
-};
    
 };
 
@@ -62,15 +48,6 @@ inline KernelFunction *
 makeFunction(Ret(*fptr)(Args...))
 {
    auto func = new kernel::functions::KernelFunctionImpl<Ret, Args...>();
-   func->wrapped_function = fptr;
-   return func;
-}
-
-// Create a SystemFunction export from a function pointer
-inline KernelFunction *
-makeManualFunction(void(*fptr)(ThreadState*))
-{
-   auto func = new kernel::functions::KernelFunctionManual();
    func->wrapped_function = fptr;
    return func;
 }
