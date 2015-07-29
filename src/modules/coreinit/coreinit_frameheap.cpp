@@ -62,12 +62,14 @@ MEMDestroyFrmHeap(FrameHeap *heap)
 void *
 MEMAllocFromFrmHeap(FrameHeap *heap, uint32_t size)
 {
+   ScopedSpinLock lock(&heap->lock);
    return MEMAllocFromFrmHeapEx(heap, size, 4);
 }
 
 void *
 MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment)
 {
+   ScopedSpinLock lock(&heap->lock);
    auto direction = HeapDirection::FromBottom;
    auto offset = 0u;
 
@@ -101,6 +103,8 @@ MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment)
 void
 MEMFreeToFrmHeap(FrameHeap *heap, FrameHeapFreeMode::Flags mode)
 {
+   ScopedSpinLock lock(&heap->lock);
+
    if (mode & FrameHeapFreeMode::Top) {
       if (heap->state->previous) {
          heap->state->top = heap->state->previous->top;
@@ -121,6 +125,7 @@ MEMFreeToFrmHeap(FrameHeap *heap, FrameHeapFreeMode::Flags mode)
 BOOL
 MEMRecordStateForFrmHeap(FrameHeap *heap, uint32_t tag)
 {
+   ScopedSpinLock lock(&heap->lock);
    FrameHeapState *state = reinterpret_cast<FrameHeapState*>(MEMAllocFromFrmHeapEx(heap, sizeof(FrameHeapState), 4));
    
    if (!state) {
@@ -138,6 +143,8 @@ MEMRecordStateForFrmHeap(FrameHeap *heap, uint32_t tag)
 BOOL
 MEMFreeByStateToFrmHeap(FrameHeap *heap, uint32_t tag)
 {
+   ScopedSpinLock lock(&heap->lock);
+
    if (tag == 0) {
       if (!heap->state->previous) {
          return false;
@@ -164,6 +171,8 @@ MEMFreeByStateToFrmHeap(FrameHeap *heap, uint32_t tag)
 uint32_t
 MEMAdjustFrmHeap(FrameHeap *heap)
 {
+   ScopedSpinLock lock(&heap->lock);
+
    if (heap->state->top != heap->top) {
       return heap->size;
    }
@@ -177,6 +186,8 @@ MEMAdjustFrmHeap(FrameHeap *heap)
 uint32_t
 MEMResizeForMBlockFrmHeap(FrameHeap *heap, uint32_t addr, uint32_t size)
 {
+   ScopedSpinLock lock(&heap->lock);
+
    if (addr > heap->state->bottom || addr < heap->state->bottom) {
       gLog->error("Invalid block address in MEMResizeForMBlockFrmHeap");
       return 0;
@@ -203,12 +214,14 @@ MEMResizeForMBlockFrmHeap(FrameHeap *heap, uint32_t addr, uint32_t size)
 uint32_t
 MEMGetAllocatableSizeForFrmHeap(FrameHeap *heap)
 {
+   ScopedSpinLock lock(&heap->lock);
    return MEMGetAllocatableSizeForFrmHeapEx(heap, 4);
 }
 
 uint32_t
 MEMGetAllocatableSizeForFrmHeapEx(FrameHeap *heap, int alignment)
 {
+   ScopedSpinLock lock(&heap->lock);
    auto bottom = alignUp(heap->state->bottom, alignment);
    auto top = alignDown(heap->state->top, alignment);
    return top - bottom;

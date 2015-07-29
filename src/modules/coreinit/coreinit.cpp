@@ -45,6 +45,7 @@ CoreInit::RegisterFunctions()
    registerMessageQueueFunctions();
    registerMutexFunctions();
    registerSemaphoreFunctions();
+   registerSharedFunctions();
    registerSpinLockFunctions();
    registerSystemInfoFunctions();
    registerThreadFunctions();

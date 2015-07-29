@@ -147,6 +147,15 @@ OSVReport(ThreadState *state)
    gLog->debug("OSVReport {}", str);
 }
 
+static void
+COSWarn(ThreadState *state)
+{
+   std::string str;
+   auto module = state->gpr[3];
+   formatString(state, str, 4);
+   gLog->debug("COSWarn {} {}", module, str);
+}
+
 void
 CoreInit::registerDebugFunctions()
 {
@@ -155,4 +164,5 @@ CoreInit::registerDebugFunctions()
    RegisterKernelFunctionManual(OSPanic);
    RegisterKernelFunctionManual(OSReport);
    RegisterKernelFunctionManual(OSVReport);
+   RegisterKernelFunctionManual(COSWarn);
 }

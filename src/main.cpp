@@ -35,8 +35,8 @@ static const char USAGE[] =
    R"(WiiU Emulator
 
        Usage:
-         wiiu play [--jit | --jitdebug] [--logfile] <game directory>
-         wiiu test [--jit | --jitdebug] [--logfile] [--as=<ppcas>] <test directory>
+         wiiu play [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] <game directory>
+         wiiu test [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
          wiiu (-h | --help)
          wiiu --version
 
@@ -45,6 +45,10 @@ static const char USAGE[] =
          --version     Show version.
          --jit         Enables the JIT engine.
          --logfile     Redirect log output to file.
+         --log-async   Enable asynchronous logging.
+         --log-level=<log-level> [default: trace]
+                       Only display logs with severity equal to or greater than this level.
+                       Available levels: trace, debug, info, notice, warning, error, critical, alert, emerg, off
          --as=<ppcas>  Path to PowerPC assembler [default: powerpc-eabi-as.exe].
    )";
 
@@ -84,8 +88,20 @@ int main(int argc, char **argv)
       sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(file, "txt", 23, 59));
    }
 
+   if (args["--log-async"].asBool()) {
+      spdlog::set_async_mode(0x100000);
+   }
+
    gLog = std::make_shared<spdlog::logger>("logger", begin(sinks), end(sinks));
    gLog->set_level(spdlog::level::trace);
+
+   auto log_level = args["--log-level"].isString()? args["--log-level"].asString(): "trace";
+   for (int l = spdlog::level::trace; l <= spdlog::level::off; l++) {
+      if (spdlog::level::to_str((spdlog::level::level_enum) l) == log_level) {
+         gLog->set_level((spdlog::level::level_enum) l);
+         break;
+      }
+   }
 
    initialiseEmulator();
 

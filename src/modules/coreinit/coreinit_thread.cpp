@@ -123,7 +123,7 @@ InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *arg
    state->cia = entry;
    state->nia = state->cia + 4;
    state->gpr[0] = 0;
-   state->gpr[1] = thread->stackStart;
+   state->gpr[1] = thread->stackStart - 4;
    state->gpr[2] = module->sda2Base;
    state->gpr[3] = argc;
    state->gpr[4] = gMemory.untranslate(argv);
@@ -203,7 +203,8 @@ OSGetActiveThreadLink(OSThread *thread, OSThreadLink *link)
 OSThread *
 OSGetCurrentThread()
 {
-   return gProcessor.getCurrentFiber()->thread;
+   auto fiber = gProcessor.getCurrentFiber();
+   return fiber ? fiber->thread : nullptr;
 }
 
 OSThread *
@@ -432,6 +433,12 @@ SleepAlarmHandler(OSAlarm *alarm, OSContext *context)
 void
 OSSleepTicks(Time ticks)
 {
+   if (1) {
+      OSTestThreadCancel();
+      gLog->warn("Ignoring unimplemented OSSleepTicks");
+      return;
+   }
+
    auto thread = OSGetCurrentThread();
 
    OSLockScheduler();

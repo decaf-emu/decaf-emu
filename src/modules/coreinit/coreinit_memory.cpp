@@ -90,16 +90,28 @@ OSSetMemBound(OSMemoryType type, uint32_t start, uint32_t size)
 BOOL
 OSGetForegroundBucket(be_val<uint32_t> *addr, be_val<uint32_t> *size)
 {
-   *addr = 0xe0000000;
-   *size = 0x04000000;
+   if (addr) {
+      *addr = 0xe0000000;
+   }
+
+   if (size) {
+      *size = 0x04000000;
+   }
+
    return TRUE;
 }
 
 BOOL
 OSGetForegroundBucketFreeArea(be_val<uint32_t> *addr, be_val<uint32_t> *size)
 {
-   *addr = 0xe0000000;
-   *size = 0x02800000;
+   if (addr) {
+      *addr = 0xe0000000;
+   }
+
+   if (size) {
+      *size = 0x02800000;
+   }
+
    return TRUE;
 }
 

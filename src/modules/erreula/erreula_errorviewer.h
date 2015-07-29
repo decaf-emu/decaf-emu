@@ -116,4 +116,13 @@ ErrEulaGetResultCode();
 uint32_t
 ErrEulaGetSelectButtonNumError();
 
+void
+ErrEulaSetVersion(int version);
+
+void
+ErrEulaPlayAppearSE(bool value);
+
+bool
+ErrEulaJump(char const *, unsigned int);
+
 } // namespace Rpl

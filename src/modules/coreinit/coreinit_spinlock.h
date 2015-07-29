@@ -28,3 +28,19 @@ BOOL OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock);
 BOOL OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock);
 BOOL OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock, int64_t timeout);
 BOOL OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock);
+
+struct ScopedSpinLock
+{
+   ScopedSpinLock(OSSpinLock *lock) :
+      lock(lock)
+   {
+      OSUninterruptibleSpinLock_Acquire(lock);
+   }
+
+   ~ScopedSpinLock()
+   {
+      OSUninterruptibleSpinLock_Release(lock);
+   }
+
+   OSSpinLock *lock;
+};
