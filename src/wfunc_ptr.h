@@ -42,12 +42,6 @@ struct wfunc_ptr
    uint32_t address;
 
    ReturnType call(ThreadState *state, Args... args);
-
-   ReturnType operator()(Args... args) {
-      ThreadState *state = &gProcessor.getCurrentFiber()->state;
-      return call(state, args...);
-   }
-
 };
 
 #pragma pack(pop)
