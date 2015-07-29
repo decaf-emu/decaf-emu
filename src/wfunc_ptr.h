@@ -56,6 +56,8 @@ operator<<(std::ostream& os, const wfunc_ptr<ReturnType, Args...>& val)
 
 // Late include of ppcinvoke due to circular reference of wfunc_ptr inside arg_converter.
 #include "ppcinvoke.h"
+#include "interpreter.h"
+
 template<typename ReturnType, typename... Args>
 ReturnType wfunc_ptr<ReturnType, Args...>::call(ThreadState *state, Args... args) {
    // Push args
