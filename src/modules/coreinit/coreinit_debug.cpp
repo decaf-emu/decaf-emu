@@ -36,10 +36,9 @@ static std::vector<char> c_specifier = {
 };
 
 static void
-formatString(ppctypes::VarList &args, std::string &output)
+formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
 {
    char buffer[32];
-   const char *fmt = args.next<const char*>();
    output.reserve(strlen(fmt));
 
    for (auto i = 0; i < strlen(fmt); ) {
@@ -122,37 +121,34 @@ formatString(ppctypes::VarList &args, std::string &output)
 }
 
 static void
-OSPanic(ppctypes::VarList& args)
+OSPanic(const char *file, int line, const char *fmt, ppctypes::VarList& args)
 {
-   char *file = args.next<char*>();
-   int line = args.next<int>();
    std::string str;
-   formatString(args, str);
+   formatString(fmt, args, str);
    gLog->error("OSPanic {}:{} {}", file, line, str);
 }
 
 static void
-OSReport(ppctypes::VarList& args)
+OSReport(const char *fmt, ppctypes::VarList& args)
 {
    std::string str;
-   formatString(args, str);
+   formatString(fmt, args, str);
    gLog->debug("OSReport {}", str);
 }
 
 static void
-OSVReport(ppctypes::VarList& args)
+OSVReport(const char *fmt, ppctypes::VarList& args)
 {
    std::string str;
-   formatString(args, str);
+   formatString(fmt, args, str);
    gLog->debug("OSVReport {}", str);
 }
 
 static void
-COSWarn(ppctypes::VarList& args)
+COSWarn(uint32_t module, const char *fmt, ppctypes::VarList& args)
 {
    std::string str;
-   auto module = args.next<uint32_t>();
-   formatString(args, str);
+   formatString(fmt, args, str);
    gLog->debug("COSWarn {} {}", module, str);
 }
 
