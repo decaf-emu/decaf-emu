@@ -190,9 +190,9 @@
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
     <ClInclude Include="..\src\jit.h" />
     <ClInclude Include="..\src\jit_float.h" />
-    <ClInclude Include="..\src\kernelfunctionargs.h" />
-    <ClInclude Include="..\src\kernelfunctionlog.h" />
-    <ClInclude Include="..\src\kernelfunctionresult.h" />
+    <ClInclude Include="..\src\ppcinvokeargs.h" />
+    <ClInclude Include="..\src\ppcinvokelog.h" />
+    <ClInclude Include="..\src\ppcinvokeresult.h" />
     <ClInclude Include="..\src\loader.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\memory.h" />
@@ -226,6 +226,8 @@
     <ClInclude Include="..\src\modules\proc_ui\proc_ui.h" />
     <ClInclude Include="..\src\modules\proc_ui\proc_ui_core.h" />
     <ClInclude Include="..\src\p32.h" />
+    <ClInclude Include="..\src\ppcinvoke.h" />
+    <ClInclude Include="..\src\ppctypes.h" />
     <ClInclude Include="..\src\processor.h" />
     <ClInclude Include="..\src\trace.h" />
     <ClInclude Include="..\src\usermodule.h" />

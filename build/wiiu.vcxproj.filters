@@ -551,12 +551,6 @@
     <ClInclude Include="..\src\kernelmodule.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\kernelfunctionargs.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\kernelfunctionresult.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\wfunc_ptr.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
@@ -589,9 +583,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\padscore\padscore_kpad.h">
       <Filter>Header Files\modules\padscore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\kernelfunctionlog.h">
-      <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\src\jit_float.h">
       <Filter>Header Files\jit</Filter>
@@ -640,6 +631,21 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_shared.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppctypes.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppcinvoke.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppcinvokelog.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppcinvokeargs.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppcinvokeresult.h">
+      <Filter>Header Files\system</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

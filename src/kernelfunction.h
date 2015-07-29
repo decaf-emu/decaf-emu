@@ -1,11 +1,8 @@
 #pragma once
-#include "kernelexport.h"
-#include "kernelfunctionargs.h"
-#include "kernelfunctionresult.h"
-#include "kernelfunctionlog.h"
-#include "log.h"
 #include "systemtypes.h"
+#include "kernelexport.h"
 #include "ppc.h"
+#include "ppcinvoke.h"
 #include "util.h"
 
 // Kernel Function Export
@@ -31,76 +28,15 @@ namespace kernel
 namespace functions
 {
 
-struct DispatchState
-{
-   ThreadState *thread;
-   LogState log;
-   size_t r;
-   size_t f;
-};
-
 // Function with non-void return type
 template<typename Ret, typename... Args>
 struct KernelFunctionImpl : KernelFunction
 {
    Ret(*wrapped_function)(Args...);
 
-   template<class Head, class... Tail, class... Args>
-   void dispatch(DispatchState &state, type_list<Head, Tail...>, Args... values)
-   {
-      auto value = convertArgument<Head>(state.thread, state.r, state.f);
-      logArgument(state.log, value);
-      dispatch(state, type_list<Tail...>{}, values..., value);
-   }
-
-   template<class... Args>
-   void dispatch(DispatchState &state, type_list<>, Args... args)
-   {
-      gLog->trace(logCallEnd(state.log));
-      auto result = wrapped_function(args...);
-      setResult<Ret>(state.thread, result);
-   }
-
    virtual void call(ThreadState *thread) override
    {
-      DispatchState state;
-      state.thread = thread;
-      state.r = 3;
-      state.f = 1;
-      logCall(state.log, thread->lr, this->name);
-      dispatch(state, type_list<Args...> {});
-   }
-};
-
-// Function with void return type
-template<typename... FuncArgs>
-struct KernelFunctionImpl<void, FuncArgs...> : KernelFunction
-{
-   void(*wrapped_function)(FuncArgs...);
-
-   template<class Head, class... Tail, class... Args>
-   void dispatch(DispatchState &state, type_list<Head, Tail...>, Args... values)
-   {
-      auto value = convertArgument<Head>(state.thread, state.r, state.f);
-      logArgument(state.log, value);
-      dispatch(state, type_list<Tail...>{}, values..., value);
-   }
-
-   template<class... Args>
-   void dispatch(DispatchState &state, type_list<>, Args... args)
-   {
-      gLog->trace(logCallEnd(state.log));
-      wrapped_function(args...);
-   }
-
-   virtual void call(ThreadState *thread) override
-   {
-      DispatchState state;
-      state.thread = thread;
-      state.r = 3;
-      state.f = 1;
-      logCall(state.log, thread->lr, this->name);
-      dispatch(state, type_list<FuncArgs...> {});
+      ppctypes::invoke(thread, wrapped_function, this->name);
    }
 };
 
@@ -111,7 +47,7 @@ struct KernelFunctionManual : KernelFunction
 
    virtual void call(ThreadState *thread) override
    {
-      LogState log;
+      ppctypes::LogState log;
       logCall(log, thread->lr, this->name);
       gLog->trace(logCallEnd(log));
       wrapped_function(thread);
