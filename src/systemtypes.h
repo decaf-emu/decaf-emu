@@ -17,6 +17,8 @@ typedef int BOOL;
 #define FALSE 0
 #endif
 
+typedef uint32_t ppcsize_t;
+
 // Ensure our structs are correct size & offsets to match WiiU
 #define CHECK_SIZE(Type, Size) \
    static_assert(sizeof(Type) == Size, \

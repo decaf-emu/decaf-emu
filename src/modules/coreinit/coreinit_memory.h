@@ -9,10 +9,10 @@ enum class OSMemoryType : uint32_t
 };
 
 void *
-OSBlockMove(void *dst, const void *src, size_t size, BOOL flush);
+OSBlockMove(void *dst, const void *src, ppcsize_t size, BOOL flush);
 
 void *
-OSBlockSet(void *dst, uint8_t val, size_t size);
+OSBlockSet(void *dst, uint8_t val, ppcsize_t size);
 
 BOOL
 OSGetForegroundBucket(be_val<uint32_t> *addr, be_val<uint32_t> *size);

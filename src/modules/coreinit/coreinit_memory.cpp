@@ -3,35 +3,35 @@
 #include "memory.h"
 
 void *
-OSBlockMove(void *dst, const void *src, size_t size, BOOL flush)
+OSBlockMove(void *dst, const void *src, ppcsize_t size, BOOL flush)
 {
    std::memmove(dst, src, size);
    return dst;
 }
 
 void *
-OSBlockSet(void *dst, uint8_t val, size_t size)
+OSBlockSet(void *dst, uint8_t val, ppcsize_t size)
 {
    std::memset(dst, val, size);
    return dst;
 }
 
 static void *
-coreinit_memmove(void *dst, const void *src, size_t size)
+coreinit_memmove(void *dst, const void *src, ppcsize_t size)
 {
    std::memmove(dst, src, size);
    return dst;
 }
 
 static void *
-coreinit_memcpy(void *dst, const void *src, size_t size)
+coreinit_memcpy(void *dst, const void *src, ppcsize_t size)
 {
    std::memcpy(dst, src, size);
    return dst;
 }
 
 static void *
-coreinit_memset(void *dst, int val, size_t size)
+coreinit_memset(void *dst, int val, ppcsize_t size)
 {
    std::memset(dst, val, size);
    return dst;
