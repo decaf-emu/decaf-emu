@@ -65,7 +65,8 @@ OSWaitAlarm(OSAlarm *alarm)
    return FALSE;
 }
 
-void CoreInit::registerAlarmFunctions()
+void
+CoreInit::registerAlarmFunctions()
 {
    RegisterKernelFunction(OSCancelAlarm);
    RegisterKernelFunction(OSCancelAlarms);
