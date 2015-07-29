@@ -52,4 +52,10 @@ getResult(ThreadState *state)
       Type>::get(state);
 }
 
+template<>
+static inline void
+getResult<void>(ThreadState *state)
+{
+}
+
 }
