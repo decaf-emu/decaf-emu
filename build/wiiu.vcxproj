@@ -172,6 +172,7 @@
     <ClCompile Include="..\src\processor.cpp" />
     <ClCompile Include="..\src\system.cpp" />
     <ClCompile Include="..\src\trace.cpp" />
+    <ClCompile Include="..\src\wfunc_ptr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\be_val.h" />

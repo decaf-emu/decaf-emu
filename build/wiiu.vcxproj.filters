@@ -106,6 +106,9 @@
     <Filter Include="Header Files\modules\erreula">
       <UniqueIdentifier>{010c8799-d846-4e5d-b504-822d85fae6b4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\util">
+      <UniqueIdentifier>{295406e0-1835-4c36-86dd-07af1a5c659b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -356,6 +359,9 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_shared.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wfunc_ptr.cpp">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

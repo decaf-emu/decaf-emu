@@ -68,7 +68,7 @@ zlibAllocWrapper(void *opaque, unsigned items, unsigned size)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
    ZlibAllocFunc allocFunc = static_cast<uint32_t>(wstrm->zalloc);
-   return allocFunc.call(&gProcessor.getCurrentFiber()->state, wstrm->opaque, items, size);
+   return allocFunc(wstrm->opaque, items, size);
 }
 
 static void
@@ -76,7 +76,7 @@ zlibFreeWrapper(void *opaque, void *address)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
    ZlibFreeFunc freeFunc = static_cast<uint32_t>(wstrm->zalloc);
-   freeFunc.call(&gProcessor.getCurrentFiber()->state, wstrm->opaque, address);
+   freeFunc(wstrm->opaque, address);
 }
 
 static int

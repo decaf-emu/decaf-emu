@@ -4,6 +4,8 @@
 #include "p32.h"
 #include "ppc.h"
 
+ThreadState *GetCurrentFiberState();
+
 #pragma pack(push, 1)
 
 template<typename ReturnType, typename... Args>
@@ -42,6 +44,10 @@ struct wfunc_ptr
    uint32_t address;
 
    ReturnType call(ThreadState *state, Args... args);
+   
+   ReturnType operator()(Args... args) {
+      return call(GetCurrentFiberState(), args...);
+   }
 };
 
 #pragma pack(pop)
