@@ -106,11 +106,13 @@ Processor::fiberEntryPoint(Fiber *fiber)
 void
 Processor::exit()
 {
-   // Return to parent fiber
+   // Destroy current fiber and return to parent fiber
    auto core = tCurrentCore;
    auto fiber = tCurrentCore->currentFiber;
+   auto parent = fiber->parentFiber;
    gLog->trace("Core {} exit thread {}", core->id, fiber->thread->id);
-   SwitchToFiber(fiber->parentFiber);
+   destroyFiber(fiber);
+   SwitchToFiber(parent);
 }
 
 void
@@ -197,6 +199,17 @@ Processor::createFiber()
    auto fiber = new Fiber();
    mFiberList.push_back(fiber);
    return fiber;
+}
+
+void
+Processor::destroyFiber(Fiber *fiber)
+{
+   if (fiber->thread) {
+      assert(fiber->thread->fiber);
+   }
+
+   mFiberList.erase(std::remove(mFiberList.begin(), mFiberList.end(), fiber), mFiberList.end());
+   delete fiber;
 }
 
 Fiber *

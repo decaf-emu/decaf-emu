@@ -61,6 +61,7 @@ public:
    void exit();
 
    Fiber *createFiber();
+   void destroyFiber(Fiber *fiber);
    Fiber *getCurrentFiber();
    Fiber *peekNextFiber(uint32_t core);
 

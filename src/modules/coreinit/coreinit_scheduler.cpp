@@ -2,9 +2,34 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
 #include "processor.h"
+#include "trace.h"
 
 static std::atomic_bool
 gSchedulerLock { false };
+
+// Setup a thread fiber, used by OSRunThread and OSResumeThread
+static void
+InitialiseThreadFiber(OSThread *thread)
+{
+   // Create a fiber for the thread
+   auto fiber = gProcessor.createFiber();
+   thread->fiber = fiber;
+   fiber->thread = thread;
+
+   // Setup thread state
+   memset(&fiber->state, 0, sizeof(ThreadState));
+
+   for (auto i = 0u; i < 32; ++i) {
+      fiber->state.gpr[i] = thread->context.gpr[i];
+   }
+
+   // Setup entry point
+   fiber->state.cia = 0;
+   fiber->state.nia = thread->entryPoint;
+
+   // Initialise tracer
+   traceInit(&fiber->state, 128);
+}
 
 void
 OSLockScheduler()
@@ -41,6 +66,11 @@ OSResumeThreadNoLock(OSThread *thread, int32_t counter)
 
    if (thread->suspendCounter == 0) {
       if (thread->state == OSThreadState::Ready) {
+         // Create a fiber for the thread to run on, if this is the first time!
+         if (!thread->fiber) {
+            InitialiseThreadFiber(thread);
+         }
+
          gProcessor.queue(thread->fiber);
       }
    }
