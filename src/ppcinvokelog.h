@@ -64,7 +64,28 @@ logArgument(LogState &state, const char *value)
    if (!value) {
       len = sprintf_s(state.buffer + state.pos, state.length, "%s", "NULL");
    } else {
-      len = sprintf_s(state.buffer + state.pos, state.length, "\"%s\"", value);
+      auto newPos = state.pos;
+
+      state.buffer[newPos++] = '\"';
+      for (const char *c = value; *c; ++c) {
+         if (*c == '\n' || *c == '\r' || *c == '\t') {
+            state.buffer[newPos++] = '\\';
+            if (*c == '\n') {
+               state.buffer[newPos++] = 'n';
+            } else if (*c == '\r') {
+               state.buffer[newPos++] = 'r';
+            } else if (*c == '\t') {
+               state.buffer[newPos++] = 't';
+            } else {
+               state.buffer[newPos++] = '?';
+            }
+         } else {
+            state.buffer[newPos++] = *c;
+         }
+      }
+      state.buffer[newPos++] = '\"';
+
+      len = newPos - state.pos;
    }
 
    state.length -= len;
@@ -83,12 +104,7 @@ template<typename Type>
 static inline void
 logArgument(LogState &state, p32<Type> value)
 {
-   int len;
-   logArgumentSeparator(state);
-
-   len = sprintf_s(state.buffer + state.pos, state.length, "%08X", static_cast<uint32_t>(value));
-   state.length -= len;
-   state.pos += len;
+   logArgument(state, static_cast<uint32_t>(value));
 }
 
 // Type *
@@ -106,9 +122,31 @@ typename std::enable_if<!std::is_enum<Type>::value, void>::type
 logArgument(LogState &state, Type value)
 {
    int len;
+   const char *fmt = "";
    logArgumentSeparator(state);
 
-   len = sprintf_s(state.buffer + state.pos, state.length, "%d", static_cast<int>(value));
+   if (std::is_floating_point<Type>::value) {
+      fmt = "%f";
+   } else if (std::is_unsigned<Type>::value) {
+      if ((uint32_t)value < 0x1000) {
+         fmt = "0x%X";
+      } else if (sizeof(Type) == 1) {
+         fmt = "0x%02X";
+      } else if (sizeof(Type) == 2) {
+         fmt = "0x%04X";
+      } else if (sizeof(Type) == 4) {
+         fmt = "0x%08X";
+      } else if (sizeof(Type) == 8) {
+         fmt = "0x%016X";
+      } else {
+         fmt = "0x%X";
+      }
+   } else {
+      fmt = "%d";
+   }
+
+   len = sprintf_s(state.buffer + state.pos, state.length, fmt, value);
+   
    state.length -= len;
    state.pos += len;
 }
