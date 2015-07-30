@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.22823.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "build\zlib.vcxproj", "{C0166DC5-84C8-466C-BD6C-037951915569}"
 EndProject
@@ -12,6 +12,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pugixml", "build\pugixml.vcxproj", "{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wiiu", "build\wiiu.vcxproj", "{D528F1B0-3DA2-496D-9E59-CE80141BD149}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7CA9594F-8EC3-4CC2-821B-F87D5DAB6363} = {7CA9594F-8EC3-4CC2-821B-F87D5DAB6363}
+		{C0166DC5-84C8-466C-BD6C-037951915569} = {C0166DC5-84C8-466C-BD6C-037951915569}
+		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6} = {2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6}
+		{94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E} = {94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "docopt", "build\docopt.vcxproj", "{7CA9594F-8EC3-4CC2-821B-F87D5DAB6363}"
 EndProject
