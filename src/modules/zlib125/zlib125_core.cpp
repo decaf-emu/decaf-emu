@@ -1,6 +1,7 @@
 #include "zlib125.h"
 #include "zlib125_core.h"
 #include "processor.h"
+#include "interpreter.h"
 #include <zlib.h>
 
 static std::map<uint32_t, z_stream>

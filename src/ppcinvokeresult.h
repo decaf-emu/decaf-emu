@@ -6,11 +6,11 @@
 namespace ppctypes
 {
 
-template <bool IsFloat, int PpcSize, typename Type>
+template <PpcType PpcTypeId, typename Type>
 struct result_converter_t;
 
 template<typename Type>
-struct result_converter_t<false, 1, Type> {
+struct result_converter_t<PpcType::WORD, Type> {
    static inline void set(ThreadState *state, Type v) {
       ppctype_converter_t<Type>::to_ppc(v, state->gpr[3]);
    }
@@ -21,7 +21,7 @@ struct result_converter_t<false, 1, Type> {
 };
 
 template<typename Type>
-struct result_converter_t<false, 2, Type> {
+struct result_converter_t<PpcType::DWORD, Type> {
    static inline void set(ThreadState *state, Type v) {
       ppctype_converter_t<Type>::to_ppc(v, state->gpr[3], state->gpr[4]);
    }
@@ -37,8 +37,7 @@ static inline void
 setResult(ThreadState *state, Type v)
 {
    return result_converter_t<
-      ppctype_converter_t<Type>::is_float,
-      ppctype_converter_t<Type>::ppc_size,
+      ppctype_converter_t<Type>::ppc_type,
       Type>::set(state, v);
 }
 
@@ -47,8 +46,7 @@ static inline Type
 getResult(ThreadState *state)
 {
    return result_converter_t<
-      ppctype_converter_t<Type>::is_float,
-      ppctype_converter_t<Type>::ppc_size,
+      ppctype_converter_t<Type>::ppc_type,
       Type>::get(state);
 }
 

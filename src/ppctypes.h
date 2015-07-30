@@ -1,39 +1,26 @@
 #pragma once
 #include <assert.h>
 #include <type_traits>
-#include "log.h"
-#include "p32.h"
-#include "wfunc_ptr.h"
 #include "ppc.h"
 
 namespace ppctypes
 {
 
+enum class PpcType {
+   WORD,
+   DWORD,
+   PAIRED0,
+   DOUBLE
+};
+
 template<typename Type>
 struct ppctype_converter_t;
-
-// p32<Type>
-template<typename Type>
-struct ppctype_converter_t<p32<Type>>
-{
-   static const bool is_float = false;
-   static const int ppc_size = 1;
-
-   static inline void to_ppc(p32<Type> v, uint32_t& out) {
-      out = static_cast<uint32_t>(v);
-   }
-
-   static inline p32<Type> from_ppc(uint32_t in) {
-      return make_p32<Type>(in);
-   }
-};
 
 // Type*
 template<typename Type>
 struct ppctype_converter_t<Type *>
 {
-   static const bool is_float = false;
-   static const int ppc_size = 1;
+   static const PpcType ppc_type = PpcType::WORD;
 
    static inline void to_ppc(Type *ptr, uint32_t& out)
    {
@@ -53,8 +40,7 @@ struct ppctype_converter_t<Type *>
 template<>
 struct ppctype_converter_t<int64_t>
 {
-   static const bool is_float = false;
-   static const int ppc_size = 2;
+   static const PpcType ppc_type = PpcType::DWORD;
 
    static inline void to_ppc(int64_t v, uint32_t& out1, uint32_t& out2)
    {
@@ -73,8 +59,7 @@ struct ppctype_converter_t<int64_t>
 template<>
 struct ppctype_converter_t<uint64_t>
 {
-   static const bool is_float = false;
-   static const int ppc_size = 2;
+   static const PpcType ppc_type = PpcType::DWORD;
 
    static inline void to_ppc(uint64_t v, uint32_t& out1, uint32_t& out2) {
       out1 = static_cast<uint32_t>(v >> 32);
@@ -92,8 +77,7 @@ struct ppctype_converter_t<uint64_t>
 template<>
 struct ppctype_converter_t<bool>
 {
-   static const bool is_float = false;
-   static const int ppc_size = 1;
+   static const PpcType ppc_type = PpcType::WORD;
 
    static inline void to_ppc(bool v, uint32_t& out) {
       out = v ? 1 : 0;
@@ -104,30 +88,11 @@ struct ppctype_converter_t<bool>
    }
 };
 
-// wfunc_ptr<...>
-template<typename ReturnType, typename... Args>
-struct ppctype_converter_t<wfunc_ptr<ReturnType, Args...>>
-{
-   static const bool is_float = false;
-   static const int ppc_size = 1;
-
-   typedef wfunc_ptr<ReturnType, Args...> Type;
-   
-   static inline void to_ppc(const Type& v, uint32_t& out) {
-      out = v.address;
-   }
-
-   static inline Type from_ppc(uint32_t in) {
-      return Type(in);
-   }
-};
-
 // float
 template<>
 struct ppctype_converter_t<float>
 {
-   static const bool is_float = true;
-   static const int ppc_size = 1;
+   static const PpcType ppc_type = PpcType::PAIRED0;
 
    static inline void to_ppc(float v, float& out) {
       out = v;
@@ -142,8 +107,7 @@ struct ppctype_converter_t<float>
 template<>
 struct ppctype_converter_t<double>
 {
-   static const bool is_float = true;
-   static const int ppc_size = 2;
+   static const PpcType ppc_type = PpcType::DOUBLE;
 
    static inline void to_ppc(double v, double& out) {
       out = v;
@@ -162,10 +126,9 @@ struct ppctype_converter_t
       std::is_integral<Type>::value || std::is_enum<Type>::value,
       "cannot do ppctype conversion against non-integer non-enum");
    static_assert(sizeof(Type) <= 4,
-      "cannot do ppctype conversion for non-sizeof 4 type");
+      "cannot do ppctype conversion for sizeof>4 type");
 
-   static const bool is_float = false;
-   static const int ppc_size = 1;
+   static const PpcType ppc_type = PpcType::WORD;
 
    static inline void to_ppc(Type v, uint32_t& out) {
       out = static_cast<uint32_t>(v);

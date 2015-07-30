@@ -7,6 +7,7 @@
 #include "instructionid.h"
 #include "ppc.h"
 #include "jit.h"
+#include "wfunc_ptr.h"
 
 #define RegisterInstruction(x) \
    registerInstruction(InstructionID::x, &x)
@@ -15,9 +16,6 @@
    registerInstruction(InstructionID::x, &fn)
 
 using instrfptr_t = void(*)(ThreadState*, Instruction);
-
-// Address used to signify a return to emulator-land.
-const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 
 enum class InterpJitMode {
    Enabled,
@@ -32,7 +30,7 @@ public:
       : mJitMode(InterpJitMode::Disabled) {}
 
    void setJitMode(InterpJitMode val);
-   void execute(ThreadState *state);
+   void executeSub(ThreadState *state);
    void addBreakpoint(uint32_t addr);
 
    InterpJitMode getJitMode() const {
@@ -40,6 +38,7 @@ public:
    }
 
 private:
+   void execute(ThreadState *state);
    InterpJitMode mJitMode;
    std::vector<uint32_t> mBreakpoints;
 
@@ -58,3 +57,25 @@ private:
 };
 
 extern Interpreter gInterpreter;
+
+template<typename ReturnType, typename... Args>
+ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args) {
+   ThreadState *state = GetCurrentFiberState();
+
+   // Push args
+   ppctypes::applyArguments(state, args...);
+
+   // Save state
+   auto nia = state->nia;
+
+   // Set state
+   state->cia = 0;
+   state->nia = address;
+   gInterpreter.executeSub(state);
+
+   // Restore state
+   state->nia = nia;
+
+   // Return the result
+   return ppctypes::getResult<ReturnType>(state);
+}

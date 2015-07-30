@@ -5,6 +5,7 @@
 #include "ppc.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
+#include "ppcinvoke.h"
 
 Processor
 gProcessor { 3 };
@@ -98,7 +99,7 @@ Processor::coreEntryPoint(Core *core)
 void
 Processor::fiberEntryPoint(Fiber *fiber)
 {
-   gInterpreter.execute(&fiber->state);
+   gInterpreter.executeSub(&fiber->state);
    OSExitThread(ppctypes::getResult<int>(&fiber->state));
 }
 

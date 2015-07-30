@@ -1,4 +1,5 @@
 #pragma once
+#include "log.h"
 #include "ppcinvokeargs.h"
 #include "ppcinvokeresult.h"
 #include "ppcinvokelog.h"

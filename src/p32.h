@@ -2,6 +2,7 @@
 #include <ostream>
 #include "be_val.h"
 #include "memory.h"
+#include "ppctypes.h"
 
 template<typename Type, bool BigEndian = false>
 class p32
@@ -123,4 +124,21 @@ static inline std::ostream&
 operator<<(std::ostream& os, const p32<Type, BigEndian>& val)
 {
    return os << static_cast<uint32_t>(val);
+}
+
+namespace ppctypes {
+template<typename BaseType>
+struct ppctype_converter_t<p32<BaseType>>
+{
+   typedef p32<BaseType> Type;
+   static const PpcType ppc_type = PpcType::WORD;
+
+   static inline void to_ppc(Type v, uint32_t& out) {
+      out = static_cast<uint32_t>(v);
+   }
+
+   static inline Type from_ppc(uint32_t in) {
+      return make_p32<BaseType>(in);
+   }
+};
 }

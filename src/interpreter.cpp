@@ -12,6 +12,9 @@ gInterpreter;
 static std::vector<instrfptr_t>
 sInstructionMap;
 
+// Address used to signify a return to emulator-land.
+const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
+
 void Interpreter::RegisterFunctions()
 {
    static bool didInit = false;
@@ -173,6 +176,17 @@ Interpreter::execute(ThreadState *state)
 
       traceInstructionEnd(trace, instr, data, state);
    }
+}
+
+void
+Interpreter::executeSub(ThreadState *state)
+{
+   auto lr = state->lr;
+   state->lr = CALLBACK_ADDR;
+   
+   execute(state);
+
+   state->lr = lr;
 }
 
 void Interpreter::addBreakpoint(uint32_t addr)

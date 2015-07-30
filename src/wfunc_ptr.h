@@ -3,6 +3,7 @@
 #include <ostream>
 #include "p32.h"
 #include "ppc.h"
+#include "ppctypes.h"
 
 ThreadState *GetCurrentFiberState();
 
@@ -41,13 +42,10 @@ struct wfunc_ptr
       return address;
    }
 
+   ReturnType operator()(Args... args);
+
    uint32_t address;
 
-   ReturnType call(ThreadState *state, Args... args);
-   
-   ReturnType operator()(Args... args) {
-      return call(GetCurrentFiberState(), args...);
-   }
 };
 
 #pragma pack(pop)
@@ -60,30 +58,20 @@ operator<<(std::ostream& os, const wfunc_ptr<ReturnType, Args...>& val)
    return os << static_cast<uint32_t>(val);
 }
 
-// Late include of ppcinvoke due to circular reference of wfunc_ptr inside arg_converter.
-#include "ppcinvoke.h"
-#include "interpreter.h"
+namespace ppctypes {
 
 template<typename ReturnType, typename... Args>
-ReturnType wfunc_ptr<ReturnType, Args...>::call(ThreadState *state, Args... args) {
-   // Push args
-   ppctypes::applyArguments(state, args...);
+struct ppctype_converter_t<wfunc_ptr<ReturnType, Args...>>
+{
+   typedef wfunc_ptr<ReturnType, Args...> Type;
+   static const PpcType ppc_type = PpcType::WORD;
+   
+   static inline void to_ppc(const Type& v, uint32_t& out) {
+      out = v.address;
+   }
 
-   // Save state
-   auto lr = state->lr;
-   auto nia = state->nia;
-
-   // Set state
-   state->cia = 0;
-   state->nia = address;
-   state->lr = CALLBACK_ADDR;
-
-   gInterpreter.execute(state);
-
-   // Restore state
-   state->lr = lr;
-   state->nia = nia;
-
-   // Return the result
-   return ppctypes::getResult<ReturnType>(state);
+   static inline Type from_ppc(uint32_t in) {
+      return Type(in);
+   }
+};
 }
