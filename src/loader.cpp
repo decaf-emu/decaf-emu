@@ -142,6 +142,8 @@ relocateSections(std::vector<elf::Section> &sections, uint32_t origCode, uint32_
          section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffCode);
       } else if (rplSection.section->type == UserModule::Section::Data) {
          section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffData);
+      } else if (rplSection.section->type == UserModule::Section::DataImports) {
+         section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffData);
       }
    }
 }
@@ -538,38 +540,36 @@ Loader::loadRPL(UserModule &module, const char *buffer, size_t size)
 
    // Allocate code & data sections in memory
    auto codeStart = module.codeAddressRange.first;
-   auto codeSize = 0x0e000000;
-   gMemory.alloc(codeStart, codeSize);
+   auto codeSize = module.maxCodeSize;
+   gMemory.alloc(codeStart, codeSize); // TODO: Append code to end of other loaded code sections
 
-   auto dataStart = module.dataAddressRange.first;
-   auto dataSize = module.dataAddressRange.second - module.dataAddressRange.first;
-   auto dataEnd = alignUp(dataStart + dataSize, 4096);
-   gMemory.alloc(dataStart, dataSize);
+   auto dataStart = alignUp(codeStart + codeSize, 4096);
+   auto dataSize = alignUp(module.dataAddressRange.second - module.dataAddressRange.first, 4096);
+   auto dataEnd = dataStart + dataSize;
+   gMemory.alloc(dataStart, dataSize); // TODO: Use OSDynLoad_MemAlloc for data section allocation
 
    // Update MEM2 memory bounds
    be_val<uint32_t> mem2start, mem2size;
    OSGetMemBound(OSMemoryType::MEM2, &mem2start, &mem2size);
    OSSetMemBound(OSMemoryType::MEM2, dataEnd, mem2size - (dataEnd - mem2start));
 
-   if (0) {
-      // Relocate sections
-      relocateSections(sections, module.codeAddressRange.first, codeStart, module.dataAddressRange.first, dataStart);
+   // Relocate sections
+   relocateSections(sections, module.codeAddressRange.first, codeStart, module.dataAddressRange.first, dataStart);
 
-      module.codeAddressRange.first = codeStart;
-      module.codeAddressRange.second = codeStart + codeSize;
+   module.codeAddressRange.first = codeStart;
+   module.codeAddressRange.second = codeStart + codeSize;
 
-      module.dataAddressRange.first = dataStart;
-      module.dataAddressRange.second = dataStart + dataSize;
+   module.dataAddressRange.first = dataStart;
+   module.dataAddressRange.second = dataStart + dataSize;
 
-      // Relocate entry point
-      for (auto i = 0u; i < sections.size(); ++i) {
-         auto &section = sections[i];
+   // Relocate entry point
+   for (auto i = 0u; i < sections.size(); ++i) {
+      auto &section = sections[i];
 
-         if (section.header.addr <= header.entry && section.header.addr + section.data.size() > header.entry) {
-            auto offset = section.section->address - section.header.addr;
-            module.entryPoint = header.entry + offset;
-            break;
-         }
+      if (section.header.addr <= header.entry && section.header.addr + section.data.size() > header.entry) {
+         auto offset = section.section->address - section.header.addr;
+         module.entryPoint = header.entry + offset;
+         break;
       }
    }
 

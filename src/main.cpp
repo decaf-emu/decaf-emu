@@ -161,6 +161,9 @@ test(const std::string &as, const std::string &path)
 static bool
 play(const std::string &path)
 {
+   UserModule module;
+   Loader loader;
+
    // Setup filesystem
    VirtualFileSystem fs { "/" };
    fs.mount("/vol", std::make_unique<HostFileSystem>(path + "/data"));
@@ -168,16 +171,17 @@ play(const std::string &path)
 
    // Read cos.xml
    pugi::xml_document doc;
-   auto cosFile = fs.openFile("/vol/code/cos.xml", FileSystem::Input | FileSystem::Binary);
+   auto fh = fs.openFile("/vol/code/cos.xml", FileSystem::Input | FileSystem::Binary);
 
-   if (!cosFile) {
+   if (!fh) {
       gLog->error("Error opening /vol/code/cos.xml");
       return false;
    }
 
-   auto size = cosFile->size();
+   auto size = fh->size();
    auto buffer = std::vector<char>(size);
-   cosFile->read(buffer.data(), size);
+   fh->read(buffer.data(), size);
+   fh->close();
 
    // Parse cos.xml
    auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
@@ -187,26 +191,27 @@ play(const std::string &path)
       return false;
    }
 
-   auto rpxPath = doc.child("app").child("argstr").child_value();
+   auto app = doc.child("app");
+   auto rpx = app.child("argstr").child_value();
+   module.maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
 
    // Read rpx file
-   auto rpxFile = fs.openFile(std::string("/vol/code/") + rpxPath, FileSystem::Input | FileSystem::Binary);
+   fh = fs.openFile(std::string("/vol/code/") + rpx, FileSystem::Input | FileSystem::Binary);
 
-   if (!rpxFile) {
-      gLog->error("Error opening /vol/code/{}", rpxPath);
+   if (!fh) {
+      gLog->error("Error opening /vol/code/{}", rpx);
       return false;
    }
 
-   buffer.resize(rpxFile->size());
-   rpxFile->read(buffer.data(), buffer.size());
+   buffer.resize(fh->size());
+   fh->read(buffer.data(), buffer.size());
+   fh->close();
 
    // Load the rpl into memory
-   Loader loader;
-   UserModule module;
-   gSystem.registerModule(rpxPath, &module);
+   gSystem.registerModule(rpx, &module);
 
    if (!loader.loadRPL(module, buffer.data(), buffer.size())) {
-      gLog->error("Could not load {}", rpxPath);
+      gLog->error("Could not load {}", rpx);
       return false;
    }
 

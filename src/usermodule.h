@@ -102,6 +102,7 @@ struct UserModule
       uint32_t size;
    };
 
+   uint32_t maxCodeSize;
    uint32_t entryPoint;
    uint32_t defaultStackSize;
    std::pair<uint32_t, uint32_t> codeAddressRange;
