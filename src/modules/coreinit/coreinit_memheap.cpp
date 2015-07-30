@@ -15,7 +15,7 @@ pMEMAllocFromDefaultHeapEx;
 p32<be_val<uint32_t>>
 pMEMFreeToDefaultHeap;
 
-static HeapHandle
+static CommonHeap *
 gMemArenas[static_cast<size_t>(BaseHeapType::Max)];
 
 static ExpandedHeap *
@@ -127,7 +127,7 @@ MEMDumpHeap(CommonHeap *heap)
    }
 }
 
-HeapHandle
+CommonHeap *
 MEMFindContainHeap(void *block)
 {
    if (auto list = findListContainingBlock(block)) {
@@ -138,10 +138,10 @@ MEMFindContainHeap(void *block)
 }
 
 BaseHeapType
-MEMGetArena(HeapHandle handle)
+MEMGetArena(CommonHeap *heap)
 {
    for (auto i = 0u; i < static_cast<size_t>(BaseHeapType::Max); ++i) {
-      if (gMemArenas[i] == handle) {
+      if (gMemArenas[i] == heap) {
          return static_cast<BaseHeapType>(i);
       }
    }
@@ -149,7 +149,7 @@ MEMGetArena(HeapHandle handle)
    return BaseHeapType::Invalid;
 }
 
-HeapHandle
+CommonHeap *
 MEMGetBaseHeapHandle(BaseHeapType type)
 {
    if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
@@ -159,12 +159,12 @@ MEMGetBaseHeapHandle(BaseHeapType type)
    }
 }
 
-HeapHandle
-MEMSetBaseHeapHandle(BaseHeapType type, HeapHandle handle)
+CommonHeap *
+MEMSetBaseHeapHandle(BaseHeapType type, CommonHeap *heap)
 {
    if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
       auto previous = gMemArenas[static_cast<size_t>(type)];
-      gMemArenas[static_cast<size_t>(type)] = handle;
+      gMemArenas[static_cast<size_t>(type)] = heap;
       return previous;
    } else {
       return 0;
@@ -217,23 +217,24 @@ CoreInitSystemHeap()
 void
 CoreInitDefaultHeap()
 {
-   HeapHandle mem1, mem2, fg;
+   ExpandedHeap *mem2;
+   FrameHeap *mem1, *fg;
    be_val<uint32_t> addr, size;
 
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
    mem2 = MEMCreateExpHeap(make_p32<ExpandedHeap>(addr), size);
-   MEMSetBaseHeapHandle(BaseHeapType::MEM2, mem2);
+   MEMSetBaseHeapHandle(BaseHeapType::MEM2, reinterpret_cast<CommonHeap*>(mem2));
 
    // Create frame heap for MEM1
    OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
    mem1 = MEMCreateFrmHeap(make_p32<FrameHeap>(addr), size);
-   MEMSetBaseHeapHandle(BaseHeapType::MEM1, mem1);
+   MEMSetBaseHeapHandle(BaseHeapType::MEM1, reinterpret_cast<CommonHeap*>(mem1));
 
    // Create frame heap for Foreground
    OSGetForegroundBucketFreeArea(&addr, &size);
    fg = MEMCreateFrmHeap(make_p32<FrameHeap>(addr), size);
-   MEMSetBaseHeapHandle(BaseHeapType::FG, fg);
+   MEMSetBaseHeapHandle(BaseHeapType::FG, reinterpret_cast<CommonHeap*>(fg));
 }
 
 void
@@ -285,7 +286,7 @@ CoreFreeDefaultHeap()
 void
 CoreInit::registerMembaseFunctions()
 {
-   memset(gMemArenas, 0, sizeof(HeapHandle) * static_cast<size_t>(BaseHeapType::Max));
+   memset(gMemArenas, 0, sizeof(CommonHeap *) * static_cast<size_t>(BaseHeapType::Max));
 
    RegisterKernelFunction(MEMGetBaseHeapHandle);
    RegisterKernelFunction(MEMSetBaseHeapHandle);

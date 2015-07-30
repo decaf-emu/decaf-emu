@@ -60,8 +60,6 @@ CHECK_SIZE(CommonHeap, 0x34);
 
 #pragma pack(pop)
 
-using HeapHandle = void *;
-
 extern p32<be_val<uint32_t>>
 pMEMAllocFromDefaultHeap;
 
@@ -80,17 +78,17 @@ MEMiFinaliseHeap(CommonHeap *heap);
 void
 MEMDumpHeap(CommonHeap *heap);
 
-HeapHandle
+CommonHeap *
 MEMFindContainHeap(void *block);
 
 BaseHeapType
-MEMGetArena(HeapHandle handle);
+MEMGetArena(CommonHeap *heap);
 
-HeapHandle
+CommonHeap *
 MEMGetBaseHeapHandle(BaseHeapType arena);
 
-HeapHandle
-MEMSetBaseHeapHandle(BaseHeapType arena, HeapHandle handle);
+CommonHeap *
+MEMSetBaseHeapHandle(BaseHeapType arena, CommonHeap *heap);
 
 void *
 OSAllocFromSystem(uint32_t size, int alignment = 4);
