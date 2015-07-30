@@ -44,8 +44,9 @@ struct ppctype_converter_t<int64_t>
 
    static inline void to_ppc(int64_t v, uint32_t& out1, uint32_t& out2)
    {
-      out1 = static_cast<uint32_t>(v >> 32);
-      out2 = static_cast<uint32_t>(v & 0xffffffff);
+      auto uv = static_cast<uint64_t>(v);
+      out1 = static_cast<uint32_t>(uv >> 32);
+      out2 = static_cast<uint32_t>(uv & 0xffffffff);
    }
 
    static inline int64_t from_ppc(uint32_t in1, uint32_t in2) {
