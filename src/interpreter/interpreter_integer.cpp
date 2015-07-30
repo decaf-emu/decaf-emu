@@ -98,7 +98,7 @@ addGeneric(ThreadState *state, Instruction instr)
    state->gpr[instr.rD] = d;
 
    // Check for carry/overflow
-   auto carry = d < a;
+   auto carry = d < a || (d == a && b > 0);
    auto overflow = !!get_bit<31>((a ^ d) & (b ^ d));
 
    if (flags & AddCarry) {

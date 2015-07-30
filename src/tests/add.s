@@ -22,6 +22,17 @@ addSimpleRecordNoSO:
    blr
    # out r3 = 3
    # out crf0 = Positive
+   
+addoSimpleOverflow:
+   # in r1 = 4000000000
+   # in r2 = 4000000000
+   # in xer.so = 1
+   addo. r3, r1, r2
+   blr
+   # out r3 = 3705032704
+   # out crf0 = Negative | SummaryOverflow
+   # out xer.ov = 0
+
 
 testCRF:
    # in r1 = 1
