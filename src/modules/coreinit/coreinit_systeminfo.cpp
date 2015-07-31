@@ -3,9 +3,8 @@
 #include "coreinit_systeminfo.h"
 #include "coreinit_memheap.h"
 #include "coreinit_time.h"
-#include <Windows.h>
 
-int64_t
+std::chrono::time_point<std::chrono::system_clock>
 gEpochTime;
 
 OSSystemInfo *
@@ -53,43 +52,27 @@ CoreInit::registerSystemInfoFunctions()
 void
 CoreInit::initialiseSystemInformation()
 {
-   /*
-   From a WiiU Console:
-   uint32_t clockSpeed 248625000
-   uint32_t 1243125000
-   uint64_t baseTime 30373326953884705
-   uint32_t 524288 = 0x80000
-   uint32_t 2097152 = 0x200000
-   uint32_t 524288 = 0x80000
-   uint32_t 1709422149632
-   */
-
    // Setup gSystemInfo
    gSystemInfo = OSAllocFromSystem<OSSystemInfo>();
-   gSystemInfo->clockSpeed = static_cast<uint32_t>(CLOCK_SPEED);
 
-   // Calculate the WiiU epoch (01/01/2000)
-   SYSTEMTIME bt;
-   FILETIME bft;
-   bt.wYear = 2000;
-   bt.wMonth = 1; // January
-   bt.wDay = 1;
-   bt.wDayOfWeek = 6; // Saturday
-   bt.wHour = 0;
-   bt.wMinute = 0;
-   bt.wSecond = 0;
-   bt.wMilliseconds = 0;
-   SystemTimeToFileTime(&bt, &bft);
+   // Clockspeed is 4 * 1 second in ticks
+   auto oneSecond = std::chrono::seconds(1);
+   auto oneSecondNS = std::chrono::duration_cast<std::chrono::nanoseconds>(oneSecond);
+   gSystemInfo->clockSpeed = oneSecondNS.count() * 4;
 
-   gEpochTime = (static_cast<Time>(bft.dwHighDateTime) << 32) | bft.dwLowDateTime;
+   // Calculate the Wii U epoch (01/01/2000)
+   std::tm tm = { 0 };
+   tm.tm_sec = 0;
+   tm.tm_min = 0;
+   tm.tm_hour = 0;
+   tm.tm_mday = 1;
+   tm.tm_mon = 1;
+   tm.tm_year = 100;
+   tm.tm_isdst = -1;
+   gEpochTime = std::chrono::system_clock::from_time_t(_mkgmtime(&tm));
 
-   // Get local time
-   SYSTEMTIME lt;
-   FILETIME lft;
-   GetLocalTime(&lt);
-   SystemTimeToFileTime(&lt, &lft);
-
-   // Set baseTime as time since 01/01/2000
-   auto localTime = (static_cast<Time>(lft.dwHighDateTime) << 32) | lft.dwLowDateTime;
-   gSystemInfo->baseTime = localTime - gEpochTime;
+   // Calculate base time
+   auto now = std::chrono::system_clock::now();
+   auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now - gEpochTime);
+   gSystemInfo->baseTime = ns.count();
 }

@@ -287,7 +287,7 @@ void
 OSSleepThread(OSThreadQueue *queue);
 
 void
-OSSleepTicks(Time ticks);
+OSSleepTicks(OSTime ticks);
 
 uint32_t
 OSSuspendThread(OSThread *thread);

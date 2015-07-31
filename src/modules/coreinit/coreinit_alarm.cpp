@@ -1,7 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 
-const uint32_t OSAlarm::Tag;
+const uint32_t
+OSAlarm::Tag;
 
 BOOL
 OSCancelAlarm(OSAlarm *alarm)
@@ -36,13 +37,13 @@ OSGetAlarmUserData(OSAlarm *alarm)
 }
 
 BOOL
-OSSetAlarm(OSAlarm *alarm, Time time, AlarmCallback callback)
+OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback)
 {
    return FALSE;
 }
 
 BOOL
-OSSetPeriodicAlarm(OSAlarm *alarm, Time start, Time interval, AlarmCallback callback)
+OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback callback)
 {
    return FALSE;
 }

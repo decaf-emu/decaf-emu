@@ -421,7 +421,7 @@ SleepAlarmHandler(OSAlarm *alarm, OSContext *context)
 }
 
 void
-OSSleepTicks(Time ticks)
+OSSleepTicks(OSTime ticks)
 {
    if (1) {
       OSTestThreadCancel();
@@ -430,7 +430,6 @@ OSSleepTicks(Time ticks)
    }
 
    auto thread = OSGetCurrentThread();
-
    OSLockScheduler();
 
    // Create the alarm user data

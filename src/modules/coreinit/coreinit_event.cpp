@@ -151,7 +151,7 @@ EventAlarmHandler(OSAlarm *alarm, OSContext *context)
 }
 
 BOOL
-OSWaitEventWithTimeout(OSEvent *event, Time timeout)
+OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
 {
    BOOL result = TRUE;
    OSLockScheduler();

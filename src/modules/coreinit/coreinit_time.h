@@ -1,21 +1,20 @@
 #pragma once
 #include "systemtypes.h"
 
-using Ticks = int32_t;
-using Time = int64_t;
+// Tick is 1 nanosecond
+using OSTick = int32_t;
 
-// This is FILETIME to Seconds but * 4
-static const Time
-CLOCK_SPEED = 10000000 * 4;
+// Time is ticks since epoch
+using OSTime = int64_t;
 
-Ticks
-OSGetSystemTick();
+OSTime
+OSGetTime();
 
-Time
+OSTime
 OSGetSystemTime();
 
-Ticks
+OSTick
 OSGetTick();
 
-Time
-OSGetTime();
+OSTick
+OSGetSystemTick();

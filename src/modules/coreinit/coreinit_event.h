@@ -50,4 +50,4 @@ void
 OSResetEvent(OSEvent *event);
 
 BOOL
-OSWaitEventWithTimeout(OSEvent *event, Time timeout);
+OSWaitEventWithTimeout(OSEvent *event, OSTime timeout);

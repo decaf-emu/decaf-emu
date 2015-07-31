@@ -70,10 +70,10 @@ void *
 OSGetAlarmUserData(OSAlarm *alarm);
 
 BOOL
-OSSetAlarm(OSAlarm *alarm, Time time, AlarmCallback callback);
+OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback);
 
 BOOL
-OSSetPeriodicAlarm(OSAlarm *alarm, Time start, Time interval, AlarmCallback callback);
+OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback callback);
 
 void
 OSSetAlarmTag(OSAlarm *alarm, uint32_t alarmTag);
