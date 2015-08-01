@@ -3,6 +3,7 @@
 #include "interpreter.h"
 #include "instructiondata.h"
 #include "memory.h"
+#include "processor.h"
 #include "trace.h"
 #include "log.h"
 
@@ -98,6 +99,9 @@ Interpreter::execute(ThreadState *state)
    while (state->nia != CALLBACK_ADDR) {
       // TankTankTank decryptor fn
       //forceJit = state->nia >= 0x0250B648 && state->nia < 0x0250B8B8;
+
+      // Handle interrupts
+      gProcessor.handleInterrupt();
 
       // JIT Attempt!
       if (forceJit || mJitMode == InterpJitMode::Enabled) {

@@ -10,11 +10,13 @@ public:
    virtual void initialise() override;
 
 private:
+   void initialiseAlarm();
    void initialiseDynLoad();
    void initialiseEvent();
    void initialiseGHS();
    void initialiseMembase();
    void initialiseMessageQueues();
+   void initialiseSchedulerFunctions();
    void initialiseSystemInformation();
    void initialiseThread();
 
@@ -41,6 +43,7 @@ private:
    static void registerMemoryFunctions();
    static void registerMessageQueueFunctions();
    static void registerMutexFunctions();
+   static void registerSchedulerFunctions();
    static void registerSemaphoreFunctions();
    static void registerSharedFunctions();
    static void registerSpinLockFunctions();

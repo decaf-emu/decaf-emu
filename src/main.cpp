@@ -12,6 +12,7 @@
 #include "memory.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_memheap.h"
+#include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/erreula/erreula.h"
 #include "modules/gx2/gx2.h"
 #include "modules/nn_ac/nn_ac.h"
@@ -217,7 +218,6 @@ play(const std::string &path)
 
    gLog->debug("Succesfully loaded {}", path);
    auto entryPoint = module.entryPoint;
-   auto stackSize = module.defaultStackSize;
 
    // Initialise default heaps
    // TODO: Call __preinit_user
@@ -226,34 +226,54 @@ play(const std::string &path)
    // Startup processor
    gProcessor.start();
 
-   // Allocate OSThread structures and stacks
-   auto thread1 = OSAllocFromSystem<OSThread>();
-   auto stack1 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-   auto stack1top = stack1 + stackSize;
-
+   // Setup default threads
    auto thread0 = OSAllocFromSystem<OSThread>();
-   auto stack0 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-   auto stack0top = stack0 + stackSize;
-
+   auto thread1 = OSAllocFromSystem<OSThread>();
    auto thread2 = OSAllocFromSystem<OSThread>();
+
+   auto stackSize = module.defaultStackSize;
+   auto stack0 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+   auto stack1 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
    auto stack2 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-   auto stack2top = stack0 + stackSize;
 
    // Create the idle threads for core0 and core2
-   OSCreateThread(thread0, 0, 0, nullptr, stack0top, stackSize, 16, OSThreadAttributes::AffinityCPU0);
-   OSCreateThread(thread2, 0, 0, nullptr, stack2top, stackSize, 16, OSThreadAttributes::AffinityCPU2);
+   OSCreateThread(thread0, 0, 0, nullptr, stack0 + stackSize, stackSize, 16, OSThreadAttributes::AffinityCPU0);
+   OSCreateThread(thread2, 0, 0, nullptr, stack2 + stackSize, stackSize, 16, OSThreadAttributes::AffinityCPU2);
 
    // Set the two idle threads to inactive
    thread0->state = OSThreadState::None;
    thread2->state = OSThreadState::None;
 
    // Create the main thread for core1
-   OSCreateThread(thread1, entryPoint, 0, nullptr, stack1top, stackSize, 16, OSThreadAttributes::AffinityCPU1);
+   OSCreateThread(thread1, entryPoint, 0, nullptr, stack1 + stackSize, stackSize, 16, OSThreadAttributes::AffinityCPU1);
 
    // Set the default threads
    OSSetDefaultThread(0, thread0);
    OSSetDefaultThread(1, thread1);
    OSSetDefaultThread(2, thread2);
+
+   // Setup Interrupt Handler threads
+   auto intThread0 = OSAllocFromSystem<OSThread>();
+   auto intThread1 = OSAllocFromSystem<OSThread>();
+   auto intThread2 = OSAllocFromSystem<OSThread>();
+
+   stackSize = 16 * 1024;
+   auto intStack0 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+   auto intStack1 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+   auto intStack2 = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+
+   OSCreateThread(intThread0, InterruptThreadEntryPoint, 0, nullptr, intStack0 + stackSize, stackSize, -1, OSThreadAttributes::AffinityCPU0);
+   OSCreateThread(intThread1, InterruptThreadEntryPoint, 1, nullptr, intStack1 + stackSize, stackSize, -1, OSThreadAttributes::AffinityCPU1);
+   OSCreateThread(intThread2, InterruptThreadEntryPoint, 2, nullptr, intStack2 + stackSize, stackSize, -1, OSThreadAttributes::AffinityCPU2);
+
+   OSSetInterruptThread(0, intThread0);
+   OSSetInterruptThread(1, intThread1);
+   OSSetInterruptThread(2, intThread2);
+
+   // Start interrupt handler threads
+   OSResumeThread(intThread0);
+   OSResumeThread(intThread1);
+   OSResumeThread(intThread2);
 
    // Start thread 1
    OSResumeThread(thread1);
@@ -268,6 +288,13 @@ play(const std::string &path)
    OSFreeToSystem(stack0);
    OSFreeToSystem(stack1);
    OSFreeToSystem(stack2);
+
+   OSFreeToSystem(intThread0);
+   OSFreeToSystem(intThread1);
+   OSFreeToSystem(intThread2);
+   OSFreeToSystem(intStack0);
+   OSFreeToSystem(intStack1);
+   OSFreeToSystem(intStack2);
 
    return true;
 }

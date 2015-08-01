@@ -8,6 +8,7 @@
 #include <Windows.h>
 #include "modules/coreinit/coreinit_mutex.h"
 
+struct OSContext;
 struct OSThread;
 struct ThreadState;
 
@@ -37,12 +38,18 @@ struct Core
    Core(uint32_t id) :
       id(id)
    {
+      nextInterrupt = std::chrono::time_point<std::chrono::system_clock>::max();
    }
 
    uint32_t id;
    Fiber *currentFiber = nullptr;
+   void *interruptedFiber = nullptr;
+   OSContext *interruptContext = nullptr;
+   Fiber *interruptHandlerFiber = nullptr;
    void *primaryFiber = nullptr;
    std::thread thread;
+   std::atomic<bool> interrupt = false;
+   std::chrono::system_clock::time_point nextInterrupt;
 };
 
 class Processor
@@ -63,6 +70,7 @@ public:
    Fiber *createFiber();
    void destroyFiber(Fiber *fiber);
    Fiber *getCurrentFiber();
+   OSContext *getInterruptContext();
    Fiber *peekNextFiber(uint32_t core);
 
    template<typename LockType>
@@ -72,6 +80,13 @@ public:
       reschedule(false);
    }
 
+   // Interrupts
+   void handleInterrupt();
+   void finishInterrupt();
+   void waitFirstInterrupt();
+   void setInterrupt(uint32_t core);
+   void setInterruptTimer(uint32_t core, std::chrono::time_point<std::chrono::system_clock> when);
+
    // Core
    uint32_t getCoreID();
    uint32_t getCoreCount();
@@ -80,6 +95,7 @@ protected:
    friend Core;
    friend Fiber;
 
+   void timerEntryPoint();
    void coreEntryPoint(Core *core);
    void fiberEntryPoint(Fiber *fiber);
 
@@ -90,6 +106,10 @@ private:
    std::condition_variable mCondition;
    std::vector<Fiber *> mFiberQueue;
    std::vector<Fiber *> mFiberList;
+
+   std::thread mTimerThread;
+   std::mutex mTimerMutex;
+   std::condition_variable mTimerCondition;
 };
 
 extern Processor

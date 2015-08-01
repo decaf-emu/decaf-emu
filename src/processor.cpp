@@ -34,6 +34,8 @@ Processor::start()
    for (auto core : mCores) {
       core->thread = std::thread(std::bind(&Processor::coreEntryPoint, this, core));
    }
+
+   mTimerThread = std::thread(std::bind(&Processor::timerEntryPoint, this));
 }
 
 void
@@ -67,6 +69,91 @@ Processor::peekNextFiber(uint32_t core)
 }
 
 void
+Processor::timerEntryPoint()
+{
+   while (mRunning) {
+      std::unique_lock<std::mutex> lock(mTimerMutex);
+      auto now = std::chrono::system_clock::now();
+      auto next = std::chrono::time_point<std::chrono::system_clock>::max();
+      bool timedWait = false;
+
+      for (auto core : mCores) {
+         if (core->nextInterrupt <= now) {
+            core->interrupt = true;
+            core->nextInterrupt = std::chrono::time_point<std::chrono::system_clock>::max();
+         } else if (core->nextInterrupt < next) {
+            next = core->nextInterrupt;
+            timedWait = true;
+         }
+      }
+
+      if (timedWait) {
+         mTimerCondition.wait_until(lock, next);
+      } else {
+         mTimerCondition.wait(lock);
+      }
+   }
+}
+
+void
+Processor::waitFirstInterrupt()
+{
+   auto core = tCurrentCore;
+   auto fiber = core->currentFiber;
+   core->interruptHandlerFiber = fiber;
+   SwitchToFiber(core->primaryFiber);
+}
+
+void
+Processor::handleInterrupt()
+{
+   auto core = tCurrentCore;
+
+   if (core->interrupt) {
+      gLog->trace("Process interrupt");
+
+      if (core->currentFiber) {
+         core->interruptedFiber = core->currentFiber->handle;
+         core->interruptContext = &core->currentFiber->thread->context;
+      } else {
+         core->interruptedFiber = core->primaryFiber;
+         core->interruptContext = nullptr;
+      }
+
+      SwitchToFiber(core->interruptHandlerFiber->handle);
+   }
+}
+
+void
+Processor::finishInterrupt()
+{
+   auto fiber = tCurrentCore->interruptedFiber;
+   tCurrentCore->interrupt = false;
+   tCurrentCore->interruptedFiber = nullptr;
+   SwitchToFiber(fiber);
+}
+
+void
+Processor::setInterrupt(uint32_t core)
+{
+   std::unique_lock<std::mutex> lock(mTimerMutex);
+   mCores[core]->nextInterrupt = std::chrono::time_point<std::chrono::system_clock>::max();
+   mCores[core]->interrupt = true;
+}
+
+void
+Processor::setInterruptTimer(uint32_t core, std::chrono::time_point<std::chrono::system_clock> when)
+{
+   std::unique_lock<std::mutex> lock(mTimerMutex);
+
+   if (when < mCores[core]->nextInterrupt) {
+      mCores[core]->nextInterrupt = when;
+   }
+
+   mTimerCondition.notify_all();
+}
+
+void
 Processor::coreEntryPoint(Core *core)
 {
    tCurrentCore = core;
@@ -88,6 +175,10 @@ Processor::coreEntryPoint(Core *core)
 
          gLog->trace("Core {} enter thread {}", core->id, fiber->thread->id);
          SwitchToFiber(fiber->handle);
+      } else if (core->interrupt) {
+         // Switch to the interrupt thread for any waiting interrupts
+         lock.unlock();
+         handleInterrupt();
       } else {
          // Wait for a valid fiber
          gLog->trace("Core {} wait for thread", core->id);
@@ -204,10 +295,6 @@ Processor::createFiber()
 void
 Processor::destroyFiber(Fiber *fiber)
 {
-   if (fiber->thread) {
-      assert(fiber->thread->fiber);
-   }
-
    mFiberList.erase(std::remove(mFiberList.begin(), mFiberList.end(), fiber), mFiberList.end());
    delete fiber;
 }
@@ -216,6 +303,12 @@ Fiber *
 Processor::getCurrentFiber()
 {
    return tCurrentCore ? tCurrentCore->currentFiber : nullptr;
+}
+
+OSContext *
+Processor::getInterruptContext()
+{
+   return tCurrentCore ? tCurrentCore->interruptContext : nullptr;
 }
 
 uint32_t

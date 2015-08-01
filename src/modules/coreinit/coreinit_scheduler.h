@@ -1,5 +1,6 @@
 #pragma once
 #include "systemtypes.h"
+#include "coreinit_thread.h"
 
 struct OSThread;
 struct OSThreadQueue;
@@ -33,3 +34,12 @@ OSWakeupThreadNoLock(OSThreadQueue *queue);
 
 void
 OSWakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult);
+
+OSThread *
+OSSetInterruptThread(uint32_t core, OSThread *thread);
+
+OSThread *
+OSGetInterruptThread(uint32_t coreID);
+
+extern ThreadEntryPoint
+InterruptThreadEntryPoint;

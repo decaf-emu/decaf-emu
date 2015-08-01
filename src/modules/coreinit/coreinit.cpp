@@ -13,11 +13,13 @@ CoreInit::~CoreInit()
 void
 CoreInit::initialise()
 {
+   initialiseAlarm();
    initialiseDynLoad();
    initialiseEvent();
    initialiseGHS();
    initialiseMembase();
    initialiseMessageQueues();
+   initialiseSchedulerFunctions();
    initialiseSystemInformation();
    initialiseThread();
 }
@@ -44,6 +46,7 @@ CoreInit::RegisterFunctions()
    registerMemlistFunctions();
    registerMessageQueueFunctions();
    registerMutexFunctions();
+   registerSchedulerFunctions();
    registerSemaphoreFunctions();
    registerSharedFunctions();
    registerSpinLockFunctions();

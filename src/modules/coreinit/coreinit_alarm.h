@@ -9,23 +9,41 @@ struct OSAlarm;
 struct OSContext;
 using AlarmCallback = wfunc_ptr<void, OSAlarm *, OSContext *>;
 
+namespace OSAlarmState
+{
+enum OSAlarmState : uint32_t
+{
+   None,
+   Set,
+   Cancelled
+};
+}
+
 struct OSAlarmQueue
 {
    static const uint32_t Tag = 0x614C6D51;
    be_val<uint32_t> tag;
    be_ptr<const char> name;
    UNKNOWN(4);
-
    OSThreadQueue threadQueue;
    be_ptr<OSAlarm> head;
    be_ptr<OSAlarm> tail;
 };
 CHECK_OFFSET(OSAlarmQueue, 0x00, tag);
 CHECK_OFFSET(OSAlarmQueue, 0x04, name);
-CHECK_OFFSET(OSAlarmQueue, 0x0c, threadQueue);
+CHECK_OFFSET(OSAlarmQueue, 0x0c, threadQueue); // What is thread queue used for?
 CHECK_OFFSET(OSAlarmQueue, 0x1c, head);
 CHECK_OFFSET(OSAlarmQueue, 0x20, tail);
 CHECK_SIZE(OSAlarmQueue, 0x24);
+
+struct OSAlarmLink
+{
+   be_ptr<OSAlarm> prev;
+   be_ptr<OSAlarm> next;
+};
+CHECK_OFFSET(OSAlarmLink, 0x00, prev);
+CHECK_OFFSET(OSAlarmLink, 0x04, next);
+CHECK_SIZE(OSAlarmLink, 0x08);
 
 struct OSAlarm
 {
@@ -35,9 +53,13 @@ struct OSAlarm
    UNKNOWN(4);
    AlarmCallback callback;
    be_val<uint32_t> alarmTag; // Like group in memheap
-   UNKNOWN(0x38 - 0x14);
-   be_ptr<void> userData;
    UNKNOWN(4);
+   be_val<OSTime> nextFire;
+   OSAlarmLink link;
+   be_val<OSTime> period;
+   UNKNOWN(8);
+   be_ptr<void> userData;
+   be_val<uint32_t> state;
    OSThreadQueue threadQueue;
    be_ptr<OSAlarmQueue> alarmQueue;
    be_ptr<OSContext> context;
@@ -46,7 +68,11 @@ CHECK_OFFSET(OSAlarm, 0x00, tag);
 CHECK_OFFSET(OSAlarm, 0x04, name);
 CHECK_OFFSET(OSAlarm, 0x0c, callback);
 CHECK_OFFSET(OSAlarm, 0x10, alarmTag);
+CHECK_OFFSET(OSAlarm, 0x18, nextFire);
+CHECK_OFFSET(OSAlarm, 0x20, link);
+CHECK_OFFSET(OSAlarm, 0x28, period);
 CHECK_OFFSET(OSAlarm, 0x38, userData);
+CHECK_OFFSET(OSAlarm, 0x3c, state);
 CHECK_OFFSET(OSAlarm, 0x40, threadQueue);
 CHECK_OFFSET(OSAlarm, 0x50, alarmQueue);
 CHECK_OFFSET(OSAlarm, 0x54, context);
@@ -69,11 +95,14 @@ OSCreateAlarmEx(OSAlarm *alarm, const char *name);
 void *
 OSGetAlarmUserData(OSAlarm *alarm);
 
+void
+OSInitAlarmQueue(OSAlarmQueue *queue);
+
 BOOL
 OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback);
 
 BOOL
-OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback callback);
+OSSetPeriodicAlarm(OSAlarm *alarm, uint32_t, OSTime start, OSTime interval, AlarmCallback callback);
 
 void
 OSSetAlarmTag(OSAlarm *alarm, uint32_t alarmTag);
@@ -83,3 +112,6 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data);
 
 BOOL
 OSWaitAlarm(OSAlarm *alarm);
+
+void
+OSCheckAlarms(uint32_t core, OSContext *context);

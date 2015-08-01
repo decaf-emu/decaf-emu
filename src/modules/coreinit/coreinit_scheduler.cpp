@@ -1,11 +1,19 @@
 #include "coreinit.h"
+#include "coreinit_alarm.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
+#include "coreinit_queue.h"
 #include "processor.h"
 #include "trace.h"
 
 static std::atomic_bool
 gSchedulerLock { false };
+
+static OSThread *
+gInterruptThreads[3];
+
+ThreadEntryPoint
+InterruptThreadEntryPoint;
 
 // Setup a thread fiber, used by OSRunThread and OSResumeThread
 static void
@@ -142,4 +150,49 @@ OSWakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResul
    }
 
    OSClearThreadQueue(queue);
+}
+
+OSThread *
+OSGetInterruptThread(uint32_t coreID)
+{
+   return gInterruptThreads[coreID];
+}
+
+OSThread *
+OSSetInterruptThread(uint32_t core, OSThread *thread)
+{
+   auto old = gInterruptThreads[core];
+   gInterruptThreads[core] = thread;
+   return old;
+}
+
+void
+InterruptThreadEntry(uint32_t core, void *arg2)
+{
+   // Initially keep thread dead until an interrupt wakes it
+   gProcessor.waitFirstInterrupt();
+
+   while (true) {
+      auto context = gProcessor.getInterruptContext();
+
+      // Check alarms for interrupts
+      OSCheckAlarms(core, context);
+
+      // TODO: Process any other interrupts, e.g. async file system
+
+      // Return to interrupted fiber
+      gProcessor.finishInterrupt();
+   }
+}
+
+void
+CoreInit::registerSchedulerFunctions()
+{
+   RegisterKernelFunction(InterruptThreadEntry);
+}
+
+void
+CoreInit::initialiseSchedulerFunctions()
+{
+   InterruptThreadEntryPoint = findExportAddress("InterruptThreadEntry");
 }
