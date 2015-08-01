@@ -109,6 +109,9 @@
     <Filter Include="Source Files\util">
       <UniqueIdentifier>{295406e0-1835-4c36-86dd-07af1a5c659b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\platforms">
+      <UniqueIdentifier>{12cac486-3b7d-42e5-b09d-c3ac6638147c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -652,6 +655,12 @@
     </ClInclude>
     <ClInclude Include="..\src\ppcinvokeresult.h">
       <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform_windows.h">
+      <Filter>Header Files\platforms</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform.h">
+      <Filter>Header Files\platforms</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

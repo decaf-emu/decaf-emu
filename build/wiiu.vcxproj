@@ -191,6 +191,8 @@
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
     <ClInclude Include="..\src\jit.h" />
     <ClInclude Include="..\src\jit_float.h" />
+    <ClInclude Include="..\src\platform.h" />
+    <ClInclude Include="..\src\platform\platform_windows.h" />
     <ClInclude Include="..\src\ppcinvokeargs.h" />
     <ClInclude Include="..\src\ppcinvokelog.h" />
     <ClInclude Include="..\src\ppcinvokeresult.h" />

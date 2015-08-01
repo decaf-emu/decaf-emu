@@ -1,3 +1,4 @@
+#include "platform.h"
 #include "coreinit.h"
 #include "coreinit_time.h"
 #include "coreinit_systeminfo.h"
@@ -44,14 +45,14 @@ OSTicksToCalendarTime(OSTime time, OSCalendarTime *calendarTime)
 {
    auto chrono = OSTimeToChrono(time);
    std::time_t system_time_t = std::chrono::system_clock::to_time_t(chrono);
-   std::tm* tm = std::localtime(&system_time_t);
+   std::tm tm = platform::localtime(system_time_t);
 
-   calendarTime->tm_sec = tm->tm_sec;
-   calendarTime->tm_min = tm->tm_min;
-   calendarTime->tm_hour = tm->tm_hour;
-   calendarTime->tm_mday = tm->tm_mday;
-   calendarTime->tm_mon = tm->tm_mon;
-   calendarTime->tm_year = tm->tm_year + 1900; // posix tm_year is year - 1900
+   calendarTime->tm_sec = tm.tm_sec;
+   calendarTime->tm_min = tm.tm_min;
+   calendarTime->tm_hour = tm.tm_hour;
+   calendarTime->tm_mday = tm.tm_mday;
+   calendarTime->tm_mon = tm.tm_mon;
+   calendarTime->tm_year = tm.tm_year + 1900; // posix tm_year is year - 1900
 }
 
 void
