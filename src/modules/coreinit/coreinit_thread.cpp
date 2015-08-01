@@ -423,12 +423,6 @@ SleepAlarmHandler(OSAlarm *alarm, OSContext *context)
 void
 OSSleepTicks(OSTime ticks)
 {
-   if (1) {
-      OSTestThreadCancel();
-      gLog->warn("Ignoring unimplemented OSSleepTicks");
-      return;
-   }
-
    auto thread = OSGetCurrentThread();
    OSLockScheduler();
 
