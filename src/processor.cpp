@@ -3,12 +3,13 @@
 #include "log.h"
 #include "processor.h"
 #include "ppc.h"
+#include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "ppcinvoke.h"
 
 Processor
-gProcessor { 3 };
+gProcessor { CoreCount };
 
 __declspec(thread) Core *
 tCurrentCore = nullptr;
@@ -110,27 +111,33 @@ Processor::handleInterrupt()
    auto core = tCurrentCore;
 
    if (core->interrupt) {
-      gLog->trace("Process interrupt");
-
       if (core->currentFiber) {
-         core->interruptedFiber = core->currentFiber->handle;
-         core->interruptContext = &core->currentFiber->thread->context;
+         core->interruptedFiber = core->currentFiber;
       } else {
-         core->interruptedFiber = core->primaryFiber;
-         core->interruptContext = nullptr;
+         core->interruptedFiber = nullptr;
       }
 
-      SwitchToFiber(core->interruptHandlerFiber->handle);
+      core->interrupt = false;
+      core->currentFiber = core->interruptHandlerFiber;
+      SwitchToFiber(core->currentFiber->handle);
    }
 }
 
 void
 Processor::finishInterrupt()
 {
-   auto fiber = tCurrentCore->interruptedFiber;
-   tCurrentCore->interrupt = false;
-   tCurrentCore->interruptedFiber = nullptr;
-   SwitchToFiber(fiber);
+   auto core = tCurrentCore;
+   auto fiber = core->interruptedFiber;
+
+   core->currentFiber = fiber;
+   core->interruptedFiber = nullptr;
+   gLog->trace("Exit interrupt core {}", core->id);
+
+   if (!fiber) {
+      SwitchToFiber(core->primaryFiber);
+   } else {
+      SwitchToFiber(fiber->handle);
+   }
 }
 
 void
@@ -320,7 +327,11 @@ Processor::getCurrentFiber()
 OSContext *
 Processor::getInterruptContext()
 {
-   return tCurrentCore ? tCurrentCore->interruptContext : nullptr;
+   if (!tCurrentCore || !tCurrentCore->currentFiber) {
+      return nullptr;
+   } else {
+      return &tCurrentCore->currentFiber->thread->context;
+   }
 }
 
 uint32_t

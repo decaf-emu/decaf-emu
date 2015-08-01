@@ -43,8 +43,7 @@ struct Core
 
    uint32_t id;
    Fiber *currentFiber = nullptr;
-   void *interruptedFiber = nullptr;
-   OSContext *interruptContext = nullptr;
+   Fiber *interruptedFiber = nullptr;
    Fiber *interruptHandlerFiber = nullptr;
    void *primaryFiber = nullptr;
    std::thread thread;
