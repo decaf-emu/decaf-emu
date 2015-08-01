@@ -60,12 +60,12 @@ OSAppendQueue(QueueType *queue, ItemType *item)
       queue->tail = item;
       item->link.next = nullptr;
       item->link.prev = nullptr;
+   } else {
+      item->link.prev = queue->tail;
+      item->link.next = nullptr;
+      queue->tail->link.next = item;
+      queue->tail = item;
    }
-   
-   item->link.prev = queue->tail;
-   item->link.next = nullptr;
-   queue->tail->link.next = item;
-   queue->tail = item;
 }
 
 // Erase item from the queue
@@ -82,26 +82,20 @@ OSEraseFromQueue(QueueType *queue, ItemType *item)
       } else {
          queue->tail = nullptr;
       }
-
-      return;
-   }
-
-   if (queue->tail == item) {
+   } else if (queue->tail == item) {
       // Erase from tail
       queue->tail = item->link.prev;
 
       if (queue->tail) {
          queue->tail->link.next = nullptr;
       }
-
-      return;
+   } else {
+      // Erase from middle
+      auto prev = item->link.prev;
+      auto next = item->link.next;
+      prev->link.next = next;
+      next->link.prev = prev;
    }
-
-   // Erase from middle
-   auto prev = item->link.prev;
-   auto next = item->link.next;
-   prev->link.next = next;
-   next->link.prev = prev;
 }
 
 // Remove and return the item at front of the queue
