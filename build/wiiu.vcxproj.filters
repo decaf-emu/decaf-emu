@@ -109,7 +109,10 @@
     <Filter Include="Source Files\util">
       <UniqueIdentifier>{295406e0-1835-4c36-86dd-07af1a5c659b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\platforms">
+    <Filter Include="Source Files\platform">
+      <UniqueIdentifier>{d66fc378-e019-47e0-a034-462bc8a28d2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\platform">
       <UniqueIdentifier>{12cac486-3b7d-42e5-b09d-c3ac6638147c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -365,6 +368,12 @@
     </ClCompile>
     <ClCompile Include="..\src\wfunc_ptr.cpp">
       <Filter>Source Files\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_windows.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix.cpp">
+      <Filter>Source Files\platform</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -656,11 +665,8 @@
     <ClInclude Include="..\src\ppcinvokeresult.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\platform\platform_windows.h">
-      <Filter>Header Files\platforms</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\platform.h">
-      <Filter>Header Files\platforms</Filter>
+      <Filter>Header Files\platform</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

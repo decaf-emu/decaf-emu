@@ -169,6 +169,8 @@
     <ClCompile Include="..\src\modules\proc_ui\proc_ui_core.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
+    <ClCompile Include="..\src\platform\platform_posix.cpp" />
+    <ClCompile Include="..\src\platform\platform_windows.cpp" />
     <ClCompile Include="..\src\processor.cpp" />
     <ClCompile Include="..\src\system.cpp" />
     <ClCompile Include="..\src\trace.cpp" />
@@ -192,7 +194,6 @@
     <ClInclude Include="..\src\jit.h" />
     <ClInclude Include="..\src\jit_float.h" />
     <ClInclude Include="..\src\platform.h" />
-    <ClInclude Include="..\src\platform\platform_windows.h" />
     <ClInclude Include="..\src\ppcinvokeargs.h" />
     <ClInclude Include="..\src\ppcinvokelog.h" />
     <ClInclude Include="..\src\ppcinvokeresult.h" />

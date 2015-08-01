@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "platform.h"
 #include "interpreter.h"
 #include "log.h"
 #include "processor.h"
@@ -34,9 +35,13 @@ Processor::start()
 
    for (auto core : mCores) {
       core->thread = std::thread(std::bind(&Processor::coreEntryPoint, this, core));
+
+      static const std::string coreNames[] = { "Core #0", "Core #1", "Core #2" };
+      platform::set_thread_name(&core->thread, coreNames[core->id]);
    }
 
    mTimerThread = std::thread(std::bind(&Processor::timerEntryPoint, this));
+   platform::set_thread_name(&mTimerThread, "Timer Thread");
 }
 
 void
