@@ -135,7 +135,7 @@ InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *arg
 }
 
 BOOL
-OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, uint32_t priority, OSThreadAttributes::Flags attributes)
+OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes::Flags attributes)
 {
    // Setup OSThread
    memset(thread, 0, sizeof(OSThread));

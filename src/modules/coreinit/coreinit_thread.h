@@ -131,8 +131,8 @@ struct OSThread
    be_val<OSThreadAttributes::Flags> attr; // OSSetThreadAffinity / OSCreateThread
    be_val<uint16_t> id;
    be_val<int32_t> suspendCounter;
-   be_val<uint32_t> priority;
-   be_val<uint32_t> basePriority;         // "ba" in DumpActiveThreads and returned in OSGetThreadPriority
+   be_val<int32_t> priority;
+   be_val<int32_t> basePriority;          // "ba" in DumpActiveThreads and returned in OSGetThreadPriority
    be_val<uint32_t> exitValue;            // Exit value of thread
    Fiber *fiber;                          // Naughty, hopefully not overriding anything important
    UNKNOWN(0x35c - 0x340);
@@ -209,7 +209,7 @@ void
 OSContinueThread(OSThread *thread);
 
 BOOL
-OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, uint32_t priority, OSThreadAttributes::Flags attributes);
+OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes::Flags attributes);
 
 void
 OSDetachThread(OSThread *thread);
