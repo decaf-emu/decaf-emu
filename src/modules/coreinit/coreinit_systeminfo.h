@@ -1,5 +1,4 @@
 #pragma once
-#include <chrono>
 #include "systemtypes.h"
 #include "coreinit_time.h"
 
@@ -17,9 +16,6 @@ CHECK_OFFSET(OSSystemInfo, 0x8, baseTime);
 CHECK_SIZE(OSSystemInfo, 0x20);
 
 #pragma pack(pop)
-
-extern std::chrono::time_point<std::chrono::system_clock>
-gEpochTime;
 
 OSSystemInfo *
 OSGetSystemInfo();

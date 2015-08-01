@@ -32,6 +32,13 @@ OSGetSystemTick()
    return OSGetSystemTime() & 0xFFFFFFFF;
 }
 
+std::chrono::time_point<std::chrono::system_clock>
+OSTimeToChrono(OSTime time)
+{
+   auto chrono = gEpochTime + std::chrono::nanoseconds(time);
+   return std::chrono::time_point_cast<std::chrono::system_clock::duration>(chrono);
+}
+
 void
 CoreInit::registerTimeFunctions()
 {
