@@ -40,7 +40,7 @@ OSTimeToChrono(OSTime time)
 }
 
 void
-OSTicksToCalendarTime(OSTime time, OSCalendarTime* calendarTime)
+OSTicksToCalendarTime(OSTime time, OSCalendarTime *calendarTime)
 {
    auto chrono = OSTimeToChrono(time);
    std::time_t system_time_t = std::chrono::system_clock::to_time_t(chrono);
