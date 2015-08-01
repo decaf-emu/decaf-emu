@@ -98,14 +98,10 @@ zlib125_inflate(WZStream *wstrm, int flush)
 
    if (wstrm->zalloc) {
       zstrm->zalloc = &zlibAllocWrapper;
-   } else {
-      zstrm->zalloc = nullptr;
    }
 
    if (wstrm->zfree) {
       zstrm->zfree = &zlibFreeWrapper;
-   } else {
-      zstrm->zfree = nullptr;
    }
 
    auto result = inflate(zstrm, flush);
