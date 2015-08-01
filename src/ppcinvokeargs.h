@@ -7,18 +7,47 @@ namespace ppctypes
 template <PpcType PpcTypeId, typename Type>
 struct arg_converter_t;
 
+static inline uint32_t
+getNextGPR(ThreadState *state, size_t &r)
+{
+   uint32_t value;
+
+   if (r > 10) {
+      auto addr = state->gpr[1] + 8 + 4 * static_cast<uint32_t>(r - 11);
+      value = gMemory.read<uint32_t>(addr);
+   } else {
+      value = state->gpr[r];
+   }
+
+   ++r;
+   return value;
+}
+
+static inline void
+setNextGPR(ThreadState *state, size_t &r, uint32_t value)
+{
+   if (r > 10) {
+      auto addr = state->gpr[1] + 8 +  4 * static_cast<uint32_t>(r - 11);
+      gMemory.write<uint32_t>(addr, value);
+   } else {
+      state->gpr[r] = value;
+   }
+
+   ++r;
+}
+
 template<typename Type>
 struct arg_converter_t<PpcType::WORD, Type> {
    static inline Type get(ThreadState *state, size_t &r, size_t &f)
    {
-      auto& x = state->gpr[r++];
-      return ppctype_converter_t<Type>::from_ppc(x);
+      return ppctype_converter_t<Type>::from_ppc(getNextGPR(state, r));
    }
 
    static inline void set(ThreadState *state, size_t &r, size_t &f, Type v)
    {
-      auto& x = state->gpr[r++];
+      uint32_t x;
       ppctype_converter_t<Type>::to_ppc(v, x);
+      setNextGPR(state, r, x);
    }
 };
 
@@ -26,16 +55,17 @@ template<typename Type>
 struct arg_converter_t<PpcType::DWORD, Type> {
    static inline Type get(ThreadState *state, size_t &r, size_t &f)
    {
-      auto& x = state->gpr[r++];
-      auto& y = state->gpr[r++];
+      auto x = getNextGPR(state, r);
+      auto y = getNextGPR(state, r);
       return ppctype_converter_t<Type>::from_ppc(x, y);
    }
 
    static inline void set(ThreadState *state, size_t &r, size_t &f, Type v)
    {
-      auto& x = state->gpr[r++];
-      auto& y = state->gpr[r++];
+      uint32_t x, y;
       ppctype_converter_t<Type>::to_ppc(v, x, y);
+      setNextGPR(state, r, x);
+      setNextGPR(state, r, y);
    }
 };
 
