@@ -62,28 +62,23 @@ public:
    void join();
 
    // Fiber
+   Fiber *createFiber();
+   void destroyFiber(Fiber *fiber);
+
    void queue(Fiber *fiber);
    void reschedule(bool hasSchedulerLock, bool yield = false);
    void yield();
    void exit();
 
-   Fiber *createFiber();
-   void destroyFiber(Fiber *fiber);
    Fiber *getCurrentFiber();
-   OSContext *getInterruptContext();
-   Fiber *peekNextFiber(uint32_t core);
-
-   template<typename LockType>
-   void wait(LockType &lock)
-   {
-      lock.unlock();
-      reschedule(false);
-   }
 
    // Interrupts
    void handleInterrupt();
    void finishInterrupt();
    void waitFirstInterrupt();
+
+   OSContext *getInterruptContext();
+
    void setInterrupt(uint32_t core);
    void setInterruptTimer(uint32_t core, std::chrono::time_point<std::chrono::system_clock> when);
 
@@ -98,6 +93,11 @@ protected:
    void timerEntryPoint();
    void coreEntryPoint(Core *core);
    void fiberEntryPoint(Fiber *fiber);
+
+   Fiber *createFiberNoLock();
+   void destroyFiberNoLock(Fiber *fiber);
+   Fiber *peekNextFiberNoLock(uint32_t core);
+   void queueNoLock(Fiber *fiber);
 
 private:
    std::atomic<bool> mRunning;
