@@ -170,11 +170,11 @@ Processor::coreEntryPoint(Core *core)
       std::unique_lock<std::mutex> lock(mMutex);
 
       // Free any fibers which need to be deleted
-      for (auto fiber : mFiberDeleteList) {
+      for (auto fiber : core->mFiberDeleteList) {
          delete fiber;
       }
 
-      mFiberDeleteList.clear();
+      core->mFiberDeleteList.clear();
 
       if (auto fiber = peekNextFiber(core->id)) {
          // Remove fiber from schedule queue
@@ -219,6 +219,9 @@ Processor::exit()
    // Destroy current fiber
    destroyFiber(fiber);
    core->currentFiber = nullptr;
+
+   // Add to fiber free list
+   core->mFiberDeleteList.push_back(fiber);
 
    // Return to parent fiber
    gLog->trace("Core {} exit thread {}", core->id, id);
@@ -319,7 +322,6 @@ Processor::destroyFiber(Fiber *fiber)
 {
    std::lock_guard<std::mutex> lock(mMutex);
    mFiberList.erase(std::remove(mFiberList.begin(), mFiberList.end(), fiber), mFiberList.end());
-   mFiberDeleteList.push_back(fiber);
 }
 
 Fiber *

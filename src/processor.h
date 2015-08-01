@@ -49,6 +49,7 @@ struct Core
    std::thread thread;
    std::atomic<bool> interrupt = false;
    std::chrono::system_clock::time_point nextInterrupt;
+   std::vector<Fiber *> mFiberDeleteList;
 };
 
 class Processor
@@ -105,7 +106,6 @@ private:
    std::condition_variable mCondition;
    std::vector<Fiber *> mFiberQueue;
    std::vector<Fiber *> mFiberList;
-   std::vector<Fiber *> mFiberDeleteList;
    std::thread mTimerThread;
    std::mutex mTimerMutex;
    std::condition_variable mTimerCondition;
