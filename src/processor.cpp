@@ -307,13 +307,17 @@ Fiber *
 Processor::createFiber()
 {
    auto fiber = new Fiber();
-   mFiberList.push_back(fiber);
+   {
+      std::lock_guard<std::mutex> lock(mMutex);
+      mFiberList.push_back(fiber);
+   }
    return fiber;
 }
 
 void
 Processor::destroyFiber(Fiber *fiber)
 {
+   std::lock_guard<std::mutex> lock(mMutex);
    mFiberList.erase(std::remove(mFiberList.begin(), mFiberList.end(), fiber), mFiberList.end());
    mFiberDeleteList.push_back(fiber);
 }
