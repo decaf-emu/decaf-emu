@@ -14,7 +14,7 @@ static OSSpinLock *
 gAlarmLock;
 
 static OSAlarmQueue *
-gAlarmQueue[3];
+gAlarmQueue[CoreCount];
 
 const uint32_t
 OSAlarm::Tag;
@@ -216,7 +216,7 @@ CoreInit::initialiseAlarm()
 {
    gAlarmLock = OSAllocFromSystem<OSSpinLock>();
 
-   for (auto i = 0u; i < 3; ++i) {
+   for (auto i = 0u; i < CoreCount; ++i) {
       gAlarmQueue[i] = OSAllocFromSystem<OSAlarmQueue>();
       OSInitAlarmQueue(gAlarmQueue[i]);
    }

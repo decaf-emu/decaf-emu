@@ -1,6 +1,7 @@
 #include <limits>
 #include "coreinit.h"
 #include "coreinit_alarm.h"
+#include "coreinit_core.h"
 #include "coreinit_memheap.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
@@ -11,7 +12,7 @@
 #include "usermodule.h"
 
 static OSThread *
-gDefaultThreads[3];
+gDefaultThreads[CoreCount];
 
 static uint32_t
 gThreadId = 1;
@@ -200,7 +201,7 @@ OSGetCurrentThread()
 OSThread *
 OSGetDefaultThread(uint32_t coreID)
 {
-   if (coreID >= 3) {
+   if (coreID >= CoreCount) {
       return nullptr;
    }
 
@@ -313,6 +314,7 @@ OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, p32<void> a
 OSThread *
 OSSetDefaultThread(uint32_t core, OSThread *thread)
 {
+   assert(core < CoreCount);
    auto old = gDefaultThreads[core];
    gDefaultThreads[core] = thread;
    return old;

@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_alarm.h"
+#include "coreinit_core.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
 #include "coreinit_queue.h"
@@ -10,7 +11,7 @@ static std::atomic_bool
 gSchedulerLock { false };
 
 static OSThread *
-gInterruptThreads[3];
+gInterruptThreads[CoreCount];
 
 ThreadEntryPoint
 InterruptThreadEntryPoint;
@@ -155,12 +156,17 @@ OSWakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResul
 OSThread *
 OSGetInterruptThread(uint32_t coreID)
 {
-   return gInterruptThreads[coreID];
+   if (coreID >= CoreCount) {
+      return nullptr;
+   } else {
+      return gInterruptThreads[coreID];
+   }
 }
 
 OSThread *
 OSSetInterruptThread(uint32_t core, OSThread *thread)
 {
+   assert(core < CoreCount);
    auto old = gInterruptThreads[core];
    gInterruptThreads[core] = thread;
    return old;
