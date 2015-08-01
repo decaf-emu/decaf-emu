@@ -180,20 +180,29 @@ OSCheckAlarms(uint32_t core, OSContext *context)
    ScopedSpinLock lock(gAlarmLock);
    auto queue = gAlarmQueue[core];
    auto now = OSGetSystemTime();
+   auto next = std::chrono::time_point<std::chrono::system_clock>::max();
 
    for (OSAlarm *alarm = queue->head; alarm; ) {
-      auto next = alarm->link.next;
+      auto nextAlarm = alarm->link.next;
 
+      // Trigger alarm if it is time
       if (alarm->nextFire <= now) {
          OSTriggerAlarmNoLock(alarm, context);
+      }
 
-         if (alarm->nextFire) {
-            gProcessor.setInterruptTimer(core, OSTimeToChrono(alarm->nextFire));
+      // Set next timer if alarm is set
+      if (alarm->state = OSAlarmState::Set && alarm->nextFire) {
+         auto nextFire = OSTimeToChrono(alarm->nextFire);
+
+         if (nextFire < next) {
+            next = nextFire;
          }
       }
 
-      alarm = next;
+      alarm = nextAlarm;
    }
+
+   gProcessor.setInterruptTimer(core, next);
 }
 
 void
