@@ -93,6 +93,9 @@ MEMSetBaseHeapHandle(BaseHeapType arena, CommonHeap *heap);
 void *
 OSAllocFromSystem(uint32_t size, int alignment = 4);
 
+char *
+OSSprintfFromSystem(const char *format, ...);
+
 template<typename Type>
 Type *
 OSAllocFromSystem(int alignment = 4)
