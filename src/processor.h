@@ -106,7 +106,7 @@ private:
    std::condition_variable mCondition;
    std::vector<Fiber *> mFiberQueue;
    std::vector<Fiber *> mFiberList;
-
+   std::vector<Fiber *> mFiberDeleteList;
    std::thread mTimerThread;
    std::mutex mTimerMutex;
    std::condition_variable mTimerCondition;
