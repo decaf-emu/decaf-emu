@@ -128,7 +128,7 @@ InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *arg
 
    // Setup thread
    thread->entryPoint = entry;
-   thread->state = OSThreadState::Ready;
+   thread->state = entry ? OSThreadState::Ready : OSThreadState::None;
    thread->requestFlag = OSThreadRequest::None;
    thread->suspendCounter = 1;
    thread->needSuspend = 0;
@@ -339,13 +339,13 @@ OSSetThreadCancelState(BOOL state)
 }
 
 void
-OSSetThreadName(OSThread* thread, const char *name)
+OSSetThreadName(OSThread *thread, const char *name)
 {
    thread->name = name;
 }
 
 BOOL
-OSSetThreadPriority(OSThread* thread, uint32_t priority)
+OSSetThreadPriority(OSThread *thread, uint32_t priority)
 {
    if (priority > 31) {
       return FALSE;
@@ -359,7 +359,7 @@ OSSetThreadPriority(OSThread* thread, uint32_t priority)
 }
 
 BOOL
-OSSetThreadRunQuantum(OSThread* thread, uint32_t quantum)
+OSSetThreadRunQuantum(OSThread *thread, uint32_t quantum)
 {
    // TODO: Implement OSSetThreadRunQuantum
    assert(false);
