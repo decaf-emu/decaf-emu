@@ -2,6 +2,7 @@
 #include "zlib125_core.h"
 #include "processor.h"
 #include "interpreter.h"
+#include "../coreinit/coreinit_memheap.h"
 #include <zlib.h>
 
 static std::map<uint32_t, z_stream>
@@ -49,18 +50,6 @@ struct WZHeader
    be_val<int> done;
 };
 
-z_stream *
-getZStream(WZStream *in)
-{
-   return &gStreamMap[gMemory.untranslate(in)];
-}
-
-void
-eraseZStream(WZStream *in)
-{
-   gStreamMap.erase(gMemory.untranslate(in));
-}
-
 using ZlibAllocFunc = wfunc_ptr<void*, void*, uint32_t, uint32_t>;
 using ZlibFreeFunc = wfunc_ptr<void, void*, void*>;
 
@@ -69,7 +58,11 @@ zlibAllocWrapper(void *opaque, unsigned items, unsigned size)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
    ZlibAllocFunc allocFunc = static_cast<uint32_t>(wstrm->zalloc);
-   return allocFunc(wstrm->opaque, items, size);
+   if (allocFunc) {
+      return allocFunc(wstrm->opaque, items, size);
+   } else {
+      return OSAllocFromSystem(items * size);
+   }
 }
 
 static void
@@ -77,7 +70,27 @@ zlibFreeWrapper(void *opaque, void *address)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
    ZlibFreeFunc freeFunc = static_cast<uint32_t>(wstrm->zalloc);
-   freeFunc(wstrm->opaque, address);
+   if (freeFunc) {
+      freeFunc(wstrm->opaque, address);
+   } else {
+      OSFreeToSystem(address);
+   }
+}
+
+z_stream *
+getZStream(WZStream *in)
+{
+   auto zstream = &gStreamMap[gMemory.untranslate(in)];
+   zstream->opaque = in;
+   zstream->zalloc = &zlibAllocWrapper;
+   zstream->zfree = &zlibFreeWrapper;
+   return zstream;
+}
+
+void
+eraseZStream(WZStream *in)
+{
+   gStreamMap.erase(gMemory.untranslate(in));
 }
 
 static int
@@ -94,15 +107,6 @@ zlib125_inflate(WZStream *wstrm, int flush)
 
    zstrm->data_type = wstrm->data_type;
    zstrm->adler = wstrm->adler;
-   zstrm->opaque = wstrm;
-
-   if (wstrm->zalloc) {
-      zstrm->zalloc = &zlibAllocWrapper;
-   }
-
-   if (wstrm->zfree) {
-      zstrm->zfree = &zlibFreeWrapper;
-   }
 
    auto result = inflate(zstrm, flush);
 
