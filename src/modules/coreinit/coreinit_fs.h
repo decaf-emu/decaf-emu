@@ -147,16 +147,31 @@ FSStatus
 FSOpenFile(FSClient *client, FSCmdBlock *block, const char *path, const char *mode, be_val<FSFileHandle> *handle, uint32_t flags);
 
 FSStatus
+FSOpenFileAsync(FSClient *client, FSCmdBlock *block, const char *path, const char *mode, be_val<FSFileHandle> *outHandle, uint32_t flags, FSAsyncData *asyncData);
+
+FSStatus
 FSGetStatFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, FSStat *stat, uint32_t flags);
 
 FSStatus
+FSGetStatFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, FSStat *stat, uint32_t flags, FSAsyncData *asyncData);
+
+FSStatus
 FSCloseFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t flags);
+
+FSStatus
+FSCloseFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t flags, FSAsyncData *asyncData);
 
 FSStatus
 FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle handle, uint32_t unk1, uint32_t flags);
 
 FSStatus
 FSReadFileAsync(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle handle, uint32_t unk1, uint32_t flags, FSAsyncData *asyncData);
+
+FSStatus
+FSReadFileWithPos(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, uint32_t pos, FSFileHandle handle, uint32_t unk1, uint32_t flags);
+
+FSStatus
+FSReadFileWithPosAsync(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, uint32_t pos, FSFileHandle handle, uint32_t unk1, uint32_t flags, FSAsyncData *asyncData);
 
 FSStatus
 FSGetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle fileHandle, be_val<uint32_t> *pos, uint32_t flags);

@@ -4,6 +4,7 @@
 #include "coreinit_memory.h"
 #include "filesystem.h"
 #include "system.h"
+#include "interpreter.h"
 
 struct FSFile
 {
@@ -141,6 +142,16 @@ FSOpenFile(FSClient *client, FSCmdBlock *block, const char *path, const char *mo
 }
 
 FSStatus
+FSOpenFileAsync(FSClient *client, FSCmdBlock *block, const char *path, const char *mode, be_val<FSFileHandle> *outHandle, uint32_t flags, FSAsyncData *asyncData)
+{
+   assert(asyncData->callback);
+   auto result = FSOpenFile(client, block, path, mode, outHandle, flags);
+   FSAsyncCallback cb = static_cast<uint32_t>(asyncData->callback);
+   cb(client, block, result, asyncData->param);
+   return result;
+}
+
+FSStatus
 FSGetStat(FSClient *client, FSCmdBlock *block, const char *filepath, FSStat *stat, uint32_t flags)
 {
    auto fs = gSystem.getFileSystem();
@@ -171,6 +182,16 @@ FSGetStatFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, FSStat *
 }
 
 FSStatus
+FSGetStatFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, FSStat *stat, uint32_t flags, FSAsyncData *asyncData)
+{
+   assert(asyncData->callback);
+   auto result = FSGetStatFile(client, block, handle, stat, flags);
+   FSAsyncCallback cb = static_cast<uint32_t>(asyncData->callback);
+   cb(client, block, result, asyncData->param);
+   return result;
+}
+
+FSStatus
 FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle handle, uint32_t unk1, uint32_t flags)
 {
    auto fsFile = gOpenFiles.get(handle);
@@ -186,8 +207,35 @@ FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, 
 FSStatus
 FSReadFileAsync(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle handle, uint32_t unk1, uint32_t flags, FSAsyncData *asyncData)
 {
-   gLog->warn("FSReadFileAsync using non-async read.");
-   return FSReadFile(client, block, buffer, size, count, handle, unk1, flags);
+   assert(asyncData->callback);
+   auto result = FSReadFile(client, block, buffer, size, count, handle, unk1, flags);
+   FSAsyncCallback cb = static_cast<uint32_t>(asyncData->callback);
+   cb(client, block, result, asyncData->param);
+   return result;
+}
+
+FSStatus
+FSReadFileWithPos(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, uint32_t position, FSFileHandle handle, uint32_t unk1, uint32_t flags)
+{
+   auto fsFile = gOpenFiles.get(handle);
+
+   if (!fsFile) {
+      return FSStatus::FatalError;
+   }
+
+   fsFile->file->seek(position);
+   auto read = fsFile->file->read(reinterpret_cast<char*>(buffer), size * count);
+   return static_cast<FSStatus>(read);
+}
+
+FSStatus
+FSReadFileWithPosAsync(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, uint32_t position, FSFileHandle handle, uint32_t unk1, uint32_t flags, FSAsyncData *asyncData)
+{
+   assert(asyncData->callback);
+   auto result = FSReadFileWithPos(client, block, buffer, size, count, position, handle, unk1, flags);
+   FSAsyncCallback cb = static_cast<uint32_t>(asyncData->callback);
+   cb(client, block, result, asyncData->param);
+   return result;
 }
 
 FSStatus
@@ -230,6 +278,16 @@ FSCloseFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t f
 }
 
 FSStatus
+FSCloseFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t flags, FSAsyncData *asyncData)
+{
+   assert(asyncData->callback);
+   auto result = FSCloseFile(client, block, handle, flags);
+   FSAsyncCallback cb = static_cast<uint32_t>(asyncData->callback);
+   cb(client, block, result, asyncData->param);
+   return result;
+}
+
+FSStatus
 FSGetCwd(FSClient *client, FSCmdBlock *block, char *buffer, uint32_t bufferSize, uint32_t flags)
 {
    if (bufferSize < gWorkingDirectory.size() + 1) {
@@ -252,12 +310,17 @@ CoreInit::registerFileSystemFunctions()
    RegisterKernelFunction(FSSetCmdPriority);
    RegisterKernelFunction(FSGetStat);
    RegisterKernelFunction(FSGetStatFile);
+   RegisterKernelFunction(FSGetStatFileAsync);
    RegisterKernelFunction(FSSetStateChangeNotification);
    RegisterKernelFunction(FSOpenFile);
+   RegisterKernelFunction(FSOpenFileAsync);
    RegisterKernelFunction(FSReadFile);
    RegisterKernelFunction(FSReadFileAsync);
+   RegisterKernelFunction(FSReadFileWithPos);
+   RegisterKernelFunction(FSReadFileWithPosAsync);
    RegisterKernelFunction(FSGetPosFile);
    RegisterKernelFunction(FSSetPosFile);
    RegisterKernelFunction(FSCloseFile);
+   RegisterKernelFunction(FSCloseFileAsync);
    RegisterKernelFunction(FSGetCwd);
 }
