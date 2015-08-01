@@ -489,7 +489,13 @@ MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap, int alignment)
    // Return the allocatable size
    size -= sizeof(ExpandedHeapBlock);
    size -= alignment;
-   return size;
+
+   // TODO: Figure out why WUP-P-ARKE crashes if we have more than 994mb ram
+   if (size > 0x3e200000) {
+      return 0x3e200000;
+   } else {
+      return size;
+   }
 }
 
 uint16_t
