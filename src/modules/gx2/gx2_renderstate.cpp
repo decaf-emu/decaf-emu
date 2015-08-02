@@ -17,7 +17,7 @@ GX2SetPolygonControl(UNKNOWN_ARGS)
 }
 
 void
-GX2SetColorControl(LogicOp logicOp, uint32_t unk1, uint32_t unk2, uint32_t unk3)
+GX2SetColorControl(GX2LogicOp::Op logicOp, uint32_t unk1, uint32_t unk2, uint32_t unk3)
 {
 }
 
@@ -33,7 +33,7 @@ GX2SetBlendConstantColor(float red, float green, float blue, float alpha)
 }
 
 void
-GX2SetAlphaTest(BOOL enabled, CompareFunction compare, float reference)
+GX2SetAlphaTest(BOOL enabled, GX2CompareFunction::Func compare, float reference)
 {
 }
 
@@ -43,7 +43,7 @@ GX2SetTargetChannelMasks(UNKNOWN_ARGS)
 }
 
 void
-GX2SetAlphaToMask(BOOL enabled, AlphaToMaskMode mode)
+GX2SetAlphaToMask(BOOL enabled, GX2AlphaToMaskMode::Mode mode)
 {
 }
 

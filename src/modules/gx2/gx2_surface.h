@@ -5,7 +5,9 @@
 
 // BindFlagsToString__20_GX2RResourceTrackerSF18_GX2RResourceFlags
 // UsageFlagsToString__20_GX2RResourceTrackerSF18_GX2RResourceFlags
-enum class GX2RResourceFlags
+namespace GX2RResourceFlags
+{
+enum Flags
 {
    // GX2R_BIND_*
    BindTexture       = 1 << 0,
@@ -30,123 +32,71 @@ enum class GX2RResourceFlags
    UsageForceMEM1    = 1 << 17,
    UsageForceMEM2    = 1 << 18,
 };
+}
 
-enum class GX2SurfaceFormat
+namespace GX2SurfaceFormat
+{
+enum Format
 {
    First = 0x01,
    R8G8B8A8 = 26,
    Last = 0x83f,
 };
-
-static inline std::ostream&
-operator<<(std::ostream& os, const GX2SurfaceFormat& val)
-{
-   switch (val) {
-   case GX2SurfaceFormat::R8G8B8A8:
-      return os << "R8G8B8A8";
-   default:
-      return os << static_cast<int>(val);
-   }
 }
 
-enum class GX2SurfaceDim
+namespace GX2SurfaceDim
 {
-   Texture2D = 1,          // guessed from game ;D
-   Texture2DMSAA = 6,      // GX2InitTextureRegs
-   Texture2DMSAAArray = 7  // GX2InitTextureRegs
+enum Dim
+{
+   Texture2D = 1,
+   Texture2DMSAA = 6,
+   Texture2DMSAAArray = 7
 };
-
-static inline std::ostream&
-operator<<(std::ostream& os, const GX2SurfaceDim& val)
-{
-   switch (val) {
-   case GX2SurfaceDim::Texture2D:
-      return os << "Texture2D";
-   case GX2SurfaceDim::Texture2DMSAA:
-      return os << "Texture2DMSAA";
-   case GX2SurfaceDim::Texture2DMSAAArray:
-      return os << "Texture2DMSAAArray";
-   default:
-      return os << static_cast<int>(val);
-   }
 }
 
-// GX2SetAAModeEx
-enum class GX2AAMode
+namespace GX2AAMode
+{
+enum Mode
 {
    Mode1X = 0, // GX2ResolveAAColorBuffer
    First = 0,
    Last = 3
 };
-
-static inline std::ostream&
-operator<<(std::ostream& os, const GX2AAMode& val)
-{
-   switch (val) {
-   case GX2AAMode::Mode1X:
-      return os << "Mode1X";
-   default:
-      return os << static_cast<int>(val);
-   }
 }
 
-// GX2GetSurfaceInfo GX2_TILE_MODE_LINEAR_SPECIAL
-enum class GX2TileMode
+namespace GX2TileMode
+{
+enum Mode
 {
    Default = 0,
    LinearSpecial = 0x10,
 };
-
-static inline std::ostream&
-operator<<(std::ostream& os, const GX2TileMode& val)
-{
-   switch (val) {
-   case GX2TileMode::Default:
-      return os << "Default";
-   case GX2TileMode::LinearSpecial:
-      return os << "LinearSpecial";
-   default:
-      return os << static_cast<int>(val);
-   }
 }
 
-// GX2SetColorBuffer
-enum class GX2SurfaceUse
+namespace GX2SurfaceUse
+{
+enum Use
 {
    Texture     = 1 << 0,
    ColorBuffer = 1 << 1,
    DepthBuffer = 1 << 2,
 };
-
-static inline std::ostream&
-operator<<(std::ostream& os, const GX2SurfaceUse& val)
-{
-   switch (val) {
-   case GX2SurfaceUse::Texture:
-      return os << "Texture";
-   case GX2SurfaceUse::ColorBuffer:
-      return os << "ColorBuffer";
-   case GX2SurfaceUse::DepthBuffer:
-      return os << "DepthBuffer";
-   default:
-      return os << static_cast<int>(val);
-   }
 }
 
 // GX2InitTextureRegs
 // G2XRCreateSurface
 struct GX2Surface
 {
-   be_val<GX2SurfaceDim> dim; // "GX2_SURFACE_DIM_2D_MSAA or GX2_SURFACE_DIM_2D_MSAA_ARRAY" = 0 or 6?
+   be_val<GX2SurfaceDim::Dim> dim; // "GX2_SURFACE_DIM_2D_MSAA or GX2_SURFACE_DIM_2D_MSAA_ARRAY" = 0 or 6?
    be_val<uint32_t> width;
    be_val<uint32_t> height;
    be_val<uint32_t> depth;
    be_val<uint32_t> mipLevels; // GX2CalcSurfaceSizeAndAlignment -> _GX2CalcNumLevels
-   be_val<GX2SurfaceFormat> format;
-   be_val<GX2AAMode> aa;
+   be_val<GX2SurfaceFormat::Format> format;
+   be_val<GX2AAMode::Mode> aa;
    union // Is this correct?? Union???
    {
-      be_val<GX2SurfaceUse> use; // GX2InitTextureRegs
+      be_val<GX2SurfaceUse::Use> use; // GX2InitTextureRegs
       be_val<uint32_t> resourceFlags; // G2XRCreateSurface
    };
    be_val<uint32_t> imageSize;

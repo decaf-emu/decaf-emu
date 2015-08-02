@@ -16,14 +16,14 @@ GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize)
 }
 
 uint32_t
-GX2CalcFetchShaderSizeEx(uint32_t attribs, FetchShaderType fetchShaderType, TessellationMode tessellationMode)
+GX2CalcFetchShaderSizeEx(uint32_t attribs, GX2FetchShaderType::Type fetchShaderType, GX2TessellationMode::Mode tessellationMode)
 {
-   // TODO: Do we need to reverse the real algo? Or does this depend on our custom impl
-   return attribs * 4 + 32;
+   // This is custom to our implementation.
+   return attribs * 16;
 }
 
 void
-GX2InitFetchShaderEx(GX2FetchShader *fetchShader, void *buffer, uint32_t count, const GX2AttribStream* attribs, FetchShaderType type, TessellationMode tessMode)
+GX2InitFetchShaderEx(GX2FetchShader *fetchShader, void *buffer, uint32_t count, GX2AttribStream *attribs, GX2FetchShaderType::Type type, GX2TessellationMode::Mode tessMode)
 {
 }
 

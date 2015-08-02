@@ -18,23 +18,23 @@ GX2SetDRCEnable(BOOL enable)
 }
 
 void
-GX2CalcTVSize(TvRenderMode tvRenderMode, SurfaceFormat surfaceFormat, BufferingMode bufferingMode, be_val<uint32_t> *size, be_val<uint32_t> *unkOut)
+GX2CalcTVSize(GX2TVRenderMode::Mode tvRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode, be_val<uint32_t> *size, be_val<uint32_t> *unkOut)
 {
    *size = 1920 * 1080;
 }
 void
-GX2CalcDRCSize(DrcRenderMode drcRenderMode, SurfaceFormat surfaceFormat, BufferingMode bufferingMode, be_val<uint32_t> *size, be_val<uint32_t> *unkOut)
+GX2CalcDRCSize(GX2DrcRenderMode::Mode drcRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode, be_val<uint32_t> *size, be_val<uint32_t> *unkOut)
 {
    *size = 854 * 480;
 }
 
 void
-GX2SetTVBuffer(p32<void> buffer, uint32_t size, TvRenderMode tvRenderMode, SurfaceFormat surfaceFormat, BufferingMode bufferingMode)
+GX2SetTVBuffer(p32<void> buffer, uint32_t size, GX2TVRenderMode::Mode tvRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode)
 {
 }
 
 void
-GX2SetDRCBuffer(p32<void> buffer, uint32_t size, DrcRenderMode drcRenderMode, SurfaceFormat surfaceFormat, BufferingMode bufferingMode)
+GX2SetDRCBuffer(p32<void> buffer, uint32_t size, GX2DrcRenderMode::Mode drcRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode)
 {
 }
 
@@ -60,11 +60,11 @@ GX2SetSwapInterval(uint32_t interval)
    gSwapInterval = interval;
 }
 
-TVScanMode
+GX2TVScanMode::Mode
 GX2GetSystemTVScanMode()
 {
    // My console returns 7
-   return TVScanMode::Last;
+   return GX2TVScanMode::Last;
 }
 
 BOOL

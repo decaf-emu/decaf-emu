@@ -1,22 +1,40 @@
 #include "systemtypes.h"
 
-enum class FetchShaderType : uint32_t
+namespace GX2FetchShaderType
+{
+enum Type : uint32_t
 {
    First = 0,
    Last = 3,
 };
+}
 
-enum class TessellationMode : uint32_t
+namespace GX2TessellationMode
+{
+enum Mode : uint32_t
 {
    First = 0,
    Last = 2,
 };
+}
 
-enum class AttribFormat : uint32_t
+namespace GX2AttribFormat
+{
+enum Format : uint32_t
 {
    First = 0,
    Last = 0xa0f
 };
+}
+
+namespace GX2ShaderMode
+{
+enum Mode : uint32_t
+{
+   GX2ShaderModeFirst = 0,
+   GX2ShaderModeLast = 3
+};
+}
 
 struct GX2FetchShader;
 struct GX2VertexShader;
@@ -29,11 +47,11 @@ struct GX2PixelSampler;
 struct GX2AttribStream
 {
    UNKNOWN(0xc);
-   AttribFormat format;
+   be_val<GX2AttribFormat::Format> format;
    UNKNOWN(0x4);
-   uint32_t aluDivisor;
+   be_val<uint32_t> aluDivisor;
    UNKNOWN(0x4);
-   uint32_t endianSwap;
+   be_val<uint32_t> endianSwap;
 };
 CHECK_OFFSET(GX2AttribStream, 0xc, format);
 CHECK_OFFSET(GX2AttribStream, 0x14, aluDivisor);
@@ -49,10 +67,10 @@ uint32_t
 GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize);
 
 uint32_t
-GX2CalcFetchShaderSizeEx(uint32_t attribs, FetchShaderType fetchShaderType, TessellationMode tesellationMode);
+GX2CalcFetchShaderSizeEx(uint32_t attribs, GX2FetchShaderType::Type fetchShaderType, GX2TessellationMode::Mode tesellationMode);
 
 void
-GX2InitFetchShaderEx(GX2FetchShader *fetchShader, void *buffer, uint32_t count, const GX2AttribStream* attribs, FetchShaderType type, TessellationMode tessMode);
+GX2InitFetchShaderEx(GX2FetchShader *fetchShader, void *buffer, uint32_t count, GX2AttribStream *attribs, GX2FetchShaderType::Type type, GX2TessellationMode::Mode tessMode);
 
 void
 GX2SetFetchShader(GX2FetchShader *shader);
