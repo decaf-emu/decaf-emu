@@ -177,6 +177,8 @@ void initialise()
 void initialiseCore(int coreId)
 {
    auto baseRC = (HGLRC)INVALID_HANDLE_VALUE;
+   bool madeCurrent = false;
+
    for (auto i = 0; i < 3; ++i) {
       if (ghRC[i] != INVALID_HANDLE_VALUE) {
          baseRC = ghRC[i];
@@ -196,9 +198,16 @@ void initialiseCore(int coreId)
       }
    }
 
-   if (wglMakeCurrent(ghDC, ghRC[coreId]) == FALSE) {
-      assert(0);
+   for (auto i = 0u; i < 10; ++i) {
+      if (wglMakeCurrent(ghDC, ghRC[coreId]) == TRUE) {
+         madeCurrent = true;
+         break;
+      }
+
+      Sleep(10);
    }
+
+   assert(madeCurrent);
 }
 
 void run()
