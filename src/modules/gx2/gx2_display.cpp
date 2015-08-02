@@ -93,6 +93,22 @@ GX2GetSwapStatus(be_val<uint32_t> *unk1, be_val<uint32_t> *unk2, be_val<uint64_t
    *unk2 = 1;
 }
 
+BOOL
+GX2GetLastFrame(GX2ScanTarget::Target scanTarget, GX2Texture *texture)
+{
+   return FALSE;
+}
+
+BOOL
+GX2GetLastFrameGamma(GX2ScanTarget::Target scanTarget, be_val<float> *gamma)
+{
+   return FALSE;
+}
+
+void
+GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget::Target scanTarget)
+{
+}
 
 void
 GX2::registerDisplayFunctions()
@@ -112,4 +128,7 @@ GX2::registerDisplayFunctions()
    RegisterKernelFunction(GX2WaitForVsync);
    RegisterKernelFunction(GX2WaitForFlip);
    RegisterKernelFunction(GX2GetSwapStatus);
+   RegisterKernelFunction(GX2GetLastFrame);
+   RegisterKernelFunction(GX2GetLastFrameGamma);
+   RegisterKernelFunction(GX2CopyColorBufferToScanBuffer);
 }

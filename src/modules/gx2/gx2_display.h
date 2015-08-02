@@ -1,6 +1,9 @@
 #pragma once
 #include "systemtypes.h"
 
+struct GX2Texture;
+struct GX2ColorBuffer;
+
 namespace GX2DrcRenderMode
 {
 enum Mode : uint32_t
@@ -44,6 +47,15 @@ enum Mode : uint32_t
    None = 0,
    First = 0,
    Last = 7
+};
+}
+
+namespace GX2ScanTarget
+{
+enum Target
+{
+   First = 1,
+   Last = 8
 };
 }
 
@@ -91,3 +103,12 @@ GX2WaitForFlip();
 
 void
 GX2GetSwapStatus(be_val<uint32_t> *unk1, be_val<uint32_t> *unk2, be_val<uint64_t> *unk3, be_val<uint64_t> *unk4);
+
+BOOL
+GX2GetLastFrame(GX2ScanTarget::Target scanTarget, GX2Texture *texture);
+
+BOOL
+GX2GetLastFrameGamma(GX2ScanTarget::Target scanTarget, be_val<float> *gamma);
+
+void
+GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget::Target scanTarget);
