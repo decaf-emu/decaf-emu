@@ -68,3 +68,6 @@ GX2SetGeometryShader(GX2GeometryShader *shader);
 
 void
 GX2SetPixelSampler(GX2PixelSampler *sampler, uint32_t id);
+
+void
+GX2SetVertexUniformReg(uint32_t offset, uint32_t count, void *data);

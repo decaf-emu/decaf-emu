@@ -53,6 +53,11 @@ GX2SetPixelSampler(GX2PixelSampler *sampler, uint32_t id)
 }
 
 void
+GX2SetVertexUniformReg(uint32_t offset, uint32_t count, void *data)
+{
+}
+
+void
 GX2::registerShaderFunctions()
 {
    RegisterKernelFunction(GX2CalcGeometryShaderInputRingBufferSize);
@@ -64,4 +69,5 @@ GX2::registerShaderFunctions()
    RegisterKernelFunction(GX2SetPixelShader);
    RegisterKernelFunction(GX2SetGeometryShader);
    RegisterKernelFunction(GX2SetPixelSampler);
+   RegisterKernelFunction(GX2SetVertexUniformReg);
 }
