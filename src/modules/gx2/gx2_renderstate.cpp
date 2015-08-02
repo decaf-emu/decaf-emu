@@ -20,12 +20,12 @@ GX2SetDepthStencilControl(uint32_t unk1,
 }
 
 void
-GX2SetStencilMask(uint32_t unk1,
-                  uint32_t unk2,
-                  uint32_t unk3,
-                  uint32_t unk4,
-                  uint32_t unk5,
-                  uint32_t unk6)
+GX2SetStencilMask(uint8_t unk1,
+                  uint8_t unk2,
+                  uint8_t unk3,
+                  uint8_t unk4,
+                  uint8_t unk5,
+                  uint8_t unk6)
 {
    // TODO: GX2SetStencilMask
 }
