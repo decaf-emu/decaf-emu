@@ -152,6 +152,12 @@ COSWarn(uint32_t module, const char *fmt, ppctypes::VarList& args)
    gLog->debug("COSWarn {} {}", module, str);
 }
 
+static void
+OSConsoleWrite(const char *msg)
+{
+   gLog->debug("OSConsoleWrite {}", msg);
+}
+
 void
 CoreInit::registerDebugFunctions()
 {
@@ -161,4 +167,5 @@ CoreInit::registerDebugFunctions()
    RegisterKernelFunction(OSReport);
    RegisterKernelFunction(OSVReport);
    RegisterKernelFunction(COSWarn);
+   RegisterKernelFunction(OSConsoleWrite);
 }
