@@ -46,8 +46,8 @@ void set_thread_name(std::thread* thread, const std::string& threadName)
 
 namespace ui {
 
-CHAR szAppName[] = "WiiUEmuClass";
-CHAR szAppTitle[] = "WiiU Emu";
+TCHAR szAppName[] = TEXT("WiiUEmuClass");
+TCHAR szAppTitle[] = TEXT("WiiU Emu");
 HWND  ghWnd;
 HDC   ghDC;
 HGLRC ghRC[3];
@@ -74,13 +74,13 @@ BOOL bSetupPixelFormat(HDC hdc)
 
    if ((pixelformat = ChoosePixelFormat(hdc, ppfd)) == 0)
    {
-      MessageBoxA(NULL, "ChoosePixelFormat failed", "Error", MB_OK);
+      MessageBox(NULL, TEXT("ChoosePixelFormat failed"), TEXT("Error"), MB_OK);
       return FALSE;
    }
 
    if (SetPixelFormat(hdc, pixelformat, ppfd) == FALSE)
    {
-      MessageBoxA(NULL, "SetPixelFormat failed", "Error", MB_OK);
+      MessageBox(NULL, TEXT("SetPixelFormat failed"), TEXT("Error"), MB_OK);
       return FALSE;
    }
 
@@ -126,29 +126,29 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void initialise()
 {
-   WNDCLASSA   wndclass;
+   WNDCLASS wndclass;
    HINSTANCE hInstance = GetModuleHandle(NULL);
 
    /* Register the frame class */
    wndclass.style = 0;
-   wndclass.lpfnWndProc = (WNDPROC)WndProc;
+   wndclass.lpfnWndProc = WndProc;
    wndclass.cbClsExtra = 0;
    wndclass.cbWndExtra = 0;
    wndclass.hInstance = hInstance;
-   wndclass.hIcon = LoadIconA(hInstance, szAppName);
+   wndclass.hIcon = LoadIcon(hInstance, szAppName);
    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
    wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
    wndclass.lpszMenuName = szAppName;
    wndclass.lpszClassName = szAppName;
 
-   if (!RegisterClassA(&wndclass))
+   if (!RegisterClass(&wndclass))
       return;
 
    auto windowWidth = 1920 / 2;
    auto windowHeight = (854 / 2) + (480 / 2);
 
    /* Create the frame */
-   ghWnd = CreateWindowA(szAppName,
+   ghWnd = CreateWindow(szAppName,
       szAppTitle,
       WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
       CW_USEDEFAULT,
