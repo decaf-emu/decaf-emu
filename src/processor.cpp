@@ -69,6 +69,9 @@ void
 Processor::coreEntryPoint(Core *core)
 {
    tCurrentCore = core;
+
+   platform::ui::initialiseCore(core->id);
+
    core->primaryFiber = ConvertThreadToFiber(NULL);
 
    while (mRunning) {

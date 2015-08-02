@@ -25,6 +25,7 @@
 #include "modules/padscore/padscore.h"
 #include "system.h"
 #include "usermodule.h"
+#include "platform.h"
 
 std::shared_ptr<spdlog::logger>
 gLog;
@@ -122,6 +123,8 @@ int main(int argc, char **argv)
 static void
 initialiseEmulator()
 {
+   platform::ui::initialise();
+
    Interpreter::RegisterFunctions();
    JitManager::RegisterFunctions();
 
@@ -264,8 +267,10 @@ play(const std::string &path)
    // Run thread 1
    OSRunThread(OSGetDefaultThread(1), module.entryPoint, 0, nullptr);
 
+   platform::ui::run();
+
    // Wait for all processor threads to exit
-   gProcessor.join();
+   //gProcessor.join();
 
    // TODO: OSFreeToSystem data
    return true;
