@@ -163,7 +163,7 @@ OSTriggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
    OSWakeupThread(&alarm->threadQueue);
 
    if (alarm->period) {
-      alarm->nextFire = OSGetSystemTime() + alarm->period;
+      alarm->nextFire = OSGetTime() + alarm->period;
       alarm->state = OSAlarmState::Set;
    } else {
       alarm->nextFire = 0;
@@ -179,7 +179,7 @@ OSCheckAlarms(uint32_t core, OSContext *context)
 {
    ScopedSpinLock lock(gAlarmLock);
    auto queue = gAlarmQueue[core];
-   auto now = OSGetSystemTime();
+   auto now = OSGetTime();
    auto next = std::chrono::time_point<std::chrono::system_clock>::max();
 
    for (OSAlarm *alarm = queue->head; alarm; ) {
