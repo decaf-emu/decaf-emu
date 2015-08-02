@@ -69,7 +69,7 @@ static void
 zlibFreeWrapper(void *opaque, void *address)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
-   ZlibFreeFunc freeFunc = static_cast<uint32_t>(wstrm->zalloc);
+   ZlibFreeFunc freeFunc = static_cast<uint32_t>(wstrm->zfree);
    if (freeFunc) {
       freeFunc(wstrm->opaque, address);
    } else {
