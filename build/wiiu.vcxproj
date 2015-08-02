@@ -148,6 +148,7 @@
     <ClCompile Include="..\src\modules\gx2\gx2_core.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_display.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_displaylist.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_draw.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_renderstate.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_shaders.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_surface.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
     <ClInclude Include="..\src\jit.h" />
     <ClInclude Include="..\src\jit_float.h" />
+    <ClInclude Include="..\src\modules\gx2\gx2_draw.h" />
     <ClInclude Include="..\src\platform.h" />
     <ClInclude Include="..\src\ppcinvokeargs.h" />
     <ClInclude Include="..\src\ppcinvokelog.h" />

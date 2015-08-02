@@ -13,6 +13,7 @@ void GX2::RegisterFunctions()
    registerCoreFunctions();
    registerDisplayFunctions();
    registerDisplayListFunctions();
+   registerDrawFunctions();
    registerRenderStateFunctions();
    registerResourceFunctions();
    registerShaderFunctions();
