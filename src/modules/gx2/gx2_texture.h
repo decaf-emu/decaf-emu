@@ -2,11 +2,28 @@
 #include "systemtypes.h"
 #include "gx2_surface.h"
 
-// Thanks to Nintendo for nice debug messages giving us variables ! :)
+struct GX2Sampler;
+
+namespace GX2TexClampMode
+{
+enum Mode
+{
+   First = 0,
+   Last = 7
+};
+}
+
+namespace GX2TexXYFilterMode
+{
+enum Mode
+{
+   First = 0,
+   Last = 1
+};
+}
 
 #pragma pack(push, 1)
 
-// GX2InitTextureRegs
 struct GX2Texture
 {
    GX2Surface surface;
@@ -24,6 +41,9 @@ CHECK_OFFSET(GX2Texture, 0x80, viewNumSlices);
 CHECK_SIZE(GX2Texture, 0x9c);
 
 #pragma pack(pop)
+
+void
+GX2InitSampler(GX2Sampler *sampler, GX2TexClampMode::Mode clampMode, GX2TexXYFilterMode::Mode minMagFilterMode);
 
 void
 GX2InitTextureRegs(GX2Texture *texture);
