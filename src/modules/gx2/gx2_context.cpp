@@ -1,10 +1,10 @@
 #include "gx2.h"
 #include "gx2_context.h"
 
-// Initialise graphics system and set current thread as the graphics thread
 void
 GX2Init(be_val<uint32_t> *attributes)
 {
+   // TODO: GX2Init set current thread as the graphics thread
    auto log = gLog->debug();
    log << "GX2Init attributes: ";
 
@@ -18,17 +18,21 @@ GX2Init(be_val<uint32_t> *attributes)
 void
 GX2Shutdown()
 {
-
+   // TODO: GX2Shutdown
 }
 
 void
 GX2Flush()
 {
+   // TODO: GX2Flush
 }
 
 void
-GX2Invalidate(GX2InvalidateMode::Mode mode, p32<void> buffer, uint32_t size)
+GX2Invalidate(GX2InvalidateMode::Mode mode,
+              void *buffer,
+              uint32_t size)
 {
+   // TODO: GX2Invalidate
 }
 
 void
@@ -38,14 +42,17 @@ GX2SetupContextState(GX2ContextState *state)
 }
 
 void
-GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1)
+GX2SetupContextStateEx(GX2ContextState *state,
+                       BOOL unk1)
 {
    state->displayListSize = 0x300;
    GX2BeginDisplayListEx(reinterpret_cast<GX2DisplayList*>(&state->displayList), state->displayListSize, unk1);
 }
 
 void
-GX2GetContextStateDisplayList(GX2ContextState *state, be_val<uint32_t> *outDisplayList, be_val<uint32_t> *outSize)
+GX2GetContextStateDisplayList(GX2ContextState *state,
+                              be_val<uint32_t> *outDisplayList,
+                              be_val<uint32_t> *outSize)
 {
    *outDisplayList = gMemory.untranslate(&state->displayList);
    *outSize = state->displayListSize;
@@ -54,6 +61,7 @@ GX2GetContextStateDisplayList(GX2ContextState *state, be_val<uint32_t> *outDispl
 void
 GX2SetContextState(GX2ContextState *state)
 {
+   // TODO: GX2SetContextState
 }
 
 void GX2::registerContextFunctions()

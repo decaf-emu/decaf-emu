@@ -21,28 +21,70 @@ enum Func : uint32_t
 
 namespace GX2AlphaToMaskMode
 {
-enum class Mode : uint32_t
+enum Mode : uint32_t
 {
    First = 0,  // GX2_ALPHA_TO_MASK_FIRST
    Last = 4    // GX2_ALPHA_TO_MASK_LAST
 };
 }
 
-void
-GX2SetDepthStencilControl(UNKNOWN_ARGS);
+namespace GX2RenderTarget
+{
+enum Target : uint32_t
+{
+   First = 0,
+   Last = 7
+};
+}
+
+namespace GX2BlendMode
+{
+enum Mode
+{
+   First = 0,
+   Last = 20
+};
+}
+
+namespace GX2BlendCombineMode
+{
+enum Mode
+{
+   First = 0,
+   Last = 4
+};
+}
+
+namespace GX2ChannelMask
+{
+enum Mask
+{
+   First = 0,
+   Last = 0xf
+};
+}
 
 void
-GX2SetStencilMask(UNKNOWN_ARGS);
+GX2SetDepthStencilControl(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
 
 void
-GX2SetPolygonControl(UNKNOWN_ARGS);
+GX2SetStencilMask(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
+
+void
+GX2SetPolygonControl(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
 
 void
 GX2SetColorControl(GX2LogicOp::Op logicOp, uint32_t unk1, uint32_t unk2, uint32_t unk3);
 
-// r3...r10?
 void
-GX2SetBlendControl(UNKNOWN_ARGS);
+GX2SetBlendControl(GX2RenderTarget::Target target,
+                   GX2BlendMode::Mode colorSrcBlend,
+                   GX2BlendMode::Mode colorDstBlend,
+                   GX2BlendCombineMode::Mode colorCombine,
+                   uint32_t unk1,
+                   GX2BlendMode::Mode alphaSrcBlend,
+                   GX2BlendMode::Mode alphaDstBlend,
+                   GX2BlendCombineMode::Mode alphaCombine);
 
 void
 GX2SetBlendConstantColor(float red, float green, float blue, float alpha);
@@ -50,9 +92,14 @@ GX2SetBlendConstantColor(float red, float green, float blue, float alpha);
 void
 GX2SetAlphaTest(BOOL enabled, GX2CompareFunction::Func compare, float reference);
 
-// r3...r10?
 void
-GX2SetTargetChannelMasks(UNKNOWN_ARGS);
+GX2SetTargetChannelMasks(GX2ChannelMask::Mask target0,
+                         GX2ChannelMask::Mask target1,
+                         GX2ChannelMask::Mask target2,
+                         GX2ChannelMask::Mask target3,
+                         GX2ChannelMask::Mask target4,
+                         GX2ChannelMask::Mask target5,
+                         GX2ChannelMask::Mask target6);
 
 void
 GX2SetAlphaToMask(BOOL enabled, GX2AlphaToMaskMode::Mode mode);

@@ -8,7 +8,8 @@ static wfunc_ptr<void, GX2RResourceFlags::Flags, p32<void>>
 pGX2RMemFree;
 
 void
-GX2RSetAllocator(GX2RAllocFuncPtr allocFn, GX2RFreeFuncPtr freeFn)
+GX2RSetAllocator(GX2RAllocFuncPtr allocFn,
+                 GX2RFreeFuncPtr freeFn)
 {
    pGX2RMemAlloc = allocFn;
    pGX2RMemFree = freeFn;

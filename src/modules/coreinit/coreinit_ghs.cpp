@@ -44,6 +44,7 @@ ghs_set_errno(uint32_t err)
 void
 ghs_flock_file(uint32_t lockIx)
 {
+   // TODO: ghs_flock_file
    assert(lockIx <= GHS_FOPEN_MAX);
    // Lock mutex for file lockIx
 }
@@ -51,6 +52,7 @@ ghs_flock_file(uint32_t lockIx)
 void
 ghsExit(int code)
 {
+   // TODO: ghsExit
    assert(false);
 }
 

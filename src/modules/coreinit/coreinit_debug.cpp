@@ -3,13 +3,13 @@
 #include "log.h"
 
 BOOL
-OSIsDebuggerPresent(void)
+OSIsDebuggerPresent()
 {
    return TRUE;
 }
 
 BOOL
-OSIsDebuggerInitialized(void)
+OSIsDebuggerInitialized()
 {
    return FALSE;
 }
@@ -153,9 +153,9 @@ COSWarn(uint32_t module, const char *fmt, ppctypes::VarList& args)
 }
 
 static void
-OSConsoleWrite(const char *msg)
+OSConsoleWrite(const char *msg, uint32_t unk)
 {
-   gLog->debug("OSConsoleWrite {}", msg);
+   gLog->debug("OSConsoleWrite[{}] {}", unk, msg);
 }
 
 void

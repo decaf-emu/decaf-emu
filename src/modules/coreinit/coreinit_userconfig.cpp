@@ -4,17 +4,20 @@
 IOHandle
 UCOpen()
 {
+   // TODO: UCOpen
    return IOInvalidHandle;
 }
 
 void
 UCClose(IOHandle handle)
 {
+   // TODO: UCClose
 }
 
 IOError
 UCReadSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
 {
+   // TODO: UCReadSysConfig
    return IOError::Generic;
 }
 

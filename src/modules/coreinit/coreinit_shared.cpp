@@ -2,8 +2,9 @@
 #include "coreinit_shared.h"
 
 BOOL
-OSGetSharedData(SharedType type, uint32_t, be_val<uint32_t> *addr, be_val<uint32_t> *size)
+OSGetSharedData(OSSharedDataType::Type type, uint32_t, be_val<uint32_t> *addr, be_val<uint32_t> *size)
 {
+   // TODO: OSGetSharedData
    return FALSE;
 }
 

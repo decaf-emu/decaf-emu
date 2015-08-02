@@ -48,4 +48,4 @@ void
 GX2SetContextState(GX2ContextState *state);
 
 void
-GX2Invalidate(GX2InvalidateMode::Mode mode, p32<void> buffer, uint32_t size);
+GX2Invalidate(GX2InvalidateMode::Mode mode, void *buffer, uint32_t size);

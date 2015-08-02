@@ -5,32 +5,37 @@
 void
 DCInvalidateRange(void *addr, uint32_t size)
 {
+   // TODO: DCInvalidateRange
 }
 
 void
 DCFlushRange(void *addr, uint32_t size)
 {
+   // TODO: DCFlushRange
 }
 
 void
 DCStoreRange(void *addr, uint32_t size)
 {
+   // TODO: DCStoreRange
 }
 
 void
 DCFlushRangeNoSync(void *addr, uint32_t size)
 {
+   // TODO: DCFlushRangeNoSync
 }
 
 void
 DCStoreRangeNoSync(void *addr, uint32_t size)
 {
+   // TODO: DCStoreRangeNoSync
 }
 
 void
 DCZeroRange(void *addr, uint32_t size)
 {
-   // TODO: Check align direction is correct!
+   // TODO: DCZeroRange check align direction is correct!
    size = alignDown(size, 32);
    addr = alignUp(addr, 32);
    memset(addr, 0, size);
@@ -39,6 +44,7 @@ DCZeroRange(void *addr, uint32_t size)
 void
 DCTouchRange(void *addr, uint32_t size)
 {
+   // TODO: DCTouchRange
 }
 
 void

@@ -119,6 +119,7 @@ FSSetCmdPriority(FSCmdBlock *block, FSPriority priority)
 void
 FSSetStateChangeNotification(FSClient *client, FSStateChangeInfo *info)
 {
+   // TODO: FSSetStateChangeNotification
 }
 
 FSStatus

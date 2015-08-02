@@ -1,9 +1,14 @@
 #include "gx2.h"
 #include "gx2_display.h"
 
-static uint32_t gSwapInterval;
-static BOOL gTVEnable;
-static BOOL gDRCEnable;
+static uint32_t
+gSwapInterval = 0;
+
+static BOOL
+gTVEnable = TRUE;
+
+static BOOL
+gDRCEnable = TRUE;
 
 void
 GX2SetTVEnable(BOOL enable)
@@ -18,34 +23,59 @@ GX2SetDRCEnable(BOOL enable)
 }
 
 void
-GX2CalcTVSize(GX2TVRenderMode::Mode tvRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode, be_val<uint32_t> *size, be_val<uint32_t> *unkOut)
+GX2CalcTVSize(GX2TVRenderMode::Mode tvRenderMode,
+              GX2SurfaceFormat::Format surfaceFormat,
+              GX2BufferingMode::Mode bufferingMode,
+              be_val<uint32_t> *size,
+              be_val<uint32_t> *unkOut)
 {
+   // TODO: GX2CalcTVSize
    *size = 1920 * 1080;
 }
+
 void
-GX2CalcDRCSize(GX2DrcRenderMode::Mode drcRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode, be_val<uint32_t> *size, be_val<uint32_t> *unkOut)
+GX2CalcDRCSize(GX2DrcRenderMode::Mode drcRenderMode,
+               GX2SurfaceFormat::Format surfaceFormat,
+               GX2BufferingMode::Mode bufferingMode,
+               be_val<uint32_t> *size,
+               be_val<uint32_t> *unkOut)
 {
+   // TODO: GX2CalcDRCSize
    *size = 854 * 480;
 }
 
 void
-GX2SetTVBuffer(p32<void> buffer, uint32_t size, GX2TVRenderMode::Mode tvRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode)
+GX2SetTVBuffer(void *buffer,
+               uint32_t size,
+               GX2TVRenderMode::Mode tvRenderMode,
+               GX2SurfaceFormat::Format surfaceFormat,
+               GX2BufferingMode::Mode bufferingMode)
 {
+   // TODO: GX2SetTVBuffer
 }
 
 void
-GX2SetDRCBuffer(p32<void> buffer, uint32_t size, GX2DrcRenderMode::Mode drcRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode)
+GX2SetDRCBuffer(void *buffer,
+                uint32_t size,
+                GX2DrcRenderMode::Mode drcRenderMode,
+                GX2SurfaceFormat::Format surfaceFormat,
+                GX2BufferingMode::Mode bufferingMode)
 {
+   // TODO: GX2SetDRCBuffer
 }
 
 void
-GX2SetTVScale(uint32_t x, uint32_t y)
+GX2SetTVScale(uint32_t x,
+              uint32_t y)
 {
+   // TODO: GX2SetTVScale
 }
 
 void
-GX2SetDRCScale(uint32_t x, uint32_t y)
+GX2SetDRCScale(uint32_t x,
+               uint32_t y)
 {
+   // TODO: GX2SetDRCScale
 }
 
 uint32_t
@@ -63,51 +93,62 @@ GX2SetSwapInterval(uint32_t interval)
 GX2TVScanMode::Mode
 GX2GetSystemTVScanMode()
 {
-   // My console returns 7
+   // TODO: GX2GetSystemTVScanMode
    return GX2TVScanMode::Last;
 }
 
 BOOL
 GX2DrawDone()
 {
+   // TODO: GX2DrawDone
    return TRUE;
 }
 
 void
 GX2WaitForVsync()
 {
+   // TODO: GX2WaitForVsync
 }
 
 void
 GX2WaitForFlip()
 {
+   // TODO: GX2WaitForFlip
 }
 
 void
-GX2GetSwapStatus(be_val<uint32_t> *unk1, be_val<uint32_t> *unk2, be_val<uint64_t> *unk3, be_val<uint64_t> *unk4)
+GX2GetSwapStatus(be_val<uint32_t> *unk1,
+                 be_val<uint32_t> *unk2,
+                 be_val<uint64_t> *unk3, // 64 bit is probably OSTime
+                 be_val<uint64_t> *unk4) // 64 bit is probably OSTime
 {
-   // unk3 and unk4 are probably OSTime because they are 64 bit
-
-   // This gets us out of loops!
+   // TODO: GX2GetSwapStatus
+   // This gets us out of some loops!
    *unk1 = 1;
    *unk2 = 1;
 }
 
 BOOL
-GX2GetLastFrame(GX2ScanTarget::Target scanTarget, GX2Texture *texture)
+GX2GetLastFrame(GX2ScanTarget::Target scanTarget,
+                GX2Texture *texture)
 {
+   // TODO: GX2GetLastFrame
    return FALSE;
 }
 
 BOOL
-GX2GetLastFrameGamma(GX2ScanTarget::Target scanTarget, be_val<float> *gamma)
+GX2GetLastFrameGamma(GX2ScanTarget::Target scanTarget,
+                     be_val<float> *gamma)
 {
+   // TODO: GX2GetLastFrameGamma
    return FALSE;
 }
 
 void
-GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget::Target scanTarget)
+GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer,
+                               GX2ScanTarget::Target scanTarget)
 {
+   // TODO: GX2CopyColorBufferToScanBuffer
 }
 
 void
