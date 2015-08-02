@@ -28,3 +28,9 @@ OSGetScreenCapturePermission();
 
 uint32_t
 OSGetConsoleType();
+
+BOOL
+OSEnableHomeButtonMenu(BOOL enable);
+
+void
+OSBlockThreadsOnExit();

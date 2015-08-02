@@ -8,10 +8,13 @@ std::chrono::time_point<std::chrono::system_clock>
 gEpochTime;
 
 OSSystemInfo *
-gSystemInfo;
+gSystemInfo = nullptr;
 
 static BOOL
-gScreenCapturePermission;
+gScreenCapturePermission = TRUE;
+
+static BOOL
+gEnableHomeButtonMenu = FALSE;
 
 OSSystemInfo *
 OSGetSystemInfo()
@@ -40,6 +43,19 @@ OSGetConsoleType()
    return 0x3000050;
 }
 
+BOOL
+OSEnableHomeButtonMenu(BOOL enable)
+{
+   gEnableHomeButtonMenu = enable;
+   return TRUE;
+}
+
+void
+OSBlockThreadsOnExit()
+{
+   // TODO: OSBlockThreadsOnExit
+}
+
 void
 CoreInit::registerSystemInfoFunctions()
 {
@@ -47,6 +63,8 @@ CoreInit::registerSystemInfoFunctions()
    RegisterKernelFunction(OSSetScreenCapturePermission);
    RegisterKernelFunction(OSGetScreenCapturePermission);
    RegisterKernelFunction(OSGetConsoleType);
+   RegisterKernelFunction(OSEnableHomeButtonMenu);
+   RegisterKernelFunction(OSBlockThreadsOnExit);
 }
 
 void
