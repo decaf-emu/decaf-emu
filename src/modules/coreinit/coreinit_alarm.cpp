@@ -88,7 +88,7 @@ OSInitAlarmQueue(OSAlarmQueue *queue)
 BOOL
 OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback)
 {
-   return OSSetPeriodicAlarm(alarm, 0, time, 0, callback);
+   return OSSetPeriodicAlarm(alarm, 0, OSGetTime() + time, 0, callback);
 }
 
 BOOL
