@@ -87,10 +87,10 @@ BOOL bSetupPixelFormat(HDC hdc)
    return TRUE;
 }
 
-LONG WINAPI WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-   LONG    lRet = 1;
-   PAINTSTRUCT    ps;
+   LRESULT lRet = 1;
+   PAINTSTRUCT ps;
 
    switch (uMsg) {
 
