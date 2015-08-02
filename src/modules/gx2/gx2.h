@@ -12,7 +12,7 @@ public:
    static void RegisterFunctions();
 
 private:
-   static void registerCoreFunctions();
+   static void registerContextFunctions();
    static void registerDisplayFunctions();
    static void registerDisplayListFunctions();
    static void registerDrawFunctions();

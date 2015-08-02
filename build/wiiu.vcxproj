@@ -145,7 +145,7 @@
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2r_resource.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_core.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_context.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_display.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_displaylist.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_draw.cpp" />
@@ -257,7 +257,7 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_time.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_userconfig.h" />
     <ClInclude Include="..\src\modules\gx2\gx2.h" />
-    <ClInclude Include="..\src\modules\gx2\gx2_core.h" />
+    <ClInclude Include="..\src\modules\gx2\gx2_context.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_display.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_displaylist.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_renderstate.h" />

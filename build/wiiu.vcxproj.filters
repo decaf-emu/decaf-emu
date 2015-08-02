@@ -192,9 +192,6 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_userconfig.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\gx2_core.cpp">
-      <Filter>Source Files\modules\gx2</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_display.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
@@ -378,6 +375,9 @@
     <ClCompile Include="..\src\modules\gx2\gx2_draw.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_context.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -436,9 +436,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_ios.h">
       <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\gx2_core.h">
-      <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_renderstate.h">
       <Filter>Header Files\modules\gx2</Filter>
@@ -672,6 +669,9 @@
       <Filter>Header Files\platform</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_context.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
   </ItemGroup>

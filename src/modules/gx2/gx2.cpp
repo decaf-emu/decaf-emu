@@ -10,7 +10,7 @@ void GX2::initialise()
 
 void GX2::RegisterFunctions()
 {
-   registerCoreFunctions();
+   registerContextFunctions();
    registerDisplayFunctions();
    registerDisplayListFunctions();
    registerDrawFunctions();
