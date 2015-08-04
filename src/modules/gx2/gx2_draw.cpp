@@ -1,5 +1,6 @@
 #include "gx2.h"
 #include "gx2_draw.h"
+#include "gx2internal.h"
 
 void
 GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
@@ -18,6 +19,34 @@ GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
                   GX2ClearFlags::Flags flags)
 {
    // TODO: GX2ClearBuffersEx
+
+   /*
+   gGX2State.contextState = nullptr;
+
+   glClearColor(red, green, blue, alpha);
+   glClearDepth(depth);
+
+   GLbitfield clearMask = 0;
+
+   if (colorBuffer) {
+      GLuint hostColorBuffer = getColorBuffer(colorBuffer);
+      
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHEMENT0, GL_TEXTURE_2D, hostColorBuffer, 0);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHEMENT1, 0, 0, 0);
+
+      clearMask |= GL_COLOR_BUFFER_BIT;
+   }
+
+   if (depthBuffer) {
+      if (flags & GX2ClearFlags::Depth) {
+         // Depth
+
+         clearMask |= GL_DEPTH_BUFFER_BIT;
+      }
+   }
+
+   glClear(clearMask);
+   */
 }
 
 void

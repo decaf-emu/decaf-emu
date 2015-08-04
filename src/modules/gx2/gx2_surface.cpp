@@ -1,5 +1,6 @@
 #include "gx2.h"
 #include "gx2_surface.h"
+#include "gx2internal.h"
 
 void
 GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
@@ -36,15 +37,15 @@ GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer, be_val<uint32_t> *outSize
 }
 
 void
-GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, uint32_t unk1)
+GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, uint32_t renderTarget)
 {
-   // TODO: GX2SetColorBuffer
+   gGX2State.colorBuffer[renderTarget] = colorBuffer;
 }
 
 void
 GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
 {
-   // TODO: GX2SetDepthBuffer
+   gGX2State.depthBuffer = depthBuffer;
 }
 
 void

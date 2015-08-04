@@ -144,6 +144,7 @@
     <ClCompile Include="..\src\modules\erreula\erreula.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2internal.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2r_resource.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_context.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_display.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
     <ClInclude Include="..\src\jit.h" />
     <ClInclude Include="..\src\jit_float.h" />
+    <ClInclude Include="..\src\modules\gx2\gx2internal.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h" />
     <ClInclude Include="..\src\platform.h" />
     <ClInclude Include="..\src\ppcinvokeargs.h" />

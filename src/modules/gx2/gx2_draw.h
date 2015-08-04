@@ -5,7 +5,7 @@ namespace GX2ClearFlags
 {
 enum Flags : uint32_t
 {
-   // Probably flags of what buffers to clear!!
+   Depth = 1,
 };
 }
 
