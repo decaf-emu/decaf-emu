@@ -26,13 +26,13 @@ GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
    glClearColor(red, green, blue, alpha);
    glClearDepth(depth);
 
-   GLbitfield clearMask = 0;
+   ClearBufferMask clearMask = GL_NONE_BIT;
 
    if (colorBuffer) {
       GLuint hostColorBuffer = getColorBuffer(colorBuffer);
       
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHEMENT0, GL_TEXTURE_2D, hostColorBuffer, 0);
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHEMENT1, 0, 0, 0);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hostColorBuffer, 0);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, 0, 0);
 
       clearMask |= GL_COLOR_BUFFER_BIT;
    }

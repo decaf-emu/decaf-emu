@@ -1,5 +1,7 @@
 #include <pugixml.hpp>
 #include <docopt.h>
+#include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
 #include "bitutils.h"
 #include "codetests.h"
 #include "filesystem.h"
@@ -123,6 +125,7 @@ int main(int argc, char **argv)
 static void
 initialiseEmulator()
 {
+   glbinding::Binding::initialize();
    platform::ui::initialise();
 
    Interpreter::RegisterFunctions();

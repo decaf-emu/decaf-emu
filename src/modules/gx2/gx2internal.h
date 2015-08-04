@@ -4,7 +4,9 @@
 #include "gx2_context.h"
 #include "gx2_texture.h"
 #include "gx2_shaders.h"
-#include <gl\GL.h>
+#include <glbinding/gl/gl.h>
+
+using namespace gl;
 
 static const int NUM_MRT_BUFFER = 8;
 static const int NUM_TEXTURE_UNIT = 16;

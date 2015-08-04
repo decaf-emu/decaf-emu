@@ -13,3 +13,6 @@
 [submodule "libraries/spdlog"]
 	path = libraries/spdlog
 	url = https://github.com/exjam/spdlog.git
+[submodule "libraries/glbinding"]
+	path = libraries/glbinding
+	url = https://github.com/cginternals/glbinding.git
