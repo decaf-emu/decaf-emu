@@ -1,5 +1,6 @@
 #pragma once
 #include "bitutils.h"
+#include <ostream>
 #include <type_traits>
 
 template<typename Type>

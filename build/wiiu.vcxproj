@@ -60,7 +60,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;ASMJIT_EMBED;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;ASMJIT_EMBED;NOMINMAX;GLBINDING_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
@@ -92,6 +92,7 @@
     <ClCompile Include="..\src\codetests.cpp" />
     <ClCompile Include="..\src\disassembler.cpp" />
     <ClCompile Include="..\src\elf.cpp" />
+    <ClCompile Include="..\src\gfx\gfx_state.cpp" />
     <ClCompile Include="..\src\instructiontable.cpp" />
     <ClCompile Include="..\src\interpreter.cpp" />
     <ClCompile Include="..\src\interpreter\interpreter_branch.cpp" />
@@ -144,7 +145,6 @@
     <ClCompile Include="..\src\modules\erreula\erreula.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2internal.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2r_resource.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_context.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_display.cpp" />
@@ -187,6 +187,8 @@
     <ClInclude Include="..\src\elf.h" />
     <ClInclude Include="..\src\filesystem.h" />
     <ClInclude Include="..\src\floatutils.h" />
+    <ClInclude Include="..\src\gfx\gfx_state.h" />
+    <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\instruction.h" />
     <ClInclude Include="..\src\instructiondata.h" />
     <ClInclude Include="..\src\instructionid.h" />
@@ -195,7 +197,6 @@
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
     <ClInclude Include="..\src\jit.h" />
     <ClInclude Include="..\src\jit_float.h" />
-    <ClInclude Include="..\src\modules\gx2\gx2internal.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h" />
     <ClInclude Include="..\src\platform.h" />
     <ClInclude Include="..\src\ppcinvokeargs.h" />

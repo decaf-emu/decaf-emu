@@ -115,6 +115,12 @@
     <Filter Include="Header Files\platform">
       <UniqueIdentifier>{12cac486-3b7d-42e5-b09d-c3ac6638147c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\gfx">
+      <UniqueIdentifier>{4944b744-1ff1-42cf-9bda-6b71b17cdcab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gfx">
+      <UniqueIdentifier>{07696dfa-49e9-4e68-9248-306c6990a3d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -378,8 +384,8 @@
     <ClCompile Include="..\src\modules\gx2\gx2_context.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\gx2internal.cpp">
-      <Filter>Source Files\modules\gx2</Filter>
+    <ClCompile Include="..\src\gfx\gfx_state.cpp">
+      <Filter>Source Files\gfx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -677,8 +683,11 @@
     <ClInclude Include="..\src\modules\gx2\gx2_context.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\gx2internal.h">
-      <Filter>Header Files\modules\gx2</Filter>
+    <ClInclude Include="..\src\gfx\gfx_state.h">
+      <Filter>Header Files\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hostlookup.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

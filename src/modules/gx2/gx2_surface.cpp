@@ -1,6 +1,6 @@
 #include "gx2.h"
 #include "gx2_surface.h"
-#include "gx2internal.h"
+#include "gfx/gfx_state.h"
 
 void
 GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)

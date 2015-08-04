@@ -39,3 +39,12 @@ typedef uint32_t ppcsize_t;
 #define PADDING(Size) UNKNOWN(Size)
 
 #define UNKNOWN_ARGS void
+
+template<size_t Size>
+struct DriverData {
+   static_assert(Size >= 4, "DriverData must be at least 4 bytes");
+   
+   uint32_t _index;
+   char _reserved[Size - 4];
+};
+

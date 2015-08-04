@@ -1,9 +1,9 @@
 #pragma once
-#include "gx2.h"
-#include "gx2_draw.h"
-#include "gx2_context.h"
-#include "gx2_texture.h"
-#include "gx2_shaders.h"
+#include "../modules/gx2/gx2.h"
+#include "../modules/gx2/gx2_draw.h"
+#include "../modules/gx2/gx2_context.h"
+#include "../modules/gx2/gx2_texture.h"
+#include "../modules/gx2/gx2_shaders.h"
 #include <glbinding/gl/gl.h>
 
 using namespace gl;
