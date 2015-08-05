@@ -1,8 +1,10 @@
 games
-tools
 docs
 obj
 build/obj
+build/texture_*
+build/shader_*
+build/*.txt
 *.user
 *.suo
 *.sdf
