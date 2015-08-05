@@ -39,13 +39,13 @@ std::map<uint32_t, const char *> name = {
 };
 
 std::map<uint32_t, Opcode> op2 = {
-#define ALU_OP2(name, value, flags) { value, { value, static_cast<Opcode::Units>(flags), #name } },
+#define ALU_OP2(name, value, srcs, flags) { value, { value, srcs, static_cast<Opcode::Units>(flags), #name } },
 #include "latte_opcodes_def.inl"
 #undef ALU_OP2
 };
 
 std::map<uint32_t, Opcode> op3 = {
-#define ALU_OP3(name, value, flags) { value, { value, static_cast<Opcode::Units>(flags), #name } },
+#define ALU_OP3(name, value, srcs, flags) { value, { value, srcs, static_cast<Opcode::Units>(flags), #name } },
 #include "latte_opcodes_def.inl"
 #undef ALU_OP3
 };

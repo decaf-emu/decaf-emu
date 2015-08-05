@@ -335,14 +335,15 @@ bool Disassembler::cfALU(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::
          auto unit = getUnit(units, alu);
          const char *name = nullptr;
          bool abs0 = false, abs1 = false;
+         auto &opcode = latte::alu::op2[alu.op2.inst];
 
          if (alu.word1.encoding == latte::alu::Encoding::OP2) {
-            auto &opcode = latte::alu::op2[alu.op2.inst];
+            opcode = latte::alu::op2[alu.op2.inst];
             name = opcode.name;
             abs0 = !!alu.op2.src0Abs;
             abs1 = !!alu.op2.src1Abs;
          } else {
-            auto &opcode = latte::alu::op3[alu.op3.inst];
+            opcode = latte::alu::op3[alu.op3.inst];
             name = opcode.name;
          }
 
@@ -365,10 +366,15 @@ bool Disassembler::cfALU(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::
             writeAluSource(out, literalPtr, mGroupCounter, alu.word1.dstGpr, alu.word1.dstRel, alu.word1.dstChan, 0, false);
          }
 
-         out << ", ";
-         writeAluSource(out, literalPtr, mGroupCounter, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
-         out << ", ";
-         writeAluSource(out, literalPtr, mGroupCounter, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
+         if (opcode.srcs > 0) {
+            out << ", ";
+            writeAluSource(out, literalPtr, mGroupCounter, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
+         }
+
+         if (opcode.srcs > 1) {
+            out << ", ";
+            writeAluSource(out, literalPtr, mGroupCounter, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
+         }
 
          if (alu.word1.encoding == latte::alu::Encoding::OP2) {
             if (alu.op2.updateExecuteMask) {
@@ -391,8 +397,10 @@ bool Disassembler::cfALU(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::
                break;
             }
          } else {
-            out << ", ";
-            writeAluSource(out, literalPtr, mGroupCounter, alu.op3.src2Sel, alu.op3.src2Rel, alu.op3.src2Chan, alu.op3.src2Neg, false);
+            if (opcode.srcs > 2) {
+               out << ", ";
+               writeAluSource(out, literalPtr, mGroupCounter, alu.op3.src2Sel, alu.op3.src2Rel, alu.op3.src2Chan, alu.op3.src2Neg, false);
+            }
          }
 
          switch (alu.word1.bankSwizzle) {

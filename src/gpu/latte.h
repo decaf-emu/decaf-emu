@@ -355,14 +355,14 @@ enum inst : uint32_t
 
 enum op2 : uint32_t
 {
-#define ALU_OP2(name, value, flags) name = value,
+#define ALU_OP2(name, value, srcs, flags) name = value,
 #include "latte_opcodes_def.inl"
 #undef ALU_OP2
 };
 
 enum op3 : uint32_t
 {
-#define ALU_OP3(name, value, flags) name = value,
+#define ALU_OP3(name, value, srcs, flags) name = value,
 #include "latte_opcodes_def.inl"
 #undef ALU_OP3
 };
@@ -377,6 +377,7 @@ struct Opcode
    };
 
    uint32_t id;
+   uint32_t srcs;
    Units units;
    const char *name;
 };
