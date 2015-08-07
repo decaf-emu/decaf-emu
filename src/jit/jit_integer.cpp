@@ -617,13 +617,13 @@ orc(PPCEmuAssembler& a, Instruction instr)
 static bool
 ori(PPCEmuAssembler& a, Instruction instr)
 {
-   return orGeneric<OrAlwaysRecord | OrImmediate>(a, instr);
+   return orGeneric<OrImmediate>(a, instr);
 }
 
 static bool
 oris(PPCEmuAssembler& a, Instruction instr)
 {
-   return orGeneric<OrAlwaysRecord | OrImmediate | OrShifted>(a, instr);
+   return orGeneric<OrImmediate | OrShifted>(a, instr);
 }
 
 // Rotate left word

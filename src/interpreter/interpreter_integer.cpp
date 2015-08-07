@@ -549,13 +549,13 @@ orc(ThreadState *state, Instruction instr)
 static void
 ori(ThreadState *state, Instruction instr)
 {
-   return orGeneric<OrAlwaysRecord | OrImmediate>(state, instr);
+   return orGeneric<OrImmediate>(state, instr);
 }
 
 static void
 oris(ThreadState *state, Instruction instr)
 {
-   return orGeneric<OrAlwaysRecord | OrImmediate | OrShifted>(state, instr);
+   return orGeneric<OrImmediate | OrShifted>(state, instr);
 }
 
 // Rotate left word
