@@ -35,25 +35,25 @@ bool test(const std::string &as, const std::string &path);
 bool play(const std::string &path);
 
 static const char USAGE[] =
-   R"(WiiU Emulator
+R"(WiiU Emulator
 
-       Usage:
-         wiiu play [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] <game directory>
-         wiiu test [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
-         wiiu (-h | --help)
-         wiiu --version
+Usage:
+   wiiu play [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] <game directory>
+   wiiu test [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
+   wiiu (-h | --help)
+   wiiu --version
 
-       Options:
-         -h --help     Show this screen.
-         --version     Show version.
-         --jit         Enables the JIT engine.
-         --logfile     Redirect log output to file.
-         --log-async   Enable asynchronous logging.
-         --log-level=<log-level> [default: trace]
-                       Only display logs with severity equal to or greater than this level.
-                       Available levels: trace, debug, info, notice, warning, error, critical, alert, emerg, off
-         --as=<ppcas>  Path to PowerPC assembler [default: powerpc-eabi-as.exe].
-   )";
+Options:
+   -h --help     Show this screen.
+   --version     Show version.
+   --jit         Enables the JIT engine.
+   --logfile     Redirect log output to file.
+   --log-async   Enable asynchronous logging.
+   --log-level=<log-level> [default: trace]
+                  Only display logs with severity equal to or greater than this level.
+                  Available levels: trace, debug, info, notice, warning, error, critical, alert, emerg, off
+   --as=<ppcas>  Path to PowerPC assembler [default: powerpc-eabi-as.exe].
+)";
 
 static std::string
 getGameName(const std::string &directory)
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
          file = "tests";
       }
 
-      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(file, "txt", 23, 59));
+      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(file, "txt", 23, 59, true));
    }
 
    if (args["--log-async"].asBool()) {
