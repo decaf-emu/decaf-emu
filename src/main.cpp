@@ -197,11 +197,11 @@ play(const std::string &path)
    }
 
    auto app = doc.child("app");
-   auto rpx = app.child("argstr").child_value();
+   auto rpx = std::string { app.child("argstr").child_value() };
    module.maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
 
    // Read rpx file
-   fh = fs.openFile(std::string("/vol/code/") + rpx, FileSystem::Input | FileSystem::Binary);
+   fh = fs.openFile("/vol/code/" + rpx, FileSystem::Input | FileSystem::Binary);
 
    if (!fh) {
       gLog->error("Error opening /vol/code/{}", rpx);
@@ -213,7 +213,7 @@ play(const std::string &path)
    fh->close();
 
    // Load the rpl into memory
-   gSystem.registerModule(rpx, &module);
+   gSystem.registerModule(rpx.c_str(), &module);
 
    if (!loader.loadRPL(module, buffer.data(), buffer.size())) {
       gLog->error("Could not load {}", rpx);
