@@ -1,5 +1,6 @@
 #pragma once
 #include "systemtypes.h"
+#include "gx2_surface.h"
 
 struct GX2Texture;
 struct GX2ColorBuffer;
@@ -17,17 +18,14 @@ namespace GX2TVRenderMode
 {
 enum Mode : uint32_t
 {
+   Unk1 = 0,
+   STD480p = 1,
+   WIDE480p = 2,
+   WIDE720p = 3,
+   Unk2 = 4,
+   WIDE1080p = 5,
    First = 0,
    Last = 5
-};
-}
-
-namespace GX2SurfaceFormat
-{
-enum Format : uint32_t
-{
-   First = 1,
-   Last = 0x83f
 };
 }
 
@@ -54,8 +52,12 @@ namespace GX2ScanTarget
 {
 enum Target
 {
-   First = 1,
-   Last = 8
+   TV = 0x01,
+   UNK1 = 0x02,
+   DRC = 0x04,
+   Unk2 = 0x08,
+   First = 0x01,
+   Last = 0x08
 };
 }
 
@@ -96,13 +98,20 @@ BOOL
 GX2DrawDone();
 
 void
+GX2SwapScanBuffers();
+
+void
 GX2WaitForVsync();
 
 void
 GX2WaitForFlip();
 
 void
-GX2GetSwapStatus(be_val<uint32_t> *unk1, be_val<uint32_t> *unk2, be_val<uint64_t> *unk3, be_val<uint64_t> *unk4);
+GX2GetSwapStatus(
+   be_val<uint32_t> *pSwapCount, 
+   be_val<uint32_t> *pFlipCount, 
+   be_val<uint64_t> *pLastFlip, 
+   be_val<uint64_t> *pLastVsync);
 
 BOOL
 GX2GetLastFrame(GX2ScanTarget::Target scanTarget, GX2Texture *texture);

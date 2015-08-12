@@ -23,7 +23,7 @@
     <ProjectGuid>{7CA9594F-8EC3-4CC2-821B-F87D5DAB6363}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>docopt</RootNamespace>
-    <TargetPlatformVersion>10.0.10069.0</TargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

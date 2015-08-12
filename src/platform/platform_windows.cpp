@@ -1,9 +1,9 @@
 #include "../platform.h"
 #ifdef PLATFORM_WINDOWS
 
+#include <algorithm>
 #include <assert.h>
 #include <windows.h>
-#include <gl/GL.h>
 
 const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
@@ -49,70 +49,18 @@ namespace ui {
 TCHAR szAppName[] = TEXT("WiiUEmuClass");
 TCHAR szAppTitle[] = TEXT("WiiU Emu");
 HWND  ghWnd;
-HDC   ghDC;
-HGLRC ghRC[3];
-
-BOOL bSetupPixelFormat(HDC hdc)
-{
-   PIXELFORMATDESCRIPTOR pfd, *ppfd;
-   int pixelformat;
-
-   ppfd = &pfd;
-
-   ppfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
-   ppfd->nVersion = 1;
-   ppfd->dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL |
-      PFD_DOUBLEBUFFER;
-   ppfd->dwLayerMask = PFD_MAIN_PLANE;
-   ppfd->iPixelType = PFD_TYPE_COLORINDEX;
-   ppfd->cColorBits = 8;
-   ppfd->cDepthBits = 16;
-   ppfd->cAccumBits = 0;
-   ppfd->cStencilBits = 0;
-
-   pixelformat = ChoosePixelFormat(hdc, ppfd);
-
-   if ((pixelformat = ChoosePixelFormat(hdc, ppfd)) == 0)
-   {
-      MessageBox(NULL, TEXT("ChoosePixelFormat failed"), TEXT("Error"), MB_OK);
-      return FALSE;
-   }
-
-   if (SetPixelFormat(hdc, pixelformat, ppfd) == FALSE)
-   {
-      MessageBox(NULL, TEXT("SetPixelFormat failed"), TEXT("Error"), MB_OK);
-      return FALSE;
-   }
-
-   return TRUE;
-}
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
    LRESULT lRet = 1;
-   PAINTSTRUCT ps;
 
    switch (uMsg) {
 
-   case WM_PAINT:
-      BeginPaint(hWnd, &ps);
-      EndPaint(hWnd, &ps);
-      break;
-
    case WM_CLOSE:
-      /*
-      if (ghDC)
-         ReleaseDC(hWnd, ghDC);
-      ghDC = 0;
-
-      DestroyWindow(hWnd);
-      */
+      //DestroyWindow(hWnd);
       break;
 
    case WM_DESTROY:
-      if (ghDC)
-         ReleaseDC(hWnd, ghDC);
-
       PostQuitMessage(0);
       break;
 
@@ -144,17 +92,17 @@ void initialise()
    if (!RegisterClass(&wndclass))
       return;
 
-   auto windowWidth = 1920 / 2;
-   auto windowHeight = (854 / 2) + (480 / 2);
+   RECT windowRect = { 0, 0, static_cast<LONG>(width()), static_cast<LONG>(height()) };
+   AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
    /* Create the frame */
    ghWnd = CreateWindow(szAppName,
       szAppTitle,
-      WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+      WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
       CW_USEDEFAULT,
       CW_USEDEFAULT,
-      windowWidth,
-      windowHeight,
+      windowRect.right - windowRect.left,
+      windowRect.bottom - windowRect.top,
       NULL,
       NULL,
       hInstance,
@@ -164,50 +112,11 @@ void initialise()
    ShowWindow(ghWnd, 1);
 
    UpdateWindow(ghWnd);
-
-   ghDC = GetDC(ghWnd);
-   if (!bSetupPixelFormat(ghDC))
-      PostQuitMessage(0);
-
-   for (auto i = 0; i < 3; ++i) {
-      ghRC[i] = (HGLRC)INVALID_HANDLE_VALUE;
-   }
 }
 
 void initialiseCore(int coreId)
 {
-   auto baseRC = (HGLRC)INVALID_HANDLE_VALUE;
-   bool madeCurrent = false;
 
-   for (auto i = 0; i < 3; ++i) {
-      if (ghRC[i] != INVALID_HANDLE_VALUE) {
-         baseRC = ghRC[i];
-         break;
-      }
-   }
-
-   if (ghRC[coreId] != INVALID_HANDLE_VALUE) {
-      assert(0);
-   }
-
-   ghRC[coreId] = wglCreateContext(ghDC);
-
-   if (baseRC != INVALID_HANDLE_VALUE) {
-      if (wglShareLists(baseRC, ghRC[coreId]) == FALSE) {
-         assert(0);
-      }
-   }
-
-   for (auto i = 0u; i < 10; ++i) {
-      if (wglMakeCurrent(ghDC, ghRC[coreId]) == TRUE) {
-         madeCurrent = true;
-         break;
-      }
-
-      Sleep(10);
-   }
-
-   assert(madeCurrent);
 }
 
 void run()
@@ -225,10 +134,17 @@ void run()
    }
 }
 
-int drcWidth() { return 854; }
-int drcHeight() { return 480; }
-int tvWidth() { return 1920;  }
-int tvHeight() { return 1080; }
+uint64_t hwnd()
+{
+   return (uint64_t)ghWnd;
+}
+
+int width() { return std::max(tvWidth(), drcWidth()); }
+int height() { return tvHeight() + drcHeight(); }
+int tvWidth() { return (int)(1280.0f * 0.65f); }
+int tvHeight() { return (int)(720.0f * 0.65f); }
+int drcWidth() { return (int)(854.0f * 0.50f); }
+int drcHeight() { return (int)(480.0f * 0.50f); }
 
 }
 

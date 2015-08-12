@@ -1,5 +1,8 @@
-#include "gx2.h"
-#include "gx2_context.h"
+#include "../gx2.h"
+#ifdef GX2_DX12
+
+#include "../gx2_context.h"
+#include "dx12_state.h"
 
 void
 GX2Init(be_val<uint32_t> *attributes)
@@ -13,6 +16,8 @@ GX2Init(be_val<uint32_t> *attributes)
       log << " " << attrib;
       ++attributes;
    }
+
+   dx::initialise();
 }
 
 void
@@ -29,8 +34,8 @@ GX2Flush()
 
 void
 GX2Invalidate(GX2InvalidateMode::Mode mode,
-              void *buffer,
-              uint32_t size)
+   void *buffer,
+   uint32_t size)
 {
    // TODO: GX2Invalidate
 }
@@ -43,7 +48,7 @@ GX2SetupContextState(GX2ContextState *state)
 
 void
 GX2SetupContextStateEx(GX2ContextState *state,
-                       BOOL unk1)
+   BOOL unk1)
 {
    state->displayListSize = 0x300;
    GX2BeginDisplayListEx(reinterpret_cast<GX2DisplayList*>(&state->displayList), state->displayListSize, unk1);
@@ -51,8 +56,8 @@ GX2SetupContextStateEx(GX2ContextState *state,
 
 void
 GX2GetContextStateDisplayList(GX2ContextState *state,
-                              be_val<uint32_t> *outDisplayList,
-                              be_val<uint32_t> *outSize)
+   be_val<uint32_t> *outDisplayList,
+   be_val<uint32_t> *outSize)
 {
    *outDisplayList = gMemory.untranslate(&state->displayList);
    *outSize = state->displayListSize;
@@ -64,14 +69,4 @@ GX2SetContextState(GX2ContextState *state)
    // TODO: GX2SetContextState
 }
 
-void GX2::registerContextFunctions()
-{
-   RegisterKernelFunction(GX2Init);
-   RegisterKernelFunction(GX2Shutdown);
-   RegisterKernelFunction(GX2Flush);
-   RegisterKernelFunction(GX2Invalidate);
-   RegisterKernelFunction(GX2SetupContextState);
-   RegisterKernelFunction(GX2SetupContextStateEx);
-   RegisterKernelFunction(GX2GetContextStateDisplayList);
-   RegisterKernelFunction(GX2SetContextState);
-}
+#endif

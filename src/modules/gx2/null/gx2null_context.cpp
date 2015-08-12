@@ -1,0 +1,56 @@
+#include "../gx2.h"
+#ifdef GX2_NULL
+
+#include "../gx2_context.h"
+
+void
+GX2Init(be_val<uint32_t> *attributes)
+{
+}
+
+void
+GX2Shutdown()
+{
+}
+
+void
+GX2Flush()
+{
+}
+
+void
+GX2Invalidate(GX2InvalidateMode::Mode mode,
+   void *buffer,
+   uint32_t size)
+{
+}
+
+void
+GX2SetupContextState(GX2ContextState *state)
+{
+   GX2SetupContextStateEx(state, TRUE);
+}
+
+void
+GX2SetupContextStateEx(GX2ContextState *state,
+   BOOL unk1)
+{
+   state->displayListSize = 0x300;
+   GX2BeginDisplayListEx(reinterpret_cast<GX2DisplayList*>(&state->displayList), state->displayListSize, unk1);
+}
+
+void
+GX2GetContextStateDisplayList(GX2ContextState *state,
+   be_val<uint32_t> *outDisplayList,
+   be_val<uint32_t> *outSize)
+{
+   *outDisplayList = gMemory.untranslate(&state->displayList);
+   *outSize = state->displayListSize;
+}
+
+void
+GX2SetContextState(GX2ContextState *state)
+{
+}
+
+#endif

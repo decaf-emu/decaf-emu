@@ -1,8 +1,15 @@
 #pragma once
 #include <vector>
 
+template<typename PpcType>
+struct HostLookupItem {
+   PpcType *source;
+
+};
+
 template<typename HostClass, typename PpcClass>
 class HostLookupTable {
+   static_assert(std::is_base_of<HostLookupItem<PpcClass>, HostClass>::value, "HostLookup items must inherit from HostLookupItem");
    static_assert(&PpcClass::driverData, "Lookup types must have driverData field");
 
 protected:
@@ -32,9 +39,22 @@ public:
       return &data.item;
    }
 
+   void freeRange(void *ptr, ppcsize_t n) {
+      for (auto i = 0; i < mArray.size(); ++i) {
+         auto& item = mArray[i];
+         if ((uint8_t*)item.source >= (uint8_t*)ptr &&
+            (uint8_t*)item.source < (uint8_t*)ptr + n) {
+            free(i);
+         }
+      }
+   }
+
 protected:
    void free(uint32_t index) {
-      mArray[index].source = nullptr;
+      auto& data = mArray[index];
+      data.item.release();
+      data.item.source = nullptr;
+      data.source = nullptr;
    }
 
    HostClass * alloc(PpcClass *source) {
@@ -44,6 +64,9 @@ protected:
          source->driverData._index = (uint32_t)mArray.size();
          mArray.emplace_back();
          auto& data = mArray.back();
+         data.source = source;
+         data.item.source = source;
+         data.item.alloc();
          return &data.item;
       }
 
@@ -51,6 +74,9 @@ protected:
          auto &i = mArray[idx];
          if (i.source == nullptr) {
             source->driverData._index = idx;
+            i.source = source;
+            i.item.source = source;
+            i.item.alloc();
             return &i.item;
          }
       }

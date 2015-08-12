@@ -13,7 +13,12 @@ namespace ui {
 void initialise();
 void initialiseCore(int coreId);
 void run();
+uint64_t hwnd();
 
+int width();
+int height();
+
+// These should be Emulator size, and better definitions should be elsewhere for WiiU side stuff...
 int drcWidth();
 int drcHeight();
 int tvWidth();

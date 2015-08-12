@@ -14,9 +14,3 @@ GX2RSetAllocator(GX2RAllocFuncPtr allocFn,
    pGX2RMemAlloc = allocFn;
    pGX2RMemFree = freeFn;
 }
-
-void
-GX2::registerResourceFunctions()
-{
-   RegisterKernelFunction(GX2RSetAllocator);
-}

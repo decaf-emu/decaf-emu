@@ -14,7 +14,7 @@
     <ProjectGuid>{D528F1B0-3DA2-496D-9E59-CE80141BD149}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>wiiu</RootNamespace>
-    <TargetPlatformVersion>10.0.10069.0</TargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -42,14 +42,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
@@ -66,7 +66,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>asmjit.lib;docopt.lib;pugixml.lib;zlib.lib;glbinding.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>asmjit.lib;docopt.lib;pugixml.lib;zlib.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -85,14 +85,13 @@
       <GenerateDebugInformation>Debug</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>asmjit.lib;docopt.lib;pugixml.lib;zlib.lib;glbinding.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>asmjit.lib;docopt.lib;pugixml.lib;zlib.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\codetests.cpp" />
     <ClCompile Include="..\src\disassembler.cpp" />
     <ClCompile Include="..\src\elf.cpp" />
-    <ClCompile Include="..\src\gfx\gfx_state.cpp" />
     <ClCompile Include="..\src\instructiontable.cpp" />
     <ClCompile Include="..\src\interpreter.cpp" />
     <ClCompile Include="..\src\interpreter\interpreter_branch.cpp" />
@@ -144,17 +143,28 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_userconfig.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\dx12_state.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_context.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_display.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_displaylist.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_draw.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_renderstate.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_shaders.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_surface.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_texture.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2r_resource.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_context.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_display.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_displaylist.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_draw.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_renderstate.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_shaders.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_surface.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_temp.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_texture.cpp" />
+    <ClCompile Include="..\src\modules\gx2\null\gx2null.cpp" />
+    <ClCompile Include="..\src\modules\gx2\null\gx2null_context.cpp" />
+    <ClCompile Include="..\src\modules\gx2\null\gx2null_display.cpp" />
+    <ClCompile Include="..\src\modules\gx2\null\gx2null_displaylist.cpp" />
+    <ClCompile Include="..\src\modules\gx2\null\gx2null_draw.cpp" />
+    <ClCompile Include="..\src\modules\gx2\null\gx2null_renderstate.cpp" />
+    <ClCompile Include="..\src\modules\gx2\null\gx2null_shaders.cpp" />
+    <ClCompile Include="..\src\modules\gx2\null\gx2null_surface.cpp" />
+    <ClCompile Include="..\src\modules\gx2\null\gx2null_texture.cpp" />
     <ClCompile Include="..\src\modules\nn_act\nn_act.cpp" />
     <ClCompile Include="..\src\modules\nn_act\nn_act_core.cpp" />
     <ClCompile Include="..\src\modules\nn_ac\nn_ac.cpp" />
@@ -187,7 +197,6 @@
     <ClInclude Include="..\src\elf.h" />
     <ClInclude Include="..\src\filesystem.h" />
     <ClInclude Include="..\src\floatutils.h" />
-    <ClInclude Include="..\src\gfx\gfx_state.h" />
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\instruction.h" />
     <ClInclude Include="..\src\instructiondata.h" />
@@ -197,6 +206,13 @@
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
     <ClInclude Include="..\src\jit.h" />
     <ClInclude Include="..\src\jit_float.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\d3dx12.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_colorbuffer.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_depthbuffer.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_heap.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_scanbuffer.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_state.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h" />
     <ClInclude Include="..\src\platform.h" />
     <ClInclude Include="..\src\ppcinvokeargs.h" />
@@ -279,6 +295,11 @@
     <ClInclude Include="..\src\systemtypes.h" />
     <ClInclude Include="..\src\util.h" />
     <ClInclude Include="..\src\wfunc_ptr.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resources\shaders\screendraw.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
