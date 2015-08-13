@@ -156,10 +156,6 @@ GX2DrawDone()
 void
 GX2SwapScanBuffers()
 {
-   gDX.swapCount++;
-   const uint64_t fenceValue = gDX.swapCount;
-   ThrowIfFailed(gDX.commandQueue->Signal(gDX.fence.Get(), fenceValue));
-
    dx::renderScanBuffers();
 }
 

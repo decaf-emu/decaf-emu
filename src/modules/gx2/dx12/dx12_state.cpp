@@ -294,6 +294,17 @@ void dx::initialise()
       {
          ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
       }
+
+      // Wait for frame completion
+      gDX.swapCount++;
+      const uint64_t fenceValue = gDX.swapCount;
+      ThrowIfFailed(gDX.commandQueue->Signal(gDX.fence.Get(), fenceValue));
+
+      if (gDX.fence->GetCompletedValue() < gDX.swapCount)
+      {
+         ThrowIfFailed(gDX.fence->SetEventOnCompletion(gDX.swapCount, gDX.fenceEvent));
+         WaitForSingleObject(gDX.fenceEvent, INFINITE);
+      }
    }
 
    _beginFrame();
@@ -368,6 +379,11 @@ void dx::_endFrame() {
 
    // Present the frame.
    ThrowIfFailed(gDX.swapChain->Present(1, 0));
+
+   // Increment the counters
+   gDX.swapCount++;
+   const uint64_t fenceValue = gDX.swapCount;
+   ThrowIfFailed(gDX.commandQueue->Signal(gDX.fence.Get(), fenceValue));
 }
 
 void dx::updateRenderTargets()
