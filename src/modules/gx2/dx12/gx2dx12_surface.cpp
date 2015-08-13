@@ -42,14 +42,14 @@ GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer, be_val<uint32_t> *outSize
 void
 GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, uint32_t renderTarget)
 {
-   gDX.activeColorBuffer[renderTarget] = colorBuffer;
+   gDX.state.colorBuffer[renderTarget] = colorBuffer;
    dx::updateRenderTargets();
 }
 
 void
 GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
 {
-   gDX.activeDepthBuffer = depthBuffer;
+   gDX.state.depthBuffer = depthBuffer;
    dx::updateRenderTargets();
 }
 

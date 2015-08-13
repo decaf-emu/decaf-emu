@@ -52,6 +52,8 @@ GX2SetupContextStateEx(GX2ContextState *state,
 {
    state->displayListSize = 0x300;
    GX2BeginDisplayListEx(reinterpret_cast<GX2DisplayList*>(&state->displayList), state->displayListSize, unk1);
+
+   memcpy(state->stateStore, &gDX.state, sizeof(gDX.state));
 }
 
 void
@@ -66,7 +68,18 @@ GX2GetContextStateDisplayList(GX2ContextState *state,
 void
 GX2SetContextState(GX2ContextState *state)
 {
-   // TODO: GX2SetContextState
+   // Sync the previous state storage
+   if (gDX.activeContextState) {
+      memcpy(gDX.activeContextState->stateStore, &gDX.state, sizeof(gDX.state));
+   }
+
+   // Restore the newly assigned state storage
+   if (state) {
+      memcpy(&gDX.state, state->stateStore, sizeof(gDX.state));
+   }
+   
+   // Save the assigned state storage
+   gDX.activeContextState = state;
 }
 
 #endif

@@ -30,6 +30,7 @@ struct DXState {
    ComPtr<ID3D12RootSignature> rootSignature;
    DXHeap *srvHeap;
    DXHeap *rtvHeap;
+   DXHeap *dsvHeap;
    ComPtr<ID3D12PipelineState> pipelineState;
    ComPtr<ID3D12GraphicsCommandList> commandList;
    DXHeapItemPtr scanbufferRtv[FrameCount];
@@ -49,15 +50,21 @@ struct DXState {
    // Emulator Objects
    DXScanBufferData *tvScanBuffer;
    DXScanBufferData *drcScanBuffer;
-   
-   GX2ColorBuffer *activeColorBuffer[GX2_NUM_MRT_BUFFER];
-   GX2DepthBuffer *activeDepthBuffer;
-   DXDynBuffer::Allocation activeAttribBuffers[32];
-   GX2FetchShader *activeFetchShader;
-   GX2VertexShader *activeVertexShader;
-   GX2PixelShader *activePixelShader;
-   GX2GeometryShader *activeGeomShader;
-   GX2PixelSampler *activePixelSampler[GX2_NUM_TEXTURE_UNIT];
+
+   struct ContextState
+   {
+      GX2ColorBuffer *colorBuffer[GX2_NUM_MRT_BUFFER];
+      GX2DepthBuffer *depthBuffer;
+      DXDynBuffer::Allocation attribBuffers[32];
+      GX2FetchShader *fetchShader;
+      GX2VertexShader *vertexShader;
+      GX2PixelShader *pixelShader;
+      GX2GeometryShader *geomShader;
+      GX2PixelSampler *pixelSampler[GX2_NUM_TEXTURE_UNIT];
+   } state;
+   static_assert(sizeof(ContextState) < sizeof(GX2ContextState::stateStore), "ContextState must be smaller than GX2ContextState::stateStore");
+
+   GX2ContextState *activeContextState;
 
 };
 

@@ -107,6 +107,15 @@ void dx::initialise()
       rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
       gDX.rtvHeap = new DXHeap(gDX.device.Get(), rtvHeapDesc);
 
+      // Describe and create a depth stencil view (DSV) descriptor heap.
+      D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+      dsvHeapDesc.NumDescriptors = 128;
+      dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+      dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+      gDX.dsvHeap = new DXHeap(gDX.device.Get(), dsvHeapDesc);
+
+      // Describe and create a constant buffer view (CBV), Shader resource
+      // view (SRV), and unordered access view (UAV) descriptor heap.
       D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
       srvHeapDesc.NumDescriptors = 2048;
       srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -268,7 +277,7 @@ void dx::initialise()
    }
 
    // 10MB Temporary Vertex Buffer
-   gDX.ppcVertexBuffer = new DXDynBuffer(10 * 1024 * 1024);
+   gDX.ppcVertexBuffer = new DXDynBuffer(gDX.device.Get(), 10 * 1024 * 1024);
 
    // Close the command list and execute it to begin the initial GPU setup.
    ThrowIfFailed(gDX.commandList->Close());
@@ -367,7 +376,7 @@ void dx::updateRenderTargets()
    int numBuffers = 0;
 
    for (auto i = 0; i < GX2_NUM_MRT_BUFFER; ++i) {
-      auto buffer = gDX.activeColorBuffer[i];
+      auto buffer = gDX.state.colorBuffer[i];
       if (!buffer) {
          break;
       }
@@ -378,9 +387,9 @@ void dx::updateRenderTargets()
    }
 
    D3D12_CPU_DESCRIPTOR_HANDLE *depthBuffer = nullptr;
-   if (gDX.activeDepthBuffer) {
-      auto hostDepthBuffer = dx::getDepthBuffer(gDX.activeDepthBuffer);
-      depthBuffer = *hostDepthBuffer->rtv;
+   if (gDX.state.depthBuffer) {
+      auto hostDepthBuffer = dx::getDepthBuffer(gDX.state.depthBuffer);
+      depthBuffer = *hostDepthBuffer->dsv;
    }
 
    // OMSetRenderTargets restrictions

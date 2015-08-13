@@ -15,7 +15,7 @@ enum Mode : uint32_t
 
 struct GX2ContextState
 {
-   UNKNOWN(0x9804);
+   uint8_t stateStore[0x9804];
    uint32_t displayListSize;
    UNKNOWN(0x9e00 - 0x9808);
    uint8_t displayList[0x300];

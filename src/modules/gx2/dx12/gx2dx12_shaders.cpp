@@ -51,32 +51,32 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 void
 GX2SetFetchShader(GX2FetchShader *shader)
 {
-   gDX.activeFetchShader = shader;
+   gDX.state.fetchShader = shader;
 }
 
 void
 GX2SetVertexShader(GX2VertexShader *shader)
 {
-   gDX.activeVertexShader = shader;
+   gDX.state.vertexShader = shader;
 }
 
 void
 GX2SetPixelShader(GX2PixelShader *shader)
 {
-   gDX.activePixelShader = shader;
+   gDX.state.pixelShader = shader;
 }
 
 void
 GX2SetGeometryShader(GX2GeometryShader *shader)
 {
-   gDX.activeGeomShader = shader;
+   gDX.state.geomShader = shader;
 }
 
 void
 GX2SetPixelSampler(GX2PixelSampler *sampler,
    uint32_t id)
 {
-   gDX.activePixelSampler[id] = sampler;
+   gDX.state.pixelSampler[id] = sampler;
 }
 
 void

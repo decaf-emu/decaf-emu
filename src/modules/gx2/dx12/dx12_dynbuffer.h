@@ -1,5 +1,5 @@
 #pragma once
-#include "dx12_state.h"
+#include "dx12.h"
 
 class DXDynBuffer {
 public:
@@ -15,7 +15,7 @@ public:
          mView.StrideInBytes = 0;
       }
 
-      Allocation(uint8_t *cpuAddr, D3D12_GPU_VIRTUAL_ADDRESS gpuAddr, size_t stride, size_t size)
+      Allocation(uint8_t *cpuAddr, D3D12_GPU_VIRTUAL_ADDRESS gpuAddr, UINT stride, UINT size)
       {
          mCpuAddr = cpuAddr;
          mView.BufferLocation = gpuAddr;
@@ -33,10 +33,10 @@ public:
 
    };
 
-   DXDynBuffer(size_t size)
+   DXDynBuffer(ID3D12Device *device, size_t size)
       : mSize(size), mOffset(0)
    {
-      ThrowIfFailed(gDX.device->CreateCommittedResource(
+      ThrowIfFailed(device->CreateCommittedResource(
          &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
          D3D12_HEAP_FLAG_NONE,
          &CD3DX12_RESOURCE_DESC::Buffer(size),
@@ -51,7 +51,7 @@ public:
       mOffset = 0;
    }
 
-   Allocation get(size_t stride, size_t size, void *data) {
+   Allocation get(UINT stride, UINT size, void *data) {
       auto thisGpuAddr = mBuffer->GetGPUVirtualAddress() + mOffset;
       auto thisCpuAddr = mCpuAddr + mOffset;
       mOffset += size;

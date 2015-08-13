@@ -22,7 +22,7 @@ GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
    uint8_t unk1,
    GX2ClearFlags::Flags flags)
 {
-   // TODO: GX2ClearBuffersEx
+   // TODO: GX2ClearBuffersEx depth/stencil clearing
 
    auto hostColorBuffer = dx::getColorBuffer(colorBuffer);
 
@@ -38,7 +38,7 @@ GX2SetAttribBuffer(
    void *buffer)
 {
    auto bufferData = gDX.ppcVertexBuffer->get(stride, size, buffer);
-   gDX.activeAttribBuffers[index] = bufferData;
+   gDX.state.attribBuffers[index] = bufferData;
 }
 
 void

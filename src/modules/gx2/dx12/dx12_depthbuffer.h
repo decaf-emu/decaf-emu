@@ -27,14 +27,14 @@ struct DXDepthBufferData : public HostLookupItem<GX2DepthBuffer> {
          IID_PPV_ARGS(&buffer)
          ));
 
-      rtv = gDX.rtvHeap->alloc();
-      gDX.device->CreateDepthStencilView(buffer.Get(), &depthStencilDesc, *rtv);
+      dsv = gDX.dsvHeap->alloc();
+      gDX.device->CreateDepthStencilView(buffer.Get(), &depthStencilDesc, *dsv);
    }
 
    void release() {
    }
 
    ComPtr<ID3D12Resource> buffer;
-   DXHeapItemPtr rtv;
+   DXHeapItemPtr dsv;
 
 };
