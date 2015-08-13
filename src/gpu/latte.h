@@ -36,6 +36,17 @@ enum KcacheMode : uint32_t
 };
 }
 
+namespace Cond
+{
+enum Cond : uint32_t
+{
+   Active         = 0,
+   False          = 1,
+   Bool           = 2,
+   NotBool        = 3
+};
+}
+
 struct Word0
 {
    uint32_t addr;
@@ -220,7 +231,8 @@ enum Channel : uint32_t
    X        = 0,
    Y        = 1,
    Z        = 2,
-   W        = 3
+   W        = 3,
+   Unknown
 };
 }
 
@@ -234,7 +246,8 @@ enum Select : uint32_t
    W        = 3,
    Zero     = 4,
    One      = 5,
-   Mask     = 7
+   Mask     = 7,
+   Unknown
 };
 }
 
@@ -369,22 +382,23 @@ enum op3 : uint32_t
 
 struct Opcode
 {
-   enum Units
+   enum Flags
    {
       Vector         = (1 << 0),
       Transcendental = (1 << 1),
-      Reduction      = (1 << 2)
+      Reduction      = (1 << 2),
+      PredSet        = (1 << 3)
    };
 
    uint32_t id;
    uint32_t srcs;
-   Units units;
+   Flags flags;
    const char *name;
 };
 
 extern std::map<uint32_t, const char *> name;
-extern std::map<uint32_t, Opcode> op2;
-extern std::map<uint32_t, Opcode> op3;
+extern std::map<uint32_t, Opcode> op2info;
+extern std::map<uint32_t, Opcode> op3info;
 
 } // namespace alu
 

@@ -24,12 +24,18 @@
     <ClCompile Include="..\src\gpu\latte.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gpu\latte_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\gpu\latte.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_disassembler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

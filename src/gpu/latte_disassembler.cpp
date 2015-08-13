@@ -222,16 +222,16 @@ isTranscendentalOnly(latte::alu::Instruction &alu)
    latte::alu::Opcode opcode;
 
    if (alu.word1.encoding == latte::alu::Encoding::OP2) {
-      opcode = latte::alu::op2[alu.op2.inst];
+      opcode = latte::alu::op2info[alu.op2.inst];
    } else {
-      opcode = latte::alu::op3[alu.op3.inst];
+      opcode = latte::alu::op3info[alu.op3.inst];
    }
 
-   if (opcode.units & latte::alu::Opcode::Vector) {
+   if (opcode.flags & latte::alu::Opcode::Vector) {
       return false;
    }
 
-   if (opcode.units & latte::alu::Opcode::Transcendental) {
+   if (opcode.flags & latte::alu::Opcode::Transcendental) {
       return true;
    }
 
@@ -244,16 +244,16 @@ isVectorOnly(latte::alu::Instruction &alu)
    latte::alu::Opcode opcode;
 
    if (alu.word1.encoding == latte::alu::Encoding::OP2) {
-      opcode = latte::alu::op2[alu.op2.inst];
+      opcode = latte::alu::op2info[alu.op2.inst];
    } else {
-      opcode = latte::alu::op3[alu.op3.inst];
+      opcode = latte::alu::op3info[alu.op3.inst];
    }
 
-   if (opcode.units & latte::alu::Opcode::Transcendental) {
+   if (opcode.flags & latte::alu::Opcode::Transcendental) {
       return false;
    }
 
-   if (opcode.units & latte::alu::Opcode::Vector) {
+   if (opcode.flags & latte::alu::Opcode::Vector) {
       return true;
    }
 
@@ -402,15 +402,15 @@ bool Disassembler::cfALU(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::
          auto unit = getUnit(units, alu);
          const char *name = nullptr;
          bool abs0 = false, abs1 = false;
-         auto &opcode = latte::alu::op2[alu.op2.inst];
+         auto &opcode = latte::alu::op2info[alu.op2.inst];
 
          if (alu.word1.encoding == latte::alu::Encoding::OP2) {
-            opcode = latte::alu::op2[alu.op2.inst];
+            opcode = latte::alu::op2info[alu.op2.inst];
             name = opcode.name;
             abs0 = !!alu.op2.src0Abs;
             abs1 = !!alu.op2.src1Abs;
          } else {
-            opcode = latte::alu::op3[alu.op3.inst];
+            opcode = latte::alu::op3info[alu.op3.inst];
             name = opcode.name;
          }
 

@@ -6,6 +6,7 @@
 #include <iostream>
 #include "bigendianview.h"
 #include "gpu/latte_disassembler.h"
+#include "gpu/latte_parser.h"
 
 namespace gsh
 {
@@ -84,6 +85,10 @@ bool parseGSH(BigEndianView &fh)
       if (block.type == gsh::Block::VertexShader || block.type == gsh::Block::PixelShader) {
          latte::Disassembler disasm;
          disasm.disassemble(reinterpret_cast<uint8_t*>(block.data), block.dataLength);
+
+         latte::Parser parser;
+         shadir::Shader shader;
+         parser.parse(shader, reinterpret_cast<uint8_t*>(block.data), block.dataLength);
       }
    }
 
