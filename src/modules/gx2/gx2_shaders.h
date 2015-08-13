@@ -28,6 +28,17 @@ enum Format : uint32_t
 };
 }
 
+namespace GX2AttribIndexType
+{
+enum Type : uint32_t
+{
+   PerVertex = 0,
+   PerInstance = 1,
+   First = 0,
+   Last = 1,
+};
+}
+
 namespace GX2EndianSwapMode
 {
 enum Mode : uint32_t
@@ -94,16 +105,18 @@ struct GX2AttribStream
    be_val<uint32_t> buffer;
    be_val<uint32_t> offset;
    be_val<GX2AttribFormat::Format> format;
-   UNKNOWN(0x4);
+   be_val<GX2AttribIndexType::Type> type;
    be_val<uint32_t> aluDivisor;
-   UNKNOWN(0x4);
+   be_val<uint32_t> mask;
    be_val<GX2EndianSwapMode::Mode> endianSwap;
 };
 CHECK_OFFSET(GX2AttribStream, 0x0, location);
 CHECK_OFFSET(GX2AttribStream, 0x4, buffer);
 CHECK_OFFSET(GX2AttribStream, 0x8, offset);
 CHECK_OFFSET(GX2AttribStream, 0xc, format);
+CHECK_OFFSET(GX2AttribStream, 0x10, type);
 CHECK_OFFSET(GX2AttribStream, 0x14, aluDivisor);
+CHECK_OFFSET(GX2AttribStream, 0x18, mask);
 CHECK_OFFSET(GX2AttribStream, 0x1c, endianSwap);
 CHECK_SIZE(GX2AttribStream, 0x20);
 
