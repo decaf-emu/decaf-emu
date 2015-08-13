@@ -372,6 +372,21 @@ void dx::_endFrame() {
 
 void dx::updateRenderTargets()
 {
+   bool needsUpdate = false;
+   for (auto i = 0; i < GX2_NUM_MRT_BUFFER; ++i) {
+      if (gDX.activeColorBuffer[i] != gDX.state.colorBuffer[i]) {
+         needsUpdate = true;
+         break;
+      }
+   }
+   if (gDX.activeDepthBuffer != gDX.state.depthBuffer) {
+      needsUpdate = true;
+   }
+
+   if (!needsUpdate) {
+      return;
+   }
+
    D3D12_CPU_DESCRIPTOR_HANDLE buffers[GX2_NUM_MRT_BUFFER];
    int numBuffers = 0;
 
@@ -392,9 +407,13 @@ void dx::updateRenderTargets()
       depthBuffer = *hostDepthBuffer->dsv;
    }
 
-   // OMSetRenderTargets restrictions
-   assert(numBuffers > 0 && numBuffers < 8);
    gDX.commandList->OMSetRenderTargets(numBuffers, buffers, FALSE, depthBuffer);
+
+   // Store active RT's
+   for (auto i = 0; i < GX2_NUM_MRT_BUFFER; ++i) {
+      gDX.activeColorBuffer[i] = gDX.state.colorBuffer[i];
+   }
+   gDX.activeDepthBuffer = gDX.state.depthBuffer;
 }
 
 #endif

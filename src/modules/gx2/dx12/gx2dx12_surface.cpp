@@ -43,14 +43,12 @@ void
 GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, uint32_t renderTarget)
 {
    gDX.state.colorBuffer[renderTarget] = colorBuffer;
-   dx::updateRenderTargets();
 }
 
 void
 GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
 {
    gDX.state.depthBuffer = depthBuffer;
-   dx::updateRenderTargets();
 }
 
 void

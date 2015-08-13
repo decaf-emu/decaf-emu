@@ -51,6 +51,9 @@ struct DXState {
    DXScanBufferData *tvScanBuffer;
    DXScanBufferData *drcScanBuffer;
 
+   GX2ColorBuffer *activeColorBuffer[GX2_NUM_MRT_BUFFER];
+   GX2DepthBuffer *activeDepthBuffer;
+
    struct ContextState
    {
       GX2ColorBuffer *colorBuffer[GX2_NUM_MRT_BUFFER];

@@ -48,6 +48,8 @@ GX2DrawEx(
    uint32_t offset,
    uint32_t numInstances)
 {
+   dx::updateRenderTargets();
+
    // TODO: GX2DrawEx
 }
 

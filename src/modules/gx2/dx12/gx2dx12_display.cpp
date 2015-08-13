@@ -232,32 +232,6 @@ GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer,
    }
 
    gDX.commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(hostColorBuffer->buffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-   /*
-   if (gDX.screenPresenting) {
-   gDX.commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gDX.renderTargets[gDX.frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-   gDX.screenPresenting = false;
-   }
-
-
-   gDX.commandList->RSSetViewports(1, &gDX.viewport);
-   gDX.commandList->RSSetScissorRects(1, &gDX.scissorRect);
-
-   gDX.commandList->OMSetRenderTargets(1, *gDX.curScanbufferRtv, FALSE, nullptr);
-
-   gDX.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-   gDX.commandList->IASetVertexBuffers(0, 1, &gDX.vertexBufferView);
-
-   gDX.commandList->SetGraphicsRootDescriptorTable(0, *hostColorBuffer->srv);
-
-   if (scanTarget == GX2ScanTarget::TV) {
-   gDX.commandList->DrawInstanced(4, 1, 0, 0);
-   } else if (scanTarget == GX2ScanTarget::DRC) {
-   gDX.commandList->DrawInstanced(4, 1, 4, 0);
-   }
-
-   gDX.commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(hostColorBuffer->buffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
-   */
 }
 
 #endif
