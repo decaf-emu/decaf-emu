@@ -144,8 +144,75 @@ bool Disassembler::cfNormal(fmt::MemoryWriter &out, latte::cf::inst id, latte::c
    return true;
 }
 
+static void
+writeSelectName(fmt::MemoryWriter &out, uint32_t select)
+{
+   switch (select) {
+   case latte::alu::Select::X:
+      out << 'x';
+      break;
+   case latte::alu::Select::Y:
+      out << 'y';
+      break;
+   case latte::alu::Select::Z:
+      out << 'z';
+      break;
+   case latte::alu::Select::W:
+      out << 'w';
+      break;
+   case latte::alu::Select::One:
+      out << '1';
+      break;
+   case latte::alu::Select::Zero:
+      out << '0';
+      break;
+   case latte::alu::Select::Mask:
+      out << '_';
+      break;
+   default:
+      assert(false);
+      out << '?';
+   }
+}
+
 bool Disassembler::cfExport(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::Instruction &cf)
 {
+   auto eid = static_cast<latte::exp::inst>(cf.expWord1.inst);
+   auto name = latte::exp::name[id];
+   auto type = static_cast<latte::exp::Type::Type>(cf.expWord0.type);
+
+   out
+      << name
+      << ": ";
+
+   switch (type) {
+   case latte::exp::Type::Pixel:
+      out << "PIX";
+      break;
+   case latte::exp::Type::Position:
+      out << "POS";
+      break;
+   case latte::exp::Type::Parameter:
+      out << "PARAM";
+      break;
+   }
+
+   out
+      << cf.expWord0.dstReg;
+
+   out
+      << ", R"
+      << cf.expWord0.srcReg
+      << ".";
+
+   writeSelectName(out, cf.expWord1.srcSelX);
+   writeSelectName(out, cf.expWord1.srcSelY);
+   writeSelectName(out, cf.expWord1.srcSelZ);
+   writeSelectName(out, cf.expWord1.srcSelW);
+
+   out
+      << "\n";
+
    return true;
 }
 
@@ -445,37 +512,6 @@ bool Disassembler::cfALU(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::
 
    decreaseIndent();
    return true;
-}
-
-static void
-writeSelectName(fmt::MemoryWriter &out, uint32_t select)
-{
-   switch (select) {
-   case latte::alu::Select::X:
-      out << 'x';
-      break;
-   case latte::alu::Select::Y:
-      out << 'y';
-      break;
-   case latte::alu::Select::Z:
-      out << 'z';
-      break;
-   case latte::alu::Select::W:
-      out << 'w';
-      break;
-   case latte::alu::Select::One:
-      out << '1';
-      break;
-   case latte::alu::Select::Zero:
-      out << '0';
-      break;
-   case latte::alu::Select::Mask:
-      out << '_';
-      break;
-   default:
-      assert(false);
-      out << '?';
-   }
 }
 
 bool Disassembler::cfTEX(fmt::MemoryWriter &out, latte::cf::inst cfID, latte::cf::Instruction &cf)
