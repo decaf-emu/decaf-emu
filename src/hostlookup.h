@@ -31,7 +31,7 @@ public:
          return alloc(source);
       }
 
-      auto& data = mArray[idx];
+      auto& data = mArray[idx - 1];
       if (data.source != source) {
          return alloc(source);
       }
@@ -51,7 +51,7 @@ public:
 
 protected:
    void free(uint32_t index) {
-      auto& data = mArray[index];
+      auto& data = mArray[index - 1];
       data.item.release();
       data.item.source = nullptr;
       data.source = nullptr;
@@ -61,7 +61,7 @@ protected:
       if (mAvailable == 0) {
          assert(mArray.size() < 0xFFFFFFFF);
 
-         source->driverData._index = (uint32_t)mArray.size();
+         source->driverData._index = (uint32_t)mArray.size() + 1;
          mArray.emplace_back();
          auto& data = mArray.back();
          data.source = source;
@@ -73,7 +73,7 @@ protected:
       for (uint32_t idx = 0; idx < mArray.size(); ++idx) {
          auto &i = mArray[idx];
          if (i.source == nullptr) {
-            source->driverData._index = idx;
+            source->driverData._index = idx + 1;
             i.source = source;
             i.item.source = source;
             i.item.alloc();
