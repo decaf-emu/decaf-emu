@@ -92,6 +92,8 @@
     <ClCompile Include="..\src\codetests.cpp" />
     <ClCompile Include="..\src\disassembler.cpp" />
     <ClCompile Include="..\src\elf.cpp" />
+    <ClCompile Include="..\src\gpu\latte.cpp" />
+    <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
     <ClCompile Include="..\src\instructiontable.cpp" />
     <ClCompile Include="..\src\interpreter.cpp" />
     <ClCompile Include="..\src\interpreter\interpreter_branch.cpp" />
@@ -197,6 +199,8 @@
     <ClInclude Include="..\src\elf.h" />
     <ClInclude Include="..\src\filesystem.h" />
     <ClInclude Include="..\src\floatutils.h" />
+    <ClInclude Include="..\src\gpu\latte.h" />
+    <ClInclude Include="..\src\gpu\latte_disassembler.h" />
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\instruction.h" />
     <ClInclude Include="..\src\instructiondata.h" />
@@ -302,6 +306,7 @@
     <None Include="..\resources\shaders\screendraw.hlsl">
       <FileType>Document</FileType>
     </None>
+    <None Include="..\src\gpu\latte_opcodes_def.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

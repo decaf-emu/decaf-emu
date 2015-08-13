@@ -3,6 +3,7 @@
 
 #include "../gx2_shaders.h"
 #include "dx12_fetchshader.h"
+#include "gpu/latte_disassembler.h"
 
 uint32_t
 GX2CalcGeometryShaderInputRingBufferSize(uint32_t ringItemSize)
@@ -58,12 +59,18 @@ void
 GX2SetVertexShader(GX2VertexShader *shader)
 {
    gDX.state.vertexShader = shader;
+
+   latte::Disassembler disasm;
+   disasm.disassemble((uint8_t*)(void*)shader->data, shader->size);
 }
 
 void
 GX2SetPixelShader(GX2PixelShader *shader)
 {
    gDX.state.pixelShader = shader;
+
+   latte::Disassembler disasm;
+   disasm.disassemble((uint8_t*)(void*)shader->data, shader->size);
 }
 
 void

@@ -127,6 +127,12 @@
     <Filter Include="Header Files\modules\gx2\dx12">
       <UniqueIdentifier>{c66b36ae-d711-4fc2-ab87-916d602dc418}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\gpu">
+      <UniqueIdentifier>{1af0bbc4-a7a4-4aee-b92b-7a4151663a9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gpu">
+      <UniqueIdentifier>{f5262755-c0da-4cd1-b97e-3d097bb6f6d5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -422,6 +428,12 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_texture.cpp">
       <Filter>Source Files\modules\gx2\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\latte_disassembler.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\latte.cpp">
+      <Filter>Source Files\gpu</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -749,10 +761,19 @@
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_dynbuffer.h">
       <Filter>Header Files\modules\gx2\dx12</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_disassembler.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
       <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="..\src\gpu\latte_opcodes_def.inl">
+      <Filter>Header Files\gpu</Filter>
     </None>
   </ItemGroup>
 </Project>

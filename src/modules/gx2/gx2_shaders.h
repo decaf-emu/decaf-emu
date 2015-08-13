@@ -61,9 +61,28 @@ CHECK_OFFSET(GX2FetchShader, 0x8, data);
 CHECK_OFFSET(GX2FetchShader, 0xc, attribCount);
 CHECK_SIZE(GX2FetchShader, 0x1c);
 
+struct GX2VertexShader
+{
+   DriverData<208> driverData;
+   be_val<uint32_t> size;
+   be_ptr<void> data;
 
-struct GX2VertexShader;
-struct GX2PixelShader;
+};
+CHECK_OFFSET(GX2VertexShader, 0x0, driverData);
+CHECK_OFFSET(GX2VertexShader, 0xd0, size);
+CHECK_OFFSET(GX2VertexShader, 0xd4, data);
+
+struct GX2PixelShader
+{
+   DriverData<164> driverData;
+   be_val<uint32_t> size;
+   be_ptr<void> data;
+
+};
+CHECK_OFFSET(GX2PixelShader, 0x0, driverData);
+CHECK_OFFSET(GX2PixelShader, 0xa4, size);
+CHECK_OFFSET(GX2PixelShader, 0xa8, data);
+
 struct GX2GeometryShader;
 struct GX2PixelSampler;
 
