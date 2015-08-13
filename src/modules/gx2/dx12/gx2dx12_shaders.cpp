@@ -2,6 +2,7 @@
 #ifdef GX2_DX12
 
 #include "../gx2_shaders.h"
+#include "dx12_fetchshader.h"
 
 uint32_t
 GX2CalcGeometryShaderInputRingBufferSize(uint32_t ringItemSize)
@@ -26,7 +27,7 @@ GX2CalcFetchShaderSizeEx(uint32_t attribs,
 {
    // TODO: GX2CalcFetchShaderSizeEx
    // This is definitely custom to our implementation.
-   return attribs * 16;
+   return sizeof(FetchShaderInfo) + (attribs * sizeof(GX2AttribStream));
 }
 
 void
@@ -37,38 +38,45 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
    GX2FetchShaderType::Type type,
    GX2TessellationMode::Mode tessMode)
 {
-   // TODO: GX2InitFetchShaderEx
+   fetchShader->data = buffer;
+   fetchShader->size = GX2CalcFetchShaderSizeEx(count, type, tessMode);
+   fetchShader->attribCount = count;
+
+   auto dataPtr = (FetchShaderInfo*)buffer;
+   dataPtr->type = type;
+   dataPtr->tessMode = tessMode;
+   memcpy(dataPtr->attribs, attribs, count * sizeof(GX2AttribStream));
 }
 
 void
 GX2SetFetchShader(GX2FetchShader *shader)
 {
-   // TODO: GX2SetFetchShader
+   gDX.activeFetchShader = shader;
 }
 
 void
 GX2SetVertexShader(GX2VertexShader *shader)
 {
-   // TODO: GX2SetVertexShader
+   gDX.activeVertexShader = shader;
 }
 
 void
 GX2SetPixelShader(GX2PixelShader *shader)
 {
-   // TODO: GX2SetPixelShader
+   gDX.activePixelShader = shader;
 }
 
 void
 GX2SetGeometryShader(GX2GeometryShader *shader)
 {
-   // TODO: GX2SetGeometryShader
+   gDX.activeGeomShader = shader;
 }
 
 void
 GX2SetPixelSampler(GX2PixelSampler *sampler,
    uint32_t id)
 {
-   // TODO: GX2SetPixelSampler
+   gDX.activePixelSampler[id] = sampler;
 }
 
 void

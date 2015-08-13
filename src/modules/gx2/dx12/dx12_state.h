@@ -7,6 +7,7 @@
 #include "hostlookup.h"
 #include "dx12.h"
 #include "dx12_heap.h"
+#include "dx12_dynbuffer.h"
 
 struct DXScanBufferData;
 struct DXColorBufferData;
@@ -37,6 +38,7 @@ struct DXState {
    D3D12_RECT scissorRect;
    ComPtr<ID3D12Resource> vertexBuffer;
    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+   DXDynBuffer *ppcVertexBuffer;
 
    // DX Synchronization objects.
    UINT frameIndex;
@@ -47,6 +49,13 @@ struct DXState {
    // Emulator Objects
    DXScanBufferData *tvScanBuffer;
    DXScanBufferData *drcScanBuffer;
+
+   DXDynBuffer::Allocation activeAttribBuffers[32];
+   GX2FetchShader *activeFetchShader;
+   GX2VertexShader *activeVertexShader;
+   GX2PixelShader *activePixelShader;
+   GX2GeometryShader *activeGeomShader;
+   GX2PixelSampler *activePixelSampler[GX2_NUM_TEXTURE_UNIT];
 
 };
 

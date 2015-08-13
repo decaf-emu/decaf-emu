@@ -34,7 +34,7 @@ GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
 
 
 void
-GX2SetAttribBuffer(uint32_t unk1, uint32_t unk2, uint32_t unk3, void *buffer);
+GX2SetAttribBuffer(uint32_t index, uint32_t size, uint32_t stride, void *buffer);
 
 void
-GX2DrawEx(GX2PrimitiveMode::Mode mode, uint32_t unk1, uint32_t unk2, uint32_t unk3);
+GX2DrawEx(GX2PrimitiveMode::Mode mode, uint32_t numVertices, uint32_t offset, uint32_t numInstances);

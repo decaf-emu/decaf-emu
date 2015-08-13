@@ -267,6 +267,9 @@ void dx::initialise()
       gDX.vertexBufferView.SizeInBytes = vertexBufferSize;
    }
 
+   // 10MB Temporary Vertex Buffer
+   gDX.ppcVertexBuffer = new DXDynBuffer(10 * 1024 * 1024);
+
    // Close the command list and execute it to begin the initial GPU setup.
    ThrowIfFailed(gDX.commandList->Close());
    ID3D12CommandList* ppCommandLists[] = { gDX.commandList.Get() };

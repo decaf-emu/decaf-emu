@@ -210,6 +210,8 @@
     <ClInclude Include="..\src\modules\gx2\dx12\dx12.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_colorbuffer.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_depthbuffer.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_dynbuffer.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_fetchshader.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_heap.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_scanbuffer.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_state.h" />

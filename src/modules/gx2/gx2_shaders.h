@@ -1,3 +1,4 @@
+#pragma once
 #include "systemtypes.h"
 
 namespace GX2FetchShaderType
@@ -27,6 +28,16 @@ enum Format : uint32_t
 };
 }
 
+namespace GX2EndianSwapMode
+{
+enum Mode : uint32_t
+{
+   None = 0,
+   First = 0,
+   Last = 3,
+};
+}
+
 namespace GX2ShaderMode
 {
 enum Mode : uint32_t
@@ -36,7 +47,21 @@ enum Mode : uint32_t
 };
 }
 
-struct GX2FetchShader;
+struct GX2FetchShader
+{
+   DriverData<4> driverData;
+   be_val<uint32_t> size;
+   be_ptr<void> data;
+   be_val<uint32_t> attribCount;
+   UNKNOWN(12);
+};
+CHECK_OFFSET(GX2FetchShader, 0x0, driverData);
+CHECK_OFFSET(GX2FetchShader, 0x4, size);
+CHECK_OFFSET(GX2FetchShader, 0x8, data);
+CHECK_OFFSET(GX2FetchShader, 0xc, attribCount);
+CHECK_SIZE(GX2FetchShader, 0x1c);
+
+
 struct GX2VertexShader;
 struct GX2PixelShader;
 struct GX2GeometryShader;
@@ -46,13 +71,18 @@ struct GX2PixelSampler;
 
 struct GX2AttribStream
 {
-   UNKNOWN(0xc);
+   be_val<uint32_t> location;
+   be_val<uint32_t> buffer;
+   be_val<uint32_t> offset;
    be_val<GX2AttribFormat::Format> format;
    UNKNOWN(0x4);
    be_val<uint32_t> aluDivisor;
    UNKNOWN(0x4);
-   be_val<uint32_t> endianSwap;
+   be_val<GX2EndianSwapMode::Mode> endianSwap;
 };
+CHECK_OFFSET(GX2AttribStream, 0x0, location);
+CHECK_OFFSET(GX2AttribStream, 0x4, buffer);
+CHECK_OFFSET(GX2AttribStream, 0x8, offset);
 CHECK_OFFSET(GX2AttribStream, 0xc, format);
 CHECK_OFFSET(GX2AttribStream, 0x14, aluDivisor);
 CHECK_OFFSET(GX2AttribStream, 0x1c, endianSwap);

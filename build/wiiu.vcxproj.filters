@@ -743,6 +743,12 @@
     <ClInclude Include="..\src\modules\gx2\dx12\d3dx12.h">
       <Filter>Header Files\modules\gx2\dx12</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_fetchshader.h">
+      <Filter>Header Files\modules\gx2\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_dynbuffer.h">
+      <Filter>Header Files\modules\gx2\dx12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
