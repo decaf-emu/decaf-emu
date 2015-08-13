@@ -2,6 +2,7 @@
 #ifdef GX2_DX12
 
 #include "../gx2_renderstate.h"
+#include "dx12_state.h"
 
 void
 GX2SetDepthStencilControl(uint32_t unk1,
@@ -105,25 +106,35 @@ GX2SetAlphaToMask(BOOL enabled,
 }
 
 void
-GX2SetViewport(float x1,
-   float y1,
-   float x2,
-   float y2,
+GX2SetViewport(float x,
+   float y,
+   float w,
+   float h,
    float zNear,
    float zFar)
 {
-   // TODO: GX2SetViewport - ensure this is not x,y,w,h
-   assert(x1 == 0 && y1 == 0);
+   D3D12_VIEWPORT viewport;
+   viewport.TopLeftX = x;
+   viewport.TopLeftY = y;
+   viewport.Width = w;
+   viewport.Height = h;
+   viewport.MinDepth = zNear;
+   viewport.MaxDepth = zFar;
+   gDX.commandList->RSSetViewports(1, &viewport);
 }
 
 void
-GX2SetScissor(uint32_t x1,
-   uint32_t y1,
-   uint32_t x2,
-   uint32_t y2)
+GX2SetScissor(uint32_t x,
+   uint32_t y,
+   uint32_t w,
+   uint32_t h)
 {
-   // TODO: GX2SetScissor - ensure this is not x,y,w,h
-   assert(x1 == 0 && y1 == 0);
+   D3D12_RECT rect;
+   rect.left = x;
+   rect.top = y;
+   rect.right = x + w;
+   rect.bottom = y + h;
+   gDX.commandList->RSSetScissorRects(1, &rect);
 }
 
 #endif
