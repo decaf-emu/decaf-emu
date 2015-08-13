@@ -361,4 +361,31 @@ void dx::_endFrame() {
    ThrowIfFailed(gDX.swapChain->Present(1, 0));
 }
 
+void dx::updateRenderTargets()
+{
+   D3D12_CPU_DESCRIPTOR_HANDLE buffers[GX2_NUM_MRT_BUFFER];
+   int numBuffers = 0;
+
+   for (auto i = 0; i < GX2_NUM_MRT_BUFFER; ++i) {
+      auto buffer = gDX.activeColorBuffer[i];
+      if (!buffer) {
+         break;
+      }
+
+      auto hostColorBuffer = dx::getColorBuffer(buffer);
+      buffers[i] = *hostColorBuffer->rtv;
+      numBuffers++;
+   }
+
+   D3D12_CPU_DESCRIPTOR_HANDLE *depthBuffer = nullptr;
+   if (gDX.activeDepthBuffer) {
+      auto hostDepthBuffer = dx::getDepthBuffer(gDX.activeDepthBuffer);
+      depthBuffer = *hostDepthBuffer->rtv;
+   }
+
+   // OMSetRenderTargets restrictions
+   assert(numBuffers > 0 && numBuffers < 8);
+   gDX.commandList->OMSetRenderTargets(numBuffers, buffers, FALSE, depthBuffer);
+}
+
 #endif

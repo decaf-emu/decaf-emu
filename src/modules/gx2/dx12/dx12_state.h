@@ -49,7 +49,9 @@ struct DXState {
    // Emulator Objects
    DXScanBufferData *tvScanBuffer;
    DXScanBufferData *drcScanBuffer;
-
+   
+   GX2ColorBuffer *activeColorBuffer[GX2_NUM_MRT_BUFFER];
+   GX2DepthBuffer *activeDepthBuffer;
    DXDynBuffer::Allocation activeAttribBuffers[32];
    GX2FetchShader *activeFetchShader;
    GX2VertexShader *activeVertexShader;
@@ -65,6 +67,7 @@ namespace dx {
 
    void initialise();
    void renderScanBuffers();
+   void updateRenderTargets();
 
    DXColorBufferData * getColorBuffer(GX2ColorBuffer *buffer);
    DXDepthBufferData * getDepthBuffer(GX2DepthBuffer *buffer);

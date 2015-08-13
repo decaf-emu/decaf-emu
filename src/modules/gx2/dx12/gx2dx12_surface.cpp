@@ -3,6 +3,7 @@
 
 #include "../gx2_surface.h"
 #include "dx12_state.h"
+#include "dx12_colorbuffer.h"
 
 void
 GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
@@ -41,13 +42,15 @@ GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer, be_val<uint32_t> *outSize
 void
 GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, uint32_t renderTarget)
 {
-   // TODO: GX2SetColorBuffer
+   gDX.activeColorBuffer[renderTarget] = colorBuffer;
+   dx::updateRenderTargets();
 }
 
 void
 GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
 {
-   // TODO: GX2SetDepthBuffer
+   gDX.activeDepthBuffer = depthBuffer;
+   dx::updateRenderTargets();
 }
 
 void
