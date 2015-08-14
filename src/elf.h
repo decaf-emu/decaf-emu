@@ -81,6 +81,7 @@ enum : uint32_t // sh_type
    SHT_LOPROC = 0x70000000,      // Lowest processor arch-specific type.
    SHT_HIPROC = 0x7fffffff,      // Highest processor arch-specific type.
    SHT_LOUSER = 0x80000000,      // Lowest type reserved for applications.
+   SHT_RPL_EXPORTS = 0x80000001, // RPL Exports
    SHT_RPL_IMPORTS = 0x80000002, // RPL Imports
    SHT_RPL_CRCS = 0x80000003,    // RPL CRCs
    SHT_RPL_FILEINFO = 0x80000004,// RPL FileInfo

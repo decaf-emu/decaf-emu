@@ -86,6 +86,22 @@ processSections(UserModule &module, std::vector<elf::Section> &sections, const c
       module.sectionMap[section->name] = section;
    }
 
+   /* SHT_RPL_EXPORTS
+   u32 num_entries
+   u32 code_sig
+   struct {
+     u32 hash?
+     u32 type?
+     u32 ?
+     u32 ?
+     null_terminated_string func_name
+     u32 ?
+     u32 ?
+     u32 ?
+     u16 ?
+   } entries[num_entries];
+   */
+
    // Create thunk sections for SHT_RPL_IMPORTS!
    for (auto i = 0u; i < sections.size(); ++i) {
       auto &rplSection = sections[i];
