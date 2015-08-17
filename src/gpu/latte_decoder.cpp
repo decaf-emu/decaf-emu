@@ -1,90 +1,61 @@
-#include "latte_parser.h"
-#include "bitutils.h"
+#include <algorithm>
 #include <cassert>
-#include <set>
-
-static const uint32_t wordsPerCF = 2; // 1 64bit slot
-static const uint32_t wordsPerALU = 2; // 1 64bit slot
-static const uint32_t wordsPerTEX = 4; // 2 64bit slots (only uses 64+32bits of data though)
-static const uint32_t wordsPerMEM = 4; // TODO: Verify
-static const uint32_t wordsPerVTX = 4; // TODO: Verify
-static const uint32_t indentSize = 2;
-static const uint32_t instrNamePad = 16;
-static const uint32_t groupCounterSize = 2;
+#include <vector>
+#include "bitutils.h"
+#include "latte.h"
 
 namespace latte
 {
 
-bool Parser::parse(shadir::Shader &shader, uint8_t *binary, uint32_t size)
+struct DecodeState
 {
-   bool result = true;
+   uint32_t *words;
+   uint32_t wordCount;
+   uint32_t cfPC;
+   uint32_t group;
+   Shader *shader;
+};
+
+static bool decodeNormal(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
+static bool decodeExport(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
+static bool decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
+static bool decodeTEX(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
+
+bool
+decode(Shader &shader, uint8_t *binary, uint32_t size)
+{
+   DecodeState state;
 
    assert((size % 4) == 0);
-   mWords = reinterpret_cast<uint32_t*>(binary);
-   mWordCount = size / 4;
-   mShader = &shader;
+   state.words = reinterpret_cast<uint32_t*>(binary);
+   state.wordCount = size / 4;
+   state.cfPC = 0;
+   state.group = 0;
+   state.shader = &shader;
 
-   mControlFlowCounter = 0;
-   mGroupCounter = 0;
-
-   // Step 1: Deserialise
-   std::vector<shadir::Instruction *> deserialised;
-   deserialise(deserialised);
-
-   // Step 2: Analyse deserialised for control flow statements, like if/while
-
-   // For IF:
-      // PUSH
-      // PRED_SET
-      // JUMP -> false
-      // -> true
-
-   // For WHILE:
-      // LOOP_BEGIN / LOOP_DX10
-      // LOOP_END
-
-      // PUSH
-      // PRED_SET *n
-      // BREAK *n
-      // POP
-
-      // PUSH
-      // PRED_SET *n
-      // CONTINUE *n
-      // POP
-
-   // Step 3: Find incoming lives for attribs/varying/uniform
-
-   // Step 4: Generate code
-
-   return result;
-}
-
-bool Parser::deserialise(std::vector<shadir::Instruction *> &deserialised)
-{
    // Step 1: Deserialise, inline ALU/TEX clauses
-   for (auto i = 0u; i < mWordCount; i += 2) {
-      auto cf = *reinterpret_cast<latte::cf::Instruction*>(mWords + i);
+   for (auto i = 0u; i < state.wordCount; i += 2) {
+      auto cf = *reinterpret_cast<latte::cf::Instruction*>(state.words + i);
       auto id = static_cast<latte::cf::inst>(cf.word1.inst);
 
       switch (cf.type) {
       case latte::cf::Type::Normal:
-         deserialiseNormal(deserialised, id, cf);
+         decodeNormal(state, id, cf);
          break;
       case latte::cf::Type::Export:
          if (id == latte::exp::EXP || id == latte::exp::EXP_DONE) {
-            deserialiseExport(deserialised, id, cf);
+            decodeExport(state, id, cf);
          } else {
             assert(false);
          }
          break;
       case latte::cf::Type::Alu:
       case latte::cf::Type::AluExtended:
-         deserialiseALU(deserialised, id, cf);
+         decodeALU(state, id, cf);
          break;
       }
 
-      mControlFlowCounter++;
+      state.cfPC++;
 
       if ((cf.type == latte::cf::Type::Normal || cf.type == latte::cf::Type::Export) && cf.word1.endOfProgram) {
          break;
@@ -94,7 +65,8 @@ bool Parser::deserialise(std::vector<shadir::Instruction *> &deserialised)
    return true;
 }
 
-bool Parser::deserialiseNormal(std::vector<shadir::Instruction *> &deserialised, latte::cf::inst id, latte::cf::Instruction &cf)
+static bool
+decodeNormal(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 {
    shadir::CfInstruction *ins = nullptr;
 
@@ -104,7 +76,7 @@ bool Parser::deserialiseNormal(std::vector<shadir::Instruction *> &deserialised,
    case latte::cf::END_PROGRAM:
       return true;
    case latte::cf::TEX:
-      return deserialiseTEX(deserialised, id, cf);
+      return decodeTEX(state, id, cf);
    case latte::cf::LOOP_START:
    case latte::cf::LOOP_START_DX10:
    case latte::cf::LOOP_START_NO_AL:
@@ -126,13 +98,13 @@ bool Parser::deserialiseNormal(std::vector<shadir::Instruction *> &deserialised,
    case latte::cf::POP_PUSH_ELSE:
       ins = new shadir::CfInstruction;
       ins->name = latte::cf::name[id];
-      ins->cfPC = mControlFlowCounter;
+      ins->cfPC = state.cfPC;
       ins->id = id;
       ins->addr = cf.word0.addr;
       ins->popCount = cf.word1.popCount;
       ins->loopCfConstant = cf.word1.cfConst;
       ins->cond = static_cast<latte::cf::Cond::Cond>(cf.word1.cond);
-      deserialised.push_back(ins);
+      state.shader->code.push_back(ins);
       return true;
    case latte::cf::VTX:
    case latte::cf::VTX_TC:
@@ -146,8 +118,10 @@ bool Parser::deserialiseNormal(std::vector<shadir::Instruction *> &deserialised,
    }
 }
 
-bool Parser::deserialiseExport(std::vector<shadir::Instruction *> &deserialised, latte::cf::inst id, latte::cf::Instruction &cf)
+static bool
+decodeExport(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 {
+   // TODO
    return true;
 }
 
@@ -208,22 +182,24 @@ getAluSource(shadir::AluSource &source, uint32_t *dwBase, uint32_t counter, uint
    }
 }
 
-bool Parser::deserialiseALU(std::vector<shadir::Instruction *> &deserialised, latte::cf::inst id, latte::cf::Instruction &cf)
+static bool
+decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 {
-   uint64_t *slots = reinterpret_cast<uint64_t *>(mWords + (wordsPerCF * cf.aluWord0.addr));
+   uint64_t *slots = reinterpret_cast<uint64_t *>(state.words + (latte::WordsPerCF * cf.aluWord0.addr));
    auto aluID = static_cast<latte::alu::inst>(cf.aluWord1.inst);
    bool hasPushedBefore = false;
 
    switch (aluID) {
    case latte::alu::inst::ALU_BREAK: // Break starts with a push!
    case latte::alu::inst::ALU_CONTINUE: // Continue starts with a push!
-      {
-         auto push = new shadir::CfInstruction();
-         push->id = latte::cf::inst::PUSH;
-         push->name = latte::cf::name[push->id];
-         deserialised.push_back(push);
-      }
-      break;
+   {
+      auto push = new shadir::CfInstruction();
+      push->id = latte::cf::inst::PUSH;
+      push->name = latte::cf::name[push->id];
+      push->cfPC = state.cfPC;
+      state.shader->code.push_back(push);
+   }
+   break;
    case latte::alu::inst::ALU_EXT:
       assert(false);
       break;
@@ -234,7 +210,7 @@ bool Parser::deserialiseALU(std::vector<shadir::Instruction *> &deserialised, la
       bool units[5] = { false, false, false, false, false };
       bool last = false;
       uint32_t *literalPtr = reinterpret_cast<uint32_t*>(slots + slot);
-      uint32_t literals = 0;
+      auto literals = 0u;
 
       for (auto i = 0u; i < 5 && !last; ++i) {
          auto alu = *reinterpret_cast<latte::alu::Instruction*>(slots + slot + i);
@@ -257,8 +233,8 @@ bool Parser::deserialiseALU(std::vector<shadir::Instruction *> &deserialised, la
          auto ins = new shadir::AluInstruction();
          bool abs0 = false, abs1 = false;
 
-         ins->cfPC = mControlFlowCounter;
-         ins->groupPC = mGroupCounter;
+         ins->cfPC = state.cfPC;
+         ins->groupPC = state.group;
          ins->predSel = static_cast<latte::alu::PredicateSelect::PredicateSelect>(alu.word0.predSel);
 
          assert(alu.word1.dstRel == 0);
@@ -283,76 +259,89 @@ bool Parser::deserialiseALU(std::vector<shadir::Instruction *> &deserialised, la
             ins->opType = shadir::AluInstruction::OP3;
             ins->op3 = static_cast<latte::alu::op3>(opcode.id);
             ins->numSources = opcode.srcs;
-            getAluSource(ins->sources[2], literalPtr, mGroupCounter, alu.op3.src2Sel, alu.op3.src2Rel, alu.op3.src2Chan, alu.op3.src2Neg, false);
+            getAluSource(ins->sources[2], literalPtr, state.group, alu.op3.src2Sel, alu.op3.src2Rel, alu.op3.src2Chan, alu.op3.src2Neg, false);
          }
 
-         getAluSource(ins->sources[0], literalPtr, mGroupCounter, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
-         getAluSource(ins->sources[1], literalPtr, mGroupCounter, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
+         getAluSource(ins->sources[0], literalPtr, state.group, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
+         getAluSource(ins->sources[1], literalPtr, state.group, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
 
          // Special ALU ops before
          if (opcode.flags & latte::alu::Opcode::PredSet) {
             switch (aluID) {
             case latte::alu::inst::ALU_PUSH_BEFORE: // PushBefore only push before first PRED_SET
-               {
-                  if (!hasPushedBefore) {
-                     auto push = new shadir::CfInstruction();
-                     push->id = latte::cf::inst::PUSH;
-                     push->name = latte::cf::name[push->id];
-                     deserialised.push_back(push);
-                     hasPushedBefore = true;
-                  }
-               }
-               break;
-            case latte::alu::inst::ALU_ELSE_AFTER: // ElseAfter push before every PRED_SET
-               {
+            {
+               if (!hasPushedBefore) {
                   auto push = new shadir::CfInstruction();
                   push->id = latte::cf::inst::PUSH;
                   push->name = latte::cf::name[push->id];
-                  deserialised.push_back(push);
+                  push->cfPC = state.cfPC;
+                  state.shader->code.push_back(push);
+                  hasPushedBefore = true;
                }
-               break;
+            }
+            break;
+            case latte::alu::inst::ALU_ELSE_AFTER: // ElseAfter push before every PRED_SET
+            {
+               auto push = new shadir::CfInstruction();
+               push->id = latte::cf::inst::PUSH;
+               push->name = latte::cf::name[push->id];
+               push->cfPC = state.cfPC;
+               state.shader->code.push_back(push);
+            }
+            break;
             }
          }
 
-         deserialised.push_back(ins);
+         state.shader->code.push_back(ins);
 
          // Special ALU ops after
          if (opcode.flags & latte::alu::Opcode::PredSet) {
             switch (aluID) {
             case latte::alu::inst::ALU_BREAK: // Break after every PRED_SET
-               {
-                  auto loopBreak = new shadir::CfInstruction();
-                  loopBreak->id = latte::cf::inst::LOOP_BREAK;
-                  loopBreak->name = latte::cf::name[loopBreak->id];
-                  loopBreak->popCount = 1;
-                  deserialised.push_back(loopBreak);
-               }
-               break;
+            {
+               auto loopBreak = new shadir::CfInstruction();
+               loopBreak->cfPC = state.cfPC;
+               loopBreak->id = latte::cf::inst::LOOP_BREAK;
+               loopBreak->name = latte::cf::name[loopBreak->id];
+               loopBreak->popCount = 1;
+               state.shader->code.push_back(loopBreak);
+            }
+            break;
             case latte::alu::inst::ALU_CONTINUE: // Continue after every PRED_SET
-               {
-                  auto loopContinue = new shadir::CfInstruction();
-                  loopContinue->id = latte::cf::inst::LOOP_CONTINUE;
-                  loopContinue->name = latte::cf::name[loopContinue->id];
-                  loopContinue->popCount = 1;
-                  deserialised.push_back(loopContinue);
-               }
-               break;
+            {
+               auto loopContinue = new shadir::CfInstruction();
+               loopContinue->cfPC = state.cfPC;
+               loopContinue->id = latte::cf::inst::LOOP_CONTINUE;
+               loopContinue->name = latte::cf::name[loopContinue->id];
+               loopContinue->popCount = 1;
+               state.shader->code.push_back(loopContinue);
+            }
+            break;
             case latte::alu::inst::ALU_ELSE_AFTER: // Else after every PRED_SET
-               {
-                  auto els = new shadir::CfInstruction();
-                  els->id = latte::cf::inst::ELSE;
-                  els->name = latte::cf::name[els->id];
-                  els->popCount = 1;
-                  deserialised.push_back(els);
-               }
-               break;
+            {
+               auto els = new shadir::CfInstruction();
+               els->cfPC = state.cfPC;
+               els->id = latte::cf::inst::ELSE;
+               els->name = latte::cf::name[els->id];
+               els->popCount = 1;
+               state.shader->code.push_back(els);
+            }
+            break;
             }
          }
 
          // Count number of literal used
-         literals += (alu.word0.src0Sel == latte::alu::Source::SrcLiteral) ? 1 : 0;
-         literals += (alu.word0.src1Sel == latte::alu::Source::SrcLiteral) ? 1 : 0;
-         literals += ((alu.word1.encoding != latte::alu::Encoding::OP2) && (alu.op3.src2Sel == latte::alu::Source::SrcLiteral)) ? 1 : 0;
+         if (alu.word0.src0Sel == latte::alu::Source::SrcLiteral) {
+            literals = std::max(literals, alu.word0.src0Chan + 1);
+         }
+
+         if (alu.word0.src1Sel == latte::alu::Source::SrcLiteral) {
+            literals = std::max(literals, alu.word0.src1Chan + 1);
+         }
+
+         if ((alu.word1.encoding != latte::alu::Encoding::OP2) && (alu.op3.src2Sel == latte::alu::Source::SrcLiteral)) {
+            literals = std::max(literals, alu.op3.src2Chan + 1);
+         }
 
          // Increase slot id
          slot += 1;
@@ -363,38 +352,41 @@ bool Parser::deserialiseALU(std::vector<shadir::Instruction *> &deserialised, la
          slot += (literals + 1) >> 1;
       }
 
-      mGroupCounter++;
+      state.group++;
    }
 
    switch (aluID) {
    case latte::alu::inst::ALU_BREAK: // Break ends with POP
    case latte::alu::inst::ALU_CONTINUE: // Continue ends with POP
    case latte::alu::inst::ALU_POP_AFTER: // Pop after ALU clause
-      {
-         auto pop = new shadir::CfInstruction();
-         pop->id = latte::cf::inst::POP;
-         pop->name = latte::cf::name[pop->id];
-         pop->popCount = 1;
-         deserialised.push_back(pop);
-      }
-      break;
+   {
+      auto pop = new shadir::CfInstruction();
+      pop->cfPC = state.cfPC;
+      pop->id = latte::cf::inst::POP;
+      pop->name = latte::cf::name[pop->id];
+      pop->popCount = 1;
+      state.shader->code.push_back(pop);
+   }
+   break;
    case latte::alu::inst::ALU_POP2_AFTER: // Pop2 after ALU clause
-      {
-         auto pop2 = new shadir::CfInstruction();
-         pop2->id = latte::cf::inst::POP;
-         pop2->name = latte::cf::name[pop2->id];
-         pop2->popCount = 2;
-         deserialised.push_back(pop2);
-      }
-      break;
+   {
+      auto pop2 = new shadir::CfInstruction();
+      pop2->cfPC = state.cfPC;
+      pop2->id = latte::cf::inst::POP;
+      pop2->name = latte::cf::name[pop2->id];
+      pop2->popCount = 2;
+      state.shader->code.push_back(pop2);
+   }
+   break;
    }
 
    return true;
 }
 
-bool Parser::deserialiseTEX(std::vector<shadir::Instruction *> &deserialised, latte::cf::inst cfID, latte::cf::Instruction &cf)
+static bool
+decodeTEX(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 {
-   uint32_t *ptr = mWords + (wordsPerCF * cf.word0.addr);
+   uint32_t *ptr = state.words + (latte::WordsPerCF * cf.word0.addr);
 
    for (auto slot = 0u; slot <= cf.word1.count; ) {
       auto tex = *reinterpret_cast<latte::tex::Instruction*>(ptr);
@@ -402,15 +394,15 @@ bool Parser::deserialiseTEX(std::vector<shadir::Instruction *> &deserialised, la
 
       if (id == latte::tex::VTX_FETCH || id == latte::tex::VTX_SEMANTIC || id == latte::tex::GET_BUFFER_RESINFO) {
          assert(false);
-         ptr += wordsPerVTX;
+         ptr += latte::WordsPerVTX;
       } else if (id == latte::tex::MEM) {
          assert(false);
-         ptr += wordsPerMEM;
+         ptr += latte::WordsPerMEM;
       } else {
          auto ins = new shadir::TexInstruction;
          ins->name = latte::tex::name[id];
-         ins->cfPC = mControlFlowCounter;
-         ins->groupPC = mGroupCounter;
+         ins->cfPC = state.cfPC;
+         ins->groupPC = state.group;
 
          ins->id = id;
          ins->bcFracMode = tex.word0.bcFracMode;
@@ -442,11 +434,11 @@ bool Parser::deserialiseTEX(std::vector<shadir::Instruction *> &deserialised, la
          ins->dst.selZ = static_cast<latte::alu::Select::Select>(tex.word1.dstSelZ);
          ins->dst.selW = static_cast<latte::alu::Select::Select>(tex.word1.dstSelW);
 
-         deserialised.push_back(ins);
-         ptr += wordsPerTEX;
+         state.shader->code.push_back(ins);
+         ptr += latte::WordsPerTEX;
       }
 
-      mGroupCounter++;
+      state.group++;
       slot++;
    }
 

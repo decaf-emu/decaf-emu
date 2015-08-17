@@ -1,4 +1,4 @@
-#include "latte.h"
+#include "latte_opcodes.h"
 
 namespace latte
 {

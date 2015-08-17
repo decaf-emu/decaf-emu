@@ -1,5 +1,8 @@
 #pragma once
-#include "latte.h"
+#include "latte_opcodes.h"
+
+namespace latte
+{
 
 namespace shadir
 {
@@ -22,17 +25,6 @@ struct Instruction
    const char *name = nullptr;
    uint32_t cfPC = -1;
    uint32_t groupPC = -1;
-};
-
-struct BasicBlock
-{
-   uint32_t pc;
-   std::vector<Instruction *> code;
-};
-
-struct Shader
-{
-   std::vector<BasicBlock> blocks;
 };
 
 struct CfInstruction : Instruction
@@ -147,30 +139,79 @@ struct TexInstruction : Instruction
    int8_t offsetZ = 0;
 };
 
-}
-
-namespace latte
+struct Block
 {
+   enum Type
+   {
+      CodeBlock,
+      Loop,
+      Conditional
+   };
 
-class Parser
-{
-public:
-   bool parse(shadir::Shader &shader, uint8_t *binary, uint32_t size);
+   Block(Type type) :
+      type(type)
+   {
+   }
 
-protected:
-   bool deserialise(std::vector<shadir::Instruction *> &deserialised);
-   bool deserialiseNormal(std::vector<shadir::Instruction *> &deserialised, latte::cf::inst id, latte::cf::Instruction &cf);
-   bool deserialiseExport(std::vector<shadir::Instruction *> &deserialised, latte::cf::inst id, latte::cf::Instruction &cf);
-   bool deserialiseALU(std::vector<shadir::Instruction *> &deserialised, latte::cf::inst id, latte::cf::Instruction &cf);
-   bool deserialiseTEX(std::vector<shadir::Instruction *> &deserialised, latte::cf::inst id, latte::cf::Instruction &cf);
+   virtual ~Block()
+   {
+   }
 
-private:
-   std::string mIndent;
-   uint32_t *mWords;
-   uint32_t mWordCount;
-   uint32_t mGroupCounter;
-   uint32_t mControlFlowCounter;
-   shadir::Shader *mShader;
+   Type type;
 };
 
+struct CodeBlock : Block
+{
+   CodeBlock() :
+      Block(Block::CodeBlock)
+   {
+   }
+
+   std::vector<shadir::Instruction *> code; // Non-owning
+};
+
+struct LoopBlock : Block
+{
+   LoopBlock() :
+      Block(Block::Loop)
+   {
+   }
+
+   virtual ~LoopBlock() final
+   {
+      for (auto block : inner) {
+         delete block;
+      }
+   }
+
+   std::vector<Block *> inner;
+};
+
+struct ConditionalBlock : Block
+{
+   ConditionalBlock(shadir::Instruction *condition) :
+      Block(Block::Conditional),
+      condition(condition)
+   {
+   }
+
+   virtual ~ConditionalBlock() final
+   {
+      for (auto block : inner) {
+         delete block;
+      }
+
+      for (auto block : innerElse) {
+         delete block;
+      }
+   }
+
+   shadir::Instruction *condition; // Non-owning
+   std::vector<Block *> inner;
+   std::vector<Block *> innerElse;
+};
+
+} // namespace shadir
+
 } // namespace latte
+

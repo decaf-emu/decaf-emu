@@ -1,10 +1,6 @@
 #include "latte_disassembler.h"
+#include "latte_opcodes.h"
 
-static const uint32_t wordsPerCF = 2;
-static const uint32_t wordsPerALU = 2;
-static const uint32_t wordsPerTEX = 4;
-static const uint32_t wordsPerMEM = 4; // TODO: Verify
-static const uint32_t wordsPerVTX = 4; // TODO: Verify
 static const uint32_t indentSize = 2;
 static const uint32_t instrNamePad = 16;
 static const uint32_t groupCounterSize = 2;
@@ -12,211 +8,142 @@ static const uint32_t groupCounterSize = 2;
 namespace latte
 {
 
-void Disassembler::increaseIndent()
+struct DisassembleState
 {
-   mIndent.append(indentSize, ' ');
-}
-
-void Disassembler::decreaseIndent()
-{
-   if (mIndent.size() >= indentSize) {
-      mIndent.resize(mIndent.size() - indentSize);
+   DisassembleState(fmt::MemoryWriter &out) :
+      out(out)
+   {
    }
-}
 
-bool Disassembler::disassemble(uint8_t *binary, uint32_t size)
+   fmt::MemoryWriter &out;
+   std::string indent;
+   uint32_t *words;
+   uint32_t wordCount;
+   uint32_t group;
+   uint32_t cfPC;
+};
+
+static bool disassembleNormal(DisassembleState &state, latte::cf::inst id, latte::cf::Instruction &cf);
+static bool disassembleExport(DisassembleState &state, latte::cf::inst id, latte::cf::Instruction &cf);
+static bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Instruction &cf);
+static bool disassembleTEX(DisassembleState &state, latte::cf::inst id, latte::cf::Instruction &cf);
+
+static void beginLine(DisassembleState &state);
+static void endLine(DisassembleState &state);
+static void increaseIndent(DisassembleState &state);
+static void decreaseIndent(DisassembleState &state);
+
+static void writeSelectName(DisassembleState &state, uint32_t select);
+static void writeAluSource(DisassembleState &state, uint32_t *dwBase, uint32_t sel, uint32_t rel, uint32_t chan, uint32_t neg, bool abs);
+static void writeRegisterName(DisassembleState &state, uint32_t sel);
+
+static uint32_t getUnit(bool units[5], latte::alu::Instruction &alu);
+static bool isVectorOnly(latte::alu::Instruction &alu);
+static bool isTranscendentalOnly(latte::alu::Instruction &alu);
+
+bool disassemble(fmt::MemoryWriter &out, uint8_t *binary, uint32_t size)
 {
-   fmt::MemoryWriter out;
    bool result = true;
+   auto state = DisassembleState { out };
 
    assert((size % 4) == 0);
-   mWords = reinterpret_cast<uint32_t*>(binary);
-   mWordCount = size / 4;
+   state.words = reinterpret_cast<uint32_t*>(binary);
+   state.wordCount = size / 4;
 
-   mControlFlowCounter = 0;
-   mGroupCounter = 0;
+   state.cfPC = 0;
+   state.group = 0;
 
-   for (auto i = 0u; i < mWordCount; i += 2) {
-      auto cf = *reinterpret_cast<latte::cf::Instruction*>(mWords + i);
+   for (auto i = 0u; i < state.wordCount; i += 2) {
+      auto cf = *reinterpret_cast<latte::cf::Instruction*>(state.words + i);
       auto id = static_cast<latte::cf::inst>(cf.word1.inst);
 
-      out << mIndent.c_str() << fmt::pad(mControlFlowCounter, 2, '0') << ' ';
+      beginLine(state);
+      state.out << fmt::pad(state.cfPC, 2, '0') << ' ';
 
       switch (cf.type) {
       case latte::cf::Type::Normal:
-         result &= cfNormal(out, id, cf);
+         result &= disassembleNormal(state, id, cf);
          break;
       case latte::cf::Type::Export:
          if (id == latte::exp::EXP || id == latte::exp::EXP_DONE) {
-            result &= cfExport(out, id, cf);
+            result &= disassembleExport(state, id, cf);
          } else {
             assert(false);
          }
          break;
       case latte::cf::Type::Alu:
       case latte::cf::Type::AluExtended:
-         result &= cfALU(out, id, cf);
+         result &= disassembleALU(state, id, cf);
          break;
       }
 
-      out << "\n";
-      mControlFlowCounter++;
+      endLine(state);
+      state.cfPC++;
 
       if ((cf.type == latte::cf::Type::Normal || cf.type == latte::cf::Type::Export) && cf.word1.endOfProgram) {
-         out << "END_OF_PROGRAM\n";
+         out << "END_OF_PROGRAM";
+         endLine(state);
          break;
       }
    }
 
-   std::cout << out.str() << std::endl;
    return result;
 }
 
-bool Disassembler::cfNormal(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::Instruction &cf)
+void beginLine(DisassembleState &state)
 {
-   auto name = latte::cf::name[id];
-
-   switch (id) {
-   case latte::cf::NOP:
-      return true;
-   case latte::cf::TEX:
-      return cfTEX(out, id, cf);
-   case latte::cf::VTX:
-   case latte::cf::VTX_TC:
-      // Vtx
-      break;
-   case latte::cf::LOOP_START:
-   case latte::cf::LOOP_START_DX10:
-   case latte::cf::LOOP_START_NO_AL:
-      out
-         << name
-         << " FAIL_JUMP_ADDR(" << cf.word0.addr << ")"
-         << "\n";
-      increaseIndent();
-      break;
-   case latte::cf::LOOP_END:
-      out
-         << name
-         << " PASS_JUMP_ADDR(" << cf.word0.addr << ")"
-         << "\n";
-      decreaseIndent();
-      break;
-   case latte::cf::JUMP:
-      out
-         << name
-         << " POP_CNT(" << cf.word1.popCount << ")"
-         << " ADDR(" << cf.word0.addr << ")"
-         << "\n";
-      break;
-   case latte::cf::END_PROGRAM:
-      out
-         << name
-         << "\n";
-      break;
-   case latte::cf::CALL_FS:
-      out
-         << name
-         << "\n";
-      break;
-   case latte::cf::LOOP_CONTINUE:
-   case latte::cf::POP_JUMP:
-   case latte::cf::ELSE:
-   case latte::cf::CALL:
-   case latte::cf::RETURN:
-   case latte::cf::EMIT_VERTEX:
-   case latte::cf::EMIT_CUT_VERTEX:
-   case latte::cf::CUT_VERTEX:
-   case latte::cf::KILL:
-   case latte::cf::PUSH:
-   case latte::cf::PUSH_ELSE:
-   case latte::cf::POP:
-   case latte::cf::POP_PUSH:
-   case latte::cf::POP_PUSH_ELSE:
-   case latte::cf::WAIT_ACK:
-   case latte::cf::TEX_ACK:
-   case latte::cf::VTX_ACK:
-   case latte::cf::VTX_TC_ACK:
-   default:
-      assert(false);
-      break;
-   }
-
-   return true;
+   state.out << state.indent.c_str();
 }
 
-static void
-writeSelectName(fmt::MemoryWriter &out, uint32_t select)
+void endLine(DisassembleState &state)
+{
+   state.out << '\n';
+}
+
+void increaseIndent(DisassembleState &state)
+{
+   state.indent.append(indentSize, ' ');
+}
+
+void decreaseIndent(DisassembleState &state)
+{
+   if (state.indent.size() >= indentSize) {
+      state.indent.resize(state.indent.size() - indentSize);
+   }
+}
+
+void
+writeSelectName(DisassembleState &state, uint32_t select)
 {
    switch (select) {
    case latte::alu::Select::X:
-      out << 'x';
+      state.out << 'x';
       break;
    case latte::alu::Select::Y:
-      out << 'y';
+      state.out << 'y';
       break;
    case latte::alu::Select::Z:
-      out << 'z';
+      state.out << 'z';
       break;
    case latte::alu::Select::W:
-      out << 'w';
+      state.out << 'w';
       break;
    case latte::alu::Select::One:
-      out << '1';
+      state.out << '1';
       break;
    case latte::alu::Select::Zero:
-      out << '0';
+      state.out << '0';
       break;
    case latte::alu::Select::Mask:
-      out << '_';
+      state.out << '_';
       break;
    default:
+      state.out << '?';
       assert(false);
-      out << '?';
    }
 }
 
-bool Disassembler::cfExport(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::Instruction &cf)
-{
-   auto eid = static_cast<latte::exp::inst>(cf.expWord1.inst);
-   auto name = latte::exp::name[id];
-   auto type = static_cast<latte::exp::Type::Type>(cf.expWord0.type);
-
-   out
-      << name
-      << ": ";
-
-   switch (type) {
-   case latte::exp::Type::Pixel:
-      out << "PIX";
-      break;
-   case latte::exp::Type::Position:
-      out << "POS";
-      break;
-   case latte::exp::Type::Parameter:
-      out << "PARAM";
-      break;
-   }
-
-   out
-      << cf.expWord0.dstReg;
-
-   out
-      << ", R"
-      << cf.expWord0.srcReg
-      << ".";
-
-   writeSelectName(out, cf.expWord1.srcSelX);
-   writeSelectName(out, cf.expWord1.srcSelY);
-   writeSelectName(out, cf.expWord1.srcSelZ);
-   writeSelectName(out, cf.expWord1.srcSelW);
-
-   out
-      << "\n";
-
-   return true;
-}
-
-static bool
+bool
 isTranscendentalOnly(latte::alu::Instruction &alu)
 {
    latte::alu::Opcode opcode;
@@ -238,7 +165,7 @@ isTranscendentalOnly(latte::alu::Instruction &alu)
    return false;
 }
 
-static bool
+bool
 isVectorOnly(latte::alu::Instruction &alu)
 {
    latte::alu::Opcode opcode;
@@ -260,7 +187,7 @@ isVectorOnly(latte::alu::Instruction &alu)
    return false;
 }
 
-static uint32_t
+uint32_t
 getUnit(bool units[5], latte::alu::Instruction &alu)
 {
    bool isTrans = false;
@@ -286,108 +213,213 @@ getUnit(bool units[5], latte::alu::Instruction &alu)
    }
 }
 
-static void
-writeRegisterName(fmt::MemoryWriter &out, uint32_t sel)
+void
+writeRegisterName(DisassembleState &state, uint32_t sel)
 {
    if (sel > latte::NumGPR - latte::NumTempRegisters) {
-      out << "T" << (latte::NumGPR - sel - 1);
+      state.out << "T" << (latte::NumGPR - sel - 1);
    } else {
-      out << "R" << sel;
+      state.out << "R" << sel;
    }
 }
 
-static void
-writeAluSource(fmt::MemoryWriter &out, uint32_t *dwBase, uint32_t counter, uint32_t sel, uint32_t rel, uint32_t chan, uint32_t neg, bool abs)
+void
+writeAluSource(DisassembleState &state, uint32_t *dwBase, uint32_t sel, uint32_t rel, uint32_t chan, uint32_t neg, bool abs)
 {
    if (rel != 0) {
       // TODO: relative address
-      out << "__UNK_REL(" << rel << ")__";
+      state.out << "__UNK_REL(" << rel << ")__";
    }
 
    if (abs) {
-      out << "ABS(";
+      state.out << "ABS(";
    }
 
    // Negate
    if (neg) {
-      out << "-";
+      state.out << "-";
    }
 
    // Sel
    if (sel >= latte::alu::Source::RegisterFirst && sel <= latte::alu::Source::RegisterLast) {
-      writeRegisterName(out, sel);
+      writeRegisterName(state, sel);
    } else if (sel >= latte::alu::Source::KcacheBank0First && sel <= latte::alu::Source::KcacheBank0Last) {
-      out << "KCACHEBANK0_" << (sel - latte::alu::Source::KcacheBank0First);
+      state.out << "KCACHEBANK0_" << (sel - latte::alu::Source::KcacheBank0First);
    } else if (sel >= latte::alu::Source::KcacheBank1First && sel <= latte::alu::Source::KcacheBank1Last) {
-      out << "KCACHEBANK1_" << (sel - latte::alu::Source::KcacheBank1First);
+      state.out << "KCACHEBANK1_" << (sel - latte::alu::Source::KcacheBank1First);
    } else if (sel == latte::alu::Source::Src1DoubleLSW) {
-      out << "__UNK_Src1DoubleLSW__";
+      state.out << "__UNK_Src1DoubleLSW__";
    } else if (sel == latte::alu::Source::Src1DoubleMSW) {
-      out << "__UNK_Src1DoubleMSW__";
+      state.out << "__UNK_Src1DoubleMSW__";
    } else if (sel == latte::alu::Source::Src05DoubleLSW) {
-      out << "__UNK_Src05DoubleLSW__";
+      state.out << "__UNK_Src05DoubleLSW__";
    } else if (sel == latte::alu::Source::Src05DoubleMSW) {
-      out << "__UNK_Src05DoubleMSW__";
+      state.out << "__UNK_Src05DoubleMSW__";
    } else if (sel == latte::alu::Source::Src0Float) {
-      out << "0.0f";
+      state.out << "0.0f";
    } else if (sel == latte::alu::Source::Src1Float) {
-      out << "1.0f";
+      state.out << "1.0f";
    } else if (sel == latte::alu::Source::Src1Integer) {
-      out << "1";
+      state.out << "1";
    } else if (sel == latte::alu::Source::SrcMinus1Integer) {
       if (neg) {
-         out << "1";
+         state.out << "1";
       } else {
-         out << "-1";
+         state.out << "-1";
       }
    } else if (sel == latte::alu::Source::Src05Float) {
-      out << "0.5f";
+      state.out << "0.5f";
    } else if (sel == latte::alu::Source::SrcLiteral) {
-      out << *reinterpret_cast<float*>(dwBase + chan) << "f";
+      state.out << *reinterpret_cast<float*>(dwBase + chan) << "f";
    } else if (sel == latte::alu::Source::SrcPreviousScalar) {
-      out << "PS" << (counter - 1);
+      state.out << "PS" << (state.group - 1);
    } else if (sel == latte::alu::Source::SrcPreviousVector) {
-      out << "PV" << (counter - 1);
+      state.out << "PV" << (state.group - 1);
    } else if (sel >= latte::alu::Source::CfileConstantsFirst && sel <= latte::alu::Source::CfileConstantsLast) {
-      out << "C" << (sel - latte::alu::Source::CfileConstantsFirst);
+      state.out << "C" << (sel - latte::alu::Source::CfileConstantsFirst);
    } else {
       assert(false);
    }
 
    // Chan
    if (chan == latte::alu::Channel::X) {
-      out << ".x";
+      state.out << ".x";
    } else if (chan == latte::alu::Channel::Y) {
-      out << ".y";
+      state.out << ".y";
    } else if (chan == latte::alu::Channel::Z) {
-      out << ".z";
+      state.out << ".z";
    } else if (chan == latte::alu::Channel::W) {
-      out << ".w";
+      state.out << ".w";
    }
 
    if (abs) {
-      out << ")";
+      state.out << ")";
    }
 }
 
-bool Disassembler::cfALU(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::Instruction &cf)
+bool disassembleNormal(DisassembleState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 {
-   uint64_t *slots = reinterpret_cast<uint64_t *>(mWords + (wordsPerCF * cf.aluWord0.addr));
+   auto name = latte::cf::name[id];
 
-   out
+   switch (id) {
+   case latte::cf::TEX:
+      return disassembleTEX(state, id, cf);
+   case latte::cf::LOOP_START:
+   case latte::cf::LOOP_START_DX10:
+   case latte::cf::LOOP_START_NO_AL:
+      state.out
+         << name
+         << " FAIL_JUMP_ADDR(" << cf.word0.addr << ")";
+      endLine(state);
+      increaseIndent(state);
+      break;
+   case latte::cf::LOOP_END:
+      state.out
+         << name
+         << " PASS_JUMP_ADDR(" << cf.word0.addr << ")";
+      endLine(state);
+      decreaseIndent(state);
+      break;
+   case latte::cf::ELSE:
+   case latte::cf::JUMP:
+      state.out
+         << name
+         << " POP_CNT(" << cf.word1.popCount << ")"
+         << " ADDR(" << cf.word0.addr << ")";
+      endLine(state);
+      break;
+   case latte::cf::NOP:
+   case latte::cf::CALL_FS:
+   case latte::cf::END_PROGRAM:
+      state.out
+         << name;
+      endLine(state);
+      break;
+   case latte::cf::VTX:
+   case latte::cf::VTX_TC:
+   case latte::cf::LOOP_CONTINUE:
+   case latte::cf::LOOP_BREAK:
+   case latte::cf::POP_JUMP:
+   case latte::cf::CALL:
+   case latte::cf::RETURN:
+   case latte::cf::EMIT_VERTEX:
+   case latte::cf::EMIT_CUT_VERTEX:
+   case latte::cf::CUT_VERTEX:
+   case latte::cf::KILL:
+   case latte::cf::PUSH:
+   case latte::cf::PUSH_ELSE:
+   case latte::cf::POP:
+   case latte::cf::POP_PUSH:
+   case latte::cf::POP_PUSH_ELSE:
+   case latte::cf::WAIT_ACK:
+   case latte::cf::TEX_ACK:
+   case latte::cf::VTX_ACK:
+   case latte::cf::VTX_TC_ACK:
+   default:
+      assert(false);
+      break;
+   }
+
+   return true;
+}
+
+bool disassembleExport(DisassembleState &state, latte::cf::inst id, latte::cf::Instruction &cf)
+{
+   auto eid = static_cast<latte::exp::inst>(cf.expWord1.inst);
+   auto name = latte::exp::name[id];
+   auto type = static_cast<latte::exp::Type::Type>(cf.expWord0.type);
+
+   state.out
+      << name
+      << ": ";
+
+   switch (type) {
+   case latte::exp::Type::Pixel:
+      state.out << "PIX";
+      break;
+   case latte::exp::Type::Position:
+      state.out << "POS";
+      break;
+   case latte::exp::Type::Parameter:
+      state.out << "PARAM";
+      break;
+   }
+
+   state.out
+      << cf.expWord0.dstReg;
+
+   state.out
+      << ", R"
+      << cf.expWord0.srcReg
+      << ".";
+
+   writeSelectName(state, cf.expWord1.srcSelX);
+   writeSelectName(state, cf.expWord1.srcSelY);
+   writeSelectName(state, cf.expWord1.srcSelZ);
+   writeSelectName(state, cf.expWord1.srcSelW);
+
+   endLine(state);
+   return true;
+}
+
+bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Instruction &cf)
+{
+   uint64_t *slots = reinterpret_cast<uint64_t *>(state.words + (latte::WordsPerCF * cf.aluWord0.addr));
+
+   state.out
       << latte::alu::name[cf.aluWord1.inst] << ": "
       << "ADDR(" << cf.aluWord0.addr << ") CNT(" << (cf.aluWord1.count + 1) << ")";
 
-   increaseIndent();
+   increaseIndent(state);
 
    for (auto slot = 0u; slot <= cf.aluWord1.count; ) {
       static char unitName[] = { 'x', 'y', 'z', 'w', 't' };
       bool units[5] = { false, false, false, false, false };
       bool last = false;
       uint32_t *literalPtr = reinterpret_cast<uint32_t*>(slots + slot);
-      uint32_t literals = 0;
+      auto literals = 0u;
 
-      out << "\n";
+      endLine(state);
 
       for (auto i = 0u; i < 5 && !last; ++i) {
          auto alu = *reinterpret_cast<latte::alu::Instruction*>(slots + slot + i);
@@ -414,90 +446,98 @@ bool Disassembler::cfALU(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::
             name = opcode.name;
          }
 
-         out << mIndent.c_str();
+         beginLine(state);
 
          if (i == 0) {
-            out << fmt::pad(mGroupCounter, groupCounterSize, '0');
+            state.out << fmt::pad(state.group, groupCounterSize, '0');
          } else {
-            out << std::string(groupCounterSize, ' ').c_str();
+            state.out << std::string(groupCounterSize, ' ').c_str();
          }
          
-         out
+         state.out
             << ' '
             << unitName[unit] << ": "
             << fmt::pad(name, instrNamePad, ' ');
 
          if (alu.word1.encoding == latte::alu::Encoding::OP2 && alu.op2.writeMask == 0) {
-            out << "____";
+            state.out << "____";
          } else {
-            writeAluSource(out, literalPtr, mGroupCounter, alu.word1.dstGpr, alu.word1.dstRel, alu.word1.dstChan, 0, false);
+            writeAluSource(state, literalPtr, alu.word1.dstGpr, alu.word1.dstRel, alu.word1.dstChan, 0, false);
          }
 
          if (opcode.srcs > 0) {
-            out << ", ";
-            writeAluSource(out, literalPtr, mGroupCounter, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
+            state.out << ", ";
+            writeAluSource(state, literalPtr, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
          }
 
          if (opcode.srcs > 1) {
-            out << ", ";
-            writeAluSource(out, literalPtr, mGroupCounter, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
+            state.out << ", ";
+            writeAluSource(state, literalPtr, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
          }
 
          if (alu.word1.encoding == latte::alu::Encoding::OP2) {
             if (alu.op2.updateExecuteMask) {
-               out << " UPDATE_EXECUTE_MASK";
+               state.out << " UPDATE_EXECUTE_MASK";
             }
 
             if (alu.op2.updatePred) {
-               out << " UPDATE_PRED";
+               state.out << " UPDATE_PRED";
             }
 
             switch (alu.op2.omod) {
             case latte::alu::OutputModifier::Divide2:
-               out << " OMOD_D2";
+               state.out << " OMOD_D2";
                break;
             case latte::alu::OutputModifier::Multiply2:
-               out << " OMOD_M2";
+               state.out << " OMOD_M2";
                break;
             case latte::alu::OutputModifier::Multiply4:
-               out << " OMOD_M4";
+               state.out << " OMOD_M4";
                break;
             }
          } else {
             if (opcode.srcs > 2) {
-               out << ", ";
-               writeAluSource(out, literalPtr, mGroupCounter, alu.op3.src2Sel, alu.op3.src2Rel, alu.op3.src2Chan, alu.op3.src2Neg, false);
+               state.out << ", ";
+               writeAluSource(state, literalPtr, alu.op3.src2Sel, alu.op3.src2Rel, alu.op3.src2Chan, alu.op3.src2Neg, false);
             }
          }
 
          switch (alu.word1.bankSwizzle) {
          case latte::alu::BankSwizzle::Vec021:
-            out << " VEC_021";
+            state.out << " VEC_021";
             break;
          case latte::alu::BankSwizzle::Vec120:
-            out << " VEC_120";
+            state.out << " VEC_120";
             break;
          case latte::alu::BankSwizzle::Vec102:
-            out << " VEC_102";
+            state.out << " VEC_102";
             break;
          case latte::alu::BankSwizzle::Vec201:
-            out << " VEC_201";
+            state.out << " VEC_201";
             break;
          case latte::alu::BankSwizzle::Vec210:
-            out << " VEC_210";
+            state.out << " VEC_210";
             break;
          }
 
          if (alu.word1.clamp) {
-            out << " CLAMP";
+            state.out << " CLAMP";
          }
 
-         out << '\n';
+         endLine(state);
 
          // Count number of literal used
-         literals += (alu.word0.src0Sel == latte::alu::Source::SrcLiteral) ? 1 : 0;
-         literals += (alu.word0.src1Sel == latte::alu::Source::SrcLiteral) ? 1 : 0;
-         literals += ((alu.word1.encoding != latte::alu::Encoding::OP2) && (alu.op3.src2Sel == latte::alu::Source::SrcLiteral)) ? 1 : 0;
+         if (alu.word0.src0Sel == latte::alu::Source::SrcLiteral) {
+            literals = std::max(literals, alu.word0.src0Chan + 1);
+         }
+
+         if (alu.word0.src1Sel == latte::alu::Source::SrcLiteral) {
+            literals = std::max(literals, alu.word0.src1Chan + 1);
+         }
+
+         if ((alu.word1.encoding != latte::alu::Encoding::OP2) && (alu.op3.src2Sel == latte::alu::Source::SrcLiteral)) {
+            literals = std::max(literals, alu.op3.src2Chan + 1);
+         }
 
          // Increase slot id
          slot += 1;
@@ -507,22 +547,24 @@ bool Disassembler::cfALU(fmt::MemoryWriter &out, latte::cf::inst id, latte::cf::
       if (literals) {
          slot += (literals + 1) >> 1;
       }
-      mGroupCounter++;
+
+      state.group++;
    }
 
-   decreaseIndent();
+   decreaseIndent(state);
    return true;
 }
 
-bool Disassembler::cfTEX(fmt::MemoryWriter &out, latte::cf::inst cfID, latte::cf::Instruction &cf)
+bool disassembleTEX(DisassembleState &state, latte::cf::inst cfID, latte::cf::Instruction &cf)
 {
-   uint32_t *ptr = mWords + (wordsPerCF * cf.word0.addr);
+   uint32_t *ptr = state.words + (latte::WordsPerCF * cf.word0.addr);
 
-   out
+   state.out
       << latte::cf::name[cfID] << ": "
-      << "ADDR(" << cf.word0.addr << ") CNT(" << (cf.word1.count + 1) << ")\n";
+      << "ADDR(" << cf.word0.addr << ") CNT(" << (cf.word1.count + 1) << ")";
 
-   increaseIndent();
+   endLine(state);
+   increaseIndent(state);
 
    for (auto slot = 0u; slot <= cf.word1.count; ) {
       auto tex = *reinterpret_cast<latte::tex::Instruction*>(ptr);
@@ -531,14 +573,15 @@ bool Disassembler::cfTEX(fmt::MemoryWriter &out, latte::cf::inst cfID, latte::cf
 
       if (id == latte::tex::VTX_FETCH || id == latte::tex::VTX_SEMANTIC || id == latte::tex::GET_BUFFER_RESINFO) {
          assert(false);
-         ptr += wordsPerVTX;
+         ptr += latte::WordsPerVTX;
       } else if (id == latte::tex::MEM) {
          assert(false);
-         ptr += wordsPerMEM;
+         ptr += latte::WordsPerMEM;
       } else {
-         out
-            << mIndent.c_str()
-            << fmt::pad(mGroupCounter, groupCounterSize, '0')
+         beginLine(state);
+
+         state.out
+            << fmt::pad(state.group, groupCounterSize, '0')
             << ' '
             << name
             << ' ';
@@ -546,37 +589,37 @@ bool Disassembler::cfTEX(fmt::MemoryWriter &out, latte::cf::inst cfID, latte::cf
          // Write dst
          if (tex.word1.dstRel != 0) {
             // TODO: relative address
-            out << "__UNK_REL(" << tex.word1.dstRel << ")__";
+            state.out << "__UNK_REL(" << tex.word1.dstRel << ")__";
          }
 
-         writeRegisterName(out, tex.word1.dstReg);
-         out << '.';
-         writeSelectName(out, tex.word1.dstSelX);
-         writeSelectName(out, tex.word1.dstSelY);
-         writeSelectName(out, tex.word1.dstSelZ);
-         writeSelectName(out, tex.word1.dstSelW);
+         writeRegisterName(state, tex.word1.dstReg);
+         state.out << '.';
+         writeSelectName(state, tex.word1.dstSelX);
+         writeSelectName(state, tex.word1.dstSelY);
+         writeSelectName(state, tex.word1.dstSelZ);
+         writeSelectName(state, tex.word1.dstSelW);
 
          // Write src
-         out << ", ";
+         state.out << ", ";
 
          if (tex.word0.srcRel != 0) {
             // TODO: relative address
-            out << "__UNK_REL(" << tex.word0.srcRel << ")__";
+            state.out << "__UNK_REL(" << tex.word0.srcRel << ")__";
          }
 
-         writeRegisterName(out, tex.word0.srcReg);
-         out << '.';
-         writeSelectName(out, tex.word2.srcSelX);
-         writeSelectName(out, tex.word2.srcSelY);
-         writeSelectName(out, tex.word2.srcSelZ);
-         writeSelectName(out, tex.word2.srcSelW);
+         writeRegisterName(state, tex.word0.srcReg);
+         state.out << '.';
+         writeSelectName(state, tex.word2.srcSelX);
+         writeSelectName(state, tex.word2.srcSelY);
+         writeSelectName(state, tex.word2.srcSelZ);
+         writeSelectName(state, tex.word2.srcSelW);
 
-         out
+         state.out
             << ", t" << tex.word0.resourceID
             << ", s" << tex.word2.samplerID;
 
          if (tex.word2.offsetX || tex.word2.offsetY || tex.word2.offsetZ) {
-            out
+            state.out
                << " OFFSET("
                << tex.word2.offsetX
                << ", "
@@ -587,42 +630,42 @@ bool Disassembler::cfTEX(fmt::MemoryWriter &out, latte::cf::inst cfID, latte::cf
          }
 
          if (tex.word1.lodBias) {
-            out << " LOD_BIAS(" << tex.word1.lodBias << ")";
+            state.out << " LOD_BIAS(" << tex.word1.lodBias << ")";
          }
 
          if (!tex.word1.coordTypeX) {
-            out << " CTX_UNORM";
+            state.out << " CTX_UNORM";
          }
 
          if (!tex.word1.coordTypeY) {
-            out << " CTY_UNORM";
+            state.out << " CTY_UNORM";
          }
 
          if (!tex.word1.coordTypeZ) {
-            out << " CTZ_UNORM";
+            state.out << " CTZ_UNORM";
          }
 
          if (!tex.word1.coordTypeW) {
-            out << " CTW_UNORM";
+            state.out << " CTW_UNORM";
          }
 
          if (tex.word0.bcFracMode) {
-            out << " BFM";
+            state.out << " BFM";
          }
 
          if (tex.word0.fetchWholeQuad) {
-            out << " FWQ";
+            state.out << " FWQ";
          }
 
-         out << '\n';
-         ptr += wordsPerTEX;
+         endLine(state);
+         ptr += latte::WordsPerTEX;
       }
 
-      mGroupCounter++;
+      state.group++;
       slot++;
    }
 
-   decreaseIndent();
+   decreaseIndent(state);
    return true;
 }
 

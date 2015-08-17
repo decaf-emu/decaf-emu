@@ -85,15 +85,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\gpu\latte.cpp" />
-    <ClCompile Include="..\src\gpu\latte_parser.cpp" />
+    <ClCompile Include="..\src\gpu\latte_opcodes.cpp" />
+    <ClCompile Include="..\src\gpu\latte_blockify.cpp" />
     <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
+    <ClCompile Include="..\src\gpu\latte_decoder.cpp" />
     <ClCompile Include="..\tools\gsh-disassemble.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\gpu\latte.h" />
+    <ClInclude Include="..\src\gpu\latte_opcodes.h" />
     <ClInclude Include="..\src\gpu\latte_disassembler.h" />
-    <ClInclude Include="..\src\gpu\latte_parser.h" />
+    <ClInclude Include="..\src\gpu\latte_shadir.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\gpu\latte_opcodes_def.inl" />
