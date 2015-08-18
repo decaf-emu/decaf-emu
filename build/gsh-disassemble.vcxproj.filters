@@ -30,11 +30,11 @@
     <ClCompile Include="..\src\gpu\latte_opcodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gpu\latte_genhlsl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\gpu\latte_disassembler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gpu\latte_shadir.h">
       <Filter>Header Files</Filter>
     </ClInclude>

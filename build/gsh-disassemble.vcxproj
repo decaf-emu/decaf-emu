@@ -85,6 +85,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\gpu\latte_genhlsl.cpp" />
     <ClCompile Include="..\src\gpu\latte_opcodes.cpp" />
     <ClCompile Include="..\src\gpu\latte_blockify.cpp" />
     <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
@@ -94,7 +95,6 @@
   <ItemGroup>
     <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_opcodes.h" />
-    <ClInclude Include="..\src\gpu\latte_disassembler.h" />
     <ClInclude Include="..\src\gpu\latte_shadir.h" />
   </ItemGroup>
   <ItemGroup>

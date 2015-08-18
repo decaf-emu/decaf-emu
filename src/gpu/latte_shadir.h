@@ -65,6 +65,7 @@ struct AluSource
    union
    {
       float floatValue;
+      double doubleValue;
       int intValue;
    };
 };
@@ -74,6 +75,7 @@ struct AluDest
    uint32_t id = 0;
    latte::alu::Channel::Channel chan = latte::alu::Channel::Unknown;
    bool clamp = false;
+   bool scalar = false;
 };
 
 struct AluInstruction : Instruction
@@ -82,6 +84,15 @@ struct AluInstruction : Instruction
    {
       OP2,
       OP3
+   };
+
+   enum Unit
+   {
+      X,
+      Y,
+      Z,
+      W,
+      T
    };
 
    AluInstruction() :
@@ -95,6 +106,7 @@ struct AluInstruction : Instruction
       latte::alu::op3 op3;
    };
 
+   Unit unit;
    OpType opType;
    uint32_t numSources = 0;
    AluSource sources[3];

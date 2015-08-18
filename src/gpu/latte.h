@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <string>
 #include "latte_shadir.h"
 
 namespace latte
@@ -28,5 +29,7 @@ struct Shader
 
 bool decode(Shader &shader, uint8_t *binary, uint32_t size);
 bool blockify(Shader &shader);
+bool disassemble(std::string &out, uint8_t *binary, uint32_t size);
+bool generateHLSL(Shader &shader, std::string &hlsl);
 
 } // namespace latte

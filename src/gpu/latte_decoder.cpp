@@ -182,6 +182,77 @@ getAluSource(shadir::AluSource &source, uint32_t *dwBase, uint32_t counter, uint
    }
 }
 
+
+static bool
+isTranscendentalOnly(latte::alu::Instruction &alu)
+{
+   latte::alu::Opcode opcode;
+
+   if (alu.word1.encoding == latte::alu::Encoding::OP2) {
+      opcode = latte::alu::op2info[alu.op2.inst];
+   } else {
+      opcode = latte::alu::op3info[alu.op3.inst];
+   }
+
+   if (opcode.flags & latte::alu::Opcode::Vector) {
+      return false;
+   }
+
+   if (opcode.flags & latte::alu::Opcode::Transcendental) {
+      return true;
+   }
+
+   return false;
+}
+
+static bool
+isVectorOnly(latte::alu::Instruction &alu)
+{
+   latte::alu::Opcode opcode;
+
+   if (alu.word1.encoding == latte::alu::Encoding::OP2) {
+      opcode = latte::alu::op2info[alu.op2.inst];
+   } else {
+      opcode = latte::alu::op3info[alu.op3.inst];
+   }
+
+   if (opcode.flags & latte::alu::Opcode::Transcendental) {
+      return false;
+   }
+
+   if (opcode.flags & latte::alu::Opcode::Vector) {
+      return true;
+   }
+
+   return false;
+}
+
+static uint32_t
+getUnit(bool units[5], latte::alu::Instruction &alu)
+{
+   bool isTrans = false;
+   auto elem = alu.word1.dstChan;
+
+   if (isTranscendentalOnly(alu)) {
+      isTrans = true;
+   } else if (isVectorOnly(alu)) {
+      isTrans = false;
+   } else if (units[elem]) {
+      isTrans = true;
+   } else {
+      isTrans = false;
+   }
+
+   if (isTrans) {
+      assert(units[4] == false);
+      units[4] = true;
+      return 4;
+   } else {
+      units[elem] = true;
+      return elem;
+   }
+}
+
 static bool
 decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 {
@@ -223,6 +294,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
       for (auto i = 0u; i < 5 && !last; ++i) {
          auto alu = *reinterpret_cast<latte::alu::Instruction*>(slots + slot);
          auto &opcode = latte::alu::op2info[alu.op2.inst];
+         auto unit = getUnit(units, alu);
 
          if (alu.word1.encoding == latte::alu::Encoding::OP2 && opcode.id == latte::alu::op2::NOP) {
             slot += 1;
@@ -241,6 +313,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
          ins->dest.clamp = alu.word1.clamp;
          ins->dest.id = alu.word1.dstGpr;
          ins->dest.chan = static_cast<latte::alu::Channel::Channel>(alu.word1.dstChan);
+         ins->unit = static_cast<shadir::AluInstruction::Unit>(unit);
 
          if (alu.word1.encoding == latte::alu::Encoding::OP2) {
             ins->name = opcode.name;

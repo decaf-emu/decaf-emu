@@ -1,4 +1,6 @@
-#include "latte_disassembler.h"
+#define NOMINMAX
+#include <spdlog/spdlog.h>
+#include "latte.h"
 #include "latte_opcodes.h"
 
 static const uint32_t indentSize = 2;
@@ -10,12 +12,7 @@ namespace latte
 
 struct DisassembleState
 {
-   DisassembleState(fmt::MemoryWriter &out) :
-      out(out)
-   {
-   }
-
-   fmt::MemoryWriter &out;
+   fmt::MemoryWriter out;
    std::string indent;
    uint32_t *words;
    uint32_t wordCount;
@@ -41,10 +38,10 @@ static uint32_t getUnit(bool units[5], latte::alu::Instruction &alu);
 static bool isVectorOnly(latte::alu::Instruction &alu);
 static bool isTranscendentalOnly(latte::alu::Instruction &alu);
 
-bool disassemble(fmt::MemoryWriter &out, uint8_t *binary, uint32_t size)
+bool disassemble(std::string &out, uint8_t *binary, uint32_t size)
 {
    bool result = true;
-   auto state = DisassembleState { out };
+   auto state = DisassembleState { };
 
    assert((size % 4) == 0);
    state.words = reinterpret_cast<uint32_t*>(binary);
@@ -81,12 +78,13 @@ bool disassemble(fmt::MemoryWriter &out, uint8_t *binary, uint32_t size)
       state.cfPC++;
 
       if ((cf.type == latte::cf::Type::Normal || cf.type == latte::cf::Type::Export) && cf.word1.endOfProgram) {
-         out << "END_OF_PROGRAM";
+         state.out << "END_OF_PROGRAM";
          endLine(state);
          break;
       }
    }
 
+   out = state.out.c_str();
    return result;
 }
 

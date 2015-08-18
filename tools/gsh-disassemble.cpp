@@ -6,7 +6,6 @@
 #include <iostream>
 #include "bigendianview.h"
 #include "gpu/latte.h"
-#include "gpu/latte_disassembler.h"
 
 namespace gsh
 {
@@ -83,13 +82,29 @@ bool parseGSH(BigEndianView &fh)
       block.data = fh.readRaw<char>(block.dataLength);
 
       if (block.type == gsh::Block::VertexShader || block.type == gsh::Block::PixelShader) {
-         fmt::MemoryWriter out;
+         std::string out;
          latte::disassemble(out, reinterpret_cast<uint8_t*>(block.data), block.dataLength);
-         std::cout << out.c_str() << std::endl;
+         std::cout << "----------------------------------------------" << std::endl;
+         std::cout << "                  Disassembly                 " << std::endl;
+         std::cout << "----------------------------------------------" << std::endl;
+         std::cout << out << std::endl;
+         std::cout << std::endl;
 
          latte::Shader shader;
          latte::decode(shader, reinterpret_cast<uint8_t*>(block.data), block.dataLength);
+         std::cout << "----------------------------------------------" << std::endl;
+         std::cout << "                    Blocks                    " << std::endl;
+         std::cout << "----------------------------------------------" << std::endl;
          latte::blockify(shader);
+         std::cout << std::endl;
+
+         std::string hlsl;
+         latte::generateHLSL(shader, hlsl);
+         std::cout << "----------------------------------------------" << std::endl;
+         std::cout << "                     HLSL                     " << std::endl;
+         std::cout << "----------------------------------------------" << std::endl;
+         std::cout << hlsl << std::endl;
+         std::cout << std::endl;
       }
    }
 
