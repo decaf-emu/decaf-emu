@@ -36,30 +36,14 @@ std::map<uint32_t, const char *> name = {
 
 std::map<uint32_t, Opcode> op2info = {
 #define ALU_OP2(name, value, srcs, flags) { value, { value, srcs, static_cast<Opcode::Flags>(flags), #name } },
-#define ALU_REDUC Opcode::Reduction
-#define ALU_VEC Opcode::Vector
-#define ALU_TRANS Opcode::Transcendental
-#define ALU_PRED_SET Opcode::PredSet
 #include "latte_opcodes_def.inl"
 #undef ALU_OP2
-#undef ALU_REDUC
-#undef ALU_VEC
-#undef ALU_TRANS
-#undef ALU_PRED_SET
 };
 
 std::map<uint32_t, Opcode> op3info = {
 #define ALU_OP3(name, value, srcs, flags) { value, { value, srcs, static_cast<Opcode::Flags>(flags), #name } },
-#define ALU_REDUC Opcode::Reduction
-#define ALU_VEC Opcode::Vector
-#define ALU_TRANS Opcode::Transcendental
-#define ALU_PRED_SET Opcode::PredSet
 #include "latte_opcodes_def.inl"
 #undef ALU_OP3
-#undef ALU_REDUC
-#undef ALU_VEC
-#undef ALU_TRANS
-#undef ALU_PRED_SET
 };
 
 } // namespace alu

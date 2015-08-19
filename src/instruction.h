@@ -132,12 +132,10 @@ union Instruction
       uint32_t : 6;
    };
    
-
    struct {
       uint32_t lk : 1;
       uint32_t : 31;
    };
-   
 
    struct {
       uint32_t : 6;

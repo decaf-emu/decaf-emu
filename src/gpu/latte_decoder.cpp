@@ -282,6 +282,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
       bool last = false;
       uint32_t *literalPtr = reinterpret_cast<uint32_t*>(slots + slot);
       auto literals = 0u;
+      shadir::AluReductionInstruction *reductionIns = nullptr;
 
       for (auto i = 0u; i < 5 && !last; ++i) {
          auto alu = *reinterpret_cast<latte::alu::Instruction*>(slots + slot + i);
@@ -338,6 +339,24 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
          getAluSource(ins->sources[0], literalPtr, state.group, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
          getAluSource(ins->sources[1], literalPtr, state.group, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
 
+         // Check whether to set sources to Int or Uint
+         if (opcode.flags & latte::alu::Opcode::IntIn) {
+            for (auto j = 0u; j < ins->numSources; ++j) {
+               ins->sources[j].valueType = shadir::AluSource::Int;
+            }
+         } else if (opcode.flags & latte::alu::Opcode::UintIn) {
+            for (auto j = 0u; j < ins->numSources; ++j) {
+               ins->sources[j].valueType = shadir::AluSource::Uint;
+            }
+         }
+
+         // Check whether to set dest to Int or Uint
+         if (opcode.flags & latte::alu::Opcode::IntOut) {
+            ins->dest.valueType = shadir::AluDest::Int;
+         } else if (opcode.flags & latte::alu::Opcode::UintOut) {
+            ins->dest.valueType = shadir::AluDest::Uint;
+         }
+
          // Special ALU ops before
          if (opcode.flags & latte::alu::Opcode::PredSet) {
             switch (aluID) {
@@ -365,7 +384,31 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
             }
          }
 
-         state.shader->code.push_back(ins);
+         // Check if we need to create a new reduction instruction
+         if (!reductionIns) {
+            if (ins->opType == shadir::AluInstruction::OP2) {
+               if (ins->op2 == latte::alu::op2::DOT4
+                   || ins->op2 == latte::alu::op2::DOT4_IEEE
+                   || ins->op2 == latte::alu::op2::CUBE
+                   || ins->op2 == latte::alu::op2::MAX4) {
+                  reductionIns = new latte::shadir::AluReductionInstruction();
+                  reductionIns->op2 = ins->op2;
+                  reductionIns->name = ins->name;
+                  reductionIns->cfPC = ins->cfPC;
+                  reductionIns->groupPC = ins->groupPC;
+                  state.shader->code.push_back(reductionIns);
+               }
+            }
+         }
+
+         if (reductionIns && unit < 4) {
+            // Add XYZW to reduction
+            assert(!reductionIns->units[unit]);
+            reductionIns->units[unit] = ins;
+         } else {
+            // Append to shader code
+            state.shader->code.push_back(ins);
+         }
 
          // Special ALU ops after
          if (opcode.flags & latte::alu::Opcode::PredSet) {

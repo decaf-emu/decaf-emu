@@ -85,7 +85,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\gpu\latte_genhlsl.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op2.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_reduction.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_cf.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_generator.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op3.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_tex.cpp" />
     <ClCompile Include="..\src\gpu\latte_opcodes.cpp" />
     <ClCompile Include="..\src\gpu\latte_blockify.cpp" />
     <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
@@ -93,6 +99,7 @@
     <ClCompile Include="..\tools\gsh-disassemble.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_opcodes.h" />
     <ClInclude Include="..\src\gpu\latte_shadir.h" />

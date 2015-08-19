@@ -13,7 +13,8 @@ struct Instruction
    {
       ControlFlow,
       ALU,
-      TEX
+      TEX,
+      AluReduction
    };
 
    Instruction(Type type) :
@@ -56,7 +57,15 @@ struct AluSource
       ConstantInt,
    };
 
+   enum ValueType
+   {
+      Float,
+      Int,
+      Uint
+   };
+
    Type type;
+   ValueType valueType = ValueType::Float;
    uint32_t id = 0;
    bool negate = false;
    bool absolute = false;
@@ -72,10 +81,18 @@ struct AluSource
 
 struct AluDest
 {
+   enum ValueType
+   {
+      Float,
+      Int,
+      Uint
+   };
+
    uint32_t id = 0;
    latte::alu::Channel::Channel chan = latte::alu::Channel::Unknown;
    bool clamp = false;
    bool scalar = false;
+   ValueType valueType = ValueType::Float;
 };
 
 struct AluInstruction : Instruction
@@ -115,7 +132,28 @@ struct AluInstruction : Instruction
    latte::alu::OutputModifier::OutputModifier outputModifier = latte::alu::OutputModifier::Off;
    bool updateExecutionMask = false;
    bool updatePredicate = false;
-   bool writeMask = false;
+   bool writeMask = true;
+};
+
+struct AluReductionInstruction : Instruction
+{
+   AluReductionInstruction() :
+      Instruction(Instruction::AluReduction)
+   {
+      for (auto i = 0u; i < 4; ++i) {
+         units[i] = nullptr;
+      }
+   }
+
+   ~AluReductionInstruction()
+   {
+      for (auto i = 0u; i < 4; ++i) {
+         delete units[i];
+      }
+   }
+
+   AluInstruction *units[4];
+   latte::alu::op2 op2;
 };
 
 struct TexRegister

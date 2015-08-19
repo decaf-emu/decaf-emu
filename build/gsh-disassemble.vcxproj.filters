@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\hlsl">
+      <UniqueIdentifier>{d8af15cd-a3f5-4484-a76b-0d34959b8922}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\hlsl">
+      <UniqueIdentifier>{e57b3144-622c-45b5-8052-facbfc3a93dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\tools\gsh-disassemble.cpp">
@@ -30,8 +36,26 @@
     <ClCompile Include="..\src\gpu\latte_opcodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_genhlsl.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_generator.cpp">
+      <Filter>Source Files\hlsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op2.cpp">
+      <Filter>Source Files\hlsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu.cpp">
+      <Filter>Source Files\hlsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_reduction.cpp">
+      <Filter>Source Files\hlsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op3.cpp">
+      <Filter>Source Files\hlsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_cf.cpp">
+      <Filter>Source Files\hlsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_tex.cpp">
+      <Filter>Source Files\hlsl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +67,9 @@
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_opcodes.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h">
+      <Filter>Header Files\hlsl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

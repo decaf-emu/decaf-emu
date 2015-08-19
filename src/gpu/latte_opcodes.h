@@ -401,7 +401,11 @@ struct Opcode
       Vector         = (1 << 0),
       Transcendental = (1 << 1),
       Reduction      = (1 << 2),
-      PredSet        = (1 << 3)
+      PredSet        = (1 << 3),
+      IntIn          = (1 << 4),
+      IntOut         = (1 << 5),
+      UintIn         = (1 << 6),
+      UintOut        = (1 << 7),
    };
 
    uint32_t id;

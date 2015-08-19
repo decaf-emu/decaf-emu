@@ -19,7 +19,8 @@ struct Label
       LoopEnd,
       ConditionalStart,
       ConditionalElse,
-      ConditionalEnd
+      ConditionalEnd,
+      Eliminated
    };
 
    Label(Type type, shadir::Instruction *ins) :
@@ -144,8 +145,8 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
             // Find the end of the jump
             auto jumpEnd = std::find_if(itr, shader.code.end(),
                                         [cfIns](auto &ins) {
-               return ins->cfPC == cfIns->addr;
-            });
+                                           return ins->cfPC == cfIns->addr;
+                                        });
 
             assert(jumpEnd != shader.code.end());
 
@@ -161,8 +162,8 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
                   // Find the real end of the jump
                   jumpEnd = std::find_if(jumpElse, shader.code.end(),
                                          [jumpEndCfIns](auto &ins) {
-                     return ins->cfPC == jumpEndCfIns->addr;
-                  });
+                                            return ins->cfPC == jumpEndCfIns->addr;
+                                         });
 
                   assert(jumpEnd != shader.code.end());
                }
@@ -183,6 +184,9 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
             // Create a conditional end label
             auto labelEnd = new Label { Label::ConditionalEnd, *jumpEnd };
             labels.push_back(labelEnd);
+
+            // Eliminate our JUMP instruction
+            labels.push_back(new Label { Label::Eliminated, ins });
 
             // Link start and end labels
             labelEnd->linkedLabel = labelStart;
