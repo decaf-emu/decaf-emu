@@ -1,4 +1,3 @@
-#define NOMINMAX
 #include <spdlog/spdlog.h>
 #include "gpu/latte.h"
 #include "gpu/hlsl/hlsl_generator.h"

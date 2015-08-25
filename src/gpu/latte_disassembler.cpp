@@ -1,4 +1,3 @@
-#define NOMINMAX
 #include <spdlog/spdlog.h>
 #include "latte.h"
 #include "latte_opcodes.h"
