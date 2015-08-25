@@ -432,7 +432,13 @@
     <ClCompile Include="..\src\gpu\latte_disassembler.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\latte.cpp">
+    <ClCompile Include="..\src\gpu\latte_blockify.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\latte_decoder.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\latte_opcodes.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
   </ItemGroup>
