@@ -63,7 +63,7 @@ struct be_wfunc_ptr
 
    ReturnType operator()(Args... args) {
       wfunc_ptr<ReturnType, Args...> ptr(static_cast<uint32_t>(address));
-      return ptr(...args);
+      return ptr(args...);
    }
 
    be_val<uint32_t> address;
