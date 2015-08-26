@@ -25,7 +25,7 @@ struct _ghs_iobuf {
 typedef _ghs_iobuf __ghs_iob[GHS_FOPEN_MAX];
 extern __ghs_iob* p_iob;
 
-typedef be_ptr<void> __ghs_iob_lock[FOPEN_MAX + 1];
+typedef be_ptr<void> __ghs_iob_lock[GHS_FOPEN_MAX + 1];
 extern __ghs_iob_lock* p_iob_lock;
 
 BOOL
