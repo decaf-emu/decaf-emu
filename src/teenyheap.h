@@ -98,6 +98,10 @@ public:
       mAllocSizes.erase(i);
    }
 
+   std::pair<void*, void*> getRange() const {
+      return std::make_pair((void*)mBuffer, (void*)(mBuffer + mSize));
+   }
+
 protected:
    void releaseBlock(FreeBlock block) {
       for (auto i = mFreeBlocks.begin(); i != mFreeBlocks.end(); ++i) {

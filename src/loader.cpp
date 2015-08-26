@@ -1,6 +1,7 @@
 #define ZLIB_CONST
 #include <cassert>
 #include <limits>
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <zlib.h>
@@ -58,6 +59,43 @@ Loader::initialise(ppcsize_t maxCodeSize)
 
    // Update MEM2 to ignore the code heap region
    OSSetMemBound(OSMemoryType::MEM2, mem2start + maxCodeSize, mem2size - maxCodeSize);
+}
+
+template<typename... Args>
+static void
+debugPrint(fmt::StringRef msg, Args... args) {
+   auto out = fmt::format(msg, args...);
+   out += "\n";
+   OutputDebugStringA(out.c_str());
+}
+
+void
+Loader::debugPrint()
+{
+   struct MySection {
+      LoadedModule *module;
+      LoadedSection *section;
+   };
+   std::vector<MySection> sections;
+
+   for (auto &module : mModules) {
+      for (auto &section : module.second->mSections) {
+         sections.emplace_back(MySection{ module.second, &section });
+      }
+   }
+
+   std::sort(sections.begin(), sections.end(), [](const MySection& i, const MySection& j) {
+      return i.section->start < j.section->start;
+   });
+
+   ::debugPrint("Sections:");
+   for (auto &section : sections) {
+      ::debugPrint("[{:08x}:{:08x}] {:<16} {}",
+         gMemory.untranslate(section.section->start),
+         gMemory.untranslate(section.section->end),
+         section.module->getName().c_str(),
+         section.section->name.c_str());
+   }
 }
 
 LoadedModule*
@@ -195,43 +233,58 @@ Loader::loadKernelModule(const std::string& name, KernelModule *module)
       }
    }
 
-   uint8_t *codeRegion = static_cast<uint8_t*>(OSAllocFromSystem((uint32_t)funcExports.size() * 8, 4));
-   for (auto &func : funcExports) {
-      // Allocate some space for the thunk
-      uint32_t *thunkAddr = reinterpret_cast<uint32_t*>(codeRegion);
-      codeRegion += 8;
+   std::vector<LoadedSection> loadedSections;
+   
+   uint32_t codeSize = (uint32_t)funcExports.size() * 8;
+   uint8_t *codeRegion = nullptr;
+   if (codeSize > 0) {
+      codeRegion = static_cast<uint8_t*>(OSAllocFromSystem(codeSize, 4));
 
-      // Write syscall thunk
-      auto kc = gInstructionTable.encode(InstructionID::kc);
-      kc.li = func->syscallID;
-      kc.aa = 1;
-      *(thunkAddr + 0) = byte_swap(kc.value);
+      loadedSections.emplace_back(LoadedSection{ ".text", codeRegion, codeRegion + codeSize });
 
-      auto bclr = gInstructionTable.encode(InstructionID::bclr);
-      bclr.bo = 0x1f;
-      *(thunkAddr + 1) = byte_swap(bclr.value);
+      for (auto &func : funcExports) {
+         // Allocate some space for the thunk
+         uint32_t *thunkAddr = reinterpret_cast<uint32_t*>(codeRegion);
+         codeRegion += 8;
 
-      // Add to exports list
-      exportsMap.emplace(func->name, thunkAddr);
+         // Write syscall thunk
+         auto kc = gInstructionTable.encode(InstructionID::kc);
+         kc.li = func->syscallID;
+         kc.aa = 1;
+         *(thunkAddr + 0) = byte_swap(kc.value);
 
-      // Save the PPC ptr for internal lookups
-      func->ppcPtr = thunkAddr;
+         auto bclr = gInstructionTable.encode(InstructionID::bclr);
+         bclr.bo = 0x1f;
+         *(thunkAddr + 1) = byte_swap(bclr.value);
+
+         // Add to exports list
+         exportsMap.emplace(func->name, thunkAddr);
+
+         // Save the PPC ptr for internal lookups
+         func->ppcPtr = thunkAddr;
+      }
    }
 
-   uint8_t *dataRegion = static_cast<uint8_t*>(OSAllocFromSystem(dataSize, 4));
-   for (auto &data : dataExports) {
-      // Allocate the same for this export
-      uint8_t *dataAddr = dataRegion;
-      dataRegion += data->size;
+   uint8_t *dataRegion = nullptr;
+   if (dataSize > 0) {
+      dataRegion = static_cast<uint8_t*>(OSAllocFromSystem(dataSize, 4));
 
-      // Add to exports list
-      exportsMap.emplace(data->name, dataAddr);
+      loadedSections.emplace_back(LoadedSection{ ".data", dataRegion, dataRegion + dataSize });
 
-      // Save the PPC ptr for internal lookups
-      data->ppcPtr = dataAddr;
+      for (auto &data : dataExports) {
+         // Allocate the same for this export
+         uint8_t *dataAddr = dataRegion;
+         dataRegion += data->size;
 
-      // Map host memory pointer to PPC region
-      *data->hostPtr = dataAddr;
+         // Add to exports list
+         exportsMap.emplace(data->name, dataAddr);
+
+         // Save the PPC ptr for internal lookups
+         data->ppcPtr = dataAddr;
+
+         // Map host memory pointer to PPC region
+         *data->hostPtr = dataAddr;
+      }
    }
 
    module->initialise();
@@ -243,6 +296,7 @@ Loader::loadKernelModule(const std::string& name, KernelModule *module)
    loadedMod->mDefaultStackSize = 0;
    loadedMod->mEntryPoint = 0;
    loadedMod->mExports = exportsMap;
+   loadedMod->mSections = loadedSections;
    loadedMod->mHandle = OSAllocFromSystem<LoadedModuleHandleData>();
    loadedMod->mHandle->ptr = loadedMod;
    return loadedMod;
@@ -389,7 +443,6 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
    assert(loadSegAddr);
    SequentialMemoryTracker loadSeg(loadSegAddr, info.loadSize);
 
-
    // Allocate
    {
       std::vector<uint8_t> sectionData;
@@ -426,6 +479,7 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
 
    // I am a bad person and I should feel bad
    std::map<void*, void*> trampolines;
+   void * trampSegStart = codeSeg.getCurrentAddr();
    auto getTramp = [&](void *target) {
       auto trampIter = trampolines.find(target);
       if (trampIter != trampolines.end()) {
@@ -713,6 +767,23 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
 
    }
 
+   // Create sections list
+   std::vector<LoadedSection> loadedSections;
+   for (auto& section : sections) {
+      if (section.header.flags & elf::SHF_ALLOC) {
+         if (section.header.type == elf::SHT_PROGBITS || section.header.type == elf::SHT_NOBITS) {
+            const char * sectionName = shStrTab + section.header.name;
+            uint8_t * sectionAddr = static_cast<uint8_t*>(section.virtAddress);
+            loadedSections.emplace_back(LoadedSection{ sectionName, sectionAddr, sectionAddr + section.virtSize });
+         }
+      }
+   }
+
+   void * trampSegEnd = codeSeg.getCurrentAddr();
+   if (trampSegEnd > trampSegStart) {
+      loadedSections.emplace_back(LoadedSection{ "loader_thunks", trampSegStart, trampSegEnd });
+   }
+
    // Free the load segment
    mCodeHeap->free(loadSegAddr);
 
@@ -723,6 +794,7 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
    loadedMod->mDefaultStackSize = info.stackSize;
    loadedMod->mEntryPoint = entryPoint;
    loadedMod->mExports = exports;
+   loadedMod->mSections = loadedSections;
    loadedMod->mHandle = OSAllocFromSystem<LoadedModuleHandleData>();
    loadedMod->mHandle->ptr = loadedMod;
    return loadedMod;

@@ -13,6 +13,12 @@ struct LoadedModuleHandleData
    class LoadedModule *ptr;
 };
 
+struct LoadedSection {
+   std::string name;
+   void * start;
+   void * end;
+};
+
 class LoadedModule
 {
    friend class Loader;
@@ -67,6 +73,7 @@ public:
 protected:
    LoadedModuleHandleData *mHandle;
    std::string mName;
+   std::vector<LoadedSection> mSections;
    std::map<std::string, void*> mExports;
    uint32_t mEntryPoint;
    uint32_t mDefaultStackSize;
@@ -83,6 +90,7 @@ public:
    LoadedModule * loadRPL(const std::string& name);
 
    const char * getUnimplementedData(uint32_t addr);
+   void debugPrint();
 
 protected:
    uint32_t registerUnimplementedData(const std::string& name);
