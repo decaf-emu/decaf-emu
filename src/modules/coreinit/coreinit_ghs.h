@@ -19,7 +19,10 @@ extern be_val<uint16_t>*
 p__gh_FOPEN_MAX;
 
 struct _ghs_iobuf {
-   UNKNOWN(0x10);
+   uint32_t unk1;
+   uint32_t unk2;
+   uint32_t unk3;
+   uint32_t unk4;
 };
 
 typedef _ghs_iobuf __ghs_iob[GHS_FOPEN_MAX];
