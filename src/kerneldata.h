@@ -9,7 +9,7 @@ struct KernelData : public KernelExport
    {
    }
 
-   p32<void> *vptr;
+   void **hostPtr;
    uint32_t size;
 };
 
@@ -19,10 +19,10 @@ namespace kernel
 // Create a KernelData export from a data pointer
 template<typename Type>
 inline KernelData *
-makeData(p32<Type> *value)
+makeData(Type **value)
 {
    auto data = new KernelData();
-   data->vptr = reinterpret_cast<p32<void>*>(value);
+   data->hostPtr = reinterpret_cast<void**>(value);
    data->size = sizeof(Type);
    return data;
 }

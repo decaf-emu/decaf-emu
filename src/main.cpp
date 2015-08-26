@@ -10,6 +10,7 @@
 #include "loader.h"
 #include "log.h"
 #include "memory.h"
+#include "modules/gameloader/gameloader.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"
@@ -26,6 +27,7 @@
 #include "system.h"
 #include "usermodule.h"
 #include "platform.h"
+#include "teenyheap.h"
 
 std::shared_ptr<spdlog::logger>
 gLog;
@@ -129,6 +131,7 @@ initialiseEmulator()
    JitManager::RegisterFunctions();
 
    // Kernel modules
+   GameLoader::RegisterFunctions();
    CoreInit::RegisterFunctions();
    ErrEula::RegisterFunctions();
    GX2::RegisterFunctions();
@@ -142,19 +145,20 @@ initialiseEmulator()
 
    // Initialise emulator systems
    gMemory.initialise();
+   gSystem.initialise();
    gInstructionTable.initialise();
    gJitManager.initialise();
-   gSystem.registerModule("coreinit", new CoreInit {});
-   gSystem.registerModule("erreula.rpl", new ErrEula {});
-   gSystem.registerModule("gx2", new GX2 {});
-   gSystem.registerModule("nn_ac", new NNAc {});
-   gSystem.registerModule("nn_act", new NNAct {});
-   gSystem.registerModule("nn_fp", new NNFp {});
-   gSystem.registerModule("nn_save", new NNSave {});
-   gSystem.registerModule("padscore", new PadScore {});
-   gSystem.registerModule("proc_ui", new ProcUI {});
-   gSystem.registerModule("zlib125", new Zlib125 {});
-   gSystem.initialiseModules();
+   gSystem.registerModule("gameloader.rpl", new GameLoader{});
+   gSystem.registerModule("coreinit.rpl", new CoreInit {});
+   gSystem.registerModule("gx2.rpl", new GX2 {});
+   gSystem.registerModule("nn_ac.rpl", new NNAc {});
+   gSystem.registerModule("nn_act.rpl", new NNAct {});
+   gSystem.registerModule("nn_fp.rpl", new NNFp {});
+   gSystem.registerModule("nn_save.rpl", new NNSave {});
+   gSystem.registerModule("proc_ui.rpl", new ProcUI {});
+   gSystem.registerModule("zlib125.rpl", new Zlib125 {});
+   gSystem.registerModule("padscore.rpl", new PadScore{});
+   gSystem.registerModule("erreula.rpl", new ErrEula{});
 }
 
 static bool
@@ -166,9 +170,6 @@ test(const std::string &as, const std::string &path)
 static bool
 play(const std::string &path)
 {
-   UserModule module;
-   Loader loader;
-
    // Setup filesystem
    VirtualFileSystem fs { "/" };
    fs.mount("/vol", std::make_unique<HostFileSystem>(path + "/data"));
@@ -198,74 +199,45 @@ play(const std::string &path)
 
    auto app = doc.child("app");
    auto rpx = std::string { app.child("argstr").child_value() };
-   module.maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
+   auto maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
 
-   // Read rpx file
-   fh = fs.openFile("/vol/code/" + rpx, FileSystem::Input | FileSystem::Binary);
+   // Set up stuff..
+   gLoader.initialise(maxCodeSize);
 
-   if (!fh) {
-      gLog->error("Error opening /vol/code/{}", rpx);
-      return false;
-   }
-
-   buffer.resize(fh->size());
-   fh->read(buffer.data(), buffer.size());
-   fh->close();
-
-   // Load the rpl into memory
-   gSystem.registerModule(rpx.c_str(), &module);
-
-   if (!loader.loadRPL(module, buffer.data(), buffer.size())) {
-      gLog->error("Could not load {}", rpx);
-      return false;
-   }
-
-   gLog->debug("Succesfully loaded {}", path);
-
-   // Initialise default heaps
-   // TODO: Call __preinit_user
-   CoreInitDefaultHeap();
+   // System preloaded modules
+   gLoader.loadRPL("gameloader");
+   gLoader.loadRPL("coreinit");
+   gLoader.loadRPL("gx2");
+   gLoader.loadRPL("nn_ac");
+   gLoader.loadRPL("nn_act");
+   gLoader.loadRPL("nn_fp");
+   gLoader.loadRPL("nn_save");
+   gLoader.loadRPL("proc_ui");
+   gLoader.loadRPL("zlib125");
 
    // Startup processor
    gProcessor.start();
 
-   // Create default threads
-   for (auto i = 0u; i < CoreCount; ++i) {
+   // Start the loader
+   {
+      GameLoaderInit(rpx.c_str());
+
       auto thread = OSAllocFromSystem<OSThread>();
-      auto stackSize = module.defaultStackSize;
+      auto stackSize = 2048;
       auto stack = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-      auto name = OSSprintfFromSystem("Default Thread %d", i);
+      auto name = OSSprintfFromSystem("Loader Thread");
+
+      auto gameLoader = gLoader.loadRPL("gameloader");
+      void *gameLoaderRun = gameLoader->findExport("GameLoaderRun");
 
       OSCreateThread(thread,
-                     0, 0, nullptr,
-                     stack + stackSize, stackSize,
-                     16,
-                     static_cast<OSThreadAttributes::Flags>(1 << i));
-
-      OSSetDefaultThread(i, thread);
+         0, 0, nullptr,
+         stack + stackSize, stackSize,
+         -2,
+         static_cast<OSThreadAttributes::Flags>(1 << 1));
       OSSetThreadName(thread, name);
+      OSRunThread(thread, gMemory.untranslate(gameLoaderRun), 0, nullptr);
    }
-
-   // Create interrupt threads
-   for (auto i = 0u; i < CoreCount; ++i) {
-      auto thread = OSAllocFromSystem<OSThread>();
-      auto stackSize = 16 * 1024;
-      auto stack = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-      auto name = OSSprintfFromSystem("Interrupt Thread %d", i);
-
-      OSCreateThread(thread,
-                     InterruptThreadEntryPoint, i, nullptr,
-                     stack + stackSize, stackSize,
-                     16,
-                     static_cast<OSThreadAttributes::Flags>(1 << i));
-
-      OSSetInterruptThread(i, thread);
-      OSSetThreadName(thread, name);
-      OSResumeThread(thread);
-   }
-
-   // Run thread 1
-   OSRunThread(OSGetDefaultThread(1), module.entryPoint, 0, nullptr);
 
    platform::ui::run();
 

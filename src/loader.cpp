@@ -6,643 +6,724 @@
 #include <zlib.h>
 #include "bigendianview.h"
 #include "elf.h"
+#include "filesystem.h"
 #include "instructiondata.h"
 #include "loader.h"
 #include "log.h"
 #include "memory.h"
 #include "modules/coreinit/coreinit_dynload.h"
 #include "modules/coreinit/coreinit_memory.h"
+#include "modules/coreinit/coreinit_memheap.h"
 #include "system.h"
+#include "systemtypes.h"
 #include "kernelmodule.h"
 #include "usermodule.h"
 #include "util.h"
+#include "teenyheap.h"
 
-static void
-loadFileInfo(elf::FileInfo &info, std::vector<elf::Section> &sections)
+Loader gLoader;
+
+static bool
+readFileInfo(BigEndianView &in, std::vector<elf::XSection> &sections, elf::FileInfo &info)
 {
    for (auto &section : sections) {
       if (section.header.type != elf::SHT_RPL_FILEINFO) {
          continue;
       }
 
-      auto in = BigEndianView { section.data.data(), section.data.size() };
-      elf::readFileInfo(in, info);
-      break;
+      std::vector<uint8_t> fileInfoData;
+      elf::readSectionData(in, section.header, fileInfoData);
+
+      auto fileInfoIn = BigEndianView{ fileInfoData.data(), fileInfoData.size() };
+      elf::readFileInfo(fileInfoIn, info);
+      return true;
    }
+
+   gLog->error("Failed to find RPLFileInfo section");
+   return false;
 }
 
-static void
-processSections(UserModule &module, std::vector<elf::Section> &sections, const char *strData)
+void
+Loader::initialise(ppcsize_t maxCodeSize)
 {
-   auto dataRange = std::make_pair(0u, 0u);
-   auto codeRange = std::make_pair(0u, 0u);
+   // Get the MEM2 Region
+   be_val<uint32_t> mem2start, mem2size;
+   OSGetMemBound(OSMemoryType::MEM2, &mem2start, &mem2size);
 
-   // Find all code & data sections and their address space
-   for (auto i = 0u; i < sections.size(); ++i) {
-      auto &rplSection = sections[i];
-      auto &header = rplSection.header;
+   // Allocate MEM2 Region
+   gMemory.alloc(mem2start, mem2size);
 
-      if (header.type != elf::SHT_PROGBITS && header.type != elf::SHT_NOBITS) {
-         continue;
+   // Steal some space for code heap
+   mCodeHeap = new TeenyHeap(gMemory.translate(mem2start), maxCodeSize);
+
+   // Update MEM2 to ignore the code heap region
+   OSSetMemBound(OSMemoryType::MEM2, mem2start + maxCodeSize, mem2size - maxCodeSize);
+}
+
+LoadedModule*
+Loader::loadRPL(const std::string& name)
+{
+   // Strip the .rpl extension
+   std::string moduleName = name;
+   if (moduleName.size() < 4 || 
+      (moduleName.substr(moduleName.size() - 4) != ".rpl" && 
+         moduleName.substr(moduleName.size() - 4) != ".rpx")) {
+      moduleName = moduleName + ".rpl";
+   }
+
+   // Check if we already have this module loaded
+   auto moduleIter = mModules.find(moduleName);
+   if (moduleIter != mModules.end()) {
+      return moduleIter->second;
+   }
+
+   // Try to load the module from somewhere
+   LoadedModule * loadedModule = nullptr;
+
+   // Try to find module in system kernel library list
+   if (!loadedModule) {
+      KernelModule *kernelModule = gSystem.findModule(moduleName.c_str());
+      if (kernelModule) {
+         // Found a kernel module with this name.
+         loadedModule = loadKernelModule(moduleName, kernelModule);
       }
+   }
 
-      auto section = new UserModule::Section();
-      section->index = i;
-      section->address = header.addr;
-      section->name = strData + header.name;
-      section->size = static_cast<uint32_t>(rplSection.data.size());
+   // Try to find module in the game code directory
+   if (!loadedModule) {
+      // Read rpx file
+      auto fs = gSystem.getFileSystem();
+      auto fh = fs->openFile("/vol/code/" + moduleName, FileSystem::Input | FileSystem::Binary);
 
-      if (header.type == elf::SHT_NOBITS) {
-         section->size = header.size;
+      if (fh->good()) {
+         auto buffer = std::vector<uint8_t>(fh->size());
+         fh->read(buffer.data(), buffer.size());
+         fh->close();
+
+         loadedModule = loadRPL(moduleName, buffer);
       }
+   }
 
-      auto start = section->address;
-      auto end = section->address + section->size;
+   if (!loadedModule) {
+      gLog->error("Failed to load module {}", moduleName);
+      return nullptr;
+   }
 
-      if (header.flags & elf::SHF_EXECINSTR) {
-         section->type = UserModule::Section::Code;
-         
-         if (codeRange.first == 0 || start < codeRange.first) {
-            codeRange.first = start;
-         }
+   mModules.emplace(moduleName, loadedModule);
 
-         if (codeRange.second == 0 || end > codeRange.second) {
-            codeRange.second = end;
-         }
+   gLog->info("Loaded module {}", moduleName);
+   return loadedModule;
+}
+
+const elf::XSection* findSection(const std::vector<elf::XSection>& sections, const char *shStrTab, const std::string& name) {
+   for (auto &section : sections) {
+      auto sectionName = shStrTab + section.header.name;
+      if (sectionName == name) {
+         return &section;
+      }
+   }
+   return nullptr;
+}
+
+void * calculateSdaBase(const elf::XSection *sdata, const elf::XSection *sbss) {
+   uint8_t * start;
+   uint8_t * end;
+
+   if (sdata && sbss) {
+      auto sdataAddr = static_cast<uint8_t*>(sdata->virtAddress);
+      auto sbssAddr = static_cast<uint8_t*>(sbss->virtAddress);
+      start = std::min(sdataAddr, sbssAddr);
+      end = std::max(sdataAddr + sdata->virtSize, sbssAddr + sbss->virtSize);
+   } else if (sdata) {
+      auto sdataAddr = static_cast<uint8_t*>(sdata->virtAddress);
+      start = sdataAddr;
+      end = sdataAddr + sdata->virtSize;
+   } else if (sbss) {
+      auto sbssAddr = static_cast<uint8_t*>(sbss->virtAddress);
+      start = sbssAddr;
+      end = sbssAddr + sbss->virtSize;
+   } else {
+      return nullptr;
+   }
+
+   if (end - start > 0xffff) {
+      gLog->error("small data and bss do not fit in a 16 bit range");
+   }
+
+   return ((end - start) / 2) + start;
+}
+
+static elf::Symbol
+getSymbol(BigEndianView &symSecView, uint32_t index)
+{
+   elf::Symbol sym;
+   symSecView.seek(index * sizeof(elf::Symbol));
+   elf::readSymbol(symSecView, sym);
+   return sym;
+}
+
+static uint32_t
+getSymbolAddress(const elf::Symbol& sym, std::vector<elf::XSection>& sections)
+{
+   auto symSec = sections[sym.shndx];
+   uint32_t virtAddr = gMemory.untranslate(symSec.virtAddress);
+   return sym.value - symSec.header.addr + virtAddr;
+}
+
+LoadedModule *
+Loader::loadKernelModule(const std::string& name, KernelModule *module)
+{
+   KernelExportMap exports = module->getExportMap();
+
+   std::vector<KernelFunction*> funcExports;
+   std::vector<KernelData*> dataExports;
+   std::map<std::string, void*> exportsMap;
+   uint32_t dataSize = 0;
+
+   for (auto &i : exports) {
+      auto exportInfo = i.second;
+      if (exportInfo->type == KernelExport::Function) {
+         auto funcExport = static_cast<KernelFunction*>(exportInfo);
+         funcExports.emplace_back(funcExport);
+      } else if (exportInfo->type == KernelExport::Data) {
+         auto dataExport = static_cast<KernelData*>(exportInfo);
+         dataSize += dataExport->size;
+         dataExports.emplace_back(dataExport);
       } else {
-         section->type = UserModule::Section::Data;
+         gLog->error("Unexpected KernelExport type");
+         return nullptr;
+      }
+   }
 
-         if (dataRange.first == 0 || start < dataRange.first) {
-            dataRange.first = start;
+   uint8_t *codeRegion = static_cast<uint8_t*>(OSAllocFromSystem((uint32_t)funcExports.size() * 8, 4));
+   for (auto &func : funcExports) {
+      // Allocate some space for the thunk
+      uint32_t *thunkAddr = reinterpret_cast<uint32_t*>(codeRegion);
+      codeRegion += 8;
+
+      // Write syscall thunk
+      auto kc = gInstructionTable.encode(InstructionID::kc);
+      kc.li = func->syscallID;
+      kc.aa = 1;
+      *(thunkAddr + 0) = byte_swap(kc.value);
+
+      auto bclr = gInstructionTable.encode(InstructionID::bclr);
+      bclr.bo = 0x1f;
+      *(thunkAddr + 1) = byte_swap(bclr.value);
+
+      // Add to exports list
+      exportsMap.emplace(func->name, thunkAddr);
+
+      // Save the PPC ptr for internal lookups
+      func->ppcPtr = thunkAddr;
+   }
+
+   uint8_t *dataRegion = static_cast<uint8_t*>(OSAllocFromSystem(dataSize, 4));
+   for (auto &data : dataExports) {
+      // Allocate the same for this export
+      uint8_t *dataAddr = dataRegion;
+      dataRegion += data->size;
+
+      // Add to exports list
+      exportsMap.emplace(data->name, dataAddr);
+
+      // Save the PPC ptr for internal lookups
+      data->ppcPtr = dataAddr;
+
+      // Map host memory pointer to PPC region
+      *data->hostPtr = dataAddr;
+   }
+
+   module->initialise();
+
+   LoadedModule *loadedMod = new LoadedModule();
+   loadedMod->mName = name;
+   loadedMod->mSdaBase = 0;
+   loadedMod->mSda2Base = 0;
+   loadedMod->mDefaultStackSize = 0;
+   loadedMod->mEntryPoint = 0;
+   loadedMod->mExports = exportsMap;
+   loadedMod->mHandle = OSAllocFromSystem<LoadedModuleHandleData>();
+   loadedMod->mHandle->ptr = loadedMod;
+   return loadedMod;
+}
+
+uint32_t
+Loader::registerUnimplementedData(const std::string& name)
+{
+   auto thunkIter = mUnimplementedData.find(name);
+   if (thunkIter != mUnimplementedData.end()) {
+      return thunkIter->second | 0x800;
+   }
+
+   int newId = (int)mUnimplementedData.size();
+   assert(newId <= 0xFF);
+   uint32_t fakeAddr = 0xFFF00000 | (newId << 12);
+
+   mUnimplementedData.emplace(name, fakeAddr);
+   return fakeAddr | 0x800;
+}
+
+const char *
+Loader::getUnimplementedData(uint32_t addr)
+{
+   static char tempStr[2048];
+
+   for (auto &data : mUnimplementedData) {
+      if (data.second == (addr & 0xFFFFF000)) {
+         int offset = static_cast<int>(addr & 0xFFF) - 0x800;
+         if (offset > 0) {
+            sprintf_s(tempStr, "%s + %d", data.first.c_str(), offset);
+         } else if (offset < 0) {
+            sprintf_s(tempStr, "%s - %d", data.first.c_str(), -offset);
+         } else {
+            sprintf_s(tempStr, "%s", data.first.c_str());
          }
-
-         if (dataRange.second == 0 || end > dataRange.second) {
-            dataRange.second = end;
-         }
+         return tempStr;
       }
-
-      rplSection.section = section;
-      module.sections.push_back(section);
-      module.sectionMap[section->name] = section;
    }
-
-   /* SHT_RPL_EXPORTS
-   u32 num_entries
-   u32 code_sig
-   struct {
-     u32 hash?
-     u32 type?
-     u32 ?
-     u32 ?
-     null_terminated_string func_name
-     u32 ?
-     u32 ?
-     u32 ?
-     u16 ?
-   } entries[num_entries];
-   */
-
-   // Create thunk sections for SHT_RPL_IMPORTS!
-   for (auto i = 0u; i < sections.size(); ++i) {
-      auto &rplSection = sections[i];
-      auto &header = rplSection.header;
-
-      if (header.type != elf::SHT_RPL_IMPORTS) {
-         continue;
-      }
-
-      auto section = new UserModule::Section();
-      section->index = i;
-      section->name = strData + header.name;
-      section->library = rplSection.data.data() + 8;
-      section->size = static_cast<uint32_t>(rplSection.data.size());
-
-      if (header.type == elf::SHT_NOBITS) {
-         section->size = header.size;
-      }
-
-      if (header.flags & elf::SHF_EXECINSTR) {
-         section->type = UserModule::Section::CodeImports;
-         section->address = alignUp(codeRange.second, header.addralign);
-         codeRange.second = section->address + section->size;
-      } else {
-         section->type = UserModule::Section::DataImports;
-         section->address = alignUp(dataRange.second, header.addralign);
-         dataRange.second = section->address + section->size;
-      }
-
-      rplSection.section = section;
-      module.sections.push_back(section);
-      module.sectionMap[section->name] = section;
-   }
-
-   // Allocate code & data sections in memory
-   module.codeAddressRange = codeRange;
-   module.dataAddressRange = dataRange;
+   return "UNKNOWN";
 }
 
-static void
-relocateSections(std::vector<elf::Section> &sections, uint32_t origCode, uint32_t newCode, uint32_t origData, uint32_t newData)
+void *
+Loader::registerUnimplementedFunction(const std::string& name)
 {
-   int32_t diffCode = static_cast<int32_t>(newCode) - static_cast<int32_t>(origCode);
-   int32_t diffData = static_cast<int32_t>(newData) - static_cast<int32_t>(origData);
-
-   for (auto &rplSection : sections) {
-      auto section = rplSection.section;
-
-      if (!section) {
-         continue;
-      }
-
-      if (rplSection.section->type == UserModule::Section::Code) {
-         section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffCode);
-      } else if (rplSection.section->type == UserModule::Section::Data) {
-         section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffData);
-      } else if (rplSection.section->type == UserModule::Section::DataImports) {
-         section->address = static_cast<uint32_t>(static_cast<int32_t>(section->address) + diffData);
-      }
-   }
-}
-
-static void
-loadSections(std::vector<elf::Section> &sections)
-{
-   for (auto &rplSection : sections) {
-      auto section = rplSection.section;
-
-      if (!section) {
-         continue;
-      }
-
-      if (rplSection.header.type == elf::SHT_NOBITS) {
-         auto ptr = gMemory.translate(section->address);
-         memset(ptr, 0, section->size);
-      } else if (rplSection.section->type == UserModule::Section::Code || rplSection.section->type == UserModule::Section::Data) {
-         auto ptr = gMemory.translate(section->address);
-         memcpy(ptr, rplSection.data.data(), rplSection.data.size());
-      }
-   }
-}
-
-static void
-processSmallDataSections(UserModule &module)
-{
-   auto findSectionRange = [](auto data, auto bss) {
-      uint32_t start, end;
-
-      if (data && bss) {
-         start = std::min(data->address, bss->address);
-         end = std::max(data->address + data->size, bss->address + bss->size);
-      } else if (data) {
-         start = data->address;
-         end = data->address + data->size;
-      } else if (bss) {
-         start = bss->address;
-         end = bss->address + bss->size;
-      } else {
-         start = 0;
-         end = 0;
-      }
-
-      return std::make_pair(start, end);
-   };
-
-   // Find _SDA_BASE_
-   auto data = module.findSection(".sdata");
-   auto bss = module.findSection(".sbss");
-   auto range = findSectionRange(data, bss);
-
-   if ((range.second - range.first) > 0xffff) {
-      gLog->error(".sdata and .sbss do not fit in a 16 bit range");
+   auto thunkIter = mUnimplementedFunctions.find(name);
+   if (thunkIter != mUnimplementedFunctions.end()) {
+      return thunkIter->second;
    }
 
-   module.sdaBase = ((range.second - range.first) / 2) + range.first;
+   uint32_t syscallId = gSystem.registerUnimplementedFunction(name.c_str());
 
-   // Find _SDA2_BASE_
-   data = module.findSection(".sdata2");
-   bss = module.findSection(".sbss2");
-   range = findSectionRange(data, bss);
+   uint32_t *thunkAddr = static_cast<uint32_t*>(OSAllocFromSystem(8, 4));
 
-   if ((range.second - range.first) > 0xffff) {
-      gLog->error(".sdata and .sbss do not fit in a 16 bit range");
-   }
-
-   module.sda2Base = ((range.second - range.first) / 2) + range.first;
-}
-
-static KernelModule *
-findSystemModule(const char *name)
-{
-   return gSystem.findModule(name);
-}
-
-static KernelFunction *
-findKernelFunction(ModuleSymbol *msym, const char *name)
-{
-   if (!msym || !msym->systemModule) {
-      return nullptr;
-   }
-
-   auto module = msym->systemModule;
-   auto sysexp = module->findExport(name);
-
-   if (!sysexp) {
-      return nullptr;
-   }
-
-   assert(sysexp->type == KernelExport::Function);
-   return reinterpret_cast<KernelFunction*>(sysexp);
-}
-
-static KernelData *
-findKernelData(ModuleSymbol *msym, const char *name)
-{
-   if (!msym || !msym->systemModule) {
-      return nullptr;
-   }
-
-   auto module = msym->systemModule;
-   auto sysexp = module->findExport(name);
-
-   if (!sysexp) {
-      return nullptr;
-   }
-
-   assert(sysexp->type == KernelExport::Data);
-   return reinterpret_cast<KernelData*>(sysexp);
-}
-
-static void
-writeFunctionThunk(uint32_t address, uint32_t id)
-{
-   // Write syscall with symbol id
+   // Write syscall thunk
    auto kc = gInstructionTable.encode(InstructionID::kc);
-   kc.li = id;
+   kc.li = syscallId;
    kc.aa = 0;
-   gMemory.write(address, kc.value);
+   *(thunkAddr + 0) = byte_swap(kc.value);
 
-   // Return by Branch to LR
    auto bclr = gInstructionTable.encode(InstructionID::bclr);
    bclr.bo = 0x1f;
-   gMemory.write(address + 4, bclr.value);
+   *(thunkAddr + 1) = byte_swap(bclr.value);
+
+   mUnimplementedFunctions.emplace(name, thunkAddr);
+   return thunkAddr;
 }
 
-static void
-writeDataThunk(uint32_t address, uint32_t id)
-{
-   // Write some invalid known value to show up when debugging
-   gMemory.write<uint32_t>(address, 0xddddd000 | id);
-}
-
-static SymbolInfo *
-createFunctionSymbol(uint32_t index, elf::Section &section, const char *name, uint32_t virtAddress, uint32_t size)
-{
-   auto symbol = new FunctionSymbol();
-   symbol->index = index;
-   symbol->name = name;
-   symbol->size = size;
-
-   if (section.header.type == elf::SHT_RPL_IMPORTS) {
-      symbol->functionType = FunctionSymbol::Kernel;
-      symbol->kernelFunction = findKernelFunction(section.msym, name);
-
-      if (symbol->kernelFunction) {
-         symbol->address = symbol->kernelFunction->vaddr;
-      } else {
-         symbol->address = virtAddress;
-
-         if (symbol->address) {
-            writeFunctionThunk(symbol->address, index);
-         }
-      }
-   } else {
-      symbol->functionType = FunctionSymbol::User;
-      symbol->address = virtAddress;
+class SequentialMemoryTracker {
+public:
+   SequentialMemoryTracker(void *ptr, size_t size)
+      : mStart(static_cast<uint8_t*>(ptr)), mEnd(mStart + size), mPtr(mStart)
+   {
    }
 
-   return symbol;
-}
-
-static SymbolInfo *
-createDataSymbol(uint32_t index, elf::Section &section, const char *name, uint32_t virtAddress, uint32_t size)
-{
-   auto symbol = new DataSymbol();
-   symbol->index = index;
-   symbol->name = name;
-   symbol->size = size;
-
-   if (section.header.type == elf::SHT_RPL_IMPORTS) {
-      symbol->dataType = DataSymbol::Kernel;
-      symbol->kernelData = findKernelData(section.msym, name);
-
-      if (symbol->kernelData) {
-         symbol->address = static_cast<uint32_t>(*symbol->kernelData->vptr);
-      } else {
-         symbol->address = virtAddress;
-
-         if (symbol->address) {
-            writeDataThunk(symbol->address, index);
-         }
-      }
-   } else {
-      symbol->dataType = DataSymbol::User;
-      symbol->address = virtAddress;
+   void * getCurrentAddr() const {
+      return mPtr;
    }
 
-   return symbol;
-}
+   void * get(size_t size, uint32_t alignment = 4) {
+      // Ensure section alignment
+      auto alignOffset = alignUp(mPtr, alignment) - mPtr;
+      size += alignOffset;
 
-static SymbolInfo *
-createModuleSymbol(uint32_t index, const char *library, const char *name, uint32_t virtAddress, uint32_t size)
-{
-   auto symbol = new ModuleSymbol();
-   symbol->index = index;
-   symbol->name = name;
-   symbol->address = virtAddress;
-   symbol->size = size;
+      // Double-check alignment
+      void * ptrOut = mPtr + alignOffset;
+      assert(alignUp(ptrOut, alignment) == ptrOut);
 
-   if (library) {
-      symbol->systemModule = findSystemModule(library);
-   } else {
-      symbol->systemModule = nullptr;
+      // Make sure we have room
+      assert(mPtr + size <= mEnd);
+
+      mPtr += size;
+      return ptrOut;
    }
 
-   if (symbol->systemModule) {
-      symbol->moduleType = ModuleSymbol::System;
-   } else {
-      symbol->moduleType = ModuleSymbol::User;
-   }
+protected:
+   uint8_t *mStart;
+   uint8_t *mEnd;
+   uint8_t *mPtr;
 
-   return symbol;
-}
+};
 
-static void
-processSymbols(UserModule &module, elf::Section &symtab, std::vector<elf::Section> &sections)
+LoadedModule*
+Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
 {
-   auto in = BigEndianView { symtab.data.data(), symtab.data.size() };
-   auto count = symtab.data.size() / sizeof(elf::Symbol);
-   auto &strtab = sections[symtab.header.link];
-
-   // TODO: Support more than one symbol section
-   assert(module.symbols.size() == 0);
-   module.symbols.resize(count);
-
-   for (auto i = 0u; i < count; ++i) {
-      SymbolInfo *symbol = nullptr;
-      auto header = elf::Symbol { };
-      elf::readSymbol(in, header);
-
-      if (header.shndx >= elf::SHN_LORESERVE) {
-         continue;
-      }
-
-      // Calculate relocated address
-      auto &impsec = sections[header.shndx];
-      auto offset = header.value - impsec.header.addr;
-      auto baseAddress = impsec.section ? impsec.section->address : 0;
-      auto virtAddress = baseAddress + offset;
-
-      // Create symbol data
-      auto name = strtab.data.data() + header.name;
-      auto binding = header.info >> 4;
-      auto type = header.info & 0xf;
-
-      if (type == elf::STT_FUNC) {
-         symbol = createFunctionSymbol(i, impsec, name, virtAddress, header.size);
-      } else if (type == elf::STT_OBJECT) {
-         symbol = createDataSymbol(i, impsec, name, virtAddress, header.size);
-      } else if (type == elf::STT_SECTION) {
-         const char *library = nullptr;
-
-         if (impsec.section) {
-            library = impsec.section->library.c_str();
-         }
-
-         symbol = createModuleSymbol(i, library, name, virtAddress, header.size);
-         impsec.msym = reinterpret_cast<ModuleSymbol*>(symbol);
-      } else {
-         symbol = new SymbolInfo();
-         symbol->type = SymbolInfo::Invalid;
-         symbol->index = i;
-         symbol->name = name;
-         symbol->address = virtAddress;
-      }
-
-      module.symbols[i] = symbol;
-   }
-}
-
-static void
-processRelocations(UserModule &module, elf::Section &section, std::vector<elf::Section> &sections)
-{
-   // TODO: Support more than one symbol section (symsec)
-   auto &symsec = sections[section.header.link];
-   auto in = BigEndianView { section.data.data(), section.data.size() };
-
-   // Find our relocation section addresses
-   auto &relsec = sections[section.header.info];
-   auto baseAddress = relsec.header.addr;
-   auto virtAddress = relsec.section->address;
-
-   // EABI sda sections
-   auto sdata  = module.findSection(".sdata");
-   auto sbss   = module.findSection(".sbss");
-   auto sdata0 = module.findSection(".sdata0");
-   auto sbss0  = module.findSection(".sbss0");
-   auto sdata2 = module.findSection(".sdata2");
-   auto sbss2  = module.findSection(".sbss2");
-
-   while (!in.eof()) {
-      elf::Rela rela;
-      elf::readRelocationAddend(in, rela);
-
-      auto index = rela.info >> 8;
-      auto type  = rela.info & 0xff;
-
-      auto &symbol = module.symbols[index];
-      auto value = symbol->address + rela.addend;
-      auto addr = (rela.offset - baseAddress) + virtAddress;
-
-      auto ptr8 = gMemory.translate(addr);
-      auto ptr16 = reinterpret_cast<uint16_t*>(ptr8);
-      auto ptr32 = reinterpret_cast<uint32_t*>(ptr8);
-
-      switch (type) {
-      case elf::R_PPC_ADDR32:
-         *ptr32 = byte_swap(value);
-         break;
-      case elf::R_PPC_ADDR16_LO:
-         *ptr16 = byte_swap<uint16_t>(value & 0xffff);
-         break;
-      case elf::R_PPC_ADDR16_HI:
-         *ptr16 = byte_swap<uint16_t>(value >> 16);
-         break;
-      case elf::R_PPC_ADDR16_HA:
-         *ptr16 = byte_swap<uint16_t>((value + 0x8000) >> 16);
-         break;
-      case elf::R_PPC_REL24:
-         *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03fffffc) | ((value - addr) & 0x03fffffc));
-         break;
-      case elf::R_PPC_EMB_SDA21: {
-         auto ins = Instruction { byte_swap(*ptr32) };
-         auto section = module.findSection(value);
-         uint32_t base;
-         int32_t offset;
-
-         if (section == sdata || section == sbss) {
-            ins.rA = 13;
-            base = module.sdaBase;
-         } else if (section == sdata0 || section == sbss0) {
-            ins.rA = 0;
-            base = 0;
-         } else if (section == sdata2 || section == sbss2) {
-            ins.rA = 2;
-            base = module.sda2Base;
-         } else {
-            gLog->error("Invalid relocation for EMB_SDA21: symbol target addr {:x}", value);
-            break;
-         }
-
-         offset = static_cast<int32_t>(value) - static_cast<int32_t>(base);
-
-         if (offset < std::numeric_limits<int16_t>::min() || offset > std::numeric_limits<int16_t>::max()) {
-            gLog->error("Expected SDA relocation {:x} to be within signed 16 bit offset of base {:x}", value, addr);
-            break;
-         }
-
-         ins.simm = offset;
-         *ptr32 = byte_swap(ins.value);
-         break;
-      }
-      default:
-         gLog->error("Unknown relocation type {}", type);
-      }
-   }
-}
-
-bool
-Loader::loadRPL(UserModule &module, const char *buffer, size_t size)
-{
-   auto in = BigEndianView { buffer, size };
-   auto header = elf::Header { };
-   auto info = elf::FileInfo { };
-   auto sections = std::vector<elf::Section> { };
+   auto in = BigEndianView{ data.data(), data.size() };
 
    // Read header
+   auto header = elf::Header{};
    if (!elf::readHeader(in, header)) {
       gLog->error("Failed elf::readHeader");
-      return false;
+      return nullptr;
    }
 
    // Check it is a CAFE abi rpl
    if (header.abi != elf::EABI_CAFE) {
       gLog->error("Unexpected elf abi found {:02x} expected {:02x}", header.abi, elf::EABI_CAFE);
-      return false;
+      return nullptr;
    }
 
    // Read sections
-   if (!elf::readSections(in, header, sections)) {
-      gLog->error("Failed elf::readSections");
-      return false;
-   }
-
-   // Process sections, find our data and code sections
-   processSections(module, sections, sections[header.shstrndx].data.data());
-
-   // Update EntryInfo
-   loadFileInfo(info, sections);
-   module.entryPoint = header.entry;
-   module.defaultStackSize = info.stackSize;
-
-   // Allocate code & data sections in memory
-   auto codeStart = module.codeAddressRange.first;
-   auto codeSize = module.maxCodeSize;
-   gMemory.alloc(codeStart, codeSize); // TODO: Append code to end of other loaded code sections
-
-   auto dataStart = alignUp(codeStart + codeSize, 4096);
-   auto dataSize = alignUp(module.dataAddressRange.second - module.dataAddressRange.first, 4096);
-   auto dataEnd = dataStart + dataSize;
-   gMemory.alloc(dataStart, dataSize); // TODO: Use OSDynLoad_MemAlloc for data section allocation
-
-   // Update MEM2 memory bounds
-   be_val<uint32_t> mem2start, mem2size;
-   OSGetMemBound(OSMemoryType::MEM2, &mem2start, &mem2size);
-   OSSetMemBound(OSMemoryType::MEM2, dataEnd, mem2size - (dataEnd - mem2start));
-
-   // Relocate sections
-   relocateSections(sections, module.codeAddressRange.first, codeStart, module.dataAddressRange.first, dataStart);
-
-   module.codeAddressRange.first = codeStart;
-   module.codeAddressRange.second = codeStart + codeSize;
-
-   module.dataAddressRange.first = dataStart;
-   module.dataAddressRange.second = dataStart + dataSize;
-
-   // Relocate entry point
-   for (auto i = 0u; i < sections.size(); ++i) {
-      auto &section = sections[i];
-
-      if (section.header.addr <= header.entry && section.header.addr + section.data.size() > header.entry) {
-         auto offset = section.section->address - section.header.addr;
-         module.entryPoint = header.entry + offset;
-         break;
-      }
-   }
-
-   // Load sections into memory
-   loadSections(sections);
-
-   // Process small data sections
-   processSmallDataSections(module);
-
-   // Process symbols
-   // TODO: Support more than one symbol section?
-   for (auto i = 0u; i < sections.size(); ++i) {
-      auto &section = sections[i];
-
-      if (section.header.type != elf::SHT_SYMTAB) {
-         continue;
-      }
-
-      processSymbols(module, section, sections);
-   }
-
-   // Process relocations
-   for (auto i = 0u; i < sections.size(); ++i) {
-      auto &section = sections[i];
-
-      if (section.header.type != elf::SHT_RELA) {
-         continue;
-      }
-
-      processRelocations(module, section, sections);
+   auto sections = std::vector<elf::XSection>{};
+   if (!elf::readSectionHeaders(in, header, sections)) {
+      gLog->error("Failed elf::readSectionHeaders");
+      return nullptr;
    }
    
-   if (0) {
-      // Print address ranges
-      gLog->debug("Loaded module!");
-      gLog->debug("Code {:08x} -> {:08x}", module.codeAddressRange.first, module.codeAddressRange.second);
-      gLog->debug("Data {:08x} -> {:08x}", module.dataAddressRange.first, module.dataAddressRange.second);
+   // Read FileInfo data
+   elf::FileInfo info;
+   readFileInfo(in, sections, info);
 
-      // Print all sections
-      gLog->debug("Sections:");
+   void *codeSegAddr = mCodeHeap->alloc(info.textSize, info.textAlign);
+   assert(codeSegAddr);
+   SequentialMemoryTracker codeSeg(codeSegAddr, info.textSize);
 
-      for (auto i = 0u; i < module.sections.size(); ++i) {
-         auto section = module.sections[i];
-         gLog->debug("{:08x} {} {:x}", section->address, section->name, section->size);
-      }
-      
-      // Print all symbols
-      gLog->debug("Symbols:");
+   void *dataSegAddr = nullptr;
+   if (OSDynLoad_MemAlloc(info.dataSize, info.dataAlign, &dataSegAddr) != 0) {
+      dataSegAddr = nullptr;
+   }
+   assert(dataSegAddr);
+   SequentialMemoryTracker dataSeg(dataSegAddr, info.dataSize);
 
-      for (auto i = 0u; i < module.symbols.size(); ++i) {
-         auto symbol = module.symbols[i];
+   void *loadSegAddr = mCodeHeap->alloc(info.loadSize, info.loadAlign);
+   assert(loadSegAddr);
+   SequentialMemoryTracker loadSeg(loadSegAddr, info.loadSize);
 
-         if (symbol && symbol->name.size()) {
-            gLog->debug("{:08x} {}", symbol->address, symbol->name);
+
+   // Allocate
+   {
+      std::vector<uint8_t> sectionData;
+
+      for (auto& section : sections) {
+         if (section.header.flags & elf::SHF_ALLOC) {
+            if (section.header.type == elf::SHT_NOBITS) {
+               sectionData.clear();
+               sectionData.resize(section.header.size, 0);
+            } else {
+               if (!elf::readSectionData(in, section.header, sectionData)) {
+                  gLog->error("Failed to decompressed allocatable section");
+                  return nullptr;
+               }
+            }
+
+            void *allocData = nullptr;
+            if (section.header.type == elf::SHT_PROGBITS || section.header.type == elf::SHT_NOBITS) {
+               if (section.header.flags & elf::SHF_EXECINSTR) {
+                  allocData = codeSeg.get(sectionData.size(), section.header.addralign);
+               } else {
+                  allocData = dataSeg.get(sectionData.size(), section.header.addralign);
+               }
+            } else {
+               allocData = loadSeg.get(sectionData.size(), section.header.addralign);
+            }
+
+            memcpy(allocData, sectionData.data(), sectionData.size());
+            section.virtAddress = allocData;
+            section.virtSize = static_cast<uint32_t>(sectionData.size());
          }
       }
    }
 
-   return true;
+   // I am a bad person and I should feel bad
+   std::map<void*, void*> trampolines;
+   auto getTramp = [&](void *target) {
+      auto trampIter = trampolines.find(target);
+      if (trampIter != trampolines.end()) {
+         return trampIter->second;
+      }
+
+      uint32_t *trampAddr = static_cast<uint32_t*>(codeSeg.getCurrentAddr());
+      uint32_t *targetAddr = static_cast<uint32_t*>(target);
+
+      intptr_t delta = reinterpret_cast<uint8_t*>(targetAddr) - reinterpret_cast<uint8_t*>(trampAddr);
+      if (delta > -0x1fffffc && delta < 0x1fffffc) {
+         trampAddr = static_cast<uint32_t*>(codeSeg.get(4));
+         
+         // Short jump using b
+         auto b = gInstructionTable.encode(InstructionID::b);
+         b.li = delta >> 2;
+         b.lk = 0;
+         b.aa = 0;
+         *trampAddr = byte_swap(b.value);
+      } else if (gMemory.untranslate(targetAddr) < 0x03fffffc) {
+         trampAddr = static_cast<uint32_t*>(codeSeg.get(4));
+
+         // Absolute jump using b
+         auto b = gInstructionTable.encode(InstructionID::b);
+         b.li = gMemory.untranslate(targetAddr) >> 2;
+         b.lk = 0;
+         b.aa = 1;
+         *trampAddr = byte_swap(b.value);
+      } else {
+         // need to implement 16-byte long-jumping here...
+         assert(0);
+      }
+
+      trampolines.emplace(targetAddr, trampAddr);
+      return static_cast<void*>(trampAddr);
+   };
+
+   // Read strtab
+   const char *shStrTab = static_cast<const char*>(sections[header.shstrndx].virtAddress);
+
+   // Calculate SDA Bases
+   auto sdata = findSection(sections, shStrTab, ".sdata");
+   auto sbss = findSection(sections, shStrTab, ".sbss");
+   auto sdata2 = findSection(sections, shStrTab, ".sdata2");
+   auto sbss2 = findSection(sections, shStrTab, ".sbss2");
+   void * sdaBase = calculateSdaBase(sdata, sbss);
+   void * sda2Base = calculateSdaBase(sdata2, sbss2);
+
+   // Process Imports
+   std::map<std::string, void*> symbolTable;
+   for (auto &section : sections) {
+      if (section.header.type != elf::SHT_RPL_IMPORTS) {
+         continue;
+      }
+
+      // Grab the name of the library
+      const char *libraryName = static_cast<const char*>(section.virtAddress) + 8;
+
+      // Try to acquire this module
+      LoadedModule *linkedModule = loadRPL(libraryName);
+      
+      // Zero the whole section after we have used the name
+      memset(static_cast<uint8_t*>(section.virtAddress) + 8, section.virtSize - 8, 0);
+      
+      if (!linkedModule) {
+         // Ignore missing modules for now
+         continue;
+      }
+
+      // Add all these symbols to the symbol table
+      for (auto &linkedExport : linkedModule->mExports) {
+         symbolTable.insert(linkedExport);
+      }
+   }
+
+   // Process Import Symbols
+   for (auto &section : sections) {
+      if (section.header.type != elf::SHT_SYMTAB) {
+         continue;
+      }
+
+      const char *strTab = static_cast<const char*>(sections[section.header.link].virtAddress);
+
+      auto symIn = BigEndianView{ section.virtAddress, section.virtSize };
+      elf::Symbol sym;
+      while (!symIn.eof()) {
+         elf::readSymbol(symIn, sym);
+
+         // Calculate relocated address
+         auto &impsec = sections[sym.shndx];
+         auto offset = sym.value - impsec.header.addr;
+         auto baseAddress = gMemory.untranslate(impsec.virtAddress);
+         auto virtAddress = baseAddress + offset;
+
+         // Create symbol data
+         auto name = strTab + sym.name;
+         auto binding = sym.info >> 4;
+         auto type = sym.info & 0xf;
+
+         if (impsec.header.type == elf::SHT_NULL) {
+            continue;
+         }
+
+         if (binding == elf::STB_GLOBAL) {
+            if (impsec.header.type == elf::SHT_RPL_IMPORTS) {
+               auto symbolTargetIter = symbolTable.find(name);
+               void * symbolAddr = nullptr;
+               if (symbolTargetIter == symbolTable.end()) {
+                  if (type == elf::STT_FUNC) {
+                     symbolAddr = registerUnimplementedFunction(name);
+                  } else {
+                     symbolAddr = nullptr;
+                  }
+               } else {
+                  if (type != elf::STT_FUNC && type != elf::STT_OBJECT) {
+                     assert(0);
+                  }
+
+                  symbolAddr = symbolTargetIter->second;
+               }
+
+               // Write the symbol addres into .fimport or .dimport
+               gMemory.write(virtAddress, gMemory.untranslate(symbolAddr));
+            }
+         }
+      }
+   }
+
+   // Process relocations
+   for (auto &section : sections) {
+      if (section.header.type != elf::SHT_RELA) {
+         continue;
+      }
+
+      auto &symSec = sections[section.header.link];
+      auto &targetSec = sections[section.header.info];
+      auto symSecView = BigEndianView{ symSec.virtAddress, symSec.virtSize };
+      auto &symStrTab = sections[symSec.header.link];
+
+      uint32_t sdaBaseAddr = gMemory.untranslate(sdaBase);
+      uint32_t sda2BaseAddr = gMemory.untranslate(sda2Base);
+
+      std::vector<uint8_t> data;
+      elf::readSectionData(in, section.header, data);
+      auto reloIn = BigEndianView{ data.data(), data.size() };
+
+      auto targetBaseAddr = targetSec.header.addr;
+      auto targetVirtAddr = gMemory.untranslate(targetSec.virtAddress);
+
+      elf::Rela rela;
+      while (!reloIn.eof()) {
+         elf::readRelocationAddend(reloIn, rela);
+
+         auto index = rela.info >> 8;
+         auto type = rela.info & 0xff;
+
+         auto reloAddr = rela.offset - targetBaseAddr + targetVirtAddr;
+
+         auto symbol = getSymbol(symSecView, index);
+         auto &symbolSection = sections[symbol.shndx];
+         auto symbolSectionName = shStrTab + symbolSection.header.name;
+
+         auto symbolName = static_cast<const char*>(symStrTab.virtAddress) + symbol.name;
+
+         uint32_t symAddr = getSymbolAddress(symbol, sections);
+         symAddr += rela.addend;
+
+         if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
+            symAddr = gMemory.read<uint32_t>(symAddr);
+
+            if (symAddr == 0) {
+               symAddr = registerUnimplementedData(symbolName);
+            }
+         }
+
+         auto ptr8 = gMemory.translate(reloAddr);
+         auto ptr16 = reinterpret_cast<uint16_t*>(ptr8);
+         auto ptr32 = reinterpret_cast<uint32_t*>(ptr8);
+
+         switch (type) {
+         case elf::R_PPC_ADDR32:
+            *ptr32 = byte_swap(symAddr);
+            break;
+         case elf::R_PPC_ADDR16_LO:
+            *ptr16 = byte_swap<uint16_t>(symAddr & 0xffff);
+            break;
+         case elf::R_PPC_ADDR16_HI:
+            *ptr16 = byte_swap<uint16_t>(symAddr >> 16);
+            break;
+         case elf::R_PPC_ADDR16_HA:
+            *ptr16 = byte_swap<uint16_t>((symAddr + 0x8000) >> 16);
+            break;
+         case elf::R_PPC_REL24: {
+            auto ins = Instruction{ byte_swap(*ptr32) };
+            auto data = gInstructionTable.decode(ins);
+
+            // Our REL24 trampolines only work for a branch instruction...
+            assert(data->id == InstructionID::b);
+
+            intptr_t delta = symAddr - reloAddr;
+            if (delta < -0x01fffffc || delta > 0x01fffffc) {
+               void *trampPtr = getTramp(gMemory.translate(symAddr));
+               assert(trampPtr);
+               uint32_t trampAddr = gMemory.untranslate(trampPtr);
+
+               delta = trampAddr - reloAddr;
+               if (delta < -0x01fffffc || delta > 0x01fffffc) {
+                  // Trampoline is still too far...
+                  assert(0);
+               }
+               symAddr = trampAddr;
+            }
+
+            *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03fffffc) | ((symAddr - reloAddr) & 0x03fffffc));
+            break;
+         }
+         case elf::R_PPC_EMB_SDA21: {
+            auto ins = Instruction{ byte_swap(*ptr32) };
+
+            int32_t offset = 0;
+
+            if (ins.rA == 0) {
+               // 0
+               offset = 0;
+            } else if (ins.rA == 2) {
+               // sda2Base
+               offset = static_cast<int32_t>(symAddr) - static_cast<int32_t>(sda2BaseAddr);
+            } else if (ins.rA == 13) {
+               // sdaBase
+               offset = static_cast<int32_t>(symAddr) - static_cast<int32_t>(sdaBaseAddr);
+            } else {
+               assert(0);
+            }
+
+            if (offset < std::numeric_limits<int16_t>::min() || offset > std::numeric_limits<int16_t>::max()) {
+               gLog->error("Expected SDA relocation {:x} to be within signed 16 bit offset of base {}", symAddr, ins.rA);
+               break;
+            }
+
+            ins.simm = offset;
+            *ptr32 = byte_swap(ins.value);
+            break;
+         }
+         default:
+            gLog->error("Unknown relocation type {}", type);
+         }
+      }
+   }
+
+   // Relocate entry point
+   uint32_t entryPoint = header.entry;
+   for (auto &section : sections) {
+      uint32_t virtAddr = gMemory.untranslate(section.virtAddress);
+
+      if (section.header.addr <= entryPoint && section.header.addr + section.virtSize > entryPoint) {
+         if (virtAddr >= section.header.addr) {
+            entryPoint += virtAddr - section.header.addr;
+         } else {
+            entryPoint -= section.header.addr - virtAddr;
+         }
+         break;
+      }
+   }
+
+   // Process exports
+   std::map<std::string, void*> exports;
+
+   for (auto &section : sections) {
+      if (section.header.type != elf::SHT_RPL_EXPORTS) {
+         continue;
+      }
+
+      uint32_t *secData = static_cast<uint32_t*>(section.virtAddress);
+      const char *secNames = static_cast<const char*>(section.virtAddress);
+      uint32_t numExports = byte_swap(*secData++);
+      uint32_t exportsCrc = byte_swap(*secData++);
+
+      for (auto i = 0u; i < numExports; ++i) {
+         uint32_t exportsAddr = byte_swap(*secData++);
+         uint32_t exportNameOff = byte_swap(*secData++);
+         const char * exportsName = secNames + exportNameOff;
+
+         exports.emplace(exportsName, gMemory.translate(exportsAddr));
+      }
+
+   }
+
+   // Free the load segment
+   mCodeHeap->free(loadSegAddr);
+
+   LoadedModule *loadedMod = new LoadedModule();
+   loadedMod->mName = name;
+   loadedMod->mSdaBase = gMemory.untranslate(sdaBase);
+   loadedMod->mSda2Base = gMemory.untranslate(sda2Base);
+   loadedMod->mDefaultStackSize = info.stackSize;
+   loadedMod->mEntryPoint = entryPoint;
+   loadedMod->mExports = exports;
+   loadedMod->mHandle = OSAllocFromSystem<LoadedModuleHandleData>();
+   loadedMod->mHandle->ptr = loadedMod;
+   return loadedMod;
 }

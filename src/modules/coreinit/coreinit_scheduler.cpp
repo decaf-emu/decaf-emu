@@ -37,7 +37,7 @@ InitialiseThreadFiber(OSThread *thread)
    fiber->state.nia = thread->entryPoint;
 
    // Initialise tracer
-   traceInit(&fiber->state, 128);
+   traceInit(&fiber->state, 1024);
 }
 
 void

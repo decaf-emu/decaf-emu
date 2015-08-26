@@ -5,8 +5,8 @@
 class BigEndianView
 {
 public:
-   BigEndianView(const char *buffer, size_t size) :
-      mBuffer(buffer), mSize(size), mOffset(0)
+   BigEndianView(const void *buffer, size_t size) :
+      mBuffer(static_cast<const uint8_t*>(buffer)), mSize(size), mOffset(0)
    {
    }
 
@@ -41,15 +41,15 @@ public:
 
    std::string readNullTerminatedString()
    {
-      const char *str = mBuffer + mOffset;
+      const char *str = reinterpret_cast<const char*>(mBuffer) + mOffset;
       mOffset += strlen(str) + 1;
       return str;
    }
 
    template<typename Type>
-   Type *readRaw(size_t count)
+   const Type *readRaw(size_t count)
    {
-      auto ptr = reinterpret_cast<Type*>(const_cast<char*>(mBuffer)+mOffset);
+      auto ptr = reinterpret_cast<const Type*>(mBuffer + mOffset);
       mOffset += sizeof(Type) * count;
       return ptr;
    }
@@ -65,7 +65,7 @@ public:
    }
 
 private:
-   const char *mBuffer;
+   const uint8_t *mBuffer;
    size_t mSize;
    size_t mOffset;
 };

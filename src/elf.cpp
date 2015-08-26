@@ -107,8 +107,8 @@ readFileInfo(BigEndianView &in, elf::FileInfo &info)
    in.read(info.textAlign);
    in.read(info.dataSize);
    in.read(info.dataAlign);
-   in.read(info.loaderSize);
-   in.read(info.loaderInfo);
+   in.read(info.loadSize);
+   in.read(info.loadAlign);
    in.read(info.tempSize);
    in.read(info.trampAdjust);
    in.read(info.sdaBase);
@@ -127,6 +127,73 @@ readFileInfo(BigEndianView &in, elf::FileInfo &info)
    in.read(info.unk3);
    in.read(info.unk4);
    return true;
+}
+
+bool
+readSectionHeaders(BigEndianView &in, Header &header, std::vector<XSection>& sections)
+{
+   sections.resize(header.shnum);
+
+   for (auto i = 0u; i < sections.size(); ++i) {
+      auto &sectionHeader = sections[i].header;
+      in.seek(header.shoff + header.shentsize * i);
+      if (!readSectionHeader(in, sectionHeader)) {
+         return false;
+      }
+   }
+
+   return true;
+}
+
+bool
+readSectionData(BigEndianView &in, const SectionHeader& header, std::vector<uint8_t> &data)
+{
+   if (header.type == SHT_NOBITS || header.size == 0) {
+      data.clear();
+      return true;
+   }
+
+   if (header.flags & SHF_DEFLATED) {
+      auto stream = z_stream{};
+      auto ret = Z_OK;
+
+      // Read the original size
+      in.seek(header.offset);
+      data.resize(in.read<uint32_t>());
+
+      // Inflate
+      memset(&stream, 0, sizeof(stream));
+      stream.zalloc = Z_NULL;
+      stream.zfree = Z_NULL;
+      stream.opaque = Z_NULL;
+
+      ret = inflateInit(&stream);
+
+      if (ret != Z_OK) {
+         gLog->error("Couldn't decompress .rpx section because inflateInit returned {}", ret);
+         data.clear();
+      } else {
+         stream.avail_in = header.size;
+         stream.next_in = const_cast<Bytef*>(in.readRaw<Bytef>(header.size));
+         stream.avail_out = static_cast<uInt>(data.size());
+         stream.next_out = reinterpret_cast<Bytef*>(data.data());
+
+         ret = inflate(&stream, Z_FINISH);
+
+         if (ret != Z_OK && ret != Z_STREAM_END) {
+            gLog->error("Couldn't decompress .rpx section because inflate returned {}", ret);
+            data.clear();
+         }
+
+         inflateEnd(&stream);
+      }
+   } else {
+      data.resize(header.size);
+      in.seek(header.offset);
+      in.read(data.data(), header.size);
+   }
+
+   return data.size() > 0;
 }
 
 bool
@@ -167,7 +234,7 @@ readSections(BigEndianView &in, Header &header, std::vector<Section> &sections)
             section.data.clear();
          } else {
             stream.avail_in = section.header.size;
-            stream.next_in = in.readRaw<Bytef>(section.header.size);
+            stream.next_in = const_cast<Bytef*>(in.readRaw<Bytef>(section.header.size));
             stream.avail_out = static_cast<uInt>(section.data.size());
             stream.next_out = reinterpret_cast<Bytef*>(section.data.data());
 

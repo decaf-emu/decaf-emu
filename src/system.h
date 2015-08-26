@@ -1,19 +1,21 @@
 #pragma once
 #include <map>
+#include <functional>
 #include <string>
 #include <vector>
 #include <mutex>
 #include <cstdint>
 #include "systemtypes.h"
+#include "loader.h"
 
 class Memory;
 class Thread;
 class KernelModule;
-struct UserModule;
 struct KernelFunction;
 class FileSystem;
+class TeenyHeap;
 
-struct LoadedModule
+struct ModuleHandleData
 {
    enum Type
    {
@@ -31,30 +33,37 @@ class System
 public:
    System();
 
-   void initialiseModules();
+   void initialise();
 
+   uint32_t registerUnimplementedFunction(const char* name);
    void registerModule(const char *name, KernelModule *module);
    KernelModule *findModule(const char *name) const;
 
-   void registerModule(const char *name, UserModule *module);
-   UserModule *getUserModule() const;
+   void setUserModule(LoadedModule *module);
+   LoadedModule *getUserModule() const;
 
    KernelFunction *getSyscall(uint32_t id);
 
    FileSystem *getFileSystem();
    void setFileSystem(FileSystem *fs);
 
+   TeenyHeap *getSystemHeap() const {
+      return mSystemHeap;
+   }
+
 protected:
+   void registerSysCall(KernelFunction *func);
    void loadThunks();
 
 private:
-   UserModule *mUserModule;
+   LoadedModule *mUserModule;
    std::map<std::string, KernelModule*> mSystemModules;
 
    void *mSystemThunks;
    std::vector<KernelFunction*> mSystemCalls;
 
    FileSystem *mFileSystem;
+   TeenyHeap *mSystemHeap;
 };
 
 extern System gSystem;

@@ -25,4 +25,5 @@ struct KernelExport
 
    Type type;
    const char *name;
+   void *ppcPtr;
 };

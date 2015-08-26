@@ -5,14 +5,15 @@
 #include "coreinit_expheap.h"
 #include "coreinit_frameheap.h"
 #include "system.h"
+#include "teenyheap.h"
 
-p32<be_val<uint32_t>>
+be_wfunc_ptr<void*, uint32_t>*
 pMEMAllocFromDefaultHeap;
 
-p32<be_val<uint32_t>>
+be_wfunc_ptr<void*, uint32_t, int>*
 pMEMAllocFromDefaultHeapEx;
 
-p32<be_val<uint32_t>>
+be_wfunc_ptr<void, void*>*
 pMEMFreeToDefaultHeap;
 
 static CommonHeap *
@@ -192,12 +193,6 @@ sMEMFreeToDefaultHeap(p32<void> block)
    return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
 }
 
-void *
-OSAllocFromSystem(uint32_t size, int alignment)
-{
-   return MEMAllocFromExpHeapEx(gSystemHeap, size, alignment);
-}
-
 char *
 OSSprintfFromSystem(const char *format, ...)
 {
@@ -208,22 +203,6 @@ OSSprintfFromSystem(const char *format, ...)
    vsprintf_s(buffer, size, format, argptr);
    va_end(argptr);
    return buffer;
-}
-
-void
-OSFreeToSystem(void *addr)
-{
-   MEMFreeToExpHeap(gSystemHeap, addr);
-}
-
-void
-CoreInitSystemHeap()
-{
-   be_val<uint32_t> addr, size;
-
-   // Create expanding heap for System
-   OSGetMemBound(OSMemoryType::System, &addr, &size);
-   gSystemHeap = MEMCreateExpHeap(make_p32<ExpandedHeap>(addr), size);
 }
 
 void
@@ -321,13 +300,10 @@ CoreInit::registerMembaseFunctions()
 void
 CoreInit::initialiseMembase()
 {
-   pMEMAllocFromDefaultHeap = make_p32<void>(OSAllocFromSystem(sizeof(uint32_t)));
+   CoreInitDefaultHeap();
+
    *pMEMAllocFromDefaultHeap = findExportAddress("sMEMAllocFromDefaultHeap");
-
-   pMEMAllocFromDefaultHeapEx = make_p32<void>(OSAllocFromSystem(sizeof(uint32_t)));
    *pMEMAllocFromDefaultHeapEx = findExportAddress("sMEMAllocFromDefaultHeapEx");
-
-   pMEMFreeToDefaultHeap = make_p32<void>(OSAllocFromSystem(sizeof(uint32_t)));
    *pMEMFreeToDefaultHeap = findExportAddress("sMEMFreeToDefaultHeap");
 
    gForegroundMemlist = OSAllocFromSystem<MemoryList>();
@@ -338,4 +314,19 @@ CoreInit::initialiseMembase()
 
    gMEM2Memlist = OSAllocFromSystem<MemoryList>();
    MEMInitList(gMEM2Memlist, offsetof(CommonHeap, link));
+}
+
+void *
+OSAllocFromSystem(uint32_t size, int alignment)
+{
+   // TODO: Support Alignments!
+   auto systemHeap = gSystem.getSystemHeap();
+   return systemHeap->alloc(size, alignment);
+}
+
+void
+OSFreeToSystem(void *addr)
+{
+   auto systemHeap = gSystem.getSystemHeap();
+   return systemHeap->free(addr);
 }

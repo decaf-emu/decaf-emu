@@ -3,13 +3,28 @@
 #include "coreinit_spinlock.h"
 #include "coreinit_memheap.h"
 
-static const auto GHS_FOPEN_MAX = 0x64;
-
 static OSSpinLock *
 ghsSpinLock;
 
 thread_local uint32_t
 ghsErrno = 0;
+
+be_wfunc_ptr<void>*
+p__atexit_cleanup;
+
+be_wfunc_ptr<void>*
+p__stdio_cleanup;
+
+be_wfunc_ptr<void, be_ptr<void>*>*
+p___cpp_exception_init_ptr;
+
+be_wfunc_ptr<void, be_ptr<void>*>*
+p___cpp_exception_cleanup_ptr;
+
+be_val<uint16_t>*
+p__gh_FOPEN_MAX;
+
+__ghs_iob* p_iob;
 
 BOOL
 ghsLock()
@@ -56,14 +71,6 @@ ghsExit(int code)
    assert(false);
 }
 
-/*
-.dimport __atexit_cleanup
-.dimport __cpp_exception_cleanup_ptr
-.dimport __cpp_exception_init_ptr
-.dimport __gh_FOPEN_MAX
-.dimport _iob
-*/
-
 void
 CoreInit::registerGhsFunctions()
 {
@@ -74,11 +81,20 @@ CoreInit::registerGhsFunctions()
    RegisterKernelFunctionName("__ghs_flock_ptr", ghs_flock_ptr);
    RegisterKernelFunctionName("__ghs_flock_file", ghs_flock_file);
    RegisterKernelFunctionName("exit", ghsExit);
+
+   RegisterKernelDataName("__atexit_cleanup", p__atexit_cleanup);
+   RegisterKernelDataName("__stdio_cleanup", p__stdio_cleanup);
+   RegisterKernelDataName("___cpp_exception_init_ptr", p___cpp_exception_init_ptr);
+   RegisterKernelDataName("___cpp_exception_cleanup_ptr", p___cpp_exception_cleanup_ptr);
+   RegisterKernelDataName("__gh_FOPEN_MAX", p__gh_FOPEN_MAX);
+   RegisterKernelDataName("_iob", p_iob);
 }
 
 void
 CoreInit::initialiseGHS()
 {
+   *p__gh_FOPEN_MAX = GHS_FOPEN_MAX;
+
    ghsSpinLock = OSAllocFromSystem<OSSpinLock>();
    OSInitSpinLock(ghsSpinLock);
 }

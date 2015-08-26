@@ -3,11 +3,12 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "wfunc_ptr.h"
 
 class KernelModule;
 struct KernelFunction;
 struct KernelData;
-struct LoadedModule;
+struct ModuleHandleData;
 
 struct SymbolInfo
 {
@@ -112,6 +113,17 @@ struct UserModule
    std::map<std::string, Section *> sectionMap;
    uint32_t sdaBase;
    uint32_t sda2Base;
+   
+   inline uint32_t
+   findExport(const std::string &name) {
+      return 0;
+   }
+
+   template<typename ReturnValue, typename... Args>
+   inline wfunc_ptr<ReturnValue, Args...>
+   findExport(const std::string &name) {
+      return wfunc_ptr<ReturnValue, Args...>(findExport(name));
+   }
 
    inline Section *
    findSection(const std::string &name)

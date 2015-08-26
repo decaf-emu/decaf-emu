@@ -148,27 +148,16 @@ kc(PPCEmuAssembler& a, Instruction instr)
    auto id = instr.li;
    auto implemented = instr.aa;
 
+   auto sym = gSystem.getSyscall(id);
    if (!implemented) {
-      auto userModule = gSystem.getUserModule();
-      auto sym = userModule->symbols[id];
-      auto fsym = reinterpret_cast<FunctionSymbol*>(sym);
-
-      if (sym->type != SymbolInfo::Function) {
-         gLog->error("Attempted to call non-function symbol {}", sym->name);
-         return true;
-      }
-
-      if (!fsym->kernelFunction) {
-         gLog->debug("Unimplemented kernel function {}", sym->name);
-         return true;
-      }
+      gLog->debug("{:08x} unimplemented kernel function {}", sym->name);
 
       a.int3();
+      return true;
    }
 
-   auto func = gSystem.getSyscall(id);
    a.mov(a.zcx, a.state);
-   a.mov(a.zdx, asmjit::Ptr(func));
+   a.mov(a.zdx, asmjit::Ptr(sym));
    a.call(asmjit::Ptr(kcstub));
    return true;
 }

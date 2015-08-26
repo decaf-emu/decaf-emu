@@ -147,6 +147,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_userconfig.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />
+    <ClCompile Include="..\src\modules\gameloader\gameloader.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\dx12_state.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_context.cpp" />
@@ -193,6 +194,7 @@
     <ClCompile Include="..\src\wfunc_ptr.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\be_data.h" />
     <ClInclude Include="..\src\be_val.h" />
     <ClInclude Include="..\src\bigendianview.h" />
     <ClInclude Include="..\src\bitutils.h" />
@@ -212,6 +214,7 @@
     <ClInclude Include="..\src\interpreter\interpreter_float.h" />
     <ClInclude Include="..\src\jit.h" />
     <ClInclude Include="..\src\jit_float.h" />
+    <ClInclude Include="..\src\modules\gameloader\gameloader.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\d3dx12.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_colorbuffer.h" />
@@ -262,6 +265,7 @@
     <ClInclude Include="..\src\ppcinvoke.h" />
     <ClInclude Include="..\src\ppctypes.h" />
     <ClInclude Include="..\src\processor.h" />
+    <ClInclude Include="..\src\teenyheap.h" />
     <ClInclude Include="..\src\trace.h" />
     <ClInclude Include="..\src\usermodule.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit.h" />

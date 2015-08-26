@@ -133,6 +133,12 @@
     <Filter Include="Header Files\gpu">
       <UniqueIdentifier>{f5262755-c0da-4cd1-b97e-3d097bb6f6d5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\gameloader">
+      <UniqueIdentifier>{abfe221e-19f4-40ac-bf45-54ee4321cfb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\gameloader">
+      <UniqueIdentifier>{37fb1798-b28c-42be-98bf-45dd2cabcf43}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -440,6 +446,9 @@
     </ClCompile>
     <ClCompile Include="..\src\gpu\latte_opcodes.cpp">
       <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gameloader\gameloader.cpp">
+      <Filter>Source Files\modules\gameloader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -772,6 +781,15 @@
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte.h">
       <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\teenyheap.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gameloader\gameloader.h">
+      <Filter>Header Files\modules\gameloader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\be_data.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

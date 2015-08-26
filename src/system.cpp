@@ -3,11 +3,30 @@
 #include "system.h"
 #include "kernelmodule.h"
 #include "modules/coreinit/coreinit_memheap.h"
+#include "teenyheap.h"
+#include "kernelfunction.h"
 
 System gSystem;
 
 System::System()
 {
+}
+
+void
+System::registerSysCall(KernelFunction *func)
+{
+   func->syscallID = static_cast<uint32_t>(mSystemCalls.size());
+   mSystemCalls.push_back(func);
+}
+
+uint32_t
+System::registerUnimplementedFunction(const char* name)
+{
+   auto ppcFn = new kernel::functions::KernelFunctionImpl<void>();
+   ppcFn->name = _strdup(name);
+   ppcFn->wrapped_function = nullptr;
+   registerSysCall(ppcFn);
+   return ppcFn->syscallID;
 }
 
 void
@@ -22,39 +41,31 @@ System::registerModule(const char *name, KernelModule *module)
       auto exp = itr.second;
 
       if (exp->type == KernelExport::Function) {
-         auto func = reinterpret_cast<KernelFunction*>(exp);
-         func->syscallID = static_cast<uint32_t>(mSystemCalls.size());
-         mSystemCalls.push_back(func);
+         registerSysCall(reinterpret_cast<KernelFunction*>(exp));
       }
    }
 }
 
 void
-System::registerModule(const char *name, UserModule *module)
+System::setUserModule(LoadedModule *module)
 {
    mUserModule = module;
 }
 
-UserModule *
+LoadedModule *
 System::getUserModule() const
 {
    return mUserModule;
 }
 
 void
-System::initialiseModules()
+System::initialise()
 {
-   CoreInitSystemHeap();
-   loadThunks();
-
-   for (auto &pair : mSystemModules) {
-      auto module = pair.second;
-      auto handle = OSAllocFromSystem<LoadedModule>();
-      handle->type = LoadedModule::Kernel;
-      handle->ptr = module;
-      module->setHandle(handle);
-      module->initialise();
-   }
+   auto systemHeapStart = 0x01000000;
+   auto systemHeapSize = 0x01000000;
+   gMemory.alloc(systemHeapStart, systemHeapSize);
+   void *systemMem = gMemory.translate(systemHeapStart);
+   mSystemHeap = new TeenyHeap(systemMem, systemHeapSize);
 }
 
 KernelModule *

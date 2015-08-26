@@ -271,27 +271,13 @@ kc(ThreadState *state, Instruction instr)
    auto id = instr.li;
    auto implemented = instr.aa;
 
+   auto sym = gSystem.getSyscall(id);
    if (!implemented) {
-      auto userModule = gSystem.getUserModule();
-      auto sym = userModule->symbols[id];
-      auto fsym = reinterpret_cast<FunctionSymbol*>(sym);
-
-      if (sym->type != SymbolInfo::Function) {
-         gLog->error("Attempted to call non-function symbol {}", sym->name);
-         return;
-      }
-
-      if (!fsym->kernelFunction) {
-         gLog->debug("{:08x} unimplemented kernel function {}", state->lr, sym->name);
-         return;
-      }
-
+      gLog->debug("{:08x} unimplemented kernel function {}", state->lr, sym->name);
       return;
-      assert(false);
    }
 
-   auto func = gSystem.getSyscall(id);
-   func->call(state);
+   sym->call(state);
 }
 
 void

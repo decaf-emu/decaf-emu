@@ -15,4 +15,16 @@ void
 traceInstructionEnd(Trace *trace, Instruction instr, InstructionData *data, ThreadState *state);
 
 void
-tracePrint(ThreadState *state, size_t count);
+tracePrint(ThreadState *state, int start, int count);
+
+int
+traceReg(ThreadState *state, int start, int regIdx);
+
+void
+traceRegStart(ThreadState *state, int start, int regIdx);
+
+void
+traceRegNext(int regIdx);
+
+void
+traceRegContinue();

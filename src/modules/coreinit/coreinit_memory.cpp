@@ -55,10 +55,6 @@ OSGetMemBound(OSMemoryType type, be_val<uint32_t> *addr, be_val<uint32_t> *size)
       *addr = gMem2Start;
       *size = gMem2Size;
       break;
-   case OSMemoryType::System:
-      *addr = 0x01000000;
-      *size = 0x01000000;
-      break;
    default:
       return -1;
    }

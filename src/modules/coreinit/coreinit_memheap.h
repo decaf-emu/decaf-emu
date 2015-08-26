@@ -60,13 +60,13 @@ CHECK_SIZE(CommonHeap, 0x34);
 
 #pragma pack(pop)
 
-extern p32<be_val<uint32_t>>
+extern be_wfunc_ptr<void*, uint32_t>*
 pMEMAllocFromDefaultHeap;
 
-extern p32<be_val<uint32_t>>
+extern be_wfunc_ptr<void*, uint32_t, int>*
 pMEMAllocFromDefaultHeapEx;
 
-extern p32<be_val<uint32_t>>
+extern be_wfunc_ptr<void, void*>*
 pMEMFreeToDefaultHeap;
 
 void
@@ -90,11 +90,18 @@ MEMGetBaseHeapHandle(BaseHeapType arena);
 CommonHeap *
 MEMSetBaseHeapHandle(BaseHeapType arena, CommonHeap *heap);
 
-void *
-OSAllocFromSystem(uint32_t size, int alignment = 4);
-
 char *
 OSSprintfFromSystem(const char *format, ...);
+
+void
+CoreFreeDefaultHeap();
+
+void
+CoreInitDefaultHeap();
+
+// TODO: Move These!
+void *
+OSAllocFromSystem(uint32_t size, int alignment = 4);
 
 template<typename Type>
 Type *
@@ -105,12 +112,3 @@ OSAllocFromSystem(int alignment = 4)
 
 void
 OSFreeToSystem(void *addr);
-
-void
-CoreFreeDefaultHeap();
-
-void
-CoreInitDefaultHeap();
-
-void
-CoreInitSystemHeap();

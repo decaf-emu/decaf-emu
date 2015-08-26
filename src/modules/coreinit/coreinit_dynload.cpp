@@ -5,6 +5,7 @@
 #include "coreinit_expheap.h"
 #include "interpreter.h"
 #include "system.h"
+#include "be_data.h"
 
 static wfunc_ptr<int, int, int, be_val<uint32_t>*>
 pOSDynLoad_MemAlloc;
@@ -48,11 +49,11 @@ OSDynLoad_GetAllocator(be_val<uint32_t> *outAllocFn, be_val<uint32_t> *outFreeFn
 
 // Wrapper func to call function pointer set by OSDynLoad_SetAllocator
 int
-OSDynLoad_MemAlloc(int size, int alignment, uint32_t *outPtr)
+OSDynLoad_MemAlloc(int size, int alignment, void **outPtr)
 {
-   be_val<uint32_t> value;
+   be_data<uint32_t> value;
    auto result = pOSDynLoad_MemAlloc(size, alignment, &value);
-   *outPtr = value;
+   *outPtr = gMemory.translate(value);
    return result;
 }
 
@@ -64,58 +65,37 @@ OSDynLoad_MemFree(void *addr)
 }
 
 int
-OSDynLoad_Acquire(char const *name, be_val<uint32_t> *outHandle)
+OSDynLoad_Acquire(char const *name, be_ptr<LoadedModuleHandleData> *outHandle)
 {
-   auto module = gSystem.findModule(name);
-
-   if (module) {
-      *outHandle = static_cast<uint32_t>(module->getHandle());
-      return 0;
-   } else {
-      *outHandle = 0;
+   auto* module = gLoader.loadRPL(name);
+   if (!module) {
+      gLog->debug("OSDynLoad_Acquire {} failed", name);
+      *outHandle = nullptr;
       return 0xBAD10001;
    }
+
+   *outHandle = module->getHandle();
+   return 0;
 }
 
 int
-OSDynLoad_FindExport(LoadedModule *module, int isData, char const *name, be_val<uint32_t> *outAddr)
+OSDynLoad_FindExport(LoadedModuleHandleData *handle, int isData, char const *name, be_ptr<void> *outAddr)
 {
-   uint32_t addr = 0;
+   auto module = handle->ptr;
 
-   if (module->type == LoadedModule::Kernel) {
-      auto kmod = reinterpret_cast<KernelModule*>(module->ptr);
-      auto exp = kmod->findExport(name);
-
-      if (!exp) {
-         gLog->debug("OSDynLoad_FindExport export {} not found", name);
-      } else if (exp->type == KernelExport::Data) {
-         if (isData == 0) {
-            gLog->debug("OSDynLoad_FindExport isData == 0 for data export {}", name);
-         } else {
-            auto kdata = reinterpret_cast<KernelData *>(exp);
-            addr = static_cast<uint32_t>(*kdata->vptr);
-         }
-      } else if (exp->type == KernelExport::Function) {
-         if (isData == 1) {
-            gLog->debug("OSDynLoad_FindExport isData == 1 for function export {}", name);
-         } else {
-            auto kfunc = reinterpret_cast<KernelFunction *>(exp);
-            addr = kfunc->vaddr;
-         }
-      }
-   }
-
-   if (addr) {
-      *outAddr = addr;
-      return 0;
-   } else {
-      *outAddr = 0;
+   auto exportPtr = module->findExport(name);
+   if (!exportPtr) {
+      gLog->debug("OSDynLoad_FindExport export {} not found", name);
+      *outAddr = nullptr;
       return 0xBAD10001;
    }
+
+   *outAddr = exportPtr;
+   return 0;
 }
 
 void
-OSDynLoad_Release(DynLoadModuleHandle handle)
+OSDynLoad_Release(LoadedModuleHandleData *handle)
 {
 }
 

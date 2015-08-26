@@ -254,6 +254,13 @@ struct Section
    ModuleSymbol *msym = nullptr;
 };
 
+struct XSection
+{
+   SectionHeader header;
+   void *virtAddress;
+   uint32_t virtSize;
+};
+
 struct FileInfo
 {
    uint32_t minVersion;
@@ -261,8 +268,8 @@ struct FileInfo
    uint32_t textAlign;
    uint32_t dataSize;
    uint32_t dataAlign;
-   uint32_t loaderSize;
-   uint32_t loaderInfo;
+   uint32_t loadSize;
+   uint32_t loadAlign;
    uint32_t tempSize;
    uint32_t trampAdjust;
    uint32_t sdaBase;
@@ -301,5 +308,11 @@ readFileInfo(BigEndianView &in, elf::FileInfo &info);
 
 bool
 readSections(BigEndianView &in, Header &header, std::vector<Section> &sections);
+
+bool
+readSectionHeaders(BigEndianView &in, Header &header, std::vector<XSection>& sections);
+
+bool
+readSectionData(BigEndianView &in, const SectionHeader& header, std::vector<uint8_t> &data);
 
 };

@@ -48,6 +48,28 @@ struct wfunc_ptr
 
 };
 
+template<typename ReturnType, typename... Args>
+struct be_wfunc_ptr
+{
+   be_wfunc_ptr() :
+      address(0)
+   {
+   }
+
+   be_wfunc_ptr& operator=(const wfunc_ptr<ReturnType, Args...>& rhs) {
+      address = rhs.address;
+      return *this;
+   }
+
+   ReturnType operator()(Args... args) {
+      wfunc_ptr<ReturnType, Args...> ptr(static_cast<uint32_t>(address));
+      return ptr(...args);
+   }
+
+   be_val<uint32_t> address;
+
+};
+
 #pragma pack(pop)
 
 

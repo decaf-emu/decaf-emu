@@ -1,6 +1,31 @@
 #pragma once
 #include "systemtypes.h"
 
+#define GHS_FOPEN_MAX 0x14
+
+extern be_wfunc_ptr<void>*
+p__atexit_cleanup;
+
+extern be_wfunc_ptr<void>*
+p__stdio_cleanup;
+
+extern be_wfunc_ptr<void, be_ptr<void>*>*
+p___cpp_exception_init_ptr;
+
+extern be_wfunc_ptr<void, be_ptr<void>*>*
+p___cpp_exception_cleanup_ptr;
+
+extern be_val<uint16_t>*
+p__gh_FOPEN_MAX;
+
+struct _ghs_iobuf {
+   UNKNOWN(0x10);
+};
+typedef _ghs_iobuf __ghs_iob[GHS_FOPEN_MAX];
+
+extern __ghs_iob* p_iob;
+
+
 BOOL
 ghsLock();
 

@@ -116,16 +116,23 @@ OSContinueThread(OSThread *thread)
 static void
 InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *argv)
 {
-   auto module = gSystem.getUserModule();
    assert(thread->fiber == nullptr);
+
+   uint32_t sdaBase = 0;
+   uint32_t sda2Base = 0;
+   auto module = gSystem.getUserModule();
+   if (module) {
+      sdaBase = module->sdaBase();
+      sda2Base = module->sda2Base();
+   }
 
    // Setup context
    thread->context.gpr[0] = 0;
    thread->context.gpr[1] = thread->stackStart - 4;
-   thread->context.gpr[2] = module->sda2Base;
+   thread->context.gpr[2] = sdaBase;
    thread->context.gpr[3] = argc;
    thread->context.gpr[4] = gMemory.untranslate(argv);
-   thread->context.gpr[13] = module->sdaBase;
+   thread->context.gpr[13] = sda2Base;
 
    // Setup thread
    thread->entryPoint = entry;

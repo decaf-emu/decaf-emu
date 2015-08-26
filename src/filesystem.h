@@ -38,8 +38,9 @@ public:
    virtual void seek(int64_t pos) = 0;
    virtual void skip(size_t n) = 0;
    virtual size_t size() = 0;
-   virtual size_t read(char *b, size_t n) = 0;
+   virtual size_t read(void *b, size_t n) = 0;
    virtual void close() = 0;
+   virtual bool good() = 0;
 };
 
 class FileSystem
@@ -104,9 +105,9 @@ class HostFileSystem : public FileSystem
          mFile.seekg(n, std::fstream::cur);
       }
 
-      size_t read(char *b, size_t n) override
+      size_t read(void *b, size_t n) override
       {
-         mFile.read(b, n);
+         mFile.read(static_cast<char*>(b), n);
          return mFile.gcount();
       }
 
@@ -115,8 +116,14 @@ class HostFileSystem : public FileSystem
          mFile.close();
       }
 
+      bool good() override
+      {
+         return mFile.good();
+      }
+
    private:
       std::ifstream mFile;
+
    };
 
    class HostDirectory : public DirectoryIterator

@@ -221,6 +221,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis)
    }
 
    dis.name = data->name;
+   dis.instruction = data;
 
    for (auto &field : data->write) {
       dis.args.push_back(disassembleField(dis.address, instr, data, field));

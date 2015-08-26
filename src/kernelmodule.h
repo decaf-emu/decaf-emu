@@ -19,7 +19,7 @@
 
 using KernelExportMap = std::map<std::string, KernelExport*>;
 
-struct LoadedModule;
+struct ModuleHandleData;
 
 class KernelModule
 {
@@ -31,19 +31,19 @@ public:
    virtual KernelExport *findExport(const char *name) const = 0;
    virtual uint32_t findExportAddress(const char *name) const = 0;
 
-   p32<LoadedModule>
+   p32<ModuleHandleData>
    getHandle() const
    {
       return mHandle;
    }
 
-   void setHandle(p32<LoadedModule> handle)
+   void setHandle(p32<ModuleHandleData> handle)
    {
       mHandle = handle;
    }
 
 protected:
-   p32<LoadedModule> mHandle;
+   p32<ModuleHandleData> mHandle;
 };
 
 template<typename ModuleType>
@@ -64,20 +64,15 @@ public:
       }
    }
 
+   // TODO: Fix this to return a void* or be_ptr<void>
    uint32_t
    findExportAddress(const char *name) const
    {
       auto exp = findExport(name);
-
-      if (exp) {
-         if (exp->type == KernelExport::Function) {
-            return reinterpret_cast<KernelFunction*>(exp)->vaddr;
-         } else if (exp->type == KernelExport::Data) {
-            return static_cast<uint32_t>(*reinterpret_cast<KernelData*>(exp)->vptr);
-         }
+      if (!exp) {
+         return 0;
       }
-
-      return 0;
+      return gMemory.untranslate(exp->ppcPtr);
    }
 
    virtual const KernelExportMap &

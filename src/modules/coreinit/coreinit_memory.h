@@ -4,8 +4,7 @@
 enum class OSMemoryType : uint32_t
 {
    MEM1 = 1,
-   MEM2 = 2,
-   System = 1234567
+   MEM2 = 2
 };
 
 void *
