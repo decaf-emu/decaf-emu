@@ -21,6 +21,7 @@
 #include "modules/nn_act/nn_act.h"
 #include "modules/nn_fp/nn_fp.h"
 #include "modules/nn_save/nn_save.h"
+#include "modules/nn_temp/nn_temp.h"
 #include "modules/zlib125/zlib125.h"
 #include "modules/proc_ui/proc_ui.h"
 #include "modules/padscore/padscore.h"
@@ -155,6 +156,7 @@ initialiseEmulator()
    gSystem.registerModule("nn_act.rpl", new NNAct {});
    gSystem.registerModule("nn_fp.rpl", new NNFp {});
    gSystem.registerModule("nn_save.rpl", new NNSave {});
+   gSystem.registerModule("nn_temp.rpl", new NNTemp{});
    gSystem.registerModule("proc_ui.rpl", new ProcUI {});
    gSystem.registerModule("zlib125.rpl", new Zlib125 {});
    gSystem.registerModule("padscore.rpl", new PadScore{});
@@ -207,13 +209,6 @@ play(const std::string &path)
    // System preloaded modules
    gLoader.loadRPL("gameloader");
    gLoader.loadRPL("coreinit");
-   gLoader.loadRPL("gx2");
-   gLoader.loadRPL("nn_ac");
-   gLoader.loadRPL("nn_act");
-   gLoader.loadRPL("nn_fp");
-   gLoader.loadRPL("nn_save");
-   gLoader.loadRPL("proc_ui");
-   gLoader.loadRPL("zlib125");
 
    // Startup processor
    gProcessor.start();

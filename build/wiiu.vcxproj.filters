@@ -139,6 +139,12 @@
     <Filter Include="Header Files\modules\gameloader">
       <UniqueIdentifier>{37fb1798-b28c-42be-98bf-45dd2cabcf43}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\nn_temp">
+      <UniqueIdentifier>{8317143f-0494-487a-a088-d71930bcf6cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_temp">
+      <UniqueIdentifier>{a127f8bf-8978-412c-9a92-ebb3b9f32893}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -449,6 +455,12 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\gameloader\gameloader.cpp">
       <Filter>Source Files\modules\gameloader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_temp\nn_temp.cpp">
+      <Filter>Source Files\modules\nn_temp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_temp\nn_temp_core.cpp">
+      <Filter>Source Files\modules\nn_temp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -790,6 +802,12 @@
     </ClInclude>
     <ClInclude Include="..\src\be_data.h">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_temp\nn_temp.h">
+      <Filter>Header Files\modules\nn_temp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_temp\nn_temp_core.h">
+      <Filter>Header Files\modules\nn_temp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
