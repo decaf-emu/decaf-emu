@@ -27,9 +27,9 @@ struct Shader
    std::vector<shadir::Block *> blocks; // Instruction AST
 };
 
-bool decode(Shader &shader, uint8_t *binary, uint32_t size);
+bool decode(Shader &shader, const uint8_t *binary, uint32_t size);
 bool blockify(Shader &shader);
-bool disassemble(std::string &out, uint8_t *binary, uint32_t size);
+bool disassemble(std::string &out, const uint8_t *binary, uint32_t size);
 bool generateHLSL(Shader &shader, std::string &hlsl);
 
 } // namespace latte

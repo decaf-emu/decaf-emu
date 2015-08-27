@@ -9,7 +9,7 @@ namespace latte
 
 struct DecodeState
 {
-   uint32_t *words;
+   const uint32_t *words;
    uint32_t wordCount;
    uint32_t cfPC;
    uint32_t group;
@@ -22,12 +22,12 @@ static bool decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruc
 static bool decodeTEX(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
 
 bool
-decode(Shader &shader, uint8_t *binary, uint32_t size)
+decode(Shader &shader, const uint8_t *binary, uint32_t size)
 {
    DecodeState state;
 
    assert((size % 4) == 0);
-   state.words = reinterpret_cast<uint32_t*>(binary);
+   state.words = reinterpret_cast<const uint32_t*>(binary);
    state.wordCount = size / 4;
    state.cfPC = 0;
    state.group = 0;
@@ -35,7 +35,7 @@ decode(Shader &shader, uint8_t *binary, uint32_t size)
 
    // Step 1: Deserialise, inline ALU/TEX clauses
    for (auto i = 0u; i < state.wordCount; i += 2) {
-      auto cf = *reinterpret_cast<latte::cf::Instruction*>(state.words + i);
+      auto cf = *reinterpret_cast<const latte::cf::Instruction*>(state.words + i);
       auto id = static_cast<latte::cf::inst>(cf.word1.inst);
 
       switch (cf.type) {
@@ -126,7 +126,7 @@ decodeExport(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 }
 
 static void
-getAluSource(shadir::AluSource &source, uint32_t *dwBase, uint32_t counter, uint32_t sel, uint32_t rel, uint32_t chan, uint32_t neg, bool abs)
+getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter, uint32_t sel, uint32_t rel, uint32_t chan, uint32_t neg, bool abs)
 {
    assert(rel == 0);
    source.absolute = abs;
@@ -167,7 +167,7 @@ getAluSource(shadir::AluSource &source, uint32_t *dwBase, uint32_t counter, uint
       source.floatValue = 0.5f;
    } else if (sel == latte::alu::Source::SrcLiteral) {
       source.type = shadir::AluSource::ConstantFloat;
-      source.floatValue = *reinterpret_cast<float*>(dwBase + chan);
+      source.floatValue = *reinterpret_cast<const float*>(dwBase + chan);
    } else if (sel == latte::alu::Source::SrcPreviousScalar) {
       source.type = shadir::AluSource::PreviousScalar;
       source.id = counter - 1;
@@ -256,7 +256,7 @@ getUnit(bool units[5], latte::alu::Instruction &alu)
 static bool
 decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 {
-   uint64_t *slots = reinterpret_cast<uint64_t *>(state.words + (latte::WordsPerCF * cf.aluWord0.addr));
+   const uint64_t *slots = reinterpret_cast<const uint64_t *>(state.words + (latte::WordsPerCF * cf.aluWord0.addr));
    auto aluID = static_cast<latte::alu::inst>(cf.aluWord1.inst);
    bool hasPushedBefore = false;
 
@@ -280,12 +280,12 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
       static char unitName[] = { 'x', 'y', 'z', 'w', 't' };
       bool units[5] = { false, false, false, false, false };
       bool last = false;
-      uint32_t *literalPtr = reinterpret_cast<uint32_t*>(slots + slot);
+      const uint32_t *literalPtr = reinterpret_cast<const uint32_t*>(slots + slot);
       auto literals = 0u;
       shadir::AluReductionInstruction *reductionIns = nullptr;
 
       for (auto i = 0u; i < 5 && !last; ++i) {
-         auto alu = *reinterpret_cast<latte::alu::Instruction*>(slots + slot + i);
+         auto alu = *reinterpret_cast<const latte::alu::Instruction*>(slots + slot + i);
          literalPtr += 2;
          last = !!alu.word0.last;
       }
@@ -293,7 +293,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
       last = false;
 
       for (auto i = 0u; i < 5 && !last; ++i) {
-         auto alu = *reinterpret_cast<latte::alu::Instruction*>(slots + slot);
+         auto alu = *reinterpret_cast<const latte::alu::Instruction*>(slots + slot);
          auto &opcode = latte::alu::op2info[alu.op2.inst];
          auto unit = getUnit(units, alu);
 
@@ -502,11 +502,11 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 static bool
 decodeTEX(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 {
-   uint32_t *ptr = state.words + (latte::WordsPerCF * cf.word0.addr);
+   const uint32_t *ptr = state.words + (latte::WordsPerCF * cf.word0.addr);
 
    for (auto slot = 0u; slot <= cf.word1.count; ) {
-      auto tex = *reinterpret_cast<latte::tex::Instruction*>(ptr);
-      auto id = static_cast<latte::tex::inst>(tex.word0.inst);
+      auto tex = *reinterpret_cast<const latte::tex::Instruction*>(ptr);
+      auto id = static_cast<const latte::tex::inst>(tex.word0.inst);
 
       if (id == latte::tex::VTX_FETCH || id == latte::tex::VTX_SEMANTIC || id == latte::tex::GET_BUFFER_RESINFO) {
          assert(false);

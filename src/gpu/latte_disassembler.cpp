@@ -13,7 +13,7 @@ struct DisassembleState
 {
    fmt::MemoryWriter out;
    std::string indent;
-   uint32_t *words;
+   const uint32_t *words;
    uint32_t wordCount;
    uint32_t group;
    uint32_t cfPC;
@@ -37,20 +37,20 @@ static uint32_t getUnit(bool units[5], latte::alu::Instruction &alu);
 static bool isVectorOnly(latte::alu::Instruction &alu);
 static bool isTranscendentalOnly(latte::alu::Instruction &alu);
 
-bool disassemble(std::string &out, uint8_t *binary, uint32_t size)
+bool disassemble(std::string &out, const uint8_t *binary, uint32_t size)
 {
    bool result = true;
    auto state = DisassembleState { };
 
    assert((size % 4) == 0);
-   state.words = reinterpret_cast<uint32_t*>(binary);
+   state.words = reinterpret_cast<const uint32_t*>(binary);
    state.wordCount = size / 4;
 
    state.cfPC = 0;
    state.group = 0;
 
    for (auto i = 0u; i < state.wordCount; i += 2) {
-      auto cf = *reinterpret_cast<latte::cf::Instruction*>(state.words + i);
+      auto cf = *reinterpret_cast<const latte::cf::Instruction*>(state.words + i);
       auto id = static_cast<latte::cf::inst>(cf.word1.inst);
 
       beginLine(state);
@@ -221,7 +221,7 @@ writeRegisterName(DisassembleState &state, uint32_t sel)
 }
 
 void
-writeAluSource(DisassembleState &state, uint32_t *dwBase, uint32_t sel, uint32_t rel, uint32_t chan, uint32_t neg, bool abs)
+writeAluSource(DisassembleState &state, const uint32_t *dwBase, uint32_t sel, uint32_t rel, uint32_t chan, uint32_t neg, bool abs)
 {
    if (rel != 0) {
       // TODO: relative address
@@ -267,7 +267,7 @@ writeAluSource(DisassembleState &state, uint32_t *dwBase, uint32_t sel, uint32_t
    } else if (sel == latte::alu::Source::Src05Float) {
       state.out << "0.5f";
    } else if (sel == latte::alu::Source::SrcLiteral) {
-      state.out << *reinterpret_cast<float*>(dwBase + chan) << "f";
+      state.out << *reinterpret_cast<const float*>(dwBase + chan) << "f";
    } else if (sel == latte::alu::Source::SrcPreviousScalar) {
       state.out << "PS" << (state.group - 1);
    } else if (sel == latte::alu::Source::SrcPreviousVector) {
@@ -401,7 +401,7 @@ bool disassembleExport(DisassembleState &state, latte::cf::inst id, latte::cf::I
 
 bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 {
-   uint64_t *slots = reinterpret_cast<uint64_t *>(state.words + (latte::WordsPerCF * cf.aluWord0.addr));
+   const uint64_t *slots = reinterpret_cast<const uint64_t *>(state.words + (latte::WordsPerCF * cf.aluWord0.addr));
 
    state.out
       << latte::alu::name[cf.aluWord1.inst] << ": "
@@ -413,13 +413,13 @@ bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Inst
       static char unitName[] = { 'x', 'y', 'z', 'w', 't' };
       bool units[5] = { false, false, false, false, false };
       bool last = false;
-      uint32_t *literalPtr = reinterpret_cast<uint32_t*>(slots + slot);
+      const uint32_t *literalPtr = reinterpret_cast<const uint32_t*>(slots + slot);
       auto literals = 0u;
 
       endLine(state);
 
       for (auto i = 0u; i < 5 && !last; ++i) {
-         auto alu = *reinterpret_cast<latte::alu::Instruction*>(slots + slot + i);
+         auto alu = *reinterpret_cast<const latte::alu::Instruction*>(slots + slot + i);
          literalPtr += 2;
          last = !!alu.word0.last;
       }
@@ -427,7 +427,7 @@ bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Inst
       last = false;
 
       for (auto i = 0u; i < 5 && !last; ++i) {
-         auto alu = *reinterpret_cast<latte::alu::Instruction*>(slots + slot);
+         auto alu = *reinterpret_cast<const latte::alu::Instruction*>(slots + slot);
          auto unit = getUnit(units, alu);
          const char *name = nullptr;
          bool abs0 = false, abs1 = false;
@@ -554,7 +554,7 @@ bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Inst
 
 bool disassembleTEX(DisassembleState &state, latte::cf::inst cfID, latte::cf::Instruction &cf)
 {
-   uint32_t *ptr = state.words + (latte::WordsPerCF * cf.word0.addr);
+  const uint32_t *ptr = state.words + (latte::WordsPerCF * cf.word0.addr);
 
    state.out
       << latte::cf::name[cfID] << ": "
@@ -564,7 +564,7 @@ bool disassembleTEX(DisassembleState &state, latte::cf::inst cfID, latte::cf::In
    increaseIndent(state);
 
    for (auto slot = 0u; slot <= cf.word1.count; ) {
-      auto tex = *reinterpret_cast<latte::tex::Instruction*>(ptr);
+      auto tex = *reinterpret_cast<const latte::tex::Instruction*>(ptr);
       auto name = latte::tex::name[tex.word0.inst];
       auto id = tex.word0.inst;
 
