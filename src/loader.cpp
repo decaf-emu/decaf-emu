@@ -568,42 +568,46 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
       while (!symIn.eof()) {
          elf::readSymbol(symIn, sym);
 
+         // Create symbol data
+         auto name = strTab + sym.name;
+         auto binding = sym.info >> 4;
+         auto type = sym.info & 0xf;
+
+         if (binding != elf::STB_GLOBAL) {
+            // No need to scan LOCAL symbols for imports
+            //  In fact, this crashes due to NULL symbols
+            continue;
+         }
+
          // Calculate relocated address
          auto &impsec = sections[sym.shndx];
          auto offset = sym.value - impsec.header.addr;
          auto baseAddress = gMemory.untranslate(impsec.virtAddress);
          auto virtAddress = baseAddress + offset;
 
-         // Create symbol data
-         auto name = strTab + sym.name;
-         auto binding = sym.info >> 4;
-         auto type = sym.info & 0xf;
-
          if (impsec.header.type == elf::SHT_NULL) {
             continue;
          }
 
-         if (binding == elf::STB_GLOBAL) {
-            if (impsec.header.type == elf::SHT_RPL_IMPORTS) {
-               auto symbolTargetIter = symbolTable.find(name);
-               void * symbolAddr = nullptr;
-               if (symbolTargetIter == symbolTable.end()) {
-                  if (type == elf::STT_FUNC) {
-                     symbolAddr = registerUnimplementedFunction(name);
-                  } else {
-                     symbolAddr = nullptr;
-                  }
+         if (impsec.header.type == elf::SHT_RPL_IMPORTS) {
+            auto symbolTargetIter = symbolTable.find(name);
+            void * symbolAddr = nullptr;
+            if (symbolTargetIter == symbolTable.end()) {
+               if (type == elf::STT_FUNC) {
+                  symbolAddr = registerUnimplementedFunction(name);
                } else {
-                  if (type != elf::STT_FUNC && type != elf::STT_OBJECT) {
-                     assert(0);
-                  }
-
-                  symbolAddr = symbolTargetIter->second;
+                  symbolAddr = nullptr;
+               }
+            } else {
+               if (type != elf::STT_FUNC && type != elf::STT_OBJECT) {
+                  assert(0);
                }
 
-               // Write the symbol addres into .fimport or .dimport
-               gMemory.write(virtAddress, gMemory.untranslate(symbolAddr));
+               symbolAddr = symbolTargetIter->second;
             }
+
+            // Write the symbol addres into .fimport or .dimport
+            gMemory.write(virtAddress, gMemory.untranslate(symbolAddr));
          }
       }
    }
