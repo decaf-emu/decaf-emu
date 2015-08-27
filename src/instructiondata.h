@@ -24,7 +24,7 @@ enum class Field
    crfD, // 6-8
    crfS, // 11-13
    crm,  // 12-19
-   d,    // 16-31 or 20-31...
+   d,    // 16-31
    fm,   // 7-14
    frA,  // 11-15
    frB,  // 16-20
@@ -41,6 +41,7 @@ enum class Field
    nb,   // 16-20
    oe,   // 21
    opcd, // 0-5
+   qd,   // 20-31
    qi,   // 22-24
    qw,   // 21
    rA,   // 11-15

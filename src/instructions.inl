@@ -241,12 +241,12 @@ INS(eciwx, (rd), (ra, rb), (), (opcd == 31, xo1 == 310), "")
 INS(ecowx, (rd), (ra, rb), (), (opcd == 31, xo1 == 438), "")
 
 // Paired-Single Load and Store
-INS(psq_l, (frd), (ra, d), (w, i), (opcd == 56), "Paired Single Load")
-INS(psq_lu, (frd), (ra, d), (w, i), (opcd == 57), "Paired Single Load with Update")
+INS(psq_l, (frd), (ra, qd), (w, i), (opcd == 56), "Paired Single Load")
+INS(psq_lu, (frd), (ra, qd), (w, i), (opcd == 57), "Paired Single Load with Update")
 INS(psq_lx, (frd), (ra, rb), (qw, qi), (opcd == 4, xo3 == 6), "Paired Single Load Indexed")
 INS(psq_lux, (frd), (ra, rb), (qw, qi), (opcd == 4, xo3 == 38), "Paired Single Load with Update Indexed")
-INS(psq_st, (frd), (ra, d), (w, i), (opcd == 60), "Paired Single Store")
-INS(psq_stu, (frd), (ra, d), (w, i), (opcd == 61), "Paired Single Store with Update")
+INS(psq_st, (frd), (ra, qd), (w, i), (opcd == 60), "Paired Single Store")
+INS(psq_stu, (frd), (ra, qd), (w, i), (opcd == 61), "Paired Single Store with Update")
 INS(psq_stx, (frs), (ra, rb), (qw, qi), (opcd == 4, xo3 == 7), "Paired Single Store Indexed")
 INS(psq_stux, (frs), (ra, rb), (qw, qi), (opcd == 4, xo3 == 39), "Paired Single Store with Update Indexed")
 

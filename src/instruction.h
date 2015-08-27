@@ -277,4 +277,11 @@ union Instruction
       uint32_t xo4 : 5;
       uint32_t : 26;
    };
+
+   struct {
+      uint32_t qd : 12;
+      uint32_t : 20;
+   };
+
+
 };

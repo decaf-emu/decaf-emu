@@ -92,6 +92,7 @@ static BitRange gFieldBits[] = {
    { 16, 20 }, // nb
    { 21, 21 }, // oe
    { 0, 5 },   // opcd
+   { 20, 31},  // qd
    { 22, 24 }, // qi
    { 21, 21 }, // qw
    { 11, 15 }, // rA
@@ -264,6 +265,7 @@ initTable()
 #define nb Field::nb
 #define oe Field::oe
 #define opcd Field::opcd
+#define qd Field::qd
 #define qi Field::qi
 #define qw Field::qw
 #define ra Field::rA

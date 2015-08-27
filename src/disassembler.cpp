@@ -114,6 +114,10 @@ disassembleField(uint32_t cia, Instruction instr, InstructionData *data, Field f
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.oe;
       break;
+   case Field::qd:
+      result.type = Disassembly::Argument::ValueSigned;
+      result.valueSigned = sign_extend<12>(instr.qd);
+      break;
    case Field::rA:
       result.type = Disassembly::Argument::Register;
       result.text = "r" + std::to_string(instr.rA);

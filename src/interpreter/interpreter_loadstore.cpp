@@ -712,7 +712,7 @@ psqLoad(ThreadState *state, Instruction instr)
    if (flags & PsqLoadIndexed) {
       ea += state->gpr[instr.rB];
    } else {
-      ea += sign_extend<16, int32_t>(instr.d);
+      ea += sign_extend<12, int32_t>(instr.qd);
    }
 
    if (flags & PsqLoadIndexed) {
@@ -795,7 +795,7 @@ psqStore(ThreadState *state, Instruction instr)
    if (flags & PsqStoreIndexed) {
       ea += state->gpr[instr.rB];
    } else {
-      ea += sign_extend<16, int32_t>(instr.d);
+      ea += sign_extend<12, int32_t>(instr.qd);
    }
 
    if (flags & PsqStoreIndexed) {
