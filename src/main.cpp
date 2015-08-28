@@ -162,6 +162,9 @@ initialiseEmulator()
    gSystem.registerModule("zlib125.rpl", new Zlib125 {});
    gSystem.registerModule("padscore.rpl", new PadScore{});
    gSystem.registerModule("erreula.rpl", new ErrEula{});
+
+   // Initialise debugger
+   gDebugger.initialise();
 }
 
 static bool

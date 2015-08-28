@@ -39,6 +39,9 @@ GameLoaderRun()
    gLog->debug("Succesfully loaded {}", gGameRpx);
 
    auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
+   
+   gDebugger.preLaunch();
+
    if (userPreinit) {
       struct HeapHandles {
          be_ptr<CommonHeap> mem1Heap;
@@ -92,9 +95,6 @@ GameLoaderRun()
       OSSetThreadName(thread, name);
       OSResumeThread(thread);
    }
-
-   // If Debugging...
-   gDebugger.addBreakpoint(appModule->entryPoint());
 
    // Run thread 1
    OSRunThread(OSGetDefaultThread(1), appModule->entryPoint(), 0, nullptr);
