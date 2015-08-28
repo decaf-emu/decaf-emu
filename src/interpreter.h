@@ -8,6 +8,7 @@
 #include "ppc.h"
 #include "jit.h"
 #include "wfunc_ptr.h"
+#include "debugger.h"
 
 #define RegisterInstruction(x) \
    registerInstruction(InstructionID::x, &x)
@@ -31,7 +32,6 @@ public:
 
    void setJitMode(InterpJitMode val);
    void executeSub(ThreadState *state);
-   void addBreakpoint(uint32_t addr);
 
    InterpJitMode getJitMode() const {
       return mJitMode;
@@ -40,7 +40,6 @@ public:
 private:
    void execute(ThreadState *state);
    InterpJitMode mJitMode;
-   std::vector<uint32_t> mBreakpoints;
 
 public:
    static void RegisterFunctions();

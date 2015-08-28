@@ -45,6 +45,12 @@ Processor::start()
    platform::set_thread_name(&mTimerThread, "Timer Thread");
 }
 
+void
+Processor::wakeAll()
+{
+   mCondition.notify_all();
+}
+
 // Wait for all threads to end
 void
 Processor::join()
@@ -75,6 +81,9 @@ Processor::coreEntryPoint(Core *core)
    core->primaryFiber = ConvertThreadToFiber(NULL);
 
    while (mRunning) {
+      // Intentionally do this before the lock...
+      gDebugger.maybeBreak(0, nullptr, core->id);
+
       std::unique_lock<std::mutex> lock { mMutex };
 
       // Free any fibers which need to be deleted

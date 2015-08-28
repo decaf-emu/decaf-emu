@@ -93,6 +93,9 @@ GameLoaderRun()
       OSResumeThread(thread);
    }
 
+   // If Debugging...
+   gDebugger.addBreakpoint(appModule->entryPoint());
+
    // Run thread 1
    OSRunThread(OSGetDefaultThread(1), appModule->entryPoint(), 0, nullptr);
 }

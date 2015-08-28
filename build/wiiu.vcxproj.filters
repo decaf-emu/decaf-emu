@@ -462,6 +462,9 @@
     <ClCompile Include="..\src\modules\nn_temp\nn_temp_core.cpp">
       <Filter>Source Files\modules\nn_temp</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\debugger.cpp">
+      <Filter>Source Files\ppc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -808,6 +811,9 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_temp\nn_temp_core.h">
       <Filter>Header Files\modules\nn_temp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\debugger.h">
+      <Filter>Header Files\ppc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

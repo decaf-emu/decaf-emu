@@ -28,6 +28,7 @@
 #include "system.h"
 #include "usermodule.h"
 #include "platform.h"
+#include "trace.h"
 #include "teenyheap.h"
 
 std::shared_ptr<spdlog::logger>
@@ -235,6 +236,10 @@ play(const std::string &path)
    }
 
    platform::ui::run();
+
+   // Force inclusion in release builds
+   tracePrint(nullptr, 0, 0);
+   gLoader.debugPrint();
 
    // Wait for all processor threads to exit
    //gProcessor.join();

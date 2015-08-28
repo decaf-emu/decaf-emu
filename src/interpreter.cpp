@@ -103,6 +103,8 @@ Interpreter::execute(ThreadState *state)
       // Handle interrupts
       gProcessor.handleInterrupt();
 
+      gDebugger.maybeBreak(state->nia, state, gProcessor.getCoreID());
+
       // JIT Attempt!
       if (forceJit || mJitMode == InterpJitMode::Enabled) {
          if (forceJit || state->nia != state->cia + 4) {
@@ -131,11 +133,6 @@ Interpreter::execute(ThreadState *state)
 
       auto trace = traceInstructionStart(instr, data, state);
       auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
-      auto bpitr = std::find(mBreakpoints.begin(), mBreakpoints.end(), state->cia);
-
-      if (bpitr != mBreakpoints.end()) {
-         gLog->debug("Hit breakpoint!");
-      }
 
       if (!fptr) {
          gLog->error("Unimplemented interpreter instruction {}", data->name);
@@ -191,11 +188,6 @@ Interpreter::executeSub(ThreadState *state)
    execute(state);
 
    state->lr = lr;
-}
-
-void Interpreter::addBreakpoint(uint32_t addr)
-{
-   mBreakpoints.push_back(addr);
 }
 
 bool jit_fallback(PPCEmuAssembler& a, Instruction instr)

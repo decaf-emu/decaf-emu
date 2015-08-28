@@ -61,6 +61,9 @@ public:
    void start();
    void join();
 
+   // Debugger Helper
+   void wakeAll();
+
    // Fiber
    Fiber *createFiber();
    void destroyFiber(Fiber *fiber);
