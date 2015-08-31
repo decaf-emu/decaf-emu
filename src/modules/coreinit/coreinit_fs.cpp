@@ -127,6 +127,10 @@ FSOpenFile(FSClient *client, FSCmdBlock *block, const char *path, const char *mo
 {
    auto fs = gSystem.getFileSystem();
    auto file = fs->openFile(path, FileSystem::Input | FileSystem::Binary);
+   
+   if (!file) {
+      return FSStatus::NotFound;
+   }
 
    if (!file->good()) {
       return FSStatus::NotFound;
@@ -157,6 +161,10 @@ FSGetStat(FSClient *client, FSCmdBlock *block, const char *filepath, FSStat *sta
 {
    auto fs = gSystem.getFileSystem();
    auto file = fs->openFile(filepath, FileSystem::Input | FileSystem::Binary);
+   
+    if (!file) {
+      return FSStatus::NotFound;
+   }
 
    if (!file->good()) {
       return FSStatus::NotFound;
