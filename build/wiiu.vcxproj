@@ -45,11 +45,11 @@
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(SolutionDir)\libraries\cereal\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(SolutionDir)\libraries\cereal\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
