@@ -92,6 +92,10 @@ public:
    const char * getUnimplementedData(uint32_t addr);
    void debugPrint();
 
+   const std::map<std::string, LoadedModule*>& getLoadedModules() const {
+      return mModules;
+   }
+
 protected:
    uint32_t registerUnimplementedData(const std::string& name);
    void * registerUnimplementedFunction(const std::string& name);

@@ -6,6 +6,7 @@
 #include "processor.h"
 #include "trace.h"
 #include "log.h"
+#include "debugcontrol.h"
 
 Interpreter
 gInterpreter;
@@ -103,8 +104,6 @@ Interpreter::execute(ThreadState *state)
       // Handle interrupts
       gProcessor.handleInterrupt();
 
-      gDebugger.maybeBreak(state->nia, state, gProcessor.getCoreID());
-
       // JIT Attempt!
       if (forceJit || mJitMode == InterpJitMode::Enabled) {
          if (forceJit || state->nia != state->cia + 4) {
@@ -122,6 +121,8 @@ Interpreter::execute(ThreadState *state)
       // Interpreter Loop!
       state->cia = state->nia;
       state->nia = state->cia + 4;
+
+      gDebugControl.maybeBreak(state->cia, state, gProcessor.getCoreID());
 
       auto instr = gMemory.read<Instruction>(state->cia);
       auto data = gInstructionTable.decode(instr);

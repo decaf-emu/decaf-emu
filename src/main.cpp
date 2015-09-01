@@ -30,6 +30,7 @@
 #include "platform.h"
 #include "trace.h"
 #include "teenyheap.h"
+#include "debugger.h"
 
 std::shared_ptr<spdlog::logger>
 gLog;

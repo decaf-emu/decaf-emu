@@ -4,9 +4,42 @@
 #include <atomic>
 #include <queue>
 #include "systemtypes.h"
+#include "debugmsg.h"
 #include "modules/coreinit/coreinit_core.h"
 
 class DebugPacket;
+class DebugMessage;
+
+typedef std::map<uint32_t, uint32_t> BreakpointListType;
+typedef std::shared_ptr<BreakpointListType> BreakpointList;
+
+enum class DebugMessageType : uint16_t {
+   Invalid,
+   PreLaunch,
+   DebuggerDc,
+   BpHit,
+};
+
+class DebugMessage : public MessageClass<DebugMessageType> { };
+template<DebugMessageType TypeId>
+using DebugMessageBase = MessageClassBase<DebugMessage, TypeId>;
+
+class DebugMessageBpHit : public DebugMessageBase<DebugMessageType::BpHit> {
+public:
+   uint32_t coreId;
+   uint32_t userData;
+
+};
+
+class DebugMessagePreLaunch : public DebugMessageBase<DebugMessageType::PreLaunch> {
+public:
+
+};
+
+class DebugMessageDebuggerDc : public DebugMessageBase<DebugMessageType::DebuggerDc> {
+public:
+
+};
 
 class Debugger
 {
@@ -14,36 +47,28 @@ public:
    Debugger();
 
    void initialise();
+   bool isEnabled() const;
 
-   bool hasDebugger() const;
-
-   void preLaunch();
-   void maybeBreak(uint32_t addr, ThreadState *state, uint32_t coreIdx);
-
-protected:
-   void addMessage(DebugPacket *msg);
-   void debugThread();
-
-   void pauseCore(ThreadState *state, uint32_t coreId);
+   void pause();
+   void resume();
 
    void addBreakpoint(uint32_t addr, uint32_t userData);
    void removeBreakpoint(uint32_t addr);
+   const BreakpointList& getBreakpoints() const {
+      return mBreakpoints;
+   }
 
-   void pauseAll();
-   void resumeAll();
-   void waitForAllPaused();
+   void notify(DebugMessage *msg);
 
-   bool mConnected;
-   std::atomic_size_t mNumBreakpoints;
-   std::map<uint32_t, uint32_t> mBreakpoints;
-   std::mutex mMutex;
-   bool mCoreStopped[CoreCount];
-   ThreadState * mStates[CoreCount];
-   std::atomic_bool mWaitingForPause;
-   std::condition_variable mWaitCond;
-   std::condition_variable mReleaseCond;
+protected:
+   void handleMessage(DebugMessage *pak);
+   void debugThread();
+
+   bool mEnabled;
    std::thread mDebuggerThread;
-   std::queue<DebugPacket*> mMsgQueue;
+   BreakpointList mBreakpoints;
+   
+   std::queue<DebugMessage*> mMsgQueue;
    std::mutex mMsgLock;
    std::condition_variable mMsgCond;
 

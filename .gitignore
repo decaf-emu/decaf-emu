@@ -9,3 +9,4 @@ build/*.txt
 *.suo
 *.sdf
 *.opensdf
+debugger/bin

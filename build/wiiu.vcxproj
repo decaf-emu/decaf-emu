@@ -90,7 +90,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\codetests.cpp" />
+    <ClCompile Include="..\src\debugcontrol.cpp" />
     <ClCompile Include="..\src\debugger.cpp" />
+    <ClCompile Include="..\src\debugnet.cpp" />
     <ClCompile Include="..\src\disassembler.cpp" />
     <ClCompile Include="..\src\elf.cpp" />
     <ClCompile Include="..\src\gpu\latte_blockify.cpp" />
@@ -202,7 +204,10 @@
     <ClInclude Include="..\src\bigendianview.h" />
     <ClInclude Include="..\src\bitutils.h" />
     <ClInclude Include="..\src\codetests.h" />
+    <ClInclude Include="..\src\debugcontrol.h" />
     <ClInclude Include="..\src\debugger.h" />
+    <ClInclude Include="..\src\debugmsg.h" />
+    <ClInclude Include="..\src\debugnet.h" />
     <ClInclude Include="..\src\disassembler.h" />
     <ClInclude Include="..\src\elf.h" />
     <ClInclude Include="..\src\filesystem.h" />

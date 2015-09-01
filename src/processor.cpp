@@ -8,6 +8,7 @@
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "ppcinvoke.h"
+#include "debugcontrol.h"
 
 Processor
 gProcessor { CoreCount };
@@ -82,7 +83,7 @@ Processor::coreEntryPoint(Core *core)
 
    while (mRunning) {
       // Intentionally do this before the lock...
-      gDebugger.maybeBreak(0, nullptr, core->id);
+      gDebugControl.maybeBreak(0, nullptr, core->id);
 
       std::unique_lock<std::mutex> lock { mMutex };
 

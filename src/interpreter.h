@@ -8,7 +8,6 @@
 #include "ppc.h"
 #include "jit.h"
 #include "wfunc_ptr.h"
-#include "debugger.h"
 
 #define RegisterInstruction(x) \
    registerInstruction(InstructionID::x, &x)

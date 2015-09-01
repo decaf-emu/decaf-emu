@@ -7,6 +7,7 @@
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "system.h"
 #include "interpreter.h"
+#include "debugcontrol.h"
 
 std::string gGameRpx;
 
@@ -40,7 +41,7 @@ GameLoaderRun()
 
    auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
    
-   gDebugger.preLaunch();
+   gDebugControl.preLaunch();
 
    if (userPreinit) {
       struct HeapHandles {

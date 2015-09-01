@@ -463,7 +463,13 @@
       <Filter>Source Files\modules\nn_temp</Filter>
     </ClCompile>
     <ClCompile Include="..\src\debugger.cpp">
-      <Filter>Source Files\ppc</Filter>
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\debugnet.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\debugcontrol.cpp">
+      <Filter>Source Files\system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -813,7 +819,16 @@
       <Filter>Header Files\modules\nn_temp</Filter>
     </ClInclude>
     <ClInclude Include="..\src\debugger.h">
-      <Filter>Header Files\ppc</Filter>
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\debugnet.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\debugmsg.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\debugcontrol.h">
+      <Filter>Header Files\system</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

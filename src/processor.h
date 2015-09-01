@@ -89,6 +89,13 @@ public:
    uint32_t getCoreID();
    uint32_t getCoreCount();
 
+   const std::vector<Core *> getCoreList() const {
+      return mCores;
+   }
+   const std::vector<Fiber *> getFiberList() const {
+      return mFiberList;
+   }
+
 protected:
    friend Core;
    friend Fiber;
