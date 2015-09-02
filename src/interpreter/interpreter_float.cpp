@@ -102,7 +102,7 @@ template<>
 float
 getFpr<float>(ThreadState *state, unsigned fr)
 {
-   return state->fpr[fr].paired0;
+   return (float)(state->fpr[fr].value);
 }
 
 template<>
@@ -115,8 +115,7 @@ getFpr<double>(ThreadState *state, unsigned fr)
 void
 setFpr(ThreadState *state, unsigned fr, float value)
 {
-   state->fpr[fr].paired0 = value;
-   state->fpr[fr].paired1 = value;
+   state->fpr[fr].value = (double)value;
 }
 
 void
