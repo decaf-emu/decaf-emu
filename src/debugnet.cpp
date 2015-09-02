@@ -228,21 +228,6 @@ int serializePacket2(std::vector<uint8_t> &data, DebugPacket *packet) {
    return 0;
 }
 
-int serializePacket(std::vector<uint8_t> &data, DebugPacket *packet)
-{
-   if (packet->isA(DebugPacketType::BpHit)) {
-      return serializePacket2<DebugPacketBpHit>(data, packet);
-   } else if (packet->isA(DebugPacketType::PreLaunch)) {
-      return serializePacket2<DebugPacketPreLaunch>(data, packet);
-   } else if (packet->isA(DebugPacketType::Pause)) {
-      return serializePacket2<DebugPacketPause>(data, packet);
-   } else if (packet->isA(DebugPacketType::Resume)) {
-      return serializePacket2<DebugPacketResume>(data, packet);
-   } else {
-      return -1;
-   }
-}
-
 struct vectorwrapbuf : public std::basic_streambuf<char> {
    vectorwrapbuf(const uint8_t *start, const uint8_t *end) {
       this->setg((char*)start, (char*)start, (char*)end);
@@ -260,18 +245,41 @@ int deserializePacket2(const std::vector<uint8_t> &data, DebugPacket *&packet) {
    return 0;
 }
 
+int serializePacket(std::vector<uint8_t> &data, DebugPacket *packet)
+{
+   if (packet->isA(DebugPacketType::BpHit)) {
+      return serializePacket2<DebugPacketBpHit>(data, packet);
+   } else if (packet->isA(DebugPacketType::PreLaunch)) {
+      return serializePacket2<DebugPacketPreLaunch>(data, packet);
+   } else if (packet->isA(DebugPacketType::Pause)) {
+      return serializePacket2<DebugPacketPause>(data, packet);
+   } else if (packet->isA(DebugPacketType::Resume)) {
+      return serializePacket2<DebugPacketResume>(data, packet);
+   } else if (packet->isA(DebugPacketType::AddBreakpoint)) {
+      return serializePacket2<DebugPacketBpAdd>(data, packet);
+   } else if (packet->isA(DebugPacketType::RemoveBreakpoint)) {
+      return serializePacket2<DebugPacketBpRemove>(data, packet);
+   } else {
+      return -1;
+   }
+}
+
 int deserializePacket(const std::vector<uint8_t> &data, DebugPacket *&packet) {
    auto &header = *reinterpret_cast<const DebugNetHeader*>(data.data());
    assert(data.size() == header.size);
 
-   if (header.command == DebugPacketType::BpHit) {
-      return deserializePacket2<DebugPacketBpHit>(data, packet);
-   } else if (header.command == DebugPacketType::PreLaunch) {
+   if (header.command == DebugPacketType::PreLaunch) {
       return deserializePacket2<DebugPacketPreLaunch>(data, packet);
+   } else if (header.command == DebugPacketType::BpHit) {
+      return deserializePacket2<DebugPacketBpHit>(data, packet);
    } else if (header.command == DebugPacketType::Pause) {
       return deserializePacket2<DebugPacketPause>(data, packet);
    } else if (header.command == DebugPacketType::Resume) {
       return deserializePacket2<DebugPacketResume>(data, packet);
+   } else if (header.command == DebugPacketType::AddBreakpoint) {
+      return deserializePacket2<DebugPacketBpAdd>(data, packet);
+   } else if (header.command == DebugPacketType::RemoveBreakpoint) {
+      return deserializePacket2<DebugPacketBpRemove>(data, packet);
    } else {
       return -1;
    }
@@ -326,17 +334,19 @@ DebugNet::networkThread()
       assert(recvd == sizeof(DebugNetHeader));
 
       DebugNetHeader *header = (DebugNetHeader*)buffer.data();
-      buffer.resize(header->size);
+      if (header->size > (uint32_t)buffer.size()) {
+         buffer.resize(header->size);
 
-      recvd = recv(sock, 
-         (char*)&buffer[sizeof(DebugNetHeader)],
-         (int)buffer.size() - sizeof(DebugNetHeader), 
-         0);
-      if (recvd <= 0) {
-         handleDisconnect();
-         break;
+         recvd = recv(sock,
+            (char*)&buffer[sizeof(DebugNetHeader)],
+            (int)buffer.size() - sizeof(DebugNetHeader),
+            0);
+         if (recvd <= 0) {
+            handleDisconnect();
+            break;
+         }
+         assert(recvd == buffer.size() - sizeof(DebugNetHeader));
       }
-      assert(recvd == buffer.size() - sizeof(DebugNetHeader));
 
       DebugPacket *packet = nullptr;
       deserializePacket(buffer, packet);

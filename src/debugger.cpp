@@ -139,6 +139,9 @@ Debugger::addBreakpoint(uint32_t addr, uint32_t userData)
          // Keep trying until success!
          continue;
       }
+
+      // Successful swap!
+      break;
    }
 }
 
