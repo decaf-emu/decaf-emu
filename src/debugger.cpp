@@ -19,7 +19,7 @@ Debugger
 gDebugger;
 
 Debugger::Debugger()
-   : mEnabled(false)
+   : mEnabled(false), mBreakpoints(new BreakpointListType())
 {
 }
 
@@ -82,10 +82,13 @@ Debugger::initialise()
    if (gDebugNet.connect("127.0.0.1", 11234)) {
       // Debugging is connected!
       mEnabled = true;
+      gLog->debug("Debugger Enabled! Remote");
    } else if (FORCE_DEBUGGER_ON) {
       mEnabled = true;
+      gLog->debug("Debugger Enabled! Local");
    } else {
       mEnabled = false;
+      gLog->debug("Debugger Disabled.");
    }
 
    if (mEnabled) {

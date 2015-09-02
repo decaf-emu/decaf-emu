@@ -35,7 +35,7 @@ struct DebugModuleInfo {
 
    template <class Archive>
    void serialize(Archive &ar) {
-      ar(name, symbols);
+      ar(name, entryPoint, symbols);
    }
 };
 
@@ -58,17 +58,22 @@ struct DebugThreadInfo {
 
 struct DebugPauseInfo {
    std::vector<DebugModuleInfo> modules;
+   uint32_t userModuleIdx;
    std::vector<DebugThreadInfo> threads;
 
    template <class Archive>
    void serialize(Archive &ar) {
       ar(modules);
+      ar(userModuleIdx);
       ar(threads);
    }
 };
 
 void populateDebugPauseInfo(DebugPauseInfo& info) {
    auto &loadedModules = gLoader.getLoadedModules();
+   int moduleIdx = 0;
+   int userModuleIdx = -1;
+   auto userModule = gSystem.getUserModule();
    for (auto &i : loadedModules) {
       auto &moduleName = i.first;
       auto &loadedModule = i.second;
@@ -77,7 +82,13 @@ void populateDebugPauseInfo(DebugPauseInfo& info) {
       tmod.name = moduleName;
       tmod.entryPoint = loadedModule->entryPoint();
       info.modules.push_back(tmod);
+
+      if (loadedModule == userModule) {
+         userModuleIdx = moduleIdx;
+      }
+      moduleIdx++;
    }
+   info.userModuleIdx = static_cast<uint32_t>(userModuleIdx);
 
    auto &coreList = gProcessor.getCoreList();
    auto &fiberList = gProcessor.getFiberList();
@@ -128,11 +139,13 @@ enum class DebugPacketType : uint16_t {
    RemoveBreakpoint = 6,
 };
 
+#pragma pack(push, 1)
 struct DebugNetHeader {
-   uint16_t size;
+   uint32_t size;
    DebugPacketType command;
    uint16_t reqId;
 };
+#pragma pack(pop)
 
 class DebugPacket : public MessageClass<DebugPacketType> { };
 template<DebugPacketType TypeId>
@@ -207,11 +220,11 @@ int serializePacket2(std::vector<uint8_t> &data, DebugPacket *packet) {
    archive(typedPacket);
    std::string& payload = str.str();
 
-   data.resize(4 + payload.size());
+   data.resize(sizeof(DebugNetHeader) + payload.size());
    auto &header = *reinterpret_cast<DebugNetHeader*>(data.data());
    header.size = (uint16_t)data.size();
    header.command = packet->type();
-   std::copy(payload.begin(), payload.end(), data.begin() + 4);
+   std::copy(payload.begin(), payload.end(), data.begin() + sizeof(DebugNetHeader));
    return 0;
 }
 
@@ -231,14 +244,14 @@ int serializePacket(std::vector<uint8_t> &data, DebugPacket *packet)
 }
 
 struct vectorwrapbuf : public std::basic_streambuf<char> {
-   vectorwrapbuf(const std::vector<uint8_t> &vec) {
-      this->setg((char*)vec.data(), (char*)vec.data(), (char*)vec.data() + vec.size());
+   vectorwrapbuf(const uint8_t *start, const uint8_t *end) {
+      this->setg((char*)start, (char*)start, (char*)end);
    }
 };
 
 template <typename T>
 int deserializePacket2(const std::vector<uint8_t> &data, DebugPacket *&packet) {
-   vectorwrapbuf databuf(data);
+   vectorwrapbuf databuf(data.data() + sizeof(DebugNetHeader), data.data() + data.size());
    std::istream stream(&databuf);
    cereal::BinaryInputArchive archive(stream);
    packet = new T();
