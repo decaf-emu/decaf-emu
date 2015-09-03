@@ -281,6 +281,6 @@ INS(ps_merge01, (frd), (fra, frb), (rc), (opcd == 4, xo1 == 560), "Paired Single
 INS(ps_merge10, (frd), (fra, frb), (rc), (opcd == 4, xo1 == 592), "Paired Single Merge Swapped")
 INS(ps_merge11, (frd), (fra, frb), (rc), (opcd == 4, xo1 == 624), "Paired Single Merge Low")
 
-INSA(mr, or_, (ra == rb))
+INSA(mr, or_, (rs == rb))
 INSA(mflr, mfspr, (spr==8))
 INSA(mfctr, mfspr, (spr==9))

@@ -252,7 +252,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
             }
          }
          if (skipField) {
-            break;
+            continue;
          }
       }
       dis.args.push_back(disassembleField(dis.address, instr, data, field));
