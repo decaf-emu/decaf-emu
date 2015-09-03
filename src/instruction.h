@@ -283,5 +283,16 @@ union Instruction
       uint32_t : 20;
    };
 
+   struct {
+      uint32_t: 2;
+      uint32_t kcn : 24;
+      uint32_t: 6;
+   };
+
+   struct {
+      uint32_t: 1;
+      uint32_t kci : 1;
+      uint32_t: 30;
+   };
 
 };

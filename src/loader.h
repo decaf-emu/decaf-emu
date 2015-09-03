@@ -70,11 +70,16 @@ public:
       return mSda2Base;
    }
 
+   const std::map<std::string, void*>& getSymbols() const {
+      return mSymbols;
+   }
+
 protected:
    LoadedModuleHandleData *mHandle;
    std::string mName;
    std::vector<LoadedSection> mSections;
    std::map<std::string, void*> mExports;
+   std::map<std::string, void*> mSymbols;
    uint32_t mEntryPoint;
    uint32_t mDefaultStackSize;
    uint32_t mSdaBase;

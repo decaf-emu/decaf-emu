@@ -52,7 +52,15 @@ Debugger::handleMessage(DebugMessage *msg)
    switch (msg->type()) {
    case DebugMessageType::DebuggerDc: {
       gDebugControl.pauseAll();
-      gLog->debug("Debugger disconnected, game has been paused.");
+
+      gLog->debug("Debugger disconnected, game paused to wait for debugger.");
+
+      gDebugControl.waitForAllPaused();
+      while (!gDebugNet.connect()) {
+         Sleep(400);
+      }
+      gDebugNet.writePaused();
+
       break;
    }
 
@@ -73,13 +81,23 @@ Debugger::handleMessage(DebugMessage *msg)
 
       break;
    }
+   case DebugMessageType::CoreStepped: {
+      auto bpMsg = reinterpret_cast<DebugMessageCoreStepped*>(msg);
+
+      gDebugControl.waitForAllPaused();
+
+      gLog->debug("Core #{} Stepped", bpMsg->coreId);
+      gDebugNet.writeCoreStepped(bpMsg->coreId);
+
+      break;
+   }
    }
 }
 
 void
 Debugger::initialise()
 {
-   if (gDebugNet.connect("127.0.0.1", 11234)) {
+   if (gDebugNet.connect()) {
       // Debugging is connected!
       mEnabled = true;
       gLog->debug("Debugger Enabled! Remote");
@@ -117,12 +135,20 @@ Debugger::pause()
 {
    gDebugControl.pauseAll();
    gDebugControl.waitForAllPaused();
+
+   gDebugNet.writePaused();
 }
 
 void
 Debugger::resume()
 {
    gDebugControl.resumeAll();
+}
+
+void
+Debugger::stepCore(uint32_t coreId)
+{
+   gDebugControl.stepCore(coreId);
 }
 
 void

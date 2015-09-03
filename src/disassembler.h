@@ -43,7 +43,7 @@ struct Disassembly
 
 struct Disassembler
 {
-   bool disassemble(Instruction bin, Disassembly &out);
+   bool disassemble(Instruction bin, Disassembly &out, uint32_t address);
 };
 
 extern Disassembler gDisassembler;

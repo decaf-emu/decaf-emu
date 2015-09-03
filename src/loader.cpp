@@ -216,6 +216,7 @@ Loader::loadKernelModule(const std::string& name, KernelModule *module)
    std::vector<KernelFunction*> funcExports;
    std::vector<KernelData*> dataExports;
    std::map<std::string, void*> exportsMap;
+   std::map<std::string, void*> symbolsMap;
    uint32_t dataSize = 0;
 
    for (auto &i : exports) {
@@ -259,6 +260,7 @@ Loader::loadKernelModule(const std::string& name, KernelModule *module)
 
          // Add to exports list
          exportsMap.emplace(func->name, thunkAddr);
+         symbolsMap.emplace(func->name, thunkAddr);
 
          // Save the PPC ptr for internal lookups
          func->ppcPtr = thunkAddr;
@@ -278,6 +280,7 @@ Loader::loadKernelModule(const std::string& name, KernelModule *module)
 
          // Add to exports list
          exportsMap.emplace(data->name, dataAddr);
+         symbolsMap.emplace(data->name, dataAddr);
 
          // Save the PPC ptr for internal lookups
          data->ppcPtr = dataAddr;
@@ -296,6 +299,7 @@ Loader::loadKernelModule(const std::string& name, KernelModule *module)
    loadedMod->mDefaultStackSize = 0;
    loadedMod->mEntryPoint = 0;
    loadedMod->mExports = exportsMap;
+   loadedMod->mSymbols = symbolsMap;
    loadedMod->mSections = loadedSections;
    loadedMod->mHandle = OSAllocFromSystem<LoadedModuleHandleData>();
    loadedMod->mHandle->ptr = loadedMod;
@@ -404,6 +408,8 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
 {
    auto in = BigEndianView{ data.data(), data.size() };
 
+   std::map<std::string, void*> symbolsMap;
+
    // Read header
    auto header = elf::Header{};
    if (!elf::readHeader(in, header)) {
@@ -480,7 +486,7 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
    // I am a bad person and I should feel bad
    std::map<void*, void*> trampolines;
    void * trampSegStart = codeSeg.getCurrentAddr();
-   auto getTramp = [&](void *target) {
+   auto getTramp = [&](void *target, const std::string& symbolName) {
       auto trampIter = trampolines.find(target);
       if (trampIter != trampolines.end()) {
          return trampIter->second;
@@ -512,6 +518,8 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
          // need to implement 16-byte long-jumping here...
          assert(0);
       }
+
+      symbolsMap.emplace(std::string("&") + symbolName, trampAddr);
 
       trampolines.emplace(targetAddr, trampAddr);
       return static_cast<void*>(trampAddr);
@@ -685,7 +693,7 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
 
             intptr_t delta = symAddr - reloAddr;
             if (delta < -0x01fffffc || delta > 0x01fffffc) {
-               void *trampPtr = getTramp(gMemory.translate(symAddr));
+               void *trampPtr = getTramp(gMemory.translate(symAddr), symbolName);
                assert(trampPtr);
                uint32_t trampAddr = gMemory.untranslate(trampPtr);
 
@@ -747,6 +755,7 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
          break;
       }
    }
+   symbolsMap.emplace("!_EntryPoint", gMemory.translate(entryPoint));
 
    // Process exports
    std::map<std::string, void*> exports;
@@ -767,6 +776,7 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
          const char * exportsName = secNames + exportNameOff;
 
          exports.emplace(exportsName, gMemory.translate(exportsAddr));
+         symbolsMap.emplace(exportsName, gMemory.translate(exportsAddr));
       }
 
    }
@@ -798,6 +808,7 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
    loadedMod->mDefaultStackSize = info.stackSize;
    loadedMod->mEntryPoint = entryPoint;
    loadedMod->mExports = exports;
+   loadedMod->mSymbols = symbolsMap;
    loadedMod->mSections = loadedSections;
    loadedMod->mHandle = OSAllocFromSystem<LoadedModuleHandleData>();
    loadedMod->mHandle->ptr = loadedMod;

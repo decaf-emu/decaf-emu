@@ -1,7 +1,10 @@
 #include <sstream>
+#include <iomanip>
 #include "bitutils.h"
 #include "disassembler.h"
 #include "instructiondata.h"
+#include "system.h"
+#include "kernelfunction.h"
 
 Disassembler gDisassembler;
 
@@ -89,6 +92,10 @@ disassembleField(uint32_t cia, Instruction instr, InstructionData *data, Field f
    case Field::imm:
       result.type = Disassembly::Argument::ValueUnsigned;
       result.valueUnsigned = instr.imm;
+      break;
+   case Field::kcn:
+      result.type = Disassembly::Argument::ConstantUnsigned;
+      result.constantUnsigned = instr.kcn;
       break;
    case Field::li:
       result.type = Disassembly::Argument::Address;
@@ -186,7 +193,7 @@ argumentToText(Disassembly::Argument &arg)
 
    switch (arg.type) {
    case Disassembly::Argument::Address:
-      ss << "0x" << std::hex << arg.address;
+      ss << "@" << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << arg.address;
       return ss.str();
    case Disassembly::Argument::Register:
       return arg.text;
@@ -216,7 +223,7 @@ argumentToText(Disassembly::Argument &arg)
 }
 
 bool
-Disassembler::disassemble(Instruction instr, Disassembly &dis)
+Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
 {
    auto data = gInstructionTable.decode(instr);
 
@@ -226,6 +233,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis)
 
    dis.name = data->name;
    dis.instruction = data;
+   dis.address = address;
 
    for (auto &field : data->write) {
       dis.args.push_back(disassembleField(dis.address, instr, data, field));
@@ -244,6 +252,8 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis)
          dis.name += 'o';
       } else if (field == Field::rc && instr.rc) {
          dis.name += '.';
+      } else if (field == Field::kci && !instr.kci) {
+         dis.name += '?';
       }
    }
 
@@ -257,6 +267,16 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis)
       }
 
       dis.text += argumentToText(arg);
+   }
+
+   // Specialized Handlers
+   if (data->id == InstructionID::kc) {
+      auto sc = gSystem.getSyscall(dis.args[0].constantUnsigned);
+      if (sc) {
+         dis.text += " ; " + std::string(sc->name);
+      } else {
+         dis.text += " ; ?";
+      }
    }
 
    return true;

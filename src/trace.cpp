@@ -77,7 +77,7 @@ static void
 printInstruction(const Trace& trace, int index)
 {
    Disassembly dis;
-   gDisassembler.disassemble(trace.instr, dis);
+   gDisassembler.disassemble(trace.instr, dis, trace.cia);
 
    std::string addend = "";
 

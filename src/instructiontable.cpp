@@ -84,6 +84,8 @@ static BitRange gFieldBits[] = {
    { 6, 10 },  // frS
    { 17, 19 }, // i
    { 16, 19 }, // imm
+   { 30, 30 }, // kci
+   { 6, 29 },  // kcn
    { 10, 10 }, // l
    { 6, 29 },  // li
    { 31, 31 }, // lk
@@ -257,6 +259,8 @@ initTable()
 #define frs Field::frS
 #define i Field::i
 #define imm Field::imm
+#define kci Field::kci
+#define kcn Field::kcn
 #define l Field::l
 #define li Field::li
 #define lk Field::lk

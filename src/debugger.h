@@ -18,6 +18,7 @@ enum class DebugMessageType : uint16_t {
    PreLaunch,
    DebuggerDc,
    BpHit,
+   CoreStepped,
 };
 
 class DebugMessage : public MessageClass<DebugMessageType> { };
@@ -28,6 +29,12 @@ class DebugMessageBpHit : public DebugMessageBase<DebugMessageType::BpHit> {
 public:
    uint32_t coreId;
    uint32_t userData;
+
+};
+
+class DebugMessageCoreStepped : public DebugMessageBase<DebugMessageType::CoreStepped> {
+public:
+   uint32_t coreId;
 
 };
 
@@ -51,6 +58,7 @@ public:
 
    void pause();
    void resume();
+   void stepCore(uint32_t coreId);
 
    void addBreakpoint(uint32_t addr, uint32_t userData);
    void removeBreakpoint(uint32_t addr);

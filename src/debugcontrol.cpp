@@ -9,6 +9,7 @@ gDebugControl;
 DebugControl::DebugControl()
 {
    mWaitingForPause.store(false);
+   mWaitingForStep.store(-1);
 
    for (int i = 0; i < DCCoreCount; ++i) {
       mCorePaused[i] = false;
@@ -23,8 +24,6 @@ DebugControl::pauseAll()
       // Someone pre-empted this pause
       return;
    }
-
-   gProcessor.wakeAll();
 }
 
 void
@@ -39,6 +38,13 @@ DebugControl::resumeAll()
    mReleaseCond.notify_all();
 }
 
+void
+DebugControl::stepCore(uint32_t coreId)
+{
+   mCorePaused[coreId] = false;
+   mWaitingForStep.store(coreId);
+   mReleaseCond.notify_all();
+}
 
 void
 DebugControl::waitForAllPaused()
@@ -53,7 +59,8 @@ DebugControl::waitForAllPaused()
       if (allCoresPaused) {
          break;
       }
-
+      
+      gProcessor.wakeAll();
       mWaitCond.wait(lock);
    }
 }
@@ -68,6 +75,10 @@ DebugControl::pauseCore(ThreadState *state, uint32_t coreId)
       mWaitCond.notify_all();
 
       mReleaseCond.wait(lock);
+
+      if (mWaitingForStep.load() == coreId) {
+         break;
+      }
    }
 }
 
@@ -92,6 +103,14 @@ DebugControl::maybeBreak(uint32_t addr, ThreadState *state, uint32_t coreId)
    }
 
    if (mWaitingForPause.load()) {
+      if (mWaitingForStep.load() == coreId) {
+         mWaitingForStep.store(-1);
+
+         auto msg = new DebugMessageCoreStepped();
+         msg->coreId = coreId;
+         gDebugger.notify(msg);
+      }
+
       pauseCore(state, coreId);
       return;
    }

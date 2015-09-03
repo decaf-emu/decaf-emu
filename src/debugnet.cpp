@@ -13,6 +13,7 @@
 #include "processor.h"
 #include "log.h"
 #include "modules/coreinit/coreinit_thread.h"
+#include "disassembler.h"
 
 DebugNet
 gDebugNet;
@@ -31,11 +32,10 @@ struct DebugSymbolInfo {
 struct DebugModuleInfo {
    std::string name;
    uint32_t entryPoint;
-   std::vector<DebugSymbolInfo> symbols;
 
    template <class Archive>
    void serialize(Archive &ar) {
-      ar(name, entryPoint, symbols);
+      ar(name, entryPoint);
    }
 };
 
@@ -47,12 +47,14 @@ struct DebugThreadInfo {
 
    uint32_t cia;
    uint32_t gpr[32];
+   uint32_t lr;
+   uint32_t ctr;
    uint32_t crf;
 
    template <class Archive>
    void serialize(Archive &ar) {
       ar(name, curCoreId, attribs, state);
-      ar(cia, gpr, crf);
+      ar(cia, gpr, lr, ctr, crf);
    }
 };
 
@@ -60,12 +62,14 @@ struct DebugPauseInfo {
    std::vector<DebugModuleInfo> modules;
    uint32_t userModuleIdx;
    std::vector<DebugThreadInfo> threads;
+   std::vector<DebugSymbolInfo> symbols;
 
    template <class Archive>
    void serialize(Archive &ar) {
       ar(modules);
       ar(userModuleIdx);
       ar(threads);
+      ar(symbols);
    }
 };
 
@@ -82,6 +86,15 @@ void populateDebugPauseInfo(DebugPauseInfo& info) {
       tmod.name = moduleName;
       tmod.entryPoint = loadedModule->entryPoint();
       info.modules.push_back(tmod);
+
+      auto &symbols = loadedModule->getSymbols();
+      for (auto &i : symbols) {
+         DebugSymbolInfo tsym;
+         tsym.name = loadedModule->getName() + std::string(".") + i.first;
+         tsym.address = gMemory.untranslate(i.second);
+         tsym.type = 0;
+         info.symbols.push_back(tsym);
+      }
 
       if (loadedModule == userModule) {
          userModuleIdx = moduleIdx;
@@ -122,6 +135,8 @@ void populateDebugPauseInfo(DebugPauseInfo& info) {
       tinfo.state = thread->state;
 
       tinfo.cia = fiber->state.cia;
+      tinfo.lr = fiber->state.lr;
+      tinfo.ctr = fiber->state.ctr;
       tinfo.crf = fiber->state.cr.value;
       memcpy(tinfo.gpr, fiber->state.gpr, sizeof(uint32_t) * 32);
 
@@ -137,6 +152,13 @@ enum class DebugPacketType : uint16_t {
    Resume = 4,
    AddBreakpoint = 5,
    RemoveBreakpoint = 6,
+   ReadMem = 7,
+   ReadMemRes = 8,
+   Disasm = 9,
+   DisasmRes = 10,
+   StepCore = 11,
+   CoreStepped = 12,
+   Paused = 13,
 };
 
 #pragma pack(push, 1)
@@ -212,6 +234,88 @@ public:
 
 };
 
+class DebugPacketReadMem : public DebugPacketBase<DebugPacketType::ReadMem> {
+public:
+   uint32_t address;
+   uint32_t size;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(address, size);
+   }
+
+};
+
+class DebugPacketReadMemRes : public DebugPacketBase<DebugPacketType::ReadMemRes> {
+public:
+   uint32_t address;
+   std::vector<uint8_t> data;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(address, data);
+   }
+
+};
+
+class DebugPacketDisasm : public DebugPacketBase<DebugPacketType::Disasm> {
+public:
+   uint32_t address;
+   uint32_t numInstr;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(address, numInstr);
+   }
+
+};
+
+class DebugPacketDisasmRes : public DebugPacketBase<DebugPacketType::DisasmRes> {
+public:
+   uint32_t address;
+   std::vector<std::string> lines;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(address, lines);
+   }
+
+};
+
+class DebugPacketStepCore : public DebugPacketBase<DebugPacketType::StepCore> {
+public:
+   uint32_t coreId;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(coreId);
+   }
+
+};
+
+class DebugPacketCoreStepped : public DebugPacketBase<DebugPacketType::CoreStepped> {
+public:
+   uint32_t coreId;
+   DebugPauseInfo info;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(coreId, info);
+   }
+
+};
+
+class DebugPacketPaused : public DebugPacketBase<DebugPacketType::Paused> {
+public:
+   DebugPauseInfo info;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(info);
+   }
+
+};
+
 template <typename T>
 int serializePacket2(std::vector<uint8_t> &data, DebugPacket *packet) {
    std::ostringstream str;
@@ -247,18 +351,36 @@ int deserializePacket2(const std::vector<uint8_t> &data, DebugPacket *&packet) {
 
 int serializePacket(std::vector<uint8_t> &data, DebugPacket *packet)
 {
-   if (packet->isA(DebugPacketType::BpHit)) {
-      return serializePacket2<DebugPacketBpHit>(data, packet);
-   } else if (packet->isA(DebugPacketType::PreLaunch)) {
+   // Stupid thing to allow copy-pasta
+   DebugNetHeader header;
+   header.command = packet->type();
+
+   if (header.command == DebugPacketType::PreLaunch) {
       return serializePacket2<DebugPacketPreLaunch>(data, packet);
-   } else if (packet->isA(DebugPacketType::Pause)) {
+   } else if (header.command == DebugPacketType::BpHit) {
+      return serializePacket2<DebugPacketBpHit>(data, packet);
+   } else if (header.command == DebugPacketType::Pause) {
       return serializePacket2<DebugPacketPause>(data, packet);
-   } else if (packet->isA(DebugPacketType::Resume)) {
+   } else if (header.command == DebugPacketType::Resume) {
       return serializePacket2<DebugPacketResume>(data, packet);
-   } else if (packet->isA(DebugPacketType::AddBreakpoint)) {
+   } else if (header.command == DebugPacketType::AddBreakpoint) {
       return serializePacket2<DebugPacketBpAdd>(data, packet);
-   } else if (packet->isA(DebugPacketType::RemoveBreakpoint)) {
+   } else if (header.command == DebugPacketType::RemoveBreakpoint) {
       return serializePacket2<DebugPacketBpRemove>(data, packet);
+   } else if (header.command == DebugPacketType::ReadMem) {
+      return serializePacket2<DebugPacketReadMem>(data, packet);
+   } else if (header.command == DebugPacketType::ReadMemRes) {
+      return serializePacket2<DebugPacketReadMemRes>(data, packet);
+   } else if (header.command == DebugPacketType::Disasm) {
+      return serializePacket2<DebugPacketDisasm>(data, packet);
+   } else if (header.command == DebugPacketType::DisasmRes) {
+      return serializePacket2<DebugPacketDisasmRes>(data, packet);
+   } else if (header.command == DebugPacketType::StepCore) {
+      return serializePacket2<DebugPacketStepCore>(data, packet);
+   } else if (header.command == DebugPacketType::CoreStepped) {
+      return serializePacket2<DebugPacketCoreStepped>(data, packet);
+   } else if (header.command == DebugPacketType::Paused) {
+      return serializePacket2<DebugPacketPaused>(data, packet);
    } else {
       return -1;
    }
@@ -280,6 +402,20 @@ int deserializePacket(const std::vector<uint8_t> &data, DebugPacket *&packet) {
       return deserializePacket2<DebugPacketBpAdd>(data, packet);
    } else if (header.command == DebugPacketType::RemoveBreakpoint) {
       return deserializePacket2<DebugPacketBpRemove>(data, packet);
+   } else if (header.command == DebugPacketType::ReadMem) {
+      return deserializePacket2<DebugPacketReadMem>(data, packet);
+   } else if (header.command == DebugPacketType::ReadMemRes) {
+      return deserializePacket2<DebugPacketReadMemRes>(data, packet);
+   } else if (header.command == DebugPacketType::Disasm) {
+      return deserializePacket2<DebugPacketDisasm>(data, packet);
+   } else if (header.command == DebugPacketType::DisasmRes) {
+      return deserializePacket2<DebugPacketDisasmRes>(data, packet);
+   } else if (header.command == DebugPacketType::StepCore) {
+      return deserializePacket2<DebugPacketStepCore>(data, packet);
+   } else if (header.command == DebugPacketType::CoreStepped) {
+      return deserializePacket2<DebugPacketCoreStepped>(data, packet);
+   } else if (header.command == DebugPacketType::Paused) {
+      return deserializePacket2<DebugPacketPaused>(data, packet);
    } else {
       return -1;
    }
@@ -288,22 +424,34 @@ int deserializePacket(const std::vector<uint8_t> &data, DebugPacket *&packet) {
 DebugNet::DebugNet()
 {
    mConnected = false;
+   setTarget("127.0.0.1", 11234);
+}
+
+void
+DebugNet::setTarget(const std::string& address, uint16_t port)
+{
+   mAddress = address;
+   mPort = port;
 }
 
 bool
-DebugNet::connect(const std::string& address, uint16_t port)
+DebugNet::connect()
 {
-   mConnected = false;
+   static bool wsaInited = false;
+   if (!wsaInited) {
+      WSADATA wsaData;
+      WSAStartup(MAKEWORD(2, 2), &wsaData);
+      wsaInited = true;
+   }
 
-   WSADATA wsaData;
-   WSAStartup(MAKEWORD(2, 2), &wsaData);
+   mConnected = false;
 
    SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
 
    struct sockaddr_in server;
-   server.sin_addr.s_addr = inet_addr(address.c_str());
+   server.sin_addr.s_addr = inet_addr(mAddress.c_str());
    server.sin_family = AF_INET;
-   server.sin_port = htons(port);
+   server.sin_port = htons(mPort);
 
    int conres = ::connect(sock, (struct sockaddr *)&server, sizeof(server));
    if (conres < 0) {
@@ -313,7 +461,7 @@ DebugNet::connect(const std::string& address, uint16_t port)
 
    mConnected = true;
    mSocket = (void*)sock;
-   mNetworkThread = std::thread(&DebugNet::networkThread, this);
+   mNetworkThread = new std::thread(&DebugNet::networkThread, this);
    return true;
 }
 
@@ -358,6 +506,7 @@ void
 DebugNet::handleDisconnect()
 {
    mConnected = false;
+   mSocket = (void*)INVALID_SOCKET;
    gDebugger.notify(new DebugMessageDebuggerDc());
 }
 
@@ -383,6 +532,44 @@ DebugNet::handlePacket(DebugPacket *pak)
    }
    case DebugPacketType::Resume: {
       gDebugger.resume();
+      break;
+   }
+   case DebugPacketType::StepCore: {
+      auto *scPak = static_cast<DebugPacketStepCore*>(pak);
+      gDebugger.stepCore(scPak->coreId);
+      break;
+   }
+   case DebugPacketType::ReadMem: {
+      auto *rmPak = static_cast<DebugPacketReadMem*>(pak);
+      if (gMemory.valid(rmPak->address)) {
+         auto pakO = new DebugPacketReadMemRes();
+
+         pakO->address = rmPak->address;
+         uint8_t *data = gMemory.translate(rmPak->address);
+         pakO->data.resize(rmPak->size);
+         memcpy(&pakO->data[0], data, pakO->data.size());
+
+         writePacket(pakO);
+      }
+      break;
+   }
+   case DebugPacketType::Disasm: {
+      auto *dPak = static_cast<DebugPacketDisasm*>(pak);
+      if (gMemory.valid(dPak->address)) {
+         auto pakO = new DebugPacketDisasmRes();
+
+         pakO->address = dPak->address;
+         auto curAddr = dPak->address;
+         for (int i = 0; i < (int)dPak->numInstr; ++i, curAddr += 4) {
+            auto instr = gMemory.read<Instruction>(curAddr);
+            Disassembly dis;
+            gDisassembler.disassemble(instr, dis, curAddr);
+
+            pakO->lines.push_back(dis.text);
+         }
+
+         writePacket(pakO);
+      }
       break;
    }
    }
@@ -414,6 +601,23 @@ DebugNet::writeBreakpointHit(uint32_t coreId, uint32_t userData)
    auto pak = new DebugPacketBpHit();
    pak->coreId = coreId;
    pak->userData = userData;
+   populateDebugPauseInfo(pak->info);
+   writePacket(pak);
+}
+
+void
+DebugNet::writeCoreStepped(uint32_t coreId)
+{
+   auto pak = new DebugPacketCoreStepped();
+   pak->coreId = coreId;
+   populateDebugPauseInfo(pak->info);
+   writePacket(pak);
+}
+
+void
+DebugNet::writePaused()
+{
+   auto pak = new DebugPacketPaused();
    populateDebugPauseInfo(pak->info);
    writePacket(pak);
 }

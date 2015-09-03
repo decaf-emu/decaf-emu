@@ -83,6 +83,9 @@ System::findModule(const char *name) const
 KernelFunction *
 System::getSyscall(uint32_t id)
 {
+   if (id >= mSystemCalls.size()) {
+      return nullptr;
+   }
    return mSystemCalls.at(id);
 }
 

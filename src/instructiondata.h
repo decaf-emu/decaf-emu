@@ -33,6 +33,8 @@ enum class Field
    frS,  // 6-10
    i,    // 17-19
    imm,  // 16-19
+   kcn,  // 6-29
+   kci,  // 30
    l,    // 10
    li,   // 6-29
    lk,   // 31

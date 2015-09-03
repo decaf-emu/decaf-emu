@@ -183,7 +183,7 @@ play(const std::string &path)
    gSystem.setFileSystem(&fs);
 
    // Read cos.xml
-   pugi::xml_document doc;
+   pugi::xml_document doc; 
    auto fh = fs.openFile("/vol/code/cos.xml", FileSystem::Input | FileSystem::Binary);
 
    if (!fh) {

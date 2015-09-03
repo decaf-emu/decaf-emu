@@ -17,12 +17,14 @@ public:
    void pauseCore(ThreadState *state, uint32_t coreId);
    void pauseAll();
    void resumeAll();
+   void stepCore(uint32_t coreId);
    void waitForAllPaused();
 
 protected:
    std::mutex mMutex;
    bool mCorePaused[DCCoreCount];
    std::atomic_bool mWaitingForPause;
+   std::atomic_uint mWaitingForStep;
    std::condition_variable mWaitCond;
    std::condition_variable mReleaseCond;
 
