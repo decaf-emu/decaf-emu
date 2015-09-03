@@ -188,6 +188,8 @@ Debugger::removeBreakpoint(uint32_t addr)
          // Keep trying until success!
          continue;
       }
+
+      break;
    }
 }
 

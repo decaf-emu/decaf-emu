@@ -519,7 +519,7 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
          assert(0);
       }
 
-      symbolsMap.emplace(std::string("&") + symbolName, trampAddr);
+      symbolsMap.emplace(symbolName + "#thunk", trampAddr);
 
       trampolines.emplace(targetAddr, trampAddr);
       return static_cast<void*>(trampAddr);
@@ -755,7 +755,6 @@ Loader::loadRPL(const std::string& name, const std::vector<uint8_t> data)
          break;
       }
    }
-   symbolsMap.emplace("!_EntryPoint", gMemory.translate(entryPoint));
 
    // Process exports
    std::map<std::string, void*> exports;

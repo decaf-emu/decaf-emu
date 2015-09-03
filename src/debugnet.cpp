@@ -19,13 +19,14 @@ DebugNet
 gDebugNet;
 
 struct DebugSymbolInfo {
+   uint32_t moduleIdx;
    std::string name;
    uint32_t address;
    uint32_t type;
 
    template <class Archive>
    void serialize(Archive &ar) {
-      ar(name, address, type);
+      ar(moduleIdx, name, address, type);
    }
 };
 
@@ -90,7 +91,8 @@ void populateDebugPauseInfo(DebugPauseInfo& info) {
       auto &symbols = loadedModule->getSymbols();
       for (auto &i : symbols) {
          DebugSymbolInfo tsym;
-         tsym.name = loadedModule->getName() + std::string(".") + i.first;
+         tsym.moduleIdx = moduleIdx;
+         tsym.name = i.first;
          tsym.address = gMemory.untranslate(i.second);
          tsym.type = 0;
          info.symbols.push_back(tsym);
