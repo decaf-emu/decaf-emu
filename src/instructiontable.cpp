@@ -55,6 +55,7 @@ struct TableEntry
 };
 
 static std::vector<InstructionData> instructionData;
+static std::vector<InstructionAlias> aliasData;
 static TableEntry instructionTable;
 
 static void
@@ -144,6 +145,17 @@ getFieldBitmask(Field field)
    return make_bitmask(getFieldStart(field), getFieldEnd(field));
 }
 
+uint32_t getFieldValue(const Field& field, Instruction instr)
+{
+   auto mask = getFieldBitmask(field);
+   auto start = getFieldStart(field);
+   auto res = (instr & mask) >> start;
+   if (field == Field::spr) {
+      res = ((res << 5) & 0x3E0) | ((res >> 5) & 0x1F);
+   }
+   return res;
+}
+
 // Decode Instruction to InstructionData
 InstructionData *
 InstructionTable::decode(Instruction instr)
@@ -153,10 +165,7 @@ InstructionTable::decode(Instruction instr)
 
    while (table) {
       for (auto &fieldMap : table->fieldMaps) {
-         auto field = fieldMap.field;
-         auto mask = getFieldBitmask(field);
-         auto start = getFieldStart(field);
-         auto value = (instr & mask) >> start;
+         auto value = getFieldValue(fieldMap.field, instr);
          table = &fieldMap.children[value];
 
          if (table->instr || table->fieldMaps.size()) {
@@ -166,6 +175,37 @@ InstructionTable::decode(Instruction instr)
 
       if (table->fieldMaps.size() == 0) {
          return table->instr;
+      }
+   }
+
+   return nullptr;
+}
+
+InstructionAlias *
+InstructionTable::findAlias(InstructionData *data, Instruction instr)
+{
+   for (auto &alias : aliasData) {
+      if (alias.id != data->id) {
+         // Not an alias for this field
+         continue;
+      }
+
+      bool opMatch = true;
+      for (auto &op : alias.opcode) {
+         uint32_t x = getFieldValue(op.field, instr);
+         uint32_t y = op.value;
+         if (op.field2 != Field::Invalid) {
+            y = getFieldValue(op.field2, instr);
+         }
+
+         if (x != y) {
+            opMatch = false;
+            break;
+         }
+      }
+
+      if (opMatch) {
+         return &alias;
       }
    }
 
@@ -239,68 +279,93 @@ initTable()
    }
 }
 
+std::string cleanInsName(const std::string& name)
+{
+   if (name[name.size() - 1] == '_') {
+      return name.substr(0, name.size() - 1);
+   }
+   return name;
+}
+
+struct FieldIndex {
+   FieldIndex(Field _id) : id(_id) { }
+   operator Field() const { return id; }
+   Field id;
+};
+
 // Initialise instructionData
-#define aa Field::aa
-#define bd Field::bd
-#define bo Field::bo
-#define bi Field::bi
-#define crba Field::crbA
-#define crbb Field::crbB
-#define crbd Field::crbD
-#define crfd Field::crfD
-#define crfs Field::crfS
-#define crm Field::crm
-#define d Field::d
-#define fm Field::fm
-#define fra Field::frA
-#define frb Field::frB
-#define frc Field::frC
-#define frd Field::frD
-#define frs Field::frS
-#define i Field::i
-#define imm Field::imm
-#define kci Field::kci
-#define kcn Field::kcn
-#define l Field::l
-#define li Field::li
-#define lk Field::lk
-#define mb Field::mb
-#define me Field::me
-#define nb Field::nb
-#define oe Field::oe
-#define opcd Field::opcd
-#define qd Field::qd
-#define qi Field::qi
-#define qw Field::qw
-#define ra Field::rA
-#define rb Field::rB
-#define rc Field::rc
-#define rd Field::rD
-#define rs Field::rS
-#define sh Field::sh
-#define simm Field::simm
-#define sr Field::sr
-#define spr Field::spr
-#define to Field::to
-#define tbr Field::tbr
-#define uimm Field::uimm
-#define w Field::w
-#define xo1 Field::xo1
-#define xo2 Field::xo2
-#define xo3 Field::xo3
-#define xo4 Field::xo4
+#define aa FieldIndex(Field::aa)
+#define bd FieldIndex(Field::bd)
+#define bo FieldIndex(Field::bo)
+#define bi FieldIndex(Field::bi)
+#define crba FieldIndex(Field::crbA)
+#define crbb FieldIndex(Field::crbB)
+#define crbd FieldIndex(Field::crbD)
+#define crfd FieldIndex(Field::crfD)
+#define crfs FieldIndex(Field::crfS)
+#define crm FieldIndex(Field::crm)
+#define d FieldIndex(Field::d)
+#define fm FieldIndex(Field::fm)
+#define fra FieldIndex(Field::frA)
+#define frb FieldIndex(Field::frB)
+#define frc FieldIndex(Field::frC)
+#define frd FieldIndex(Field::frD)
+#define frs FieldIndex(Field::frS)
+#define i FieldIndex(Field::i)
+#define imm FieldIndex(Field::imm)
+#define kci FieldIndex(Field::kci)
+#define kcn FieldIndex(Field::kcn)
+#define l FieldIndex(Field::l)
+#define li FieldIndex(Field::li)
+#define lk FieldIndex(Field::lk)
+#define mb FieldIndex(Field::mb)
+#define me FieldIndex(Field::me)
+#define nb FieldIndex(Field::nb)
+#define oe FieldIndex(Field::oe)
+#define opcd FieldIndex(Field::opcd)
+#define qd FieldIndex(Field::qd)
+#define qi FieldIndex(Field::qi)
+#define qw FieldIndex(Field::qw)
+#define ra FieldIndex(Field::rA)
+#define rb FieldIndex(Field::rB)
+#define rc FieldIndex(Field::rc)
+#define rd FieldIndex(Field::rD)
+#define rs FieldIndex(Field::rS)
+#define sh FieldIndex(Field::sh)
+#define simm FieldIndex(Field::simm)
+#define sr FieldIndex(Field::sr)
+#define spr FieldIndex(Field::spr)
+#define to FieldIndex(Field::to)
+#define tbr FieldIndex(Field::tbr)
+#define uimm FieldIndex(Field::uimm)
+#define w FieldIndex(Field::w)
+#define xo1 FieldIndex(Field::xo1)
+#define xo2 FieldIndex(Field::xo2)
+#define xo3 FieldIndex(Field::xo3)
+#define xo4 FieldIndex(Field::xo4)
 
 #define PRINTOPS(...) __VA_ARGS__
 #define INS(name, write, read, flags, opcodes, fullname) \
    instructionData.emplace_back(InstructionData { \
-                                   InstructionID::name, #name, fullname, \
+                                   InstructionID::name, cleanInsName(#name), fullname, \
                                    { PRINTOPS opcodes }, { PRINTOPS read }, \
                                    { PRINTOPS write }, { PRINTOPS flags } });
 
-static InstructionData::Opcode
-operator==(const Field &lhs, const int &rhs)
+#define INSA(name, op, opcodes) \
+   aliasData.emplace_back(InstructionAlias { \
+                             #name, InstructionID::op, \
+                             { PRINTOPS opcodes } });
+
+static InstructionOpcode
+operator==(const FieldIndex &lhs, const int &rhs)
 {
-   return InstructionData::Opcode(lhs, rhs);
+   return InstructionOpcode(lhs.id, rhs);
+}
+
+static InstructionOpcode
+operator==(const FieldIndex &lhs, const FieldIndex &rhs)
+{
+   return InstructionOpcode(lhs.id, rhs.id);
 }
 
 void

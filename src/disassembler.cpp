@@ -231,6 +231,8 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
       return false;
    }
 
+   InstructionAlias *alias = gInstructionTable.findAlias(data, instr);
+
    dis.name = data->name;
    dis.instruction = data;
    dis.address = address;
@@ -240,6 +242,19 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    }
 
    for (auto &field : data->read) {
+      // If we have an alias, then don't put the first opcode field in the args...
+      if (alias) {
+         bool skipField = false;
+         for (auto &op : alias->opcode) {
+            if (field == op.field) {
+               skipField = true;
+               break;
+            }
+         }
+         if (skipField) {
+            break;
+         }
+      }
       dis.args.push_back(disassembleField(dis.address, instr, data, field));
    }
 
@@ -257,7 +272,11 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
       }
    }
 
-   dis.text = dis.name;
+   if (alias) {
+      dis.text = alias->name;
+   } else {
+      dis.text = dis.name;
+   }
 
    for (auto &arg : dis.args) {
       if (&arg == &dis.args[0]) {

@@ -11,7 +11,7 @@ struct BitRange
    int end;
 };
 
-enum class Field
+enum class Field : uint32_t
 {
    Invalid,
    aa,   // 30
@@ -65,29 +65,43 @@ enum class Field
    xo4,  // 26-30
 };
 
+struct InstructionOpcode
+{
+   InstructionOpcode()
+   {
+   }
+
+   InstructionOpcode(Field field, uint32_t value)
+      : field(field), value(value)
+   {
+   }
+
+   InstructionOpcode(Field field, Field field2)
+      : field(field), field2(field2)
+   {
+   }
+
+   Field field = Field::Invalid;
+   Field field2 = Field::Invalid;
+   uint32_t value = 0;
+};
+
 struct InstructionData
 {
-   struct Opcode
-   {
-      Opcode()
-      {
-      }
-
-      Opcode(Field field, uint32_t value) : field(field), value(value)
-      {
-      }
-
-      Field field = Field::Invalid;
-      uint32_t value = 0;
-   };
-
    InstructionID id;
-   const char *name;
-   const char *fullname;
-   std::vector<Opcode> opcode;
+   std::string name;
+   std::string fullname;
+   std::vector<InstructionOpcode> opcode;
    std::vector<Field> read;
    std::vector<Field> write;
    std::vector<Field> flags;
+};
+
+struct InstructionAlias
+{
+   std::string name;
+   InstructionID id;
+   std::vector<InstructionOpcode> opcode;
 };
 
 struct InstructionTable
@@ -95,6 +109,7 @@ struct InstructionTable
    void initialise();
    InstructionData *decode(Instruction instr);
    Instruction encode(InstructionID id);
+   InstructionAlias *findAlias(InstructionData *data, Instruction instr);
    bool isA(InstructionID id, Instruction instr);
 };
 
