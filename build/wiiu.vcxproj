@@ -324,6 +324,8 @@
       <FileType>Document</FileType>
     </None>
     <None Include="..\src\gpu\latte_opcodes_def.inl" />
+    <None Include="..\src\instructionaliases.inl" />
+    <None Include="..\src\instructionfields.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

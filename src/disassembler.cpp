@@ -27,11 +27,11 @@ disassembleField(uint32_t cia, Instruction instr, InstructionData *data, Field f
       break;
    case Field::bi:
       result.type = Disassembly::Argument::ConstantUnsigned;
-      result.constantUnsigned = instr.bo;
+      result.constantUnsigned = instr.bi;
       break;
    case Field::bo:
       result.type = Disassembly::Argument::ConstantUnsigned;
-      result.constantUnsigned = instr.bi;
+      result.constantUnsigned = instr.bo;
       break;
    case Field::crbA:
       result.type = Disassembly::Argument::ConstantUnsigned;
@@ -159,7 +159,7 @@ disassembleField(uint32_t cia, Instruction instr, InstructionData *data, Field f
       break;
    case Field::spr: // TODO: Real SPR name
       result.type = Disassembly::Argument::Register;
-      result.text = "spr" + std::to_string(instr.sprl | instr.spru << 5);
+      result.text = "spr" + std::to_string(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
       break;
    case Field::to:
       result.type = Disassembly::Argument::ConstantUnsigned;

@@ -838,5 +838,11 @@
     <None Include="..\src\gpu\latte_opcodes_def.inl">
       <Filter>Header Files\gpu</Filter>
     </None>
+    <None Include="..\src\instructionaliases.inl">
+      <Filter>Header Files\ppc</Filter>
+    </None>
+    <None Include="..\src\instructionfields.inl">
+      <Filter>Header Files\ppc</Filter>
+    </None>
   </ItemGroup>
 </Project>

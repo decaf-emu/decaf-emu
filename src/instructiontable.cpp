@@ -64,58 +64,14 @@ initData();
 static void
 initTable();
 
+#define FLD(x, y, z, ...) {y, z},
+
 static BitRange gFieldBits[] = {
    { -1, -1 },
-   { 30, 30 }, // aa
-   { 16, 29 }, // bd
-   { 11, 15 }, // bi
-   { 6, 10 },  // bo
-   { 11, 15 }, // crbA
-   { 16, 20 }, // crbB
-   { 6, 10 },  // crbD
-   { 6, 8 },   // crfD
-   { 11, 13 }, // crfS
-   { 12, 19 }, // crm
-   { 16, 31 }, // d
-   { 7, 14 },  // fm
-   { 11, 15 }, // frA
-   { 16, 20 }, // frB
-   { 21, 25 }, // frC
-   { 6, 10 },  // frD
-   { 6, 10 },  // frS
-   { 17, 19 }, // i
-   { 16, 19 }, // imm
-   { 30, 30 }, // kci
-   { 6, 29 },  // kcn
-   { 10, 10 }, // l
-   { 6, 29 },  // li
-   { 31, 31 }, // lk
-   { 21, 25 }, // mb
-   { 26, 30 }, // me
-   { 16, 20 }, // nb
-   { 21, 21 }, // oe
-   { 0, 5 },   // opcd
-   { 20, 31},  // qd
-   { 22, 24 }, // qi
-   { 21, 21 }, // qw
-   { 11, 15 }, // rA
-   { 16, 20 }, // rB
-   { 31, 31 }, // rc
-   { 6, 10 },  // rD
-   { 6, 10 },  // rS
-   { 16, 20 }, // sh
-   { 16, 31 }, // simm
-   { 12, 15 }, // sr
-   { 11, 20 }, // spr
-   { 6, 10 },  // to
-   { 11, 20 }, // tbr
-   { 16, 31 }, // uimm
-   { 16, 16 }, // w
-   { 21, 30 }, // xo1
-   { 22, 30 }, // xo2
-   { 25, 30 }, // xo3
-   { 26, 30 }, // xo4
+   #include "instructionfields.inl"
 };
+
+#undef FLD
 
 // First bit of instruction field
 uint32_t
@@ -294,55 +250,10 @@ struct FieldIndex {
 };
 
 // Initialise instructionData
-#define aa FieldIndex(Field::aa)
-#define bd FieldIndex(Field::bd)
-#define bo FieldIndex(Field::bo)
-#define bi FieldIndex(Field::bi)
-#define crba FieldIndex(Field::crbA)
-#define crbb FieldIndex(Field::crbB)
-#define crbd FieldIndex(Field::crbD)
-#define crfd FieldIndex(Field::crfD)
-#define crfs FieldIndex(Field::crfS)
-#define crm FieldIndex(Field::crm)
-#define d FieldIndex(Field::d)
-#define fm FieldIndex(Field::fm)
-#define fra FieldIndex(Field::frA)
-#define frb FieldIndex(Field::frB)
-#define frc FieldIndex(Field::frC)
-#define frd FieldIndex(Field::frD)
-#define frs FieldIndex(Field::frS)
-#define i FieldIndex(Field::i)
-#define imm FieldIndex(Field::imm)
-#define kci FieldIndex(Field::kci)
-#define kcn FieldIndex(Field::kcn)
-#define l FieldIndex(Field::l)
-#define li FieldIndex(Field::li)
-#define lk FieldIndex(Field::lk)
-#define mb FieldIndex(Field::mb)
-#define me FieldIndex(Field::me)
-#define nb FieldIndex(Field::nb)
-#define oe FieldIndex(Field::oe)
-#define opcd FieldIndex(Field::opcd)
-#define qd FieldIndex(Field::qd)
-#define qi FieldIndex(Field::qi)
-#define qw FieldIndex(Field::qw)
-#define ra FieldIndex(Field::rA)
-#define rb FieldIndex(Field::rB)
-#define rc FieldIndex(Field::rc)
-#define rd FieldIndex(Field::rD)
-#define rs FieldIndex(Field::rS)
-#define sh FieldIndex(Field::sh)
-#define simm FieldIndex(Field::simm)
-#define sr FieldIndex(Field::sr)
-#define spr FieldIndex(Field::spr)
-#define to FieldIndex(Field::to)
-#define tbr FieldIndex(Field::tbr)
-#define uimm FieldIndex(Field::uimm)
-#define w FieldIndex(Field::w)
-#define xo1 FieldIndex(Field::xo1)
-#define xo2 FieldIndex(Field::xo2)
-#define xo3 FieldIndex(Field::xo3)
-#define xo4 FieldIndex(Field::xo4)
+#define FLD(x, ...) \
+   static const FieldIndex x(Field::x);
+#include "instructionfields.inl"
+#undef FLD
 
 #define PRINTOPS(...) __VA_ARGS__
 #define INS(name, write, read, flags, opcodes, fullname) \
@@ -372,4 +283,19 @@ void
 initData()
 {
 #include "instructions.inl"
+#include "instructionaliases.inl"
+
+   // Verify instruction fields
+#define FLD(x, y, z, ...) \
+   static_assert(z >= y, "Field " #x " z < y"); \
+   Instruction ins_##x(make_bitmask<31-z,31-y,uint32_t>()); \
+   uint32_t insv_##x = make_bitmask<0, z - y, uint32_t>(); \
+   if (ins_##x.x != insv_##x) { \
+      printf("%s %08x %08x\n", #x, ins_##x.x, insv_##x); \
+   }
+#include "instructionfields.inl"
+#undef FLD
 };
+
+#undef INS
+#undef INSA

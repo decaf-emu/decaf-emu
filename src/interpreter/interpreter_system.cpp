@@ -10,7 +10,7 @@
 static SprEncoding
 decodeSPR(Instruction instr)
 {
-   return static_cast<SprEncoding>(instr.sprl | (instr.spru << 5));
+   return static_cast<SprEncoding>(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
 }
 
 /*

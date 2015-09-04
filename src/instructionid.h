@@ -1,7 +1,6 @@
 #pragma once
 
 #define INS(x, ...) x,
-#define INSA(...)
 
 enum class InstructionID
 {
@@ -11,4 +10,3 @@ enum class InstructionID
 };
 
 #undef INS
-#undef INSA
