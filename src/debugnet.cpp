@@ -42,9 +42,14 @@ struct DebugModuleInfo {
 
 struct DebugThreadInfo {
    std::string name;
+
    int32_t curCoreId;
    uint32_t attribs;
    uint32_t state;
+
+   uint32_t entryPoint;
+   uint32_t stackStart;
+   uint32_t stackEnd;
 
    uint32_t cia;
    uint32_t gpr[32];
@@ -55,6 +60,7 @@ struct DebugThreadInfo {
    template <class Archive>
    void serialize(Archive &ar) {
       ar(name, curCoreId, attribs, state);
+      ar(entryPoint, stackStart, stackEnd);
       ar(cia, gpr, lr, ctr, crf);
    }
 };
@@ -132,6 +138,10 @@ void populateDebugPauseInfo(DebugPauseInfo& info) {
             }
          }
       }
+
+      tinfo.entryPoint = thread->entryPoint;
+      tinfo.stackStart = thread->stackStart;
+      tinfo.stackEnd = thread->stackEnd;
 
       tinfo.attribs = thread->attr;
       tinfo.state = thread->state;
