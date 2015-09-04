@@ -85,6 +85,7 @@ public:
       auto sptr = reinterpret_cast<size_t>(ptr);
       auto sbase = reinterpret_cast<size_t>(mBase);
       assert(sptr > sbase);
+      assert(sptr <= sbase + 0xFFFFFFFF);
       return static_cast<uint32_t>(sptr - sbase);
    }
 
@@ -92,7 +93,7 @@ public:
    template<typename Type>
    Type read(uint32_t address) const
    {
-      return byte_swap(*reinterpret_cast<Type*>(translate(address)));
+      return byte_swap(readNoSwap<Type>(address));
    }
 
    // Read Type from virtual address with no endian byte_swap
@@ -106,7 +107,7 @@ public:
    template<typename Type>
    void write(uint32_t address, Type value) const
    {
-      *reinterpret_cast<Type*>(translate(address)) = byte_swap(value);
+      writeNoSwap(address, byte_swap(value));
    }
 
    // Write Type to virtual address with no endian byte_swap
