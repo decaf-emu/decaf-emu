@@ -25,7 +25,7 @@ SAVEGetSharedDataTitlePath(uint64_t titleID, const char *dir, char *buffer, uint
    auto titleHi = static_cast<uint32_t>(titleID >> 32);
    auto result = snprintf(buffer, bufferSize, "/vol/storage_mlc01/sys/title/%08x/%08x/content/%s", titleHi, titleLo, dir);
 
-   if (result < 0 || result >= static_cast<int>(bufferSize)) {
+   if (result < 0 || static_cast<uint32_t>(result) >= bufferSize) {
       return SaveStatus::FatalError;
    }
 
