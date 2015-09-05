@@ -211,6 +211,19 @@
     <ClInclude Include="..\src\disassembler.h" />
     <ClInclude Include="..\src\elf.h" />
     <ClInclude Include="..\src\filesystem.h" />
+    <ClInclude Include="..\src\filesystem\filesystem.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_file.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_folder.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_host_file.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_host_folder.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_host_path.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_node.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_path.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_virt_file.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_virt_folder.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_win_file.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_win_folder.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_win_path.h" />
     <ClInclude Include="..\src\floatutils.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_disassembler.h" />
@@ -276,6 +289,7 @@
     <ClInclude Include="..\src\ppcinvoke.h" />
     <ClInclude Include="..\src\ppctypes.h" />
     <ClInclude Include="..\src\processor.h" />
+    <ClInclude Include="..\src\strutils.h" />
     <ClInclude Include="..\src\teenyheap.h" />
     <ClInclude Include="..\src\trace.h" />
     <ClInclude Include="..\src\usermodule.h" />

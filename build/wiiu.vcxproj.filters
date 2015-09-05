@@ -145,6 +145,9 @@
     <Filter Include="Header Files\modules\nn_temp">
       <UniqueIdentifier>{a127f8bf-8978-412c-9a92-ebb3b9f32893}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\filesystem">
+      <UniqueIdentifier>{3ef84099-716b-4231-a2e4-d1d0b9efe35d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -829,6 +832,48 @@
     </ClInclude>
     <ClInclude Include="..\src\debugcontrol.h">
       <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_host_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_host_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_host_path.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_node.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_path.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_virt_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_virt_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_win_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_win_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_win_path.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\strutils.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

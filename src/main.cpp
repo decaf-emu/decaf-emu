@@ -2,7 +2,7 @@
 #include <docopt.h>
 #include "bitutils.h"
 #include "codetests.h"
-#include "filesystem.h"
+#include "filesystem/filesystem.h"
 #include "instructiondata.h"
 #include "interpreter.h"
 #include "processor.h"
@@ -37,7 +37,7 @@ gLog;
 
 void initialiseEmulator();
 bool test(const std::string &as, const std::string &path);
-bool play(const std::string &path);
+bool play(const fs::HostPath &path);
 
 static const char USAGE[] =
 R"(WiiU Emulator
@@ -60,11 +60,10 @@ Options:
    --as=<ppcas>  Path to PowerPC assembler [default: powerpc-eabi-as.exe].
 )";
 
-static std::string
-getGameName(const std::string &directory)
+static const std::string&
+getGameName(const fs::HostPath &path)
 {
-   auto parent = std::experimental::filesystem::path(directory).parent_path().generic_string();
-   return directory.substr(parent.size() + 1);
+   return path.name();
 }
 
 int main(int argc, char **argv)
@@ -175,16 +174,16 @@ test(const std::string &as, const std::string &path)
 }
 
 static bool
-play(const std::string &path)
+play(const fs::HostPath &path)
 {
    // Setup filesystem
-   VirtualFileSystem fs { "/" };
-   fs.mount("/vol", std::make_unique<HostFileSystem>(path + "/data"));
+   fs::FileSystem fs;
+   fs.mountHostFolder("/vol", path.join("data"));
    gSystem.setFileSystem(&fs);
 
    // Read cos.xml
-   pugi::xml_document doc; 
-   auto fh = fs.openFile("/vol/code/cos.xml", FileSystem::Input | FileSystem::Binary);
+   pugi::xml_document doc;
+   auto fh = fs.openFile("/vol/code/cos.xml", fs::File::Read);
 
    if (!fh) {
       gLog->error("Error opening /vol/code/cos.xml");

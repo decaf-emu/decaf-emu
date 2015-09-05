@@ -7,7 +7,7 @@
 #include <zlib.h>
 #include "bigendianview.h"
 #include "elf.h"
-#include "filesystem.h"
+#include "filesystem/filesystem.h"
 #include "instructiondata.h"
 #include "loader.h"
 #include "log.h"
@@ -131,11 +131,11 @@ Loader::loadRPL(const std::string& name)
    if (!loadedModule) {
       // Read rpx file
       auto fs = gSystem.getFileSystem();
-      auto fh = fs->openFile("/vol/code/" + moduleName, FileSystem::Input | FileSystem::Binary);
+      auto fh = fs->openFile("/vol/code/" + moduleName, fs::File::Read);
 
-      if (fh->good()) {
+      if (fh) {
          auto buffer = std::vector<uint8_t>(fh->size());
-         fh->read(buffer.data(), buffer.size());
+         fh->read(reinterpret_cast<char *>(buffer.data()), buffer.size());
          fh->close();
 
          loadedModule = loadRPL(moduleName, buffer);
@@ -346,6 +346,9 @@ Loader::getUnimplementedData(uint32_t addr)
 void *
 Loader::registerUnimplementedFunction(const std::string& name)
 {
+   if (name == "_SYSGetSystemApplicationTitleId") {
+      DebugBreak();
+   }
    auto thunkIter = mUnimplementedFunctions.find(name);
    if (thunkIter != mUnimplementedFunctions.end()) {
       return thunkIter->second;

@@ -118,12 +118,12 @@ System::loadThunks()
 }
 
 void
-System::setFileSystem(FileSystem *fs)
+System::setFileSystem(fs::FileSystem *fs)
 {
    mFileSystem = fs;
 }
 
-FileSystem *System::getFileSystem()
+fs::FileSystem *System::getFileSystem()
 {
    return mFileSystem;
 }

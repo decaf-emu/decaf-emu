@@ -12,8 +12,12 @@ class Memory;
 class Thread;
 class KernelModule;
 struct KernelFunction;
-class FileSystem;
 class TeenyHeap;
+
+namespace fs
+{
+class FileSystem;
+}
 
 struct ModuleHandleData
 {
@@ -44,8 +48,8 @@ public:
 
    KernelFunction *getSyscall(uint32_t id);
 
-   FileSystem *getFileSystem();
-   void setFileSystem(FileSystem *fs);
+   fs::FileSystem *getFileSystem();
+   void setFileSystem(fs::FileSystem *fs);
 
    TeenyHeap *getSystemHeap() const {
       return mSystemHeap;
@@ -62,7 +66,7 @@ private:
    void *mSystemThunks;
    std::vector<KernelFunction*> mSystemCalls;
 
-   FileSystem *mFileSystem;
+   fs::FileSystem *mFileSystem;
    TeenyHeap *mSystemHeap;
 };
 
