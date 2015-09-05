@@ -9,7 +9,6 @@
 Disassembler gDisassembler;
 
 // TODO: Finish disassembler!
-// TODO: Add instruction aliases?
 
 static Disassembly::Argument
 disassembleField(uint32_t cia, Instruction instr, InstructionData *data, Field field)

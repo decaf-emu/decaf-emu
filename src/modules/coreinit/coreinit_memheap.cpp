@@ -319,7 +319,6 @@ CoreInit::initialiseMembase()
 void *
 OSAllocFromSystem(uint32_t size, int alignment)
 {
-   // TODO: Support Alignments!
    auto systemHeap = gSystem.getSystemHeap();
    return systemHeap->alloc(size, alignment);
 }

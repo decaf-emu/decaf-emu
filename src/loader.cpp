@@ -346,9 +346,6 @@ Loader::getUnimplementedData(uint32_t addr)
 void *
 Loader::registerUnimplementedFunction(const std::string& name)
 {
-   if (name == "_SYSGetSystemApplicationTitleId") {
-      DebugBreak();
-   }
    auto thunkIter = mUnimplementedFunctions.find(name);
    if (thunkIter != mUnimplementedFunctions.end()) {
       return thunkIter->second;
