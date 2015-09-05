@@ -23,7 +23,10 @@ splitString(const std::string &source, char delimiter, std::vector<std::string> 
    }
 
    while ((offset = source.find(delimiter, offset)) != std::string::npos) {
-      result.push_back(source.substr(last, offset - last));
+      if (offset - last > 0) {
+         result.push_back(source.substr(last, offset - last));
+      }
+
       last = ++offset;
    }
 
