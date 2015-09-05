@@ -34,6 +34,11 @@ struct HostFolder : public Folder
          return false;
       }
 
+      if (strcmp(findData.cFileName, ".") == 0 || strcmp(findData.cFileName, "..") == 0) {
+         // Skip over . and .. entries
+         return read(entry);
+      }
+
       entry.name = findData.cFileName;
 
       if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
