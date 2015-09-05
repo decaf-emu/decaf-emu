@@ -189,6 +189,8 @@
     <ClCompile Include="..\src\modules\padscore\padscore_wpad.cpp" />
     <ClCompile Include="..\src\modules\proc_ui\proc_ui.cpp" />
     <ClCompile Include="..\src\modules\proc_ui\proc_ui_core.cpp" />
+    <ClCompile Include="..\src\modules\sysapp\sysapp.cpp" />
+    <ClCompile Include="..\src\modules\sysapp\sysapp_title.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
     <ClCompile Include="..\src\platform\platform_posix.cpp" />
@@ -249,6 +251,8 @@
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp_core.h" />
+    <ClInclude Include="..\src\modules\sysapp\sysapp.h" />
+    <ClInclude Include="..\src\modules\sysapp\sysapp_title.h" />
     <ClInclude Include="..\src\platform.h" />
     <ClInclude Include="..\src\ppcinvokeargs.h" />
     <ClInclude Include="..\src\ppcinvokelog.h" />

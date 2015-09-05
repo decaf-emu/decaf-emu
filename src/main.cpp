@@ -25,6 +25,7 @@
 #include "modules/zlib125/zlib125.h"
 #include "modules/proc_ui/proc_ui.h"
 #include "modules/padscore/padscore.h"
+#include "modules/sysapp/sysapp.h"
 #include "system.h"
 #include "usermodule.h"
 #include "platform.h"
@@ -143,6 +144,7 @@ initialiseEmulator()
    NNSave::RegisterFunctions();
    PadScore::RegisterFunctions();
    ProcUI::RegisterFunctions();
+   SysApp::RegisterFunctions();
    Zlib125::RegisterFunctions();
 
    // Initialise emulator systems
@@ -162,6 +164,7 @@ initialiseEmulator()
    gSystem.registerModule("zlib125.rpl", new Zlib125 {});
    gSystem.registerModule("padscore.rpl", new PadScore{});
    gSystem.registerModule("erreula.rpl", new ErrEula{});
+   gSystem.registerModule("sysapp.rpl", new SysApp {});
 
    // Initialise debugger
    gDebugger.initialise();

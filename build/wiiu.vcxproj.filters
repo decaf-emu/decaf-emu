@@ -145,6 +145,12 @@
     <Filter Include="Header Files\modules\nn_temp">
       <UniqueIdentifier>{a127f8bf-8978-412c-9a92-ebb3b9f32893}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\modules\sysapp">
+      <UniqueIdentifier>{5304bcc9-e23a-4716-ae39-07defd05091b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\sysapp">
+      <UniqueIdentifier>{44a664bb-41e9-4f34-a8bc-387c15e42edb}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files\filesystem">
       <UniqueIdentifier>{3ef84099-716b-4231-a2e4-d1d0b9efe35d}</UniqueIdentifier>
     </Filter>
@@ -473,6 +479,12 @@
     </ClCompile>
     <ClCompile Include="..\src\debugcontrol.cpp">
       <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\sysapp\sysapp.cpp">
+      <Filter>Source Files\modules\sysapp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\sysapp\sysapp_title.cpp">
+      <Filter>Source Files\modules\sysapp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -832,6 +844,12 @@
     </ClInclude>
     <ClInclude Include="..\src\debugcontrol.h">
       <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\sysapp\sysapp.h">
+      <Filter>Header Files\modules\sysapp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\sysapp\sysapp_title.h">
+      <Filter>Header Files\modules\sysapp</Filter>
     </ClInclude>
     <ClInclude Include="..\src\filesystem\filesystem.h">
       <Filter>Header Files\filesystem</Filter>
