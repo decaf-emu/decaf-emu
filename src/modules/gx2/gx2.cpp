@@ -123,6 +123,10 @@ GX2::registerShaderFunctions()
    RegisterKernelFunction(GX2SetVertexUniformReg);
    RegisterKernelFunction(GX2SetPixelUniformReg);
    RegisterKernelFunction(GX2SetShaderModeEx);
+   RegisterKernelFunction(GX2GetPixelShaderGPRs);
+   RegisterKernelFunction(GX2GetPixelShaderStackEntries);
+   RegisterKernelFunction(GX2GetVertexShaderGPRs);
+   RegisterKernelFunction(GX2GetVertexShaderStackEntries);
 }
 
 void

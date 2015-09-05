@@ -135,4 +135,29 @@ GX2SetShaderModeEx(GX2ShaderMode::Mode mode,
    // TODO: GX2SetShaderModeEx
 }
 
+uint32_t
+GX2GetPixelShaderGPRs(GX2PixelShader *shader)
+{
+   return 8;
+}
+
+uint32_t
+GX2GetPixelShaderStackEntries(GX2PixelShader *shader)
+{
+   return 8;
+}
+
+uint32_t
+GX2GetVertexShaderGPRs(GX2VertexShader *shader)
+{
+   return 8;
+}
+
+uint32_t
+GX2GetVertexShaderStackEntries(GX2VertexShader *shader)
+{
+   return 8;
+}
+
+
 #endif

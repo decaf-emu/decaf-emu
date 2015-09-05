@@ -157,3 +157,15 @@ GX2SetPixelUniformReg(uint32_t offset, uint32_t count, void *data);
 
 void
 GX2SetShaderModeEx(GX2ShaderMode::Mode mode, uint32_t unk1, uint32_t unk2, uint32_t unk3, uint32_t unk4, uint32_t unk5, uint32_t unk6);
+
+uint32_t
+GX2GetPixelShaderGPRs(GX2PixelShader *shader);
+
+uint32_t
+GX2GetPixelShaderStackEntries(GX2PixelShader *shader);
+
+uint32_t
+GX2GetVertexShaderGPRs(GX2VertexShader *shader);
+
+uint32_t
+GX2GetVertexShaderStackEntries(GX2VertexShader *shader);
