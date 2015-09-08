@@ -5,7 +5,7 @@ INS(adde, (rD), (rA, rB), (oe, rc), (opcd == 31, xo2 == 138), "Add Extended")
 INS(addi, (rD), (rA, simm), (), (opcd == 14), "Add Immediate")
 INS(addic, (rD), (rA, simm), (), (opcd == 12), "Add Immediate with Carry")
 INS(addicx, (rD), (rA, simm), (), (opcd == 13), "Add Immediate with Carry and Record")
-INS(addis, (rD), (rA, simm), (), (opcd == 15), "Add Immediate Signed")
+INS(addis, (rD), (rA, simm), (), (opcd == 15), "Add Immediate Shifted")
 INS(addme, (rD), (rA), (oe, rc), (opcd == 31, xo2 == 234), "Add to Minus One Extended")
 INS(addze, (rD), (rA), (oe, rc), (opcd == 31, xo2 == 202), "Add to Zero Extended")
 INS(divw, (rD), (rA, rB), (oe, rc), (opcd == 31, xo2 == 491), "Divide Word")
@@ -183,8 +183,8 @@ INS(fneg, (frD), (frB), (rc), (opcd == 63, xo1 == 40), "Floating Negate")
 // Branch
 INS(b, (), (li), (aa, lk), (opcd == 18), "Branch")
 INS(bc, (), (bo, bi, bd), (aa, lk), (opcd == 16), "Branch Conditional")
-INS(bcctr, (), (bo, bi), (lk), (opcd == 19, xo1 == 528), "Branch Conditional to CTR")
-INS(bclr, (), (bo, bi), (lk), (opcd == 19, xo1 == 16), "Branch Conditional to LR")
+INS(bcctr, (), (bo, bi, CTR), (lk), (opcd == 19, xo1 == 528), "Branch Conditional to CTR")
+INS(bclr, (), (bo, bi, LR), (lk), (opcd == 19, xo1 == 16), "Branch Conditional to LR")
 
 // Condition Register Logical
 INS(crand, (crbD), (crbA, crbB), (), (opcd == 19, xo1 == 257), "Condition Register AND")
@@ -207,14 +207,14 @@ INS(tw, (), (to, rA, rB), (), (opcd == 31, xo1 == 4), "")
 INS(twi, (), (to, rA, simm), (), (opcd == 3), "")
 
 // Processor Control
-INS(mcrxr, (), (crfS), (), (opcd == 31, xo1 == 512), "Move to Condition Register from XER")
+INS(mcrxr, (crfS), (XER), (), (opcd == 31, xo1 == 512), "Move to Condition Register from XER")
 INS(mfcr, (rD), (), (), (opcd == 31, xo1 == 19), "Move from Condition Register")
 INS(mfmsr, (rD), (), (), (opcd == 31, xo1 == 83), "Move from Machine State Register")
 INS(mfspr, (rD), (spr), (), (opcd == 31, xo1 == 339), "Move from Special Purpose Register")
 INS(mftb, (rD), (tbr), (), (opcd == 31, xo1 == 371), "Move from Time Base Register")
-INS(mtcrf, (rD), (crm), (), (opcd == 31, xo1 == 144), "Move to Condition Register Fields")
-INS(mtmsr, (rD), (), (), (opcd == 31, xo1 == 146), "Move to Machine State Register")
-INS(mtspr, (rD), (spr), (), (opcd == 31, xo1 == 467), "Move to Special Purpose Register")
+INS(mtcrf, (crm), (rS), (), (opcd == 31, xo1 == 144), "Move to Condition Register Fields")
+INS(mtmsr, (), (rS), (), (opcd == 31, xo1 == 146), "Move to Machine State Register")
+INS(mtspr, (spr), (rS), (), (opcd == 31, xo1 == 467), "Move to Special Purpose Register")
 
 // Cache Management
 INS(dcbf, (), (rA, rB), (), (opcd == 31, xo1 == 86), "")

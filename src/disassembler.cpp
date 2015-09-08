@@ -237,6 +237,20 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    dis.address = address;
 
    for (auto &field : data->write) {
+      // If we have an alias, then don't put the first opcode field in the args...
+      if (alias) {
+         bool skipField = false;
+         for (auto &op : alias->opcode) {
+            if (field == op.field) {
+               skipField = true;
+               break;
+            }
+         }
+         if (skipField) {
+            continue;
+         }
+      }
+
       dis.args.push_back(disassembleField(dis.address, instr, data, field));
    }
 

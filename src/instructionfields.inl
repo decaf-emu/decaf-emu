@@ -47,3 +47,8 @@ FLD(xo1, 21, 30)
 FLD(xo2, 22, 30)
 FLD(xo3, 25, 30)
 FLD(xo4, 26, 30)
+
+// Marker Fields
+FLD(XER, 0, 0)
+FLD(LR, 0, 0)
+FLD(CTR, 0, 0)

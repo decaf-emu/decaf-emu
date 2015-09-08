@@ -7,26 +7,60 @@ struct Tracer;
 
 // TODO: Probably should rename this to something reasonable
 namespace StateField {
-   enum Field : uint32_t {
-      Invalid = 0,
-      GPR = 1,
-      // 1 - 32 == GPR[0] to GPR[31]
-      FPR = 33,
-      // 33 - 64 == FPR[0] to FPR[31]
-      LR = 65,
-      CTR = 66,
-      CR = 67,
-      XER = 68,
+   enum Field : uint8_t {
+      Invalid,
+      GPR,
+      GPR0 = GPR,
+      GPR31 = GPR + 31,
+      FPR,
+      FPR0 = FPR,
+      FPR31 = FPR + 31,
+      CR,
+      XER,
+      LR,
+      CTR,
+      FPSCR,
+      Reserved,
+      ReservedAddress,
+      Memory,
+      Max,
    };
 }
+
+typedef uint32_t TraceFieldType;
+
+struct TraceFieldValue {
+   union {
+      struct {
+         uint32_t u32v0;
+         uint32_t u32v1;
+      };
+      uint64_t u64v;
+      struct {
+         float f32v0;
+         float f32v1;
+      };
+      double f64v;
+      struct {
+         uint32_t mem_size;
+         uint32_t mem_offset;
+      };
+      uint64_t value;
+   };
+};
+
+static const int NumTraceReadFields = 4;
+static const int NumTraceWriteFields = 4;
 
 struct Trace
 {
    Instruction instr;
-   InstructionData *data;
    uint32_t cia;
-   uint32_t read[4];
-   uint32_t write[4];
+   TraceFieldType readField[NumTraceReadFields];
+   TraceFieldValue readValue[NumTraceReadFields];
+   TraceFieldType writeField[NumTraceWriteFields];
+   TraceFieldValue writeValue[NumTraceWriteFields];
+   TraceFieldValue prewriteValue[NumTraceWriteFields];
 };
 
 const Trace& getTrace(Tracer *tracer, int index);

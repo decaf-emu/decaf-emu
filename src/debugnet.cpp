@@ -21,34 +21,25 @@ DebugNet
 gDebugNet;
 
 struct DebugTraceEntryField {
-   uint32_t type;
-   union {
-      struct {
-         uint32_t u32v0;
-         uint32_t u32v1;
-      };
-      uint64_t u64v;
-      struct {
-         float f32v0;
-         float f32v1;
-      };
-      double f64v;
-      uint64_t value;
-   };
+   TraceFieldType type;
+   TraceFieldValue data;
 };
+static_assert(sizeof(TraceFieldType) == 4, "Protocol expects 4-byte TraceFieldType");
+static_assert(sizeof(TraceFieldValue) == 8, "Protocol expects 8-byte TraceFieldValue");
 
 struct DebugTraceEntry {
    uint32_t cia;
-   DebugTraceEntryField fields[4];
+   DebugTraceEntryField fields[NumTraceWriteFields];
 
    template <class Archive>
    void serialize(Archive &ar) {
       ar(cia);
-      for (auto i = 0; i < 4; ++i) {
-         ar(fields[i].type, fields[i].value);
+      for (auto i = 0; i < NumTraceWriteFields; ++i) {
+         ar(fields[i].type, fields[i].data.value);
       }
    }
 };
+static_assert(NumTraceWriteFields == 4, "Protocol expects 4 field entries.");
 
 struct DebugSymbolInfo {
    uint32_t moduleIdx;
@@ -190,38 +181,6 @@ static void populateDebugPauseInfo(DebugPauseInfo& info) {
    }
 }
 
-static uint32_t getStateField(Instruction instr, Field field) {
-   switch (field) {
-   case Field::rA:
-      return StateField::GPR + instr.rA;
-   case Field::rB:
-      return StateField::GPR + instr.rB;
-   case Field::rS:
-      return StateField::GPR + instr.rS;
-   case Field::rD:
-      return StateField::GPR + instr.rD;
-   }
-   return 0;
-}
-
-static void populateDebugTraceEntryField(DebugTraceEntryField& field, ThreadState *state)
-{
-   auto &stateField = field.type;
-   if (stateField == StateField::Invalid) {
-      // Ignore invalid fields
-   } else if (stateField >= StateField::GPR && stateField < StateField::GPR + 32) {
-      field.u32v0 = state->gpr[stateField - StateField::GPR];
-   } else if (stateField == StateField::LR) {
-      field.u32v0 = state->lr;
-   } else if (stateField == StateField::CTR) {
-      field.u32v0 = state->ctr;
-   } else if (stateField == StateField::CR) {
-      field.u32v0 = state->cr.value;
-   } else {
-      assert(0);
-   }
-}
-
 static void populateDebugTraceEntrys(std::vector<DebugTraceEntry>& entries, ThreadState *state)
 {
    auto &tracer = state->tracer;
@@ -233,20 +192,13 @@ static void populateDebugTraceEntrys(std::vector<DebugTraceEntry>& entries, Thre
       DebugTraceEntry entry;
       entry.cia = trace.cia;
 
-      for (int fieldIdx = 0; fieldIdx < 4; ++fieldIdx) {
-         entry.fields[fieldIdx].type = StateField::Invalid;
-      }
-
-      int fieldIdx = 0;
-      for (auto &rfield : trace.data->read) {
-         assert(fieldIdx < 4);
-         if (rfield != Field::Invalid) {
-            entry.fields[fieldIdx].type = getStateField(trace.instr, rfield);
-            populateDebugTraceEntryField(entry.fields[fieldIdx], state);
+      for (auto i = 0; i < NumTraceWriteFields; ++i) {
+         entry.fields[i].type = trace.writeField[i];
+         if (trace.writeField[i] != StateField::Invalid) {
+            entry.fields[i].data = trace.prewriteValue[i];
          }
-         ++fieldIdx;
       }
-
+      
       entries.push_back(entry);
    }
 }
