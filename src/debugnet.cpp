@@ -14,9 +14,41 @@
 #include "log.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "disassembler.h"
+#include "trace.h"
+#include "instructiondata.h"
 
 DebugNet
 gDebugNet;
+
+struct DebugTraceEntryField {
+   uint32_t type;
+   union {
+      struct {
+         uint32_t u32v0;
+         uint32_t u32v1;
+      };
+      uint64_t u64v;
+      struct {
+         float f32v0;
+         float f32v1;
+      };
+      double f64v;
+      uint64_t value;
+   };
+};
+
+struct DebugTraceEntry {
+   uint32_t cia;
+   DebugTraceEntryField fields[4];
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(cia);
+      for (auto i = 0; i < 4; ++i) {
+         ar(fields[i].type, fields[i].value);
+      }
+   }
+};
 
 struct DebugSymbolInfo {
    uint32_t moduleIdx;
@@ -42,6 +74,7 @@ struct DebugModuleInfo {
 
 struct DebugThreadInfo {
    std::string name;
+   uint32_t id;
 
    int32_t curCoreId;
    uint32_t attribs;
@@ -59,7 +92,7 @@ struct DebugThreadInfo {
 
    template <class Archive>
    void serialize(Archive &ar) {
-      ar(name, curCoreId, attribs, state);
+      ar(name, id, curCoreId, attribs, state);
       ar(entryPoint, stackStart, stackEnd);
       ar(cia, gpr, lr, ctr, crf);
    }
@@ -80,7 +113,7 @@ struct DebugPauseInfo {
    }
 };
 
-void populateDebugPauseInfo(DebugPauseInfo& info) {
+static void populateDebugPauseInfo(DebugPauseInfo& info) {
    auto &loadedModules = gLoader.getLoadedModules();
    int moduleIdx = 0;
    int userModuleIdx = -1;
@@ -129,6 +162,7 @@ void populateDebugPauseInfo(DebugPauseInfo& info) {
 
       DebugThreadInfo tinfo;
       tinfo.name = thread->name;
+      tinfo.id = thread->id;
 
       tinfo.curCoreId = -1;
       for (auto &core : coreList) {
@@ -156,6 +190,67 @@ void populateDebugPauseInfo(DebugPauseInfo& info) {
    }
 }
 
+static uint32_t getStateField(Instruction instr, Field field) {
+   switch (field) {
+   case Field::rA:
+      return StateField::GPR + instr.rA;
+   case Field::rB:
+      return StateField::GPR + instr.rB;
+   case Field::rS:
+      return StateField::GPR + instr.rS;
+   case Field::rD:
+      return StateField::GPR + instr.rD;
+   }
+   return 0;
+}
+
+static void populateDebugTraceEntryField(DebugTraceEntryField& field, ThreadState *state)
+{
+   auto &stateField = field.type;
+   if (stateField == StateField::Invalid) {
+      // Ignore invalid fields
+   } else if (stateField >= StateField::GPR && stateField < StateField::GPR + 32) {
+      field.u32v0 = state->gpr[stateField - StateField::GPR];
+   } else if (stateField == StateField::LR) {
+      field.u32v0 = state->lr;
+   } else if (stateField == StateField::CTR) {
+      field.u32v0 = state->ctr;
+   } else if (stateField == StateField::CR) {
+      field.u32v0 = state->cr.value;
+   } else {
+      assert(0);
+   }
+}
+
+static void populateDebugTraceEntrys(std::vector<DebugTraceEntry>& entries, ThreadState *state)
+{
+   auto &tracer = state->tracer;
+
+   auto numTraces = static_cast<int>(getTracerNumTraces(tracer));
+   for (int i = 0; i < numTraces; ++i) {
+      auto &trace = getTrace(tracer, i);
+
+      DebugTraceEntry entry;
+      entry.cia = trace.cia;
+
+      for (int fieldIdx = 0; fieldIdx < 4; ++fieldIdx) {
+         entry.fields[fieldIdx].type = StateField::Invalid;
+      }
+
+      int fieldIdx = 0;
+      for (auto &rfield : trace.data->read) {
+         assert(fieldIdx < 4);
+         if (rfield != Field::Invalid) {
+            entry.fields[fieldIdx].type = getStateField(trace.instr, rfield);
+            populateDebugTraceEntryField(entry.fields[fieldIdx], state);
+         }
+         ++fieldIdx;
+      }
+
+      entries.push_back(entry);
+   }
+}
+
 enum class DebugPacketType : uint16_t {
    Invalid = 0,
    PreLaunch = 1,
@@ -171,6 +266,8 @@ enum class DebugPacketType : uint16_t {
    StepCore = 11,
    CoreStepped = 12,
    Paused = 13,
+   GetTrace = 14,
+   GetTraceRes = 15,
 };
 
 #pragma pack(push, 1)
@@ -328,6 +425,29 @@ public:
 
 };
 
+class DebugPacketGetTrace : public DebugPacketBase<DebugPacketType::GetTrace> {
+public:
+   uint32_t threadId;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(threadId);
+   }
+
+};
+
+class DebugPacketGetTraceRes : public DebugPacketBase<DebugPacketType::GetTraceRes> {
+public:
+   uint32_t threadId;
+   std::vector<DebugTraceEntry> info;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(threadId, info);
+   }
+
+};
+
 template <typename T>
 int serializePacket2(std::vector<uint8_t> &data, DebugPacket *packet) {
    std::ostringstream str;
@@ -393,6 +513,10 @@ int serializePacket(std::vector<uint8_t> &data, DebugPacket *packet)
       return serializePacket2<DebugPacketCoreStepped>(data, packet);
    } else if (header.command == DebugPacketType::Paused) {
       return serializePacket2<DebugPacketPaused>(data, packet);
+   } else if (header.command == DebugPacketType::GetTrace) {
+      return serializePacket2<DebugPacketGetTrace>(data, packet);
+   } else if (header.command == DebugPacketType::GetTraceRes) {
+      return serializePacket2<DebugPacketGetTraceRes>(data, packet);
    } else {
       return -1;
    }
@@ -428,6 +552,10 @@ int deserializePacket(const std::vector<uint8_t> &data, DebugPacket *&packet) {
       return deserializePacket2<DebugPacketCoreStepped>(data, packet);
    } else if (header.command == DebugPacketType::Paused) {
       return deserializePacket2<DebugPacketPaused>(data, packet);
+   } else if (header.command == DebugPacketType::GetTrace) {
+      return deserializePacket2<DebugPacketGetTrace>(data, packet);
+   } else if (header.command == DebugPacketType::GetTraceRes) {
+      return deserializePacket2<DebugPacketGetTraceRes>(data, packet);
    } else {
       return -1;
    }
@@ -582,6 +710,27 @@ DebugNet::handlePacket(DebugPacket *pak)
 
          writePacket(pakO);
       }
+      break;
+   }
+   case DebugPacketType::GetTrace: {
+      auto *tPak = static_cast<DebugPacketGetTrace*>(pak);
+
+      Fiber *fiber = nullptr;
+      auto fiberList = gProcessor.getFiberList();
+      for (auto &i : fiberList) {
+         if (i->thread->id == tPak->threadId) {
+            fiber = i;
+            break;
+         }
+      }
+      if (!fiber) {
+         break;
+      }
+
+      auto pakO = new DebugPacketGetTraceRes();
+      populateDebugTraceEntrys(pakO->info, &fiber->state);
+      writePacket(pakO);
+
       break;
    }
    }

@@ -16,19 +16,11 @@ debugPrint(fmt::StringRef msg, Args... args) {
    OutputDebugStringA(out.c_str());
 }
 
-struct Trace
-{
-   Instruction instr;
-   InstructionData *data;
-   uint32_t cia;
-   uint32_t read[4];
-   uint32_t write[4];
-};
-
 struct Tracer
 {
    size_t index;
-   std::vector<Trace> trace;
+   size_t numTraces;
+   std::vector<Trace> traces;
 };
 
 static uint32_t
@@ -100,12 +92,32 @@ printInstruction(const Trace& trace, int index)
    
 }
 
+const Trace& getTrace(Tracer *tracer, int index)
+{
+   auto tracerSize = tracer->numTraces;
+   assert(index >= 0);
+   assert(index < tracerSize);
+   auto realIndex = (int)tracer->index - 1 - index;
+   while (realIndex < 0) {
+      realIndex += (int)tracerSize;
+   }
+   while (realIndex >= tracerSize) {
+      realIndex -= (int)tracerSize;
+   }
+   return tracer->traces[realIndex];
+}
+
+size_t getTracerNumTraces(Tracer *tracer) {
+   return tracer->numTraces;
+}
+
 void
 traceInit(ThreadState *state, size_t size)
 {
    state->tracer = new Tracer();
    state->tracer->index = 0;
-   state->tracer->trace.resize(size);
+   state->tracer->numTraces = 0;
+   state->tracer->traces.resize(size);
 }
 
 Trace *
@@ -116,8 +128,14 @@ traceInstructionStart(Instruction instr, InstructionData *data, ThreadState *sta
    }
 
    auto tracer = state->tracer;
-   auto &trace = tracer->trace[tracer->index];
-   tracer->index = (tracer->index + 1) % tracer->trace.size();
+   auto &trace = tracer->traces[tracer->index];
+
+   auto tracerSize = tracer->traces.size();
+   if (tracer->numTraces < tracerSize) {
+      tracer->numTraces++;
+   }
+   tracer->index = (tracer->index + 1) % tracerSize;
+   
    
    memset(&trace, 0xDC, sizeof(Trace));
    trace.data = data;
@@ -145,26 +163,11 @@ traceInstructionEnd(Trace *trace, Instruction instr, InstructionData *data, Thre
    }
 }
 
-static const Trace& getTrace(Tracer *tracer, int index)
-{
-   auto tracerSize = tracer->trace.size();
-   assert(index >= 0);
-   assert(index < tracerSize);
-   auto realIndex = tracer->index - 1 - index;
-   while (realIndex < 0) {
-      realIndex += tracerSize;
-   }
-   while (realIndex >= tracerSize) {
-      realIndex -= tracerSize;
-   }
-   return tracer->trace[realIndex];
-}
-
 void
 tracePrint(ThreadState *state, int start, int count)
 {
    auto tracer = state->tracer;
-   auto tracerSize = static_cast<int>(tracer->trace.size());
+   auto tracerSize = static_cast<int>(getTracerNumTraces(tracer));
 
    if (count == 0) {
       count = tracerSize - start;
@@ -188,7 +191,7 @@ int
 traceReg(ThreadState *state, int start, int regIdx)
 {
    auto tracer = state->tracer;
-   auto tracerSize = static_cast<int>(tracer->trace.size());
+   auto tracerSize = static_cast<int>(getTracerNumTraces(tracer));
 
    debugPrint("Trace - Search {} to {} for write r{}", start, tracerSize, regIdx);
 
@@ -294,7 +297,7 @@ traceRegAround()
    int end = gRegTraceIndex + 4;
 
    auto tracer = gRegTraceState->tracer;
-   auto tracerSize = static_cast<int>(tracer->trace.size());
+   auto tracerSize = static_cast<int>(getTracerNumTraces(tracer));
 
    if (start < 0) {
       start = 0;
