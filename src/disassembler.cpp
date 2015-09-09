@@ -235,26 +235,32 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    dis.name = data->name;
    dis.instruction = data;
    dis.address = address;
-
+   
+   std::list<Field> args;
    for (auto &field : data->write) {
-      // If we have an alias, then don't put the first opcode field in the args...
-      if (alias) {
-         bool skipField = false;
-         for (auto &op : alias->opcode) {
-            if (field == op.field) {
-               skipField = true;
-               break;
-            }
-         }
-         if (skipField) {
-            continue;
-         }
+      // Skip arguments that are in read list as well
+      if (std::find(data->read.begin(), data->read.end(), field) != data->read.end()) {
+         continue;
       }
 
-      dis.args.push_back(disassembleField(dis.address, instr, data, field));
+      // Add only unique arguements
+      if (std::find(args.begin(), args.end(), field) != args.end()) {
+         continue;
+      }
+
+      args.push_back(field);
+   }
+   for (auto &field : data->read) {
+      // Add only unique arguements
+      if (std::find(args.begin(), args.end(), field) != args.end()) {
+         continue;
+      }
+
+      args.push_back(field);
    }
 
-   for (auto &field : data->read) {
+
+   for (auto &field : args) {
       // If we have an alias, then don't put the first opcode field in the args...
       if (alias) {
          bool skipField = false;
@@ -268,6 +274,15 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
             continue;
          }
       }
+
+      if (field == Field::aa || 
+         field == Field::lk || 
+         field == Field::oe || 
+         field == Field::rc || 
+         field == Field::kci) {
+         continue;
+      }
+
       dis.args.push_back(disassembleField(dis.address, instr, data, field));
    }
 

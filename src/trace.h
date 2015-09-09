@@ -15,14 +15,16 @@ namespace StateField {
       FPR,
       FPR0 = FPR,
       FPR31 = FPR + 31,
+      GQR,
+      GQR0 = GQR,
+      GQR7 = GQR + 7,
       CR,
       XER,
       LR,
       CTR,
       FPSCR,
-      Reserved,
-      ReservedAddress,
-      Memory,
+      Reserve,
+      ReserveAddress,
       Max,
    };
 }
@@ -48,19 +50,24 @@ struct TraceFieldValue {
       uint64_t value;
    };
 };
-
-static const int NumTraceReadFields = 4;
-static const int NumTraceWriteFields = 4;
+static_assert(sizeof(TraceFieldValue) == sizeof(TraceFieldValue::value), "TraceFieldValue::value size must match total structure size");
 
 struct Trace
 {
+   struct _R {
+      TraceFieldType type;
+      TraceFieldValue value;
+   };
+   struct _W {
+      TraceFieldType type;
+      TraceFieldValue value;
+      TraceFieldValue prevalue;
+   };
+
    Instruction instr;
    uint32_t cia;
-   TraceFieldType readField[NumTraceReadFields];
-   TraceFieldValue readValue[NumTraceReadFields];
-   TraceFieldType writeField[NumTraceWriteFields];
-   TraceFieldValue writeValue[NumTraceWriteFields];
-   TraceFieldValue prewriteValue[NumTraceWriteFields];
+   std::vector<_R> reads;
+   std::vector<_W> writes;
 };
 
 const Trace& getTrace(Tracer *tracer, int index);

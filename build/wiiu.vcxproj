@@ -293,6 +293,7 @@
     <ClInclude Include="..\src\ppcinvoke.h" />
     <ClInclude Include="..\src\ppctypes.h" />
     <ClInclude Include="..\src\processor.h" />
+    <ClInclude Include="..\src\statedbg.h" />
     <ClInclude Include="..\src\strutils.h" />
     <ClInclude Include="..\src\teenyheap.h" />
     <ClInclude Include="..\src\trace.h" />

@@ -7,6 +7,9 @@
 #include "trace.h"
 #include "system.h"
 #include "kernelfunction.h"
+#include "statedbg.h"
+
+#define TRACE_VERIFICATION
 
 template<typename... Args>
 static void
@@ -21,6 +24,7 @@ struct Tracer
    size_t index;
    size_t numTraces;
    std::vector<Trace> traces;
+   ThreadState prevState;
 };
 
 static void
@@ -60,14 +64,14 @@ printInstruction(const Trace& trace, int index)
       addend = " [" + std::string(scall->name) + "]";
    }
 
-   for (auto j = 0; j < NumTraceWriteFields; ++j) {
-      printFieldValue(trace.instr, trace.writeField[j], trace.writeValue[j]);
+   for (auto &write : trace.writes) {
+      printFieldValue(trace.instr, write.type, write.value);
    }
    
    debugPrint("  [{}] {:08x} {}{}", index, trace.cia, dis.text.c_str(), addend.c_str());
 
-   for (auto j = 0; j < NumTraceReadFields; ++j) {
-      printFieldValue(trace.instr, trace.readField[j], trace.readValue[j]);
+   for (auto &read : trace.reads) {
+      printFieldValue(trace.instr, read.type, read.value);
    }
 }
 
@@ -115,6 +119,16 @@ static uint32_t getFieldStateField(Instruction instr, Field field) {
       return StateField::GPR + instr.rS;
    case Field::rD:
       return StateField::GPR + instr.rD;
+   case Field::frA:
+      return StateField::FPR + instr.frA;
+   case Field::frB:
+      return StateField::FPR + instr.frB;
+   case Field::frC:
+      return StateField::FPR + instr.frC;
+   case Field::frD:
+      return StateField::FPR + instr.frD;
+   case Field::frS:
+      return StateField::FPR + instr.frS;
    case Field::spr:
       switch (decodeSPR(instr)) {
       case SprEncoding::CTR:
@@ -123,6 +137,22 @@ static uint32_t getFieldStateField(Instruction instr, Field field) {
          return StateField::LR;
       case SprEncoding::XER:
          return StateField::XER;
+      case SprEncoding::GQR0:
+         return StateField::GQR + 0;
+      case SprEncoding::GQR1:
+         return StateField::GQR + 1;
+      case SprEncoding::GQR2:
+         return StateField::GQR + 2;
+      case SprEncoding::GQR3:
+         return StateField::GQR + 3;
+      case SprEncoding::GQR4:
+         return StateField::GQR + 4;
+      case SprEncoding::GQR5:
+         return StateField::GQR + 5;
+      case SprEncoding::GQR6:
+         return StateField::GQR + 6;
+      case SprEncoding::GQR7:
+         return StateField::GQR + 7;
       }
       break;
    case Field::bo:
@@ -139,43 +169,43 @@ static uint32_t getFieldStateField(Instruction instr, Field field) {
    case Field::crfS:
    case Field::crm:
       return StateField::CR;
+   case Field::oe:
+      if (instr.oe) {
+         return StateField::XER;
+      }
+      break;
+   case Field::rc:
+      if (instr.rc) {
+         return StateField::CR;
+      }
+      break;
    case Field::XER:
       return StateField::XER;
+   case Field::CR:
+      return StateField::CR;
    case Field::CTR:
       return StateField::CTR;
    case Field::LR:
       return StateField::LR;
+   case Field::FPSCR:
+      return StateField::FPSCR;
    case Field::lk:
       return StateField::LR;
    }
    return StateField::Invalid;
 }
 
-template<int Size>
-static void pushUniqueField(TraceFieldType (&fields)[Size], uint32_t fieldId) {
-   if (fieldId == StateField::Invalid) {
-      return;
-   }
-
-   for (int i = 0; i < Size; ++i) {
-      if (fields[i] == fieldId) {
-         // Already in the list
-         return;
-      } else if (fields[i] == StateField::Invalid) {
-         fields[i] = fieldId;
-         return;
-      }
-   }
-   assert(0);
-}
-
-static void populateStateField(ThreadState *state, TraceFieldType type, TraceFieldValue &field) {
+static void saveStateField(ThreadState *state, TraceFieldType type, TraceFieldValue &field) {
    if (type == StateField::Invalid) {
       return;
    }
 
    if (type >= StateField::GPR0 && type <= StateField::GPR31) {
       field.u32v0 = state->gpr[type - StateField::GPR];
+   } else if (type >= StateField::FPR0 && type <= StateField::FPR31) {
+      field.f64v = state->fpr[type - StateField::FPR].value;
+   } else if (type >= StateField::GQR0 && type <= StateField::GQR7) {
+      field.u32v0 = state->gqr[type - StateField::GQR].value;
    } else if (type == StateField::CR) {
       field.u32v0 = state->cr.value;
    } else if (type == StateField::XER) {
@@ -184,9 +214,60 @@ static void populateStateField(ThreadState *state, TraceFieldType type, TraceFie
       field.u32v0 = state->lr;
    } else if (type == StateField::CTR) {
       field.u32v0 = state->ctr;
+   } else if (type == StateField::FPSCR) {
+      field.u32v0 = state->fpscr.value;
+   } else if (type == StateField::Reserve) {
+      field.u32v0 = state->reserve ? 1 : 0;
+   } else if (type == StateField::ReserveAddress) {
+      field.u32v0 = state->reserveAddress;
    } else {
       assert(0);
    }
+}
+
+static void restoreStateField(ThreadState *state, TraceFieldType type, TraceFieldValue &field) {
+   if (type == StateField::Invalid) {
+      return;
+   }
+
+   if (type >= StateField::GPR0 && type <= StateField::GPR31) {
+      state->gpr[type - StateField::GPR] = field.u32v0;
+   } else if (type >= StateField::FPR0 && type <= StateField::FPR31) {
+      state->fpr[type - StateField::FPR].value = field.f64v;
+   } else if (type >= StateField::GQR0 && type <= StateField::GQR7) {
+      state->gqr[type - StateField::GQR].value = field.u32v0;
+   } else if (type == StateField::CR) {
+      state->cr.value = field.u32v0;
+   } else if (type == StateField::XER) {
+      state->xer.value = field.u32v0;
+   } else if (type == StateField::LR) {
+      state->lr = field.u32v0;
+   } else if (type == StateField::CTR) {
+      state->ctr = field.u32v0;
+   } else if (type == StateField::FPSCR) {
+      state->fpscr.value = field.u32v0;
+   } else if (type == StateField::Reserve) {
+      state->reserve = (field.u32v0 != 0);
+   } else if (type == StateField::ReserveAddress) {
+      state->reserveAddress = field.u32v0;
+   } else {
+      assert(0);
+   }
+}
+
+template<typename T>
+static void pushUniqueField(std::vector<T> &fields, uint32_t fieldId) {
+   if (fieldId == StateField::Invalid) {
+      return;
+   }
+
+   for (auto &i : fields) {
+      if (i.type == fieldId) {
+         return;
+      }
+   }
+
+   fields.push_back({ fieldId });
 }
 
 Trace *
@@ -204,38 +285,53 @@ traceInstructionStart(Instruction instr, InstructionData *data, ThreadState *sta
       tracer->numTraces++;
    }
    tracer->index = (tracer->index + 1) % tracerSize;
-   
-   memset(&trace, 0xDC, sizeof(Trace));
+
+   // Setup Trace
    trace.instr = instr;
    trace.cia = state->cia;
+   trace.reads.clear();
+   trace.writes.clear();
 
-   for (int i = 0; i < NumTraceReadFields; ++i) {
-      trace.readField[i] = StateField::Invalid;
-   }
-   for (int i = 0; i < NumTraceWriteFields; ++i) {
-      trace.writeField[i] = StateField::Invalid;
-   }
-
+   // Automatically determine register changes
    for (auto i = 0u; i < data->read.size(); ++i) {
       auto stateField = getFieldStateField(instr, data->read[i]);
-      pushUniqueField(trace.readField, stateField);
+      pushUniqueField(trace.reads, stateField);
    }
 
    for (auto i = 0u; i < data->write.size(); ++i) {
       auto stateField = getFieldStateField(instr, data->write[i]);
-      pushUniqueField(trace.writeField, stateField);
+      pushUniqueField(trace.writes, stateField);
    }
    for (auto i = 0u; i < data->flags.size(); ++i) {
       auto stateField = getFieldStateField(instr, data->flags[i]);
-      pushUniqueField(trace.writeField, stateField);
+      pushUniqueField(trace.writes, stateField);
    }
 
-   for (int i = 0; i < NumTraceReadFields; ++i) {
-      populateStateField(state, trace.readField[i], trace.readValue[i]);
+   // Some special cases.
+   if (data->id == InstructionID::lmw) {
+      for (uint32_t i = StateField::GPR + instr.rD; i <= StateField::GPR31; ++i) {
+         pushUniqueField(trace.writes, i);
+      }
+   } else if (data->id == InstructionID::stmw) {
+      for (uint32_t i = StateField::GPR + instr.rS; i <= StateField::GPR31; ++i) {
+         pushUniqueField(trace.reads, i);
+      }
+   } else if (data->id == InstructionID::stswi) {
+      assert(0);
+   } else if (data->id == InstructionID::stswx) {
+      assert(0);
    }
-   for (int i = 0; i < NumTraceWriteFields; ++i) {
-      populateStateField(state, trace.writeField[i], trace.prewriteValue[i]);
+
+
+   // Save all state
+   for (auto &i : trace.reads) {
+      saveStateField(state, i.type, i.value);
    }
+   for (auto &i : trace.writes) {
+      saveStateField(state, i.type, i.prevalue);
+   }
+
+   tracer->prevState = *state;
 
    return &trace;
 }
@@ -247,9 +343,49 @@ traceInstructionEnd(Trace *trace, Instruction instr, InstructionData *data, Thre
       return;
    }
 
-   for (int i = 0; i < NumTraceWriteFields; ++i) {
-      populateStateField(state, trace->writeField[i], trace->writeValue[i]);
+   auto tracer = state->tracer;
+   
+   // Special hack for KC for now
+   if (data->id == InstructionID::kc) {
+      trace->writes.clear();
+
+      for (int i = 0; i < StateField::Max; ++i) {
+         TraceFieldValue curVal, prevVal;
+         saveStateField(&tracer->prevState, i, prevVal);
+         saveStateField(state, i, curVal);
+         if (curVal.value != prevVal.value) {
+            pushUniqueField(trace->writes, i);
+         }
+      }
+
+      for (auto &i : trace->writes) {
+         saveStateField(&tracer->prevState, i.type, i.prevalue);
+      }
    }
+
+   for (auto &i : trace->writes) {
+      saveStateField(state, i.type, i.value);
+   }
+
+#ifdef TRACE_VERIFICATION
+   if (tracer->numTraces > 0) {
+      ThreadState checkState = *state;
+      checkState.nia = tracer->prevState.nia;
+
+      for (auto &i : trace->writes) {
+         restoreStateField(&checkState, i.type, i.prevalue);
+      }
+      
+      std::vector<std::string> errors;
+      if (!dbgStateCmp(&checkState, &tracer->prevState, errors)) {
+         gLog->error("Trace Compliance errors w/ {}", data->name);
+         for (auto &err : errors) {
+            gLog->error(err);
+         }
+         DebugBreak();
+      }
+   }
+#endif
 }
 
 void
@@ -291,14 +427,12 @@ traceReg(ThreadState *state, int start, int regIdx)
       auto &trace = getTrace(tracer, i);
 
       bool wasMatchedWrite = false;
-      for (auto i = 0; i < NumTraceWriteFields; ++i) {
-         if (trace.writeField[i] == StateField::GPR + regIdx) {
+      for (auto &i : trace.writes) {
+         if (i.type == StateField::GPR + regIdx) {
             wasMatchedWrite = true;
             break;
          }
       }
-
-      // TODO: Handle kc's return values...
 
       if (wasMatchedWrite) {
          printInstruction(trace, i);
@@ -340,9 +474,9 @@ traceRegNext(int regIdx)
    auto tracer = gRegTraceState->tracer;
    auto &trace = getTrace(tracer, foundIndex);
 
-   if (trace.readField[0] != StateField::Invalid && trace.readField[1] == StateField::Invalid) {
-      if (trace.readField[0] >= StateField::GPR0 && trace.readField[0] <= StateField::GPR31) {
-         gRegTraceNextReg = trace.readField[0] - StateField::GPR;
+   if (trace.reads.size() == 1) {
+      if (trace.reads.front().type >= StateField::GPR0 && trace.reads.front().type <= StateField::GPR31) {
+         gRegTraceNextReg = trace.reads.front().type - StateField::GPR;
          debugPrint("Suggested next register is r{}", gRegTraceNextReg);
       } else {
          // Not a GPR read

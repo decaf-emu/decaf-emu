@@ -23,23 +23,24 @@ gDebugNet;
 struct DebugTraceEntryField {
    TraceFieldType type;
    TraceFieldValue data;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(type, data.value);
+   }
 };
 static_assert(sizeof(TraceFieldType) == 4, "Protocol expects 4-byte TraceFieldType");
 static_assert(sizeof(TraceFieldValue) == 8, "Protocol expects 8-byte TraceFieldValue");
 
 struct DebugTraceEntry {
    uint32_t cia;
-   DebugTraceEntryField fields[NumTraceWriteFields];
+   std::vector<DebugTraceEntryField> fields;
 
    template <class Archive>
    void serialize(Archive &ar) {
-      ar(cia);
-      for (auto i = 0; i < NumTraceWriteFields; ++i) {
-         ar(fields[i].type, fields[i].data.value);
-      }
+      ar(cia, fields);
    }
 };
-static_assert(NumTraceWriteFields == 4, "Protocol expects 4 field entries.");
 
 struct DebugSymbolInfo {
    uint32_t moduleIdx;
@@ -191,14 +192,14 @@ static void populateDebugTraceEntrys(std::vector<DebugTraceEntry>& entries, Thre
 
       DebugTraceEntry entry;
       entry.cia = trace.cia;
-
-      for (auto i = 0; i < NumTraceWriteFields; ++i) {
-         entry.fields[i].type = trace.writeField[i];
-         if (trace.writeField[i] != StateField::Invalid) {
-            entry.fields[i].data = trace.prewriteValue[i];
-         }
-      }
       
+      for (auto &i : trace.writes) {
+         DebugTraceEntryField field;
+         field.type = i.type;
+         field.data = i.prevalue;
+         entry.fields.push_back(field);
+      }
+
       entries.push_back(entry);
    }
 }
