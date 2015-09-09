@@ -357,6 +357,7 @@ enum MulFlags
    MulLow         = 1 << 0, // (uint32_t)d
    MulHigh        = 1 << 1, // d >> 32
    MulImmediate   = 1 << 2, // b = simm
+   MulCheckRecord = 1 << 3, // Check rc then update cr
 };
 
 // Signed multiply
@@ -382,13 +383,15 @@ mulSignedGeneric(ThreadState *state, Instruction instr)
 
    state->gpr[instr.rD] = d;
 
-   if (instr.rc) {
-      updateConditionRegister(state, d);
+   if (flags & MulCheckRecord) {
+      if (instr.rc) {
+         updateConditionRegister(state, d);
+      }
    }
 }
 
 // Unsigned multiply
-template<MulFlags flags>
+template<unsigned flags>
 static void
 mulUnsignedGeneric(ThreadState *state, Instruction instr)
 {
@@ -405,21 +408,23 @@ mulUnsignedGeneric(ThreadState *state, Instruction instr)
 
    state->gpr[instr.rD] = d;
 
-   if (instr.rc) {
-      updateConditionRegister(state, d);
+   if (flags & MulCheckRecord) {
+      if (instr.rc) {
+         updateConditionRegister(state, d);
+      }
    }
 }
 
 static void
 mulhw(ThreadState *state, Instruction instr)
 {
-   return mulSignedGeneric<MulHigh>(state, instr);
+   return mulSignedGeneric<MulHigh | MulCheckRecord>(state, instr);
 }
 
 static void
 mulhwu(ThreadState *state, Instruction instr)
 {
-   return mulUnsignedGeneric<MulHigh>(state, instr);
+   return mulUnsignedGeneric<MulHigh | MulCheckRecord>(state, instr);
 }
 
 static void
@@ -431,7 +436,7 @@ mulli(ThreadState *state, Instruction instr)
 static void
 mullw(ThreadState *state, Instruction instr)
 {
-   return mulSignedGeneric<MulLow>(state, instr);
+   return mulSignedGeneric<MulLow | MulCheckRecord>(state, instr);
 }
 
 // NAND
