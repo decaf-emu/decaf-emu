@@ -5,22 +5,22 @@
 using gpr_t = uint32_t;
 
 // Floating-Point Registers
-union fpr_t
+struct fpr_t
 {
-   double value;
-   uint64_t idw;
-
-   struct
+   union
    {
-      float paired0;
-      float paired1;
+      double value;
+      double paired0;
+      uint64_t idw;
+
+      struct
+      {
+         uint32_t iw0;
+         uint32_t iw1;
+      };
    };
 
-   struct
-   {
-      uint32_t iw0;
-      uint32_t iw1;
-   };
+   double paired1;
 };
 
 namespace ConditionRegisterFlag

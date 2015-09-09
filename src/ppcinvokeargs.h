@@ -70,16 +70,16 @@ struct arg_converter_t<PpcType::DWORD, Type> {
 };
 
 template<typename Type>
-struct arg_converter_t<PpcType::PAIRED0, Type> {
+struct arg_converter_t<PpcType::FLOAT, Type> {
    static inline Type get(ThreadState *state, size_t &r, size_t &f)
    {
-      auto& x = state->fpr[f++].paired0;
+      auto& x = state->fpr[f++].value;
       return ppctype_converter_t<Type>::from_ppc(x);
    }
 
    static inline void set(ThreadState *state, size_t &r, size_t &f, Type v)
    {
-      auto& x = state->fpr[f++].paired0;
+      auto& x = state->fpr[f++].value;
       ppctype_converter_t<Type>::to_ppc(v, x);
    }
 };

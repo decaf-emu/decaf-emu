@@ -98,41 +98,13 @@ updateFloatConditionRegister(ThreadState *state)
    state->cr.cr1 = state->fpscr.cr1;
 }
 
-template<>
-float
-getFpr<float>(ThreadState *state, unsigned fr)
-{
-   return state->fpr[fr].paired0;
-}
-
-template<>
-double
-getFpr<double>(ThreadState *state, unsigned fr)
-{
-   return state->fpr[fr].value;
-}
-
-void
-setFpr(ThreadState *state, unsigned fr, float value)
-{
-   state->fpr[fr].paired0 = value;
-   state->fpr[fr].paired1 = value;
-}
-
-void
-setFpr(ThreadState *state, unsigned fr, double value)
-{
-   state->fpr[fr].value = value;
-}
-
 // Floating Add
-template<typename Type>
 static void
-floatAdd(ThreadState *state, Instruction instr)
+fadd(ThreadState *state, Instruction instr)
 {
-   Type a, b, d;
-   a = getFpr<Type>(state, instr.frA);
-   b = getFpr<Type>(state, instr.frB);
+   double a, b, d;
+   a = state->fpr[instr.frA].value;
+   b = state->fpr[instr.frB].value;
 
    state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
@@ -140,33 +112,27 @@ floatAdd(ThreadState *state, Instruction instr)
    d = a + b;
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
 }
 
-static void
-fadd(ThreadState *state, Instruction instr)
-{
-   return floatAdd<double>(state, instr);
-}
-
+// Floating Add Single
 static void
 fadds(ThreadState *state, Instruction instr)
 {
-   return floatAdd<float>(state, instr);
+   return fadd(state, instr);
 }
 
 // Floating Divide
-template<typename Type>
 static void
-floatDiv(ThreadState *state, Instruction instr)
+fdiv(ThreadState *state, Instruction instr)
 {
-   Type a, b, d;
-   a = getFpr<Type>(state, instr.frA);
-   b = getFpr<Type>(state, instr.frB);
+   double a, b, d;
+   a = state->fpr[instr.frA].value;
+   b = state->fpr[instr.frB].value;
 
    state->fpscr.vxzdz = is_zero(a) && is_zero(b);
    state->fpscr.vxidi = is_infinity(a) && is_infinity(b);
@@ -175,33 +141,27 @@ floatDiv(ThreadState *state, Instruction instr)
    d = a / b;
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
 }
 
-static void
-fdiv(ThreadState *state, Instruction instr)
-{
-   return floatDiv<double>(state, instr);
-}
-
+// Floating Divide Single
 static void
 fdivs(ThreadState *state, Instruction instr)
 {
-   return floatDiv<float>(state, instr);
+   return fdiv(state, instr);
 }
 
 // Floating Multiply
-template<typename Type>
 static void
-floatMul(ThreadState *state, Instruction instr)
+fmul(ThreadState *state, Instruction instr)
 {
-   Type a, b, d;
-   a = getFpr<Type>(state, instr.frA);
-   b = getFpr<Type>(state, instr.frB);
+   double a, b, d;
+   a = state->fpr[instr.frA].value;
+   b = state->fpr[instr.frB].value;
 
    state->fpscr.vximz = is_infinity(a) && is_zero(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
@@ -209,33 +169,27 @@ floatMul(ThreadState *state, Instruction instr)
    d = a / b;
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
 }
 
-static void
-fmul(ThreadState *state, Instruction instr)
-{
-   return floatMul<double>(state, instr);
-}
-
+// Floating Multiply Single
 static void
 fmuls(ThreadState *state, Instruction instr)
 {
-   return floatMul<float>(state, instr);
+   return fmul(state, instr);
 }
 
 // Floating Subtract
-template<typename Type>
 static void
-floatSub(ThreadState *state, Instruction instr)
+fsub(ThreadState *state, Instruction instr)
 {
-   Type a, b, d;
-   a = getFpr<Type>(state, instr.frA);
-   b = getFpr<Type>(state, instr.frB);
+   double a, b, d;
+   a = state->fpr[instr.frA].value;
+   b = state->fpr[instr.frB].value;
 
    state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
@@ -243,48 +197,45 @@ floatSub(ThreadState *state, Instruction instr)
    d = a - b;
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
 }
 
-static void
-fsub(ThreadState *state, Instruction instr)
-{
-   return floatSub<double>(state, instr);
-}
-
+// Floating Subtract Single
 static void
 fsubs(ThreadState *state, Instruction instr)
 {
-   return floatSub<float>(state, instr);
+   return fsub(state, instr);
 }
 
+// Floating Reciprocal Estimate Single
 static void
 fres(ThreadState *state, Instruction instr)
 {
-   float b, d;
-   b = getFpr<float>(state, instr.frB);
-   d = 1.0f / b;
+   double b, d;
+   b = state->fpr[instr.frB].value;
+   d = 1.0 / b;
 
    state->fpscr.vxsnan |= is_signalling_nan(b);
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
 }
 
+// Floating Reciprocal Square Root Estimate
 static void
 frsqrte(ThreadState *state, Instruction instr)
 {
    double b, d;
-   b = getFpr<double>(state, instr.frB);
-   d = 1.0f / std::sqrt(b);
+   b = state->fpr[instr.frB].value;
+   d = 1.0 / std::sqrt(b);
 
    auto vxsnan = is_signalling_nan(b);
    state->fpscr.vxsnan |= vxsnan;
@@ -292,7 +243,7 @@ frsqrte(ThreadState *state, Instruction instr)
 
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -303,9 +254,9 @@ static void
 fsel(ThreadState *state, Instruction instr)
 {
    double a, b, c, d;
-   a = getFpr<double>(state, instr.frA);
-   b = getFpr<double>(state, instr.frB);
-   c = getFpr<double>(state, instr.frC);
+   a = state->fpr[instr.frA].value;
+   b = state->fpr[instr.frB].value;
+   c = state->fpr[instr.frC].value;
 
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
 
@@ -316,7 +267,7 @@ fsel(ThreadState *state, Instruction instr)
    }
 
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -324,14 +275,13 @@ fsel(ThreadState *state, Instruction instr)
 }
 
 // Floating Multiply-Add
-template<typename Type>
 static void
-floatMulAdd(ThreadState *state, Instruction instr)
+fmadd(ThreadState *state, Instruction instr)
 {
-   Type a, b, c, d;
-   a = getFpr<Type>(state, instr.frA);
-   b = getFpr<Type>(state, instr.frB);
-   c = getFpr<Type>(state, instr.frC);
+   double a, b, c, d;
+   a = state->fpr[instr.frA].value;
+   b = state->fpr[instr.frB].value;
+   c = state->fpr[instr.frC].value;
 
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
    state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
@@ -340,34 +290,28 @@ floatMulAdd(ThreadState *state, Instruction instr)
    d = (a * c) + b;
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
 }
 
-static void
-fmadd(ThreadState *state, Instruction instr)
-{
-   return floatMulAdd<double>(state, instr);
-}
-
+// Floating Multiply-Add Single
 static void
 fmadds(ThreadState *state, Instruction instr)
 {
-   return floatMulAdd<float>(state, instr);
+   return fmadd(state, instr);
 }
 
 // Floating Multiply-Sub
-template<typename Type>
 static void
-floatMulSub(ThreadState *state, Instruction instr)
+fmsub(ThreadState *state, Instruction instr)
 {
-   Type a, b, c, d;
-   a = getFpr<Type>(state, instr.frA);
-   b = getFpr<Type>(state, instr.frB);
-   c = getFpr<Type>(state, instr.frC);
+   double a, b, c, d;
+   a = state->fpr[instr.frA].value;
+   b = state->fpr[instr.frB].value;
+   c = state->fpr[instr.frC].value;
 
    state->fpscr.vximz = is_infinity(a * c) && is_zero(c);
    state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
@@ -376,34 +320,28 @@ floatMulSub(ThreadState *state, Instruction instr)
    d = (a * c) - b;
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
 }
 
-static void
-fmsub(ThreadState *state, Instruction instr)
-{
-   return floatMulSub<double>(state, instr);
-}
-
+// Floating Multiply-Sub Single
 static void
 fmsubs(ThreadState *state, Instruction instr)
 {
-   return floatMulSub<float>(state, instr);
+   return fmsub(state, instr);
 }
 
 // Floating Negative Multiply-Add
-template<typename Type>
 static void
-floatNegMulAdd(ThreadState *state, Instruction instr)
+fnmadd(ThreadState *state, Instruction instr)
 {
-   Type a, b, c, d;
-   a = getFpr<Type>(state, instr.frA);
-   b = getFpr<Type>(state, instr.frB);
-   c = getFpr<Type>(state, instr.frC);
+   double a, b, c, d;
+   a = state->fpr[instr.frA].value;
+   b = state->fpr[instr.frB].value;
+   c = state->fpr[instr.frC].value;
 
    state->fpscr.vximz = is_infinity(a * c) && is_zero(c);
    state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
@@ -412,34 +350,28 @@ floatNegMulAdd(ThreadState *state, Instruction instr)
    d = -((a * c) + b);
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
 }
 
-static void
-fnmadd(ThreadState *state, Instruction instr)
-{
-   return floatNegMulAdd<double>(state, instr);
-}
-
+// Floating Negative Multiply-Add Single
 static void
 fnmadds(ThreadState *state, Instruction instr)
 {
-   return floatNegMulAdd<float>(state, instr);
+   return fnmadd(state, instr);
 }
 
 // Floating Negative Multiply-Sub
-template<typename Type>
 static void
-floatNegMulSub(ThreadState *state, Instruction instr)
+fnmsub(ThreadState *state, Instruction instr)
 {
-   Type a, b, c, d;
-   a = getFpr<Type>(state, instr.frA);
-   b = getFpr<Type>(state, instr.frB);
-   c = getFpr<Type>(state, instr.frC);
+   double a, b, c, d;
+   a = state->fpr[instr.frA].value;
+   b = state->fpr[instr.frB].value;
+   c = state->fpr[instr.frC].value;
 
    state->fpscr.vximz = is_infinity(a * c) && is_zero(c);
    state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
@@ -448,25 +380,21 @@ floatNegMulSub(ThreadState *state, Instruction instr)
    d = -((a * c) - b);
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
 }
 
-static void
-fnmsub(ThreadState *state, Instruction instr)
-{
-   return floatNegMulSub<double>(state, instr);
-}
-
+// Floating Negative Multiply-Sub Single
 static void
 fnmsubs(ThreadState *state, Instruction instr)
 {
-   return floatNegMulSub<float>(state, instr);
+   return fnmsub(state, instr);
 }
 
+// Floating Convert to Integer Word
 static void
 fctiw(ThreadState *state, Instruction instr)
 {
@@ -509,6 +437,7 @@ fctiw(ThreadState *state, Instruction instr)
    }
 }
 
+// Floating Convert to Integer Word with Round toward Zero
 static void
 fctiwz(ThreadState *state, Instruction instr)
 {
@@ -538,6 +467,7 @@ fctiwz(ThreadState *state, Instruction instr)
    }
 }
 
+// Floating Round to Single
 static void
 frsp(ThreadState *state, Instruction instr)
 {
@@ -547,7 +477,7 @@ frsp(ThreadState *state, Instruction instr)
    auto d = static_cast<float>(b);
    updateFPSCR(state);
    updateFPRF(state, d);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = static_cast<double>(d);
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -562,7 +492,7 @@ fabs(ThreadState *state, Instruction instr)
 
    b = state->fpr[instr.frB].value;
    d = std::fabs(b);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -577,7 +507,7 @@ fnabs(ThreadState *state, Instruction instr)
 
    b = state->fpr[instr.frB].value;
    d = -std::fabs(b);
-   setFpr(state, instr.frD, d);
+   state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -588,10 +518,7 @@ fnabs(ThreadState *state, Instruction instr)
 static void
 fmr(ThreadState *state, Instruction instr)
 {
-   double b;
-
-   b = state->fpr[instr.frB].value;
-   setFpr(state, instr.frD, b);
+   state->fpr[instr.frD].value = state->fpr[instr.frB].value;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -602,10 +529,7 @@ fmr(ThreadState *state, Instruction instr)
 static void
 fneg(ThreadState *state, Instruction instr)
 {
-   double b;
-
-   b = -state->fpr[instr.frB].value;
-   setFpr(state, instr.frD, b);
+   state->fpr[instr.frD].value = -state->fpr[instr.frB].value;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);

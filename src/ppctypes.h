@@ -9,7 +9,7 @@ namespace ppctypes
 enum class PpcType {
    WORD,
    DWORD,
-   PAIRED0,
+   FLOAT,
    DOUBLE
 };
 
@@ -93,14 +93,14 @@ struct ppctype_converter_t<bool>
 template<>
 struct ppctype_converter_t<float>
 {
-   static const PpcType ppc_type = PpcType::PAIRED0;
+   static const PpcType ppc_type = PpcType::FLOAT;
 
-   static inline void to_ppc(float v, float& out) {
-      out = v;
+   static inline void to_ppc(float v, double& out) {
+      out = static_cast<double>(v);
    }
 
-   static inline float from_ppc(float in) {
-      return in;
+   static inline float from_ppc(double in) {
+      return static_cast<float>(in);
    }
 };
 

@@ -7,7 +7,7 @@
 static void
 ps_abs(ThreadState *state, Instruction instr)
 {
-   float b0, b1, d0, d1;
+   double b0, b1, d0, d1;
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
 
@@ -26,7 +26,7 @@ ps_abs(ThreadState *state, Instruction instr)
 static void
 ps_add(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, d0, d1;
+   double a0, a1, b0, b1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
    a1 = state->fpr[instr.frA].paired1;
@@ -59,7 +59,7 @@ ps_add(ThreadState *state, Instruction instr)
 static void
 ps_div(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, d0, d1;
+   double a0, a1, b0, b1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
    a1 = state->fpr[instr.frA].paired1;
@@ -105,7 +105,7 @@ template<unsigned flags>
 static void
 maddGeneric(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, c0, c1, d0, d1;
+   double a0, a1, b0, b1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
    a1 = state->fpr[instr.frA].paired1;
@@ -193,7 +193,7 @@ template<unsigned flags = 0>
 static void
 mergeGeneric(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, d0, d1;
+   double a0, a1, b0, b1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
    a1 = state->fpr[instr.frA].paired1;
@@ -267,7 +267,7 @@ template<unsigned flags = 0>
 static void
 msubGeneric(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, c0, c1, d0, d1;
+   double a0, a1, b0, b1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
    a1 = state->fpr[instr.frA].paired1;
@@ -336,7 +336,7 @@ template<unsigned flags>
 static void
 mulGeneric(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, d0, d1;
+   double a0, a1, b0, b1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
    a1 = state->fpr[instr.frA].paired1;
@@ -397,7 +397,7 @@ ps_muls1(ThreadState *state, Instruction instr)
 static void
 ps_nabs(ThreadState *state, Instruction instr)
 {
-   float b0, b1, d0, d1;
+   double b0, b1, d0, d1;
 
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
@@ -417,7 +417,7 @@ ps_nabs(ThreadState *state, Instruction instr)
 static void
 ps_neg(ThreadState *state, Instruction instr)
 {
-   float b0, b1, d0, d1;
+   double b0, b1, d0, d1;
 
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
@@ -437,7 +437,7 @@ ps_neg(ThreadState *state, Instruction instr)
 static void
 ps_res(ThreadState *state, Instruction instr)
 {
-   float b0, b1, d0, d1;
+   double b0, b1, d0, d1;
 
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
@@ -465,7 +465,7 @@ ps_res(ThreadState *state, Instruction instr)
 static void
 ps_rsqrte(ThreadState *state, Instruction instr)
 {
-   float b0, b1, d0, d1;
+   double b0, b1, d0, d1;
 
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
@@ -493,7 +493,7 @@ ps_rsqrte(ThreadState *state, Instruction instr)
 static void
 ps_sel(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, c0, c1, d0, d1;
+   double a0, a1, b0, b1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
    a1 = state->fpr[instr.frA].paired1;
@@ -519,7 +519,7 @@ ps_sel(ThreadState *state, Instruction instr)
 static void
 ps_sub(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, d0, d1;
+   double a0, a1, b0, b1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
    a1 = state->fpr[instr.frA].paired1;
@@ -559,7 +559,7 @@ template<unsigned flags = 0>
 static void
 sumGeneric(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, c0, c1, d0, d1;
+   double a0, a1, b0, b1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
    a1 = state->fpr[instr.frA].paired1;
@@ -586,6 +586,7 @@ sumGeneric(ThreadState *state, Instruction instr)
       d1 = a0 + b1;
       d0 = c0;
    }
+
    updateFPSCR(state);
    updateFPRF(state, d0);
 

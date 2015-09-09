@@ -12,7 +12,6 @@ enum LoadFlags
    LoadByteReverse   = 1 << 3, // Swap bytes
    LoadReserve       = 1 << 4, // lwarx harware reserve
    LoadZeroRA        = 1 << 5, // Use 0 instead of r0
-   LoadPairedSingles = 1 << 6, // Set fpr.paired1 = d & fpr.paired2 = d
 };
 
 template<typename Type, unsigned flags = 0>
@@ -42,12 +41,7 @@ loadGeneric(ThreadState *state, Instruction instr)
    }
   
    if (std::is_floating_point<Type>::value) {
-      if (flags & LoadPairedSingles) {
-         state->fpr[instr.rD].paired0 = static_cast<float>(d);
-         state->fpr[instr.rD].paired1 = static_cast<float>(d);
-      } else {
-         state->fpr[instr.rD].value = static_cast<double>(d);
-      }
+      state->fpr[instr.rD].value = static_cast<double>(d);
    } else {
       if (flags & LoadSignExtend) {
          state->gpr[instr.rD] = static_cast<uint32_t>(sign_extend<bit_width<Type>::value, uint64_t>(static_cast<uint64_t>(d)));
@@ -183,25 +177,25 @@ lwzx(ThreadState *state, Instruction instr)
 static void
 lfs(ThreadState *state, Instruction instr)
 {
-   return loadGeneric<float, LoadPairedSingles | LoadZeroRA>(state, instr);
+   return loadGeneric<float, LoadZeroRA>(state, instr);
 }
 
 static void
 lfsu(ThreadState *state, Instruction instr)
 {
-   return loadGeneric<float, LoadPairedSingles | LoadUpdate>(state, instr);
+   return loadGeneric<float, LoadUpdate>(state, instr);
 }
 
 static void
 lfsux(ThreadState *state, Instruction instr)
 {
-   return loadGeneric<float, LoadPairedSingles | LoadUpdate | LoadIndexed>(state, instr);
+   return loadGeneric<float, LoadUpdate | LoadIndexed>(state, instr);
 }
 
 static void
 lfsx(ThreadState *state, Instruction instr)
 {
-   return loadGeneric<float, LoadPairedSingles | LoadZeroRA | LoadIndexed>(state, instr);
+   return loadGeneric<float, LoadZeroRA | LoadIndexed>(state, instr);
 }
 
 static void
@@ -307,7 +301,6 @@ enum StoreFlags
    StoreConditional     = 1 << 3, // lward/stwcx Conditional
    StoreZeroRA          = 1 << 4, // Use 0 instead of r0
    StoreFloatAsInteger  = 1 << 5, // stfiwx
-   StoreSingle          = 1 << 6, // Single
 };
 
 template<typename Type, unsigned flags = 0>
@@ -345,11 +338,7 @@ storeGeneric(ThreadState *state, Instruction instr)
    if (flags & StoreFloatAsInteger) {
       s = static_cast<Type>(state->fpr[instr.rS].iw0);
    } else if (std::is_floating_point<Type>::value) {
-      if (flags & StoreSingle) {
-         s = static_cast<Type>(state->fpr[instr.rS].paired0);
-      } else {
-         s = static_cast<Type>(state->fpr[instr.rS].value);
-      }
+      s = static_cast<Type>(state->fpr[instr.rS].value);
    } else {
       s = static_cast<Type>(state->gpr[instr.rS]);
    }
@@ -459,25 +448,25 @@ stwcx(ThreadState *state, Instruction instr)
 static void
 stfs(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreSingle | StoreZeroRA>(state, instr);
+   storeGeneric<float, StoreZeroRA>(state, instr);
 }
 
 static void
 stfsu(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreSingle | StoreUpdate>(state, instr);
+   storeGeneric<float, StoreUpdate>(state, instr);
 }
 
 static void
 stfsux(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreSingle | StoreUpdate | StoreIndexed>(state, instr);
+   storeGeneric<float, StoreUpdate | StoreIndexed>(state, instr);
 }
 
 static void
 stfsx(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreSingle | StoreZeroRA | StoreIndexed>(state, instr);
+   storeGeneric<float, StoreZeroRA | StoreIndexed>(state, instr);
 }
 
 static void
@@ -580,7 +569,7 @@ stswx(ThreadState *state, Instruction instr)
 }
 
 // Tables copied from Dolphin source code
-const static float dequantizeTable[] =
+const static double dequantizeTable[] =
 {
    1.0 / (1ULL << 0), 1.0 / (1ULL << 1), 1.0 / (1ULL << 2), 1.0 / (1ULL << 3),
    1.0 / (1ULL << 4), 1.0 / (1ULL << 5), 1.0 / (1ULL << 6), 1.0 / (1ULL << 7),
@@ -600,7 +589,7 @@ const static float dequantizeTable[] =
    (1ULL << 4), (1ULL << 3), (1ULL << 2), (1ULL << 1),
 };
 
-const static float quantizeTable[] =
+const static double quantizeTable[] =
 {
    (1ULL << 0), (1ULL << 1), (1ULL << 2), (1ULL << 3),
    (1ULL << 4), (1ULL << 5), (1ULL << 6), (1ULL << 7),
@@ -620,27 +609,27 @@ const static float quantizeTable[] =
    1.0 / (1ULL << 4), 1.0 / (1ULL << 3), 1.0 / (1ULL << 2), 1.0 / (1ULL << 1),
 };
 
-static float
+static double
 dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
 {
-   float scaleValue = dequantizeTable[scale];
-   float result;
+   double scaleValue = dequantizeTable[scale];
+   double result;
 
    switch (type) {
    case QuantizedDataType::Floating:
-      result = gMemory.read<float>(ea);
+      result = static_cast<double>(gMemory.read<float>(ea));
       break;
    case QuantizedDataType::Unsigned8:
-      result = scaleValue * static_cast<float>(gMemory.read<uint8_t>(ea));
+      result = scaleValue * static_cast<double>(gMemory.read<uint8_t>(ea));
       break;
    case QuantizedDataType::Unsigned16:
-      result = scaleValue * static_cast<float>(gMemory.read<uint16_t>(ea));
+      result = scaleValue * static_cast<double>(gMemory.read<uint16_t>(ea));
       break;
    case QuantizedDataType::Signed8:
-      result = scaleValue * static_cast<float>(gMemory.read<int8_t>(ea));
+      result = scaleValue * static_cast<double>(gMemory.read<int8_t>(ea));
       break;
    case QuantizedDataType::Signed16:
-      result = scaleValue * static_cast<float>(gMemory.read<int16_t>(ea));
+      result = scaleValue * static_cast<double>(gMemory.read<int16_t>(ea));
       break;
    default:
       assert("Unkown QuantizedDataType");
@@ -650,18 +639,18 @@ dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
 }
 
 template<typename Type>
-static inline float
-clamp(float value)
+static inline double
+clamp(double value)
 {
-   float min = static_cast<float>(std::numeric_limits<uint8_t>::min());
-   float max = static_cast<float>(std::numeric_limits<uint8_t>::max());
+   double min = static_cast<double>(std::numeric_limits<uint8_t>::min());
+   double max = static_cast<double>(std::numeric_limits<uint8_t>::max());
    return std::max(min, std::min(value, max));
 }
 
 static void
-quantize(uint32_t ea, float value, QuantizedDataType type, uint32_t scale)
+quantize(uint32_t ea, double value, QuantizedDataType type, uint32_t scale)
 {
-   float scaleValue = dequantizeTable[scale];
+   double scaleValue = dequantizeTable[scale];
 
    switch (type) {
    case QuantizedDataType::Floating:
@@ -784,7 +773,7 @@ psqStore(ThreadState *state, Instruction instr)
 {
    uint32_t ea, sts, c, i, w;
    QuantizedDataType stt;
-   float s0, s1;
+   double s0, s1;
 
    if ((flags & PsqStoreZeroRA) && instr.rA == 0) {
       ea = 0;
