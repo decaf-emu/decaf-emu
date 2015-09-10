@@ -128,8 +128,8 @@ fcmpGeneric(ThreadState *state, Instruction instr)
       a = static_cast<Type>(state->fpr[instr.frA].paired1);
       b = static_cast<Type>(state->fpr[instr.frB].paired1);
    } else {
-      a = static_cast<Type>(state->fpr[instr.frA].value);
-      b = static_cast<Type>(state->fpr[instr.frB].value);
+      a = static_cast<Type>(state->fpr[instr.frA].paired0);
+      b = static_cast<Type>(state->fpr[instr.frB].paired0);
    }
 
    vxsnan = (is_signalling_nan(a) || is_signalling_nan(b));

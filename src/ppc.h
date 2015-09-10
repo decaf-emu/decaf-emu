@@ -7,20 +7,30 @@ using gpr_t = uint32_t;
 // Floating-Point Registers
 struct fpr_t
 {
-   union
-   {
-      double value;
-      double paired0;
-      uint64_t idw;
-
+   union {
+      struct {
+         double paired0;
+         double paired1;
+      };
+      struct {
+         uint64_t idw;
+         uint64_t idw1;
+      };
       struct
       {
          uint32_t iw0;
          uint32_t iw1;
+         uint32_t iw2;
+         uint32_t iw3;
       };
+      struct {
+         uint64_t value0;
+         uint64_t value1;
+      };
+      struct {
+         uint64_t data[2];
+      } value;
    };
-
-   double paired1;
 };
 
 namespace ConditionRegisterFlag

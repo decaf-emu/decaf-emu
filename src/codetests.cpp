@@ -54,7 +54,15 @@ struct Value
    {
       uint32_t uint32Value;
       float floatValue;
-      double doubleValue;
+
+      struct {
+         uint64_t uint64Value0;
+         uint64_t uint64Value1;
+      };
+      struct {
+         double doubleValue0;
+         double doubleValue1;
+      };
    };
 
    std::string stringValue;
@@ -262,7 +270,8 @@ decodeValue(const std::string &in, Target &target, Value &value)
       return true;
    } else if (in.find(".") != std::string::npos) {
       value.type = Value::Double;
-      value.doubleValue = std::stod(in);
+      value.doubleValue0 = std::stod(in);
+      value.doubleValue1 = std::stod(in);
       return true;
    } else if (in.find_first_not_of("0123456789") != std::string::npos) {
       if (target >= TargetId::CRF0 && target <= TargetId::CRF7) {
@@ -371,7 +380,8 @@ Value getStateValue(ThreadState& state, Target t)
       v.uint32Value = state.gpr[t - TargetId::GPR0];
    } else if (t >= TargetId::FPR0 && t <= TargetId::FPR31) {
       v.type = Value::Type::Double;
-      v.doubleValue = state.fpr[t - TargetId::FPR0].value;
+      v.doubleValue0 = state.fpr[t - TargetId::FPR0].paired0;
+      v.doubleValue1 = state.fpr[t - TargetId::FPR0].paired1;
    } else if (t >= TargetId::CRF0 && t <= TargetId::CRF7) {
       v.type = Value::Type::Uint32;
       v.uint32Value = getCRF(&state, t - TargetId::CRF0);
@@ -400,7 +410,8 @@ void setStateValue(ThreadState& state, Target t, Value v)
       state.gpr[t - TargetId::GPR0] = v.uint32Value;
    } else if (t >= TargetId::FPR0 && t <= TargetId::FPR31) {
       assert(v.type == Value::Type::Double);
-      state.fpr[t - TargetId::FPR0].value = v.doubleValue;
+      state.fpr[t - TargetId::FPR0].paired0 = v.doubleValue0;
+      state.fpr[t - TargetId::FPR0].paired1 = v.doubleValue1;
    } else if (t >= TargetId::CRF0 && t <= TargetId::CRF7) {
       assert(v.type == Value::Type::Uint32);
       setCRF(&state, t - TargetId::CRF0, v.uint32Value);
@@ -457,8 +468,12 @@ bool checkField(const TestDataField& field, Target target, ThreadState& state, T
             return false;
          }
       } else if (nv.type == Value::Type::Double) {
-         if (nv.doubleValue != field.output.doubleValue) {
-            gLog->error(" * Expected {} to be {} but got {}", fieldName, field.output.doubleValue, nv.doubleValue);
+         if (nv.doubleValue0 != field.output.doubleValue0) {
+            gLog->error(" * Expected {}[0] to be {} but got {}", fieldName, field.output.doubleValue0, nv.doubleValue0);
+            return false;
+         }
+         if (nv.doubleValue1 != field.output.doubleValue1) {
+            gLog->error(" * Expected {}[1] to be {} but got {}", fieldName, field.output.doubleValue1, nv.doubleValue1);
             return false;
          }
       } else {
@@ -471,8 +486,12 @@ bool checkField(const TestDataField& field, Target target, ThreadState& state, T
             return false;
          }
       } else if (nv.type == Value::Type::Double) {
-         if (nv.uint32Value != ov.uint32Value) {
-            gLog->error(" * Expected {} to be unchanged but {} != {}", fieldName, nv.doubleValue, ov.doubleValue);
+         if (nv.uint64Value0 != ov.uint64Value0) {
+            gLog->error(" * Expected {}[0] to be unchanged but {} != {}", fieldName, nv.doubleValue0, ov.doubleValue0);
+            return false;
+         }
+         if (nv.uint64Value1 != ov.uint64Value1) {
+            gLog->error(" * Expected {}[1] to be unchanged but {} != {}", fieldName, nv.doubleValue1, ov.doubleValue1);
             return false;
          }
       } else {

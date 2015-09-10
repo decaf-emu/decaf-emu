@@ -26,11 +26,11 @@ struct DebugTraceEntryField {
 
    template <class Archive>
    void serialize(Archive &ar) {
-      ar(type, data.value);
+      ar(type, data.u64v0, data.u64v1);
    }
 };
 static_assert(sizeof(TraceFieldType) == 4, "Protocol expects 4-byte TraceFieldType");
-static_assert(sizeof(TraceFieldValue) == 8, "Protocol expects 8-byte TraceFieldValue");
+static_assert(sizeof(TraceFieldValue) == 16, "Protocol expects 16-byte TraceFieldValue");
 
 struct DebugTraceEntry {
    uint32_t cia;

@@ -36,18 +36,40 @@ struct TraceFieldValue {
       struct {
          uint32_t u32v0;
          uint32_t u32v1;
+         uint32_t u32v2;
+         uint32_t u32v3;
       };
-      uint64_t u64v;
+      struct {
+         uint64_t u64v0;
+         uint64_t u64v1;
+      };
       struct {
          float f32v0;
          float f32v1;
+         float f32v2;
+         float f32v3;
       };
-      double f64v;
+      struct {
+         double f64v0;
+         double f64v1;
+      };
       struct {
          uint32_t mem_size;
          uint32_t mem_offset;
       };
-      uint64_t value;
+      struct {
+         uint64_t value0;
+         uint64_t value1;
+      };
+      struct ValueType {
+         bool operator==(const ValueType& rhs) {
+            return data[0] == rhs.data[0] && data[1] == rhs.data[1];
+         }
+         bool operator!=(const ValueType& rhs) {
+            return data[0] != rhs.data[0] || data[1] != rhs.data[1];
+         }
+         uint64_t data[2];
+      } value;
    };
 };
 static_assert(sizeof(TraceFieldValue) == sizeof(TraceFieldValue::value), "TraceFieldValue::value size must match total structure size");

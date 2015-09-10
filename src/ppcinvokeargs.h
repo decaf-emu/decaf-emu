@@ -73,13 +73,13 @@ template<typename Type>
 struct arg_converter_t<PpcType::FLOAT, Type> {
    static inline Type get(ThreadState *state, size_t &r, size_t &f)
    {
-      auto& x = state->fpr[f++].value;
+      auto& x = state->fpr[f++].paired0;
       return ppctype_converter_t<Type>::from_ppc(x);
    }
 
    static inline void set(ThreadState *state, size_t &r, size_t &f, Type v)
    {
-      auto& x = state->fpr[f++].value;
+      auto& x = state->fpr[f++].paired0;
       ppctype_converter_t<Type>::to_ppc(v, x);
    }
 };
@@ -88,13 +88,13 @@ template<typename Type>
 struct arg_converter_t<PpcType::DOUBLE, Type> {
    static inline Type get(ThreadState *state, size_t &r, size_t &f)
    {
-      auto& x = state->fpr[f++].value;
+      auto& x = state->fpr[f++].paired0;
       return ppctype_converter_t<Type>::from_ppc(x);
    }
 
    static inline void set(ThreadState *state, size_t &r, size_t &f, Type v)
    {
-      auto& x = state->fpr[f++].value;
+      auto& x = state->fpr[f++].paired0;
       ppctype_converter_t<Type>::to_ppc(v, x);
    }
 };

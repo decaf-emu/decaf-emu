@@ -41,7 +41,7 @@ loadGeneric(ThreadState *state, Instruction instr)
    }
   
    if (std::is_floating_point<Type>::value) {
-      state->fpr[instr.rD].value = static_cast<double>(d);
+      state->fpr[instr.rD].paired0 = static_cast<double>(d);
    } else {
       if (flags & LoadSignExtend) {
          state->gpr[instr.rD] = static_cast<uint32_t>(sign_extend<bit_width<Type>::value, uint64_t>(static_cast<uint64_t>(d)));
@@ -338,7 +338,7 @@ storeGeneric(ThreadState *state, Instruction instr)
    if (flags & StoreFloatAsInteger) {
       s = static_cast<Type>(state->fpr[instr.rS].iw0);
    } else if (std::is_floating_point<Type>::value) {
-      s = static_cast<Type>(state->fpr[instr.rS].value);
+      s = static_cast<Type>(state->fpr[instr.rS].paired0);
    } else {
       s = static_cast<Type>(state->gpr[instr.rS]);
    }
