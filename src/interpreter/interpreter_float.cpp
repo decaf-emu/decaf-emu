@@ -258,15 +258,12 @@ fsel(ThreadState *state, Instruction instr)
    b = state->fpr[instr.frB].value;
    c = state->fpr[instr.frC].value;
 
-   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
-
    if (a >= 0.0) {
       d = c;
    } else {
       d = b;
    }
 
-   updateFPRF(state, d);
    state->fpr[instr.frD].value = d;
 
    if (instr.rc) {
