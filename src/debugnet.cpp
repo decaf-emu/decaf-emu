@@ -32,6 +32,10 @@ struct DebugTraceEntryField {
 static_assert(sizeof(TraceFieldType) == 4, "Protocol expects 4-byte TraceFieldType");
 static_assert(sizeof(TraceFieldValue) == 16, "Protocol expects 16-byte TraceFieldValue");
 
+static_assert(StateField::Invalid == 0, "Protocol expects Invalid to be 0");
+static_assert(StateField::GPR == 1, "Protocol expects GPR to begin at 1");
+static_assert(StateField::FPR == 33, "Protocol expects FPR to begin at 32");
+
 struct DebugTraceEntry {
    uint32_t cia;
    std::vector<DebugTraceEntryField> fields;
