@@ -179,6 +179,8 @@ static uint32_t getFieldStateField(Instruction instr, Field field) {
          return StateField::CR;
       }
       break;
+   case Field::lk:
+      return StateField::LR;
    case Field::XER:
       return StateField::XER;
    case Field::CR:
@@ -189,8 +191,8 @@ static uint32_t getFieldStateField(Instruction instr, Field field) {
       return StateField::LR;
    case Field::FPSCR:
       return StateField::FPSCR;
-   case Field::lk:
-      return StateField::LR;
+   case Field::RSRV:
+      return StateField::ReserveAddress;
    }
    return StateField::Invalid;
 }
@@ -217,10 +219,10 @@ static void saveStateField(ThreadState *state, TraceFieldType type, TraceFieldVa
       field.u32v0 = state->ctr;
    } else if (type == StateField::FPSCR) {
       field.u32v0 = state->fpscr.value;
-   } else if (type == StateField::Reserve) {
-      field.u32v0 = state->reserve ? 1 : 0;
    } else if (type == StateField::ReserveAddress) {
-      field.u32v0 = state->reserveAddress;
+      field.u32v0 = state->reserve ? 1 : 0;
+      field.u32v1 = state->reserveAddress;
+      field.u32v2 = state->reserveData;
    } else {
       assert(0);
    }
@@ -248,10 +250,10 @@ static void restoreStateField(ThreadState *state, TraceFieldType type, TraceFiel
       state->ctr = field.u32v0;
    } else if (type == StateField::FPSCR) {
       state->fpscr.value = field.u32v0;
-   } else if (type == StateField::Reserve) {
-      state->reserve = (field.u32v0 != 0);
    } else if (type == StateField::ReserveAddress) {
-      state->reserveAddress = field.u32v0;
+      state->reserve = (field.u32v0 != 0);
+      state->reserveAddress = field.u32v1;
+      state->reserveData = field.u32v2;
    } else {
       assert(0);
    }

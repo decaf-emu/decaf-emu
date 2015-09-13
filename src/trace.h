@@ -23,7 +23,6 @@ namespace StateField {
       LR,
       CTR,
       FPSCR,
-      Reserve,
       ReserveAddress,
       Max,
    };

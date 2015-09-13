@@ -149,8 +149,8 @@ INS(stswx, (), (rS, rA, rB), (), (opcd == 31, xo1 == 661), "Store String Word In
 // Memory Synchronisation
 INS(eieio, (), (), (), (opcd == 31, xo1 == 854), "Enforce In-Order Execution of I/O")
 INS(isync, (), (), (), (opcd == 19, xo1 == 150), "Instruction Synchronise")
-INS(lwarx, (rD), (rA, rB), (), (opcd == 31, xo1 == 20), "Load Word and Reserve Indexed")
-INS(stwcx, (), (rS, rA, rB), (), (opcd == 31, xo1 == 150), "Store Word Conditional Indexed")
+INS(lwarx, (rD, RSRV), (rA, rB), (), (opcd == 31, xo1 == 20), "Load Word and Reserve Indexed")
+INS(stwcx, (RSRV), (rS, rA, rB), (), (opcd == 31, xo1 == 150), "Store Word Conditional Indexed")
 INS(sync, (), (), (), (opcd == 31, xo1 == 598), "Synchronise")
 
 // Floating-Point Load

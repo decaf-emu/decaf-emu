@@ -377,6 +377,7 @@ struct ThreadState
    // Reserve for lwarx / stwcx.
    bool reserve;
    uint32_t reserveAddress;
+   uint32_t reserveData;
 };
 
 uint32_t

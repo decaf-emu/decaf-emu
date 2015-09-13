@@ -53,6 +53,7 @@ loadGeneric(ThreadState *state, Instruction instr)
    if (flags & LoadReserve) {
       state->reserve = true;
       state->reserveAddress = ea;
+      state->reserveData = gMemory.read<uint32_t>(state->reserveAddress);
    }
 
    if (flags & LoadUpdate) {
@@ -326,9 +327,15 @@ storeGeneric(ThreadState *state, Instruction instr)
       state->cr.cr0 = state->xer.so ? ConditionRegisterFlag::SummaryOverflow : 0;
 
       if (state->reserve) {
-         // Store is succesful, clear reserve bit and set CR0[EQ]
-         state->cr.cr0 |= ConditionRegisterFlag::Equal;
          state->reserve = false;
+
+         if (gMemory.read<uint32_t>(state->reserveAddress) == state->reserveData) {
+            // Store is succesful, clear reserve bit and set CR0[EQ]
+            state->cr.cr0 |= ConditionRegisterFlag::Equal;   
+         } else {
+            // Reservation has been written by another process
+            return;
+         }
       } else {
          // Reserve bit is not set, do not write.
          return;
