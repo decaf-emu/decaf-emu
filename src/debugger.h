@@ -28,6 +28,7 @@ using DebugMessageBase = MessageClassBase<DebugMessage, TypeId>;
 class DebugMessageBpHit : public DebugMessageBase<DebugMessageType::BpHit> {
 public:
    uint32_t coreId;
+   uint32_t address;
    uint32_t userData;
 
 };

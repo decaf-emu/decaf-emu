@@ -130,6 +130,7 @@ DebugControl::maybeBreak(uint32_t addr, ThreadState *state, uint32_t coreId)
       // Send a message to the debugger before we pause ourself
       auto msg = new DebugMessageBpHit();
       msg->coreId = coreId;
+      msg->address = addr;
       msg->userData = bpUserData;
       gDebugger.notify(msg);
 

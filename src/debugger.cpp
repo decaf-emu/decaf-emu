@@ -76,8 +76,16 @@ Debugger::handleMessage(DebugMessage *msg)
 
       gDebugControl.waitForAllPaused();
 
-      gLog->debug("Breakpoint Hit on Core #{}", bpMsg->coreId);
-      gDebugNet.writeBreakpointHit(bpMsg->coreId, bpMsg->userData);
+      if (bpMsg->userData == 0xFFFFFFFF) {
+         // Temporary step-over breakpoint
+         gDebugger.removeBreakpoint(bpMsg->address);
+
+         gLog->debug("StepOver BP Hit on Core #{}", bpMsg->coreId);
+         gDebugNet.writeCoreStepped(bpMsg->coreId);
+      } else {
+         gLog->debug("Breakpoint Hit on Core #{}", bpMsg->coreId);
+         gDebugNet.writeBreakpointHit(bpMsg->coreId, bpMsg->userData);
+      }
 
       break;
    }

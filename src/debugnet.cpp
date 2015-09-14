@@ -225,6 +225,7 @@ enum class DebugPacketType : uint16_t {
    Paused = 13,
    GetTrace = 14,
    GetTraceRes = 15,
+   StepCoreOver = 16,
 };
 
 #pragma pack(push, 1)
@@ -405,6 +406,17 @@ public:
 
 };
 
+class DebugPacketStepCoreOver : public DebugPacketBase<DebugPacketType::StepCoreOver> {
+public:
+   uint32_t coreId;
+
+   template <class Archive>
+   void serialize(Archive &ar) {
+      ar(coreId);
+   }
+
+};
+
 template <typename T>
 int serializePacket2(std::vector<uint8_t> &data, DebugPacket *packet) {
    std::ostringstream str;
@@ -474,6 +486,8 @@ int serializePacket(std::vector<uint8_t> &data, DebugPacket *packet)
       return serializePacket2<DebugPacketGetTrace>(data, packet);
    } else if (header.command == DebugPacketType::GetTraceRes) {
       return serializePacket2<DebugPacketGetTraceRes>(data, packet);
+   } else if (header.command == DebugPacketType::StepCoreOver) {
+      return serializePacket2<DebugPacketStepCoreOver>(data, packet);
    } else {
       return -1;
    }
@@ -513,6 +527,8 @@ int deserializePacket(const std::vector<uint8_t> &data, DebugPacket *&packet) {
       return deserializePacket2<DebugPacketGetTrace>(data, packet);
    } else if (header.command == DebugPacketType::GetTraceRes) {
       return deserializePacket2<DebugPacketGetTraceRes>(data, packet);
+   } else if (header.command == DebugPacketType::StepCoreOver) {
+      return deserializePacket2<DebugPacketStepCoreOver>(data, packet);
    } else {
       return -1;
    }
@@ -634,6 +650,49 @@ DebugNet::handlePacket(DebugPacket *pak)
    case DebugPacketType::StepCore: {
       auto *scPak = static_cast<DebugPacketStepCore*>(pak);
       gDebugger.stepCore(scPak->coreId);
+      break;
+   }
+   case DebugPacketType::StepCoreOver: {
+      auto *scPak = static_cast<DebugPacketStepCoreOver*>(pak);
+      
+      if (scPak->coreId < 0 || scPak->coreId >= 3) {
+         break;
+      }
+
+      auto &coreList = gProcessor.getCoreList();
+      auto &core = coreList[scPak->coreId];
+
+      Fiber *fiber = nullptr;
+      auto fiberList = gProcessor.getFiberList();
+      for (auto &i : fiberList) {
+         if (i == core->currentFiber) {
+            fiber = i;
+            break;
+         }
+      }
+      if (!fiber) {
+         break;
+      }
+      
+      uint32_t curAddr = fiber->state.cia;
+
+      auto instr = gMemory.read<Instruction>(curAddr);
+      auto data = gInstructionTable.decode(instr);
+      if (data->id == InstructionID::b || data->id == InstructionID::bc ||
+         data->id == InstructionID::bcctr || data->id == InstructionID::bclr) {
+         if (instr.lk) {
+            // This is a branch-and-link.  Put a BP after the next instruction
+            gDebugger.addBreakpoint(curAddr + 4, 0xFFFFFFFF);
+            gDebugger.resume();
+         } else {
+            // Direct branch, just step
+            gDebugger.stepCore(scPak->coreId);
+         }
+      } else {
+         // Not a branch, just step
+         gDebugger.stepCore(scPak->coreId);
+      }
+
       break;
    }
    case DebugPacketType::ReadMem: {
