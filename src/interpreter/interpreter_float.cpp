@@ -166,7 +166,7 @@ fmul(ThreadState *state, Instruction instr)
    state->fpscr.vximz = is_infinity(a) && is_zero(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
-   d = a / b;
+   d = a * b;
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
