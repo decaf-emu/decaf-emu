@@ -5,7 +5,7 @@
 // UsageFlagsToString__20_GX2RResourceTrackerSF18_GX2RResourceFlags
 namespace GX2RResourceFlags
 {
-enum Flags
+enum Flags : uint32_t
 {
    // GX2R_BIND_*
    BindTexture = 1 << 0,
@@ -31,6 +31,13 @@ enum Flags
    UsageForceMEM2 = 1 << 18,
 };
 }
+
+struct GX2RBuffer
+{
+   be_val<GX2RResourceFlags::Flags> flags;
+   be_val<uint32_t> elemSize;
+   be_val<uint32_t> elemCount;
+};
 
 using GX2RAllocFuncPtr = wfunc_ptr<p32<void>, GX2RResourceFlags::Flags, uint32_t, uint32_t>;
 using GX2RFreeFuncPtr = wfunc_ptr<void, GX2RResourceFlags::Flags, p32<void>>;
