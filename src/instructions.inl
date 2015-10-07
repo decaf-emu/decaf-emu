@@ -4,7 +4,7 @@ INS(addc, (rD, XER), (rA, rB), (oe, rc), (opcd == 31, xo2 == 10), "Add with Carr
 INS(adde, (rD, XER), (rA, rB), (oe, rc), (opcd == 31, xo2 == 138), "Add Extended")
 INS(addi, (rD), (rA, simm), (), (opcd == 14), "Add Immediate")
 INS(addic, (rD, XER), (rA, simm), (), (opcd == 12), "Add Immediate with Carry")
-INS(addicx, (rD, CR,XER), (rA, simm), (), (opcd == 13), "Add Immediate with Carry and Record")
+INS(addicx, (rD, CR, XER), (rA, simm), (), (opcd == 13), "Add Immediate with Carry and Record")
 INS(addis, (rD), (rA, simm), (), (opcd == 15), "Add Immediate Shifted")
 INS(addme, (rD, XER), (rA), (oe, rc), (opcd == 31, xo2 == 234), "Add to Minus One Extended")
 INS(addze, (rD, XER), (rA), (oe, rc), (opcd == 31, xo2 == 202), "Add to Zero Extended")

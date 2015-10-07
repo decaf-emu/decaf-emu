@@ -237,6 +237,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    dis.address = address;
    
    std::list<Field> args;
+
    for (auto &field : data->write) {
       // Skip arguments that are in read list as well
       if (std::find(data->read.begin(), data->read.end(), field) != data->read.end()) {
@@ -248,8 +249,15 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
          continue;
       }
 
+      // Ignore trace only fields for disassembly
+      if (field == Field::FPSCR || field == Field::XER || field == Field::CR
+          || field == Field::RESERVE || field == Field::RESERVEADDR) {
+         continue;
+      }
+
       args.push_back(field);
    }
+
    for (auto &field : data->read) {
       // Add only unique arguements
       if (std::find(args.begin(), args.end(), field) != args.end()) {
