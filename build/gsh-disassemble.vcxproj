@@ -89,6 +89,7 @@
     <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op2.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_reduction.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_cf.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_exp.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_generator.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op3.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_tex.cpp" />

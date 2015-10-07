@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include "latte_opcodes.h"
 
 namespace latte
@@ -14,11 +15,16 @@ struct Instruction
       ControlFlow,
       ALU,
       TEX,
+      Export,
       AluReduction
    };
 
    Instruction(Type type) :
       insType(type)
+   {
+   }
+
+   virtual ~Instruction()
    {
    }
 
@@ -35,11 +41,24 @@ struct CfInstruction : Instruction
    {
    }
 
+   virtual ~CfInstruction() final
+   {
+   }
+
    latte::cf::inst id;
    uint32_t addr = 0;
    uint8_t popCount = 0;
    uint8_t loopCfConstant = 0;
    latte::cf::Cond::Cond cond = latte::cf::Cond::Active;
+};
+
+struct SelRegister
+{
+   uint8_t id = 0;
+   latte::alu::Select::Select selX = latte::alu::Select::X;
+   latte::alu::Select::Select selY = latte::alu::Select::Y;
+   latte::alu::Select::Select selZ = latte::alu::Select::Z;
+   latte::alu::Select::Select selW = latte::alu::Select::W;
 };
 
 struct AluSource
@@ -117,6 +136,10 @@ struct AluInstruction : Instruction
    {
    }
 
+   virtual ~AluInstruction() final
+   {
+   }
+
    union
    {
       latte::alu::op2 op2;
@@ -140,29 +163,35 @@ struct AluReductionInstruction : Instruction
    AluReductionInstruction() :
       Instruction(Instruction::AluReduction)
    {
-      for (auto i = 0u; i < 4; ++i) {
-         units[i] = nullptr;
-      }
    }
 
-   ~AluReductionInstruction()
+   virtual ~AluReductionInstruction() final
    {
-      for (auto i = 0u; i < 4; ++i) {
-         delete units[i];
-      }
    }
 
-   AluInstruction *units[4];
+   std::unique_ptr<AluInstruction> units[4];
    latte::alu::op2 op2;
 };
 
-struct TexRegister
+struct ExportInstruction : Instruction
 {
-   uint8_t id = 0;
-   latte::alu::Select::Select selX = latte::alu::Select::X;
-   latte::alu::Select::Select selY = latte::alu::Select::Y;
-   latte::alu::Select::Select selZ = latte::alu::Select::Z;
-   latte::alu::Select::Select selW = latte::alu::Select::W;
+   ExportInstruction() :
+      Instruction(Instruction::Export)
+   {
+   }
+
+   virtual ~ExportInstruction() final
+   {
+   }
+
+   latte::exp::inst id;
+   SelRegister src;
+   uint32_t dstReg = 0;
+   latte::exp::Type::Type type;
+   uint32_t elemSize = 0;
+   uint32_t indexGpr = 0;
+   bool wholeQuadMode = false;
+   bool barrier = false;
 };
 
 struct TexInstruction : Instruction
@@ -172,14 +201,18 @@ struct TexInstruction : Instruction
    {
    }
 
+   virtual ~TexInstruction() final
+   {
+   }
+
    latte::tex::inst id;
    bool bcFracMode = false;
    bool fetchWholeQuad = false;
    uint8_t resourceID = 0;
    uint8_t samplerID = 0;
    int8_t lodBias = 0;
-   TexRegister src;
-   TexRegister dst;
+   SelRegister src;
+   SelRegister dst;
    bool coordNormaliseX = false;
    bool coordNormaliseY = false;
    bool coordNormaliseZ = false;
@@ -210,10 +243,16 @@ struct Block
    Type type;
 };
 
+using BlockList = std::vector<std::unique_ptr<shadir::Block>>;
+
 struct CodeBlock : Block
 {
    CodeBlock() :
       Block(Block::CodeBlock)
+   {
+   }
+
+   virtual ~CodeBlock() final
    {
    }
 
@@ -229,12 +268,9 @@ struct LoopBlock : Block
 
    virtual ~LoopBlock() final
    {
-      for (auto block : inner) {
-         delete block;
-      }
    }
 
-   std::vector<Block *> inner;
+   BlockList inner;
 };
 
 struct ConditionalBlock : Block
@@ -247,18 +283,11 @@ struct ConditionalBlock : Block
 
    virtual ~ConditionalBlock() final
    {
-      for (auto block : inner) {
-         delete block;
-      }
-
-      for (auto block : innerElse) {
-         delete block;
-      }
    }
 
    shadir::Instruction *condition; // Non-owning
-   std::vector<Block *> inner;
-   std::vector<Block *> innerElse;
+   BlockList inner;
+   BlockList innerElse;
 };
 
 } // namespace shadir

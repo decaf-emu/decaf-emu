@@ -1,7 +1,7 @@
 #include "hlsl_generator.h"
 
 using latte::shadir::TexInstruction;
-using latte::shadir::TexRegister;
+using latte::shadir::SelRegister;
 
 /*
 Unimplemented:
@@ -47,7 +47,7 @@ GET_BUFFER_RESINFO
 namespace hlsl
 {
 
-static bool translateTexSelect(GenerateState &state, latte::alu::Select::Select sel)
+static bool translateSelect(GenerateState &state, latte::alu::Select::Select sel)
 {
    switch (sel) {
    case latte::alu::Select::X:
@@ -71,6 +71,33 @@ static bool translateTexSelect(GenerateState &state, latte::alu::Select::Select 
    return true;
 }
 
+unsigned translateSelRegister(GenerateState &state, SelRegister &reg)
+{
+   state.out << 'R' << reg.id;
+
+   if (reg.selX != latte::alu::Select::Mask) {
+      state.out << '.';
+   }
+
+   if (!translateSelect(state, reg.selX)) {
+      return 0;
+   }
+
+   if (!translateSelect(state, reg.selY)) {
+      return 1;
+   }
+
+   if (!translateSelect(state, reg.selZ)) {
+      return 2;
+   }
+
+   if (!translateSelect(state, reg.selW)) {
+      return 3;
+   }
+
+   return 4;
+}
+
 static void translateTexRegisterChannels(GenerateState &state, unsigned channels)
 {
    if (channels > 0) {
@@ -90,39 +117,16 @@ static void translateTexRegisterChannels(GenerateState &state, unsigned channels
    }
 }
 
-static unsigned translateTexRegister(GenerateState &state, TexRegister &reg)
-{
-   state.out << 'R' << reg.id << '.';
-
-   if (!translateTexSelect(state, reg.selX)) {
-      return 0;
-   }
-
-   if (!translateTexSelect(state, reg.selY)) {
-      return 1;
-   }
-
-   if (!translateTexSelect(state, reg.selZ)) {
-      return 2;
-   }
-
-   if (!translateTexSelect(state, reg.selW)) {
-      return 3;
-   }
-
-   return 4;
-}
-
 static bool SAMPLE(GenerateState &state, TexInstruction *ins)
 {
-   auto channels = translateTexRegister(state, ins->dst);
+   auto channels = translateSelRegister(state, ins->dst);
 
    state.out
       << " = tex2d(texture_"
       << ins->resourceID
       << ", ";
 
-   translateTexRegister(state, ins->src);
+   translateSelRegister(state, ins->src);
 
    state.out << ").";
    translateTexRegisterChannels(state, channels);

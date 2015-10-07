@@ -30,7 +30,7 @@ struct Label
 
    Type type;
    shadir::Instruction *first = nullptr;
-   std::vector<shadir::Block*> *restoreBlockList = nullptr;
+   shadir::BlockList *restoreBlockList = nullptr;
    Label *linkedLabel = nullptr;
    shadir::Block *linkedBlock = nullptr;
 };
@@ -38,22 +38,22 @@ struct Label
 static bool labelify(Shader &shader, std::vector<Label *> &labels);
 static bool blockify(Shader &shader, std::vector<Label *> labels);
 
-static void printBlockList(std::vector<shadir::Block*> &blocks)
+static void printBlockList(shadir::BlockList &blocks)
 {
-   for (auto block : blocks) {
+   for (auto &block : blocks) {
       if (block->type == shadir::Block::CodeBlock) {
-         auto codeBlock = reinterpret_cast<shadir::CodeBlock*>(block);
+         auto codeBlock = reinterpret_cast<shadir::CodeBlock*>(block.get());
 
          for (auto ins : codeBlock->code) {
             std::cout << ins->cfPC << " " << ins->name << std::endl;
          }
       } else if (block->type == shadir::Block::Loop) {
-         auto loopBlock = reinterpret_cast<shadir::LoopBlock*>(block);
+         auto loopBlock = reinterpret_cast<shadir::LoopBlock*>(block.get());
          std::cout << "while(true) { // START_LOOP " << std::endl;
          printBlockList(loopBlock->inner);
          std::cout << "} // END_LOOP " << std::endl;
       } else if (block->type == shadir::Block::Conditional) {
-         auto condBlock = reinterpret_cast<shadir::ConditionalBlock*>(block);
+         auto condBlock = reinterpret_cast<shadir::ConditionalBlock*>(block.get());
          std::cout << "if(" << condBlock->condition->cfPC << " " << condBlock->condition->name << ") {" << std::endl;
          printBlockList(condBlock->inner);
 
@@ -97,10 +97,10 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
 
    // Iterate over the code and find matching code patterns to labelify
    for (auto itr = shader.code.begin(); itr != shader.code.end(); ++itr) {
-      auto ins = *itr;
+      auto &ins = *itr;
 
       if (ins->insType == shadir::Instruction::ControlFlow) {
-         auto cfIns = reinterpret_cast<shadir::CfInstruction*>(ins);
+         auto cfIns = reinterpret_cast<shadir::CfInstruction*>(ins.get());
 
          if (cfIns->id == latte::cf::inst::LOOP_START
              || cfIns->id == latte::cf::inst::LOOP_START_DX10
@@ -116,7 +116,7 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
             labels.push_back(labelStart);
 
             // Create a LoopEnd label
-            auto labelEnd = new Label { Label::LoopEnd, ins };
+            auto labelEnd = new Label { Label::LoopEnd, ins.get() };
             labels.push_back(labelEnd);
 
             // Link the start and end labels
@@ -132,7 +132,7 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
             labels.push_back(labelStart);
 
             // Create a ConditionalEnd label for after the BREAK/CONTINUE instruction
-            auto labelEnd = new Label { Label::ConditionalEnd, *(itr + 1) };
+            auto labelEnd = new Label { Label::ConditionalEnd, (itr + 1)->get() };
             labels.push_back(labelEnd);
 
             // Link the start and end labels
@@ -154,7 +154,7 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
             auto jumpElse = shader.code.end();
 
             if ((*jumpEnd)->insType == shadir::Instruction::ControlFlow) {
-               auto jumpEndCfIns = reinterpret_cast<shadir::CfInstruction*>(*jumpEnd);
+               auto jumpEndCfIns = reinterpret_cast<shadir::CfInstruction*>(jumpEnd->get());
 
                if (jumpEndCfIns->id == latte::cf::inst::ELSE) {
                   jumpElse = jumpEnd;
@@ -176,17 +176,17 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
 
             // Create a conditional else label, if needed
             if (jumpElse != shader.code.end()) {
-               auto labelElse = new Label { Label::ConditionalElse, *jumpElse };
+               auto labelElse = new Label { Label::ConditionalElse, jumpElse->get() };
                labelElse->linkedLabel = labelStart;
                labels.push_back(labelElse);
             }
 
             // Create a conditional end label
-            auto labelEnd = new Label { Label::ConditionalEnd, *jumpEnd };
+            auto labelEnd = new Label { Label::ConditionalEnd, jumpEnd->get() };
             labels.push_back(labelEnd);
 
             // Eliminate our JUMP instruction
-            labels.push_back(new Label { Label::Eliminated, ins });
+            labels.push_back(new Label { Label::Eliminated, ins.get() });
 
             // Link start and end labels
             labelEnd->linkedLabel = labelStart;
@@ -197,7 +197,7 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
             pops.push(cfIns);
          }
       } else if (ins->insType == shadir::Instruction::ALU) {
-         auto aluIns = reinterpret_cast<shadir::AluInstruction *>(ins);
+         auto aluIns = reinterpret_cast<shadir::AluInstruction *>(ins.get());
 
          if (aluIns->opType == latte::alu::Encoding::OP2) {
             auto &opcode = latte::alu::op2info[aluIns->op2];
@@ -237,7 +237,7 @@ static bool blockify(Shader &shader, std::vector<Label *> labels)
    for (auto &ins : shader.code) {
       bool insertToCode = true;
 
-      if (label && label->first == ins) {
+      if (label && label->first == ins.get()) {
          // Most labels will skip current instruction
          insertToCode = false;
 
@@ -249,9 +249,9 @@ static bool blockify(Shader &shader, std::vector<Label *> labels)
             label->linkedLabel->restoreBlockList = activeBlockList;
 
             // Create a new loop block
-            auto loopBlock = new shadir::LoopBlock;
+            auto loopBlock = new shadir::LoopBlock {};
             label->linkedBlock = loopBlock;
-            activeBlockList->push_back(loopBlock);
+            activeBlockList->emplace_back(loopBlock);
 
             // Set the current block list to the loop inner
             activeBlockList = &loopBlock->inner;
@@ -275,9 +275,9 @@ static bool blockify(Shader &shader, std::vector<Label *> labels)
             label->linkedLabel->restoreBlockList = activeBlockList;
 
             // Create a new conditional block
-            auto condBlock = new shadir::ConditionalBlock { ins };
+            auto condBlock = new shadir::ConditionalBlock { ins.get() };
             label->linkedBlock = condBlock;
-            activeBlockList->push_back(condBlock);
+            activeBlockList->emplace_back(condBlock);
 
             // Set current block list to the condition inner
             activeBlockList = &condBlock->inner;
@@ -325,10 +325,10 @@ static bool blockify(Shader &shader, std::vector<Label *> labels)
          if (!activeCodeBlock) {
             // Create a new block for active list
             activeCodeBlock = new shadir::CodeBlock {};
-            activeBlockList->push_back(activeCodeBlock);
+            activeBlockList->emplace_back(activeCodeBlock);
          }
 
-         activeCodeBlock->code.push_back(ins);
+         activeCodeBlock->code.push_back(ins.get());
       }
    }
 

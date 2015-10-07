@@ -22,7 +22,7 @@ static bool DOT4(GenerateState &state, AluReductionInstruction *ins)
    for (auto i = 0; i < 4; ++i) {
       if (ins->units[i]->writeMask) {
          assert(!dest);
-         dest = ins->units[i];
+         dest = ins->units[i].get();
       }
    }
 
@@ -30,7 +30,7 @@ static bool DOT4(GenerateState &state, AluReductionInstruction *ins)
    if (!dest) {
       assert(!ins->units[0]->writeMask);
       assert(ins->units[0]->dest.chan == latte::alu::Channel::X);
-      dest = ins->units[0];
+      dest = ins->units[0].get();
    }
 
    translateAluDestStart(state, dest);

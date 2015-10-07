@@ -104,7 +104,7 @@ decodeNormal(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
       ins->popCount = cf.word1.popCount;
       ins->loopCfConstant = cf.word1.cfConst;
       ins->cond = static_cast<latte::cf::Cond::Cond>(cf.word1.cond);
-      state.shader->code.push_back(ins);
+      state.shader->code.emplace_back(ins);
       return true;
    case latte::cf::VTX:
    case latte::cf::VTX_TC:
@@ -121,7 +121,28 @@ decodeNormal(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 static bool
 decodeExport(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 {
-   // TODO
+   auto exp = new latte::shadir::ExportInstruction {};
+   exp->id = static_cast<latte::exp::inst>(cf.expWord1.inst);
+   exp->name = latte::exp::name[exp->id];
+   exp->cfPC = state.cfPC;
+
+   exp->dstReg = cf.expWord0.dstReg;
+   exp->src.id = cf.expWord0.srcReg;
+   exp->src.selX = static_cast<latte::alu::Select::Select>(cf.expWord1.srcSelX);
+   exp->src.selY = static_cast<latte::alu::Select::Select>(cf.expWord1.srcSelY);
+   exp->src.selZ = static_cast<latte::alu::Select::Select>(cf.expWord1.srcSelZ);
+   exp->src.selW = static_cast<latte::alu::Select::Select>(cf.expWord1.srcSelW);
+
+   exp->type = static_cast<latte::exp::Type::Type>(cf.expWord0.type);
+   exp->elemSize = cf.expWord0.elemSize;
+   exp->indexGpr = cf.expWord0.indexGpr;
+   exp->wholeQuadMode = cf.expWord1.wholeQuadMode;
+   exp->barrier = !!cf.expWord1.barrier;
+
+   assert(cf.expWord0.srcRel == 0);
+   assert(cf.expWord1.validPixelMode == 0);
+   state.shader->exports.push_back(exp);
+   state.shader->code.emplace_back(exp);
    return true;
 }
 
@@ -268,7 +289,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
       push->id = latte::cf::inst::PUSH;
       push->name = latte::cf::name[push->id];
       push->cfPC = state.cfPC;
-      state.shader->code.push_back(push);
+      state.shader->code.emplace_back(push);
    }
    break;
    case latte::alu::inst::ALU_EXT:
@@ -367,7 +388,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
                   push->id = latte::cf::inst::PUSH;
                   push->name = latte::cf::name[push->id];
                   push->cfPC = state.cfPC;
-                  state.shader->code.push_back(push);
+                  state.shader->code.emplace_back(push);
                   hasPushedBefore = true;
                }
             }
@@ -378,7 +399,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
                push->id = latte::cf::inst::PUSH;
                push->name = latte::cf::name[push->id];
                push->cfPC = state.cfPC;
-               state.shader->code.push_back(push);
+               state.shader->code.emplace_back(push);
             }
             break;
             }
@@ -396,7 +417,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
                   reductionIns->name = ins->name;
                   reductionIns->cfPC = ins->cfPC;
                   reductionIns->groupPC = ins->groupPC;
-                  state.shader->code.push_back(reductionIns);
+                  state.shader->code.emplace_back(reductionIns);
                }
             }
          }
@@ -404,10 +425,10 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
          if (reductionIns && unit < 4) {
             // Add XYZW to reduction
             assert(!reductionIns->units[unit]);
-            reductionIns->units[unit] = ins;
+            reductionIns->units[unit] = std::unique_ptr<shadir::AluInstruction>(ins);
          } else {
             // Append to shader code
-            state.shader->code.push_back(ins);
+            state.shader->code.emplace_back(ins);
          }
 
          // Special ALU ops after
@@ -420,7 +441,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
                loopBreak->id = latte::cf::inst::LOOP_BREAK;
                loopBreak->name = latte::cf::name[loopBreak->id];
                loopBreak->popCount = 1;
-               state.shader->code.push_back(loopBreak);
+               state.shader->code.emplace_back(loopBreak);
             }
             break;
             case latte::alu::inst::ALU_CONTINUE: // Continue after every PRED_SET
@@ -430,7 +451,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
                loopContinue->id = latte::cf::inst::LOOP_CONTINUE;
                loopContinue->name = latte::cf::name[loopContinue->id];
                loopContinue->popCount = 1;
-               state.shader->code.push_back(loopContinue);
+               state.shader->code.emplace_back(loopContinue);
             }
             break;
             case latte::alu::inst::ALU_ELSE_AFTER: // Else after every PRED_SET
@@ -440,7 +461,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
                els->id = latte::cf::inst::ELSE;
                els->name = latte::cf::name[els->id];
                els->popCount = 1;
-               state.shader->code.push_back(els);
+               state.shader->code.emplace_back(els);
             }
             break;
             }
@@ -481,7 +502,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
       pop->id = latte::cf::inst::POP;
       pop->name = latte::cf::name[pop->id];
       pop->popCount = 1;
-      state.shader->code.push_back(pop);
+      state.shader->code.emplace_back(pop);
    }
    break;
    case latte::alu::inst::ALU_POP2_AFTER: // Pop2 after ALU clause
@@ -491,7 +512,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
       pop2->id = latte::cf::inst::POP;
       pop2->name = latte::cf::name[pop2->id];
       pop2->popCount = 2;
-      state.shader->code.push_back(pop2);
+      state.shader->code.emplace_back(pop2);
    }
    break;
    }
@@ -550,7 +571,7 @@ decodeTEX(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
          ins->dst.selZ = static_cast<latte::alu::Select::Select>(tex.word1.dstSelZ);
          ins->dst.selW = static_cast<latte::alu::Select::Select>(tex.word1.dstSelW);
 
-         state.shader->code.push_back(ins);
+         state.shader->code.emplace_back(ins);
          ptr += latte::WordsPerTEX;
       }
 

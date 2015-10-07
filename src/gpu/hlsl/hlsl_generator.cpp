@@ -7,13 +7,14 @@ static const auto indentSize = 3u;
 namespace hlsl
 {
 
-static bool translateBlocks(GenerateState &state, std::vector<latte::shadir::Block *> blocks);
+static bool translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks);
 
 static std::map<latte::cf::inst, TranslateFuncCF> sGeneratorTableCf;
 static std::map<latte::alu::op2, TranslateFuncALU> sGeneratorTableAluOp2;
 static std::map<latte::alu::op3, TranslateFuncALU> sGeneratorTableAluOp3;
 static std::map<latte::alu::op2, TranslateFuncALUReduction> sGeneratorTableAluOp2Reduction;
 static std::map<latte::tex::inst, TranslateFuncTEX> sGeneratorTableTex;
+static std::map<latte::exp::inst, TranslateFuncEXP> sGeneratorTableExport;
 
 void intialise()
 {
@@ -25,6 +26,7 @@ void intialise()
       registerAluOP3();
       registerAluReduction();
       registerTex();
+      registerExp();
    }
 }
 
@@ -51,6 +53,11 @@ void registerGenerator(latte::alu::op2 ins, TranslateFuncALUReduction func)
 void registerGenerator(latte::tex::inst ins, TranslateFuncTEX func)
 {
    sGeneratorTableTex[ins] = func;
+}
+
+void registerGenerator(latte::exp::inst ins, TranslateFuncEXP func)
+{
+   sGeneratorTableExport[ins] = func;
 }
 
 void beginLine(GenerateState &state)
@@ -134,6 +141,18 @@ static bool translateInstruction(GenerateState &state, latte::shadir::Instructio
             } else {
                return (*itr->second)(state, ins2);
             }
+         }
+      }
+      break;
+   case latte::shadir::Instruction::Export:
+      {
+         auto ins2 = reinterpret_cast<latte::shadir::ExportInstruction *>(ins);
+         auto itr = sGeneratorTableExport.find(ins2->id);
+
+         if (itr == sGeneratorTableExport.end()) {
+            return false;
+         } else {
+            return (*itr->second)(state, ins2);
          }
       }
       break;
@@ -221,12 +240,12 @@ static bool translateBlock(GenerateState &state, latte::shadir::Block *block)
    return false;
 }
 
-static bool translateBlocks(GenerateState &state, std::vector<latte::shadir::Block *> blocks)
+static bool translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks)
 {
    auto result = true;
 
-   for (auto block : blocks) {
-      result &= translateBlock(state, block);
+   for (auto &block : blocks) {
+      result &= translateBlock(state, block.get());
    }
 
    return result;
