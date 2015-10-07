@@ -62,7 +62,7 @@ public:
    void join();
 
    // Debugger Helper
-   void wakeAll();
+   void wakeAllCores();
 
    // Fiber
    Fiber *createFiber();

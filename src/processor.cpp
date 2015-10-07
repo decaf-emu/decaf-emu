@@ -47,7 +47,7 @@ Processor::start()
 }
 
 void
-Processor::wakeAll()
+Processor::wakeAllCores()
 {
    mCondition.notify_all();
 }
@@ -322,6 +322,7 @@ Processor::timerEntryPoint()
          if (core->nextInterrupt <= now) {
             core->interrupt = true;
             core->nextInterrupt = std::chrono::time_point<std::chrono::system_clock>::max();
+            wakeAllCores();
          } else if (core->nextInterrupt < next) {
             next = core->nextInterrupt;
             timedWait = true;

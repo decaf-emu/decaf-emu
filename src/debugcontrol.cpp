@@ -60,7 +60,7 @@ DebugControl::waitForAllPaused()
          break;
       }
       
-      gProcessor.wakeAll();
+      gProcessor.wakeAllCores();
       mWaitCond.wait(lock);
    }
 }
