@@ -19,3 +19,6 @@
 [submodule "libraries/cereal"]
 	path = libraries/cereal
 	url = https://github.com/USCiLab/cereal.git
+[submodule "libraries/gsl"]
+	path = libraries/gsl
+	url = https://github.com/Microsoft/GSL.git
