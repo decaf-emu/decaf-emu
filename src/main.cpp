@@ -230,22 +230,19 @@ play(const fs::HostPath &path)
       auto name = OSSprintfFromSystem("Loader Thread");
 
       auto gameLoader = gLoader.loadRPL("gameloader");
-      void *gameLoaderRun = gameLoader->findExport("GameLoaderRun");
+      auto gameLoaderRun = gameLoader->findExport("GameLoaderRun");
 
-      OSCreateThread(thread,
-         0, 0, nullptr,
-         stack + stackSize, stackSize,
-         -2,
-         static_cast<OSThreadAttributes::Flags>(1 << 1));
+      OSCreateThread(thread, 0, 0, nullptr,
+                     stack + stackSize, stackSize, -2,
+                     static_cast<OSThreadAttributes::Flags>(1 << 1));
       OSSetThreadName(thread, name);
-      OSRunThread(thread, gMemory.untranslate(gameLoaderRun), 0, nullptr);
+      OSRunThread(thread, gameLoaderRun, 0, nullptr);
    }
 
    platform::ui::run();
 
    // Force inclusion in release builds
    tracePrint(nullptr, 0, 0);
-   gLoader.debugPrint();
 
    // Wait for all processor threads to exit
    //gProcessor.join();

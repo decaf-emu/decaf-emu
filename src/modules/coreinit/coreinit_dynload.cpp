@@ -28,7 +28,7 @@ void MEM_DynLoad_DefaultFree(void *addr)
 }
 
 int
-OSDynLoad_SetAllocator(uint32_t allocFn, uint32_t freeFn)
+OSDynLoad_SetAllocator(ppcaddr_t allocFn, ppcaddr_t freeFn)
 {
    if (!allocFn || !freeFn) {
       return 0xBAD10017;
@@ -40,10 +40,10 @@ OSDynLoad_SetAllocator(uint32_t allocFn, uint32_t freeFn)
 }
 
 int
-OSDynLoad_GetAllocator(be_val<uint32_t> *outAllocFn, be_val<uint32_t> *outFreeFn)
+OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn, be_val<ppcaddr_t> *outFreeFn)
 {
-   *outAllocFn = static_cast<uint32_t>(pOSDynLoad_MemAlloc);
-   *outFreeFn = static_cast<uint32_t>(pOSDynLoad_MemFree);
+   *outAllocFn = static_cast<ppcaddr_t>(pOSDynLoad_MemAlloc);
+   *outFreeFn = static_cast<ppcaddr_t>(pOSDynLoad_MemFree);
    return 0;
 }
 
@@ -74,19 +74,19 @@ OSDynLoad_Acquire(char const *name, be_ptr<LoadedModuleHandleData> *outHandle)
       return 0xBAD10001;
    }
 
-   *outHandle = module->getHandle();
+   *outHandle = module->handle;
    return 0;
 }
 
 int
-OSDynLoad_FindExport(LoadedModuleHandleData *handle, int isData, char const *name, be_ptr<void> *outAddr)
+OSDynLoad_FindExport(LoadedModuleHandleData *handle, int isData, char const *name, be_val<ppcaddr_t> *outAddr)
 {
    auto module = handle->ptr;
-
    auto exportPtr = module->findExport(name);
+
    if (!exportPtr) {
       gLog->debug("OSDynLoad_FindExport export {} not found", name);
-      *outAddr = nullptr;
+      *outAddr = 0;
       return 0xBAD10001;
    }
 

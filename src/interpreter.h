@@ -57,7 +57,8 @@ private:
 extern Interpreter gInterpreter;
 
 template<typename ReturnType, typename... Args>
-ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args) {
+ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
+{
    ThreadState *state = GetCurrentFiberState();
 
    // Push args

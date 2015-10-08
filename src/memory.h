@@ -2,6 +2,7 @@
 #include <cassert>
 #include <vector>
 #include "bitutils.h"
+#include "types.h"
 
 union PageEntry
 {
@@ -50,22 +51,24 @@ public:
    ~Memory();
 
    bool initialise();
-   bool valid(uint32_t address);
-   bool alloc(uint32_t address, size_t size);
-   uint32_t alloc(MemoryType type, size_t size);
-   bool free(uint32_t address);
+   bool valid(ppcaddr_t address);
+   bool alloc(ppcaddr_t address, size_t size);
+   ppcaddr_t alloc(MemoryType type, size_t size);
+   bool free(ppcaddr_t address);
 
-   size_t base() const {
+   size_t base() const
+   {
       return (size_t)mBase;
    }
 
    // Translate WiiU virtual address to host address
-   uint8_t *translate(uint32_t address) const
+   template<typename Type = uint8_t>
+   Type *translate(ppcaddr_t address) const
    {
       if (!address) {
          return nullptr;
       } else {
-         return mBase + address;
+         return reinterpret_cast<Type*>(mBase + address);
       }
    }
 
@@ -76,7 +79,7 @@ public:
    }
 
    // Translate host address to WiiU virtual address
-   uint32_t untranslate(const void *ptr) const
+   ppcaddr_t untranslate(const void *ptr) const
    {
       if (!ptr) {
          return 0;
@@ -86,33 +89,33 @@ public:
       auto sbase = reinterpret_cast<size_t>(mBase);
       assert(sptr > sbase);
       assert(sptr <= sbase + 0xFFFFFFFF);
-      return static_cast<uint32_t>(sptr - sbase);
+      return static_cast<ppcaddr_t>(sptr - sbase);
    }
 
    // Read Type from virtual address
    template<typename Type>
-   Type read(uint32_t address) const
+   Type read(ppcaddr_t address) const
    {
       return byte_swap(readNoSwap<Type>(address));
    }
 
    // Read Type from virtual address with no endian byte_swap
    template<typename Type>
-   Type readNoSwap(uint32_t address) const
+   Type readNoSwap(ppcaddr_t address) const
    {
       return *reinterpret_cast<Type*>(translate(address));
    }
 
    // Write Type to virtual address
    template<typename Type>
-   void write(uint32_t address, Type value) const
+   void write(ppcaddr_t address, Type value) const
    {
       writeNoSwap(address, byte_swap(value));
    }
 
    // Write Type to virtual address with no endian byte_swap
    template<typename Type>
-   void writeNoSwap(uint32_t address, Type value) const
+   void writeNoSwap(ppcaddr_t address, Type value) const
    {
       *reinterpret_cast<Type*>(translate(address)) = value;
    }

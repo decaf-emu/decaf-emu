@@ -2,22 +2,9 @@
 #include <cstdint>
 #include "be_val.h"
 #include "memory.h"
+#include "types.h"
 #include "p32.h"
 #include "wfunc_ptr.h"
-
-#ifndef BOOL
-typedef int BOOL;
-#endif
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-
-typedef uint32_t ppcsize_t;
 
 // Ensure our structs are correct size & offsets to match WiiU
 #define CHECK_SIZE(Type, Size) \

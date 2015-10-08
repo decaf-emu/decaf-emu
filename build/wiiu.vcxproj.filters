@@ -896,6 +896,9 @@
     <ClInclude Include="..\src\statedbg.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\types.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

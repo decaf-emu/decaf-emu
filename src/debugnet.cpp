@@ -109,31 +109,33 @@ struct DebugPauseInfo {
    }
 };
 
-static void populateDebugPauseInfo(DebugPauseInfo& info) {
+static void
+populateDebugPauseInfo(DebugPauseInfo& info)
+{
    auto &loadedModules = gLoader.getLoadedModules();
    int moduleIdx = 0;
    int userModuleIdx = -1;
    auto userModule = gSystem.getUserModule();
-   for (auto &i : loadedModules) {
-      auto &moduleName = i.first;
-      auto &loadedModule = i.second;
+
+   for (auto &modItr : loadedModules) {
+      auto &moduleName = modItr.first;
+      auto &loadedModule = modItr.second;
 
       DebugModuleInfo tmod;
       tmod.name = moduleName;
-      tmod.entryPoint = loadedModule->entryPoint();
+      tmod.entryPoint = loadedModule->entryPoint;
       info.modules.push_back(tmod);
 
-      auto &symbols = loadedModule->getSymbols();
-      for (auto &i : symbols) {
+      for (auto &symItr : loadedModule->symbols) {
          DebugSymbolInfo tsym;
          tsym.moduleIdx = moduleIdx;
-         tsym.name = i.first;
-         tsym.address = gMemory.untranslate(i.second);
+         tsym.name = symItr.first;
+         tsym.address = symItr.second;
          tsym.type = 0;
          info.symbols.push_back(tsym);
       }
 
-      if (loadedModule == userModule) {
+      if (loadedModule.get() == userModule) {
          userModuleIdx = moduleIdx;
       }
       moduleIdx++;

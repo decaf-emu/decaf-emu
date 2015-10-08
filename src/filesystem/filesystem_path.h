@@ -18,7 +18,7 @@ struct FilePath
          exploded.push_back("/");
       }
 
-      splitString(path, '/', exploded);
+      split_string(path, '/', exploded);
    }
 
    const std::string &name() const

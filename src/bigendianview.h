@@ -1,12 +1,18 @@
 #pragma once
+#include <array_view.h>
 #include <string>
 #include "bitutils.h"
 
 class BigEndianView
 {
 public:
-   BigEndianView(const void *buffer, size_t size) :
+   BigEndianView(const void *buffer, std::size_t size) :
       mBuffer(static_cast<const uint8_t*>(buffer)), mSize(size), mOffset(0)
+   {
+   }
+
+   BigEndianView(const gsl::array_view<uint8_t> &view) :
+      mBuffer(static_cast<const uint8_t*>(view.data())), mSize(view.size()), mOffset(0)
    {
    }
 
@@ -39,6 +45,14 @@ public:
       mOffset += sizeof(Type) * count;
    }
 
+   template<typename Type>
+   void read(const gsl::array_view<Type> &arr)
+   {
+      for (auto i = 0u; i < arr.size(); ++i) {
+         read<Type>(arr[i]);
+      }
+   }
+
    std::string readNullTerminatedString()
    {
       const char *str = reinterpret_cast<const char*>(mBuffer) + mOffset;
@@ -66,6 +80,6 @@ public:
 
 private:
    const uint8_t *mBuffer;
-   size_t mSize;
-   size_t mOffset;
+   std::size_t mSize;
+   std::size_t mOffset;
 };

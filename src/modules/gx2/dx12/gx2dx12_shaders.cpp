@@ -79,7 +79,7 @@ GX2SetVertexShader(GX2VertexShader *shader)
 
    // Print disassembly
    std::string code;
-   latte::disassemble(code, (uint8_t*)(void*)shader->data, shader->size);
+   latte::disassemble(code, { (uint8_t*)(void*)shader->data, shader->size });
    std::cout << "GX2SetVertexShader" << std::endl << code << std::endl;
 }
 
@@ -90,7 +90,7 @@ GX2SetPixelShader(GX2PixelShader *shader)
 
    // Print disassembly
    std::string code;
-   latte::disassemble(code, (uint8_t*)(void*)shader->data, shader->size);
+   latte::disassemble(code, { (uint8_t*)(void*)shader->data, shader->size });
    std::cout << "GX2SetVertexShader" << std::endl << code << std::endl;
 }
 

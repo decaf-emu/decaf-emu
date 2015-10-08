@@ -58,6 +58,7 @@ zlibAllocWrapper(void *opaque, unsigned items, unsigned size)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
    ZlibAllocFunc allocFunc = static_cast<uint32_t>(wstrm->zalloc);
+
    if (allocFunc) {
       return allocFunc(wstrm->opaque, items, size);
    } else {

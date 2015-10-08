@@ -116,15 +116,11 @@ OSContinueThread(OSThread *thread)
 static void
 InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *argv)
 {
-   assert(thread->fiber == nullptr);
-
-   uint32_t sdaBase = 0;
-   uint32_t sda2Base = 0;
    auto module = gSystem.getUserModule();
-   if (module) {
-      sdaBase = module->sdaBase();
-      sda2Base = module->sda2Base();
-   }
+   auto sdaBase = module ? module->sdaBase : 0u;
+   auto sda2Base = module ? module->sda2Base : 0u;
+
+   assert(thread->fiber == nullptr);
 
    // We allocate an extra 8 bytes to deal with any main() calling
    //  conventions where the stack is allocated by the caller?

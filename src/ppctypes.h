@@ -6,7 +6,8 @@
 namespace ppctypes
 {
 
-enum class PpcType {
+enum class PpcType
+{
    WORD,
    DWORD,
    FLOAT,

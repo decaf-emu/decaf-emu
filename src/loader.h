@@ -1,5 +1,7 @@
 #pragma once
+#include <array_view.h>
 #include <string>
+#include <memory>
 #include <vector>
 #include <map>
 #include "systemtypes.h"
@@ -7,111 +9,91 @@
 
 class KernelModule;
 class TeenyHeap;
+struct LoadedModule;
 
 struct LoadedModuleHandleData
 {
-   class LoadedModule *ptr;
+   LoadedModule *ptr;
 };
 
-struct LoadedSection {
-   std::string name;
-   void * start;
-   void * end;
-};
-
-class LoadedModule
+struct LoadedSection
 {
-   friend class Loader;
-public:
-   LoadedModule()
+   std::string name;
+   ppcaddr_t start;
+   ppcaddr_t end;
+};
+
+struct LoadedModule
+{
+   ppcaddr_t findExport(const std::string& name)
    {
+      auto itr = exports.find(name);
+
+      if (itr == exports.end()) {
+         return 0u;
+      }
+
+      return itr->second;
    }
 
    template<typename ReturnType, typename... Args>
    wfunc_ptr<ReturnType, Args...>
-   findFuncExport(const std::string& name) {
+   findFuncExport(const std::string& name)
+   {
       return wfunc_ptr<ReturnType, Args...>(findExport(name));
    }
 
-   template<typename T>
-   T* findDataExport(const std::string& name) {
-      return static_cast<T*>(findExport(name));
+   template<typename Type>
+   Type *findDataExport(const std::string& name)
+   {
+      return gMemory.translate<Type>(findExport(name));
    }
 
-   LoadedModuleHandleData * getHandle() {
-      return mHandle;
-   }
-
-   virtual std::string getName() {
-      return mName;
-   }
-
-   virtual void* findExport(const std::string& name) {
-      auto exportIter = mExports.find(name);
-      if (exportIter == mExports.end()) {
-         return nullptr;
-      }
-      return exportIter->second;
-   }
-
-   uint32_t entryPoint() const {
-      return mEntryPoint;
-   }
-
-   uint32_t defaultStackSize() const {
-      return mDefaultStackSize;
-   }
-
-   uint32_t sdaBase() const {
-      return mSdaBase;
-   }
-
-   uint32_t sda2Base() const {
-      return mSda2Base;
-   }
-
-   const std::map<std::string, void*>& getSymbols() const {
-      return mSymbols;
-   }
-
-protected:
-   LoadedModuleHandleData *mHandle;
-   std::string mName;
-   std::vector<LoadedSection> mSections;
-   std::map<std::string, void*> mExports;
-   std::map<std::string, void*> mSymbols;
-   uint32_t mEntryPoint;
-   uint32_t mDefaultStackSize;
-   uint32_t mSdaBase;
-   uint32_t mSda2Base;
-
+   std::string name;
+   LoadedModuleHandleData *handle = nullptr;
+   ppcaddr_t entryPoint = 0;
+   ppcsize_t defaultStackSize = 0;
+   ppcaddr_t sdaBase = 0;
+   ppcaddr_t sda2Base = 0;
+   std::vector<LoadedSection> sections;
+   std::map<std::string, ppcaddr_t> exports;
+   std::map<std::string, ppcaddr_t> symbols;
 };
+
+class SequentialMemoryTracker;
+using ModuleList = std::map<std::string, std::unique_ptr<LoadedModule>>;
+using SectionList = std::vector<elf::XSection>;
+using AddressRange = std::pair<ppcaddr_t, ppcaddr_t>;
 
 class Loader
 {
 public:
    void initialise(ppcsize_t maxCodeSize);
+   LoadedModule *loadRPL(std::string name);
 
-   LoadedModule * loadRPL(const std::string& name);
+   const char *getUnimplementedData(ppcaddr_t addr);
 
-   const char * getUnimplementedData(uint32_t addr);
-   void debugPrint();
-
-   const std::map<std::string, LoadedModule*>& getLoadedModules() const {
+   const ModuleList &getLoadedModules() const
+   {
       return mModules;
    }
 
-protected:
-   uint32_t registerUnimplementedData(const std::string& name);
-   void * registerUnimplementedFunction(const std::string& name);
-   LoadedModule * loadKernelModule(const std::string &name, KernelModule *module);
-   LoadedModule * loadRPL(const std::string& name, const std::vector<uint8_t> data);
+private:
+   ppcaddr_t registerUnimplementedData(const std::string& name);
+   ppcaddr_t registerUnimplementedFunction(const std::string& name);
 
-   std::map<std::string, void*> mUnimplementedFunctions;
+   std::unique_ptr<LoadedModule> loadKernelModule(const std::string &name, KernelModule *module);
+   std::unique_ptr<LoadedModule> loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data);
+
+   bool processImports(LoadedModule *loadedMod, const SectionList &sections);
+   bool processExports(LoadedModule *loadedMod, const SectionList &sections);
+   bool processRelocations(LoadedModule *loadedMod, const SectionList &sections, BigEndianView &in, const char *shStrTab, SequentialMemoryTracker &codeSeg, AddressRange &trampSeg);
+
+private:
+   ModuleList mModules;
+   std::map<std::string, ppcaddr_t> mUnimplementedFunctions;
    std::map<std::string, int> mUnimplementedData;
-   std::map<std::string, LoadedModule*> mModules;
-   TeenyHeap *mCodeHeap;
-
+   std::unique_ptr<TeenyHeap> mCodeHeap;
 };
 
 extern Loader gLoader;

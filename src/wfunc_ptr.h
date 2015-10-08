@@ -27,7 +27,7 @@ struct wfunc_ptr
    {
    }
 
-   wfunc_ptr(uint32_t addr) :
+   wfunc_ptr(ppcaddr_t addr) :
       address(addr)
    {
    }
@@ -37,15 +37,14 @@ struct wfunc_ptr
    {
    }
 
-   operator uint32_t() const
+   operator ppcaddr_t() const
    {
       return address;
    }
 
    ReturnType operator()(Args... args);
 
-   uint32_t address;
-
+   ppcaddr_t address;
 };
 
 template<typename ReturnType, typename... Args>
@@ -56,31 +55,33 @@ struct be_wfunc_ptr
    {
    }
 
-   be_wfunc_ptr& operator=(const wfunc_ptr<ReturnType, Args...>& rhs) {
+   be_wfunc_ptr& operator=(const wfunc_ptr<ReturnType, Args...> &rhs)
+   {
       address = rhs.address;
       return *this;
    }
 
-   ReturnType operator()(Args... args) {
+   ReturnType operator()(Args... args)
+   {
       wfunc_ptr<ReturnType, Args...> ptr(static_cast<uint32_t>(address));
       return ptr(args...);
    }
 
-   be_val<uint32_t> address;
-
+   be_val<ppcaddr_t> address;
 };
 
 #pragma pack(pop)
 
 
 template<typename ReturnType, typename... Args>
-static inline std::ostream&
-operator<<(std::ostream& os, const wfunc_ptr<ReturnType, Args...>& val)
+static inline std::ostream &
+operator<<(std::ostream &os, const wfunc_ptr<ReturnType, Args...> &val)
 {
-   return os << static_cast<uint32_t>(val);
+   return os << static_cast<ppcaddr_t>(val);
 }
 
-namespace ppctypes {
+namespace ppctypes
+{
 
 template<typename ReturnType, typename... Args>
 struct ppctype_converter_t<wfunc_ptr<ReturnType, Args...>>
@@ -88,12 +89,15 @@ struct ppctype_converter_t<wfunc_ptr<ReturnType, Args...>>
    typedef wfunc_ptr<ReturnType, Args...> Type;
    static const PpcType ppc_type = PpcType::WORD;
    
-   static inline void to_ppc(const Type& v, uint32_t& out) {
+   static inline void to_ppc(const Type& v, uint32_t& out)
+   {
       out = v.address;
    }
 
-   static inline Type from_ppc(uint32_t in) {
+   static inline Type from_ppc(uint32_t in)
+   {
       return Type(in);
    }
 };
-}
+
+} // namespace ppctypes

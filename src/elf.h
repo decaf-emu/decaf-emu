@@ -257,7 +257,8 @@ struct Section
 struct XSection
 {
    SectionHeader header;
-   void *virtAddress;
+   uint8_t *memory;
+   uint32_t virtAddress;
    uint32_t virtSize;
 };
 

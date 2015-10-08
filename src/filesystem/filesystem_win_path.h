@@ -14,8 +14,8 @@ public:
    HostPath(std::string pathStr) :
       mPath(pathStr)
    {
-      replaceAll(mPath, '/', '\\');
-      splitString(mPath, '\\', mExploded);
+      replace_all(mPath, '/', '\\');
+      split_string(mPath, '\\', mExploded);
    }
 
    HostPath join(const std::string &rhs) const
