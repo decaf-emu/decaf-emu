@@ -1,4 +1,5 @@
 #pragma once
+#include <array_view.h>
 #include <cstdint>
 #include <string>
 #include <memory>
@@ -22,9 +23,9 @@ struct Shader
    std::vector<std::unique_ptr<shadir::Block>> blocks; // Instruction AST
 };
 
-bool decode(Shader &shader, const uint8_t *binary, uint32_t size);
+bool decode(Shader &shader, const gsl::array_view<uint8_t> &binary);
 bool blockify(Shader &shader);
-bool disassemble(std::string &out, const uint8_t *binary, uint32_t size);
+bool disassemble(std::string &out, const gsl::array_view<uint8_t> &binary);
 bool generateHLSL(Shader &shader, std::string &hlsl);
 
 } // namespace latte

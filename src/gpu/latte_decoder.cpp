@@ -10,7 +10,7 @@ namespace latte
 struct DecodeState
 {
    const uint32_t *words;
-   uint32_t wordCount;
+   std::size_t wordCount;
    uint32_t cfPC;
    uint32_t group;
    Shader *shader;
@@ -22,13 +22,13 @@ static bool decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruc
 static bool decodeTEX(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
 
 bool
-decode(Shader &shader, const uint8_t *binary, uint32_t size)
+decode(Shader &shader, const gsl::array_view<uint8_t> &binary)
 {
    DecodeState state;
 
-   assert((size % 4) == 0);
-   state.words = reinterpret_cast<const uint32_t*>(binary);
-   state.wordCount = size / 4;
+   assert((binary.size() % 4) == 0);
+   state.words = reinterpret_cast<const uint32_t*>(binary.data());
+   state.wordCount = binary.size() / 4;
    state.cfPC = 0;
    state.group = 0;
    state.shader = &shader;

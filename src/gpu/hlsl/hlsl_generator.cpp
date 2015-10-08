@@ -91,6 +91,7 @@ static bool translateInstruction(GenerateState &state, latte::shadir::Instructio
          auto itr = sGeneratorTableCf.find(ins2->id);
 
          if (itr == sGeneratorTableCf.end()) {
+            state.out << "// Unimplemented " << latte::cf::name[ins2->id];
             return false;
          } else {
             return (*itr->second)(state, ins2);
@@ -103,6 +104,7 @@ static bool translateInstruction(GenerateState &state, latte::shadir::Instructio
          auto itr = sGeneratorTableTex.find(ins2->id);
 
          if (itr == sGeneratorTableTex.end()) {
+            state.out << "// Unimplemented " << latte::tex::name[ins2->id];
             return false;
          } else {
             return (*itr->second)(state, ins2);
@@ -115,6 +117,7 @@ static bool translateInstruction(GenerateState &state, latte::shadir::Instructio
          auto itr = sGeneratorTableAluOp2Reduction.find(ins2->op2);
 
          if (itr == sGeneratorTableAluOp2Reduction.end()) {
+            state.out << "// Unimplemented " << latte::alu::op2info[ins2->op2].name;
             return false;
          } else {
             return (*itr->second)(state, ins2);
@@ -129,6 +132,7 @@ static bool translateInstruction(GenerateState &state, latte::shadir::Instructio
             auto itr = sGeneratorTableAluOp2.find(ins2->op2);
 
             if (itr == sGeneratorTableAluOp2.end()) {
+               state.out << "// Unimplemented " << latte::alu::op2info[ins2->op2].name;
                return false;
             } else {
                return (*itr->second)(state, ins2);
@@ -137,6 +141,7 @@ static bool translateInstruction(GenerateState &state, latte::shadir::Instructio
             auto itr = sGeneratorTableAluOp3.find(ins2->op3);
 
             if (itr == sGeneratorTableAluOp3.end()) {
+               state.out << "// Unimplemented " << latte::alu::op3info[ins2->op3].name;
                return false;
             } else {
                return (*itr->second)(state, ins2);
@@ -150,6 +155,7 @@ static bool translateInstruction(GenerateState &state, latte::shadir::Instructio
          auto itr = sGeneratorTableExport.find(ins2->id);
 
          if (itr == sGeneratorTableExport.end()) {
+            state.out << "// Unimplemented " << latte::exp::name[ins2->id];
             return false;
          } else {
             return (*itr->second)(state, ins2);

@@ -14,7 +14,7 @@ struct DisassembleState
    fmt::MemoryWriter out;
    std::string indent;
    const uint32_t *words;
-   uint32_t wordCount;
+   std::size_t wordCount;
    uint32_t group;
    uint32_t cfPC;
 };
@@ -37,14 +37,14 @@ static uint32_t getUnit(bool units[5], latte::alu::Instruction &alu);
 static bool isVectorOnly(latte::alu::Instruction &alu);
 static bool isTranscendentalOnly(latte::alu::Instruction &alu);
 
-bool disassemble(std::string &out, const uint8_t *binary, uint32_t size)
+bool disassemble(std::string &out, const gsl::array_view<uint8_t> &binary)
 {
    bool result = true;
    auto state = DisassembleState { };
 
-   assert((size % 4) == 0);
-   state.words = reinterpret_cast<const uint32_t*>(binary);
-   state.wordCount = size / 4;
+   assert((binary.size() % 4) == 0);
+   state.words = reinterpret_cast<const uint32_t*>(binary.data());
+   state.wordCount = binary.size() / 4;
 
    state.cfPC = 0;
    state.group = 0;

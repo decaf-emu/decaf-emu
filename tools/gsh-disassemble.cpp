@@ -40,7 +40,7 @@ struct Block
    uint32_t dataLength;
    uint32_t unk4;
    uint32_t unk5;
-   const char *data;
+   std::vector<uint8_t> data;
 };
 
 }
@@ -79,11 +79,13 @@ bool parseGSH(BigEndianView &fh)
       fh.read(block.dataLength);
       fh.read(block.unk4);
       fh.read(block.unk5);
-      block.data = fh.readRaw<char>(block.dataLength);
+
+      block.data.resize(block.dataLength);
+      fh.read<uint8_t>(block.data);
 
       if (block.type == gsh::Block::VertexShader || block.type == gsh::Block::PixelShader) {
          std::string out;
-         latte::disassemble(out, reinterpret_cast<const uint8_t*>(block.data), block.dataLength);
+         latte::disassemble(out, block.data);
          std::cout << "----------------------------------------------" << std::endl;
          std::cout << "                  Disassembly                 " << std::endl;
          std::cout << "----------------------------------------------" << std::endl;
@@ -91,7 +93,7 @@ bool parseGSH(BigEndianView &fh)
          std::cout << std::endl;
 
          latte::Shader shader;
-         latte::decode(shader, reinterpret_cast<const uint8_t*>(block.data), block.dataLength);
+         latte::decode(shader, block.data);
          std::cout << "----------------------------------------------" << std::endl;
          std::cout << "                    Blocks                    " << std::endl;
          std::cout << "----------------------------------------------" << std::endl;
