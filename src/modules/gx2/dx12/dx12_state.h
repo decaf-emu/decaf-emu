@@ -32,6 +32,7 @@ struct DXState {
    DXHeap *rtvHeap;
    DXHeap *dsvHeap;
    ComPtr<ID3D12PipelineState> pipelineState;
+   ComPtr<ID3D12PipelineState> emuPipelineState;
    ComPtr<ID3D12GraphicsCommandList> commandList;
    DXHeapItemPtr scanbufferRtv[FrameCount];
    DXHeapItemPtr curScanbufferRtv;
@@ -58,7 +59,12 @@ struct DXState {
    {
       GX2ColorBuffer *colorBuffer[GX2_NUM_MRT_BUFFER];
       GX2DepthBuffer *depthBuffer;
-      DXDynBuffer::Allocation attribBuffers[32];
+      struct {
+         uint32_t index;
+         uint32_t size;
+         uint32_t stride;
+         void *buffer;
+      } attribBuffers[32];
       GX2FetchShader *fetchShader;
       GX2VertexShader *vertexShader;
       GX2PixelShader *pixelShader;
@@ -78,6 +84,7 @@ namespace dx {
    void initialise();
    void renderScanBuffers();
    void updateRenderTargets();
+   void updateBuffers();
 
    DXColorBufferData * getColorBuffer(GX2ColorBuffer *buffer);
    DXDepthBufferData * getDepthBuffer(GX2DepthBuffer *buffer);

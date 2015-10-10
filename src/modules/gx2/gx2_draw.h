@@ -14,6 +14,8 @@ namespace GX2PrimitiveMode
 enum Mode : uint32_t
 {
    First = 1,
+   Triangles = 4,
+   TriangleStrip = 6,
    Last = 0x94
 };
 }

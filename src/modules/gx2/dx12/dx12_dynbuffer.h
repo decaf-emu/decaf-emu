@@ -23,6 +23,10 @@ public:
          mView.SizeInBytes = size;
       }
 
+      bool valid() const {
+         return mView.BufferLocation != 0;
+      }
+
       operator D3D12_VERTEX_BUFFER_VIEW*() {
          return &mView;
       }

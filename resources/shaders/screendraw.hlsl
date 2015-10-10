@@ -1,3 +1,9 @@
+struct VSInput
+{
+   float4 position : POSITION;
+   float4 uv : TEXCOORD;
+};
+
 struct PSInput
 {
    float4 position : SV_POSITION;
@@ -7,12 +13,12 @@ struct PSInput
 Texture2D g_texture : register(t0);
 SamplerState g_sampler : register(s0);
 
-PSInput VSMain(float4 position : POSITION, float4 uv : TEXCOORD)
+PSInput VSMain(VSInput input)
 {
    PSInput result;
 
-   result.position = position;
-   result.uv = uv;
+   result.position = input.position;
+   result.uv = input.uv;
 
    return result;
 }

@@ -197,28 +197,50 @@ void dx::initialise()
          { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
       };
 
-      // Describe and create the graphics pipeline state object (PSO).
-      D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-      psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
-      psoDesc.pRootSignature = gDX.rootSignature.Get();
-      psoDesc.VS = { reinterpret_cast<UINT8*>(vertexShader->GetBufferPointer()), vertexShader->GetBufferSize() };
-      psoDesc.PS = { reinterpret_cast<UINT8*>(pixelShader->GetBufferPointer()), pixelShader->GetBufferSize() };
-      psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-      psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-      psoDesc.DepthStencilState.DepthEnable = FALSE;
-      psoDesc.DepthStencilState.StencilEnable = FALSE;
-      psoDesc.SampleMask = UINT_MAX;
-      psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-      psoDesc.NumRenderTargets = 1;
-      psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-      psoDesc.SampleDesc.Count = 1;
-      ThrowIfFailed(gDX.device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&gDX.pipelineState)));
+      {
+         // Describe and create the graphics pipeline state object (PSO).
+         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+         psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+         psoDesc.pRootSignature = gDX.rootSignature.Get();
+         psoDesc.VS = { reinterpret_cast<UINT8*>(vertexShader->GetBufferPointer()), vertexShader->GetBufferSize() };
+         psoDesc.PS = { reinterpret_cast<UINT8*>(pixelShader->GetBufferPointer()), pixelShader->GetBufferSize() };
+         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+         psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+         psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+         psoDesc.DepthStencilState.DepthEnable = FALSE;
+         psoDesc.DepthStencilState.StencilEnable = FALSE;
+         psoDesc.SampleMask = UINT_MAX;
+         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+         psoDesc.NumRenderTargets = 1;
+         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+         psoDesc.SampleDesc.Count = 1;
+         ThrowIfFailed(gDX.device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&gDX.pipelineState)));
+      }
+
+      {
+         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+         psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+         psoDesc.pRootSignature = gDX.rootSignature.Get();
+         psoDesc.VS = { reinterpret_cast<UINT8*>(vertexShader->GetBufferPointer()), vertexShader->GetBufferSize() };
+         psoDesc.PS = { reinterpret_cast<UINT8*>(pixelShader->GetBufferPointer()), pixelShader->GetBufferSize() };
+         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+         psoDesc.DepthStencilState.DepthEnable = FALSE;
+         psoDesc.DepthStencilState.StencilEnable = FALSE;
+         psoDesc.SampleMask = UINT_MAX;
+         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+         psoDesc.NumRenderTargets = 1;
+         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+         psoDesc.SampleDesc.Count = 1;
+         ThrowIfFailed(gDX.device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&gDX.emuPipelineState)));
+      }
    }
 
    // Create the command list.
    gDX.frameIndex = gDX.swapChain->GetCurrentBackBufferIndex();
 
-   ThrowIfFailed(gDX.device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, gDX.commandAllocator[gDX.frameIndex].Get(), gDX.pipelineState.Get(), IID_PPV_ARGS(&gDX.commandList)));
+   ThrowIfFailed(gDX.device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, gDX.commandAllocator[gDX.frameIndex].Get(), gDX.emuPipelineState.Get(), IID_PPV_ARGS(&gDX.commandList)));
 
 
 
@@ -345,6 +367,8 @@ void dx::_endFrame() {
    gDX.commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gDX.tvScanBuffer->buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
    gDX.commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gDX.drcScanBuffer->buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
+   gDX.commandList->SetPipelineState(gDX.emuPipelineState.Get());
+
    gDX.commandList->RSSetViewports(1, &gDX.viewport);
    gDX.commandList->RSSetScissorRects(1, &gDX.scissorRect);
 
@@ -430,6 +454,26 @@ void dx::updateRenderTargets()
       gDX.activeColorBuffer[i] = gDX.state.colorBuffer[i];
    }
    gDX.activeDepthBuffer = gDX.state.depthBuffer;
+}
+
+void dx::updateBuffers()
+{
+   D3D12_VERTEX_BUFFER_VIEW buffers[32];
+
+   for (auto i = 0; i < 32; ++i) {
+      auto& buffer = gDX.state.attribBuffers[0];
+      if (!buffer.buffer || !buffer.size) {
+         buffers[i].BufferLocation = NULL;
+         buffers[i].SizeInBytes = 0;
+         buffers[i].StrideInBytes = 0;
+         continue;
+      }
+
+      buffers[i] = *(D3D12_VERTEX_BUFFER_VIEW*)gDX.ppcVertexBuffer->get(
+         buffer.stride, buffer.size, buffer.buffer);
+   }
+
+   gDX.commandList->IASetVertexBuffers(0, 32, buffers);
 }
 
 #endif

@@ -3,7 +3,6 @@
 
 #include "../gx2_shaders.h"
 #include "dx12_fetchshader.h"
-#include "gpu/latte.h"
 
 uint32_t
 GX2CalcGeometryShaderInputRingBufferSize(uint32_t ringItemSize)
@@ -53,45 +52,18 @@ void
 GX2SetFetchShader(GX2FetchShader *shader)
 {
    gDX.state.fetchShader = shader;
-
-   auto dataPtr = (FetchShaderInfo*)(void*)shader->data;
-   printf("Fetch Shader:\n");
-   printf("  Type: %d\n", dataPtr->type);
-   printf("  Tess Mode: %d\n", dataPtr->tessMode);
-   for (auto i = 0u; i < shader->attribCount; ++i) {
-      auto attrib = dataPtr->attribs[i];
-      printf("  Attrib[%d] L:%d, B:%d, O:%d, F:%d, T:%d, A:%d, M:%08x, E:%d\n", i,
-         (int32_t)attrib.location,
-         (int32_t)attrib.buffer,
-         (int32_t)attrib.offset,
-         (int32_t)attrib.format,
-         (int32_t)attrib.type,
-         (int32_t)attrib.aluDivisor,
-         (uint32_t)attrib.mask,
-         (int32_t)attrib.endianSwap);
-   }
 }
 
 void
 GX2SetVertexShader(GX2VertexShader *shader)
 {
    gDX.state.vertexShader = shader;
-
-   // Print disassembly
-   std::string code;
-   latte::disassemble(code, { (uint8_t*)(void*)shader->data, shader->size });
-   std::cout << "GX2SetVertexShader" << std::endl << code << std::endl;
 }
 
 void
 GX2SetPixelShader(GX2PixelShader *shader)
 {
    gDX.state.pixelShader = shader;
-
-   // Print disassembly
-   std::string code;
-   latte::disassemble(code, { (uint8_t*)(void*)shader->data, shader->size });
-   std::cout << "GX2SetVertexShader" << std::endl << code << std::endl;
 }
 
 void
