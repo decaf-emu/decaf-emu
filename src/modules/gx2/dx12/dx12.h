@@ -15,6 +15,7 @@ inline void ThrowIfFailed(HRESULT hr)
 {
    if (FAILED(hr))
    {
+      printf("DX Exception %08x\n", hr);
       throw;
    }
 }

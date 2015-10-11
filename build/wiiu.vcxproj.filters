@@ -486,6 +486,9 @@
     <ClCompile Include="..\src\modules\sysapp\sysapp_title.cpp">
       <Filter>Source Files\modules\sysapp</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\dx12\dx12_tmpcrc.cpp">
+      <Filter>Source Files\modules\gx2\dx12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -899,6 +902,9 @@
     <ClInclude Include="..\src\types.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_pipelinemgr.h">
+      <Filter>Header Files\modules\gx2\dx12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
@@ -912,6 +918,12 @@
     </None>
     <None Include="..\src\instructionfields.inl">
       <Filter>Header Files\ppc</Filter>
+    </None>
+    <None Include="..\resources\shaders\wiiu_tmp_simple.hlsl">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\wiiu_default.hlsl">
+      <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

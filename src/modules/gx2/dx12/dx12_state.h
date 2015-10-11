@@ -12,6 +12,7 @@
 struct DXScanBufferData;
 struct DXColorBufferData;
 struct DXDepthBufferData;
+class DXPipelineMgr;
 
 struct DXState {
    DXState()
@@ -31,7 +32,6 @@ struct DXState {
    DXHeap *srvHeap;
    DXHeap *rtvHeap;
    DXHeap *dsvHeap;
-   ComPtr<ID3D12PipelineState> pipelineState;
    ComPtr<ID3D12PipelineState> emuPipelineState;
    ComPtr<ID3D12GraphicsCommandList> commandList;
    DXHeapItemPtr scanbufferRtv[FrameCount];
@@ -41,6 +41,7 @@ struct DXState {
    ComPtr<ID3D12Resource> vertexBuffer;
    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
    DXDynBuffer *ppcVertexBuffer;
+   DXPipelineMgr *pipelineMgr;
 
    // DX Synchronization objects.
    UINT frameIndex;
@@ -60,7 +61,6 @@ struct DXState {
       GX2ColorBuffer *colorBuffer[GX2_NUM_MRT_BUFFER];
       GX2DepthBuffer *depthBuffer;
       struct {
-         uint32_t index;
          uint32_t size;
          uint32_t stride;
          void *buffer;
@@ -84,6 +84,7 @@ namespace dx {
    void initialise();
    void renderScanBuffers();
    void updateRenderTargets();
+   void updatePipeline();
    void updateBuffers();
 
    DXColorBufferData * getColorBuffer(GX2ColorBuffer *buffer);

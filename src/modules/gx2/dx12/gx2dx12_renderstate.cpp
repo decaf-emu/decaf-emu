@@ -132,8 +132,16 @@ GX2SetScissor(uint32_t x,
    D3D12_RECT rect;
    rect.left = x;
    rect.top = y;
-   rect.right = x + w;
-   rect.bottom = y + h;
+   if (w >= 0xFFFFF) {
+      rect.right = 0xFFFFF;
+   } else {
+      rect.right = x + w;
+   }
+   if (h >= 0xFFFFF) {
+      rect.bottom = 0xFFFFF;
+   } else {
+      rect.bottom = y + h;
+   }
    gDX.commandList->RSSetScissorRects(1, &rect);
 }
 

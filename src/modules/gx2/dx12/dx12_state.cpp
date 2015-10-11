@@ -9,6 +9,7 @@
 #include "dx12_scanbuffer.h"
 #include "dx12_colorbuffer.h"
 #include "dx12_depthbuffer.h"
+#include "dx12_pipelinemgr.h"
 
 DXState gDX;
 
@@ -198,27 +199,6 @@ void dx::initialise()
       };
 
       {
-         // Describe and create the graphics pipeline state object (PSO).
-         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-         psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
-         psoDesc.pRootSignature = gDX.rootSignature.Get();
-         psoDesc.VS = { reinterpret_cast<UINT8*>(vertexShader->GetBufferPointer()), vertexShader->GetBufferSize() };
-         psoDesc.PS = { reinterpret_cast<UINT8*>(pixelShader->GetBufferPointer()), pixelShader->GetBufferSize() };
-         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-         psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-         psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-         psoDesc.DepthStencilState.DepthEnable = FALSE;
-         psoDesc.DepthStencilState.StencilEnable = FALSE;
-         psoDesc.SampleMask = UINT_MAX;
-         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-         psoDesc.NumRenderTargets = 1;
-         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-         psoDesc.SampleDesc.Count = 1;
-         ThrowIfFailed(gDX.device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&gDX.pipelineState)));
-      }
-
-      {
          D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
          psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
          psoDesc.pRootSignature = gDX.rootSignature.Get();
@@ -236,6 +216,8 @@ void dx::initialise()
          ThrowIfFailed(gDX.device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&gDX.emuPipelineState)));
       }
    }
+
+   gDX.pipelineMgr = new DXPipelineMgr();
 
    // Create the command list.
    gDX.frameIndex = gDX.swapChain->GetCurrentBackBufferIndex();
@@ -349,7 +331,7 @@ void dx::_beginFrame() {
    // However, when ExecuteCommandList() is called on a particular command 
    // list, that command list can then be reset at any time and must be before 
    // re-recording.
-   ThrowIfFailed(gDX.commandList->Reset(gDX.commandAllocator[gDX.frameIndex].Get(), gDX.pipelineState.Get()));
+   ThrowIfFailed(gDX.commandList->Reset(gDX.commandAllocator[gDX.frameIndex].Get(), gDX.emuPipelineState.Get()));
 
    // Set necessary state.
    gDX.commandList->SetGraphicsRootSignature(gDX.rootSignature.Get());
@@ -456,24 +438,108 @@ void dx::updateRenderTargets()
    gDX.activeDepthBuffer = gDX.state.depthBuffer;
 }
 
+void dx::updatePipeline()
+{
+   auto pipelineState = gDX.pipelineMgr->findOrCreate().Get();
+   gDX.commandList->SetPipelineState(pipelineState);
+}
+
 void dx::updateBuffers()
 {
-   D3D12_VERTEX_BUFFER_VIEW buffers[32];
+   DXDynBuffer::Allocation buffers[32];
+   D3D12_VERTEX_BUFFER_VIEW bufferList[32];
+   auto fetchShader = gDX.state.fetchShader;
+   auto fetchData = (FetchShaderInfo*)(void*)fetchShader->data;
 
    for (auto i = 0; i < 32; ++i) {
-      auto& buffer = gDX.state.attribBuffers[0];
+      auto& buffer = gDX.state.attribBuffers[i];
       if (!buffer.buffer || !buffer.size) {
-         buffers[i].BufferLocation = NULL;
-         buffers[i].SizeInBytes = 0;
-         buffers[i].StrideInBytes = 0;
+         bufferList[i].BufferLocation = NULL;
+         bufferList[i].SizeInBytes = 0;
+         bufferList[i].StrideInBytes = 0;
          continue;
       }
 
-      buffers[i] = *(D3D12_VERTEX_BUFFER_VIEW*)gDX.ppcVertexBuffer->get(
-         buffer.stride, buffer.size, buffer.buffer);
+      buffers[i] = gDX.ppcVertexBuffer->get(
+         buffer.stride, buffer.size, nullptr);
+      bufferList[i] = *(D3D12_VERTEX_BUFFER_VIEW*)buffers[i];
    }
 
-   gDX.commandList->IASetVertexBuffers(0, 32, buffers);
+   for (auto i = 0u; i < fetchShader->attribCount; ++i) {
+      auto attrib = fetchData->attribs[i];
+      auto srcBuffer = gDX.state.attribBuffers[attrib.location];
+      auto destBuffer = buffers[attrib.location];
+
+      if (!destBuffer.valid()) {
+         continue;
+      }
+
+      int dataSize = 4;
+      int dataCount = 4;
+      switch (attrib.format) {
+      case GX2AttribFormat::UNORM_8:
+         dataSize = 1; dataCount = 1; break;
+      case GX2AttribFormat::UNORM_8_8:
+         dataSize = 1; dataCount = 2; break;
+      case GX2AttribFormat::UNORM_8_8_8_8:
+         dataSize = 1; dataCount = 4; break;
+      case GX2AttribFormat::UINT_8:
+         dataSize = 1; dataCount = 1; break;
+      case GX2AttribFormat::UINT_8_8:
+         dataSize = 1; dataCount = 2; break;
+      case GX2AttribFormat::UINT_8_8_8_8:
+         dataSize = 1; dataCount = 4; break;
+      case GX2AttribFormat::SNORM_8:
+         dataSize = 1; dataCount = 1; break;
+      case GX2AttribFormat::SNORM_8_8:
+         dataSize = 1; dataCount = 2; break;
+      case GX2AttribFormat::SNORM_8_8_8_8:
+         dataSize = 1; dataCount = 4; break;
+      case GX2AttribFormat::SINT_8:
+         dataSize = 1; dataCount = 1; break;
+      case GX2AttribFormat::SINT_8_8:
+         dataSize = 1; dataCount = 2; break;
+      case GX2AttribFormat::SINT_8_8_8_8:
+         dataSize = 1; dataCount = 4; break;
+      case GX2AttribFormat::FLOAT_32:
+         dataSize = 4; dataCount = 1; break;
+      case GX2AttribFormat::FLOAT_32_32:
+         dataSize = 4; dataCount = 2; break;
+      case GX2AttribFormat::FLOAT_32_32_32:
+         dataSize = 4; dataCount = 3; break;
+      case GX2AttribFormat::FLOAT_32_32_32_32:
+         dataSize = 4; dataCount = 4; break;
+      default:
+         dataSize = 1; dataCount = 1; break;
+      };
+
+      if (dataSize == 1) {
+         for (auto i = attrib.offset; i < srcBuffer.size; i += srcBuffer.stride) {
+            uint8_t *src = (uint8_t*)srcBuffer.buffer + i;
+            uint8_t *dest = (uint8_t*)destBuffer + i;
+            memcpy(dest, src, dataSize);
+         }
+      } else if (dataSize == 4) {
+         for (auto i = attrib.offset; i < srcBuffer.size; i += srcBuffer.stride) {
+            uint32_t *src = (uint32_t*)((uint8_t*)srcBuffer.buffer + i);
+            uint32_t *dest = (uint32_t*)((uint8_t*)destBuffer + i);
+            if (dataSize >= 1) {
+               *dest++ = byte_swap(*src++);
+               if (dataSize >= 2) {
+                  *dest++ = byte_swap(*src++);
+                  if (dataSize >= 3) {
+                     *dest++ = byte_swap(*src++);
+                     if (dataSize >= 4) {
+                        *dest++ = byte_swap(*src++);
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   gDX.commandList->IASetVertexBuffers(0, 32, bufferList);
 }
 
 #endif

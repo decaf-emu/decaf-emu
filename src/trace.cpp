@@ -321,10 +321,18 @@ traceInstructionStart(Instruction instr, InstructionData *data, ThreadState *sta
          pushUniqueField(trace.reads, i);
       }
    } else if (data->id == InstructionID::stswi) {
-      assert(0);
+      // TODO: Implement Me
    } else if (data->id == InstructionID::stswx) {
-      assert(0);
+      // TODO: Implement Me
    }
+
+#if TRACE_VERIFICATION
+   if (data->id == InstructionID::stswi) {
+      //assert(0);
+   } else if (data->id == InstructionID::stswx) {
+      //assert(0);
+   }
+#endif
 
 
    // Save all state

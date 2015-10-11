@@ -152,6 +152,7 @@
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />
     <ClCompile Include="..\src\modules\gameloader\gameloader.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\dx12_state.cpp" />
+    <ClCompile Include="..\src\modules\gx2\dx12\dx12_tmpcrc.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_context.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_display.cpp" />
@@ -246,6 +247,7 @@
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_dynbuffer.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_fetchshader.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_heap.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_pipelinemgr.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_scanbuffer.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_state.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h" />
@@ -346,6 +348,18 @@
     <None Include="..\src\gpu\latte_opcodes_def.inl" />
     <None Include="..\src\instructionaliases.inl" />
     <None Include="..\src\instructionfields.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resources\shaders\wiiu_tmp_simple.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="..\resources\shaders\wiiu_default.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

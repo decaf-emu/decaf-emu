@@ -24,6 +24,26 @@ namespace GX2AttribFormat
 enum Format : uint32_t
 {
    First = 0,
+   UNORM_8 = 0x0,
+   UNORM_8_8 = 0x04,
+   UNORM_8_8_8_8 = 0x0a,
+
+   UINT_8 = 0x100,
+   UINT_8_8 = 0x104,
+   UINT_8_8_8_8 = 0x10a,
+
+   SNORM_8 = 0x200,
+   SNORM_8_8 = 0x204,
+   SNORM_8_8_8_8 = 0x20a,
+
+   SINT_8 = 0x300,
+   SINT_8_8 = 0x304,
+   SINT_8_8_8_8 = 0x30a,
+
+   FLOAT_32 = 0x806,
+   FLOAT_32_32 = 0x80d,
+   FLOAT_32_32_32 = 0x811,
+   FLOAT_32_32_32_32 = 0x813,
    Last = 0xa0f
 };
 }

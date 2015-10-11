@@ -27,6 +27,10 @@ public:
          return mView.BufferLocation != 0;
       }
 
+      operator uint8_t*() {
+         return mCpuAddr;
+      }
+
       operator D3D12_VERTEX_BUFFER_VIEW*() {
          return &mView;
       }
@@ -60,7 +64,9 @@ public:
       auto thisCpuAddr = mCpuAddr + mOffset;
       mOffset += size;
       Allocation alloc(thisCpuAddr, thisGpuAddr, stride, size);
-      memcpy(alloc.mCpuAddr, data, size);
+      if (data) {
+         memcpy(alloc.mCpuAddr, data, size);
+      }
       return alloc;
    }
 
