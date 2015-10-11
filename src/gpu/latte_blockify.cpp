@@ -35,8 +35,10 @@ struct Label
    shadir::Block *linkedBlock = nullptr;
 };
 
-static bool labelify(Shader &shader, std::vector<Label *> &labels);
-static bool blockify(Shader &shader, std::vector<Label *> labels);
+using LabelList = std::vector<std::unique_ptr<Label>>;
+
+static bool labelify(Shader &shader, LabelList &labels);
+static bool blockify(Shader &shader, const LabelList &labels);
 
 static void printBlockList(shadir::BlockList &blocks)
 {
@@ -44,7 +46,7 @@ static void printBlockList(shadir::BlockList &blocks)
       if (block->type == shadir::Block::CodeBlock) {
          auto codeBlock = reinterpret_cast<shadir::CodeBlock*>(block.get());
 
-         for (auto ins : codeBlock->code) {
+         for (auto &ins : codeBlock->code) {
             std::cout << ins->cfPC << " " << ins->name << std::endl;
          }
       } else if (block->type == shadir::Block::Loop) {
@@ -69,17 +71,12 @@ static void printBlockList(shadir::BlockList &blocks)
 
 bool blockify(Shader &shader)
 {
-   std::vector<Label *> labels;
+   LabelList labels;
 
    auto result = labelify(shader, labels);
 
    if (result) {
       result = blockify(shader, labels);
-   }
-
-   // Ewwww clean up labels
-   for (auto label : labels) {
-      delete label;
    }
 
    // Debug: Print block list
@@ -88,7 +85,7 @@ bool blockify(Shader &shader)
    return result;
 }
 
-static bool labelify(Shader &shader, std::vector<Label *> &labels)
+static bool labelify(Shader &shader, LabelList &labels)
 {
    std::stack<shadir::CfInstruction *> loopStarts; // LOOP_START*
    std::stack<shadir::CfInstruction *> pushes;     // PUSH
@@ -113,11 +110,11 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
             // Create a LoopStart label
             auto labelStart = new Label { Label::LoopStart, loopStarts.top() };
             loopStarts.pop();
-            labels.push_back(labelStart);
+            labels.emplace_back(labelStart);
 
             // Create a LoopEnd label
             auto labelEnd = new Label { Label::LoopEnd, ins.get() };
-            labels.push_back(labelEnd);
+            labels.emplace_back(labelEnd);
 
             // Link the start and end labels
             labelEnd->linkedLabel = labelStart;
@@ -129,11 +126,11 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
             // Create a ConditionalStart label for the last PRED_SET
             auto labelStart = new Label { Label::ConditionalStart, predSets.top() };
             predSets.pop();
-            labels.push_back(labelStart);
+            labels.emplace_back(labelStart);
 
             // Create a ConditionalEnd label for after the BREAK/CONTINUE instruction
             auto labelEnd = new Label { Label::ConditionalEnd, (itr + 1)->get() };
-            labels.push_back(labelEnd);
+            labels.emplace_back(labelEnd);
 
             // Link the start and end labels
             labelEnd->linkedLabel = labelStart;
@@ -172,21 +169,21 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
             // Create a conditional start label
             auto labelStart = new Label { Label::ConditionalStart, predSets.top() };
             predSets.pop();
-            labels.push_back(labelStart);
+            labels.emplace_back(labelStart);
 
             // Create a conditional else label, if needed
             if (jumpElse != shader.code.end()) {
                auto labelElse = new Label { Label::ConditionalElse, jumpElse->get() };
                labelElse->linkedLabel = labelStart;
-               labels.push_back(labelElse);
+               labels.emplace_back(labelElse);
             }
 
             // Create a conditional end label
             auto labelEnd = new Label { Label::ConditionalEnd, jumpEnd->get() };
-            labels.push_back(labelEnd);
+            labels.emplace_back(labelEnd);
 
             // Eliminate our JUMP instruction
-            labels.push_back(new Label { Label::Eliminated, ins.get() });
+            labels.emplace_back(new Label { Label::Eliminated, ins.get() });
 
             // Link start and end labels
             labelEnd->linkedLabel = labelStart;
@@ -215,14 +212,14 @@ static bool labelify(Shader &shader, std::vector<Label *> &labels)
 
    // Sort the labels
    std::sort(labels.begin(), labels.end(),
-             [](auto lhs, auto rhs) {
-      return lhs->first->cfPC < rhs->first->cfPC;
-   });
+             [](auto &lhs, auto &rhs) {
+                return lhs->first->cfPC < rhs->first->cfPC;
+             });
 
    return true;
 }
 
-static bool blockify(Shader &shader, std::vector<Label *> labels)
+static bool blockify(Shader &shader, const LabelList &labels)
 {
    shadir::CodeBlock *activeCodeBlock = nullptr;
    auto activeBlockList = &shader.blocks;
@@ -230,7 +227,7 @@ static bool blockify(Shader &shader, std::vector<Label *> labels)
    Label *label = nullptr;
 
    if (labelItr != labels.end()) {
-      label = *labelItr;
+      label = labelItr->get();
    }
 
    // Iterate over code and find matching labels to generate code blocks
@@ -313,7 +310,7 @@ static bool blockify(Shader &shader, std::vector<Label *> labels)
          ++labelItr;
 
          if (labelItr != labels.end()) {
-            label = *labelItr;
+            label = labelItr->get();
          } else {
             label = nullptr;
          }
