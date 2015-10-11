@@ -10,3 +10,4 @@ build/*.txt
 *.sdf
 *.opensdf
 debugger/bin
+dump/

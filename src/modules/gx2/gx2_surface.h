@@ -5,7 +5,7 @@
 
 namespace GX2SurfaceFormat
 {
-enum Format
+enum Format : uint32_t
 {
    First = 0x01,
    R8G8B8A8 = 26,
@@ -15,7 +15,7 @@ enum Format
 
 namespace GX2SurfaceDim
 {
-enum Dim
+enum Dim : uint32_t
 {
    Texture2D = 1,
    Texture2DMSAA = 6,
@@ -25,7 +25,7 @@ enum Dim
 
 namespace GX2AAMode
 {
-enum Mode
+enum Mode : uint32_t
 {
    Mode1X = 0, // GX2ResolveAAColorBuffer
    First = 0,
@@ -35,7 +35,7 @@ enum Mode
 
 namespace GX2TileMode
 {
-enum Mode
+enum Mode : uint32_t
 {
    Default = 0,
    LinearSpecial = 0x10,
@@ -44,7 +44,7 @@ enum Mode
 
 namespace GX2SurfaceUse
 {
-enum Use
+enum Use : uint32_t
 {
    Texture     = 1 << 0,
    ColorBuffer = 1 << 1,
@@ -72,7 +72,7 @@ struct GX2Surface
    be_ptr<void> image;
    be_val<uint32_t> mipmapSize; // sizeof mipPtr
    be_ptr<void> mipmaps;
-   be_val<uint32_t> tileMode;
+   be_val<GX2TileMode::Mode> tileMode;
    be_val<uint32_t> swizzle; // GX2SetSurfaceSwizzle;
    be_val<uint32_t> alignment;
    be_val<uint32_t> pitch;

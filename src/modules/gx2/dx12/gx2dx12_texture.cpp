@@ -2,12 +2,13 @@
 #ifdef GX2_DX12
 
 #include "../gx2_texture.h"
+#include "../gx2_debug.h"
 #include "log.h"
 
 void
 GX2InitSampler(GX2Sampler *sampler,
-   GX2TexClampMode::Mode clampMode,
-   GX2TexXYFilterMode::Mode minMagFilterMode)
+               GX2TexClampMode::Mode clampMode,
+               GX2TexXYFilterMode::Mode minMagFilterMode)
 {
    // TODO: GX2InitSampler
 }
@@ -20,9 +21,10 @@ GX2InitTextureRegs(GX2Texture *texture)
 
 void
 GX2SetPixelTexture(GX2Texture *texture,
-   uint32_t unit)
+                   uint32_t unit)
 {
    // TODO: GX2SetPixelTexture
+   GX2DumpTexture(texture);
 }
 
 #endif
