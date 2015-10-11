@@ -33,9 +33,7 @@ GX2Flush()
 }
 
 void
-GX2Invalidate(GX2InvalidateMode::Mode mode,
-   void *buffer,
-   uint32_t size)
+GX2Invalidate(GX2InvalidateMode::Mode mode, void *buffer, uint32_t size)
 {
    // TODO: GX2Invalidate
 }
@@ -47,8 +45,7 @@ GX2SetupContextState(GX2ContextState *state)
 }
 
 void
-GX2SetupContextStateEx(GX2ContextState *state,
-   BOOL unk1)
+GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1)
 {
    state->displayListSize = 0x300;
    GX2BeginDisplayListEx(reinterpret_cast<GX2DisplayList*>(&state->displayList), state->displayListSize, unk1);
@@ -58,8 +55,8 @@ GX2SetupContextStateEx(GX2ContextState *state,
 
 void
 GX2GetContextStateDisplayList(GX2ContextState *state,
-   be_val<uint32_t> *outDisplayList,
-   be_val<uint32_t> *outSize)
+                              be_val<uint32_t> *outDisplayList,
+                              be_val<uint32_t> *outSize)
 {
    *outDisplayList = gMemory.untranslate(&state->displayList);
    *outSize = state->displayListSize;

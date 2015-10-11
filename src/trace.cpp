@@ -9,7 +9,7 @@
 #include "kernelfunction.h"
 #include "statedbg.h"
 
-#define TRACE_VERIFICATION
+//#define TRACE_VERIFICATION
 
 template<typename... Args>
 static void
@@ -75,7 +75,8 @@ printInstruction(const Trace& trace, int index)
    }
 }
 
-const Trace& getTrace(Tracer *tracer, int index)
+const Trace&
+getTrace(Tracer *tracer, int index)
 {
    auto tracerSize = tracer->numTraces;
    assert(index >= 0);
@@ -90,7 +91,9 @@ const Trace& getTrace(Tracer *tracer, int index)
    return tracer->traces[realIndex];
 }
 
-size_t getTracerNumTraces(Tracer *tracer) {
+size_t
+getTracerNumTraces(Tracer *tracer)
+{
    return tracer->numTraces;
 }
 
@@ -109,7 +112,9 @@ decodeSPR(Instruction instr)
    return static_cast<SprEncoding>(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
 }
 
-static uint32_t getFieldStateField(Instruction instr, Field field) {
+static uint32_t
+getFieldStateField(Instruction instr, Field field)
+{
    switch (field) {
    case Field::rA:
       return StateField::GPR + instr.rA;
@@ -197,7 +202,9 @@ static uint32_t getFieldStateField(Instruction instr, Field field) {
    return StateField::Invalid;
 }
 
-static void saveStateField(ThreadState *state, TraceFieldType type, TraceFieldValue &field) {
+static void
+saveStateField(ThreadState *state, TraceFieldType type, TraceFieldValue &field)
+{
    if (type == StateField::Invalid) {
       return;
    }
@@ -228,7 +235,9 @@ static void saveStateField(ThreadState *state, TraceFieldType type, TraceFieldVa
    }
 }
 
-static void restoreStateField(ThreadState *state, TraceFieldType type, TraceFieldValue &field) {
+static void
+restoreStateField(ThreadState *state, TraceFieldType type, TraceFieldValue &field)
+{
    if (type == StateField::Invalid) {
       return;
    }
@@ -260,7 +269,9 @@ static void restoreStateField(ThreadState *state, TraceFieldType type, TraceFiel
 }
 
 template<typename T>
-static void pushUniqueField(std::vector<T> &fields, uint32_t fieldId) {
+static void
+pushUniqueField(std::vector<T> &fields, uint32_t fieldId)
+{
    if (fieldId == StateField::Invalid) {
       return;
    }
@@ -283,11 +294,12 @@ traceInstructionStart(Instruction instr, InstructionData *data, ThreadState *sta
 
    auto tracer = state->tracer;
    auto &trace = tracer->traces[tracer->index];
-
    auto tracerSize = tracer->traces.size();
+
    if (tracer->numTraces < tracerSize) {
       tracer->numTraces++;
    }
+
    tracer->index = (tracer->index + 1) % tracerSize;
 
    // Setup Trace
@@ -306,6 +318,7 @@ traceInstructionStart(Instruction instr, InstructionData *data, ThreadState *sta
       auto stateField = getFieldStateField(instr, data->write[i]);
       pushUniqueField(trace.writes, stateField);
    }
+
    for (auto i = 0u; i < data->flags.size(); ++i) {
       auto stateField = getFieldStateField(instr, data->flags[i]);
       pushUniqueField(trace.writes, stateField);
@@ -326,7 +339,7 @@ traceInstructionStart(Instruction instr, InstructionData *data, ThreadState *sta
       // TODO: Implement Me
    }
 
-#if TRACE_VERIFICATION
+#ifdef TRACE_VERIFICATION
    if (data->id == InstructionID::stswi) {
       //assert(0);
    } else if (data->id == InstructionID::stswx) {
@@ -334,17 +347,16 @@ traceInstructionStart(Instruction instr, InstructionData *data, ThreadState *sta
    }
 #endif
 
-
    // Save all state
    for (auto &i : trace.reads) {
       saveStateField(state, i.type, i.value);
    }
+
    for (auto &i : trace.writes) {
       saveStateField(state, i.type, i.prevalue);
    }
 
    tracer->prevState = *state;
-
    return &trace;
 }
 
@@ -381,19 +393,21 @@ traceInstructionEnd(Trace *trace, Instruction instr, InstructionData *data, Thre
 
 #ifdef TRACE_VERIFICATION
    if (tracer->numTraces > 0) {
-      ThreadState checkState = *state;
+      auto errors = std::vector<std::string> {};
+      auto checkState = *state;
       checkState.nia = tracer->prevState.nia;
 
       for (auto &i : trace->writes) {
          restoreStateField(&checkState, i.type, i.prevalue);
       }
-      
-      std::vector<std::string> errors;
+
       if (!dbgStateCmp(&checkState, &tracer->prevState, errors)) {
          gLog->error("Trace Compliance errors w/ {}", data->name);
+
          for (auto &err : errors) {
             gLog->error(err);
          }
+
          DebugBreak();
       }
    }
@@ -410,8 +424,7 @@ tracePrint(ThreadState *state, int start, int count)
       count = tracerSize - start;
    }
 
-   int end = start + count;
-   
+   auto end = start + count;
    assert(start >= 0);
    assert(end <= tracerSize);
 
@@ -419,7 +432,6 @@ tracePrint(ThreadState *state, int start, int count)
 
    for (auto i = start; i < end; ++i) {
       auto &trace = getTrace(tracer, i);
-
       printInstruction(trace, i);
    }
 }
@@ -456,9 +468,9 @@ traceReg(ThreadState *state, int start, int regIdx)
    return -1;
 }
 
-ThreadState *gRegTraceState = nullptr;
-int gRegTraceIndex = 0;
-int gRegTraceNextReg = -1;
+static ThreadState *gRegTraceState = nullptr;
+static int gRegTraceIndex = 0;
+static int gRegTraceNextReg = -1;
 
 void
 traceRegStart(ThreadState *state, int start, int regIdx)

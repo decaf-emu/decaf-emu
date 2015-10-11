@@ -18,16 +18,32 @@ CHECK_SIZE(OSSpinLock, 0x10);
 
 #pragma pack(pop)
 
-void OSInitSpinLock(OSSpinLock *spinlock);
-BOOL OSAcquireSpinLock(OSSpinLock *spinlock);
-BOOL OSTryAcquireSpinLock(OSSpinLock *spinlock);
-BOOL OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock, int64_t timeout);
-BOOL OSReleaseSpinLock(OSSpinLock *spinlock);
+void
+OSInitSpinLock(OSSpinLock *spinlock);
 
-BOOL OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock);
-BOOL OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock);
-BOOL OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock, int64_t timeout);
-BOOL OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock);
+BOOL
+OSAcquireSpinLock(OSSpinLock *spinlock);
+
+BOOL
+OSTryAcquireSpinLock(OSSpinLock *spinlock);
+
+BOOL
+OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock, int64_t timeout);
+
+BOOL
+OSReleaseSpinLock(OSSpinLock *spinlock);
+
+BOOL
+OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock);
+
+BOOL
+OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock);
+
+BOOL
+OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock, int64_t timeout);
+
+BOOL
+OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock);
 
 struct ScopedSpinLock
 {
