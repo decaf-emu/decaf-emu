@@ -74,25 +74,37 @@ private:
                (int32_t)attrib.endianSwap);
          }
       }
+
       // Print Vertex Shader Data
       uint32_t vertexShaderCrc;
       {
          auto shader = gDX.state.vertexShader;
          vertexShaderCrc = tmp_crc32(shader->data, shader->size);
-         std::string code;
-         latte::disassemble(code, { (uint8_t*)(void*)shader->data, shader->size });
+         std::string disasm, hlsl;
+         latte::Shader shadir;
+         latte::disassemble(disasm, { (uint8_t*)(void*)shader->data, shader->size });
+         latte::decode(shadir, { (uint8_t*)(void*)shader->data, shader->size });
+         latte::blockify(shadir);
+         latte::generateHLSL(shadir, hlsl);
          printf("Vertex Shader [%p] (%08x)\n", shader, vertexShaderCrc);
-         printf("%s\n", code.c_str());
+         printf("%s\n", disasm.c_str());
+         printf("%s\n", hlsl.c_str());
       }
+
       // Print Pixel Shader Data
       uint32_t pixelShaderCrc;
       {
          auto shader = gDX.state.pixelShader;
          pixelShaderCrc = tmp_crc32(shader->data, shader->size);
-         std::string code;
-         latte::disassemble(code, { (uint8_t*)(void*)shader->data, shader->size });
+         std::string disasm, hlsl;
+         latte::Shader shadir;
+         latte::disassemble(disasm, { (uint8_t*)(void*)shader->data, shader->size });
+         latte::decode(shadir, { (uint8_t*)(void*)shader->data, shader->size });
+         latte::blockify(shadir);
+         latte::generateHLSL(shadir, hlsl);
          printf("Pixel Shader [%p] (%08x)\n", shader, pixelShaderCrc);
-         printf("%s\n", code.c_str());
+         printf("%s\n", disasm.c_str());
+         printf("%s\n", hlsl.c_str());
       }
 
       auto fetchShader = gDX.state.fetchShader;

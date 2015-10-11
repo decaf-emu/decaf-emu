@@ -95,6 +95,15 @@
     <ClCompile Include="..\src\debugnet.cpp" />
     <ClCompile Include="..\src\disassembler.cpp" />
     <ClCompile Include="..\src\elf.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op2.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op3.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_reduction.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_cf.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_controlflow.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_exp.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_generator.cpp" />
+    <ClCompile Include="..\src\gpu\hlsl\hlsl_tex.cpp" />
     <ClCompile Include="..\src\gpu\latte_blockify.cpp" />
     <ClCompile Include="..\src\gpu\latte_decoder.cpp" />
     <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
@@ -228,6 +237,7 @@
     <ClInclude Include="..\src\filesystem\filesystem_win_folder.h" />
     <ClInclude Include="..\src\filesystem\filesystem_win_path.h" />
     <ClInclude Include="..\src\floatutils.h" />
+    <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_disassembler.h" />
     <ClInclude Include="..\src\hostlookup.h" />
