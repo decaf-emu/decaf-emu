@@ -147,12 +147,13 @@ decodeExport(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 }
 
 static void
-getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter, uint32_t sel, uint32_t rel, uint32_t chan, uint32_t neg, bool abs)
+getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter, uint32_t sel, uint32_t rel, uint32_t indexMode, uint32_t chan, uint32_t neg, bool abs)
 {
-   assert(rel == 0);
    source.absolute = abs;
    source.negate = !!neg;
    source.chan = static_cast<latte::alu::Channel::Channel>(chan);
+   source.rel = !!rel;
+   source.indexMode = static_cast<latte::alu::IndexMode::IndexMode>(indexMode);
 
    if (sel >= latte::alu::Source::RegisterFirst && sel <= latte::alu::Source::RegisterLast) {
       source.type = shadir::AluSource::Register;
@@ -354,11 +355,11 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
             ins->opType = shadir::AluInstruction::OP3;
             ins->op3 = static_cast<latte::alu::op3>(opcode.id);
             ins->numSources = opcode.srcs;
-            getAluSource(ins->sources[2], literalPtr, state.group, alu.op3.src2Sel, alu.op3.src2Rel, alu.op3.src2Chan, alu.op3.src2Neg, false);
+            getAluSource(ins->sources[2], literalPtr, state.group, alu.op3.src2Sel, alu.op3.src2Rel, alu.word0.indexMode, alu.op3.src2Chan, alu.op3.src2Neg, false);
          }
 
-         getAluSource(ins->sources[0], literalPtr, state.group, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
-         getAluSource(ins->sources[1], literalPtr, state.group, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
+         getAluSource(ins->sources[0], literalPtr, state.group, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.indexMode, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
+         getAluSource(ins->sources[1], literalPtr, state.group, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.indexMode, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
 
          // Check whether to set sources to Int or Uint
          if (opcode.flags & latte::alu::Opcode::IntIn) {

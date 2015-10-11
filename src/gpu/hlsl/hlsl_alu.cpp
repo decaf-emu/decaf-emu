@@ -113,6 +113,32 @@ void translateAluSource(GenerateState &state, AluSource &src)
       break;
    }
 
+   if (src.rel) {
+      state.out << '[';
+
+      switch (src.indexMode) {
+      case latte::alu::IndexMode::ArX:
+         state.out << "AR.x";
+         break;
+      case latte::alu::IndexMode::ArY:
+         state.out << "AR.y";
+         break;
+      case latte::alu::IndexMode::ArZ:
+         state.out << "AR.z";
+         break;
+      case latte::alu::IndexMode::ArW:
+         state.out << "AR.w";
+         break;
+      case latte::alu::IndexMode::Loop:
+         state.out << "AL";
+         break;
+      default:
+         assert(0);
+      }
+
+      state.out << ']';
+   }
+
    switch (src.type) {
    case AluSource::Register:
    case AluSource::KcacheBank0:

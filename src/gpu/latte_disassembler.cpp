@@ -221,13 +221,8 @@ writeRegisterName(DisassembleState &state, uint32_t sel)
 }
 
 void
-writeAluSource(DisassembleState &state, const uint32_t *dwBase, uint32_t sel, uint32_t rel, uint32_t chan, uint32_t neg, bool abs)
+writeAluSource(DisassembleState &state, const uint32_t *dwBase, uint32_t sel, uint32_t rel, uint32_t indexMode, uint32_t chan, uint32_t neg, bool abs)
 {
-   if (rel != 0) {
-      // TODO: relative address
-      state.out << "__UNK_REL(" << rel << ")__";
-   }
-
    if (abs) {
       state.out << "ABS(";
    }
@@ -276,6 +271,33 @@ writeAluSource(DisassembleState &state, const uint32_t *dwBase, uint32_t sel, ui
       state.out << "C" << (sel - latte::alu::Source::CfileConstantsFirst);
    } else {
       assert(false);
+   }
+
+   if (rel) {
+      assert(indexMode == 0);
+      state.out << '[';
+
+      switch (indexMode) {
+      case latte::alu::IndexMode::ArX:
+         state.out << "AR.x";
+         break;
+      case latte::alu::IndexMode::ArY:
+         state.out << "AR.y";
+         break;
+      case latte::alu::IndexMode::ArZ:
+         state.out << "AR.z";
+         break;
+      case latte::alu::IndexMode::ArW:
+         state.out << "AR.w";
+         break;
+      case latte::alu::IndexMode::Loop:
+         state.out << "AL";
+         break;
+      default:
+         state.out << "__UNK_INDEXMODE(" << indexMode << ")__";
+      }
+
+      state.out << ']';
    }
 
    // Chan
@@ -459,17 +481,17 @@ bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Inst
          if (alu.word1.encoding == latte::alu::Encoding::OP2 && alu.op2.writeMask == 0) {
             state.out << "____";
          } else {
-            writeAluSource(state, literalPtr, alu.word1.dstGpr, alu.word1.dstRel, alu.word1.dstChan, 0, false);
+            writeAluSource(state, literalPtr, alu.word1.dstGpr, alu.word1.dstRel, alu.word0.indexMode, alu.word1.dstChan, 0, false);
          }
 
          if (opcode.srcs > 0) {
             state.out << ", ";
-            writeAluSource(state, literalPtr, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
+            writeAluSource(state, literalPtr, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.indexMode, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
          }
 
          if (opcode.srcs > 1) {
             state.out << ", ";
-            writeAluSource(state, literalPtr, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
+            writeAluSource(state, literalPtr, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.indexMode, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
          }
 
          if (alu.word1.encoding == latte::alu::Encoding::OP2) {
@@ -495,7 +517,7 @@ bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Inst
          } else {
             if (opcode.srcs > 2) {
                state.out << ", ";
-               writeAluSource(state, literalPtr, alu.op3.src2Sel, alu.op3.src2Rel, alu.op3.src2Chan, alu.op3.src2Neg, false);
+               writeAluSource(state, literalPtr, alu.op3.src2Sel, alu.op3.src2Rel, alu.word0.indexMode, alu.op3.src2Chan, alu.op3.src2Neg, false);
             }
          }
 

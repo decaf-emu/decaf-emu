@@ -88,6 +88,8 @@ struct AluSource
    uint32_t id = 0;
    bool negate = false;
    bool absolute = false;
+   bool rel = false;
+   latte::alu::IndexMode::IndexMode indexMode = latte::alu::IndexMode::ArX;
    latte::alu::Channel::Channel chan = latte::alu::Channel::Unknown;
 
    union
