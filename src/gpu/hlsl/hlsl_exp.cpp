@@ -19,10 +19,10 @@ MEM_EXPORT
 namespace hlsl
 {
 
-static bool EXP_DONE(GenerateState &state, ExportInstruction *ins)
+static bool EXP(GenerateState &state, ExportInstruction *ins)
 {
    assert(ins->wholeQuadMode == false);
-   assert(ins->barrier == true);
+   //assert(ins->barrier == true);
    assert(ins->indexGpr == 0);
    assert(ins->elemSize == 0);
 
@@ -56,7 +56,8 @@ static bool EXP_DONE(GenerateState &state, ExportInstruction *ins)
 void registerExp()
 {
    using latte::exp::inst;
-   registerGenerator(inst::EXP_DONE, EXP_DONE);
+   registerGenerator(inst::EXP, EXP);
+   registerGenerator(inst::EXP_DONE, EXP);
 }
 
 } // namespace hlsl
