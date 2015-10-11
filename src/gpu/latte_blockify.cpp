@@ -281,8 +281,7 @@ static bool blockify(Shader &shader, const LabelList &labels)
             activeCodeBlock = nullptr;
          } else if (label->type == Label::ConditionalElse) {
             assert(label->linkedLabel);
-            assert(label->linkedLabel->type == Label::LoopStart);
-            assert(label->restoreBlockList);
+            assert(label->linkedLabel->type == Label::ConditionalStart);
 
             // Get the matching ConditionalBlock from the ConditionalStart label
             auto condBlock = reinterpret_cast<shadir::ConditionalBlock *>(label->linkedLabel->linkedBlock);
