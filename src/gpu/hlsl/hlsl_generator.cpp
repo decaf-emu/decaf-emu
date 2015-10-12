@@ -200,7 +200,7 @@ static bool translateConditionalBlock(GenerateState &state, latte::shadir::Condi
       endLine(state);
 
       increaseIndent(state);
-      result &= translateBlocks(state, block->inner);
+      result &= translateBlocks(state, block->innerElse);
       decreaseIndent(state);
 
       beginLine(state);
