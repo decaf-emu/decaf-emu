@@ -136,6 +136,26 @@ static bool SAMPLE(GenerateState &state, TexInstruction *ins)
    return true;
 }
 
+static bool SAMPLE_C(GenerateState &state, TexInstruction *ins)
+{
+   auto channels = translateSelRegister(state, ins->dst);
+
+   state.out
+      << " = g_texture"
+      << ins->resourceID
+      << ".SampleCmp("
+      << "g_sampler"
+      << ins->samplerID
+      << ", ";
+
+   translateSelRegister(state, ins->src);
+
+   // TODO: Compare to src.w?
+   state.out
+      << ", R" << ins->src.id << ".w";
+
+   state.out << ").";
+   translateTexRegisterChannels(state, channels);
    return true;
 }
 
@@ -143,6 +163,7 @@ void registerTex()
 {
    using latte::tex::inst;
    registerGenerator(inst::SAMPLE, SAMPLE);
+   registerGenerator(inst::SAMPLE_C, SAMPLE_C);
 }
 
 } // namespace hlsl
