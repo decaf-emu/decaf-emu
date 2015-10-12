@@ -97,7 +97,7 @@ bool parseGSH(BigEndianView &fh)
          std::cout << "----------------------------------------------" << std::endl;
          std::cout << "                    Blocks                    " << std::endl;
          std::cout << "----------------------------------------------" << std::endl;
-         latte::blockify(shader);
+         latte::dumpBlocks(shader);
          std::cout << std::endl;
 
          std::string hlsl;

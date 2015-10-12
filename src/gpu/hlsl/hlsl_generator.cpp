@@ -171,7 +171,34 @@ static bool translateCodeBlock(GenerateState &state, latte::shadir::CodeBlock *b
 {
    auto result = true;
 
-   for (auto ins : block->code) {
+   for (auto &ins : block->code) {
+      if (ins->groupPC != -1 && state.groupPC < ins->groupPC) {
+         // If the last group both read and writes PV then we use the temp PVo / PSo to prevent overwrites of read
+         if (state.shader->pvUsed.find(ins->groupPC - 1) != state.shader->pvUsed.end()) {
+            if (state.shader->pvUsed.find(ins->groupPC - 2) != state.shader->pvUsed.end()) {
+               beginLine(state);
+               state.out << "PV = PVo;";
+               endLine(state);
+            }
+         }
+
+         if (state.shader->psUsed.find(ins->groupPC - 1) != state.shader->psUsed.end()) {
+            if (state.shader->pvUsed.find(ins->groupPC - 2) != state.shader->pvUsed.end()) {
+               beginLine(state);
+               state.out << "PS = PSo;";
+               endLine(state);
+            }
+         }
+
+         // Begin new group
+         beginLine(state);
+         state.out << "// groupPC = " << ins->groupPC;
+         endLine(state);
+      }
+
+      state.cfPC = ins->cfPC;
+      state.groupPC = ins->groupPC;
+
       beginLine(state);
       result &= translateInstruction(state, ins);
       endLine(state);
@@ -266,6 +293,7 @@ bool generateHLSL(Shader &shader, std::string &hlsl)
 {
    auto result = true;
    auto state = GenerateState {};
+   state.shader = &shader;
 
    hlsl::intialise();
    result &= hlsl::translateBlocks(state, shader.blocks);

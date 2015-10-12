@@ -2,6 +2,8 @@
 #include <spdlog/spdlog.h>
 #include <Windows.h>
 #include "gx2_texture.h"
+#include "gx2_shaders.h"
+#include "gpu/latte.h"
 
 static void
 GX2CreateDumpDirectory()
@@ -145,4 +147,45 @@ GX2DumpTexture(const GX2Texture *texture)
    GX2DumpData(binary, texture, sizeof(GX2Texture));
    GX2DumpData(binary, texture->surface.image, texture->surface.imageSize);
    GX2DumpData(binary, texture->surface.mipmaps, texture->surface.mipmapSize);
+}
+
+static void
+GX2DumpShader(const std::string &filename, uint8_t *data, size_t size)
+{
+   std::string output;
+
+   // Write binary of shader data to shader_pixel_X.txt
+   GX2DumpData("dump/" + filename + ".bin", data, size);
+
+   // Write text of GX2PixelShader to shader_pixel_X.txt
+   auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
+
+   // Disassemble
+   latte::disassemble(output, { data, size });
+
+   file
+      << "Disassembly:" << std::endl
+      << output << std::endl;
+
+   // Decompiled
+   auto decompiled = latte::Shader {};
+   latte::decode(decompiled, { data, size });
+   latte::blockify(decompiled);
+   latte::generateHLSL(decompiled, output);
+
+   file
+      << "Decompiled:" << std::endl
+      << output << std::endl;
+}
+
+void
+GX2DumpShader(GX2PixelShader *shader)
+{
+   GX2DumpShader("shader_pixel_" + GX2PointerAsString(shader), shader->data, shader->size);
+}
+
+void
+GX2DumpShader(GX2VertexShader *shader)
+{
+   GX2DumpShader("shader_vertex_" + GX2PointerAsString(shader), shader->data, shader->size);
 }

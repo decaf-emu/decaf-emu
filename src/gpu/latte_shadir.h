@@ -30,8 +30,8 @@ struct Instruction
 
    Type insType;
    const char *name = nullptr;
-   uint32_t cfPC = -1;
-   uint32_t groupPC = -1;
+   int32_t cfPC = -1;
+   int32_t groupPC = -1;
 };
 
 struct CfInstruction : Instruction
@@ -158,6 +158,7 @@ struct AluInstruction : Instruction
    bool updateExecutionMask = false;
    bool updatePredicate = false;
    bool writeMask = true;
+   bool isReduction = false;
 };
 
 struct AluReductionInstruction : Instruction

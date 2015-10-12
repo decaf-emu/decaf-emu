@@ -11,8 +11,8 @@ struct DecodeState
 {
    const uint32_t *words;
    std::size_t wordCount;
-   uint32_t cfPC;
-   uint32_t group;
+   int32_t cfPC;
+   int32_t group;
    Shader *shader;
 };
 
@@ -60,6 +60,16 @@ decode(Shader &shader, const gsl::array_view<uint8_t> &binary)
       if ((cf.type == latte::cf::Type::Normal || cf.type == latte::cf::Type::Export) && cf.word1.endOfProgram) {
          break;
       }
+   }
+
+   // Step 2: Reverse control flow to put the code into blocks
+   if (!blockify(shader)) {
+      return false;
+   }
+
+   // Step 3: Analyse for variables!
+   if (!analyse(shader)) {
+      return false;
    }
 
    return true;
@@ -427,6 +437,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
             // Add XYZW to reduction
             assert(!reductionIns->units[unit]);
             reductionIns->units[unit] = std::unique_ptr<shadir::AluInstruction>(ins);
+            ins->isReduction = true;
          } else {
             // Append to shader code
             state.shader->code.emplace_back(ins);

@@ -25,10 +25,10 @@ public:
    template<typename OtherType, bool OtherEndian>
    p32(const p32<OtherType, OtherEndian> &rhs)
    {
-      setPointer(rhs.getPointer());
+      setPointer(rhs.get());
    }
 
-   Type *getPointer() const
+   Type *get() const
    {
       auto address = BigEndian ? byte_swap(mValue) : mValue;
       return reinterpret_cast<Type*>(gMemory.translate(address));
@@ -47,7 +47,7 @@ public:
 
    Type *operator->() const
    {
-      return getPointer();
+      return get();
    }
 
    p32 &operator=(const std::nullptr_t&)
@@ -65,13 +65,13 @@ public:
    template<typename OtherType, bool OtherEndian>
    p32 &operator=(const p32<OtherType, OtherEndian> &rhs)
    {
-      setPointer(rhs.getPointer());
+      setPointer(rhs.get());
       return *this;
    }
 
    operator Type *() const
    {
-      return getPointer();
+      return get();
    }
 
    explicit operator bool() const

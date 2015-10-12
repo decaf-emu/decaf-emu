@@ -8,6 +8,9 @@ struct GenerateState
 {
    fmt::MemoryWriter out;
    std::string indent;
+   int32_t cfPC = -1;
+   int32_t groupPC = -1;
+   latte::Shader *shader;
 };
 
 using TranslateFuncCF = bool(*)(GenerateState &state, latte::shadir::CfInstruction *ins);

@@ -4,6 +4,7 @@
 #include "dx12.h"
 #include "dx12_fetchshader.h"
 #include "modules/gx2/gx2_shaders.h"
+#include "modules/gx2/gx2_debug.h"
 #include "gpu/latte.h"
 
 uint32_t tmp_crc32(const void *buf, size_t size);
@@ -80,15 +81,8 @@ private:
       {
          auto shader = gDX.state.vertexShader;
          vertexShaderCrc = tmp_crc32(shader->data, shader->size);
-         std::string disasm, hlsl;
-         latte::Shader shadir;
-         latte::disassemble(disasm, { (uint8_t*)(void*)shader->data, shader->size });
-         latte::decode(shadir, { (uint8_t*)(void*)shader->data, shader->size });
-         latte::blockify(shadir);
-         latte::generateHLSL(shadir, hlsl);
          printf("Vertex Shader [%p] (%08x)\n", shader, vertexShaderCrc);
-         printf("%s\n", disasm.c_str());
-         printf("%s\n", hlsl.c_str());
+         GX2DumpShader(shader);
       }
 
       // Print Pixel Shader Data
@@ -96,15 +90,8 @@ private:
       {
          auto shader = gDX.state.pixelShader;
          pixelShaderCrc = tmp_crc32(shader->data, shader->size);
-         std::string disasm, hlsl;
-         latte::Shader shadir;
-         latte::disassemble(disasm, { (uint8_t*)(void*)shader->data, shader->size });
-         latte::decode(shadir, { (uint8_t*)(void*)shader->data, shader->size });
-         latte::blockify(shadir);
-         latte::generateHLSL(shadir, hlsl);
          printf("Pixel Shader [%p] (%08x)\n", shader, pixelShaderCrc);
-         printf("%s\n", disasm.c_str());
-         printf("%s\n", hlsl.c_str());
+         GX2DumpShader(shader);
       }
 
       auto fetchShader = gDX.state.fetchShader;

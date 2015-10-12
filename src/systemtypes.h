@@ -26,6 +26,7 @@
 #define PADDING(Size) UNKNOWN(Size)
 
 #define UNKNOWN_ARGS void
+#define UNKNOWN_SIZE(x) //x
 
 template<size_t Size>
 struct DriverData {

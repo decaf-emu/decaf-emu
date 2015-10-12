@@ -40,7 +40,8 @@ using LabelList = std::vector<std::unique_ptr<Label>>;
 static bool labelify(Shader &shader, LabelList &labels);
 static bool blockify(Shader &shader, const LabelList &labels);
 
-static void printBlockList(shadir::BlockList &blocks)
+static void
+printBlockList(shadir::BlockList &blocks)
 {
    for (auto &block : blocks) {
       if (block->type == shadir::Block::CodeBlock) {
@@ -69,23 +70,29 @@ static void printBlockList(shadir::BlockList &blocks)
    }
 }
 
-bool blockify(Shader &shader)
+
+void
+dumpBlocks(Shader &shader)
+{
+   printBlockList(shader.blocks);
+}
+
+
+bool
+blockify(Shader &shader)
 {
    LabelList labels;
 
-   auto result = labelify(shader, labels);
-
-   if (result) {
-      result = blockify(shader, labels);
+   if (!labelify(shader, labels)) {
+      return false;
    }
 
-   // Debug: Print block list
-   printBlockList(shader.blocks);
-
-   return result;
+   return blockify(shader, labels);
 }
 
-static bool labelify(Shader &shader, LabelList &labels)
+
+static bool
+labelify(Shader &shader, LabelList &labels)
 {
    std::stack<shadir::CfInstruction *> loopStarts; // LOOP_START*
    std::stack<shadir::CfInstruction *> pushes;     // PUSH
@@ -219,7 +226,9 @@ static bool labelify(Shader &shader, LabelList &labels)
    return true;
 }
 
-static bool blockify(Shader &shader, const LabelList &labels)
+
+static bool
+blockify(Shader &shader, const LabelList &labels)
 {
    shadir::CodeBlock *activeCodeBlock = nullptr;
    auto activeBlockList = &shader.blocks;

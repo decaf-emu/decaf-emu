@@ -27,13 +27,32 @@ void translateChannel(GenerateState &state, latte::alu::Channel::Channel channel
 void translateAluDestStart(GenerateState &state, AluInstruction *ins)
 {
    if (ins->unit != AluInstruction::T) {
-      state.out << "PV" << '.';
-      translateChannel(state, static_cast<latte::alu::Channel::Channel>(ins->unit));
-   } else {
-      state.out << "PS";
-   }
+      if (state.shader->pvUsed.find(ins->groupPC) != state.shader->pvUsed.end()) {
+         if (state.shader->pvUsed.find(ins->groupPC - 1) != state.shader->pvUsed.end()) {
+            // If we read and write PV in this group we must use a temp to prevent clash
+            state.out << "PVo.";
+         } else {
+            state.out << "PV.";
+         }
 
-   state.out << " = ";
+         if (ins->isReduction) {
+            // Reduction targets PV.x always
+            state.out << 'x';
+         } else {
+            translateChannel(state, static_cast<latte::alu::Channel::Channel>(ins->unit));
+         }
+
+         state.out << " = ";
+      }
+   } else {
+      if (state.shader->psUsed.find(ins->groupPC) != state.shader->psUsed.end()) {
+         if (state.shader->pvUsed.find(ins->groupPC - 1) != state.shader->pvUsed.end()) {
+            state.out << "PSo = ";
+         } else {
+            state.out << "PS = ";
+         }
+      }
+   }
 
    if (ins->writeMask) {
       state.out << 'R' << ins->dest.id << '.';

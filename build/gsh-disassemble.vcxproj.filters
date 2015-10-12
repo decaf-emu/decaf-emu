@@ -60,6 +60,9 @@
     <ClCompile Include="..\src\gpu\hlsl\hlsl_exp.cpp">
       <Filter>Source Files\hlsl</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gpu\latte_analyse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\gpu\latte_shadir.h">
