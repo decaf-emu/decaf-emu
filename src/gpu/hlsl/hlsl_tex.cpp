@@ -122,14 +122,19 @@ static bool SAMPLE(GenerateState &state, TexInstruction *ins)
    auto channels = translateSelRegister(state, ins->dst);
 
    state.out
-      << " = tex2d(texture_"
+      << " = g_texture"
       << ins->resourceID
+      << ".Sample("
+      << "g_sampler"
+      << ins->samplerID
       << ", ";
 
    translateSelRegister(state, ins->src);
 
    state.out << ").";
    translateTexRegisterChannels(state, channels);
+   return true;
+}
 
    return true;
 }
