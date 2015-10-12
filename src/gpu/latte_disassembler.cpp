@@ -394,18 +394,21 @@ bool disassembleExport(DisassembleState &state, latte::cf::inst id, latte::cf::I
 
    switch (type) {
    case latte::exp::Type::Pixel:
-      state.out << "PIX";
+      state.out
+         << "PIX"
+         << cf.expWord0.dstReg;
       break;
    case latte::exp::Type::Position:
-      state.out << "POS";
+      state.out
+         << "POS"
+         << (cf.expWord0.dstReg - 60);
       break;
    case latte::exp::Type::Parameter:
-      state.out << "PARAM";
+      state.out
+         << "PARAM"
+         << cf.expWord0.dstReg;
       break;
    }
-
-   state.out
-      << cf.expWord0.dstReg;
 
    state.out
       << ", R"
