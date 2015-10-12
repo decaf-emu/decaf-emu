@@ -96,23 +96,78 @@ struct GX2VertexShader
 {
    DriverData<208> driverData;
    be_val<uint32_t> size;
-   be_ptr<void> data;
+   be_ptr<uint8_t> data;
+   be_val<GX2ShaderMode::Mode> mode;
 
+   be_val<uint32_t> numUnk1;  // Size of unk1
+   be_ptr<void> unk1;         // Array of something
+
+   be_val<uint32_t> uniformVarCount;
+   be_ptr<GX2UniformVar> uniformVars;
+
+   be_val<uint32_t> numUnk2;  // Size of unk2
+   be_ptr<void> unk2;         // Array of something
+
+   be_val<uint32_t> numUnk3;  // Size of unk3
+   be_ptr<void> unk3;         // Array of something
+
+   be_val<uint32_t> samplerVarCount;
+   be_ptr<GX2SamplerVar> samplerVars;
+
+   be_val<uint32_t> numUnk4;  // Size of unk4
+   be_ptr<void> unk4;         // Array of something
+
+   UNKNOWN(4 * 10);
 };
 CHECK_OFFSET(GX2VertexShader, 0x0, driverData);
 CHECK_OFFSET(GX2VertexShader, 0xd0, size);
 CHECK_OFFSET(GX2VertexShader, 0xd4, data);
+CHECK_OFFSET(GX2VertexShader, 0xd8, mode);
+CHECK_OFFSET(GX2VertexShader, 0xe4, uniformVarCount);
+CHECK_OFFSET(GX2VertexShader, 0xe8, uniformVars);
+CHECK_OFFSET(GX2VertexShader, 0xfc, samplerVarCount);
+CHECK_OFFSET(GX2VertexShader, 0x100, samplerVars);
+CHECK_SIZE(GX2VertexShader, 0x134);
+
+struct GX2UniformVar;
+struct GX2SamplerVar;
 
 struct GX2PixelShader
 {
    DriverData<164> driverData;
    be_val<uint32_t> size;
-   be_ptr<void> data;
+   be_ptr<uint8_t> data;
+   be_val<GX2ShaderMode::Mode> mode;
 
+   be_val<uint32_t> numUnk1;  // Size of unk1
+   be_ptr<void> unk1;         // Array of something
+
+   be_val<uint32_t> uniformVarCount;
+   be_ptr<GX2UniformVar> uniformVars;
+
+   be_val<uint32_t> numUnk2;  // Size of unk2
+   be_ptr<void> unk2;         // Array of something
+
+   be_val<uint32_t> numUnk3;  // Size of unk3
+   be_ptr<void> unk3;         // Array of something
+
+   be_val<uint32_t> samplerVarCount;
+   be_ptr<GX2SamplerVar> samplerVars;
+
+   be_val<uint32_t> unk4;
+   be_val<uint32_t> unk5;
+   be_val<uint32_t> unk6;
+   be_val<uint32_t> unk7;
 };
 CHECK_OFFSET(GX2PixelShader, 0x0, driverData);
 CHECK_OFFSET(GX2PixelShader, 0xa4, size);
 CHECK_OFFSET(GX2PixelShader, 0xa8, data);
+CHECK_OFFSET(GX2PixelShader, 0xac, mode);
+CHECK_OFFSET(GX2PixelShader, 0xb8, uniformVarCount);
+CHECK_OFFSET(GX2PixelShader, 0xbc, uniformVars);
+CHECK_OFFSET(GX2PixelShader, 0xd0, samplerVarCount);
+CHECK_OFFSET(GX2PixelShader, 0xd4, samplerVars);
+CHECK_SIZE(GX2PixelShader, 0xe8);
 
 struct GX2GeometryShader;
 struct GX2PixelSampler;
