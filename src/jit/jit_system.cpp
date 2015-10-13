@@ -12,13 +12,6 @@ decodeSPR(Instruction instr)
    return static_cast<SprEncoding>(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
 }
 
-static bool
-tw(PPCEmuAssembler& a, Instruction instr)
-{
-   a.int3();
-   return true;
-}
-
 // Enforce In-Order Execution of I/O
 static bool
 eieio(PPCEmuAssembler& a, Instruction instr)
@@ -150,7 +143,7 @@ kc(PPCEmuAssembler& a, Instruction instr)
 
    auto sym = gSystem.getSyscall(id);
    if (!implemented) {
-      gLog->debug("{:08x} unimplemented kernel function {}", sym->name);
+      gLog->debug("unimplemented kernel function {}", sym->name);
 
       a.int3();
       return true;
@@ -165,11 +158,24 @@ kc(PPCEmuAssembler& a, Instruction instr)
 void
 JitManager::registerSystemInstructions()
 {
-   RegisterInstruction(tw);
+   RegisterInstructionFallback(dcbf);
+   RegisterInstructionFallback(dcbi);
+   RegisterInstructionFallback(dcbst);
+   RegisterInstructionFallback(dcbt);
+   RegisterInstructionFallback(dcbtst);
+   RegisterInstructionFallback(dcbz);
+   RegisterInstructionFallback(dcbz_l);
    RegisterInstruction(eieio);
    RegisterInstruction(isync);
    RegisterInstruction(sync);
    RegisterInstruction(mfspr);
    RegisterInstruction(mtspr);
+   RegisterInstructionFallback(mftb);
+   RegisterInstructionFallback(mfmsr);
+   RegisterInstructionFallback(mtmsr);
+   RegisterInstructionFallback(mfsr);
+   RegisterInstructionFallback(mfsrin);
+   RegisterInstructionFallback(mtsr);
+   RegisterInstructionFallback(mtsrin);
    RegisterInstruction(kc);
 }

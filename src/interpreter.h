@@ -32,6 +32,8 @@ public:
    void setJitMode(InterpJitMode val);
    void executeSub(ThreadState *state);
 
+   static bool hasInstruction(InstructionID id);
+
    InterpJitMode getJitMode() const {
       return mJitMode;
    }

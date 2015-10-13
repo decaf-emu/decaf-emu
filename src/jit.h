@@ -47,7 +47,9 @@ public:
       for (auto i = 0; i < 32; ++i) {
          ppcfpr[i] = PPCTSReg(fpr[i]);
          ppcfprps[i][0] = PPCTSReg(fpr[i].paired0);
+         ppcfprps[i][0].setSize(8);
          ppcfprps[i][1] = PPCTSReg(fpr[i].paired1);
+         ppcfprps[i][1].setSize(8);
       }
       ppccr = PPCTSReg(cr);
       ppcxer = PPCTSReg(xer.value);
@@ -136,6 +138,8 @@ public:
    JitCode get(uint32_t addr);
    JitCode getSingle(uint32_t addr);
    uint32_t execute(ThreadState *state, JitCode block);
+
+   static bool hasInstruction(InstructionID id);
 
 private:
    bool identBlock(JitBlock& block);

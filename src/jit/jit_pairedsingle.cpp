@@ -14,22 +14,22 @@ static bool
 mergeGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if (flags & MergeValue0) {
-      a.mov(a.eax, a.ppcfprps[instr.frA][1]);
+      a.mov(a.zax, a.ppcfprps[instr.frA][1]);
    } else {
-      a.mov(a.eax, a.ppcfprps[instr.frA][0]);
+      a.mov(a.zax, a.ppcfprps[instr.frA][0]);
    }
 
    if (flags & MergeValue1) {
-      a.mov(a.ecx, a.ppcfprps[instr.frB][1]);
+      a.mov(a.zcx, a.ppcfprps[instr.frB][1]);
    } else {
-      a.mov(a.ecx, a.ppcfprps[instr.frB][0]);
+      a.mov(a.zcx, a.ppcfprps[instr.frB][0]);
    }
 
-   a.mov(a.ppcfprps[instr.frD][0], a.eax);
-   a.mov(a.ppcfprps[instr.frD][1], a.ecx);
+   a.mov(a.ppcfprps[instr.frD][0], a.zax);
+   a.mov(a.ppcfprps[instr.frD][1], a.zcx);
 
    if (instr.rc) {
-      updateFloatConditionRegister(a, a.eax, a.ecx);
+      updateFloatConditionRegister(a, a.zax, a.zcx);
    }
    return true;
 }

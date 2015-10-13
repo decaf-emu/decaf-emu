@@ -193,24 +193,18 @@ template<unsigned flags = 0>
 static void
 mergeGeneric(ThreadState *state, Instruction instr)
 {
-   double a0, a1, b0, b1, d0, d1;
-
-   a0 = state->fpr[instr.frA].paired0;
-   a1 = state->fpr[instr.frA].paired1;
-
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
+   double d0, d1;
 
    if (flags & MergeValue0) {
-      d0 = a1;
+      d0 = state->fpr[instr.frA].paired1;
    } else {
-      d0 = a0;
+      d0 = state->fpr[instr.frA].paired0;
    }
 
    if (flags & MergeValue1) {
-      d1 = b1;
+      d1 = state->fpr[instr.frB].paired1;
    } else {
-      d1 = b0;
+      d1 = state->fpr[instr.frB].paired0;
    }
 
    state->fpr[instr.frD].paired0 = d0;

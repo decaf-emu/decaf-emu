@@ -44,6 +44,11 @@ void Interpreter::registerInstruction(InstructionID id, instrfptr_t fptr)
    sInstructionMap[static_cast<size_t>(id)] = fptr;
 }
 
+bool Interpreter::hasInstruction(InstructionID id)
+{
+   return sInstructionMap[static_cast<size_t>(id)] != nullptr;
+}
+
 void Interpreter::setJitMode(InterpJitMode val) {
    mJitMode = val;
 }

@@ -35,6 +35,22 @@ void JitManager::registerInstruction(InstructionID id, jitinstrfptr_t fptr)
    sJitInstructionMap[static_cast<size_t>(id)] = fptr;
 }
 
+bool JitManager::hasInstruction(InstructionID id)
+{
+   switch (id) {
+   case InstructionID::b:
+      return true;
+   case InstructionID::bc:
+      return true;
+   case InstructionID::bcctr:
+      return true;
+   case InstructionID::bclr:
+      return true;
+   default:
+      return sJitInstructionMap[static_cast<size_t>(id)] != nullptr;
+   }
+}
+
 bool JitManager::initialise() {
    initStubs();
    return true;

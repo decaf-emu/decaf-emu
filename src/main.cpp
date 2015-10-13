@@ -133,6 +133,14 @@ initialiseEmulator()
    Interpreter::RegisterFunctions();
    JitManager::RegisterFunctions();
 
+   // Verify JIT and Interpreter have everything registered...
+   for (size_t i = 0; i < static_cast<size_t>(InstructionID::InstructionCount); ++i) {
+      if ((Interpreter::hasInstruction(static_cast<InstructionID>(i)) ^ 
+         JitManager::hasInstruction(static_cast<InstructionID>(i))) != 0) {
+         __debugbreak();
+      }
+   }
+   
    // Kernel modules
    GameLoader::RegisterFunctions();
    CoreInit::RegisterFunctions();
