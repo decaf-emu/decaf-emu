@@ -30,7 +30,7 @@ static std::string
 GX2EnumAsString(GX2SurfaceFormat::Format format)
 {
    switch (format) {
-   case GX2SurfaceFormat::R8G8B8A8:
+   case GX2SurfaceFormat::UNORM_R8G8B8A8:
       return "R8G8B8A8";
    default:
       return std::to_string(static_cast<int>(format));

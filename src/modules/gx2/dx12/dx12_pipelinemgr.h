@@ -6,8 +6,7 @@
 #include "modules/gx2/gx2_shaders.h"
 #include "modules/gx2/gx2_debug.h"
 #include "gpu/latte.h"
-
-uint32_t tmp_crc32(const void *buf, size_t size);
+#include "crc32.h"
 
 class DXPipelineMgr {
 public:
@@ -75,21 +74,19 @@ private:
                (int32_t)attrib.endianSwap);
          }
       }
-
       // Print Vertex Shader Data
       uint32_t vertexShaderCrc;
       {
          auto shader = gDX.state.vertexShader;
-         vertexShaderCrc = tmp_crc32(shader->data, shader->size);
+         vertexShaderCrc = crc32(shader->data, shader->size);
          printf("Vertex Shader [%p] (%08x)\n", shader, vertexShaderCrc);
          GX2DumpShader(shader);
       }
-
       // Print Pixel Shader Data
       uint32_t pixelShaderCrc;
       {
          auto shader = gDX.state.pixelShader;
-         pixelShaderCrc = tmp_crc32(shader->data, shader->size);
+         pixelShaderCrc = crc32(shader->data, shader->size);
          printf("Pixel Shader [%p] (%08x)\n", shader, pixelShaderCrc);
          GX2DumpShader(shader);
       }
@@ -111,13 +108,18 @@ private:
 
       // Disabled currently as we do not currently bind textures for the draw
       //   call which causes drivers to crash as the texture is missing.
-      if (false && vertexShaderCrc == 0x084ffd1c && pixelShaderCrc == 0xfa8d2477) {
+      if (vertexShaderCrc == 0x084ffd1c && pixelShaderCrc == 0xfa8d2477) {
          ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_tmp_simple.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, nullptr));
          ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_tmp_simple.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, nullptr));
       } else {
          // Only pass through the position...
-         ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_default.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, nullptr));
-         ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_default.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, nullptr));
+         if (fetchShader->attribCount >= 2u) {
+            ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_tmp_simple.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, nullptr));
+            ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_tmp_simple.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, nullptr));
+         } else {
+            ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_default.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, nullptr));
+            ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_default.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, nullptr));
+         }
       }
 
       static const char *semantics[] = { "POSITION", "TEXCOORD", "PSIZE", "NORMAL" };
@@ -185,7 +187,6 @@ private:
          psoDesc.VS = { reinterpret_cast<UINT8*>(vertexShaderBlob->GetBufferPointer()), vertexShaderBlob->GetBufferSize() };
          psoDesc.PS = { reinterpret_cast<UINT8*>(pixelShaderBlob->GetBufferPointer()), pixelShaderBlob->GetBufferSize() };
          psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-         psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
          psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
          psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
          psoDesc.DepthStencilState.DepthEnable = FALSE;

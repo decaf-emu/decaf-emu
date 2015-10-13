@@ -90,6 +90,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\codetests.cpp" />
+    <ClCompile Include="..\src\crc32.cpp" />
     <ClCompile Include="..\src\debugcontrol.cpp" />
     <ClCompile Include="..\src\debugger.cpp" />
     <ClCompile Include="..\src\debugnet.cpp" />
@@ -104,10 +105,12 @@
     <ClCompile Include="..\src\gpu\hlsl\hlsl_exp.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_generator.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_tex.cpp" />
+    <ClCompile Include="..\src\gpu\latte_analyse.cpp" />
     <ClCompile Include="..\src\gpu\latte_blockify.cpp" />
     <ClCompile Include="..\src\gpu\latte_decoder.cpp" />
     <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
     <ClCompile Include="..\src\gpu\latte_opcodes.cpp" />
+    <ClCompile Include="..\src\gpu\latte_tiling.cpp" />
     <ClCompile Include="..\src\instructiontable.cpp" />
     <ClCompile Include="..\src\interpreter.cpp" />
     <ClCompile Include="..\src\interpreter\interpreter_branch.cpp" />
@@ -161,7 +164,6 @@
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />
     <ClCompile Include="..\src\modules\gameloader\gameloader.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\dx12_state.cpp" />
-    <ClCompile Include="..\src\modules\gx2\dx12\dx12_tmpcrc.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_context.cpp" />
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_display.cpp" />
@@ -241,6 +243,7 @@
     <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_disassembler.h" />
+    <ClInclude Include="..\src\gpu\latte_tiling.h" />
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\instruction.h" />
     <ClInclude Include="..\src\instructiondata.h" />
@@ -261,6 +264,8 @@
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_pipelinemgr.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_scanbuffer.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_state.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_texture.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_utils.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_debug.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp.h" />

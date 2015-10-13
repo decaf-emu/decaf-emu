@@ -92,6 +92,9 @@ CHECK_OFFSET(GX2FetchShader, 0x8, data);
 CHECK_OFFSET(GX2FetchShader, 0xc, attribCount);
 CHECK_SIZE(GX2FetchShader, 0x1c);
 
+struct GX2UniformVar;
+struct GX2SamplerVar;
+
 struct GX2VertexShader
 {
    DriverData<208> driverData;
@@ -128,9 +131,6 @@ CHECK_OFFSET(GX2VertexShader, 0xe8, uniformVars);
 CHECK_OFFSET(GX2VertexShader, 0xfc, samplerVarCount);
 CHECK_OFFSET(GX2VertexShader, 0x100, samplerVars);
 CHECK_SIZE(GX2VertexShader, 0x134);
-
-struct GX2UniformVar;
-struct GX2SamplerVar;
 
 struct GX2PixelShader
 {

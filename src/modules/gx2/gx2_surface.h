@@ -8,7 +8,9 @@ namespace GX2SurfaceFormat
 enum Format : uint32_t
 {
    First = 0x01,
-   R8G8B8A8 = 26,
+   UNORM_R8G8B8A8 = 0x1a,
+   UNORM_BC1 = 0x31,
+   UNORM_BC3 = 0x33,
    Last = 0x83f,
 };
 }
@@ -38,7 +40,22 @@ namespace GX2TileMode
 enum Mode : uint32_t
 {
    Default = 0,
-   LinearSpecial = 0x10,
+   LinearAligned = 1,
+   Tiled1DThin1 = 2,
+   Tiled1DThick = 3,
+   Tiled2DThin1 = 4,
+   Tiled2DThin2 = 5,
+   Tiled2DThin4 = 6,
+   Tiled2DThick = 7,
+   Tiled2BThin1 = 8,
+   Tiled2BThin2 = 9,
+   Tiled2BThin4 = 10,
+   Tiled2BThick = 11,
+   Tiled3DThin1 = 12,
+   Tiled3DThick = 13,
+   Tiled3BThin1 = 14,
+   Tiled3BThick = 15,
+   LinearSpecial = 16
 };
 }
 

@@ -12,6 +12,7 @@
 struct DXScanBufferData;
 struct DXColorBufferData;
 struct DXDepthBufferData;
+struct DXTextureData;
 class DXPipelineMgr;
 
 struct DXState {
@@ -86,9 +87,11 @@ namespace dx {
    void updateRenderTargets();
    void updatePipeline();
    void updateBuffers();
+   void updateTextures();
 
    DXColorBufferData * getColorBuffer(GX2ColorBuffer *buffer);
    DXDepthBufferData * getDepthBuffer(GX2DepthBuffer *buffer);
+   DXTextureData * getTexture(GX2Texture *buffer);
 
    void _beginFrame();
    void _endFrame();

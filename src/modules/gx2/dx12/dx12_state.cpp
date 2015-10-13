@@ -10,11 +10,13 @@
 #include "dx12_colorbuffer.h"
 #include "dx12_depthbuffer.h"
 #include "dx12_pipelinemgr.h"
+#include "dx12_texture.h"
 
 DXState gDX;
 
 HostLookupTable<DXColorBufferData, GX2ColorBuffer> colorBufferLkp;
 HostLookupTable<DXDepthBufferData, GX2DepthBuffer> depthBufferLkp;
+HostLookupTable<DXTextureData, GX2Texture> textureLkp;
 
 DXColorBufferData * dx::getColorBuffer(GX2ColorBuffer *buffer) {
    return colorBufferLkp.get(buffer);
@@ -22,6 +24,10 @@ DXColorBufferData * dx::getColorBuffer(GX2ColorBuffer *buffer) {
 
 DXDepthBufferData * dx::getDepthBuffer(GX2DepthBuffer *buffer) {
    return depthBufferLkp.get(buffer);
+}
+
+DXTextureData * dx::getTexture(GX2Texture *buffer) {
+   return textureLkp.get(buffer);
 }
 
 void dx::initialise()
@@ -540,6 +546,11 @@ void dx::updateBuffers()
    }
 
    gDX.commandList->IASetVertexBuffers(0, 32, bufferList);
+}
+
+void dx::updateTextures()
+{
+   // We actually do this live right now...
 }
 
 #endif

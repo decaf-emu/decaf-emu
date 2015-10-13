@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 /*-
 *  COPYRIGHT (C) 1986 Gary S. Brown.  You may use this program, or
 *  code or tables extracted from it, as desired without restriction.
@@ -39,8 +41,6 @@
 *
 * CRC32 code derived from work by Gary S. Brown.
 */
-
-#include <stdint.h>
 
 static uint32_t crc32_tab[] = {
    0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
@@ -88,7 +88,7 @@ static uint32_t crc32_tab[] = {
    0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-uint32_t tmp_crc32(const void *buf, size_t size)
+uint32_t crc32(const void *buf, size_t size)
 {
    const uint8_t *p = (const uint8_t*)buf;
    uint32_t crc = 0 ^ ~0U;
