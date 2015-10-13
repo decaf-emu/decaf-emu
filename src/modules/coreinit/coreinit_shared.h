@@ -5,12 +5,12 @@ namespace OSSharedDataType
 {
 enum Type
 {
-   Unk0,
-   Unk1,
-   Unk2,
-   Unk3
+   FontChinese    = 0,
+   FontKorean     = 1,
+   FontStandard   = 2,
+   FontTaiwanese  = 3
 };
 }
 
 BOOL
-OSGetSharedData(OSSharedDataType::Type type, uint32_t, be_val<uint32_t> *addr, be_val<uint32_t> *size);
+OSGetSharedData(OSSharedDataType::Type type, uint32_t, be_ptr<uint8_t> *addr, be_val<uint32_t> *size);

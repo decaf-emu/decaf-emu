@@ -17,6 +17,7 @@ private:
    void initialiseMembase();
    void initialiseMessageQueues();
    void initialiseSchedulerFunctions();
+   void initialiseShared();
    void initialiseSystemInformation();
    void initialiseThread();
 

@@ -20,6 +20,7 @@ CoreInit::initialise()
    initialiseMembase();
    initialiseMessageQueues();
    initialiseSchedulerFunctions();
+   initialiseShared();
    initialiseSystemInformation();
    initialiseThread();
 }
