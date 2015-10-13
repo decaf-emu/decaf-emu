@@ -1,6 +1,8 @@
 #include <spdlog/spdlog.h>
+#include <array_view.h>
 #include "gpu/latte.h"
 #include "gpu/hlsl/hlsl_generator.h"
+#include "modules/gx2/gx2_shaders.h"
 
 static const auto indentSize = 3u;
 
@@ -16,7 +18,9 @@ static std::map<latte::alu::op2, TranslateFuncALUReduction> sGeneratorTableAluOp
 static std::map<latte::tex::inst, TranslateFuncTEX> sGeneratorTableTex;
 static std::map<latte::exp::inst, TranslateFuncEXP> sGeneratorTableExport;
 
-void intialise()
+
+void
+intialise()
 {
    static bool initialised = false;
 
@@ -30,59 +34,81 @@ void intialise()
    }
 }
 
-void registerGenerator(latte::cf::inst ins, TranslateFuncCF func)
+
+void
+registerGenerator(latte::cf::inst ins, TranslateFuncCF func)
 {
    sGeneratorTableCf[ins] = func;
 }
 
-void registerGenerator(latte::alu::op2 ins, TranslateFuncALU func)
+
+void
+registerGenerator(latte::alu::op2 ins, TranslateFuncALU func)
 {
    sGeneratorTableAluOp2[ins] = func;
 }
 
-void registerGenerator(latte::alu::op3 ins, TranslateFuncALU func)
+
+void
+registerGenerator(latte::alu::op3 ins, TranslateFuncALU func)
 {
    sGeneratorTableAluOp3[ins] = func;
 }
 
-void registerGenerator(latte::alu::op2 ins, TranslateFuncALUReduction func)
+
+void
+registerGenerator(latte::alu::op2 ins, TranslateFuncALUReduction func)
 {
    sGeneratorTableAluOp2Reduction[ins] = func;
 }
 
-void registerGenerator(latte::tex::inst ins, TranslateFuncTEX func)
+
+void
+registerGenerator(latte::tex::inst ins, TranslateFuncTEX func)
 {
    sGeneratorTableTex[ins] = func;
 }
 
-void registerGenerator(latte::exp::inst ins, TranslateFuncEXP func)
+
+void
+registerGenerator(latte::exp::inst ins, TranslateFuncEXP func)
 {
    sGeneratorTableExport[ins] = func;
 }
 
-void beginLine(GenerateState &state)
+
+void
+beginLine(GenerateState &state)
 {
    state.out << state.indent.c_str();
 }
 
-void endLine(GenerateState &state)
+
+void
+endLine(GenerateState &state)
 {
    state.out << '\n';
 }
 
-void increaseIndent(GenerateState &state)
+
+void
+increaseIndent(GenerateState &state)
 {
    state.indent.append(indentSize, ' ');
 }
 
-void decreaseIndent(GenerateState &state)
+
+void
+decreaseIndent(GenerateState &state)
 {
    if (state.indent.size() >= indentSize) {
       state.indent.resize(state.indent.size() - indentSize);
    }
 }
 
-static bool translateInstruction(GenerateState &state, latte::shadir::Instruction *ins)
+
+static bool
+translateInstruction(GenerateState &state, latte::shadir::Instruction *ins)
 {
    switch (ins->insType) {
    case latte::shadir::Instruction::ControlFlow:
@@ -167,7 +193,9 @@ static bool translateInstruction(GenerateState &state, latte::shadir::Instructio
    return false;
 }
 
-static bool translateCodeBlock(GenerateState &state, latte::shadir::CodeBlock *block)
+
+static bool
+translateCodeBlock(GenerateState &state, latte::shadir::CodeBlock *block)
 {
    auto result = true;
 
@@ -201,13 +229,16 @@ static bool translateCodeBlock(GenerateState &state, latte::shadir::CodeBlock *b
 
       beginLine(state);
       result &= translateInstruction(state, ins);
+      state.out << ";";
       endLine(state);
    }
 
    return result;
 }
 
-static bool translateConditionalBlock(GenerateState &state, latte::shadir::ConditionalBlock *block)
+
+static bool
+translateConditionalBlock(GenerateState &state, latte::shadir::ConditionalBlock *block)
 {
    auto result = true;
 
@@ -242,7 +273,9 @@ static bool translateConditionalBlock(GenerateState &state, latte::shadir::Condi
    return result;
 }
 
-static bool translateLoopBlock(GenerateState &state, latte::shadir::LoopBlock *block)
+
+static bool
+translateLoopBlock(GenerateState &state, latte::shadir::LoopBlock *block)
 {
    auto result = true;
    beginLine(state);
@@ -259,7 +292,9 @@ static bool translateLoopBlock(GenerateState &state, latte::shadir::LoopBlock *b
    return result;
 }
 
-static bool translateBlock(GenerateState &state, latte::shadir::Block *block)
+
+static bool
+translateBlock(GenerateState &state, latte::shadir::Block *block)
 {
    switch (block->type) {
    case latte::shadir::Block::CodeBlock:
@@ -273,7 +308,9 @@ static bool translateBlock(GenerateState &state, latte::shadir::Block *block)
    return false;
 }
 
-static bool translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks)
+
+static bool
+translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks)
 {
    auto result = true;
 
@@ -289,7 +326,8 @@ static bool translateBlocks(GenerateState &state, latte::shadir::BlockList &bloc
 namespace latte
 {
 
-bool generateHLSL(Shader &shader, std::string &hlsl)
+bool
+generateBody(Shader &shader, std::string &body)
 {
    auto result = true;
    auto state = GenerateState {};
@@ -297,9 +335,229 @@ bool generateHLSL(Shader &shader, std::string &hlsl)
 
    hlsl::intialise();
    result &= hlsl::translateBlocks(state, shader.blocks);
-   hlsl = state.out.c_str();
+   body = state.out.c_str();
 
    return result;
 }
+
+static std::string
+getGX2AttribFormatType(GX2AttribFormat::Format format)
+{
+   switch (format) {
+   case GX2AttribFormat::UNORM_8:
+      return "unorm float";
+   case GX2AttribFormat::UNORM_8_8:
+      return "unorm float2";
+   case GX2AttribFormat::UNORM_8_8_8_8:
+      return "unorm float4";
+   case GX2AttribFormat::UINT_8:
+      return "uint";
+   case GX2AttribFormat::UINT_8_8:
+      return "uint2";
+   case GX2AttribFormat::UINT_8_8_8_8:
+      return "uint4";
+   case GX2AttribFormat::SNORM_8:
+      return "snorm float";
+   case GX2AttribFormat::SNORM_8_8:
+      return "snorm float2";
+   case GX2AttribFormat::SNORM_8_8_8_8:
+      return "snorm float4";
+   case GX2AttribFormat::SINT_8:
+      return "int";
+   case GX2AttribFormat::SINT_8_8:
+      return "int2";
+   case GX2AttribFormat::SINT_8_8_8_8:
+      return "int4";
+   case GX2AttribFormat::FLOAT_32:
+      return "float";
+   case GX2AttribFormat::FLOAT_32_32:
+      return "float2";
+   case GX2AttribFormat::FLOAT_32_32_32:
+      return "float3";
+   case GX2AttribFormat::FLOAT_32_32_32_32:
+      return "float4";
+   default:
+      assert(0);
+      return "float4";
+   }
+}
+
+bool
+generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShader, Shader &pixelShader, std::string &hlsl)
+{
+   auto result = true;
+   std::string vertexBody, pixelBody;
+   fmt::MemoryWriter shader;
+
+   shader << "struct VSInput {\n";
+
+   static const char *semantics[] = { "POSITION", "TEXCOORD", "PSIZE", "NORMAL" };
+
+   for (auto &attrib : attribs) {
+      shader
+         << "   "
+         << getGX2AttribFormatType(attrib.format)
+         << " param" << attrib.location
+         << " : "
+         << semantics[attrib.location]
+         << ";\n";
+   }
+
+   shader << "};\n\n";
+
+   shader << "struct PSInput {\n";
+
+   for (auto &exp : vertexShader.exports) {
+      shader << "   ";
+      switch (exp->type) {
+      case latte::exp::Type::Position:
+         shader
+            << "float4 position"
+            << (exp->dstReg - 60)
+            << " : POSITION"
+            << (exp->dstReg - 60)
+            << ";\n";
+         break;
+      case latte::exp::Type::Parameter:
+         shader
+            << "float4 param"
+            << exp->dstReg
+            << " : TEXCOORD"
+            << exp->dstReg
+            << ";\n";
+         break;
+      case latte::exp::Type::Pixel:
+         shader
+            << "float4 color"
+            << exp->dstReg
+            << " : COLOR"
+            << exp->dstReg
+            << ";\n";
+         break;
+      }
+   }
+
+   shader << "};\n\n";
+
+   shader << "struct PSOutput {\n";
+
+   for (auto &exp : pixelShader.exports) {
+      shader << "   ";
+      switch (exp->type) {
+      case latte::exp::Type::Position:
+         shader
+            << "float4 position"
+            << (exp->dstReg - 60)
+            << " : POSITION"
+            << (exp->dstReg - 60)
+            << ";\n";
+         break;
+      case latte::exp::Type::Parameter:
+         shader
+            << "float4 param"
+            << exp->dstReg
+            << " : TEXCOORD"
+            << exp->dstReg
+            << ";\n";
+         break;
+      case latte::exp::Type::Pixel:
+         shader
+            << "float4 color"
+            << exp->dstReg
+            << " : SV_TARGET"
+            << exp->dstReg
+            << ";\n";
+         break;
+      }
+   }
+
+   shader << "};\n\n";
+
+   for (auto id : pixelShader.samplersUsed) {
+      shader
+         << "SamplerState g_sampler" << id
+         << " : register(s" << id << ");\n";
+   }
+
+   for (auto id : pixelShader.resourcesUsed) {
+      shader
+         << "Texture2D g_texture" << id
+         << " : register(t" << id << ");\n";
+   }
+
+   shader
+      << "\n"
+      << "PSInput VSMain(VSInput input)\n"
+      << "{\n"
+      << "PSInput out;\n";
+
+   for (auto id : vertexShader.gprsUsed) {
+      shader
+         << "float4 R" << id << ";\n";
+   }
+
+   if (vertexShader.psUsed.size()) {
+      shader
+         << "float4 PS;\n"
+         << "float4 PSo;\n";
+   }
+
+   if (vertexShader.pvUsed.size()) {
+      shader
+         << "float4 PV;\n"
+         << "float4 PVo;\n";
+   }
+
+   for (auto &attrib : attribs) {
+      shader << "R" << (attrib.location + 1) << " = float4(input.param" << attrib.location << ");\n";
+   }
+
+   result &= generateBody(vertexShader, vertexBody);
+   shader << vertexBody;
+
+   shader
+      << "return out;\n"
+      << "}\n";
+
+   shader
+      << "\n"
+      << "PSOutput PSMain(PSInput input)\n"
+      << "{\n"
+      << "PSOutput out;\n";
+
+   for (auto id : pixelShader.gprsUsed) {
+      shader
+         << "float4 R" << id << ";\n";
+   }
+
+   if (pixelShader.psUsed.size()) {
+      shader
+         << "float4 PS;\n"
+         << "float4 PSo;\n";
+   }
+
+   if (pixelShader.pvUsed.size()) {
+      shader
+         << "float4 PV;\n"
+         << "float4 PVo;\n";
+   }
+
+   for (auto &exp : vertexShader.exports) {
+      if (exp->type == latte::exp::Type::Parameter) {
+         shader << "R" << exp->dstReg << " = float4(input.param" << exp->dstReg << ");\n";
+      }
+   }
+
+   result &= generateBody(pixelShader, pixelBody);
+   shader << pixelBody;
+
+   shader
+      << "return out;\n"
+      << "}\n";
+
+   hlsl = shader.str();
+   return result;
+}
+
 
 } // namespace latte

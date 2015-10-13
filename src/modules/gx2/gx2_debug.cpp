@@ -171,7 +171,7 @@ GX2DumpShader(const std::string &filename, uint8_t *data, size_t size)
    auto decompiled = latte::Shader {};
    latte::decode(decompiled, { data, size });
    latte::blockify(decompiled);
-   latte::generateHLSL(decompiled, output);
+   latte::generateBody(decompiled, output);
 
    file
       << "Decompiled:" << std::endl

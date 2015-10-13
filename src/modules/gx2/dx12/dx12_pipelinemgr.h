@@ -91,10 +91,20 @@ private:
          GX2DumpShader(shader);
       }
 
+
       auto fetchShader = gDX.state.fetchShader;
       auto vertexShader = gDX.state.vertexShader;
       auto pixelShader = gDX.state.pixelShader;
       auto fetchData = (FetchShaderInfo*)(void*)fetchShader->data;
+
+      {
+         latte::Shader decVertexShader, decPixelShader;
+         std::string hlsl;
+         latte::decode(decVertexShader, { vertexShader->data.get(), vertexShader->size });
+         latte::decode(decPixelShader, { pixelShader->data.get(), pixelShader->size });
+         latte::generateHLSL({ (GX2AttribStream*)fetchData->attribs, fetchShader->attribCount }, decVertexShader, decPixelShader, hlsl);
+         printf("%s", hlsl.c_str());
+      }
 
       ComPtr<ID3DBlob> vertexShaderBlob;
       ComPtr<ID3DBlob> pixelShaderBlob;
@@ -127,8 +137,8 @@ private:
       DXGI_FORMAT inputElementFormat;
       std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
       for (auto i = 0u; i < fetchShader->attribCount; ++i) {
-         auto attrib = fetchData->attribs[i];
-         
+         auto &attrib = fetchData->attribs[i];
+
          switch (attrib.format) {
          case GX2AttribFormat::UNORM_8:
             inputElementFormat = DXGI_FORMAT_R8_UNORM; break;

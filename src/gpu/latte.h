@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <string>
 #include "latte_shadir.h"
+#include "modules/gx2/gx2_shaders.h"
 
 namespace latte
 {
@@ -35,6 +36,7 @@ bool blockify(Shader &shader);
 bool analyse(Shader &shader);
 void dumpBlocks(Shader &shader);
 bool disassemble(std::string &out, const gsl::array_view<uint8_t> &binary);
-bool generateHLSL(Shader &shader, std::string &hlsl);
+bool generateBody(Shader &shader, std::string &body);
+bool generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShader, Shader &pixelShader, std::string &hlsl);
 
 } // namespace latte
