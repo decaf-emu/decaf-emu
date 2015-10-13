@@ -111,6 +111,7 @@
     <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
     <ClCompile Include="..\src\gpu\latte_opcodes.cpp" />
     <ClCompile Include="..\src\gpu\latte_tiling.cpp" />
+    <ClCompile Include="..\src\gpu\mesa_r600_tiling.cpp" />
     <ClCompile Include="..\src\instructiontable.cpp" />
     <ClCompile Include="..\src\interpreter.cpp" />
     <ClCompile Include="..\src\interpreter\interpreter_branch.cpp" />
@@ -244,6 +245,7 @@
     <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_disassembler.h" />
     <ClInclude Include="..\src\gpu\latte_tiling.h" />
+    <ClInclude Include="..\src\gpu\mesa_r600_tiling.h" />
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\instruction.h" />
     <ClInclude Include="..\src\instructiondata.h" />

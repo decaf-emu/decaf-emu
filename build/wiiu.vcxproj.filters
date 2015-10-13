@@ -531,6 +531,9 @@
     <ClCompile Include="..\src\gpu\latte_analyse.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gpu\mesa_r600_tiling.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -960,6 +963,9 @@
       <Filter>Header Files\modules\gx2\dx12</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_tiling.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\mesa_r600_tiling.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
   </ItemGroup>
