@@ -976,11 +976,5 @@
     <None Include="..\src\instructionfields.inl">
       <Filter>Header Files\ppc</Filter>
     </None>
-    <None Include="..\resources\shaders\wiiu_tmp_simple.hlsl">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="..\resources\shaders\wiiu_default.hlsl">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

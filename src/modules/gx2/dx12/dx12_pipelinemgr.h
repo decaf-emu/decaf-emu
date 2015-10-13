@@ -97,12 +97,13 @@ private:
       auto pixelShader = gDX.state.pixelShader;
       auto fetchData = (FetchShaderInfo*)(void*)fetchShader->data;
 
+      std::string hlsl;
       {
          latte::Shader decVertexShader, decPixelShader;
-         std::string hlsl;
          latte::decode(decVertexShader, { vertexShader->data.get(), vertexShader->size });
          latte::decode(decPixelShader, { pixelShader->data.get(), pixelShader->size });
          latte::generateHLSL({ (GX2AttribStream*)fetchData->attribs, fetchShader->attribCount }, decVertexShader, decPixelShader, hlsl);
+         printf("Compiled Shader:\n");
          printf("%s", hlsl.c_str());
       }
 
@@ -116,23 +117,18 @@ private:
       UINT compileFlags = 0;
 #endif
 
-      // Disabled currently as we do not currently bind textures for the draw
-      //   call which causes drivers to crash as the texture is missing.
-      if (vertexShaderCrc == 0x084ffd1c && pixelShaderCrc == 0xfa8d2477) {
-         ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_tmp_simple.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, nullptr));
-         ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_tmp_simple.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, nullptr));
-      } else {
-         // Only pass through the position...
-         if (fetchShader->attribCount >= 2u) {
-            ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_tmp_simple.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, nullptr));
-            ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_tmp_simple.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, nullptr));
-         } else {
-            ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_default.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, nullptr));
-            ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_default.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, nullptr));
-         }
+      ComPtr<ID3DBlob> errorBlob;
+      HRESULT hr;
+      hr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, &errorBlob);
+      if (FAILED(hr)) {
+         printf("Shader Compilation Failed:\n%s", (char*)errorBlob->GetBufferPointer());
+         throw;
       }
-
-      static const char *semantics[] = { "POSITION", "TEXCOORD", "PSIZE", "NORMAL" };
+      hr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, &errorBlob);
+      if (FAILED(hr)) {
+         printf("Shader Compilation Failed:\n%s", (char*)errorBlob->GetBufferPointer());
+         throw;
+      }
 
       DXGI_FORMAT inputElementFormat;
       std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
@@ -177,8 +173,8 @@ private:
          };
 
          D3D12_INPUT_ELEMENT_DESC inputElementDesc = {
-            semantics[attrib.location],
-            0,
+            "POSITION",
+            attrib.location,
             inputElementFormat,
             attrib.buffer,
             attrib.offset,

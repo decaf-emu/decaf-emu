@@ -31,19 +31,19 @@ static bool EXP(GenerateState &state, ExportInstruction *ins)
       assert(ins->dstReg >= 60);
       // : POSITION[n]
       state.out
-         << "out.position"
+         << "result.position"
          << (ins->dstReg - 60);
       break;
    case latte::exp::Type::Parameter:
       // ??? : TEXCOORD ???
       state.out
-         << "out.param"
+         << "result.param"
          << ins->dstReg;
       break;
    case latte::exp::Type::Pixel:
       // : COLOR[n]
       state.out
-         << "out.color"
+         << "result.color"
          << ins->dstReg;
       break;
    }

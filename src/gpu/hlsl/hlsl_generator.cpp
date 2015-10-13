@@ -382,6 +382,48 @@ getGX2AttribFormatType(GX2AttribFormat::Format format)
    }
 }
 
+static int
+getGX2AttribFormatElems(GX2AttribFormat::Format format)
+{
+   switch (format) {
+   case GX2AttribFormat::UNORM_8:
+      return 1;
+   case GX2AttribFormat::UNORM_8_8:
+      return 2;
+   case GX2AttribFormat::UNORM_8_8_8_8:
+      return 4;
+   case GX2AttribFormat::UINT_8:
+      return 1;
+   case GX2AttribFormat::UINT_8_8:
+      return 2;
+   case GX2AttribFormat::UINT_8_8_8_8:
+      return 4;
+   case GX2AttribFormat::SNORM_8:
+      return 1;
+   case GX2AttribFormat::SNORM_8_8:
+      return 2;
+   case GX2AttribFormat::SNORM_8_8_8_8:
+      return 4;
+   case GX2AttribFormat::SINT_8:
+      return 1;
+   case GX2AttribFormat::SINT_8_8:
+      return 2;
+   case GX2AttribFormat::SINT_8_8_8_8:
+      return 4;
+   case GX2AttribFormat::FLOAT_32:
+      return 1;
+   case GX2AttribFormat::FLOAT_32_32:
+      return 2;
+   case GX2AttribFormat::FLOAT_32_32_32:
+      return 3;
+   case GX2AttribFormat::FLOAT_32_32_32_32:
+      return 4;
+   default:
+      assert(0);
+      return 4;
+   }
+}
+
 bool
 generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShader, Shader &pixelShader, std::string &hlsl)
 {
@@ -391,15 +433,12 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShad
 
    shader << "struct VSInput {\n";
 
-   static const char *semantics[] = { "POSITION", "TEXCOORD", "PSIZE", "NORMAL" };
-
    for (auto &attrib : attribs) {
       shader
          << "   "
          << getGX2AttribFormatType(attrib.format)
          << " param" << attrib.location
-         << " : "
-         << semantics[attrib.location]
+         << " : POSITION" << attrib.location
          << ";\n";
    }
 
@@ -411,12 +450,20 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShad
       shader << "   ";
       switch (exp->type) {
       case latte::exp::Type::Position:
-         shader
-            << "float4 position"
-            << (exp->dstReg - 60)
-            << " : POSITION"
-            << (exp->dstReg - 60)
-            << ";\n";
+         if ((exp->dstReg - 60) == 0) {
+            shader
+               << "float4 position"
+               << (exp->dstReg - 60)
+               << " : SV_POSITION"
+               << ";\n";
+         } else {
+            shader
+               << "float4 position"
+               << (exp->dstReg - 60)
+               << " : POSITION"
+               << (exp->dstReg - 60)
+               << ";\n";
+         }
          break;
       case latte::exp::Type::Parameter:
          shader
@@ -489,7 +536,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShad
       << "\n"
       << "PSInput VSMain(VSInput input)\n"
       << "{\n"
-      << "PSInput out;\n";
+      << "PSInput result;\n";
 
    for (auto id : vertexShader.gprsUsed) {
       shader
@@ -509,21 +556,37 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShad
    }
 
    for (auto &attrib : attribs) {
-      shader << "R" << (attrib.location + 1) << " = float4(input.param" << attrib.location << ");\n";
+      int attribElems = getGX2AttribFormatElems(attrib.format);
+      switch (attribElems) {
+      case 1:
+         shader << "R" << (attrib.location + 1) << " = float4(input.param" << attrib.location << ", 0, 0, 0);\n";
+         break;
+      case 2:
+         shader << "R" << (attrib.location + 1) << " = float4(input.param" << attrib.location << ", 0, 0);\n";
+         break;
+      case 3:
+         shader << "R" << (attrib.location + 1) << " = float4(input.param" << attrib.location << ", 0);\n";
+         break;
+      case 4:
+         shader << "R" << (attrib.location + 1) << " = input.param" << attrib.location << ";\n";
+         break;
+      default:
+         assert(0);
+      }
    }
 
    result &= generateBody(vertexShader, vertexBody);
    shader << vertexBody;
 
    shader
-      << "return out;\n"
+      << "return result;\n"
       << "}\n";
 
    shader
       << "\n"
       << "PSOutput PSMain(PSInput input)\n"
       << "{\n"
-      << "PSOutput out;\n";
+      << "PSOutput result;\n";
 
    for (auto id : pixelShader.gprsUsed) {
       shader
@@ -544,7 +607,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShad
 
    for (auto &exp : vertexShader.exports) {
       if (exp->type == latte::exp::Type::Parameter) {
-         shader << "R" << exp->dstReg << " = float4(input.param" << exp->dstReg << ");\n";
+         shader << "R" << exp->dstReg << " = (float4)input.param" << exp->dstReg << ";\n";
       }
    }
 
@@ -552,7 +615,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShad
    shader << pixelBody;
 
    shader
-      << "return out;\n"
+      << "return result;\n"
       << "}\n";
 
    hlsl = shader.str();
