@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <map>
 
 template<typename PpcType>
 struct HostLookupItem {
@@ -7,6 +8,45 @@ struct HostLookupItem {
 
 };
 
+template<typename HostClass, typename PpcClass>
+class HostLookupTable {
+   static_assert(std::is_base_of<HostLookupItem<PpcClass>, HostClass>::value, "HostLookup items must inherit from HostLookupItem");
+   static_assert(&PpcClass::driverData, "Lookup types must have driverData field");
+
+protected:
+   struct Data {
+      PpcClass *source;
+      HostClass item;
+   };
+
+public:
+   HostLookupTable() {
+   }
+
+   HostClass * get(PpcClass *source) {
+      auto i = mData.find(source);
+      if (i != mData.end()) {
+         return i->second;
+      }
+
+      HostClass *data = new HostClass();
+      data->source = source;
+      data->alloc();
+      mData.emplace(source, data);
+      return data;
+   }
+
+   void freeRange(void *ptr, ppcsize_t n) {
+   }
+
+protected:
+   std::map<PpcClass*, HostClass*> mData;
+
+};
+
+
+/** DriveData based implementation
+// Currently disabled due to inability to assume games zero driveData...
 template<typename HostClass, typename PpcClass>
 class HostLookupTable {
    static_assert(std::is_base_of<HostLookupItem<PpcClass>, HostClass>::value, "HostLookup items must inherit from HostLookupItem");
@@ -91,3 +131,4 @@ protected:
    std::vector<Data> mArray;
 
 };
+*/
