@@ -101,7 +101,7 @@ unsigned translateSelRegister(GenerateState &state, SelRegister &reg)
 static void translateTexRegisterChannels(GenerateState &state, unsigned channels)
 {
    if (channels > 0) {
-      state.out << 'x';
+      state.out << ".x";
    }
 
    if (channels > 1) {
@@ -131,7 +131,7 @@ static bool SAMPLE(GenerateState &state, TexInstruction *ins)
 
    translateSelRegister(state, ins->src);
 
-   state.out << ").";
+   state.out << ")";
    translateTexRegisterChannels(state, channels);
    return true;
 }
@@ -154,7 +154,7 @@ static bool SAMPLE_C(GenerateState &state, TexInstruction *ins)
    state.out
       << ", R" << ins->src.id << ".w";
 
-   state.out << ").";
+   state.out << ")";
    translateTexRegisterChannels(state, channels);
    return true;
 }

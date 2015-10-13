@@ -28,11 +28,10 @@ static bool EXP(GenerateState &state, ExportInstruction *ins)
 
    switch (ins->type) {
    case latte::exp::Type::Position:
-      assert(ins->dstReg >= 60);
       // : POSITION[n]
       state.out
          << "result.position"
-         << (ins->dstReg - 60);
+         << ins->dstReg;
       break;
    case latte::exp::Type::Parameter:
       // ??? : TEXCOORD ???

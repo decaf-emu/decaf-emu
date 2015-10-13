@@ -401,7 +401,7 @@ bool disassembleExport(DisassembleState &state, latte::cf::inst id, latte::cf::I
    case latte::exp::Type::Position:
       state.out
          << "POS"
-         << (cf.expWord0.dstReg - 60);
+         << cf.expWord0.dstReg;
       break;
    case latte::exp::Type::Parameter:
       state.out
@@ -475,7 +475,7 @@ bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Inst
          } else {
             state.out << std::string(groupCounterSize, ' ').c_str();
          }
-         
+
          state.out
             << ' '
             << unitName[unit] << ": "

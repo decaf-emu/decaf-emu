@@ -149,6 +149,11 @@ decodeExport(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
    exp->wholeQuadMode = cf.expWord1.wholeQuadMode;
    exp->barrier = !!cf.expWord1.barrier;
 
+   if (exp->type == latte::exp::Type::Position) {
+      assert(exp->dstReg >= 60);
+      exp->dstReg -= 60;
+   }
+
    assert(cf.expWord0.srcRel == 0);
    assert(cf.expWord1.validPixelMode == 0);
    state.shader->exports.push_back(exp);

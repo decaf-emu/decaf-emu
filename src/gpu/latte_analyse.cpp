@@ -156,7 +156,6 @@ analyseAluSource(AnalyseState &state, latte::shadir::AluSource &src)
    KcacheBank1,
    PreviousVector,
    PreviousScalar,
-   ConstantFile,
    ConstantFloat,
    ConstantDouble,
    ConstantInt,
@@ -175,6 +174,9 @@ analyseAluSource(AnalyseState &state, latte::shadir::AluSource &src)
       if (state.groupPC != -1) {
          state.shader->psUsed.emplace(state.groupPC - 1);
       }
+      break;
+   case latte::shadir::AluSource::ConstantFile:
+      state.shader->uniformsUsed.emplace(src.id);
       break;
    }
 }

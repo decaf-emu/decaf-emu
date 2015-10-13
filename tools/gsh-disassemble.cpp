@@ -6,6 +6,7 @@
 #include <iostream>
 #include "bigendianview.h"
 #include "gpu/latte.h"
+#include "gpu/hlsl/hlsl.h"
 
 namespace gsh
 {
@@ -101,7 +102,7 @@ bool parseGSH(BigEndianView &fh)
          std::cout << std::endl;
 
          std::string hlsl;
-         latte::generateHLSL(shader, hlsl);
+         hlsl::generateBody(shader, hlsl);
          std::cout << "----------------------------------------------" << std::endl;
          std::cout << "                     HLSL                     " << std::endl;
          std::cout << "----------------------------------------------" << std::endl;

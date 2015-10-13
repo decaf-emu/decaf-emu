@@ -1,6 +1,7 @@
 #include <spdlog/spdlog.h>
 #include <array_view.h>
 #include "gpu/latte.h"
+#include "gpu/hlsl/hlsl.h"
 #include "gpu/hlsl/hlsl_generator.h"
 #include "modules/gx2/gx2_shaders.h"
 
@@ -10,6 +11,15 @@ namespace hlsl
 {
 
 static bool translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks);
+static bool generateEpilog(fmt::MemoryWriter &output);
+static bool generatePixelParams(latte::Shader &vertexShader, fmt::MemoryWriter &output);
+static bool generateVertexParams(const gsl::array_view<GX2AttribStream> &attribs, fmt::MemoryWriter &output);
+static bool generateLocals(latte::Shader &shader, fmt::MemoryWriter &output);
+static bool generateProlog(const char *functionName, const char *inputStruct, const char *outputStruct, fmt::MemoryWriter &output);
+static bool generateExports(latte::Shader &shader, fmt::MemoryWriter &output);
+static bool generateAttribs(const gsl::array_view<GX2AttribStream> &attribs, fmt::MemoryWriter &output);
+static int getGX2AttribFormatElems(GX2AttribFormat::Format format);
+static std::string getGX2AttribFormatType(GX2AttribFormat::Format format);
 
 static std::map<latte::cf::inst, TranslateFuncCF> sGeneratorTableCf;
 static std::map<latte::alu::op2, TranslateFuncALU> sGeneratorTableAluOp2;
@@ -321,25 +331,6 @@ translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks)
    return result;
 }
 
-} // namespace hlsl
-
-namespace latte
-{
-
-bool
-generateBody(Shader &shader, std::string &body)
-{
-   auto result = true;
-   auto state = GenerateState {};
-   state.shader = &shader;
-
-   hlsl::intialise();
-   result &= hlsl::translateBlocks(state, shader.blocks);
-   body = state.out.c_str();
-
-   return result;
-}
-
 static std::string
 getGX2AttribFormatType(GX2AttribFormat::Format format)
 {
@@ -424,17 +415,11 @@ getGX2AttribFormatElems(GX2AttribFormat::Format format)
    }
 }
 
-bool
-generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShader, Shader &pixelShader, std::string &hlsl)
+static bool
+generateAttribs(const gsl::array_view<GX2AttribStream> &attribs, fmt::MemoryWriter &output)
 {
-   auto result = true;
-   std::string vertexBody, pixelBody;
-   fmt::MemoryWriter shader;
-
-   shader << "struct VSInput {\n";
-
    for (auto &attrib : attribs) {
-      shader
+      output
          << "   "
          << getGX2AttribFormatType(attrib.format)
          << " param" << attrib.location
@@ -442,31 +427,35 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShad
          << ";\n";
    }
 
-   shader << "};\n\n";
+   return true;
+}
 
-   shader << "struct PSInput {\n";
+static bool
+generateExports(latte::Shader &shader, fmt::MemoryWriter &output)
+{
+   for (auto &exp : shader.exports) {
+      output << "   ";
 
-   for (auto &exp : vertexShader.exports) {
-      shader << "   ";
       switch (exp->type) {
       case latte::exp::Type::Position:
-         if ((exp->dstReg - 60) == 0) {
-            shader
+         if (exp->dstReg == 0) {
+            output
                << "float4 position"
-               << (exp->dstReg - 60)
+               << exp->dstReg
                << " : SV_POSITION"
                << ";\n";
          } else {
-            shader
+            output
                << "float4 position"
-               << (exp->dstReg - 60)
+               << exp->dstReg
                << " : POSITION"
-               << (exp->dstReg - 60)
+               << exp->dstReg
                << ";\n";
          }
+
          break;
       case latte::exp::Type::Parameter:
-         shader
+         output
             << "float4 param"
             << exp->dstReg
             << " : TEXCOORD"
@@ -474,41 +463,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShad
             << ";\n";
          break;
       case latte::exp::Type::Pixel:
-         shader
-            << "float4 color"
-            << exp->dstReg
-            << " : COLOR"
-            << exp->dstReg
-            << ";\n";
-         break;
-      }
-   }
-
-   shader << "};\n\n";
-
-   shader << "struct PSOutput {\n";
-
-   for (auto &exp : pixelShader.exports) {
-      shader << "   ";
-      switch (exp->type) {
-      case latte::exp::Type::Position:
-         shader
-            << "float4 position"
-            << (exp->dstReg - 60)
-            << " : POSITION"
-            << (exp->dstReg - 60)
-            << ";\n";
-         break;
-      case latte::exp::Type::Parameter:
-         shader
-            << "float4 param"
-            << exp->dstReg
-            << " : TEXCOORD"
-            << exp->dstReg
-            << ";\n";
-         break;
-      case latte::exp::Type::Pixel:
-         shader
+         output
             << "float4 color"
             << exp->dstReg
             << " : SV_TARGET"
@@ -518,107 +473,170 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, Shader &vertexShad
       }
    }
 
-   shader << "};\n\n";
+   return true;
+}
+
+static bool
+generateProlog(const char *functionName, const char *inputStruct, const char *outputStruct, fmt::MemoryWriter &output)
+{
+   output
+      << "\n"
+      << outputStruct << " " << functionName << "(" << inputStruct << " input)\n"
+      << "{\n"
+      << outputStruct << " result;\n";
+
+   return true;
+}
+
+static bool
+generateLocals(latte::Shader &shader, fmt::MemoryWriter &output)
+{
+   for (auto id : shader.gprsUsed) {
+      output
+         << "float4 R" << id << ";\n";
+   }
+
+   for (auto id : shader.uniformsUsed) {
+      // TODO: Real uniforms
+      output
+         << "float4 C" << id << " = float4(0.5, 0.5, 0, 0);\n";
+   }
+
+   if (shader.psUsed.size()) {
+      output
+         << "float4 PS;\n"
+         << "float4 PSo;\n";
+   }
+
+   if (shader.pvUsed.size()) {
+      output
+         << "float4 PV;\n"
+         << "float4 PVo;\n";
+   }
+
+   return true;
+}
+
+static bool
+generateVertexParams(const gsl::array_view<GX2AttribStream> &attribs, fmt::MemoryWriter &output)
+{
+   auto result = true;
+
+   for (auto &attrib : attribs) {
+      int attribElems = getGX2AttribFormatElems(attrib.format);
+
+      output
+         << "R" << (attrib.location + 1)
+         << " = ";
+
+      switch (attribElems) {
+      case 1:
+         output << "float4(input.param" << attrib.location << ", 0, 0, 0);\n";
+         break;
+      case 2:
+         output << "float4(input.param" << attrib.location << ", 0, 0);\n";
+         break;
+      case 3:
+         output << "float4(input.param" << attrib.location << ", 0);\n";
+         break;
+      case 4:
+         output << "input.param" << attrib.location << ";\n";
+         break;
+      default:
+         assert(0);
+         result = false;
+      }
+   }
+
+   return result;
+}
+
+static bool
+generatePixelParams(latte::Shader &vertexShader, fmt::MemoryWriter &output)
+{
+   for (auto &exp : vertexShader.exports) {
+      if (exp->type == latte::exp::Type::Parameter) {
+         output << "R" << exp->dstReg << " = (float4)input.param" << exp->dstReg << ";\n";
+      }
+   }
+
+   return true;
+}
+
+static bool
+generateEpilog(fmt::MemoryWriter &output)
+{
+   output
+      << "return result;\n"
+      << "}\n";
+
+   return true;
+}
+
+bool
+generateBody(latte::Shader &shader, std::string &body)
+{
+   auto result = true;
+   auto state = GenerateState {};
+   state.shader = &shader;
+
+   intialise();
+   result &= translateBlocks(state, shader.blocks);
+   body = state.out.c_str();
+
+   return result;
+}
+
+bool
+generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
+             latte::Shader &vertexShader,
+             latte::Shader &pixelShader,
+             std::string &hlsl)
+{
+   auto result = true;
+   fmt::MemoryWriter output;
+
+   output << "struct VSInput {\n";
+   result &= generateAttribs(attribs, output);
+   output << "};\n\n";
+
+   output << "struct PSInput {\n";
+   generateExports(vertexShader, output);
+   output << "};\n\n";
+
+   output << "struct PSOutput {\n";
+   generateExports(pixelShader, output);
+   output << "};\n\n";
 
    for (auto id : pixelShader.samplersUsed) {
-      shader
+      output
          << "SamplerState g_sampler" << id
          << " : register(s" << id << ");\n";
    }
 
    for (auto id : pixelShader.resourcesUsed) {
-      shader
+      output
          << "Texture2D g_texture" << id
          << " : register(t" << id << ");\n";
    }
 
-   shader
-      << "\n"
-      << "PSInput VSMain(VSInput input)\n"
-      << "{\n"
-      << "PSInput result;\n";
-
-   for (auto id : vertexShader.gprsUsed) {
-      shader
-         << "float4 R" << id << ";\n";
-   }
-
-   if (vertexShader.psUsed.size()) {
-      shader
-         << "float4 PS;\n"
-         << "float4 PSo;\n";
-   }
-
-   if (vertexShader.pvUsed.size()) {
-      shader
-         << "float4 PV;\n"
-         << "float4 PVo;\n";
-   }
-
-   for (auto &attrib : attribs) {
-      int attribElems = getGX2AttribFormatElems(attrib.format);
-      switch (attribElems) {
-      case 1:
-         shader << "R" << (attrib.location + 1) << " = float4(input.param" << attrib.location << ", 0, 0, 0);\n";
-         break;
-      case 2:
-         shader << "R" << (attrib.location + 1) << " = float4(input.param" << attrib.location << ", 0, 0);\n";
-         break;
-      case 3:
-         shader << "R" << (attrib.location + 1) << " = float4(input.param" << attrib.location << ", 0);\n";
-         break;
-      case 4:
-         shader << "R" << (attrib.location + 1) << " = input.param" << attrib.location << ";\n";
-         break;
-      default:
-         assert(0);
-      }
-   }
-
+   auto vertexBody = std::string { };
+   result &= generateProlog("VSMain", "VSInput", "PSInput", output);
+   result &= generateLocals(vertexShader, output);
+   result &= generateVertexParams(attribs, output);
    result &= generateBody(vertexShader, vertexBody);
-   shader << vertexBody;
+   output << vertexBody;
+   result &= generateEpilog(output);
 
-   shader
-      << "return result;\n"
-      << "}\n";
-
-   shader
-      << "\n"
-      << "PSOutput PSMain(PSInput input)\n"
-      << "{\n"
-      << "PSOutput result;\n";
-
-   for (auto id : pixelShader.gprsUsed) {
-      shader
-         << "float4 R" << id << ";\n";
-   }
-
-   if (pixelShader.psUsed.size()) {
-      shader
-         << "float4 PS;\n"
-         << "float4 PSo;\n";
-   }
-
-   if (pixelShader.pvUsed.size()) {
-      shader
-         << "float4 PV;\n"
-         << "float4 PVo;\n";
-   }
-
-   for (auto &exp : vertexShader.exports) {
-      if (exp->type == latte::exp::Type::Parameter) {
-         shader << "R" << exp->dstReg << " = (float4)input.param" << exp->dstReg << ";\n";
-      }
-   }
-
+   auto pixelBody = std::string { };
+   result &= generateProlog("PSMain", "PSInput", "PSOutput", output);
+   result &= generateLocals(pixelShader, output);
+   result &= generatePixelParams(vertexShader, output);
    result &= generateBody(pixelShader, pixelBody);
-   shader << pixelBody;
+   output << pixelBody;
+   result &= generateEpilog(output);
 
-   shader
-      << "return result;\n"
-      << "}\n";
-
-   hlsl = shader.str();
+   hlsl = output.str();
    return result;
 }
 

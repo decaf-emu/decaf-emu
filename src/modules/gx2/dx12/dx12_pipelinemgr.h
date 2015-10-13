@@ -6,6 +6,7 @@
 #include "modules/gx2/gx2_shaders.h"
 #include "modules/gx2/gx2_debug.h"
 #include "gpu/latte.h"
+#include "gpu/hlsl/hlsl.h"
 #include "crc32.h"
 
 class DXPipelineMgr {
@@ -102,7 +103,7 @@ private:
          latte::Shader decVertexShader, decPixelShader;
          latte::decode(decVertexShader, { vertexShader->data.get(), vertexShader->size });
          latte::decode(decPixelShader, { pixelShader->data.get(), pixelShader->size });
-         latte::generateHLSL({ (GX2AttribStream*)fetchData->attribs, fetchShader->attribCount }, decVertexShader, decPixelShader, hlsl);
+         hlsl::generateHLSL({ (GX2AttribStream*)fetchData->attribs, fetchShader->attribCount }, decVertexShader, decPixelShader, hlsl);
          printf("Compiled Shader:\n");
          printf("%s", hlsl.c_str());
       }
