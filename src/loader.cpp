@@ -311,7 +311,7 @@ Loader::loadKernelModule(const std::string &name, KernelModule *module)
          return nullptr;
       }
    }
-   
+
    // Create module
    auto loadedMod = std::make_unique<LoadedModule>();
    loadedMod->name = name;
@@ -780,8 +780,8 @@ Loader::loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data)
    auto sbss = findSection(sections, shStrTab, ".sbss");
    auto sdata2 = findSection(sections, shStrTab, ".sdata2");
    auto sbss2 = findSection(sections, shStrTab, ".sbss2");
-   auto sdaBase = calculateSdaBase(sdata, sbss);
-   auto sda2Base = calculateSdaBase(sdata2, sbss2);
+   loadedMod->sdaBase = calculateSdaBase(sdata, sbss);
+   loadedMod->sda2Base = calculateSdaBase(sdata2, sbss2);
 
    // Process Imports
    if (!processImports(loadedMod.get(), sections)) {
@@ -838,8 +838,6 @@ Loader::loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data)
    mCodeHeap->free(loadSegAddr);
 
    loadedMod->name = name;
-   loadedMod->sdaBase = sdaBase;
-   loadedMod->sda2Base = sda2Base;
    loadedMod->defaultStackSize = info.stackSize;
    loadedMod->entryPoint = entryPoint;
    loadedMod->handle = OSAllocFromSystem<LoadedModuleHandleData>();
