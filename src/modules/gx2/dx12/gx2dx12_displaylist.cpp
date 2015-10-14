@@ -1,18 +1,17 @@
-#include "../gx2.h"
+#include "modules/gx2/gx2.h"
 #ifdef GX2_DX12
 
-#include "../gx2_displaylist.h"
+#include "modules/gx2/gx2_displaylist.h"
+#include "virtual_ptr.h"
 
-static GX2DisplayList *
+static virtual_ptr<GX2DisplayList>
 gCurrentDisplayList = nullptr;
 
 static uint32_t
 gCurrentDisplayListSize = 0;
 
 void
-GX2BeginDisplayListEx(GX2DisplayList *displayList,
-   uint32_t size,
-   BOOL unk1)
+GX2BeginDisplayListEx(GX2DisplayList *displayList, uint32_t size, BOOL unk1)
 {
    gCurrentDisplayList = displayList;
    gCurrentDisplayListSize = size;
@@ -33,15 +32,13 @@ GX2EndDisplayList(GX2DisplayList *displayList)
 }
 
 void
-GX2DirectCallDisplayList(GX2DisplayList *displayList,
-   uint32_t size)
+GX2DirectCallDisplayList(GX2DisplayList *displayList, uint32_t size)
 {
    // TODO: GX2DirectCallDisplayList
 }
 
 void
-GX2CallDisplayList(GX2DisplayList *displayList,
-   uint32_t size)
+GX2CallDisplayList(GX2DisplayList *displayList, uint32_t size)
 {
    if (GX2GetDisplayListWriteStatus()) {
       GX2CopyDisplayList(displayList, size);
@@ -57,23 +54,21 @@ GX2GetDisplayListWriteStatus()
 }
 
 BOOL
-GX2GetCurrentDisplayList(be_val<uint32_t> *outDisplayList,
-   be_val<uint32_t> *outSize)
+GX2GetCurrentDisplayList(be_val<uint32_t> *outDisplayList, be_val<uint32_t> *outSize)
 {
    if (!gCurrentDisplayList) {
       return FALSE;
    }
 
-   *outDisplayList = gMemory.untranslate(gCurrentDisplayList);
+   *outDisplayList = gCurrentDisplayList.getAddress();
    *outSize = gCurrentDisplayListSize;
    return TRUE;
 }
 
 void
-GX2CopyDisplayList(GX2DisplayList *displayList,
-   uint32_t size)
+GX2CopyDisplayList(GX2DisplayList *displayList, uint32_t size)
 {
-   auto dst = reinterpret_cast<uint8_t*>(gCurrentDisplayList) + gCurrentDisplayListSize;
+   auto dst = reinterpret_cast<uint8_t*>(gCurrentDisplayList.get()) + gCurrentDisplayListSize;
    memcpy(dst, displayList, size);
    gCurrentDisplayListSize += size;
 }

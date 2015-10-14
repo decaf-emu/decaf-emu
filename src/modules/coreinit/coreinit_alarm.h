@@ -1,7 +1,10 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
 #include "coreinit_threadqueue.h"
 #include "coreinit_time.h"
+#include "structsize.h"
+#include "virtual_ptr.h"
+#include "wfunc_ptr.h"
 
 #pragma pack(push, 1)
 

@@ -1,5 +1,8 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
+#include "structsize.h"
+#include "types.h"
+#include "virtual_ptr.h"
 
 namespace GX2FetchShaderType
 {
@@ -80,13 +83,12 @@ enum Mode : uint32_t
 
 struct GX2FetchShader
 {
-   DriverData<4> driverData;
+   UNKNOWN(4);
    be_val<uint32_t> size;
    be_ptr<void> data;
    be_val<uint32_t> attribCount;
    UNKNOWN(12);
 };
-CHECK_OFFSET(GX2FetchShader, 0x0, driverData);
 CHECK_OFFSET(GX2FetchShader, 0x4, size);
 CHECK_OFFSET(GX2FetchShader, 0x8, data);
 CHECK_OFFSET(GX2FetchShader, 0xc, attribCount);
@@ -97,7 +99,7 @@ struct GX2SamplerVar;
 
 struct GX2VertexShader
 {
-   DriverData<208> driverData;
+   UNKNOWN(208);
    be_val<uint32_t> size;
    be_ptr<uint8_t> data;
    be_val<GX2ShaderMode::Mode> mode;
@@ -122,7 +124,6 @@ struct GX2VertexShader
 
    UNKNOWN(4 * 10);
 };
-CHECK_OFFSET(GX2VertexShader, 0x0, driverData);
 CHECK_OFFSET(GX2VertexShader, 0xd0, size);
 CHECK_OFFSET(GX2VertexShader, 0xd4, data);
 CHECK_OFFSET(GX2VertexShader, 0xd8, mode);
@@ -134,7 +135,7 @@ CHECK_SIZE(GX2VertexShader, 0x134);
 
 struct GX2PixelShader
 {
-   DriverData<164> driverData;
+   UNKNOWN(164);
    be_val<uint32_t> size;
    be_ptr<uint8_t> data;
    be_val<GX2ShaderMode::Mode> mode;
@@ -159,7 +160,6 @@ struct GX2PixelShader
    be_val<uint32_t> unk6;
    be_val<uint32_t> unk7;
 };
-CHECK_OFFSET(GX2PixelShader, 0x0, driverData);
 CHECK_OFFSET(GX2PixelShader, 0xa4, size);
 CHECK_OFFSET(GX2PixelShader, 0xa8, data);
 CHECK_OFFSET(GX2PixelShader, 0xac, mode);
@@ -204,10 +204,17 @@ uint32_t
 GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize);
 
 uint32_t
-GX2CalcFetchShaderSizeEx(uint32_t attribs, GX2FetchShaderType::Type fetchShaderType, GX2TessellationMode::Mode tesellationMode);
+GX2CalcFetchShaderSizeEx(uint32_t attribs,
+                         GX2FetchShaderType::Type fetchShaderType,
+                         GX2TessellationMode::Mode tesellationMode);
 
 void
-GX2InitFetchShaderEx(GX2FetchShader *fetchShader, void *buffer, uint32_t count, GX2AttribStream *attribs, GX2FetchShaderType::Type type, GX2TessellationMode::Mode tessMode);
+GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
+                     void *buffer,
+                     uint32_t count,
+                     GX2AttribStream *attribs,
+                     GX2FetchShaderType::Type type,
+                     GX2TessellationMode::Mode tessMode);
 
 void
 GX2SetFetchShader(GX2FetchShader *shader);
@@ -231,7 +238,9 @@ void
 GX2SetPixelUniformReg(uint32_t offset, uint32_t count, void *data);
 
 void
-GX2SetShaderModeEx(GX2ShaderMode::Mode mode, uint32_t unk1, uint32_t unk2, uint32_t unk3, uint32_t unk4, uint32_t unk5, uint32_t unk6);
+GX2SetShaderModeEx(GX2ShaderMode::Mode mode,
+                   uint32_t unk1, uint32_t unk2, uint32_t unk3,
+                   uint32_t unk4, uint32_t unk5, uint32_t unk6);
 
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader);

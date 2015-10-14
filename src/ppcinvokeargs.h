@@ -1,5 +1,7 @@
 #pragma once
+#include "be_val.h"
 #include "ppctypes.h"
+#include "virtual_ptr.h"
 
 namespace ppctypes
 {
@@ -14,7 +16,7 @@ getNextGPR(ThreadState *state, size_t &r)
 
    if (r > 10) {
       auto addr = state->gpr[1] + 8 + 4 * static_cast<uint32_t>(r - 11);
-      value = gMemory.read<uint32_t>(addr);
+      value = *make_virtual_ptr<be_val<uint32_t>>(addr);
    } else {
       value = state->gpr[r];
    }
@@ -28,7 +30,7 @@ setNextGPR(ThreadState *state, size_t &r, uint32_t value)
 {
    if (r > 10) {
       auto addr = state->gpr[1] + 8 +  4 * static_cast<uint32_t>(r - 11);
-      gMemory.write<uint32_t>(addr, value);
+      *make_virtual_ptr<be_val<uint32_t>>(addr) = value;
    } else {
       state->gpr[r] = value;
    }

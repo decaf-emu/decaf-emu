@@ -1,6 +1,8 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
 #include "gx2_displaylist.h"
+#include "structsize.h"
+#include "types.h"
 
 namespace GX2InvalidateMode
 {
@@ -42,7 +44,7 @@ void
 GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1);
 
 void
-GX2GetContextStateDisplayList(GX2ContextState *state, be_val<uint32_t> *outDisplayList, be_val<uint32_t> *outSize);
+GX2GetContextStateDisplayList(GX2ContextState *state, be_ptr<uint8_t> *outDisplayList, be_val<uint32_t> *outSize);
 
 void
 GX2SetContextState(GX2ContextState *state);

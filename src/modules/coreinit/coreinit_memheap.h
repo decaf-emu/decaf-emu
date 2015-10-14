@@ -1,7 +1,8 @@
 #pragma once
-#include "systemtypes.h"
 #include "coreinit_memlist.h"
 #include "coreinit_spinlock.h"
+#include "structsize.h"
+#include "wfunc_ptr.h"
 
 enum class BaseHeapType : uint32_t
 {

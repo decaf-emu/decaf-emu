@@ -56,14 +56,13 @@ GX2GetDisplayListWriteStatus()
 }
 
 BOOL
-GX2GetCurrentDisplayList(be_val<uint32_t> *outDisplayList,
-   be_val<uint32_t> *outSize)
+GX2GetCurrentDisplayList(be_val<uint32_t> *outDisplayList, be_val<uint32_t> *outSize)
 {
    if (!gCurrentDisplayList) {
       return FALSE;
    }
 
-   *outDisplayList = gMemory.untranslate(gCurrentDisplayList);
+   *outDisplayList = memory_untranslate(gCurrentDisplayList);
    *outSize = gCurrentDisplayListSize;
    return TRUE;
 }

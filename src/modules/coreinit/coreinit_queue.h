@@ -1,5 +1,4 @@
 #pragma once
-#include "systemtypes.h"
 
 template<typename QueueType>
 static void inline

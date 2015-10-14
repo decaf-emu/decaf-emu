@@ -1,7 +1,10 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
 #include "coreinit_time.h"
 #include "coreinit_threadqueue.h"
+#include "structsize.h"
+#include "virtual_ptr.h"
+#include "wfunc_ptr.h"
 
 #pragma pack(push, 1)
 
@@ -142,15 +145,15 @@ struct OSThread
    be_ptr<OSMutex> mutex;                 // Mutex we are waiting to lock
    OSMutexQueue mutexQueue;               // Mutexes owned by this thread
    OSThreadLink activeLink;               // Link on active thread queue
-   be_val<uint32_t> stackStart;           // Stack starting value (top, highest address)
-   be_val<uint32_t> stackEnd;             // Stack end value (bottom, lowest address)
+   be_ptr<be_val<uint32_t>> stackStart;   // Stack starting value (top, highest address)
+   be_ptr<be_val<uint32_t>> stackEnd;     // Stack end value (bottom, lowest address)
    be_val<uint32_t> entryPoint;           // Entry point from OSCreateThread
    UNKNOWN(0x57c - 0x3a0);
    be_val<uint32_t> specific[0x10];
    UNKNOWN(0x5c0 - 0x5bc);
    be_ptr<const char> name;               // Thread name
    UNKNOWN(0x4);
-   be_ptr<uint8_t> userStackPointer;      // The stack specified in OSCreateThread
+   be_ptr<be_val<uint32_t>> userStackPointer; // The stack specified in OSCreateThread
    be_val<uint32_t> cleanupCallback;
    be_val<uint32_t> deallocator;
    be_val<uint32_t> cancelState;          // Is listening to requestFlag enabled
@@ -209,7 +212,7 @@ void
 OSContinueThread(OSThread *thread);
 
 BOOL
-OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes::Flags attributes);
+OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, be_val<uint32_t> *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes::Flags attributes);
 
 void
 OSDetachThread(OSThread *thread);
@@ -257,7 +260,7 @@ int32_t
 OSResumeThread(OSThread *thread);
 
 BOOL
-OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, p32<void> argv);
+OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv);
 
 OSThread *
 OSSetDefaultThread(uint32_t core, OSThread *thread);

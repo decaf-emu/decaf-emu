@@ -6,7 +6,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
 #include "coreinit_thread.h"
-#include "memory.h"
+#include "memory_translate.h"
 #include "processor.h"
 #include "system.h"
 #include "usermodule.h"
@@ -20,18 +20,18 @@ gThreadId = 1;
 void
 __OSClearThreadStack32(OSThread *thread, uint32_t value)
 {
-   uint32_t clearStart = 0, clearEnd = 0;
+   virtual_ptr<be_val<uint32_t>> clearStart, clearEnd;
 
    if (OSGetCurrentThread() == thread) {
       clearStart = thread->stackEnd + 4;
-      clearEnd = OSGetStackPointer();
+      clearEnd = make_virtual_ptr<be_val<uint32_t>>(OSGetStackPointer());
    } else {
       clearStart = thread->stackEnd + 4;
-      clearEnd = thread->fiber->state.gpr[1];
+      clearEnd = make_virtual_ptr<be_val<uint32_t>>(thread->fiber->state.gpr[1]);
    }
 
    for (auto addr = clearStart; addr < clearEnd; addr += 4) {
-      *reinterpret_cast<uint32_t*>(gMemory.translate(addr)) = value;
+      *addr = value;
    }
 }
 
@@ -39,7 +39,6 @@ void
 OSCancelThread(OSThread *thread)
 {
    bool reschedule = false;
-
    OSLockScheduler();
 
    if (thread->requestFlag == OSThreadRequest::Suspend) {
@@ -79,18 +78,16 @@ OSCheckActiveThreads()
 int32_t
 OSCheckThreadStackUsage(OSThread *thread)
 {
-   uint32_t addr, result;
+   virtual_ptr<be_val<uint32_t>> addr;
    OSLockScheduler();
 
    for (addr = thread->stackEnd + 4; addr < thread->stackStart; addr += 4) {
-      auto val = *reinterpret_cast<uint32_t*>(gMemory.translate(addr));
-
-      if (val != 0xfefefefe) {
+      if (*addr != 0xfefefefe) {
          break;
       }
    }
 
-   result = thread->stackStart - addr;
+   auto result = static_cast<int32_t>(thread->stackStart.getAddress()) - static_cast<int32_t>(addr.getAddress());
    OSUnlockScheduler();
    return result;
 }
@@ -132,10 +129,10 @@ InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *arg
 
    // Setup context
    thread->context.gpr[0] = 0;
-   thread->context.gpr[1] = thread->stackStart - 4 - EXTRA_STACK_ALLOC;
+   thread->context.gpr[1] = thread->stackStart.getAddress() - 4 - EXTRA_STACK_ALLOC;
    thread->context.gpr[2] = sda2Base;
    thread->context.gpr[3] = argc;
-   thread->context.gpr[4] = gMemory.untranslate(argv);
+   thread->context.gpr[4] = memory_untranslate(argv);
    thread->context.gpr[13] = sdaBase;
 
    // Setup thread
@@ -147,19 +144,19 @@ InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *arg
 }
 
 BOOL
-OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, uint8_t *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes::Flags attributes)
+OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, be_val<uint32_t> *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes::Flags attributes)
 {
    // Setup OSThread
    memset(thread, 0, sizeof(OSThread));
    thread->userStackPointer = stack;
-   thread->stackStart = gMemory.untranslate(stack);
-   thread->stackEnd = thread->stackStart - stackSize;
+   thread->stackStart = stack;
+   thread->stackEnd = reinterpret_cast<be_val<uint32_t>*>(reinterpret_cast<uint8_t*>(stack) - stackSize);
    thread->basePriority = priority;
    thread->attr = attributes;
    thread->id = gThreadId++;
 
    // Write magic stack ending!
-   gMemory.write(thread->stackEnd, 0xDEADBABE);
+   *thread->stackEnd = 0xDEADBABE;
 
    // Setup thread state
    InitialiseThreadState(thread, entry, argc, argv);
@@ -307,7 +304,7 @@ OSResumeThread(OSThread *thread)
 }
 
 BOOL
-OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, p32<void> argv)
+OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv)
 {
    BOOL result = false;
    OSLockScheduler();

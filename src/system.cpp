@@ -1,10 +1,11 @@
 #include <algorithm>
 #include "instructiondata.h"
-#include "system.h"
-#include "kernelmodule.h"
-#include "modules/coreinit/coreinit_memheap.h"
-#include "teenyheap.h"
 #include "kernelfunction.h"
+#include "kernelmodule.h"
+#include "memory.h"
+#include "modules/coreinit/coreinit_memheap.h"
+#include "system.h"
+#include "teenyheap.h"
 
 System gSystem;
 
@@ -61,8 +62,8 @@ System::getUserModule() const
 void
 System::initialise()
 {
-   auto systemHeapStart = 0x01000000;
-   auto systemHeapSize = 0x01000000;
+   auto systemHeapStart = 0x01000000u;
+   auto systemHeapSize = 0x01000000u;
    gMemory.alloc(systemHeapStart, systemHeapSize);
    void *systemMem = gMemory.translate(systemHeapStart);
    mSystemHeap = new TeenyHeap(systemMem, systemHeapSize);
@@ -86,6 +87,7 @@ System::getSyscall(uint32_t id)
    if (id >= mSystemCalls.size()) {
       return nullptr;
    }
+
    return mSystemCalls.at(id);
 }
 

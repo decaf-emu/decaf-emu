@@ -1,5 +1,8 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
+#include "structsize.h"
+#include "types.h"
+#include "virtual_ptr.h"
 
 #pragma pack(push, 1)
 
@@ -123,15 +126,13 @@ struct GX2DepthBuffer
    be_val<uint32_t> viewNumSlices; // GX2ClearDepthStencilEx
    be_ptr<void> hiZPtr; // GX2ExpandDepthBuffer
    be_val<uint32_t> hiZSize;
-   UNKNOWN(8);
-   DriverData<28> driverData;
+   UNKNOWN(36);
 };
 CHECK_OFFSET(GX2DepthBuffer, 0x74, viewMip);
 CHECK_OFFSET(GX2DepthBuffer, 0x78, viewFirstSlice);
 CHECK_OFFSET(GX2DepthBuffer, 0x7C, viewNumSlices);
 CHECK_OFFSET(GX2DepthBuffer, 0x80, hiZPtr);
 CHECK_OFFSET(GX2DepthBuffer, 0x84, hiZSize);
-CHECK_OFFSET(GX2DepthBuffer, 0x90, driverData);
 CHECK_SIZE(GX2DepthBuffer, 0xAC);
 
 struct GX2ColorBuffer
@@ -141,13 +142,11 @@ struct GX2ColorBuffer
    be_val<uint32_t> viewMip; // GX2ClearBuffersEx
    be_val<uint32_t> viewFirstSlice; // GX2ClearBuffersEx
    be_val<uint32_t> viewNumSlices; // GX2ClearBuffersEx
-   UNKNOWN(8);
-   DriverData<20> driverData;
+   UNKNOWN(28);
 };
 CHECK_OFFSET(GX2ColorBuffer, 0x74, viewMip);
 CHECK_OFFSET(GX2ColorBuffer, 0x78, viewFirstSlice);
 CHECK_OFFSET(GX2ColorBuffer, 0x7C, viewNumSlices);
-CHECK_OFFSET(GX2ColorBuffer, 0x88, driverData);
 CHECK_SIZE(GX2ColorBuffer, 0x9C);
 
 #pragma pack(pop)

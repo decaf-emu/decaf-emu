@@ -1,9 +1,11 @@
-#include "zlib125.h"
-#include "zlib125_core.h"
-#include "processor.h"
-#include "interpreter.h"
-#include "../coreinit/coreinit_memheap.h"
 #include <zlib.h>
+#include "interpreter.h"
+#include "modules/coreinit/coreinit_memheap.h"
+#include "memory_translate.h"
+#include "processor.h"
+#include "virtual_ptr.h"
+#include "wfunc_ptr.h"
+#include "zlib125.h"
 
 static std::map<uint32_t, z_stream>
 gStreamMap;
@@ -57,7 +59,7 @@ static void *
 zlibAllocWrapper(void *opaque, unsigned items, unsigned size)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
-   ZlibAllocFunc allocFunc = static_cast<uint32_t>(wstrm->zalloc);
+   ZlibAllocFunc allocFunc = wstrm->zalloc;
 
    if (allocFunc) {
       return allocFunc(wstrm->opaque, items, size);
@@ -70,7 +72,8 @@ static void
 zlibFreeWrapper(void *opaque, void *address)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
-   ZlibFreeFunc freeFunc = static_cast<uint32_t>(wstrm->zfree);
+   ZlibFreeFunc freeFunc = wstrm->zfree;
+
    if (freeFunc) {
       freeFunc(wstrm->opaque, address);
    } else {
@@ -81,7 +84,7 @@ zlibFreeWrapper(void *opaque, void *address)
 z_stream *
 getZStream(WZStream *in)
 {
-   auto zstream = &gStreamMap[gMemory.untranslate(in)];
+   auto zstream = &gStreamMap[memory_untranslate(in)];
    zstream->opaque = in;
    zstream->zalloc = &zlibAllocWrapper;
    zstream->zfree = &zlibFreeWrapper;
@@ -91,7 +94,7 @@ getZStream(WZStream *in)
 void
 eraseZStream(WZStream *in)
 {
-   gStreamMap.erase(gMemory.untranslate(in));
+   gStreamMap.erase(memory_untranslate(in));
 }
 
 static int
@@ -161,7 +164,7 @@ Zlib125::registerCoreFunctions()
    RegisterKernelFunction(crc32);
    RegisterKernelFunction(compressBound);
    RegisterKernelFunction(zlibCompileFlags);
-   
+
    // Need wrap
    RegisterKernelFunctionName("inflate", zlib125_inflate);
    RegisterKernelFunctionName("inflateInit_", zlib125_inflateInit_);

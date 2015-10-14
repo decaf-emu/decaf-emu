@@ -1,10 +1,12 @@
 #include <fstream>
 #include <spdlog/spdlog.h>
 #include <Windows.h>
+
 #include "gx2_texture.h"
 #include "gx2_shaders.h"
 #include "gpu/latte.h"
 #include "gpu/hlsl/hlsl.h"
+#include "memory_translate.h"
 
 static void
 GX2CreateDumpDirectory()
@@ -81,7 +83,7 @@ static std::string
 GX2PointerAsString(const void *pointer)
 {
    fmt::MemoryWriter format;
-   format.write("{:08X}", gMemory.untranslate(pointer));
+   format.write("{:08X}", memory_untranslate(pointer));
    return format.str();
 }
 

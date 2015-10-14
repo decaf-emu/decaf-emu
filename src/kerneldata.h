@@ -1,5 +1,5 @@
 #pragma once
-#include "systemtypes.h"
+#include <cstdint>
 #include "kernelexport.h"
 
 struct KernelData : public KernelExport

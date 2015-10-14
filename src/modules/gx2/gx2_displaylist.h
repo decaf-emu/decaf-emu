@@ -1,5 +1,6 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
+#include "types.h"
 
 struct GX2DisplayList;
 

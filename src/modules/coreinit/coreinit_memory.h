@@ -1,5 +1,5 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
 
 enum class OSMemoryType : uint32_t
 {

@@ -9,13 +9,14 @@
 #include "debugnet.h"
 #include "debugmsg.h"
 #include "debugger.h"
-#include "system.h"
-#include "processor.h"
-#include "log.h"
-#include "modules/coreinit/coreinit_thread.h"
 #include "disassembler.h"
-#include "trace.h"
 #include "instructiondata.h"
+#include "log.h"
+#include "memory.h"
+#include "modules/coreinit/coreinit_thread.h"
+#include "processor.h"
+#include "system.h"
+#include "trace.h"
 
 DebugNet
 gDebugNet;
@@ -172,8 +173,8 @@ populateDebugPauseInfo(DebugPauseInfo& info)
       }
 
       tinfo.entryPoint = thread->entryPoint;
-      tinfo.stackStart = thread->stackStart;
-      tinfo.stackEnd = thread->stackEnd;
+      tinfo.stackStart = thread->stackStart.getAddress();
+      tinfo.stackEnd = thread->stackEnd.getAddress();
 
       tinfo.attribs = thread->attr;
       tinfo.state = thread->state;
@@ -198,7 +199,7 @@ static void populateDebugTraceEntrys(std::vector<DebugTraceEntry>& entries, Thre
 
       DebugTraceEntry entry;
       entry.cia = trace.cia;
-      
+
       for (auto &i : trace.writes) {
          DebugTraceEntryField field;
          field.type = i.type;
@@ -656,7 +657,7 @@ DebugNet::handlePacket(DebugPacket *pak)
    }
    case DebugPacketType::StepCoreOver: {
       auto *scPak = static_cast<DebugPacketStepCoreOver*>(pak);
-      
+
       if (scPak->coreId < 0 || scPak->coreId >= 3) {
          break;
       }
@@ -675,7 +676,7 @@ DebugNet::handlePacket(DebugPacket *pak)
       if (!fiber) {
          break;
       }
-      
+
       uint32_t curAddr = fiber->state.cia;
 
       auto instr = gMemory.read<Instruction>(curAddr);

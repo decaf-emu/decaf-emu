@@ -3,10 +3,11 @@
 #include "coreinit.h"
 #include "coreinit_memheap.h"
 #include "coreinit_shared.h"
+#include "virtual_ptr.h"
 
 struct FontData
 {
-   p32<uint8_t> data = nullptr;
+   virtual_ptr<uint8_t> data = nullptr;
    uint32_t size = 0;
 };
 

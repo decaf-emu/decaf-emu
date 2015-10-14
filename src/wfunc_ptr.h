@@ -1,9 +1,7 @@
 #pragma once
-#include <cstdint>
 #include <ostream>
-#include "p32.h"
-#include "ppc.h"
 #include "ppctypes.h"
+#include "virtual_ptr.h"
 
 ThreadState *GetCurrentFiberState();
 
@@ -32,8 +30,9 @@ struct wfunc_ptr
    {
    }
 
-   wfunc_ptr(p32<void> addr) :
-      address(addr)
+   template<bool Endian>
+   wfunc_ptr(const virtual_ptr<void, Endian> &ptr) :
+      address(ptr.getAddress())
    {
    }
 
@@ -55,23 +54,32 @@ struct be_wfunc_ptr
    {
    }
 
+   void setAddress(ppcaddr_t addr)
+   {
+      address = byte_swap(addr);
+   }
+
+   ppcaddr_t getAddress() const
+   {
+      return byte_swap(address);
+   }
+
    be_wfunc_ptr& operator=(const wfunc_ptr<ReturnType, Args...> &rhs)
    {
-      address = rhs.address;
+      setAddress(rhs.address);
       return *this;
    }
 
    ReturnType operator()(Args... args)
    {
-      wfunc_ptr<ReturnType, Args...> ptr(static_cast<uint32_t>(address));
+      wfunc_ptr<ReturnType, Args...> ptr(getAddress());
       return ptr(args...);
    }
 
-   be_val<ppcaddr_t> address;
+   ppcaddr_t address;
 };
 
 #pragma pack(pop)
-
 
 template<typename ReturnType, typename... Args>
 static inline std::ostream &
@@ -88,7 +96,7 @@ struct ppctype_converter_t<wfunc_ptr<ReturnType, Args...>>
 {
    typedef wfunc_ptr<ReturnType, Args...> Type;
    static const PpcType ppc_type = PpcType::WORD;
-   
+
    static inline void to_ppc(const Type& v, uint32_t& out)
    {
       out = v.address;

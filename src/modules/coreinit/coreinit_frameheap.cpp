@@ -1,7 +1,10 @@
 #include "coreinit.h"
 #include "coreinit_memheap.h"
 #include "coreinit_frameheap.h"
+#include "memory.h"
+#include "memory_translate.h"
 #include "system.h"
+#include "virtual_ptr.h"
 
 #pragma pack(push, 1)
 
@@ -10,7 +13,7 @@ struct FrameHeapState
    uint32_t tag;
    uint32_t top;
    uint32_t bottom;
-   p32<FrameHeapState> previous;
+   virtual_ptr<FrameHeapState> previous;
 };
 
 struct FrameHeap : CommonHeap
@@ -18,7 +21,7 @@ struct FrameHeap : CommonHeap
    uint32_t top;
    uint32_t bottom;
    uint32_t size;
-   p32<FrameHeapState> state;
+   virtual_ptr<FrameHeapState> state;
 };
 
 #pragma pack(pop)
@@ -33,14 +36,14 @@ FrameHeap *
 MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags)
 {
    // Allocate memory
-   auto base = gMemory.untranslate(heap);
+   auto base = memory_untranslate(heap);
    gMemory.alloc(base, size);
 
    // Setup state
    heap->size = size;
    heap->top = base + size;
    heap->bottom = base + sizeof(FrameHeap) + sizeof(FrameHeapState);
-   heap->state = make_p32<FrameHeap>(base + sizeof(FrameHeap));
+   heap->state = make_virtual_ptr<FrameHeapState>(base + sizeof(FrameHeap));
    heap->state->tag = 0;
    heap->state->top = heap->top;
    heap->state->bottom = heap->bottom;
@@ -55,7 +58,7 @@ void *
 MEMDestroyFrmHeap(FrameHeap *heap)
 {
    MEMiFinaliseHeap(heap);
-   gMemory.free(gMemory.untranslate(heap));
+   gMemory.free(memory_untranslate(heap));
    return heap;
 }
 
@@ -97,7 +100,7 @@ MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment)
 
    // Align offset
    offset = alignUp(offset, alignment);
-   return make_p32<void>(offset);
+   return make_virtual_ptr<void>(offset);
 }
 
 void
@@ -127,7 +130,7 @@ MEMRecordStateForFrmHeap(FrameHeap *heap, uint32_t tag)
 {
    ScopedSpinLock lock(&heap->lock);
    FrameHeapState *state = reinterpret_cast<FrameHeapState*>(MEMAllocFromFrmHeapEx(heap, sizeof(FrameHeapState), 4));
-   
+
    if (!state) {
       return FALSE;
    }
@@ -179,7 +182,7 @@ MEMAdjustFrmHeap(FrameHeap *heap)
 
    heap->top = heap->bottom;
    heap->state->top = heap->top;
-   heap->size = heap->state->top - gMemory.untranslate(heap);
+   heap->size = heap->state->top - memory_untranslate(heap);
    return heap->size;
 }
 

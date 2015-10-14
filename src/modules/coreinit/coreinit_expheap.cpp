@@ -1,6 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_expheap.h"
+#include "memory.h"
 #include "system.h"
+#include "virtual_ptr.h"
 
 #pragma pack(push, 1)
 
@@ -10,8 +12,8 @@ struct ExpandedHeapBlock
    uint32_t size;
    uint16_t group;
    HeapDirection direction;
-   p32<ExpandedHeapBlock> next;
-   p32<ExpandedHeapBlock> prev;
+   virtual_ptr<ExpandedHeapBlock> next;
+   virtual_ptr<ExpandedHeapBlock> prev;
 };
 
 struct ExpandedHeap : CommonHeap
@@ -21,8 +23,8 @@ struct ExpandedHeap : CommonHeap
    uint32_t top;
    uint16_t group;
    HeapMode mode;
-   p32<ExpandedHeapBlock> freeBlockList;
-   p32<ExpandedHeapBlock> usedBlockList;
+   virtual_ptr<ExpandedHeapBlock> freeBlockList;
+   virtual_ptr<ExpandedHeapBlock> usedBlockList;
 };
 
 #pragma pack(pop)
@@ -30,8 +32,8 @@ struct ExpandedHeap : CommonHeap
 static const uint32_t
 minimumBlockSize = sizeof(ExpandedHeapBlock) + 4;
 
-static p32<ExpandedHeapBlock>
-findBlock(p32<ExpandedHeapBlock> head, uint32_t addr)
+static virtual_ptr<ExpandedHeapBlock>
+findBlock(virtual_ptr<ExpandedHeapBlock> head, uint32_t addr)
 {
    for (auto block = head; block; block = block->next) {
       if (block->addr == addr) {
@@ -43,7 +45,7 @@ findBlock(p32<ExpandedHeapBlock> head, uint32_t addr)
 }
 
 static void
-eraseBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> block)
+eraseBlock(virtual_ptr<ExpandedHeapBlock> &head, virtual_ptr<ExpandedHeapBlock> block)
 {
    if (block == head) {
       head = block->next;
@@ -59,9 +61,9 @@ eraseBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> block)
 }
 
 static void
-insertBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> block)
+insertBlock(virtual_ptr<ExpandedHeapBlock> &head, virtual_ptr<ExpandedHeapBlock> block)
 {
-   p32<ExpandedHeapBlock> insertAfter = nullptr;
+   virtual_ptr<ExpandedHeapBlock> insertAfter = nullptr;
 
    for (auto itr = head; itr; itr = itr->next) {
       if (itr->addr < block->addr) {
@@ -92,7 +94,7 @@ insertBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> block)
 }
 
 static void
-replaceBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> old, p32<ExpandedHeapBlock> block)
+replaceBlock(virtual_ptr<ExpandedHeapBlock> &head, virtual_ptr<ExpandedHeapBlock> old, virtual_ptr<ExpandedHeapBlock> block)
 {
    if (!old) {
       insertBlock(head, block);
@@ -112,10 +114,10 @@ replaceBlock(p32<ExpandedHeapBlock> &head, p32<ExpandedHeapBlock> old, p32<Expan
    }
 }
 
-static p32<ExpandedHeapBlock>
-getTail(p32<ExpandedHeapBlock> block)
+static virtual_ptr<ExpandedHeapBlock>
+getTail(virtual_ptr<ExpandedHeapBlock> block)
 {
-   p32<ExpandedHeapBlock> tail;
+   virtual_ptr<ExpandedHeapBlock> tail;
 
    for (; block; block = block->next) {
       tail = block;
@@ -134,7 +136,7 @@ ExpandedHeap *
 MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
 {
    // Allocate memory
-   auto base = gMemory.untranslate(heap);
+   auto base = memory_untranslate(heap);
    gMemory.alloc(base, size);
 
    // Setup state
@@ -144,8 +146,8 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
    heap->mode = HeapMode::FirstFree;
    heap->group = 0;
    heap->usedBlockList = nullptr;
-   heap->freeBlockList = make_p32<ExpandedHeapBlock>(base + sizeof(ExpandedHeap));
-   heap->freeBlockList->addr = static_cast<uint32_t>(heap->freeBlockList);
+   heap->freeBlockList = make_virtual_ptr<ExpandedHeapBlock>(base + sizeof(ExpandedHeap));
+   heap->freeBlockList->addr = heap->freeBlockList.getAddress();
    heap->freeBlockList->size = heap->size - sizeof(ExpandedHeap);
    heap->freeBlockList->next = nullptr;
    heap->freeBlockList->prev = nullptr;
@@ -159,14 +161,14 @@ ExpandedHeap *
 MEMDestroyExpHeap(ExpandedHeap *heap)
 {
    MEMiFinaliseHeap(heap);
-   gMemory.free(gMemory.untranslate(heap));
+   gMemory.free(memory_untranslate(heap));
    return heap;
 }
 
 void
 MEMiDumpExpHeap(ExpandedHeap *heap)
 {
-   gLog->debug("MEMiDumpExpHeap({:8x})", gMemory.untranslate(heap));
+   gLog->debug("MEMiDumpExpHeap({:8x})", memory_untranslate(heap));
    gLog->debug("Status Address Size Group");
 
    for (auto block = heap->freeBlockList; block; block = block->next) {
@@ -189,7 +191,7 @@ void *
 MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 {
    ScopedSpinLock lock(&heap->lock);
-   p32<ExpandedHeapBlock> freeBlock = nullptr, usedBlock = nullptr;
+   virtual_ptr<ExpandedHeapBlock> freeBlock, usedBlock;
    auto direction = HeapDirection::FromBottom;
    uint32_t base;
 
@@ -274,7 +276,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 
          // Replace free block
          auto old = freeBlock;
-         freeBlock = make_p32<ExpandedHeapBlock>(base + size);
+         freeBlock = make_virtual_ptr<ExpandedHeapBlock>(base + size);
          freeBlock->addr = base + size;
          freeBlock->size = freeSize;
          replaceBlock(heap->freeBlockList, old, freeBlock);
@@ -293,20 +295,20 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 
    // Create a new used block
    auto aligned = alignUp(base + static_cast<uint32_t>(sizeof(ExpandedHeapBlock)), alignment);
-   usedBlock = make_p32<ExpandedHeapBlock>(aligned - static_cast<uint32_t>(sizeof(ExpandedHeapBlock)));
+   usedBlock = make_virtual_ptr<ExpandedHeapBlock>(aligned - static_cast<uint32_t>(sizeof(ExpandedHeapBlock)));
    usedBlock->addr = base;
    usedBlock->size = size;
    usedBlock->group = heap->group;
    usedBlock->direction = direction;
    insertBlock(heap->usedBlockList, usedBlock);
-   return make_p32<void>(aligned);
+   return make_virtual_ptr<void>(aligned);
 }
 
 void
-MEMFreeToExpHeap(ExpandedHeap *heap, void *address)
+MEMFreeToExpHeap(ExpandedHeap *heap, uint8_t *address)
 {
    ScopedSpinLock lock(&heap->lock);
-   auto base = gMemory.untranslate(address);
+   auto base = memory_untranslate(address);
 
    if (!base) {
       return;
@@ -316,13 +318,13 @@ MEMFreeToExpHeap(ExpandedHeap *heap, void *address)
    base = base - static_cast<uint32_t>(sizeof(ExpandedHeapBlock));
 
    // Remove used blocked
-   auto usedBlock = make_p32<ExpandedHeapBlock>(base);
+   auto usedBlock = make_virtual_ptr<ExpandedHeapBlock>(base);
    auto addr = usedBlock->addr;
    auto size = usedBlock->size;
    eraseBlock(heap->usedBlockList, usedBlock);
 
    // Create free block
-   auto freeBlock = make_p32<ExpandedHeapBlock>(addr);
+   auto freeBlock = make_virtual_ptr<ExpandedHeapBlock>(addr);
    freeBlock->addr = addr;
    freeBlock->size = size;
    insertBlock(heap->freeBlockList, freeBlock);
@@ -380,15 +382,15 @@ MEMAdjustExpHeap(ExpandedHeap *heap)
 }
 
 uint32_t
-MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> mblock, uint32_t size)
+MEMResizeForMBlockExpHeap(ExpandedHeap *heap, uint8_t *mblock, uint32_t size)
 {
    ScopedSpinLock lock(&heap->lock);
 
    // Get the block header
-   auto address = static_cast<uint32_t>(mblock);
+   auto address = memory_untranslate(mblock);
    auto base = address - static_cast<uint32_t>(sizeof(ExpandedHeapBlock));
 
-   auto block = make_p32<ExpandedHeapBlock>(base);
+   auto block = make_virtual_ptr<ExpandedHeapBlock>(base);
    auto nextAddr = block->addr + block->size;
 
    auto freeBlock = findBlock(heap->freeBlockList, nextAddr);
@@ -434,7 +436,7 @@ MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> mblock, uint32_t size)
    // Update free block
    if (freeBlockSize) {
       auto old = freeBlock;
-      freeBlock = make_p32<ExpandedHeapBlock>(block->addr + newSize);
+      freeBlock = make_virtual_ptr<ExpandedHeapBlock>(block->addr + newSize);
       freeBlock->addr = block->addr + newSize;
       freeBlock->size = freeBlockSize;
       replaceBlock(heap->freeBlockList, old, freeBlock);
@@ -515,23 +517,23 @@ MEMGetGroupIDForExpHeap(ExpandedHeap *heap)
 }
 
 uint32_t
-MEMGetSizeForMBlockExpHeap(p32<void> addr)
+MEMGetSizeForMBlockExpHeap(uint8_t *addr)
 {
-   auto block = make_p32<ExpandedHeapBlock>(static_cast<uint32_t>(addr) - sizeof(ExpandedHeapBlock));
+   auto block = reinterpret_cast<ExpandedHeapBlock *>(addr - sizeof(ExpandedHeapBlock));
    return block->size;
 }
 
 uint16_t
-MEMGetGroupIDForMBlockExpHeap(p32<void> addr)
+MEMGetGroupIDForMBlockExpHeap(uint8_t *addr)
 {
-   auto block = make_p32<ExpandedHeapBlock>(static_cast<uint32_t>(addr) - sizeof(ExpandedHeapBlock));
+   auto block = reinterpret_cast<ExpandedHeapBlock *>(addr - sizeof(ExpandedHeapBlock));
    return block->group;
 }
 
 HeapDirection
-MEMGetAllocDirForMBlockExpHeap(p32<void> addr)
+MEMGetAllocDirForMBlockExpHeap(uint8_t *addr)
 {
-   auto block = make_p32<ExpandedHeapBlock>(static_cast<uint32_t>(addr) - sizeof(ExpandedHeapBlock));
+   auto block = reinterpret_cast<ExpandedHeapBlock *>(addr - sizeof(ExpandedHeapBlock));
    return block->direction;
 }
 

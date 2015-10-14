@@ -1,7 +1,7 @@
-#include "../gx2.h"
+#include "modules/gx2/gx2.h"
 #ifdef GX2_DX12
 
-#include "../gx2_context.h"
+#include "modules/gx2/gx2_context.h"
 #include "dx12_state.h"
 
 void
@@ -56,10 +56,10 @@ GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1)
 
 void
 GX2GetContextStateDisplayList(GX2ContextState *state,
-                              be_val<uint32_t> *outDisplayList,
+                              be_ptr<uint8_t> *outDisplayList,
                               be_val<uint32_t> *outSize)
 {
-   *outDisplayList = gMemory.untranslate(&state->displayList);
+   *outDisplayList = reinterpret_cast<uint8_t*>(&state->displayList);
    *outSize = state->displayListSize;
 }
 
@@ -75,7 +75,7 @@ GX2SetContextState(GX2ContextState *state)
    if (state) {
       memcpy(&gDX.state, state->stateStore, sizeof(gDX.state));
    }
-   
+
    // Save the assigned state storage
    gDX.activeContextState = state;
 }

@@ -1,7 +1,7 @@
 #include "padscore.h"
 #include "padscore_wpad.h"
 
-static WPADStatus
+static WPADStatus::Status
 gWPADStatus = WPADStatus::Uninitialised;
 
 void
@@ -10,7 +10,7 @@ WPADInit()
    gWPADStatus = WPADStatus::Initialised;
 }
 
-WPADStatus
+WPADStatus::Status
 WPADGetStatus()
 {
    return gWPADStatus;

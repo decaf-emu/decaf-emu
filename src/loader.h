@@ -4,8 +4,10 @@
 #include <memory>
 #include <vector>
 #include <map>
-#include "systemtypes.h"
 #include "elf.h"
+#include "memory_translate.h"
+#include "types.h"
+#include "wfunc_ptr.h"
 
 class KernelModule;
 class TeenyHeap;
@@ -46,7 +48,7 @@ struct LoadedModule
    template<typename Type>
    Type *findDataExport(const std::string& name)
    {
-      return gMemory.translate<Type>(findExport(name));
+      return reinterpret_cast<Type *>(memory_translate(findExport(name)));
    }
 
    std::string name;

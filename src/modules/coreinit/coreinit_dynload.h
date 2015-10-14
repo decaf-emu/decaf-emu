@@ -1,5 +1,6 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
+#include "virtual_ptr.h"
 
 struct LoadedModuleHandleData;
 
@@ -13,7 +14,7 @@ int
 OSDynLoad_MemAlloc(int size, int alignment, void **outPtr);
 
 void
-OSDynLoad_MemFree(p32<void> addr);
+OSDynLoad_MemFree(void *addr);
 
 int
 OSDynLoad_Acquire(char const *name, be_ptr<LoadedModuleHandleData> *outHandle);

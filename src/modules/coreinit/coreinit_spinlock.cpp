@@ -1,8 +1,9 @@
+#include <atomic>
 #include "coreinit.h"
 #include "coreinit_spinlock.h"
 #include "coreinit_thread.h"
+#include "memory_translate.h"
 #include "processor.h"
-#include <atomic>
 
 static void
 spinLock(OSSpinLock *spinlock)
@@ -14,7 +15,7 @@ spinLock(OSSpinLock *spinlock)
       return;
    }
 
-   owner = gMemory.untranslate(thread);
+   owner = memory_untranslate(thread);
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
@@ -38,7 +39,7 @@ spinTryLock(OSSpinLock *spinlock)
       return FALSE;
    }
 
-   owner = gMemory.untranslate(thread);
+   owner = memory_untranslate(thread);
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
@@ -64,7 +65,7 @@ spinReleaseLock(OSSpinLock *spinlock)
       return FALSE;
    }
 
-   owner = gMemory.untranslate(OSGetCurrentThread());
+   owner = memory_untranslate(OSGetCurrentThread());
 
    if (spinlock->recursion > 0u) {
       --spinlock->recursion;

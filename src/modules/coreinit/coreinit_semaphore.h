@@ -1,6 +1,7 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
 #include "coreinit_threadqueue.h"
+#include "virtual_ptr.h"
 
 #pragma pack(push, 1)
 

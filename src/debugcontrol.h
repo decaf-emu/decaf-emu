@@ -1,10 +1,12 @@
 #pragma once
+#include <cstdint>
 #include <mutex>
 #include <atomic>
-#include "systemtypes.h"
 
 // TODO: Need to use CoreCount, but needs to not be in CoreInit...
 static const int DCCoreCount = 3;
+
+struct ThreadState;
 
 class DebugControl
 {
@@ -27,7 +29,6 @@ protected:
    std::atomic_uint mWaitingForStep;
    std::condition_variable mWaitCond;
    std::condition_variable mReleaseCond;
-
 };
 
 extern DebugControl gDebugControl;

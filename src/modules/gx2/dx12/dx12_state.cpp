@@ -1,8 +1,7 @@
-#include "../gx2.h"
+#include "modules/gx2/gx2.h"
 #ifdef GX2_DX12
 
 #include <memory>
-#include "systemtypes.h"
 #include "hostlookup.h"
 #include "platform.h"
 #include "dx12_state.h"
@@ -263,9 +262,9 @@ void dx::initialise()
 
       const UINT vertexBufferSize = sizeof(triangleVertices);
 
-      // Note: using upload heaps to transfer static data like vert buffers is not 
-      // recommended. Every time the GPU needs it, the upload heap will be marshalled 
-      // over. Please read up on Default Heap usage. An upload heap is used here for 
+      // Note: using upload heaps to transfer static data like vert buffers is not
+      // recommended. Every time the GPU needs it, the upload heap will be marshalled
+      // over. Please read up on Default Heap usage. An upload heap is used here for
       // code simplicity and because there are very few verts to actually transfer.
       ThrowIfFailed(gDX.device->CreateCommittedResource(
          &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -330,13 +329,13 @@ void dx::_beginFrame() {
    gDX.frameIndex = gDX.swapChain->GetCurrentBackBufferIndex();
    gDX.curScanbufferRtv = gDX.scanbufferRtv[gDX.frameIndex];
 
-   // Command list allocators can only be reset when the associated 
-   // command lists have finished execution on the GPU; apps should use 
+   // Command list allocators can only be reset when the associated
+   // command lists have finished execution on the GPU; apps should use
    // fences to determine GPU execution progress.
    ThrowIfFailed(gDX.commandAllocator[gDX.frameIndex]->Reset());
 
-   // However, when ExecuteCommandList() is called on a particular command 
-   // list, that command list can then be reset at any time and must be before 
+   // However, when ExecuteCommandList() is called on a particular command
+   // list, that command list can then be reset at any time and must be before
    // re-recording.
    ThrowIfFailed(gDX.commandList->Reset(gDX.commandAllocator[gDX.frameIndex].Get(), gDX.emuPipelineState.Get()));
 

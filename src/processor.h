@@ -7,10 +7,10 @@
 #include <vector>
 #include <Windows.h>
 #include "modules/coreinit/coreinit_mutex.h"
+#include "ppc.h"
 
 struct OSContext;
 struct OSThread;
-struct ThreadState;
 
 struct Fiber
 {

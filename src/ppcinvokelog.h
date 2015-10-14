@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdio>
-#include "p32.h"
+#include "virtual_ptr.h"
 
 namespace ppctypes
 {
@@ -99,12 +99,12 @@ logArgument(LogState &state, char *value)
    logArgument(state, const_cast<const char*>(value));
 }
 
-// p32<Type>
+// virtual_ptr<Type>
 template<typename Type>
 static inline void
-logArgument(LogState &state, p32<Type> value)
+logArgument(LogState &state, virtual_ptr<Type> value)
 {
-   logArgument(state, static_cast<uint32_t>(value));
+   logArgument(state, value.getAddress());
 }
 
 // Type *
@@ -112,7 +112,7 @@ template<typename Type>
 static inline void
 logArgument(LogState &state, Type *value)
 {
-   logArgument(state, make_p32<Type>(value));
+   logArgument(state, make_virtual_ptr<Type>(value));
 }
 
 // Log generic (not enum)
@@ -146,7 +146,7 @@ logArgument(LogState &state, Type value)
    }
 
    len = sprintf_s(state.buffer + state.pos, state.length, fmt, value);
-   
+
    state.length -= len;
    state.pos += len;
 }

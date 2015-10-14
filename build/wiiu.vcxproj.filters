@@ -534,6 +534,9 @@
     <ClCompile Include="..\src\gpu\mesa_r600_tiling.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\memory_translate.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -617,9 +620,6 @@
     <ClInclude Include="..\src\modules\zlib125\zlib125.h">
       <Filter>Header Files\modules\zlib125</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\modules\zlib125\zlib125_core.h">
-      <Filter>Header Files\modules\zlib125</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_event.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
@@ -669,9 +669,6 @@
       <Filter>Header Files\util</Filter>
     </ClInclude>
     <ClInclude Include="..\src\memory.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\systemtypes.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\src\interpreter.h">
@@ -726,9 +723,6 @@
       <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wfunc_ptr.h">
-      <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\p32.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
     <ClInclude Include="..\src\be_val.h">
@@ -967,6 +961,15 @@
     </ClInclude>
     <ClInclude Include="..\src\gpu\mesa_r600_tiling.h">
       <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\virtual_ptr.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\structsize.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\memory_translate.h">
+      <Filter>Header Files\system</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

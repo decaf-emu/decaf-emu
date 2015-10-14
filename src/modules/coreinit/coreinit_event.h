@@ -1,6 +1,9 @@
 #pragma once
+#include "be_val.h"
 #include "coreinit_time.h"
 #include "coreinit_threadqueue.h"
+#include "structsize.h"
+#include "virtual_ptr.h"
 
 enum class EventMode : uint32_t
 {
@@ -21,7 +24,6 @@ struct OSEvent
    OSThreadQueue queue;
    be_val<EventMode> mode;
 };
-
 CHECK_OFFSET(OSEvent, 0x0, tag);
 CHECK_OFFSET(OSEvent, 0x4, name);
 CHECK_OFFSET(OSEvent, 0xc, value);

@@ -1,11 +1,10 @@
 #pragma once
-#include <map>
+#include <cstdint>
 #include <functional>
+#include <map>
+#include <mutex>
 #include <string>
 #include <vector>
-#include <mutex>
-#include <cstdint>
-#include "systemtypes.h"
 #include "loader.h"
 
 class Memory;

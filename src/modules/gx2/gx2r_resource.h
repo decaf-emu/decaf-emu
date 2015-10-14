@@ -1,5 +1,7 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
+#include "types.h"
+#include "wfunc_ptr.h"
 
 // BindFlagsToString__20_GX2RResourceTrackerSF18_GX2RResourceFlags
 // UsageFlagsToString__20_GX2RResourceTrackerSF18_GX2RResourceFlags
@@ -39,8 +41,8 @@ struct GX2RBuffer
    be_val<uint32_t> elemCount;
 };
 
-using GX2RAllocFuncPtr = wfunc_ptr<p32<void>, GX2RResourceFlags::Flags, uint32_t, uint32_t>;
-using GX2RFreeFuncPtr = wfunc_ptr<void, GX2RResourceFlags::Flags, p32<void>>;
+using GX2RAllocFuncPtr = wfunc_ptr<void *, GX2RResourceFlags::Flags, uint32_t, uint32_t>;
+using GX2RFreeFuncPtr = wfunc_ptr<void, GX2RResourceFlags::Flags, void *>;
 
 void
 GX2RSetAllocator(GX2RAllocFuncPtr allocFn, GX2RFreeFuncPtr freeFn);

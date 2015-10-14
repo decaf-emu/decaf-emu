@@ -1,15 +1,16 @@
-#include "gameloader.h"
 #include <string>
-#include "systemtypes.h"
+#include "debugcontrol.h"
+#include "gameloader.h"
+#include "interpreter.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "system.h"
-#include "interpreter.h"
-#include "debugcontrol.h"
+#include "virtual_ptr.h"
 
-static std::string gGameRpx;
+static std::string
+gGameRpx;
 
 
 GameLoader::GameLoader()
@@ -76,7 +77,7 @@ GameLoaderRun()
       auto name = OSSprintfFromSystem("Default Thread %d", i);
 
       OSCreateThread(thread, 0u, 0, nullptr,
-                     stack + stackSize, stackSize, 16,
+                     reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, 16,
                      static_cast<OSThreadAttributes::Flags>(1 << i));
       OSSetDefaultThread(i, thread);
       OSSetThreadName(thread, name);
@@ -90,7 +91,7 @@ GameLoaderRun()
       auto name = OSSprintfFromSystem("Interrupt Thread %d", i);
 
       OSCreateThread(thread, InterruptThreadEntryPoint, i, nullptr,
-                     stack + stackSize, stackSize, 16,
+                     reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, 16,
                      static_cast<OSThreadAttributes::Flags>(1 << i));
       OSSetInterruptThread(i, thread);
       OSSetThreadName(thread, name);

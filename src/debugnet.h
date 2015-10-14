@@ -1,6 +1,6 @@
 #pragma once
+#include <cstdint>
 #include <string>
-#include "systemtypes.h"
 
 class DebugPacket;
 

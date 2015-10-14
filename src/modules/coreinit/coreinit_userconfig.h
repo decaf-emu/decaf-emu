@@ -1,6 +1,6 @@
 #pragma once
-#include "systemtypes.h"
 #include "coreinit_ios.h"
+#include "structsize.h"
 
 #pragma pack(push, 1)
 
@@ -8,6 +8,7 @@ struct UCSysConfig
 {
    UNKNOWN(0x54); // From UCReadSysConfigAsync, memcpy count * 0x54? Not sure if correct
 };
+CHECK_SIZE(UCSysConfig, 0x54);
 
 #pragma pack(pop)
 

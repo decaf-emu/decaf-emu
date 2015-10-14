@@ -1,5 +1,5 @@
 #pragma once
-#include "systemtypes.h"
+#include "types.h"
 #include "coreinit_memheap.h"
 
 struct ExpandedHeap;
@@ -23,7 +23,7 @@ void *
 MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment);
 
 void
-MEMFreeToExpHeap(ExpandedHeap *heap, void *block);
+MEMFreeToExpHeap(ExpandedHeap *heap, uint8_t *block);
 
 HeapMode
 MEMSetAllocModeForExpHeap(ExpandedHeap *heap, HeapMode mode);
@@ -35,7 +35,7 @@ uint32_t
 MEMAdjustExpHeap(ExpandedHeap *heap);
 
 uint32_t
-MEMResizeForMBlockExpHeap(ExpandedHeap *heap, p32<void> address, uint32_t size);
+MEMResizeForMBlockExpHeap(ExpandedHeap *heap, uint8_t *address, uint32_t size);
 
 uint32_t
 MEMGetTotalFreeSizeForExpHeap(ExpandedHeap *heap);
@@ -53,10 +53,10 @@ uint16_t
 MEMGetGroupIDForExpHeap(ExpandedHeap *heap);
 
 uint32_t
-MEMGetSizeForMBlockExpHeap(p32<void> addr);
+MEMGetSizeForMBlockExpHeap(uint8_t *addr);
 
 uint16_t
-MEMGetGroupIDForMBlockExpHeap(p32<void> addr);
+MEMGetGroupIDForMBlockExpHeap(uint8_t *addr);
 
 HeapDirection
-MEMGetAllocDirForMBlockExpHeap(p32<void> addr);
+MEMGetAllocDirForMBlockExpHeap(uint8_t *addr);

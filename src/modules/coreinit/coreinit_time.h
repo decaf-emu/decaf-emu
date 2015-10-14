@@ -1,6 +1,7 @@
 #pragma once
 #include <chrono>
-#include "systemtypes.h"
+#include "be_val.h"
+#include "structsize.h"
 
 #pragma pack(push, 1)
 

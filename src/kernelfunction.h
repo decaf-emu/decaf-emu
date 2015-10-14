@@ -1,5 +1,5 @@
 #pragma once
-#include "systemtypes.h"
+#include <cstdint>
 #include "kernelexport.h"
 #include "ppc.h"
 #include "ppcinvoke.h"
@@ -39,7 +39,7 @@ struct KernelFunctionImpl : KernelFunction
       ppctypes::invoke(thread, wrapped_function, this->name);
    }
 };
-   
+
 };
 
 // Create a SystemFunction export from a function pointer

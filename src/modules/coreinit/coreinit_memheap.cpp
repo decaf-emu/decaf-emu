@@ -4,8 +4,10 @@
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
 #include "coreinit_frameheap.h"
+#include "memory_translate.h"
 #include "system.h"
 #include "teenyheap.h"
+#include "virtual_ptr.h"
 
 be_wfunc_ptr<void*, uint32_t>*
 pMEMAllocFromDefaultHeap;
@@ -56,7 +58,7 @@ static MemoryList *
 findListContainingBlock(void *block)
 {
    be_val<uint32_t> start, size, end;
-   uint32_t addr = gMemory.untranslate(block);
+   uint32_t addr = memory_untranslate(block);
    OSGetForegroundBucket(&start, &size);
    end = start + size;
 
@@ -78,7 +80,7 @@ static CommonHeap *
 findHeapContainingBlock(MemoryList *list, void *block)
 {
    CommonHeap *heap = nullptr;
-   uint32_t addr = gMemory.untranslate(block);
+   uint32_t addr = memory_untranslate(block);
 
    while (heap = reinterpret_cast<CommonHeap*>(MEMGetNextListObject(list, heap))) {
       if (addr >= heap->dataStart && addr < heap->dataEnd) {
@@ -187,7 +189,7 @@ sMEMAllocFromDefaultHeapEx(uint32_t size, int alignment)
 }
 
 static void
-sMEMFreeToDefaultHeap(p32<void> block)
+sMEMFreeToDefaultHeap(uint8_t *block)
 {
    auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
    return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
@@ -214,17 +216,17 @@ CoreInitDefaultHeap()
 
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
-   mem2 = MEMCreateExpHeap(make_p32<ExpandedHeap>(addr), size);
+   mem2 = MEMCreateExpHeap(make_virtual_ptr<ExpandedHeap>(addr), size);
    MEMSetBaseHeapHandle(BaseHeapType::MEM2, reinterpret_cast<CommonHeap*>(mem2));
 
    // Create frame heap for MEM1
    OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
-   mem1 = MEMCreateFrmHeap(make_p32<FrameHeap>(addr), size);
+   mem1 = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
    MEMSetBaseHeapHandle(BaseHeapType::MEM1, reinterpret_cast<CommonHeap*>(mem1));
 
    // Create frame heap for Foreground
    OSGetForegroundBucketFreeArea(&addr, &size);
-   fg = MEMCreateFrmHeap(make_p32<FrameHeap>(addr), size);
+   fg = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
    MEMSetBaseHeapHandle(BaseHeapType::FG, reinterpret_cast<CommonHeap*>(fg));
 }
 

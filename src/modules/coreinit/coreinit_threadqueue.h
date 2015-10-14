@@ -1,5 +1,6 @@
 #pragma once
-#include "systemtypes.h"
+#include "structsize.h"
+#include "virtual_ptr.h"
 
 #pragma pack(push, 1)
 

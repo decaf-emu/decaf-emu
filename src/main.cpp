@@ -241,7 +241,7 @@ play(const fs::HostPath &path)
       auto gameLoaderRun = gameLoader->findExport("GameLoaderRun");
 
       OSCreateThread(thread, 0, 0, nullptr,
-                     stack + stackSize, stackSize, -2,
+                     reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, -2,
                      static_cast<OSThreadAttributes::Flags>(1 << 1));
       OSSetThreadName(thread, name);
       OSRunThread(thread, gameLoaderRun, 0, nullptr);

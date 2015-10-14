@@ -20,7 +20,7 @@
 #include "modules/coreinit/coreinit_memory.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "system.h"
-#include "systemtypes.h"
+#include "types.h"
 #include "usermodule.h"
 #include "util.h"
 #include "teenyheap.h"
@@ -724,7 +724,7 @@ Loader::loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data)
    readFileInfo(in, sections, info);
 
    codeSegAddr = mCodeHeap->alloc(info.textSize, info.textAlign);
-   loadSegAddr = mCodeHeap->alloc(info.loadSize, info.loadAlign);
+   loadSegAddr = OSAllocFromSystem(info.loadSize, info.loadAlign);
 
    if (OSDynLoad_MemAlloc(info.dataSize, info.dataAlign, &dataSegAddr) != 0) {
       dataSegAddr = nullptr;
@@ -835,7 +835,8 @@ Loader::loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data)
    }
 
    // Free the load segment
-   mCodeHeap->free(loadSegAddr);
+   OSFreeToSystem(loadSegAddr);
+   //mCodeHeap->free(loadSegAddr);
 
    loadedMod->name = name;
    loadedMod->defaultStackSize = info.stackSize;

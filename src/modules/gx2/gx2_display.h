@@ -1,6 +1,7 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
 #include "gx2_surface.h"
+#include "types.h"
 
 struct GX2Texture;
 struct GX2ColorBuffer;
@@ -68,16 +69,32 @@ void
 GX2SetDRCEnable(BOOL enable);
 
 void
-GX2CalcTVSize(GX2TVRenderMode::Mode tvRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode, be_val<uint32_t> *size, be_val<uint32_t> *unkOut);
+GX2CalcTVSize(GX2TVRenderMode::Mode tvRenderMode,
+              GX2SurfaceFormat::Format surfaceFormat,
+              GX2BufferingMode::Mode bufferingMode,
+              be_val<uint32_t> *size,
+              be_val<uint32_t> *unkOut);
 
 void
-GX2CalcDRCSize(GX2DrcRenderMode::Mode drcRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode, be_val<uint32_t> *size, be_val<uint32_t> *unkOut);
+GX2CalcDRCSize(GX2DrcRenderMode::Mode drcRenderMode,
+               GX2SurfaceFormat::Format surfaceFormat,
+               GX2BufferingMode::Mode bufferingMode,
+               be_val<uint32_t> *size,
+               be_val<uint32_t> *unkOut);
 
 void
-GX2SetTVBuffer(void *buffer, uint32_t size, GX2TVRenderMode::Mode tvRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode);
+GX2SetTVBuffer(void *buffer,
+               uint32_t size,
+               GX2TVRenderMode::Mode tvRenderMode,
+               GX2SurfaceFormat::Format surfaceFormat,
+               GX2BufferingMode::Mode bufferingMode);
 
 void
-GX2SetDRCBuffer(void *buffer, uint32_t size, GX2DrcRenderMode::Mode drcRenderMode, GX2SurfaceFormat::Format surfaceFormat, GX2BufferingMode::Mode bufferingMode);
+GX2SetDRCBuffer(void *buffer,
+                uint32_t size,
+                GX2DrcRenderMode::Mode drcRenderMode,
+                GX2SurfaceFormat::Format surfaceFormat,
+                GX2BufferingMode::Mode bufferingMode);
 
 void
 GX2SetTVScale(uint32_t x, uint32_t y);
@@ -107,11 +124,10 @@ void
 GX2WaitForFlip();
 
 void
-GX2GetSwapStatus(
-   be_val<uint32_t> *pSwapCount, 
-   be_val<uint32_t> *pFlipCount, 
-   be_val<uint64_t> *pLastFlip, 
-   be_val<uint64_t> *pLastVsync);
+GX2GetSwapStatus(be_val<uint32_t> *pSwapCount,
+                 be_val<uint32_t> *pFlipCount,
+                 be_val<uint64_t> *pLastFlip,
+                 be_val<uint64_t> *pLastVsync);
 
 BOOL
 GX2GetLastFrame(GX2ScanTarget::Target scanTarget, GX2Texture *texture);

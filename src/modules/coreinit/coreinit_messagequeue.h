@@ -1,8 +1,8 @@
 #pragma once
-#include "systemtypes.h"
 #include "coreinit_thread.h"
 #include "coreinit_mutex.h"
-#include "util.h"
+#include "structsize.h"
+#include "virtual_ptr.h"
 
 #pragma pack(push, 1)
 
@@ -43,7 +43,7 @@ CHECK_SIZE(OSMessageQueue, 0x3c);
 
 namespace MessageFlags
 {
-enum Flags
+enum Flags : uint32_t
 {
    Blocking     = 1 << 0,
    HighPriority = 1 << 1,

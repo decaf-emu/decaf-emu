@@ -1,9 +1,9 @@
 #pragma once
-#include "systemtypes.h"
 #include "coreinit_thread.h"
+#include "wfunc_ptr.h"
 
 // From WUP-P-ARKE
-enum class ExceptionType
+enum class ExceptionType : uint32_t
 {
    SystemReset = 0,
    MachineCheck = 1,

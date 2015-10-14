@@ -3,6 +3,7 @@
 #include "interpreter.h"
 #include "loader.h"
 #include "log.h"
+#include "memory_translate.h"
 #include "system.h"
 #include "kernelfunction.h"
 #include "usermodule.h"
@@ -77,7 +78,7 @@ dcbz(ThreadState *state, Instruction instr)
 
    addr += state->gpr[instr.rB];
    addr = alignDown(addr, 32);
-   memset(gMemory.translate(addr), 0, 32);
+   memset(memory_translate(addr), 0, 32);
 }
 
 // Data Cache Block Zero Locked

@@ -1,6 +1,6 @@
 #pragma once
-#include "systemtypes.h"
 #include "coreinit_ios.h"
+#include "structsize.h"
 
 #pragma pack(push, 1)
 

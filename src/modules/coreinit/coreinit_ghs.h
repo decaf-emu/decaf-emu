@@ -1,5 +1,7 @@
 #pragma once
-#include "systemtypes.h"
+#include "be_val.h"
+#include "virtual_ptr.h"
+#include "wfunc_ptr.h"
 
 #define GHS_FOPEN_MAX 0x14
 
@@ -18,7 +20,8 @@ p___cpp_exception_cleanup_ptr;
 extern be_val<uint16_t>*
 p__gh_FOPEN_MAX;
 
-struct _ghs_iobuf {
+struct _ghs_iobuf
+{
    uint32_t unk1;
    uint32_t unk2;
    uint32_t unk3;

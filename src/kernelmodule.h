@@ -4,6 +4,7 @@
 #include "kernelexport.h"
 #include "kernelfunction.h"
 #include "kerneldata.h"
+#include "virtual_ptr.h"
 
 #define RegisterKernelFunction(fn) \
    registerExport(#fn, kernel::makeFunction(fn))
@@ -29,21 +30,21 @@ public:
    virtual void initialise() = 0;
    virtual const KernelExportMap &getExportMap() const = 0;
    virtual KernelExport *findExport(const char *name) const = 0;
-   virtual uint32_t findExportAddress(const char *name) const = 0;
+   virtual virtual_ptr<void> findExportAddress(const char *name) const = 0;
 
-   p32<ModuleHandleData>
+   virtual_ptr<ModuleHandleData>
    getHandle() const
    {
       return mHandle;
    }
 
-   void setHandle(p32<ModuleHandleData> handle)
+   void setHandle(virtual_ptr<ModuleHandleData> handle)
    {
       mHandle = handle;
    }
 
 protected:
-   p32<ModuleHandleData> mHandle;
+   virtual_ptr<ModuleHandleData> mHandle;
 };
 
 template<typename ModuleType>
@@ -64,15 +65,16 @@ public:
       }
    }
 
-   // TODO: Fix this to return a void* or be_ptr<void>
-   uint32_t
+   virtual_ptr<void>
    findExportAddress(const char *name) const
    {
       auto exp = findExport(name);
+
       if (!exp) {
-         return 0;
+         return nullptr;
       }
-      return gMemory.untranslate(exp->ppcPtr);
+
+      return exp->ppcPtr;
    }
 
    virtual const KernelExportMap &

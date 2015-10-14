@@ -1,11 +1,13 @@
 #include <algorithm>
+#include "be_data.h"
 #include "coreinit.h"
 #include "coreinit_dynload.h"
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
 #include "interpreter.h"
+#include "memory_translate.h"
 #include "system.h"
-#include "be_data.h"
+#include "virtual_ptr.h"
 
 static wfunc_ptr<int, int, int, be_val<uint32_t>*>
 pOSDynLoad_MemAlloc;
@@ -13,15 +15,17 @@ pOSDynLoad_MemAlloc;
 static wfunc_ptr<void, void *>
 pOSDynLoad_MemFree;
 
-int MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
+static int
+MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 {
    auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
    auto memory = MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
-   *outPtr = gMemory.untranslate(memory);
+   *outPtr = memory_untranslate(memory);
    return 0;
 }
 
-void MEM_DynLoad_DefaultFree(void *addr)
+static void
+MEM_DynLoad_DefaultFree(uint8_t *addr)
 {
    auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
    MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), addr);
@@ -53,7 +57,7 @@ OSDynLoad_MemAlloc(int size, int alignment, void **outPtr)
 {
    be_data<uint32_t> value;
    auto result = pOSDynLoad_MemAlloc(size, alignment, &value);
-   *outPtr = gMemory.translate(value);
+   *outPtr = memory_translate(value);
    return result;
 }
 

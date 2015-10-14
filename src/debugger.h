@@ -1,9 +1,9 @@
 #pragma once
+#include <cstdint>
 #include <map>
 #include <mutex>
 #include <atomic>
 #include <queue>
-#include "systemtypes.h"
 #include "debugmsg.h"
 #include "modules/coreinit/coreinit_core.h"
 
@@ -30,23 +30,19 @@ public:
    uint32_t coreId;
    uint32_t address;
    uint32_t userData;
-
 };
 
 class DebugMessageCoreStepped : public DebugMessageBase<DebugMessageType::CoreStepped> {
 public:
    uint32_t coreId;
-
 };
 
 class DebugMessagePreLaunch : public DebugMessageBase<DebugMessageType::PreLaunch> {
 public:
-
 };
 
 class DebugMessageDebuggerDc : public DebugMessageBase<DebugMessageType::DebuggerDc> {
 public:
-
 };
 
 class Debugger
@@ -76,11 +72,10 @@ protected:
    bool mEnabled;
    std::thread mDebuggerThread;
    BreakpointList mBreakpoints;
-   
+
    std::queue<DebugMessage*> mMsgQueue;
    std::mutex mMsgLock;
    std::condition_variable mMsgCond;
-
 };
 
 extern Debugger gDebugger;
