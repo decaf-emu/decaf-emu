@@ -26,7 +26,6 @@ namespace GX2AttribFormat
 {
 enum Format : uint32_t
 {
-   First = 0,
    UNORM_8 = 0x0,
    UNORM_8_8 = 0x04,
    UNORM_8_8_8_8 = 0x0a,
@@ -47,6 +46,8 @@ enum Format : uint32_t
    FLOAT_32_32 = 0x80d,
    FLOAT_32_32_32 = 0x811,
    FLOAT_32_32_32_32 = 0x813,
+
+   First = 0,
    Last = 0xa0f
 };
 }
@@ -67,6 +68,7 @@ namespace GX2EndianSwapMode
 enum Mode : uint32_t
 {
    None = 0,
+   Default = 3,
    First = 0,
    Last = 3,
 };

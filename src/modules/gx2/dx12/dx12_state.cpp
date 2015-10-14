@@ -450,6 +450,81 @@ void dx::updatePipeline()
    gDX.commandList->SetPipelineState(pipelineState);
 }
 
+template<typename Type, int N, bool EndianSwap>
+void stridedMemcpy3(uint8_t *src, uint8_t *dest, size_t size, uint32_t stride, uint32_t offset) {
+   uint32_t extraStride = stride - (sizeof(Type) * N);
+   Type *s = (Type*)(src + offset);
+   Type *d = (Type*)(dest + offset);
+   Type *sEnd = (Type*)(src + size);
+   while (s < sEnd) {
+      if (EndianSwap) {
+         for (auto i = 0u; i < N; ++i) {
+            *d++ = byte_swap(*s++);
+         }
+         *((uint8_t**)&s) += extraStride;
+         *((uint8_t**)&d) += extraStride;
+      } else {
+         memcpy(s, d, sizeof(Type) * N);
+         *((uint8_t**)&s) += stride;
+         *((uint8_t**)&d) += stride;
+      }
+   }
+}
+
+template<typename Type, int N>
+void stridedMemcpy2(
+   uint8_t *src, uint8_t *dest, size_t size,
+   uint32_t stride, uint32_t offset,
+   GX2EndianSwapMode::Mode endianess) {
+   if (endianess == GX2EndianSwapMode::Default || endianess == GX2EndianSwapMode::None) {
+      return stridedMemcpy3<Type, N, true>(src, dest, size, stride, offset);
+   } else {
+      return stridedMemcpy3<Type, N, false>(src, dest, size, stride, offset);
+   }
+}
+
+void stridedMemcpy(
+   uint8_t *src, uint8_t *dest, size_t size, 
+   uint32_t stride, uint32_t offset, 
+   GX2EndianSwapMode::Mode endianess, GX2AttribFormat::Format format) {
+   switch (format) {
+   case GX2AttribFormat::UNORM_8:
+      return stridedMemcpy2<uint8_t, 1>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::UNORM_8_8:
+      return stridedMemcpy2<uint8_t, 2>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::UNORM_8_8_8_8:
+      return stridedMemcpy2<uint8_t, 4>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::UINT_8:
+      return stridedMemcpy2<uint8_t, 1>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::UINT_8_8:
+      return stridedMemcpy2<uint8_t, 2>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::UINT_8_8_8_8:
+      return stridedMemcpy2<uint8_t, 4>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::SNORM_8:
+      return stridedMemcpy2<uint8_t, 1>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::SNORM_8_8:
+      return stridedMemcpy2<uint8_t, 2>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::SNORM_8_8_8_8:
+      return stridedMemcpy2<uint8_t, 4>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::SINT_8:
+      return stridedMemcpy2<uint32_t, 1>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::SINT_8_8:
+      return stridedMemcpy2<uint32_t, 2>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::SINT_8_8_8_8:
+      return stridedMemcpy2<uint32_t, 4>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::FLOAT_32:
+      return stridedMemcpy2<float, 1>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::FLOAT_32_32:
+      return stridedMemcpy2<float, 2>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::FLOAT_32_32_32:
+      return stridedMemcpy2<float, 3>(src, dest, size, stride, offset, endianess);
+   case GX2AttribFormat::FLOAT_32_32_32_32:
+      return stridedMemcpy2<float, 4>(src, dest, size, stride, offset, endianess);
+   default:
+      assert(0);
+   };
+}
+
 void dx::updateBuffers()
 {
    DXDynBuffer::Allocation buffers[32];
@@ -473,76 +548,21 @@ void dx::updateBuffers()
 
    for (auto i = 0u; i < fetchShader->attribCount; ++i) {
       auto attrib = fetchData->attribs[i];
-      auto srcBuffer = gDX.state.attribBuffers[attrib.location];
-      auto destBuffer = buffers[attrib.location];
+      auto srcBuffer = gDX.state.attribBuffers[attrib.buffer];
+      auto destBuffer = buffers[attrib.buffer];
 
       if (!destBuffer.valid()) {
          continue;
       }
 
-      int dataSize = 4;
-      int dataCount = 4;
-      switch (attrib.format) {
-      case GX2AttribFormat::UNORM_8:
-         dataSize = 1; dataCount = 1; break;
-      case GX2AttribFormat::UNORM_8_8:
-         dataSize = 1; dataCount = 2; break;
-      case GX2AttribFormat::UNORM_8_8_8_8:
-         dataSize = 1; dataCount = 4; break;
-      case GX2AttribFormat::UINT_8:
-         dataSize = 1; dataCount = 1; break;
-      case GX2AttribFormat::UINT_8_8:
-         dataSize = 1; dataCount = 2; break;
-      case GX2AttribFormat::UINT_8_8_8_8:
-         dataSize = 1; dataCount = 4; break;
-      case GX2AttribFormat::SNORM_8:
-         dataSize = 1; dataCount = 1; break;
-      case GX2AttribFormat::SNORM_8_8:
-         dataSize = 1; dataCount = 2; break;
-      case GX2AttribFormat::SNORM_8_8_8_8:
-         dataSize = 1; dataCount = 4; break;
-      case GX2AttribFormat::SINT_8:
-         dataSize = 1; dataCount = 1; break;
-      case GX2AttribFormat::SINT_8_8:
-         dataSize = 1; dataCount = 2; break;
-      case GX2AttribFormat::SINT_8_8_8_8:
-         dataSize = 1; dataCount = 4; break;
-      case GX2AttribFormat::FLOAT_32:
-         dataSize = 4; dataCount = 1; break;
-      case GX2AttribFormat::FLOAT_32_32:
-         dataSize = 4; dataCount = 2; break;
-      case GX2AttribFormat::FLOAT_32_32_32:
-         dataSize = 4; dataCount = 3; break;
-      case GX2AttribFormat::FLOAT_32_32_32_32:
-         dataSize = 4; dataCount = 4; break;
-      default:
-         dataSize = 1; dataCount = 1; break;
-      };
-
-      if (dataSize == 1) {
-         for (auto i = attrib.offset; i < srcBuffer.size; i += srcBuffer.stride) {
-            uint8_t *src = (uint8_t*)srcBuffer.buffer + i;
-            uint8_t *dest = (uint8_t*)destBuffer + i;
-            memcpy(dest, src, dataSize);
-         }
-      } else if (dataSize == 4) {
-         for (auto i = attrib.offset; i < srcBuffer.size; i += srcBuffer.stride) {
-            uint32_t *src = (uint32_t*)((uint8_t*)srcBuffer.buffer + i);
-            uint32_t *dest = (uint32_t*)((uint8_t*)destBuffer + i);
-            if (dataSize >= 1) {
-               *dest++ = byte_swap(*src++);
-               if (dataSize >= 2) {
-                  *dest++ = byte_swap(*src++);
-                  if (dataSize >= 3) {
-                     *dest++ = byte_swap(*src++);
-                     if (dataSize >= 4) {
-                        *dest++ = byte_swap(*src++);
-                     }
-                  }
-               }
-            }
-         }
-      }
+      stridedMemcpy(
+         (uint8_t*)srcBuffer.buffer,
+         (uint8_t*)destBuffer,
+         srcBuffer.size,
+         srcBuffer.stride,
+         attrib.offset,
+         attrib.endianSwap,
+         attrib.format);
    }
 
    gDX.commandList->IASetVertexBuffers(0, 32, bufferList);

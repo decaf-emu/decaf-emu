@@ -41,7 +41,6 @@ namespace GX2BlendMode
 {
 enum Mode
 {
-   First = 0,
    Zero = 0,
    One = 1,
    SrcColor = 2,
@@ -59,6 +58,7 @@ enum Mode
    InvSrc1Color = 16,
    Src1Alpha = 17,
    InvSrc1Alpha = 18,
+   First = 0,
    Last = 20
 };
 }
@@ -67,12 +67,12 @@ namespace GX2BlendCombineMode
 {
 enum Mode
 {
-   First = 0,
    Add = 0,
    Subtract = 1,
    Min = 2,
    Max = 3,
    RevSubtract = 4,
+   First = 0,
    Last = 4
 };
 }
