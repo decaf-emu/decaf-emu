@@ -71,7 +71,7 @@ public:
    void shiftTo(asmjit::X86GpReg reg, int s, int d) {
       if (s > d) {
          shr(reg, s - d);
-      } else if (d < s) {
+      } else if (d > s) {
          shl(reg, d - s);
       }
    }
