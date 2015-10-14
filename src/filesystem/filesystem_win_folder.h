@@ -77,7 +77,7 @@ struct HostFolder : public Folder
 
       // Check if child already exists
       if (node) {
-         if (node->type = FileSystemNode::FolderNode) {
+         if (node->type == FileSystemNode::FolderNode) {
             // Directory exists, return it
             return node;
          } else {
