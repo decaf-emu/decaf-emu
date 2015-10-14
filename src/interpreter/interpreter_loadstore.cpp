@@ -39,7 +39,7 @@ loadGeneric(ThreadState *state, Instruction instr)
    } else {
       d = gMemory.read<Type>(ea);
    }
-  
+
    if (std::is_floating_point<Type>::value) {
       state->fpr[instr.rD].paired0 = static_cast<double>(d);
    } else {
@@ -316,7 +316,7 @@ storeGeneric(ThreadState *state, Instruction instr)
    } else {
       ea = state->gpr[instr.rA];
    }
-   
+
    if (flags & StoreIndexed) {
       ea += state->gpr[instr.rB];
    } else {
@@ -331,7 +331,7 @@ storeGeneric(ThreadState *state, Instruction instr)
 
          if (gMemory.read<uint32_t>(state->reserveAddress) == state->reserveData) {
             // Store is succesful, clear reserve bit and set CR0[EQ]
-            state->cr.cr0 |= ConditionRegisterFlag::Equal;   
+            state->cr.cr0 |= ConditionRegisterFlag::Equal;
          } else {
             // Reservation has been written by another process
             return;

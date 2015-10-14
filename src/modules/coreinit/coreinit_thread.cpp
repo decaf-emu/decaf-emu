@@ -276,7 +276,7 @@ OSJoinThread(OSThread *thread, be_val<int> *val)
       OSSleepThreadNoLock(&thread->joinQueue);
       OSRescheduleNoLock();
    }
-   
+
    if (val) {
       *val = thread->exitValue;
    }
@@ -297,7 +297,7 @@ OSResumeThread(OSThread *thread)
 {
    OSLockScheduler();
    auto old = OSResumeThreadNoLock(thread, 1);
-   
+
    if (thread->suspendCounter == 0) {
       OSRescheduleNoLock();
    }
