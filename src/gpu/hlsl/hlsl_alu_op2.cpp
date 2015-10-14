@@ -449,7 +449,7 @@ static bool PRED_SETGE(GenerateState &state, AluInstruction *ins)
    if (!ins->writeMask && ins->updateExecutionMask && ins->updatePredicate) {
       // Should be inside a conditional
       translateAluSource(state, ins->sources[0]);
-      state.out << " == ";
+      state.out << " >= ";
       translateAluSource(state, ins->sources[1]);
    } else {
       translateAluDestStart(state, ins);
@@ -479,7 +479,7 @@ static bool PRED_SETGT(GenerateState &state, AluInstruction *ins)
    if (!ins->writeMask && ins->updateExecutionMask && ins->updatePredicate) {
       // Should be inside a conditional
       translateAluSource(state, ins->sources[0]);
-      state.out << " == ";
+      state.out << " > ";
       translateAluSource(state, ins->sources[1]);
    } else {
       translateAluDestStart(state, ins);
