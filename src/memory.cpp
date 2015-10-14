@@ -84,7 +84,7 @@ Memory::valid(uint32_t address)
    auto view = getView(address);
 
    if (!view) {
-      return nullptr;
+      return false;
    }
 
    auto page = (address - view->start) / view->pageSize;
