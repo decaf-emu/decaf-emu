@@ -152,11 +152,12 @@ void dx::initialise()
 
    // Create the root signature.
    {
-      CD3DX12_DESCRIPTOR_RANGE ranges[1];
+      CD3DX12_DESCRIPTOR_RANGE ranges[2];
       ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
-      CD3DX12_ROOT_PARAMETER rootParameters[1];
+      CD3DX12_ROOT_PARAMETER rootParameters[2];
       rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+      rootParameters[1].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
       D3D12_STATIC_SAMPLER_DESC sampler = {};
       sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -546,6 +547,15 @@ void dx::updateBuffers()
    }
 
    gDX.commandList->IASetVertexBuffers(0, 32, bufferList);
+
+
+   DXDynBuffer::Allocation constBuffer;
+
+   constBuffer = gDX.ppcVertexBuffer->get(
+      0, 16 * 4 * sizeof(float), nullptr);
+   uint8_t *constData = (uint8_t*)constBuffer;
+   memcpy(constData, gDX.state.uniforms, 16 * 4 * sizeof(float));
+   gDX.commandList->SetGraphicsRootConstantBufferView(1, constBuffer);
 }
 
 void dx::updateTextures()

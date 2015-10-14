@@ -496,12 +496,6 @@ generateLocals(latte::Shader &shader, fmt::MemoryWriter &output)
          << "float4 R" << id << ";\n";
    }
 
-   for (auto id : shader.uniformsUsed) {
-      // TODO: Real uniforms
-      output
-         << "float4 C" << id << " = float4(0.5, 0.5, 0, 0);\n";
-   }
-
    if (shader.psUsed.size()) {
       output
          << "float4 PS;\n"
@@ -607,6 +601,25 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    output << "struct PSOutput {\n";
    generateExports(pixelShader, output);
    output << "};\n\n";
+
+   uint32_t maxUniform = 0;
+   for (auto i : vertexShader.uniformsUsed) {
+      if (maxUniform < i + 1) {
+         maxUniform = i + 1;
+      }
+   }
+   for (auto i : pixelShader.uniformsUsed) {
+      if (maxUniform < i + 1) {
+         maxUniform = i + 1;
+      }
+   }
+   if (maxUniform > 0) {
+      output << "cbuffer Uniforms {\n";
+      for (auto i = 0u; i < maxUniform; ++i) {
+         output << "  float4 C" << i << ";\n";
+      }
+      output << "};\n\n";
+   }
 
    for (auto id : pixelShader.samplersUsed) {
       output

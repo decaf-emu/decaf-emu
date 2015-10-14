@@ -31,6 +31,10 @@ public:
          return mCpuAddr;
       }
 
+      operator D3D12_GPU_VIRTUAL_ADDRESS() {
+         return mView.BufferLocation;
+      }
+
       operator D3D12_VERTEX_BUFFER_VIEW*() {
          return &mView;
       }
@@ -52,7 +56,8 @@ public:
          nullptr,
          IID_PPV_ARGS(&mBuffer)));
 
-      ThrowIfFailed(mBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mCpuAddr)));
+      CD3DX12_RANGE readRange(0, 0);
+      ThrowIfFailed(mBuffer->Map(0, &readRange, reinterpret_cast<void**>(&mCpuAddr)));
    }
 
    void reset() {

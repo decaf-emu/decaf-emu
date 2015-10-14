@@ -71,6 +71,7 @@ struct DXState {
       GX2PixelShader *pixelShader;
       GX2GeometryShader *geomShader;
       GX2PixelSampler *pixelSampler[GX2_NUM_TEXTURE_UNIT];
+      float uniforms[256 * 4];
    } state;
    static_assert(sizeof(ContextState) < sizeof(GX2ContextState::stateStore), "ContextState must be smaller than GX2ContextState::stateStore");
 
