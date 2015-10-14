@@ -553,10 +553,9 @@ template<unsigned flags = 0>
 static void
 sumGeneric(ThreadState *state, Instruction instr)
 {
-   double a0, a1, b0, b1, c0, c1, d0, d1;
+   double a0, b0, b1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
-   a1 = state->fpr[instr.frA].paired1;
 
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
@@ -574,11 +573,11 @@ sumGeneric(ThreadState *state, Instruction instr)
       || is_signalling_nan(c1);
 
    if (flags & Sum0) {
-      d1 = c0;
       d0 = a0 + b1;
+      d1 = c1;
    } else if (flags & Sum1) {
-      d1 = a0 + b1;
       d0 = c0;
+      d1 = a0 + b1;
    }
 
    updateFPSCR(state);
