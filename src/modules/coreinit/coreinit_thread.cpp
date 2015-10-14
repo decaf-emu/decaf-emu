@@ -133,10 +133,10 @@ InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *arg
    // Setup context
    thread->context.gpr[0] = 0;
    thread->context.gpr[1] = thread->stackStart - 4 - EXTRA_STACK_ALLOC;
-   thread->context.gpr[2] = sdaBase;
+   thread->context.gpr[2] = sda2Base;
    thread->context.gpr[3] = argc;
    thread->context.gpr[4] = gMemory.untranslate(argv);
-   thread->context.gpr[13] = sda2Base;
+   thread->context.gpr[13] = sdaBase;
 
    // Setup thread
    thread->entryPoint = entry;
