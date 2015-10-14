@@ -393,6 +393,7 @@ enum MulFlags
    MulLow = 1 << 0, // (uint32_t)d
    MulHigh = 1 << 1, // d >> 32
    MulImmediate = 1 << 2, // b = simm
+   MulCheckRecord = 1 << 3, // Check rc then update cr
 };
 
 // Signed multiply
@@ -413,14 +414,18 @@ mulSignedGeneric(PPCEmuAssembler& a, Instruction instr)
    if (flags & MulLow) {
       a.mov(a.ppcgpr[instr.rD], a.eax);
 
-      if (instr.rc) {
-         updateConditionRegister(a, a.eax, a.ecx, a.edx);
+      if (flags & MulCheckRecord) {
+         if (instr.rc) {
+            updateConditionRegister(a, a.eax, a.ecx, a.edx);
+         }
       }
    } else if (flags & MulHigh) {
       a.mov(a.ppcgpr[instr.rD], a.edx);
 
-      if (instr.rc) {
-         updateConditionRegister(a, a.edx, a.ecx, a.eax);
+      if (flags & MulCheckRecord) {
+         if (instr.rc) {
+            updateConditionRegister(a, a.edx, a.ecx, a.eax);
+         }
       }
    } else {
       assert(0);
@@ -430,7 +435,7 @@ mulSignedGeneric(PPCEmuAssembler& a, Instruction instr)
 }
 
 // Unsigned multiply
-template<MulFlags flags>
+template<unsigned flags>
 static bool
 mulUnsignedGeneric(PPCEmuAssembler& a, Instruction instr)
 {
@@ -447,14 +452,18 @@ mulUnsignedGeneric(PPCEmuAssembler& a, Instruction instr)
    if (flags & MulLow) {
       a.mov(a.ppcgpr[instr.rD], a.eax);
 
-      if (instr.rc) {
-         updateConditionRegister(a, a.eax, a.ecx, a.edx);
+      if (flags & MulCheckRecord) {
+         if (instr.rc) {
+            updateConditionRegister(a, a.eax, a.ecx, a.edx);
+         }
       }
    } else if (flags & MulHigh) {
       a.mov(a.ppcgpr[instr.rD], a.edx);
 
-      if (instr.rc) {
-         updateConditionRegister(a, a.edx, a.ecx, a.eax);
+      if (flags & MulCheckRecord) {
+         if (instr.rc) {
+            updateConditionRegister(a, a.edx, a.ecx, a.eax);
+         }
       }
    } else {
       assert(0);
@@ -466,13 +475,13 @@ mulUnsignedGeneric(PPCEmuAssembler& a, Instruction instr)
 static bool
 mulhw(PPCEmuAssembler& a, Instruction instr)
 {
-   return mulSignedGeneric<MulHigh>(a, instr);
+   return mulSignedGeneric<MulHigh | MulCheckRecord>(a, instr);
 }
 
 static bool
 mulhwu(PPCEmuAssembler& a, Instruction instr)
 {
-   return mulUnsignedGeneric<MulHigh>(a, instr);
+   return mulUnsignedGeneric<MulHigh | MulCheckRecord>(a, instr);
 }
 
 static bool
@@ -484,7 +493,7 @@ mulli(PPCEmuAssembler& a, Instruction instr)
 static bool
 mullw(PPCEmuAssembler& a, Instruction instr)
 {
-   return mulSignedGeneric<MulLow>(a, instr);
+   return mulSignedGeneric<MulLow | MulCheckRecord>(a, instr);
 }
 
 // NAND

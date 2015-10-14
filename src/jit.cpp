@@ -66,13 +66,13 @@ void JitManager::initStubs() {
    a.push(a.zbx);
    a.push(a.zdi);
    a.push(a.zsi);
-   a.sub(a.zsp, 0x28);
+   a.sub(a.zsp, 0x30);
    a.mov(a.zbx, a.zcx);
    a.mov(a.zsi, static_cast<uint64_t>(gMemory.base()));
    a.jmp(a.zdx);
 
    a.bind(extroLabel);
-   a.add(a.zsp, 0x28);
+   a.add(a.zsp, 0x30);
    a.pop(a.zsi);
    a.pop(a.zdi);
    a.pop(a.zbx);
@@ -493,9 +493,7 @@ bool JitManager::gen(JitBlock& block)
 
    JitCode func = asmjit_cast<JitCode>(a.make());
    if (func == nullptr) {
-      auto errCode = a.getError();
-      auto errString = asmjit::ErrorUtil::asString(errCode);
-      gLog->error("JIT failed due to asmjit make failure ({}): {}", errCode, errString);
+      gLog->error("JIT failed due to asmjit make failure");
       return false;
    }
 
@@ -510,4 +508,9 @@ bool JitManager::gen(JitBlock& block)
 
 uint32_t JitManager::execute(ThreadState *state, JitCode block) {
    return mCallFn(state, block);
+}
+
+bool PPCEmuAssembler::ErrorHandler::handleError(asmjit::Error code, const char* message) {
+   gLog->error("ASMJit Error {}: {}\n", code, message);
+   return true;
 }

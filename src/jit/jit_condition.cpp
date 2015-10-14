@@ -33,7 +33,6 @@ void setCRB(PPCEmuAssembler& a, uint32_t bit, const asmjit::X86GpReg& value, con
 enum CmpFlags
 {
    CmpImmediate = 1 << 0, // b = imm
-   CmpLogical = 1 << 1
 };
 
 template<typename Type, unsigned flags = 0>
@@ -70,27 +69,30 @@ cmpGeneric(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.ecx, a.ppcgpr[instr.rB]);
    }
 
-   if (flags & CmpLogical) {
-      a.cmp(a.zax, a.zcx);
+   a.cmp(a.eax, a.ecx);
+   a.mov(a.r8d, 0);
+   if (std::is_unsigned<Type>::value) {
+      a.seta(a.r8d.r8());
    } else {
-      a.cmp(a.eax, a.ecx);
+      a.setg(a.r8d.r8());
+   }
+   a.mov(a.r9d, 0);
+   if (std::is_unsigned<Type>::value) {
+      a.setb(a.r9d.r8());
+   } else {
+      a.setl(a.r9d.r8());
    }
 
-   a.lahf();
    a.mov(a.ecx, 0);
    a.sete(a.ecx.r8());
    a.shl(a.ecx, crshift + ConditionRegisterFlag::ZeroShift);
    a.or_(a.edx, a.ecx);
 
-   a.sahf();
-   a.mov(a.ecx, 0);
-   a.setg(a.ecx.r8());
+   a.mov(a.ecx, a.r8d);
    a.shl(a.ecx, crshift + ConditionRegisterFlag::PositiveShift);
    a.or_(a.edx, a.ecx);
    
-   a.sahf();
-   a.mov(a.ecx, 0);
-   a.setl(a.ecx.r8());
+   a.mov(a.ecx, a.r9d);
    a.shl(a.ecx, crshift + ConditionRegisterFlag::NegativeShift);
    a.or_(a.edx, a.ecx);
 
@@ -114,13 +116,13 @@ cmpi(PPCEmuAssembler& a, Instruction instr)
 static bool
 cmpl(PPCEmuAssembler& a, Instruction instr)
 {
-   return cmpGeneric<uint32_t, CmpLogical>(a, instr);
+   return cmpGeneric<uint32_t>(a, instr);
 }
 
 static bool
 cmpli(PPCEmuAssembler& a, Instruction instr)
 {
-   return cmpGeneric<uint32_t, CmpLogical | CmpImmediate>(a, instr);
+   return cmpGeneric<uint32_t, CmpImmediate>(a, instr);
 }
 
 // Floating Compare

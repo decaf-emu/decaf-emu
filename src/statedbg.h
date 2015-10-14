@@ -42,6 +42,7 @@ static inline bool dbgStateCmp(ThreadState* state, ThreadState* estate, std::vec
    }
    CHECKONE(reserve, "reserve");
    CHECKONE(reserveAddress, "reserveAddress");
+   CHECKONE(reserveData, "reserveData");
 #undef CHECKONEI
 #undef CHECKONE
 

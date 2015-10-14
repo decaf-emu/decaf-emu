@@ -110,9 +110,15 @@ Interpreter::execute(ThreadState *state)
 
          // Save thread-state for JIT run.
          ThreadState jstate = *state;
+         uint32_t jReserveBytes = 0;
+         uint32_t jReserveAddress = 0;
+         if (jstate.reserve) {
+            jReserveAddress = jstate.reserveAddress;
+            jReserveBytes = gMemory.read<uint32_t>(jReserveAddress);
+         }
 
          // Fetch the JIT instruction block
-         JitCode jitInstr = gJitManager.getSingle(state->cia);
+         JitCode jitInstr = gJitManager.getSingle(ostate.cia);
          if (jitInstr == nullptr) {
          	gLog->error("Failed to JIT debug instr {} @ {:08x}", data->name, ostate.cia);
             DebugBreak();
@@ -123,6 +129,11 @@ Interpreter::execute(ThreadState *state)
 
          // Kernel calls are not stateless
          if (data->id != InstructionID::kc) {
+            // Restore reserve data
+            if (jReserveAddress != 0) {
+               gMemory.write(jReserveAddress, jReserveBytes);
+            }
+
             // Execute with JIT
             jstate.nia = gJitManager.execute(&jstate, jitInstr);
 

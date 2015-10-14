@@ -32,24 +32,32 @@ Register Assignments:
 */
 
 class PPCEmuAssembler : public asmjit::X86Assembler {
+private:
+   class ErrorHandler : public asmjit::ErrorHandler {
+   public:
+      bool handleError(asmjit::Error code, const char* message) override;
+   } errHandler;
+
 public:
    PPCEmuAssembler(asmjit::Runtime* runtime)
       : asmjit::X86Assembler(runtime, asmjit::kArchX64)
    {
+      setErrorHandler(&errHandler);
+
       eax = zax.r32();
       ecx = zcx.r32();
       edx = zdx.r32();
+      r8d = asmjit::x86::r8d;
+      r9d = asmjit::x86::r9d;
 
-#define PPCTSReg(mm) asmjit::X86Mem(zbx, (int32_t)offsetof(ThreadState, mm))
+#define PPCTSReg(mm) asmjit::X86Mem(zbx, (int32_t)offsetof(ThreadState, mm), sizeof(ThreadState::mm))
       for (auto i = 0; i < 32; ++i) {
          ppcgpr[i] = PPCTSReg(gpr[i]);
       }
       for (auto i = 0; i < 32; ++i) {
          ppcfpr[i] = PPCTSReg(fpr[i]);
          ppcfprps[i][0] = PPCTSReg(fpr[i].paired0);
-         ppcfprps[i][0].setSize(8);
          ppcfprps[i][1] = PPCTSReg(fpr[i].paired1);
-         ppcfprps[i][1].setSize(8);
       }
       ppccr = PPCTSReg(cr);
       ppcxer = PPCTSReg(xer.value);
@@ -61,11 +69,15 @@ public:
       }
       ppcreserve = PPCTSReg(reserve);
       ppcreserveAddress = PPCTSReg(reserveAddress);
+      ppcreserveData = PPCTSReg(reserveData);
 #undef PPCTSReg
 
       state = zbx;
       membase = zsi;
       cia = zdi;
+
+      xmm0 = asmjit::x86::xmm0;
+      xmm1 = asmjit::x86::xmm1;
    }
 
    void shiftTo(asmjit::X86GpReg reg, int s, int d) {
@@ -83,6 +95,11 @@ public:
    asmjit::X86GpReg eax;
    asmjit::X86GpReg ecx;
    asmjit::X86GpReg edx;
+   asmjit::X86GpReg r8d;
+   asmjit::X86GpReg r9d;
+
+   asmjit::X86XmmReg xmm0;
+   asmjit::X86XmmReg xmm1;
 
    asmjit::X86Mem ppcgpr[32];
    asmjit::X86Mem ppcfpr[32];
@@ -96,6 +113,7 @@ public:
 
    asmjit::X86Mem ppcreserve;
    asmjit::X86Mem ppcreserveAddress;
+   asmjit::X86Mem ppcreserveData;
 };
 
 template<typename T, typename Z>

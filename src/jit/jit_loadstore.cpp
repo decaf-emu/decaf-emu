@@ -11,7 +11,6 @@ enum LoadFlags
    LoadByteReverse = 1 << 3, // Swap bytes
    LoadReserve = 1 << 4, // lwarx harware reserve
    LoadZeroRA = 1 << 5, // Use 0 instead of r0
-   LoadPairedSingles = 1 << 6, // Set fpr.paired1 = d & fpr.paired2 = d
 };
 
 template<typename Type, unsigned flags = 0>
@@ -61,13 +60,13 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (std::is_floating_point<Type>::value) {
-      if (flags & LoadPairedSingles) {
-         a.mov(a.ppcfprps[instr.rD][0], a.eax);
-         a.mov(a.ppcfprps[instr.rD][1], a.eax);
-      }
-      else {
+      if (sizeof(Type) == 4) {
+         a.movq(a.xmm0, a.zax);
+         a.cvtss2sd(a.xmm1, a.xmm0);
+         a.movq(a.ppcfprps[instr.rD][0], a.xmm1);
+      } else {
          assert(sizeof(Type) == 8);
-         a.mov(a.ppcfpr[instr.rD], a.zax);
+         a.mov(a.ppcfprps[instr.rD][0], a.zax);
       }
    }
    else {
@@ -82,6 +81,11 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
    if (flags & LoadReserve) {
       a.mov(a.ppcreserve, 1u);
       a.mov(a.ppcreserveAddress, a.ecx);
+      a.mov(a.zdx, a.ecx);
+      a.add(a.zdx, a.membase);
+      a.mov(a.eax, asmjit::X86Mem(a.zdx, 0));
+      a.bswap(a.eax);
+      a.mov(a.ppcreserveData, a.eax);
    }
 
    if (flags & LoadUpdate) {
@@ -207,25 +211,25 @@ lwzx(PPCEmuAssembler& a, Instruction instr)
 static bool
 lfs(PPCEmuAssembler& a, Instruction instr)
 {
-   return loadGeneric<float, LoadPairedSingles | LoadZeroRA>(a, instr);
+   return loadGeneric<float, LoadZeroRA>(a, instr);
 }
 
 static bool
 lfsu(PPCEmuAssembler& a, Instruction instr)
 {
-   return loadGeneric<float, LoadPairedSingles | LoadUpdate>(a, instr);
+   return loadGeneric<float, LoadUpdate>(a, instr);
 }
 
 static bool
 lfsux(PPCEmuAssembler& a, Instruction instr)
 {
-   return loadGeneric<float, LoadPairedSingles | LoadUpdate | LoadIndexed>(a, instr);
+   return loadGeneric<float, LoadUpdate | LoadIndexed>(a, instr);
 }
 
 static bool
 lfsx(PPCEmuAssembler& a, Instruction instr)
 {
-   return loadGeneric<float, LoadPairedSingles | LoadZeroRA | LoadIndexed>(a, instr);
+   return loadGeneric<float, LoadZeroRA | LoadIndexed>(a, instr);
 }
 
 static bool
@@ -311,7 +315,6 @@ enum StoreFlags
    StoreConditional = 1 << 3, // lward/stwcx Conditional
    StoreZeroRA = 1 << 4, // Use 0 instead of r0
    StoreFloatAsInteger = 1 << 5, // stfiwx
-   StoreSingle = 1 << 6, // Single
 };
 
 template<typename Type, unsigned flags = 0>
@@ -364,11 +367,11 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
       assert(sizeof(Type) == 4);
       a.mov(a.eax, a.ppcfprps[instr.rS][0]);
    } else if (std::is_floating_point<Type>::value) {
-      if (flags & StoreSingle) {
-         assert(sizeof(Type) == 4);
-         a.mov(a.eax, a.ppcfprps[instr.rS][0]);
-      }
-      else {
+      if (sizeof(Type) == 4) {
+         a.movq(a.xmm0, a.ppcfprps[instr.rS][0]);
+         a.cvtsd2ss(a.xmm1, a.xmm0);
+         a.movq(a.eax, a.xmm1);
+      } else {
          assert(sizeof(Type) == 8);
          a.mov(a.zax, a.ppcfpr[instr.rS]);
       }
@@ -511,25 +514,25 @@ stwcx(PPCEmuAssembler& a, Instruction instr)
 static bool
 stfs(PPCEmuAssembler& a, Instruction instr)
 {
-   return storeGeneric<float, StoreSingle | StoreZeroRA>(a, instr);
+   return storeGeneric<float, StoreZeroRA>(a, instr);
 }
 
 static bool
 stfsu(PPCEmuAssembler& a, Instruction instr)
 {
-   return storeGeneric<float, StoreSingle | StoreUpdate>(a, instr);
+   return storeGeneric<float, StoreUpdate>(a, instr);
 }
 
 static bool
 stfsux(PPCEmuAssembler& a, Instruction instr)
 {
-   return storeGeneric<float, StoreSingle | StoreUpdate | StoreIndexed>(a, instr);
+   return storeGeneric<float, StoreUpdate | StoreIndexed>(a, instr);
 }
 
 static bool
 stfsx(PPCEmuAssembler& a, Instruction instr)
 {
-   return storeGeneric<float, StoreSingle | StoreZeroRA | StoreIndexed>(a, instr);
+   return storeGeneric<float, StoreZeroRA | StoreIndexed>(a, instr);
 }
 
 static bool
