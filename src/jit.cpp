@@ -64,6 +64,7 @@ void JitManager::initStubs() {
 
    a.bind(introLabel);
    a.push(a.zbx);
+   a.push(a.zdi);
    a.push(a.zsi);
    a.sub(a.zsp, 0x28);
    a.mov(a.zbx, a.zcx);
@@ -73,6 +74,7 @@ void JitManager::initStubs() {
    a.bind(extroLabel);
    a.add(a.zsp, 0x28);
    a.pop(a.zsi);
+   a.pop(a.zdi);
    a.pop(a.zbx);
    a.ret();
 
