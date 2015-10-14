@@ -429,7 +429,7 @@ static bool PRED_SETE(GenerateState &state, AluInstruction *ins)
       translateAluSource(state, ins->sources[1]);
       state.out << ") ? ";
 
-      if (ins->dest.valueType = AluDest::Float) {
+      if (ins->dest.valueType == AluDest::Float) {
          state.out << "1.0f : 0.0f";
       } else {
          state.out << "1 : 0";
@@ -459,7 +459,7 @@ static bool PRED_SETGE(GenerateState &state, AluInstruction *ins)
       translateAluSource(state, ins->sources[1]);
       state.out << ") ? ";
 
-      if (ins->dest.valueType = AluDest::Float) {
+      if (ins->dest.valueType == AluDest::Float) {
          state.out << "1.0f : 0.0f";
       } else {
          state.out << "1 : 0";
@@ -489,7 +489,7 @@ static bool PRED_SETGT(GenerateState &state, AluInstruction *ins)
       translateAluSource(state, ins->sources[1]);
       state.out << ") ? ";
 
-      if (ins->dest.valueType = AluDest::Float) {
+      if (ins->dest.valueType == AluDest::Float) {
          state.out << "1.0f : 0.0f";
       } else {
          state.out << "1 : 0";
@@ -518,7 +518,7 @@ static bool PRED_SETNE(GenerateState &state, AluInstruction *ins)
       translateAluSource(state, ins->sources[1]);
       state.out << ") ? ";
 
-      if (ins->dest.valueType = AluDest::Float) {
+      if (ins->dest.valueType == AluDest::Float) {
          state.out << "1.0f : 0.0f";
       } else {
          state.out << "1 : 0";
@@ -584,7 +584,7 @@ static bool SETE(GenerateState &state, AluInstruction *ins)
    translateAluSource(state, ins->sources[1]);
    state.out << ") ? ";
 
-   if (ins->dest.valueType = AluDest::Float) {
+   if (ins->dest.valueType == AluDest::Float) {
       state.out << "1.0f : 0.0f";
    } else {
       state.out << "1 : 0";
@@ -606,7 +606,7 @@ static bool SETGE(GenerateState &state, AluInstruction *ins)
    translateAluSource(state, ins->sources[1]);
    state.out << ") ? ";
 
-   if (ins->dest.valueType = AluDest::Float) {
+   if (ins->dest.valueType == AluDest::Float) {
       state.out << "1.0f : 0.0f";
    } else {
       state.out << "1 : 0";
@@ -628,7 +628,7 @@ static bool SETGT(GenerateState &state, AluInstruction *ins)
    translateAluSource(state, ins->sources[1]);
    state.out << ") ? ";
 
-   if (ins->dest.valueType = AluDest::Float) {
+   if (ins->dest.valueType == AluDest::Float) {
       state.out << "1.0f : 0.0f";
    } else {
       state.out << "1 : 0";
@@ -650,7 +650,7 @@ static bool SETNE(GenerateState &state, AluInstruction *ins)
    translateAluSource(state, ins->sources[1]);
    state.out << ") ? ";
 
-   if (ins->dest.valueType = AluDest::Float) {
+   if (ins->dest.valueType == AluDest::Float) {
       state.out << "1.0f : 0.0f";
    } else {
       state.out << "1 : 0";

@@ -191,7 +191,7 @@ OSCheckAlarms(uint32_t core, OSContext *context)
       }
 
       // Set next timer if alarm is set
-      if (alarm->state = OSAlarmState::Set && alarm->nextFire) {
+      if (alarm->state == OSAlarmState::Set && alarm->nextFire) {
          auto nextFire = OSTimeToChrono(alarm->nextFire);
 
          if (nextFire < next) {
