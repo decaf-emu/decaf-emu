@@ -45,7 +45,7 @@ GX2SetPolygonControl(uint32_t unk1,
 
 void
 GX2SetColorControl(GX2LogicOp::Op logicOp,
-   uint32_t unk1,
+   uint8_t blendEnabled,
    uint32_t unk2,
    uint32_t unk3)
 {

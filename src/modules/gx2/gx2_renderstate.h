@@ -42,6 +42,23 @@ namespace GX2BlendMode
 enum Mode
 {
    First = 0,
+   Zero = 0,
+   One = 1,
+   SrcColor = 2,
+   InvSrcColor = 3,
+   SrcAlpha = 4,
+   InvSrcAlpha = 5,
+   DestAlpha = 6,
+   InvDestAlpha = 7,
+   DestColor = 8,
+   InvDestColor = 9,
+   SrcAlphaSat = 10,
+   BlendFactor = 13,
+   InvBlendFactor = 14,
+   Src1Color = 15,
+   InvSrc1Color = 16,
+   Src1Alpha = 17,
+   InvSrc1Alpha = 18,
    Last = 20
 };
 }
@@ -51,6 +68,11 @@ namespace GX2BlendCombineMode
 enum Mode
 {
    First = 0,
+   Add = 0,
+   Subtract = 1,
+   Min = 2,
+   Max = 3,
+   RevSubtract = 4,
    Last = 4
 };
 }
@@ -74,7 +96,7 @@ void
 GX2SetPolygonControl(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
 
 void
-GX2SetColorControl(GX2LogicOp::Op logicOp, uint32_t unk1, uint32_t unk2, uint32_t unk3);
+GX2SetColorControl(GX2LogicOp::Op logicOp, uint8_t blendEnabled, uint32_t unk2, uint32_t unk3);
 
 void
 GX2SetBlendControl(GX2RenderTarget::Target target,

@@ -3,6 +3,7 @@
 #include <vector>
 #include "dx12.h"
 #include "dx12_fetchshader.h"
+#include "dx12_utils.h"
 #include "modules/gx2/gx2_shaders.h"
 #include "modules/gx2/gx2_debug.h"
 #include "gpu/latte.h"
@@ -59,12 +60,12 @@ private:
       {
          auto shader = gDX.state.fetchShader;
          auto dataPtr = (FetchShaderInfo*)(void*)shader->data;
-         printf("Fetch Shader [%p]:\n", shader);
-         printf("  Type: %d\n", dataPtr->type);
-         printf("  Tess Mode: %d\n", dataPtr->tessMode);
+         gLog->debug("Fetch Shader [{}]:\n", (void*)shader);
+         gLog->debug("  Type: {}\n", dataPtr->type);
+         gLog->debug("  Tess: {}\n", dataPtr->tessMode);
          for (auto i = 0u; i < shader->attribCount; ++i) {
             auto attrib = dataPtr->attribs[i];
-            printf("  Attrib[%d] L:%d, B:%d, O:%d, F:%d, T:%d, A:%d, M:%08x, E:%d\n", i,
+            gLog->debug("  Attrib[{}] L:{}, B:{}, O:{}, F:{}, T:{}, A:{}, M:{:08x}, E:{}\n", i,
                (int32_t)attrib.location,
                (int32_t)attrib.buffer,
                (int32_t)attrib.offset,
@@ -80,7 +81,7 @@ private:
       {
          auto shader = gDX.state.vertexShader;
          vertexShaderCrc = crc32(shader->data, shader->size);
-         printf("Vertex Shader [%p] (%08x)\n", shader, vertexShaderCrc);
+         gLog->debug("Pixel Shader [{}] ({:08x})\n", (void*)shader, vertexShaderCrc);
          GX2DumpShader(shader);
       }
       // Print Pixel Shader Data
@@ -88,7 +89,7 @@ private:
       {
          auto shader = gDX.state.pixelShader;
          pixelShaderCrc = crc32(shader->data, shader->size);
-         printf("Pixel Shader [%p] (%08x)\n", shader, pixelShaderCrc);
+         gLog->debug("Pixel Shader [{}] ({:08x})\n", (void*)shader, pixelShaderCrc);
          GX2DumpShader(shader);
       }
 
@@ -104,8 +105,7 @@ private:
          latte::decode(decVertexShader, { vertexShader->data.get(), vertexShader->size });
          latte::decode(decPixelShader, { pixelShader->data.get(), pixelShader->size });
          hlsl::generateHLSL({ (GX2AttribStream*)fetchData->attribs, fetchShader->attribCount }, decVertexShader, decPixelShader, hlsl);
-         printf("Compiled Shader:\n");
-         printf("%s", hlsl.c_str());
+         gLog->debug("Compiled Shader:\n{}\n", hlsl);
       }
 
       ComPtr<ID3DBlob> vertexShaderBlob;
@@ -122,12 +122,12 @@ private:
       HRESULT hr;
       hr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, &errorBlob);
       if (FAILED(hr)) {
-         printf("Shader Compilation Failed:\n%s", (char*)errorBlob->GetBufferPointer());
+         gLog->warn("Vertex Shader Compilation Failed:\n{}", (char*)errorBlob->GetBufferPointer());
          throw;
       }
       hr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, &errorBlob);
       if (FAILED(hr)) {
-         printf("Shader Compilation Failed:\n%s", (char*)errorBlob->GetBufferPointer());
+         gLog->warn("Pixel Shader Compilation Failed:\n{}", (char*)errorBlob->GetBufferPointer());
          throw;
       }
 
@@ -203,6 +203,27 @@ private:
          psoDesc.NumRenderTargets = 1;
          psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
          psoDesc.SampleDesc.Count = 1;
+
+         auto &blendState = gDX.state.blendState;
+         if (blendState.blendEnabled) {
+            psoDesc.BlendState.IndependentBlendEnable = true;
+            for (auto i = 0; i < 8; ++i) {
+               auto &targetState = gDX.state.targetBlendState[i];
+               auto &rtInfo = psoDesc.BlendState.RenderTarget[i];
+               rtInfo.LogicOpEnable = false;
+               rtInfo.LogicOp = D3D12_LOGIC_OP_COPY;
+               rtInfo.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+               rtInfo.BlendEnable = blendState.blendEnabled & (1 << i);
+               rtInfo.SrcBlend = dx12MakeBlend(targetState.colorSrcBlend);
+               rtInfo.DestBlend = dx12MakeBlend(targetState.colorDstBlend);
+               rtInfo.BlendOp = dx12MakeBlendOp(targetState.colorCombine);
+               rtInfo.SrcBlendAlpha = dx12MakeBlend(targetState.alphaSrcBlend);
+               rtInfo.DestBlendAlpha = dx12MakeBlend(targetState.alphaDstBlend);
+               rtInfo.BlendOpAlpha = dx12MakeBlendOp(targetState.alphaCombine);
+
+            }
+         }
+
          ThrowIfFailed(gDX.device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
       }
 

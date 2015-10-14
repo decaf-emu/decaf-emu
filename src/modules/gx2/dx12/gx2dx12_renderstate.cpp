@@ -49,11 +49,13 @@ GX2SetPolygonControl(uint32_t unk1,
 
 void
 GX2SetColorControl(GX2LogicOp::Op logicOp,
-   uint32_t unk1,
+   uint8_t blendEnabled,
    uint32_t unk2,
    uint32_t unk3)
 {
-   // TODO: GX2SetColorControl
+   auto &blendState = gDX.state.blendState;
+   blendState.logicOp = logicOp;
+   blendState.blendEnabled = blendEnabled;
 }
 
 void
@@ -66,7 +68,13 @@ GX2SetBlendControl(GX2RenderTarget::Target target,
    GX2BlendMode::Mode alphaDstBlend,
    GX2BlendCombineMode::Mode alphaCombine)
 {
-   // TODO: GX2SetBlendControl
+   auto &blendState = gDX.state.targetBlendState[target];
+   blendState.colorSrcBlend = colorSrcBlend;
+   blendState.colorDstBlend = colorDstBlend;
+   blendState.colorCombine = colorCombine;
+   blendState.alphaSrcBlend = alphaSrcBlend;
+   blendState.alphaDstBlend = alphaDstBlend;
+   blendState.alphaCombine = alphaCombine;
 }
 
 void
@@ -75,7 +83,14 @@ GX2SetBlendConstantColor(float red,
    float blue,
    float alpha)
 {
-   // TODO: GX2SetBlendConstantColor
+   auto &blendState = gDX.state.blendState;
+   blendState.constColor[0] = red;
+   blendState.constColor[1] = green;
+   blendState.constColor[2] = blue;
+   blendState.constColor[3] = alpha;
+
+   // TODO: Why do we store this AND set it on DX12?
+   gDX.commandList->OMSetBlendFactor(blendState.constColor);
 }
 
 void
@@ -83,7 +98,11 @@ GX2SetAlphaTest(BOOL enabled,
    GX2CompareFunction::Func compare,
    float reference)
 {
-   // TODO: GX2SetAlphaTest
+   // TODO: Implement this with the shader compiler
+   auto &blendState = gDX.state.blendState;
+   blendState.alphaTestEnabled = (enabled != 0);
+   blendState.alphaFunc = compare;
+   blendState.alphaRef = reference;
 }
 
 void

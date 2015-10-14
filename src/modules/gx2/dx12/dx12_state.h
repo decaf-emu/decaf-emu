@@ -2,6 +2,7 @@
 #include "modules/gx2/gx2.h"
 #include "modules/gx2/gx2_draw.h"
 #include "modules/gx2/gx2_context.h"
+#include "modules/gx2/gx2_renderstate.h"
 #include "modules/gx2/gx2_texture.h"
 #include "modules/gx2/gx2_shaders.h"
 #include "hostlookup.h"
@@ -71,6 +72,22 @@ struct DXState {
       GX2PixelShader *pixelShader;
       GX2GeometryShader *geomShader;
       GX2PixelSampler *pixelSampler[GX2_NUM_TEXTURE_UNIT];
+      struct {
+         GX2LogicOp::Op logicOp;
+         uint8_t blendEnabled;
+         float constColor[4];
+         bool alphaTestEnabled;
+         GX2CompareFunction::Func alphaFunc;
+         float alphaRef;
+      } blendState;
+      struct {
+         GX2BlendMode::Mode colorSrcBlend;
+         GX2BlendMode::Mode colorDstBlend;
+         GX2BlendCombineMode::Mode colorCombine;
+         GX2BlendMode::Mode alphaSrcBlend;
+         GX2BlendMode::Mode alphaDstBlend;
+         GX2BlendCombineMode::Mode alphaCombine;
+      } targetBlendState[8];
       float uniforms[256 * 4];
    } state;
    static_assert(sizeof(ContextState) < sizeof(GX2ContextState::stateStore), "ContextState must be smaller than GX2ContextState::stateStore");
