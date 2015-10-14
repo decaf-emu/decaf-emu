@@ -786,7 +786,7 @@ Loader::loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data)
    // Process Imports
    if (!processImports(loadedMod.get(), sections)) {
       gLog->error("Error loading imports");
-      return false;
+      return nullptr;
    }
 
    // Process relocations
@@ -794,7 +794,7 @@ Loader::loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data)
 
    if (!processRelocations(loadedMod.get(), sections, in, shStrTab, codeSeg, trampSeg)) {
       gLog->error("Error loading relocations");
-      return false;
+      return nullptr;
    }
 
    // Relocate entry point
@@ -815,7 +815,7 @@ Loader::loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data)
    // Process exports
    if (!processExports(loadedMod.get(), sections)) {
       gLog->error("Error loading exports");
-      return false;
+      return nullptr;
    }
 
    // Create sections list
