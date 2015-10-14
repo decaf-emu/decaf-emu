@@ -493,7 +493,9 @@ bool JitManager::gen(JitBlock& block)
 
    JitCode func = asmjit_cast<JitCode>(a.make());
    if (func == nullptr) {
-      gLog->error("JIT failed due to asmjit make failure");
+      auto errCode = a.getError();
+      auto errString = asmjit::ErrorUtil::asString(errCode);
+      gLog->error("JIT failed due to asmjit make failure ({}): {}", errCode, errString);
       return false;
    }
 
