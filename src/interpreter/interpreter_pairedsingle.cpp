@@ -330,34 +330,34 @@ template<unsigned flags>
 static void
 mulGeneric(ThreadState *state, Instruction instr)
 {
-   double a0, a1, b0, b1, d0, d1;
+   double a0, a1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
    a1 = state->fpr[instr.frA].paired1;
 
    if (flags & MultiplyPaired) {
-      b0 = state->fpr[instr.frB].paired0;
-      b1 = state->fpr[instr.frB].paired1;
+      c0 = state->fpr[instr.frC].paired0;
+      c1 = state->fpr[instr.frC].paired1;
    } else if (flags & MultiplyScalar0) {
-      b0 = state->fpr[instr.frB].paired0;
-      b1 = state->fpr[instr.frB].paired0;
+      c0 = state->fpr[instr.frC].paired0;
+      c1 = state->fpr[instr.frC].paired0;
    } else if (flags & MultiplyScalar1) {
-      b0 = state->fpr[instr.frB].paired1;
-      b1 = state->fpr[instr.frB].paired1;
+      c0 = state->fpr[instr.frC].paired1;
+      c1 = state->fpr[instr.frC].paired1;
    }
 
    state->fpscr.vximz |=
-         (is_infinity(a0) && is_zero(b0))
-      || (is_infinity(a1) && is_zero(b1))
-      || (is_zero(a0) && is_infinity(b0))
-      || (is_zero(a1) && is_infinity(b1));
+         (is_infinity(a0) && is_zero(c0))
+      || (is_infinity(a1) && is_zero(c1))
+      || (is_zero(a0) && is_infinity(c0))
+      || (is_zero(a1) && is_infinity(c1));
 
    state->fpscr.vxsnan |=
          is_signalling_nan(a0) || is_signalling_nan(a1)
-      || is_signalling_nan(b0) || is_signalling_nan(b1);
+      || is_signalling_nan(c0) || is_signalling_nan(c1);
 
-   d1 = a1 * b1;
-   d0 = a0 * b0;
+   d1 = a1 * c1;
+   d0 = a0 * c0;
    updateFPSCR(state);
    updateFPRF(state, d0);
 

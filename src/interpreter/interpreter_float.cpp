@@ -159,14 +159,14 @@ fdivs(ThreadState *state, Instruction instr)
 static void
 fmul(ThreadState *state, Instruction instr)
 {
-   double a, b, d;
+   double a, c, d;
    a = state->fpr[instr.frA].paired0;
-   b = state->fpr[instr.frB].paired0;
+   c = state->fpr[instr.frC].paired0;
 
-   state->fpscr.vximz = is_infinity(a) && is_zero(b);
-   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
+   state->fpscr.vximz = is_infinity(a) && is_zero(c);
+   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(c);
 
-   d = a * b;
+   d = a * c;
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
