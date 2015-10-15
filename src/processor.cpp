@@ -353,7 +353,7 @@ Processor::handleInterrupt()
 {
    auto core = tCurrentCore;
 
-   if (core->interrupt) {
+   if (core && core->interrupt) {
       if (core->currentFiber) {
          core->interruptedFiber = core->currentFiber;
       } else {
