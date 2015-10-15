@@ -438,8 +438,8 @@ Loader::registerUnimplementedFunction(const std::string& name)
 
    // Write syscall thunk
    auto kc = gInstructionTable.encode(InstructionID::kc);
-   kc.li = id;
-   kc.aa = 0;
+   kc.kcn = id;
+   kc.kci = 0;
    *(thunk + 0) = byte_swap(kc.value);
 
    auto bclr = gInstructionTable.encode(InstructionID::bclr);
