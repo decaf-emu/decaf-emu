@@ -3,8 +3,12 @@
 #include "fuzztests.h"
 #include "instructionid.h"
 #include "instructiondata.h"
-#include "instructiondata.h"
 #include "log.h"
+#include "ppc.h"
+
+template<size_t SIZE, class T> inline size_t array_size(T (&arr)[SIZE]) {
+   return SIZE;
+}
 
 struct InstructionFuzzData {
    uint32_t baseInstr;
@@ -90,6 +94,17 @@ setupFuzzData() {
    return res;
 }
 
+void setFieldValue(Instruction &instr, Field field, uint32_t value) {
+   instr.value |= (value << getFieldStart(field)) & getFieldBitmask(field);
+}
+
+static void
+encodeSPR(Instruction &instr, SprEncoding spr)
+{
+   uint32_t sprInt = (uint32_t)spr;
+   instr.spr = ((sprInt << 5) & 0x3E0) | ((sprInt >> 5) & 0x1F);
+}
+
 bool
 executeInstrTest(uint32_t test_seed, InstructionID instrId)
 {
@@ -101,14 +116,124 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
    case InstructionID::stmw:
    case InstructionID::stswi:
    case InstructionID::stswx:
+      // Disabled for now
+      return true;
+   case InstructionID::b:
+   case InstructionID::bc:
+   case InstructionID::bcctr:
+   case InstructionID::bclr:
+      // Branching cannot be fuzzed
+      return true;
+   case InstructionID::kc:
+      // Emulator Instruction
+      return true;
+   case InstructionID::sc:
+   case InstructionID::tw:
+   case InstructionID::twi:
+   case InstructionID::mfsr:
+   case InstructionID::mfsrin:
+   case InstructionID::mtsr:
+   case InstructionID::mtsrin:
+      // Supervisory Instructions
       return true;
    }
 
    std::mt19937 test_rand(test_seed);
    const InstructionData *data = gInstructionTable.find(instrId);
    const InstructionFuzzData *fuzzData = &instructionFuzzData[(int)instrId];
+   if (!data || !fuzzData) {
+      return false;
+   }
 
+   Instruction instr(fuzzData->baseInstr);
 
+   uint32_t gprAlloc = 5;
+   uint32_t fprAlloc = 0;
+   for (auto i : fuzzData->allFields) {
+      if (isFieldMarker(i)) {
+         continue;
+      }
+
+      switch (i) {
+      case Field::frA: // gpr Targets
+      case Field::frB:
+      case Field::frC:
+      case Field::frD:
+      case Field::frS:
+         setFieldValue(instr, i, fprAlloc++);
+         break;
+      case Field::rA: // fpr Targets
+      case Field::rB:
+      case Field::rD:
+      case Field::rS:
+         setFieldValue(instr, i, gprAlloc++);
+         break;
+      case Field::crbA: // crb Targets
+      case Field::crbB:
+      case Field::crbD:
+         setFieldValue(instr, i, test_rand());
+         break;
+      case Field::crfD: // crf Targets
+      case Field::crfS:
+         setFieldValue(instr, i, test_rand());
+         break;
+      case Field::i: // gqr Targets
+      case Field::qi:
+         break;
+      case Field::imm: // Random Values
+      case Field::simm:
+      case Field::uimm:
+      case Field::rc: // Record Condition
+      case Field::oe:
+      case Field::crm:
+      case Field::fm:
+      case Field::w:
+      case Field::qw:
+      case Field::sh: // Shift Registers
+      case Field::mb:
+      case Field::me:
+         break;
+         setFieldValue(instr, i, test_rand());
+         break;
+      case Field::d: // Memory Delta...
+      case Field::qd:
+         setFieldValue(instr, i, test_rand());
+         break;
+      case Field::spr: // Special Purpose Registers
+      {
+         SprEncoding validSprs[] = {
+            SprEncoding::XER,
+            SprEncoding::LR,
+            SprEncoding::CTR,
+            SprEncoding::GQR0,
+            SprEncoding::GQR1,
+            SprEncoding::GQR2,
+            SprEncoding::GQR3,
+            SprEncoding::GQR4,
+            SprEncoding::GQR5,
+            SprEncoding::GQR6,
+            SprEncoding::GQR7 };
+         encodeSPR(instr, validSprs[test_rand() % array_size(validSprs)]);
+         break;
+      }
+      case Field::tbr: // Time Base Registers
+      {
+         SprEncoding validTbrs[] = {
+            SprEncoding::TBL,
+            SprEncoding::TBU };
+         encodeSPR(instr, validTbrs[test_rand() % array_size(validTbrs)]);
+         break;
+      }
+      case Field::l:
+         // l always must be 0
+         instr.l = 0;
+         break;
+
+      default:
+         gLog->error("Instruction {} field {} is unsupported by fuzzer", data->name, (uint32_t)i);
+         return false;
+      }
+   }
 
    return true;
 }
