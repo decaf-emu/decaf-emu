@@ -269,8 +269,8 @@ mtsrin(ThreadState *state, Instruction instr)
 static void
 kc(ThreadState *state, Instruction instr)
 {
-   auto id = instr.li;
-   auto implemented = instr.aa;
+   auto id = instr.kcn;
+   auto implemented = instr.kci;
 
    auto sym = gSystem.getSyscall(id);
    if (!implemented) {

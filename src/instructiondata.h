@@ -12,14 +12,17 @@ struct BitRange
 };
 
 #define FLD(x, ...) x,
+#define MRKR(x, ...) x,
 
 enum class Field : uint32_t
 {
    Invalid,
    #include "instructionfields.inl"
+   FieldCount,
 };
 
 #undef FLD
+#undef MRKR
 
 struct InstructionOpcode
 {
@@ -63,6 +66,7 @@ struct InstructionAlias
 struct InstructionTable
 {
    void initialise();
+   InstructionData *find(InstructionID instrId);
    InstructionData *decode(Instruction instr);
    Instruction encode(InstructionID id);
    InstructionAlias *findAlias(InstructionData *data, Instruction instr);
@@ -70,6 +74,9 @@ struct InstructionTable
 };
 
 extern InstructionTable gInstructionTable;
+
+bool
+isFieldMarker(Field field);
 
 uint32_t
 getFieldStart(Field field);

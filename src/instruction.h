@@ -20,7 +20,9 @@ union Instruction
       uint32_t x : (z-y+1); \
       uint32_t : (y); \
    };
+#define MRKR(...)
 #include "instructionfields.inl"
 #undef FLD
+#undef MRKR
 
 };

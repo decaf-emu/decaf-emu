@@ -333,8 +333,8 @@ Loader::loadKernelModule(const std::string &name, KernelModule *module)
 
          // Write syscall thunk
          auto kc = gInstructionTable.encode(InstructionID::kc);
-         kc.li = func->syscallID;
-         kc.aa = 1;
+         kc.kcn = func->syscallID;
+         kc.kci = 1;
          *(thunk + 0) = byte_swap(kc.value);
 
          auto bclr = gInstructionTable.encode(InstructionID::bclr);

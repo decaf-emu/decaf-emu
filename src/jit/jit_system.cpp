@@ -138,8 +138,8 @@ kcstub(ThreadState *state, KernelFunction *func)
 static bool
 kc(PPCEmuAssembler& a, Instruction instr)
 {
-   auto id = instr.li;
-   auto implemented = instr.aa;
+   auto id = instr.kcn;
+   auto implemented = instr.kci;
 
    auto sym = gSystem.getSyscall(id);
    if (!implemented) {

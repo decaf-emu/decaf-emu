@@ -537,6 +537,9 @@
     <ClCompile Include="..\src\memory_translate.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\fuzztests.cpp">
+      <Filter>Source Files\ppc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -970,6 +973,9 @@
     </ClInclude>
     <ClInclude Include="..\src\memory_translate.h">
       <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\fuzztests.h">
+      <Filter>Header Files\ppc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

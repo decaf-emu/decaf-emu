@@ -65,13 +65,19 @@ static void
 initTable();
 
 #define FLD(x, y, z, ...) {y, z},
-
+#define MRKR(x, ...) {-1, -1},
 static BitRange gFieldBits[] = {
    { -1, -1 },
    #include "instructionfields.inl"
 };
-
 #undef FLD
+#undef MRKR
+
+bool
+isFieldMarker(Field field)
+{
+   return gFieldBits[static_cast<int>(field)].start == -1;
+}
 
 // First bit of instruction field
 uint32_t
@@ -110,6 +116,12 @@ uint32_t getFieldValue(const Field& field, Instruction instr)
       res = ((res << 5) & 0x3E0) | ((res >> 5) & 0x1F);
    }
    return res;
+}
+
+InstructionData *
+InstructionTable::find(InstructionID instrId)
+{
+   return &instructionData[static_cast<size_t>(instrId)];
 }
 
 // Decode Instruction to InstructionData
@@ -252,8 +264,11 @@ struct FieldIndex {
 // Initialise instructionData
 #define FLD(x, ...) \
    static const FieldIndex x(Field::x);
+#define MRKR(x, ...) \
+   static const FieldIndex x(Field::x);
 #include "instructionfields.inl"
 #undef FLD
+#undef MRKR
 
 #define PRINTOPS(...) __VA_ARGS__
 #define INS(name, write, read, flags, opcodes, fullname) \
@@ -279,6 +294,12 @@ operator==(const FieldIndex &lhs, const FieldIndex &rhs)
    return InstructionOpcode(lhs.id, rhs.id);
 }
 
+static InstructionOpcode
+operator!(const FieldIndex &lhs)
+{
+   return InstructionOpcode(lhs.id, 0);
+}
+
 void
 initData()
 {
@@ -293,8 +314,10 @@ initData()
    if (ins_##x.x != insv_##x) { \
       printf("%s %08x %08x\n", #x, ins_##x.x, insv_##x); \
    }
+#define MRKR(...)
 #include "instructionfields.inl"
 #undef FLD
+#undef MRKR
 };
 
 #undef INS

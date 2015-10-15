@@ -2,6 +2,7 @@
 #include <docopt.h>
 #include "bitutils.h"
 #include "codetests.h"
+#include "fuzztests.h"
 #include "filesystem/filesystem.h"
 #include "instructiondata.h"
 #include "interpreter.h"
@@ -38,6 +39,7 @@ gLog;
 
 void initialiseEmulator();
 bool test(const std::string &as, const std::string &path);
+bool fuzzTest();
 bool play(const fs::HostPath &path);
 
 static const char USAGE[] =
@@ -46,6 +48,7 @@ R"(WiiU Emulator
 Usage:
    wiiu play [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] <game directory>
    wiiu test [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
+   wiiu fuzz
    wiiu (-h | --help)
    wiiu --version
 
@@ -116,6 +119,9 @@ int main(int argc, char **argv)
    if (args["play"].asBool()) {
       gLog->set_pattern("[%l:%t] %v");
       result = play(args["<game directory>"].asString());
+   } else if (args["fuzz"].asBool()) {
+      gLog->set_pattern("%v");
+      result = fuzzTest();
    } else if (args["test"].asBool()) {
       gLog->set_pattern("%v");
       result = test(args["--as"].asString(), args["<test directory>"].asString());
@@ -182,6 +188,12 @@ static bool
 test(const std::string &as, const std::string &path)
 {
    return executeCodeTests(as, path);
+}
+
+static bool
+fuzzTest()
+{
+   return executeFuzzTests();
 }
 
 static bool
