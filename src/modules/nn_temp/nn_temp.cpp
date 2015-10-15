@@ -1,16 +1,16 @@
 #include "nn_temp.h"
 
-NNTemp::NNTemp()
+NN_temp::NN_temp()
 {
 }
 
 void
-NNTemp::initialise()
+NN_temp::initialise()
 {
 }
 
 void
-NNTemp::RegisterFunctions()
+NN_temp::RegisterFunctions()
 {
    registerCoreFunctions();
 }

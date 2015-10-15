@@ -1,5 +1,6 @@
 #include "nn_ac.h"
 #include "nn_ac_core.h"
+#include "nn_ac_result.h"
 
 namespace nn
 {
@@ -7,10 +8,10 @@ namespace nn
 namespace ac
 {
 
-Result
+nn::Result
 Initialize()
 {
-   return Result::OK;
+   return nn::Result::Success;
 }
 
 void
@@ -18,31 +19,32 @@ Finalize()
 {
 }
 
-Result
+nn::Result
 Connect()
 {
-   return Result::Error;
+   // TODO: Find a better error to return? :D
+   return ac::LibraryNotInitialiased;
 }
 
-Result
+nn::Result
 IsApplicationConnected(bool *connected)
 {
    *connected = false;
-   return Result::OK;
+   return nn::Result::Success;
 }
 
-Result
+nn::Result
 GetConnectStatus(Status *status)
 {
    *status = Status::Error;
-   return Result::OK;
+   return nn::Result::Success;
 }
 
-Result
+nn::Result
 GetLastErrorCode(uint32_t *error)
 {
    *error = 123;
-   return Result::OK;
+   return nn::Result::Success;
 }
 
 } // namespace ac
@@ -50,7 +52,7 @@ GetLastErrorCode(uint32_t *error)
 } // namespace nn
 
 void
-NNAc::registerCoreFunctions()
+NN_ac::registerCoreFunctions()
 {
    RegisterKernelFunctionName("Initialize__Q2_2nn2acFv", nn::ac::Initialize);
    RegisterKernelFunctionName("Finalize__Q2_2nn2acFv", nn::ac::Finalize);

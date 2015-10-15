@@ -33,7 +33,7 @@ SAVEGetSharedDataTitlePath(uint64_t titleID, const char *dir, char *buffer, uint
 }
 
 void
-NNSave::registerCoreFunctions()
+NN_save::registerCoreFunctions()
 {
    RegisterKernelFunction(SAVEInit);
    RegisterKernelFunction(SAVEShutdown);

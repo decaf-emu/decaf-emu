@@ -13,7 +13,7 @@ TEMPShutdown()
 }
 
 void
-NNTemp::registerCoreFunctions()
+NN_temp::registerCoreFunctions()
 {
    RegisterKernelFunction(TEMPInit);
    RegisterKernelFunction(TEMPShutdown);

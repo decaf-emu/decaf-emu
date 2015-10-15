@@ -1,10 +1,10 @@
 #pragma once
 #include "kernelmodule.h"
 
-class NN_fp : public KernelModuleImpl<NN_fp>
+class NN_nfp : public KernelModuleImpl<NN_nfp>
 {
 public:
-   NN_fp();
+   NN_nfp();
 
    virtual void initialise() override;
 

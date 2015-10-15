@@ -1,10 +1,10 @@
 #pragma once
 #include "kernelmodule.h"
 
-class NNAc : public KernelModuleImpl<NNAc>
+class NN_ac : public KernelModuleImpl<NN_ac>
 {
 public:
-   NNAc();
+   NN_ac();
 
    virtual void initialise() override;
 

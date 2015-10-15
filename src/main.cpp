@@ -21,13 +21,14 @@
 #include "modules/nn_ac/nn_ac.h"
 #include "modules/nn_act/nn_act.h"
 #include "modules/nn_fp/nn_fp.h"
+#include "modules/nn_nfp/nn_nfp.h"
 #include "modules/nn_save/nn_save.h"
 #include "modules/nn_temp/nn_temp.h"
-#include "modules/zlib125/zlib125.h"
 #include "modules/proc_ui/proc_ui.h"
 #include "modules/padscore/padscore.h"
 #include "modules/sysapp/sysapp.h"
 #include "modules/vpad/vpad.h"
+#include "modules/zlib125/zlib125.h"
 #include "system.h"
 #include "usermodule.h"
 #include "platform.h"
@@ -153,10 +154,11 @@ initialiseEmulator()
    CoreInit::RegisterFunctions();
    ErrEula::RegisterFunctions();
    GX2::RegisterFunctions();
-   NNAc::RegisterFunctions();
-   NNAct::RegisterFunctions();
-   NNFp::RegisterFunctions();
-   NNSave::RegisterFunctions();
+   NN_ac::RegisterFunctions();
+   NN_act::RegisterFunctions();
+   NN_fp::RegisterFunctions();
+   NN_nfp::RegisterFunctions();
+   NN_save::RegisterFunctions();
    PadScore::RegisterFunctions();
    ProcUI::RegisterFunctions();
    SysApp::RegisterFunctions();
@@ -170,18 +172,19 @@ initialiseEmulator()
    gJitManager.initialise();
    gSystem.registerModule("gameloader.rpl", new GameLoader{});
    gSystem.registerModule("coreinit.rpl", new CoreInit {});
+   gSystem.registerModule("erreula.rpl", new ErrEula {});
    gSystem.registerModule("gx2.rpl", new GX2 {});
-   gSystem.registerModule("nn_ac.rpl", new NNAc {});
-   gSystem.registerModule("nn_act.rpl", new NNAct {});
-   gSystem.registerModule("nn_fp.rpl", new NNFp {});
-   gSystem.registerModule("nn_save.rpl", new NNSave {});
-   gSystem.registerModule("nn_temp.rpl", new NNTemp{});
+   gSystem.registerModule("nn_ac.rpl", new NN_ac {});
+   gSystem.registerModule("nn_act.rpl", new NN_act {});
+   gSystem.registerModule("nn_fp.rpl", new NN_fp {});
+   gSystem.registerModule("nn_nfp.rpl", new NN_nfp {});
+   gSystem.registerModule("nn_save.rpl", new NN_save {});
+   gSystem.registerModule("nn_temp.rpl", new NN_temp {});
+   gSystem.registerModule("padscore.rpl", new PadScore {});
    gSystem.registerModule("proc_ui.rpl", new ProcUI {});
-   gSystem.registerModule("zlib125.rpl", new Zlib125 {});
-   gSystem.registerModule("padscore.rpl", new PadScore{});
-   gSystem.registerModule("erreula.rpl", new ErrEula{});
    gSystem.registerModule("sysapp.rpl", new SysApp {});
    gSystem.registerModule("vpad.rpl", new VPad {});
+   gSystem.registerModule("zlib125.rpl", new Zlib125 {});
 
    // Initialise debugger
    gDebugger.initialise();

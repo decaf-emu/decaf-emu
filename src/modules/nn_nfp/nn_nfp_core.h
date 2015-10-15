@@ -1,13 +1,19 @@
 #pragma once
 #include "be_val.h"
+#include "structsize.h"
 #include "types.h"
 #include "modules/nn_result.h"
 
 namespace nn
 {
 
-namespace fp
+namespace nfp
 {
+
+struct AmiiboSettingsArgs
+{
+   UNKNOWN(0x5D);
+};
 
 nn::Result
 Initialize();
@@ -15,11 +21,8 @@ Initialize();
 nn::Result
 Finalize();
 
-bool
-IsInitialized();
-
 nn::Result
-GetFriendList(void *list, be_val<uint32_t> *length, uint32_t index, uint32_t listSize);
+GetAmiiboSettingsArgs(AmiiboSettingsArgs *args);
 
 }  // namespace fp
 

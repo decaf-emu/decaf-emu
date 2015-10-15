@@ -1,16 +1,16 @@
 #include "nn_fp.h"
 
-NNFp::NNFp()
+NN_fp::NN_fp()
 {
 }
 
 void
-NNFp::initialise()
+NN_fp::initialise()
 {
 }
 
 void
-NNFp::RegisterFunctions()
+NN_fp::RegisterFunctions()
 {
    registerCoreFunctions();
 }

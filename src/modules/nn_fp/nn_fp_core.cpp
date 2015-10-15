@@ -10,18 +10,18 @@ namespace fp
 static bool
 gInitialised = false;
 
-Result
+nn::Result
 Initialize()
 {
    gInitialised = true;
-   return Result::OK;
+   return nn::Result::Success;
 }
 
-Result
+nn::Result
 Finalize()
 {
    gInitialised = false;
-   return Result::OK;
+   return nn::Result::Success;
 }
 
 bool
@@ -30,11 +30,11 @@ IsInitialized()
    return gInitialised;
 }
 
-Result
+nn::Result
 GetFriendList(void *list, be_val<uint32_t> *length, uint32_t index, uint32_t listSize)
 {
    *length = 0;
-   return Result::OK;
+   return nn::Result::Success;
 }
 
 } // namespace fp
@@ -42,7 +42,7 @@ GetFriendList(void *list, be_val<uint32_t> *length, uint32_t index, uint32_t lis
 } // namespace nn
 
 void
-NNFp::registerCoreFunctions()
+NN_fp::registerCoreFunctions()
 {
    RegisterKernelFunctionName("Initialize__Q2_2nn2fpFv", nn::fp::Initialize);
    RegisterKernelFunctionName("Finalize__Q2_2nn2fpFv", nn::fp::Finalize);

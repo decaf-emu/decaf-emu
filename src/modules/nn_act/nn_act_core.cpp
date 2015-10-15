@@ -7,10 +7,10 @@ namespace nn
 namespace act
 {
 
-Result
+nn::Result
 Initialize()
 {
-   return Result::OK;
+   return nn::Result::Success;
 }
 
 void
@@ -18,10 +18,10 @@ Finalize()
 {
 }
 
-Result
+nn::Result
 Cancel()
 {
-   return Result::OK;
+   return nn::Result::Success;
 }
 
 uint8_t
@@ -41,7 +41,7 @@ GetTransferableId(uint32_t unk1)
 } // namespace nn
 
 void
-NNAct::registerCoreFunctions()
+NN_act::registerCoreFunctions()
 {
    RegisterKernelFunctionName("Initialize__Q2_2nn3actFv", nn::act::Initialize);
    RegisterKernelFunctionName("Finalize__Q2_2nn3actFv", nn::act::Finalize);

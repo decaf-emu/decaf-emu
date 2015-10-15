@@ -1,16 +1,16 @@
 #include "nn_ac.h"
 
-NNAc::NNAc()
+NN_ac::NN_ac()
 {
 }
 
 void
-NNAc::initialise()
+NN_ac::initialise()
 {
 }
 
 void
-NNAc::RegisterFunctions()
+NN_ac::RegisterFunctions()
 {
    registerCoreFunctions();
 }

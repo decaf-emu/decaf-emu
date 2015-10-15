@@ -1,16 +1,16 @@
 #include "nn_act.h"
 
-NNAct::NNAct()
+NN_act::NN_act()
 {
 }
 
 void
-NNAct::initialise()
+NN_act::initialise()
 {
 }
 
 void
-NNAct::RegisterFunctions()
+NN_act::RegisterFunctions()
 {
    registerCoreFunctions();
 }

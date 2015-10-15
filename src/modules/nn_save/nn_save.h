@@ -1,10 +1,10 @@
 #pragma once
 #include "kernelmodule.h"
 
-class NNSave : public KernelModuleImpl<NNSave>
+class NN_save : public KernelModuleImpl<NN_save>
 {
 public:
-   NNSave();
+   NN_save();
 
    virtual void initialise() override;
 

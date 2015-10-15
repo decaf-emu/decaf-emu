@@ -1,10 +1,10 @@
 #pragma once
 #include "kernelmodule.h"
 
-class NNTemp : public KernelModuleImpl<NNTemp>
+class NN_temp : public KernelModuleImpl<NN_temp>
 {
 public:
-   NNTemp();
+   NN_temp();
 
    virtual void initialise() override;
 
@@ -13,5 +13,4 @@ public:
 
 private:
    static void registerCoreFunctions();
-
 };

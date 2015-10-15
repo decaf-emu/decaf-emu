@@ -1,16 +1,16 @@
 #include "nn_save.h"
 
-NNSave::NNSave()
+NN_save::NN_save()
 {
 }
 
 void
-NNSave::initialise()
+NN_save::initialise()
 {
 }
 
 void
-NNSave::RegisterFunctions()
+NN_save::RegisterFunctions()
 {
    registerCoreFunctions();
 }

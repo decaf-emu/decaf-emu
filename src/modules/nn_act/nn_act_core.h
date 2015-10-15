@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "modules/nn_result.h"
 
 namespace nn
 {
@@ -7,19 +8,13 @@ namespace nn
 namespace act
 {
 
-enum class Result : uint32_t
-{
-   OK = 0,
-   Error = 0x80000000,
-};
-
-Result
+nn::Result
 Initialize();
 
 void
 Finalize();
 
-Result
+nn::Result
 Cancel();
 
 uint8_t
