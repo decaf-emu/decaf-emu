@@ -202,8 +202,8 @@ getFieldStateField(Instruction instr, Field field)
    return StateField::Invalid;
 }
 
-static void
-saveStateField(ThreadState *state, TraceFieldType type, TraceFieldValue &field)
+void
+saveStateField(const ThreadState *state, TraceFieldType type, TraceFieldValue &field)
 {
    if (type == StateField::Invalid) {
       return;
@@ -235,8 +235,8 @@ saveStateField(ThreadState *state, TraceFieldType type, TraceFieldValue &field)
    }
 }
 
-static void
-restoreStateField(ThreadState *state, TraceFieldType type, TraceFieldValue &field)
+void
+restoreStateField(ThreadState *state, TraceFieldType type, const TraceFieldValue &field)
 {
    if (type == StateField::Invalid) {
       return;

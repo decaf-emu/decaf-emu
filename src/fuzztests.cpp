@@ -5,6 +5,10 @@
 #include "instructiondata.h"
 #include "log.h"
 #include "ppc.h"
+#include "memory.h"
+#include "bitutils.h"
+#include "interpreter.h"
+#include "trace.h"
 
 template<size_t SIZE, class T> inline size_t array_size(T (&arr)[SIZE]) {
    return SIZE;
@@ -15,6 +19,8 @@ struct InstructionFuzzData {
    std::vector<Field> allFields;
 };
 
+static const uint32_t instructionBase = 0x02000000;
+static const uint32_t dataBase = 0x03000000;
 std::vector<InstructionFuzzData> instructionFuzzData;
 
 bool buildFuzzData(InstructionID instrId, InstructionFuzzData &fuzzData)
@@ -24,6 +30,19 @@ bool buildFuzzData(InstructionID instrId, InstructionFuzzData &fuzzData)
    }
 
    InstructionData *data = gInstructionTable.find(instrId);
+
+   // Verify JIT and Interpreter have everything registered...
+   bool hasInterpHandler = Interpreter::hasInstruction(static_cast<InstructionID>(instrId));
+   bool hasJitHandler = JitManager::hasInstruction(static_cast<InstructionID>(instrId));
+   if ((hasInterpHandler ^ hasJitHandler) != 0) {
+      if (!hasInterpHandler) {
+         gLog->error("Instruction {} has a JIT handler but no Interpreter handler", data->name);
+      }
+      if (!hasJitHandler) {
+         gLog->error("Instruction {} has a Interpreter handler but no JIT handler", data->name);
+      }
+      return false;
+   }
 
    uint32_t instr = 0x00000000;
    uint32_t instrBits = 0x00000000;
@@ -106,6 +125,23 @@ encodeSPR(Instruction &instr, SprEncoding spr)
 }
 
 bool
+compareStateField(StateField::Field field, const TraceFieldValue &x, const TraceFieldValue &y, const TraceFieldValue &m, bool neg = false)
+{
+   if (field >= StateField::FPR0 && field <= StateField::FPR31) {
+      uint64_t xa = x.u64v0 & m.u64v0;
+      uint64_t xb = x.u64v1 & m.u64v1;
+      uint64_t ya = y.u64v0 & m.u64v0;
+      uint64_t yb = y.u64v1 & m.u64v1;
+      return (*(double*)xa) == (*(double*)ya) && (*(double*)xb) == (*(double*)yb);
+   }
+
+   return (x.u32v0 & m.u32v0) == (y.u32v0 & m.u32v0) &&
+      (x.u32v0 & m.u32v1) == (y.u32v0 & m.u32v1) &&
+      (x.u32v0 & m.u32v2) == (y.u32v0 & m.u32v2) &&
+      (x.u32v0 & m.u32v3) == (y.u32v0 & m.u32v3);
+}
+
+bool
 executeInstrTest(uint32_t test_seed, InstructionID instrId)
 {
    // Special cases that we can't test easily
@@ -145,6 +181,11 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
       return false;
    }
 
+   if (!Interpreter::hasInstruction(instrId)) {
+      // No handler, skip it...
+      return true;
+   }
+
    Instruction instr(fuzzData->baseInstr);
 
    uint32_t gprAlloc = 5;
@@ -155,18 +196,18 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
       }
 
       switch (i) {
-      case Field::frA: // gpr Targets
+      case Field::rA: // gpr Targets
+      case Field::rB:
+      case Field::rD:
+      case Field::rS:
+         setFieldValue(instr, i, gprAlloc++);
+         break;
+      case Field::frA: // fpr Targets
       case Field::frB:
       case Field::frC:
       case Field::frD:
       case Field::frS:
          setFieldValue(instr, i, fprAlloc++);
-         break;
-      case Field::rA: // fpr Targets
-      case Field::rB:
-      case Field::rD:
-      case Field::rS:
-         setFieldValue(instr, i, gprAlloc++);
          break;
       case Field::crbA: // crb Targets
       case Field::crbB:
@@ -235,6 +276,142 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
       }
    }
 
+   // Write an instruction
+   gMemory.write(instructionBase + 0, instr.value);
+  
+   // Write a return for the Interpreter
+   Instruction bclr = gInstructionTable.encode(InstructionID::bclr);
+   bclr.bo = 0x1f;
+   gMemory.write(instructionBase + 4, bclr.value);
+
+   // Create States
+   ThreadState stateFF, state00;
+   memset(&state00, 0x00, sizeof(ThreadState));
+   memset(&stateFF, 0xFF, sizeof(ThreadState));
+
+   // Set up initial state
+   TraceFieldValue writeMask[StateField::Max];
+   memset(&writeMask, 0, sizeof(writeMask));
+
+   for (auto i : data->write) {
+      switch (i) {
+      case Field::rA:
+         writeMask[StateField::GPR + instr.rA].u32v0 = 0xFFFFFFFF; break;
+      case Field::rB:
+         writeMask[StateField::GPR + instr.rB].u32v0 = 0xFFFFFFFF; break;
+      case Field::rD:
+         writeMask[StateField::GPR + instr.rD].u32v0 = 0xFFFFFFFF; break;
+      case Field::rS:
+         writeMask[StateField::GPR + instr.rS].u32v0 = 0xFFFFFFFF; break;
+      case Field::frA:
+         writeMask[StateField::FPR + instr.frA].u64v0 = 0xFFFFFFFFFFFFFFFF;
+         writeMask[StateField::FPR + instr.frA].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         break;
+      case Field::frB:
+         writeMask[StateField::FPR + instr.frB].u64v0 = 0xFFFFFFFFFFFFFFFF;
+         writeMask[StateField::FPR + instr.frB].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         break;
+      case Field::frC:
+         writeMask[StateField::FPR + instr.frC].u64v0 = 0xFFFFFFFFFFFFFFFF;
+         writeMask[StateField::FPR + instr.frC].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         break;
+      case Field::frD:
+         writeMask[StateField::FPR + instr.frD].u64v0 = 0xFFFFFFFFFFFFFFFF;
+         writeMask[StateField::FPR + instr.frD].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         break;
+      case Field::frS:
+         writeMask[StateField::FPR + instr.frS].u64v0 = 0xFFFFFFFFFFFFFFFF;
+         writeMask[StateField::FPR + instr.frS].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         break;
+      case Field::i:
+         writeMask[StateField::GQR + instr.i].u32v0 = 0xFFFFFFFF; break;
+      case Field::qi:
+         writeMask[StateField::GQR + instr.qi].u32v0 = 0xFFFFFFFF; break;
+      case Field::crbA:
+         writeMask[StateField::CR].u32v0 |= (1 << instr.crbA); break;
+      case Field::crbB:
+         writeMask[StateField::CR].u32v0 |= (1 << instr.crbA); break;
+      case Field::crbD:
+         writeMask[StateField::CR].u32v0 |= (1 << instr.crbA); break;
+      case Field::crfS:
+         writeMask[StateField::CR].u32v0 |= (0xF << instr.crfS); break;
+      case Field::crfD:
+         writeMask[StateField::CR].u32v0 |= (0xF << instr.crfD); break;
+      case Field::RSRV:
+         writeMask[StateField::ReserveAddress].u32v0 |= 0xFFFFFFFF; break;
+      case Field::CTR:
+         writeMask[StateField::CTR].u32v0 |= 0xFFFFFFFF; break;
+         // TODO: The following fields should probably be
+         //   more specific in the instruction data...
+      case Field::CR:
+         writeMask[StateField::CR].u32v0 |= 0xFFFFFFFF; break;
+      case Field::FPSCR:
+         writeMask[StateField::FPSCR].u32v0 |= 0xFFFFFFFF; break;
+      case Field::XER:
+         writeMask[StateField::XER].u32v0 |= 0xFFFFFFFF; break;
+      default:
+         assert(0);
+      }
+   }
+
+   // Required to be set to this
+   state00.tracer = nullptr;
+   state00.cia = 0;
+   state00.nia = instructionBase;
+   stateFF.tracer = nullptr;
+   stateFF.cia = 0;
+   stateFF.nia = instructionBase;
+
+   ThreadState iState00, iStateFF, jState00, jStateFF;
+   memcpy(&iState00, &state00, sizeof(ThreadState));
+   memcpy(&iStateFF, &stateFF, sizeof(ThreadState));
+   memcpy(&jState00, &state00, sizeof(ThreadState));
+   memcpy(&jStateFF, &stateFF, sizeof(ThreadState));
+
+   {
+      gInterpreter.executeSub(&iState00);
+      gInterpreter.executeSub(&iStateFF);
+   }
+
+   {
+      gJitManager.clearCache();
+      JitCode jitFn = gJitManager.getSingle(instructionBase);
+      if (!jitFn) {
+         gLog->error("Instruction {} (:08x) failed to JIT", data->name, instr.value);
+         return false;
+      }
+
+      gJitManager.execute(&jState00, jitFn);
+      gJitManager.execute(&jStateFF, jitFn);
+
+      // Make sure CIA/NIA states match...
+      jState00.cia = iState00.cia;
+      jState00.nia = iState00.nia;
+      jStateFF.cia = iStateFF.cia;
+      jStateFF.nia = iStateFF.nia;
+   }
+
+   // Check that we have no unexpected writes
+   // Compare iState00 vs iStateFF
+   // Compare jState00 vs jStateFF
+
+   for (auto i = 0; i < StateField::Max; ++i) {
+      if (i == StateField::Invalid) {
+         continue;
+      }
+
+      TraceFieldValue val00, valFF;
+      saveStateField(&iState00, i, val00);
+      saveStateField(&iStateFF, i, valFF);
+   }
+
+   // Check that we have no unexpected reads
+   // Compare iState00 vs state00
+   // Compare jState00 vs state00
+
+   // Compare iState00 and jState00 to hardware...
+
+
    return true;
 }
 
@@ -244,6 +421,10 @@ executeFuzzTests(uint32_t suite_seed)
    if (!setupFuzzData()) {
       return false;
    }
+
+   gInterpreter.setJitMode(InterpJitMode::Disabled);
+   gMemory.alloc(instructionBase, 32);
+   gMemory.alloc(dataBase, 128);
 
    std::mt19937 suite_rand(suite_seed);
    for (auto i = 0; i < 100; ++i) {
