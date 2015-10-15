@@ -203,12 +203,15 @@
     <ClCompile Include="..\src\modules\nn_temp\nn_temp_core.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore_kpad.cpp" />
-    <ClCompile Include="..\src\modules\padscore\padscore_vpad.cpp" />
+    <ClCompile Include="..\src\modules\padscore\padscore_kpad_status.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore_wpad.cpp" />
     <ClCompile Include="..\src\modules\proc_ui\proc_ui.cpp" />
     <ClCompile Include="..\src\modules\proc_ui\proc_ui_core.cpp" />
     <ClCompile Include="..\src\modules\sysapp\sysapp.cpp" />
     <ClCompile Include="..\src\modules\sysapp\sysapp_title.cpp" />
+    <ClCompile Include="..\src\modules\vpad\vpad.cpp" />
+    <ClCompile Include="..\src\modules\vpad\vpad_core.cpp" />
+    <ClCompile Include="..\src\modules\vpad\vpad_status.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
     <ClCompile Include="..\src\platform\platform_posix.cpp" />
@@ -222,6 +225,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\be_data.h" />
     <ClInclude Include="..\src\be_val.h" />
+    <ClInclude Include="..\src\be_vec.h" />
     <ClInclude Include="..\src\bigendianview.h" />
     <ClInclude Include="..\src\bitutils.h" />
     <ClInclude Include="..\src\codetests.h" />
@@ -284,8 +288,12 @@
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_core.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp_core.h" />
+    <ClInclude Include="..\src\modules\padscore\padscore_kpad_status.h" />
     <ClInclude Include="..\src\modules\sysapp\sysapp.h" />
     <ClInclude Include="..\src\modules\sysapp\sysapp_title.h" />
+    <ClInclude Include="..\src\modules\vpad\vpad.h" />
+    <ClInclude Include="..\src\modules\vpad\vpad_core.h" />
+    <ClInclude Include="..\src\modules\vpad\vpad_status.h" />
     <ClInclude Include="..\src\platform.h" />
     <ClInclude Include="..\src\ppcinvokeargs.h" />
     <ClInclude Include="..\src\ppcinvokelog.h" />
@@ -318,7 +326,6 @@
     <ClInclude Include="..\src\modules\nn_fp\nn_fp_core.h" />
     <ClInclude Include="..\src\modules\padscore\padscore.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_kpad.h" />
-    <ClInclude Include="..\src\modules\padscore\padscore_vpad.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_wpad.h" />
     <ClInclude Include="..\src\modules\proc_ui\proc_ui.h" />
     <ClInclude Include="..\src\modules\proc_ui\proc_ui_core.h" />
