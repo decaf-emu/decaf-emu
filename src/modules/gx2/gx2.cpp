@@ -16,6 +16,7 @@ GX2::GX2()
 
 void GX2::initialise()
 {
+   initialiseVsync();
 }
 
 void
@@ -31,6 +32,7 @@ GX2::RegisterFunctions()
    registerSurfaceFunctions();
    registerTempFunctions();
    registerTextureFunctions();
+   registerVsyncFunctions();
 }
 
 void

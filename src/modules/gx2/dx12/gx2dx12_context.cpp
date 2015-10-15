@@ -2,6 +2,7 @@
 #ifdef GX2_DX12
 
 #include "modules/gx2/gx2_context.h"
+#include "modules/gx2/gx2_vsync.h"
 #include "dx12_state.h"
 
 void
@@ -18,6 +19,7 @@ GX2Init(be_val<uint32_t> *attributes)
    }
 
    dx::initialise();
+   _GX2InitVsync();
 }
 
 void

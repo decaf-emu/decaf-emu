@@ -20,6 +20,8 @@ public:
 
    virtual void initialise() override;
 
+   void initialiseVsync();
+
 public:
    static void RegisterFunctions();
 
@@ -34,4 +36,5 @@ private:
    static void registerSurfaceFunctions();
    static void registerTempFunctions();
    static void registerTextureFunctions();
+   static void registerVsyncFunctions();
 };

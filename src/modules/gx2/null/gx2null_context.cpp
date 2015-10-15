@@ -6,6 +6,7 @@
 void
 GX2Init(be_val<uint32_t> *attributes)
 {
+   GX2InitVsync();
 }
 
 void

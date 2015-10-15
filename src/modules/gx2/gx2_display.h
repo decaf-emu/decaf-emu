@@ -1,6 +1,7 @@
 #pragma once
 #include "be_val.h"
 #include "gx2_surface.h"
+#include "modules/coreinit/coreinit_time.h"
 #include "types.h"
 
 struct GX2Texture;
@@ -124,10 +125,10 @@ void
 GX2WaitForFlip();
 
 void
-GX2GetSwapStatus(be_val<uint32_t> *pSwapCount,
-                 be_val<uint32_t> *pFlipCount,
-                 be_val<uint64_t> *pLastFlip,
-                 be_val<uint64_t> *pLastVsync);
+GX2GetSwapStatus(be_val<uint32_t> *swapCount,
+                 be_val<uint32_t> *flipCount,
+                 be_val<OSTime> *lastFlip,
+                 be_val<OSTime> *lastVsync);
 
 BOOL
 GX2GetLastFrame(GX2ScanTarget::Target scanTarget, GX2Texture *texture);
@@ -137,3 +138,6 @@ GX2GetLastFrameGamma(GX2ScanTarget::Target scanTarget, be_val<float> *gamma);
 
 void
 GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget::Target scanTarget);
+
+void
+GX2VsyncCallback();
