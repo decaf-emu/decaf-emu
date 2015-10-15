@@ -13,6 +13,7 @@ template<typename Type, bool IsBigEndian = false>
 virtual_ptr<Type, IsBigEndian>
 make_virtual_ptr(uint32_t address);
 
+// A pointer to virtual memory space (the Wii U system memory)
 template<typename Type, bool IsBigEndian>
 class virtual_ptr
 {
