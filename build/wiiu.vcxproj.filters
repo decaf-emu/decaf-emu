@@ -160,6 +160,12 @@
     <Filter Include="Header Files\gpu\hlsl">
       <UniqueIdentifier>{974acc1d-bb61-4981-b94f-ed25c886cb91}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\modules\vpad">
+      <UniqueIdentifier>{f7aacdc2-e9bd-4f0c-b415-75cb99d29d80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\vpad">
+      <UniqueIdentifier>{42794536-3b80-4746-a81d-c98ba2a0f8fb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -372,9 +378,6 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_alarm.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\modules\padscore\padscore_vpad.cpp">
-      <Filter>Source Files\modules\padscore</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\nn_fp\nn_fp.cpp">
       <Filter>Source Files\modules\nn_fp</Filter>
     </ClCompile>
@@ -539,6 +542,18 @@
     </ClCompile>
     <ClCompile Include="..\src\fuzztests.cpp">
       <Filter>Source Files\ppc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\vpad\vpad.cpp">
+      <Filter>Source Files\modules\vpad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\vpad\vpad_core.cpp">
+      <Filter>Source Files\modules\vpad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\vpad\vpad_status.cpp">
+      <Filter>Source Files\modules\vpad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\padscore\padscore_kpad_status.cpp">
+      <Filter>Source Files\modules\padscore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -785,9 +800,6 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_queue.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\modules\padscore\padscore_vpad.h">
-      <Filter>Header Files\modules\padscore</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\nn_fp\nn_fp.h">
       <Filter>Header Files\modules\nn_fp</Filter>
     </ClInclude>
@@ -976,6 +988,21 @@
     </ClInclude>
     <ClInclude Include="..\src\fuzztests.h">
       <Filter>Header Files\ppc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\vpad\vpad.h">
+      <Filter>Header Files\modules\vpad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\vpad\vpad_core.h">
+      <Filter>Header Files\modules\vpad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\be_vec.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\vpad\vpad_status.h">
+      <Filter>Header Files\modules\vpad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\padscore\padscore_kpad_status.h">
+      <Filter>Header Files\modules\padscore</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

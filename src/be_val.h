@@ -13,6 +13,15 @@ public:
    static_assert(!std::is_reference<Type>::value, "be_val invalid type: reference");
    static_assert(!std::is_union<Type>::value, "be_val invalid type: union");
 
+   be_val()
+   {
+   }
+
+   be_val(Type value)
+   {
+      *this = value;
+   }
+
    Type value() const
    {
       return byte_swap(mValue);

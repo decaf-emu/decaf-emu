@@ -26,6 +26,18 @@ KPADSetMplsWorkarea(char *buffer)
    // sizeof(buffer) = KPADGetMplsWorkSize()
 }
 
+// Enable "Direct Pointing Device"
+void
+KPADEnableDPD(uint32_t channel)
+{
+}
+
+// Disable "Direct Pointing Device"
+void
+KPADDisableDPD(uint32_t channel)
+{
+}
+
 void
 PadScore::registerKPADFunctions()
 {
@@ -33,4 +45,6 @@ PadScore::registerKPADFunctions()
    RegisterKernelFunction(KPADInitEx);
    RegisterKernelFunction(KPADGetMplsWorkSize);
    RegisterKernelFunction(KPADSetMplsWorkarea);
+   RegisterKernelFunction(KPADEnableDPD);
+   RegisterKernelFunction(KPADDisableDPD);
 }

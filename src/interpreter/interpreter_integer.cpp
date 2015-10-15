@@ -276,7 +276,7 @@ divGeneric(ThreadState *state, Instruction instr)
    state->gpr[instr.rD] = d;
 
    auto overflow = (b == 0);
-   
+
    if (std::is_signed<Type>::value && (a == 0x80000000 && b == -1)) {
       overflow = true;
    }
@@ -464,7 +464,7 @@ neg(ThreadState *state, Instruction instr)
 
    a = state->gpr[instr.rA];
 
-   d = ~a + 1;
+   d = (~a) + 1;
    state->gpr[instr.rD] = d;
 
    bool overflow = (a == 0x80000000);

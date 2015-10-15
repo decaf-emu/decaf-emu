@@ -12,3 +12,6 @@ KPADGetMplsWorkSize();
 
 void
 KPADSetMplsWorkarea(char *buffer);
+
+void
+KPADDisableDPD(uint32_t channel);

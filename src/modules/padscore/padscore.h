@@ -13,6 +13,6 @@ public:
 
 private:
    static void registerKPADFunctions();
-   static void registerVPADFunctions();
+   static void registerKPADStatusFunctions();
    static void registerWPADFunctions();
 };

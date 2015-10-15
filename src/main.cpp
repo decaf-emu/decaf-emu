@@ -27,6 +27,7 @@
 #include "modules/proc_ui/proc_ui.h"
 #include "modules/padscore/padscore.h"
 #include "modules/sysapp/sysapp.h"
+#include "modules/vpad/vpad.h"
 #include "system.h"
 #include "usermodule.h"
 #include "platform.h"
@@ -159,6 +160,7 @@ initialiseEmulator()
    PadScore::RegisterFunctions();
    ProcUI::RegisterFunctions();
    SysApp::RegisterFunctions();
+   VPad::RegisterFunctions();
    Zlib125::RegisterFunctions();
 
    // Initialise emulator systems
@@ -179,6 +181,7 @@ initialiseEmulator()
    gSystem.registerModule("padscore.rpl", new PadScore{});
    gSystem.registerModule("erreula.rpl", new ErrEula{});
    gSystem.registerModule("sysapp.rpl", new SysApp {});
+   gSystem.registerModule("vpad.rpl", new VPad {});
 
    // Initialise debugger
    gDebugger.initialise();
