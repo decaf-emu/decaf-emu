@@ -3,7 +3,6 @@
 #include "jit_internal.h"
 #include "jit_insreg.h"
 #include "../../mem/mem.h"
-#include "memory.h"
 #include "../instructiondata.h"
 #include "log.h"
 #include "bitutils.h"

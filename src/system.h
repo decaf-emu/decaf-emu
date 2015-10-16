@@ -45,7 +45,7 @@ public:
    void setUserModule(LoadedModule *module);
    LoadedModule *getUserModule() const;
 
-   KernelFunction *getSyscall(uint32_t id);
+   KernelFunction *getSyscallData(uint32_t id);
 
    fs::FileSystem *getFileSystem();
    void setFileSystem(fs::FileSystem *fs);
@@ -63,7 +63,7 @@ private:
    std::map<std::string, KernelModule*> mSystemModules;
 
    void *mSystemThunks;
-   std::vector<KernelFunction*> mSystemCalls;
+   std::map<uint32_t, KernelFunction*> mSystemCalls;
 
    fs::FileSystem *mFileSystem;
    TeenyHeap *mSystemHeap;

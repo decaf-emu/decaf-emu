@@ -1,12 +1,10 @@
 #include <cassert>
 #include "interpreter_insreg.h"
 #include "bitutils.h"
-#include "loader.h"
+#include "util.h"
 #include "log.h"
 #include "memory_translate.h"
-#include "system.h"
-#include "kernelfunction.h"
-#include "usermodule.h"
+#include "../cpu.h"
 
 static SprEncoding
 decodeSPR(Instruction instr)
@@ -270,15 +268,15 @@ static void
 kc(ThreadState *state, Instruction instr)
 {
    auto id = instr.kcn;
-   auto implemented = instr.kci;
 
-   auto sym = gSystem.getSyscall(id);
-   if (!implemented) {
-      gLog->debug("{:08x} unimplemented kernel function {}", state->lr, sym->name);
+   auto kc = cpu::getKernelCall(id);
+   if (!kc) {
+      gLog->error("Encountered invalid Kernel Call ID {}", id);
+      assert(0);
       return;
    }
 
-   sym->call(state);
+   kc->first(state, kc->second);
 }
 
 void

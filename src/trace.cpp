@@ -60,7 +60,7 @@ printInstruction(const Trace& trace, int index)
    std::string addend = "";
 
    if (dis.instruction->id == InstructionID::kc) {
-      auto scall = gSystem.getSyscall(trace.instr.li);
+      auto scall = gSystem.getSyscallData(trace.instr.li);
       addend = " [" + std::string(scall->name) + "]";
    }
 

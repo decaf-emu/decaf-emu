@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <functional>
+#include <utility>
 #include "state.h"
 #include "wfunc_ptr.h"
 
@@ -22,6 +23,11 @@ namespace cpu
    void initialise();
    void executeSub(ThreadState *state);
 
+   typedef void (*KernelCallFn)(ThreadState *state, void *userData);
+   typedef std::pair<KernelCallFn, void*> KernelCallEntry;
+   uint32_t registerKernelCall(KernelCallEntry &entry);
+   KernelCallEntry * getKernelCall(uint32_t id);
+   
 }
 
 template<typename ReturnType, typename... Args>

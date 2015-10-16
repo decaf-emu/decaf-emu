@@ -2,9 +2,6 @@
 #include <cassert>
 #include "bitutils.h"
 #include "log.h"
-#include "system.h"
-#include "kernelfunction.h"
-#include "usermodule.h"
 
 namespace cpu
 {
@@ -132,30 +129,22 @@ namespace jit
       return true;
    }
 
-   static void
-      kcstub(ThreadState *state, KernelFunction *func)
-   {
-      func->call(state);
-   }
-
    // Kernel call
    static bool
       kc(PPCEmuAssembler& a, Instruction instr)
    {
       auto id = instr.kcn;
-      auto implemented = instr.kci;
 
-      auto sym = gSystem.getSyscall(id);
-      if (!implemented) {
-         gLog->debug("unimplemented kernel function {}", sym->name);
-
+      auto kc = cpu::getKernelCall(id);
+      if (!kc) {
+         gLog->error("Encountered invalid Kernel Call ID {}", id);
          a.int3();
-         return true;
+         return false;
       }
 
       a.mov(a.zcx, a.state);
-      a.mov(a.zdx, asmjit::Ptr(sym));
-      a.call(asmjit::Ptr(kcstub));
+      a.mov(a.zdx, asmjit::Ptr(kc->second));
+      a.call(asmjit::Ptr(kc->first));
       return true;
    }
 

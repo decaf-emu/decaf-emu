@@ -17,6 +17,7 @@ struct KernelFunction : KernelExport
    {
    }
 
+   bool valid;
    uint32_t syscallID;
    uint32_t vaddr;
    virtual void call(ThreadState *state) = 0;
@@ -48,6 +49,7 @@ inline KernelFunction *
 makeFunction(Ret(*fptr)(Args...))
 {
    auto func = new kernel::functions::KernelFunctionImpl<Ret, Args...>();
+   func->valid = true;
    func->wrapped_function = fptr;
    return func;
 }

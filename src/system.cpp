@@ -15,17 +15,30 @@ System::System()
 {
 }
 
+static void
+kcstub(ThreadState *state, void *userData)
+{
+   KernelFunction *func = static_cast<KernelFunction*> (userData);
+   if (!func->valid) {
+      gLog->debug("unimplemented kernel function {}", func->name);
+      return;
+   }
+
+   func->call(state);
+}
+
 void
 System::registerSysCall(KernelFunction *func)
 {
-   func->syscallID = static_cast<uint32_t>(mSystemCalls.size());
-   mSystemCalls.push_back(func);
+   func->syscallID = cpu::registerKernelCall(cpu::KernelCallEntry(kcstub, func));
+   mSystemCalls[func->syscallID] = func;
 }
 
 uint32_t
 System::registerUnimplementedFunction(const char* name)
 {
    auto ppcFn = new kernel::functions::KernelFunctionImpl<void>();
+   ppcFn->valid = false;
    ppcFn->name = _strdup(name);
    ppcFn->wrapped_function = nullptr;
    registerSysCall(ppcFn);
@@ -84,13 +97,9 @@ System::findModule(const char *name) const
 }
 
 KernelFunction *
-System::getSyscall(uint32_t id)
+System::getSyscallData(uint32_t id)
 {
-   if (id >= mSystemCalls.size()) {
-      return nullptr;
-   }
-
-   return mSystemCalls.at(id);
+   return mSystemCalls[id];
 }
 
 void
@@ -102,7 +111,9 @@ System::loadThunks()
    mSystemThunks = OSAllocFromSystem(static_cast<uint32_t>(mSystemCalls.size() * 8), 4);
    addr = mem::untranslate(mSystemThunks);
 
-   for (auto &func : mSystemCalls) {
+   for (auto &i : mSystemCalls) {
+      auto &func = i.second;
+
       // Set the function virtual address
       func->vaddr = addr;
 

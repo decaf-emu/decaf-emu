@@ -285,8 +285,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
       if (field == Field::aa || 
          field == Field::lk || 
          field == Field::oe || 
-         field == Field::rc || 
-         field == Field::kci) {
+         field == Field::rc) {
          continue;
       }
 
@@ -302,8 +301,6 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
          dis.name += 'o';
       } else if (field == Field::rc && instr.rc) {
          dis.name += '.';
-      } else if (field == Field::kci && !instr.kci) {
-         dis.name += '?';
       }
    }
 
@@ -325,7 +322,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
 
    // Specialized Handlers
    if (data->id == InstructionID::kc) {
-      auto sc = gSystem.getSyscall(dis.args[0].constantUnsigned);
+      auto sc = gSystem.getSyscallData(dis.args[0].constantUnsigned);
       if (sc) {
          dis.text += " ; " + std::string(sc->name);
       } else {

@@ -333,7 +333,6 @@ Loader::loadKernelModule(const std::string &name, KernelModule *module)
          // Write syscall thunk
          auto kc = gInstructionTable.encode(InstructionID::kc);
          kc.kcn = func->syscallID;
-         kc.kci = 1;
          *(thunk + 0) = byte_swap(kc.value);
 
          auto bclr = gInstructionTable.encode(InstructionID::bclr);
@@ -438,7 +437,6 @@ Loader::registerUnimplementedFunction(const std::string& name)
    // Write syscall thunk
    auto kc = gInstructionTable.encode(InstructionID::kc);
    kc.kcn = id;
-   kc.kci = 0;
    *(thunk + 0) = byte_swap(kc.value);
 
    auto bclr = gInstructionTable.encode(InstructionID::bclr);
