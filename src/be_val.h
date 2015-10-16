@@ -64,7 +64,7 @@ public:
    template<typename Other> be_val &operator^=(Other rhs) { *this = static_cast<Type>(value() ^ rhs); return *this; }
 
 protected:
-   Type mValue;
+   Type mValue{};
 };
 
 template<typename Type>
