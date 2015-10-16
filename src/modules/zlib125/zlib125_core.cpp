@@ -1,5 +1,5 @@
 #include <zlib.h>
-#include "interpreter.h"
+#include "cpu/cpu.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "memory_translate.h"
 #include "processor.h"

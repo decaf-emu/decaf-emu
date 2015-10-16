@@ -1,5 +1,5 @@
+#include "interpreter_insreg.h"
 #include "bitutils.h"
-#include "interpreter.h"
 
 static void
 b(ThreadState *state, Instruction instr)
@@ -106,7 +106,7 @@ bclr(ThreadState *state, Instruction instr)
 }
 
 void
-Interpreter::registerBranchInstructions()
+cpu::interpreter::registerBranchInstructions()
 {
    RegisterInstruction(b);
    RegisterInstruction(bc);

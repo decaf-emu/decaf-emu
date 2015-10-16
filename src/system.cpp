@@ -1,11 +1,13 @@
 #include <algorithm>
-#include "instructiondata.h"
+#include <functional>
+#include "cpu/instructiondata.h"
 #include "kernelfunction.h"
 #include "kernelmodule.h"
-#include "memory.h"
+#include "mem/mem.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "system.h"
 #include "teenyheap.h"
+#include "cpu/cpu.h"
 
 System gSystem;
 
@@ -64,8 +66,8 @@ System::initialise()
 {
    auto systemHeapStart = 0x01000000u;
    auto systemHeapSize = 0x01000000u;
-   gMemory.alloc(systemHeapStart, systemHeapSize);
-   void *systemMem = gMemory.translate(systemHeapStart);
+   mem::alloc(systemHeapStart, systemHeapSize);
+   void *systemMem = mem::translate(systemHeapStart);
    mSystemHeap = new TeenyHeap(systemMem, systemHeapSize);
 }
 
@@ -98,7 +100,7 @@ System::loadThunks()
 
    // Allocate space for all thunks!
    mSystemThunks = OSAllocFromSystem(static_cast<uint32_t>(mSystemCalls.size() * 8), 4);
-   addr = gMemory.untranslate(mSystemThunks);
+   addr = mem::untranslate(mSystemThunks);
 
    for (auto &func : mSystemCalls) {
       // Set the function virtual address
@@ -108,12 +110,12 @@ System::loadThunks()
       auto kc = gInstructionTable.encode(InstructionID::kc);
       kc.li = func->syscallID;
       kc.aa = 1;
-      gMemory.write(addr, kc.value);
+      mem::write(addr, kc.value);
 
       // Return by Branch to LR
       auto bclr = gInstructionTable.encode(InstructionID::bclr);
       bclr.bo = 0x1f;
-      gMemory.write(addr + 4, bclr.value);
+      mem::write(addr + 4, bclr.value);
 
       addr += 8;
    }

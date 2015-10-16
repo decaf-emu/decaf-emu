@@ -4,7 +4,7 @@
 #include "coreinit_memory.h"
 #include "filesystem/filesystem.h"
 #include "system.h"
-#include "interpreter.h"
+#include "cpu/cpu.h"
 
 struct FSFile
 {

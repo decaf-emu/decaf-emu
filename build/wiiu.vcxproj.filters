@@ -13,12 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\interpreter">
-      <UniqueIdentifier>{db86df2c-95f5-4641-8e36-60678d08610d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\interpreter">
-      <UniqueIdentifier>{4ae275c9-5a4c-4137-a743-5359d521dab1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\ppc">
       <UniqueIdentifier>{218a3501-38a3-41cf-bf13-8a79d70a0bfd}</UniqueIdentifier>
     </Filter>
@@ -66,12 +60,6 @@
     </Filter>
     <Filter Include="Header Files\modules\nn_act">
       <UniqueIdentifier>{99e874d6-385b-42d6-ba40-a1157f13fef9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\jit">
-      <UniqueIdentifier>{5acdbc25-c874-438e-94fc-2b44f86fe985}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\jit">
-      <UniqueIdentifier>{2e6ea203-c5d4-40fa-b606-aebdbc8570c1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\modules\proc_ui">
       <UniqueIdentifier>{0aa10194-42a7-4e39-9998-6af69405988a}</UniqueIdentifier>
@@ -172,37 +160,40 @@
     <Filter Include="Source Files\modules\vpad">
       <UniqueIdentifier>{42794536-3b80-4746-a81d-c98ba2a0f8fb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\cpu">
+      <UniqueIdentifier>{93e30564-48e0-47fa-87dc-363185030a2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cpu">
+      <UniqueIdentifier>{774ad2b1-5fd2-4b4f-bdf1-e7f989a8d1a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\cpu\interpreter">
+      <UniqueIdentifier>{59f6cbc4-7111-45b5-b1c1-0c881c224518}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\cpu\jit">
+      <UniqueIdentifier>{36a6e1f6-9012-4c36-9af0-b5c33e6fad0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cpu\jit">
+      <UniqueIdentifier>{ee431e45-1eea-4834-9a53-5397bd070bed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cpu\interpreter">
+      <UniqueIdentifier>{cbe8e4ea-c84b-4fa4-bc3d-54470b7dcb69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\mem">
+      <UniqueIdentifier>{ff6e7ce9-9a00-4c47-8776-9aec31aaa7d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mem">
+      <UniqueIdentifier>{2a8ea741-97ef-4e99-a138-ff658e13c1ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\interpreter\interpreter_branch.cpp">
-      <Filter>Source Files\interpreter</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\interpreter\interpreter_condition.cpp">
-      <Filter>Source Files\interpreter</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\interpreter\interpreter_integer.cpp">
-      <Filter>Source Files\interpreter</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\interpreter\interpreter_loadstore.cpp">
-      <Filter>Source Files\interpreter</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\interpreter\interpreter_system.cpp">
-      <Filter>Source Files\interpreter</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_debug.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_thread.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\interpreter\interpreter_pairedsingle.cpp">
-      <Filter>Source Files\interpreter</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\interpreter\interpreter_float.cpp">
-      <Filter>Source Files\interpreter</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_memory.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
@@ -261,20 +252,8 @@
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp">
       <Filter>Source Files\modules\zlib125</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\disassembler.cpp">
-      <Filter>Source Files\ppc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\instructiontable.cpp">
-      <Filter>Source Files\ppc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\memory.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\system.cpp">
       <Filter>Source Files\system</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\interpreter.cpp">
-      <Filter>Source Files\ppc</Filter>
     </ClCompile>
     <ClCompile Include="..\src\loader.cpp">
       <Filter>Source Files\system</Filter>
@@ -302,24 +281,6 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_temp.cpp">
       <Filter>Source Files\modules\gx2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\jit\jit_branch.cpp">
-      <Filter>Source Files\jit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\jit\jit_integer.cpp">
-      <Filter>Source Files\jit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\jit\jit_loadstore.cpp">
-      <Filter>Source Files\jit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\jit\jit_system.cpp">
-      <Filter>Source Files\jit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\jit.cpp">
-      <Filter>Source Files\ppc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\jit\jit_condition.cpp">
-      <Filter>Source Files\jit</Filter>
     </ClCompile>
     <ClCompile Include="..\src\elf.cpp">
       <Filter>Source Files\system</Filter>
@@ -353,12 +314,6 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\padscore\padscore_kpad.cpp">
       <Filter>Source Files\modules\padscore</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\jit\jit_float.cpp">
-      <Filter>Source Files\jit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\jit\jit_pairedsingle.cpp">
-      <Filter>Source Files\jit</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\nn_act\nn_act.cpp">
       <Filter>Source Files\modules\nn_act</Filter>
@@ -573,6 +528,69 @@
     <ClCompile Include="..\src\modules\gx2\gx2_vsync.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\cpu\interpreter\interpreter.cpp">
+      <Filter>Source Files\cpu\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\jit\jit.cpp">
+      <Filter>Source Files\cpu\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\cpu.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\interpreter\interpreter_branch.cpp">
+      <Filter>Source Files\cpu\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\interpreter\interpreter_condition.cpp">
+      <Filter>Source Files\cpu\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\interpreter\interpreter_float.cpp">
+      <Filter>Source Files\cpu\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\interpreter\interpreter_integer.cpp">
+      <Filter>Source Files\cpu\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\interpreter\interpreter_loadstore.cpp">
+      <Filter>Source Files\cpu\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\interpreter\interpreter_pairedsingle.cpp">
+      <Filter>Source Files\cpu\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\interpreter\interpreter_system.cpp">
+      <Filter>Source Files\cpu\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mem\mem.cpp">
+      <Filter>Source Files\mem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\jit\jit_branch.cpp">
+      <Filter>Source Files\cpu\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\jit\jit_condition.cpp">
+      <Filter>Source Files\cpu\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\jit\jit_float.cpp">
+      <Filter>Source Files\cpu\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\jit\jit_integer.cpp">
+      <Filter>Source Files\cpu\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\jit\jit_loadstore.cpp">
+      <Filter>Source Files\cpu\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\jit\jit_pairedsingle.cpp">
+      <Filter>Source Files\cpu\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\jit\jit_system.cpp">
+      <Filter>Source Files\cpu\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\jit\jit_fallback.cpp">
+      <Filter>Source Files\cpu\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\instructiontable.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\disassembler.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -659,20 +677,8 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_event.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\instructiondata.h">
-      <Filter>Header Files\ppc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\instructionid.h">
-      <Filter>Header Files\ppc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\instructions.inl">
-      <Filter>Header Files\ppc</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\elf.h">
       <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\disassembler.h">
-      <Filter>Header Files\ppc</Filter>
     </ClInclude>
     <ClInclude Include="..\src\bigendianview.h">
       <Filter>Header Files\util</Filter>
@@ -683,17 +689,11 @@
     <ClInclude Include="..\src\floatutils.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\instruction.h">
-      <Filter>Header Files\ppc</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\loader.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\src\log.h">
       <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppc.h">
-      <Filter>Header Files\ppc</Filter>
     </ClInclude>
     <ClInclude Include="..\src\usermodule.h">
       <Filter>Header Files\system</Filter>
@@ -703,15 +703,6 @@
     </ClInclude>
     <ClInclude Include="..\src\util.h">
       <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\memory.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\interpreter.h">
-      <Filter>Header Files\interpreter</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\interpreter\interpreter_float.h">
-      <Filter>Header Files\interpreter</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_fastmutex.h">
       <Filter>Header Files\modules\coreinit</Filter>
@@ -739,9 +730,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_temp.h">
       <Filter>Header Files\modules\gx2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\jit.h">
-      <Filter>Header Files\jit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\codetests.h">
       <Filter>Header Files\ppc</Filter>
@@ -787,9 +775,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\padscore\padscore_kpad.h">
       <Filter>Header Files\modules\padscore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\jit_float.h">
-      <Filter>Header Files\jit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_act\nn_act.h">
       <Filter>Header Files\modules\nn_act</Filter>
@@ -1040,6 +1025,51 @@
     <ClInclude Include="..\src\modules\gx2\gx2_vsync.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\cpu\cpu.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\jit\jit.h">
+      <Filter>Header Files\cpu\jit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\interpreter\interpreter.h">
+      <Filter>Header Files\cpu\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mem\mem.h">
+      <Filter>Header Files\mem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\state.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\interpreter\interpreter_float.h">
+      <Filter>Header Files\cpu\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\jit\jit_internal.h">
+      <Filter>Header Files\cpu\jit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\jit\jit_float.h">
+      <Filter>Header Files\cpu\jit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\utils.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\instruction.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\instructiondata.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\instructionid.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\disassembler.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\interpreter\interpreter_insreg.h">
+      <Filter>Header Files\cpu\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\jit\jit_insreg.h">
+      <Filter>Header Files\cpu\jit</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
@@ -1048,11 +1078,14 @@
     <None Include="..\src\gpu\latte_opcodes_def.inl">
       <Filter>Header Files\gpu</Filter>
     </None>
-    <None Include="..\src\instructionaliases.inl">
-      <Filter>Header Files\ppc</Filter>
+    <None Include="..\src\cpu\instructionaliases.inl">
+      <Filter>Header Files\cpu</Filter>
     </None>
-    <None Include="..\src\instructionfields.inl">
-      <Filter>Header Files\ppc</Filter>
+    <None Include="..\src\cpu\instructionfields.inl">
+      <Filter>Header Files\cpu</Filter>
+    </None>
+    <None Include="..\src\cpu\instructions.inl">
+      <Filter>Header Files\cpu</Filter>
     </None>
   </ItemGroup>
 </Project>

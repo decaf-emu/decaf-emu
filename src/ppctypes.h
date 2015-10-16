@@ -1,7 +1,7 @@
 #pragma once
 #include <assert.h>
 #include <type_traits>
-#include "ppc.h"
+#include "cpu/state.h"
 #include "memory_translate.h"
 
 namespace ppctypes

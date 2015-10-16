@@ -1,7 +1,7 @@
 #include <algorithm>
+#include "interpreter_insreg.h"
 #include "bitutils.h"
-#include "interpreter.h"
-#include "memory.h"
+#include "mem/mem.h"
 
 // Load
 enum LoadFlags
@@ -35,9 +35,9 @@ loadGeneric(ThreadState *state, Instruction instr)
 
    if (flags & LoadByteReverse) {
       // Read already does byte_swap, so we readNoSwap for byte reverse
-      d = gMemory.readNoSwap<Type>(ea);
+      d = mem::readNoSwap<Type>(ea);
    } else {
-      d = gMemory.read<Type>(ea);
+      d = mem::read<Type>(ea);
    }
 
    if (std::is_floating_point<Type>::value) {
@@ -53,7 +53,7 @@ loadGeneric(ThreadState *state, Instruction instr)
    if (flags & LoadReserve) {
       state->reserve = true;
       state->reserveAddress = ea;
-      state->reserveData = gMemory.read<uint32_t>(state->reserveAddress);
+      state->reserveData = mem::read<uint32_t>(state->reserveAddress);
    }
 
    if (flags & LoadUpdate) {
@@ -239,7 +239,7 @@ lmw(ThreadState *state, Instruction instr)
    ea = b + sign_extend<16, int32_t>(instr.d);
 
    for (r = instr.rD; r <= 31; ++r, ea += 4) {
-      state->gpr[r] = gMemory.read<uint32_t>(ea);
+      state->gpr[r] = mem::read<uint32_t>(ea);
    }
 }
 
@@ -273,7 +273,7 @@ lswGeneric(ThreadState *state, Instruction instr)
          state->gpr[r] = 0;
       }
 
-      state->gpr[r] |= gMemory.read<uint8_t>(ea) << (24 - i);
+      state->gpr[r] |= mem::read<uint8_t>(ea) << (24 - i);
 
       i = (i + 8) % 32;
       ea = ea + 1;
@@ -329,7 +329,7 @@ storeGeneric(ThreadState *state, Instruction instr)
       if (state->reserve) {
          state->reserve = false;
 
-         if (gMemory.read<uint32_t>(state->reserveAddress) == state->reserveData) {
+         if (mem::read<uint32_t>(state->reserveAddress) == state->reserveData) {
             // Store is succesful, clear reserve bit and set CR0[EQ]
             state->cr.cr0 |= ConditionRegisterFlag::Equal;
          } else {
@@ -352,9 +352,9 @@ storeGeneric(ThreadState *state, Instruction instr)
 
    if (flags & StoreByteReverse) {
       // Write already does byte_swap, so we writeNoSwap for byte reverse
-      gMemory.writeNoSwap<Type>(ea, s);
+      mem::writeNoSwap<Type>(ea, s);
    } else {
-      gMemory.write<Type>(ea, s);
+      mem::write<Type>(ea, s);
    }
 
    if (flags & StoreUpdate) {
@@ -522,7 +522,7 @@ stmw(ThreadState *state, Instruction instr)
    ea = b + sign_extend<16, int32_t>(instr.d);
 
    for (r = instr.rS; r <= 31; ++r, ea += 4) {
-      gMemory.write<uint32_t>(ea, state->gpr[r]);
+      mem::write<uint32_t>(ea, state->gpr[r]);
    }
 }
 
@@ -555,7 +555,7 @@ stswGeneric(ThreadState *state, Instruction instr)
          r = (r + 1) % 32;
       }
 
-      gMemory.write<uint8_t>(ea, (state->gpr[r] >> (24 - i)) & 0xff);
+      mem::write<uint8_t>(ea, (state->gpr[r] >> (24 - i)) & 0xff);
 
       i = (i + 8) % 32;
       ea = ea + 1;
@@ -624,19 +624,19 @@ dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
 
    switch (type) {
    case QuantizedDataType::Floating:
-      result = static_cast<double>(gMemory.read<float>(ea));
+      result = static_cast<double>(mem::read<float>(ea));
       break;
    case QuantizedDataType::Unsigned8:
-      result = scaleValue * static_cast<double>(gMemory.read<uint8_t>(ea));
+      result = scaleValue * static_cast<double>(mem::read<uint8_t>(ea));
       break;
    case QuantizedDataType::Unsigned16:
-      result = scaleValue * static_cast<double>(gMemory.read<uint16_t>(ea));
+      result = scaleValue * static_cast<double>(mem::read<uint16_t>(ea));
       break;
    case QuantizedDataType::Signed8:
-      result = scaleValue * static_cast<double>(gMemory.read<int8_t>(ea));
+      result = scaleValue * static_cast<double>(mem::read<int8_t>(ea));
       break;
    case QuantizedDataType::Signed16:
-      result = scaleValue * static_cast<double>(gMemory.read<int16_t>(ea));
+      result = scaleValue * static_cast<double>(mem::read<int16_t>(ea));
       break;
    default:
       assert("Unkown QuantizedDataType");
@@ -661,23 +661,23 @@ quantize(uint32_t ea, double value, QuantizedDataType type, uint32_t scale)
 
    switch (type) {
    case QuantizedDataType::Floating:
-      gMemory.write(ea, static_cast<float>(value));
+      mem::write(ea, static_cast<float>(value));
       break;
    case QuantizedDataType::Unsigned8:
       value = clamp<uint8_t>(value * scaleValue);
-      gMemory.write(ea, static_cast<uint8_t>(value));
+      mem::write(ea, static_cast<uint8_t>(value));
       break;
    case QuantizedDataType::Unsigned16:
       value = clamp<uint16_t>(value * scaleValue);
-      gMemory.write(ea, static_cast<uint16_t>(value));
+      mem::write(ea, static_cast<uint16_t>(value));
       break;
    case QuantizedDataType::Signed8:
       value = clamp<int8_t>(value * scaleValue);
-      gMemory.write(ea, static_cast<int8_t>(value));
+      mem::write(ea, static_cast<int8_t>(value));
       break;
    case QuantizedDataType::Signed16:
       value = clamp<int16_t>(value * scaleValue);
-      gMemory.write(ea, static_cast<int16_t>(value));
+      mem::write(ea, static_cast<int16_t>(value));
       break;
    default:
       assert("Unkown QuantizedDataType");
@@ -851,7 +851,7 @@ psq_stux(ThreadState *state, Instruction instr)
    psqStore<PsqStoreUpdate | PsqStoreIndexed>(state, instr);
 }
 
-void Interpreter::registerLoadStoreInstructions()
+void cpu::interpreter::registerLoadStoreInstructions()
 {
    RegisterInstruction(lbz);
    RegisterInstruction(lbzu);

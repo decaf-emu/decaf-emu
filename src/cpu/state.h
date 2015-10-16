@@ -42,20 +42,20 @@ enum ConditionRegisterFlag : uint32_t
    ZeroShift = 1,
    SummaryOverflowShift = 0,
 
-   Negative          = 1 << NegativeShift,
-   Positive          = 1 << PositiveShift,
-   Zero              = 1 << ZeroShift,
-   SummaryOverflow   = 1 << SummaryOverflowShift,
+   Negative = 1 << NegativeShift,
+   Positive = 1 << PositiveShift,
+   Zero = 1 << ZeroShift,
+   SummaryOverflow = 1 << SummaryOverflowShift,
 
-   LessThan          = Negative,
-   GreaterThan       = Positive,
-   Equal             = Zero,
-   Unordered         = SummaryOverflow,
+   LessThan = Negative,
+   GreaterThan = Positive,
+   Equal = Zero,
+   Unordered = SummaryOverflow,
 
-   FloatingPointException           = Negative,
-   FloatingPointExceptionEnabled    = Positive,
-   FloatingPointInvalidException    = Zero,
-   FloatingPointOverflowException   = SummaryOverflow,
+   FloatingPointException = Negative,
+   FloatingPointExceptionEnabled = Positive,
+   FloatingPointInvalidException = Zero,
+   FloatingPointOverflowException = SummaryOverflow,
 };
 }
 
@@ -77,7 +77,8 @@ union cr_t
    };
 };
 
-namespace XERegisterBits {
+namespace XERegisterBits
+{
 enum XERegisterBits : uint32_t {
    XRShift = 28,
 
@@ -101,7 +102,7 @@ union xer_t
    struct
    {
       uint32_t byteCount : 7; // For lmwx, stmwx
-      uint32_t : 22;
+   uint32_t: 22;
       uint32_t ca : 1;        // Carry
       uint32_t ov : 1;        // Overflow
       uint32_t so : 1;        // Sticky OV
@@ -109,7 +110,7 @@ union xer_t
 
    struct
    {
-      uint32_t : 28;
+   uint32_t: 28;
       uint32_t crxr; // [0-3] condition stuff in xer
    };
 };
@@ -123,11 +124,11 @@ union msr_t
    {
       uint32_t le : 1;  // Little-endian mode enabled
       uint32_t ri : 1;  // Exception is recoverable
-      uint32_t : 2;
+   uint32_t: 2;
       uint32_t dr : 1;  // Data address translation enabled
       uint32_t ir : 1;  // Instruction address translation enabled
       uint32_t ip : 1;  // Exception prefix
-      uint32_t : 1;
+   uint32_t: 1;
       uint32_t fe1 : 1; // Floating-point exception mode 1
       uint32_t be : 1;  // Branch trace enabled
       uint32_t se : 1;  // Single-step trace enabled
@@ -137,9 +138,9 @@ union msr_t
       uint32_t pr : 1;  // Privelege level (0 = supervisor, 1 = user)
       uint32_t ee : 1;  // External interrupt enabled
       uint32_t ile : 1; // Exception little-endian mode
-      uint32_t : 1;
+   uint32_t: 1;
       uint32_t pow : 1; // Power management enabled
-      uint32_t : 13;
+   uint32_t: 13;
    };
 };
 
@@ -147,16 +148,16 @@ namespace FloatingPointResultFlags
 {
 enum FloatingPointResultFlags : uint32_t
 {
-   ClassDescriptor   = 1 << 4,
-   Negative          = 1 << 3,
-   Positive          = 1 << 2,
-   Zero              = 1 << 1,
-   NaN               = 1 << 0,
+   ClassDescriptor = 1 << 4,
+   Negative = 1 << 3,
+   Positive = 1 << 2,
+   Zero = 1 << 1,
+   NaN = 1 << 0,
 
-   LessThan          = Negative,
-   GreaterThan       = Positive,
-   Equal             = Zero,
-   Unordered         = NaN,
+   LessThan = Negative,
+   GreaterThan = Positive,
+   Equal = Zero,
+   Unordered = NaN,
 };
 }
 
@@ -164,9 +165,9 @@ namespace FloatingPointRoundMode
 {
 enum FloatingPointRoundMode : uint32_t
 {
-   Nearest  = 0,
+   Nearest = 0,
    Positive = 1,
-   Zero     = 2,
+   Zero = 2,
    Negative = 3
 };
 }
@@ -178,7 +179,7 @@ union fpscr_t
 
    struct
    {
-      uint32_t : 28;
+   uint32_t: 28;
       uint32_t cr1 : 4;
    };
 
@@ -194,7 +195,7 @@ union fpscr_t
       uint32_t vxcvi : 1;  // FP Invalid Operation Exception for Invalid Integer Convert
       uint32_t vxsqrt : 1; // FP Invalid Operation Exception for Invalid Square Root
       uint32_t vxsoft : 1; // FP Invalid Operation Exception for Software Request
-      uint32_t : 1;
+   uint32_t: 1;
       uint32_t fprf : 5;   // FP Result Flags
       uint32_t fi : 1;     // FP Fraction Inexact
       uint32_t fr : 1;     // FP Fraction Rounded
@@ -229,11 +230,11 @@ union pvr_t
 // gqr.st_type / gqr.ld_type
 enum class QuantizedDataType : uint32_t
 {
-   Floating    = 0,
-   Unsigned8   = 4,
-   Unsigned16  = 5,
-   Signed8     = 6,
-   Signed16    = 7
+   Floating = 0,
+   Unsigned8 = 4,
+   Unsigned16 = 5,
+   Signed8 = 6,
+   Signed16 = 7
 };
 
 // Graphics Quantization Registers
@@ -244,13 +245,13 @@ union gqr_t
    struct
    {
       uint32_t st_type : 3;
-      uint32_t : 5;
+   uint32_t: 5;
       uint32_t st_scale : 6;
-      uint32_t : 2;
+   uint32_t: 2;
       uint32_t ld_type : 3;
-      uint32_t : 5;
+   uint32_t: 5;
       uint32_t ld_scale : 6;
-      uint32_t : 2;
+   uint32_t: 2;
    };
 };
 
@@ -374,20 +375,8 @@ struct ThreadState
 
    gqr_t gqr[8];     // Graphics Quantization Registers
 
-   // Reserve for lwarx / stwcx.
+                     // Reserve for lwarx / stwcx.
    bool reserve;
    uint32_t reserveAddress;
    uint32_t reserveData;
 };
-
-uint32_t
-getCRF(ThreadState *state, uint32_t field);
-
-void
-setCRF(ThreadState *state, uint32_t field, uint32_t value);
-
-uint32_t
-getCRB(ThreadState *state, uint32_t bit);
-
-void
-setCRB(ThreadState *state, uint32_t bit, uint32_t value);

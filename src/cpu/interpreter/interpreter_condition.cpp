@@ -1,6 +1,6 @@
+#include "interpreter_insreg.h"
 #include "bitutils.h"
 #include "floatutils.h"
-#include "interpreter.h"
 
 static std::pair<uint32_t, uint32_t>
 getCRFRange(uint32_t field)
@@ -336,7 +336,7 @@ mtcrf(ThreadState *state, Instruction instr)
 }
 
 void
-Interpreter::registerConditionInstructions()
+cpu::interpreter::registerConditionInstructions()
 {
    RegisterInstruction(cmp);
    RegisterInstruction(cmpi);

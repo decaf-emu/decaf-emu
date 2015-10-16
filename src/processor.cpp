@@ -1,9 +1,9 @@
 #include <algorithm>
 #include "platform.h"
-#include "interpreter.h"
+#include "cpu/cpu.h"
 #include "log.h"
 #include "processor.h"
-#include "ppc.h"
+#include "cpu/state.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
@@ -67,7 +67,7 @@ Processor::join()
 void
 Processor::fiberEntryPoint(Fiber *fiber)
 {
-   gInterpreter.executeSub(&fiber->state);
+   cpu::executeSub(&fiber->state);
    OSExitThread(ppctypes::getResult<int>(&fiber->state));
 }
 

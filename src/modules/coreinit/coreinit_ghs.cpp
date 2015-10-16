@@ -3,7 +3,7 @@
 #include "coreinit_spinlock.h"
 #include "coreinit_memheap.h"
 #include "coreinit_mutex.h"
-#include "interpreter.h"
+#include "cpu/cpu.h"
 #include "trace.h"
 
 static OSSpinLock *

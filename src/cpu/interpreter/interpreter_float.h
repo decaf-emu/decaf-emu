@@ -1,5 +1,5 @@
 #pragma once
-struct ThreadState;
+#include "../state.h"
 
 void
 updateFPSCR(ThreadState *state);

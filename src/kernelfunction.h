@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "kernelexport.h"
-#include "ppc.h"
+#include "cpu/state.h"
 #include "ppcinvoke.h"
 #include "util.h"
 

@@ -4,7 +4,7 @@
 #include "coreinit_dynload.h"
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
-#include "interpreter.h"
+#include "cpu/cpu.h"
 #include "memory_translate.h"
 #include "system.h"
 #include "virtual_ptr.h"

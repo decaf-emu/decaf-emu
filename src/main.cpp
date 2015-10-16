@@ -4,10 +4,9 @@
 #include "codetests.h"
 #include "fuzztests.h"
 #include "filesystem/filesystem.h"
-#include "instructiondata.h"
-#include "interpreter.h"
+
+#include "cpu/cpu.h"
 #include "processor.h"
-#include "jit.h"
 #include "loader.h"
 #include "log.h"
 #include "memory.h"
@@ -35,6 +34,7 @@
 #include "trace.h"
 #include "teenyheap.h"
 #include "debugger.h"
+#include "mem/mem.h"
 
 std::shared_ptr<spdlog::logger>
 gLog;
@@ -78,11 +78,11 @@ int main(int argc, char **argv)
    bool result = false;
 
    if (args["--jitdebug"].asBool()) {
-      gInterpreter.setJitMode(InterpJitMode::Debug);
+      cpu::setJitMode(cpu::JitMode::Debug);
    } else if (args["--jit"].asBool()) {
-      gInterpreter.setJitMode(InterpJitMode::Enabled);
+      cpu::setJitMode(cpu::JitMode::Enabled);
    } else {
-      gInterpreter.setJitMode(InterpJitMode::Disabled);
+      cpu::setJitMode(cpu::JitMode::Disabled);
    }
 
    // Create the logger
@@ -137,9 +137,8 @@ static void
 initialiseEmulator()
 {
    platform::ui::initialise();
-
-   Interpreter::RegisterFunctions();
-   JitManager::RegisterFunctions();
+   mem::initialise();
+   cpu::initialise();
 
    // Kernel modules
    GameLoader::RegisterFunctions();
@@ -158,10 +157,7 @@ initialiseEmulator()
    Zlib125::RegisterFunctions();
 
    // Initialise emulator systems
-   gMemory.initialise();
    gSystem.initialise();
-   gInstructionTable.initialise();
-   gJitManager.initialise();
    gSystem.registerModule("gameloader.rpl", new GameLoader{});
    gSystem.registerModule("coreinit.rpl", new CoreInit {});
    gSystem.registerModule("erreula.rpl", new ErrEula {});

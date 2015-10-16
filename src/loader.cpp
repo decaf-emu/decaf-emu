@@ -7,15 +7,14 @@
 #include <string_view.h>
 #include <vector>
 #include <zlib.h>
-
 #include "bigendianview.h"
 #include "elf.h"
 #include "filesystem/filesystem.h"
-#include "instructiondata.h"
+#include "cpu/instructiondata.h"
 #include "kernelmodule.h"
 #include "loader.h"
 #include "log.h"
-#include "memory.h"
+#include "mem/mem.h"
 #include "modules/coreinit/coreinit_dynload.h"
 #include "modules/coreinit/coreinit_memory.h"
 #include "modules/coreinit/coreinit_memheap.h"
@@ -39,7 +38,7 @@ public:
    ppcaddr_t
       getCurrentAddr() const
    {
-      return gMemory.untranslate(mPtr);
+      return mem::untranslate(mPtr);
    }
 
    void *
@@ -176,14 +175,14 @@ static ppcaddr_t
 getTrampAddress(LoadedModule *loadedMod, SequentialMemoryTracker &codeSeg, TrampolineMap &trampolines, void *target, const std::string& symbolName)
 {
    auto trampAddr = codeSeg.getCurrentAddr();
-   auto targetAddr = gMemory.untranslate(target);
+   auto targetAddr = mem::untranslate(target);
    auto trampIter = trampolines.find(targetAddr);
 
    if (trampIter != trampolines.end()) {
       return trampIter->second;
    }
 
-   auto tramp = gMemory.translate<uint32_t>(trampAddr);
+   auto tramp = mem::translate<uint32_t>(trampAddr);
    auto delta = static_cast<ptrdiff_t>(targetAddr) - static_cast<ptrdiff_t>(trampAddr);
 
    if (delta > -0x1FFFFFCll && delta < 0x1FFFFFCll) {
@@ -224,10 +223,10 @@ Loader::initialise(ppcsize_t maxCodeSize)
    OSGetMemBound(OSMemoryType::MEM2, &mem2start, &mem2size);
 
    // Allocate MEM2 Region
-   gMemory.alloc(mem2start, mem2size);
+   mem::alloc(mem2start, mem2size);
 
    // Steal some space for code heap
-   mCodeHeap = std::make_unique<TeenyHeap>(gMemory.translate(mem2start), maxCodeSize);
+   mCodeHeap = std::make_unique<TeenyHeap>(mem::translate(mem2start), maxCodeSize);
 
    // Update MEM2 to ignore the code heap region
    OSSetMemBound(OSMemoryType::MEM2, mem2start + maxCodeSize, mem2size - maxCodeSize);
@@ -321,14 +320,14 @@ Loader::loadKernelModule(const std::string &name, KernelModule *module)
    // Load code section
    if (codeSize > 0) {
       auto codeRegion = static_cast<uint8_t*>(OSAllocFromSystem(codeSize, 4));
-      auto start = gMemory.untranslate(codeRegion);
+      auto start = mem::untranslate(codeRegion);
       auto end = start + codeSize;
       loadedMod->sections.emplace_back(LoadedSection { ".text", start, end });
 
       for (auto &func : funcExports) {
          // Allocate some space for the thunk
          auto thunk = reinterpret_cast<uint32_t*>(codeRegion);
-         auto addr = gMemory.untranslate(thunk);
+         auto addr = mem::untranslate(thunk);
          codeRegion += 8;
 
          // Write syscall thunk
@@ -353,14 +352,14 @@ Loader::loadKernelModule(const std::string &name, KernelModule *module)
    // Load data section
    if (dataSize > 0) {
       auto dataRegion = static_cast<uint8_t*>(OSAllocFromSystem(dataSize, 4));
-      auto start = gMemory.untranslate(dataRegion);
+      auto start = mem::untranslate(dataRegion);
       auto end = start + codeSize;
       loadedMod->sections.emplace_back(LoadedSection { ".data", start, end });
 
       for (auto &data : dataExports) {
          // Allocate the same for this export
          auto thunk = dataRegion;
-         auto addr = gMemory.untranslate(thunk);
+         auto addr = mem::untranslate(thunk);
          dataRegion += data->size;
 
          // Add to exports list
@@ -434,7 +433,7 @@ Loader::registerUnimplementedFunction(const std::string& name)
 
    auto id = gSystem.registerUnimplementedFunction(name.c_str());
    auto thunk = static_cast<uint32_t*>(OSAllocFromSystem(8, 4));
-   auto addr = gMemory.untranslate(thunk);
+   auto addr = mem::untranslate(thunk);
 
    // Write syscall thunk
    auto kc = gInstructionTable.encode(InstructionID::kc);
@@ -490,14 +489,14 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
          symAddr += rela.addend;
 
          if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
-            symAddr = gMemory.read<uint32_t>(symAddr);
+            symAddr = mem::read<uint32_t>(symAddr);
 
             if (symAddr == 0) {
                symAddr = registerUnimplementedData(symbolName);
             }
          }
 
-         auto ptr8 = gMemory.translate(reloAddr);
+         auto ptr8 = mem::translate(reloAddr);
          auto ptr16 = reinterpret_cast<uint16_t*>(ptr8);
          auto ptr32 = reinterpret_cast<uint32_t*>(ptr8);
 
@@ -525,7 +524,7 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
             auto delta = static_cast<ptrdiff_t>(symAddr) - static_cast<ptrdiff_t>(reloAddr);
 
             if (delta < -0x01FFFFFC || delta > 0x01FFFFFC) {
-               auto trampAddr = getTrampAddress(loadedMod, codeSeg, trampolines, gMemory.translate(symAddr), symbolName);
+               auto trampAddr = getTrampAddress(loadedMod, codeSeg, trampolines, mem::translate(symAddr), symbolName);
 
                // Ensure valid trampoline delta
                assert(trampAddr);
@@ -654,7 +653,7 @@ Loader::processImports(LoadedModule *loadedMod, const SectionList &sections)
             }
 
             // Write the symbol address into .fimport or .dimport
-            gMemory.write(virtAddress, symbolAddr);
+            mem::write(virtAddress, symbolAddr);
          }
       }
    }
@@ -767,7 +766,7 @@ Loader::loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data)
 
          memcpy(allocData, buffer.data(), buffer.size());
          section.memory = reinterpret_cast<uint8_t*>(allocData);
-         section.virtAddress = gMemory.untranslate(allocData);
+         section.virtAddress = mem::untranslate(allocData);
          section.virtSize = static_cast<uint32_t>(buffer.size());
       }
    }

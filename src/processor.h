@@ -7,7 +7,7 @@
 #include <vector>
 #include <Windows.h>
 #include "modules/coreinit/coreinit_mutex.h"
-#include "ppc.h"
+#include "cpu/state.h"
 
 struct OSContext;
 struct OSThread;

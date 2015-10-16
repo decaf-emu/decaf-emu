@@ -1,6 +1,6 @@
 #include <cassert>
+#include "interpreter_insreg.h"
 #include "bitutils.h"
-#include "interpreter.h"
 #include "loader.h"
 #include "log.h"
 #include "memory_translate.h"
@@ -282,7 +282,7 @@ kc(ThreadState *state, Instruction instr)
 }
 
 void
-Interpreter::registerSystemInstructions()
+cpu::interpreter::registerSystemInstructions()
 {
    RegisterInstruction(dcbf);
    RegisterInstruction(dcbi);

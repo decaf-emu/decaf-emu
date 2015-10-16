@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_memheap.h"
 #include "coreinit_frameheap.h"
-#include "memory.h"
+#include "mem/mem.h"
 #include "memory_translate.h"
 #include "system.h"
 #include "virtual_ptr.h"
@@ -37,7 +37,7 @@ MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags)
 {
    // Allocate memory
    auto base = memory_untranslate(heap);
-   gMemory.alloc(base, size);
+   mem::alloc(base, size);
 
    // Setup state
    heap->size = size;
@@ -58,7 +58,7 @@ void *
 MEMDestroyFrmHeap(FrameHeap *heap)
 {
    MEMiFinaliseHeap(heap);
-   gMemory.free(memory_untranslate(heap));
+   mem::free(memory_untranslate(heap));
    return heap;
 }
 

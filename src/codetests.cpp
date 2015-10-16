@@ -9,9 +9,11 @@
 #include "bigendianview.h"
 #include "codetests.h"
 #include "elf.h"
-#include "interpreter.h"
+#include "cpu/cpu.h"
+#include "cpu/utils.h"
+#include "cpu/jit/jit.h"
 #include "log.h"
-#include "memory.h"
+#include "mem/mem.h"
 #include "modules/coreinit/coreinit_dynload.h"
 
 namespace TargetId {
@@ -514,7 +516,7 @@ bool executeCodeTest(ThreadState& state, uint32_t baseAddress, const TestData& t
    // Execute test
    state.cia = 0;
    state.nia = baseAddress + test.offset;
-   gInterpreter.executeSub(&state);
+   cpu::executeSub(&state);
 
    bool result = true;
    for (auto i = 0; i < TargetId::Max; ++i) {
@@ -539,7 +541,7 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
    }
 
    // Allocate some memory to write code to
-   if (!gMemory.alloc(baseAddress, 4096)) {
+   if (!mem::alloc(baseAddress, 4096)) {
       gLog->error("Could not allocate memory for test code");
       return false;
    }
@@ -575,10 +577,10 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
       }
 
       // Clear JIT cache between tests.
-      gJitManager.clearCache();
+      cpu::jit::clearCache();
 
       // Load code into memory
-      memcpy(gMemory.translate(baseAddress), tests.code.data(), tests.code.size());
+      memcpy(mem::translate(baseAddress), tests.code.data(), tests.code.size());
 
       // Execute tests
       ThreadState state;
@@ -587,9 +589,11 @@ executeCodeTests(const std::string &assembler, const std::string &directory)
 
          gLog->debug("Running test '{}'", test.first);
 
+         /* TODO: Maybe turn this back on?
          if (gInterpreter.getJitMode() == InterpJitMode::Enabled) {
             gJitManager.prepare(baseAddress + test.second.offset);
          }
+         */
 
          // Run test with all state set to 0x00
          gLog->debug(" Running with 0x00");

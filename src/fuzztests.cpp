@@ -1,14 +1,17 @@
 #include <random>
 #include <string>
 #include "fuzztests.h"
-#include "instructionid.h"
-#include "instructiondata.h"
+#include "cpu/instructionid.h"
+#include "cpu/instructiondata.h"
 #include "log.h"
-#include "ppc.h"
-#include "memory.h"
+#include "cpu/state.h"
+#include "mem/mem.h"
 #include "bitutils.h"
-#include "interpreter.h"
 #include "trace.h"
+#include "cpu/interpreter/interpreter.h"
+#include "cpu/jit/jit.h"
+#include "cpu/interpreter/interpreter_insreg.h"
+#include "cpu/jit/jit_insreg.h"
 
 template<size_t SIZE, class T> inline size_t array_size(T (&arr)[SIZE]) {
    return SIZE;
@@ -32,8 +35,8 @@ bool buildFuzzData(InstructionID instrId, InstructionFuzzData &fuzzData)
    InstructionData *data = gInstructionTable.find(instrId);
 
    // Verify JIT and Interpreter have everything registered...
-   bool hasInterpHandler = Interpreter::hasInstruction(static_cast<InstructionID>(instrId));
-   bool hasJitHandler = JitManager::hasInstruction(static_cast<InstructionID>(instrId));
+   bool hasInterpHandler = cpu::interpreter::hasInstruction(static_cast<InstructionID>(instrId));
+   bool hasJitHandler = cpu::jit::hasInstruction(static_cast<InstructionID>(instrId));
    if ((hasInterpHandler ^ hasJitHandler) != 0) {
       if (!hasInterpHandler) {
          gLog->error("Instruction {} has a JIT handler but no Interpreter handler", data->name);
@@ -181,7 +184,7 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
       return false;
    }
 
-   if (!Interpreter::hasInstruction(instrId)) {
+   if (!cpu::interpreter::hasInstruction(instrId)) {
       // No handler, skip it...
       return true;
    }
@@ -277,12 +280,12 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
    }
 
    // Write an instruction
-   gMemory.write(instructionBase + 0, instr.value);
+   mem::write(instructionBase + 0, instr.value);
   
    // Write a return for the Interpreter
    Instruction bclr = gInstructionTable.encode(InstructionID::bclr);
    bclr.bo = 0x1f;
-   gMemory.write(instructionBase + 4, bclr.value);
+   mem::write(instructionBase + 4, bclr.value);
 
    // Create States
    ThreadState stateFF, state00;
@@ -369,20 +372,14 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
    memcpy(&jStateFF, &stateFF, sizeof(ThreadState));
 
    {
-      gInterpreter.executeSub(&iState00);
-      gInterpreter.executeSub(&iStateFF);
+      cpu::interpreter::executeSub(&iState00);
+      cpu::interpreter::executeSub(&iStateFF);
    }
 
    {
-      gJitManager.clearCache();
-      JitCode jitFn = gJitManager.getSingle(instructionBase);
-      if (!jitFn) {
-         gLog->error("Instruction {} (:08x) failed to JIT", data->name, instr.value);
-         return false;
-      }
-
-      gJitManager.execute(&jState00, jitFn);
-      gJitManager.execute(&jStateFF, jitFn);
+      cpu::jit::clearCache();
+      cpu::jit::executeSub(&jState00);
+      cpu::jit::executeSub(&jStateFF);
 
       // Make sure CIA/NIA states match...
       jState00.cia = iState00.cia;
@@ -422,9 +419,8 @@ executeFuzzTests(uint32_t suite_seed)
       return false;
    }
 
-   gInterpreter.setJitMode(InterpJitMode::Disabled);
-   gMemory.alloc(instructionBase, 32);
-   gMemory.alloc(dataBase, 128);
+   mem::alloc(instructionBase, 32);
+   mem::alloc(dataBase, 128);
 
    std::mt19937 suite_rand(suite_seed);
    for (auto i = 0; i < 100; ++i) {

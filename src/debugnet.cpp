@@ -9,10 +9,10 @@
 #include "debugnet.h"
 #include "debugmsg.h"
 #include "debugger.h"
-#include "disassembler.h"
-#include "instructiondata.h"
+#include "cpu/disassembler.h"
+#include "cpu/instructiondata.h"
 #include "log.h"
-#include "memory.h"
+#include "mem/mem.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "processor.h"
 #include "system.h"
@@ -679,7 +679,7 @@ DebugNet::handlePacket(DebugPacket *pak)
 
       uint32_t curAddr = fiber->state.cia;
 
-      auto instr = gMemory.read<Instruction>(curAddr);
+      auto instr = mem::read<Instruction>(curAddr);
       auto data = gInstructionTable.decode(instr);
       if (data->id == InstructionID::b || data->id == InstructionID::bc ||
          data->id == InstructionID::bcctr || data->id == InstructionID::bclr) {
@@ -700,11 +700,11 @@ DebugNet::handlePacket(DebugPacket *pak)
    }
    case DebugPacketType::ReadMem: {
       auto *rmPak = static_cast<DebugPacketReadMem*>(pak);
-      if (gMemory.valid(rmPak->address)) {
+      if (mem::valid(rmPak->address)) {
          auto pakO = new DebugPacketReadMemRes();
 
          pakO->address = rmPak->address;
-         uint8_t *data = gMemory.translate(rmPak->address);
+         uint8_t *data = mem::translate(rmPak->address);
          pakO->data.resize(rmPak->size);
          memcpy(&pakO->data[0], data, pakO->data.size());
 
@@ -714,13 +714,13 @@ DebugNet::handlePacket(DebugPacket *pak)
    }
    case DebugPacketType::Disasm: {
       auto *dPak = static_cast<DebugPacketDisasm*>(pak);
-      if (gMemory.valid(dPak->address)) {
+      if (mem::valid(dPak->address)) {
          auto pakO = new DebugPacketDisasmRes();
 
          pakO->address = dPak->address;
          auto curAddr = dPak->address;
          for (int i = 0; i < (int)dPak->numInstr; ++i, curAddr += 4) {
-            auto instr = gMemory.read<Instruction>(curAddr);
+            auto instr = mem::read<Instruction>(curAddr);
             Disassembly dis;
             gDisassembler.disassemble(instr, dis, curAddr);
 

@@ -1,9 +1,9 @@
 #include <cfenv>
 #include <numeric>
+#include "interpreter_insreg.h"
 #include "bitutils.h"
 #include "floatutils.h"
 #include "interpreter.h"
-#include "interpreter_float.h"
 
 void
 updateFPSCR(ThreadState *state)
@@ -534,7 +534,7 @@ fneg(ThreadState *state, Instruction instr)
 }
 
 void
-Interpreter::registerFloatInstructions()
+cpu::interpreter::registerFloatInstructions()
 {
    RegisterInstruction(fadd);
    RegisterInstruction(fadds);

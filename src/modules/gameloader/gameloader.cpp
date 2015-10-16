@@ -1,7 +1,7 @@
 #include <string>
 #include "debugcontrol.h"
 #include "gameloader.h"
-#include "interpreter.h"
+#include "cpu/cpu.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_memheap.h"

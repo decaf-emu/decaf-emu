@@ -1,5 +1,8 @@
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <type_traits>
+#include "interpreter_insreg.h"
 #include "bitutils.h"
-#include "interpreter.h"
 
 // Update cr0 with value
 static void
@@ -825,7 +828,7 @@ xoris(ThreadState *state, Instruction instr)
 }
 
 void
-Interpreter::registerIntegerInstructions()
+cpu::interpreter::registerIntegerInstructions()
 {
    RegisterInstruction(add);
    RegisterInstruction(addc);

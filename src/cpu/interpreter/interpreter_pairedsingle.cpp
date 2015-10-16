@@ -1,6 +1,6 @@
 #include <cmath>
+#include "interpreter_insreg.h"
 #include "floatutils.h"
-#include "interpreter.h"
 #include "interpreter_float.h"
 
 // Absolute
@@ -604,7 +604,7 @@ ps_sum1(ThreadState *state, Instruction instr)
 }
 
 void
-Interpreter::registerPairedInstructions()
+cpu::interpreter::registerPairedInstructions()
 {
    RegisterInstruction(ps_add);
    RegisterInstruction(ps_div);
