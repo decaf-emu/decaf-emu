@@ -1090,11 +1090,5 @@
     <None Include="..\src\cpu\instructions.inl">
       <Filter>Header Files\cpu</Filter>
     </None>
-    <None Include="..\src\cpu\instructionsnew.inl">
-      <Filter>Header Files\cpu</Filter>
-    </None>
-    <None Include="..\src\cpu\instructionfieldsnew.inl">
-      <Filter>Header Files\cpu</Filter>
-    </None>
   </ItemGroup>
 </Project>

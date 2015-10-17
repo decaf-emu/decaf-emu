@@ -129,6 +129,15 @@ encodeSPR(Instruction &instr, SprEncoding spr)
 }
 
 bool
+compareStateField(int field, const TraceFieldValue &x, const TraceFieldValue &y)
+{
+   if (field >= StateField::FPR0 && field <= StateField::FPR31) {
+      return abs(x.f64v0 - y.f64v0) < 0.0001 && abs(x.f64v1 - y.f64v1) < 0.0001;
+   }
+   return x.u64v0 == y.u64v0 && x.u64v1 == y.u64v1;
+}
+
+bool
 compareStateField(int field, const TraceFieldValue &x, const TraceFieldValue &y, const TraceFieldValue &m, bool neg = false)
 {
    if (field >= StateField::FPR0 && field <= StateField::FPR31) {
@@ -146,17 +155,32 @@ compareStateField(int field, const TraceFieldValue &x, const TraceFieldValue &y,
 }
 
 bool
-executeInstrTest(uint32_t test_seed, InstructionID instrId)
+executeInstrTest(uint32_t test_seed)
 {
+   std::mt19937 test_rand(test_seed);
+   InstructionID instrId = (InstructionID)(test_rand() % (int)InstructionID::InstructionCount);
+
    // Special cases that we can't test easily
    switch (instrId) {
    case InstructionID::Invalid:
       return true;
    case InstructionID::lmw:
+   case InstructionID::lswi:
+   case InstructionID::lswx:
    case InstructionID::stmw:
    case InstructionID::stswi:
    case InstructionID::stswx:
-      // Disabled for now
+      // Multi-word logic, disabled for now
+      return true;
+   case InstructionID::psq_l:
+   case InstructionID::psq_lu:
+   case InstructionID::psq_lux:
+   case InstructionID::psq_lx:
+   case InstructionID::psq_st:
+   case InstructionID::psq_stu:
+   case InstructionID::psq_stux:
+   case InstructionID::psq_stx:
+      // Quantization Registers need to be properly configured for these, disabled for now
       return true;
    case InstructionID::b:
    case InstructionID::bc:
@@ -178,7 +202,6 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
       return true;
    }
 
-   std::mt19937 test_rand(test_seed);
    const InstructionData *data = gInstructionTable.find(instrId);
    const InstructionFuzzData *fuzzData = &instructionFuzzData[(int)instrId];
    if (!data || !fuzzData) {
@@ -192,92 +215,110 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
 
    Instruction instr(fuzzData->baseInstr);
 
-   uint32_t gprAlloc = 5;
-   uint32_t fprAlloc = 0;
-   for (auto i : fuzzData->allFields) {
-      if (isFieldMarker(i)) {
-         continue;
-      }
+   {
+      // TODO: Add handling for rA==0 being 0 :S
+      uint32_t gprAlloc = 0;
+      uint32_t fprAlloc = 0;
+      uint32_t gqrAlloc = 0;
+      static const uint32_t gprAllocatable[] = { 5, 6, 7, 8, 9 };
+      static const uint32_t fprAllocatable[] = { 0, 1, 2, 3 };
+      static const uint32_t gqrAllocatable[] = { 0, 1, 2, 3 };
+      auto nextGpr = [&]() {
+         assert(gprAlloc < array_size(gprAllocatable));
+         return gprAllocatable[gprAlloc++];
+      };
+      auto nextFpr = [&]() {
+         assert(fprAlloc < array_size(fprAllocatable));
+         return fprAllocatable[fprAlloc++];
+      };
+      auto nextGqr = [&]() {
+         assert(gqrAlloc < array_size(gqrAllocatable));
+         return gqrAllocatable[gqrAlloc++];
+      };
+      for (auto i : fuzzData->allFields) {
+         if (isFieldMarker(i)) {
+            continue;
+         }
 
-      switch (i) {
-      case Field::rA: // gpr Targets
-      case Field::rB:
-      case Field::rD:
-      case Field::rS:
-         setFieldValue(instr, i, gprAlloc++);
-         break;
-      case Field::frA: // fpr Targets
-      case Field::frB:
-      case Field::frC:
-      case Field::frD:
-      case Field::frS:
-         setFieldValue(instr, i, fprAlloc++);
-         break;
-      case Field::crbA: // crb Targets
-      case Field::crbB:
-      case Field::crbD:
-         setFieldValue(instr, i, test_rand());
-         break;
-      case Field::crfD: // crf Targets
-      case Field::crfS:
-         setFieldValue(instr, i, test_rand());
-         break;
-      case Field::i: // gqr Targets
-      case Field::qi:
-         break;
-      case Field::imm: // Random Values
-      case Field::simm:
-      case Field::uimm:
-      case Field::rc: // Record Condition
-      case Field::frc:
-      case Field::oe:
-      case Field::crm:
-      case Field::fm:
-      case Field::w:
-      case Field::qw:
-      case Field::sh: // Shift Registers
-      case Field::mb:
-      case Field::me:
-         break;
-         setFieldValue(instr, i, test_rand());
-         break;
-      case Field::d: // Memory Delta...
-      case Field::qd:
-         setFieldValue(instr, i, test_rand());
-         break;
-      case Field::spr: // Special Purpose Registers
-      {
-         SprEncoding validSprs[] = {
-            SprEncoding::XER,
-            SprEncoding::LR,
-            SprEncoding::CTR,
-            SprEncoding::GQR0,
-            SprEncoding::GQR1,
-            SprEncoding::GQR2,
-            SprEncoding::GQR3,
-            SprEncoding::GQR4,
-            SprEncoding::GQR5,
-            SprEncoding::GQR6,
-            SprEncoding::GQR7 };
-         encodeSPR(instr, validSprs[test_rand() % array_size(validSprs)]);
-         break;
-      }
-      case Field::tbr: // Time Base Registers
-      {
-         SprEncoding validTbrs[] = {
-            SprEncoding::TBL,
-            SprEncoding::TBU };
-         encodeSPR(instr, validTbrs[test_rand() % array_size(validTbrs)]);
-         break;
-      }
-      case Field::l:
-         // l always must be 0
-         instr.l = 0;
-         break;
+         switch (i) {
+         case Field::rA: // gpr Targets
+         case Field::rB:
+         case Field::rD:
+         case Field::rS:
+            setFieldValue(instr, i, nextGpr());
+            break;
+         case Field::frA: // fpr Targets
+         case Field::frB:
+         case Field::frC:
+         case Field::frD:
+         case Field::frS:
+            setFieldValue(instr, i, nextFpr());
+            break;
+         case Field::i: // gqr Targets
+         case Field::qi:
+            setFieldValue(instr, i, test_rand() & 4);
+         case Field::crbA: // crb Targets
+         case Field::crbB:
+         case Field::crbD:
+            setFieldValue(instr, i, test_rand());
+            break;
+         case Field::crfD: // crf Targets
+         case Field::crfS:
+            setFieldValue(instr, i, test_rand());
+            break;
+         case Field::imm: // Random Values
+         case Field::simm:
+         case Field::uimm:
+         case Field::rc: // Record Condition
+         case Field::frc:
+         case Field::oe:
+         case Field::crm:
+         case Field::fm:
+         case Field::w:
+         case Field::qw:
+         case Field::sh: // Shift Registers
+         case Field::mb:
+         case Field::me:
+            break;
+            setFieldValue(instr, i, test_rand());
+            break;
+         case Field::d: // Memory Delta...
+         case Field::qd:
+            setFieldValue(instr, i, test_rand());
+            break;
+         case Field::spr: // Special Purpose Registers
+         {
+            SprEncoding validSprs[] = {
+               SprEncoding::XER,
+               SprEncoding::CTR,
+               SprEncoding::GQR0,
+               SprEncoding::GQR1,
+               SprEncoding::GQR2,
+               SprEncoding::GQR3,
+               SprEncoding::GQR4,
+               SprEncoding::GQR5,
+               SprEncoding::GQR6,
+               SprEncoding::GQR7 };
+            encodeSPR(instr, validSprs[test_rand() % array_size(validSprs)]);
+            break;
+         }
+         case Field::tbr: // Time Base Registers
+         {
+            SprEncoding validTbrs[] = {
+               SprEncoding::TBL,
+               SprEncoding::TBU };
+            encodeSPR(instr, validTbrs[test_rand() % array_size(validTbrs)]);
+            break;
+         }
+         case Field::l:
+            // l always must be 0
+            instr.l = 0;
+            break;
 
-      default:
-         gLog->error("Instruction {} field {} is unsupported by fuzzer", data->name, (uint32_t)i);
-         return false;
+         default:
+            gLog->error("Instruction {} field {} is unsupported by fuzzer", data->name, (uint32_t)i);
+            return false;
+         }
       }
    }
 
@@ -289,461 +330,181 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
    bclr.bo = 0x1f;
    mem::write(instructionBase + 4, bclr.value);
 
-   // Create States
-   ThreadState stateFF, state00;
-   memset(&state00, 0x00, sizeof(ThreadState));
-   memset(&stateFF, 0xFF, sizeof(ThreadState));
+#define STATEFIELDO(x, y) (StateField::Field)((int)x + y)
+   StateField::Field randFields[] = {
+      STATEFIELDO(StateField::GPR, 0),
+      STATEFIELDO(StateField::GPR, 5),
+      STATEFIELDO(StateField::GPR, 6),
+      STATEFIELDO(StateField::GPR, 7),
+      STATEFIELDO(StateField::GPR, 8),
+      STATEFIELDO(StateField::GPR, 9),
+      STATEFIELDO(StateField::FPR, 0),
+      STATEFIELDO(StateField::FPR, 1),
+      STATEFIELDO(StateField::FPR, 2),
+      STATEFIELDO(StateField::FPR, 3),
+      STATEFIELDO(StateField::GQR, 0),
+      STATEFIELDO(StateField::GQR, 1),
+      STATEFIELDO(StateField::GQR, 2),
+      STATEFIELDO(StateField::GQR, 3),
+      StateField::CR,
+      StateField::FPSCR,
+      StateField::XER,
+      StateField::CTR
+   };
+#undef STATEFIELDO
+   size_t numRandFields = array_size(randFields);
 
-   // Create memory values
-   static const size_t memSize = 16;
-   uint8_t memFF[memSize], mem00[memSize], memMask[memSize];
-   memset(mem00, 0x01, memSize);
-   memset(memFF, 0xFE, memSize);
-   memset(memMask, 0x00, memSize);
+   // Build some randomized state data
+   ThreadState iState, jState;
+   for (auto i = 0u; i < numRandFields; ++i) {
+      auto field = randFields[i];
 
-   std::vector<Field> insReads = data->read;
-   std::vector<Field> insWrites = data->write;
+      TraceFieldValue v;
+      v.u32v0 = test_rand();
+      v.u32v1 = test_rand();
+      v.u32v2 = test_rand();
+      v.u32v3 = test_rand();
 
-   bool isPairedSinglesInstr = false;
-   for (auto i : data->flags) {
-      switch (i) {
-         switch (i) {
-            // Flag Types
-         case Field::rc:
-            if (!instr.rc) {
-               break;
-            }
-            // Falls Through
-         case Field::ARC:
-            insReads.push_back(Field::XERSO);
-            insWrites.push_back(Field::CR0);
-            break;
-         case Field::frc:
-            if (!instr.rc) {
-               break;
-            }
-            insWrites.push_back(Field::CR1);
-         case Field::oe:
-            if (!instr.oe) {
-               break;
-            }
-            // Falls Through...
-         case Field::AOE:
-            insReads.push_back(Field::XERO);
-            break;
-         case Field::PS:
-            isPairedSinglesInstr;
-            break;
-         default:
-            assert(0);
-         }
-
-      }
+      restoreStateField(&iState, field, v);
+      restoreStateField(&jState, field, v);
    }
 
-
-   // Set up initial state
-   TraceFieldValue writeMask[StateField::Max];
-   memset(&writeMask, 0, sizeof(writeMask));
-
-   for (auto i : insWrites) {
-      switch (i) {
-      case Field::rA:
-         writeMask[StateField::GPR + instr.rA].u32v0 = 0xFFFFFFFF; break;
-      case Field::rB:
-         writeMask[StateField::GPR + instr.rB].u32v0 = 0xFFFFFFFF; break;
-      case Field::rD:
-         writeMask[StateField::GPR + instr.rD].u32v0 = 0xFFFFFFFF; break;
-      case Field::rS:
-         writeMask[StateField::GPR + instr.rS].u32v0 = 0xFFFFFFFF; break;
-      case Field::frA:
-         writeMask[StateField::FPR + instr.frA].u64v0 = 0xFFFFFFFFFFFFFFFF;
-         if (isPairedSinglesInstr) {
-            writeMask[StateField::FPR + instr.frA].u64v1 = 0xFFFFFFFFFFFFFFFF;
-         }
-         break;
-      case Field::frB:
-         writeMask[StateField::FPR + instr.frB].u64v0 = 0xFFFFFFFFFFFFFFFF;
-         if (isPairedSinglesInstr) {
-            writeMask[StateField::FPR + instr.frB].u64v1 = 0xFFFFFFFFFFFFFFFF;
-         }
-         break;
-      case Field::frC:
-         writeMask[StateField::FPR + instr.frC].u64v0 = 0xFFFFFFFFFFFFFFFF;
-         if (isPairedSinglesInstr) {
-            writeMask[StateField::FPR + instr.frC].u64v1 = 0xFFFFFFFFFFFFFFFF;
-         }
-         break;
-      case Field::frD:
-         writeMask[StateField::FPR + instr.frD].u64v0 = 0xFFFFFFFFFFFFFFFF;
-         if (isPairedSinglesInstr) {
-            writeMask[StateField::FPR + instr.frD].u64v1 = 0xFFFFFFFFFFFFFFFF;
-         }
-         break;
-      case Field::frS:
-         writeMask[StateField::FPR + instr.frS].u64v0 = 0xFFFFFFFFFFFFFFFF;
-         if (isPairedSinglesInstr) {
-            writeMask[StateField::FPR + instr.frS].u64v1 = 0xFFFFFFFFFFFFFFFF;
-         }
-         break;
-      case Field::i:
-         writeMask[StateField::GQR + instr.i].u32v0 = 0xFFFFFFFF; break;
-      case Field::qi:
-         writeMask[StateField::GQR + instr.qi].u32v0 = 0xFFFFFFFF; break;
-      case Field::crbA:
-         writeMask[StateField::CR].u32v0 |= (1 << instr.crbA); break;
-      case Field::crbB:
-         writeMask[StateField::CR].u32v0 |= (1 << instr.crbA); break;
-      case Field::crbD:
-         writeMask[StateField::CR].u32v0 |= (1 << instr.crbA); break;
-      case Field::crfS:
-         writeMask[StateField::CR].u32v0 |= (0xF << ((7 - instr.crfS) * 4)); break;
-      case Field::crfD:
-         writeMask[StateField::CR].u32v0 |= (0xF << ((7 - instr.crfD) * 4)); break;
-      case Field::RSRV:
-         writeMask[StateField::ReserveAddress].u32v0 |= 0xFFFFFFFF; break;
-      case Field::CTR:
-         writeMask[StateField::CTR].u32v0 |= 0xFFFFFFFF; break;
-      case Field::FPSCR:
-         // DISABLED - SHOULDNT BE USED...
-         break;
-      case Field::FCRSNAN:
-         writeMask[StateField::FPSCR].u32v0 |= FPSCRRegisterBits::VXSNAN; break;
-      case Field::FCRISI:
-         writeMask[StateField::FPSCR].u32v0 |= FPSCRRegisterBits::VXISI; break;
-      case Field::FCRIDI:
-         writeMask[StateField::FPSCR].u32v0 |= FPSCRRegisterBits::VXIDI; break;
-      case Field::FCRZDZ:
-         writeMask[StateField::FPSCR].u32v0 |= FPSCRRegisterBits::VXZDZ; break;
-      case Field::XERO:
-         writeMask[StateField::XER].u32v0 |= (XERegisterBits::Overflow | XERegisterBits::StickyOV); break;
-      case Field::XERC:
-         writeMask[StateField::XER].u32v0 |= XERegisterBits::Carry; break;
-      case Field::CR0:
-         writeMask[StateField::CR].u32v0 |= 0xF0000000; break;
-      case Field::CR1:
-         writeMask[StateField::CR].u32v0 |= 0x0F000000; break;
-      default:
-         assert(0);
-      }
+   // Build some randomized memory data
+   const uint32_t memSize = 64;
+   uint8_t iMem[memSize], jMem[memSize];
+   for (auto i = 0u; i < memSize; ++i) {
+      auto randVal = (uint8_t)test_rand();
+      iMem[i] = randVal;
+      jMem[i] = randVal;
    }
 
-#define GPRRAND(i) { \
-   state00.gpr[i] = test_rand(); \
-   stateFF.gpr[i] = state00.gpr[i]; \
-   break; }
-#define FPRRAND(i) { \
-   state00.fpr[i].idw = test_rand(); \
-   if (isPairedSinglesInstr) state00.fpr[i].idw1 = test_rand(); \
-   stateFF.fpr[i].idw = state00.fpr[i].idw; \
-   if (isPairedSinglesInstr) stateFF.fpr[i].idw1 = state00.fpr[i].idw1; \
-   break; }
-#define GQRRAND(i) { \
-   state00.gqr[i].value = test_rand(); \
-   stateFF.gqr[i].value = state00.gqr[i].value; \
-   break; }
-#define CRBRAND(i) { \
-   auto randBit = test_rand() & 1; \
-   setCRB(&state00, i, randBit); \
-   setCRB(&stateFF, i, randBit); \
-   break; }
-#define CRFRAND(i) { \
-   auto randBits = test_rand() & 0xF; \
-   setCRF(&state00, i, randBits); \
-   setCRF(&stateFF, i, randBits); \
-   break; }
-#define GENERICRAND(field) { \
-   auto randVal = test_rand(); \
-   state00.field = randVal; \
-   stateFF.field = state00.field; \
-   break; }
-
-   for (auto i : insReads) {
-      switch (i) {
-
-         // State Related
-      case Field::rA: GPRRAND(instr.rA);
-      case Field::rB: GPRRAND(instr.rB);
-      case Field::rD: GPRRAND(instr.rD);
-      case Field::rS: GPRRAND(instr.rS);
-      case Field::frA: FPRRAND(instr.frA);
-      case Field::frB: FPRRAND(instr.frB);
-      case Field::frC: FPRRAND(instr.frC);
-      case Field::frD: FPRRAND(instr.frD);
-      case Field::frS: FPRRAND(instr.frS);
-      case Field::i: GQRRAND(instr.i);
-      case Field::qi: GQRRAND(instr.qi);
-      case Field::crbA: CRBRAND(instr.crbA);
-      case Field::crbB: CRBRAND(instr.crbB);
-      case Field::crbD: CRBRAND(instr.crbD);
-      case Field::crfS: CRFRAND(instr.crfS);
-      case Field::crfD: CRFRAND(instr.crfD);
-
-         // Markers
-      case Field::CTR: GENERICRAND(ctr);
-      case Field::XERC: GENERICRAND(xer.ca);
-      case Field::XERSO: GENERICRAND(xer.so);
-
-         // Instruction Related
-      case Field::imm:
-      case Field::simm:
-      case Field::uimm:
-      case Field::crm:
-      case Field::fm:
-      case Field::w:
-      case Field::qw:
-      case Field::sh:
-      case Field::mb:
-      case Field::me:
-      case Field::d:
-      case Field::qd:
-      case Field::spr:
-      case Field::tbr:
-      case Field::l:
-         break;
-
-         // Flag Types
-      case Field::rc:
-      case Field::frc:
-      case Field::oe:
-      case Field::ARC:
-      case Field::AOE:
-         assert(0);
-         break;
-
-      default:
-         assert(0);
-      }
-   }
-
-#undef GPRRAND
-#undef FPRRAND
-#undef CRBRAND
-#undef CRFRAND
-#undef GENERICRAND
-
-   // Write random data to memory...
+   // Some instructions need to be forced to a certain address
 #define SETGPR(i, v) \
-   state00.gpr[i]=v; \
-   stateFF.gpr[i]=v;
-#define MEMRAND(pos, size) \
-   assert(pos + size < memSize); \
-   for(auto i = 0; i < size; ++i) { \
-      mem00[pos+i] = test_rand(); \
-      memFF[pos+i] = test_rand(); \
-   }
-#define MEMMASK(pos, size) \
-   assert(pos + size < memSize); \
-   memset(memMask, 0xFF, size)
-#define CONFIGDELTALOAD(Type) { \
-      auto d = sign_extend<16, int32_t>(instr.d); \
-      SETGPR(instr.rA, dataBase - d); \
-      MEMRAND(0, sizeof(Type)) \
-      break; }
-#define CONFIGIDXDLOAD(Type) { \
+   iState.gpr[i]=v; \
+   jState.gpr[i]=v;
+#define CONFIG_rA_rB() { \
       auto d = static_cast<int32_t>(test_rand()); \
       SETGPR(instr.rA, d); \
       SETGPR(instr.rB, dataBase - d); \
-      MEMRAND(0, sizeof(Type)) \
       break; }
-#define CONFIGDELTASTORE(Type) { \
+#define CONFIG_rA_D() { \
       auto d = sign_extend<16, int32_t>(instr.d); \
       SETGPR(instr.rA, dataBase - d); \
-      MEMMASK(0, sizeof(Type)); \
       break; }
-#define CONFIGIDXDSTORE(Type) { \
-      auto d = static_cast<int32_t>(test_rand()); \
-      SETGPR(instr.rA, d); \
-      SETGPR(instr.rB, dataBase - d); \
-      MEMMASK(0, sizeof(Type)); \
+#define CONFIG_rA_QD() { \
+      auto d = sign_extend<12, int32_t>(instr.qd); \
+      SETGPR(instr.rA, dataBase - d); \
       break; }
 
    switch (instrId) {
-   case InstructionID::lbz: CONFIGDELTALOAD(uint8_t);
-   case InstructionID::lbzu: CONFIGDELTALOAD(uint8_t);
-   case InstructionID::lha: CONFIGDELTALOAD(uint16_t);
-   case InstructionID::lhau: CONFIGDELTALOAD(uint16_t);
-   case InstructionID::lhz: CONFIGDELTALOAD(uint16_t);
-   case InstructionID::lhzu: CONFIGDELTALOAD(uint16_t);
-   case InstructionID::lwz: CONFIGDELTALOAD(uint32_t);
-   case InstructionID::lwzu: CONFIGDELTALOAD(uint32_t);
-   case InstructionID::lfs: CONFIGDELTALOAD(float);
-   case InstructionID::lfsu: CONFIGDELTALOAD(float);
-   case InstructionID::lfd: CONFIGDELTALOAD(double);
-   case InstructionID::lfdu: CONFIGDELTALOAD(double);
-   case InstructionID::lbzx: CONFIGIDXDLOAD(uint8_t);
-   case InstructionID::lbzux: CONFIGIDXDLOAD(uint8_t);
-   case InstructionID::lhax: CONFIGIDXDLOAD(uint16_t);
-   case InstructionID::lhaux: CONFIGIDXDLOAD(uint16_t);
-   case InstructionID::lhbrx: CONFIGIDXDLOAD(uint16_t);
-   case InstructionID::lhzx: CONFIGIDXDLOAD(uint16_t);
-   case InstructionID::lhzux: CONFIGIDXDLOAD(uint16_t);
-   case InstructionID::lwbrx: CONFIGIDXDLOAD(uint32_t);
-   case InstructionID::lwarx: CONFIGIDXDLOAD(uint32_t);
-   case InstructionID::lwzx: CONFIGIDXDLOAD(uint32_t);
-   case InstructionID::lwzux: CONFIGIDXDLOAD(uint32_t);
-   case InstructionID::lfsx: CONFIGIDXDLOAD(float);
-   case InstructionID::lfsux: CONFIGIDXDLOAD(float);
-   case InstructionID::lfdx: CONFIGIDXDLOAD(double);
-   case InstructionID::lfdux: CONFIGIDXDLOAD(double);
-   case InstructionID::stb: CONFIGDELTASTORE(uint8_t);
-   case InstructionID::stbu: CONFIGDELTASTORE(uint8_t);
-   case InstructionID::sth: CONFIGDELTASTORE(uint16_t);
-   case InstructionID::sthu: CONFIGDELTASTORE(uint16_t);
-   case InstructionID::stw: CONFIGDELTASTORE(uint32_t);
-   case InstructionID::stwu: CONFIGDELTASTORE(uint32_t);
-   case InstructionID::stfs: CONFIGDELTASTORE(float);
-   case InstructionID::stfsu: CONFIGDELTASTORE(float);
-   case InstructionID::stfd: CONFIGDELTASTORE(double);
-   case InstructionID::stfdu: CONFIGDELTASTORE(double);
-   case InstructionID::stbx: CONFIGIDXDSTORE(uint8_t);
-   case InstructionID::stbux: CONFIGIDXDSTORE(uint8_t);
-   case InstructionID::sthx: CONFIGIDXDSTORE(uint16_t);
-   case InstructionID::sthux: CONFIGIDXDSTORE(uint16_t);
-   case InstructionID::stwx: CONFIGIDXDSTORE(uint32_t);
-   case InstructionID::stwux: CONFIGIDXDSTORE(uint32_t);
-   case InstructionID::sthbrx: CONFIGIDXDSTORE(uint16_t);
-   case InstructionID::stwbrx: CONFIGIDXDSTORE(uint32_t);
-   case InstructionID::stwcx: CONFIGIDXDSTORE(uint32_t);
-   case InstructionID::stfsx: CONFIGIDXDSTORE(float);
-   case InstructionID::stfsux: CONFIGIDXDSTORE(float);
-   case InstructionID::stfdx: CONFIGIDXDSTORE(double);
-   case InstructionID::stfdux: CONFIGIDXDSTORE(double);
-   case InstructionID::stfiwx: CONFIGIDXDSTORE(uint32_t);
+   case InstructionID::lbz: CONFIG_rA_D();
+   case InstructionID::lbzu: CONFIG_rA_D();
+   case InstructionID::lha: CONFIG_rA_D();
+   case InstructionID::lhau: CONFIG_rA_D();
+   case InstructionID::lhz: CONFIG_rA_D();
+   case InstructionID::lhzu: CONFIG_rA_D();
+   case InstructionID::lwz: CONFIG_rA_D();
+   case InstructionID::lwzu: CONFIG_rA_D();
+   case InstructionID::lfs: CONFIG_rA_D();
+   case InstructionID::lfsu: CONFIG_rA_D();
+   case InstructionID::lfd: CONFIG_rA_D();
+   case InstructionID::lfdu: CONFIG_rA_D();
+   case InstructionID::lbzx: CONFIG_rA_rB();
+   case InstructionID::lbzux: CONFIG_rA_rB();
+   case InstructionID::lhax: CONFIG_rA_rB();
+   case InstructionID::lhaux: CONFIG_rA_rB();
+   case InstructionID::lhbrx: CONFIG_rA_rB();
+   case InstructionID::lhzx: CONFIG_rA_rB();
+   case InstructionID::lhzux: CONFIG_rA_rB();
+   case InstructionID::lwbrx: CONFIG_rA_rB();
+   case InstructionID::lwarx: CONFIG_rA_rB();
+   case InstructionID::lwzx: CONFIG_rA_rB();
+   case InstructionID::lwzux: CONFIG_rA_rB();
+   case InstructionID::lfsx: CONFIG_rA_rB();
+   case InstructionID::lfsux: CONFIG_rA_rB();
+   case InstructionID::lfdx: CONFIG_rA_rB();
+   case InstructionID::lfdux: CONFIG_rA_rB();
+
+   case InstructionID::stb: CONFIG_rA_D();
+   case InstructionID::stbu: CONFIG_rA_D();
+   case InstructionID::sth: CONFIG_rA_D();
+   case InstructionID::sthu: CONFIG_rA_D();
+   case InstructionID::stw: CONFIG_rA_D();
+   case InstructionID::stwu: CONFIG_rA_D();
+   case InstructionID::stfs: CONFIG_rA_D();
+   case InstructionID::stfsu: CONFIG_rA_D();
+   case InstructionID::stfd: CONFIG_rA_D();
+   case InstructionID::stfdu: CONFIG_rA_D();
+   case InstructionID::stbx: CONFIG_rA_rB();
+   case InstructionID::stbux: CONFIG_rA_rB();
+   case InstructionID::sthx: CONFIG_rA_rB();
+   case InstructionID::sthux: CONFIG_rA_rB();
+   case InstructionID::stwx: CONFIG_rA_rB();
+   case InstructionID::stwux: CONFIG_rA_rB();
+   case InstructionID::sthbrx: CONFIG_rA_rB();
+   case InstructionID::stwbrx: CONFIG_rA_rB();
+   case InstructionID::stwcx: CONFIG_rA_rB();
+   case InstructionID::stfsx: CONFIG_rA_rB();
+   case InstructionID::stfsux: CONFIG_rA_rB();
+   case InstructionID::stfdx: CONFIG_rA_rB();
+   case InstructionID::stfdux: CONFIG_rA_rB();
+   case InstructionID::stfiwx: CONFIG_rA_rB();
+
+   case InstructionID::psq_l: CONFIG_rA_QD();
+   case InstructionID::psq_lx: CONFIG_rA_rB();
+   case InstructionID::psq_lu: CONFIG_rA_QD();
+   case InstructionID::psq_lux: CONFIG_rA_rB();
+
+   case InstructionID::dcbz: CONFIG_rA_rB();
+   case InstructionID::dcbz_l: CONFIG_rA_rB();
 
    default:
       break;
    }
 
 #undef SETGPR
-#undef MEMRAND
-#undef MEMMASK
-#undef CONFIGDELTALOAD
-#undef CONFIGIDXDLOAD
-#undef CONFIGDELTASTORE
-#undef CONFIGIDXDSTORE
+#undef CONFIG_rA_rB
+#undef CONFIG_rA_D
+#undef CONFIG_rA_QD
+
+
+   // Disable Reserveds for now
+   iState.reserve = false;
+   jState.reserve = false;
 
    // Required to be set to this
-   state00.tracer = nullptr;
-   state00.cia = 0;
-   state00.nia = instructionBase;
-   stateFF.tracer = nullptr;
-   stateFF.cia = 0;
-   stateFF.nia = instructionBase;
-
-   ThreadState iState00, iStateFF, jState00, jStateFF;
-   memcpy(&iState00, &state00, sizeof(ThreadState));
-   memcpy(&iStateFF, &stateFF, sizeof(ThreadState));
-   memcpy(&jState00, &state00, sizeof(ThreadState));
-   memcpy(&jStateFF, &stateFF, sizeof(ThreadState));
-   uint8_t jMem00[memSize], jMemFF[memSize], iMem00[memSize], iMemFF[memSize];
+   iState.tracer = nullptr;
+   iState.cia = 0;
+   iState.nia = instructionBase;
+   jState.tracer = nullptr;
+   jState.cia = 0;
+   jState.nia = instructionBase;
 
    {
-      memcpy(mem::translate(dataBase), mem00, memSize);
-      cpu::interpreter::executeSub(&iState00);
-      memcpy(iMem00, mem::translate(dataBase), memSize);
-
-      memcpy(mem::translate(dataBase), memFF, memSize);
-      cpu::interpreter::executeSub(&iStateFF);
-      memcpy(iMemFF, mem::translate(dataBase), memSize);
+      memcpy(mem::translate(dataBase), iMem, memSize);
+      cpu::interpreter::executeSub(&iState);
+      memcpy(iMem, mem::translate(dataBase), memSize);
    }
 
    {
       cpu::jit::clearCache();
 
-      memcpy(mem::translate(dataBase), mem00, memSize);
-      cpu::jit::executeSub(&jState00);
-      memcpy(jMem00, mem::translate(dataBase), memSize);
-
-      memcpy(mem::translate(dataBase), memFF, memSize);
-      cpu::jit::executeSub(&jStateFF);
-      memcpy(jMemFF, mem::translate(dataBase), memSize);
-
-      // Make sure CIA/NIA states match...
-      jState00.cia = iState00.cia;
-      jState00.nia = iState00.nia;
-      jStateFF.cia = iStateFF.cia;
-      jStateFF.nia = iStateFF.nia;
+      memcpy(mem::translate(dataBase), jMem, memSize);
+      cpu::jit::executeSub(&jState);
+      memcpy(jMem, mem::translate(dataBase), memSize);
    }
 
-   // Check that we have no unexpected writes
-   // Compare iState00 vs iStateFF
-   // Compare jState00 vs jStateFF
+   for (auto i = 0u; i < numRandFields; ++i) {
+      auto field = randFields[i];
 
-
-   for (auto i = 0; i < StateField::Max; ++i) {
-      StateField::Field field = (StateField::Field)i;
-      if (field == StateField::Invalid) {
-         continue;
-      }
-
-      TraceFieldValue val00, valFF;
-      saveStateField(&state00, field, val00);
-      saveStateField(&stateFF, field, valFF);
-
-      TraceFieldValue iVal00, iValFF, jVal00, jValFF;
-      saveStateField(&iState00, field, iVal00);
-      saveStateField(&iStateFF, field, iValFF);
-      saveStateField(&jState00, field, jVal00);
-      saveStateField(&jStateFF, field, jValFF);
-
-      // -- Check for things that changed between 00 and FF
-      // jMem
-      if (!compareStateField(field, jVal00, jValFF, writeMask[field], false)) {
-         gLog->warn("{} JIT {} behaviour affected by unexpected state", data->name, getStateFieldName(field));
-      }
-
-      // jMem
-      if (!compareStateField(field, iVal00, iValFF, writeMask[field], false)) {
-         gLog->warn("{} Interpreter {} behaviour affected by unexpected state", data->name, getStateFieldName(field));
+      TraceFieldValue iVal, jVal;
+      saveStateField(&iState, field, iVal);
+      saveStateField(&jState, field, jVal);
+      
+      if (!compareStateField(field, iVal, jVal)) {
+         gLog->warn("{}({:08x}) :: JIT does not match Interp on {}", data->name, test_seed, getStateFieldName(field));
       }
    }
-
-
-   for (auto i = 0; i < memSize; ++i) {
-      // -- Check for things that changed between 00 and FF
-      // jMem
-      if ((jMem00[i] & memMask[i]) != (jMemFF[i] & memMask[i])) {
-         gLog->warn("JIT memory behaviour affected by unexpected state");
-      }
-
-      // iMem
-      if ((iMem00[i] & memMask[i]) != (iMemFF[i] & memMask[i])) {
-         gLog->warn("Interpreter memory behaviour affected by unexpected state");
-      }
-
-
-      // -- Check that nothing changed that shouldnt have
-      // iMem
-      if ((iMem00[i] & ~memMask[i]) != (mem00[i] & ~memMask[i]) ||
-         (iMemFF[i] & ~memMask[i]) != (memFF[i] & ~memMask[i])) {
-         gLog->warn("Interpreter unexpectedly wrote memory for {}", data->name);
-      }
-
-      // jMem
-      if ((jMem00[i] & ~memMask[i]) != (mem00[i] & ~memMask[i]) ||
-         (jMemFF[i] & ~memMask[i]) != (memFF[i] & ~memMask[i])) {
-         gLog->warn("JIT unexpectedly wrote memory for {}", data->name);
-      }
-
-   }
-
-   // Check all expected result values
-   /* DISABLED FOR NOW
-   for (auto i = 0; i < memSize; ++i) {
-      // Check that the JIT memory changes matched the interpreter
-      if ((iMem00[i] & memMask[i]) != (jMem00[i] & memMask[i])) {
-         gLog->warn("JIT and Interpreter gave different memory results");
-      }
-   }
-   */
-
-   // Check that we have no unexpected reads
-   // Compare iState00 vs state00
-   // Compare jState00 vs state00
-
-   // Compare iState00 and jState00 to hardware...
-
 
    return true;
 }
@@ -759,9 +520,15 @@ executeFuzzTests(uint32_t suite_seed)
    mem::alloc(dataBase, 128);
 
    std::mt19937 suite_rand(suite_seed);
-   for (auto i = 0; i < 100; ++i) {
-      InstructionID instrId = (InstructionID)(i % (int)InstructionID::InstructionCount);
-      executeInstrTest(suite_rand(), instrId);
+   for (auto i = 0; i < 10000; ++i) {
+      if (false) {
+         gLog->info("Executing test {}", i);
+         if (i == 167) {
+            __debugbreak();
+         }
+      }
+
+      executeInstrTest(suite_rand());
    }
 
    return true;
