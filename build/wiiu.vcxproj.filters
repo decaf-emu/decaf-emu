@@ -591,6 +591,9 @@
     <ClCompile Include="..\src\cpu\disassembler.cpp">
       <Filter>Source Files\cpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\cpu\instructioninfo.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1085,6 +1088,12 @@
       <Filter>Header Files\cpu</Filter>
     </None>
     <None Include="..\src\cpu\instructions.inl">
+      <Filter>Header Files\cpu</Filter>
+    </None>
+    <None Include="..\src\cpu\instructionsnew.inl">
+      <Filter>Header Files\cpu</Filter>
+    </None>
+    <None Include="..\src\cpu\instructionfieldsnew.inl">
       <Filter>Header Files\cpu</Filter>
     </None>
   </ItemGroup>

@@ -27,6 +27,35 @@ struct Tracer
    ThreadState prevState;
 };
 
+std::string
+getStateFieldName(TraceFieldType type)
+{
+   if (type == StateField::Invalid) {
+      return "Invalid";
+   }
+
+   if (type >= StateField::GPR0 && type <= StateField::GPR31) {
+      return fmt::format("r{:02}", type - StateField::GPR);
+   } else if (type >= StateField::FPR0 && type <= StateField::FPR31) {
+      return fmt::format("f{:02}", type - StateField::FPR);
+   } else if (type >= StateField::GQR0 && type <= StateField::GQR7) {
+      return fmt::format("q{:02}", type - StateField::FPR);
+   } else if (type == StateField::CR) {
+      return "CR";
+   } else if (type == StateField::XER) {
+      return "XER";
+   } else if (type == StateField::LR) {
+      return "LR";
+   } else if (type == StateField::FPSCR) {
+      return "FPSCR";
+   } else if (type == StateField::CTR) {
+      return "CTR";
+   } else {
+      assert(0);
+      return "UNK";
+   }
+}
+
 static void
 printFieldValue(Instruction instr, TraceFieldType type, const TraceFieldValue& value)
 {
@@ -186,10 +215,8 @@ getFieldStateField(Instruction instr, Field field)
       break;
    case Field::lk:
       return StateField::LR;
-   case Field::XER:
+   case Field::XERO:
       return StateField::XER;
-   case Field::CR:
-      return StateField::CR;
    case Field::CTR:
       return StateField::CTR;
    case Field::LR:
@@ -205,6 +232,9 @@ getFieldStateField(Instruction instr, Field field)
 void
 saveStateField(const ThreadState *state, TraceFieldType type, TraceFieldValue &field)
 {
+   field.u64v0 = 0;
+   field.u64v1 = 0;
+
    if (type == StateField::Invalid) {
       return;
    }

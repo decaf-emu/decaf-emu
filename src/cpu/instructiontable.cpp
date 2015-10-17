@@ -73,10 +73,22 @@ static BitRange gFieldBits[] = {
 #undef FLD
 #undef MRKR
 
+#define FLD(x, ...) { #x },
+#define MRKR(x, ...) { #x },
+static const char * gFieldNames[] = {
+#include "instructionfields.inl"
+};
+#undef FLD
+#undef MRKR
+
 bool
 isFieldMarker(Field field)
 {
    return gFieldBits[static_cast<int>(field)].start == -1;
+}
+
+const char * getFieldName(Field field) {
+   return gFieldNames[static_cast<int>(field)];
 }
 
 // First bit of instruction field

@@ -250,7 +250,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
       }
 
       // Ignore trace only fields for disassembly
-      if (field == Field::FPSCR || field == Field::XER || field == Field::CR || field == Field::RSRV) {
+      if (isFieldMarker(field)) {
          continue;
       }
 

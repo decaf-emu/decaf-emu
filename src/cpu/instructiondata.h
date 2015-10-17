@@ -78,6 +78,9 @@ extern InstructionTable gInstructionTable;
 bool
 isFieldMarker(Field field);
 
+const char *
+getFieldName(Field field);
+
 uint32_t
 getFieldStart(Field field);
 

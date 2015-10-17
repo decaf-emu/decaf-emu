@@ -3,6 +3,7 @@
 #include "fuzztests.h"
 #include "cpu/instructionid.h"
 #include "cpu/instructiondata.h"
+#include "cpu/utils.h"
 #include "log.h"
 #include "cpu/state.h"
 #include "mem/mem.h"
@@ -128,14 +129,14 @@ encodeSPR(Instruction &instr, SprEncoding spr)
 }
 
 bool
-compareStateField(StateField::Field field, const TraceFieldValue &x, const TraceFieldValue &y, const TraceFieldValue &m, bool neg = false)
+compareStateField(int field, const TraceFieldValue &x, const TraceFieldValue &y, const TraceFieldValue &m, bool neg = false)
 {
    if (field >= StateField::FPR0 && field <= StateField::FPR31) {
       uint64_t xa = x.u64v0 & m.u64v0;
       uint64_t xb = x.u64v1 & m.u64v1;
       uint64_t ya = y.u64v0 & m.u64v0;
       uint64_t yb = y.u64v1 & m.u64v1;
-      return (*(double*)xa) == (*(double*)ya) && (*(double*)xb) == (*(double*)yb);
+      return (*(double*)&xa) == (*(double*)&ya) && (*(double*)&xb) == (*(double*)&yb);
    }
 
    return (x.u32v0 & m.u32v0) == (y.u32v0 & m.u32v0) &&
@@ -228,6 +229,7 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
       case Field::simm:
       case Field::uimm:
       case Field::rc: // Record Condition
+      case Field::frc:
       case Field::oe:
       case Field::crm:
       case Field::fm:
@@ -281,7 +283,7 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
 
    // Write an instruction
    mem::write(instructionBase + 0, instr.value);
-  
+
    // Write a return for the Interpreter
    Instruction bclr = gInstructionTable.encode(InstructionID::bclr);
    bclr.bo = 0x1f;
@@ -292,11 +294,59 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
    memset(&state00, 0x00, sizeof(ThreadState));
    memset(&stateFF, 0xFF, sizeof(ThreadState));
 
+   // Create memory values
+   static const size_t memSize = 16;
+   uint8_t memFF[memSize], mem00[memSize], memMask[memSize];
+   memset(mem00, 0x01, memSize);
+   memset(memFF, 0xFE, memSize);
+   memset(memMask, 0x00, memSize);
+
+   std::vector<Field> insReads = data->read;
+   std::vector<Field> insWrites = data->write;
+
+   bool isPairedSinglesInstr = false;
+   for (auto i : data->flags) {
+      switch (i) {
+         switch (i) {
+            // Flag Types
+         case Field::rc:
+            if (!instr.rc) {
+               break;
+            }
+            // Falls Through
+         case Field::ARC:
+            insReads.push_back(Field::XERSO);
+            insWrites.push_back(Field::CR0);
+            break;
+         case Field::frc:
+            if (!instr.rc) {
+               break;
+            }
+            insWrites.push_back(Field::CR1);
+         case Field::oe:
+            if (!instr.oe) {
+               break;
+            }
+            // Falls Through...
+         case Field::AOE:
+            insReads.push_back(Field::XERO);
+            break;
+         case Field::PS:
+            isPairedSinglesInstr;
+            break;
+         default:
+            assert(0);
+         }
+
+      }
+   }
+
+
    // Set up initial state
    TraceFieldValue writeMask[StateField::Max];
    memset(&writeMask, 0, sizeof(writeMask));
 
-   for (auto i : data->write) {
+   for (auto i : insWrites) {
       switch (i) {
       case Field::rA:
          writeMask[StateField::GPR + instr.rA].u32v0 = 0xFFFFFFFF; break;
@@ -308,23 +358,33 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
          writeMask[StateField::GPR + instr.rS].u32v0 = 0xFFFFFFFF; break;
       case Field::frA:
          writeMask[StateField::FPR + instr.frA].u64v0 = 0xFFFFFFFFFFFFFFFF;
-         writeMask[StateField::FPR + instr.frA].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         if (isPairedSinglesInstr) {
+            writeMask[StateField::FPR + instr.frA].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         }
          break;
       case Field::frB:
          writeMask[StateField::FPR + instr.frB].u64v0 = 0xFFFFFFFFFFFFFFFF;
-         writeMask[StateField::FPR + instr.frB].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         if (isPairedSinglesInstr) {
+            writeMask[StateField::FPR + instr.frB].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         }
          break;
       case Field::frC:
          writeMask[StateField::FPR + instr.frC].u64v0 = 0xFFFFFFFFFFFFFFFF;
-         writeMask[StateField::FPR + instr.frC].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         if (isPairedSinglesInstr) {
+            writeMask[StateField::FPR + instr.frC].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         }
          break;
       case Field::frD:
          writeMask[StateField::FPR + instr.frD].u64v0 = 0xFFFFFFFFFFFFFFFF;
-         writeMask[StateField::FPR + instr.frD].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         if (isPairedSinglesInstr) {
+            writeMask[StateField::FPR + instr.frD].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         }
          break;
       case Field::frS:
          writeMask[StateField::FPR + instr.frS].u64v0 = 0xFFFFFFFFFFFFFFFF;
-         writeMask[StateField::FPR + instr.frS].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         if (isPairedSinglesInstr) {
+            writeMask[StateField::FPR + instr.frS].u64v1 = 0xFFFFFFFFFFFFFFFF;
+         }
          break;
       case Field::i:
          writeMask[StateField::GQR + instr.i].u32v0 = 0xFFFFFFFF; break;
@@ -337,25 +397,231 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
       case Field::crbD:
          writeMask[StateField::CR].u32v0 |= (1 << instr.crbA); break;
       case Field::crfS:
-         writeMask[StateField::CR].u32v0 |= (0xF << instr.crfS); break;
+         writeMask[StateField::CR].u32v0 |= (0xF << ((7 - instr.crfS) * 4)); break;
       case Field::crfD:
-         writeMask[StateField::CR].u32v0 |= (0xF << instr.crfD); break;
+         writeMask[StateField::CR].u32v0 |= (0xF << ((7 - instr.crfD) * 4)); break;
       case Field::RSRV:
          writeMask[StateField::ReserveAddress].u32v0 |= 0xFFFFFFFF; break;
       case Field::CTR:
          writeMask[StateField::CTR].u32v0 |= 0xFFFFFFFF; break;
-         // TODO: The following fields should probably be
-         //   more specific in the instruction data...
-      case Field::CR:
-         writeMask[StateField::CR].u32v0 |= 0xFFFFFFFF; break;
       case Field::FPSCR:
-         writeMask[StateField::FPSCR].u32v0 |= 0xFFFFFFFF; break;
-      case Field::XER:
-         writeMask[StateField::XER].u32v0 |= 0xFFFFFFFF; break;
+         // DISABLED - SHOULDNT BE USED...
+         break;
+      case Field::FCRSNAN:
+         writeMask[StateField::FPSCR].u32v0 |= FPSCRRegisterBits::VXSNAN; break;
+      case Field::FCRISI:
+         writeMask[StateField::FPSCR].u32v0 |= FPSCRRegisterBits::VXISI; break;
+      case Field::FCRIDI:
+         writeMask[StateField::FPSCR].u32v0 |= FPSCRRegisterBits::VXIDI; break;
+      case Field::FCRZDZ:
+         writeMask[StateField::FPSCR].u32v0 |= FPSCRRegisterBits::VXZDZ; break;
+      case Field::XERO:
+         writeMask[StateField::XER].u32v0 |= (XERegisterBits::Overflow | XERegisterBits::StickyOV); break;
+      case Field::XERC:
+         writeMask[StateField::XER].u32v0 |= XERegisterBits::Carry; break;
+      case Field::CR0:
+         writeMask[StateField::CR].u32v0 |= 0xF0000000; break;
+      case Field::CR1:
+         writeMask[StateField::CR].u32v0 |= 0x0F000000; break;
       default:
          assert(0);
       }
    }
+
+#define GPRRAND(i) { \
+   state00.gpr[i] = test_rand(); \
+   stateFF.gpr[i] = state00.gpr[i]; \
+   break; }
+#define FPRRAND(i) { \
+   state00.fpr[i].idw = test_rand(); \
+   if (isPairedSinglesInstr) state00.fpr[i].idw1 = test_rand(); \
+   stateFF.fpr[i].idw = state00.fpr[i].idw; \
+   if (isPairedSinglesInstr) stateFF.fpr[i].idw1 = state00.fpr[i].idw1; \
+   break; }
+#define GQRRAND(i) { \
+   state00.gqr[i].value = test_rand(); \
+   stateFF.gqr[i].value = state00.gqr[i].value; \
+   break; }
+#define CRBRAND(i) { \
+   auto randBit = test_rand() & 1; \
+   setCRB(&state00, i, randBit); \
+   setCRB(&stateFF, i, randBit); \
+   break; }
+#define CRFRAND(i) { \
+   auto randBits = test_rand() & 0xF; \
+   setCRF(&state00, i, randBits); \
+   setCRF(&stateFF, i, randBits); \
+   break; }
+#define GENERICRAND(field) { \
+   auto randVal = test_rand(); \
+   state00.field = randVal; \
+   stateFF.field = state00.field; \
+   break; }
+
+   for (auto i : insReads) {
+      switch (i) {
+
+         // State Related
+      case Field::rA: GPRRAND(instr.rA);
+      case Field::rB: GPRRAND(instr.rB);
+      case Field::rD: GPRRAND(instr.rD);
+      case Field::rS: GPRRAND(instr.rS);
+      case Field::frA: FPRRAND(instr.frA);
+      case Field::frB: FPRRAND(instr.frB);
+      case Field::frC: FPRRAND(instr.frC);
+      case Field::frD: FPRRAND(instr.frD);
+      case Field::frS: FPRRAND(instr.frS);
+      case Field::i: GQRRAND(instr.i);
+      case Field::qi: GQRRAND(instr.qi);
+      case Field::crbA: CRBRAND(instr.crbA);
+      case Field::crbB: CRBRAND(instr.crbB);
+      case Field::crbD: CRBRAND(instr.crbD);
+      case Field::crfS: CRFRAND(instr.crfS);
+      case Field::crfD: CRFRAND(instr.crfD);
+
+         // Markers
+      case Field::CTR: GENERICRAND(ctr);
+      case Field::XERC: GENERICRAND(xer.ca);
+      case Field::XERSO: GENERICRAND(xer.so);
+
+         // Instruction Related
+      case Field::imm:
+      case Field::simm:
+      case Field::uimm:
+      case Field::crm:
+      case Field::fm:
+      case Field::w:
+      case Field::qw:
+      case Field::sh:
+      case Field::mb:
+      case Field::me:
+      case Field::d:
+      case Field::qd:
+      case Field::spr:
+      case Field::tbr:
+      case Field::l:
+         break;
+
+         // Flag Types
+      case Field::rc:
+      case Field::frc:
+      case Field::oe:
+      case Field::ARC:
+      case Field::AOE:
+         assert(0);
+         break;
+
+      default:
+         assert(0);
+      }
+   }
+
+#undef GPRRAND
+#undef FPRRAND
+#undef CRBRAND
+#undef CRFRAND
+#undef GENERICRAND
+
+   // Write random data to memory...
+#define SETGPR(i, v) \
+   state00.gpr[i]=v; \
+   stateFF.gpr[i]=v;
+#define MEMRAND(pos, size) \
+   assert(pos + size < memSize); \
+   for(auto i = 0; i < size; ++i) { \
+      mem00[pos+i] = test_rand(); \
+      memFF[pos+i] = test_rand(); \
+   }
+#define MEMMASK(pos, size) \
+   assert(pos + size < memSize); \
+   memset(memMask, 0xFF, size)
+#define CONFIGDELTALOAD(Type) { \
+      auto d = sign_extend<16, int32_t>(instr.d); \
+      SETGPR(instr.rA, dataBase - d); \
+      MEMRAND(0, sizeof(Type)) \
+      break; }
+#define CONFIGIDXDLOAD(Type) { \
+      auto d = static_cast<int32_t>(test_rand()); \
+      SETGPR(instr.rA, d); \
+      SETGPR(instr.rB, dataBase - d); \
+      MEMRAND(0, sizeof(Type)) \
+      break; }
+#define CONFIGDELTASTORE(Type) { \
+      auto d = sign_extend<16, int32_t>(instr.d); \
+      SETGPR(instr.rA, dataBase - d); \
+      MEMMASK(0, sizeof(Type)); \
+      break; }
+#define CONFIGIDXDSTORE(Type) { \
+      auto d = static_cast<int32_t>(test_rand()); \
+      SETGPR(instr.rA, d); \
+      SETGPR(instr.rB, dataBase - d); \
+      MEMMASK(0, sizeof(Type)); \
+      break; }
+
+   switch (instrId) {
+   case InstructionID::lbz: CONFIGDELTALOAD(uint8_t);
+   case InstructionID::lbzu: CONFIGDELTALOAD(uint8_t);
+   case InstructionID::lha: CONFIGDELTALOAD(uint16_t);
+   case InstructionID::lhau: CONFIGDELTALOAD(uint16_t);
+   case InstructionID::lhz: CONFIGDELTALOAD(uint16_t);
+   case InstructionID::lhzu: CONFIGDELTALOAD(uint16_t);
+   case InstructionID::lwz: CONFIGDELTALOAD(uint32_t);
+   case InstructionID::lwzu: CONFIGDELTALOAD(uint32_t);
+   case InstructionID::lfs: CONFIGDELTALOAD(float);
+   case InstructionID::lfsu: CONFIGDELTALOAD(float);
+   case InstructionID::lfd: CONFIGDELTALOAD(double);
+   case InstructionID::lfdu: CONFIGDELTALOAD(double);
+   case InstructionID::lbzx: CONFIGIDXDLOAD(uint8_t);
+   case InstructionID::lbzux: CONFIGIDXDLOAD(uint8_t);
+   case InstructionID::lhax: CONFIGIDXDLOAD(uint16_t);
+   case InstructionID::lhaux: CONFIGIDXDLOAD(uint16_t);
+   case InstructionID::lhbrx: CONFIGIDXDLOAD(uint16_t);
+   case InstructionID::lhzx: CONFIGIDXDLOAD(uint16_t);
+   case InstructionID::lhzux: CONFIGIDXDLOAD(uint16_t);
+   case InstructionID::lwbrx: CONFIGIDXDLOAD(uint32_t);
+   case InstructionID::lwarx: CONFIGIDXDLOAD(uint32_t);
+   case InstructionID::lwzx: CONFIGIDXDLOAD(uint32_t);
+   case InstructionID::lwzux: CONFIGIDXDLOAD(uint32_t);
+   case InstructionID::lfsx: CONFIGIDXDLOAD(float);
+   case InstructionID::lfsux: CONFIGIDXDLOAD(float);
+   case InstructionID::lfdx: CONFIGIDXDLOAD(double);
+   case InstructionID::lfdux: CONFIGIDXDLOAD(double);
+   case InstructionID::stb: CONFIGDELTASTORE(uint8_t);
+   case InstructionID::stbu: CONFIGDELTASTORE(uint8_t);
+   case InstructionID::sth: CONFIGDELTASTORE(uint16_t);
+   case InstructionID::sthu: CONFIGDELTASTORE(uint16_t);
+   case InstructionID::stw: CONFIGDELTASTORE(uint32_t);
+   case InstructionID::stwu: CONFIGDELTASTORE(uint32_t);
+   case InstructionID::stfs: CONFIGDELTASTORE(float);
+   case InstructionID::stfsu: CONFIGDELTASTORE(float);
+   case InstructionID::stfd: CONFIGDELTASTORE(double);
+   case InstructionID::stfdu: CONFIGDELTASTORE(double);
+   case InstructionID::stbx: CONFIGIDXDSTORE(uint8_t);
+   case InstructionID::stbux: CONFIGIDXDSTORE(uint8_t);
+   case InstructionID::sthx: CONFIGIDXDSTORE(uint16_t);
+   case InstructionID::sthux: CONFIGIDXDSTORE(uint16_t);
+   case InstructionID::stwx: CONFIGIDXDSTORE(uint32_t);
+   case InstructionID::stwux: CONFIGIDXDSTORE(uint32_t);
+   case InstructionID::sthbrx: CONFIGIDXDSTORE(uint16_t);
+   case InstructionID::stwbrx: CONFIGIDXDSTORE(uint32_t);
+   case InstructionID::stwcx: CONFIGIDXDSTORE(uint32_t);
+   case InstructionID::stfsx: CONFIGIDXDSTORE(float);
+   case InstructionID::stfsux: CONFIGIDXDSTORE(float);
+   case InstructionID::stfdx: CONFIGIDXDSTORE(double);
+   case InstructionID::stfdux: CONFIGIDXDSTORE(double);
+   case InstructionID::stfiwx: CONFIGIDXDSTORE(uint32_t);
+
+   default:
+      break;
+   }
+
+#undef SETGPR
+#undef MEMRAND
+#undef MEMMASK
+#undef CONFIGDELTALOAD
+#undef CONFIGIDXDLOAD
+#undef CONFIGDELTASTORE
+#undef CONFIGIDXDSTORE
 
    // Required to be set to this
    state00.tracer = nullptr;
@@ -370,16 +636,28 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
    memcpy(&iStateFF, &stateFF, sizeof(ThreadState));
    memcpy(&jState00, &state00, sizeof(ThreadState));
    memcpy(&jStateFF, &stateFF, sizeof(ThreadState));
+   uint8_t jMem00[memSize], jMemFF[memSize], iMem00[memSize], iMemFF[memSize];
 
    {
+      memcpy(mem::translate(dataBase), mem00, memSize);
       cpu::interpreter::executeSub(&iState00);
+      memcpy(iMem00, mem::translate(dataBase), memSize);
+
+      memcpy(mem::translate(dataBase), memFF, memSize);
       cpu::interpreter::executeSub(&iStateFF);
+      memcpy(iMemFF, mem::translate(dataBase), memSize);
    }
 
    {
       cpu::jit::clearCache();
+
+      memcpy(mem::translate(dataBase), mem00, memSize);
       cpu::jit::executeSub(&jState00);
+      memcpy(jMem00, mem::translate(dataBase), memSize);
+
+      memcpy(mem::translate(dataBase), memFF, memSize);
       cpu::jit::executeSub(&jStateFF);
+      memcpy(jMemFF, mem::translate(dataBase), memSize);
 
       // Make sure CIA/NIA states match...
       jState00.cia = iState00.cia;
@@ -392,15 +670,73 @@ executeInstrTest(uint32_t test_seed, InstructionID instrId)
    // Compare iState00 vs iStateFF
    // Compare jState00 vs jStateFF
 
+
    for (auto i = 0; i < StateField::Max; ++i) {
-      if (i == StateField::Invalid) {
+      StateField::Field field = (StateField::Field)i;
+      if (field == StateField::Invalid) {
          continue;
       }
 
       TraceFieldValue val00, valFF;
-      saveStateField(&iState00, i, val00);
-      saveStateField(&iStateFF, i, valFF);
+      saveStateField(&state00, field, val00);
+      saveStateField(&stateFF, field, valFF);
+
+      TraceFieldValue iVal00, iValFF, jVal00, jValFF;
+      saveStateField(&iState00, field, iVal00);
+      saveStateField(&iStateFF, field, iValFF);
+      saveStateField(&jState00, field, jVal00);
+      saveStateField(&jStateFF, field, jValFF);
+
+      // -- Check for things that changed between 00 and FF
+      // jMem
+      if (!compareStateField(field, jVal00, jValFF, writeMask[field], false)) {
+         gLog->warn("{} JIT {} behaviour affected by unexpected state", data->name, getStateFieldName(field));
+      }
+
+      // jMem
+      if (!compareStateField(field, iVal00, iValFF, writeMask[field], false)) {
+         gLog->warn("{} Interpreter {} behaviour affected by unexpected state", data->name, getStateFieldName(field));
+      }
    }
+
+
+   for (auto i = 0; i < memSize; ++i) {
+      // -- Check for things that changed between 00 and FF
+      // jMem
+      if ((jMem00[i] & memMask[i]) != (jMemFF[i] & memMask[i])) {
+         gLog->warn("JIT memory behaviour affected by unexpected state");
+      }
+
+      // iMem
+      if ((iMem00[i] & memMask[i]) != (iMemFF[i] & memMask[i])) {
+         gLog->warn("Interpreter memory behaviour affected by unexpected state");
+      }
+
+
+      // -- Check that nothing changed that shouldnt have
+      // iMem
+      if ((iMem00[i] & ~memMask[i]) != (mem00[i] & ~memMask[i]) ||
+         (iMemFF[i] & ~memMask[i]) != (memFF[i] & ~memMask[i])) {
+         gLog->warn("Interpreter unexpectedly wrote memory for {}", data->name);
+      }
+
+      // jMem
+      if ((jMem00[i] & ~memMask[i]) != (mem00[i] & ~memMask[i]) ||
+         (jMemFF[i] & ~memMask[i]) != (memFF[i] & ~memMask[i])) {
+         gLog->warn("JIT unexpectedly wrote memory for {}", data->name);
+      }
+
+   }
+
+   // Check all expected result values
+   /* DISABLED FOR NOW
+   for (auto i = 0; i < memSize; ++i) {
+      // Check that the JIT memory changes matched the interpreter
+      if ((iMem00[i] & memMask[i]) != (jMem00[i] & memMask[i])) {
+         gLog->warn("JIT and Interpreter gave different memory results");
+      }
+   }
+   */
 
    // Check that we have no unexpected reads
    // Compare iState00 vs state00

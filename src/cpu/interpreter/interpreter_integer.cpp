@@ -275,7 +275,13 @@ divGeneric(ThreadState *state, Instruction instr)
    a = state->gpr[instr.rA];
    b = state->gpr[instr.rB];
 
-   d = a / b;
+   if (b != 0) {
+      d = a / b;
+   } else {
+      // Exceptions are off by default, when exceptions are off
+      //   div-by-zero simply returns 0...
+      d = 0;
+   }
    state->gpr[instr.rD] = d;
 
    auto overflow = (b == 0);

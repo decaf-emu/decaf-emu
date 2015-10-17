@@ -172,6 +172,23 @@ enum FloatingPointRoundMode : uint32_t
 };
 }
 
+namespace FPSCRRegisterBits
+{
+enum FPSCRRegisterBits : uint32_t {
+   VXSNANShift = 24,
+   VXISIShift = 23,
+   VXIDIShift = 22,
+   VXZDZShift = 21,
+   VXIMZShift = 20,
+
+   VXSNAN = 1u << VXSNANShift,
+   VXISI = 1u << VXISIShift,
+   VXIDI = 1u << VXIDIShift,
+   VXZDZ = 1u << VXZDZShift,
+   VXIMZ = 1u << VXIMZShift,
+};
+}
+
 // Floating-Point Status and Control Register
 union fpscr_t
 {

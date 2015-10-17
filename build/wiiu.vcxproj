@@ -92,6 +92,7 @@
     <ClCompile Include="..\src\codetests.cpp" />
     <ClCompile Include="..\src\cpu\cpu.cpp" />
     <ClCompile Include="..\src\cpu\disassembler.cpp" />
+    <ClCompile Include="..\src\cpu\instructioninfo.cpp" />
     <ClCompile Include="..\src\cpu\instructiontable.cpp" />
     <ClCompile Include="..\src\cpu\interpreter\interpreter.cpp" />
     <ClCompile Include="..\src\cpu\interpreter\interpreter_branch.cpp" />
@@ -392,7 +393,9 @@
     </None>
     <None Include="..\src\cpu\instructionaliases.inl" />
     <None Include="..\src\cpu\instructionfields.inl" />
+    <None Include="..\src\cpu\instructionfieldsnew.inl" />
     <None Include="..\src\cpu\instructions.inl" />
+    <None Include="..\src\cpu\instructionsnew.inl" />
     <None Include="..\src\gpu\latte_opcodes_def.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

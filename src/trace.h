@@ -74,6 +74,9 @@ struct TraceFieldValue {
 };
 static_assert(sizeof(TraceFieldValue) == sizeof(TraceFieldValue::value), "TraceFieldValue::value size must match total structure size");
 
+std::string
+getStateFieldName(TraceFieldType type);
+
 void
 saveStateField(const ThreadState *state, TraceFieldType type, TraceFieldValue &field);
 
