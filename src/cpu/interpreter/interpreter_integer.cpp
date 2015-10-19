@@ -856,6 +856,7 @@ cpu::interpreter::registerIntegerInstructions()
    RegisterInstruction(divwu);
    RegisterInstruction(extsb);
    RegisterInstruction(extsh);
+   RegisterInstruction(eqv);
    RegisterInstruction(mulhw);
    RegisterInstruction(mulhwu);
    RegisterInstruction(mulli);
