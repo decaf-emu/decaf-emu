@@ -656,7 +656,9 @@ shiftLogical(ThreadState *state, Instruction instr)
 
    n = b & 0x1f;
 
-   if (flags & ShiftLeft) {
+   if (b & 0x20) {
+      a = 0;
+   } else if (flags & ShiftLeft) {
       a = s << n;
    } else if (flags & ShiftRight) {
       a = s >> n;
