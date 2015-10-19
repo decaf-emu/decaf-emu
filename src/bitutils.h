@@ -1,4 +1,5 @@
 #pragma once
+#include <climits>
 #include <cstdint>
 #include <cstdlib>
 
@@ -161,9 +162,9 @@ sign_extend(Type src)
 template<typename Type>
 struct bit_width
 {
-   static const size_t value = sizeof(Type) * 8;
+   static constexpr size_t value = sizeof(Type) * CHAR_BIT;
 
-   operator size_t() const
+   constexpr operator size_t() const
    {
       return value;
    }
