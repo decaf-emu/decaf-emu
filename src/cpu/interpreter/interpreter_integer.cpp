@@ -109,7 +109,7 @@ addGeneric(ThreadState *state, Instruction instr)
    }
 
    if (flags & AddAlwaysRecord) {
-      updateOverflow(state, overflow);
+      // Always record only means update CR0, NOT overflow
       updateConditionRegister(state, d);
    } else if (flags & AddCheckRecord) {
       if (instr.oe) {
