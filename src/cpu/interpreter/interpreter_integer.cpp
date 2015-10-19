@@ -275,20 +275,20 @@ divGeneric(ThreadState *state, Instruction instr)
    a = state->gpr[instr.rA];
    b = state->gpr[instr.rB];
 
-   if (b != 0) {
-      d = a / b;
-   } else {
-      // Exceptions are off by default, when exceptions are off
-      //   div-by-zero simply returns 0...
-      d = 0;
-   }
-   state->gpr[instr.rD] = d;
-
    auto overflow = (b == 0);
 
    if (std::is_signed<Type>::value && (a == 0x80000000 && b == -1)) {
       overflow = true;
    }
+
+   if (!overflow) {
+      d = a / b;
+   } else {
+      // rD = -1 when rA is negative, 0 when rA is positive
+      d = a < 0 ? -1 : 0;
+   }
+
+   state->gpr[instr.rD] = d;
 
    if (instr.oe) {
       updateOverflow(state, overflow);
