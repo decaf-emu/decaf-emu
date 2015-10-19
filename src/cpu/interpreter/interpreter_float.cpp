@@ -55,6 +55,8 @@ updateFPSCR(ThreadState *state)
       | fpscr.ux
       | fpscr.zx
       | fpscr.xx;
+
+   std::feclearexcept(FE_ALL_EXCEPT);
 }
 
 template<typename Type>
