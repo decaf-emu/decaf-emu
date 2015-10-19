@@ -712,7 +712,7 @@ shiftArithmetic(ThreadState *state, Instruction instr)
 
    // XER[CA] is set if rS contains a negative number and any
    // 1 bits are shifted out of position 31
-   bool carry = s < 0 && !get_bit<31>(a);
+   bool carry = s < 0 && (s << (32 - n));
 
    // Shift amounts from 32 to 63 give a result of 32 sign bits
    // and cause XER[CA] to receive the sign bit of rS
