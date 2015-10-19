@@ -84,7 +84,7 @@ updateFPRF(ThreadState *state, Type value)
    if (cls != FP_NAN) {
       if (neg) {
          flags |= FloatingPointResultFlags::Negative;
-      } else {
+      } else if (cls != FP_ZERO) {
          flags |= FloatingPointResultFlags::Positive;
       }
    }
