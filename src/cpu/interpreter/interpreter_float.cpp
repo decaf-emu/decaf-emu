@@ -510,7 +510,48 @@ fmadd(ThreadState *state, Instruction instr)
 static void
 fmadds(ThreadState *state, Instruction instr)
 {
-   return fmadd(state, instr);
+   double a, b, c, d;
+   a = state->fpr[instr.frA].paired0;
+   b = state->fpr[instr.frB].paired0;
+   c = state->fpr[instr.frC].paired0;
+
+   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
+   state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
+   state->fpscr.vximz = is_infinity(a * c) && is_zero(c);
+
+   d = a * c;
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         d = make_quiet(a);
+      } else if (is_nan(b)) {
+         d = make_quiet(b);
+      } else if (is_nan(c)) {
+         d = make_quiet(c);
+      } else {
+         d = make_nan<double>();
+      }
+   } else {
+      if (is_infinity(d) && is_infinity(b) && !(is_infinity(a) || is_infinity(c))) {
+         d = b;
+      } else {
+         d = d + b;
+         if (is_nan(d)) {
+            if (is_nan(b)) {
+               d = make_quiet(b);
+            } else {
+               d = make_nan<double>();
+            }
+         }
+      }
+   }
+
+   updateFPSCR(state);
+   updateFPRF(state, d);
+   state->fpr[instr.frD].paired0 = static_cast<float>(d);
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
 }
 
 // Floating Multiply-Sub
