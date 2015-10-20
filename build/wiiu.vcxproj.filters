@@ -372,9 +372,6 @@
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_draw.cpp">
       <Filter>Source Files\modules\gx2\dx12</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\null\gx2null.cpp">
-      <Filter>Source Files\modules\gx2\null</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\gx2\null\gx2null_draw.cpp">
       <Filter>Source Files\modules\gx2\null</Filter>
     </ClCompile>

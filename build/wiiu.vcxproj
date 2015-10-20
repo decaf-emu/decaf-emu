@@ -183,7 +183,6 @@
     <ClCompile Include="..\src\modules\gx2\gx2_debug.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_temp.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_vsync.cpp" />
-    <ClCompile Include="..\src\modules\gx2\null\gx2null.cpp" />
     <ClCompile Include="..\src\modules\gx2\null\gx2null_context.cpp" />
     <ClCompile Include="..\src\modules\gx2\null\gx2null_display.cpp" />
     <ClCompile Include="..\src\modules\gx2\null\gx2null_displaylist.cpp" />

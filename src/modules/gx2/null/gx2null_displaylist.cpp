@@ -1,7 +1,7 @@
-#include "../gx2.h"
+#include "modules/gx2/gx2.h"
 #ifdef GX2_NULL
 
-#include "../gx2_displaylist.h"
+#include "modules/gx2/gx2_displaylist.h"
 
 static GX2DisplayList *
 gCurrentDisplayList = nullptr;
@@ -11,8 +11,8 @@ gCurrentDisplayListSize = 0;
 
 void
 GX2BeginDisplayListEx(GX2DisplayList *displayList,
-   uint32_t size,
-   BOOL unk1)
+                      uint32_t size,
+                      BOOL unk1)
 {
    gCurrentDisplayList = displayList;
    gCurrentDisplayListSize = size;
@@ -34,13 +34,13 @@ GX2EndDisplayList(GX2DisplayList *displayList)
 
 void
 GX2DirectCallDisplayList(GX2DisplayList *displayList,
-   uint32_t size)
+                         uint32_t size)
 {
 }
 
 void
 GX2CallDisplayList(GX2DisplayList *displayList,
-   uint32_t size)
+                   uint32_t size)
 {
    if (GX2GetDisplayListWriteStatus()) {
       GX2CopyDisplayList(displayList, size);
@@ -56,7 +56,8 @@ GX2GetDisplayListWriteStatus()
 }
 
 BOOL
-GX2GetCurrentDisplayList(be_val<uint32_t> *outDisplayList, be_val<uint32_t> *outSize)
+GX2GetCurrentDisplayList(be_val<uint32_t> *outDisplayList,
+                         be_val<uint32_t> *outSize)
 {
    if (!gCurrentDisplayList) {
       return FALSE;

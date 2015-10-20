@@ -1,12 +1,13 @@
-#include "../gx2.h"
+#include "modules/gx2/gx2.h"
 #ifdef GX2_NULL
 
-#include "../gx2_context.h"
+#include "modules/gx2/gx2_context.h"
+#include "modules/gx2/gx2_vsync.h"
 
 void
 GX2Init(be_val<uint32_t> *attributes)
 {
-   GX2InitVsync();
+   _GX2InitVsync();
 }
 
 void
