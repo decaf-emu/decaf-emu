@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include "bigendianview.h"
 #include "gpu/latte.h"
 #include "gpu/hlsl/hlsl.h"
+#include "utils/bigendianview.h"
 
 namespace gsh
 {
