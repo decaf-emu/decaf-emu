@@ -1,5 +1,6 @@
 #include "nn_act.h"
 #include "nn_act_core.h"
+#include "nn_act_result.h"
 
 namespace nn
 {
@@ -36,6 +37,11 @@ GetTransferableId(uint32_t unk1)
    return 0;
 }
 
+nn::Result GetMiiEx(void*, uint8_t)
+{
+   return nn::act::AccountNotFound;
+}
+
 } // namespace act
 
 } // namespace nn
@@ -48,4 +54,5 @@ NN_act::registerCoreFunctions()
    RegisterKernelFunctionName("Cancel__Q2_2nn3actFv", nn::act::Cancel);
    RegisterKernelFunctionName("GetSlotNo__Q2_2nn3actFv", nn::act::GetSlotNo);
    RegisterKernelFunctionName("GetTransferableId__Q2_2nn3actFUi", nn::act::GetTransferableId);
+   RegisterKernelFunctionName("GetMiiEx__Q2_2nn3actFP12FFLStoreDataUc", nn::act::GetMiiEx);
 }

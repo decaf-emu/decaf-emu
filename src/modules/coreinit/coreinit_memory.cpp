@@ -112,6 +112,12 @@ OSGetForegroundBucketFreeArea(be_val<uint32_t> *addr, be_val<uint32_t> *size)
 }
 
 void
+OSMemoryBarrier()
+{
+   // TODO: OSMemoryBarrier
+}
+
+void
 CoreInit::registerMemoryFunctions()
 {
    RegisterKernelFunction(OSBlockMove);
@@ -119,6 +125,7 @@ CoreInit::registerMemoryFunctions()
    RegisterKernelFunction(OSGetMemBound);
    RegisterKernelFunction(OSGetForegroundBucket);
    RegisterKernelFunction(OSGetForegroundBucketFreeArea);
+   RegisterKernelFunction(OSMemoryBarrier);
    RegisterKernelFunctionName("memcpy", coreinit_memcpy);
    RegisterKernelFunctionName("memset", coreinit_memset);
    RegisterKernelFunctionName("memmove", coreinit_memmove);
