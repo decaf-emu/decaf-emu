@@ -7,7 +7,7 @@
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "system.h"
-#include "virtual_ptr.h"
+#include "utils/virtual_ptr.h"
 
 static std::string
 gGameRpx;

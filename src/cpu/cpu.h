@@ -3,32 +3,32 @@
 #include <functional>
 #include <utility>
 #include "state.h"
-#include "wfunc_ptr.h"
+#include "utils/wfunc_ptr.h"
 
 struct ThreadState;
 
 namespace cpu
 {
 
-   static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
+static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 
-   enum class JitMode {
-      Enabled,
-      Disabled,
-      Debug
-   };
+enum class JitMode {
+   Enabled,
+   Disabled,
+   Debug
+};
 
-   void setJitMode(JitMode mode);
+void setJitMode(JitMode mode);
 
-   void initialise();
-   void executeSub(ThreadState *state);
+void initialise();
+void executeSub(ThreadState *state);
 
-   typedef void (*KernelCallFn)(ThreadState *state, void *userData);
-   typedef std::pair<KernelCallFn, void*> KernelCallEntry;
-   uint32_t registerKernelCall(KernelCallEntry &entry);
-   KernelCallEntry * getKernelCall(uint32_t id);
-   
-}
+typedef void (*KernelCallFn)(ThreadState *state, void *userData);
+typedef std::pair<KernelCallFn, void*> KernelCallEntry;
+uint32_t registerKernelCall(KernelCallEntry &entry);
+KernelCallEntry * getKernelCall(uint32_t id);
+
+} // namespace cpu
 
 template<typename ReturnType, typename... Args>
 ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)

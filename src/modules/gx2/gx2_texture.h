@@ -1,8 +1,8 @@
 #pragma once
-#include "be_val.h"
-#include "gx2_surface.h"
-#include "structsize.h"
+#include "modules/gx2/gx2_surface.h"
 #include "types.h"
+#include "utils/be_val.h"
+#include "utils/structsize.h"
 
 struct GX2Sampler;
 

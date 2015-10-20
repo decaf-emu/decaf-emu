@@ -1,6 +1,5 @@
 #include "coreinit.h"
 #include "coreinit_memory.h"
-#include "memory.h"
 
 void *
 OSBlockMove(void *dst, const void *src, ppcsize_t size, BOOL flush)

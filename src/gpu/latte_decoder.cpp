@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
-#include "bitutils.h"
 #include "latte.h"
+#include "utils/bitutils.h"
 
 namespace latte
 {

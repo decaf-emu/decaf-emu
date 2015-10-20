@@ -6,15 +6,15 @@
 #include <functional>
 #include <locale>
 #include <map>
-#include "bigendianview.h"
 #include "codetests.h"
-#include "elf.h"
 #include "cpu/cpu.h"
 #include "cpu/utils.h"
 #include "cpu/jit/jit.h"
-#include "log.h"
+#include "elf.h"
 #include "mem/mem.h"
 #include "modules/coreinit/coreinit_dynload.h"
+#include "utils/bigendianview.h"
+#include "utils/log.h"
 
 namespace TargetId {
 enum {

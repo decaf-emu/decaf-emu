@@ -1,7 +1,7 @@
 #pragma once
 #include <array_view.h>
 #include <string>
-#include "bitutils.h"
+#include "utils/bitutils.h"
 
 class BigEndianView
 {

@@ -1,9 +1,9 @@
 #pragma once
 #include <cstdint>
-#include "kernelexport.h"
 #include "cpu/state.h"
+#include "kernelexport.h"
 #include "ppcinvoke.h"
-#include "util.h"
+#include "utils/type_list.h"
 
 // Kernel Function Export
 struct KernelFunction : KernelExport
@@ -41,7 +41,7 @@ struct KernelFunctionImpl : KernelFunction
    }
 };
 
-};
+} // namespace functions
 
 // Create a SystemFunction export from a function pointer
 template<typename Ret, typename... Args>
@@ -54,4 +54,4 @@ makeFunction(Ret(*fptr)(Args...))
    return func;
 }
 
-};
+}  // namespace kernel

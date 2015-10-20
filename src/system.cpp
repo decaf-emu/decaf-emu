@@ -1,13 +1,13 @@
 #include <algorithm>
 #include <functional>
+#include "cpu/cpu.h"
 #include "cpu/instructiondata.h"
 #include "kernelfunction.h"
 #include "kernelmodule.h"
 #include "mem/mem.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "system.h"
-#include "teenyheap.h"
-#include "cpu/cpu.h"
+#include "utils/teenyheap.h"
 
 System gSystem;
 

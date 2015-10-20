@@ -1,9 +1,9 @@
 #include <cfenv>
 #include <numeric>
 #include "interpreter_insreg.h"
-#include "bitutils.h"
-#include "floatutils.h"
 #include "interpreter.h"
+#include "utils/bitutils.h"
+#include "utils/floatutils.h"
 
 const int fres_expected_base[] =
 {

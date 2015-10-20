@@ -1,7 +1,7 @@
 #pragma once
-#include "bitutils.h"
 #include <ostream>
 #include <type_traits>
+#include "utils/bitutils.h"
 
 template<typename Type>
 class be_val

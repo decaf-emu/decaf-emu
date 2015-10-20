@@ -1,10 +1,10 @@
 #include <sstream>
 #include <iomanip>
-#include "bitutils.h"
 #include "disassembler.h"
 #include "instructiondata.h"
 #include "system.h"
 #include "kernelfunction.h"
+#include "utils/bitutils.h"
 
 Disassembler gDisassembler;
 
@@ -235,7 +235,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    dis.name = data->name;
    dis.instruction = data;
    dis.address = address;
-   
+
    std::list<Field> args;
 
    for (auto &field : data->write) {
@@ -282,10 +282,10 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
          }
       }
 
-      if (field == Field::aa || 
-         field == Field::lk || 
-         field == Field::oe || 
-         field == Field::rc) {
+      if (field == Field::aa ||
+          field == Field::lk ||
+          field == Field::oe ||
+          field == Field::rc) {
          continue;
       }
 

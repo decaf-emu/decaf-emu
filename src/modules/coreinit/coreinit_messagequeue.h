@@ -1,8 +1,8 @@
 #pragma once
 #include "coreinit_thread.h"
 #include "coreinit_mutex.h"
-#include "structsize.h"
-#include "virtual_ptr.h"
+#include "utils/structsize.h"
+#include "utils/virtual_ptr.h"
 
 #pragma pack(push, 1)
 

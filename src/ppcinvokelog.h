@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdio>
-#include "virtual_ptr.h"
+#include "utils/virtual_ptr.h"
 
 namespace ppctypes
 {

@@ -7,13 +7,11 @@
 #include <string_view.h>
 #include <vector>
 #include <zlib.h>
-#include "bigendianview.h"
+#include "cpu/instructiondata.h"
 #include "elf.h"
 #include "filesystem/filesystem.h"
-#include "cpu/instructiondata.h"
 #include "kernelmodule.h"
 #include "loader.h"
-#include "log.h"
 #include "mem/mem.h"
 #include "modules/coreinit/coreinit_dynload.h"
 #include "modules/coreinit/coreinit_memory.h"
@@ -21,8 +19,11 @@
 #include "system.h"
 #include "types.h"
 #include "usermodule.h"
-#include "util.h"
-#include "teenyheap.h"
+#include "utils/align.h"
+#include "utils/bigendianview.h"
+#include "utils/log.h"
+#include "utils/strutils.h"
+#include "utils/teenyheap.h"
 
 Loader gLoader;
 using TrampolineMap = std::map<ppcaddr_t, ppcaddr_t>;
@@ -45,12 +46,12 @@ public:
       get(size_t size, uint32_t alignment = 4)
    {
       // Ensure section alignment
-      auto alignOffset = alignUp(mPtr, alignment) - mPtr;
+      auto alignOffset = align_up(mPtr, alignment) - mPtr;
       size += alignOffset;
 
       // Double-check alignment
       auto ptrOut = mPtr + alignOffset;
-      assert(alignUp(ptrOut, alignment) == ptrOut);
+      assert(align_up(ptrOut, alignment) == ptrOut);
 
       // Make sure we have room
       assert(mPtr + size <= mEnd);

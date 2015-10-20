@@ -8,7 +8,7 @@
 #include "modules/gx2/gx2_debug.h"
 #include "gpu/latte.h"
 #include "gpu/hlsl/hlsl.h"
-#include "crc32.h"
+#include "utils/crc32.h"
 
 class DXPipelineMgr {
 public:

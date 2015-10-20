@@ -1,7 +1,7 @@
 #pragma once
-#include "be_val.h"
-#include "virtual_ptr.h"
-#include "wfunc_ptr.h"
+#include "utils/be_val.h"
+#include "utils/virtual_ptr.h"
+#include "utils/wfunc_ptr.h"
 
 #define GHS_FOPEN_MAX 0x14
 

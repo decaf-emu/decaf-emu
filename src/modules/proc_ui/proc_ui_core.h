@@ -1,6 +1,6 @@
 #pragma once
 #include "types.h"
-#include "wfunc_ptr.h"
+#include "utils/wfunc_ptr.h"
 
 // Unknown parameters.
 using ProcUISaveCallback = wfunc_ptr<void>;

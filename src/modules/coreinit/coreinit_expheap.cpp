@@ -2,7 +2,8 @@
 #include "coreinit_expheap.h"
 #include "mem/mem.h"
 #include "system.h"
-#include "virtual_ptr.h"
+#include "utils/align.h"
+#include "utils/virtual_ptr.h"
 
 #pragma pack(push, 1)
 
@@ -294,7 +295,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
    }
 
    // Create a new used block
-   auto aligned = alignUp(base + static_cast<uint32_t>(sizeof(ExpandedHeapBlock)), alignment);
+   auto aligned = align_up(base + static_cast<uint32_t>(sizeof(ExpandedHeapBlock)), alignment);
    usedBlock = make_virtual_ptr<ExpandedHeapBlock>(aligned - static_cast<uint32_t>(sizeof(ExpandedHeapBlock)));
    usedBlock->addr = base;
    usedBlock->size = size;

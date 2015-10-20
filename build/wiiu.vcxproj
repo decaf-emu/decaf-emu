@@ -111,7 +111,6 @@
     <ClCompile Include="..\src\cpu\jit\jit_loadstore.cpp" />
     <ClCompile Include="..\src\cpu\jit\jit_pairedsingle.cpp" />
     <ClCompile Include="..\src\cpu\jit\jit_system.cpp" />
-    <ClCompile Include="..\src\crc32.cpp" />
     <ClCompile Include="..\src\debugcontrol.cpp" />
     <ClCompile Include="..\src\debugger.cpp" />
     <ClCompile Include="..\src\debugnet.cpp" />
@@ -226,14 +225,10 @@
     <ClCompile Include="..\src\system.cpp" />
     <ClCompile Include="..\src\trace.cpp" />
     <ClCompile Include="..\src\memory_translate.cpp" />
-    <ClCompile Include="..\src\wfunc_ptr.cpp" />
+    <ClCompile Include="..\src\utils\crc32.cpp" />
+    <ClCompile Include="..\src\utils\wfunc_ptr.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\be_data.h" />
-    <ClInclude Include="..\src\be_val.h" />
-    <ClInclude Include="..\src\be_vec.h" />
-    <ClInclude Include="..\src\bigendianview.h" />
-    <ClInclude Include="..\src\bitutils.h" />
     <ClInclude Include="..\src\codetests.h" />
     <ClInclude Include="..\src\cpu\cpu.h" />
     <ClInclude Include="..\src\cpu\disassembler.h" />
@@ -268,7 +263,6 @@
     <ClInclude Include="..\src\filesystem\filesystem_win_file.h" />
     <ClInclude Include="..\src\filesystem\filesystem_win_folder.h" />
     <ClInclude Include="..\src\filesystem\filesystem_win_path.h" />
-    <ClInclude Include="..\src\floatutils.h" />
     <ClInclude Include="..\src\fuzztests.h" />
     <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
@@ -314,7 +308,6 @@
     <ClInclude Include="..\src\ppcinvokelog.h" />
     <ClInclude Include="..\src\ppcinvokeresult.h" />
     <ClInclude Include="..\src\loader.h" />
-    <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_alarm.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_core.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_device.h" />
@@ -347,8 +340,6 @@
     <ClInclude Include="..\src\ppctypes.h" />
     <ClInclude Include="..\src\processor.h" />
     <ClInclude Include="..\src\statedbg.h" />
-    <ClInclude Include="..\src\strutils.h" />
-    <ClInclude Include="..\src\teenyheap.h" />
     <ClInclude Include="..\src\trace.h" />
     <ClInclude Include="..\src\types.h" />
     <ClInclude Include="..\src\usermodule.h" />
@@ -386,10 +377,21 @@
     <ClInclude Include="..\src\kernelexport.h" />
     <ClInclude Include="..\src\kernelfunction.h" />
     <ClInclude Include="..\src\kernelmodule.h" />
-    <ClInclude Include="..\src\structsize.h" />
-    <ClInclude Include="..\src\util.h" />
-    <ClInclude Include="..\src\virtual_ptr.h" />
-    <ClInclude Include="..\src\wfunc_ptr.h" />
+    <ClInclude Include="..\src\utils\be_data.h" />
+    <ClInclude Include="..\src\utils\be_val.h" />
+    <ClInclude Include="..\src\utils\be_vec.h" />
+    <ClInclude Include="..\src\utils\bigendianview.h" />
+    <ClInclude Include="..\src\utils\bitutils.h" />
+    <ClInclude Include="..\src\utils\crc32.h" />
+    <ClInclude Include="..\src\utils\floatutils.h" />
+    <ClInclude Include="..\src\utils\log.h" />
+    <ClInclude Include="..\src\utils\structsize.h" />
+    <ClInclude Include="..\src\utils\strutils.h" />
+    <ClInclude Include="..\src\utils\teenyheap.h" />
+    <ClInclude Include="..\src\utils\align.h" />
+    <ClInclude Include="..\src\utils\type_list.h" />
+    <ClInclude Include="..\src\utils\virtual_ptr.h" />
+    <ClInclude Include="..\src\utils\wfunc_ptr.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

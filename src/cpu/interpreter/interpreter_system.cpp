@@ -1,10 +1,10 @@
 #include <cassert>
+#include "cpu/cpu.h"
 #include "interpreter_insreg.h"
-#include "bitutils.h"
-#include "util.h"
-#include "log.h"
 #include "memory_translate.h"
-#include "../cpu.h"
+#include "utils/bitutils.h"
+#include "utils/align.h"
+#include "utils/log.h"
 
 static SprEncoding
 decodeSPR(Instruction instr)
@@ -75,7 +75,7 @@ dcbz(ThreadState *state, Instruction instr)
    }
 
    addr += state->gpr[instr.rB];
-   addr = alignDown(addr, 32);
+   addr = align_down(addr, 32);
    memset(memory_translate(addr), 0, 32);
 }
 

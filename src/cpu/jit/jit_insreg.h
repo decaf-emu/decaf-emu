@@ -1,30 +1,32 @@
 #pragma once
-#include "../state.h"
-#include "../instruction.h"
-#include "../instructionid.h"
+#include "cpu/state.h"
+#include "cpu/instruction.h"
+#include "cpu/instructionid.h"
 #include "jit_internal.h"
 
 namespace cpu
 {
+
 namespace jit
 {
 
-   using jitinstrfptr_t = bool(*)(PPCEmuAssembler&, Instruction);
+using jitinstrfptr_t = bool(*)(PPCEmuAssembler&, Instruction);
 
-   bool hasInstruction(InstructionID instrId);
-   void registerInstruction(InstructionID id, jitinstrfptr_t fptr);
-   void registerBranchInstructions();
-   void registerConditionInstructions();
-   void registerFloatInstructions();
-   void registerIntegerInstructions();
-   void registerLoadStoreInstructions();
-   void registerPairedInstructions();
-   void registerSystemInstructions();
+bool hasInstruction(InstructionID instrId);
+void registerInstruction(InstructionID id, jitinstrfptr_t fptr);
+void registerBranchInstructions();
+void registerConditionInstructions();
+void registerFloatInstructions();
+void registerIntegerInstructions();
+void registerLoadStoreInstructions();
+void registerPairedInstructions();
+void registerSystemInstructions();
 
-   bool jit_fallback(PPCEmuAssembler& a, Instruction instr);
+bool jit_fallback(PPCEmuAssembler& a, Instruction instr);
 
-}
-}
+} // namespace jit
+
+} // namespace cpu
 
 #undef RegisterInstruction
 #undef RegisterInstructionFn

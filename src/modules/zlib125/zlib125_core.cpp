@@ -3,8 +3,8 @@
 #include "modules/coreinit/coreinit_memheap.h"
 #include "memory_translate.h"
 #include "processor.h"
-#include "virtual_ptr.h"
-#include "wfunc_ptr.h"
+#include "utils/virtual_ptr.h"
+#include "utils/wfunc_ptr.h"
 #include "zlib125.h"
 
 static std::map<uint32_t, z_stream>

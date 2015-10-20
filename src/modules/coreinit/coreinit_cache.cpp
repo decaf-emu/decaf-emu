@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_cache.h"
-#include "util.h"
+#include "utils/align.h"
 
 void
 DCInvalidateRange(void *addr, uint32_t size)
@@ -36,8 +36,8 @@ void
 DCZeroRange(void *addr, uint32_t size)
 {
    // TODO: DCZeroRange check align direction is correct!
-   size = alignDown(size, 32);
-   addr = alignUp(addr, 32);
+   size = align_down(size, 32);
+   addr = align_up(addr, 32);
    memset(addr, 0, size);
 }
 

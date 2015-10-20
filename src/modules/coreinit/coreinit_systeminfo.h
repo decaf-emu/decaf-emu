@@ -1,7 +1,7 @@
 #pragma once
-#include "be_val.h"
 #include "coreinit_time.h"
-#include "structsize.h"
+#include "utils/be_val.h"
+#include "utils/structsize.h"
 
 #pragma pack(push, 1)
 

@@ -3,16 +3,16 @@
 #include "fuzztests.h"
 #include "cpu/instructionid.h"
 #include "cpu/instructiondata.h"
-#include "cpu/utils.h"
-#include "log.h"
-#include "cpu/state.h"
-#include "mem/mem.h"
-#include "bitutils.h"
-#include "trace.h"
 #include "cpu/interpreter/interpreter.h"
-#include "cpu/jit/jit.h"
 #include "cpu/interpreter/interpreter_insreg.h"
+#include "cpu/jit/jit.h"
 #include "cpu/jit/jit_insreg.h"
+#include "cpu/state.h"
+#include "cpu/utils.h"
+#include "mem/mem.h"
+#include "trace.h"
+#include "utils/bitutils.h"
+#include "utils/log.h"
 
 template<size_t SIZE, class T> inline size_t array_size(T (&arr)[SIZE]) {
    return SIZE;
@@ -500,7 +500,7 @@ executeInstrTest(uint32_t test_seed)
       TraceFieldValue iVal, jVal;
       saveStateField(&iState, field, iVal);
       saveStateField(&jState, field, jVal);
-      
+
       if (!compareStateField(field, iVal, jVal)) {
          gLog->warn("{}({:08x}) :: JIT does not match Interp on {}", data->name, test_seed, getStateFieldName(field));
       }

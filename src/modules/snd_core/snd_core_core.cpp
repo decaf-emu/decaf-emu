@@ -1,5 +1,5 @@
 #include "snd_core.h"
-#include "wfunc_ptr.h"
+#include "utils/wfunc_ptr.h"
 
 void
 AXInit()

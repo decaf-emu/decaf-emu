@@ -1,7 +1,8 @@
 #pragma once
-#include "be_val.h"
 #include "coreinit_threadqueue.h"
-#include "virtual_ptr.h"
+#include "utils/be_val.h"
+#include "utils/structsize.h"
+#include "utils/virtual_ptr.h"
 
 #pragma pack(push, 1)
 

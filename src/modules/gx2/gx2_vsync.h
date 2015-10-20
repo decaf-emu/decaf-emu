@@ -1,6 +1,6 @@
 #pragma once
 #include "modules/coreinit/coreinit_time.h"
-#include "wfunc_ptr.h"
+#include "utils/wfunc_ptr.h"
 
 extern OSTime
 gLastVsync;

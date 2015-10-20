@@ -3,11 +3,13 @@
 
 namespace cpu
 {
+
 namespace jit
 {
 
-   void
-   updateFloatConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& tmp, const asmjit::X86GpReg& tmp2);
+void
+updateFloatConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& tmp, const asmjit::X86GpReg& tmp2);
 
-}
-}
+} // namespace jit
+
+} // namespace cpu

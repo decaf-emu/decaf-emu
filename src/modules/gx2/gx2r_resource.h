@@ -1,7 +1,7 @@
 #pragma once
-#include "be_val.h"
 #include "types.h"
-#include "wfunc_ptr.h"
+#include "utils/be_val.h"
+#include "utils/wfunc_ptr.h"
 
 // BindFlagsToString__20_GX2RResourceTrackerSF18_GX2RResourceFlags
 // UsageFlagsToString__20_GX2RResourceTrackerSF18_GX2RResourceFlags

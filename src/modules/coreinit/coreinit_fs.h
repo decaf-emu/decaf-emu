@@ -1,7 +1,7 @@
 #pragma once
-#include "be_val.h"
-#include "structsize.h"
-#include "wfunc_ptr.h"
+#include "utils/be_val.h"
+#include "utils/structsize.h"
+#include "utils/wfunc_ptr.h"
 
 // Thank you cafe_tank for FS_STATUS_x
 enum class FSStatus : int32_t

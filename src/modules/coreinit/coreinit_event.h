@@ -1,9 +1,9 @@
 #pragma once
-#include "be_val.h"
 #include "coreinit_time.h"
 #include "coreinit_threadqueue.h"
-#include "structsize.h"
-#include "virtual_ptr.h"
+#include "utils/be_val.h"
+#include "utils/structsize.h"
+#include "utils/virtual_ptr.h"
 
 enum class EventMode : uint32_t
 {

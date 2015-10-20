@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "interpreter_insreg.h"
-#include "bitutils.h"
 #include "mem/mem.h"
+#include "utils/bitutils.h"
 
 // Load
 enum LoadFlags

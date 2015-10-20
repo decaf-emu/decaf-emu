@@ -11,12 +11,12 @@
 #include "debugger.h"
 #include "cpu/disassembler.h"
 #include "cpu/instructiondata.h"
-#include "log.h"
 #include "mem/mem.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "processor.h"
 #include "system.h"
 #include "trace.h"
+#include "utils/log.h"
 
 DebugNet
 gDebugNet;

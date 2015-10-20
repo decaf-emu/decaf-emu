@@ -1,12 +1,12 @@
-#include "latte_shadir.h"
-#include "latte.h"
-#include "bitutils.h"
 #include <cassert>
 #include <set>
 #include <stack>
 #include <functional>
 #include <algorithm>
 #include <iostream>
+#include "latte_shadir.h"
+#include "latte.h"
+#include "utils/bitutils.h"
 
 namespace latte
 {

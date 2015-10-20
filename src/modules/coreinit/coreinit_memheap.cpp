@@ -6,8 +6,8 @@
 #include "coreinit_frameheap.h"
 #include "memory_translate.h"
 #include "system.h"
-#include "teenyheap.h"
-#include "virtual_ptr.h"
+#include "utils/teenyheap.h"
+#include "utils/virtual_ptr.h"
 
 be_wfunc_ptr<void*, uint32_t>*
 pMEMAllocFromDefaultHeap;

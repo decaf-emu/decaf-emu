@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_debug.h"
-#include "log.h"
+#include "utils/log.h"
 
 BOOL
 OSIsDebuggerPresent()

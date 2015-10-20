@@ -1,6 +1,6 @@
 #pragma once
 #include "coreinit_thread.h"
-#include "wfunc_ptr.h"
+#include "utils/wfunc_ptr.h"
 
 // From WUP-P-ARKE
 enum class ExceptionType : uint32_t

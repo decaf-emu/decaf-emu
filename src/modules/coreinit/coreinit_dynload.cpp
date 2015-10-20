@@ -1,5 +1,4 @@
 #include <algorithm>
-#include "be_data.h"
 #include "coreinit.h"
 #include "coreinit_dynload.h"
 #include "coreinit_memheap.h"
@@ -7,7 +6,10 @@
 #include "cpu/cpu.h"
 #include "memory_translate.h"
 #include "system.h"
-#include "virtual_ptr.h"
+#include "utils/be_data.h"
+#include "utils/be_val.h"
+#include "utils/virtual_ptr.h"
+#include "utils/wfunc_ptr.h"
 
 static wfunc_ptr<int, int, int, be_val<uint32_t>*>
 pOSDynLoad_MemAlloc;

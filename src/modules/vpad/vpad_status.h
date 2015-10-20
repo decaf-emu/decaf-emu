@@ -1,8 +1,8 @@
 #pragma once
-#include "be_val.h"
-#include "be_vec.h"
-#include "structsize.h"
 #include "types.h"
+#include "utils/be_val.h"
+#include "utils/be_vec.h"
+#include "utils/structsize.h"
 
 namespace Buttons
 {

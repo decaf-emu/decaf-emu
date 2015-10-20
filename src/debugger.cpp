@@ -7,11 +7,11 @@
 #include <atomic>
 #include <iostream>
 #include "debugger.h"
-#include "log.h"
-#include "processor.h"
 #include "debugmsg.h"
 #include "debugnet.h"
 #include "debugcontrol.h"
+#include "processor.h"
+#include "utils/log.h"
 
 static const bool FORCE_DEBUGGER_ON = false;
 
@@ -66,7 +66,7 @@ Debugger::handleMessage(DebugMessage *msg)
 
    case DebugMessageType::PreLaunch: {
       gDebugControl.waitForAllPaused();
-      
+
       gLog->debug("Prelaunch Occured");
       gDebugNet.writePrelaunch();
       break;

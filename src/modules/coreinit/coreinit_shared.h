@@ -1,6 +1,6 @@
 #pragma once
-#include "be_val.h"
-#include "virtual_ptr.h"
+#include "utils/be_val.h"
+#include "utils/virtual_ptr.h"
 
 namespace OSSharedDataType
 {

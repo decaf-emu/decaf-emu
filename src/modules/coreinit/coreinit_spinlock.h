@@ -1,8 +1,8 @@
 #pragma once
 #include <atomic>
-#include "be_val.h"
 #include "coreinit_thread.h"
-#include "structsize.h"
+#include "utils/be_val.h"
+#include "utils/structsize.h"
 
 #pragma pack(push, 1)
 

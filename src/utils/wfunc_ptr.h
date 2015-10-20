@@ -1,7 +1,7 @@
 #pragma once
 #include <ostream>
 #include "ppctypes.h"
-#include "virtual_ptr.h"
+#include "utils/virtual_ptr.h"
 
 ThreadState *GetCurrentFiberState();
 

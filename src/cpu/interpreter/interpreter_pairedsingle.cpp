@@ -1,7 +1,7 @@
 #include <cmath>
 #include "interpreter_insreg.h"
-#include "floatutils.h"
 #include "interpreter_float.h"
+#include "utils/floatutils.h"
 
 // Absolute
 static void

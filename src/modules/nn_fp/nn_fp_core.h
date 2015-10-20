@@ -1,7 +1,7 @@
 #pragma once
-#include "be_val.h"
-#include "types.h"
 #include "modules/nn_result.h"
+#include "types.h"
+#include "utils/be_val.h"
 
 namespace nn
 {

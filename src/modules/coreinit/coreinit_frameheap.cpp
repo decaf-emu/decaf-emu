@@ -4,7 +4,8 @@
 #include "mem/mem.h"
 #include "memory_translate.h"
 #include "system.h"
-#include "virtual_ptr.h"
+#include "utils/align.h"
+#include "utils/virtual_ptr.h"
 
 #pragma pack(push, 1)
 
@@ -82,7 +83,7 @@ MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment)
    }
 
    // Align size
-   size = alignUp(size, alignment);
+   size = align_up(size, alignment);
 
    // Ensure there is sufficient space on the heap
    if (heap->state->top - heap->state->bottom < size) {
@@ -99,7 +100,7 @@ MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment)
    }
 
    // Align offset
-   offset = alignUp(offset, alignment);
+   offset = align_up(offset, alignment);
    return make_virtual_ptr<void>(offset);
 }
 
@@ -225,8 +226,8 @@ uint32_t
 MEMGetAllocatableSizeForFrmHeapEx(FrameHeap *heap, int alignment)
 {
    ScopedSpinLock lock(&heap->lock);
-   auto bottom = alignUp(heap->state->bottom, alignment);
-   auto top = alignDown(heap->state->top, alignment);
+   auto bottom = align_up(heap->state->bottom, alignment);
+   auto top = align_down(heap->state->top, alignment);
    return top - bottom;
 }
 

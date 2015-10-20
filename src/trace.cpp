@@ -1,13 +1,12 @@
 #include "cpu/disassembler.h"
 #include "cpu/instruction.h"
 #include "cpu/instructiondata.h"
-#include "log.h"
-#include "memory.h"
 #include "cpu/state.h"
-#include "trace.h"
-#include "system.h"
 #include "kernelfunction.h"
 #include "statedbg.h"
+#include "system.h"
+#include "trace.h"
+#include "utils/log.h"
 
 //#define TRACE_VERIFICATION
 

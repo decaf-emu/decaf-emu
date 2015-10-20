@@ -3,7 +3,7 @@
 #include "coreinit.h"
 #include "coreinit_memheap.h"
 #include "coreinit_shared.h"
-#include "virtual_ptr.h"
+#include "utils/virtual_ptr.h"
 
 struct FontData
 {

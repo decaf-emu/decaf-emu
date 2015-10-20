@@ -1,9 +1,9 @@
-#include "bigendianview.h"
-#include "elf.h"
-#include "log.h"
-#include <zlib.h>
 #include <cassert>
 #include <vector>
+#include <zlib.h>
+#include "elf.h"
+#include "utils/bigendianview.h"
+#include "utils/log.h"
 
 const unsigned elf::Header::Magic;
 
@@ -62,6 +62,7 @@ readHeader(BigEndianView &in, Header &header)
    return true;
 }
 
+
 bool
 readSectionHeader(BigEndianView &in, SectionHeader &shdr)
 {
@@ -78,6 +79,7 @@ readSectionHeader(BigEndianView &in, SectionHeader &shdr)
    return true;
 }
 
+
 bool
 readSymbol(BigEndianView &in, Symbol &sym)
 {
@@ -90,6 +92,7 @@ readSymbol(BigEndianView &in, Symbol &sym)
    return true;
 }
 
+
 bool
 readRelocationAddend(BigEndianView &in, Rela &rela)
 {
@@ -98,6 +101,7 @@ readRelocationAddend(BigEndianView &in, Rela &rela)
    in.read(rela.addend);
    return true;
 }
+
 
 bool
 readFileInfo(BigEndianView &in, elf::FileInfo &info)
@@ -129,6 +133,7 @@ readFileInfo(BigEndianView &in, elf::FileInfo &info)
    return true;
 }
 
+
 bool
 readSectionHeaders(BigEndianView &in, Header &header, std::vector<XSection>& sections)
 {
@@ -144,6 +149,7 @@ readSectionHeaders(BigEndianView &in, Header &header, std::vector<XSection>& sec
 
    return true;
 }
+
 
 bool
 readSectionData(BigEndianView &in, const SectionHeader& header, std::vector<uint8_t> &data)
@@ -195,6 +201,7 @@ readSectionData(BigEndianView &in, const SectionHeader& header, std::vector<uint
 
    return data.size() > 0;
 }
+
 
 bool
 readSections(BigEndianView &in, Header &header, std::vector<Section> &sections)
@@ -257,4 +264,4 @@ readSections(BigEndianView &in, Header &header, std::vector<Section> &sections)
    return true;
 }
 
-}
+} // namespace elf

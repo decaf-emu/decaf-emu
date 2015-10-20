@@ -2,7 +2,7 @@
 #include <Windows.h>
 #include <type_traits>
 #include "interpreter_insreg.h"
-#include "bitutils.h"
+#include "utils/bitutils.h"
 
 // Update cr0 with value
 static void

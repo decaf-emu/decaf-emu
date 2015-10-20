@@ -1,8 +1,7 @@
 #pragma once
-#include "be_val.h"
-#include "structsize.h"
-#include "types.h"
 #include "modules/nn_result.h"
+#include "types.h"
+#include "utils/structsize.h"
 
 namespace nn
 {

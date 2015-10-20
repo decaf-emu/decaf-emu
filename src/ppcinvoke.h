@@ -1,9 +1,9 @@
 #pragma once
-#include "log.h"
 #include "ppcinvokeargs.h"
 #include "ppcinvokeresult.h"
 #include "ppcinvokelog.h"
-#include "util.h"
+#include "utils/log.h"
+#include "utils/type_list.h"
 
 namespace ppctypes
 {

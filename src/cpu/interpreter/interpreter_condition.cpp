@@ -1,6 +1,6 @@
 #include "interpreter_insreg.h"
-#include "bitutils.h"
-#include "floatutils.h"
+#include "utils/bitutils.h"
+#include "utils/floatutils.h"
 
 static std::pair<uint32_t, uint32_t>
 getCRFRange(uint32_t field)

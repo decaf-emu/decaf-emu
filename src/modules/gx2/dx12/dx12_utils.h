@@ -1,6 +1,6 @@
 #pragma once
 #include "dx12_state.h"
-#include "../gx2_surface.h"
+#include "modules/gx2/gx2_surface.h"
 
 static const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Format format) {
    switch (format) {

@@ -1,8 +1,8 @@
 #pragma once
-#include "be_val.h"
-#include "gx2_surface.h"
 #include "modules/coreinit/coreinit_time.h"
+#include "modules/gx2/gx2_surface.h"
 #include "types.h"
+#include "utils/be_val.h"
 
 struct GX2Texture;
 struct GX2ColorBuffer;

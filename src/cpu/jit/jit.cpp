@@ -1,11 +1,11 @@
 #include <vector>
+#include "cpu/instructiondata.h"
 #include "jit.h"
 #include "jit_internal.h"
 #include "jit_insreg.h"
-#include "../../mem/mem.h"
-#include "../instructiondata.h"
-#include "log.h"
-#include "bitutils.h"
+#include "mem/mem.h"
+#include "utils/log.h"
+#include "utils/bitutils.h"
 
 namespace cpu
 {

@@ -1,6 +1,6 @@
 #include <cassert>
-#include "bitutils.h"
 #include "instructiondata.h"
+#include "utils/bitutils.h"
 
 InstructionTable gInstructionTable;
 

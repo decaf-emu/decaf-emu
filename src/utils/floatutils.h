@@ -1,6 +1,6 @@
 #pragma once
 #include <numeric>
-#include "bitutils.h"
+#include "utils/bitutils.h"
 
 union FloatBitsSingle
 {

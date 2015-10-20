@@ -1,14 +1,14 @@
 #include <algorithm>
-#include "platform.h"
 #include "cpu/cpu.h"
-#include "log.h"
-#include "processor.h"
 #include "cpu/state.h"
+#include "debugcontrol.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
+#include "platform.h"
+#include "processor.h"
 #include "ppcinvoke.h"
-#include "debugcontrol.h"
+#include "utils/log.h"
 
 Processor
 gProcessor { CoreCount };

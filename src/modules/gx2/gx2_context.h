@@ -1,7 +1,7 @@
 #pragma once
-#include "be_val.h"
-#include "gx2_displaylist.h"
-#include "structsize.h"
+#include "modules/gx2/gx2_displaylist.h"
+#include "utils/be_val.h"
+#include "utils/structsize.h"
 #include "types.h"
 
 namespace GX2InvalidateMode

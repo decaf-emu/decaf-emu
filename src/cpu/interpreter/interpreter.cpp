@@ -1,11 +1,11 @@
-#include "interpreter.h"
-#include "interpreter_insreg.h"
-#include "../instructiondata.h"
-#include "../../trace.h"
-#include "../../processor.h"
-#include "../../debugcontrol.h"
-#include "../../log.h"
+#include "cpu/instructiondata.h"
+#include "cpu/interpreter/interpreter.h"
+#include "cpu/interpreter/interpreter_insreg.h"
+#include "debugcontrol.h"
 #include "mem/mem.h"
+#include "processor.h"
+#include "trace.h"
+#include "utils/log.h"
 
 namespace cpu
 {

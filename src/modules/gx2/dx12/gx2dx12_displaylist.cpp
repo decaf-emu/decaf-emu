@@ -2,7 +2,7 @@
 #ifdef GX2_DX12
 
 #include "modules/gx2/gx2_displaylist.h"
-#include "virtual_ptr.h"
+#include "utils/virtual_ptr.h"
 
 static virtual_ptr<GX2DisplayList>
 gCurrentDisplayList = nullptr;

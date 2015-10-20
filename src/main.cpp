@@ -1,15 +1,14 @@
 #include <pugixml.hpp>
 #include <docopt.h>
-#include "bitutils.h"
+#include "utils/bitutils.h"
 #include "codetests.h"
+#include "cpu/cpu.h"
+#include "debugger.h"
 #include "fuzztests.h"
 #include "filesystem/filesystem.h"
-
-#include "cpu/cpu.h"
 #include "processor.h"
 #include "loader.h"
-#include "log.h"
-#include "memory.h"
+#include "mem/mem.h"
 #include "modules/gameloader/gameloader.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_core.h"
@@ -33,9 +32,8 @@
 #include "usermodule.h"
 #include "platform.h"
 #include "trace.h"
-#include "teenyheap.h"
-#include "debugger.h"
-#include "mem/mem.h"
+#include "utils/log.h"
+#include "utils/teenyheap.h"
 
 std::shared_ptr<spdlog::logger>
 gLog;

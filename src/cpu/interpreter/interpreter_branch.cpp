@@ -1,5 +1,5 @@
 #include "interpreter_insreg.h"
-#include "bitutils.h"
+#include "utils/bitutils.h"
 
 static void
 b(ThreadState *state, Instruction instr)

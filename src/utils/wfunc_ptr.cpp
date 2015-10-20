@@ -1,6 +1,8 @@
-#include "wfunc_ptr.h"
 #include "processor.h"
+#include "utils/wfunc_ptr.h"
 
-ThreadState *GetCurrentFiberState() {
+ThreadState *
+GetCurrentFiberState()
+{
    return &gProcessor.getCurrentFiber()->state;
 }

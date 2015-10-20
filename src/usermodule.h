@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "wfunc_ptr.h"
+#include "utils/wfunc_ptr.h"
 
 class KernelModule;
 struct KernelFunction;
@@ -113,7 +113,7 @@ struct UserModule
    std::map<std::string, Section *> sectionMap;
    uint32_t sdaBase;
    uint32_t sda2Base;
-   
+
    inline uint32_t
    findExport(const std::string &name) {
       return 0;
