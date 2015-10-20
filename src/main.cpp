@@ -6,6 +6,7 @@
 #include "debugger.h"
 #include "fuzztests.h"
 #include "filesystem/filesystem.h"
+#include "hardwaretests.h"
 #include "processor.h"
 #include "loader.h"
 #include "mem/mem.h"
@@ -50,6 +51,7 @@ Usage:
    wiiu play [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] <game directory>
    wiiu test [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
    wiiu fuzz
+   wiiu hwtest [--logfile]
    wiiu (-h | --help)
    wiiu --version
 
@@ -95,6 +97,8 @@ int main(int argc, char **argv)
          file = getGameName(args["<game directory>"].asString());
       } else if (args["test"].asBool()) {
          file = "tests";
+      } else if (args["hwtest"].asBool()) {
+         file = "hwtest";
       }
 
       sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(file, "txt", 23, 59, true));
@@ -123,6 +127,9 @@ int main(int argc, char **argv)
    } else if (args["fuzz"].asBool()) {
       gLog->set_pattern("%v");
       result = fuzzTest();
+   } else if (args["hwtest"].asBool()) {
+      gLog->set_pattern("%v");
+      result = hwtest::runTests();
    } else if (args["test"].asBool()) {
       gLog->set_pattern("%v");
       result = test(args["--as"].asString(), args["<test directory>"].asString());

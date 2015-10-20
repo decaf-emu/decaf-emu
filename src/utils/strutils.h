@@ -53,6 +53,17 @@ join_string(IteratorType begin, IteratorType end, char delim, std::string &out)
    }
 }
 
+// Returns true if source begins with prefix
+static inline bool
+begins_with(const std::string &source, const std::string &prefix)
+{
+   if (prefix.size() > source.size()) {
+      return false;
+   } else {
+      return std::equal(prefix.begin(), prefix.end(), source.begin());
+   }
+}
+
 // Returns true if source ends with suffix
 static inline bool
 ends_with(const std::string &source, const std::string &suffix)
