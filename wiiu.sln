@@ -26,6 +26,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gsh-disassemble", "build\gsh-disassemble.vcxproj", "{07C14E4C-41E6-4359-934E-7FA06D9800C1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hardware-test-server", "build\hardware-test-server.vcxproj", "{CD2AFBB6-5A6C-4FC6-B76B-F618193AEFC8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{01016351-42D4-4D49-A433-00CF4E1F7A8C} = {01016351-42D4-4D49-A433-00CF4E1F7A8C}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hardware-test-generator", "build\hardware-test-generator.vcxproj", "{CDFC321E-07C6-44E1-B145-02749935DDFE}"
 EndProject
