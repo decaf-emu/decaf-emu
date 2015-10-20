@@ -165,6 +165,16 @@ fadd(ThreadState *state, Instruction instr)
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
    d = a + b;
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         d = make_quiet(a);
+      } else if (is_nan(b)) {
+         d = make_quiet(b);
+      } else {
+         d = make_nan<double>();
+      }
+   }
+
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
@@ -185,7 +195,16 @@ fadds(ThreadState *state, Instruction instr)
    state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
-   d = (float)(a + b);
+   d = static_cast<float>(a + b);
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         d = make_quiet(static_cast<float>(a));
+      } else if (is_nan(b)) {
+         d = make_quiet(static_cast<float>(b));
+      } else {
+         d = make_nan<double>();
+      }
+   }
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
@@ -616,7 +635,7 @@ fctiw(ThreadState *state, Instruction instr)
 
    updateFPSCR(state);
    state->fpr[instr.frD].iw0 = bi;
-   state->fpr[instr.frD].iw1 = 0xFFF80000;
+   state->fpr[instr.frD].iw1 = 0xFFF80000 | (is_negative_zero(b) ? 1 : 0);
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -647,7 +666,7 @@ fctiwz(ThreadState *state, Instruction instr)
 
    updateFPSCR(state);
    state->fpr[instr.frD].iw0 = bi;
-   state->fpr[instr.frD].iw1 = 0xFFF80000;
+   state->fpr[instr.frD].iw1 = 0xFFF80000 | (is_negative_zero(b) ? 1 : 0);
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
