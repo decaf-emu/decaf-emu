@@ -122,11 +122,13 @@ private:
       HRESULT hr;
       hr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, &errorBlob);
       if (FAILED(hr)) {
+         gLog->warn("Shader Source:\n{}\n", hlsl);
          gLog->warn("Vertex Shader Compilation Failed:\n{}", (char*)errorBlob->GetBufferPointer());
          throw;
       }
       hr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, &errorBlob);
       if (FAILED(hr)) {
+         gLog->warn("Shader Source:\n{}\n", hlsl);
          gLog->warn("Pixel Shader Compilation Failed:\n{}", (char*)errorBlob->GetBufferPointer());
          throw;
       }
