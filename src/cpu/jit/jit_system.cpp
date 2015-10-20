@@ -8,6 +8,7 @@ namespace cpu
 
 namespace jit
 {
+
 static SprEncoding
 decodeSPR(Instruction instr)
 {
@@ -50,28 +51,28 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
    case SprEncoding::CTR:
       a.mov(a.eax, a.ppcctr);
       break;
-   case SprEncoding::GQR0:
+   case SprEncoding::UGQR0:
       a.mov(a.eax, a.ppcgpr[0]);
       break;
-   case SprEncoding::GQR1:
+   case SprEncoding::UGQR1:
       a.mov(a.eax, a.ppcgpr[1]);
       break;
-   case SprEncoding::GQR2:
+   case SprEncoding::UGQR2:
       a.mov(a.eax, a.ppcgpr[2]);
       break;
-   case SprEncoding::GQR3:
+   case SprEncoding::UGQR3:
       a.mov(a.eax, a.ppcgpr[3]);
       break;
-   case SprEncoding::GQR4:
+   case SprEncoding::UGQR4:
       a.mov(a.eax, a.ppcgpr[4]);
       break;
-   case SprEncoding::GQR5:
+   case SprEncoding::UGQR5:
       a.mov(a.eax, a.ppcgpr[5]);
       break;
-   case SprEncoding::GQR6:
+   case SprEncoding::UGQR6:
       a.mov(a.eax, a.ppcgpr[6]);
       break;
-   case SprEncoding::GQR7:
+   case SprEncoding::UGQR7:
       a.mov(a.eax, a.ppcgpr[7]);
       break;
    default:
@@ -99,28 +100,28 @@ mtspr(PPCEmuAssembler& a, Instruction instr)
    case SprEncoding::CTR:
       a.mov(a.ppcctr, a.eax);
       break;
-   case SprEncoding::GQR0:
+   case SprEncoding::UGQR0:
       a.mov(a.ppcgqr[0], a.eax);
       break;
-   case SprEncoding::GQR1:
+   case SprEncoding::UGQR1:
       a.mov(a.ppcgqr[1], a.eax);
       break;
-   case SprEncoding::GQR2:
+   case SprEncoding::UGQR2:
       a.mov(a.ppcgqr[2], a.eax);
       break;
-   case SprEncoding::GQR3:
+   case SprEncoding::UGQR3:
       a.mov(a.ppcgqr[3], a.eax);
       break;
-   case SprEncoding::GQR4:
+   case SprEncoding::UGQR4:
       a.mov(a.ppcgqr[4], a.eax);
       break;
-   case SprEncoding::GQR5:
+   case SprEncoding::UGQR5:
       a.mov(a.ppcgqr[5], a.eax);
       break;
-   case SprEncoding::GQR6:
+   case SprEncoding::UGQR6:
       a.mov(a.ppcgqr[6], a.eax);
       break;
-   case SprEncoding::GQR7:
+   case SprEncoding::UGQR7:
       a.mov(a.ppcgqr[7], a.eax);
       break;
    default:
