@@ -483,15 +483,20 @@ fmadd(ThreadState *state, Instruction instr)
          d = make_nan<double>();
       }
    } else {
-      d = d + b;
-      if (is_nan(d)) {
-         if (is_nan(b)) {
-            d = make_quiet(b);
-         } else {
-            d = make_nan<double>();
+      if (is_infinity(d) && is_infinity(b) && !(is_infinity(a) || is_infinity(c))) {
+         d = b;
+      } else {
+         d = d + b;
+         if (is_nan(d)) {
+            if (is_nan(b)) {
+               d = make_quiet(b);
+            } else {
+               d = make_nan<double>();
+            }
          }
       }
    }
+
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
