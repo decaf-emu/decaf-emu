@@ -129,37 +129,55 @@ private:
 
 static_assert(sizeof(FSClient) < 0x1700, "FSClient must be less than 0x1700 bytes");
 
-static std::string
-gWorkingDirectory = "/vol/code";
+static fs::FilePath
+gWorkingPath = "/vol/code";
 
 static std::vector<FSClient*>
 gClients;
+
+
+fs::FilePath
+translatePath(const char *path)
+{
+   if (path[0] == '/') {
+      return path;
+   } else {
+      return gWorkingPath + path;
+   }
+}
+
 
 void
 FSInit()
 {
 }
 
+
 void
 FSShutdown()
 {
 }
 
+
 FSStatus
-FSAddClient(FSClient *client, uint32_t flags)
+FSAddClient(FSClient *client,
+            uint32_t flags)
 {
    new(client) FSClient();
    gClients.push_back(client);
    return FSStatus::OK;
 }
 
+
 FSStatus
-FSDelClient(FSClient *client, uint32_t flags)
+FSDelClient(FSClient *client,
+            uint32_t flags)
 {
    client->~FSClient();
    gClients.erase(std::remove(gClients.begin(), gClients.end(), client), gClients.end());
    return FSStatus::OK;
 }
+
 
 uint32_t
 FSGetClientNum()
@@ -167,30 +185,41 @@ FSGetClientNum()
    return static_cast<uint32_t>(gClients.size());
 }
 
+
 void
 FSInitCmdBlock(FSCmdBlock *block)
 {
 }
 
+
 FSStatus
-FSSetCmdPriority(FSCmdBlock *block, FSPriority priority)
+FSSetCmdPriority(FSCmdBlock *block,
+                 FSPriority priority)
 {
    return FSStatus::OK;
 }
 
+
 void
-FSSetStateChangeNotification(FSClient *client, FSStateChangeInfo *info)
+FSSetStateChangeNotification(FSClient *client,
+                             FSStateChangeInfo *info)
 {
    // TODO: FSSetStateChangeNotification
 }
 
+
 FSStatus
-FSOpenFile(FSClient *client, FSCmdBlock *block, const char *path, const char *mode, be_val<FSFileHandle> *outHandle, uint32_t flags)
+FSOpenFile(FSClient *client,
+           FSCmdBlock *block,
+           const char *path,
+           const char *mode,
+           be_val<FSFileHandle> *outHandle,
+           uint32_t flags)
 {
    // TODO: Parse open mode
    auto fs = gSystem.getFileSystem();
-   auto file = fs->openFile(path, fs::File::Read);
-   
+   auto file = fs->openFile(translatePath(path), fs::File::Read);
+
    if (!file) {
       return FSStatus::NotFound;
    }
@@ -199,8 +228,15 @@ FSOpenFile(FSClient *client, FSCmdBlock *block, const char *path, const char *mo
    return FSStatus::OK;
 }
 
+
 FSStatus
-FSOpenFileAsync(FSClient *client, FSCmdBlock *block, const char *path, const char *mode, be_val<FSFileHandle> *outHandle, uint32_t flags, FSAsyncData *asyncData)
+FSOpenFileAsync(FSClient *client,
+                FSCmdBlock *block,
+                const char *path,
+                const char *mode,
+                be_val<FSFileHandle> *outHandle,
+                uint32_t flags,
+                FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
    auto result = FSOpenFile(client, block, path, mode, outHandle, flags);
@@ -209,11 +245,16 @@ FSOpenFileAsync(FSClient *client, FSCmdBlock *block, const char *path, const cha
    return result;
 }
 
+
 FSStatus
-FSOpenDir(FSClient *client, FSCmdBlock *block, const char *path, be_val<FSDirectoryHandle> *handle, uint32_t flags)
+FSOpenDir(FSClient *client,
+          FSCmdBlock *block,
+          const char *path,
+          be_val<FSDirectoryHandle> *handle,
+          uint32_t flags)
 {
    auto fs = gSystem.getFileSystem();
-   auto dir = fs->openFolder(path);
+   auto dir = fs->openFolder(translatePath(path));
 
    if (!dir) {
       return FSStatus::NotFound;
@@ -223,8 +264,14 @@ FSOpenDir(FSClient *client, FSCmdBlock *block, const char *path, be_val<FSDirect
    return FSStatus::OK;
 }
 
+
 FSStatus
-FSOpenDirAsync(FSClient *client, FSCmdBlock *block, const char *path, be_val<FSDirectoryHandle> *handle, uint32_t flags, FSAsyncData *asyncData)
+FSOpenDirAsync(FSClient *client,
+               FSCmdBlock *block,
+               const char *path,
+               be_val<FSDirectoryHandle> *handle,
+               uint32_t flags,
+               FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
    auto result = FSOpenDir(client, block, path, handle, flags);
@@ -233,8 +280,13 @@ FSOpenDirAsync(FSClient *client, FSCmdBlock *block, const char *path, be_val<FSD
    return result;
 }
 
+
 FSStatus
-FSReadDir(FSClient *client, FSCmdBlock *block, FSDirectoryHandle handle, FSDirectoryEntry *entry, uint32_t flags)
+FSReadDir(FSClient *client,
+          FSCmdBlock *block,
+          FSDirectoryHandle handle,
+          FSDirectoryEntry *entry,
+          uint32_t flags)
 {
    auto directory = client->getDirectory(handle);
    fs::FolderEntry folderEntry;
@@ -242,7 +294,7 @@ FSReadDir(FSClient *client, FSCmdBlock *block, FSDirectoryHandle handle, FSDirec
    if (!directory) {
       return FSStatus::FatalError;
    }
-   
+
    if (!directory->read(folderEntry)) {
       return FSStatus::End;
    }
@@ -258,8 +310,14 @@ FSReadDir(FSClient *client, FSCmdBlock *block, FSDirectoryHandle handle, FSDirec
    return FSStatus::OK;
 }
 
+
 FSStatus
-FSReadDirAsync(FSClient *client, FSCmdBlock *block, FSDirectoryHandle handle, FSDirectoryEntry *entry, uint32_t flags, FSAsyncData *asyncData)
+FSReadDirAsync(FSClient *client,
+               FSCmdBlock *block,
+               FSDirectoryHandle handle,
+               FSDirectoryEntry *entry,
+               uint32_t flags,
+               FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
    auto result = FSReadDir(client, block, handle, entry, flags);
@@ -268,8 +326,12 @@ FSReadDirAsync(FSClient *client, FSCmdBlock *block, FSDirectoryHandle handle, FS
    return result;
 }
 
+
 FSStatus
-FSCloseDir(FSClient *client, FSCmdBlock *block, FSDirectoryHandle handle, uint32_t flags)
+FSCloseDir(FSClient *client,
+           FSCmdBlock *block,
+           FSDirectoryHandle handle,
+           uint32_t flags)
 {
    auto directory = client->getDirectory(handle);
 
@@ -282,8 +344,13 @@ FSCloseDir(FSClient *client, FSCmdBlock *block, FSDirectoryHandle handle, uint32
    return FSStatus::OK;
 }
 
+
 FSStatus
-FSCloseDirAsync(FSClient *client, FSCmdBlock *block, FSDirectoryHandle handle, uint32_t flags, FSAsyncData *asyncData)
+FSCloseDirAsync(FSClient *client,
+                FSCmdBlock *block,
+                FSDirectoryHandle handle,
+                uint32_t flags,
+                FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
    auto result = FSCloseDir(client, block, handle, flags);
@@ -292,12 +359,17 @@ FSCloseDirAsync(FSClient *client, FSCmdBlock *block, FSDirectoryHandle handle, u
    return result;
 }
 
+
 FSStatus
-FSGetStat(FSClient *client, FSCmdBlock *block, const char *filepath, FSStat *stat, uint32_t flags)
+FSGetStat(FSClient *client,
+          FSCmdBlock *block,
+          const char *path,
+          FSStat *stat,
+          uint32_t flags)
 {
    auto fs = gSystem.getFileSystem();
-   auto file = fs->findFile(filepath);
-   
+   auto file = fs->findFile(translatePath(path));
+
    if (!file) {
       return FSStatus::NotFound;
    }
@@ -307,18 +379,29 @@ FSGetStat(FSClient *client, FSCmdBlock *block, const char *filepath, FSStat *sta
    return FSStatus::OK;
 }
 
+
 FSStatus
-FSGetStatAsync(FSClient *client, FSCmdBlock *block, const char *filepath, FSStat *stat, uint32_t flags, FSAsyncData *asyncData)
+FSGetStatAsync(FSClient *client,
+               FSCmdBlock *block,
+               const char *path,
+               FSStat *stat,
+               uint32_t flags,
+               FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
-   auto result = FSGetStat(client, block, filepath, stat, flags);
+   auto result = FSGetStat(client, block, path, stat, flags);
    FSAsyncCallback cb = static_cast<uint32_t>(asyncData->callback);
    cb(client, block, result, asyncData->param);
    return result;
 }
 
+
 FSStatus
-FSGetStatFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, FSStat *stat, uint32_t flags)
+FSGetStatFile(FSClient *client,
+              FSCmdBlock *block,
+              FSFileHandle handle,
+              FSStat *stat,
+              uint32_t flags)
 {
    auto file = client->getFile(handle);
 
@@ -331,8 +414,14 @@ FSGetStatFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, FSStat *
    return FSStatus::OK;
 }
 
+
 FSStatus
-FSGetStatFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, FSStat *stat, uint32_t flags, FSAsyncData *asyncData)
+FSGetStatFileAsync(FSClient *client,
+                   FSCmdBlock *block,
+                   FSFileHandle handle,
+                   FSStat *stat,
+                   uint32_t flags,
+                   FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
    auto result = FSGetStatFile(client, block, handle, stat, flags);
@@ -341,8 +430,16 @@ FSGetStatFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, FSS
    return result;
 }
 
+
 FSStatus
-FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle handle, uint32_t unk1, uint32_t flags)
+FSReadFile(FSClient *client,
+           FSCmdBlock *block,
+           uint8_t *buffer,
+           uint32_t size,
+           uint32_t count,
+           FSFileHandle handle,
+           uint32_t unk1,
+           uint32_t flags)
 {
    auto file = client->getFile(handle);
 
@@ -354,8 +451,17 @@ FSReadFile(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, 
    return static_cast<FSStatus>(read);
 }
 
+
 FSStatus
-FSReadFileAsync(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, FSFileHandle handle, uint32_t unk1, uint32_t flags, FSAsyncData *asyncData)
+FSReadFileAsync(FSClient *client,
+                FSCmdBlock *block,
+                uint8_t *buffer,
+                uint32_t size,
+                uint32_t count,
+                FSFileHandle handle,
+                uint32_t unk1,
+                uint32_t flags,
+                FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
    auto result = FSReadFile(client, block, buffer, size, count, handle, unk1, flags);
@@ -364,8 +470,17 @@ FSReadFileAsync(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t s
    return result;
 }
 
+
 FSStatus
-FSReadFileWithPos(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, uint32_t position, FSFileHandle handle, uint32_t unk1, uint32_t flags)
+FSReadFileWithPos(FSClient *client,
+                  FSCmdBlock *block,
+                  uint8_t *buffer,
+                  uint32_t size,
+                  uint32_t count,
+                  uint32_t position,
+                  FSFileHandle handle,
+                  uint32_t unk1,
+                  uint32_t flags)
 {
    auto file = client->getFile(handle);
 
@@ -377,8 +492,18 @@ FSReadFileWithPos(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t
    return static_cast<FSStatus>(read);
 }
 
+
 FSStatus
-FSReadFileWithPosAsync(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uint32_t size, uint32_t count, uint32_t position, FSFileHandle handle, uint32_t unk1, uint32_t flags, FSAsyncData *asyncData)
+FSReadFileWithPosAsync(FSClient *client,
+                       FSCmdBlock *block,
+                       uint8_t *buffer,
+                       uint32_t size,
+                       uint32_t count,
+                       uint32_t position,
+                       FSFileHandle handle,
+                       uint32_t unk1,
+                       uint32_t flags,
+                       FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
    auto result = FSReadFileWithPos(client, block, buffer, size, count, position, handle, unk1, flags);
@@ -387,8 +512,13 @@ FSReadFileWithPosAsync(FSClient *client, FSCmdBlock *block, uint8_t *buffer, uin
    return result;
 }
 
+
 FSStatus
-FSGetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, be_val<uint32_t> *pos, uint32_t flags)
+FSGetPosFile(FSClient *client,
+             FSCmdBlock *block,
+             FSFileHandle handle,
+             be_val<uint32_t> *pos,
+             uint32_t flags)
 {
    auto file = client->getFile(handle);
 
@@ -400,8 +530,14 @@ FSGetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, be_val<ui
    return FSStatus::OK;
 }
 
+
 FSStatus
-FSGetPosFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, be_val<uint32_t> *pos, uint32_t flags, FSAsyncData *asyncData)
+FSGetPosFileAsync(FSClient *client,
+                  FSCmdBlock *block,
+                  FSFileHandle handle,
+                  be_val<uint32_t> *pos,
+                  uint32_t flags,
+                  FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
    auto result = FSGetPosFile(client, block, handle, pos, flags);
@@ -410,8 +546,13 @@ FSGetPosFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, be_v
    return result;
 }
 
+
 FSStatus
-FSSetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t pos, uint32_t flags)
+FSSetPosFile(FSClient *client,
+             FSCmdBlock *block,
+             FSFileHandle handle,
+             uint32_t pos,
+             uint32_t flags)
 {
    auto file = client->getFile(handle);
 
@@ -423,8 +564,14 @@ FSSetPosFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t 
    return FSStatus::OK;
 }
 
+
 FSStatus
-FSSetPosFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t pos, uint32_t flags, FSAsyncData *asyncData)
+FSSetPosFileAsync(FSClient *client,
+                  FSCmdBlock *block,
+                  FSFileHandle handle,
+                  uint32_t pos,
+                  uint32_t flags,
+                  FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
    auto result = FSSetPosFile(client, block, handle, pos, flags);
@@ -433,8 +580,12 @@ FSSetPosFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint
    return result;
 }
 
+
 FSStatus
-FSCloseFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t flags)
+FSCloseFile(FSClient *client,
+            FSCmdBlock *block,
+            FSFileHandle handle,
+            uint32_t flags)
 {
    auto file = client->getFile(handle);
 
@@ -447,8 +598,13 @@ FSCloseFile(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t f
    return FSStatus::OK;
 }
 
+
 FSStatus
-FSCloseFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint32_t flags, FSAsyncData *asyncData)
+FSCloseFileAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 FSFileHandle handle,
+                 uint32_t flags,
+                 FSAsyncData *asyncData)
 {
    assert(asyncData->callback);
    auto result = FSCloseFile(client, block, handle, flags);
@@ -457,16 +613,47 @@ FSCloseFileAsync(FSClient *client, FSCmdBlock *block, FSFileHandle handle, uint3
    return result;
 }
 
+
 FSStatus
-FSGetCwd(FSClient *client, FSCmdBlock *block, char *buffer, uint32_t bufferSize, uint32_t flags)
+FSGetCwd(FSClient *client,
+         FSCmdBlock *block,
+         char *buffer,
+         uint32_t bufferSize,
+         uint32_t flags)
 {
-   if (bufferSize < gWorkingDirectory.size() + 1) {
-      return FSStatus::Cancelled;
+   if (strncpy_s(buffer, bufferSize, gWorkingPath.path.c_str(), _TRUNCATE) == STRUNCATE) {
+      return FSStatus::FatalError;
    }
 
-   memcpy(buffer, gWorkingDirectory.c_str(), gWorkingDirectory.size() + 1);
    return FSStatus::OK;
 }
+
+
+FSStatus
+FSChangeDir(FSClient *client,
+            FSCmdBlock *block,
+            const char *path,
+            uint32_t flags)
+{
+   gWorkingPath = translatePath(path);
+   return FSStatus::OK;
+}
+
+
+FSStatus
+FSChangeDirAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 const char *path,
+                 uint32_t flags,
+                 FSAsyncData *asyncData)
+{
+   assert(asyncData->callback);
+   auto result = FSChangeDir(client, block, path, flags);
+   FSAsyncCallback cb = static_cast<uint32_t>(asyncData->callback);
+   cb(client, block, result, asyncData->param);
+   return result;
+}
+
 
 void
 CoreInit::registerFileSystemFunctions()
@@ -476,10 +663,13 @@ CoreInit::registerFileSystemFunctions()
    RegisterKernelFunction(FSAddClient);
    RegisterKernelFunction(FSDelClient);
    RegisterKernelFunction(FSGetClientNum);
-   RegisterKernelFunction(FSGetCwd);
    RegisterKernelFunction(FSInitCmdBlock);
    RegisterKernelFunction(FSSetCmdPriority);
    RegisterKernelFunction(FSSetStateChangeNotification);
+
+   RegisterKernelFunction(FSGetCwd);
+   RegisterKernelFunction(FSChangeDir);
+   RegisterKernelFunction(FSChangeDirAsync);
 
    RegisterKernelFunction(FSGetStat);
    RegisterKernelFunction(FSGetStatAsync);

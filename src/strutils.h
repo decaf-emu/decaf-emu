@@ -36,6 +36,23 @@ split_string(const std::string &source, char delimiter, std::vector<std::string>
    result.push_back(source.substr(last, offset - last));
 }
 
+// Joins a vector of strings into one string using a delimeter
+template<typename IteratorType>
+static inline void
+join_string(IteratorType begin, IteratorType end, char delim, std::string &out)
+{
+   bool first = true;
+
+   for (auto itr = begin; itr != end; ++itr) {
+      if (first) {
+         out += *itr;
+         first = false;
+      } else {
+         out += delim + *itr;
+      }
+   }
+}
+
 // Returns true if source ends with suffix
 static inline bool
 ends_with(const std::string &source, const std::string &suffix)
