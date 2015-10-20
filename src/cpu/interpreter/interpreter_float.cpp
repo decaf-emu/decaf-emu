@@ -125,7 +125,21 @@ fadd(ThreadState *state, Instruction instr)
 static void
 fadds(ThreadState *state, Instruction instr)
 {
-   return fadd(state, instr);
+   double a, b, d;
+   a = state->fpr[instr.frA].paired0;
+   b = state->fpr[instr.frB].paired0;
+
+   state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
+   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
+
+   d = (float)(a + b);
+   updateFPSCR(state);
+   updateFPRF(state, d);
+   state->fpr[instr.frD].paired0 = d;
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
 }
 
 // Floating Divide
@@ -141,6 +155,15 @@ fdiv(ThreadState *state, Instruction instr)
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
    d = a / b;
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         d = make_quiet(a);
+      } else if (is_nan(b)) {
+         d = make_quiet(b);
+      } else {
+         d = make_nan<double>();
+      }
+   }
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
@@ -154,7 +177,31 @@ fdiv(ThreadState *state, Instruction instr)
 static void
 fdivs(ThreadState *state, Instruction instr)
 {
-   return fdiv(state, instr);
+   double a, b, d;
+   a = state->fpr[instr.frA].paired0;
+   b = state->fpr[instr.frB].paired0;
+
+   state->fpscr.vxzdz = is_zero(a) && is_zero(b);
+   state->fpscr.vxidi = is_infinity(a) && is_infinity(b);
+   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
+
+   d = static_cast<float>(a / b);
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         d = make_quiet(static_cast<float>(a));
+      } else if (is_nan(b)) {
+         d = make_quiet(static_cast<float>(b));
+      } else {
+         d = make_nan<double>();
+      }
+   }
+   updateFPSCR(state);
+   updateFPRF(state, d);
+   state->fpr[instr.frD].paired0 = d;
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
 }
 
 // Floating Multiply
@@ -401,11 +448,11 @@ fctiw(ThreadState *state, Instruction instr)
    int32_t bi;
    b = state->fpr[instr.frB].paired0;
 
-   if (b > static_cast<double>(0x7FFFFFFF)) {
-      bi = 0x7FFFFFFF;
+   if (b > static_cast<double>(INT_MAX)) {
+      bi = INT_MAX;
       state->fpscr.vxcvi = 1;
-   } else if (b < static_cast<double>(0x80000000)) {
-      bi = 0x80000000;
+   } else if (b < static_cast<double>(INT_MIN)) {
+      bi = INT_MIN;
       state->fpscr.vxcvi = 1;
    } else {
       switch (state->fpscr.rn) {
@@ -430,6 +477,7 @@ fctiw(ThreadState *state, Instruction instr)
 
    updateFPSCR(state);
    state->fpr[instr.frD].iw0 = bi;
+   state->fpr[instr.frD].iw1 = 0xFFF80000;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -444,11 +492,11 @@ fctiwz(ThreadState *state, Instruction instr)
    int32_t bi;
    b = state->fpr[instr.frB].paired0;
 
-   if (b > static_cast<double>(0x7FFFFFFF)) {
-      bi = 0x7FFFFFFF;
+   if (b > static_cast<double>(INT_MAX)) {
+      bi = INT_MAX;
       state->fpscr.vxcvi = 1;
-   } else if (b < static_cast<double>(0x80000000)) {
-      bi = 0x80000000;
+   } else if (b < static_cast<double>(INT_MIN)) {
+      bi = INT_MIN;
       state->fpscr.vxcvi = 1;
    } else {
       bi = static_cast<int32_t>(std::trunc(b));
@@ -460,6 +508,7 @@ fctiwz(ThreadState *state, Instruction instr)
 
    updateFPSCR(state);
    state->fpr[instr.frD].iw0 = bi;
+   state->fpr[instr.frD].iw1 = 0xFFF80000;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);

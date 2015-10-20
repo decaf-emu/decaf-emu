@@ -6,6 +6,8 @@ union FloatBitsSingle
 {
    static const unsigned exponent_min = 0;
    static const unsigned exponent_max = 0xff;
+   static const unsigned mantissa_min = 0;
+   static const unsigned mantissa_max = 0x40000;
 
    float v;
    uint32_t uv;
@@ -27,8 +29,10 @@ union FloatBitsSingle
 
 union FloatBitsDouble
 {
-   static const unsigned exponent_min = 0;
-   static const unsigned exponent_max = 0x7ff;
+   static const uint64_t exponent_min = 0;
+   static const uint64_t exponent_max = 0x7ff;
+   static const uint64_t mantissa_min = 0;
+   static const uint64_t mantissa_max = 0x8000000000000;
 
    double v;
    uint64_t uv;
@@ -173,4 +177,23 @@ inline bool
 is_signalling_nan(Type v)
 {
    return is_nan(v) && !is_quiet(v);
+}
+
+template<typename Type>
+Type
+make_quiet(Type v)
+{
+   auto bits = get_float_bits(v);
+   bits.quiet = 1;
+   return bits.v;
+}
+
+template<typename Type>
+Type
+make_nan()
+{
+   auto bits = get_float_bits(static_cast<Type>(0));
+   bits.exponent = bits.exponent_max;
+   bits.mantissa = bits.mantissa_max;
+   return bits.v;
 }
