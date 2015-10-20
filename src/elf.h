@@ -7,8 +7,6 @@ class BigEndianView;
 namespace elf
 {
 
-#pragma pack(push, 1)
-
 enum // e_machine
 {
    EM_PPC = 20 // PowerPC
@@ -289,8 +287,6 @@ struct FileInfo
    uint32_t unk3;
    uint32_t unk4;
 };
-
-#pragma pack(pop)
 
 bool
 readHeader(BigEndianView &in, Header &header);
