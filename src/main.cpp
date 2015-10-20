@@ -48,10 +48,10 @@ static const char USAGE[] =
 R"(WiiU Emulator
 
 Usage:
-   wiiu play [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] <game directory>
-   wiiu test [--jit | --jitdebug] [--logfile] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
+   wiiu play [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] <game directory>
+   wiiu test [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
    wiiu fuzz
-   wiiu hwtest [--logfile]
+   wiiu hwtest [--log-file]
    wiiu (-h | --help)
    wiiu --version
 
@@ -59,7 +59,8 @@ Options:
    -h --help     Show this screen.
    --version     Show version.
    --jit         Enables the JIT engine.
-   --logfile     Redirect log output to file.
+   --jit-debug   Verify JIT implementation against interpreter.
+   --log-file    Redirect log output to file.
    --log-async   Enable asynchronous logging.
    --log-level=<log-level> [default: trace]
                   Only display logs with severity equal to or greater than this level.
@@ -78,7 +79,7 @@ int main(int argc, char **argv)
    auto args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true, "WiiU 0.1");
    bool result = false;
 
-   if (args["--jitdebug"].asBool()) {
+   if (args["--jit-debug"].asBool()) {
       cpu::setJitMode(cpu::JitMode::Debug);
    } else if (args["--jit"].asBool()) {
       cpu::setJitMode(cpu::JitMode::Enabled);
@@ -90,7 +91,7 @@ int main(int argc, char **argv)
    std::vector<spdlog::sink_ptr> sinks;
    sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
 
-   if (args["--logfile"].asBool()) {
+   if (args["--log-file"].asBool()) {
       std::string file;
 
       if (args["play"].asBool()) {
