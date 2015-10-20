@@ -224,6 +224,7 @@ Loader::initialise(ppcsize_t maxCodeSize)
 
    // Allocate MEM2 Region
    mem::alloc(mem2start, mem2size);
+   mem::protect(0xFFF00000, 0x000FFFFF);
 
    // Steal some space for code heap
    mCodeHeap = std::make_unique<TeenyHeap>(mem::translate(mem2start), maxCodeSize);

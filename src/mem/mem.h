@@ -5,77 +5,78 @@
 namespace mem
 {
    
-   extern uint8_t *gBase;
+extern uint8_t *gBase;
 
-   void initialise();
+void initialise();
 
-   bool valid(ppcaddr_t address);
-   bool alloc(ppcaddr_t address, size_t size);
-   //ppcaddr_t alloc(MemoryType type, size_t size);
-   bool free(ppcaddr_t address);
+bool valid(ppcaddr_t address);
+bool protect(ppcaddr_t address, size_t size);
+bool alloc(ppcaddr_t address, size_t size);
+//ppcaddr_t alloc(MemoryType type, size_t size);
+bool free(ppcaddr_t address);
 
-   static inline size_t base()
-   {
-      return (size_t)gBase;
+static inline size_t base()
+{
+   return (size_t)gBase;
+}
+
+// Translate WiiU virtual address to host address
+template<typename Type = uint8_t>
+static inline Type *translate(ppcaddr_t address)
+{
+   if (!address) {
+      return nullptr;
+   } else {
+      return reinterpret_cast<Type*>(gBase + address);
+   }
+}
+
+template<typename Type>
+static inline Type *translatePtr(Type *ptr)
+{
+   return reinterpret_cast<Type*>(translate(reinterpret_cast<uint32_t>(ptr)));
+}
+
+// Translate host address to WiiU virtual address
+static inline ppcaddr_t untranslate(const void *ptr)
+{
+   if (!ptr) {
+      return 0;
    }
 
-   // Translate WiiU virtual address to host address
-   template<typename Type = uint8_t>
-   static inline Type *translate(ppcaddr_t address)
-   {
-      if (!address) {
-         return nullptr;
-      } else {
-         return reinterpret_cast<Type*>(gBase + address);
-      }
-   }
+   auto sptr = reinterpret_cast<size_t>(ptr);
+   auto sbase = reinterpret_cast<size_t>(gBase);
+   assert(sptr > sbase);
+   assert(sptr <= sbase + 0xFFFFFFFF);
+   return static_cast<ppcaddr_t>(sptr - sbase);
+}
 
-   template<typename Type>
-   static inline Type *translatePtr(Type *ptr)
-   {
-      return reinterpret_cast<Type*>(translate(reinterpret_cast<uint32_t>(ptr)));
-   }
+// Read Type from virtual address
+template<typename Type>
+static inline Type read(ppcaddr_t address)
+{
+   return byte_swap(readNoSwap<Type>(address));
+}
 
-   // Translate host address to WiiU virtual address
-   static inline ppcaddr_t untranslate(const void *ptr)
-   {
-      if (!ptr) {
-         return 0;
-      }
+// Read Type from virtual address with no endian byte_swap
+template<typename Type>
+static inline Type readNoSwap(ppcaddr_t address)
+{
+   return *reinterpret_cast<Type*>(translate(address));
+}
 
-      auto sptr = reinterpret_cast<size_t>(ptr);
-      auto sbase = reinterpret_cast<size_t>(gBase);
-      assert(sptr > sbase);
-      assert(sptr <= sbase + 0xFFFFFFFF);
-      return static_cast<ppcaddr_t>(sptr - sbase);
-   }
+// Write Type to virtual address
+template<typename Type>
+static inline void write(ppcaddr_t address, Type value)
+{
+   writeNoSwap(address, byte_swap(value));
+}
 
-   // Read Type from virtual address
-   template<typename Type>
-   static inline Type read(ppcaddr_t address)
-   {
-      return byte_swap(readNoSwap<Type>(address));
-   }
-
-   // Read Type from virtual address with no endian byte_swap
-   template<typename Type>
-   static inline Type readNoSwap(ppcaddr_t address)
-   {
-      return *reinterpret_cast<Type*>(translate(address));
-   }
-
-   // Write Type to virtual address
-   template<typename Type>
-   static inline void write(ppcaddr_t address, Type value)
-   {
-      writeNoSwap(address, byte_swap(value));
-   }
-
-   // Write Type to virtual address with no endian byte_swap
-   template<typename Type>
-   static inline void writeNoSwap(ppcaddr_t address, Type value)
-   {
-      *reinterpret_cast<Type*>(translate(address)) = value;
-   }
+// Write Type to virtual address with no endian byte_swap
+template<typename Type>
+static inline void writeNoSwap(ppcaddr_t address, Type value)
+{
+   *reinterpret_cast<Type*>(translate(address)) = value;
+}
 
 }
