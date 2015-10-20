@@ -5,6 +5,59 @@
 #include "floatutils.h"
 #include "interpreter.h"
 
+const int fres_expected_base[] =
+{
+   0x7ff800, 0x783800, 0x70ea00, 0x6a0800,
+   0x638800, 0x5d6200, 0x579000, 0x520800,
+   0x4cc800, 0x47ca00, 0x430800, 0x3e8000,
+   0x3a2c00, 0x360800, 0x321400, 0x2e4a00,
+   0x2aa800, 0x272c00, 0x23d600, 0x209e00,
+   0x1d8800, 0x1a9000, 0x17ae00, 0x14f800,
+   0x124400, 0x0fbe00, 0x0d3800, 0x0ade00,
+   0x088400, 0x065000, 0x041c00, 0x020c00,
+};
+const int fres_expected_dec[] =
+{
+   0x3e1, 0x3a7, 0x371, 0x340,
+   0x313, 0x2ea, 0x2c4, 0x2a0,
+   0x27f, 0x261, 0x245, 0x22a,
+   0x212, 0x1fb, 0x1e5, 0x1d1,
+   0x1be, 0x1ac, 0x19b, 0x18b,
+   0x17c, 0x16e, 0x15b, 0x15b,
+   0x143, 0x143, 0x12d, 0x12d,
+   0x11a, 0x11a, 0x108, 0x106,
+};
+
+double
+ppc_estimate_reciprocal(double v)
+{
+   auto bits = get_float_bits(v);
+
+   if (bits.mantissa == 0 && bits.exponent == 0) {
+      return std::copysign(std::numeric_limits<double>::infinity(), v);
+   }
+
+   if (bits.exponent == bits.exponent_max) {
+      if (bits.mantissa == 0) {
+         return std::copysign(0.0, v);
+      }
+      return static_cast<float>(v);
+   }
+
+   if (bits.exponent < 895) {
+      return std::copysign(std::numeric_limits<float>::max(), v);
+   }
+
+   if (bits.exponent > 1149) {
+      return std::copysign(0.0, v);
+   }
+
+   int idx = (int)(bits.mantissa >> 37);
+   bits.exponent = 0x7FD - bits.exponent;
+   bits.mantissa = (int64_t)(fres_expected_base[idx / 1024] - (fres_expected_dec[idx / 1024] * (idx % 1024) + 1) / 2) << 29;
+   return bits.v;
+}
+
 void
 updateFPSCR(ThreadState *state)
 {
@@ -216,6 +269,15 @@ fmul(ThreadState *state, Instruction instr)
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(c);
 
    d = a * c;
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         d = make_quiet(a);
+      } else if (is_nan(c)) {
+         d = make_quiet(c);
+      } else {
+         d = make_nan<double>();
+      }
+   }
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
@@ -229,7 +291,30 @@ fmul(ThreadState *state, Instruction instr)
 static void
 fmuls(ThreadState *state, Instruction instr)
 {
-   return fmul(state, instr);
+   double a, c, d;
+   a = state->fpr[instr.frA].paired0;
+   c = state->fpr[instr.frC].paired0;
+
+   state->fpscr.vximz = is_infinity(a) && is_zero(c);
+   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(c);
+
+   d = static_cast<float>(a * c);
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         d = make_quiet(static_cast<float>(a));
+      } else if (is_nan(c)) {
+         d = make_quiet(static_cast<float>(c));
+      } else {
+         d = make_nan<double>();
+      }
+   }
+   updateFPSCR(state);
+   updateFPRF(state, d);
+   state->fpr[instr.frD].paired0 = d;
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
 }
 
 // Floating Subtract
@@ -244,6 +329,15 @@ fsub(ThreadState *state, Instruction instr)
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
    d = a - b;
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         d = make_quiet(a);
+      } else if (is_nan(b)) {
+         d = make_quiet(b);
+      } else {
+         d = make_nan<double>();
+      }
+   }
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
@@ -257,7 +351,30 @@ fsub(ThreadState *state, Instruction instr)
 static void
 fsubs(ThreadState *state, Instruction instr)
 {
-   return fsub(state, instr);
+   double a, b, d;
+   a = state->fpr[instr.frA].paired0;
+   b = state->fpr[instr.frB].paired0;
+
+   state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
+   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
+
+   d = static_cast<float>(a - b);
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         d = make_quiet(static_cast<float>(a));
+      } else if (is_nan(b)) {
+         d = make_quiet(static_cast<float>(b));
+      } else {
+         d = make_nan<double>();
+      }
+   }
+   updateFPSCR(state);
+   updateFPRF(state, d);
+   state->fpr[instr.frD].paired0 = d;
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
 }
 
 // Floating Reciprocal Estimate Single
@@ -266,9 +383,11 @@ fres(ThreadState *state, Instruction instr)
 {
    double b, d;
    b = state->fpr[instr.frB].paired0;
-   d = 1.0 / b;
 
    state->fpscr.vxsnan |= is_signalling_nan(b);
+
+   d = ppc_estimate_reciprocal(b);
+   
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
@@ -333,7 +452,27 @@ fmadd(ThreadState *state, Instruction instr)
    state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
    state->fpscr.vximz = is_infinity(a * c) && is_zero(c);
 
-   d = (a * c) + b;
+   d = a * c;
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         d = make_quiet(a);
+      } else if (is_nan(b)) {
+         d = make_quiet(b);
+      } else if (is_nan(c)) {
+         d = make_quiet(c);
+      } else {
+         d = make_nan<double>();
+      }
+   } else {
+      d = d + b;
+      if (is_nan(d)) {
+         if (is_nan(b)) {
+            d = make_quiet(b);
+         } else {
+            d = make_nan<double>();
+         }
+      }
+   }
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
@@ -551,11 +690,11 @@ fabs(ThreadState *state, Instruction instr)
 static void
 fnabs(ThreadState *state, Instruction instr)
 {
-   double b, d;
+   uint64_t b, d;
 
-   b = state->fpr[instr.frB].paired0;
-   d = -std::fabs(b);
-   state->fpr[instr.frD].paired0 = d;
+   b = state->fpr[instr.frB].value0;
+   d = set_bit(b, 63);
+   state->fpr[instr.frD].value0 = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -577,7 +716,11 @@ fmr(ThreadState *state, Instruction instr)
 static void
 fneg(ThreadState *state, Instruction instr)
 {
-   state->fpr[instr.frD].paired0 = -state->fpr[instr.frB].paired0;
+   uint64_t b, d;
+
+   b = state->fpr[instr.frB].value0;
+   d = flip_bit(b, 63);
+   state->fpr[instr.frD].value0 = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);

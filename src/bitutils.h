@@ -49,6 +49,21 @@ set_bit(Type src)
    return src | (static_cast<Type>(1) << (bit));
 }
 
+// Flips the value of a bit to 1
+template<typename Type>
+inline Type
+flip_bit(Type src, unsigned bit)
+{
+   return src ^ (static_cast<Type>(1) << bit);
+}
+
+template<unsigned bit, typename Type>
+inline Type
+flip_bit(Type src)
+{
+   return src ^ (static_cast<Type>(1) << (bit));
+}
+
 // Clears the value of a bit
 template<typename Type>
 inline Type

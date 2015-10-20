@@ -700,30 +700,28 @@ shiftArithmetic(ThreadState *state, Instruction instr)
       b = state->gpr[instr.rB];
    }
 
-   n = b & 0x1f;
+   bool carry = false;
+   if (b & 0x20) {
+      if (s >= 0) {
+         a = 0;
+      } else {
+         a = -1;
+         carry = true;
+      }
+   } else {
+      n = b & 0x1f;
+      if (n == 0) {
+         a = s;
+      } else {
+         a = s >> n;
 
-   if (flags & ShiftLeft) {
-      a = s << n;
-   } else if (flags & ShiftRight) {
-      a = s >> n;
+         if ((s < 0) && (s << (32 - n))) {
+            carry = true;
+         }
+      }
    }
 
    state->gpr[instr.rA] = a;
-
-   // XER[CA] is set if rS contains a negative number and any
-   // 1 bits are shifted out of position 31
-   bool carry = s < 0 && (s << (32 - n));
-
-   // Shift amounts from 32 to 63 give a result of 32 sign bits
-   // and cause XER[CA] to receive the sign bit of rS
-   if (b & 0x20) {
-      carry = !!get_bit<31>(s);
-   }
-
-   // A shift amount of zero causes rA = rS and XER[CA] cleared
-   if (n == 0) {
-      carry = false;
-   }
 
    updateCarry(state, carry);
 
