@@ -55,6 +55,8 @@ updateFPSCR(ThreadState *state)
       | fpscr.ux
       | fpscr.zx
       | fpscr.xx;
+
+   std::feclearexcept(FE_ALL_EXCEPT);
 }
 
 template<typename Type>
@@ -84,7 +86,7 @@ updateFPRF(ThreadState *state, Type value)
    if (cls != FP_NAN) {
       if (neg) {
          flags |= FloatingPointResultFlags::Negative;
-      } else {
+      } else if (cls != FP_ZERO) {
          flags |= FloatingPointResultFlags::Positive;
       }
    }
@@ -485,11 +487,11 @@ frsp(ThreadState *state, Instruction instr)
 static void
 fabs(ThreadState *state, Instruction instr)
 {
-   double b, d;
+   uint64_t b, d;
 
-   b = state->fpr[instr.frB].paired0;
-   d = std::fabs(b);
-   state->fpr[instr.frD].paired0 = d;
+   b = state->fpr[instr.frB].value0;
+   d = clear_bit(b, 63);
+   state->fpr[instr.frD].value0 = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);

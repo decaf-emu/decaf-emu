@@ -25,6 +25,7 @@
 #include "modules/nn_temp/nn_temp.h"
 #include "modules/proc_ui/proc_ui.h"
 #include "modules/padscore/padscore.h"
+#include "modules/snd_core/snd_core.h"
 #include "modules/sysapp/sysapp.h"
 #include "modules/vpad/vpad.h"
 #include "modules/zlib125/zlib125.h"
@@ -152,6 +153,7 @@ initialiseEmulator()
    NN_save::RegisterFunctions();
    PadScore::RegisterFunctions();
    ProcUI::RegisterFunctions();
+   Snd_Core::RegisterFunctions();
    SysApp::RegisterFunctions();
    VPad::RegisterFunctions();
    Zlib125::RegisterFunctions();
@@ -170,6 +172,7 @@ initialiseEmulator()
    gSystem.registerModule("nn_temp.rpl", new NN_temp {});
    gSystem.registerModule("padscore.rpl", new PadScore {});
    gSystem.registerModule("proc_ui.rpl", new ProcUI {});
+   gSystem.registerModule("snd_core.rpl", new Snd_Core {});
    gSystem.registerModule("sysapp.rpl", new SysApp {});
    gSystem.registerModule("vpad.rpl", new VPad {});
    gSystem.registerModule("zlib125.rpl", new Zlib125 {});

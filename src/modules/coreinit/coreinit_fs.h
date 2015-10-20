@@ -165,16 +165,29 @@ FSGetCwd(FSClient *client,
          uint32_t flags);
 
 FSStatus
+FSChangeDir(FSClient *client,
+            FSCmdBlock *block,
+            const char *path,
+            uint32_t flags);
+
+FSStatus
+FSChangeDirAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 const char *path,
+                 uint32_t flags,
+                 FSAsyncData *asyncData);
+
+FSStatus
 FSGetStat(FSClient *client,
           FSCmdBlock *block,
-          const char *filepath,
+          const char *path,
           FSStat *stat,
           uint32_t flags);
 
 FSStatus
 FSGetStatAsync(FSClient *client,
                FSCmdBlock *block,
-               const char *filepath,
+               const char *path,
                FSStat *stat,
                uint32_t flags,
                FSAsyncData *asyncData);

@@ -109,7 +109,7 @@ addGeneric(ThreadState *state, Instruction instr)
    }
 
    if (flags & AddAlwaysRecord) {
-      updateOverflow(state, overflow);
+      // Always record only means update CR0, NOT overflow
       updateConditionRegister(state, d);
    } else if (flags & AddCheckRecord) {
       if (instr.oe) {
@@ -275,20 +275,20 @@ divGeneric(ThreadState *state, Instruction instr)
    a = state->gpr[instr.rA];
    b = state->gpr[instr.rB];
 
-   if (b != 0) {
-      d = a / b;
-   } else {
-      // Exceptions are off by default, when exceptions are off
-      //   div-by-zero simply returns 0...
-      d = 0;
-   }
-   state->gpr[instr.rD] = d;
-
    auto overflow = (b == 0);
 
    if (std::is_signed<Type>::value && (a == 0x80000000 && b == -1)) {
       overflow = true;
    }
+
+   if (!overflow) {
+      d = a / b;
+   } else {
+      // rD = -1 when rA is negative, 0 when rA is positive
+      d = a < 0 ? -1 : 0;
+   }
+
+   state->gpr[instr.rD] = d;
 
    if (instr.oe) {
       updateOverflow(state, overflow);
@@ -656,7 +656,9 @@ shiftLogical(ThreadState *state, Instruction instr)
 
    n = b & 0x1f;
 
-   if (flags & ShiftLeft) {
+   if (b & 0x20) {
+      a = 0;
+   } else if (flags & ShiftLeft) {
       a = s << n;
    } else if (flags & ShiftRight) {
       a = s >> n;
@@ -710,7 +712,7 @@ shiftArithmetic(ThreadState *state, Instruction instr)
 
    // XER[CA] is set if rS contains a negative number and any
    // 1 bits are shifted out of position 31
-   bool carry = s < 0 && !get_bit<31>(a);
+   bool carry = s < 0 && (s << (32 - n));
 
    // Shift amounts from 32 to 63 give a result of 32 sign bits
    // and cause XER[CA] to receive the sign bit of rS
@@ -854,6 +856,7 @@ cpu::interpreter::registerIntegerInstructions()
    RegisterInstruction(divwu);
    RegisterInstruction(extsb);
    RegisterInstruction(extsh);
+   RegisterInstruction(eqv);
    RegisterInstruction(mulhw);
    RegisterInstruction(mulhwu);
    RegisterInstruction(mulli);

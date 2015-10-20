@@ -96,7 +96,7 @@ printInstruction(const Trace& trace, int index)
    for (auto &write : trace.writes) {
       printFieldValue(trace.instr, write.type, write.value);
    }
-   
+
    debugPrint("  [{}] {:08x} {}{}", index, trace.cia, dis.text.c_str(), addend.c_str());
 
    for (auto &read : trace.reads) {
@@ -398,7 +398,7 @@ traceInstructionEnd(Trace *trace, Instruction instr, InstructionData *data, Thre
    }
 
    auto tracer = state->tracer;
-   
+
    // Special hack for KC for now
    if (data->id == InstructionID::kc) {
       trace->writes.clear();

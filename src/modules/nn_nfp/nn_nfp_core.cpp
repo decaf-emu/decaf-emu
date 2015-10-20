@@ -26,6 +26,20 @@ GetAmiiboSettingsArgs(AmiiboSettingsArgs *args)
    return nn::Result::Success;
 }
 
+nn::Result
+SetActivateEvent(uint32_t)
+{
+   // TODO: nn::nfp::SetActivateEvent
+   return nn::Result::Success;
+}
+
+nn::Result
+SetDeactivateEvent(uint32_t)
+{
+   // TODO: nn::nfp::SetDeactivateEvent
+   return nn::Result::Success;
+}
+
 } // namespace nfp
 
 } // namespace nn
@@ -36,4 +50,6 @@ NN_nfp::registerCoreFunctions()
    RegisterKernelFunctionName("Initialize__Q2_2nn3nfpFv", nn::nfp::Initialize);
    RegisterKernelFunctionName("Finalize__Q2_2nn3nfpFv", nn::nfp::Finalize);
    RegisterKernelFunctionName("GetAmiiboSettingsArgs__Q2_2nn3nfpFPQ3_2nn3nfp18AmiiboSettingsArgs", nn::nfp::GetAmiiboSettingsArgs);
+   RegisterKernelFunctionName("SetActivateEvent__Q2_2nn3nfpFP7OSEvent", nn::nfp::SetActivateEvent);
+   RegisterKernelFunctionName("SetDeactivateEvent__Q2_2nn3nfpFP7OSEvent", nn::nfp::SetDeactivateEvent);
 }

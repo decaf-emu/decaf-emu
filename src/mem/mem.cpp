@@ -155,6 +155,12 @@ namespace mem
       return view->pageTable[page].allocated;
    }
 
+   bool protect(uint32_t address, size_t size)
+   {
+      auto result = VirtualAlloc(gBase + address, size, MEM_RESERVE, PAGE_NOACCESS);
+      return result != NULL;
+   }
+
    bool alloc(uint32_t address, size_t size)
    {
       auto view = getView(address);
