@@ -100,30 +100,21 @@ is_negative_zero(Type v)
    return is_negative(v) && is_zero(v);
 }
 
-/*
-template<typename Type>
-inline bool
-is_normal(Type v)
-{
-auto b = get_float_bits(v);
-return b.exponent > std::numeric_limits<Type>::min_exponent
-&& b.exponent < std::numeric_limits<Type>::max_exponent;
-}*/
-
 template<typename Type>
 inline bool
 is_normal(Type v)
 {
    auto d = get_float_bits(v);
    return d.exponent > d.exponent_min
-       && d.exponent > d.exponent_max;
+       && d.exponent < d.exponent_max;
 }
 
 template<typename Type>
 inline bool
 is_denormal(Type v)
 {
-   return get_float_bits(v).exponent == 0;
+   auto d = get_float_bits(v);
+   return d.exponent == d.exponent_min;
 }
 
 template<typename Type>
