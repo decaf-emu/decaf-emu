@@ -606,6 +606,9 @@
     <ClCompile Include="..\src\hardwaretests.cpp">
       <Filter>Source Files\ppc</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\snd_core\snd_core_device.cpp">
+      <Filter>Source Files\modules\snd_core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1099,6 +1102,15 @@
     </ClInclude>
     <ClInclude Include="..\src\hardwaretests.h">
       <Filter>Header Files\ppc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\snd_core\snd_core_device.h">
+      <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\snd_core\snd_core_result.h">
+      <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\snd_core\snd_core_core.h">
+      <Filter>Header Files\modules\snd_core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

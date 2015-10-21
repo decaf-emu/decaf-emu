@@ -13,4 +13,5 @@ public:
 
 private:
    static void registerCoreFunctions();
+   static void registerDeviceFunctions();
 };

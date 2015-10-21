@@ -13,4 +13,5 @@ void
 Snd_Core::RegisterFunctions()
 {
    registerCoreFunctions();
+   registerDeviceFunctions();
 }
