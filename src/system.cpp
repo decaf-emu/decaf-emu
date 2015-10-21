@@ -77,11 +77,8 @@ System::getUserModule() const
 void
 System::initialise()
 {
-   auto systemHeapStart = 0x01000000u;
-   auto systemHeapSize = 0x01000000u;
-   mem::alloc(systemHeapStart, systemHeapSize);
-   void *systemMem = mem::translate(systemHeapStart);
-   mSystemHeap = new TeenyHeap(systemMem, systemHeapSize);
+   void *systemMem = mem::translate(0x01000000);
+   mSystemHeap = new TeenyHeap(systemMem, 0x01000000);
 }
 
 KernelModule *

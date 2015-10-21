@@ -38,7 +38,6 @@ MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags)
 {
    // Allocate memory
    auto base = memory_untranslate(heap);
-   mem::alloc(base, size);
 
    // Setup state
    heap->size = size;
@@ -59,7 +58,6 @@ void *
 MEMDestroyFrmHeap(FrameHeap *heap)
 {
    MEMiFinaliseHeap(heap);
-   mem::free(memory_untranslate(heap));
    return heap;
 }
 

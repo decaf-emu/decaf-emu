@@ -223,11 +223,6 @@ Loader::initialise(ppcsize_t maxCodeSize)
    be_val<uint32_t> mem2start, mem2size;
    OSGetMemBound(OSMemoryType::MEM2, &mem2start, &mem2size);
 
-   // Allocate MEM2 Region
-   mem::alloc(mem2start, mem2size);
-   mem::alloc(0xF8000000, 0x10000);
-   mem::protect(0xFFF00000, 0x000FFFFF);
-
    // Steal some space for code heap
    mCodeHeap = std::make_unique<TeenyHeap>(mem::translate(mem2start), maxCodeSize);
 

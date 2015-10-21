@@ -234,6 +234,15 @@ play(const fs::HostPath &path)
    auto rpx = std::string { app.child("argstr").child_value() };
    auto maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
 
+   // Allocate memory for the emulator
+   mem::alloc(0x01000000, 0x01000000); // System
+   mem::alloc(0x02000000, 0x40000000); // MEM2
+   mem::alloc(0xe0000000, 0x02800000); // Foreground
+   mem::alloc(0xf4000000, 0x02000000); // MEM1
+   mem::alloc(0xf8000000, 0x00010000); // L2CACHE
+   // Lock out some memory for unimplemented data access
+   mem::protect(0xfff00000, 0x000fffff);
+
    // Set up stuff..
    gLoader.initialise(maxCodeSize);
 
