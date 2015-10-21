@@ -143,7 +143,6 @@ int main(int argc, char **argv)
 static void
 initialiseEmulator()
 {
-   platform::ui::initialise();
    mem::initialise();
    cpu::initialise();
 
@@ -202,6 +201,8 @@ fuzzTest()
 static bool
 play(const fs::HostPath &path)
 {
+   platform::ui::initialise();
+
    // Setup filesystem
    fs::FileSystem fs;
    fs.mountHostFolder("/vol", path.join("data"));
