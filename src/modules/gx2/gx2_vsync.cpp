@@ -38,7 +38,7 @@ _GX2InitVsync()
 
    auto ticks = (static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) * 60) / 1000;
    OSCreateAlarm(gVsyncAlarm);
-   OSSetPeriodicAlarm(gVsyncAlarm, 0, OSGetTime(), ticks, pVsyncAlarmHandler);
+   OSSetPeriodicAlarm(gVsyncAlarm, OSGetTime(), ticks, pVsyncAlarmHandler);
 }
 
 void

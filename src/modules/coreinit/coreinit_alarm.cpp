@@ -88,11 +88,11 @@ OSInitAlarmQueue(OSAlarmQueue *queue)
 BOOL
 OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback)
 {
-   return OSSetPeriodicAlarm(alarm, 0, OSGetTime() + time, 0, callback);
+   return OSSetPeriodicAlarm(alarm, OSGetTime() + time, 0, callback);
 }
 
 BOOL
-OSSetPeriodicAlarm(OSAlarm *alarm, uint32_t, OSTime start, OSTime interval, AlarmCallback callback)
+OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback callback)
 {
    ScopedSpinLock lock(gAlarmLock);
 

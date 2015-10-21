@@ -105,7 +105,7 @@ BOOL
 OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback);
 
 BOOL
-OSSetPeriodicAlarm(OSAlarm *alarm, uint32_t, OSTime start, OSTime interval, AlarmCallback callback);
+OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback callback);
 
 void
 OSSetAlarmTag(OSAlarm *alarm, uint32_t alarmTag);

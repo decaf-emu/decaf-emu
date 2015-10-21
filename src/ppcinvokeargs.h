@@ -101,13 +101,21 @@ struct arg_converter_t<PpcType::DOUBLE, Type> {
    }
 };
 
+static constexpr inline size_t
+alignRegister64(size_t r)
+{
+   return ((r % 2) == 0) ? (r + 1) : r;
+}
+
 template<typename Type>
 static inline void
 setArgument(ThreadState *state, size_t &r, size_t &f, Type v)
 {
-   return arg_converter_t<
-      ppctype_converter_t<Type>::ppc_type,
-      Type>::set(state, r, f, v);
+   if (ppctype_converter_t<Type>::ppc_type == PpcType::DWORD) {
+      r = alignRegister64(r);
+   }
+
+   return arg_converter_t<ppctype_converter_t<Type>::ppc_type, Type>::set(state, r, f, v);
 }
 
 // Grab an argument from registers for function
@@ -115,9 +123,11 @@ template<typename Type>
 static inline Type
 getArgument(ThreadState *state, size_t &r, size_t &f)
 {
-   return arg_converter_t<
-      ppctype_converter_t<Type>::ppc_type,
-      Type>::get(state, r, f);
+   if (ppctype_converter_t<Type>::ppc_type == PpcType::DWORD) {
+      r = alignRegister64(r);
+   }
+
+   return arg_converter_t<ppctype_converter_t<Type>::ppc_type, Type>::get(state, r, f);
 }
 
-}
+} // namespace ppctypes
