@@ -44,30 +44,30 @@ public:
    be_val operator--(int) { auto old = *this; *this = value() - 1; return old; }
    be_val operator++(int) { auto old = *this; *this = value() + 1; return old; }
 
-   template<typename Other> bool operator == (Other rhs) const { return value() == static_cast<Type>(rhs); }
-   template<typename Other> bool operator != (Other rhs) const { return value() != static_cast<Type>(rhs); }
-   template<typename Other> bool operator >= (Other rhs) const { return value() >= static_cast<Type>(rhs); }
-   template<typename Other> bool operator <= (Other rhs) const { return value() <= static_cast<Type>(rhs); }
-   template<typename Other> bool operator  > (Other rhs) const { return value()  > static_cast<Type>(rhs); }
-   template<typename Other> bool operator  < (Other rhs) const { return value()  < static_cast<Type>(rhs); }
+   template<typename Other> bool operator == (const Other &rhs) const { return value() == static_cast<Type>(rhs); }
+   template<typename Other> bool operator != (const Other &rhs) const { return value() != static_cast<Type>(rhs); }
+   template<typename Other> bool operator >= (const Other &rhs) const { return value() >= static_cast<Type>(rhs); }
+   template<typename Other> bool operator <= (const Other &rhs) const { return value() <= static_cast<Type>(rhs); }
+   template<typename Other> bool operator  > (const Other &rhs) const { return value()  > static_cast<Type>(rhs); }
+   template<typename Other> bool operator  < (const Other &rhs) const { return value()  < static_cast<Type>(rhs); }
 
-   template<typename Other> be_val &operator+=(Other rhs) { *this = static_cast<Type>(value() + rhs); return *this; }
-   template<typename Other> be_val &operator-=(Other rhs) { *this = static_cast<Type>(value() - rhs); return *this; }
-   template<typename Other> be_val &operator*=(Other rhs) { *this = static_cast<Type>(value() * rhs); return *this; }
-   template<typename Other> be_val &operator/=(Other rhs) { *this = static_cast<Type>(value() / rhs); return *this; }
-   template<typename Other> be_val &operator%=(Other rhs) { *this = static_cast<Type>(value() % rhs); return *this; }
-   template<typename Other> be_val &operator|=(Other rhs) { *this = static_cast<Type>(value() | rhs); return *this; }
-   template<typename Other> be_val &operator&=(Other rhs) { *this = static_cast<Type>(value() & rhs); return *this; }
-   template<typename Other> be_val &operator^=(Other rhs) { *this = static_cast<Type>(value() ^ rhs); return *this; }
+   template<typename Other> be_val &operator+=(const Other &rhs) { *this = static_cast<Type>(value() + rhs); return *this; }
+   template<typename Other> be_val &operator-=(const Other &rhs) { *this = static_cast<Type>(value() - rhs); return *this; }
+   template<typename Other> be_val &operator*=(const Other &rhs) { *this = static_cast<Type>(value() * rhs); return *this; }
+   template<typename Other> be_val &operator/=(const Other &rhs) { *this = static_cast<Type>(value() / rhs); return *this; }
+   template<typename Other> be_val &operator%=(const Other &rhs) { *this = static_cast<Type>(value() % rhs); return *this; }
+   template<typename Other> be_val &operator|=(const Other &rhs) { *this = static_cast<Type>(value() | rhs); return *this; }
+   template<typename Other> be_val &operator&=(const Other &rhs) { *this = static_cast<Type>(value() & rhs); return *this; }
+   template<typename Other> be_val &operator^=(const Other &rhs) { *this = static_cast<Type>(value() ^ rhs); return *this; }
 
-   template<typename Other> Type operator+(Other rhs) const { return static_cast<Type>(value() + rhs); }
-   template<typename Other> Type operator-(Other rhs) const { return static_cast<Type>(value() - rhs); }
-   template<typename Other> Type operator*(Other rhs) const { return static_cast<Type>(value() * rhs); }
-   template<typename Other> Type operator/(Other rhs) const { return static_cast<Type>(value() / rhs); }
-   template<typename Other> Type operator%(Other rhs) const { return static_cast<Type>(value() % rhs); }
-   template<typename Other> Type operator|(Other rhs) const { return static_cast<Type>(value() | rhs); }
-   template<typename Other> Type operator&(Other rhs) const { return static_cast<Type>(value() & rhs); }
-   template<typename Other> Type operator^(Other rhs) const { return static_cast<Type>(value() ^ rhs); }
+   template<typename Other> Type operator+(const Other &rhs) const { return static_cast<Type>(value() + rhs); }
+   template<typename Other> Type operator-(const Other &rhs) const { return static_cast<Type>(value() - rhs); }
+   template<typename Other> Type operator*(const Other &rhs) const { return static_cast<Type>(value() * rhs); }
+   template<typename Other> Type operator/(const Other &rhs) const { return static_cast<Type>(value() / rhs); }
+   template<typename Other> Type operator%(const Other &rhs) const { return static_cast<Type>(value() % rhs); }
+   template<typename Other> Type operator|(const Other &rhs) const { return static_cast<Type>(value() | rhs); }
+   template<typename Other> Type operator&(const Other &rhs) const { return static_cast<Type>(value() & rhs); }
+   template<typename Other> Type operator^(const Other &rhs) const { return static_cast<Type>(value() ^ rhs); }
 
 protected:
    Type mValue{};
