@@ -5,9 +5,6 @@
 namespace mem
 {
 
-extern uint8_t *
-gBase;
-
 void
 initialise();
 
@@ -35,7 +32,7 @@ translate(ppcaddr_t address)
    if (!address) {
       return nullptr;
    } else {
-      return reinterpret_cast<Type*>(gBase + address);
+      return reinterpret_cast<Type*>(base() + address);
    }
 }
 
@@ -55,7 +52,7 @@ untranslate(const void *ptr)
    }
 
    auto sptr = reinterpret_cast<size_t>(ptr);
-   auto sbase = reinterpret_cast<size_t>(gBase);
+   auto sbase = base();
    assert(sptr > sbase);
    assert(sptr <= sbase + 0xFFFFFFFF);
    return static_cast<ppcaddr_t>(sptr - sbase);

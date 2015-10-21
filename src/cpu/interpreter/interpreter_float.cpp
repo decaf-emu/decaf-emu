@@ -16,6 +16,7 @@ const int fres_expected_base[] =
    0x124400, 0x0fbe00, 0x0d3800, 0x0ade00,
    0x088400, 0x065000, 0x041c00, 0x020c00,
 };
+
 const int fres_expected_dec[] =
 {
    0x3e1, 0x3a7, 0x371, 0x340,
@@ -153,9 +154,27 @@ updateFloatConditionRegister(ThreadState *state)
    state->cr.cr1 = state->fpscr.cr1;
 }
 
+template<typename Type>
+static double
+checkNan(double d, double a, double b)
+{
+   if (is_nan(d)) {
+      if (is_nan(a)) {
+         return make_quiet(static_cast<Type>(a));
+      } else if (is_nan(b)) {
+         return make_quiet(static_cast<Type>(b));
+      } else {
+         return make_nan<double>();
+      }
+   } else {
+      return d;
+   }
+}
+
 // Floating Add
+template<typename Type>
 static void
-fadd(ThreadState *state, Instruction instr)
+faddGeneric(ThreadState *state, Instruction instr)
 {
    double a, b, d;
    a = state->fpr[instr.frA].paired0;
@@ -164,59 +183,36 @@ fadd(ThreadState *state, Instruction instr)
    state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
-   d = a + b;
-   if (is_nan(d)) {
-      if (is_nan(a)) {
-         d = make_quiet(a);
-      } else if (is_nan(b)) {
-         d = make_quiet(b);
-      } else {
-         d = make_nan<double>();
-      }
-   }
-
+   d = static_cast<Type>(a + b);
    updateFPSCR(state);
+
+   d = checkNan<Type>(d, a, b);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
+}
+
+// Floating Add Double
+static void
+fadd(ThreadState *state, Instruction instr)
+{
+   faddGeneric<double>(state, instr);
 }
 
 // Floating Add Single
 static void
 fadds(ThreadState *state, Instruction instr)
 {
-   double a, b, d;
-   a = state->fpr[instr.frA].paired0;
-   b = state->fpr[instr.frB].paired0;
-
-   state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
-   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
-
-   d = static_cast<float>(a + b);
-   if (is_nan(d)) {
-      if (is_nan(a)) {
-         d = make_quiet(static_cast<float>(a));
-      } else if (is_nan(b)) {
-         d = make_quiet(static_cast<float>(b));
-      } else {
-         d = make_nan<double>();
-      }
-   }
-   updateFPSCR(state);
-   updateFPRF(state, d);
-   state->fpr[instr.frD].paired0 = d;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   faddGeneric<float>(state, instr);
 }
 
 // Floating Divide
+template<typename Type>
 static void
-fdiv(ThreadState *state, Instruction instr)
+fdivGeneric(ThreadState *state, Instruction instr)
 {
    double a, b, d;
    a = state->fpr[instr.frA].paired0;
@@ -226,59 +222,36 @@ fdiv(ThreadState *state, Instruction instr)
    state->fpscr.vxidi = is_infinity(a) && is_infinity(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
-   d = a / b;
-   if (is_nan(d)) {
-      if (is_nan(a)) {
-         d = make_quiet(a);
-      } else if (is_nan(b)) {
-         d = make_quiet(b);
-      } else {
-         d = make_nan<double>();
-      }
-   }
+   d = static_cast<Type>(a / b);
    updateFPSCR(state);
+
+   d = checkNan<Type>(d, a, b);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
+}
+
+// Floating Divide Double
+static void
+fdiv(ThreadState *state, Instruction instr)
+{
+   fdivGeneric<double>(state, instr);
 }
 
 // Floating Divide Single
 static void
 fdivs(ThreadState *state, Instruction instr)
 {
-   double a, b, d;
-   a = state->fpr[instr.frA].paired0;
-   b = state->fpr[instr.frB].paired0;
-
-   state->fpscr.vxzdz = is_zero(a) && is_zero(b);
-   state->fpscr.vxidi = is_infinity(a) && is_infinity(b);
-   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
-
-   d = static_cast<float>(a / b);
-   if (is_nan(d)) {
-      if (is_nan(a)) {
-         d = make_quiet(static_cast<float>(a));
-      } else if (is_nan(b)) {
-         d = make_quiet(static_cast<float>(b));
-      } else {
-         d = make_nan<double>();
-      }
-   }
-   updateFPSCR(state);
-   updateFPRF(state, d);
-   state->fpr[instr.frD].paired0 = d;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   fdivGeneric<float>(state, instr);
 }
 
 // Floating Multiply
+template<typename Type>
 static void
-fmul(ThreadState *state, Instruction instr)
+fmulGeneric(ThreadState *state, Instruction instr)
 {
    double a, c, d;
    a = state->fpr[instr.frA].paired0;
@@ -287,58 +260,36 @@ fmul(ThreadState *state, Instruction instr)
    state->fpscr.vximz = is_infinity(a) && is_zero(c);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(c);
 
-   d = a * c;
-   if (is_nan(d)) {
-      if (is_nan(a)) {
-         d = make_quiet(a);
-      } else if (is_nan(c)) {
-         d = make_quiet(c);
-      } else {
-         d = make_nan<double>();
-      }
-   }
+   d = static_cast<Type>(a * c);
    updateFPSCR(state);
+
+   d = checkNan<Type>(d, a, c);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
+}
+
+// Floating Multiply Double
+static void
+fmul(ThreadState *state, Instruction instr)
+{
+   fmulGeneric<double>(state, instr);
 }
 
 // Floating Multiply Single
 static void
 fmuls(ThreadState *state, Instruction instr)
 {
-   double a, c, d;
-   a = state->fpr[instr.frA].paired0;
-   c = state->fpr[instr.frC].paired0;
-
-   state->fpscr.vximz = is_infinity(a) && is_zero(c);
-   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(c);
-
-   d = static_cast<float>(a * c);
-   if (is_nan(d)) {
-      if (is_nan(a)) {
-         d = make_quiet(static_cast<float>(a));
-      } else if (is_nan(c)) {
-         d = make_quiet(static_cast<float>(c));
-      } else {
-         d = make_nan<double>();
-      }
-   }
-   updateFPSCR(state);
-   updateFPRF(state, d);
-   state->fpr[instr.frD].paired0 = d;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   fmulGeneric<float>(state, instr);
 }
 
 // Floating Subtract
+template<typename Type>
 static void
-fsub(ThreadState *state, Instruction instr)
+fsubGeneric(ThreadState *state, Instruction instr)
 {
    double a, b, d;
    a = state->fpr[instr.frA].paired0;
@@ -347,53 +298,30 @@ fsub(ThreadState *state, Instruction instr)
    state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
-   d = a - b;
-   if (is_nan(d)) {
-      if (is_nan(a)) {
-         d = make_quiet(a);
-      } else if (is_nan(b)) {
-         d = make_quiet(b);
-      } else {
-         d = make_nan<double>();
-      }
-   }
+   d = static_cast<Type>(a - b);
    updateFPSCR(state);
+
+   d = checkNan<Type>(d, a, b);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
+}
+
+// Floating Subtract Double
+static void
+fsub(ThreadState *state, Instruction instr)
+{
+   fsubGeneric<double>(state, instr);
 }
 
 // Floating Subtract Single
 static void
 fsubs(ThreadState *state, Instruction instr)
 {
-   double a, b, d;
-   a = state->fpr[instr.frA].paired0;
-   b = state->fpr[instr.frB].paired0;
-
-   state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
-   state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
-
-   d = static_cast<float>(a - b);
-   if (is_nan(d)) {
-      if (is_nan(a)) {
-         d = make_quiet(static_cast<float>(a));
-      } else if (is_nan(b)) {
-         d = make_quiet(static_cast<float>(b));
-      } else {
-         d = make_nan<double>();
-      }
-   }
-   updateFPSCR(state);
-   updateFPRF(state, d);
-   state->fpr[instr.frD].paired0 = d;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   fsubGeneric<float>(state, instr);
 }
 
 // Floating Reciprocal Estimate Single
@@ -406,7 +334,7 @@ fres(ThreadState *state, Instruction instr)
    state->fpscr.vxsnan |= is_signalling_nan(b);
 
    d = ppc_estimate_reciprocal(b);
-   
+
    updateFPSCR(state);
    updateFPRF(state, d);
    state->fpr[instr.frD].paired0 = d;
