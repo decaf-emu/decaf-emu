@@ -1,6 +1,7 @@
 #pragma once
 #include "dx12_state.h"
 #include "modules/gx2/gx2_surface.h"
+#include "utils/align.h"
 
 static const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Format format) {
    switch (format) {
@@ -8,11 +9,16 @@ static const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Format format) {
       return DXGI_FORMAT_R8G8B8A8_UNORM;
    case GX2SurfaceFormat::UNORM_BC1:
       return DXGI_FORMAT_BC1_UNORM;
+   case GX2SurfaceFormat::UNORM_BC2:
+      return DXGI_FORMAT_BC3_UNORM;
    case GX2SurfaceFormat::UNORM_BC3:
       return DXGI_FORMAT_BC3_UNORM;
+   case GX2SurfaceFormat::UNORM_BC4:
+      return DXGI_FORMAT_BC4_UNORM;
+   case GX2SurfaceFormat::UNORM_BC5:
+      return DXGI_FORMAT_BC5_UNORM;
    default:
-      assert(0);
-      return DXGI_FORMAT_UNKNOWN;
+      throw;
    };
 };
 
@@ -53,8 +59,18 @@ static const D3D12_BLEND dx12MakeBlend(GX2BlendMode::Mode mode) {
    case  GX2BlendMode::InvSrc1Alpha:
       return D3D12_BLEND_INV_SRC1_ALPHA;
    default:
-      assert(0);
-      return D3D12_BLEND_ONE;
+      throw;
+   }
+}
+
+static const D3D12_PRIMITIVE_TOPOLOGY dx12MakePrimitiveTopology(GX2PrimitiveMode::Mode mode) {
+   switch (mode) {
+   case GX2PrimitiveMode::Triangles:
+      return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+   case GX2PrimitiveMode::TriangleStrip:
+      return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+   default:
+      throw;
    }
 }
 
@@ -71,17 +87,18 @@ static const D3D12_BLEND_OP dx12MakeBlendOp(GX2BlendCombineMode::Mode op) {
    case GX2BlendCombineMode::RevSubtract:
       return D3D12_BLEND_OP_REV_SUBTRACT;
    default:
-      assert(0);
-      return D3D12_BLEND_OP_ADD;
+      throw;
    }
 }
 
 static const uint32_t dx12FixSize(GX2SurfaceFormat::Format format, uint32_t size) {
    switch (format) {
    case GX2SurfaceFormat::UNORM_BC1:
-      return (size >> 2) * 4;
+   case GX2SurfaceFormat::UNORM_BC2:
    case GX2SurfaceFormat::UNORM_BC3:
-      return (size >> 2) * 4;
+   case GX2SurfaceFormat::UNORM_BC4:
+   case GX2SurfaceFormat::UNORM_BC5:
+      return align_up(size, 4);
    default:
       return size;
    }

@@ -3,28 +3,24 @@
 
 class DXDynBuffer {
 public:
-   class Allocation {
+   class BaseAllocation {
       friend class DXDynBuffer;
 
    public:
-      Allocation()
+      BaseAllocation()
       {
          mCpuAddr = nullptr;
-         mView.BufferLocation = 0;
-         mView.SizeInBytes = 0;
-         mView.StrideInBytes = 0;
+         mGpuAddr = NULL;
       }
 
-      Allocation(uint8_t *cpuAddr, D3D12_GPU_VIRTUAL_ADDRESS gpuAddr, UINT stride, UINT size)
+      BaseAllocation(uint8_t *cpuAddr, D3D12_GPU_VIRTUAL_ADDRESS gpuAddr)
       {
          mCpuAddr = cpuAddr;
-         mView.BufferLocation = gpuAddr;
-         mView.StrideInBytes = stride;
-         mView.SizeInBytes = size;
+         mGpuAddr = gpuAddr;
       }
 
       bool valid() const {
-         return mView.BufferLocation != 0;
+         return mGpuAddr != 0;
       }
 
       operator uint8_t*() {
@@ -32,7 +28,26 @@ public:
       }
 
       operator D3D12_GPU_VIRTUAL_ADDRESS() {
-         return mView.BufferLocation;
+         return mGpuAddr;
+      }
+
+   protected:
+      uint8_t *mCpuAddr;
+      D3D12_GPU_VIRTUAL_ADDRESS mGpuAddr;
+
+   };
+
+   class VertexAllocation : public BaseAllocation
+   {
+   public:
+      VertexAllocation() { }
+
+      VertexAllocation(const BaseAllocation& alloc, UINT stride, UINT size)
+         : BaseAllocation(alloc)
+      {
+         mView.BufferLocation = mGpuAddr;
+         mView.StrideInBytes = stride;
+         mView.SizeInBytes = size;
       }
 
       operator D3D12_VERTEX_BUFFER_VIEW*() {
@@ -40,8 +55,29 @@ public:
       }
 
    protected:
-      uint8_t *mCpuAddr;
       D3D12_VERTEX_BUFFER_VIEW mView;
+
+   };
+
+   class IndexAllocation : public BaseAllocation
+   {
+   public:
+      IndexAllocation() { }
+
+      IndexAllocation(const BaseAllocation& alloc, DXGI_FORMAT format, UINT size)
+         : BaseAllocation(alloc)
+      {
+         mView.BufferLocation = mGpuAddr;
+         mView.Format = format;
+         mView.SizeInBytes = size;
+      }
+
+      operator D3D12_INDEX_BUFFER_VIEW*() {
+         return &mView;
+      }
+
+   protected:
+      D3D12_INDEX_BUFFER_VIEW mView;
 
    };
 
@@ -64,15 +100,24 @@ public:
       mOffset = 0;
    }
 
-   Allocation get(UINT stride, UINT size, void *data) {
+   BaseAllocation get(UINT size, void *data) {
       auto thisGpuAddr = mBuffer->GetGPUVirtualAddress() + mOffset;
       auto thisCpuAddr = mCpuAddr + mOffset;
       mOffset += size;
-      Allocation alloc(thisCpuAddr, thisGpuAddr, stride, size);
+
+      BaseAllocation alloc(thisCpuAddr, thisGpuAddr);
       if (data) {
-         memcpy(alloc.mCpuAddr, data, size);
+         memcpy(thisCpuAddr, data, size);
       }
       return alloc;
+   }
+
+   VertexAllocation get(UINT stride, UINT size, void *data) {
+      return VertexAllocation(get(size, data), stride, size);
+   }
+
+   IndexAllocation get(DXGI_FORMAT format, UINT size, void *data) {
+      return IndexAllocation(get(size, data), format, size);
    }
 
    ComPtr<ID3D12Resource> mBuffer;

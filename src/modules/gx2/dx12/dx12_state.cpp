@@ -527,7 +527,7 @@ void stridedMemcpy(
 
 void dx::updateBuffers()
 {
-   DXDynBuffer::Allocation buffers[32];
+   DXDynBuffer::VertexAllocation buffers[32];
    D3D12_VERTEX_BUFFER_VIEW bufferList[32];
    auto fetchShader = gDX.state.fetchShader;
    auto fetchData = (FetchShaderInfo*)(void*)fetchShader->data;
@@ -568,10 +568,7 @@ void dx::updateBuffers()
    gDX.commandList->IASetVertexBuffers(0, 32, bufferList);
 
 
-   DXDynBuffer::Allocation constBuffer;
-
-   constBuffer = gDX.ppcVertexBuffer->get(
-      0, 16 * 4 * sizeof(float), nullptr);
+   auto constBuffer = gDX.ppcVertexBuffer->get(16 * 4 * sizeof(float), nullptr);
    uint8_t *constData = (uint8_t*)constBuffer;
    memcpy(constData, gDX.state.uniforms, 16 * 4 * sizeof(float));
    gDX.commandList->SetGraphicsRootConstantBufferView(1, constBuffer);

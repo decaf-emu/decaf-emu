@@ -6,6 +6,7 @@
 #include "dx12_fetchshader.h"
 #include "dx12_colorbuffer.h"
 #include "dx12_depthbuffer.h"
+#include "dx12_utils.h"
 
 void
 GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
@@ -30,6 +31,26 @@ GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
    const float clearColor[] = { red, green, blue, alpha };
    gDX.commandList->ClearRenderTargetView(*hostColorBuffer->rtv, clearColor, 0, nullptr);
 }
+
+void
+GX2ClearColor(GX2ColorBuffer *colorBuffer,
+   float red, float green, float blue, float alpha)
+{
+   auto hostColorBuffer = dx::getColorBuffer(colorBuffer);
+
+   const float clearColor[] = { red, green, blue, alpha };
+   gDX.commandList->ClearRenderTargetView(*hostColorBuffer->rtv, clearColor, 0, nullptr);
+}
+
+void
+GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
+   float depth,
+   uint8_t stencil,
+   GX2ClearFlags::Flags unk2)
+{
+   // TODO: GX2ClearDepthStencilEx depth/stencil clearing
+}
+
 
 void
 GX2SetAttribBuffer(
@@ -57,19 +78,42 @@ GX2DrawEx(
    dx::updatePipeline();
    dx::updateBuffers();
 
-   switch (mode) {
-   case GX2PrimitiveMode::Triangles:
-      gDX.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-      break;
-   case GX2PrimitiveMode::TriangleStrip:
-      gDX.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-      break;
-   default:
-      assert(0);
-   }
-   
+   gDX.commandList->IASetPrimitiveTopology(
+      dx12MakePrimitiveTopology(mode));
+
    gDX.commandList->DrawInstanced(numVertices, numInstances, offset, 0);
 
+}
+
+void
+GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
+   uint32_t numVertices,
+   GX2IndexType::Type indexType,
+   void *indices,
+   uint32_t offset,
+   uint32_t numInstances)
+{
+   // TODO: GX2DrawIndexedEx
+
+   dx::updateRenderTargets();
+   dx::updatePipeline();
+   dx::updateBuffers();
+
+   gDX.commandList->IASetPrimitiveTopology(
+      dx12MakePrimitiveTopology(mode));
+
+   switch (indexType) {
+   case 4000:
+   {
+      auto indexAlloc = gDX.ppcVertexBuffer->get(DXGI_FORMAT_R8_UINT, numVertices * 2, indices);
+      gDX.commandList->IASetIndexBuffer(indexAlloc);
+      break;
+   }
+   default:
+      throw;
+   }
+
+   gDX.commandList->DrawIndexedInstanced(numVertices, numInstances, 0, offset, 0);
 }
 
 #endif

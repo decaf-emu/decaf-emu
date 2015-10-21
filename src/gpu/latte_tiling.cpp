@@ -10,9 +10,12 @@ untileSurface(GX2Surface *surface, std::vector<uint8_t> &data, uint32_t &rowPitc
 
    switch (surface->format) {
    case GX2SurfaceFormat::UNORM_BC1:
+   case GX2SurfaceFormat::UNORM_BC4:
       cpp = 8;
       break;
+   case GX2SurfaceFormat::UNORM_BC2:
    case GX2SurfaceFormat::UNORM_BC3:
+   case GX2SurfaceFormat::UNORM_BC5:
       cpp = 16;
       break;
    default:
@@ -37,20 +40,24 @@ untileSurface(GX2Surface *surface, std::vector<uint8_t> &data, uint32_t &rowPitc
    texture.base.Height = surfaceHeight / expandY;
    texture.pitch = surfacePitch * texture.cpp;
    texture.group_bytes = 256;
+   texture.r7xx_bank_op = 0;
+   texture.bo = &rbdata;
+   texture.bo->ptr = surfaceData;
 
    switch (surface->tileMode) {
+   case GX2TileMode::Tiled1DThin1:
+      texture.bo->flags = RADEON_BO_FLAGS_MICRO_TILE;
+      texture.num_channels = 2;
+      texture.num_banks = 4;
+      break;
    case GX2TileMode::Tiled2DThin1:
+      texture.bo->flags = RADEON_BO_FLAGS_MACRO_TILE;
       texture.num_channels = 2;
       texture.num_banks = 4;
       break;
    default:
       __debugbreak();
    }
-
-   texture.r7xx_bank_op = 0;
-   texture.bo = &rbdata;
-   texture.bo->flags = RADEON_BO_FLAGS_MACRO_TILE;
-   texture.bo->ptr = surfaceData;
 
    auto outBuf = &data[0];
 

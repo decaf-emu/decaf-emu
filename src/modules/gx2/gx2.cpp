@@ -89,9 +89,12 @@ void
 GX2::registerDrawFunctions()
 {
    RegisterKernelFunction(GX2ClearBuffersEx);
+   RegisterKernelFunction(GX2ClearColor);
+   RegisterKernelFunction(GX2ClearDepthStencilEx);
    RegisterKernelFunction(GX2SetClearDepthStencil);
    RegisterKernelFunction(GX2SetAttribBuffer);
    RegisterKernelFunction(GX2DrawEx);
+   RegisterKernelFunction(GX2DrawIndexedEx);
 }
 
 void

@@ -16,7 +16,16 @@ enum Mode : uint32_t
    First = 1,
    Triangles = 4,
    TriangleStrip = 6,
-   Last = 0x94
+   Last = 0x94,
+};
+}
+
+namespace GX2IndexType
+{
+enum Type : uint32_t
+{
+   First = 0,
+   Last = 9,
 };
 }
 
@@ -25,6 +34,15 @@ struct GX2DepthBuffer;
 
 void
 GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer, float depth, uint8_t stencil);
+
+void
+GX2ClearColor(GX2ColorBuffer *colorBuffer, 
+              float red, float green, float blue,  float alpha);
+
+void
+GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
+                       float depth, uint8_t stencil,
+                       GX2ClearFlags::Flags unk2);
 
 void
 GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
@@ -40,3 +58,11 @@ GX2SetAttribBuffer(uint32_t index, uint32_t size, uint32_t stride, void *buffer)
 
 void
 GX2DrawEx(GX2PrimitiveMode::Mode mode, uint32_t numVertices, uint32_t offset, uint32_t numInstances);
+
+void
+GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode, 
+   uint32_t numVertices, 
+   GX2IndexType::Type indexType, 
+   void *indices, 
+   uint32_t offset, 
+   uint32_t numInstances);

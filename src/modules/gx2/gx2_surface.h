@@ -12,7 +12,10 @@ enum Format : uint32_t
 {
    UNORM_R8G8B8A8 = 0x1a,
    UNORM_BC1 = 0x31,
+   UNORM_BC2 = 0x32,
    UNORM_BC3 = 0x33,
+   UNORM_BC4 = 0x34,
+   UNORM_BC5 = 0x35,
    First = 0x01,
    Last = 0x83f,
 };
