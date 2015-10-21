@@ -1,5 +1,11 @@
 #include "coreinit.h"
 #include "coreinit_memory.h"
+#include "coreinit_core.h"
+#include "utils/teenyheap.h"
+#include "mem/mem.h"
+
+static TeenyHeap *
+gLcHeaps[3];
 
 void *
 OSBlockMove(void *dst, const void *src, ppcsize_t size, BOOL flush)
@@ -116,6 +122,28 @@ OSMemoryBarrier()
    // TODO: OSMemoryBarrier
 }
 
+void * LCAlloc(uint32_t size)
+{
+   uint32_t coreId = OSGetCoreId();
+   return gLcHeaps[coreId]->alloc(size, 512);
+}
+
+void LCDealloc(void * addr)
+{
+   uint32_t coreId = OSGetCoreId();
+   gLcHeaps[coreId]->free(addr);
+}
+
+void
+CoreInit::initialiseMemory()
+{
+   auto lcBase = static_cast<uint8_t*>(memory_translate(0xF8000000));
+
+   for (auto i = 0; i < 3; ++i) {
+      gLcHeaps[i] = new TeenyHeap(lcBase + (0x6000 * i), 0x4000);
+   }
+}
+
 void
 CoreInit::registerMemoryFunctions()
 {
@@ -125,6 +153,8 @@ CoreInit::registerMemoryFunctions()
    RegisterKernelFunction(OSGetForegroundBucket);
    RegisterKernelFunction(OSGetForegroundBucketFreeArea);
    RegisterKernelFunction(OSMemoryBarrier);
+   RegisterKernelFunction(LCAlloc);
+   RegisterKernelFunction(LCDealloc);
    RegisterKernelFunctionName("memcpy", coreinit_memcpy);
    RegisterKernelFunctionName("memset", coreinit_memset);
    RegisterKernelFunctionName("memmove", coreinit_memmove);

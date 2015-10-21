@@ -24,7 +24,8 @@ enum class MemoryType
    SystemData,
    Application,
    Foreground,
-   MEM1
+   MEM1,
+   L2CACHE
 };
 
 struct MemoryView
@@ -102,6 +103,7 @@ initialise()
       { MemoryType::Application,       0x02000000, 0x42000000,   4 * 1024 },
       { MemoryType::Foreground,        0xe0000000, 0xe4000000,   4 * 1024 },
       { MemoryType::MEM1,              0xf4000000, 0xf6000000,   4 * 1024 },
+      { MemoryType::L2CACHE,           0xf8000000, 0xf8010000,       1024 }
    };
 
    // Create file map

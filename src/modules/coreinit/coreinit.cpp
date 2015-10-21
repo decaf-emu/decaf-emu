@@ -17,6 +17,7 @@ CoreInit::initialise()
    initialiseDynLoad();
    initialiseEvent();
    initialiseGHS();
+   initialiseMemory();
    initialiseMembase();
    initialiseMessageQueues();
    initialiseSchedulerFunctions();

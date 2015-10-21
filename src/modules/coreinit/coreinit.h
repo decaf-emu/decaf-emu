@@ -14,6 +14,7 @@ private:
    void initialiseDynLoad();
    void initialiseEvent();
    void initialiseGHS();
+   void initialiseMemory();
    void initialiseMembase();
    void initialiseMessageQueues();
    void initialiseSchedulerFunctions();
