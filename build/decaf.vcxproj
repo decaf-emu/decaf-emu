@@ -410,6 +410,11 @@
     <None Include="..\src\cpu\instructions.inl" />
     <None Include="..\src\gpu\latte_opcodes_def.inl" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resources\shaders\wiiu_fallback.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

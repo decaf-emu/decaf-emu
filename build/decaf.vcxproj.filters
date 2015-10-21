@@ -1135,5 +1135,8 @@
     <None Include="..\src\cpu\instructions.inl">
       <Filter>Header Files\cpu</Filter>
     </None>
+    <None Include="..\resources\shaders\wiiu_fallback.hlsl">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

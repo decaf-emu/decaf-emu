@@ -119,18 +119,24 @@ private:
 #endif
 
       ComPtr<ID3DBlob> errorBlob;
-      HRESULT hr;
-      hr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, &errorBlob);
-      if (FAILED(hr)) {
-         gLog->warn("Shader Source:\n{}\n", hlsl);
-         gLog->warn("Vertex Shader Compilation Failed:\n{}", (char*)errorBlob->GetBufferPointer());
-         throw;
+      HRESULT vertHr, pixHr;
+      vertHr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, &errorBlob);
+      if (!FAILED(vertHr)) {
+         pixHr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, &errorBlob);
       }
-      hr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, &errorBlob);
-      if (FAILED(hr)) {
+
+      if (FAILED(vertHr) || FAILED(pixHr)) {
+         if (FAILED(vertHr)) {
+            gLog->warn("Vertex Shader Compilation Failed");
+         } else {
+            gLog->warn("Pixel Shader Compilation Failed");
+         }
+
+         gLog->warn("Error: {}\n", (char*)errorBlob->GetBufferPointer());
          gLog->warn("Shader Source:\n{}\n", hlsl);
-         gLog->warn("Pixel Shader Compilation Failed:\n{}", (char*)errorBlob->GetBufferPointer());
-         throw;
+
+         ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_fallback.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, nullptr));
+         ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/wiiu_fallback.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, nullptr));
       }
 
       DXGI_FORMAT inputElementFormat;
