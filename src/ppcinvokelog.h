@@ -160,4 +160,4 @@ logArgument(LogState &state, Type value)
    logArgument(state, static_cast<int>(value));
 }
 
-}
+} // namespace ppctypes

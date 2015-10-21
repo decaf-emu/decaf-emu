@@ -609,6 +609,9 @@
     <ClCompile Include="..\src\modules\snd_core\snd_core_device.cpp">
       <Filter>Source Files\modules\snd_core</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_atomic64.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1111,6 +1114,9 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\snd_core\snd_core_core.h">
       <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

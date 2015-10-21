@@ -16,18 +16,22 @@ struct _argumentsState
    size_t f;
 };
 
-class VarList {
+class VarList
+{
 public:
-   VarList(_argumentsState& state) : mState(state) { }
+   VarList(_argumentsState& state) :
+      mState(state)
+   {
+   }
 
    template<typename Type>
-   Type next() {
+   Type next()
+   {
       return getArgument<Type>(mState.thread, mState.r, mState.f);
    }
 
 protected:
    _argumentsState& mState;
-
 };
 
 template<typename Head, typename... Tail>
@@ -103,4 +107,4 @@ invoke(ThreadState *state, ReturnType func(Args...), const char *name = nullptr)
    invoke2(argstate, func, type_list<Args...> {});
 }
 
-}
+} // namespace ppctypes

@@ -138,6 +138,7 @@
     <ClCompile Include="..\src\mem\mem.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_alarm.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_atomic64.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_cache.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_core.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_debug.cpp" />
@@ -274,6 +275,7 @@
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\memory_translate.h" />
     <ClInclude Include="..\src\mem\mem.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
     <ClInclude Include="..\src\modules\gameloader\gameloader.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\d3dx12.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12.h" />

@@ -10,23 +10,29 @@ template <PpcType PpcTypeId, typename Type>
 struct result_converter_t;
 
 template<typename Type>
-struct result_converter_t<PpcType::WORD, Type> {
-   static inline void set(ThreadState *state, Type v) {
+struct result_converter_t<PpcType::WORD, Type>
+{
+   static inline void set(ThreadState *state, Type v)
+   {
       ppctype_converter_t<Type>::to_ppc(v, state->gpr[3]);
    }
 
-   static inline Type get(ThreadState *state) {
+   static inline Type get(ThreadState *state)
+   {
       return ppctype_converter_t<Type>::from_ppc(state->gpr[3]);
    }
 };
 
 template<typename Type>
-struct result_converter_t<PpcType::DWORD, Type> {
-   static inline void set(ThreadState *state, Type v) {
+struct result_converter_t<PpcType::DWORD, Type>
+{
+   static inline void set(ThreadState *state, Type v)
+   {
       ppctype_converter_t<Type>::to_ppc(v, state->gpr[3], state->gpr[4]);
    }
 
-   static inline Type get(ThreadState *state) {
+   static inline Type get(ThreadState *state)
+   {
       return ppctype_converter_t<Type>::from_ppc(state->gpr[3], state->gpr[4]);
    }
 };
@@ -36,18 +42,14 @@ template<typename Type>
 static inline void
 setResult(ThreadState *state, Type v)
 {
-   return result_converter_t<
-      ppctype_converter_t<Type>::ppc_type,
-      Type>::set(state, v);
+   return result_converter_t<ppctype_converter_t<Type>::ppc_type, Type>::set(state, v);
 }
 
 template<typename Type>
 static inline Type
 getResult(ThreadState *state)
 {
-   return result_converter_t<
-      ppctype_converter_t<Type>::ppc_type,
-      Type>::get(state);
+   return result_converter_t<ppctype_converter_t<Type>::ppc_type, Type>::get(state);
 }
 
 template<>
@@ -56,4 +58,4 @@ getResult<void>(ThreadState *state)
 {
 }
 
-}
+} // namespace ppctypes

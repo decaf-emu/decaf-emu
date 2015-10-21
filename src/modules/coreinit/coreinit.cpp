@@ -14,6 +14,7 @@ void
 CoreInit::initialise()
 {
    initialiseAlarm();
+   initialiseAtomic64();
    initialiseDynLoad();
    initialiseEvent();
    initialiseGHS();
@@ -30,6 +31,7 @@ void
 CoreInit::RegisterFunctions()
 {
    registerAlarmFunctions();
+   registerAtomic64Functions();
    registerCoreFunctions();
    registerCacheFunctions();
    registerDebugFunctions();

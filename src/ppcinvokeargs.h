@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 #include "ppctypes.h"
 #include "utils/be_val.h"
 #include "utils/virtual_ptr.h"
@@ -39,7 +40,8 @@ setNextGPR(ThreadState *state, size_t &r, uint32_t value)
 }
 
 template<typename Type>
-struct arg_converter_t<PpcType::WORD, Type> {
+struct arg_converter_t<PpcType::WORD, Type>
+{
    static inline Type get(ThreadState *state, size_t &r, size_t &f)
    {
       return ppctype_converter_t<Type>::from_ppc(getNextGPR(state, r));
@@ -54,7 +56,8 @@ struct arg_converter_t<PpcType::WORD, Type> {
 };
 
 template<typename Type>
-struct arg_converter_t<PpcType::DWORD, Type> {
+struct arg_converter_t<PpcType::DWORD, Type>
+{
    static inline Type get(ThreadState *state, size_t &r, size_t &f)
    {
       auto x = getNextGPR(state, r);
@@ -72,7 +75,8 @@ struct arg_converter_t<PpcType::DWORD, Type> {
 };
 
 template<typename Type>
-struct arg_converter_t<PpcType::FLOAT, Type> {
+struct arg_converter_t<PpcType::FLOAT, Type>
+{
    static inline Type get(ThreadState *state, size_t &r, size_t &f)
    {
       auto& x = state->fpr[f++].paired0;
@@ -87,7 +91,8 @@ struct arg_converter_t<PpcType::FLOAT, Type> {
 };
 
 template<typename Type>
-struct arg_converter_t<PpcType::DOUBLE, Type> {
+struct arg_converter_t<PpcType::DOUBLE, Type>
+{
    static inline Type get(ThreadState *state, size_t &r, size_t &f)
    {
       auto& x = state->fpr[f++].paired0;

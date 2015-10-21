@@ -11,6 +11,7 @@ public:
 
 private:
    void initialiseAlarm();
+   void initialiseAtomic64();
    void initialiseDynLoad();
    void initialiseEvent();
    void initialiseGHS();
@@ -27,6 +28,7 @@ public:
 
 private:
    static void registerAlarmFunctions();
+   static void registerAtomic64Functions();
    static void registerCoreFunctions();
    static void registerCacheFunctions();
    static void registerDebugFunctions();
