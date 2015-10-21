@@ -48,11 +48,17 @@ struct MemoryView
 };
 
 
-uint8_t *gBase = nullptr;
-void *sFile = NULL;
-std::vector<MemoryView> sViews;
+static uint8_t *
+gBase = nullptr;
 
-void unmapViews()
+static void *
+sFile = NULL;
+
+static std::vector<MemoryView>
+sViews;
+
+static void
+unmapViews()
 {
    for (auto &view : sViews) {
       if (view.address) {
@@ -62,7 +68,10 @@ void unmapViews()
    }
 }
 
-bool tryMapViews(uint8_t *base)
+
+// Tries to map all memory views across a 32 bit address space
+static bool
+tryMapViews(uint8_t *base)
 {
    for (auto &view : sViews) {
       auto lo = static_cast<DWORD>(view.start);
@@ -82,7 +91,10 @@ bool tryMapViews(uint8_t *base)
    return true;
 }
 
-void initialise()
+
+// Initialise system memory, mapping all valid address space
+void
+initialise()
 {
    // Setup memory views
    sViews = {
@@ -120,7 +132,9 @@ void initialise()
    }
 }
 
-MemoryView * getView(MemoryType type)
+
+static MemoryView *
+getView(MemoryType type)
 {
    for (auto &view : sViews) {
       if (view.type == type) {
@@ -131,7 +145,9 @@ MemoryView * getView(MemoryType type)
    return nullptr;
 }
 
-MemoryView * getView(uint32_t address)
+
+static MemoryView *
+getView(ppcaddr_t address)
 {
    for (auto &view : sViews) {
       if (address >= view.start && address < view.end) {
@@ -142,7 +158,18 @@ MemoryView * getView(uint32_t address)
    return nullptr;
 }
 
-bool valid(uint32_t address)
+
+// Return the base address of mapped memory
+size_t
+base()
+{
+   return reinterpret_cast<size_t>(gBase);
+}
+
+
+// Returns true if address is in mapped Wii U memory
+bool
+valid(ppcaddr_t address)
 {
    auto view = getView(address);
 
@@ -154,13 +181,19 @@ bool valid(uint32_t address)
    return view->pageTable[page].allocated;
 }
 
-bool protect(uint32_t address, size_t size)
+
+// Effectively sets a memory breakpoint
+bool
+protect(ppcaddr_t address, size_t size)
 {
    auto result = VirtualAlloc(gBase + address, size, MEM_RESERVE, PAGE_NOACCESS);
    return result != NULL;
 }
 
-bool alloc(uint32_t address, size_t size)
+
+// Allocate a region of memory
+bool
+alloc(ppcaddr_t address, size_t size)
 {
    auto view = getView(address);
 
@@ -205,7 +238,10 @@ bool alloc(uint32_t address, size_t size)
    return true;
 }
 
-uint32_t alloc(MemoryType type, size_t size)
+
+// Allocate a type of memory
+uint32_t
+alloc(MemoryType type, size_t size)
 {
    auto view = getView(type);
    auto n = (size - 1) / view->pageSize;
@@ -240,7 +276,10 @@ uint32_t alloc(MemoryType type, size_t size)
    }
 }
 
-bool free(uint32_t address)
+
+// Free memory at address
+bool
+free(ppcaddr_t address)
 {
    MemoryView *view = getView(address);
 
@@ -277,7 +316,10 @@ bool free(uint32_t address)
    return true;
 }
 
-void shutdown()
+
+// Cleanup memory, unmapping all views
+void
+shutdown()
 {
    if (sFile) {
       unmapViews();
