@@ -1,6 +1,6 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/7kf15xo09fcmt1b9?svg=true)](https://ci.appveyor.com/project/exjam/wiiu-emu)
+[![Build status](https://ci.appveyor.com/api/projects/status/fbhhy0nf6nym9pcf?svg=true)](https://ci.appveyor.com/project/exjam/decaf-emu)
 
-# wiiu-emu
+# decaf-emu
 Researching Wii U emulation. Licensed under the terms of the GNU General Public License, version 2 or later (GPLv2+).
 
 ## Requirements
