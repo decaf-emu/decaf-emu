@@ -14,7 +14,7 @@
     <ProjectGuid>{07C14E4C-41E6-4359-934E-7FA06D9800C1}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>gshdisassemble</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
