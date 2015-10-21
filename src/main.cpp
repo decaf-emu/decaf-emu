@@ -45,15 +45,15 @@ bool fuzzTest();
 bool play(const fs::HostPath &path);
 
 static const char USAGE[] =
-R"(WiiU Emulator
+R"(Decaf Emulator
 
 Usage:
-   wiiu play [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] <game directory>
-   wiiu test [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
-   wiiu fuzz
-   wiiu hwtest [--log-file]
-   wiiu (-h | --help)
-   wiiu --version
+   decaf play [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] <game directory>
+   decaf test [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
+   decaf fuzz
+   decaf hwtest [--log-file]
+   decaf (-h | --help)
+   decaf --version
 
 Options:
    -h --help     Show this screen.
