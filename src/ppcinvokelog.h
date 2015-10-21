@@ -137,7 +137,7 @@ logArgument(LogState &state, Type value)
       } else if (sizeof(Type) == 4) {
          fmt = "0x%08X";
       } else if (sizeof(Type) == 8) {
-         fmt = "0x%016X";
+         fmt = "0x%016llX";
       } else {
          fmt = "0x%X";
       }
