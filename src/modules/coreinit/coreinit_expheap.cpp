@@ -5,6 +5,17 @@
 #include "utils/align.h"
 #include "utils/virtual_ptr.h"
 
+/**
+ TODO: Implement Heaps a bit better.
+ The WiiU implements its heaps (at least Expanded Heap) by storing
+ the free blocks using the heap header, this means that all instances
+ of accessing the allowable size for a particular heap should be
+ removing header size from each free block.  This is particularily
+ relevant with GetExpHeapTotalFreeSize, which should be removing
+ sizeof(ExpandedHeapBlock) for each free block, rather than just once
+ for the whole number.
+*/
+
 #pragma pack(push, 1)
 
 struct ExpandedHeapBlock
@@ -202,6 +213,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
    }
 
    // Add size for block header and alignment
+   uint32_t originalSize = size;
    size += sizeof(ExpandedHeapBlock);
    size += alignment;
 
@@ -258,7 +270,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
    }
 
    if (!freeBlock) {
-      gLog->error("MEMAllocFromExpHeapEx failed, no free block found");
+      gLog->error("MEMAllocFromExpHeapEx failed, no free block found for size {:08x} ({:08x}+{:x}+{:x})", size, originalSize, sizeof(ExpandedHeapBlock), alignment);
       MEMiDumpExpHeap(heap);
       return 0;
    }
@@ -312,6 +324,11 @@ MEMFreeToExpHeap(ExpandedHeap *heap, uint8_t *address)
    auto base = memory_untranslate(address);
 
    if (!base) {
+      return;
+   }
+
+   if (base < heap->bottom || base >= heap->top) {
+      gLog->warn("FreeToExpHeap outside heap region; {:08x} not within {:08x}-{:08x}", base, heap->bottom, heap->top);
       return;
    }
 
@@ -460,6 +477,13 @@ MEMGetTotalFreeSizeForExpHeap(ExpandedHeap *heap)
    for (auto block = heap->freeBlockList; block; block = block->next) {
       size += block->size;
    }
+
+   // Ensure it is big enough
+   if (size < sizeof(ExpandedHeapBlock)) {
+      return 0;
+   }
+
+   size -= sizeof(ExpandedHeapBlock);
 
    return size;
 }
