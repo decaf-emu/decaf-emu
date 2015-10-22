@@ -5,7 +5,7 @@ IOHandle
 UCOpen()
 {
    // TODO: UCOpen
-   return IOInvalidHandle;
+   return 0x12345;
 }
 
 void

@@ -1,24 +1,28 @@
 #include "coreinit.h"
 #include "coreinit_mcp.h"
 
+static const IOHandle
+gMCPHandle = 0x12345678;
+
 IOHandle
 MCP_Open()
 {
-   // TODO: MCP_Open
-   return IOInvalidHandle;
+   return gMCPHandle;
 }
 
 void
 MCP_Close(IOHandle handle)
 {
-   // TODO: MCP_Close
+   assert(handle == gMCPHandle);
 }
 
 IOError
 MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings)
 {
-   // TODO: MCP_GetSysProdSettings
-   return IOError::Generic;
+   memset(settings, 0, sizeof(MCPSysProdSettings));
+   settings->gameRegion = SCIRegion::US;
+   settings->platformRegion = SCIRegion::EUR;
+   return IOError::OK;
 }
 
 void
