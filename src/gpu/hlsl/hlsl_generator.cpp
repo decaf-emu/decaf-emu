@@ -12,11 +12,11 @@ namespace hlsl
 
 static bool translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks);
 static bool generateEpilog(fmt::MemoryWriter &output);
-static bool generatePixelParams(latte::Shader &vertexShader, fmt::MemoryWriter &output);
+static bool generatePixelParams(const latte::Shader &vertexShader, fmt::MemoryWriter &output);
 static bool generateVertexParams(const gsl::array_view<GX2AttribStream> &attribs, fmt::MemoryWriter &output);
-static bool generateLocals(latte::Shader &shader, fmt::MemoryWriter &output);
+static bool generateLocals(const latte::Shader &shader, fmt::MemoryWriter &output);
 static bool generateProlog(const char *functionName, const char *inputStruct, const char *outputStruct, fmt::MemoryWriter &output);
-static bool generateExports(latte::Shader &shader, fmt::MemoryWriter &output);
+static bool generateExports(const latte::Shader &shader, fmt::MemoryWriter &output);
 static bool generateAttribs(const gsl::array_view<GX2AttribStream> &attribs, fmt::MemoryWriter &output);
 static int getGX2AttribFormatElems(GX2AttribFormat::Format format);
 static std::string getGX2AttribFormatType(GX2AttribFormat::Format format);
@@ -418,7 +418,7 @@ getGX2AttribFormatElems(GX2AttribFormat::Format format)
 static bool
 generateAttribs(const gsl::array_view<GX2AttribStream> &attribs, fmt::MemoryWriter &output)
 {
-   for (auto &attrib : attribs) {
+   for (const auto &attrib : attribs) {
       output
          << "   "
          << getGX2AttribFormatType(attrib.format)
@@ -431,9 +431,9 @@ generateAttribs(const gsl::array_view<GX2AttribStream> &attribs, fmt::MemoryWrit
 }
 
 static bool
-generateExports(latte::Shader &shader, fmt::MemoryWriter &output)
+generateExports(const latte::Shader &shader, fmt::MemoryWriter &output)
 {
-   for (auto &exp : shader.exports) {
+   for (const auto &exp : shader.exports) {
       output << "   ";
 
       switch (exp->type) {
@@ -489,7 +489,7 @@ generateProlog(const char *functionName, const char *inputStruct, const char *ou
 }
 
 static bool
-generateLocals(latte::Shader &shader, fmt::MemoryWriter &output)
+generateLocals(const latte::Shader &shader, fmt::MemoryWriter &output)
 {
    for (auto id : shader.gprsUsed) {
       output
@@ -516,7 +516,7 @@ generateVertexParams(const gsl::array_view<GX2AttribStream> &attribs, fmt::Memor
 {
    auto result = true;
 
-   for (auto &attrib : attribs) {
+   for (const auto &attrib : attribs) {
       int attribElems = getGX2AttribFormatElems(attrib.format);
 
       output
@@ -546,9 +546,9 @@ generateVertexParams(const gsl::array_view<GX2AttribStream> &attribs, fmt::Memor
 }
 
 static bool
-generatePixelParams(latte::Shader &vertexShader, fmt::MemoryWriter &output)
+generatePixelParams(const latte::Shader &vertexShader, fmt::MemoryWriter &output)
 {
-   for (auto &exp : vertexShader.exports) {
+   for (const auto &exp : vertexShader.exports) {
       if (exp->type == latte::exp::Type::Parameter) {
          output << "R" << exp->dstReg << " = (float4)input.param" << exp->dstReg << ";\n";
       }
