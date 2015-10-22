@@ -1136,6 +1136,9 @@
     <ClInclude Include="..\src\modules\swkbd\swkbd_core.h">
       <Filter>Header Files\modules\swkbd</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\cpu\cpu_internal.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

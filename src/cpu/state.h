@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <atomic>
 
 // General Purpose Integer Registers
 using gpr_t = uint32_t;
@@ -394,10 +395,24 @@ enum class SprEncoding
    PIR = 0x3FF,
 };
 
+namespace cpu {
+
+struct CoreState
+{
+   CoreState() {
+      interrupt.exchange(false);
+   }
+
+   std::atomic_bool interrupt;
+};
+
+}
+
 // Thread registers
 // TODO: Some system registers may not be thread-specific!
 struct ThreadState
 {
+   cpu::CoreState *core;
    struct Tracer *tracer;
 
    uint32_t cia;     // Current execution address

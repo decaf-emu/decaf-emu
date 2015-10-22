@@ -35,6 +35,8 @@ Processor::start()
 {
    mRunning = true;
 
+   ::cpu::set_interrupt_handler(handleInterrupt);
+
    for (auto core : mCores) {
       core->thread = std::thread(std::bind(&Processor::coreEntryPoint, this, core));
 
@@ -67,7 +69,13 @@ Processor::join()
 void
 Processor::fiberEntryPoint(Fiber *fiber)
 {
-   cpu::executeSub(&fiber->state);
+   auto core = tCurrentCore;
+   if (!core) {
+      gLog->error("fiberEntryPoint called from non-ppc thread.");
+      return;
+   }
+
+   cpu::executeSub(&core->state, &fiber->state);
    OSExitThread(ppctypes::getResult<int>(&fiber->state));
 }
 
@@ -94,7 +102,11 @@ Processor::coreEntryPoint(Core *core)
 
       core->mFiberDeleteList.clear();
 
-      if (auto fiber = peekNextFiberNoLock(core->id)) {
+      if (::cpu::hasInterrupt(&core->state)) {
+         // Switch to the interrupt thread for any waiting interrupts
+         lock.unlock();
+         handleInterrupt();
+      } else if (auto fiber = peekNextFiberNoLock(core->id)) {
          // Remove fiber from schedule queue
          mFiberQueue.erase(std::remove(mFiberQueue.begin(), mFiberQueue.end(), fiber), mFiberQueue.end());
 
@@ -107,10 +119,6 @@ Processor::coreEntryPoint(Core *core)
 
          gLog->trace("Core {} enter thread {}", core->id, fiber->thread->id);
          SwitchToFiber(fiber->handle);
-      } else if (core->interrupt) {
-         // Switch to the interrupt thread for any waiting interrupts
-         lock.unlock();
-         handleInterrupt();
       } else {
          // Wait for a valid fiber
          gLog->trace("Core {} wait for thread", core->id);
@@ -301,10 +309,15 @@ Processor::getCurrentFiber()
 OSContext *
 Processor::getInterruptContext()
 {
-   if (!tCurrentCore || !tCurrentCore->currentFiber) {
+   if (!tCurrentCore) {
+      gLog->error("Called getInterruptContext on non-ppc thread.");
       return nullptr;
+   }
+
+   if (tCurrentCore->interruptedFiber) {
+      return &tCurrentCore->interruptedFiber->thread->context;
    } else {
-      return &tCurrentCore->currentFiber->thread->context;
+      return nullptr;
    }
 }
 
@@ -320,7 +333,7 @@ Processor::timerEntryPoint()
 
       for (auto core : mCores) {
          if (core->nextInterrupt <= now) {
-            core->interrupt = true;
+            ::cpu::interrupt(&core->state);
             core->nextInterrupt = std::chrono::time_point<std::chrono::system_clock>::max();
             wakeAllCores();
          } else if (core->nextInterrupt < next) {
@@ -347,30 +360,42 @@ Processor::waitFirstInterrupt()
    SwitchToFiber(core->primaryFiber);
 }
 
+void
+Processor::handleInterrupt(cpu::CoreState *core, ThreadState *state)
+{
+   gProcessor.handleInterrupt();
+}
+
 // Yield to interrupt thread to handle any pending interrupt
 void
 Processor::handleInterrupt()
 {
    auto core = tCurrentCore;
-
-   if (core && core->interrupt) {
-      if (core->currentFiber) {
-         core->interruptedFiber = core->currentFiber;
-      } else {
-         core->interruptedFiber = nullptr;
-      }
-
-      core->interrupt = false;
-      core->currentFiber = core->interruptHandlerFiber;
-      SwitchToFiber(core->currentFiber->handle);
+   if (!core) {
+      gLog->error("handleInterrupt called from non-ppc thread");
+      return;
    }
+
+   if (core->currentFiber) {
+      core->interruptedFiber = core->currentFiber;
+   } else {
+      core->interruptedFiber = nullptr;
+   }
+
+   ::cpu::clearInterrupt(&core->state);
+   core->currentFiber = core->interruptHandlerFiber;
+   SwitchToFiber(core->currentFiber->handle);
 }
 
-// Return to the interrupted thread
+// Return to normal processing
 void
 Processor::finishInterrupt()
 {
    auto core = tCurrentCore;
+   if (!core) {
+      gLog->error("finishInterrupt called from non-ppc thread");
+   }
+
    auto fiber = core->interruptedFiber;
 
    core->currentFiber = fiber;
@@ -390,7 +415,7 @@ Processor::setInterrupt(uint32_t core)
 {
    std::unique_lock<std::mutex> lock { mTimerMutex };
    mCores[core]->nextInterrupt = std::chrono::time_point<std::chrono::system_clock>::max();
-   mCores[core]->interrupt = true;
+   ::cpu::interrupt(&mCores[core]->state);
 }
 
 // Set the time of the next interrupt, will not overwrite sooner times

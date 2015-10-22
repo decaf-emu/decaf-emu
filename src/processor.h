@@ -47,9 +47,9 @@ struct Core
    Fiber *interruptHandlerFiber = nullptr;
    void *primaryFiber = nullptr;
    std::thread thread;
-   std::atomic<bool> interrupt = false;
    std::chrono::system_clock::time_point nextInterrupt;
    std::vector<Fiber *> mFiberDeleteList;
+   cpu::CoreState state;
 };
 
 class Processor
@@ -103,6 +103,7 @@ protected:
    void timerEntryPoint();
    void coreEntryPoint(Core *core);
    void fiberEntryPoint(Fiber *fiber);
+   static void handleInterrupt(cpu::CoreState *core, ThreadState *state);
 
    Fiber *createFiberNoLock();
    void destroyFiberNoLock(Fiber *fiber);

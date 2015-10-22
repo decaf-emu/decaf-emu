@@ -6,6 +6,7 @@
 #include "processor.h"
 #include "trace.h"
 #include "utils/log.h"
+#include "../cpu_internal.h"
 
 namespace cpu
 {
@@ -54,8 +55,9 @@ namespace interpreter
          // TankTankTank decryptor fn
          //forceJit = state->nia >= 0x0250B648 && state->nia < 0x0250B8B8;
 
-         // Handle interrupts
-         gProcessor.handleInterrupt();
+         if (state->core->interrupt.load()) {
+            cpu::gInterruptHandler(state->core, state);
+         }
 
          // Interpreter Loop!
          state->cia = state->nia;

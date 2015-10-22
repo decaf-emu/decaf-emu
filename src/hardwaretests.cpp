@@ -182,7 +182,7 @@ bool runTests()
 
          // Execute test
          mem::write(baseAddress, test.instr.value);
-         cpu::executeSub(&state);
+         cpu::executeSub(nullptr, &state);
 
          // Check XER (all bits)
          if (state.xer.value != test.output.xer.value) {

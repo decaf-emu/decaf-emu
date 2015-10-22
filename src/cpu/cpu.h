@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <atomic>
 #include <functional>
 #include <utility>
 #include "state.h"
@@ -18,10 +19,20 @@ enum class JitMode {
    Debug
 };
 
+struct CoreState;
+
 void setJitMode(JitMode mode);
 
 void initialise();
-void executeSub(ThreadState *state);
+
+typedef void(*interrupt_handler)(CoreState*, ThreadState*);
+void set_interrupt_handler(interrupt_handler handler);
+
+void interrupt(CoreState *core);
+bool hasInterrupt(CoreState *core);
+void clearInterrupt(CoreState *core);
+
+void executeSub(CoreState *core, ThreadState *state);
 
 typedef void (*KernelCallFn)(ThreadState *state, void *userData);
 typedef std::pair<KernelCallFn, void*> KernelCallEntry;
@@ -44,7 +55,7 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
    // Set state
    state->cia = 0;
    state->nia = address;
-   cpu::executeSub(state);
+   cpu::executeSub(state->core, state);
 
    // Restore state
    state->nia = nia;
