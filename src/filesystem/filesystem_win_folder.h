@@ -22,13 +22,13 @@ struct HostFolder : public Folder
       close();
    }
 
-   virtual bool open()
+   bool open() override
    {
       findHandle = FindFirstFileA(path.join("*"), &findData);
       return findHandle != INVALID_HANDLE_VALUE;
    }
 
-   virtual bool read(FolderEntry &entry)
+   bool read(FolderEntry &entry) override
    {
       if (findHandle == INVALID_HANDLE_VALUE) {
          return false;
@@ -56,12 +56,12 @@ struct HostFolder : public Folder
       return true;
    }
 
-   virtual bool rewind()
+   bool rewind() override
    {
       return close() && open();
    }
 
-   virtual bool close()
+   bool close() override
    {
       if (findHandle != INVALID_HANDLE_VALUE) {
          FindClose(findHandle);
@@ -71,7 +71,7 @@ struct HostFolder : public Folder
       return true;
    }
 
-   virtual FileSystemNode *addFolder(const std::string &name) override
+   FileSystemNode *addFolder(const std::string &name) override
    {
       auto node = findChild(name);
 
@@ -97,7 +97,7 @@ struct HostFolder : public Folder
       return addChild(new HostFolder(name, hostPath));
    }
 
-   virtual FileSystemNode *addChild(FileSystemNode *node) override
+   FileSystemNode *addChild(FileSystemNode *node) override
    {
       // Ensure child is a Host type
       if (node->hostType != FileSystemNode::HostNode) {
@@ -109,7 +109,7 @@ struct HostFolder : public Folder
       return node;
    }
 
-   virtual FileSystemNode *findChild(const std::string &name) override
+   FileSystemNode *findChild(const std::string &name) override
    {
       // Find file/folder in virtual file system
       auto node = virtualFolder.findChild(name);

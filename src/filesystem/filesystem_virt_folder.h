@@ -18,13 +18,13 @@ struct VirtualFolder : Folder
       }
    }
 
-   virtual bool open()
+   bool open() override
    {
       pos = children.begin();
       return true;
    }
 
-   virtual bool read(FolderEntry &entry)
+   bool read(FolderEntry &entry) override
    {
       if (pos == children.end()) {
          return false;
@@ -44,30 +44,30 @@ struct VirtualFolder : Folder
       return true;
    }
 
-   virtual bool rewind()
+   bool rewind() override
    {
       pos = children.begin();
       return true;
    }
 
-   virtual bool close()
+   bool close() override
    {
       pos = children.end();
       return true;
    }
 
-   virtual FileSystemNode *addFolder(const std::string &name) override
+   FileSystemNode *addFolder(const std::string &name) override
    {
       return addChild(new VirtualFolder(name));
    }
 
-   virtual FileSystemNode *addChild(FileSystemNode *node) override
+   FileSystemNode *addChild(FileSystemNode *node) override
    {
       children.push_back(node);
       return node;
    }
 
-   virtual FileSystemNode *findChild(const std::string &name) override
+   FileSystemNode *findChild(const std::string &name) override
    {
       for (auto node : children) {
          if (node->name == name) {
