@@ -1,3 +1,4 @@
+#include <cassert>
 #include "jit_insreg.h"
 #include "utils/bitutils.h"
 

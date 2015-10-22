@@ -92,6 +92,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\codetests.cpp" />
     <ClCompile Include="..\src\cpu\cpu.cpp" />
+    <ClCompile Include="..\src\cpu\cpu_kc.cpp" />
     <ClCompile Include="..\src\cpu\disassembler.cpp" />
     <ClCompile Include="..\src\cpu\instructioninfo.cpp" />
     <ClCompile Include="..\src\cpu\instructiontable.cpp" />
@@ -112,6 +113,7 @@
     <ClCompile Include="..\src\cpu\jit\jit_loadstore.cpp" />
     <ClCompile Include="..\src\cpu\jit\jit_pairedsingle.cpp" />
     <ClCompile Include="..\src\cpu\jit\jit_system.cpp" />
+    <ClCompile Include="..\src\cpu\trace.cpp" />
     <ClCompile Include="..\src\debugcontrol.cpp" />
     <ClCompile Include="..\src\debugger.cpp" />
     <ClCompile Include="..\src\debugnet.cpp" />
@@ -228,7 +230,6 @@
     <ClCompile Include="..\src\platform\platform_windows.cpp" />
     <ClCompile Include="..\src\processor.cpp" />
     <ClCompile Include="..\src\system.cpp" />
-    <ClCompile Include="..\src\trace.cpp" />
     <ClCompile Include="..\src\memory_translate.cpp" />
     <ClCompile Include="..\src\utils\crc32.cpp" />
     <ClCompile Include="..\src\utils\wfunc_ptr.cpp" />
@@ -249,6 +250,8 @@
     <ClInclude Include="..\src\cpu\jit\jit_insreg.h" />
     <ClInclude Include="..\src\cpu\jit\jit_internal.h" />
     <ClInclude Include="..\src\cpu\state.h" />
+    <ClInclude Include="..\src\cpu\statedbg.h" />
+    <ClInclude Include="..\src\cpu\trace.h" />
     <ClInclude Include="..\src\cpu\utils.h" />
     <ClInclude Include="..\src\debugcontrol.h" />
     <ClInclude Include="..\src\debugger.h" />
@@ -352,8 +355,6 @@
     <ClInclude Include="..\src\ppcinvoke.h" />
     <ClInclude Include="..\src\ppctypes.h" />
     <ClInclude Include="..\src\processor.h" />
-    <ClInclude Include="..\src\statedbg.h" />
-    <ClInclude Include="..\src\trace.h" />
     <ClInclude Include="..\src\types.h" />
     <ClInclude Include="..\src\usermodule.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit.h" />
@@ -404,6 +405,7 @@
     <ClInclude Include="..\src\utils\align.h" />
     <ClInclude Include="..\src\utils\type_list.h" />
     <ClInclude Include="..\src\utils\virtual_ptr.h" />
+    <ClInclude Include="..\src\utils\wfunc_call.h" />
     <ClInclude Include="..\src\utils\wfunc_ptr.h" />
   </ItemGroup>
   <ItemGroup>

@@ -5,7 +5,7 @@
 #include "coreinit_thread.h"
 #include "coreinit_queue.h"
 #include "processor.h"
-#include "trace.h"
+#include "cpu/trace.h"
 
 static std::atomic_bool
 gSchedulerLock { false };

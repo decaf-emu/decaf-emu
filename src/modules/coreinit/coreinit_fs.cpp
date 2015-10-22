@@ -4,7 +4,7 @@
 #include "coreinit_memory.h"
 #include "filesystem/filesystem.h"
 #include "system.h"
-#include "cpu/cpu.h"
+#include "utils/wfunc_call.h"
 
 struct FSFile
 {

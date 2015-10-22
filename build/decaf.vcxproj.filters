@@ -309,9 +309,6 @@
     <ClCompile Include="..\src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\trace.cpp">
-      <Filter>Source Files\ppc</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\proc_ui\proc_ui.cpp">
       <Filter>Source Files\modules\proc_ui</Filter>
     </ClCompile>
@@ -624,6 +621,12 @@
     <ClCompile Include="..\src\modules\swkbd\swkbd_core.cpp">
       <Filter>Source Files\modules\swkbd</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\cpu\cpu_kc.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\trace.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -769,9 +772,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_memheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\trace.h">
-      <Filter>Header Files\ppc</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\proc_ui\proc_ui.h">
       <Filter>Header Files\modules\proc_ui</Filter>
@@ -1067,9 +1067,6 @@
     <ClInclude Include="..\src\hostlookup.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\statedbg.h">
-      <Filter>Header Files\cpu</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\be_data.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
@@ -1137,6 +1134,15 @@
       <Filter>Header Files\modules\swkbd</Filter>
     </ClInclude>
     <ClInclude Include="..\src\cpu\cpu_internal.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\wfunc_call.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\statedbg.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\trace.h">
       <Filter>Header Files\cpu</Filter>
     </ClInclude>
   </ItemGroup>

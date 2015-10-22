@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "cpu/state.h"
+#include "state.h"
 
 template<typename T>
 static std::string to_hex_string(T i) {

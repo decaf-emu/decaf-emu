@@ -6,7 +6,7 @@
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_threadqueue.h"
 #include "modules/coreinit/coreinit_time.h"
-#include "cpu/cpu.h"
+#include "utils/wfunc_call.h"
 #include <chrono>
 
 OSTime

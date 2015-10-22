@@ -1,5 +1,5 @@
 #include <zlib.h>
-#include "cpu/cpu.h"
+#include "utils/wfunc_call.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "memory_translate.h"
 #include "processor.h"

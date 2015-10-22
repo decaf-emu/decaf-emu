@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 #include <asmjit/asmjit.h>
-#include "cpu/cpu.h"
+#include "../cpu.h"
 
 namespace cpu
 {

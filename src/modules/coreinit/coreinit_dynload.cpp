@@ -3,7 +3,7 @@
 #include "coreinit_dynload.h"
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
-#include "cpu/cpu.h"
+#include "utils/wfunc_call.h"
 #include "memory_translate.h"
 #include "system.h"
 #include "utils/be_data.h"

@@ -1,3 +1,4 @@
+#include <cassert>
 #include "jit_internal.h"
 #include "cpu/instructiondata.h"
 #include "cpu/interpreter/interpreter_insreg.h"

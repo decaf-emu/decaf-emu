@@ -33,7 +33,7 @@
 #include "system.h"
 #include "usermodule.h"
 #include "platform.h"
-#include "trace.h"
+#include "cpu/trace.h"
 #include "utils/log.h"
 #include "utils/teenyheap.h"
 

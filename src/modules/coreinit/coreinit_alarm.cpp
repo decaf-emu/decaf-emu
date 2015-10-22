@@ -7,7 +7,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_time.h"
 #include "coreinit_queue.h"
-#include "cpu/cpu.h"
+#include "utils/wfunc_call.h"
 #include "processor.h"
 
 static OSSpinLock *

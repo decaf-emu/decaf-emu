@@ -1,12 +1,12 @@
-#include "cpu/instructiondata.h"
-#include "cpu/interpreter/interpreter.h"
-#include "cpu/interpreter/interpreter_insreg.h"
+#include "interpreter.h"
+#include "interpreter_insreg.h"
+#include "../instructiondata.h"
+#include "../trace.h"
+#include "../cpu_internal.h"
 #include "debugcontrol.h"
 #include "mem/mem.h"
-#include "processor.h"
-#include "trace.h"
 #include "utils/log.h"
-#include "../cpu_internal.h"
+#include "processor.h"
 
 namespace cpu
 {

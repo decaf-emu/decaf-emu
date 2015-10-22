@@ -10,7 +10,7 @@
 #include "cpu/state.h"
 #include "cpu/utils.h"
 #include "mem/mem.h"
-#include "trace.h"
+#include "cpu/trace.h"
 #include "utils/bitutils.h"
 #include "utils/log.h"
 

@@ -15,7 +15,7 @@
 #include "modules/coreinit/coreinit_thread.h"
 #include "processor.h"
 #include "system.h"
-#include "trace.h"
+#include "cpu/trace.h"
 #include "utils/log.h"
 
 DebugNet

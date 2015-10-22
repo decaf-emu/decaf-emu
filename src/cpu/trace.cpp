@@ -1,11 +1,9 @@
-#include "cpu/disassembler.h"
-#include "cpu/instruction.h"
-#include "cpu/instructiondata.h"
-#include "cpu/state.h"
-#include "kernelfunction.h"
-#include "statedbg.h"
-#include "system.h"
 #include "trace.h"
+#include "disassembler.h"
+#include "instruction.h"
+#include "instructiondata.h"
+#include "state.h"
+#include "statedbg.h"
 #include "utils/log.h"
 
 //#define TRACE_VERIFICATION
@@ -87,10 +85,12 @@ printInstruction(const Trace& trace, int index)
 
    std::string addend = "";
 
+   /*
    if (dis.instruction->id == InstructionID::kc) {
       auto scall = gSystem.getSyscallData(trace.instr.li);
       addend = " [" + std::string(scall->name) + "]";
    }
+   */
 
    for (auto &write : trace.writes) {
       printFieldValue(trace.instr, write.type, write.value);

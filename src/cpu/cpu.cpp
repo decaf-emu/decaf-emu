@@ -11,7 +11,6 @@ namespace cpu
 interrupt_handler gInterruptHandler;
 
 JitMode gJitMode = JitMode::Disabled;
-static std::vector<KernelCallEntry> sKernelCalls;
 
 void setJitMode(JitMode mode)
 {
@@ -60,20 +59,6 @@ void executeSub(CoreState *core, ThreadState *state)
    } else {
       interpreter::executeSub(state);
    }
-}
-
-uint32_t registerKernelCall(KernelCallEntry &entry)
-{
-   sKernelCalls.push_back(entry);
-   return static_cast<uint32_t>(sKernelCalls.size() - 1);
-}
-
-KernelCallEntry * getKernelCall(uint32_t id)
-{
-   if (id >= sKernelCalls.size()) {
-      return nullptr;
-   }
-   return &sKernelCalls[id];
 }
 
 }

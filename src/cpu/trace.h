@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "cpu/instruction.h"
+#include "instruction.h"
 
 struct InstructionData;
 struct ThreadState;

@@ -1,5 +1,5 @@
 #pragma once
-#include "cpu/cpu.h"
+#include "../cpu.h"
 
 namespace cpu
 {
