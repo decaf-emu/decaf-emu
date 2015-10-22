@@ -215,6 +215,8 @@
     <ClCompile Include="..\src\modules\snd_core\snd_core.cpp" />
     <ClCompile Include="..\src\modules\snd_core\snd_core_core.cpp" />
     <ClCompile Include="..\src\modules\snd_core\snd_core_device.cpp" />
+    <ClCompile Include="..\src\modules\swkbd\swkbd.cpp" />
+    <ClCompile Include="..\src\modules\swkbd\swkbd_core.cpp" />
     <ClCompile Include="..\src\modules\sysapp\sysapp.cpp" />
     <ClCompile Include="..\src\modules\sysapp\sysapp_title.cpp" />
     <ClCompile Include="..\src\modules\vpad\vpad.cpp" />
@@ -306,6 +308,8 @@
     <ClInclude Include="..\src\modules\snd_core\snd_core_core.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core_device.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core_result.h" />
+    <ClInclude Include="..\src\modules\swkbd\swkbd.h" />
+    <ClInclude Include="..\src\modules\swkbd\swkbd_core.h" />
     <ClInclude Include="..\src\modules\sysapp\sysapp.h" />
     <ClInclude Include="..\src\modules\sysapp\sysapp_title.h" />
     <ClInclude Include="..\src\modules\vpad\vpad.h" />
