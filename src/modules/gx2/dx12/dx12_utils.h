@@ -5,6 +5,8 @@
 
 static const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Format format) {
    switch (format) {
+   case GX2SurfaceFormat::UNORM_R8:
+      return DXGI_FORMAT_R8_UNORM;
    case GX2SurfaceFormat::UNORM_R8G8B8A8:
       return DXGI_FORMAT_R8G8B8A8_UNORM;
    case GX2SurfaceFormat::UNORM_BC1:
@@ -68,6 +70,11 @@ static const D3D12_PRIMITIVE_TOPOLOGY dx12MakePrimitiveTopology(GX2PrimitiveMode
    case GX2PrimitiveMode::Triangles:
       return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
    case GX2PrimitiveMode::TriangleStrip:
+      return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+
+   case GX2PrimitiveMode::Quads: // TODO: Implement quad splitting...
+      return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+   case GX2PrimitiveMode::QuadStrip: // TODO: Implement quad splitting...
       return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
    default:
       throw;

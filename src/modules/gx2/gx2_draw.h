@@ -5,7 +5,7 @@ namespace GX2ClearFlags
 {
 enum Flags : uint32_t
 {
-   Depth = 1,
+   Depth = 0x1,
 };
 }
 
@@ -13,9 +13,11 @@ namespace GX2PrimitiveMode
 {
 enum Mode : uint32_t
 {
-   First = 1,
-   Triangles = 4,
-   TriangleStrip = 6,
+   First = 0x1,
+   Triangles = 0x4,
+   TriangleStrip = 0x6,
+   Quads = 0x13,
+   QuadStrip = 0x14,
    Last = 0x94,
 };
 }
@@ -24,8 +26,9 @@ namespace GX2IndexType
 {
 enum Type : uint32_t
 {
-   First = 0,
-   Last = 9,
+   First = 0x0,
+   U16 = 0x4,
+   Last = 0x9,
 };
 }
 

@@ -103,9 +103,14 @@ GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
       dx12MakePrimitiveTopology(mode));
 
    switch (indexType) {
-   case 4000:
+   case GX2IndexType::U16:
    {
-      auto indexAlloc = gDX.ppcVertexBuffer->get(DXGI_FORMAT_R8_UINT, numVertices * 2, indices);
+      auto indexAlloc = gDX.ppcVertexBuffer->get(DXGI_FORMAT_R16_UINT, numVertices * sizeof(uint16_t), nullptr);
+      auto indexBuffer = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(indexAlloc));
+      auto inBuffer = static_cast<uint16_t*>(indices);
+      for (auto i = 0u; i < numVertices; ++i) {
+         *indexBuffer++ = byte_swap(*inBuffer++);
+      }
       gDX.commandList->IASetIndexBuffer(indexAlloc);
       break;
    }

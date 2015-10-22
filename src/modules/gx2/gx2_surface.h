@@ -10,6 +10,7 @@ namespace GX2SurfaceFormat
 {
 enum Format : uint32_t
 {
+   UNORM_R8 = 0x1,
    UNORM_R8G8B8A8 = 0x1a,
    UNORM_BC1 = 0x31,
    UNORM_BC2 = 0x32,
