@@ -363,12 +363,6 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_shared.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\platform\platform_windows.cpp">
-      <Filter>Source Files\platform</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\platform\platform_posix.cpp">
-      <Filter>Source Files\platform</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12.cpp">
       <Filter>Source Files\modules\gx2\dx12</Filter>
     </ClCompile>
@@ -626,6 +620,21 @@
     </ClCompile>
     <ClCompile Include="..\src\cpu\trace.cpp">
       <Filter>Source Files\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_win_thread.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_win_ui.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_win_time.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_time.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_thread.cpp">
+      <Filter>Source Files\platform</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1133,6 +1142,7 @@
     <ClInclude Include="..\src\modules\swkbd\swkbd_core.h">
       <Filter>Header Files\modules\swkbd</Filter>
     </ClInclude>
+<<<<<<< HEAD
     <ClInclude Include="..\src\cpu\cpu_internal.h">
       <Filter>Header Files\cpu</Filter>
     </ClInclude>
@@ -1144,6 +1154,15 @@
     </ClInclude>
     <ClInclude Include="..\src\cpu\trace.h">
       <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform_time.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform_thread.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform_ui.h">
+      <Filter>Header Files\platform</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

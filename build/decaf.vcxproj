@@ -226,8 +226,11 @@
     <ClCompile Include="..\src\modules\vpad\vpad_status.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
-    <ClCompile Include="..\src\platform\platform_posix.cpp" />
-    <ClCompile Include="..\src\platform\platform_windows.cpp" />
+    <ClCompile Include="..\src\platform\platform_posix_thread.cpp" />
+    <ClCompile Include="..\src\platform\platform_posix_time.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_thread.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_time.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_ui.cpp" />
     <ClCompile Include="..\src\processor.cpp" />
     <ClCompile Include="..\src\system.cpp" />
     <ClCompile Include="..\src\memory_translate.cpp" />
@@ -320,6 +323,9 @@
     <ClInclude Include="..\src\modules\vpad\vpad_core.h" />
     <ClInclude Include="..\src\modules\vpad\vpad_status.h" />
     <ClInclude Include="..\src\platform.h" />
+    <ClInclude Include="..\src\platform\platform_thread.h" />
+    <ClInclude Include="..\src\platform\platform_time.h" />
+    <ClInclude Include="..\src\platform\platform_ui.h" />
     <ClInclude Include="..\src\ppcinvokeargs.h" />
     <ClInclude Include="..\src\ppcinvokelog.h" />
     <ClInclude Include="..\src\ppcinvokeresult.h" />

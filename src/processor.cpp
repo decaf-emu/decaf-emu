@@ -5,7 +5,7 @@
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
-#include "platform.h"
+#include "platform/platform_thread.h"
 #include "processor.h"
 #include "ppcinvoke.h"
 #include "utils/log.h"
@@ -84,9 +84,6 @@ void
 Processor::coreEntryPoint(Core *core)
 {
    tCurrentCore = core;
-
-   platform::ui::initialiseCore(core->id);
-
    core->primaryFiber = ConvertThreadToFiber(NULL);
 
    while (mRunning) {

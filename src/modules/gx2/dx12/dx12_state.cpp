@@ -3,13 +3,13 @@
 
 #include <memory>
 #include "hostlookup.h"
-#include "platform.h"
 #include "dx12_state.h"
 #include "dx12_scanbuffer.h"
 #include "dx12_colorbuffer.h"
 #include "dx12_depthbuffer.h"
 #include "dx12_pipelinemgr.h"
 #include "dx12_texture.h"
+#include "platform/platform_ui.h"
 
 DXState gDX;
 
@@ -31,12 +31,12 @@ DXTextureData * dx::getTexture(GX2Texture *buffer) {
 
 void dx::initialise()
 {
-   gDX.viewport.Width = static_cast<float>(platform::ui::width());
-   gDX.viewport.Height = static_cast<float>(platform::ui::height());
+   gDX.viewport.Width = static_cast<float>(platform::ui::getWindowWidth());
+   gDX.viewport.Height = static_cast<float>(platform::ui::getWindowHeight());
    gDX.viewport.MaxDepth = 1.0f;
 
-   gDX.scissorRect.right = static_cast<LONG>(platform::ui::width());
-   gDX.scissorRect.bottom = static_cast<LONG>(platform::ui::height());
+   gDX.scissorRect.right = static_cast<LONG>(platform::ui::getWindowWidth());
+   gDX.scissorRect.bottom = static_cast<LONG>(platform::ui::getWindowHeight());
 
 
 #ifdef _DEBUG
@@ -84,12 +84,12 @@ void dx::initialise()
    // Describe and create the swap chain.
    DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
    swapChainDesc.BufferCount = gDX.FrameCount;
-   swapChainDesc.BufferDesc.Width = platform::ui::width();
-   swapChainDesc.BufferDesc.Height = platform::ui::height();
+   swapChainDesc.BufferDesc.Width = platform::ui::getWindowWidth();
+   swapChainDesc.BufferDesc.Height = platform::ui::getWindowHeight();
    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-   swapChainDesc.OutputWindow = (HWND)platform::ui::hwnd();
+   swapChainDesc.OutputWindow = reinterpret_cast<HWND>(platform::ui::getWindowHandle());
    swapChainDesc.SampleDesc.Count = 1;
    swapChainDesc.Windowed = TRUE;
 
@@ -233,15 +233,15 @@ void dx::initialise()
 
 
    {
-#define SCREENSPACE(x, y) { -1 + ((x) / (float)platform::ui::width()) * 2, 1 - ((y) / (float)platform::ui::height()) * 2, 0.0f }
+#define SCREENSPACE(x, y) { -1 + ((x) / (float)platform::ui::getWindowWidth()) * 2, 1 - ((y) / (float)platform::ui::getWindowHeight()) * 2, 0.0f }
       float tvX = 0;
       float tvY = 0;
-      float tvWidth = (float)platform::ui::tvWidth();
-      float tvHeight = (float)platform::ui::tvHeight();
-      float drcX = ((float)platform::ui::tvWidth() - (float)platform::ui::drcWidth()) / 2;
-      float drcY = (float)platform::ui::tvHeight();
-      float drcWidth = (float)platform::ui::drcWidth();
-      float drcHeight = (float)platform::ui::drcHeight();
+      float tvWidth = static_cast<float>(platform::ui::getTvWidth());
+      float tvHeight = static_cast<float>(platform::ui::getTvHeight());
+      float drcX = (tvWidth - static_cast<float>(platform::ui::getDrcWidth())) / 2.0f;
+      float drcY = tvHeight;
+      float drcWidth = static_cast<float>(platform::ui::getDrcWidth());
+      float drcHeight = static_cast<float>(platform::ui::getDrcHeight());
 
       struct Vertex {
          XMFLOAT3 pos;
@@ -484,8 +484,8 @@ void stridedMemcpy2(
 }
 
 void stridedMemcpy(
-   uint8_t *src, uint8_t *dest, size_t size, 
-   uint32_t stride, uint32_t offset, 
+   uint8_t *src, uint8_t *dest, size_t size,
+   uint32_t stride, uint32_t offset,
    GX2EndianSwapMode::Mode endianess, GX2AttribFormat::Format format) {
    switch (format) {
    case GX2AttribFormat::UNORM_8:

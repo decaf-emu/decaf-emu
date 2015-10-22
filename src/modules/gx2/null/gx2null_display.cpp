@@ -3,7 +3,6 @@
 
 #include "modules/coreinit/coreinit_time.h"
 #include "modules/gx2/gx2_display.h"
-#include "platform.h"
 
 static uint32_t
 gSwapInterval = 0;

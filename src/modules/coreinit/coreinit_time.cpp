@@ -1,7 +1,7 @@
-#include "platform.h"
 #include "coreinit.h"
 #include "coreinit_time.h"
 #include "coreinit_systeminfo.h"
+#include "platform/platform_time.h"
 
 // Time since epoch
 OSTime

@@ -10,7 +10,7 @@
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/gx2/gx2_display.h"
 #include "modules/gx2/gx2_vsync.h"
-#include "platform.h"
+#include "platform/platform_ui.h"
 
 static uint32_t
 gSwapInterval = 0;

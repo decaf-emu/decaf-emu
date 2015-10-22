@@ -3,6 +3,7 @@
 #include "utils/bitutils.h"
 #include "codetests.h"
 #include "cpu/cpu.h"
+#include "cpu/trace.h"
 #include "debugger.h"
 #include "fuzztests.h"
 #include "filesystem/filesystem.h"
@@ -30,10 +31,9 @@
 #include "modules/sysapp/sysapp.h"
 #include "modules/vpad/vpad.h"
 #include "modules/zlib125/zlib125.h"
+#include "platform/platform_ui.h"
 #include "system.h"
 #include "usermodule.h"
-#include "platform.h"
-#include "cpu/trace.h"
 #include "utils/log.h"
 #include "utils/teenyheap.h"
 
@@ -66,7 +66,7 @@ Options:
    --log-level=<log-level> [default: trace]
                  Only display logs with severity equal to or greater than this level.
                  Available levels: trace, debug, info, notice, warning, error, critical, alert, emerg, off
-   --sys-path=<sys-path>   
+   --sys-path=<sys-path>
                  Where to locate any external system files.
    --as=<ppcas>  Path to PowerPC assembler [default: powerpc-eabi-as.exe].
 )";
@@ -211,7 +211,11 @@ fuzzTest()
 static bool
 play(const fs::HostPath &path, const fs::HostPath &sysPath)
 {
-   platform::ui::initialise();
+   // Create window
+   if (!platform::ui::createWindow(L"Decaf")) {
+      gLog->error("Error creating window");
+      return false;
+   }
 
    // Setup filesystem
    fs::FileSystem fs;
