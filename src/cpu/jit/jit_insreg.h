@@ -33,8 +33,8 @@ bool jit_fallback(PPCEmuAssembler& a, Instruction instr);
 #undef RegisterInstructionFallback
 
 #define RegisterInstruction(x) \
-   ::cpu::jit::registerInstruction(InstructionID::x, &x)
+   cpu::jit::registerInstruction(InstructionID::x, &x)
 #define RegisterInstructionFn(x, fn) \
-   ::cpu::jit::registerInstruction(InstructionID::x, &fn)
+   cpu::jit::registerInstruction(InstructionID::x, &fn)
 #define RegisterInstructionFallback(x) \
-   ::cpu::jit::registerInstruction(InstructionID::x, &::cpu::jit::jit_fallback)
+   cpu::jit::registerInstruction(InstructionID::x, &cpu::jit::jit_fallback)

@@ -79,7 +79,7 @@ getGameName(const fs::HostPath &path)
 
 int main(int argc, char **argv)
 {
-   auto args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true, "WiiU 0.1");
+   auto args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true, "Decaf 0.1");
    bool result = false;
 
    if (args["--jit-debug"].asBool()) {

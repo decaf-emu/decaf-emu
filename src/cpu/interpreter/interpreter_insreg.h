@@ -28,6 +28,6 @@ void registerSystemInstructions();
 #undef RegisterInstructionFn
 
 #define RegisterInstruction(x) \
-   ::cpu::interpreter::registerInstruction(InstructionID::x, &x)
+   cpu::interpreter::registerInstruction(InstructionID::x, &x)
 #define RegisterInstructionFn(x, fn) \
-   ::cpu::interpreter::registerInstruction(InstructionID::x, &fn)
+   cpu::interpreter::registerInstruction(InstructionID::x, &fn)

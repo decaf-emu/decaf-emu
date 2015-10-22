@@ -12,7 +12,7 @@ namespace jit
 bool jit_fallback(PPCEmuAssembler& a, Instruction instr)
 {
    auto data = gInstructionTable.decode(instr);
-   auto fptr = ::cpu::interpreter::getInstructionHandler(data->id);
+   auto fptr = cpu::interpreter::getInstructionHandler(data->id);
    if (!fptr) {
       assert(0);
    }
