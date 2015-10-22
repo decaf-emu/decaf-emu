@@ -4,9 +4,23 @@
 
 #pragma pack(push, 1)
 
+namespace SCILanguage
+{
+enum Lang
+{
+   English = 0x01,
+};
+}
+
 struct UCSysConfig
 {
-   UNKNOWN(0x54); // From UCReadSysConfigAsync, memcpy count * 0x54? Not sure if correct
+   char name[32];
+   UNKNOWN(32);
+   be_val<uint32_t> unk1; // access rights? 0x777
+   be_val<uint32_t> data_size;
+   be_val<uint32_t> unk3; // usually 0x00?
+   be_val<uint32_t> unk4; // count? 0x03
+   be_ptr<void> data;
 };
 CHECK_SIZE(UCSysConfig, 0x54);
 

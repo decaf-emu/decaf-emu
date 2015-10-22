@@ -4,21 +4,27 @@
 IOHandle
 UCOpen()
 {
-   // TODO: UCOpen
-   return 0x12345;
+   return static_cast<IOHandle>(0);
 }
 
 void
 UCClose(IOHandle handle)
 {
-   // TODO: UCClose
 }
 
 IOError
 UCReadSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
 {
-   // TODO: UCReadSysConfig
-   return IOError::Generic;
+   for (auto i = 0; i < count; ++i) {
+      auto &setting = settings[i];
+      if (strcmp(setting.name, "cafe.language") == 0) {
+         assert(setting.data_size == 4);
+         *static_cast<uint32_t*>(setting.data.get()) = SCILanguage::English;
+      } else {
+         gLog->info("UCReadSysConfig unknown setting {} ({})", setting.name, setting.data_size);
+      }
+   }
+   return IOError::OK;
 }
 
 void
