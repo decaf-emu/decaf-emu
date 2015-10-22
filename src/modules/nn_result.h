@@ -67,9 +67,9 @@ union Result
    }
 
    Result(int32_t module, int32_t level, int32_t description) :
+      description(description),
       module(module),
-      level(level),
-      description(description)
+      level(level)
    {
    }
 

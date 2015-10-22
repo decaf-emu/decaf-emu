@@ -36,7 +36,7 @@ struct MemoryView
    }
 
    MemoryView(MemoryType type, uint32_t start, uint32_t end, uint32_t pageSize) :
-      type(type), start(start), end(end), pageSize(pageSize), address(0)
+      type(type), start(start), end(end), address(0), pageSize(pageSize)
    {
    }
 
