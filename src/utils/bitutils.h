@@ -21,14 +21,14 @@ bit_cast(const SrcType& src)
 
 // Gets the value of a bit
 template<typename Type>
-inline Type
+constexpr Type
 get_bit(Type src, unsigned bit)
 {
    return (src >> bit) & static_cast<Type>(1);
 }
 
 template<unsigned bit, typename Type>
-inline Type
+constexpr Type
 get_bit(Type src)
 {
    return (src >> (bit)) & static_cast<Type>(1);
@@ -36,14 +36,14 @@ get_bit(Type src)
 
 // Sets the value of a bit to 1
 template<typename Type>
-inline Type
+constexpr Type
 set_bit(Type src, unsigned bit)
 {
    return src | (static_cast<Type>(1) << bit);
 }
 
 template<unsigned bit, typename Type>
-inline Type
+constexpr Type
 set_bit(Type src)
 {
    return src | (static_cast<Type>(1) << (bit));
@@ -51,14 +51,14 @@ set_bit(Type src)
 
 // Flips the value of a bit to 1
 template<typename Type>
-inline Type
+constexpr Type
 flip_bit(Type src, unsigned bit)
 {
    return src ^ (static_cast<Type>(1) << bit);
 }
 
 template<unsigned bit, typename Type>
-inline Type
+constexpr Type
 flip_bit(Type src)
 {
    return src ^ (static_cast<Type>(1) << (bit));
@@ -66,14 +66,14 @@ flip_bit(Type src)
 
 // Clears the value of a bit
 template<typename Type>
-inline Type
+constexpr Type
 clear_bit(Type src, unsigned bit)
 {
    return src & ~(static_cast<Type>(1) << bit);
 }
 
 template<unsigned bit, typename Type>
-inline Type
+constexpr Type
 clear_bit(Type src)
 {
    return src & ~(static_cast<Type>(1) << (bit));
@@ -98,28 +98,28 @@ set_bit_value(Type src, Type value)
 
 // Create a bitmask for bits
 template<typename Type>
-constexpr inline Type
+constexpr Type
 make_bitmask(Type bits)
 {
    return static_cast<Type>((1ull << bits) - 1);
 }
 
 template<unsigned bits, typename Type>
-constexpr inline Type
+constexpr Type
 make_bitmask()
 {
    return static_cast<Type>((1ull << (bits)) - 1);
 }
 
 template<>
-constexpr inline uint32_t
+constexpr uint32_t
 make_bitmask<32, uint32_t>()
 {
    return 0xffffffff;
 }
 
 template<>
-constexpr inline uint64_t
+constexpr uint64_t
 make_bitmask<64, uint64_t>()
 {
    return 0xffffffffffffffffull;
@@ -127,14 +127,14 @@ make_bitmask<64, uint64_t>()
 
 // Creates a bitmask between begin and end
 template<typename Type>
-constexpr inline Type
+constexpr Type
 make_bitmask(Type begin, Type end)
 {
    return make_bitmask(end - begin + 1) << begin;
 }
 
 template<unsigned begin, unsigned end, typename Type>
-constexpr inline Type
+constexpr Type
 make_bitmask()
 {
    return make_bitmask<(end) - (begin) + 1, Type>() << (begin);
