@@ -5,6 +5,10 @@
 #include <cstring>
 #include <type_traits>
 
+#ifdef __linux__
+#include <byteswap.h>
+#endif
+
 // reinterpret_cast for value types
 template<typename DstType, typename SrcType>
 static inline DstType
@@ -211,7 +215,15 @@ struct byte_swap_t<Type, 2>
 {
    static Type swap(Type src)
    {
+#ifdef _MSC_VER
       return bit_cast<Type>(_byteswap_ushort(bit_cast<uint16_t>(src)));
+#elif __APPLE__
+      // Apple has no 16-bit byteswap intrinsic
+      const uint16_t data = bit_cast<uint16_t>(src);
+      return bit_cast<Type>((uint16_t)((data >> 8) | (data << 8)));
+#elif __linux__
+      return bit_cast<Type>(bswap_16(bit_cast<uint16_t>(src)));
+#endif
    }
 };
 
@@ -220,7 +232,13 @@ struct byte_swap_t<Type, 4>
 {
    static Type swap(Type src)
    {
+#ifdef _MSC_VER
       return bit_cast<Type>(_byteswap_ulong(bit_cast<uint32_t>(src)));
+#elif __APPLE__
+      return bit_cast<Type>(__builtin_bswap32(bit_cast<uint32_t>(src)));
+#elif __linux__
+      return bit_cast<Type>(bswap_32(bit_cast<uint32_t>(src)));
+#endif
    }
 };
 
@@ -229,7 +247,13 @@ struct byte_swap_t<Type, 8>
 {
    static Type swap(Type src)
    {
+#ifdef _MSC_VER
       return bit_cast<Type>(_byteswap_uint64(bit_cast<uint64_t>(src)));
+#elif __APPLE__
+      return bit_cast<Type>(__builtin_bswap64(bit_cast<uint64_t>(src)));
+#elif __linux__
+      return bit_cast<Type>(bswap_64(bit_cast<uint64_t>(src)));
+#endif
    }
 };
 
