@@ -54,7 +54,7 @@ public:
    virtual ~KernelModuleImpl() { }
 
    KernelExport *
-   findExport(const char *name) const
+   findExport(const char *name) const override
    {
       auto itr = getExportMap().find(name);
 
@@ -66,7 +66,7 @@ public:
    }
 
    virtual_ptr<void>
-   findExportAddress(const char *name) const
+   findExportAddress(const char *name) const override
    {
       auto exp = findExport(name);
 
@@ -78,7 +78,7 @@ public:
    }
 
    virtual const KernelExportMap &
-   getExportMap() const
+   getExportMap() const override
    {
       return KernelModuleImpl::getStaticExportMap();
    }
