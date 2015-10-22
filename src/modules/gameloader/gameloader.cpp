@@ -91,7 +91,7 @@ GameLoaderRun()
       auto name = OSSprintfFromSystem("Interrupt Thread %d", i);
 
       OSCreateThread(thread, InterruptThreadEntryPoint, i, nullptr,
-                     reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, 16,
+                     reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, -1,
                      static_cast<OSThreadAttributes::Flags>(1 << i));
       OSSetInterruptThread(i, thread);
       OSSetThreadName(thread, name);
