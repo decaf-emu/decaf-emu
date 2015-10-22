@@ -7,211 +7,240 @@ namespace nn
 namespace swkbd
 {
 
-bool AppearInputForm(/*something*/)
+
+bool
+AppearInputForm(const AppearArg *arg)
 {
-   gLog->info("nn::swkbd::AppearInputForm");
    return true;
 }
 
-bool AppearKeyboard(/*something*/)
+
+bool
+AppearKeyboard(const KeyboardArg *arg)
 {
-   gLog->info("nn::swkbd::AppearKeyboard");
    return true;
 }
 
-void Calc(/*something*/)
+
+void
+CalcSubThreadFont()
 {
-   gLog->info("nn::swkbd::Calc");
 }
 
-void CalcSubThreadFont()
+
+void
+CalcSubThreadPredict()
 {
-   gLog->info("nn::swkbd::CalcSubThreadFont");
 }
 
-void CalcSubThreadPredict()
+
+void
+Calc(const ControllerInfo *info)
 {
-   gLog->info("nn::swkbd::CalcSubThreadPredict");
 }
 
-void ConfirmUnfixAll()
+
+void
+ConfirmUnfixAll()
 {
-   gLog->info("nn::swkbd::ConfirmUnfixAll");
 }
 
-bool Create(/*something*/)
+
+void
+Create(unsigned char *, RegionType::Region region, unsigned int, FSClient *fsclient)
 {
-   gLog->info("nn::swkbd::Create");
+}
+
+
+void
+Destroy()
+{
+}
+
+
+bool
+DisappearInputForm()
+{
    return true;
 }
 
-void Destroy()
-{
-   gLog->info("nn::swkbd::Destroy");
-}
 
-bool DisappearInputForm()
+bool
+DisappearKeyboard()
 {
-   gLog->info("nn::swkbd::DisappearInputForm");
    return true;
 }
 
-bool DisappearKeyboard()
+
+void
+DrawDRC()
 {
-   gLog->info("nn::swkbd::DisappearKeyboard");
-   return true;
 }
 
-void DrawDRC()
+
+void
+DrawTV()
 {
-   gLog->info("nn::swkbd::DrawDRC");
 }
 
-void DrawTV()
+
+void
+GetDrawStringInfo(DrawStringInfo *info)
 {
-   gLog->info("nn::swkbd::DrawTV");
 }
 
-void GetDrawStringInfo(void*)
-{
-   gLog->info("nn::swkbd::GetDrawStringInfo");
-}
 
-const wchar_t* GetInputFormString()
+const char_t *
+GetInputFormString()
 {
-   gLog->info("nn::swkbd::GetInputFormString");
    return nullptr;
 }
 
-void GetKeyboardCondition(void*)
+
+void
+GetKeyboardCondition(KeyboardCondition *condition)
 {
-   gLog->info("nn::swkbd::GetKeyboardCondition");
 }
 
-State::Mode GetStateInputForm()
+
+State::State
+GetStateInputForm()
 {
-   gLog->info("nn::swkbd::GetStateInputForm");
-   return (State::Mode)0;
+   return State::WaitOut;
 }
 
-State::Mode GetStateKeyboard()
+
+State::State
+GetStateKeyboard()
 {
-   gLog->info("nn::swkbd::GetStateKeyboard");
-   return static_cast<State::Mode>(0);
+   return State::WaitOut;
 }
 
-uint32_t GetWorkMemorySize(uint32_t)
+
+void
+InactivateSelectCursor()
 {
-   gLog->info("nn::swkbd::GetWorkMemorySize");
-   return 1;
 }
 
-void InactivateSelectCursor()
-{
-   gLog->info("nn::swkbd::InactivateSelectCursor");
-}
 
-bool InitLearnDic(void*)
+bool
+InitLearnDic(void *dictionary)
 {
-   gLog->info("nn::swkbd::InitLearnDic");
-   return true;
-}
-
-bool IsCoveredWithSubWindow()
-{
-   gLog->info("nn::swkbd::IsCoveredWithSubWindow");
    return false;
 }
 
-bool IsDecideCancelButton(bool*)
+
+bool
+IsCoveredWithSubWindow()
 {
-   gLog->info("nn::swkbd::IsDecideCancelButton");
    return false;
 }
 
-bool IsDecideOkButton(bool*)
+
+bool
+IsDecideCancelButton(bool *)
 {
-   gLog->info("nn::swkbd::IsDecideOkButton");
    return false;
 }
 
-bool IsKeyboardTarget(void*)
+
+bool
+IsDecideOkButton(bool *)
 {
-   gLog->info("nn::swkbd::IsKeyboardTarget");
    return false;
 }
 
-bool IsNeedCalcSubThreadFont()
+
+bool
+IsKeyboardTarget(const IEventReceiver *receiver)
 {
-   gLog->info("nn::swkbd::IsNeedCalcSubThreadFont");
    return false;
 }
 
-bool IsNeedCalcSubThreadPredict()
+
+bool
+IsNeedCalcSubThreadFont()
 {
-   gLog->info("nn::swkbd::IsNeedCalcSubThreadPredict");
    return false;
 }
 
-bool IsSelectCursorActive()
+
+bool
+IsNeedCalcSubThreadPredict()
 {
-   gLog->info("nn::swkbd::IsSelectCursorActive");
-   return true;
+   return false;
 }
 
-void MuteAllSound(bool shouldMute)
+
+bool
+IsSelectCursorActive()
 {
-   gLog->info("nn::swkbd::MuteAllSound({})", shouldMute);
+   return false;
 }
 
-void SetControllerRemo(ControllerType::Type controllerType)
+
+void
+MuteAllSound(bool mute)
 {
-   gLog->info("nn::swkbd::SetControllerRemo({})", static_cast<uint32_t>(controllerType));
 }
 
-void SetCursorPos(int32_t pos)
+
+void
+SetControllerRemo(ControllerType::Type controller)
 {
-   gLog->info("nn::swkbd::SetCursorPos({})", pos);
 }
 
-void SetEnableOkButton(bool enabled)
+
+void
+SetCursorPos(int32_t pos)
 {
-   gLog->info("nn::swkbd::SetEnableOkButton({})", enabled);
 }
 
-void SetInputFormString(const wchar_t *value)
+
+void
+SetEnableOkButton(bool enable)
 {
-   gLog->info("nn::swkbd::SetInputFormString");
 }
 
-void SetReceiver()
+
+void
+SetInputFormString(const char_t *str)
 {
-   gLog->info("nn::swkbd::SetReceiver");
 }
 
-void SetSelectFrom(int32_t)
+
+void
+SetReceiver(const ReceiverArg *arg)
 {
-   gLog->info("nn::swkbd::SetSelectFrom");
 }
 
-void SetUserControllerEventObj(void*)
+
+void
+SetSelectFrom(int32_t pos)
 {
-   gLog->info("nn::swkbd::SetUserControllerEventObj");
 }
 
-void SetUserSoundObj(void*)
+
+void
+SetUserControllerEventObj(IControllerEventObj *obj)
 {
-   gLog->info("nn::swkbd::SetUserSoundObj");
 }
 
-void SetVersion(int version)
+
+void
+SetUserSoundObj(ISoundObj *obj)
 {
-   gLog->info("nn::swkbd::SetVersion");
 }
 
+
+void
+SetVersion(int32_t version)
+{
 }
 
-}
+} // namespace swkbd
+
+} // namespace nn
 
 void
 Swkbd::registerCoreFunctions()
@@ -231,9 +260,10 @@ Swkbd::registerCoreFunctions()
    RegisterKernelFunctionName("SwkbdGetDrawStringInfo__3RplFPQ3_2nn5swkbd14DrawStringInfo", nn::swkbd::GetDrawStringInfo);
    RegisterKernelFunctionName("SwkbdGetInputFormString__3RplFv", nn::swkbd::GetInputFormString);
    RegisterKernelFunctionName("SwkbdGetKeyboardCondition__3RplFPQ3_2nn5swkbd17KeyboardCondition", nn::swkbd::GetKeyboardCondition);
-   RegisterKernelFunctionName("SwkbdInitLearnDic__3RplFPv", nn::swkbd::InitLearnDic);
    RegisterKernelFunctionName("SwkbdGetStateInputForm__3RplFv", nn::swkbd::GetStateInputForm);
    RegisterKernelFunctionName("SwkbdGetStateKeyboard__3RplFv", nn::swkbd::GetStateKeyboard);
+   RegisterKernelFunctionName("SwkbdInactivateSelectCursor__3RplFv", nn::swkbd::InactivateSelectCursor);
+   RegisterKernelFunctionName("SwkbdInitLearnDic__3RplFPv", nn::swkbd::InitLearnDic);
    RegisterKernelFunctionName("SwkbdIsCoveredWithSubWindow__3RplFv", nn::swkbd::IsCoveredWithSubWindow);
    RegisterKernelFunctionName("SwkbdIsDecideCancelButton__3RplFPb", nn::swkbd::IsDecideCancelButton);
    RegisterKernelFunctionName("SwkbdIsDecideOkButton__3RplFPb", nn::swkbd::IsDecideOkButton);
@@ -241,15 +271,14 @@ Swkbd::registerCoreFunctions()
    RegisterKernelFunctionName("SwkbdIsNeedCalcSubThreadFont__3RplFv", nn::swkbd::IsNeedCalcSubThreadFont);
    RegisterKernelFunctionName("SwkbdIsNeedCalcSubThreadPredict__3RplFv", nn::swkbd::IsNeedCalcSubThreadPredict);
    RegisterKernelFunctionName("SwkbdIsSelectCursorActive__3RplFv", nn::swkbd::IsSelectCursorActive);
-   RegisterKernelFunctionName("SwkbdInactivateSelectCursor__3RplFv", nn::swkbd::InactivateSelectCursor);
+   RegisterKernelFunctionName("SwkbdMuteAllSound__3RplFb", nn::swkbd::MuteAllSound);
    RegisterKernelFunctionName("SwkbdSetControllerRemo__3RplFQ3_2nn5swkbd14ControllerType", nn::swkbd::SetControllerRemo);
    RegisterKernelFunctionName("SwkbdSetCursorPos__3RplFi", nn::swkbd::SetCursorPos);
    RegisterKernelFunctionName("SwkbdSetEnableOkButton__3RplFb", nn::swkbd::SetEnableOkButton);
+   RegisterKernelFunctionName("SwkbdSetInputFormString__3RplFPCw", nn::swkbd::SetInputFormString);
    RegisterKernelFunctionName("SwkbdSetReceiver__3RplFRCQ3_2nn5swkbd11ReceiverArg", nn::swkbd::SetReceiver);
    RegisterKernelFunctionName("SwkbdSetSelectFrom__3RplFi", nn::swkbd::SetSelectFrom);
    RegisterKernelFunctionName("SwkbdSetUserControllerEventObj__3RplFPQ3_2nn5swkbd19IControllerEventObj", nn::swkbd::SetUserControllerEventObj);
    RegisterKernelFunctionName("SwkbdSetUserSoundObj__3RplFPQ3_2nn5swkbd9ISoundObj", nn::swkbd::SetUserSoundObj);
-   RegisterKernelFunctionName("SwkbdSetInputFormString__3RplFPCw", nn::swkbd::SetInputFormString);
-   RegisterKernelFunctionName("SwkbdMuteAllSound__3RplFb", nn::swkbd::MuteAllSound);
    RegisterKernelFunctionName("SwkbdSetVersion__3RplFi", nn::swkbd::SetVersion);
 }
