@@ -39,10 +39,10 @@
 std::shared_ptr<spdlog::logger>
 gLog;
 
-void initialiseEmulator();
-bool test(const std::string &as, const std::string &path);
-bool fuzzTest();
-bool play(const fs::HostPath &path);
+static void initialiseEmulator();
+static bool test(const std::string &as, const std::string &path);
+static bool fuzzTest();
+static bool play(const fs::HostPath &path);
 
 static const char USAGE[] =
 R"(Decaf Emulator
