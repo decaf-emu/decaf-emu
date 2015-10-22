@@ -1,5 +1,6 @@
 #pragma once
 #include <ostream>
+#include "bitutils.h"
 #include "ppctypes.h"
 #include "utils/virtual_ptr.h"
 

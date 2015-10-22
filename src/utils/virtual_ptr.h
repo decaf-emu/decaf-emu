@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "bitutils.h"
 #include "memory_translate.h"
 
 template<typename Type, bool IsBigEndian = false>
