@@ -19,7 +19,11 @@ untileSurface(GX2Surface *surface, std::vector<uint8_t> &data, uint32_t &rowPitc
       cpp = 16;
       break;
    default:
-      __debugbreak();
+      // Lets try to... Not Untile??
+      rowPitch = surface->pitch;
+      data.resize(surface->imageSize);
+      memcpy(&data[0], surface->image.get(), surface->imageSize);
+      return;
    }
 
    auto expandX = 4;
