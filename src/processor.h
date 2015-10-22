@@ -28,7 +28,6 @@ struct Fiber
 
    uint32_t coreID;
    void *handle = nullptr;
-   void *parentFiber = nullptr;
    OSThread *thread = nullptr;
    ThreadState state;
 };
@@ -42,13 +41,15 @@ struct Core
    }
 
    uint32_t id;
+   uint32_t threadId;
    Fiber *currentFiber = nullptr;
    Fiber *interruptedFiber = nullptr;
    Fiber *interruptHandlerFiber = nullptr;
    void *primaryFiber = nullptr;
    std::thread thread;
    std::chrono::system_clock::time_point nextInterrupt;
-   std::vector<Fiber *> mFiberDeleteList;
+   std::vector<Fiber *> fiberDeleteList;
+   std::vector<Fiber *> fiberPendingList;
    cpu::CoreState state;
 };
 
@@ -66,7 +67,6 @@ public:
 
    // Fiber
    Fiber *createFiber();
-   void destroyFiber(Fiber *fiber);
 
    void queue(Fiber *fiber);
    void reschedule(bool hasSchedulerLock, bool yield = false);
@@ -82,17 +82,19 @@ public:
 
    OSContext *getInterruptContext();
 
-   void setInterrupt(uint32_t core);
    void setInterruptTimer(uint32_t core, std::chrono::time_point<std::chrono::system_clock> when);
 
    // Core
    uint32_t getCoreID();
    uint32_t getCoreCount();
 
-   const std::vector<Core *> getCoreList() const {
+   const std::vector<Core *> getCoreList() const
+   {
       return mCores;
    }
-   const std::vector<Fiber *> getFiberList() const {
+
+   const std::vector<Fiber *> getFiberList() const
+   {
       return mFiberList;
    }
 
@@ -106,7 +108,6 @@ protected:
    static void handleInterrupt(cpu::CoreState *core, ThreadState *state);
 
    Fiber *createFiberNoLock();
-   void destroyFiberNoLock(Fiber *fiber);
    Fiber *peekNextFiberNoLock(uint32_t core);
    void queueNoLock(Fiber *fiber);
 
