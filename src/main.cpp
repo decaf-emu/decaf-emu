@@ -43,13 +43,13 @@ gLog;
 static void initialiseEmulator();
 static bool test(const std::string &as, const std::string &path);
 static bool fuzzTest();
-static bool play(const fs::HostPath &path);
+static bool play(const fs::HostPath &path, const fs::HostPath &sysPath);
 
 static const char USAGE[] =
 R"(Decaf Emulator
 
 Usage:
-   decaf play [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] <game directory>
+   decaf play [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] [--sys-path=<sys-path>] <game directory>
    decaf test [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
    decaf fuzz
    decaf hwtest [--log-file]
@@ -64,8 +64,10 @@ Options:
    --log-file    Redirect log output to file.
    --log-async   Enable asynchronous logging.
    --log-level=<log-level> [default: trace]
-                  Only display logs with severity equal to or greater than this level.
-                  Available levels: trace, debug, info, notice, warning, error, critical, alert, emerg, off
+                 Only display logs with severity equal to or greater than this level.
+                 Available levels: trace, debug, info, notice, warning, error, critical, alert, emerg, off
+   --sys-path=<sys-path>   
+                 Where to locate any external system files.
    --as=<ppcas>  Path to PowerPC assembler [default: powerpc-eabi-as.exe].
 )";
 
@@ -124,8 +126,13 @@ int main(int argc, char **argv)
    initialiseEmulator();
 
    if (args["play"].asBool()) {
+      std::string sysPath = "/no_sys_specified";
+      if (args["--sys-path"].isString()) {
+         sysPath = args["--sys-path"].asString();
+      }
+
       gLog->set_pattern("[%l:%t] %v");
-      result = play(args["<game directory>"].asString());
+      result = play(args["<game directory>"].asString(), sysPath);
    } else if (args["fuzz"].asBool()) {
       gLog->set_pattern("%v");
       result = fuzzTest();
@@ -202,13 +209,14 @@ fuzzTest()
 }
 
 static bool
-play(const fs::HostPath &path)
+play(const fs::HostPath &path, const fs::HostPath &sysPath)
 {
    platform::ui::initialise();
 
    // Setup filesystem
    fs::FileSystem fs;
    fs.mountHostFolder("/vol", path.join("data"));
+   fs.mountHostFolder("/vol/storage_mlc01", sysPath.join("mlc"));
    gSystem.setFileSystem(&fs);
 
    // Read cos.xml
