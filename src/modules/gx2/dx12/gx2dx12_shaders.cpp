@@ -1,7 +1,7 @@
-#include "../gx2.h"
+#include "modules/gx2/gx2.h"
 #ifdef GX2_DX12
 
-#include "../gx2_shaders.h"
+#include "modules/gx2/gx2_shaders.h"
 #include "dx12_fetchshader.h"
 
 uint32_t
@@ -22,8 +22,8 @@ GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize)
 
 uint32_t
 GX2CalcFetchShaderSizeEx(uint32_t attribs,
-   GX2FetchShaderType::Type fetchShaderType,
-   GX2TessellationMode::Mode tessellationMode)
+                         GX2FetchShaderType::Type fetchShaderType,
+                         GX2TessellationMode::Mode tessellationMode)
 {
    // TODO: GX2CalcFetchShaderSizeEx
    // This is definitely custom to our implementation.
@@ -32,11 +32,11 @@ GX2CalcFetchShaderSizeEx(uint32_t attribs,
 
 void
 GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
-   void *buffer,
-   uint32_t count,
-   GX2AttribStream *attribs,
-   GX2FetchShaderType::Type type,
-   GX2TessellationMode::Mode tessMode)
+                     void *buffer,
+                     uint32_t count,
+                     GX2AttribStream *attribs,
+                     GX2FetchShaderType::Type type,
+                     GX2TessellationMode::Mode tessMode)
 {
    fetchShader->data = buffer;
    fetchShader->size = GX2CalcFetchShaderSizeEx(count, type, tessMode);
@@ -74,15 +74,15 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
 
 void
 GX2SetPixelSampler(GX2PixelSampler *sampler,
-   uint32_t id)
+                   uint32_t id)
 {
    gDX.state.pixelSampler[id] = sampler;
 }
 
 void
 GX2SetVertexUniformReg(uint32_t offset,
-   uint32_t count,
-   void *data)
+                       uint32_t count,
+                       void *data)
 {
    float *floatData = (float*)data;
    for (auto i = 0u; i < count; ++i) {
@@ -92,20 +92,20 @@ GX2SetVertexUniformReg(uint32_t offset,
 
 void
 GX2SetPixelUniformReg(uint32_t offset,
-   uint32_t count,
-   void *data)
+                      uint32_t count,
+                      void *data)
 {
    // TODO: GX2SetPixelUniformReg
 }
 
 void
 GX2SetShaderModeEx(GX2ShaderMode::Mode mode,
-   uint32_t unk1,
-   uint32_t unk2,
-   uint32_t unk3,
-   uint32_t unk4,
-   uint32_t unk5,
-   uint32_t unk6)
+                   uint32_t unk1,
+                   uint32_t unk2,
+                   uint32_t unk3,
+                   uint32_t unk4,
+                   uint32_t unk5,
+                   uint32_t unk6)
 {
    // TODO: GX2SetShaderModeEx
 }

@@ -62,15 +62,14 @@ GX2SetTVBuffer(void *buffer,
                GX2SurfaceFormat::Format surfaceFormat,
                GX2BufferingMode::Mode bufferingMode)
 {
+   int tvWidth = 0, tvHeight = 0;
+
    // TODO: GX2SetTVBuffer
    if (!gDX.tvScanBuffer) {
       gDX.tvScanBuffer = new DXScanBufferData();
    } else {
       gDX.tvScanBuffer->release();
    }
-
-   int tvWidth = 0;
-   int tvHeight = 0;
 
    if (tvRenderMode == GX2TVRenderMode::STD480p) {
       tvWidth = 640;

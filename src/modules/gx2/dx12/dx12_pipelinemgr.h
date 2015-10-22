@@ -81,7 +81,7 @@ private:
       {
          auto shader = gDX.state.vertexShader;
          vertexShaderCrc = crc32(shader->data, shader->size);
-         gLog->debug("Pixel Shader [{}] ({:08x})\n", (void*)shader, vertexShaderCrc);
+         gLog->debug("Vertex Shader [{}] ({:08x})\n", (void*)shader, vertexShaderCrc);
          GX2DumpShader(shader);
       }
       // Print Pixel Shader Data

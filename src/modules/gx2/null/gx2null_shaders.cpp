@@ -17,19 +17,19 @@ GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize)
 
 uint32_t
 GX2CalcFetchShaderSizeEx(uint32_t attribs,
-   GX2FetchShaderType::Type fetchShaderType,
-   GX2TessellationMode::Mode tessellationMode)
+                         GX2FetchShaderType::Type fetchShaderType,
+                         GX2TessellationMode::Mode tessellationMode)
 {
    return attribs * 16;
 }
 
 void
 GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
-   void *buffer,
-   uint32_t count,
-   GX2AttribStream *attribs,
-   GX2FetchShaderType::Type type,
-   GX2TessellationMode::Mode tessMode)
+                     void *buffer,
+                     uint32_t count,
+                     GX2AttribStream *attribs,
+                     GX2FetchShaderType::Type type,
+                     GX2TessellationMode::Mode tessMode)
 {
 }
 

@@ -6,6 +6,8 @@
 //#define GX2_GL40
 //#define GX2_GL50
 
+#define GX2_DUMP_SHADERS
+
 #if !( defined(GX2_DX11) || defined(GX2_DX12) || defined(GX2_GL40) || defined(GX2_GL50) )
 #define GX2_NULL
 #endif

@@ -22,15 +22,15 @@ GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
 
 void
 GX2ClearColor(GX2ColorBuffer *colorBuffer,
-   float red, float green, float blue, float alpha)
+              float red, float green, float blue, float alpha)
 {
 }
 
 void
 GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
-   float depth,
-   uint8_t stencil,
-   GX2ClearFlags::Flags unk2)
+                       float depth,
+                       uint8_t stencil,
+                       GX2ClearFlags::Flags unk2)
 {
 }
 

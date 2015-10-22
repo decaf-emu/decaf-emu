@@ -157,10 +157,10 @@ GX2DumpShader(const std::string &filename, uint8_t *data, size_t size)
 {
    std::string output;
 
-   // Write binary of shader data to shader_pixel_X.txt
+   // Write binary of shader data to shader_pixel_X.bin
    GX2DumpData("dump/" + filename + ".bin", data, size);
 
-   // Write text of GX2PixelShader to shader_pixel_X.txt
+   // Write text of shader to shader_pixel_X.txt
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
 
    // Disassemble
