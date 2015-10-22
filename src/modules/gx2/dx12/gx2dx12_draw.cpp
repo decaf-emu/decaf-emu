@@ -7,6 +7,7 @@
 #include "dx12_colorbuffer.h"
 #include "dx12_depthbuffer.h"
 #include "dx12_utils.h"
+#include "utils/byte_swap.h"
 
 
 void

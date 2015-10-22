@@ -1142,7 +1142,6 @@
     <ClInclude Include="..\src\modules\swkbd\swkbd_core.h">
       <Filter>Header Files\modules\swkbd</Filter>
     </ClInclude>
-<<<<<<< HEAD
     <ClInclude Include="..\src\cpu\cpu_internal.h">
       <Filter>Header Files\cpu</Filter>
     </ClInclude>
@@ -1163,6 +1162,12 @@
     </ClInclude>
     <ClInclude Include="..\src\platform\platform_ui.h">
       <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\byte_swap.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\bit_cast.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

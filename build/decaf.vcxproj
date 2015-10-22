@@ -402,6 +402,8 @@
     <ClInclude Include="..\src\utils\be_vec.h" />
     <ClInclude Include="..\src\utils\bigendianview.h" />
     <ClInclude Include="..\src\utils\bitutils.h" />
+    <ClInclude Include="..\src\utils\bit_cast.h" />
+    <ClInclude Include="..\src\utils\byte_swap.h" />
     <ClInclude Include="..\src\utils\crc32.h" />
     <ClInclude Include="..\src\utils\floatutils.h" />
     <ClInclude Include="..\src\utils\log.h" />

@@ -1,7 +1,8 @@
 #pragma once
 #include <array_view.h>
+#include <cstring>
 #include <string>
-#include "utils/bitutils.h"
+#include "utils/byte_swap.h"
 
 class BigEndianView
 {
@@ -34,14 +35,14 @@ public:
    template<typename Type, size_t count>
    void read(Type(&chars)[count])
    {
-      memcpy(chars, mBuffer + mOffset, sizeof(Type) * count);
+      std::memcpy(chars, mBuffer + mOffset, sizeof(Type) * count);
       mOffset += sizeof(Type) * count;
    }
 
    template<typename Type>
    void read(Type *buffer, size_t count)
    {
-      memcpy(buffer, mBuffer + mOffset, sizeof(Type) * count);
+      std::memcpy(buffer, mBuffer + mOffset, sizeof(Type) * count);
       mOffset += sizeof(Type) * count;
    }
 

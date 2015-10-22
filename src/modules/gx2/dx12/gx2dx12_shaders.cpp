@@ -3,6 +3,7 @@
 
 #include "modules/gx2/gx2_shaders.h"
 #include "dx12_fetchshader.h"
+#include "utils/byte_swap.h"
 
 uint32_t
 GX2CalcGeometryShaderInputRingBufferSize(uint32_t ringItemSize)

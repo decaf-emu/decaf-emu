@@ -5,6 +5,7 @@
 #include "cpu/disassembler.h"
 #include "hardwaretests.h"
 #include "mem/mem.h"
+#include "utils/bit_cast.h"
 #include "utils/floatutils.h"
 #include "utils/log.h"
 #include "utils/strutils.h"

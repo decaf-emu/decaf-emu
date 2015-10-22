@@ -1,7 +1,7 @@
 #pragma once
 #include <ostream>
 #include <type_traits>
-#include "utils/bitutils.h"
+#include "utils/byte_swap.h"
 
 template<typename Type>
 class be_val
@@ -70,7 +70,7 @@ public:
    template<typename Other> Type operator^(const Other &rhs) const { return static_cast<Type>(value() ^ rhs); }
 
 protected:
-   Type mValue{};
+   Type mValue {};
 };
 
 template<typename Type>

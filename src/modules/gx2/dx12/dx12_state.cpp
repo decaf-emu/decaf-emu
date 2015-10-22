@@ -10,6 +10,7 @@
 #include "dx12_pipelinemgr.h"
 #include "dx12_texture.h"
 #include "platform/platform_ui.h"
+#include "utils/byte_swap.h"
 
 DXState gDX;
 

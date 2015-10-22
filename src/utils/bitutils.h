@@ -1,27 +1,6 @@
 #pragma once
 #include <climits>
 #include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <type_traits>
-
-#ifdef __linux__
-#include <byteswap.h>
-#endif
-
-// reinterpret_cast for value types
-template<typename DstType, typename SrcType>
-static inline DstType
-bit_cast(const SrcType& src)
-{
-   static_assert(sizeof(SrcType) == sizeof(DstType), "bit_cast must be between same sized types");
-   static_assert(std::is_trivially_copyable<SrcType>(), "SrcType is not trivially copyable.");
-   static_assert(std::is_trivially_copyable<DstType>(), "DstType is not trivially copyable.");
-
-   DstType dst;
-   std::memcpy(&dst, &src, sizeof(SrcType));
-   return dst;
-}
 
 // Gets the value of a bit
 template<typename Type>
@@ -195,72 +174,3 @@ struct bit_width
       return value;
    }
 };
-
-// Utility class to swap endian for types of size 1, 2, 4, 8
-// other type sizes are not supported
-template<typename Type, unsigned Size = sizeof(Type)>
-struct byte_swap_t;
-
-template<typename Type>
-struct byte_swap_t<Type, 1>
-{
-   static Type swap(Type src)
-   {
-      return src;
-   }
-};
-
-template<typename Type>
-struct byte_swap_t<Type, 2>
-{
-   static Type swap(Type src)
-   {
-#ifdef _MSC_VER
-      return bit_cast<Type>(_byteswap_ushort(bit_cast<uint16_t>(src)));
-#elif __APPLE__
-      // Apple has no 16-bit byteswap intrinsic
-      const uint16_t data = bit_cast<uint16_t>(src);
-      return bit_cast<Type>((uint16_t)((data >> 8) | (data << 8)));
-#elif __linux__
-      return bit_cast<Type>(bswap_16(bit_cast<uint16_t>(src)));
-#endif
-   }
-};
-
-template<typename Type>
-struct byte_swap_t<Type, 4>
-{
-   static Type swap(Type src)
-   {
-#ifdef _MSC_VER
-      return bit_cast<Type>(_byteswap_ulong(bit_cast<uint32_t>(src)));
-#elif __APPLE__
-      return bit_cast<Type>(__builtin_bswap32(bit_cast<uint32_t>(src)));
-#elif __linux__
-      return bit_cast<Type>(bswap_32(bit_cast<uint32_t>(src)));
-#endif
-   }
-};
-
-template<typename Type>
-struct byte_swap_t<Type, 8>
-{
-   static Type swap(Type src)
-   {
-#ifdef _MSC_VER
-      return bit_cast<Type>(_byteswap_uint64(bit_cast<uint64_t>(src)));
-#elif __APPLE__
-      return bit_cast<Type>(__builtin_bswap64(bit_cast<uint64_t>(src)));
-#elif __linux__
-      return bit_cast<Type>(bswap_64(bit_cast<uint64_t>(src)));
-#endif
-   }
-};
-
-// Swaps endian of src
-template<typename Type>
-inline Type
-byte_swap(Type src)
-{
-   return byte_swap_t<Type>::swap(src);
-}

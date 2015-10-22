@@ -1,7 +1,7 @@
 #pragma once
 #include "types.h"
-#include "bitutils.h"
 #include "memory_translate.h"
+#include "utils/byte_swap.h"
 
 template<typename Type, bool IsBigEndian = false>
 class virtual_ptr;

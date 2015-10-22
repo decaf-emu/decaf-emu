@@ -21,6 +21,7 @@
 #include "usermodule.h"
 #include "utils/align.h"
 #include "utils/bigendianview.h"
+#include "utils/byte_swap.h"
 #include "utils/log.h"
 #include "utils/strutils.h"
 #include "utils/teenyheap.h"
