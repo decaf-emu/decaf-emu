@@ -219,9 +219,25 @@ labelify(Shader &shader, LabelList &labels)
 
    // Sort the labels
    std::sort(labels.begin(), labels.end(),
-             [](auto &lhs, auto &rhs) {
-                return lhs->first->cfPC < rhs->first->cfPC;
-             });
+      [](auto &lhs, auto &rhs) {
+         if (lhs->first->cfPC == rhs->first->cfPC) {
+            assert(lhs->linkedLabel && rhs->linkedLabel);
+            auto lhsLinkedPC = lhs->linkedLabel->first->cfPC;
+            auto rhsLinkedPC = rhs->linkedLabel->first->cfPC;
+
+            if (lhsLinkedPC < lhs->first->cfPC) {
+               if (rhsLinkedPC < rhs->first->cfPC) {
+                  return lhsLinkedPC > rhsLinkedPC;
+               } else {
+                  return true;
+               }
+            } else {
+               return false;
+            }
+         }
+
+         return lhs->first->cfPC < rhs->first->cfPC;
+      });
 
    return true;
 }
