@@ -19,6 +19,10 @@ MCP_Close(IOHandle handle)
 IOError
 MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings)
 {
+   if (handle != gMCPHandle) {
+      return IOError::Generic;
+   }
+
    memset(settings, 0, sizeof(MCPSysProdSettings));
    settings->gameRegion = SCIRegion::US;
    settings->platformRegion = SCIRegion::EUR;

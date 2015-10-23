@@ -4,11 +4,12 @@
 
 #pragma pack(push, 1)
 
-namespace SCILanguage
+namespace UCDataType
 {
-enum Lang
+enum DataType : uint32_t
 {
-   English = 0x01,
+   Uint8 = 1,
+   Uint32 = 3,
 };
 }
 
@@ -17,9 +18,9 @@ struct UCSysConfig
    char name[32];
    UNKNOWN(32);
    be_val<uint32_t> unk1; // access rights? 0x777
-   be_val<uint32_t> data_size;
+   be_val<uint32_t> dataType;
    be_val<uint32_t> unk3; // usually 0x00?
-   be_val<uint32_t> unk4; // count? 0x03
+   be_val<uint32_t> dataSize;
    be_ptr<void> data;
 };
 CHECK_SIZE(UCSysConfig, 0x54);

@@ -286,6 +286,7 @@
     <ClInclude Include="..\src\memory_translate.h" />
     <ClInclude Include="..\src\mem\mem.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_sci.h" />
     <ClInclude Include="..\src\modules\gameloader\gameloader.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\d3dx12.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12.h" />

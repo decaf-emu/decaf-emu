@@ -1,18 +1,10 @@
 #pragma once
 #include "coreinit_ios.h"
+#include "coreinit_sci.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 
 #pragma pack(push, 1)
-
-namespace SCIRegion
-{
-enum Region : uint8_t
-{
-   US = 2,
-   EUR = 4,
-};
-}
 
 struct MCPSysProdSettings
 {
