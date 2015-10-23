@@ -498,8 +498,8 @@ generateLocals(const latte::Shader &shader, fmt::MemoryWriter &output)
 
    if (shader.psUsed.size()) {
       output
-         << "float4 PS;\n"
-         << "float4 PSo;\n";
+         << "float PS;\n"
+         << "float PSo;\n";
    }
 
    if (shader.pvUsed.size()) {
