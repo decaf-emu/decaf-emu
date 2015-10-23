@@ -390,6 +390,8 @@ Loader::registerUnimplementedData(const std::string& name)
    auto fakeAddr = 0xFFF00000 | (id << 12);
    assert(id <= 0xFF);
 
+   gLog->info("Unimplemented data symbol {} at {:08x}", name, fakeAddr);
+
    mUnimplementedData.emplace(name, fakeAddr);
    return fakeAddr | 0x800;
 }
