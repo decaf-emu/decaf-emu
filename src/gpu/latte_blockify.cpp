@@ -243,7 +243,7 @@ blockify(Shader &shader, const LabelList &labels)
    for (auto &ins : shader.code) {
       bool insertToCode = true;
 
-      if (label && label->first == ins.get()) {
+      while (label && label->first == ins.get()) {
          // Most labels will skip current instruction
          insertToCode = false;
 
