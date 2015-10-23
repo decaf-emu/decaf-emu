@@ -24,7 +24,7 @@ UCReadSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
       return IOError::Generic;
    }
 
-   for (auto i = 0; i < count; ++i) {
+   for (auto i = 0u; i < count; ++i) {
       auto &setting = settings[i];
       auto ptr8 = reinterpret_cast<uint8_t*>(setting.data.get());
       auto ptr32 = reinterpret_cast<uint32_t*>(setting.data.get());
