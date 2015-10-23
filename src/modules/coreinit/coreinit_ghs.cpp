@@ -19,10 +19,10 @@ be_wfunc_ptr<void>*
 p__stdio_cleanup;
 
 be_wfunc_ptr<void, be_ptr<void>*>*
-p___cpp_exception_init_ptr;
+p__cpp_exception_init_ptr;
 
 be_wfunc_ptr<void, be_ptr<void>*>*
-p___cpp_exception_cleanup_ptr;
+p__cpp_exception_cleanup_ptr;
 
 be_val<uint16_t>*
 p__gh_FOPEN_MAX;
@@ -126,8 +126,8 @@ CoreInit::registerGhsFunctions()
 
    RegisterKernelDataName("__atexit_cleanup", p__atexit_cleanup);
    RegisterKernelDataName("__stdio_cleanup", p__stdio_cleanup);
-   RegisterKernelDataName("___cpp_exception_init_ptr", p___cpp_exception_init_ptr);
-   RegisterKernelDataName("___cpp_exception_cleanup_ptr", p___cpp_exception_cleanup_ptr);
+   RegisterKernelDataName("__cpp_exception_init_ptr", p__cpp_exception_init_ptr);
+   RegisterKernelDataName("__cpp_exception_cleanup_ptr", p__cpp_exception_cleanup_ptr);
    RegisterKernelDataName("__gh_FOPEN_MAX", p__gh_FOPEN_MAX);
    RegisterKernelDataName("_iob", p_iob);
    RegisterKernelDataName("_iob_lock", p_iob_lock);
