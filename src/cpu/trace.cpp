@@ -6,6 +6,7 @@
 #include "statedbg.h"
 #include "utils/log.h"
 
+//#define TRACE_ENABLED
 //#define TRACE_VERIFICATION
 
 template<typename... Args>
@@ -128,10 +129,14 @@ getTracerNumTraces(Tracer *tracer)
 void
 traceInit(ThreadState *state, size_t size)
 {
+#ifdef TRACE_ENABLED
    state->tracer = new Tracer();
    state->tracer->index = 0;
    state->tracer->numTraces = 0;
    state->tracer->traces.resize(size);
+#else
+   state->tracer = nullptr;
+#endif
 }
 
 static SprEncoding
