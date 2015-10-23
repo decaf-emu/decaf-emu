@@ -354,6 +354,12 @@ bool disassembleNormal(DisassembleState &state, latte::cf::inst id, latte::cf::I
          << name;
       endLine(state);
       break;
+   case latte::cf::POP:
+      state.out
+         << name
+         << " POP_CNT(" << cf.word1.popCount << ")";
+      endLine(state);
+      break;
    case latte::cf::VTX:
    case latte::cf::VTX_TC:
    case latte::cf::LOOP_CONTINUE:
@@ -367,7 +373,6 @@ bool disassembleNormal(DisassembleState &state, latte::cf::inst id, latte::cf::I
    case latte::cf::KILL:
    case latte::cf::PUSH:
    case latte::cf::PUSH_ELSE:
-   case latte::cf::POP:
    case latte::cf::POP_PUSH:
    case latte::cf::POP_PUSH_ELSE:
    case latte::cf::WAIT_ACK:
