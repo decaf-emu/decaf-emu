@@ -2,6 +2,7 @@
 
 using latte::shadir::AluInstruction;
 using latte::shadir::AluSource;
+using latte::shadir::AluDest;
 
 namespace hlsl
 {
@@ -60,6 +61,10 @@ void translateAluDestStart(GenerateState &state, AluInstruction *ins)
       state.out << " = ";
    }
 
+   if (ins->dest.valueType == AluDest::Int || ins->dest.valueType == AluDest::Uint) {
+      state.out << "asfloat(";
+   }
+
    switch (ins->outputModifier) {
    case latte::alu::OutputModifier::Multiply2:
    case latte::alu::OutputModifier::Multiply4:
@@ -90,6 +95,10 @@ void translateAluDestEnd(GenerateState &state, AluInstruction *ins)
       state.out << ") / 2";
       break;
    }
+
+   if (ins->dest.valueType == AluDest::Int || ins->dest.valueType == AluDest::Uint) {
+      state.out << ")";
+   }
 }
 
 void translateAluSource(GenerateState &state, AluSource &src)
@@ -100,6 +109,38 @@ void translateAluSource(GenerateState &state, AluSource &src)
 
    if (src.negate) {
       state.out << '-';
+   }
+
+   if (src.valueType == AluSource::Int) {
+      switch (src.type) {
+      case AluSource::Register:
+      case AluSource::KcacheBank0:
+      case AluSource::KcacheBank1:
+      case AluSource::PreviousVector:
+      case AluSource::PreviousScalar:
+      case AluSource::ConstantFile:
+         state.out << "asint(";
+         break;
+      case AluSource::ConstantFloat:
+      case AluSource::ConstantDouble:
+         state.out << "(int)(";
+         break;
+      }
+   } else if (src.valueType == AluSource::Uint) {
+      switch (src.type) {
+      case AluSource::Register:
+      case AluSource::KcacheBank0:
+      case AluSource::KcacheBank1:
+      case AluSource::PreviousVector:
+      case AluSource::PreviousScalar:
+      case AluSource::ConstantFile:
+         state.out << "asuint(";
+         break;
+      case AluSource::ConstantFloat:
+      case AluSource::ConstantDouble:
+         state.out << "(uint)(";
+         break;
+      }
    }
 
    switch (src.type) {
@@ -125,10 +166,10 @@ void translateAluSource(GenerateState &state, AluSource &src)
       state.out.write("{:.6f}f", src.floatValue);
       break;
    case AluSource::ConstantDouble:
-      state.out.write("{:.6f}", src.doubleValue);
+      state.out.write("{:.6f}f", src.doubleValue);
       break;
    case AluSource::ConstantInt:
-      state.out << src.intValue;
+      state.out << (int)src.floatValue;
       break;
    }
 
@@ -168,8 +209,14 @@ void translateAluSource(GenerateState &state, AluSource &src)
       translateChannel(state, src.chan);
    }
 
+   if (src.valueType == AluSource::Int || src.valueType == AluSource::Uint) {
+      if (src.type != AluSource::ConstantInt) {
+         state.out << ')';
+      }
+   }
+
    if (src.absolute) {
-      state.out << ")";
+      state.out << ')';
    }
 }
 

@@ -170,10 +170,11 @@ GX2DumpShader(const std::string &filename, uint8_t *data, size_t size)
       << "Disassembly:" << std::endl
       << output << std::endl;
 
+   output.clear();
+
    // Decompiled
    auto decompiled = latte::Shader {};
    latte::decode(decompiled, { data, size });
-   latte::blockify(decompiled);
    hlsl::generateBody(decompiled, output);
 
    file

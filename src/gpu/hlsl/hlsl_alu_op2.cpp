@@ -375,7 +375,7 @@ static bool FLT_TO_INT(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "asint(";
+   state.out << "(int)(";
    translateAluSource(state, ins->sources[0]);
    state.out << ")";
 
@@ -389,7 +389,7 @@ static bool INT_TO_FLT(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "asfloat(";
+   state.out << "(float)asint(";
    translateAluSource(state, ins->sources[0]);
    state.out << ")";
 
@@ -403,7 +403,7 @@ static bool UINT_TO_FLT(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "asfloat(";
+   state.out << "(float)asuint(";
    translateAluSource(state, ins->sources[0]);
    state.out << ")";
 
