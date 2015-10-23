@@ -1,4 +1,5 @@
 #pragma once
+#include <gsl.h>
 #include "dx12.h"
 
 class DXDynBuffer {
@@ -101,6 +102,8 @@ public:
    }
 
    BaseAllocation get(UINT size, void *data) {
+      gsl::fail_fast_assert(mOffset + size < mSize);
+
       auto thisGpuAddr = mBuffer->GetGPUVirtualAddress() + mOffset;
       auto thisCpuAddr = mCpuAddr + mOffset;
       mOffset += size;
