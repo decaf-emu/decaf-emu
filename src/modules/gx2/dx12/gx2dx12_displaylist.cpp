@@ -10,6 +10,9 @@ gCurrentDisplayList = nullptr;
 static uint32_t
 gCurrentDisplayListSize = 0;
 
+static uint32_t
+gCurrentDisplayListOffset = 0;
+
 
 void
 GX2BeginDisplayListEx(GX2DisplayList *displayList,
@@ -18,6 +21,7 @@ GX2BeginDisplayListEx(GX2DisplayList *displayList,
 {
    gCurrentDisplayList = displayList;
    gCurrentDisplayListSize = size;
+   gCurrentDisplayListOffset = 0;
 }
 
 
@@ -32,8 +36,8 @@ GX2BeginDisplayList(GX2DisplayList *displayList,
 uint32_t
 GX2EndDisplayList(GX2DisplayList *displayList)
 {
-   assert(gCurrentDisplayList == displayList);
-   return gCurrentDisplayListSize;
+   (gCurrentDisplayList == displayList);
+   return gCurrentDisplayListOffset;
 }
 
 
@@ -82,9 +86,11 @@ void
 GX2CopyDisplayList(GX2DisplayList *displayList,
                    uint32_t size)
 {
-   auto dst = reinterpret_cast<uint8_t*>(gCurrentDisplayList.get()) + gCurrentDisplayListSize;
+   assert(gCurrentDisplayListOffset + size <= gCurrentDisplayListSize);
+
+   auto dst = reinterpret_cast<uint8_t*>(gCurrentDisplayList.get()) + gCurrentDisplayListOffset;
    memcpy(dst, displayList, size);
-   gCurrentDisplayListSize += size;
+   gCurrentDisplayListOffset += size;
 }
 
 #endif
