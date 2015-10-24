@@ -306,13 +306,14 @@ OSResumeThread(OSThread *thread)
 BOOL
 OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv)
 {
-   BOOL result = false;
+   BOOL result = FALSE;
    OSLockScheduler();
 
    if (OSIsThreadTerminated(thread)) {
       InitialiseThreadState(thread, entry, argc, argv);
       OSResumeThreadNoLock(thread, 1);
       OSRescheduleNoLock();
+      result = TRUE;
    }
 
    OSUnlockScheduler();
