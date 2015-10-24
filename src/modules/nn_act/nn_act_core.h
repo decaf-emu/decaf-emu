@@ -14,6 +14,9 @@ Initialize();
 void
 Finalize();
 
+bool
+IsSlotOccupied(uint8_t id);
+
 nn::Result
 Cancel();
 

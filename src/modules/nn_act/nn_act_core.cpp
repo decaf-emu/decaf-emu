@@ -19,6 +19,12 @@ Finalize()
 {
 }
 
+bool
+IsSlotOccupied(uint8_t id)
+{
+   return false;
+}
+
 nn::Result
 Cancel()
 {
@@ -37,8 +43,9 @@ GetTransferableId(uint32_t unk1)
    return 0;
 }
 
-nn::Result GetMiiEx(void*, uint8_t)
+nn::Result GetMiiEx(void* unk1, uint8_t unk2)
 {
+   gLog->warn("GetMiiEx({}, {})", reinterpret_cast<intptr_t>(unk1), unk2);
    return nn::act::AccountNotFound;
 }
 
@@ -52,6 +59,7 @@ NN_act::registerCoreFunctions()
    RegisterKernelFunctionName("Initialize__Q2_2nn3actFv", nn::act::Initialize);
    RegisterKernelFunctionName("Finalize__Q2_2nn3actFv", nn::act::Finalize);
    RegisterKernelFunctionName("Cancel__Q2_2nn3actFv", nn::act::Cancel);
+   RegisterKernelFunctionName("IsSlotOccupied__Q2_2nn3actFUc", nn::act::GetSlotNo);
    RegisterKernelFunctionName("GetSlotNo__Q2_2nn3actFv", nn::act::GetSlotNo);
    RegisterKernelFunctionName("GetTransferableId__Q2_2nn3actFUi", nn::act::GetTransferableId);
    RegisterKernelFunctionName("GetMiiEx__Q2_2nn3actFP12FFLStoreDataUc", nn::act::GetMiiEx);
