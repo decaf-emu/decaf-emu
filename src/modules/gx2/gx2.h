@@ -12,6 +12,7 @@
 #define GX2_NULL
 #endif
 
+static const int GX2_NUM_SAMPLERS = 8;
 static const int GX2_NUM_MRT_BUFFER = 8;
 static const int GX2_NUM_TEXTURE_UNIT = 16;
 
