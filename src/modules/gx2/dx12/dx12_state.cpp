@@ -39,8 +39,6 @@ void dx::initialise()
    gDX.scissorRect.right = static_cast<LONG>(platform::ui::getWindowWidth());
    gDX.scissorRect.bottom = static_cast<LONG>(platform::ui::getWindowHeight());
 
-
-#ifdef _DEBUG
    // Enable the D3D12 debug layer.
    {
       ComPtr<ID3D12Debug> debugController;
@@ -49,7 +47,6 @@ void dx::initialise()
          debugController->EnableDebugLayer();
       }
    }
-#endif
 
    ComPtr<IDXGIFactory4> factory;
    ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&factory)));
