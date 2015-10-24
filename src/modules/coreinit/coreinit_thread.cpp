@@ -435,8 +435,7 @@ void
 OSSleepTicks(OSTime ticks)
 {
    auto thread = OSGetCurrentThread();
-   OSLockScheduler();
-
+   
    // Create the alarm user data
    auto data = OSAllocFromSystem<SleepAlarmData>();
    data->thread = thread;
@@ -448,12 +447,15 @@ OSSleepTicks(OSTime ticks)
    OSSetAlarm(alarm, ticks, pSleepAlarmHandler);
 
    // Sleep thread
+   OSLockScheduler();
+
    OSSleepThreadNoLock(nullptr);
    OSRescheduleNoLock();
+   
+   OSUnlockScheduler();
 
    OSFreeToSystem(data);
    OSFreeToSystem(alarm);
-   OSUnlockScheduler();
 }
 
 uint32_t
