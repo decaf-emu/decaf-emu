@@ -233,6 +233,12 @@ Processor::queueNoLock(Fiber *fiber)
       return lhs->thread->basePriority < rhs->thread->basePriority;
    };
 
+   if (tCurrentCore) {
+      gLog->trace("Core {} queued thread {}", tCurrentCore->id, fiber->thread->id);
+   } else {
+      gLog->trace("System queued thread {}", fiber->thread->id);
+   }
+
    auto pos = std::upper_bound(mFiberQueue.begin(), mFiberQueue.end(), fiber, compare);
    mFiberQueue.insert(pos, fiber);
    mCondition.notify_all();
