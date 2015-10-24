@@ -48,6 +48,12 @@ DCTouchRange(void *addr, uint32_t size)
 }
 
 void
+OSCoherencyBarrier()
+{
+   // TODO: OSCoherencyBarrier
+}
+
+void
 CoreInit::registerCacheFunctions()
 {
    RegisterKernelFunction(DCInvalidateRange);
@@ -57,4 +63,5 @@ CoreInit::registerCacheFunctions()
    RegisterKernelFunction(DCStoreRangeNoSync);
    RegisterKernelFunction(DCZeroRange);
    RegisterKernelFunction(DCTouchRange);
+   RegisterKernelFunction(OSCoherencyBarrier);
 }

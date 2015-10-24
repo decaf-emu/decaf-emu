@@ -21,3 +21,6 @@ DCZeroRange(void *addr, uint32_t size);
 
 void
 DCTouchRange(void *addr, uint32_t size);
+
+void
+OSCoherencyBarrier();
