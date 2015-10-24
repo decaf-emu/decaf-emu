@@ -1,6 +1,7 @@
 #pragma once
 #include <gsl.h>
 #include "dx12.h"
+#include "utils/align.h"
 
 class DXDynBuffer {
 public:
@@ -101,9 +102,16 @@ public:
       mOffset = 0;
    }
 
-   BaseAllocation get(UINT size, void *data) {
+   BaseAllocation get(UINT size, void *data, UINT alignment = 0) {
+      // align the offset according to the alignment requirements
+      if (alignment != 0) {
+         mOffset = align_up(mOffset, alignment);
+      }
+
+      // Fail if we don't have enough room
       gsl::fail_fast_assert(mOffset + size < mSize);
 
+      // Build this buffer
       auto thisGpuAddr = mBuffer->GetGPUVirtualAddress() + mOffset;
       auto thisCpuAddr = mCpuAddr + mOffset;
       mOffset += size;
@@ -115,12 +123,12 @@ public:
       return alloc;
    }
 
-   VertexAllocation get(UINT stride, UINT size, void *data) {
-      return VertexAllocation(get(size, data), stride, size);
+   VertexAllocation get(UINT stride, UINT size, void *data, UINT alignment = 0) {
+      return VertexAllocation(get(size, data, alignment), stride, size);
    }
 
-   IndexAllocation get(DXGI_FORMAT format, UINT size, void *data) {
-      return IndexAllocation(get(size, data), format, size);
+   IndexAllocation get(DXGI_FORMAT format, UINT size, void *data, UINT alignment = 0) {
+      return IndexAllocation(get(size, data, alignment), format, size);
    }
 
    ComPtr<ID3D12Resource> mBuffer;
