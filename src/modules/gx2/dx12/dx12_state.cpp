@@ -149,12 +149,17 @@ void dx::initialise()
 
    // Create the root signature.
    {
-      CD3DX12_DESCRIPTOR_RANGE ranges[2];
-      ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8, 0);
+      CD3DX12_DESCRIPTOR_RANGE ranges[GX2_NUM_SAMPLERS];
+      for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
+         ranges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i);
+      }
 
-      CD3DX12_ROOT_PARAMETER rootParameters[2];
-      rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-      rootParameters[1].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+      CD3DX12_ROOT_PARAMETER rootParameters[1 + GX2_NUM_SAMPLERS];
+      uint32_t paramIdx = 0;
+      rootParameters[paramIdx++].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+      for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
+         rootParameters[paramIdx++].InitAsDescriptorTable(1, &ranges[i], D3D12_SHADER_VISIBILITY_ALL);
+      }
 
       D3D12_STATIC_SAMPLER_DESC samplers[8];
       for (int i = 0; i < GX2_NUM_SAMPLERS; ++i) {
@@ -368,13 +373,13 @@ void dx::_endFrame() {
 
    // Render TV ScanBuffer
    {
-      gDX.commandList->SetGraphicsRootDescriptorTable(0, *gDX.tvScanBuffer->srv);
+      gDX.commandList->SetGraphicsRootDescriptorTable(1, *gDX.tvScanBuffer->srv);
       gDX.commandList->DrawInstanced(4, 1, 0, 0);
    }
 
    // Render DRC ScanBuffer
    {
-      gDX.commandList->SetGraphicsRootDescriptorTable(0, *gDX.drcScanBuffer->srv);
+      gDX.commandList->SetGraphicsRootDescriptorTable(1, *gDX.drcScanBuffer->srv);
       gDX.commandList->DrawInstanced(4, 1, 4, 0);
    }
 
@@ -569,10 +574,10 @@ void dx::updateBuffers()
    gDX.commandList->IASetVertexBuffers(0, 32, bufferList);
 
 
-   auto constBuffer = gDX.ppcVertexBuffer->get(16 * 4 * sizeof(float), nullptr);
+   auto constBuffer = gDX.ppcVertexBuffer->get(16 * 4 * sizeof(float), nullptr, 256);
    uint8_t *constData = (uint8_t*)constBuffer;
    memcpy(constData, gDX.state.uniforms, 16 * 4 * sizeof(float));
-   gDX.commandList->SetGraphicsRootConstantBufferView(1, constBuffer);
+   gDX.commandList->SetGraphicsRootConstantBufferView(0, constBuffer);
 }
 
 void dx::updateTextures()

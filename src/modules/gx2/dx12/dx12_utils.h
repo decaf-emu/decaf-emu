@@ -72,10 +72,8 @@ static const D3D12_PRIMITIVE_TOPOLOGY dx12MakePrimitiveTopology(GX2PrimitiveMode
    case GX2PrimitiveMode::TriangleStrip:
       return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 
-   case GX2PrimitiveMode::Quads: // TODO: Implement quad splitting...
-      return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-   case GX2PrimitiveMode::QuadStrip: // TODO: Implement quad splitting...
-      return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+   case GX2PrimitiveMode::Quads: // Should be handled outside this method
+   case GX2PrimitiveMode::QuadStrip: // Should be handled outside this method
    default:
       throw;
    }

@@ -69,6 +69,53 @@ GX2SetAttribBuffer(uint32_t index,
    attribData.buffer = buffer;
 }
 
+// Decomposes a set of quads to a triangle list
+template <typename IndexType>
+void
+triifiedDraw(GX2PrimitiveMode::Mode mode,
+   uint32_t numVertices,
+   IndexType *indices,
+   uint32_t offset,
+   uint32_t numInstances)
+{
+   gDX.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+   uint32_t newNumIndices = 0;
+   switch (mode) {
+   case GX2PrimitiveMode::Quads:
+      newNumIndices = numVertices * 6 / 4;
+      break;
+   case GX2PrimitiveMode::QuadStrip:
+      // Don't actually know how to handle a quad strip...
+      //   How the hell do you strip a quad list :S
+      throw;
+   default:
+      // Nobody should be calling me with other modes...
+      throw;
+   }
+
+   // Always 32-bit indices for now to save scanning the input
+   //   indices to see if they will fit into 16-bit indices after expansion.
+   auto indexAlloc = gDX.ppcVertexBuffer->get(DXGI_FORMAT_R32_UINT, newNumIndices * sizeof(uint32_t), nullptr);
+   auto indicesOut = reinterpret_cast<uint32_t*>(static_cast<uint8_t*>(indexAlloc));
+
+   for (auto i = 0u; i < numVertices / 4; ++i) {
+      auto index_tl = byte_swap(*indices++);
+      auto index_tr = byte_swap(*indices++);
+      auto index_bl = byte_swap(*indices++);
+      auto index_br = byte_swap(*indices++);
+      
+      *indicesOut++ = index_tl;
+      *indicesOut++ = index_tr;
+      *indicesOut++ = index_bl;
+      *indicesOut++ = index_bl;
+      *indicesOut++ = index_br;
+      *indicesOut++ = index_tl;
+   }
+
+   gDX.commandList->IASetIndexBuffer(indexAlloc);
+   gDX.commandList->DrawIndexedInstanced(newNumIndices, numInstances, 0, offset, 0);
+}
 
 void
 GX2DrawEx(GX2PrimitiveMode::Mode mode,
@@ -86,7 +133,6 @@ GX2DrawEx(GX2PrimitiveMode::Mode mode,
       dx12MakePrimitiveTopology(mode));
 
    gDX.commandList->DrawInstanced(numVertices, numInstances, offset, 0);
-
 }
 
 void
@@ -102,6 +148,15 @@ GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
    dx::updateRenderTargets();
    dx::updatePipeline();
    dx::updateBuffers();
+
+   if (mode == GX2PrimitiveMode::Quads) {
+      switch (indexType) {
+      case GX2IndexType::U16:
+         return triifiedDraw(mode, numVertices, static_cast<uint16_t*>(indices), offset, numInstances);
+      default:
+         throw;
+      }
+   }
 
    gDX.commandList->IASetPrimitiveTopology(
       dx12MakePrimitiveTopology(mode));
