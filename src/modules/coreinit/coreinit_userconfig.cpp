@@ -32,7 +32,7 @@ UCReadSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
       if (strcmp(setting.name, "cafe.cntry_reg") == 0) {
          assert(setting.dataType == UCDataType::Uint32);
          assert(setting.dataSize == 4);
-         *ptr32 = SCICountryCode::UnitedKingdom;
+         *ptr32 = SCICountryCode::USA;
       } else if (strcmp(setting.name, "cafe.eco") == 0) {
          assert(setting.dataType == UCDataType::Uint8);
          assert(setting.dataSize == 1);

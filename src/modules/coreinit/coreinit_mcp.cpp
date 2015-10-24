@@ -25,7 +25,7 @@ MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings)
 
    memset(settings, 0, sizeof(MCPSysProdSettings));
    settings->gameRegion = SCIRegion::US;
-   settings->platformRegion = SCIRegion::EUR;
+   settings->platformRegion = SCIRegion::US;
    return IOError::OK;
 }
 
