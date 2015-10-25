@@ -137,32 +137,32 @@ GX2SetShaderModeEx(GX2ShaderMode::Mode mode,
                    uint32_t unk5,
                    uint32_t unk6)
 {
-   // TODO: GX2SetShaderModeEx
-   gLog->debug("unimplemented GX2SetShaderModeEx");
+   // This does not appear to actually impact how the
+   //   rendering behaves...  No need to log it for now.
 }
 
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader)
 {
-   return 8;
+   return 60;
 }
 
 uint32_t
 GX2GetPixelShaderStackEntries(GX2PixelShader *shader)
 {
-   return 8;
+   return 60;
 }
 
 uint32_t
 GX2GetVertexShaderGPRs(GX2VertexShader *shader)
 {
-   return 8;
+   return 60;
 }
 
 uint32_t
 GX2GetVertexShaderStackEntries(GX2VertexShader *shader)
 {
-   return 8;
+   return 60;
 }
 
 
