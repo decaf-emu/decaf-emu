@@ -163,7 +163,7 @@ void dx::initialise()
    // Create the root signature.
    {
       CD3DX12_DESCRIPTOR_RANGE ranges[GX2_NUM_SAMPLERS];
-      CD3DX12_ROOT_PARAMETER rootParameters[1 + GX2_NUM_SAMPLERS + GX2_NUM_UNIFORMBLOCKS];
+      CD3DX12_ROOT_PARAMETER rootParameters[GX2_NUM_SAMPLERS + GX2_NUM_UNIFORMBLOCKS];
       uint32_t paramIdx = 0;
       for (auto i = 0; i < GX2_NUM_UNIFORMBLOCKS; ++i) {
          gDX.cbvIndex[i] = paramIdx;
@@ -175,7 +175,7 @@ void dx::initialise()
          rootParameters[paramIdx++].InitAsDescriptorTable(1, &ranges[i], D3D12_SHADER_VISIBILITY_ALL);
       }
 
-      D3D12_STATIC_SAMPLER_DESC samplers[8];
+      D3D12_STATIC_SAMPLER_DESC samplers[GX2_NUM_SAMPLERS];
       for (int i = 0; i < GX2_NUM_SAMPLERS; ++i) {
          auto &sampler = samplers[i] = {};
          sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
