@@ -110,13 +110,22 @@ GX2SetVertexUniformReg(uint32_t offset, uint32_t count, void *data) {
    DX_DLCALL(_GX2SetVertexUniformReg, offset, count, data);
 }
 
-
+void
+_GX2SetPixelUniformReg(uint32_t offset,
+   uint32_t count,
+   void *data)
+{
+   float *floatData = (float*)data;
+   for (auto i = 0u; i < count; ++i) {
+      gDX.state.uniforms[offset + i] = byte_swap(floatData[i]);
+   }
+}
 void
 GX2SetPixelUniformReg(uint32_t offset,
                       uint32_t count,
                       void *data)
 {
-   // TODO: GX2SetPixelUniformReg
+   DX_DLCALL(_GX2SetPixelUniformReg, offset, count, data);
 }
 
 void
