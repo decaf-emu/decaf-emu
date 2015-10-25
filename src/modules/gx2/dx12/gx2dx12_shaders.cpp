@@ -50,38 +50,53 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 }
 
 void
-GX2SetFetchShader(GX2FetchShader *shader)
+_GX2SetFetchShader(GX2FetchShader *shader)
 {
    gDX.state.fetchShader = shader;
 }
+void GX2SetFetchShader(GX2FetchShader *shader) {
+   DX_DLCALL(_GX2SetFetchShader, shader);
+}
 
 void
-GX2SetVertexShader(GX2VertexShader *shader)
+_GX2SetVertexShader(GX2VertexShader *shader)
 {
    gDX.state.vertexShader = shader;
 }
+void GX2SetVertexShader(GX2VertexShader *shader) {
+   DX_DLCALL(_GX2SetVertexShader, shader);
+}
 
 void
-GX2SetPixelShader(GX2PixelShader *shader)
+_GX2SetPixelShader(GX2PixelShader *shader)
 {
    gDX.state.pixelShader = shader;
 }
-
-void
-GX2SetGeometryShader(GX2GeometryShader *shader)
-{
-   gDX.state.geomShader = shader;
+void GX2SetPixelShader(GX2PixelShader *shader) {
+   DX_DLCALL(_GX2SetPixelShader, shader);
 }
 
 void
-GX2SetPixelSampler(GX2PixelSampler *sampler,
+_GX2SetGeometryShader(GX2GeometryShader *shader)
+{
+   gDX.state.geomShader = shader;
+}
+void GX2SetGeometryShader(GX2GeometryShader *shader) {
+   DX_DLCALL(_GX2SetGeometryShader, shader);
+}
+
+void
+_GX2SetPixelSampler(GX2PixelSampler *sampler,
                    uint32_t id)
 {
    gDX.state.pixelSampler[id] = sampler;
 }
+void GX2SetPixelSampler(GX2PixelSampler *sampler, uint32_t id) {
+   DX_DLCALL(_GX2SetPixelSampler, sampler, id);
+}
 
 void
-GX2SetVertexUniformReg(uint32_t offset,
+_GX2SetVertexUniformReg(uint32_t offset,
                        uint32_t count,
                        void *data)
 {
@@ -90,6 +105,11 @@ GX2SetVertexUniformReg(uint32_t offset,
       gDX.state.uniforms[offset + i] = byte_swap(floatData[i]);
    }
 }
+void
+GX2SetVertexUniformReg(uint32_t offset, uint32_t count, void *data) {
+   DX_DLCALL(_GX2SetVertexUniformReg, offset, count, data);
+}
+
 
 void
 GX2SetPixelUniformReg(uint32_t offset,

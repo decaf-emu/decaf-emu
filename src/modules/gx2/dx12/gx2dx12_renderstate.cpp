@@ -48,10 +48,10 @@ GX2SetPolygonControl(uint32_t unk1,
 }
 
 void
-GX2SetColorControl(GX2LogicOp::Op logicOp,
-                   uint8_t blendEnabled,
-                   uint32_t unk2,
-                   uint32_t unk3)
+_GX2SetColorControl(GX2LogicOp::Op logicOp,
+   uint8_t blendEnabled,
+   uint32_t unk2,
+   uint32_t unk3)
 {
    auto &blendState = gDX.state.blendState;
    blendState.logicOp = logicOp;
@@ -59,7 +59,16 @@ GX2SetColorControl(GX2LogicOp::Op logicOp,
 }
 
 void
-GX2SetBlendControl(GX2RenderTarget::Target target,
+GX2SetColorControl(GX2LogicOp::Op logicOp,
+                   uint8_t blendEnabled,
+                   uint32_t unk2,
+                   uint32_t unk3)
+{
+   DX_DLCALL(_GX2SetColorControl, logicOp, blendEnabled, unk2, unk3);
+}
+
+void
+_GX2SetBlendControl(GX2RenderTarget::Target target,
                    GX2BlendMode::Mode colorSrcBlend,
                    GX2BlendMode::Mode colorDstBlend,
                    GX2BlendCombineMode::Mode colorCombine,
@@ -78,7 +87,22 @@ GX2SetBlendControl(GX2RenderTarget::Target target,
 }
 
 void
-GX2SetBlendConstantColor(float red,
+GX2SetBlendControl(GX2RenderTarget::Target target,
+   GX2BlendMode::Mode colorSrcBlend,
+   GX2BlendMode::Mode colorDstBlend,
+   GX2BlendCombineMode::Mode colorCombine,
+   uint32_t unk1,
+   GX2BlendMode::Mode alphaSrcBlend,
+   GX2BlendMode::Mode alphaDstBlend,
+   GX2BlendCombineMode::Mode alphaCombine)
+{
+   DX_DLCALL(_GX2SetBlendControl, 
+      target, colorSrcBlend, colorDstBlend, colorCombine, 
+      unk1, alphaSrcBlend, alphaDstBlend, alphaCombine);
+}
+
+void
+_GX2SetBlendConstantColor(float red,
                          float green,
                          float blue,
                          float alpha)
@@ -94,7 +118,16 @@ GX2SetBlendConstantColor(float red,
 }
 
 void
-GX2SetAlphaTest(BOOL enabled,
+GX2SetBlendConstantColor(float red,
+   float green,
+   float blue,
+   float alpha)
+{
+   DX_DLCALL(_GX2SetBlendConstantColor, red, green, blue, alpha);
+}
+
+void
+_GX2SetAlphaTest(BOOL enabled,
                 GX2CompareFunction::Func compare,
                 float reference)
 {
@@ -103,6 +136,14 @@ GX2SetAlphaTest(BOOL enabled,
    blendState.alphaTestEnabled = (enabled != 0);
    blendState.alphaFunc = compare;
    blendState.alphaRef = reference;
+}
+
+void
+GX2SetAlphaTest(BOOL enabled,
+   GX2CompareFunction::Func compare,
+   float reference)
+{
+   DX_DLCALL(_GX2SetAlphaTest, enabled, compare, reference);
 }
 
 void
@@ -125,7 +166,7 @@ GX2SetAlphaToMask(BOOL enabled,
 }
 
 void
-GX2SetViewport(float x,
+_GX2SetViewport(float x,
                float y,
                float w,
                float h,
@@ -143,7 +184,18 @@ GX2SetViewport(float x,
 }
 
 void
-GX2SetScissor(uint32_t x,
+GX2SetViewport(float x,
+   float y,
+   float w,
+   float h,
+   float zNear,
+   float zFar)
+{
+   DX_DLCALL(_GX2SetViewport, x, y, w, h, zNear, zFar);
+}
+
+void
+_GX2SetScissor(uint32_t x,
               uint32_t y,
               uint32_t w,
               uint32_t h)
@@ -162,6 +214,15 @@ GX2SetScissor(uint32_t x,
       rect.bottom = y + h;
    }
    gDX.commandList->RSSetScissorRects(1, &rect);
+}
+
+void
+GX2SetScissor(uint32_t x,
+   uint32_t y,
+   uint32_t w,
+   uint32_t h)
+{
+   DX_DLCALL(_GX2SetScissor, x, y, w, h);
 }
 
 #endif

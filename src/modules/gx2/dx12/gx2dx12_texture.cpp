@@ -20,12 +20,19 @@ GX2InitTextureRegs(GX2Texture *texture)
 }
 
 void
-GX2SetPixelTexture(GX2Texture *texture,
+_GX2SetPixelTexture(GX2Texture *texture,
                    uint32_t unit)
 {
    DXTextureData *textureData = dx::getTexture(texture);
    textureData->upload();
    gDX.commandList->SetGraphicsRootDescriptorTable(1 + unit, *textureData->srv);
+}
+
+void
+GX2SetPixelTexture(GX2Texture *texture,
+   uint32_t unit)
+{
+   DX_DLCALL(_GX2SetPixelTexture, texture, unit);
 }
 
 #endif

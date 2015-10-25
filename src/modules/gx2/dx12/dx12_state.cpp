@@ -32,6 +32,17 @@ DXTextureData * dx::getTexture(GX2Texture *buffer) {
 
 void dx::initialise()
 {
+   gDX.activeContextState = nullptr;
+   gDX.activeDisplayList = nullptr;
+   gDX.activeDisplayListSize = 0;
+   gDX.activeDisplayListOffset = 0;
+   for (auto i = 0; i < GX2_NUM_MRT_BUFFER; ++i) {
+      gDX.activeColorBuffer[i] = nullptr;
+   }
+   gDX.activeDepthBuffer = nullptr;
+   
+
+
    gDX.viewport.Width = static_cast<float>(platform::ui::getWindowWidth());
    gDX.viewport.Height = static_cast<float>(platform::ui::getWindowHeight());
    gDX.viewport.MaxDepth = 1.0f;

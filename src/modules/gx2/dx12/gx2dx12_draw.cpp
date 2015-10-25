@@ -9,7 +9,6 @@
 #include "dx12_utils.h"
 #include "utils/byte_swap.h"
 
-
 void
 GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
                         float depth,
@@ -20,24 +19,33 @@ GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
 
 
 void
-GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
+_GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
                   GX2DepthBuffer *depthBuffer,
                   float red, float green, float blue, float alpha,
                   float depth,
                   uint8_t unk1,
                   GX2ClearFlags::Flags flags)
 {
-   // TODO: GX2ClearBuffersEx depth/stencil clearing
-
    auto hostColorBuffer = dx::getColorBuffer(colorBuffer);
 
    const float clearColor[] = { red, green, blue, alpha };
    gDX.commandList->ClearRenderTargetView(*hostColorBuffer->rtv, clearColor, 0, nullptr);
 }
 
+void
+GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
+   GX2DepthBuffer *depthBuffer,
+   float red, float green, float blue, float alpha,
+   float depth,
+   uint8_t unk1,
+   GX2ClearFlags::Flags flags)
+{
+   DX_DLCALL(_GX2ClearBuffersEx, colorBuffer, depthBuffer, 
+      red, green, blue, alpha, depth, unk1, flags);
+}
 
 void
-GX2ClearColor(GX2ColorBuffer *colorBuffer,
+_GX2ClearColor(GX2ColorBuffer *colorBuffer,
               float red, float green, float blue, float alpha)
 {
    auto hostColorBuffer = dx::getColorBuffer(colorBuffer);
@@ -46,6 +54,12 @@ GX2ClearColor(GX2ColorBuffer *colorBuffer,
    gDX.commandList->ClearRenderTargetView(*hostColorBuffer->rtv, clearColor, 0, nullptr);
 }
 
+void
+GX2ClearColor(GX2ColorBuffer *colorBuffer,
+   float red, float green, float blue, float alpha)
+{
+   DX_DLCALL(_GX2ClearColor, colorBuffer, red, green, blue, alpha);
+}
 
 void
 GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
@@ -58,7 +72,7 @@ GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
 
 
 void
-GX2SetAttribBuffer(uint32_t index,
+_GX2SetAttribBuffer(uint32_t index,
                    uint32_t size,
                    uint32_t stride,
                    void *buffer)
@@ -67,6 +81,15 @@ GX2SetAttribBuffer(uint32_t index,
    attribData.size = size;
    attribData.stride = stride;
    attribData.buffer = buffer;
+}
+
+void
+GX2SetAttribBuffer(uint32_t index,
+   uint32_t size,
+   uint32_t stride,
+   void *buffer)
+{
+   DX_DLCALL(_GX2SetAttribBuffer, index, size, stride, buffer);
 }
 
 // Decomposes a set of quads to a triangle list
@@ -118,7 +141,7 @@ triifiedDraw(GX2PrimitiveMode::Mode mode,
 }
 
 void
-GX2DrawEx(GX2PrimitiveMode::Mode mode,
+_GX2DrawEx(GX2PrimitiveMode::Mode mode,
           uint32_t numVertices,
           uint32_t offset,
           uint32_t numInstances)
@@ -136,7 +159,16 @@ GX2DrawEx(GX2PrimitiveMode::Mode mode,
 }
 
 void
-GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
+GX2DrawEx(GX2PrimitiveMode::Mode mode,
+   uint32_t numVertices,
+   uint32_t offset,
+   uint32_t numInstances)
+{
+   DX_DLCALL(_GX2DrawEx, mode, numVertices, offset, numInstances);
+}
+
+void
+_GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
                  uint32_t numVertices,
                  GX2IndexType::Type indexType,
                  void *indices,
@@ -178,6 +210,17 @@ GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
    }
 
    gDX.commandList->DrawIndexedInstanced(numVertices, numInstances, 0, offset, 0);
+}
+
+void
+GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
+   uint32_t numVertices,
+   GX2IndexType::Type indexType,
+   void *indices,
+   uint32_t offset,
+   uint32_t numInstances)
+{
+   DX_DLCALL(_GX2DrawIndexedEx, mode, numVertices, indexType, indices, offset, numInstances);
 }
 
 #endif

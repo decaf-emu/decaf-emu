@@ -9,6 +9,7 @@
 #include "dx12.h"
 #include "dx12_heap.h"
 #include "dx12_dynbuffer.h"
+#include "dx12_cmdlist.h"
 
 struct DXScanBufferData;
 struct DXColorBufferData;
@@ -93,6 +94,9 @@ struct DXState {
    static_assert(sizeof(ContextState) < sizeof(GX2ContextState::stateStore), "ContextState must be smaller than GX2ContextState::stateStore");
 
    GX2ContextState *activeContextState;
+   void *activeDisplayList;
+   uint32_t activeDisplayListSize;
+   uint32_t activeDisplayListOffset;
 
 };
 
@@ -114,4 +118,22 @@ namespace dx {
    void _beginFrame();
    void _endFrame();
 
+   template <typename FnType, FnType Func, typename... Args>
+   void displayListCall(Args... args)
+   {
+      if (!gDX.activeDisplayList) {
+         // If we are not generating a display list, just call it directly...
+         Func(args...);
+         return;
+      }
+
+      CommandListRef cl = { 
+         reinterpret_cast<uint8_t*>(gDX.activeDisplayList),
+         gDX.activeDisplayListSize,
+         gDX.activeDisplayListOffset };
+      commandListAppend1<FnType, Func, Args...>(cl, args...);
+   }
+
 }
+
+#define DX_DLCALL(x, ...) dx::displayListCall<decltype(&x), &x>(__VA_ARGS__)

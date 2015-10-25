@@ -61,12 +61,13 @@ GX2GetContextStateDisplayList(GX2ContextState *state,
                               be_ptr<uint8_t> *outDisplayList,
                               be_val<uint32_t> *outSize)
 {
-   *outDisplayList = reinterpret_cast<uint8_t*>(&state->displayList);
-   *outSize = state->displayListSize;
+   // This does not currently work since we do not use an internal display
+   //   list for queueing stuff...
+   throw;
 }
 
 void
-GX2SetContextState(GX2ContextState *state)
+_GX2SetContextState(GX2ContextState *state)
 {
    // Sync the previous state storage
    if (gDX.activeContextState) {
@@ -80,6 +81,15 @@ GX2SetContextState(GX2ContextState *state)
 
    // Save the assigned state storage
    gDX.activeContextState = state;
+}
+
+void
+GX2SetContextState(GX2ContextState *state)
+{
+   // This might not be right, it's possible that we need 
+   //   to transfer the whole GX2ContextState into the display 
+   //   list for later rather than just referring to it...
+   DX_DLCALL(_GX2SetContextState, state);
 }
 
 #endif
