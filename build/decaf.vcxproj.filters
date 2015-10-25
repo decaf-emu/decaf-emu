@@ -1172,6 +1172,9 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_sci.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_cmdlist.h">
+      <Filter>Header Files\modules\gx2\dx12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

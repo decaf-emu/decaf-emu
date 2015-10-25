@@ -300,6 +300,7 @@
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_state.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_texture.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_utils.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_cmdlist.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_debug.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_vsync.h" />
