@@ -20,6 +20,7 @@ GX2SetDepthStencilControl(uint32_t unk1,
                           uint32_t unk13)
 {
    // TODO: GX2SetDepthStencilControl
+   gLog->debug("unimplemented GX2SetDepthStencilControl");
 }
 
 void
@@ -31,6 +32,7 @@ GX2SetStencilMask(uint8_t unk1,
                   uint8_t unk6)
 {
    // TODO: GX2SetStencilMask
+   gLog->debug("unimplemented GX2SetStencilMask");
 }
 
 void
@@ -45,6 +47,7 @@ GX2SetPolygonControl(uint32_t unk1,
                      uint32_t unk9)
 {
    // TODO: GX2SetPolygonControl
+   gLog->debug("unimplemented GX2SetPolygonControl");
 }
 
 void
@@ -156,6 +159,7 @@ GX2SetTargetChannelMasks(GX2ChannelMask::Mask target0,
                          GX2ChannelMask::Mask target6)
 {
    // TODO: GX2SetTargetChannelMasks
+   gLog->debug("unimplemented GX2SetTargetChannelMasks");
 }
 
 void
@@ -163,6 +167,7 @@ GX2SetAlphaToMask(BOOL enabled,
                   GX2AlphaToMaskMode::Mode mode)
 {
    // TODO: GX2SetAlphaToMask
+   gLog->debug("unimplemented GX2SetAlphaToMask");
 }
 
 void

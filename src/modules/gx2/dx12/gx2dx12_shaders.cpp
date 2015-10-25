@@ -129,6 +129,7 @@ GX2SetShaderModeEx(GX2ShaderMode::Mode mode,
                    uint32_t unk6)
 {
    // TODO: GX2SetShaderModeEx
+   gLog->debug("unimplemented GX2SetShaderModeEx");
 }
 
 uint32_t

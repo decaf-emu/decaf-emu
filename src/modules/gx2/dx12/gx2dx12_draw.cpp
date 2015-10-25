@@ -15,6 +15,7 @@ GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
                         uint8_t stencil)
 {
    // TODO: GX2SetClearDepthStencil
+   gLog->debug("unimplemented GX2SetClearDepthStencil");
 }
 
 
@@ -68,6 +69,7 @@ GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
                        GX2ClearFlags::Flags unk2)
 {
    // TODO: GX2ClearDepthStencilEx depth/stencil clearing
+   gLog->debug("unimplemented GX2ClearDepthStencilEx");
 }
 
 

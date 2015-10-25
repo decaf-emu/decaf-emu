@@ -50,7 +50,8 @@ void
 GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1)
 {
    state->displayListSize = 0x300;
-   GX2BeginDisplayListEx(reinterpret_cast<GX2DisplayList*>(&state->displayList), state->displayListSize, unk1);
+   // We don't actually use the internal display list...
+   //GX2BeginDisplayListEx(reinterpret_cast<GX2DisplayList*>(&state->displayList), state->displayListSize, unk1);
 
    memcpy(state->stateStore, &gDX.state, sizeof(gDX.state));
    gDX.activeContextState = state;
