@@ -6,6 +6,7 @@
 #include <iostream>
 #include "gpu/latte.h"
 #include "gpu/hlsl/hlsl.h"
+#include "gpu/hlsl/hlsl_generator.h"
 #include "utils/bigendianview.h"
 
 namespace gsh
@@ -94,7 +95,8 @@ bool parseGSH(BigEndianView &fh)
          std::cout << std::endl;
 
          latte::Shader shader;
-         latte::decode(shader, block.data);
+         latte::Shader::Type type = (block.type == gsh::Block::VertexShader) ? latte::Shader::Vertex : latte::Shader::Pixel;
+         latte::decode(shader, type, block.data);
          std::cout << "----------------------------------------------" << std::endl;
          std::cout << "                    Blocks                    " << std::endl;
          std::cout << "----------------------------------------------" << std::endl;

@@ -568,11 +568,10 @@ generateEpilog(fmt::MemoryWriter &output)
 }
 
 bool
-generateBody(ShaderType shaderType, latte::Shader &shader, std::string &body)
+generateBody(latte::Shader &shader, std::string &body)
 {
    auto result = true;
    auto state = GenerateState {};
-   state.shaderType = shaderType;
    state.shader = &shader;
 
    intialise();
@@ -647,7 +646,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    result &= generateProlog("VSMain", "VSInput", "PSInput", output);
    result &= generateLocals(vertexShader, output);
    result &= generateVertexParams(attribs, output);
-   result &= generateBody(ShaderType::Vertex, vertexShader, vertexBody);
+   result &= generateBody(vertexShader, vertexBody);
    output << vertexBody;
    result &= generateEpilog(output);
 
@@ -655,7 +654,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    result &= generateProlog("PSMain", "PSInput", "PSOutput", output);
    result &= generateLocals(pixelShader, output);
    result &= generatePixelParams(vertexShader, output);
-   result &= generateBody(ShaderType::Pixel, pixelShader, pixelBody);
+   result &= generateBody(pixelShader, pixelBody);
    output << pixelBody;
    result &= generateEpilog(output);
 

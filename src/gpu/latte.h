@@ -11,6 +11,13 @@ namespace latte
 
 struct Shader
 {
+   enum Type
+   {
+      Geometry,
+      Vertex,
+      Pixel,
+   };
+
    Shader()
    {
    }
@@ -18,6 +25,8 @@ struct Shader
    ~Shader()
    {
    }
+
+   Type type;
 
    std::vector<std::unique_ptr<shadir::Instruction>> code;  // Serialised list of instructions
    std::vector<std::unique_ptr<shadir::Block>> blocks;      // Instruction AST
@@ -31,7 +40,7 @@ struct Shader
    std::unordered_set<uint32_t> resourcesUsed;  // Set of Resource IDs used
 };
 
-bool decode(Shader &shader, const gsl::array_view<uint8_t> &binary);
+bool decode(Shader &shader, Shader::Type type, const gsl::array_view<uint8_t> &binary);
 bool blockify(Shader &shader);
 bool analyse(Shader &shader);
 void dumpBlocks(Shader &shader);

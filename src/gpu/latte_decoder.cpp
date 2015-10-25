@@ -22,7 +22,7 @@ static bool decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruc
 static bool decodeTEX(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
 
 bool
-decode(Shader &shader, const gsl::array_view<uint8_t> &binary)
+decode(Shader &shader, Shader::Type type, const gsl::array_view<uint8_t> &binary)
 {
    DecodeState state;
 
@@ -32,6 +32,7 @@ decode(Shader &shader, const gsl::array_view<uint8_t> &binary)
    state.cfPC = 0;
    state.group = 0;
    state.shader = &shader;
+   shader.type = type;
 
    // Step 1: Deserialise, inline ALU/TEX clauses
    for (auto i = 0u; i < state.wordCount; i += 2) {

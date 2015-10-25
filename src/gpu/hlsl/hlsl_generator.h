@@ -4,13 +4,6 @@
 #include "gpu/latte.h"
 #include "gpu/latte_shadir.h"
 
-enum class ShaderType
-{
-   Geometry,
-   Vertex,
-   Pixel,
-};
-
 struct GenerateState
 {
    fmt::MemoryWriter out;
@@ -18,7 +11,6 @@ struct GenerateState
    int32_t cfPC = -1;
    int32_t groupPC = -1;
    latte::Shader *shader;
-   ShaderType shaderType;
 };
 
 using TranslateFuncCF = bool(*)(GenerateState &state, latte::shadir::CfInstruction *ins);
@@ -32,7 +24,7 @@ namespace hlsl
 
 void intialise();
 
-bool generateBody(ShaderType shaderType, latte::Shader &shader, std::string &body);
+bool generateBody(latte::Shader &shader, std::string &body);
 
 void registerGenerator(latte::cf::inst ins, TranslateFuncCF func);
 void registerGenerator(latte::alu::op2 ins, TranslateFuncALU func);

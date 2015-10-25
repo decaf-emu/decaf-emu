@@ -160,9 +160,9 @@ void translateAluSource(GenerateState &state, AluSource &src)
       state.out << "PS";
       break;
    case AluSource::ConstantFile:
-      if (state.shaderType == ShaderType::Vertex) {
+      if (state.shader->type == latte::Shader::Vertex) {
          state.out << 'VC' << src.id;
-      } else if (state.shaderType == ShaderType::Pixel) {
+      } else if (state.shader->type == latte::Shader::Pixel) {
          state.out << 'PC' << src.id;
       } else {
          throw;

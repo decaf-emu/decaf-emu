@@ -276,6 +276,7 @@
     <ClInclude Include="..\src\filesystem\filesystem_win_folder.h" />
     <ClInclude Include="..\src\filesystem\filesystem_win_path.h" />
     <ClInclude Include="..\src\fuzztests.h" />
+    <ClInclude Include="..\src\gpu\hlsl\hlsl.h" />
     <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_disassembler.h" />

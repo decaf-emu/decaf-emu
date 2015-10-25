@@ -174,9 +174,9 @@ GX2DumpShader(const std::string &filename, uint8_t *data, size_t size)
    output.clear();
 
    // Decompiled
-   auto decompiled = latte::Shader {};
-   latte::decode(decompiled, { data, size });
-   hlsl::generateBody(ShaderType::Vertex, decompiled, output);
+   auto decompiled = latte::Shader { };
+   latte::decode(decompiled, latte::Shader::Vertex, { data, size });
+   hlsl::generateBody(decompiled, output);
 
    file
       << "Decompiled:" << std::endl
