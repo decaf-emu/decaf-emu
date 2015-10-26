@@ -235,6 +235,7 @@
     <ClCompile Include="..\src\system.cpp" />
     <ClCompile Include="..\src\memory_translate.cpp" />
     <ClCompile Include="..\src\utils\crc32.cpp" />
+    <ClCompile Include="..\src\utils\log.cpp" />
     <ClCompile Include="..\src\utils\wfunc_ptr.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -36,9 +36,6 @@
 #include "utils/log.h"
 #include "utils/teenyheap.h"
 
-std::shared_ptr<spdlog::logger>
-gLog;
-
 static void initialiseEmulator();
 static bool fuzzTest();
 static bool play(const fs::HostPath &path, const fs::HostPath &sysPath);
