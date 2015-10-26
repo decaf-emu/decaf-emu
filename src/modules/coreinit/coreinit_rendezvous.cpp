@@ -11,7 +11,7 @@ OSInitRendezvous(OSRendezvous *rendezvous)
 BOOL
 OSWaitRendezvous(OSRendezvous *rendezvous, uint32_t coreMask)
 {
-   return OSWaitRendezvousWithTimeout(rendezvous, coreMask, 0);
+   return OSWaitRendezvousWithTimeout(rendezvous, coreMask, -1);
 }
 
 BOOL
@@ -19,7 +19,7 @@ OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous, uint32_t coreMask, OSTime 
 {
    auto core = OSGetCoreId();
    auto success = FALSE;
-   auto endTime = timeout ? OSGetTime() + timeout : 0;
+   auto endTime = OSGetTime() + timeout;
 
    // Set our core flag
    rendezvous->core[core].store(1, std::memory_order_release);
@@ -37,7 +37,7 @@ OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous, uint32_t coreMask, OSTime 
       }
 
       // Check for timeout
-      if (timeout && OSGetTime() >= endTime) {
+      if (timeout != -1 && OSGetTime() >= endTime) {
          break;
       }
    } while (!success);
