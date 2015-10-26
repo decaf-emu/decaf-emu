@@ -102,6 +102,29 @@ void translateAluDestEnd(GenerateState &state, AluInstruction *ins)
    }
 }
 
+void translateIndex(GenerateState &state, latte::alu::IndexMode::IndexMode index)
+{
+   switch (index) {
+   case latte::alu::IndexMode::ArX:
+      state.out << "AR.x";
+      break;
+   case latte::alu::IndexMode::ArY:
+      state.out << "AR.y";
+      break;
+   case latte::alu::IndexMode::ArZ:
+      state.out << "AR.z";
+      break;
+   case latte::alu::IndexMode::ArW:
+      state.out << "AR.w";
+      break;
+   case latte::alu::IndexMode::Loop:
+      state.out << "AL";
+      break;
+   default:
+      assert(0);
+   }
+}
+
 void translateAluSource(GenerateState &state, AluSource &src)
 {
    if (src.absolute) {
@@ -162,12 +185,19 @@ void translateAluSource(GenerateState &state, AluSource &src)
       break;
    case AluSource::ConstantFile:
       if (state.shader->type == latte::Shader::Vertex) {
-         state.out << "VC" << src.id;
+         state.out << "VC[" << src.id;
       } else if (state.shader->type == latte::Shader::Pixel) {
-         state.out << "PC" << src.id;
+         state.out << "PC[" << src.id;
       } else {
          throw std::runtime_error("Unexpected shader type for ConstantFile");
       }
+
+      if (src.rel) {
+         state.out << " + ";
+         translateIndex(state, src.indexMode);
+      }
+
+      state.out << ']';
       break;
    case AluSource::ConstantLiteral:
       if (src.valueType == AluSource::Float) {
@@ -190,29 +220,7 @@ void translateAluSource(GenerateState &state, AluSource &src)
    }
 
    if (src.rel) {
-      state.out << '[';
-
-      switch (src.indexMode) {
-      case latte::alu::IndexMode::ArX:
-         state.out << "AR.x";
-         break;
-      case latte::alu::IndexMode::ArY:
-         state.out << "AR.y";
-         break;
-      case latte::alu::IndexMode::ArZ:
-         state.out << "AR.z";
-         break;
-      case latte::alu::IndexMode::ArW:
-         state.out << "AR.w";
-         break;
-      case latte::alu::IndexMode::Loop:
-         state.out << "AL";
-         break;
-      default:
-         assert(0);
-      }
-
-      state.out << ']';
+      assert(src.type == AluSource::ConstantFile);
    }
 
    switch (src.type) {

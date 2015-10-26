@@ -257,6 +257,18 @@ static bool MOV(GenerateState &state, AluInstruction *ins)
    return true;
 }
 
+static bool MOVA_FLOOR(GenerateState &state, AluInstruction *ins)
+{
+   // AR.chan = floor(src0)
+   state.out << "AR.";
+   translateChannel(state, ins->dest.chan);
+
+   state.out << " = (int)floor(";
+   translateAluSource(state, ins->sources[0]);
+   state.out << ")";
+   return true;
+}
+
 static bool CEIL(GenerateState &state, AluInstruction *ins)
 {
    // dst = ceil(src0)
@@ -684,6 +696,7 @@ void registerAluOP2()
    registerGenerator(op2::MAX_UINT, MAX);
    registerGenerator(op2::MIN_UINT, MIN);
    registerGenerator(op2::MOV, MOV);
+   registerGenerator(op2::MOVA_FLOOR, MOVA_FLOOR);
    registerGenerator(op2::CEIL, CEIL);
    registerGenerator(op2::FLOOR, FLOOR);
    registerGenerator(op2::TRUNC, TRUNC);

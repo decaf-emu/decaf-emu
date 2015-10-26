@@ -508,6 +508,8 @@ generateLocals(const latte::Shader &shader, fmt::MemoryWriter &output)
          << "float4 PVo;\n";
    }
 
+   // TODO: Only print AR if needed
+   output << "int4 AR;\n";
    return true;
 }
 
@@ -602,31 +604,19 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    generateExports(pixelShader, output);
    output << "};\n\n";
 
-   uint32_t maxVertUniform = 0;
-   for (auto i : vertexShader.uniformsUsed) {
-      if (maxVertUniform < i + 1) {
-         maxVertUniform = i + 1;
-      }
-   }
-   if (maxVertUniform > 0) {
+   if (vertexShader.uniformsUsed.size()) {
+      auto max = *std::max_element(vertexShader.uniformsUsed.begin(), vertexShader.uniformsUsed.end());
+
       output << "cbuffer VertUniforms {\n";
-      for (auto i = 0u; i < maxVertUniform; ++i) {
-         output << "  float4 VC" << i << ";\n";
-      }
+         output << "  float4 VC[" << (max + 1) << "];\n";
       output << "};\n\n";
    }
 
-   uint32_t maxPixUniform = 0;
-   for (auto i : pixelShader.uniformsUsed) {
-      if (maxPixUniform < i + 1) {
-         maxPixUniform = i + 1;
-      }
-   }
-   if (maxPixUniform > 0) {
+   if (pixelShader.uniformsUsed.size()) {
+      auto max = *std::max_element(pixelShader.uniformsUsed.begin(), pixelShader.uniformsUsed.end());
+
       output << "cbuffer PixUniforms {\n";
-      for (auto i = 0u; i < maxPixUniform; ++i) {
-         output << "  float4 PC" << i << ";\n";
-      }
+      output << "  float4 PC[" << (max + 1) << "];\n";
       output << "};\n\n";
    }
 
