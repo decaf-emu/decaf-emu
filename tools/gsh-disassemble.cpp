@@ -149,3 +149,16 @@ int main(int argc, char **argv)
    std::cout << "Usage: " << argv[0] << " <gsh|vertex|pixel> <filename>" << std::endl;
    return -1;
 }
+
+// Appease the compiler gods.
+void *
+memory_translate(ppcaddr_t address)
+{
+   return nullptr;
+}
+
+ppcaddr_t
+memory_untranslate(const void *pointer)
+{
+   return 0;
+}
