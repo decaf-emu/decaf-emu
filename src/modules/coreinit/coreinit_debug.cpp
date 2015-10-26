@@ -5,7 +5,7 @@
 BOOL
 OSIsDebuggerPresent()
 {
-   return TRUE;
+   return FALSE;
 }
 
 BOOL
