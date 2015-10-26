@@ -99,8 +99,20 @@ static std::string
 GX2EnumAsString(GX2UniformType::Type type)
 {
    switch (type) {
+   case GX2UniformType::Int:
+      return "Int";
+   case GX2UniformType::Int2:
+      return "Int2";
+   case GX2UniformType::Int3:
+      return "Int3";
+   case GX2UniformType::Int4:
+      return "Int4";
+   case GX2UniformType::Float:
+      return "Float";
    case GX2UniformType::Float2:
       return "Float2";
+   case GX2UniformType::Float3:
+      return "Float3";
    case GX2UniformType::Float4:
       return "Float4";
    case GX2UniformType::Matrix4x4:
@@ -233,7 +245,7 @@ formatUniformVars(fmt::MemoryWriter &out, uint32_t count, GX2UniformVar *vars)
    out << "  uniformVarCount: " << count << "\n";
 
    for (auto i = 0u; i < count; ++i) {
-      out << "    Block " << i << "\n"
+      out << "    Var " << i << "\n"
          << "      name: " << vars[i].name.get() << "\n"
          << "      type: " << GX2EnumAsString(vars[i].type) << "\n"
          << "      count: " << vars[i].count << "\n"

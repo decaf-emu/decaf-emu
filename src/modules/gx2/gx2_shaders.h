@@ -90,8 +90,14 @@ namespace GX2UniformType
 {
 enum Type : uint32_t
 {
+   Int = 2,
+   Float = 4,
    Float2 = 9,
+   Float3 = 10,
    Float4 = 11,
+   Int2 = 15,
+   Int3 = 16,
+   Int4 = 17,
    Matrix4x4 = 29,
 };
 }
