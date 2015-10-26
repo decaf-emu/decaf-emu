@@ -212,6 +212,14 @@ private:
          psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
          psoDesc.SampleDesc.Count = 1;
 
+         if (gDX.state.primitiveRestartIdx == 0xFFFF) {
+            psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF;
+         } else if (gDX.state.primitiveRestartIdx == 0xFFFFFFFF) {
+            psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF;
+         } else {
+            throw;
+         }
+
          auto &blendState = gDX.state.blendState;
          if (blendState.blendEnabled) {
             psoDesc.BlendState.IndependentBlendEnable = true;

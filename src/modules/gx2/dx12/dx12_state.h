@@ -53,6 +53,8 @@ struct DXState {
    UINT swapCount;
 
    // Emulator Objects
+   uint32_t srvIndex[GX2_NUM_SAMPLERS];
+   uint32_t cbvIndex[GX2_NUM_UNIFORMBLOCKS];
    DXScanBufferData *tvScanBuffer;
    DXScanBufferData *drcScanBuffer;
 
@@ -63,6 +65,7 @@ struct DXState {
    {
       GX2ColorBuffer *colorBuffer[GX2_NUM_MRT_BUFFER];
       GX2DepthBuffer *depthBuffer;
+      uint32_t primitiveRestartIdx;
       struct {
          uint32_t size;
          uint32_t stride;
@@ -89,7 +92,8 @@ struct DXState {
          GX2BlendMode::Mode alphaDstBlend;
          GX2BlendCombineMode::Mode alphaCombine;
       } targetBlendState[8];
-      float uniforms[256 * 4];
+      float vertUniforms[GX2_NUM_GPRS * 4];
+      float pixUniforms[GX2_NUM_GPRS * 4];
    } state;
    static_assert(sizeof(ContextState) < sizeof(GX2ContextState::stateStore), "ContextState must be smaller than GX2ContextState::stateStore");
 

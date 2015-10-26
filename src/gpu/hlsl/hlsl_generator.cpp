@@ -568,10 +568,11 @@ generateEpilog(fmt::MemoryWriter &output)
 }
 
 bool
-generateBody(latte::Shader &shader, std::string &body)
+generateBody(ShaderType shaderType, latte::Shader &shader, std::string &body)
 {
    auto result = true;
    auto state = GenerateState {};
+   state.shaderType = shaderType;
    state.shader = &shader;
 
    intialise();
@@ -602,21 +603,30 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    generateExports(pixelShader, output);
    output << "};\n\n";
 
-   uint32_t maxUniform = 0;
+   uint32_t maxVertUniform = 0;
    for (auto i : vertexShader.uniformsUsed) {
-      if (maxUniform < i + 1) {
-         maxUniform = i + 1;
+      if (maxVertUniform < i + 1) {
+         maxVertUniform = i + 1;
       }
    }
+   if (maxVertUniform > 0) {
+      output << "cbuffer VertUniforms {\n";
+      for (auto i = 0u; i < maxVertUniform; ++i) {
+         output << "  float4 VC" << i << ";\n";
+      }
+      output << "};\n\n";
+   }
+
+   uint32_t maxPixUniform = 0;
    for (auto i : pixelShader.uniformsUsed) {
-      if (maxUniform < i + 1) {
-         maxUniform = i + 1;
+      if (maxPixUniform < i + 1) {
+         maxPixUniform = i + 1;
       }
    }
-   if (maxUniform > 0) {
-      output << "cbuffer Uniforms {\n";
-      for (auto i = 0u; i < maxUniform; ++i) {
-         output << "  float4 C" << i << ";\n";
+   if (maxPixUniform > 0) {
+      output << "cbuffer PixUniforms {\n";
+      for (auto i = 0u; i < maxPixUniform; ++i) {
+         output << "  float4 PC" << i << ";\n";
       }
       output << "};\n\n";
    }
@@ -637,7 +647,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    result &= generateProlog("VSMain", "VSInput", "PSInput", output);
    result &= generateLocals(vertexShader, output);
    result &= generateVertexParams(attribs, output);
-   result &= generateBody(vertexShader, vertexBody);
+   result &= generateBody(ShaderType::Vertex, vertexShader, vertexBody);
    output << vertexBody;
    result &= generateEpilog(output);
 
@@ -645,7 +655,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    result &= generateProlog("PSMain", "PSInput", "PSOutput", output);
    result &= generateLocals(pixelShader, output);
    result &= generatePixelParams(vertexShader, output);
-   result &= generateBody(pixelShader, pixelBody);
+   result &= generateBody(ShaderType::Pixel, pixelShader, pixelBody);
    output << pixelBody;
    result &= generateEpilog(output);
 

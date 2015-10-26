@@ -94,6 +94,18 @@ GX2SetAttribBuffer(uint32_t index,
    DX_DLCALL(_GX2SetAttribBuffer, index, size, stride, buffer);
 }
 
+void
+_GX2SetPrimitiveRestartIndex(uint32_t index)
+{
+   gDX.state.primitiveRestartIdx = index;
+}
+
+void
+GX2SetPrimitiveRestartIndex(uint32_t index)
+{
+   DX_DLCALL(_GX2SetPrimitiveRestartIndex, index);
+}
+
 // Decomposes a set of quads to a triangle list
 template <typename IndexType>
 void

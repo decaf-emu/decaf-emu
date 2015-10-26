@@ -93,6 +93,7 @@ GX2::registerDrawFunctions()
    RegisterKernelFunction(GX2ClearDepthStencilEx);
    RegisterKernelFunction(GX2SetClearDepthStencil);
    RegisterKernelFunction(GX2SetAttribBuffer);
+   RegisterKernelFunction(GX2SetPrimitiveRestartIndex);
    RegisterKernelFunction(GX2DrawEx);
    RegisterKernelFunction(GX2DrawIndexedEx);
 }
@@ -127,6 +128,8 @@ GX2::registerShaderFunctions()
    RegisterKernelFunction(GX2SetPixelSampler);
    RegisterKernelFunction(GX2SetVertexUniformReg);
    RegisterKernelFunction(GX2SetPixelUniformReg);
+   RegisterKernelFunction(GX2SetVertexUniformBlock);
+   RegisterKernelFunction(GX2SetPixelUniformBlock);
    RegisterKernelFunction(GX2SetShaderModeEx);
    RegisterKernelFunction(GX2GetPixelShaderGPRs);
    RegisterKernelFunction(GX2GetPixelShaderStackEntries);

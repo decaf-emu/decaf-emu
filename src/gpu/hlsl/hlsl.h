@@ -7,7 +7,6 @@
 namespace hlsl
 {
 
-bool generateBody(latte::Shader &shader, std::string &body);
 bool generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, latte::Shader &vertexShader, latte::Shader &pixelShader, std::string &hlsl);
 
 }

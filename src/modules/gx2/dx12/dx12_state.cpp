@@ -42,6 +42,8 @@ void dx::initialise()
    gDX.activeDepthBuffer = nullptr;
    
 
+   gDX.state.primitiveRestartIdx = 0xFFFFFFFF;
+
 
    gDX.viewport.Width = static_cast<float>(platform::ui::getWindowWidth());
    gDX.viewport.Height = static_cast<float>(platform::ui::getWindowHeight());
@@ -161,14 +163,15 @@ void dx::initialise()
    // Create the root signature.
    {
       CD3DX12_DESCRIPTOR_RANGE ranges[GX2_NUM_SAMPLERS];
-      for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
-         ranges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i);
-      }
-
-      CD3DX12_ROOT_PARAMETER rootParameters[1 + GX2_NUM_SAMPLERS];
+      CD3DX12_ROOT_PARAMETER rootParameters[1 + GX2_NUM_SAMPLERS + GX2_NUM_UNIFORMBLOCKS];
       uint32_t paramIdx = 0;
-      rootParameters[paramIdx++].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+      for (auto i = 0; i < GX2_NUM_UNIFORMBLOCKS; ++i) {
+         gDX.cbvIndex[i] = paramIdx;
+         rootParameters[paramIdx++].InitAsConstantBufferView(i, 0, D3D12_SHADER_VISIBILITY_ALL);
+      }
       for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
+         gDX.srvIndex[i] = paramIdx;
+         ranges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i);
          rootParameters[paramIdx++].InitAsDescriptorTable(1, &ranges[i], D3D12_SHADER_VISIBILITY_ALL);
       }
 
@@ -384,13 +387,13 @@ void dx::_endFrame() {
 
    // Render TV ScanBuffer
    {
-      gDX.commandList->SetGraphicsRootDescriptorTable(1, *gDX.tvScanBuffer->srv);
+      gDX.commandList->SetGraphicsRootDescriptorTable(gDX.srvIndex[0], *gDX.tvScanBuffer->srv);
       gDX.commandList->DrawInstanced(4, 1, 0, 0);
    }
 
    // Render DRC ScanBuffer
    {
-      gDX.commandList->SetGraphicsRootDescriptorTable(1, *gDX.drcScanBuffer->srv);
+      gDX.commandList->SetGraphicsRootDescriptorTable(gDX.srvIndex[0], *gDX.drcScanBuffer->srv);
       gDX.commandList->DrawInstanced(4, 1, 4, 0);
    }
 
@@ -584,11 +587,18 @@ void dx::updateBuffers()
 
    gDX.commandList->IASetVertexBuffers(0, 32, bufferList);
 
-
-   auto constBuffer = gDX.ppcVertexBuffer->get(16 * 4 * sizeof(float), nullptr, 256);
-   uint8_t *constData = (uint8_t*)constBuffer;
-   memcpy(constData, gDX.state.uniforms, 16 * 4 * sizeof(float));
-   gDX.commandList->SetGraphicsRootConstantBufferView(0, constBuffer);
+   {
+      auto constBuffer = gDX.ppcVertexBuffer->get(16 * 4 * sizeof(float), nullptr, 256);
+      uint8_t *constData = (uint8_t*)constBuffer;
+      memcpy(constData, gDX.state.vertUniforms, 16 * 4 * sizeof(float));
+      gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[0], constBuffer);
+   }
+   {
+      auto constBuffer = gDX.ppcVertexBuffer->get(16 * 4 * sizeof(float), nullptr, 256);
+      uint8_t *constData = (uint8_t*)constBuffer;
+      memcpy(constData, gDX.state.pixUniforms, 16 * 4 * sizeof(float));
+      gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[1], constBuffer);
+   }
 }
 
 void dx::updateTextures()

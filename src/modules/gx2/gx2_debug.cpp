@@ -6,6 +6,7 @@
 #include "gx2_shaders.h"
 #include "gpu/latte.h"
 #include "gpu/hlsl/hlsl.h"
+#include "gpu/hlsl/hlsl_generator.h"
 #include "memory_translate.h"
 
 static void
@@ -175,7 +176,7 @@ GX2DumpShader(const std::string &filename, uint8_t *data, size_t size)
    // Decompiled
    auto decompiled = latte::Shader {};
    latte::decode(decompiled, { data, size });
-   hlsl::generateBody(decompiled, output);
+   hlsl::generateBody(ShaderType::Vertex, decompiled, output);
 
    file
       << "Decompiled:" << std::endl

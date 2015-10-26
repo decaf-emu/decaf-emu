@@ -60,6 +60,9 @@ void
 GX2SetAttribBuffer(uint32_t index, uint32_t size, uint32_t stride, void *buffer);
 
 void
+GX2SetPrimitiveRestartIndex(uint32_t index);
+
+void
 GX2DrawEx(GX2PrimitiveMode::Mode mode, uint32_t numVertices, uint32_t offset, uint32_t numInstances);
 
 void

@@ -100,9 +100,10 @@ _GX2SetVertexUniformReg(uint32_t offset,
                        uint32_t count,
                        void *data)
 {
+   gLog->info("_GX2SetVertexUniformReg({}, {}, {})", offset, count, memory_untranslate(data));
    float *floatData = (float*)data;
    for (auto i = 0u; i < count; ++i) {
-      gDX.state.uniforms[offset + i] = byte_swap(floatData[i]);
+      gDX.state.vertUniforms[offset + i] = byte_swap(floatData[i]);
    }
 }
 void
@@ -115,9 +116,10 @@ _GX2SetPixelUniformReg(uint32_t offset,
    uint32_t count,
    void *data)
 {
+   gLog->info("_GX2SetPixelUniformReg({}, {}, {})", offset, count, memory_untranslate(data));
    float *floatData = (float*)data;
    for (auto i = 0u; i < count; ++i) {
-      gDX.state.uniforms[offset + i] = byte_swap(floatData[i]);
+      gDX.state.pixUniforms[offset + i] = byte_swap(floatData[i]);
    }
 }
 void
@@ -126,6 +128,30 @@ GX2SetPixelUniformReg(uint32_t offset,
                       void *data)
 {
    DX_DLCALL(_GX2SetPixelUniformReg, offset, count, data);
+}
+
+void
+_GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
+{
+   gLog->info("_GX2SetVertexUniformBlock({}, {}, {:08x})", location, size, memory_untranslate(data));
+}
+
+void
+GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
+{
+   DX_DLCALL(_GX2SetVertexUniformBlock, location, size, data);
+}
+
+void
+_GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
+{
+   gLog->info("_GX2SetPixelUniformBlock({}, {}, {:08x})", location, size, memory_untranslate(data));
+}
+
+void
+GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
+{
+   DX_DLCALL(_GX2SetPixelUniformBlock, location, size, data);
 }
 
 void

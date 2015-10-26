@@ -160,7 +160,13 @@ void translateAluSource(GenerateState &state, AluSource &src)
       state.out << "PS";
       break;
    case AluSource::ConstantFile:
-      state.out << 'C' << src.id;
+      if (state.shaderType == ShaderType::Vertex) {
+         state.out << 'VC' << src.id;
+      } else if (state.shaderType == ShaderType::Pixel) {
+         state.out << 'PC' << src.id;
+      } else {
+         throw;
+      }
       break;
    case AluSource::ConstantFloat:
       state.out.write("{:.6f}f", src.floatValue);
