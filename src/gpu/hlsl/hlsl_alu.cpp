@@ -161,11 +161,11 @@ void translateAluSource(GenerateState &state, AluSource &src)
       break;
    case AluSource::ConstantFile:
       if (state.shader->type == latte::Shader::Vertex) {
-         state.out << 'VC' << src.id;
+         state.out << "VC" << src.id;
       } else if (state.shader->type == latte::Shader::Pixel) {
-         state.out << 'PC' << src.id;
+         state.out << "PC" << src.id;
       } else {
-         throw;
+         throw std::runtime_error("Unexpected shader type for ConstantFile");
       }
       break;
    case AluSource::ConstantFloat:
