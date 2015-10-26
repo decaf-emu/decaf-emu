@@ -50,6 +50,7 @@ CoreInit::RegisterFunctions()
    registerMemlistFunctions();
    registerMessageQueueFunctions();
    registerMutexFunctions();
+   registerRendezvousFunctions();
    registerSchedulerFunctions();
    registerSemaphoreFunctions();
    registerSharedFunctions();

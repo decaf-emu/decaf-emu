@@ -636,6 +636,9 @@
     <ClCompile Include="..\src\platform\platform_posix_thread.cpp">
       <Filter>Source Files\platform</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_rendezvous.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -889,9 +892,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_dynbuffer.h">
       <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gpu\latte_disassembler.h">
-      <Filter>Header Files\gpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte.h">
       <Filter>Header Files\gpu</Filter>
@@ -1177,6 +1177,9 @@
     </ClInclude>
     <ClInclude Include="..\src\gpu\hlsl\hlsl.h">
       <Filter>Header Files\gpu\hlsl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

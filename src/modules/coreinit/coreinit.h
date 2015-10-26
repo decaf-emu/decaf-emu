@@ -47,6 +47,7 @@ private:
    static void registerMemoryFunctions();
    static void registerMessageQueueFunctions();
    static void registerMutexFunctions();
+   static void registerRendezvousFunctions();
    static void registerSchedulerFunctions();
    static void registerSemaphoreFunctions();
    static void registerSharedFunctions();

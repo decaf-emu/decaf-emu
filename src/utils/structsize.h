@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 
 // Ensure our structs are correct size & offsets to match WiiU
 #define CHECK_SIZE(Type, Size) \

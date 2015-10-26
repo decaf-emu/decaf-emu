@@ -160,6 +160,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_memory.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_messagequeue.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_mutex.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_rendezvous.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_scheduler.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_semaphore.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_shared.cpp" />
@@ -279,7 +280,6 @@
     <ClInclude Include="..\src\gpu\hlsl\hlsl.h" />
     <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
-    <ClInclude Include="..\src\gpu\latte_disassembler.h" />
     <ClInclude Include="..\src\gpu\latte_tiling.h" />
     <ClInclude Include="..\src\gpu\mesa_r600_tiling.h" />
     <ClInclude Include="..\src\hardwaretests.h" />
@@ -287,6 +287,7 @@
     <ClInclude Include="..\src\memory_translate.h" />
     <ClInclude Include="..\src\mem\mem.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_sci.h" />
     <ClInclude Include="..\src\modules\gameloader\gameloader.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\d3dx12.h" />
