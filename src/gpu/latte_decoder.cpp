@@ -204,8 +204,8 @@ getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter
       source.type = shadir::AluSource::ConstantFloat;
       source.floatValue = 0.5f;
    } else if (sel == latte::alu::Source::SrcLiteral) {
-      source.type = shadir::AluSource::ConstantFloat;
-      source.floatValue = *reinterpret_cast<const float*>(dwBase + chan);
+      source.type = shadir::AluSource::ConstantLiteral;
+      source.literalValue = dwBase[chan];
    } else if (sel == latte::alu::Source::SrcPreviousScalar) {
       source.type = shadir::AluSource::PreviousScalar;
       source.id = counter - 1;

@@ -1,4 +1,5 @@
 #include "hlsl_generator.h"
+#include "utils/bit_cast.h"
 
 using latte::shadir::AluInstruction;
 using latte::shadir::AluSource;
@@ -168,6 +169,15 @@ void translateAluSource(GenerateState &state, AluSource &src)
          throw std::runtime_error("Unexpected shader type for ConstantFile");
       }
       break;
+   case AluSource::ConstantLiteral:
+      if (src.valueType == AluSource::Float) {
+         state.out.write("{:.6f}f", bit_cast<float>(src.literalValue));
+      } else if (src.valueType == AluSource::Int) {
+         state.out << bit_cast<int32_t>(src.literalValue);
+      } else if (src.valueType == AluSource::Uint) {
+         state.out << bit_cast<uint32_t>(src.literalValue);
+      }
+      break;
    case AluSource::ConstantFloat:
       state.out.write("{:.6f}f", src.floatValue);
       break;
@@ -216,7 +226,7 @@ void translateAluSource(GenerateState &state, AluSource &src)
    }
 
    if (src.valueType == AluSource::Int || src.valueType == AluSource::Uint) {
-      if (src.type != AluSource::ConstantInt) {
+      if (src.type != AluSource::ConstantInt && src.type != AluSource::ConstantLiteral) {
          state.out << ')';
       }
    }

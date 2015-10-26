@@ -74,6 +74,7 @@ struct AluSource
       ConstantFloat,
       ConstantDouble,
       ConstantInt,
+      ConstantLiteral,
    };
 
    enum ValueType
@@ -97,6 +98,7 @@ struct AluSource
       float floatValue;
       double doubleValue;
       int intValue;
+      uint32_t literalValue;
    };
 };
 

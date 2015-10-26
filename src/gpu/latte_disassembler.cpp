@@ -262,7 +262,7 @@ writeAluSource(DisassembleState &state, const uint32_t *dwBase, uint32_t sel, ui
    } else if (sel == latte::alu::Source::Src05Float) {
       state.out << "0.5f";
    } else if (sel == latte::alu::Source::SrcLiteral) {
-      state.out << *reinterpret_cast<const float*>(dwBase + chan) << "f";
+      state.out.write("{:08X}", dwBase[chan]);
    } else if (sel == latte::alu::Source::SrcPreviousScalar) {
       state.out << "PS" << (state.group - 1);
    } else if (sel == latte::alu::Source::SrcPreviousVector) {
