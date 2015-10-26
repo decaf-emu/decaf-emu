@@ -4,6 +4,7 @@
 #include "ppcinvokelog.h"
 #include "utils/log.h"
 #include "utils/type_list.h"
+#include "cpu/trace.h"
 
 namespace ppctypes
 {
@@ -35,7 +36,7 @@ protected:
 };
 
 template<typename Head, typename... Tail>
-static inline void
+inline void
 applyArguments2(_argumentsState& state, Head head, Tail... tail)
 {
    setArgument<Head>(state.thread, state.r, state.f, head);
@@ -43,14 +44,14 @@ applyArguments2(_argumentsState& state, Head head, Tail... tail)
 }
 
 template<typename Last>
-static inline void
+inline void
 applyArguments2(_argumentsState& state, Last last)
 {
    setArgument<Last>(state.thread, state.r, state.f, last);
 }
 
 template<typename... Args>
-static inline void
+inline void
 applyArguments(ThreadState *state, Args&&... args)
 {
    _argumentsState argstate;
@@ -61,7 +62,7 @@ applyArguments(ThreadState *state, Args&&... args)
 }
 
 template<typename FnReturnType, typename... FnArgs, typename Head, typename... Tail, typename... Args>
-static inline void
+inline void
 invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<Head, Tail...>, Args... values)
 {
    auto value = getArgument<Head>(state.thread, state.r, state.f);
@@ -70,7 +71,7 @@ invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<Head, Ta
 }
 
 template<typename FnReturnType, typename... FnArgs, typename... Args>
-static inline void
+inline void
 invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<VarList&>, Args... values)
 {
    VarList vargs(state);
@@ -78,25 +79,33 @@ invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<VarList&
    invoke2(state, func, type_list<>{}, values..., vargs);
 }
 
+inline void
+invokeEndLog(_argumentsState& state)
+{
+   const char * logData = logCallEnd(state.log);
+   traceLogSyscall(logData);
+   gLog->trace(logData);
+}
+
 template<typename FnReturnType, typename... FnArgs, typename... Args>
-static inline void
+inline void
 invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<>, Args... args)
 {
-   gLog->trace(logCallEnd(state.log));
+   invokeEndLog(state);
    auto result = func(args...);
    setResult<FnReturnType>(state.thread, result);
 }
 
 template<typename... FnArgs, typename... Args>
-static inline void
+inline void
 invoke2(_argumentsState& state, void func(FnArgs...), type_list<>, Args... args)
 {
-   gLog->trace(logCallEnd(state.log));
+   invokeEndLog(state);
    func(args...);
 }
 
 template<typename ReturnType, typename... Args>
-static inline void
+inline void
 invoke(ThreadState *state, ReturnType func(Args...), const char *name = nullptr)
 {
    _argumentsState argstate;

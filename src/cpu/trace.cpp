@@ -7,6 +7,7 @@
 #include "utils/log.h"
 
 //#define TRACE_ENABLED
+//#define TRACE_SC_ENABLED
 //#define TRACE_VERIFICATION
 
 template<typename... Args>
@@ -581,4 +582,37 @@ traceRegContinue()
    }
 
    traceRegNext(gRegTraceNextReg);
+}
+
+std::list<std::string> gSyscallTrace;
+std::mutex gSyscallTraceLock;
+
+void
+tracePrintSyscall(int count)
+{
+   std::unique_lock<std::mutex> lock(gSyscallTraceLock);
+
+   if (count < 0 || count >= gSyscallTrace.size()) {
+      count = (int)gSyscallTrace.size();
+   }
+
+   debugPrint("Trace - Last {} syscalls", count);
+
+   int j = 0;
+   for (auto i = gSyscallTrace.begin(); i != gSyscallTrace.end() && j < count; ++i, ++j) {
+      debugPrint("  {}", *i);
+   }
+}
+
+void
+traceLogSyscall(const std::string& info)
+{
+#ifdef TRACE_SC_ENABLED
+   std::unique_lock<std::mutex> lock(gSyscallTraceLock);
+
+   gSyscallTrace.push_front(info);
+   while (gSyscallTrace.size() > 2048) {
+      gSyscallTrace.pop_back();
+   }
+#endif
 }

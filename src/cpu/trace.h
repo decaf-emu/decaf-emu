@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <list>
 #include "instruction.h"
 
 struct InstructionData;
@@ -128,3 +129,9 @@ traceRegNext(int regIdx);
 
 void
 traceRegContinue();
+
+void
+tracePrintSyscall(int count);
+
+void
+traceLogSyscall(const std::string& info);

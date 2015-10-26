@@ -291,6 +291,7 @@ play(const fs::HostPath &path, const fs::HostPath &sysPath)
 
    // Force inclusion in release builds
    tracePrint(nullptr, 0, 0);
+   tracePrintSyscall(0);
 
    // Wait for all processor threads to exit
    //gProcessor.join();
