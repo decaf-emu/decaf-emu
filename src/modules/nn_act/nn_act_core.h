@@ -26,6 +26,12 @@ GetSlotNo();
 uint32_t
 GetTransferableId(uint32_t unk1);
 
+nn::Result
+GetMii(void* unk1);
+
+nn::Result
+GetMiiEx(void* unk1, uint8_t unk2);
+
 }  // namespace act
 
 }  // namespace nn
