@@ -47,7 +47,7 @@ static const char USAGE[] =
 R"(Decaf Emulator
 
 Usage:
-   decaf play [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] [--sys-path=<sys-path>] <game directory>
+   decaf play [--jit | --jit-debug] [--log-file] [--log-async] [--no-log-stdout] [--log-level=<log-level>] [--sys-path=<sys-path>] <game directory>
    decaf fuzz
    decaf hwtest [--log-file]
    decaf (-h | --help)
@@ -58,6 +58,8 @@ Options:
    --version     Show version.
    --jit         Enables the JIT engine.
    --jit-debug   Verify JIT implementation against interpreter.
+   --no-log-stdout
+                 Disable logging to stdout
    --log-file    Redirect log output to file.
    --log-async   Enable asynchronous logging.
    --log-level=<log-level> [default: trace]
@@ -89,7 +91,10 @@ int main(int argc, char **argv)
 
    // Create the logger
    std::vector<spdlog::sink_ptr> sinks;
-   sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+
+   if (!args["--no-log-stdout"].asBool()) {
+      sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+   }
 
    if (args["--log-file"].asBool()) {
       std::string file;
@@ -113,6 +118,7 @@ int main(int argc, char **argv)
    gLog->set_level(spdlog::level::info);
 
    auto log_level = args["--log-level"].isString() ? args["--log-level"].asString() : "info";
+
    for (int l = spdlog::level::trace; l <= spdlog::level::off; l++) {
       if (spdlog::level::to_str((spdlog::level::level_enum) l) == log_level) {
          gLog->set_level((spdlog::level::level_enum) l);
