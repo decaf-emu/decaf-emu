@@ -196,10 +196,10 @@ getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter
       source.floatValue = 1.0f;
    } else if (sel == latte::alu::Source::Src1Integer) {
       source.type = shadir::AluSource::ConstantInt;
-      source.floatValue = 1;
+      source.intValue = 1;
    } else if (sel == latte::alu::Source::SrcMinus1Integer) {
       source.type = shadir::AluSource::ConstantInt;
-      source.floatValue = -1;
+      source.intValue = -1;
    } else if (sel == latte::alu::Source::Src05Float) {
       source.type = shadir::AluSource::ConstantFloat;
       source.floatValue = 0.5f;

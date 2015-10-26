@@ -175,7 +175,7 @@ void translateAluSource(GenerateState &state, AluSource &src)
       state.out.write("{:.6f}f", src.doubleValue);
       break;
    case AluSource::ConstantInt:
-      state.out << (int)src.floatValue;
+      state.out << src.intValue;
       break;
    }
 
