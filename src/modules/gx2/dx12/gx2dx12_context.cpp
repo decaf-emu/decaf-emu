@@ -62,9 +62,14 @@ GX2GetContextStateDisplayList(GX2ContextState *state,
                               be_ptr<uint8_t> *outDisplayList,
                               be_val<uint32_t> *outSize)
 {
-   // This does not currently work since we do not use an internal display
-   //   list for queueing stuff...
-   throw;
+   // This is definitely not correct as this method is used by games
+   //   to directly invoke the internal display list which configures
+   //   the state in a particular context state.  For now we return null
+   //   which means that the state is not properly applied when they call
+   //   DirectCallDisplayList.
+   gLog->warn("Badly implemented GX2GetContextStateDisplayList called.");
+   *outDisplayList = nullptr;
+   *outSize = 0;
 }
 
 void
