@@ -23,6 +23,8 @@ void
 _GX2SetPixelTexture(GX2Texture *texture,
                    uint32_t unit)
 {
+   gLog->debug("_GX2SetPixelTexture({}, {})", memory_untranslate(texture), unit);
+
    DXTextureData *textureData = dx::getTexture(texture);
    textureData->upload();
    gDX.commandList->SetGraphicsRootDescriptorTable(gDX.srvIndex[unit], *textureData->srv);

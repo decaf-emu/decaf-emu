@@ -160,7 +160,7 @@ _GX2DrawEx(GX2PrimitiveMode::Mode mode,
           uint32_t offset,
           uint32_t numInstances)
 {
-   // TODO: GX2DrawEx
+   gLog->debug("_GX2DrawEx({}, {}, {})", numVertices, offset, numInstances);
 
    dx::updateRenderTargets();
    dx::updatePipeline();
@@ -189,7 +189,7 @@ _GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
                  uint32_t offset,
                  uint32_t numInstances)
 {
-   // TODO: GX2DrawIndexedEx
+   gLog->debug("_GX2DrawIndexedEx({}, {}, {})", numVertices, offset, numInstances);
 
    dx::updateRenderTargets();
    dx::updatePipeline();
