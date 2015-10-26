@@ -402,7 +402,8 @@
     <ClInclude Include="..\src\utils\be_data.h" />
     <ClInclude Include="..\src\utils\be_val.h" />
     <ClInclude Include="..\src\utils\be_vec.h" />
-    <ClInclude Include="..\src\utils\bigendianview.h" />
+    <ClInclude Include="..\src\utils\binaryfile.h" />
+    <ClInclude Include="..\src\utils\binaryview.h" />
     <ClInclude Include="..\src\utils\bitutils.h" />
     <ClInclude Include="..\src\utils\bit_cast.h" />
     <ClInclude Include="..\src\utils\byte_swap.h" />

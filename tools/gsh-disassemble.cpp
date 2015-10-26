@@ -7,7 +7,9 @@
 #include "gpu/latte.h"
 #include "gpu/hlsl/hlsl.h"
 #include "gpu/hlsl/hlsl_generator.h"
-#include "utils/bigendianview.h"
+#include "utils/be_val.h"
+#include "utils/binaryfile.h"
+#include "utils/strutils.h"
 
 namespace gsh
 {
@@ -15,14 +17,14 @@ namespace gsh
 struct Header
 {
    static const uint32_t Magic = 0x47667832;
-   uint32_t magic;
-   uint32_t unk1;
-   uint32_t unk2;
-   uint32_t unk3;
-   uint32_t unk4;
-   uint32_t unk5;
-   uint32_t unk6;
-   uint32_t unk7;
+   be_val<uint32_t> magic;
+   be_val<uint32_t> unk1;
+   be_val<uint32_t> unk2;
+   be_val<uint32_t> unk3;
+   be_val<uint32_t> unk4;
+   be_val<uint32_t> unk5;
+   be_val<uint32_t> unk6;
+   be_val<uint32_t> unk7;
 };
 
 struct Block
@@ -33,21 +35,51 @@ struct Block
       PixelShader = 7
    };
 
-   static const uint32_t Magic = 0x424c4b7b;
-   uint32_t magic;
-   uint32_t unk1;
-   uint32_t unk2;
-   uint32_t unk3;
-   uint32_t type;
-   uint32_t dataLength;
-   uint32_t unk4;
-   uint32_t unk5;
-   std::vector<uint8_t> data;
+   static const uint32_t Magic = 0x424C4B7B;
+   be_val<uint32_t> magic;
+   be_val<uint32_t> unk1;
+   be_val<uint32_t> unk2;
+   be_val<uint32_t> unk3;
+   be_val<uint32_t> type;
+   be_val<uint32_t> dataLength;
+   be_val<uint32_t> unk4;
+   be_val<uint32_t> unk5;
+   gsl::array_view<uint8_t> data;
 };
 
 }
 
-bool parseGSH(BigEndianView &fh)
+static bool
+dumpShader(latte::Shader::Type type, const gsl::array_view<uint8_t> &data)
+{
+   std::string out;
+   latte::disassemble(out, data);
+   std::cout << "----------------------------------------------" << std::endl;
+   std::cout << "                  Disassembly                 " << std::endl;
+   std::cout << "----------------------------------------------" << std::endl;
+   std::cout << out << std::endl;
+   std::cout << std::endl;
+
+   latte::Shader shader;
+   latte::decode(shader, type, data);
+   std::cout << "----------------------------------------------" << std::endl;
+   std::cout << "                    Blocks                    " << std::endl;
+   std::cout << "----------------------------------------------" << std::endl;
+   latte::dumpBlocks(shader);
+   std::cout << std::endl;
+
+   std::string hlsl;
+   hlsl::generateBody(shader, hlsl);
+   std::cout << "----------------------------------------------" << std::endl;
+   std::cout << "                     HLSL                     " << std::endl;
+   std::cout << "----------------------------------------------" << std::endl;
+   std::cout << hlsl << std::endl;
+   std::cout << std::endl;
+   return true;
+}
+
+static bool
+parseGSH(BinaryFile &fh)
 {
    gsh::Header header;
    fh.read(header.magic);
@@ -82,34 +114,12 @@ bool parseGSH(BigEndianView &fh)
       fh.read(block.unk4);
       fh.read(block.unk5);
 
-      block.data.resize(block.dataLength);
-      fh.read<uint8_t>(block.data);
+      block.data = fh.readView(block.dataLength);
 
-      if (block.type == gsh::Block::VertexShader || block.type == gsh::Block::PixelShader) {
-         std::string out;
-         latte::disassemble(out, block.data);
-         std::cout << "----------------------------------------------" << std::endl;
-         std::cout << "                  Disassembly                 " << std::endl;
-         std::cout << "----------------------------------------------" << std::endl;
-         std::cout << out << std::endl;
-         std::cout << std::endl;
-
-         latte::Shader shader;
-         latte::Shader::Type type = (block.type == gsh::Block::VertexShader) ? latte::Shader::Vertex : latte::Shader::Pixel;
-         latte::decode(shader, type, block.data);
-         std::cout << "----------------------------------------------" << std::endl;
-         std::cout << "                    Blocks                    " << std::endl;
-         std::cout << "----------------------------------------------" << std::endl;
-         latte::dumpBlocks(shader);
-         std::cout << std::endl;
-
-         std::string hlsl;
-         hlsl::generateBody(shader, hlsl);
-         std::cout << "----------------------------------------------" << std::endl;
-         std::cout << "                     HLSL                     " << std::endl;
-         std::cout << "----------------------------------------------" << std::endl;
-         std::cout << hlsl << std::endl;
-         std::cout << std::endl;
+      if (block.type == gsh::Block::VertexShader) {
+         dumpShader(latte::Shader::Vertex, block.data);
+      } else if (block.type == gsh::Block::PixelShader) {
+         dumpShader(latte::Shader::Pixel, block.data);
       }
    }
 
@@ -118,17 +128,24 @@ bool parseGSH(BigEndianView &fh)
 
 int main(int argc, char **argv)
 {
-   // Read whole file
-   std::vector<char> data;
-   std::ifstream file(argv[1], std::ifstream::binary | std::ifstream::in);
-   file.seekg(0, std::ifstream::end);
-   auto size = static_cast<size_t>(file.tellg());
-   file.seekg(0, std::ifstream::beg);
-   data.resize(size);
-   file.read(data.data(), size);
-   file.close();
+   if (argc >= 3) {
+      std::string strType = argv[1];
+      std::string filename = argv[2];
+      BinaryFile file;
 
-   // Parse
-   BigEndianView fh { data.data(), data.size() };
-   return parseGSH(fh) ? 0 : -1;
+      if (!file.open(filename)) {
+         return -1;
+      }
+
+      if (strType.compare("gsh") == 0) {
+         return parseGSH(file) ? 0 : -1;
+      } else if (strType.compare("vertex") == 0) {
+         return dumpShader(latte::Shader::Vertex, file) ? 1 : 0;
+      } else if (strType.compare("pixel") == 0) {
+         return dumpShader(latte::Shader::Pixel, file) ? 1 : 0;
+      }
+   }
+
+   std::cout << "Usage: " << argv[0] << " <gsh|vertex|pixel> <filename>" << std::endl;
+   return -1;
 }

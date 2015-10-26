@@ -1175,6 +1175,12 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\binaryfile.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\binaryview.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
