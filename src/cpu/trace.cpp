@@ -592,7 +592,7 @@ tracePrintSyscall(int count)
 {
    std::unique_lock<std::mutex> lock(gSyscallTraceLock);
 
-   if (count < 0 || count >= gSyscallTrace.size()) {
+   if (count <= 0 || count >= gSyscallTrace.size()) {
       count = (int)gSyscallTrace.size();
    }
 
