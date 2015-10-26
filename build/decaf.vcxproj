@@ -90,7 +90,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\codetests.cpp" />
     <ClCompile Include="..\src\cpu\cpu.cpp" />
     <ClCompile Include="..\src\cpu\cpu_kc.cpp" />
     <ClCompile Include="..\src\cpu\disassembler.cpp" />
@@ -239,7 +238,6 @@
     <ClCompile Include="..\src\utils\wfunc_ptr.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\codetests.h" />
     <ClInclude Include="..\src\cpu\cpu.h" />
     <ClInclude Include="..\src\cpu\cpu_internal.h" />
     <ClInclude Include="..\src\cpu\disassembler.h" />

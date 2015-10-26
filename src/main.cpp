@@ -1,7 +1,6 @@
 #include <pugixml.hpp>
 #include <docopt.h>
 #include "utils/bitutils.h"
-#include "codetests.h"
 #include "cpu/cpu.h"
 #include "cpu/trace.h"
 #include "debugger.h"
@@ -41,7 +40,6 @@ std::shared_ptr<spdlog::logger>
 gLog;
 
 static void initialiseEmulator();
-static bool test(const std::string &as, const std::string &path);
 static bool fuzzTest();
 static bool play(const fs::HostPath &path, const fs::HostPath &sysPath);
 
@@ -50,7 +48,6 @@ R"(Decaf Emulator
 
 Usage:
    decaf play [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] [--sys-path=<sys-path>] <game directory>
-   decaf test [--jit | --jit-debug] [--log-file] [--log-async] [--log-level=<log-level>] [--as=<ppcas>] <test directory>
    decaf fuzz
    decaf hwtest [--log-file]
    decaf (-h | --help)
@@ -139,9 +136,6 @@ int main(int argc, char **argv)
    } else if (args["hwtest"].asBool()) {
       gLog->set_pattern("%v");
       result = hwtest::runTests();
-   } else if (args["test"].asBool()) {
-      gLog->set_pattern("%v");
-      result = test(args["--as"].asString(), args["<test directory>"].asString());
    }
 
    system("PAUSE");
@@ -194,12 +188,6 @@ initialiseEmulator()
 
    // Initialise debugger
    gDebugger.initialise();
-}
-
-static bool
-test(const std::string &as, const std::string &path)
-{
-   return executeCodeTests(as, path);
 }
 
 static bool
