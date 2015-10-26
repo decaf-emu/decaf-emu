@@ -1,5 +1,6 @@
 #pragma once
 #include "modules/gx2/gx2_displaylist.h"
+#include "modules/coreinit/coreinit_time.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "types.h"
@@ -36,6 +37,12 @@ GX2Shutdown();
 
 void
 GX2Flush();
+
+OSTime
+GX2GetLastSubmittedTimeStamp();
+
+OSTime
+GX2GetRetiredTimeStamp();
 
 void
 GX2SetupContextState(GX2ContextState *state);

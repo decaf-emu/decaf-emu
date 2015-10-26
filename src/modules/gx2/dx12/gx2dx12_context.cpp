@@ -28,10 +28,24 @@ GX2Shutdown()
    // TODO: GX2Shutdown
 }
 
+OSTime gLastFlush;
+
 void
 GX2Flush()
 {
-   // TODO: GX2Flush
+   gLastFlush = OSGetTime();
+}
+
+OSTime
+GX2GetLastSubmittedTimeStamp()
+{
+   return gLastFlush;
+}
+
+OSTime
+GX2GetRetiredTimeStamp()
+{
+   return gLastFlush;
 }
 
 void

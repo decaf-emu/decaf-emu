@@ -41,6 +41,8 @@ GX2::registerContextFunctions()
    RegisterKernelFunction(GX2Init);
    RegisterKernelFunction(GX2Shutdown);
    RegisterKernelFunction(GX2Flush);
+   RegisterKernelFunction(GX2GetLastSubmittedTimeStamp);
+   RegisterKernelFunction(GX2GetRetiredTimeStamp);
    RegisterKernelFunction(GX2Invalidate);
    RegisterKernelFunction(GX2SetupContextState);
    RegisterKernelFunction(GX2SetupContextStateEx);
