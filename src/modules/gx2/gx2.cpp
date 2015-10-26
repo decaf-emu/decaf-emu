@@ -160,6 +160,10 @@ void
 GX2::registerTextureFunctions()
 {
    RegisterKernelFunction(GX2InitSampler);
+   RegisterKernelFunction(GX2InitSamplerLOD);
+   RegisterKernelFunction(GX2InitSamplerZMFilter);
+   RegisterKernelFunction(GX2InitSamplerClamping);
+   RegisterKernelFunction(GX2InitSamplerXYFilter);
    RegisterKernelFunction(GX2InitTextureRegs);
    RegisterKernelFunction(GX2SetPixelTexture);
 }
