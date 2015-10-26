@@ -104,7 +104,12 @@ private:
          latte::Shader decVertexShader, decPixelShader;
          latte::decode(decVertexShader, latte::Shader::Vertex, { vertexShader->data.get(), vertexShader->size });
          latte::decode(decPixelShader, latte::Shader::Pixel, { pixelShader->data.get(), pixelShader->size });
-         hlsl::generateHLSL({ (GX2AttribStream*)fetchData->attribs, fetchShader->attribCount }, decVertexShader, decPixelShader, hlsl);
+
+         hlsl::generateHLSL({ (GX2AttribStream*)fetchData->attribs, fetchShader->attribCount },
+                            vertexShader, decVertexShader,
+                            pixelShader, decPixelShader,
+                            hlsl);
+
          gLog->debug("Compiled Shader:\n{}\n", hlsl);
       }
 

@@ -1,6 +1,7 @@
 #include "modules/gx2/gx2.h"
 #ifdef GX2_DX12
 
+#include "modules/gx2/gx2_debug.h"
 #include "modules/gx2/gx2_texture.h"
 #include "dx12_state.h"
 #include "dx12_texture.h"
@@ -31,7 +32,7 @@ GX2InitSamplerClamping(GX2Sampler *sampler, uint32_t unk1, uint32_t unk2, uint32
    // TODO: GX2InitSamplerClamping
 }
 
-void 
+void
 GX2InitSamplerXYFilter(GX2Sampler *sampler, uint32_t unk1, uint32_t unk2, uint32_t unk3)
 {
    // TODO: GX2InitSamplerXYFilter
@@ -49,6 +50,7 @@ _GX2SetPixelTexture(GX2Texture *texture,
 {
    gLog->debug("_GX2SetPixelTexture({}, {})", memory_untranslate(texture), unit);
 
+   GX2DumpTexture(texture);
    DXTextureData *textureData = dx::getTexture(texture);
    textureData->upload();
    gDX.commandList->SetGraphicsRootDescriptorTable(gDX.srvIndex[unit], *textureData->srv);

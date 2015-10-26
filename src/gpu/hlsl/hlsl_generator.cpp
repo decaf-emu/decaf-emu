@@ -583,9 +583,62 @@ generateBody(latte::Shader &shader, std::string &body)
    return result;
 }
 
+static size_t
+getUniformTypeSlots(GX2UniformType::Type type)
+{
+   switch (type) {
+   case GX2UniformType::Int:
+      return 1;
+   case GX2UniformType::Float:
+      return 1;
+   case GX2UniformType::Float2:
+      return 1;
+   case GX2UniformType::Float3:
+      return 1;
+   case GX2UniformType::Float4:
+      return 1;
+   case GX2UniformType::Int2:
+      return 1;
+   case GX2UniformType::Int3:
+      return 1;
+   case GX2UniformType::Int4:
+      return 1;
+   case GX2UniformType::Matrix4x4:
+      return 4;
+   default:
+      assert(false);
+      return 1;
+   }
+}
+
+static size_t
+getUniformCount(latte::Shader &shader, uint32_t varCount, GX2UniformVar *vars)
+{
+   if (varCount == 0 && shader.uniformsUsed.size() == 0) {
+      return 0;
+   }
+
+   size_t highestOffset = 0, max = 0;
+
+   for (auto i = 0u; i < varCount; ++i) {
+      if (vars[i].offset >= highestOffset) {
+         highestOffset = (vars[i].offset / 4) + getUniformTypeSlots(vars[i].type);
+      }
+   }
+
+   if (shader.uniformsUsed.size()) {
+      max = 1 + *std::max_element(shader.uniformsUsed.begin(), shader.uniformsUsed.end());
+   }
+
+   assert(max <= highestOffset);
+   return std::max(max, highestOffset);
+}
+
 bool
 generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
+             GX2VertexShader *gx2Vertex,
              latte::Shader &vertexShader,
+             GX2PixelShader *gx2Pixel,
              latte::Shader &pixelShader,
              std::string &hlsl)
 {
@@ -604,20 +657,38 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    generateExports(pixelShader, output);
    output << "};\n\n";
 
-   if (vertexShader.uniformsUsed.size()) {
-      auto max = *std::max_element(vertexShader.uniformsUsed.begin(), vertexShader.uniformsUsed.end());
+   if (gx2Vertex->mode == GX2ShaderMode::UniformRegister) {
+      auto count = getUniformCount(vertexShader, gx2Vertex->uniformVarCount, gx2Vertex->uniformVars);
 
-      output << "cbuffer VertUniforms {\n";
-         output << "  float4 VC[" << (max + 1) << "];\n";
+      if (count) {
+         output << "cbuffer VertUniforms {\n";
+         output << "  float4 VC[" << count << "];\n";
+         output << "};\n\n";
+      }
+   } else if (gx2Vertex->mode == GX2ShaderMode::UniformBlock) {
+      assert(gx2Vertex->uniformBlockCount == 1);
+      output << "cbuffer VertBlock {\n";
+      output << "  float4 VB[" << (gx2Vertex->uniformBlocks[0].size / 4) << "];\n";
       output << "};\n\n";
+   } else {
+      assert(false);
    }
 
-   if (pixelShader.uniformsUsed.size()) {
-      auto max = *std::max_element(pixelShader.uniformsUsed.begin(), pixelShader.uniformsUsed.end());
+   if (gx2Pixel->mode == GX2ShaderMode::UniformRegister) {
+      auto count = getUniformCount(pixelShader, gx2Pixel->uniformVarCount, gx2Pixel->uniformVars);
 
-      output << "cbuffer PixUniforms {\n";
-      output << "  float4 PC[" << (max + 1) << "];\n";
+      if (count) {
+         output << "cbuffer PixUniforms {\n";
+         output << "  float4 PC[" << count << "];\n";
+         output << "};\n\n";
+      }
+   } else if (gx2Pixel->mode == GX2ShaderMode::UniformBlock) {
+      assert(gx2Pixel->uniformBlockCount == 1);
+      output << "cbuffer PixBlock {\n";
+      output << "  float4 PB[" << (gx2Pixel->uniformBlocks[0].size / 4) << "];\n";
       output << "};\n\n";
+   } else {
+      assert(false);
    }
 
    for (auto id : pixelShader.samplersUsed) {

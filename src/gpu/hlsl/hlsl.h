@@ -7,6 +7,12 @@
 namespace hlsl
 {
 
-bool generateHLSL(const gsl::array_view<GX2AttribStream> &attribs, latte::Shader &vertexShader, latte::Shader &pixelShader, std::string &hlsl);
+bool
+generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
+             GX2VertexShader *gx2Vertex,
+             latte::Shader &vertexShader,
+             GX2PixelShader *gx2Pixel,
+             latte::Shader &pixelShader,
+             std::string &hlsl);
 
 }

@@ -179,20 +179,26 @@ GX2DumpTexture(const GX2Texture *texture)
    file << format.str();
 
    // Write binary dump of image data to texture_X.img
-   if (texture->surface.imageSize) {
+   if (texture->surface.image && texture->surface.imageSize) {
       GX2DumpData("dump/" + filename + ".img", texture->surface.image, texture->surface.imageSize);
    }
 
    // Write binary dump of mipmap data to texture_X.mip
-   if (texture->surface.mipmapSize) {
+   if (texture->surface.mipmaps && texture->surface.mipmapSize) {
       GX2DumpData("dump/" + filename + ".mip", texture->surface.mipmaps, texture->surface.mipmapSize);
    }
 
    // Write combined binary dump of GX2Texture + Image + Mipmap to texture_X.gx2tex
    auto binary = std::ofstream { "dump/" + filename + ".gx2tex", std::ofstream::out | std::ofstream::binary };
    GX2DumpData(binary, texture, sizeof(GX2Texture));
-   GX2DumpData(binary, texture->surface.image, texture->surface.imageSize);
-   GX2DumpData(binary, texture->surface.mipmaps, texture->surface.mipmapSize);
+
+   if (texture->surface.image && texture->surface.imageSize) {
+      GX2DumpData(binary, texture->surface.image, texture->surface.imageSize);
+   }
+
+   if (texture->surface.mipmaps && texture->surface.mipmapSize) {
+      GX2DumpData(binary, texture->surface.mipmaps, texture->surface.mipmapSize);
+   }
 }
 
 static void

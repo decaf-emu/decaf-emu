@@ -171,19 +171,49 @@ void translateAluSource(GenerateState &state, AluSource &src)
    case AluSource::Register:
       state.out << 'R' << src.id;
       break;
-   case AluSource::KcacheBank0:
-      state.out << "KcackeBank0_" << src.id;
-      break;
-   case AluSource::KcacheBank1:
-      state.out << "KcackeBank1_" << src.id;
-      break;
    case AluSource::PreviousVector:
       state.out << "PV";
       break;
    case AluSource::PreviousScalar:
       state.out << "PS";
       break;
-   case AluSource::ConstantFile:
+   case AluSource::ConstantFloat:
+      state.out.write("{:.6f}f", src.floatValue);
+      break;
+   case AluSource::ConstantDouble:
+      state.out.write("{:.6f}f", src.doubleValue);
+      break;
+   case AluSource::ConstantInt:
+      state.out << src.intValue;
+      break;
+   case AluSource::ConstantLiteral:
+      if (src.valueType == AluSource::Float) {
+         state.out.write("{:.6f}f", bit_cast<float>(src.literalValue));
+      } else if (src.valueType == AluSource::Int) {
+         state.out << bit_cast<int32_t>(src.literalValue);
+      } else if (src.valueType == AluSource::Uint) {
+         state.out << bit_cast<uint32_t>(src.literalValue);
+      }
+      break;
+   case AluSource::KcacheBank0: // Uniform block
+      if (state.shader->type == latte::Shader::Vertex) {
+         state.out << "VB[" << src.id;
+      } else if (state.shader->type == latte::Shader::Pixel) {
+         state.out << "PB[" << src.id;
+      }
+
+      if (src.rel) {
+         state.out << " + ";
+         translateIndex(state, src.indexMode);
+      }
+
+      state.out << ']';
+      break;
+   case AluSource::KcacheBank1: // ??
+      state.out << "KcacheBank1[" << src.id << ']';
+      assert(!src.rel);
+      break;
+   case AluSource::ConstantFile: // Uniform register
       if (state.shader->type == latte::Shader::Vertex) {
          state.out << "VC[" << src.id;
       } else if (state.shader->type == latte::Shader::Pixel) {
@@ -198,24 +228,6 @@ void translateAluSource(GenerateState &state, AluSource &src)
       }
 
       state.out << ']';
-      break;
-   case AluSource::ConstantLiteral:
-      if (src.valueType == AluSource::Float) {
-         state.out.write("{:.6f}f", bit_cast<float>(src.literalValue));
-      } else if (src.valueType == AluSource::Int) {
-         state.out << bit_cast<int32_t>(src.literalValue);
-      } else if (src.valueType == AluSource::Uint) {
-         state.out << bit_cast<uint32_t>(src.literalValue);
-      }
-      break;
-   case AluSource::ConstantFloat:
-      state.out.write("{:.6f}f", src.floatValue);
-      break;
-   case AluSource::ConstantDouble:
-      state.out.write("{:.6f}f", src.doubleValue);
-      break;
-   case AluSource::ConstantInt:
-      state.out << src.intValue;
       break;
    }
 
