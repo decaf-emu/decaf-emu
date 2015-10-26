@@ -91,8 +91,13 @@ GX2CopyDisplayList(GX2DisplayList *displayList,
                    uint32_t size)
 {
    // We do not currently handle DL_OVERFLOW events
-   if (gDX.activeDisplayListOffset + size < gDX.activeDisplayListSize) {
+   if (gDX.activeDisplayListOffset + size > gDX.activeDisplayListSize) {
       throw;
+   }
+
+   if (displayList == nullptr) {
+      gLog->warn("GX2CopyDisplayList with nullptr");
+      return;
    }
 
    auto dst = reinterpret_cast<uint8_t*>(gDX.activeDisplayList) + gDX.activeDisplayListOffset;
