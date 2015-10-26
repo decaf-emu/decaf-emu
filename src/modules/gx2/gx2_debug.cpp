@@ -81,6 +81,36 @@ GX2EnumAsString(GX2TileMode::Mode mode)
 }
 
 static std::string
+GX2EnumAsString(GX2ShaderMode::Mode mode)
+{
+   switch (mode) {
+   case GX2ShaderMode::UniformRegister:
+      return "UniformRegister";
+   case GX2ShaderMode::UniformBlock:
+      return "UniformBlock";
+   case GX2ShaderMode::GeometryShader:
+      return "GeometryShader";
+   default:
+      return std::to_string(static_cast<int>(mode));
+   }
+}
+
+static std::string
+GX2EnumAsString(GX2UniformType::Type type)
+{
+   switch (type) {
+   case GX2UniformType::Float2:
+      return "Float2";
+   case GX2UniformType::Float4:
+      return "Float4";
+   case GX2UniformType::Matrix4x4:
+      return "Matrix4x4";
+   default:
+      return std::to_string(static_cast<int>(type));
+   }
+}
+
+static std::string
 GX2PointerAsString(const void *pointer)
 {
    fmt::MemoryWriter format;
@@ -154,7 +184,7 @@ GX2DumpTexture(const GX2Texture *texture)
 }
 
 static void
-GX2DumpShader(const std::string &filename, uint8_t *data, size_t size)
+GX2DumpShader(const std::string &filename, const std::string &info, uint8_t *data, size_t size)
 {
    std::string output;
 
@@ -168,6 +198,7 @@ GX2DumpShader(const std::string &filename, uint8_t *data, size_t size)
    latte::disassemble(output, { data, size });
 
    file
+      << info << std::endl
       << "Disassembly:" << std::endl
       << output << std::endl;
 
@@ -183,14 +214,70 @@ GX2DumpShader(const std::string &filename, uint8_t *data, size_t size)
       << output << std::endl;
 }
 
+static void
+formatUniformBlocks(fmt::MemoryWriter &out, uint32_t count, GX2UniformBlock *blocks)
+{
+   out << "  uniformBlockCount: " << count << "\n";
+
+   for (auto i = 0u; i < count; ++i) {
+      out << "    Block " << i << "\n"
+         << "      name: " << blocks[i].name.get() << "\n"
+         << "      offset: " << blocks[i].offset << "\n"
+         << "      size: " << blocks[i].size << "\n";
+   }
+}
+
+static void
+formatUniformVars(fmt::MemoryWriter &out, uint32_t count, GX2UniformVar *vars)
+{
+   out << "  uniformVarCount: " << count << "\n";
+
+   for (auto i = 0u; i < count; ++i) {
+      out << "    Block " << i << "\n"
+         << "      name: " << vars[i].name.get() << "\n"
+         << "      type: " << GX2EnumAsString(vars[i].type) << "\n"
+         << "      count: " << vars[i].count << "\n"
+         << "      offset: " << vars[i].offset << "\n"
+         << "      block: " << vars[i].block << "\n";
+   }
+}
+
 void
 GX2DumpShader(GX2PixelShader *shader)
 {
-   GX2DumpShader("shader_pixel_" + GX2PointerAsString(shader), shader->data, shader->size);
+   fmt::MemoryWriter out;
+   out << "GX2PixelShader:\n"
+      << "  size: " << shader->size << "\n"
+      << "  mode: " << GX2EnumAsString(shader->mode) << "\n";
+
+   formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
+   formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
+
+   out << "  numUnk1: " << shader->numUnk1 << "\n";
+   out << "  numUnk2: " << shader->numUnk2 << "\n";
+   out << "  samplerVarCount: " << shader->samplerVarCount << "\n";
+   out << "  unk3: " << shader->unk3 << "\n";
+   out << "  unk4: " << shader->unk4 << "\n";
+   out << "  unk5: " << shader->unk5 << "\n";
+   out << "  unk6: " << shader->unk6 << "\n";
+   GX2DumpShader("shader_pixel_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
 }
 
 void
 GX2DumpShader(GX2VertexShader *shader)
 {
-   GX2DumpShader("shader_vertex_" + GX2PointerAsString(shader), shader->data, shader->size);
+   fmt::MemoryWriter out;
+   out << "GX2VertexShader:\n"
+      << "  size: " << shader->size << "\n"
+      << "  mode: " << GX2EnumAsString(shader->mode) << "\n";
+
+   formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
+   formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
+
+   out << "  numUnk1: " << shader->numUnk1 << "\n";
+   out << "  numUnk2: " << shader->numUnk2 << "\n";
+   out << "  samplerVarCount: " << shader->samplerVarCount << "\n";
+   out << "  numUnk3: " << shader->numUnk3 << "\n";
+
+   GX2DumpShader("shader_vertex_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
 }

@@ -79,7 +79,20 @@ namespace GX2ShaderMode
 enum Mode : uint32_t
 {
    GX2ShaderModeFirst = 0,
+   UniformRegister = 0,
+   UniformBlock = 1,
+   GeometryShader = 2,
    GX2ShaderModeLast = 3
+};
+}
+
+namespace GX2UniformType
+{
+enum Type : uint32_t
+{
+   Float2 = 9,
+   Float4 = 11,
+   Matrix4x4 = 29,
 };
 }
 
@@ -96,7 +109,32 @@ CHECK_OFFSET(GX2FetchShader, 0x8, data);
 CHECK_OFFSET(GX2FetchShader, 0xc, attribCount);
 CHECK_SIZE(GX2FetchShader, 0x1c);
 
-struct GX2UniformVar;
+struct GX2UniformVar
+{
+   be_ptr<const char> name;
+   be_val<GX2UniformType::Type> type;
+   be_val<uint32_t> count;
+   be_val<uint32_t> offset;
+   be_val<int32_t> block;
+};
+CHECK_OFFSET(GX2UniformVar, 0x00, name);
+CHECK_OFFSET(GX2UniformVar, 0x04, type);
+CHECK_OFFSET(GX2UniformVar, 0x08, count);
+CHECK_OFFSET(GX2UniformVar, 0x0C, offset);
+CHECK_OFFSET(GX2UniformVar, 0x10, block);
+CHECK_SIZE(GX2UniformVar, 0x14);
+
+struct GX2UniformBlock
+{
+   be_ptr<const char> name;
+   be_val<uint32_t> offset;
+   be_val<uint32_t> size;
+};
+CHECK_OFFSET(GX2UniformBlock, 0x00, name);
+CHECK_OFFSET(GX2UniformBlock, 0x04, offset);
+CHECK_OFFSET(GX2UniformBlock, 0x08, size);
+CHECK_SIZE(GX2UniformBlock, 0x0C);
+
 struct GX2SamplerVar;
 
 struct GX2VertexShader
@@ -106,29 +144,31 @@ struct GX2VertexShader
    be_ptr<uint8_t> data;
    be_val<GX2ShaderMode::Mode> mode;
 
-   be_val<uint32_t> numUnk1;  // Size of unk1
-   be_ptr<void> unk1;         // Array of something
+   be_val<uint32_t> uniformBlockCount;
+   be_ptr<GX2UniformBlock> uniformBlocks;
 
    be_val<uint32_t> uniformVarCount;
    be_ptr<GX2UniformVar> uniformVars;
 
+   be_val<uint32_t> numUnk1;  // Size of unk1
+   be_ptr<void> unk1;         // Array of something
+
    be_val<uint32_t> numUnk2;  // Size of unk2
    be_ptr<void> unk2;         // Array of something
-
-   be_val<uint32_t> numUnk3;  // Size of unk3
-   be_ptr<void> unk3;         // Array of something
 
    be_val<uint32_t> samplerVarCount;
    be_ptr<GX2SamplerVar> samplerVars;
 
-   be_val<uint32_t> numUnk4;  // Size of unk4
-   be_ptr<void> unk4;         // Array of something
+   be_val<uint32_t> numUnk3;  // Size of unk3
+   be_ptr<void> unk3;         // Array of something
 
    UNKNOWN(4 * 10);
 };
 CHECK_OFFSET(GX2VertexShader, 0xd0, size);
 CHECK_OFFSET(GX2VertexShader, 0xd4, data);
 CHECK_OFFSET(GX2VertexShader, 0xd8, mode);
+CHECK_OFFSET(GX2VertexShader, 0xdc, uniformBlockCount);
+CHECK_OFFSET(GX2VertexShader, 0xe0, uniformBlocks);
 CHECK_OFFSET(GX2VertexShader, 0xe4, uniformVarCount);
 CHECK_OFFSET(GX2VertexShader, 0xe8, uniformVars);
 CHECK_OFFSET(GX2VertexShader, 0xfc, samplerVarCount);
@@ -142,29 +182,31 @@ struct GX2PixelShader
    be_ptr<uint8_t> data;
    be_val<GX2ShaderMode::Mode> mode;
 
-   be_val<uint32_t> numUnk1;  // Size of unk1
-   be_ptr<void> unk1;         // Array of something
+   be_val<uint32_t> uniformBlockCount;
+   be_ptr<GX2UniformBlock> uniformBlocks;
 
    be_val<uint32_t> uniformVarCount;
    be_ptr<GX2UniformVar> uniformVars;
 
+   be_val<uint32_t> numUnk1;  // Size of unk1
+   be_ptr<void> unk1;         // Array of something
+
    be_val<uint32_t> numUnk2;  // Size of unk2
    be_ptr<void> unk2;         // Array of something
-
-   be_val<uint32_t> numUnk3;  // Size of unk3
-   be_ptr<void> unk3;         // Array of something
 
    be_val<uint32_t> samplerVarCount;
    be_ptr<GX2SamplerVar> samplerVars;
 
+   be_val<uint32_t> unk3;
    be_val<uint32_t> unk4;
    be_val<uint32_t> unk5;
    be_val<uint32_t> unk6;
-   be_val<uint32_t> unk7;
 };
 CHECK_OFFSET(GX2PixelShader, 0xa4, size);
 CHECK_OFFSET(GX2PixelShader, 0xa8, data);
 CHECK_OFFSET(GX2PixelShader, 0xac, mode);
+CHECK_OFFSET(GX2PixelShader, 0xb0, uniformBlockCount);
+CHECK_OFFSET(GX2PixelShader, 0xb4, uniformBlocks);
 CHECK_OFFSET(GX2PixelShader, 0xb8, uniformVarCount);
 CHECK_OFFSET(GX2PixelShader, 0xbc, uniformVars);
 CHECK_OFFSET(GX2PixelShader, 0xd0, samplerVarCount);
