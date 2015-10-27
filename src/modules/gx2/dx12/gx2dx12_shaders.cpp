@@ -96,38 +96,32 @@ void GX2SetPixelSampler(GX2PixelSampler *sampler, uint32_t id) {
 }
 
 void
-_GX2SetVertexUniformReg(uint32_t offset,
-                       uint32_t count,
-                       void *data)
+_GX2SetVertexUniformReg(uint32_t offset, float data)
 {
-   gLog->debug("_GX2SetVertexUniformReg({}, {}, {})", offset, count, memory_untranslate(data));
-   float *floatData = (float*)data;
-   for (auto i = 0u; i < count; ++i) {
-      gDX.state.vertUniforms[offset + i] = byte_swap(floatData[i]);
-   }
+   gDX.state.vertUniforms[offset] = data;
 }
 void
 GX2SetVertexUniformReg(uint32_t offset, uint32_t count, void *data) {
-   DX_DLCALL(_GX2SetVertexUniformReg, offset, count, data);
+   float *floatData = (float*)data;
+   for (auto i = 0u; i < count; ++i) {
+      DX_DLCALL(_GX2SetVertexUniformReg, offset + i, byte_swap(floatData[i]));
+   }
 }
 
 void
-_GX2SetPixelUniformReg(uint32_t offset,
-   uint32_t count,
-   void *data)
+_GX2SetPixelUniformReg(uint32_t offset, float data)
 {
-   gLog->debug("_GX2SetPixelUniformReg({}, {}, {})", offset, count, memory_untranslate(data));
-   float *floatData = (float*)data;
-   for (auto i = 0u; i < count; ++i) {
-      gDX.state.pixUniforms[offset + i] = byte_swap(floatData[i]);
-   }
+   gDX.state.pixUniforms[offset] = data;
 }
 void
 GX2SetPixelUniformReg(uint32_t offset,
                       uint32_t count,
                       void *data)
 {
-   DX_DLCALL(_GX2SetPixelUniformReg, offset, count, data);
+   float *floatData = (float*)data;
+   for (auto i = 0u; i < count; ++i) {
+      DX_DLCALL(_GX2SetPixelUniformReg, offset + i, byte_swap(floatData[i]));
+   }
 }
 
 void
