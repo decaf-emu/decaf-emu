@@ -66,8 +66,6 @@ struct AluSource
    enum Type
    {
       Register,
-      KcacheBank0,
-      KcacheBank1,
       PreviousVector,
       PreviousScalar,
       ConstantFile,
@@ -75,6 +73,22 @@ struct AluSource
       ConstantDouble,
       ConstantInt,
       ConstantLiteral,
+      UniformBlock0,
+      UniformBlock1,
+      UniformBlock2,
+      UniformBlock3,
+      UniformBlock4,
+      UniformBlock5,
+      UniformBlock6,
+      UniformBlock7,
+      UniformBlock8,
+      UniformBlock9,
+      UniformBlock10,
+      UniformBlock11,
+      UniformBlock12,
+      UniformBlock13,
+      UniformBlock14,
+      UniformBlock15,
    };
 
    enum ValueType

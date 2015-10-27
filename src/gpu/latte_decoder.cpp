@@ -16,6 +16,16 @@ struct DecodeState
    Shader *shader;
 };
 
+namespace KcacheMode
+{
+enum Mode {
+   Nop = 0,
+   Lock1 = 1,
+   Lock2 = 2,
+   LockLoopIdx = 3
+};
+}
+
 static bool decodeNormal(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
 static bool decodeExport(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
 static bool decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
@@ -163,7 +173,12 @@ decodeExport(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 }
 
 static void
-getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter, uint32_t sel, uint32_t rel, uint32_t indexMode, uint32_t chan, uint32_t neg, bool abs)
+getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter, 
+             uint32_t sel, uint32_t rel, uint32_t indexMode, 
+             uint32_t chan, uint32_t neg, bool abs,
+             uint32_t kcacheMode0, uint32_t kcacheMode1,
+             uint32_t kcacheBank0, uint32_t kcacheBank1,
+             uint32_t kcacheAddr0, uint32_t kcacheAddr1)
 {
    source.absolute = abs;
    source.negate = !!neg;
@@ -175,11 +190,15 @@ getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter
       source.type = shadir::AluSource::Register;
       source.id = sel - latte::alu::Source::RegisterFirst;
    } else if (sel >= latte::alu::Source::KcacheBank0First && sel <= latte::alu::Source::KcacheBank0Last) {
-      source.type = shadir::AluSource::KcacheBank0;
-      source.id = sel - latte::alu::Source::KcacheBank0First;
+      // We do not currently handle kcache's based on a loop index
+      assert(kcacheMode0 == KcacheMode::Lock1 || kCacheMode0 == KcacheMode::Lock2);
+      source.type = static_cast<shadir::AluSource::Type>(shadir::AluSource::UniformBlock0 + kcacheBank0);
+      source.id = (kcacheAddr0 * 16) + (sel - latte::alu::Source::KcacheBank0First);
    } else if (sel >= latte::alu::Source::KcacheBank1First && sel <= latte::alu::Source::KcacheBank1Last) {
-      source.type = shadir::AluSource::KcacheBank1;
-      source.id = sel - latte::alu::Source::KcacheBank1First;
+      // We do not currently handle kcache's based on a loop index
+      assert(kcacheMode1 == KcacheMode::Lock1 || kCacheMode1 == KcacheMode::Lock2);
+      source.type = static_cast<shadir::AluSource::Type>(shadir::AluSource::UniformBlock0 + kcacheBank1);
+      source.id = (kcacheAddr1 * 16) + (sel - latte::alu::Source::KcacheBank1First);
    } else if (sel == latte::alu::Source::Src1DoubleLSW) {
       assert(false);
    } else if (sel == latte::alu::Source::Src1DoubleMSW) {
@@ -371,11 +390,26 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
             ins->opType = shadir::AluInstruction::OP3;
             ins->op3 = static_cast<latte::alu::op3>(opcode.id);
             ins->numSources = opcode.srcs;
-            getAluSource(ins->sources[2], literalPtr, state.group, alu.op3.src2Sel, alu.op3.src2Rel, alu.word0.indexMode, alu.op3.src2Chan, alu.op3.src2Neg, false);
+            getAluSource(ins->sources[2], literalPtr, state.group, 
+               alu.op3.src2Sel, alu.op3.src2Rel, alu.word0.indexMode,
+               alu.op3.src2Chan, alu.op3.src2Neg, false,
+               cf.aluWord0.kcacheMode0, cf.aluWord1.kcacheMode1,
+               cf.aluWord0.kcacheBank0, cf.aluWord0.kcacheBank1,
+               cf.aluWord1.kcacheAddr0, cf.aluWord1.kcacheAddr1);
          }
 
-         getAluSource(ins->sources[0], literalPtr, state.group, alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.indexMode, alu.word0.src0Chan, alu.word0.src0Neg, abs0);
-         getAluSource(ins->sources[1], literalPtr, state.group, alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.indexMode, alu.word0.src1Chan, alu.word0.src1Neg, abs1);
+         getAluSource(ins->sources[0], literalPtr, state.group, 
+            alu.word0.src0Sel, alu.word0.src0Rel, alu.word0.indexMode, 
+            alu.word0.src0Chan, alu.word0.src0Neg, abs0,
+            cf.aluWord0.kcacheMode0, cf.aluWord1.kcacheMode1,
+            cf.aluWord0.kcacheBank0, cf.aluWord0.kcacheBank1,
+            cf.aluWord1.kcacheAddr0, cf.aluWord1.kcacheAddr1);
+         getAluSource(ins->sources[1], literalPtr, state.group, 
+            alu.word0.src1Sel, alu.word0.src1Rel, alu.word0.indexMode, 
+            alu.word0.src1Chan, alu.word0.src1Neg, abs1,
+            cf.aluWord0.kcacheMode0, cf.aluWord1.kcacheMode1,
+            cf.aluWord0.kcacheBank0, cf.aluWord0.kcacheBank1,
+            cf.aluWord1.kcacheAddr0, cf.aluWord1.kcacheAddr1);
 
          // Check whether to set sources to Int or Uint
          if (opcode.flags & latte::alu::Opcode::IntIn) {

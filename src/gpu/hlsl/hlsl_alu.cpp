@@ -138,8 +138,22 @@ void translateAluSource(GenerateState &state, AluSource &src)
    if (src.valueType == AluSource::Int) {
       switch (src.type) {
       case AluSource::Register:
-      case AluSource::KcacheBank0:
-      case AluSource::KcacheBank1:
+      case AluSource::UniformBlock0:
+      case AluSource::UniformBlock1:
+      case AluSource::UniformBlock2:
+      case AluSource::UniformBlock3:
+      case AluSource::UniformBlock4:
+      case AluSource::UniformBlock5:
+      case AluSource::UniformBlock6:
+      case AluSource::UniformBlock7:
+      case AluSource::UniformBlock8:
+      case AluSource::UniformBlock9:
+      case AluSource::UniformBlock10:
+      case AluSource::UniformBlock11:
+      case AluSource::UniformBlock12:
+      case AluSource::UniformBlock13:
+      case AluSource::UniformBlock14:
+      case AluSource::UniformBlock15:
       case AluSource::PreviousVector:
       case AluSource::PreviousScalar:
       case AluSource::ConstantFile:
@@ -153,8 +167,22 @@ void translateAluSource(GenerateState &state, AluSource &src)
    } else if (src.valueType == AluSource::Uint) {
       switch (src.type) {
       case AluSource::Register:
-      case AluSource::KcacheBank0:
-      case AluSource::KcacheBank1:
+      case AluSource::UniformBlock0:
+      case AluSource::UniformBlock1:
+      case AluSource::UniformBlock2:
+      case AluSource::UniformBlock3:
+      case AluSource::UniformBlock4:
+      case AluSource::UniformBlock5:
+      case AluSource::UniformBlock6:
+      case AluSource::UniformBlock7:
+      case AluSource::UniformBlock8:
+      case AluSource::UniformBlock9:
+      case AluSource::UniformBlock10:
+      case AluSource::UniformBlock11:
+      case AluSource::UniformBlock12:
+      case AluSource::UniformBlock13:
+      case AluSource::UniformBlock14:
+      case AluSource::UniformBlock15:
       case AluSource::PreviousVector:
       case AluSource::PreviousScalar:
       case AluSource::ConstantFile:
@@ -195,11 +223,31 @@ void translateAluSource(GenerateState &state, AluSource &src)
          state.out << bit_cast<uint32_t>(src.literalValue);
       }
       break;
-   case AluSource::KcacheBank0: // Uniform block
+   case AluSource::UniformBlock0:
+   case AluSource::UniformBlock1:
+   case AluSource::UniformBlock2:
+   case AluSource::UniformBlock3:
+   case AluSource::UniformBlock4:
+   case AluSource::UniformBlock5:
+   case AluSource::UniformBlock6:
+   case AluSource::UniformBlock7:
+   case AluSource::UniformBlock8:
+   case AluSource::UniformBlock9:
+   case AluSource::UniformBlock10:
+   case AluSource::UniformBlock11:
+   case AluSource::UniformBlock12:
+   case AluSource::UniformBlock13:
+   case AluSource::UniformBlock14:
+   case AluSource::UniformBlock15:
+   {
+      uint32_t blockIdx = src.type - AluSource::UniformBlock0;
+
       if (state.shader->type == latte::Shader::Vertex) {
-         state.out << "VB[" << src.id;
+         state.out << "VUB" << blockIdx << "[" << src.id;
       } else if (state.shader->type == latte::Shader::Pixel) {
-         state.out << "PB[" << src.id;
+         state.out << "PUB" << blockIdx << "[" << src.id;
+      } else {
+         throw;
       }
 
       if (src.rel) {
@@ -209,10 +257,7 @@ void translateAluSource(GenerateState &state, AluSource &src)
 
       state.out << ']';
       break;
-   case AluSource::KcacheBank1: // ??
-      state.out << "KcacheBank1[" << src.id << ']';
-      assert(!src.rel);
-      break;
+   }
    case AluSource::ConstantFile: // Uniform register
       if (state.shader->type == latte::Shader::Vertex) {
          state.out << "VC[" << src.id;
@@ -237,8 +282,22 @@ void translateAluSource(GenerateState &state, AluSource &src)
 
    switch (src.type) {
    case AluSource::Register:
-   case AluSource::KcacheBank0:
-   case AluSource::KcacheBank1:
+   case AluSource::UniformBlock0:
+   case AluSource::UniformBlock1:
+   case AluSource::UniformBlock2:
+   case AluSource::UniformBlock3:
+   case AluSource::UniformBlock4:
+   case AluSource::UniformBlock5:
+   case AluSource::UniformBlock6:
+   case AluSource::UniformBlock7:
+   case AluSource::UniformBlock8:
+   case AluSource::UniformBlock9:
+   case AluSource::UniformBlock10:
+   case AluSource::UniformBlock11:
+   case AluSource::UniformBlock12:
+   case AluSource::UniformBlock13:
+   case AluSource::UniformBlock14:
+   case AluSource::UniformBlock15:
    case AluSource::ConstantFile:
    case AluSource::PreviousVector:
       state.out << '.';

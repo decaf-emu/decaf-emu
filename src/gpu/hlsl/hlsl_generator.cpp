@@ -666,10 +666,11 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
          output << "};\n\n";
       }
    } else if (gx2Vertex->mode == GX2ShaderMode::UniformBlock) {
-      assert(gx2Vertex->uniformBlockCount == 1);
-      output << "cbuffer VertBlock {\n";
-      output << "  float4 VB[" << (gx2Vertex->uniformBlocks[0].size / 4) << "];\n";
-      output << "};\n\n";
+      for (auto i = 0u; i < gx2Vertex->uniformBlockCount; ++i) {
+         output << "cbuffer VertBlock" << i << " {\n";
+         output << "  float4 VUB" << i << "[" << (gx2Vertex->uniformBlocks[i].size / 16) << "];\n";
+         output << "};\n\n";
+      }
    } else {
       assert(false);
    }
@@ -683,10 +684,11 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
          output << "};\n\n";
       }
    } else if (gx2Pixel->mode == GX2ShaderMode::UniformBlock) {
-      assert(gx2Pixel->uniformBlockCount == 1);
-      output << "cbuffer PixBlock {\n";
-      output << "  float4 PB[" << (gx2Pixel->uniformBlocks[0].size / 4) << "];\n";
-      output << "};\n\n";
+      for (auto i = 0u; i < gx2Pixel->uniformBlockCount; ++i) {
+         output << "cbuffer PixBlock" << i << " {\n";
+         output << "  float4 PUB" << i << "[" << (gx2Pixel->uniformBlocks[i].size / 16) << "];\n";
+         output << "};\n\n";
+      }
    } else {
       assert(false);
    }

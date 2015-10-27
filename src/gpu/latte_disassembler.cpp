@@ -434,8 +434,10 @@ bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Inst
    const uint64_t *slots = reinterpret_cast<const uint64_t *>(state.words + (latte::WordsPerCF * cf.aluWord0.addr));
 
    state.out
-      << latte::alu::name[cf.aluWord1.inst] << ": "
-      << "ADDR(" << cf.aluWord0.addr << ") CNT(" << (cf.aluWord1.count + 1) << ")";
+      << latte::alu::name[cf.aluWord1.inst] << ":"
+      << " ADDR(" << cf.aluWord0.addr << ") CNT(" << (cf.aluWord1.count + 1) << ")"
+      << " KCACHE0(" << cf.aluWord0.kcacheMode0 << "," << cf.aluWord0.kcacheBank0 << "," << cf.aluWord1.kcacheAddr0 << ")"
+      << " KCACHE1(" << cf.aluWord1.kcacheMode1 << "," << cf.aluWord0.kcacheBank1 << "," << cf.aluWord1.kcacheAddr1 << ")";
 
    increaseIndent(state);
 
