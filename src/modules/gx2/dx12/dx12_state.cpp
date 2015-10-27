@@ -590,8 +590,12 @@ void dx::updateBuffers()
          attrib.format);
    }
 
-   gDX.commandList->IASetVertexBuffers(0, 32, bufferList);
-
+   for (auto i = 0; i < 32; ++i) {
+      if (bufferList[i].BufferLocation) {
+         gDX.commandList->IASetVertexBuffers(i, 1, &bufferList[i]);
+      }
+   }
+   
    if (gDX.state.shaderMode == GX2ShaderMode::UniformRegister) {
       {
          auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), nullptr, 256);
