@@ -2,7 +2,7 @@
 #include "mesa_r600_tiling.h"
 
 void
-untileSurface(GX2Surface *surface, std::vector<uint8_t> &data, uint32_t &rowPitch)
+untileSurface(const GX2Surface *surface, std::vector<uint8_t> &data, uint32_t &rowPitch)
 {
    // TODO: This way of untiling (using expandX,expandY) will
    //   only work with BC compressed textures...

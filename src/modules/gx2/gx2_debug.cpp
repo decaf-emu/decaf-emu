@@ -8,6 +8,39 @@
 #include "gpu/hlsl/hlsl.h"
 #include "gpu/hlsl/hlsl_generator.h"
 #include "memory_translate.h"
+#include "gpu/latte_tiling.h"
+
+#pragma pack(1)
+
+struct DdsPixelFormat {
+   uint32_t	dwSize;
+   uint32_t	dwFlags;
+   uint32_t	dwFourCC;
+   uint32_t	dwRGBBitCount;
+   uint32_t	dwRBitMask;
+   uint32_t	dwGBitMask;
+   uint32_t	dwBBitMask;
+   uint32_t	dwABitMask;
+};
+
+struct DdsHeader {
+   uint32_t	dwSize;
+   uint32_t	dwFlags;
+   uint32_t	dwHeight;
+   uint32_t	dwWidth;
+   uint32_t	dwPitchOrLinearSize;
+   uint32_t	dwDepth;
+   uint32_t	dwMipMapCount;
+   uint32_t	dwReserved1[11];
+   DdsPixelFormat	ddspf;
+   uint32_t	dwCaps;
+   uint32_t	dwCaps2;
+   uint32_t	dwCaps3;
+   uint32_t	dwCaps4;
+   uint32_t	dwReserved2;
+};
+static_assert(sizeof(DdsHeader) == 124, "dds header should be 124 bytes long");
+#pragma pack()
 
 static void
 GX2CreateDumpDirectory()
@@ -199,6 +232,36 @@ GX2DumpTexture(const GX2Texture *texture)
    if (texture->surface.mipmaps && texture->surface.mipmapSize) {
       GX2DumpData(binary, texture->surface.mipmaps, texture->surface.mipmapSize);
    }
+
+   std::vector<uint8_t> data;
+   uint32_t rowPitch;
+   untileSurface(&texture->surface, data, rowPitch);
+
+   DdsHeader ddsHeader;
+   memset(&ddsHeader, 0, sizeof(ddsHeader));
+   ddsHeader.dwSize = sizeof(ddsHeader);
+   ddsHeader.dwFlags = 0x1 | 0x2 | 0x4 | 0x1000 | 0x80000;
+   ddsHeader.dwHeight = texture->surface.height;
+   ddsHeader.dwWidth = texture->surface.width;
+   ddsHeader.dwPitchOrLinearSize = (uint32_t)data.size();
+   ddsHeader.ddspf.dwSize = sizeof(ddsHeader.ddspf);
+   ddsHeader.ddspf.dwFlags = 0x1 | 0x4;
+   ddsHeader.dwCaps = 0x1000;
+
+   switch (texture->surface.format) {
+   case GX2SurfaceFormat::UNORM_BC1: ddsHeader.ddspf.dwFourCC = '1TXD'; break;
+   case GX2SurfaceFormat::UNORM_BC2:ddsHeader.ddspf.dwFourCC = '3TXD'; break;
+   case GX2SurfaceFormat::UNORM_BC3:ddsHeader.ddspf.dwFourCC = '5TXD'; break;
+   case GX2SurfaceFormat::UNORM_BC4:ddsHeader.ddspf.dwFourCC = '1ITA'; break;
+   case GX2SurfaceFormat::UNORM_BC5:ddsHeader.ddspf.dwFourCC = '2ITA'; break;
+   default:
+      throw;
+   }
+   
+   auto binaryDds = std::ofstream{ "dump/" + filename + ".dds", std::ofstream::out | std::ofstream::binary };
+   GX2DumpData(binaryDds, "DDS ", 4);
+   GX2DumpData(binaryDds, &ddsHeader, sizeof(ddsHeader));
+   GX2DumpData(binaryDds, &data[0], data.size());
 }
 
 static void
