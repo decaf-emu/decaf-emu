@@ -531,11 +531,11 @@ void stridedMemcpy(
    case GX2AttribFormat::SNORM_8_8_8_8:
       return stridedMemcpy2<uint8_t, 4>(src, dest, size, stride, offset, endianess);
    case GX2AttribFormat::SINT_8:
-      return stridedMemcpy2<uint32_t, 1>(src, dest, size, stride, offset, endianess);
+      return stridedMemcpy2<int8_t, 1>(src, dest, size, stride, offset, endianess);
    case GX2AttribFormat::SINT_8_8:
-      return stridedMemcpy2<uint32_t, 2>(src, dest, size, stride, offset, endianess);
+      return stridedMemcpy2<int8_t, 2>(src, dest, size, stride, offset, endianess);
    case GX2AttribFormat::SINT_8_8_8_8:
-      return stridedMemcpy2<uint32_t, 4>(src, dest, size, stride, offset, endianess);
+      return stridedMemcpy2<int8_t, 4>(src, dest, size, stride, offset, endianess);
    case GX2AttribFormat::FLOAT_32:
       return stridedMemcpy2<float, 1>(src, dest, size, stride, offset, endianess);
    case GX2AttribFormat::FLOAT_32_32:
@@ -573,7 +573,7 @@ void dx::updateBuffers()
    for (auto i = 0u; i < fetchShader->attribCount; ++i) {
       auto attrib = fetchData->attribs[i];
       auto srcBuffer = gDX.state.attribBuffers[attrib.buffer];
-      auto destBuffer = buffers[attrib.buffer];
+      auto destBuffer = buffers[attrib.location];
 
       if (!destBuffer.valid()) {
          throw;
