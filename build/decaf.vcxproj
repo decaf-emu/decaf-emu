@@ -279,6 +279,8 @@
     <ClInclude Include="..\src\gpu\hlsl\hlsl.h" />
     <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
+    <ClInclude Include="..\src\gpu\latte_opcodes.h" />
+    <ClInclude Include="..\src\gpu\latte_shadir.h" />
     <ClInclude Include="..\src\gpu\latte_tiling.h" />
     <ClInclude Include="..\src\gpu\mesa_r600_tiling.h" />
     <ClInclude Include="..\src\hardwaretests.h" />
