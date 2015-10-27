@@ -100,7 +100,7 @@ _GX2SetVertexUniformReg(uint32_t offset,
                        uint32_t count,
                        void *data)
 {
-   gLog->info("_GX2SetVertexUniformReg({}, {}, {})", offset, count, memory_untranslate(data));
+   gLog->debug("_GX2SetVertexUniformReg({}, {}, {})", offset, count, memory_untranslate(data));
    float *floatData = (float*)data;
    for (auto i = 0u; i < count; ++i) {
       gDX.state.vertUniforms[offset + i] = byte_swap(floatData[i]);
@@ -116,7 +116,7 @@ _GX2SetPixelUniformReg(uint32_t offset,
    uint32_t count,
    void *data)
 {
-   gLog->info("_GX2SetPixelUniformReg({}, {}, {})", offset, count, memory_untranslate(data));
+   gLog->debug("_GX2SetPixelUniformReg({}, {}, {})", offset, count, memory_untranslate(data));
    float *floatData = (float*)data;
    for (auto i = 0u; i < count; ++i) {
       gDX.state.pixUniforms[offset + i] = byte_swap(floatData[i]);
