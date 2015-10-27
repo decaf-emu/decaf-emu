@@ -31,7 +31,7 @@ GX2EndDisplayList(GX2DisplayList *displayList)
 {
    uint32_t coreId = OSGetCoreId();
    auto &dlData = gDX.activeDisplayList[coreId];
-   assert(dlData == displayList);
+   assert(dlData.buffer == displayList);
 
    uint32_t endOffset = dlData.offset;
    dlData.buffer = nullptr;
