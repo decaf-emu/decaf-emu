@@ -191,12 +191,12 @@ getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter
       source.id = sel - latte::alu::Source::RegisterFirst;
    } else if (sel >= latte::alu::Source::KcacheBank0First && sel <= latte::alu::Source::KcacheBank0Last) {
       // We do not currently handle kcache's based on a loop index
-      assert(kcacheMode0 == KcacheMode::Lock1 || kCacheMode0 == KcacheMode::Lock2);
+      assert(kcacheMode0 == KcacheMode::Lock1 || kcacheMode0 == KcacheMode::Lock2);
       source.type = static_cast<shadir::AluSource::Type>(shadir::AluSource::UniformBlock0 + kcacheBank0);
       source.id = (kcacheAddr0 * 16) + (sel - latte::alu::Source::KcacheBank0First);
    } else if (sel >= latte::alu::Source::KcacheBank1First && sel <= latte::alu::Source::KcacheBank1Last) {
       // We do not currently handle kcache's based on a loop index
-      assert(kcacheMode1 == KcacheMode::Lock1 || kCacheMode1 == KcacheMode::Lock2);
+      assert(kcacheMode1 == KcacheMode::Lock1 || kcacheMode1 == KcacheMode::Lock2);
       source.type = static_cast<shadir::AluSource::Type>(shadir::AluSource::UniformBlock0 + kcacheBank1);
       source.id = (kcacheAddr1 * 16) + (sel - latte::alu::Source::KcacheBank1First);
    } else if (sel == latte::alu::Source::Src1DoubleLSW) {
