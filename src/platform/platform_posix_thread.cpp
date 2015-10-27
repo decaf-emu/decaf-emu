@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <thread>
+#include <string>
 
 namespace platform
 {

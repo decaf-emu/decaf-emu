@@ -3,6 +3,7 @@
 #include <atomic>
 #include <functional>
 #include <utility>
+#include "ppcinvoke.h"
 #include "state.h"
 
 struct ThreadState;
