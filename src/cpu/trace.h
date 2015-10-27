@@ -33,6 +33,16 @@ namespace StateField {
 typedef uint32_t TraceFieldType;
 
 struct TraceFieldValue {
+   struct ValueType {
+      bool operator==(const ValueType& rhs) {
+         return data[0] == rhs.data[0] && data[1] == rhs.data[1];
+      }
+      bool operator!=(const ValueType& rhs) {
+         return data[0] != rhs.data[0] || data[1] != rhs.data[1];
+      }
+      uint64_t data[2];
+   };
+
    union {
       struct {
          uint32_t u32v0;
@@ -62,15 +72,7 @@ struct TraceFieldValue {
          uint64_t value0;
          uint64_t value1;
       };
-      struct ValueType {
-         bool operator==(const ValueType& rhs) {
-            return data[0] == rhs.data[0] && data[1] == rhs.data[1];
-         }
-         bool operator!=(const ValueType& rhs) {
-            return data[0] != rhs.data[0] || data[1] != rhs.data[1];
-         }
-         uint64_t data[2];
-      } value;
+      ValueType value;
    };
 };
 static_assert(sizeof(TraceFieldValue) == sizeof(TraceFieldValue::value), "TraceFieldValue::value size must match total structure size");
