@@ -57,7 +57,7 @@ Debugger::handleMessage(DebugMessage *msg)
 
       gDebugControl.waitForAllPaused();
       while (!gDebugNet.connect()) {
-         Sleep(400);
+         std::this_thread::sleep_for(std::chrono::milliseconds(400));
       }
       gDebugNet.writePaused();
 
