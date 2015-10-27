@@ -10,9 +10,11 @@ GX2BeginDisplayListEx(GX2DisplayList *displayList,
                       uint32_t size,
                       BOOL unk1)
 {
-   gDX.activeDisplayList = displayList;
-   gDX.activeDisplayListSize = size;
-   gDX.activeDisplayListOffset = 0;
+   uint32_t coreId = OSGetCoreId();
+   auto &dlData = gDX.activeDisplayList[coreId];
+   dlData.buffer = displayList;
+   dlData.size = size;
+   dlData.offset = 0;
 }
 
 
@@ -27,11 +29,14 @@ GX2BeginDisplayList(GX2DisplayList *displayList,
 uint32_t
 GX2EndDisplayList(GX2DisplayList *displayList)
 {
-   assert(gDX.activeDisplayList == displayList);
-   uint32_t endOffset = gDX.activeDisplayListOffset;
-   gDX.activeDisplayList = nullptr;
-   gDX.activeDisplayListSize = 0;
-   gDX.activeDisplayListOffset = 0;
+   uint32_t coreId = OSGetCoreId();
+   auto &dlData = gDX.activeDisplayList[coreId];
+   assert(dlData == displayList);
+
+   uint32_t endOffset = dlData.offset;
+   dlData.buffer = nullptr;
+   dlData.size = 0;
+   dlData.offset = 0;
    return endOffset;
 }
 
@@ -68,7 +73,9 @@ GX2CallDisplayList(GX2DisplayList *displayList,
 BOOL
 GX2GetDisplayListWriteStatus()
 {
-   return !!gDX.activeDisplayList;
+   uint32_t coreId = OSGetCoreId();
+   auto &dlData = gDX.activeDisplayList[coreId];
+   return !!dlData.buffer;
 }
 
 
@@ -76,12 +83,14 @@ BOOL
 GX2GetCurrentDisplayList(be_val<uint32_t> *outDisplayList,
                          be_val<uint32_t> *outSize)
 {
-   if (!gDX.activeDisplayList) {
+   uint32_t coreId = OSGetCoreId();
+   auto &dlData = gDX.activeDisplayList[coreId];
+   if (!dlData.buffer) {
       return FALSE;
    }
 
-   *outDisplayList = memory_untranslate(gDX.activeDisplayList);
-   *outSize = gDX.activeDisplayListSize;
+   *outDisplayList = memory_untranslate(dlData.buffer);
+   *outSize = dlData.size;
    return TRUE;
 }
 
@@ -90,8 +99,11 @@ void
 GX2CopyDisplayList(GX2DisplayList *displayList,
                    uint32_t size)
 {
+   uint32_t coreId = OSGetCoreId();
+   auto &dlData = gDX.activeDisplayList[coreId];
+
    // We do not currently handle DL_OVERFLOW events
-   if (gDX.activeDisplayListOffset + size > gDX.activeDisplayListSize) {
+   if (dlData.offset + size > dlData.size) {
       throw;
    }
 
@@ -100,9 +112,9 @@ GX2CopyDisplayList(GX2DisplayList *displayList,
       return;
    }
 
-   auto dst = reinterpret_cast<uint8_t*>(gDX.activeDisplayList) + gDX.activeDisplayListOffset;
+   auto dst = reinterpret_cast<uint8_t*>(dlData.buffer) + dlData.offset;
    memcpy(dst, displayList, size);
-   gDX.activeDisplayListOffset += size;
+   dlData.offset += size;
 }
 
 #endif

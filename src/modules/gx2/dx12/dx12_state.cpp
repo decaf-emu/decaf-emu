@@ -33,9 +33,12 @@ DXTextureData * dx::getTexture(GX2Texture *buffer) {
 void dx::initialise()
 {
    gDX.activeContextState = nullptr;
-   gDX.activeDisplayList = nullptr;
-   gDX.activeDisplayListSize = 0;
-   gDX.activeDisplayListOffset = 0;
+   for (auto i = 0; i < 3; ++i) {
+      auto &displayList = gDX.activeDisplayList[i];
+      displayList.buffer = nullptr;
+      displayList.size = 0;
+      displayList.offset = 0;
+   }
    for (auto i = 0; i < GX2_NUM_MRT_BUFFER; ++i) {
       gDX.activeColorBuffer[i] = nullptr;
    }

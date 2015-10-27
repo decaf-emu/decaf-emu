@@ -5,6 +5,7 @@
 #include "modules/gx2/gx2_renderstate.h"
 #include "modules/gx2/gx2_texture.h"
 #include "modules/gx2/gx2_shaders.h"
+#include "modules/coreinit/coreinit_core.h"
 #include "hostlookup.h"
 #include "dx12.h"
 #include "dx12_heap.h"
@@ -108,9 +109,11 @@ struct DXState {
    static_assert(sizeof(ContextState) < sizeof(GX2ContextState::stateStore), "ContextState must be smaller than GX2ContextState::stateStore");
 
    GX2ContextState *activeContextState;
-   void *activeDisplayList;
-   uint32_t activeDisplayListSize;
-   uint32_t activeDisplayListOffset;
+   struct {
+      void * buffer;
+      uint32_t size;
+      uint32_t offset;
+   } activeDisplayList[3];
 
 };
 
@@ -135,16 +138,18 @@ namespace dx {
    template <typename FnType, FnType Func, typename... Args>
    void displayListCall(Args... args)
    {
-      if (!gDX.activeDisplayList) {
+      uint32_t coreId = OSGetCoreId();
+      auto &dlData = gDX.activeDisplayList[coreId];
+      if (!dlData.buffer) {
          // If we are not generating a display list, just call it directly...
+         assert(coreId == 1);
          Func(args...);
          return;
       }
 
       CommandListRef cl = { 
-         reinterpret_cast<uint8_t*>(gDX.activeDisplayList),
-         gDX.activeDisplayListSize,
-         gDX.activeDisplayListOffset };
+         reinterpret_cast<uint8_t*>(dlData.buffer),
+         dlData.size, dlData.offset };
       commandListAppend1<FnType, Func, Args...>(cl, args...);
    }
 
