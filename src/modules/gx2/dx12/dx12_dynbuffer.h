@@ -102,7 +102,7 @@ public:
       mOffset = 0;
    }
 
-   BaseAllocation get(UINT size, void *data, UINT alignment = 0) {
+   BaseAllocation get(UINT size, const void *data, UINT alignment = 0) {
       // align the offset according to the alignment requirements
       if (alignment != 0) {
          mOffset = align_up(mOffset, alignment);
@@ -123,11 +123,11 @@ public:
       return alloc;
    }
 
-   VertexAllocation get(UINT stride, UINT size, void *data, UINT alignment = 0) {
+   VertexAllocation get(UINT stride, UINT size, const void *data, UINT alignment = 0) {
       return VertexAllocation(get(size, data, alignment), stride, size);
    }
 
-   IndexAllocation get(DXGI_FORMAT format, UINT size, void *data, UINT alignment = 0) {
+   IndexAllocation get(DXGI_FORMAT format, UINT size, const void *data, UINT alignment = 0) {
       return IndexAllocation(get(size, data, alignment), format, size);
    }
 

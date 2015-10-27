@@ -40,10 +40,15 @@ void dx::initialise()
       gDX.activeColorBuffer[i] = nullptr;
    }
    gDX.activeDepthBuffer = nullptr;
-   
 
    gDX.state.primitiveRestartIdx = 0xFFFFFFFF;
-
+   gDX.state.shaderMode = GX2ShaderMode::UniformRegister;
+   for (auto i = 0; i < 16; ++i) {
+      gDX.state.pixUniformBlocks[i].buffer = nullptr;
+      gDX.state.pixUniformBlocks[i].size = 0;
+      gDX.state.vertUniformBlocks[i].buffer = nullptr;
+      gDX.state.vertUniformBlocks[i].size = 0;
+   }
 
    gDX.viewport.Width = static_cast<float>(platform::ui::getWindowWidth());
    gDX.viewport.Height = static_cast<float>(platform::ui::getWindowHeight());
@@ -587,17 +592,40 @@ void dx::updateBuffers()
 
    gDX.commandList->IASetVertexBuffers(0, 32, bufferList);
 
-   {
-      auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), nullptr, 256);
-      uint8_t *constData = (uint8_t*)constBuffer;
-      memcpy(constData, gDX.state.vertUniforms, GX2_NUM_GPRS * 4 * sizeof(float));
-      gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[0], constBuffer);
-   }
-   {
-      auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), nullptr, 256);
-      uint8_t *constData = (uint8_t*)constBuffer;
-      memcpy(constData, gDX.state.pixUniforms, GX2_NUM_GPRS * 4 * sizeof(float));
-      gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[1], constBuffer);
+   if (gDX.state.shaderMode == GX2ShaderMode::UniformRegister) {
+      {
+         auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), nullptr, 256);
+         uint8_t *constData = (uint8_t*)constBuffer;
+         memcpy(constData, gDX.state.vertUniforms, GX2_NUM_GPRS * 4 * sizeof(float));
+         gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[0], constBuffer);
+      }
+      {
+         auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), nullptr, 256);
+         uint8_t *constData = (uint8_t*)constBuffer;
+         memcpy(constData, gDX.state.pixUniforms, GX2_NUM_GPRS * 4 * sizeof(float));
+         gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[1], constBuffer);
+      }
+   } else if (gDX.state.shaderMode == GX2ShaderMode::UniformBlock) {
+      uint32_t cbvIdx = 0;
+      if (gDX.state.vertexShader != nullptr) {
+         for (auto i = 0u; i < gDX.state.vertexShader->uniformBlockCount; ++i) {
+            auto &uniBlock = gDX.state.vertexShader->uniformBlocks[i];
+            auto &blockData = gDX.state.vertUniformBlocks[uniBlock.offset];
+            auto constBuffer = gDX.ppcVertexBuffer->get(blockData.size, blockData.buffer, 256);
+            gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[cbvIdx++], constBuffer);
+         }
+      }
+      if (gDX.state.pixelShader != nullptr) {
+         for (auto i = 0u; i < gDX.state.pixelShader->uniformBlockCount; ++i) {
+            auto &uniBlock = gDX.state.pixelShader->uniformBlocks[i];
+            auto &blockData = gDX.state.pixUniformBlocks[uniBlock.offset];
+            auto constBuffer = gDX.ppcVertexBuffer->get(blockData.size, blockData.buffer, 256);
+            gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[cbvIdx++], constBuffer);
+         }
+      }
+   } else {
+      // We don't support Geometry shaders just yet...
+      throw;
    }
 }
 

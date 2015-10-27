@@ -133,7 +133,8 @@ GX2SetPixelUniformReg(uint32_t offset,
 void
 _GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
-   gLog->info("_GX2SetVertexUniformBlock({}, {}, {:08x})", location, size, memory_untranslate(data));
+   gDX.state.vertUniformBlocks[location].buffer = data;
+   gDX.state.vertUniformBlocks[location].size = size;
 }
 
 void
@@ -145,7 +146,8 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 void
 _GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
-   gLog->info("_GX2SetPixelUniformBlock({}, {}, {:08x})", location, size, memory_untranslate(data));
+   gDX.state.pixUniformBlocks[location].buffer = data;
+   gDX.state.pixUniformBlocks[location].size = size;
 }
 
 void
@@ -155,16 +157,19 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 }
 
 void
-GX2SetShaderModeEx(GX2ShaderMode::Mode mode,
-                   uint32_t unk1,
-                   uint32_t unk2,
-                   uint32_t unk3,
-                   uint32_t unk4,
-                   uint32_t unk5,
-                   uint32_t unk6)
+_GX2SetShaderModeEx(GX2ShaderMode::Mode mode,
+   uint32_t unk1, uint32_t unk2, uint32_t unk3,
+   uint32_t unk4, uint32_t unk5, uint32_t unk6)
 {
-   // This does not appear to actually impact how the
-   //   rendering behaves...  No need to log it for now.
+   gDX.state.shaderMode = mode;
+}
+
+void
+GX2SetShaderModeEx(GX2ShaderMode::Mode mode,
+                   uint32_t unk1, uint32_t unk2, uint32_t unk3,
+                   uint32_t unk4, uint32_t unk5, uint32_t unk6)
+{
+   DX_DLCALL(_GX2SetShaderModeEx, mode, unk1, unk2, unk3, unk4, unk5, unk6);
 }
 
 uint32_t

@@ -69,7 +69,7 @@ struct DXState {
       struct {
          uint32_t size;
          uint32_t stride;
-         void *buffer;
+         const void *buffer;
       } attribBuffers[32];
       GX2FetchShader *fetchShader;
       GX2VertexShader *vertexShader;
@@ -92,8 +92,18 @@ struct DXState {
          GX2BlendMode::Mode alphaDstBlend;
          GX2BlendCombineMode::Mode alphaCombine;
       } targetBlendState[8];
+      GX2ShaderMode::Mode shaderMode;
       float vertUniforms[GX2_NUM_GPRS * 4];
       float pixUniforms[GX2_NUM_GPRS * 4];
+      struct {
+         uint32_t size;
+         const void *buffer;
+      } vertUniformBlocks[16];
+      struct {
+         uint32_t size;
+         const void *buffer;
+      } pixUniformBlocks[16];
+      
    } state;
    static_assert(sizeof(ContextState) < sizeof(GX2ContextState::stateStore), "ContextState must be smaller than GX2ContextState::stateStore");
 
