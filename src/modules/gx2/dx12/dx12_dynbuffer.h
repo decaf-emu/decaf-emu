@@ -42,7 +42,7 @@ public:
    class VertexAllocation : public BaseAllocation
    {
    public:
-      VertexAllocation() { }
+      VertexAllocation() : mView{ 0 } { }
 
       VertexAllocation(const BaseAllocation& alloc, UINT stride, UINT size)
          : BaseAllocation(alloc)
@@ -64,7 +64,7 @@ public:
    class IndexAllocation : public BaseAllocation
    {
    public:
-      IndexAllocation() { }
+      IndexAllocation() : mView{ 0 } { }
 
       IndexAllocation(const BaseAllocation& alloc, DXGI_FORMAT format, UINT size)
          : BaseAllocation(alloc)
