@@ -116,12 +116,8 @@ private:
       ComPtr<ID3DBlob> vertexShaderBlob;
       ComPtr<ID3DBlob> pixelShaderBlob;
 
-#ifdef _DEBUG
       // Enable better shader debugging with the graphics debugging tools.
       UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-      UINT compileFlags = 0;
-#endif
 
       ComPtr<ID3DBlob> errorBlob;
       HRESULT vertHr, pixHr;
