@@ -215,12 +215,8 @@ void dx::initialise()
       ComPtr<ID3DBlob> vertexShader;
       ComPtr<ID3DBlob> pixelShader;
 
-#ifdef _DEBUG
       // Enable better shader debugging with the graphics debugging tools.
       UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-      UINT compileFlags = 0;
-#endif
 
       ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/screendraw.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
       ThrowIfFailed(D3DCompileFromFile(L"resources/shaders/screendraw.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
