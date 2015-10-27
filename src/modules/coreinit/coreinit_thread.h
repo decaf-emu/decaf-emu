@@ -199,7 +199,7 @@ using ThreadEntryPoint = wfunc_ptr<uint32_t, uint32_t, void*>;
 void
 OSCancelThread(OSThread *thread);
 
-long
+int32_t
 OSCheckActiveThreads();
 
 int32_t

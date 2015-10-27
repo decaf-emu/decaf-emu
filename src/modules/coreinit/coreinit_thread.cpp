@@ -67,7 +67,7 @@ OSCancelThread(OSThread *thread)
    }
 }
 
-long
+int32_t
 OSCheckActiveThreads()
 {
    // TODO: Count threads in active thread queue
