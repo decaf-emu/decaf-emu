@@ -588,15 +588,15 @@ void dx::updateBuffers()
    gDX.commandList->IASetVertexBuffers(0, 32, bufferList);
 
    {
-      auto constBuffer = gDX.ppcVertexBuffer->get(16 * 4 * sizeof(float), nullptr, 256);
+      auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), nullptr, 256);
       uint8_t *constData = (uint8_t*)constBuffer;
-      memcpy(constData, gDX.state.vertUniforms, 16 * 4 * sizeof(float));
+      memcpy(constData, gDX.state.vertUniforms, GX2_NUM_GPRS * 4 * sizeof(float));
       gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[0], constBuffer);
    }
    {
-      auto constBuffer = gDX.ppcVertexBuffer->get(16 * 4 * sizeof(float), nullptr, 256);
+      auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), nullptr, 256);
       uint8_t *constData = (uint8_t*)constBuffer;
-      memcpy(constData, gDX.state.pixUniforms, 16 * 4 * sizeof(float));
+      memcpy(constData, gDX.state.pixUniforms, GX2_NUM_GPRS * 4 * sizeof(float));
       gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[1], constBuffer);
    }
 }
