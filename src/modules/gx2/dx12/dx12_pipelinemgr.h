@@ -145,6 +145,10 @@ private:
       for (auto i = 0u; i < fetchShader->attribCount; ++i) {
          auto &attrib = fetchData->attribs[i];
 
+         if (attrib.type != 0) {
+            throw;
+         }
+
          switch (attrib.format) {
          case GX2AttribFormat::UNORM_8:
             inputElementFormat = DXGI_FORMAT_R8_UNORM; break;
