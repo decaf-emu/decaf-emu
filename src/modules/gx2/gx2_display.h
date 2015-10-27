@@ -12,6 +12,8 @@ namespace GX2DrcRenderMode
 enum Mode : uint32_t
 {
    First = 0,
+   Disabled = 0,
+   Single = 1,
    Last = 3
 };
 }
@@ -111,6 +113,9 @@ GX2SetSwapInterval(uint32_t interval);
 
 GX2TVScanMode::Mode
 GX2GetSystemTVScanMode();
+
+GX2DrcRenderMode::Mode
+GX2GetSystemDRCMode();
 
 BOOL
 GX2DrawDone();

@@ -64,6 +64,7 @@ GX2::registerDisplayFunctions()
    RegisterKernelFunction(GX2SetSwapInterval);
    RegisterKernelFunction(GX2GetSwapInterval);
    RegisterKernelFunction(GX2GetSystemTVScanMode);
+   RegisterKernelFunction(GX2GetSystemDRCMode);
    RegisterKernelFunction(GX2DrawDone);
    RegisterKernelFunction(GX2SwapScanBuffers);
    RegisterKernelFunction(GX2WaitForVsync);

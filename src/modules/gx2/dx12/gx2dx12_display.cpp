@@ -140,6 +140,12 @@ GX2GetSystemTVScanMode()
    return GX2TVScanMode::Last;
 }
 
+GX2DrcRenderMode::Mode
+GX2GetSystemDRCMode()
+{
+   return GX2DrcRenderMode::Single;
+}
+
 BOOL
 GX2DrawDone()
 {
