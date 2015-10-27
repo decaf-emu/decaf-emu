@@ -139,15 +139,15 @@ triifiedDraw(GX2PrimitiveMode::Mode mode,
    for (auto i = 0u; i < numVertices / 4; ++i) {
       auto index_tl = byte_swap(*indices++);
       auto index_tr = byte_swap(*indices++);
-      auto index_bl = byte_swap(*indices++);
       auto index_br = byte_swap(*indices++);
+      auto index_bl = byte_swap(*indices++);
       
       *indicesOut++ = index_tl;
       *indicesOut++ = index_tr;
-      *indicesOut++ = index_bl;
-      *indicesOut++ = index_bl;
       *indicesOut++ = index_br;
       *indicesOut++ = index_tl;
+      *indicesOut++ = index_br;
+      *indicesOut++ = index_bl;
    }
 
    gDX.commandList->IASetIndexBuffer(indexAlloc);
