@@ -1,5 +1,6 @@
 #include <sstream>
 #include <iomanip>
+#include <list>
 #include "disassembler.h"
 #include "instructiondata.h"
 #include "system.h"

@@ -1,8 +1,9 @@
 #pragma once
+#include <atomic>
 #include <cstdint>
 #include <map>
 #include <mutex>
-#include <atomic>
+#include <thread>
 #include <queue>
 #include "debugmsg.h"
 #include "modules/coreinit/coreinit_core.h"
