@@ -119,7 +119,6 @@ fcmpGeneric(ThreadState *state, Instruction instr)
 {
    Type a, b;
    uint32_t c;
-   bool vxsnan = false;
 
    if (flags & FCmpSingle0) {
       a = static_cast<Type>(state->fpr[instr.frA].paired0);
@@ -131,8 +130,6 @@ fcmpGeneric(ThreadState *state, Instruction instr)
       a = static_cast<Type>(state->fpr[instr.frA].paired0);
       b = static_cast<Type>(state->fpr[instr.frB].paired0);
    }
-
-   vxsnan = (is_signalling_nan(a) || is_signalling_nan(b));
 
    if (a < b) {
       c = ConditionRegisterFlag::LessThan;
