@@ -156,18 +156,40 @@ zlib125_inflateEnd(WZStream *wstrm)
    return result;
 }
 
+static uint32_t
+zlib125_adler32(uint32_t adler, const Bytef * buf, unsigned len)
+{
+   return (uint32_t)adler32(adler, buf, len);
+}
+
+static uint32_t
+zlib125_crc32(uint32_t crc, const Bytef * buf, unsigned len)
+{
+   return (uint32_t)crc32(crc, buf, len);
+}
+
+static uint32_t
+zlib125_compressBound(uint32_t sourceLen)
+{
+   return (uint32_t)compressBound(sourceLen);
+}
+
+static uint32_t
+zlib125_zlibCompileFlags()
+{
+   return (uint32_t)zlibCompileFlags();
+}
+
 void
 Zlib125::registerCoreFunctions()
 {
-   // Functions we can do directly!
-   RegisterKernelFunction(adler32);
-   RegisterKernelFunction(crc32);
-   RegisterKernelFunction(compressBound);
-   RegisterKernelFunction(zlibCompileFlags);
-
    // Need wrap
+   RegisterKernelFunctionName("adler32", zlib125_adler32);
+   RegisterKernelFunctionName("crc32", zlib125_crc32);
    RegisterKernelFunctionName("inflate", zlib125_inflate);
    RegisterKernelFunctionName("inflateInit_", zlib125_inflateInit_);
    RegisterKernelFunctionName("inflateInit2_", zlib125_inflateInit2_);
    RegisterKernelFunctionName("inflateEnd", zlib125_inflateEnd);
+   RegisterKernelFunctionName("compressBound", zlib125_compressBound);
+   RegisterKernelFunctionName("zlibCompileFlags", zlib125_zlibCompileFlags);
 }
