@@ -65,7 +65,7 @@ public:
             return ItemPtr(item);
          }
       }
-      assert(0);
+      throw;
       return ItemPtr();
    }
 
