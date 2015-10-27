@@ -573,7 +573,7 @@ void dx::updateBuffers()
    for (auto i = 0u; i < fetchShader->attribCount; ++i) {
       auto attrib = fetchData->attribs[i];
       auto srcBuffer = gDX.state.attribBuffers[attrib.buffer];
-      auto destBuffer = buffers[attrib.location];
+      auto destBuffer = buffers[attrib.buffer];
 
       if (!destBuffer.valid()) {
          throw;
