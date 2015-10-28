@@ -43,6 +43,9 @@ void dx::initialise()
       gDX.activeColorBuffer[i] = nullptr;
    }
    gDX.activeDepthBuffer = nullptr;
+   for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
+      gDX.activeTextures[i] = nullptr;
+   }
 
    gDX.state.primitiveRestartIdx = 0xFFFFFFFF;
    gDX.state.shaderMode = GX2ShaderMode::UniformRegister;
@@ -146,6 +149,16 @@ void dx::initialise()
       srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
       srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
       gDX.srvHeap = new DXHeap(gDX.device.Get(), srvHeapDesc);
+
+      // Create a RTV for each frame.
+      for (UINT n = 0; n < gDX.FrameCount; n++)
+      {
+         D3D12_DESCRIPTOR_HEAP_DESC srvHeapListDesc = {};
+         srvHeapListDesc.NumDescriptors = 2048;
+         srvHeapListDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+         srvHeapListDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+         gDX.srvHeapList[n] = new DXHeapList(gDX.device.Get(), srvHeapListDesc);
+      }
    }
 
    // Create frame resources.
@@ -170,18 +183,18 @@ void dx::initialise()
 
    // Create the root signature.
    {
-      CD3DX12_DESCRIPTOR_RANGE ranges[GX2_NUM_SAMPLERS];
-      CD3DX12_ROOT_PARAMETER rootParameters[GX2_NUM_SAMPLERS + GX2_NUM_UNIFORMBLOCKS];
+      
+      CD3DX12_ROOT_PARAMETER rootParameters[2];
+      CD3DX12_DESCRIPTOR_RANGE ranges[2];
       uint32_t paramIdx = 0;
-      for (auto i = 0; i < GX2_NUM_UNIFORMBLOCKS; ++i) {
-         gDX.cbvIndex[i] = paramIdx;
-         rootParameters[paramIdx++].InitAsConstantBufferView(i, 0, D3D12_SHADER_VISIBILITY_ALL);
-      }
-      for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
-         gDX.srvIndex[i] = paramIdx;
-         ranges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i);
-         rootParameters[paramIdx++].InitAsDescriptorTable(1, &ranges[i], D3D12_SHADER_VISIBILITY_ALL);
-      }
+
+      ranges[paramIdx].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, GX2_NUM_UNIFORMBLOCKS, 0);
+      rootParameters[paramIdx].InitAsDescriptorTable(1, &ranges[paramIdx], D3D12_SHADER_VISIBILITY_ALL);
+      paramIdx++;
+
+      ranges[paramIdx].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, GX2_NUM_SAMPLERS, 0);
+      rootParameters[paramIdx].InitAsDescriptorTable(1, &ranges[paramIdx], D3D12_SHADER_VISIBILITY_ALL);
+      paramIdx++;
 
       D3D12_STATIC_SAMPLER_DESC samplers[GX2_NUM_SAMPLERS];
       for (int i = 0; i < GX2_NUM_SAMPLERS; ++i) {
@@ -300,7 +313,8 @@ void dx::initialise()
 
       // Copy the triangle data to the vertex buffer.
       UINT8* pVertexDataBegin;
-      ThrowIfFailed(gDX.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pVertexDataBegin)));
+      CD3DX12_RANGE readRange(0, 0);
+      ThrowIfFailed(gDX.vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
       memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
       gDX.vertexBuffer->Unmap(0, nullptr);
 
@@ -352,6 +366,8 @@ void dx::renderScanBuffers() {
 void dx::_beginFrame() {
    gDX.frameIndex = gDX.swapChain->GetCurrentBackBufferIndex();
    gDX.curScanbufferRtv = gDX.scanbufferRtv[gDX.frameIndex];
+   gDX.curSrvHeapList = gDX.srvHeapList[gDX.frameIndex];
+   gDX.curSrvHeapList->reset();
 
    // Command list allocators can only be reset when the associated
    // command lists have finished execution on the GPU; apps should use
@@ -366,7 +382,7 @@ void dx::_beginFrame() {
    // Set necessary state.
    gDX.commandList->SetGraphicsRootSignature(gDX.rootSignature.Get());
 
-   ID3D12DescriptorHeap* ppHeaps[] = { *gDX.srvHeap };
+   ID3D12DescriptorHeap* ppHeaps[] = { *gDX.curSrvHeapList };
    gDX.commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
    const float clearColor[] = { 0.6f, 0.2f, 0.2f, 1.0f };
@@ -391,13 +407,25 @@ void dx::_endFrame() {
 
    // Render TV ScanBuffer
    {
-      gDX.commandList->SetGraphicsRootDescriptorTable(gDX.srvIndex[0], *gDX.tvScanBuffer->srv);
+      DXHeapList::Item srv = gDX.curSrvHeapList->alloc();
+      for (auto i = 0; i < GX2_NUM_SAMPLERS - 1; ++i) {
+         gDX.curSrvHeapList->alloc();
+      }
+      gDX.device->CreateShaderResourceView(*gDX.tvScanBuffer, *gDX.tvScanBuffer, srv);
+
+      gDX.commandList->SetGraphicsRootDescriptorTable(1, srv);
       gDX.commandList->DrawInstanced(4, 1, 0, 0);
    }
 
    // Render DRC ScanBuffer
    {
-      gDX.commandList->SetGraphicsRootDescriptorTable(gDX.srvIndex[0], *gDX.drcScanBuffer->srv);
+      DXHeapList::Item srv = gDX.curSrvHeapList->alloc();
+      for (auto i = 0; i < GX2_NUM_SAMPLERS - 1; ++i) {
+         gDX.curSrvHeapList->alloc();
+      }
+      gDX.device->CreateShaderResourceView(*gDX.drcScanBuffer, *gDX.drcScanBuffer, srv);
+
+      gDX.commandList->SetGraphicsRootDescriptorTable(1, srv);
       gDX.commandList->DrawInstanced(4, 1, 4, 0);
    }
 
@@ -566,7 +594,7 @@ void dx::updateBuffers()
       }
 
       buffers[i] = gDX.ppcVertexBuffer->get(
-         buffer.stride, buffer.size, nullptr);
+         buffer.stride, buffer.size, nullptr, 256);
       bufferList[i] = *(D3D12_VERTEX_BUFFER_VIEW*)buffers[i];
    }
 
@@ -595,40 +623,76 @@ void dx::updateBuffers()
       }
    }
 
-   if (gDX.state.shaderMode == GX2ShaderMode::UniformRegister) {
-      {
-         auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), nullptr, 256);
-         uint8_t *constData = (uint8_t*)constBuffer;
-         memcpy(constData, gDX.state.vertUniforms, GX2_NUM_GPRS * 4 * sizeof(float));
-         gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[0], constBuffer);
+   {
+      DXHeapList::Item heapItems[GX2_NUM_UNIFORMBLOCKS];
+      for (auto i = 0; i < GX2_NUM_UNIFORMBLOCKS; ++i) {
+         heapItems[i] = gDX.curSrvHeapList->alloc();
       }
-      {
-         auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), nullptr, 256);
-         uint8_t *constData = (uint8_t*)constBuffer;
-         memcpy(constData, gDX.state.pixUniforms, GX2_NUM_GPRS * 4 * sizeof(float));
-         gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[1], constBuffer);
+
+      if (gDX.state.shaderMode == GX2ShaderMode::UniformRegister) {
+         {
+            auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), gDX.state.vertUniforms, 256);
+
+            D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
+            desc.BufferLocation = constBuffer;
+            desc.SizeInBytes = GX2_NUM_GPRS * 4 * sizeof(float);
+            gDX.device->CreateConstantBufferView(&desc, heapItems[0]);
+         }
+         {
+            auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), gDX.state.pixUniforms, 256);
+
+            D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
+            desc.BufferLocation = constBuffer;
+            desc.SizeInBytes = GX2_NUM_GPRS * 4 * sizeof(float);
+            gDX.device->CreateConstantBufferView(&desc, heapItems[1]);
+         }
+      } else if (gDX.state.shaderMode == GX2ShaderMode::UniformBlock) {
+         uint32_t cbvIdx = 0;
+         if (gDX.state.vertexShader != nullptr) {
+            for (auto i = 0u; i < gDX.state.vertexShader->uniformBlockCount; ++i) {
+               auto &uniBlock = gDX.state.vertexShader->uniformBlocks[i];
+               auto &blockData = gDX.state.vertUniformBlocks[uniBlock.offset];
+               auto constBuffer = gDX.ppcVertexBuffer->get(blockData.size, blockData.buffer, 256);
+
+               D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
+               desc.BufferLocation = constBuffer;
+               desc.SizeInBytes = blockData.size;
+               gDX.device->CreateConstantBufferView(&desc, heapItems[cbvIdx++]);
+            }
+         }
+         if (gDX.state.pixelShader != nullptr) {
+            for (auto i = 0u; i < gDX.state.pixelShader->uniformBlockCount; ++i) {
+               auto &uniBlock = gDX.state.pixelShader->uniformBlocks[i];
+               auto &blockData = gDX.state.pixUniformBlocks[uniBlock.offset];
+               auto constBuffer = gDX.ppcVertexBuffer->get(blockData.size, blockData.buffer, 256);
+
+               D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
+               desc.BufferLocation = constBuffer;
+               desc.SizeInBytes = blockData.size;
+               gDX.device->CreateConstantBufferView(&desc, heapItems[cbvIdx++]);
+            }
+         }
+      } else {
+         // We don't support Geometry shaders just yet...
+         throw;
       }
-   } else if (gDX.state.shaderMode == GX2ShaderMode::UniformBlock) {
-      uint32_t cbvIdx = 0;
-      if (gDX.state.vertexShader != nullptr) {
-         for (auto i = 0u; i < gDX.state.vertexShader->uniformBlockCount; ++i) {
-            auto &uniBlock = gDX.state.vertexShader->uniformBlocks[i];
-            auto &blockData = gDX.state.vertUniformBlocks[uniBlock.offset];
-            auto constBuffer = gDX.ppcVertexBuffer->get(blockData.size, blockData.buffer, 256);
-            gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[cbvIdx++], constBuffer);
+
+      gDX.commandList->SetGraphicsRootDescriptorTable(0, heapItems[0]);
+   }
+   {
+      DXHeapList::Item heapItems[GX2_NUM_SAMPLERS];
+      for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
+         heapItems[i] = gDX.curSrvHeapList->alloc();
+      }
+
+      for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
+         auto &tex = gDX.activeTextures[i];
+         if (tex) {
+            gDX.device->CreateShaderResourceView(*tex, *tex, heapItems[i]);
          }
       }
-      if (gDX.state.pixelShader != nullptr) {
-         for (auto i = 0u; i < gDX.state.pixelShader->uniformBlockCount; ++i) {
-            auto &uniBlock = gDX.state.pixelShader->uniformBlocks[i];
-            auto &blockData = gDX.state.pixUniformBlocks[uniBlock.offset];
-            auto constBuffer = gDX.ppcVertexBuffer->get(blockData.size, blockData.buffer, 256);
-            gDX.commandList->SetGraphicsRootConstantBufferView(gDX.cbvIndex[cbvIdx++], constBuffer);
-         }
-      }
-   } else {
-      // We don't support Geometry shaders just yet...
-      throw;
+
+      gDX.commandList->SetGraphicsRootDescriptorTable(1, heapItems[0]);
    }
 }
 

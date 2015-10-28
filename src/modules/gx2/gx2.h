@@ -13,8 +13,8 @@
 #endif
 
 static const int GX2_NUM_GPRS = 144;
-static const int GX2_NUM_SAMPLERS = 8;
-static const int GX2_NUM_UNIFORMBLOCKS = 14; // Supposed to be 16, but DX12 doesn't actually support that...
+static const int GX2_NUM_SAMPLERS = 4;
+static const int GX2_NUM_UNIFORMBLOCKS = 4; // Supposed to be 16, but DX12 doesn't actually support that...
 static const int GX2_NUM_MRT_BUFFER = 8;
 static const int GX2_NUM_TEXTURE_UNIT = 16;
 

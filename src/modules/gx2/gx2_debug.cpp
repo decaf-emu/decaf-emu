@@ -149,7 +149,7 @@ GX2DumpTexture(const GX2Texture *texture)
    case GX2SurfaceFormat::UNORM_BC4:ddsHeader.ddspf.dwFourCC = '1ITA'; break;
    case GX2SurfaceFormat::UNORM_BC5:ddsHeader.ddspf.dwFourCC = '2ITA'; break;
    default:
-      throw;
+      return;
    }
 
    auto binaryDds = std::ofstream{ "dump/" + filename + ".dds", std::ofstream::out | std::ofstream::binary };

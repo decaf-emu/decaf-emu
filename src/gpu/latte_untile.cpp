@@ -610,7 +610,10 @@ void
 untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, uint32_t &pitchOut)
 {
    if (surface->tileMode == GX2TileMode::LinearAligned) {
-      throw std::runtime_error("Unsupported tile mode LinearAligned");
+      out.resize(surface->imageSize);
+      memcpy(&out[0], surface->image, surface->imageSize);
+      pitchOut = surface->pitch; // Probably fucked I bet
+      return;
    }
 
    if (surface->tileMode == GX2TileMode::LinearSpecial) {

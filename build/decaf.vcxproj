@@ -297,6 +297,7 @@
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_dynbuffer.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_fetchshader.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_heap.h" />
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_heaplist.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_pipelinemgr.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_scanbuffer.h" />
     <ClInclude Include="..\src\modules\gx2\dx12\dx12_state.h" />

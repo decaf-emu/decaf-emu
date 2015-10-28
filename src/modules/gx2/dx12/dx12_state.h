@@ -9,6 +9,7 @@
 #include "hostlookup.h"
 #include "dx12.h"
 #include "dx12_heap.h"
+#include "dx12_heaplist.h"
 #include "dx12_dynbuffer.h"
 #include "dx12_cmdlist.h"
 
@@ -40,6 +41,8 @@ struct DXState {
    ComPtr<ID3D12GraphicsCommandList> commandList;
    DXHeapItemPtr scanbufferRtv[FrameCount];
    DXHeapItemPtr curScanbufferRtv;
+   DXHeapList *srvHeapList[FrameCount];
+   DXHeapList *curSrvHeapList;
    D3D12_VIEWPORT viewport;
    D3D12_RECT scissorRect;
    ComPtr<ID3D12Resource> vertexBuffer;
@@ -58,9 +61,10 @@ struct DXState {
    uint32_t cbvIndex[GX2_NUM_UNIFORMBLOCKS];
    DXScanBufferData *tvScanBuffer;
    DXScanBufferData *drcScanBuffer;
-
+   
    GX2ColorBuffer *activeColorBuffer[GX2_NUM_MRT_BUFFER];
    GX2DepthBuffer *activeDepthBuffer;
+   DXTextureData *activeTextures[GX2_NUM_SAMPLERS];
 
    struct ContextState
    {

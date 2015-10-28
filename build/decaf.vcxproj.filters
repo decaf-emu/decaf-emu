@@ -1190,6 +1190,9 @@
     <ClInclude Include="..\src\gpu\latte_untile.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\dx12\dx12_heaplist.h">
+      <Filter>Header Files\modules\gx2\dx12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

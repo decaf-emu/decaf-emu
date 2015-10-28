@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include <fstream>
 #include "dx12.h"
 #include "dx12_fetchshader.h"
 #include "dx12_utils.h"
@@ -119,11 +120,21 @@ private:
       // Enable better shader debugging with the graphics debugging tools.
       UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 
+      std::string hlslFileName = fmt::format("dump/shader_{:08x}_{:08x}_{:08x}.hlsl",
+         memory_untranslate(fetchShader),
+         memory_untranslate(vertexShader),
+         memory_untranslate(pixelShader));
+      std::wstring hlslFileNameW(hlslFileName.begin(), hlslFileName.end());
+      {
+         auto file = std::ofstream{ hlslFileNameW, std::ofstream::out | std::ofstream::binary };
+         file.write(hlsl.c_str(), hlsl.size());
+      }
+
       ComPtr<ID3DBlob> errorBlob;
       HRESULT vertHr, pixHr;
-      vertHr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, &errorBlob);
+      vertHr = D3DCompileFromFile(hlslFileNameW.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShaderBlob, &errorBlob);
       if (!FAILED(vertHr)) {
-         pixHr = D3DCompile(hlsl.c_str(), hlsl.size(), nullptr, nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, &errorBlob);
+         pixHr = D3DCompileFromFile(hlslFileNameW.c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShaderBlob, &errorBlob);
       }
 
       if (FAILED(vertHr) || FAILED(pixHr)) {
@@ -217,6 +228,7 @@ private:
          psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
          psoDesc.SampleDesc.Count = 1;
 
+         /*
          if (gDX.state.primitiveRestartIdx == 0xFFFF) {
             psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF;
          } else if (gDX.state.primitiveRestartIdx == 0xFFFFFFFF) {
@@ -224,6 +236,7 @@ private:
          } else {
             throw;
          }
+         */
 
          auto &blendState = gDX.state.blendState;
          if (blendState.blendEnabled) {
@@ -245,6 +258,7 @@ private:
             }
          }
 
+         psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
          ThrowIfFailed(gDX.device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
       }
 

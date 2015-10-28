@@ -53,7 +53,8 @@ _GX2SetPixelTexture(GX2Texture *texture,
    GX2DumpTexture(texture);
    DXTextureData *textureData = dx::getTexture(texture);
    textureData->upload();
-   gDX.commandList->SetGraphicsRootDescriptorTable(gDX.srvIndex[unit], *textureData->srv);
+   
+   gDX.activeTextures[unit] = textureData;
 }
 
 void

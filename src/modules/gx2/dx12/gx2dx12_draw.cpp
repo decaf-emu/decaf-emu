@@ -115,8 +115,6 @@ triifiedDraw(GX2PrimitiveMode::Value mode,
    uint32_t offset,
    uint32_t numInstances)
 {
-   gDX.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
    uint32_t newNumIndices = 0;
    switch (mode) {
    case GX2PrimitiveMode::Quads:
@@ -131,16 +129,13 @@ triifiedDraw(GX2PrimitiveMode::Value mode,
       throw;
    }
 
-   // Always 32-bit indices for now to save scanning the input
-   //   indices to see if they will fit into 16-bit indices after expansion.
-   auto indexAlloc = gDX.ppcVertexBuffer->get(DXGI_FORMAT_R32_UINT, newNumIndices * sizeof(uint32_t), nullptr);
-   auto indicesOut = reinterpret_cast<uint32_t*>(static_cast<uint8_t*>(indexAlloc));
+   auto indicesOut = new uint16_t[newNumIndices];
 
    for (auto i = 0u; i < numVertices / 4; ++i) {
       auto index_tl = byte_swap(*indices++);
       auto index_tr = byte_swap(*indices++);
-      auto index_bl = byte_swap(*indices++);
       auto index_br = byte_swap(*indices++);
+      auto index_bl = byte_swap(*indices++);
 
       *indicesOut++ = index_tl;
       *indicesOut++ = index_tr;
@@ -150,7 +145,10 @@ triifiedDraw(GX2PrimitiveMode::Value mode,
       *indicesOut++ = index_br;
    }
 
+   auto indexAlloc = gDX.ppcVertexBuffer->get(DXGI_FORMAT_R16_UINT, newNumIndices * sizeof(uint16_t), indicesOut, 256);
    gDX.commandList->IASetIndexBuffer(indexAlloc);
+
+   gDX.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
    gDX.commandList->DrawIndexedInstanced(newNumIndices, numInstances, 0, offset, 0);
 }
 

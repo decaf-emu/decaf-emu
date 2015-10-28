@@ -657,17 +657,18 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    generateExports(pixelShader, output);
    output << "};\n\n";
 
+   int registerIdx = 0;
    if (gx2Vertex->mode == GX2ShaderMode::UniformRegister) {
       auto count = getUniformCount(vertexShader, gx2Vertex->uniformVarCount, gx2Vertex->uniformVars);
 
       if (count) {
-         output << "cbuffer VertUniforms {\n";
+         output << "cbuffer VertUniforms : register(b0) {\n";
          output << "  float4 VC[" << count << "];\n";
          output << "};\n\n";
       }
    } else if (gx2Vertex->mode == GX2ShaderMode::UniformBlock) {
       for (auto i = 0u; i < gx2Vertex->uniformBlockCount; ++i) {
-         output << "cbuffer VertBlock" << i << " {\n";
+         output << "cbuffer VertBlock" << i << " : register(b" << registerIdx++ << ") {\n";
          output << "  float4 VUB" << i << "[" << (gx2Vertex->uniformBlocks[i].size / 16) << "];\n";
          output << "};\n\n";
       }
@@ -679,13 +680,13 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
       auto count = getUniformCount(pixelShader, gx2Pixel->uniformVarCount, gx2Pixel->uniformVars);
 
       if (count) {
-         output << "cbuffer PixUniforms {\n";
+         output << "cbuffer PixUniforms : register(b1) {\n";
          output << "  float4 PC[" << count << "];\n";
          output << "};\n\n";
       }
    } else if (gx2Pixel->mode == GX2ShaderMode::UniformBlock) {
       for (auto i = 0u; i < gx2Pixel->uniformBlockCount; ++i) {
-         output << "cbuffer PixBlock" << i << " {\n";
+         output << "cbuffer PixBlock" << i << " : register(b" << registerIdx++ << ") {\n";
          output << "  float4 PUB" << i << "[" << (gx2Pixel->uniformBlocks[i].size / 16) << "];\n";
          output << "};\n\n";
       }
