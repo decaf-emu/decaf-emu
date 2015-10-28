@@ -194,7 +194,7 @@ private:
          case GX2AttribFormat::FLOAT_32_32_32_32:
             inputElementFormat = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
          default:
-            assert(0);
+            throw;
          };
 
          D3D12_INPUT_ELEMENT_DESC inputElementDesc = {
@@ -219,6 +219,7 @@ private:
          psoDesc.PS = { reinterpret_cast<UINT8*>(pixelShaderBlob->GetBufferPointer()), pixelShaderBlob->GetBufferSize() };
          psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
          psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+         psoDesc.RasterizerState.DepthClipEnable = FALSE;
          psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
          psoDesc.DepthStencilState.DepthEnable = FALSE;
          psoDesc.DepthStencilState.StencilEnable = FALSE;
