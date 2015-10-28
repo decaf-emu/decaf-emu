@@ -25,7 +25,7 @@ _GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
                   float red, float green, float blue, float alpha,
                   float depth,
                   uint8_t unk1,
-                  GX2ClearFlags::Flags flags)
+                  GX2ClearFlags::Value flags)
 {
    auto hostColorBuffer = dx::getColorBuffer(colorBuffer);
 
@@ -39,9 +39,9 @@ GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
    float red, float green, float blue, float alpha,
    float depth,
    uint8_t unk1,
-   GX2ClearFlags::Flags flags)
+   GX2ClearFlags::Value flags)
 {
-   DX_DLCALL(_GX2ClearBuffersEx, colorBuffer, depthBuffer, 
+   DX_DLCALL(_GX2ClearBuffersEx, colorBuffer, depthBuffer,
       red, green, blue, alpha, depth, unk1, flags);
 }
 
@@ -66,7 +66,7 @@ void
 GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
                        float depth,
                        uint8_t stencil,
-                       GX2ClearFlags::Flags unk2)
+                       GX2ClearFlags::Value unk2)
 {
    // TODO: GX2ClearDepthStencilEx depth/stencil clearing
    gLog->debug("unimplemented GX2ClearDepthStencilEx");
@@ -109,7 +109,7 @@ GX2SetPrimitiveRestartIndex(uint32_t index)
 // Decomposes a set of quads to a triangle list
 template <typename IndexType>
 void
-triifiedDraw(GX2PrimitiveMode::Mode mode,
+triifiedDraw(GX2PrimitiveMode::Value mode,
    uint32_t numVertices,
    IndexType *indices,
    uint32_t offset,
@@ -141,7 +141,7 @@ triifiedDraw(GX2PrimitiveMode::Mode mode,
       auto index_tr = byte_swap(*indices++);
       auto index_bl = byte_swap(*indices++);
       auto index_br = byte_swap(*indices++);
-      
+
       *indicesOut++ = index_tl;
       *indicesOut++ = index_tr;
       *indicesOut++ = index_bl;
@@ -155,7 +155,7 @@ triifiedDraw(GX2PrimitiveMode::Mode mode,
 }
 
 void
-_GX2DrawEx(GX2PrimitiveMode::Mode mode,
+_GX2DrawEx(GX2PrimitiveMode::Value mode,
           uint32_t numVertices,
           uint32_t offset,
           uint32_t numInstances)
@@ -173,7 +173,7 @@ _GX2DrawEx(GX2PrimitiveMode::Mode mode,
 }
 
 void
-GX2DrawEx(GX2PrimitiveMode::Mode mode,
+GX2DrawEx(GX2PrimitiveMode::Value mode,
    uint32_t numVertices,
    uint32_t offset,
    uint32_t numInstances)
@@ -182,9 +182,9 @@ GX2DrawEx(GX2PrimitiveMode::Mode mode,
 }
 
 void
-_GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
+_GX2DrawIndexedEx(GX2PrimitiveMode::Value mode,
                  uint32_t numVertices,
-                 GX2IndexType::Type indexType,
+                 GX2IndexType::Value indexType,
                  void *indices,
                  uint32_t offset,
                  uint32_t numInstances)
@@ -227,9 +227,9 @@ _GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
 }
 
 void
-GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
+GX2DrawIndexedEx(GX2PrimitiveMode::Value mode,
    uint32_t numVertices,
-   GX2IndexType::Type indexType,
+   GX2IndexType::Value indexType,
    void *indices,
    uint32_t offset,
    uint32_t numInstances)

@@ -8,8 +8,8 @@
 
 void
 GX2InitSampler(GX2Sampler *sampler,
-               GX2TexClampMode::Mode clampMode,
-               GX2TexXYFilterMode::Mode minMagFilterMode)
+               GX2TexClampMode::Value clampMode,
+               GX2TexXYFilterMode::Value minMagFilterMode)
 {
    // TODO: GX2InitSampler
 }

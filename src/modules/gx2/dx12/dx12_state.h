@@ -78,22 +78,22 @@ struct DXState {
       GX2GeometryShader *geomShader;
       GX2PixelSampler *pixelSampler[GX2_NUM_TEXTURE_UNIT];
       struct {
-         GX2LogicOp::Op logicOp;
+         GX2LogicOp::Value logicOp;
          uint8_t blendEnabled;
          float constColor[4];
          bool alphaTestEnabled;
-         GX2CompareFunction::Func alphaFunc;
+         GX2CompareFunction::Value alphaFunc;
          float alphaRef;
       } blendState;
       struct {
-         GX2BlendMode::Mode colorSrcBlend;
-         GX2BlendMode::Mode colorDstBlend;
-         GX2BlendCombineMode::Mode colorCombine;
-         GX2BlendMode::Mode alphaSrcBlend;
-         GX2BlendMode::Mode alphaDstBlend;
-         GX2BlendCombineMode::Mode alphaCombine;
+         GX2BlendMode::Value colorSrcBlend;
+         GX2BlendMode::Value colorDstBlend;
+         GX2BlendCombineMode::Value colorCombine;
+         GX2BlendMode::Value alphaSrcBlend;
+         GX2BlendMode::Value alphaDstBlend;
+         GX2BlendCombineMode::Value alphaCombine;
       } targetBlendState[8];
-      GX2ShaderMode::Mode shaderMode;
+      GX2ShaderMode::Value shaderMode;
       float vertUniforms[GX2_NUM_GPRS * 4];
       float pixUniforms[GX2_NUM_GPRS * 4];
       struct {
@@ -104,7 +104,7 @@ struct DXState {
          uint32_t size;
          const void *buffer;
       } pixUniformBlocks[16];
-      
+
    } state;
    static_assert(sizeof(ContextState) < sizeof(GX2ContextState::stateStore), "ContextState must be smaller than GX2ContextState::stateStore");
 
@@ -147,7 +147,7 @@ namespace dx {
          return;
       }
 
-      CommandListRef cl = { 
+      CommandListRef cl = {
          reinterpret_cast<uint8_t*>(dlData.buffer),
          dlData.size, dlData.offset };
       commandListAppend1<FnType, Func, Args...>(cl, args...);

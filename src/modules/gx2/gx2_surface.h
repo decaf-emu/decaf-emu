@@ -3,100 +3,31 @@
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
+#include "gx2_enum.h"
 
 #pragma pack(push, 1)
-
-namespace GX2SurfaceFormat
-{
-enum Format : uint32_t
-{
-   UNORM_R8 = 0x1,
-   UNORM_R8G8B8A8 = 0x1a,
-   UNORM_BC1 = 0x31,
-   UNORM_BC2 = 0x32,
-   UNORM_BC3 = 0x33,
-   UNORM_BC4 = 0x34,
-   UNORM_BC5 = 0x35,
-   First = 0x01,
-   Last = 0x83f,
-};
-}
-
-namespace GX2SurfaceDim
-{
-enum Dim : uint32_t
-{
-   Texture2D = 1,
-   Texture2DMSAA = 6,
-   Texture2DMSAAArray = 7
-};
-}
-
-namespace GX2AAMode
-{
-enum Mode : uint32_t
-{
-   Mode1X = 0, // GX2ResolveAAColorBuffer
-   First = 0,
-   Last = 3
-};
-}
-
-namespace GX2TileMode
-{
-enum Mode : uint32_t
-{
-   Default = 0,
-   LinearAligned = 1,
-   Tiled1DThin1 = 2,
-   Tiled1DThick = 3,
-   Tiled2DThin1 = 4,
-   Tiled2DThin2 = 5,
-   Tiled2DThin4 = 6,
-   Tiled2DThick = 7,
-   Tiled2BThin1 = 8,
-   Tiled2BThin2 = 9,
-   Tiled2BThin4 = 10,
-   Tiled2BThick = 11,
-   Tiled3DThin1 = 12,
-   Tiled3DThick = 13,
-   Tiled3BThin1 = 14,
-   Tiled3BThick = 15,
-   LinearSpecial = 16
-};
-}
-
-namespace GX2SurfaceUse
-{
-enum Use : uint32_t
-{
-   Texture     = 1 << 0,
-   ColorBuffer = 1 << 1,
-   DepthBuffer = 1 << 2,
-};
-}
 
 // GX2InitTextureRegs
 // G2XRCreateSurface
 struct GX2Surface
 {
-   be_val<GX2SurfaceDim::Dim> dim; // "GX2_SURFACE_DIM_2D_MSAA or GX2_SURFACE_DIM_2D_MSAA_ARRAY" = 0 or 6?
+   be_val<GX2SurfaceDim::Value> dim; // "GX2_SURFACE_DIM_2D_MSAA or GX2_SURFACE_DIM_2D_MSAA_ARRAY" = 0 or 6?
    be_val<uint32_t> width;
    be_val<uint32_t> height;
    be_val<uint32_t> depth;
    be_val<uint32_t> mipLevels; // GX2CalcSurfaceSizeAndAlignment -> _GX2CalcNumLevels
-   be_val<GX2SurfaceFormat::Format> format;
-   be_val<GX2AAMode::Mode> aa;
+   be_val<GX2SurfaceFormat::Value> format;
+   be_val<GX2AAMode::Value> aa;
    union // Is this correct?? Union???
    {
-      be_val<GX2SurfaceUse::Use> use; // GX2InitTextureRegs
+      be_val<GX2SurfaceUse::Value> use; // GX2InitTextureRegs
       be_val<uint32_t> resourceFlags; // G2XRCreateSurface
    };
    be_val<uint32_t> imageSize;
    be_ptr<void> image;
    be_val<uint32_t> mipmapSize; // sizeof mipPtr
    be_ptr<void> mipmaps;
-   be_val<GX2TileMode::Mode> tileMode;
+   be_val<GX2TileMode::Value> tileMode;
    be_val<uint32_t> swizzle; // GX2SetSurfaceSwizzle;
    be_val<uint32_t> alignment;
    be_val<uint32_t> pitch;

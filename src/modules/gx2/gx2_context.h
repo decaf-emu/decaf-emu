@@ -1,18 +1,10 @@
 #pragma once
 #include "modules/gx2/gx2_displaylist.h"
+#include "modules/gx2/gx2_enum.h"
 #include "modules/coreinit/coreinit_time.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "types.h"
-
-namespace GX2InvalidateMode
-{
-enum Mode : uint32_t
-{
-   First = 1,
-   Last = 0x1ff
-};
-}
 
 #pragma pack(push, 1)
 
@@ -57,4 +49,4 @@ void
 GX2SetContextState(GX2ContextState *state);
 
 void
-GX2Invalidate(GX2InvalidateMode::Mode mode, void *buffer, uint32_t size);
+GX2Invalidate(GX2InvalidateMode::Value mode, void *buffer, uint32_t size);

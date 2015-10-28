@@ -1,106 +1,9 @@
 #pragma once
+#include "modules/gx2/gx2_enum.h"
 #include "types.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
-
-namespace GX2FetchShaderType
-{
-enum Type : uint32_t
-{
-   First = 0,
-   Last = 3,
-};
-}
-
-namespace GX2TessellationMode
-{
-enum Mode : uint32_t
-{
-   First = 0,
-   Last = 2,
-};
-}
-
-namespace GX2AttribFormat
-{
-enum Format : uint32_t
-{
-   UNORM_8 = 0x0,
-   UNORM_8_8 = 0x04,
-   UNORM_8_8_8_8 = 0x0a,
-
-   UINT_8 = 0x100,
-   UINT_8_8 = 0x104,
-   UINT_8_8_8_8 = 0x10a,
-
-   SNORM_8 = 0x200,
-   SNORM_8_8 = 0x204,
-   SNORM_8_8_8_8 = 0x20a,
-
-   SINT_8 = 0x300,
-   SINT_8_8 = 0x304,
-   SINT_8_8_8_8 = 0x30a,
-
-   FLOAT_32 = 0x806,
-   FLOAT_32_32 = 0x80d,
-   FLOAT_32_32_32 = 0x811,
-   FLOAT_32_32_32_32 = 0x813,
-
-   First = 0,
-   Last = 0xa0f
-};
-}
-
-namespace GX2AttribIndexType
-{
-enum Type : uint32_t
-{
-   PerVertex = 0,
-   PerInstance = 1,
-   First = 0,
-   Last = 1,
-};
-}
-
-namespace GX2EndianSwapMode
-{
-enum Mode : uint32_t
-{
-   None = 0,
-   Default = 3,
-   First = 0,
-   Last = 3,
-};
-}
-
-namespace GX2ShaderMode
-{
-enum Mode : uint32_t
-{
-   GX2ShaderModeFirst = 0,
-   UniformRegister = 0,
-   UniformBlock = 1,
-   GeometryShader = 2,
-   GX2ShaderModeLast = 3
-};
-}
-
-namespace GX2UniformType
-{
-enum Type : uint32_t
-{
-   Int = 2,
-   Float = 4,
-   Float2 = 9,
-   Float3 = 10,
-   Float4 = 11,
-   Int2 = 15,
-   Int3 = 16,
-   Int4 = 17,
-   Matrix4x4 = 29,
-};
-}
 
 struct GX2FetchShader
 {
@@ -118,7 +21,7 @@ CHECK_SIZE(GX2FetchShader, 0x1c);
 struct GX2UniformVar
 {
    be_ptr<const char> name;
-   be_val<GX2UniformType::Type> type;
+   be_val<GX2UniformType::Value> type;
    be_val<uint32_t> count;
    be_val<uint32_t> offset;
    be_val<int32_t> block;
@@ -148,7 +51,7 @@ struct GX2VertexShader
    UNKNOWN(208);
    be_val<uint32_t> size;
    be_ptr<uint8_t> data;
-   be_val<GX2ShaderMode::Mode> mode;
+   be_val<GX2ShaderMode::Value> mode;
 
    be_val<uint32_t> uniformBlockCount;
    be_ptr<GX2UniformBlock> uniformBlocks;
@@ -186,7 +89,7 @@ struct GX2PixelShader
    UNKNOWN(164);
    be_val<uint32_t> size;
    be_ptr<uint8_t> data;
-   be_val<GX2ShaderMode::Mode> mode;
+   be_val<GX2ShaderMode::Value> mode;
 
    be_val<uint32_t> uniformBlockCount;
    be_ptr<GX2UniformBlock> uniformBlocks;
@@ -229,11 +132,11 @@ struct GX2AttribStream
    be_val<uint32_t> location;
    be_val<uint32_t> buffer;
    be_val<uint32_t> offset;
-   be_val<GX2AttribFormat::Format> format;
-   be_val<GX2AttribIndexType::Type> type;
+   be_val<GX2AttribFormat::Value> format;
+   be_val<GX2AttribIndexType::Value> type;
    be_val<uint32_t> aluDivisor;
    be_val<uint32_t> mask;
-   be_val<GX2EndianSwapMode::Mode> endianSwap;
+   be_val<GX2EndianSwapMode::Value> endianSwap;
 };
 CHECK_OFFSET(GX2AttribStream, 0x0, location);
 CHECK_OFFSET(GX2AttribStream, 0x4, buffer);
@@ -255,16 +158,16 @@ GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize);
 
 uint32_t
 GX2CalcFetchShaderSizeEx(uint32_t attribs,
-                         GX2FetchShaderType::Type fetchShaderType,
-                         GX2TessellationMode::Mode tesellationMode);
+                         GX2FetchShaderType::Value fetchShaderType,
+                         GX2TessellationMode::Value tesellationMode);
 
 void
 GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
                      void *buffer,
                      uint32_t count,
                      GX2AttribStream *attribs,
-                     GX2FetchShaderType::Type type,
-                     GX2TessellationMode::Mode tessMode);
+                     GX2FetchShaderType::Value type,
+                     GX2TessellationMode::Value tessMode);
 
 void
 GX2SetFetchShader(GX2FetchShader *shader);
@@ -294,7 +197,7 @@ void
 GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data);
 
 void
-GX2SetShaderModeEx(GX2ShaderMode::Mode mode,
+GX2SetShaderModeEx(GX2ShaderMode::Value mode,
                    uint32_t unk1, uint32_t unk2, uint32_t unk3,
                    uint32_t unk4, uint32_t unk5, uint32_t unk6);
 

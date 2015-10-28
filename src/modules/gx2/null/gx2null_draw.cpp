@@ -16,7 +16,7 @@ GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
                   float red, float green, float blue, float alpha,
                   float depth,
                   uint8_t unk1,
-                  GX2ClearFlags::Flags flags)
+                  GX2ClearFlags::Value flags)
 {
 }
 
@@ -30,7 +30,7 @@ void
 GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
                        float depth,
                        uint8_t stencil,
-                       GX2ClearFlags::Flags unk2)
+                       GX2ClearFlags::Value unk2)
 {
 }
 
@@ -53,7 +53,7 @@ GX2DrawEx(GX2PrimitiveMode::Mode mode,
 void
 GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
    uint32_t numVertices,
-   GX2IndexType::Type indexType,
+   GX2IndexType::Value indexType,
    void *indices,
    uint32_t offset,
    uint32_t numInstances)

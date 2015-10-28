@@ -34,9 +34,9 @@ GX2SetDRCEnable(BOOL enable)
 }
 
 void
-GX2CalcTVSize(GX2TVRenderMode::Mode tvRenderMode,
-              GX2SurfaceFormat::Format surfaceFormat,
-              GX2BufferingMode::Mode bufferingMode,
+GX2CalcTVSize(GX2TVRenderMode::Value tvRenderMode,
+              GX2SurfaceFormat::Value surfaceFormat,
+              GX2BufferingMode::Value bufferingMode,
               be_val<uint32_t> *size,
               be_val<uint32_t> *unkOut)
 {
@@ -45,9 +45,9 @@ GX2CalcTVSize(GX2TVRenderMode::Mode tvRenderMode,
 }
 
 void
-GX2CalcDRCSize(GX2DrcRenderMode::Mode drcRenderMode,
-               GX2SurfaceFormat::Format surfaceFormat,
-               GX2BufferingMode::Mode bufferingMode,
+GX2CalcDRCSize(GX2DrcRenderMode::Value drcRenderMode,
+               GX2SurfaceFormat::Value surfaceFormat,
+               GX2BufferingMode::Value bufferingMode,
                be_val<uint32_t> *size,
                be_val<uint32_t> *unkOut)
 {
@@ -58,9 +58,9 @@ GX2CalcDRCSize(GX2DrcRenderMode::Mode drcRenderMode,
 void
 GX2SetTVBuffer(void *buffer,
                uint32_t size,
-               GX2TVRenderMode::Mode tvRenderMode,
-               GX2SurfaceFormat::Format surfaceFormat,
-               GX2BufferingMode::Mode bufferingMode)
+               GX2TVRenderMode::Value tvRenderMode,
+               GX2SurfaceFormat::Value surfaceFormat,
+               GX2BufferingMode::Value bufferingMode)
 {
    int tvWidth = 0, tvHeight = 0;
 
@@ -71,16 +71,16 @@ GX2SetTVBuffer(void *buffer,
       gDX.tvScanBuffer->release();
    }
 
-   if (tvRenderMode == GX2TVRenderMode::STD480p) {
+   if (tvRenderMode == GX2TVRenderMode::Standard480p) {
       tvWidth = 640;
       tvHeight = 480;
-   } else if (tvRenderMode == GX2TVRenderMode::WIDE480p) {
+   } else if (tvRenderMode == GX2TVRenderMode::Wide480p) {
       tvWidth = 704;
       tvHeight = 480;
-   } else if (tvRenderMode == GX2TVRenderMode::WIDE720p) {
+   } else if (tvRenderMode == GX2TVRenderMode::Wide720p) {
       tvWidth = 1280;
       tvHeight = 720;
-   } else if (tvRenderMode == GX2TVRenderMode::WIDE1080p) {
+   } else if (tvRenderMode == GX2TVRenderMode::Wide1080p) {
       tvWidth = 1920;
       tvHeight = 1080;
    } else {
@@ -92,9 +92,9 @@ GX2SetTVBuffer(void *buffer,
 
 void
 GX2SetDRCBuffer(void *buffer, uint32_t size,
-                GX2DrcRenderMode::Mode drcRenderMode,
-                GX2SurfaceFormat::Format surfaceFormat,
-                GX2BufferingMode::Mode bufferingMode)
+                GX2DrcRenderMode::Value drcRenderMode,
+                GX2SurfaceFormat::Value surfaceFormat,
+                GX2BufferingMode::Value bufferingMode)
 {
    // TODO: GX2SetDRCBuffer
    if (!gDX.drcScanBuffer) {
@@ -133,14 +133,14 @@ GX2SetSwapInterval(uint32_t interval)
    gSwapInterval = interval;
 }
 
-GX2TVScanMode::Mode
+GX2TVScanMode::Value
 GX2GetSystemTVScanMode()
 {
    // TODO: GX2GetSystemTVScanMode
    return GX2TVScanMode::Last;
 }
 
-GX2DrcRenderMode::Mode
+GX2DrcRenderMode::Value
 GX2GetSystemDRCMode()
 {
    return GX2DrcRenderMode::Single;
@@ -182,7 +182,7 @@ GX2GetSwapStatus(be_val<uint32_t> *swapCount,
 }
 
 BOOL
-GX2GetLastFrame(GX2ScanTarget::Target scanTarget,
+GX2GetLastFrame(GX2ScanTarget::Value scanTarget,
                 GX2Texture *texture)
 {
    // TODO: GX2GetLastFrame
@@ -190,7 +190,7 @@ GX2GetLastFrame(GX2ScanTarget::Target scanTarget,
 }
 
 BOOL
-GX2GetLastFrameGamma(GX2ScanTarget::Target scanTarget,
+GX2GetLastFrameGamma(GX2ScanTarget::Value scanTarget,
                      be_val<float> *gamma)
 {
    // TODO: GX2GetLastFrameGamma
@@ -199,7 +199,7 @@ GX2GetLastFrameGamma(GX2ScanTarget::Target scanTarget,
 
 void
 GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer,
-                               GX2ScanTarget::Target scanTarget)
+                               GX2ScanTarget::Value scanTarget)
 {
    // TODO: GX2CopyColorBufferToScanBuffer
 

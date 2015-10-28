@@ -1,69 +1,12 @@
 #pragma once
 #include "modules/coreinit/coreinit_time.h"
+#include "modules/gx2/gx2_enum.h"
 #include "modules/gx2/gx2_surface.h"
 #include "types.h"
 #include "utils/be_val.h"
 
 struct GX2Texture;
 struct GX2ColorBuffer;
-
-namespace GX2DrcRenderMode
-{
-enum Mode : uint32_t
-{
-   First = 0,
-   Disabled = 0,
-   Single = 1,
-   Last = 3
-};
-}
-
-namespace GX2TVRenderMode
-{
-enum Mode : uint32_t
-{
-   Unk1 = 0,
-   STD480p = 1,
-   WIDE480p = 2,
-   WIDE720p = 3,
-   Unk2 = 4,
-   WIDE1080p = 5,
-   First = 0,
-   Last = 5
-};
-}
-
-namespace GX2BufferingMode
-{
-enum Mode : uint32_t
-{
-   First = 1,
-   Last = 4
-};
-}
-
-namespace GX2TVScanMode
-{
-enum Mode : uint32_t
-{
-   None = 0,
-   First = 0,
-   Last = 7
-};
-}
-
-namespace GX2ScanTarget
-{
-enum Target
-{
-   TV = 0x01,
-   UNK1 = 0x02,
-   DRC = 0x04,
-   Unk2 = 0x08,
-   First = 0x01,
-   Last = 0x08
-};
-}
 
 void
 GX2SetTVEnable(BOOL enable);
@@ -72,32 +15,32 @@ void
 GX2SetDRCEnable(BOOL enable);
 
 void
-GX2CalcTVSize(GX2TVRenderMode::Mode tvRenderMode,
-              GX2SurfaceFormat::Format surfaceFormat,
-              GX2BufferingMode::Mode bufferingMode,
+GX2CalcTVSize(GX2TVRenderMode::Value tvRenderMode,
+              GX2SurfaceFormat::Value surfaceFormat,
+              GX2BufferingMode::Value bufferingMode,
               be_val<uint32_t> *size,
               be_val<uint32_t> *unkOut);
 
 void
-GX2CalcDRCSize(GX2DrcRenderMode::Mode drcRenderMode,
-               GX2SurfaceFormat::Format surfaceFormat,
-               GX2BufferingMode::Mode bufferingMode,
+GX2CalcDRCSize(GX2DrcRenderMode::Value drcRenderMode,
+               GX2SurfaceFormat::Value surfaceFormat,
+               GX2BufferingMode::Value bufferingMode,
                be_val<uint32_t> *size,
                be_val<uint32_t> *unkOut);
 
 void
 GX2SetTVBuffer(void *buffer,
                uint32_t size,
-               GX2TVRenderMode::Mode tvRenderMode,
-               GX2SurfaceFormat::Format surfaceFormat,
-               GX2BufferingMode::Mode bufferingMode);
+               GX2TVRenderMode::Value tvRenderMode,
+               GX2SurfaceFormat::Value surfaceFormat,
+               GX2BufferingMode::Value bufferingMode);
 
 void
 GX2SetDRCBuffer(void *buffer,
                 uint32_t size,
-                GX2DrcRenderMode::Mode drcRenderMode,
-                GX2SurfaceFormat::Format surfaceFormat,
-                GX2BufferingMode::Mode bufferingMode);
+                GX2DrcRenderMode::Value drcRenderMode,
+                GX2SurfaceFormat::Value surfaceFormat,
+                GX2BufferingMode::Value bufferingMode);
 
 void
 GX2SetTVScale(uint32_t x, uint32_t y);
@@ -111,10 +54,10 @@ GX2GetSwapInterval();
 void
 GX2SetSwapInterval(uint32_t interval);
 
-GX2TVScanMode::Mode
+GX2TVScanMode::Value
 GX2GetSystemTVScanMode();
 
-GX2DrcRenderMode::Mode
+GX2DrcRenderMode::Value
 GX2GetSystemDRCMode();
 
 BOOL
@@ -136,13 +79,13 @@ GX2GetSwapStatus(be_val<uint32_t> *swapCount,
                  be_val<OSTime> *lastVsync);
 
 BOOL
-GX2GetLastFrame(GX2ScanTarget::Target scanTarget, GX2Texture *texture);
+GX2GetLastFrame(GX2ScanTarget::Value scanTarget, GX2Texture *texture);
 
 BOOL
-GX2GetLastFrameGamma(GX2ScanTarget::Target scanTarget, be_val<float> *gamma);
+GX2GetLastFrameGamma(GX2ScanTarget::Value scanTarget, be_val<float> *gamma);
 
 void
-GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget::Target scanTarget);
+GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget::Value scanTarget);
 
 void
 GX2VsyncCallback();

@@ -49,7 +49,7 @@ GX2GetRetiredTimeStamp()
 }
 
 void
-GX2Invalidate(GX2InvalidateMode::Mode mode, void *buffer, uint32_t size)
+GX2Invalidate(GX2InvalidateMode::Value mode, void *buffer, uint32_t size)
 {
    // TODO: GX2Invalidate
 }
@@ -106,8 +106,8 @@ _GX2SetContextState(GX2ContextState *state)
 void
 GX2SetContextState(GX2ContextState *state)
 {
-   // This might not be right, it's possible that we need 
-   //   to transfer the whole GX2ContextState into the display 
+   // This might not be right, it's possible that we need
+   //   to transfer the whole GX2ContextState into the display
    //   list for later rather than just referring to it...
    DX_DLCALL(_GX2SetContextState, state);
 }

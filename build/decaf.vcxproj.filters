@@ -639,6 +639,9 @@
     <ClCompile Include="..\src\utils\log.cpp">
       <Filter>Source Files\util</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1189,6 +1192,12 @@
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_shadir.h">
       <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_enum.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_enum_string.h">
+      <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

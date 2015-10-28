@@ -98,7 +98,7 @@
     <ClCompile Include="..\src\gpu\latte_blockify.cpp" />
     <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
     <ClCompile Include="..\src\gpu\latte_decoder.cpp" />
-    <ClCompile Include="..\tools\gsh-disassemble.cpp" />
+    <ClCompile Include="..\tools\gsh-disassemble\gsh-disassemble.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />

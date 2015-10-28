@@ -44,7 +44,7 @@ GX2SetPolygonControl(uint32_t unk1,
 }
 
 void
-GX2SetColorControl(GX2LogicOp::Op logicOp,
+GX2SetColorControl(GX2LogicOp::Value logicOp,
                    uint8_t blendEnabled,
                    uint32_t unk2,
                    uint32_t unk3)
@@ -52,14 +52,14 @@ GX2SetColorControl(GX2LogicOp::Op logicOp,
 }
 
 void
-GX2SetBlendControl(GX2RenderTarget::Target target,
-                   GX2BlendMode::Mode colorSrcBlend,
-                   GX2BlendMode::Mode colorDstBlend,
-                   GX2BlendCombineMode::Mode colorCombine,
+GX2SetBlendControl(GX2RenderTarget::Value target,
+                   GX2BlendMode::Value colorSrcBlend,
+                   GX2BlendMode::Value colorDstBlend,
+                   GX2BlendCombineMode::Value colorCombine,
                    uint32_t unk1,
-                   GX2BlendMode::Mode alphaSrcBlend,
-                   GX2BlendMode::Mode alphaDstBlend,
-                   GX2BlendCombineMode::Mode alphaCombine)
+                   GX2BlendMode::Value alphaSrcBlend,
+                   GX2BlendMode::Value alphaDstBlend,
+                   GX2BlendCombineMode::Value alphaCombine)
 {
 }
 
@@ -73,25 +73,25 @@ GX2SetBlendConstantColor(float red,
 
 void
 GX2SetAlphaTest(BOOL enabled,
-                GX2CompareFunction::Func compare,
+                GX2CompareFunction::Value compare,
                 float reference)
 {
 }
 
 void
-GX2SetTargetChannelMasks(GX2ChannelMask::Mask target0,
-                         GX2ChannelMask::Mask target1,
-                         GX2ChannelMask::Mask target2,
-                         GX2ChannelMask::Mask target3,
-                         GX2ChannelMask::Mask target4,
-                         GX2ChannelMask::Mask target5,
-                         GX2ChannelMask::Mask target6)
+GX2SetTargetChannelMasks(GX2ChannelMask::Value target0,
+                         GX2ChannelMask::Value target1,
+                         GX2ChannelMask::Value target2,
+                         GX2ChannelMask::Value target3,
+                         GX2ChannelMask::Value target4,
+                         GX2ChannelMask::Value target5,
+                         GX2ChannelMask::Value target6)
 {
 }
 
 void
 GX2SetAlphaToMask(BOOL enabled,
-                  GX2AlphaToMaskMode::Mode mode)
+                  GX2AlphaToMaskMode::Value mode)
 {
 }
 

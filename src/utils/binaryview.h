@@ -98,6 +98,13 @@ public:
       mPosition += size;
    }
 
+   void
+   read(std::vector<uint8_t> &buffer, std::size_t size)
+   {
+      buffer.resize(size);
+      read(buffer.data(), size);
+   }
+
    operator gsl::array_view<uint8_t>() const
    {
       return gsl::array_view<uint8_t> { mData };

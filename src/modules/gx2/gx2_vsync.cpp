@@ -28,7 +28,7 @@ struct EventCallbackData
 };
 
 static EventCallbackData
-gEventCallbacks[GX2EventCallback::Max];
+gEventCallbacks[GX2EventType::Last];
 
 void
 _GX2InitVsync()
@@ -42,18 +42,18 @@ _GX2InitVsync()
 }
 
 void
-GX2SetEventCallback(GX2EventCallback::Type type, GX2EventCallbackFunction func, void *userData)
+GX2SetEventCallback(GX2EventType::Value type, GX2EventCallbackFunction func, void *userData)
 {
-   if (type < GX2EventCallback::Max) {
+   if (type < GX2EventType::Last) {
       gEventCallbacks[type].func = func;
       gEventCallbacks[type].data = userData;
    }
 }
 
 void
-GX2GetEventCallback(GX2EventCallback::Type type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut)
+GX2GetEventCallback(GX2EventType::Value type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut)
 {
-   if (type < GX2EventCallback::Max) {
+   if (type < GX2EventType::Last) {
       *funcOut = gEventCallbacks[type].func;
       *userDataOut = gEventCallbacks[type].data;
    } else {
@@ -73,10 +73,10 @@ VsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
    gLastVsync = OSGetSystemTime();
    OSWakeupThread(gVsyncThreadQueue);
-   auto callback = gEventCallbacks[GX2EventCallback::Vsync];
+   auto callback = gEventCallbacks[GX2EventType::Vsync];
 
    if (callback.func) {
-      callback.func(GX2EventCallback::Vsync, callback.data);
+      callback.func(GX2EventType::Vsync, callback.data);
    }
 }
 

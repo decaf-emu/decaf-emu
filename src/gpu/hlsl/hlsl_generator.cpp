@@ -18,8 +18,8 @@ static bool generateLocals(const latte::Shader &shader, fmt::MemoryWriter &outpu
 static bool generateProlog(const char *functionName, const char *inputStruct, const char *outputStruct, fmt::MemoryWriter &output);
 static bool generateExports(const latte::Shader &shader, fmt::MemoryWriter &output);
 static bool generateAttribs(const gsl::array_view<GX2AttribStream> &attribs, fmt::MemoryWriter &output);
-static int getGX2AttribFormatElems(GX2AttribFormat::Format format);
-static std::string getGX2AttribFormatType(GX2AttribFormat::Format format);
+static int getGX2AttribFormatElems(GX2AttribFormat::Value format);
+static std::string getGX2AttribFormatType(GX2AttribFormat::Value format);
 
 static std::map<latte::cf::inst, TranslateFuncCF> sGeneratorTableCf;
 static std::map<latte::alu::op2, TranslateFuncALU> sGeneratorTableAluOp2;
@@ -332,7 +332,7 @@ translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks)
 }
 
 static std::string
-getGX2AttribFormatType(GX2AttribFormat::Format format)
+getGX2AttribFormatType(GX2AttribFormat::Value format)
 {
    switch (format) {
    case GX2AttribFormat::UNORM_8:
@@ -374,7 +374,7 @@ getGX2AttribFormatType(GX2AttribFormat::Format format)
 }
 
 static int
-getGX2AttribFormatElems(GX2AttribFormat::Format format)
+getGX2AttribFormatElems(GX2AttribFormat::Value format)
 {
    switch (format) {
    case GX2AttribFormat::UNORM_8:
@@ -584,7 +584,7 @@ generateBody(latte::Shader &shader, std::string &body)
 }
 
 static size_t
-getUniformTypeSlots(GX2UniformType::Type type)
+getUniformTypeSlots(GX2UniformType::Value type)
 {
    switch (type) {
    case GX2UniformType::Int:

@@ -1,28 +1,11 @@
 #pragma once
+#include "modules/gx2/gx2_enum.h"
 #include "modules/gx2/gx2_surface.h"
 #include "types.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 
 struct GX2Sampler;
-
-namespace GX2TexClampMode
-{
-enum Mode
-{
-   First = 0,
-   Last = 7
-};
-}
-
-namespace GX2TexXYFilterMode
-{
-enum Mode
-{
-   First = 0,
-   Last = 1
-};
-}
 
 #pragma pack(push, 1)
 
@@ -46,8 +29,8 @@ CHECK_SIZE(GX2Texture, 0x9c);
 
 void
 GX2InitSampler(GX2Sampler *sampler,
-               GX2TexClampMode::Mode clampMode,
-               GX2TexXYFilterMode::Mode minMagFilterMode);
+               GX2TexClampMode::Value clampMode,
+               GX2TexXYFilterMode::Value minMagFilterMode);
 
 void
 GX2InitSamplerLOD(GX2Sampler *sampler, float unk1, float unk2, float unk3);

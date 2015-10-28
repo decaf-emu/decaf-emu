@@ -51,7 +51,7 @@ GX2SetPolygonControl(uint32_t unk1,
 }
 
 void
-_GX2SetColorControl(GX2LogicOp::Op logicOp,
+_GX2SetColorControl(GX2LogicOp::Value logicOp,
    uint8_t blendEnabled,
    uint32_t unk2,
    uint32_t unk3)
@@ -62,7 +62,7 @@ _GX2SetColorControl(GX2LogicOp::Op logicOp,
 }
 
 void
-GX2SetColorControl(GX2LogicOp::Op logicOp,
+GX2SetColorControl(GX2LogicOp::Value logicOp,
                    uint8_t blendEnabled,
                    uint32_t unk2,
                    uint32_t unk3)
@@ -71,14 +71,14 @@ GX2SetColorControl(GX2LogicOp::Op logicOp,
 }
 
 void
-_GX2SetBlendControl(GX2RenderTarget::Target target,
-                   GX2BlendMode::Mode colorSrcBlend,
-                   GX2BlendMode::Mode colorDstBlend,
-                   GX2BlendCombineMode::Mode colorCombine,
+_GX2SetBlendControl(GX2RenderTarget::Value target,
+                   GX2BlendMode::Value colorSrcBlend,
+                   GX2BlendMode::Value colorDstBlend,
+                   GX2BlendCombineMode::Value colorCombine,
                    uint32_t unk1,
-                   GX2BlendMode::Mode alphaSrcBlend,
-                   GX2BlendMode::Mode alphaDstBlend,
-                   GX2BlendCombineMode::Mode alphaCombine)
+                   GX2BlendMode::Value alphaSrcBlend,
+                   GX2BlendMode::Value alphaDstBlend,
+                   GX2BlendCombineMode::Value alphaCombine)
 {
    auto &blendState = gDX.state.targetBlendState[target];
    blendState.colorSrcBlend = colorSrcBlend;
@@ -90,17 +90,17 @@ _GX2SetBlendControl(GX2RenderTarget::Target target,
 }
 
 void
-GX2SetBlendControl(GX2RenderTarget::Target target,
-   GX2BlendMode::Mode colorSrcBlend,
-   GX2BlendMode::Mode colorDstBlend,
-   GX2BlendCombineMode::Mode colorCombine,
+GX2SetBlendControl(GX2RenderTarget::Value target,
+   GX2BlendMode::Value colorSrcBlend,
+   GX2BlendMode::Value colorDstBlend,
+   GX2BlendCombineMode::Value colorCombine,
    uint32_t unk1,
-   GX2BlendMode::Mode alphaSrcBlend,
-   GX2BlendMode::Mode alphaDstBlend,
-   GX2BlendCombineMode::Mode alphaCombine)
+   GX2BlendMode::Value alphaSrcBlend,
+   GX2BlendMode::Value alphaDstBlend,
+   GX2BlendCombineMode::Value alphaCombine)
 {
-   DX_DLCALL(_GX2SetBlendControl, 
-      target, colorSrcBlend, colorDstBlend, colorCombine, 
+   DX_DLCALL(_GX2SetBlendControl,
+      target, colorSrcBlend, colorDstBlend, colorCombine,
       unk1, alphaSrcBlend, alphaDstBlend, alphaCombine);
 }
 
@@ -131,7 +131,7 @@ GX2SetBlendConstantColor(float red,
 
 void
 _GX2SetAlphaTest(BOOL enabled,
-                GX2CompareFunction::Func compare,
+                GX2CompareFunction::Value compare,
                 float reference)
 {
    // TODO: Implement this with the shader compiler
@@ -143,20 +143,20 @@ _GX2SetAlphaTest(BOOL enabled,
 
 void
 GX2SetAlphaTest(BOOL enabled,
-   GX2CompareFunction::Func compare,
+   GX2CompareFunction::Value compare,
    float reference)
 {
    DX_DLCALL(_GX2SetAlphaTest, enabled, compare, reference);
 }
 
 void
-GX2SetTargetChannelMasks(GX2ChannelMask::Mask target0,
-                         GX2ChannelMask::Mask target1,
-                         GX2ChannelMask::Mask target2,
-                         GX2ChannelMask::Mask target3,
-                         GX2ChannelMask::Mask target4,
-                         GX2ChannelMask::Mask target5,
-                         GX2ChannelMask::Mask target6)
+GX2SetTargetChannelMasks(GX2ChannelMask::Value target0,
+                         GX2ChannelMask::Value target1,
+                         GX2ChannelMask::Value target2,
+                         GX2ChannelMask::Value target3,
+                         GX2ChannelMask::Value target4,
+                         GX2ChannelMask::Value target5,
+                         GX2ChannelMask::Value target6)
 {
    // TODO: GX2SetTargetChannelMasks
    gLog->debug("unimplemented GX2SetTargetChannelMasks");
@@ -164,7 +164,7 @@ GX2SetTargetChannelMasks(GX2ChannelMask::Mask target0,
 
 void
 GX2SetAlphaToMask(BOOL enabled,
-                  GX2AlphaToMaskMode::Mode mode)
+                  GX2AlphaToMaskMode::Value mode)
 {
    // TODO: GX2SetAlphaToMask
    gLog->debug("unimplemented GX2SetAlphaToMask");

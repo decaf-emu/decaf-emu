@@ -3,11 +3,11 @@
 #include "modules/gx2/gx2_surface.h"
 #include "utils/align.h"
 
-static const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Format format) {
+static const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Value format) {
    switch (format) {
    case GX2SurfaceFormat::UNORM_R8:
       return DXGI_FORMAT_R8_UNORM;
-   case GX2SurfaceFormat::UNORM_R8G8B8A8:
+   case GX2SurfaceFormat::UNORM_R8_G8_B8_A8:
       return DXGI_FORMAT_R8G8B8A8_UNORM;
    case GX2SurfaceFormat::UNORM_BC1:
       return DXGI_FORMAT_BC1_UNORM;
@@ -24,7 +24,7 @@ static const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Format format) {
    };
 };
 
-static const D3D12_BLEND dx12MakeBlend(GX2BlendMode::Mode mode) {
+static const D3D12_BLEND dx12MakeBlend(GX2BlendMode::Value mode) {
    switch (mode) {
    case GX2BlendMode::Zero:
       return D3D12_BLEND_ZERO;
@@ -65,7 +65,7 @@ static const D3D12_BLEND dx12MakeBlend(GX2BlendMode::Mode mode) {
    }
 }
 
-static const D3D12_PRIMITIVE_TOPOLOGY dx12MakePrimitiveTopology(GX2PrimitiveMode::Mode mode) {
+static const D3D12_PRIMITIVE_TOPOLOGY dx12MakePrimitiveTopology(GX2PrimitiveMode::Value mode) {
    switch (mode) {
    case GX2PrimitiveMode::Triangles:
       return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -79,7 +79,7 @@ static const D3D12_PRIMITIVE_TOPOLOGY dx12MakePrimitiveTopology(GX2PrimitiveMode
    }
 }
 
-static const D3D12_BLEND_OP dx12MakeBlendOp(GX2BlendCombineMode::Mode op) {
+static const D3D12_BLEND_OP dx12MakeBlendOp(GX2BlendCombineMode::Value op) {
    switch (op) {
    case GX2BlendCombineMode::Add:
       return D3D12_BLEND_OP_ADD;
@@ -96,7 +96,7 @@ static const D3D12_BLEND_OP dx12MakeBlendOp(GX2BlendCombineMode::Mode op) {
    }
 }
 
-static const uint32_t dx12FixSize(GX2SurfaceFormat::Format format, uint32_t size) {
+static const uint32_t dx12FixSize(GX2SurfaceFormat::Value format, uint32_t size) {
    switch (format) {
    case GX2SurfaceFormat::UNORM_BC1:
    case GX2SurfaceFormat::UNORM_BC2:

@@ -499,7 +499,7 @@ template<typename Type, int N>
 void stridedMemcpy2(
    uint8_t *src, uint8_t *dest, size_t size,
    uint32_t stride, uint32_t offset,
-   GX2EndianSwapMode::Mode endianess) {
+   GX2EndianSwapMode::Value endianess) {
    if (endianess == GX2EndianSwapMode::Default || endianess == GX2EndianSwapMode::None) {
       return stridedMemcpy3<Type, N, true>(src, dest, size, stride, offset);
    } else {
@@ -510,7 +510,7 @@ void stridedMemcpy2(
 void stridedMemcpy(
    uint8_t *src, uint8_t *dest, size_t size,
    uint32_t stride, uint32_t offset,
-   GX2EndianSwapMode::Mode endianess, GX2AttribFormat::Format format) {
+   GX2EndianSwapMode::Value endianess, GX2AttribFormat::Value format) {
    switch (format) {
    case GX2AttribFormat::UNORM_8:
       return stridedMemcpy2<uint8_t, 1>(src, dest, size, stride, offset, endianess);
@@ -594,7 +594,7 @@ void dx::updateBuffers()
          gDX.commandList->IASetVertexBuffers(i, 1, &bufferList[i]);
       }
    }
-   
+
    if (gDX.state.shaderMode == GX2ShaderMode::UniformRegister) {
       {
          auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), nullptr, 256);

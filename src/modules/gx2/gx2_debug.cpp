@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <Windows.h>
 
+#include "gx2_enum_string.h"
 #include "gx2_texture.h"
 #include "gx2_shaders.h"
 #include "gpu/latte.h"
@@ -46,113 +47,6 @@ static void
 GX2CreateDumpDirectory()
 {
    CreateDirectory(TEXT("dump"), NULL);
-}
-
-static std::string
-GX2EnumAsString(GX2SurfaceDim::Dim dim)
-{
-   switch (dim) {
-   case GX2SurfaceDim::Texture2D:
-      return "Texture2D";
-   case GX2SurfaceDim::Texture2DMSAA:
-      return "Texture2DMSAA";
-   case GX2SurfaceDim::Texture2DMSAAArray:
-      return "Texture2DMSAAArray";
-   default:
-      return std::to_string(static_cast<int>(dim));
-   }
-}
-
-static std::string
-GX2EnumAsString(GX2SurfaceFormat::Format format)
-{
-   switch (format) {
-   case GX2SurfaceFormat::UNORM_R8G8B8A8:
-      return "R8G8B8A8";
-   default:
-      return std::to_string(static_cast<int>(format));
-   }
-}
-
-static std::string
-GX2EnumAsString(GX2AAMode::Mode mode)
-{
-   switch (mode) {
-   case GX2AAMode::Mode1X:
-      return "Mode1X";
-   default:
-      return std::to_string(static_cast<int>(mode));
-   }
-}
-
-static std::string
-GX2EnumAsString(GX2SurfaceUse::Use use)
-{
-   switch (use) {
-   case GX2SurfaceUse::Texture:
-      return "Texture";
-   case GX2SurfaceUse::ColorBuffer:
-      return "ColorBuffer";
-   case GX2SurfaceUse::DepthBuffer:
-      return "DepthBuffer";
-   default:
-      return std::to_string(static_cast<int>(use));
-   }
-}
-
-static std::string
-GX2EnumAsString(GX2TileMode::Mode mode)
-{
-   switch (mode) {
-   case GX2TileMode::Default:
-      return "Default";
-   case GX2TileMode::LinearSpecial:
-      return "LinearSpecial";
-   default:
-      return std::to_string(static_cast<int>(mode));
-   }
-}
-
-static std::string
-GX2EnumAsString(GX2ShaderMode::Mode mode)
-{
-   switch (mode) {
-   case GX2ShaderMode::UniformRegister:
-      return "UniformRegister";
-   case GX2ShaderMode::UniformBlock:
-      return "UniformBlock";
-   case GX2ShaderMode::GeometryShader:
-      return "GeometryShader";
-   default:
-      return std::to_string(static_cast<int>(mode));
-   }
-}
-
-static std::string
-GX2EnumAsString(GX2UniformType::Type type)
-{
-   switch (type) {
-   case GX2UniformType::Int:
-      return "Int";
-   case GX2UniformType::Int2:
-      return "Int2";
-   case GX2UniformType::Int3:
-      return "Int3";
-   case GX2UniformType::Int4:
-      return "Int4";
-   case GX2UniformType::Float:
-      return "Float";
-   case GX2UniformType::Float2:
-      return "Float2";
-   case GX2UniformType::Float3:
-      return "Float3";
-   case GX2UniformType::Float4:
-      return "Float4";
-   case GX2UniformType::Matrix4x4:
-      return "Matrix4x4";
-   default:
-      return std::to_string(static_cast<int>(type));
-   }
 }
 
 static std::string

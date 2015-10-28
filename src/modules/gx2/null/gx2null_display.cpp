@@ -26,9 +26,9 @@ GX2SetDRCEnable(BOOL enable)
 }
 
 void
-GX2CalcTVSize(GX2TVRenderMode::Mode tvRenderMode,
-              GX2SurfaceFormat::Format surfaceFormat,
-              GX2BufferingMode::Mode bufferingMode,
+GX2CalcTVSize(GX2TVRenderMode::Value tvRenderMode,
+              GX2SurfaceFormat::Value surfaceFormat,
+              GX2BufferingMode::Value bufferingMode,
               be_val<uint32_t> *size,
               be_val<uint32_t> *unkOut)
 {
@@ -36,9 +36,9 @@ GX2CalcTVSize(GX2TVRenderMode::Mode tvRenderMode,
 }
 
 void
-GX2CalcDRCSize(GX2DrcRenderMode::Mode drcRenderMode,
-               GX2SurfaceFormat::Format surfaceFormat,
-               GX2BufferingMode::Mode bufferingMode,
+GX2CalcDRCSize(GX2DrcRenderMode::Value drcRenderMode,
+               GX2SurfaceFormat::Value surfaceFormat,
+               GX2BufferingMode::Value bufferingMode,
                be_val<uint32_t> *size,
                be_val<uint32_t> *unkOut)
 {
@@ -48,18 +48,18 @@ GX2CalcDRCSize(GX2DrcRenderMode::Mode drcRenderMode,
 void
 GX2SetTVBuffer(void *buffer,
                uint32_t size,
-               GX2TVRenderMode::Mode tvRenderMode,
-               GX2SurfaceFormat::Format surfaceFormat,
-               GX2BufferingMode::Mode bufferingMode)
+               GX2TVRenderMode::Value tvRenderMode,
+               GX2SurfaceFormat::Value surfaceFormat,
+               GX2BufferingMode::Value bufferingMode)
 {
 }
 
 void
 GX2SetDRCBuffer(void *buffer,
                 uint32_t size,
-                GX2DrcRenderMode::Mode drcRenderMode,
-                GX2SurfaceFormat::Format surfaceFormat,
-                GX2BufferingMode::Mode bufferingMode)
+                GX2DrcRenderMode::Value drcRenderMode,
+                GX2SurfaceFormat::Value surfaceFormat,
+                GX2BufferingMode::Value bufferingMode)
 {
 }
 
@@ -120,14 +120,14 @@ GX2GetSwapStatus(be_val<uint32_t> *pSwapCount,
 }
 
 BOOL
-GX2GetLastFrame(GX2ScanTarget::Target scanTarget,
+GX2GetLastFrame(GX2ScanTarget::Value scanTarget,
                 GX2Texture *texture)
 {
    return FALSE;
 }
 
 BOOL
-GX2GetLastFrameGamma(GX2ScanTarget::Target scanTarget,
+GX2GetLastFrameGamma(GX2ScanTarget::Value scanTarget,
                      be_val<float> *gamma)
 {
    return FALSE;
@@ -135,7 +135,7 @@ GX2GetLastFrameGamma(GX2ScanTarget::Target scanTarget,
 
 void
 GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer,
-                               GX2ScanTarget::Target scanTarget)
+                               GX2ScanTarget::Value scanTarget)
 {
 }
 
