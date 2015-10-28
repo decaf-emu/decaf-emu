@@ -525,8 +525,9 @@ get_2d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
    return offset;
 }
 
+#include <cassert>
 void
-untileSurface(GX2Surface *surface, uint8_t *imageData, std::vector<uint8_t> &out, uint32_t &pitchOut)
+untileSurface2(const GX2Surface *surface, uint8_t *imageData, std::vector<uint8_t> &out, uint32_t &pitchOut)
 {
    if (surface->tileMode == GX2TileMode::LinearAligned) {
       throw std::runtime_error("Unsupported tile mode LinearAligned");
@@ -557,6 +558,7 @@ untileSurface(GX2Surface *surface, uint8_t *imageData, std::vector<uint8_t> &out
 
    // Get src
    auto src = imageData;
+   auto srcMax = imageData + surface->imageSize;
    auto bpp = info.elementBytes;
    auto pitch = info.pitchElements * bpp;
 
@@ -564,23 +566,35 @@ untileSurface(GX2Surface *surface, uint8_t *imageData, std::vector<uint8_t> &out
    out.resize(info.height * pitch);
    pitchOut = pitch;
    auto dst = out.data();
+   auto dstMax = out.data() + out.size();
+
+   auto macro_tile_size = GX2GetMacroTileSize(info.tileMode);
+   auto macro_tile_width = macro_tile_size.first;
+   auto macro_tile_height = macro_tile_size.second;
 
    if (info.tileMode == GX2TileMode::Tiled1DThick || info.tileMode == GX2TileMode::Tiled1DThin1) {
-      auto z = 0u;
+      /*auto z = 0u;
 
       for (auto y = 0u; y < info.height; ++y) {
          for (auto x = 0u; x < info.width; ++x) {
             auto offset = get_1d_offset(info, x, y, z);
             std::memcpy(dst + (y * pitch) + (x * bpp), src + offset, bpp);
          }
-      }
+      }*/
    } else {
       auto z = 0u;
 
-      for (auto y = 0u; y < info.height; ++y) {
-         for (auto x = 0u; x < info.width; ++x) {
+      auto height = info.height / 8;
+      auto width = info.width / 8;
+
+      for (auto y = 0u; y < height; ++y) {
+         for (auto x = 0u; x < width; ++x) {
             auto offset = get_2d_offset(info, x, y, z);
-            std::memcpy(dst + (y * pitch) + (x * bpp), src + offset, bpp);
+            auto dstPx = dst + (y * pitch) + (x * bpp);
+            auto srcPx = src + offset;
+            assert(dstPx < dstMax);
+            assert(srcPx < srcMax);
+            std::memcpy(dstPx, srcPx, bpp);
          }
       }
    }

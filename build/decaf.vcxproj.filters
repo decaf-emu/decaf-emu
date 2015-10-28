@@ -642,6 +642,9 @@
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gpu\latte_untile.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1083,9 +1086,6 @@
       <Filter>Header Files\util</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\be_vec.h">
-      <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\bigendianview.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\bitutils.h">
