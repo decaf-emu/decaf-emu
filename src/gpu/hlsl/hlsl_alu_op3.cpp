@@ -22,6 +22,16 @@ MUL_LIT_D2
 namespace hlsl
 {
 
+AluSource cndSrc(AluSource src)
+{
+   if (src.type == AluSource::ConstantInt || src.type == AluSource::ConstantLiteral) {
+      return src;
+   }
+
+   src.valueType = AluSource::Float;
+   return src;
+}
+
 static bool CNDE(GenerateState &state, AluInstruction *ins)
 {
    // dst = (src0 == 0) ? src1 : src2
@@ -39,9 +49,9 @@ static bool CNDE(GenerateState &state, AluInstruction *ins)
    }
 
    state.out << ") ? ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, cndSrc(ins->sources[1]));
    state.out << " : ";
-   translateAluSource(state, ins->sources[2]);
+   translateAluSource(state, cndSrc(ins->sources[2]));
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -65,9 +75,9 @@ static bool CNDGT(GenerateState &state, AluInstruction *ins)
    }
 
    state.out << ") ? ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, cndSrc(ins->sources[1]));
    state.out << " : ";
-   translateAluSource(state, ins->sources[2]);
+   translateAluSource(state, cndSrc(ins->sources[2]));
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -91,9 +101,9 @@ static bool CNDGE(GenerateState &state, AluInstruction *ins)
    }
 
    state.out << ") ? ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, cndSrc(ins->sources[1]));
    state.out << " : ";
-   translateAluSource(state, ins->sources[2]);
+   translateAluSource(state, cndSrc(ins->sources[2]));
    state.out << ')';
 
    translateAluDestEnd(state, ins);
