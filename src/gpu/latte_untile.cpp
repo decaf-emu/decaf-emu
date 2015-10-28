@@ -4,6 +4,7 @@
 #include <vector>
 #include "modules/gx2/gx2_surface.h"
 #include "utils/bitutils.h"
+#include "utils/align.h"
 
 template<typename Type>
 constexpr Type integral_log2(Type n, Type p = 0)
@@ -38,6 +39,86 @@ struct TileInfo
    bool isDepthTexture;
    bool isStencilTexture;
 };
+
+static inline std::pair<unsigned, unsigned>
+GX2GetBlockSize(GX2SurfaceFormat::Value format)
+{
+   switch (format) {
+   case GX2SurfaceFormat::UNORM_BC1:
+   case GX2SurfaceFormat::UNORM_BC2:
+   case GX2SurfaceFormat::UNORM_BC3:
+   case GX2SurfaceFormat::UNORM_BC4:
+   case GX2SurfaceFormat::UNORM_BC5:
+   case GX2SurfaceFormat::SNORM_BC4:
+   case GX2SurfaceFormat::SNORM_BC5:
+   case GX2SurfaceFormat::SRGB_BC1:
+   case GX2SurfaceFormat::SRGB_BC2:
+   case GX2SurfaceFormat::SRGB_BC3:
+      return { 4, 4 };
+
+   case GX2SurfaceFormat::UNORM_R4_G4:
+   case GX2SurfaceFormat::UNORM_R4_G4_B4_A4:
+   case GX2SurfaceFormat::UNORM_R8:
+   case GX2SurfaceFormat::UNORM_R8_G8:
+   case GX2SurfaceFormat::UNORM_R8_G8_B8_A8:
+   case GX2SurfaceFormat::UNORM_R16:
+   case GX2SurfaceFormat::UNORM_R16_G16:
+   case GX2SurfaceFormat::UNORM_R16_G16_B16_A16:
+   case GX2SurfaceFormat::UNORM_R5_G6_B5:
+   case GX2SurfaceFormat::UNORM_R5_G5_B5_A1:
+   case GX2SurfaceFormat::UNORM_A1_B5_G5_R5:
+   case GX2SurfaceFormat::UNORM_R24_X8:
+   case GX2SurfaceFormat::UNORM_A2_B10_G10_R10:
+   case GX2SurfaceFormat::UNORM_R10_G10_B10_A2:
+   case GX2SurfaceFormat::UNORM_NV12:
+   case GX2SurfaceFormat::UINT_R8:
+   case GX2SurfaceFormat::UINT_R8_G8:
+   case GX2SurfaceFormat::UINT_R8_G8_B8_A8:
+   case GX2SurfaceFormat::UINT_R16:
+   case GX2SurfaceFormat::UINT_R16_G16:
+   case GX2SurfaceFormat::UINT_R16_G16_B16_A16:
+   case GX2SurfaceFormat::UINT_R32:
+   case GX2SurfaceFormat::UINT_R32_G32:
+   case GX2SurfaceFormat::UINT_R32_G32_B32_A32:
+   case GX2SurfaceFormat::UINT_A2_B10_G10_R10:
+   case GX2SurfaceFormat::UINT_R10_G10_B10_A2:
+   case GX2SurfaceFormat::UINT_X24_G8:
+   case GX2SurfaceFormat::UINT_G8_X24:
+   case GX2SurfaceFormat::SNORM_R8:
+   case GX2SurfaceFormat::SNORM_R8_G8:
+   case GX2SurfaceFormat::SNORM_R8_G8_B8_A8:
+   case GX2SurfaceFormat::SNORM_R16:
+   case GX2SurfaceFormat::SNORM_R16_G16:
+   case GX2SurfaceFormat::SNORM_R16_G16_B16_A16:
+   case GX2SurfaceFormat::SNORM_R10_G10_B10_A2:
+   case GX2SurfaceFormat::SINT_R8:
+   case GX2SurfaceFormat::SINT_R8_G8:
+   case GX2SurfaceFormat::SINT_R8_G8_B8_A8:
+   case GX2SurfaceFormat::SINT_R16:
+   case GX2SurfaceFormat::SINT_R16_G16:
+   case GX2SurfaceFormat::SINT_R16_G16_B16_A16:
+   case GX2SurfaceFormat::SINT_R32:
+   case GX2SurfaceFormat::SINT_R32_G32:
+   case GX2SurfaceFormat::SINT_R32_G32_B32_A32:
+   case GX2SurfaceFormat::SINT_R10_G10_B10_A2:
+   case GX2SurfaceFormat::SRGB_R8_G8_B8_A8:
+   case GX2SurfaceFormat::FLOAT_R32:
+   case GX2SurfaceFormat::FLOAT_R32_G32:
+   case GX2SurfaceFormat::FLOAT_R32_G32_B32_A32:
+   case GX2SurfaceFormat::FLOAT_R16:
+   case GX2SurfaceFormat::FLOAT_R16_G16:
+   case GX2SurfaceFormat::FLOAT_R16_G16_B16_A16:
+   case GX2SurfaceFormat::FLOAT_R11_G11_B10:
+   case GX2SurfaceFormat::FLOAT_D24_S8:
+   case GX2SurfaceFormat::FLOAT_X8_X24:
+      return { 1, 1 };
+
+   case GX2SurfaceFormat::INVALID:
+   default:
+      throw std::runtime_error("Unexpected GX2SurfaceFormat");
+      return { 1, 1 };
+   }
+}
 
 static inline unsigned
 GX2GetElementBytes(GX2SurfaceFormat::Value format)
@@ -413,7 +494,7 @@ get_bank(unsigned x, unsigned y)
    bank |= (get_bit<3>(x) ^ get_bit(y, 4 + channel_bits)) << 0;
 
    //bank[1] = x[4] ^ y[3 + log2(num_channels)]
-   bank |= (get_bit<3>(4) ^ get_bit(y, 3 + channel_bits)) << 1;
+   bank |= (get_bit<4>(x) ^ get_bit(y, 3 + channel_bits)) << 1;
    return bank;
 }
 
@@ -464,12 +545,12 @@ get_2d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
    // Fancy calculations
    auto tile_bytes = tile_width * tile_height * tile_thickness * element_bytes * num_samples;
    auto macro_tile_bytes = macro_tile_width * macro_tile_height * tile_bytes;
-   auto macro_tiles_per_row = pitch_elements / macro_tile_width;
-   auto macro_tiles_per_slice = macro_tiles_per_row * (height / macro_tile_height);
+   auto macro_tiles_per_row = pitch_elements / tile_width / macro_tile_width;
+   auto macro_tiles_per_slice = macro_tiles_per_row * (height / tile_height / macro_tile_height);
    auto slice_offset = (z / tile_thickness) * macro_tiles_per_slice * macro_tile_bytes;
 
-   auto macro_tile_row_index = y / macro_tile_height;
-   auto macro_tile_column_index = x / macro_tile_width;
+   auto macro_tile_row_index = y / tile_height / macro_tile_height;
+   auto macro_tile_column_index = x / tile_width / macro_tile_width;
    auto macro_tile_offset = ((macro_tile_row_index * macro_tiles_per_row) + macro_tile_column_index) * macro_tile_bytes;
 
    auto element_offset = get_element_offset(info, pixel_number, tile_bytes);
@@ -525,9 +606,8 @@ get_2d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
    return offset;
 }
 
-#include <cassert>
 void
-untileSurface2(const GX2Surface *surface, uint8_t *imageData, std::vector<uint8_t> &out, uint32_t &pitchOut)
+untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, uint32_t &pitchOut)
 {
    if (surface->tileMode == GX2TileMode::LinearAligned) {
       throw std::runtime_error("Unsupported tile mode LinearAligned");
@@ -541,61 +621,48 @@ untileSurface2(const GX2Surface *surface, uint8_t *imageData, std::vector<uint8_
       throw std::runtime_error("Unsupported tile mode Default");
    }
 
+   auto blockSize = GX2GetBlockSize(surface->format);
+   auto bpe = GX2GetElementBytes(surface->format);
+   uint32_t surfaceWidth = align_up(static_cast<uint32_t>(surface->width), blockSize.first);
+   uint32_t surfaceHeight = align_up(static_cast<uint32_t>(surface->height), blockSize.second);
+
    // Setup tiling info
    TileInfo info;
    info.surfaceFormat = surface->format;
    info.tileMode = surface->tileMode;
    info.numSamples = 1; // Used when multisampling
    info.curSample = 0;
-   info.pitchElements = surface->pitch;
-   info.width = surface->width;
-   info.height = surface->height;
+   info.pitchElements = surfaceWidth / blockSize.first;
+   info.width = surfaceWidth / blockSize.first;
+   info.height = surfaceHeight / blockSize.second;
    info.swizzle = surface->swizzle;
    info.isDepthTexture = false;
    info.isStencilTexture = false;
-   info.elementBytes = GX2GetElementBytes(surface->format);
+   info.elementBytes = bpe;
    info.tileThickness = GX2GetTileThickness(surface->tileMode);
 
-   // Get src
-   auto src = imageData;
-   auto srcMax = imageData + surface->imageSize;
-   auto bpp = info.elementBytes;
-   auto pitch = info.pitchElements * bpp;
-
    // Setup dst
-   out.resize(info.height * pitch);
-   pitchOut = pitch;
-   auto dst = out.data();
-   auto dstMax = out.data() + out.size();
+   out.resize(surface->imageSize);
 
-   auto macro_tile_size = GX2GetMacroTileSize(info.tileMode);
-   auto macro_tile_width = macro_tile_size.first;
-   auto macro_tile_height = macro_tile_size.second;
+   auto src = reinterpret_cast<uint8_t*>(surface->image.get());
+   auto dst = out.data();
+   auto pitch = info.pitchElements * bpe;
 
    if (info.tileMode == GX2TileMode::Tiled1DThick || info.tileMode == GX2TileMode::Tiled1DThin1) {
-      /*auto z = 0u;
-
       for (auto y = 0u; y < info.height; ++y) {
          for (auto x = 0u; x < info.width; ++x) {
-            auto offset = get_1d_offset(info, x, y, z);
-            std::memcpy(dst + (y * pitch) + (x * bpp), src + offset, bpp);
+            auto offset = get_1d_offset(info, x, y, 0);
+            std::memcpy(dst + (y * pitch) + (x * bpe), src + offset, bpe);
          }
-      }*/
+      }
    } else {
-      auto z = 0u;
-
-      auto height = info.height / 8;
-      auto width = info.width / 8;
-
-      for (auto y = 0u; y < height; ++y) {
-         for (auto x = 0u; x < width; ++x) {
-            auto offset = get_2d_offset(info, x, y, z);
-            auto dstPx = dst + (y * pitch) + (x * bpp);
-            auto srcPx = src + offset;
-            assert(dstPx < dstMax);
-            assert(srcPx < srcMax);
-            std::memcpy(dstPx, srcPx, bpp);
+      for (auto y = 0u; y < info.height; ++y) {
+         for (auto x = 0u; x < info.width; ++x) {
+            auto offset = get_2d_offset(info, x, y, 0);
+            std::memcpy(dst + (y * pitch) + (x * bpe), src + offset, bpe);
          }
       }
    }
+
+   pitchOut = pitch;
 }

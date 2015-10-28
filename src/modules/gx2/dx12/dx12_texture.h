@@ -1,7 +1,7 @@
 #pragma once
 #include "dx12_state.h"
 #include "dx12_utils.h"
-#include "gpu/latte_tiling.h"
+#include "gpu/latte_untile.h"
 
 struct DXTextureData : public HostLookupItem<GX2Texture> {
    void alloc() {

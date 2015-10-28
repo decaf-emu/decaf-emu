@@ -9,7 +9,6 @@
 #include "gpu/hlsl/hlsl.h"
 #include "gpu/hlsl/hlsl_generator.h"
 #include "memory_translate.h"
-#include "gpu/latte_tiling.h"
 #include "gpu/latte_untile.h"
 
 #pragma pack(1)
@@ -130,7 +129,7 @@ GX2DumpTexture(const GX2Texture *texture)
 
    std::vector<uint8_t> data;
    uint32_t rowPitch;
-   untileSurface2(&texture->surface, reinterpret_cast<uint8_t*>(texture->surface.image.get()), data, rowPitch);
+   untileSurface(&texture->surface, data, rowPitch);
 
    DdsHeader ddsHeader;
    memset(&ddsHeader, 0, sizeof(ddsHeader));
