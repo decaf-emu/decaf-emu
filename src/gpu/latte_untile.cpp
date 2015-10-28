@@ -533,7 +533,7 @@ get_2d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
    auto tile_thickness = info.tileThickness;
    auto element_bytes = info.elementBytes;
    auto num_samples = info.numSamples;
-   auto pitch_elements = info.pitchElements;
+   auto pitch_elements = align_up(info.pitchElements, 32);
    auto height = info.height;
    auto sample_number = info.curSample;
    auto pixel_number = get_pixel_number(info, x, y, z);
