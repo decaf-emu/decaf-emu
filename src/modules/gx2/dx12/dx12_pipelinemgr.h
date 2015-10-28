@@ -259,7 +259,6 @@ private:
             }
          }
 
-         psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
          ThrowIfFailed(gDX.device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
       }
 
