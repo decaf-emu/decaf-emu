@@ -129,7 +129,8 @@ triifiedDraw(GX2PrimitiveMode::Value mode,
       throw;
    }
 
-   auto indicesOut = new uint16_t[newNumIndices];
+   auto indexData = new uint16_t[newNumIndices];
+   auto indicesOut = indexData;
 
    for (auto i = 0u; i < numVertices / 4; ++i) {
       auto index_tl = byte_swap(*indices++);
@@ -145,7 +146,9 @@ triifiedDraw(GX2PrimitiveMode::Value mode,
       *indicesOut++ = index_br;
    }
 
-   auto indexAlloc = gDX.ppcVertexBuffer->get(DXGI_FORMAT_R16_UINT, newNumIndices * sizeof(uint16_t), indicesOut, 256);
+   auto indexAlloc = gDX.ppcVertexBuffer->get(DXGI_FORMAT_R16_UINT, newNumIndices * sizeof(uint16_t), indexData, 256);
+   delete indexData;
+
    gDX.commandList->IASetIndexBuffer(indexAlloc);
 
    gDX.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
