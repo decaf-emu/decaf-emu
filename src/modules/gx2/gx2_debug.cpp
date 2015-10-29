@@ -165,7 +165,6 @@ GX2DumpTexture(const GX2Texture *texture)
 static void
 GX2DumpShader(const std::string &filename, const std::string &info, uint8_t *data, size_t size)
 {
-#ifdef ENABLE_GX2_DUMP
    std::string output;
 
    // Write binary of shader data to shader_pixel_X.bin
@@ -192,7 +191,6 @@ GX2DumpShader(const std::string &filename, const std::string &info, uint8_t *dat
    file
       << "Decompiled:" << std::endl
       << output << std::endl;
-#endif
 }
 
 static void
@@ -226,22 +224,13 @@ formatUniformVars(fmt::MemoryWriter &out, uint32_t count, GX2UniformVar *vars)
 void
 GX2DumpShader(GX2FetchShader *shader)
 {
-#ifdef ENABLE_GX2_DUMP
+//#ifdef ENABLE_GX2_DUMP
    fmt::MemoryWriter out;
-   out << "GX2VertexShader:\n"
-      << "  size: " << shader->size << "\n"
-      << "  mode: " << GX2EnumAsString(shader->mode) << "\n";
+   out << "GX2FetchShader:\n"
+      << "  size: " << shader->size << "\n";
 
-   formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
-   formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
-
-   out << "  numUnk1: " << shader->numUnk1 << "\n";
-   out << "  numUnk2: " << shader->numUnk2 << "\n";
-   out << "  samplerVarCount: " << shader->samplerVarCount << "\n";
-   out << "  numUnk3: " << shader->numUnk3 << "\n";
-
-   GX2DumpShader("shader_vertex_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
-#endif
+   GX2DumpShader("shader_fetch_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
+//#endif
 }
 
 void

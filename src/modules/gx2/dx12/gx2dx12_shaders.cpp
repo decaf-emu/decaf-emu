@@ -39,7 +39,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
                      GX2FetchShaderType::Value type,
                      GX2TessellationMode::Value tessMode)
 {
-   fetchShader->data = buffer;
+   fetchShader->data = static_cast<uint8_t*>(buffer);
    fetchShader->size = GX2CalcFetchShaderSizeEx(count, type, tessMode);
    fetchShader->attribCount = count;
 

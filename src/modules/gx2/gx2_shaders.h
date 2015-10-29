@@ -8,16 +8,16 @@
 
 struct GX2FetchShader
 {
-   UNKNOWN(4);
+   UNKNOWN(8);
    be_val<uint32_t> size;
-   be_ptr<void> data;
+   be_ptr<uint8_t> data;
    be_val<uint32_t> attribCount;
    UNKNOWN(12);
 };
-CHECK_OFFSET(GX2FetchShader, 0x4, size);
-CHECK_OFFSET(GX2FetchShader, 0x8, data);
-CHECK_OFFSET(GX2FetchShader, 0xc, attribCount);
-CHECK_SIZE(GX2FetchShader, 0x1c);
+CHECK_OFFSET(GX2FetchShader, 0x8, size);
+CHECK_OFFSET(GX2FetchShader, 0xc, data);
+CHECK_OFFSET(GX2FetchShader, 0x10, attribCount);
+CHECK_SIZE(GX2FetchShader, 0x20);
 
 struct GX2UniformVar
 {
