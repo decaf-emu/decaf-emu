@@ -292,15 +292,18 @@ private:
 
          auto &blendState = gDX.state.blendState;
          if ((blendState.blendEnabled & ~1) != 0) {
-            psoDesc.BlendState.IndependentBlendEnable = true;
-         } else {
-            psoDesc.BlendState.IndependentBlendEnable = false;
+            // We do not yet support MRT
+            throw;
          }
-         for (auto i = 0; i < 8; ++i) {
-            auto &targetState = gDX.state.targetBlendState[i];
-            auto &rtInfo = psoDesc.BlendState.RenderTarget[i];
-            rtInfo.BlendEnable = blendState.blendEnabled & (1 << i);
-            rtInfo.LogicOpEnable = !rtInfo.BlendEnable;
+
+         psoDesc.BlendState.IndependentBlendEnable = false;
+
+         {
+            auto rtNum = 0;
+            auto &targetState = gDX.state.targetBlendState[rtNum];
+            auto &rtInfo = psoDesc.BlendState.RenderTarget[rtNum];
+            rtInfo.BlendEnable = !!(blendState.blendEnabled & (1 << rtNum));
+            rtInfo.LogicOpEnable = (blendState.logicOp != GX2LogicOp::Copy);
             rtInfo.LogicOp = dx12MakeLogicOp(blendState.logicOp);
             rtInfo.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
             rtInfo.SrcBlend = dx12MakeBlend(targetState.colorSrcBlend);
@@ -309,11 +312,6 @@ private:
             rtInfo.SrcBlendAlpha = dx12MakeBlend(targetState.alphaSrcBlend);
             rtInfo.DestBlendAlpha = dx12MakeBlend(targetState.alphaDstBlend);
             rtInfo.BlendOpAlpha = dx12MakeBlendOp(targetState.alphaCombine);
-
-            if (rtInfo.BlendEnable && blendState.logicOp != GX2LogicOp::Copy) {
-               // Can't have both of these in DX12
-               throw;
-            }
          }
 
          ThrowIfFailed(gDX.device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
