@@ -174,6 +174,15 @@ zlib125_compressBound(uint32_t sourceLen)
    return (uint32_t)compressBound(sourceLen);
 }
 
+static int
+zlib125_uncompress(uint8_t* dest, be_val<uint32_t>* destLen, const uint8_t* source, uint32_t sourceLen)
+{
+   unsigned long realDestLen = *destLen;
+   auto result = uncompress(dest, &realDestLen, source, sourceLen);
+   *destLen = realDestLen;
+   return result;
+}
+
 static uint32_t
 zlib125_zlibCompileFlags()
 {
@@ -191,5 +200,6 @@ Zlib125::registerCoreFunctions()
    RegisterKernelFunctionName("inflateInit2_", zlib125_inflateInit2_);
    RegisterKernelFunctionName("inflateEnd", zlib125_inflateEnd);
    RegisterKernelFunctionName("compressBound", zlib125_compressBound);
+   RegisterKernelFunctionName("uncompress", zlib125_uncompress);
    RegisterKernelFunctionName("zlibCompileFlags", zlib125_zlibCompileFlags);
 }
