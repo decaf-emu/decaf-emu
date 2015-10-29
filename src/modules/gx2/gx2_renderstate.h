@@ -37,7 +37,8 @@ GX2SetTargetChannelMasks(GX2ChannelMask::Value target0,
                          GX2ChannelMask::Value target3,
                          GX2ChannelMask::Value target4,
                          GX2ChannelMask::Value target5,
-                         GX2ChannelMask::Value target6);
+                         GX2ChannelMask::Value target6,
+                         GX2ChannelMask::Value target7);
 
 void
 GX2SetAlphaToMask(BOOL enabled, GX2AlphaToMaskMode::Value mode);

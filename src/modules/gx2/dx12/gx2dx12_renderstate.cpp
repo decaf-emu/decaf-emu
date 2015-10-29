@@ -152,16 +152,38 @@ GX2SetAlphaTest(BOOL enabled,
 }
 
 void
+_GX2SetTargetChannelMasks(GX2ChannelMask::Value target0,
+                          GX2ChannelMask::Value target1,
+                          GX2ChannelMask::Value target2,
+                          GX2ChannelMask::Value target3,
+                          GX2ChannelMask::Value target4,
+                          GX2ChannelMask::Value target5,
+                          GX2ChannelMask::Value target6,
+                          GX2ChannelMask::Value target7)
+{
+   gDX.state.targetBlendState[0].channelMask = target0;
+   gDX.state.targetBlendState[1].channelMask = target1;
+   gDX.state.targetBlendState[2].channelMask = target2;
+   gDX.state.targetBlendState[3].channelMask = target3;
+   gDX.state.targetBlendState[4].channelMask = target4;
+   gDX.state.targetBlendState[5].channelMask = target5;
+   gDX.state.targetBlendState[6].channelMask = target6;
+   gDX.state.targetBlendState[7].channelMask = target7;
+}
+
+void
 GX2SetTargetChannelMasks(GX2ChannelMask::Value target0,
                          GX2ChannelMask::Value target1,
                          GX2ChannelMask::Value target2,
                          GX2ChannelMask::Value target3,
                          GX2ChannelMask::Value target4,
                          GX2ChannelMask::Value target5,
-                         GX2ChannelMask::Value target6)
+                         GX2ChannelMask::Value target6,
+                         GX2ChannelMask::Value target7)
 {
-   // TODO: GX2SetTargetChannelMasks
-   gLog->debug("unimplemented GX2SetTargetChannelMasks");
+   DX_DLCALL(_GX2SetTargetChannelMasks, 
+      target0, target1, target2, target3, 
+      target4, target5, target6, target7);
 }
 
 void

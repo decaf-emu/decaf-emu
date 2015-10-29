@@ -93,6 +93,7 @@ struct DXState {
          float alphaRef;
       } blendState;
       struct TargetBlendState {
+         GX2ChannelMask::Value channelMask;
          GX2BlendMode::Value colorSrcBlend;
          GX2BlendMode::Value colorDstBlend;
          GX2BlendCombineMode::Value colorCombine;

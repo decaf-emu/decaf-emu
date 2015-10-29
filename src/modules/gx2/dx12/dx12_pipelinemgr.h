@@ -26,32 +26,10 @@ public:
       {
       }
 
-   protected:
-      DXPipelineMgr *mParent;
-      struct {
-         GX2FetchShader *fetchShader;
-         GX2PixelShader *pixelShader;
-         GX2VertexShader *vertexShader;
-         DXState::ContextState::BlendState blendState;
-         DXState::ContextState::TargetBlendState targetBlendState[8];
-      } mStateInfo;
-      ComPtr<ID3D12PipelineState> mPipelineState;
-
-   };
-
-   typedef std::shared_ptr<Item> ItemPtr;
-
-   DXPipelineMgr()
-   {
-   }
-
-   ComPtr<ID3D12PipelineState> findOrCreate()
-   {
-      for (auto &i : mItems) {
-
+      bool matchesCurrentState() {
 #define CHECKVAL(valname) \
-         if (i->mStateInfo.valname != gDX.state.valname) { \
-            continue; \
+         if (mStateInfo.valname != gDX.state.valname) { \
+            return false; \
          }
 
          CHECKVAL(fetchShader);
@@ -77,7 +55,35 @@ public:
          }
 
 #undef CHECKVAL
-         
+
+         return true;
+      }
+
+   protected:
+      DXPipelineMgr *mParent;
+      struct {
+         GX2FetchShader *fetchShader;
+         GX2PixelShader *pixelShader;
+         GX2VertexShader *vertexShader;
+         DXState::ContextState::BlendState blendState;
+         DXState::ContextState::TargetBlendState targetBlendState[8];
+      } mStateInfo;
+      ComPtr<ID3D12PipelineState> mPipelineState;
+
+   };
+
+   typedef std::shared_ptr<Item> ItemPtr;
+
+   DXPipelineMgr()
+   {
+   }
+
+   ComPtr<ID3D12PipelineState> findOrCreate()
+   {
+      for (auto &i : mItems) {
+         if (!i->matchesCurrentState()) {
+            continue;
+         }
          return i->mPipelineState;
       }
 
@@ -321,8 +327,8 @@ private:
       item->mStateInfo.fetchShader = fetchShader;
       item->mStateInfo.vertexShader = vertexShader;
       item->mStateInfo.pixelShader = pixelShader;
-      memcpy(&item->mStateInfo.blendState, &gDX.state.blendState, sizeof(gDX.state.blendState));
-      memcpy(item->mStateInfo.targetBlendState, gDX.state.targetBlendState, sizeof(gDX.state.targetBlendState));
+      memcpy(&item->mStateInfo.blendState, &gDX.state.blendState, sizeof(DXState::ContextState::BlendState));
+      memcpy(&item->mStateInfo.targetBlendState, &gDX.state.targetBlendState, sizeof(DXState::ContextState::TargetBlendState) * 8);
       item->mPipelineState = pipelineState;
       mItems.push_back(item);
       return item->mPipelineState;
