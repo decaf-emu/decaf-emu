@@ -28,11 +28,13 @@ public:
 
    protected:
       DXPipelineMgr *mParent;
-      GX2FetchShader *mFetchShader;
-      GX2PixelShader *mPixelShader;
-      GX2VertexShader *mVertexShader;
-      DXState::ContextState::BlendState mBlendState;
-      DXState::ContextState::TargetBlendState mTgtBlendState[8];
+      struct {
+         GX2FetchShader *fetchShader;
+         GX2PixelShader *pixelShader;
+         GX2VertexShader *vertexShader;
+         DXState::ContextState::BlendState blendState;
+         DXState::ContextState::TargetBlendState targetBlendState[8];
+      } mStateInfo;
       ComPtr<ID3D12PipelineState> mPipelineState;
 
    };
@@ -46,14 +48,37 @@ public:
    ComPtr<ID3D12PipelineState> findOrCreate()
    {
       for (auto &i : mItems) {
-         if (i->mFetchShader == gDX.state.fetchShader &&
-            i->mVertexShader == gDX.state.vertexShader &&
-            i->mPixelShader == gDX.state.pixelShader &&
-            memcmp(&i->mBlendState, &gDX.state.blendState, sizeof(gDX.state.blendState) == 0) &&
-            memcmp(i->mTgtBlendState, gDX.state.targetBlendState, sizeof(gDX.state.targetBlendState)) == 0)
-         {
-            return i->mPipelineState;
+
+#define CHECKVAL(valname) \
+         if (i->mStateInfo.valname != gDX.state.valname) { \
+            continue; \
          }
+
+         CHECKVAL(fetchShader);
+         CHECKVAL(vertexShader);
+         CHECKVAL(pixelShader);
+         CHECKVAL(blendState.logicOp);
+         CHECKVAL(blendState.blendEnabled);
+         CHECKVAL(blendState.alphaTestEnabled);
+         if (gDX.state.blendState.alphaTestEnabled) {
+            CHECKVAL(blendState.alphaFunc);
+            CHECKVAL(blendState.alphaRef);
+         }
+
+         for (auto j = 0; j < 8; ++j) {
+            if (gDX.state.blendState.blendEnabled & (1 << j)) {
+               CHECKVAL(targetBlendState[j].colorSrcBlend);
+               CHECKVAL(targetBlendState[j].colorDstBlend);
+               CHECKVAL(targetBlendState[j].colorCombine);
+               CHECKVAL(targetBlendState[j].alphaSrcBlend);
+               CHECKVAL(targetBlendState[j].alphaDstBlend);
+               CHECKVAL(targetBlendState[j].alphaCombine);
+            }
+         }
+
+#undef CHECKVAL
+         
+         return i->mPipelineState;
       }
 
       return create();
@@ -295,12 +320,12 @@ private:
       }
 
       auto item = new Item(this);
-      item->mFetchShader = fetchShader;
-      item->mVertexShader = vertexShader;
-      item->mPixelShader = pixelShader;
+      item->mStateInfo.fetchShader = fetchShader;
+      item->mStateInfo.vertexShader = vertexShader;
+      item->mStateInfo.pixelShader = pixelShader;
+      memcpy(&item->mStateInfo.blendState, &gDX.state.blendState, sizeof(gDX.state.blendState));
+      memcpy(item->mStateInfo.targetBlendState, gDX.state.targetBlendState, sizeof(gDX.state.targetBlendState));
       item->mPipelineState = pipelineState;
-      memcpy(&item->mBlendState, &gDX.state.blendState, sizeof(gDX.state.blendState));
-      memcpy(item->mTgtBlendState, gDX.state.targetBlendState, sizeof(gDX.state.targetBlendState));
       mItems.push_back(item);
       return item->mPipelineState;
    }
