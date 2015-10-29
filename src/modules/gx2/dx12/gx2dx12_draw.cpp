@@ -146,7 +146,7 @@ triifiedDraw(GX2PrimitiveMode::Value mode,
       *indicesOut++ = index_br;
    }
 
-   auto indexAlloc = gDX.ppcVertexBuffer->get(DXGI_FORMAT_R16_UINT, newNumIndices * sizeof(uint16_t), indexData, 256);
+   auto indexAlloc = gDX.curTmpBuffer->get(DXGI_FORMAT_R16_UINT, newNumIndices * sizeof(uint16_t), indexData, 256);
    delete indexData;
 
    gDX.commandList->IASetIndexBuffer(indexAlloc);
@@ -211,7 +211,7 @@ _GX2DrawIndexedEx(GX2PrimitiveMode::Value mode,
    switch (indexType) {
    case GX2IndexType::U16:
    {
-      auto indexAlloc = gDX.ppcVertexBuffer->get(DXGI_FORMAT_R16_UINT, numVertices * sizeof(uint16_t), nullptr);
+      auto indexAlloc = gDX.curTmpBuffer->get(DXGI_FORMAT_R16_UINT, numVertices * sizeof(uint16_t), nullptr);
       auto indexBuffer = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(indexAlloc));
       auto inBuffer = static_cast<uint16_t*>(indices);
       for (auto i = 0u; i < numVertices; ++i) {

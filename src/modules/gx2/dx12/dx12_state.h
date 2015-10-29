@@ -43,13 +43,14 @@ struct DXState {
    DXHeapItemPtr curScanbufferRtv;
    DXHeapList *srvHeapList[FrameCount];
    DXHeapList *sampleHeapList[FrameCount];
+   DXDynBuffer *tmpBuffer[FrameCount];
    DXHeapList *curSrvHeapList;
    DXHeapList *curSampleHeapList;
    D3D12_VIEWPORT viewport;
    D3D12_RECT scissorRect;
    ComPtr<ID3D12Resource> vertexBuffer;
    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-   DXDynBuffer *ppcVertexBuffer;
+   DXDynBuffer *curTmpBuffer;
    DXPipelineMgr *pipelineMgr;
 
    // DX Synchronization objects.

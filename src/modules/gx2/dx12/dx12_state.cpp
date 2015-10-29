@@ -317,8 +317,11 @@ void dx::initialise()
       gDX.vertexBufferView.SizeInBytes = vertexBufferSize;
    }
 
-   // 10MB Temporary Vertex Buffer
-   gDX.ppcVertexBuffer = new DXDynBuffer(gDX.device.Get(), 10 * 1024 * 1024);
+   for (UINT n = 0; n < gDX.FrameCount; n++)
+   {
+      // 10MB Temporary Buffer
+      gDX.tmpBuffer[n] = new DXDynBuffer(gDX.device.Get(), 10 * 1024 * 1024);
+   }
 
    // Close the command list and execute it to begin the initial GPU setup.
    ThrowIfFailed(gDX.commandList->Close());
@@ -361,8 +364,10 @@ void dx::_beginFrame() {
    gDX.curScanbufferRtv = gDX.scanbufferRtv[gDX.frameIndex];
    gDX.curSrvHeapList = gDX.srvHeapList[gDX.frameIndex];
    gDX.curSampleHeapList = gDX.sampleHeapList[gDX.frameIndex];
+   gDX.curTmpBuffer = gDX.tmpBuffer[gDX.frameIndex];
    gDX.curSrvHeapList->reset();
    gDX.curSampleHeapList->reset();
+   gDX.curTmpBuffer->reset();
 
    // Command list allocators can only be reset when the associated
    // command lists have finished execution on the GPU; apps should use
@@ -612,7 +617,7 @@ void dx::updateBuffers()
          continue;
       }
 
-      buffers[i] = gDX.ppcVertexBuffer->get(
+      buffers[i] = gDX.curTmpBuffer->get(
          buffer.stride, buffer.size, nullptr, 256);
       bufferList[i] = *(D3D12_VERTEX_BUFFER_VIEW*)buffers[i];
    }
@@ -650,7 +655,7 @@ void dx::updateBuffers()
 
       if (gDX.state.shaderMode == GX2ShaderMode::UniformRegister) {
          {
-            auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), gDX.state.vertUniforms, 256);
+            auto constBuffer = gDX.curTmpBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), gDX.state.vertUniforms, 256);
 
             D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
             desc.BufferLocation = constBuffer;
@@ -658,7 +663,7 @@ void dx::updateBuffers()
             gDX.device->CreateConstantBufferView(&desc, heapItems[0]);
          }
          {
-            auto constBuffer = gDX.ppcVertexBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), gDX.state.pixUniforms, 256);
+            auto constBuffer = gDX.curTmpBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), gDX.state.pixUniforms, 256);
 
             D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
             desc.BufferLocation = constBuffer;
@@ -671,7 +676,7 @@ void dx::updateBuffers()
             for (auto i = 0u; i < gDX.state.vertexShader->uniformBlockCount; ++i) {
                auto &uniBlock = gDX.state.vertexShader->uniformBlocks[i];
                auto &blockData = gDX.state.vertUniformBlocks[uniBlock.offset];
-               auto constBuffer = gDX.ppcVertexBuffer->get(blockData.size, blockData.buffer, 256);
+               auto constBuffer = gDX.curTmpBuffer->get(blockData.size, blockData.buffer, 256);
 
                D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
                desc.BufferLocation = constBuffer;
@@ -683,7 +688,7 @@ void dx::updateBuffers()
             for (auto i = 0u; i < gDX.state.pixelShader->uniformBlockCount; ++i) {
                auto &uniBlock = gDX.state.pixelShader->uniformBlocks[i];
                auto &blockData = gDX.state.pixUniformBlocks[uniBlock.offset];
-               auto constBuffer = gDX.ppcVertexBuffer->get(blockData.size, blockData.buffer, 256);
+               auto constBuffer = gDX.curTmpBuffer->get(blockData.size, blockData.buffer, 256);
 
                D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
                desc.BufferLocation = constBuffer;
