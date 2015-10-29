@@ -4,7 +4,7 @@
 static inline uint32_t
 floatToFixedPoint(float value, uint32_t bits, float min, float max)
 {
-   return (value - min) * (static_cast<float>(1 << bits) / (max - min));
+   return static_cast<uint32_t>((value - min) * (static_cast<float>(1 << bits) / (max - min)));
 }
 
 void
