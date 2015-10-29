@@ -163,7 +163,7 @@ void dx::initialise()
          D3D12_DESCRIPTOR_HEAP_DESC sampleHeapListDesc = {};
          sampleHeapListDesc.NumDescriptors = 2048;
          sampleHeapListDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-         sampleHeapListDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+         sampleHeapListDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
          gDX.sampleHeapList[n] = new DXHeapList(gDX.device.Get(), sampleHeapListDesc);
       }
    }
@@ -382,7 +382,10 @@ void dx::_beginFrame() {
    // Set necessary state.
    gDX.commandList->SetGraphicsRootSignature(gDX.rootSignature.Get());
 
-   ID3D12DescriptorHeap* ppHeaps[] = { *gDX.curSrvHeapList };
+   ID3D12DescriptorHeap* ppHeaps[] = {
+      (ID3D12DescriptorHeap*)(*gDX.curSrvHeapList),
+      (ID3D12DescriptorHeap*)(*gDX.curSampleHeapList)
+   };
    gDX.commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
    const float clearColor[] = { 0.6f, 0.2f, 0.2f, 1.0f };
