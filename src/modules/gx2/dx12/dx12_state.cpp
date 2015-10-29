@@ -683,11 +683,14 @@ void dx::updateBuffers()
             for (auto i = 0u; i < gDX.state.vertexShader->uniformBlockCount; ++i) {
                auto &uniBlock = gDX.state.vertexShader->uniformBlocks[i];
                auto &blockData = gDX.state.vertUniformBlocks[uniBlock.offset];
-               auto constBuffer = gDX.curTmpBuffer->get(blockData.size, blockData.buffer, 256);
+
+               uint32_t alignedSize = align_up(blockData.size, 256);
+               auto constBuffer = gDX.curTmpBuffer->get(alignedSize, nullptr, 256);
+               memcpy((uint8_t*)constBuffer, blockData.buffer, blockData.size);
 
                D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
                desc.BufferLocation = constBuffer;
-               desc.SizeInBytes = blockData.size;
+               desc.SizeInBytes = alignedSize;
                gDX.device->CreateConstantBufferView(&desc, heapItems[cbvIdx++]);
             }
          }
@@ -695,11 +698,14 @@ void dx::updateBuffers()
             for (auto i = 0u; i < gDX.state.pixelShader->uniformBlockCount; ++i) {
                auto &uniBlock = gDX.state.pixelShader->uniformBlocks[i];
                auto &blockData = gDX.state.pixUniformBlocks[uniBlock.offset];
-               auto constBuffer = gDX.curTmpBuffer->get(blockData.size, blockData.buffer, 256);
+
+               uint32_t alignedSize = align_up(blockData.size, 256);
+               auto constBuffer = gDX.curTmpBuffer->get(alignedSize, nullptr, 256);
+               memcpy((uint8_t*)constBuffer, blockData.buffer, blockData.size);
 
                D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
                desc.BufferLocation = constBuffer;
-               desc.SizeInBytes = blockData.size;
+               desc.SizeInBytes = alignedSize;
                gDX.device->CreateConstantBufferView(&desc, heapItems[cbvIdx++]);
             }
          }
