@@ -640,6 +640,8 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
              latte::Shader &vertexShader,
              GX2PixelShader *gx2Pixel,
              latte::Shader &pixelShader,
+             const std::string& vsAddend, 
+             const std::string& psAddend,
              std::string &hlsl)
 {
    auto result = true;
@@ -712,6 +714,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    result &= generateVertexParams(attribs, output);
    result &= generateBody(vertexShader, vertexBody);
    output << vertexBody;
+   output << vsAddend;
    result &= generateEpilog(output);
 
    auto pixelBody = std::string { };
@@ -720,6 +723,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
    result &= generatePixelParams(vertexShader, output);
    result &= generateBody(pixelShader, pixelBody);
    output << pixelBody;
+   output << psAddend;
    result &= generateEpilog(output);
 
    hlsl = output.str();

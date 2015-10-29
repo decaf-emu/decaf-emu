@@ -96,6 +96,14 @@ GX2_ENUM_END
 
 GX2_ENUM(GX2CompareFunction, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 7)
+   GX2_ENUM_VALUE(Never, 0)
+   GX2_ENUM_VALUE(Less, 1)
+   GX2_ENUM_VALUE(Equal, 2)
+   GX2_ENUM_VALUE(LessOrEqual, 3)
+   GX2_ENUM_VALUE(Greater, 4)
+   GX2_ENUM_VALUE(NotEqual, 5)
+   GX2_ENUM_VALUE(GreaterOrEqual, 6)
+   GX2_ENUM_VALUE(Always, 7)
 GX2_ENUM_END
 
 GX2_ENUM(GX2ClearFlags, uint32_t)

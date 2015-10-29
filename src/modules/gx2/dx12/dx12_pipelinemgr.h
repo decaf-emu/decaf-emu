@@ -111,9 +111,32 @@ private:
          latte::decode(decVertexShader, latte::Shader::Vertex, { vertexShader->data.get(), vertexShader->size });
          latte::decode(decPixelShader, latte::Shader::Pixel, { pixelShader->data.get(), pixelShader->size });
 
+         std::string psAddend = "";
+         if (gDX.state.blendState.alphaTestEnabled) {
+            auto alphaFunc = gDX.state.blendState.alphaFunc;
+            if (alphaFunc == GX2CompareFunction::Always) {
+               psAddend = "discard;\n";
+            } else if (alphaFunc == GX2CompareFunction::Never) {
+               psAddend = "";
+            } else {
+               const char *testFunc = "";
+               switch (alphaFunc) {
+               case GX2CompareFunction::Less: testFunc = "<"; break;
+               case GX2CompareFunction::Equal: testFunc = "=="; break;
+               case GX2CompareFunction::LessOrEqual: testFunc = "<="; break;
+               case GX2CompareFunction::Greater: testFunc = ">"; break;
+               case GX2CompareFunction::NotEqual: testFunc = "!="; break;
+               case GX2CompareFunction::GreaterOrEqual: testFunc = ">="; break;
+               }
+               auto alphaRef = gDX.state.blendState.alphaRef;
+               psAddend = fmt::format("if (result.color0.a {} {}) discard;\n", testFunc, alphaRef);
+            }
+         }
+
          hlsl::generateHLSL({ (GX2AttribStream*)fetchData->attribs, fetchShader->attribCount },
                             vertexShader, decVertexShader,
                             pixelShader, decPixelShader,
+                            "", psAddend,
                             hlsl);
 
          gLog->trace("Compiled Shader:\n{}\n", hlsl);

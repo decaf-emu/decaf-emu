@@ -13,6 +13,8 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
              latte::Shader &vertexShader,
              GX2PixelShader *gx2Pixel,
              latte::Shader &pixelShader,
+             const std::string& vsAddend,
+             const std::string& psAddend,
              std::string &hlsl);
 
 }
