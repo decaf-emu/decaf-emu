@@ -211,13 +211,25 @@ GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer,
 
       CD3DX12_TEXTURE_COPY_LOCATION dest(gDX.tvScanBuffer->buffer.Get(), 0);
       CD3DX12_TEXTURE_COPY_LOCATION source(hostColorBuffer->buffer.Get(), 0);
-      gDX.commandList->CopyTextureRegion(&dest, 0, 0, 0, &source, nullptr);
+
+      D3D12_BOX rect;
+      rect.left = 0;
+      rect.top = 0;
+      rect.right = hostColorBuffer->source->surface.width;
+      rect.bottom = hostColorBuffer->source->surface.height;
+      gDX.commandList->CopyTextureRegion(&dest, 0, 0, 0, &source, &rect);
 
    } else if (scanTarget == GX2ScanTarget::DRC) {
 
       CD3DX12_TEXTURE_COPY_LOCATION dest(gDX.drcScanBuffer->buffer.Get(), 0);
       CD3DX12_TEXTURE_COPY_LOCATION source(hostColorBuffer->buffer.Get(), 0);
-      gDX.commandList->CopyTextureRegion(&dest, 0, 0, 0, &source, nullptr);
+
+      D3D12_BOX rect;
+      rect.left = 0;
+      rect.top = 0;
+      rect.right = hostColorBuffer->source->surface.width;
+      rect.bottom = hostColorBuffer->source->surface.height;
+      gDX.commandList->CopyTextureRegion(&dest, 0, 0, 0, &source, &rect);
 
    }
 
