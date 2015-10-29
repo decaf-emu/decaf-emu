@@ -31,6 +31,8 @@ public:
       GX2FetchShader *mFetchShader;
       GX2PixelShader *mPixelShader;
       GX2VertexShader *mVertexShader;
+      DXState::ContextState::BlendState mBlendState;
+      DXState::ContextState::TargetBlendState mTgtBlendState[8];
       ComPtr<ID3D12PipelineState> mPipelineState;
 
    };
@@ -46,7 +48,10 @@ public:
       for (auto &i : mItems) {
          if (i->mFetchShader == gDX.state.fetchShader &&
             i->mVertexShader == gDX.state.vertexShader &&
-            i->mPixelShader == gDX.state.pixelShader) {
+            i->mPixelShader == gDX.state.pixelShader &&
+            memcmp(&i->mBlendState, &gDX.state.blendState, sizeof(gDX.state.blendState) == 0) &&
+            memcmp(i->mTgtBlendState, gDX.state.targetBlendState, sizeof(gDX.state.targetBlendState)) == 0)
+         {
             return i->mPipelineState;
          }
       }
@@ -61,12 +66,12 @@ private:
       {
          auto shader = gDX.state.fetchShader;
          auto dataPtr = (FetchShaderInfo*)(void*)shader->data;
-         gLog->debug("Fetch Shader [{}]:\n", (void*)shader);
-         gLog->debug("  Type: {}\n", dataPtr->type);
-         gLog->debug("  Tess: {}\n", dataPtr->tessMode);
+         gLog->trace("Fetch Shader [{}]:\n", (void*)shader);
+         gLog->trace("  Type: {}\n", dataPtr->type);
+         gLog->trace("  Tess: {}\n", dataPtr->tessMode);
          for (auto i = 0u; i < shader->attribCount; ++i) {
             auto attrib = dataPtr->attribs[i];
-            gLog->debug("  Attrib[{}] L:{}, B:{}, O:{}, F:{}, T:{}, A:{}, M:{:08x}, E:{}\n", i,
+            gLog->trace("  Attrib[{}] L:{}, B:{}, O:{}, F:{}, T:{}, A:{}, M:{:08x}, E:{}\n", i,
                (int32_t)attrib.location,
                (int32_t)attrib.buffer,
                (int32_t)attrib.offset,
@@ -82,7 +87,7 @@ private:
       {
          auto shader = gDX.state.vertexShader;
          vertexShaderCrc = crc32(shader->data, shader->size);
-         gLog->debug("Vertex Shader [{}] ({:08x})\n", (void*)shader, vertexShaderCrc);
+         gLog->trace("Vertex Shader [{}] ({:08x})\n", (void*)shader, vertexShaderCrc);
          GX2DumpShader(shader);
       }
       // Print Pixel Shader Data
@@ -90,7 +95,7 @@ private:
       {
          auto shader = gDX.state.pixelShader;
          pixelShaderCrc = crc32(shader->data, shader->size);
-         gLog->debug("Pixel Shader [{}] ({:08x})\n", (void*)shader, pixelShaderCrc);
+         gLog->trace("Pixel Shader [{}] ({:08x})\n", (void*)shader, pixelShaderCrc);
          GX2DumpShader(shader);
       }
 
@@ -111,7 +116,7 @@ private:
                             pixelShader, decPixelShader,
                             hlsl);
 
-         gLog->debug("Compiled Shader:\n{}\n", hlsl);
+         gLog->trace("Compiled Shader:\n{}\n", hlsl);
       }
 
       ComPtr<ID3DBlob> vertexShaderBlob;
@@ -229,7 +234,6 @@ private:
          psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
          psoDesc.SampleDesc.Count = 1;
 
-         /*
          if (gDX.state.primitiveRestartIdx == 0xFFFF) {
             psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF;
          } else if (gDX.state.primitiveRestartIdx == 0xFFFFFFFF) {
@@ -237,25 +241,30 @@ private:
          } else {
             throw;
          }
-         */
 
          auto &blendState = gDX.state.blendState;
-         if (blendState.blendEnabled) {
+         if ((blendState.blendEnabled & ~1) != 0) {
             psoDesc.BlendState.IndependentBlendEnable = true;
-            for (auto i = 0; i < 8; ++i) {
-               auto &targetState = gDX.state.targetBlendState[i];
-               auto &rtInfo = psoDesc.BlendState.RenderTarget[i];
-               rtInfo.LogicOpEnable = false;
-               rtInfo.LogicOp = D3D12_LOGIC_OP_COPY;
-               rtInfo.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-               rtInfo.BlendEnable = blendState.blendEnabled & (1 << i);
-               rtInfo.SrcBlend = dx12MakeBlend(targetState.colorSrcBlend);
-               rtInfo.DestBlend = dx12MakeBlend(targetState.colorDstBlend);
-               rtInfo.BlendOp = dx12MakeBlendOp(targetState.colorCombine);
-               rtInfo.SrcBlendAlpha = dx12MakeBlend(targetState.alphaSrcBlend);
-               rtInfo.DestBlendAlpha = dx12MakeBlend(targetState.alphaDstBlend);
-               rtInfo.BlendOpAlpha = dx12MakeBlendOp(targetState.alphaCombine);
+         } else {
+            psoDesc.BlendState.IndependentBlendEnable = false;
+         }
+         for (auto i = 0; i < 8; ++i) {
+            auto &targetState = gDX.state.targetBlendState[i];
+            auto &rtInfo = psoDesc.BlendState.RenderTarget[i];
+            rtInfo.BlendEnable = blendState.blendEnabled & (1 << i);
+            rtInfo.LogicOpEnable = !rtInfo.BlendEnable;
+            rtInfo.LogicOp = dx12MakeLogicOp(blendState.logicOp);
+            rtInfo.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+            rtInfo.SrcBlend = dx12MakeBlend(targetState.colorSrcBlend);
+            rtInfo.DestBlend = dx12MakeBlend(targetState.colorDstBlend);
+            rtInfo.BlendOp = dx12MakeBlendOp(targetState.colorCombine);
+            rtInfo.SrcBlendAlpha = dx12MakeBlend(targetState.alphaSrcBlend);
+            rtInfo.DestBlendAlpha = dx12MakeBlend(targetState.alphaDstBlend);
+            rtInfo.BlendOpAlpha = dx12MakeBlendOp(targetState.alphaCombine);
 
+            if (rtInfo.BlendEnable && blendState.logicOp != GX2LogicOp::Copy) {
+               // Can't have both of these in DX12
+               throw;
             }
          }
 
@@ -267,6 +276,8 @@ private:
       item->mVertexShader = vertexShader;
       item->mPixelShader = pixelShader;
       item->mPipelineState = pipelineState;
+      memcpy(&item->mBlendState, &gDX.state.blendState, sizeof(gDX.state.blendState));
+      memcpy(item->mTgtBlendState, gDX.state.targetBlendState, sizeof(gDX.state.targetBlendState));
       mItems.push_back(item);
       return item->mPipelineState;
    }

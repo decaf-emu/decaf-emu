@@ -84,7 +84,7 @@ struct DXState {
       GX2PixelShader *pixelShader;
       GX2GeometryShader *geomShader;
       GX2Sampler *pixelSampler[GX2_NUM_TEXTURE_UNIT];
-      struct {
+      struct BlendState {
          GX2LogicOp::Value logicOp;
          uint8_t blendEnabled;
          float constColor[4];
@@ -92,7 +92,7 @@ struct DXState {
          GX2CompareFunction::Value alphaFunc;
          float alphaRef;
       } blendState;
-      struct {
+      struct TargetBlendState {
          GX2BlendMode::Value colorSrcBlend;
          GX2BlendMode::Value colorDstBlend;
          GX2BlendCombineMode::Value colorCombine;

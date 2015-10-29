@@ -65,6 +65,45 @@ inline const D3D12_BLEND dx12MakeBlend(GX2BlendMode::Value mode) {
    }
 }
 
+inline const D3D12_LOGIC_OP dx12MakeLogicOp(GX2LogicOp::Value op) {
+   switch (op) {
+   case GX2LogicOp::Clear:
+      return D3D12_LOGIC_OP_CLEAR;
+   case GX2LogicOp::Nor:
+      return D3D12_LOGIC_OP_NOR;
+   case GX2LogicOp::InvertedAnd:
+      return D3D12_LOGIC_OP_AND_INVERTED;
+   case GX2LogicOp::InvertedCopy:
+      return D3D12_LOGIC_OP_COPY_INVERTED;
+   case GX2LogicOp::ReverseAnd:
+      return D3D12_LOGIC_OP_AND_REVERSE;
+   case GX2LogicOp::Invert:
+      return D3D12_LOGIC_OP_INVERT;
+   case GX2LogicOp::Xor:
+      return D3D12_LOGIC_OP_XOR;
+   case GX2LogicOp::NotAnd:
+      return D3D12_LOGIC_OP_NAND;
+   case GX2LogicOp::And:
+      return D3D12_LOGIC_OP_AND;
+   case GX2LogicOp::Equiv:
+      return D3D12_LOGIC_OP_EQUIV;
+   case GX2LogicOp::NoOp:
+      return D3D12_LOGIC_OP_NOOP;
+   case GX2LogicOp::InvertedOr:
+      return D3D12_LOGIC_OP_OR_INVERTED;
+   case GX2LogicOp::Copy:
+      return D3D12_LOGIC_OP_COPY;
+   case GX2LogicOp::ReverseOr:
+      return D3D12_LOGIC_OP_OR_REVERSE;
+   case GX2LogicOp::Or:
+      return D3D12_LOGIC_OP_OR;
+   case GX2LogicOp::Set:
+      return D3D12_LOGIC_OP_SET;
+   default:
+      throw;
+   }
+}
+
 inline const D3D12_PRIMITIVE_TOPOLOGY dx12MakePrimitiveTopology(GX2PrimitiveMode::Value mode) {
    switch (mode) {
    case GX2PrimitiveMode::Triangles:

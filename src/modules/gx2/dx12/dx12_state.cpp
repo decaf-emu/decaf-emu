@@ -524,6 +524,8 @@ void dx::updatePipeline()
 {
    auto pipelineState = gDX.pipelineMgr->findOrCreate().Get();
    gDX.commandList->SetPipelineState(pipelineState);
+
+   gDX.commandList->OMSetBlendFactor(gDX.state.blendState.constColor);
 }
 
 template<typename Type, int N, bool EndianSwap>

@@ -135,6 +135,22 @@ GX2_ENUM_END
 
 GX2_ENUM(GX2LogicOp, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 0xff)
+   GX2_ENUM_VALUE(Clear, 0x00)
+   GX2_ENUM_VALUE(Nor, 0x11)
+   GX2_ENUM_VALUE(InvertedAnd, 0x22)
+   GX2_ENUM_VALUE(InvertedCopy, 0x33)
+   GX2_ENUM_VALUE(ReverseAnd, 0x44)
+   GX2_ENUM_VALUE(Invert, 0x55)
+   GX2_ENUM_VALUE(Xor, 0x66)
+   GX2_ENUM_VALUE(NotAnd, 0x77)
+   GX2_ENUM_VALUE(And, 0x88)
+   GX2_ENUM_VALUE(Equiv, 0x99)
+   GX2_ENUM_VALUE(NoOp, 0xAA)
+   GX2_ENUM_VALUE(InvertedOr, 0xBB)
+   GX2_ENUM_VALUE(Copy, 0xCC)
+   GX2_ENUM_VALUE(ReverseOr, 0xDD)
+   GX2_ENUM_VALUE(Or, 0xEE)
+   GX2_ENUM_VALUE(Set, 0xFF)
 GX2_ENUM_END
 
 GX2_ENUM(GX2PrimitiveMode, uint32_t)

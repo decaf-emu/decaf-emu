@@ -11,6 +11,8 @@
 #include "memory_translate.h"
 #include "gpu/latte_untile.h"
 
+//#define ENABLE_GX2_DUMP
+
 #pragma pack(1)
 
 struct DdsPixelFormat {
@@ -73,6 +75,7 @@ GX2DumpData(std::ofstream &file, const void *data, size_t size)
 void
 GX2DumpTexture(const GX2Texture *texture)
 {
+#ifdef ENABLE_GX2_DUMP
    GX2CreateDumpDirectory();
 
    // Write text dump of GX2Texture structure to texture_X.txt
@@ -156,11 +159,13 @@ GX2DumpTexture(const GX2Texture *texture)
    GX2DumpData(binaryDds, "DDS ", 4);
    GX2DumpData(binaryDds, &ddsHeader, sizeof(ddsHeader));
    GX2DumpData(binaryDds, &data[0], data.size());
+#endif
 }
 
 static void
 GX2DumpShader(const std::string &filename, const std::string &info, uint8_t *data, size_t size)
 {
+#ifdef ENABLE_GX2_DUMP
    std::string output;
 
    // Write binary of shader data to shader_pixel_X.bin
@@ -187,6 +192,7 @@ GX2DumpShader(const std::string &filename, const std::string &info, uint8_t *dat
    file
       << "Decompiled:" << std::endl
       << output << std::endl;
+#endif
 }
 
 static void
@@ -218,8 +224,30 @@ formatUniformVars(fmt::MemoryWriter &out, uint32_t count, GX2UniformVar *vars)
 }
 
 void
+GX2DumpShader(GX2FetchShader *shader)
+{
+#ifdef ENABLE_GX2_DUMP
+   fmt::MemoryWriter out;
+   out << "GX2VertexShader:\n"
+      << "  size: " << shader->size << "\n"
+      << "  mode: " << GX2EnumAsString(shader->mode) << "\n";
+
+   formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
+   formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
+
+   out << "  numUnk1: " << shader->numUnk1 << "\n";
+   out << "  numUnk2: " << shader->numUnk2 << "\n";
+   out << "  samplerVarCount: " << shader->samplerVarCount << "\n";
+   out << "  numUnk3: " << shader->numUnk3 << "\n";
+
+   GX2DumpShader("shader_vertex_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
+#endif
+}
+
+void
 GX2DumpShader(GX2PixelShader *shader)
 {
+#ifdef ENABLE_GX2_DUMP
    fmt::MemoryWriter out;
    out << "GX2PixelShader:\n"
       << "  size: " << shader->size << "\n"
@@ -236,11 +264,13 @@ GX2DumpShader(GX2PixelShader *shader)
    out << "  unk5: " << shader->unk5 << "\n";
    out << "  unk6: " << shader->unk6 << "\n";
    GX2DumpShader("shader_pixel_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
+#endif
 }
 
 void
 GX2DumpShader(GX2VertexShader *shader)
 {
+#ifdef ENABLE_GX2_DUMP
    fmt::MemoryWriter out;
    out << "GX2VertexShader:\n"
       << "  size: " << shader->size << "\n"
@@ -255,4 +285,5 @@ GX2DumpShader(GX2VertexShader *shader)
    out << "  numUnk3: " << shader->numUnk3 << "\n";
 
    GX2DumpShader("shader_vertex_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
+#endif
 }
