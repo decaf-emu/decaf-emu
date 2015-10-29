@@ -430,6 +430,8 @@ void dx::_endFrame() {
       samplerDesc.MinLOD = 0.0f;
       samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
       gDX.device->CreateSampler(&samplerDesc, sampler);
+
+      gDX.commandList->SetGraphicsRootDescriptorTable(2, sampler);
    }
 
    // Render TV ScanBuffer
