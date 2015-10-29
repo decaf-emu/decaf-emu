@@ -648,6 +648,9 @@
     <ClCompile Include="..\src\modules\gx2\gx2_format.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_taskqueue.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1207,6 +1210,12 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_format.h">
       <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\be_volatile.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -157,6 +157,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_memlist.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_memory.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_messagequeue.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_taskqueue.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_mutex.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_rendezvous.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_scheduler.cpp" />
@@ -290,6 +291,7 @@
     <ClInclude Include="..\src\memory_translate.h" />
     <ClInclude Include="..\src\mem\mem.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_sci.h" />
     <ClInclude Include="..\src\modules\gameloader\gameloader.h" />
@@ -412,6 +414,7 @@
     <ClInclude Include="..\src\utils\be_data.h" />
     <ClInclude Include="..\src\utils\be_val.h" />
     <ClInclude Include="..\src\utils\be_vec.h" />
+    <ClInclude Include="..\src\utils\be_volatile.h" />
     <ClInclude Include="..\src\utils\binaryfile.h" />
     <ClInclude Include="..\src\utils\binaryview.h" />
     <ClInclude Include="..\src\utils\bitutils.h" />

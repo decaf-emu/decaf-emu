@@ -53,6 +53,7 @@ private:
    static void registerSharedFunctions();
    static void registerSpinLockFunctions();
    static void registerSystemInfoFunctions();
+   static void registerTaskQueueFunctions();
    static void registerThreadFunctions();
    static void registerTimeFunctions();
    static void registerUserConfigFunctions();

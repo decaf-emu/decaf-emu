@@ -56,6 +56,7 @@ CoreInit::RegisterFunctions()
    registerSharedFunctions();
    registerSpinLockFunctions();
    registerSystemInfoFunctions();
+   registerTaskQueueFunctions();
    registerThreadFunctions();
    registerTimeFunctions();
    registerUserConfigFunctions();
