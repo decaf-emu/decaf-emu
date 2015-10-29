@@ -51,8 +51,8 @@ struct DXTextureData : public HostLookupItem<GX2Texture> {
    void upload() {
       gDX.commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
 
-      uint32_t rowPitch;
-      untileSurface(&source->surface, textureData, rowPitch);
+      size_t rowPitch;
+      latte::untileSurface(&source->surface, textureData, rowPitch);
 
       D3D12_SUBRESOURCE_DATA uploadData = {};
       uploadData.pData = &textureData[0];

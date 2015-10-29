@@ -128,8 +128,8 @@ convert(const std::string &filenameIn, const std::string &filenameOut)
 
    for (auto &tex : textures) {
       std::vector<uint8_t> untiledData;
-      uint32_t untiledPitch = 0;
-      untileSurface(&tex.header->surface, tex.imageData.data(), untiledData, untiledPitch);
+      size_t untiledPitch = 0;
+      latte::untileSurface(&tex.header->surface, tex.imageData.data(), untiledData, untiledPitch);
 
       // MAGIC DDS
       DdsHeader ddsHeader;

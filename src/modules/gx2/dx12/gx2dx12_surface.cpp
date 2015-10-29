@@ -6,25 +6,6 @@
 #include "dx12_colorbuffer.h"
 
 void
-GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
-{
-   // TODO: GX2CalcSurfaceSizeAndAlignment
-   surface->alignment = 4;
-   surface->imageSize = 4 * surface->width * surface->height;
-   surface->pitch = surface->width;
-}
-
-void
-GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer,
-                          be_val<uint32_t> *outSize,
-                          be_val<uint32_t> *outAlignment)
-{
-   // TODO: GX2CalcDepthBufferHiZInfo
-   *outSize = depthBuffer->surface.imageSize / (8 * 8);
-   *outAlignment = 4;
-}
-
-void
 _GX2SetColorBuffer(GX2ColorBuffer *colorBuffer,
                   uint32_t renderTarget)
 {

@@ -128,8 +128,8 @@ GX2DumpTexture(const GX2Texture *texture)
    }
 
    std::vector<uint8_t> data;
-   uint32_t rowPitch;
-   untileSurface(&texture->surface, data, rowPitch);
+   size_t rowPitch;
+   latte::untileSurface(&texture->surface, data, rowPitch);
 
    DdsHeader ddsHeader;
    memset(&ddsHeader, 0, sizeof(ddsHeader));

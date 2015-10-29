@@ -2,7 +2,9 @@
 #include <cstdint>
 #include <exception>
 #include <vector>
+#include "modules/gx2/gx2_format.h"
 #include "modules/gx2/gx2_surface.h"
+#include "latte_untile.h"
 #include "utils/bitutils.h"
 #include "utils/align.h"
 
@@ -12,320 +14,24 @@ constexpr Type integral_log2(Type n, Type p = 0)
    return (n <= 1) ? p : integral_log2(n / 2, p + 1);
 }
 
-static const auto num_channels = 2u;
-static const auto num_banks = 4u;
-static const auto group_bytes = 256u;
-static const auto row_bytes = 2 * 1024u;
-static const auto bank_swap_bytes = 256u;
-static const auto sample_split_bytes = 2 * 1024u;
-static const auto channel_bits = integral_log2(num_channels);
-static const auto bank_bits = integral_log2(num_banks);
-static const auto group_bits = integral_log2(group_bytes);
-static const auto tile_width = 8u;
-static const auto tile_height = 8u;
-
 struct TileInfo
 {
    GX2SurfaceFormat::Value surfaceFormat;
    GX2TileMode::Value tileMode;
-   unsigned numSamples;
-   unsigned curSample;
-   unsigned pitchElements;
-   unsigned width;
-   unsigned height;
-   unsigned swizzle;
-   unsigned elementBytes;
-   unsigned tileThickness;
+   size_t numSamples;
+   size_t curSample;
+   size_t pitchElements;
+   size_t width;
+   size_t height;
+   size_t swizzle;
+   size_t elementBytes;
+   size_t tileThickness;
    bool isDepthTexture;
    bool isStencilTexture;
 };
 
-static inline std::pair<unsigned, unsigned>
-GX2GetBlockSize(GX2SurfaceFormat::Value format)
+namespace latte
 {
-   switch (format) {
-   case GX2SurfaceFormat::UNORM_BC1:
-   case GX2SurfaceFormat::UNORM_BC2:
-   case GX2SurfaceFormat::UNORM_BC3:
-   case GX2SurfaceFormat::UNORM_BC4:
-   case GX2SurfaceFormat::UNORM_BC5:
-   case GX2SurfaceFormat::SNORM_BC4:
-   case GX2SurfaceFormat::SNORM_BC5:
-   case GX2SurfaceFormat::SRGB_BC1:
-   case GX2SurfaceFormat::SRGB_BC2:
-   case GX2SurfaceFormat::SRGB_BC3:
-      return { 4, 4 };
-
-   case GX2SurfaceFormat::UNORM_R4_G4:
-   case GX2SurfaceFormat::UNORM_R4_G4_B4_A4:
-   case GX2SurfaceFormat::UNORM_R8:
-   case GX2SurfaceFormat::UNORM_R8_G8:
-   case GX2SurfaceFormat::UNORM_R8_G8_B8_A8:
-   case GX2SurfaceFormat::UNORM_R16:
-   case GX2SurfaceFormat::UNORM_R16_G16:
-   case GX2SurfaceFormat::UNORM_R16_G16_B16_A16:
-   case GX2SurfaceFormat::UNORM_R5_G6_B5:
-   case GX2SurfaceFormat::UNORM_R5_G5_B5_A1:
-   case GX2SurfaceFormat::UNORM_A1_B5_G5_R5:
-   case GX2SurfaceFormat::UNORM_R24_X8:
-   case GX2SurfaceFormat::UNORM_A2_B10_G10_R10:
-   case GX2SurfaceFormat::UNORM_R10_G10_B10_A2:
-   case GX2SurfaceFormat::UNORM_NV12:
-   case GX2SurfaceFormat::UINT_R8:
-   case GX2SurfaceFormat::UINT_R8_G8:
-   case GX2SurfaceFormat::UINT_R8_G8_B8_A8:
-   case GX2SurfaceFormat::UINT_R16:
-   case GX2SurfaceFormat::UINT_R16_G16:
-   case GX2SurfaceFormat::UINT_R16_G16_B16_A16:
-   case GX2SurfaceFormat::UINT_R32:
-   case GX2SurfaceFormat::UINT_R32_G32:
-   case GX2SurfaceFormat::UINT_R32_G32_B32_A32:
-   case GX2SurfaceFormat::UINT_A2_B10_G10_R10:
-   case GX2SurfaceFormat::UINT_R10_G10_B10_A2:
-   case GX2SurfaceFormat::UINT_X24_G8:
-   case GX2SurfaceFormat::UINT_G8_X24:
-   case GX2SurfaceFormat::SNORM_R8:
-   case GX2SurfaceFormat::SNORM_R8_G8:
-   case GX2SurfaceFormat::SNORM_R8_G8_B8_A8:
-   case GX2SurfaceFormat::SNORM_R16:
-   case GX2SurfaceFormat::SNORM_R16_G16:
-   case GX2SurfaceFormat::SNORM_R16_G16_B16_A16:
-   case GX2SurfaceFormat::SNORM_R10_G10_B10_A2:
-   case GX2SurfaceFormat::SINT_R8:
-   case GX2SurfaceFormat::SINT_R8_G8:
-   case GX2SurfaceFormat::SINT_R8_G8_B8_A8:
-   case GX2SurfaceFormat::SINT_R16:
-   case GX2SurfaceFormat::SINT_R16_G16:
-   case GX2SurfaceFormat::SINT_R16_G16_B16_A16:
-   case GX2SurfaceFormat::SINT_R32:
-   case GX2SurfaceFormat::SINT_R32_G32:
-   case GX2SurfaceFormat::SINT_R32_G32_B32_A32:
-   case GX2SurfaceFormat::SINT_R10_G10_B10_A2:
-   case GX2SurfaceFormat::SRGB_R8_G8_B8_A8:
-   case GX2SurfaceFormat::FLOAT_R32:
-   case GX2SurfaceFormat::FLOAT_R32_G32:
-   case GX2SurfaceFormat::FLOAT_R32_G32_B32_A32:
-   case GX2SurfaceFormat::FLOAT_R16:
-   case GX2SurfaceFormat::FLOAT_R16_G16:
-   case GX2SurfaceFormat::FLOAT_R16_G16_B16_A16:
-   case GX2SurfaceFormat::FLOAT_R11_G11_B10:
-   case GX2SurfaceFormat::FLOAT_D24_S8:
-   case GX2SurfaceFormat::FLOAT_X8_X24:
-      return { 1, 1 };
-
-   case GX2SurfaceFormat::INVALID:
-   default:
-      throw std::runtime_error("Unexpected GX2SurfaceFormat");
-      return { 1, 1 };
-   }
-}
-
-static inline unsigned
-GX2GetElementBytes(GX2SurfaceFormat::Value format)
-{
-   static const auto bc1 = 8;
-   static const auto bc2 = 16;
-   static const auto bc3 = 16;
-   static const auto bc4 = 8;
-   static const auto bc5 = 16;
-
-   switch (format) {
-   case GX2SurfaceFormat::UNORM_R4_G4:
-      return 1;
-   case GX2SurfaceFormat::UNORM_R4_G4_B4_A4:
-      return 2;
-   case GX2SurfaceFormat::UNORM_R8:
-      return 1;
-   case GX2SurfaceFormat::UNORM_R8_G8:
-      return 2;
-   case GX2SurfaceFormat::UNORM_R8_G8_B8_A8:
-      return 4;
-   case GX2SurfaceFormat::UNORM_R16:
-      return 2;
-   case GX2SurfaceFormat::UNORM_R16_G16:
-      return 4;
-   case GX2SurfaceFormat::UNORM_R16_G16_B16_A16:
-      return 8;
-   case GX2SurfaceFormat::UNORM_R5_G6_B5:
-      return 2;
-   case GX2SurfaceFormat::UNORM_R5_G5_B5_A1:
-      return 2;
-   case GX2SurfaceFormat::UNORM_A1_B5_G5_R5:
-      return 2;
-   case GX2SurfaceFormat::UNORM_R24_X8:
-      return 4;
-   case GX2SurfaceFormat::UNORM_A2_B10_G10_R10:
-      return 4;
-   case GX2SurfaceFormat::UNORM_R10_G10_B10_A2:
-      return 4;
-   case GX2SurfaceFormat::UNORM_BC1:
-      return bc1;
-   case GX2SurfaceFormat::UNORM_BC2:
-      return bc2;
-   case GX2SurfaceFormat::UNORM_BC3:
-      return bc3;
-   case GX2SurfaceFormat::UNORM_BC4:
-      return bc4;
-   case GX2SurfaceFormat::UNORM_BC5:
-      return bc5;
-   case GX2SurfaceFormat::UNORM_NV12:
-      return 0;
-
-   case GX2SurfaceFormat::UINT_R8:
-      return 1;
-   case GX2SurfaceFormat::UINT_R8_G8:
-      return 2;
-   case GX2SurfaceFormat::UINT_R8_G8_B8_A8:
-      return 4;
-   case GX2SurfaceFormat::UINT_R16:
-      return 2;
-   case GX2SurfaceFormat::UINT_R16_G16:
-      return 4;
-   case GX2SurfaceFormat::UINT_R16_G16_B16_A16:
-      return 8;
-   case GX2SurfaceFormat::UINT_R32:
-      return 4;
-   case GX2SurfaceFormat::UINT_R32_G32:
-      return 8;
-   case GX2SurfaceFormat::UINT_R32_G32_B32_A32:
-      return 16;
-   case GX2SurfaceFormat::UINT_A2_B10_G10_R10:
-      return 4;
-   case GX2SurfaceFormat::UINT_R10_G10_B10_A2:
-      return 4;
-   case GX2SurfaceFormat::UINT_X24_G8:
-      return 4;
-   case GX2SurfaceFormat::UINT_G8_X24:
-      return 4;
-
-   case GX2SurfaceFormat::SNORM_R8:
-      return 1;
-   case GX2SurfaceFormat::SNORM_R8_G8:
-      return 2;
-   case GX2SurfaceFormat::SNORM_R8_G8_B8_A8:
-      return 4;
-   case GX2SurfaceFormat::SNORM_R16:
-      return 2;
-   case GX2SurfaceFormat::SNORM_R16_G16:
-      return 4;
-   case GX2SurfaceFormat::SNORM_R16_G16_B16_A16:
-      return 8;
-   case GX2SurfaceFormat::SNORM_R10_G10_B10_A2:
-      return 4;
-   case GX2SurfaceFormat::SNORM_BC4:
-      return bc4;
-   case GX2SurfaceFormat::SNORM_BC5:
-      return bc5;
-
-   case GX2SurfaceFormat::SINT_R8:
-      return 1;
-   case GX2SurfaceFormat::SINT_R8_G8:
-      return 2;
-   case GX2SurfaceFormat::SINT_R8_G8_B8_A8:
-      return 4;
-   case GX2SurfaceFormat::SINT_R16:
-      return 2;
-   case GX2SurfaceFormat::SINT_R16_G16:
-      return 4;
-   case GX2SurfaceFormat::SINT_R16_G16_B16_A16:
-      return 8;
-   case GX2SurfaceFormat::SINT_R32:
-      return 4;
-   case GX2SurfaceFormat::SINT_R32_G32:
-      return 8;
-   case GX2SurfaceFormat::SINT_R32_G32_B32_A32:
-      return 16;
-   case GX2SurfaceFormat::SINT_R10_G10_B10_A2:
-      return 4;
-
-   case GX2SurfaceFormat::SRGB_R8_G8_B8_A8:
-      return 4;
-   case GX2SurfaceFormat::SRGB_BC1:
-      return bc1;
-   case GX2SurfaceFormat::SRGB_BC2:
-      return bc2;
-   case GX2SurfaceFormat::SRGB_BC3:
-      return bc3;
-
-   case GX2SurfaceFormat::FLOAT_R32:
-      return 4;
-   case GX2SurfaceFormat::FLOAT_R32_G32:
-      return 8;
-   case GX2SurfaceFormat::FLOAT_R32_G32_B32_A32:
-      return 16;
-   case GX2SurfaceFormat::FLOAT_R16:
-      return 2;
-   case GX2SurfaceFormat::FLOAT_R16_G16:
-      return 4;
-   case GX2SurfaceFormat::FLOAT_R16_G16_B16_A16:
-      return 8;
-   case GX2SurfaceFormat::FLOAT_R11_G11_B10:
-      return 4;
-   case GX2SurfaceFormat::FLOAT_D24_S8:
-      return 4;
-   case GX2SurfaceFormat::FLOAT_X8_X24:
-      return 4;
-
-   case GX2SurfaceFormat::INVALID:
-   default:
-      throw std::runtime_error("Unexpected GX2SurfaceFormat");
-      return 0;
-   }
-}
-
-static inline unsigned
-GX2GetTileThickness(GX2TileMode::Value mode)
-{
-   switch (mode) {
-   case GX2TileMode::LinearAligned:
-   case GX2TileMode::LinearSpecial:
-   case GX2TileMode::Tiled1DThin1:
-   case GX2TileMode::Tiled2DThin1:
-   case GX2TileMode::Tiled2DThin2:
-   case GX2TileMode::Tiled2DThin4:
-   case GX2TileMode::Tiled2BThin1:
-   case GX2TileMode::Tiled2BThin2:
-   case GX2TileMode::Tiled2BThin4:
-   case GX2TileMode::Tiled3DThin1:
-   case GX2TileMode::Tiled3BThin1:
-      return 1;
-   case GX2TileMode::Tiled1DThick:
-   case GX2TileMode::Tiled2DThick:
-   case GX2TileMode::Tiled2BThick:
-   case GX2TileMode::Tiled3DThick:
-   case GX2TileMode::Tiled3BThick:
-      return 4;
-   case GX2TileMode::Default:
-   default:
-      throw std::runtime_error("Unexpected GX2TileMode");
-      return 0;
-   }
-}
-
-static inline std::pair<unsigned, unsigned>
-GX2GetMacroTileSize(GX2TileMode::Value mode)
-{
-   switch (mode) {
-   case GX2TileMode::Tiled2DThin1:
-   case GX2TileMode::Tiled2DThick:
-   case GX2TileMode::Tiled2BThin1:
-   case GX2TileMode::Tiled2BThick:
-   case GX2TileMode::Tiled3DThin1:
-   case GX2TileMode::Tiled3DThick:
-   case GX2TileMode::Tiled3BThin1:
-   case GX2TileMode::Tiled3BThick:
-      return { num_banks, num_channels };
-   case GX2TileMode::Tiled2DThin2:
-   case GX2TileMode::Tiled2BThin2:
-      return { num_banks / 2, num_channels * 2 };
-   case GX2TileMode::Tiled2DThin4:
-   case GX2TileMode::Tiled2BThin4:
-      return { num_banks / 4, num_channels * 4 };
-   default:
-      throw std::logic_error("Unexpected GX2TileMode");
-      return { 0, 0 };
-   }
-}
 
 static inline bool
 GX2TileModeNeedsChannelRotation(GX2TileMode::Value mode)
@@ -375,10 +81,10 @@ GX2TileModeNeedsBankSwapping(GX2TileMode::Value mode)
    }
 }
 
-static inline unsigned
-get_pixel_number(const TileInfo &info, unsigned x, unsigned y, unsigned z)
+static inline size_t
+get_pixel_number(const TileInfo &info, size_t x, size_t y, size_t z)
 {
-   auto pixel_number = 0u;
+   size_t pixel_number = 0;
 
    if (info.isDepthTexture) {
       // Depth textures have a special pixel number
@@ -444,15 +150,15 @@ get_pixel_number(const TileInfo &info, unsigned x, unsigned y, unsigned z)
    return pixel_number;
 }
 
-static inline unsigned
-get_element_offset(const TileInfo &info, unsigned pixel_number, unsigned tile_bytes)
+static inline size_t
+get_element_offset(const TileInfo &info, size_t pixel_number, size_t tile_bytes)
 {
-   static const auto stencil_data_size = 1u;
-   static const auto depth_data_size = 3u;
+   static const size_t stencil_data_size = 1;
+   static const size_t depth_data_size = 3;
    auto element_bytes = info.elementBytes;
    auto num_samples = info.numSamples;
    auto sample_number = info.curSample;
-   auto element_offset = 0u;
+   auto element_offset = static_cast<size_t>(0);
 
    if (!info.isDepthTexture) {
       auto sample_offset = sample_number * (tile_bytes / num_samples);
@@ -461,7 +167,7 @@ get_element_offset(const TileInfo &info, unsigned pixel_number, unsigned tile_by
       auto pixel_offset = pixel_number * element_bytes * num_samples;
       element_offset = pixel_offset + (sample_number * element_bytes);
    } else if (element_bytes == 4) {
-      unsigned pixel_offset;
+      size_t pixel_offset;
 
       if (info.isStencilTexture) {
          pixel_offset = pixel_number * stencil_data_size;
@@ -477,19 +183,19 @@ get_element_offset(const TileInfo &info, unsigned pixel_number, unsigned tile_by
    return element_offset;
 }
 
-static inline unsigned
-get_channel(unsigned x, unsigned y)
+static inline size_t
+get_channel(size_t x, size_t y)
 {
-   auto channel = 0u;
+   size_t channel = 0;
    //channel[0] = x[3] ^ y[3]
    channel |= (get_bit<3>(x) ^ get_bit<3>(y)) << 0;
    return channel;
 }
 
-static inline unsigned
-get_bank(unsigned x, unsigned y)
+static inline size_t
+get_bank(size_t x, size_t y)
 {
-   auto bank = 0u;
+   size_t bank = 0;
    //bank[0] = x[3] ^ y[4 + log2(num_channels)]
    bank |= (get_bit<3>(x) ^ get_bit(y, 4 + channel_bits)) << 0;
 
@@ -498,8 +204,8 @@ get_bank(unsigned x, unsigned y)
    return bank;
 }
 
-unsigned
-get_1d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
+size_t
+get_1d_offset(const TileInfo &info, size_t x, size_t y, size_t z)
 {
    // Setup vars
    auto tile_thickness = info.tileThickness;
@@ -526,8 +232,8 @@ get_1d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
    return offset;
 }
 
-unsigned
-get_2d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
+size_t
+get_2d_offset(const TileInfo &info, size_t x, size_t y, size_t z)
 {
    // Setup vars
    auto tile_thickness = info.tileThickness;
@@ -559,10 +265,10 @@ get_2d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
    total_offset = total_offset + element_offset;
 
    // Calculate bank & channel
-   auto bank_slice_rotation = 0u;
-   auto bank_swap_rotation = 0u;
-   auto channel_slice_rotation = 0u;
-   auto sample_slice_rotation = 0u;
+   size_t bank_slice_rotation = 0;
+   size_t bank_swap_rotation = 0;
+   size_t channel_slice_rotation = 0;
+   size_t sample_slice_rotation = 0;
 
    auto do_channel_rotate = GX2TileModeNeedsChannelRotation(info.tileMode);
    auto do_bank_swapping = GX2TileModeNeedsBankSwapping(info.tileMode);
@@ -573,8 +279,8 @@ get_2d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
 
    if (do_channel_rotate) {
       // 3D & 3B formats
-      bank_slice_rotation = (std::max(1u, (num_channels / 2) - 1) * slice) / num_channels;
-      channel_slice_rotation = std::max(1u, (num_channels / 2) - 1) * slice;
+      bank_slice_rotation = (std::max(1ull, (num_channels / 2) - 1) * slice) / num_channels;
+      channel_slice_rotation = std::max(1ull, (num_channels / 2) - 1) * slice;
    } else {
       // 2D & 2B formats
       bank_slice_rotation = (((num_banks / 2) - 1) * slice);
@@ -598,7 +304,7 @@ get_2d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
    channel ^= (channel_swizzle + channel_slice_rotation) & (num_channels - 1);
 
    // Final offset
-   auto group_mask = (1u << group_bits) - 1;
+   auto group_mask = (1ull << group_bits) - 1;
    auto offset_low = total_offset & group_mask;
    auto offset_high = (total_offset & ~group_mask) << (channel_bits + bank_bits);
    auto offset = (bank << (group_bits + channel_bits)) + (channel << group_bits) + offset_low + offset_high;
@@ -607,12 +313,12 @@ get_2d_offset(const TileInfo &info, unsigned x, unsigned y, unsigned z)
 }
 
 void
-untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, uint32_t &pitchOut)
+untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, size_t &pitchOut)
 {
    if (surface->tileMode == GX2TileMode::LinearAligned) {
       out.resize(surface->imageSize);
       memcpy(&out[0], surface->image, surface->imageSize);
-      pitchOut = surface->pitch; // Probably fucked I bet
+      pitchOut = surface->pitch;
       return;
    }
 
@@ -624,10 +330,10 @@ untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, uint32_t &pi
       throw std::runtime_error("Unsupported tile mode Default");
    }
 
-   auto blockSize = GX2GetBlockSize(surface->format);
-   auto bpe = GX2GetElementBytes(surface->format);
-   uint32_t surfaceWidth = align_up(static_cast<uint32_t>(surface->width), blockSize.first);
-   uint32_t surfaceHeight = align_up(static_cast<uint32_t>(surface->height), blockSize.second);
+   auto blockSize = GX2GetSurfaceBlockSize(surface->format);
+   auto bpe = GX2GetSurfaceElementBytes(surface->format);
+   auto surfaceWidth = align_up<uint32_t>(surface->width, blockSize.first);
+   auto surfaceHeight = align_up<uint32_t>(surface->height, blockSize.second);
 
    // Setup tiling info
    TileInfo info;
@@ -652,15 +358,15 @@ untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, uint32_t &pi
    auto pitch = info.pitchElements * bpe;
 
    if (info.tileMode == GX2TileMode::Tiled1DThick || info.tileMode == GX2TileMode::Tiled1DThin1) {
-      for (auto y = 0u; y < info.height; ++y) {
-         for (auto x = 0u; x < info.width; ++x) {
+      for (size_t y = 0; y < info.height; ++y) {
+         for (size_t x = 0; x < info.width; ++x) {
             auto offset = get_1d_offset(info, x, y, 0);
             std::memcpy(dst + (y * pitch) + (x * bpe), src + offset, bpe);
          }
       }
    } else {
-      for (auto y = 0u; y < info.height; ++y) {
-         for (auto x = 0u; x < info.width; ++x) {
+      for (size_t y = 0; y < info.height; ++y) {
+         for (size_t x = 0; x < info.width; ++x) {
             auto offset = get_2d_offset(info, x, y, 0);
             std::memcpy(dst + (y * pitch) + (x * bpe), src + offset, bpe);
          }
@@ -668,4 +374,6 @@ untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, uint32_t &pi
    }
 
    pitchOut = pitch;
+}
+
 }
