@@ -267,9 +267,6 @@ std::pair<size_t, size_t>
 GX2GetMacroTileSize(GX2TileMode::Value mode)
 {
    switch (mode) {
-   case GX2TileMode::LinearAligned:
-   case GX2TileMode::LinearSpecial:
-      return { 0, 0 };
    case GX2TileMode::Tiled2DThin1:
    case GX2TileMode::Tiled2DThick:
    case GX2TileMode::Tiled2BThin1:

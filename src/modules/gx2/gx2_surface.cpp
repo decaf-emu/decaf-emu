@@ -18,13 +18,12 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
       surface->tileMode = GX2TileMode::LinearAligned;
    } else {
       // Warn, because we have not checked if our calculations are correct...
-      gLog->warn("Encountered non-default tileMode for format {}", GX2EnumAsString(surface->format));
+      gLog->warn("Encountered non-default tileMode {} for format {}", GX2EnumAsString(surface->tileMode), GX2EnumAsString(surface->format));
    }
 
    auto blockSize = GX2GetSurfaceBlockSize(surface->format);
    auto element_bytes = GX2GetSurfaceElementBytes(surface->format);
    auto tile_thickness = GX2GetTileThickness(surface->tileMode);
-   auto macro_tile_size = GX2GetMacroTileSize(surface->tileMode);
 
    size_t num_samples = 1;
    size_t pitch_elements_align = 1;
@@ -60,6 +59,7 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
    case GX2TileMode::Tiled3DThin1:
    case GX2TileMode::Tiled3BThin1:
    {
+      auto macro_tile_size = GX2GetMacroTileSize(surface->tileMode);
       auto macro_tile_width = macro_tile_size.first;
       auto macro_tile_height = macro_tile_size.second;
       auto tile_bytes = tile_width * tile_height * tile_thickness * element_bytes * num_samples;
