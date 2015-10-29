@@ -19,7 +19,7 @@ GX2SetBlendControl(GX2RenderTarget::Value target,
                    GX2BlendMode::Value colorSrcBlend,
                    GX2BlendMode::Value colorDstBlend,
                    GX2BlendCombineMode::Value colorCombine,
-                   uint32_t unk1,
+                   BOOL unk1,
                    GX2BlendMode::Value alphaSrcBlend,
                    GX2BlendMode::Value alphaDstBlend,
                    GX2BlendCombineMode::Value alphaCombine);

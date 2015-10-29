@@ -75,7 +75,7 @@ _GX2SetBlendControl(GX2RenderTarget::Value target,
                    GX2BlendMode::Value colorSrcBlend,
                    GX2BlendMode::Value colorDstBlend,
                    GX2BlendCombineMode::Value colorCombine,
-                   uint32_t unk1,
+                   BOOL useAlphaBlend,
                    GX2BlendMode::Value alphaSrcBlend,
                    GX2BlendMode::Value alphaDstBlend,
                    GX2BlendCombineMode::Value alphaCombine)
@@ -84,9 +84,15 @@ _GX2SetBlendControl(GX2RenderTarget::Value target,
    blendState.colorSrcBlend = colorSrcBlend;
    blendState.colorDstBlend = colorDstBlend;
    blendState.colorCombine = colorCombine;
-   blendState.alphaSrcBlend = alphaSrcBlend;
-   blendState.alphaDstBlend = alphaDstBlend;
-   blendState.alphaCombine = alphaCombine;
+   if (useAlphaBlend != 0) {
+      blendState.alphaSrcBlend = alphaSrcBlend;
+      blendState.alphaDstBlend = alphaDstBlend;
+      blendState.alphaCombine = alphaCombine;
+   } else {
+      blendState.alphaSrcBlend = blendState.colorSrcBlend;
+      blendState.alphaDstBlend = blendState.colorDstBlend;
+      blendState.alphaCombine = blendState.colorCombine;
+   }
 }
 
 void
@@ -94,14 +100,14 @@ GX2SetBlendControl(GX2RenderTarget::Value target,
    GX2BlendMode::Value colorSrcBlend,
    GX2BlendMode::Value colorDstBlend,
    GX2BlendCombineMode::Value colorCombine,
-   uint32_t unk1,
+   BOOL useAlphaBlend,
    GX2BlendMode::Value alphaSrcBlend,
    GX2BlendMode::Value alphaDstBlend,
    GX2BlendCombineMode::Value alphaCombine)
 {
    DX_DLCALL(_GX2SetBlendControl,
       target, colorSrcBlend, colorDstBlend, colorCombine,
-      unk1, alphaSrcBlend, alphaDstBlend, alphaCombine);
+      useAlphaBlend, alphaSrcBlend, alphaDstBlend, alphaCombine);
 }
 
 void
@@ -115,9 +121,6 @@ _GX2SetBlendConstantColor(float red,
    blendState.constColor[1] = green;
    blendState.constColor[2] = blue;
    blendState.constColor[3] = alpha;
-
-   // TODO: Why do we store this AND set it on DX12?
-   gDX.commandList->OMSetBlendFactor(blendState.constColor);
 }
 
 void
@@ -134,7 +137,6 @@ _GX2SetAlphaTest(BOOL enabled,
                 GX2CompareFunction::Value compare,
                 float reference)
 {
-   // TODO: Implement this with the shader compiler
    auto &blendState = gDX.state.blendState;
    blendState.alphaTestEnabled = (enabled != 0);
    blendState.alphaFunc = compare;
