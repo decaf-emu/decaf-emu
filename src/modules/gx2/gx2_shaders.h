@@ -4,6 +4,7 @@
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
+#include "gx2_sampler.h"
 
 struct GX2FetchShader
 {
@@ -123,7 +124,6 @@ CHECK_OFFSET(GX2PixelShader, 0xd4, samplerVars);
 CHECK_SIZE(GX2PixelShader, 0xe8);
 
 struct GX2GeometryShader;
-struct GX2PixelSampler;
 
 #pragma pack(push, 1)
 
@@ -182,7 +182,7 @@ void
 GX2SetGeometryShader(GX2GeometryShader *shader);
 
 void
-GX2SetPixelSampler(GX2PixelSampler *sampler, uint32_t id);
+GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id);
 
 void
 GX2SetVertexUniformReg(uint32_t offset, uint32_t count, void *data);

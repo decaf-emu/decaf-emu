@@ -86,12 +86,12 @@ void GX2SetGeometryShader(GX2GeometryShader *shader) {
 }
 
 void
-_GX2SetPixelSampler(GX2PixelSampler *sampler,
+_GX2SetPixelSampler(GX2Sampler *sampler,
                    uint32_t id)
 {
    gDX.state.pixelSampler[id] = sampler;
 }
-void GX2SetPixelSampler(GX2PixelSampler *sampler, uint32_t id) {
+void GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id) {
    DX_DLCALL(_GX2SetPixelSampler, sampler, id);
 }
 

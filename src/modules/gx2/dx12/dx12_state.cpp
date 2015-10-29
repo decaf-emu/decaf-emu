@@ -11,6 +11,7 @@
 #include "dx12_texture.h"
 #include "platform/platform_ui.h"
 #include "utils/byte_swap.h"
+#include "../gx2_sampler.h"
 
 DXState gDX;
 
@@ -158,6 +159,12 @@ void dx::initialise()
          srvHeapListDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
          srvHeapListDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
          gDX.srvHeapList[n] = new DXHeapList(gDX.device.Get(), srvHeapListDesc);
+
+         D3D12_DESCRIPTOR_HEAP_DESC sampleHeapListDesc = {};
+         sampleHeapListDesc.NumDescriptors = 2048;
+         sampleHeapListDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+         sampleHeapListDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+         gDX.sampleHeapList[n] = new DXHeapList(gDX.device.Get(), sampleHeapListDesc);
       }
    }
 
@@ -184,8 +191,8 @@ void dx::initialise()
    // Create the root signature.
    {
       
-      CD3DX12_ROOT_PARAMETER rootParameters[2];
-      CD3DX12_DESCRIPTOR_RANGE ranges[2];
+      CD3DX12_ROOT_PARAMETER rootParameters[3];
+      CD3DX12_DESCRIPTOR_RANGE ranges[3];
       uint32_t paramIdx = 0;
 
       ranges[paramIdx].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, GX2_NUM_UNIFORMBLOCKS, 0);
@@ -196,26 +203,12 @@ void dx::initialise()
       rootParameters[paramIdx].InitAsDescriptorTable(1, &ranges[paramIdx], D3D12_SHADER_VISIBILITY_ALL);
       paramIdx++;
 
-      D3D12_STATIC_SAMPLER_DESC samplers[GX2_NUM_SAMPLERS];
-      for (int i = 0; i < GX2_NUM_SAMPLERS; ++i) {
-         auto &sampler = samplers[i] = {};
-         sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-         sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-         sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-         sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-         sampler.MipLODBias = 0;
-         sampler.MaxAnisotropy = 0;
-         sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-         sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-         sampler.MinLOD = 0.0f;
-         sampler.MaxLOD = D3D12_FLOAT32_MAX;
-         sampler.ShaderRegister = i;
-         sampler.RegisterSpace = 0;
-         sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-      }
+      ranges[paramIdx].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, GX2_NUM_SAMPLERS, 0);
+      rootParameters[paramIdx].InitAsDescriptorTable(1, &ranges[paramIdx], D3D12_SHADER_VISIBILITY_ALL);
+      paramIdx++;
 
       CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-      rootSignatureDesc.Init(_countof(rootParameters), rootParameters, GX2_NUM_SAMPLERS, samplers, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+      rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
       ComPtr<ID3DBlob> signature;
       ComPtr<ID3DBlob> error;
@@ -367,7 +360,9 @@ void dx::_beginFrame() {
    gDX.frameIndex = gDX.swapChain->GetCurrentBackBufferIndex();
    gDX.curScanbufferRtv = gDX.scanbufferRtv[gDX.frameIndex];
    gDX.curSrvHeapList = gDX.srvHeapList[gDX.frameIndex];
+   gDX.curSampleHeapList = gDX.sampleHeapList[gDX.frameIndex];
    gDX.curSrvHeapList->reset();
+   gDX.curSampleHeapList->reset();
 
    // Command list allocators can only be reset when the associated
    // command lists have finished execution on the GPU; apps should use
@@ -404,6 +399,30 @@ void dx::_endFrame() {
 
    gDX.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
    gDX.commandList->IASetVertexBuffers(0, 1, &gDX.vertexBufferView);
+
+   // Setup Samplers
+   {
+      DXHeapList::Item sampler = gDX.curSampleHeapList->alloc();
+      for (auto i = 0; i < GX2_NUM_SAMPLERS - 1; ++i) {
+         gDX.curSampleHeapList->alloc();
+      }
+
+      D3D12_SAMPLER_DESC samplerDesc;
+      samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+      samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+      samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+      samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+      samplerDesc.MipLODBias = 0;
+      samplerDesc.MaxAnisotropy = 0;
+      samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+      samplerDesc.BorderColor[0] = 0;
+      samplerDesc.BorderColor[1] = 0;
+      samplerDesc.BorderColor[2] = 0;
+      samplerDesc.BorderColor[3] = 0;
+      samplerDesc.MinLOD = 0.0f;
+      samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+      gDX.device->CreateSampler(&samplerDesc, sampler);
+   }
 
    // Render TV ScanBuffer
    {
@@ -681,18 +700,75 @@ void dx::updateBuffers()
    }
    {
       DXHeapList::Item heapItems[GX2_NUM_SAMPLERS];
+      DXHeapList::Item samplerItems[GX2_NUM_SAMPLERS];
       for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
          heapItems[i] = gDX.curSrvHeapList->alloc();
+         samplerItems[i] = gDX.curSampleHeapList->alloc();
       }
 
       for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
          auto &tex = gDX.activeTextures[i];
+         auto &fetch = gDX.state.pixelSampler[i];
          if (tex) {
             gDX.device->CreateShaderResourceView(*tex, *tex, heapItems[i]);
+            
+            D3D12_SAMPLER_DESC samplerDesc;
+            samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+            samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+            samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+            samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+            samplerDesc.MipLODBias = 0;
+            samplerDesc.MaxAnisotropy = 0;
+            samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+            samplerDesc.BorderColor[0] = 0;
+            samplerDesc.BorderColor[1] = 0;
+            samplerDesc.BorderColor[2] = 0;
+            samplerDesc.BorderColor[3] = 0;
+            samplerDesc.MinLOD = 0.0f;
+            samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+            if (fetch) {
+               samplerDesc.Filter = D3D12_ENCODE_BASIC_FILTER(
+                  dx12MakeFilterType(fetch->minFilter), 
+                  dx12MakeFilterType(fetch->magFilter),
+                  dx12MakeMipFilterType(fetch->filterMip),
+                  D3D12_FILTER_REDUCTION_TYPE_STANDARD);
+               if (fetch->filterMip == GX2TexMipFilterMode::None) {
+                  samplerDesc.MinLOD = 0.0f;
+                  samplerDesc.MaxLOD = 0.0f;
+               }
+
+               samplerDesc.AddressU = dx12MakeAddressMode(fetch->clampX);
+               samplerDesc.AddressV = dx12MakeAddressMode(fetch->clampY);
+               samplerDesc.AddressW = dx12MakeAddressMode(fetch->clampZ);
+               switch (fetch->borderType) {
+               case GX2TexBorderType::TransparentBlack:
+                  samplerDesc.BorderColor[0] = 0;
+                  samplerDesc.BorderColor[1] = 0;
+                  samplerDesc.BorderColor[2] = 0;
+                  samplerDesc.BorderColor[3] = 0;
+                  break;
+               case GX2TexBorderType::Black:
+                  samplerDesc.BorderColor[0] = 0;
+                  samplerDesc.BorderColor[1] = 0;
+                  samplerDesc.BorderColor[2] = 0;
+                  samplerDesc.BorderColor[3] = 1;
+                  break;
+               case GX2TexBorderType::White:
+                  samplerDesc.BorderColor[0] = 1;
+                  samplerDesc.BorderColor[1] = 1;
+                  samplerDesc.BorderColor[2] = 1;
+                  samplerDesc.BorderColor[3] = 1;
+                  break;
+               case GX2TexBorderType::Variable:
+                  throw;
+               }
+            }
+            gDX.device->CreateSampler(&samplerDesc, samplerItems[i]);
          }
       }
 
       gDX.commandList->SetGraphicsRootDescriptorTable(1, heapItems[0]);
+      gDX.commandList->SetGraphicsRootDescriptorTable(2, samplerItems[0]);
    }
 }
 

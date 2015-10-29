@@ -3,7 +3,7 @@
 #include "modules/gx2/gx2_surface.h"
 #include "utils/align.h"
 
-static const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Value format) {
+inline const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Value format) {
    switch (format) {
    case GX2SurfaceFormat::UNORM_R8:
       return DXGI_FORMAT_R8_UNORM;
@@ -24,7 +24,7 @@ static const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Value format) {
    };
 };
 
-static const D3D12_BLEND dx12MakeBlend(GX2BlendMode::Value mode) {
+inline const D3D12_BLEND dx12MakeBlend(GX2BlendMode::Value mode) {
    switch (mode) {
    case GX2BlendMode::Zero:
       return D3D12_BLEND_ZERO;
@@ -65,7 +65,7 @@ static const D3D12_BLEND dx12MakeBlend(GX2BlendMode::Value mode) {
    }
 }
 
-static const D3D12_PRIMITIVE_TOPOLOGY dx12MakePrimitiveTopology(GX2PrimitiveMode::Value mode) {
+inline const D3D12_PRIMITIVE_TOPOLOGY dx12MakePrimitiveTopology(GX2PrimitiveMode::Value mode) {
    switch (mode) {
    case GX2PrimitiveMode::Triangles:
       return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -106,5 +106,47 @@ static const uint32_t dx12FixSize(GX2SurfaceFormat::Value format, uint32_t size)
       return align_up(size, 4);
    default:
       return size;
+   }
+}
+
+inline D3D12_TEXTURE_ADDRESS_MODE dx12MakeAddressMode(GX2TexClampMode::Value mode) {
+   switch (mode) {
+   case GX2TexClampMode::Wrap:
+      return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+   case GX2TexClampMode::Mirror:
+      return D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+   case GX2TexClampMode::Clamp:
+      return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+   case GX2TexClampMode::MirrorOnce:
+      return D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE;
+   case GX2TexClampMode::ClampBorder:
+      return D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+   default:
+      throw;
+   }
+}
+
+inline D3D12_FILTER_TYPE dx12MakeFilterType(GX2TexXYFilterMode::Value filter) {
+   switch (filter) {
+   case GX2TexXYFilterMode::Point:
+      return D3D12_FILTER_TYPE_POINT;
+   case GX2TexXYFilterMode::Linear:
+      return D3D12_FILTER_TYPE_LINEAR;
+   default:
+      throw;
+   }
+}
+
+inline D3D12_FILTER_TYPE dx12MakeMipFilterType(GX2TexMipFilterMode::Value filter) {
+   switch (filter) {
+   case GX2TexMipFilterMode::None:
+      // This is coupled with some work in the sampler creator too
+      return D3D12_FILTER_TYPE_POINT;
+   case GX2TexMipFilterMode::Point:
+      return D3D12_FILTER_TYPE_POINT;
+   case GX2TexMipFilterMode::Linear:
+      return D3D12_FILTER_TYPE_LINEAR;
+   default:
+      throw;
    }
 }

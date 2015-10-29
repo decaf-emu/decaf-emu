@@ -42,7 +42,9 @@ struct DXState {
    DXHeapItemPtr scanbufferRtv[FrameCount];
    DXHeapItemPtr curScanbufferRtv;
    DXHeapList *srvHeapList[FrameCount];
+   DXHeapList *sampleHeapList[FrameCount];
    DXHeapList *curSrvHeapList;
+   DXHeapList *curSampleHeapList;
    D3D12_VIEWPORT viewport;
    D3D12_RECT scissorRect;
    ComPtr<ID3D12Resource> vertexBuffer;
@@ -80,7 +82,7 @@ struct DXState {
       GX2VertexShader *vertexShader;
       GX2PixelShader *pixelShader;
       GX2GeometryShader *geomShader;
-      GX2PixelSampler *pixelSampler[GX2_NUM_TEXTURE_UNIT];
+      GX2Sampler *pixelSampler[GX2_NUM_TEXTURE_UNIT];
       struct {
          GX2LogicOp::Value logicOp;
          uint8_t blendEnabled;

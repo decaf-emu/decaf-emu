@@ -251,14 +251,26 @@ GX2_ENUM_END
 
 GX2_ENUM(GX2TexBorderType, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 3)
+   GX2_ENUM_VALUE(TransparentBlack, 0)
+   GX2_ENUM_VALUE(Black, 1)
+   GX2_ENUM_VALUE(White, 2)
+   GX2_ENUM_VALUE(Variable, 3)
 GX2_ENUM_END
 
 GX2_ENUM(GX2TexClampMode, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 7)
+   GX2_ENUM_VALUE(Wrap, 0)
+   GX2_ENUM_VALUE(Mirror, 1)
+   GX2_ENUM_VALUE(Clamp, 2)
+   GX2_ENUM_VALUE(MirrorOnce, 3)
+   GX2_ENUM_VALUE(ClampBorder, 6)
 GX2_ENUM_END
 
 GX2_ENUM(GX2TexMipFilterMode, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 2)
+   GX2_ENUM_VALUE(None, 0)
+   GX2_ENUM_VALUE(Point, 1)
+   GX2_ENUM_VALUE(Linear, 2)
 GX2_ENUM_END
 
 GX2_ENUM(GX2TexMipPerfMode, uint32_t)
@@ -267,6 +279,8 @@ GX2_ENUM_END
 
 GX2_ENUM(GX2TexXYFilterMode, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 1)
+   GX2_ENUM_VALUE(Point, 0)
+   GX2_ENUM_VALUE(Linear, 1)
 GX2_ENUM_END
 
 GX2_ENUM(GX2TexZFilterMode, uint32_t)

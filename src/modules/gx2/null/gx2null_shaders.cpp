@@ -54,7 +54,7 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
 }
 
 void
-GX2SetPixelSampler(GX2PixelSampler *sampler,
+GX2SetPixelSampler(GX2Sampler *sampler,
                    uint32_t id)
 {
 }
