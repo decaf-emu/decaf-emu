@@ -28,23 +28,6 @@ CHECK_SIZE(GX2Texture, 0x9c);
 #pragma pack(pop)
 
 void
-GX2InitSampler(GX2Sampler *sampler,
-               GX2TexClampMode::Value clampMode,
-               GX2TexXYFilterMode::Value minMagFilterMode);
-
-void
-GX2InitSamplerLOD(GX2Sampler *sampler, float unk1, float unk2, float unk3);
-
-void
-GX2InitSamplerZMFilter(GX2Sampler *samper, uint32_t unk1, uint32_t unk2);
-
-void
-GX2InitSamplerClamping(GX2Sampler *sampler, uint32_t unk1, uint32_t unk2, uint32_t unk3);
-
-void
-GX2InitSamplerXYFilter(GX2Sampler *sampler, uint32_t unk1, uint32_t unk2, uint32_t unk3);
-
-void
 GX2InitTextureRegs(GX2Texture *texture);
 
 void

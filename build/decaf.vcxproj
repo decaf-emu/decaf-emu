@@ -185,6 +185,7 @@
     <ClCompile Include="..\src\modules\gx2\gx2r_resource.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_debug.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_sampler.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_temp.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_vsync.cpp" />
     <ClCompile Include="..\src\modules\gx2\null\gx2null_context.cpp" />
@@ -308,6 +309,7 @@
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_enum.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_enum_string.h" />
+    <ClInclude Include="..\src\modules\gx2\gx2_sampler.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_vsync.h" />
     <ClInclude Include="..\src\modules\nn_act\nn_act_result.h" />
     <ClInclude Include="..\src\modules\nn_ac\nn_ac_result.h" />

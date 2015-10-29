@@ -37,6 +37,7 @@ private:
    static void registerDrawFunctions();
    static void registerResourceFunctions();
    static void registerRenderStateFunctions();
+   static void registerSamplerFunctions();
    static void registerShaderFunctions();
    static void registerSurfaceFunctions();
    static void registerTempFunctions();

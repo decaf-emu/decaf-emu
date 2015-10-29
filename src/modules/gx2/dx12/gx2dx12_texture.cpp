@@ -7,38 +7,6 @@
 #include "dx12_texture.h"
 
 void
-GX2InitSampler(GX2Sampler *sampler,
-               GX2TexClampMode::Value clampMode,
-               GX2TexXYFilterMode::Value minMagFilterMode)
-{
-   // TODO: GX2InitSampler
-}
-
-void
-GX2InitSamplerLOD(GX2Sampler *sampler, float unk1, float unk2, float unk3)
-{
-   // TODO: GX2InitSamplerLOD
-}
-
-void
-GX2InitSamplerZMFilter(GX2Sampler *samper, uint32_t unk1, uint32_t unk2)
-{
-   // TODO: GX2InitSamplerZMFilter
-}
-
-void
-GX2InitSamplerClamping(GX2Sampler *sampler, uint32_t unk1, uint32_t unk2, uint32_t unk3)
-{
-   // TODO: GX2InitSamplerClamping
-}
-
-void
-GX2InitSamplerXYFilter(GX2Sampler *sampler, uint32_t unk1, uint32_t unk2, uint32_t unk3)
-{
-   // TODO: GX2InitSamplerXYFilter
-}
-
-void
 GX2InitTextureRegs(GX2Texture *texture)
 {
    // TODO: GX2InitTextureRegs
@@ -53,7 +21,7 @@ _GX2SetPixelTexture(GX2Texture *texture,
    GX2DumpTexture(texture);
    DXTextureData *textureData = dx::getTexture(texture);
    textureData->upload();
-   
+
    gDX.activeTextures[unit] = textureData;
 }
 

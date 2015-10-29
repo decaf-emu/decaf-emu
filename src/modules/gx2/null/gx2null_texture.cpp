@@ -5,13 +5,6 @@
 #include "utils/log.h"
 
 void
-GX2InitSampler(GX2Sampler *sampler,
-               GX2TexClampMode::Value clampMode,
-               GX2TexXYFilterMode::Value minMagFilterMode)
-{
-}
-
-void
 GX2InitTextureRegs(GX2Texture *texture)
 {
 }
