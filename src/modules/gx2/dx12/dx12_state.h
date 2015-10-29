@@ -25,7 +25,7 @@ struct DXState {
 
    }
 
-   static const UINT FrameCount = 2;
+   static const UINT FrameCount = 4;
 
    // DX Basics
    ComPtr<IDXGISwapChain3> swapChain;
