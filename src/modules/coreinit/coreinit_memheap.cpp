@@ -7,6 +7,7 @@
 #include "memory_translate.h"
 #include "system.h"
 #include "utils/teenyheap.h"
+#include "utils/strutils.h"
 #include "utils/virtual_ptr.h"
 
 be_wfunc_ptr<void*, uint32_t>*
@@ -82,7 +83,7 @@ findHeapContainingBlock(MemoryList *list, void *block)
    CommonHeap *heap = nullptr;
    uint32_t addr = memory_untranslate(block);
 
-   while (heap = reinterpret_cast<CommonHeap*>(MEMGetNextListObject(list, heap))) {
+   while ((heap = reinterpret_cast<CommonHeap*>(MEMGetNextListObject(list, heap)))) {
       if (addr >= heap->dataStart && addr < heap->dataEnd) {
          auto child = findHeapContainingBlock(&heap->list, block);
          return child ? child : heap;
@@ -200,9 +201,9 @@ OSSprintfFromSystem(const char *format, ...)
 {
    va_list argptr;
    va_start(argptr, format);
-   auto size = _vscprintf(format, argptr) + 1;
+   auto size = vsnprintf(nullptr, 0, format, argptr) + 1;
    auto buffer = reinterpret_cast<char *>(OSAllocFromSystem(size, 4));
-   vsprintf_s(buffer, size, format, argptr);
+   vsnprintf(buffer, size, format, argptr);
    va_end(argptr);
    return buffer;
 }

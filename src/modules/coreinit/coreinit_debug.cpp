@@ -2,6 +2,7 @@
 #include "coreinit_debug.h"
 #include "utils/log.h"
 #include "utils/make_array.h"
+#include "utils/strutils.h"
 
 BOOL
 OSIsDebuggerPresent()
@@ -104,7 +105,7 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
          case 'c':
          case 'p':
          case 'n':
-            sprintf_s(buffer, 32, formatter.c_str(), args.next<uint32_t>());
+            snprintf(buffer, 32, formatter.c_str(), args.next<uint32_t>());
             output.append(buffer);
             break;
          case 's':

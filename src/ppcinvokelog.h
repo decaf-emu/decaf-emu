@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <string>
 #include "config.h"
+#include "utils/strutils.h"
 #include "utils/virtual_ptr.h"
 
 namespace ppctypes
@@ -19,7 +20,7 @@ static inline void
 logCall(LogState &state, uint32_t lr, const std::string &name)
 {
    if (config::log::kernel_trace) {
-      auto len = sprintf_s(state.buffer + state.pos, state.length, "0x%08X %s(", lr, name.c_str());
+      auto len = snprintf(state.buffer + state.pos, state.length, "0x%08X %s(", lr, name.c_str());
       state.length -= len;
       state.pos += len;
    }
@@ -29,7 +30,7 @@ static inline const char *
 logCallEnd(LogState &state)
 {
    if (config::log::kernel_trace) {
-      auto len = sprintf_s(state.buffer + state.pos, state.length, ")");
+      auto len = snprintf(state.buffer + state.pos, state.length, ")");
       state.length -= len;
       state.pos += len;
       return state.buffer;
@@ -42,7 +43,7 @@ static inline void
 logArgumentSeparator(LogState &state)
 {
    if (state.argc > 0) {
-      auto len = sprintf_s(state.buffer + state.pos, state.length, ", ");
+      auto len = snprintf(state.buffer + state.pos, state.length, ", ");
       state.length -= len;
       state.pos += len;
    }
@@ -57,7 +58,7 @@ logArgumentVargs(LogState &state)
    int len;
    logArgumentSeparator(state);
 
-   len = sprintf_s(state.buffer + state.pos, state.length, "...");
+   len = snprintf(state.buffer + state.pos, state.length, "...");
    state.length -= len;
    state.pos += len;
 }
@@ -70,7 +71,7 @@ logArgument(LogState &state, const char *value)
    logArgumentSeparator(state);
 
    if (!value) {
-      len = sprintf_s(state.buffer + state.pos, state.length, "%s", "NULL");
+      len = snprintf(state.buffer + state.pos, state.length, "%s", "NULL");
    } else {
       auto newPos = state.pos;
 
@@ -153,7 +154,7 @@ logArgument(LogState &state, Type value)
       fmt = "%d";
    }
 
-   len = sprintf_s(state.buffer + state.pos, state.length, fmt, value);
+   len = snprintf(state.buffer + state.pos, state.length, fmt, value);
 
    state.length -= len;
    state.pos += len;

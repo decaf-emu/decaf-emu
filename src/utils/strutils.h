@@ -1,7 +1,15 @@
 #pragma once
 #include <algorithm>
+#include <cstdio>
 #include <string>
 #include <vector>
+#include "platform/platform.h"
+
+#ifdef PLATFORM_WINDOWS
+   #define snprintf sprintf_s
+   #define vsnprintf vsprintf_s
+   #define strdup _strdup
+#endif
 
 // Replace all occurences of a character in a string
 static inline void
