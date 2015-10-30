@@ -106,6 +106,15 @@ GX2_ENUM(GX2CompareFunction, uint32_t)
    GX2_ENUM_VALUE(Always, 7)
 GX2_ENUM_END
 
+GX2_ENUM(GX2Component, uint32_t)
+   GX2_ENUM_VALUE(Mem0, 0)
+   GX2_ENUM_VALUE(Mem1, 1)
+   GX2_ENUM_VALUE(Mem2, 2)
+   GX2_ENUM_VALUE(Mem3, 3)
+   GX2_ENUM_VALUE(Zero, 4)
+   GX2_ENUM_VALUE(One, 5)
+GX2_ENUM_END
+
 GX2_ENUM(GX2ClearFlags, uint32_t)
    GX2_ENUM_VALUE(Depth, 1)
 GX2_ENUM_END

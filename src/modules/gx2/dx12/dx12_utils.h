@@ -3,6 +3,25 @@
 #include "modules/gx2/gx2_surface.h"
 #include "utils/align.h"
 
+inline const D3D12_SHADER_COMPONENT_MAPPING dx12MakeComponent(GX2Component::Value value) {
+   switch (value) {
+   case GX2Component::Mem0:
+      return D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_0;
+   case GX2Component::Mem1:
+      return D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_1;
+   case GX2Component::Mem2:
+      return D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_2;
+   case GX2Component::Mem3:
+      return D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_3;
+   case GX2Component::Zero:
+      return D3D12_SHADER_COMPONENT_MAPPING_FORCE_VALUE_0;
+   case GX2Component::One:
+      return D3D12_SHADER_COMPONENT_MAPPING_FORCE_VALUE_1;
+   default:
+      throw;
+   }
+}
+
 inline const DXGI_FORMAT dx12MakeFormat(GX2SurfaceFormat::Value format) {
    switch (format) {
    case GX2SurfaceFormat::UNORM_R8:

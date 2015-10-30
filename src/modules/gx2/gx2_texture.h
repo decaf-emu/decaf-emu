@@ -16,7 +16,8 @@ struct GX2Texture
    be_val<uint32_t> viewNumMips;
    be_val<uint32_t> viewFirstSlice;
    be_val<uint32_t> viewNumSlices;
-   UNKNOWN(24);
+   be_val<uint32_t> compMap;
+   UNKNOWN(20);
 };
 CHECK_OFFSET(GX2Texture, 0x0, surface);
 CHECK_OFFSET(GX2Texture, 0x74, viewFirstMip);

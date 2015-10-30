@@ -39,7 +39,12 @@ struct DXTextureData : public HostLookupItem<GX2Texture> {
          IID_PPV_ARGS(&uploadBuffer)));
 
       // Describe and create a SRV for the texture.
-      mView.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+      mView.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(
+         dx12MakeComponent(static_cast<GX2Component::Value>((source->compMap >> 24) & 0xFF)),
+         dx12MakeComponent(static_cast<GX2Component::Value>((source->compMap >> 16) & 0xFF)),
+         dx12MakeComponent(static_cast<GX2Component::Value>((source->compMap >> 8) & 0xFF)),
+         dx12MakeComponent(static_cast<GX2Component::Value>((source->compMap >> 0) & 0xFF))
+      );
       mView.Format = textureDesc.Format;
       mView.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
       mView.Texture2D.MipLevels = 1;
