@@ -46,6 +46,14 @@ public:
       r8d = asmjit::x86::r8d;
       r9d = asmjit::x86::r9d;
 
+      state = zbx;
+      membase = zsi;
+      interruptAddr = asmjit::x86::r10;
+      cia = zdi;
+
+      xmm0 = asmjit::x86::xmm0;
+      xmm1 = asmjit::x86::xmm1;
+
 #define PPCTSReg(mm) asmjit::X86Mem(zbx, (int32_t)offsetof(ThreadState, mm), sizeof(ThreadState::mm))
       for (auto i = 0; i < 32; ++i) {
          ppcgpr[i] = PPCTSReg(gpr[i]);
@@ -71,13 +79,6 @@ public:
       ppcreserveAddress = PPCTSReg(reserveAddress);
       ppcreserveData = PPCTSReg(reserveData);
 #undef PPCTSReg
-
-      state = zbx;
-      membase = zsi;
-      cia = zdi;
-
-      xmm0 = asmjit::x86::xmm0;
-      xmm1 = asmjit::x86::xmm1;
    }
 
    void shiftTo(asmjit::X86GpReg reg, int s, int d)
@@ -91,6 +92,7 @@ public:
 
    asmjit::X86GpReg state;
    asmjit::X86GpReg membase;
+   asmjit::X86GpReg interruptAddr;
    asmjit::X86GpReg cia;
 
    asmjit::X86GpReg eax;
@@ -125,7 +127,7 @@ T asmjit_cast(Z* base, size_t offset = 0)
 
 typedef void* JitCode;
 typedef void* JitFinale;
-typedef uint32_t(*JitCall)(ThreadState*, JitCode);
+typedef uint32_t(*JitCall)(ThreadState*, cpu::CoreState*, JitCode);
 
 typedef std::map<uint32_t, asmjit::Label> JumpLabelMap;
 

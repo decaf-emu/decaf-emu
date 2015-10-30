@@ -33,13 +33,16 @@ namespace jit
       a.push(a.zbx);
       a.push(a.zdi);
       a.push(a.zsi);
-      a.sub(a.zsp, 0x30);
+      a.push(asmjit::x86::r10);
+      a.sub(a.zsp, 0x2C);
       a.mov(a.zbx, a.zcx);
+      a.mov(asmjit::x86::r10, a.zdx);
       a.mov(a.zsi, static_cast<uint64_t>(mem::base()));
-      a.jmp(a.zdx);
+      a.jmp(asmjit::x86::r8d);
 
       a.bind(extroLabel);
       a.add(a.zsp, 0x30);
+      a.pop(asmjit::x86::r10);
       a.pop(a.zsi);
       a.pop(a.zdi);
       a.pop(a.zbx);
@@ -386,7 +389,7 @@ namespace jit
    }
 
    uint32_t execute(ThreadState *state, JitCode block) {
-      return gCallFn(state, block);
+      return gCallFn(state, state->core, block);
    }
 
    void execute(ThreadState *state) {

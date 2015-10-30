@@ -23,9 +23,22 @@ enum BcFlags
    BcBranchCTR = 1 << 3
 };
 
+void
+jit_b_check_interrupt(PPCEmuAssembler& a, uint32_t cia)
+{
+   asmjit::Label noInterrupt(a);
+   a.cmp(asmjit::X86Mem(a.interruptAddr, 0, 4), 0);
+   a.je(noInterrupt);
+   a.mov(a.eax, cia);
+   a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
+   a.bind(noInterrupt);
+}
+
 bool
 jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels)
 {
+   jit_b_check_interrupt(a, cia);
+
    uint32_t nia = sign_extend<26>(instr.li << 2);
    if (!instr.aa) {
       nia += cia;
@@ -55,6 +68,8 @@ template<unsigned flags>
 static bool
 bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels)
 {
+   jit_b_check_interrupt(a, cia);
+
    uint32_t bo = instr.bo;
    asmjit::Label doCondFailLbl(a);
 
