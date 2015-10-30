@@ -12,3 +12,4 @@ build/*.txt
 *.opendb
 debugger/bin
 dump/
+config.json
