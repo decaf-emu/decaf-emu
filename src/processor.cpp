@@ -108,6 +108,14 @@ Processor::coreEntryPoint(Core *core)
 
       core->fiberPendingList.clear();
 
+      // Check for any interrupts
+      if (cpu::hasInterrupt(&core->state)) {
+         cpu::clearInterrupt(&core->state);
+
+         core->interruptHandlerFiber->thread->state = OSThreadState::Ready;
+         queueNoLock(core->interruptHandlerFiber);
+      }
+
       if (auto fiber = peekNextFiberNoLock(core->id)) {
          // Remove fiber from schedule queue
          mFiberQueue.erase(std::remove(mFiberQueue.begin(), mFiberQueue.end(), fiber), mFiberQueue.end());
@@ -122,11 +130,6 @@ Processor::coreEntryPoint(Core *core)
          gLog->trace("Core {} enter thread {}", core->id, fiber->thread->id);
          SwitchToFiber(fiber->handle);
          core->threadId = 0;
-      } else if (cpu::hasInterrupt(&core->state)) {
-         cpu::clearInterrupt(&core->state);
-         core->interruptedFiber = nullptr;
-         core->interruptHandlerFiber->thread->state = OSThreadState::Ready;
-         core->fiberPendingList.push_back(core->interruptHandlerFiber);
       } else {
          // Wait for a valid fiber
          gLog->trace("Core {} wait for thread", core->id);
@@ -367,26 +370,17 @@ void
 Processor::handleInterrupt()
 {
    auto core = tCurrentCore;
-
    if (!core) {
       gLog->error("handleInterrupt called from non-ppc thread");
       return;
    }
 
-   // Clear interrupt flag
-   cpu::clearInterrupt(&core->state);
-
-   // Save interrupted fiber
-   if (core->currentFiber) {
-      core->interruptedFiber = core->currentFiber;
+   core->interruptedFiber = core->currentFiber;
+   if (core->interruptedFiber) {
       core->interruptedFiber->thread->state = OSThreadState::Ready;
       core->fiberPendingList.push_back(core->interruptedFiber);
-   } else {
-      core->interruptedFiber = nullptr;
    }
 
-   core->interruptHandlerFiber->thread->state = OSThreadState::Ready;
-   core->fiberPendingList.push_back(core->interruptHandlerFiber);
    SwitchToFiber(core->primaryFiber);
 }
 
