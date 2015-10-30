@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdio>
+#include "config.h"
 #include "utils/virtual_ptr.h"
 
 namespace ppctypes
@@ -16,18 +17,24 @@ struct LogState
 static inline void
 logCall(LogState &state, uint32_t lr, const char *name)
 {
-   auto len = sprintf_s(state.buffer + state.pos, state.length, "0x%08X %s(", lr, name);
-   state.length -= len;
-   state.pos += len;
+   if (config::log::kernel_trace) {
+      auto len = sprintf_s(state.buffer + state.pos, state.length, "0x%08X %s(", lr, name);
+      state.length -= len;
+      state.pos += len;
+   }
 }
 
 static inline const char *
 logCallEnd(LogState &state)
 {
-   auto len = sprintf_s(state.buffer + state.pos, state.length, ")");
-   state.length -= len;
-   state.pos += len;
-   return state.buffer;
+   if (config::log::kernel_trace) {
+      auto len = sprintf_s(state.buffer + state.pos, state.length, ")");
+      state.length -= len;
+      state.pos += len;
+      return state.buffer;
+   } else {
+      return nullptr;
+   }
 }
 
 static inline void

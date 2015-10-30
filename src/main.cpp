@@ -1,5 +1,6 @@
 #include <pugixml.hpp>
 #include <docopt.h>
+#include "config.h"
 #include "utils/bitutils.h"
 #include "cpu/cpu.h"
 #include "cpu/trace.h"
@@ -38,7 +39,7 @@
 
 static void initialiseEmulator();
 static bool fuzzTest();
-static bool play(const fs::HostPath &path, const fs::HostPath &sysPath);
+static bool play(const fs::HostPath &path);
 
 static const char USAGE[] =
 R"(Decaf Emulator
@@ -64,7 +65,6 @@ Options:
                  Available levels: trace, debug, info, notice, warning, error, critical, alert, emerg, off
    --sys-path=<sys-path>
                  Where to locate any external system files.
-   --as=<ppcas>  Path to PowerPC assembler [default: powerpc-eabi-as.exe].
 )";
 
 static const std::string&
@@ -76,67 +76,59 @@ getGameName(const fs::HostPath &path)
 int main(int argc, char **argv)
 {
    auto args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true, "Decaf 0.1");
+   auto has_arg = [&args](const char *name) { return args.find(name) != args.end(); };
+   auto arg_bool = [&](const char *name) { return has_arg(name) && args[name].isBool() ? args[name].asBool() : false; };
+   auto arg_str = [&](const char *name) { return has_arg(name) && args[name].isString() ? args[name].asString() : ""; };
    bool result = false;
 
-   if (args["--jit-debug"].asBool()) {
-      cpu::setJitMode(cpu::JitMode::Debug);
-   } else if (args["--jit"].asBool()) {
-      cpu::setJitMode(cpu::JitMode::Enabled);
-   } else {
-      cpu::setJitMode(cpu::JitMode::Disabled);
+   // First thing, load the config!
+   config::load("config.json");
+
+   // Allow command line options to override config
+   if (arg_bool("--jit-debug")) {
+      config::jit::debug = true;
+   } else if (arg_bool("--jit")) {
+      config::jit::enabled = true;
    }
 
-   // Create the logger
-   std::vector<spdlog::sink_ptr> sinks;
-
-   if (!args["--no-log-stdout"].asBool()) {
-      sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+   if (arg_bool("--no-log-stdout")) {
+      config::log::to_stdout = true;
    }
 
-   if (args["--log-file"].asBool()) {
-      std::string file;
-
-      if (args["play"].asBool()) {
-         file = getGameName(args["<game directory>"].asString());
-      } else if (args["test"].asBool()) {
-         file = "tests";
-      } else if (args["hwtest"].asBool()) {
-         file = "hwtest";
-      }
-
-      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(file, "txt", 23, 59, true));
+   if (arg_bool("--log-file")) {
+      config::log::to_file = true;
    }
 
-   if (args["--log-async"].asBool()) {
-      spdlog::set_async_mode(0x100000);
+   if (arg_bool("play")) {
+      config::log::filename = getGameName(arg_str("<game directory>"));
+   } else if (arg_bool("test")) {
+      config::log::filename = "tests";
+   } else if (arg_bool("hwtest")) {
+      config::log::filename = "hwtest";
    }
 
-   gLog = std::make_shared<spdlog::logger>("logger", begin(sinks), end(sinks));
-   gLog->set_level(spdlog::level::info);
-
-   auto log_level = args["--log-level"].isString() ? args["--log-level"].asString() : "info";
-
-   for (int l = spdlog::level::trace; l <= spdlog::level::off; l++) {
-      if (spdlog::level::to_str((spdlog::level::level_enum) l) == log_level) {
-         gLog->set_level((spdlog::level::level_enum) l);
-         break;
-      }
+   if (arg_bool("--log-async")) {
+      config::log::async = true;
    }
 
+   if (has_arg("--log-level")) {
+      config::log::level = arg_str("--log-level");
+   }
+
+   if (has_arg("--sys-path")) {
+      config::system::system_path = arg_str("--sys-path");
+   }
+
+   // Start!
    initialiseEmulator();
 
-   if (args["play"].asBool()) {
-      std::string sysPath = "/no_sys_specified";
-      if (args["--sys-path"].isString()) {
-         sysPath = args["--sys-path"].asString();
-      }
-
+   if (arg_bool("play")) {
       gLog->set_pattern("[%l:%t] %v");
-      result = play(args["<game directory>"].asString(), sysPath);
-   } else if (args["fuzz"].asBool()) {
+      result = play(args["<game directory>"].asString());
+   } else if (arg_bool("fuzz")) {
       gLog->set_pattern("%v");
       result = fuzzTest();
-   } else if (args["hwtest"].asBool()) {
+   } else if (arg_bool("hwtest")) {
       gLog->set_pattern("%v");
       result = hwtest::runTests();
    }
@@ -148,6 +140,45 @@ int main(int argc, char **argv)
 static void
 initialiseEmulator()
 {
+   // Setup logger from config
+   std::vector<spdlog::sink_ptr> sinks;
+
+   if (config::log::to_stdout) {
+      sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+   }
+
+   if (config::log::to_file) {
+      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(config::log::filename, "txt", 23, 59, true));
+   }
+
+   if (config::log::async) {
+      spdlog::set_async_mode(0x1000);
+   }
+
+   gLog = std::make_shared<spdlog::logger>("logger", begin(sinks), end(sinks));
+   gLog->set_level(spdlog::level::info);
+
+   for (int i = spdlog::level::trace; i <= spdlog::level::off; i++) {
+      auto level = static_cast<spdlog::level::level_enum>(i);
+
+      if (spdlog::level::to_str(level) == config::log::level) {
+         gLog->set_level(level);
+         break;
+      }
+   }
+
+   // Setup jit from config
+   if (config::jit::enabled) {
+      if (config::jit::debug) {
+         cpu::setJitMode(cpu::JitMode::Debug);
+      } else {
+         cpu::setJitMode(cpu::JitMode::Enabled);
+      }
+   } else {
+      cpu::setJitMode(cpu::JitMode::Disabled);
+   }
+
+   // Setup core
    mem::initialise();
    cpu::initialise();
 
@@ -200,7 +231,7 @@ fuzzTest()
 }
 
 static bool
-play(const fs::HostPath &path, const fs::HostPath &sysPath)
+play(const fs::HostPath &path)
 {
    // Create window
    if (!platform::ui::createWindow(L"Decaf")) {
@@ -209,6 +240,7 @@ play(const fs::HostPath &path, const fs::HostPath &sysPath)
    }
 
    // Setup filesystem
+   fs::HostPath sysPath = config::system::system_path;
    fs::FileSystem fs;
    fs.mountHostFolder("/vol", path.join("data"));
    fs.mountHostFolder("/vol/storage_mlc01", sysPath.join("mlc"));

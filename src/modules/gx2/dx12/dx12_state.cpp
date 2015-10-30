@@ -2,6 +2,7 @@
 #ifdef GX2_DX12
 
 #include <memory>
+#include "config.h"
 #include "hostlookup.h"
 #include "dx12_state.h"
 #include "dx12_scanbuffer.h"
@@ -76,10 +77,8 @@ void dx::initialise()
    ComPtr<IDXGIFactory4> factory;
    ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&factory)));
 
-   // Always use WARP for now...
-   static const bool USE_WARP_DEVICE = true;
-   if (USE_WARP_DEVICE)
-   {
+   // Create adapter (set use_warp for software renderer)
+   if (config::dx12::use_warp) {
       ComPtr<IDXGIAdapter> warpAdapter;
       ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
 
@@ -88,8 +87,7 @@ void dx::initialise()
          D3D_FEATURE_LEVEL_11_0,
          IID_PPV_ARGS(&gDX.device)
          ));
-   } else
-   {
+   } else {
       ThrowIfFailed(D3D12CreateDevice(
          nullptr,
          D3D_FEATURE_LEVEL_11_0,
@@ -190,7 +188,7 @@ void dx::initialise()
 
    // Create the root signature.
    {
-      
+
       CD3DX12_ROOT_PARAMETER rootParameters[3];
       CD3DX12_DESCRIPTOR_RANGE ranges[3];
       uint32_t paramIdx = 0;
@@ -746,7 +744,7 @@ void dx::updateBuffers()
          auto &fetch = gDX.state.pixelSampler[i];
          if (tex) {
             gDX.device->CreateShaderResourceView(*tex, *tex, heapItems[i]);
-            
+
             D3D12_SAMPLER_DESC samplerDesc;
             samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
             samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -763,7 +761,7 @@ void dx::updateBuffers()
             samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
             if (fetch) {
                samplerDesc.Filter = D3D12_ENCODE_BASIC_FILTER(
-                  dx12MakeFilterType(fetch->minFilter), 
+                  dx12MakeFilterType(fetch->minFilter),
                   dx12MakeFilterType(fetch->magFilter),
                   dx12MakeMipFilterType(fetch->filterMip),
                   D3D12_FILTER_REDUCTION_TYPE_STANDARD);

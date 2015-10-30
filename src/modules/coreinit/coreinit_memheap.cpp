@@ -126,7 +126,7 @@ MEMDumpHeap(CommonHeap *heap)
    case HeapType::UnitHeap:
    case HeapType::UserHeap:
    case HeapType::BlockHeap:
-      gLog->error("TODO: Unimplemented MEMDumpHeap type");
+      gLog->info("Unimplemented MEMDumpHeap type");
    }
 }
 

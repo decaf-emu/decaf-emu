@@ -20,7 +20,7 @@ kcstub(ThreadState *state, void *userData)
 {
    KernelFunction *func = static_cast<KernelFunction*> (userData);
    if (!func->valid) {
-      gLog->debug("unimplemented kernel function {}", func->name);
+      gLog->info("unimplemented kernel function {}", func->name);
       return;
    }
 

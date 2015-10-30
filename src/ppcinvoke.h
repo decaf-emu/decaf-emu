@@ -1,4 +1,5 @@
 #pragma once
+#include "config.h"
 #include "ppcinvokeargs.h"
 #include "ppcinvokeresult.h"
 #include "ppcinvokelog.h"
@@ -66,7 +67,11 @@ inline void
 invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<Head, Tail...>, Args... values)
 {
    auto value = getArgument<Head>(state.thread, state.r, state.f);
-   logArgument(state.log, value);
+
+   if (config::log::kernel_trace) {
+      logArgument(state.log, value);
+   }
+
    invoke2(state, func, type_list<Tail...>{}, values..., value);
 }
 
@@ -75,7 +80,11 @@ inline void
 invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<VarList&>, Args... values)
 {
    VarList vargs(state);
-   logArgumentVargs(state.log);
+
+   if (config::log::kernel_trace) {
+      logArgumentVargs(state.log);
+   }
+
    invoke2(state, func, type_list<>{}, values..., vargs);
 }
 
@@ -84,14 +93,17 @@ invokeEndLog(_argumentsState& state)
 {
    const char * logData = logCallEnd(state.log);
    traceLogSyscall(logData);
-   gLog->trace(logData);
+   gLog->debug(logData);
 }
 
 template<typename FnReturnType, typename... FnArgs, typename... Args>
 inline void
 invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<>, Args... args)
 {
-   invokeEndLog(state);
+   if (config::log::kernel_trace) {
+      invokeEndLog(state);
+   }
+
    auto result = func(args...);
    setResult<FnReturnType>(state.thread, result);
 }
@@ -100,7 +112,10 @@ template<typename... FnArgs, typename... Args>
 inline void
 invoke2(_argumentsState& state, void func(FnArgs...), type_list<>, Args... args)
 {
-   invokeEndLog(state);
+   if (config::log::kernel_trace) {
+      invokeEndLog(state);
+   }
+
    func(args...);
 }
 
@@ -112,7 +127,11 @@ invoke(ThreadState *state, ReturnType func(Args...), const char *name = nullptr)
    argstate.thread = state;
    argstate.r = 3;
    argstate.f = 1;
-   logCall(argstate.log, state->lr, name);
+
+   if (config::log::kernel_trace) {
+      logCall(argstate.log, state->lr, name);
+   }
+
    invoke2(argstate, func, type_list<Args...> {});
 }
 

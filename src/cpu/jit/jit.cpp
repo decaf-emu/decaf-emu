@@ -241,7 +241,7 @@ namespace jit
                auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
 
                if (!fptr) {
-                  gLog->debug("JIT bailing due to unimplemented instruction {}", data->name);
+                  gLog->info("JIT bailing due to unimplemented instruction {}", data->name);
                   jitFailed = true;
                   break;
                }
