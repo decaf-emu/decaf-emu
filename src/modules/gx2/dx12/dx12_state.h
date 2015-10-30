@@ -84,6 +84,7 @@ struct DXState {
       GX2PixelShader *pixelShader;
       GX2GeometryShader *geomShader;
       GX2Sampler *pixelSampler[GX2_NUM_TEXTURE_UNIT];
+      float pixelSamplerBorder[GX2_NUM_TEXTURE_UNIT][4];
       struct BlendState {
          GX2LogicOp::Value logicOp;
          uint8_t blendEnabled;

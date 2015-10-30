@@ -778,7 +778,11 @@ void dx::updateBuffers()
                   samplerDesc.BorderColor[3] = 1;
                   break;
                case GX2TexBorderType::Variable:
-                  throw;
+                  samplerDesc.BorderColor[0] = gDX.state.pixelSamplerBorder[i][0];
+                  samplerDesc.BorderColor[1] = gDX.state.pixelSamplerBorder[i][1];
+                  samplerDesc.BorderColor[2] = gDX.state.pixelSamplerBorder[i][2];
+                  samplerDesc.BorderColor[3] = gDX.state.pixelSamplerBorder[i][3];
+                  break;
                }
             }
             gDX.device->CreateSampler(&samplerDesc, samplerItems[i]);

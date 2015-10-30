@@ -254,4 +254,21 @@ GX2SetScissor(uint32_t x,
    DX_DLCALL(_GX2SetScissor, x, y, w, h);
 }
 
+void
+_GX2SetPixelSamplerBorderColor(uint32_t samplerId,
+   float red, float green, float blue, float alpha)
+{
+   gDX.state.pixelSamplerBorder[samplerId][0] = red;
+   gDX.state.pixelSamplerBorder[samplerId][1] = green;
+   gDX.state.pixelSamplerBorder[samplerId][2] = blue;
+   gDX.state.pixelSamplerBorder[samplerId][3] = alpha;
+}
+
+void
+GX2SetPixelSamplerBorderColor(uint32_t samplerId,
+                              float red, float green, float blue, float alpha)
+{
+   DX_DLCALL(_GX2SetPixelSamplerBorderColor, samplerId, red, green, blue, alpha);
+}
+
 #endif

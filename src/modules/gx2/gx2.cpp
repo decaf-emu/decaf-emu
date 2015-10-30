@@ -116,6 +116,7 @@ GX2::registerRenderStateFunctions()
    RegisterKernelFunction(GX2SetAlphaToMask);
    RegisterKernelFunction(GX2SetViewport);
    RegisterKernelFunction(GX2SetScissor);
+   RegisterKernelFunction(GX2SetPixelSamplerBorderColor);
 }
 
 void
