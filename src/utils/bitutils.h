@@ -1,6 +1,11 @@
 #pragma once
 #include <climits>
 #include <cstdint>
+#include "platform/platform.h"
+
+#ifdef PLATFORM_WINDOWS
+#include <Windows.h>
+#endif
 
 // Gets the value of a bit
 template<typename Type>
@@ -161,6 +166,21 @@ sign_extend(Type src)
    } else {
       return src;
    }
+}
+
+inline bool
+bit_scan_reverse(uint32_t *out_position, uint32_t bits)
+{
+#ifdef PLATFORM_WINDOWS
+   return !!_BitScanReverse(out_position, bits);
+#elif defined(PLATFORM_POSIX)
+   if (bits == 0) {
+      return false;
+   }
+
+   *out_position = __builtin_clz(bits);
+   return true;
+#endif
 }
 
 // Return number of bits in type

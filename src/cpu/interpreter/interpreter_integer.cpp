@@ -253,7 +253,7 @@ cntlzw(ThreadState *state, Instruction instr)
 
    s = state->gpr[instr.rS];
 
-   if (!_BitScanReverse(&a, s)) {
+   if (!bit_scan_reverse(&a, s)) {
       a = 32;
    } else {
       a = 31 - a;
