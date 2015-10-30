@@ -43,7 +43,7 @@ GX2SetAttribBuffer(uint32_t unk1,
 }
 
 void
-GX2DrawEx(GX2PrimitiveMode::Mode mode,
+GX2DrawEx(GX2PrimitiveMode::Value mode,
           uint32_t unk1,
           uint32_t unk2,
           uint32_t unk3)
@@ -51,7 +51,7 @@ GX2DrawEx(GX2PrimitiveMode::Mode mode,
 }
 
 void
-GX2DrawIndexedEx(GX2PrimitiveMode::Mode mode,
+GX2DrawIndexedEx(GX2PrimitiveMode::Value mode,
    uint32_t numVertices,
    GX2IndexType::Value indexType,
    void *indices,

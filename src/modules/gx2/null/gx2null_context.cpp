@@ -21,7 +21,7 @@ GX2Flush()
 }
 
 void
-GX2Invalidate(GX2InvalidateMode::Mode mode,
+GX2Invalidate(GX2InvalidateMode::Value mode,
               void *buffer,
               uint32_t size)
 {
