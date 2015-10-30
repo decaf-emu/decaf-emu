@@ -1,6 +1,8 @@
 #pragma once
+#include <iostream>
 #include <vector>
 #include <string>
+#include <sstream>
 #include "state.h"
 
 template<typename T>
