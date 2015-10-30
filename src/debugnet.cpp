@@ -455,43 +455,40 @@ int deserializePacket2(const std::vector<uint8_t> &data, DebugPacket *&packet) {
 
 int serializePacket(std::vector<uint8_t> &data, DebugPacket *packet)
 {
-   // Stupid thing to allow copy-pasta
-   DebugNetHeader header;
-   header.command = packet->type();
-
-   if (header.command == DebugPacketType::PreLaunch) {
+   switch (packet->type()) {
+   case DebugPacketType::PreLaunch:
       return serializePacket2<DebugPacketPreLaunch>(data, packet);
-   } else if (header.command == DebugPacketType::BpHit) {
+   case DebugPacketType::BpHit:
       return serializePacket2<DebugPacketBpHit>(data, packet);
-   } else if (header.command == DebugPacketType::Pause) {
+   case DebugPacketType::Pause:
       return serializePacket2<DebugPacketPause>(data, packet);
-   } else if (header.command == DebugPacketType::Resume) {
+   case DebugPacketType::Resume:
       return serializePacket2<DebugPacketResume>(data, packet);
-   } else if (header.command == DebugPacketType::AddBreakpoint) {
+   case DebugPacketType::AddBreakpoint:
       return serializePacket2<DebugPacketBpAdd>(data, packet);
-   } else if (header.command == DebugPacketType::RemoveBreakpoint) {
+   case DebugPacketType::RemoveBreakpoint:
       return serializePacket2<DebugPacketBpRemove>(data, packet);
-   } else if (header.command == DebugPacketType::ReadMem) {
+   case DebugPacketType::ReadMem:
       return serializePacket2<DebugPacketReadMem>(data, packet);
-   } else if (header.command == DebugPacketType::ReadMemRes) {
+   case DebugPacketType::ReadMemRes:
       return serializePacket2<DebugPacketReadMemRes>(data, packet);
-   } else if (header.command == DebugPacketType::Disasm) {
+   case DebugPacketType::Disasm:
       return serializePacket2<DebugPacketDisasm>(data, packet);
-   } else if (header.command == DebugPacketType::DisasmRes) {
+   case DebugPacketType::DisasmRes:
       return serializePacket2<DebugPacketDisasmRes>(data, packet);
-   } else if (header.command == DebugPacketType::StepCore) {
+   case DebugPacketType::StepCore:
       return serializePacket2<DebugPacketStepCore>(data, packet);
-   } else if (header.command == DebugPacketType::CoreStepped) {
+   case DebugPacketType::CoreStepped:
       return serializePacket2<DebugPacketCoreStepped>(data, packet);
-   } else if (header.command == DebugPacketType::Paused) {
+   case DebugPacketType::Paused:
       return serializePacket2<DebugPacketPaused>(data, packet);
-   } else if (header.command == DebugPacketType::GetTrace) {
+   case DebugPacketType::GetTrace:
       return serializePacket2<DebugPacketGetTrace>(data, packet);
-   } else if (header.command == DebugPacketType::GetTraceRes) {
+   case DebugPacketType::GetTraceRes:
       return serializePacket2<DebugPacketGetTraceRes>(data, packet);
-   } else if (header.command == DebugPacketType::StepCoreOver) {
+   case DebugPacketType::StepCoreOver:
       return serializePacket2<DebugPacketStepCoreOver>(data, packet);
-   } else {
+   default:
       return -1;
    }
 }
@@ -500,39 +497,40 @@ int deserializePacket(const std::vector<uint8_t> &data, DebugPacket *&packet) {
    auto &header = *reinterpret_cast<const DebugNetHeader*>(data.data());
    assert(data.size() == header.size);
 
-   if (header.command == DebugPacketType::PreLaunch) {
+   switch (header.command) {
+   case DebugPacketType::PreLaunch:
       return deserializePacket2<DebugPacketPreLaunch>(data, packet);
-   } else if (header.command == DebugPacketType::BpHit) {
+   case DebugPacketType::BpHit:
       return deserializePacket2<DebugPacketBpHit>(data, packet);
-   } else if (header.command == DebugPacketType::Pause) {
+   case DebugPacketType::Pause:
       return deserializePacket2<DebugPacketPause>(data, packet);
-   } else if (header.command == DebugPacketType::Resume) {
+   case DebugPacketType::Resume:
       return deserializePacket2<DebugPacketResume>(data, packet);
-   } else if (header.command == DebugPacketType::AddBreakpoint) {
+   case DebugPacketType::AddBreakpoint:
       return deserializePacket2<DebugPacketBpAdd>(data, packet);
-   } else if (header.command == DebugPacketType::RemoveBreakpoint) {
+   case DebugPacketType::RemoveBreakpoint:
       return deserializePacket2<DebugPacketBpRemove>(data, packet);
-   } else if (header.command == DebugPacketType::ReadMem) {
+   case DebugPacketType::ReadMem:
       return deserializePacket2<DebugPacketReadMem>(data, packet);
-   } else if (header.command == DebugPacketType::ReadMemRes) {
+   case DebugPacketType::ReadMemRes:
       return deserializePacket2<DebugPacketReadMemRes>(data, packet);
-   } else if (header.command == DebugPacketType::Disasm) {
+   case DebugPacketType::Disasm:
       return deserializePacket2<DebugPacketDisasm>(data, packet);
-   } else if (header.command == DebugPacketType::DisasmRes) {
+   case DebugPacketType::DisasmRes:
       return deserializePacket2<DebugPacketDisasmRes>(data, packet);
-   } else if (header.command == DebugPacketType::StepCore) {
+   case DebugPacketType::StepCore:
       return deserializePacket2<DebugPacketStepCore>(data, packet);
-   } else if (header.command == DebugPacketType::CoreStepped) {
+   case DebugPacketType::CoreStepped:
       return deserializePacket2<DebugPacketCoreStepped>(data, packet);
-   } else if (header.command == DebugPacketType::Paused) {
+   case DebugPacketType::Paused:
       return deserializePacket2<DebugPacketPaused>(data, packet);
-   } else if (header.command == DebugPacketType::GetTrace) {
+   case DebugPacketType::GetTrace:
       return deserializePacket2<DebugPacketGetTrace>(data, packet);
-   } else if (header.command == DebugPacketType::GetTraceRes) {
+   case DebugPacketType::GetTraceRes:
       return deserializePacket2<DebugPacketGetTraceRes>(data, packet);
-   } else if (header.command == DebugPacketType::StepCoreOver) {
+   case DebugPacketType::StepCoreOver:
       return deserializePacket2<DebugPacketStepCoreOver>(data, packet);
-   } else {
+   default:
       return -1;
    }
 }
