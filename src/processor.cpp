@@ -331,6 +331,8 @@ Processor::timerEntryPoint()
 
       for (auto core : mCores) {
          if (core->nextInterrupt <= now) {
+            std::unique_lock<std::mutex> cpuLock { mMutex };
+
             cpu::interrupt(&core->state);
             core->nextInterrupt = std::chrono::time_point<std::chrono::system_clock>::max();
             wakeAllCores();
