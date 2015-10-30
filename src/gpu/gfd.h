@@ -11,6 +11,7 @@ namespace BlockType
 {
 enum Type : uint32_t
 {
+   EndOfFile = 1,
    VertexShaderHeader = 3,
    VertexShaderProgram = 5,
    PixelShaderHeader = 6,

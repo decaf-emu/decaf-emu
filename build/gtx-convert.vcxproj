@@ -11,13 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\gpu\gfd.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp" />
-    <ClCompile Include="..\tools\gfd.cpp" />
     <ClCompile Include="..\tools\gtx-convert\gtx-convert.cpp" />
     <ClCompile Include="..\tools\gtx-convert\untile.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\tools\gfd.h" />
+    <ClInclude Include="..\src\gpu\gfd.h" />
     <ClInclude Include="..\tools\gtx-convert\untile.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

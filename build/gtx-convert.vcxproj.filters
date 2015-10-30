@@ -12,21 +12,21 @@
     <ClCompile Include="..\tools\gtx-convert\gtx-convert.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\tools\gfd.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\tools\gtx-convert\untile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gpu\gfd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\tools\gfd.h">
+    <ClInclude Include="..\tools\gtx-convert\untile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\tools\gtx-convert\untile.h">
+    <ClInclude Include="..\src\gpu\gfd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

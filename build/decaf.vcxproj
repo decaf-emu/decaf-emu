@@ -118,6 +118,7 @@
     <ClCompile Include="..\src\debugnet.cpp" />
     <ClCompile Include="..\src\elf.cpp" />
     <ClCompile Include="..\src\fuzztests.cpp" />
+    <ClCompile Include="..\src\gpu\gfd.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_alu.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op2.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op3.cpp" />
@@ -280,6 +281,7 @@
     <ClInclude Include="..\src\filesystem\filesystem_win_folder.h" />
     <ClInclude Include="..\src\filesystem\filesystem_win_path.h" />
     <ClInclude Include="..\src\fuzztests.h" />
+    <ClInclude Include="..\src\gpu\gfd.h" />
     <ClInclude Include="..\src\gpu\hlsl\hlsl.h" />
     <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
     <ClInclude Include="..\src\gpu\latte.h" />

@@ -1,4 +1,4 @@
-#include "gfd.h"
+#include "gpu/gfd.h"
 #include "untile.h"
 #include "gpu/latte_tiling.h"
 #include "modules/gx2/gx2_texture.h"

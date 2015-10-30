@@ -10,6 +10,7 @@
 #include "gpu/hlsl/hlsl_generator.h"
 #include "memory_translate.h"
 #include "gpu/latte_untile.h"
+#include "gpu/gfd.h"
 
 //#define ENABLE_GX2_DUMP
 
@@ -73,6 +74,55 @@ GX2DumpData(std::ofstream &file, const void *data, size_t size)
 }
 
 void
+GX2DumpGTX(const GX2Texture *texture)
+{
+   auto filename = "texture_" + GX2PointerAsString(texture);
+   auto file = std::ofstream { "dump/" + filename + ".gtx", std::ofstream::out | std::ofstream::binary };
+
+   // Write file header
+   gfd::FileHeader header;
+   memset(&header, 0, sizeof(gfd::FileHeader));
+   header.magic = gfd::FileHeader::Magic;
+   header.headerSize = sizeof(gfd::FileHeader);
+   header.version1 = 7;
+   header.version2 = 1;
+   header.version3 = 2;
+   file.write(reinterpret_cast<char*>(&header), sizeof(gfd::FileHeader));
+
+   // Write TextureHeader
+   gfd::BlockHeader block;
+   memset(&block, 0, sizeof(gfd::FileHeader));
+   block.magic = gfd::BlockHeader::Magic;
+   block.headerSize = sizeof(gfd::BlockHeader);
+   block.version1 = 1;
+   block.version2 = 0;
+   block.type = gfd::BlockType::TextureHeader;
+   block.dataSize = sizeof(GX2Texture);
+   file.write(reinterpret_cast<const char*>(&block), sizeof(gfd::BlockHeader));
+   file.write(reinterpret_cast<const char*>(texture), sizeof(GX2Texture));
+
+   // Write TextureImage
+   memset(&block, 0, sizeof(gfd::FileHeader));
+   block.magic = gfd::BlockHeader::Magic;
+   block.headerSize = sizeof(gfd::BlockHeader);
+   block.version1 = 1;
+   block.version2 = 0;
+   block.type = gfd::BlockType::TextureImage;
+   block.dataSize = texture->surface.imageSize;
+   file.write(reinterpret_cast<char*>(&block), sizeof(gfd::BlockHeader));
+   file.write(reinterpret_cast<char*>(texture->surface.image.get()), texture->surface.imageSize);
+
+   // Write EOF block
+   memset(&block, 0, sizeof(gfd::FileHeader));
+   block.magic = gfd::BlockHeader::Magic;
+   block.headerSize = sizeof(gfd::BlockHeader);
+   block.version1 = 1;
+   block.version2 = 0;
+   block.type = gfd::BlockType::EndOfFile;
+   file.write(reinterpret_cast<char*>(&block), sizeof(gfd::BlockHeader));
+}
+
+void
 GX2DumpTexture(const GX2Texture *texture)
 {
 #ifdef ENABLE_GX2_DUMP
@@ -108,28 +158,14 @@ GX2DumpTexture(const GX2Texture *texture)
 
    file << format.str();
 
-   // Write binary dump of image data to texture_X.img
-   if (texture->surface.image && texture->surface.imageSize) {
-      GX2DumpData("dump/" + filename + ".img", texture->surface.image, texture->surface.imageSize);
+   if (!texture->surface.image || !texture->surface.imageSize) {
+      return;
    }
 
-   // Write binary dump of mipmap data to texture_X.mip
-   if (texture->surface.mipmaps && texture->surface.mipmapSize) {
-      GX2DumpData("dump/" + filename + ".mip", texture->surface.mipmaps, texture->surface.mipmapSize);
-   }
+   // Write GTX
+   GX2DumpGTX(texture);
 
-   // Write combined binary dump of GX2Texture + Image + Mipmap to texture_X.gx2tex
-   auto binary = std::ofstream { "dump/" + filename + ".gx2tex", std::ofstream::out | std::ofstream::binary };
-   GX2DumpData(binary, texture, sizeof(GX2Texture));
-
-   if (texture->surface.image && texture->surface.imageSize) {
-      GX2DumpData(binary, texture->surface.image, texture->surface.imageSize);
-   }
-
-   if (texture->surface.mipmaps && texture->surface.mipmapSize) {
-      GX2DumpData(binary, texture->surface.mipmaps, texture->surface.mipmapSize);
-   }
-
+   // Write DDS
    std::vector<uint8_t> data;
    size_t rowPitch;
    latte::untileSurface(&texture->surface, data, rowPitch);

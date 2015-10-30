@@ -651,6 +651,9 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_taskqueue.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gpu\gfd.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1216,6 +1219,9 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\gfd.h">
+      <Filter>Header Files\gpu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
