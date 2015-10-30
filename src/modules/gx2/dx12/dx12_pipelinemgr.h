@@ -297,19 +297,19 @@ private:
          }
 
          auto &blendState = gDX.state.blendState;
-         if ((blendState.blendEnabled & ~1) != 0) {
-            // We do not yet support MRT
-            throw;
+         if (blendState.blendEnabled == 0) {
+            // Cannot use logicOp with blendEnabled set to anything but 0,
+            //   and with DX12, you need to have IndependantBlendOff for
+            //   LogicOp specific things as well.
+            psoDesc.BlendState.IndependentBlendEnable = false;
+         } else {
+            psoDesc.BlendState.IndependentBlendEnable = true;
          }
-
-         psoDesc.BlendState.IndependentBlendEnable = false;
-
-         {
-            auto rtNum = 0;
-            auto &targetState = gDX.state.targetBlendState[rtNum];
-            auto &rtInfo = psoDesc.BlendState.RenderTarget[rtNum];
-            rtInfo.BlendEnable = !!(blendState.blendEnabled & (1 << rtNum));
-            rtInfo.LogicOpEnable = (blendState.logicOp != GX2LogicOp::Copy);
+         for (auto i = 0; i < 8; ++i) {
+            auto &targetState = gDX.state.targetBlendState[i];
+            auto &rtInfo = psoDesc.BlendState.RenderTarget[i];
+            rtInfo.BlendEnable = blendState.blendEnabled & (1 << i);
+            rtInfo.LogicOpEnable = !rtInfo.BlendEnable;
             rtInfo.LogicOp = dx12MakeLogicOp(blendState.logicOp);
             rtInfo.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
             rtInfo.SrcBlend = dx12MakeBlend(targetState.colorSrcBlend);
