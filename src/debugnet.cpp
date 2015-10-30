@@ -426,7 +426,7 @@ int serializePacket2(std::vector<uint8_t> &data, DebugPacket *packet) {
    cereal::BinaryOutputArchive archive(str);
    T &typedPacket = *(T*)packet;
    archive(typedPacket);
-   std::string& payload = str.str();
+   std::string payload = str.str();
 
    data.resize(sizeof(DebugNetHeader) + payload.size());
    auto &header = *reinterpret_cast<DebugNetHeader*>(data.data());

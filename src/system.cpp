@@ -31,7 +31,8 @@ kcstub(ThreadState *state, void *userData)
 void
 System::registerSysCall(KernelFunction *func)
 {
-   func->syscallID = cpu::registerKernelCall(cpu::KernelCallEntry(kcstub, func));
+   cpu::KernelCallEntry entry(kcstub, func);
+   func->syscallID = cpu::registerKernelCall(entry);
    mSystemCalls[func->syscallID] = func;
 }
 
