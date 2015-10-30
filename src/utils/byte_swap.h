@@ -27,11 +27,11 @@ struct byte_swap_t<Type, 2>
    {
 #ifdef PLATFORM_WINDOWS
       return bit_cast<Type>(_byteswap_ushort(bit_cast<uint16_t>(src)));
-#elif PLATFORM_APPLE
+#elif defined(PLATFORM_APPLE)
       // Apple has no 16-bit byteswap intrinsic
       const uint16_t data = bit_cast<uint16_t>(src);
       return bit_cast<Type>((uint16_t)((data >> 8) | (data << 8)));
-#elif PLATFORM_LINUX
+#elif defined(PLATFORM_LINUX)
       return bit_cast<Type>(bswap_16(bit_cast<uint16_t>(src)));
 #endif
    }
@@ -44,9 +44,9 @@ struct byte_swap_t<Type, 4>
    {
 #ifdef PLATFORM_WINDOWS
       return bit_cast<Type>(_byteswap_ulong(bit_cast<uint32_t>(src)));
-#elif PLATFORM_APPLE
+#elif defined(PLATFORM_APPLE)
       return bit_cast<Type>(__builtin_bswap32(bit_cast<uint32_t>(src)));
-#elif __linux__
+#elif defined(PLATFORM_LINUX)
       return bit_cast<Type>(bswap_32(bit_cast<uint32_t>(src)));
 #endif
    }
@@ -59,9 +59,9 @@ struct byte_swap_t<Type, 8>
    {
 #ifdef PLATFORM_WINDOWS
       return bit_cast<Type>(_byteswap_uint64(bit_cast<uint64_t>(src)));
-#elif PLATFORM_APPLE
+#elif defined(PLATFORM_APPLE)
       return bit_cast<Type>(__builtin_bswap64(bit_cast<uint64_t>(src)));
-#elif PLATFORM_LINUX
+#elif defined(PLATFORM_LINUX)
       return bit_cast<Type>(bswap_64(bit_cast<uint64_t>(src)));
 #endif
    }
