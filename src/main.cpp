@@ -46,7 +46,7 @@ R"(Decaf Emulator
 Usage:
    decaf play [--jit | --jit-debug] [--log-file] [--log-async] [--no-log-stdout] [--log-level=<log-level>] [--sys-path=<sys-path>] <game directory>
    decaf fuzz
-   decaf hwtest [--log-file]
+   decaf hwtest [--log-file] [--jit]
    decaf (-h | --help)
    decaf --version
 
