@@ -183,6 +183,36 @@ bit_scan_reverse(uint32_t *out_position, uint32_t bits)
 #endif
 }
 
+#ifdef PLATFORM_WINDOWS
+#define bit_rotate_left _rotl
+#else
+inline uint32_t bit_rotate_left(uint32_t x, int shift)
+{
+   shift &= 31;
+
+   if (!shift) {
+     return x;
+   }
+
+   return (x << shift) | (x >> (32 - shift));
+}
+#endif
+
+#ifdef PLATFORM_WINDOWS
+#define bit_rotate_right _rotr
+#else
+inline uint32_t bit_rotate_right(uint32_t x, int shift)
+{
+   shift &= 31;
+
+   if (!shift) {
+      return x;
+   }
+
+   return (x >> shift) | (x << (32 - shift));
+}
+#endif
+
 // Return number of bits in type
 template<typename Type>
 struct bit_width

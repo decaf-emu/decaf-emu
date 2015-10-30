@@ -595,7 +595,7 @@ rlwGeneric(ThreadState *state, Instruction instr)
       n = state->gpr[instr.rB] & 0x1f;
    }
 
-   r = _rotl(s, n);
+   r = bit_rotate_left(s, n);
    m = make_ppc_bitmask(instr.mb, instr.me);
 
    if (flags & RlwAnd) {
