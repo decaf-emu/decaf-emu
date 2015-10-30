@@ -2,6 +2,7 @@
 #include <experimental/filesystem>
 #include <fstream>
 #include "cpu/cpu.h"
+#include "cpu/jit/jit.h"
 #include "cpu/disassembler.h"
 #include "hardwaretests.h"
 #include "mem/mem.h"
@@ -183,6 +184,7 @@ bool runTests()
 
          // Execute test
          mem::write(baseAddress, test.instr.value);
+         cpu::jit::clearCache();
          cpu::executeSub(nullptr, &state);
 
          // Check XER (all bits)

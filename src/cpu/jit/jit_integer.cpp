@@ -902,6 +902,7 @@ void registerIntegerInstructions()
    RegisterInstruction(cntlzw);
    RegisterInstruction(divw);
    RegisterInstruction(divwu);
+   RegisterInstruction(eqv);
    RegisterInstruction(extsb);
    RegisterInstruction(extsh);
    RegisterInstruction(mulhw);
