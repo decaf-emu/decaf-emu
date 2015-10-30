@@ -1,0 +1,64 @@
+include_directories(".")
+
+set(SOURCE_FILES
+	commandqueue.cpp
+	driver.cpp
+	gfd.cpp
+	latte_analyse.cpp
+	latte_blockify.cpp
+	latte_decoder.cpp
+	latte_disassembler.cpp
+	latte_format.cpp
+	latte_opcodes.cpp
+	latte_untile.cpp
+	opengl/glsl_alu.cpp
+	opengl/glsl_alu_op2.cpp
+	opengl/glsl_alu_op3.cpp
+	opengl/glsl_alu_reduction.cpp
+	opengl/glsl_cf.cpp
+	opengl/glsl_exp.cpp
+	opengl/glsl_generator.cpp
+	opengl/glsl_tex.cpp
+	opengl/opengl_driver.cpp
+	opengl/opengl_shader.cpp
+	opengl/opengl_texture.cpp
+	opengl/opengl_wgl.cpp
+	pm4.cpp
+    )
+set(HEADER_FILES
+	commandqueue.h
+	driver.h
+	gfd.h
+	latte_contextstate.h
+	latte_enum_cb.h
+	latte_enum_common.h
+	latte_enum_db.h
+	latte_enum_pa.h
+	latte_enum_spi.h
+	latte_enum_sq.h
+	latte_enum_sx.h
+	latte_enum_vgt.h
+	latte_format.h
+	latte.h
+	latte_instructions.h
+	latte_opcodes.h
+	latte_registers_cb.h
+	latte_registers_db.h
+	latte_registers.h
+	latte_registers_pa.h
+	latte_registers_spi.h
+	latte_registers_sq.h
+	latte_registers_sx.h
+	latte_registers_td.h
+	latte_registers_vgt.h
+	latte_shadir.h
+	opengl/glsl_generator.h
+	opengl/opengl_driver.h
+	pm4_buffer.h
+	pm4_format.h
+	pm4.h
+	pm4_reader.h
+	pm4_writer.h
+    )
+
+add_library(gpu STATIC ${SOURCE_FILES} ${HEADER_FILES})
