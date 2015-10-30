@@ -96,6 +96,11 @@ void
 OSClearThreadStackUsage(OSThread *thread)
 {
    OSLockScheduler();
+
+   if (!thread) {
+      thread = OSGetCurrentThread();
+   }
+
    thread->attr &= ~OSThreadAttributes::StackUsage;
    OSUnlockScheduler();
 }
