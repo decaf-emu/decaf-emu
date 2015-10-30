@@ -9,5 +9,6 @@ build/*.txt
 *.suo
 *.sdf
 *.opensdf
+*.opendb
 debugger/bin
 dump/
