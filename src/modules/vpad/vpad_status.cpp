@@ -5,7 +5,7 @@
 #include <utility>
 
 static BYTE
-gLastVkeyState[0xFF];
+gLastVkeyState[256];
 
 static const std::vector<std::pair<Buttons::Buttons, BYTE>>
 gControllerMap =
@@ -39,7 +39,7 @@ VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<int32_t> *er
 
    memset(&buffers[0], 0, sizeof(VPADStatus));
 
-   BYTE keyState[0xff];
+   BYTE keyState[256];
 
    // Flush GetKeyboardState
    GetKeyState(0);
@@ -63,13 +63,13 @@ VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<int32_t> *er
       }
    }
 
-   memcpy(gLastVkeyState, keyState, sizeof(BYTE) * 0xFF);
+   memcpy(gLastVkeyState, keyState, sizeof(BYTE) * 256);
    return 1;
 }
 
 void
 VPad::registerStatusFunctions()
 {
-   memset(&gLastVkeyState, 0, sizeof(BYTE) * 0xFF);
+   memset(&gLastVkeyState, 0, sizeof(BYTE) * 256);
    RegisterKernelFunction(VPADRead);
 }
