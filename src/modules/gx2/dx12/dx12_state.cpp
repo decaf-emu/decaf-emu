@@ -656,11 +656,14 @@ void dx::updateBuffers()
 
    {
       DXHeapList::Item heapItems[GX2_NUM_UNIFORMBLOCKS];
-      for (auto i = 0; i < GX2_NUM_UNIFORMBLOCKS; ++i) {
-         heapItems[i] = gDX.curSrvHeapList->alloc();
-      }
+      uint32_t numActiveCbvs = 0;
 
       if (gDX.state.shaderMode == GX2ShaderMode::UniformRegister) {
+         numActiveCbvs = 2;
+         for (auto i = 0u; i < numActiveCbvs; ++i) {
+            heapItems[i] = gDX.curSrvHeapList->alloc();
+         }
+
          {
             auto constBuffer = gDX.curTmpBuffer->get(GX2_NUM_GPRS * 4 * sizeof(float), gDX.state.vertUniforms, 256);
 
@@ -678,6 +681,11 @@ void dx::updateBuffers()
             gDX.device->CreateConstantBufferView(&desc, heapItems[1]);
          }
       } else if (gDX.state.shaderMode == GX2ShaderMode::UniformBlock) {
+         numActiveCbvs = gDX.state.vertexShader->uniformBlockCount + gDX.state.pixelShader->uniformBlockCount;
+         for (auto i = 0u; i < numActiveCbvs; ++i) {
+            heapItems[i] = gDX.curSrvHeapList->alloc();
+         }
+
          uint32_t cbvIdx = 0;
          if (gDX.state.vertexShader != nullptr) {
             for (auto i = 0u; i < gDX.state.vertexShader->uniformBlockCount; ++i) {
@@ -714,12 +722,21 @@ void dx::updateBuffers()
          throw;
       }
 
-      gDX.commandList->SetGraphicsRootDescriptorTable(0, heapItems[0]);
+      if (numActiveCbvs) {
+         gDX.commandList->SetGraphicsRootDescriptorTable(0, heapItems[0]);
+      }
    }
    {
       DXHeapList::Item heapItems[GX2_NUM_SAMPLERS];
       DXHeapList::Item samplerItems[GX2_NUM_SAMPLERS];
+
+      uint32_t numActiveTex = 0;
       for (auto i = 0; i < GX2_NUM_SAMPLERS; ++i) {
+         if (gDX.activeTextures[i]) {
+            numActiveTex = i + 1;
+         }
+      }
+      for (auto i = 0u; i < numActiveTex; ++i) {
          heapItems[i] = gDX.curSrvHeapList->alloc();
          samplerItems[i] = gDX.curSampleHeapList->alloc();
       }
@@ -789,8 +806,10 @@ void dx::updateBuffers()
          }
       }
 
-      gDX.commandList->SetGraphicsRootDescriptorTable(1, heapItems[0]);
-      gDX.commandList->SetGraphicsRootDescriptorTable(2, samplerItems[0]);
+      if (numActiveTex > 0) {
+         gDX.commandList->SetGraphicsRootDescriptorTable(1, heapItems[0]);
+         gDX.commandList->SetGraphicsRootDescriptorTable(2, samplerItems[0]);
+      }
    }
 }
 
