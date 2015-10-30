@@ -12,9 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\gpu\gfd.cpp" />
+    <ClCompile Include="..\src\gpu\latte_untile.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_format.cpp" />
     <ClCompile Include="..\tools\gtx-convert\gtx-convert.cpp" />
-    <ClCompile Include="..\tools\gtx-convert\untile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\gpu\gfd.h" />

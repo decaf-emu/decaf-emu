@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24606.1
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "build\zlib.vcxproj", "{C0166DC5-84C8-466C-BD6C-037951915569}"
 EndProject
@@ -80,7 +80,9 @@ Global
 		{D528F1B0-3DA2-496D-9E59-CE80141BD149}.Release|x64.ActiveCfg = Release|x64
 		{D528F1B0-3DA2-496D-9E59-CE80141BD149}.Release|x64.Build.0 = Release|x64
 		{7CB8D060-968B-4173-B2BF-1E29088107F2}.Debug|x64.ActiveCfg = Debug|x64
+		{7CB8D060-968B-4173-B2BF-1E29088107F2}.Debug|x64.Build.0 = Debug|x64
 		{7CB8D060-968B-4173-B2BF-1E29088107F2}.Release|x64.ActiveCfg = Release|x64
+		{7CB8D060-968B-4173-B2BF-1E29088107F2}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

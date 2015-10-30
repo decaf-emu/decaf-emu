@@ -313,11 +313,11 @@ get_2d_offset(const TileInfo &info, size_t x, size_t y, size_t z)
 }
 
 void
-untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, size_t &pitchOut)
+untileSurface(const GX2Surface *surface, const uint8_t *imageData, std::vector<uint8_t> &out, size_t &pitchOut)
 {
    if (surface->tileMode == GX2TileMode::LinearAligned) {
       out.resize(surface->imageSize);
-      memcpy(&out[0], surface->image, surface->imageSize);
+      memcpy(&out[0], imageData, surface->imageSize);
       pitchOut = surface->pitch;
       return;
    }
@@ -353,7 +353,7 @@ untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, size_t &pitc
    // Setup dst
    out.resize(surface->imageSize);
 
-   auto src = reinterpret_cast<uint8_t*>(surface->image.get());
+   auto src = imageData;
    auto dst = out.data();
    auto pitch = info.pitchElements * bpe;
 
@@ -374,6 +374,12 @@ untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, size_t &pitc
    }
 
    pitchOut = pitch;
+}
+
+void
+untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, size_t &pitchOut)
+{
+   untileSurface(surface, reinterpret_cast<uint8_t*>(surface->image.get()), out, pitchOut);
 }
 
 }

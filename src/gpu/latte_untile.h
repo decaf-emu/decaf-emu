@@ -22,4 +22,7 @@ static const size_t tile_height = 8;
 void
 untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, size_t &pitchOut);
 
+void
+untileSurface(const GX2Surface *surface, const uint8_t *imageData, std::vector<uint8_t> &out, size_t &pitchOut);
+
 }
