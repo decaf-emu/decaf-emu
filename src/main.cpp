@@ -66,7 +66,7 @@ Options:
    --log-level=<log-level> [default: trace]
                  Only display logs with severity equal to or greater than this level.
                  Available levels: trace, debug, info, notice, warning, error, critical, alert, emerg, off
-   --sys-path=<sys-path>
+   --sys-path=<sys-path> 
                  Where to locate any external system files.
 )";
 
