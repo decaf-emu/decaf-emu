@@ -13,10 +13,10 @@ struct DisassembleState
 {
    fmt::MemoryWriter out;
    std::string indent;
-   const uint32_t *words;
-   std::size_t wordCount;
-   uint32_t group;
-   uint32_t cfPC;
+   const uint32_t *words = nullptr;
+   std::size_t wordCount = 0;
+   uint32_t group = 0;
+   uint32_t cfPC = 0;
 };
 
 static bool disassembleNormal(DisassembleState &state, latte::cf::inst id, latte::cf::Instruction &cf);
