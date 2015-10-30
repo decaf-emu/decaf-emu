@@ -12,6 +12,11 @@ tm localtime(const std::time_t& time)
    return tm_snapshot;
 }
 
+time_t make_gm_time(std::tm time)
+{
+   return _mkgmtime(&time);
+}
+
 } // namespace platform
 
 #endif
