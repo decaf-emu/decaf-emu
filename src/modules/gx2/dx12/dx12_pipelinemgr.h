@@ -309,7 +309,7 @@ private:
             auto &targetState = gDX.state.targetBlendState[i];
             auto &rtInfo = psoDesc.BlendState.RenderTarget[i];
             rtInfo.BlendEnable = blendState.blendEnabled & (1 << i);
-            rtInfo.LogicOpEnable = !rtInfo.BlendEnable;
+            rtInfo.LogicOpEnable = blendState.blendEnabled == 0;
             rtInfo.LogicOp = dx12MakeLogicOp(blendState.logicOp);
             rtInfo.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
             rtInfo.SrcBlend = dx12MakeBlend(targetState.colorSrcBlend);
