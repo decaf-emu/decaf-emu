@@ -56,7 +56,7 @@ GX2SetBlendControl(GX2RenderTarget::Value target,
                    GX2BlendMode::Value colorSrcBlend,
                    GX2BlendMode::Value colorDstBlend,
                    GX2BlendCombineMode::Value colorCombine,
-                   uint32_t unk1,
+                   BOOL useAlphaBlend,
                    GX2BlendMode::Value alphaSrcBlend,
                    GX2BlendMode::Value alphaDstBlend,
                    GX2BlendCombineMode::Value alphaCombine)
@@ -85,7 +85,8 @@ GX2SetTargetChannelMasks(GX2ChannelMask::Value target0,
                          GX2ChannelMask::Value target3,
                          GX2ChannelMask::Value target4,
                          GX2ChannelMask::Value target5,
-                         GX2ChannelMask::Value target6)
+                         GX2ChannelMask::Value target6,
+                         GX2ChannelMask::Value target7)
 {
 }
 

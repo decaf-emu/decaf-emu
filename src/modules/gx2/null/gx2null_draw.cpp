@@ -43,6 +43,11 @@ GX2SetAttribBuffer(uint32_t unk1,
 }
 
 void
+GX2SetPrimitiveRestartIndex(uint32_t index)
+{
+}
+
+void
 GX2DrawEx(GX2PrimitiveMode::Value mode,
           uint32_t unk1,
           uint32_t unk2,
