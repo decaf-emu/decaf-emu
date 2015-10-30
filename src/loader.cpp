@@ -98,7 +98,9 @@ readFileInfo(BigEndianView &in, const SectionList &sections, elf::FileInfo &info
       }
 
       elf::readSectionData(in, section.header, data);
-      elf::readFileInfo(BigEndianView { data }, info);
+
+      BigEndianView be_view { data };
+      elf::readFileInfo(be_view, info);
       return true;
    }
 
