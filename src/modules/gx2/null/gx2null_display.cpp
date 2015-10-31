@@ -87,10 +87,16 @@ GX2SetSwapInterval(uint32_t interval)
    gSwapInterval = interval;
 }
 
-GX2TVScanMode::Mode
+GX2TVScanMode::Value
 GX2GetSystemTVScanMode()
 {
    return GX2TVScanMode::Last;
+}
+
+GX2DrcRenderMode::Value
+GX2GetSystemDRCMode()
+{
+   return GX2DrcRenderMode::Single;
 }
 
 BOOL

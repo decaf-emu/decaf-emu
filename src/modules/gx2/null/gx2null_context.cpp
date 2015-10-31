@@ -15,13 +15,28 @@ GX2Shutdown()
 {
 }
 
+OSTime gLastFlush;
+
 void
 GX2Flush()
 {
+   gLastFlush = OSGetTime();
+}
+
+OSTime
+GX2GetLastSubmittedTimeStamp()
+{
+   return gLastFlush;
+}
+
+OSTime
+GX2GetRetiredTimeStamp()
+{
+   return gLastFlush;
 }
 
 void
-GX2Invalidate(GX2InvalidateMode::Mode mode,
+GX2Invalidate(GX2InvalidateMode::Value mode,
               void *buffer,
               uint32_t size)
 {

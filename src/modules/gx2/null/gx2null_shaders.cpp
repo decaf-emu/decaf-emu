@@ -74,6 +74,20 @@ GX2SetPixelUniformReg(uint32_t offset,
 }
 
 void
+GX2SetVertexUniformBlock(uint32_t location,
+                         uint32_t size,
+                         const void *data)
+{
+}
+
+void
+GX2SetPixelUniformBlock(uint32_t location,
+                        uint32_t size,
+                        const void *data)
+{
+}
+
+void
 GX2SetShaderModeEx(GX2ShaderMode::Value mode,
                    uint32_t unk1,
                    uint32_t unk2,
