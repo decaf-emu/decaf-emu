@@ -3,6 +3,7 @@
 #include "coreinit_systeminfo.h"
 #include "coreinit_memheap.h"
 #include "coreinit_time.h"
+#include "platform/platform_time.h"
 
 std::chrono::time_point<std::chrono::system_clock>
 gEpochTime;
@@ -87,7 +88,7 @@ CoreInit::initialiseSystemInformation()
    tm.tm_mon = 1;
    tm.tm_year = 100;
    tm.tm_isdst = -1;
-   gEpochTime = std::chrono::system_clock::from_time_t(_mkgmtime(&tm));
+   gEpochTime = std::chrono::system_clock::from_time_t(platform::make_gm_time(tm));
 
    // Calculate base time
    auto now = std::chrono::system_clock::now();
