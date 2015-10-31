@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 struct KernelExport
 {
    enum Type
@@ -24,6 +26,6 @@ struct KernelExport
    }
 
    Type type;
-   const char *name;
+   std::string name;
    void *ppcPtr;
 };

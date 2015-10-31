@@ -252,7 +252,7 @@ Loader::loadRPL(std::string name)
 
    // Try to find module in system kernel library list
    if (!module) {
-      auto kernelModule = gSystem.findModule(name.c_str());
+      auto kernelModule = gSystem.findModule(name);
 
       if (kernelModule) {
          module = loadKernelModule(name, kernelModule);
@@ -431,7 +431,7 @@ Loader::registerUnimplementedFunction(const std::string& name)
       return itr->second;
    }
 
-   auto id = gSystem.registerUnimplementedFunction(name.c_str());
+   auto id = gSystem.registerUnimplementedFunction(name);
    auto thunk = static_cast<uint32_t*>(OSAllocFromSystem(8, 4));
    auto addr = mem::untranslate(thunk);
 

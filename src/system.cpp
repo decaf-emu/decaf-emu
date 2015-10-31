@@ -35,20 +35,20 @@ System::registerSysCall(KernelFunction *func)
 }
 
 uint32_t
-System::registerUnimplementedFunction(const char* name)
+System::registerUnimplementedFunction(const std::string &name)
 {
    auto ppcFn = new kernel::functions::KernelFunctionImpl<void>();
    ppcFn->valid = false;
-   ppcFn->name = _strdup(name);
+   ppcFn->name = name;
    ppcFn->wrapped_function = nullptr;
    registerSysCall(ppcFn);
    return ppcFn->syscallID;
 }
 
 void
-System::registerModule(const char *name, KernelModule *module)
+System::registerModule(const std::string &name, KernelModule *module)
 {
-   mSystemModules.insert(std::make_pair(std::move(name), module));
+   mSystemModules.emplace(name, module);
 
    // Map syscall IDs
    auto exports = module->getExportMap();
@@ -82,7 +82,7 @@ System::initialise()
 }
 
 KernelModule *
-System::findModule(const char *name) const
+System::findModule(const std::string &name) const
 {
    auto itr = mSystemModules.find(name);
 

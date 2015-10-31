@@ -325,7 +325,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    if (data->id == InstructionID::kc) {
       auto sc = gSystem.getSyscallData(dis.args[0].constantUnsigned);
       if (sc) {
-         dis.text += " ; " + std::string(sc->name);
+         dis.text += " ; " + sc->name;
       } else {
          dis.text += " ; ?";
       }

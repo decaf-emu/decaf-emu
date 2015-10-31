@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdio>
+#include <string>
 #include "config.h"
 #include "utils/virtual_ptr.h"
 
@@ -15,10 +16,10 @@ struct LogState
 };
 
 static inline void
-logCall(LogState &state, uint32_t lr, const char *name)
+logCall(LogState &state, uint32_t lr, const std::string &name)
 {
    if (config::log::kernel_trace) {
-      auto len = sprintf_s(state.buffer + state.pos, state.length, "0x%08X %s(", lr, name);
+      auto len = sprintf_s(state.buffer + state.pos, state.length, "0x%08X %s(", lr, name.c_str());
       state.length -= len;
       state.pos += len;
    }

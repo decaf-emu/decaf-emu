@@ -38,9 +38,9 @@ public:
 
    void initialise();
 
-   uint32_t registerUnimplementedFunction(const char* name);
-   void registerModule(const char *name, KernelModule *module);
-   KernelModule *findModule(const char *name) const;
+   uint32_t registerUnimplementedFunction(const std::string &name);
+   void registerModule(const std::string &name, KernelModule *module);
+   KernelModule *findModule(const std::string &name) const;
 
    void setUserModule(LoadedModule *module);
    LoadedModule *getUserModule() const;

@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "config.h"
 #include "ppcinvokeargs.h"
 #include "ppcinvokeresult.h"
@@ -121,7 +122,7 @@ invoke2(_argumentsState& state, void func(FnArgs...), type_list<>, Args... args)
 
 template<typename ReturnType, typename... Args>
 inline void
-invoke(ThreadState *state, ReturnType func(Args...), const char *name = nullptr)
+invoke(ThreadState *state, ReturnType func(Args...), const std::string &name = "")
 {
    _argumentsState argstate;
    argstate.thread = state;
