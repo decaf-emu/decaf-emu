@@ -76,7 +76,7 @@ getGameName(const fs::HostPath &path)
 int main(int argc, char **argv)
 {
    auto args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true, "Decaf 0.1");
-   auto has_arg = [&args](const char *name) { return args.find(name) != args.end(); };
+   auto has_arg = [&args](const char *name) { return args.find(name) != args.end() ? (bool)args[name] : false; };
    auto arg_bool = [&](const char *name) { return has_arg(name) && args[name].isBool() ? args[name].asBool() : false; };
    auto arg_str = [&](const char *name) { return has_arg(name) && args[name].isString() ? args[name].asString() : ""; };
    bool result = false;
