@@ -78,7 +78,7 @@ addGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (flags & AddAlwaysRecord) {
-      recordOverflow = true;
+      recordOverflow = false;
       recordCond = true;
    } else if (flags & AddCheckRecord) {
       if (instr.oe) {
