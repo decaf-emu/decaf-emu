@@ -690,6 +690,10 @@ template<unsigned flags>
 static void
 shiftArithmetic(ThreadState *state, Instruction instr)
 {
+   if (!(flags & ShiftRight)) {
+      throw;
+   }
+
    int32_t s, a, n, b;
 
    s = state->gpr[instr.rS];

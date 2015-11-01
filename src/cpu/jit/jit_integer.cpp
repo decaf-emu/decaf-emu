@@ -724,21 +724,21 @@ shiftLogical(PPCEmuAssembler& a, Instruction instr)
 
    if (flags & ShiftImmediate) {
       if (flags & ShiftLeft) {
-         a.shl(a.eax, instr.sh);
+         a.shl(a.zax, instr.sh);
       } else if (flags & ShiftRight) {
-         a.shr(a.eax, instr.sh);
+         a.shr(a.zax, instr.sh);
       } else {
-         assert(0);
+		 throw;
       }
    } else {
       a.mov(a.ecx, a.ppcgpr[instr.rB]);
 
       if (flags & ShiftLeft) {
-         a.shl(a.eax, a.ecx.r8());
+         a.shl(a.zax, a.ecx.r8());
       } else if (flags & ShiftRight) {
-         a.shr(a.eax, a.ecx.r8());
+         a.shr(a.zax, a.ecx.r8());
       } else {
-         assert(0);
+		 throw;
       }
    }
 
@@ -770,12 +770,8 @@ template<unsigned flags>
 static bool
 shiftArithmetic(PPCEmuAssembler& a, Instruction instr)
 {
-   if (flags & ShiftImmediate && instr.sh == 0) {
-      // Clear Carry Flag
-      a.mov(a.ecx, a.ppcxer);
-      a.and_(a.ecx, ~XERegisterBits::Carry);
-      a.mov(a.ppcxer, a.ecx);
-      return true;
+   if (!(flags & ShiftRight)) {
+      throw;
    }
 
    return jit_fallback(a, instr);
