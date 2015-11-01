@@ -12,6 +12,9 @@ namespace cpu
 namespace jit
 {
 
+   static const bool JIT_DEBUG = true;
+   static const int JIT_MAX_INST = 20000;
+
    static std::vector<jitinstrfptr_t>
    sInstructionMap;
 
@@ -33,16 +36,16 @@ namespace jit
       a.push(a.zbx);
       a.push(a.zdi);
       a.push(a.zsi);
-      a.push(asmjit::x86::r10);
+      a.push(asmjit::x86::r12);
       a.sub(a.zsp, 0x38);
       a.mov(a.zbx, a.zcx);
-      a.mov(asmjit::x86::r10, a.zdx);
+      a.mov(asmjit::x86::r12, a.zdx);
       a.mov(a.zsi, static_cast<uint64_t>(mem::base()));
       a.jmp(asmjit::x86::r8d);
 
       a.bind(extroLabel);
       a.add(a.zsp, 0x38);
-      a.pop(asmjit::x86::r10);
+      a.pop(asmjit::x86::r12);
       a.pop(a.zsi);
       a.pop(a.zdi);
       a.pop(a.zbx);
@@ -123,7 +126,6 @@ namespace jit
    bool gen(JitBlock& block)
    {
       PPCEmuAssembler a(sRuntime);
-      bool jitFailed = false;
 
       JumpLabelMap jumpLabels;
       for (auto i = block.targets.begin(); i != block.targets.end(); ++i) {
@@ -133,8 +135,10 @@ namespace jit
       }
 
       // Fix VS debug viewer...
-      for (int i = 0; i < 8; ++i) {
-         a.nop();
+      if (JIT_DEBUG) {
+         for (int i = 0; i < 8; ++i) {
+            a.nop();
+         }
       }
 
       asmjit::Label codeStart(a);
@@ -147,7 +151,9 @@ namespace jit
             a.bind(ciaLbl->second);
          }
 
-         a.mov(a.cia, lclCia);
+         if (JIT_DEBUG) {
+            a.mov(a.cia, lclCia);
+         }
 
          auto instr = mem::read<Instruction>(lclCia);
          auto data = gInstructionTable.decode(instr);
@@ -169,29 +175,20 @@ namespace jit
          }
 
          if (!genSuccess) {
-            gLog->debug("JIT bailed due to generation failure on {}", data->name);
-
-            if (!JIT_CONTINUE_ON_ERROR) {
-               jitFailed = true;
-               break;
-            } else {
-               a.int3();
-            }
+            a.int3();
          }
 
-         a.nop();
+         if (JIT_DEBUG) {
+            a.nop();
+         }
 
          lclCia += 4;
-      }
-
-      if (jitFailed) {
-         return false;
       }
 
       // Debug Check
       for (auto i = jumpLabels.begin(); i != jumpLabels.end(); ++i) {
          if (!a.isLabelValid(i->second) || !a.isLabelBound(i->second)) {
-            gLog->debug("Jump target {:08x} was never initialized...", i->first);
+            gLog->error("Jump target {:08x} was never initialized...", i->first);
          }
       }
 
@@ -217,7 +214,6 @@ namespace jit
       auto fnStart = block.start;
       auto fnMax = fnStart;
       auto fnEnd = fnStart;
-      bool jitFailed = false;
       JumpTargetList jumpTargets;
 
       auto lclCia = fnStart;
@@ -226,26 +222,12 @@ namespace jit
          auto data = gInstructionTable.decode(instr);
 
          if (!data) {
-            // Looks like we found a tail call function :(
-            jitFailed = true;
+            // Looks like we found a tail call function??
+
+            fnMax = lclCia - 4;
+            fnEnd = fnMax + 4;
+            gLog->warn("Bailing on JIT {:08x} ident due to failed decode at {:08x}", block.start, lclCia);
             break;
-         }
-
-         if (!JIT_CONTINUE_ON_ERROR) {
-            // These ifs should match the generator loop below...
-            if (data->id == InstructionID::b) {
-            } else if (data->id == InstructionID::bc) {
-            } else if (data->id == InstructionID::bcctr) {
-            } else if (data->id == InstructionID::bclr) {
-            } else {
-               auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
-
-               if (!fptr) {
-                  gLog->info("JIT bailing due to unimplemented instruction {}", data->name);
-                  jitFailed = true;
-                  break;
-               }
-            }
          }
 
          uint32_t nia;
@@ -306,7 +288,7 @@ namespace jit
             break;
          }
 
-         if (jitFailed || fnEnd != fnStart) {
+         if (fnEnd != fnStart) {
             // If we found an end, lets stop searching!
             break;
          }
@@ -314,14 +296,11 @@ namespace jit
          lclCia += 4;
 
          if (((lclCia - fnStart) >> 2) > JIT_MAX_INST) {
-            gLog->debug("Bailing on JIT due to max instruction limit at {:08x}", lclCia);
-            jitFailed = true;
+            fnMax = lclCia - 4;
+            fnEnd = fnMax + 4;
+            gLog->warn("Bailing on JIT {:08x} due to max instruction limit at {:08x}", block.start, lclCia);
             break;
          }
-      }
-
-      if (jitFailed) {
-         return false;
       }
 
       block.end = fnEnd;
@@ -332,7 +311,11 @@ namespace jit
       return true;
    }
 
+   static std::mutex sMutex;
+
    JitCode get(uint32_t addr) {
+      std::unique_lock<std::mutex> lock(sMutex);
+
       auto i = sBlocks.find(addr);
       if (i != sBlocks.end()) {
          return i->second;
@@ -396,7 +379,7 @@ namespace jit
       while (state->nia != cpu::CALLBACK_ADDR) {
          JitCode jitFn = get(state->nia);
          if (!jitFn) {
-            assert(0);
+            throw;
          }
 
          auto newNia = execute(state, jitFn);

@@ -9,9 +9,6 @@ namespace cpu
 namespace jit
 {
 
-static const bool JIT_CONTINUE_ON_ERROR = false;
-static const int JIT_MAX_INST = 20000;
-
 /*
 Register Assignments:
 RAX . Scratch
@@ -48,7 +45,7 @@ public:
 
       state = zbx;
       membase = zsi;
-      interruptAddr = asmjit::x86::r10;
+      interruptAddr = asmjit::x86::r12;
       cia = zdi;
 
       xmm0 = asmjit::x86::xmm0;

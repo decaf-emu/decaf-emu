@@ -1,4 +1,5 @@
 #include "jit_insreg.h"
+#include "../cpu_internal.h"
 #include "utils/bitutils.h"
 
 namespace cpu
@@ -24,13 +25,19 @@ enum BcFlags
 };
 
 void
+jit_interrupt_stub(ThreadState *state)
+{
+   cpu::gInterruptHandler(state->core, state);
+}
+
+void
 jit_b_check_interrupt(PPCEmuAssembler& a, uint32_t cia)
 {
    asmjit::Label noInterrupt(a);
    a.cmp(asmjit::X86Mem(a.interruptAddr, 0, 4), 0);
    a.je(noInterrupt);
-   a.mov(a.eax, cia);
-   a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
+   a.mov(a.zcx, a.state);
+   a.call(asmjit::Ptr(jit_interrupt_stub));
    a.bind(noInterrupt);
 }
 
