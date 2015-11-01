@@ -71,7 +71,7 @@ cmpGeneric(PPCEmuAssembler& a, Instruction instr)
    a.mov(a.eax, a.ppcxer);
    a.and_(a.eax, XERegisterBits::StickyOV);
    a.shr(a.eax, XERegisterBits::StickyOVShift);
-   a.shl(a.eax, ConditionRegisterFlag::SummaryOverflowShift << crshift);
+   a.shl(a.eax, ConditionRegisterFlag::SummaryOverflowShift + crshift);
    a.or_(a.edx, a.eax);
 
    // Perform Comparison
