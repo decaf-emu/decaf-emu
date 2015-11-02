@@ -17,6 +17,47 @@ updateFloatConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& tmp, co
 }
 
 static bool
+fdiv(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+
+   a.divsd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fdivs(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+
+   a.divsd(a.xmm0, a.xmm1);
+
+   a.cvtsd2ss(a.xmm1, a.xmm0);
+   a.cvtss2sd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
 fmul(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
@@ -97,8 +138,8 @@ void registerFloatInstructions()
 {
    RegisterInstructionFallback(fadd);
    RegisterInstructionFallback(fadds);
-   RegisterInstructionFallback(fdiv);
-   RegisterInstructionFallback(fdivs);
+   RegisterInstruction(fdiv);
+   RegisterInstruction(fdivs);
    RegisterInstruction(fmul);
    RegisterInstruction(fmuls);
    RegisterInstruction(fsub);
