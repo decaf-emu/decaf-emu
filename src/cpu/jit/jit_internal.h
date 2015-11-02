@@ -50,6 +50,8 @@ public:
 
       xmm0 = asmjit::x86::xmm0;
       xmm1 = asmjit::x86::xmm1;
+      xmm2 = asmjit::x86::xmm2;
+      xmm3 = asmjit::x86::xmm3;
 
 #define PPCTSReg(mm) asmjit::X86Mem(zbx, (int32_t)offsetof(ThreadState, mm), sizeof(ThreadState::mm))
       for (auto i = 0; i < 32; ++i) {
@@ -100,6 +102,8 @@ public:
 
    asmjit::X86XmmReg xmm0;
    asmjit::X86XmmReg xmm1;
+   asmjit::X86XmmReg xmm2;
+   asmjit::X86XmmReg xmm3;
 
    asmjit::X86Mem ppcgpr[32];
    asmjit::X86Mem ppcfpr[32];
