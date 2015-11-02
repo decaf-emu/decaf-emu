@@ -65,10 +65,6 @@ template<unsigned flags = 0>
 static bool
 addGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   if (flags & AddSubtract) {
-      return jit_fallback(a, instr);
-   }
-
    bool recordCarry = false;
    bool recordOverflow = false;
    bool recordCond = false;
