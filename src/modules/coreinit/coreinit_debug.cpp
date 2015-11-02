@@ -1,3 +1,4 @@
+#include <array>
 #include "coreinit.h"
 #include "coreinit_debug.h"
 #include "utils/log.h"
@@ -14,26 +15,26 @@ OSIsDebuggerInitialized()
    return FALSE;
 }
 
-static std::vector<char> c_flags = {
+static const std::array<char, 5> c_flags = {{
    '-', '+', ' ', '#', '0'
-};
+}};
 
-static std::vector<char> c_width = {
+static const std::array<char, 11> c_width = {{
    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*'
-};
+}};
 
-static std::vector<char> c_precision = {
+static const std::array<char, 12> c_precision = {{
    '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*'
-};
+}};
 
-static std::vector<char> c_length = {
+static const std::array<char, 6> c_length = {{
    'h', 'l', 'j', 'z', 't', 'L'
-};
+}};
 
-static std::vector<char> c_specifier = {
+static const std::array<char, 18> c_specifier = {{
    'd', 'i', 'u', 'o', 'x', 'X', 'f', 'F', 'e',
    'E', 'g', 'G', 'a', 'A', 'c', 's', 'p', 'n'
-};
+}};
 
 static void
 formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
