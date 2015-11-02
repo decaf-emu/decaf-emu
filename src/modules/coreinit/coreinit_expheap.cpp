@@ -270,7 +270,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
    if (!freeBlock) {
       gLog->error("MEMAllocFromExpHeapEx failed, no free block found for size {:08x} ({:08x}+{:x}+{:x})", size, originalSize, sizeof(ExpandedHeapBlock), alignment);
       MEMiDumpExpHeap(heap);
-      return 0;
+      return nullptr;
    }
 
    if (direction == HeapDirection::FromBottom) {

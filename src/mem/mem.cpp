@@ -53,7 +53,7 @@ static uint8_t *
 gBase = nullptr;
 
 static void *
-sFile = NULL;
+sFile = nullptr;
 
 static std::vector<MemoryView>
 sViews;
@@ -188,8 +188,7 @@ valid(ppcaddr_t address)
 bool
 protect(ppcaddr_t address, size_t size)
 {
-   auto result = VirtualAlloc(gBase + address, size, MEM_RESERVE, PAGE_NOACCESS);
-   return result != NULL;
+   return VirtualAlloc(gBase + address, size, MEM_RESERVE, PAGE_NOACCESS) != nullptr;
 }
 
 

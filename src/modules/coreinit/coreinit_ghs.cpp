@@ -80,7 +80,7 @@ ghsExit(int code)
    tracePrint(GetCurrentFiberState(), 0, 0);
 
    // Must never return...
-   *static_cast<uint32_t*>(0) = 0;
+   *static_cast<uint32_t*>(nullptr) = 0;
 }
 
 void ghs_mtx_init(void *mtx)
