@@ -774,7 +774,40 @@ shiftArithmetic(PPCEmuAssembler& a, Instruction instr)
       throw;
    }
 
-   return jit_fallback(a, instr);
+   a.movsxd(a.zax, a.ppcgpr[instr.rS]);
+   a.mov(a.edx, a.eax);
+
+   if (flags & ShiftImmediate) {
+      a.sar(a.zax, instr.sh);
+
+      a.shl(a.zdx, 32 - instr.sh);
+   } else {
+      a.mov(a.ecx, a.ppcgpr[instr.rB]);
+      a.mov(a.r8d, a.ecx);
+
+      a.sar(a.zax, a.ecx.r8());
+
+      a.shl(a.zdx, 32);
+      a.shr(a.zdx, a.ecx.r8());
+   }
+
+   a.test(a.edx, a.eax);
+   a.mov(a.ecx, 0);
+   a.setnz(a.ecx.r8());
+   a.shl(a.ecx, XERegisterBits::CarryShift);
+
+   a.mov(a.edx, a.ppcxer);
+   a.and_(a.edx, ~XERegisterBits::Carry);
+   a.or_(a.edx, a.ecx);
+   a.mov(a.ppcxer, a.edx);
+
+   a.mov(a.ppcgpr[instr.rA], a.eax);
+
+   if (instr.rc) {
+      updateConditionRegister(a, a.eax, a.ecx, a.edx);
+   }
+
+   return true;
 }
 
 static bool
