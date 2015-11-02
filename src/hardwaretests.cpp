@@ -231,7 +231,7 @@ bool runTests()
             auto value = state.fpr[reg].paired0;
             auto expected = test.output.fr[i];
 
-            if (!is_nan(value) && !is_nan(test.output.fr[i]) && !is_infinity(value) && !is_infinity(expected)) {
+            if (!is_nan(value) && !is_nan(expected) && !is_infinity(value) && !is_infinity(expected)) {
                double dval = value / expected;
 
                if (dval < 0.999 || dval > 1.001) {
@@ -239,6 +239,12 @@ bool runTests()
                   failed = true;
                }
             } else {
+               if (is_nan(value) && is_nan(expected)) {
+                  auto bits = get_float_bits(value);
+                  bits.sign = get_float_bits(expected).sign;
+                  value = bits.v;
+               }
+
                if (bit_cast<uint64_t>(value) != bit_cast<uint64_t>(expected)) {
                   gLog->error("Test failed, f{} expected {:16X} found {:16X}", reg, bit_cast<uint64_t>(expected), bit_cast<uint64_t>(value));
                   failed = true;
