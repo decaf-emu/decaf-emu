@@ -242,7 +242,7 @@ MPInitTask(MPTask *task, MPTaskFunc func, uint32_t userArg1, uint32_t userArg2)
    task->result = 0;
    task->coreID = CoreCount;
    task->duration = 0;
-   task->userData = 0;
+   task->userData = nullptr;
 }
 
 

@@ -158,7 +158,7 @@ MEMGetBaseHeapHandle(BaseHeapType type)
    if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
       return gMemArenas[static_cast<size_t>(type)];
    } else {
-      return 0;
+      return nullptr;
    }
 }
 
@@ -170,7 +170,7 @@ MEMSetBaseHeapHandle(BaseHeapType type, CommonHeap *heap)
       gMemArenas[static_cast<size_t>(type)] = heap;
       return previous;
    } else {
-      return 0;
+      return nullptr;
    }
 }
 
