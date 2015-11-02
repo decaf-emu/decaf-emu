@@ -5,18 +5,11 @@
 #include "state.h"
 #include "statedbg.h"
 #include "utils/log.h"
+#include "utils/debuglog.h"
 
 //#define TRACE_ENABLED
 //#define TRACE_SC_ENABLED
 //#define TRACE_VERIFICATION
-
-template<typename... Args>
-static void
-debugPrint(fmt::StringRef msg, Args... args) {
-   auto out = fmt::format(msg, args...);
-   out += "\n";
-   OutputDebugStringA(out.c_str());
-}
 
 struct Tracer
 {

@@ -4,6 +4,7 @@
 #include "utils/bitutils.h"
 #include "cpu/cpu.h"
 #include "cpu/trace.h"
+#include "cpu/jit/jit.h"
 #include "debugger.h"
 #include "fuzztests.h"
 #include "filesystem/filesystem.h"
@@ -315,6 +316,7 @@ play(const fs::HostPath &path)
    // Force inclusion in release builds
    tracePrint(nullptr, 0, 0);
    tracePrintSyscall(0);
+   fallbacksPrint();
 
    // Wait for all processor threads to exit
    //gProcessor.join();

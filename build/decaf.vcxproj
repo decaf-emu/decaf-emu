@@ -425,6 +425,7 @@
     <ClInclude Include="..\src\utils\bit_cast.h" />
     <ClInclude Include="..\src\utils\byte_swap.h" />
     <ClInclude Include="..\src\utils\crc32.h" />
+    <ClInclude Include="..\src\utils\debuglog.h" />
     <ClInclude Include="..\src\utils\floatutils.h" />
     <ClInclude Include="..\src\utils\log.h" />
     <ClInclude Include="..\src\utils\structsize.h" />

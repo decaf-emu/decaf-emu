@@ -1229,6 +1229,9 @@
     <ClInclude Include="..\src\config.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\debuglog.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
