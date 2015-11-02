@@ -17,6 +17,25 @@ updateFloatConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& tmp, co
 }
 
 static bool
+fmul(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
+
+   a.mulsd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
 fmuls(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
@@ -80,7 +99,7 @@ void registerFloatInstructions()
    RegisterInstructionFallback(fadds);
    RegisterInstructionFallback(fdiv);
    RegisterInstructionFallback(fdivs);
-   RegisterInstructionFallback(fmul);
+   RegisterInstruction(fmul);
    RegisterInstruction(fmuls);
    RegisterInstruction(fsub);
    RegisterInstructionFallback(fsubs);
