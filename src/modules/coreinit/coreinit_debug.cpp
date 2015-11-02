@@ -1,7 +1,7 @@
-#include <array>
 #include "coreinit.h"
 #include "coreinit_debug.h"
 #include "utils/log.h"
+#include "utils/make_array.h"
 
 BOOL
 OSIsDebuggerPresent()
@@ -15,26 +15,26 @@ OSIsDebuggerInitialized()
    return FALSE;
 }
 
-static const std::array<char, 5> c_flags = {{
+static const auto c_flags = make_array<char>(
    '-', '+', ' ', '#', '0'
-}};
+);
 
-static const std::array<char, 11> c_width = {{
+static const auto c_width = make_array<char>(
    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*'
-}};
+);
 
-static const std::array<char, 12> c_precision = {{
+static const auto c_precision = make_array<char>(
    '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*'
-}};
+);
 
-static const std::array<char, 6> c_length = {{
+static const auto c_length = make_array<char>(
    'h', 'l', 'j', 'z', 't', 'L'
-}};
+);
 
-static const std::array<char, 18> c_specifier = {{
+static const auto c_specifier = make_array<char>(
    'd', 'i', 'u', 'o', 'x', 'X', 'f', 'F', 'e',
    'E', 'g', 'G', 'a', 'A', 'c', 's', 'p', 'n'
-}};
+);
 
 static void
 formatString(const char *fmt, ppctypes::VarList &args, std::string &output)

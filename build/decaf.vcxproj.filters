@@ -1232,6 +1232,9 @@
     <ClInclude Include="..\src\utils\debuglog.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\make_array.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
