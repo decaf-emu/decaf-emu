@@ -748,6 +748,5 @@ cpu::interpreter::registerFloatInstructions()
    RegisterInstruction(fabs);
    RegisterInstruction(fnabs);
    RegisterInstruction(fmr);
-   RegisterInstruction(fabs);
    RegisterInstruction(fneg);
 }

@@ -17,6 +17,47 @@ updateFloatConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& tmp, co
 }
 
 static bool
+fadd(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+
+   a.addsd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fadds(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+
+   a.addsd(a.xmm0, a.xmm1);
+
+   a.cvtsd2ss(a.xmm1, a.xmm0);
+   a.cvtss2sd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
 fdiv(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
@@ -140,6 +181,198 @@ fsubs(PPCEmuAssembler& a, Instruction instr)
 }
 
 static bool
+fmadd(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
+   a.mulsd(a.xmm0, a.xmm1);
+
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   a.addsd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fmadds(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
+   a.mulsd(a.xmm0, a.xmm1);
+
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   a.addsd(a.xmm0, a.xmm1);
+
+   a.cvtsd2ss(a.xmm1, a.xmm0);
+   a.cvtss2sd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fmsub(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
+   a.mulsd(a.xmm0, a.xmm1);
+
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   a.subsd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fmsubs(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
+   a.mulsd(a.xmm0, a.xmm1);
+
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   a.subsd(a.xmm0, a.xmm1);
+
+   a.cvtsd2ss(a.xmm1, a.xmm0);
+   a.cvtss2sd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fnmadd(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
+   a.mulsd(a.xmm0, a.xmm1);
+
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   a.addsd(a.xmm0, a.xmm1);
+
+   a.mov(a.zax, 0x8000000000000000);
+   a.movq(a.xmm1, a.zax);
+   a.pxor(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fnmadds(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
+   a.mulsd(a.xmm0, a.xmm1);
+
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   a.addsd(a.xmm0, a.xmm1);
+
+   a.mov(a.zax, 0x8000000000000000);
+   a.movq(a.xmm1, a.zax);
+   a.pxor(a.xmm0, a.xmm1);
+
+   a.cvtsd2ss(a.xmm1, a.xmm0);
+   a.cvtss2sd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fnmsub(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
+   a.mulsd(a.xmm0, a.xmm1);
+
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   a.subsd(a.xmm0, a.xmm1);
+
+   a.mov(a.zax, 0x8000000000000000);
+   a.movq(a.xmm1, a.zax);
+   a.pxor(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fnmsubs(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
+   a.mulsd(a.xmm0, a.xmm1);
+
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   a.subsd(a.xmm0, a.xmm1);
+
+   a.mov(a.zax, 0x8000000000000000);
+   a.movq(a.xmm1, a.zax);
+   a.pxor(a.xmm0, a.xmm1);
+
+   a.cvtsd2ss(a.xmm1, a.xmm0);
+   a.cvtss2sd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
 frsp(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
@@ -151,6 +384,50 @@ frsp(PPCEmuAssembler& a, Instruction instr)
    a.movq(a.xmm0, a.ppcfpr[instr.frB]);
    a.cvtsd2ss(a.xmm1, a.xmm0);
    a.cvtss2sd(a.xmm0, a.xmm1);
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fabs(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frB]);
+
+   a.mov(a.zax, 0x7FFFFFFFFFFFFFFF);
+   a.movq(a.xmm1, a.zax);
+   a.pand(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
+fnabs(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frB]);
+
+   a.mov(a.zax, 0x7FFFFFFFFFFFFFFF);
+   a.movq(a.xmm1, a.zax);
+   a.pand(a.xmm0, a.xmm1);
+
+   a.mov(a.zax, 0x8000000000000000);
+   a.movq(a.xmm1, a.zax);
+   a.pxor(a.xmm0, a.xmm1);
+
    a.movq(a.ppcfpr[instr.frD], a.xmm0);
 
    return true;
@@ -171,10 +448,33 @@ fmr(PPCEmuAssembler& a, Instruction instr)
    return true;
 }
 
+static bool
+fneg(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frB]);
+
+   a.mov(a.zax, 0x8000000000000000);
+   a.movq(a.xmm1, a.zax);
+   a.pxor(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
 void registerFloatInstructions()
 {
-   RegisterInstructionFallback(fadd);
-   RegisterInstructionFallback(fadds);
+   // TODO: fmXXX instructions are CLOSE, but not perfectly
+   //   accurate...
+
+   RegisterInstruction(fadd);
+   RegisterInstruction(fadds);
    RegisterInstruction(fdiv);
    RegisterInstruction(fdivs);
    RegisterInstruction(fmul);
@@ -184,22 +484,21 @@ void registerFloatInstructions()
    RegisterInstructionFallback(fres);
    RegisterInstructionFallback(frsqrte);
    RegisterInstructionFallback(fsel);
-   RegisterInstructionFallback(fmadd);
-   RegisterInstructionFallback(fmadds);
-   RegisterInstructionFallback(fmsub);
-   RegisterInstructionFallback(fmsubs);
-   RegisterInstructionFallback(fnmadd);
-   RegisterInstructionFallback(fnmadds);
-   RegisterInstructionFallback(fnmsub);
-   RegisterInstructionFallback(fnmsubs);
+   RegisterInstruction(fmadd);
+   RegisterInstruction(fmadds);
+   RegisterInstruction(fmsub);
+   RegisterInstruction(fmsubs);
+   RegisterInstruction(fnmadd);
+   RegisterInstruction(fnmadds);
+   RegisterInstruction(fnmsub);
+   RegisterInstruction(fnmsubs);
    RegisterInstructionFallback(fctiw);
    RegisterInstructionFallback(fctiwz);
    RegisterInstruction(frsp);
-   RegisterInstructionFallback(fabs);
-   RegisterInstructionFallback(fnabs);
+   RegisterInstruction(fabs);
+   RegisterInstruction(fnabs);
    RegisterInstruction(fmr);
-   RegisterInstructionFallback(fabs);
-   RegisterInstructionFallback(fneg);
+   RegisterInstruction(fneg);
 }
 
 } // namespace jit
