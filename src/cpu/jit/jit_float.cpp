@@ -118,6 +118,28 @@ fsub(PPCEmuAssembler& a, Instruction instr)
 }
 
 static bool
+fsubs(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
+   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+
+   a.subsd(a.xmm0, a.xmm1);
+
+   a.cvtsd2ss(a.xmm1, a.xmm0);
+   a.cvtss2sd(a.xmm0, a.xmm1);
+
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
+static bool
 frsp(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
@@ -134,6 +156,21 @@ frsp(PPCEmuAssembler& a, Instruction instr)
    return true;
 }
 
+static bool
+fmr(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   a.movq(a.xmm0, a.ppcfpr[instr.frB]);
+   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+
+   return true;
+}
+
 void registerFloatInstructions()
 {
    RegisterInstructionFallback(fadd);
@@ -143,7 +180,7 @@ void registerFloatInstructions()
    RegisterInstruction(fmul);
    RegisterInstruction(fmuls);
    RegisterInstruction(fsub);
-   RegisterInstructionFallback(fsubs);
+   RegisterInstruction(fsubs);
    RegisterInstructionFallback(fres);
    RegisterInstructionFallback(frsqrte);
    RegisterInstructionFallback(fsel);
@@ -160,7 +197,7 @@ void registerFloatInstructions()
    RegisterInstruction(frsp);
    RegisterInstructionFallback(fabs);
    RegisterInstructionFallback(fnabs);
-   RegisterInstructionFallback(fmr);
+   RegisterInstruction(fmr);
    RegisterInstructionFallback(fabs);
    RegisterInstructionFallback(fneg);
 }
