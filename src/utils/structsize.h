@@ -10,6 +10,9 @@
    static_assert(offsetof(Type, Field) == Offset, \
                  #Type "::" #Field " must be at offset " #Offset)
 
+// TODO: Figure out how to implement this, might be impossible without complex constexpr?
+#define CHECK_BIT_OFFSET(Type, Offset, Field)
+
 // Workaround weird macro concat ## behaviour
 #define PP_CAT(a, b) PP_CAT_I(a, b)
 #define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)

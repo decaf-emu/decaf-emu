@@ -278,6 +278,10 @@ GX2_ENUM(GX2SurfaceUse, uint32_t)
    GX2_ENUM_VALUE(DepthBuffer,      1 << 2)
 GX2_ENUM_END
 
+GX2_ENUM(GX2StencilFunction, uint32_t)
+   GX2_ENUM_VALID_RANGE(0, 7)
+GX2_ENUM_END
+
 GX2_ENUM(GX2TessellationMode, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 2)
 GX2_ENUM_END

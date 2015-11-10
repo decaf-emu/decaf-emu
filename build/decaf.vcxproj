@@ -135,6 +135,7 @@
     <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
     <ClCompile Include="..\src\gpu\latte_opcodes.cpp" />
     <ClCompile Include="..\src\gpu\latte_untile.cpp" />
+    <ClCompile Include="..\src\gpu\pm4.cpp" />
     <ClCompile Include="..\src\hardwaretests.cpp" />
     <ClCompile Include="..\src\loader.cpp" />
     <ClCompile Include="..\src\main.cpp" />
@@ -189,6 +190,7 @@
     <ClCompile Include="..\src\modules\gx2\gx2_debug.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_format.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_registers.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_sampler.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_surface.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_temp.cpp" />
@@ -290,6 +292,7 @@
     <ClInclude Include="..\src\gpu\latte_opcodes.h" />
     <ClInclude Include="..\src\gpu\latte_shadir.h" />
     <ClInclude Include="..\src\gpu\latte_untile.h" />
+    <ClInclude Include="..\src\gpu\pm4.h" />
     <ClInclude Include="..\src\hardwaretests.h" />
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\memory_translate.h" />
@@ -318,6 +321,7 @@
     <ClInclude Include="..\src\modules\gx2\gx2_enum.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_enum_string.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_format.h" />
+    <ClInclude Include="..\src\modules\gx2\gx2_registers.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_sampler.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_vsync.h" />
     <ClInclude Include="..\src\modules\nn_act\nn_act_result.h" />

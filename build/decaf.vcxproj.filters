@@ -657,6 +657,12 @@
     <ClCompile Include="..\src\config.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_registers.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\pm4.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1234,6 +1240,12 @@
     </ClInclude>
     <ClInclude Include="..\src\utils\make_array.h">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\pm4.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_registers.h">
+      <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
