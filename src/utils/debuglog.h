@@ -2,7 +2,7 @@
 
 template<typename... Args>
 static void
-debugPrint(fmt::StringRef msg, Args... args) {
+debugPrint(fmt::CStringRef msg, Args... args) {
    auto out = fmt::format(msg, args...);
    out += "\n";
    OutputDebugStringA(out.c_str());
