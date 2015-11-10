@@ -32,14 +32,14 @@ struct GX2Sampler
    };
 
    struct {
-      uint32_t : 14;
-      uint32_t perfZ : 2;
-      uint32_t perfMip : 3;
+      uint32_t : 15;
       uint32_t unkFilterAdjust : 1; // GX2InitSamplerFilterAdjust unk
+      uint32_t perfMip : 3;
+      uint32_t perfZ : 2;
       uint32_t unkLodAdjust1 : 6; // GX2InitSamplerLODAdjust unk1 float 0 ... 2
       uint32_t : 2;
       GX2RoundingMode::Value roundingMode : 1;
-      uint32_t : 3;
+      uint32_t : 2;
    };
 };
 CHECK_SIZE(GX2Sampler, 12);
