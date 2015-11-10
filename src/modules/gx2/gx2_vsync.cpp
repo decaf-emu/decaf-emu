@@ -36,7 +36,7 @@ _GX2InitVsync()
    gVsyncThreadQueue = OSAllocFromSystem<OSThreadQueue>();
    gVsyncAlarm = OSAllocFromSystem<OSAlarm>();
 
-   auto ticks = (static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) * 60) / 1000;
+   auto ticks = static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) / 60;
    OSCreateAlarm(gVsyncAlarm);
    OSSetPeriodicAlarm(gVsyncAlarm, OSGetTime(), ticks, pVsyncAlarmHandler);
 }
