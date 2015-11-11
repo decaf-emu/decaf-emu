@@ -3,11 +3,13 @@
 uint32_t
 GX2CalcGeometryShaderInputRingBufferSize(uint32_t ringItemSize)
 {
+   return 0;
 }
 
 uint32_t
 GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize)
 {
+   return 0;
 }
 
 uint32_t
@@ -15,6 +17,7 @@ GX2CalcFetchShaderSizeEx(uint32_t attribs,
                          GX2FetchShaderType::Value fetchShaderType,
                          GX2TessellationMode::Value tesellationMode)
 {
+   return 0;
 }
 
 void
@@ -82,19 +85,23 @@ GX2SetShaderModeEx(GX2ShaderMode::Value mode,
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader)
 {
+   return 0;
 }
 
 uint32_t
 GX2GetPixelShaderStackEntries(GX2PixelShader *shader)
 {
+   return 0;
 }
 
 uint32_t
 GX2GetVertexShaderGPRs(GX2VertexShader *shader)
 {
+   return 0;
 }
 
 uint32_t
 GX2GetVertexShaderStackEntries(GX2VertexShader *shader)
 {
+   return 0;
 }

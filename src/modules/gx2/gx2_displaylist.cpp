@@ -13,6 +13,7 @@ GX2BeginDisplayList(GX2DisplayList *displayList, uint32_t size)
 uint32_t
 GX2EndDisplayList(GX2DisplayList *displayList)
 {
+   return 0;
 }
 
 void
@@ -28,11 +29,13 @@ GX2CallDisplayList(GX2DisplayList *displayList, uint32_t size)
 BOOL
 GX2GetDisplayListWriteStatus()
 {
+   return FALSE;
 }
 
 BOOL
 GX2GetCurrentDisplayList(be_val<uint32_t> *outDisplayList, be_val<uint32_t> *outSize)
 {
+   return FALSE;
 }
 
 void

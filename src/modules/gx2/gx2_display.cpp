@@ -59,9 +59,11 @@ GX2SetDRCScale(uint32_t x, uint32_t y)
 GX2TVScanMode::Value
 GX2GetSystemTVScanMode()
 {
+   return GX2TVScanMode::None;
 }
 
 GX2DrcRenderMode::Value
 GX2GetSystemDRCMode()
 {
+   return GX2DrcRenderMode::Single;
 }

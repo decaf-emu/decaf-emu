@@ -1,5 +1,8 @@
 #pragma once
 #include <fail_fast.h>
+#include <initializer_list>
+#include <array_view.h>
+#include <vector>
 #include "modules/coreinit/coreinit_time.h"
 #include "types.h"
 #include "utils/be_val.h"
@@ -158,6 +161,14 @@ struct CommandBuffer
    uint32_t maxSize;
 };
 
+namespace ConfigRegister
+{
+enum Value : uint32_t
+{
+   Base = 0x2000,
+};
+}
+
 namespace ContextRegister
 {
 enum Value : uint32_t
@@ -176,40 +187,188 @@ enum Value : uint32_t
 
 CommandBuffer *getCommandBuffer(uint32_t size);
 
-static inline Packet3 makePacket3(Opcode3::Value opcode, uint32_t size)
-{
-   Packet3 pak { 0 };
-   pak.type = 3;
-   pak.opcode = opcode;
-   pak.size = size - 1;
-   return pak;
-}
+class Pm4Builder {
+public:
+   Pm4Builder(Opcode3::Value opCode)
+   {
+      mBuffer = getCommandBuffer(0);
+      mBufferStartSize = mBuffer->curSize;
 
-static inline bool writeData(CommandBuffer *buf, uint32_t data)
-{
-   buf->buffer[buf->curSize++] = data;
-   return true;
-}
-
-static inline bool writePacket(CommandBuffer *buf, Opcode3::Value opcode, uint32_t size)
-{
-   if (buf->curSize + size > buf->maxSize) {
-      // TODO: GX2FlushCB
-      gsl::fail_fast("Writing past end of CommandBuffer, TODO: GX2FlushCB");
+      checkSpace(1);
+      mHeader = reinterpret_cast<Packet3*>(&mBuffer->buffer[mBuffer->curSize++]);
+      mHeader->type = 3;
+      mHeader->opcode = opCode;
+      mHeader->size = 0;
    }
 
-   auto pak = makePacket3(opcode, size);
-   writeData(buf, pak.value);
-   return true;
+   void write(uint32_t value) {
+      checkSpace(1);
+      mHeader->size++;
+      mBuffer->buffer[mBuffer->curSize++] = value;
+   }
+
+   void writeArr(gsl::array_view<uint32_t> values)
+   {
+      checkSpace(static_cast<uint32_t>(values.size()));
+      mHeader->size += static_cast<uint32_t>(values.size());
+      for (auto &value : values) {
+         mBuffer->buffer[mBuffer->curSize++] = value;
+      }
+   }
+
+   void writeArr(gsl::array_view<uint16_t> values)
+   {
+      uint32_t dwordCount = (static_cast<uint32_t>(values.size()) + 1) / 2;
+      checkSpace(dwordCount);
+      mHeader->size += dwordCount;
+      for (auto i = 0u; i < values.size() / 2; ++i) {
+         uint32_t data = 0;
+         data |= values[i * 2 + 0];
+         data |= values[i * 2 + 1] << 16;
+         mBuffer->buffer[mBuffer->curSize++] = data;
+      }
+      // if uneven number of 16bit values, write the last one
+      if (values.size() & 1) {
+         mBuffer->buffer[mBuffer->curSize++] = values[values.size() - 1];
+      }
+   }
+
+protected:
+   void checkSpace(uint32_t size) {
+      if (mBuffer->curSize + size >= mBuffer->maxSize) {
+         // NOT ENOUGH ROOM
+         gsl::fail_fast();
+
+         // Need to copy from mBufferStartSize to curSize into
+         //   new buffer, and then start from there...
+      }
+
+      mBuffer->curSize += size;
+   }
+
+   CommandBuffer *mBuffer;
+   uint32_t mBufferStartSize;
+   Packet3 *mHeader;
+};
+
+template <Opcode3::Value opCode>
+static inline Pm4Builder beginPacket()
+{
+   return Pm4Builder(opCode);
 }
 
-static inline bool setContextRegister(ContextRegister::Value id, uint32_t value)
+static inline void indexType(uint32_t indexType, uint32_t swapMode)
 {
-   auto buf = getCommandBuffer(3);
-   writePacket(buf, Opcode3::SET_CONTEXT_REG, 2);
-   writeData(buf, id - ContextRegister::Base);
-   writeData(buf, value);
-   return true;
+   uint32_t indexField;
+   indexField |= (indexType & 1) << 0;
+   indexField |= (swapMode & 3) << 1;
+
+   auto pak = beginPacket<Opcode3::INDEX_TYPE>();
+   pak.write(indexField);
+}
+
+static inline void drawIndex(uint32_t indexAddr, uint32_t numIndices)
+{
+   uint32_t drawInitiator = 0u;
+
+   auto pak = beginPacket<Opcode3::DRAW_INDEX>();
+   pak.write(indexAddr);
+   pak.write(0u);
+   pak.write(numIndices);
+   pak.write(drawInitiator);
+}
+
+static inline void drawIndexAuto(uint32_t numVertices)
+{
+   uint32_t drawInitiator = 0u;
+
+   auto pak = beginPacket<Opcode3::DRAW_INDEX_IMMD>();
+   pak.write(numVertices);
+   pak.write(drawInitiator);
+}
+
+static inline void drawIndexImmd(gsl::array_view<uint16_t> indices)
+{
+   auto numIndices = static_cast<uint32_t>(indices.size());
+   uint32_t drawInitiator = 0u;
+
+   auto pak = beginPacket<Opcode3::DRAW_INDEX_IMMD>();
+   pak.write(numIndices);
+   pak.write(drawInitiator);
+   pak.writeArr(indices);
+}
+
+static inline void drawIndexImmd(gsl::array_view<uint32_t> indices)
+{
+   auto numIndices = static_cast<uint32_t>(indices.size());
+   uint32_t drawInitiator = 0u;
+
+   auto pak = beginPacket<Opcode3::DRAW_INDEX_IMMD>();
+   pak.write(numIndices);
+   pak.write(drawInitiator);
+   pak.writeArr(indices);
+}
+
+static inline void numInstances(uint32_t count)
+{
+   auto pak = beginPacket<Opcode3::NUM_INSTANCES>();
+   pak.write(count);
+}
+
+static inline void setConfigReg(ConfigRegister::Value id, gsl::array_view<uint32_t> values)
+{
+   auto pak = beginPacket<Opcode3::SET_CONFIG_REG>();
+   pak.write(id - ConfigRegister::Base);
+   pak.writeArr(values);
+}
+
+static inline void setContextReg(ContextRegister::Value id, gsl::array_view<uint32_t> values)
+{
+   auto pak = beginPacket<Opcode3::SET_CONTEXT_REG>();
+   pak.write(id - ContextRegister::Base);
+   pak.writeArr(values);
+}
+
+static inline void setAluConst(uint32_t id, gsl::array_view<uint32_t> values)
+{
+   auto pak = beginPacket<Opcode3::SET_ALU_CONST>();
+   pak.write(id);
+   pak.writeArr(values);
+}
+
+static inline void setBoolConst(uint32_t id, gsl::array_view<uint32_t> values)
+{
+   auto pak = beginPacket<Opcode3::SET_BOOL_CONST>();
+   pak.write(id);
+   pak.writeArr(values);
+}
+
+static inline void setLoopConst(uint32_t id, gsl::array_view<uint32_t> values)
+{
+   auto pak = beginPacket<Opcode3::SET_LOOP_CONST>();
+   pak.write(id);
+   pak.writeArr(values);
+}
+
+static inline void setResource(uint32_t id, gsl::array_view<uint32_t> values)
+{
+   auto pak = beginPacket<Opcode3::SET_RESOURCE>();
+   pak.write(id);
+   pak.writeArr(values);
+}
+
+static inline void setSampler(uint32_t id, gsl::array_view<uint32_t> values)
+{
+   auto pak = beginPacket<Opcode3::SET_SAMPLER>();
+   pak.write(id);
+   pak.writeArr(values);
+}
+
+static inline void setCtlConst(uint32_t id, gsl::array_view<uint32_t> values)
+{
+   auto pak = beginPacket<Opcode3::SET_CTL_CONST>();
+   pak.write(id);
+   pak.writeArr(values);
 }
 
 }
