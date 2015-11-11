@@ -186,6 +186,7 @@ enum Value : uint32_t
 }
 
 CommandBuffer *getCommandBuffer(uint32_t size);
+CommandBuffer *flushCommandBuffer(CommandBuffer *buffer);
 
 class Pm4Builder {
 public:
@@ -236,11 +237,27 @@ public:
 protected:
    void checkSpace(uint32_t size) {
       if (mBuffer->curSize + size >= mBuffer->maxSize) {
-         // NOT ENOUGH ROOM
-         gsl::fail_fast();
+         // Save our old buffer and fetch a ne wone
+         CommandBuffer *oldBuffer = mBuffer;
+         mBuffer = flushCommandBuffer(mBuffer);
 
-         // Need to copy from mBufferStartSize to curSize into
-         //   new buffer, and then start from there...
+         // If there is currently a packet being built, we need to copy it
+         if (mBuffer->curSize > mBufferStartSize) {
+            auto packetSize = mBuffer->curSize - mBufferStartSize;
+
+            // Copy the packet data to the new buffer
+            memcpy(mBuffer->buffer, &oldBuffer->buffer[mBufferStartSize], packetSize * sizeof(uint32_t));
+            oldBuffer->curSize = mBufferStartSize;
+            mBuffer->curSize += packetSize;
+         }
+
+         // Update the buffer start size
+         mBufferStartSize = mBuffer->curSize;
+
+         if (mBuffer->curSize + size >= mBuffer->maxSize) {
+            // Still not enough room somehow...
+            gsl::fail_fast();
+         }
       }
 
       mBuffer->curSize += size;
