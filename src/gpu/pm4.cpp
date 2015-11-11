@@ -1,17 +1,17 @@
-#include "pm4.h"
+#include "pm4_buffer.h"
 #include "modules/gx2/gx2_cbpool.h"
 
 namespace pm4
 {
 
-CommandBuffer *
-getCommandBuffer(uint32_t size)
+Buffer *
+getBuffer(uint32_t size)
 {
    return gx2::internal::getCommandBuffer(size);
 }
 
-CommandBuffer *
-flushCommandBuffer(CommandBuffer *buffer)
+Buffer *
+flushBuffer(Buffer *buffer)
 {
    return gx2::internal::flushCommandBuffer(buffer);
 }

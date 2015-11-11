@@ -1,4 +1,6 @@
 #include "gx2_draw.h"
+#include "gpu/pm4.h"
+#include "gpu/pm4_writer.h"
 
 void
 GX2ClearColor(GX2ColorBuffer *colorBuffer,
@@ -44,6 +46,7 @@ GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
 void
 GX2SetPrimitiveRestartIndex(uint32_t index)
 {
+   pm4::write(pm4::SetContextReg { pm4::ContextRegister::PrimitiveRestartIndex, { &index, 1 } });
 }
 
 void
@@ -52,6 +55,11 @@ GX2DrawEx(GX2PrimitiveMode::Value mode,
           uint32_t offset,
           uint32_t numInstances)
 {
+   pm4::write(pm4::SetControlConstant { 0, { &offset, 1 } });
+   pm4::write(pm4::SetConfigReg { pm4::ConfigRegister::PrimitiveType, { reinterpret_cast<uint32_t*>(&mode), 1 } });
+   pm4::write(pm4::IndexType { GX2IndexType::U32 });
+   pm4::write(pm4::NumInstances { numInstances });
+   pm4::write(pm4::DrawIndexAuto { numVertices, 0 });
 }
 
 void
@@ -62,4 +70,9 @@ GX2DrawIndexedEx(GX2PrimitiveMode::Value mode,
                  uint32_t offset,
                  uint32_t numInstances)
 {
+   pm4::write(pm4::SetControlConstant { 0, { &offset, 1 } });
+   pm4::write(pm4::SetConfigReg { pm4::ConfigRegister::PrimitiveType, { reinterpret_cast<uint32_t*>(&mode), 1 } });
+   pm4::write(pm4::IndexType { indexType });
+   pm4::write(pm4::NumInstances { numInstances });
+   pm4::write(pm4::DrawIndex2 { static_cast<uint32_t>(-1), indices, numVertices, 0 });
 }

@@ -4,7 +4,7 @@
 
 namespace pm4
 {
-struct CommandBuffer;
+struct Buffer;
 }
 
 namespace gx2
@@ -16,13 +16,13 @@ namespace internal
 void
 initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size, uint32_t itemSize);
 
-pm4::CommandBuffer *
+pm4::Buffer *
 allocateCommandBuffer();
 
-pm4::CommandBuffer *
-flushCommandBuffer(pm4::CommandBuffer *cb);
+pm4::Buffer *
+flushCommandBuffer(pm4::Buffer *cb);
 
-pm4::CommandBuffer *
+pm4::Buffer *
 getCommandBuffer(uint32_t size);
 
 } // namespace internal

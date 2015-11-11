@@ -119,6 +119,8 @@
     <ClCompile Include="..\src\debugnet.cpp" />
     <ClCompile Include="..\src\elf.cpp" />
     <ClCompile Include="..\src\fuzztests.cpp" />
+    <ClCompile Include="..\src\gpu\driver\commandqueue.cpp" />
+    <ClCompile Include="..\src\gpu\driver\opengl\opengl_driver.cpp" />
     <ClCompile Include="..\src\gpu\gfd.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_alu.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op2.cpp" />
@@ -277,6 +279,8 @@
     <ClInclude Include="..\src\filesystem\filesystem_win_folder.h" />
     <ClInclude Include="..\src\filesystem\filesystem_win_path.h" />
     <ClInclude Include="..\src\fuzztests.h" />
+    <ClInclude Include="..\src\gpu\driver\commandqueue.h" />
+    <ClInclude Include="..\src\gpu\driver\opengl\opengl_driver.h" />
     <ClInclude Include="..\src\gpu\gfd.h" />
     <ClInclude Include="..\src\gpu\hlsl\hlsl.h" />
     <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
@@ -285,6 +289,11 @@
     <ClInclude Include="..\src\gpu\latte_shadir.h" />
     <ClInclude Include="..\src\gpu\latte_untile.h" />
     <ClInclude Include="..\src\gpu\pm4.h" />
+    <ClInclude Include="..\src\gpu\pm4_buffer.h" />
+    <ClInclude Include="..\src\gpu\pm4_format.h" />
+    <ClInclude Include="..\src\gpu\pm4_reader.h" />
+    <ClInclude Include="..\src\gpu\pm4_registers.h" />
+    <ClInclude Include="..\src\gpu\pm4_writer.h" />
     <ClInclude Include="..\src\hardwaretests.h" />
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\memory_translate.h" />

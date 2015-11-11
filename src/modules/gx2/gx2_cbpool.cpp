@@ -2,7 +2,7 @@
 #include <vector>
 #include "gx2_cbpool.h"
 #include "gx2_event.h"
-#include "gpu/pm4.h"
+#include "gpu/pm4_buffer.h"
 
 struct CommandBufferPool
 {
@@ -10,12 +10,11 @@ struct CommandBufferPool
    uint32_t size;
    uint32_t itemSize = 0x100;
    uint32_t itemsHead = 0;
-   std::vector<pm4::CommandBuffer> items;
+   std::vector<pm4::Buffer> items;
 };
 
 CommandBufferPool gCommandBufferPool;
-pm4::CommandBuffer *gActiveBuffer = nullptr;
-
+pm4::Buffer *gActiveBuffer = nullptr;
 
 namespace gx2
 {
@@ -33,7 +32,7 @@ initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size, uint32_t itemSi
    allocateCommandBuffer();
 }
 
-pm4::CommandBuffer *
+pm4::Buffer *
 allocateCommandBuffer()
 {
    OSTime retiredTimestamp = GX2GetRetiredTimeStamp();
@@ -57,8 +56,8 @@ allocateCommandBuffer()
    return buffer;
 }
 
-pm4::CommandBuffer *
-flushCommandBuffer(pm4::CommandBuffer *cb)
+pm4::Buffer *
+flushCommandBuffer(pm4::Buffer *cb)
 {
    assert(cb == gActiveBuffer);
 
@@ -69,7 +68,7 @@ flushCommandBuffer(pm4::CommandBuffer *cb)
    return allocateCommandBuffer();
 }
 
-pm4::CommandBuffer *
+pm4::Buffer *
 getCommandBuffer(uint32_t size)
 {
    auto buffer = gActiveBuffer;

@@ -1,4 +1,5 @@
 #include "gpu/pm4.h"
+#include "gpu/pm4_writer.h"
 #include "gx2_registers.h"
 
 void
@@ -49,7 +50,7 @@ void
 GX2SetBlendControlReg(GX2BlendControlReg *reg)
 {
    auto id = static_cast<pm4::ContextRegister::Value>(pm4::ContextRegister::Blend0Control + reg->target);
-   pm4::setContextReg(id, { &reg->dw1, 1 });
+   pm4::write(pm4::SetContextReg { id, { &reg->dw1, 1 } });
 }
 
 void
