@@ -282,7 +282,7 @@ static inline void drawIndexAuto(uint32_t numVertices)
 {
    uint32_t drawInitiator = 0u;
 
-   auto pak = beginPacket<Opcode3::DRAW_INDEX_IMMD>();
+   auto pak = beginPacket<Opcode3::DRAW_INDEX_AUTO>();
    pak.write(numVertices);
    pak.write(drawInitiator);
 }
