@@ -1,7 +1,7 @@
 #pragma once
 #include <array_view.h>
 #include "pm4_format.h"
-#include "pm4_registers.h"
+#include "latte_registers.h"
 #include "utils/virtual_ptr.h"
 
 #pragma pack(push, 1)
@@ -14,7 +14,7 @@ struct DrawIndexAuto
    static const auto Opcode = Opcode3::DRAW_INDEX_AUTO;
 
    uint32_t indexCount;
-   DrawInitiator drawInitiator;
+   latte::DrawInitiator drawInitiator;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -31,7 +31,7 @@ struct DrawIndex2
    uint32_t maxIndices;
    virtual_ptr<void> addr;
    uint32_t numIndices;
-   DrawInitiator drawInitiator;
+   latte::DrawInitiator drawInitiator;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -48,7 +48,7 @@ struct IndexType
 {
    static const auto Opcode = Opcode3::INDEX_TYPE;
 
-   DmaIndexType type;
+   latte::DmaIndexType type;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -74,13 +74,13 @@ struct SetConfigReg
 {
    static const auto Opcode = Opcode3::SET_CONFIG_REG;
 
-   Register::Value id;
+   latte::Register::Value id;
    gsl::array_view<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.offsetValue(id, Register::ConfigRegisterBase);
+      se.reg(id, latte::Register::ConfigRegisterBase);
       se(values);
    }
 };
@@ -89,13 +89,13 @@ struct SetContextReg
 {
    static const auto Opcode = Opcode3::SET_CONTEXT_REG;
 
-   Register::Value id;
+   latte::Register::Value id;
    gsl::array_view<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.offsetValue(id, Register::ContextRegisterBase);
+      se.reg(id, latte::Register::ContextRegisterBase);
       se(values);
    }
 };

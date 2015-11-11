@@ -1208,9 +1208,6 @@
     <ClInclude Include="..\src\gpu\pm4_format.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gpu\pm4_registers.h">
-      <Filter>Header Files\gpu</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gpu\pm4_buffer.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
@@ -1218,6 +1215,9 @@
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\driver\commandqueue.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_registers.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
   </ItemGroup>

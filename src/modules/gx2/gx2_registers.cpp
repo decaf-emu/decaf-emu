@@ -14,13 +14,13 @@ GX2InitBlendControlReg(GX2BlendControlReg *reg,
                        GX2BlendCombineMode::Value alphaCombine)
 {
    reg->target = target;
-   reg->colorSrcBlend = colorSrcBlend;
-   reg->colorDstBlend = colorDstBlend;
-   reg->colorCombine = colorCombine;
-   reg->useAlphaBlend = useAlphaBlend;
-   reg->alphaSrcBlend = alphaSrcBlend;
-   reg->alphaDstBlend = alphaDstBlend;
-   reg->alphaCombine = alphaCombine;
+   reg->value.colorSrcBlend = colorSrcBlend;
+   reg->value.colorDstBlend = colorDstBlend;
+   reg->value.colorCombine = colorCombine;
+   reg->value.useAlphaBlend = useAlphaBlend;
+   reg->value.alphaSrcBlend = alphaSrcBlend;
+   reg->value.alphaDstBlend = alphaDstBlend;
+   reg->value.alphaCombine = alphaCombine;
 }
 
 void
@@ -49,8 +49,8 @@ GX2SetBlendControl(GX2RenderTarget::Value target,
 void
 GX2SetBlendControlReg(GX2BlendControlReg *reg)
 {
-   auto id = static_cast<pm4::Register::Value>(pm4::Register::Blend0Control + reg->target);
-   pm4::write(pm4::SetContextReg { id, { &reg->dw1, 1 } });
+   auto id = static_cast<latte::Register::Value>(latte::Register::Blend0Control + reg->target);
+   pm4::write(pm4::SetContextReg { id, { &reg->value.value, 1 } });
 }
 
 void
@@ -59,7 +59,7 @@ GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                               BOOL depthWrite,
                               GX2CompareFunction::Value depthCompare,
                               BOOL stencilTest,
-                              BOOL unk1,
+                              BOOL backfaceStencil,
                               GX2CompareFunction::Value frontStencilFunc,
                               GX2StencilFunction::Value frontStencilZPass,
                               GX2StencilFunction::Value frontStencilZFail,
@@ -69,19 +69,19 @@ GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                               GX2StencilFunction::Value backStencilZFail,
                               GX2StencilFunction::Value backStencilFail)
 {
-   reg->depthTest = depthTest;
-   reg->depthWrite = depthWrite;
-   reg->depthCompare = depthCompare;
-   reg->stencilTest = stencilTest;
-   reg->unk1 = unk1;
-   reg->frontStencilFunc = frontStencilFunc;
-   reg->frontStencilZPass = frontStencilZPass;
-   reg->frontStencilZFail = frontStencilZFail;
-   reg->frontStencilFail = frontStencilFail;
-   reg->backStencilFunc = backStencilFunc;
-   reg->backStencilZPass = backStencilZPass;
-   reg->backStencilZFail = backStencilZFail;
-   reg->backStencilFail = backStencilFail;
+   reg->value.depthTest = depthTest;
+   reg->value.depthWrite = depthWrite;
+   reg->value.depthCompare = depthCompare;
+   reg->value.stencilTest = stencilTest;
+   reg->value.backfaceStencil = backfaceStencil;
+   reg->value.frontStencilFunc = frontStencilFunc;
+   reg->value.frontStencilZPass = frontStencilZPass;
+   reg->value.frontStencilZFail = frontStencilZFail;
+   reg->value.frontStencilFail = frontStencilFail;
+   reg->value.backStencilFunc = backStencilFunc;
+   reg->value.backStencilZPass = backStencilZPass;
+   reg->value.backStencilZFail = backStencilZFail;
+   reg->value.backStencilFail = backStencilFail;
 }
 
 void
@@ -89,7 +89,7 @@ GX2SetDepthStencilControl(BOOL depthTest,
                           BOOL depthWrite,
                           GX2CompareFunction::Value depthCompare,
                           BOOL stencilTest,
-                          BOOL unk1,
+                          BOOL backfaceStencil,
                           GX2CompareFunction::Value frontStencilFunc,
                           GX2StencilFunction::Value frontStencilZPass,
                           GX2StencilFunction::Value frontStencilZFail,
@@ -105,7 +105,7 @@ GX2SetDepthStencilControl(BOOL depthTest,
                                  depthWrite,
                                  depthCompare,
                                  stencilTest,
-                                 unk1,
+                                 backfaceStencil,
                                  frontStencilFunc,
                                  frontStencilZPass,
                                  frontStencilZFail,
@@ -120,5 +120,5 @@ GX2SetDepthStencilControl(BOOL depthTest,
 void
 GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg)
 {
-   // TODO: GX2SetDepthStencilControlReg
+   pm4::write(pm4::SetContextReg { latte::Register::DepthControl, { &reg->value.value, 1 } });
 }

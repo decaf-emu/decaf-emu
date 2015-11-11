@@ -36,15 +36,6 @@ public:
       return *this;
    }
 
-   // Write one word with a base value
-   template<typename Type>
-   PacketWriter &offsetValue(Type value, Type base)
-   {
-      checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = static_cast<uint32_t>(value) - static_cast<uint32_t>(base);
-      return *this;
-   }
-
    // Write a virtual ptr as one word
    template<typename Type>
    PacketWriter &operator()(virtual_ptr<Type> value)
@@ -61,6 +52,15 @@ public:
       checkSize(size);
       memcpy(&mBuffer->buffer[mBuffer->curSize], values.data(), values.size() * sizeof(uint32_t));
       mBuffer->curSize += size;
+      return *this;
+   }
+
+   // Write one word as a register
+   template<typename Type>
+   PacketWriter &reg(Type value, Type base)
+   {
+      checkSize(1);
+      mBuffer->buffer[mBuffer->curSize++] = (static_cast<uint32_t>(value) - static_cast<uint32_t>(base)) >> 2;
       return *this;
    }
 

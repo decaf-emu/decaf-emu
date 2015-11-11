@@ -292,7 +292,7 @@
     <ClInclude Include="..\src\gpu\pm4_buffer.h" />
     <ClInclude Include="..\src\gpu\pm4_format.h" />
     <ClInclude Include="..\src\gpu\pm4_reader.h" />
-    <ClInclude Include="..\src\gpu\pm4_registers.h" />
+    <ClInclude Include="..\src\gpu\latte_registers.h" />
     <ClInclude Include="..\src\gpu\pm4_writer.h" />
     <ClInclude Include="..\src\hardwaretests.h" />
     <ClInclude Include="..\src\hostlookup.h" />

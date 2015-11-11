@@ -2,6 +2,7 @@
 #include "opengl_driver.h"
 #include "gpu/pm4_buffer.h"
 #include "gpu/pm4_reader.h"
+#include "gpu/latte_registers.h"
 
 namespace gpu
 {
@@ -12,14 +13,14 @@ namespace opengl
 void Driver::setContextReg(pm4::SetContextReg &data)
 {
    switch (data.id) {
-   case pm4::Register::Blend0Control:
-   case pm4::Register::Blend1Control:
-   case pm4::Register::Blend2Control:
-   case pm4::Register::Blend3Control:
-   case pm4::Register::Blend4Control:
-   case pm4::Register::Blend5Control:
-   case pm4::Register::Blend6Control:
-   case pm4::Register::Blend7Control:
+   case latte::Register::Blend0Control:
+   case latte::Register::Blend1Control:
+   case latte::Register::Blend2Control:
+   case latte::Register::Blend3Control:
+   case latte::Register::Blend4Control:
+   case latte::Register::Blend5Control:
+   case latte::Register::Blend6Control:
+   case latte::Register::Blend7Control:
       break;
    }
 }

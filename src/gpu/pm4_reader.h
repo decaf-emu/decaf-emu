@@ -23,15 +23,6 @@ public:
       return *this;
    }
 
-   // Read one word with a base value
-   template<typename Type>
-   PacketReader &offsetValue(Type &value, uint32_t base)
-   {
-      checkSize(1);
-      value = static_cast<Type>(mBuffer[mPosition++] + base);
-      return *this;
-   }
-
    // Read one word as a virtual_ptr
    template<typename Type>
    PacketReader &operator()(virtual_ptr<Type> &value)
@@ -55,6 +46,15 @@ public:
       checkSize(size);
       values = mBuffer.sub(mPosition, size);
       mPosition += size;
+      return *this;
+   }
+
+   // Read one word as a register
+   template<typename Type>
+   PacketReader &reg(Type &value, uint32_t base)
+   {
+      checkSize(1);
+      value = static_cast<Type>((mBuffer[mPosition++] << 2) + base);
       return *this;
    }
 
