@@ -1,11 +1,16 @@
 #include "gx2.h"
-#include "gx2_context.h"
+#include "gx2_contextstate.h"
 #include "gx2_display.h"
 #include "gx2_displaylist.h"
 #include "gx2_draw.h"
-#include "gx2_renderstate.h"
+#include "gx2_event.h"
+#include "gx2_mem.h"
+#include "gx2_registers.h"
+#include "gx2_sampler.h"
 #include "gx2_shaders.h"
+#include "gx2_state.h"
 #include "gx2_surface.h"
+#include "gx2_swap.h"
 #include "gx2_temp.h"
 #include "gx2_texture.h"
 #include "gx2r_resource.h"
@@ -22,29 +27,26 @@ void GX2::initialise()
 void
 GX2::RegisterFunctions()
 {
-   registerContextFunctions();
+   registerContextStateFunctions();
    registerDisplayFunctions();
    registerDisplayListFunctions();
    registerDrawFunctions();
-   registerRenderStateFunctions();
+   registerEventFunctions();
    registerResourceFunctions();
+   registerMemFunctions();
+   registerRegisterFunctions();
    registerSamplerFunctions();
    registerShaderFunctions();
+   registerStateFunctions();
    registerSurfaceFunctions();
+   registerSwapFunctions();
    registerTempFunctions();
    registerTextureFunctions();
-   registerVsyncFunctions();
 }
 
 void
-GX2::registerContextFunctions()
+GX2::registerContextStateFunctions()
 {
-   RegisterKernelFunction(GX2Init);
-   RegisterKernelFunction(GX2Shutdown);
-   RegisterKernelFunction(GX2Flush);
-   RegisterKernelFunction(GX2GetLastSubmittedTimeStamp);
-   RegisterKernelFunction(GX2GetRetiredTimeStamp);
-   RegisterKernelFunction(GX2Invalidate);
    RegisterKernelFunction(GX2SetupContextState);
    RegisterKernelFunction(GX2SetupContextStateEx);
    RegisterKernelFunction(GX2GetContextStateDisplayList);
@@ -62,18 +64,8 @@ GX2::registerDisplayFunctions()
    RegisterKernelFunction(GX2CalcDRCSize);
    RegisterKernelFunction(GX2SetDRCBuffer);
    RegisterKernelFunction(GX2SetDRCScale);
-   RegisterKernelFunction(GX2SetSwapInterval);
-   RegisterKernelFunction(GX2GetSwapInterval);
    RegisterKernelFunction(GX2GetSystemTVScanMode);
    RegisterKernelFunction(GX2GetSystemDRCMode);
-   RegisterKernelFunction(GX2DrawDone);
-   RegisterKernelFunction(GX2SwapScanBuffers);
-   RegisterKernelFunction(GX2WaitForVsync);
-   RegisterKernelFunction(GX2WaitForFlip);
-   RegisterKernelFunction(GX2GetSwapStatus);
-   RegisterKernelFunction(GX2GetLastFrame);
-   RegisterKernelFunction(GX2GetLastFrameGamma);
-   RegisterKernelFunction(GX2CopyColorBufferToScanBuffer);
 }
 
 void
@@ -95,28 +87,57 @@ GX2::registerDrawFunctions()
    RegisterKernelFunction(GX2ClearBuffersEx);
    RegisterKernelFunction(GX2ClearColor);
    RegisterKernelFunction(GX2ClearDepthStencilEx);
-   RegisterKernelFunction(GX2SetClearDepthStencil);
    RegisterKernelFunction(GX2SetAttribBuffer);
+   RegisterKernelFunction(GX2SetClearDepthStencil);
    RegisterKernelFunction(GX2SetPrimitiveRestartIndex);
    RegisterKernelFunction(GX2DrawEx);
    RegisterKernelFunction(GX2DrawIndexedEx);
 }
 
 void
-GX2::registerRenderStateFunctions()
+GX2::registerEventFunctions()
 {
-   RegisterKernelFunction(GX2SetDepthStencilControl);
-   RegisterKernelFunction(GX2SetStencilMask);
-   RegisterKernelFunction(GX2SetPolygonControl);
-   RegisterKernelFunction(GX2SetColorControl);
+   RegisterKernelFunction(GX2DrawDone);
+   RegisterKernelFunction(GX2WaitForVsync);
+   RegisterKernelFunction(GX2WaitForFlip);
+   RegisterKernelFunction(GX2SetEventCallback);
+   RegisterKernelFunction(GX2GetEventCallback);
+   RegisterKernelFunction(GX2GetRetiredTimeStamp);
+   RegisterKernelFunction(GX2GetLastSubmittedTimeStamp);
+   RegisterKernelFunction(GX2WaitTimeStamp);
+   RegisterKernelFunctionName("VsyncAlarmHandler", gx2::internal::vsyncAlarmHandler);
+}
+
+void
+GX2::registerMemFunctions()
+{
+   RegisterKernelFunction(GX2Invalidate);
+}
+
+void
+GX2::registerRegisterFunctions()
+{
+   RegisterKernelFunction(GX2InitBlendControlReg);
+   RegisterKernelFunction(GX2InitDepthStencilControlReg);
    RegisterKernelFunction(GX2SetBlendControl);
-   RegisterKernelFunction(GX2SetBlendConstantColor);
-   RegisterKernelFunction(GX2SetAlphaTest);
-   RegisterKernelFunction(GX2SetTargetChannelMasks);
-   RegisterKernelFunction(GX2SetAlphaToMask);
-   RegisterKernelFunction(GX2SetViewport);
-   RegisterKernelFunction(GX2SetScissor);
-   RegisterKernelFunction(GX2SetPixelSamplerBorderColor);
+   RegisterKernelFunction(GX2SetBlendControlReg);
+   RegisterKernelFunction(GX2SetDepthStencilControl);
+   RegisterKernelFunction(GX2SetDepthStencilControlReg);
+}
+
+void
+GX2::registerSamplerFunctions()
+{
+   RegisterKernelFunction(GX2InitSampler);
+   RegisterKernelFunction(GX2InitSamplerBorderType);
+   RegisterKernelFunction(GX2InitSamplerClamping);
+   RegisterKernelFunction(GX2InitSamplerDepthCompare);
+   RegisterKernelFunction(GX2InitSamplerFilterAdjust);
+   RegisterKernelFunction(GX2InitSamplerLOD);
+   RegisterKernelFunction(GX2InitSamplerLODAdjust);
+   RegisterKernelFunction(GX2InitSamplerRoundingMode);
+   RegisterKernelFunction(GX2InitSamplerXYFilter);
+   RegisterKernelFunction(GX2InitSamplerZMFilter);
 }
 
 void
@@ -143,6 +164,16 @@ GX2::registerShaderFunctions()
 }
 
 void
+GX2::registerStateFunctions()
+{
+   RegisterKernelFunction(GX2Init);
+   RegisterKernelFunction(GX2Shutdown);
+   RegisterKernelFunction(GX2Flush);
+   RegisterKernelFunction(GX2GetLastSubmittedTimeStamp);
+   RegisterKernelFunction(GX2GetRetiredTimeStamp);
+}
+
+void
 GX2::registerSurfaceFunctions()
 {
    RegisterKernelFunction(GX2CalcSurfaceSizeAndAlignment);
@@ -151,6 +182,19 @@ GX2::registerSurfaceFunctions()
    RegisterKernelFunction(GX2SetDepthBuffer);
    RegisterKernelFunction(GX2InitColorBufferRegs);
    RegisterKernelFunction(GX2InitDepthBufferRegs);
+}
+
+void
+GX2::registerSwapFunctions()
+{
+   RegisterKernelFunction(GX2CopyColorBufferToScanBuffer);
+   RegisterKernelFunction(GX2SwapBuffers);
+   RegisterKernelFunction(GX2SwapScanBuffers);
+   RegisterKernelFunction(GX2GetLastFrame);
+   RegisterKernelFunction(GX2GetLastFrameGamma);
+   RegisterKernelFunction(GX2GetSwapStatus);
+   RegisterKernelFunction(GX2GetSwapInterval);
+   RegisterKernelFunction(GX2SetSwapInterval);
 }
 
 void

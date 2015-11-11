@@ -1,9 +1,9 @@
 #pragma once
 #include "modules/gx2/gx2_displaylist.h"
 #include "modules/gx2/gx2_enum.h"
-#include "modules/coreinit/coreinit_time.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
+#include "utils/virtual_ptr.h"
 #include "types.h"
 
 #pragma pack(push, 1)
@@ -22,21 +22,6 @@ CHECK_SIZE(GX2ContextState, 0xa100);
 #pragma pack(pop)
 
 void
-GX2Init(be_val<uint32_t> *attributes);
-
-void
-GX2Shutdown();
-
-void
-GX2Flush();
-
-OSTime
-GX2GetLastSubmittedTimeStamp();
-
-OSTime
-GX2GetRetiredTimeStamp();
-
-void
 GX2SetupContextState(GX2ContextState *state);
 
 void
@@ -47,6 +32,3 @@ GX2GetContextStateDisplayList(GX2ContextState *state, be_ptr<uint8_t> *outDispla
 
 void
 GX2SetContextState(GX2ContextState *state);
-
-void
-GX2Invalidate(GX2InvalidateMode::Value mode, void *buffer, uint32_t size);

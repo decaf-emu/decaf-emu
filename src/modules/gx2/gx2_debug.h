@@ -6,13 +6,13 @@ struct GX2PixelShader;
 struct GX2VertexShader;
 
 void
-GX2DumpTexture(const GX2Texture *texture);
+GX2DebugDumpTexture(const GX2Texture *texture);
 
 void
-GX2DumpShader(GX2FetchShader *shader);
+GX2DebugDumpShader(GX2FetchShader *shader);
 
 void
-GX2DumpShader(GX2PixelShader *shader);
+GX2DebugDumpShader(GX2PixelShader *shader);
 
 void
-GX2DumpShader(GX2VertexShader *shader);
+GX2DebugDumpShader(GX2VertexShader *shader);

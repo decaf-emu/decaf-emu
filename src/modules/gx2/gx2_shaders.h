@@ -1,6 +1,6 @@
 #pragma once
-#include "modules/gx2/gx2_enum.h"
 #include "types.h"
+#include "modules/gx2/gx2_enum.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"

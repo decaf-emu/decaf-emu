@@ -106,15 +106,6 @@
     <Filter Include="Resource Files\shaders">
       <UniqueIdentifier>{f00a9768-c04e-476d-a0b8-52419d062d63}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\modules\gx2\dx12">
-      <UniqueIdentifier>{eae7bcf7-6a0b-4651-a691-f916eaa2b206}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\modules\gx2\null">
-      <UniqueIdentifier>{f7d52aa5-7c69-4e7b-bbad-1c36a63eb067}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\modules\gx2\dx12">
-      <UniqueIdentifier>{c66b36ae-d711-4fc2-ab87-916d602dc418}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\gpu">
       <UniqueIdentifier>{1af0bbc4-a7a4-4aee-b92b-7a4151663a9a}</UniqueIdentifier>
     </Filter>
@@ -360,60 +351,6 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_shared.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12.cpp">
-      <Filter>Source Files\modules\gx2\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_draw.cpp">
-      <Filter>Source Files\modules\gx2\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\null\gx2null_draw.cpp">
-      <Filter>Source Files\modules\gx2\null</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_display.cpp">
-      <Filter>Source Files\modules\gx2\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\null\gx2null_display.cpp">
-      <Filter>Source Files\modules\gx2\null</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_context.cpp">
-      <Filter>Source Files\modules\gx2\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\dx12\dx12_state.cpp">
-      <Filter>Source Files\modules\gx2\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\null\gx2null_context.cpp">
-      <Filter>Source Files\modules\gx2\null</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\null\gx2null_displaylist.cpp">
-      <Filter>Source Files\modules\gx2\null</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\null\gx2null_renderstate.cpp">
-      <Filter>Source Files\modules\gx2\null</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\null\gx2null_shaders.cpp">
-      <Filter>Source Files\modules\gx2\null</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\null\gx2null_surface.cpp">
-      <Filter>Source Files\modules\gx2\null</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\null\gx2null_texture.cpp">
-      <Filter>Source Files\modules\gx2\null</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_displaylist.cpp">
-      <Filter>Source Files\modules\gx2\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_renderstate.cpp">
-      <Filter>Source Files\modules\gx2\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_shaders.cpp">
-      <Filter>Source Files\modules\gx2\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_surface.cpp">
-      <Filter>Source Files\modules\gx2\dx12</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\dx12\gx2dx12_texture.cpp">
-      <Filter>Source Files\modules\gx2\dx12</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gpu\latte_disassembler.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
@@ -509,9 +446,6 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\padscore\padscore_kpad_status.cpp">
       <Filter>Source Files\modules\padscore</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gx2\gx2_vsync.cpp">
-      <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
     <ClCompile Include="..\src\cpu\interpreter\interpreter.cpp">
       <Filter>Source Files\cpu\interpreter</Filter>
@@ -660,8 +594,41 @@
     <ClCompile Include="..\src\modules\gx2\gx2_registers.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_state.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\gpu\pm4.cpp">
       <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_contextstate.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_mem.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_display.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_displaylist.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_draw.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_shaders.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_texture.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_event.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_swap.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_cbpool.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -721,9 +688,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_ios.h">
       <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\gx2_renderstate.h">
-      <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_display.h">
       <Filter>Header Files\modules\gx2</Filter>
@@ -884,36 +848,6 @@
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\gx2_context.h">
-      <Filter>Header Files\modules\gx2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_state.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_heap.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_scanbuffer.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_colorbuffer.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_depthbuffer.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\d3dx12.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_fetchshader.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_dynbuffer.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gpu\latte.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
@@ -986,20 +920,11 @@
     <ClInclude Include="..\src\types.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_pipelinemgr.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h">
       <Filter>Header Files\gpu\hlsl</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_debug.h">
       <Filter>Header Files\modules\gx2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_texture.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_utils.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
     </ClInclude>
     <ClInclude Include="..\src\memory_translate.h">
       <Filter>Header Files\system</Filter>
@@ -1033,9 +958,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\padscore\padscore_kpad_status.h">
       <Filter>Header Files\modules\padscore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\gx2_vsync.h">
-      <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
     <ClInclude Include="..\src\cpu\cpu.h">
       <Filter>Header Files\cpu</Filter>
@@ -1184,9 +1106,6 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_sci.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_cmdlist.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gpu\hlsl\hlsl.h">
       <Filter>Header Files\gpu\hlsl</Filter>
     </ClInclude>
@@ -1213,9 +1132,6 @@
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_untile.h">
       <Filter>Header Files\gpu</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gx2\dx12\dx12_heaplist.h">
-      <Filter>Header Files\modules\gx2\dx12</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_sampler.h">
       <Filter>Header Files\modules\gx2</Filter>
@@ -1245,6 +1161,24 @@
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_registers.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_state.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_contextstate.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_mem.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_event.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_swap.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_cbpool.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
   </ItemGroup>

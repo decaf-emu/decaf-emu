@@ -70,22 +70,6 @@ CHECK_BIT_OFFSET(GX2DepthStencilControlReg, 0x1D, backStencilZFail);
 #pragma pack(pop)
 
 void
-GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
-                              BOOL depthTest,
-                              BOOL depthWrite,
-                              GX2CompareFunction::Value depthCompare,
-                              BOOL stencilTest,
-                              BOOL unk1,
-                              GX2CompareFunction::Value frontStencilFunc,
-                              GX2StencilFunction::Value frontStencilZPass,
-                              GX2StencilFunction::Value frontStencilZFail,
-                              GX2StencilFunction::Value frontStencilFail,
-                              GX2CompareFunction::Value backStencilFunc,
-                              GX2StencilFunction::Value backStencilZPass,
-                              GX2StencilFunction::Value backStencilZFail,
-                              GX2StencilFunction::Value backStencilFail);
-
-void
 GX2InitBlendControlReg(GX2BlendControlReg *reg,
                        GX2RenderTarget::Value target,
                        GX2BlendMode::Value colorSrcBlend,
@@ -108,3 +92,37 @@ GX2SetBlendControl(GX2RenderTarget::Value target,
 
 void
 GX2SetBlendControlReg(GX2BlendControlReg *reg);
+
+void
+GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
+                              BOOL depthTest,
+                              BOOL depthWrite,
+                              GX2CompareFunction::Value depthCompare,
+                              BOOL stencilTest,
+                              BOOL unk1,
+                              GX2CompareFunction::Value frontStencilFunc,
+                              GX2StencilFunction::Value frontStencilZPass,
+                              GX2StencilFunction::Value frontStencilZFail,
+                              GX2StencilFunction::Value frontStencilFail,
+                              GX2CompareFunction::Value backStencilFunc,
+                              GX2StencilFunction::Value backStencilZPass,
+                              GX2StencilFunction::Value backStencilZFail,
+                              GX2StencilFunction::Value backStencilFail);
+
+void
+GX2SetDepthStencilControl(BOOL depthTest,
+                          BOOL depthWrite,
+                          GX2CompareFunction::Value depthCompare,
+                          BOOL stencilTest,
+                          BOOL unk1,
+                          GX2CompareFunction::Value frontStencilFunc,
+                          GX2StencilFunction::Value frontStencilZPass,
+                          GX2StencilFunction::Value frontStencilZFail,
+                          GX2StencilFunction::Value frontStencilFail,
+                          GX2CompareFunction::Value backStencilFunc,
+                          GX2StencilFunction::Value backStencilZPass,
+                          GX2StencilFunction::Value backStencilZFail,
+                          GX2StencilFunction::Value backStencilFail);
+
+void
+GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg);

@@ -101,18 +101,3 @@ GX2InitSamplerZMFilter(GX2Sampler *sampler,
    sampler->filterZ = filterZ;
    sampler->filterMip = filterMip;
 }
-
-void
-GX2::registerSamplerFunctions()
-{
-   RegisterKernelFunction(GX2InitSampler);
-   RegisterKernelFunction(GX2InitSamplerBorderType);
-   RegisterKernelFunction(GX2InitSamplerClamping);
-   RegisterKernelFunction(GX2InitSamplerDepthCompare);
-   RegisterKernelFunction(GX2InitSamplerFilterAdjust);
-   RegisterKernelFunction(GX2InitSamplerLOD);
-   RegisterKernelFunction(GX2InitSamplerLODAdjust);
-   RegisterKernelFunction(GX2InitSamplerRoundingMode);
-   RegisterKernelFunction(GX2InitSamplerXYFilter);
-   RegisterKernelFunction(GX2InitSamplerZMFilter);
-}

@@ -1,5 +1,5 @@
-#include "modules/gx2/gx2.h"
-#include "modules/gx2/gx2_vsync.h"
+#include "gx2.h"
+#include "gx2_event.h"
 #include "modules/coreinit/coreinit_alarm.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
@@ -9,8 +9,14 @@
 #include "utils/wfunc_call.h"
 #include <chrono>
 
-OSTime
+static OSTime
 gLastVsync = 0;
+
+static OSTime
+gLastSubmittedTimestamp = 0;
+
+static OSTime
+gRetiredTimestamp = 0;
 
 static virtual_ptr<OSThreadQueue>
 gVsyncThreadQueue;
@@ -30,16 +36,26 @@ struct EventCallbackData
 static EventCallbackData
 gEventCallbacks[GX2EventType::Last];
 
-void
-_GX2InitVsync()
-{
-   gVsyncThreadQueue = OSAllocFromSystem<OSThreadQueue>();
-   gVsyncAlarm = OSAllocFromSystem<OSAlarm>();
 
-   auto ticks = static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) / 60;
-   OSCreateAlarm(gVsyncAlarm);
-   OSSetPeriodicAlarm(gVsyncAlarm, OSGetTime(), ticks, pVsyncAlarmHandler);
+BOOL
+GX2DrawDone()
+{
+   return GX2WaitTimeStamp(GX2GetLastSubmittedTimeStamp());
 }
+
+
+void
+GX2WaitForVsync()
+{
+   OSSleepThread(gVsyncThreadQueue);
+}
+
+
+void
+GX2WaitForFlip()
+{
+}
+
 
 void
 GX2SetEventCallback(GX2EventType::Value type, GX2EventCallbackFunction func, void *userData)
@@ -49,6 +65,7 @@ GX2SetEventCallback(GX2EventType::Value type, GX2EventCallbackFunction func, voi
       gEventCallbacks[type].data = userData;
    }
 }
+
 
 void
 GX2GetEventCallback(GX2EventType::Value type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut)
@@ -62,14 +79,49 @@ GX2GetEventCallback(GX2EventType::Value type, be_GX2EventCallbackFunction *funcO
    }
 }
 
-void
-GX2WaitForVsync()
+
+OSTime
+GX2GetRetiredTimeStamp()
 {
-   OSSleepThread(gVsyncThreadQueue);
+   return gRetiredTimestamp;
 }
 
+
+OSTime
+GX2GetLastSubmittedTimeStamp()
+{
+   return gLastSubmittedTimestamp;
+}
+
+
+BOOL
+GX2WaitTimeStamp(OSTime time)
+{
+   // TODO: Sleep until GPU has processed TimeStamp
+   return TRUE;
+}
+
+
+namespace gx2
+{
+
+namespace internal
+{
+
 void
-VsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
+initVsync()
+{
+   gVsyncThreadQueue = OSAllocFromSystem<OSThreadQueue>();
+   gVsyncAlarm = OSAllocFromSystem<OSAlarm>();
+
+   auto ticks = static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) / 60;
+   OSCreateAlarm(gVsyncAlarm);
+   OSSetPeriodicAlarm(gVsyncAlarm, OSGetTime(), ticks, pVsyncAlarmHandler);
+}
+
+
+void
+vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
    gLastVsync = OSGetSystemTime();
    OSWakeupThread(gVsyncThreadQueue);
@@ -80,17 +132,27 @@ VsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
    }
 }
 
+
+void
+setRetiredTimestamp(OSTime timestamp)
+{
+   gRetiredTimestamp = timestamp;
+}
+
+
+void
+setLastSubmittedTimestamp(OSTime timestamp)
+{
+   gLastSubmittedTimestamp = timestamp;
+}
+
+} // namespace internal
+
+} // namespace gx2
+
+
 void
 GX2::initialiseVsync()
 {
    pVsyncAlarmHandler = findExportAddress("VsyncAlarmHandler");
-}
-
-void
-GX2::registerVsyncFunctions()
-{
-   RegisterKernelFunction(GX2WaitForVsync);
-   RegisterKernelFunction(GX2SetEventCallback);
-   RegisterKernelFunction(GX2GetEventCallback);
-   RegisterKernelFunction(VsyncAlarmHandler);
 }

@@ -15,7 +15,8 @@
 
 #pragma pack(1)
 
-struct DdsPixelFormat {
+struct DdsPixelFormat
+{
    uint32_t	dwSize;
    uint32_t	dwFlags;
    uint32_t	dwFourCC;
@@ -26,7 +27,8 @@ struct DdsPixelFormat {
    uint32_t	dwABitMask;
 };
 
-struct DdsHeader {
+struct DdsHeader
+{
    uint32_t	dwSize;
    uint32_t	dwFlags;
    uint32_t	dwHeight;
@@ -42,7 +44,9 @@ struct DdsHeader {
    uint32_t	dwCaps4;
    uint32_t	dwReserved2;
 };
+
 static_assert(sizeof(DdsHeader) == 124, "dds header should be 124 bytes long");
+
 #pragma pack()
 
 static void
@@ -60,20 +64,20 @@ GX2PointerAsString(const void *pointer)
 }
 
 static void
-GX2DumpData(const std::string &filename, const void *data, size_t size)
+GX2DebugDumpData(const std::string &filename, const void *data, size_t size)
 {
    auto file = std::ofstream { filename, std::ofstream::out | std::ofstream::binary };
    file.write(static_cast<const char *>(data), size);
 }
 
 static void
-GX2DumpData(std::ofstream &file, const void *data, size_t size)
+GX2DebugDumpData(std::ofstream &file, const void *data, size_t size)
 {
    file.write(reinterpret_cast<const char *>(data), size);
 }
 
 static void
-GX2DumpGTX(const GX2Texture *texture)
+GX2DebugDumpGTX(const GX2Texture *texture)
 {
    auto filename = "texture_" + GX2PointerAsString(texture);
    auto file = std::ofstream { "dump/" + filename + ".gtx", std::ofstream::out | std::ofstream::binary };
@@ -122,7 +126,7 @@ GX2DumpGTX(const GX2Texture *texture)
 }
 
 void
-GX2DumpTexture(const GX2Texture *texture)
+GX2DebugDumpTexture(const GX2Texture *texture)
 {
    if (!config::gx2::dump_textures) {
       return;
@@ -165,7 +169,7 @@ GX2DumpTexture(const GX2Texture *texture)
    }
 
    // Write GTX
-   GX2DumpGTX(texture);
+   GX2DebugDumpGTX(texture);
 
    // Write DDS
    std::vector<uint8_t> data;
@@ -194,19 +198,19 @@ GX2DumpTexture(const GX2Texture *texture)
    }
 
    auto binaryDds = std::ofstream{ "dump/" + filename + ".dds", std::ofstream::out | std::ofstream::binary };
-   GX2DumpData(binaryDds, "DDS ", 4);
-   GX2DumpData(binaryDds, &ddsHeader, sizeof(ddsHeader));
-   GX2DumpData(binaryDds, &data[0], data.size());
+   GX2DebugDumpData(binaryDds, "DDS ", 4);
+   GX2DebugDumpData(binaryDds, &ddsHeader, sizeof(ddsHeader));
+   GX2DebugDumpData(binaryDds, &data[0], data.size());
 }
 
 static void
-GX2DumpShader(const std::string &filename, const std::string &info, uint8_t *data, size_t size)
+GX2DebugDumpShader(const std::string &filename, const std::string &info, uint8_t *data, size_t size)
 {
    std::string output;
 
    // Write binary of shader data to shader_pixel_X.bin
    GX2CreateDumpDirectory();
-   GX2DumpData("dump/" + filename + ".bin", data, size);
+   GX2DebugDumpData("dump/" + filename + ".bin", data, size);
 
    // Write text of shader to shader_pixel_X.txt
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
@@ -260,7 +264,7 @@ formatUniformVars(fmt::MemoryWriter &out, uint32_t count, GX2UniformVar *vars)
 }
 
 void
-GX2DumpShader(GX2FetchShader *shader)
+GX2DebugDumpShader(GX2FetchShader *shader)
 {
    if (!config::gx2::dump_shaders) {
       return;
@@ -270,11 +274,11 @@ GX2DumpShader(GX2FetchShader *shader)
    out << "GX2FetchShader:\n"
       << "  size: " << shader->size << "\n";
 
-   GX2DumpShader("shader_fetch_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
+   GX2DebugDumpShader("shader_fetch_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
 }
 
 void
-GX2DumpShader(GX2PixelShader *shader)
+GX2DebugDumpShader(GX2PixelShader *shader)
 {
    if (!config::gx2::dump_shaders) {
       return;
@@ -295,11 +299,11 @@ GX2DumpShader(GX2PixelShader *shader)
    out << "  unk4: " << shader->unk4 << "\n";
    out << "  unk5: " << shader->unk5 << "\n";
    out << "  unk6: " << shader->unk6 << "\n";
-   GX2DumpShader("shader_pixel_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
+   GX2DebugDumpShader("shader_pixel_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
 }
 
 void
-GX2DumpShader(GX2VertexShader *shader)
+GX2DebugDumpShader(GX2VertexShader *shader)
 {
    if (!config::gx2::dump_shaders) {
       return;
@@ -318,5 +322,5 @@ GX2DumpShader(GX2VertexShader *shader)
    out << "  samplerVarCount: " << shader->samplerVarCount << "\n";
    out << "  numUnk3: " << shader->numUnk3 << "\n";
 
-   GX2DumpShader("shader_vertex_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
+   GX2DebugDumpShader("shader_vertex_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
 }

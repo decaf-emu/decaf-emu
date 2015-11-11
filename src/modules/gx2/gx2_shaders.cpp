@@ -1,26 +1,20 @@
-#include "modules/gx2/gx2.h"
-#ifdef GX2_NULL
-
-#include "modules/gx2/gx2_shaders.h"
+#include "gx2_shaders.h"
 
 uint32_t
 GX2CalcGeometryShaderInputRingBufferSize(uint32_t ringItemSize)
 {
-   return ringItemSize << 12;
 }
 
 uint32_t
 GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize)
 {
-   return ringItemSize << 14;
 }
 
 uint32_t
 GX2CalcFetchShaderSizeEx(uint32_t attribs,
                          GX2FetchShaderType::Value fetchShaderType,
-                         GX2TessellationMode::Value tessellationMode)
+                         GX2TessellationMode::Value tesellationMode)
 {
-   return attribs * 16;
 }
 
 void
@@ -54,72 +48,53 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
 }
 
 void
-GX2SetPixelSampler(GX2Sampler *sampler,
-                   uint32_t id)
+GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id)
 {
 }
 
 void
-GX2SetVertexUniformReg(uint32_t offset,
-                       uint32_t count,
-                       void *data)
+GX2SetVertexUniformReg(uint32_t offset, uint32_t count, void *data)
 {
 }
 
 void
-GX2SetPixelUniformReg(uint32_t offset,
-                      uint32_t count,
-                      void *data)
+GX2SetPixelUniformReg(uint32_t offset, uint32_t count, void *data)
 {
 }
 
 void
-GX2SetVertexUniformBlock(uint32_t location,
-                         uint32_t size,
-                         const void *data)
+GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
 }
 
 void
-GX2SetPixelUniformBlock(uint32_t location,
-                        uint32_t size,
-                        const void *data)
+GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
 }
 
 void
 GX2SetShaderModeEx(GX2ShaderMode::Value mode,
-                   uint32_t unk1,
-                   uint32_t unk2,
-                   uint32_t unk3,
-                   uint32_t unk4,
-                   uint32_t unk5,
-                   uint32_t unk6)
+                   uint32_t unk1, uint32_t unk2, uint32_t unk3,
+                   uint32_t unk4, uint32_t unk5, uint32_t unk6)
 {
 }
 
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader)
 {
-   return 8;
 }
 
 uint32_t
 GX2GetPixelShaderStackEntries(GX2PixelShader *shader)
 {
-   return 8;
 }
 
 uint32_t
 GX2GetVertexShaderGPRs(GX2VertexShader *shader)
 {
-   return 8;
 }
 
 uint32_t
 GX2GetVertexShaderStackEntries(GX2VertexShader *shader)
 {
-   return 8;
 }
-
-#endif

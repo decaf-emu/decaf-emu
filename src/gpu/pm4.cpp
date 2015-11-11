@@ -1,12 +1,13 @@
 #include "pm4.h"
+#include "modules/gx2/gx2_cbpool.h"
 
 namespace pm4
 {
 
-static inline CommandBuffer *getCommandBuffer(uint32_t size)
+CommandBuffer *
+getCommandBuffer(uint32_t size)
 {
-   // TODO: Use gx2::internal shit
-   return nullptr;
+   return gx2::internal::getCommandBuffer(size);
 }
 
 } // namespace pm4
