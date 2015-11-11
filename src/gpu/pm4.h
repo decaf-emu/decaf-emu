@@ -74,13 +74,13 @@ struct SetConfigReg
 {
    static const auto Opcode = Opcode3::SET_CONFIG_REG;
 
-   ConfigRegister::Value id;
+   Register::Value id;
    gsl::array_view<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.offsetValue(id, ConfigRegister::Base);
+      se.offsetValue(id, Register::ConfigRegisterBase);
       se(values);
    }
 };
@@ -89,13 +89,13 @@ struct SetContextReg
 {
    static const auto Opcode = Opcode3::SET_CONTEXT_REG;
 
-   ContextRegister::Value id;
+   Register::Value id;
    gsl::array_view<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.offsetValue(id, ContextRegister::Base);
+      se.offsetValue(id, Register::ContextRegisterBase);
       se(values);
    }
 };

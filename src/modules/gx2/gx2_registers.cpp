@@ -49,7 +49,7 @@ GX2SetBlendControl(GX2RenderTarget::Value target,
 void
 GX2SetBlendControlReg(GX2BlendControlReg *reg)
 {
-   auto id = static_cast<pm4::ContextRegister::Value>(pm4::ContextRegister::Blend0Control + reg->target);
+   auto id = static_cast<pm4::Register::Value>(pm4::Register::Blend0Control + reg->target);
    pm4::write(pm4::SetContextReg { id, { &reg->dw1, 1 } });
 }
 

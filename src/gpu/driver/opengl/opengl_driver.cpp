@@ -12,14 +12,14 @@ namespace opengl
 void Driver::setContextReg(pm4::SetContextReg &data)
 {
    switch (data.id) {
-   case pm4::ContextRegister::Blend0Control:
-   case pm4::ContextRegister::Blend1Control:
-   case pm4::ContextRegister::Blend2Control:
-   case pm4::ContextRegister::Blend3Control:
-   case pm4::ContextRegister::Blend4Control:
-   case pm4::ContextRegister::Blend5Control:
-   case pm4::ContextRegister::Blend6Control:
-   case pm4::ContextRegister::Blend7Control:
+   case pm4::Register::Blend0Control:
+   case pm4::Register::Blend1Control:
+   case pm4::Register::Blend2Control:
+   case pm4::Register::Blend3Control:
+   case pm4::Register::Blend4Control:
+   case pm4::Register::Blend5Control:
+   case pm4::Register::Blend6Control:
+   case pm4::Register::Blend7Control:
       break;
    }
 }

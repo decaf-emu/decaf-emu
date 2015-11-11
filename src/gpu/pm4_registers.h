@@ -4,32 +4,32 @@
 namespace pm4
 {
 
-namespace ConfigRegister
+namespace Register
 {
 enum Value : uint32_t
 {
-   Base = 0x2000,
-   PrimitiveType = 0x2256,
+   // Config Registers
+   ConfigRegisterBase = 0x8000,
+   PrimitiveType = 0x8958,
+   NumIndices = 0x8970,
+   ConfigRegisterEnd = 0x8a000,
+
+   // Context Registers
+   ContextRegisterBase = 0x28000,
+   PrimitiveRestartIndex = 0x2840c,
+   Blend0Control = 0x028780,
+   Blend1Control = 0x028784,
+   Blend2Control = 0x028788,
+   Blend3Control = 0x02878C,
+   Blend4Control = 0x028790,
+   Blend5Control = 0x028794,
+   Blend6Control = 0x028798,
+   Blend7Control = 0x02879C,
+   ContextRegisterEnd = 0x29000,
 };
 }
 
-namespace ContextRegister
-{
-enum Value : uint32_t
-{
-   Base = 0xA000,
-   PrimitiveRestartIndex = 0xA103,
-   Blend0Control = 0xA1E0,
-   Blend1Control = 0xA1E1,
-   Blend2Control = 0xA1E2,
-   Blend3Control = 0xA1E3,
-   Blend4Control = 0xA1E4,
-   Blend5Control = 0xA1E5,
-   Blend6Control = 0xA1E6,
-   Blend7Control = 0xA1E7,
-};
-}
-
+// VGT_DMA_INDEX_TYPE
 union DmaIndexType
 {
    uint32_t value;
@@ -42,6 +42,7 @@ union DmaIndexType
    };
 };
 
+// VGT_DRAW_INITIATOR
 union DrawInitiator
 {
    uint32_t value;
