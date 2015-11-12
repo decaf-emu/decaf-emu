@@ -54,7 +54,7 @@ GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
 void
 GX2SetPrimitiveRestartIndex(uint32_t index)
 {
-   pm4::write(pm4::SetContextReg { latte::Register::PrimitiveRestartIndex, { &index, 1 } });
+   pm4::write(pm4::SetContextReg { latte::Register::PrimitiveResetIndex, { &index, 1 } });
 }
 
 void
