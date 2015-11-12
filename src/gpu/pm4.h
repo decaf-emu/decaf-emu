@@ -186,6 +186,66 @@ struct LoadContextReg
    }
 };
 
+struct LoadAluConst
+{
+   static const auto Opcode = Opcode3::LOAD_ALU_CONST;
+   virtual_ptr<uint32_t> addr;
+   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(addr);
+      se(0); // addr hi
+      se(values);
+   }
+};
+
+struct LoadLoopConst
+{
+   static const auto Opcode = Opcode3::LOAD_LOOP_CONST;
+   virtual_ptr<uint32_t> addr;
+   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(addr);
+      se(0); // addr hi
+      se(values);
+   }
+};
+
+struct LoadResource
+{
+   static const auto Opcode = Opcode3::LOAD_RESOURCE;
+   virtual_ptr<uint32_t> addr;
+   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(addr);
+      se(0); // addr hi
+      se(values);
+   }
+};
+
+struct LoadSampler
+{
+   static const auto Opcode = Opcode3::LOAD_SAMPLER;
+   virtual_ptr<uint32_t> addr;
+   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(addr);
+      se(0); // addr hi
+      se(values);
+   }
+};
+
 }
 
 #pragma pack(pop)

@@ -6,7 +6,8 @@
 static GX2ContextState *
 gActiveContext = nullptr;
 
-static std::pair<uint32_t, uint32_t> ConfigRegisterRange[] = {
+static std::pair<uint32_t, uint32_t> ConfigRegisterRange[] =
+{
    { 0x300, 6 },
    { 0x900, 0x48 },
    { 0x980, 0x48 },
@@ -24,7 +25,8 @@ static std::pair<uint32_t, uint32_t> ConfigRegisterRange[] = {
    { 0x404, 2 },
 };
 
-static std::pair<uint32_t, uint32_t> ContextRegisterRange[] = {
+static std::pair<uint32_t, uint32_t> ContextRegisterRange[] =
+{
    { 0, 2 },
    { 3, 3 },
    { 0xA, 4 },
@@ -72,25 +74,58 @@ static std::pair<uint32_t, uint32_t> ContextRegisterRange[] = {
    { 0x284, 0xC },
 };
 
+static std::pair<uint32_t, uint32_t> AluConstRange[] =
+{
+   { 0, 0x800 },
+};
+
+static std::pair<uint32_t, uint32_t> LoopConstRange[] =
+{
+   { 0, 0x60 },
+};
+
+static std::pair<uint32_t, uint32_t> ResourceRange[] =
+{
+   { 0, 0x70 },
+   { 0x380, 0x70 },
+   { 0x460, 0x70 },
+   { 0x7E0, 0x70 },
+   { 0x8B9, 7 },
+   { 0x8C0, 0x70 },
+   { 0x930, 0x70 },
+   { 0xCB0, 0x70 },
+   { 0xD89, 7 },
+};
+
+static std::pair<uint32_t, uint32_t> SamplerRange[] =
+{
+   { 0, 0x36 },
+   { 0x36, 0x36 },
+   { 0x6C, 0x36 },
+};
+
 void
 GX2SetupContextState(GX2ContextState *state)
 {
    GX2SetupContextStateEx(state, TRUE);
 }
 
-void
-GX2LoadState(GX2ContextState *state)
+static void
+_GX2LoadState(GX2ContextState *state)
 {
    pm4::write(pm4::LoadConfigReg { state->shadowState.config, { ConfigRegisterRange } });
    pm4::write(pm4::LoadContextReg { state->shadowState.context, { ContextRegisterRange } });
-   // TODO: Rest of shadowState
+   pm4::write(pm4::LoadAluConst { state->shadowState.alu, { AluConstRange } });
+   pm4::write(pm4::LoadLoopConst { state->shadowState.loop, { LoopConstRange } });
+   pm4::write(pm4::LoadResource { state->shadowState.resource, { ResourceRange } });
+   pm4::write(pm4::LoadSampler { state->shadowState.sampler, { SamplerRange } });
 }
 
 void
 GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1)
 {
    GX2BeginDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
-   GX2LoadState(state);
+   _GX2LoadState(state);
    GX2EndDisplayList(state->shadowDisplayList);
 }
 
