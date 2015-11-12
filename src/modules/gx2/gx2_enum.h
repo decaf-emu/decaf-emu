@@ -119,6 +119,7 @@ GX2_ENUM_END
 
 GX2_ENUM(GX2ClearFlags, uint32_t)
    GX2_ENUM_VALUE(Depth, 1)
+   GX2_ENUM_VALUE(Stencil, 2)
 GX2_ENUM_END
 
 GX2_ENUM(GX2DrcRenderMode, uint32_t)

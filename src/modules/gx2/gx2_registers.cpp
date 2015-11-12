@@ -171,3 +171,9 @@ GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg)
 {
    pm4::write(pm4::SetContextReg { latte::Register::DepthControl, { &reg->value.value, 1 } });
 }
+
+void
+GX2SetPrimitiveRestartIndex(uint32_t index)
+{
+   pm4::write(pm4::SetContextReg { latte::Register::PrimitiveResetIndex, { &index, 1 } });
+}

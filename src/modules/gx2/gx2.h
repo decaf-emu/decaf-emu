@@ -18,21 +18,4 @@ public:
 
 public:
    static void RegisterFunctions();
-
-private:
-   static void registerContextStateFunctions();
-   static void registerDisplayFunctions();
-   static void registerDisplayListFunctions();
-   static void registerDrawFunctions();
-   static void registerEventFunctions();
-   static void registerResourceFunctions();
-   static void registerMemFunctions();
-   static void registerRegisterFunctions();
-   static void registerSamplerFunctions();
-   static void registerShaderFunctions();
-   static void registerStateFunctions();
-   static void registerSurfaceFunctions();
-   static void registerSwapFunctions();
-   static void registerTempFunctions();
-   static void registerTextureFunctions();
 };
