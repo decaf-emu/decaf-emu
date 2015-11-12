@@ -117,10 +117,14 @@ GX2::registerMemFunctions()
 void
 GX2::registerRegisterFunctions()
 {
+   RegisterKernelFunction(GX2InitBlendConstantColorReg);
+   RegisterKernelFunction(GX2SetBlendConstantColor);
+   RegisterKernelFunction(GX2SetBlendConstantColorReg);
+   RegisterKernelFunction(GX2GetBlendConstantColorReg);
    RegisterKernelFunction(GX2InitBlendControlReg);
-   RegisterKernelFunction(GX2InitDepthStencilControlReg);
    RegisterKernelFunction(GX2SetBlendControl);
    RegisterKernelFunction(GX2SetBlendControlReg);
+   RegisterKernelFunction(GX2InitDepthStencilControlReg);
    RegisterKernelFunction(GX2SetDepthStencilControl);
    RegisterKernelFunction(GX2SetDepthStencilControlReg);
 }

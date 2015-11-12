@@ -15,6 +15,19 @@ CHECK_SIZE(GX2BlendControlReg, 8);
 CHECK_OFFSET(GX2BlendControlReg, 0, target);
 CHECK_OFFSET(GX2BlendControlReg, 4, value);
 
+struct GX2BlendConstantColorReg
+{
+   float red;
+   float green;
+   float blue;
+   float alpha;
+};
+CHECK_SIZE(GX2BlendConstantColorReg, 0x10);
+CHECK_OFFSET(GX2BlendConstantColorReg, 0x00, red);
+CHECK_OFFSET(GX2BlendConstantColorReg, 0x04, green);
+CHECK_OFFSET(GX2BlendConstantColorReg, 0x08, blue);
+CHECK_OFFSET(GX2BlendConstantColorReg, 0x0c, alpha);
+
 struct GX2DepthStencilControlReg
 {
    latte::DB_DEPTH_CONTROL value;
@@ -23,6 +36,29 @@ CHECK_SIZE(GX2DepthStencilControlReg, 4);
 CHECK_OFFSET(GX2DepthStencilControlReg, 0, value);
 
 #pragma pack(pop)
+
+void
+GX2InitBlendConstantColorReg(GX2BlendConstantColorReg *reg,
+                             float red,
+                             float green,
+                             float blue,
+                             float alpha);
+
+void
+GX2SetBlendConstantColor(float red,
+                         float green,
+                         float blue,
+                         float alpha);
+
+void
+GX2SetBlendConstantColorReg(GX2BlendConstantColorReg *reg);
+
+void
+GX2GetBlendConstantColorReg(GX2BlendConstantColorReg *reg,
+                            float *red,
+                            float *green,
+                            float *blue,
+                            float *alpha);
 
 void
 GX2InitBlendControlReg(GX2BlendControlReg *reg,

@@ -2,6 +2,55 @@
 #include "gpu/pm4_writer.h"
 #include "gx2_registers.h"
 
+
+void
+GX2InitBlendConstantColorReg(GX2BlendConstantColorReg *reg,
+                             float red,
+                             float green,
+                             float blue,
+                             float alpha)
+{
+   reg->red = red;
+   reg->green = green;
+   reg->blue = blue;
+   reg->alpha = alpha;
+}
+
+
+void
+GX2SetBlendConstantColor(float red,
+                         float green,
+                         float blue,
+                         float alpha)
+{
+   GX2BlendConstantColorReg reg;
+   GX2InitBlendConstantColorReg(&reg, red, green, blue, alpha);
+   GX2SetBlendConstantColorReg(&reg);
+}
+
+
+void
+GX2SetBlendConstantColorReg(GX2BlendConstantColorReg *reg)
+{
+   auto values = reinterpret_cast<uint32_t*>(&reg->red);
+   pm4::write(pm4::SetContextReg { latte::Register::BlendColorRed, { values, 4 } });
+}
+
+
+void
+GX2GetBlendConstantColorReg(GX2BlendConstantColorReg *reg,
+                            float *red,
+                            float *green,
+                            float *blue,
+                            float *alpha)
+{
+   *red = reg->red;
+   *green = reg->green;
+   *blue = reg->blue;
+   *alpha = reg->alpha;
+}
+
+
 void
 GX2InitBlendControlReg(GX2BlendControlReg *reg,
                        GX2RenderTarget::Value target,
