@@ -6,37 +6,42 @@ namespace latte
 
 namespace Register
 {
+
 enum Value : uint32_t
 {
    // Config Registers
-   ConfigRegisterBase = 0x8000,
-   PrimitiveType = 0x8958,
-   NumIndices = 0x8970,
-   ConfigRegisterEnd = 0x8a000,
+   ConfigRegisterBase         = 0x08000,
+   PrimitiveType              = 0x08958,
+   NumIndices                 = 0x08970,
+   ConfigRegisterEnd          = 0x08a00,
 
    // Context Registers
-   ContextRegisterBase     = 0x28000,
-   PrimitiveRestartIndex   = 0x2840c, // VGT_MULTI_PRIM_IB_RESET_INDX
-   Blend0Control           = 0x28780, // CB_BLEND_CONTROL
-   Blend1Control           = 0x28784,
-   Blend2Control           = 0x28788,
-   Blend3Control           = 0x2878C,
-   Blend4Control           = 0x28790,
-   Blend5Control           = 0x28794,
-   Blend6Control           = 0x28798,
-   Blend7Control           = 0x2879C,
-   DrawInitiator           = 0x287f0, // VGT_DRAW_INITIATOR
-   DepthControl            = 0x28800, // DB_DEPTH_CONTROL
-   BlendControl            = 0x28804, // CB_BLEND_CONTROL
-   ColorControl            = 0x28808, // CB_COLOR_CONTROL
-   DmaBaseHi               = 0x287e4, // VGT_DMA_BASE_HI
-   DmaBase                 = 0x287e8, // VGT_DMA_BASE
-   DmaSize                 = 0x28a74, // VGT_DMA_SIZE
-   DmaMaxSize              = 0x28a78, // VGT_DMA_MAX_SIZE
-   DmaIndexType            = 0x28a7c, // VGT_DMA_INDEX_TYPE
-   DmaNumInstances         = 0x28a88, // VGT_DMA_NUM_INSTANCES
-   PrimitiveResetEnable    = 0x28a94, // VGT_MULTI_PRIM_IB_RESET_EN
-   ContextRegisterEnd      = 0x29000,
+   ContextRegisterBase        = 0x28000,
+   PrimitiveResetIndex        = 0x2840c, // VGT_MULTI_PRIM_IB_RESET_INDX
+   BlendColorRed              = 0x28414, // CB_BLEND_RED
+   BlendColorGreen            = 0x28418, // CB_BLEND_GREEN
+   BlendColorBlue             = 0x2841C, // CB_BLEND_BLUE
+   BlendColorAlpha            = 0x28420, // CB_BLEND_ALPHA
+   Blend0Control              = 0x28780, // CB_BLEND0_CONTROL
+   Blend1Control              = 0x28784, // CB_BLEND1_CONTROL
+   Blend2Control              = 0x28788, // CB_BLEND2_CONTROL
+   Blend3Control              = 0x2878C, // CB_BLEND3_CONTROL
+   Blend4Control              = 0x28790, // CB_BLEND4_CONTROL
+   Blend5Control              = 0x28794, // CB_BLEND5_CONTROL
+   Blend6Control              = 0x28798, // CB_BLEND6_CONTROL
+   Blend7Control              = 0x2879C, // CB_BLEND7_CONTROL
+   DrawInitiator              = 0x287f0, // VGT_DRAW_INITIATOR
+   DepthControl               = 0x28800, // DB_DEPTH_CONTROL
+   BlendControl               = 0x28804, // CB_BLEND_CONTROL
+   ColorControl               = 0x28808, // CB_COLOR_CONTROL
+   DmaBaseHi                  = 0x287e4, // VGT_DMA_BASE_HI
+   DmaBase                    = 0x287e8, // VGT_DMA_BASE
+   DmaSize                    = 0x28a74, // VGT_DMA_SIZE
+   DmaMaxSize                 = 0x28a78, // VGT_DMA_MAX_SIZE
+   DmaIndexType               = 0x28a7c, // VGT_DMA_INDEX_TYPE
+   DmaNumInstances            = 0x28a88, // VGT_DMA_NUM_INSTANCES
+   PrimitiveResetEnable       = 0x28a94, // VGT_MULTI_PRIM_IB_RESET_EN
+   ContextRegisterEnd         = 0x29000,
 };
 }
 
@@ -74,22 +79,67 @@ enum COMB_FUNC
    COMB_DST_MINUS_SRC = 4,
 };
 
-union CB_BLEND_CONTROL
+struct CB_BLEND_CONTROL
 {
-   uint32_t value;
+   static const auto RegisterID = Register::BlendControl;
 
-   struct
+   union
    {
-      BLEND_FUNC colorSrcBlend : 5;
-      COMB_FUNC colorCombine : 3;
-      BLEND_FUNC colorDstBlend : 5;
-      uint32_t : 3;
-      BLEND_FUNC alphaSrcBlend : 5;
-      COMB_FUNC alphaCombine : 3;
-      BLEND_FUNC alphaDstBlend : 5;
-      uint32_t useAlphaBlend : 1;
-      uint32_t : 2;
+      uint32_t value;
+
+      struct
+      {
+         BLEND_FUNC colorSrcBlend : 5;
+         COMB_FUNC colorCombine : 3;
+         BLEND_FUNC colorDstBlend : 5;
+         uint32_t : 3;
+         BLEND_FUNC alphaSrcBlend : 5;
+         COMB_FUNC alphaCombine : 3;
+         BLEND_FUNC alphaDstBlend : 5;
+         uint32_t useAlphaBlend : 1;
+         uint32_t : 2;
+      };
    };
+};
+
+struct CB_BLEND0_CONTROL : public CB_BLEND_CONTROL
+{
+   static const auto RegisterID = Register::Blend0Control;
+};
+
+struct CB_BLEND1_CONTROL : public CB_BLEND_CONTROL
+{
+   static const auto RegisterID = Register::Blend1Control;
+};
+
+struct CB_BLEND2_CONTROL : public CB_BLEND_CONTROL
+{
+   static const auto RegisterID = Register::Blend2Control;
+};
+
+struct CB_BLEND3_CONTROL : public CB_BLEND_CONTROL
+{
+   static const auto RegisterID = Register::Blend3Control;
+};
+
+struct CB_BLEND4_CONTROL : public CB_BLEND_CONTROL
+{
+   static const auto RegisterID = Register::Blend4Control;
+};
+
+struct CB_BLEND5_CONTROL : public CB_BLEND_CONTROL
+{
+   static const auto RegisterID = Register::Blend5Control;
+};
+
+struct CB_BLEND6_CONTROL : public CB_BLEND_CONTROL
+{
+   static const auto RegisterID = Register::Blend6Control;
+};
+
+struct CB_BLEND7_CONTROL : public CB_BLEND_CONTROL
+{
+   static const auto RegisterID = Register::Blend7Control;
 };
 
 enum SPECIAL_OP
@@ -106,6 +156,7 @@ enum SPECIAL_OP
 
 union CB_COLOR_CONTROL
 {
+   static const auto RegisterID = Register::ColorControl;
    uint32_t value;
 
    struct
@@ -160,6 +211,7 @@ enum STENCIL_FUNC : uint32_t
 
 union DB_DEPTH_CONTROL
 {
+   static const auto RegisterID = Register::DepthControl;
    uint32_t value;
 
    struct
@@ -209,21 +261,25 @@ union VGT_DMA_INDEX_TYPE
 
 struct VGT_DMA_MAX_SIZE
 {
+   static const auto RegisterID = Register::DmaMaxSize;
    uint32_t maxSize;
 };
 
 struct VGT_DMA_BASE
 {
+   static const auto RegisterID = Register::DmaBase;
    uint32_t baseAddr;
 };
 
 struct VGT_DMA_NUM_INSTANCES
 {
+   static const auto RegisterID = Register::DmaNumInstances;
    uint32_t numInstances;
 };
 
 union VGT_DMA_BASE_HI
 {
+   static const auto RegisterID = Register::DmaBaseHi;
    uint32_t value;
 
    struct
@@ -235,6 +291,7 @@ union VGT_DMA_BASE_HI
 
 union VGT_MULTI_PRIM_IB_RESET_EN
 {
+   static const auto RegisterID = Register::PrimitiveResetEnable;
    uint32_t value;
 
    struct
@@ -246,11 +303,13 @@ union VGT_MULTI_PRIM_IB_RESET_EN
 
 union VGT_MULTI_PRIM_IB_RESET_INDX
 {
+   static const auto RegisterID = Register::PrimitiveResetIndex;
    uint32_t index;
 };
 
 struct VGT_DMA_SIZE
 {
+   static const auto RegisterID = Register::DmaSize;
    uint32_t numIndices;
 };
 
@@ -270,6 +329,7 @@ enum DI_MAJOR_MODE : uint32_t
 
 union VGT_DRAW_INITIATOR
 {
+   static const auto RegisterID = Register::DrawInitiator;
    uint32_t value;
 
    struct
