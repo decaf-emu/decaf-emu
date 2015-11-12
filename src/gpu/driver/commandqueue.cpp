@@ -1,3 +1,4 @@
+#include "commandqueue.h"
 #include "gpu/pm4_buffer.h"
 #include "modules/gx2/gx2_event.h"
 #include "modules/coreinit/coreinit_time.h"
@@ -41,21 +42,46 @@ private:
 static CommandQueue
 gQueue;
 
-void queueCommandBuffer(pm4::Buffer *buf)
+void
+queueUserBuffer(void *buffer, uint32_t bytes)
+{
+   // TODO: Please no allocate
+   // ergggggggggghhhh i hate everything about this
+   auto buf = new pm4::Buffer {};
+   buf->curSize = bytes / 4;
+   buf->maxSize = bytes / 4;
+   buf->buffer = new uint32_t[buf->curSize];
+   buf->userBuffer = true;
+   queueCommandBuffer(buf);
+}
+
+
+void
+queueCommandBuffer(pm4::Buffer *buf)
 {
    buf->submitTime = OSGetTime();
    gx2::internal::setLastSubmittedTimestamp(buf->submitTime);
    gQueue.appendBuffer(buf);
 }
 
-pm4::Buffer *unqueueCommandBuffer()
+
+pm4::Buffer *
+unqueueCommandBuffer()
 {
    return gQueue.waitForBuffer();
 }
 
-void retireCommandBuffer(pm4::Buffer *buf)
+
+void
+retireCommandBuffer(pm4::Buffer *buf)
 {
    gx2::internal::setRetiredTimestamp(buf->submitTime);
+
+   // TODO: Unlazy this
+   if (buf->userBuffer) {
+      delete buf->buffer;
+      delete buf;
+   }
 }
 
 } // namespace gpu

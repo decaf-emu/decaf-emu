@@ -23,3 +23,15 @@ GX2Shutdown();
 
 void
 GX2Flush();
+
+namespace gx2
+{
+
+namespace internal
+{
+
+uint32_t getMainCoreId();
+
+} // namespace internal
+
+} // namespace gx2

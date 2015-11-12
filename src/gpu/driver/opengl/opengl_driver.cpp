@@ -3,6 +3,7 @@
 #include "gpu/pm4_buffer.h"
 #include "gpu/pm4_reader.h"
 #include "gpu/latte_registers.h"
+#include <glbinding/gl/gl.h>
 
 namespace gpu
 {
@@ -12,14 +13,31 @@ namespace opengl
 
 void Driver::setContextReg(pm4::SetContextReg &data)
 {
+   // Copy to local register store
+   auto *dst = &mRegisters[data.id];
+   memcpy(dst, data.values.data(), data.values.size() * sizeof(uint32_t));
+
+   // Shadow in memory
+
+   // Perform OpenGL operation
    switch (data.id) {
+   case latte::Register::BlendControl:
+      break;
    case latte::Register::Blend0Control:
+      //gl::glBlendFunci(0, src, dst);
+      break;
    case latte::Register::Blend1Control:
+      break;
    case latte::Register::Blend2Control:
+      break;
    case latte::Register::Blend3Control:
+      break;
    case latte::Register::Blend4Control:
+      break;
    case latte::Register::Blend5Control:
+      break;
    case latte::Register::Blend6Control:
+      break;
    case latte::Register::Blend7Control:
       break;
    }

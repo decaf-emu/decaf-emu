@@ -8,10 +8,11 @@ namespace pm4
 
 struct Buffer
 {
-   OSTime submitTime;
-   virtual_ptr<uint32_t> buffer;
-   uint32_t curSize;
-   uint32_t maxSize;
+   bool userBuffer = false;
+   OSTime submitTime = 0;
+   uint32_t *buffer = nullptr;
+   uint32_t curSize = 0;
+   uint32_t maxSize = 0;
 };
 
 Buffer *

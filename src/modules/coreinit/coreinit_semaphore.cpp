@@ -43,7 +43,7 @@ OSTryWaitSemaphore(OSSemaphore *semaphore)
    int32_t previous;
    OSLockScheduler();
    assert(semaphore && semaphore->tag == OSSemaphore::Tag);
-   
+
    // Try to decrease semaphore
    previous = semaphore->count;
 

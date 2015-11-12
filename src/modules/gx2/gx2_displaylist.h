@@ -1,31 +1,30 @@
 #pragma once
 #include "types.h"
 #include "utils/be_val.h"
-
-struct GX2DisplayList;
+#include "utils/virtual_ptr.h"
 
 #define GX2_DISPLAY_LIST_ALIGNMENT 0x20
 
 void
-GX2BeginDisplayListEx(GX2DisplayList *displayList, uint32_t size, BOOL unk1);
+GX2BeginDisplayList(void *displayList, uint32_t size);
 
 void
-GX2BeginDisplayList(GX2DisplayList *displayList, uint32_t size);
+GX2BeginDisplayListEx(void *displayList, uint32_t size, BOOL unk1);
 
 uint32_t
-GX2EndDisplayList(GX2DisplayList *displayList);
+GX2EndDisplayList(void *displayList);
 
 void
-GX2DirectCallDisplayList(GX2DisplayList *displayList, uint32_t size);
+GX2DirectCallDisplayList(void *displayList, uint32_t size);
 
 void
-GX2CallDisplayList(GX2DisplayList *displayList, uint32_t size);
+GX2CallDisplayList(void *displayList, uint32_t size);
 
 BOOL
 GX2GetDisplayListWriteStatus();
 
 BOOL
-GX2GetCurrentDisplayList(be_val<uint32_t> *outDisplayList, be_val<uint32_t> *outSize);
+GX2GetCurrentDisplayList(be_ptr<void> *outDisplayList, be_val<uint32_t> *outSize);
 
 void
-GX2CopyDisplayList(GX2DisplayList *displayList, uint32_t size);
+GX2CopyDisplayList(void *displayList, uint32_t size);

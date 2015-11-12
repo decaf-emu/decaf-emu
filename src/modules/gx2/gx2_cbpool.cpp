@@ -1,8 +1,13 @@
 #include <cassert>
+#include <tuple>
 #include <vector>
 #include "gx2_cbpool.h"
 #include "gx2_event.h"
+#include "gx2_displaylist.h"
+#include "gx2_state.h"
 #include "gpu/pm4_buffer.h"
+#include "gpu/driver/commandqueue.h"
+#include "modules/coreinit/coreinit_core.h"
 
 struct CommandBufferPool
 {
@@ -13,8 +18,11 @@ struct CommandBufferPool
    std::vector<pm4::Buffer> items;
 };
 
-CommandBufferPool gCommandBufferPool;
-pm4::Buffer *gActiveBuffer = nullptr;
+static CommandBufferPool
+gCommandBufferPool;
+
+static pm4::Buffer *
+gActiveBuffer[CoreCount] = { nullptr, nullptr, nullptr };
 
 namespace gx2
 {
@@ -22,19 +30,10 @@ namespace gx2
 namespace internal
 {
 
-void
-initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size, uint32_t itemSize)
-{
-   gCommandBufferPool.base = base;
-   gCommandBufferPool.size = size;
-   gCommandBufferPool.itemSize = itemSize;
-   gCommandBufferPool.items.resize(size / gCommandBufferPool.itemSize);
-   allocateCommandBuffer();
-}
-
-pm4::Buffer *
+static pm4::Buffer *
 allocateCommandBuffer()
 {
+   assert(gx2::internal::getMainCoreId() == OSGetCoreId());
    OSTime retiredTimestamp = GX2GetRetiredTimeStamp();
    auto buffer = &gCommandBufferPool.items[gCommandBufferPool.itemsHead];
 
@@ -42,6 +41,7 @@ allocateCommandBuffer()
       GX2WaitTimeStamp(buffer->submitTime);
    }
 
+   buffer->userBuffer = false;
    buffer->submitTime = 0;
    buffer->curSize = 0;
    buffer->maxSize = gCommandBufferPool.itemSize / 4;
@@ -52,32 +52,82 @@ allocateCommandBuffer()
       gCommandBufferPool.itemsHead = 0;
    }
 
-   gActiveBuffer = buffer;
    return buffer;
+}
+
+void
+initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size, uint32_t itemSize)
+{
+   auto core = OSGetCoreId();
+   assert(gx2::internal::getMainCoreId() == core);
+
+   gCommandBufferPool.base = base;
+   gCommandBufferPool.size = size;
+   gCommandBufferPool.itemSize = itemSize;
+   gCommandBufferPool.items.resize(size / gCommandBufferPool.itemSize);
+   gActiveBuffer[core] = allocateCommandBuffer();
 }
 
 pm4::Buffer *
 flushCommandBuffer(pm4::Buffer *cb)
 {
-   assert(cb == gActiveBuffer);
+   auto core = OSGetCoreId();
+   auto &active = gActiveBuffer[core];
 
-   // TODO: Flush buffer to GX2 driver backened
-   cb->submitTime = OSGetTime();
+   if (!cb) {
+      cb = active;
+   } else {
+      assert(active == cb);
+   }
 
-   // Allocate and return new command buffer
-   return allocateCommandBuffer();
+   if (active->userBuffer) {
+      void *newList = nullptr;
+      uint32_t newSize = 0;
+
+      // End the active display list
+      GX2EndDisplayList(cb->buffer);
+
+      // Ask user to allocate new display list
+      std::tie(newList, newSize) = displayListOverrun(cb->buffer, cb->curSize * 4);
+
+      if (!newList || !newSize) {
+         throw std::logic_error("Unable to handle display list overrun");
+      }
+
+      // Begin new display list, it will update gActiveBuffer
+      GX2BeginDisplayList(newList, newSize);
+   } else {
+      // Send buffer to our driver!
+      gpu::queueCommandBuffer(cb);
+
+      // Allocate new buffer
+      active = allocateCommandBuffer();
+   }
+
+   return active;
 }
 
 pm4::Buffer *
 getCommandBuffer(uint32_t size)
 {
-   auto buffer = gActiveBuffer;
+   auto core = OSGetCoreId();
+   auto buffer = gActiveBuffer[core];
 
-   if (buffer->curSize + size > buffer->maxSize) {
+   if (!buffer) {
+      buffer = allocateCommandBuffer();
+   } else if (buffer->curSize + size > buffer->maxSize) {
       buffer = flushCommandBuffer(buffer);
    }
 
    return buffer;
+}
+
+void
+setUserCommandBuffer(pm4::Buffer *buffer)
+{
+   auto core = OSGetCoreId();
+   buffer->userBuffer = true;
+   gActiveBuffer[core] = buffer;
 }
 
 }

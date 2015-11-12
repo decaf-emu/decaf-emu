@@ -36,7 +36,7 @@ gWaitTimeStampQueue = nullptr;
 struct EventCallbackData
 {
    GX2EventCallbackFunction func;
-   virtual_ptr<void> data;
+   void *data;
 };
 
 static EventCallbackData
@@ -67,6 +67,10 @@ GX2WaitForFlip()
 void
 GX2SetEventCallback(GX2EventType::Value type, GX2EventCallbackFunction func, void *userData)
 {
+   if (type == GX2EventType::DisplayListOverrun && !userData) {
+      gLog->error("DisplayListOverrun callback set with no valid userData");
+   }
+
    if (type < GX2EventType::Last) {
       gEventCallbacks[type].func = func;
       gEventCallbacks[type].data = userData;
@@ -146,6 +150,30 @@ vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
    if (callback.func) {
       callback.func(GX2EventType::Vsync, callback.data);
    }
+}
+
+
+std::pair<void *, uint32_t>
+displayListOverrun(void *list, uint32_t size)
+{
+   auto callback = gEventCallbacks[GX2EventType::DisplayListOverrun];
+   void *newList = nullptr;
+   uint32_t newSize = 0u;
+
+   if (callback.func && callback.data) {
+      auto data = reinterpret_cast<GX2DisplayListOverrunData *>(callback.data);
+      data->oldList = list;
+      data->oldSize = size;
+      data->newList = nullptr;
+      data->newSize = 0;
+
+      // Call the user's function, it should set newList and newSize
+      callback.func(GX2EventType::DisplayListOverrun, callback.data);
+      return { data->newList, data->newSize };
+   }
+
+   gLog->error("Encountered DisplayListOverrun without a valid callback!");
+   return { nullptr, 0 };
 }
 
 

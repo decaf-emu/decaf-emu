@@ -38,7 +38,7 @@ struct DrawIndex2
    {
       se(maxIndices);
       se(addr);
-      se(0);
+      se(0); // addr hi
       se(numIndices);
       se(drawInitiator.value);
    }
@@ -110,7 +110,7 @@ struct SetControlConstant
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se(id);
+      se.reg(id, latte::Register::ControlRegisterBase);
       se(values);
    }
 };
@@ -134,127 +134,57 @@ struct SetResourceAttrib
       se(size);
       se(word2.value);
       se(word3.value);
-      se(0); // word4
-      se(0); // word5
+      se(0);
+      se(0);
       se(word6.value);
-      se(0); // word6
+      se(0);
    }
 };
 
-/*
-static inline void indexType(uint32_t indexType, uint32_t swapMode)
+struct IndirectBufferCall
 {
-   uint32_t indexField;
-   indexField |= (indexType & 1) << 0;
-   indexField |= (swapMode & 3) << 1;
+   static const auto Opcode = Opcode3::INDIRECT_BUFFER_PRIV;
+   virtual_ptr<void> addr;
+   uint32_t size;
 
-   auto pak = beginPacket<Opcode3::INDEX_TYPE>();
-   pak.write(indexField);
-}
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(addr);
+      se(0);
+      se(size);
+   }
+};
 
-static inline void drawIndex(uint32_t indexAddr, uint32_t numIndices)
+struct LoadConfigReg
 {
-   uint32_t drawInitiator = 0u;
+   static const auto Opcode = Opcode3::LOAD_CONFIG_REG;
+   virtual_ptr<uint32_t> addr;
+   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
 
-   auto pak = beginPacket<Opcode3::DRAW_INDEX>();
-   pak.write(indexAddr);
-   pak.write(0u);
-   pak.write(numIndices);
-   pak.write(drawInitiator);
-}
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(addr);
+      se(0); // addr hi
+      se(values);
+   }
+};
 
-static inline void drawIndexAuto(uint32_t numVertices)
+struct LoadContextReg
 {
-   uint32_t drawInitiator = 0u;
+   static const auto Opcode = Opcode3::LOAD_CONTEXT_REG;
+   virtual_ptr<uint32_t> addr;
+   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
 
-   auto pak = beginPacket<Opcode3::DRAW_INDEX_AUTO>();
-   pak.write(numVertices);
-   pak.write(drawInitiator);
-}
-
-static inline void drawIndexImmd(gsl::array_view<uint16_t> indices)
-{
-   auto numIndices = static_cast<uint32_t>(indices.size());
-   uint32_t drawInitiator = 0u;
-
-   auto pak = beginPacket<Opcode3::DRAW_INDEX_IMMD>();
-   pak.write(numIndices);
-   pak.write(drawInitiator);
-   pak.writeArr(indices);
-}
-
-static inline void drawIndexImmd(gsl::array_view<uint32_t> indices)
-{
-   auto numIndices = static_cast<uint32_t>(indices.size());
-   uint32_t drawInitiator = 0u;
-
-   auto pak = beginPacket<Opcode3::DRAW_INDEX_IMMD>();
-   pak.write(numIndices);
-   pak.write(drawInitiator);
-   pak.writeArr(indices);
-}
-
-static inline void numInstances(uint32_t count)
-{
-   auto pak = beginPacket<Opcode3::NUM_INSTANCES>();
-   pak.write(count);
-}
-
-static inline void setConfigReg(ConfigRegister::Value id, gsl::array_view<uint32_t> values)
-{
-   auto pak = beginPacket<Opcode3::SET_CONFIG_REG>();
-   pak.write(id - ConfigRegister::Base);
-   pak.writeArr(values);
-}
-
-static inline void setContextReg(ContextRegister::Value id, gsl::array_view<uint32_t> values)
-{
-   auto pak = beginPacket<Opcode3::SET_CONTEXT_REG>();
-   pak.write(id - ContextRegister::Base);
-   pak.writeArr(values);
-}
-
-static inline void setAluConst(uint32_t id, gsl::array_view<uint32_t> values)
-{
-   auto pak = beginPacket<Opcode3::SET_ALU_CONST>();
-   pak.write(id);
-   pak.writeArr(values);
-}
-
-static inline void setBoolConst(uint32_t id, gsl::array_view<uint32_t> values)
-{
-   auto pak = beginPacket<Opcode3::SET_BOOL_CONST>();
-   pak.write(id);
-   pak.writeArr(values);
-}
-
-static inline void setLoopConst(uint32_t id, gsl::array_view<uint32_t> values)
-{
-   auto pak = beginPacket<Opcode3::SET_LOOP_CONST>();
-   pak.write(id);
-   pak.writeArr(values);
-}
-
-static inline void setResource(uint32_t id, gsl::array_view<uint32_t> values)
-{
-   auto pak = beginPacket<Opcode3::SET_RESOURCE>();
-   pak.write(id);
-   pak.writeArr(values);
-}
-
-static inline void setSampler(uint32_t id, gsl::array_view<uint32_t> values)
-{
-   auto pak = beginPacket<Opcode3::SET_SAMPLER>();
-   pak.write(id);
-   pak.writeArr(values);
-}
-
-static inline void setCtlConst(uint32_t id, gsl::array_view<uint32_t> values)
-{
-   auto pak = beginPacket<Opcode3::SET_CTL_CONST>();
-   pak.write(id);
-   pak.writeArr(values);
-}*/
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(addr);
+      se(0); // addr hi
+      se(values);
+   }
+};
 
 }
 

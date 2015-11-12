@@ -1,8 +1,18 @@
 #include "gpu/pm4.h"
 #include "gx2_cbpool.h"
+#include "gx2_displaylist.h"
 #include "gx2_state.h"
+#include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"
+#include "utils/log.h"
 #include "utils/virtual_ptr.h"
+#include "gpu/driver/opengl/opengl_driver.h"
+
+static uint32_t
+gMainCoreId = 0;
+
+static gpu::opengl::Driver *
+gDriver = nullptr;
 
 void
 GX2Init(be_val<uint32_t> *attributes)
@@ -12,6 +22,9 @@ GX2Init(be_val<uint32_t> *attributes)
    uint32_t cbPoolItemSize = 0x100;
    virtual_ptr<char *> argv = nullptr;
    uint32_t argc = 0;
+
+   // Set main gx2 core
+   gMainCoreId = OSGetCoreId();
 
    // Parse attributes
    while (attributes && *attributes != GX2InitAttrib::End) {
@@ -46,6 +59,10 @@ GX2Init(be_val<uint32_t> *attributes)
 
    // Initialise command buffer pools
    gx2::internal::initCommandBufferPool(cbPoolBase, cbPoolSize, cbPoolItemSize);
+
+   // Start driver
+   gDriver = new gpu::opengl::Driver();
+   gDriver->run();
 }
 
 void
@@ -56,4 +73,24 @@ GX2Shutdown()
 void
 GX2Flush()
 {
+   if (GX2GetDisplayListWriteStatus()) {
+      gLog->error("GX2Flush called from within a display list");
+   }
+
+   gx2::internal::flushCommandBuffer(nullptr);
 }
+
+namespace gx2
+{
+
+namespace internal
+{
+
+uint32_t getMainCoreId()
+{
+   return gMainCoreId;
+}
+
+} // namespace internal
+
+} // namespace gx2

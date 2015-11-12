@@ -17,13 +17,13 @@ void
 initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size, uint32_t itemSize);
 
 pm4::Buffer *
-allocateCommandBuffer();
-
-pm4::Buffer *
 flushCommandBuffer(pm4::Buffer *cb);
 
 pm4::Buffer *
 getCommandBuffer(uint32_t size);
+
+void
+setUserCommandBuffer(pm4::Buffer *userBuffer);
 
 } // namespace internal
 

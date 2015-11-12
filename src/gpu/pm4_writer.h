@@ -1,8 +1,10 @@
 #pragma once
 #include <array_view.h>
 #include <gsl.h>
+#include "pm4.h"
 #include "pm4_buffer.h"
 #include "pm4_format.h"
+#include "latte_registers.h"
 #include "utils/virtual_ptr.h"
 
 namespace pm4
@@ -57,7 +59,7 @@ public:
 
    // Write one word as a register
    template<typename Type>
-   PacketWriter &reg(Type value, Type base)
+   PacketWriter &reg(Type value, latte::Register::Value base)
    {
       checkSize(1);
       mBuffer->buffer[mBuffer->curSize++] = (static_cast<uint32_t>(value) - static_cast<uint32_t>(base)) >> 2;

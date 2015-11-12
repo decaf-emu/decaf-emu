@@ -56,27 +56,31 @@ struct GX2DepthBuffer
 {
    GX2Surface surface;
 
-   be_val<uint32_t> viewMip; // GX2ClearDepthStencilEx
-   be_val<uint32_t> viewFirstSlice; // GX2ClearDepthStencilEx
-   be_val<uint32_t> viewNumSlices; // GX2ClearDepthStencilEx
-   be_ptr<void> hiZPtr; // GX2ExpandDepthBuffer
+   be_val<uint32_t> viewMip;
+   be_val<uint32_t> viewFirstSlice;
+   be_val<uint32_t> viewNumSlices;
+   be_ptr<void> hiZPtr;
    be_val<uint32_t> hiZSize;
-   UNKNOWN(36);
+   be_val<float> depthClear;
+   be_val<uint32_t> stencilClear;
+   UNKNOWN(28);
 };
 CHECK_OFFSET(GX2DepthBuffer, 0x74, viewMip);
 CHECK_OFFSET(GX2DepthBuffer, 0x78, viewFirstSlice);
 CHECK_OFFSET(GX2DepthBuffer, 0x7C, viewNumSlices);
 CHECK_OFFSET(GX2DepthBuffer, 0x80, hiZPtr);
 CHECK_OFFSET(GX2DepthBuffer, 0x84, hiZSize);
+CHECK_OFFSET(GX2DepthBuffer, 0x88, depthClear);
+CHECK_OFFSET(GX2DepthBuffer, 0x8C, stencilClear);
 CHECK_SIZE(GX2DepthBuffer, 0xAC);
 
 struct GX2ColorBuffer
 {
    GX2Surface surface;
 
-   be_val<uint32_t> viewMip; // GX2ClearBuffersEx
-   be_val<uint32_t> viewFirstSlice; // GX2ClearBuffersEx
-   be_val<uint32_t> viewNumSlices; // GX2ClearBuffersEx
+   be_val<uint32_t> viewMip;
+   be_val<uint32_t> viewFirstSlice;
+   be_val<uint32_t> viewNumSlices;
    UNKNOWN(28);
 };
 CHECK_OFFSET(GX2ColorBuffer, 0x74, viewMip);

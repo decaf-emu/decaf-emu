@@ -138,6 +138,7 @@ GX2_ENUM(GX2EventType, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 5)
    GX2_ENUM_VALUE(Vsync, 2)
    GX2_ENUM_VALUE(Flip, 3)
+   GX2_ENUM_VALUE(DisplayListOverrun, 4)
 GX2_ENUM_END
 
 GX2_ENUM(GX2FetchShaderType, uint32_t)

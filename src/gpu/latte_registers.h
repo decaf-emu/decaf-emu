@@ -13,10 +13,12 @@ enum Value : uint32_t
    ConfigRegisterBase         = 0x08000,
    PrimitiveType              = 0x08958,
    NumIndices                 = 0x08970,
-   ConfigRegisterEnd          = 0x08a00,
+   ConfigRegisterEnd          = 0x08b00,
 
    // Context Registers
    ContextRegisterBase        = 0x28000,
+   StencilClear               = 0x28028, // DB_STENCIL_CLEAR
+   DepthClear                 = 0x2802c, // DB_DEPTH_CLEAR
    PrimitiveResetIndex        = 0x2840c, // VGT_MULTI_PRIM_IB_RESET_INDX
    BlendColorRed              = 0x28414, // CB_BLEND_RED
    BlendColorGreen            = 0x28418, // CB_BLEND_GREEN
@@ -42,6 +44,25 @@ enum Value : uint32_t
    DmaNumInstances            = 0x28a88, // VGT_DMA_NUM_INSTANCES
    PrimitiveResetEnable       = 0x28a94, // VGT_MULTI_PRIM_IB_RESET_EN
    ContextRegisterEnd         = 0x29000,
+
+   // Alu Const Registers
+   AluConstRegisterBase       = 0x30000,
+
+   // Resource Registers
+   ResourceRegisterBase       = 0x38000,
+
+   // Sampler Registers
+   SamplerRegisterBase        = 0x3C000,
+
+   // Control Registers
+   ControlRegisterBase        = 0x3CFF0,
+   VertextBaseFetchLocation   = 0x3CFF0, // SQ_VTX_BASE_VTX_LOC
+
+   // Loop Const Registers
+   LoopConstRegisterBase      = 0x3E200,
+
+   // Bool Const Registers
+   BoolConstRegisterBase      = 0x3E380,
 };
 }
 
@@ -207,6 +228,25 @@ enum STENCIL_FUNC : uint32_t
    STENCIL_INVERT = 5,
    STENCIL_INCR_WRAP = 6,
    STENCIL_DECR_WRAP = 7,
+};
+
+union DB_STENCIL_CLEAR
+{
+   static const auto RegisterID = Register::StencilClear;
+   uint32_t value;
+
+   struct
+   {
+      uint32_t clear : 8;
+      uint32_t min : 16;
+      uint32_t : 8;
+   };
+};
+
+struct DB_DEPTH_CLEAR
+{
+   static const auto RegisterID = Register::DepthClear;
+   float depthClear;
 };
 
 union DB_DEPTH_CONTROL
@@ -421,6 +461,12 @@ union SQ_VTX_CONSTANT_WORD6_0
       uint32_t : 30;
       SQ_TEX_VTX_TYPE type : 2;
    };
+};
+
+struct SQ_VTX_BASE_VTX_LOC
+{
+   static const auto RegisterID = Register::VertextBaseFetchLocation;
+   uint32_t offset;
 };
 
 } // namespace latte
