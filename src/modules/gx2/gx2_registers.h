@@ -9,7 +9,7 @@
 struct GX2BlendControlReg
 {
    GX2RenderTarget::Value target;
-   latte::BlendControl value;
+   latte::CB_BLEND_CONTROL value;
 };
 CHECK_SIZE(GX2BlendControlReg, 8);
 CHECK_OFFSET(GX2BlendControlReg, 0, target);
@@ -17,7 +17,7 @@ CHECK_OFFSET(GX2BlendControlReg, 4, value);
 
 struct GX2DepthStencilControlReg
 {
-   latte::DepthControl value;
+   latte::DB_DEPTH_CONTROL value;
 };
 CHECK_SIZE(GX2DepthStencilControlReg, 4);
 CHECK_OFFSET(GX2DepthStencilControlReg, 0, value);

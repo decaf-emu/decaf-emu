@@ -69,6 +69,8 @@ GX2_ENUM(GX2BlendMode, uint32_t)
    GX2_ENUM_VALUE(DestColor,        8)
    GX2_ENUM_VALUE(InvDestColor,     9)
    GX2_ENUM_VALUE(SrcAlphaSat,      10)
+   GX2_ENUM_VALUE(BothSrcAlpha,     11)
+   GX2_ENUM_VALUE(BothInvSrcAlpha,  12)
    GX2_ENUM_VALUE(BlendFactor,      13)
    GX2_ENUM_VALUE(InvBlendFactor,   14)
    GX2_ENUM_VALUE(Src1Color,        15)
@@ -283,6 +285,14 @@ GX2_ENUM_END
 
 GX2_ENUM(GX2StencilFunction, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 7)
+   GX2_ENUM_VALUE(Keep, 0)
+   GX2_ENUM_VALUE(Zero, 1)
+   GX2_ENUM_VALUE(Replace, 2)
+   GX2_ENUM_VALUE(IncrClamp, 3)
+   GX2_ENUM_VALUE(DecrClamp, 4)
+   GX2_ENUM_VALUE(Invert, 5)
+   GX2_ENUM_VALUE(IncrWrap, 6)
+   GX2_ENUM_VALUE(DecrWrap, 7)
 GX2_ENUM_END
 
 GX2_ENUM(GX2TessellationMode, uint32_t)

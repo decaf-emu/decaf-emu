@@ -14,13 +14,13 @@ GX2InitBlendControlReg(GX2BlendControlReg *reg,
                        GX2BlendCombineMode::Value alphaCombine)
 {
    reg->target = target;
-   reg->value.colorSrcBlend = colorSrcBlend;
-   reg->value.colorDstBlend = colorDstBlend;
-   reg->value.colorCombine = colorCombine;
+   reg->value.colorSrcBlend = static_cast<latte::BLEND_FUNC>(colorSrcBlend);
+   reg->value.colorDstBlend = static_cast<latte::BLEND_FUNC>(colorDstBlend);
+   reg->value.colorCombine = static_cast<latte::COMB_FUNC>(colorCombine);
    reg->value.useAlphaBlend = useAlphaBlend;
-   reg->value.alphaSrcBlend = alphaSrcBlend;
-   reg->value.alphaDstBlend = alphaDstBlend;
-   reg->value.alphaCombine = alphaCombine;
+   reg->value.alphaSrcBlend = static_cast<latte::BLEND_FUNC>(alphaSrcBlend);
+   reg->value.alphaDstBlend = static_cast<latte::BLEND_FUNC>(alphaDstBlend);
+   reg->value.alphaCombine = static_cast<latte::COMB_FUNC>(alphaCombine);
 }
 
 void
@@ -71,17 +71,17 @@ GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
 {
    reg->value.depthTest = depthTest;
    reg->value.depthWrite = depthWrite;
-   reg->value.depthCompare = depthCompare;
+   reg->value.depthCompare = static_cast<latte::FRAG_FUNC>(depthCompare);
    reg->value.stencilTest = stencilTest;
    reg->value.backfaceStencil = backfaceStencil;
-   reg->value.frontStencilFunc = frontStencilFunc;
-   reg->value.frontStencilZPass = frontStencilZPass;
-   reg->value.frontStencilZFail = frontStencilZFail;
-   reg->value.frontStencilFail = frontStencilFail;
-   reg->value.backStencilFunc = backStencilFunc;
-   reg->value.backStencilZPass = backStencilZPass;
-   reg->value.backStencilZFail = backStencilZFail;
-   reg->value.backStencilFail = backStencilFail;
+   reg->value.frontStencilFunc = static_cast<latte::REF_FUNC>(frontStencilFunc);
+   reg->value.frontStencilZPass = static_cast<latte::STENCIL_FUNC>(frontStencilZPass);
+   reg->value.frontStencilZFail = static_cast<latte::STENCIL_FUNC>(frontStencilZFail);
+   reg->value.frontStencilFail = static_cast<latte::STENCIL_FUNC>(frontStencilFail);
+   reg->value.backStencilFunc = static_cast<latte::REF_FUNC>(backStencilFunc);
+   reg->value.backStencilZPass = static_cast<latte::STENCIL_FUNC>(backStencilZPass);
+   reg->value.backStencilZFail = static_cast<latte::STENCIL_FUNC>(backStencilZFail);
+   reg->value.backStencilFail = static_cast<latte::STENCIL_FUNC>(backStencilFail);
 }
 
 void

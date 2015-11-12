@@ -34,6 +34,14 @@ GX2SetAttribBuffer(uint32_t index,
                    uint32_t stride,
                    void *buffer)
 {
+   pm4::SetResourceAttrib attrib;
+   memset(&attrib, 0, sizeof(pm4::SetResourceAttrib));
+   attrib.id = (index * 7) + 0x8c0;
+   attrib.baseAddress = buffer;
+   attrib.size = size;
+   attrib.word2.stride = stride;
+   attrib.word6.type = latte::SQ_TEX_VTX_VALID_BUFFER;
+   pm4::write(attrib);
 }
 
 void
