@@ -37,6 +37,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "decaf", "build\decaf.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtx-convert", "build\gtx-convert.vcxproj", "{7CB8D060-968B-4173-B2BF-1E29088107F2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glbinding", "build\glbinding.vcxproj", "{32C7C2BD-0D47-48C7-9887-468850923599}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -83,6 +85,10 @@ Global
 		{7CB8D060-968B-4173-B2BF-1E29088107F2}.Debug|x64.Build.0 = Debug|x64
 		{7CB8D060-968B-4173-B2BF-1E29088107F2}.Release|x64.ActiveCfg = Release|x64
 		{7CB8D060-968B-4173-B2BF-1E29088107F2}.Release|x64.Build.0 = Release|x64
+		{32C7C2BD-0D47-48C7-9887-468850923599}.Debug|x64.ActiveCfg = Debug|x64
+		{32C7C2BD-0D47-48C7-9887-468850923599}.Debug|x64.Build.0 = Debug|x64
+		{32C7C2BD-0D47-48C7-9887-468850923599}.Release|x64.ActiveCfg = Release|x64
+		{32C7C2BD-0D47-48C7-9887-468850923599}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,5 +103,6 @@ Global
 		{CDFC321E-07C6-44E1-B145-02749935DDFE} = {4E2164E9-068E-44D0-BC5B-E8A68B30D4CE}
 		{01016351-42D4-4D49-A433-00CF4E1F7A8C} = {A7137181-83E5-46FB-A880-B4FB4F4BF3C3}
 		{7CB8D060-968B-4173-B2BF-1E29088107F2} = {4E2164E9-068E-44D0-BC5B-E8A68B30D4CE}
+		{32C7C2BD-0D47-48C7-9887-468850923599} = {A7137181-83E5-46FB-A880-B4FB4F4BF3C3}
 	EndGlobalSection
 EndGlobal
