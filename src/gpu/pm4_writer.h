@@ -16,18 +16,28 @@ public:
    PacketWriter(Opcode3::Value opCode)
    {
       mBuffer = pm4::getBuffer(1);
-      mSaveSize = mBuffer->curSize;
 
-      auto header = reinterpret_cast<Packet3 *>(&mBuffer->buffer[mBuffer->curSize++]);
-      header->value = 0;
-      header->type = PacketType::Type3;
-      header->opcode = opCode;
+      if (mBuffer) {
+         mSaveSize = mBuffer->curSize;
+
+         auto header = reinterpret_cast<Packet3 *>(&mBuffer->buffer[mBuffer->curSize++]);
+         header->value = 0;
+         header->type = PacketType::Type3;
+         header->opcode = opCode;
+      }
    }
 
    ~PacketWriter()
    {
-      auto header = reinterpret_cast<Packet3 *>(&mBuffer->buffer[mSaveSize]);
-      header->size = (mBuffer->curSize - mSaveSize) - 2;
+      if (mBuffer) {
+         auto header = reinterpret_cast<Packet3 *>(&mBuffer->buffer[mSaveSize]);
+         header->size = (mBuffer->curSize - mSaveSize) - 2;
+      }
+   }
+
+   bool valid()
+   {
+      return !!mBuffer;
    }
 
    // Write one word
@@ -102,7 +112,10 @@ template<typename Type>
 void write(Type &value)
 {
    PacketWriter writer { Type::Opcode };
-   value.serialise(writer);
+
+   if (writer.valid()) {
+      value.serialise(writer);
+   }
 }
 
-}
+} // namespace pm4

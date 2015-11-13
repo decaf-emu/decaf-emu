@@ -8,6 +8,7 @@
 #include "gpu/pm4_buffer.h"
 #include "gpu/driver/commandqueue.h"
 #include "modules/coreinit/coreinit_core.h"
+#include "utils/log.h"
 
 struct CommandBufferPool
 {
@@ -33,7 +34,12 @@ namespace internal
 static pm4::Buffer *
 allocateCommandBuffer()
 {
-   assert(gx2::internal::getMainCoreId() == OSGetCoreId());
+   if (gx2::internal::getMainCoreId() != OSGetCoreId()) {
+      // Only the main core can have command buffers
+      gLog->warn("Tried to allocate command buffer on non-main graphics core");
+      return nullptr;
+   }
+
    OSTime retiredTimestamp = GX2GetRetiredTimeStamp();
    auto buffer = &gCommandBufferPool.items[gCommandBufferPool.itemsHead];
 
