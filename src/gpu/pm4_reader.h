@@ -33,19 +33,13 @@ public:
    }
 
    // Read the rest of the entire packet
-   PacketReader &operator()(gsl::array_view<uint32_t> &values)
+   template<typename Type>
+   PacketReader &operator()(gsl::array_view<Type> &values)
    {
-      values = mBuffer.sub(mPosition);
-      mPosition = mBuffer.size();
-      return *this;
-   }
+      values = { reinterpret_cast<Type*>(&mBuffer[mPosition]),
+                 ((mBuffer.size() - mPosition) * sizeof(uint32_t)) / sizeof(Type) };
 
-   // Read array of size
-   PacketReader &operator()(gsl::array_view<uint32_t> &values, size_t size)
-   {
-      checkSize(size);
-      values = mBuffer.sub(mPosition, size);
-      mPosition += size;
+      mPosition = mBuffer.size();
       return *this;
    }
 
@@ -54,7 +48,7 @@ public:
    PacketReader &reg(Type &value, uint32_t base)
    {
       checkSize(1);
-      value = static_cast<Type>((mBuffer[mPosition++] << 2) + base);
+      value = static_cast<Type>((mBuffer[mPosition++] * 4) + base);
       return *this;
    }
 

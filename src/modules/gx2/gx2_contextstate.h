@@ -31,11 +31,12 @@ CHECK_SIZE(GX2ShadowRegisters, 0x9800);
 // Internal display list is used to create LOAD_ dlist for the shadow state
 struct GX2ContextState
 {
+   static const auto MaxDisplayListSize = 192u;
    GX2ShadowRegisters shadowState;
    UNKNOWN(4);
    uint32_t shadowDisplayListSize;
    UNKNOWN(0x9e00 - 0x9808);
-   uint8_t shadowDisplayList[0x300];
+   uint32_t shadowDisplayList[MaxDisplayListSize];
 };
 CHECK_OFFSET(GX2ContextState, 0x0000, shadowState);
 CHECK_OFFSET(GX2ContextState, 0x9804, shadowDisplayListSize);

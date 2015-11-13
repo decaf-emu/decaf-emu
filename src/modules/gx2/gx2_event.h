@@ -60,7 +60,7 @@ namespace internal
 {
 
 void
-initVsync();
+initEvents();
 
 void
 vsyncAlarmHandler(OSAlarm *alarm, OSContext *context);

@@ -124,9 +124,9 @@ _GX2LoadState(GX2ContextState *state)
 void
 GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1)
 {
-   GX2BeginDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
+   GX2BeginDisplayList(state->shadowDisplayList, GX2ContextState::MaxDisplayListSize * 4);
    _GX2LoadState(state);
-   GX2EndDisplayList(state->shadowDisplayList);
+   state->shadowDisplayListSize = GX2EndDisplayList(state->shadowDisplayList);
 }
 
 void
@@ -146,9 +146,11 @@ GX2SetContextState(GX2ContextState *state)
 {
    gActiveContext = state;
 
-   if (GX2GetDisplayListWriteStatus()) {
-      GX2CopyDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
-   } else {
-      GX2CallDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
+   if (state) {
+      if (GX2GetDisplayListWriteStatus()) {
+         GX2CopyDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
+      } else {
+         GX2CallDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
+      }
    }
 }

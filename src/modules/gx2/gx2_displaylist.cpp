@@ -10,13 +10,13 @@ static std::array<pm4::Buffer, CoreCount>
 gActiveDisplayList;
 
 void
-GX2BeginDisplayList(void *displayList, uint32_t size)
+GX2BeginDisplayList(void *displayList, uint32_t bytes)
 {
-   GX2BeginDisplayListEx(displayList, size, TRUE);
+   GX2BeginDisplayListEx(displayList, bytes, TRUE);
 }
 
 void
-GX2BeginDisplayListEx(void *displayList, uint32_t size, BOOL unk1)
+GX2BeginDisplayListEx(void *displayList, uint32_t bytes, BOOL unk1)
 {
    auto core = OSGetCoreId();
    auto &active = gActiveDisplayList[core];
@@ -24,7 +24,7 @@ GX2BeginDisplayListEx(void *displayList, uint32_t size, BOOL unk1)
    // Set active display list
    active.buffer = reinterpret_cast<uint32_t*>(displayList);
    active.curSize = 0;
-   active.maxSize = size;
+   active.maxSize = bytes / 4;
 
    // Set active command buffer to the display list
    gx2::internal::setUserCommandBuffer(&active);
@@ -78,24 +78,24 @@ GX2GetCurrentDisplayList(be_ptr<void> *outDisplayList, be_val<uint32_t> *outSize
 }
 
 void
-GX2DirectCallDisplayList(void *displayList, uint32_t size)
+GX2DirectCallDisplayList(void *displayList, uint32_t bytes)
 {
    GX2Flush();
-   gpu::queueUserBuffer(displayList, size);
+   gpu::queueUserBuffer(displayList, bytes);
 }
 
 void
-GX2CallDisplayList(void *displayList, uint32_t size)
+GX2CallDisplayList(void *displayList, uint32_t bytes)
 {
-   pm4::write(pm4::IndirectBufferCall { displayList, size / 4 });
+   pm4::write(pm4::IndirectBufferCall { displayList, bytes / 4 });
 }
 
 void
-GX2CopyDisplayList(void *displayList, uint32_t size)
+GX2CopyDisplayList(void *displayList, uint32_t bytes)
 {
    // Copy the display list to the current command buffer
-   auto words = size / 4;
+   auto words = bytes / 4;
    auto dst = gx2::internal::getCommandBuffer(words);
-   memcpy(&dst->buffer[dst->curSize], displayList, size);
+   memcpy(&dst->buffer[dst->curSize], displayList, bytes);
    dst->curSize += words;
 }

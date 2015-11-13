@@ -1,6 +1,7 @@
 #include "gpu/pm4.h"
 #include "gx2_cbpool.h"
 #include "gx2_displaylist.h"
+#include "gx2_event.h"
 #include "gx2_state.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"
@@ -57,12 +58,15 @@ GX2Init(be_val<uint32_t> *attributes)
       cbPoolBase = reinterpret_cast<uint32_t*>((*pMEMAllocFromDefaultHeapEx)(cbPoolSize, 0x100));
    }
 
+   // Init event handler stuff (vsync, flips, etc)
+   gx2::internal::initEvents();
+
    // Initialise command buffer pools
    gx2::internal::initCommandBufferPool(cbPoolBase, cbPoolSize, cbPoolItemSize);
 
    // Start driver
    gDriver = new gpu::opengl::Driver();
-   gDriver->run();
+   gDriver->start();
 }
 
 void

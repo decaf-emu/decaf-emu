@@ -1,5 +1,6 @@
 #pragma once
 #include <array_view.h>
+#include <thread>
 #include "gpu/pm4.h"
 
 namespace gpu
@@ -11,6 +12,7 @@ namespace opengl
 class Driver
 {
 public:
+   void start();
    void run();
 
 private:
@@ -26,6 +28,7 @@ private:
 private:
    volatile bool mRunning = true;
    uint32_t mRegisters[0x10000];
+   std::thread mThread;
 };
 
 } // namespace opengl

@@ -14,7 +14,7 @@ namespace opengl
 void Driver::setContextReg(pm4::SetContextReg &data)
 {
    // Copy to local register store
-   auto *dst = &mRegisters[data.id];
+   auto *dst = &mRegisters[data.id / 4];
    memcpy(dst, data.values.data(), data.values.size() * sizeof(uint32_t));
 
    // Shadow in memory
@@ -54,6 +54,12 @@ void Driver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> da
    }
 }
 
+void Driver::start()
+{
+   mRunning = true;
+   mThread = std::thread(&Driver::run, this);
+}
+
 void Driver::run()
 {
    while (mRunning) {
@@ -61,14 +67,14 @@ void Driver::run()
 
       for (auto pos = 0u; pos < buffer->curSize; ) {
          auto header = *reinterpret_cast<pm4::PacketHeader *>(&buffer->buffer[pos]);
-         auto size = 1u;
+         auto size = 0u;
 
          switch (header.type) {
          case pm4::PacketType::Type3:
          {
             auto header3 = pm4::Packet3 { header.value };
-            size = header3.size;
-            handlePacketType3(header3, { &buffer->buffer[pos], size });
+            size = header3.size + 1;
+            //handlePacketType3(header3, { &buffer->buffer[pos + 1], size });
             break;
          }
          case pm4::PacketType::Type0:
@@ -78,7 +84,7 @@ void Driver::run()
             throw std::logic_error("What the fuck son");
          }
 
-         pos += size;
+         pos += size + 1;
       }
 
       gpu::retireCommandBuffer(buffer);

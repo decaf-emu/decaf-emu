@@ -19,15 +19,15 @@ public:
       mSaveSize = mBuffer->curSize;
 
       auto header = reinterpret_cast<Packet3 *>(&mBuffer->buffer[mBuffer->curSize++]);
+      header->value = 0;
       header->type = PacketType::Type3;
       header->opcode = opCode;
-      header->size = 0;
    }
 
    ~PacketWriter()
    {
       auto header = reinterpret_cast<Packet3 *>(&mBuffer->buffer[mSaveSize]);
-      header->size = mBuffer->curSize - mSaveSize;
+      header->size = (mBuffer->curSize - mSaveSize) - 2;
    }
 
    // Write one word
@@ -48,11 +48,12 @@ public:
    }
 
    // Write a list of words
-   PacketWriter &operator()(gsl::array_view<uint32_t> values)
+   template<typename Type>
+   PacketWriter &operator()(gsl::array_view<Type> values)
    {
-      auto size = gsl::narrow_cast<uint32_t>(values.size());
+      auto size = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
       checkSize(size);
-      memcpy(&mBuffer->buffer[mBuffer->curSize], values.data(), values.size() * sizeof(uint32_t));
+      memcpy(&mBuffer->buffer[mBuffer->curSize], values.data(), size * sizeof(uint32_t));
       mBuffer->curSize += size;
       return *this;
    }
@@ -62,7 +63,7 @@ public:
    PacketWriter &reg(Type value, latte::Register::Value base)
    {
       checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = (static_cast<uint32_t>(value) - static_cast<uint32_t>(base)) >> 2;
+      mBuffer->buffer[mBuffer->curSize++] = (static_cast<uint32_t>(value) - static_cast<uint32_t>(base)) / 4;
       return *this;
    }
 

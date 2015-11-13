@@ -111,22 +111,26 @@ pm4::Buffer *
 getCommandBuffer(uint32_t size)
 {
    auto core = OSGetCoreId();
-   auto buffer = gActiveBuffer[core];
+   auto &active = gActiveBuffer[core];
 
-   if (!buffer) {
-      buffer = allocateCommandBuffer();
-   } else if (buffer->curSize + size > buffer->maxSize) {
-      buffer = flushCommandBuffer(buffer);
+   if (!active) {
+      active = allocateCommandBuffer();
+   } else if (active->curSize + size > active->maxSize) {
+      active = flushCommandBuffer(active);
    }
 
-   return buffer;
+   return active;
 }
 
 void
 setUserCommandBuffer(pm4::Buffer *buffer)
 {
    auto core = OSGetCoreId();
-   buffer->userBuffer = true;
+
+   if (buffer) {
+      buffer->userBuffer = true;
+   }
+
    gActiveBuffer[core] = buffer;
 }
 

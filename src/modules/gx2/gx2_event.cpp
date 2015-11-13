@@ -128,7 +128,7 @@ namespace internal
 
 
 void
-initVsync()
+initEvents()
 {
    gVsyncThreadQueue = OSAllocFromSystem<OSThreadQueue>();
    gVsyncAlarm = OSAllocFromSystem<OSAlarm>();

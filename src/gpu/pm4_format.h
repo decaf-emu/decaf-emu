@@ -115,8 +115,8 @@ union PacketHeader
 
    struct
    {
-      PacketType::Value type : 2;
       uint32_t : 30;
+      PacketType::Value type : 2;
    };
 };
 
@@ -126,9 +126,9 @@ union Packet0
 
    struct
    {
-      PacketType::Value type : 2;
-      uint32_t count : 14;
       uint32_t baseIndex : 16;
+      uint32_t count : 14;
+      PacketType::Value type : 2;
    };
 };
 
@@ -138,8 +138,8 @@ union Packet2
 
    struct
    {
-      PacketType::Value type : 2;
       uint32_t : 30;
+      PacketType::Value type : 2;
    };
 };
 
@@ -149,11 +149,11 @@ union Packet3
 
    struct
    {
-      PacketType::Value type : 2;
-      uint32_t size : 14;
-      Opcode3::Value opcode : 8;
-      uint32_t : 7;
       uint32_t predicate : 1;
+      uint32_t : 7;
+      Opcode3::Value opcode : 8;
+      uint32_t size : 14;
+      PacketType::Value type : 2;
    };
 };
 
