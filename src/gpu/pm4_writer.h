@@ -95,7 +95,7 @@ private:
 
       if (oldSize > mSaveSize) {
          memcpy(&newBuffer->buffer[newBuffer->curSize], &oldBuffer->buffer[mSaveSize], oldSize - mSaveSize);
-         newBuffer->curSize = oldBuffer->curSize - mSaveSize;
+         newBuffer->curSize = oldSize - mSaveSize;
       }
 
       mBuffer->curSize = mSaveSize;

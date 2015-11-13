@@ -140,6 +140,6 @@ setUserCommandBuffer(pm4::Buffer *buffer)
    gActiveBuffer[core] = buffer;
 }
 
-}
+} // namespace internal
 
-}
+} // namespace gx2
