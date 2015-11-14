@@ -11,6 +11,9 @@ struct IndexMapEntry
    latte::SQ_CHAN chan;
 };
 
+static const auto
+FetchesPerControlFlow = 16u;
+
 static uint32_t
 GX2FetchInstsPerAttrib(GX2FetchShaderType::Value type);
 
@@ -144,7 +147,7 @@ GX2FSCalcNumAluInsts(GX2FetchShaderType::Value type, GX2TessellationMode::Value 
 uint32_t
 GX2FSCalcNumFetchCFInsts(uint32_t fetches)
 {
-   return (fetches + (latte::BytesPerVTX - 1)) / latte::BytesPerVTX;
+   return (fetches + (FetchesPerControlFlow - 1)) / FetchesPerControlFlow;
 }
 
 uint32_t
@@ -232,8 +235,12 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
             someTessVar2 = attrib.location;
          }
       } else {
+         // Semantic vertex fetch
          vfetch.word0.VTX_INST = latte::SQ_VTX_INST_SEMANTIC;
+
+         // Setup source
          vfetch.word0.BUFFER_ID = attrib.buffer - 96; // TODO: Why -96?? Is this correct??
+         vfetch.word2.OFFSET = attribs[i].offset;
 
          if (attrib.type) {
             if (attrib.type == GX2AttribIndexType::PerInstance) {
@@ -263,13 +270,17 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
             vfetch.word0.SRC_SEL_X = static_cast<latte::SQ_SEL>(indexMap[0].chan);
          }
 
-         vfetch.word0.MEGA_FETCH_COUNT = GX2GetAttribFormatBytes(attrib.format) - 1;
-
-         vfetch.word1.DATA_FORMAT = GX2GetAttribFormatDataFormat(attrib.format);
+         // Setup dest
+         vfetch.gpr.DST_GPR = attrib.location;
          vfetch.word1.DST_SEL_W = static_cast<latte::SQ_SEL>(attrib.mask & 0x7);
          vfetch.word1.DST_SEL_Z = static_cast<latte::SQ_SEL>((attrib.mask >> 8) & 0x7);
          vfetch.word1.DST_SEL_Y = static_cast<latte::SQ_SEL>((attrib.mask >> 16) & 0x7);
          vfetch.word1.DST_SEL_X = static_cast<latte::SQ_SEL>((attrib.mask >> 24) & 0x7);
+
+         // Setup format
+         vfetch.word2.MEGA_FETCH = 1;
+         vfetch.word0.MEGA_FETCH_COUNT = GX2GetAttribFormatBytes(attrib.format) - 1;
+         vfetch.word1.DATA_FORMAT = GX2GetAttribFormatDataFormat(attrib.format);
 
          if (attribs[i].format & GX2AttribFormatFlags::SCALED) {
             vfetch.word1.NUM_FORMAT_ALL = latte::SQ_NUM_FORMAT_SCALED;
@@ -278,8 +289,6 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          } else if (attribs[i].format) {
             vfetch.word1.NUM_FORMAT_ALL = latte::SQ_NUM_FORMAT_NORM;
          }
-
-         vfetch.gpr.DST_GPR = attrib.location;
 
          if (attribs[i].format & GX2AttribFormatFlags::SIGNED) {
             vfetch.word1.FORMAT_COMP_ALL = latte::SQ_FORMAT_COMP_SIGNED;
@@ -291,12 +300,10 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
             vfetch.word2.ENDIAN_SWAP = static_cast<latte::SQ_ENDIAN>(attribs[i].endianSwap & 3);
          }
 
-         vfetch.word2.OFFSET = attribs[i].offset;
-         vfetch.word2.MEGA_FETCH = 1;
-
          // Append to program
          *(vfetches++) = vfetch;
 
+         // Add extra tesselation vertex fetches
          if (type != GX2FetchShaderType::NoTesselation && attrib.type != GX2AttribIndexType::PerInstance) {
             auto perAttrib = GX2FetchInstsPerAttrib(type);
 
@@ -315,9 +322,20 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
       }
    }
 
-   // TODO: Tesellation stuff
+   if (type != GX2FetchShaderType::NoTesselation) {
+      // TODO: _GX2FSGenTessAluOps
+   }
 
-   // TODO: Generate a VTX CF per 16 VFETCH
+   // Generate a VTX CF per 16 VFETCH
+   auto fetches = GX2FSCalcNumFetchInsts(attribCount, type);
+
+   if (fetches) {
+      auto cfCount = GX2FSCalcNumFetchCFInsts(fetches);
+
+      for (auto i = 0u; i < cfCount; ++i) {
+         // TODO
+      }
+   }
 
    // TODO: Append a EOP
 }
