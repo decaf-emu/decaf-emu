@@ -1232,6 +1232,39 @@
     <ClInclude Include="..\src\gpu\driver\display.h">
       <Filter>Header Files\gpu\driver</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_enum_sq.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_registers_sq.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_registers_cb.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_enum_cb.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_enum_db.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_registers_db.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_registers_vgt.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_enum_vgt.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_enum_spi.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_registers_spi.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_registers_pa.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
