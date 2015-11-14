@@ -33,7 +33,7 @@ void
 GX2SetBlendConstantColorReg(GX2BlendConstantColorReg *reg)
 {
    auto values = reinterpret_cast<uint32_t*>(&reg->red);
-   pm4::write(pm4::SetContextReg { latte::Register::BlendColorRed, { values, 4 } });
+   pm4::write(pm4::SetContextRegs { latte::Register::CB_BLEND_RED, { values, 4 } });
 }
 
 
@@ -63,13 +63,13 @@ GX2InitBlendControlReg(GX2BlendControlReg *reg,
                        GX2BlendCombineMode::Value alphaCombine)
 {
    reg->target = target;
-   reg->value.colorSrcBlend = static_cast<latte::BLEND_FUNC>(colorSrcBlend);
-   reg->value.colorDstBlend = static_cast<latte::BLEND_FUNC>(colorDstBlend);
-   reg->value.colorCombine = static_cast<latte::COMB_FUNC>(colorCombine);
-   reg->value.useAlphaBlend = useAlphaBlend;
-   reg->value.alphaSrcBlend = static_cast<latte::BLEND_FUNC>(alphaSrcBlend);
-   reg->value.alphaDstBlend = static_cast<latte::BLEND_FUNC>(alphaDstBlend);
-   reg->value.alphaCombine = static_cast<latte::COMB_FUNC>(alphaCombine);
+   reg->cb_blend_control.COLOR_SRCBLEND = static_cast<latte::BLEND_FUNC>(colorSrcBlend);
+   reg->cb_blend_control.COLOR_DESTBLEND = static_cast<latte::BLEND_FUNC>(colorDstBlend);
+   reg->cb_blend_control.COLOR_COMB_FCN = static_cast<latte::COMB_FUNC>(colorCombine);
+   reg->cb_blend_control.SEPARATE_ALPHA_BLEND = useAlphaBlend;
+   reg->cb_blend_control.ALPHA_SRCBLEND = static_cast<latte::BLEND_FUNC>(alphaSrcBlend);
+   reg->cb_blend_control.ALPHA_DESTBLEND = static_cast<latte::BLEND_FUNC>(alphaDstBlend);
+   reg->cb_blend_control.ALPHA_COMB_FCN = static_cast<latte::COMB_FUNC>(alphaCombine);
 }
 
 void
@@ -98,8 +98,8 @@ GX2SetBlendControl(GX2RenderTarget::Value target,
 void
 GX2SetBlendControlReg(GX2BlendControlReg *reg)
 {
-   auto id = static_cast<latte::Register::Value>(latte::Register::Blend0Control + reg->target);
-   pm4::write(pm4::SetContextReg { id, { &reg->value.value, 1 } });
+   auto id = static_cast<latte::Register::Value>(latte::Register::CB_BLEND0_CONTROL + reg->target);
+   pm4::write(pm4::SetContextReg { id, reg->cb_blend_control.value });
 }
 
 void
@@ -118,19 +118,19 @@ GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                               GX2StencilFunction::Value backStencilZFail,
                               GX2StencilFunction::Value backStencilFail)
 {
-   reg->value.depthTest = depthTest;
-   reg->value.depthWrite = depthWrite;
-   reg->value.depthCompare = static_cast<latte::FRAG_FUNC>(depthCompare);
-   reg->value.stencilTest = stencilTest;
-   reg->value.backfaceStencil = backfaceStencil;
-   reg->value.frontStencilFunc = static_cast<latte::REF_FUNC>(frontStencilFunc);
-   reg->value.frontStencilZPass = static_cast<latte::STENCIL_FUNC>(frontStencilZPass);
-   reg->value.frontStencilZFail = static_cast<latte::STENCIL_FUNC>(frontStencilZFail);
-   reg->value.frontStencilFail = static_cast<latte::STENCIL_FUNC>(frontStencilFail);
-   reg->value.backStencilFunc = static_cast<latte::REF_FUNC>(backStencilFunc);
-   reg->value.backStencilZPass = static_cast<latte::STENCIL_FUNC>(backStencilZPass);
-   reg->value.backStencilZFail = static_cast<latte::STENCIL_FUNC>(backStencilZFail);
-   reg->value.backStencilFail = static_cast<latte::STENCIL_FUNC>(backStencilFail);
+   reg->db_depth_control.Z_ENABLE = depthTest;
+   reg->db_depth_control.Z_WRITE_ENABLE = depthWrite;
+   reg->db_depth_control.ZFUNC = static_cast<latte::FRAG_FUNC>(depthCompare);
+   reg->db_depth_control.STENCIL_ENABLE = stencilTest;
+   reg->db_depth_control.BACKFACE_ENABLE = backfaceStencil;
+   reg->db_depth_control.STENCILFUNC = static_cast<latte::REF_FUNC>(frontStencilFunc);
+   reg->db_depth_control.STENCILZPASS = static_cast<latte::STENCIL_FUNC>(frontStencilZPass);
+   reg->db_depth_control.STENCILZFAIL = static_cast<latte::STENCIL_FUNC>(frontStencilZFail);
+   reg->db_depth_control.STENCILFAIL = static_cast<latte::STENCIL_FUNC>(frontStencilFail);
+   reg->db_depth_control.STENCILFUNC_BF = static_cast<latte::REF_FUNC>(backStencilFunc);
+   reg->db_depth_control.STENCILZPASS_BF = static_cast<latte::STENCIL_FUNC>(backStencilZPass);
+   reg->db_depth_control.STENCILZFAIL_BF = static_cast<latte::STENCIL_FUNC>(backStencilZFail);
+   reg->db_depth_control.STENCILFAIL_BF = static_cast<latte::STENCIL_FUNC>(backStencilFail);
 }
 
 void
@@ -169,11 +169,11 @@ GX2SetDepthStencilControl(BOOL depthTest,
 void
 GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg)
 {
-   pm4::write(pm4::SetContextReg { latte::Register::DepthControl, { &reg->value.value, 1 } });
+   pm4::write(pm4::SetContextReg { latte::Register::DB_DEPTH_CONTROL, reg->db_depth_control.value });
 }
 
 void
 GX2SetPrimitiveRestartIndex(uint32_t index)
 {
-   pm4::write(pm4::SetContextReg { latte::Register::PrimitiveResetIndex, { &index, 1 } });
+   pm4::write(pm4::SetContextReg { latte::Register::VGT_MULTI_PRIM_IB_RESET_INDX, index });
 }

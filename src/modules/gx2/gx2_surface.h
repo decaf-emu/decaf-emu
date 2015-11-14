@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "gpu/latte_registers.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
@@ -81,11 +82,27 @@ struct GX2ColorBuffer
    be_val<uint32_t> viewMip;
    be_val<uint32_t> viewFirstSlice;
    be_val<uint32_t> viewNumSlices;
-   UNKNOWN(28);
+   be_ptr<void> aaBuffer;
+   be_val<uint32_t> aaSize;
+   struct
+   {
+      latte::CB_COLORN_SIZE cb_color_size;
+      latte::CB_COLORN_INFO cb_color_info;
+      latte::CB_COLORN_VIEW cb_color_view;
+      latte::CB_COLORN_MASK cb_color_mask;
+      uint32_t cmask_offset;
+   } regs;
 };
 CHECK_OFFSET(GX2ColorBuffer, 0x74, viewMip);
 CHECK_OFFSET(GX2ColorBuffer, 0x78, viewFirstSlice);
 CHECK_OFFSET(GX2ColorBuffer, 0x7C, viewNumSlices);
+CHECK_OFFSET(GX2ColorBuffer, 0x80, aaBuffer);
+CHECK_OFFSET(GX2ColorBuffer, 0x84, aaSize);
+CHECK_OFFSET(GX2ColorBuffer, 0x88, regs.cb_color_size);
+CHECK_OFFSET(GX2ColorBuffer, 0x8C, regs.cb_color_info);
+CHECK_OFFSET(GX2ColorBuffer, 0x90, regs.cb_color_view);
+CHECK_OFFSET(GX2ColorBuffer, 0x94, regs.cb_color_mask);
+CHECK_OFFSET(GX2ColorBuffer, 0x98, regs.cmask_offset);
 CHECK_SIZE(GX2ColorBuffer, 0x9C);
 
 #pragma pack(pop)
@@ -97,7 +114,7 @@ void
 GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer, be_val<uint32_t> *outSize, be_val<uint32_t> *outAlignment);
 
 void
-GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, uint32_t unk1);
+GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget::Value target);
 
 void
 GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer);

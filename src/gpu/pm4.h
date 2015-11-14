@@ -75,6 +75,21 @@ struct SetConfigReg
    static const auto Opcode = Opcode3::SET_CONFIG_REG;
 
    latte::Register::Value id;
+   uint32_t value;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.reg(id, latte::Register::ConfigRegisterBase);
+      se(value);
+   }
+};
+
+struct SetConfigRegs
+{
+   static const auto Opcode = Opcode3::SET_CONFIG_REG;
+
+   latte::Register::Value id;
    gsl::array_view<uint32_t> values;
 
    template<typename Serialiser>
@@ -90,6 +105,21 @@ struct SetContextReg
    static const auto Opcode = Opcode3::SET_CONTEXT_REG;
 
    latte::Register::Value id;
+   uint32_t value;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.reg(id, latte::Register::ContextRegisterBase);
+      se(value);
+   }
+};
+
+struct SetContextRegs
+{
+   static const auto Opcode = Opcode3::SET_CONTEXT_REG;
+
+   latte::Register::Value id;
    gsl::array_view<uint32_t> values;
 
    template<typename Serialiser>
@@ -101,6 +131,21 @@ struct SetContextReg
 };
 
 struct SetControlConstant
+{
+   static const auto Opcode = Opcode3::SET_CTL_CONST;
+
+   uint32_t id;
+   uint32_t value;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.reg(id, latte::Register::ControlRegisterBase);
+      se(value);
+   }
+};
+
+struct SetControlConstants
 {
    static const auto Opcode = Opcode3::SET_CTL_CONST;
 

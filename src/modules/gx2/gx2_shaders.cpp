@@ -38,6 +38,36 @@ GX2SetFetchShader(GX2FetchShader *shader)
 void
 GX2SetVertexShader(GX2VertexShader *shader)
 {
+/*
+if (shader->shaderMode != GEOMETRY_SHADER) {
+  SET_CONTEXT_REG 0x216, { EFFECTIVE_ADDRESS(shader->data) >> 8, shader->size >> 3, 0x10, 0x10, shader->_regs[0] } 0x28858:SQ_PGM_START_VS
+  SET_CONTEXT_REG 0x2A1, { shader->_regs[1] } 0x28a84:VGT_PRIMITIVEID_EN
+  SET_CONTEXT_REG 0x1B1, { shader->_regs[2] } 0x286c4:SPI_VS_OUT_CONFIG
+  SET_CONTEXT_REG 0x207, { shader->_regs[14] } 0x2881c:PA_CL_VS_OUT_CNTL
+  if (shader->_regs[3] > 0) {
+    SET_CONTEXT_REG 0x185, { FOR(i < MIN(shader->_regs[3], 0xA)) -> shader->_regs[4+i] }
+  }
+  SET_CONTEXT_REG 0x234, { 0x0 }
+  if (shader->hasStreamOut) {
+    _GX2WriteStreamOutStride(&shader->streamOutVertexStride)
+  }
+  SET_CONTEXT_REG 0x2C8, { shader._regs[49] }
+} else {
+  SET_CONTEXT_REG 0x216, { EFFECTIVE_ADDRESS(shader->data) >> 8, shader->size >> 3, 0x10, 0x10, shader->_regs[0] }
+  SET_CONTEXT_REG 0x22A, { shader->ringItemsize }
+}
+
+SET_CONTEXT_REG 0x238, { shader->_regs[15] }
+if (shader->_regs[16] > 0) {
+  SET_CONTEXT_REG 0xE0, { FOR(i < MIN(shader->_regs[16], 0x20)) -> shader->_regs[17+i] }
+}
+SET_CONTEXT_REG 0x316, { shader->_regs[50] }
+SET_CONTEXT_REG 0x288, { shader->_regs[51] }
+
+if (shader->_numLoops > 0) {
+  _GX2SetVertexLoopVar(shader->_loopVars, shader->_loopVars + (shader->_numLoops << 3));
+}
+*/
 }
 
 void

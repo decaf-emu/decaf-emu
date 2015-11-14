@@ -651,6 +651,9 @@
     <ClCompile Include="..\src\modules\gx2\gx2_clear.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gpu\driver\display.cpp">
+      <Filter>Source Files\gpu\driver</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1224,6 +1227,9 @@
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\driver\commandqueue.h">
+      <Filter>Header Files\gpu\driver</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\driver\display.h">
       <Filter>Header Files\gpu\driver</Filter>
     </ClInclude>
   </ItemGroup>

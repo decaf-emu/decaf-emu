@@ -11,7 +11,7 @@ namespace gpu
 namespace opengl
 {
 
-void Driver::setContextReg(pm4::SetContextReg &data)
+void Driver::setContextReg(pm4::SetContextRegs &data)
 {
    // Copy to local register store
    auto *dst = &mRegisters[data.id / 4];
@@ -21,24 +21,18 @@ void Driver::setContextReg(pm4::SetContextReg &data)
 
    // Perform OpenGL operation
    switch (data.id) {
-   case latte::Register::BlendControl:
+   case latte::Register::CB_BLEND_CONTROL:
+      //gl::glBlendFunc(src, dst);
       break;
-   case latte::Register::Blend0Control:
-      //gl::glBlendFunci(0, src, dst);
-      break;
-   case latte::Register::Blend1Control:
-      break;
-   case latte::Register::Blend2Control:
-      break;
-   case latte::Register::Blend3Control:
-      break;
-   case latte::Register::Blend4Control:
-      break;
-   case latte::Register::Blend5Control:
-      break;
-   case latte::Register::Blend6Control:
-      break;
-   case latte::Register::Blend7Control:
+   case latte::Register::CB_BLEND0_CONTROL:
+   case latte::Register::CB_BLEND1_CONTROL:
+   case latte::Register::CB_BLEND2_CONTROL:
+   case latte::Register::CB_BLEND3_CONTROL:
+   case latte::Register::CB_BLEND4_CONTROL:
+   case latte::Register::CB_BLEND5_CONTROL:
+   case latte::Register::CB_BLEND6_CONTROL:
+   case latte::Register::CB_BLEND7_CONTROL:
+      //gl::glBlendFunci(data.id - latte::Register::CB_BLEND0_CONTROL, src, dst);
       break;
    }
 }
@@ -49,7 +43,7 @@ void Driver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> da
 
    switch (header.opcode) {
    case pm4::Opcode3::SET_CONTEXT_REG:
-      setContextReg(pm4::read<pm4::SetContextReg>(reader));
+      setContextReg(pm4::read<pm4::SetContextRegs>(reader));
       break;
    }
 }

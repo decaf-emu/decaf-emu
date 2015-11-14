@@ -120,6 +120,7 @@
     <ClCompile Include="..\src\elf.cpp" />
     <ClCompile Include="..\src\fuzztests.cpp" />
     <ClCompile Include="..\src\gpu\driver\commandqueue.cpp" />
+    <ClCompile Include="..\src\gpu\driver\display.cpp" />
     <ClCompile Include="..\src\gpu\driver\opengl\opengl_driver.cpp" />
     <ClCompile Include="..\src\gpu\gfd.cpp" />
     <ClCompile Include="..\src\gpu\hlsl\hlsl_alu.cpp" />
@@ -281,6 +282,7 @@
     <ClInclude Include="..\src\filesystem\filesystem_win_path.h" />
     <ClInclude Include="..\src\fuzztests.h" />
     <ClInclude Include="..\src\gpu\driver\commandqueue.h" />
+    <ClInclude Include="..\src\gpu\driver\display.h" />
     <ClInclude Include="..\src\gpu\driver\opengl\opengl_driver.h" />
     <ClInclude Include="..\src\gpu\gfd.h" />
     <ClInclude Include="..\src\gpu\hlsl\hlsl.h" />

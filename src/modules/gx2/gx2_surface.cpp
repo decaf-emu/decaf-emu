@@ -2,6 +2,7 @@
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
 #include "gpu/latte_untile.h"
+#include "gpu/pm4_writer.h"
 #include "utils/log.h"
 #include "utils/align.h"
 
@@ -89,8 +90,28 @@ GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer,
 }
 
 void
-GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, uint32_t unk1)
+GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget::Value target)
 {
+   using namespace latte::Register;
+   uint32_t addr256, aaAddr256;
+   auto reg = [](unsigned id) { return static_cast<latte::Register::Value>(id); };
+
+   addr256 = colorBuffer->surface.image.getAddress() >> 8;
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_BASE + target), addr256 });
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_SIZE + target), colorBuffer->regs.cb_color_size.value });
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_INFO + target), colorBuffer->regs.cb_color_info.value });
+
+   if (colorBuffer->surface.aa != 0) {
+      aaAddr256 = colorBuffer->aaBuffer.getAddress() >> 8;
+   } else {
+      aaAddr256 = 0;
+   }
+
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_TILE + target), aaAddr256 });
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_FRAG + target), aaAddr256 });
+
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_VIEW + target), colorBuffer->regs.cb_color_view.value });
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_MASK + target), colorBuffer->regs.cb_color_mask.value });
 }
 
 void
@@ -101,6 +122,7 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
 void
 GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
 {
+   // FUCK
 }
 
 void

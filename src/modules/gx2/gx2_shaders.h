@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "gpu/latte_registers.h"
 #include "modules/gx2/gx2_enum.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
@@ -8,12 +9,19 @@
 
 struct GX2FetchShader
 {
-   UNKNOWN(8);
+   UNKNOWN(4);
+
+   struct
+   {
+      latte::SQ_PGM_RESOURCES_FS sq_pgm_resources_fs;
+   } regs;
+
    be_val<uint32_t> size;
    be_ptr<uint8_t> data;
    be_val<uint32_t> attribCount;
    UNKNOWN(12);
 };
+CHECK_OFFSET(GX2FetchShader, 0x4, regs.sq_pgm_resources_fs);
 CHECK_OFFSET(GX2FetchShader, 0x8, size);
 CHECK_OFFSET(GX2FetchShader, 0xc, data);
 CHECK_OFFSET(GX2FetchShader, 0x10, attribCount);
@@ -49,7 +57,22 @@ struct GX2SamplerVar;
 
 struct GX2VertexShader
 {
-   UNKNOWN(208);
+   struct
+   {
+      latte::SQ_PGM_RESOURCES_VS sq_pgm_resources_vs;
+      latte::VGT_PRIMITIVEID_EN vgt_primitiveid_en;
+      latte::SPI_VS_OUT_CONFIG spi_vs_out_config;
+      uint32_t num_spi_vs_out_id;
+      latte::SPI_VS_OUT_ID spi_vs_out_id[10];
+      latte::PA_CL_VS_OUT_CNTL pa_cl_vs_out_cntl;
+      latte::SQ_VTX_SEMANTIC_CLEAR sq_vtx_semantic_clear;
+      uint32_t num_sq_vtx_semantic;
+      latte::SQ_VTX_SEMANTIC_N sq_vtx_semantic[32];
+      latte::VGT_STRMOUT_BUFFER_EN vgt_strmout_buffer_en;
+      latte::VGT_VERTEX_REUSE_BLOCK_CNTL vgt_vertex_reuse_block_cntl;
+      latte::VGT_HOS_REUSE_DEPTH vgt_hos_reuse_depth;
+   } regs;
+
    be_val<uint32_t> size;
    be_ptr<uint8_t> data;
    be_val<GX2ShaderMode::Value> mode;
@@ -74,6 +97,7 @@ struct GX2VertexShader
 
    UNKNOWN(4 * 10);
 };
+CHECK_OFFSET(GX2VertexShader, 0x0, regs);
 CHECK_OFFSET(GX2VertexShader, 0xd0, size);
 CHECK_OFFSET(GX2VertexShader, 0xd4, data);
 CHECK_OFFSET(GX2VertexShader, 0xd8, mode);
@@ -87,7 +111,20 @@ CHECK_SIZE(GX2VertexShader, 0x134);
 
 struct GX2PixelShader
 {
-   UNKNOWN(164);
+   struct
+   {
+      latte::SQ_PGM_RESOURCES_PS sq_pgm_resources_ps;
+      latte::SQ_PGM_EXPORTS_PS pgm_exports_ps;
+      latte::SPI_PS_IN_CONTROL_0 spi_ps_in_control_0;
+      latte::SPI_PS_IN_CONTROL_1 spi_ps_in_control_1;
+      uint32_t num_spi_ps_input_cntl;
+      latte::SPI_PS_INPUT_CNTL_N spi_ps_input_cntls[32];
+      latte::CB_SHADER_MASK cb_shader_mask;
+      latte::CB_SHADER_CONTROL cb_shader_control;
+      latte::DB_SHADER_CONTROL db_shader_control;
+      latte::SPI_INPUT_Z spi_input_z;
+   } regs;
+
    be_val<uint32_t> size;
    be_ptr<uint8_t> data;
    be_val<GX2ShaderMode::Value> mode;
@@ -112,15 +149,25 @@ struct GX2PixelShader
    be_val<uint32_t> unk5;
    be_val<uint32_t> unk6;
 };
-CHECK_OFFSET(GX2PixelShader, 0xa4, size);
-CHECK_OFFSET(GX2PixelShader, 0xa8, data);
-CHECK_OFFSET(GX2PixelShader, 0xac, mode);
-CHECK_OFFSET(GX2PixelShader, 0xb0, uniformBlockCount);
-CHECK_OFFSET(GX2PixelShader, 0xb4, uniformBlocks);
-CHECK_OFFSET(GX2PixelShader, 0xb8, uniformVarCount);
-CHECK_OFFSET(GX2PixelShader, 0xbc, uniformVars);
-CHECK_OFFSET(GX2PixelShader, 0xd0, samplerVarCount);
-CHECK_OFFSET(GX2PixelShader, 0xd4, samplerVars);
+CHECK_OFFSET(GX2PixelShader, 0x00, regs.sq_pgm_resources_ps);
+CHECK_OFFSET(GX2PixelShader, 0x04, regs.pgm_exports_ps);
+CHECK_OFFSET(GX2PixelShader, 0x08, regs.spi_ps_in_control_0);
+CHECK_OFFSET(GX2PixelShader, 0x0C, regs.spi_ps_in_control_1);
+CHECK_OFFSET(GX2PixelShader, 0x10, regs.num_spi_ps_input_cntl);
+CHECK_OFFSET(GX2PixelShader, 0x14, regs.spi_ps_input_cntls);
+CHECK_OFFSET(GX2PixelShader, 0x94, regs.cb_shader_mask);
+CHECK_OFFSET(GX2PixelShader, 0x98, regs.cb_shader_control);
+CHECK_OFFSET(GX2PixelShader, 0x9C, regs.db_shader_control);
+CHECK_OFFSET(GX2PixelShader, 0xA0, regs.spi_input_z);
+CHECK_OFFSET(GX2PixelShader, 0xA4, size);
+CHECK_OFFSET(GX2PixelShader, 0xA8, data);
+CHECK_OFFSET(GX2PixelShader, 0xAc, mode);
+CHECK_OFFSET(GX2PixelShader, 0xB0, uniformBlockCount);
+CHECK_OFFSET(GX2PixelShader, 0xB4, uniformBlocks);
+CHECK_OFFSET(GX2PixelShader, 0xB8, uniformVarCount);
+CHECK_OFFSET(GX2PixelShader, 0xBc, uniformVars);
+CHECK_OFFSET(GX2PixelShader, 0xD0, samplerVarCount);
+CHECK_OFFSET(GX2PixelShader, 0xD4, samplerVars);
 CHECK_SIZE(GX2PixelShader, 0xe8);
 
 struct GX2GeometryShader;

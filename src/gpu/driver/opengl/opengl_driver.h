@@ -17,7 +17,7 @@ public:
 
 private:
    void handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data);
-   void setContextReg(pm4::SetContextReg &data);
+   void setContextReg(pm4::SetContextRegs &data);
 
    template<typename Type>
    Type *getRegister(latte::Register::Value id)

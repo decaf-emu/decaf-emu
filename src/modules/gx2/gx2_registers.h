@@ -11,11 +11,11 @@ struct GX2DepthBuffer;
 struct GX2BlendControlReg
 {
    GX2RenderTarget::Value target;
-   latte::CB_BLEND_CONTROL value;
+   latte::CB_BLENDN_CONTROL cb_blend_control;
 };
 CHECK_SIZE(GX2BlendControlReg, 8);
 CHECK_OFFSET(GX2BlendControlReg, 0, target);
-CHECK_OFFSET(GX2BlendControlReg, 4, value);
+CHECK_OFFSET(GX2BlendControlReg, 4, cb_blend_control);
 
 struct GX2BlendConstantColorReg
 {
@@ -32,10 +32,10 @@ CHECK_OFFSET(GX2BlendConstantColorReg, 0x0c, alpha);
 
 struct GX2DepthStencilControlReg
 {
-   latte::DB_DEPTH_CONTROL value;
+   latte::DB_DEPTH_CONTROL db_depth_control;
 };
 CHECK_SIZE(GX2DepthStencilControlReg, 4);
-CHECK_OFFSET(GX2DepthStencilControlReg, 0, value);
+CHECK_OFFSET(GX2DepthStencilControlReg, 0, db_depth_control);
 
 #pragma pack(pop)
 
