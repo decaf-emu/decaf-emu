@@ -274,7 +274,7 @@ GX2DebugDumpShader(GX2FetchShader *shader)
    out << "GX2FetchShader:\n"
       << "  size: " << shader->size << "\n";
 
-   GX2DebugDumpShader("shader_fetch_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
+   GX2DebugDumpShader("shader_fetch_" + GX2PointerAsString(shader), out.str(), reinterpret_cast<uint8_t *>(shader->data.get()), shader->size);
 }
 
 void

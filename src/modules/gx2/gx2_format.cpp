@@ -1,6 +1,125 @@
 #include "gx2_format.h"
 #include "gpu/latte_untile.h"
 
+size_t
+GX2GetAttribFormatBytes(GX2AttribFormat::Value format)
+{
+   switch (format & 0x1f) {
+   case GX2AttribFormatType::TYPE_8:
+   case GX2AttribFormatType::TYPE_4_4:
+      return 1;
+   case GX2AttribFormatType::TYPE_16:
+   case GX2AttribFormatType::TYPE_16_FLOAT:
+   case GX2AttribFormatType::TYPE_8_8:
+      return 2;
+   case GX2AttribFormatType::TYPE_32:
+   case GX2AttribFormatType::TYPE_32_FLOAT:
+   case GX2AttribFormatType::TYPE_16_16:
+   case GX2AttribFormatType::TYPE_16_16_FLOAT:
+   case GX2AttribFormatType::TYPE_10_11_11_FLOAT:
+   case GX2AttribFormatType::TYPE_8_8_8_8:
+   case GX2AttribFormatType::TYPE_10_10_10_2:
+      return 4;
+   case GX2AttribFormatType::TYPE_32_32:
+   case GX2AttribFormatType::TYPE_32_32_FLOAT:
+   case GX2AttribFormatType::TYPE_16_16_16_16:
+   case GX2AttribFormatType::TYPE_16_16_16_16_FLOAT:
+      return 8;
+   case GX2AttribFormatType::TYPE_32_32_32:
+   case GX2AttribFormatType::TYPE_32_32_32_FLOAT:
+      return 12;
+   case GX2AttribFormatType::TYPE_32_32_32_32:
+   case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
+      return 16;
+   default:
+      throw std::logic_error("Invalid GX2AttribFormat format");
+      return 1;
+   }
+}
+
+GX2EndianSwapMode::Value
+GX2GetAttribFormatSwapMode(GX2AttribFormat::Value format)
+{
+   switch (format & 0x1F) {
+   case GX2AttribFormatType::TYPE_8:
+   case GX2AttribFormatType::TYPE_4_4:
+   case GX2AttribFormatType::TYPE_8_8:
+   case GX2AttribFormatType::TYPE_8_8_8_8:
+      return GX2EndianSwapMode::None;
+   case GX2AttribFormatType::TYPE_16:
+   case GX2AttribFormatType::TYPE_16_FLOAT:
+   case GX2AttribFormatType::TYPE_16_16:
+   case GX2AttribFormatType::TYPE_16_16_FLOAT:
+   case GX2AttribFormatType::TYPE_16_16_16_16:
+   case GX2AttribFormatType::TYPE_16_16_16_16_FLOAT:
+      return GX2EndianSwapMode::Swap8In16;
+   case GX2AttribFormatType::TYPE_32:
+   case GX2AttribFormatType::TYPE_32_FLOAT:
+   case GX2AttribFormatType::TYPE_10_11_11_FLOAT:
+   case GX2AttribFormatType::TYPE_10_10_10_2:
+   case GX2AttribFormatType::TYPE_32_32:
+   case GX2AttribFormatType::TYPE_32_32_FLOAT:
+   case GX2AttribFormatType::TYPE_32_32_32:
+   case GX2AttribFormatType::TYPE_32_32_32_FLOAT:
+   case GX2AttribFormatType::TYPE_32_32_32_32:
+   case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
+      return GX2EndianSwapMode::Swap8In32;
+   default:
+      throw std::logic_error("Invalid GX2AttribFormat format");
+      return GX2EndianSwapMode::None;
+   }
+}
+
+latte::SQ_DATA_FORMAT
+GX2GetAttribFormatDataFormat(GX2AttribFormat::Value format)
+{
+   switch (format & 0x1F) {
+   case GX2AttribFormatType::TYPE_8:
+      return latte::FMT_8;
+   case GX2AttribFormatType::TYPE_4_4:
+      return latte::FMT_4_4;
+   case GX2AttribFormatType::TYPE_16:
+      return latte::FMT_16;
+   case GX2AttribFormatType::TYPE_16_FLOAT:
+      return latte::FMT_16_FLOAT;
+   case GX2AttribFormatType::TYPE_8_8:
+      return latte::FMT_8_8;
+   case GX2AttribFormatType::TYPE_32:
+      return latte::FMT_32;
+   case GX2AttribFormatType::TYPE_32_FLOAT:
+      return latte::FMT_32_FLOAT;
+   case GX2AttribFormatType::TYPE_16_16:
+      return latte::FMT_16_16;
+   case GX2AttribFormatType::TYPE_16_16_FLOAT:
+      return latte::FMT_16_16_FLOAT;
+   case GX2AttribFormatType::TYPE_10_11_11_FLOAT:
+      return latte::FMT_10_11_11_FLOAT;
+   case GX2AttribFormatType::TYPE_8_8_8_8:
+      return latte::FMT_8_8_8_8;
+   case GX2AttribFormatType::TYPE_10_10_10_2:
+      return latte::FMT_10_10_10_2;
+   case GX2AttribFormatType::TYPE_32_32:
+      return latte::FMT_32_32;
+   case GX2AttribFormatType::TYPE_32_32_FLOAT:
+      return latte::FMT_32_32_FLOAT;
+   case GX2AttribFormatType::TYPE_16_16_16_16:
+      return latte::FMT_16_16_16_16;
+   case GX2AttribFormatType::TYPE_16_16_16_16_FLOAT:
+      return latte::FMT_16_16_16_16_FLOAT;
+   case GX2AttribFormatType::TYPE_32_32_32:
+      return latte::FMT_32_32_32;
+   case GX2AttribFormatType::TYPE_32_32_32_FLOAT:
+      return latte::FMT_32_32_32_FLOAT;
+   case GX2AttribFormatType::TYPE_32_32_32_32:
+      return latte::FMT_32_32_32_32;
+   case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
+      return latte::FMT_32_32_32_32_FLOAT;
+   default:
+      throw std::logic_error("Invalid GX2AttribFormat format");
+      return latte::FMT_8;
+   }
+}
+
 std::pair<size_t, size_t>
 GX2GetSurfaceBlockSize(GX2SurfaceFormat::Value format)
 {

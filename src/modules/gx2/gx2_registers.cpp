@@ -63,13 +63,13 @@ GX2InitBlendControlReg(GX2BlendControlReg *reg,
                        GX2BlendCombineMode::Value alphaCombine)
 {
    reg->target = target;
-   reg->cb_blend_control.COLOR_SRCBLEND = static_cast<latte::BLEND_FUNC>(colorSrcBlend);
-   reg->cb_blend_control.COLOR_DESTBLEND = static_cast<latte::BLEND_FUNC>(colorDstBlend);
-   reg->cb_blend_control.COLOR_COMB_FCN = static_cast<latte::COMB_FUNC>(colorCombine);
-   reg->cb_blend_control.SEPARATE_ALPHA_BLEND = useAlphaBlend;
-   reg->cb_blend_control.ALPHA_SRCBLEND = static_cast<latte::BLEND_FUNC>(alphaSrcBlend);
-   reg->cb_blend_control.ALPHA_DESTBLEND = static_cast<latte::BLEND_FUNC>(alphaDstBlend);
-   reg->cb_blend_control.ALPHA_COMB_FCN = static_cast<latte::COMB_FUNC>(alphaCombine);
+   reg->cb_blend_control.COLOR_SRCBLEND         = static_cast<latte::CB_BLEND_FUNC>(colorSrcBlend);
+   reg->cb_blend_control.COLOR_DESTBLEND        = static_cast<latte::CB_BLEND_FUNC>(colorDstBlend);
+   reg->cb_blend_control.COLOR_COMB_FCN         = static_cast<latte::CB_COMB_FUNC>(colorCombine);
+   reg->cb_blend_control.SEPARATE_ALPHA_BLEND   = useAlphaBlend;
+   reg->cb_blend_control.ALPHA_SRCBLEND         = static_cast<latte::CB_BLEND_FUNC>(alphaSrcBlend);
+   reg->cb_blend_control.ALPHA_DESTBLEND        = static_cast<latte::CB_BLEND_FUNC>(alphaDstBlend);
+   reg->cb_blend_control.ALPHA_COMB_FCN         = static_cast<latte::CB_COMB_FUNC>(alphaCombine);
 }
 
 void
@@ -118,19 +118,19 @@ GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                               GX2StencilFunction::Value backStencilZFail,
                               GX2StencilFunction::Value backStencilFail)
 {
-   reg->db_depth_control.Z_ENABLE = depthTest;
-   reg->db_depth_control.Z_WRITE_ENABLE = depthWrite;
-   reg->db_depth_control.ZFUNC = static_cast<latte::FRAG_FUNC>(depthCompare);
-   reg->db_depth_control.STENCIL_ENABLE = stencilTest;
-   reg->db_depth_control.BACKFACE_ENABLE = backfaceStencil;
-   reg->db_depth_control.STENCILFUNC = static_cast<latte::REF_FUNC>(frontStencilFunc);
-   reg->db_depth_control.STENCILZPASS = static_cast<latte::STENCIL_FUNC>(frontStencilZPass);
-   reg->db_depth_control.STENCILZFAIL = static_cast<latte::STENCIL_FUNC>(frontStencilZFail);
-   reg->db_depth_control.STENCILFAIL = static_cast<latte::STENCIL_FUNC>(frontStencilFail);
-   reg->db_depth_control.STENCILFUNC_BF = static_cast<latte::REF_FUNC>(backStencilFunc);
-   reg->db_depth_control.STENCILZPASS_BF = static_cast<latte::STENCIL_FUNC>(backStencilZPass);
-   reg->db_depth_control.STENCILZFAIL_BF = static_cast<latte::STENCIL_FUNC>(backStencilZFail);
-   reg->db_depth_control.STENCILFAIL_BF = static_cast<latte::STENCIL_FUNC>(backStencilFail);
+   reg->db_depth_control.Z_ENABLE         = depthTest;
+   reg->db_depth_control.Z_WRITE_ENABLE   = depthWrite;
+   reg->db_depth_control.ZFUNC            = static_cast<latte::DB_FRAG_FUNC>(depthCompare);
+   reg->db_depth_control.STENCIL_ENABLE   = stencilTest;
+   reg->db_depth_control.BACKFACE_ENABLE  = backfaceStencil;
+   reg->db_depth_control.STENCILFUNC      = static_cast<latte::DB_REF_FUNC>(frontStencilFunc);
+   reg->db_depth_control.STENCILZPASS     = static_cast<latte::DB_STENCIL_FUNC>(frontStencilZPass);
+   reg->db_depth_control.STENCILZFAIL     = static_cast<latte::DB_STENCIL_FUNC>(frontStencilZFail);
+   reg->db_depth_control.STENCILFAIL      = static_cast<latte::DB_STENCIL_FUNC>(frontStencilFail);
+   reg->db_depth_control.STENCILFUNC_BF   = static_cast<latte::DB_REF_FUNC>(backStencilFunc);
+   reg->db_depth_control.STENCILZPASS_BF  = static_cast<latte::DB_STENCIL_FUNC>(backStencilZPass);
+   reg->db_depth_control.STENCILZFAIL_BF  = static_cast<latte::DB_STENCIL_FUNC>(backStencilZFail);
+   reg->db_depth_control.STENCILFAIL_BF   = static_cast<latte::DB_STENCIL_FUNC>(backStencilFail);
 }
 
 void

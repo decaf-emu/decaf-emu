@@ -188,6 +188,7 @@
     <ClCompile Include="..\src\modules\gx2\gx2_displaylist.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_draw.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_fetchshader.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_format.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_mem.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_registers.cpp" />
@@ -293,6 +294,7 @@
     <ClInclude Include="..\src\gpu\latte_enum_spi.h" />
     <ClInclude Include="..\src\gpu\latte_enum_sq.h" />
     <ClInclude Include="..\src\gpu\latte_enum_vgt.h" />
+    <ClInclude Include="..\src\gpu\latte_instructions.h" />
     <ClInclude Include="..\src\gpu\latte_opcodes.h" />
     <ClInclude Include="..\src\gpu\latte_registers_cb.h" />
     <ClInclude Include="..\src\gpu\latte_registers_db.h" />

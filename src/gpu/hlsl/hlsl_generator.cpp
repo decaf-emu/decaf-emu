@@ -584,26 +584,26 @@ generateBody(latte::Shader &shader, std::string &body)
 }
 
 static size_t
-getUniformTypeSlots(GX2UniformType::Value type)
+getUniformTypeSlots(GX2ShaderVarType::Value type)
 {
    switch (type) {
-   case GX2UniformType::Int:
+   case GX2ShaderVarType::Int:
       return 1;
-   case GX2UniformType::Float:
+   case GX2ShaderVarType::Float:
       return 1;
-   case GX2UniformType::Float2:
+   case GX2ShaderVarType::Float2:
       return 1;
-   case GX2UniformType::Float3:
+   case GX2ShaderVarType::Float3:
       return 1;
-   case GX2UniformType::Float4:
+   case GX2ShaderVarType::Float4:
       return 1;
-   case GX2UniformType::Int2:
+   case GX2ShaderVarType::Int2:
       return 1;
-   case GX2UniformType::Int3:
+   case GX2ShaderVarType::Int3:
       return 1;
-   case GX2UniformType::Int4:
+   case GX2ShaderVarType::Int4:
       return 1;
-   case GX2UniformType::Matrix4x4:
+   case GX2ShaderVarType::Matrix4x4:
       return 4;
    default:
       assert(false);
@@ -640,7 +640,7 @@ generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
              latte::Shader &vertexShader,
              GX2PixelShader *gx2Pixel,
              latte::Shader &pixelShader,
-             const std::string& vsAddend, 
+             const std::string& vsAddend,
              const std::string& psAddend,
              std::string &hlsl)
 {

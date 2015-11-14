@@ -9,7 +9,7 @@
 
 struct GX2FetchShader
 {
-   UNKNOWN(4);
+   be_val<GX2FetchShaderType::Value > type;
 
    struct
    {
@@ -17,20 +17,24 @@ struct GX2FetchShader
    } regs;
 
    be_val<uint32_t> size;
-   be_ptr<uint8_t> data;
+   be_ptr<void> data;
    be_val<uint32_t> attribCount;
-   UNKNOWN(12);
+   be_val<uint32_t> numDivisors;
+   be_val<uint32_t> divisors[2];
 };
+CHECK_OFFSET(GX2FetchShader, 0x0, type);
 CHECK_OFFSET(GX2FetchShader, 0x4, regs.sq_pgm_resources_fs);
 CHECK_OFFSET(GX2FetchShader, 0x8, size);
 CHECK_OFFSET(GX2FetchShader, 0xc, data);
 CHECK_OFFSET(GX2FetchShader, 0x10, attribCount);
+CHECK_OFFSET(GX2FetchShader, 0x14, numDivisors);
+CHECK_OFFSET(GX2FetchShader, 0x18, divisors);
 CHECK_SIZE(GX2FetchShader, 0x20);
 
 struct GX2UniformVar
 {
    be_ptr<const char> name;
-   be_val<GX2UniformType::Value> type;
+   be_val<GX2ShaderVarType::Value> type;
    be_val<uint32_t> count;
    be_val<uint32_t> offset;
    be_val<int32_t> block;
@@ -61,6 +65,19 @@ CHECK_OFFSET(GX2UniformBlock, 0x00, name);
 CHECK_OFFSET(GX2UniformBlock, 0x04, offset);
 CHECK_OFFSET(GX2UniformBlock, 0x08, size);
 CHECK_SIZE(GX2UniformBlock, 0x0C);
+
+struct GX2AttribVar
+{
+   be_ptr<const char> name;
+   be_val<GX2ShaderVarType::Value> type;
+   be_val<uint32_t> count;
+   be_val<uint32_t> location;
+};
+CHECK_OFFSET(GX2AttribVar, 0x00, name);
+CHECK_OFFSET(GX2AttribVar, 0x04, type);
+CHECK_OFFSET(GX2AttribVar, 0x08, count);
+CHECK_OFFSET(GX2AttribVar, 0x0C, location);
+CHECK_SIZE(GX2AttribVar, 0x10);
 
 struct GX2SamplerVar;
 
@@ -102,13 +119,13 @@ struct GX2VertexShader
    be_ptr<GX2SamplerVar> samplerVars;
 
    be_val<uint32_t> attribVarCount;
-   be_ptr<void> attribVars;
+   be_ptr<GX2AttribVar> attribVars;
 
-   uint32_t ringItemsize;
+   be_val<uint32_t> ringItemsize;
 
-   BOOL hasStreamOut;
-   uint32_t streamOutStride[4];
-    
+   be_val<BOOL> hasStreamOut;
+   be_val<uint32_t> streamOutStride[4];
+
    UNKNOWN(4 * 4);
 };
 CHECK_OFFSET(GX2VertexShader, 0x0, regs);
@@ -235,7 +252,7 @@ GX2CalcFetchShaderSizeEx(uint32_t attribs,
 void
 GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
                      void *buffer,
-                     uint32_t count,
+                     uint32_t attribCount,
                      GX2AttribStream *attribs,
                      GX2FetchShaderType::Value type,
                      GX2TessellationMode::Value tessMode);

@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 
+// TODO: Replace with latte_instructions.h
 #pragma pack(push, 1)
 
 namespace latte
@@ -17,13 +18,20 @@ static const uint32_t SlotsPerCF = 1;
 static const uint32_t SlotsPerALU = 1;
 static const uint32_t SlotsPerTEX = 2; // Only uses 98 bits of data though
 static const uint32_t SlotsPerMEM = 2; // TODO: Verify
-static const uint32_t SlotsPerVTX = 2; // TODO: Verify
+static const uint32_t SlotsPerVTX = 2;
 
 static const uint32_t WordsPerCF = SlotsPerCF * WordsPerSlot;
 static const uint32_t WordsPerALU = SlotsPerALU * WordsPerSlot;
 static const uint32_t WordsPerTEX = SlotsPerTEX * WordsPerSlot;
 static const uint32_t WordsPerMEM = SlotsPerMEM * WordsPerSlot;
 static const uint32_t WordsPerVTX = SlotsPerVTX * WordsPerSlot;
+
+static const uint32_t BytesPerWords = 4;
+static const uint32_t BytesPerCF = WordsPerCF * BytesPerWords;
+static const uint32_t BytesPerALU = WordsPerALU * BytesPerWords;
+static const uint32_t BytesPerTEX = WordsPerTEX * BytesPerWords;
+static const uint32_t BytesPerMEM = WordsPerMEM * BytesPerWords;
+static const uint32_t BytesPerVTX = WordsPerVTX * BytesPerWords;
 
 namespace cf
 {
@@ -487,11 +495,31 @@ namespace vtx
 
 namespace FetchType
 {
-enum FetchType
+enum Value : uint32_t
 {
    VertexData     = 0,
    InstanceData   = 1,
    NoIndexOffset  = 2,
+};
+}
+
+namespace NumFormat
+{
+enum Value : uint32_t
+{
+   Normal = 0,
+   Integer = 1,
+   Scaled = 2,
+};
+}
+
+namespace EndianSwap
+{
+enum Value : uint32_t
+{
+   SwapNone = 0,
+   Swap8in16 = 1,
+   Swap8in32 = 2,
 };
 }
 
@@ -585,7 +613,7 @@ struct Word1
    uint32_t useConstFields : 1;
    uint32_t dataFormat : 6;
    uint32_t numFormatAll : 2;
-   uint32_t formatCompAll : 1;
+   uint32_t formatCompSigned : 1;
    uint32_t srfModeAll : 1;
 };
 
