@@ -3,6 +3,7 @@
 #include "gpu/pm4_buffer.h"
 #include "gpu/pm4_reader.h"
 #include "gpu/latte_registers.h"
+#include "platform/platform_ui.h"
 #include <glbinding/gl/gl.h>
 
 namespace gpu
@@ -17,23 +18,26 @@ void Driver::setContextReg(pm4::SetContextRegs &data)
    auto *dst = &mRegisters[data.id / 4];
    memcpy(dst, data.values.data(), data.values.size() * sizeof(uint32_t));
 
-   // Shadow in memory
-
    // Perform OpenGL operation
-   switch (data.id) {
-   case latte::Register::CB_BLEND_CONTROL:
-      //gl::glBlendFunc(src, dst);
-      break;
-   case latte::Register::CB_BLEND0_CONTROL:
-   case latte::Register::CB_BLEND1_CONTROL:
-   case latte::Register::CB_BLEND2_CONTROL:
-   case latte::Register::CB_BLEND3_CONTROL:
-   case latte::Register::CB_BLEND4_CONTROL:
-   case latte::Register::CB_BLEND5_CONTROL:
-   case latte::Register::CB_BLEND6_CONTROL:
-   case latte::Register::CB_BLEND7_CONTROL:
-      //gl::glBlendFunci(data.id - latte::Register::CB_BLEND0_CONTROL, src, dst);
-      break;
+   auto regIdx = data.id;
+   for (auto &value : data.values) {
+      // For the following registers, we apply their state changes
+      //   directly to the OpenGL context...
+      switch (regIdx) {
+      case latte::Register::CB_BLEND_CONTROL:
+      case latte::Register::CB_BLEND0_CONTROL:
+      case latte::Register::CB_BLEND1_CONTROL:
+      case latte::Register::CB_BLEND2_CONTROL:
+      case latte::Register::CB_BLEND3_CONTROL:
+      case latte::Register::CB_BLEND4_CONTROL:
+      case latte::Register::CB_BLEND5_CONTROL:
+      case latte::Register::CB_BLEND6_CONTROL:
+      case latte::Register::CB_BLEND7_CONTROL:
+         // gl::something();
+         break;
+      }
+
+      regIdx = static_cast<latte::Register::Value>(regIdx + 4);
    }
 }
 
