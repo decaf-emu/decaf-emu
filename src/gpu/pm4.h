@@ -70,6 +70,21 @@ struct NumInstances
    }
 };
 
+struct SetAluConsts
+{
+   static const auto Opcode = Opcode3::SET_ALU_CONST;
+
+   latte::Register::Value id;
+   gsl::array_view<uint32_t> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.reg(id, latte::Register::AluConstRegisterBase);
+      se(values);
+   }
+};
+
 struct SetConfigReg
 {
    static const auto Opcode = Opcode3::SET_CONFIG_REG;
@@ -157,6 +172,21 @@ struct SetControlConstants
    {
       se.reg(id, latte::Register::ControlRegisterBase);
       se(values);
+   }
+};
+
+struct SetLoopConst
+{
+   static const auto Opcode = Opcode3::SET_LOOP_CONST;
+
+   latte::Register::Value id;
+   uint32_t value;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.reg(id, latte::Register::LoopConstRegisterBase);
+      se(value);
    }
 };
 

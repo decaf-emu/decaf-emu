@@ -5,6 +5,44 @@
 namespace latte
 {
 
+// ALU Constant store data for use in DX9 mode (DX10 mode uses the constant-cache
+// instead and this constant-file is not available).
+// Constants 0-225 are reserved for pixel shader
+// Constants 256-511 are reserved for vertex shader
+struct SQ_ALU_CONSTANT0_0
+{
+   float X;
+};
+
+struct SQ_ALU_CONSTANT1_0
+{
+   float Y;
+};
+
+struct SQ_ALU_CONSTANT2_0
+{
+   float Z;
+};
+
+struct SQ_ALU_CONSTANT3_0
+{
+   float W;
+};
+
+// Used for SQ_CF_INST_LOOP and SQ_CF_INST_LOOP_NO_AL
+struct SQ_LOOP_CONST_DX9_0
+{
+   uint32_t COUNT : 12;
+   uint32_t INIT : 12;
+   uint32_t INC : 8;
+};
+
+// Used for SQ_CF_INST_LOOP_DX10
+struct SQ_LOOP_CONST_DX10_0
+{
+   uint32_t COUNT;
+};
+
 union SQ_VTX_CONSTANT_WORD2_0
 {
    uint32_t value;

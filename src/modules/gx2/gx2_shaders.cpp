@@ -1,3 +1,4 @@
+#include <cassert>
 #include "gx2_shaders.h"
 #include "gpu/pm4_writer.h"
 
@@ -84,13 +85,23 @@ GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id)
 }
 
 void
-GX2SetVertexUniformReg(uint32_t offset, uint32_t count, void *data)
+GX2SetVertexUniformReg(uint32_t offset, uint32_t count, uint32_t *data)
 {
 }
 
 void
-GX2SetPixelUniformReg(uint32_t offset, uint32_t count, void *data)
+GX2SetPixelUniformReg(uint32_t offset, uint32_t count, uint32_t *data)
 {
+   auto loop = offset >> 16;
+
+   if (loop) {
+      auto id = static_cast<latte::Register::Value>(latte::Register::SQ_LOOP_CONST_0 + loop);
+      pm4::write(pm4::SetLoopConst { id, data[0] });
+   }
+
+   auto alu = offset & 0x7fff;
+   auto id = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONSTANT0_0 + alu);
+   pm4::write(pm4::SetAluConsts { id, { data, count } });
 }
 
 void
