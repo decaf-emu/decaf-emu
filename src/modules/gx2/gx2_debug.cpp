@@ -292,13 +292,9 @@ GX2DebugDumpShader(GX2PixelShader *shader)
    formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
    formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
 
-   out << "  numUnk1: " << shader->numUnk1 << "\n";
-   out << "  numUnk2: " << shader->numUnk2 << "\n";
+   out << "  initialValueCount: " << shader->initialValueCount << "\n";
+   out << "  loopVarCount: " << shader->loopVarCount << "\n";
    out << "  samplerVarCount: " << shader->samplerVarCount << "\n";
-   out << "  unk3: " << shader->unk3 << "\n";
-   out << "  unk4: " << shader->unk4 << "\n";
-   out << "  unk5: " << shader->unk5 << "\n";
-   out << "  unk6: " << shader->unk6 << "\n";
    GX2DebugDumpShader("shader_pixel_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
 }
 
@@ -317,10 +313,9 @@ GX2DebugDumpShader(GX2VertexShader *shader)
    formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
    formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
 
-   out << "  numUnk1: " << shader->numUnk1 << "\n";
-   out << "  numUnk2: " << shader->numUnk2 << "\n";
+   out << "  initialValueCount: " << shader->initialValueCount << "\n";
+   out << "  loopVarCount: " << shader->loopVarCount << "\n";
    out << "  samplerVarCount: " << shader->samplerVarCount << "\n";
-   out << "  numUnk3: " << shader->numUnk3 << "\n";
 
    GX2DebugDumpShader("shader_vertex_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
 }

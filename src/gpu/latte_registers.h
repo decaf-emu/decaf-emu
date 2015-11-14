@@ -178,8 +178,11 @@ enum Value : uint32_t
    PA_CL_VS_OUT_CNTL                = 0x2881C,
    SQ_PGM_RESOURCES_PS              = 0x28850,
    SQ_PGM_EXPORTS_PS                = 0x28854,
+   SQ_PGM_START_VS                  = 0x28858,
    SQ_PGM_RESOURCES_VS              = 0x28868,
-   SQ_PGM_RESOURCES_FS              = 0X288A4,
+   SQ_PGM_RESOURCES_FS              = 0x288A4,
+   SQ_ESGS_RING_ITEMSIZE            = 0x288A8,
+   SQ_PGM_CF_OFFSET_VS              = 0x288D0,
    SQ_VTX_SEMANTIC_CLEAR            = 0x288E0,
    VGT_HOS_REUSE_DEPTH              = 0x28A20,
    VGT_DMA_SIZE                     = 0x28A74,
@@ -1030,13 +1033,17 @@ union SQ_PGM_EXPORTS_PS
 
 // This register is used to clear the contents of the vertex semantic table.
 // Entries can be cleared independently -- each has one bit in this register to clear or leave alone.
-struct SQ_VTX_SEMANTIC_CLEAR
+union SQ_VTX_SEMANTIC_CLEAR
 {
+   uint32_t value;
+
    uint32_t CLEAR;
 };
 
-struct SQ_VTX_SEMANTIC_N
+union SQ_VTX_SEMANTIC_N
 {
+   uint32_t value;
+
    uint32_t SEMANTIC_ID;
 };
 

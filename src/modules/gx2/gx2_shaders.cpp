@@ -1,4 +1,5 @@
 #include "gx2_shaders.h"
+#include "gpu/pm4_writer.h"
 
 uint32_t
 GX2CalcGeometryShaderInputRingBufferSize(uint32_t ringItemSize)
@@ -38,36 +39,51 @@ GX2SetFetchShader(GX2FetchShader *shader)
 void
 GX2SetVertexShader(GX2VertexShader *shader)
 {
-/*
-if (shader->shaderMode != GEOMETRY_SHADER) {
-  SET_CONTEXT_REG 0x216, { EFFECTIVE_ADDRESS(shader->data) >> 8, shader->size >> 3, 0x10, 0x10, shader->_regs[0] } 0x28858:SQ_PGM_START_VS
-  SET_CONTEXT_REG 0x2A1, { shader->_regs[1] } 0x28a84:VGT_PRIMITIVEID_EN
-  SET_CONTEXT_REG 0x1B1, { shader->_regs[2] } 0x286c4:SPI_VS_OUT_CONFIG
-  SET_CONTEXT_REG 0x207, { shader->_regs[14] } 0x2881c:PA_CL_VS_OUT_CNTL
-  if (shader->_regs[3] > 0) {
-    SET_CONTEXT_REG 0x185, { FOR(i < MIN(shader->_regs[3], 0xA)) -> shader->_regs[4+i] }
-  }
-  SET_CONTEXT_REG 0x234, { 0x0 }
-  if (shader->hasStreamOut) {
-    _GX2WriteStreamOutStride(&shader->streamOutVertexStride)
-  }
-  SET_CONTEXT_REG 0x2C8, { shader._regs[49] }
-} else {
-  SET_CONTEXT_REG 0x216, { EFFECTIVE_ADDRESS(shader->data) >> 8, shader->size >> 3, 0x10, 0x10, shader->_regs[0] }
-  SET_CONTEXT_REG 0x22A, { shader->ringItemsize }
-}
+   // Some kind of shenanigans that involves using a hardcoded *shader
 
-SET_CONTEXT_REG 0x238, { shader->_regs[15] }
-if (shader->_regs[16] > 0) {
-  SET_CONTEXT_REG 0xE0, { FOR(i < MIN(shader->_regs[16], 0x20)) -> shader->_regs[17+i] }
-}
-SET_CONTEXT_REG 0x316, { shader->_regs[50] }
-SET_CONTEXT_REG 0x288, { shader->_regs[51] }
 
-if (shader->_numLoops > 0) {
-  _GX2SetVertexLoopVar(shader->_loopVars, shader->_loopVars + (shader->_numLoops << 3));
-}
-*/
+   uint32_t shaderRegData[] = {
+      shader->data.getAddress(),
+      shader->size >> 3,
+      0x10,
+      0x10,
+      shader->regs.sq_pgm_resources_vs.value
+   };
+   pm4::write(pm4::SetContextRegs{ latte::Register::SQ_PGM_START_VS, shaderRegData });
+
+   if (shader->mode != GX2ShaderMode::GeometryShader) {
+      pm4::write(pm4::SetContextReg{ latte::Register::VGT_PRIMITIVEID_EN, shader->regs.vgt_primitiveid_en.value });
+      pm4::write(pm4::SetContextReg{ latte::Register::SPI_VS_OUT_CONFIG, shader->regs.spi_vs_out_config.value });
+      pm4::write(pm4::SetContextReg{ latte::Register::PA_CL_VS_OUT_CNTL, shader->regs.pa_cl_vs_out_cntl.value });
+      if (shader->regs.num_spi_vs_out_id > 0) {
+         pm4::write(pm4::SetContextRegs{
+            latte::Register::SPI_VS_OUT_ID_0,
+            { &shader->regs.spi_vs_out_id[0].value, shader->regs.num_spi_vs_out_id } });
+      }
+      pm4::write(pm4::SetContextReg{ latte::Register::SQ_PGM_CF_OFFSET_VS, 0 });
+      if (shader->hasStreamOut) {
+         //_GX2WriteStreamOutStride(&shader->streamOutVertexStride);
+      }
+      pm4::write(pm4::SetContextReg{ latte::Register::SQ_PGM_CF_OFFSET_VS, 0 });
+      pm4::write(pm4::SetContextReg{ latte::Register::VGT_STRMOUT_BUFFER_EN, shader->regs.vgt_strmout_buffer_en.value });
+   } else {
+      pm4::write(pm4::SetContextReg{ latte::Register::SQ_ESGS_RING_ITEMSIZE, shader->ringItemsize });
+   }
+
+   pm4::write(pm4::SetContextReg{ latte::Register::SQ_VTX_SEMANTIC_CLEAR, shader->regs.sq_vtx_semantic_clear.value });
+
+   if (shader->regs.num_sq_vtx_semantic > 0) {
+      pm4::write(pm4::SetContextRegs{
+         latte::Register::SQ_VTX_SEMANTIC_0,
+         { &shader->regs.sq_vtx_semantic[0].value, shader->regs.num_sq_vtx_semantic } });
+   }
+
+   pm4::write(pm4::SetContextReg{ latte::Register::VGT_VERTEX_REUSE_BLOCK_CNTL, shader->regs.vgt_vertex_reuse_block_cntl.value });
+   pm4::write(pm4::SetContextReg{ latte::Register::VGT_HOS_REUSE_DEPTH, shader->regs.vgt_hos_reuse_depth.value });
+
+   if (shader->loopVarCount > 0) {
+      //_GX2SetVertexLoopVar(shader->loopVars, shader->loopVars + (shader->loopVarCount << 3));
+   }
 }
 
 void

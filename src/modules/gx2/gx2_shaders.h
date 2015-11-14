@@ -42,6 +42,15 @@ CHECK_OFFSET(GX2UniformVar, 0x0C, offset);
 CHECK_OFFSET(GX2UniformVar, 0x10, block);
 CHECK_SIZE(GX2UniformVar, 0x14);
 
+struct GX2UniformInitialValue
+{
+   float value[4];
+   uint32_t offset;
+};
+CHECK_OFFSET(GX2UniformInitialValue, 0x00, value);
+CHECK_OFFSET(GX2UniformInitialValue, 0x10, offset);
+CHECK_SIZE(GX2UniformInitialValue, 0x14);
+
 struct GX2UniformBlock
 {
    be_ptr<const char> name;
@@ -83,19 +92,24 @@ struct GX2VertexShader
    be_val<uint32_t> uniformVarCount;
    be_ptr<GX2UniformVar> uniformVars;
 
-   be_val<uint32_t> numUnk1;  // Size of unk1
-   be_ptr<void> unk1;         // Array of something
+   be_val<uint32_t> initialValueCount;
+   be_ptr<GX2UniformInitialValue> initialValues;
 
-   be_val<uint32_t> numUnk2;  // Size of unk2
-   be_ptr<void> unk2;         // Array of something
+   be_val<uint32_t> loopVarCount;
+   be_ptr<void> loopVars;
 
    be_val<uint32_t> samplerVarCount;
    be_ptr<GX2SamplerVar> samplerVars;
 
-   be_val<uint32_t> numUnk3;  // Size of unk3
-   be_ptr<void> unk3;         // Array of something
+   be_val<uint32_t> attribVarCount;
+   be_ptr<void> attribVars;
 
-   UNKNOWN(4 * 10);
+   uint32_t ringItemsize;
+
+   BOOL hasStreamOut;
+   uint32_t streamOutStride[4];
+    
+   UNKNOWN(4 * 4);
 };
 CHECK_OFFSET(GX2VertexShader, 0x0, regs);
 CHECK_OFFSET(GX2VertexShader, 0xd0, size);
@@ -105,8 +119,17 @@ CHECK_OFFSET(GX2VertexShader, 0xdc, uniformBlockCount);
 CHECK_OFFSET(GX2VertexShader, 0xe0, uniformBlocks);
 CHECK_OFFSET(GX2VertexShader, 0xe4, uniformVarCount);
 CHECK_OFFSET(GX2VertexShader, 0xe8, uniformVars);
+CHECK_OFFSET(GX2VertexShader, 0xec, initialValueCount);
+CHECK_OFFSET(GX2VertexShader, 0xf0, initialValues);
+CHECK_OFFSET(GX2VertexShader, 0xf4, loopVarCount);
+CHECK_OFFSET(GX2VertexShader, 0xf8, loopVars);
 CHECK_OFFSET(GX2VertexShader, 0xfc, samplerVarCount);
 CHECK_OFFSET(GX2VertexShader, 0x100, samplerVars);
+CHECK_OFFSET(GX2VertexShader, 0x104, attribVarCount);
+CHECK_OFFSET(GX2VertexShader, 0x108, attribVars);
+CHECK_OFFSET(GX2VertexShader, 0x10c, ringItemsize);
+CHECK_OFFSET(GX2VertexShader, 0x110, hasStreamOut);
+CHECK_OFFSET(GX2VertexShader, 0x114, streamOutStride);
 CHECK_SIZE(GX2VertexShader, 0x134);
 
 struct GX2PixelShader
@@ -135,19 +158,16 @@ struct GX2PixelShader
    be_val<uint32_t> uniformVarCount;
    be_ptr<GX2UniformVar> uniformVars;
 
-   be_val<uint32_t> numUnk1;  // Size of unk1
-   be_ptr<void> unk1;         // Array of something
+   be_val<uint32_t> initialValueCount;
+   be_ptr<GX2UniformInitialValue> initialValues;
 
-   be_val<uint32_t> numUnk2;  // Size of unk2
-   be_ptr<void> unk2;         // Array of something
+   be_val<uint32_t> loopVarCount;
+   be_ptr<void> loopVars;
 
    be_val<uint32_t> samplerVarCount;
    be_ptr<GX2SamplerVar> samplerVars;
 
-   be_val<uint32_t> unk3;
-   be_val<uint32_t> unk4;
-   be_val<uint32_t> unk5;
-   be_val<uint32_t> unk6;
+   UNKNOWN(4 * 4);
 };
 CHECK_OFFSET(GX2PixelShader, 0x00, regs.sq_pgm_resources_ps);
 CHECK_OFFSET(GX2PixelShader, 0x04, regs.pgm_exports_ps);
@@ -161,11 +181,15 @@ CHECK_OFFSET(GX2PixelShader, 0x9C, regs.db_shader_control);
 CHECK_OFFSET(GX2PixelShader, 0xA0, regs.spi_input_z);
 CHECK_OFFSET(GX2PixelShader, 0xA4, size);
 CHECK_OFFSET(GX2PixelShader, 0xA8, data);
-CHECK_OFFSET(GX2PixelShader, 0xAc, mode);
+CHECK_OFFSET(GX2PixelShader, 0xAC, mode);
 CHECK_OFFSET(GX2PixelShader, 0xB0, uniformBlockCount);
 CHECK_OFFSET(GX2PixelShader, 0xB4, uniformBlocks);
 CHECK_OFFSET(GX2PixelShader, 0xB8, uniformVarCount);
-CHECK_OFFSET(GX2PixelShader, 0xBc, uniformVars);
+CHECK_OFFSET(GX2PixelShader, 0xBC, uniformVars);
+CHECK_OFFSET(GX2PixelShader, 0xC0, initialValueCount);
+CHECK_OFFSET(GX2PixelShader, 0xC4, initialValues);
+CHECK_OFFSET(GX2PixelShader, 0xC8, loopVarCount);
+CHECK_OFFSET(GX2PixelShader, 0xCC, loopVars);
 CHECK_OFFSET(GX2PixelShader, 0xD0, samplerVarCount);
 CHECK_OFFSET(GX2PixelShader, 0xD4, samplerVars);
 CHECK_SIZE(GX2PixelShader, 0xe8);
