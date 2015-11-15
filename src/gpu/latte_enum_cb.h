@@ -4,13 +4,6 @@
 namespace latte
 {
 
-enum CB_ARRAY_MODE : uint32_t
-{
-   ARRAY_LINEAR_GENERAL       = 0,
-   ARRAY_LINEAR_ALIGNED       = 1,
-   ARRAY_2D_TILED_THIN1       = 4,
-};
-
 enum CB_BLEND_FUNC : uint32_t
 {
    CB_BLEND_ZERO                       = 0,
@@ -47,10 +40,10 @@ enum CB_COMB_FUNC : uint32_t
 
 enum CB_ENDIAN : uint32_t
 {
-   ENDIAN_NONE                = 0,
-   ENDIAN_8IN16               = 1,
-   ENDIAN_8IN32               = 2,
-   ENDIAN_8IN64               = 3,
+   CB_ENDIAN_NONE             = 0,
+   CB_ENDIAN_8IN16            = 1,
+   CB_ENDIAN_8IN32            = 2,
+   CB_ENDIAN_8IN64            = 3,
 };
 
 enum CB_FORMAT : uint32_t
@@ -101,12 +94,6 @@ enum CB_NUMBER_TYPE : uint32_t
    NUMBER_SINT                = 5,
    NUMBER_SRGB                = 6,
    NUMBER_FLOAT               = 7,
-};
-
-enum CB_READ_SIZE : uint32_t
-{
-   READ_256_BITS              = 0,
-   READ_512_BITS              = 0,
 };
 
 enum CB_ROUND_MODE : uint32_t

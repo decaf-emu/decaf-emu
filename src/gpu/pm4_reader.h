@@ -52,6 +52,15 @@ public:
       return *this;
    }
 
+   // Read one word as a size (N - 1)
+   template<typename Type>
+   PacketReader &size(Type &value)
+   {
+      checkSize(1);
+      value = static_cast<Type>(mBuffer[mPosition++] + 1);
+      return *this;
+   }
+
 private:
    void checkSize(size_t size)
    {

@@ -1,19 +1,78 @@
 #pragma once
 #include "types.h"
 #include "latte_enum_db.h"
+#include "latte_enum_common.h"
 
 namespace latte
 {
 
-union DB_STENCIL_CLEAR
+struct DB_DEPTH_BASE
+{
+   uint32_t BASE_256B;
+};
+
+struct DB_DEPTH_HTILE_DATA_BASE
+{
+   uint32_t BASE_256B;
+};
+
+union DB_DEPTH_INFO
 {
    uint32_t value;
 
    struct
    {
-      uint32_t CLEAR : 8;
-      uint32_t MIN : 16;
+      DB_DEPTH_FORMAT FORMAT : 3;
+      READ_SIZE READ_SIZE : 1;
+      uint32_t : 11;
+      ARRAY_MODE ARRAY_MODE : 4;
+      uint32_t : 6;
+      uint32_t TILE_SURFACE_ENABLE : 1;
+      uint32_t TILE_COMPACT : 1;
+      uint32_t : 4;
+      uint32_t ZRANGE_PRECISION : 1;
+   };
+};
+
+union DB_DEPTH_SIZE
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t PITCH_TILE_MAX : 10;
+      uint32_t SLICE_TILE_MAX : 20;
+      uint32_t : 2;
+   };
+};
+
+union DB_DEPTH_VIEW
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t SLICE_START : 11;
+      uint32_t : 2;
+      uint32_t SLICE_MAX : 11;
       uint32_t : 8;
+   };
+};
+
+union DB_HTILE_SURFACE
+{
+   uint32_t value;
+
+   struct {
+      uint32_t HTILE_WIDTH : 1;
+      uint32_t HTILE_HEIGHT : 1;
+      uint32_t LINEAR : 1;
+      uint32_t FULL_CACHE : 1;
+      uint32_t HTILE_USES_PRELOAD_WIN : 1;
+      uint32_t PRELOAD : 1;
+      uint32_t PREFETCH_WIDTH : 6;
+      uint32_t PREFETCH_HEIGHT : 6;
+      uint32_t : 14;
    };
 };
 
@@ -46,6 +105,30 @@ union DB_DEPTH_CONTROL
    };
 };
 
+union DB_PREFETCH_LIMIT
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t DEPTH_HEIGHT_TILE_MAX : 10;
+      uint32_t : 22;
+   };
+};
+
+union DB_PRELOAD_CONTROL
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t START_X : 8;
+      uint32_t START_Y : 8;
+      uint32_t MAX_X : 8;
+      uint32_t MAX_Y : 8;
+   };
+};
+
 union DB_SHADER_CONTROL
 {
    uint32_t value;
@@ -64,6 +147,18 @@ union DB_SHADER_CONTROL
       uint32_t EXEC_ON_NOOP : 1;
       uint32_t ALPHA_TO_MASK_DISABLE : 1;
       uint32_t : 19;
+   };
+};
+
+union DB_STENCIL_CLEAR
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t CLEAR : 8;
+      uint32_t MIN : 16;
+      uint32_t : 8;
    };
 };
 

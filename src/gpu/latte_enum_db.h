@@ -4,6 +4,18 @@
 namespace latte
 {
 
+enum DB_DEPTH_FORMAT : uint32_t
+{
+   DEPTH_INVALID           = 0,
+   DEPTH_16                = 1,
+   DEPTH_X8_24             = 2,
+   DEPTH_8_24              = 3,
+   DEPTH_X8_24_FLOAT       = 4,
+   DEPTH_8_24_FLOAT        = 5,
+   DEPTH_32_FLOAT          = 6,
+   DEPTH_X24_8_32_FLOAT    = 7,
+};
+
 enum DB_FRAG_FUNC : uint32_t
 {
    DB_FRAG_NEVER           = 0,

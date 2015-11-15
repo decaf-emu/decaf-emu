@@ -1271,6 +1271,9 @@
     <ClInclude Include="..\src\gpu\latte_instructions.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_enum_common.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

@@ -77,6 +77,15 @@ public:
       return *this;
    }
 
+   // Write one word as a size (N - 1)
+   template<typename Type>
+   PacketWriter &size(Type value)
+   {
+      checkSize(1);
+      mBuffer->buffer[mBuffer->curSize++] = static_cast<uint32_t>(value) - 1;
+      return *this;
+   }
+
 private:
    void checkSize(uint32_t size)
    {

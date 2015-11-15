@@ -41,4 +41,17 @@ union PA_CL_VS_OUT_CNTL
    };
 };
 
+// Polygon Offset Depth Buffer Format Control
+union PA_SU_POLY_OFFSET_DB_FMT_CNTL
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t POLY_OFFSET_NEG_NUM_DB_BITS : 8;
+      uint32_t POLY_OFFSET_DB_IS_FLOAT_FMT : 1;
+      uint32_t : 15;
+   };
+};
+
 } // namespace latte

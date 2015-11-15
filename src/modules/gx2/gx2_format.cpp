@@ -230,6 +230,100 @@ GX2GetSurfaceSwap(GX2SurfaceFormat::Value format)
    return static_cast<GX2EndianSwapMode::Value>(gSurfaceFormatData[format & 0x3F].endian);
 }
 
+latte::DB_DEPTH_FORMAT
+GX2GetSurfaceDepthFormat(GX2SurfaceFormat::Value format)
+{
+   switch (format & 0x3F) {
+   case latte::FMT_16:
+      return latte::DEPTH_16;
+   case latte::FMT_8_24:
+      return latte::DEPTH_8_24;
+   case latte::FMT_8_24_FLOAT:
+      return latte::DEPTH_8_24_FLOAT;
+   case latte::FMT_32_FLOAT:
+      return latte::DEPTH_32_FLOAT;
+   case latte::FMT_X24_8_32_FLOAT:
+      return latte::DEPTH_X24_8_32_FLOAT;
+   default:
+      return latte::DEPTH_INVALID;
+   }
+}
+
+latte::CB_FORMAT
+GX2GetSurfaceColorFormat(GX2SurfaceFormat::Value format)
+{
+   switch (format & 0x3F) {
+   case latte::FMT_8:
+      return latte::COLOR_8;
+   case latte::FMT_4_4:
+      return latte::COLOR_4_4;
+   case latte::FMT_3_3_2:
+      return latte::COLOR_3_3_2;
+   case latte::FMT_16:
+      return latte::COLOR_16;
+   case latte::FMT_16_FLOAT:
+      return latte::COLOR_16_FLOAT;
+   case latte::FMT_8_8:
+      return latte::COLOR_8_8;
+   case latte::FMT_5_6_5:
+      return latte::COLOR_5_6_5;
+   case latte::FMT_6_5_5:
+      return latte::COLOR_6_5_5;
+   case latte::FMT_1_5_5_5:
+      return latte::COLOR_1_5_5_5;
+   case latte::FMT_4_4_4_4:
+      return latte::COLOR_4_4_4_4;
+   case latte::FMT_5_5_5_1:
+      return latte::COLOR_5_5_5_1;
+   case latte::FMT_32:
+      return latte::COLOR_32;
+   case latte::FMT_32_FLOAT:
+      return latte::COLOR_32_FLOAT;
+   case latte::FMT_16_16:
+      return latte::COLOR_16_16;
+   case latte::FMT_16_16_FLOAT:
+      return latte::COLOR_16_16_FLOAT;
+   case latte::FMT_8_24:
+      return latte::COLOR_8_24;
+   case latte::FMT_8_24_FLOAT:
+      return latte::COLOR_8_24_FLOAT;
+   case latte::FMT_24_8:
+      return latte::COLOR_24_8;
+   case latte::FMT_24_8_FLOAT:
+      return latte::COLOR_24_8_FLOAT;
+   case latte::FMT_10_11_11:
+      return latte::COLOR_10_11_11;
+   case latte::FMT_10_11_11_FLOAT:
+      return latte::COLOR_10_11_11_FLOAT;
+   case latte::FMT_11_11_10:
+      return latte::COLOR_11_11_10;
+   case latte::FMT_11_11_10_FLOAT:
+      return latte::COLOR_11_11_10_FLOAT;
+   case latte::FMT_2_10_10_10:
+      return latte::COLOR_2_10_10_10;
+   case latte::FMT_8_8_8_8:
+      return latte::COLOR_8_8_8_8;
+   case latte::FMT_10_10_10_2:
+      return latte::COLOR_10_10_10_2;
+   case latte::FMT_X24_8_32_FLOAT:
+      return latte::COLOR_X24_8_32_FLOAT;
+   case latte::FMT_32_32:
+      return latte::COLOR_32_32;
+   case latte::FMT_32_32_FLOAT:
+      return latte::COLOR_32_32_FLOAT;
+   case latte::FMT_16_16_16_16:
+      return latte::COLOR_16_16_16_16;
+   case latte::FMT_16_16_16_16_FLOAT:
+      return latte::COLOR_16_16_16_16_FLOAT;
+   case latte::FMT_32_32_32_32:
+      return latte::COLOR_32_32_32_32;
+   case latte::FMT_32_32_32_32_FLOAT:
+      return latte::COLOR_32_32_32_32_FLOAT;
+   default:
+      return latte::COLOR_INVALID;
+   }
+}
+
 size_t
 GX2GetTileThickness(GX2TileMode::Value mode)
 {

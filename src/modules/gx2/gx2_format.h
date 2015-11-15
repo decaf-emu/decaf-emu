@@ -2,6 +2,8 @@
 #include <utility>
 #include "types.h"
 #include "gx2_enum.h"
+#include "gpu/latte_enum_cb.h"
+#include "gpu/latte_enum_db.h"
 #include "gpu/latte_enum_sq.h"
 
 size_t
@@ -24,6 +26,12 @@ GX2GetSurfaceSwap(GX2SurfaceFormat::Value format);
 
 GX2SurfaceUse::Value
 GX2GetSurfaceUse(GX2SurfaceFormat::Value format);
+
+latte::DB_DEPTH_FORMAT
+GX2GetSurfaceDepthFormat(GX2SurfaceFormat::Value format);
+
+latte::CB_FORMAT
+GX2GetSurfaceColorFormat(GX2SurfaceFormat::Value format);
 
 size_t
 GX2GetTileThickness(GX2TileMode::Value mode);

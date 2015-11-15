@@ -206,7 +206,7 @@ struct SetResourceAttrib
    {
       se(id);
       se(baseAddress);
-      se(size);
+      se.size(size);
       se(word2.value);
       se(word3.value);
       se(0);

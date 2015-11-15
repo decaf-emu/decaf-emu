@@ -63,7 +63,17 @@ struct GX2DepthBuffer
    be_val<uint32_t> hiZSize;
    be_val<float> depthClear;
    be_val<uint32_t> stencilClear;
-   UNKNOWN(28);
+
+   struct
+   {
+      latte::DB_DEPTH_SIZE db_depth_size;
+      latte::DB_DEPTH_VIEW db_depth_view;
+      latte::DB_DEPTH_INFO db_depth_info;
+      latte::DB_HTILE_SURFACE db_htile_surface;
+      latte::DB_PREFETCH_LIMIT db_prefetch_limit;
+      latte::DB_PRELOAD_CONTROL db_preload_control;
+      latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL pa_poly_offset_cntl;
+   } regs;
 };
 CHECK_OFFSET(GX2DepthBuffer, 0x74, viewMip);
 CHECK_OFFSET(GX2DepthBuffer, 0x78, viewFirstSlice);
@@ -72,6 +82,13 @@ CHECK_OFFSET(GX2DepthBuffer, 0x80, hiZPtr);
 CHECK_OFFSET(GX2DepthBuffer, 0x84, hiZSize);
 CHECK_OFFSET(GX2DepthBuffer, 0x88, depthClear);
 CHECK_OFFSET(GX2DepthBuffer, 0x8C, stencilClear);
+CHECK_OFFSET(GX2DepthBuffer, 0x90, regs.db_depth_size);
+CHECK_OFFSET(GX2DepthBuffer, 0x94, regs.db_depth_view);
+CHECK_OFFSET(GX2DepthBuffer, 0x98, regs.db_depth_info);
+CHECK_OFFSET(GX2DepthBuffer, 0x9C, regs.db_htile_surface);
+CHECK_OFFSET(GX2DepthBuffer, 0xA0, regs.db_prefetch_limit);
+CHECK_OFFSET(GX2DepthBuffer, 0xA4, regs.db_preload_control);
+CHECK_OFFSET(GX2DepthBuffer, 0xA8, regs.pa_poly_offset_cntl);
 CHECK_SIZE(GX2DepthBuffer, 0xAC);
 
 struct GX2ColorBuffer
@@ -83,6 +100,7 @@ struct GX2ColorBuffer
    be_val<uint32_t> viewNumSlices;
    be_ptr<void> aaBuffer;
    be_val<uint32_t> aaSize;
+
    struct
    {
       latte::CB_COLORN_SIZE cb_color_size;

@@ -290,6 +290,7 @@
     <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_enum_cb.h" />
+    <ClInclude Include="..\src\gpu\latte_enum_common.h" />
     <ClInclude Include="..\src\gpu\latte_enum_db.h" />
     <ClInclude Include="..\src\gpu\latte_enum_spi.h" />
     <ClInclude Include="..\src\gpu\latte_enum_sq.h" />

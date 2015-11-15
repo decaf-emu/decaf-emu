@@ -23,6 +23,11 @@ enum Value : uint32_t
 
    // Context Registers
    ContextRegisterBase              = 0x28000,
+   DB_DEPTH_SIZE                    = 0x28000,
+   DB_DEPTH_VIEW                    = 0x28004,
+   DB_DEPTH_BASE                    = 0x2800C,
+   DB_DEPTH_INFO                    = 0x28010,
+   DB_DEPTH_HTILE_DATA_BASE         = 0x28014,
    DB_STENCIL_CLEAR                 = 0x28028,
    DB_DEPTH_CLEAR                   = 0x2802c,
    CB_COLOR0_BASE                   = 0x28040,
@@ -199,6 +204,10 @@ enum Value : uint32_t
    VGT_MULTI_PRIM_IB_RESET_EN       = 0x28A94,
    VGT_STRMOUT_BUFFER_EN            = 0x28B20,
    VGT_VERTEX_REUSE_BLOCK_CNTL      = 0x28C58,
+   DB_HTILE_SURFACE                 = 0x28D24,
+   DB_PRELOAD_CONTROL               = 0x28D30,
+   DB_PREFETCH_LIMIT                = 0x28D34,
+   PA_SU_POLY_OFFSET_DB_FMT_CNTL    = 0x28DF8,
    ContextRegisterEnd               = 0x29000,
 
    // Alu Const Registers
