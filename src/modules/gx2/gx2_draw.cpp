@@ -9,7 +9,7 @@ GX2SetAttribBuffer(uint32_t index,
 {
    pm4::SetResourceAttrib attrib;
    memset(&attrib, 0, sizeof(pm4::SetResourceAttrib));
-   attrib.id = (index * 7) + 0x8c0;
+   attrib.id = (index * 7) + 0x8c0; // TODO: Figure out name of register 0x8c0
    attrib.baseAddress = buffer;
    attrib.size = size;
    attrib.word2.STRIDE = stride;

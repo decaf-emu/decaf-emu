@@ -107,6 +107,7 @@ enum SQ_DATA_FORMAT : uint32_t
    FMT_APC6                         = 60,
    FMT_APC7                         = 61,
    FMT_CTX1                         = 62,
+   FMT_MASK                         = 0x3F,
 };
 
 enum SQ_EXPORT_TYPE : uint32_t

@@ -48,6 +48,7 @@ GX2_ENUM_END
 GX2_ENUM(GX2AttribFormatFlags, uint32_t)
    GX2_ENUM_VALUE(INTEGER, 0x100)
    GX2_ENUM_VALUE(SIGNED, 0x200)
+   GX2_ENUM_VALUE(DEGAMMA, 0x400)
    GX2_ENUM_VALUE(SCALED, 0x800)
 GX2_ENUM_END
 
@@ -236,7 +237,12 @@ GX2_ENUM(GX2ScanTarget, uint32_t)
 GX2_ENUM_END
 
 GX2_ENUM(GX2SurfaceDim, uint32_t)
+   GX2_ENUM_VALUE(Texture1D,           0)
    GX2_ENUM_VALUE(Texture2D,           1)
+   GX2_ENUM_VALUE(Texture3D,           2)
+   GX2_ENUM_VALUE(TextureCube,         3)
+   GX2_ENUM_VALUE(Texture1DArray,      4)
+   GX2_ENUM_VALUE(Texture2DArray,      5)
    GX2_ENUM_VALUE(Texture2DMSAA,       6)
    GX2_ENUM_VALUE(Texture2DMSAAArray,  7)
 GX2_ENUM_END

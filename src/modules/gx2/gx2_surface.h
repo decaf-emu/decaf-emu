@@ -8,15 +8,13 @@
 
 #pragma pack(push, 1)
 
-// GX2InitTextureRegs
-// G2XRCreateSurface
 struct GX2Surface
 {
-   be_val<GX2SurfaceDim::Value> dim; // "GX2_SURFACE_DIM_2D_MSAA or GX2_SURFACE_DIM_2D_MSAA_ARRAY" = 0 or 6?
+   be_val<GX2SurfaceDim::Value> dim;
    be_val<uint32_t> width;
    be_val<uint32_t> height;
    be_val<uint32_t> depth;
-   be_val<uint32_t> mipLevels; // GX2CalcSurfaceSizeAndAlignment -> _GX2CalcNumLevels
+   be_val<uint32_t> mipLevels;
    be_val<GX2SurfaceFormat::Value> format;
    be_val<GX2AAMode::Value> aa;
    union // Is this correct?? Union???
@@ -26,10 +24,10 @@ struct GX2Surface
    };
    be_val<uint32_t> imageSize;
    be_ptr<void> image;
-   be_val<uint32_t> mipmapSize; // sizeof mipPtr
+   be_val<uint32_t> mipmapSize;
    be_ptr<void> mipmaps;
    be_val<GX2TileMode::Value> tileMode;
-   be_val<uint32_t> swizzle; // GX2SetSurfaceSwizzle;
+   be_val<uint32_t> swizzle;
    be_val<uint32_t> alignment;
    be_val<uint32_t> pitch;
    UNKNOWN(0x74 - 0x40);

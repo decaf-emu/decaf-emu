@@ -212,7 +212,33 @@ struct SetResourceAttrib
       se(0);
       se(0);
       se(word6.value);
-      se(0);
+   }
+};
+
+struct SetResourceTexture
+{
+   static const auto Opcode = Opcode3::SET_RESOURCE;
+
+   uint32_t id;
+   latte::SQ_TEX_RESOURCE_WORD0_0 word0;
+   latte::SQ_TEX_RESOURCE_WORD1_0 word1;
+   virtual_ptr<void> baseAddress;
+   virtual_ptr<void> mipAddress;
+   latte::SQ_TEX_RESOURCE_WORD4_0 word4;
+   latte::SQ_TEX_RESOURCE_WORD5_0 word5;
+   latte::SQ_TEX_RESOURCE_WORD6_0 word6;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.reg(id, latte::Register::SQ_TEX_RESOURCE_WORD0_0);
+      se(word0.value);
+      se(word1.value);
+      se(baseAddress);
+      se(mipAddress);
+      se(word4.value);
+      se(word5.value);
+      se(word6.value);
    }
 };
 

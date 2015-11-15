@@ -29,6 +29,12 @@ public:
       setPointer(value);
    }
 
+   template<bool OtherEndian>
+   virtual_ptr(const virtual_ptr<Type, OtherEndian> &value)
+   {
+      setAddress(value.getAddress());
+   }
+
    Type *get() const
    {
       return reinterpret_cast<Type *>(memory_translate(getAddress()));
