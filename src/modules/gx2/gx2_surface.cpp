@@ -145,10 +145,27 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
 void
 GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
 {
-   // FUCK
+   // TODO: Set more regs!
+   memset(&colorBuffer->regs, 0, sizeof(colorBuffer->regs));
+
+   auto &info = colorBuffer->regs.cb_color_info;
+   info.FORMAT = GX2GetSurfaceColorFormat(colorBuffer->surface.format);
+
+   auto &size = colorBuffer->regs.cb_color_size;
+   size.PITCH_TILE_MAX = (colorBuffer->surface.pitch / latte::tile_width) - 1;
+   size.SLICE_TILE_MAX = ((colorBuffer->surface.pitch * colorBuffer->surface.height) / (latte::tile_width * latte::tile_height)) - 1;
 }
 
 void
 GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
 {
+   // TODO: Set more regs!
+   memset(&depthBuffer->regs, 0, sizeof(depthBuffer->regs));
+
+   auto &info = depthBuffer->regs.db_depth_info;
+   info.FORMAT = GX2GetSurfaceDepthFormat(depthBuffer->surface.format);
+
+   auto &size = depthBuffer->regs.db_depth_size;
+   size.PITCH_TILE_MAX = (depthBuffer->surface.pitch / latte::tile_width) - 1;
+   size.SLICE_TILE_MAX = ((depthBuffer->surface.pitch * depthBuffer->surface.height) / (latte::tile_width * latte::tile_height)) - 1;
 }
