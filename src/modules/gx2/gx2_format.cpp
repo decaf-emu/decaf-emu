@@ -1,5 +1,82 @@
 #include "gx2_format.h"
 #include "gpu/latte_untile.h"
+#include "gpu/latte_enum_sq.h"
+
+struct GX2SurfaceFormatData
+{
+   uint8_t bpp;
+   uint8_t use;
+   uint8_t endian;
+   uint8_t unk;
+};
+
+GX2SurfaceFormatData gSurfaceFormatData[] =
+{
+   { 0, 0, 0, 1 },
+   { 8, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
+   { 8, GX2SurfaceUse::Texture, 0, 1 },
+   { 0, 0, 0, 1 },
+   { 0, 0, 0, 1 },
+   { 16, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer | GX2SurfaceUse::DepthBuffer, 0, 0 },
+   { 16, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
+   { 16, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
+   { 16, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer | GX2SurfaceUse::ScanBuffer, 0, 1 },
+   { 16, GX2SurfaceUse::Texture, 0, 1 },
+   { 16, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
+   { 16, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
+   { 16, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
+   { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
+   { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer | GX2SurfaceUse::DepthBuffer, 0, 0 },
+   { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
+   { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
+   { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::DepthBuffer, 0, 0 },
+   { 0, 0, 0, 0 },
+   { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
+   { 0, 0, 0, 0 },
+   { 0, 0, 0, 1 },
+   { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
+   { 0, 0, 0, 1 },
+   { 0, 0, 0, 1 },
+   { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer | GX2SurfaceUse::ScanBuffer, 0, 1 },
+   { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer | GX2SurfaceUse::ScanBuffer, 0, 1 },
+   { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer | GX2SurfaceUse::ScanBuffer, 0, 1 },
+   { 64, GX2SurfaceUse::Texture | GX2SurfaceUse::DepthBuffer, 0, 0 },
+   { 64, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
+   { 64, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
+   { 64, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
+   { 64, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
+   { 0, 0, 0, 0 },
+   { 128, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
+   { 128, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
+   { 0, 0, 0, 1 },
+   { 0, 0, 0, 1 },
+   { 0, 0, 0, 1 },
+   { 16, GX2SurfaceUse::Texture, 0, 0 },
+   { 16, GX2SurfaceUse::Texture, 0, 0 },
+   { 32, GX2SurfaceUse::Texture, 0, 0 },
+   { 32, GX2SurfaceUse::Texture, 0, 0 },
+   { 32, GX2SurfaceUse::Texture, 0, 0 },
+   { 0, GX2SurfaceUse::Texture, 0, 1 },
+   { 0, GX2SurfaceUse::Texture, 0, 0 },
+   { 0, GX2SurfaceUse::Texture, 0, 0 },
+   { 96, GX2SurfaceUse::Texture, 0, 0 },
+   { 96, GX2SurfaceUse::Texture, 0, 0 },
+   { 64, GX2SurfaceUse::Texture, 0, 1 },
+   { 128, GX2SurfaceUse::Texture, 0, 1 },
+   { 128, GX2SurfaceUse::Texture, 0, 1 },
+   { 64, GX2SurfaceUse::Texture, 0, 1 },
+   { 128, GX2SurfaceUse::Texture, 0, 1 },
+   { 0, 0, 0, 0 },
+   { 0, 0, 0, 0 },
+   { 0, 0, 0, 0 },
+   { 0, 0, 0, 0 },
+   { 0, 0, 0, 0 },
+   { 0, 0, 0, 0 },
+   { 0, 0, 0, 0 },
+   { 0, 0, 0, 0 },
+   { 0, 0, 0, 0 },
+   { 0, 0, 0, 0 },
+};
 
 size_t
 GX2GetAttribFormatBytes(GX2AttribFormat::Value format)
@@ -123,79 +200,14 @@ GX2GetAttribFormatDataFormat(GX2AttribFormat::Value format)
 std::pair<size_t, size_t>
 GX2GetSurfaceBlockSize(GX2SurfaceFormat::Value format)
 {
-   switch (format) {
-   case GX2SurfaceFormat::UNORM_BC1:
-   case GX2SurfaceFormat::UNORM_BC2:
-   case GX2SurfaceFormat::UNORM_BC3:
-   case GX2SurfaceFormat::UNORM_BC4:
-   case GX2SurfaceFormat::UNORM_BC5:
-   case GX2SurfaceFormat::SNORM_BC4:
-   case GX2SurfaceFormat::SNORM_BC5:
-   case GX2SurfaceFormat::SRGB_BC1:
-   case GX2SurfaceFormat::SRGB_BC2:
-   case GX2SurfaceFormat::SRGB_BC3:
+   switch (format & 0x3F) {
+   case latte::FMT_BC1:
+   case latte::FMT_BC2:
+   case latte::FMT_BC3:
+   case latte::FMT_BC4:
+   case latte::FMT_BC5:
       return { 4, 4 };
-
-   case GX2SurfaceFormat::UNORM_R4_G4:
-   case GX2SurfaceFormat::UNORM_R4_G4_B4_A4:
-   case GX2SurfaceFormat::UNORM_R8:
-   case GX2SurfaceFormat::UNORM_R8_G8:
-   case GX2SurfaceFormat::UNORM_R8_G8_B8_A8:
-   case GX2SurfaceFormat::UNORM_R16:
-   case GX2SurfaceFormat::UNORM_R16_G16:
-   case GX2SurfaceFormat::UNORM_R16_G16_B16_A16:
-   case GX2SurfaceFormat::UNORM_R5_G6_B5:
-   case GX2SurfaceFormat::UNORM_R5_G5_B5_A1:
-   case GX2SurfaceFormat::UNORM_A1_B5_G5_R5:
-   case GX2SurfaceFormat::UNORM_R24_X8:
-   case GX2SurfaceFormat::UNORM_A2_B10_G10_R10:
-   case GX2SurfaceFormat::UNORM_R10_G10_B10_A2:
-   case GX2SurfaceFormat::UNORM_NV12:
-   case GX2SurfaceFormat::UINT_R8:
-   case GX2SurfaceFormat::UINT_R8_G8:
-   case GX2SurfaceFormat::UINT_R8_G8_B8_A8:
-   case GX2SurfaceFormat::UINT_R16:
-   case GX2SurfaceFormat::UINT_R16_G16:
-   case GX2SurfaceFormat::UINT_R16_G16_B16_A16:
-   case GX2SurfaceFormat::UINT_R32:
-   case GX2SurfaceFormat::UINT_R32_G32:
-   case GX2SurfaceFormat::UINT_R32_G32_B32_A32:
-   case GX2SurfaceFormat::UINT_A2_B10_G10_R10:
-   case GX2SurfaceFormat::UINT_R10_G10_B10_A2:
-   case GX2SurfaceFormat::UINT_X24_G8:
-   case GX2SurfaceFormat::UINT_G8_X24:
-   case GX2SurfaceFormat::SNORM_R8:
-   case GX2SurfaceFormat::SNORM_R8_G8:
-   case GX2SurfaceFormat::SNORM_R8_G8_B8_A8:
-   case GX2SurfaceFormat::SNORM_R16:
-   case GX2SurfaceFormat::SNORM_R16_G16:
-   case GX2SurfaceFormat::SNORM_R16_G16_B16_A16:
-   case GX2SurfaceFormat::SNORM_R10_G10_B10_A2:
-   case GX2SurfaceFormat::SINT_R8:
-   case GX2SurfaceFormat::SINT_R8_G8:
-   case GX2SurfaceFormat::SINT_R8_G8_B8_A8:
-   case GX2SurfaceFormat::SINT_R16:
-   case GX2SurfaceFormat::SINT_R16_G16:
-   case GX2SurfaceFormat::SINT_R16_G16_B16_A16:
-   case GX2SurfaceFormat::SINT_R32:
-   case GX2SurfaceFormat::SINT_R32_G32:
-   case GX2SurfaceFormat::SINT_R32_G32_B32_A32:
-   case GX2SurfaceFormat::SINT_R10_G10_B10_A2:
-   case GX2SurfaceFormat::SRGB_R8_G8_B8_A8:
-   case GX2SurfaceFormat::FLOAT_R32:
-   case GX2SurfaceFormat::FLOAT_R32_G32:
-   case GX2SurfaceFormat::FLOAT_R32_G32_B32_A32:
-   case GX2SurfaceFormat::FLOAT_R16:
-   case GX2SurfaceFormat::FLOAT_R16_G16:
-   case GX2SurfaceFormat::FLOAT_R16_G16_B16_A16:
-   case GX2SurfaceFormat::FLOAT_R11_G11_B10:
-   case GX2SurfaceFormat::FLOAT_D24_S8:
-   case GX2SurfaceFormat::FLOAT_X8_X24:
-      return { 1, 1 };
-
-   case GX2SurfaceFormat::INVALID:
    default:
-      throw std::runtime_error("Unexpected GX2SurfaceFormat");
       return { 1, 1 };
    }
 }
@@ -203,154 +215,19 @@ GX2GetSurfaceBlockSize(GX2SurfaceFormat::Value format)
 size_t
 GX2GetSurfaceElementBytes(GX2SurfaceFormat::Value format)
 {
-   static const size_t bc1 = 8;
-   static const size_t bc2 = 16;
-   static const size_t bc3 = 16;
-   static const size_t bc4 = 8;
-   static const size_t bc5 = 16;
+   return gSurfaceFormatData[format & 0x3F].bpp / 8;
+}
 
-   switch (format) {
-   case GX2SurfaceFormat::UNORM_R4_G4:
-      return 1;
-   case GX2SurfaceFormat::UNORM_R4_G4_B4_A4:
-      return 2;
-   case GX2SurfaceFormat::UNORM_R8:
-      return 1;
-   case GX2SurfaceFormat::UNORM_R8_G8:
-      return 2;
-   case GX2SurfaceFormat::UNORM_R8_G8_B8_A8:
-      return 4;
-   case GX2SurfaceFormat::UNORM_R16:
-      return 2;
-   case GX2SurfaceFormat::UNORM_R16_G16:
-      return 4;
-   case GX2SurfaceFormat::UNORM_R16_G16_B16_A16:
-      return 8;
-   case GX2SurfaceFormat::UNORM_R5_G6_B5:
-      return 2;
-   case GX2SurfaceFormat::UNORM_R5_G5_B5_A1:
-      return 2;
-   case GX2SurfaceFormat::UNORM_A1_B5_G5_R5:
-      return 2;
-   case GX2SurfaceFormat::UNORM_R24_X8:
-      return 4;
-   case GX2SurfaceFormat::UNORM_A2_B10_G10_R10:
-      return 4;
-   case GX2SurfaceFormat::UNORM_R10_G10_B10_A2:
-      return 4;
-   case GX2SurfaceFormat::UNORM_BC1:
-      return bc1;
-   case GX2SurfaceFormat::UNORM_BC2:
-      return bc2;
-   case GX2SurfaceFormat::UNORM_BC3:
-      return bc3;
-   case GX2SurfaceFormat::UNORM_BC4:
-      return bc4;
-   case GX2SurfaceFormat::UNORM_BC5:
-      return bc5;
-   case GX2SurfaceFormat::UNORM_NV12:
-      return 0;
+GX2SurfaceUse::Value
+GX2GetSurfaceUse(GX2SurfaceFormat::Value format)
+{
+   return static_cast<GX2SurfaceUse::Value>(gSurfaceFormatData[format & 0x3F].use);
+}
 
-   case GX2SurfaceFormat::UINT_R8:
-      return 1;
-   case GX2SurfaceFormat::UINT_R8_G8:
-      return 2;
-   case GX2SurfaceFormat::UINT_R8_G8_B8_A8:
-      return 4;
-   case GX2SurfaceFormat::UINT_R16:
-      return 2;
-   case GX2SurfaceFormat::UINT_R16_G16:
-      return 4;
-   case GX2SurfaceFormat::UINT_R16_G16_B16_A16:
-      return 8;
-   case GX2SurfaceFormat::UINT_R32:
-      return 4;
-   case GX2SurfaceFormat::UINT_R32_G32:
-      return 8;
-   case GX2SurfaceFormat::UINT_R32_G32_B32_A32:
-      return 16;
-   case GX2SurfaceFormat::UINT_A2_B10_G10_R10:
-      return 4;
-   case GX2SurfaceFormat::UINT_R10_G10_B10_A2:
-      return 4;
-   case GX2SurfaceFormat::UINT_X24_G8:
-      return 4;
-   case GX2SurfaceFormat::UINT_G8_X24:
-      return 4;
-
-   case GX2SurfaceFormat::SNORM_R8:
-      return 1;
-   case GX2SurfaceFormat::SNORM_R8_G8:
-      return 2;
-   case GX2SurfaceFormat::SNORM_R8_G8_B8_A8:
-      return 4;
-   case GX2SurfaceFormat::SNORM_R16:
-      return 2;
-   case GX2SurfaceFormat::SNORM_R16_G16:
-      return 4;
-   case GX2SurfaceFormat::SNORM_R16_G16_B16_A16:
-      return 8;
-   case GX2SurfaceFormat::SNORM_R10_G10_B10_A2:
-      return 4;
-   case GX2SurfaceFormat::SNORM_BC4:
-      return bc4;
-   case GX2SurfaceFormat::SNORM_BC5:
-      return bc5;
-
-   case GX2SurfaceFormat::SINT_R8:
-      return 1;
-   case GX2SurfaceFormat::SINT_R8_G8:
-      return 2;
-   case GX2SurfaceFormat::SINT_R8_G8_B8_A8:
-      return 4;
-   case GX2SurfaceFormat::SINT_R16:
-      return 2;
-   case GX2SurfaceFormat::SINT_R16_G16:
-      return 4;
-   case GX2SurfaceFormat::SINT_R16_G16_B16_A16:
-      return 8;
-   case GX2SurfaceFormat::SINT_R32:
-      return 4;
-   case GX2SurfaceFormat::SINT_R32_G32:
-      return 8;
-   case GX2SurfaceFormat::SINT_R32_G32_B32_A32:
-      return 16;
-   case GX2SurfaceFormat::SINT_R10_G10_B10_A2:
-      return 4;
-
-   case GX2SurfaceFormat::SRGB_R8_G8_B8_A8:
-      return 4;
-   case GX2SurfaceFormat::SRGB_BC1:
-      return bc1;
-   case GX2SurfaceFormat::SRGB_BC2:
-      return bc2;
-   case GX2SurfaceFormat::SRGB_BC3:
-      return bc3;
-
-   case GX2SurfaceFormat::FLOAT_R32:
-      return 4;
-   case GX2SurfaceFormat::FLOAT_R32_G32:
-      return 8;
-   case GX2SurfaceFormat::FLOAT_R32_G32_B32_A32:
-      return 16;
-   case GX2SurfaceFormat::FLOAT_R16:
-      return 2;
-   case GX2SurfaceFormat::FLOAT_R16_G16:
-      return 4;
-   case GX2SurfaceFormat::FLOAT_R16_G16_B16_A16:
-      return 8;
-   case GX2SurfaceFormat::FLOAT_R11_G11_B10:
-      return 4;
-   case GX2SurfaceFormat::FLOAT_D24_S8:
-      return 4;
-   case GX2SurfaceFormat::FLOAT_X8_X24:
-      return 4;
-
-   case GX2SurfaceFormat::INVALID:
-   default:
-      throw std::runtime_error("Unexpected GX2SurfaceFormat");
-      return 0;
-   }
+GX2EndianSwapMode::Value
+GX2GetSurfaceSwap(GX2SurfaceFormat::Value format)
+{
+   return static_cast<GX2EndianSwapMode::Value>(gSurfaceFormatData[format & 0x3F].endian);
 }
 
 size_t

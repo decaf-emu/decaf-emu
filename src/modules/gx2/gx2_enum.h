@@ -325,6 +325,7 @@ GX2_ENUM(GX2SurfaceUse, uint32_t)
    GX2_ENUM_VALUE(Texture,          1 << 0)
    GX2_ENUM_VALUE(ColorBuffer,      1 << 1)
    GX2_ENUM_VALUE(DepthBuffer,      1 << 2)
+   GX2_ENUM_VALUE(ScanBuffer,       1 << 3)
 GX2_ENUM_END
 
 GX2_ENUM(GX2StencilFunction, uint32_t)

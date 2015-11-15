@@ -19,6 +19,12 @@ GX2GetSurfaceBlockSize(GX2SurfaceFormat::Value format);
 size_t
 GX2GetSurfaceElementBytes(GX2SurfaceFormat::Value format);
 
+GX2EndianSwapMode::Value
+GX2GetSurfaceSwap(GX2SurfaceFormat::Value format);
+
+GX2SurfaceUse::Value
+GX2GetSurfaceUse(GX2SurfaceFormat::Value format);
+
 size_t
 GX2GetTileThickness(GX2TileMode::Value mode);
 

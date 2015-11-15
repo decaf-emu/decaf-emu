@@ -92,9 +92,7 @@ GX2InitTextureRegs(GX2Texture *texture)
       texture->regWord4.FORCE_DEGAMMA = 1;
    }
 
-   // TODO: Setup endian swap based off texture->surface.format
-   texture->regWord4.ENDIAN_SWAP = latte::SQ_ENDIAN_AUTO;
-
+   texture->regWord4.ENDIAN_SWAP = static_cast<latte::SQ_ENDIAN>(GX2GetSurfaceSwap(texture->surface.format));
    texture->regWord4.REQUEST_SIZE = 2;
 
    texture->regWord4.DST_SEL_X = static_cast<latte::SQ_SEL>((texture->compMap >> 24) & 0x7);

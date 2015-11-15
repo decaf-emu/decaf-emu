@@ -30,7 +30,7 @@ struct GX2Surface
    be_val<uint32_t> swizzle;
    be_val<uint32_t> alignment;
    be_val<uint32_t> pitch;
-   UNKNOWN(0x74 - 0x40);
+   be_val<uint32_t> mipLevelOffset[13];
 };
 CHECK_OFFSET(GX2Surface, 0x0, dim);
 CHECK_OFFSET(GX2Surface, 0x4, width);
@@ -49,6 +49,7 @@ CHECK_OFFSET(GX2Surface, 0x30, tileMode);
 CHECK_OFFSET(GX2Surface, 0x34, swizzle);
 CHECK_OFFSET(GX2Surface, 0x38, alignment);
 CHECK_OFFSET(GX2Surface, 0x3C, pitch);
+CHECK_OFFSET(GX2Surface, 0x40, mipLevelOffset);
 CHECK_SIZE(GX2Surface, 0x74);
 
 struct GX2DepthBuffer
