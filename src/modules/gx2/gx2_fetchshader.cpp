@@ -206,7 +206,7 @@ GX2CalcFetchShaderSizeEx(uint32_t attribs,
 
 void
 GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
-                     void *buffer,
+                     uint8_t *buffer,
                      uint32_t attribCount,
                      GX2AttribStream *attribs,
                      GX2FetchShaderType::Value type,
@@ -220,22 +220,43 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
       throw std::logic_error("Unsupported fetch shader tessellation mode.");
    }
 
-   auto indexMap = GX2FSGetIndexGprMap(type, tessMode);
    auto someTessVar1 = 128u;
    auto someTessVar2 = 128u;
-   auto vfetches = reinterpret_cast<latte::VertexFetchInst *>(buffer);
+   auto numGPRs = 0u;
+   auto barrier = false;
 
+   // Calculate instruction pointers
+   auto fetchCount = GX2FSCalcNumFetchInsts(attribCount, type);
+   auto aluCount = GX2FSCalcNumAluInsts(type, tessMode);
+   auto cfCount = GX2FSCalcNumCFInsts(fetchCount, type);
+
+   auto fetchSize = fetchCount * latte::BytesPerVTX;
+   auto cfSize = cfCount * latte::BytesPerCF;
+   auto aluSize = aluCount * latte::BytesPerALU;
+
+   auto cfOffset = 0u;
+   auto aluOffset = cfSize;
+   auto fetchOffset = align_up(cfSize + aluSize, 0x10u);
+
+   auto cfPtr = reinterpret_cast<latte::ControlFlowInst *>(buffer + cfOffset);
+   auto aluPtr = reinterpret_cast<latte::AluInst *>(buffer + cfOffset);
+   auto fetchPtr = reinterpret_cast<latte::VertexFetchInst *>(buffer + cfOffset);
+
+   // Setup fetch shader
    fetchShader->type = type;
    fetchShader->attribCount = attribCount;
    fetchShader->data = buffer;
    fetchShader->size = GX2CalcFetchShaderSizeEx(attribCount, type, tessMode);
+
+   // Generate fetch instructions
+   auto indexMap = GX2FSGetIndexGprMap(type, tessMode);
 
    for (auto i = 0u; i < attribCount; ++i) {
       latte::VertexFetchInst vfetch = { 0, 0, 0, 0 };
       auto &attrib = attribs[i];
 
       if (attrib.buffer == 16) {
-         // TODO: Figure out what this is for
+         // TODO: Figure out what these vars are for
          if (attrib.offset) {
             if (attrib.offset == 1) {
                someTessVar1 = attrib.location;
@@ -310,7 +331,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          }
 
          // Append to program
-         *(vfetches++) = vfetch;
+         *(fetchPtr++) = vfetch;
 
          // Add extra tesselation vertex fetches
          if (type != GX2FetchShaderType::NoTessellation && attrib.type != GX2AttribIndexType::PerInstance) {
@@ -325,26 +346,64 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
                vfetch2.gpr.DST_GPR = j + attrib.location;
 
                // Append to program
-               *(vfetches++) = vfetch;
+               *(fetchPtr++) = vfetch;
             }
          }
       }
    }
 
+   // Generate tessellation ALU ops
    if (type != GX2FetchShaderType::NoTessellation) {
-      // TODO: _GX2FSGenTessAluOps
+      numGPRs = 2;
+
+      if (tessMode == GX2TessellationMode::Adaptive) {
+         switch (type) {
+         case GX2FetchShaderType::LineTessellation:
+            numGPRs = 3;
+            break;
+         case GX2FetchShaderType::TriangleTessellation:
+            numGPRs = 7;
+            break;
+         case GX2FetchShaderType::QuadTessellation:
+            numGPRs = 7;
+            break;
+         }
+      }
+
+      // TODO: GX2FSGenTessAluOps
+      barrier = true;
    }
 
    // Generate a VTX CF per 16 VFETCH
-   auto fetches = GX2FSCalcNumFetchInsts(attribCount, type);
-
-   if (fetches) {
-      auto cfCount = GX2FSCalcNumFetchCFInsts(fetches);
-
+   if (fetchCount) {
       for (auto i = 0u; i < cfCount; ++i) {
-         // TODO
+         auto fetches = FetchesPerControlFlow;
+
+         if (fetchCount < (i + 1) * FetchesPerControlFlow) {
+            // Don't overrun our fetches!
+            fetches = fetchCount % FetchesPerControlFlow;
+         }
+
+         latte::ControlFlowInst inst = { 0, 0 };
+         inst.word0.addr = (fetchOffset + latte::BytesPerVTX * i * FetchesPerControlFlow) / 8;
+         inst.word1.COUNT = fetches & 0x7;
+         inst.word1.COUNT_3 = (fetches >> 3) & 0x1;
+         inst.word1.CF_INST = latte::SQ_CF_INST_VTX_TC;
+         inst.word1.BARRIER = barrier ? 1 : 0;
+         *(cfPtr++) = inst;
       }
    }
 
-   // TODO: Append a EOP
+   // Generate tessellation "post" ALU ops
+   if (numGPRs) {
+      // TODO: GX2FSGenPostAluOps
+   }
+
+   // Generate an EOP
+   latte::ControlFlowInst eop = { 0, 0 };
+   eop.word1.BARRIER = 1;
+   eop.word1.CF_INST = latte::SQ_CF_INST_RETURN;
+
+   // Set sq_pgm_resources_fs
+   fetchShader->regs.sq_pgm_resources_fs.NUM_GPRS = numGPRs;
 }

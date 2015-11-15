@@ -251,7 +251,7 @@ GX2CalcFetchShaderSizeEx(uint32_t attribs,
 
 void
 GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
-                     void *buffer,
+                     uint8_t *buffer,
                      uint32_t attribCount,
                      GX2AttribStream *attribs,
                      GX2FetchShaderType::Value type,
