@@ -1,3 +1,4 @@
+#include <fail_fast.h>
 #include "gx2_shaders.h"
 #include "gx2_enum.h"
 #include "gx2_format.h"
@@ -89,13 +90,13 @@ uint32_t
 GX2FetchInstsPerAttrib(GX2FetchShaderType::Value type)
 {
    switch (type) {
-   case GX2FetchShaderType::NoTesselation:
+   case GX2FetchShaderType::NoTessellation:
       return 1;
-   case GX2FetchShaderType::LineTesselation:
+   case GX2FetchShaderType::LineTessellation:
       return 2;
-   case GX2FetchShaderType::TriangleTesselation:
+   case GX2FetchShaderType::TriangleTessellation:
       return 3;
-   case GX2FetchShaderType::QuadTesselation:
+   case GX2FetchShaderType::QuadTessellation:
       return 4;
    default:
       throw std::logic_error("Unexpected fetch shader type.");
@@ -106,11 +107,11 @@ uint32_t
 GX2FSCalcNumFetchInsts(uint32_t attribs, GX2FetchShaderType::Value type)
 {
    switch (type) {
-   case GX2FetchShaderType::NoTesselation:
+   case GX2FetchShaderType::NoTessellation:
       return attribs;
-   case GX2FetchShaderType::LineTesselation:
-   case GX2FetchShaderType::TriangleTesselation:
-   case GX2FetchShaderType::QuadTesselation:
+   case GX2FetchShaderType::LineTessellation:
+   case GX2FetchShaderType::TriangleTessellation:
+   case GX2FetchShaderType::QuadTessellation:
       return GX2FetchInstsPerAttrib(type) * (attribs - 2);
    default:
       throw std::logic_error("Unexpected fetch shader type.");
@@ -122,11 +123,11 @@ GX2FSCalcNumTessALUInsts(GX2FetchShaderType::Value type, GX2TessellationMode::Va
 {
    if (mode == GX2TessellationMode::Adaptive) {
       switch (type) {
-      case GX2FetchShaderType::LineTesselation:
+      case GX2FetchShaderType::LineTessellation:
          return 11;
-      case GX2FetchShaderType::TriangleTesselation:
+      case GX2FetchShaderType::TriangleTessellation:
          return 57;
-      case GX2FetchShaderType::QuadTesselation:
+      case GX2FetchShaderType::QuadTessellation:
          return 43;
       }
    }
@@ -137,7 +138,7 @@ GX2FSCalcNumTessALUInsts(GX2FetchShaderType::Value type, GX2TessellationMode::Va
 uint32_t
 GX2FSCalcNumAluInsts(GX2FetchShaderType::Value type, GX2TessellationMode::Value mode)
 {
-   if (type == GX2FetchShaderType::NoTesselation) {
+   if (type == GX2FetchShaderType::NoTessellation) {
       return 0;
    } else {
       return GX2FSCalcNumTessALUInsts(type, mode) + 4;
@@ -155,7 +156,7 @@ GX2FSCalcNumCFInsts(uint32_t fetches, GX2FetchShaderType::Value type)
 {
    auto count = GX2FSCalcNumFetchCFInsts(fetches);
 
-   if (type != GX2FetchShaderType::NoTesselation) {
+   if (type != GX2FetchShaderType::NoTessellation) {
       count += 2;
    }
 
@@ -167,25 +168,25 @@ GX2FSGetIndexGprMap(GX2FetchShaderType::Value type,
                     GX2TessellationMode::Value mode)
 {
    switch (type) {
-   case GX2FetchShaderType::LineTesselation:
+   case GX2FetchShaderType::LineTessellation:
       if (mode == GX2TessellationMode::Adaptive) {
          return IndexMapLineTessAdaptive;
       } else {
          return IndexMapLineTess;
       }
-   case GX2FetchShaderType::TriangleTesselation:
+   case GX2FetchShaderType::TriangleTessellation:
       if (mode == GX2TessellationMode::Adaptive) {
          return IndexMapTriTessAdaptive;
       } else {
          return IndexMapTriTess;
       }
-   case GX2FetchShaderType::QuadTesselation:
+   case GX2FetchShaderType::QuadTessellation:
       if (mode == GX2TessellationMode::Adaptive) {
          return IndexMapQuadTessAdaptive;
       } else {
          return IndexMapQuadTess;
       }
-   case GX2FetchShaderType::NoTesselation:
+   case GX2FetchShaderType::NoTessellation:
    default:
       return IndexMapNoTess;
    }
@@ -211,6 +212,14 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
                      GX2FetchShaderType::Value type,
                      GX2TessellationMode::Value tessMode)
 {
+   if (type != GX2FetchShaderType::NoTessellation) {
+      throw std::logic_error("Unsupported fetch shader type.");
+   }
+
+   if (tessMode != GX2TessellationMode::Discrete) {
+      throw std::logic_error("Unsupported fetch shader tessellation mode.");
+   }
+
    auto indexMap = GX2FSGetIndexGprMap(type, tessMode);
    auto someTessVar1 = 128u;
    auto someTessVar2 = 128u;
@@ -304,7 +313,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          *(vfetches++) = vfetch;
 
          // Add extra tesselation vertex fetches
-         if (type != GX2FetchShaderType::NoTesselation && attrib.type != GX2AttribIndexType::PerInstance) {
+         if (type != GX2FetchShaderType::NoTessellation && attrib.type != GX2AttribIndexType::PerInstance) {
             auto perAttrib = GX2FetchInstsPerAttrib(type);
 
             for (auto j = 1u; j < perAttrib; ++j) {
@@ -322,7 +331,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
       }
    }
 
-   if (type != GX2FetchShaderType::NoTesselation) {
+   if (type != GX2FetchShaderType::NoTessellation) {
       // TODO: _GX2FSGenTessAluOps
    }
 

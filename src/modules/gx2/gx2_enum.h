@@ -175,10 +175,10 @@ GX2_ENUM_END
 
 GX2_ENUM(GX2FetchShaderType, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 3)
-   GX2_ENUM_VALUE(NoTesselation, 0)
-   GX2_ENUM_VALUE(LineTesselation, 1)
-   GX2_ENUM_VALUE(TriangleTesselation, 2)
-   GX2_ENUM_VALUE(QuadTesselation, 3)
+   GX2_ENUM_VALUE(NoTessellation, 0)
+   GX2_ENUM_VALUE(LineTessellation, 1)
+   GX2_ENUM_VALUE(TriangleTessellation, 2)
+   GX2_ENUM_VALUE(QuadTessellation, 3)
 GX2_ENUM_END
 
 GX2_ENUM(GX2IndexType, uint32_t)
