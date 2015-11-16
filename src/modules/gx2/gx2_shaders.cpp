@@ -252,9 +252,24 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 
 void
 GX2SetShaderModeEx(GX2ShaderMode::Value mode,
-                   uint32_t unk1, uint32_t unk2, uint32_t unk3,
-                   uint32_t unk4, uint32_t unk5, uint32_t unk6)
+                   uint32_t numVsGpr, uint32_t numVsStackEntries, 
+                   uint32_t numGsGpr, uint32_t numGsStackEntries,
+                   uint32_t numPsGpr, uint32_t numPsStackEntries)
 {
+   auto sq_config = latte::SQ_CONFIG{ 0 };
+
+   if (mode == GX2ShaderMode::UniformRegister) {
+      sq_config.DX9_CONSTS = 1;
+   } else if (mode == GX2ShaderMode::UniformBlock) {
+      sq_config.DX9_CONSTS = 0;
+   } else {
+      gsl::fail_fast("Unexpected shader mode");
+   }
+
+   pm4::write(pm4::SetConfigReg{ latte::Register::SQ_CONFIG, sq_config.value });
+
+   // Normally would do lots of SET_CONFIG_REG here,
+   //   but not needed for our drivers.
 }
 
 uint32_t

@@ -19,7 +19,8 @@ enum Value : uint32_t
    ConfigRegisterBase               = 0x08000,
    VGT_PRIMITIVE_TYPE               = 0x08958,
    VGT_NUM_INDICES                  = 0x08970,
-   ConfigRegisterEnd                = 0x08b00,
+   SQ_CONFIG                        = 0x08c00,
+   ConfigRegisterEnd                = 0x0ac00,
 
    // Context Registers
    ContextRegisterBase              = 0x28000,

@@ -29,6 +29,30 @@ struct SQ_ALU_CONSTANT3_0
    float W;
 };
 
+union SQ_CONFIG
+{
+   uint32_t value;
+
+   struct {
+      uint32_t VC_ENABLE : 1;
+      uint32_t EXPORT_SRC_C : 1;
+      uint32_t DX9_CONSTS : 1;
+      uint32_t ALU_INST_PREFER_VECTOR : 1;
+      uint32_t DX10_CLAMP : 1;
+      uint32_t ALU_PREFER_ONE_WATERFALL : 1;
+      uint32_t ALU_MAX_ONE_WATERFALL : 1;
+      uint32_t : 1;
+      uint32_t CLAUSE_SEQ_PRIO : 2;
+      uint32_t NO_GPR_CLAMP : 1;
+      uint32_t EN_TEX_SKEW : 1;
+      uint32_t : 12;
+      uint32_t PS_PRIO : 2;
+      uint32_t VS_PRIO : 2;
+      uint32_t GS_PRIO : 2;
+      uint32_t ES_PRIO : 2;
+   };
+};
+
 // Used for SQ_CF_INST_LOOP and SQ_CF_INST_LOOP_NO_AL
 struct SQ_LOOP_CONST_DX9_0
 {

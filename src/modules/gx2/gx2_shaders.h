@@ -293,8 +293,9 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data);
 
 void
 GX2SetShaderModeEx(GX2ShaderMode::Value mode,
-                   uint32_t unk1, uint32_t unk2, uint32_t unk3,
-                   uint32_t unk4, uint32_t unk5, uint32_t unk6);
+                   uint32_t numVsGpr, uint32_t numVsStackEntries,
+                   uint32_t numGsGpr, uint32_t numGsStackEntries,
+                   uint32_t numPsGpr, uint32_t numPsStackEntries);
 
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader);
