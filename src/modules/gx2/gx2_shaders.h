@@ -2,6 +2,7 @@
 #include "types.h"
 #include "gpu/latte_registers.h"
 #include "modules/gx2/gx2_enum.h"
+#include "utils/be_array.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
@@ -85,18 +86,18 @@ struct GX2VertexShader
 {
    struct
    {
-      latte::SQ_PGM_RESOURCES_VS sq_pgm_resources_vs;
-      latte::VGT_PRIMITIVEID_EN vgt_primitiveid_en;
-      latte::SPI_VS_OUT_CONFIG spi_vs_out_config;
-      uint32_t num_spi_vs_out_id;
-      latte::SPI_VS_OUT_ID spi_vs_out_id[10];
-      latte::PA_CL_VS_OUT_CNTL pa_cl_vs_out_cntl;
-      latte::SQ_VTX_SEMANTIC_CLEAR sq_vtx_semantic_clear;
-      uint32_t num_sq_vtx_semantic;
-      latte::SQ_VTX_SEMANTIC_N sq_vtx_semantic[32];
-      latte::VGT_STRMOUT_BUFFER_EN vgt_strmout_buffer_en;
-      latte::VGT_VERTEX_REUSE_BLOCK_CNTL vgt_vertex_reuse_block_cntl;
-      latte::VGT_HOS_REUSE_DEPTH vgt_hos_reuse_depth;
+      be_val<latte::SQ_PGM_RESOURCES_VS> sq_pgm_resources_vs;
+      be_val<latte::VGT_PRIMITIVEID_EN> vgt_primitiveid_en;
+      be_val<latte::SPI_VS_OUT_CONFIG> spi_vs_out_config;
+      be_val<uint32_t> num_spi_vs_out_id;
+      be_array<latte::SPI_VS_OUT_ID, 10> spi_vs_out_id;
+      be_val<latte::PA_CL_VS_OUT_CNTL> pa_cl_vs_out_cntl;
+      be_val<latte::SQ_VTX_SEMANTIC_CLEAR> sq_vtx_semantic_clear;
+      be_val<uint32_t> num_sq_vtx_semantic;
+      be_array<latte::SQ_VTX_SEMANTIC_N, 32> sq_vtx_semantic;
+      be_val<latte::VGT_STRMOUT_BUFFER_EN> vgt_strmout_buffer_en;
+      be_val<latte::VGT_VERTEX_REUSE_BLOCK_CNTL> vgt_vertex_reuse_block_cntl;
+      be_val<latte::VGT_HOS_REUSE_DEPTH> vgt_hos_reuse_depth;
    } regs;
 
    be_val<uint32_t> size;

@@ -18,24 +18,41 @@ void
 GX2SetFetchShader(GX2FetchShader *shader)
 {
    uint32_t shaderRegData[] = {
-      shader->data.getAddress(),
+      shader->data.getAddress() >> 8,
       shader->size >> 3,
       0x10,
       0x10,
       shader->regs.sq_pgm_resources_fs.value
    };
-   pm4::write(pm4::SetContextRegs{ latte::Register::SQ_PGM_START_FS, shaderRegData });
+   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_FS, shaderRegData });
 
    uint32_t vgt_instance_step_rates[] = {
       shader->divisors[0],
       shader->divisors[1],
    };
-   pm4::write(pm4::SetContextRegs{ latte::Register::VGT_INSTANCE_STEP_RATE_0, vgt_instance_step_rates });
+   pm4::write(pm4::SetContextRegs { latte::Register::VGT_INSTANCE_STEP_RATE_0, vgt_instance_step_rates });
 }
 
 void
 GX2SetVertexShader(GX2VertexShader *shader)
 {
+   auto ringItemsize = shader->ringItemsize.value();
+   auto pa_cl_vs_out_cntl = shader->regs.pa_cl_vs_out_cntl.value();
+
+   auto spi_vs_out_config = shader->regs.spi_vs_out_config.value();
+   auto num_spi_vs_out_id = shader->regs.num_spi_vs_out_id.value();
+   auto spi_vs_out_id = shader->regs.spi_vs_out_id.value();
+
+   auto sq_pgm_resources_vs = shader->regs.sq_pgm_resources_vs.value();
+   auto sq_vtx_semantic_clear = shader->regs.sq_vtx_semantic_clear.value();
+   auto num_sq_vtx_semantic = shader->regs.num_sq_vtx_semantic.value();
+   auto sq_vtx_semantic = shader->regs.sq_vtx_semantic.value();
+
+   auto vgt_hos_reuse_depth = shader->regs.vgt_hos_reuse_depth.value();
+   auto vgt_primitiveid_en = shader->regs.vgt_primitiveid_en.value();
+   auto vgt_strmout_buffer_en = shader->regs.vgt_strmout_buffer_en.value();
+   auto vgt_vertex_reuse_block_cntl = shader->regs.vgt_vertex_reuse_block_cntl.value();
+
    // Some kind of shenanigans that involves using a hardcoded *shader
 
    uint32_t shaderRegData[] = {
@@ -43,39 +60,39 @@ GX2SetVertexShader(GX2VertexShader *shader)
       shader->size >> 3,
       0x10,
       0x10,
-      shader->regs.sq_pgm_resources_vs.value
+      sq_pgm_resources_vs.value
    };
    pm4::write(pm4::SetContextRegs{ latte::Register::SQ_PGM_START_VS, shaderRegData });
 
    if (shader->mode != GX2ShaderMode::GeometryShader) {
-      pm4::write(pm4::SetContextReg{ latte::Register::VGT_PRIMITIVEID_EN, shader->regs.vgt_primitiveid_en.value });
-      pm4::write(pm4::SetContextReg{ latte::Register::SPI_VS_OUT_CONFIG, shader->regs.spi_vs_out_config.value });
-      pm4::write(pm4::SetContextReg{ latte::Register::PA_CL_VS_OUT_CNTL, shader->regs.pa_cl_vs_out_cntl.value });
+      pm4::write(pm4::SetContextReg{ latte::Register::VGT_PRIMITIVEID_EN, vgt_primitiveid_en.value });
+      pm4::write(pm4::SetContextReg{ latte::Register::SPI_VS_OUT_CONFIG, spi_vs_out_config.value });
+      pm4::write(pm4::SetContextReg{ latte::Register::PA_CL_VS_OUT_CNTL, pa_cl_vs_out_cntl.value });
+
       if (shader->regs.num_spi_vs_out_id > 0) {
-         pm4::write(pm4::SetContextRegs{
-            latte::Register::SPI_VS_OUT_ID_0,
-            { &shader->regs.spi_vs_out_id[0].value, shader->regs.num_spi_vs_out_id } });
+         pm4::write(pm4::SetContextRegs { latte::Register::SPI_VS_OUT_ID_0, { &spi_vs_out_id[0].value, num_spi_vs_out_id } });
       }
+
       pm4::write(pm4::SetContextReg{ latte::Register::SQ_PGM_CF_OFFSET_VS, 0 });
+
       if (shader->hasStreamOut) {
          //_GX2WriteStreamOutStride(&shader->streamOutVertexStride);
       }
-      pm4::write(pm4::SetContextReg{ latte::Register::SQ_PGM_CF_OFFSET_VS, 0 });
-      pm4::write(pm4::SetContextReg{ latte::Register::VGT_STRMOUT_BUFFER_EN, shader->regs.vgt_strmout_buffer_en.value });
+
+      pm4::write(pm4::SetContextReg { latte::Register::SQ_PGM_CF_OFFSET_VS, 0 });
+      pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_BUFFER_EN, vgt_strmout_buffer_en.value });
    } else {
-      pm4::write(pm4::SetContextReg{ latte::Register::SQ_ESGS_RING_ITEMSIZE, shader->ringItemsize });
+      pm4::write(pm4::SetContextReg { latte::Register::SQ_ESGS_RING_ITEMSIZE, ringItemsize });
    }
 
-   pm4::write(pm4::SetContextReg{ latte::Register::SQ_VTX_SEMANTIC_CLEAR, shader->regs.sq_vtx_semantic_clear.value });
+   pm4::write(pm4::SetContextReg { latte::Register::SQ_VTX_SEMANTIC_CLEAR, sq_vtx_semantic_clear.value });
 
    if (shader->regs.num_sq_vtx_semantic > 0) {
-      pm4::write(pm4::SetContextRegs{
-         latte::Register::SQ_VTX_SEMANTIC_0,
-         { &shader->regs.sq_vtx_semantic[0].value, shader->regs.num_sq_vtx_semantic } });
+      pm4::write(pm4::SetContextRegs { latte::Register::SQ_VTX_SEMANTIC_0, { &sq_vtx_semantic[0].value, num_sq_vtx_semantic } });
    }
 
-   pm4::write(pm4::SetContextReg{ latte::Register::VGT_VERTEX_REUSE_BLOCK_CNTL, shader->regs.vgt_vertex_reuse_block_cntl.value });
-   pm4::write(pm4::SetContextReg{ latte::Register::VGT_HOS_REUSE_DEPTH, shader->regs.vgt_hos_reuse_depth.value });
+   pm4::write(pm4::SetContextReg{ latte::Register::VGT_VERTEX_REUSE_BLOCK_CNTL, vgt_vertex_reuse_block_cntl.value });
+   pm4::write(pm4::SetContextReg{ latte::Register::VGT_HOS_REUSE_DEPTH, vgt_hos_reuse_depth.value });
 
    if (shader->loopVarCount > 0) {
       //_GX2SetVertexLoopVar(shader->loopVars, shader->loopVars + (shader->loopVarCount << 3));
@@ -106,7 +123,7 @@ GX2SetPixelShader(GX2PixelShader *shader)
          latte::Register::SPI_PS_INPUT_CNTL_0,
          { &shader->regs.spi_ps_input_cntls[0].value, shader->regs.num_spi_ps_input_cntl } });
    }
-   
+
    uint32_t db_shader_control = shader->regs.db_shader_control.value | 0x200;
 
    pm4::write(pm4::SetContextReg{ latte::Register::CB_SHADER_MASK, shader->regs.cb_shader_mask.value });

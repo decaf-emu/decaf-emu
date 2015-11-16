@@ -427,6 +427,7 @@
     <ClInclude Include="..\src\kernelexport.h" />
     <ClInclude Include="..\src\kernelfunction.h" />
     <ClInclude Include="..\src\kernelmodule.h" />
+    <ClInclude Include="..\src\utils\be_array.h" />
     <ClInclude Include="..\src\utils\be_data.h" />
     <ClInclude Include="..\src\utils\be_val.h" />
     <ClInclude Include="..\src\utils\be_vec.h" />
