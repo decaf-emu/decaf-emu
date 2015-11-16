@@ -32,7 +32,8 @@ GX2SetBlendConstantColor(float red,
 void
 GX2SetBlendConstantColorReg(GX2BlendConstantColorReg *reg)
 {
-   auto values = reinterpret_cast<uint32_t*>(&reg->red);
+   float colors[] = { reg->red, reg->green, reg->blue, reg->alpha };
+   auto values = reinterpret_cast<uint32_t*>(colors);
    pm4::write(pm4::SetContextRegs { latte::Register::CB_BLEND_RED, { values, 4 } });
 }
 

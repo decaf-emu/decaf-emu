@@ -19,10 +19,10 @@ CHECK_OFFSET(GX2BlendControlReg, 4, cb_blend_control);
 
 struct GX2BlendConstantColorReg
 {
-   float red;
-   float green;
-   float blue;
-   float alpha;
+   be_val<float> red;
+   be_val<float> green;
+   be_val<float> blue;
+   be_val<float> alpha;
 };
 CHECK_SIZE(GX2BlendConstantColorReg, 0x10);
 CHECK_OFFSET(GX2BlendConstantColorReg, 0x00, red);
