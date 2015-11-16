@@ -249,7 +249,7 @@ struct SetResourceAttrib
    static const auto Opcode = Opcode3::SET_RESOURCE;
 
    uint32_t id;
-   virtual_ptr<void> baseAddress;
+   virtual_ptr<const void> baseAddress;
    uint32_t size;
    latte::SQ_VTX_CONSTANT_WORD2_0 word2;
    latte::SQ_VTX_CONSTANT_WORD3_0 word3;

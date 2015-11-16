@@ -11,7 +11,7 @@ GX2SetAttribBuffer(uint32_t index,
    memset(&attrib, 0, sizeof(pm4::SetResourceAttrib));
    attrib.id = (index * 7) + 0x8c0; // TODO: Figure out name of register 0x8c0
    attrib.baseAddress = buffer;
-   attrib.size = size;
+   attrib.size = size - 1;
    attrib.word2.STRIDE = stride;
    attrib.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
    pm4::write(attrib);

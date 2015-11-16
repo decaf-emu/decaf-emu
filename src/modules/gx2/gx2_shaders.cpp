@@ -211,11 +211,43 @@ GX2SetPixelUniformReg(uint32_t offset, uint32_t count, uint32_t *data)
 void
 GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
+   pm4::SetResourceAttrib attrib;
+   memset(&attrib, 0, sizeof(pm4::SetResourceAttrib));
+   attrib.id = (location * 7) + 0x7E0;
+   attrib.baseAddress = data;
+   attrib.size = size - 1;
+   // GX2 actually sets a bunch of useless word2,word3 stuff
+   attrib.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+   pm4::write(attrib);
+
+   uint32_t addr256 = memory_untranslate(data) >> 8;
+
+   auto addrId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + location * 4);
+   pm4::write(pm4::SetContextReg{ addrId, addr256 });
+
+   auto sizeId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + location * 4);
+   pm4::write(pm4::SetContextReg{ sizeId, size - 1 });
 }
 
 void
 GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
+   pm4::SetResourceAttrib attrib;
+   memset(&attrib, 0, sizeof(pm4::SetResourceAttrib));
+   attrib.id = (location * 7) + 0x380;
+   attrib.baseAddress = data;
+   attrib.size = size - 1;
+   // GX2 actually sets a bunch of useless word2,word3 stuff
+   attrib.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+   pm4::write(attrib);
+
+   const uint32_t addr256 = memory_untranslate(data) >> 8;
+
+   auto addrId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + location * 4);
+   pm4::write(pm4::SetContextReg{ addrId, addr256 });
+
+   auto sizeId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + location * 4);
+   pm4::write(pm4::SetContextReg{ sizeId, size - 1 });
 }
 
 void
