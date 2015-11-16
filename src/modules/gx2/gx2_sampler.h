@@ -9,9 +9,9 @@
 struct GX2Sampler
 {
    struct {
-      latte::SQ_TEX_SAMPLER_WORD0_0 word0;
-      latte::SQ_TEX_SAMPLER_WORD1_0 word1;
-      latte::SQ_TEX_SAMPLER_WORD2_0 word2;
+      be_val<latte::SQ_TEX_SAMPLER_WORD0_0> word0;
+      be_val<latte::SQ_TEX_SAMPLER_WORD1_0> word1;
+      be_val<latte::SQ_TEX_SAMPLER_WORD2_0> word2;
    } regs;
 };
 CHECK_SIZE(GX2Sampler, 12);
