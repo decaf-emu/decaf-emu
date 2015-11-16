@@ -125,8 +125,30 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
 }
 
 void
+_GX2SetSampler(GX2Sampler *sampler, uint32_t id)
+{
+   pm4::write(pm4::SetSamplerAttrib{ id, sampler->regs.word0, sampler->regs.word1, sampler->regs.word2 });
+}
+
+void
+GX2SetVertexSampler(GX2Sampler *sampler, uint32_t id)
+{
+   assert(id < 0x12);
+   _GX2SetSampler(sampler, 0x12 + id);
+}
+
+void
 GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id)
 {
+   assert(id < 0x12);
+   _GX2SetSampler(sampler, 0x00 + id);
+}
+
+void
+GX2SetGeometrySampler(GX2Sampler *sampler, uint32_t id)
+{
+   assert(id < 0x12);
+   _GX2SetSampler(sampler, 0x24 + id);
 }
 
 void

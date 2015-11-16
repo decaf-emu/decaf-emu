@@ -270,7 +270,13 @@ void
 GX2SetGeometryShader(GX2GeometryShader *shader);
 
 void
+GX2SetVertexSampler(GX2Sampler *sampler, uint32_t id);
+
+void
 GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id);
+
+void
+GX2SetGeometrySampler(GX2Sampler *sampler, uint32_t id);
 
 void
 GX2SetVertexUniformReg(uint32_t offset, uint32_t count, uint32_t *data);

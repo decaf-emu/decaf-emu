@@ -122,7 +122,9 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2SetVertexShader);
    RegisterKernelFunction(GX2SetPixelShader);
    RegisterKernelFunction(GX2SetGeometryShader);
+   RegisterKernelFunction(GX2SetVertexSampler);
    RegisterKernelFunction(GX2SetPixelSampler);
+   RegisterKernelFunction(GX2SetGeometrySampler);
    RegisterKernelFunction(GX2SetVertexUniformReg);
    RegisterKernelFunction(GX2SetPixelUniformReg);
    RegisterKernelFunction(GX2SetVertexUniformBlock);

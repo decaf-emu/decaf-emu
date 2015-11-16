@@ -294,4 +294,61 @@ union SQ_TEX_RESOURCE_WORD6_0
    };
 };
 
+union SQ_TEX_SAMPLER_WORD0_0
+{
+   uint32_t value;
+
+   struct
+   {
+      SQ_TEX_CLAMP CLAMP_X : 3;
+      SQ_TEX_CLAMP CLAMP_Y : 3;
+      SQ_TEX_CLAMP CLAMP_Z : 3;
+      SQ_TEX_XY_FILTER XY_MAG_FILTER : 3;
+      SQ_TEX_XY_FILTER XY_MIN_FILTER : 3;
+      SQ_TEX_Z_FILTER Z_FILTER : 2;
+      SQ_TEX_Z_FILTER MIP_FILTER : 2;
+      SQ_TEX_ANISO MAX_ANISO_RATIO : 3;
+      SQ_TEX_BORDER_COLOR BORDER_COLOR_TYPE : 2;
+      uint32_t POINT_SAMPLING_CLAMP : 1;
+      uint32_t TEX_ARRAY_OVERRIDE : 1;
+      SQ_TEX_DEPTH_COMPARE DEPTH_COMPARE_FUNCTION : 3;
+      SQ_TEX_CHROMA_KEY CHROMA_KEY : 2;
+      uint32_t LOD_USES_MINOR_AXIS : 1;
+   };
+};
+
+union SQ_TEX_SAMPLER_WORD1_0
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t MIN_LOD : 10;
+      uint32_t MAX_LOD : 10;
+      uint32_t LOD_BIAS : 12;
+   };
+};
+
+union SQ_TEX_SAMPLER_WORD2_0
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t LOD_BIAS_SEC : 12;
+      uint32_t MC_COORD_TRUNCATE : 1;
+      uint32_t FORCE_DEGAMMA : 1;
+      uint32_t HIGH_PRECISION_FILTER : 1;
+      uint32_t PERF_MIP : 3;
+      uint32_t PERF_Z : 2;
+      uint32_t ANISO_BIAS : 6;
+      uint32_t FETCH_4 : 1;
+      uint32_t SAMPLE_IS_PCF : 1;
+      uint32_t TRUNCATE_COORD : 1;
+      uint32_t DISABLE_CUBE_WRAP : 1;
+      uint32_t: 1;
+      uint32_t TYPE : 1;
+   };
+};
+
 } // namespace latte
