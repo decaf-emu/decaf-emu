@@ -95,11 +95,15 @@ GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget::Value target)
    using namespace latte::Register;
    uint32_t addr256, aaAddr256;
    auto reg = [](unsigned id) { return static_cast<latte::Register::Value>(id); };
+   auto cb_color_info = colorBuffer->regs.cb_color_info.value();
+   auto cb_color_mask = colorBuffer->regs.cb_color_mask.value();
+   auto cb_color_size = colorBuffer->regs.cb_color_size.value();
+   auto cb_color_view = colorBuffer->regs.cb_color_view.value();
 
    addr256 = colorBuffer->surface.image.getAddress() >> 8;
    pm4::write(pm4::SetContextReg { reg(CB_COLOR0_BASE + target), addr256 });
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_SIZE + target), colorBuffer->regs.cb_color_size.value });
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_INFO + target), colorBuffer->regs.cb_color_info.value });
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_SIZE + target), cb_color_size.value });
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_INFO + target), cb_color_info.value });
 
    if (colorBuffer->surface.aa != 0) {
       aaAddr256 = colorBuffer->aaBuffer.getAddress() >> 8;
@@ -110,8 +114,8 @@ GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget::Value target)
    pm4::write(pm4::SetContextReg { reg(CB_COLOR0_TILE + target), aaAddr256 });
    pm4::write(pm4::SetContextReg { reg(CB_COLOR0_FRAG + target), aaAddr256 });
 
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_VIEW + target), colorBuffer->regs.cb_color_view.value });
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_MASK + target), colorBuffer->regs.cb_color_mask.value });
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_VIEW + target), cb_color_view.value });
+   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_MASK + target), cb_color_mask.value });
 }
 
 void
@@ -145,15 +149,21 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
 void
 GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
 {
-   // TODO: Set more regs!
+   auto cb_color_info = colorBuffer->regs.cb_color_info.value();
+   auto cb_color_size = colorBuffer->regs.cb_color_size.value();
+
+   // Update register values
    memset(&colorBuffer->regs, 0, sizeof(colorBuffer->regs));
+   cb_color_info.FORMAT = GX2GetSurfaceColorFormat(colorBuffer->surface.format);
 
-   auto &info = colorBuffer->regs.cb_color_info;
-   info.FORMAT = GX2GetSurfaceColorFormat(colorBuffer->surface.format);
+   cb_color_size.PITCH_TILE_MAX = (colorBuffer->surface.pitch / latte::tile_width) - 1;
+   cb_color_size.SLICE_TILE_MAX = ((colorBuffer->surface.pitch * colorBuffer->surface.height) / (latte::tile_width * latte::tile_height)) - 1;
 
-   auto &size = colorBuffer->regs.cb_color_size;
-   size.PITCH_TILE_MAX = (colorBuffer->surface.pitch / latte::tile_width) - 1;
-   size.SLICE_TILE_MAX = ((colorBuffer->surface.pitch * colorBuffer->surface.height) / (latte::tile_width * latte::tile_height)) - 1;
+   // TODO: Set more regs!
+
+   // Save big endian registers
+   colorBuffer->regs.cb_color_info = cb_color_info;
+   colorBuffer->regs.cb_color_size = cb_color_size;
 }
 
 void

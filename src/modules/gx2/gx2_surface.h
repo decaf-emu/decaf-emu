@@ -103,11 +103,11 @@ struct GX2ColorBuffer
 
    struct
    {
-      latte::CB_COLORN_SIZE cb_color_size;
-      latte::CB_COLORN_INFO cb_color_info;
-      latte::CB_COLORN_VIEW cb_color_view;
-      latte::CB_COLORN_MASK cb_color_mask;
-      uint32_t cmask_offset;
+      be_val<latte::CB_COLORN_SIZE> cb_color_size;
+      be_val<latte::CB_COLORN_INFO> cb_color_info;
+      be_val<latte::CB_COLORN_VIEW> cb_color_view;
+      be_val<latte::CB_COLORN_MASK> cb_color_mask;
+      be_val<uint32_t> cmask_offset;
    } regs;
 };
 CHECK_OFFSET(GX2ColorBuffer, 0x74, viewMip);
