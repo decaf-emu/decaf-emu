@@ -32,7 +32,7 @@ CHECK_OFFSET(GX2BlendConstantColorReg, 0x0c, alpha);
 
 struct GX2DepthStencilControlReg
 {
-   latte::DB_DEPTH_CONTROL db_depth_control;
+   be_val<latte::DB_DEPTH_CONTROL> db_depth_control;
 };
 CHECK_SIZE(GX2DepthStencilControlReg, 4);
 CHECK_OFFSET(GX2DepthStencilControlReg, 0, db_depth_control);

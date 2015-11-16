@@ -121,19 +121,21 @@ GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                               GX2StencilFunction::Value backStencilZFail,
                               GX2StencilFunction::Value backStencilFail)
 {
-   reg->db_depth_control.Z_ENABLE         = depthTest;
-   reg->db_depth_control.Z_WRITE_ENABLE   = depthWrite;
-   reg->db_depth_control.ZFUNC            = static_cast<latte::DB_FRAG_FUNC>(depthCompare);
-   reg->db_depth_control.STENCIL_ENABLE   = stencilTest;
-   reg->db_depth_control.BACKFACE_ENABLE  = backfaceStencil;
-   reg->db_depth_control.STENCILFUNC      = static_cast<latte::DB_REF_FUNC>(frontStencilFunc);
-   reg->db_depth_control.STENCILZPASS     = static_cast<latte::DB_STENCIL_FUNC>(frontStencilZPass);
-   reg->db_depth_control.STENCILZFAIL     = static_cast<latte::DB_STENCIL_FUNC>(frontStencilZFail);
-   reg->db_depth_control.STENCILFAIL      = static_cast<latte::DB_STENCIL_FUNC>(frontStencilFail);
-   reg->db_depth_control.STENCILFUNC_BF   = static_cast<latte::DB_REF_FUNC>(backStencilFunc);
-   reg->db_depth_control.STENCILZPASS_BF  = static_cast<latte::DB_STENCIL_FUNC>(backStencilZPass);
-   reg->db_depth_control.STENCILZFAIL_BF  = static_cast<latte::DB_STENCIL_FUNC>(backStencilZFail);
-   reg->db_depth_control.STENCILFAIL_BF   = static_cast<latte::DB_STENCIL_FUNC>(backStencilFail);
+   auto db_depth_control = reg->db_depth_control.value();
+   db_depth_control.Z_ENABLE         = depthTest;
+   db_depth_control.Z_WRITE_ENABLE   = depthWrite;
+   db_depth_control.ZFUNC            = static_cast<latte::DB_FRAG_FUNC>(depthCompare);
+   db_depth_control.STENCIL_ENABLE   = stencilTest;
+   db_depth_control.BACKFACE_ENABLE  = backfaceStencil;
+   db_depth_control.STENCILFUNC      = static_cast<latte::DB_REF_FUNC>(frontStencilFunc);
+   db_depth_control.STENCILZPASS     = static_cast<latte::DB_STENCIL_FUNC>(frontStencilZPass);
+   db_depth_control.STENCILZFAIL     = static_cast<latte::DB_STENCIL_FUNC>(frontStencilZFail);
+   db_depth_control.STENCILFAIL      = static_cast<latte::DB_STENCIL_FUNC>(frontStencilFail);
+   db_depth_control.STENCILFUNC_BF   = static_cast<latte::DB_REF_FUNC>(backStencilFunc);
+   db_depth_control.STENCILZPASS_BF  = static_cast<latte::DB_STENCIL_FUNC>(backStencilZPass);
+   db_depth_control.STENCILZFAIL_BF  = static_cast<latte::DB_STENCIL_FUNC>(backStencilZFail);
+   db_depth_control.STENCILFAIL_BF   = static_cast<latte::DB_STENCIL_FUNC>(backStencilFail);
+   reg->db_depth_control = db_depth_control;
 }
 
 void
@@ -172,7 +174,8 @@ GX2SetDepthStencilControl(BOOL depthTest,
 void
 GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg)
 {
-   pm4::write(pm4::SetContextReg { latte::Register::DB_DEPTH_CONTROL, reg->db_depth_control.value });
+   auto db_depth_control = reg->db_depth_control.value();
+   pm4::write(pm4::SetContextReg { latte::Register::DB_DEPTH_CONTROL, db_depth_control.value });
 }
 
 void
