@@ -11,9 +11,6 @@ void
 GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget::Value scanTarget);
 
 void
-GX2SwapBuffers(GX2ColorBuffer *renderBuffer);
-
-void
 GX2SwapScanBuffers();
 
 BOOL

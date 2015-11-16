@@ -9,6 +9,41 @@
 namespace pm4
 {
 
+struct DecafSwapBuffers
+{
+   static const auto Opcode = Opcode3::DECAF_SWAP_BUFFERS;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+   }
+};
+
+struct DecafCopyColorToScan
+{
+   static const auto Opcode = Opcode3::DECAF_COPY_COLOR_TO_SCAN;
+
+   uint32_t scanTarget;
+   uint32_t bufferAddr;
+   uint32_t aaBufferAddr;
+   latte::CB_COLORN_SIZE cb_color_size;
+   latte::CB_COLORN_INFO cb_color_info;
+   latte::CB_COLORN_VIEW cb_color_view;
+   latte::CB_COLORN_MASK cb_color_mask;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(scanTarget);
+      se(bufferAddr);
+      se(aaBufferAddr);
+      se(cb_color_size.value);
+      se(cb_color_info.value);
+      se(cb_color_view.value);
+      se(cb_color_mask.value);
+   }
+};
+
 struct DrawIndexAuto
 {
    static const auto Opcode = Opcode3::DRAW_INDEX_AUTO;

@@ -10,6 +10,9 @@ namespace Opcode3
 {
 enum Value : uint32_t
 {
+   DECAF_COPY_COLOR_TO_SCAN   = 0x01,
+   DECAF_SWAP_BUFFERS         = 0x02,
+
    NOP                        = 0x10,
    INDIRECT_BUFFER_END        = 0x17,
    NEXTCHAR                   = 0x19,

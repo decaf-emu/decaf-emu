@@ -1,4 +1,6 @@
+#include "gx2_surface.h"
 #include "gx2_swap.h"
+#include "gpu/pm4_writer.h"
 
 static uint32_t
 gSwapInterval = 1;
@@ -6,16 +8,30 @@ gSwapInterval = 1;
 void
 GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget::Value scanTarget)
 {
-}
+   uint32_t addr256, aaAddr256;
+   addr256 = buffer->surface.image.getAddress() >> 8;
 
-void
-GX2SwapBuffers(GX2ColorBuffer *renderBuffer)
-{
+   if (buffer->surface.aa != 0) {
+      aaAddr256 = buffer->aaBuffer.getAddress() >> 8;
+   } else {
+      aaAddr256 = 0;
+   }
+
+   pm4::write(pm4::DecafCopyColorToScan{
+      scanTarget,
+      addr256,
+      aaAddr256,
+      buffer->regs.cb_color_size,
+      buffer->regs.cb_color_info,
+      buffer->regs.cb_color_view,
+      buffer->regs.cb_color_mask
+   });
 }
 
 void
 GX2SwapScanBuffers()
 {
+   pm4::write(pm4::DecafSwapBuffers{ });
 }
 
 BOOL

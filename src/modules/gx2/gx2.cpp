@@ -152,7 +152,6 @@ GX2::RegisterFunctions()
 
    // Swap
    RegisterKernelFunction(GX2CopyColorBufferToScanBuffer);
-   RegisterKernelFunction(GX2SwapBuffers);
    RegisterKernelFunction(GX2SwapScanBuffers);
    RegisterKernelFunction(GX2GetLastFrame);
    RegisterKernelFunction(GX2GetLastFrameGamma);
