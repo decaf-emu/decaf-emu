@@ -121,23 +121,31 @@ GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget::Value target)
 void
 GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
 {
+   auto db_depth_info = depthBuffer->regs.db_depth_info.value();
+   auto db_depth_size = depthBuffer->regs.db_depth_size.value();
+   auto db_depth_view = depthBuffer->regs.db_depth_view.value();
+   auto db_htile_surface = depthBuffer->regs.db_htile_surface.value();
+   auto db_prefetch_limit = depthBuffer->regs.db_prefetch_limit.value();
+   auto db_preload_control = depthBuffer->regs.db_preload_control.value();
+   auto pa_poly_offset_cntl = depthBuffer->regs.pa_poly_offset_cntl.value();
+
    uint32_t values1[] = {
-      depthBuffer->regs.db_depth_size.value,
-      depthBuffer->regs.db_depth_view.value,
+      db_depth_size.value,
+      db_depth_view.value,
    };
    pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_SIZE, values1 });
 
    uint32_t values2[] = {
       depthBuffer->surface.image.getAddress(),
-      depthBuffer->regs.db_depth_info.value,
+      db_depth_info.value,
       depthBuffer->hiZPtr.getAddress(),
    };
    pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_SIZE, values2 });
 
-   pm4::write(pm4::SetContextReg { latte::Register::DB_HTILE_SURFACE, depthBuffer->regs.db_htile_surface.value });
-   pm4::write(pm4::SetContextReg { latte::Register::DB_PREFETCH_LIMIT, depthBuffer->regs.db_prefetch_limit.value });
-   pm4::write(pm4::SetContextReg { latte::Register::DB_PRELOAD_CONTROL, depthBuffer->regs.db_preload_control.value });
-   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_POLY_OFFSET_DB_FMT_CNTL, depthBuffer->regs.pa_poly_offset_cntl.value });
+   pm4::write(pm4::SetContextReg { latte::Register::DB_HTILE_SURFACE, db_htile_surface.value });
+   pm4::write(pm4::SetContextReg { latte::Register::DB_PREFETCH_LIMIT, db_prefetch_limit.value });
+   pm4::write(pm4::SetContextReg { latte::Register::DB_PRELOAD_CONTROL, db_preload_control.value });
+   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_POLY_OFFSET_DB_FMT_CNTL, pa_poly_offset_cntl.value });
 
    uint32_t values3[] = {
       depthBuffer->stencilClear,
@@ -169,13 +177,19 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
 void
 GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
 {
-   // TODO: Set more regs!
+   auto db_depth_info = depthBuffer->regs.db_depth_info.value();
+   auto db_depth_size = depthBuffer->regs.db_depth_size.value();
+
+   // Update register values
    memset(&depthBuffer->regs, 0, sizeof(depthBuffer->regs));
+   db_depth_info.FORMAT = GX2GetSurfaceDepthFormat(depthBuffer->surface.format);
 
-   auto &info = depthBuffer->regs.db_depth_info;
-   info.FORMAT = GX2GetSurfaceDepthFormat(depthBuffer->surface.format);
+   db_depth_size.PITCH_TILE_MAX = (depthBuffer->surface.pitch / latte::tile_width) - 1;
+   db_depth_size.SLICE_TILE_MAX = ((depthBuffer->surface.pitch * depthBuffer->surface.height) / (latte::tile_width * latte::tile_height)) - 1;
 
-   auto &size = depthBuffer->regs.db_depth_size;
-   size.PITCH_TILE_MAX = (depthBuffer->surface.pitch / latte::tile_width) - 1;
-   size.SLICE_TILE_MAX = ((depthBuffer->surface.pitch * depthBuffer->surface.height) / (latte::tile_width * latte::tile_height)) - 1;
+   // TODO: Set more regs!
+
+   // Save big endian registers
+   depthBuffer->regs.db_depth_info = db_depth_info;
+   depthBuffer->regs.db_depth_size = db_depth_size;
 }

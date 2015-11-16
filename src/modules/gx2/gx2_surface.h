@@ -66,13 +66,13 @@ struct GX2DepthBuffer
 
    struct
    {
-      latte::DB_DEPTH_SIZE db_depth_size;
-      latte::DB_DEPTH_VIEW db_depth_view;
-      latte::DB_DEPTH_INFO db_depth_info;
-      latte::DB_HTILE_SURFACE db_htile_surface;
-      latte::DB_PREFETCH_LIMIT db_prefetch_limit;
-      latte::DB_PRELOAD_CONTROL db_preload_control;
-      latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL pa_poly_offset_cntl;
+      be_val<latte::DB_DEPTH_SIZE> db_depth_size;
+      be_val<latte::DB_DEPTH_VIEW> db_depth_view;
+      be_val<latte::DB_DEPTH_INFO> db_depth_info;
+      be_val<latte::DB_HTILE_SURFACE> db_htile_surface;
+      be_val<latte::DB_PREFETCH_LIMIT> db_prefetch_limit;
+      be_val<latte::DB_PRELOAD_CONTROL> db_preload_control;
+      be_val<latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL> pa_poly_offset_cntl;
    } regs;
 };
 CHECK_OFFSET(GX2DepthBuffer, 0x74, viewMip);
