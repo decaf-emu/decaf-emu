@@ -49,8 +49,8 @@ CHECK_SIZE(GX2UniformVar, 0x14);
 
 struct GX2UniformInitialValue
 {
-   float value[4];
-   uint32_t offset;
+   be_val<float> value[4];
+   be_val<uint32_t> offset;
 };
 CHECK_OFFSET(GX2UniformInitialValue, 0x00, value);
 CHECK_OFFSET(GX2UniformInitialValue, 0x10, offset);
