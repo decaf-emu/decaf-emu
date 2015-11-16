@@ -14,7 +14,7 @@ struct GX2FetchShader
 
    struct
    {
-      latte::SQ_PGM_RESOURCES_FS sq_pgm_resources_fs;
+      be_val<latte::SQ_PGM_RESOURCES_FS> sq_pgm_resources_fs;
    } regs;
 
    be_val<uint32_t> size;

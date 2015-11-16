@@ -17,12 +17,14 @@ GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize)
 void
 GX2SetFetchShader(GX2FetchShader *shader)
 {
+   auto sq_pgm_resources_fs = shader->regs.sq_pgm_resources_fs.value();
+
    uint32_t shaderRegData[] = {
-      shader->data.getAddress() >> 8,
+      shader->data.getAddress() / 256,
       shader->size >> 3,
       0x10,
       0x10,
-      shader->regs.sq_pgm_resources_fs.value
+      sq_pgm_resources_fs.value,
    };
    pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_FS, shaderRegData });
 
@@ -56,11 +58,11 @@ GX2SetVertexShader(GX2VertexShader *shader)
    // Some kind of shenanigans that involves using a hardcoded *shader
 
    uint32_t shaderRegData[] = {
-      shader->data.getAddress(),
+      shader->data.getAddress() / 256,
       shader->size >> 3,
       0x10,
       0x10,
-      sq_pgm_resources_vs.value
+      sq_pgm_resources_vs.value,
    };
    pm4::write(pm4::SetContextRegs{ latte::Register::SQ_PGM_START_VS, shaderRegData });
 

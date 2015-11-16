@@ -227,7 +227,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 
    // Calculate instruction pointers
    auto fetchCount = GX2FSCalcNumFetchInsts(attribCount, type);
-   auto aluCount = GX2FSCalcNumAluInsts(type, tessMode);
+   auto aluCount = 0; // GX2FSCalcNumAluInsts(type, tessMode);
    auto cfCount = GX2FSCalcNumCFInsts(fetchCount, type);
 
    auto fetchSize = fetchCount * latte::BytesPerVTX;
@@ -376,7 +376,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 
    // Generate a VTX CF per 16 VFETCH
    if (fetchCount) {
-      for (auto i = 0u; i < cfCount; ++i) {
+      for (auto i = 0u; i < cfCount - 1; ++i) {
          auto fetches = FetchesPerControlFlow;
 
          if (fetchCount < (i + 1) * FetchesPerControlFlow) {
@@ -403,7 +403,10 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
    latte::ControlFlowInst eop = { 0, 0 };
    eop.word1.BARRIER = 1;
    eop.word1.CF_INST = latte::SQ_CF_INST_RETURN;
+   *(cfPtr++) = eop;
 
    // Set sq_pgm_resources_fs
-   fetchShader->regs.sq_pgm_resources_fs.NUM_GPRS = numGPRs;
+   auto sq_pgm_resources_fs = fetchShader->regs.sq_pgm_resources_fs.value();
+   sq_pgm_resources_fs.NUM_GPRS = numGPRs;
+   fetchShader->regs.sq_pgm_resources_fs = sq_pgm_resources_fs;
 }
