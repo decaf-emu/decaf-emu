@@ -62,14 +62,16 @@ GX2InitBlendControlReg(GX2BlendControlReg *reg,
                        GX2BlendMode::Value alphaDstBlend,
                        GX2BlendCombineMode::Value alphaCombine)
 {
+   auto cb_blend_control = reg->cb_blend_control.value();
    reg->target = target;
-   reg->cb_blend_control.COLOR_SRCBLEND         = static_cast<latte::CB_BLEND_FUNC>(colorSrcBlend);
-   reg->cb_blend_control.COLOR_DESTBLEND        = static_cast<latte::CB_BLEND_FUNC>(colorDstBlend);
-   reg->cb_blend_control.COLOR_COMB_FCN         = static_cast<latte::CB_COMB_FUNC>(colorCombine);
-   reg->cb_blend_control.SEPARATE_ALPHA_BLEND   = useAlphaBlend;
-   reg->cb_blend_control.ALPHA_SRCBLEND         = static_cast<latte::CB_BLEND_FUNC>(alphaSrcBlend);
-   reg->cb_blend_control.ALPHA_DESTBLEND        = static_cast<latte::CB_BLEND_FUNC>(alphaDstBlend);
-   reg->cb_blend_control.ALPHA_COMB_FCN         = static_cast<latte::CB_COMB_FUNC>(alphaCombine);
+   cb_blend_control.COLOR_SRCBLEND        = static_cast<latte::CB_BLEND_FUNC>(colorSrcBlend);
+   cb_blend_control.COLOR_DESTBLEND       = static_cast<latte::CB_BLEND_FUNC>(colorDstBlend);
+   cb_blend_control.COLOR_COMB_FCN        = static_cast<latte::CB_COMB_FUNC>(colorCombine);
+   cb_blend_control.SEPARATE_ALPHA_BLEND  = useAlphaBlend;
+   cb_blend_control.ALPHA_SRCBLEND        = static_cast<latte::CB_BLEND_FUNC>(alphaSrcBlend);
+   cb_blend_control.ALPHA_DESTBLEND       = static_cast<latte::CB_BLEND_FUNC>(alphaDstBlend);
+   cb_blend_control.ALPHA_COMB_FCN        = static_cast<latte::CB_COMB_FUNC>(alphaCombine);
+   reg->cb_blend_control = cb_blend_control;
 }
 
 void
@@ -98,8 +100,9 @@ GX2SetBlendControl(GX2RenderTarget::Value target,
 void
 GX2SetBlendControlReg(GX2BlendControlReg *reg)
 {
+   auto cb_blend_control = reg->cb_blend_control.value();
    auto id = static_cast<latte::Register::Value>(latte::Register::CB_BLEND0_CONTROL + reg->target);
-   pm4::write(pm4::SetContextReg { id, reg->cb_blend_control.value });
+   pm4::write(pm4::SetContextReg { id, cb_blend_control.value });
 }
 
 void

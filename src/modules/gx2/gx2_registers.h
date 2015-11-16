@@ -10,8 +10,8 @@ struct GX2DepthBuffer;
 
 struct GX2BlendControlReg
 {
-   GX2RenderTarget::Value target;
-   latte::CB_BLENDN_CONTROL cb_blend_control;
+   be_val<GX2RenderTarget::Value> target;
+   be_val<latte::CB_BLENDN_CONTROL> cb_blend_control;
 };
 CHECK_SIZE(GX2BlendControlReg, 8);
 CHECK_OFFSET(GX2BlendControlReg, 0, target);
