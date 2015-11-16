@@ -49,8 +49,8 @@ CHECK_SIZE(GX2UniformVar, 0x14);
 
 struct GX2UniformInitialValue
 {
-   float value[4];
-   uint32_t offset;
+   be_array<float, 4> value;
+   be_val<uint32_t> offset;
 };
 CHECK_OFFSET(GX2UniformInitialValue, 0x00, value);
 CHECK_OFFSET(GX2UniformInitialValue, 0x10, offset);
@@ -154,16 +154,16 @@ struct GX2PixelShader
 {
    struct
    {
-      latte::SQ_PGM_RESOURCES_PS sq_pgm_resources_ps;
-      latte::SQ_PGM_EXPORTS_PS pgm_exports_ps;
-      latte::SPI_PS_IN_CONTROL_0 spi_ps_in_control_0;
-      latte::SPI_PS_IN_CONTROL_1 spi_ps_in_control_1;
-      uint32_t num_spi_ps_input_cntl;
-      latte::SPI_PS_INPUT_CNTL_N spi_ps_input_cntls[32];
-      latte::CB_SHADER_MASK cb_shader_mask;
-      latte::CB_SHADER_CONTROL cb_shader_control;
-      latte::DB_SHADER_CONTROL db_shader_control;
-      latte::SPI_INPUT_Z spi_input_z;
+      be_val<latte::SQ_PGM_RESOURCES_PS> sq_pgm_resources_ps;
+      be_val<latte::SQ_PGM_EXPORTS_PS> sq_pgm_exports_ps;
+      be_val<latte::SPI_PS_IN_CONTROL_0> spi_ps_in_control_0;
+      be_val<latte::SPI_PS_IN_CONTROL_1> spi_ps_in_control_1;
+      be_val<uint32_t> num_spi_ps_input_cntl;
+      be_array<latte::SPI_PS_INPUT_CNTL_N, 32> spi_ps_input_cntls;
+      be_val<latte::CB_SHADER_MASK> cb_shader_mask;
+      be_val<latte::CB_SHADER_CONTROL> cb_shader_control;
+      be_val<latte::DB_SHADER_CONTROL> db_shader_control;
+      be_val<latte::SPI_INPUT_Z> spi_input_z;
    } regs;
 
    be_val<uint32_t> size;
@@ -188,7 +188,7 @@ struct GX2PixelShader
    UNKNOWN(4 * 4);
 };
 CHECK_OFFSET(GX2PixelShader, 0x00, regs.sq_pgm_resources_ps);
-CHECK_OFFSET(GX2PixelShader, 0x04, regs.pgm_exports_ps);
+CHECK_OFFSET(GX2PixelShader, 0x04, regs.sq_pgm_exports_ps);
 CHECK_OFFSET(GX2PixelShader, 0x08, regs.spi_ps_in_control_0);
 CHECK_OFFSET(GX2PixelShader, 0x0C, regs.spi_ps_in_control_1);
 CHECK_OFFSET(GX2PixelShader, 0x10, regs.num_spi_ps_input_cntl);

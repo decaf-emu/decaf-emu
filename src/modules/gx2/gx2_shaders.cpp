@@ -104,34 +104,47 @@ GX2SetVertexShader(GX2VertexShader *shader)
 void
 GX2SetPixelShader(GX2PixelShader *shader)
 {
+   auto cb_shader_control = shader->regs.cb_shader_control.value();
+   auto cb_shader_mask = shader->regs.cb_shader_mask.value();
+   auto db_shader_control = shader->regs.db_shader_control.value();
+
+   auto spi_input_z = shader->regs.spi_input_z.value();
+   auto spi_ps_in_control_0 = shader->regs.spi_ps_in_control_0.value();
+   auto spi_ps_in_control_1 = shader->regs.spi_ps_in_control_1.value();
+   auto spi_ps_input_cntls = shader->regs.spi_ps_input_cntls.value();
+   auto num_spi_ps_input_cntl = shader->regs.num_spi_ps_input_cntl.value();
+
+   auto sq_pgm_resources_ps = shader->regs.sq_pgm_resources_ps.value();
+   auto sq_pgm_exports_ps = shader->regs.sq_pgm_exports_ps.value();
+
    uint32_t shaderRegData[] = {
-      shader->data.getAddress(),
+      shader->data.getAddress() / 256,
       shader->size >> 3,
       0x10,
       0x10,
-      shader->regs.sq_pgm_resources_ps.value,
-      shader->regs.pgm_exports_ps.value,
+      sq_pgm_resources_ps.value,
+      sq_pgm_exports_ps.value,
    };
-   pm4::write(pm4::SetContextRegs{ latte::Register::SQ_PGM_START_PS, shaderRegData });
+   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_PS, shaderRegData });
 
    uint32_t spi_ps_in_control[] = {
-      shader->regs.spi_ps_in_control_0.value,
-      shader->regs.spi_ps_in_control_1.value,
+      spi_ps_in_control_0.value,
+      spi_ps_in_control_1.value,
    };
-   pm4::write(pm4::SetContextRegs{ latte::Register::SPI_PS_IN_CONTROL_0, spi_ps_in_control });
+   pm4::write(pm4::SetContextRegs { latte::Register::SPI_PS_IN_CONTROL_0, spi_ps_in_control });
 
-   if (shader->regs.num_spi_ps_input_cntl > 0) {
-      pm4::write(pm4::SetContextRegs{
+   if (num_spi_ps_input_cntl > 0) {
+      pm4::write(pm4::SetContextRegs {
          latte::Register::SPI_PS_INPUT_CNTL_0,
-         { &shader->regs.spi_ps_input_cntls[0].value, shader->regs.num_spi_ps_input_cntl } });
+         { &spi_ps_input_cntls[0].value, num_spi_ps_input_cntl }
+      });
    }
 
-   uint32_t db_shader_control = shader->regs.db_shader_control.value | 0x200;
-
-   pm4::write(pm4::SetContextReg{ latte::Register::CB_SHADER_MASK, shader->regs.cb_shader_mask.value });
-   pm4::write(pm4::SetContextReg{ latte::Register::CB_SHADER_CONTROL, shader->regs.cb_shader_control.value });
-   pm4::write(pm4::SetContextReg{ latte::Register::DB_SHADER_CONTROL, db_shader_control });
-   pm4::write(pm4::SetContextReg{ latte::Register::SPI_INPUT_Z, shader->regs.spi_input_z.value });
+   db_shader_control.DUAL_EXPORT_ENABLE = 1;
+   pm4::write(pm4::SetContextReg { latte::Register::CB_SHADER_MASK, cb_shader_mask.value });
+   pm4::write(pm4::SetContextReg { latte::Register::CB_SHADER_CONTROL, cb_shader_control.value });
+   pm4::write(pm4::SetContextReg { latte::Register::DB_SHADER_CONTROL, db_shader_control.value });
+   pm4::write(pm4::SetContextReg { latte::Register::SPI_INPUT_Z, spi_input_z.value });
 
    if (shader->loopVarCount > 0) {
       //_GX2SetPixelLoopVar(shader->loopVars, shader->loopVars + (shader->loopVarCount << 3));
@@ -146,7 +159,12 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
 void
 _GX2SetSampler(GX2Sampler *sampler, uint32_t id)
 {
-   pm4::write(pm4::SetSamplerAttrib{ id, sampler->regs.word0, sampler->regs.word1, sampler->regs.word2 });
+   pm4::write(pm4::SetSamplerAttrib {
+      id,
+      sampler->regs.word0,
+      sampler->regs.word1,
+      sampler->regs.word2
+   });
 }
 
 void
