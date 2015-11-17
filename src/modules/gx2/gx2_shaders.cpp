@@ -275,23 +275,23 @@ GX2SetShaderModeEx(GX2ShaderMode::Value mode,
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader)
 {
-   return 0;
+   return shader->regs.sq_pgm_resources_ps.value().NUM_GPRS;
 }
 
 uint32_t
 GX2GetPixelShaderStackEntries(GX2PixelShader *shader)
 {
-   return 0;
+   return shader->regs.sq_pgm_resources_ps.value().STACK_SIZE;
 }
 
 uint32_t
 GX2GetVertexShaderGPRs(GX2VertexShader *shader)
 {
-   return 0;
+   return shader->regs.sq_pgm_resources_vs.value().NUM_GPRS;
 }
 
 uint32_t
 GX2GetVertexShaderStackEntries(GX2VertexShader *shader)
 {
-   return 0;
+   return shader->regs.sq_pgm_resources_vs.value().STACK_SIZE;
 }
