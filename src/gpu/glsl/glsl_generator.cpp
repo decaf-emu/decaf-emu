@@ -1,13 +1,13 @@
 #include <spdlog/spdlog.h>
 #include <array_view.h>
 #include "gpu/latte.h"
-#include "gpu/hlsl/hlsl.h"
-#include "gpu/hlsl/hlsl_generator.h"
+#include "gpu/glsl/glsl.h"
+#include "gpu/glsl/glsl_generator.h"
 #include "modules/gx2/gx2_shaders.h"
 
 static const auto indentSize = 3u;
 
-namespace hlsl
+namespace glsl
 {
 
 static bool translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks);
@@ -335,41 +335,35 @@ static std::string
 getGX2AttribFormatType(GX2AttribFormat::Value format)
 {
    switch (format) {
-   case GX2AttribFormat::UNORM_8:
-      return "unorm float";
-   case GX2AttribFormat::UNORM_8_8:
-      return "unorm float2";
-   case GX2AttribFormat::UNORM_8_8_8_8:
-      return "unorm float4";
    case GX2AttribFormat::UINT_8:
       return "uint";
    case GX2AttribFormat::UINT_8_8:
-      return "uint2";
+      return "uvec2";
    case GX2AttribFormat::UINT_8_8_8_8:
-      return "uint4";
-   case GX2AttribFormat::SNORM_8:
-      return "snorm float";
-   case GX2AttribFormat::SNORM_8_8:
-      return "snorm float2";
-   case GX2AttribFormat::SNORM_8_8_8_8:
-      return "snorm float4";
+      return "uvec4";
    case GX2AttribFormat::SINT_8:
       return "int";
    case GX2AttribFormat::SINT_8_8:
-      return "int2";
+      return "ivec2";
    case GX2AttribFormat::SINT_8_8_8_8:
-      return "int4";
+      return "ivec4";
    case GX2AttribFormat::FLOAT_32:
       return "float";
    case GX2AttribFormat::FLOAT_32_32:
-      return "float2";
+      return "vec2";
    case GX2AttribFormat::FLOAT_32_32_32:
-      return "float3";
+      return "vec3";
    case GX2AttribFormat::FLOAT_32_32_32_32:
-      return "float4";
+      return "vec4";
+   case GX2AttribFormat::SNORM_8:
+   case GX2AttribFormat::SNORM_8_8:
+   case GX2AttribFormat::SNORM_8_8_8_8:
+   case GX2AttribFormat::UNORM_8:
+   case GX2AttribFormat::UNORM_8_8:
+   case GX2AttribFormat::UNORM_8_8_8_8:
    default:
-      assert(0);
-      return "float4";
+      throw std::logic_error("Unsupported GLSL GX2AttribFormatType");
+      return "vec4";
    }
 }
 
@@ -420,10 +414,9 @@ generateAttribs(const gsl::array_view<GX2AttribStream> &attribs, fmt::MemoryWrit
 {
    for (const auto &attrib : attribs) {
       output
-         << "   "
+         << "in "
          << getGX2AttribFormatType(attrib.format)
-         << " param" << attrib.location
-         << " : POSITION" << attrib.location
+         << " param_" << attrib.location
          << ";\n";
    }
 
@@ -438,35 +431,21 @@ generateExports(const latte::Shader &shader, fmt::MemoryWriter &output)
 
       switch (exp->type) {
       case latte::exp::Type::Position:
-         if (exp->dstReg == 0) {
-            output
-               << "float4 position"
-               << exp->dstReg
-               << " : SV_POSITION"
-               << ";\n";
-         } else {
-            output
-               << "float4 position"
-               << exp->dstReg
-               << " : POSITION"
-               << exp->dstReg
-               << ";\n";
-         }
+         output
+            << "in vec4 position_"
+            << exp->dstReg
+            << ";\n";
 
          break;
       case latte::exp::Type::Parameter:
          output
-            << "float4 param"
-            << exp->dstReg
-            << " : TEXCOORD"
+            << "in vec4 param_"
             << exp->dstReg
             << ";\n";
          break;
       case latte::exp::Type::Pixel:
          output
-            << "float4 color"
-            << exp->dstReg
-            << " : SV_TARGET"
+            << "in vec4 color"
             << exp->dstReg
             << ";\n";
          break;
@@ -634,6 +613,9 @@ getUniformCount(latte::Shader &shader, uint32_t varCount, GX2UniformVar *vars)
    return std::max(max, highestOffset);
 }
 
+// fetch shader + vs_input ?
+
+// vs_output + ps_input?
 bool
 generateHLSL(const gsl::array_view<GX2AttribStream> &attribs,
              GX2VertexShader *gx2Vertex,

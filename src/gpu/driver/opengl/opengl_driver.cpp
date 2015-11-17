@@ -12,32 +12,78 @@ namespace gpu
 namespace opengl
 {
 
+// We need LOAD_REG and SET_REG to do same shit.
+
+void Driver::checkActiveShader()
+{
+   auto pgm_start_fs = getRegister<latte::SQ_PGM_START_FS>(latte::Register::SQ_PGM_START_FS);
+   auto pgm_start_vs = getRegister<latte::SQ_PGM_START_VS>(latte::Register::SQ_PGM_START_VS);
+   auto pgm_start_ps = getRegister<latte::SQ_PGM_START_PS>(latte::Register::SQ_PGM_START_PS);
+
+   if (mActiveShader &&
+       mActiveShader->fetch && mActiveShader->fetch->pgm_start_fs.PGM_START != pgm_start_fs.PGM_START
+       && mActiveShader->vertex && mActiveShader->vertex->pgm_start_vs.PGM_START != pgm_start_vs.PGM_START
+       && mActiveShader->pixel && mActiveShader->pixel->pgm_start_ps.PGM_START != pgm_start_ps.PGM_START) {
+      // OpenGL shader matches latte shader
+      return;
+   }
+
+   auto fsProgram = make_virtual_ptr<void>(pgm_start_fs.PGM_START << 8);
+   auto vsProgram = make_virtual_ptr<void>(pgm_start_vs.PGM_START << 8);
+   auto psProgram = make_virtual_ptr<void>(pgm_start_ps.PGM_START << 8);
+
+   // Update OpenGL shader
+   auto &fetchShader = mFetchShaders[pgm_start_fs.PGM_START];
+   auto &vertexShader = mVertexShaders[pgm_start_vs.PGM_START];
+   auto &pixelShader = mPixelShaders[pgm_start_ps.PGM_START];
+   auto &shader = mShaders[{ pgm_start_vs.PGM_START, pgm_start_ps.PGM_START }];
+
+   if (shader.program != -1) {
+      // TODO: bind shader
+      return;
+   }
+
+   if (!fetchShader.parsed) {
+      // Parse attrib stream
+   }
+
+   if (vertexShader.program == -1) {
+
+   }
+
+   if (pixelShader.program == -1) {
+
+   }
+}
+
+void Driver::setRegister(latte::Register::Value reg, uint32_t value)
+{
+   // Save to my state
+   mRegisters[reg / 4] = value;
+
+   // TODO: Save to active context state shadow regs
+
+   // For the following registers, we apply their state changes
+   //   directly to the OpenGL context...
+   switch (reg) {
+   case latte::Register::CB_BLEND_CONTROL:
+   case latte::Register::CB_BLEND0_CONTROL:
+   case latte::Register::CB_BLEND1_CONTROL:
+   case latte::Register::CB_BLEND2_CONTROL:
+   case latte::Register::CB_BLEND3_CONTROL:
+   case latte::Register::CB_BLEND4_CONTROL:
+   case latte::Register::CB_BLEND5_CONTROL:
+   case latte::Register::CB_BLEND6_CONTROL:
+   case latte::Register::CB_BLEND7_CONTROL:
+      // gl::something();
+      break;
+   }
+}
+
 void Driver::setContextReg(pm4::SetContextRegs &data)
 {
-   // Copy to local register store
-   auto *dst = &mRegisters[data.id / 4];
-   memcpy(dst, data.values.data(), data.values.size() * sizeof(uint32_t));
-
-   // Perform OpenGL operation
-   auto regIdx = data.id;
-   for (auto &value : data.values) {
-      // For the following registers, we apply their state changes
-      //   directly to the OpenGL context...
-      switch (regIdx) {
-      case latte::Register::CB_BLEND_CONTROL:
-      case latte::Register::CB_BLEND0_CONTROL:
-      case latte::Register::CB_BLEND1_CONTROL:
-      case latte::Register::CB_BLEND2_CONTROL:
-      case latte::Register::CB_BLEND3_CONTROL:
-      case latte::Register::CB_BLEND4_CONTROL:
-      case latte::Register::CB_BLEND5_CONTROL:
-      case latte::Register::CB_BLEND6_CONTROL:
-      case latte::Register::CB_BLEND7_CONTROL:
-         // gl::something();
-         break;
-      }
-
-      regIdx = static_cast<latte::Register::Value>(regIdx + 4);
+   for (auto i = 0u; i < data.values.size(); ++i) {
+      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 

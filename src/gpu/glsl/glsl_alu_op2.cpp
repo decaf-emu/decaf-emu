@@ -1,4 +1,4 @@
-#include "hlsl_generator.h"
+#include "glsl_generator.h"
 
 using latte::shadir::AluInstruction;
 using latte::shadir::AluSource;
@@ -69,7 +69,7 @@ PRED_SETE_64
 PRED_SETGE_64
 */
 
-namespace hlsl
+namespace glsl
 {
 
 static bool ADD(GenerateState &state, AluInstruction *ins)
@@ -299,11 +299,11 @@ static bool FLOOR(GenerateState &state, AluInstruction *ins)
 
 static bool FRACT(GenerateState &state, AluInstruction *ins)
 {
-   // dst = frac(src0)
+   // dst = fract(src0)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "frac(";
+   state.out << "fract(";
    translateAluSource(state, ins->sources[0]);
    state.out << ')';
 
@@ -401,7 +401,7 @@ static bool INT_TO_FLT(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "(float)asint(";
+   state.out << "(float)floatBitsToInt(";
    translateAluSource(state, ins->sources[0]);
    state.out << ")";
 
@@ -415,7 +415,7 @@ static bool UINT_TO_FLT(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "(float)asuint(";
+   state.out << "(float)floatBitsToUint(";
    translateAluSource(state, ins->sources[0]);
    state.out << ")";
 
@@ -548,7 +548,7 @@ static bool RECIP(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "rcp(";
+   state.out << "recip(";
    translateAluSource(state, ins->sources[0]);
    state.out << ")";
 
@@ -562,7 +562,7 @@ static bool RECIPSQRT(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "rsqrt(";
+   state.out << "inversesqrt(";
    translateAluSource(state, ins->sources[0]);
    state.out << ")";
 

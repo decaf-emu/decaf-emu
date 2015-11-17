@@ -269,7 +269,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          vfetch.word0.VTX_INST = latte::SQ_VTX_INST_SEMANTIC;
 
          // Setup source
-         vfetch.word0.BUFFER_ID = attrib.buffer - 96; // TODO: Why -96?? Is this correct??
+         vfetch.word0.BUFFER_ID = attrib.buffer;
          vfetch.word2.OFFSET = attribs[i].offset;
 
          if (attrib.type) {

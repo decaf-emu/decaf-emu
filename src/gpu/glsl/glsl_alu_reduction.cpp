@@ -1,4 +1,4 @@
-#include "hlsl_generator.h"
+#include "glsl_generator.h"
 
 using latte::shadir::AluInstruction;
 using latte::shadir::AluReductionInstruction;
@@ -9,7 +9,7 @@ CUBE
 MAX4
 */
 
-namespace hlsl
+namespace glsl
 {
 
 static bool DOT4(GenerateState &state, AluReductionInstruction *ins)

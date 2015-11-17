@@ -5,8 +5,8 @@
 #include <vector>
 #include <iostream>
 #include "gpu/latte.h"
-#include "gpu/hlsl/hlsl.h"
-#include "gpu/hlsl/hlsl_generator.h"
+#include "gpu/glsl/glsl.h"
+#include "gpu/glsl/glsl_generator.h"
 #include "utils/be_val.h"
 #include "utils/binaryfile.h"
 #include "utils/strutils.h"
@@ -69,9 +69,9 @@ dumpShader(latte::Shader::Type type, const gsl::array_view<uint8_t> &data)
    std::cout << std::endl;
 
    std::string hlsl;
-   hlsl::generateBody(shader, hlsl);
+   glsl::generateBody(shader, hlsl);
    std::cout << "----------------------------------------------" << std::endl;
-   std::cout << "                     HLSL                     " << std::endl;
+   std::cout << "                     GLSL                     " << std::endl;
    std::cout << "----------------------------------------------" << std::endl;
    std::cout << hlsl << std::endl;
    std::cout << std::endl;

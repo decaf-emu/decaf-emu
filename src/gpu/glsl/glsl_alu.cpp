@@ -1,11 +1,11 @@
-#include "hlsl_generator.h"
+#include "glsl_generator.h"
 #include "utils/bit_cast.h"
 
 using latte::shadir::AluInstruction;
 using latte::shadir::AluSource;
 using latte::shadir::AluDest;
 
-namespace hlsl
+namespace glsl
 {
 
 void translateChannel(GenerateState &state, latte::alu::Channel::Channel channel)
@@ -62,8 +62,10 @@ void translateAluDestStart(GenerateState &state, AluInstruction *ins)
       state.out << " = ";
    }
 
-   if (ins->dest.valueType == AluDest::Int || ins->dest.valueType == AluDest::Uint) {
-      state.out << "asfloat(";
+   if (ins->dest.valueType == AluDest::Uint) {
+      state.out << "uintBitsToFloat(";
+   } else if (ins->dest.valueType == AluDest::Int) {
+      state.out << "intBitsToFloat(";
    }
 
    switch (ins->outputModifier) {
@@ -157,7 +159,7 @@ void translateAluSource(GenerateState &state, AluSource &src)
       case AluSource::PreviousVector:
       case AluSource::PreviousScalar:
       case AluSource::ConstantFile:
-         state.out << "asint(";
+         state.out << "floatBitsToInt(";
          break;
       case AluSource::ConstantFloat:
       case AluSource::ConstantDouble:
@@ -186,7 +188,7 @@ void translateAluSource(GenerateState &state, AluSource &src)
       case AluSource::PreviousVector:
       case AluSource::PreviousScalar:
       case AluSource::ConstantFile:
-         state.out << "asuint(";
+         state.out << "floatBitsToUint(";
          break;
       case AluSource::ConstantFloat:
       case AluSource::ConstantDouble:

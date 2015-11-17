@@ -133,12 +133,6 @@
     <Filter Include="Header Files\filesystem">
       <UniqueIdentifier>{3ef84099-716b-4231-a2e4-d1d0b9efe35d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\gpu\hlsl">
-      <UniqueIdentifier>{0ab45c95-28b5-40a5-b572-b1cb3234ef40}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\gpu\hlsl">
-      <UniqueIdentifier>{974acc1d-bb61-4981-b94f-ed25c886cb91}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\modules\nn_nfp">
       <UniqueIdentifier>{fdb1a51c-1ded-4a58-ac82-da062692f7c7}</UniqueIdentifier>
     </Filter>
@@ -198,6 +192,12 @@
     </Filter>
     <Filter Include="Header Files\gpu\driver\opengl">
       <UniqueIdentifier>{3da4a358-56b9-4d93-a6c8-03a40f540257}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gpu\glsl">
+      <UniqueIdentifier>{7f076c99-3991-43b1-802a-0d6c8480e93a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gpu\glsl">
+      <UniqueIdentifier>{43fe1db7-1e42-49dc-b821-e2326d17ce64}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -398,33 +398,6 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\sysapp\sysapp_title.cpp">
       <Filter>Source Files\modules\sysapp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu.cpp">
-      <Filter>Source Files\gpu\hlsl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op2.cpp">
-      <Filter>Source Files\gpu\hlsl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op3.cpp">
-      <Filter>Source Files\gpu\hlsl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_reduction.cpp">
-      <Filter>Source Files\gpu\hlsl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_cf.cpp">
-      <Filter>Source Files\gpu\hlsl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_controlflow.cpp">
-      <Filter>Source Files\gpu\hlsl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_exp.cpp">
-      <Filter>Source Files\gpu\hlsl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_generator.cpp">
-      <Filter>Source Files\gpu\hlsl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_tex.cpp">
-      <Filter>Source Files\gpu\hlsl</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_debug.cpp">
       <Filter>Source Files\modules\gx2</Filter>
@@ -656,6 +629,33 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_fetchshader.cpp">
       <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\glsl\glsl_alu.cpp">
+      <Filter>Source Files\gpu\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\glsl\glsl_alu_op2.cpp">
+      <Filter>Source Files\gpu\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\glsl\glsl_alu_op3.cpp">
+      <Filter>Source Files\gpu\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\glsl\glsl_alu_reduction.cpp">
+      <Filter>Source Files\gpu\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\glsl\glsl_cf.cpp">
+      <Filter>Source Files\gpu\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\glsl\glsl_exp.cpp">
+      <Filter>Source Files\gpu\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\glsl\glsl_generator.cpp">
+      <Filter>Source Files\gpu\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\glsl\glsl_tex.cpp">
+      <Filter>Source Files\gpu\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\driver\opengl\opengl_shader.cpp">
+      <Filter>Source Files\gpu\driver\opengl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -947,9 +947,6 @@
     <ClInclude Include="..\src\types.h">
       <Filter>Header Files\system</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h">
-      <Filter>Header Files\gpu\hlsl</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_debug.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
@@ -1133,9 +1130,6 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_sci.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gpu\hlsl\hlsl.h">
-      <Filter>Header Files\gpu\hlsl</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
@@ -1276,6 +1270,12 @@
     </ClInclude>
     <ClInclude Include="..\src\utils\be_array.h">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\glsl\glsl.h">
+      <Filter>Header Files\gpu\glsl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\glsl\glsl_generator.h">
+      <Filter>Header Files\gpu\glsl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

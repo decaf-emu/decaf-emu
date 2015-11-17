@@ -211,14 +211,14 @@ GX2SetPixelUniformReg(uint32_t offset, uint32_t count, uint32_t *data)
 void
 GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
-   pm4::SetResourceAttrib attrib;
-   memset(&attrib, 0, sizeof(pm4::SetResourceAttrib));
-   attrib.id = (location * 7) + latte::SQ_VS_BUF_RESOURCE_0;
-   attrib.baseAddress = data;
-   attrib.size = size - 1;
+   pm4::SetVtxResource res;
+   memset(&res, 0, sizeof(pm4::SetVtxResource));
+   res.id = (location * 7) + latte::SQ_VS_BUF_RESOURCE_0;
+   res.baseAddress = data;
+   res.size = size - 1;
    // GX2 actually sets a bunch of useless word2,word3 stuff
-   attrib.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
-   pm4::write(attrib);
+   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+   pm4::write(res);
 
    uint32_t addr256 = memory_untranslate(data) >> 8;
 
@@ -232,14 +232,14 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 void
 GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
-   pm4::SetResourceAttrib attrib;
-   memset(&attrib, 0, sizeof(pm4::SetResourceAttrib));
-   attrib.id = (location * 7) + latte::SQ_PS_BUF_RESOURCE_0;
-   attrib.baseAddress = data;
-   attrib.size = size - 1;
+   pm4::SetVtxResource res;
+   memset(&res, 0, sizeof(pm4::SetVtxResource));
+   res.id = (location * 7) + latte::SQ_PS_BUF_RESOURCE_0;
+   res.baseAddress = data;
+   res.size = size - 1;
    // GX2 actually sets a bunch of useless word2,word3 stuff
-   attrib.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
-   pm4::write(attrib);
+   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+   pm4::write(res);
 
    const uint32_t addr256 = memory_untranslate(data) >> 8;
 

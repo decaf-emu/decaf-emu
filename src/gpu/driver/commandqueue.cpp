@@ -50,7 +50,7 @@ queueUserBuffer(void *buffer, uint32_t bytes)
    auto buf = new pm4::Buffer {};
    buf->curSize = bytes / 4;
    buf->maxSize = bytes / 4;
-   buf->buffer = new uint32_t[buf->curSize];
+   buf->buffer = reinterpret_cast<uint32_t *>(buffer);
    buf->userBuffer = true;
    queueCommandBuffer(buf);
 }

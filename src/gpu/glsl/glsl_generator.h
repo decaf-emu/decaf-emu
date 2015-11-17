@@ -19,7 +19,7 @@ using TranslateFuncALUReduction = bool(*)(GenerateState &state, latte::shadir::A
 using TranslateFuncTEX = bool(*)(GenerateState &state, latte::shadir::TexInstruction *ins);
 using TranslateFuncEXP = bool(*)(GenerateState &state, latte::shadir::ExportInstruction *ins);
 
-namespace hlsl
+namespace glsl
 {
 
 void intialise();
@@ -56,6 +56,6 @@ void translateAluSource(GenerateState &state, AluSource &src);
 void translateAluSourceVector(GenerateState &state, AluSource &srcX, AluSource &srcY, AluSource &srcZ, AluSource &srcW);
 
 void translateChannel(GenerateState &state, Channel channel);
-unsigned translateSelRegister(GenerateState &state, SelRegister &reg);
+unsigned translateSelRegister(GenerateState &state, SelRegister &reg, size_t maxSel = 4);
 
 }

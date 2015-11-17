@@ -1,6 +1,7 @@
 #include "gpu/gfd.h"
 #include "gpu/latte_untile.h"
 #include "modules/gx2/gx2_texture.h"
+#include "modules/gx2/gx2_shaders.h"
 #include "modules/gx2/gx2_enum_string.h"
 #include "utils/binaryfile.h"
 #include <spdlog/spdlog.h>
@@ -29,6 +30,43 @@ bool printInfo(const std::string &filename)
 
    for (auto &block : file.blocks) {
       switch (block.header.type) {
+      case gfd::BlockType::VertexShaderHeader:
+      {
+         auto shader = reinterpret_cast<GX2VertexShader *>(block.data.data());
+         auto spi_vs_out_config = shader->regs.spi_vs_out_config.value();
+         auto num_spi_vs_out_id = shader->regs.num_spi_vs_out_id.value();
+         auto spi_vs_out_id = shader->regs.spi_vs_out_id.value();
+         std::cout
+            << "VertexShaderHeader" << std::endl
+            << "  index        = " << block.header.index << std::endl
+            << "  size         = " << shader->size << std::endl
+            << "  mode         = " << shader->size << std::endl
+            << "  uBlocks      = " << shader->uniformBlockCount << std::endl
+            << "  uVars        = " << shader->uniformVarCount << std::endl
+            << "  initVars     = " << shader->initialValueCount << std::endl
+            << "  loopVars     = " << shader->loopVarCount << std::endl
+            << "  samplerVars  = " << shader->samplerVarCount << std::endl
+            << "  attribVars   = " << shader->attribVarCount << std::endl
+            << "  ringItemsize = " << shader->ringItemsize << std::endl
+            << "  hasStreamOut = " << shader->hasStreamOut << std::endl;
+         // TODO: Write out registers
+         break;
+      }
+      case gfd::BlockType::PixelShaderHeader:
+      {
+         auto shader = reinterpret_cast<GX2PixelShader *>(block.data.data());
+         auto spi_ps_in_control_0 = shader->regs.spi_ps_in_control_0.value();
+         auto spi_ps_in_control_1 = shader->regs.spi_ps_in_control_1.value();
+         auto num_spi_ps_input_cntl = shader->regs.num_spi_ps_input_cntl.value();
+         auto spi_ps_input_cntls = shader->regs.spi_ps_input_cntls.value();
+         auto cb_shader_mask = shader->regs.cb_shader_mask.value();
+
+         std::cout
+            << "PixelShaderHeader" << std::endl;
+         // TODO: Write out structure
+         // TODO: Write out registers
+         break;
+      }
       case gfd::BlockType::TextureHeader:
          {
             auto tex = reinterpret_cast<GX2Texture *>(block.data.data());

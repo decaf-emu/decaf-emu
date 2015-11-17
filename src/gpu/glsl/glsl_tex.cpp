@@ -1,4 +1,4 @@
-#include "hlsl_generator.h"
+#include "glsl_generator.h"
 
 using latte::shadir::TexInstruction;
 using latte::shadir::SelRegister;
@@ -44,7 +44,7 @@ GATHER4_C_O
 GET_BUFFER_RESINFO
 */
 
-namespace hlsl
+namespace glsl
 {
 
 static bool translateSelect(GenerateState &state, latte::alu::Select::Select sel)
@@ -71,27 +71,27 @@ static bool translateSelect(GenerateState &state, latte::alu::Select::Select sel
    return true;
 }
 
-unsigned translateSelRegister(GenerateState &state, SelRegister &reg)
+unsigned translateSelRegister(GenerateState &state, SelRegister &reg, size_t maxSel)
 {
    state.out << 'R' << reg.id;
 
-   if (reg.selX != latte::alu::Select::Mask) {
+   if (maxSel > 0 && reg.selX != latte::alu::Select::Mask) {
       state.out << '.';
    }
 
-   if (!translateSelect(state, reg.selX)) {
+   if (maxSel > 0 && !translateSelect(state, reg.selX)) {
       return 0;
    }
 
-   if (!translateSelect(state, reg.selY)) {
+   if (maxSel > 1 && !translateSelect(state, reg.selY)) {
       return 1;
    }
 
-   if (!translateSelect(state, reg.selZ)) {
+   if (maxSel > 2 && !translateSelect(state, reg.selZ)) {
       return 2;
    }
 
-   if (!translateSelect(state, reg.selW)) {
+   if (maxSel > 3 && !translateSelect(state, reg.selW)) {
       return 3;
    }
 
@@ -121,11 +121,12 @@ static bool SAMPLE(GenerateState &state, TexInstruction *ins)
 {
    auto channels = translateSelRegister(state, ins->dst);
 
+   if (ins->resourceID != ins->samplerID) {
+      throw std::logic_error("Expect resourceID == samplerID");
+   }
+
    state.out
-      << " = g_texture"
-      << ins->resourceID
-      << ".Sample("
-      << "g_sampler"
+      << " = texture(sampler_"
       << ins->samplerID
       << ", ";
 
@@ -140,19 +141,19 @@ static bool SAMPLE_C(GenerateState &state, TexInstruction *ins)
 {
    auto channels = translateSelRegister(state, ins->dst);
 
+   if (ins->resourceID != ins->samplerID) {
+      throw std::logic_error("Expect resourceID == samplerID");
+   }
+
    state.out
-      << " = g_texture"
-      << ins->resourceID
-      << ".SampleCmp("
-      << "g_sampler"
+      << " = texture(sampler_"
       << ins->samplerID
-      << ", ";
+      << ", vec3(";
 
-   translateSelRegister(state, ins->src);
+   translateSelRegister(state, ins->src, 2);
 
-   // TODO: Compare to src.w?
    state.out
-      << ", R" << ins->src.id << ".w";
+      << ", R" << ins->src.id << ".w)";
 
    state.out << ")";
    translateTexRegisterChannels(state, channels);

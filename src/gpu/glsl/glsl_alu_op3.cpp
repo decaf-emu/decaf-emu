@@ -1,4 +1,4 @@
-#include "hlsl_generator.h"
+#include "glsl_generator.h"
 
 using latte::shadir::AluInstruction;
 using latte::shadir::AluSource;
@@ -19,7 +19,7 @@ MUL_LIT_M4
 MUL_LIT_D2
 */
 
-namespace hlsl
+namespace glsl
 {
 
 AluSource cndSrc(AluSource src)

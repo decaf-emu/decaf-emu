@@ -85,14 +85,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu.cpp" />
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op2.cpp" />
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_reduction.cpp" />
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_cf.cpp" />
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_exp.cpp" />
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_generator.cpp" />
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_alu_op3.cpp" />
-    <ClCompile Include="..\src\gpu\hlsl\hlsl_tex.cpp" />
+    <ClCompile Include="..\src\gpu\glsl\glsl_alu.cpp" />
+    <ClCompile Include="..\src\gpu\glsl\glsl_alu_op2.cpp" />
+    <ClCompile Include="..\src\gpu\glsl\glsl_alu_op3.cpp" />
+    <ClCompile Include="..\src\gpu\glsl\glsl_alu_reduction.cpp" />
+    <ClCompile Include="..\src\gpu\glsl\glsl_cf.cpp" />
+    <ClCompile Include="..\src\gpu\glsl\glsl_exp.cpp" />
+    <ClCompile Include="..\src\gpu\glsl\glsl_generator.cpp" />
+    <ClCompile Include="..\src\gpu\glsl\glsl_tex.cpp" />
     <ClCompile Include="..\src\gpu\latte_analyse.cpp" />
     <ClCompile Include="..\src\gpu\latte_opcodes.cpp" />
     <ClCompile Include="..\src\gpu\latte_blockify.cpp" />
@@ -101,7 +101,8 @@
     <ClCompile Include="..\tools\gsh-disassemble\gsh-disassemble.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\gpu\hlsl\hlsl_generator.h" />
+    <ClInclude Include="..\src\gpu\glsl\glsl.h" />
+    <ClInclude Include="..\src\gpu\glsl\glsl_generator.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_opcodes.h" />
     <ClInclude Include="..\src\gpu\latte_shadir.h" />

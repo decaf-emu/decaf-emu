@@ -1,4 +1,4 @@
-#include "hlsl_generator.h"
+#include "glsl_generator.h"
 
 using latte::shadir::CfInstruction;
 
@@ -29,7 +29,7 @@ VTX_ACK
 VTX_TC_ACK
 */
 
-namespace hlsl
+namespace glsl
 {
 
 static bool LOOP_BREAK(GenerateState &state, CfInstruction *ins)

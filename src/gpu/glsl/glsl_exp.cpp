@@ -1,4 +1,4 @@
-#include "hlsl_generator.h"
+#include "glsl_generator.h"
 
 using latte::shadir::ExportInstruction;
 using latte::shadir::SelRegister;
@@ -16,7 +16,7 @@ EXP
 MEM_EXPORT
 */
 
-namespace hlsl
+namespace glsl
 {
 
 static bool EXP(GenerateState &state, ExportInstruction *ins)
@@ -28,21 +28,18 @@ static bool EXP(GenerateState &state, ExportInstruction *ins)
 
    switch (ins->type) {
    case latte::exp::Type::Position:
-      // : POSITION[n]
       state.out
-         << "result.position"
+         << "exp_position_"
          << ins->dstReg;
       break;
    case latte::exp::Type::Parameter:
-      // ??? : TEXCOORD ???
       state.out
-         << "result.param"
+         << "exp_param_"
          << ins->dstReg;
       break;
    case latte::exp::Type::Pixel:
-      // : COLOR[n]
       state.out
-         << "result.color"
+         << "exp_color_"
          << ins->dstReg;
       break;
    }
