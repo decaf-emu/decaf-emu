@@ -239,8 +239,8 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
    auto fetchOffset = align_up(cfSize + aluSize, 0x10u);
 
    auto cfPtr = reinterpret_cast<latte::ControlFlowInst *>(buffer + cfOffset);
-   auto aluPtr = reinterpret_cast<latte::AluInst *>(buffer + cfOffset);
-   auto fetchPtr = reinterpret_cast<latte::VertexFetchInst *>(buffer + cfOffset);
+   auto aluPtr = reinterpret_cast<latte::AluInst *>(buffer + aluOffset);
+   auto fetchPtr = reinterpret_cast<latte::VertexFetchInst *>(buffer + fetchOffset);
 
    // Setup fetch shader
    fetchShader->type = type;
