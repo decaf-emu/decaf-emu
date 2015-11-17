@@ -71,9 +71,11 @@ struct DrawIndex2
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
+      uint32_t unusedAddrHi = 0;
+
       se(maxIndices);
       se(addr);
-      se(0); // addr hi
+      se(unusedAddrHi);
       se(numIndices);
       se(drawInitiator.value);
    }
@@ -225,6 +227,21 @@ struct SetLoopConst
    }
 };
 
+struct SetLoopConsts
+{
+   static const auto Opcode = Opcode3::SET_LOOP_CONST;
+
+   latte::Register::Value id;
+   gsl::array_view<uint32_t> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.reg(id, latte::Register::LoopConstRegisterBase);
+      se(values);
+   }
+};
+
 struct SetSamplerAttrib
 {
    static const auto Opcode = Opcode3::SET_SAMPLER;
@@ -237,10 +254,25 @@ struct SetSamplerAttrib
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se(id);
+      se.reg(id, latte::Register::SamplerRegisterBase);
       se(word0.value);
       se(word1.value);
       se(word2.value);
+   }
+};
+
+struct SetSamplers
+{
+   static const auto Opcode = Opcode3::SET_SAMPLER;
+
+   latte::Register::Value id;
+   gsl::array_view<uint32_t> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.reg(id, latte::Register::SamplerRegisterBase);
+      se(values);
    }
 };
 
@@ -258,13 +290,16 @@ struct SetVtxResource
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se(id);
+      uint32_t unusedWord4 = 0;
+      uint32_t unusedWord5 = 0;
+
+      se.reg(id, latte::Register::ResourceRegisterBase);
       se(baseAddress);
       se(size);
       se(word2.value);
       se(word3.value);
-      se(0);
-      se(0);
+      se(unusedWord4);
+      se(unusedWord5);
       se(word6.value);
    }
 };
@@ -285,7 +320,7 @@ struct SetTexResource
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se(id);
+      se.reg(id, latte::Register::ResourceRegisterBase);
       se(word0.value);
       se(word1.value);
       se(baseAddress);
@@ -293,6 +328,21 @@ struct SetTexResource
       se(word4.value);
       se(word5.value);
       se(word6.value);
+   }
+};
+
+struct SetResources
+{
+   static const auto Opcode = Opcode3::SET_RESOURCE;
+
+   latte::Register::Value id;
+   gsl::array_view<uint32_t> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.reg(id, latte::Register::ResourceRegisterBase);
+      se(values);
    }
 };
 
@@ -305,8 +355,10 @@ struct IndirectBufferCall
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
+      uint32_t unusedAddrHi = 0;
+
       se(addr);
-      se(0);
+      se(unusedAddrHi);
       se(size);
    }
 };
@@ -320,8 +372,10 @@ struct LoadConfigReg
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
+      uint32_t unusedAddrHi = 0;
+
       se(addr);
-      se(0); // addr hi
+      se(unusedAddrHi);
       se(values);
    }
 };
@@ -335,8 +389,10 @@ struct LoadContextReg
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
+      uint32_t unusedAddrHi = 0;
+
       se(addr);
-      se(0); // addr hi
+      se(unusedAddrHi);
       se(values);
    }
 };
@@ -350,8 +406,10 @@ struct LoadAluConst
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
+      uint32_t unusedAddrHi = 0;
+
       se(addr);
-      se(0); // addr hi
+      se(unusedAddrHi);
       se(values);
    }
 };
@@ -365,8 +423,10 @@ struct LoadLoopConst
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
+      uint32_t unusedAddrHi = 0;
+
       se(addr);
-      se(0); // addr hi
+      se(unusedAddrHi);
       se(values);
    }
 };
@@ -380,8 +440,10 @@ struct LoadResource
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
+      uint32_t unusedAddrHi = 0;
+
       se(addr);
-      se(0); // addr hi
+      se(unusedAddrHi);
       se(values);
    }
 };
@@ -395,8 +457,10 @@ struct LoadSampler
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
+      uint32_t unusedAddrHi = 0;
+
       se(addr);
-      se(0); // addr hi
+      se(unusedAddrHi);
       se(values);
    }
 };

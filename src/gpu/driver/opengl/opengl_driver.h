@@ -62,7 +62,20 @@ public:
 
 private:
    void handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data);
-   void setContextReg(pm4::SetContextRegs &data);
+   void decafCopyColorToScan(pm4::DecafCopyColorToScan &data);
+   void decafSwapBuffers(pm4::DecafSwapBuffers &data);
+   void drawIndexAuto(pm4::DrawIndexAuto &data);
+   void drawIndex2(pm4::DrawIndex2 &data);
+   void indexType(pm4::IndexType &data);
+   void numInstances(pm4::NumInstances &data);
+   void setAluConsts(pm4::SetAluConsts &data);
+   void setConfigRegs(pm4::SetConfigRegs &data);
+   void setContextRegs(pm4::SetContextRegs &data);
+   void setControlConstants(pm4::SetControlConstants &data);
+   void setLoopConsts(pm4::SetLoopConsts &data);
+   void setSamplers(pm4::SetSamplers &data);
+   void setResources(pm4::SetResources &data);
+   void indirectBufferCall(pm4::IndirectBufferCall &data);
 
    void checkActiveShader();
 
@@ -70,6 +83,8 @@ private:
 
    bool parseFetchShader(FetchShader &shader, void *buffer, size_t size);
    bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, void *buffer, size_t size);
+
+   void runCommandBuffer(uint32_t *buffer, uint32_t size);
 
    template<typename Type>
    Type getRegister(uint32_t id)

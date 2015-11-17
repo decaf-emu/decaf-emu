@@ -80,11 +80,85 @@ void Driver::setRegister(latte::Register::Value reg, uint32_t value)
    }
 }
 
-void Driver::setContextReg(pm4::SetContextRegs &data)
+void Driver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
+{
+}
+
+void Driver::decafSwapBuffers(pm4::DecafSwapBuffers &data)
+{
+}
+
+void Driver::drawIndexAuto(pm4::DrawIndexAuto &data)
+{
+}
+
+void Driver::drawIndex2(pm4::DrawIndex2 &data)
+{
+}
+
+void Driver::indexType(pm4::IndexType &data)
+{
+   mRegisters[latte::Register::VGT_DMA_INDEX_TYPE / 4] = data.type.value;
+}
+
+void Driver::numInstances(pm4::NumInstances &data)
+{
+   mRegisters[latte::Register::VGT_DMA_NUM_INSTANCES / 4] = data.count;
+}
+
+void Driver::setAluConsts(pm4::SetAluConsts &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
+}
+
+void Driver::setConfigRegs(pm4::SetConfigRegs &data)
+{
+   for (auto i = 0u; i < data.values.size(); ++i) {
+      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+   }
+}
+
+void Driver::setContextRegs(pm4::SetContextRegs &data)
+{
+   for (auto i = 0u; i < data.values.size(); ++i) {
+      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+   }
+}
+
+void Driver::setControlConstants(pm4::SetControlConstants &data)
+{
+   for (auto i = 0u; i < data.values.size(); ++i) {
+      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+   }
+}
+
+void Driver::setLoopConsts(pm4::SetLoopConsts &data)
+{
+   for (auto i = 0u; i < data.values.size(); ++i) {
+      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+   }
+}
+
+void Driver::setSamplers(pm4::SetSamplers &data)
+{
+   for (auto i = 0u; i < data.values.size(); ++i) {
+      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+   }
+}
+
+void Driver::setResources(pm4::SetResources &data)
+{
+   for (auto i = 0u; i < data.values.size(); ++i) {
+      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+   }
+}
+
+void Driver::indirectBufferCall(pm4::IndirectBufferCall &data)
+{
+   auto buffer = reinterpret_cast<uint32_t*>(data.addr.get());
+   runCommandBuffer(buffer, data.size);
 }
 
 void Driver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data)
@@ -92,8 +166,47 @@ void Driver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> da
    pm4::PacketReader reader { data };
 
    switch (header.opcode) {
+   case pm4::Opcode3::DECAF_COPY_COLOR_TO_SCAN:
+      decafCopyColorToScan(pm4::read<pm4::DecafCopyColorToScan>(reader));
+      break;
+   case pm4::Opcode3::DECAF_SWAP_BUFFERS:
+      decafSwapBuffers(pm4::read<pm4::DecafSwapBuffers>(reader));
+      break;
+   case pm4::Opcode3::DRAW_INDEX_AUTO:
+      drawIndexAuto(pm4::read<pm4::DrawIndexAuto>(reader));
+      break;
+   case pm4::Opcode3::DRAW_INDEX_2:
+      drawIndex2(pm4::read<pm4::DrawIndex2>(reader));
+      break;
+   case pm4::Opcode3::INDEX_TYPE:
+      indexType(pm4::read<pm4::IndexType>(reader));
+      break;
+   case pm4::Opcode3::NUM_INSTANCES:
+      numInstances(pm4::read<pm4::NumInstances>(reader));
+      break;
+   case pm4::Opcode3::SET_ALU_CONST:
+      setAluConsts(pm4::read<pm4::SetAluConsts>(reader));
+      break;
+   case pm4::Opcode3::SET_CONFIG_REG:
+      setConfigRegs(pm4::read<pm4::SetConfigRegs>(reader));
+      break;
    case pm4::Opcode3::SET_CONTEXT_REG:
-      setContextReg(pm4::read<pm4::SetContextRegs>(reader));
+      setContextRegs(pm4::read<pm4::SetContextRegs>(reader));
+      break;
+   case pm4::Opcode3::SET_CTL_CONST:
+      setControlConstants(pm4::read<pm4::SetControlConstants>(reader));
+      break;
+   case pm4::Opcode3::SET_LOOP_CONST:
+      setLoopConsts(pm4::read<pm4::SetLoopConsts>(reader));
+      break;
+   case pm4::Opcode3::SET_SAMPLER:
+      setSamplers(pm4::read<pm4::SetSamplers>(reader));
+      break;
+   case pm4::Opcode3::SET_RESOURCE:
+      setResources(pm4::read<pm4::SetResources>(reader));
+      break;
+   case pm4::Opcode3::INDIRECT_BUFFER_PRIV:
+      indirectBufferCall(pm4::read<pm4::IndirectBufferCall>(reader));
       break;
    }
 }
@@ -104,32 +217,37 @@ void Driver::start()
    mThread = std::thread(&Driver::run, this);
 }
 
+void Driver::runCommandBuffer(uint32_t *buffer, uint32_t size)
+{
+   for (auto pos = 0u; pos < size; ) {
+      auto header = *reinterpret_cast<pm4::PacketHeader *>(&buffer[pos]);
+      auto size = 0u;
+
+      switch (header.type) {
+      case pm4::PacketType::Type3:
+      {
+         auto header3 = pm4::Packet3{ header.value };
+         size = header3.size + 1;
+         //handlePacketType3(header3, { &buffer[pos + 1], size });
+         break;
+      }
+      case pm4::PacketType::Type0:
+      case pm4::PacketType::Type1:
+      case pm4::PacketType::Type2:
+      default:
+         throw std::logic_error("What the fuck son");
+      }
+
+      pos += size + 1;
+   }
+}
+
 void Driver::run()
 {
    while (mRunning) {
       auto buffer = gpu::unqueueCommandBuffer();
 
-      for (auto pos = 0u; pos < buffer->curSize; ) {
-         auto header = *reinterpret_cast<pm4::PacketHeader *>(&buffer->buffer[pos]);
-         auto size = 0u;
-
-         switch (header.type) {
-         case pm4::PacketType::Type3:
-         {
-            auto header3 = pm4::Packet3 { header.value };
-            size = header3.size + 1;
-            //handlePacketType3(header3, { &buffer->buffer[pos + 1], size });
-            break;
-         }
-         case pm4::PacketType::Type0:
-         case pm4::PacketType::Type1:
-         case pm4::PacketType::Type2:
-         default:
-            throw std::logic_error("What the fuck son");
-         }
-
-         pos += size + 1;
-      }
+      runCommandBuffer(buffer->buffer, buffer->curSize);
 
       gpu::retireCommandBuffer(buffer);
    }
