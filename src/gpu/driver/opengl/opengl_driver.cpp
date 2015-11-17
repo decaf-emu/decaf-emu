@@ -97,6 +97,11 @@ void Driver::setRegister(latte::Register::Value reg, uint32_t value)
    // For the following registers, we apply their state changes
    //   directly to the OpenGL context...
    switch (reg) {
+   case latte::Register::SQ_VTX_SEMANTIC_CLEAR:
+      for (auto i = 0u; i < 32; ++i) {
+         setRegister(static_cast<latte::Register::Value>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4), 0xffffffff);
+      }
+      break;
    case latte::Register::CB_BLEND_CONTROL:
    case latte::Register::CB_BLEND0_CONTROL:
    case latte::Register::CB_BLEND1_CONTROL:
