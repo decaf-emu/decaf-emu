@@ -6,6 +6,7 @@
 #include "pm4_format.h"
 #include "latte_registers.h"
 #include "utils/virtual_ptr.h"
+#include "utils/log.h"
 
 namespace pm4
 {
@@ -102,12 +103,15 @@ private:
       auto newBuffer = pm4::flushBuffer(oldBuffer);
       auto saveSize = newBuffer->curSize;
 
+      if ((newBuffer->curSize + size) > newBuffer->maxSize) {
+         throw std::logic_error("PM4 packet is wayy too big son");
+      }
+
       if (oldSize > mSaveSize) {
-         memcpy(&newBuffer->buffer[newBuffer->curSize], &oldBuffer->buffer[mSaveSize], oldSize - mSaveSize);
+         memcpy(&newBuffer->buffer[newBuffer->curSize], &oldBuffer->buffer[mSaveSize], 4 * (oldSize - mSaveSize));
          newBuffer->curSize = oldSize - mSaveSize;
       }
 
-      mBuffer->curSize = mSaveSize;
       mBuffer = newBuffer;
       mSaveSize = saveSize;
    }
