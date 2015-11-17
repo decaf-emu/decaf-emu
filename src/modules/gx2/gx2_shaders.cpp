@@ -213,7 +213,7 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
    pm4::SetResourceAttrib attrib;
    memset(&attrib, 0, sizeof(pm4::SetResourceAttrib));
-   attrib.id = (location * 7) + 0x7E0;
+   attrib.id = (location * 7) + latte::SQ_VS_BUF_RESOURCE_0;
    attrib.baseAddress = data;
    attrib.size = size - 1;
    // GX2 actually sets a bunch of useless word2,word3 stuff
@@ -223,10 +223,10 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
    uint32_t addr256 = memory_untranslate(data) >> 8;
 
    auto addrId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + location * 4);
-   pm4::write(pm4::SetContextReg{ addrId, addr256 });
+   pm4::write(pm4::SetContextReg { addrId, addr256 });
 
    auto sizeId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + location * 4);
-   pm4::write(pm4::SetContextReg{ sizeId, size - 1 });
+   pm4::write(pm4::SetContextReg { sizeId, size - 1 });
 }
 
 void
@@ -234,7 +234,7 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
    pm4::SetResourceAttrib attrib;
    memset(&attrib, 0, sizeof(pm4::SetResourceAttrib));
-   attrib.id = (location * 7) + 0x380;
+   attrib.id = (location * 7) + latte::SQ_PS_BUF_RESOURCE_0;
    attrib.baseAddress = data;
    attrib.size = size - 1;
    // GX2 actually sets a bunch of useless word2,word3 stuff
@@ -244,15 +244,15 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
    const uint32_t addr256 = memory_untranslate(data) >> 8;
 
    auto addrId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + location * 4);
-   pm4::write(pm4::SetContextReg{ addrId, addr256 });
+   pm4::write(pm4::SetContextReg { addrId, addr256 });
 
    auto sizeId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + location * 4);
-   pm4::write(pm4::SetContextReg{ sizeId, size - 1 });
+   pm4::write(pm4::SetContextReg { sizeId, size - 1 });
 }
 
 void
 GX2SetShaderModeEx(GX2ShaderMode::Value mode,
-                   uint32_t numVsGpr, uint32_t numVsStackEntries, 
+                   uint32_t numVsGpr, uint32_t numVsStackEntries,
                    uint32_t numGsGpr, uint32_t numGsStackEntries,
                    uint32_t numPsGpr, uint32_t numPsStackEntries)
 {
@@ -266,7 +266,7 @@ GX2SetShaderModeEx(GX2ShaderMode::Value mode,
       gsl::fail_fast("Unexpected shader mode");
    }
 
-   pm4::write(pm4::SetConfigReg{ latte::Register::SQ_CONFIG, sq_config.value });
+   pm4::write(pm4::SetConfigReg { latte::Register::SQ_CONFIG, sq_config.value });
 
    // Normally would do lots of SET_CONFIG_REG here,
    //   but not needed for our drivers.

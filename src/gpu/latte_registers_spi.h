@@ -126,7 +126,7 @@ union SPI_VS_OUT_CONFIG
 };
 
 // Vertex Shader output semantic mapping
-union SPI_VS_OUT_ID
+union SPI_VS_OUT_ID_N
 {
    uint32_t value;
 
@@ -139,15 +139,15 @@ union SPI_VS_OUT_ID
    };
 };
 
-using SPI_VS_OUT_ID_0 = SPI_VS_OUT_ID;
-using SPI_VS_OUT_ID_1 = SPI_VS_OUT_ID;
-using SPI_VS_OUT_ID_2 = SPI_VS_OUT_ID;
-using SPI_VS_OUT_ID_3 = SPI_VS_OUT_ID;
-using SPI_VS_OUT_ID_4 = SPI_VS_OUT_ID;
-using SPI_VS_OUT_ID_5 = SPI_VS_OUT_ID;
-using SPI_VS_OUT_ID_6 = SPI_VS_OUT_ID;
-using SPI_VS_OUT_ID_7 = SPI_VS_OUT_ID;
-using SPI_VS_OUT_ID_8 = SPI_VS_OUT_ID;
-using SPI_VS_OUT_ID_9 = SPI_VS_OUT_ID;
+using SPI_VS_OUT_ID_0 = SPI_VS_OUT_ID_N;
+using SPI_VS_OUT_ID_1 = SPI_VS_OUT_ID_N;
+using SPI_VS_OUT_ID_2 = SPI_VS_OUT_ID_N;
+using SPI_VS_OUT_ID_3 = SPI_VS_OUT_ID_N;
+using SPI_VS_OUT_ID_4 = SPI_VS_OUT_ID_N;
+using SPI_VS_OUT_ID_5 = SPI_VS_OUT_ID_N;
+using SPI_VS_OUT_ID_6 = SPI_VS_OUT_ID_N;
+using SPI_VS_OUT_ID_7 = SPI_VS_OUT_ID_N;
+using SPI_VS_OUT_ID_8 = SPI_VS_OUT_ID_N;
+using SPI_VS_OUT_ID_9 = SPI_VS_OUT_ID_N;
 
 } // namespace latte

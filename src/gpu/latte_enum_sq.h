@@ -186,6 +186,19 @@ enum SQ_REL : uint32_t
    SQ_RELATIVE                      = 1,
 };
 
+enum SQ_RES_OFFSET
+{
+   SQ_PS_TEX_RESOURCE_0       = 0x0 * 7,
+   SQ_PS_BUF_RESOURCE_0       = 0x80 * 7,
+   SQ_VS_TEX_RESOURCE_0       = 0xA0 * 7,
+   SQ_VS_BUF_RESOURCE_0       = 0x120 * 7,
+   SQ_VS_GSOUT_RESOURCE       = 0x13F * 7,
+   SQ_VS_ATTRIB_RESOURCE_0    = 0x140 * 7,
+   SQ_GS_TEX_RESOURCE_0       = 0x150 * 7,
+   SQ_GS_BUF_RESOURCE_0       = 0x1D0 * 7,
+   SQ_GS_GSIN_RESOURCE        = 0x1EF * 7,
+};
+
 enum SQ_SEL : uint32_t
 {
    SQ_SEL_X                         = 0,

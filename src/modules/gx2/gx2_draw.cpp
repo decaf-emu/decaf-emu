@@ -7,14 +7,14 @@ GX2SetAttribBuffer(uint32_t index,
                    uint32_t stride,
                    void *buffer)
 {
-   pm4::SetResourceAttrib attrib;
-   memset(&attrib, 0, sizeof(pm4::SetResourceAttrib));
-   attrib.id = (index * 7) + 0x8c0; // TODO: Figure out name of register 0x8c0
-   attrib.baseAddress = buffer;
-   attrib.size = size - 1;
-   attrib.word2.STRIDE = stride;
-   attrib.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
-   pm4::write(attrib);
+   pm4::SetVtxResource res;
+   memset(&res, 0, sizeof(pm4::SetVtxResource));
+   res.id = (index * 7) + latte::SQ_VS_ATTRIB_RESOURCE_0;
+   res.baseAddress = buffer;
+   res.size = size - 1;
+   res.word2.STRIDE = stride;
+   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+   pm4::write(res);
 }
 
 void

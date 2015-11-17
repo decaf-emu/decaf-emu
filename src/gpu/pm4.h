@@ -244,7 +244,7 @@ struct SetSamplerAttrib
    }
 };
 
-struct SetResourceAttrib
+struct SetVtxResource
 {
    static const auto Opcode = Opcode3::SET_RESOURCE;
 
@@ -260,7 +260,7 @@ struct SetResourceAttrib
    {
       se(id);
       se(baseAddress);
-      se.size(size);
+      se(size);
       se(word2.value);
       se(word3.value);
       se(0);
@@ -269,7 +269,7 @@ struct SetResourceAttrib
    }
 };
 
-struct SetResourceTexture
+struct SetTexResource
 {
    static const auto Opcode = Opcode3::SET_RESOURCE;
 
@@ -285,7 +285,7 @@ struct SetResourceTexture
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::SQ_TEX_RESOURCE_WORD0_0);
+      se(id);
       se(word0.value);
       se(word1.value);
       se(baseAddress);

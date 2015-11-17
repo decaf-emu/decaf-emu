@@ -90,7 +90,7 @@ struct GX2VertexShader
       be_val<latte::VGT_PRIMITIVEID_EN> vgt_primitiveid_en;
       be_val<latte::SPI_VS_OUT_CONFIG> spi_vs_out_config;
       be_val<uint32_t> num_spi_vs_out_id;
-      be_array<latte::SPI_VS_OUT_ID, 10> spi_vs_out_id;
+      be_array<latte::SPI_VS_OUT_ID_N, 10> spi_vs_out_id;
       be_val<latte::PA_CL_VS_OUT_CNTL> pa_cl_vs_out_cntl;
       be_val<latte::SQ_VTX_SEMANTIC_CLEAR> sq_vtx_semantic_clear;
       be_val<uint32_t> num_sq_vtx_semantic;

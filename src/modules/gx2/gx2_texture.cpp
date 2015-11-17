@@ -132,8 +132,23 @@ GX2InitTextureRegs(GX2Texture *texture)
 void
 GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
 {
-   pm4::write(pm4::SetResourceTexture {
-      (unit * 7) + latte::Register::SQ_TEX_RESOURCE_WORD0_0,
+   pm4::write(pm4::SetTexResource {
+      (unit * 7) + latte::SQ_PS_TEX_RESOURCE_0,
+      texture->regs.word0,
+      texture->regs.word1,
+      texture->surface.image,
+      texture->surface.mipmaps,
+      texture->regs.word4,
+      texture->regs.word5,
+      texture->regs.word6,
+   });
+}
+
+void
+GX2SetVertexTexture(GX2Texture *texture, uint32_t unit)
+{
+   pm4::write(pm4::SetTexResource {
+      (unit * 7) + latte::SQ_VS_TEX_RESOURCE_0,
       texture->regs.word0,
       texture->regs.word1,
       texture->surface.image,
