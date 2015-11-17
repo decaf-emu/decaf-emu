@@ -77,12 +77,13 @@ private:
    void setResources(pm4::SetResources &data);
    void indirectBufferCall(pm4::IndirectBufferCall &data);
 
-   void checkActiveShader();
+   bool checkActiveShader();
 
    void setRegister(latte::Register::Value reg, uint32_t value);
 
    bool parseFetchShader(FetchShader &shader, void *buffer, size_t size);
-   bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, void *buffer, size_t size);
+   bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size);
+   bool compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t size);
 
    void runCommandBuffer(uint32_t *buffer, uint32_t size);
 

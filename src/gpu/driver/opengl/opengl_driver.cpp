@@ -4,6 +4,7 @@
 #include "gpu/pm4_reader.h"
 #include "gpu/latte_registers.h"
 #include "platform/platform_ui.h"
+#include "utils/log.h"
 #include <glbinding/gl/gl.h>
 
 namespace gpu
@@ -14,23 +15,22 @@ namespace opengl
 
 // We need LOAD_REG and SET_REG to do same shit.
 
-void Driver::checkActiveShader()
+bool Driver::checkActiveShader()
 {
    auto pgm_start_fs = getRegister<latte::SQ_PGM_START_FS>(latte::Register::SQ_PGM_START_FS);
    auto pgm_start_vs = getRegister<latte::SQ_PGM_START_VS>(latte::Register::SQ_PGM_START_VS);
    auto pgm_start_ps = getRegister<latte::SQ_PGM_START_PS>(latte::Register::SQ_PGM_START_PS);
+   auto pgm_size_fs = getRegister<latte::SQ_PGM_SIZE_FS>(latte::Register::SQ_PGM_SIZE_FS);
+   auto pgm_size_vs = getRegister<latte::SQ_PGM_SIZE_VS>(latte::Register::SQ_PGM_SIZE_VS);
+   auto pgm_size_ps = getRegister<latte::SQ_PGM_SIZE_PS>(latte::Register::SQ_PGM_SIZE_PS);
 
    if (mActiveShader &&
        mActiveShader->fetch && mActiveShader->fetch->pgm_start_fs.PGM_START != pgm_start_fs.PGM_START
        && mActiveShader->vertex && mActiveShader->vertex->pgm_start_vs.PGM_START != pgm_start_vs.PGM_START
        && mActiveShader->pixel && mActiveShader->pixel->pgm_start_ps.PGM_START != pgm_start_ps.PGM_START) {
       // OpenGL shader matches latte shader
-      return;
+      return true;
    }
-
-   auto fsProgram = make_virtual_ptr<void>(pgm_start_fs.PGM_START << 8);
-   auto vsProgram = make_virtual_ptr<void>(pgm_start_vs.PGM_START << 8);
-   auto psProgram = make_virtual_ptr<void>(pgm_start_ps.PGM_START << 8);
 
    // Update OpenGL shader
    auto &fetchShader = mFetchShaders[pgm_start_fs.PGM_START];
@@ -39,21 +39,52 @@ void Driver::checkActiveShader()
    auto &shader = mShaders[{ pgm_start_vs.PGM_START, pgm_start_ps.PGM_START }];
 
    if (shader.program != -1) {
-      // TODO: bind shader
-      return;
+      gl::glBindProgramPipeline(shader.program);
+      return true;
    }
 
    if (!fetchShader.parsed) {
-      // Parse attrib stream
+      auto program = make_virtual_ptr<void>(pgm_start_fs.PGM_START << 8);
+      auto size = pgm_size_fs.PGM_SIZE << 3;
+
+      if (!parseFetchShader(fetchShader, program, size)) {
+         gLog->error("Failed to parse fetch shader");
+         return false;
+      }
+
+      fetchShader.parsed = true;
    }
 
    if (vertexShader.program == -1) {
+      auto program = make_virtual_ptr<uint8_t>(pgm_start_vs.PGM_START << 8);
+      auto size = pgm_size_vs.PGM_SIZE << 3;
 
+      if (!compileVertexShader(vertexShader, fetchShader, program, size)) {
+         gLog->error("Failed to compile vertex shader");
+         return false;
+      }
+
+      // TODO: Upload to OpenGL
    }
 
    if (pixelShader.program == -1) {
+      auto program = make_virtual_ptr<uint8_t>(pgm_start_ps.PGM_START << 8);
+      auto size = pgm_size_ps.PGM_SIZE << 3;
 
+      if (!compilePixelShader(pixelShader, program, size)) {
+         gLog->error("Failed to compile vertex shader");
+         return false;
+      }
+
+      // TODO: Upload to OpenGL
    }
+
+   shader.fetch = &fetchShader;
+   shader.vertex = &vertexShader;
+   shader.pixel = &pixelShader;
+
+   // TODO: Create pipeline in Shader of VertexShader + PixelShader
+   return true;
 }
 
 void Driver::setRegister(latte::Register::Value reg, uint32_t value)
@@ -90,10 +121,12 @@ void Driver::decafSwapBuffers(pm4::DecafSwapBuffers &data)
 
 void Driver::drawIndexAuto(pm4::DrawIndexAuto &data)
 {
+   checkActiveShader();
 }
 
 void Driver::drawIndex2(pm4::DrawIndex2 &data)
 {
+   checkActiveShader();
 }
 
 void Driver::indexType(pm4::IndexType &data)
@@ -228,7 +261,7 @@ void Driver::runCommandBuffer(uint32_t *buffer, uint32_t size)
       {
          auto header3 = pm4::Packet3{ header.value };
          size = header3.size + 1;
-         //handlePacketType3(header3, { &buffer[pos + 1], size });
+         handlePacketType3(header3, { &buffer[pos + 1], size });
          break;
       }
       case pm4::PacketType::Type0:

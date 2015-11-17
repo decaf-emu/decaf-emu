@@ -39,7 +39,7 @@ static bool EXP(GenerateState &state, ExportInstruction *ins)
       break;
    case latte::exp::Type::Pixel:
       state.out
-         << "exp_color_"
+         << "exp_pixel_"
          << ins->dstReg;
       break;
    }

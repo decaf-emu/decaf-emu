@@ -245,9 +245,9 @@ void translateAluSource(GenerateState &state, AluSource &src)
       uint32_t blockIdx = src.type - AluSource::UniformBlock0;
 
       if (state.shader->type == latte::Shader::Vertex) {
-         state.out << "VUB" << blockIdx << "[" << src.id;
+         state.out << "VUB[" << blockIdx << "].values[" << src.id;
       } else if (state.shader->type == latte::Shader::Pixel) {
-         state.out << "PUB" << blockIdx << "[" << src.id;
+         state.out << "PUB[" << blockIdx << "].values[" << src.id;
       } else {
          throw;
       }

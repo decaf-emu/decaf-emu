@@ -195,6 +195,13 @@ union SQ_PGM_START_FS
    uint32_t PGM_START;
 };
 
+// Size >> 3
+union SQ_PGM_SIZE_FS
+{
+   uint32_t value;
+   uint32_t PGM_SIZE;
+};
+
 // Memory address of the (256-byte aligned) first CF instruction of the shader code for the fetch shader(VS)
 union SQ_PGM_START_VS
 {
@@ -202,11 +209,25 @@ union SQ_PGM_START_VS
    uint32_t PGM_START;
 };
 
+// Size >> 3
+union SQ_PGM_SIZE_VS
+{
+   uint32_t value;
+   uint32_t PGM_SIZE;
+};
+
 // Memory address of the (256-byte aligned) first CF instruction of the shader code for the fetch shader(PS)
 union SQ_PGM_START_PS
 {
    uint32_t value;
    uint32_t PGM_START;
+};
+
+// Size >> 3
+union SQ_PGM_SIZE_PS
+{
+   uint32_t value;
+   uint32_t PGM_SIZE;
 };
 
 // Defines the exports from the Pixel Shader Program.
@@ -232,7 +253,12 @@ union SQ_VTX_SEMANTIC_CLEAR
 union SQ_VTX_SEMANTIC_N
 {
    uint32_t value;
-   uint32_t SEMANTIC_ID;
+
+   struct
+   {
+      uint32_t SEMANTIC_ID : 8;
+      uint32_t : 24;
+   };
 };
 
 using SQ_VTX_SEMANTIC_0 = SQ_VTX_SEMANTIC_N;
