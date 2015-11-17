@@ -160,7 +160,7 @@ void
 _GX2SetSampler(GX2Sampler *sampler, uint32_t id)
 {
    pm4::write(pm4::SetSamplerAttrib {
-      id,
+      id * 3,
       sampler->regs.word0,
       sampler->regs.word1,
       sampler->regs.word2

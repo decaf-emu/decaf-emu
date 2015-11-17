@@ -254,7 +254,7 @@ struct SetSamplerAttrib
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::SamplerRegisterBase);
+      se(id);
       se(word0.value);
       se(word1.value);
       se(word2.value);
@@ -293,7 +293,7 @@ struct SetVtxResource
       uint32_t unusedWord4 = 0;
       uint32_t unusedWord5 = 0;
 
-      se.reg(id, latte::Register::ResourceRegisterBase);
+      se(id);
       se(baseAddress);
       se(size);
       se(word2.value);
@@ -320,7 +320,7 @@ struct SetTexResource
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::ResourceRegisterBase);
+      se(id);
       se(word0.value);
       se(word1.value);
       se(baseAddress);
