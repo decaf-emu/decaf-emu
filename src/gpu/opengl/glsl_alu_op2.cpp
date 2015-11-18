@@ -69,6 +69,12 @@ PRED_SETE_64
 PRED_SETGE_64
 */
 
+namespace gpu
+{
+
+namespace opengl
+{
+
 namespace glsl
 {
 
@@ -737,4 +743,8 @@ void registerAluOP2()
    registerGenerator(op2::FLT_TO_INT, FLT_TO_INT);
 }
 
-} // namespace hlsl
+} // namespace glsl
+
+} // namespace opengl
+
+} // namespace gpu

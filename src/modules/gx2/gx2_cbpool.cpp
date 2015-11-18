@@ -6,7 +6,7 @@
 #include "gx2_displaylist.h"
 #include "gx2_state.h"
 #include "gpu/pm4_buffer.h"
-#include "gpu/driver/commandqueue.h"
+#include "gpu/commandqueue.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "utils/log.h"
 

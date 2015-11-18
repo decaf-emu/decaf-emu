@@ -7,8 +7,7 @@
 #include "gx2_texture.h"
 #include "gx2_shaders.h"
 #include "gpu/latte.h"
-#include "gpu/glsl/glsl.h"
-#include "gpu/glsl/glsl_generator.h"
+#include "gpu/opengl/glsl_generator.h"
 #include "memory_translate.h"
 #include "gpu/latte_untile.h"
 #include "gpu/gfd.h"
@@ -228,7 +227,7 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, uint8_t
    // Decompiled
    auto decompiled = latte::Shader { };
    latte::decode(decompiled, latte::Shader::Vertex, { data, size });
-   glsl::generateBody(decompiled, output);
+   gpu::opengl::glsl::generateBody(decompiled, output);
 
    file
       << "Decompiled:" << std::endl

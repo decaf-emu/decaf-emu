@@ -9,6 +9,12 @@ CUBE
 MAX4
 */
 
+namespace gpu
+{
+
+namespace opengl
+{
+
 namespace glsl
 {
 
@@ -51,4 +57,8 @@ void registerAluReduction()
    registerGenerator(op2::DOT4, DOT4);
 }
 
-} // namespace hlsl
+} // namespace glsl
+
+} // namespace opengl
+
+} // namespace gpu

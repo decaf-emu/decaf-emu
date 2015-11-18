@@ -19,6 +19,12 @@ MUL_LIT_M4
 MUL_LIT_D2
 */
 
+namespace gpu
+{
+
+namespace opengl
+{
+
 namespace glsl
 {
 
@@ -217,4 +223,8 @@ void registerAluOP3()
    registerGenerator(op3::MULADD_IEEE_D2, MULADD_D2);
 }
 
-} // namespace hlsl
+} // namespace glsl
+
+} // namespace opengl
+
+} // namespace gpu

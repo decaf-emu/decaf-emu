@@ -8,6 +8,7 @@
 #include "debugger.h"
 #include "fuzztests.h"
 #include "filesystem/filesystem.h"
+#include "gpu/opengl/opengl_driver.h"
 #include "hardwaretests.h"
 #include "processor.h"
 #include "loader.h"
@@ -234,6 +235,9 @@ fuzzTest()
 static bool
 play(const fs::HostPath &path)
 {
+   // Create gpu driver
+   gpu::driver::create(new gpu::opengl::GLDriver);
+
    // Create window
    if (!platform::ui::createWindow(L"Decaf")) {
       gLog->error("Error creating window");

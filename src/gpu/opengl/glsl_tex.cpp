@@ -44,6 +44,12 @@ GATHER4_C_O
 GET_BUFFER_RESINFO
 */
 
+namespace gpu
+{
+
+namespace opengl
+{
+
 namespace glsl
 {
 
@@ -167,4 +173,8 @@ void registerTex()
    registerGenerator(inst::SAMPLE_C, SAMPLE_C);
 }
 
-} // namespace hlsl
+} // namespace glsl
+
+} // namespace opengl
+
+} // namespace gpu

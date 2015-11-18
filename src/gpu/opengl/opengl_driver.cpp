@@ -1,11 +1,13 @@
-#include "gpu/driver/commandqueue.h"
-#include "opengl_driver.h"
+#include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
+#include <gsl.h>
+
+#include "gpu/commandqueue.h"
 #include "gpu/pm4_buffer.h"
 #include "gpu/pm4_reader.h"
 #include "gpu/latte_registers.h"
-#include "platform/platform_ui.h"
+#include "opengl_driver.h"
 #include "utils/log.h"
-#include <glbinding/gl/gl.h>
 
 namespace gpu
 {
@@ -15,7 +17,7 @@ namespace opengl
 
 // We need LOAD_REG and SET_REG to do same shit.
 
-bool Driver::checkActiveShader()
+bool GLDriver::checkActiveShader()
 {
    auto pgm_start_fs = getRegister<latte::SQ_PGM_START_FS>(latte::Register::SQ_PGM_START_FS);
    auto pgm_start_vs = getRegister<latte::SQ_PGM_START_VS>(latte::Register::SQ_PGM_START_VS);
@@ -36,58 +38,91 @@ bool Driver::checkActiveShader()
    auto &fetchShader = mFetchShaders[pgm_start_fs.PGM_START];
    auto &vertexShader = mVertexShaders[pgm_start_vs.PGM_START];
    auto &pixelShader = mPixelShaders[pgm_start_ps.PGM_START];
-   auto &shader = mShaders[{ pgm_start_vs.PGM_START, pgm_start_ps.PGM_START }];
+   auto &shader = mShaders[ShaderKey { pgm_start_fs.PGM_START, pgm_start_vs.PGM_START, pgm_start_ps.PGM_START }];
 
-   if (shader.program != -1) {
-      gl::glBindProgramPipeline(shader.program);
-      return true;
-   }
+   // Genearte shader if needed
+   if (!shader.pipeline) {
+      // Parse fetch shader if needed
+      if (!fetchShader.parsed) {
+         auto program = make_virtual_ptr<void>(pgm_start_fs.PGM_START << 8);
+         auto size = pgm_size_fs.PGM_SIZE << 3;
 
-   if (!fetchShader.parsed) {
-      auto program = make_virtual_ptr<void>(pgm_start_fs.PGM_START << 8);
-      auto size = pgm_size_fs.PGM_SIZE << 3;
-
-      if (!parseFetchShader(fetchShader, program, size)) {
-         gLog->error("Failed to parse fetch shader");
-         return false;
+         if (!parseFetchShader(fetchShader, program, size)) {
+            gLog->error("Failed to parse fetch shader");
+            return false;
+         }
       }
 
-      fetchShader.parsed = true;
-   }
+      // Compile vertex shader if needed
+      if (!vertexShader.program) {
+         auto program = make_virtual_ptr<uint8_t>(pgm_start_vs.PGM_START << 8);
+         auto size = pgm_size_vs.PGM_SIZE << 3;
 
-   if (vertexShader.program == -1) {
-      auto program = make_virtual_ptr<uint8_t>(pgm_start_vs.PGM_START << 8);
-      auto size = pgm_size_vs.PGM_SIZE << 3;
+         if (!compileVertexShader(vertexShader, fetchShader, program, size)) {
+            gLog->error("Failed to recompile vertex shader");
+            return false;
+         }
 
-      if (!compileVertexShader(vertexShader, fetchShader, program, size)) {
-         gLog->error("Failed to compile vertex shader");
-         return false;
+         // Create OpenGL Shader
+         const gl::GLchar *code[] = { vertexShader.code.c_str() };
+         vertexShader.program = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
+
+         if (!vertexShader.program) {
+            gl::GLint logLength = 0;
+            std::string logMessage;
+            gl::glGetProgramiv(vertexShader.program, gl::GL_INFO_LOG_LENGTH, &logLength);
+
+            logMessage.resize(logLength);
+            gl::glGetProgramInfoLog(vertexShader.program, logLength, &logLength, &logMessage[0]);
+            gLog->error("Failed to compile vertex shader glsl:\n{}", logMessage);
+            return false;
+         }
       }
 
-      // TODO: Upload to OpenGL
-   }
+      // Compile pixel shader if needed
+      if (!pixelShader.program) {
+         auto program = make_virtual_ptr<uint8_t>(pgm_start_ps.PGM_START << 8);
+         auto size = pgm_size_ps.PGM_SIZE << 3;
 
-   if (pixelShader.program == -1) {
-      auto program = make_virtual_ptr<uint8_t>(pgm_start_ps.PGM_START << 8);
-      auto size = pgm_size_ps.PGM_SIZE << 3;
+         if (!compilePixelShader(pixelShader, program, size)) {
+            gLog->error("Failed to compile vertex shader");
+            return false;
+         }
 
-      if (!compilePixelShader(pixelShader, program, size)) {
-         gLog->error("Failed to compile vertex shader");
-         return false;
+         // Create OpenGL Shader
+         const gl::GLchar *code[] = { vertexShader.code.c_str() };
+         pixelShader.program = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
+
+         if (!pixelShader.program) {
+            gl::GLint logLength = 0;
+            std::string logMessage;
+            gl::glGetProgramiv(pixelShader.program, gl::GL_INFO_LOG_LENGTH, &logLength);
+
+            logMessage.resize(logLength);
+            gl::glGetProgramInfoLog(pixelShader.program, logLength, &logLength, &logMessage[0]);
+            gLog->error("Failed to compile pixel shader glsl:\n{}", logMessage);
+            return false;
+         }
       }
 
-      // TODO: Upload to OpenGL
+      if (fetchShader.parsed && vertexShader.program && pixelShader.program) {
+         shader.fetch = &fetchShader;
+         shader.vertex = &vertexShader;
+         shader.pixel = &pixelShader;
+
+         // Create pipeline
+         gl::glGenProgramPipelines(1, &shader.pipeline);
+         gl::glUseProgramStages(shader.pipeline, gl::GL_VERTEX_SHADER_BIT, shader.vertex->program);
+         gl::glUseProgramStages(shader.pipeline, gl::GL_FRAGMENT_SHADER_BIT, shader.pixel->program);
+      }
    }
 
-   shader.fetch = &fetchShader;
-   shader.vertex = &vertexShader;
-   shader.pixel = &pixelShader;
-
-   // TODO: Create pipeline in Shader of VertexShader + PixelShader
+   // Bind shader
+   gl::glBindProgramPipeline(shader.pipeline);
    return true;
 }
 
-void Driver::setRegister(latte::Register::Value reg, uint32_t value)
+void GLDriver::setRegister(latte::Register::Value reg, uint32_t value)
 {
    // Save to my state
    mRegisters[reg / 4] = value;
@@ -116,98 +151,98 @@ void Driver::setRegister(latte::Register::Value reg, uint32_t value)
    }
 }
 
-void Driver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
+void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
 {
 }
 
-void Driver::decafSwapBuffers(pm4::DecafSwapBuffers &data)
+void GLDriver::decafSwapBuffers(pm4::DecafSwapBuffers &data)
 {
 }
 
-void Driver::decafClearColor(pm4::DecafClearColor &data)
+void GLDriver::decafClearColor(pm4::DecafClearColor &data)
 {
 }
 
-void Driver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
+void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
 {
 }
 
-void Driver::drawIndexAuto(pm4::DrawIndexAuto &data)
-{
-   checkActiveShader();
-}
-
-void Driver::drawIndex2(pm4::DrawIndex2 &data)
+void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
 {
    checkActiveShader();
 }
 
-void Driver::indexType(pm4::IndexType &data)
+void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
+{
+   checkActiveShader();
+}
+
+void GLDriver::indexType(pm4::IndexType &data)
 {
    mRegisters[latte::Register::VGT_DMA_INDEX_TYPE / 4] = data.type.value;
 }
 
-void Driver::numInstances(pm4::NumInstances &data)
+void GLDriver::numInstances(pm4::NumInstances &data)
 {
    mRegisters[latte::Register::VGT_DMA_NUM_INSTANCES / 4] = data.count;
 }
 
-void Driver::setAluConsts(pm4::SetAluConsts &data)
+void GLDriver::setAluConsts(pm4::SetAluConsts &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void Driver::setConfigRegs(pm4::SetConfigRegs &data)
+void GLDriver::setConfigRegs(pm4::SetConfigRegs &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void Driver::setContextRegs(pm4::SetContextRegs &data)
+void GLDriver::setContextRegs(pm4::SetContextRegs &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void Driver::setControlConstants(pm4::SetControlConstants &data)
+void GLDriver::setControlConstants(pm4::SetControlConstants &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void Driver::setLoopConsts(pm4::SetLoopConsts &data)
+void GLDriver::setLoopConsts(pm4::SetLoopConsts &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void Driver::setSamplers(pm4::SetSamplers &data)
+void GLDriver::setSamplers(pm4::SetSamplers &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void Driver::setResources(pm4::SetResources &data)
+void GLDriver::setResources(pm4::SetResources &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void Driver::indirectBufferCall(pm4::IndirectBufferCall &data)
+void GLDriver::indirectBufferCall(pm4::IndirectBufferCall &data)
 {
    auto buffer = reinterpret_cast<uint32_t*>(data.addr.get());
    runCommandBuffer(buffer, data.size);
 }
 
-void Driver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data)
+void GLDriver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data)
 {
    pm4::PacketReader reader { data };
 
@@ -263,13 +298,21 @@ void Driver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> da
    }
 }
 
-void Driver::start()
+void GLDriver::start()
 {
    mRunning = true;
-   mThread = std::thread(&Driver::run, this);
+   mThread = std::thread(&GLDriver::run, this);
 }
 
-void Driver::runCommandBuffer(uint32_t *buffer, uint32_t size)
+void GLDriver::setTvDisplay(size_t width, size_t height)
+{
+}
+
+void GLDriver::setDrcDisplay(size_t width, size_t height)
+{
+}
+
+void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t size)
 {
    for (auto pos = 0u; pos < size; ) {
       auto header = *reinterpret_cast<pm4::PacketHeader *>(&buffer[pos]);
@@ -294,8 +337,11 @@ void Driver::runCommandBuffer(uint32_t *buffer, uint32_t size)
    }
 }
 
-void Driver::run()
+void GLDriver::run()
 {
+   activateDeviceContext();
+   glbinding::Binding::initialize();
+
    while (mRunning) {
       auto buffer = gpu::unqueueCommandBuffer();
 

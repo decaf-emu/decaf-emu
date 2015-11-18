@@ -19,6 +19,12 @@ using TranslateFuncALUReduction = bool(*)(GenerateState &state, latte::shadir::A
 using TranslateFuncTEX = bool(*)(GenerateState &state, latte::shadir::TexInstruction *ins);
 using TranslateFuncEXP = bool(*)(GenerateState &state, latte::shadir::ExportInstruction *ins);
 
+namespace gpu
+{
+
+namespace opengl
+{
+
 namespace glsl
 {
 
@@ -58,4 +64,8 @@ void translateAluSourceVector(GenerateState &state, AluSource &srcX, AluSource &
 void translateChannel(GenerateState &state, Channel channel);
 unsigned translateSelRegister(GenerateState &state, SelRegister &reg, size_t maxSel = 4);
 
-}
+} // namespace glsl
+
+} // namespace opengl
+
+} // namespace gpu

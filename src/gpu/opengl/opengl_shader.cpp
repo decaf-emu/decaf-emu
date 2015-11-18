@@ -1,9 +1,9 @@
 #include "opengl_driver.h"
+#include "glsl_generator.h"
 #include "gpu/latte_registers.h"
 #include "gpu/latte_instructions.h"
 #include "gpu/latte_opcodes.h"
 #include "gpu/latte.h"
-#include "gpu/glsl/glsl_generator.h"
 #include "utils/log.h"
 #include <spdlog/spdlog.h>
 
@@ -13,9 +13,10 @@ namespace gpu
 namespace opengl
 {
 
-bool Driver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
+bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
 {
    auto program = reinterpret_cast<latte::ControlFlowInst *>(buffer);
+   auto parsed = false;
 
    for (auto i = 0; i < size / latte::WordsPerCF; i++) {
       auto &cf = program[i];
@@ -54,17 +55,19 @@ bool Driver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
       }
       case latte::SQ_CF_INST_RETURN:
       case latte::SQ_CF_INST_END_PROGRAM:
-         return true;
+         parsed = true;
+         break;
       default:
          gLog->error("Unexpected fetch shader instruction {}", cf.word1.CF_INST);
       }
 
       if (cf.word1.END_OF_PROGRAM) {
-         return true;
+         parsed = true;
       }
    }
 
-   return false;
+   shader.parsed = parsed;
+   return parsed;
 }
 
 static size_t
@@ -210,7 +213,72 @@ getGLSLDataFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT num, latte:
    return "vec4";
 }
 
-bool Driver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size)
+static void
+writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq_config)
+{
+   if (sq_config.DX9_CONSTS) {
+      // Uniform registers
+      out << "uniform vec4 VC[256];\n";
+   } else {
+      // Uniform blocks
+      // TODO: Change max size of VUB
+      out << "uniform VertexUB {\n"
+         << "   vec4 values[];\n"
+         << "} VUB[4]\n";
+   }
+
+   // Samplers
+   for (auto id : shader.samplersUsed) {
+      out << "uniform sampler2D sampler_" << id << ";\n";
+   }
+}
+
+static void
+writeLocals(fmt::MemoryWriter &out, latte::Shader &shader)
+{
+   // Registers
+   for (auto id : shader.gprsUsed) {
+      out << "vec4 R" << id << ";\n";
+   }
+
+   // Previous Scalar
+   if (shader.psUsed.size()) {
+      out << "float PS;\n"
+         << "float PSo;\n";
+   }
+
+   // Previous Vector
+   if (shader.pvUsed.size()) {
+      out << "float4 PV;\n"
+         << "float4 PVo;\n";
+   }
+
+   // Address Register (TODO: Only print if used)
+   out << "int4 AR;\n";
+
+   // Loop Index (TODO: Only print if used)
+   out << "int AL;\n";
+}
+
+static void
+writeExports(fmt::MemoryWriter &out, latte::Shader &shader)
+{
+   for (auto exp : shader.exports) {
+      switch (exp->type) {
+      case latte::exp::Type::Position:
+         out << "vec4 exp_position_" << exp->dstReg << ";\n";
+         break;
+      case latte::exp::Type::Parameter:
+         out << "vec4 exp_param_" << exp->dstReg << ";\n";
+         break;
+      case latte::exp::Type::Pixel:
+         out << "vec4 exp_pixel_" << exp->dstReg << ";\n";
+         break;
+      }
+   }
+}
+
+bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size)
 {
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
    auto spi_vs_out_config = getRegister<latte::SPI_VS_OUT_CONFIG>(latte::Register::SPI_VS_OUT_CONFIG);
@@ -231,24 +299,7 @@ bool Driver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8
    }
 
    // Uniforms
-   if (sq_config.DX9_CONSTS) {
-      // Uniform registers
-      out << "uniform vec4 VC[256];\n";
-   } else {
-      // Uniform blocks
-      // TODO: Change max size of VUB
-      out << "uniform VertexUB {\n"
-          << "   vec4 values[];\n"
-          << "} VUB[4]\n";
-   }
-
-   out << '\n';
-
-   // Samplers
-   for (auto id : shader.samplersUsed) {
-      out << "uniform sampler2D sampler_" << id << ";\n";
-   }
-
+   writeUniforms(out, shader, sq_config);
    out << '\n';
 
    // Vertex Shader Inputs
@@ -259,7 +310,6 @@ bool Driver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8
           << getGLSLDataFormat(attrib.format, attrib.numFormat, attrib.formatComp)
           << " fs_out_" << attrib.location << ";\n";
    }
-
    out << '\n';
 
    // Vertex Shader Exports
@@ -282,50 +332,14 @@ bool Driver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8
          out << "out vec4 vs_out_" << spi_vs_out_id.SEMANTIC_3 << ";\n";
       }
    }
-
    out << '\n';
 
    // Program code
    out << "void main()\n"
        << "{\n";
 
-   // Registers
-   for (auto id : shader.gprsUsed) {
-      out << "vec4 R" << id << ";\n";
-   }
-
-   // Previous Scalar
-   if (shader.psUsed.size()) {
-      out << "float PS;\n"
-          << "float PSo;\n";
-   }
-
-   // Previous Vector
-   if (shader.pvUsed.size()) {
-      out << "float4 PV;\n"
-          << "float4 PVo;\n";
-   }
-
-   // Address Register (TODO: Only print if used)
-   out << "int4 AR;\n";
-
-   // Loop Index (TODO: Only print if used)
-   out << "int AL;\n";
-
-   // Exports
-   for (auto exp : shader.exports) {
-      switch (exp->type) {
-      case latte::exp::Type::Position:
-         out << "vec4 exp_position_" << exp->dstReg << ";\n";
-         break;
-      case latte::exp::Type::Parameter:
-         out << "vec4 exp_param_" << exp->dstReg << ";\n";
-         break;
-      case latte::exp::Type::Pixel:
-         out << "vec4 exp_pixel_" << exp->dstReg << ";\n";
-         break;
-      }
-   }
+   writeLocals(out, shader);
+   writeExports(out, shader);
 
    // Initialise registers
    // TODO: Check which order of VertexID and InstanceID for r0.x, r0.y
@@ -377,56 +391,135 @@ bool Driver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8
          out << "vs_out_" << exp->dstReg << " = exp_param_" << exp->dstReg << ";\n";
          break;
       case latte::exp::Type::Pixel:
-         out << "ps_out_" << exp->dstReg << " = exp_pixel_" << exp->dstReg << ";\n";
+         throw std::logic_error("Unexpected pixel export in vertex shader.");
          break;
       }
    }
 
    out << "}\n";
-   gLog->debug("Shader: \n{}", out.c_str());
+
+   vertex.code = out.str();
+   gLog->debug("Vertex Shader: \n{}", vertex.code);
    return true;
 }
 
 
-bool Driver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t size)
+bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t size)
 {
-   return false;
-   /*
-   latte::SPI_PS_IN_CONTROL_0 spi_ps_in_control_0;
-   latte::SPI_PS_IN_CONTROL_1 spi_ps_in_control_1;
-   latte::CB_SHADER_MASK cb_shader_mask;
+   auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
+   auto spi_ps_in_control_0 = getRegister<latte::SPI_PS_IN_CONTROL_0>(latte::Register::SPI_PS_IN_CONTROL_0);
+   auto spi_ps_in_control_1 = getRegister<latte::SPI_PS_IN_CONTROL_1>(latte::Register::SPI_PS_IN_CONTROL_1);
+   auto cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
    fmt::MemoryWriter out;
+   latte::Shader shader;
+   std::string body;
 
+   if (!latte::decode(shader, latte::Shader::Pixel, { buffer, size })) {
+      gLog->error("Failed to decode pixel shader");
+      return false;
+   }
+
+   if (!glsl::generateBody(shader, body)) {
+      gLog->error("Failed to generate GLSL for pixel shader");
+      return false;
+   }
+
+   // Uniforms
+   writeUniforms(out, shader, sq_config);
+   out << '\n';
+
+   // Pixel Shader Inputs
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP; ++i) {
-      latte::SPI_PS_INPUT_CNTL_0 input;
+      auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
 
-      if (input.FLAT_SHADE) {
+      if (spi_ps_input_cntl.FLAT_SHADE) {
          out << "flat ";
       }
 
-      out << "in vec4 vs_out_" << input.SEMANTIC << ";\n";
+      out << "in vec4 vs_out_" << spi_ps_input_cntl.SEMANTIC << ";\n";
    }
+   out << '\n';
 
+   // Pixel Shader Exports
    auto maskBits = cb_shader_mask.value;
-   for (auto i = 0; i < 8; ++i) {
-      auto mask = maskBits & 0xf;
 
-      if (mask) {
+   for (auto i = 0; i < 8; ++i) {
+      if (maskBits & 0xf) {
          out << "out vec4 ps_out_" << i << ";\n";
       }
+
       maskBits >>= 4;
    }
+   out << '\n';
 
-
+   // Program code
    out << "void main()\n"
       << "{\n";
 
+   writeLocals(out, shader);
+   writeExports(out, shader);
+
+   // Assign vertex shader output to our GPR
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP; ++i) {
-      latte::SPI_PS_INPUT_CNTL_0 input;
-      out << "R" << i << " = vs_out_" << input.SEMANTIC << ";\n";
+      auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
+      auto id = spi_ps_input_cntl.SEMANTIC;
+
+      if (id == 0xff) {
+         continue;
+      }
+
+      out << "R" << i << " = vs_out_" << id << ";\n";
    }
 
-   out << "}\n";*/
+   out << '\n' << body << '\n';
+
+   for (auto exp : shader.exports) {
+      switch (exp->type) {
+      case latte::exp::Type::Pixel: {
+         auto mask = cb_shader_mask.value >> (4 * exp->dstReg);
+
+         if (!mask) {
+            gLog->warn("Export is masked by cb_shader_mask");
+         } else {
+            out
+               << "ps_out_"
+               << exp->dstReg
+               << " = exp_pixel_"
+               << exp->dstReg << '.';
+
+            if (mask & (1 << 0)) {
+               out << 'x';
+            }
+
+            if (mask & (1 << 1)) {
+               out << 'y';
+            }
+
+            if (mask & (1 << 2)) {
+               out << 'z';
+            }
+
+            if (mask & (1 << 3)) {
+               out << 'w';
+            }
+
+            out << ";\n";
+         }
+      } break;
+      case latte::exp::Type::Position:
+         throw std::logic_error("Unexpected position export in pixel shader.");
+         break;
+      case latte::exp::Type::Parameter:
+         throw std::logic_error("Unexpected parameter export in pixel shader.");
+         break;
+      }
+   }
+
+   out << "}\n";
+
+   pixel.code = out.str();
+   gLog->debug("Pixel Shader: \n{}", pixel.code);
+   return true;
 }
 
 } // namespace opengl

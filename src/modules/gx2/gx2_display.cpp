@@ -1,5 +1,5 @@
 #include "gx2_display.h"
-#include "gpu/driver/display.h"
+#include "gpu/driver.h"
 
 void
 GX2SetTVEnable(BOOL enable)

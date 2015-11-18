@@ -181,23 +181,11 @@
     <Filter Include="Source Files\modules\swkbd">
       <UniqueIdentifier>{3c3e0cf6-ac1e-4075-9e7d-4c3643ae9654}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\gpu\driver">
-      <UniqueIdentifier>{7d13535f-e343-49b0-b0ce-bb31218eb10e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\gpu\driver">
-      <UniqueIdentifier>{80e32bb4-dfbc-451e-8646-ba1179d3440b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\gpu\driver\opengl">
-      <UniqueIdentifier>{bb897b6e-cc4f-4511-a07d-0bf46f2dc485}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\gpu\driver\opengl">
+    <Filter Include="Header Files\gpu\opengl">
       <UniqueIdentifier>{3da4a358-56b9-4d93-a6c8-03a40f540257}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\gpu\glsl">
-      <UniqueIdentifier>{7f076c99-3991-43b1-802a-0d6c8480e93a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\gpu\glsl">
-      <UniqueIdentifier>{43fe1db7-1e42-49dc-b821-e2326d17ce64}</UniqueIdentifier>
+    <Filter Include="Source Files\gpu\opengl">
+      <UniqueIdentifier>{bb897b6e-cc4f-4511-a07d-0bf46f2dc485}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -615,47 +603,50 @@
     <ClCompile Include="..\src\modules\gx2\gx2_cbpool.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\driver\commandqueue.cpp">
-      <Filter>Source Files\gpu\driver</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\driver\opengl\opengl_driver.cpp">
-      <Filter>Source Files\gpu\driver\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_clear.cpp">
       <Filter>Source Files\modules\gx2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\driver\display.cpp">
-      <Filter>Source Files\gpu\driver</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_fetchshader.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\glsl\glsl_alu.cpp">
-      <Filter>Source Files\gpu\glsl</Filter>
+    <ClCompile Include="..\src\gpu\opengl\glsl_alu.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\glsl\glsl_alu_op2.cpp">
-      <Filter>Source Files\gpu\glsl</Filter>
+    <ClCompile Include="..\src\gpu\opengl\glsl_alu_op2.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\glsl\glsl_alu_op3.cpp">
-      <Filter>Source Files\gpu\glsl</Filter>
+    <ClCompile Include="..\src\gpu\opengl\glsl_alu_op3.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\glsl\glsl_alu_reduction.cpp">
-      <Filter>Source Files\gpu\glsl</Filter>
+    <ClCompile Include="..\src\gpu\opengl\glsl_alu_reduction.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\glsl\glsl_cf.cpp">
-      <Filter>Source Files\gpu\glsl</Filter>
+    <ClCompile Include="..\src\gpu\opengl\glsl_cf.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\glsl\glsl_exp.cpp">
-      <Filter>Source Files\gpu\glsl</Filter>
+    <ClCompile Include="..\src\gpu\opengl\glsl_exp.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\glsl\glsl_generator.cpp">
-      <Filter>Source Files\gpu\glsl</Filter>
+    <ClCompile Include="..\src\gpu\opengl\glsl_generator.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\glsl\glsl_tex.cpp">
-      <Filter>Source Files\gpu\glsl</Filter>
+    <ClCompile Include="..\src\gpu\opengl\glsl_tex.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\driver\opengl\opengl_shader.cpp">
-      <Filter>Source Files\gpu\driver\opengl</Filter>
+    <ClCompile Include="..\src\gpu\opengl\opengl_driver.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\opengl_shader.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\opengl_wgl.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\commandqueue.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\driver.cpp">
+      <Filter>Source Files\gpu</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1202,9 +1193,6 @@
     <ClInclude Include="..\src\modules\gx2\gx2_cbpool.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gpu\driver\opengl\opengl_driver.h">
-      <Filter>Header Files\gpu\driver\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gpu\pm4_writer.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
@@ -1222,12 +1210,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_clear.h">
       <Filter>Header Files\modules\gx2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gpu\driver\commandqueue.h">
-      <Filter>Header Files\gpu\driver</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gpu\driver\display.h">
-      <Filter>Header Files\gpu\driver</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_enum_sq.h">
       <Filter>Header Files\gpu</Filter>
@@ -1271,11 +1253,23 @@
     <ClInclude Include="..\src\utils\be_array.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gpu\glsl\glsl.h">
-      <Filter>Header Files\gpu\glsl</Filter>
+    <ClInclude Include="..\src\gpu\driver\opengl\glsl_generator.h">
+      <Filter>Header Files\gpu</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gpu\glsl\glsl_generator.h">
-      <Filter>Header Files\gpu\glsl</Filter>
+    <ClInclude Include="..\src\gpu\driver\opengl\opengl_driver.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\opengl\glsl_generator.h">
+      <Filter>Header Files\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\opengl\opengl_driver.h">
+      <Filter>Header Files\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\commandqueue.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\driver.h">
+      <Filter>Header Files\gpu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

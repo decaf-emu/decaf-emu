@@ -16,6 +16,12 @@ EXP
 MEM_EXPORT
 */
 
+namespace gpu
+{
+
+namespace opengl
+{
+
 namespace glsl
 {
 
@@ -56,4 +62,8 @@ void registerExp()
    registerGenerator(inst::EXP_DONE, EXP);
 }
 
-} // namespace hlsl
+} // namespace glsl
+
+} // namespace opengl
+
+} // namespace gpu

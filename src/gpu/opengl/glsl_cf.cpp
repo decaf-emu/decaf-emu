@@ -29,6 +29,12 @@ VTX_ACK
 VTX_TC_ACK
 */
 
+namespace gpu
+{
+
+namespace opengl
+{
+
 namespace glsl
 {
 
@@ -50,4 +56,8 @@ void registerCf()
    registerGenerator(latte::cf::inst::LOOP_CONTINUE, LOOP_CONTINUE);
 }
 
-} // namespace hlsl
+} // namespace glsl
+
+} // namespace opengl
+
+} // namespace gpu

@@ -5,6 +5,12 @@ using latte::shadir::AluInstruction;
 using latte::shadir::AluSource;
 using latte::shadir::AluDest;
 
+namespace gpu
+{
+
+namespace opengl
+{
+
 namespace glsl
 {
 
@@ -330,4 +336,8 @@ void translateAluSourceVector(GenerateState &state, AluSource &srcX, AluSource &
    state.out << ')';
 }
 
-} // namespace hlsl
+} // namespace glsl
+
+} // namespace opengl
+
+} // namespace gpu

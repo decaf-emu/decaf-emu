@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 #include "gpu/pm4.h"
+#include "gpu/driver.h"
 
 namespace gpu
 {
@@ -35,32 +36,43 @@ struct FetchShader
 struct VertexShader
 {
    latte::SQ_PGM_START_VS pgm_start_vs;
-   gl::GLuint program = -1;
+   gl::GLuint program = 0;
+   std::string code;
 };
 
 struct PixelShader
 {
    latte::SQ_PGM_START_PS pgm_start_ps;
-   gl::GLuint program = -1;
+   gl::GLuint program = 0;
+   std::string code;
 };
 
-using ShaderKey = std::pair<uint32_t, uint32_t>;
+using ShaderKey = std::tuple<uint32_t, uint32_t, uint32_t>;
 
 struct Shader
 {
-   gl::GLuint program = -1;
+   gl::GLuint pipeline = 0;
    FetchShader *fetch;
    VertexShader *vertex;
    PixelShader *pixel;
 };
 
-class Driver
+using GLContext = uint64_t;
+
+class GLDriver : public gpu::Driver
 {
 public:
-   void start();
-   void run();
+   virtual ~GLDriver() {}
+
+   void start() override;
+   void setupWindow() override;
+   void setTvDisplay(size_t width, size_t height) override;
+   void setDrcDisplay(size_t width, size_t height) override;
 
 private:
+   void run();
+   void activateDeviceContext();
+
    void handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data);
    void decafCopyColorToScan(pm4::DecafCopyColorToScan &data);
    void decafSwapBuffers(pm4::DecafSwapBuffers &data);
@@ -105,6 +117,8 @@ private:
    std::unordered_map<uint32_t, VertexShader> mVertexShaders;
    std::unordered_map<uint32_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
+
+   GLContext mDeviceContext;
 };
 
 } // namespace opengl

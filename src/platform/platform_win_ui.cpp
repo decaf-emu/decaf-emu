@@ -1,6 +1,7 @@
 #include "platform_ui.h"
-#ifdef PLATFORM_WINDOWS
+#include "gpu/driver.h"
 
+#ifdef PLATFORM_WINDOWS
 #include <algorithm>
 #include <cassert>
 #include <Windows.h>
@@ -19,6 +20,10 @@ WndProc(HWND handle, UINT msg, WPARAM wParam, LPARAM lParam)
    LRESULT result = 1;
 
    switch (msg) {
+   case WM_CREATE:
+      gHandle = handle;
+      gpu::driver::setupWindow();
+      break;
    case WM_CLOSE:
       //DestroyWindow(hWnd);
       break;

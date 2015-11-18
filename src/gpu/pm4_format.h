@@ -29,7 +29,7 @@ enum Value : uint32_t
    START_2D_CMDBUF            = 0x25,
    INDEX_BASE                 = 0x26,
    DRAW_INDEX_2               = 0x27,
-   CONTEXT_CONTROL            = 0x28,
+   CONTEXT_CTL                = 0x28,
    DRAW_INDEX_OFFSET          = 0x29,
    INDEX_TYPE                 = 0x2A,
    DRAW_INDEX                 = 0x2B,

@@ -1,3 +1,4 @@
+#include "gpu/driver.h"
 #include "gpu/pm4.h"
 #include "gx2_cbpool.h"
 #include "gx2_displaylist.h"
@@ -7,13 +8,9 @@
 #include "modules/coreinit/coreinit_memheap.h"
 #include "utils/log.h"
 #include "utils/virtual_ptr.h"
-#include "gpu/driver/opengl/opengl_driver.h"
 
 static uint32_t
 gMainCoreId = 0;
-
-static gpu::opengl::Driver *
-gDriver = nullptr;
 
 void
 GX2Init(be_val<uint32_t> *attributes)
@@ -64,14 +61,14 @@ GX2Init(be_val<uint32_t> *attributes)
    // Initialise command buffer pools
    gx2::internal::initCommandBufferPool(cbPoolBase, cbPoolSize, cbPoolItemSize);
 
-   // Start driver
-   gDriver = new gpu::opengl::Driver();
-   gDriver->start();
+   // Start our driver!
+   gpu::driver::start();
 }
 
 void
 GX2Shutdown()
 {
+   gpu::driver::destroy();
 }
 
 void
