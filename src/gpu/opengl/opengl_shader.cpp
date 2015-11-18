@@ -18,7 +18,7 @@ bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
    auto program = reinterpret_cast<latte::ControlFlowInst *>(buffer);
    auto parsed = false;
 
-   for (auto i = 0; i < size / latte::WordsPerCF; i++) {
+   for (auto i = 0; (i < size / latte::WordsPerCF) && !parsed; i++) {
       auto &cf = program[i];
 
       switch (cf.word1.CF_INST) {
