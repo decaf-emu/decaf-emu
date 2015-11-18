@@ -1271,6 +1271,12 @@
     <ClInclude Include="..\src\gpu\driver.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_registers_sx.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_enum_sx.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

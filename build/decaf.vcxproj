@@ -294,6 +294,7 @@
     <ClInclude Include="..\src\gpu\latte_enum_db.h" />
     <ClInclude Include="..\src\gpu\latte_enum_spi.h" />
     <ClInclude Include="..\src\gpu\latte_enum_sq.h" />
+    <ClInclude Include="..\src\gpu\latte_enum_sx.h" />
     <ClInclude Include="..\src\gpu\latte_enum_vgt.h" />
     <ClInclude Include="..\src\gpu\latte_instructions.h" />
     <ClInclude Include="..\src\gpu\latte_opcodes.h" />
@@ -302,6 +303,7 @@
     <ClInclude Include="..\src\gpu\latte_registers_pa.h" />
     <ClInclude Include="..\src\gpu\latte_registers_spi.h" />
     <ClInclude Include="..\src\gpu\latte_registers_sq.h" />
+    <ClInclude Include="..\src\gpu\latte_registers_sx.h" />
     <ClInclude Include="..\src\gpu\latte_registers_vgt.h" />
     <ClInclude Include="..\src\gpu\latte_shadir.h" />
     <ClInclude Include="..\src\gpu\latte_untile.h" />
