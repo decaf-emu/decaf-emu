@@ -232,35 +232,35 @@ union PA_SU_POINT_SIZE
 union PA_SU_POLY_OFFSET_CLAMP
 {
    uint32_t value;
-   uint32_t CLAMP;
+   float CLAMP;
 };
 
 // Back-Facing Polygon Offset Scale
 union PA_SU_POLY_OFFSET_BACK_SCALE
 {
    uint32_t value;
-   uint32_t SCALE;
+   float SCALE;
 };
 
 // Back-Facing Polygon Offset Scale
 union PA_SU_POLY_OFFSET_BACK_OFFSET
 {
    uint32_t value;
-   uint32_t OFFSET;
+   float OFFSET;
 };
 
 // Front-Facing Polygon Offset Scale
 union PA_SU_POLY_OFFSET_FRONT_SCALE
 {
    uint32_t value;
-   uint32_t SCALE;
+   float SCALE;
 };
 
 // Front-Facing Polygon Offset Scale
 union PA_SU_POLY_OFFSET_FRONT_OFFSET
 {
    uint32_t value;
-   uint32_t OFFSET;
+   float OFFSET;
 };
 
 // SU/SC Controls for Facedness Culling, Polymode, Polygon Offset, and various Enables

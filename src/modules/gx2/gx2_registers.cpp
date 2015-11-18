@@ -394,7 +394,7 @@ GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg)
    pm4::write(pm4::SetContextReg { latte::Register::DB_DEPTH_CONTROL, db_depth_control.value });
 }
 
-void GX2SetStencilMask(uint8_t frontMask, uint8_t frontWriteMask, uint8_t frontRef, 
+void GX2SetStencilMask(uint8_t frontMask, uint8_t frontWriteMask, uint8_t frontRef,
                        uint8_t backMask, uint8_t backWriteMask, uint8_t backRef)
 {
    GX2StencilMaskReg reg;
@@ -452,20 +452,24 @@ void
 GX2InitLineWidthReg(GX2LineWidthReg *reg,
                     float width)
 {
-   // TODO: GX2InitLineWidthReg
+   auto pa_su_line_cntl = reg->pa_su_line_cntl.value();
+   pa_su_line_cntl.WIDTH = gsl::narrow_cast<uint32_t>(width * 8.0f);
+   reg->pa_su_line_cntl = pa_su_line_cntl;
 }
 
 void
 GX2GetLineWidthReg(GX2LineWidthReg *reg,
                    be_val<float> *width)
 {
-   // TODO: GX2GetLineWidthReg
+   auto pa_su_line_cntl = reg->pa_su_line_cntl.value();
+   *width = static_cast<float>(pa_su_line_cntl.WIDTH) / 8.0f;
 }
 
 void
 GX2SetLineWidthReg(GX2LineWidthReg *reg)
 {
-   // TODO: GX2SetLineWidthReg
+   auto pa_su_line_cntl = reg->pa_su_line_cntl.value();
+   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_LINE_CNTL, pa_su_line_cntl.value });
 }
 
 void
@@ -482,7 +486,10 @@ GX2InitPointSizeReg(GX2PointSizeReg *reg,
                     float width,
                     float height)
 {
-   // TODO: GX2InitPointSizeReg
+   auto pa_su_point_size = reg->pa_su_point_size.value();
+   pa_su_point_size.WIDTH = gsl::narrow_cast<uint32_t>(width * 8.0f);
+   pa_su_point_size.HEIGHT = gsl::narrow_cast<uint32_t>(height * 8.0f);
+   reg->pa_su_point_size = pa_su_point_size;
 }
 
 void
@@ -490,13 +497,16 @@ GX2GetPointSizeReg(GX2PointSizeReg *reg,
                    be_val<float> *width,
                    be_val<float> *height)
 {
-   // TODO: GX2GetPointSizeReg
+   auto pa_su_point_size = reg->pa_su_point_size.value();
+   *width = static_cast<float>(pa_su_point_size.WIDTH) / 8.0f;
+   *height = static_cast<float>(pa_su_point_size.HEIGHT) / 8.0f;
 }
 
 void
 GX2SetPointSizeReg(GX2PointSizeReg *reg)
 {
-   // TODO: GX2SetPointSizeReg
+   auto pa_su_point_size = reg->pa_su_point_size.value();
+   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_POINT_SIZE, pa_su_point_size.value });
 }
 
 void
@@ -513,7 +523,10 @@ GX2InitPointLimitsReg(GX2PointLimitsReg *reg,
                       float min,
                       float max)
 {
-   // TODO: GX2InitPointLimitsReg
+   auto pa_su_point_minmax = reg->pa_su_point_minmax.value();
+   pa_su_point_minmax.MIN_SIZE = gsl::narrow_cast<uint32_t>(min * 8.0f);
+   pa_su_point_minmax.MAX_SIZE = gsl::narrow_cast<uint32_t>(max * 8.0f);
+   reg->pa_su_point_minmax = pa_su_point_minmax;
 }
 
 void
@@ -521,13 +534,16 @@ GX2GetPointLimitsReg(GX2PointLimitsReg *reg,
                      be_val<float> *min,
                      be_val<float> *max)
 {
-   // TODO: GX2GetPointLimitsReg
+   auto pa_su_point_minmax = reg->pa_su_point_minmax.value();
+   *min = static_cast<float>(pa_su_point_minmax.MIN_SIZE) / 8.0f;
+   *max = static_cast<float>(pa_su_point_minmax.MAX_SIZE) / 8.0f;
 }
 
 void
 GX2SetPointLimitsReg(GX2PointLimitsReg *reg)
 {
-   // TODO: GX2SetPointLimitsReg
+   auto pa_su_point_minmax = reg->pa_su_point_minmax.value();
+   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_POINT_MINMAX, pa_su_point_minmax.value });
 }
 
 void
@@ -567,7 +583,17 @@ GX2InitPolygonControlReg(GX2PolygonControlReg *reg,
                          BOOL polyOffsetBackEnable,
                          BOOL polyOffsetParaEnable)
 {
-   // TODO: GX2InitPolygonControlReg
+   auto pa_su_sc_mode_cntl = reg->pa_su_sc_mode_cntl.value();
+   pa_su_sc_mode_cntl.FACE = frontFace;
+   pa_su_sc_mode_cntl.CULL_FRONT = cullFront;
+   pa_su_sc_mode_cntl.CULL_BACK = cullBack;
+   pa_su_sc_mode_cntl.POLY_MODE = polyMode;
+   pa_su_sc_mode_cntl.POLYMODE_FRONT_PTYPE = polyModeFront;
+   pa_su_sc_mode_cntl.POLYMODE_BACK_PTYPE = polyModeBack;
+   pa_su_sc_mode_cntl.POLY_OFFSET_FRONT_ENABLE = polyOffsetFrontEnable;
+   pa_su_sc_mode_cntl.POLY_OFFSET_BACK_ENABLE = polyOffsetBackEnable;
+   pa_su_sc_mode_cntl.POLY_OFFSET_PARA_ENABLE = polyOffsetParaEnable;
+   reg->pa_su_sc_mode_cntl = pa_su_sc_mode_cntl;
 }
 
 void
@@ -582,13 +608,23 @@ GX2GetPolygonControlReg(GX2PolygonControlReg *reg,
                         be_val<BOOL> *polyOffsetBackEnable,
                         be_val<BOOL> *polyOffsetParaEnable)
 {
-   // TODO: GX2GetPolygonControlReg
+   auto pa_su_sc_mode_cntl = reg->pa_su_sc_mode_cntl.value();
+   *frontFace = static_cast<GX2FrontFace::Value>(pa_su_sc_mode_cntl.FACE);
+   *cullFront = pa_su_sc_mode_cntl.CULL_FRONT;
+   *cullBack = pa_su_sc_mode_cntl.CULL_BACK;
+   *polyMode = pa_su_sc_mode_cntl.POLY_MODE;
+   *polyModeFront = static_cast<GX2PolygonMode::Value>(pa_su_sc_mode_cntl.POLYMODE_FRONT_PTYPE);
+   *polyModeBack = static_cast<GX2PolygonMode::Value>(pa_su_sc_mode_cntl.POLYMODE_BACK_PTYPE);
+   *polyOffsetFrontEnable = pa_su_sc_mode_cntl.POLY_OFFSET_FRONT_ENABLE;
+   *polyOffsetBackEnable = pa_su_sc_mode_cntl.POLY_OFFSET_BACK_ENABLE;
+   *polyOffsetParaEnable = pa_su_sc_mode_cntl.POLY_OFFSET_PARA_ENABLE;
 }
 
 void
 GX2SetPolygonControlReg(GX2PolygonControlReg *reg)
 {
-   // TODO: GX2SetPolygonControlReg
+   auto pa_su_sc_mode_cntl = reg->pa_su_sc_mode_cntl.value();
+   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_SC_MODE_CNTL, pa_su_sc_mode_cntl.value });
 }
 
 void
@@ -616,7 +652,23 @@ GX2InitPolygonOffsetReg(GX2PolygonOffsetReg *reg,
                         float backScale,
                         float clamp)
 {
-   // TODO: GX2InitPolygonOffsetReg
+   auto pa_su_poly_offset_front_offset = reg->pa_su_poly_offset_front_offset.value();
+   auto pa_su_poly_offset_front_scale = reg->pa_su_poly_offset_front_scale.value();
+   auto pa_su_poly_offset_back_offset = reg->pa_su_poly_offset_back_offset.value();
+   auto pa_su_poly_offset_back_scale = reg->pa_su_poly_offset_back_scale.value();
+   auto pa_su_poly_offset_clamp = reg->pa_su_poly_offset_clamp.value();
+
+   pa_su_poly_offset_front_offset.OFFSET = frontOffset;
+   pa_su_poly_offset_front_scale.SCALE = frontScale * 16.0f;
+   pa_su_poly_offset_back_offset.OFFSET = backOffset;
+   pa_su_poly_offset_back_scale.SCALE = backScale * 16.0f;
+   pa_su_poly_offset_clamp.CLAMP = clamp;
+
+   reg->pa_su_poly_offset_front_offset = pa_su_poly_offset_front_offset;
+   reg->pa_su_poly_offset_front_scale = pa_su_poly_offset_front_scale;
+   reg->pa_su_poly_offset_back_offset = pa_su_poly_offset_back_offset;
+   reg->pa_su_poly_offset_back_scale = pa_su_poly_offset_back_scale;
+   reg->pa_su_poly_offset_clamp = pa_su_poly_offset_clamp;
 }
 
 void
@@ -627,13 +679,37 @@ GX2GetPolygonOffsetReg(GX2PolygonOffsetReg *reg,
                        be_val<float> *backScale,
                        be_val<float> *clamp)
 {
-   // TODO: GX2GetPolygonOffsetReg
+   auto pa_su_poly_offset_front_offset = reg->pa_su_poly_offset_front_offset.value();
+   auto pa_su_poly_offset_front_scale = reg->pa_su_poly_offset_front_scale.value();
+   auto pa_su_poly_offset_back_offset = reg->pa_su_poly_offset_back_offset.value();
+   auto pa_su_poly_offset_back_scale = reg->pa_su_poly_offset_back_scale.value();
+   auto pa_su_poly_offset_clamp = reg->pa_su_poly_offset_clamp.value();
+
+   *frontOffset = pa_su_poly_offset_front_offset.OFFSET;
+   *frontScale = pa_su_poly_offset_front_scale.SCALE / 16.0f;
+   *backOffset = pa_su_poly_offset_back_offset.OFFSET;
+   *backScale = pa_su_poly_offset_back_scale.SCALE / 16.0f;
+   *clamp = pa_su_poly_offset_clamp.CLAMP;
 }
 
 void
 GX2SetPolygonOffsetReg(GX2PolygonOffsetReg *reg)
 {
-   // TODO: GX2SetPolygonOffsetReg
+   auto pa_su_poly_offset_front_offset = reg->pa_su_poly_offset_front_offset.value();
+   auto pa_su_poly_offset_front_scale = reg->pa_su_poly_offset_front_scale.value();
+   auto pa_su_poly_offset_back_offset = reg->pa_su_poly_offset_back_offset.value();
+   auto pa_su_poly_offset_back_scale = reg->pa_su_poly_offset_back_scale.value();
+   uint32_t values[] = {
+      pa_su_poly_offset_front_scale.value,
+      pa_su_poly_offset_front_offset.value,
+      pa_su_poly_offset_back_scale.value,
+      pa_su_poly_offset_back_offset.value,
+   };
+
+   pm4::write(pm4::SetContextRegs { latte::Register::PA_SU_POLY_OFFSET_FRONT_SCALE, { values } });
+
+   auto pa_su_poly_offset_clamp = reg->pa_su_poly_offset_clamp.value();
+   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_POLY_OFFSET_CLAMP, pa_su_poly_offset_clamp.value });
 }
 
 void
@@ -654,7 +730,16 @@ GX2InitScissorReg(GX2ScissorReg *reg,
                   uint32_t width,
                   uint32_t height)
 {
-   // TODO: GX2InitScissorReg
+   auto pa_sc_generic_scissor_tl = reg->pa_sc_generic_scissor_tl.value();
+   auto pa_sc_generic_scissor_br = reg->pa_sc_generic_scissor_br.value();
+
+   pa_sc_generic_scissor_tl.TL_X = x;
+   pa_sc_generic_scissor_tl.TL_Y = y;
+   pa_sc_generic_scissor_br.BR_X = x + width;
+   pa_sc_generic_scissor_br.BR_Y = y + height;
+
+   reg->pa_sc_generic_scissor_tl = pa_sc_generic_scissor_tl;
+   reg->pa_sc_generic_scissor_br = pa_sc_generic_scissor_br;
 }
 
 void
@@ -664,13 +749,27 @@ GX2GetScissorReg(GX2ScissorReg *reg,
                  be_val<uint32_t> *width,
                  be_val<uint32_t> *height)
 {
-   // TODO: GX2GetScissorReg
+   auto pa_sc_generic_scissor_tl = reg->pa_sc_generic_scissor_tl.value();
+   auto pa_sc_generic_scissor_br = reg->pa_sc_generic_scissor_br.value();
+
+   *x = pa_sc_generic_scissor_tl.TL_X;
+   *y = pa_sc_generic_scissor_tl.TL_Y;
+   *width = pa_sc_generic_scissor_tl.TL_X - pa_sc_generic_scissor_br.BR_X;
+   *height = pa_sc_generic_scissor_tl.TL_Y - pa_sc_generic_scissor_br.BR_Y;
 }
 
 void
 GX2SetScissorReg(GX2ScissorReg *reg)
 {
-   // TODO: GX2SetScissorReg
+   auto pa_sc_generic_scissor_tl = reg->pa_sc_generic_scissor_tl.value();
+   auto pa_sc_generic_scissor_br = reg->pa_sc_generic_scissor_br.value();
+
+   uint32_t values[] = {
+      pa_sc_generic_scissor_tl.value,
+      pa_sc_generic_scissor_br.value,
+   };
+
+   pm4::write(pm4::SetContextRegs { latte::Register::PA_SC_GENERIC_SCISSOR_TL, { values } });
 }
 
 void
@@ -707,7 +806,16 @@ GX2InitTargetChannelMasksReg(GX2TargetChannelMaskReg *reg,
                              GX2ChannelMask::Value mask6,
                              GX2ChannelMask::Value mask7)
 {
-   // TODO: GX2InitTargetChannelMasksReg
+   auto cb_target_mask = reg->cb_target_mask.value();
+   cb_target_mask.TARGET0_ENABLE = mask0;
+   cb_target_mask.TARGET1_ENABLE = mask1;
+   cb_target_mask.TARGET2_ENABLE = mask2;
+   cb_target_mask.TARGET3_ENABLE = mask3;
+   cb_target_mask.TARGET4_ENABLE = mask4;
+   cb_target_mask.TARGET5_ENABLE = mask5;
+   cb_target_mask.TARGET6_ENABLE = mask6;
+   cb_target_mask.TARGET7_ENABLE = mask7;
+   reg->cb_target_mask = cb_target_mask;
 }
 
 void
@@ -721,13 +829,22 @@ GX2GetTargetChannelMasksReg(GX2TargetChannelMaskReg *reg,
                             be_val<GX2ChannelMask::Value> *mask6,
                             be_val<GX2ChannelMask::Value> *mask7)
 {
-   // TODO: GX2GetTargetChannelMasksReg
+   auto cb_target_mask = reg->cb_target_mask.value();
+   *mask0 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET0_ENABLE);
+   *mask1 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET1_ENABLE);
+   *mask2 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET2_ENABLE);
+   *mask3 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET3_ENABLE);
+   *mask4 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET4_ENABLE);
+   *mask5 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET5_ENABLE);
+   *mask6 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET6_ENABLE);
+   *mask7 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET7_ENABLE);
 }
 
 void
 GX2SetTargetChannelMasksReg(GX2TargetChannelMaskReg *reg)
 {
-   // TODO: GX2SetTargetChannelMasksReg
+   auto cb_target_mask = reg->cb_target_mask.value();
+   pm4::write(pm4::SetContextReg { latte::Register::CB_TARGET_MASK, cb_target_mask.value });
 }
 
 void
@@ -752,7 +869,50 @@ GX2InitViewportReg(GX2ViewportReg *reg,
                    float nearZ,
                    float farZ)
 {
-   // TODO: GX2InitViewportReg
+   auto pa_cl_vport_xscale = reg->pa_cl_vport_xscale.value();
+   auto pa_cl_vport_xoffset = reg->pa_cl_vport_xoffset.value();
+   auto pa_cl_vport_yscale = reg->pa_cl_vport_yscale.value();
+   auto pa_cl_vport_yoffset = reg->pa_cl_vport_yoffset.value();
+   auto pa_cl_vport_zscale = reg->pa_cl_vport_zscale.value();
+   auto pa_cl_vport_zoffset = reg->pa_cl_vport_zoffset.value();
+
+   auto pa_cl_gb_vert_clip_adj = reg->pa_cl_gb_vert_clip_adj.value();
+   auto pa_cl_gb_vert_disc_adj = reg->pa_cl_gb_vert_disc_adj.value();
+   auto pa_cl_gb_horz_clip_adj = reg->pa_cl_gb_horz_clip_adj.value();
+   auto pa_cl_gb_horz_disc_adj = reg->pa_cl_gb_horz_disc_adj.value();
+
+   auto pa_sc_vport_zmin = reg->pa_sc_vport_zmin.value();
+   auto pa_sc_vport_zmax = reg->pa_sc_vport_zmax.value();
+
+   pa_cl_vport_xscale.VPORT_XSCALE = width * 0.5f;
+   pa_cl_vport_xoffset.VPORT_XOFFSET = x + (width * 0.5f);
+   pa_cl_vport_yscale.VPORT_YSCALE = height * 0.5f;
+   pa_cl_vport_yoffset.VPORT_YOFFSET = y + (height * 0.5f);
+   pa_cl_vport_zscale.VPORT_ZSCALE = (farZ - nearZ) * 0.5f;
+   pa_cl_vport_zoffset.VPORT_ZOFFSET = (farZ + nearZ) * 0.5f;
+
+   pa_cl_gb_vert_clip_adj.DATA_REGISTER = 1.0f;
+   pa_cl_gb_vert_disc_adj.DATA_REGISTER = 1.0f;
+   pa_cl_gb_horz_clip_adj.DATA_REGISTER = 1.0f;
+   pa_cl_gb_horz_disc_adj.DATA_REGISTER = 1.0f;
+
+   pa_sc_vport_zmin.VPORT_ZMIN = std::min(nearZ, farZ);
+   pa_sc_vport_zmax.VPORT_ZMAX = std::max(nearZ, farZ);
+
+   reg->pa_cl_vport_xscale = pa_cl_vport_xscale;
+   reg->pa_cl_vport_xoffset = pa_cl_vport_xoffset;
+   reg->pa_cl_vport_yscale = pa_cl_vport_yscale;
+   reg->pa_cl_vport_yoffset = pa_cl_vport_yoffset;
+   reg->pa_cl_vport_zscale = pa_cl_vport_zscale;
+   reg->pa_cl_vport_zoffset = pa_cl_vport_zoffset;
+
+   reg->pa_cl_gb_vert_clip_adj = pa_cl_gb_vert_clip_adj;
+   reg->pa_cl_gb_vert_disc_adj = pa_cl_gb_vert_disc_adj;
+   reg->pa_cl_gb_horz_clip_adj = pa_cl_gb_horz_clip_adj;
+   reg->pa_cl_gb_horz_disc_adj = pa_cl_gb_horz_disc_adj;
+
+   reg->pa_sc_vport_zmin = pa_sc_vport_zmin;
+   reg->pa_sc_vport_zmax = pa_sc_vport_zmax;
 }
 
 void
@@ -764,11 +924,72 @@ GX2GetViewportReg(GX2ViewportReg *reg,
                   be_val<float> *nearZ,
                   be_val<float> *farZ)
 {
-   // TODO: GX2GetViewportReg
+   auto pa_cl_vport_xscale = reg->pa_cl_vport_xscale.value();
+   auto pa_cl_vport_xoffset = reg->pa_cl_vport_xoffset.value();
+   auto pa_cl_vport_yscale = reg->pa_cl_vport_yscale.value();
+   auto pa_cl_vport_yoffset = reg->pa_cl_vport_yoffset.value();
+   auto pa_cl_vport_zscale = reg->pa_cl_vport_zscale.value();
+   auto pa_cl_vport_zoffset = reg->pa_cl_vport_zoffset.value();
+
+   auto pa_cl_gb_vert_clip_adj = reg->pa_cl_gb_vert_clip_adj.value();
+   auto pa_cl_gb_vert_disc_adj = reg->pa_cl_gb_vert_disc_adj.value();
+   auto pa_cl_gb_horz_clip_adj = reg->pa_cl_gb_horz_clip_adj.value();
+   auto pa_cl_gb_horz_disc_adj = reg->pa_cl_gb_horz_disc_adj.value();
+
+   auto pa_sc_vport_zmin = reg->pa_sc_vport_zmin.value();
+   auto pa_sc_vport_zmax = reg->pa_sc_vport_zmax.value();
+
+   *x = pa_cl_vport_xoffset.VPORT_XOFFSET - pa_cl_vport_xscale.VPORT_XSCALE;
+   *y = pa_cl_vport_yoffset.VPORT_YOFFSET - pa_cl_vport_yscale.VPORT_YSCALE;
+
+   *width = 2.0f * pa_cl_vport_xscale.VPORT_XSCALE;
+   *height = 2.0f * pa_cl_vport_yscale.VPORT_YSCALE;
+
+   if (pa_cl_vport_zscale.VPORT_ZSCALE > 0.0f) {
+      *nearZ = pa_sc_vport_zmin.VPORT_ZMIN;
+      *farZ = pa_sc_vport_zmax.VPORT_ZMAX;
+   } else {
+      *farZ = pa_sc_vport_zmin.VPORT_ZMIN;
+      *nearZ = pa_sc_vport_zmax.VPORT_ZMAX;
+   }
 }
 
 void
 GX2SetViewportReg(GX2ViewportReg *reg)
 {
-   // TODO: GX2SetViewportReg
+   auto pa_cl_vport_xscale = reg->pa_cl_vport_xscale.value();
+   auto pa_cl_vport_xoffset = reg->pa_cl_vport_xoffset.value();
+   auto pa_cl_vport_yscale = reg->pa_cl_vport_yscale.value();
+   auto pa_cl_vport_yoffset = reg->pa_cl_vport_yoffset.value();
+   auto pa_cl_vport_zscale = reg->pa_cl_vport_zscale.value();
+   auto pa_cl_vport_zoffset = reg->pa_cl_vport_zoffset.value();
+   uint32_t values1[] = {
+      pa_cl_vport_xscale.value,
+      pa_cl_vport_xoffset.value,
+      pa_cl_vport_yscale.value,
+      pa_cl_vport_yoffset.value,
+      pa_cl_vport_zscale.value,
+      pa_cl_vport_zoffset.value,
+   };
+   pm4::write(pm4::SetContextRegs { latte::Register::PA_CL_VPORT_XSCALE_0, values1 });
+
+   auto pa_cl_gb_vert_clip_adj = reg->pa_cl_gb_vert_clip_adj.value();
+   auto pa_cl_gb_vert_disc_adj = reg->pa_cl_gb_vert_disc_adj.value();
+   auto pa_cl_gb_horz_clip_adj = reg->pa_cl_gb_horz_clip_adj.value();
+   auto pa_cl_gb_horz_disc_adj = reg->pa_cl_gb_horz_disc_adj.value();
+   uint32_t values2[] = {
+      pa_cl_gb_vert_clip_adj.value,
+      pa_cl_gb_vert_disc_adj.value,
+      pa_cl_gb_horz_clip_adj.value,
+      pa_cl_gb_horz_disc_adj.value,
+   };
+   pm4::write(pm4::SetContextRegs { latte::Register::PA_CL_GB_VERT_CLIP_ADJ, values2 });
+
+   auto pa_sc_vport_zmin = reg->pa_sc_vport_zmin.value();
+   auto pa_sc_vport_zmax = reg->pa_sc_vport_zmax.value();
+   uint32_t values3[] = {
+      pa_sc_vport_zmin.value,
+      pa_sc_vport_zmax.value,
+   };
+   pm4::write(pm4::SetContextRegs { latte::Register::PA_SC_VPORT_ZMIN_0, values3 });
 }
