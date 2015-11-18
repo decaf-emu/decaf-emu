@@ -64,6 +64,8 @@ private:
    void handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data);
    void decafCopyColorToScan(pm4::DecafCopyColorToScan &data);
    void decafSwapBuffers(pm4::DecafSwapBuffers &data);
+   void decafClearColor(pm4::DecafClearColor &data);
+   void decafClearDepthStencil(pm4::DecafClearDepthStencil &data);
    void drawIndexAuto(pm4::DrawIndexAuto &data);
    void drawIndex2(pm4::DrawIndex2 &data);
    void indexType(pm4::IndexType &data);

@@ -49,6 +49,14 @@ public:
       return *this;
    }
 
+   // Write one float
+   PacketWriter &operator()(float value)
+   {
+      checkSize(1);
+      mBuffer->buffer[mBuffer->curSize++] = bit_cast<uint32_t>(value);
+      return *this;
+   }
+
    // Write a virtual ptr as one word
    template<typename Type>
    PacketWriter &operator()(virtual_ptr<Type> value)

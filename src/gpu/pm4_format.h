@@ -12,6 +12,8 @@ enum Value : uint32_t
 {
    DECAF_COPY_COLOR_TO_SCAN   = 0x01,
    DECAF_SWAP_BUFFERS         = 0x02,
+   DECAF_CLEAR_COLOR          = 0x03,
+   DECAF_CLEAR_DEPTH_STENCIL  = 0x04,
 
    NOP                        = 0x10,
    INDIRECT_BUFFER_END        = 0x17,

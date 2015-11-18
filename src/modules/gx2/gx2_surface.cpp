@@ -140,7 +140,7 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
       db_depth_info.value,
       depthBuffer->hiZPtr.getAddress(),
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_SIZE, values2 });
+   pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_BASE, values2 });
 
    pm4::write(pm4::SetContextReg { latte::Register::DB_HTILE_SURFACE, db_htile_surface.value });
    pm4::write(pm4::SetContextReg { latte::Register::DB_PREFETCH_LIMIT, db_prefetch_limit.value });

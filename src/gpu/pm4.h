@@ -44,6 +44,57 @@ struct DecafCopyColorToScan
    }
 };
 
+struct DecafClearColor
+{
+   static const auto Opcode = Opcode3::DECAF_CLEAR_COLOR;
+   
+   float r, g, b, a;
+   uint32_t bufferAddr;
+   uint32_t aaBufferAddr;
+   latte::CB_COLORN_SIZE cb_color_size;
+   latte::CB_COLORN_INFO cb_color_info;
+   latte::CB_COLORN_VIEW cb_color_view;
+   latte::CB_COLORN_MASK cb_color_mask;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(r);
+      se(g);
+      se(b);
+      se(a);
+      se(bufferAddr);
+      se(aaBufferAddr);
+      se(cb_color_size.value);
+      se(cb_color_info.value);
+      se(cb_color_view.value);
+      se(cb_color_mask.value);
+   }
+};
+
+struct DecafClearDepthStencil
+{
+   static const auto Opcode = Opcode3::DECAF_CLEAR_DEPTH_STENCIL;
+
+   uint32_t flags;
+   uint32_t bufferAddr;
+   latte::DB_DEPTH_INFO db_depth_info;
+   uint32_t hiZAddr;
+   latte::DB_DEPTH_SIZE db_depth_size;
+   latte::DB_DEPTH_VIEW db_depth_view;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(flags);
+      se(bufferAddr);
+      se(db_depth_info.value);
+      se(hiZAddr);
+      se(db_depth_size.value);
+      se(db_depth_view.value);
+   }
+};
+
 struct DrawIndexAuto
 {
    static const auto Opcode = Opcode3::DRAW_INDEX_AUTO;

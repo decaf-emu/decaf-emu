@@ -124,6 +124,14 @@ void Driver::decafSwapBuffers(pm4::DecafSwapBuffers &data)
 {
 }
 
+void Driver::decafClearColor(pm4::DecafClearColor &data)
+{
+}
+
+void Driver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
+{
+}
+
 void Driver::drawIndexAuto(pm4::DrawIndexAuto &data)
 {
    checkActiveShader();
@@ -209,6 +217,12 @@ void Driver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> da
       break;
    case pm4::Opcode3::DECAF_SWAP_BUFFERS:
       decafSwapBuffers(pm4::read<pm4::DecafSwapBuffers>(reader));
+      break;
+   case pm4::Opcode3::DECAF_CLEAR_COLOR:
+      decafClearColor(pm4::read<pm4::DecafClearColor>(reader));
+      break;
+   case pm4::Opcode3::DECAF_CLEAR_DEPTH_STENCIL:
+      decafClearDepthStencil(pm4::read<pm4::DecafClearDepthStencil>(reader));
       break;
    case pm4::Opcode3::DRAW_INDEX_AUTO:
       drawIndexAuto(pm4::read<pm4::DrawIndexAuto>(reader));

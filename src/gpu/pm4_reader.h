@@ -23,6 +23,14 @@ public:
       return *this;
    }
 
+   // Read one float
+   PacketReader &operator()(float &value)
+   {
+      checkSize(1);
+      value = bit_cast<float>(mBuffer[mPosition++]);
+      return *this;
+   }
+
    // Read one word as a virtual_ptr
    template<typename Type>
    PacketReader &operator()(virtual_ptr<Type> &value)
