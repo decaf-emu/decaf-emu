@@ -36,15 +36,15 @@ struct FetchShader
 
 struct VertexShader
 {
+   gl::GLuint object = 0;
    latte::SQ_PGM_START_VS pgm_start_vs;
-   gl::GLuint program = 0;
    std::string code;
 };
 
 struct PixelShader
 {
+   gl::GLuint object = 0;
    latte::SQ_PGM_START_PS pgm_start_ps;
-   gl::GLuint program = 0;
    std::string code;
 };
 
@@ -52,10 +52,27 @@ using ShaderKey = std::tuple<uint32_t, uint32_t, uint32_t>;
 
 struct Shader
 {
-   gl::GLuint pipeline = 0;
+   gl::GLuint object = 0;
    FetchShader *fetch;
    VertexShader *vertex;
    PixelShader *pixel;
+};
+
+struct ColorBuffer
+{
+   gl::GLuint object = 0;
+   latte::CB_COLORN_BASE cb_color_base;
+};
+
+struct DepthBuffer
+{
+   gl::GLuint object = 0;
+   // TODO:
+};
+
+struct FrameBuffer
+{
+   gl::GLuint object = 0;
 };
 
 using GLContext = uint64_t;
@@ -95,6 +112,7 @@ private:
    void indirectBufferCall(pm4::IndirectBufferCall &data);
 
    bool checkActiveShader();
+   bool checkActiveColorBuffer();
 
    void setRegister(latte::Register::Value reg, uint32_t value);
 
@@ -120,6 +138,10 @@ private:
    std::unordered_map<uint32_t, VertexShader> mVertexShaders;
    std::unordered_map<uint32_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
+
+   FrameBuffer mFrameBuffer;
+   std::array<ColorBuffer *, 8> mActiveColorBuffers;
+   std::unordered_map<uint32_t, ColorBuffer> mColorBuffers;
 
 #ifdef PLATFORM_WINDOWS
    uint64_t mDeviceContext;
