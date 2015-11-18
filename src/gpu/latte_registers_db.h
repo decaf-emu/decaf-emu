@@ -1,7 +1,7 @@
 #pragma once
 #include "types.h"
-#include "latte_enum_db.h"
 #include "latte_enum_common.h"
+#include "latte_enum_db.h"
 
 namespace latte
 {
@@ -94,11 +94,11 @@ union DB_DEPTH_CONTROL
       uint32_t : 1;
       DB_FRAG_FUNC ZFUNC : 3;
       uint32_t BACKFACE_ENABLE : 1;
-      DB_REF_FUNC STENCILFUNC : 3;
+      REF_FUNC STENCILFUNC : 3;
       DB_STENCIL_FUNC STENCILFAIL : 3;
       DB_STENCIL_FUNC STENCILZPASS : 3;
       DB_STENCIL_FUNC STENCILZFAIL : 3;
-      DB_REF_FUNC STENCILFUNC_BF : 3;
+      REF_FUNC STENCILFUNC_BF : 3;
       DB_STENCIL_FUNC STENCILFAIL_BF : 3;
       DB_STENCIL_FUNC STENCILZPASS_BF : 3;
       DB_STENCIL_FUNC STENCILZFAIL_BF : 3;

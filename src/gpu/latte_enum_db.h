@@ -28,18 +28,6 @@ enum DB_FRAG_FUNC : uint32_t
    DB_FRAG_ALWAYS          = 7,
 };
 
-enum DB_REF_FUNC : uint32_t
-{
-   DB_REF_NEVER            = 0,
-   DB_REF_LESS             = 1,
-   DB_REF_EQUAL            = 2,
-   DB_REF_LEQUAL           = 3,
-   DB_REF_GREATER          = 4,
-   DB_REF_NOTEQUAL         = 5,
-   DB_REF_GEQUAL           = 6,
-   DB_REF_ALWAYS           = 7,
-};
-
 enum DB_STENCIL_FUNC : uint32_t
 {
    DB_STENCIL_KEEP         = 0,

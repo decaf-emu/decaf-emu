@@ -41,6 +41,20 @@ union PA_CL_VS_OUT_CNTL
    };
 };
 
+// Multisample AA Mask
+union PA_SC_AA_MASK
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t AA_MASK_ULC : 8;
+      uint32_t AA_MASK_URC : 8;
+      uint32_t AA_MASK_LLC : 8;
+      uint32_t AA_MASK_LRC : 8;
+   };
+};
+
 // Polygon Offset Depth Buffer Format Control
 union PA_SU_POLY_OFFSET_DB_FMT_CNTL
 {

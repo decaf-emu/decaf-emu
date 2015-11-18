@@ -10,13 +10,13 @@ struct GX2DepthBuffer;
 
 struct GX2AAMaskReg
 {
-   // be_val<latte::PA_SC_AA_MASK> pa_sc_aa_mask;
+   be_val<latte::PA_SC_AA_MASK> pa_sc_aa_mask;
 };
 
 struct GX2AlphaTestReg
 {
-   // be_val<latte::SX_ALPHA_TEST_CONTROL> sx_alpha_test_control;
-   // be_val<latte::SX_ALPHA_REF> sx_alpha_ref;
+   be_val<latte::SX_ALPHA_TEST_CONTROL> sx_alpha_test_control;
+   be_val<latte::SX_ALPHA_REF> sx_alpha_ref;
 };
 
 struct GX2BlendControlReg

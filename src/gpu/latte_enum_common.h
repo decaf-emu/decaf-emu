@@ -13,8 +13,20 @@ enum ARRAY_MODE : uint32_t
 
 enum READ_SIZE : uint32_t
 {
-   READ_256_BITS = 0,
-   READ_512_BITS = 0,
+   READ_256_BITS        = 0,
+   READ_512_BITS        = 0,
+};
+
+enum REF_FUNC : uint32_t
+{
+   REF_NEVER            = 0,
+   REF_LESS             = 1,
+   REF_EQUAL            = 2,
+   REF_LEQUAL           = 3,
+   REF_GREATER          = 4,
+   REF_NOTEQUAL         = 5,
+   REF_GEQUAL           = 6,
+   REF_ALWAYS           = 7,
 };
 
 } // namespace latte

@@ -5,6 +5,7 @@
 #include "latte_registers_pa.h"
 #include "latte_registers_spi.h"
 #include "latte_registers_sq.h"
+#include "latte_registers_sx.h"
 #include "latte_registers_vgt.h"
 
 namespace latte
@@ -154,10 +155,12 @@ enum Value : uint32_t
    SQ_VTX_SEMANTIC_30               = 0x283F8,
    SQ_VTX_SEMANTIC_31               = 0x283FC,
    VGT_MULTI_PRIM_IB_RESET_INDX     = 0x2840c,
+   SX_ALPHA_TEST_CONTROL            = 0x28410,
    CB_BLEND_RED                     = 0x28414,
    CB_BLEND_GREEN                   = 0x28418,
    CB_BLEND_BLUE                    = 0x2841C,
    CB_BLEND_ALPHA                   = 0x28420,
+   SX_ALPHA_REF                     = 0x28438,
    SPI_VS_OUT_ID_0                  = 0x28614,
    SPI_VS_OUT_ID_1                  = 0x28618,
    SPI_VS_OUT_ID_2                  = 0x2861C,
@@ -276,6 +279,7 @@ enum Value : uint32_t
    VGT_INSTANCE_STEP_RATE_0         = 0x28AA0,
    VGT_INSTANCE_STEP_RATE_1         = 0x28AA4,
    VGT_STRMOUT_BUFFER_EN            = 0x28B20,
+   PA_SC_AA_MASK                    = 0x28C48,
    VGT_VERTEX_REUSE_BLOCK_CNTL      = 0x28C58,
    DB_HTILE_SURFACE                 = 0x28D24,
    DB_PRELOAD_CONTROL               = 0x28D30,
