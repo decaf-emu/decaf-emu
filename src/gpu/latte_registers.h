@@ -194,6 +194,8 @@ enum Value : uint32_t
    CB_BLEND_GREEN                   = 0x28418,
    CB_BLEND_BLUE                    = 0x2841C,
    CB_BLEND_ALPHA                   = 0x28420,
+   DB_STENCILREFMASK                = 0x28430,
+   DB_STENCILREFMASK_BF             = 0x28434,
    SX_ALPHA_REF                     = 0x28438,
    PA_CL_VPORT_XSCALE_0             = 0x2843C,
    PA_CL_VPORT_XOFFSET_0            = 0x28440,

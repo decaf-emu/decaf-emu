@@ -394,6 +394,52 @@ GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg)
    pm4::write(pm4::SetContextReg { latte::Register::DB_DEPTH_CONTROL, db_depth_control.value });
 }
 
+void GX2SetStencilMask(uint8_t frontMask, uint8_t frontWriteMask, uint8_t frontRef, 
+                       uint8_t backMask, uint8_t backWriteMask, uint8_t backRef)
+{
+   GX2StencilMaskReg reg;
+   GX2InitStencilMaskReg(&reg, frontMask, frontWriteMask, frontRef, backMask, backWriteMask, backRef);
+   GX2SetStencilMaskReg(&reg);
+}
+
+void GX2InitStencilMaskReg(GX2StencilMaskReg *reg,
+                       uint8_t frontMask, uint8_t frontWriteMask, uint8_t frontRef,
+                       uint8_t backMask, uint8_t backWriteMask, uint8_t backRef)
+{
+   auto db_stencilrefmask = reg->db_stencilrefmask.value();
+   auto db_stencilrefmask_bf = reg->db_stencilrefmask_bf.value();
+   db_stencilrefmask.STENCILREF = frontRef;
+   db_stencilrefmask.STENCILMASK = frontMask;
+   db_stencilrefmask.STENCILWRITEMASK = frontWriteMask;
+   db_stencilrefmask_bf.STENCILREF_BF = backRef;
+   db_stencilrefmask_bf.STENCILMASK_BF = backMask;
+   db_stencilrefmask_bf.STENCILWRITEMASK_BF = backWriteMask;
+   reg->db_stencilrefmask = db_stencilrefmask;
+   reg->db_stencilrefmask_bf = db_stencilrefmask_bf;
+}
+
+void GX2GetStencilMaskReg(GX2StencilMaskReg *reg,
+                          uint8_t *frontMask, uint8_t *frontWriteMask, uint8_t *frontRef,
+                          uint8_t *backMask, uint8_t *backWriteMask, uint8_t *backRef)
+{
+   auto db_stencilrefmask = reg->db_stencilrefmask.value();
+   auto db_stencilrefmask_bf = reg->db_stencilrefmask_bf.value();
+   *frontRef = db_stencilrefmask.STENCILREF;
+   *frontMask = db_stencilrefmask.STENCILMASK;
+   *frontWriteMask = db_stencilrefmask.STENCILWRITEMASK;
+   *backRef = db_stencilrefmask_bf.STENCILREF_BF;
+   *backMask = db_stencilrefmask_bf.STENCILMASK_BF;
+   *backWriteMask = db_stencilrefmask_bf.STENCILWRITEMASK_BF;
+}
+
+void GX2SetStencilMaskReg(GX2StencilMaskReg *reg)
+{
+   auto db_stencilrefmask = reg->db_stencilrefmask.value();
+   auto db_stencilrefmask_bf = reg->db_stencilrefmask_bf.value();
+   pm4::write(pm4::SetContextReg{ latte::Register::DB_STENCILREFMASK, db_stencilrefmask.value });
+   pm4::write(pm4::SetContextReg{ latte::Register::DB_STENCILREFMASK_BF, db_stencilrefmask_bf.value });
+}
+
 void
 GX2SetLineWidth(float width)
 {

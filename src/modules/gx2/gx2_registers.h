@@ -60,6 +60,15 @@ struct GX2DepthStencilControlReg
 CHECK_SIZE(GX2DepthStencilControlReg, 4);
 CHECK_OFFSET(GX2DepthStencilControlReg, 0, db_depth_control);
 
+struct GX2StencilMaskReg
+{
+   be_val<latte::DB_STENCILREFMASK> db_stencilrefmask;
+   be_val<latte::DB_STENCILREFMASK_BF> db_stencilrefmask_bf;
+};
+CHECK_SIZE(GX2StencilMaskReg, 8);
+CHECK_OFFSET(GX2StencilMaskReg, 0, db_stencilrefmask);
+CHECK_OFFSET(GX2StencilMaskReg, 4, db_stencilrefmask_bf);
+
 struct GX2LineWidthReg
 {
    be_val<latte::PA_SU_LINE_CNTL> pa_su_line_cntl;
@@ -326,6 +335,23 @@ GX2GetDepthStencilControlReg(GX2DepthStencilControlReg *reg,
 
 void
 GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg);
+
+void
+GX2SetStencilMask(uint8_t frontMask, uint8_t frontWriteMask, uint8_t frontRef,
+                  uint8_t backMask, uint8_t backWriteMask, uint8_t backRef);
+
+void
+GX2InitStencilMaskReg(GX2StencilMaskReg *reg,
+                      uint8_t frontMask, uint8_t frontWriteMask, uint8_t frontRef,
+                      uint8_t backMask, uint8_t backWriteMask, uint8_t backRef);
+
+void
+GX2GetStencilMaskReg(GX2StencilMaskReg *reg,
+                     uint8_t *frontMask, uint8_t *frontWriteMask, uint8_t *frontRef,
+                     uint8_t *backMask, uint8_t *backWriteMask, uint8_t *backRef);
+
+void
+GX2SetStencilMaskReg(GX2StencilMaskReg *reg);
 
 void
 GX2SetLineWidth(float width);

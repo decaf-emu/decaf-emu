@@ -105,6 +105,30 @@ union DB_DEPTH_CONTROL
    };
 };
 
+union DB_STENCILREFMASK
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t STENCILREF : 8;
+      uint32_t STENCILMASK : 8;
+      uint32_t STENCILWRITEMASK: 8;
+   };
+};
+
+union DB_STENCILREFMASK_BF
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t STENCILREF_BF : 8;
+      uint32_t STENCILMASK_BF : 8;
+      uint32_t STENCILWRITEMASK_BF : 8;
+   };
+};
+
 union DB_PREFETCH_LIMIT
 {
    uint32_t value;

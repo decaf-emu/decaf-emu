@@ -114,6 +114,10 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2InitDepthStencilControlReg);
    RegisterKernelFunction(GX2GetDepthStencilControlReg);
    RegisterKernelFunction(GX2SetDepthStencilControlReg);
+   RegisterKernelFunction(GX2SetStencilMask);
+   RegisterKernelFunction(GX2InitStencilMaskReg);
+   RegisterKernelFunction(GX2GetStencilMaskReg);
+   RegisterKernelFunction(GX2SetStencilMaskReg);
    RegisterKernelFunction(GX2SetLineWidth);
    RegisterKernelFunction(GX2InitLineWidthReg);
    RegisterKernelFunction(GX2GetLineWidthReg);
