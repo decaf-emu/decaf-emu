@@ -7,6 +7,7 @@
 #include <vector>
 #include "gpu/pm4.h"
 #include "gpu/driver.h"
+#include "platform/platform.h"
 
 namespace gpu
 {
@@ -71,7 +72,9 @@ public:
 
 private:
    void run();
+
    void activateDeviceContext();
+   void swapBuffers();
 
    void handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data);
    void decafCopyColorToScan(pm4::DecafCopyColorToScan &data);
@@ -118,7 +121,10 @@ private:
    std::unordered_map<uint32_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
 
-   GLContext mDeviceContext;
+#ifdef PLATFORM_WINDOWS
+   uint64_t mDeviceContext;
+   uint64_t mOpenGLContext;
+#endif
 };
 
 } // namespace opengl

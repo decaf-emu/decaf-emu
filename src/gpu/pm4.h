@@ -47,8 +47,11 @@ struct DecafCopyColorToScan
 struct DecafClearColor
 {
    static const auto Opcode = Opcode3::DECAF_CLEAR_COLOR;
-   
-   float r, g, b, a;
+
+   float red;
+   float green;
+   float blue;
+   float alpha;
    uint32_t bufferAddr;
    uint32_t aaBufferAddr;
    latte::CB_COLORN_SIZE cb_color_size;
@@ -59,10 +62,10 @@ struct DecafClearColor
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se(r);
-      se(g);
-      se(b);
-      se(a);
+      se(red);
+      se(green);
+      se(blue);
+      se(alpha);
       se(bufferAddr);
       se(aaBufferAddr);
       se(cb_color_size.value);

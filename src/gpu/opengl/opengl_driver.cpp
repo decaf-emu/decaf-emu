@@ -157,10 +157,14 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
 
 void GLDriver::decafSwapBuffers(pm4::DecafSwapBuffers &data)
 {
+   swapBuffers();
 }
 
 void GLDriver::decafClearColor(pm4::DecafClearColor &data)
 {
+   // TODO: Set current color buffer
+   gl::glClearColor(data.red, data.green, data.blue, data.alpha);
+   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 }
 
 void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
