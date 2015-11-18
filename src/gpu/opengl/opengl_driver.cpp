@@ -27,7 +27,7 @@ bool GLDriver::checkActiveColorBuffer()
       if (!cb_color_base.BASE_256B) {
          if (active) {
             // Unbind active
-            gl::glFramebufferRenderbuffer(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, gl::GL_RENDERBUFFER, 0);
+            gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, 0, 0);
             active = nullptr;
          }
 
@@ -56,15 +56,15 @@ bool GLDriver::checkActiveColorBuffer()
 
          // Create render buffer
          active = &mColorBuffers[cb_color_base.BASE_256B];
-         gl::glGenRenderbuffers(1, &active->object);
-         gl::glBindRenderbuffer(gl::GL_RENDERBUFFER, active->object);
-
-         // TODO: Use colorbuffer format
-         gl::glRenderbufferStorage(gl::GL_RENDERBUFFER, gl::GL_RGBA, pitch, height);
+         gl::glGenTextures(1, &active->object);
+         gl::glBindTexture(gl::GL_TEXTURE_2D, active->object);
+         gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<int>(gl::GL_RGBA), pitch, height, 0, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, 0);
+         gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
+         gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
       }
 
       // Bind renderbuffer to framebuffer
-      gl::glFramebufferRenderbuffer(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, gl::GL_RENDERBUFFER, active->object);
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, active->object, 0);
    }
 
    return true;
