@@ -70,6 +70,7 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2SetAttribBuffer);
    RegisterKernelFunction(GX2DrawEx);
    RegisterKernelFunction(GX2DrawIndexedEx);
+   RegisterKernelFunction(GX2SetPrimitiveRestartIndex);
 
    // Event
    RegisterKernelFunction(GX2DrawDone);
@@ -89,17 +90,61 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2Invalidate);
 
    // Register
-   RegisterKernelFunction(GX2InitBlendConstantColorReg);
+   RegisterKernelFunction(GX2SetAAMask);
+   RegisterKernelFunction(GX2InitAAMaskReg);
+   RegisterKernelFunction(GX2GetAAMaskReg);
+   RegisterKernelFunction(GX2SetAAMaskReg);
+   RegisterKernelFunction(GX2SetAlphaTest);
+   RegisterKernelFunction(GX2InitAlphaTestReg);
+   RegisterKernelFunction(GX2GetAlphaTestReg);
+   RegisterKernelFunction(GX2SetAlphaTestReg);
    RegisterKernelFunction(GX2SetBlendConstantColor);
-   RegisterKernelFunction(GX2SetBlendConstantColorReg);
+   RegisterKernelFunction(GX2InitBlendConstantColorReg);
    RegisterKernelFunction(GX2GetBlendConstantColorReg);
-   RegisterKernelFunction(GX2InitBlendControlReg);
+   RegisterKernelFunction(GX2SetBlendConstantColorReg);
    RegisterKernelFunction(GX2SetBlendControl);
+   RegisterKernelFunction(GX2InitBlendControlReg);
+   RegisterKernelFunction(GX2GetBlendControlReg);
    RegisterKernelFunction(GX2SetBlendControlReg);
-   RegisterKernelFunction(GX2InitDepthStencilControlReg);
+   RegisterKernelFunction(GX2SetColorControl);
+   RegisterKernelFunction(GX2InitColorControlReg);
+   RegisterKernelFunction(GX2GetColorControlReg);
+   RegisterKernelFunction(GX2SetColorControlReg);
    RegisterKernelFunction(GX2SetDepthStencilControl);
+   RegisterKernelFunction(GX2InitDepthStencilControlReg);
+   RegisterKernelFunction(GX2GetDepthStencilControlReg);
    RegisterKernelFunction(GX2SetDepthStencilControlReg);
-   RegisterKernelFunction(GX2SetPrimitiveRestartIndex);
+   RegisterKernelFunction(GX2SetLineWidth);
+   RegisterKernelFunction(GX2InitLineWidthReg);
+   RegisterKernelFunction(GX2GetLineWidthReg);
+   RegisterKernelFunction(GX2SetLineWidthReg);
+   RegisterKernelFunction(GX2SetPointSize);
+   RegisterKernelFunction(GX2InitPointSizeReg);
+   RegisterKernelFunction(GX2GetPointSizeReg);
+   RegisterKernelFunction(GX2SetPointSizeReg);
+   RegisterKernelFunction(GX2SetPointLimits);
+   RegisterKernelFunction(GX2InitPointLimitsReg);
+   RegisterKernelFunction(GX2GetPointLimitsReg);
+   RegisterKernelFunction(GX2SetPointLimitsReg);
+   RegisterKernelFunction(GX2SetPolygonControl);
+   RegisterKernelFunction(GX2InitPolygonControlReg);
+   RegisterKernelFunction(GX2SetPolygonControlReg);
+   RegisterKernelFunction(GX2SetPolygonOffset);
+   RegisterKernelFunction(GX2InitPolygonOffsetReg);
+   RegisterKernelFunction(GX2GetPolygonOffsetReg);
+   RegisterKernelFunction(GX2SetPolygonOffsetReg);
+   RegisterKernelFunction(GX2SetScissor);
+   RegisterKernelFunction(GX2InitScissorReg);
+   RegisterKernelFunction(GX2GetScissorReg);
+   RegisterKernelFunction(GX2SetScissorReg);
+   RegisterKernelFunction(GX2SetTargetChannelMasks);
+   RegisterKernelFunction(GX2InitTargetChannelMasksReg);
+   RegisterKernelFunction(GX2GetTargetChannelMasksReg);
+   RegisterKernelFunction(GX2SetTargetChannelMasksReg);
+   RegisterKernelFunction(GX2SetViewport);
+   RegisterKernelFunction(GX2InitViewportReg);
+   RegisterKernelFunction(GX2GetViewportReg);
+   RegisterKernelFunction(GX2SetViewportReg);
 
    // Sampler
    RegisterKernelFunction(GX2InitSampler);

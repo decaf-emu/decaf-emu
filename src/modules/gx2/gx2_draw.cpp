@@ -44,3 +44,9 @@ GX2DrawIndexedEx(GX2PrimitiveMode::Value mode,
    pm4::write(pm4::NumInstances { numInstances });
    pm4::write(pm4::DrawIndex2 { static_cast<uint32_t>(-1), indices, numVertices, 0 });
 }
+
+void
+GX2SetPrimitiveRestartIndex(uint32_t index)
+{
+   pm4::write(pm4::SetContextReg { latte::Register::VGT_MULTI_PRIM_IB_RESET_INDX, index });
+}

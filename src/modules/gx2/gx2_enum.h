@@ -182,6 +182,12 @@ GX2_ENUM(GX2FetchShaderType, uint32_t)
    GX2_ENUM_VALUE(QuadTessellation, 3)
 GX2_ENUM_END
 
+GX2_ENUM(GX2FrontFace, uint32_t)
+   GX2_ENUM_VALID_RANGE(0, 1)
+   GX2_ENUM_VALUE(CounterClockwise, 0)
+   GX2_ENUM_VALUE(Clockwise, 1)
+GX2_ENUM_END
+
 GX2_ENUM(GX2IndexType, uint32_t)
    GX2_ENUM_VALID_RANGE(0x0, 0x9)
    GX2_ENUM_VALUE(U16_LE, 0x0)
@@ -220,6 +226,13 @@ GX2_ENUM(GX2PrimitiveMode, uint32_t)
    GX2_ENUM_VALUE(TriangleStrip,    0x6)
    GX2_ENUM_VALUE(Quads,            0x13)
    GX2_ENUM_VALUE(QuadStrip,        0x14)
+GX2_ENUM_END
+
+GX2_ENUM(GX2PolygonMode, uint32_t)
+   GX2_ENUM_VALID_RANGE(0, 2)
+   GX2_ENUM_VALUE(Point, 0)
+   GX2_ENUM_VALUE(Line, 1)
+   GX2_ENUM_VALUE(Triangle, 2)
 GX2_ENUM_END
 
 GX2_ENUM(GX2RenderTarget, uint32_t)

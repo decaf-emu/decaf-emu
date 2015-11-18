@@ -21,3 +21,6 @@ GX2DrawIndexedEx(GX2PrimitiveMode::Value mode,
                  void *indices,
                  uint32_t offset,
                  uint32_t numInstances);
+
+void
+GX2SetPrimitiveRestartIndex(uint32_t index);
