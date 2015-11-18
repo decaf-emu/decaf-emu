@@ -294,8 +294,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    }
 
    if (!glsl::generateBody(shader, body)) {
-      gLog->error("Failed to generate GLSL for vertex shader");
-      return false;
+      gLog->warn("Failed to translate 100% of instructions for vertex shader");
    }
 
    // Uniforms
@@ -399,7 +398,6 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    out << "}\n";
 
    vertex.code = out.str();
-   gLog->debug("Vertex Shader: \n{}", vertex.code);
    return true;
 }
 
@@ -420,8 +418,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    }
 
    if (!glsl::generateBody(shader, body)) {
-      gLog->error("Failed to generate GLSL for pixel shader");
-      return false;
+      gLog->warn("Failed to translate 100% of instructions for pixel shader");
    }
 
    // Uniforms
@@ -518,7 +515,6 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    out << "}\n";
 
    pixel.code = out.str();
-   gLog->debug("Pixel Shader: \n{}", pixel.code);
    return true;
 }
 
