@@ -249,4 +249,23 @@ union CB_SHADER_MASK
    };
 };
 
+// Contains color component mask fields for writing the render targets. Red, green, blue, and alpha
+// are components 0, 1, 2, and 3 in the pixel shader and are enabled by bits 0, 1, 2, and 3 in each field
+union CB_TARGET_MASK
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t TARGET0_ENABLE : 4;
+      uint32_t TARGET1_ENABLE : 4;
+      uint32_t TARGET2_ENABLE : 4;
+      uint32_t TARGET3_ENABLE : 4;
+      uint32_t TARGET4_ENABLE : 4;
+      uint32_t TARGET5_ENABLE : 4;
+      uint32_t TARGET6_ENABLE : 4;
+      uint32_t TARGET7_ENABLE : 4;
+   };
+};
+
 } // namespace latte

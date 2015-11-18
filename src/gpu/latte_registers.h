@@ -119,6 +119,7 @@ enum Value : uint32_t
    SQ_ALU_CONST_BUFFER_SIZE_VS_13   = 0x281B4,
    SQ_ALU_CONST_BUFFER_SIZE_VS_14   = 0x281B8,
    SQ_ALU_CONST_BUFFER_SIZE_VS_15   = 0x281BC,
+   CB_TARGET_MASK                   = 0x28238,
    CB_SHADER_MASK                   = 0x2823C,
    SQ_VTX_SEMANTIC_0                = 0x28380,
    SQ_VTX_SEMANTIC_1                = 0x28384,
