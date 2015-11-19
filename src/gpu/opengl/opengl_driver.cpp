@@ -1,6 +1,7 @@
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
 #include <gsl.h>
+#include <fstream>
 
 #include "gpu/commandqueue.h"
 #include "gpu/pm4_buffer.h"
@@ -16,7 +17,30 @@ namespace gpu
 namespace opengl
 {
 
-// We need LOAD_REG and SET_REG to do same shit.
+bool GLDriver::checkReadyDraw()
+{
+   if (!checkActiveShader()) {
+      gLog->warn("Skipping draw with invalid shader.");
+      return false;
+   }
+
+   if (!checkActiveUniforms()) {
+      gLog->warn("Skipping draw with invalid uniforms.");
+      return false;
+   }
+
+   if (!checkActiveColorBuffer()) {
+      gLog->warn("Skipping draw with invalid color buffer.");
+      return false;
+   }
+
+   if (!checkActiveDepthBuffer()) {
+      gLog->warn("Skipping draw with invalid depth buffer.");
+      return false;
+   }
+
+   return true;
+}
 
 bool GLDriver::checkActiveColorBuffer()
 {
@@ -39,32 +63,108 @@ bool GLDriver::checkActiveColorBuffer()
          continue;
       }
 
+      active = &mColorBuffers[cb_color_base.BASE_256B];
+      active->cb_color_base = cb_color_base;
+
       if (!active->object) {
          auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
          auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
-         auto cb_color_tile = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_TILE + i * 4);
-         auto cb_color_frag = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_FRAG + i * 4);
-         auto cb_color_view = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_VIEW + i * 4);
-         auto cb_color_mask = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_MASK + i * 4);
 
          auto format = cb_color_info.FORMAT;
          auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX;
          auto slice_tile_max = cb_color_size.SLICE_TILE_MAX;
 
-         auto pitch = (pitch_tile_max + 1) * latte::tile_width;
-         auto height = ((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch;
+         auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::tile_width);
+         auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch);
 
-         // Create render buffer
-         active = &mColorBuffers[cb_color_base.BASE_256B];
+         // Create color buffer
          gl::glGenTextures(1, &active->object);
          gl::glBindTexture(gl::GL_TEXTURE_2D, active->object);
-         gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<int>(gl::GL_RGBA), pitch, height, 0, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, 0);
          gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
          gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+         gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+         gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+         gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<int>(gl::GL_RGBA), pitch, height, 0, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, 0);
       }
 
-      // Bind renderbuffer to framebuffer
+      // Bind color buffer
       gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, active->object, 0);
+   }
+
+   return true;
+}
+
+bool GLDriver::checkActiveDepthBuffer()
+{
+   auto db_depth_base = getRegister<latte::DB_DEPTH_BASE>(latte::Register::DB_DEPTH_BASE);
+   auto &active = mActiveDepthBuffer;
+
+   if (!db_depth_base.BASE_256B) {
+      if (active) {
+         // Unbind active
+         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, 0, 0);
+         active = nullptr;
+      }
+
+      return true;
+   }
+
+   if (active && active->db_depth_base.BASE_256B == db_depth_base.BASE_256B) {
+      // Already bound
+      return true;
+   }
+
+   active = &mDepthBuffers[db_depth_base.BASE_256B];
+   active->db_depth_base = db_depth_base;
+
+   if (!active->object) {
+      auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
+      auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
+
+      auto format = db_depth_info.FORMAT;
+      auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX;
+      auto slice_tile_max = db_depth_size.SLICE_TILE_MAX;
+
+      auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::tile_width);
+      auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch);
+
+      // Create depth buffer
+      gl::glGenTextures(1, &active->object);
+      gl::glBindTexture(gl::GL_TEXTURE_2D, active->object);
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_COMPARE_MODE, static_cast<int>(gl::GL_NONE));
+      gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<int>(gl::GL_DEPTH_COMPONENT32), pitch, height, 0, gl::GL_DEPTH_COMPONENT, gl::GL_FLOAT, 0);
+   }
+
+   // Bind depth buffer
+   gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, active->object, 0);
+   return true;
+}
+
+bool GLDriver::checkActiveUniforms()
+{
+   auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
+
+   if (!mActiveShader) {
+      return true;
+   }
+
+   if (sq_config.DX9_CONSTS) {
+      // Upload uniform registers
+      if (mActiveShader->vertex && mActiveShader->vertex->object) {
+         auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_256 / 4]);
+         gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, 256 * 4, values);
+      }
+
+      if (mActiveShader->pixel && mActiveShader->pixel->object) {
+         auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_0 / 4]);
+         gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, 256 * 4, values);
+      }
+   } else {
+      // TODO: Upload uniform blocks
    }
 
    return true;
@@ -93,6 +193,16 @@ bool GLDriver::checkActiveShader()
    auto &pixelShader = mPixelShaders[pgm_start_ps.PGM_START];
    auto &shader = mShaders[ShaderKey { pgm_start_fs.PGM_START, pgm_start_vs.PGM_START, pgm_start_ps.PGM_START }];
 
+   auto getProgramLog = [](auto program, auto getFn, auto getInfoFn) {
+      gl::GLint logLength = 0;
+      std::string logMessage;
+      getFn(program, gl::GL_INFO_LOG_LENGTH, &logLength);
+
+      logMessage.resize(logLength);
+      getInfoFn(program, logLength, &logLength, &logMessage[0]);
+      return logMessage;
+   };
+
    // Genearte shader if needed
    if (!shader.object) {
       // Parse fetch shader if needed
@@ -120,16 +230,15 @@ bool GLDriver::checkActiveShader()
          const gl::GLchar *code[] = { vertexShader.code.c_str() };
          vertexShader.object = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
 
-         if (!vertexShader.object) {
-            gl::GLint logLength = 0;
-            std::string logMessage;
-            gl::glGetProgramiv(vertexShader.object, gl::GL_INFO_LOG_LENGTH, &logLength);
-
-            logMessage.resize(logLength);
-            gl::glGetProgramInfoLog(vertexShader.object, logLength, &logLength, &logMessage[0]);
-            gLog->error("Failed to compile vertex shader glsl:\n{}", logMessage);
+         // Check program log
+         auto log = getProgramLog(vertexShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
+         if (log.size()) {
+            gLog->error("OpenGL failed to compile vertex shader:\n{}", log);
             return false;
          }
+
+         // Get uniform locations
+         vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VC");
       }
 
       // Compile pixel shader if needed
@@ -138,24 +247,23 @@ bool GLDriver::checkActiveShader()
          auto size = pgm_size_ps.PGM_SIZE << 3;
 
          if (!compilePixelShader(pixelShader, program, size)) {
-            gLog->error("Failed to compile vertex shader");
+            gLog->error("Failed to compile pixel shader");
             return false;
          }
 
          // Create OpenGL Shader
-         const gl::GLchar *code[] = { vertexShader.code.c_str() };
+         const gl::GLchar *code[] = { pixelShader.code.c_str() };
          pixelShader.object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
 
-         if (!pixelShader.object) {
-            gl::GLint logLength = 0;
-            std::string logMessage;
-            gl::glGetProgramiv(pixelShader.object, gl::GL_INFO_LOG_LENGTH, &logLength);
-
-            logMessage.resize(logLength);
-            gl::glGetProgramInfoLog(pixelShader.object, logLength, &logLength, &logMessage[0]);
-            gLog->error("Failed to compile pixel shader glsl:\n{}", logMessage);
+         // Check program log
+         auto log = getProgramLog(pixelShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
+         if (log.size()) {
+            gLog->error("OpenGL failed to compile pixel shader:\n{}", log);
             return false;
          }
+
+         // Get uniform locations
+         pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "VC");
       }
 
       if (fetchShader.parsed && vertexShader.object && pixelShader.object) {
@@ -204,8 +312,146 @@ void GLDriver::setRegister(latte::Register::Value reg, uint32_t value)
    }
 }
 
+static std::string
+readFileToString(const std::string &filename)
+{
+   std::ifstream in { filename, std::ifstream::binary };
+   std::string result;
+
+   if (in.is_open()) {
+      in.seekg(0, in.end);
+      auto size = in.tellg();
+      result.resize(size);
+      in.seekg(0, in.beg);
+      in.read(&result[0], size);
+   }
+
+   return result;
+}
+
+void GLDriver::initGL()
+{
+   activateDeviceContext();
+   glbinding::Binding::initialize();
+
+   glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After, { "glGetError" });
+   glbinding::setAfterCallback([](const glbinding::FunctionCall &call) {
+      auto error = gl::glGetError();
+
+      if (error != gl::GL_NO_ERROR) {
+         gLog->error("OpenGL {} error: {}", call.toString(), error);
+      }
+   });
+
+   // Clear active state
+   mActiveShader = nullptr;
+   mActiveDepthBuffer = nullptr;
+   memset(&mActiveColorBuffers[0], 0, sizeof(ColorBuffer *) * mActiveColorBuffers.size());
+
+   // Create our default framebuffer
+   gl::glGenFramebuffers(1, &mFrameBuffer.object);
+   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
+
+   auto vertexCode = readFileToString("resources/shaders/screen_vertex.glsl");
+   if (!vertexCode.size()) {
+      gLog->error("Could not load resources/shaders/screen_vertex.glsl");
+   }
+
+   auto pixelCode = readFileToString("resources/shaders/screen_pixel.glsl");
+   if (!pixelCode.size()) {
+      gLog->error("Could not load resources/shaders/screen_pixel.glsl");
+   }
+
+   // Create vertex program
+   auto code = vertexCode.c_str();
+   mScreenDraw.vertexProgram = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, &code);
+
+   // Create pixel program
+   code = pixelCode.c_str();
+   mScreenDraw.pixelProgram = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, &code);
+   gl::glBindFragDataLocation(mScreenDraw.pixelProgram, 0, "ps_color");
+
+   gl::GLint logLength = 0;
+   std::string logMessage;
+   gl::glGetProgramiv(mScreenDraw.vertexProgram, gl::GL_INFO_LOG_LENGTH, &logLength);
+
+   logMessage.resize(logLength);
+   gl::glGetProgramInfoLog(mScreenDraw.vertexProgram, logLength, &logLength, &logMessage[0]);
+   gLog->error("Failed to compile vertex shader glsl:\n{}", logMessage);
+
+   // Create pipeline
+   gl::glGenProgramPipelines(1, &mScreenDraw.pipeline);
+   gl::glBindProgramPipeline(mScreenDraw.pipeline);
+   gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_VERTEX_SHADER_BIT, mScreenDraw.vertexProgram);
+   gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_FRAGMENT_SHADER_BIT, mScreenDraw.pixelProgram);
+
+   // Create vertex buffer
+   static const gl::GLfloat vertices[] = {
+       -1.0f,  1.0f,  0.0f, 1.0f,
+        1.0f,  1.0f,  1.0f, 1.0f,
+        1.0f, -1.0f,  1.0f, 0.0f,
+
+        1.0f, -1.0f,  1.0f, 0.0f,
+       -1.0f, -1.0f,  0.0f, 0.0f,
+       -1.0f,  1.0f,  0.0f, 1.0f
+   };
+
+   gl::glGenBuffers(1, &mScreenDraw.vertBuffer);
+   gl::glBindBuffer(gl::GL_ARRAY_BUFFER, mScreenDraw.vertBuffer);
+   gl::glBufferData(gl::GL_ARRAY_BUFFER, sizeof(vertices), vertices, gl::GL_STATIC_DRAW);
+
+   // Create vertex array
+   gl::glGenVertexArrays(1, &mScreenDraw.vertArray);
+   gl::glBindVertexArray(mScreenDraw.vertArray);
+   gl::glBindBuffer(gl::GL_ARRAY_BUFFER, mScreenDraw.vertBuffer);
+
+   auto fs_position = gl::glGetAttribLocation(mScreenDraw.vertexProgram, "fs_position");
+   gl::glEnableVertexAttribArray(fs_position);
+   gl::glVertexAttribPointer(fs_position, 2, gl::GL_FLOAT, gl::GL_FALSE, 4 * sizeof(gl::GLfloat), 0);
+
+   auto fs_texCoord = gl::glGetAttribLocation(mScreenDraw.vertexProgram, "fs_texCoord");
+   gl::glEnableVertexAttribArray(fs_texCoord);
+   gl::glVertexAttribPointer(fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 4 * sizeof(gl::GLfloat), (void*)(2 * sizeof(gl::GLfloat)));
+}
+
 void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
 {
+   auto itr = mColorBuffers.find(data.bufferAddr);
+
+   if (itr == mColorBuffers.end()) {
+      gLog->error("Could not find color buffer for DecafCopyColorToScan");
+      return;
+   }
+
+   auto &buffer = itr->second;
+
+   if (!buffer.object) {
+      gLog->error("Tried to use uninitialised color buffer in DecafCopyColorToScan");
+      return;
+   }
+
+   if (data.scanTarget == 1) {
+      // TV
+   } else if (data.scanTarget == 4) {
+      // DRC
+   }
+
+   // Unbind active framebuffer
+   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0);
+
+   // Setup screen draw shader
+   gl::glBindVertexArray(mScreenDraw.vertArray);
+   gl::glBindProgramPipeline(mScreenDraw.pipeline);
+
+   // Draw screen quad
+   gl::glEnable(gl::GL_TEXTURE_2D);
+   gl::glDisable(gl::GL_DEPTH_TEST);
+   gl::glActiveTexture(gl::GL_TEXTURE0);
+   gl::glBindTexture(gl::GL_TEXTURE_2D, buffer.object);
+   gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
+
+   // Rebind active framebuffer
+   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
 }
 
 void GLDriver::decafSwapBuffers(pm4::DecafSwapBuffers &data)
@@ -215,11 +461,49 @@ void GLDriver::decafSwapBuffers(pm4::DecafSwapBuffers &data)
 
 void GLDriver::decafClearColor(pm4::DecafClearColor &data)
 {
-   // Check if data.buffer is bound to 0-8 active, if so clear N, if not bind to 0 and clear 0
-   //gl::glClearBufferiv(gl::GL_COLOR, )
-   // TODO: Set current color buffer
-   gl::glClearColor(data.red, data.green, data.blue, data.alpha);
-   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+   float colors[] = {
+      data.red,
+      data.green,
+      data.blue,
+      data.alpha
+   };
+
+   // Check if the color buffer is actively bound
+   for (auto i = 0; i < 8; ++i) {
+      auto active = mActiveColorBuffers[i];
+
+      if (!active) {
+         continue;
+      }
+
+      if (active->cb_color_base.BASE_256B == data.bufferAddr) {
+         gl::glClearBufferfv(gl::GL_COLOR, i, colors);
+         return;
+      }
+   }
+
+   // Not active, so we have to bind it and then clear
+   auto itr = mColorBuffers.find(data.bufferAddr);
+
+   if (itr == mColorBuffers.end()) {
+      gLog->error("Could not find color buffer for DecafClearColor");
+      return;
+   }
+
+   auto &buffer = itr->second;
+
+   if (!buffer.object) {
+      gLog->error("Tried to use uninitialised color buffer in DecafClearColor");
+      return;
+   }
+
+   gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, buffer.object, 0);
+   gl::glClearBufferfv(gl::GL_COLOR, 0, colors);
+
+   // Rebind color buffer 0
+   if (mActiveColorBuffers[0] && mActiveColorBuffers[0]->object) {
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, mActiveColorBuffers[0]->object, 0);
+   }
 }
 
 void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
@@ -228,16 +512,14 @@ void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
 
 void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
 {
-   if (!checkActiveShader()) {
-      gLog->warn("Skipping draw with invalid shader.");
+   if (!checkReadyDraw()) {
       return;
    }
 }
 
 void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
 {
-   if (!checkActiveShader()) {
-      gLog->warn("Skipping draw with invalid shader.");
+   if (!checkReadyDraw()) {
       return;
    }
 }
@@ -404,21 +686,11 @@ void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t size)
 
 void GLDriver::run()
 {
-   activateDeviceContext();
-   glbinding::Binding::initialize();
-
-   mActiveShader = nullptr;
-   memset(&mActiveColorBuffers[0], 0, sizeof(ColorBuffer *) * mActiveColorBuffers.size());
-
-   // Create our default framebuffer
-   gl::glGenFramebuffers(1, &mFrameBuffer.object);
-   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
+   initGL();
 
    while (mRunning) {
       auto buffer = gpu::unqueueCommandBuffer();
-
       runCommandBuffer(buffer->buffer, buffer->curSize);
-
       gpu::retireCommandBuffer(buffer);
    }
 }

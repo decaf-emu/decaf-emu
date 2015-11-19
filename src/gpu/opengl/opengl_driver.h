@@ -37,6 +37,7 @@ struct FetchShader
 struct VertexShader
 {
    gl::GLuint object = 0;
+   gl::GLuint uniformRegisters = 0;
    latte::SQ_PGM_START_VS pgm_start_vs;
    std::string code;
 };
@@ -44,6 +45,7 @@ struct VertexShader
 struct PixelShader
 {
    gl::GLuint object = 0;
+   gl::GLuint uniformRegisters = 0;
    latte::SQ_PGM_START_PS pgm_start_ps;
    std::string code;
 };
@@ -67,12 +69,21 @@ struct ColorBuffer
 struct DepthBuffer
 {
    gl::GLuint object = 0;
-   // TODO:
+   latte::DB_DEPTH_BASE db_depth_base;
 };
 
 struct FrameBuffer
 {
    gl::GLuint object = 0;
+};
+
+struct ScreenDrawData
+{
+   gl::GLuint vertexProgram;
+   gl::GLuint pixelProgram;
+   gl::GLuint pipeline;
+   gl::GLuint vertArray;
+   gl::GLuint vertBuffer;
 };
 
 using GLContext = uint64_t;
@@ -89,6 +100,7 @@ public:
 
 private:
    void run();
+   void initGL();
 
    void activateDeviceContext();
    void swapBuffers();
@@ -111,8 +123,11 @@ private:
    void setResources(pm4::SetResources &data);
    void indirectBufferCall(pm4::IndirectBufferCall &data);
 
-   bool checkActiveShader();
+   bool checkReadyDraw();
    bool checkActiveColorBuffer();
+   bool checkActiveDepthBuffer();
+   bool checkActiveShader();
+   bool checkActiveUniforms();
 
    void setRegister(latte::Register::Value reg, uint32_t value);
 
@@ -139,9 +154,13 @@ private:
    std::unordered_map<uint32_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
 
-   FrameBuffer mFrameBuffer;
-   std::array<ColorBuffer *, 8> mActiveColorBuffers;
+   ScreenDrawData mScreenDraw;
    std::unordered_map<uint32_t, ColorBuffer> mColorBuffers;
+   std::unordered_map<uint32_t, DepthBuffer> mDepthBuffers;
+
+   FrameBuffer mFrameBuffer;
+   DepthBuffer *mActiveDepthBuffer;
+   std::array<ColorBuffer *, 8> mActiveColorBuffers;
 
 #ifdef PLATFORM_WINDOWS
    uint64_t mDeviceContext;
