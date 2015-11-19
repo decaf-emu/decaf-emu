@@ -214,6 +214,12 @@ getGLSLDataFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT num, latte:
 }
 
 static void
+writeHeader(fmt::MemoryWriter &out)
+{
+   out << "#version 420 core\n";
+}
+
+static void
 writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq_config)
 {
    if (sq_config.DX9_CONSTS) {
@@ -222,7 +228,8 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
    } else {
       // Uniform blocks
       // TODO: Change max size of VUB
-      out << "uniform VertexUB {\n"
+      out
+         << "uniform VertexUB {\n"
          << "   vec4 values[];\n"
          << "} VUB[4]\n";
    }
@@ -230,6 +237,14 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
    // Samplers
    for (auto id : shader.samplersUsed) {
       out << "uniform sampler2D sampler_" << id << ";\n";
+   }
+
+   // Redeclare gl_PerVertex for Vertex Shaders
+   if (shader.type == latte::Shader::Vertex) {
+      out
+         << "out gl_PerVertex {\n"
+         << "   vec4 gl_Position;\n"
+         << "};";
    }
 }
 
@@ -244,17 +259,17 @@ writeLocals(fmt::MemoryWriter &out, latte::Shader &shader)
    // Previous Scalar
    if (shader.psUsed.size()) {
       out << "float PS;\n"
-         << "float PSo;\n";
+          << "float PSo;\n";
    }
 
    // Previous Vector
    if (shader.pvUsed.size()) {
-      out << "float4 PV;\n"
-         << "float4 PVo;\n";
+      out << "vec4 PV;\n"
+          << "vec4 PVo;\n";
    }
 
    // Address Register (TODO: Only print if used)
-   out << "int4 AR;\n";
+   out << "ivec4 AR;\n";
 
    // Loop Index (TODO: Only print if used)
    out << "int AL;\n";
@@ -296,6 +311,9 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    if (!glsl::generateBody(shader, body)) {
       gLog->warn("Failed to translate 100% of instructions for vertex shader");
    }
+
+   // Write header
+   writeHeader(out);
 
    // Uniforms
    writeUniforms(out, shader, sq_config);
@@ -341,8 +359,10 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    writeExports(out, shader);
 
    // Initialise registers
-   // TODO: Check which order of VertexID and InstanceID for r0.x, r0.y
-   out << "R0 = vec4(intBitsToFloat(gl_VertexID), intBitsToFloat(gl_InstanceID), 0.0, 0.0);\n";
+   if (shader.gprsUsed.find(0) != shader.gprsUsed.end()) {
+      // TODO: Check which order of VertexID and InstanceID for r0.x, r0.y
+      out << "R0 = vec4(intBitsToFloat(gl_VertexID), intBitsToFloat(gl_InstanceID), 0.0, 0.0);\n";
+   }
 
    // Assign fetch shader output to our GPR
    for (auto i = 0u; i < 32; ++i) {
@@ -420,6 +440,9 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    if (!glsl::generateBody(shader, body)) {
       gLog->warn("Failed to translate 100% of instructions for pixel shader");
    }
+
+   // Write header
+   writeHeader(out);
 
    // Uniforms
    writeUniforms(out, shader, sq_config);
