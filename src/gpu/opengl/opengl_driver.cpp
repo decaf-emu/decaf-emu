@@ -252,6 +252,7 @@ bool GLDriver::checkActiveShader()
          auto log = getProgramLog(vertexShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
          if (log.size()) {
             gLog->error("OpenGL failed to compile vertex shader:\n{}", log);
+            gLog->error("Shader Code:\n{}\n", vertexShader.code);
             return false;
          }
 
@@ -265,7 +266,7 @@ bool GLDriver::checkActiveShader()
          auto size = pgm_size_ps.PGM_SIZE << 3;
 
          if (!compilePixelShader(pixelShader, program, size)) {
-            gLog->error("Failed to compile pixel shader");
+            gLog->error("Failed to recompile pixel shader");
             return false;
          }
 
@@ -277,6 +278,7 @@ bool GLDriver::checkActiveShader()
          auto log = getProgramLog(pixelShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
          if (log.size()) {
             gLog->error("OpenGL failed to compile pixel shader:\n{}", log);
+            gLog->error("Shader Code:\n{}\n", pixelShader.code);
             return false;
          }
 
