@@ -123,6 +123,11 @@ private:
    void setResources(pm4::SetResources &data);
    void indirectBufferCall(pm4::IndirectBufferCall &data);
 
+   ColorBuffer * getColorBuffer(latte::CB_COLORN_BASE &base,
+      latte::CB_COLORN_SIZE &size, latte::CB_COLORN_INFO &info);
+   DepthBuffer * getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
+      latte::DB_DEPTH_SIZE &db_depth_size, latte::DB_DEPTH_INFO &db_depth_info);
+
    bool checkReadyDraw();
    bool checkActiveColorBuffer();
    bool checkActiveDepthBuffer();

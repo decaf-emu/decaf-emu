@@ -42,6 +42,65 @@ bool GLDriver::checkReadyDraw()
    return true;
 }
 
+ColorBuffer * 
+GLDriver::getColorBuffer(latte::CB_COLORN_BASE &cb_color_base,
+                         latte::CB_COLORN_SIZE &cb_color_size, 
+                         latte::CB_COLORN_INFO &cb_color_info)
+{
+   auto buffer = &mColorBuffers[cb_color_base.BASE_256B];
+   buffer->cb_color_base = cb_color_base;
+
+   if (!buffer->object) {
+      auto format = cb_color_info.FORMAT;
+      auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX;
+      auto slice_tile_max = cb_color_size.SLICE_TILE_MAX;
+
+      auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::tile_width);
+      auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch);
+
+      // Create color buffer
+      gl::glGenTextures(1, &buffer->object);
+      gl::glBindTexture(gl::GL_TEXTURE_2D, buffer->object);
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+      gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<int>(gl::GL_RGBA), pitch, height, 0, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, 0);
+   }
+
+   return buffer;
+}
+
+DepthBuffer *
+GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
+   latte::DB_DEPTH_SIZE &db_depth_size,
+   latte::DB_DEPTH_INFO &db_depth_info)
+{
+   auto buffer = &mDepthBuffers[db_depth_base.BASE_256B];
+   buffer->db_depth_base = db_depth_base;
+
+   if (!buffer->object) {
+      auto format = db_depth_info.FORMAT;
+      auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX;
+      auto slice_tile_max = db_depth_size.SLICE_TILE_MAX;
+
+      auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::tile_width);
+      auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch);
+
+      // Create depth buffer
+      gl::glGenTextures(1, &buffer->object);
+      gl::glBindTexture(gl::GL_TEXTURE_2D, buffer->object);
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_COMPARE_MODE, static_cast<int>(gl::GL_NONE));
+      gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<int>(gl::GL_DEPTH_COMPONENT32), pitch, height, 0, gl::GL_DEPTH_COMPONENT, gl::GL_FLOAT, 0);
+   }
+
+   return buffer;
+}
+
 bool GLDriver::checkActiveColorBuffer()
 {
    for (auto i = 0u; i < 8; ++i) {
@@ -63,29 +122,9 @@ bool GLDriver::checkActiveColorBuffer()
          continue;
       }
 
-      active = &mColorBuffers[cb_color_base.BASE_256B];
-      active->cb_color_base = cb_color_base;
-
-      if (!active->object) {
-         auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
-         auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
-
-         auto format = cb_color_info.FORMAT;
-         auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX;
-         auto slice_tile_max = cb_color_size.SLICE_TILE_MAX;
-
-         auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::tile_width);
-         auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch);
-
-         // Create color buffer
-         gl::glGenTextures(1, &active->object);
-         gl::glBindTexture(gl::GL_TEXTURE_2D, active->object);
-         gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-         gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-         gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-         gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-         gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<int>(gl::GL_RGBA), pitch, height, 0, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, 0);
-      }
+      auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
+      auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
+      active = getColorBuffer(cb_color_base, cb_color_size, cb_color_info);
 
       // Bind color buffer
       gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, active->object, 0);
@@ -114,30 +153,9 @@ bool GLDriver::checkActiveDepthBuffer()
       return true;
    }
 
-   active = &mDepthBuffers[db_depth_base.BASE_256B];
-   active->db_depth_base = db_depth_base;
-
-   if (!active->object) {
-      auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
-      auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
-
-      auto format = db_depth_info.FORMAT;
-      auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX;
-      auto slice_tile_max = db_depth_size.SLICE_TILE_MAX;
-
-      auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::tile_width);
-      auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch);
-
-      // Create depth buffer
-      gl::glGenTextures(1, &active->object);
-      gl::glBindTexture(gl::GL_TEXTURE_2D, active->object);
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_COMPARE_MODE, static_cast<int>(gl::GL_NONE));
-      gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<int>(gl::GL_DEPTH_COMPONENT32), pitch, height, 0, gl::GL_DEPTH_COMPONENT, gl::GL_FLOAT, 0);
-   }
+   auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
+   auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
+   active = getDepthBuffer(db_depth_base, db_depth_size, db_depth_info);
 
    // Bind depth buffer
    gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, active->object, 0);
@@ -416,19 +434,8 @@ void GLDriver::initGL()
 
 void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
 {
-   auto itr = mColorBuffers.find(data.bufferAddr);
-
-   if (itr == mColorBuffers.end()) {
-      gLog->error("Could not find color buffer for DecafCopyColorToScan");
-      return;
-   }
-
-   auto &buffer = itr->second;
-
-   if (!buffer.object) {
-      gLog->error("Tried to use uninitialised color buffer in DecafCopyColorToScan");
-      return;
-   }
+   auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
+   auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
 
    if (data.scanTarget == 1) {
       // TV
@@ -447,7 +454,7 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
    gl::glEnable(gl::GL_TEXTURE_2D);
    gl::glDisable(gl::GL_DEPTH_TEST);
    gl::glActiveTexture(gl::GL_TEXTURE0);
-   gl::glBindTexture(gl::GL_TEXTURE_2D, buffer.object);
+   gl::glBindTexture(gl::GL_TEXTURE_2D, buffer->object);
    gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
 
    // Rebind active framebuffer
@@ -482,28 +489,19 @@ void GLDriver::decafClearColor(pm4::DecafClearColor &data)
       }
    }
 
-   // Not active, so we have to bind it and then clear
-   auto itr = mColorBuffers.find(data.bufferAddr);
+   // Find our colorbuffer to clear
+   auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
+   auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
 
-   if (itr == mColorBuffers.end()) {
-      gLog->error("Could not find color buffer for DecafClearColor");
-      return;
-   }
+   // Temporarily set to this color buffer
+   gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, buffer->object, 0);
 
-   auto &buffer = itr->second;
-
-   if (!buffer.object) {
-      gLog->error("Tried to use uninitialised color buffer in DecafClearColor");
-      return;
-   }
-
-   gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, buffer.object, 0);
+   // Clear the buffer
    gl::glClearBufferfv(gl::GL_COLOR, 0, colors);
 
-   // Rebind color buffer 0
-   if (mActiveColorBuffers[0] && mActiveColorBuffers[0]->object) {
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, mActiveColorBuffers[0]->object, 0);
-   }
+   // Clear the temporary color buffer attachement
+   mActiveColorBuffers[0] = nullptr;
+   gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, 0, 0);
 }
 
 void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
