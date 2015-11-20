@@ -169,7 +169,7 @@ void translateAluSource(GenerateState &state, AluSource &src)
          break;
       case AluSource::ConstantFloat:
       case AluSource::ConstantDouble:
-         state.out << "(int)(";
+         state.out << "int(";
          break;
       }
    } else if (src.valueType == AluSource::Uint) {
@@ -198,7 +198,7 @@ void translateAluSource(GenerateState &state, AluSource &src)
          break;
       case AluSource::ConstantFloat:
       case AluSource::ConstantDouble:
-         state.out << "(uint)(";
+         state.out << "uint(";
          break;
       }
    }

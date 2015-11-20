@@ -393,7 +393,7 @@ static bool FLT_TO_INT(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "(int)(";
+   state.out << "int(";
    translateAluSource(state, ins->sources[0]);
    state.out << ")";
 
@@ -407,9 +407,9 @@ static bool INT_TO_FLT(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "(float)floatBitsToInt(";
+   state.out << "float(floatBitsToInt(";
    translateAluSource(state, ins->sources[0]);
-   state.out << ")";
+   state.out << "))";
 
    translateAluDestEnd(state, ins);
    return true;
@@ -421,9 +421,9 @@ static bool UINT_TO_FLT(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "(float)floatBitsToUint(";
+   state.out << "float(floatBitsToUint(";
    translateAluSource(state, ins->sources[0]);
-   state.out << ")";
+   state.out << "))";
 
    translateAluDestEnd(state, ins);
    return true;
