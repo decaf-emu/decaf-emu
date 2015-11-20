@@ -231,7 +231,7 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
       out
          << "uniform VertexUB {\n"
          << "   vec4 values[];\n"
-         << "} VUB[4]\n";
+         << "} VUB[4];\n";
    }
 
    // Samplers
