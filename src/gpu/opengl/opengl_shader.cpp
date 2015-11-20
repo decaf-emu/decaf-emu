@@ -16,9 +16,8 @@ namespace opengl
 bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
 {
    auto program = reinterpret_cast<latte::ControlFlowInst *>(buffer);
-   auto parsed = false;
 
-   for (auto i = 0; (i < size / latte::WordsPerCF) && !parsed; i++) {
+   for (auto i = 0; (i < size / latte::WordsPerCF); i++) {
       auto &cf = program[i];
 
       switch (cf.word1.CF_INST) {
@@ -46,6 +45,7 @@ bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
             attrib.offset = vf.word2.OFFSET;
             attrib.formatComp = vf.word1.FORMAT_COMP_ALL;
             attrib.numFormat = vf.word1.NUM_FORMAT_ALL;
+            attrib.endianSwap = vf.word2.ENDIAN_SWAP;
             attrib.dstSel[0] = vf.word1.DST_SEL_X;
             attrib.dstSel[1] = vf.word1.DST_SEL_Y;
             attrib.dstSel[2] = vf.word1.DST_SEL_Z;
@@ -55,19 +55,17 @@ bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
       }
       case latte::SQ_CF_INST_RETURN:
       case latte::SQ_CF_INST_END_PROGRAM:
-         parsed = true;
-         break;
+         return true;
       default:
          gLog->error("Unexpected fetch shader instruction {}", cf.word1.CF_INST);
       }
 
       if (cf.word1.END_OF_PROGRAM) {
-         parsed = true;
+         return true;
       }
    }
 
-   shader.parsed = parsed;
-   return parsed;
+   return false;
 }
 
 static size_t
@@ -385,16 +383,16 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
       switch (channels) {
       case 1:
-         out << "vec4(fs_out_" << id << ", 0.0, 0.0, 0.0);\n";
+         out << "vec4(fs_out_" << attrib->location << ", 0.0, 0.0, 0.0);\n";
          break;
       case 2:
-         out << "vec4(fs_out_" << id << ", 0.0, 0.0);\n";
+         out << "vec4(fs_out_" << attrib->location << ", 0.0, 0.0);\n";
          break;
       case 3:
-         out << "vec4(fs_out_" << id << ", 0.0);\n";
+         out << "vec4(fs_out_" << attrib->location << ", 0.0);\n";
          break;
       case 4:
-         out << "fs_out_" << id << ";\n";
+         out << "fs_out_" << attrib->location << ";\n";
          break;
       }
    }

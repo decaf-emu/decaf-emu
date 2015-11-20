@@ -67,7 +67,7 @@ struct SQ_LOOP_CONST_DX10_0
    uint32_t COUNT;
 };
 
-union SQ_VTX_CONSTANT_WORD0_0
+union SQ_VTX_CONSTANT_WORD0_N
 {
    uint32_t value;
 
@@ -77,7 +77,7 @@ union SQ_VTX_CONSTANT_WORD0_0
    };
 };
 
-union SQ_VTX_CONSTANT_WORD1_0
+union SQ_VTX_CONSTANT_WORD1_N
 {
    uint32_t value;
 
@@ -87,7 +87,7 @@ union SQ_VTX_CONSTANT_WORD1_0
    };
 };
 
-union SQ_VTX_CONSTANT_WORD2_0
+union SQ_VTX_CONSTANT_WORD2_N
 {
    uint32_t value;
 
@@ -104,7 +104,7 @@ union SQ_VTX_CONSTANT_WORD2_0
    };
 };
 
-union SQ_VTX_CONSTANT_WORD3_0
+union SQ_VTX_CONSTANT_WORD3_N
 {
    uint32_t value;
 
@@ -116,7 +116,7 @@ union SQ_VTX_CONSTANT_WORD3_0
    };
 };
 
-union SQ_VTX_CONSTANT_WORD6_0
+union SQ_VTX_CONSTANT_WORD6_N
 {
    uint32_t value;
 
@@ -294,7 +294,7 @@ using SQ_VTX_SEMANTIC_29 = SQ_VTX_SEMANTIC_N;
 using SQ_VTX_SEMANTIC_30 = SQ_VTX_SEMANTIC_N;
 using SQ_VTX_SEMANTIC_31 = SQ_VTX_SEMANTIC_N;
 
-union SQ_TEX_RESOURCE_WORD0_0
+union SQ_TEX_RESOURCE_WORD0_N
 {
    uint32_t value;
 
@@ -308,7 +308,7 @@ union SQ_TEX_RESOURCE_WORD0_0
    };
 };
 
-union SQ_TEX_RESOURCE_WORD1_0
+union SQ_TEX_RESOURCE_WORD1_N
 {
    uint32_t value;
 
@@ -320,17 +320,17 @@ union SQ_TEX_RESOURCE_WORD1_0
    };
 };
 
-struct SQ_TEX_RESOURCE_WORD2_0
+struct SQ_TEX_RESOURCE_WORD2_N
 {
    uint32_t BASE_ADDRESS;
 };
 
-struct SQ_TEX_RESOURCE_WORD3_0
+struct SQ_TEX_RESOURCE_WORD3_N
 {
    uint32_t MIP_ADDRESS;
 };
 
-union SQ_TEX_RESOURCE_WORD4_0
+union SQ_TEX_RESOURCE_WORD4_N
 {
    uint32_t value;
 
@@ -353,7 +353,7 @@ union SQ_TEX_RESOURCE_WORD4_0
    };
 };
 
-union SQ_TEX_RESOURCE_WORD5_0
+union SQ_TEX_RESOURCE_WORD5_N
 {
    uint32_t value;
 
@@ -366,7 +366,7 @@ union SQ_TEX_RESOURCE_WORD5_0
    };
 };
 
-union SQ_TEX_RESOURCE_WORD6_0
+union SQ_TEX_RESOURCE_WORD6_N
 {
    uint32_t value;
 

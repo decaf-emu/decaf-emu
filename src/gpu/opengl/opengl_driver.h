@@ -15,6 +15,8 @@ namespace gpu
 namespace opengl
 {
 
+static const auto MAX_ATTRIB_COUNT = 16u;
+
 struct FetchShader
 {
    struct Attrib
@@ -26,12 +28,13 @@ struct FetchShader
       latte::SQ_DATA_FORMAT format;
       latte::SQ_SEL dstSel[4];
       latte::SQ_NUM_FORMAT numFormat;
+      latte::SQ_ENDIAN endianSwap;
       latte::SQ_FORMAT_COMP formatComp;
    };
 
+   gl::GLuint object = 0;
    std::vector<Attrib> attribs;
    latte::SQ_PGM_START_FS pgm_start_fs;
-   bool parsed = false;
 };
 
 struct VertexShader
@@ -40,6 +43,7 @@ struct VertexShader
    gl::GLuint uniformRegisters = 0;
    latte::SQ_PGM_START_VS pgm_start_vs;
    std::string code;
+   std::array<gl::GLuint, MAX_ATTRIB_COUNT> attribLocations;
 };
 
 struct PixelShader
@@ -75,6 +79,14 @@ struct DepthBuffer
 struct FrameBuffer
 {
    gl::GLuint object = 0;
+};
+
+struct AttributeBuffer
+{
+   gl::GLuint object = 0;
+   uint32_t size = 0;
+   uint32_t stride = 0;
+   void *mappedBuffer = nullptr;
 };
 
 struct ScreenDrawData
@@ -129,6 +141,7 @@ private:
       latte::DB_DEPTH_SIZE &db_depth_size, latte::DB_DEPTH_INFO &db_depth_info);
 
    bool checkReadyDraw();
+   bool checkActiveAttribBuffers();
    bool checkActiveColorBuffer();
    bool checkActiveDepthBuffer();
    bool checkActiveShader();
@@ -150,7 +163,7 @@ private:
 
 private:
    volatile bool mRunning = true;
-   uint32_t mRegisters[0x10000];
+   std::array<uint32_t, 0x10000> mRegisters;
    std::thread mThread;
 
    Shader *mActiveShader = nullptr;
@@ -162,6 +175,7 @@ private:
    ScreenDrawData mScreenDraw;
    std::unordered_map<uint32_t, ColorBuffer> mColorBuffers;
    std::unordered_map<uint32_t, DepthBuffer> mDepthBuffers;
+   std::unordered_map<uint32_t, AttributeBuffer> mAttribBuffers;
 
    FrameBuffer mFrameBuffer;
    DepthBuffer *mActiveDepthBuffer;

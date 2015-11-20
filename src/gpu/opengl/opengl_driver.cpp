@@ -25,6 +25,11 @@ bool GLDriver::checkReadyDraw()
       return false;
    }
 
+   if (!checkActiveAttribBuffers()) {
+      gLog->warn("Skipping draw with invalid attribs.");
+      return false;
+   }
+
    if (!checkActiveUniforms()) {
       gLog->warn("Skipping draw with invalid uniforms.");
       return false;
@@ -43,9 +48,9 @@ bool GLDriver::checkReadyDraw()
    return true;
 }
 
-ColorBuffer * 
+ColorBuffer *
 GLDriver::getColorBuffer(latte::CB_COLORN_BASE &cb_color_base,
-                         latte::CB_COLORN_SIZE &cb_color_size, 
+                         latte::CB_COLORN_SIZE &cb_color_size,
                          latte::CB_COLORN_INFO &cb_color_info)
 {
    auto buffer = &mColorBuffers[cb_color_base.BASE_256B];
@@ -74,8 +79,8 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE &cb_color_base,
 
 DepthBuffer *
 GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
-   latte::DB_DEPTH_SIZE &db_depth_size,
-   latte::DB_DEPTH_INFO &db_depth_info)
+                         latte::DB_DEPTH_SIZE &db_depth_size,
+                         latte::DB_DEPTH_INFO &db_depth_info)
 {
    auto buffer = &mDepthBuffers[db_depth_base.BASE_256B];
    buffer->db_depth_base = db_depth_base;
@@ -100,6 +105,211 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
    }
 
    return buffer;
+}
+
+static gl::GLenum
+getAttributeFormat(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
+{
+   bool isSigned = (formatComp == latte::SQ_FORMAT_COMP_SIGNED);
+
+   switch (format) {
+   case latte::FMT_8:
+   case latte::FMT_8_8:
+   case latte::FMT_8_8_8:
+   case latte::FMT_8_8_8_8:
+      return isSigned ? gl::GL_BYTE : gl::GL_UNSIGNED_BYTE;
+   case latte::FMT_16:
+   case latte::FMT_16_16:
+   case latte::FMT_16_16_16:
+   case latte::FMT_16_16_16_16:
+      return isSigned ? gl::GL_SHORT : gl::GL_UNSIGNED_SHORT;
+   case latte::FMT_16_FLOAT:
+   case latte::FMT_16_16_FLOAT:
+   case latte::FMT_16_16_16_FLOAT:
+   case latte::FMT_16_16_16_16_FLOAT:
+      return gl::GL_HALF_FLOAT;
+   case latte::FMT_32:
+   case latte::FMT_32_32:
+   case latte::FMT_32_32_32:
+   case latte::FMT_32_32_32_32:
+      return isSigned ? gl::GL_INT : gl::GL_UNSIGNED_INT;
+   case latte::FMT_32_FLOAT:
+   case latte::FMT_32_32_FLOAT:
+   case latte::FMT_32_32_32_FLOAT:
+   case latte::FMT_32_32_32_32_FLOAT:
+      return gl::GL_FLOAT;
+   default:
+      throw std::logic_error("Unsupported attribute format");
+      return gl::GL_BYTE;
+   }
+}
+
+static gl::GLint
+getAttributeComponents(latte::SQ_DATA_FORMAT format)
+{
+   switch (format) {
+   case latte::FMT_8:
+   case latte::FMT_16:
+   case latte::FMT_16_FLOAT:
+   case latte::FMT_32:
+   case latte::FMT_32_FLOAT:
+      return 1;
+   case latte::FMT_8_8:
+   case latte::FMT_16_16:
+   case latte::FMT_16_16_FLOAT:
+   case latte::FMT_32_32:
+   case latte::FMT_32_32_FLOAT:
+      return 2;
+   case latte::FMT_8_8_8:
+   case latte::FMT_16_16_16:
+   case latte::FMT_16_16_16_FLOAT:
+   case latte::FMT_32_32_32:
+   case latte::FMT_32_32_32_FLOAT:
+      return 3;
+   case latte::FMT_8_8_8_8:
+   case latte::FMT_16_16_16_16:
+   case latte::FMT_16_16_16_16_FLOAT:
+   case latte::FMT_32_32_32_32:
+   case latte::FMT_32_32_32_32_FLOAT:
+      return 4;
+   default:
+      throw std::logic_error("Unsupported attribute format");
+      return 4;
+   }
+}
+
+template<typename Type, int N>
+void stridedMemcpy2(void *srcBuffer, void *dstBuffer, size_t size, size_t offset, size_t stride, bool endian)
+{
+   auto src = reinterpret_cast<uint8_t *>(srcBuffer) + offset;
+   auto dst = reinterpret_cast<uint8_t *>(dstBuffer) + offset;
+   auto end = reinterpret_cast<uint8_t *>(srcBuffer) + size;
+
+   if (endian) {
+      while (src < end) {
+         auto srcPtr = reinterpret_cast<Type *>(src);
+         auto dstPtr = reinterpret_cast<Type *>(dst);
+
+         for (auto i = 0u; i < N; ++i) {
+            *dstPtr++ = byte_swap(*srcPtr++);
+         }
+
+         src += stride;
+         dst += stride;
+      }
+   } else {
+      while (src < end) {
+         memcpy(src, dst, sizeof(Type) * N);
+         src += stride;
+         dst += stride;
+      }
+   }
+}
+
+void stridedMemcpy(void *src, void *dst, size_t size, size_t offset, size_t stride, latte::SQ_ENDIAN endian, latte::SQ_DATA_FORMAT format)
+{
+   bool swap = (endian != latte::SQ_ENDIAN_NONE);
+
+   switch (format) {
+   case latte::FMT_8:
+      stridedMemcpy2<uint8_t, 1>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_8_8:
+      stridedMemcpy2<uint8_t, 2>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_8_8_8:
+      stridedMemcpy2<uint8_t, 3>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_8_8_8_8:
+      stridedMemcpy2<uint8_t, 4>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_16:
+   case latte::FMT_16_FLOAT:
+      stridedMemcpy2<uint16_t, 1>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_16_16:
+   case latte::FMT_16_16_FLOAT:
+      stridedMemcpy2<uint16_t, 2>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_16_16_16:
+   case latte::FMT_16_16_16_FLOAT:
+      stridedMemcpy2<uint16_t, 3>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_16_16_16_16:
+   case latte::FMT_16_16_16_16_FLOAT:
+      stridedMemcpy2<uint16_t, 4>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_32:
+   case latte::FMT_32_FLOAT:
+      stridedMemcpy2<uint32_t, 1>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_32_32:
+   case latte::FMT_32_32_FLOAT:
+      stridedMemcpy2<uint32_t, 2>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_32_32_32:
+   case latte::FMT_32_32_32_FLOAT:
+      stridedMemcpy2<uint32_t, 3>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_32_32_32_32:
+   case latte::FMT_32_32_32_32_FLOAT:
+      stridedMemcpy2<uint32_t, 4>(src, dst, size, offset, stride, swap);
+      break;
+   default:
+      throw std::logic_error("Invalid strided memcpy format");
+   }
+}
+
+bool GLDriver::checkActiveAttribBuffers()
+{
+   if (!mActiveShader
+       || !mActiveShader->fetch || !mActiveShader->fetch->attribs.size()
+       || !mActiveShader->vertex || !mActiveShader->vertex->object) {
+      return false;
+   }
+
+   for (auto &attrib : mActiveShader->fetch->attribs) {
+      auto index = attrib.buffer;
+      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
+      auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
+      auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
+      auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
+
+      if (sq_vtx_constant_word6.TYPE != latte::SQ_TEX_VTX_VALID_BUFFER) {
+         gLog->error("No valid buffer set for attrib resource {}", index);
+         return false;
+      }
+
+      auto addr = sq_vtx_constant_word0.BASE_ADDRESS;
+      auto size = sq_vtx_constant_word1.SIZE + 1;
+      auto stride = sq_vtx_constant_word2.STRIDE;
+      auto &buffer = mAttribBuffers[addr];
+
+      if (!buffer.object) {
+         buffer.size = size;
+         buffer.stride = stride;
+
+         gl::glCreateBuffers(1, &buffer.object);
+         gl::glNamedBufferStorage(buffer.object, size, NULL, gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+         buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT);
+      } else if (buffer.size != size || buffer.stride != stride) {
+         throw std::logic_error("Buffer size has changed!");
+      }
+
+      stridedMemcpy(make_virtual_ptr<void *>(addr),
+                    buffer.mappedBuffer,
+                    buffer.size,
+                    attrib.offset,
+                    buffer.stride,
+                    attrib.endianSwap,
+                    attrib.format);
+
+      // TODO: Only flush + bind once per buffer
+      gl::glFlushMappedNamedBufferRange(buffer.object, 0, buffer.size);
+      gl::glBindVertexBuffer(attrib.buffer, buffer.object, 0, buffer.stride);
+   }
+
+   return true;
 }
 
 bool GLDriver::checkActiveColorBuffer()
@@ -225,13 +435,26 @@ bool GLDriver::checkActiveShader()
    // Genearte shader if needed
    if (!shader.object) {
       // Parse fetch shader if needed
-      if (!fetchShader.parsed) {
+      if (!fetchShader.object) {
          auto program = make_virtual_ptr<void>(pgm_start_fs.PGM_START << 8);
          auto size = pgm_size_fs.PGM_SIZE << 3;
 
          if (!parseFetchShader(fetchShader, program, size)) {
             gLog->error("Failed to parse fetch shader");
             return false;
+         }
+
+         // Setup attrib format
+         gl::glCreateVertexArrays(1, &fetchShader.object);
+
+         for (auto &attrib : fetchShader.attribs) {
+            auto normalise = attrib.numFormat == latte::SQ_NUM_FORMAT_SCALED ? gl::GL_TRUE : gl::GL_FALSE;
+            auto type = getAttributeFormat(attrib.format, attrib.formatComp);
+            auto components = getAttributeComponents(attrib.format);
+
+            gl::glEnableVertexArrayAttrib(fetchShader.object, attrib.location);
+            gl::glVertexArrayAttribFormat(fetchShader.object, attrib.location, components, type, normalise, attrib.offset);
+            gl::glVertexArrayAttribBinding(fetchShader.object, attrib.location, attrib.buffer);
          }
       }
 
@@ -259,6 +482,15 @@ bool GLDriver::checkActiveShader()
 
          // Get uniform locations
          vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VC");
+
+         // Get attribute locations
+         vertexShader.attribLocations.fill(0);
+
+         for (auto &attrib : fetchShader.attribs) {
+            char name[32];
+            sprintf_s(name, 32, "fs_out_%u", attrib.location);
+            vertexShader.attribLocations[attrib.location] = gl::glGetAttribLocation(vertexShader.object, name);
+         }
       }
 
       // Compile pixel shader if needed
@@ -287,19 +519,23 @@ bool GLDriver::checkActiveShader()
          pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "VC");
       }
 
-      if (fetchShader.parsed && vertexShader.object && pixelShader.object) {
-         shader.fetch = &fetchShader;
-         shader.vertex = &vertexShader;
-         shader.pixel = &pixelShader;
+      shader.fetch = &fetchShader;
+      shader.vertex = &vertexShader;
+      shader.pixel = &pixelShader;
 
-         // Create pipeline
-         gl::glGenProgramPipelines(1, &shader.object);
-         gl::glUseProgramStages(shader.object, gl::GL_VERTEX_SHADER_BIT, shader.vertex->object);
-         gl::glUseProgramStages(shader.object, gl::GL_FRAGMENT_SHADER_BIT, shader.pixel->object);
-      }
+      // Create pipeline
+      gl::glGenProgramPipelines(1, &shader.object);
+      gl::glUseProgramStages(shader.object, gl::GL_VERTEX_SHADER_BIT, shader.vertex->object);
+      gl::glUseProgramStages(shader.object, gl::GL_FRAGMENT_SHADER_BIT, shader.pixel->object);
    }
 
-   // Bind shader
+   // Set active shader
+   mActiveShader = &shader;
+
+   // Bind fetch shader
+   gl::glBindVertexArray(shader.fetch->object);
+
+   // Bind vertex + pixel shader
    gl::glBindProgramPipeline(shader.object);
    return true;
 }
@@ -352,6 +588,7 @@ readFileToString(const std::string &filename)
 
 void GLDriver::initGL()
 {
+   mRegisters.fill(0);
    activateDeviceContext();
    glbinding::Binding::initialize();
 
@@ -410,7 +647,6 @@ void GLDriver::initGL()
 
    // Create pipeline
    gl::glGenProgramPipelines(1, &mScreenDraw.pipeline);
-   gl::glBindProgramPipeline(mScreenDraw.pipeline);
    gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_VERTEX_SHADER_BIT, mScreenDraw.vertexProgram);
    gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_FRAGMENT_SHADER_BIT, mScreenDraw.pixelProgram);
 
@@ -459,26 +695,24 @@ void GLDriver::initGL()
       SX(drcLeft),  SY(drcBottom),  0.0f, 0.0f,
       SX(drcLeft),  SY(drcTop),     0.0f, 1.0f
    };
-
 #undef SX
 #undef SY
 
-   gl::glGenBuffers(1, &mScreenDraw.vertBuffer);
-   gl::glBindBuffer(gl::GL_ARRAY_BUFFER, mScreenDraw.vertBuffer);
-   gl::glBufferData(gl::GL_ARRAY_BUFFER, sizeof(vertices), vertices, gl::GL_STATIC_DRAW);
+   gl::glCreateBuffers(1, &mScreenDraw.vertBuffer);
+   gl::glNamedBufferData(mScreenDraw.vertBuffer, sizeof(vertices), vertices, gl::GL_STATIC_DRAW);
 
    // Create vertex array
-   gl::glGenVertexArrays(1, &mScreenDraw.vertArray);
-   gl::glBindVertexArray(mScreenDraw.vertArray);
-   gl::glBindBuffer(gl::GL_ARRAY_BUFFER, mScreenDraw.vertBuffer);
+   gl::glCreateVertexArrays(1, &mScreenDraw.vertArray);
 
    auto fs_position = gl::glGetAttribLocation(mScreenDraw.vertexProgram, "fs_position");
-   gl::glEnableVertexAttribArray(fs_position);
-   gl::glVertexAttribPointer(fs_position, 2, gl::GL_FLOAT, gl::GL_FALSE, 4 * sizeof(gl::GLfloat), 0);
+   gl::glEnableVertexArrayAttrib(mScreenDraw.vertArray, fs_position);
+   gl::glVertexArrayAttribFormat(mScreenDraw.vertArray, fs_position, 2, gl::GL_FLOAT, gl::GL_FALSE, 0);
+   gl::glVertexArrayAttribBinding(mScreenDraw.vertArray, fs_position, 0);
 
    auto fs_texCoord = gl::glGetAttribLocation(mScreenDraw.vertexProgram, "fs_texCoord");
-   gl::glEnableVertexAttribArray(fs_texCoord);
-   gl::glVertexAttribPointer(fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 4 * sizeof(gl::GLfloat), (void*)(2 * sizeof(gl::GLfloat)));
+   gl::glEnableVertexArrayAttrib(mScreenDraw.vertArray, fs_texCoord);
+   gl::glVertexArrayAttribFormat(mScreenDraw.vertArray, fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 2 * sizeof(gl::GLfloat));
+   gl::glVertexArrayAttribBinding(mScreenDraw.vertArray, fs_texCoord, 0);
 }
 
 enum {
@@ -495,6 +729,7 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
 
    // Setup screen draw shader
    gl::glBindVertexArray(mScreenDraw.vertArray);
+   gl::glBindVertexBuffer(0, mScreenDraw.vertBuffer, 0, 4 * sizeof(gl::GLfloat));
    gl::glBindProgramPipeline(mScreenDraw.pipeline);
 
    // Draw screen quad
@@ -629,8 +864,10 @@ void GLDriver::setSamplers(pm4::SetSamplers &data)
 
 void GLDriver::setResources(pm4::SetResources &data)
 {
+   auto id = latte::Register::ResourceRegisterBase + (4 * data.id);
+
    for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+      setRegister(static_cast<latte::Register::Value>(id + i * 4), data.values[i]);
    }
 }
 

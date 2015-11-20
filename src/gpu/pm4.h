@@ -337,9 +337,9 @@ struct SetVtxResource
    uint32_t id;
    virtual_ptr<const void> baseAddress;
    uint32_t size;
-   latte::SQ_VTX_CONSTANT_WORD2_0 word2;
-   latte::SQ_VTX_CONSTANT_WORD3_0 word3;
-   latte::SQ_VTX_CONSTANT_WORD6_0 word6;
+   latte::SQ_VTX_CONSTANT_WORD2_N word2;
+   latte::SQ_VTX_CONSTANT_WORD3_N word3;
+   latte::SQ_VTX_CONSTANT_WORD6_N word6;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -363,13 +363,13 @@ struct SetTexResource
    static const auto Opcode = Opcode3::SET_RESOURCE;
 
    uint32_t id;
-   latte::SQ_TEX_RESOURCE_WORD0_0 word0;
-   latte::SQ_TEX_RESOURCE_WORD1_0 word1;
+   latte::SQ_TEX_RESOURCE_WORD0_N word0;
+   latte::SQ_TEX_RESOURCE_WORD1_N word1;
    virtual_ptr<void> baseAddress;
    virtual_ptr<void> mipAddress;
-   latte::SQ_TEX_RESOURCE_WORD4_0 word4;
-   latte::SQ_TEX_RESOURCE_WORD5_0 word5;
-   latte::SQ_TEX_RESOURCE_WORD6_0 word6;
+   latte::SQ_TEX_RESOURCE_WORD4_N word4;
+   latte::SQ_TEX_RESOURCE_WORD5_N word5;
+   latte::SQ_TEX_RESOURCE_WORD6_N word6;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -389,13 +389,13 @@ struct SetResources
 {
    static const auto Opcode = Opcode3::SET_RESOURCE;
 
-   latte::Register::Value id;
+   uint32_t id;
    gsl::array_view<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::ResourceRegisterBase);
+      se(id);
       se(values);
    }
 };

@@ -21,11 +21,11 @@ struct GX2Texture
 
    struct
    {
-      be_val<latte::SQ_TEX_RESOURCE_WORD0_0> word0;
-      be_val<latte::SQ_TEX_RESOURCE_WORD1_0> word1;
-      be_val<latte::SQ_TEX_RESOURCE_WORD4_0> word4;
-      be_val<latte::SQ_TEX_RESOURCE_WORD5_0> word5;
-      be_val<latte::SQ_TEX_RESOURCE_WORD6_0> word6;
+      be_val<latte::SQ_TEX_RESOURCE_WORD0_N> word0;
+      be_val<latte::SQ_TEX_RESOURCE_WORD1_N> word1;
+      be_val<latte::SQ_TEX_RESOURCE_WORD4_N> word4;
+      be_val<latte::SQ_TEX_RESOURCE_WORD5_N> word5;
+      be_val<latte::SQ_TEX_RESOURCE_WORD6_N> word6;
    } regs;
 };
 CHECK_OFFSET(GX2Texture, 0x0, surface);
