@@ -3,6 +3,7 @@
 #include <gsl.h>
 #include <fstream>
 
+#include "platform/platform_ui.h"
 #include "gpu/commandqueue.h"
 #include "gpu/pm4_buffer.h"
 #include "gpu/pm4_reader.h"
@@ -363,6 +364,14 @@ void GLDriver::initGL()
       }
    });
 
+   // Set a background color for emu window.
+   gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
+   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+   // Sneakily assume double-buffering...
+   swapBuffers();
+   gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
+   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+
    // Clear active state
    mActiveShader = nullptr;
    mActiveDepthBuffer = nullptr;
@@ -405,16 +414,54 @@ void GLDriver::initGL()
    gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_VERTEX_SHADER_BIT, mScreenDraw.vertexProgram);
    gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_FRAGMENT_SHADER_BIT, mScreenDraw.pixelProgram);
 
+   float wndWidth = static_cast<float>(platform::ui::getWindowWidth());
+   float wndHeight = static_cast<float>(platform::ui::getWindowHeight());
+   float tvWidth = static_cast<float>(platform::ui::getTvWidth());
+   float tvHeight = static_cast<float>(platform::ui::getTvHeight());
+   float drcWidth = static_cast<float>(platform::ui::getDrcWidth());
+   float drcHeight = static_cast<float>(platform::ui::getDrcHeight());
+
+   auto tvXHeight = wndHeight * 0.7f;
+   auto tvXWidth = tvWidth * (tvXHeight / tvHeight);
+   auto drcXHeight = wndHeight - tvXHeight;
+   auto drcXWidth = drcWidth * (drcXHeight / drcHeight);
+
+   auto tvTop = 0;
+   auto tvLeft = (wndWidth - tvXWidth) / 2;
+   auto tvBottom = tvTop + tvXHeight;
+   auto tvRight = tvLeft + tvXWidth;
+   auto drcTop = tvBottom;
+   auto drcLeft = (wndWidth - drcXWidth) / 2;
+   auto drcBottom = drcTop + drcXHeight;
+   auto drcRight = drcLeft + drcXWidth;
+
+#define SX(x) (((x)/wndWidth*2)-1)
+#define SY(y) -(((y)/wndHeight*2)-1)
+
+   // (TL, TR, BR)    (BR, BL, TL)
    // Create vertex buffer
    static const gl::GLfloat vertices[] = {
-       -1.0f,  1.0f,  0.0f, 1.0f,
-        1.0f,  1.0f,  1.0f, 1.0f,
-        1.0f, -1.0f,  1.0f, 0.0f,
+      // TV
+      SX(tvLeft),  SY(tvTop),       0.0f, 1.0f,
+      SX(tvRight), SY(tvTop),       1.0f, 1.0f,
+      SX(tvRight), SY(tvBottom),    1.0f, 0.0f,
 
-        1.0f, -1.0f,  1.0f, 0.0f,
-       -1.0f, -1.0f,  0.0f, 0.0f,
-       -1.0f,  1.0f,  0.0f, 1.0f
+      SX(tvRight), SY(tvBottom),    1.0f, 0.0f,
+      SX(tvLeft),  SY(tvBottom),    0.0f, 0.0f,
+      SX(tvLeft),  SY(tvTop),       0.0f, 1.0f,
+
+      // DRC
+      SX(drcLeft),  SY(drcTop),     0.0f, 1.0f,
+      SX(drcRight), SY(drcTop),     1.0f, 1.0f,
+      SX(drcRight), SY(drcBottom),  1.0f, 0.0f,
+
+      SX(drcRight), SY(drcBottom),  1.0f, 0.0f,
+      SX(drcLeft),  SY(drcBottom),  0.0f, 0.0f,
+      SX(drcLeft),  SY(drcTop),     0.0f, 1.0f
    };
+
+#undef SX
+#undef SY
 
    gl::glGenBuffers(1, &mScreenDraw.vertBuffer);
    gl::glBindBuffer(gl::GL_ARRAY_BUFFER, mScreenDraw.vertBuffer);
@@ -434,16 +481,14 @@ void GLDriver::initGL()
    gl::glVertexAttribPointer(fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 4 * sizeof(gl::GLfloat), (void*)(2 * sizeof(gl::GLfloat)));
 }
 
+enum {
+   SCANTARGET_TV = 1,
+   SCANTARGET_DRC = 4,
+};
 void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
 {
    auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
    auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
-
-   if (data.scanTarget == 1) {
-      // TV
-   } else if (data.scanTarget == 4) {
-      // DRC
-   }
 
    // Unbind active framebuffer
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0);
@@ -457,7 +502,13 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
    gl::glDisable(gl::GL_DEPTH_TEST);
    gl::glActiveTexture(gl::GL_TEXTURE0);
    gl::glBindTexture(gl::GL_TEXTURE_2D, buffer->object);
-   gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
+   if (data.scanTarget == SCANTARGET_TV) {
+      gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
+   } else if (data.scanTarget == SCANTARGET_DRC) {
+      gl::glDrawArrays(gl::GL_TRIANGLES, 6, 6);
+   } else {
+      gLog->error("decafCopyColorToScan called for unknown scanTarget.");
+   }
 
    // Rebind active framebuffer
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
@@ -659,9 +710,9 @@ void GLDriver::setDrcDisplay(size_t width, size_t height)
 {
 }
 
-void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t size)
+void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
 {
-   for (auto pos = 0u; pos < size; ) {
+   for (auto pos = 0u; pos < buffer_size; ) {
       auto header = *reinterpret_cast<pm4::PacketHeader *>(&buffer[pos]);
       auto size = 0u;
 
