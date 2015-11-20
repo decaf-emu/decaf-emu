@@ -325,7 +325,7 @@ void translateAluSource(GenerateState &state, AluSource &src)
 
 void translateAluSourceVector(GenerateState &state, AluSource &srcX, AluSource &srcY, AluSource &srcZ, AluSource &srcW)
 {
-   state.out << "float4(";
+   state.out << "vec4(";
    translateAluSource(state, srcX);
    state.out << ", ";
    translateAluSource(state, srcY);
