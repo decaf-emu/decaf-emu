@@ -16,6 +16,7 @@ namespace opengl
 {
 
 static const auto MAX_ATTRIB_COUNT = 16u;
+static const auto MAX_COLOR_BUFFER_COUNT = 8u;
 
 struct FetchShader
 {
@@ -179,7 +180,7 @@ private:
 
    FrameBuffer mFrameBuffer;
    DepthBuffer *mActiveDepthBuffer;
-   std::array<ColorBuffer *, 8> mActiveColorBuffers;
+   std::array<ColorBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;
 
 #ifdef PLATFORM_WINDOWS
    uint64_t mDeviceContext;

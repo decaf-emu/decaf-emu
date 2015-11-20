@@ -314,7 +314,7 @@ bool GLDriver::checkActiveAttribBuffers()
 
 bool GLDriver::checkActiveColorBuffer()
 {
-   for (auto i = 0u; i < 8; ++i) {
+   for (auto i = 0u; i < mActiveColorBuffers.size(); ++i) {
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
       auto &active = mActiveColorBuffers[i];
 
@@ -737,6 +737,7 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
    gl::glDisable(gl::GL_DEPTH_TEST);
    gl::glActiveTexture(gl::GL_TEXTURE0);
    gl::glBindTexture(gl::GL_TEXTURE_2D, buffer->object);
+
    if (data.scanTarget == SCANTARGET_TV) {
       gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
    } else if (data.scanTarget == SCANTARGET_DRC) {
@@ -801,6 +802,47 @@ void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
    if (!checkReadyDraw()) {
       return;
    }
+
+   auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
+   auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
+   gl::GLenum mode;
+
+   switch (vgt_primitive_type.PRIM_TYPE) {
+   case latte::VGT_DI_PT_POINTLIST:
+      mode = gl::GL_POINTS;
+      break;
+   case latte::VGT_DI_PT_LINELIST:
+      mode = gl::GL_LINES;
+      break;
+   case latte::VGT_DI_PT_LINESTRIP:
+      mode = gl::GL_LINE_STRIP;
+      break;
+   case latte::VGT_DI_PT_TRILIST:
+      mode = gl::GL_TRIANGLES;
+      break;
+   case latte::VGT_DI_PT_TRIFAN:
+      mode = gl::GL_TRIANGLE_FAN;
+      break;
+   case latte::VGT_DI_PT_TRISTRIP:
+      mode = gl::GL_TRIANGLE_STRIP;
+      break;
+   case latte::VGT_DI_PT_LINELOOP:
+      mode = gl::GL_LINE_LOOP;
+      break;
+   case latte::VGT_DI_PT_QUADLIST:
+      mode = gl::GL_QUADS;
+      break;
+   case latte::VGT_DI_PT_QUADSTRIP:
+      mode = gl::GL_QUAD_STRIP;
+      break;
+   case latte::VGT_DI_PT_POLYGON:
+      mode = gl::GL_POLYGON;
+      break;
+   default:
+      throw std::logic_error("Invalid VGT_PRIMITIVE_TYPE");
+   }
+
+   gl::glDrawArrays(mode, sq_vtx_base_vtx_loc.OFFSET, data.indexCount);
 }
 
 void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
