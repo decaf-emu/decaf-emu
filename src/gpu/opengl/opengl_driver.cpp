@@ -797,17 +797,10 @@ void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
 {
 }
 
-void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
+gl::GLenum getGlPrimitiveType(latte::VGT_DI_PRIMITIVE_TYPE primType)
 {
-   if (!checkReadyDraw()) {
-      return;
-   }
-
-   auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
-   auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
    gl::GLenum mode;
-
-   switch (vgt_primitive_type.PRIM_TYPE) {
+   switch (primType) {
    case latte::VGT_DI_PT_POINTLIST:
       mode = gl::GL_POINTS;
       break;
@@ -841,7 +834,19 @@ void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
    default:
       throw std::logic_error("Invalid VGT_PRIMITIVE_TYPE");
    }
+   return mode;
+}
 
+void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
+{
+   if (!checkReadyDraw()) {
+      return;
+   }
+
+   auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
+   auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
+
+   gl::GLenum mode = getGlPrimitiveType(vgt_primitive_type.PRIM_TYPE);
    gl::glDrawArrays(mode, sq_vtx_base_vtx_loc.OFFSET, data.indexCount);
 }
 
@@ -850,6 +855,15 @@ void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
    if (!checkReadyDraw()) {
       return;
    }
+
+   auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
+   auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
+   auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
+
+   gl::GLenum mode = getGlPrimitiveType(vgt_primitive_type.PRIM_TYPE);
+
+   //uint16_t *indices = nullptr;
+   //gl::glDrawElementsBaseVertex(mode, data.numIndices, gl::GL_UNSIGNED_SHORT, indices, sq_vtx_base_vtx_loc.OFFSET);
 }
 
 void GLDriver::indexType(pm4::IndexType &data)
