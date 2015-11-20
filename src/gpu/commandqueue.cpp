@@ -28,7 +28,7 @@ public:
          mQueueCV.wait(lock);
       }
 
-      auto next = mQueue.back();
+      auto next = mQueue.front();
       mQueue.pop();
       return next;
    }
