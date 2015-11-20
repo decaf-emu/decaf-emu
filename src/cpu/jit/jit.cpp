@@ -298,7 +298,7 @@ namespace jit
          if (((lclCia - fnStart) >> 2) > JIT_MAX_INST) {
             fnMax = lclCia - 4;
             fnEnd = fnMax + 4;
-            gLog->warn("Bailing on JIT {:08x} due to max instruction limit at {:08x}", block.start, lclCia);
+            gLog->trace("Bailing on JIT {:08x} due to max instruction limit at {:08x}", block.start, lclCia);
             break;
          }
       }
