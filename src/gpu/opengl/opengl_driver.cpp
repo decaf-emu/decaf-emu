@@ -291,7 +291,7 @@ bool GLDriver::checkActiveAttribBuffers()
 
          gl::glCreateBuffers(1, &buffer.object);
          gl::glNamedBufferStorage(buffer.object, size, NULL, gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
-         buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT);
+         buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
       } else if (buffer.size != size || buffer.stride != stride) {
          throw std::logic_error("Buffer size has changed!");
       }
