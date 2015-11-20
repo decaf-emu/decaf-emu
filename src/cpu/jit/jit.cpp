@@ -13,7 +13,7 @@ namespace jit
 {
 
    static const bool JIT_DEBUG = true;
-   static const int JIT_MAX_INST = 20000;
+   static const int JIT_MAX_INST = 500;
 
    static std::vector<jitinstrfptr_t>
    sInstructionMap;
