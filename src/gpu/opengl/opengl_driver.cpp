@@ -822,19 +822,75 @@ gl::GLenum getGlPrimitiveType(latte::VGT_DI_PRIMITIVE_TYPE primType)
    case latte::VGT_DI_PT_LINELOOP:
       mode = gl::GL_LINE_LOOP;
       break;
-   case latte::VGT_DI_PT_QUADLIST:
-      mode = gl::GL_QUADS;
-      break;
-   case latte::VGT_DI_PT_QUADSTRIP:
-      mode = gl::GL_QUAD_STRIP;
-      break;
-   case latte::VGT_DI_PT_POLYGON:
-      mode = gl::GL_POLYGON;
-      break;
    default:
       throw std::logic_error("Invalid VGT_PRIMITIVE_TYPE");
    }
    return mode;
+}
+
+template<typename IndexType>
+void drawPrimitives3(gl::GLenum mode, uint32_t offset, uint32_t count, const IndexType *indices)
+{
+   if (!indices) {
+      gl::glDrawArrays(mode, offset, count);
+   } else {
+      if (std::is_same<IndexType, uint16_t>()) {
+         gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_SHORT, indices, offset);
+      } else if (std::is_same<IndexType, uint32_t>()) {
+         gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_INT, indices, offset);
+      } else {
+         throw new std::logic_error("Unexpected index type.");
+      }
+   }
+}
+
+template<typename IndexType>
+void drawQuadList(uint32_t offset, uint32_t count, const IndexType *indices)
+{
+   auto triCount = count * 6 / 4;
+   auto quadIndices = new IndexType[triCount];
+
+   auto indicesOut = quadIndices;
+   for (auto i = 0u; i < count / 4; ++i) {
+      auto index_tl = *indices++;
+      auto index_tr = *indices++;
+      auto index_br = *indices++;
+      auto index_bl = *indices++;
+
+      *indicesOut++ = index_tl;
+      *indicesOut++ = index_tr;
+      *indicesOut++ = index_bl;
+      *indicesOut++ = index_bl;
+      *indicesOut++ = index_tr;
+      *indicesOut++ = index_br;
+   }
+
+   drawPrimitives3(gl::GL_TRIANGLES, offset, triCount, quadIndices);
+   delete quadIndices;
+}
+
+template<typename IndexType>
+void drawPrimitives2(latte::VGT_DI_PRIMITIVE_TYPE primType, uint32_t offset,
+   uint32_t count, const IndexType *indices)
+{
+   if (primType == latte::VGT_DI_PT_QUADLIST) {
+      return drawQuadList(offset, count, indices);
+   } else {
+      gl::GLenum mode = getGlPrimitiveType(primType);
+      return drawPrimitives3(mode, offset, count, indices);
+   }
+}
+
+void drawPrimitives(latte::VGT_DI_PRIMITIVE_TYPE primType, uint32_t offset, 
+                    uint32_t count, const void *indices, latte::VGT_INDEX indexFmt)
+{
+   if (indexFmt == latte::VGT_INDEX_16) {
+      drawPrimitives2(primType, offset, count, static_cast<const uint16_t*>(indices));
+   } else if (indexFmt == latte::VGT_INDEX_32) {
+      drawPrimitives2(primType, offset, count, static_cast<const uint32_t*>(indices));
+   } else {
+      throw new std::logic_error("Unexpected index format type.");
+   }
 }
 
 void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
@@ -846,8 +902,8 @@ void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
 
-   gl::GLenum mode = getGlPrimitiveType(vgt_primitive_type.PRIM_TYPE);
-   gl::glDrawArrays(mode, sq_vtx_base_vtx_loc.OFFSET, data.indexCount);
+   drawPrimitives(vgt_primitive_type.PRIM_TYPE, sq_vtx_base_vtx_loc.OFFSET, 
+      data.indexCount, nullptr, latte::VGT_INDEX_32);
 }
 
 void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
@@ -860,10 +916,40 @@ void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
    auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
 
-   gl::GLenum mode = getGlPrimitiveType(vgt_primitive_type.PRIM_TYPE);
+   uint32_t indexBytes = 0;
+   if (vgt_dma_index_type.INDEX_TYPE == latte::VGT_INDEX_16) {
+      indexBytes = data.numIndices * 2;
+   } else if (vgt_dma_index_type.INDEX_TYPE == latte::VGT_INDEX_32) {
+      indexBytes = data.numIndices * 4;
+   } else {
+      throw new std::logic_error("Unexpected vgt_dma_index_type.INDEX_TYPE");
+   }
 
-   //uint16_t *indices = nullptr;
-   //gl::glDrawElementsBaseVertex(mode, data.numIndices, gl::GL_UNSIGNED_SHORT, indices, sq_vtx_base_vtx_loc.OFFSET);
+   // Swap and indexBytes are separate because you can have 32-bit swap,
+   //   but 16-bit indices in some cases...  This is also why we pre-swap
+   //   the data before intercepting QUAD and POLYGON draws.
+   if (vgt_dma_index_type.SWAP_MODE == latte::VGT_DMA_SWAP_16_BIT) {
+      auto *indicesIn = static_cast<uint16_t*>(data.addr.get());
+      auto *indices = new uint16_t[indexBytes / sizeof(uint16_t)];
+      for (auto i = 0u; i < data.numIndices; ++i) {
+         indices[i] = byte_swap(indicesIn[i]);
+      }
+      drawPrimitives(vgt_primitive_type.PRIM_TYPE, sq_vtx_base_vtx_loc.OFFSET,
+         data.numIndices, indices, vgt_dma_index_type.INDEX_TYPE);
+      delete indices;
+   } else if (vgt_dma_index_type.SWAP_MODE == latte::VGT_DMA_SWAP_32_BIT) {
+      auto *indicesIn = static_cast<uint32_t*>(data.addr.get());
+      auto *indices = new uint32_t[indexBytes / sizeof(uint32_t)];
+      for (auto i = 0u; i < data.numIndices; ++i) {
+         indices[i] = byte_swap(indicesIn[i]);
+      }
+      drawPrimitives(vgt_primitive_type.PRIM_TYPE, sq_vtx_base_vtx_loc.OFFSET,
+         data.numIndices, indices, vgt_dma_index_type.INDEX_TYPE);
+      delete indices;
+   } else if (vgt_dma_index_type.SWAP_MODE == latte::VGT_DMA_SWAP_NONE) {
+      drawPrimitives(vgt_primitive_type.PRIM_TYPE, sq_vtx_base_vtx_loc.OFFSET,
+         data.numIndices, data.addr, vgt_dma_index_type.INDEX_TYPE);
+   }
 }
 
 void GLDriver::indexType(pm4::IndexType &data)
