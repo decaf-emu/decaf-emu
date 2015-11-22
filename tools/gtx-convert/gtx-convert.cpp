@@ -128,7 +128,7 @@ struct DdsHeader
    uint32_t	dwDepth;
    uint32_t	dwMipMapCount;
    uint32_t	dwReserved1[11];
-   DdsPixelFormat	ddspf;
+   DdsPixelFormat ddspf;
    uint32_t	dwCaps;
    uint32_t	dwCaps2;
    uint32_t	dwCaps3;
@@ -232,18 +232,5 @@ int main(int argc, char **argv)
       return convert(in, out) ? 0 : -1;
    }
 
-   return 0;
-}
-
-// Stubs to appease the linker gods
-void *
-memory_translate(ppcaddr_t address)
-{
-   return nullptr;
-}
-
-ppcaddr_t
-memory_untranslate(const void *pointer)
-{
    return 0;
 }
