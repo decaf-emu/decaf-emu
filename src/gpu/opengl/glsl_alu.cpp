@@ -251,9 +251,9 @@ void translateAluSource(GenerateState &state, AluSource &src)
       uint32_t blockIdx = src.type - AluSource::UniformBlock0;
 
       if (state.shader->type == latte::Shader::Vertex) {
-         state.out << "VUB[" << blockIdx << "].values[" << src.id;
+         state.out << "VB[" << blockIdx << "].values[" << src.id;
       } else if (state.shader->type == latte::Shader::Pixel) {
-         state.out << "PUB[" << blockIdx << "].values[" << src.id;
+         state.out << "PB[" << blockIdx << "].values[" << src.id;
       } else {
          throw;
       }
@@ -268,9 +268,9 @@ void translateAluSource(GenerateState &state, AluSource &src)
    }
    case AluSource::ConstantFile: // Uniform register
       if (state.shader->type == latte::Shader::Vertex) {
-         state.out << "VC[" << src.id;
+         state.out << "VR[" << src.id;
       } else if (state.shader->type == latte::Shader::Pixel) {
-         state.out << "PC[" << src.id;
+         state.out << "PR[" << src.id;
       } else {
          throw std::runtime_error("Unexpected shader type for ConstantFile");
       }

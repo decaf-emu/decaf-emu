@@ -167,7 +167,14 @@ bool GLDriver::checkActiveShader()
          }
 
          // Get uniform locations
-         vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VC");
+         vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VR");
+         vertexShader.uniformBlocks.fill(0);
+
+         for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
+            char name[32];
+            sprintf_s(name, 32, "VertexBlock[%u]", i);
+            vertexShader.uniformBlocks[i] = gl::glGetUniformLocation(vertexShader.object, name);
+         }
 
          // Get attribute locations
          vertexShader.attribLocations.fill(0);
@@ -202,7 +209,14 @@ bool GLDriver::checkActiveShader()
          }
 
          // Get uniform locations
-         pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "VC");
+         pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "PR");
+         pixelShader.uniformBlocks.fill(0);
+
+         for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
+            char name[32];
+            sprintf_s(name, 32, "PixelBlock[%u]", i);
+            pixelShader.uniformBlocks[i] = gl::glGetUniformLocation(pixelShader.object, name);
+         }
       }
 
       shader.fetch = &fetchShader;
@@ -597,14 +611,36 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
 {
    if (sq_config.DX9_CONSTS) {
       // Uniform registers
-      out << "uniform vec4 VC[256];\n";
+      out << "uniform vec4 ";
+
+      if (shader.type == latte::Shader::Vertex) {
+         out << "VR";
+      } else {
+         out << "PR";
+      }
+
+      out << "[" << MAX_UNIFORM_REGISTERS << "];\n";
    } else {
       // Uniform blocks
-      // TODO: Change max size of VUB
-      out
-         << "uniform VertexUB {\n"
+      out << "uniform ";
+
+      if (shader.type == latte::Shader::Vertex) {
+         out << "VertexBlock";
+      } else {
+         out << "PixelBlock";
+      }
+
+      out << " {\n"
          << "   vec4 values[];\n"
-         << "} VUB[4];\n";
+         << "} ";
+
+      if (shader.type == latte::Shader::Vertex) {
+         out << "VB";
+      } else {
+         out << "PB";
+      }
+
+      out << "[4];\n";
    }
 
    // Samplers

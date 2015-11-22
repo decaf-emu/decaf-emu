@@ -17,6 +17,8 @@ namespace opengl
 
 static const auto MAX_ATTRIB_COUNT = 16u;
 static const auto MAX_COLOR_BUFFER_COUNT = 8u;
+static const auto MAX_UNIFORM_BLOCKS = 8u;
+static const auto MAX_UNIFORM_REGISTERS = 256u;
 
 struct FetchShader
 {
@@ -42,15 +44,17 @@ struct VertexShader
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
+   std::array<gl::GLuint, MAX_ATTRIB_COUNT> attribLocations;
+   std::array<gl::GLuint, MAX_UNIFORM_BLOCKS> uniformBlocks;
    latte::SQ_PGM_START_VS pgm_start_vs;
    std::string code;
-   std::array<gl::GLuint, MAX_ATTRIB_COUNT> attribLocations;
 };
 
 struct PixelShader
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
+   std::array<gl::GLuint, MAX_UNIFORM_BLOCKS> uniformBlocks;
    latte::SQ_PGM_START_PS pgm_start_ps;
    std::string code;
 };
