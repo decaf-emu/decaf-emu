@@ -791,21 +791,48 @@ void GLDriver::decafClearColor(pm4::DecafClearColor &data)
    auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
    auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
 
-   // Temporarily set to this color buffer
+   // Bind color buffer
    gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, buffer->object, 0);
 
-   // Clear the buffer
+   // Clear color buffer
    gl::glClearBufferfv(gl::GL_COLOR, 0, colors);
 
-   // Clear the temporary color buffer attachement
-   mActiveColorBuffers[0] = nullptr;
-   gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, 0, 0);
+   // Restore original color buffer
+   if (mActiveColorBuffers[0]) {
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, mActiveColorBuffers[0]->object, 0);
+   } else {
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, 0, 0);
+   }
 }
 
 void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
 {
    auto db_depth_clear = getRegister<latte::DB_DEPTH_CLEAR>(latte::Register::DB_DEPTH_CLEAR);
    auto db_stencil_clear = getRegister<latte::DB_STENCIL_CLEAR>(latte::Register::DB_STENCIL_CLEAR);
+
+   // Check if this is the active depth buffer
+   if (mActiveDepthBuffer && mActiveDepthBuffer->db_depth_base.BASE_256B == data.bufferAddr) {
+      // Clear active
+      gl::glClearBufferfi(gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR);
+      return;
+   }
+
+   // Find our depthbuffer to clear
+   auto db_depth_base = bit_cast<latte::DB_DEPTH_BASE>(data.bufferAddr);
+   auto buffer = getDepthBuffer(db_depth_base, data.db_depth_size, data.db_depth_info);
+
+   // Bind depth buffer
+   gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, buffer->object, 0);
+
+   // Clear depth buffer
+   gl::glClearBufferfi(gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR);
+
+   // Restore original depth buffer
+   if (mActiveDepthBuffer) {
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, mActiveDepthBuffer->object, 0);
+   } else {
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, 0, 0);
+   }
 }
 
 static gl::GLenum
