@@ -157,6 +157,7 @@ private:
    bool checkActiveShader();
    bool checkActiveTextures();
    bool checkActiveUniforms();
+   bool checkViewport();
 
    void setRegister(latte::Register::Value reg, uint32_t value);
 
@@ -176,6 +177,9 @@ private:
    volatile bool mRunning = true;
    std::array<uint32_t, 0x10000> mRegisters;
    std::thread mThread;
+
+   bool mViewportDirty = false;
+   bool mScissorDirty = false;
 
    Shader *mActiveShader = nullptr;
    std::unordered_map<uint32_t, FetchShader> mFetchShaders;

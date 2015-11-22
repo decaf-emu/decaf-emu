@@ -50,6 +50,11 @@ bool GLDriver::checkReadyDraw()
       return false;
    }
 
+   if (!checkViewport()) {
+      gLog->warn("Skipping draw with invalid viewport.");
+      return false;
+   }
+
    return true;
 }
 
@@ -170,6 +175,61 @@ bool GLDriver::checkActiveDepthBuffer()
    return true;
 }
 
+bool
+GLDriver::checkViewport()
+{
+   if (mViewportDirty) {
+      auto pa_cl_vport_xscale = getRegister<latte::PA_CL_VPORT_XSCALE_N>(latte::Register::PA_CL_VPORT_XSCALE_0);
+      auto pa_cl_vport_xoffset = getRegister<latte::PA_CL_VPORT_XOFFSET_N>(latte::Register::PA_CL_VPORT_XOFFSET_0);
+      auto pa_cl_vport_yscale = getRegister<latte::PA_CL_VPORT_YSCALE_N>(latte::Register::PA_CL_VPORT_YSCALE_0);
+      auto pa_cl_vport_yoffset = getRegister<latte::PA_CL_VPORT_YOFFSET_N>(latte::Register::PA_CL_VPORT_YOFFSET_0);
+      auto pa_cl_vport_zscale = getRegister<latte::PA_CL_VPORT_ZSCALE_N>(latte::Register::PA_CL_VPORT_ZSCALE_0);
+      auto pa_cl_vport_zoffset = getRegister<latte::PA_CL_VPORT_ZOFFSET_N>(latte::Register::PA_CL_VPORT_ZOFFSET_0);
+      auto pa_sc_vport_zmin = getRegister<latte::PA_SC_VPORT_ZMIN_N>(latte::Register::PA_SC_VPORT_ZMIN_0);
+      auto pa_sc_vport_zmax = getRegister<latte::PA_SC_VPORT_ZMAX_N>(latte::Register::PA_SC_VPORT_ZMAX_0);
+
+      auto width = pa_cl_vport_xscale.VPORT_XSCALE * 2.0f;
+      auto height = pa_cl_vport_yscale.VPORT_YSCALE * 2.0f;
+
+      auto x = pa_cl_vport_xoffset.VPORT_XOFFSET - pa_cl_vport_xscale.VPORT_XSCALE;
+      auto y = pa_cl_vport_yoffset.VPORT_YOFFSET - pa_cl_vport_yscale.VPORT_YSCALE;
+
+      gl::glViewport(gsl::narrow_cast<gl::GLint>(x),
+                     gsl::narrow_cast<gl::GLint>(y),
+                     gsl::narrow_cast<gl::GLint>(width),
+                     gsl::narrow_cast<gl::GLint>(height));
+
+      float nearZ, farZ;
+
+      if (pa_cl_vport_zscale.VPORT_ZSCALE > 0.0f) {
+         nearZ = pa_sc_vport_zmin.VPORT_ZMIN;
+         farZ = pa_sc_vport_zmax.VPORT_ZMAX;
+      } else {
+         farZ = pa_sc_vport_zmin.VPORT_ZMIN;
+         nearZ = pa_sc_vport_zmax.VPORT_ZMAX;
+      }
+
+      gl::glDepthRangef(nearZ, farZ);
+      mViewportDirty = false;
+   }
+
+   if (mScissorDirty) {
+      auto pa_sc_generic_scissor_tl = getRegister<latte::PA_SC_GENERIC_SCISSOR_TL>(latte::Register::PA_SC_GENERIC_SCISSOR_TL);
+      auto pa_sc_generic_scissor_br = getRegister<latte::PA_SC_GENERIC_SCISSOR_BR>(latte::Register::PA_SC_GENERIC_SCISSOR_BR);
+
+      auto x = pa_sc_generic_scissor_tl.TL_X;
+      auto y = pa_sc_generic_scissor_tl.TL_Y;
+      auto width = pa_sc_generic_scissor_br.BR_X - pa_sc_generic_scissor_tl.TL_X;
+      auto height = pa_sc_generic_scissor_br.BR_Y - pa_sc_generic_scissor_tl.TL_Y;
+
+      gl::glEnable(gl::GL_SCISSOR_TEST);
+      gl::glScissor(x, y, width, height);
+      mScissorDirty = false;
+   }
+
+   return true;
+}
+
 void GLDriver::setRegister(latte::Register::Value reg, uint32_t value)
 {
    // Save to my state
@@ -195,6 +255,20 @@ void GLDriver::setRegister(latte::Register::Value reg, uint32_t value)
    case latte::Register::CB_BLEND6_CONTROL:
    case latte::Register::CB_BLEND7_CONTROL:
       // gl::something();
+   case latte::Register::PA_CL_VPORT_XSCALE_0:
+   case latte::Register::PA_CL_VPORT_XOFFSET_0:
+   case latte::Register::PA_CL_VPORT_YSCALE_0:
+   case latte::Register::PA_CL_VPORT_YOFFSET_0:
+   case latte::Register::PA_CL_VPORT_ZSCALE_0:
+   case latte::Register::PA_CL_VPORT_ZOFFSET_0:
+   case latte::Register::PA_SC_VPORT_ZMIN_0:
+   case latte::Register::PA_SC_VPORT_ZMAX_0:
+      mViewportDirty = true;
+      break;
+
+   case latte::Register::PA_SC_GENERIC_SCISSOR_TL:
+   case latte::Register::PA_SC_GENERIC_SCISSOR_BR:
+      mScissorDirty = true;
       break;
    }
 }
@@ -230,6 +304,9 @@ void GLDriver::initGL()
          gLog->error("OpenGL {} error: {}", call.toString(), error);
       }
    });
+
+   // Set initial viewport
+   gl::glViewport(0, 0, platform::ui::getWindowWidth(), platform::ui::getWindowHeight());
 
    // Set a background color for emu window.
    gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
@@ -267,14 +344,6 @@ void GLDriver::initGL()
    mScreenDraw.pixelProgram = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, &code);
    gl::glBindFragDataLocation(mScreenDraw.pixelProgram, 0, "ps_color");
 
-   gl::GLint logLength = 0;
-   std::string logMessage;
-   gl::glGetProgramiv(mScreenDraw.vertexProgram, gl::GL_INFO_LOG_LENGTH, &logLength);
-
-   logMessage.resize(logLength);
-   gl::glGetProgramInfoLog(mScreenDraw.vertexProgram, logLength, &logLength, &logMessage[0]);
-   gLog->error("Failed to compile vertex shader glsl:\n{}", logMessage);
-
    // Create pipeline
    gl::glGenProgramPipelines(1, &mScreenDraw.pipeline);
    gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_VERTEX_SHADER_BIT, mScreenDraw.vertexProgram);
@@ -287,19 +356,14 @@ void GLDriver::initGL()
    float drcWidth = static_cast<float>(platform::ui::getDrcWidth());
    float drcHeight = static_cast<float>(platform::ui::getDrcHeight());
 
-   auto tvXHeight = wndHeight * 0.7f;
-   auto tvXWidth = tvWidth * (tvXHeight / tvHeight);
-   auto drcXHeight = wndHeight - tvXHeight;
-   auto drcXWidth = drcWidth * (drcXHeight / drcHeight);
-
    auto tvTop = 0;
-   auto tvLeft = (wndWidth - tvXWidth) / 2;
-   auto tvBottom = tvTop + tvXHeight;
-   auto tvRight = tvLeft + tvXWidth;
+   auto tvLeft = (wndWidth - tvWidth) / 2;
+   auto tvBottom = tvTop + tvHeight;
+   auto tvRight = tvLeft + tvWidth;
    auto drcTop = tvBottom;
-   auto drcLeft = (wndWidth - drcXWidth) / 2;
-   auto drcBottom = drcTop + drcXHeight;
-   auto drcRight = drcLeft + drcXWidth;
+   auto drcLeft = (wndWidth - drcWidth) / 2;
+   auto drcBottom = drcTop + drcHeight;
+   auto drcRight = drcLeft + drcWidth;
 
 #define SX(x) (((x)/wndWidth*2)-1)
 #define SY(y) -(((y)/wndHeight*2)-1)
@@ -343,6 +407,8 @@ void GLDriver::initGL()
    gl::glEnableVertexArrayAttrib(mScreenDraw.vertArray, fs_texCoord);
    gl::glVertexArrayAttribFormat(mScreenDraw.vertArray, fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 2 * sizeof(gl::GLfloat));
    gl::glVertexArrayAttribBinding(mScreenDraw.vertArray, fs_texCoord, 0);
+
+   gl::glEnable(gl::GL_TEXTURE_2D);
 }
 
 enum
@@ -358,6 +424,10 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
 
    // Unbind active framebuffer
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0);
+
+   // Setup viewport
+   gl::glViewport(0, 0, platform::ui::getWindowWidth(), platform::ui::getWindowHeight());
+   mViewportDirty = true;
 
    // Setup screen draw shader
    gl::glBindVertexArray(mScreenDraw.vertArray);
