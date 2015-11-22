@@ -65,13 +65,12 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE &cb_color_base,
       auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch);
 
       // Create color buffer
-      gl::glGenTextures(1, &buffer->object);
-      gl::glBindTexture(gl::GL_TEXTURE_2D, buffer->object);
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-      gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<int>(gl::GL_RGBA), pitch, height, 0, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, 0);
+      gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &buffer->object);
+      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
+      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+      gl::glTextureStorage2D(buffer->object, 1, gl::GL_RGBA8, pitch, height);
    }
 
    return buffer;
@@ -94,14 +93,12 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
       auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch);
 
       // Create depth buffer
-      gl::glGenTextures(1, &buffer->object);
-      gl::glBindTexture(gl::GL_TEXTURE_2D, buffer->object);
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-      gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_COMPARE_MODE, static_cast<int>(gl::GL_NONE));
-      gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<int>(gl::GL_DEPTH_COMPONENT32), pitch, height, 0, gl::GL_DEPTH_COMPONENT, gl::GL_FLOAT, 0);
+      gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &buffer->object);
+      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
+      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+      gl::glTextureStorage2D(buffer->object, 1, gl::GL_DEPTH_COMPONENT32F, pitch, height);
    }
 
    return buffer;
