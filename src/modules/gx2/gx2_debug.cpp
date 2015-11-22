@@ -9,7 +9,7 @@
 #include "gpu/latte.h"
 #include "gpu/opengl/glsl_generator.h"
 #include "memory_translate.h"
-#include "gpu/latte_untile.h"
+#include "gpu/latte_format.h"
 #include "gpu/gfd.h"
 
 #pragma pack(1)
@@ -171,7 +171,7 @@ GX2DebugDumpTexture(const GX2Texture *texture)
    GX2DebugDumpGTX(texture);
 
    // Write DDS
-   std::vector<uint8_t> data;
+   /*std::vector<uint8_t> data;
    size_t rowPitch;
    latte::untileSurface(&texture->surface, data, rowPitch);
 
@@ -199,7 +199,7 @@ GX2DebugDumpTexture(const GX2Texture *texture)
    auto binaryDds = std::ofstream{ "dump/" + filename + ".dds", std::ofstream::out | std::ofstream::binary };
    GX2DebugDumpData(binaryDds, "DDS ", 4);
    GX2DebugDumpData(binaryDds, &ddsHeader, sizeof(ddsHeader));
-   GX2DebugDumpData(binaryDds, &data[0], data.size());
+   GX2DebugDumpData(binaryDds, &data[0], data.size());*/
 }
 
 static void

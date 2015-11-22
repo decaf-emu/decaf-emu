@@ -8,7 +8,7 @@
 #include "gpu/pm4_buffer.h"
 #include "gpu/pm4_reader.h"
 #include "gpu/latte_registers.h"
-#include "gpu/latte_untile.h"
+#include "gpu/latte_format.h"
 #include "opengl_driver.h"
 #include "utils/log.h"
 
@@ -20,6 +20,16 @@ namespace opengl
 
 bool GLDriver::checkReadyDraw()
 {
+   if (!checkActiveColorBuffer()) {
+      gLog->warn("Skipping draw with invalid color buffer.");
+      return false;
+   }
+
+   if (!checkActiveDepthBuffer()) {
+      gLog->warn("Skipping draw with invalid depth buffer.");
+      return false;
+   }
+
    if (!checkActiveShader()) {
       gLog->warn("Skipping draw with invalid shader.");
       return false;
@@ -35,13 +45,8 @@ bool GLDriver::checkReadyDraw()
       return false;
    }
 
-   if (!checkActiveColorBuffer()) {
-      gLog->warn("Skipping draw with invalid color buffer.");
-      return false;
-   }
-
-   if (!checkActiveDepthBuffer()) {
-      gLog->warn("Skipping draw with invalid depth buffer.");
+   if (!checkActiveTextures()) {
+      gLog->warn("Skipping draw with invalid textures.");
       return false;
    }
 
@@ -104,211 +109,6 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
    return buffer;
 }
 
-static gl::GLenum
-getAttributeFormat(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
-{
-   bool isSigned = (formatComp == latte::SQ_FORMAT_COMP_SIGNED);
-
-   switch (format) {
-   case latte::FMT_8:
-   case latte::FMT_8_8:
-   case latte::FMT_8_8_8:
-   case latte::FMT_8_8_8_8:
-      return isSigned ? gl::GL_BYTE : gl::GL_UNSIGNED_BYTE;
-   case latte::FMT_16:
-   case latte::FMT_16_16:
-   case latte::FMT_16_16_16:
-   case latte::FMT_16_16_16_16:
-      return isSigned ? gl::GL_SHORT : gl::GL_UNSIGNED_SHORT;
-   case latte::FMT_16_FLOAT:
-   case latte::FMT_16_16_FLOAT:
-   case latte::FMT_16_16_16_FLOAT:
-   case latte::FMT_16_16_16_16_FLOAT:
-      return gl::GL_HALF_FLOAT;
-   case latte::FMT_32:
-   case latte::FMT_32_32:
-   case latte::FMT_32_32_32:
-   case latte::FMT_32_32_32_32:
-      return isSigned ? gl::GL_INT : gl::GL_UNSIGNED_INT;
-   case latte::FMT_32_FLOAT:
-   case latte::FMT_32_32_FLOAT:
-   case latte::FMT_32_32_32_FLOAT:
-   case latte::FMT_32_32_32_32_FLOAT:
-      return gl::GL_FLOAT;
-   default:
-      throw std::logic_error("Unsupported attribute format");
-      return gl::GL_BYTE;
-   }
-}
-
-static gl::GLint
-getAttributeComponents(latte::SQ_DATA_FORMAT format)
-{
-   switch (format) {
-   case latte::FMT_8:
-   case latte::FMT_16:
-   case latte::FMT_16_FLOAT:
-   case latte::FMT_32:
-   case latte::FMT_32_FLOAT:
-      return 1;
-   case latte::FMT_8_8:
-   case latte::FMT_16_16:
-   case latte::FMT_16_16_FLOAT:
-   case latte::FMT_32_32:
-   case latte::FMT_32_32_FLOAT:
-      return 2;
-   case latte::FMT_8_8_8:
-   case latte::FMT_16_16_16:
-   case latte::FMT_16_16_16_FLOAT:
-   case latte::FMT_32_32_32:
-   case latte::FMT_32_32_32_FLOAT:
-      return 3;
-   case latte::FMT_8_8_8_8:
-   case latte::FMT_16_16_16_16:
-   case latte::FMT_16_16_16_16_FLOAT:
-   case latte::FMT_32_32_32_32:
-   case latte::FMT_32_32_32_32_FLOAT:
-      return 4;
-   default:
-      throw std::logic_error("Unsupported attribute format");
-      return 4;
-   }
-}
-
-template<typename Type, int N>
-void stridedMemcpy2(void *srcBuffer, void *dstBuffer, size_t size, size_t offset, size_t stride, bool endian)
-{
-   auto src = reinterpret_cast<uint8_t *>(srcBuffer) + offset;
-   auto dst = reinterpret_cast<uint8_t *>(dstBuffer) + offset;
-   auto end = reinterpret_cast<uint8_t *>(srcBuffer) + size;
-
-   if (endian) {
-      while (src < end) {
-         auto srcPtr = reinterpret_cast<Type *>(src);
-         auto dstPtr = reinterpret_cast<Type *>(dst);
-
-         for (auto i = 0u; i < N; ++i) {
-            *dstPtr++ = byte_swap(*srcPtr++);
-         }
-
-         src += stride;
-         dst += stride;
-      }
-   } else {
-      while (src < end) {
-         memcpy(src, dst, sizeof(Type) * N);
-         src += stride;
-         dst += stride;
-      }
-   }
-}
-
-void stridedMemcpy(void *src, void *dst, size_t size, size_t offset, size_t stride, latte::SQ_ENDIAN endian, latte::SQ_DATA_FORMAT format)
-{
-   bool swap = (endian != latte::SQ_ENDIAN_NONE);
-
-   switch (format) {
-   case latte::FMT_8:
-      stridedMemcpy2<uint8_t, 1>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_8_8:
-      stridedMemcpy2<uint8_t, 2>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_8_8_8:
-      stridedMemcpy2<uint8_t, 3>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_8_8_8_8:
-      stridedMemcpy2<uint8_t, 4>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_16:
-   case latte::FMT_16_FLOAT:
-      stridedMemcpy2<uint16_t, 1>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_16_16:
-   case latte::FMT_16_16_FLOAT:
-      stridedMemcpy2<uint16_t, 2>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_16_16_16:
-   case latte::FMT_16_16_16_FLOAT:
-      stridedMemcpy2<uint16_t, 3>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_16_16_16_16:
-   case latte::FMT_16_16_16_16_FLOAT:
-      stridedMemcpy2<uint16_t, 4>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_32:
-   case latte::FMT_32_FLOAT:
-      stridedMemcpy2<uint32_t, 1>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_32_32:
-   case latte::FMT_32_32_FLOAT:
-      stridedMemcpy2<uint32_t, 2>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_32_32_32:
-   case latte::FMT_32_32_32_FLOAT:
-      stridedMemcpy2<uint32_t, 3>(src, dst, size, offset, stride, swap);
-      break;
-   case latte::FMT_32_32_32_32:
-   case latte::FMT_32_32_32_32_FLOAT:
-      stridedMemcpy2<uint32_t, 4>(src, dst, size, offset, stride, swap);
-      break;
-   default:
-      throw std::logic_error("Invalid strided memcpy format");
-   }
-}
-
-bool GLDriver::checkActiveAttribBuffers()
-{
-   if (!mActiveShader
-       || !mActiveShader->fetch || !mActiveShader->fetch->attribs.size()
-       || !mActiveShader->vertex || !mActiveShader->vertex->object) {
-      return false;
-   }
-
-   for (auto &attrib : mActiveShader->fetch->attribs) {
-      auto index = attrib.buffer;
-      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
-      auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
-      auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
-      auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
-
-      if (sq_vtx_constant_word6.TYPE != latte::SQ_TEX_VTX_VALID_BUFFER) {
-         gLog->error("No valid buffer set for attrib resource {}", index);
-         return false;
-      }
-
-      auto addr = sq_vtx_constant_word0.BASE_ADDRESS;
-      auto size = sq_vtx_constant_word1.SIZE + 1;
-      auto stride = sq_vtx_constant_word2.STRIDE;
-      auto &buffer = mAttribBuffers[addr];
-
-      if (!buffer.object) {
-         buffer.size = size;
-         buffer.stride = stride;
-
-         gl::glCreateBuffers(1, &buffer.object);
-         gl::glNamedBufferStorage(buffer.object, size, NULL, gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
-         buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
-      } else if (buffer.size != size || buffer.stride != stride) {
-         throw std::logic_error("Buffer size has changed!");
-      }
-
-      stridedMemcpy(make_virtual_ptr<void *>(addr),
-                    buffer.mappedBuffer,
-                    buffer.size,
-                    attrib.offset,
-                    buffer.stride,
-                    attrib.endianSwap,
-                    attrib.format);
-
-      // TODO: Only flush + bind once per buffer
-      gl::glFlushMappedNamedBufferRange(buffer.object, 0, buffer.size);
-      gl::glBindVertexBuffer(attrib.buffer, buffer.object, 0, buffer.stride);
-   }
-
-   return true;
-}
-
 bool GLDriver::checkActiveColorBuffer()
 {
    for (auto i = 0u; i < mActiveColorBuffers.size(); ++i) {
@@ -367,173 +167,6 @@ bool GLDriver::checkActiveDepthBuffer()
 
    // Bind depth buffer
    gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, active->object, 0);
-   return true;
-}
-
-bool GLDriver::checkActiveUniforms()
-{
-   auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
-
-   if (!mActiveShader) {
-      return true;
-   }
-
-   if (sq_config.DX9_CONSTS) {
-      // Upload uniform registers
-      if (mActiveShader->vertex && mActiveShader->vertex->object) {
-         auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_256 / 4]);
-         gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, 256 * 4, values);
-      }
-
-      if (mActiveShader->pixel && mActiveShader->pixel->object) {
-         auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_0 / 4]);
-         gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, 256 * 4, values);
-      }
-   } else {
-      // TODO: Upload uniform blocks
-   }
-
-   return true;
-}
-
-bool GLDriver::checkActiveShader()
-{
-   auto pgm_start_fs = getRegister<latte::SQ_PGM_START_FS>(latte::Register::SQ_PGM_START_FS);
-   auto pgm_start_vs = getRegister<latte::SQ_PGM_START_VS>(latte::Register::SQ_PGM_START_VS);
-   auto pgm_start_ps = getRegister<latte::SQ_PGM_START_PS>(latte::Register::SQ_PGM_START_PS);
-   auto pgm_size_fs = getRegister<latte::SQ_PGM_SIZE_FS>(latte::Register::SQ_PGM_SIZE_FS);
-   auto pgm_size_vs = getRegister<latte::SQ_PGM_SIZE_VS>(latte::Register::SQ_PGM_SIZE_VS);
-   auto pgm_size_ps = getRegister<latte::SQ_PGM_SIZE_PS>(latte::Register::SQ_PGM_SIZE_PS);
-
-   if (mActiveShader &&
-       mActiveShader->fetch && mActiveShader->fetch->pgm_start_fs.PGM_START != pgm_start_fs.PGM_START
-       && mActiveShader->vertex && mActiveShader->vertex->pgm_start_vs.PGM_START != pgm_start_vs.PGM_START
-       && mActiveShader->pixel && mActiveShader->pixel->pgm_start_ps.PGM_START != pgm_start_ps.PGM_START) {
-      // OpenGL shader matches latte shader
-      return true;
-   }
-
-   // Update OpenGL shader
-   auto &fetchShader = mFetchShaders[pgm_start_fs.PGM_START];
-   auto &vertexShader = mVertexShaders[pgm_start_vs.PGM_START];
-   auto &pixelShader = mPixelShaders[pgm_start_ps.PGM_START];
-   auto &shader = mShaders[ShaderKey { pgm_start_fs.PGM_START, pgm_start_vs.PGM_START, pgm_start_ps.PGM_START }];
-
-   auto getProgramLog = [](auto program, auto getFn, auto getInfoFn) {
-      gl::GLint logLength = 0;
-      std::string logMessage;
-      getFn(program, gl::GL_INFO_LOG_LENGTH, &logLength);
-
-      logMessage.resize(logLength);
-      getInfoFn(program, logLength, &logLength, &logMessage[0]);
-      return logMessage;
-   };
-
-   // Genearte shader if needed
-   if (!shader.object) {
-      // Parse fetch shader if needed
-      if (!fetchShader.object) {
-         auto program = make_virtual_ptr<void>(pgm_start_fs.PGM_START << 8);
-         auto size = pgm_size_fs.PGM_SIZE << 3;
-
-         if (!parseFetchShader(fetchShader, program, size)) {
-            gLog->error("Failed to parse fetch shader");
-            return false;
-         }
-
-         // Setup attrib format
-         gl::glCreateVertexArrays(1, &fetchShader.object);
-
-         for (auto &attrib : fetchShader.attribs) {
-            auto normalise = attrib.numFormat == latte::SQ_NUM_FORMAT_SCALED ? gl::GL_TRUE : gl::GL_FALSE;
-            auto type = getAttributeFormat(attrib.format, attrib.formatComp);
-            auto components = getAttributeComponents(attrib.format);
-
-            gl::glEnableVertexArrayAttrib(fetchShader.object, attrib.location);
-            gl::glVertexArrayAttribFormat(fetchShader.object, attrib.location, components, type, normalise, attrib.offset);
-            gl::glVertexArrayAttribBinding(fetchShader.object, attrib.location, attrib.buffer);
-         }
-      }
-
-      // Compile vertex shader if needed
-      if (!vertexShader.object) {
-         auto program = make_virtual_ptr<uint8_t>(pgm_start_vs.PGM_START << 8);
-         auto size = pgm_size_vs.PGM_SIZE << 3;
-
-         if (!compileVertexShader(vertexShader, fetchShader, program, size)) {
-            gLog->error("Failed to recompile vertex shader");
-            return false;
-         }
-
-         // Create OpenGL Shader
-         const gl::GLchar *code[] = { vertexShader.code.c_str() };
-         vertexShader.object = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
-
-         // Check program log
-         auto log = getProgramLog(vertexShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
-         if (log.size()) {
-            gLog->error("OpenGL failed to compile vertex shader:\n{}", log);
-            gLog->error("Shader Code:\n{}\n", vertexShader.code);
-            return false;
-         }
-
-         // Get uniform locations
-         vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VC");
-
-         // Get attribute locations
-         vertexShader.attribLocations.fill(0);
-
-         for (auto &attrib : fetchShader.attribs) {
-            char name[32];
-            sprintf_s(name, 32, "fs_out_%u", attrib.location);
-            vertexShader.attribLocations[attrib.location] = gl::glGetAttribLocation(vertexShader.object, name);
-         }
-      }
-
-      // Compile pixel shader if needed
-      if (!pixelShader.object) {
-         auto program = make_virtual_ptr<uint8_t>(pgm_start_ps.PGM_START << 8);
-         auto size = pgm_size_ps.PGM_SIZE << 3;
-
-         if (!compilePixelShader(pixelShader, program, size)) {
-            gLog->error("Failed to recompile pixel shader");
-            return false;
-         }
-
-         // Create OpenGL Shader
-         const gl::GLchar *code[] = { pixelShader.code.c_str() };
-         pixelShader.object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
-
-         // Check program log
-         auto log = getProgramLog(pixelShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
-         if (log.size()) {
-            gLog->error("OpenGL failed to compile pixel shader:\n{}", log);
-            gLog->error("Shader Code:\n{}\n", pixelShader.code);
-            return false;
-         }
-
-         // Get uniform locations
-         pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "VC");
-      }
-
-      shader.fetch = &fetchShader;
-      shader.vertex = &vertexShader;
-      shader.pixel = &pixelShader;
-
-      // Create pipeline
-      gl::glGenProgramPipelines(1, &shader.object);
-      gl::glUseProgramStages(shader.object, gl::GL_VERTEX_SHADER_BIT, shader.vertex->object);
-      gl::glUseProgramStages(shader.object, gl::GL_FRAGMENT_SHADER_BIT, shader.pixel->object);
-   }
-
-   // Set active shader
-   mActiveShader = &shader;
-
-   // Bind fetch shader
-   gl::glBindVertexArray(shader.fetch->object);
-
-   // Bind vertex + pixel shader
-   gl::glBindProgramPipeline(shader.object);
    return true;
 }
 
@@ -712,10 +345,12 @@ void GLDriver::initGL()
    gl::glVertexArrayAttribBinding(mScreenDraw.vertArray, fs_texCoord, 0);
 }
 
-enum {
+enum
+{
    SCANTARGET_TV = 1,
    SCANTARGET_DRC = 4,
 };
+
 void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
 {
    auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
@@ -792,11 +427,15 @@ void GLDriver::decafClearColor(pm4::DecafClearColor &data)
 
 void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
 {
+   auto db_depth_clear = getRegister<latte::DB_DEPTH_CLEAR>(latte::Register::DB_DEPTH_CLEAR);
+   auto db_stencil_clear = getRegister<latte::DB_STENCIL_CLEAR>(latte::Register::DB_STENCIL_CLEAR);
 }
 
-gl::GLenum getGlPrimitiveType(latte::VGT_DI_PRIMITIVE_TYPE primType)
+static gl::GLenum
+getGlPrimitiveType(latte::VGT_DI_PRIMITIVE_TYPE primType)
 {
    gl::GLenum mode;
+
    switch (primType) {
    case latte::VGT_DI_PT_POINTLIST:
       mode = gl::GL_POINTS;
@@ -822,71 +461,70 @@ gl::GLenum getGlPrimitiveType(latte::VGT_DI_PRIMITIVE_TYPE primType)
    default:
       throw std::logic_error("Invalid VGT_PRIMITIVE_TYPE");
    }
+
    return mode;
 }
 
 template<typename IndexType>
-void drawPrimitives3(gl::GLenum mode, uint32_t offset, uint32_t count, const IndexType *indices)
+static void
+drawPrimitives2(gl::GLenum mode, uint32_t offset, uint32_t count, const IndexType *indices)
 {
    if (!indices) {
       gl::glDrawArrays(mode, offset, count);
-   } else {
-      if (std::is_same<IndexType, uint16_t>()) {
-         gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_SHORT, indices, offset);
-      } else if (std::is_same<IndexType, uint32_t>()) {
-         gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_INT, indices, offset);
-      } else {
-         throw new std::logic_error("Unexpected index type.");
-      }
+   } else if (std::is_same<IndexType, uint16_t>()) {
+      gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_SHORT, indices, offset);
+   } else if (std::is_same<IndexType, uint32_t>()) {
+      gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_INT, indices, offset);
    }
 }
 
 template<typename IndexType>
-void drawQuadList(uint32_t offset, uint32_t count, const IndexType *indices)
+static void
+unpackQuadList(uint32_t offset, uint32_t count, const IndexType *src)
 {
-   auto triCount = count * 6 / 4;
-   auto quadIndices = new IndexType[triCount];
+   auto tris = (count * 6) / 4;
+   auto unpacked = std::vector<IndexType>(tris);
+   auto dst = &unpacked[0];
 
-   auto indicesOut = quadIndices;
+   // Unpack quad indices into triangle indices
    for (auto i = 0u; i < count / 4; ++i) {
-      auto index_tl = *indices++;
-      auto index_tr = *indices++;
-      auto index_br = *indices++;
-      auto index_bl = *indices++;
+      auto index_tl = *src++;
+      auto index_tr = *src++;
+      auto index_br = *src++;
+      auto index_bl = *src++;
 
-      *indicesOut++ = index_tl;
-      *indicesOut++ = index_tr;
-      *indicesOut++ = index_bl;
-      *indicesOut++ = index_bl;
-      *indicesOut++ = index_tr;
-      *indicesOut++ = index_br;
+      *(dst++) = index_tl;
+      *(dst++) = index_tr;
+      *(dst++) = index_bl;
+      *(dst++) = index_bl;
+      *(dst++) = index_tr;
+      *(dst++) = index_br;
    }
 
-   drawPrimitives3(gl::GL_TRIANGLES, offset, triCount, quadIndices);
-   delete quadIndices;
+   drawPrimitives2(gl::GL_TRIANGLES, offset, tris, unpacked.data());
 }
 
-template<typename IndexType>
-void drawPrimitives2(latte::VGT_DI_PRIMITIVE_TYPE primType, uint32_t offset,
-   uint32_t count, const IndexType *indices)
+static void
+drawPrimitives(latte::VGT_DI_PRIMITIVE_TYPE primType,
+               uint32_t offset,
+               uint32_t count,
+               const void *indices,
+               latte::VGT_INDEX indexFmt)
 {
    if (primType == latte::VGT_DI_PT_QUADLIST) {
-      return drawQuadList(offset, count, indices);
+      if (indexFmt == latte::VGT_INDEX_16) {
+         unpackQuadList(offset, count, reinterpret_cast<const uint16_t*>(indices));
+      } else if (indexFmt == latte::VGT_INDEX_32) {
+         unpackQuadList(offset, count, reinterpret_cast<const uint32_t*>(indices));
+      }
    } else {
-      gl::GLenum mode = getGlPrimitiveType(primType);
-      return drawPrimitives3(mode, offset, count, indices);
-   }
-}
+      auto mode = getGlPrimitiveType(primType);
 
-void drawPrimitives(latte::VGT_DI_PRIMITIVE_TYPE primType, uint32_t offset, 
-                    uint32_t count, const void *indices, latte::VGT_INDEX indexFmt)
-{
-   if (indexFmt == latte::VGT_INDEX_16) {
-      drawPrimitives2(primType, offset, count, static_cast<const uint16_t*>(indices));
-   } else if (indexFmt == latte::VGT_INDEX_32) {
-      drawPrimitives2(primType, offset, count, static_cast<const uint32_t*>(indices));
-   } else {
-      throw new std::logic_error("Unexpected index format type.");
+      if (indexFmt == latte::VGT_INDEX_16) {
+         drawPrimitives2(mode, offset, count, reinterpret_cast<const uint16_t*>(indices));
+      } else if (indexFmt == latte::VGT_INDEX_32) {
+         drawPrimitives2(mode, offset, count, reinterpret_cast<const uint32_t*>(indices));
+      }
    }
 }
 
@@ -899,8 +537,11 @@ void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
 
-   drawPrimitives(vgt_primitive_type.PRIM_TYPE, sq_vtx_base_vtx_loc.OFFSET, 
-      data.indexCount, nullptr, latte::VGT_INDEX_32);
+   drawPrimitives(vgt_primitive_type.PRIM_TYPE,
+                  sq_vtx_base_vtx_loc.OFFSET,
+                  data.indexCount,
+                  nullptr,
+                  latte::VGT_INDEX_32);
 }
 
 void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
@@ -913,39 +554,49 @@ void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
    auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
 
-   uint32_t indexBytes = 0;
-   if (vgt_dma_index_type.INDEX_TYPE == latte::VGT_INDEX_16) {
-      indexBytes = data.numIndices * 2;
-   } else if (vgt_dma_index_type.INDEX_TYPE == latte::VGT_INDEX_32) {
-      indexBytes = data.numIndices * 4;
-   } else {
-      throw new std::logic_error("Unexpected vgt_dma_index_type.INDEX_TYPE");
-   }
-
    // Swap and indexBytes are separate because you can have 32-bit swap,
    //   but 16-bit indices in some cases...  This is also why we pre-swap
    //   the data before intercepting QUAD and POLYGON draws.
    if (vgt_dma_index_type.SWAP_MODE == latte::VGT_DMA_SWAP_16_BIT) {
-      auto *indicesIn = static_cast<uint16_t*>(data.addr.get());
-      auto *indices = new uint16_t[indexBytes / sizeof(uint16_t)];
-      for (auto i = 0u; i < data.numIndices; ++i) {
-         indices[i] = byte_swap(indicesIn[i]);
+      auto *src = static_cast<uint16_t*>(data.addr.get());
+      auto indices = std::vector<uint16_t>(data.numIndices);
+
+      if (vgt_dma_index_type.INDEX_TYPE != latte::VGT_INDEX_16) {
+         throw new std::logic_error("Unexpected INDEX_TYPE for VGT_DMA_SWAP_16_BIT");
       }
-      drawPrimitives(vgt_primitive_type.PRIM_TYPE, sq_vtx_base_vtx_loc.OFFSET,
-         data.numIndices, indices, vgt_dma_index_type.INDEX_TYPE);
-      delete indices;
+
+      for (auto i = 0u; i < data.numIndices; ++i) {
+         indices[i] = byte_swap(src[i]);
+      }
+
+      drawPrimitives(vgt_primitive_type.PRIM_TYPE,
+                     sq_vtx_base_vtx_loc.OFFSET,
+                     data.numIndices,
+                     indices.data(),
+                     vgt_dma_index_type.INDEX_TYPE);
    } else if (vgt_dma_index_type.SWAP_MODE == latte::VGT_DMA_SWAP_32_BIT) {
-      auto *indicesIn = static_cast<uint32_t*>(data.addr.get());
-      auto *indices = new uint32_t[indexBytes / sizeof(uint32_t)];
-      for (auto i = 0u; i < data.numIndices; ++i) {
-         indices[i] = byte_swap(indicesIn[i]);
+      auto *src = static_cast<uint32_t*>(data.addr.get());
+      auto indices = std::vector<uint32_t>(data.numIndices);
+
+      if (vgt_dma_index_type.INDEX_TYPE != latte::VGT_INDEX_32) {
+         throw new std::logic_error("Unexpected INDEX_TYPE for VGT_DMA_SWAP_32_BIT");
       }
-      drawPrimitives(vgt_primitive_type.PRIM_TYPE, sq_vtx_base_vtx_loc.OFFSET,
-         data.numIndices, indices, vgt_dma_index_type.INDEX_TYPE);
-      delete indices;
+
+      for (auto i = 0u; i < data.numIndices; ++i) {
+         indices[i] = byte_swap(src[i]);
+      }
+
+      drawPrimitives(vgt_primitive_type.PRIM_TYPE,
+                     sq_vtx_base_vtx_loc.OFFSET,
+                     data.numIndices,
+                     indices.data(),
+                     vgt_dma_index_type.INDEX_TYPE);
    } else if (vgt_dma_index_type.SWAP_MODE == latte::VGT_DMA_SWAP_NONE) {
-      drawPrimitives(vgt_primitive_type.PRIM_TYPE, sq_vtx_base_vtx_loc.OFFSET,
-         data.numIndices, data.addr, vgt_dma_index_type.INDEX_TYPE);
+      drawPrimitives(vgt_primitive_type.PRIM_TYPE,
+                     sq_vtx_base_vtx_loc.OFFSET,
+                     data.numIndices,
+                     data.addr,
+                     vgt_dma_index_type.INDEX_TYPE);
    }
 }
 

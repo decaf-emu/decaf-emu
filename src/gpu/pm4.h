@@ -365,8 +365,8 @@ struct SetTexResource
    uint32_t id;
    latte::SQ_TEX_RESOURCE_WORD0_N word0;
    latte::SQ_TEX_RESOURCE_WORD1_N word1;
-   virtual_ptr<void> baseAddress;
-   virtual_ptr<void> mipAddress;
+   latte::SQ_TEX_RESOURCE_WORD2_N word2;
+   latte::SQ_TEX_RESOURCE_WORD3_N word3;
    latte::SQ_TEX_RESOURCE_WORD4_N word4;
    latte::SQ_TEX_RESOURCE_WORD5_N word5;
    latte::SQ_TEX_RESOURCE_WORD6_N word6;
@@ -377,8 +377,8 @@ struct SetTexResource
       se(id);
       se(word0.value);
       se(word1.value);
-      se(baseAddress);
-      se(mipAddress);
+      se(word2.value);
+      se(word3.value);
       se(word4.value);
       se(word5.value);
       se(word6.value);

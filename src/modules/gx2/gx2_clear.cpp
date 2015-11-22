@@ -18,7 +18,7 @@ GX2ClearColor(GX2ColorBuffer *colorBuffer,
       aaAddr256 = 0;
    }
 
-   pm4::write(pm4::DecafClearColor{
+   pm4::write(pm4::DecafClearColor {
       red, green, blue, alpha,
       addr256,
       aaAddr256,
@@ -29,10 +29,11 @@ GX2ClearColor(GX2ColorBuffer *colorBuffer,
    });
 }
 
-void _GX2ClearDepthStencil(GX2DepthBuffer *depthBuffer, 
-                           GX2ClearFlags::Value clearFlags)
+void
+DecafClearDepthStencil(GX2DepthBuffer *depthBuffer,
+                       GX2ClearFlags::Value clearFlags)
 {
-   pm4::write(pm4::DecafClearDepthStencil{
+   pm4::write(pm4::DecafClearDepthStencil {
       clearFlags,
       depthBuffer->surface.image.getAddress(),
       depthBuffer->regs.db_depth_info,
@@ -47,9 +48,9 @@ GX2ClearDepthStencil(GX2DepthBuffer *depthBuffer,
                      GX2ClearFlags::Value clearFlags)
 {
    uint32_t values[] = { depthBuffer->stencilClear, bit_cast<uint32_t>(depthBuffer->depthClear) };
-   pm4::write(pm4::SetContextRegs{ latte::Register::DB_STENCIL_CLEAR, { values } });
+   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, { values } });
 
-   _GX2ClearDepthStencil(depthBuffer, clearFlags);
+   DecafClearDepthStencil(depthBuffer, clearFlags);
 }
 
 void
@@ -58,9 +59,9 @@ GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
                        GX2ClearFlags::Value clearFlags)
 {
    uint32_t values[] = { stencil, bit_cast<uint32_t>(depth) };
-   pm4::write(pm4::SetContextRegs{ latte::Register::DB_STENCIL_CLEAR, { values } });
+   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, { values } });
 
-   _GX2ClearDepthStencil(depthBuffer, clearFlags);
+   DecafClearDepthStencil(depthBuffer, clearFlags);
 }
 
 void

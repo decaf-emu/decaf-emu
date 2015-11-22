@@ -1,5 +1,5 @@
 #include "gpu/gfd.h"
-#include "gpu/latte_untile.h"
+#include "gpu/latte_format.h"
 #include "modules/gx2/gx2_texture.h"
 #include "modules/gx2/gx2_shaders.h"
 #include "modules/gx2/gx2_enum_string.h"
@@ -165,8 +165,14 @@ convert(const std::string &filenameIn, const std::string &filenameOut)
 
    for (auto &tex : textures) {
       std::vector<uint8_t> untiledData;
-      size_t untiledPitch = 0;
-      latte::untileSurface(&tex.header->surface, tex.imageData.data(), untiledData, untiledPitch);
+      latte::untile(tex.imageData.data(),
+                    tex.header->surface.width,
+                    tex.header->surface.height,
+                    tex.header->surface.pitch,
+                    static_cast<latte::SQ_DATA_FORMAT>(tex.header->surface.format & 0x3F),
+                    static_cast<latte::SQ_TILE_MODE>(tex.header->surface.tileMode.value()),
+                    tex.header->surface.swizzle,
+                    untiledData);
 
       // MAGIC DDS
       DdsHeader ddsHeader;
@@ -175,7 +181,7 @@ convert(const std::string &filenameIn, const std::string &filenameOut)
       ddsHeader.dwFlags = 0x1 | 0x2 | 0x4 | 0x1000 | 0x80000;
       ddsHeader.dwHeight = tex.header->surface.height;
       ddsHeader.dwWidth = tex.header->surface.width;
-      ddsHeader.dwPitchOrLinearSize = (uint32_t)tex.imageData.size();
+      ddsHeader.dwPitchOrLinearSize = (uint32_t)untiledData.size();
       ddsHeader.ddspf.dwSize = sizeof(ddsHeader.ddspf);
       ddsHeader.ddspf.dwFlags = 0x1 | 0x4;
       ddsHeader.dwCaps = 0x1000;

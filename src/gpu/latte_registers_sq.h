@@ -301,7 +301,7 @@ union SQ_TEX_RESOURCE_WORD0_N
    struct
    {
       SQ_TEX_DIM DIM : 3;
-      uint32_t TILE_MODE : 4;
+      SQ_TILE_MODE TILE_MODE : 4;
       uint32_t TILE_TYPE : 1;
       uint32_t PITCH : 11;
       uint32_t TEX_WIDTH : 13;
@@ -320,13 +320,21 @@ union SQ_TEX_RESOURCE_WORD1_N
    };
 };
 
-struct SQ_TEX_RESOURCE_WORD2_N
+union SQ_TEX_RESOURCE_WORD2_N
 {
+   uint32_t value;
    uint32_t BASE_ADDRESS;
+
+   struct
+   {
+      uint32_t SWIZZLE : 3;
+      uint32_t : 29;
+   };
 };
 
-struct SQ_TEX_RESOURCE_WORD3_N
+union SQ_TEX_RESOURCE_WORD3_N
 {
+   uint32_t value;
    uint32_t MIP_ADDRESS;
 };
 

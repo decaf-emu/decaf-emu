@@ -1,7 +1,7 @@
 #include "gx2_surface.h"
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
-#include "gpu/latte_untile.h"
+#include "gpu/latte_format.h"
 #include "gpu/pm4_writer.h"
 #include "utils/log.h"
 #include "utils/align.h"

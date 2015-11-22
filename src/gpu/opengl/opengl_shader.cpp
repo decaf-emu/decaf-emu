@@ -1,3 +1,4 @@
+#include <glbinding/gl/gl.h>
 #include "opengl_driver.h"
 #include "glsl_generator.h"
 #include "gpu/latte_registers.h"
@@ -12,6 +13,380 @@ namespace gpu
 
 namespace opengl
 {
+
+static gl::GLenum
+getAttributeFormat(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
+{
+   bool isSigned = (formatComp == latte::SQ_FORMAT_COMP_SIGNED);
+
+   switch (format) {
+   case latte::FMT_8:
+   case latte::FMT_8_8:
+   case latte::FMT_8_8_8:
+   case latte::FMT_8_8_8_8:
+      return isSigned ? gl::GL_BYTE : gl::GL_UNSIGNED_BYTE;
+   case latte::FMT_16:
+   case latte::FMT_16_16:
+   case latte::FMT_16_16_16:
+   case latte::FMT_16_16_16_16:
+      return isSigned ? gl::GL_SHORT : gl::GL_UNSIGNED_SHORT;
+   case latte::FMT_16_FLOAT:
+   case latte::FMT_16_16_FLOAT:
+   case latte::FMT_16_16_16_FLOAT:
+   case latte::FMT_16_16_16_16_FLOAT:
+      return gl::GL_HALF_FLOAT;
+   case latte::FMT_32:
+   case latte::FMT_32_32:
+   case latte::FMT_32_32_32:
+   case latte::FMT_32_32_32_32:
+      return isSigned ? gl::GL_INT : gl::GL_UNSIGNED_INT;
+   case latte::FMT_32_FLOAT:
+   case latte::FMT_32_32_FLOAT:
+   case latte::FMT_32_32_32_FLOAT:
+   case latte::FMT_32_32_32_32_FLOAT:
+      return gl::GL_FLOAT;
+   default:
+      throw std::logic_error("Unsupported attribute format");
+      return gl::GL_BYTE;
+   }
+}
+
+static gl::GLint
+getAttributeComponents(latte::SQ_DATA_FORMAT format)
+{
+   switch (format) {
+   case latte::FMT_8:
+   case latte::FMT_16:
+   case latte::FMT_16_FLOAT:
+   case latte::FMT_32:
+   case latte::FMT_32_FLOAT:
+      return 1;
+   case latte::FMT_8_8:
+   case latte::FMT_16_16:
+   case latte::FMT_16_16_FLOAT:
+   case latte::FMT_32_32:
+   case latte::FMT_32_32_FLOAT:
+      return 2;
+   case latte::FMT_8_8_8:
+   case latte::FMT_16_16_16:
+   case latte::FMT_16_16_16_FLOAT:
+   case latte::FMT_32_32_32:
+   case latte::FMT_32_32_32_FLOAT:
+      return 3;
+   case latte::FMT_8_8_8_8:
+   case latte::FMT_16_16_16_16:
+   case latte::FMT_16_16_16_16_FLOAT:
+   case latte::FMT_32_32_32_32:
+   case latte::FMT_32_32_32_32_FLOAT:
+      return 4;
+   default:
+      throw std::logic_error("Unsupported attribute format");
+      return 4;
+   }
+}
+
+bool GLDriver::checkActiveShader()
+{
+   auto pgm_start_fs = getRegister<latte::SQ_PGM_START_FS>(latte::Register::SQ_PGM_START_FS);
+   auto pgm_start_vs = getRegister<latte::SQ_PGM_START_VS>(latte::Register::SQ_PGM_START_VS);
+   auto pgm_start_ps = getRegister<latte::SQ_PGM_START_PS>(latte::Register::SQ_PGM_START_PS);
+   auto pgm_size_fs = getRegister<latte::SQ_PGM_SIZE_FS>(latte::Register::SQ_PGM_SIZE_FS);
+   auto pgm_size_vs = getRegister<latte::SQ_PGM_SIZE_VS>(latte::Register::SQ_PGM_SIZE_VS);
+   auto pgm_size_ps = getRegister<latte::SQ_PGM_SIZE_PS>(latte::Register::SQ_PGM_SIZE_PS);
+
+   if (mActiveShader &&
+       mActiveShader->fetch && mActiveShader->fetch->pgm_start_fs.PGM_START != pgm_start_fs.PGM_START
+       && mActiveShader->vertex && mActiveShader->vertex->pgm_start_vs.PGM_START != pgm_start_vs.PGM_START
+       && mActiveShader->pixel && mActiveShader->pixel->pgm_start_ps.PGM_START != pgm_start_ps.PGM_START) {
+      // OpenGL shader matches latte shader
+      return true;
+   }
+
+   // Update OpenGL shader
+   auto &fetchShader = mFetchShaders[pgm_start_fs.PGM_START];
+   auto &vertexShader = mVertexShaders[pgm_start_vs.PGM_START];
+   auto &pixelShader = mPixelShaders[pgm_start_ps.PGM_START];
+   auto &shader = mShaders[ShaderKey { pgm_start_fs.PGM_START, pgm_start_vs.PGM_START, pgm_start_ps.PGM_START }];
+
+   auto getProgramLog = [](auto program, auto getFn, auto getInfoFn) {
+      gl::GLint logLength = 0;
+      std::string logMessage;
+      getFn(program, gl::GL_INFO_LOG_LENGTH, &logLength);
+
+      logMessage.resize(logLength);
+      getInfoFn(program, logLength, &logLength, &logMessage[0]);
+      return logMessage;
+   };
+
+   // Genearte shader if needed
+   if (!shader.object) {
+      // Parse fetch shader if needed
+      if (!fetchShader.object) {
+         auto program = make_virtual_ptr<void>(pgm_start_fs.PGM_START << 8);
+         auto size = pgm_size_fs.PGM_SIZE << 3;
+
+         if (!parseFetchShader(fetchShader, program, size)) {
+            gLog->error("Failed to parse fetch shader");
+            return false;
+         }
+
+         // Setup attrib format
+         gl::glCreateVertexArrays(1, &fetchShader.object);
+
+         for (auto &attrib : fetchShader.attribs) {
+            auto normalise = attrib.numFormat == latte::SQ_NUM_FORMAT_SCALED ? gl::GL_TRUE : gl::GL_FALSE;
+            auto type = getAttributeFormat(attrib.format, attrib.formatComp);
+            auto components = getAttributeComponents(attrib.format);
+
+            gl::glEnableVertexArrayAttrib(fetchShader.object, attrib.location);
+            gl::glVertexArrayAttribFormat(fetchShader.object, attrib.location, components, type, normalise, attrib.offset);
+            gl::glVertexArrayAttribBinding(fetchShader.object, attrib.location, attrib.buffer);
+         }
+      }
+
+      // Compile vertex shader if needed
+      if (!vertexShader.object) {
+         auto program = make_virtual_ptr<uint8_t>(pgm_start_vs.PGM_START << 8);
+         auto size = pgm_size_vs.PGM_SIZE << 3;
+
+         if (!compileVertexShader(vertexShader, fetchShader, program, size)) {
+            gLog->error("Failed to recompile vertex shader");
+            return false;
+         }
+
+         // Create OpenGL Shader
+         const gl::GLchar *code[] = { vertexShader.code.c_str() };
+         vertexShader.object = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
+
+         // Check program log
+         auto log = getProgramLog(vertexShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
+         if (log.size()) {
+            gLog->error("OpenGL failed to compile vertex shader:\n{}", log);
+            gLog->error("Shader Code:\n{}\n", vertexShader.code);
+            return false;
+         }
+
+         // Get uniform locations
+         vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VC");
+
+         // Get attribute locations
+         vertexShader.attribLocations.fill(0);
+
+         for (auto &attrib : fetchShader.attribs) {
+            char name[32];
+            sprintf_s(name, 32, "fs_out_%u", attrib.location);
+            vertexShader.attribLocations[attrib.location] = gl::glGetAttribLocation(vertexShader.object, name);
+         }
+      }
+
+      // Compile pixel shader if needed
+      if (!pixelShader.object) {
+         auto program = make_virtual_ptr<uint8_t>(pgm_start_ps.PGM_START << 8);
+         auto size = pgm_size_ps.PGM_SIZE << 3;
+
+         if (!compilePixelShader(pixelShader, program, size)) {
+            gLog->error("Failed to recompile pixel shader");
+            return false;
+         }
+
+         // Create OpenGL Shader
+         const gl::GLchar *code[] = { pixelShader.code.c_str() };
+         pixelShader.object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
+
+         // Check program log
+         auto log = getProgramLog(pixelShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
+         if (log.size()) {
+            gLog->error("OpenGL failed to compile pixel shader:\n{}", log);
+            gLog->error("Shader Code:\n{}\n", pixelShader.code);
+            return false;
+         }
+
+         // Get uniform locations
+         pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "VC");
+      }
+
+      shader.fetch = &fetchShader;
+      shader.vertex = &vertexShader;
+      shader.pixel = &pixelShader;
+
+      // Create pipeline
+      gl::glGenProgramPipelines(1, &shader.object);
+      gl::glUseProgramStages(shader.object, gl::GL_VERTEX_SHADER_BIT, shader.vertex->object);
+      gl::glUseProgramStages(shader.object, gl::GL_FRAGMENT_SHADER_BIT, shader.pixel->object);
+   }
+
+   // Set active shader
+   mActiveShader = &shader;
+
+   // Bind fetch shader
+   gl::glBindVertexArray(shader.fetch->object);
+
+   // Bind vertex + pixel shader
+   gl::glBindProgramPipeline(shader.object);
+   return true;
+}
+
+bool GLDriver::checkActiveUniforms()
+{
+   auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
+
+   if (!mActiveShader) {
+      return true;
+   }
+
+   if (sq_config.DX9_CONSTS) {
+      // Upload uniform registers
+      if (mActiveShader->vertex && mActiveShader->vertex->object) {
+         auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_256 / 4]);
+         gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, 256 * 4, values);
+      }
+
+      if (mActiveShader->pixel && mActiveShader->pixel->object) {
+         auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_0 / 4]);
+         gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, 256 * 4, values);
+      }
+   } else {
+      // TODO: Upload uniform blocks
+   }
+
+   return true;
+}
+
+template<typename Type, int N>
+static void
+stridedMemcpy2(void *srcBuffer, void *dstBuffer, size_t size, size_t offset, size_t stride, bool endian)
+{
+   auto src = reinterpret_cast<uint8_t *>(srcBuffer) + offset;
+   auto dst = reinterpret_cast<uint8_t *>(dstBuffer) + offset;
+   auto end = reinterpret_cast<uint8_t *>(srcBuffer) + size;
+
+   if (endian) {
+      while (src < end) {
+         auto srcPtr = reinterpret_cast<Type *>(src);
+         auto dstPtr = reinterpret_cast<Type *>(dst);
+
+         for (auto i = 0u; i < N; ++i) {
+            *dstPtr++ = byte_swap(*srcPtr++);
+         }
+
+         src += stride;
+         dst += stride;
+      }
+   } else {
+      while (src < end) {
+         memcpy(src, dst, sizeof(Type) * N);
+         src += stride;
+         dst += stride;
+      }
+   }
+}
+
+static void
+stridedMemcpy(void *src, void *dst, size_t size, size_t offset, size_t stride, latte::SQ_ENDIAN endian, latte::SQ_DATA_FORMAT format)
+{
+   bool swap = (endian != latte::SQ_ENDIAN_NONE);
+
+   switch (format) {
+   case latte::FMT_8:
+      stridedMemcpy2<uint8_t, 1>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_8_8:
+      stridedMemcpy2<uint8_t, 2>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_8_8_8:
+      stridedMemcpy2<uint8_t, 3>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_8_8_8_8:
+      stridedMemcpy2<uint8_t, 4>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_16:
+   case latte::FMT_16_FLOAT:
+      stridedMemcpy2<uint16_t, 1>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_16_16:
+   case latte::FMT_16_16_FLOAT:
+      stridedMemcpy2<uint16_t, 2>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_16_16_16:
+   case latte::FMT_16_16_16_FLOAT:
+      stridedMemcpy2<uint16_t, 3>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_16_16_16_16:
+   case latte::FMT_16_16_16_16_FLOAT:
+      stridedMemcpy2<uint16_t, 4>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_32:
+   case latte::FMT_32_FLOAT:
+      stridedMemcpy2<uint32_t, 1>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_32_32:
+   case latte::FMT_32_32_FLOAT:
+      stridedMemcpy2<uint32_t, 2>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_32_32_32:
+   case latte::FMT_32_32_32_FLOAT:
+      stridedMemcpy2<uint32_t, 3>(src, dst, size, offset, stride, swap);
+      break;
+   case latte::FMT_32_32_32_32:
+   case latte::FMT_32_32_32_32_FLOAT:
+      stridedMemcpy2<uint32_t, 4>(src, dst, size, offset, stride, swap);
+      break;
+   default:
+      throw std::logic_error("Invalid strided memcpy format");
+   }
+}
+
+bool GLDriver::checkActiveAttribBuffers()
+{
+   if (!mActiveShader
+       || !mActiveShader->fetch || !mActiveShader->fetch->attribs.size()
+       || !mActiveShader->vertex || !mActiveShader->vertex->object) {
+      return false;
+   }
+
+   for (auto &attrib : mActiveShader->fetch->attribs) {
+      auto index = attrib.buffer;
+      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
+      auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
+      auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
+      auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
+
+      if (sq_vtx_constant_word6.TYPE != latte::SQ_TEX_VTX_VALID_BUFFER) {
+         gLog->error("No valid buffer set for attrib resource {}", index);
+         return false;
+      }
+
+      auto addr = sq_vtx_constant_word0.BASE_ADDRESS;
+      auto size = sq_vtx_constant_word1.SIZE + 1;
+      auto stride = sq_vtx_constant_word2.STRIDE;
+      auto &buffer = mAttribBuffers[addr];
+
+      if (!buffer.object) {
+         buffer.size = size;
+         buffer.stride = stride;
+
+         gl::glCreateBuffers(1, &buffer.object);
+         gl::glNamedBufferStorage(buffer.object, size, NULL, gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+         buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+      } else if (buffer.size != size || buffer.stride != stride) {
+         throw std::logic_error("Buffer size has changed!");
+      }
+
+      stridedMemcpy(make_virtual_ptr<void *>(addr),
+                    buffer.mappedBuffer,
+                    buffer.size,
+                    attrib.offset,
+                    buffer.stride,
+                    attrib.endianSwap,
+                    attrib.format);
+
+      // TODO: Only flush + bind once per buffer
+      gl::glFlushMappedNamedBufferRange(buffer.object, 0, buffer.size);
+      gl::glBindVertexBuffer(attrib.buffer, buffer.object, 0, buffer.stride);
+   }
+
+   return true;
+}
 
 bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
 {
@@ -234,7 +609,7 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
 
    // Samplers
    for (auto id : shader.samplersUsed) {
-      out << "uniform sampler2D sampler_" << id << ";\n";
+      out << "layout (binding = " << id << ") uniform sampler2D sampler_" << id << ";\n";
    }
 
    // Redeclare gl_PerVertex for Vertex Shaders

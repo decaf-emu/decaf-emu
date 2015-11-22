@@ -76,8 +76,9 @@ union DB_HTILE_SURFACE
    };
 };
 
-struct DB_DEPTH_CLEAR
+union DB_DEPTH_CLEAR
 {
+   uint32_t value;
    float DEPTH_CLEAR;
 };
 

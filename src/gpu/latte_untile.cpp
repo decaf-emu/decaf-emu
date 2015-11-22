@@ -1,10 +1,12 @@
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <exception>
 #include <vector>
 #include "modules/gx2/gx2_format.h"
 #include "modules/gx2/gx2_surface.h"
-#include "latte_untile.h"
+#include "latte_format.h"
+#include "latte_enum_sq.h"
 #include "utils/bitutils.h"
 #include "utils/align.h"
 
@@ -16,12 +18,10 @@ constexpr Type integral_log2(Type n, Type p = 0)
 
 struct TileInfo
 {
-   GX2SurfaceFormat::Value surfaceFormat;
-   GX2TileMode::Value tileMode;
+   latte::SQ_TILE_MODE tileMode;
    size_t numSamples;
    size_t curSample;
    size_t pitchElements;
-   size_t width;
    size_t height;
    size_t swizzle;
    size_t elementBytes;
@@ -32,54 +32,6 @@ struct TileInfo
 
 namespace latte
 {
-
-static inline bool
-GX2TileModeNeedsChannelRotation(GX2TileMode::Value mode)
-{
-   switch (mode) {
-   case GX2TileMode::Tiled2DThin1:
-   case GX2TileMode::Tiled2DThick:
-   case GX2TileMode::Tiled2BThin1:
-   case GX2TileMode::Tiled2BThick:
-   case GX2TileMode::Tiled2DThin2:
-   case GX2TileMode::Tiled2BThin2:
-   case GX2TileMode::Tiled2DThin4:
-   case GX2TileMode::Tiled2BThin4:
-      return false;
-   case GX2TileMode::Tiled3DThin1:
-   case GX2TileMode::Tiled3DThick:
-   case GX2TileMode::Tiled3BThin1:
-   case GX2TileMode::Tiled3BThick:
-      return true;
-   default:
-      throw std::logic_error("Unexpected GX2TileMode");
-      return false;
-   }
-}
-
-static inline bool
-GX2TileModeNeedsBankSwapping(GX2TileMode::Value mode)
-{
-   switch (mode) {
-   case GX2TileMode::Tiled2DThin1:
-   case GX2TileMode::Tiled2DThick:
-   case GX2TileMode::Tiled2DThin2:
-   case GX2TileMode::Tiled2DThin4:
-   case GX2TileMode::Tiled3DThin1:
-   case GX2TileMode::Tiled3DThick:
-      return false;
-   case GX2TileMode::Tiled2BThin1:
-   case GX2TileMode::Tiled2BThick:
-   case GX2TileMode::Tiled2BThin2:
-   case GX2TileMode::Tiled2BThin4:
-   case GX2TileMode::Tiled3BThin1:
-   case GX2TileMode::Tiled3BThick:
-      return true;
-   default:
-      throw std::logic_error("Unexpected GX2TileMode");
-      return false;
-   }
-}
 
 static inline size_t
 get_pixel_number(const TileInfo &info, size_t x, size_t y, size_t z)
@@ -244,7 +196,7 @@ get_2d_offset(const TileInfo &info, size_t x, size_t y, size_t z)
    auto sample_number = info.curSample;
    auto pixel_number = get_pixel_number(info, x, y, z);
 
-   auto macro_tile_size = GX2GetMacroTileSize(info.tileMode);
+   auto macro_tile_size = macroTileSize(info.tileMode);
    auto macro_tile_width = macro_tile_size.first;
    auto macro_tile_height = macro_tile_size.second;
 
@@ -270,8 +222,8 @@ get_2d_offset(const TileInfo &info, size_t x, size_t y, size_t z)
    size_t channel_slice_rotation = 0;
    size_t sample_slice_rotation = 0;
 
-   auto do_channel_rotate = GX2TileModeNeedsChannelRotation(info.tileMode);
-   auto do_bank_swapping = GX2TileModeNeedsBankSwapping(info.tileMode);
+   auto do_channel_rotate = tileModeNeedsChannelRotation(info.tileMode);
+   auto do_bank_swapping = tileModeNeedsBankSwapping(info.tileMode);
 
    // All formats do bank rotation
    auto slice = z / tile_thickness;
@@ -312,74 +264,57 @@ get_2d_offset(const TileInfo &info, size_t x, size_t y, size_t z)
    return offset;
 }
 
-void
-untileSurface(const GX2Surface *surface, const uint8_t *imageData, std::vector<uint8_t> &out, size_t &pitchOut)
+bool
+untile(const uint8_t *image, size_t width, size_t height, size_t pitch, latte::SQ_DATA_FORMAT format, latte::SQ_TILE_MODE tileMode, uint32_t swizzle, std::vector<uint8_t> &out)
 {
-   if (surface->tileMode == GX2TileMode::LinearAligned) {
-      out.resize(surface->imageSize);
-      memcpy(&out[0], imageData, surface->imageSize);
-      pitchOut = surface->pitch;
-      return;
+   if (tileMode == latte::SQ_TILE_MODE_LINEAR_SPECIAL) {
+      return false;
    }
 
-   if (surface->tileMode == GX2TileMode::LinearSpecial) {
-      throw std::runtime_error("Unsupported tile mode LinearSpecial");
-   }
-
-   if (surface->tileMode == GX2TileMode::Default) {
-      throw std::runtime_error("Unsupported tile mode Default");
-   }
-
-   auto blockSize = GX2GetSurfaceBlockSize(surface->format);
-   auto bpe = GX2GetSurfaceElementBytes(surface->format);
-   auto surfaceWidth = align_up<uint32_t>(surface->width, blockSize.first);
-   auto surfaceHeight = align_up<uint32_t>(surface->height, blockSize.second);
-
-   // Setup tiling info
    TileInfo info;
-   info.surfaceFormat = surface->format;
-   info.tileMode = surface->tileMode;
-   info.numSamples = 1; // Used when multisampling
+   info.tileMode = tileMode;
+   info.numSamples = 1;
    info.curSample = 0;
-   info.pitchElements = surfaceWidth / blockSize.first;
-   info.width = surfaceWidth / blockSize.first;
-   info.height = surfaceHeight / blockSize.second;
-   info.swizzle = surface->swizzle;
+   info.pitchElements = pitch;
+   info.height = height;
+   info.swizzle = swizzle;
    info.isDepthTexture = false;
    info.isStencilTexture = false;
-   info.elementBytes = bpe;
-   info.tileThickness = GX2GetTileThickness(surface->tileMode);
+   info.elementBytes = formatBytesPerElement(format);
+   info.tileThickness = tileThickness(tileMode);
 
-   // Setup dst
-   out.resize(surface->imageSize);
+   if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5) {
+      info.pitchElements = (pitch + 3) / 4;
+      info.height = (height + 3) / 4;
+   }
 
-   auto src = imageData;
-   auto dst = out.data();
-   auto pitch = info.pitchElements * bpe;
+   auto size = info.pitchElements * info.height * info.elementBytes;
+   out.resize(size);
 
-   if (info.tileMode == GX2TileMode::Tiled1DThick || info.tileMode == GX2TileMode::Tiled1DThin1) {
+   auto src = image;
+   auto dst = &out[0];
+
+   if (tileMode == latte::SQ_TILE_MODE_LINEAR_ALIGNED) {
+      std::memcpy(dst, src, size);
+   } else if (info.tileMode == latte::SQ_TILE_MODE_TILED_1D_THICK || info.tileMode == latte::SQ_TILE_MODE_TILED_1D_THIN1) {
       for (size_t y = 0; y < info.height; ++y) {
-         for (size_t x = 0; x < info.width; ++x) {
-            auto offset = get_1d_offset(info, x, y, 0);
-            std::memcpy(dst + (y * pitch) + (x * bpe), src + offset, bpe);
+         for (size_t x = 0; x < info.pitchElements; ++x) {
+            auto srcOffset = get_1d_offset(info, x, y, 0);
+            auto dstOffset = (x + y * info.pitchElements) * info.elementBytes;
+            std::memcpy(dst + dstOffset, src + srcOffset, info.elementBytes);
          }
       }
    } else {
       for (size_t y = 0; y < info.height; ++y) {
-         for (size_t x = 0; x < info.width; ++x) {
-            auto offset = get_2d_offset(info, x, y, 0);
-            std::memcpy(dst + (y * pitch) + (x * bpe), src + offset, bpe);
+         for (size_t x = 0; x < info.pitchElements; ++x) {
+            auto srcOffset = get_2d_offset(info, x, y, 0);
+            auto dstOffset = (x + y * info.pitchElements) * info.elementBytes;
+            std::memcpy(dst + dstOffset, src + srcOffset, info.elementBytes);
          }
       }
    }
 
-   pitchOut = pitch;
+   return true;
 }
 
-void
-untileSurface(const GX2Surface *surface, std::vector<uint8_t> &out, size_t &pitchOut)
-{
-   untileSurface(surface, reinterpret_cast<uint8_t*>(surface->image.get()), out, pitchOut);
-}
-
-}
+} // namespace latte

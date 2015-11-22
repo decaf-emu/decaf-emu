@@ -1,6 +1,6 @@
 #include "gx2_format.h"
-#include "gpu/latte_untile.h"
 #include "gpu/latte_enum_sq.h"
+#include "gpu/latte_format.h"
 
 struct GX2SurfaceFormatData
 {
@@ -327,53 +327,11 @@ GX2GetSurfaceColorFormat(GX2SurfaceFormat::Value format)
 size_t
 GX2GetTileThickness(GX2TileMode::Value mode)
 {
-   switch (mode) {
-   case GX2TileMode::LinearAligned:
-   case GX2TileMode::LinearSpecial:
-   case GX2TileMode::Tiled1DThin1:
-   case GX2TileMode::Tiled2DThin1:
-   case GX2TileMode::Tiled2DThin2:
-   case GX2TileMode::Tiled2DThin4:
-   case GX2TileMode::Tiled2BThin1:
-   case GX2TileMode::Tiled2BThin2:
-   case GX2TileMode::Tiled2BThin4:
-   case GX2TileMode::Tiled3DThin1:
-   case GX2TileMode::Tiled3BThin1:
-      return 1;
-   case GX2TileMode::Tiled1DThick:
-   case GX2TileMode::Tiled2DThick:
-   case GX2TileMode::Tiled2BThick:
-   case GX2TileMode::Tiled3DThick:
-   case GX2TileMode::Tiled3BThick:
-      return 4;
-   case GX2TileMode::Default:
-   default:
-      throw std::runtime_error("Unexpected GX2TileMode");
-      return 0;
-   }
+   return latte::tileThickness(static_cast<latte::SQ_TILE_MODE>(mode));
 }
 
 std::pair<size_t, size_t>
 GX2GetMacroTileSize(GX2TileMode::Value mode)
 {
-   switch (mode) {
-   case GX2TileMode::Tiled2DThin1:
-   case GX2TileMode::Tiled2DThick:
-   case GX2TileMode::Tiled2BThin1:
-   case GX2TileMode::Tiled2BThick:
-   case GX2TileMode::Tiled3DThin1:
-   case GX2TileMode::Tiled3DThick:
-   case GX2TileMode::Tiled3BThin1:
-   case GX2TileMode::Tiled3BThick:
-      return { latte::num_banks, latte::num_channels };
-   case GX2TileMode::Tiled2DThin2:
-   case GX2TileMode::Tiled2BThin2:
-      return { latte::num_banks / 2, latte::num_channels * 2 };
-   case GX2TileMode::Tiled2DThin4:
-   case GX2TileMode::Tiled2BThin4:
-      return { latte::num_banks / 4, latte::num_channels * 4 };
-   default:
-      throw std::logic_error("Unexpected GX2TileMode");
-      return { 0, 0 };
-   }
+   return latte::macroTileSize(static_cast<latte::SQ_TILE_MODE>(mode));
 }

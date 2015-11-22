@@ -90,6 +90,11 @@ struct AttributeBuffer
    void *mappedBuffer = nullptr;
 };
 
+struct Texture
+{
+   gl::GLuint object = 0;
+};
+
 struct ScreenDrawData
 {
    gl::GLuint vertexProgram;
@@ -146,6 +151,7 @@ private:
    bool checkActiveColorBuffer();
    bool checkActiveDepthBuffer();
    bool checkActiveShader();
+   bool checkActiveTextures();
    bool checkActiveUniforms();
 
    void setRegister(latte::Register::Value reg, uint32_t value);
@@ -172,6 +178,7 @@ private:
    std::unordered_map<uint32_t, VertexShader> mVertexShaders;
    std::unordered_map<uint32_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
+   std::unordered_map<uint32_t, Texture> mTextures;
 
    ScreenDrawData mScreenDraw;
    std::unordered_map<uint32_t, ColorBuffer> mColorBuffers;

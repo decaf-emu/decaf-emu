@@ -1,5 +1,6 @@
 #include "gx2_format.h"
 #include "gx2_texture.h"
+#include "gpu/latte_format.h"
 #include "gpu/latte_registers.h"
 #include "gpu/pm4_writer.h"
 
@@ -40,7 +41,7 @@ GX2InitTextureRegs(GX2Texture *texture)
    // Word 0
    word0.value = 0;
    word0.DIM = static_cast<latte::SQ_TEX_DIM>(texture->surface.dim & 0x7);
-   word0.TILE_MODE = texture->surface.tileMode;
+   word0.TILE_MODE = static_cast<latte::SQ_TILE_MODE>(texture->surface.tileMode.value());
 
    if (texture->surface.use & GX2SurfaceUse::DepthBuffer) {
       word0.TILE_TYPE = 1;
@@ -55,7 +56,7 @@ GX2InitTextureRegs(GX2Texture *texture)
       elemSize = 1;
    }
 
-   word0.PITCH = ((elemSize * texture->surface.pitch) / 8) - 1;
+   word0.PITCH = ((elemSize * texture->surface.pitch) / latte::tile_width) - 1;
    word0.TEX_WIDTH = texture->surface.width - 1;
 
    // Word 1
@@ -90,8 +91,10 @@ GX2InitTextureRegs(GX2Texture *texture)
 
    if (texture->surface.format & GX2AttribFormatFlags::SCALED) {
       word4.NUM_FORMAT_ALL = latte::SQ_NUM_FORMAT_SCALED;
-   } else if (texture->surface.format & GX2AttribFormatFlags::SIGNED) {
+   } else if (texture->surface.format & GX2AttribFormatFlags::INTEGER) {
       word4.NUM_FORMAT_ALL = latte::SQ_NUM_FORMAT_INT;
+   } else {
+      word4.NUM_FORMAT_ALL = latte::SQ_NUM_FORMAT_NORM;
    }
 
    if (texture->surface.format & GX2AttribFormatFlags::DEGAMMA) {
@@ -132,12 +135,15 @@ GX2InitTextureRegs(GX2Texture *texture)
 void
 GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
 {
+   auto word2 = (texture->surface.image.getAddress() ^ (texture->surface.swizzle & 0xffff)) >> 8;
+   auto word3 = texture->surface.mipmaps.getAddress() >> 8;
+
    pm4::write(pm4::SetTexResource {
       (unit * 7) + latte::SQ_PS_TEX_RESOURCE_0,
       texture->regs.word0,
       texture->regs.word1,
-      texture->surface.image,
-      texture->surface.mipmaps,
+      word2,
+      word3,
       texture->regs.word4,
       texture->regs.word5,
       texture->regs.word6,
@@ -147,12 +153,15 @@ GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
 void
 GX2SetVertexTexture(GX2Texture *texture, uint32_t unit)
 {
+   auto word2 = (texture->surface.image.getAddress() ^ (texture->surface.swizzle & 0xffff)) >> 8;
+   auto word3 = texture->surface.mipmaps.getAddress() >> 8;
+
    pm4::write(pm4::SetTexResource {
       (unit * 7) + latte::SQ_VS_TEX_RESOURCE_0,
       texture->regs.word0,
       texture->regs.word1,
-      texture->surface.image,
-      texture->surface.mipmaps,
+      word2,
+      word3,
       texture->regs.word4,
       texture->regs.word5,
       texture->regs.word6,
