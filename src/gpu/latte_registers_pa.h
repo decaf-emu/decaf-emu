@@ -1,6 +1,7 @@
 #pragma once
 #include "types.h"
 #include "latte_enum_spi.h"
+#include "latte_enum_pa.h"
 
 namespace latte
 {
@@ -272,7 +273,7 @@ union PA_SU_SC_MODE_CNTL
    {
       uint32_t CULL_FRONT : 1;
       uint32_t CULL_BACK : 1;
-      uint32_t FACE : 1;
+      PA_FACE FACE : 1;
       uint32_t POLY_MODE : 2;
       uint32_t POLYMODE_FRONT_PTYPE : 3;
       uint32_t POLYMODE_BACK_PTYPE : 3;

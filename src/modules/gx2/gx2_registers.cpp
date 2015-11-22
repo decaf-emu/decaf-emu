@@ -341,7 +341,7 @@ GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
    auto db_depth_control = reg->db_depth_control.value();
    db_depth_control.Z_ENABLE = depthTest;
    db_depth_control.Z_WRITE_ENABLE = depthWrite;
-   db_depth_control.ZFUNC = static_cast<latte::DB_FRAG_FUNC>(depthCompare);
+   db_depth_control.ZFUNC = static_cast<latte::REF_FUNC>(depthCompare);
    db_depth_control.STENCIL_ENABLE = stencilTest;
    db_depth_control.BACKFACE_ENABLE = backfaceStencil;
    db_depth_control.STENCILFUNC = static_cast<latte::REF_FUNC>(frontStencilFunc);
@@ -394,8 +394,12 @@ GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg)
    pm4::write(pm4::SetContextReg { latte::Register::DB_DEPTH_CONTROL, db_depth_control.value });
 }
 
-void GX2SetStencilMask(uint8_t frontMask, uint8_t frontWriteMask, uint8_t frontRef,
-                       uint8_t backMask, uint8_t backWriteMask, uint8_t backRef)
+void GX2SetStencilMask(uint8_t frontMask,
+                       uint8_t frontWriteMask,
+                       uint8_t frontRef,
+                       uint8_t backMask,
+                       uint8_t backWriteMask,
+                       uint8_t backRef)
 {
    GX2StencilMaskReg reg;
    GX2InitStencilMaskReg(&reg, frontMask, frontWriteMask, frontRef, backMask, backWriteMask, backRef);
@@ -403,30 +407,43 @@ void GX2SetStencilMask(uint8_t frontMask, uint8_t frontWriteMask, uint8_t frontR
 }
 
 void GX2InitStencilMaskReg(GX2StencilMaskReg *reg,
-                       uint8_t frontMask, uint8_t frontWriteMask, uint8_t frontRef,
-                       uint8_t backMask, uint8_t backWriteMask, uint8_t backRef)
+                           uint8_t frontMask,
+                           uint8_t frontWriteMask,
+                           uint8_t frontRef,
+                           uint8_t backMask,
+                           uint8_t backWriteMask,
+                           uint8_t backRef)
 {
    auto db_stencilrefmask = reg->db_stencilrefmask.value();
    auto db_stencilrefmask_bf = reg->db_stencilrefmask_bf.value();
+
    db_stencilrefmask.STENCILREF = frontRef;
    db_stencilrefmask.STENCILMASK = frontMask;
    db_stencilrefmask.STENCILWRITEMASK = frontWriteMask;
+
    db_stencilrefmask_bf.STENCILREF_BF = backRef;
    db_stencilrefmask_bf.STENCILMASK_BF = backMask;
    db_stencilrefmask_bf.STENCILWRITEMASK_BF = backWriteMask;
+
    reg->db_stencilrefmask = db_stencilrefmask;
    reg->db_stencilrefmask_bf = db_stencilrefmask_bf;
 }
 
 void GX2GetStencilMaskReg(GX2StencilMaskReg *reg,
-                          uint8_t *frontMask, uint8_t *frontWriteMask, uint8_t *frontRef,
-                          uint8_t *backMask, uint8_t *backWriteMask, uint8_t *backRef)
+                          uint8_t *frontMask,
+                          uint8_t *frontWriteMask,
+                          uint8_t *frontRef,
+                          uint8_t *backMask,
+                          uint8_t *backWriteMask,
+                          uint8_t *backRef)
 {
    auto db_stencilrefmask = reg->db_stencilrefmask.value();
    auto db_stencilrefmask_bf = reg->db_stencilrefmask_bf.value();
+
    *frontRef = db_stencilrefmask.STENCILREF;
    *frontMask = db_stencilrefmask.STENCILMASK;
    *frontWriteMask = db_stencilrefmask.STENCILWRITEMASK;
+
    *backRef = db_stencilrefmask_bf.STENCILREF_BF;
    *backMask = db_stencilrefmask_bf.STENCILMASK_BF;
    *backWriteMask = db_stencilrefmask_bf.STENCILWRITEMASK_BF;
@@ -436,8 +453,8 @@ void GX2SetStencilMaskReg(GX2StencilMaskReg *reg)
 {
    auto db_stencilrefmask = reg->db_stencilrefmask.value();
    auto db_stencilrefmask_bf = reg->db_stencilrefmask_bf.value();
-   pm4::write(pm4::SetContextReg{ latte::Register::DB_STENCILREFMASK, db_stencilrefmask.value });
-   pm4::write(pm4::SetContextReg{ latte::Register::DB_STENCILREFMASK_BF, db_stencilrefmask_bf.value });
+   pm4::write(pm4::SetContextReg { latte::Register::DB_STENCILREFMASK, db_stencilrefmask.value });
+   pm4::write(pm4::SetContextReg { latte::Register::DB_STENCILREFMASK_BF, db_stencilrefmask_bf.value });
 }
 
 void
@@ -584,7 +601,7 @@ GX2InitPolygonControlReg(GX2PolygonControlReg *reg,
                          BOOL polyOffsetParaEnable)
 {
    auto pa_su_sc_mode_cntl = reg->pa_su_sc_mode_cntl.value();
-   pa_su_sc_mode_cntl.FACE = frontFace;
+   pa_su_sc_mode_cntl.FACE = static_cast<latte::PA_FACE>(frontFace);
    pa_su_sc_mode_cntl.CULL_FRONT = cullFront;
    pa_su_sc_mode_cntl.CULL_BACK = cullBack;
    pa_su_sc_mode_cntl.POLY_MODE = polyMode;
@@ -754,8 +771,8 @@ GX2GetScissorReg(GX2ScissorReg *reg,
 
    *x = pa_sc_generic_scissor_tl.TL_X;
    *y = pa_sc_generic_scissor_tl.TL_Y;
-   *width = pa_sc_generic_scissor_tl.TL_X - pa_sc_generic_scissor_br.BR_X;
-   *height = pa_sc_generic_scissor_tl.TL_Y - pa_sc_generic_scissor_br.BR_Y;
+   *width = pa_sc_generic_scissor_br.BR_X - pa_sc_generic_scissor_tl.TL_X;
+   *height = pa_sc_generic_scissor_br.BR_Y - pa_sc_generic_scissor_tl.TL_Y;
 }
 
 void

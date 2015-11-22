@@ -1256,12 +1256,6 @@
     <ClInclude Include="..\src\utils\be_array.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gpu\driver\opengl\glsl_generator.h">
-      <Filter>Header Files\gpu</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gpu\driver\opengl\opengl_driver.h">
-      <Filter>Header Files\gpu</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gpu\opengl\glsl_generator.h">
       <Filter>Header Files\gpu\opengl</Filter>
     </ClInclude>
@@ -1284,6 +1278,9 @@
       <Filter>Header Files\util</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_format.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_enum_pa.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
   </ItemGroup>

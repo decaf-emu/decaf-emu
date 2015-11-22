@@ -287,13 +287,12 @@
     <ClInclude Include="..\src\fuzztests.h" />
     <ClInclude Include="..\src\gpu\commandqueue.h" />
     <ClInclude Include="..\src\gpu\driver.h" />
-    <ClInclude Include="..\src\gpu\driver\opengl\glsl_generator.h" />
-    <ClInclude Include="..\src\gpu\driver\opengl\opengl_driver.h" />
     <ClInclude Include="..\src\gpu\gfd.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_enum_cb.h" />
     <ClInclude Include="..\src\gpu\latte_enum_common.h" />
     <ClInclude Include="..\src\gpu\latte_enum_db.h" />
+    <ClInclude Include="..\src\gpu\latte_enum_pa.h" />
     <ClInclude Include="..\src\gpu\latte_enum_spi.h" />
     <ClInclude Include="..\src\gpu\latte_enum_sq.h" />
     <ClInclude Include="..\src\gpu\latte_enum_sx.h" />

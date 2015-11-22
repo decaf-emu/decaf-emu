@@ -16,18 +16,6 @@ enum DB_DEPTH_FORMAT : uint32_t
    DEPTH_X24_8_32_FLOAT    = 7,
 };
 
-enum DB_FRAG_FUNC : uint32_t
-{
-   DB_FRAG_NEVER           = 0,
-   DB_FRAG_LESS            = 1,
-   DB_FRAG_EQUAL           = 2,
-   DB_FRAG_LEQUAL          = 3,
-   DB_FRAG_GREATER         = 4,
-   DB_FRAG_NOTEQUAL        = 5,
-   DB_FRAG_GEQUAL          = 6,
-   DB_FRAG_ALWAYS          = 7,
-};
-
 enum DB_STENCIL_FUNC : uint32_t
 {
    DB_STENCIL_KEEP         = 0,

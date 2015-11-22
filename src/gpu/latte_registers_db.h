@@ -93,7 +93,7 @@ union DB_DEPTH_CONTROL
       uint32_t Z_ENABLE : 1;
       uint32_t Z_WRITE_ENABLE : 1;
       uint32_t : 1;
-      DB_FRAG_FUNC ZFUNC : 3;
+      REF_FUNC ZFUNC : 3;
       uint32_t BACKFACE_ENABLE : 1;
       REF_FUNC STENCILFUNC : 3;
       DB_STENCIL_FUNC STENCILFAIL : 3;

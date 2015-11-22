@@ -121,28 +121,31 @@ getWindowHeight()
    return getTvHeight() + getDrcHeight();
 }
 
+static const auto DrcScaleFactor = 0.5f;
+static const auto TvScaleFactor = 0.65f;
+
 int
 getDrcWidth()
 {
-   return static_cast<int>(854.0f * 0.50f);
+   return static_cast<int>(854.0f * DrcScaleFactor);
 }
 
 int
 getDrcHeight()
 {
-   return static_cast<int>(480.0f * 0.50f);
+   return static_cast<int>(480.0f * DrcScaleFactor);
 }
 
 int
 getTvWidth()
 {
-   return static_cast<int>(1280.0f * 0.65f);
+   return static_cast<int>(1280.0f * TvScaleFactor);
 }
 
 int
 getTvHeight()
 {
-   return static_cast<int>(720.0f * 0.65f);
+   return static_cast<int>(720.0f * TvScaleFactor);
 }
 
 }
