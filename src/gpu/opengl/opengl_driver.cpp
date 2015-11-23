@@ -63,7 +63,7 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE &cb_color_base,
                          latte::CB_COLORN_SIZE &cb_color_size,
                          latte::CB_COLORN_INFO &cb_color_info)
 {
-   auto buffer = &mColorBuffers[cb_color_base.BASE_256B];
+   auto buffer = &mColorBuffers[cb_color_base.value ^ cb_color_size.value ^ cb_color_info.value];
    buffer->cb_color_base = cb_color_base;
 
    if (!buffer->object) {
@@ -91,7 +91,7 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
                          latte::DB_DEPTH_SIZE &db_depth_size,
                          latte::DB_DEPTH_INFO &db_depth_info)
 {
-   auto buffer = &mDepthBuffers[db_depth_base.BASE_256B];
+   auto buffer = &mDepthBuffers[db_depth_base.value ^ db_depth_size.value ^ db_depth_info.value];
    buffer->db_depth_base = db_depth_base;
 
    if (!buffer->object) {
@@ -130,11 +130,6 @@ bool GLDriver::checkActiveColorBuffer()
          continue;
       }
 
-      if (active && active->cb_color_base.BASE_256B == cb_color_base.BASE_256B) {
-         // Already bound
-         continue;
-      }
-
       auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
       auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
       active = getColorBuffer(cb_color_base, cb_color_size, cb_color_info);
@@ -158,11 +153,6 @@ bool GLDriver::checkActiveDepthBuffer()
          active = nullptr;
       }
 
-      return true;
-   }
-
-   if (active && active->db_depth_base.BASE_256B == db_depth_base.BASE_256B) {
-      // Already bound
       return true;
    }
 

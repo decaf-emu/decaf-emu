@@ -43,14 +43,16 @@ GetTransferableId(uint32_t unk1)
    return 0;
 }
 
-nn::Result GetMii(void* unk1)
+nn::Result
+GetMii(void* unk1)
 {
    return nn::act::AccountNotFound;
 }
 
-nn::Result GetMiiEx(void* unk1, uint8_t unk2)
+nn::Result
+GetMiiEx(void* unk1, uint8_t unk2)
 {
-   gLog->warn("GetMiiEx({}, {})", reinterpret_cast<intptr_t>(unk1), unk2);
+   gLog->warn("GetMiiEx({}, {})", reinterpret_cast<intptr_t>(unk1), static_cast<uint32_t>(unk2));
    return nn::act::AccountNotFound;
 }
 

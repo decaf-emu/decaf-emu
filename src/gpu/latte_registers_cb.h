@@ -60,8 +60,9 @@ union CB_BLEND_ALPHA
    float BLEND_ALPHA;
 };
 
-struct CB_COLORN_BASE
+union CB_COLORN_BASE
 {
+   uint32_t value;
    uint32_t BASE_256B;
 };
 

@@ -6,13 +6,15 @@
 namespace latte
 {
 
-struct DB_DEPTH_BASE
+union DB_DEPTH_BASE
 {
+   uint32_t value;
    uint32_t BASE_256B;
 };
 
-struct DB_DEPTH_HTILE_DATA_BASE
+union DB_DEPTH_HTILE_DATA_BASE
 {
+   uint32_t value;
    uint32_t BASE_256B;
 };
 
