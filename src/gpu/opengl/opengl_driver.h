@@ -123,6 +123,7 @@ public:
 private:
    void run();
    void initGL();
+   void initRegisters();
 
    void activateDeviceContext();
    void swapBuffers();
