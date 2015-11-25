@@ -275,7 +275,7 @@ untile(const uint8_t *image, size_t width, size_t height, size_t pitch, latte::S
    info.tileMode = tileMode;
    info.numSamples = 1;
    info.curSample = 0;
-   info.pitchElements = pitch;
+   info.pitchElements = width;
    info.height = height;
    info.swizzle = swizzle;
    info.isDepthTexture = false;
@@ -284,7 +284,7 @@ untile(const uint8_t *image, size_t width, size_t height, size_t pitch, latte::S
    info.tileThickness = tileThickness(tileMode);
 
    if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5) {
-      info.pitchElements = (pitch + 3) / 4;
+      info.pitchElements = (width + 3) / 4;
       info.height = (height + 3) / 4;
    }
 

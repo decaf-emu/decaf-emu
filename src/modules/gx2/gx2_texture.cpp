@@ -1,3 +1,4 @@
+#include "gx2_debug.h"
 #include "gx2_format.h"
 #include "gx2_texture.h"
 #include "gpu/latte_format.h"
@@ -49,7 +50,14 @@ GX2InitTextureRegs(GX2Texture *texture)
       word0.TILE_TYPE = 0;
    }
 
-   word0.PITCH = (texture->surface.pitch / latte::tile_width) - 1;
+   auto format = static_cast<latte::SQ_DATA_FORMAT>(texture->surface.format & latte::FMT_MASK);
+   auto elemSize = 1u;
+
+   if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 && format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
+      elemSize = 4u;
+   }
+
+   word0.PITCH = ((elemSize * texture->surface.pitch) / latte::tile_width) - 1;
    word0.TEX_WIDTH = texture->surface.width - 1;
 
    // Word 1
@@ -67,7 +75,7 @@ GX2InitTextureRegs(GX2Texture *texture)
       word1.TEX_DEPTH = 0;
    }
 
-   word1.DATA_FORMAT = static_cast<latte::SQ_DATA_FORMAT>(texture->surface.format & latte::FMT_MASK);
+   word1.DATA_FORMAT = format;
 
    // Word 4
    auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
@@ -131,6 +139,9 @@ GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
    auto word2 = (texture->surface.image.getAddress() ^ (texture->surface.swizzle & 0xffff)) >> 8;
    auto word3 = texture->surface.mipmaps.getAddress() >> 8;
 
+   // Dump texture
+   GX2DebugDumpTexture(texture);
+
    pm4::write(pm4::SetTexResource {
       (unit * 7) + latte::SQ_PS_TEX_RESOURCE_0,
       texture->regs.word0,
@@ -148,6 +159,9 @@ GX2SetVertexTexture(GX2Texture *texture, uint32_t unit)
 {
    auto word2 = (texture->surface.image.getAddress() ^ (texture->surface.swizzle & 0xffff)) >> 8;
    auto word3 = texture->surface.mipmaps.getAddress() >> 8;
+
+   // Dump texture
+   GX2DebugDumpTexture(texture);
 
    pm4::write(pm4::SetTexResource {
       (unit * 7) + latte::SQ_VS_TEX_RESOURCE_0,

@@ -248,19 +248,17 @@ bool GLDriver::checkActiveTextures()
          textureFormat = getTextureFormat(format, formatComp);
       }
 
-      // TODO: Use pitch+width gl::glPixelStorei(gl::GL_UNPACK_ROW_LENGTH, pitch * formatBytesPerElement(format));
-
       switch (dim) {
       case latte::SQ_TEX_DIM_2D:
          gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &texture.object);
          gl::glTextureParameteri(texture.object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
          gl::glTextureParameteri(texture.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-         gl::glTextureStorage2D(texture.object, 1, storageFormat, pitch, height);
+         gl::glTextureStorage2D(texture.object, 1, storageFormat, width, height);
 
          if (compressed) {
-            gl::glCompressedTextureSubImage2D(texture.object, 0, 0, 0, pitch, height, textureFormat, gsl::narrow_cast<gl::GLsizei>(size), untiled.data());
+            gl::glCompressedTextureSubImage2D(texture.object, 0, 0, 0, width, height, textureFormat, gsl::narrow_cast<gl::GLsizei>(size), untiled.data());
          } else {
-            gl::glTextureSubImage2D(texture.object, 0, 0, 0, pitch, height, textureFormat, textureType, untiled.data());
+            gl::glTextureSubImage2D(texture.object, 0, 0, 0, width, height, textureFormat, textureType, untiled.data());
          }
          break;
       case latte::SQ_TEX_DIM_1D:
