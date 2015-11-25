@@ -252,12 +252,12 @@ bool GLDriver::checkActiveUniforms()
       // Upload uniform registers
       if (mActiveShader->vertex && mActiveShader->vertex->object) {
          auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_256 / 4]);
-         gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, 256 * 4, values);
+         gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, 256, values);
       }
 
       if (mActiveShader->pixel && mActiveShader->pixel->object) {
          auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_0 / 4]);
-         gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, 256 * 4, values);
+         gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, 256, values);
       }
    } else {
       // TODO: Upload uniform blocks
