@@ -674,7 +674,7 @@ writeLocals(fmt::MemoryWriter &out, latte::Shader &shader)
    // Previous Vector
    if (shader.pvUsed.size()) {
       out << "vec4 PV;\n"
-          << "vec4 PVo;\n";
+          << "vec4 PVo = vec4(0, 0, 0, 0);\n";
    }
 
    // Address Register (TODO: Only print if used)
