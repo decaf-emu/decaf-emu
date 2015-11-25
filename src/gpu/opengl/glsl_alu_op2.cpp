@@ -269,9 +269,9 @@ static bool MOVA_FLOOR(GenerateState &state, AluInstruction *ins)
    state.out << "AR.";
    translateChannel(state, ins->dest.chan);
 
-   state.out << " = (int)floor(";
+   state.out << " = int(floor(";
    translateAluSource(state, ins->sources[0]);
-   state.out << ")";
+   state.out << "))";
    return true;
 }
 
