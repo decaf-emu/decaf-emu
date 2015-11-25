@@ -359,6 +359,7 @@ enum Value : uint32_t
    SQ_ALU_CONSTANT1_256             = 0x31004,
    SQ_ALU_CONSTANT2_256             = 0x31008,
    SQ_ALU_CONSTANT3_256             = 0x3100C,
+   AluConstRegisterEnd              = 0x32000,
 
    // Resource Registers
    ResourceRegisterBase             = 0x38000,
@@ -376,9 +377,11 @@ enum Value : uint32_t
    SQ_VTX_CONSTANT_WORD4_0          = 0x38010,
    SQ_VTX_CONSTANT_WORD5_0          = 0x38014,
    SQ_VTX_CONSTANT_WORD6_0          = 0x38018,
+   ResourceRegisterEnd              = 0x3B678,
 
    // Sampler Registers
    SamplerRegisterBase              = 0x3C000,
+   SamplerRegisterEnd               = 0x3C288,
 
    // Control Registers
    ControlRegisterBase              = 0x3CFF0,
@@ -389,6 +392,7 @@ enum Value : uint32_t
    SQ_LOOP_CONST_0                  = 0x3E200,
    SQ_LOOP_CONST_32                 = 0x3E280,
    SQ_LOOP_CONST_64                 = 0x3E300,
+   LoopConstRegisterEnd             = 0x3E380,
 
    // Bool Const Registers
    BoolConstRegisterBase            = 0x3E380,

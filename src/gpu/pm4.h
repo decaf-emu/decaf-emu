@@ -19,6 +19,19 @@ struct DecafSwapBuffers
    }
 };
 
+struct DecafSetContextState
+{
+   static const auto Opcode = Opcode3::DECAF_SET_CONTEXT_STATE;
+
+   virtual_ptr<void> context;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(context);
+   }
+};
+
 struct DecafCopyColorToScan
 {
    static const auto Opcode = Opcode3::DECAF_COPY_COLOR_TO_SCAN;
@@ -468,6 +481,23 @@ struct LoadAluConst
    }
 };
 
+struct LoadBoolConst
+{
+   static const auto Opcode = Opcode3::LOAD_BOOL_CONST;
+   virtual_ptr<uint32_t> addr;
+   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      uint32_t unusedAddrHi = 0;
+
+      se(addr);
+      se(unusedAddrHi);
+      se(values);
+   }
+};
+
 struct LoadLoopConst
 {
    static const auto Opcode = Opcode3::LOAD_LOOP_CONST;
@@ -505,6 +535,23 @@ struct LoadResource
 struct LoadSampler
 {
    static const auto Opcode = Opcode3::LOAD_SAMPLER;
+   virtual_ptr<uint32_t> addr;
+   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      uint32_t unusedAddrHi = 0;
+
+      se(addr);
+      se(unusedAddrHi);
+      se(values);
+   }
+};
+
+struct LoadControlConst
+{
+   static const auto Opcode = Opcode3::LOAD_CTL_CONST;
    virtual_ptr<uint32_t> addr;
    gsl::array_view<std::pair<uint32_t, uint32_t>> values;
 

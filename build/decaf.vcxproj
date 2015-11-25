@@ -289,6 +289,7 @@
     <ClInclude Include="..\src\gpu\driver.h" />
     <ClInclude Include="..\src\gpu\gfd.h" />
     <ClInclude Include="..\src\gpu\latte.h" />
+    <ClInclude Include="..\src\gpu\latte_contextstate.h" />
     <ClInclude Include="..\src\gpu\latte_enum_cb.h" />
     <ClInclude Include="..\src\gpu\latte_enum_common.h" />
     <ClInclude Include="..\src\gpu\latte_enum_db.h" />

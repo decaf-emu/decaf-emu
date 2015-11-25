@@ -7,6 +7,7 @@
 #include <vector>
 #include "gpu/pm4.h"
 #include "gpu/driver.h"
+#include "gpu/latte_contextstate.h"
 #include "platform/platform.h"
 
 namespace gpu
@@ -133,10 +134,13 @@ private:
    void decafSwapBuffers(pm4::DecafSwapBuffers &data);
    void decafClearColor(pm4::DecafClearColor &data);
    void decafClearDepthStencil(pm4::DecafClearDepthStencil &data);
+   void decafSetContextState(pm4::DecafSetContextState &data);
    void drawIndexAuto(pm4::DrawIndexAuto &data);
    void drawIndex2(pm4::DrawIndex2 &data);
    void indexType(pm4::IndexType &data);
+   void indirectBufferCall(pm4::IndirectBufferCall &data);
    void numInstances(pm4::NumInstances &data);
+
    void setAluConsts(pm4::SetAluConsts &data);
    void setConfigRegs(pm4::SetConfigRegs &data);
    void setContextRegs(pm4::SetContextRegs &data);
@@ -144,12 +148,28 @@ private:
    void setLoopConsts(pm4::SetLoopConsts &data);
    void setSamplers(pm4::SetSamplers &data);
    void setResources(pm4::SetResources &data);
-   void indirectBufferCall(pm4::IndirectBufferCall &data);
 
-   ColorBuffer * getColorBuffer(latte::CB_COLORN_BASE &base,
-      latte::CB_COLORN_SIZE &size, latte::CB_COLORN_INFO &info);
-   DepthBuffer * getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
-      latte::DB_DEPTH_SIZE &db_depth_size, latte::DB_DEPTH_INFO &db_depth_info);
+   void loadAluConsts(pm4::LoadAluConst &data);
+   void loadBoolConsts(pm4::LoadBoolConst &data);
+   void loadConfigRegs(pm4::LoadConfigReg &data);
+   void loadContextRegs(pm4::LoadContextReg &data);
+   void loadControlConstants(pm4::LoadControlConst &data);
+   void loadLoopConsts(pm4::LoadLoopConst &data);
+   void loadSamplers(pm4::LoadSampler &data);
+   void loadResources(pm4::LoadResource &data);
+   void loadRegisters(latte::Register::Value base,
+                      uint32_t *src,
+                      gsl::array_view<std::pair<uint32_t, uint32_t>> registers);
+
+   ColorBuffer *
+   getColorBuffer(latte::CB_COLORN_BASE &base,
+                  latte::CB_COLORN_SIZE &size,
+                  latte::CB_COLORN_INFO &info);
+
+   DepthBuffer *
+   getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
+                  latte::DB_DEPTH_SIZE &db_depth_size,
+                  latte::DB_DEPTH_INFO &db_depth_info);
 
    bool checkReadyDraw();
    bool checkActiveAttribBuffers();
@@ -182,25 +202,27 @@ private:
    bool mViewportDirty = false;
    bool mScissorDirty = false;
 
-   Shader *mActiveShader = nullptr;
+   ScreenDrawData mScreenDraw;
+
    std::unordered_map<uint32_t, FetchShader> mFetchShaders;
    std::unordered_map<uint32_t, VertexShader> mVertexShaders;
    std::unordered_map<uint32_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
    std::unordered_map<uint32_t, Texture> mTextures;
-
-   ScreenDrawData mScreenDraw;
    std::unordered_map<uint32_t, ColorBuffer> mColorBuffers;
    std::unordered_map<uint32_t, DepthBuffer> mDepthBuffers;
    std::unordered_map<uint32_t, AttributeBuffer> mAttribBuffers;
 
    FrameBuffer mFrameBuffer;
-   DepthBuffer *mActiveDepthBuffer;
+   Shader *mActiveShader = nullptr;
+   DepthBuffer *mActiveDepthBuffer = nullptr;
    std::array<ColorBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;
 
+   latte::ContextState *mContextState = nullptr;
+
 #ifdef PLATFORM_WINDOWS
-   uint64_t mDeviceContext;
-   uint64_t mOpenGLContext;
+   uint64_t mDeviceContext = 0;
+   uint64_t mOpenGLContext = 0;
 #endif
 };
 

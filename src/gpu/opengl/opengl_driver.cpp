@@ -345,7 +345,10 @@ void GLDriver::setRegister(latte::Register::Value reg, uint32_t value)
    // Save to my state
    mRegisters[reg / 4] = value;
 
-   // TODO: Save to active context state shadow regs
+   // Save to shadowed context state
+   if (mContextState) {
+      mContextState->setRegister(reg, value);
+   }
 
    // For the following registers, we apply their state changes
    //   directly to the OpenGL context...
@@ -706,12 +709,14 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
 
    // Setup viewport
    gl::glViewport(0, 0, platform::ui::getWindowWidth(), platform::ui::getWindowHeight());
-   mViewportDirty = true;
 
    // Setup screen draw shader
    gl::glBindVertexArray(mScreenDraw.vertArray);
    gl::glBindVertexBuffer(0, mScreenDraw.vertBuffer, 0, 4 * sizeof(gl::GLfloat));
    gl::glBindProgramPipeline(mScreenDraw.pipeline);
+
+   // Set active shader to nullptr so it has to rebind.
+   mActiveShader = nullptr;
 
    // Draw screen quad
    gl::glDisablei(gl::GL_BLEND, 0);
@@ -727,32 +732,6 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
       gl::glDrawArrays(gl::GL_TRIANGLES, 6, 6);
    } else {
       gLog->error("decafCopyColorToScan called for unknown scanTarget.");
-   }
-
-   // Restore draw state
-   auto cb_color_control = getRegister<latte::CB_COLOR_CONTROL>(latte::Register::CB_COLOR_CONTROL);
-   auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
-   auto pa_su_sc_mode_cntl = getRegister<latte::PA_SU_SC_MODE_CNTL>(latte::Register::PA_SU_SC_MODE_CNTL);
-   auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
-
-   if (cb_color_control.TARGET_BLEND_ENABLE & 1) {
-      gl::glEnablei(gl::GL_BLEND, 0);
-   }
-
-   if (db_depth_control.Z_ENABLE) {
-      gl::glEnable(gl::GL_DEPTH_TEST);
-   }
-
-   if (db_depth_control.STENCIL_ENABLE) {
-      gl::glEnable(gl::GL_STENCIL_TEST);
-   }
-
-   if (pa_su_sc_mode_cntl.CULL_FRONT || pa_su_sc_mode_cntl.CULL_BACK) {
-      gl::glEnable(gl::GL_CULL_FACE);
-   }
-
-   if (sx_alpha_test_control.ALPHA_TEST_ENABLE) {
-      gl::glEnable(gl::GL_ALPHA_TEST);
    }
 
    // Rebind active framebuffer
@@ -835,6 +814,11 @@ void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
    }
 }
 
+void GLDriver::decafSetContextState(pm4::DecafSetContextState &data)
+{
+   mContextState = reinterpret_cast<latte::ContextState *>(data.context.get());
+}
+
 static gl::GLenum
 getPrimitiveMode(latte::VGT_DI_PRIMITIVE_TYPE type)
 {
@@ -860,7 +844,7 @@ getPrimitiveMode(latte::VGT_DI_PRIMITIVE_TYPE type)
 
 template<typename IndexType>
 static void
-drawPrimitives2(gl::GLenum mode, uint32_t offset, uint32_t count, const IndexType *indices)
+drawPrimitives2(gl::GLenum mode, uint32_t count, const IndexType *indices, uint32_t offset)
 {
    if (!indices) {
       gl::glDrawArrays(mode, offset, count);
@@ -873,7 +857,7 @@ drawPrimitives2(gl::GLenum mode, uint32_t offset, uint32_t count, const IndexTyp
 
 template<typename IndexType>
 static void
-unpackQuadList(uint32_t offset, uint32_t count, const IndexType *src)
+unpackQuadList(uint32_t count, const IndexType *src, uint32_t offset)
 {
    auto tris = (count / 4) * 6;
    auto unpacked = std::vector<IndexType>(tris);
@@ -895,7 +879,7 @@ unpackQuadList(uint32_t offset, uint32_t count, const IndexType *src)
       *(dst++) = index_br;
    }
 
-   drawPrimitives2(gl::GL_TRIANGLES, offset, tris, unpacked.data());
+   drawPrimitives2(gl::GL_TRIANGLES, tris, unpacked.data(), offset);
 }
 
 static void
@@ -907,17 +891,17 @@ drawPrimitives(latte::VGT_DI_PRIMITIVE_TYPE primType,
 {
    if (primType == latte::VGT_DI_PT_QUADLIST) {
       if (indexFmt == latte::VGT_INDEX_16) {
-         unpackQuadList(offset, count, reinterpret_cast<const uint16_t*>(indices));
+         unpackQuadList(count, reinterpret_cast<const uint16_t*>(indices), offset);
       } else if (indexFmt == latte::VGT_INDEX_32) {
-         unpackQuadList(offset, count, reinterpret_cast<const uint32_t*>(indices));
+         unpackQuadList(count, reinterpret_cast<const uint32_t*>(indices), offset);
       }
    } else {
       auto mode = getPrimitiveMode(primType);
 
       if (indexFmt == latte::VGT_INDEX_16) {
-         drawPrimitives2(mode, offset, count, reinterpret_cast<const uint16_t*>(indices));
+         drawPrimitives2(mode, count, reinterpret_cast<const uint16_t*>(indices), offset);
       } else if (indexFmt == latte::VGT_INDEX_32) {
-         drawPrimitives2(mode, offset, count, reinterpret_cast<const uint32_t*>(indices));
+         drawPrimitives2(mode, count, reinterpret_cast<const uint32_t*>(indices), offset);
       }
    }
 }
@@ -1057,6 +1041,58 @@ void GLDriver::setResources(pm4::SetResources &data)
    }
 }
 
+void GLDriver::loadRegisters(latte::Register::Value base, uint32_t *src, gsl::array_view<std::pair<uint32_t, uint32_t>> registers)
+{
+   for (auto &range : registers) {
+      auto start = range.first;
+      auto count = range.second;
+
+      for (auto j = start; j < start + count; ++j) {
+         setRegister(static_cast<latte::Register::Value>(base + j * 4), src[j]);
+      }
+   }
+}
+
+void GLDriver::loadAluConsts(pm4::LoadAluConst &data)
+{
+   loadRegisters(latte::Register::AluConstRegisterBase, data.addr, data.values);
+}
+
+void GLDriver::loadBoolConsts(pm4::LoadBoolConst &data)
+{
+   loadRegisters(latte::Register::BoolConstRegisterBase, data.addr, data.values);
+}
+
+void GLDriver::loadConfigRegs(pm4::LoadConfigReg &data)
+{
+   loadRegisters(latte::Register::ConfigRegisterBase, data.addr, data.values);
+}
+
+void GLDriver::loadContextRegs(pm4::LoadContextReg &data)
+{
+   loadRegisters(latte::Register::ContextRegisterBase, data.addr, data.values);
+}
+
+void GLDriver::loadControlConstants(pm4::LoadControlConst &data)
+{
+   loadRegisters(latte::Register::ControlRegisterBase, data.addr, data.values);
+}
+
+void GLDriver::loadLoopConsts(pm4::LoadLoopConst &data)
+{
+   loadRegisters(latte::Register::LoopConstRegisterBase, data.addr, data.values);
+}
+
+void GLDriver::loadSamplers(pm4::LoadSampler &data)
+{
+   loadRegisters(latte::Register::SamplerRegisterBase, data.addr, data.values);
+}
+
+void GLDriver::loadResources(pm4::LoadResource &data)
+{
+   loadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
+}
+
 void GLDriver::indirectBufferCall(pm4::IndirectBufferCall &data)
 {
    auto buffer = reinterpret_cast<uint32_t*>(data.addr.get());
@@ -1079,6 +1115,9 @@ void GLDriver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> 
       break;
    case pm4::Opcode3::DECAF_CLEAR_DEPTH_STENCIL:
       decafClearDepthStencil(pm4::read<pm4::DecafClearDepthStencil>(reader));
+      break;
+   case pm4::Opcode3::DECAF_SET_CONTEXT_STATE:
+      decafSetContextState(pm4::read<pm4::DecafSetContextState>(reader));
       break;
    case pm4::Opcode3::DRAW_INDEX_AUTO:
       drawIndexAuto(pm4::read<pm4::DrawIndexAuto>(reader));
@@ -1112,6 +1151,30 @@ void GLDriver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> 
       break;
    case pm4::Opcode3::SET_RESOURCE:
       setResources(pm4::read<pm4::SetResources>(reader));
+      break;
+   case pm4::Opcode3::LOAD_CONFIG_REG:
+      loadConfigRegs(pm4::read<pm4::LoadConfigReg>(reader));
+      break;
+   case pm4::Opcode3::LOAD_CONTEXT_REG:
+      loadContextRegs(pm4::read<pm4::LoadContextReg>(reader));
+      break;
+   case pm4::Opcode3::LOAD_ALU_CONST:
+      loadAluConsts(pm4::read<pm4::LoadAluConst>(reader));
+      break;
+   case pm4::Opcode3::LOAD_BOOL_CONST:
+      loadBoolConsts(pm4::read<pm4::LoadBoolConst>(reader));
+      break;
+   case pm4::Opcode3::LOAD_LOOP_CONST:
+      loadLoopConsts(pm4::read<pm4::LoadLoopConst>(reader));
+      break;
+   case pm4::Opcode3::LOAD_RESOURCE:
+      loadResources(pm4::read<pm4::LoadResource>(reader));
+      break;
+   case pm4::Opcode3::LOAD_SAMPLER:
+      loadSamplers(pm4::read<pm4::LoadSampler>(reader));
+      break;
+   case pm4::Opcode3::LOAD_CTL_CONST:
+      loadControlConstants(pm4::read<pm4::LoadControlConst>(reader));
       break;
    case pm4::Opcode3::INDIRECT_BUFFER_PRIV:
       indirectBufferCall(pm4::read<pm4::IndirectBufferCall>(reader));

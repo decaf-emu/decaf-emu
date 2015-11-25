@@ -124,9 +124,15 @@ _GX2LoadState(GX2ContextState *state)
 void
 GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1)
 {
+   memset(&state->shadowState, 0, sizeof(state->shadowState));
    GX2BeginDisplayList(state->shadowDisplayList, GX2ContextState::MaxDisplayListSize * 4);
    _GX2LoadState(state);
    state->shadowDisplayListSize = GX2EndDisplayList(state->shadowDisplayList);
+
+   // Default to uniform registers
+   auto sq_config = latte::SQ_CONFIG { state->shadowState.getRegister(latte::Register::SQ_CONFIG) };
+   sq_config.DX9_CONSTS = 1;
+   state->shadowState.setRegister(latte::Register::SQ_CONFIG, sq_config.value);
 }
 
 void
@@ -153,4 +159,8 @@ GX2SetContextState(GX2ContextState *state)
          GX2CallDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
       }
    }
+
+   pm4::write(pm4::DecafSetContextState {
+      reinterpret_cast<void *>(&state->shadowState)
+   });
 }
