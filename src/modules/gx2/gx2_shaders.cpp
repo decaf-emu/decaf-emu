@@ -189,21 +189,28 @@ GX2SetGeometrySampler(GX2Sampler *sampler, uint32_t id)
 }
 
 void
-GX2SetVertexUniformReg(uint32_t offset, uint32_t count, uint32_t *data)
+GX2SetVertexUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 {
    auto loop = offset >> 16;
    if (loop) {
       auto id = static_cast<latte::Register::Value>(latte::Register::SQ_LOOP_CONST_32 + loop);
-      pm4::write(pm4::SetLoopConst{ id, data[0] });
+      pm4::write(pm4::SetLoopConst { id, data[0] });
    }
 
    auto alu = offset & 0x7fff;
    auto id = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONSTANT0_256 + alu);
-   pm4::write(pm4::SetAluConsts{ id,{ data, count } });
+
+   // Custom write packet so we can endian swap data
+   pm4::PacketWriter writer { pm4::SetAluConsts::Opcode };
+   writer.reg(id, latte::Register::AluConstRegisterBase);
+
+   for (auto i = 0u; i < count; ++i) {
+      writer(data[i].value());
+   }
 }
 
 void
-GX2SetPixelUniformReg(uint32_t offset, uint32_t count, uint32_t *data)
+GX2SetPixelUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 {
    auto loop = offset >> 16;
    if (loop) {
@@ -213,7 +220,14 @@ GX2SetPixelUniformReg(uint32_t offset, uint32_t count, uint32_t *data)
 
    auto alu = offset & 0x7fff;
    auto id = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONSTANT0_0 + alu);
-   pm4::write(pm4::SetAluConsts { id, { data, count } });
+
+   // Custom write packet so we can endian swap data
+   pm4::PacketWriter writer { pm4::SetAluConsts::Opcode };
+   writer.reg(id, latte::Register::AluConstRegisterBase);
+
+   for (auto i = 0u; i < count; ++i) {
+      writer(data[i].value());
+   }
 }
 
 void
