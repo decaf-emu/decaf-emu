@@ -36,7 +36,7 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
       break;
    case GX2TileMode::LinearAligned:
       base_align = group_bytes;
-      pitch_elements_align = std::max(64ull, group_bytes / element_bytes);
+      pitch_elements_align = tile_width;// std::max(64ull, group_bytes / element_bytes);
       break;
    case GX2TileMode::Tiled1DThick:
       assert(num_samples == 1);

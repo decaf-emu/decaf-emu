@@ -86,9 +86,9 @@ getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
    case GX2SurfaceFormat::UNORM_BC3:
       return gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
    case GX2SurfaceFormat::UNORM_BC4:
-      return gl::GL_R8;
+      return gl::GL_COMPRESSED_RED_RGTC1;
    case GX2SurfaceFormat::UNORM_BC5:
-      return gl::GL_RG8;
+      return gl::GL_COMPRESSED_RG_RGTC2;
    default:
       throw std::logic_error("Invalid texture format");
       return gl::GL_INVALID_ENUM;
@@ -191,6 +191,7 @@ getCompressedTextureFormat(latte::SQ_DATA_FORMAT format, uint32_t degamma)
 bool GLDriver::checkActiveTextures()
 {
    static const auto MAX_PS_TEXTURES = 16;
+   std::vector<uint8_t> untiled;
 
    for (auto i = 0; i < MAX_PS_TEXTURES; ++i) {
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
@@ -228,8 +229,6 @@ bool GLDriver::checkActiveTextures()
       auto swizzle = sq_tex_resource_word2.SWIZZLE << 8;
 
       auto tiled = make_virtual_ptr<uint8_t>(addr);
-
-      std::vector<uint8_t> untiled;
 
       if (!latte::untile(tiled, width, height, pitch, format, tileMode, swizzle, untiled)) {
          gLog->error("Failed to untile texture.");

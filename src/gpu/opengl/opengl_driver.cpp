@@ -836,37 +836,26 @@ void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
 }
 
 static gl::GLenum
-getGlPrimitiveType(latte::VGT_DI_PRIMITIVE_TYPE primType)
+getPrimitiveMode(latte::VGT_DI_PRIMITIVE_TYPE type)
 {
-   gl::GLenum mode;
-
-   switch (primType) {
+   switch (type) {
    case latte::VGT_DI_PT_POINTLIST:
-      mode = gl::GL_POINTS;
-      break;
+      return gl::GL_POINTS;
    case latte::VGT_DI_PT_LINELIST:
-      mode = gl::GL_LINES;
-      break;
+      return gl::GL_LINES;
    case latte::VGT_DI_PT_LINESTRIP:
-      mode = gl::GL_LINE_STRIP;
-      break;
+      return gl::GL_LINE_STRIP;
    case latte::VGT_DI_PT_TRILIST:
-      mode = gl::GL_TRIANGLES;
-      break;
+      return gl::GL_TRIANGLES;
    case latte::VGT_DI_PT_TRIFAN:
-      mode = gl::GL_TRIANGLE_FAN;
-      break;
+      return gl::GL_TRIANGLE_FAN;
    case latte::VGT_DI_PT_TRISTRIP:
-      mode = gl::GL_TRIANGLE_STRIP;
-      break;
+      return gl::GL_TRIANGLE_STRIP;
    case latte::VGT_DI_PT_LINELOOP:
-      mode = gl::GL_LINE_LOOP;
-      break;
+      return gl::GL_LINE_LOOP;
    default:
       throw std::logic_error("Invalid VGT_PRIMITIVE_TYPE");
    }
-
-   return mode;
 }
 
 template<typename IndexType>
@@ -886,7 +875,7 @@ template<typename IndexType>
 static void
 unpackQuadList(uint32_t offset, uint32_t count, const IndexType *src)
 {
-   auto tris = (count * 6) / 4;
+   auto tris = (count / 4) * 6;
    auto unpacked = std::vector<IndexType>(tris);
    auto dst = &unpacked[0];
 
@@ -900,6 +889,7 @@ unpackQuadList(uint32_t offset, uint32_t count, const IndexType *src)
       *(dst++) = index_tl;
       *(dst++) = index_tr;
       *(dst++) = index_bl;
+
       *(dst++) = index_bl;
       *(dst++) = index_tr;
       *(dst++) = index_br;
@@ -922,7 +912,7 @@ drawPrimitives(latte::VGT_DI_PRIMITIVE_TYPE primType,
          unpackQuadList(offset, count, reinterpret_cast<const uint32_t*>(indices));
       }
    } else {
-      auto mode = getGlPrimitiveType(primType);
+      auto mode = getPrimitiveMode(primType);
 
       if (indexFmt == latte::VGT_INDEX_16) {
          drawPrimitives2(mode, offset, count, reinterpret_cast<const uint16_t*>(indices));
@@ -1001,6 +991,8 @@ void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
                      data.numIndices,
                      data.addr,
                      vgt_dma_index_type.INDEX_TYPE);
+   } else {
+      throw std::logic_error("Invalid vgt_dma_index_type.SWAP_MODE");
    }
 }
 

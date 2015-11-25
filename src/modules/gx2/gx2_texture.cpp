@@ -49,14 +49,7 @@ GX2InitTextureRegs(GX2Texture *texture)
       word0.TILE_TYPE = 0;
    }
 
-   auto formatType = static_cast<latte::SQ_DATA_FORMAT>(texture->surface.format & latte::FMT_MASK);
-   auto elemSize = 4u;
-
-   if (formatType < latte::FMT_BC1 || formatType > latte::FMT_BC5) {
-      elemSize = 1;
-   }
-
-   word0.PITCH = ((elemSize * texture->surface.pitch) / latte::tile_width) - 1;
+   word0.PITCH = (texture->surface.pitch / latte::tile_width) - 1;
    word0.TEX_WIDTH = texture->surface.width - 1;
 
    // Word 1
@@ -74,7 +67,7 @@ GX2InitTextureRegs(GX2Texture *texture)
       word1.TEX_DEPTH = 0;
    }
 
-   word1.DATA_FORMAT = formatType;
+   word1.DATA_FORMAT = static_cast<latte::SQ_DATA_FORMAT>(texture->surface.format & latte::FMT_MASK);
 
    // Word 4
    auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
