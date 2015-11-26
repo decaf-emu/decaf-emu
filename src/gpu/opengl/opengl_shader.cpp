@@ -261,6 +261,8 @@ bool GLDriver::checkActiveUniforms()
       }
    } else {
       // TODO: Upload uniform blocks
+      gLog->error("Uniform blocks not supported.");
+      return false;
    }
 
    return true;
