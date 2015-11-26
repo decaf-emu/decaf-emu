@@ -554,9 +554,9 @@ static bool RECIP(GenerateState &state, AluInstruction *ins)
    assert(ins->numSources == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "recip(";
+   state.out << "(1.0 / (";
    translateAluSource(state, ins->sources[0]);
-   state.out << ")";
+   state.out << "))";
 
    translateAluDestEnd(state, ins);
    return true;
