@@ -712,6 +712,7 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
    gl::glDisablei(gl::GL_BLEND, 0);
    gl::glDisable(gl::GL_DEPTH_TEST);
    gl::glDisable(gl::GL_STENCIL_TEST);
+   gl::glDisable(gl::GL_SCISSOR_TEST);
    gl::glDisable(gl::GL_CULL_FACE);
    gl::glDisable(gl::GL_ALPHA_TEST);
    gl::glBindTextureUnit(0, buffer->object);
