@@ -22,6 +22,22 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
       gLog->warn("Encountered non-default tileMode {} for format {}", GX2EnumAsString(surface->tileMode), GX2EnumAsString(surface->format));
    }
 
+   if (!surface->width) {
+      surface->width = 1;
+   }
+
+   if (!surface->height) {
+      surface->height = 1;
+   }
+
+   if (!surface->depth) {
+      surface->depth = 1;
+   }
+
+   if (!surface->mipLevels) {
+      surface->mipLevels = 1;
+   }
+
    auto blockSize = GX2GetSurfaceBlockSize(surface->format);
    auto element_bytes = GX2GetSurfaceElementBytes(surface->format);
    auto tile_thickness = GX2GetTileThickness(surface->tileMode);
@@ -76,7 +92,7 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
    surface->alignment = base_align;
    surface->pitch = align_up<uint32_t>(surface->width, pitch_elements_align);
    surface->height = align_up<uint32_t>(surface->height, height_align);
-   surface->imageSize = surface->width * surface->height * element_bytes;
+   surface->imageSize = surface->width * surface->height * surface->depth * element_bytes;
 }
 
 void

@@ -609,7 +609,7 @@ writeHeader(fmt::MemoryWriter &out)
 }
 
 static void
-writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq_config)
+writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq_config, std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> &samplerTypes)
 {
    if (sq_config.DX9_CONSTS) {
       // Uniform registers
@@ -647,7 +647,22 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
 
    // Samplers
    for (auto id : shader.samplersUsed) {
-      out << "layout (binding = " << id << ") uniform sampler2D sampler_" << id << ";\n";
+      auto type = samplerTypes[id];
+
+      out << "layout (binding = " << id << ") uniform ";
+
+      switch (type) {
+      case SamplerType::Sampler2D:
+         out << "sampler2D";
+         break;
+      case SamplerType::Sampler2DArray:
+         out << "sampler2DArray";
+         break;
+      default:
+         throw std::logic_error("Unsupported sampler type");
+      }
+
+      out << " sampler_" << id << ";\n";
    }
 
    // Redeclare gl_PerVertex for Vertex Shaders
@@ -704,6 +719,22 @@ writeExports(fmt::MemoryWriter &out, latte::Shader &shader)
    }
 }
 
+static SamplerType
+getSamplerType(latte::SQ_TEX_DIM dim, latte::SQ_NUM_FORMAT numFormat, latte::SQ_FORMAT_COMP formatComp)
+{
+   // TODO: Use numFormat and formatComp for signed/unsigned sampler
+   switch (dim) {
+   case latte::SQ_TEX_DIM_1D:
+      return SamplerType::Sampler1D;
+   case latte::SQ_TEX_DIM_2D:
+      return SamplerType::Sampler2D;
+   case latte::SQ_TEX_DIM_2D_ARRAY:
+      return SamplerType::Sampler2DArray;
+   default:
+      throw std::logic_error("Unexpected sampler type.");
+   }
+}
+
 bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size)
 {
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
@@ -723,11 +754,21 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       gLog->warn("Failed to translate 100% of instructions for vertex shader");
    }
 
+   // Get vertex sampler types
+   for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
+      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
+      auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
+
+      vertex.samplerTypes[i] = getSamplerType(sq_tex_resource_word0.DIM,
+                                              sq_tex_resource_word4.NUM_FORMAT_ALL,
+                                              sq_tex_resource_word4.FORMAT_COMP_X);
+   }
+
    // Write header
    writeHeader(out);
 
    // Uniforms
-   writeUniforms(out, shader, sq_config);
+   writeUniforms(out, shader, sq_config, vertex.samplerTypes);
    out << '\n';
 
    // Vertex Shader Inputs
@@ -832,7 +873,6 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    return true;
 }
 
-
 bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t size)
 {
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
@@ -852,11 +892,21 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
       gLog->warn("Failed to translate 100% of instructions for pixel shader");
    }
 
+   // Get pixel sampler types
+   for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
+      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
+      auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
+
+      pixel.samplerTypes[i] = getSamplerType(sq_tex_resource_word0.DIM,
+                                             sq_tex_resource_word4.NUM_FORMAT_ALL,
+                                             sq_tex_resource_word4.FORMAT_COMP_X);
+   }
+
    // Write header
    writeHeader(out);
 
    // Uniforms
-   writeUniforms(out, shader, sq_config);
+   writeUniforms(out, shader, sq_config, pixel.samplerTypes);
    out << '\n';
 
    // Pixel Shader Inputs

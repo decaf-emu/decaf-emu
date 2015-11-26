@@ -252,7 +252,7 @@ bool GLDriver::checkActiveTextures()
 
       auto tiled = make_virtual_ptr<uint8_t>(addr);
 
-      if (!latte::untile(tiled, width, height, pitch, format, tileMode, swizzle, untiled)) {
+      if (!latte::untile(tiled, width, height, depth, pitch, format, tileMode, swizzle, untiled)) {
          gLog->error("Failed to untile texture.");
          return false;
       }
@@ -279,16 +279,43 @@ bool GLDriver::checkActiveTextures()
          gl::glTextureStorage2D(texture.object, 1, storageFormat, width, height);
 
          if (compressed) {
-            gl::glCompressedTextureSubImage2D(texture.object, 0, 0, 0, width, height, textureFormat, gsl::narrow_cast<gl::GLsizei>(size), untiled.data());
+            gl::glCompressedTextureSubImage2D(texture.object, 0,
+                                              0, 0,
+                                              width, height,
+                                              textureFormat,
+                                              gsl::narrow_cast<gl::GLsizei>(size), untiled.data());
          } else {
-            gl::glTextureSubImage2D(texture.object, 0, 0, 0, width, height, textureFormat, textureType, untiled.data());
+            gl::glTextureSubImage2D(texture.object, 0,
+                                    0, 0,
+                                    width, height,
+                                    textureFormat, textureType,
+                                    untiled.data());
+         }
+         break;
+      case latte::SQ_TEX_DIM_2D_ARRAY:
+         gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &texture.object);
+         gl::glTextureParameteri(texture.object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+         gl::glTextureParameteri(texture.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
+         gl::glTextureStorage3D(texture.object, 1, storageFormat, width, height, depth);
+
+         if (compressed) {
+            gl::glCompressedTextureSubImage3D(texture.object, 0,
+                                              0, 0, 0,
+                                              width, height, depth,
+                                              textureFormat,
+                                              gsl::narrow_cast<gl::GLsizei>(size), untiled.data());
+         } else {
+            gl::glTextureSubImage3D(texture.object, 0,
+                                    0, 0, 0,
+                                    width, height, depth,
+                                    textureFormat, textureType,
+                                    untiled.data());
          }
          break;
       case latte::SQ_TEX_DIM_1D:
       case latte::SQ_TEX_DIM_3D:
       case latte::SQ_TEX_DIM_CUBEMAP:
       case latte::SQ_TEX_DIM_1D_ARRAY:
-      case latte::SQ_TEX_DIM_2D_ARRAY:
       case latte::SQ_TEX_DIM_2D_MSAA:
       case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
          gLog->error("Unsupported texture dim: {}", sq_tex_resource_word0.DIM);

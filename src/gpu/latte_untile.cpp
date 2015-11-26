@@ -265,7 +265,7 @@ get_2d_offset(const TileInfo &info, size_t x, size_t y, size_t z)
 }
 
 bool
-untile(const uint8_t *image, size_t width, size_t height, size_t pitch, latte::SQ_DATA_FORMAT format, latte::SQ_TILE_MODE tileMode, uint32_t swizzle, std::vector<uint8_t> &out)
+untile(const uint8_t *image, size_t width, size_t height, size_t depth, size_t pitch, latte::SQ_DATA_FORMAT format, latte::SQ_TILE_MODE tileMode, uint32_t swizzle, std::vector<uint8_t> &out)
 {
    if (tileMode == latte::SQ_TILE_MODE_LINEAR_SPECIAL) {
       return false;
@@ -288,28 +288,36 @@ untile(const uint8_t *image, size_t width, size_t height, size_t pitch, latte::S
       info.height = (height + 3) / 4;
    }
 
-   auto size = info.pitchElements * info.height * info.elementBytes;
-   out.resize(size);
+   auto sliceSize = info.pitchElements * info.height * info.elementBytes;
+   out.resize(sliceSize * depth);
 
    auto src = image;
-   auto dst = &out[0];
+   auto dstBase = &out[0];
 
    if (tileMode == latte::SQ_TILE_MODE_LINEAR_ALIGNED) {
-      std::memcpy(dst, src, size);
+      std::memcpy(dstBase, src, sliceSize * depth);
    } else if (info.tileMode == latte::SQ_TILE_MODE_TILED_1D_THICK || info.tileMode == latte::SQ_TILE_MODE_TILED_1D_THIN1) {
-      for (size_t y = 0; y < info.height; ++y) {
-         for (size_t x = 0; x < info.pitchElements; ++x) {
-            auto srcOffset = get_1d_offset(info, x, y, 0);
-            auto dstOffset = (x + y * info.pitchElements) * info.elementBytes;
-            std::memcpy(dst + dstOffset, src + srcOffset, info.elementBytes);
+      for (size_t z = 0; z < depth; ++z) {
+         auto dst = dstBase + z * sliceSize;
+
+         for (size_t y = 0; y < info.height; ++y) {
+            for (size_t x = 0; x < info.pitchElements; ++x) {
+               auto srcOffset = get_1d_offset(info, x, y, 0);
+               auto dstOffset = (x + y * info.pitchElements) * info.elementBytes;
+               std::memcpy(dst + dstOffset, src + srcOffset, info.elementBytes);
+            }
          }
       }
    } else {
-      for (size_t y = 0; y < info.height; ++y) {
-         for (size_t x = 0; x < info.pitchElements; ++x) {
-            auto srcOffset = get_2d_offset(info, x, y, 0);
-            auto dstOffset = (x + y * info.pitchElements) * info.elementBytes;
-            std::memcpy(dst + dstOffset, src + srcOffset, info.elementBytes);
+      for (size_t z = 0; z < depth; ++z) {
+         auto dst = dstBase + z * sliceSize;
+
+         for (size_t y = 0; y < info.height; ++y) {
+            for (size_t x = 0; x < info.pitchElements; ++x) {
+               auto srcOffset = get_2d_offset(info, x, y, z);
+               auto dstOffset = (x + y * info.pitchElements) * info.elementBytes;
+               std::memcpy(dst + dstOffset, src + srcOffset, info.elementBytes);
+            }
          }
       }
    }

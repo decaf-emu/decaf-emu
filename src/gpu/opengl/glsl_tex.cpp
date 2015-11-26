@@ -136,7 +136,7 @@ static bool SAMPLE(GenerateState &state, TexInstruction *ins)
       << ins->samplerID
       << ", ";
 
-   translateSelRegister(state, ins->src);
+   translateSelRegister(state, ins->src, 3);
 
    state.out << ")";
    translateTexRegisterChannels(state, channels);
@@ -156,7 +156,7 @@ static bool SAMPLE_C(GenerateState &state, TexInstruction *ins)
       << ins->samplerID
       << ", vec3(";
 
-   translateSelRegister(state, ins->src, 2);
+   translateSelRegister(state, ins->src, 3);
 
    state.out
       << ", R" << ins->src.id << ".w)";

@@ -22,6 +22,14 @@ static const auto MAX_UNIFORM_BLOCKS = 8u;
 static const auto MAX_UNIFORM_REGISTERS = 256u;
 static const auto MAX_SAMPLERS_PER_TYPE = 16u;
 
+enum class SamplerType
+{
+   Invalid,
+   Sampler1D,
+   Sampler2D,
+   Sampler2DArray,
+};
+
 struct FetchShader
 {
    struct Attrib
@@ -48,6 +56,7 @@ struct VertexShader
    gl::GLuint uniformRegisters = 0;
    std::array<gl::GLuint, MAX_ATTRIB_COUNT> attribLocations;
    std::array<gl::GLuint, MAX_UNIFORM_BLOCKS> uniformBlocks;
+   std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
    latte::SQ_PGM_START_VS pgm_start_vs;
    std::string code;
 };
@@ -57,6 +66,7 @@ struct PixelShader
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
    std::array<gl::GLuint, MAX_UNIFORM_BLOCKS> uniformBlocks;
+   std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
    latte::SQ_PGM_START_PS pgm_start_ps;
    std::string code;
 };

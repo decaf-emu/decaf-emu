@@ -468,6 +468,13 @@ GX2_ENUM(GX2TVScanMode, uint32_t)
    GX2_ENUM_VALUE(None, 0)
 GX2_ENUM_END
 
+GX2_ENUM(GX2SamplerVarType, uint32_t)
+   GX2_ENUM_VALUE(Sampler1D, 0)
+   GX2_ENUM_VALUE(Sampler2D, 1)
+   GX2_ENUM_VALUE(Sampler3D, 3)
+   GX2_ENUM_VALUE(SamplerCube, 4)
+GX2_ENUM_END
+
 GX2_ENUM(GX2ShaderMode, uint32_t)
    GX2_ENUM_VALUE(UniformRegister, 0)
    GX2_ENUM_VALUE(UniformBlock, 1)

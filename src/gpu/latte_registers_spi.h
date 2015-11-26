@@ -108,7 +108,6 @@ using SPI_PS_INPUT_CNTL_28 = SPI_PS_INPUT_CNTL_N;
 using SPI_PS_INPUT_CNTL_29 = SPI_PS_INPUT_CNTL_N;
 using SPI_PS_INPUT_CNTL_30 = SPI_PS_INPUT_CNTL_N;
 
-
 // Vertex Shader output configuration
 union SPI_VS_OUT_CONFIG
 {

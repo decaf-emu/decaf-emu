@@ -20,7 +20,7 @@ static const size_t tile_width         = 8;
 static const size_t tile_height        = 8;
 
 bool
-untile(const uint8_t *image, size_t width, size_t height, size_t pitch, latte::SQ_DATA_FORMAT format, latte::SQ_TILE_MODE tileMode, uint32_t swizzle, std::vector<uint8_t> &out);
+untile(const uint8_t *image, size_t width, size_t height, size_t depth, size_t pitch, latte::SQ_DATA_FORMAT format, latte::SQ_TILE_MODE tileMode, uint32_t swizzle, std::vector<uint8_t> &out);
 
 inline std::pair<size_t, size_t>
 macroTileSize(latte::SQ_TILE_MODE mode)
