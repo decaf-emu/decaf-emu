@@ -80,7 +80,16 @@ CHECK_OFFSET(GX2AttribVar, 0x08, count);
 CHECK_OFFSET(GX2AttribVar, 0x0C, location);
 CHECK_SIZE(GX2AttribVar, 0x10);
 
-struct GX2SamplerVar;
+struct GX2SamplerVar
+{
+   be_ptr<const char> name;
+   be_val<GX2SamplerVarType::Value> type;
+   be_val<uint32_t> location;
+};
+CHECK_OFFSET(GX2SamplerVar, 0x00, name);
+CHECK_OFFSET(GX2SamplerVar, 0x04, type);
+CHECK_OFFSET(GX2SamplerVar, 0x08, location);
+CHECK_SIZE(GX2SamplerVar, 0x0C);
 
 struct GX2VertexShader
 {

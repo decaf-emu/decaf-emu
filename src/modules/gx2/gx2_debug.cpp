@@ -262,6 +262,19 @@ formatUniformVars(fmt::MemoryWriter &out, uint32_t count, GX2UniformVar *vars)
    }
 }
 
+static void
+formatSamplerVars(fmt::MemoryWriter &out, uint32_t count, GX2SamplerVar *vars)
+{
+   out << "  samplerVarCount: " << count << "\n";
+
+   for (auto i = 0u; i < count; ++i) {
+      out << "    Var " << i << "\n"
+         << "      name: " << vars[i].name.get() << "\n"
+         << "      type: " << GX2EnumAsString(vars[i].type) << "\n"
+         << "      location: " << vars[i].location << "\n";
+   }
+}
+
 void
 GX2DebugDumpShader(GX2FetchShader *shader)
 {
@@ -290,10 +303,10 @@ GX2DebugDumpShader(GX2PixelShader *shader)
 
    formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
    formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
+   formatSamplerVars(out, shader->samplerVarCount, shader->samplerVars);
 
    out << "  initialValueCount: " << shader->initialValueCount << "\n";
    out << "  loopVarCount: " << shader->loopVarCount << "\n";
-   out << "  samplerVarCount: " << shader->samplerVarCount << "\n";
    GX2DebugDumpShader("shader_pixel_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
 }
 
@@ -311,10 +324,10 @@ GX2DebugDumpShader(GX2VertexShader *shader)
 
    formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
    formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
+   formatSamplerVars(out, shader->samplerVarCount, shader->samplerVars);
 
    out << "  initialValueCount: " << shader->initialValueCount << "\n";
    out << "  loopVarCount: " << shader->loopVarCount << "\n";
-   out << "  samplerVarCount: " << shader->samplerVarCount << "\n";
 
    GX2DebugDumpShader("shader_vertex_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
 }

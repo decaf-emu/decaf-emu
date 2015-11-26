@@ -1,4 +1,5 @@
 #include <cassert>
+#include "gx2_debug.h"
 #include "gx2_shaders.h"
 #include "gpu/pm4_writer.h"
 
@@ -99,6 +100,8 @@ GX2SetVertexShader(GX2VertexShader *shader)
    if (shader->loopVarCount > 0) {
       //_GX2SetVertexLoopVar(shader->loopVars, shader->loopVars + (shader->loopVarCount << 3));
    }
+
+   GX2DebugDumpShader(shader);
 }
 
 void
@@ -149,6 +152,8 @@ GX2SetPixelShader(GX2PixelShader *shader)
    if (shader->loopVarCount > 0) {
       //_GX2SetPixelLoopVar(shader->loopVars, shader->loopVars + (shader->loopVarCount << 3));
    }
+
+   GX2DebugDumpShader(shader);
 }
 
 void
