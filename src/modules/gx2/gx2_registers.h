@@ -24,6 +24,13 @@ CHECK_SIZE(GX2AlphaTestReg, 8);
 CHECK_OFFSET(GX2AlphaTestReg, 0, sx_alpha_test_control);
 CHECK_OFFSET(GX2AlphaTestReg, 4, sx_alpha_ref);
 
+struct GX2AlphaToMaskReg
+{
+   be_val<latte::DB_ALPHA_TO_MASK> db_alpha_to_mask;
+};
+CHECK_SIZE(GX2AlphaToMaskReg, 4);
+CHECK_OFFSET(GX2AlphaToMaskReg, 0, db_alpha_to_mask);
+
 struct GX2BlendControlReg
 {
    be_val<GX2RenderTarget::Value> target;
@@ -204,6 +211,23 @@ GX2GetAlphaTestReg(const GX2AlphaTestReg *reg,
 
 void
 GX2SetAlphaTestReg(GX2AlphaTestReg *reg);
+
+void
+GX2SetAlphaToMask(BOOL alphaToMask,
+                  GX2AlphaToMaskMode::Value mode);
+
+void
+GX2InitAlphaToMaskReg(GX2AlphaToMaskReg *reg,
+                      BOOL alphaToMask,
+                      GX2AlphaToMaskMode::Value mode);
+
+void
+GX2GetAlphaToMaskReg(const GX2AlphaToMaskReg *reg,
+                     be_val<BOOL> *alphaToMask,
+                     be_val<GX2AlphaToMaskMode::Value> *mode);
+
+void
+GX2SetAlphaToMaskReg(GX2AlphaToMaskReg *reg);
 
 void
 GX2SetBlendConstantColor(float red,

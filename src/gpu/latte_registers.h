@@ -341,6 +341,7 @@ enum Value : uint32_t
    DB_HTILE_SURFACE                 = 0x28D24,
    DB_PRELOAD_CONTROL               = 0x28D30,
    DB_PREFETCH_LIMIT                = 0x28D34,
+   DB_ALPHA_TO_MASK                 = 0x28D44,
    PA_SU_POLY_OFFSET_DB_FMT_CNTL    = 0x28DF8,
    PA_SU_POLY_OFFSET_CLAMP          = 0x28DFC,
    PA_SU_POLY_OFFSET_FRONT_SCALE    = 0x28E00,

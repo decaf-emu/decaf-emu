@@ -98,6 +98,10 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2InitAlphaTestReg);
    RegisterKernelFunction(GX2GetAlphaTestReg);
    RegisterKernelFunction(GX2SetAlphaTestReg);
+   RegisterKernelFunction(GX2SetAlphaToMask);
+   RegisterKernelFunction(GX2InitAlphaToMaskReg);
+   RegisterKernelFunction(GX2GetAlphaToMaskReg);
+   RegisterKernelFunction(GX2SetAlphaToMaskReg);
    RegisterKernelFunction(GX2SetBlendConstantColor);
    RegisterKernelFunction(GX2InitBlendConstantColorReg);
    RegisterKernelFunction(GX2GetBlendConstantColorReg);

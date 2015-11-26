@@ -105,6 +105,99 @@ GX2SetAlphaTestReg(GX2AlphaTestReg *reg)
 }
 
 void
+GX2SetAlphaToMask(BOOL alphaToMask,
+                  GX2AlphaToMaskMode::Value mode)
+{
+   GX2AlphaToMaskReg reg;
+   GX2InitAlphaToMaskReg(&reg, alphaToMask, mode);
+   GX2SetAlphaToMaskReg(&reg);
+}
+
+void
+GX2InitAlphaToMaskReg(GX2AlphaToMaskReg *reg,
+                      BOOL alphaToMask,
+                      GX2AlphaToMaskMode::Value mode)
+{
+   auto db_alpha_to_mask = reg->db_alpha_to_mask.value();
+   db_alpha_to_mask.ALPHA_TO_MASK_ENABLE = alphaToMask;
+
+   switch (mode) {
+   case GX2AlphaToMaskMode::NonDithered:
+      // 0xAA = 10 10 10 10
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = 2;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET1 = 2;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET2 = 2;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET3 = 2;
+      break;
+   case GX2AlphaToMaskMode::Dither0:
+      // 0x78 = 01 11 10 00
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = 0;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET1 = 2;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET2 = 3;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET3 = 1;
+      break;
+   case GX2AlphaToMaskMode::Dither90:
+      // 0xC6 = 11 00 01 10
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = 2;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET1 = 1;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET2 = 0;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET3 = 3;
+      break;
+   case GX2AlphaToMaskMode::Dither180:
+      // 0x2D = 00 10 11 01
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = 1;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET1 = 3;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET2 = 2;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET3 = 0;
+      break;
+   case GX2AlphaToMaskMode::Dither270:
+      // 0x93 = 10 01 00 11
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = 3;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET1 = 0;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET2 = 1;
+      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET3 = 2;
+      break;
+   }
+   db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = mode;
+   reg->db_alpha_to_mask = db_alpha_to_mask;
+}
+
+void
+GX2GetAlphaToMaskReg(const GX2AlphaToMaskReg *reg,
+                     be_val<BOOL> *alphaToMask,
+                     be_val<GX2AlphaToMaskMode::Value> *mode)
+{
+   auto db_alpha_to_mask = reg->db_alpha_to_mask.value();
+   auto value = (db_alpha_to_mask.value >> 8) & 0xff;
+   *alphaToMask = db_alpha_to_mask.ALPHA_TO_MASK_ENABLE;
+
+   switch (value) {
+   case 0x78:
+      *mode = GX2AlphaToMaskMode::Dither0;
+      break;
+   case 0xC6:
+      *mode = GX2AlphaToMaskMode::Dither90;
+      break;
+   case 0x2D:
+      *mode = GX2AlphaToMaskMode::Dither180;
+      break;
+   case 0x93:
+      *mode = GX2AlphaToMaskMode::Dither270;
+      break;
+   default:
+      *mode = GX2AlphaToMaskMode::NonDithered;
+      break;
+   }
+}
+
+void
+GX2SetAlphaToMaskReg(GX2AlphaToMaskReg *reg)
+{
+   auto db_alpha_to_mask = reg->db_alpha_to_mask.value();
+   pm4::write(pm4::SetContextReg { latte::Register::DB_ALPHA_TO_MASK, db_alpha_to_mask.value });
+}
+
+void
 GX2SetBlendConstantColor(float red,
                          float green,
                          float blue,

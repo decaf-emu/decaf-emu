@@ -85,6 +85,11 @@ GX2_ENUM_END
 
 GX2_ENUM(GX2AlphaToMaskMode, uint32_t)
    GX2_ENUM_VALID_RANGE(0, 4)
+   GX2_ENUM_VALUE(NonDithered,   0)
+   GX2_ENUM_VALUE(Dither0,       1)
+   GX2_ENUM_VALUE(Dither90,      2)
+   GX2_ENUM_VALUE(Dither180,     3)
+   GX2_ENUM_VALUE(Dither270,     4)
 GX2_ENUM_END
 
 GX2_ENUM(GX2BlendMode, uint32_t)

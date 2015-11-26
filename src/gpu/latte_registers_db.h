@@ -6,6 +6,23 @@
 namespace latte
 {
 
+union DB_ALPHA_TO_MASK
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t ALPHA_TO_MASK_ENABLE : 1;
+      uint32_t : 7;
+      uint32_t ALPHA_TO_MASK_OFFSET0 : 2;
+      uint32_t ALPHA_TO_MASK_OFFSET1 : 2;
+      uint32_t ALPHA_TO_MASK_OFFSET2 : 2;
+      uint32_t ALPHA_TO_MASK_OFFSET3 : 2;
+      uint32_t OFFSET_ROUND : 1;
+      uint32_t : 15;
+   };
+};
+
 union DB_DEPTH_BASE
 {
    uint32_t value;
