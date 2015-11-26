@@ -188,6 +188,27 @@ getCompressedTextureFormat(latte::SQ_DATA_FORMAT format, uint32_t degamma)
    }
 }
 
+static gl::GLenum
+getTextureSwizzle(latte::SQ_SEL sel)
+{
+   switch (sel) {
+   case latte::SQ_SEL_X:
+      return gl::GL_RED;
+   case latte::SQ_SEL_Y:
+      return gl::GL_GREEN;
+   case latte::SQ_SEL_Z:
+      return gl::GL_BLUE;
+   case latte::SQ_SEL_W:
+      return gl::GL_ALPHA;
+   case latte::SQ_SEL_0:
+      return gl::GL_ZERO;
+   case latte::SQ_SEL_1:
+      return gl::GL_ONE;
+   default:
+      throw std::logic_error("Invalid texture swizzle");
+   }
+}
+
 bool GLDriver::checkActiveTextures()
 {
    static const auto MAX_PS_TEXTURES = 16;
@@ -213,6 +234,7 @@ bool GLDriver::checkActiveTextures()
          continue;
       }
 
+      // Untile texture
       auto pitch = (sq_tex_resource_word0.PITCH + 1) * gsl::narrow_cast<uint32_t>(latte::tile_width);
       auto width = sq_tex_resource_word0.TEX_WIDTH + 1;
       auto height = sq_tex_resource_word1.TEX_HEIGHT + 1;
@@ -235,6 +257,7 @@ bool GLDriver::checkActiveTextures()
          return false;
       }
 
+      // Create texture
       bool compressed = isCompressedFormat(format);
       auto target = getTextureTarget(dim);
       auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma);
@@ -272,6 +295,20 @@ bool GLDriver::checkActiveTextures()
          return false;
       }
 
+      // Setup texture swizzle
+      auto dst_sel_x = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_X);
+      auto dst_sel_y = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Y);
+      auto dst_sel_z = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Z);
+      auto dst_sel_w = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_W);
+
+      gl::GLint textureSwizzle[] = {
+         static_cast<gl::GLint>(dst_sel_x),
+         static_cast<gl::GLint>(dst_sel_y),
+         static_cast<gl::GLint>(dst_sel_z),
+         static_cast<gl::GLint>(dst_sel_w),
+      };
+
+      gl::glTextureParameteriv(texture.object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
       gl::glBindTextureUnit(i, texture.object);
    }
 
