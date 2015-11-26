@@ -54,6 +54,20 @@ GX2CreateDumpDirectory()
    CreateDirectory(TEXT("dump"), NULL);
 }
 
+static bool
+fileExists(const std::string &name)
+{
+   WIN32_FIND_DATAA data;
+   auto handle = FindFirstFileA(name.c_str(), &data);
+
+   if (handle == INVALID_HANDLE_VALUE) {
+      return false;
+   }
+
+   FindClose(handle);
+   return true;
+}
+
 static std::string
 GX2PointerAsString(const void *pointer)
 {
@@ -135,6 +149,11 @@ GX2DebugDumpTexture(const GX2Texture *texture)
 
    // Write text dump of GX2Texture structure to texture_X.txt
    auto filename = "texture_" + GX2PointerAsString(texture);
+
+   if (fileExists("dump/" + filename + ".txt")) {
+      return;
+   }
+
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
    auto format = fmt::MemoryWriter {};
 
@@ -209,6 +228,11 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, uint8_t
 
    // Write binary of shader data to shader_pixel_X.bin
    GX2CreateDumpDirectory();
+
+   if (fileExists("dump/" + filename + ".bin")) {
+      return;
+   }
+
    GX2DebugDumpData("dump/" + filename + ".bin", data, size);
 
    // Write text of shader to shader_pixel_X.txt
