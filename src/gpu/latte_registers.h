@@ -6,6 +6,7 @@
 #include "latte_registers_spi.h"
 #include "latte_registers_sq.h"
 #include "latte_registers_sx.h"
+#include "latte_registers_td.h"
 #include "latte_registers_vgt.h"
 
 namespace latte
@@ -21,6 +22,33 @@ enum Value : uint32_t
    VGT_PRIMITIVE_TYPE               = 0x08958,
    VGT_NUM_INDICES                  = 0x08970,
    SQ_CONFIG                        = 0x08c00,
+   TD_PS_SAMPLER_BORDER0_RED        = 0x0a400,
+   TD_PS_SAMPLER_BORDER0_GREEN      = 0x0a404,
+   TD_PS_SAMPLER_BORDER0_BLUE       = 0x0a408,
+   TD_PS_SAMPLER_BORDER0_ALPHA      = 0x0a40C,
+   // ...
+   TD_PS_SAMPLER_BORDER17_RED       = 0x0a510,
+   TD_PS_SAMPLER_BORDER17_GREEN     = 0x0a514,
+   TD_PS_SAMPLER_BORDER17_BLUE      = 0x0a518,
+   TD_PS_SAMPLER_BORDER17_ALPHA     = 0x0a51C,
+   TD_VS_SAMPLER_BORDER0_RED        = 0x0a600,
+   TD_VS_SAMPLER_BORDER0_GREEN      = 0x0a604,
+   TD_VS_SAMPLER_BORDER0_BLUE       = 0x0a608,
+   TD_VS_SAMPLER_BORDER0_ALPHA      = 0x0a60C,
+   // ...
+   TD_VS_SAMPLER_BORDER17_RED       = 0x0a710,
+   TD_VS_SAMPLER_BORDER17_GREEN     = 0x0a714,
+   TD_VS_SAMPLER_BORDER17_BLUE      = 0x0a718,
+   TD_VS_SAMPLER_BORDER17_ALPHA     = 0x0a71C,
+   TD_GS_SAMPLER_BORDER0_RED        = 0x0a900,
+   TD_GS_SAMPLER_BORDER0_GREEN      = 0x0a904,
+   TD_GS_SAMPLER_BORDER0_BLUE       = 0x0a908,
+   TD_GS_SAMPLER_BORDER0_ALPHA      = 0x0a90C,
+   // ...
+   TD_GS_SAMPLER_BORDER17_RED       = 0x0aa10,
+   TD_GS_SAMPLER_BORDER17_GREEN     = 0x0aa14,
+   TD_GS_SAMPLER_BORDER17_BLUE      = 0x0aa18,
+   TD_GS_SAMPLER_BORDER17_ALPHA     = 0x0aa1C,
    ConfigRegisterEnd                = 0x0ac00,
 
    // Context Registers
@@ -382,6 +410,9 @@ enum Value : uint32_t
 
    // Sampler Registers
    SamplerRegisterBase              = 0x3C000,
+   SQ_TEX_SAMPLER_WORD0_0           = 0x3C000,
+   SQ_TEX_SAMPLER_WORD1_0           = 0x3C004,
+   SQ_TEX_SAMPLER_WORD2_0           = 0x3C008,
    SamplerRegisterEnd               = 0x3C288,
 
    // Control Registers

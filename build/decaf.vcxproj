@@ -307,6 +307,7 @@
     <ClInclude Include="..\src\gpu\latte_registers_spi.h" />
     <ClInclude Include="..\src\gpu\latte_registers_sq.h" />
     <ClInclude Include="..\src\gpu\latte_registers_sx.h" />
+    <ClInclude Include="..\src\gpu\latte_registers_td.h" />
     <ClInclude Include="..\src\gpu\latte_registers_vgt.h" />
     <ClInclude Include="..\src\gpu\latte_shadir.h" />
     <ClInclude Include="..\src\gpu\opengl\glsl_generator.h" />

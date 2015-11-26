@@ -314,9 +314,9 @@ struct SetSamplerAttrib
    static const auto Opcode = Opcode3::SET_SAMPLER;
 
    uint32_t id;
-   latte::SQ_TEX_SAMPLER_WORD0_0 word0;
-   latte::SQ_TEX_SAMPLER_WORD1_0 word1;
-   latte::SQ_TEX_SAMPLER_WORD2_0 word2;
+   latte::SQ_TEX_SAMPLER_WORD0_N word0;
+   latte::SQ_TEX_SAMPLER_WORD1_N word1;
+   latte::SQ_TEX_SAMPLER_WORD2_N word2;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)

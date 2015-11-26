@@ -391,7 +391,7 @@ union SQ_TEX_RESOURCE_WORD6_N
    };
 };
 
-union SQ_TEX_SAMPLER_WORD0_0
+union SQ_TEX_SAMPLER_WORD0_N
 {
    uint32_t value;
 
@@ -414,7 +414,7 @@ union SQ_TEX_SAMPLER_WORD0_0
    };
 };
 
-union SQ_TEX_SAMPLER_WORD1_0
+union SQ_TEX_SAMPLER_WORD1_N
 {
    uint32_t value;
 
@@ -426,7 +426,7 @@ union SQ_TEX_SAMPLER_WORD1_0
    };
 };
 
-union SQ_TEX_SAMPLER_WORD2_0
+union SQ_TEX_SAMPLER_WORD2_N
 {
    uint32_t value;
 

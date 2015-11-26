@@ -50,6 +50,11 @@ bool GLDriver::checkReadyDraw()
       return false;
    }
 
+   if (!checkActiveSamplers()) {
+      gLog->warn("Skipping draw with invalid samplers.");
+      return false;
+   }
+
    if (!checkViewport()) {
       gLog->warn("Skipping draw with invalid viewport.");
       return false;

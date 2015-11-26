@@ -278,6 +278,152 @@ bool GLDriver::checkActiveTextures()
    return true;
 }
 
+static gl::GLenum
+getTextureWrap(latte::SQ_TEX_CLAMP clamp)
+{
+   switch (clamp) {
+   case latte::SQ_TEX_WRAP:
+      return gl::GL_REPEAT;
+   case latte::SQ_TEX_MIRROR:
+      return gl::GL_MIRRORED_REPEAT;
+   case latte::SQ_TEX_CLAMP_LAST_TEXEL:
+      return gl::GL_CLAMP_TO_EDGE;
+   case latte::SQ_TEX_MIRROR_ONCE_LAST_TEXEL:
+      return gl::GL_MIRROR_CLAMP_TO_EDGE;
+   case latte::SQ_TEX_CLAMP_BORDER:
+      return gl::GL_CLAMP_TO_BORDER;
+   case latte::SQ_TEX_MIRROR_ONCE_BORDER:
+      return gl::GL_MIRROR_CLAMP_TO_BORDER_EXT;
+   case latte::SQ_TEX_CLAMP_HALF_BORDER:
+   case latte::SQ_TEX_MIRROR_ONCE_HALF_BORDER:
+   default:
+      throw std::logic_error("Invalid SQ_TEX_CLAMP");
+   }
+}
+
+static gl::GLenum
+getTextureXYFilter(latte::SQ_TEX_XY_FILTER filter)
+{
+   switch (filter) {
+   case latte::SQ_TEX_XY_FILTER_POINT:
+      return gl::GL_NEAREST;
+   case latte::SQ_TEX_XY_FILTER_BILINEAR:
+      return gl::GL_LINEAR;
+   default:
+      throw std::logic_error("Invalid SQ_TEX_XY_FILTER");
+   }
+}
+
+static gl::GLenum
+getTextureCompareFunction(latte::SQ_TEX_DEPTH_COMPARE func)
+{
+   switch (func) {
+   case latte::SQ_TEX_DEPTH_COMPARE_NEVER:
+      return gl::GL_NEVER;
+   case latte::SQ_TEX_DEPTH_COMPARE_LESS:
+      return gl::GL_LESS;
+   case latte::SQ_TEX_DEPTH_COMPARE_EQUAL:
+      return gl::GL_EQUAL;
+   case latte::SQ_TEX_DEPTH_COMPARE_LESSEQUAL:
+      return gl::GL_LEQUAL;
+   case latte::SQ_TEX_DEPTH_COMPARE_GREATER:
+      return gl::GL_GREATER;
+   case latte::SQ_TEX_DEPTH_COMPARE_NOTEQUAL:
+      return gl::GL_NOTEQUAL;
+   case latte::SQ_TEX_DEPTH_COMPARE_GREATEREQUAL:
+      return gl::GL_GEQUAL;
+   case latte::SQ_TEX_DEPTH_COMPARE_ALWAYS:
+      return gl::GL_ALWAYS;
+   default:
+      throw std::logic_error("Invalid SQ_TEX_DEPTH_COMPARE");
+   }
+}
+
+bool GLDriver::checkActiveSamplers()
+{
+   // TODO: Vertex Samplers, Geometry Samplers
+   // Pixel samplers id 0...16
+   for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
+      auto sq_tex_sampler_word0 = getRegister<latte::SQ_TEX_SAMPLER_WORD0_N>(latte::Register::SQ_TEX_SAMPLER_WORD0_0 + 4 * (i * 3));
+      auto sq_tex_sampler_word1 = getRegister<latte::SQ_TEX_SAMPLER_WORD1_N>(latte::Register::SQ_TEX_SAMPLER_WORD1_0 + 4 * (i * 3));
+      auto sq_tex_sampler_word2 = getRegister<latte::SQ_TEX_SAMPLER_WORD2_N>(latte::Register::SQ_TEX_SAMPLER_WORD2_0 + 4 * (i * 3));
+
+      if (sq_tex_sampler_word0.value == 0 && sq_tex_sampler_word1.value == 0 && sq_tex_sampler_word2.value == 0) {
+         gl::glBindSampler(i, 0);
+         continue;
+      }
+
+      auto &sampler = mPixelSamplers[i];
+
+      if (!sampler.object) {
+         gl::glCreateSamplers(1, &sampler.object);
+      }
+
+      // Texture clamp
+      auto clamp_x = getTextureWrap(sq_tex_sampler_word0.CLAMP_X);
+      auto clamp_y = getTextureWrap(sq_tex_sampler_word0.CLAMP_Y);
+      auto clamp_z = getTextureWrap(sq_tex_sampler_word0.CLAMP_Z);
+
+      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_S, static_cast<gl::GLint>(clamp_x));
+      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_T, static_cast<gl::GLint>(clamp_y));
+      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_R, static_cast<gl::GLint>(clamp_z));
+
+      // Texture filter
+      auto xy_min_filter = getTextureXYFilter(sq_tex_sampler_word0.XY_MIN_FILTER);
+      auto xy_mag_filter = getTextureXYFilter(sq_tex_sampler_word0.XY_MAG_FILTER);
+
+      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MIN_FILTER, static_cast<gl::GLint>(xy_min_filter));
+      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<gl::GLint>(xy_mag_filter));
+
+      // Setup border color
+      auto border_color_type = sq_tex_sampler_word0.BORDER_COLOR_TYPE;
+      std::array<float, 4> colors;
+
+      switch (border_color_type) {
+      case latte::SQ_TEX_BORDER_COLOR_TRANS_BLACK:
+         colors = { 0.0f, 0.0f, 0.0f, 0.0f };
+         break;
+      case latte::SQ_TEX_BORDER_COLOR_OPAQUE_BLACK:
+         colors = { 0.0f, 0.0f, 0.0f, 1.0f };
+         break;
+      case latte::SQ_TEX_BORDER_COLOR_OPAQUE_WHITE:
+         colors = { 1.0f, 1.0f, 1.0f, 0.0f };
+         break;
+      case latte::SQ_TEX_BORDER_COLOR_REGISTER:
+         auto td_ps_sampler_border_red = getRegister<latte::TD_PS_SAMPLER_BORDERN_RED>(latte::Register::TD_PS_SAMPLER_BORDER0_RED + 4 * (i * 4));
+         auto td_ps_sampler_border_green = getRegister<latte::TD_PS_SAMPLER_BORDERN_GREEN>(latte::Register::TD_PS_SAMPLER_BORDER0_GREEN + 4 * (i * 4));
+         auto td_ps_sampler_border_blue = getRegister<latte::TD_PS_SAMPLER_BORDERN_BLUE>(latte::Register::TD_PS_SAMPLER_BORDER0_BLUE + 4 * (i * 4));
+         auto td_ps_sampler_border_alpha = getRegister<latte::TD_PS_SAMPLER_BORDERN_ALPHA>(latte::Register::TD_PS_SAMPLER_BORDER0_ALPHA + 4 * (i * 4));
+
+         colors = {
+            td_ps_sampler_border_red.BORDER_RED,
+            td_ps_sampler_border_green.BORDER_GREEN,
+            td_ps_sampler_border_blue.BORDER_BLUE,
+            td_ps_sampler_border_alpha.BORDER_ALPHA,
+         };
+         break;
+      }
+
+      gl::glSamplerParameterfv(sampler.object, gl::GL_TEXTURE_BORDER_COLOR, &colors[0]);
+
+      // Depth compare
+      auto depth_compare_function = getTextureCompareFunction(sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION);
+      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_FUNC, static_cast<gl::GLint>(depth_compare_function));
+
+      // Setup texture LOD
+      auto min_lod = sq_tex_sampler_word1.MIN_LOD;
+      auto max_lod = sq_tex_sampler_word1.MAX_LOD;
+      auto lod_bias = sq_tex_sampler_word1.LOD_BIAS;
+
+      // TODO: GL_TEXTURE_MIN_LOD, GL_TEXTURE_MAX_LOD, GL_TEXTURE_LOD_BIAS
+
+      // Bind sampler
+      gl::glBindSampler(i, sampler.object);
+   }
+
+   return true;
+}
+
 } // namespace opengl
 
 } // namespace gpu

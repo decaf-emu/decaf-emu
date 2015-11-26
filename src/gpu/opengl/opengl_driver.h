@@ -20,6 +20,7 @@ static const auto MAX_ATTRIB_COUNT = 16u;
 static const auto MAX_COLOR_BUFFER_COUNT = 8u;
 static const auto MAX_UNIFORM_BLOCKS = 8u;
 static const auto MAX_UNIFORM_REGISTERS = 256u;
+static const auto MAX_SAMPLERS_PER_TYPE = 16u;
 
 struct FetchShader
 {
@@ -109,6 +110,11 @@ struct ScreenDrawData
    gl::GLuint vertBuffer;
 };
 
+struct Sampler
+{
+   gl::GLuint object = 0;
+};
+
 using GLContext = uint64_t;
 
 class GLDriver : public gpu::Driver
@@ -174,6 +180,7 @@ private:
    bool checkActiveAttribBuffers();
    bool checkActiveColorBuffer();
    bool checkActiveDepthBuffer();
+   bool checkActiveSamplers();
    bool checkActiveShader();
    bool checkActiveTextures();
    bool checkActiveUniforms();
@@ -211,6 +218,10 @@ private:
    std::unordered_map<uint32_t, ColorBuffer> mColorBuffers;
    std::unordered_map<uint32_t, DepthBuffer> mDepthBuffers;
    std::unordered_map<uint32_t, AttributeBuffer> mAttribBuffers;
+
+   std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mVertexSamplers;
+   std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mPixelSamplers;
+   std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mGeometrySamplers;
 
    FrameBuffer mFrameBuffer;
    Shader *mActiveShader = nullptr;
