@@ -95,9 +95,9 @@ bool GLDriver::checkActiveShader()
    auto pgm_size_ps = getRegister<latte::SQ_PGM_SIZE_PS>(latte::Register::SQ_PGM_SIZE_PS);
 
    if (mActiveShader &&
-       mActiveShader->fetch && mActiveShader->fetch->pgm_start_fs.PGM_START != pgm_start_fs.PGM_START
-       && mActiveShader->vertex && mActiveShader->vertex->pgm_start_vs.PGM_START != pgm_start_vs.PGM_START
-       && mActiveShader->pixel && mActiveShader->pixel->pgm_start_ps.PGM_START != pgm_start_ps.PGM_START) {
+       mActiveShader->fetch && mActiveShader->fetch->pgm_start_fs.PGM_START == pgm_start_fs.PGM_START
+       && mActiveShader->vertex && mActiveShader->vertex->pgm_start_vs.PGM_START == pgm_start_vs.PGM_START
+       && mActiveShader->pixel && mActiveShader->pixel->pgm_start_ps.PGM_START == pgm_start_ps.PGM_START) {
       // OpenGL shader matches latte shader
       return true;
    }
