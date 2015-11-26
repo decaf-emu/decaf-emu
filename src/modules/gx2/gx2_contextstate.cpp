@@ -1,6 +1,9 @@
 #include "gpu/pm4_writer.h"
 #include "gx2.h"
 #include "gx2_contextstate.h"
+#include "gx2_draw.h"
+#include "gx2_shaders.h"
+#include "gx2_registers.h"
 #include <utility>
 
 static GX2ContextState *
@@ -124,15 +127,17 @@ _GX2LoadState(GX2ContextState *state)
 void
 GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1)
 {
+   // Create our internal shadow display list
    memset(&state->shadowState, 0, sizeof(state->shadowState));
    GX2BeginDisplayList(state->shadowDisplayList, GX2ContextState::MaxDisplayListSize * 4);
    _GX2LoadState(state);
    state->shadowDisplayListSize = GX2EndDisplayList(state->shadowDisplayList);
 
-   // Default to uniform registers
-   auto sq_config = latte::SQ_CONFIG { state->shadowState.getRegister(latte::Register::SQ_CONFIG) };
-   sq_config.DX9_CONSTS = 1;
-   state->shadowState.setRegister(latte::Register::SQ_CONFIG, sq_config.value);
+   // Set to active state
+   GX2SetContextState(state);
+
+   // Initialise default state
+   GX2SetDefaultState();
 }
 
 void
@@ -161,6 +166,111 @@ GX2SetContextState(GX2ContextState *state)
    }
 
    pm4::write(pm4::DecafSetContextState {
-      reinterpret_cast<void *>(&state->shadowState)
+      state ? reinterpret_cast<void *>(&state->shadowState) : nullptr
    });
+}
+
+void
+GX2SetDefaultState()
+{
+   GX2SetShaderModeEx(GX2ShaderMode::UniformRegister, // mode
+                      48,     // numVsGpr
+                      64,     // numVsStackEntries
+                      0,      // numGsGpr
+                      0,      // numGsStackEntries
+                      200,    // numPsGpr
+                      192);   // numPsStackEntries
+
+   GX2SetDepthStencilControl(TRUE,                          // depthTest
+                             TRUE,                          // depthWrite
+                             GX2CompareFunction::Less,      // depthCompare
+                             FALSE,                         // stencilTest
+                             FALSE,                         // backfaceStencil
+                             GX2CompareFunction::Always,    // frontStencilFunc
+                             GX2StencilFunction::Replace,   // frontStencilZPass
+                             GX2StencilFunction::Replace,   // frontStencilZFail
+                             GX2StencilFunction::Replace,   // frontStencilFail
+                             GX2CompareFunction::Always,    // backStencilFunc
+                             GX2StencilFunction::Replace,   // backStencilZPass
+                             GX2StencilFunction::Replace,   // backStencilZFail
+                             GX2StencilFunction::Replace);  // backStencilFail
+
+   GX2SetPolygonControl(GX2FrontFace::CounterClockwise,  // frontFace
+                        FALSE,                           // cullFront
+                        FALSE,                           // cullBack
+                        FALSE,                           // polyMode
+                        GX2PolygonMode::Triangle,        // polyModeFront
+                        GX2PolygonMode::Triangle,        // polyModeBack
+                        FALSE,                           // polyOffsetFrontEnable
+                        FALSE,                           // polyOffsetBackEnable
+                        FALSE);                          // polyOffsetParaEnable
+
+   GX2SetStencilMask(0xff,    // frontMask
+                     0xff,    // frontWriteMask
+                     1,       // frontRef
+                     0xff,    // backMask
+                     0xff,    // backWriteMask
+                     1);      // backRef
+
+   GX2SetPolygonOffset(0.0f,  // frontOffset
+                       0.0f,  // frontScale
+                       0.0f,  // backOffset
+                       0.0f,  // backScale
+                       0.0f); // clamp
+
+   GX2SetPointSize(1.0f,      // width
+                   1.0f);     // height
+
+   GX2SetPointLimits(1.0f,    // min
+                     1.0f);   // max
+
+   GX2SetLineWidth(1.0f);
+
+   GX2SetPrimitiveRestartIndex(-1);
+
+   GX2SetAlphaTest(FALSE,                    // alphaTest
+                   GX2CompareFunction::Less, // func
+                   0.0f);                    // ref
+
+   GX2SetAlphaToMask(FALSE,                              // enable
+                     GX2AlphaToMaskMode::NonDithered);   // mode
+
+   GX2SetTargetChannelMasks(GX2ChannelMask::RGBA,
+                            GX2ChannelMask::RGBA,
+                            GX2ChannelMask::RGBA,
+                            GX2ChannelMask::RGBA,
+                            GX2ChannelMask::RGBA,
+                            GX2ChannelMask::RGBA,
+                            GX2ChannelMask::RGBA,
+                            GX2ChannelMask::RGBA);
+
+   GX2SetColorControl(GX2LogicOp::Copy,   // rop3
+                      0,                  // targetBlendEnable
+                      FALSE,              // multiWriteEnable
+                      TRUE);              // colorWriteEnable
+
+   for (auto i = 0u; i < 8u; ++i) {
+      GX2SetBlendControl(static_cast<GX2RenderTarget::Value>(i),  // target
+                         GX2BlendMode::SrcAlpha,      // colorSrcBlend
+                         GX2BlendMode::InvSrcAlpha,   // colorDstBlend
+                         GX2BlendCombineMode::Add,    // colorCombine
+                         TRUE,                        // useAlphaBlend
+                         GX2BlendMode::SrcAlpha,      // alphaSrcBlend
+                         GX2BlendMode::InvSrcAlpha,   // alphaDstBlend
+                         GX2BlendCombineMode::Add);   // alphaCombine
+   }
+
+   GX2SetBlendConstantColor(0.0f, 0.0f, 0.0f, 0.0f); // RGBA
+
+   // GX2SetStreamOutEnable(0); VGT_STRMOUT_EN
+
+   // GX2SetRasterizerClipControl(1, 1); PA_CL_CLIP_CNTL
+
+   // GX2SetTessellation(0, 0x84, 9); 0x285 VGT_HOS_CNTL, 0x289 VGT_GROUP_PRIM_TYPE, 0x28a, 0x28b, 0x28c, 0x28e, 0x28d, 0x28f
+
+   // GX2SetMaxTessellationLevel(1.0f); 0x286
+
+   // GX2SetMinTessellationLevel(1.0f); 0x287
+
+   // Set 0x343 DB_RENDER_CONTROL to 0
 }

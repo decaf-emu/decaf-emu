@@ -43,6 +43,7 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2SetupContextStateEx);
    RegisterKernelFunction(GX2GetContextStateDisplayList);
    RegisterKernelFunction(GX2SetContextState);
+   RegisterKernelFunction(GX2SetDefaultState);
 
    // Display
    RegisterKernelFunction(GX2SetTVEnable);

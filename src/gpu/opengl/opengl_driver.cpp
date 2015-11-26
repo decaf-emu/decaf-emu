@@ -562,17 +562,6 @@ readFileToString(const std::string &filename)
    return result;
 }
 
-void GLDriver::initRegisters()
-{
-   // Setup registers
-   mRegisters.fill(0);
-
-   // Default to uniform registers
-   auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
-   sq_config.DX9_CONSTS = 1;
-   setRegister(latte::Register::SQ_CONFIG, sq_config.value);
-}
-
 void GLDriver::initGL()
 {
    activateDeviceContext();
@@ -599,6 +588,7 @@ void GLDriver::initGL()
    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 
    // Clear active state
+   mRegisters.fill(0);
    mActiveShader = nullptr;
    mActiveDepthBuffer = nullptr;
    memset(&mActiveColorBuffers[0], 0, sizeof(ColorBuffer *) * mActiveColorBuffers.size());
@@ -1223,7 +1213,6 @@ void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
 
 void GLDriver::run()
 {
-   initRegisters();
    initGL();
 
    while (mRunning) {

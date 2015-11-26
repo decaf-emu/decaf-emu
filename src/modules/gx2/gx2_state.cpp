@@ -1,6 +1,7 @@
 #include "gpu/driver.h"
 #include "gpu/pm4.h"
 #include "gx2_cbpool.h"
+#include "gx2_contextstate.h"
 #include "gx2_displaylist.h"
 #include "gx2_event.h"
 #include "gx2_state.h"
@@ -63,6 +64,9 @@ GX2Init(be_val<uint32_t> *attributes)
 
    // Start our driver!
    gpu::driver::start();
+
+   // Setup default gx2 state
+   GX2SetDefaultState();
 }
 
 void

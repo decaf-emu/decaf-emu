@@ -37,3 +37,6 @@ GX2GetContextStateDisplayList(GX2ContextState *state, be_ptr<void> *outDisplayLi
 
 void
 GX2SetContextState(GX2ContextState *state);
+
+void
+GX2SetDefaultState();
