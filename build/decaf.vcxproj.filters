@@ -675,6 +675,12 @@
     <ClCompile Include="..\src\platform\platform_posix_memorymap.cpp">
       <Filter>Source Files\platform</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_dir.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\posix_win_dir.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -886,9 +892,6 @@
     </ClInclude>
     <ClInclude Include="..\src\ppcinvokeresult.h">
       <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\platform.h">
-      <Filter>Header Files\platform</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h">
       <Filter>Header Files\modules\gx2</Filter>
@@ -1323,6 +1326,12 @@
       <Filter>Header Files\platform</Filter>
     </ClInclude>
     <ClInclude Include="..\src\platform\platform_memorymap.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform_dir.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform.h">
       <Filter>Header Files\platform</Filter>
     </ClInclude>
   </ItemGroup>
