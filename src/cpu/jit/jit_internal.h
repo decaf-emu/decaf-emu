@@ -126,11 +126,11 @@ T asmjit_cast(Z* base, size_t offset = 0)
    return reinterpret_cast<T>(((char*)base) + offset);
 }
 
-typedef void* JitCode;
-typedef void* JitFinale;
-typedef uint32_t(*JitCall)(ThreadState*, cpu::CoreState*, JitCode);
+using JitCode = void *;
+using JitCall = uint32_t(*)(ThreadState*, cpu::CoreState*, JitCode);
+using JitFinale = JitCall;
 
-typedef std::map<uint32_t, asmjit::Label> JumpLabelMap;
+using JumpLabelMap = std::map<uint32_t, asmjit::Label>;
 
 extern JitCall gCallFn;
 extern JitFinale gFinaleFn;

@@ -48,8 +48,11 @@ be_ptr<void>*
 ghs_flock_ptr(void *file)
 {
    unsigned int index = (unsigned int)(((_ghs_iobuf*)file) - (_ghs_iobuf*)p_iob);
-   if (index > *p__gh_FOPEN_MAX)
+
+   if (index > *p__gh_FOPEN_MAX) {
       index = *p__gh_FOPEN_MAX;
+   }
+
    return &(*p_iob_lock)[index];
 }
 
