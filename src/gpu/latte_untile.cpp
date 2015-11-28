@@ -231,8 +231,8 @@ get_2d_offset(const TileInfo &info, size_t x, size_t y, size_t z)
 
    if (do_channel_rotate) {
       // 3D & 3B formats
-      bank_slice_rotation = (std::max(1ull, (num_channels / 2) - 1) * slice) / num_channels;
-      channel_slice_rotation = std::max(1ull, (num_channels / 2) - 1) * slice;
+      bank_slice_rotation = (std::max<size_t>(1, (num_channels / 2) - 1) * slice) / num_channels;
+      channel_slice_rotation = std::max<size_t>(1, (num_channels / 2) - 1) * slice;
    } else {
       // 2D & 2B formats
       bank_slice_rotation = (((num_banks / 2) - 1) * slice);

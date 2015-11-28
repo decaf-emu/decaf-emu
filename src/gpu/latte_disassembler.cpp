@@ -557,15 +557,15 @@ bool disassembleALU(DisassembleState &state, latte::cf::inst id, latte::cf::Inst
 
          // Count number of literal used
          if (alu.word0.src0Sel == latte::alu::Source::SrcLiteral) {
-            literals = std::max(literals, alu.word0.src0Chan + 1);
+            literals = std::max<unsigned>(literals, alu.word0.src0Chan + 1);
          }
 
          if (alu.word0.src1Sel == latte::alu::Source::SrcLiteral) {
-            literals = std::max(literals, alu.word0.src1Chan + 1);
+            literals = std::max<unsigned>(literals, alu.word0.src1Chan + 1);
          }
 
          if ((alu.word1.encoding != latte::alu::Encoding::OP2) && (alu.op3.src2Sel == latte::alu::Source::SrcLiteral)) {
-            literals = std::max(literals, alu.op3.src2Chan + 1);
+            literals = std::max<unsigned>(literals, alu.op3.src2Chan + 1);
          }
 
          // Increase slot id
