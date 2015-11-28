@@ -669,6 +669,12 @@
     <ClCompile Include="..\src\platform\platform_posix_fiber.cpp">
       <Filter>Source Files\platform</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\platform\platform_win_memorymap.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_memorymap.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1314,6 +1320,9 @@
       <Filter>Header Files\input</Filter>
     </ClInclude>
     <ClInclude Include="..\src\platform\platform_fiber.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform_memorymap.h">
       <Filter>Header Files\platform</Filter>
     </ClInclude>
   </ItemGroup>

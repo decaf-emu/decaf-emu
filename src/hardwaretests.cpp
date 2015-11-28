@@ -136,11 +136,6 @@ bool runTests()
    uint32_t testsFailed = 0, testsPassed = 0;
    uint32_t baseAddress = 0x02000000;
 
-   // Allocate some memory to write code to
-   if (!mem::alloc(baseAddress, 4096)) {
-      return false;
-   }
-
    Instruction bclr = gInstructionTable.encode(InstructionID::bclr);
    bclr.bo = 0x1f;
    mem::write(baseAddress + 4, bclr.value);

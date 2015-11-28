@@ -18,13 +18,6 @@ valid(ppcaddr_t address);
 bool
 protect(ppcaddr_t address, size_t size);
 
-bool
-alloc(ppcaddr_t address, size_t size);
-
-bool
-free(ppcaddr_t address);
-
-
 // Translate WiiU virtual address to host address
 template<typename Type = uint8_t>
 inline Type *
@@ -35,13 +28,6 @@ translate(ppcaddr_t address)
    } else {
       return reinterpret_cast<Type*>(base() + address);
    }
-}
-
-template<typename Type>
-inline Type *
-translatePtr(Type *ptr)
-{
-   return reinterpret_cast<Type*>(translate(reinterpret_cast<uint32_t>(ptr)));
 }
 
 // Translate host address to WiiU virtual address

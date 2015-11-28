@@ -516,10 +516,8 @@ executeFuzzTests(uint32_t suite_seed)
       return false;
    }
 
-   mem::alloc(instructionBase, 32);
-   mem::alloc(dataBase, 128);
-
    std::mt19937 suite_rand(suite_seed);
+
    for (auto i = 0; i < 10000; ++i) {
       if (false) {
          gLog->info("Executing test {}", i);
