@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include "be_val.h"
 
 template<typename Type, size_t Size>

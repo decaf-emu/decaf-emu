@@ -2,6 +2,7 @@
 #include "gpu/pm4_buffer.h"
 #include "modules/gx2/gx2_event.h"
 #include "modules/coreinit/coreinit_time.h"
+#include <condition_variable>
 #include <queue>
 #include <mutex>
 

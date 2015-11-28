@@ -1,7 +1,8 @@
 #pragma once
+#include <atomic>
+#include <condition_variable>
 #include <cstdint>
 #include <mutex>
-#include <atomic>
 
 // TODO: Need to use CoreCount, but needs to not be in CoreInit...
 static const int DCCoreCount = 3;

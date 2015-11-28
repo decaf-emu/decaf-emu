@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <list>
+#include <string>
+
 #include "instruction.h"
 
 struct InstructionData;
