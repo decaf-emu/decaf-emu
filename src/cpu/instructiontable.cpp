@@ -73,8 +73,8 @@ static BitRange gFieldBits[] = {
 #undef FLD
 #undef MRKR
 
-#define FLD(x, ...) { #x },
-#define MRKR(x, ...) { #x },
+#define FLD(x, ...) #x,
+#define MRKR(x, ...) #x,
 static const char * gFieldNames[] = {
 #include "instructionfields.inl"
 };
