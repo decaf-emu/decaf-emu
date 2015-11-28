@@ -1,6 +1,7 @@
 #pragma once
 #include <climits>
 #include <cstdint>
+#include <cstddef>
 #include "platform/platform.h"
 
 #ifdef PLATFORM_WINDOWS
