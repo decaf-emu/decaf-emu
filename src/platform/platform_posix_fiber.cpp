@@ -1,3 +1,4 @@
+#include "platform.h"
 #include "platform_fiber.h"
 
 #ifdef PLATFORM_POSIX

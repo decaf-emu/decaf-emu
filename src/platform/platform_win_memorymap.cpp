@@ -1,4 +1,4 @@
-#pragma once
+#include "platform.h"
 #include "platform_memorymap.h"
 
 #ifdef PLATFORM_WINDOWS

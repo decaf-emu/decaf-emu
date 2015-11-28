@@ -1,6 +1,7 @@
+#include "platform.h"
 #include "platform_thread.h"
-#ifdef PLATFORM_POSIX
 
+#ifdef PLATFORM_POSIX
 #include <ctime>
 #include <thread>
 #include <string>

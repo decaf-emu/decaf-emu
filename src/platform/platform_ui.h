@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include "platform/platform.h"
 
 namespace platform
 {

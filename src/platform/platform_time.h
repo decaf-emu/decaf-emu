@@ -1,6 +1,5 @@
 #pragma once
 #include <ctime>
-#include "platform/platform.h"
 
 namespace platform
 {

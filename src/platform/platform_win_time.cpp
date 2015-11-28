@@ -1,3 +1,4 @@
+#include "platform.h"
 #include "platform_time.h"
 
 #ifdef PLATFORM_WINDOWS

@@ -1,3 +1,4 @@
+#include "platform.h"
 #include "platform_thread.h"
 
 #ifdef PLATFORM_WINDOWS
