@@ -73,8 +73,6 @@ public:
    void initialise(ppcsize_t maxCodeSize);
    LoadedModule *loadRPL(std::string name);
 
-   const char *getUnimplementedData(ppcaddr_t addr);
-
    const ModuleList &getLoadedModules() const
    {
       return mModules;

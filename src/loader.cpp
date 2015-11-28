@@ -397,31 +397,6 @@ Loader::registerUnimplementedData(const std::string& name)
 }
 
 
-const char *
-Loader::getUnimplementedData(ppcaddr_t addr)
-{
-   static char tempStr[2048];
-
-   for (auto &data : mUnimplementedData) {
-      if (data.second == (addr & 0xFFFFF000)) {
-         int offset = static_cast<int>(addr & 0xFFF) - 0x800;
-
-         if (offset > 0) {
-            sprintf_s(tempStr, "%s + %d", data.first.c_str(), offset);
-         } else if (offset < 0) {
-            sprintf_s(tempStr, "%s - %d", data.first.c_str(), -offset);
-         } else {
-            sprintf_s(tempStr, "%s", data.first.c_str());
-         }
-
-         return tempStr;
-      }
-   }
-
-   return "UNKNOWN";
-}
-
-
 ppcaddr_t
 Loader::registerUnimplementedFunction(const std::string& name)
 {
@@ -447,6 +422,7 @@ Loader::registerUnimplementedFunction(const std::string& name)
    mUnimplementedFunctions.emplace(name, addr);
    return addr;
 }
+
 
 bool
 Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections, BigEndianView &in, const char *shStrTab, SequentialMemoryTracker &codeSeg, AddressRange &trampSeg)
@@ -571,6 +547,7 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
    return true;
 }
 
+
 bool
 Loader::processImports(LoadedModule *loadedMod, const SectionList &sections)
 {
@@ -660,6 +637,7 @@ Loader::processImports(LoadedModule *loadedMod, const SectionList &sections)
    return true;
 }
 
+
 bool
 Loader::processExports(LoadedModule *loadedMod, const SectionList &sections)
 {
@@ -685,6 +663,7 @@ Loader::processExports(LoadedModule *loadedMod, const SectionList &sections)
 
    return true;
 }
+
 
 std::unique_ptr<LoadedModule>
 Loader::loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data)
