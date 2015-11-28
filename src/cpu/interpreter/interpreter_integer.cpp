@@ -1,5 +1,3 @@
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 #include <type_traits>
 #include "interpreter_insreg.h"
 #include "utils/bitutils.h"
