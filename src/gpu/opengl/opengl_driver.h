@@ -133,16 +133,12 @@ public:
    virtual ~GLDriver() {}
 
    void start() override;
-   void setupWindow() override;
    void setTvDisplay(size_t width, size_t height) override;
    void setDrcDisplay(size_t width, size_t height) override;
 
 private:
    void run();
    void initGL();
-
-   void activateDeviceContext();
-   void swapBuffers();
 
    void handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data);
    void decafCopyColorToScan(pm4::DecafCopyColorToScan &data);

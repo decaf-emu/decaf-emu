@@ -8,22 +8,25 @@ namespace Buttons
 {
 enum Buttons : uint32_t
 {
-   Sync = 1 << 0,
-   Home = 1 << 1,
-   Minus = 1 << 2,
-   Plus = 1 << 3,
-   R = 1 << 4,
-   L = 1 << 5,
-   ZR = 1 << 6,
-   ZL = 1 << 7,
-   Down = 1 << 8,
-   Up = 1 << 9,
-   Right = 1 << 10,
-   Left = 1 << 11,
-   Y = 1 << 12,
-   X = 1 << 13,
-   B = 1 << 14,
-   A = 1 << 15,
+   Sync     = 1 << 0,
+   Home     = 1 << 1,
+   Minus    = 1 << 2,
+   Plus     = 1 << 3,
+   R        = 1 << 4,
+   L        = 1 << 5,
+   ZR       = 1 << 6,
+   ZL       = 1 << 7,
+   Down     = 1 << 8,
+   Up       = 1 << 9,
+   Right    = 1 << 10,
+   Left     = 1 << 11,
+   Y        = 1 << 12,
+   X        = 1 << 13,
+   B        = 1 << 14,
+   A        = 1 << 15,
+   // ?
+   StickR   = 1 << 17,
+   StickL   = 1 << 18,
 };
 }
 
@@ -35,6 +38,16 @@ enum Validity : uint16_t
    InvalidX = 1 << 0,
    InvalidY = 1 << 1,
    InvalidXY = InvalidX | InvalidY
+};
+}
+
+namespace VpadReadError
+{
+enum Error : int32_t
+{
+   Success = 0,
+   NoSamples = -1,
+   InvalidController = -2,
 };
 }
 
@@ -113,4 +126,4 @@ CHECK_OFFSET(VPADStatus, 0xA3, slideVolumeEx);
 CHECK_SIZE(VPADStatus, 0xAC);
 
 int32_t
-VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<int32_t> *error);
+VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadError::Error> *error);

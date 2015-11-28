@@ -29,12 +29,6 @@ destroy()
 }
 
 void
-setupWindow()
-{
-   gActiveDriver->setupWindow();
-}
-
-void
 setTvDisplay(size_t width, size_t height)
 {
    gActiveDriver->setTvDisplay(width, height);

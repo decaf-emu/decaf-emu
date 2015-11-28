@@ -187,6 +187,12 @@
     <Filter Include="Source Files\gpu\opengl">
       <UniqueIdentifier>{bb897b6e-cc4f-4511-a07d-0bf46f2dc485}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\input">
+      <UniqueIdentifier>{da917015-c2f1-4b4c-9c16-25384aee9bc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\input">
+      <UniqueIdentifier>{9d72e53e-68e5-45b6-89f4-b5ae00b4025b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -522,9 +528,6 @@
     <ClCompile Include="..\src\platform\platform_win_thread.cpp">
       <Filter>Source Files\platform</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\platform\platform_win_ui.cpp">
-      <Filter>Source Files\platform</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\platform\platform_win_time.cpp">
       <Filter>Source Files\platform</Filter>
     </ClCompile>
@@ -639,9 +642,6 @@
     <ClCompile Include="..\src\gpu\opengl\opengl_shader.cpp">
       <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\opengl\opengl_wgl.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gpu\commandqueue.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
@@ -653,6 +653,15 @@
     </ClCompile>
     <ClCompile Include="..\src\gpu\opengl\opengl_texture.cpp">
       <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_glfw_ui.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_glfw_input.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\input\input.cpp">
+      <Filter>Source Files\input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1288,6 +1297,15 @@
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_registers_td.h">
       <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform_input.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform_glfw.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\input\input.h">
+      <Filter>Header Files\input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

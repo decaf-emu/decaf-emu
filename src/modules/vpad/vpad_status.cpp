@@ -1,75 +1,81 @@
 #include "vpad.h"
 #include "vpad_status.h"
-#include <Windows.h>
+#include "input/input.h"
 #include <vector>
 #include <utility>
 
-static BYTE
-gLastVkeyState[256];
-
-static const std::vector<std::pair<Buttons::Buttons, BYTE>>
-gControllerMap =
+static const std::vector<std::pair<Buttons::Buttons, input::vpad::Core>>
+gButtonMap =
 {
-   { Buttons::Sync, '0' },
-   { Buttons::Home, '1' },
-   { Buttons::Minus, '2' },
-   { Buttons::Plus, '3' },
-   { Buttons::R, 'E' },
-   { Buttons::L, 'W' },
-   { Buttons::ZR, 'R' },
-   { Buttons::ZL, 'Q' },
-   { Buttons::Down, VK_DOWN },
-   { Buttons::Up, VK_UP },
-   { Buttons::Left, VK_LEFT },
-   { Buttons::Right, VK_RIGHT },
-   { Buttons::Y, 'A' },
-   { Buttons::X, 'S' },
-   { Buttons::B, 'Z' },
-   { Buttons::A, 'X' },
+   { Buttons::Sync,     input::vpad::Core::Sync },
+   { Buttons::Home,     input::vpad::Core::Home },
+   { Buttons::Minus,    input::vpad::Core::Minus },
+   { Buttons::Plus,     input::vpad::Core::Plus },
+   { Buttons::R,        input::vpad::Core::TriggerR },
+   { Buttons::L,        input::vpad::Core::TriggerL },
+   { Buttons::ZR,       input::vpad::Core::TriggerZR },
+   { Buttons::ZL,       input::vpad::Core::TriggerZL },
+   { Buttons::Down,     input::vpad::Core::Down },
+   { Buttons::Up,       input::vpad::Core::Up },
+   { Buttons::Left,     input::vpad::Core::Left },
+   { Buttons::Right,    input::vpad::Core::Right },
+   { Buttons::Y,        input::vpad::Core::Y },
+   { Buttons::X,        input::vpad::Core::X },
+   { Buttons::B,        input::vpad::Core::B },
+   { Buttons::A,        input::vpad::Core::A },
+   { Buttons::StickL,   input::vpad::Core::StickL },
+   { Buttons::StickR,   input::vpad::Core::StickR },
 };
 
+static uint32_t
+gLastButtonState = 0;
+
 int32_t
-VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<int32_t> *error)
+VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadError::Error> *error)
 {
    assert(count >= 1);
 
-   if (error) {
-      *error = 0;
+   if (chan >= input::vpad::MaxControllers) {
+      if (error) {
+         *error = VpadReadError::InvalidController;
+      }
+
+      return 0;
    }
 
    memset(&buffers[0], 0, sizeof(VPADStatus));
 
-   BYTE keyState[256];
+   auto channel = static_cast<input::vpad::Channel>(chan);
+   auto &buffer = buffers[0];
 
-   // Flush GetKeyboardState
-   GetKeyState(0);
+   for (auto &pair : gButtonMap) {
+      auto bit = pair.first;
+      auto button = pair.second;
+      auto status = input::getButtonStatus(channel, button);
+      auto previous = gLastButtonState & bit;
 
-   if (!GetKeyboardState(keyState)) {
-      gLog->warn("Could not get keyboard state");
-   }
-
-   for (auto &pair : gControllerMap) {
-      auto button = pair.first;
-      auto vkey = pair.second;
-
-      if (keyState[vkey]) {
-         if (!gLastVkeyState[vkey]) {
-            buffers[0].trigger |= button;
+      if (status == input::ButtonPressed) {
+         if (!previous) {
+            buffer.trigger |= bit;
          }
 
-         buffers[0].hold |= button;
-      } else if (gLastVkeyState[vkey]) {
-         buffers[0].release |= button;
+         buffer.hold |= bit;
+      } else if (previous) {
+         buffer.release |= bit;
       }
    }
 
-   memcpy(gLastVkeyState, keyState, sizeof(BYTE) * 256);
+   gLastButtonState = buffer.hold;
+
+   if (error) {
+      *error = VpadReadError::Success;
+   }
+
    return 1;
 }
 
 void
 VPad::registerStatusFunctions()
 {
-   memset(&gLastVkeyState, 0, sizeof(BYTE) * 256);
    RegisterKernelFunction(VPADRead);
 }

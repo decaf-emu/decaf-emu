@@ -25,3 +25,6 @@
 [submodule "libraries/glbinding"]
 	path = libraries/glbinding
 	url = https://github.com/cginternals/glbinding.git
+[submodule "libraries/glfw"]
+	path = libraries/glfw
+	url = https://github.com/glfw/glfw.git

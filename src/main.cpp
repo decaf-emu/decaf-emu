@@ -10,6 +10,7 @@
 #include "filesystem/filesystem.h"
 #include "gpu/opengl/opengl_driver.h"
 #include "hardwaretests.h"
+#include "input/input.h"
 #include "processor.h"
 #include "loader.h"
 #include "mem/mem.h"
@@ -241,6 +242,11 @@ play(const fs::HostPath &path)
    // Create window
    if (!platform::ui::createWindow(L"Decaf")) {
       gLog->error("Error creating window");
+      return false;
+   }
+
+   if (!input::init()) {
+      gLog->error("Error setting up input");
       return false;
    }
 

@@ -588,7 +588,7 @@ readFileToString(const std::string &filename)
 
 void GLDriver::initGL()
 {
-   activateDeviceContext();
+   platform::ui::activateContext();
    glbinding::Binding::initialize();
 
    glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After, { "glGetError" });
@@ -607,7 +607,7 @@ void GLDriver::initGL()
    gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
    // Sneakily assume double-buffering...
-   swapBuffers();
+   platform::ui::swapBuffers();
    gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 
@@ -703,8 +703,6 @@ void GLDriver::initGL()
    gl::glEnableVertexArrayAttrib(mScreenDraw.vertArray, fs_texCoord);
    gl::glVertexArrayAttribFormat(mScreenDraw.vertArray, fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 2 * sizeof(gl::GLfloat));
    gl::glVertexArrayAttribBinding(mScreenDraw.vertArray, fs_texCoord, 0);
-
-   gl::glEnable(gl::GL_TEXTURE_2D);
 }
 
 enum
@@ -757,7 +755,7 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
 
 void GLDriver::decafSwapBuffers(pm4::DecafSwapBuffers &data)
 {
-   swapBuffers();
+   platform::ui::swapBuffers();
 }
 
 void GLDriver::decafClearColor(pm4::DecafClearColor &data)

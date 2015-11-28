@@ -14,8 +14,14 @@ createWindow(const std::wstring &title);
 void
 run();
 
-uint64_t
-getWindowHandle();
+void
+swapBuffers();
+
+void
+activateContext();
+
+void
+releaseContext();
 
 int
 getWindowWidth();
