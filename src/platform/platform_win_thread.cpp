@@ -1,7 +1,7 @@
 #include "platform_thread.h"
-#include <Windows.h>
 
 #ifdef PLATFORM_WINDOWS
+#include <Windows.h>
 
 static const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
@@ -20,7 +20,7 @@ typedef struct tagTHREADNAME_INFO
 namespace platform
 {
 
-void set_thread_name(std::thread* thread, const std::string& threadName)
+void setThreadName(std::thread* thread, const std::string& threadName)
 {
    DWORD dwThreadID = ::GetThreadId(static_cast<HANDLE>(thread->native_handle()));
 
