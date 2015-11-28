@@ -5,6 +5,7 @@
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
+#include "platform/platform_fiber.h"
 #include "platform/platform_thread.h"
 #include "processor.h"
 #include "ppcinvoke.h"
@@ -15,12 +16,6 @@ gProcessor { CoreCount };
 
 __declspec(thread) Core *
 tCurrentCore = nullptr;
-
-void
-Fiber::fiberEntryPoint(void *param)
-{
-   gProcessor.fiberEntryPoint(reinterpret_cast<Fiber*>(param));
-}
 
 Processor::Processor(size_t cores)
 {
@@ -80,12 +75,18 @@ Processor::fiberEntryPoint(Fiber *fiber)
    OSExitThread(ppctypes::getResult<int>(&fiber->state));
 }
 
+void
+Fiber::fiberEntryPoint(void *param)
+{
+   gProcessor.fiberEntryPoint(reinterpret_cast<Fiber *>(param));
+}
+
 // Entry point of CPU Core threads
 void
 Processor::coreEntryPoint(Core *core)
 {
    tCurrentCore = core;
-   core->primaryFiber = ConvertThreadToFiber(NULL);
+   core->primaryFiberHandle = platform::getThreadFiber();
 
    while (mRunning) {
       // Intentionally do this before the lock...
@@ -128,7 +129,7 @@ Processor::coreEntryPoint(Core *core)
          lock.unlock();
 
          gLog->trace("Core {} enter thread {}", core->id, fiber->thread->id);
-         SwitchToFiber(fiber->handle);
+         platform::swapToFiber(core->primaryFiberHandle, fiber->handle);
          core->threadId = 0;
       } else {
          // Wait for a valid fiber
@@ -189,7 +190,7 @@ Processor::reschedule(bool hasSchedulerLock, bool yield)
 
    // Return to main scheduler fiber
    lock.unlock();
-   SwitchToFiber(core->primaryFiber);
+   platform::swapToFiber(fiber->handle, core->primaryFiberHandle);
 
    // Reacquire scheduler lock if needed
    if (hasSchedulerLock) {
@@ -217,7 +218,7 @@ Processor::exit()
 
    // Return to parent fiber
    gLog->trace("Core {} exit fiber {}", core->id, id);
-   SwitchToFiber(core->primaryFiber);
+   platform::swapToFiber(fiber->handle, core->primaryFiberHandle);
 }
 
 // Insert a fiber into the run queue
@@ -357,7 +358,7 @@ Processor::waitFirstInterrupt()
    auto fiber = core->currentFiber;
    assert(fiber->thread->basePriority == -1);
    core->interruptHandlerFiber = fiber;
-   SwitchToFiber(core->primaryFiber);
+   platform::swapToFiber(fiber->handle, core->primaryFiberHandle);
 }
 
 void
@@ -371,18 +372,19 @@ void
 Processor::handleInterrupt()
 {
    auto core = tCurrentCore;
+
    if (!core) {
       gLog->error("handleInterrupt called from non-ppc thread");
       return;
    }
 
-   core->interruptedFiber = core->currentFiber;
-   if (core->interruptedFiber) {
-      core->interruptedFiber->thread->state = OSThreadState::Ready;
-      core->fiberPendingList.push_back(core->interruptedFiber);
-   }
+   // Add interrupted fiber to pending run list and return to primary fiber
+   auto fiber = core->currentFiber;
+   fiber->thread->state = OSThreadState::Ready;
+   core->fiberPendingList.push_back(fiber);
+   core->interruptedFiber = fiber;
 
-   SwitchToFiber(core->primaryFiber);
+   platform::swapToFiber(fiber->handle, core->primaryFiberHandle);
 }
 
 // Return to normal processing
@@ -397,8 +399,11 @@ Processor::finishInterrupt()
    }
 
    gLog->trace("Exit interrupt core {}", core->id);
+
+   // Clear interrupted fiber and return to primary fiber
+   auto fiber = core->currentFiber;
    core->interruptedFiber = nullptr;
-   SwitchToFiber(core->primaryFiber);
+   platform::swapToFiber(fiber->handle, core->primaryFiberHandle);
 }
 
 // Set the time of the next interrupt, will not overwrite sooner times

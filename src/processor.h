@@ -5,9 +5,9 @@
 #include <mutex>
 #include <thread>
 #include <vector>
-#include <Windows.h>
-#include "modules/coreinit/coreinit_mutex.h"
 #include "cpu/state.h"
+#include "modules/coreinit/coreinit_mutex.h"
+#include "platform/platform_fiber.h"
 
 struct OSContext;
 struct OSThread;
@@ -16,18 +16,18 @@ struct Fiber
 {
    Fiber()
    {
-      handle = CreateFiber(0, &Fiber::fiberEntryPoint, this);
+      handle = platform::createFiber(&Fiber::fiberEntryPoint, this);
    }
 
    ~Fiber()
    {
-      DeleteFiber(handle);
+      platform::destroyFiber(handle);
    }
 
-   static void __stdcall fiberEntryPoint(void *param);
+   static void fiberEntryPoint(void *param);
 
    uint32_t coreID;
-   void *handle = nullptr;
+   platform::Fiber *handle = nullptr;
    OSThread *thread = nullptr;
    ThreadState state;
 };
@@ -45,7 +45,7 @@ struct Core
    Fiber *currentFiber = nullptr;
    Fiber *interruptedFiber = nullptr;
    Fiber *interruptHandlerFiber = nullptr;
-   void *primaryFiber = nullptr;
+   platform::Fiber *primaryFiberHandle = nullptr;
    std::thread thread;
    std::chrono::system_clock::time_point nextInterrupt;
    std::vector<Fiber *> fiberDeleteList;

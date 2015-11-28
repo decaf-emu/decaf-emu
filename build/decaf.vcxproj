@@ -236,8 +236,10 @@
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
     <ClCompile Include="..\src\platform\platform_glfw_input.cpp" />
     <ClCompile Include="..\src\platform\platform_glfw_ui.cpp" />
+    <ClCompile Include="..\src\platform\platform_posix_fiber.cpp" />
     <ClCompile Include="..\src\platform\platform_posix_thread.cpp" />
     <ClCompile Include="..\src\platform\platform_posix_time.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_fiber.cpp" />
     <ClCompile Include="..\src\platform\platform_win_thread.cpp" />
     <ClCompile Include="..\src\platform\platform_win_time.cpp" />
     <ClCompile Include="..\src\processor.cpp" />
@@ -363,6 +365,7 @@
     <ClInclude Include="..\src\modules\vpad\vpad_core.h" />
     <ClInclude Include="..\src\modules\vpad\vpad_status.h" />
     <ClInclude Include="..\src\platform.h" />
+    <ClInclude Include="..\src\platform\platform_fiber.h" />
     <ClInclude Include="..\src\platform\platform_glfw.h" />
     <ClInclude Include="..\src\platform\platform_input.h" />
     <ClInclude Include="..\src\platform\platform_thread.h" />

@@ -663,6 +663,12 @@
     <ClCompile Include="..\src\input\input.cpp">
       <Filter>Source Files\input</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\platform\platform_win_fiber.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_fiber.cpp">
+      <Filter>Source Files\platform</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1306,6 +1312,9 @@
     </ClInclude>
     <ClInclude Include="..\src\input\input.h">
       <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform_fiber.h">
+      <Filter>Header Files\platform</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
