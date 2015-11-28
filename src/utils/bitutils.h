@@ -169,7 +169,7 @@ sign_extend(Type src)
 }
 
 inline bool
-bit_scan_reverse(uint32_t *out_position, uint32_t bits)
+bit_scan_reverse(unsigned long *out_position, uint32_t bits)
 {
 #ifdef PLATFORM_WINDOWS
    return !!_BitScanReverse(out_position, bits);

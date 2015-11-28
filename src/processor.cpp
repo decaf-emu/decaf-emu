@@ -14,7 +14,7 @@
 Processor
 gProcessor { CoreCount };
 
-__declspec(thread) Core *
+static thread_local Core *
 tCurrentCore = nullptr;
 
 Processor::Processor(size_t cores)
