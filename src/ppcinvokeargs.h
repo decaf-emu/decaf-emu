@@ -10,7 +10,7 @@ namespace ppctypes
 template <PpcType PpcTypeId, typename Type>
 struct arg_converter_t;
 
-static inline uint32_t
+inline uint32_t
 getNextGPR(ThreadState *state, size_t &r)
 {
    uint32_t value;
@@ -26,7 +26,7 @@ getNextGPR(ThreadState *state, size_t &r)
    return value;
 }
 
-static inline void
+inline void
 setNextGPR(ThreadState *state, size_t &r, uint32_t value)
 {
    if (r > 10) {
@@ -113,7 +113,7 @@ alignRegister64(size_t r)
 }
 
 template<typename Type>
-static inline void
+inline void
 setArgument(ThreadState *state, size_t &r, size_t &f, Type v)
 {
    if (ppctype_converter_t<Type>::ppc_type == PpcType::DWORD) {
@@ -125,7 +125,7 @@ setArgument(ThreadState *state, size_t &r, size_t &f, Type v)
 
 // Grab an argument from registers for function
 template<typename Type>
-static inline Type
+inline Type
 getArgument(ThreadState *state, size_t &r, size_t &f)
 {
    if (ppctype_converter_t<Type>::ppc_type == PpcType::DWORD) {

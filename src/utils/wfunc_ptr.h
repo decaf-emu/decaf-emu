@@ -83,7 +83,7 @@ struct be_wfunc_ptr
 #pragma pack(pop)
 
 template<typename ReturnType, typename... Args>
-static inline std::ostream &
+inline std::ostream &
 operator<<(std::ostream &os, const wfunc_ptr<ReturnType, Args...> &val)
 {
    return os << static_cast<ppcaddr_t>(val);

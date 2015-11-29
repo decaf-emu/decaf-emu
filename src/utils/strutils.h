@@ -12,7 +12,7 @@
 #endif
 
 // Replace all occurences of a character in a string
-static inline void
+inline void
 replace_all(std::string &source, char find, char replace)
 {
    std::string::size_type offset = 0;
@@ -24,7 +24,7 @@ replace_all(std::string &source, char find, char replace)
 }
 
 // Split a string by a character
-static inline void
+inline void
 split_string(const std::string &source, char delimiter, std::vector<std::string> &result)
 {
    std::string::size_type offset = 0, last = 0;
@@ -46,7 +46,7 @@ split_string(const std::string &source, char delimiter, std::vector<std::string>
 
 // Joins a vector of strings into one string using a delimeter
 template<typename IteratorType>
-static inline void
+inline void
 join_string(IteratorType begin, IteratorType end, char delim, std::string &out)
 {
    bool first = true;
@@ -62,7 +62,7 @@ join_string(IteratorType begin, IteratorType end, char delim, std::string &out)
 }
 
 // Returns true if source begins with prefix
-static inline bool
+inline bool
 begins_with(const std::string &source, const std::string &prefix)
 {
    if (prefix.size() > source.size()) {
@@ -73,7 +73,7 @@ begins_with(const std::string &source, const std::string &prefix)
 }
 
 // Returns true if source ends with suffix
-static inline bool
+inline bool
 ends_with(const std::string &source, const std::string &suffix)
 {
    if (suffix.size() > source.size()) {

@@ -646,7 +646,7 @@ dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
 }
 
 template<typename Type>
-static inline double
+inline double
 clamp(double value)
 {
    double min = static_cast<double>(std::numeric_limits<uint8_t>::min());

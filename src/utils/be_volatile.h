@@ -75,7 +75,7 @@ protected:
 };
 
 template<typename Type>
-static inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& os, const be_volatile<Type>& val)
 {
    return os << static_cast<Type>(val);

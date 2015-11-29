@@ -39,17 +39,23 @@ struct result_converter_t<PpcType::DWORD, Type>
 
 // Copy return result to registers
 template<typename Type>
-static inline void
+inline void
 setResult(ThreadState *state, Type v)
 {
    result_converter_t<ppctype_converter_t<Type>::ppc_type, Type>::set(state, v);
 }
 
 template<typename Type>
-static inline Type
+inline Type
 getResult(ThreadState *state)
 {
    return result_converter_t<ppctype_converter_t<Type>::ppc_type, Type>::get(state);
+}
+
+template <>
+inline void
+getResult<void>(ThreadState *state)
+{
 }
 
 } // namespace ppctypes

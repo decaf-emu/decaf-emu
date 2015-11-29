@@ -598,7 +598,7 @@ tracePrintSyscall(int count)
 }
 
 void
-traceLogSyscall(const std::string& info)
+traceLogSyscall(const std::string &info)
 {
 #ifdef TRACE_SC_ENABLED
    std::unique_lock<std::mutex> lock(gSyscallTraceLock);

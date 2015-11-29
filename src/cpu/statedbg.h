@@ -7,12 +7,15 @@
 #include "state.h"
 
 template<typename T>
-static std::string to_hex_string(T i) {
+static std::string to_hex_string(T i)
+{
    std::ostringstream oss;
    oss << "0x" << std::hex << i;
    return oss.str();
 }
-static inline bool dbgStateCmp(ThreadState* state, ThreadState* estate, std::vector<std::string>& errors) {
+
+inline bool dbgStateCmp(ThreadState* state, ThreadState* estate, std::vector<std::string>& errors)
+{
    if (memcmp(state, estate, sizeof(ThreadState)) == 0) {
       return true;
    }

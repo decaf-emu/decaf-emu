@@ -33,7 +33,7 @@ struct TileInfo
 namespace latte
 {
 
-static inline size_t
+inline size_t
 get_pixel_number(const TileInfo &info, size_t x, size_t y, size_t z)
 {
    size_t pixel_number = 0;
@@ -102,7 +102,7 @@ get_pixel_number(const TileInfo &info, size_t x, size_t y, size_t z)
    return pixel_number;
 }
 
-static inline size_t
+inline size_t
 get_element_offset(const TileInfo &info, size_t pixel_number, size_t tile_bytes)
 {
    static const size_t stencil_data_size = 1;
@@ -135,7 +135,7 @@ get_element_offset(const TileInfo &info, size_t pixel_number, size_t tile_bytes)
    return element_offset;
 }
 
-static inline size_t
+inline size_t
 get_channel(size_t x, size_t y)
 {
    size_t channel = 0;
@@ -144,7 +144,7 @@ get_channel(size_t x, size_t y)
    return channel;
 }
 
-static inline size_t
+inline size_t
 get_bank(size_t x, size_t y)
 {
    size_t bank = 0;

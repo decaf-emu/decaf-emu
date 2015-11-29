@@ -4,7 +4,7 @@
 
 // reinterpret_cast for value types
 template<typename DstType, typename SrcType>
-static inline DstType
+inline DstType
 bit_cast(const SrcType& src)
 {
    static_assert(sizeof(SrcType) == sizeof(DstType), "bit_cast must be between same sized types");
