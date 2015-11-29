@@ -47,7 +47,7 @@ mapMemory(MemoryMappedFile *file, size_t offset, size_t address, size_t size)
 bool
 unmapMemory(MemoryMappedFile *file, size_t address, size_t size)
 {
-   auto baseAddress = reinterpret_cast<LPVOID>(address);
+   auto baseAddress = reinterpret_cast<void *>(address);
    return !munmap(baseAddress, size);
 }
 
@@ -61,8 +61,8 @@ commitMemory(MemoryMappedFile *file, size_t address, size_t size)
 bool
 protectMemory(size_t address, size_t size)
 {
-   auto baseAddress = reinterpret_cast<LPVOID>(address);
-   return mprotect(address, size, PROT_NONE) == 0;
+   auto baseAddress = reinterpret_cast<void *>(address);
+   return mprotect(baseAddress, size, PROT_NONE) == 0;
 }
 
 } // namespace platform
