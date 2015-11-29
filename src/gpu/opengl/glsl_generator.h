@@ -10,7 +10,7 @@ struct GenerateState
    std::string indent;
    int32_t cfPC = -1;
    int32_t groupPC = -1;
-   latte::Shader *shader;
+   latte::Shader *shader = nullptr;
 };
 
 using TranslateFuncCF = bool(*)(GenerateState &state, latte::shadir::CfInstruction *ins);
