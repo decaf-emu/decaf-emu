@@ -92,7 +92,7 @@ invoke2(_argumentsState& state, FnReturnType func(FnArgs...), type_list<VarList&
 inline void
 invokeEndLog(_argumentsState& state)
 {
-   const char * logData = logCallEnd(state.log);
+   auto logData = logCallEnd(state.log);
    traceLogSyscall(logData);
    gLog->debug(logData);
 }

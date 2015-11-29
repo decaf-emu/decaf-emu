@@ -4,105 +4,83 @@
 #include "config.h"
 #include "utils/strutils.h"
 #include "utils/virtual_ptr.h"
+#include <spdlog/details/format.h>
 
 namespace ppctypes
 {
 
 struct LogState
 {
-   char buffer[255];
-   int length = 255;
-   int pos = 0;
+   fmt::MemoryWriter out;
    int argc = 0;
 };
 
-static inline void
+inline void
 logCall(LogState &state, uint32_t lr, const std::string &name)
 {
    if (config::log::kernel_trace) {
-      auto len = snprintf(state.buffer + state.pos, state.length, "0x%08X %s(", lr, name.c_str());
-      state.length -= len;
-      state.pos += len;
+      state.out.write("0x{:08X} {}(", lr, name.c_str());
    }
 }
 
-static inline const char *
+inline std::string
 logCallEnd(LogState &state)
 {
    if (config::log::kernel_trace) {
-      auto len = snprintf(state.buffer + state.pos, state.length, ")");
-      state.length -= len;
-      state.pos += len;
-      return state.buffer;
+      state.out.write("}");
+      return state.out.str();
    } else {
       return nullptr;
    }
 }
 
-static inline void
+inline void
 logArgumentSeparator(LogState &state)
 {
    if (state.argc > 0) {
-      auto len = snprintf(state.buffer + state.pos, state.length, ", ");
-      state.length -= len;
-      state.pos += len;
+      state.out.write(", ");
    }
 
    state.argc++;
 }
 
 // ...
-static inline void
+inline void
 logArgumentVargs(LogState &state)
 {
-   int len;
    logArgumentSeparator(state);
-
-   len = snprintf(state.buffer + state.pos, state.length, "...");
-   state.length -= len;
-   state.pos += len;
+   state.out.write("...");
 }
 
 // const char *
-static inline void
+inline void
 logArgument(LogState &state, const char *value)
 {
-   int len;
    logArgumentSeparator(state);
 
    if (!value) {
-      len = snprintf(state.buffer + state.pos, state.length, "%s", "NULL");
+      state.out.write("NULL");
    } else {
-      auto newPos = state.pos;
+      state.out.write("\"");
 
-      state.buffer[newPos++] = '\"';
       for (const char *c = value; *c; ++c) {
-         if (*c == '\n' || *c == '\r' || *c == '\t') {
-            state.buffer[newPos++] = '\\';
-            if (*c == '\n') {
-               state.buffer[newPos++] = 'n';
-            } else if (*c == '\r') {
-               state.buffer[newPos++] = 'r';
-            } else if (*c == '\t') {
-               state.buffer[newPos++] = 't';
-            } else {
-               state.buffer[newPos++] = '?';
-            }
+         if (*c == '\n') {
+            state.out.write("\\n");
+         } else if (*c == '\r') {
+            state.out.write("\\r");
+         } else if (*c == '\t') {
+            state.out.write("\\t");
          } else {
-            state.buffer[newPos++] = *c;
+            state.out << *c;
          }
       }
-      state.buffer[newPos++] = '\"';
 
-      len = newPos - state.pos;
+      state.out.write("\"");
    }
-
-   state.length -= len;
-   state.pos += len;
 }
 
 // char *
-static inline void
+inline void
 logArgument(LogState &state, char *value)
 {
    logArgument(state, const_cast<const char*>(value));
@@ -110,7 +88,7 @@ logArgument(LogState &state, char *value)
 
 // virtual_ptr<Type>
 template<typename Type>
-static inline void
+inline void
 logArgument(LogState &state, virtual_ptr<Type> value)
 {
    logArgument(state, value.getAddress());
@@ -118,7 +96,7 @@ logArgument(LogState &state, virtual_ptr<Type> value)
 
 // Type *
 template<typename Type>
-static inline void
+inline void
 logArgument(LogState &state, Type *value)
 {
    logArgument(state, make_virtual_ptr<Type>(value));
@@ -126,43 +104,36 @@ logArgument(LogState &state, Type *value)
 
 // Log generic (not enum)
 template<typename Type>
-static inline
+inline
 typename std::enable_if<!std::is_enum<Type>::value, void>::type
 logArgument(LogState &state, Type value)
 {
-   int len;
-   const char *fmt = "";
    logArgumentSeparator(state);
 
    if (std::is_floating_point<Type>::value) {
-      fmt = "%f";
+      state.out << value;
    } else if (std::is_unsigned<Type>::value) {
-      if ((uint32_t)value < 0x1000) {
-         fmt = "0x%X";
+      if ((uint32_t)value < 0x10) {
+         state.out.write("0x{:X}", value);
       } else if (sizeof(Type) == 1) {
-         fmt = "0x%02X";
+         state.out.write("0x{:02X}", value);
       } else if (sizeof(Type) == 2) {
-         fmt = "0x%04X";
+         state.out.write("0x{:04X}", value);
       } else if (sizeof(Type) == 4) {
-         fmt = "0x%08X";
+         state.out.write("0x{:08X}", value);
       } else if (sizeof(Type) == 8) {
-         fmt = "0x%016llX";
+         state.out.write("0x{:016X}", value);
       } else {
-         fmt = "0x%X";
+         state.out.write("0x{:X}", value);
       }
    } else {
-      fmt = "%d";
+      state.out << value;
    }
-
-   len = snprintf(state.buffer + state.pos, state.length, fmt, value);
-
-   state.length -= len;
-   state.pos += len;
 }
 
 // Log enum (cast to int so stream out succeeds)
 template<typename Type>
-static inline
+inline
 typename std::enable_if<std::is_enum<Type>::value, void>::type
 logArgument(LogState &state, Type value)
 {
