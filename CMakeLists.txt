@@ -52,6 +52,7 @@ find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
 find_package(Threads REQUIRED)
+find_package(OpenGL REQUIRED)
 
 if (NOT MSVC)
     set(CMAKE_CXX_COMPILER "clang")
