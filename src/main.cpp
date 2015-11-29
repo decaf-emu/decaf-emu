@@ -133,7 +133,7 @@ int main(int argc, char **argv)
       result = fuzzTest();
    } else if (arg_bool("hwtest")) {
       gLog->set_pattern("%v");
-      result = hwtest::runTests();
+      result = hwtest::runTests("tests/cpu/wiiu");
    }
 
    system("PAUSE");

@@ -1,5 +1,4 @@
 #include <cassert>
-#include <experimental/filesystem>
 #include <fstream>
 #include "cpu/cpu.h"
 #include "cpu/jit/jit.h"
@@ -10,8 +9,8 @@
 #include "utils/floatutils.h"
 #include "utils/log.h"
 #include "utils/strutils.h"
+#include "filesystem/filesystem.h"
 
-namespace fs = std::experimental::filesystem;
 static const auto TEST_FPSCR = false;
 
 namespace hwtest
@@ -131,7 +130,7 @@ excludeTests = {
    "fnmsub", "fnmsubs",
 };
 
-bool runTests()
+bool runTests(const std::string &path)
 {
    uint32_t testsFailed = 0, testsPassed = 0;
    uint32_t baseAddress = 0x02000000;
@@ -140,14 +139,19 @@ bool runTests()
    bclr.bo = 0x1f;
    mem::write(baseAddress + 4, bclr.value);
 
-   // Read all tests
-   for (auto &entry : fs::directory_iterator("tests/cpu/wiiu")) {
-      std::ifstream file(entry.path().string(), std::ifstream::in | std::ifstream::binary);
+   fs::FileSystem filesystem;
+   fs::FolderEntry entry;
+   fs::HostPath base = path;
+   filesystem.mountHostFolder("/tests", base);
+   auto folder = filesystem.openFolder("/tests");
+
+   while (folder->read(entry)) {
+      std::ifstream file(base.join(entry.name).path(), std::ifstream::in | std::ifstream::binary);
       cereal::BinaryInputArchive cerealInput(file);
       TestFile testFile;
 
       // Parse test file with cereal
-      testFile.name = entry.path().filename().string();
+      testFile.name = entry.name;
       cerealInput(testFile);
 
       // Skip excluded tests
