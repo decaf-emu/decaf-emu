@@ -168,7 +168,7 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, uint8_t
    output.clear();
 
    // Decompiled
-   auto decompiled = latte::Shader { };
+   latte::Shader decompiled;
    latte::decode(decompiled, latte::Shader::Vertex, { data, size });
    gpu::opengl::glsl::generateBody(decompiled, output);
 
