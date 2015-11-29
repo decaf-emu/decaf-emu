@@ -4,34 +4,29 @@
 namespace fs
 {
 
-struct FileSystemNode
+class Node
 {
-   enum Type
+public:
+   enum NodeType
    {
+      Invalid,
       FolderNode,
-      FileNode
+      FileNode,
    };
 
-   enum HostType
-   {
-      VirtualNode,
-      HostNode
-   };
-
-   FileSystemNode(Type type, HostType hostType, std::string name) :
+   Node(NodeType type, const std::string &name) :
       type(type),
-      hostType(hostType),
       name(name)
    {
    }
 
-   virtual ~FileSystemNode()
+   virtual ~Node()
    {
    }
 
-   Type type;
-   HostType hostType;
+   NodeType type = Invalid;
    std::string name;
+   size_t size = 0;
 };
 
 } // namespace fs

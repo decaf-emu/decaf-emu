@@ -1,0 +1,70 @@
+#pragma once
+#include <vector>
+#include "filesystem_node.h"
+#include "filesystem_folderhandle.h"
+
+namespace fs
+{
+
+struct VirtualFolderHandle : public FolderHandle
+{
+   using iterator = std::vector<Node *>::const_iterator;
+
+public:
+   VirtualFolderHandle(const iterator &begin, const iterator &end) :
+      mBegin(begin),
+      mEnd(end),
+      mIterator(mBegin)
+   {
+   }
+
+   virtual ~VirtualFolderHandle()
+   {
+   }
+
+   virtual bool open()
+   {
+      mIterator = mBegin;
+      return true;
+   }
+
+   virtual void close()
+   {
+      mIterator = mEnd;
+   }
+
+   virtual bool read(FolderEntry &entry)
+   {
+      if (mIterator == mEnd) {
+         return false;
+      }
+
+      auto node = *mIterator;
+      entry.name = node->name;
+      entry.size = node->size;
+
+      if (node->type == Node::FileNode) {
+         entry.type = FolderEntry::File;
+      } else if (node->type == Node::FolderNode) {
+         entry.type = FolderEntry::Folder;
+      } else {
+         entry.type = FolderEntry::Unknown;
+      }
+
+      mIterator++;
+      return true;
+   }
+
+   virtual bool rewind()
+   {
+      mIterator = mBegin;
+      return true;
+   }
+
+private:
+   const iterator mBegin;
+   const iterator mEnd;
+   iterator mIterator;
+};
+
+} // namespace fs

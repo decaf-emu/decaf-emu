@@ -18,14 +18,6 @@ struct Shader
       Pixel,
    };
 
-   Shader()
-   {
-   }
-
-   ~Shader()
-   {
-   }
-
    Type type;
 
    std::vector<std::unique_ptr<shadir::Instruction>> code;  // Serialised list of instructions
@@ -38,11 +30,6 @@ struct Shader
    std::unordered_set<uint32_t> uniformsUsed;   // Set of Uniforms used
    std::unordered_set<uint32_t> samplersUsed;   // Set of Sampler IDs used
    std::unordered_set<uint32_t> resourcesUsed;  // Set of Resource IDs used
-
-private:
-   // We can't copy-construct because std::vector<std::unique_ptr> is non-copyable
-   Shader(Shader& other) { }
-   Shader(const Shader& other) { }
 };
 
 bool decode(Shader &shader, Shader::Type type, const gsl::array_view<uint8_t> &binary);

@@ -681,6 +681,12 @@
     <ClCompile Include="..\src\platform\posix_win_dir.cpp">
       <Filter>Source Files\platform</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\filesystem\filesystem_win_host_folder.cpp">
+      <Filter>Header Files\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\filesystem\filesystem_win_host_folderhandle.cpp">
+      <Filter>Header Files\filesystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -927,42 +933,6 @@
       <Filter>Header Files\modules\sysapp</Filter>
     </ClInclude>
     <ClInclude Include="..\src\filesystem\filesystem.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_file.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_folder.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_host_file.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_host_folder.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_host_path.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_node.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_path.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_virt_file.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_virt_folder.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_win_file.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_win_folder.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\filesystem\filesystem_win_path.h">
       <Filter>Header Files\filesystem</Filter>
     </ClInclude>
     <ClInclude Include="..\src\types.h">
@@ -1333,6 +1303,48 @@
     </ClInclude>
     <ClInclude Include="..\src\platform\platform.h">
       <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_host_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_path.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_node.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_filehandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_folderhandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_virtual_folderhandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_virtual_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_virtual_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_host_filehandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_host_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_host_folderhandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_host_path.h">
+      <Filter>Header Files\filesystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

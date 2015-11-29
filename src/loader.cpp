@@ -268,7 +268,7 @@ Loader::loadRPL(std::string name)
 
       if (fh) {
          auto buffer = std::vector<uint8_t>(fh->size());
-         fh->read(reinterpret_cast<char *>(buffer.data()), buffer.size());
+         fh->read(buffer.data(), buffer.size());
          fh->close();
 
          module = loadRPL(name, buffer);

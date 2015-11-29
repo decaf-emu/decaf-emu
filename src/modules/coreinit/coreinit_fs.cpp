@@ -1,3 +1,4 @@
+#include <gsl.h>
 #include <mutex>
 #include "coreinit.h"
 #include "coreinit_fs.h"
@@ -33,7 +34,7 @@ public:
       mOpenFiles.push_back(nullptr);
    }
 
-   FSFileHandle addFile(fs::File *file)
+   FSFileHandle addFile(fs::FileHandle *file)
    {
       std::lock_guard<std::mutex> lock(mMutex);
 
@@ -51,7 +52,7 @@ public:
       return handle;
    }
 
-   FSDirectoryHandle addDirectory(fs::Folder *folder)
+   FSDirectoryHandle addDirectory(fs::FolderHandle *folder)
    {
       std::lock_guard<std::mutex> lock(mMutex);
 
@@ -69,7 +70,7 @@ public:
       return handle;
    }
 
-   fs::File *getFile(FSFileHandle handle)
+   fs::FileHandle *getFile(FSFileHandle handle)
    {
       std::lock_guard<std::mutex> lock(mMutex);
 
@@ -80,7 +81,7 @@ public:
       return mOpenFiles[handle];
    }
 
-   fs::Folder *getDirectory(FSDirectoryHandle handle)
+   fs::FolderHandle *getDirectory(FSDirectoryHandle handle)
    {
       std::lock_guard<std::mutex> lock(mMutex);
 
@@ -123,26 +124,26 @@ public:
 
 private:
    std::mutex mMutex;
-   std::vector<fs::File *> mOpenFiles;
-   std::vector<fs::Folder *> mOpenFolders;
+   std::vector<fs::FileHandle *> mOpenFiles;
+   std::vector<fs::FolderHandle *> mOpenFolders;
 };
 
 static_assert(sizeof(FSClient) < 0x1700, "FSClient must be less than 0x1700 bytes");
 
-static fs::FilePath
+static fs::Path
 gWorkingPath = "/vol/code";
 
 static std::vector<FSClient*>
 gClients;
 
 
-fs::FilePath
+fs::Path
 translatePath(const char *path)
 {
    if (path[0] == '/') {
       return path;
    } else {
-      return gWorkingPath + path;
+      return gWorkingPath.join(path);
    }
 }
 
@@ -299,10 +300,16 @@ FSReadDir(FSClient *client,
       return FSStatus::End;
    }
 
+   // Clear entry
    memset(entry, 0, sizeof(FSDirectoryEntry));
-   folderEntry.name.copy(entry->name, 256);
-   entry->name[255] = '\0';
-   entry->info.size = folderEntry.size;
+
+   // Copy name
+   auto nameSize = std::min<size_t>(folderEntry.name.size(), 255);
+   std::memcpy(entry->name, folderEntry.name.c_str(), nameSize);
+   entry->name[nameSize] = '\0';
+
+   // Copy data
+   entry->info.size = gsl::narrow_cast<uint32_t>(folderEntry.size);
 
    if (folderEntry.type == fs::FolderEntry::Folder) {
       entry->info.flags |= FSStat::Directory;
@@ -368,15 +375,16 @@ FSGetStat(FSClient *client,
           FSStat *stat,
           uint32_t flags)
 {
+   fs::FolderEntry entry;
    auto fs = gSystem.getFileSystem();
-   auto file = fs->findFile(translatePath(path));
+   auto file = fs->findEntry(translatePath(path), entry);
 
    if (!file) {
       return FSStatus::NotFound;
    }
 
    memset(stat, 0, sizeof(FSStat));
-   stat->size = static_cast<uint32_t>(file->size());
+   stat->size = gsl::narrow_cast<uint32_t>(entry.size);
    return FSStatus::OK;
 }
 
@@ -448,7 +456,7 @@ FSReadFile(FSClient *client,
       return FSStatus::FatalError;
    }
 
-   auto read = file->read(reinterpret_cast<char*>(buffer), size * count);
+   auto read = file->read(buffer, size * count);
    return static_cast<FSStatus>(read);
 }
 
@@ -489,7 +497,7 @@ FSReadFileWithPos(FSClient *client,
       return FSStatus::FatalError;
    }
 
-   auto read = file->read(reinterpret_cast<char*>(buffer), size * count, position);
+   auto read = file->read(buffer, size * count, position);
    return static_cast<FSStatus>(read);
 }
 
@@ -622,11 +630,15 @@ FSGetCwd(FSClient *client,
          uint32_t bufferSize,
          uint32_t flags)
 {
-   if (gWorkingPath.path.copy(buffer, bufferSize - 1) != bufferSize - 1) {
+   auto &path = gWorkingPath.path();
+   auto size = path.size();
+
+   if (size >= bufferSize) {
       return FSStatus::FatalError;
    }
 
-   buffer[bufferSize - 1] = '\0';
+   std::memcpy(buffer, path.c_str(), size);
+   buffer[size] = '\0';
    return FSStatus::OK;
 }
 

@@ -70,10 +70,10 @@ Options:
                  Where to locate any external system files.
 )";
 
-static const std::string&
+static const std::string
 getGameName(const fs::HostPath &path)
 {
-   return path.name();
+   return path.filename();
 }
 
 int main(int argc, char **argv)
@@ -267,7 +267,7 @@ play(const fs::HostPath &path)
    }
 
    auto size = fh->size();
-   auto buffer = std::vector<char>(size);
+   auto buffer = std::vector<uint8_t>(size);
    fh->read(buffer.data(), size);
    fh->close();
 

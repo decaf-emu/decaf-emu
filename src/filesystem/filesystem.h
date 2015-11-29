@@ -1,11 +1,10 @@
 #pragma once
-#include <cassert>
-#include "filesystem_node.h"
-#include "filesystem_path.h"
-#include "filesystem_host_file.h"
+#include "filesystem_file.h"
+#include "filesystem_filehandle.h"
 #include "filesystem_host_folder.h"
-#include "filesystem_virt_file.h"
-#include "filesystem_virt_folder.h"
+#include "filesystem_host_path.h"
+#include "filesystem_path.h"
+#include "filesystem_virtual_folder.h"
 
 namespace fs
 {
@@ -18,116 +17,105 @@ public:
    {
    }
 
-   // Add node at path, will create path if not exists
-   bool addNode(const FilePath &path, FileSystemNode *node)
+   bool mountHostFolder(Path dst, HostPath src)
    {
-      auto parent = createParentPath(path);
+      auto parent = createVirtualPath(dst.parentPath());
 
-      if (!parent) {
+      if (!parent || parent->type != Node::FolderNode) {
          return false;
       }
 
-      assert(parent->type == FileSystemNode::FolderNode);
       auto folder = reinterpret_cast<Folder *>(parent);
-      folder->addChild(node);
+      return !!folder->addChild(new HostFolder(src, dst.filename()));
+   }
+
+   FileHandle *openFile(Path path, File::OpenMode mode)
+   {
+      auto node = findNode(path);
+
+      if (!node || node->type != Node::FileNode) {
+         return false;
+      }
+
+      auto file = reinterpret_cast<File *>(node);
+      return file->open(mode);
+   }
+
+   FolderHandle *openFolder(Path path)
+   {
+      auto node = findNode(path);
+
+      if (!node || node->type != Node::FolderNode) {
+         return false;
+      }
+
+      auto file = reinterpret_cast<Folder *>(node);
+      return file->open();
+   }
+
+   bool findEntry(Path path, FolderEntry &entry)
+   {
+      auto node = findNode(path);
+
+      if (!node) {
+         return false;
+      }
+
+      entry.name = node->name;
+      entry.size = node->size;
+
+      if (node->type == Node::FileNode) {
+         entry.type = FolderEntry::File;
+      } else if (node->type == Node::FolderNode) {
+         entry.type = FolderEntry::Folder;
+      } else {
+         entry.type = FolderEntry::Unknown;
+      }
+
       return true;
    }
 
-   // Mount hostPath folder at path
-   bool mountHostFolder(const FilePath &path, std::string hostPath)
+protected:
+   Node *findNode(const Path &path)
    {
-      return addNode(path, new HostFolder(path.name(), hostPath));
-   }
+      auto node = reinterpret_cast<Node *>(&mRoot);
 
-   // Create whole path
-   FileSystemNode *createPath(const FilePath &path)
-   {
-      auto itr = path.exploded.begin();
-      auto end = path.exploded.end();
-
-      if (mRoot.name == *(itr++)) {
-         if (itr == end) {
-            return &mRoot;
-         } else {
-            return mRoot.createPath(itr, end);
+      for (auto &dir : path) {
+         if (!node || node->type != Node::FolderNode) {
+            return nullptr;
          }
-      } else {
-         return nullptr;
-      }
-   }
 
-   // Create path leading up to the top level directory/file in FilePath
-   FileSystemNode *createParentPath(const FilePath &path)
-   {
-      auto itr = path.exploded.begin();
-      auto end = path.exploded.end() - 1;
-
-      if (mRoot.name == *(itr++)) {
-         if (itr == end) {
-            return &mRoot;
-         } else {
-            return mRoot.createPath(itr, end);
+         // Skip root directory
+         if (node == &mRoot && dir.compare("/") == 0) {
+            continue;
          }
-      } else {
-         return nullptr;
+
+         auto folder = reinterpret_cast<Folder *>(node);
+         node = folder->findChild(dir);
       }
+
+      return node;
    }
 
-   // Find a node at a path
-   FileSystemNode *findNode(const FilePath &path)
+   Node *createVirtualPath(const Path &path)
    {
-      auto itr = path.exploded.begin();
-      auto end = path.exploded.end();
+      auto node = reinterpret_cast<Node *>(&mRoot);
 
-      if (mRoot.name == *(itr++)) {
-         return mRoot.findNode(itr, end);
-      } else {
-         return nullptr;
+      for (auto &dir : path) {
+         if (!node || node->type != Node::FolderNode) {
+            return nullptr;
+         }
+
+         // Skip root directory
+         if (node == &mRoot && dir.compare("/") == 0) {
+            continue;
+         }
+
+         auto folder = reinterpret_cast<Folder *>(node);
+         node = folder->addFolder(dir);
       }
-   }
 
-   File *findFile(const FilePath &path)
-   {
-      auto node = findNode(path);
-
-      if (!node || node->type != FileSystemNode::FileNode) {
-         return nullptr;
-      } else {
-         return reinterpret_cast<File *>(node);
-      }
-   }
-
-   Folder *findFolder(const FilePath &path)
-   {
-      auto node = findNode(path);
-
-      if (!node || node->type != FileSystemNode::FolderNode) {
-         return nullptr;
-      } else {
-         return reinterpret_cast<Folder *>(node);
-      }
-   }
-
-   File *openFile(const FilePath &path, fs::File::OpenMode mode)
-   {
-      auto file = findFile(path);
-
-      if (!file || !file->open(mode)) {
-         return nullptr;
-      } else {
-         return file;
-      }
-   }
-
-   Folder *openFolder(const FilePath &path)
-   {
-      auto folder = findFolder(path);
-
-      if (!folder || !folder->open()) {
-         return nullptr;
-      } else {
-         return folder;
-      }
+      return node;
    }
 
 private:

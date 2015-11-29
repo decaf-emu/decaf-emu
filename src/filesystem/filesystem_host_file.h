@@ -1,5 +1,33 @@
 #pragma once
+#include <string>
+#include "filesystem_file.h"
+#include "filesystem_host_filehandle.h"
+#include "filesystem_host_path.h"
 
-#ifdef _WIN32
-#include "filesystem_win_file.h"
-#endif
+namespace fs
+{
+
+class HostFile : public File
+{
+public:
+   HostFile(const HostPath &path, const std::string &name) :
+      File(name),
+      mPath(path)
+   {
+
+   }
+
+   virtual ~HostFile()
+   {
+   }
+
+   virtual class FileHandle *open(OpenMode mode)
+   {
+      return new HostFileHandle(mPath.path(), mode);
+   }
+
+private:
+   HostPath mPath;
+};
+
+} // namespace fs
