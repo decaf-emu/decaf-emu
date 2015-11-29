@@ -678,14 +678,14 @@
     <ClCompile Include="..\src\platform\platform_posix_dir.cpp">
       <Filter>Source Files\platform</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\platform\posix_win_dir.cpp">
-      <Filter>Source Files\platform</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\filesystem\filesystem_win_host_folder.cpp">
       <Filter>Header Files\filesystem</Filter>
     </ClCompile>
     <ClCompile Include="..\src\filesystem\filesystem_win_host_folderhandle.cpp">
       <Filter>Header Files\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_win_dir.cpp">
+      <Filter>Source Files\platform</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

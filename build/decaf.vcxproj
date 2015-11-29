@@ -247,7 +247,7 @@
     <ClCompile Include="..\src\platform\platform_win_memorymap.cpp" />
     <ClCompile Include="..\src\platform\platform_win_thread.cpp" />
     <ClCompile Include="..\src\platform\platform_win_time.cpp" />
-    <ClCompile Include="..\src\platform\posix_win_dir.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_dir.cpp" />
     <ClCompile Include="..\src\processor.cpp" />
     <ClCompile Include="..\src\system.cpp" />
     <ClCompile Include="..\src\memory_translate.cpp" />
