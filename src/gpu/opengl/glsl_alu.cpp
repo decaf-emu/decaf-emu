@@ -133,7 +133,7 @@ void translateIndex(GenerateState &state, latte::alu::IndexMode::IndexMode index
    }
 }
 
-void translateAluSource(GenerateState &state, AluSource &src)
+void translateAluSource(GenerateState &state, const AluSource &src)
 {
    if (src.absolute) {
       state.out << "abs(";
@@ -323,7 +323,11 @@ void translateAluSource(GenerateState &state, AluSource &src)
    }
 }
 
-void translateAluSourceVector(GenerateState &state, AluSource &srcX, AluSource &srcY, AluSource &srcZ, AluSource &srcW)
+void translateAluSourceVector(GenerateState &state,
+                              const AluSource &srcX,
+                              const AluSource &srcY,
+                              const AluSource &srcZ,
+                              const AluSource &srcW)
 {
    state.out << "vec4(";
    translateAluSource(state, srcX);

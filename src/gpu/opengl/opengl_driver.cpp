@@ -64,9 +64,9 @@ bool GLDriver::checkReadyDraw()
 }
 
 ColorBuffer *
-GLDriver::getColorBuffer(latte::CB_COLORN_BASE &cb_color_base,
-                         latte::CB_COLORN_SIZE &cb_color_size,
-                         latte::CB_COLORN_INFO &cb_color_info)
+GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
+                         latte::CB_COLORN_SIZE cb_color_size,
+                         latte::CB_COLORN_INFO cb_color_info)
 {
    auto buffer = &mColorBuffers[cb_color_base.value ^ cb_color_size.value ^ cb_color_info.value];
    buffer->cb_color_base = cb_color_base;
@@ -92,9 +92,9 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE &cb_color_base,
 }
 
 DepthBuffer *
-GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
-                         latte::DB_DEPTH_SIZE &db_depth_size,
-                         latte::DB_DEPTH_INFO &db_depth_info)
+GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
+                         latte::DB_DEPTH_SIZE db_depth_size,
+                         latte::DB_DEPTH_INFO db_depth_info)
 {
    auto buffer = &mDepthBuffers[db_depth_base.value ^ db_depth_size.value ^ db_depth_info.value];
    buffer->db_depth_base = db_depth_base;
@@ -711,7 +711,7 @@ enum
    SCANTARGET_DRC = 4,
 };
 
-void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
+void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
 {
    auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
    auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
@@ -753,12 +753,12 @@ void GLDriver::decafCopyColorToScan(pm4::DecafCopyColorToScan &data)
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
 }
 
-void GLDriver::decafSwapBuffers(pm4::DecafSwapBuffers &data)
+void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 {
    platform::ui::swapBuffers();
 }
 
-void GLDriver::decafClearColor(pm4::DecafClearColor &data)
+void GLDriver::decafClearColor(const pm4::DecafClearColor &data)
 {
    float colors[] = {
       data.red,
@@ -799,7 +799,7 @@ void GLDriver::decafClearColor(pm4::DecafClearColor &data)
    }
 }
 
-void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
+void GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
 {
    auto db_depth_clear = getRegister<latte::DB_DEPTH_CLEAR>(latte::Register::DB_DEPTH_CLEAR);
    auto db_stencil_clear = getRegister<latte::DB_STENCIL_CLEAR>(latte::Register::DB_STENCIL_CLEAR);
@@ -829,7 +829,7 @@ void GLDriver::decafClearDepthStencil(pm4::DecafClearDepthStencil &data)
    }
 }
 
-void GLDriver::decafSetContextState(pm4::DecafSetContextState &data)
+void GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
 {
    mContextState = reinterpret_cast<latte::ContextState *>(data.context.get());
 }
@@ -921,7 +921,7 @@ drawPrimitives(latte::VGT_DI_PRIMITIVE_TYPE primType,
    }
 }
 
-void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
+void GLDriver::drawIndexAuto(const pm4::DrawIndexAuto &data)
 {
    if (!checkReadyDraw()) {
       return;
@@ -937,7 +937,7 @@ void GLDriver::drawIndexAuto(pm4::DrawIndexAuto &data)
                   latte::VGT_INDEX_32);
 }
 
-void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
+void GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
 {
    if (!checkReadyDraw()) {
       return;
@@ -995,59 +995,59 @@ void GLDriver::drawIndex2(pm4::DrawIndex2 &data)
    }
 }
 
-void GLDriver::indexType(pm4::IndexType &data)
+void GLDriver::indexType(const pm4::IndexType &data)
 {
    mRegisters[latte::Register::VGT_DMA_INDEX_TYPE / 4] = data.type.value;
 }
 
-void GLDriver::numInstances(pm4::NumInstances &data)
+void GLDriver::numInstances(const pm4::NumInstances &data)
 {
    mRegisters[latte::Register::VGT_DMA_NUM_INSTANCES / 4] = data.count;
 }
 
-void GLDriver::setAluConsts(pm4::SetAluConsts &data)
+void GLDriver::setAluConsts(const pm4::SetAluConsts &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void GLDriver::setConfigRegs(pm4::SetConfigRegs &data)
+void GLDriver::setConfigRegs(const pm4::SetConfigRegs &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void GLDriver::setContextRegs(pm4::SetContextRegs &data)
+void GLDriver::setContextRegs(const pm4::SetContextRegs &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void GLDriver::setControlConstants(pm4::SetControlConstants &data)
+void GLDriver::setControlConstants(const pm4::SetControlConstants &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void GLDriver::setLoopConsts(pm4::SetLoopConsts &data)
+void GLDriver::setLoopConsts(const pm4::SetLoopConsts &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void GLDriver::setSamplers(pm4::SetSamplers &data)
+void GLDriver::setSamplers(const pm4::SetSamplers &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
    }
 }
 
-void GLDriver::setResources(pm4::SetResources &data)
+void GLDriver::setResources(const pm4::SetResources &data)
 {
    auto id = latte::Register::ResourceRegisterBase + (4 * data.id);
 
@@ -1068,47 +1068,47 @@ void GLDriver::loadRegisters(latte::Register::Value base, uint32_t *src, gsl::ar
    }
 }
 
-void GLDriver::loadAluConsts(pm4::LoadAluConst &data)
+void GLDriver::loadAluConsts(const pm4::LoadAluConst &data)
 {
    loadRegisters(latte::Register::AluConstRegisterBase, data.addr, data.values);
 }
 
-void GLDriver::loadBoolConsts(pm4::LoadBoolConst &data)
+void GLDriver::loadBoolConsts(const pm4::LoadBoolConst &data)
 {
    loadRegisters(latte::Register::BoolConstRegisterBase, data.addr, data.values);
 }
 
-void GLDriver::loadConfigRegs(pm4::LoadConfigReg &data)
+void GLDriver::loadConfigRegs(const pm4::LoadConfigReg &data)
 {
    loadRegisters(latte::Register::ConfigRegisterBase, data.addr, data.values);
 }
 
-void GLDriver::loadContextRegs(pm4::LoadContextReg &data)
+void GLDriver::loadContextRegs(const pm4::LoadContextReg &data)
 {
    loadRegisters(latte::Register::ContextRegisterBase, data.addr, data.values);
 }
 
-void GLDriver::loadControlConstants(pm4::LoadControlConst &data)
+void GLDriver::loadControlConstants(const pm4::LoadControlConst &data)
 {
    loadRegisters(latte::Register::ControlRegisterBase, data.addr, data.values);
 }
 
-void GLDriver::loadLoopConsts(pm4::LoadLoopConst &data)
+void GLDriver::loadLoopConsts(const pm4::LoadLoopConst &data)
 {
    loadRegisters(latte::Register::LoopConstRegisterBase, data.addr, data.values);
 }
 
-void GLDriver::loadSamplers(pm4::LoadSampler &data)
+void GLDriver::loadSamplers(const pm4::LoadSampler &data)
 {
    loadRegisters(latte::Register::SamplerRegisterBase, data.addr, data.values);
 }
 
-void GLDriver::loadResources(pm4::LoadResource &data)
+void GLDriver::loadResources(const pm4::LoadResource &data)
 {
    loadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
 }
 
-void GLDriver::indirectBufferCall(pm4::IndirectBufferCall &data)
+void GLDriver::indirectBufferCall(const pm4::IndirectBufferCall &data)
 {
    auto buffer = reinterpret_cast<uint32_t*>(data.addr.get());
    runCommandBuffer(buffer, data.size);

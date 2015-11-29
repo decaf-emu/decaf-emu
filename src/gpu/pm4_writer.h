@@ -130,12 +130,13 @@ private:
 };
 
 template<typename Type>
-void write(Type &value)
+void write(const Type &value)
 {
    PacketWriter writer { Type::Opcode };
 
    if (writer.valid()) {
-      value.serialise(writer);
+      // Don't judge me
+      const_cast<Type &>(value).serialise(writer);
    }
 }
 

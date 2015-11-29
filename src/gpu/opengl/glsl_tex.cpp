@@ -77,7 +77,7 @@ static bool translateSelect(GenerateState &state, latte::alu::Select::Select sel
    return true;
 }
 
-unsigned translateSelRegister(GenerateState &state, SelRegister &reg, size_t maxSel)
+unsigned translateSelRegister(GenerateState &state, const SelRegister &reg, size_t maxSel)
 {
    state.out << 'R' << reg.id;
 

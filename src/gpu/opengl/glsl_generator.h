@@ -58,11 +58,11 @@ using latte::alu::Channel::Channel;
 
 void translateAluDestStart(GenerateState &state, AluInstruction *ins);
 void translateAluDestEnd(GenerateState &state, AluInstruction *ins);
-void translateAluSource(GenerateState &state, AluSource &src);
-void translateAluSourceVector(GenerateState &state, AluSource &srcX, AluSource &srcY, AluSource &srcZ, AluSource &srcW);
+void translateAluSource(GenerateState &state, const AluSource &src);
+void translateAluSourceVector(GenerateState &state, const AluSource &srcX, const AluSource &srcY, const AluSource &srcZ, const AluSource &srcW);
 
 void translateChannel(GenerateState &state, Channel channel);
-unsigned translateSelRegister(GenerateState &state, SelRegister &reg, size_t maxSel = 4);
+unsigned translateSelRegister(GenerateState &state, const SelRegister &reg, size_t maxSel = 4);
 
 } // namespace glsl
 

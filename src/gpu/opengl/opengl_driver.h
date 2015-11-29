@@ -141,46 +141,46 @@ private:
    void initGL();
 
    void handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data);
-   void decafCopyColorToScan(pm4::DecafCopyColorToScan &data);
-   void decafSwapBuffers(pm4::DecafSwapBuffers &data);
-   void decafClearColor(pm4::DecafClearColor &data);
-   void decafClearDepthStencil(pm4::DecafClearDepthStencil &data);
-   void decafSetContextState(pm4::DecafSetContextState &data);
-   void drawIndexAuto(pm4::DrawIndexAuto &data);
-   void drawIndex2(pm4::DrawIndex2 &data);
-   void indexType(pm4::IndexType &data);
-   void indirectBufferCall(pm4::IndirectBufferCall &data);
-   void numInstances(pm4::NumInstances &data);
+   void decafCopyColorToScan(const pm4::DecafCopyColorToScan &data);
+   void decafSwapBuffers(const pm4::DecafSwapBuffers &data);
+   void decafClearColor(const pm4::DecafClearColor &data);
+   void decafClearDepthStencil(const pm4::DecafClearDepthStencil &data);
+   void decafSetContextState(const pm4::DecafSetContextState &data);
+   void drawIndexAuto(const pm4::DrawIndexAuto &data);
+   void drawIndex2(const pm4::DrawIndex2 &data);
+   void indexType(const pm4::IndexType &data);
+   void indirectBufferCall(const pm4::IndirectBufferCall &data);
+   void numInstances(const pm4::NumInstances &data);
 
-   void setAluConsts(pm4::SetAluConsts &data);
-   void setConfigRegs(pm4::SetConfigRegs &data);
-   void setContextRegs(pm4::SetContextRegs &data);
-   void setControlConstants(pm4::SetControlConstants &data);
-   void setLoopConsts(pm4::SetLoopConsts &data);
-   void setSamplers(pm4::SetSamplers &data);
-   void setResources(pm4::SetResources &data);
+   void setAluConsts(const pm4::SetAluConsts &data);
+   void setConfigRegs(const pm4::SetConfigRegs &data);
+   void setContextRegs(const pm4::SetContextRegs &data);
+   void setControlConstants(const pm4::SetControlConstants &data);
+   void setLoopConsts(const pm4::SetLoopConsts &data);
+   void setSamplers(const pm4::SetSamplers &data);
+   void setResources(const pm4::SetResources &data);
 
-   void loadAluConsts(pm4::LoadAluConst &data);
-   void loadBoolConsts(pm4::LoadBoolConst &data);
-   void loadConfigRegs(pm4::LoadConfigReg &data);
-   void loadContextRegs(pm4::LoadContextReg &data);
-   void loadControlConstants(pm4::LoadControlConst &data);
-   void loadLoopConsts(pm4::LoadLoopConst &data);
-   void loadSamplers(pm4::LoadSampler &data);
-   void loadResources(pm4::LoadResource &data);
+   void loadAluConsts(const pm4::LoadAluConst &data);
+   void loadBoolConsts(const pm4::LoadBoolConst &data);
+   void loadConfigRegs(const pm4::LoadConfigReg &data);
+   void loadContextRegs(const pm4::LoadContextReg &data);
+   void loadControlConstants(const pm4::LoadControlConst &data);
+   void loadLoopConsts(const pm4::LoadLoopConst &data);
+   void loadSamplers(const pm4::LoadSampler &data);
+   void loadResources(const pm4::LoadResource &data);
    void loadRegisters(latte::Register::Value base,
                       uint32_t *src,
                       gsl::array_view<std::pair<uint32_t, uint32_t>> registers);
 
    ColorBuffer *
-   getColorBuffer(latte::CB_COLORN_BASE &base,
-                  latte::CB_COLORN_SIZE &size,
-                  latte::CB_COLORN_INFO &info);
+   getColorBuffer(latte::CB_COLORN_BASE base,
+                  latte::CB_COLORN_SIZE size,
+                  latte::CB_COLORN_INFO info);
 
    DepthBuffer *
-   getDepthBuffer(latte::DB_DEPTH_BASE &db_depth_base,
-                  latte::DB_DEPTH_SIZE &db_depth_size,
-                  latte::DB_DEPTH_INFO &db_depth_info);
+   getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
+                  latte::DB_DEPTH_SIZE db_depth_size,
+                  latte::DB_DEPTH_INFO db_depth_info);
 
    bool checkReadyDraw();
    bool checkActiveAttribBuffers();
