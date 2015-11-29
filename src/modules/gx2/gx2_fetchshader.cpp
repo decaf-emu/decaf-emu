@@ -1,4 +1,3 @@
-#include <fail_fast.h>
 #include "gx2_shaders.h"
 #include "gx2_enum.h"
 #include "gx2_format.h"

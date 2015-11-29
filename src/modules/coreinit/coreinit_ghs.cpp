@@ -1,4 +1,4 @@
-#include <fail_fast.h>
+#include <stdexcept>
 #include "coreinit.h"
 #include "coreinit_ghs.h"
 #include "coreinit_spinlock.h"
@@ -83,7 +83,7 @@ ghsExit(int code)
    tracePrint(GetCurrentFiberState(), 0, 0);
 
    // Must never return...
-   gsl::fail_fast("ghsExit");
+   std::runtime_error("ghsExit");
 }
 
 void ghs_mtx_init(void *mtx)

@@ -1,4 +1,5 @@
 #include <cassert>
+#include <stdexcept>
 #include "gx2_debug.h"
 #include "gx2_shaders.h"
 #include "gpu/pm4_writer.h"
@@ -290,7 +291,7 @@ GX2SetShaderModeEx(GX2ShaderMode::Value mode,
    } else if (mode == GX2ShaderMode::UniformBlock) {
       sq_config.DX9_CONSTS = 0;
    } else {
-      gsl::fail_fast("Unexpected shader mode");
+      std::runtime_error("Unexpected shader mode");
    }
 
    pm4::write(pm4::SetConfigReg { latte::Register::SQ_CONFIG, sq_config.value });
