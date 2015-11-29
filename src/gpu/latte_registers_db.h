@@ -42,9 +42,9 @@ union DB_DEPTH_INFO
    struct
    {
       DB_DEPTH_FORMAT FORMAT : 3;
-      READ_SIZE READ_SIZE : 1;
+      CB_READ_SIZE READ_SIZE : 1;
       uint32_t : 11;
-      ARRAY_MODE ARRAY_MODE : 4;
+      CB_ARRAY_MODE ARRAY_MODE : 4;
       uint32_t : 6;
       uint32_t TILE_SURFACE_ENABLE : 1;
       uint32_t TILE_COMPACT : 1;
