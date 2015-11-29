@@ -400,12 +400,7 @@ namespace cpu
 
 struct CoreState
 {
-   std::atomic_bool interrupt;
-
-   CoreState() :
-      interrupt(false)
-   {
-   }
+   std::atomic_bool interrupt { false };
 };
 
 }

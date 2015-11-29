@@ -12,14 +12,14 @@
 #include <atomic>
 #include <chrono>
 
-static std::atomic_int64_t
-gLastVsync = 0;
+static std::atomic<int64_t>
+gLastVsync { 0 };
 
-static std::atomic_int64_t
-gLastSubmittedTimestamp = 0;
+static std::atomic<int64_t>
+gLastSubmittedTimestamp { 0 };
 
-static std::atomic_int64_t
-gRetiredTimestamp = 0;
+static std::atomic<int64_t>
+gRetiredTimestamp { 0 };
 
 static virtual_ptr<OSThreadQueue>
 gVsyncThreadQueue;
