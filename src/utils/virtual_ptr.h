@@ -12,7 +12,7 @@ make_virtual_ptr(Type *pointer);
 
 template<typename Type, bool IsBigEndian = false>
 virtual_ptr<Type, IsBigEndian>
-make_virtual_ptr(uint32_t address);
+make_virtual_ptr(ppcaddr_t address);
 
 // A pointer to virtual memory space (the Wii U system memory)
 template<typename Type, bool IsBigEndian>
@@ -99,17 +99,17 @@ public:
 
    virtual_ptr operator +(int offset) const
    {
-      return { getAddress() + offset * sizeof(Type) };
+      return { static_cast<ppcaddr_t>(getAddress() + offset * sizeof(Type)) };
    }
 
    virtual_ptr operator -(int offset) const
    {
-      return { getAddress() - offset * sizeof(Type) };
+      return { static_cast<ppcaddr_t>(getAddress() - offset * sizeof(Type)) };
    }
 
    virtual_ptr operator -(unsigned offset) const
    {
-      return { getAddress() - offset * sizeof(Type) };
+      return { static_cast<ppcaddr_t>(getAddress() - offset * sizeof(Type)) };
    }
 
    virtual_ptr &operator +=(int offset)
@@ -161,7 +161,7 @@ public:
    }
 
 private:
-   friend virtual_ptr make_virtual_ptr<Type, IsBigEndian>(uint32_t address);
+   friend virtual_ptr make_virtual_ptr<Type, IsBigEndian>(ppcaddr_t address);
 
    virtual_ptr(ppcaddr_t address)
    {
@@ -182,7 +182,7 @@ virtual_ptr<Type, IsBigEndian> make_virtual_ptr(Type *pointer)
 }
 
 template<typename Type, bool IsBigEndian>
-virtual_ptr<Type, IsBigEndian> make_virtual_ptr(uint32_t address)
+virtual_ptr<Type, IsBigEndian> make_virtual_ptr(ppcaddr_t address)
 {
    return { address };
 }
