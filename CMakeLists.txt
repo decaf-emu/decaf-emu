@@ -46,6 +46,16 @@ externalproject_add(glbinding
 externalproject_get_property(glbinding BINARY_DIR)
 set(GLBINDING_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding.a")
 
+set(GLFW_DIR "libraries/glfw")
+include_directories("${GLFW_DIR}/include")
+externalproject_add(glfw
+    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${GLFW_DIR}"
+    CMAKE_CACHE_ARGS "-DGLFW_BUILD_EXAMPLES:string=off -DGLFW_BUILD_TESTS:string=off -DGLFW_BUILD_DOCS:string=off"
+    INSTALL_COMMAND ""
+    )
+externalproject_get_property(glfw BINARY_DIR)
+set(GLFW_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glfw.a")
+
 if (NOT MSVC)
     set(CMAKE_CXX_COMPILER "clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
