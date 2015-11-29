@@ -92,7 +92,7 @@ CommonHeap *
 MEMSetBaseHeapHandle(BaseHeapType arena, CommonHeap *heap);
 
 char *
-OSSprintfFromSystem(const char *format, ...);
+OSStringFromSystem(const std::string &src);
 
 void
 CoreFreeDefaultHeap();
@@ -102,7 +102,7 @@ CoreInitDefaultHeap();
 
 // TODO: Move These!
 void *
-OSAllocFromSystem(uint32_t size, int alignment = 4);
+OSAllocFromSystem(size_t size, int alignment = 4);
 
 template<typename Type>
 Type *

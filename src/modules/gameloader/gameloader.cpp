@@ -74,7 +74,7 @@ GameLoaderRun()
       auto thread = OSAllocFromSystem<OSThread>();
       auto stackSize = appModule->defaultStackSize;
       auto stack = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-      auto name = OSSprintfFromSystem("Default Thread %d", i);
+      auto name = OSStringFromSystem(fmt::format("Default Thread {}", i));
 
       OSCreateThread(thread, 0u, 0, nullptr,
                      reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, 16,
@@ -88,7 +88,7 @@ GameLoaderRun()
       auto thread = OSAllocFromSystem<OSThread>();
       auto stackSize = 16 * 1024;
       auto stack = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-      auto name = OSSprintfFromSystem("Interrupt Thread %d", i);
+      auto name = OSStringFromSystem(fmt::format("Interrupt Thread {}", i));
 
       OSCreateThread(thread, InterruptThreadEntryPoint, i, nullptr,
                      reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, -1,

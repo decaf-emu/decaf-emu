@@ -303,7 +303,7 @@ play(const fs::HostPath &path)
       auto thread = OSAllocFromSystem<OSThread>();
       auto stackSize = 2048;
       auto stack = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
-      auto name = OSSprintfFromSystem("Loader Thread");
+      auto name = OSStringFromSystem("Loader Thread");
 
       auto gameLoader = gLoader.loadRPL("gameloader");
       auto gameLoaderRun = gameLoader->findExport("GameLoaderRun");

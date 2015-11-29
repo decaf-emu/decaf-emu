@@ -197,14 +197,11 @@ sMEMFreeToDefaultHeap(uint8_t *block)
 }
 
 char *
-OSSprintfFromSystem(const char *format, ...)
+OSStringFromSystem(const std::string &src)
 {
-   va_list argptr;
-   va_start(argptr, format);
-   auto size = vsnprintf(nullptr, 0, format, argptr) + 1;
-   auto buffer = reinterpret_cast<char *>(OSAllocFromSystem(size, 4));
-   vsnprintf(buffer, size, format, argptr);
-   va_end(argptr);
+   auto buffer = reinterpret_cast<char *>(OSAllocFromSystem(src.size() + 1, 4));
+   std::memcpy(buffer, src.data(), src.size());
+   buffer[src.size()] = 0;
    return buffer;
 }
 
@@ -320,7 +317,7 @@ CoreInit::initialiseMembase()
 }
 
 void *
-OSAllocFromSystem(uint32_t size, int alignment)
+OSAllocFromSystem(size_t size, int alignment)
 {
    auto systemHeap = gSystem.getSystemHeap();
    return systemHeap->alloc(size, alignment);
