@@ -8,7 +8,7 @@
 namespace platform
 {
 
-static size_t
+static const size_t
 DefaultStackSize = 1024 * 1024;
 
 struct Fiber
