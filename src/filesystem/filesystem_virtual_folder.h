@@ -22,7 +22,7 @@ public:
       }
    }
 
-   virtual Node *addFolder(const std::string &name)
+   virtual Node *addFolder(const std::string &name) override
    {
       auto node = findChild(name);
 
