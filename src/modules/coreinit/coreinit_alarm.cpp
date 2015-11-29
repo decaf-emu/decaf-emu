@@ -22,7 +22,7 @@ OSAlarm::Tag;
 static BOOL
 OSCancelAlarmNoLock(OSAlarm *alarm)
 {
-   if (!alarm->state == OSAlarmState::Set) {
+   if (alarm->state != OSAlarmState::Set) {
       return FALSE;
    }
 
