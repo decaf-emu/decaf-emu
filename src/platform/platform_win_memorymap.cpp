@@ -68,14 +68,22 @@ bool
 commitMemory(MemoryMappedFile *file, size_t address, size_t size)
 {
    auto baseAddress = reinterpret_cast<LPVOID>(address);
-   return !!VirtualAlloc(baseAddress, size, MEM_COMMIT, PAGE_READWRITE);
+   auto result = VirtualAlloc(baseAddress, size, MEM_COMMIT, PAGE_READWRITE);
+
+   if (result != baseAddress) {
+      VirtualFree(result, size, MEM_DECOMMIT);
+      return false;
+   }
+
+   return true;
 }
 
 bool
 protectMemory(size_t address, size_t size)
 {
    auto baseAddress = reinterpret_cast<LPVOID>(address);
-   return !!VirtualAlloc(baseAddress, size, MEM_RESERVE, PAGE_NOACCESS);
+   auto result = VirtualAlloc(baseAddress, size, MEM_RESERVE, PAGE_NOACCESS);
+   return (result != baseAddress);
 }
 
 } // namespace platform
