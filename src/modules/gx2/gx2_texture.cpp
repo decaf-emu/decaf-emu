@@ -20,7 +20,7 @@ GX2InitTextureRegs(GX2Texture *texture)
    }
 
    if (!texture->viewNumSlices) {
-      texture->viewNumSlices;
+      texture->viewNumSlices = 1;
    }
 
    if (!texture->surface.width) {
