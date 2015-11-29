@@ -14,6 +14,7 @@
 #include "mem/mem.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "processor.h"
+#include "platform/platform.h"
 #include "system.h"
 #include "cpu/trace.h"
 #include "utils/log.h"
@@ -551,7 +552,9 @@ DebugNet::setTarget(const std::string& address, uint16_t port)
 bool
 DebugNet::connect()
 {
+#ifdef PLATFORM_WINDOWS
    static bool wsaInited = false;
+
    if (!wsaInited) {
       WSADATA wsaData;
       WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -568,6 +571,7 @@ DebugNet::connect()
    server.sin_port = htons(mPort);
 
    int conres = ::connect(sock, (struct sockaddr *)&server, sizeof(server));
+
    if (conres < 0) {
       // Connect failure
       return false;
@@ -577,11 +581,15 @@ DebugNet::connect()
    mSocket = (void*)sock;
    mNetworkThread = new std::thread(&DebugNet::networkThread, this);
    return true;
+#else
+   return false;
+#endif
 }
 
 void
 DebugNet::networkThread()
 {
+#ifdef PLATFORM_WINDOWS
    SOCKET sock = (SOCKET)mSocket;
    std::vector<uint8_t> buffer;
 
@@ -614,14 +622,17 @@ DebugNet::networkThread()
       deserializePacket(buffer, packet);
       handlePacket(packet);
    }
+#endif
 }
 
 void
 DebugNet::handleDisconnect()
 {
+#ifdef PLATFORM_WINDOWS
    mConnected = false;
    mSocket = (void*)INVALID_SOCKET;
    gDebugger.notify(new DebugMessageDebuggerDc());
+#endif
 }
 
 void
@@ -756,6 +767,7 @@ DebugNet::handlePacket(DebugPacket *pak)
 void
 DebugNet::writePacket(DebugPacket *pak)
 {
+#ifdef PLATFORM_WINDOWS
    gLog->debug("Writing packet {}", (int)pak->type());
 
    std::vector<uint8_t> buffer;
@@ -763,6 +775,7 @@ DebugNet::writePacket(DebugPacket *pak)
 
    SOCKET sock = (SOCKET)mSocket;
    send(sock, (char*)&buffer[0], (int)buffer.size(), 0);
+#endif
 }
 
 void
