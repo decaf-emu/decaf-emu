@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <cstdarg>
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -81,4 +82,33 @@ ends_with(const std::string &source, const std::string &suffix)
    } else {
       return std::equal(suffix.rbegin(), suffix.rend(), source.rbegin());
    }
+}
+
+// Creates a string according to a format string and varargs
+static inline std::string
+format_string(const char* fmt, ...)
+{
+   va_list args;
+   va_start(args, fmt);
+
+   // Calculate the size for our char buffer
+#ifdef PLATFORM_WINDOWS
+   int formatted_len = _vscprintf(fmt, args) + 1;
+#else
+   int formatted_len = vsnprintf(nullptr, 0, fmt, args);
+#endif
+   if (formatted_len <= 0) // Error occurred
+      return "";
+
+   std::string ret;
+   ret.resize(formatted_len);
+
+   // C++11 guarantees that strings are contiguous in memory
+#ifdef PLATFORM_WINDOWS
+   vsprintf_s(&ret[0], formatted_len, fmt, args);
+#else
+   vsnprintf(&ret[0], formatted_len, fmt, args);
+#endif
+   va_end(args);
+   return ret;
 }
