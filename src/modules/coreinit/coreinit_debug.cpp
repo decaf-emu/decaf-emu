@@ -40,7 +40,6 @@ static const auto c_specifier = make_array<char>(
 static void
 formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
 {
-   char buffer[32];
    output.reserve(strlen(fmt));
 
    for (auto i = 0; i < strlen(fmt); ) {
@@ -85,7 +84,6 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
 
          std::string formatter = "%";
          formatter += flags + width + precision + length + specifier;
-         buffer[0] = 0;
 
          switch (specifier) {
          case 'd':
@@ -105,8 +103,7 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
          case 'c':
          case 'p':
          case 'n':
-            snprintf(buffer, 32, formatter.c_str(), args.next<uint32_t>());
-            output.append(buffer);
+            output.append(format_string(formatter.c_str(), args.next<uint32_t>()));
             break;
          case 's':
             output.append(args.next<const char*>());
