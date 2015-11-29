@@ -53,7 +53,8 @@ public:
       xmm2 = asmjit::x86::xmm2;
       xmm3 = asmjit::x86::xmm3;
 
-#define PPCTSReg(mm) asmjit::X86Mem(zbx, (int32_t)offsetof(ThreadState, mm), sizeof(ThreadState::mm))
+#define offsetof2(s, m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
+#define PPCTSReg(mm) asmjit::X86Mem(zbx, (int32_t)offsetof2(ThreadState, mm), sizeof(ThreadState::mm))
       for (auto i = 0; i < 32; ++i) {
          ppcgpr[i] = PPCTSReg(gpr[i]);
       }
