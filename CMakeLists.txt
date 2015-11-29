@@ -43,6 +43,7 @@ externalproject_add(glbinding
     SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${GLBINDING_DIR}"
     CMAKE_CACHE_ARGS
         -DOPTION_BUILD_STATIC:string=on
+        -DOPTION_BUILD_TESTS:string=off
     INSTALL_COMMAND ""
     )
 externalproject_get_property(glbinding BINARY_DIR)
