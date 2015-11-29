@@ -12,8 +12,8 @@ struct AnalyseState
 {
    struct Register
    {
-      std::array<int32_t, 4> read = { -1, -1, -1, -1 };
-      std::array<int32_t, 4> write = { -1, -1, -1, -1 };
+      std::array<int32_t, 4> read = { { -1, -1, -1, -1 } };
+      std::array<int32_t, 4> write = { { -1, -1, -1, -1 } };
    };
 
    int32_t addr = -1;
