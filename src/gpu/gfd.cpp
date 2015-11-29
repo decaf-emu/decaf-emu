@@ -4,6 +4,12 @@
 namespace gfd
 {
 
+const uint32_t
+FileHeader::Magic;
+
+const uint32_t
+BlockHeader::Magic;
+
 bool
 readFile(const std::string &filename, File &out)
 {
