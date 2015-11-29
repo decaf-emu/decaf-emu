@@ -5,6 +5,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+namespace platform
+{
+
 bool
 createDirectory(const std::string &path)
 {
