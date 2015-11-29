@@ -53,4 +53,4 @@ add_subdirectory(utils)
 
 add_executable(decaf-emu ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(decaf-emu cpu filesystem gpu input mem modules platform utils)
-target_link_libraries(decaf-emu z ${ASMJIT_LIBRARIES} ${DOCOPT_LIBRARIES} ${PUGIXML_LIBRARIES} ${GLBINDING_LIBRARIES} ${GLFW_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(decaf-emu z m ${ASMJIT_LIBRARIES} ${DOCOPT_LIBRARIES} ${PUGIXML_LIBRARIES} ${GLBINDING_LIBRARIES} ${GLFW_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
