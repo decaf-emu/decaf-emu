@@ -80,7 +80,7 @@ protected:
    {
       auto node = reinterpret_cast<Node *>(&mRoot);
 
-      for (auto &dir : path) {
+      for (auto dir : path) {
          if (!node || node->type != Node::FolderNode) {
             return nullptr;
          }
@@ -101,7 +101,7 @@ protected:
    {
       auto node = reinterpret_cast<Node *>(&mRoot);
 
-      for (auto &dir : path) {
+      for (auto dir : path) {
          if (!node || node->type != Node::FolderNode) {
             return nullptr;
          }
