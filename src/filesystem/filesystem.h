@@ -34,7 +34,7 @@ public:
       auto node = findNode(path);
 
       if (!node || node->type != Node::FileNode) {
-         return false;
+         return nullptr;
       }
 
       auto file = reinterpret_cast<File *>(node);
@@ -46,7 +46,7 @@ public:
       auto node = findNode(path);
 
       if (!node || node->type != Node::FolderNode) {
-         return false;
+         return nullptr;
       }
 
       auto file = reinterpret_cast<Folder *>(node);
