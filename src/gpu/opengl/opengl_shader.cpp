@@ -6,6 +6,7 @@
 #include "gpu/latte_opcodes.h"
 #include "gpu/latte.h"
 #include "utils/log.h"
+#include "utils/strutils.h"
 #include <spdlog/spdlog.h>
 
 namespace gpu
@@ -171,18 +172,16 @@ bool GLDriver::checkActiveShader()
          vertexShader.uniformBlocks.fill(0);
 
          for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
-            char name[32];
-            sprintf_s(name, 32, "VertexBlock[%u]", i);
-            vertexShader.uniformBlocks[i] = gl::glGetUniformLocation(vertexShader.object, name);
+            auto name = fmt::format("VertexBlock[{}]", i);
+            vertexShader.uniformBlocks[i] = gl::glGetUniformLocation(vertexShader.object, name.c_str());
          }
 
          // Get attribute locations
          vertexShader.attribLocations.fill(0);
 
          for (auto &attrib : fetchShader.attribs) {
-            char name[32];
-            sprintf_s(name, 32, "fs_out_%u", attrib.location);
-            vertexShader.attribLocations[attrib.location] = gl::glGetAttribLocation(vertexShader.object, name);
+            auto name = fmt::format("fs_out_{}", attrib.location);
+            vertexShader.attribLocations[attrib.location] = gl::glGetAttribLocation(vertexShader.object, name.c_str());
          }
       }
 
@@ -213,9 +212,8 @@ bool GLDriver::checkActiveShader()
          pixelShader.uniformBlocks.fill(0);
 
          for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
-            char name[32];
-            sprintf_s(name, 32, "PixelBlock[%u]", i);
-            pixelShader.uniformBlocks[i] = gl::glGetUniformLocation(pixelShader.object, name);
+            auto name = fmt::format("PixelBlock[{}]", i);
+            pixelShader.uniformBlocks[i] = gl::glGetUniformLocation(pixelShader.object, name.c_str());
          }
       }
 
