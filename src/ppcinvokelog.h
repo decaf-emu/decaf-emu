@@ -27,7 +27,7 @@ inline std::string
 logCallEnd(LogState &state)
 {
    if (config::log::kernel_trace) {
-      state.out.write("}");
+      state.out.write(")");
       return state.out.str();
    } else {
       return nullptr;
