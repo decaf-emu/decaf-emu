@@ -300,7 +300,8 @@ FSReadDir(FSClient *client,
    }
 
    memset(entry, 0, sizeof(FSDirectoryEntry));
-   strcpy_s(entry->name, 256, folderEntry.name.c_str());
+   folderEntry.name.copy(entry->name, 256);
+   entry->name[255] = '\0';
    entry->info.size = folderEntry.size;
 
    if (folderEntry.type == fs::FolderEntry::Folder) {
@@ -621,10 +622,11 @@ FSGetCwd(FSClient *client,
          uint32_t bufferSize,
          uint32_t flags)
 {
-   if (strncpy_s(buffer, bufferSize, gWorkingPath.path.c_str(), _TRUNCATE) == STRUNCATE) {
+   if (gWorkingPath.path.copy(buffer, bufferSize - 1) != bufferSize - 1) {
       return FSStatus::FatalError;
    }
 
+   buffer[bufferSize - 1] = '\0';
    return FSStatus::OK;
 }
 
