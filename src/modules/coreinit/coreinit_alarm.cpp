@@ -19,6 +19,9 @@ gAlarmQueue[CoreCount];
 const uint32_t
 OSAlarm::Tag;
 
+const uint32_t
+OSAlarmQueue::Tag;
+
 static BOOL
 OSCancelAlarmNoLock(OSAlarm *alarm)
 {
