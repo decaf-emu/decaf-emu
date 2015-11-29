@@ -1,27 +1,37 @@
 include_directories(".")
 
 set(SOURCE_FILES
-	)
+    platform_glfw_input.cpp
+    platform_glfw_ui.cpp
+    )
 
 set(HEADER_FILES
-	platform.h
-	platform_thread.h
-	platform_time.h
-	platform_ui.h
-	)
+    platform_fiber.h
+    platform_glfw.h
+    platform.h
+    platform_input.h
+    platform_memorymap.h
+    platform_thread.h
+    platform_time.h
+    platform_ui.h
+    )
 
 set(SOURCE_FILES_WINDOWS
-	platform_win_thread.cpp
-	platform_win_time.cpp
-	platform_win_ui.cpp
+    platform_win_dir.cpp
+    platform_win_fiber.cpp
+    platform_win_memorymap.cpp
+    platform_win_thread.cpp
+    platform_win_time.cpp
     )
 set(HEADER_FILES_WINDOWS
     )
 
 set(SOURCE_FILES_POSIX
-	platform_posix_thread.cpp
-	platform_posix_time.cpp
-	platform_posix_ui.cpp
+    platform_posix_dir.cpp
+    platform_posix_fiber.cpp
+    platform_posix_memorymap.cpp
+    platform_posix_thread.cpp
+    platform_posix_time.cpp
     )
 set(HEADER_FILES_POSIX
     )

@@ -1,10 +1,10 @@
 include_directories(".")
 
 set(SOURCE_FILES
-	mem.cpp
+    mem.cpp
     )
 set(HEADER_FILES
-	mem.h
+    mem.h
     )
 
 add_library(mem STATIC ${SOURCE_FILES} ${HEADER_FILES})

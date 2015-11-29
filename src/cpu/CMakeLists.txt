@@ -1,49 +1,49 @@
 include_directories(".")
 
 set(SOURCE_FILES
-	cpu.cpp
-	cpu_kc.cpp
-	disassembler.cpp
-	instructioninfo.cpp
-	instructiontable.cpp
-	interpreter/interpreter_branch.cpp
-	interpreter/interpreter_condition.cpp
-	interpreter/interpreter.cpp
-	interpreter/interpreter_float.cpp
-	interpreter/interpreter_integer.cpp
-	interpreter/interpreter_loadstore.cpp
-	interpreter/interpreter_pairedsingle.cpp
-	interpreter/interpreter_system.cpp
-	jit/jit_branch.cpp
-	jit/jit_condition.cpp
-	jit/jit.cpp
-	jit/jit_fallback.cpp
-	jit/jit_float.cpp
-	jit/jit_integer.cpp
-	jit/jit_loadstore.cpp
-	jit/jit_pairedsingle.cpp
-	jit/jit_system.cpp
-	trace.cpp
+    cpu.cpp
+    cpu_kc.cpp
+    disassembler.cpp
+    instructioninfo.cpp
+    instructiontable.cpp
+    interpreter/interpreter_branch.cpp
+    interpreter/interpreter_condition.cpp
+    interpreter/interpreter.cpp
+    interpreter/interpreter_float.cpp
+    interpreter/interpreter_integer.cpp
+    interpreter/interpreter_loadstore.cpp
+    interpreter/interpreter_pairedsingle.cpp
+    interpreter/interpreter_system.cpp
+    jit/jit_branch.cpp
+    jit/jit_condition.cpp
+    jit/jit.cpp
+    jit/jit_fallback.cpp
+    jit/jit_float.cpp
+    jit/jit_integer.cpp
+    jit/jit_loadstore.cpp
+    jit/jit_pairedsingle.cpp
+    jit/jit_system.cpp
+    trace.cpp
     )
 set(HEADER_FILES
-	cpu.h
-	cpu_internal.h
-	disassembler.h
-	instructiondata.h
-	instruction.h
-	instructionid.h
-	interpreter/interpreter_float.h
-	interpreter/interpreter.h
-	interpreter/interpreter_insreg.h
-	interpreter/interpreter_internal.h
-	jit/jit_float.h
-	jit/jit.h
-	jit/jit_insreg.h
-	jit/jit_internal.h
-	statedbg.h
-	state.h
-	trace.h
-	utils.h
+    cpu.h
+    cpu_internal.h
+    disassembler.h
+    instructiondata.h
+    instruction.h
+    instructionid.h
+    interpreter/interpreter_float.h
+    interpreter/interpreter.h
+    interpreter/interpreter_insreg.h
+    interpreter/interpreter_internal.h
+    jit/jit_float.h
+    jit/jit.h
+    jit/jit_insreg.h
+    jit/jit_internal.h
+    statedbg.h
+    state.h
+    trace.h
+    utils.h
     )
 
 add_library(cpu STATIC ${SOURCE_FILES} ${HEADER_FILES})
