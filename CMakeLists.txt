@@ -30,7 +30,8 @@ set(ASMJIT_DIR "libraries/asmjit")
 include_directories("${ASMJIT_DIR}/src")
 externalproject_add(asmjit
     SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${ASMJIT_DIR}"
-    CMAKE_CACHE_ARGS "-DASMJIT_STATIC:string=on"
+    CMAKE_CACHE_ARGS
+        -DASMJIT_STATIC:string=on
     INSTALL_COMMAND ""
     )
 externalproject_get_property(asmjit BINARY_DIR)
@@ -40,21 +41,15 @@ set(GLBINDING_DIR "libraries/glbinding")
 include_directories("${GLBINDING_DIR}/source/glbinding/include")
 externalproject_add(glbinding
     SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${GLBINDING_DIR}"
-    CMAKE_CACHE_ARGS "-DOPTION_BUILD_STATIC:string=on"
+    CMAKE_CACHE_ARGS
+        -DOPTION_BUILD_STATIC:string=on
     INSTALL_COMMAND ""
     )
 externalproject_get_property(glbinding BINARY_DIR)
 set(GLBINDING_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding.a")
 
-set(GLFW_DIR "libraries/glfw")
-include_directories("${GLFW_DIR}/include")
-externalproject_add(glfw
-    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${GLFW_DIR}"
-    CMAKE_CACHE_ARGS "-DGLFW_BUILD_EXAMPLES:string=off -DGLFW_BUILD_TESTS:string=off -DGLFW_BUILD_DOCS:string=off"
-    INSTALL_COMMAND ""
-    )
-externalproject_get_property(glfw BINARY_DIR)
-set(GLFW_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glfw.a")
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLFW REQUIRED glfw3)
 
 if (NOT MSVC)
     set(CMAKE_CXX_COMPILER "clang")
