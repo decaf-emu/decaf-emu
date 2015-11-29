@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.4)
 include(ExternalProject)
 
-project(decaf-emu)
+project(decaf-emu C CXX)
 
 set(PUGIXML_DIR "libraries/pugixml")
 include_directories("${PUGIXML_DIR}/src")
@@ -50,6 +50,8 @@ set(GLBINDING_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding.a
 
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
+
+find_package(Threads REQUIRED)
 
 if (NOT MSVC)
     set(CMAKE_CXX_COMPILER "clang")
