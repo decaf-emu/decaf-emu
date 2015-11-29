@@ -330,12 +330,11 @@ translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks)
 bool
 generateBody(latte::Shader &shader, std::string &body)
 {
-   auto result = true;
-   auto state = GenerateState {};
+   GenerateState state;
    state.shader = &shader;
 
    intialise();
-   result &= translateBlocks(state, shader.blocks);
+   auto result = translateBlocks(state, shader.blocks);
    body = state.out.c_str();
 
    return result;

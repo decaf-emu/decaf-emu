@@ -39,8 +39,8 @@ static bool isTranscendentalOnly(latte::alu::Instruction &alu);
 
 bool disassemble(std::string &out, const gsl::array_view<uint8_t> &binary)
 {
+   DisassembleState state;
    bool result = true;
-   auto state = DisassembleState { };
 
    assert((binary.size() % 4) == 0);
    state.words = reinterpret_cast<const uint32_t*>(binary.data());
