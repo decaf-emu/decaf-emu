@@ -521,9 +521,6 @@ executeFuzzTests(uint32_t suite_seed)
    for (auto i = 0; i < 10000; ++i) {
       if (false) {
          gLog->info("Executing test {}", i);
-         if (i == 167) {
-            __debugbreak();
-         }
       }
 
       executeInstrTest(suite_rand());
