@@ -2,9 +2,7 @@
 #include "platform_thread.h"
 
 #ifdef PLATFORM_POSIX
-#include <ctime>
-#include <thread>
-#include <string>
+#include <pthread.h>
 
 namespace platform
 {
