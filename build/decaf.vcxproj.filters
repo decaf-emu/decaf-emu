@@ -193,6 +193,9 @@
     <Filter Include="Source Files\input">
       <UniqueIdentifier>{9d72e53e-68e5-45b6-89f4-b5ae00b4025b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\filesystem">
+      <UniqueIdentifier>{acbd1f70-d96c-45bd-88d6-1fd975a9112b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -678,14 +681,20 @@
     <ClCompile Include="..\src\platform\platform_posix_dir.cpp">
       <Filter>Source Files\platform</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\filesystem\filesystem_win_host_folder.cpp">
-      <Filter>Header Files\filesystem</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\filesystem\filesystem_win_host_folderhandle.cpp">
-      <Filter>Header Files\filesystem</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\platform\platform_win_dir.cpp">
       <Filter>Source Files\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\filesystem\filesystem_posix_host_folder.cpp">
+      <Filter>Source Files\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\filesystem\filesystem_posix_host_folderhandle.cpp">
+      <Filter>Source Files\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\filesystem\filesystem_win_host_folder.cpp">
+      <Filter>Source Files\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\filesystem\filesystem_win_host_folderhandle.cpp">
+      <Filter>Source Files\filesystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

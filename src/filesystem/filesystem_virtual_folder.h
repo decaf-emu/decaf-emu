@@ -53,7 +53,14 @@ public:
 
    virtual FolderHandle *open() override
    {
-      return new VirtualFolderHandle(mChildren.begin(), mChildren.end());
+      auto handle = new VirtualFolderHandle(mChildren.begin(), mChildren.end());
+
+      if (!handle->open()) {
+         delete handle;
+         return nullptr;
+      }
+
+      return handle;
    }
 
 private:

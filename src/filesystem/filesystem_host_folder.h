@@ -45,7 +45,14 @@ public:
 
    virtual FolderHandle *open() override
    {
-      return new HostFolderHandle(mPath, mVirtual.open());
+      auto handle = new HostFolderHandle(mPath, mVirtual.open());
+
+      if (!handle->open()) {
+         delete handle;
+         return nullptr;
+      }
+
+      return handle;
    }
 
 private:

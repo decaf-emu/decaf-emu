@@ -49,17 +49,8 @@ public:
          return nullptr;
       }
 
-      auto file = reinterpret_cast<Folder *>(node);
-      auto handle = file->open();
-      if (!handle) {
-         return nullptr;
-      }
-      if (!handle->open()) {
-         delete handle;
-         return nullptr;
-      }
-
-      return handle;
+      auto folder = reinterpret_cast<Folder *>(node);
+      return folder->open();
    }
 
    bool findEntry(Path path, FolderEntry &entry)

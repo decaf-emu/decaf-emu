@@ -23,7 +23,14 @@ public:
 
    virtual class FileHandle *open(OpenMode mode)
    {
-      return new HostFileHandle(mPath.path(), mode);
+      auto handle = new HostFileHandle(mPath.path(), mode);
+
+      if (!handle->open()) {
+         delete handle;
+         return nullptr;
+      }
+
+      return handle;
    }
 
 private:

@@ -118,6 +118,8 @@
     <ClCompile Include="..\src\debugger.cpp" />
     <ClCompile Include="..\src\debugnet.cpp" />
     <ClCompile Include="..\src\elf.cpp" />
+    <ClCompile Include="..\src\filesystem\filesystem_posix_host_folder.cpp" />
+    <ClCompile Include="..\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_win_host_folder.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_win_host_folderhandle.cpp" />
     <ClCompile Include="..\src\fuzztests.cpp" />
