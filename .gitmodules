@@ -25,3 +25,6 @@
 [submodule "libraries/glfw"]
 	path = libraries/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "libraries/gsl-lite"]
+	path = libraries/gsl-lite
+	url = https://github.com/decaf-emu/gsl-lite.git

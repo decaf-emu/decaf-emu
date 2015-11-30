@@ -46,11 +46,11 @@
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>

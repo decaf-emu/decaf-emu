@@ -46,14 +46,14 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\gsl\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\ovsocket;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\ovsocket;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\gsl\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\ovsocket;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\ovsocket;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
