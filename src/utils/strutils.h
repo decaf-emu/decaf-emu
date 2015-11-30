@@ -89,6 +89,7 @@ static inline std::string
 format_string(const char* fmt, ...)
 {
    va_list args;
+   std::string ret;
    va_start(args, fmt);
 
    // Calculate the size for our char buffer
@@ -97,18 +98,18 @@ format_string(const char* fmt, ...)
 #else
    int formatted_len = vsnprintf(nullptr, 0, fmt, args);
 #endif
-   if (formatted_len <= 0) // Error occurred
-      return "";
 
-   std::string ret;
-   ret.resize(formatted_len);
+   if (formatted_len > 0) {
+      ret.resize(formatted_len);
 
-   // C++11 guarantees that strings are contiguous in memory
+      // C++11 guarantees that strings are contiguous in memory
 #ifdef PLATFORM_WINDOWS
-   vsprintf_s(&ret[0], formatted_len, fmt, args);
+      vsprintf_s(&ret[0], formatted_len, fmt, args);
 #else
-   vsnprintf(&ret[0], formatted_len, fmt, args);
+      vsnprintf(&ret[0], formatted_len, fmt, args);
 #endif
+   }
+
    va_end(args);
    return ret;
 }
