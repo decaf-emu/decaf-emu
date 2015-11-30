@@ -9,7 +9,7 @@ static platform::input::ControllerHandle
 gVpadHandles[vpad::MaxControllers];
 
 static platform::input::ControllerHandle
-gWpadHandle[wpad::MaxControllers];
+gWpadHandles[wpad::MaxControllers];
 
 static int
 getButtonMapping(vpad::Channel channel, vpad::Core button)
@@ -61,10 +61,22 @@ getControllerHandle(vpad::Channel channel)
 {
    auto id = static_cast<size_t>(channel);
 
-   if (id > vpad::MaxControllers) {
+   if (id >= vpad::MaxControllers) {
       return 0;
    } else {
       return gVpadHandles[id];
+   }
+}
+
+static platform::input::ControllerHandle
+getControllerHandle(wpad::Channel channel)
+{
+   auto id = static_cast<size_t>(channel);
+
+   if (id >= wpad::MaxControllers) {
+      return 0;
+   } else {
+      return gWpadHandles[id];
    }
 }
 
@@ -72,7 +84,12 @@ bool
 init()
 {
    gVpadHandles[0] = platform::input::getControllerHandle(config::input::vpad0::name);
-   // TODO: 4 wpad controllers
+
+   // TODO: Config 4 wpad controllers
+   for (auto i = 0; i < 4; ++i) {
+      gWpadHandles[i] = 0;
+   }
+
    return true;
 }
 
