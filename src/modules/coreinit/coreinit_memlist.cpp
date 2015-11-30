@@ -116,7 +116,7 @@ MEMRemoveListObject(MemoryList *list, void *object)
    }
 
    do {
-      MEMGetNextListObject(list, head);
+      head = MEMGetNextListObject(list, head);
    } while (head && head != object);
 
    if (head == object) {
@@ -155,10 +155,9 @@ MEMGetNthListObject(MemoryList *list, uint16_t n)
 {
    void *head = nullptr;
 
-   do {
-      MEMGetNextListObject(list, head);
-      --n;
-   } while (head && n >= 0);
+   for (auto i = 0u; i < n && head; ++i) {
+      head = MEMGetNextListObject(list, head);
+   }
 
    return head;
 }
