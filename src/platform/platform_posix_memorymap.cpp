@@ -34,7 +34,7 @@ mapMemory(MemoryMappedFile *file, size_t offset, size_t address, size_t size)
    }
 
    auto baseAddress = reinterpret_cast<void *>(address);
-   auto result = mmap(baseAddress, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
+   auto result = mmap(baseAddress, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
    if (result != baseAddress) {
       unmapMemory(file, address, size);
