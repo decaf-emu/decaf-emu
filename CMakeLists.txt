@@ -25,7 +25,7 @@ set(DOCOPT_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}docopt_s.a")
 set(SPDLOG_DIR "libraries/spdlog")
 include_directories("${SPDLOG_DIR}/include")
 
-set(GSL_DIR "libraries/gsl")
+set(GSL_DIR "libraries/gsl-lite")
 include_directories("${GSL_DIR}/include")
 
 set(CEREAL_DIR "libraries/cereal")
