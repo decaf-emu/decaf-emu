@@ -565,7 +565,7 @@ Loader::processImports(LoadedModule *loadedMod, const SectionList &sections)
       auto linkedModule = loadRPL(libraryName);
 
       // Zero the whole section after we have used the name
-      memset(section.memory + 8, section.virtSize - 8, 0);
+      std::memset(section.memory + 8, 0, section.virtSize - 8);
 
       if (!linkedModule) {
          // Ignore missing modules for now
