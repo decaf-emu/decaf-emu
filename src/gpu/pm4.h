@@ -1,5 +1,5 @@
 #pragma once
-#include <array_view.h>
+#include <gsl.h>
 #include "pm4_format.h"
 #include "latte_registers.h"
 #include "utils/virtual_ptr.h"
@@ -179,7 +179,7 @@ struct SetAluConsts
    static const auto Opcode = Opcode3::SET_ALU_CONST;
 
    latte::Register::Value id;
-   gsl::array_view<uint32_t> values;
+   gsl::span<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -209,7 +209,7 @@ struct SetConfigRegs
    static const auto Opcode = Opcode3::SET_CONFIG_REG;
 
    latte::Register::Value id;
-   gsl::array_view<uint32_t> values;
+   gsl::span<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -239,7 +239,7 @@ struct SetContextRegs
    static const auto Opcode = Opcode3::SET_CONTEXT_REG;
 
    latte::Register::Value id;
-   gsl::array_view<uint32_t> values;
+   gsl::span<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -269,7 +269,7 @@ struct SetControlConstants
    static const auto Opcode = Opcode3::SET_CTL_CONST;
 
    uint32_t id;
-   gsl::array_view<uint32_t> values;
+   gsl::span<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -299,7 +299,7 @@ struct SetLoopConsts
    static const auto Opcode = Opcode3::SET_LOOP_CONST;
 
    latte::Register::Value id;
-   gsl::array_view<uint32_t> values;
+   gsl::span<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -333,7 +333,7 @@ struct SetSamplers
    static const auto Opcode = Opcode3::SET_SAMPLER;
 
    latte::Register::Value id;
-   gsl::array_view<uint32_t> values;
+   gsl::span<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -403,7 +403,7 @@ struct SetResources
    static const auto Opcode = Opcode3::SET_RESOURCE;
 
    uint32_t id;
-   gsl::array_view<uint32_t> values;
+   gsl::span<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -434,7 +434,7 @@ struct LoadConfigReg
 {
    static const auto Opcode = Opcode3::LOAD_CONFIG_REG;
    virtual_ptr<uint32_t> addr;
-   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+   gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -451,7 +451,7 @@ struct LoadContextReg
 {
    static const auto Opcode = Opcode3::LOAD_CONTEXT_REG;
    virtual_ptr<uint32_t> addr;
-   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+   gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -468,7 +468,7 @@ struct LoadAluConst
 {
    static const auto Opcode = Opcode3::LOAD_ALU_CONST;
    virtual_ptr<uint32_t> addr;
-   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+   gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -485,7 +485,7 @@ struct LoadBoolConst
 {
    static const auto Opcode = Opcode3::LOAD_BOOL_CONST;
    virtual_ptr<uint32_t> addr;
-   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+   gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -502,7 +502,7 @@ struct LoadLoopConst
 {
    static const auto Opcode = Opcode3::LOAD_LOOP_CONST;
    virtual_ptr<uint32_t> addr;
-   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+   gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -519,7 +519,7 @@ struct LoadResource
 {
    static const auto Opcode = Opcode3::LOAD_RESOURCE;
    virtual_ptr<uint32_t> addr;
-   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+   gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -536,7 +536,7 @@ struct LoadSampler
 {
    static const auto Opcode = Opcode3::LOAD_SAMPLER;
    virtual_ptr<uint32_t> addr;
-   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+   gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -553,7 +553,7 @@ struct LoadControlConst
 {
    static const auto Opcode = Opcode3::LOAD_CTL_CONST;
    virtual_ptr<uint32_t> addr;
-   gsl::array_view<std::pair<uint32_t, uint32_t>> values;
+   gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)

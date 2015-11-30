@@ -28,13 +28,13 @@ GX2SetFetchShader(GX2FetchShader *shader)
       0x10,
       sq_pgm_resources_fs.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_FS, { shaderRegData }});
+   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_FS, gsl::as_span(shaderRegData) });
 
    uint32_t vgt_instance_step_rates[] = {
       shader->divisors[0],
       shader->divisors[1],
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::VGT_INSTANCE_STEP_RATE_0, { vgt_instance_step_rates }});
+   pm4::write(pm4::SetContextRegs { latte::Register::VGT_INSTANCE_STEP_RATE_0, gsl::as_span(vgt_instance_step_rates) });
 }
 
 void
@@ -66,7 +66,7 @@ GX2SetVertexShader(GX2VertexShader *shader)
       0x10,
       sq_pgm_resources_vs.value,
    };
-   pm4::write(pm4::SetContextRegs{ latte::Register::SQ_PGM_START_VS, { shaderRegData }});
+   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_VS, gsl::as_span(shaderRegData) });
 
    if (shader->mode != GX2ShaderMode::GeometryShader) {
       pm4::write(pm4::SetContextReg { latte::Register::VGT_PRIMITIVEID_EN, vgt_primitiveid_en.value });
@@ -74,7 +74,10 @@ GX2SetVertexShader(GX2VertexShader *shader)
       pm4::write(pm4::SetContextReg { latte::Register::PA_CL_VS_OUT_CNTL, pa_cl_vs_out_cntl.value });
 
       if (shader->regs.num_spi_vs_out_id > 0) {
-         pm4::write(pm4::SetContextRegs { latte::Register::SPI_VS_OUT_ID_0, { &spi_vs_out_id[0].value, num_spi_vs_out_id } });
+         pm4::write(pm4::SetContextRegs {
+            latte::Register::SPI_VS_OUT_ID_0,
+            gsl::as_span(&spi_vs_out_id[0].value, shader->regs.num_spi_vs_out_id)
+         });
       }
 
       pm4::write(pm4::SetContextReg { latte::Register::SQ_PGM_CF_OFFSET_VS, 0 });
@@ -92,7 +95,10 @@ GX2SetVertexShader(GX2VertexShader *shader)
    pm4::write(pm4::SetContextReg { latte::Register::SQ_VTX_SEMANTIC_CLEAR, sq_vtx_semantic_clear.value });
 
    if (shader->regs.num_sq_vtx_semantic > 0) {
-      pm4::write(pm4::SetContextRegs { latte::Register::SQ_VTX_SEMANTIC_0, { &sq_vtx_semantic[0].value, num_sq_vtx_semantic } });
+      pm4::write(pm4::SetContextRegs {
+         latte::Register::SQ_VTX_SEMANTIC_0,
+         gsl::as_span(&sq_vtx_semantic[0].value, shader->regs.num_sq_vtx_semantic)
+      });
    }
 
    pm4::write(pm4::SetContextReg { latte::Register::VGT_VERTEX_REUSE_BLOCK_CNTL, vgt_vertex_reuse_block_cntl.value });
@@ -129,18 +135,18 @@ GX2SetPixelShader(GX2PixelShader *shader)
       sq_pgm_resources_ps.value,
       sq_pgm_exports_ps.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_PS, { shaderRegData }});
+   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_PS, gsl::as_span(shaderRegData) });
 
    uint32_t spi_ps_in_control[] = {
       spi_ps_in_control_0.value,
       spi_ps_in_control_1.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::SPI_PS_IN_CONTROL_0, { spi_ps_in_control }});
+   pm4::write(pm4::SetContextRegs { latte::Register::SPI_PS_IN_CONTROL_0, gsl::as_span(spi_ps_in_control) });
 
    if (num_spi_ps_input_cntl > 0) {
       pm4::write(pm4::SetContextRegs {
          latte::Register::SPI_PS_INPUT_CNTL_0,
-         { &spi_ps_input_cntls[0].value, num_spi_ps_input_cntl }
+         gsl::as_span(&spi_ps_input_cntls[0].value, num_spi_ps_input_cntl),
       });
    }
 

@@ -116,12 +116,12 @@ GX2SetupContextState(GX2ContextState *state)
 static void
 _GX2LoadState(GX2ContextState *state)
 {
-   pm4::write(pm4::LoadConfigReg { state->shadowState.config, { ConfigRegisterRange } });
-   pm4::write(pm4::LoadContextReg { state->shadowState.context, { ContextRegisterRange } });
-   pm4::write(pm4::LoadAluConst { state->shadowState.alu, { AluConstRange } });
-   pm4::write(pm4::LoadLoopConst { state->shadowState.loop, { LoopConstRange } });
-   pm4::write(pm4::LoadResource { state->shadowState.resource, { ResourceRange } });
-   pm4::write(pm4::LoadSampler { state->shadowState.sampler, { SamplerRange } });
+   pm4::write(pm4::LoadConfigReg { state->shadowState.config, gsl::as_span(ConfigRegisterRange) });
+   pm4::write(pm4::LoadContextReg { state->shadowState.context, gsl::as_span(ContextRegisterRange) });
+   pm4::write(pm4::LoadAluConst { state->shadowState.alu, gsl::as_span(AluConstRange) });
+   pm4::write(pm4::LoadLoopConst { state->shadowState.loop, gsl::as_span(LoopConstRange) });
+   pm4::write(pm4::LoadResource { state->shadowState.resource, gsl::as_span(ResourceRange) });
+   pm4::write(pm4::LoadSampler { state->shadowState.sampler, gsl::as_span(SamplerRange) });
 }
 
 void

@@ -1,6 +1,6 @@
 #pragma once
-#include <array_view.h>
 #include <cstring>
+#include <gsl.h>
 #include <string>
 #include "utils/byte_swap.h"
 
@@ -12,7 +12,7 @@ public:
    {
    }
 
-   BigEndianView(const gsl::array_view<uint8_t> &view) :
+   BigEndianView(const gsl::span<uint8_t> &view) :
       mBuffer(static_cast<const uint8_t*>(view.data())), mSize(view.size()), mOffset(0)
    {
    }
@@ -47,7 +47,7 @@ public:
    }
 
    template<typename Type>
-   void read(const gsl::array_view<Type> &arr)
+   void read(const gsl::span<Type> &arr)
    {
       for (auto i = 0u; i < arr.size(); ++i) {
          read<Type>(arr[i]);

@@ -37,7 +37,7 @@ static uint32_t getUnit(bool units[5], latte::alu::Instruction &alu);
 static bool isVectorOnly(latte::alu::Instruction &alu);
 static bool isTranscendentalOnly(latte::alu::Instruction &alu);
 
-bool disassemble(std::string &out, const gsl::array_view<uint8_t> &binary)
+bool disassemble(std::string &out, const gsl::span<uint8_t> &binary)
 {
    DisassembleState state;
    bool result = true;

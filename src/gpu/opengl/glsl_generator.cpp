@@ -1,5 +1,4 @@
 #include <spdlog/spdlog.h>
-#include <array_view.h>
 #include "glsl_generator.h"
 #include "gpu/latte.h"
 #include "modules/gx2/gx2_shaders.h"

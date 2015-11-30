@@ -4,7 +4,6 @@
 #include <gsl.h>
 #include <limits>
 #include <string>
-#include <string_view.h>
 #include <vector>
 #include <zlib.h>
 #include "cpu/instructiondata.h"
@@ -668,7 +667,7 @@ Loader::processExports(LoadedModule *loadedMod, const SectionList &sections)
 
 
 std::unique_ptr<LoadedModule>
-Loader::loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data)
+Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
 {
    std::vector<uint8_t> buffer;
    auto in = BigEndianView { data };

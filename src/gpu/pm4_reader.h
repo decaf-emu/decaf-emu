@@ -1,5 +1,5 @@
 #pragma once
-#include <array_view.h>
+#include <gsl.h>
 #include "pm4_buffer.h"
 #include "pm4_format.h"
 #include "utils/virtual_ptr.h"
@@ -10,7 +10,7 @@ namespace pm4
 class PacketReader
 {
 public:
-   PacketReader(gsl::array_view<uint32_t> data) :
+   PacketReader(gsl::span<uint32_t> data) :
       mBuffer(data)
    {
    }
@@ -42,10 +42,10 @@ public:
 
    // Read the rest of the entire packet
    template<typename Type>
-   PacketReader &operator()(gsl::array_view<Type> &values)
+   PacketReader &operator()(gsl::span<Type> &values)
    {
-      values = { reinterpret_cast<Type*>(&mBuffer[mPosition]),
-                 ((mBuffer.size() - mPosition) * sizeof(uint32_t)) / sizeof(Type) };
+      values = gsl::as_span(reinterpret_cast<Type*>(&mBuffer[mPosition]),
+                            ((mBuffer.size() - mPosition) * sizeof(uint32_t)) / sizeof(Type));
 
       mPosition = mBuffer.size();
       return *this;
@@ -79,7 +79,7 @@ private:
 
 private:
    size_t mPosition = 0;
-   gsl::array_view<uint32_t> mBuffer;
+   gsl::span<uint32_t> mBuffer;
 };
 
 template<typename Type>

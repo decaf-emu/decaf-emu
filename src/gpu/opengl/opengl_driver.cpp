@@ -1056,7 +1056,7 @@ void GLDriver::setResources(const pm4::SetResources &data)
    }
 }
 
-void GLDriver::loadRegisters(latte::Register::Value base, uint32_t *src, gsl::array_view<std::pair<uint32_t, uint32_t>> registers)
+void GLDriver::loadRegisters(latte::Register::Value base, uint32_t *src, const gsl::span<std::pair<uint32_t, uint32_t>> &registers)
 {
    for (auto &range : registers) {
       auto start = range.first;
@@ -1114,7 +1114,7 @@ void GLDriver::indirectBufferCall(const pm4::IndirectBufferCall &data)
    runCommandBuffer(buffer, data.size);
 }
 
-void GLDriver::handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data)
+void GLDriver::handlePacketType3(pm4::Packet3 header, const gsl::span<uint32_t> &data)
 {
    pm4::PacketReader reader { data };
 
@@ -1222,7 +1222,7 @@ void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
       {
          auto header3 = pm4::Packet3{ header.value };
          size = header3.size + 1;
-         handlePacketType3(header3, { &buffer[pos + 1], size });
+         handlePacketType3(header3, gsl::as_span(&buffer[pos + 1], size));
          break;
       }
       case pm4::PacketType::Type0:

@@ -2,9 +2,9 @@
 #include <cstring>
 #include <exception>
 #include <fstream>
+#include <gsl.h>
 #include <string>
 #include <vector>
-#include <array_view.h>
 
 class BinaryView
 {
@@ -18,12 +18,12 @@ public:
    {
    }
 
-   BinaryView(gsl::array_view<uint8_t> data) :
+   BinaryView(const gsl::span<uint8_t> &data) :
       mData(data)
    {
    }
 
-   bool open(gsl::array_view<uint8_t> data)
+   bool open(const gsl::span<uint8_t> &data)
    {
       mData = data;
       mPosition = 0;
@@ -75,14 +75,14 @@ public:
       mPosition += sizeof(Type);
    }
 
-   gsl::array_view<uint8_t>
+   gsl::span<uint8_t>
    readView(std::size_t size)
    {
       if (mPosition + size > mData.size()) {
          throw std::runtime_error("Read past end of data");
       }
 
-      gsl::array_view<uint8_t> view { mData.data() + mPosition, size };
+      auto view = gsl::as_span(mData.data() + mPosition, size);
       mPosition += size;
       return view;
    }
@@ -105,12 +105,12 @@ public:
       read(buffer.data(), size);
    }
 
-   operator gsl::array_view<uint8_t>() const
+   operator gsl::span<uint8_t>() const
    {
-      return gsl::array_view<uint8_t> { mData };
+      return gsl::span<uint8_t> { mData };
    }
 
 private:
-   gsl::array_view<uint8_t> mData;
+   gsl::span<uint8_t> mData;
    std::size_t mPosition = 0;
 };

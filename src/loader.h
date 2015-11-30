@@ -1,9 +1,9 @@
 #pragma once
-#include <array_view.h>
-#include <string>
-#include <memory>
-#include <vector>
+#include <gsl.h>
 #include <map>
+#include <memory>
+#include <string>
+#include <vector>
 #include "elf.h"
 #include "memory_translate.h"
 #include "types.h"
@@ -83,7 +83,7 @@ private:
    ppcaddr_t registerUnimplementedFunction(const std::string& name);
 
    std::unique_ptr<LoadedModule> loadKernelModule(const std::string &name, KernelModule *module);
-   std::unique_ptr<LoadedModule> loadRPL(const std::string& name, const gsl::array_view<uint8_t> &data);
+   std::unique_ptr<LoadedModule> loadRPL(const std::string& name, const gsl::span<uint8_t> &data);
 
    bool processImports(LoadedModule *loadedMod, const SectionList &sections);
    bool processExports(LoadedModule *loadedMod, const SectionList &sections);

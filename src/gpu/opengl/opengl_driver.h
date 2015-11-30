@@ -1,6 +1,6 @@
 #pragma once
-#include <array_view.h>
 #include <glbinding/gl/types.h>
+#include <gsl.h>
 #include <map>
 #include <thread>
 #include <unordered_map>
@@ -140,7 +140,7 @@ private:
    void run();
    void initGL();
 
-   void handlePacketType3(pm4::Packet3 header, gsl::array_view<uint32_t> data);
+   void handlePacketType3(pm4::Packet3 header, const gsl::span<uint32_t> &data);
    void decafCopyColorToScan(const pm4::DecafCopyColorToScan &data);
    void decafSwapBuffers(const pm4::DecafSwapBuffers &data);
    void decafClearColor(const pm4::DecafClearColor &data);
@@ -170,7 +170,7 @@ private:
    void loadResources(const pm4::LoadResource &data);
    void loadRegisters(latte::Register::Value base,
                       uint32_t *src,
-                      gsl::array_view<std::pair<uint32_t, uint32_t>> registers);
+                      const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
 
    ColorBuffer *
    getColorBuffer(latte::CB_COLORN_BASE base,

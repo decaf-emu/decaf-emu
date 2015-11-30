@@ -1,5 +1,4 @@
 #pragma once
-#include <array_view.h>
 #include <gsl.h>
 #include "pm4.h"
 #include "pm4_buffer.h"
@@ -68,7 +67,7 @@ public:
 
    // Write a list of words
    template<typename Type>
-   PacketWriter &operator()(gsl::array_view<Type> values)
+   PacketWriter &operator()(const gsl::span<Type> &values)
    {
       auto size = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
       checkSize(size);

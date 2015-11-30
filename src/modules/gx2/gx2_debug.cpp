@@ -158,7 +158,7 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, uint8_t
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
 
    // Disassemble
-   latte::disassemble(output, { data, size });
+   latte::disassemble(output, gsl::as_span(data, size));
 
    file
       << info << std::endl
@@ -169,7 +169,7 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, uint8_t
 
    // Decompiled
    latte::Shader decompiled;
-   latte::decode(decompiled, latte::Shader::Vertex, { data, size });
+   latte::decode(decompiled, latte::Shader::Vertex, gsl::as_span(data, size));
    gpu::opengl::glsl::generateBody(decompiled, output);
 
    file
@@ -229,7 +229,10 @@ GX2DebugDumpShader(GX2FetchShader *shader)
    out << "GX2FetchShader:\n"
       << "  size: " << shader->size << "\n";
 
-   GX2DebugDumpShader("shader_fetch_" + GX2PointerAsString(shader), out.str(), reinterpret_cast<uint8_t *>(shader->data.get()), shader->size);
+   GX2DebugDumpShader("shader_fetch_" + GX2PointerAsString(shader),
+                      out.str(),
+                      reinterpret_cast<uint8_t *>(shader->data.get()),
+                      shader->size);
 }
 
 void
@@ -250,7 +253,11 @@ GX2DebugDumpShader(GX2PixelShader *shader)
 
    out << "  initialValueCount: " << shader->initialValueCount << "\n";
    out << "  loopVarCount: " << shader->loopVarCount << "\n";
-   GX2DebugDumpShader("shader_pixel_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
+
+   GX2DebugDumpShader("shader_pixel_" + GX2PointerAsString(shader),
+                      out.str(),
+                      shader->data,
+                      shader->size);
 }
 
 void
@@ -272,5 +279,8 @@ GX2DebugDumpShader(GX2VertexShader *shader)
    out << "  initialValueCount: " << shader->initialValueCount << "\n";
    out << "  loopVarCount: " << shader->loopVarCount << "\n";
 
-   GX2DebugDumpShader("shader_vertex_" + GX2PointerAsString(shader), out.str(), shader->data, shader->size);
+   GX2DebugDumpShader("shader_vertex_" + GX2PointerAsString(shader),
+                      out.str(),
+                      shader->data,
+                      shader->size);
 }

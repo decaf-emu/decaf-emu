@@ -743,7 +743,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    FetchShader::Attrib *semanticAttribs[32];
    memset(semanticAttribs, 0, sizeof(FetchShader::Attrib *) * 32);
 
-   if (!latte::decode(shader, latte::Shader::Vertex, { buffer, size })) {
+   if (!latte::decode(shader, latte::Shader::Vertex, gsl::as_span(buffer, size))) {
       gLog->error("Failed to decode vertex shader");
       return false;
    }
@@ -881,7 +881,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    latte::Shader shader;
    std::string body;
 
-   if (!latte::decode(shader, latte::Shader::Pixel, { buffer, size })) {
+   if (!latte::decode(shader, latte::Shader::Pixel, gsl::as_span(buffer, size))) {
       gLog->error("Failed to decode pixel shader");
       return false;
    }

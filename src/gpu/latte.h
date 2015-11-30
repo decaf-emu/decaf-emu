@@ -1,9 +1,9 @@
 #pragma once
-#include <array_view.h>
 #include <cstdint>
+#include <gsl.h>
 #include <memory>
-#include <unordered_set>
 #include <string>
+#include <unordered_set>
 #include "latte_shadir.h"
 
 namespace latte
@@ -32,10 +32,10 @@ struct Shader
    std::unordered_set<uint32_t> resourcesUsed;  // Set of Resource IDs used
 };
 
-bool decode(Shader &shader, Shader::Type type, const gsl::array_view<uint8_t> &binary);
+bool decode(Shader &shader, Shader::Type type, const gsl::span<uint8_t> &binary);
 bool blockify(Shader &shader);
 bool analyse(Shader &shader);
 void dumpBlocks(Shader &shader);
-bool disassemble(std::string &out, const gsl::array_view<uint8_t> &binary);
+bool disassemble(std::string &out, const gsl::span<uint8_t> &binary);
 
 } // namespace latte
