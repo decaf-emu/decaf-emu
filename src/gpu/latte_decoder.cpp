@@ -26,10 +26,10 @@ enum Mode {
 };
 }
 
-static bool decodeNormal(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
-static bool decodeExport(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
-static bool decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
-static bool decodeTEX(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf);
+static bool decodeNormal(DecodeState &state, cf::inst id, cf::Instruction &cf);
+static bool decodeExport(DecodeState &state, cf::inst id, cf::Instruction &cf);
+static bool decodeALU(DecodeState &state, cf::inst id, cf::Instruction &cf);
+static bool decodeTEX(DecodeState &state, cf::inst id, cf::Instruction &cf);
 
 bool
 decode(Shader &shader, Shader::Type type, const gsl::span<uint8_t> &binary)
@@ -46,29 +46,29 @@ decode(Shader &shader, Shader::Type type, const gsl::span<uint8_t> &binary)
 
    // Step 1: Deserialise, inline ALU/TEX clauses
    for (auto i = 0u; i < state.wordCount; i += 2) {
-      auto cf = *reinterpret_cast<const latte::cf::Instruction*>(state.words + i);
-      auto id = static_cast<latte::cf::inst>(cf.word1.inst);
+      auto cf = *reinterpret_cast<const cf::Instruction*>(state.words + i);
+      auto id = static_cast<cf::inst>(cf.word1.inst);
 
       switch (cf.type) {
-      case latte::cf::Type::Normal:
+      case cf::Type::Normal:
          decodeNormal(state, id, cf);
          break;
-      case latte::cf::Type::Export:
-         if (id == latte::exp::EXP || id == latte::exp::EXP_DONE) {
+      case cf::Type::Export:
+         if (id == exp::EXP || id == exp::EXP_DONE) {
             decodeExport(state, id, cf);
          } else {
             assert(false);
          }
          break;
-      case latte::cf::Type::Alu:
-      case latte::cf::Type::AluExtended:
+      case cf::Type::Alu:
+      case cf::Type::AluExtended:
          decodeALU(state, id, cf);
          break;
       }
 
       state.cfPC++;
 
-      if ((cf.type == latte::cf::Type::Normal || cf.type == latte::cf::Type::Export) && cf.word1.endOfProgram) {
+      if ((cf.type == cf::Type::Normal || cf.type == cf::Type::Export) && cf.word1.endOfProgram) {
          break;
       }
    }
@@ -87,52 +87,52 @@ decode(Shader &shader, Shader::Type type, const gsl::span<uint8_t> &binary)
 }
 
 static bool
-decodeNormal(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
+decodeNormal(DecodeState &state, cf::inst id, cf::Instruction &cf)
 {
    shadir::CfInstruction *ins = nullptr;
 
    switch (id) {
-   case latte::cf::NOP:
-   case latte::cf::CALL_FS:
-   case latte::cf::END_PROGRAM:
+   case cf::NOP:
+   case cf::CALL_FS:
+   case cf::END_PROGRAM:
       return true;
-   case latte::cf::TEX:
+   case cf::TEX:
       return decodeTEX(state, id, cf);
-   case latte::cf::LOOP_START:
-   case latte::cf::LOOP_START_DX10:
-   case latte::cf::LOOP_START_NO_AL:
-   case latte::cf::LOOP_END:
-   case latte::cf::JUMP:
-   case latte::cf::LOOP_CONTINUE:
-   case latte::cf::POP_JUMP:
-   case latte::cf::ELSE:
-   case latte::cf::CALL:
-   case latte::cf::RETURN:
-   case latte::cf::EMIT_VERTEX:
-   case latte::cf::EMIT_CUT_VERTEX:
-   case latte::cf::CUT_VERTEX:
-   case latte::cf::KILL:
-   case latte::cf::PUSH:
-   case latte::cf::PUSH_ELSE:
-   case latte::cf::POP:
-   case latte::cf::POP_PUSH:
-   case latte::cf::POP_PUSH_ELSE:
+   case cf::LOOP_START:
+   case cf::LOOP_START_DX10:
+   case cf::LOOP_START_NO_AL:
+   case cf::LOOP_END:
+   case cf::JUMP:
+   case cf::LOOP_CONTINUE:
+   case cf::POP_JUMP:
+   case cf::ELSE:
+   case cf::CALL:
+   case cf::RETURN:
+   case cf::EMIT_VERTEX:
+   case cf::EMIT_CUT_VERTEX:
+   case cf::CUT_VERTEX:
+   case cf::KILL:
+   case cf::PUSH:
+   case cf::PUSH_ELSE:
+   case cf::POP:
+   case cf::POP_PUSH:
+   case cf::POP_PUSH_ELSE:
       ins = new shadir::CfInstruction;
-      ins->name = latte::cf::name[id];
+      ins->name = cf::name[id];
       ins->cfPC = state.cfPC;
       ins->id = id;
       ins->addr = cf.word0.addr;
       ins->popCount = cf.word1.popCount;
       ins->loopCfConstant = cf.word1.cfConst;
-      ins->cond = static_cast<latte::cf::Cond::Cond>(cf.word1.cond);
+      ins->cond = static_cast<cf::Cond::Cond>(cf.word1.cond);
       state.shader->code.emplace_back(ins);
       return true;
-   case latte::cf::VTX:
-   case latte::cf::VTX_TC:
-   case latte::cf::WAIT_ACK:
-   case latte::cf::TEX_ACK:
-   case latte::cf::VTX_ACK:
-   case latte::cf::VTX_TC_ACK:
+   case cf::VTX:
+   case cf::VTX_TC:
+   case cf::WAIT_ACK:
+   case cf::TEX_ACK:
+   case cf::VTX_ACK:
+   case cf::VTX_TC_ACK:
    default:
       assert(false);
       return false;
@@ -140,27 +140,27 @@ decodeNormal(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 }
 
 static bool
-decodeExport(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
+decodeExport(DecodeState &state, cf::inst id, cf::Instruction &cf)
 {
-   auto exp = new latte::shadir::ExportInstruction {};
-   exp->id = static_cast<latte::exp::inst>(cf.expWord1.inst);
-   exp->name = latte::exp::name[exp->id];
+   auto exp = new shadir::ExportInstruction {};
+   exp->id = static_cast<exp::inst>(cf.expWord1.inst);
+   exp->name = exp::name[exp->id];
    exp->cfPC = state.cfPC;
 
    exp->dstReg = cf.expWord0.dstReg;
    exp->src.id = cf.expWord0.srcReg;
-   exp->src.selX = static_cast<latte::alu::Select::Select>(cf.expWord1.srcSelX);
-   exp->src.selY = static_cast<latte::alu::Select::Select>(cf.expWord1.srcSelY);
-   exp->src.selZ = static_cast<latte::alu::Select::Select>(cf.expWord1.srcSelZ);
-   exp->src.selW = static_cast<latte::alu::Select::Select>(cf.expWord1.srcSelW);
+   exp->src.selX = static_cast<alu::Select::Select>(cf.expWord1.srcSelX);
+   exp->src.selY = static_cast<alu::Select::Select>(cf.expWord1.srcSelY);
+   exp->src.selZ = static_cast<alu::Select::Select>(cf.expWord1.srcSelZ);
+   exp->src.selW = static_cast<alu::Select::Select>(cf.expWord1.srcSelW);
 
-   exp->type = static_cast<latte::exp::Type::Type>(cf.expWord0.type);
+   exp->type = static_cast<exp::Type::Type>(cf.expWord0.type);
    exp->elemSize = cf.expWord0.elemSize;
    exp->indexGpr = cf.expWord0.indexGpr;
    exp->wholeQuadMode = cf.expWord1.wholeQuadMode;
    exp->barrier = !!cf.expWord1.barrier;
 
-   if (exp->type == latte::exp::Type::Position) {
+   if (exp->type == exp::Type::Position) {
       assert(exp->dstReg >= 60);
       exp->dstReg -= 60;
    }
@@ -182,58 +182,58 @@ getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter
 {
    source.absolute = abs;
    source.negate = !!neg;
-   source.chan = static_cast<latte::alu::Channel::Channel>(chan);
+   source.chan = static_cast<alu::Channel::Channel>(chan);
    source.rel = !!rel;
-   source.indexMode = static_cast<latte::alu::IndexMode::IndexMode>(indexMode);
+   source.indexMode = static_cast<alu::IndexMode::IndexMode>(indexMode);
 
-   if (sel >= latte::alu::Source::RegisterFirst && sel <= latte::alu::Source::RegisterLast) {
+   if (sel >= alu::Source::RegisterFirst && sel <= alu::Source::RegisterLast) {
       source.type = shadir::AluSource::Register;
-      source.id = sel - latte::alu::Source::RegisterFirst;
-   } else if (sel >= latte::alu::Source::KcacheBank0First && sel <= latte::alu::Source::KcacheBank0Last) {
+      source.id = sel - alu::Source::RegisterFirst;
+   } else if (sel >= alu::Source::KcacheBank0First && sel <= alu::Source::KcacheBank0Last) {
       // We do not currently handle kcache's based on a loop index
       assert(kcacheMode0 == KcacheMode::Lock1 || kcacheMode0 == KcacheMode::Lock2);
       source.type = static_cast<shadir::AluSource::Type>(shadir::AluSource::UniformBlock0 + kcacheBank0);
-      source.id = (kcacheAddr0 * 16) + (sel - latte::alu::Source::KcacheBank0First);
-   } else if (sel >= latte::alu::Source::KcacheBank1First && sel <= latte::alu::Source::KcacheBank1Last) {
+      source.id = (kcacheAddr0 * 16) + (sel - alu::Source::KcacheBank0First);
+   } else if (sel >= alu::Source::KcacheBank1First && sel <= alu::Source::KcacheBank1Last) {
       // We do not currently handle kcache's based on a loop index
       assert(kcacheMode1 == KcacheMode::Lock1 || kcacheMode1 == KcacheMode::Lock2);
       source.type = static_cast<shadir::AluSource::Type>(shadir::AluSource::UniformBlock0 + kcacheBank1);
-      source.id = (kcacheAddr1 * 16) + (sel - latte::alu::Source::KcacheBank1First);
-   } else if (sel == latte::alu::Source::Src1DoubleLSW) {
+      source.id = (kcacheAddr1 * 16) + (sel - alu::Source::KcacheBank1First);
+   } else if (sel == alu::Source::Src1DoubleLSW) {
       assert(false);
-   } else if (sel == latte::alu::Source::Src1DoubleMSW) {
+   } else if (sel == alu::Source::Src1DoubleMSW) {
       assert(false);
-   } else if (sel == latte::alu::Source::Src05DoubleLSW) {
+   } else if (sel == alu::Source::Src05DoubleLSW) {
       assert(false);
-   } else if (sel == latte::alu::Source::Src05DoubleMSW) {
+   } else if (sel == alu::Source::Src05DoubleMSW) {
       assert(false);
-   } else if (sel == latte::alu::Source::Src0Float) {
+   } else if (sel == alu::Source::Src0Float) {
       source.type = shadir::AluSource::ConstantFloat;
       source.floatValue = 0.0f;
-   } else if (sel == latte::alu::Source::Src1Float) {
+   } else if (sel == alu::Source::Src1Float) {
       source.type = shadir::AluSource::ConstantFloat;
       source.floatValue = 1.0f;
-   } else if (sel == latte::alu::Source::Src1Integer) {
+   } else if (sel == alu::Source::Src1Integer) {
       source.type = shadir::AluSource::ConstantInt;
       source.intValue = 1;
-   } else if (sel == latte::alu::Source::SrcMinus1Integer) {
+   } else if (sel == alu::Source::SrcMinus1Integer) {
       source.type = shadir::AluSource::ConstantInt;
       source.intValue = -1;
-   } else if (sel == latte::alu::Source::Src05Float) {
+   } else if (sel == alu::Source::Src05Float) {
       source.type = shadir::AluSource::ConstantFloat;
       source.floatValue = 0.5f;
-   } else if (sel == latte::alu::Source::SrcLiteral) {
+   } else if (sel == alu::Source::SrcLiteral) {
       source.type = shadir::AluSource::ConstantLiteral;
       source.literalValue = dwBase[chan];
-   } else if (sel == latte::alu::Source::SrcPreviousScalar) {
+   } else if (sel == alu::Source::SrcPreviousScalar) {
       source.type = shadir::AluSource::PreviousScalar;
       source.id = counter - 1;
-   } else if (sel == latte::alu::Source::SrcPreviousVector) {
+   } else if (sel == alu::Source::SrcPreviousVector) {
       source.type = shadir::AluSource::PreviousVector;
       source.id = counter - 1;
-   } else if (sel >= latte::alu::Source::CfileConstantsFirst && sel <= latte::alu::Source::CfileConstantsLast) {
+   } else if (sel >= alu::Source::CfileConstantsFirst && sel <= alu::Source::CfileConstantsLast) {
       source.type = shadir::AluSource::ConstantFile;
-      source.id = sel - latte::alu::Source::CfileConstantsFirst;
+      source.id = sel - alu::Source::CfileConstantsFirst;
    } else {
       assert(false);
    }
@@ -241,21 +241,21 @@ getAluSource(shadir::AluSource &source, const uint32_t *dwBase, uint32_t counter
 
 
 static bool
-isTranscendentalOnly(latte::alu::Instruction &alu)
+isTranscendentalOnly(alu::Instruction &alu)
 {
-   latte::alu::Opcode opcode;
+   alu::Opcode opcode;
 
-   if (alu.word1.encoding == latte::alu::Encoding::OP2) {
-      opcode = latte::alu::op2info[alu.op2.inst];
+   if (alu.word1.encoding == alu::Encoding::OP2) {
+      opcode = alu::op2info[alu.op2.inst];
    } else {
-      opcode = latte::alu::op3info[alu.op3.inst];
+      opcode = alu::op3info[alu.op3.inst];
    }
 
-   if (opcode.flags & latte::alu::Opcode::Vector) {
+   if (opcode.flags & alu::Opcode::Vector) {
       return false;
    }
 
-   if (opcode.flags & latte::alu::Opcode::Transcendental) {
+   if (opcode.flags & alu::Opcode::Transcendental) {
       return true;
    }
 
@@ -263,21 +263,21 @@ isTranscendentalOnly(latte::alu::Instruction &alu)
 }
 
 static bool
-isVectorOnly(latte::alu::Instruction &alu)
+isVectorOnly(alu::Instruction &alu)
 {
-   latte::alu::Opcode opcode;
+   alu::Opcode opcode;
 
-   if (alu.word1.encoding == latte::alu::Encoding::OP2) {
-      opcode = latte::alu::op2info[alu.op2.inst];
+   if (alu.word1.encoding == alu::Encoding::OP2) {
+      opcode = alu::op2info[alu.op2.inst];
    } else {
-      opcode = latte::alu::op3info[alu.op3.inst];
+      opcode = alu::op3info[alu.op3.inst];
    }
 
-   if (opcode.flags & latte::alu::Opcode::Transcendental) {
+   if (opcode.flags & alu::Opcode::Transcendental) {
       return false;
    }
 
-   if (opcode.flags & latte::alu::Opcode::Vector) {
+   if (opcode.flags & alu::Opcode::Vector) {
       return true;
    }
 
@@ -285,7 +285,7 @@ isVectorOnly(latte::alu::Instruction &alu)
 }
 
 static uint32_t
-getUnit(bool units[5], latte::alu::Instruction &alu)
+getUnit(bool units[5], alu::Instruction &alu)
 {
    bool isTrans = false;
    auto elem = alu.word1.dstChan;
@@ -311,24 +311,24 @@ getUnit(bool units[5], latte::alu::Instruction &alu)
 }
 
 static bool
-decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
+decodeALU(DecodeState &state, cf::inst id, cf::Instruction &cf)
 {
-   const uint64_t *slots = reinterpret_cast<const uint64_t *>(state.words + (latte::WordsPerCF * cf.aluWord0.addr));
-   auto aluID = static_cast<latte::alu::inst>(cf.aluWord1.inst);
+   const uint64_t *slots = reinterpret_cast<const uint64_t *>(state.words + (WordsPerCF * cf.aluWord0.addr));
+   auto aluID = static_cast<alu::inst>(cf.aluWord1.inst);
    bool hasPushedBefore = false;
 
    switch (aluID) {
-   case latte::alu::inst::ALU_BREAK: // Break starts with a push!
-   case latte::alu::inst::ALU_CONTINUE: // Continue starts with a push!
+   case alu::inst::ALU_BREAK: // Break starts with a push!
+   case alu::inst::ALU_CONTINUE: // Continue starts with a push!
    {
       auto push = new shadir::CfInstruction();
-      push->id = latte::cf::inst::PUSH;
-      push->name = latte::cf::name[push->id];
+      push->id = cf::inst::PUSH;
+      push->name = cf::name[push->id];
       push->cfPC = state.cfPC;
       state.shader->code.emplace_back(push);
    }
    break;
-   case latte::alu::inst::ALU_EXT:
+   case alu::inst::ALU_EXT:
       assert(false);
       break;
    }
@@ -342,7 +342,7 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
       shadir::AluReductionInstruction *reductionIns = nullptr;
 
       for (auto i = 0u; i < 5 && !last; ++i) {
-         auto alu = *reinterpret_cast<const latte::alu::Instruction*>(slots + slot + i);
+         auto alu = *reinterpret_cast<const alu::Instruction*>(slots + slot + i);
          literalPtr += 2;
          last = !!alu.word0.last;
       }
@@ -350,11 +350,11 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
       last = false;
 
       for (auto i = 0u; i < 5 && !last; ++i) {
-         auto alu = *reinterpret_cast<const latte::alu::Instruction*>(slots + slot);
-         auto &opcode = latte::alu::op2info[alu.op2.inst];
+         auto alu = *reinterpret_cast<const alu::Instruction*>(slots + slot);
+         auto &opcode = alu::op2info[alu.op2.inst];
          auto unit = getUnit(units, alu);
 
-         if (alu.word1.encoding == latte::alu::Encoding::OP2 && opcode.id == latte::alu::op2::NOP) {
+         if (alu.word1.encoding == alu::Encoding::OP2 && opcode.id == alu::op2::NOP) {
             slot += 1;
             last = !!alu.word0.last;
             continue;
@@ -365,30 +365,30 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 
          ins->cfPC = state.cfPC;
          ins->groupPC = state.group;
-         ins->predSel = static_cast<latte::alu::PredicateSelect::PredicateSelect>(alu.word0.predSel);
+         ins->predSel = static_cast<alu::PredicateSelect::PredicateSelect>(alu.word0.predSel);
 
          assert(alu.word1.dstRel == 0);
          ins->dest.clamp = alu.word1.clamp;
          ins->dest.id = alu.word1.dstGpr;
-         ins->dest.chan = static_cast<latte::alu::Channel::Channel>(alu.word1.dstChan);
+         ins->dest.chan = static_cast<alu::Channel::Channel>(alu.word1.dstChan);
          ins->unit = static_cast<shadir::AluInstruction::Unit>(unit);
 
-         if (alu.word1.encoding == latte::alu::Encoding::OP2) {
+         if (alu.word1.encoding == alu::Encoding::OP2) {
             ins->name = opcode.name;
             ins->opType = shadir::AluInstruction::OP2;
-            ins->op2 = static_cast<latte::alu::op2>(opcode.id);
+            ins->op2 = static_cast<alu::op2>(opcode.id);
             ins->numSources = opcode.srcs;
             ins->updateExecutionMask = alu.op2.updateExecuteMask;
             ins->updatePredicate = alu.op2.updatePred;
             ins->writeMask = alu.op2.writeMask;
-            ins->outputModifier = static_cast<latte::alu::OutputModifier::OutputModifier>(alu.op2.omod);
+            ins->outputModifier = static_cast<alu::OutputModifier::OutputModifier>(alu.op2.omod);
             abs0 = !!alu.op2.src0Abs;
             abs1 = !!alu.op2.src1Abs;
          } else {
-            opcode = latte::alu::op3info[alu.op3.inst];
+            opcode = alu::op3info[alu.op3.inst];
             ins->name = opcode.name;
             ins->opType = shadir::AluInstruction::OP3;
-            ins->op3 = static_cast<latte::alu::op3>(opcode.id);
+            ins->op3 = static_cast<alu::op3>(opcode.id);
             ins->numSources = opcode.srcs;
             getAluSource(ins->sources[2], literalPtr, state.group,
                alu.op3.src2Sel, alu.op3.src2Rel, alu.word0.indexMode,
@@ -412,43 +412,43 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
             cf.aluWord1.kcacheAddr0, cf.aluWord1.kcacheAddr1);
 
          // Check whether to set sources to Int or Uint
-         if (opcode.flags & latte::alu::Opcode::IntIn) {
+         if (opcode.flags & alu::Opcode::IntIn) {
             for (auto j = 0u; j < ins->numSources; ++j) {
                ins->sources[j].valueType = shadir::AluSource::Int;
             }
-         } else if (opcode.flags & latte::alu::Opcode::UintIn) {
+         } else if (opcode.flags & alu::Opcode::UintIn) {
             for (auto j = 0u; j < ins->numSources; ++j) {
                ins->sources[j].valueType = shadir::AluSource::Uint;
             }
          }
 
          // Check whether to set dest to Int or Uint
-         if (opcode.flags & latte::alu::Opcode::IntOut) {
+         if (opcode.flags & alu::Opcode::IntOut) {
             ins->dest.valueType = shadir::AluDest::Int;
-         } else if (opcode.flags & latte::alu::Opcode::UintOut) {
+         } else if (opcode.flags & alu::Opcode::UintOut) {
             ins->dest.valueType = shadir::AluDest::Uint;
          }
 
          // Special ALU ops before
-         if (opcode.flags & latte::alu::Opcode::PredSet) {
+         if (opcode.flags & alu::Opcode::PredSet) {
             switch (aluID) {
-            case latte::alu::inst::ALU_PUSH_BEFORE: // PushBefore only push before first PRED_SET
+            case alu::inst::ALU_PUSH_BEFORE: // PushBefore only push before first PRED_SET
             {
                if (!hasPushedBefore) {
                   auto push = new shadir::CfInstruction();
-                  push->id = latte::cf::inst::PUSH;
-                  push->name = latte::cf::name[push->id];
+                  push->id = cf::inst::PUSH;
+                  push->name = cf::name[push->id];
                   push->cfPC = state.cfPC;
                   state.shader->code.emplace_back(push);
                   hasPushedBefore = true;
                }
             }
             break;
-            case latte::alu::inst::ALU_ELSE_AFTER: // ElseAfter push before every PRED_SET
+            case alu::inst::ALU_ELSE_AFTER: // ElseAfter push before every PRED_SET
             {
                auto push = new shadir::CfInstruction();
-               push->id = latte::cf::inst::PUSH;
-               push->name = latte::cf::name[push->id];
+               push->id = cf::inst::PUSH;
+               push->name = cf::name[push->id];
                push->cfPC = state.cfPC;
                state.shader->code.emplace_back(push);
             }
@@ -459,11 +459,11 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
          // Check if we need to create a new reduction instruction
          if (!reductionIns) {
             if (ins->opType == shadir::AluInstruction::OP2) {
-               if (ins->op2 == latte::alu::op2::DOT4
-                   || ins->op2 == latte::alu::op2::DOT4_IEEE
-                   || ins->op2 == latte::alu::op2::CUBE
-                   || ins->op2 == latte::alu::op2::MAX4) {
-                  reductionIns = new latte::shadir::AluReductionInstruction();
+               if (ins->op2 == alu::op2::DOT4
+                   || ins->op2 == alu::op2::DOT4_IEEE
+                   || ins->op2 == alu::op2::CUBE
+                   || ins->op2 == alu::op2::MAX4) {
+                  reductionIns = new shadir::AluReductionInstruction();
                   reductionIns->op2 = ins->op2;
                   reductionIns->name = ins->name;
                   reductionIns->cfPC = ins->cfPC;
@@ -484,34 +484,34 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
          }
 
          // Special ALU ops after
-         if (opcode.flags & latte::alu::Opcode::PredSet) {
+         if (opcode.flags & alu::Opcode::PredSet) {
             switch (aluID) {
-            case latte::alu::inst::ALU_BREAK: // Break after every PRED_SET
+            case alu::inst::ALU_BREAK: // Break after every PRED_SET
             {
                auto loopBreak = new shadir::CfInstruction();
                loopBreak->cfPC = state.cfPC;
-               loopBreak->id = latte::cf::inst::LOOP_BREAK;
-               loopBreak->name = latte::cf::name[loopBreak->id];
+               loopBreak->id = cf::inst::LOOP_BREAK;
+               loopBreak->name = cf::name[loopBreak->id];
                loopBreak->popCount = 1;
                state.shader->code.emplace_back(loopBreak);
             }
             break;
-            case latte::alu::inst::ALU_CONTINUE: // Continue after every PRED_SET
+            case alu::inst::ALU_CONTINUE: // Continue after every PRED_SET
             {
                auto loopContinue = new shadir::CfInstruction();
                loopContinue->cfPC = state.cfPC;
-               loopContinue->id = latte::cf::inst::LOOP_CONTINUE;
-               loopContinue->name = latte::cf::name[loopContinue->id];
+               loopContinue->id = cf::inst::LOOP_CONTINUE;
+               loopContinue->name = cf::name[loopContinue->id];
                loopContinue->popCount = 1;
                state.shader->code.emplace_back(loopContinue);
             }
             break;
-            case latte::alu::inst::ALU_ELSE_AFTER: // Else after every PRED_SET
+            case alu::inst::ALU_ELSE_AFTER: // Else after every PRED_SET
             {
                auto els = new shadir::CfInstruction();
                els->cfPC = state.cfPC;
-               els->id = latte::cf::inst::ELSE;
-               els->name = latte::cf::name[els->id];
+               els->id = cf::inst::ELSE;
+               els->name = cf::name[els->id];
                els->popCount = 1;
                state.shader->code.emplace_back(els);
             }
@@ -520,15 +520,15 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
          }
 
          // Count number of literal used
-         if (alu.word0.src0Sel == latte::alu::Source::SrcLiteral) {
+         if (alu.word0.src0Sel == alu::Source::SrcLiteral) {
             literals = std::max<unsigned>(literals, alu.word0.src0Chan + 1);
          }
 
-         if (alu.word0.src1Sel == latte::alu::Source::SrcLiteral) {
+         if (alu.word0.src1Sel == alu::Source::SrcLiteral) {
             literals = std::max<unsigned>(literals, alu.word0.src1Chan + 1);
          }
 
-         if ((alu.word1.encoding != latte::alu::Encoding::OP2) && (alu.op3.src2Sel == latte::alu::Source::SrcLiteral)) {
+         if ((alu.word1.encoding != alu::Encoding::OP2) && (alu.op3.src2Sel == alu::Source::SrcLiteral)) {
             literals = std::max<unsigned>(literals, alu.op3.src2Chan + 1);
          }
 
@@ -545,24 +545,24 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
    }
 
    switch (aluID) {
-   case latte::alu::inst::ALU_BREAK: // Break ends with POP
-   case latte::alu::inst::ALU_CONTINUE: // Continue ends with POP
-   case latte::alu::inst::ALU_POP_AFTER: // Pop after ALU clause
+   case alu::inst::ALU_BREAK: // Break ends with POP
+   case alu::inst::ALU_CONTINUE: // Continue ends with POP
+   case alu::inst::ALU_POP_AFTER: // Pop after ALU clause
    {
       auto pop = new shadir::CfInstruction();
       pop->cfPC = state.cfPC;
-      pop->id = latte::cf::inst::POP;
-      pop->name = latte::cf::name[pop->id];
+      pop->id = cf::inst::POP;
+      pop->name = cf::name[pop->id];
       pop->popCount = 1;
       state.shader->code.emplace_back(pop);
    }
    break;
-   case latte::alu::inst::ALU_POP2_AFTER: // Pop2 after ALU clause
+   case alu::inst::ALU_POP2_AFTER: // Pop2 after ALU clause
    {
       auto pop2 = new shadir::CfInstruction();
       pop2->cfPC = state.cfPC;
-      pop2->id = latte::cf::inst::POP;
-      pop2->name = latte::cf::name[pop2->id];
+      pop2->id = cf::inst::POP;
+      pop2->name = cf::name[pop2->id];
       pop2->popCount = 2;
       state.shader->code.emplace_back(pop2);
    }
@@ -573,23 +573,23 @@ decodeALU(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 }
 
 static bool
-decodeTEX(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
+decodeTEX(DecodeState &state, cf::inst id, cf::Instruction &cf)
 {
-   const uint32_t *ptr = state.words + (latte::WordsPerCF * cf.word0.addr);
+   const uint32_t *ptr = state.words + (WordsPerCF * cf.word0.addr);
 
    for (auto slot = 0u; slot <= cf.word1.count; ) {
-      auto tex = *reinterpret_cast<const latte::tex::Instruction*>(ptr);
-      auto id = static_cast<const latte::tex::inst>(tex.word0.inst);
+      auto tex = *reinterpret_cast<const tex::Instruction*>(ptr);
+      auto id = static_cast<const tex::inst>(tex.word0.inst);
 
-      if (id == latte::tex::VTX_FETCH || id == latte::tex::VTX_SEMANTIC || id == latte::tex::GET_BUFFER_RESINFO) {
+      if (id == tex::VTX_FETCH || id == tex::VTX_SEMANTIC || id == tex::GET_BUFFER_RESINFO) {
          assert(false);
-         ptr += latte::WordsPerVTX;
-      } else if (id == latte::tex::MEM) {
+         ptr += WordsPerVTX;
+      } else if (id == tex::MEM) {
          assert(false);
-         ptr += latte::WordsPerMEM;
+         ptr += WordsPerMEM;
       } else {
          auto ins = new shadir::TexInstruction;
-         ins->name = latte::tex::name[id];
+         ins->name = tex::name[id];
          ins->cfPC = state.cfPC;
          ins->groupPC = state.group;
 
@@ -611,20 +611,20 @@ decodeTEX(DecodeState &state, latte::cf::inst id, latte::cf::Instruction &cf)
 
          assert(tex.word0.srcRel == 0);
          ins->src.id = tex.word0.srcReg;
-         ins->src.selX = static_cast<latte::alu::Select::Select>(tex.word2.srcSelX);
-         ins->src.selY = static_cast<latte::alu::Select::Select>(tex.word2.srcSelY);
-         ins->src.selZ = static_cast<latte::alu::Select::Select>(tex.word2.srcSelZ);
-         ins->src.selW = static_cast<latte::alu::Select::Select>(tex.word2.srcSelW);
+         ins->src.selX = static_cast<alu::Select::Select>(tex.word2.srcSelX);
+         ins->src.selY = static_cast<alu::Select::Select>(tex.word2.srcSelY);
+         ins->src.selZ = static_cast<alu::Select::Select>(tex.word2.srcSelZ);
+         ins->src.selW = static_cast<alu::Select::Select>(tex.word2.srcSelW);
 
          assert(tex.word1.dstRel == 0);
          ins->dst.id = tex.word1.dstReg;
-         ins->dst.selX = static_cast<latte::alu::Select::Select>(tex.word1.dstSelX);
-         ins->dst.selY = static_cast<latte::alu::Select::Select>(tex.word1.dstSelY);
-         ins->dst.selZ = static_cast<latte::alu::Select::Select>(tex.word1.dstSelZ);
-         ins->dst.selW = static_cast<latte::alu::Select::Select>(tex.word1.dstSelW);
+         ins->dst.selX = static_cast<alu::Select::Select>(tex.word1.dstSelX);
+         ins->dst.selY = static_cast<alu::Select::Select>(tex.word1.dstSelY);
+         ins->dst.selZ = static_cast<alu::Select::Select>(tex.word1.dstSelZ);
+         ins->dst.selW = static_cast<alu::Select::Select>(tex.word1.dstSelW);
 
          state.shader->code.emplace_back(ins);
-         ptr += latte::WordsPerTEX;
+         ptr += WordsPerTEX;
       }
 
       state.group++;

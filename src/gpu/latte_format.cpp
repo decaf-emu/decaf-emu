@@ -5,7 +5,7 @@ namespace latte
 {
 
 size_t
-formatBytesPerElement(latte::SQ_DATA_FORMAT format)
+formatBytesPerElement(SQ_DATA_FORMAT format)
 {
    return GX2GetSurfaceElementBytes(static_cast<GX2SurfaceFormat::Value>(format));
 }

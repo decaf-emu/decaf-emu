@@ -10,6 +10,9 @@
 #include "utils/bitutils.h"
 #include "utils/align.h"
 
+namespace latte
+{
+
 template<typename Type>
 constexpr Type integral_log2(Type n, Type p = 0)
 {
@@ -18,7 +21,7 @@ constexpr Type integral_log2(Type n, Type p = 0)
 
 struct TileInfo
 {
-   latte::SQ_TILE_MODE tileMode;
+   SQ_TILE_MODE tileMode;
    size_t numSamples;
    size_t curSample;
    size_t pitchElements;
@@ -29,9 +32,6 @@ struct TileInfo
    bool isDepthTexture;
    bool isStencilTexture;
 };
-
-namespace latte
-{
 
 inline size_t
 get_pixel_number(const TileInfo &info, size_t x, size_t y, size_t z)
@@ -265,9 +265,17 @@ get_2d_offset(const TileInfo &info, size_t x, size_t y, size_t z)
 }
 
 bool
-untile(const uint8_t *image, size_t width, size_t height, size_t depth, size_t pitch, latte::SQ_DATA_FORMAT format, latte::SQ_TILE_MODE tileMode, uint32_t swizzle, std::vector<uint8_t> &out)
+untile(const uint8_t *image,
+       size_t width,
+       size_t height,
+       size_t depth,
+       size_t pitch,
+       SQ_DATA_FORMAT format,
+       SQ_TILE_MODE tileMode,
+       uint32_t swizzle,
+       std::vector<uint8_t> &out)
 {
-   if (tileMode == latte::SQ_TILE_MODE_LINEAR_SPECIAL) {
+   if (tileMode == SQ_TILE_MODE_LINEAR_SPECIAL) {
       return false;
    }
 
@@ -283,7 +291,7 @@ untile(const uint8_t *image, size_t width, size_t height, size_t depth, size_t p
    info.elementBytes = formatBytesPerElement(format);
    info.tileThickness = tileThickness(tileMode);
 
-   if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5) {
+   if (format >= FMT_BC1 && format <= FMT_BC5) {
       info.pitchElements = (width + 3) / 4;
       info.height = (height + 3) / 4;
    }
@@ -294,9 +302,9 @@ untile(const uint8_t *image, size_t width, size_t height, size_t depth, size_t p
    auto src = image;
    auto dstBase = &out[0];
 
-   if (tileMode == latte::SQ_TILE_MODE_LINEAR_ALIGNED) {
+   if (tileMode == SQ_TILE_MODE_LINEAR_ALIGNED) {
       std::memcpy(dstBase, src, sliceSize * depth);
-   } else if (info.tileMode == latte::SQ_TILE_MODE_TILED_1D_THICK || info.tileMode == latte::SQ_TILE_MODE_TILED_1D_THIN1) {
+   } else if (info.tileMode == SQ_TILE_MODE_TILED_1D_THICK || info.tileMode == SQ_TILE_MODE_TILED_1D_THIN1) {
       for (size_t z = 0; z < depth; ++z) {
          auto dst = dstBase + z * sliceSize;
 

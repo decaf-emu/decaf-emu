@@ -106,12 +106,12 @@ labelify(Shader &shader, LabelList &labels)
       if (ins->insType == shadir::Instruction::ControlFlow) {
          auto cfIns = reinterpret_cast<shadir::CfInstruction*>(ins.get());
 
-         if (cfIns->id == latte::cf::inst::LOOP_START
-             || cfIns->id == latte::cf::inst::LOOP_START_DX10
-             || cfIns->id == latte::cf::inst::LOOP_START_NO_AL) {
+         if (cfIns->id == cf::inst::LOOP_START
+             || cfIns->id == cf::inst::LOOP_START_DX10
+             || cfIns->id == cf::inst::LOOP_START_NO_AL) {
             // Found a loop start, find a matching loop_end in the correct stack
             loopStarts.push(cfIns);
-         } else if (cfIns->id == latte::cf::inst::LOOP_END) {
+         } else if (cfIns->id == cf::inst::LOOP_END) {
             assert(loopStarts.size());
 
             // Create a LoopStart label
@@ -126,7 +126,7 @@ labelify(Shader &shader, LabelList &labels)
             // Link the start and end labels
             labelEnd->linkedLabel = labelStart;
             labelStart->linkedLabel = labelEnd;
-         } else if (cfIns->id == latte::cf::inst::LOOP_CONTINUE || cfIns->id == latte::cf::inst::LOOP_BREAK) {
+         } else if (cfIns->id == cf::inst::LOOP_CONTINUE || cfIns->id == cf::inst::LOOP_BREAK) {
             assert(loopStarts.size());
             assert(predSets.size());
 
@@ -142,7 +142,7 @@ labelify(Shader &shader, LabelList &labels)
             // Link the start and end labels
             labelEnd->linkedLabel = labelStart;
             labelStart->linkedLabel = labelEnd;
-         } else if (cfIns->id == latte::cf::inst::JUMP) {
+         } else if (cfIns->id == cf::inst::JUMP) {
             assert(predSets.size());
             assert(pushes.size());
 
@@ -160,7 +160,7 @@ labelify(Shader &shader, LabelList &labels)
             if ((*jumpEnd)->insType == shadir::Instruction::ControlFlow) {
                auto jumpEndCfIns = reinterpret_cast<shadir::CfInstruction*>(jumpEnd->get());
 
-               if (jumpEndCfIns->id == latte::cf::inst::ELSE) {
+               if (jumpEndCfIns->id == cf::inst::ELSE) {
                   jumpElse = jumpEnd;
 
                   // Find the real end of the jump
@@ -195,18 +195,18 @@ labelify(Shader &shader, LabelList &labels)
             // Link start and end labels
             labelEnd->linkedLabel = labelStart;
             labelStart->linkedLabel = labelEnd;
-         } else if (cfIns->id == latte::cf::inst::PUSH) {
+         } else if (cfIns->id == cf::inst::PUSH) {
             pushes.push(cfIns);
-         } else if (cfIns->id == latte::cf::inst::POP) {
+         } else if (cfIns->id == cf::inst::POP) {
             pops.push(cfIns);
          }
       } else if (ins->insType == shadir::Instruction::ALU) {
          auto aluIns = reinterpret_cast<shadir::AluInstruction *>(ins.get());
 
-         if (aluIns->opType == latte::alu::Encoding::OP2) {
-            auto &opcode = latte::alu::op2info[aluIns->op2];
+         if (aluIns->opType == shadir::AluInstruction::OP2) {
+            auto &opcode = alu::op2info[aluIns->op2];
 
-            if (opcode.flags & latte::alu::Opcode::PredSet) {
+            if (opcode.flags & alu::Opcode::PredSet) {
                predSets.push(aluIns);
             }
          }
