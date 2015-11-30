@@ -50,7 +50,16 @@ public:
       }
 
       auto file = reinterpret_cast<Folder *>(node);
-      return file->open();
+      auto handle = file->open();
+      if (!handle) {
+         return nullptr;
+      }
+      if (!handle->open()) {
+         delete handle;
+         return nullptr;
+      }
+
+      return handle;
    }
 
    bool findEntry(Path path, FolderEntry &entry)
