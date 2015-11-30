@@ -52,8 +52,8 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
             continue;
          }
 
-         std::string flags, width, length, precision;
-         char specifier;
+         std::string flags, width, length, precision, formatter;
+         char specifier = 0;
 
          while (std::find(c_flags.begin(), c_flags.end(), fmt[i]) != c_flags.end()) {
             flags.push_back(fmt[i]);
@@ -82,9 +82,6 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
             ++i;
          }
 
-         std::string formatter = "%";
-         formatter += flags + width + precision + length + specifier;
-
          switch (specifier) {
          case 'd':
          case 'i':
@@ -103,6 +100,7 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
          case 'c':
          case 'p':
          case 'n':
+            formatter = "%" + flags + width + precision + length + specifier;
             output.append(format_string(formatter.c_str(), args.next<uint32_t>()));
             break;
          case 's':
