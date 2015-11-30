@@ -26,7 +26,7 @@ struct Fiber
 
    static void fiberEntryPoint(void *param);
 
-   uint32_t coreID;
+   uint32_t coreID = 0;
    platform::Fiber *handle = nullptr;
    OSThread *thread = nullptr;
    ThreadState state;
@@ -38,10 +38,11 @@ struct Core
       id(id)
    {
       nextInterrupt = std::chrono::time_point<std::chrono::system_clock>::max();
+      std::memset(&state, 0, sizeof(cpu::CoreState));
    }
 
    uint32_t id;
-   uint32_t threadId;
+   uint32_t threadId = 0;
    Fiber *currentFiber = nullptr;
    Fiber *interruptedFiber = nullptr;
    Fiber *interruptHandlerFiber = nullptr;
@@ -112,7 +113,7 @@ protected:
    void queueNoLock(Fiber *fiber);
 
 private:
-   std::atomic<bool> mRunning;
+   std::atomic<bool> mRunning { false };
    std::vector<Core*> mCores;
    std::mutex mMutex;
    std::condition_variable mCondition;

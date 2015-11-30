@@ -50,7 +50,8 @@ public:
    fs::FileSystem *getFileSystem();
    void setFileSystem(fs::FileSystem *fs);
 
-   TeenyHeap *getSystemHeap() const {
+   TeenyHeap *getSystemHeap() const
+   {
       return mSystemHeap;
    }
 
@@ -59,14 +60,14 @@ protected:
    void loadThunks();
 
 private:
-   LoadedModule *mUserModule;
+   LoadedModule *mUserModule = nullptr;
    std::map<std::string, KernelModule*> mSystemModules;
 
-   void *mSystemThunks;
+   void *mSystemThunks = nullptr;
    std::map<uint32_t, KernelFunction*> mSystemCalls;
 
-   fs::FileSystem *mFileSystem;
-   TeenyHeap *mSystemHeap;
+   fs::FileSystem *mFileSystem = nullptr;
+   TeenyHeap *mSystemHeap = nullptr;
 };
 
 extern System gSystem;

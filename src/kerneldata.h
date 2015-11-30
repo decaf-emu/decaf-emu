@@ -9,8 +9,8 @@ struct KernelData : public KernelExport
    {
    }
 
-   void **hostPtr;
-   uint32_t size;
+   void **hostPtr = nullptr;
+   uint32_t size = 0;
 };
 
 namespace kernel

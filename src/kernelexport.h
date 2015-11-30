@@ -27,5 +27,5 @@ struct KernelExport
 
    Type type;
    std::string name;
-   void *ppcPtr;
+   void *ppcPtr = nullptr;
 };

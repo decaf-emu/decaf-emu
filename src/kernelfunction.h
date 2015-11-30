@@ -17,10 +17,11 @@ struct KernelFunction : KernelExport
    {
    }
 
-   bool valid;
-   uint32_t syscallID;
-   uint32_t vaddr;
    virtual void call(ThreadState *state) = 0;
+
+   bool valid = false;
+   uint32_t syscallID = 0;
+   uint32_t vaddr = 0;
 };
 
 namespace kernel
