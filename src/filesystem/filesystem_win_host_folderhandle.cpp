@@ -19,6 +19,7 @@ bool HostFolderHandle::open()
 
    if (!data) {
       data = new WindowsData();
+      mFindData = data;
    }
 
    data->handle = FindFirstFileA(mPath.join("*").path().c_str(), &data->data);
@@ -53,6 +54,7 @@ void HostFolderHandle::close()
 
 bool HostFolderHandle::read(FolderEntry &entry)
 {
+   // Read virtual entries first
    if (mVirtualHandle->read(entry)) {
       return true;
    }
@@ -62,7 +64,6 @@ bool HostFolderHandle::read(FolderEntry &entry)
    }
 
    auto data = reinterpret_cast<WindowsData *>(mFindData);
-
    entry.name = data->data.cFileName;
    entry.size = data->data.nFileSizeLow;
    entry.size |= (static_cast<size_t>(data->data.nFileSizeHigh) << 32);

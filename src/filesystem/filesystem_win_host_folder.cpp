@@ -27,9 +27,9 @@ HostFolder::findChild(const std::string &name)
 
    // File/Directory found, create matching virtual entry
    if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-      child = addChild(new HostFolder(hostPath, data.cFileName));
+      child = addChild(new HostFolder(hostPath, name));
    } else {
-      child = addChild(new HostFile(hostPath, data.cFileName));
+      child = addChild(new HostFile(hostPath, name));
    }
 
    child->size = data.nFileSizeLow;
