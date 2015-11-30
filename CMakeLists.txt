@@ -12,6 +12,11 @@ set(DOCOPT_DIR "libraries/docopt")
 include_directories("${DOCOPT_DIR}")
 externalproject_add(docopt
     SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${DOCOPT_DIR}"
+    CMAKE_CACHE_ARGS
+        -DCMAKE_C_COMPILER:string=${CMAKE_C_COMPILER}
+        -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
+        -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
+        -DCMAKE_CXX_FLAGS:string=${CMAKE_CXX_FLAGS}
     INSTALL_COMMAND ""
     )
 externalproject_get_property(docopt BINARY_DIR)
@@ -31,6 +36,10 @@ include_directories("${ASMJIT_DIR}/src")
 externalproject_add(asmjit
     SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${ASMJIT_DIR}"
     CMAKE_CACHE_ARGS
+        -DCMAKE_C_COMPILER:string=${CMAKE_C_COMPILER}
+        -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
+        -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
+        -DCMAKE_CXX_FLAGS:string=${CMAKE_CXX_FLAGS}
         -DASMJIT_STATIC:string=on
     INSTALL_COMMAND ""
     )
@@ -42,6 +51,10 @@ include_directories("${GLBINDING_DIR}/source/glbinding/include")
 externalproject_add(glbinding
     SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${GLBINDING_DIR}"
     CMAKE_CACHE_ARGS
+        -DCMAKE_C_COMPILER:string=${CMAKE_C_COMPILER}
+        -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
+        -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
+        -DCMAKE_CXX_FLAGS:string=${CMAKE_CXX_FLAGS}
         -DOPTION_BUILD_STATIC:string=on
         -DOPTION_BUILD_TESTS:string=off
     INSTALL_COMMAND ""

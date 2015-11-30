@@ -136,7 +136,9 @@ int main(int argc, char **argv)
       result = hwtest::runTests("tests/cpu/wiiu");
    }
 
+#ifdef PLATFORM_WINDOWS
    system("PAUSE");
+#endif
    return result ? 0 : -1;
 }
 
