@@ -387,6 +387,25 @@ GX2SetColorControlReg(GX2ColorControlReg *reg)
    pm4::write(pm4::SetContextReg { latte::Register::CB_COLOR_CONTROL, cb_color_control.value });
 }
 
+void
+GX2SetDepthOnlyControl(BOOL depthTest,
+                       BOOL depthWrite,
+                       GX2CompareFunction::Value depthCompare)
+{
+   GX2SetDepthStencilControl(depthTest,
+                             depthWrite,
+                             depthCompare,
+                             FALSE,
+                             FALSE,
+                             GX2CompareFunction::Never,
+                             GX2StencilFunction::Keep,
+                             GX2StencilFunction::Keep,
+                             GX2StencilFunction::Keep,
+                             GX2CompareFunction::Never,
+                             GX2StencilFunction::Keep,
+                             GX2StencilFunction::Keep,
+                             GX2StencilFunction::Keep);
+}
 
 void
 GX2SetDepthStencilControl(BOOL depthTest,

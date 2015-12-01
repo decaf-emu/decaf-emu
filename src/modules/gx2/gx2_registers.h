@@ -311,6 +311,11 @@ void
 GX2SetColorControlReg(GX2ColorControlReg *reg);
 
 void
+GX2SetDepthOnlyControl(BOOL depthTest,
+                       BOOL depthWrite,
+                       GX2CompareFunction::Value depthCompare);
+
+void
 GX2SetDepthStencilControl(BOOL depthTest,
                           BOOL depthWrite,
                           GX2CompareFunction::Value depthCompare,

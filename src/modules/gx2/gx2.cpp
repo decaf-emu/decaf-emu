@@ -115,6 +115,7 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2InitColorControlReg);
    RegisterKernelFunction(GX2GetColorControlReg);
    RegisterKernelFunction(GX2SetColorControlReg);
+   RegisterKernelFunction(GX2SetDepthOnlyControl);
    RegisterKernelFunction(GX2SetDepthStencilControl);
    RegisterKernelFunction(GX2InitDepthStencilControlReg);
    RegisterKernelFunction(GX2GetDepthStencilControlReg);
