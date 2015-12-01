@@ -16,6 +16,7 @@ set(SOURCE_FILES
     coreinit/coreinit_frameheap.cpp
     coreinit/coreinit_fs.cpp
     coreinit/coreinit_ghs.cpp
+    coreinit/coreinit_lockedcache.cpp
     coreinit/coreinit_mcp.cpp
     coreinit/coreinit_memheap.cpp
     coreinit/coreinit_memlist.cpp
@@ -107,6 +108,7 @@ set(HEADER_FILES
     coreinit/coreinit_fs.h
     coreinit/coreinit_ghs.h
     coreinit/coreinit_ios.h
+    coreinit/coreinit_lockedcache.h
     coreinit/coreinit_mcp.h
     coreinit/coreinit_memheap.h
     coreinit/coreinit_memlist.h
