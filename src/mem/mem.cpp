@@ -18,8 +18,9 @@ gMemoryMap =
 {
    { "SystemData",   0x01000000, 0x02000000, 0 },
    { "Application",  0x02000000, 0x42000000, 0 },
-   { "Foreground",   0xe0000000, 0xe4000000, 0 },
-   { "MEM1",         0xf4000000, 0xf6000000, 0 },
+   { "Foreground",   0xE0000000, 0xE4000000, 0 },
+   { "MEM1",         0xF4000000, 0xF6000000, 0 },
+   { "LockedCache",  0xF8000000, 0xF800C000, 0 },
 };
 
 static size_t

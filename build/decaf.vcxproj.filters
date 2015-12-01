@@ -696,6 +696,9 @@
     <ClCompile Include="..\src\filesystem\filesystem_win_host_folderhandle.cpp">
       <Filter>Source Files\filesystem</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_lockedcache.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1354,6 +1357,9 @@
     </ClInclude>
     <ClInclude Include="..\src\filesystem\filesystem_host_path.h">
       <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_lockedcache.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

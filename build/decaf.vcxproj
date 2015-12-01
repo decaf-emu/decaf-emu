@@ -165,6 +165,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_frameheap.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_fs.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_ghs.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_lockedcache.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_mcp.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_memheap.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_memlist.cpp" />
@@ -337,6 +338,7 @@
     <ClInclude Include="..\src\memory_translate.h" />
     <ClInclude Include="..\src\mem\mem.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_lockedcache.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_sci.h" />

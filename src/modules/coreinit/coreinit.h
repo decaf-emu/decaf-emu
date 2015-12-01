@@ -15,7 +15,7 @@ private:
    void initialiseDynLoad();
    void initialiseEvent();
    void initialiseGHS();
-   void initialiseMemory();
+   void initialiseLockedCache();
    void initialiseMembase();
    void initialiseMessageQueues();
    void initialiseSchedulerFunctions();
@@ -41,6 +41,7 @@ private:
    static void registerFileSystemFunctions();
    static void registerFrameHeapFunctions();
    static void registerGhsFunctions();
+   static void registerLockedCacheFunctions();
    static void registerMcpFunctions();
    static void registerMembaseFunctions();
    static void registerMemlistFunctions();

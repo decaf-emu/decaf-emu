@@ -18,7 +18,7 @@ CoreInit::initialise()
    initialiseDynLoad();
    initialiseEvent();
    initialiseGHS();
-   initialiseMemory();
+   initialiseLockedCache();
    initialiseMembase();
    initialiseMessageQueues();
    initialiseSchedulerFunctions();
@@ -44,6 +44,7 @@ CoreInit::RegisterFunctions()
    registerFileSystemFunctions();
    registerFrameHeapFunctions();
    registerGhsFunctions();
+   registerLockedCacheFunctions();
    registerMcpFunctions();
    registerMemoryFunctions();
    registerMembaseFunctions();

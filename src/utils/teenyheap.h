@@ -15,7 +15,8 @@ private:
 
 public:
    TeenyHeap(void *buffer, size_t size) :
-      mBuffer(static_cast<uint8_t*>(buffer)), mSize(size)
+      mBuffer(static_cast<uint8_t*>(buffer)),
+      mSize(size)
    {
       mFreeBlocks.emplace_back(FreeBlock { mBuffer, mBuffer + mSize });
    }
