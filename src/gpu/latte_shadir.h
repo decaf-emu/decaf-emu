@@ -206,7 +206,7 @@ struct ExportInstruction : Instruction
    latte::exp::inst id;
    SelRegister src;
    uint32_t dstReg = 0;
-   latte::exp::Type::Type type;
+   latte::exp::Type::ExportType type;
    uint32_t elemSize = 0;
    uint32_t indexGpr = 0;
    bool wholeQuadMode = false;

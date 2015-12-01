@@ -391,7 +391,7 @@ bool disassembleExport(DisassembleState &state, cf::inst id, cf::Instruction &cf
 {
    auto eid = static_cast<exp::inst>(cf.expWord1.inst);
    auto name = exp::name[id];
-   auto type = static_cast<exp::Type::Type>(cf.expWord0.type);
+   auto type = static_cast<exp::Type::ExportType>(cf.expWord0.type);
 
    state.out
       << name
