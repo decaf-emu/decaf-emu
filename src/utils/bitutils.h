@@ -179,7 +179,7 @@ bit_scan_reverse(unsigned long *out_position, uint32_t bits)
       return false;
    }
 
-   *out_position = __builtin_clz(bits);
+   *out_position = 31 - __builtin_clz(bits);
    return true;
 #endif
 }
