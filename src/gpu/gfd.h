@@ -1,3 +1,4 @@
+#pragma once
 #include <cstdint>
 #include <vector>
 #include "utils/be_val.h"

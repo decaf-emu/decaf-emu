@@ -1,3 +1,4 @@
+#pragma once
 #include "cpu/cpu.h"
 #include "wfunc_ptr.h"
 
