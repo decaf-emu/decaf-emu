@@ -54,7 +54,7 @@ decode(Shader &shader, Shader::Type type, const gsl::span<uint8_t> &binary)
          decodeNormal(state, id, cf);
          break;
       case cf::Type::Export:
-         if (id == exp::EXP || id == exp::EXP_DONE) {
+         if (static_cast<exp::inst>(id) == exp::EXP || static_cast<exp::inst>(id) == exp::EXP_DONE) {
             decodeExport(state, id, cf);
          } else {
             assert(false);

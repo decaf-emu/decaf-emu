@@ -61,7 +61,7 @@ bool disassemble(std::string &out, const gsl::span<uint8_t> &binary)
          result &= disassembleNormal(state, id, cf);
          break;
       case cf::Type::Export:
-         if (id == exp::EXP || id == exp::EXP_DONE) {
+         if (static_cast<exp::inst>(id) == exp::EXP || static_cast<exp::inst>(id) == exp::EXP_DONE) {
             result &= disassembleExport(state, id, cf);
          } else {
             assert(false);
