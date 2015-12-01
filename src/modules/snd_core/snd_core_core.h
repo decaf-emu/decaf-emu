@@ -11,6 +11,9 @@ using AXFrameCallback = wfunc_ptr<void>;
 void
 AXInit();
 
+BOOL
+AXIsInit();
+
 void
 AXInitProfile(AXProfile *profile, uint32_t maxProfiles);
 

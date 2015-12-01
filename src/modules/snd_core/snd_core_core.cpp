@@ -2,10 +2,20 @@
 #include "snd_core_core.h"
 #include "utils/wfunc_ptr.h"
 
+static BOOL
+gAXInit = FALSE;
+
 void
 AXInit()
 {
    // TODO: AXInit
+   gAXInit = TRUE;
+}
+
+BOOL
+AXIsInit()
+{
+   return gAXInit;
 }
 
 void
@@ -46,6 +56,7 @@ void
 Snd_Core::registerCoreFunctions()
 {
    RegisterKernelFunction(AXInit);
+   RegisterKernelFunction(AXIsInit);
    RegisterKernelFunction(AXInitProfile);
    RegisterKernelFunction(AXSetDefaultMixerSelect);
    RegisterKernelFunction(AXRegisterAppFrameCallback);
