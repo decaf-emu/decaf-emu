@@ -1,4 +1,3 @@
-#pragma once
 #include "coreinit.h"
 #include "coreinit_atomic64.h"
 #include "coreinit_memheap.h"
