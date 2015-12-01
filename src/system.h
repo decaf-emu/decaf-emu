@@ -40,6 +40,7 @@ public:
 
    uint32_t registerUnimplementedFunction(const std::string &name);
    void registerModule(const std::string &name, KernelModule *module);
+   void registerModuleAlias(const std::string &module, const std::string &alias);
    KernelModule *findModule(const std::string &name) const;
 
    void setUserModule(LoadedModule *module);

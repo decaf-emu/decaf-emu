@@ -220,6 +220,7 @@ initialiseEmulator()
    gSystem.registerModule("padscore.rpl", new PadScore {});
    gSystem.registerModule("proc_ui.rpl", new ProcUI {});
    gSystem.registerModule("snd_core.rpl", new Snd_Core {});
+   gSystem.registerModuleAlias("snd_core.rpl", "sndcore2.rpl");
    gSystem.registerModule("swkbd.rpl", new Swkbd{});
    gSystem.registerModule("sysapp.rpl", new SysApp {});
    gSystem.registerModule("vpad.rpl", new VPad {});

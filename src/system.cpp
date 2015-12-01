@@ -65,6 +65,16 @@ System::registerModule(const std::string &name, KernelModule *module)
 }
 
 void
+System::registerModuleAlias(const std::string &module, const std::string &alias)
+{
+   auto itr = mSystemModules.find(module);
+
+   if (itr != mSystemModules.end()) {
+      mSystemModules.emplace(alias, itr->second);
+   }
+}
+
+void
 System::setUserModule(LoadedModule *module)
 {
    mUserModule = module;
