@@ -54,7 +54,7 @@ decode(Shader &shader, Shader::Type type, const gsl::span<uint8_t> &binary)
          decodeNormal(state, id, cf);
          break;
       case cf::Type::Export:
-         if (id == exp::EXP || id == exp::EXP_DONE) {
+         if (static_cast<exp::inst>(id) == exp::EXP || static_cast<exp::inst>(id) == exp::EXP_DONE) {
             decodeExport(state, id, cf);
          } else {
             assert(false);
@@ -154,7 +154,7 @@ decodeExport(DecodeState &state, cf::inst id, cf::Instruction &cf)
    exp->src.selZ = static_cast<alu::Select::Select>(cf.expWord1.srcSelZ);
    exp->src.selW = static_cast<alu::Select::Select>(cf.expWord1.srcSelW);
 
-   exp->type = static_cast<exp::Type::Type>(cf.expWord0.type);
+   exp->type = static_cast<exp::Type::ExportType>(cf.expWord0.type);
    exp->elemSize = cf.expWord0.elemSize;
    exp->indexGpr = cf.expWord0.indexGpr;
    exp->wholeQuadMode = cf.expWord1.wholeQuadMode;
@@ -331,6 +331,8 @@ decodeALU(DecodeState &state, cf::inst id, cf::Instruction &cf)
    case alu::inst::ALU_EXT:
       assert(false);
       break;
+   default:
+      break;
    }
 
    for (auto slot = 0u; slot <= cf.aluWord1.count; ) {
@@ -453,6 +455,8 @@ decodeALU(DecodeState &state, cf::inst id, cf::Instruction &cf)
                state.shader->code.emplace_back(push);
             }
             break;
+            default:
+               break;
             }
          }
 
@@ -516,6 +520,8 @@ decodeALU(DecodeState &state, cf::inst id, cf::Instruction &cf)
                state.shader->code.emplace_back(els);
             }
             break;
+            default:
+               break;
             }
          }
 
@@ -567,6 +573,8 @@ decodeALU(DecodeState &state, cf::inst id, cf::Instruction &cf)
       state.shader->code.emplace_back(pop2);
    }
    break;
+   default:
+      break;
    }
 
    return true;

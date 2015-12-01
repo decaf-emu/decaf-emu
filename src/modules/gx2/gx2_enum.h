@@ -5,6 +5,10 @@
 #define GX2_ENUM(name, type) namespace name { enum Value : type {
 #endif
 
+#ifndef GX2_ENUM_WITH_RANGE
+#define GX2_ENUM_WITH_RANGE(name, type, min, max) namespace name { enum Range : type { First = min, Last = max }; enum Value : type {
+#endif
+
 #ifndef GX2_ENUM_END
 #define GX2_ENUM_END }; }
 #endif
@@ -13,16 +17,11 @@
 #define GX2_ENUM_VALUE(key, value) key = value,
 #endif
 
-#ifndef GX2_ENUM_VALID_RANGE
-#define GX2_ENUM_VALID_RANGE(min, max) First = min, Last = max,
-#endif
-
 GX2_ENUM(GX2AAMode, uint32_t)
    GX2_ENUM_VALUE(Mode1X, 0)
 GX2_ENUM_END
 
-GX2_ENUM(GX2AttribFormatType, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 0x1F)
+GX2_ENUM_WITH_RANGE(GX2AttribFormatType, uint32_t, 0, 0x1F)
    GX2_ENUM_VALUE(TYPE_8, 0x00)
    GX2_ENUM_VALUE(TYPE_4_4, 0x01)
    GX2_ENUM_VALUE(TYPE_16, 0x02)
@@ -52,8 +51,7 @@ GX2_ENUM(GX2AttribFormatFlags, uint32_t)
    GX2_ENUM_VALUE(SCALED, 0x800)
 GX2_ENUM_END
 
-GX2_ENUM(GX2AttribFormat, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 0xA0F)
+GX2_ENUM_WITH_RANGE(GX2AttribFormat, uint32_t, 0, 0xA0F)
 
    GX2_ENUM_VALUE(UNORM_8, 0x0)
    GX2_ENUM_VALUE(UNORM_8_8, 0x04)
@@ -77,14 +75,12 @@ GX2_ENUM(GX2AttribFormat, uint32_t)
    GX2_ENUM_VALUE(FLOAT_32_32_32_32, 0x813)
 GX2_ENUM_END
 
-GX2_ENUM(GX2AttribIndexType, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 1)
+GX2_ENUM_WITH_RANGE(GX2AttribIndexType, uint32_t, 0, 1)
    GX2_ENUM_VALUE(PerVertex, 0)
    GX2_ENUM_VALUE(PerInstance, 1)
 GX2_ENUM_END
 
-GX2_ENUM(GX2AlphaToMaskMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 4)
+GX2_ENUM_WITH_RANGE(GX2AlphaToMaskMode, uint32_t, 0, 4)
    GX2_ENUM_VALUE(NonDithered,   0)
    GX2_ENUM_VALUE(Dither0,       1)
    GX2_ENUM_VALUE(Dither90,      2)
@@ -92,8 +88,7 @@ GX2_ENUM(GX2AlphaToMaskMode, uint32_t)
    GX2_ENUM_VALUE(Dither270,     4)
 GX2_ENUM_END
 
-GX2_ENUM(GX2BlendMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 20)
+GX2_ENUM_WITH_RANGE(GX2BlendMode, uint32_t, 0, 20)
    GX2_ENUM_VALUE(Zero,             0)
    GX2_ENUM_VALUE(One,              1)
    GX2_ENUM_VALUE(SrcColor,         2)
@@ -115,8 +110,7 @@ GX2_ENUM(GX2BlendMode, uint32_t)
    GX2_ENUM_VALUE(InvSrc1Alpha,     18)
 GX2_ENUM_END
 
-GX2_ENUM(GX2BlendCombineMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 4)
+GX2_ENUM_WITH_RANGE(GX2BlendCombineMode, uint32_t, 0, 4)
    GX2_ENUM_VALUE(Add,              0)
    GX2_ENUM_VALUE(Subtract,         1)
    GX2_ENUM_VALUE(Min,              2)
@@ -124,12 +118,10 @@ GX2_ENUM(GX2BlendCombineMode, uint32_t)
    GX2_ENUM_VALUE(RevSubtract,      4)
 GX2_ENUM_END
 
-GX2_ENUM(GX2BufferingMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(1, 4)
+GX2_ENUM_WITH_RANGE(GX2BufferingMode, uint32_t, 1, 4)
 GX2_ENUM_END
 
-GX2_ENUM(GX2ChannelMask, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 15)
+GX2_ENUM_WITH_RANGE(GX2ChannelMask, uint32_t, 0, 15)
    GX2_ENUM_VALUE(R,    1)
    GX2_ENUM_VALUE(G,    2)
    GX2_ENUM_VALUE(RG,   3)
@@ -147,8 +139,7 @@ GX2_ENUM(GX2ChannelMask, uint32_t)
    GX2_ENUM_VALUE(RGBA, 15)
 GX2_ENUM_END
 
-GX2_ENUM(GX2CompareFunction, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 7)
+GX2_ENUM_WITH_RANGE(GX2CompareFunction, uint32_t, 0, 7)
    GX2_ENUM_VALUE(Never, 0)
    GX2_ENUM_VALUE(Less, 1)
    GX2_ENUM_VALUE(Equal, 2)
@@ -173,55 +164,47 @@ GX2_ENUM(GX2ClearFlags, uint32_t)
    GX2_ENUM_VALUE(Stencil, 2)
 GX2_ENUM_END
 
-GX2_ENUM(GX2DrcRenderMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 3)
+GX2_ENUM_WITH_RANGE(GX2DrcRenderMode, uint32_t, 0, 3)
    GX2_ENUM_VALUE(Disabled,      0)
    GX2_ENUM_VALUE(Single,        1)
 GX2_ENUM_END
 
-GX2_ENUM(GX2EndianSwapMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 3)
+GX2_ENUM_WITH_RANGE(GX2EndianSwapMode, uint32_t, 0, 3)
    GX2_ENUM_VALUE(None, 0)
    GX2_ENUM_VALUE(Swap8In16, 1)
    GX2_ENUM_VALUE(Swap8In32, 2)
    GX2_ENUM_VALUE(Default, 3)
 GX2_ENUM_END
 
-GX2_ENUM(GX2EventType, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 5)
+GX2_ENUM_WITH_RANGE(GX2EventType, uint32_t, 0, 5)
    GX2_ENUM_VALUE(Vsync, 2)
    GX2_ENUM_VALUE(Flip, 3)
    GX2_ENUM_VALUE(DisplayListOverrun, 4)
 GX2_ENUM_END
 
-GX2_ENUM(GX2FetchShaderType, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 3)
+GX2_ENUM_WITH_RANGE(GX2FetchShaderType, uint32_t, 0, 3)
    GX2_ENUM_VALUE(NoTessellation, 0)
    GX2_ENUM_VALUE(LineTessellation, 1)
    GX2_ENUM_VALUE(TriangleTessellation, 2)
    GX2_ENUM_VALUE(QuadTessellation, 3)
 GX2_ENUM_END
 
-GX2_ENUM(GX2FrontFace, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 1)
+GX2_ENUM_WITH_RANGE(GX2FrontFace, uint32_t, 0, 1)
    GX2_ENUM_VALUE(CounterClockwise, 0)
    GX2_ENUM_VALUE(Clockwise, 1)
 GX2_ENUM_END
 
-GX2_ENUM(GX2IndexType, uint32_t)
-   GX2_ENUM_VALID_RANGE(0x0, 0x9)
+GX2_ENUM_WITH_RANGE(GX2IndexType, uint32_t, 0x0, 0x9)
    GX2_ENUM_VALUE(U16_LE, 0x0)
    GX2_ENUM_VALUE(U32_LE, 0x1)
    GX2_ENUM_VALUE(U16, 0x4)
    GX2_ENUM_VALUE(U32, 0x9)
 GX2_ENUM_END
 
-GX2_ENUM(GX2InvalidateMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(1, 0x1ff)
+GX2_ENUM_WITH_RANGE(GX2InvalidateMode, uint32_t, 1, 0x1ff)
 GX2_ENUM_END
 
-GX2_ENUM(GX2LogicOp, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 0xff)
+GX2_ENUM_WITH_RANGE(GX2LogicOp, uint32_t, 0, 0xff)
    GX2_ENUM_VALUE(Clear,         0x00)
    GX2_ENUM_VALUE(Nor,           0x11)
    GX2_ENUM_VALUE(InvertedAnd,   0x22)
@@ -240,23 +223,20 @@ GX2_ENUM(GX2LogicOp, uint32_t)
    GX2_ENUM_VALUE(Set,           0xFF)
 GX2_ENUM_END
 
-GX2_ENUM(GX2PrimitiveMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0x1, 0x94)
+GX2_ENUM_WITH_RANGE(GX2PrimitiveMode, uint32_t, 0x1, 0x94)
    GX2_ENUM_VALUE(Triangles,        0x4)
    GX2_ENUM_VALUE(TriangleStrip,    0x6)
    GX2_ENUM_VALUE(Quads,            0x13)
    GX2_ENUM_VALUE(QuadStrip,        0x14)
 GX2_ENUM_END
 
-GX2_ENUM(GX2PolygonMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 2)
+GX2_ENUM_WITH_RANGE(GX2PolygonMode, uint32_t, 0, 2)
    GX2_ENUM_VALUE(Point,            0)
    GX2_ENUM_VALUE(Line,             1)
    GX2_ENUM_VALUE(Triangle,         2)
 GX2_ENUM_END
 
-GX2_ENUM(GX2RenderTarget, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 7)
+GX2_ENUM_WITH_RANGE(GX2RenderTarget, uint32_t, 0, 7)
    GX2_ENUM_VALUE(Target0, 0)
    GX2_ENUM_VALUE(Target1, 1)
    GX2_ENUM_VALUE(Target2, 2)
@@ -267,12 +247,10 @@ GX2_ENUM(GX2RenderTarget, uint32_t)
    GX2_ENUM_VALUE(Target7, 7)
 GX2_ENUM_END
 
-GX2_ENUM(GX2RoundingMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 1)
+GX2_ENUM_WITH_RANGE(GX2RoundingMode, uint32_t, 0, 1)
 GX2_ENUM_END
 
-GX2_ENUM(GX2ScanTarget, uint32_t)
-   GX2_ENUM_VALID_RANGE(1, 8)
+GX2_ENUM_WITH_RANGE(GX2ScanTarget, uint32_t, 1, 8)
    GX2_ENUM_VALUE(TV,      1)
    GX2_ENUM_VALUE(DRC,     4)
 GX2_ENUM_END
@@ -369,8 +347,7 @@ GX2_ENUM(GX2SurfaceUse, uint32_t)
    GX2_ENUM_VALUE(ScanBuffer,       1 << 3)
 GX2_ENUM_END
 
-GX2_ENUM(GX2StencilFunction, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 7)
+GX2_ENUM_WITH_RANGE(GX2StencilFunction, uint32_t, 0, 7)
    GX2_ENUM_VALUE(Keep, 0)
    GX2_ENUM_VALUE(Zero, 1)
    GX2_ENUM_VALUE(Replace, 2)
@@ -381,23 +358,20 @@ GX2_ENUM(GX2StencilFunction, uint32_t)
    GX2_ENUM_VALUE(DecrWrap, 7)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TessellationMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 2)
+GX2_ENUM_WITH_RANGE(GX2TessellationMode, uint32_t, 0, 2)
    GX2_ENUM_VALUE(Discrete, 0)
    GX2_ENUM_VALUE(Continuous, 1)
    GX2_ENUM_VALUE(Adaptive, 2)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TexBorderType, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 3)
+GX2_ENUM_WITH_RANGE(GX2TexBorderType, uint32_t, 0, 3)
    GX2_ENUM_VALUE(TransparentBlack, 0)
    GX2_ENUM_VALUE(Black, 1)
    GX2_ENUM_VALUE(White, 2)
    GX2_ENUM_VALUE(Variable, 3)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TexClampMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 7)
+GX2_ENUM_WITH_RANGE(GX2TexClampMode, uint32_t, 0, 7)
    GX2_ENUM_VALUE(Wrap, 0)
    GX2_ENUM_VALUE(Mirror, 1)
    GX2_ENUM_VALUE(Clamp, 2)
@@ -405,34 +379,28 @@ GX2_ENUM(GX2TexClampMode, uint32_t)
    GX2_ENUM_VALUE(ClampBorder, 6)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TexMipFilterMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 2)
+GX2_ENUM_WITH_RANGE(GX2TexMipFilterMode, uint32_t, 0, 2)
    GX2_ENUM_VALUE(None, 0)
    GX2_ENUM_VALUE(Point, 1)
    GX2_ENUM_VALUE(Linear, 2)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TexMipPerfMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 7)
+GX2_ENUM_WITH_RANGE(GX2TexMipPerfMode, uint32_t, 0, 7)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TexXYFilterMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 1)
+GX2_ENUM_WITH_RANGE(GX2TexXYFilterMode, uint32_t, 0, 1)
    GX2_ENUM_VALUE(Point, 0)
    GX2_ENUM_VALUE(Linear, 1)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TexAnisoRatio, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 4)
+GX2_ENUM_WITH_RANGE(GX2TexAnisoRatio, uint32_t, 0, 4)
    GX2_ENUM_VALUE(None, 0)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TexZFilterMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 2)
+GX2_ENUM_WITH_RANGE(GX2TexZFilterMode, uint32_t, 0, 2)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TexZPerfMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 3)
+GX2_ENUM_WITH_RANGE(GX2TexZPerfMode, uint32_t, 0, 3)
 GX2_ENUM_END
 
 GX2_ENUM(GX2TileMode, uint32_t)
@@ -455,16 +423,14 @@ GX2_ENUM(GX2TileMode, uint32_t)
    GX2_ENUM_VALUE(LinearSpecial,    16)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TVRenderMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 5)
+GX2_ENUM_WITH_RANGE(GX2TVRenderMode, uint32_t, 0, 5)
    GX2_ENUM_VALUE(Standard480p,  1)
    GX2_ENUM_VALUE(Wide480p,      2)
    GX2_ENUM_VALUE(Wide720p,      3)
    GX2_ENUM_VALUE(Wide1080p,     5)
 GX2_ENUM_END
 
-GX2_ENUM(GX2TVScanMode, uint32_t)
-   GX2_ENUM_VALID_RANGE(0, 7)
+GX2_ENUM_WITH_RANGE(GX2TVScanMode, uint32_t, 0, 7)
    GX2_ENUM_VALUE(None, 0)
 GX2_ENUM_END
 
@@ -494,8 +460,8 @@ GX2_ENUM(GX2ShaderVarType, uint32_t)
 GX2_ENUM_END
 
 #undef GX2_ENUM
+#undef GX2_ENUM_WITH_RANGE
 #undef GX2_ENUM_END
 #undef GX2_ENUM_VALUE
-#undef GX2_ENUM_VALID_RANGE
 
 #endif

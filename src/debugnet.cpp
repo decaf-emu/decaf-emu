@@ -667,7 +667,7 @@ DebugNet::handlePacket(DebugPacket *pak)
    case DebugPacketType::StepCoreOver: {
       auto *scPak = static_cast<DebugPacketStepCoreOver*>(pak);
 
-      if (scPak->coreId < 0 || scPak->coreId >= 3) {
+      if (scPak->coreId >= 3) {
          break;
       }
 
@@ -761,6 +761,8 @@ DebugNet::handlePacket(DebugPacket *pak)
 
       break;
    }
+   default:
+      break;
    }
 }
 

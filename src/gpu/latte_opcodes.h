@@ -178,11 +178,14 @@ namespace exp
 
 namespace Type
 {
-enum Type
+enum ExportType
 {
    Pixel          = 0,
    Position       = 1,
    Parameter      = 2,
+};
+enum WriteType
+{
    Write          = 0,
    WriteInd       = 1,
    WriteAck       = 2,

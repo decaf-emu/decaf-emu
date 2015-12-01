@@ -185,6 +185,8 @@ getFieldStateField(Instruction instr, Field field)
          return StateField::GQR + 6;
       case SprEncoding::GQR7:
          return StateField::GQR + 7;
+      default:
+         break;
       }
       break;
    case Field::bo:
@@ -223,6 +225,8 @@ getFieldStateField(Instruction instr, Field field)
       return StateField::FPSCR;
    case Field::RSRV:
       return StateField::ReserveAddress;
+   default:
+      break;
    }
    return StateField::Invalid;
 }

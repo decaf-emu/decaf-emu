@@ -99,6 +99,9 @@ Debugger::handleMessage(DebugMessage *msg)
 
       break;
    }
+   case DebugMessageType::Invalid:
+      gLog->debug("Invalid message");
+      break;
    }
 }
 

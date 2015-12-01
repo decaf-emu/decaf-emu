@@ -29,6 +29,9 @@ void translateChannel(GenerateState &state, latte::alu::Channel::Channel channel
    case latte::alu::Channel::W:
       state.out << 'w';
       break;
+   case latte::alu::Channel::Unknown:
+      state.out << '?';
+      break;
    }
 }
 
@@ -80,6 +83,8 @@ void translateAluDestStart(GenerateState &state, AluInstruction *ins)
    case latte::alu::OutputModifier::Divide2:
       state.out << '(';
       break;
+   case latte::alu::OutputModifier::Off:
+      break;
    }
 
    if (ins->dest.clamp) {
@@ -102,6 +107,8 @@ void translateAluDestEnd(GenerateState &state, AluInstruction *ins)
       break;
    case latte::alu::OutputModifier::Divide2:
       state.out << ") / 2";
+      break;
+   case latte::alu::OutputModifier::Off:
       break;
    }
 
@@ -171,6 +178,9 @@ void translateAluSource(GenerateState &state, const AluSource &src)
       case AluSource::ConstantDouble:
          state.out << "int(";
          break;
+      case AluSource::ConstantInt:
+      case AluSource::ConstantLiteral:
+         break;
       }
    } else if (src.valueType == AluSource::Uint) {
       switch (src.type) {
@@ -199,6 +209,9 @@ void translateAluSource(GenerateState &state, const AluSource &src)
       case AluSource::ConstantFloat:
       case AluSource::ConstantDouble:
          state.out << "uint(";
+         break;
+      case AluSource::ConstantInt:
+      case AluSource::ConstantLiteral:
          break;
       }
    }
@@ -310,6 +323,12 @@ void translateAluSource(GenerateState &state, const AluSource &src)
    case AluSource::PreviousVector:
       state.out << '.';
       translateChannel(state, src.chan);
+   case AluSource::PreviousScalar:
+   case AluSource::ConstantFloat:
+   case AluSource::ConstantDouble:
+   case AluSource::ConstantInt:
+   case AluSource::ConstantLiteral:
+      break;
    }
 
    if (src.valueType == AluSource::Int || src.valueType == AluSource::Uint) {

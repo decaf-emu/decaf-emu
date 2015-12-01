@@ -48,6 +48,7 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
    size_t height_align = 1;
 
    switch (surface->tileMode) {
+   case GX2TileMode::Default:
    case GX2TileMode::LinearSpecial:
       break;
    case GX2TileMode::LinearAligned:

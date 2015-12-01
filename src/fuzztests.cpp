@@ -132,7 +132,7 @@ bool
 compareStateField(int field, const TraceFieldValue &x, const TraceFieldValue &y)
 {
    if (field >= StateField::FPR0 && field <= StateField::FPR31) {
-      return abs(x.f64v0 - y.f64v0) < 0.0001 && abs(x.f64v1 - y.f64v1) < 0.0001;
+      return fabs(x.f64v0 - y.f64v0) < 0.0001 && fabs(x.f64v1 - y.f64v1) < 0.0001;
    }
    return x.u64v0 == y.u64v0 && x.u64v1 == y.u64v1;
 }
@@ -200,6 +200,8 @@ executeInstrTest(uint32_t test_seed)
    case InstructionID::mtsrin:
       // Supervisory Instructions
       return true;
+   default:
+      break;
    }
 
    const InstructionData *data = gInstructionTable.find(instrId);

@@ -79,6 +79,8 @@ printTestField(Field field, Instruction instr, RegisterState *input, RegisterSta
    case Field::FPSCR:
       //gLog->debug("fpscr = {:08X} {:08x} {:08X}", input->fpscr.value, output->fpscr.value, state->fpscr.value);
       break;
+   default:
+      break;
    }
 }
 

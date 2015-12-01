@@ -5,6 +5,8 @@ class MessageClass {
 public:
    typedef Type IdType;
 
+   virtual ~MessageClass() = default;
+
    virtual Type type() const = 0;
 
    bool isA(Type typeId) const {
