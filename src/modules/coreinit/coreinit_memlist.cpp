@@ -40,6 +40,7 @@ MEMAppendListObject(MemoryList *list, void *object)
    tail->next = object;
    link->prev = list->tail;
    link->next = nullptr;
+   list->tail = object;
    list->count++;
 }
 
@@ -104,6 +105,7 @@ MEMRemoveListObject(MemoryList *list, void *object)
    if (list->head == object) {
       // Remove from head
       list->head = MEMGetNextListObject(list, list->head);
+      getLink(list, list->tail)->prev = nullptr;
       list->count--;
       return;
    }
@@ -111,6 +113,7 @@ MEMRemoveListObject(MemoryList *list, void *object)
    if (list->tail == object) {
       // Remove from tail
       list->tail = MEMGetPrevListObject(list, list->tail);
+      getLink(list, list->tail)->next = nullptr;
       list->count--;
       return;
    }
@@ -122,10 +125,10 @@ MEMRemoveListObject(MemoryList *list, void *object)
    if (head == object) {
       // Remove from middle of list
       auto link = getLink(list, object);
-      auto before = link->next;
-      auto after = link->prev;
-      getLink(list, before)->next = after;
-      getLink(list, after)->prev = before;
+      auto next = link->next;
+      auto prev = link->prev;
+      getLink(list, prev)->next = next;
+      getLink(list, next)->prev = prev;
       list->count--;
    }
 }
