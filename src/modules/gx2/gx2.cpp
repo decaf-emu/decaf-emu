@@ -136,6 +136,7 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2InitPointLimitsReg);
    RegisterKernelFunction(GX2GetPointLimitsReg);
    RegisterKernelFunction(GX2SetPointLimitsReg);
+   RegisterKernelFunction(GX2SetCullOnlyControl);
    RegisterKernelFunction(GX2SetPolygonControl);
    RegisterKernelFunction(GX2InitPolygonControlReg);
    RegisterKernelFunction(GX2SetPolygonControlReg);

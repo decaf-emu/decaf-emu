@@ -682,6 +682,22 @@ GX2SetPointLimitsReg(GX2PointLimitsReg *reg)
 }
 
 void
+GX2SetCullOnlyControl(GX2FrontFace::Value frontFace,
+                      BOOL cullFront,
+                      BOOL cullBack)
+{
+   GX2SetPolygonControl(frontFace,
+                        cullFront,
+                        cullBack,
+                        FALSE,
+                        GX2PolygonMode::Point,
+                        GX2PolygonMode::Point,
+                        FALSE,
+                        FALSE,
+                        FALSE);
+}
+
+void
 GX2SetPolygonControl(GX2FrontFace::Value frontFace,
                      BOOL cullFront,
                      BOOL cullBack,
