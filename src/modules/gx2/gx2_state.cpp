@@ -9,6 +9,7 @@
 #include "modules/coreinit/coreinit_memheap.h"
 #include "utils/log.h"
 #include "utils/virtual_ptr.h"
+#include "utils/wfunc_call.h"
 
 static uint32_t
 gMainCoreId = 0;
