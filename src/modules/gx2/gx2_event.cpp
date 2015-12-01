@@ -71,7 +71,7 @@ GX2SetEventCallback(GX2EventType::Value type, GX2EventCallbackFunction func, voi
       gLog->error("DisplayListOverrun callback set with no valid userData");
    }
 
-   if (type < GX2EventType::Last) {
+   if (static_cast<GX2EventType::Range>(type) < GX2EventType::Last) {
       gEventCallbacks[type].func = func;
       gEventCallbacks[type].data = userData;
    }
@@ -81,7 +81,7 @@ GX2SetEventCallback(GX2EventType::Value type, GX2EventCallbackFunction func, voi
 void
 GX2GetEventCallback(GX2EventType::Value type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut)
 {
-   if (type < GX2EventType::Last) {
+   if (static_cast<GX2EventType::Range>(type) < GX2EventType::Last) {
       *funcOut = gEventCallbacks[type].func;
       *userDataOut = gEventCallbacks[type].data;
    } else {
