@@ -39,55 +39,6 @@ GX2DebugDumpData(std::ofstream &file, const void *data, size_t size)
    file.write(reinterpret_cast<const char *>(data), size);
 }
 
-static void
-GX2DebugDumpGTX(const GX2Texture *texture)
-{
-   auto filename = "texture_" + GX2PointerAsString(texture);
-   auto file = std::ofstream { "dump/" + filename + ".gtx", std::ofstream::out | std::ofstream::binary };
-
-   // Write file header
-   gfd::FileHeader header;
-   memset(&header, 0, sizeof(gfd::FileHeader));
-   header.magic = gfd::FileHeader::Magic;
-   header.headerSize = sizeof(gfd::FileHeader);
-   header.version1 = 7;
-   header.version2 = 1;
-   header.version3 = 2;
-   file.write(reinterpret_cast<char*>(&header), sizeof(gfd::FileHeader));
-
-   // Write TextureHeader
-   gfd::BlockHeader block;
-   memset(&block, 0, sizeof(gfd::FileHeader));
-   block.magic = gfd::BlockHeader::Magic;
-   block.headerSize = sizeof(gfd::BlockHeader);
-   block.version1 = 1;
-   block.version2 = 0;
-   block.type = gfd::BlockType::TextureHeader;
-   block.dataSize = sizeof(GX2Texture);
-   file.write(reinterpret_cast<const char*>(&block), sizeof(gfd::BlockHeader));
-   file.write(reinterpret_cast<const char*>(texture), sizeof(GX2Texture));
-
-   // Write TextureImage
-   memset(&block, 0, sizeof(gfd::FileHeader));
-   block.magic = gfd::BlockHeader::Magic;
-   block.headerSize = sizeof(gfd::BlockHeader);
-   block.version1 = 1;
-   block.version2 = 0;
-   block.type = gfd::BlockType::TextureImage;
-   block.dataSize = texture->surface.imageSize;
-   file.write(reinterpret_cast<char*>(&block), sizeof(gfd::BlockHeader));
-   file.write(reinterpret_cast<char*>(texture->surface.image.get()), texture->surface.imageSize);
-
-   // Write EOF block
-   memset(&block, 0, sizeof(gfd::FileHeader));
-   block.magic = gfd::BlockHeader::Magic;
-   block.headerSize = sizeof(gfd::BlockHeader);
-   block.version1 = 1;
-   block.version2 = 0;
-   block.type = gfd::BlockType::EndOfFile;
-   file.write(reinterpret_cast<char*>(&block), sizeof(gfd::BlockHeader));
-}
-
 void
 GX2DebugDumpTexture(const GX2Texture *texture)
 {
@@ -136,12 +87,15 @@ GX2DebugDumpTexture(const GX2Texture *texture)
       return;
    }
 
-   // Write GTX
-   GX2DebugDumpGTX(texture);
+   // Write GTX file
+   gfd::File gtx;
+   gtx.add(texture);
+   gtx.write("dump/" + filename + ".gtx");
 }
 
+template<typename ShaderType>
 static void
-GX2DebugDumpShader(const std::string &filename, const std::string &info, uint8_t *data, size_t size)
+GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader)
 {
    std::string output;
 
@@ -152,13 +106,13 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, uint8_t
       return;
    }
 
-   GX2DebugDumpData("dump/" + filename + ".bin", data, size);
+   GX2DebugDumpData("dump/" + filename + ".bin", shader->data, shader->size);
 
    // Write text of shader to shader_pixel_X.txt
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
 
    // Disassemble
-   latte::disassemble(output, gsl::as_span(data, size));
+   latte::disassemble(output, gsl::as_span(shader->data.get(), shader->size));
 
    file
       << info << std::endl
@@ -169,12 +123,17 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, uint8_t
 
    // Decompiled
    latte::Shader decompiled;
-   latte::decode(decompiled, latte::Shader::Vertex, gsl::as_span(data, size));
+   latte::decode(decompiled, latte::Shader::Vertex, gsl::as_span(shader->data.get(), shader->size));
    gpu::opengl::glsl::generateBody(decompiled, output);
 
    file
       << "Decompiled:" << std::endl
       << output << std::endl;
+
+   // Write GSH file
+   gfd::File gsh;
+   gsh.add(shader);
+   gsh.write("dump/" + filename + ".gsh");
 }
 
 static void
@@ -231,8 +190,7 @@ GX2DebugDumpShader(GX2FetchShader *shader)
 
    GX2DebugDumpShader("shader_fetch_" + GX2PointerAsString(shader),
                       out.str(),
-                      reinterpret_cast<uint8_t *>(shader->data.get()),
-                      shader->size);
+                      shader);
 }
 
 void
@@ -256,8 +214,7 @@ GX2DebugDumpShader(GX2PixelShader *shader)
 
    GX2DebugDumpShader("shader_pixel_" + GX2PointerAsString(shader),
                       out.str(),
-                      shader->data,
-                      shader->size);
+                      shader);
 }
 
 void
@@ -281,6 +238,5 @@ GX2DebugDumpShader(GX2VertexShader *shader)
 
    GX2DebugDumpShader("shader_vertex_" + GX2PointerAsString(shader),
                       out.str(),
-                      shader->data,
-                      shader->size);
+                      shader);
 }

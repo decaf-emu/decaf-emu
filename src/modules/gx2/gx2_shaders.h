@@ -18,7 +18,7 @@ struct GX2FetchShader
    } regs;
 
    be_val<uint32_t> size;
-   be_ptr<void> data;
+   be_ptr<uint8_t> data;
    be_val<uint32_t> attribCount;
    be_val<uint32_t> numDivisors;
    be_val<uint32_t> divisors[2];

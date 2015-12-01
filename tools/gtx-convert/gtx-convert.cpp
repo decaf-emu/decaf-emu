@@ -1,12 +1,13 @@
+#include <cassert>
+#include <docopt.h>
+#include <gsl.h>
+#include <spdlog/spdlog.h>
 #include "gpu/gfd.h"
 #include "gpu/latte_format.h"
 #include "modules/gx2/gx2_texture.h"
 #include "modules/gx2/gx2_shaders.h"
 #include "modules/gx2/gx2_enum_string.h"
 #include "utils/binaryfile.h"
-#include <spdlog/spdlog.h>
-#include <cassert>
-#include <docopt.h>
 
 static const char USAGE[] =
 R"(GTX Texture Converter
@@ -20,11 +21,25 @@ Usage:
    --version     Show version.
 )";
 
+static void
+printUniformBlocks(uint32_t count, GX2UniformBlock *blocks)
+{
+   std::cout << "  Uniform Blocks (" << count << ")" << std::endl;
+
+   for (auto i = 0u; i < count; ++i) {
+      std::cout
+         << "    Block " << i << std::endl
+         << "      name   = " << blocks[i].name.getAddress() << std::endl
+         << "      offset = " << blocks[i].offset << std::endl
+         << "      size   = " << blocks[i].size << std::endl;
+   }
+}
+
 bool printInfo(const std::string &filename)
 {
    gfd::File file;
 
-   if (!gfd::readFile(filename, file)) {
+   if (!file.read(filename)) {
       return false;
    }
 
@@ -40,7 +55,7 @@ bool printInfo(const std::string &filename)
             << "VertexShaderHeader" << std::endl
             << "  index        = " << block.header.index << std::endl
             << "  size         = " << shader->size << std::endl
-            << "  mode         = " << shader->size << std::endl
+            << "  mode         = " << GX2EnumAsString(shader->mode) << std::endl
             << "  uBlocks      = " << shader->uniformBlockCount << std::endl
             << "  uVars        = " << shader->uniformVarCount << std::endl
             << "  initVars     = " << shader->initialValueCount << std::endl
@@ -62,7 +77,16 @@ bool printInfo(const std::string &filename)
          auto cb_shader_mask = shader->regs.cb_shader_mask.value();
 
          std::cout
-            << "PixelShaderHeader" << std::endl;
+            << "PixelShaderHeader" << std::endl
+            << "  index        = " << block.header.index << std::endl
+            << "  size         = " << shader->size << std::endl
+            << "  mode         = " << GX2EnumAsString(shader->mode) << std::endl
+            << "  uBlocks      = " << shader->uniformBlockCount << std::endl
+            << "  uVars        = " << shader->uniformVarCount << std::endl
+            << "  initVars     = " << shader->initialValueCount << std::endl
+            << "  loopVars     = " << shader->loopVarCount << std::endl
+            << "  samplerVars  = " << shader->samplerVarCount << std::endl;
+
          // TODO: Write out structure
          // TODO: Write out registers
          break;
@@ -100,8 +124,8 @@ bool printInfo(const std::string &filename)
 struct Texture
 {
    GX2Texture *header;
-   gsl::array_view<uint8_t> imageData;
-   gsl::array_view<uint8_t> mipmapData;
+   gsl::span<uint8_t> imageData;
+   gsl::span<uint8_t> mipmapData;
 };
 
 #pragma pack(1)
@@ -143,7 +167,7 @@ convert(const std::string &filenameIn, const std::string &filenameOut)
    gfd::File file;
    std::vector<Texture> textures;
 
-   if (!gfd::readFile(filenameIn, file)) {
+   if (!file.read(filenameIn)) {
       return false;
    }
 
@@ -168,6 +192,7 @@ convert(const std::string &filenameIn, const std::string &filenameOut)
       latte::untile(tex.imageData.data(),
                     tex.header->surface.width,
                     tex.header->surface.height,
+                    tex.header->surface.depth,
                     tex.header->surface.pitch,
                     static_cast<latte::SQ_DATA_FORMAT>(tex.header->surface.format & 0x3F),
                     static_cast<latte::SQ_TILE_MODE>(tex.header->surface.tileMode.value()),
@@ -232,5 +257,17 @@ int main(int argc, char **argv)
       return convert(in, out) ? 0 : -1;
    }
 
+   return 0;
+}
+
+void *
+memory_translate(ppcaddr_t address)
+{
+   return nullptr;
+}
+
+ppcaddr_t
+memory_untranslate(const void *pointer)
+{
    return 0;
 }
