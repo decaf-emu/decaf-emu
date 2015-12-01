@@ -200,6 +200,8 @@ executeInstrTest(uint32_t test_seed)
    case InstructionID::mtsrin:
       // Supervisory Instructions
       return true;
+   default:
+      break;
    }
 
    const InstructionData *data = gInstructionTable.find(instrId);

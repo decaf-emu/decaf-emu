@@ -761,6 +761,8 @@ DebugNet::handlePacket(DebugPacket *pak)
 
       break;
    }
+   default:
+      break;
    }
 }
 

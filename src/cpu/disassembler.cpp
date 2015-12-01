@@ -217,6 +217,8 @@ argumentToText(Disassembly::Argument &arg)
       return std::to_string(arg.constantUnsigned);
    case Disassembly::Argument::ConstantSigned:
       return std::to_string(arg.constantSigned);
+   case Disassembly::Argument::Invalid:
+      return std::string("???");
    }
 
    return std::string();

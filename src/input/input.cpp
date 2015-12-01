@@ -51,6 +51,8 @@ getButtonMapping(vpad::Channel channel, vpad::Core button)
       return config::input::vpad0::button_home;
    case vpad::Core::Sync:
       return config::input::vpad0::button_sync;
+   case vpad::Core::Invalid:
+      return 0;
    }
 
    return 0;

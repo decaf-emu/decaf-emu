@@ -331,6 +331,8 @@ decodeALU(DecodeState &state, cf::inst id, cf::Instruction &cf)
    case alu::inst::ALU_EXT:
       assert(false);
       break;
+   default:
+      break;
    }
 
    for (auto slot = 0u; slot <= cf.aluWord1.count; ) {
@@ -453,6 +455,8 @@ decodeALU(DecodeState &state, cf::inst id, cf::Instruction &cf)
                state.shader->code.emplace_back(push);
             }
             break;
+            default:
+               break;
             }
          }
 
@@ -516,6 +520,8 @@ decodeALU(DecodeState &state, cf::inst id, cf::Instruction &cf)
                state.shader->code.emplace_back(els);
             }
             break;
+            default:
+               break;
             }
          }
 
@@ -567,6 +573,8 @@ decodeALU(DecodeState &state, cf::inst id, cf::Instruction &cf)
       state.shader->code.emplace_back(pop2);
    }
    break;
+   default:
+      break;
    }
 
    return true;

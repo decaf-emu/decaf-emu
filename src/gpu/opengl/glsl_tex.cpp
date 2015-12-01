@@ -71,6 +71,7 @@ static bool translateSelect(GenerateState &state, latte::alu::Select::Select sel
    case latte::alu::Select::Mask:
    case latte::alu::Select::One:
    case latte::alu::Select::Zero:
+   case latte::alu::Select::Unknown:
       return false;
    }
 

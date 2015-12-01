@@ -122,6 +122,8 @@ GX2FSCalcNumTessALUInsts(GX2FetchShaderType::Value type, GX2TessellationMode::Va
 {
    if (mode == GX2TessellationMode::Adaptive) {
       switch (type) {
+      case GX2FetchShaderType::NoTessellation:
+         break;
       case GX2FetchShaderType::LineTessellation:
          return 11;
       case GX2FetchShaderType::TriangleTessellation:
@@ -357,6 +359,8 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 
       if (tessMode == GX2TessellationMode::Adaptive) {
          switch (type) {
+         case GX2FetchShaderType::NoTessellation:
+            break;
          case GX2FetchShaderType::LineTessellation:
             numGPRs = 3;
             break;
