@@ -238,14 +238,18 @@ LoadedModule *
 Loader::loadRPL(std::string name)
 {
    std::unique_ptr<LoadedModule> module;
+   std::string moduleName;
 
    // Ensure moduleName has an extension
    if (!ends_with(name, ".rpl") && !ends_with(name, ".rpx")) {
+      moduleName = name;
       name = name + ".rpl";
+   } else {
+      moduleName = name.substr(0, name.size() - 4);
    }
 
    // Check if we already have this module loaded
-   auto itr = mModules.find(name);
+   auto itr = mModules.find(moduleName);
 
    if (itr != mModules.end()) {
       return itr->second.get();
@@ -280,7 +284,7 @@ Loader::loadRPL(std::string name)
    } else {
       auto result = module.get();
       gLog->info("Loaded module {}", name);
-      mModules.emplace(name, std::move(module));
+      mModules.emplace(moduleName, std::move(module));
       return result;
    }
 }

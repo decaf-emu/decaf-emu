@@ -74,6 +74,7 @@ int
 OSDynLoad_Acquire(char const *name, be_ptr<LoadedModuleHandleData> *outHandle)
 {
    auto* module = gLoader.loadRPL(name);
+
    if (!module) {
       gLog->debug("OSDynLoad_Acquire {} failed", name);
       *outHandle = nullptr;
