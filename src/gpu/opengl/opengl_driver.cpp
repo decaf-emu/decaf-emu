@@ -879,19 +879,36 @@ unpackQuadList(uint32_t count, const IndexType *src, uint32_t offset)
    auto dst = &unpacked[0];
 
    // Unpack quad indices into triangle indices
-   for (auto i = 0u; i < count / 4; ++i) {
-      auto index_tl = *src++;
-      auto index_tr = *src++;
-      auto index_br = *src++;
-      auto index_bl = *src++;
+   if (src) {
+      for (auto i = 0u; i < count / 4; ++i) {
+         auto index_tl = *src++;
+         auto index_tr = *src++;
+         auto index_br = *src++;
+         auto index_bl = *src++;
 
-      *(dst++) = index_tl;
-      *(dst++) = index_tr;
-      *(dst++) = index_bl;
+         *(dst++) = index_tl;
+         *(dst++) = index_tr;
+         *(dst++) = index_bl;
 
-      *(dst++) = index_bl;
-      *(dst++) = index_tr;
-      *(dst++) = index_br;
+         *(dst++) = index_bl;
+         *(dst++) = index_tr;
+         *(dst++) = index_br;
+      }
+   } else {
+      auto index_tl = 1u;
+      auto index_tr = 0u;
+      auto index_br = 2u;
+      auto index_bl = 3u;
+
+      for (auto i = 0u; i < count / 4; ++i) {
+         *(dst++) = index_tl;
+         *(dst++) = index_tr;
+         *(dst++) = index_bl;
+
+         *(dst++) = index_bl;
+         *(dst++) = index_tr;
+         *(dst++) = index_br;
+      }
    }
 
    drawPrimitives2(gl::GL_TRIANGLES, tris, unpacked.data(), offset);
