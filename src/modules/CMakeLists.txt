@@ -100,6 +100,7 @@ set(HEADER_FILES
     coreinit/coreinit_debug.h
     coreinit/coreinit_device.h
     coreinit/coreinit_dynload.h
+    coreinit/coreinit_enum.h
     coreinit/coreinit_event.h
     coreinit/coreinit_exception.h
     coreinit/coreinit_expheap.h
@@ -118,7 +119,6 @@ set(HEADER_FILES
     coreinit/coreinit_queue.h
     coreinit/coreinit_rendezvous.h
     coreinit/coreinit_scheduler.h
-    coreinit/coreinit_sci.h
     coreinit/coreinit_semaphore.h
     coreinit/coreinit_shared.h
     coreinit/coreinit_spinlock.h

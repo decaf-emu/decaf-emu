@@ -1,17 +1,8 @@
 #pragma once
+#include "types.h"
+#include "coreinit_enum.h"
 #include "utils/be_val.h"
 #include "utils/virtual_ptr.h"
 
-namespace OSSharedDataType
-{
-enum Type
-{
-   FontChinese    = 0,
-   FontKorean     = 1,
-   FontStandard   = 2,
-   FontTaiwanese  = 3
-};
-}
-
 BOOL
-OSGetSharedData(OSSharedDataType::Type type, uint32_t, be_ptr<uint8_t> *addr, be_val<uint32_t> *size);
+OSGetSharedData(OSSharedDataType type, uint32_t, be_ptr<uint8_t> *addr, be_val<uint32_t> *size);

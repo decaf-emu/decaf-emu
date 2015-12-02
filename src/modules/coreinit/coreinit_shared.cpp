@@ -14,7 +14,7 @@ struct FontData
 FontData gFonts[4];
 
 BOOL
-OSGetSharedData(OSSharedDataType::Type type, uint32_t, be_ptr<uint8_t> *addr, be_val<uint32_t> *size)
+OSGetSharedData(OSSharedDataType type, uint32_t, be_ptr<uint8_t> *addr, be_val<uint32_t> *size)
 {
    switch (type) {
    case OSSharedDataType::FontChinese:

@@ -337,10 +337,10 @@
     <ClInclude Include="..\src\memory_translate.h" />
     <ClInclude Include="..\src\mem\mem.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_enum.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_lockedcache.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h" />
-    <ClInclude Include="..\src\modules\coreinit\coreinit_sci.h" />
     <ClInclude Include="..\src\modules\gameloader\gameloader.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_cbpool.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_clear.h" />

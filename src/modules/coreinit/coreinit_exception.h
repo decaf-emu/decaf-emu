@@ -1,32 +1,13 @@
 #pragma once
+#include "types.h"
+#include "coreinit_enum.h"
 #include "coreinit_thread.h"
 #include "utils/wfunc_ptr.h"
 
-// From WUP-P-ARKE
-enum class ExceptionType : uint32_t
-{
-   SystemReset = 0,
-   MachineCheck = 1,
-   DSI = 2,
-   ISI = 3,
-   ExternalInterrupt = 4,
-   Alignment = 5,
-   Program = 6,
-   FloatingPoint = 7,
-   Decrementer = 8,
-   SystemCall = 9,
-   Trace = 10,
-   PerformanceMonitor = 11,
-   Breakpoint = 12,
-   SystemInterrupt = 13,
-   ICI = 14,
-   Max = 15
-};
+using OSExceptionCallback = wfunc_ptr<BOOL, OSContext*>;
 
-using ExceptionCallback = wfunc_ptr<BOOL, OSContext*>;
+OSExceptionCallback
+OSSetExceptionCallback(OSExceptionType exceptionType, OSExceptionCallback callback);
 
-ExceptionCallback
-OSSetExceptionCallback(ExceptionType exceptionType, ExceptionCallback callback);
-
-ExceptionCallback
-OSSetExceptionCallbackEx(uint32_t unk1, ExceptionType exceptionType, ExceptionCallback callback);
+OSExceptionCallback
+OSSetExceptionCallbackEx(uint32_t unk1, OSExceptionType exceptionType, OSExceptionCallback callback);

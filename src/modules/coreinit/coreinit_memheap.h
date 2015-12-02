@@ -1,47 +1,18 @@
 #pragma once
+#include "types.h"
+#include "coreinit_enum.h"
 #include "coreinit_memlist.h"
 #include "coreinit_spinlock.h"
 #include "utils/structsize.h"
 #include "utils/wfunc_ptr.h"
 
-enum class BaseHeapType : uint32_t
-{
-   Min = 0,
-   MEM1 = 0,
-   MEM2 = 1,
-   FG = 8,
-   Max = 9,
-   Invalid = 10
-};
-
-enum class HeapMode : uint8_t
-{
-   FirstFree,
-   NearestSize
-};
-
-enum class HeapDirection : uint8_t
-{
-   FromTop,
-   FromBottom
-};
-
 static const uint32_t MEM_MAX_HEAP_TABLE = 0x20;
-
-enum class HeapType : uint32_t
-{
-   ExpandedHeap = 0x45585048,
-   FrameHeap = 0x46524D48,
-   UnitHeap = 0x554E5448,
-   UserHeap = 0x55535248,
-   BlockHeap = 0x424C4B48
-};
 
 #pragma pack(push, 1)
 
 struct CommonHeap
 {
-   be_val<HeapType> tag;
+   be_val<MEMiHeapTag> tag;
    MemoryLink link;
    MemoryList list;
    be_val<uint32_t> dataStart;
@@ -71,7 +42,7 @@ extern be_wfunc_ptr<void, void*>*
 pMEMFreeToDefaultHeap;
 
 void
-MEMiInitHeapHead(CommonHeap *heap, HeapType type, uint32_t dataStart, uint32_t dataEnd);
+MEMiInitHeapHead(CommonHeap *heap, MEMiHeapTag tag, uint32_t dataStart, uint32_t dataEnd);
 
 void
 MEMiFinaliseHeap(CommonHeap *heap);
@@ -82,14 +53,14 @@ MEMDumpHeap(CommonHeap *heap);
 CommonHeap *
 MEMFindContainHeap(void *block);
 
-BaseHeapType
+MEMBaseHeapType
 MEMGetArena(CommonHeap *heap);
 
 CommonHeap *
-MEMGetBaseHeapHandle(BaseHeapType arena);
+MEMGetBaseHeapHandle(MEMBaseHeapType type);
 
 CommonHeap *
-MEMSetBaseHeapHandle(BaseHeapType arena, CommonHeap *heap);
+MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap);
 
 char *
 OSStringFromSystem(const std::string &src);

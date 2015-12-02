@@ -1,4 +1,6 @@
 #pragma once
+#include "types.h"
+#include "coreinit_enum.h"
 #include "coreinit_thread.h"
 #include "coreinit_mutex.h"
 #include "utils/structsize.h"
@@ -41,15 +43,6 @@ CHECK_SIZE(OSMessageQueue, 0x3c);
 
 #pragma pack(pop)
 
-namespace MessageFlags
-{
-enum Flags : uint32_t
-{
-   Blocking     = 1 << 0,
-   HighPriority = 1 << 1,
-};
-}
-
 void
 OSInitMessageQueue(OSMessageQueue *queue, OSMessage *messages, int32_t size);
 
@@ -57,13 +50,13 @@ void
 OSInitMessageQueueEx(OSMessageQueue *queue, OSMessage *messages, int32_t size, const char *name);
 
 BOOL
-OSSendMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags);
+OSSendMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags);
 
 BOOL
-OSJamMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags);
+OSJamMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags);
 
 BOOL
-OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags);
+OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags);
 
 BOOL
 OSPeekMessage(OSMessageQueue *queue, OSMessage *message);

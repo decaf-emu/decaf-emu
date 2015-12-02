@@ -23,7 +23,7 @@ struct ExpandedHeapBlock
    uint32_t addr;
    uint32_t size;
    uint16_t group;
-   HeapDirection direction;
+   MEMExpHeapDirection direction;
    virtual_ptr<ExpandedHeapBlock> next;
    virtual_ptr<ExpandedHeapBlock> prev;
 };
@@ -34,7 +34,7 @@ struct ExpandedHeap : CommonHeap
    uint32_t bottom;
    uint32_t top;
    uint16_t group;
-   HeapMode mode;
+   MEMExpHeapMode mode;
    virtual_ptr<ExpandedHeapBlock> freeBlockList;
    virtual_ptr<ExpandedHeapBlock> usedBlockList;
 };
@@ -154,7 +154,7 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
    heap->size = size;
    heap->bottom = base;
    heap->top = base + size;
-   heap->mode = HeapMode::FirstFree;
+   heap->mode = MEMExpHeapMode::FirstFree;
    heap->group = 0;
    heap->usedBlockList = nullptr;
    heap->freeBlockList = make_virtual_ptr<ExpandedHeapBlock>(base + sizeof(ExpandedHeap));
@@ -164,7 +164,7 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
    heap->freeBlockList->prev = nullptr;
 
    // Setup common header
-   MEMiInitHeapHead(heap, HeapType::ExpandedHeap, heap->freeBlockList->addr, heap->freeBlockList->addr + heap->freeBlockList->size);
+   MEMiInitHeapHead(heap, MEMiHeapTag::ExpandedHeap, heap->freeBlockList->addr, heap->freeBlockList->addr + heap->freeBlockList->size);
    return heap;
 }
 
@@ -202,12 +202,12 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 {
    ScopedSpinLock lock(&heap->lock);
    virtual_ptr<ExpandedHeapBlock> freeBlock, usedBlock;
-   auto direction = HeapDirection::FromBottom;
+   auto direction = MEMExpHeapDirection::FromBottom;
    uint32_t base;
 
    if (alignment < 0) {
       alignment = -alignment;
-      direction = HeapDirection::FromTop;
+      direction = MEMExpHeapDirection::FromTop;
    }
 
    // Add size for block header and alignment
@@ -215,8 +215,8 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
    size += sizeof(ExpandedHeapBlock);
    size += alignment;
 
-   if (heap->mode == HeapMode::FirstFree) {
-      if (direction == HeapDirection::FromBottom) {
+   if (heap->mode == MEMExpHeapMode::FirstFree) {
+      if (direction == MEMExpHeapDirection::FromBottom) {
          // Find first block large enough from bottom of heap
          for (auto block = heap->freeBlockList; block; block = block->next) {
             if (block->size < size) {
@@ -226,7 +226,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
             freeBlock = block;
             break;
          }
-      } else if (direction == HeapDirection::FromTop) {
+      } else if (direction == MEMExpHeapDirection::FromTop) {
          // Find first block large enough from top of heap
          for (auto block = getTail(heap->freeBlockList); block; block = block->prev) {
             if (block->size < size) {
@@ -237,10 +237,10 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
             break;
          }
       }
-   } else if (heap->mode == HeapMode::NearestSize) {
+   } else if (heap->mode == MEMExpHeapMode::NearestSize) {
       uint32_t nearestSize = -1;
 
-      if (direction == HeapDirection::FromBottom) {
+      if (direction == MEMExpHeapDirection::FromBottom) {
          // Find block nearest in size from bottom of heap
          for (auto block = heap->freeBlockList; block; block = block->next) {
             if (block->size < size) {
@@ -252,7 +252,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
                freeBlock = block;
             }
          }
-      } else if (direction == HeapDirection::FromTop) {
+      } else if (direction == MEMExpHeapDirection::FromTop) {
          // Find block nearest in size from top of heap
          for (auto block = getTail(heap->freeBlockList); block; block = block->prev) {
             if (block->size < size) {
@@ -273,7 +273,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
       return nullptr;
    }
 
-   if (direction == HeapDirection::FromBottom) {
+   if (direction == MEMExpHeapDirection::FromBottom) {
       // Reduce freeblock size
       base = freeBlock->addr;
       freeBlock->size -= size;
@@ -292,7 +292,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
          freeBlock->size = freeSize;
          replaceBlock(heap->freeBlockList, old, freeBlock);
       }
-   } else if (direction == HeapDirection::FromTop) {
+   } else if (direction == MEMExpHeapDirection::FromTop) {
       // Reduce freeblock size
       freeBlock->size -= size;
       base = freeBlock->addr + freeBlock->size;
@@ -362,8 +362,8 @@ MEMFreeToExpHeap(ExpandedHeap *heap, uint8_t *address)
    }
 }
 
-HeapMode
-MEMSetAllocModeForExpHeap(ExpandedHeap *heap, HeapMode mode)
+MEMExpHeapMode
+MEMSetAllocModeForExpHeap(ExpandedHeap *heap, MEMExpHeapMode mode)
 {
    ScopedSpinLock lock(&heap->lock);
    auto previous = heap->mode;
@@ -371,7 +371,7 @@ MEMSetAllocModeForExpHeap(ExpandedHeap *heap, HeapMode mode)
    return previous;
 }
 
-HeapMode
+MEMExpHeapMode
 MEMGetAllocModeForExpHeap(ExpandedHeap *heap)
 {
    ScopedSpinLock lock(&heap->lock);
@@ -553,7 +553,7 @@ MEMGetGroupIDForMBlockExpHeap(uint8_t *addr)
    return block->group;
 }
 
-HeapDirection
+MEMExpHeapDirection
 MEMGetAllocDirForMBlockExpHeap(uint8_t *addr)
 {
    auto block = reinterpret_cast<ExpandedHeapBlock *>(addr - sizeof(ExpandedHeapBlock));

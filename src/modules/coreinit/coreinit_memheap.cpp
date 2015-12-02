@@ -19,8 +19,8 @@ pMEMAllocFromDefaultHeapEx;
 be_wfunc_ptr<void, void*>*
 pMEMFreeToDefaultHeap;
 
-static CommonHeap *
-gMemArenas[static_cast<size_t>(BaseHeapType::Max)];
+static std::array<CommonHeap *, MEMBaseHeapType::Max>
+gMemArenas;
 
 static ExpandedHeap *
 gSystemHeap = nullptr;
@@ -94,9 +94,9 @@ findHeapContainingBlock(MemoryList *list, void *block)
 }
 
 void
-MEMiInitHeapHead(CommonHeap *heap, HeapType type, uint32_t dataStart, uint32_t dataEnd)
+MEMiInitHeapHead(CommonHeap *heap, MEMiHeapTag tag, uint32_t dataStart, uint32_t dataEnd)
 {
-   heap->tag = type;
+   heap->tag = tag;
    MEMInitList(&heap->list, offsetof(CommonHeap, link));
    heap->dataStart = dataStart;
    heap->dataEnd = dataEnd;
@@ -120,13 +120,13 @@ void
 MEMDumpHeap(CommonHeap *heap)
 {
    switch (heap->tag) {
-   case HeapType::ExpandedHeap:
+   case MEMiHeapTag::ExpandedHeap:
       MEMiDumpExpHeap(reinterpret_cast<ExpandedHeap*>(heap));
       break;
-   case HeapType::FrameHeap:
-   case HeapType::UnitHeap:
-   case HeapType::UserHeap:
-   case HeapType::BlockHeap:
+   case MEMiHeapTag::FrameHeap:
+   case MEMiHeapTag::UnitHeap:
+   case MEMiHeapTag::UserHeap:
+   case MEMiHeapTag::BlockHeap:
       gLog->info("Unimplemented MEMDumpHeap type");
    }
 }
@@ -141,34 +141,34 @@ MEMFindContainHeap(void *block)
    return nullptr;
 }
 
-BaseHeapType
+MEMBaseHeapType
 MEMGetArena(CommonHeap *heap)
 {
-   for (auto i = 0u; i < static_cast<size_t>(BaseHeapType::Max); ++i) {
+   for (auto i = 0u; i < gMemArenas.size(); ++i) {
       if (gMemArenas[i] == heap) {
-         return static_cast<BaseHeapType>(i);
+         return static_cast<MEMBaseHeapType>(i);
       }
    }
 
-   return BaseHeapType::Invalid;
+   return MEMBaseHeapType::Invalid;
 }
 
 CommonHeap *
-MEMGetBaseHeapHandle(BaseHeapType type)
+MEMGetBaseHeapHandle(MEMBaseHeapType type)
 {
-   if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
-      return gMemArenas[static_cast<size_t>(type)];
+   if (type < gMemArenas.size()) {
+      return gMemArenas[type];
    } else {
       return nullptr;
    }
 }
 
 CommonHeap *
-MEMSetBaseHeapHandle(BaseHeapType type, CommonHeap *heap)
+MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap)
 {
-   if (type >= BaseHeapType::Min && type < BaseHeapType::Max) {
-      auto previous = gMemArenas[static_cast<size_t>(type)];
-      gMemArenas[static_cast<size_t>(type)] = heap;
+   if (type < gMemArenas.size()) {
+      auto previous = gMemArenas[type];
+      gMemArenas[type] = heap;
       return previous;
    } else {
       return nullptr;
@@ -178,21 +178,21 @@ MEMSetBaseHeapHandle(BaseHeapType type, CommonHeap *heap)
 static void *
 sMEMAllocFromDefaultHeap(uint32_t size)
 {
-   auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
    return MEMAllocFromExpHeap(reinterpret_cast<ExpandedHeap*>(heap), size);
 }
 
 static void *
 sMEMAllocFromDefaultHeapEx(uint32_t size, int alignment)
 {
-   auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
    return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
 }
 
 static void
 sMEMFreeToDefaultHeap(uint8_t *block)
 {
-   auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
    return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
 }
 
@@ -215,36 +215,37 @@ CoreInitDefaultHeap()
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
    mem2 = MEMCreateExpHeap(make_virtual_ptr<ExpandedHeap>(addr), size);
-   MEMSetBaseHeapHandle(BaseHeapType::MEM2, reinterpret_cast<CommonHeap*>(mem2));
+   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, reinterpret_cast<CommonHeap*>(mem2));
 
    // Create frame heap for MEM1
    OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
    mem1 = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
-   MEMSetBaseHeapHandle(BaseHeapType::MEM1, reinterpret_cast<CommonHeap*>(mem1));
+   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, reinterpret_cast<CommonHeap*>(mem1));
 
    // Create frame heap for Foreground
    OSGetForegroundBucketFreeArea(&addr, &size);
    fg = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
-   MEMSetBaseHeapHandle(BaseHeapType::FG, reinterpret_cast<CommonHeap*>(fg));
+   MEMSetBaseHeapHandle(MEMBaseHeapType::FG, reinterpret_cast<CommonHeap*>(fg));
 }
 
 void
 CoreFreeDefaultHeap()
 {
    // Delete all base heaps
-   for (auto i = 0u; i < static_cast<size_t>(BaseHeapType::Max); ++i) {
+   for (auto i = 0u; i < MEMBaseHeapType::Max; ++i) {
       if (gMemArenas[i]) {
          auto heap = reinterpret_cast<CommonHeap*>(gMemArenas[i]);
+
          switch (heap->tag) {
-         case HeapType::ExpandedHeap:
+         case MEMiHeapTag::ExpandedHeap:
             MEMDestroyExpHeap(reinterpret_cast<ExpandedHeap*>(heap));
             break;
-         case HeapType::FrameHeap:
+         case MEMiHeapTag::FrameHeap:
             MEMDestroyFrmHeap(reinterpret_cast<FrameHeap*>(heap));
             break;
-         case HeapType::UnitHeap:
-         case HeapType::UserHeap:
-         case HeapType::BlockHeap:
+         case MEMiHeapTag::UnitHeap:
+         case MEMiHeapTag::UserHeap:
+         case MEMiHeapTag::BlockHeap:
          default:
             assert(false);
          }
@@ -277,7 +278,7 @@ CoreFreeDefaultHeap()
 void
 CoreInit::registerMembaseFunctions()
 {
-   memset(gMemArenas, 0, sizeof(CommonHeap *) * static_cast<size_t>(BaseHeapType::Max));
+   gMemArenas.fill(nullptr);
 
    RegisterKernelFunction(MEMGetBaseHeapHandle);
    RegisterKernelFunction(MEMSetBaseHeapHandle);

@@ -8,13 +8,13 @@
 const uint32_t OSEvent::Tag;
 
 void
-OSInitEvent(OSEvent *event, bool value, EventMode mode)
+OSInitEvent(OSEvent *event, bool value, OSEventMode mode)
 {
    OSInitEventEx(event, value, mode, nullptr);
 }
 
 void
-OSInitEventEx(OSEvent *event, bool value, EventMode mode, char *name)
+OSInitEventEx(OSEvent *event, bool value, OSEventMode mode, char *name)
 {
    event->tag = OSEvent::Tag;
    event->mode = mode;
@@ -40,7 +40,7 @@ OSSignalEvent(OSEvent *event)
    event->value = TRUE;
 
    if (!OSIsThreadQueueEmpty(&event->queue)) {
-      if (event->mode == EventMode::AutoReset) {
+      if (event->mode == OSEventMode::AutoReset) {
          // Reset value
          event->value = FALSE;
 
@@ -75,7 +75,7 @@ OSSignalEventAll(OSEvent *event)
    event->value = TRUE;
 
    if (!OSIsThreadQueueEmpty(&event->queue)) {
-      if (event->mode == EventMode::AutoReset) {
+      if (event->mode == OSEventMode::AutoReset) {
          // Reset event
          event->value = FALSE;
       }
@@ -111,7 +111,7 @@ OSWaitEvent(OSEvent *event)
    if (event->value) {
       // Event is already set
 
-      if (event->mode == EventMode::AutoReset) {
+      if (event->mode == OSEventMode::AutoReset) {
          // Reset event
          event->value = FALSE;
       }
@@ -154,7 +154,7 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
 
    // Check if event is already set
    if (event->value) {
-      if (event->mode == EventMode::AutoReset) {
+      if (event->mode == OSEventMode::AutoReset) {
          // Reset event
          event->value = FALSE;
       }

@@ -31,13 +31,13 @@ OSInitMessageQueueEx(OSMessageQueue *queue, OSMessage *messages, int32_t size, c
 }
 
 BOOL
-OSSendMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags)
+OSSendMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
 {
    OSLockScheduler();
    assert(queue && queue->tag == OSMessageQueue::Tag);
    assert(message);
 
-   if (!(flags & MessageFlags::Blocking) && queue->used == queue->size) {
+   if (!(flags & OSMessageFlags::Blocking) && queue->used == queue->size) {
       // Do not block waiting for space to insert message
       OSUnlockScheduler();
       return FALSE;
@@ -64,13 +64,13 @@ OSSendMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags fla
 }
 
 BOOL
-OSJamMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags)
+OSJamMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
 {
    OSLockScheduler();
    assert(queue && queue->tag == OSMessageQueue::Tag);
    assert(message);
 
-   if (!(flags & MessageFlags::Blocking) && queue->used == queue->size) {
+   if (!(flags & OSMessageFlags::Blocking) && queue->used == queue->size) {
       // Do not block waiting for space to insert message
       OSUnlockScheduler();
       return FALSE;
@@ -102,13 +102,13 @@ OSJamMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flag
 }
 
 BOOL
-OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags flags)
+OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
 {
    OSLockScheduler();
    assert(queue && queue->tag == OSMessageQueue::Tag);
    assert(message);
 
-   if (!(flags & MessageFlags::Blocking) && queue->used == 0) {
+   if (!(flags & OSMessageFlags::Blocking) && queue->used == 0) {
       // Do not block waiting for a message to arrive
       OSUnlockScheduler();
       return FALSE;
@@ -119,7 +119,7 @@ OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, MessageFlags::Flags 
       OSSleepThreadNoLock(&queue->recvQueue);
       OSRescheduleNoLock();
    }
-   
+
    // Copy into message array
    auto src = static_cast<OSMessage*>(queue->messages) + queue->first;
    memcpy(message, src, sizeof(OSMessage));

@@ -57,15 +57,15 @@ GameLoaderRun()
       };
 
       HeapHandles *wiiHandles = OSAllocFromSystem<HeapHandles>();
-      wiiHandles->mem1Heap = MEMGetBaseHeapHandle(BaseHeapType::MEM1);
-      wiiHandles->fgHeap = MEMGetBaseHeapHandle(BaseHeapType::FG);
-      wiiHandles->mem2Heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
+      wiiHandles->mem1Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM1);
+      wiiHandles->fgHeap = MEMGetBaseHeapHandle(MEMBaseHeapType::FG);
+      wiiHandles->mem2Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
 
       userPreinit(&wiiHandles->mem1Heap, &wiiHandles->fgHeap, &wiiHandles->mem2Heap);
 
-      MEMSetBaseHeapHandle(BaseHeapType::MEM1, wiiHandles->mem1Heap);
-      MEMSetBaseHeapHandle(BaseHeapType::FG, wiiHandles->fgHeap);
-      MEMSetBaseHeapHandle(BaseHeapType::MEM2, wiiHandles->mem2Heap);
+      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, wiiHandles->mem1Heap);
+      MEMSetBaseHeapHandle(MEMBaseHeapType::FG, wiiHandles->fgHeap);
+      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, wiiHandles->mem2Heap);
       OSFreeToSystem(wiiHandles);
    }
 

@@ -119,6 +119,9 @@ GX2_ENUM_WITH_RANGE(GX2BlendCombineMode, uint32_t, 0, 4)
 GX2_ENUM_END
 
 GX2_ENUM_WITH_RANGE(GX2BufferingMode, uint32_t, 1, 4)
+   GX2_ENUM_VALUE(Single, 1)
+   GX2_ENUM_VALUE(Double, 2)
+   GX2_ENUM_VALUE(Triple, 3)
 GX2_ENUM_END
 
 GX2_ENUM_WITH_RANGE(GX2ChannelMask, uint32_t, 0, 15)
@@ -248,6 +251,8 @@ GX2_ENUM_WITH_RANGE(GX2RenderTarget, uint32_t, 0, 7)
 GX2_ENUM_END
 
 GX2_ENUM_WITH_RANGE(GX2RoundingMode, uint32_t, 0, 1)
+   GX2_ENUM_VALUE(RoundToEven, 0)
+   GX2_ENUM_VALUE(Truncate, 1)
 GX2_ENUM_END
 
 GX2_ENUM_WITH_RANGE(GX2ScanTarget, uint32_t, 1, 8)
@@ -386,6 +391,7 @@ GX2_ENUM_WITH_RANGE(GX2TexMipFilterMode, uint32_t, 0, 2)
 GX2_ENUM_END
 
 GX2_ENUM_WITH_RANGE(GX2TexMipPerfMode, uint32_t, 0, 7)
+   GX2_ENUM_VALUE(Disable, 0)
 GX2_ENUM_END
 
 GX2_ENUM_WITH_RANGE(GX2TexXYFilterMode, uint32_t, 0, 1)
@@ -398,6 +404,9 @@ GX2_ENUM_WITH_RANGE(GX2TexAnisoRatio, uint32_t, 0, 4)
 GX2_ENUM_END
 
 GX2_ENUM_WITH_RANGE(GX2TexZFilterMode, uint32_t, 0, 2)
+   GX2_ENUM_VALUE(None,    0)
+   GX2_ENUM_VALUE(Point,   1)
+   GX2_ENUM_VALUE(Linear,  2)
 GX2_ENUM_END
 
 GX2_ENUM_WITH_RANGE(GX2TexZPerfMode, uint32_t, 0, 3)
@@ -464,4 +473,4 @@ GX2_ENUM_END
 #undef GX2_ENUM_END
 #undef GX2_ENUM_VALUE
 
-#endif
+#endif // ifdef GX2_ENUM_H

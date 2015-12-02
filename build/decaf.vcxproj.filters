@@ -1127,9 +1127,6 @@
     <ClInclude Include="..\src\utils\bit_cast.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\modules\coreinit\coreinit_sci.h">
-      <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
@@ -1356,6 +1353,9 @@
       <Filter>Header Files\filesystem</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_lockedcache.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_enum.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>

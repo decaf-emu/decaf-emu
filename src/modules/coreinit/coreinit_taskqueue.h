@@ -1,6 +1,7 @@
 #pragma once
-#include <types.h>
+#include "types.h"
 #include "coreinit_core.h"
+#include "coreinit_enum.h"
 #include "coreinit_spinlock.h"
 #include "coreinit_time.h"
 #include "utils/be_val.h"
@@ -13,35 +14,12 @@ struct MPTaskQueue;
 
 #pragma pack(push, 1)
 
-namespace MPTaskQueueState
-{
-enum Value : uint32_t
-{
-   Initialised = 1 << 0,
-   Ready = 1 << 1,
-   Stopping = 1 << 2,
-   Stopped = 1 << 3,
-   Finished = 1 << 4,
-};
-}
-
-namespace MPTaskState
-{
-enum Value : uint32_t
-{
-   Initialised = 1 << 0,
-   Ready = 1 << 1,
-   Running = 1 << 2,
-   Finished = 1 << 3,
-};
-}
-
 using MPTaskFunc = wfunc_ptr<uint32_t, uint32_t, uint32_t>;
 using be_MPTaskFunc = be_wfunc_ptr<uint32_t, uint32_t, uint32_t>;
 
 struct MPTaskInfo
 {
-   be_val<MPTaskState::Value> state;
+   be_val<MPTaskState> state;
    be_val<uint32_t> result;
    be_val<uint32_t> coreID;
    be_val<OSTime> duration;
@@ -56,7 +34,7 @@ struct MPTask
 {
    be_ptr<MPTask> self;
    be_ptr<MPTaskQueue> queue;
-   be_volatile<MPTaskState::Value> state;
+   be_volatile<MPTaskState> state;
    be_MPTaskFunc func;
    be_val<uint32_t> userArg1;
    be_val<uint32_t> userArg2;
@@ -79,7 +57,7 @@ CHECK_SIZE(MPTask, 0x2C);
 
 struct MPTaskQueueInfo
 {
-   be_val<MPTaskQueueState::Value> state;
+   be_val<MPTaskQueueState> state;
    be_val<uint32_t> tasks;
    be_val<uint32_t> tasksReady;
    be_val<uint32_t> tasksRunning;
@@ -95,7 +73,7 @@ CHECK_SIZE(MPTaskQueueInfo, 0x14);
 struct MPTaskQueue
 {
    be_ptr<MPTaskQueue> self;
-   be_volatile<MPTaskQueueState::Value> state;
+   be_volatile<MPTaskQueueState> state;
    be_val<uint32_t> tasks;
    be_val<uint32_t> tasksReady;
    be_val<uint32_t> tasksRunning;
@@ -160,11 +138,11 @@ MPDequeTasks(MPTaskQueue *queue,
 
 BOOL
 MPWaitTaskQ(MPTaskQueue *queue,
-            MPTaskQueueState::Value mask);
+            MPTaskQueueState mask);
 
 BOOL
 MPWaitTaskQWithTimeout(MPTaskQueue *queue,
-                       MPTaskQueueState::Value wmask,
+                       MPTaskQueueState wmask,
                        OSTime timeout);
 
 BOOL

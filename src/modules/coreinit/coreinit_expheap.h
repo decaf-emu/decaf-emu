@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "coreinit_enum.h"
 #include "coreinit_memheap.h"
 
 struct ExpandedHeap;
@@ -25,10 +26,10 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment);
 void
 MEMFreeToExpHeap(ExpandedHeap *heap, uint8_t *block);
 
-HeapMode
-MEMSetAllocModeForExpHeap(ExpandedHeap *heap, HeapMode mode);
+MEMExpHeapMode
+MEMSetAllocModeForExpHeap(ExpandedHeap *heap, MEMExpHeapMode mode);
 
-HeapMode
+MEMExpHeapMode
 MEMGetAllocModeForExpHeap(ExpandedHeap *heap);
 
 uint32_t
@@ -58,5 +59,5 @@ MEMGetSizeForMBlockExpHeap(uint8_t *addr);
 uint16_t
 MEMGetGroupIDForMBlockExpHeap(uint8_t *addr);
 
-HeapDirection
+MEMExpHeapDirection
 MEMGetAllocDirForMBlockExpHeap(uint8_t *addr);

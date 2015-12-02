@@ -200,7 +200,7 @@ MPDequeTasks(MPTaskQueue *queue,
 
 // Busy wait until state mask matches mask (ewwww)
 BOOL
-MPWaitTaskQ(MPTaskQueue *queue, MPTaskQueueState::Value mask)
+MPWaitTaskQ(MPTaskQueue *queue, MPTaskQueueState mask)
 {
    while ((queue->state & mask) == 0);
    return TRUE;
@@ -208,7 +208,7 @@ MPWaitTaskQ(MPTaskQueue *queue, MPTaskQueueState::Value mask)
 
 
 BOOL
-MPWaitTaskQWithTimeout(MPTaskQueue *queue, MPTaskQueueState::Value mask, OSTime timeout)
+MPWaitTaskQWithTimeout(MPTaskQueue *queue, MPTaskQueueState mask, OSTime timeout)
 {
    auto start = OSGetTime();
    auto end = start + timeout;

@@ -1,6 +1,7 @@
 #pragma once
+#include "types.h"
+#include "coreinit_enum.h"
 #include "coreinit_ios.h"
-#include "coreinit_sci.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 
@@ -9,9 +10,9 @@
 struct MCPSysProdSettings
 {
    UNKNOWN(3);
-   be_val<SCIRegion::Region> platformRegion;
+   be_val<SCIRegion> platformRegion;
    UNKNOWN(0x7);
-   be_val<SCIRegion::Region> gameRegion;
+   be_val<SCIRegion> gameRegion;
    UNKNOWN(0x3A);
 };
 CHECK_OFFSET(MCPSysProdSettings, 0x03, platformRegion);

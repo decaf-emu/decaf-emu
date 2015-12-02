@@ -1,17 +1,10 @@
 #pragma once
+#include "types.h"
+#include "coreinit_enum.h"
 #include "coreinit_ios.h"
 #include "utils/structsize.h"
 
 #pragma pack(push, 1)
-
-namespace UCDataType
-{
-enum DataType : uint32_t
-{
-   Uint8 = 1,
-   Uint32 = 3,
-};
-}
 
 struct UCSysConfig
 {

@@ -1,5 +1,4 @@
 #include "coreinit.h"
-#include "coreinit_sci.h"
 #include "coreinit_userconfig.h"
 
 static const IOHandle

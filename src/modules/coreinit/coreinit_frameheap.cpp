@@ -50,7 +50,7 @@ MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags)
    heap->state->previous = nullptr;
 
    // Setup common header
-   MEMiInitHeapHead(heap, HeapType::FrameHeap, heap->bottom, heap->top);
+   MEMiInitHeapHead(heap, MEMiHeapTag::FrameHeap, heap->bottom, heap->top);
    return heap;
 }
 
@@ -72,12 +72,12 @@ void *
 MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment)
 {
    ScopedSpinLock lock(&heap->lock);
-   auto direction = HeapDirection::FromBottom;
+   auto fromBottom = true;
    auto offset = 0u;
 
    if (alignment < 0) {
       alignment = -alignment;
-      direction = HeapDirection::FromTop;
+      fromBottom = false;
    }
 
    // Align size
@@ -89,10 +89,10 @@ MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment)
    }
 
    // Allocate
-   if (direction == HeapDirection::FromBottom) {
+   if (fromBottom) {
       offset = heap->state->bottom;
       heap->state->bottom += size;
-   } else if (direction == HeapDirection::FromTop) {
+   } else {
       heap->state->top -= size;
       offset = heap->state->top;
    }
@@ -103,11 +103,11 @@ MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment)
 }
 
 void
-MEMFreeToFrmHeap(FrameHeap *heap, FrameHeapFreeMode::Flags mode)
+MEMFreeToFrmHeap(FrameHeap *heap, MEMFrameHeapFreeMode mode)
 {
    ScopedSpinLock lock(&heap->lock);
 
-   if (mode & FrameHeapFreeMode::Top) {
+   if (mode & MEMFrameHeapFreeMode::Top) {
       if (heap->state->previous) {
          heap->state->top = heap->state->previous->top;
       } else {
@@ -115,7 +115,7 @@ MEMFreeToFrmHeap(FrameHeap *heap, FrameHeapFreeMode::Flags mode)
       }
    }
 
-   if (mode & FrameHeapFreeMode::Bottom) {
+   if (mode & MEMFrameHeapFreeMode::Bottom) {
       if (heap->state->previous) {
          heap->state->bottom = heap->state->previous->bottom;
       } else {

@@ -1,17 +1,17 @@
 #include "coreinit.h"
 #include "coreinit_exception.h"
 
-ExceptionCallback
-gExceptionCallbacks[static_cast<size_t>(ExceptionType::Max)];
+OSExceptionCallback
+gExceptionCallbacks[OSExceptionType::Max];
 
-ExceptionCallback
-OSSetExceptionCallback(ExceptionType exceptionType, ExceptionCallback callback)
+OSExceptionCallback
+OSSetExceptionCallback(OSExceptionType exceptionType, OSExceptionCallback callback)
 {
    return OSSetExceptionCallbackEx(1, exceptionType, callback);
 }
 
-ExceptionCallback
-OSSetExceptionCallbackEx(uint32_t unk1, ExceptionType exceptionType, ExceptionCallback callback)
+OSExceptionCallback
+OSSetExceptionCallbackEx(uint32_t unk1, OSExceptionType exceptionType, OSExceptionCallback callback)
 {
    auto index = static_cast<size_t>(exceptionType);
    auto previous = gExceptionCallbacks[index];

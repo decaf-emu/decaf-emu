@@ -1,16 +1,7 @@
 #pragma once
-#include "coreinit_memory.h"
 #include "types.h"
-
-namespace FrameHeapFreeMode
-{
-enum Flags
-{
-   Bottom = 1 << 0,
-   Top = 1 << 1,
-   All = Bottom | Top
-};
-}
+#include "coreinit_enum.h"
+#include "coreinit_memory.h"
 
 struct FrameHeap;
 
@@ -30,7 +21,7 @@ void *
 MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment);
 
 void
-MEMFreeToFrmHeap(FrameHeap *heap, FrameHeapFreeMode::Flags mode);
+MEMFreeToFrmHeap(FrameHeap *heap, MEMFrameHeapFreeMode mode);
 
 BOOL
 MEMRecordStateForFrmHeap(FrameHeap *heap, uint32_t tag);

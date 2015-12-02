@@ -1,4 +1,6 @@
 #pragma once
+#include "types.h"
+#include "coreinit_enum.h"
 #include "coreinit_threadqueue.h"
 #include "coreinit_time.h"
 #include "utils/be_val.h"
@@ -12,16 +14,6 @@ struct OSAlarm;
 struct OSContext;
 using AlarmCallback = wfunc_ptr<void, OSAlarm *, OSContext *>;
 using be_AlarmCallback = be_wfunc_ptr<void, OSAlarm *, OSContext *>;
-
-namespace OSAlarmState
-{
-enum OSAlarmState : uint32_t
-{
-   None,
-   Set,
-   Cancelled
-};
-}
 
 struct OSAlarmQueue
 {
@@ -63,7 +55,7 @@ struct OSAlarm
    be_val<OSTime> period;
    be_val<OSTime> tbrStart;
    be_ptr<void> userData;
-   be_val<uint32_t> state;
+   be_val<OSAlarmState> state;
    OSThreadQueue threadQueue;
    be_ptr<OSAlarmQueue> alarmQueue;
    be_ptr<OSContext> context;

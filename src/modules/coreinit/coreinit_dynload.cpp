@@ -20,7 +20,7 @@ pOSDynLoad_MemFree;
 static int
 MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 {
-   auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
    auto memory = MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
    *outPtr = memory_untranslate(memory);
    return 0;
@@ -29,7 +29,7 @@ MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 static void
 MEM_DynLoad_DefaultFree(uint8_t *addr)
 {
-   auto heap = MEMGetBaseHeapHandle(BaseHeapType::MEM2);
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
    MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), addr);
 }
 
