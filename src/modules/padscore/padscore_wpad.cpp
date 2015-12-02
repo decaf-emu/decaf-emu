@@ -22,10 +22,18 @@ WPADEnableURCC(BOOL enable)
 {
 }
 
+WPADError::Value
+WPADProbe(WPADChan::Chan chan, be_val<WPADControllerType::Value> *type)
+{
+   *type = WPADControllerType::NoController;
+   return WPADError::NoController;
+}
+
 void
 PadScore::registerWPADFunctions()
 {
    RegisterKernelFunction(WPADInit);
    RegisterKernelFunction(WPADGetStatus);
    RegisterKernelFunction(WPADEnableURCC);
+   RegisterKernelFunction(WPADProbe);
 }

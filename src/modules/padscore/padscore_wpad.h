@@ -12,6 +12,17 @@ enum Chan : uint32_t
 };
 }
 
+namespace WPADControllerType
+{
+enum Value : uint32_t
+{
+   Wiimote = 0,
+   Nunchuk = 1,
+   Classic = 2,
+   NoController = 253,
+};
+}
+
 namespace WPADMotorCommand
 {
 enum Command : uint32_t
@@ -32,6 +43,15 @@ enum Status : uint32_t
 };
 }
 
+namespace WPADError
+{
+enum Value : uint32_t
+{
+   None = 0,
+   NoController = -1,
+};
+}
+
 void
 WPADInit();
 
@@ -40,3 +60,6 @@ WPADGetStatus();
 
 void
 WPADEnableURCC(BOOL enable);
+
+WPADError::Value
+WPADProbe(WPADChan::Chan chan, be_val<WPADControllerType::Value> *type);
