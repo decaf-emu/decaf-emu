@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <map>
 #include <vector>
+#include <mutex>
 #include "utils/align.h"
 
 class TeenyHeap
@@ -24,6 +25,7 @@ public:
    void *
    alloc(size_t size, size_t alignment = 4)
    {
+      std::unique_lock<std::mutex> lock(mMutex);
       // Pick first free block to allocate from
       auto itr = mFreeBlocks.begin();
       intptr_t alignOffset = 0;
@@ -67,6 +69,7 @@ public:
    void *
    realloc(void *ptr, size_t size, size_t alignment = 4)
    {
+      std::unique_lock<std::mutex> lock(mMutex);
       auto ucptr = static_cast<uint8_t*>(ptr);
       auto itr = mAllocSizes.find(ucptr);
       assert(itr != mAllocSizes.end());
@@ -95,6 +98,7 @@ public:
    void
    free(void *ptr)
    {
+      std::unique_lock<std::mutex> lock(mMutex);
       auto ucptr = static_cast<uint8_t*>(ptr);
       auto itr = mAllocSizes.find(ucptr);
       assert(itr != mAllocSizes.end());
@@ -134,4 +138,5 @@ protected:
    size_t mSize;
    std::map<uint8_t*, size_t> mAllocSizes;
    std::vector<FreeBlock> mFreeBlocks;
+   std::mutex mMutex;
 };
