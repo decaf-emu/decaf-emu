@@ -178,7 +178,9 @@ OSTriggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
    alarm->context = context;
 
    if (alarm->callback && alarm->state != OSAlarmState::Cancelled) {
+      OSUninterruptibleSpinLock_Release(gAlarmLock);
       alarm->callback(alarm, context);
+      OSUninterruptibleSpinLock_Acquire(gAlarmLock);
    }
 
    OSWakeupThread(&alarm->threadQueue);
