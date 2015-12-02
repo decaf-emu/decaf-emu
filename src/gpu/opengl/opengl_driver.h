@@ -34,7 +34,7 @@ public:
       gLog->critical(message);
    }
 
-   virtual char const* what() const
+   virtual char const* what() const noexcept
    {
       return mWhat.c_str();
    }
