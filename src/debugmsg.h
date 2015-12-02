@@ -3,10 +3,9 @@
 template<typename Type>
 class MessageClass
 {
-protected:
+public:
    typedef Type IdType;
 
-public:
    virtual ~MessageClass() = default;
 
    virtual Type type() const = 0;
