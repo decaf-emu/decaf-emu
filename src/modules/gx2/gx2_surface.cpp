@@ -210,3 +210,16 @@ GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
    depthBuffer->regs.db_depth_info = db_depth_info;
    depthBuffer->regs.db_depth_size = db_depth_size;
 }
+
+uint32_t
+GX2GetSurfaceSwizzle(GX2Surface *surface)
+{
+   return (surface->swizzle >> 8) & 0xff;
+}
+
+void
+GX2SetSurfaceSwizzle(GX2Surface *surface, uint32_t swizzle)
+{
+   surface->swizzle &= 0xFFFF00FF;
+   surface->swizzle |= swizzle << 8;
+}
