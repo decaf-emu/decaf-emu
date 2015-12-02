@@ -281,7 +281,6 @@ executeInstrTest(uint32_t test_seed)
          case Field::sh: // Shift Registers
          case Field::mb:
          case Field::me:
-            break;
             setFieldValue(instr, i, test_rand());
             break;
          case Field::d: // Memory Delta...
