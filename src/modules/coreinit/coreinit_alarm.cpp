@@ -145,21 +145,30 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data)
 BOOL
 OSWaitAlarm(OSAlarm *alarm)
 {
-   OSAcquireSpinLock(gAlarmLock);
+   OSUninterruptibleSpinLock_Acquire(gAlarmLock);
+   BOOL result = FALSE;
    assert(alarm);
    assert(alarm->tag == OSAlarm::Tag);
 
    if (alarm->state != OSAlarmState::Set) {
-      OSReleaseSpinLock(gAlarmLock);
+      OSUninterruptibleSpinLock_Release(gAlarmLock);
       return FALSE;
    }
 
    OSLockScheduler();
    OSSleepThreadNoLock(&alarm->threadQueue);
-   OSReleaseSpinLock(gAlarmLock);
+   OSUninterruptibleSpinLock_Release(gAlarmLock);
    OSRescheduleNoLock();
+
+   OSUninterruptibleSpinLock_Acquire(gAlarmLock);
+
+   if (alarm->state != OSAlarmState::Cancelled) {
+      result = TRUE;
+   }
+
+   OSUninterruptibleSpinLock_Release(gAlarmLock);
    OSUnlockScheduler();
-   return TRUE;
+   return result;
 }
 
 static bool
