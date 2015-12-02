@@ -140,14 +140,10 @@ struct EventAlarmData
 void
 EventAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
-   OSLockScheduler();
-
    // Wakeup the thread waiting on this alarm
    auto data = reinterpret_cast<EventAlarmData*>(OSGetAlarmUserData(alarm));
    data->timeout = TRUE;
    OSWakeupOneThreadNoLock(data->thread);
-
-   OSUnlockScheduler();
 }
 
 BOOL

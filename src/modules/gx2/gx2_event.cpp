@@ -144,11 +144,13 @@ void
 vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
    gLastVsync.store(OSGetSystemTime(), std::memory_order_release);
-   OSWakeupThread(gVsyncThreadQueue);
+   OSWakeupThreadNoLock(gVsyncThreadQueue);
    auto callback = gEventCallbacks[GX2EventType::Vsync];
 
    if (callback.func) {
+      OSUnlockScheduler();
       callback.func(GX2EventType::Vsync, callback.data);
+      OSLockScheduler();
    }
 }
 

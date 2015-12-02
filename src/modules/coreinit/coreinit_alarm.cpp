@@ -146,6 +146,7 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data)
 BOOL
 OSWaitAlarm(OSAlarm *alarm)
 {
+   OSLockScheduler();
    OSUninterruptibleSpinLock_Acquire(gAlarmLock);
    BOOL result = FALSE;
    assert(alarm);
@@ -153,10 +154,10 @@ OSWaitAlarm(OSAlarm *alarm)
 
    if (alarm->state != OSAlarmState::Set) {
       OSUninterruptibleSpinLock_Release(gAlarmLock);
+      OSUnlockScheduler();
       return FALSE;
    }
 
-   OSLockScheduler();
    OSSleepThreadNoLock(&alarm->threadQueue);
    OSUninterruptibleSpinLock_Release(gAlarmLock);
    OSRescheduleNoLock();
@@ -172,18 +173,10 @@ OSWaitAlarm(OSAlarm *alarm)
    return result;
 }
 
-static bool
+static void
 OSTriggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
 {
    alarm->context = context;
-
-   if (alarm->callback && alarm->state != OSAlarmState::Cancelled) {
-      OSUninterruptibleSpinLock_Release(gAlarmLock);
-      alarm->callback(alarm, context);
-      OSUninterruptibleSpinLock_Acquire(gAlarmLock);
-   }
-
-   OSWakeupThread(&alarm->threadQueue);
 
    if (alarm->period) {
       alarm->nextFire = OSGetTime() + alarm->period;
@@ -191,25 +184,33 @@ OSTriggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
    } else {
       alarm->nextFire = 0;
       alarm->state = OSAlarmState::None;
-      OSEraseFromQueue(static_cast<OSAlarmQueue*>(alarm->alarmQueue), alarm);
+      OSEraseFromQueue<OSAlarmQueue>(alarm->alarmQueue, alarm);
    }
 
-   return alarm->nextFire == 0;
+   if (alarm->callback) {
+      OSUninterruptibleSpinLock_Release(gAlarmLock);
+      alarm->callback(alarm, context);
+      OSUninterruptibleSpinLock_Acquire(gAlarmLock);
+   }
+
+   OSWakeupThreadNoLock(&alarm->threadQueue);
 }
 
 void
 OSCheckAlarms(uint32_t core, OSContext *context)
 {
-   ScopedSpinLock lock(gAlarmLock);
    auto queue = gAlarmQueue[core];
    auto now = OSGetTime();
    auto next = std::chrono::time_point<std::chrono::system_clock>::max();
+
+   OSLockScheduler();
+   OSUninterruptibleSpinLock_Acquire(gAlarmLock);
 
    for (OSAlarm *alarm = queue->head; alarm; ) {
       auto nextAlarm = alarm->link.next;
 
       // Trigger alarm if it is time
-      if (alarm->nextFire <= now) {
+      if (alarm->nextFire <= now && alarm->state != OSAlarmState::Cancelled) {
          OSTriggerAlarmNoLock(alarm, context);
       }
 
@@ -225,6 +226,8 @@ OSCheckAlarms(uint32_t core, OSContext *context)
       alarm = nextAlarm;
    }
 
+   OSUninterruptibleSpinLock_Release(gAlarmLock);
+   OSUnlockScheduler();
    gProcessor.setInterruptTimer(core, next);
 }
 
