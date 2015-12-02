@@ -803,8 +803,8 @@ psqStore(ThreadState *state, Instruction instr)
    }
 
    c = 4;
-   stt = static_cast<QuantizedDataType>(state->gqr[instr.qi].st_type);
-   sts = state->gqr[instr.qi].st_scale;
+   stt = static_cast<QuantizedDataType>(state->gqr[i].st_type);
+   sts = state->gqr[i].st_scale;
 
    if (stt == QuantizedDataType::Unsigned8 || stt == QuantizedDataType::Signed8) {
       c = 1;
@@ -815,7 +815,7 @@ psqStore(ThreadState *state, Instruction instr)
    s0 = state->fpr[instr.frS].paired0;
    s1 = state->fpr[instr.frS].paired1;
 
-   if (instr.qw == 0) {
+   if (w == 0) {
       quantize(ea, s0, stt, sts);
       quantize(ea + c, s1, stt, sts);
    } else {
