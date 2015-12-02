@@ -134,13 +134,17 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
 void
 OSSetAlarmTag(OSAlarm *alarm, uint32_t alarmTag)
 {
+   OSUninterruptibleSpinLock_Acquire(gAlarmLock);
    alarm->alarmTag = alarmTag;
+   OSUninterruptibleSpinLock_Release(gAlarmLock);
 }
 
 void
 OSSetAlarmUserData(OSAlarm *alarm, void *data)
 {
+   OSUninterruptibleSpinLock_Acquire(gAlarmLock);
    alarm->userData = data;
+   OSUninterruptibleSpinLock_Release(gAlarmLock);
 }
 
 BOOL

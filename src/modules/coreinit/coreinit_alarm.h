@@ -56,12 +56,12 @@ struct OSAlarm
    be_ptr<const char> name;
    UNKNOWN(4);
    be_AlarmCallback callback;
-   be_val<uint32_t> alarmTag; // Like group in memheap
+   be_val<uint32_t> alarmTag;
    UNKNOWN(4);
    be_val<OSTime> nextFire;
    OSAlarmLink link;
    be_val<OSTime> period;
-   UNKNOWN(8);
+   be_val<OSTime> tbrStart;
    be_ptr<void> userData;
    be_val<uint32_t> state;
    OSThreadQueue threadQueue;
@@ -75,6 +75,7 @@ CHECK_OFFSET(OSAlarm, 0x10, alarmTag);
 CHECK_OFFSET(OSAlarm, 0x18, nextFire);
 CHECK_OFFSET(OSAlarm, 0x20, link);
 CHECK_OFFSET(OSAlarm, 0x28, period);
+CHECK_OFFSET(OSAlarm, 0x30, tbrStart);
 CHECK_OFFSET(OSAlarm, 0x38, userData);
 CHECK_OFFSET(OSAlarm, 0x3c, state);
 CHECK_OFFSET(OSAlarm, 0x40, threadQueue);
