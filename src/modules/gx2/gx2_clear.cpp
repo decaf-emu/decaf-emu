@@ -31,7 +31,7 @@ GX2ClearColor(GX2ColorBuffer *colorBuffer,
 
 void
 DecafClearDepthStencil(GX2DepthBuffer *depthBuffer,
-                       GX2ClearFlags::Value clearFlags)
+                       GX2ClearFlags clearFlags)
 {
    pm4::write(pm4::DecafClearDepthStencil {
       clearFlags,
@@ -45,7 +45,7 @@ DecafClearDepthStencil(GX2DepthBuffer *depthBuffer,
 
 void
 GX2ClearDepthStencil(GX2DepthBuffer *depthBuffer,
-                     GX2ClearFlags::Value clearFlags)
+                     GX2ClearFlags clearFlags)
 {
    uint32_t values[] = {
       depthBuffer->stencilClear,
@@ -59,7 +59,7 @@ GX2ClearDepthStencil(GX2DepthBuffer *depthBuffer,
 void
 GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
                        float depth, uint8_t stencil,
-                       GX2ClearFlags::Value clearFlags)
+                       GX2ClearFlags clearFlags)
 {
    uint32_t values[] = {
       stencil,
@@ -74,7 +74,7 @@ void
 GX2ClearBuffers(GX2ColorBuffer *colorBuffer,
                 GX2DepthBuffer *depthBuffer,
                 float red, float green, float blue, float alpha,
-                GX2ClearFlags::Value clearFlags)
+                GX2ClearFlags clearFlags)
 {
    GX2ClearColor(colorBuffer, red, green, blue, alpha);
    GX2ClearDepthStencil(depthBuffer, clearFlags);
@@ -86,7 +86,7 @@ GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
                   float red, float green, float blue, float alpha,
                   float depth,
                   uint8_t stencil,
-                  GX2ClearFlags::Value clearFlags)
+                  GX2ClearFlags clearFlags)
 {
    GX2ClearColor(colorBuffer, red, green, blue, alpha);
    GX2ClearDepthStencilEx(depthBuffer, depth, stencil, clearFlags);

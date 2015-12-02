@@ -12,7 +12,7 @@
 namespace latte
 {
 
-namespace Register
+namespace Register_
 {
 
 enum Value : uint32_t
@@ -430,5 +430,7 @@ enum Value : uint32_t
    BoolConstRegisterBase            = 0x3E380,
 };
 }
+
+using Register = Register_::Value;
 
 } // namespace latte

@@ -10,7 +10,7 @@
 
 struct GX2FetchShader
 {
-   be_val<GX2FetchShaderType::Value > type;
+   be_val<GX2FetchShaderType > type;
 
    struct
    {
@@ -35,7 +35,7 @@ CHECK_SIZE(GX2FetchShader, 0x20);
 struct GX2UniformVar
 {
    be_ptr<const char> name;
-   be_val<GX2ShaderVarType::Value> type;
+   be_val<GX2ShaderVarType> type;
    be_val<uint32_t> count;
    be_val<uint32_t> offset;
    be_val<int32_t> block;
@@ -70,7 +70,7 @@ CHECK_SIZE(GX2UniformBlock, 0x0C);
 struct GX2AttribVar
 {
    be_ptr<const char> name;
-   be_val<GX2ShaderVarType::Value> type;
+   be_val<GX2ShaderVarType> type;
    be_val<uint32_t> count;
    be_val<uint32_t> location;
 };
@@ -83,7 +83,7 @@ CHECK_SIZE(GX2AttribVar, 0x10);
 struct GX2SamplerVar
 {
    be_ptr<const char> name;
-   be_val<GX2SamplerVarType::Value> type;
+   be_val<GX2SamplerVarType> type;
    be_val<uint32_t> location;
 };
 CHECK_OFFSET(GX2SamplerVar, 0x00, name);
@@ -111,7 +111,7 @@ struct GX2VertexShader
 
    be_val<uint32_t> size;
    be_ptr<uint8_t> data;
-   be_val<GX2ShaderMode::Value> mode;
+   be_val<GX2ShaderMode> mode;
 
    be_val<uint32_t> uniformBlockCount;
    be_ptr<GX2UniformBlock> uniformBlocks;
@@ -177,7 +177,7 @@ struct GX2PixelShader
 
    be_val<uint32_t> size;
    be_ptr<uint8_t> data;
-   be_val<GX2ShaderMode::Value> mode;
+   be_val<GX2ShaderMode> mode;
 
    be_val<uint32_t> uniformBlockCount;
    be_ptr<GX2UniformBlock> uniformBlocks;
@@ -230,11 +230,11 @@ struct GX2AttribStream
    be_val<uint32_t> location;
    be_val<uint32_t> buffer;
    be_val<uint32_t> offset;
-   be_val<GX2AttribFormat::Value> format;
-   be_val<GX2AttribIndexType::Value> type;
+   be_val<GX2AttribFormat> format;
+   be_val<GX2AttribIndexType> type;
    be_val<uint32_t> aluDivisor;
    be_val<uint32_t> mask;
-   be_val<GX2EndianSwapMode::Value> endianSwap;
+   be_val<GX2EndianSwapMode> endianSwap;
 };
 CHECK_OFFSET(GX2AttribStream, 0x0, location);
 CHECK_OFFSET(GX2AttribStream, 0x4, buffer);
@@ -256,16 +256,16 @@ GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize);
 
 uint32_t
 GX2CalcFetchShaderSizeEx(uint32_t attribs,
-                         GX2FetchShaderType::Value fetchShaderType,
-                         GX2TessellationMode::Value tesellationMode);
+                         GX2FetchShaderType fetchShaderType,
+                         GX2TessellationMode tesellationMode);
 
 void
 GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
                      uint8_t *buffer,
                      uint32_t attribCount,
                      GX2AttribStream *attribs,
-                     GX2FetchShaderType::Value type,
-                     GX2TessellationMode::Value tessMode);
+                     GX2FetchShaderType type,
+                     GX2TessellationMode tessMode);
 
 void
 GX2SetFetchShader(GX2FetchShader *shader);
@@ -301,7 +301,7 @@ void
 GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data);
 
 void
-GX2SetShaderModeEx(GX2ShaderMode::Value mode,
+GX2SetShaderModeEx(GX2ShaderMode mode,
                    uint32_t numVsGpr, uint32_t numVsStackEntries,
                    uint32_t numGsGpr, uint32_t numGsStackEntries,
                    uint32_t numPsGpr, uint32_t numPsStackEntries);

@@ -10,23 +10,23 @@
 
 struct GX2Surface
 {
-   be_val<GX2SurfaceDim::Value> dim;
+   be_val<GX2SurfaceDim> dim;
    be_val<uint32_t> width;
    be_val<uint32_t> height;
    be_val<uint32_t> depth;
    be_val<uint32_t> mipLevels;
-   be_val<GX2SurfaceFormat::Value> format;
-   be_val<GX2AAMode::Value> aa;
+   be_val<GX2SurfaceFormat> format;
+   be_val<GX2AAMode> aa;
    union // Is this correct?? Union???
    {
-      be_val<GX2SurfaceUse::Value> use; // GX2InitTextureRegs
+      be_val<GX2SurfaceUse> use; // GX2InitTextureRegs
       be_val<uint32_t> resourceFlags; // G2XRCreateSurface
    };
    be_val<uint32_t> imageSize;
    be_ptr<void> image;
    be_val<uint32_t> mipmapSize;
    be_ptr<void> mipmaps;
-   be_val<GX2TileMode::Value> tileMode;
+   be_val<GX2TileMode> tileMode;
    be_val<uint32_t> swizzle;
    be_val<uint32_t> alignment;
    be_val<uint32_t> pitch;
@@ -131,7 +131,7 @@ void
 GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer, be_val<uint32_t> *outSize, be_val<uint32_t> *outAlignment);
 
 void
-GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget::Value target);
+GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget target);
 
 void
 GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer);

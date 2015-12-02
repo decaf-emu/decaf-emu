@@ -20,28 +20,28 @@ CHECK_SIZE(GX2Sampler, 12);
 
 void
 GX2InitSampler(GX2Sampler *sampler,
-               GX2TexClampMode::Value clampMode,
-               GX2TexXYFilterMode::Value minMagFilterMode);
+               GX2TexClampMode clampMode,
+               GX2TexXYFilterMode minMagFilterMode);
 
 void
 GX2InitSamplerBorderType(GX2Sampler *sampler,
-                         GX2TexBorderType::Value borderType);
+                         GX2TexBorderType borderType);
 
 void
 GX2InitSamplerClamping(GX2Sampler *sampler,
-                       GX2TexClampMode::Value clampX,
-                       GX2TexClampMode::Value clampY,
-                       GX2TexClampMode::Value clampZ);
+                       GX2TexClampMode clampX,
+                       GX2TexClampMode clampY,
+                       GX2TexClampMode clampZ);
 
 void
 GX2InitSamplerDepthCompare(GX2Sampler *sampler,
-                           GX2CompareFunction::Value depthCompare);
+                           GX2CompareFunction depthCompare);
 
 void
 GX2InitSamplerFilterAdjust(GX2Sampler *sampler,
                            BOOL highPrecision,
-                           GX2TexMipPerfMode::Value perfMip,
-                           GX2TexZPerfMode::Value perfZ);
+                           GX2TexMipPerfMode perfMip,
+                           GX2TexZPerfMode perfZ);
 
 void
 GX2InitSamplerLOD(GX2Sampler *sampler, float lodMin, float lodMax, float lodBias);
@@ -51,15 +51,15 @@ GX2InitSamplerLODAdjust(GX2Sampler *sampler, float unk1, BOOL unk2);
 
 void
 GX2InitSamplerRoundingMode(GX2Sampler *sampler,
-                           GX2RoundingMode::Value roundingMode);
+                           GX2RoundingMode roundingMode);
 
 void
 GX2InitSamplerXYFilter(GX2Sampler *sampler,
-                       GX2TexXYFilterMode::Value filterMag,
-                       GX2TexXYFilterMode::Value filterMin,
-                       GX2TexAnisoRatio::Value maxAniso);
+                       GX2TexXYFilterMode filterMag,
+                       GX2TexXYFilterMode filterMin,
+                       GX2TexAnisoRatio maxAniso);
 
 void
 GX2InitSamplerZMFilter(GX2Sampler *sampler,
-                       GX2TexZFilterMode::Value filterZ,
-                       GX2TexMipFilterMode::Value filterMip);
+                       GX2TexZFilterMode filterZ,
+                       GX2TexMipFilterMode filterMip);

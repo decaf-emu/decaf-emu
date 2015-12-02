@@ -78,7 +78,7 @@ public:
 
    // Write one word as a register
    template<typename Type>
-   PacketWriter &reg(Type value, latte::Register::Value base)
+   PacketWriter &reg(Type value, latte::Register base)
    {
       checkSize(1);
       mBuffer->buffer[mBuffer->curSize++] = (static_cast<uint32_t>(value) - static_cast<uint32_t>(base)) / 4;

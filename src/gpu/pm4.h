@@ -178,7 +178,7 @@ struct SetAluConsts
 {
    static const auto Opcode = Opcode3::SET_ALU_CONST;
 
-   latte::Register::Value id;
+   latte::Register id;
    gsl::span<uint32_t> values;
 
    template<typename Serialiser>
@@ -193,7 +193,7 @@ struct SetConfigReg
 {
    static const auto Opcode = Opcode3::SET_CONFIG_REG;
 
-   latte::Register::Value id;
+   latte::Register id;
    uint32_t value;
 
    template<typename Serialiser>
@@ -208,7 +208,7 @@ struct SetConfigRegs
 {
    static const auto Opcode = Opcode3::SET_CONFIG_REG;
 
-   latte::Register::Value id;
+   latte::Register id;
    gsl::span<uint32_t> values;
 
    template<typename Serialiser>
@@ -223,7 +223,7 @@ struct SetContextReg
 {
    static const auto Opcode = Opcode3::SET_CONTEXT_REG;
 
-   latte::Register::Value id;
+   latte::Register id;
    uint32_t value;
 
    template<typename Serialiser>
@@ -238,7 +238,7 @@ struct SetContextRegs
 {
    static const auto Opcode = Opcode3::SET_CONTEXT_REG;
 
-   latte::Register::Value id;
+   latte::Register id;
    gsl::span<uint32_t> values;
 
    template<typename Serialiser>
@@ -283,7 +283,7 @@ struct SetLoopConst
 {
    static const auto Opcode = Opcode3::SET_LOOP_CONST;
 
-   latte::Register::Value id;
+   latte::Register id;
    uint32_t value;
 
    template<typename Serialiser>
@@ -298,7 +298,7 @@ struct SetLoopConsts
 {
    static const auto Opcode = Opcode3::SET_LOOP_CONST;
 
-   latte::Register::Value id;
+   latte::Register id;
    gsl::span<uint32_t> values;
 
    template<typename Serialiser>
@@ -332,7 +332,7 @@ struct SetSamplers
 {
    static const auto Opcode = Opcode3::SET_SAMPLER;
 
-   latte::Register::Value id;
+   latte::Register id;
    gsl::span<uint32_t> values;
 
    template<typename Serialiser>

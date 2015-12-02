@@ -107,20 +107,20 @@ GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer,
 }
 
 void
-GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget::Value target)
+GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget target)
 {
-   using namespace latte::Register;
+   using latte::Register;
    uint32_t addr256, aaAddr256;
-   auto reg = [](unsigned id) { return static_cast<latte::Register::Value>(id); };
+   auto reg = [](unsigned id) { return static_cast<Register>(id); };
    auto cb_color_info = colorBuffer->regs.cb_color_info.value();
    auto cb_color_mask = colorBuffer->regs.cb_color_mask.value();
    auto cb_color_size = colorBuffer->regs.cb_color_size.value();
    auto cb_color_view = colorBuffer->regs.cb_color_view.value();
 
    addr256 = colorBuffer->surface.image.getAddress() >> 8;
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_BASE + target), addr256 });
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_SIZE + target), cb_color_size.value });
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_INFO + target), cb_color_info.value });
+   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_BASE + target), addr256 });
+   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_SIZE + target), cb_color_size.value });
+   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_INFO + target), cb_color_info.value });
 
    if (colorBuffer->surface.aa != 0) {
       aaAddr256 = colorBuffer->aaBuffer.getAddress() >> 8;
@@ -128,11 +128,11 @@ GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget::Value target)
       aaAddr256 = 0;
    }
 
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_TILE + target), aaAddr256 });
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_FRAG + target), aaAddr256 });
+   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_TILE + target), aaAddr256 });
+   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_FRAG + target), aaAddr256 });
 
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_VIEW + target), cb_color_view.value });
-   pm4::write(pm4::SetContextReg { reg(CB_COLOR0_MASK + target), cb_color_mask.value });
+   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_VIEW + target), cb_color_view.value });
+   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_MASK + target), cb_color_mask.value });
 }
 
 void

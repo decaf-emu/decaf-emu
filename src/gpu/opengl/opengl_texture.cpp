@@ -39,7 +39,7 @@ getTextureTarget(latte::SQ_TEX_DIM dim)
    }
 }
 
-static GX2SurfaceFormat::Value
+static GX2SurfaceFormat
 getSurfaceFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, latte::SQ_FORMAT_COMP formatComp, uint32_t degamma)
 {
    uint32_t value = format;
@@ -58,7 +58,7 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
       value |= GX2AttribFormatFlags::DEGAMMA;
    }
 
-   return static_cast<GX2SurfaceFormat::Value>(value);
+   return static_cast<GX2SurfaceFormat>(value);
 }
 
 static gl::GLenum

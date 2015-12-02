@@ -6,7 +6,7 @@ static uint32_t
 gSwapInterval = 1;
 
 void
-GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget::Value scanTarget)
+GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget scanTarget)
 {
    uint32_t addr256, aaAddr256;
    addr256 = buffer->surface.image.getAddress() >> 8;
@@ -35,13 +35,13 @@ GX2SwapScanBuffers()
 }
 
 BOOL
-GX2GetLastFrame(GX2ScanTarget::Value scanTarget, GX2Texture *texture)
+GX2GetLastFrame(GX2ScanTarget scanTarget, GX2Texture *texture)
 {
    return FALSE;
 }
 
 BOOL
-GX2GetLastFrameGamma(GX2ScanTarget::Value scanTarget, be_val<float> *gamma)
+GX2GetLastFrameGamma(GX2ScanTarget scanTarget, be_val<float> *gamma)
 {
    return FALSE;
 }

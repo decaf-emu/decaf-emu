@@ -14,18 +14,18 @@ GX2ClearColor(GX2ColorBuffer *colorBuffer,
 
 void
 GX2ClearDepthStencil(GX2DepthBuffer *depthBuffer,
-                     GX2ClearFlags::Value clearMode);
+                     GX2ClearFlags clearMode);
 
 void
 GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
                        float depth, uint8_t stencil,
-                       GX2ClearFlags::Value clearMode);
+                       GX2ClearFlags clearMode);
 
 void
 GX2ClearBuffers(GX2ColorBuffer *colorBuffer,
                 GX2DepthBuffer *depthBuffer,
                 float red, float green, float blue, float alpha,
-                GX2ClearFlags::Value clearMode);
+                GX2ClearFlags clearMode);
 
 void
 GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
@@ -33,7 +33,7 @@ GX2ClearBuffersEx(GX2ColorBuffer *colorBuffer,
                   float red, float green, float blue, float alpha,
                   float depth,
                   uint8_t stencil,
-                  GX2ClearFlags::Value clearMode);
+                  GX2ClearFlags clearMode);
 
 void
 GX2SetClearDepth(GX2DepthBuffer *depthBuffer,

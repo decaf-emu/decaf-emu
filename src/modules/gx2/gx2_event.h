@@ -1,6 +1,6 @@
 #pragma once
 #include "modules/coreinit/coreinit_time.h"
-#include "modules/gx2/gx2_enum.h"
+#include "gx2_enum.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/wfunc_ptr.h"
@@ -26,8 +26,8 @@ CHECK_SIZE(GX2DisplayListOverrunData, 0x18);
 
 #pragma pack(pop)
 
-using GX2EventCallbackFunction = wfunc_ptr<void, GX2EventType::Value, void *>;
-using be_GX2EventCallbackFunction = be_wfunc_ptr<void, GX2EventType::Value, void *>;
+using GX2EventCallbackFunction = wfunc_ptr<void, GX2EventType, void *>;
+using be_GX2EventCallbackFunction = be_wfunc_ptr<void, GX2EventType, void *>;
 
 BOOL
 GX2DrawDone();
@@ -39,10 +39,10 @@ void
 GX2WaitForFlip();
 
 void
-GX2SetEventCallback(GX2EventType::Value type, GX2EventCallbackFunction func, void *userData);
+GX2SetEventCallback(GX2EventType type, GX2EventCallbackFunction func, void *userData);
 
 void
-GX2GetEventCallback(GX2EventType::Value type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut);
+GX2GetEventCallback(GX2EventType type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut);
 
 OSTime
 GX2GetRetiredTimeStamp();

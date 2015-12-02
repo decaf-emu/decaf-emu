@@ -12,9 +12,9 @@ GX2SetDRCEnable(BOOL enable)
 }
 
 void
-GX2CalcTVSize(GX2TVRenderMode::Value tvRenderMode,
-              GX2SurfaceFormat::Value surfaceFormat,
-              GX2BufferingMode::Value bufferingMode,
+GX2CalcTVSize(GX2TVRenderMode tvRenderMode,
+              GX2SurfaceFormat surfaceFormat,
+              GX2BufferingMode bufferingMode,
               be_val<uint32_t> *size,
               be_val<uint32_t> *unkOut)
 {
@@ -23,9 +23,9 @@ GX2CalcTVSize(GX2TVRenderMode::Value tvRenderMode,
 }
 
 void
-GX2CalcDRCSize(GX2DrcRenderMode::Value drcRenderMode,
-               GX2SurfaceFormat::Value surfaceFormat,
-               GX2BufferingMode::Value bufferingMode,
+GX2CalcDRCSize(GX2DrcRenderMode drcRenderMode,
+               GX2SurfaceFormat surfaceFormat,
+               GX2BufferingMode bufferingMode,
                be_val<uint32_t> *size,
                be_val<uint32_t> *unkOut)
 {
@@ -36,9 +36,9 @@ GX2CalcDRCSize(GX2DrcRenderMode::Value drcRenderMode,
 void
 GX2SetTVBuffer(void *buffer,
                uint32_t size,
-               GX2TVRenderMode::Value tvRenderMode,
-               GX2SurfaceFormat::Value surfaceFormat,
-               GX2BufferingMode::Value bufferingMode)
+               GX2TVRenderMode tvRenderMode,
+               GX2SurfaceFormat surfaceFormat,
+               GX2BufferingMode bufferingMode)
 {
    int tvWidth = 0, tvHeight = 0;
 
@@ -64,9 +64,9 @@ GX2SetTVBuffer(void *buffer,
 void
 GX2SetDRCBuffer(void *buffer,
                 uint32_t size,
-                GX2DrcRenderMode::Value drcRenderMode,
-                GX2SurfaceFormat::Value surfaceFormat,
-                GX2BufferingMode::Value bufferingMode)
+                GX2DrcRenderMode drcRenderMode,
+                GX2SurfaceFormat surfaceFormat,
+                GX2BufferingMode bufferingMode)
 {
    int drcWidth = 854, drcHeight = 480;
    gpu::driver::setDrcDisplay(drcWidth, drcHeight);
@@ -82,13 +82,13 @@ GX2SetDRCScale(uint32_t x, uint32_t y)
 {
 }
 
-GX2TVScanMode::Value
+GX2TVScanMode
 GX2GetSystemTVScanMode()
 {
    return GX2TVScanMode::None;
 }
 
-GX2DrcRenderMode::Value
+GX2DrcRenderMode
 GX2GetSystemDRCMode()
 {
    return GX2DrcRenderMode::Single;

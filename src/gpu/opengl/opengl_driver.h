@@ -189,7 +189,7 @@ private:
    void loadLoopConsts(const pm4::LoadLoopConst &data);
    void loadSamplers(const pm4::LoadSampler &data);
    void loadResources(const pm4::LoadResource &data);
-   void loadRegisters(latte::Register::Value base,
+   void loadRegisters(latte::Register base,
                       uint32_t *src,
                       const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
 
@@ -213,7 +213,7 @@ private:
    bool checkActiveUniforms();
    bool checkViewport();
 
-   void setRegister(latte::Register::Value reg, uint32_t value);
+   void setRegister(latte::Register reg, uint32_t value);
 
    bool parseFetchShader(FetchShader &shader, void *buffer, size_t size);
    bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size);

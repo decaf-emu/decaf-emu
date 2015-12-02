@@ -33,7 +33,7 @@ CHECK_OFFSET(GX2AlphaToMaskReg, 0, db_alpha_to_mask);
 
 struct GX2BlendControlReg
 {
-   be_val<GX2RenderTarget::Value> target;
+   be_val<GX2RenderTarget> target;
    be_val<latte::CB_BLENDN_CONTROL> cb_blend_control;
 };
 CHECK_SIZE(GX2BlendControlReg, 8);
@@ -194,19 +194,19 @@ GX2SetAAMaskReg(GX2AAMaskReg *reg);
 
 void
 GX2SetAlphaTest(BOOL alphaTest,
-                GX2CompareFunction::Value func,
+                GX2CompareFunction func,
                 float ref);
 
 void
 GX2InitAlphaTestReg(GX2AlphaTestReg *reg,
                     BOOL alphaTest,
-                    GX2CompareFunction::Value func,
+                    GX2CompareFunction func,
                     float ref);
 
 void
 GX2GetAlphaTestReg(const GX2AlphaTestReg *reg,
                    be_val<BOOL> *alphaTest,
-                   be_val<GX2CompareFunction::Value> *func,
+                   be_val<GX2CompareFunction> *func,
                    be_val<float> *ref);
 
 void
@@ -214,17 +214,17 @@ GX2SetAlphaTestReg(GX2AlphaTestReg *reg);
 
 void
 GX2SetAlphaToMask(BOOL alphaToMask,
-                  GX2AlphaToMaskMode::Value mode);
+                  GX2AlphaToMaskMode mode);
 
 void
 GX2InitAlphaToMaskReg(GX2AlphaToMaskReg *reg,
                       BOOL alphaToMask,
-                      GX2AlphaToMaskMode::Value mode);
+                      GX2AlphaToMaskMode mode);
 
 void
 GX2GetAlphaToMaskReg(const GX2AlphaToMaskReg *reg,
                      be_val<BOOL> *alphaToMask,
-                     be_val<GX2AlphaToMaskMode::Value> *mode);
+                     be_val<GX2AlphaToMaskMode> *mode);
 
 void
 GX2SetAlphaToMaskReg(GX2AlphaToMaskReg *reg);
@@ -253,56 +253,56 @@ void
 GX2SetBlendConstantColorReg(GX2BlendConstantColorReg *reg);
 
 void
-GX2SetBlendControl(GX2RenderTarget::Value target,
-                   GX2BlendMode::Value colorSrcBlend,
-                   GX2BlendMode::Value colorDstBlend,
-                   GX2BlendCombineMode::Value colorCombine,
+GX2SetBlendControl(GX2RenderTarget target,
+                   GX2BlendMode colorSrcBlend,
+                   GX2BlendMode colorDstBlend,
+                   GX2BlendCombineMode colorCombine,
                    BOOL useAlphaBlend,
-                   GX2BlendMode::Value alphaSrcBlend,
-                   GX2BlendMode::Value alphaDstBlend,
-                   GX2BlendCombineMode::Value alphaCombine);
+                   GX2BlendMode alphaSrcBlend,
+                   GX2BlendMode alphaDstBlend,
+                   GX2BlendCombineMode alphaCombine);
 
 void
 GX2InitBlendControlReg(GX2BlendControlReg *reg,
-                       GX2RenderTarget::Value target,
-                       GX2BlendMode::Value colorSrcBlend,
-                       GX2BlendMode::Value colorDstBlend,
-                       GX2BlendCombineMode::Value colorCombine,
+                       GX2RenderTarget target,
+                       GX2BlendMode colorSrcBlend,
+                       GX2BlendMode colorDstBlend,
+                       GX2BlendCombineMode colorCombine,
                        BOOL useAlphaBlend,
-                       GX2BlendMode::Value alphaSrcBlend,
-                       GX2BlendMode::Value alphaDstBlend,
-                       GX2BlendCombineMode::Value alphaCombine);
+                       GX2BlendMode alphaSrcBlend,
+                       GX2BlendMode alphaDstBlend,
+                       GX2BlendCombineMode alphaCombine);
 
 void
 GX2GetBlendControlReg(GX2BlendControlReg *reg,
-                      be_val<GX2RenderTarget::Value> *target,
-                      be_val<GX2BlendMode::Value> *colorSrcBlend,
-                      be_val<GX2BlendMode::Value> *colorDstBlend,
-                      be_val<GX2BlendCombineMode::Value> *colorCombine,
+                      be_val<GX2RenderTarget> *target,
+                      be_val<GX2BlendMode> *colorSrcBlend,
+                      be_val<GX2BlendMode> *colorDstBlend,
+                      be_val<GX2BlendCombineMode> *colorCombine,
                       be_val<BOOL> *useAlphaBlend,
-                      be_val<GX2BlendMode::Value> *alphaSrcBlend,
-                      be_val<GX2BlendMode::Value> *alphaDstBlend,
-                      be_val<GX2BlendCombineMode::Value> *alphaCombine);
+                      be_val<GX2BlendMode> *alphaSrcBlend,
+                      be_val<GX2BlendMode> *alphaDstBlend,
+                      be_val<GX2BlendCombineMode> *alphaCombine);
 
 void
 GX2SetBlendControlReg(GX2BlendControlReg *reg);
 
 void
-GX2SetColorControl(GX2LogicOp::Value rop3,
+GX2SetColorControl(GX2LogicOp rop3,
                    uint8_t targetBlendEnable,
                    BOOL multiWriteEnable,
                    BOOL colorWriteEnable);
 
 void
 GX2InitColorControlReg(GX2ColorControlReg *reg,
-                       GX2LogicOp::Value rop3,
+                       GX2LogicOp rop3,
                        uint8_t targetBlendEnable,
                        BOOL multiWriteEnable,
                        BOOL colorWriteEnable);
 
 void
 GX2GetColorControlReg(GX2ColorControlReg *reg,
-                      be_val<GX2LogicOp::Value> *rop3,
+                      be_val<GX2LogicOp> *rop3,
                       be_val<uint8_t> *targetBlendEnable,
                       be_val<BOOL> *multiWriteEnable,
                       be_val<BOOL> *colorWriteEnable);
@@ -313,54 +313,54 @@ GX2SetColorControlReg(GX2ColorControlReg *reg);
 void
 GX2SetDepthOnlyControl(BOOL depthTest,
                        BOOL depthWrite,
-                       GX2CompareFunction::Value depthCompare);
+                       GX2CompareFunction depthCompare);
 
 void
 GX2SetDepthStencilControl(BOOL depthTest,
                           BOOL depthWrite,
-                          GX2CompareFunction::Value depthCompare,
+                          GX2CompareFunction depthCompare,
                           BOOL stencilTest,
                           BOOL backfaceStencil,
-                          GX2CompareFunction::Value frontStencilFunc,
-                          GX2StencilFunction::Value frontStencilZPass,
-                          GX2StencilFunction::Value frontStencilZFail,
-                          GX2StencilFunction::Value frontStencilFail,
-                          GX2CompareFunction::Value backStencilFunc,
-                          GX2StencilFunction::Value backStencilZPass,
-                          GX2StencilFunction::Value backStencilZFail,
-                          GX2StencilFunction::Value backStencilFail);
+                          GX2CompareFunction frontStencilFunc,
+                          GX2StencilFunction frontStencilZPass,
+                          GX2StencilFunction frontStencilZFail,
+                          GX2StencilFunction frontStencilFail,
+                          GX2CompareFunction backStencilFunc,
+                          GX2StencilFunction backStencilZPass,
+                          GX2StencilFunction backStencilZFail,
+                          GX2StencilFunction backStencilFail);
 
 void
 GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                               BOOL depthTest,
                               BOOL depthWrite,
-                              GX2CompareFunction::Value depthCompare,
+                              GX2CompareFunction depthCompare,
                               BOOL stencilTest,
                               BOOL backfaceStencil,
-                              GX2CompareFunction::Value frontStencilFunc,
-                              GX2StencilFunction::Value frontStencilZPass,
-                              GX2StencilFunction::Value frontStencilZFail,
-                              GX2StencilFunction::Value frontStencilFail,
-                              GX2CompareFunction::Value backStencilFunc,
-                              GX2StencilFunction::Value backStencilZPass,
-                              GX2StencilFunction::Value backStencilZFail,
-                              GX2StencilFunction::Value backStencilFail);
+                              GX2CompareFunction frontStencilFunc,
+                              GX2StencilFunction frontStencilZPass,
+                              GX2StencilFunction frontStencilZFail,
+                              GX2StencilFunction frontStencilFail,
+                              GX2CompareFunction backStencilFunc,
+                              GX2StencilFunction backStencilZPass,
+                              GX2StencilFunction backStencilZFail,
+                              GX2StencilFunction backStencilFail);
 
 void
 GX2GetDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                              be_val<BOOL> *depthTest,
                              be_val<BOOL> *depthWrite,
-                             be_val<GX2CompareFunction::Value> *depthCompare,
+                             be_val<GX2CompareFunction> *depthCompare,
                              be_val<BOOL> *stencilTest,
                              be_val<BOOL> *backfaceStencil,
-                             be_val<GX2CompareFunction::Value> *frontStencilFunc,
-                             be_val<GX2StencilFunction::Value> *frontStencilZPass,
-                             be_val<GX2StencilFunction::Value> *frontStencilZFail,
-                             be_val<GX2StencilFunction::Value> *frontStencilFail,
-                             be_val<GX2CompareFunction::Value> *backStencilFunc,
-                             be_val<GX2StencilFunction::Value> *backStencilZPass,
-                             be_val<GX2StencilFunction::Value> *backStencilZFail,
-                             be_val<GX2StencilFunction::Value> *backStencilFail);
+                             be_val<GX2CompareFunction> *frontStencilFunc,
+                             be_val<GX2StencilFunction> *frontStencilZPass,
+                             be_val<GX2StencilFunction> *frontStencilZFail,
+                             be_val<GX2StencilFunction> *frontStencilFail,
+                             be_val<GX2CompareFunction> *backStencilFunc,
+                             be_val<GX2StencilFunction> *backStencilZPass,
+                             be_val<GX2StencilFunction> *backStencilZFail,
+                             be_val<GX2StencilFunction> *backStencilFail);
 
 void
 GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg);
@@ -431,41 +431,41 @@ void
 GX2SetPointLimitsReg(GX2PointLimitsReg *reg);
 
 void
-GX2SetCullOnlyControl(GX2FrontFace::Value frontFace,
+GX2SetCullOnlyControl(GX2FrontFace frontFace,
                       BOOL cullFront,
                       BOOL cullBack);
 
 void
-GX2SetPolygonControl(GX2FrontFace::Value frontFace,
+GX2SetPolygonControl(GX2FrontFace frontFace,
                      BOOL cullFront,
                      BOOL cullBack,
                      BOOL polyMode,
-                     GX2PolygonMode::Value polyModeFront,
-                     GX2PolygonMode::Value polyModeBack,
+                     GX2PolygonMode polyModeFront,
+                     GX2PolygonMode polyModeBack,
                      BOOL polyOffsetFrontEnable,
                      BOOL polyOffsetBackEnable,
                      BOOL polyOffsetParaEnable);
 
 void
 GX2InitPolygonControlReg(GX2PolygonControlReg *reg,
-                         GX2FrontFace::Value frontFace,
+                         GX2FrontFace frontFace,
                          BOOL cullFront,
                          BOOL cullBack,
                          BOOL polyMode,
-                         GX2PolygonMode::Value polyModeFront,
-                         GX2PolygonMode::Value polyModeBack,
+                         GX2PolygonMode polyModeFront,
+                         GX2PolygonMode polyModeBack,
                          BOOL polyOffsetFrontEnable,
                          BOOL polyOffsetBackEnable,
                          BOOL polyOffsetParaEnable);
 
 void
 GX2GetPolygonControlReg(GX2PolygonControlReg *reg,
-                        be_val<GX2FrontFace::Value> *frontFace,
+                        be_val<GX2FrontFace> *frontFace,
                         be_val<BOOL> *cullFront,
                         be_val<BOOL> *cullBack,
                         be_val<BOOL> *polyMode,
-                        be_val<GX2PolygonMode::Value> *polyModeFront,
-                        be_val<GX2PolygonMode::Value> *polyModeBack,
+                        be_val<GX2PolygonMode> *polyModeFront,
+                        be_val<GX2PolygonMode> *polyModeBack,
                         be_val<BOOL> *polyOffsetFrontEnable,
                         be_val<BOOL> *polyOffsetBackEnable,
                         be_val<BOOL> *polyOffsetParaEnable);
@@ -523,36 +523,36 @@ void
 GX2SetScissorReg(GX2ScissorReg *reg);
 
 void
-GX2SetTargetChannelMasks(GX2ChannelMask::Value mask0,
-                         GX2ChannelMask::Value mask1,
-                         GX2ChannelMask::Value mask2,
-                         GX2ChannelMask::Value mask3,
-                         GX2ChannelMask::Value mask4,
-                         GX2ChannelMask::Value mask5,
-                         GX2ChannelMask::Value mask6,
-                         GX2ChannelMask::Value mask7);
+GX2SetTargetChannelMasks(GX2ChannelMask mask0,
+                         GX2ChannelMask mask1,
+                         GX2ChannelMask mask2,
+                         GX2ChannelMask mask3,
+                         GX2ChannelMask mask4,
+                         GX2ChannelMask mask5,
+                         GX2ChannelMask mask6,
+                         GX2ChannelMask mask7);
 
 void
 GX2InitTargetChannelMasksReg(GX2TargetChannelMaskReg *reg,
-                             GX2ChannelMask::Value mask0,
-                             GX2ChannelMask::Value mask1,
-                             GX2ChannelMask::Value mask2,
-                             GX2ChannelMask::Value mask3,
-                             GX2ChannelMask::Value mask4,
-                             GX2ChannelMask::Value mask5,
-                             GX2ChannelMask::Value mask6,
-                             GX2ChannelMask::Value mask7);
+                             GX2ChannelMask mask0,
+                             GX2ChannelMask mask1,
+                             GX2ChannelMask mask2,
+                             GX2ChannelMask mask3,
+                             GX2ChannelMask mask4,
+                             GX2ChannelMask mask5,
+                             GX2ChannelMask mask6,
+                             GX2ChannelMask mask7);
 
 void
 GX2GetTargetChannelMasksReg(GX2TargetChannelMaskReg *reg,
-                            be_val<GX2ChannelMask::Value> *mask0,
-                            be_val<GX2ChannelMask::Value> *mask1,
-                            be_val<GX2ChannelMask::Value> *mask2,
-                            be_val<GX2ChannelMask::Value> *mask3,
-                            be_val<GX2ChannelMask::Value> *mask4,
-                            be_val<GX2ChannelMask::Value> *mask5,
-                            be_val<GX2ChannelMask::Value> *mask6,
-                            be_val<GX2ChannelMask::Value> *mask7);
+                            be_val<GX2ChannelMask> *mask0,
+                            be_val<GX2ChannelMask> *mask1,
+                            be_val<GX2ChannelMask> *mask2,
+                            be_val<GX2ChannelMask> *mask3,
+                            be_val<GX2ChannelMask> *mask4,
+                            be_val<GX2ChannelMask> *mask5,
+                            be_val<GX2ChannelMask> *mask6,
+                            be_val<GX2ChannelMask> *mask7);
 
 void
 GX2SetTargetChannelMasksReg(GX2TargetChannelMaskReg *reg);

@@ -40,7 +40,7 @@ struct EventCallbackData
 };
 
 static EventCallbackData
-gEventCallbacks[GX2EventType::Last];
+gEventCallbacks[GX2EventType::Max];
 
 
 BOOL
@@ -65,13 +65,13 @@ GX2WaitForFlip()
 
 
 void
-GX2SetEventCallback(GX2EventType::Value type, GX2EventCallbackFunction func, void *userData)
+GX2SetEventCallback(GX2EventType type, GX2EventCallbackFunction func, void *userData)
 {
    if (type == GX2EventType::DisplayListOverrun && !userData) {
       gLog->error("DisplayListOverrun callback set with no valid userData");
    }
 
-   if (static_cast<GX2EventType::Range>(type) < GX2EventType::Last) {
+   if (type < GX2EventType::Max) {
       gEventCallbacks[type].func = func;
       gEventCallbacks[type].data = userData;
    }
@@ -79,9 +79,9 @@ GX2SetEventCallback(GX2EventType::Value type, GX2EventCallbackFunction func, voi
 
 
 void
-GX2GetEventCallback(GX2EventType::Value type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut)
+GX2GetEventCallback(GX2EventType type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut)
 {
-   if (static_cast<GX2EventType::Range>(type) < GX2EventType::Last) {
+   if (type < GX2EventType::Max) {
       *funcOut = gEventCallbacks[type].func;
       *userDataOut = gEventCallbacks[type].data;
    } else {

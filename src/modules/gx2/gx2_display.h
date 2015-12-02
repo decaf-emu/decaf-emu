@@ -15,32 +15,32 @@ void
 GX2SetDRCEnable(BOOL enable);
 
 void
-GX2CalcTVSize(GX2TVRenderMode::Value tvRenderMode,
-              GX2SurfaceFormat::Value surfaceFormat,
-              GX2BufferingMode::Value bufferingMode,
+GX2CalcTVSize(GX2TVRenderMode tvRenderMode,
+              GX2SurfaceFormat surfaceFormat,
+              GX2BufferingMode bufferingMode,
               be_val<uint32_t> *size,
               be_val<uint32_t> *unkOut);
 
 void
-GX2CalcDRCSize(GX2DrcRenderMode::Value drcRenderMode,
-               GX2SurfaceFormat::Value surfaceFormat,
-               GX2BufferingMode::Value bufferingMode,
+GX2CalcDRCSize(GX2DrcRenderMode drcRenderMode,
+               GX2SurfaceFormat surfaceFormat,
+               GX2BufferingMode bufferingMode,
                be_val<uint32_t> *size,
                be_val<uint32_t> *unkOut);
 
 void
 GX2SetTVBuffer(void *buffer,
                uint32_t size,
-               GX2TVRenderMode::Value tvRenderMode,
-               GX2SurfaceFormat::Value surfaceFormat,
-               GX2BufferingMode::Value bufferingMode);
+               GX2TVRenderMode tvRenderMode,
+               GX2SurfaceFormat surfaceFormat,
+               GX2BufferingMode bufferingMode);
 
 void
 GX2SetDRCBuffer(void *buffer,
                 uint32_t size,
-                GX2DrcRenderMode::Value drcRenderMode,
-                GX2SurfaceFormat::Value surfaceFormat,
-                GX2BufferingMode::Value bufferingMode);
+                GX2DrcRenderMode drcRenderMode,
+                GX2SurfaceFormat surfaceFormat,
+                GX2BufferingMode bufferingMode);
 
 void
 GX2SetTVScale(uint32_t x, uint32_t y);
@@ -48,8 +48,8 @@ GX2SetTVScale(uint32_t x, uint32_t y);
 void
 GX2SetDRCScale(uint32_t x, uint32_t y);
 
-GX2TVScanMode::Value
+GX2TVScanMode
 GX2GetSystemTVScanMode();
 
-GX2DrcRenderMode::Value
+GX2DrcRenderMode
 GX2GetSystemDRCMode();

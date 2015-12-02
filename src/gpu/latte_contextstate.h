@@ -20,7 +20,7 @@ struct ContextState
    uint32_t sampler[0xA2];
    PADDING((0xC0 - 0xA2) * 4);
 
-   uint32_t getRegister(latte::Register::Value reg)
+   uint32_t getRegister(latte::Register reg)
    {
       if (reg >= latte::Register::ConfigRegisterBase && reg < latte::Register::ConfigRegisterEnd) {
          return config[(reg - latte::Register::ConfigRegisterBase) / 4];
@@ -39,7 +39,7 @@ struct ContextState
       return 0;
    }
 
-   void setRegister(latte::Register::Value reg, uint32_t value)
+   void setRegister(latte::Register reg, uint32_t value)
    {
       if (reg >= latte::Register::ConfigRegisterBase && reg < latte::Register::ConfigRegisterEnd) {
          config[(reg - latte::Register::ConfigRegisterBase) / 4] = value;

@@ -205,12 +205,12 @@ GX2SetVertexUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 {
    auto loop = offset >> 16;
    if (loop) {
-      auto id = static_cast<latte::Register::Value>(latte::Register::SQ_LOOP_CONST_32 + 4 * loop);
+      auto id = static_cast<latte::Register>(latte::Register::SQ_LOOP_CONST_32 + 4 * loop);
       pm4::write(pm4::SetLoopConst { id, data[0] });
    }
 
    auto alu = offset & 0x7fff;
-   auto id = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONSTANT0_256 + 4 * alu);
+   auto id = static_cast<latte::Register>(latte::Register::SQ_ALU_CONSTANT0_256 + 4 * alu);
 
    // Custom write packet so we can endian swap data
    pm4::PacketWriter writer { pm4::SetAluConsts::Opcode };
@@ -226,12 +226,12 @@ GX2SetPixelUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 {
    auto loop = offset >> 16;
    if (loop) {
-      auto id = static_cast<latte::Register::Value>(latte::Register::SQ_LOOP_CONST_0 + 4 * loop);
+      auto id = static_cast<latte::Register>(latte::Register::SQ_LOOP_CONST_0 + 4 * loop);
       pm4::write(pm4::SetLoopConst { id, data[0] });
    }
 
    auto alu = offset & 0x7fff;
-   auto id = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONSTANT0_0 + 4 * alu);
+   auto id = static_cast<latte::Register>(latte::Register::SQ_ALU_CONSTANT0_0 + 4 * alu);
 
    // Custom write packet so we can endian swap data
    pm4::PacketWriter writer { pm4::SetAluConsts::Opcode };
@@ -256,10 +256,10 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 
    uint32_t addr256 = memory_untranslate(data) >> 8;
 
-   auto addrId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + location * 4);
+   auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + location * 4);
    pm4::write(pm4::SetContextReg { addrId, addr256 });
 
-   auto sizeId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + location * 4);
+   auto sizeId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + location * 4);
    pm4::write(pm4::SetContextReg { sizeId, size - 1 });
 }
 
@@ -277,15 +277,15 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 
    const uint32_t addr256 = memory_untranslate(data) >> 8;
 
-   auto addrId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + location * 4);
+   auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + location * 4);
    pm4::write(pm4::SetContextReg { addrId, addr256 });
 
-   auto sizeId = static_cast<latte::Register::Value>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + location * 4);
+   auto sizeId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + location * 4);
    pm4::write(pm4::SetContextReg { sizeId, size - 1 });
 }
 
 void
-GX2SetShaderModeEx(GX2ShaderMode::Value mode,
+GX2SetShaderModeEx(GX2ShaderMode mode,
                    uint32_t numVsGpr, uint32_t numVsStackEntries,
                    uint32_t numGsGpr, uint32_t numGsStackEntries,
                    uint32_t numPsGpr, uint32_t numPsStackEntries)

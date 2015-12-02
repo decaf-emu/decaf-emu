@@ -18,7 +18,7 @@ GX2RSetAllocator(GX2RAllocFuncPtr allocFn,
 }
 
 uint32_t
-GX2RGetBufferAlignment(GX2RResourceFlags::Value flags)
+GX2RGetBufferAlignment(GX2RResourceFlags flags)
 {
    return 256;
 }
@@ -54,7 +54,7 @@ GX2RCreateBuffer(GX2RBuffer *buffer)
 }
 
 void
-GX2RDestroyBufferEx(GX2RBuffer *buffer, GX2RResourceFlags::Value flags)
+GX2RDestroyBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags)
 {
    if (buffer && buffer->buffer) {
       pGX2RMemFree(flags, buffer->buffer);
@@ -66,12 +66,12 @@ GX2RDestroyBufferEx(GX2RBuffer *buffer, GX2RResourceFlags::Value flags)
 }
 
 void *
-GX2RLockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags::Value flags)
+GX2RLockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags)
 {
    return buffer->buffer;
 }
 
 void
-GX2RUnlockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags::Value flags)
+GX2RUnlockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags)
 {
 }

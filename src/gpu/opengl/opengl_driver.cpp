@@ -341,7 +341,7 @@ getStencilFunc(latte::DB_STENCIL_FUNC func)
    }
 }
 
-void GLDriver::setRegister(latte::Register::Value reg, uint32_t value)
+void GLDriver::setRegister(latte::Register reg, uint32_t value)
 {
    // Save to my state
    mRegisters[reg / 4] = value;
@@ -356,7 +356,7 @@ void GLDriver::setRegister(latte::Register::Value reg, uint32_t value)
    switch (reg) {
    case latte::Register::SQ_VTX_SEMANTIC_CLEAR:
       for (auto i = 0u; i < 32; ++i) {
-         setRegister(static_cast<latte::Register::Value>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4), 0xffffffff);
+         setRegister(static_cast<latte::Register>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4), 0xffffffff);
       }
       break;
 
@@ -1021,42 +1021,42 @@ void GLDriver::numInstances(const pm4::NumInstances &data)
 void GLDriver::setAluConsts(const pm4::SetAluConsts &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
 }
 
 void GLDriver::setConfigRegs(const pm4::SetConfigRegs &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
 }
 
 void GLDriver::setContextRegs(const pm4::SetContextRegs &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
 }
 
 void GLDriver::setControlConstants(const pm4::SetControlConstants &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
 }
 
 void GLDriver::setLoopConsts(const pm4::SetLoopConsts &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
 }
 
 void GLDriver::setSamplers(const pm4::SetSamplers &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register::Value>(data.id + i * 4), data.values[i]);
+      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
 }
 
@@ -1065,18 +1065,18 @@ void GLDriver::setResources(const pm4::SetResources &data)
    auto id = latte::Register::ResourceRegisterBase + (4 * data.id);
 
    for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register::Value>(id + i * 4), data.values[i]);
+      setRegister(static_cast<latte::Register>(id + i * 4), data.values[i]);
    }
 }
 
-void GLDriver::loadRegisters(latte::Register::Value base, uint32_t *src, const gsl::span<std::pair<uint32_t, uint32_t>> &registers)
+void GLDriver::loadRegisters(latte::Register base, uint32_t *src, const gsl::span<std::pair<uint32_t, uint32_t>> &registers)
 {
    for (auto &range : registers) {
       auto start = range.first;
       auto count = range.second;
 
       for (auto j = start; j < start + count; ++j) {
-         setRegister(static_cast<latte::Register::Value>(base + j * 4), src[j]);
+         setRegister(static_cast<latte::Register>(base + j * 4), src[j]);
       }
    }
 }

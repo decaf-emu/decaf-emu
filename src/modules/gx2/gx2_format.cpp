@@ -79,7 +79,7 @@ GX2SurfaceFormatData gSurfaceFormatData[] =
 };
 
 size_t
-GX2GetAttribFormatBytes(GX2AttribFormat::Value format)
+GX2GetAttribFormatBytes(GX2AttribFormat format)
 {
    switch (format & 0x1f) {
    case GX2AttribFormatType::TYPE_8:
@@ -114,8 +114,8 @@ GX2GetAttribFormatBytes(GX2AttribFormat::Value format)
    }
 }
 
-GX2EndianSwapMode::Value
-GX2GetAttribFormatSwapMode(GX2AttribFormat::Value format)
+GX2EndianSwapMode
+GX2GetAttribFormatSwapMode(GX2AttribFormat format)
 {
    switch (format & 0x1F) {
    case GX2AttribFormatType::TYPE_8:
@@ -148,7 +148,7 @@ GX2GetAttribFormatSwapMode(GX2AttribFormat::Value format)
 }
 
 latte::SQ_DATA_FORMAT
-GX2GetAttribFormatDataFormat(GX2AttribFormat::Value format)
+GX2GetAttribFormatDataFormat(GX2AttribFormat format)
 {
    switch (format & 0x1F) {
    case GX2AttribFormatType::TYPE_8:
@@ -198,7 +198,7 @@ GX2GetAttribFormatDataFormat(GX2AttribFormat::Value format)
 }
 
 std::pair<size_t, size_t>
-GX2GetSurfaceBlockSize(GX2SurfaceFormat::Value format)
+GX2GetSurfaceBlockSize(GX2SurfaceFormat format)
 {
    switch (format & 0x3F) {
    case latte::FMT_BC1:
@@ -213,25 +213,25 @@ GX2GetSurfaceBlockSize(GX2SurfaceFormat::Value format)
 }
 
 size_t
-GX2GetSurfaceElementBytes(GX2SurfaceFormat::Value format)
+GX2GetSurfaceElementBytes(GX2SurfaceFormat format)
 {
    return gSurfaceFormatData[format & 0x3F].bpp / 8;
 }
 
-GX2SurfaceUse::Value
-GX2GetSurfaceUse(GX2SurfaceFormat::Value format)
+GX2SurfaceUse
+GX2GetSurfaceUse(GX2SurfaceFormat format)
 {
-   return static_cast<GX2SurfaceUse::Value>(gSurfaceFormatData[format & 0x3F].use);
+   return static_cast<GX2SurfaceUse>(gSurfaceFormatData[format & 0x3F].use);
 }
 
-GX2EndianSwapMode::Value
-GX2GetSurfaceSwap(GX2SurfaceFormat::Value format)
+GX2EndianSwapMode
+GX2GetSurfaceSwap(GX2SurfaceFormat format)
 {
-   return static_cast<GX2EndianSwapMode::Value>(gSurfaceFormatData[format & 0x3F].endian);
+   return static_cast<GX2EndianSwapMode>(gSurfaceFormatData[format & 0x3F].endian);
 }
 
 latte::DB_DEPTH_FORMAT
-GX2GetSurfaceDepthFormat(GX2SurfaceFormat::Value format)
+GX2GetSurfaceDepthFormat(GX2SurfaceFormat format)
 {
    switch (format & 0x3F) {
    case latte::FMT_16:
@@ -250,7 +250,7 @@ GX2GetSurfaceDepthFormat(GX2SurfaceFormat::Value format)
 }
 
 latte::CB_FORMAT
-GX2GetSurfaceColorFormat(GX2SurfaceFormat::Value format)
+GX2GetSurfaceColorFormat(GX2SurfaceFormat format)
 {
    switch (format & 0x3F) {
    case latte::FMT_8:
@@ -325,13 +325,13 @@ GX2GetSurfaceColorFormat(GX2SurfaceFormat::Value format)
 }
 
 size_t
-GX2GetTileThickness(GX2TileMode::Value mode)
+GX2GetTileThickness(GX2TileMode mode)
 {
    return latte::tileThickness(static_cast<latte::SQ_TILE_MODE>(mode));
 }
 
 std::pair<size_t, size_t>
-GX2GetMacroTileSize(GX2TileMode::Value mode)
+GX2GetMacroTileSize(GX2TileMode mode)
 {
    return latte::macroTileSize(static_cast<latte::SQ_TILE_MODE>(mode));
 }

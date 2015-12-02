@@ -250,7 +250,7 @@ GX2SetDefaultState()
                       TRUE);              // colorWriteEnable
 
    for (auto i = 0u; i < 8u; ++i) {
-      GX2SetBlendControl(static_cast<GX2RenderTarget::Value>(i),  // target
+      GX2SetBlendControl(static_cast<GX2RenderTarget>(i),  // target
                          GX2BlendMode::SrcAlpha,      // colorSrcBlend
                          GX2BlendMode::InvSrcAlpha,   // colorDstBlend
                          GX2BlendCombineMode::Add,    // colorCombine

@@ -55,7 +55,7 @@ GX2SetAAMaskReg(GX2AAMaskReg *reg)
 
 void
 GX2SetAlphaTest(BOOL alphaTest,
-                GX2CompareFunction::Value func,
+                GX2CompareFunction func,
                 float ref)
 {
    GX2AlphaTestReg reg;
@@ -66,7 +66,7 @@ GX2SetAlphaTest(BOOL alphaTest,
 void
 GX2InitAlphaTestReg(GX2AlphaTestReg *reg,
                     BOOL alphaTest,
-                    GX2CompareFunction::Value func,
+                    GX2CompareFunction func,
                     float ref)
 {
    auto sx_alpha_ref = reg->sx_alpha_ref.value();
@@ -83,14 +83,14 @@ GX2InitAlphaTestReg(GX2AlphaTestReg *reg,
 void
 GX2GetAlphaTestReg(const GX2AlphaTestReg *reg,
                    be_val<BOOL> *alphaTest,
-                   be_val<GX2CompareFunction::Value> *func,
+                   be_val<GX2CompareFunction> *func,
                    be_val<float> *ref)
 {
    auto sx_alpha_ref = reg->sx_alpha_ref.value();
    auto sx_alpha_test_control = reg->sx_alpha_test_control.value();
 
    *alphaTest = sx_alpha_test_control.ALPHA_TEST_ENABLE;
-   *func = static_cast<GX2CompareFunction::Value>(sx_alpha_test_control.ALPHA_FUNC);
+   *func = static_cast<GX2CompareFunction>(sx_alpha_test_control.ALPHA_FUNC);
    *ref = sx_alpha_ref.ALPHA_REF;
 }
 
@@ -106,7 +106,7 @@ GX2SetAlphaTestReg(GX2AlphaTestReg *reg)
 
 void
 GX2SetAlphaToMask(BOOL alphaToMask,
-                  GX2AlphaToMaskMode::Value mode)
+                  GX2AlphaToMaskMode mode)
 {
    GX2AlphaToMaskReg reg;
    GX2InitAlphaToMaskReg(&reg, alphaToMask, mode);
@@ -116,7 +116,7 @@ GX2SetAlphaToMask(BOOL alphaToMask,
 void
 GX2InitAlphaToMaskReg(GX2AlphaToMaskReg *reg,
                       BOOL alphaToMask,
-                      GX2AlphaToMaskMode::Value mode)
+                      GX2AlphaToMaskMode mode)
 {
    auto db_alpha_to_mask = reg->db_alpha_to_mask.value();
    db_alpha_to_mask.ALPHA_TO_MASK_ENABLE = alphaToMask;
@@ -165,7 +165,7 @@ GX2InitAlphaToMaskReg(GX2AlphaToMaskReg *reg,
 void
 GX2GetAlphaToMaskReg(const GX2AlphaToMaskReg *reg,
                      be_val<BOOL> *alphaToMask,
-                     be_val<GX2AlphaToMaskMode::Value> *mode)
+                     be_val<GX2AlphaToMaskMode> *mode)
 {
    auto db_alpha_to_mask = reg->db_alpha_to_mask.value();
    auto value = (db_alpha_to_mask.value >> 8) & 0xff;
@@ -249,14 +249,14 @@ GX2SetBlendConstantColorReg(GX2BlendConstantColorReg *reg)
 }
 
 void
-GX2SetBlendControl(GX2RenderTarget::Value target,
-                   GX2BlendMode::Value colorSrcBlend,
-                   GX2BlendMode::Value colorDstBlend,
-                   GX2BlendCombineMode::Value colorCombine,
+GX2SetBlendControl(GX2RenderTarget target,
+                   GX2BlendMode colorSrcBlend,
+                   GX2BlendMode colorDstBlend,
+                   GX2BlendCombineMode colorCombine,
                    BOOL useAlphaBlend,
-                   GX2BlendMode::Value alphaSrcBlend,
-                   GX2BlendMode::Value alphaDstBlend,
-                   GX2BlendCombineMode::Value alphaCombine)
+                   GX2BlendMode alphaSrcBlend,
+                   GX2BlendMode alphaDstBlend,
+                   GX2BlendCombineMode alphaCombine)
 {
    GX2BlendControlReg reg;
    GX2InitBlendControlReg(&reg,
@@ -273,14 +273,14 @@ GX2SetBlendControl(GX2RenderTarget::Value target,
 
 void
 GX2InitBlendControlReg(GX2BlendControlReg *reg,
-                       GX2RenderTarget::Value target,
-                       GX2BlendMode::Value colorSrcBlend,
-                       GX2BlendMode::Value colorDstBlend,
-                       GX2BlendCombineMode::Value colorCombine,
+                       GX2RenderTarget target,
+                       GX2BlendMode colorSrcBlend,
+                       GX2BlendMode colorDstBlend,
+                       GX2BlendCombineMode colorCombine,
                        BOOL useAlphaBlend,
-                       GX2BlendMode::Value alphaSrcBlend,
-                       GX2BlendMode::Value alphaDstBlend,
-                       GX2BlendCombineMode::Value alphaCombine)
+                       GX2BlendMode alphaSrcBlend,
+                       GX2BlendMode alphaDstBlend,
+                       GX2BlendCombineMode alphaCombine)
 {
    auto cb_blend_control = reg->cb_blend_control.value();
    reg->target = target;
@@ -296,37 +296,37 @@ GX2InitBlendControlReg(GX2BlendControlReg *reg,
 
 void
 GX2GetBlendControlReg(GX2BlendControlReg *reg,
-                      be_val<GX2RenderTarget::Value> *target,
-                      be_val<GX2BlendMode::Value> *colorSrcBlend,
-                      be_val<GX2BlendMode::Value> *colorDstBlend,
-                      be_val<GX2BlendCombineMode::Value> *colorCombine,
+                      be_val<GX2RenderTarget> *target,
+                      be_val<GX2BlendMode> *colorSrcBlend,
+                      be_val<GX2BlendMode> *colorDstBlend,
+                      be_val<GX2BlendCombineMode> *colorCombine,
                       be_val<BOOL> *useAlphaBlend,
-                      be_val<GX2BlendMode::Value> *alphaSrcBlend,
-                      be_val<GX2BlendMode::Value> *alphaDstBlend,
-                      be_val<GX2BlendCombineMode::Value> *alphaCombine)
+                      be_val<GX2BlendMode> *alphaSrcBlend,
+                      be_val<GX2BlendMode> *alphaDstBlend,
+                      be_val<GX2BlendCombineMode> *alphaCombine)
 {
    *target = reg->target;
 
    auto cb_blend_control = reg->cb_blend_control.value();
-   *colorSrcBlend = static_cast<GX2BlendMode::Value>(cb_blend_control.COLOR_SRCBLEND);
-   *colorDstBlend = static_cast<GX2BlendMode::Value>(cb_blend_control.COLOR_DESTBLEND);
-   *colorCombine = static_cast<GX2BlendCombineMode::Value>(cb_blend_control.COLOR_COMB_FCN);
+   *colorSrcBlend = static_cast<GX2BlendMode>(cb_blend_control.COLOR_SRCBLEND);
+   *colorDstBlend = static_cast<GX2BlendMode>(cb_blend_control.COLOR_DESTBLEND);
+   *colorCombine = static_cast<GX2BlendCombineMode>(cb_blend_control.COLOR_COMB_FCN);
    *useAlphaBlend = cb_blend_control.SEPARATE_ALPHA_BLEND;
-   *alphaSrcBlend = static_cast<GX2BlendMode::Value>(cb_blend_control.ALPHA_SRCBLEND);
-   *alphaDstBlend = static_cast<GX2BlendMode::Value>(cb_blend_control.ALPHA_DESTBLEND);
-   *alphaCombine = static_cast<GX2BlendCombineMode::Value>(cb_blend_control.ALPHA_COMB_FCN);
+   *alphaSrcBlend = static_cast<GX2BlendMode>(cb_blend_control.ALPHA_SRCBLEND);
+   *alphaDstBlend = static_cast<GX2BlendMode>(cb_blend_control.ALPHA_DESTBLEND);
+   *alphaCombine = static_cast<GX2BlendCombineMode>(cb_blend_control.ALPHA_COMB_FCN);
 }
 
 void
 GX2SetBlendControlReg(GX2BlendControlReg *reg)
 {
    auto cb_blend_control = reg->cb_blend_control.value();
-   auto id = static_cast<latte::Register::Value>(latte::Register::CB_BLEND0_CONTROL + reg->target);
+   auto id = static_cast<latte::Register>(latte::Register::CB_BLEND0_CONTROL + reg->target);
    pm4::write(pm4::SetContextReg { id, cb_blend_control.value });
 }
 
 void
-GX2SetColorControl(GX2LogicOp::Value rop3,
+GX2SetColorControl(GX2LogicOp rop3,
                    uint8_t targetBlendEnable,
                    BOOL multiWriteEnable,
                    BOOL colorWriteEnable)
@@ -342,7 +342,7 @@ GX2SetColorControl(GX2LogicOp::Value rop3,
 
 void
 GX2InitColorControlReg(GX2ColorControlReg *reg,
-                       GX2LogicOp::Value rop3,
+                       GX2LogicOp rop3,
                        uint8_t targetBlendEnable,
                        BOOL multiWriteEnable,
                        BOOL colorWriteEnable)
@@ -363,13 +363,13 @@ GX2InitColorControlReg(GX2ColorControlReg *reg,
 
 void
 GX2GetColorControlReg(GX2ColorControlReg *reg,
-                      be_val<GX2LogicOp::Value> *rop3,
+                      be_val<GX2LogicOp> *rop3,
                       be_val<uint8_t> *targetBlendEnable,
                       be_val<BOOL> *multiWriteEnable,
                       be_val<BOOL> *colorWriteEnable)
 {
    auto cb_color_control = reg->cb_color_control.value();
-   *rop3 = static_cast<GX2LogicOp::Value>(cb_color_control.ROP3);
+   *rop3 = static_cast<GX2LogicOp>(cb_color_control.ROP3);
    *targetBlendEnable = cb_color_control.TARGET_BLEND_ENABLE;
    *multiWriteEnable = cb_color_control.MULTIWRITE_ENABLE;
 
@@ -390,7 +390,7 @@ GX2SetColorControlReg(GX2ColorControlReg *reg)
 void
 GX2SetDepthOnlyControl(BOOL depthTest,
                        BOOL depthWrite,
-                       GX2CompareFunction::Value depthCompare)
+                       GX2CompareFunction depthCompare)
 {
    GX2SetDepthStencilControl(depthTest,
                              depthWrite,
@@ -410,17 +410,17 @@ GX2SetDepthOnlyControl(BOOL depthTest,
 void
 GX2SetDepthStencilControl(BOOL depthTest,
                           BOOL depthWrite,
-                          GX2CompareFunction::Value depthCompare,
+                          GX2CompareFunction depthCompare,
                           BOOL stencilTest,
                           BOOL backfaceStencil,
-                          GX2CompareFunction::Value frontStencilFunc,
-                          GX2StencilFunction::Value frontStencilZPass,
-                          GX2StencilFunction::Value frontStencilZFail,
-                          GX2StencilFunction::Value frontStencilFail,
-                          GX2CompareFunction::Value backStencilFunc,
-                          GX2StencilFunction::Value backStencilZPass,
-                          GX2StencilFunction::Value backStencilZFail,
-                          GX2StencilFunction::Value backStencilFail)
+                          GX2CompareFunction frontStencilFunc,
+                          GX2StencilFunction frontStencilZPass,
+                          GX2StencilFunction frontStencilZFail,
+                          GX2StencilFunction frontStencilFail,
+                          GX2CompareFunction backStencilFunc,
+                          GX2StencilFunction backStencilZPass,
+                          GX2StencilFunction backStencilZFail,
+                          GX2StencilFunction backStencilFail)
 {
    GX2DepthStencilControlReg reg;
    GX2InitDepthStencilControlReg(&reg,
@@ -444,17 +444,17 @@ void
 GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                               BOOL depthTest,
                               BOOL depthWrite,
-                              GX2CompareFunction::Value depthCompare,
+                              GX2CompareFunction depthCompare,
                               BOOL stencilTest,
                               BOOL backfaceStencil,
-                              GX2CompareFunction::Value frontStencilFunc,
-                              GX2StencilFunction::Value frontStencilZPass,
-                              GX2StencilFunction::Value frontStencilZFail,
-                              GX2StencilFunction::Value frontStencilFail,
-                              GX2CompareFunction::Value backStencilFunc,
-                              GX2StencilFunction::Value backStencilZPass,
-                              GX2StencilFunction::Value backStencilZFail,
-                              GX2StencilFunction::Value backStencilFail)
+                              GX2CompareFunction frontStencilFunc,
+                              GX2StencilFunction frontStencilZPass,
+                              GX2StencilFunction frontStencilZFail,
+                              GX2StencilFunction frontStencilFail,
+                              GX2CompareFunction backStencilFunc,
+                              GX2StencilFunction backStencilZPass,
+                              GX2StencilFunction backStencilZFail,
+                              GX2StencilFunction backStencilFail)
 {
    auto db_depth_control = reg->db_depth_control.value();
    db_depth_control.Z_ENABLE = depthTest;
@@ -477,32 +477,32 @@ void
 GX2GetDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                              be_val<BOOL> *depthTest,
                              be_val<BOOL> *depthWrite,
-                             be_val<GX2CompareFunction::Value> *depthCompare,
+                             be_val<GX2CompareFunction> *depthCompare,
                              be_val<BOOL> *stencilTest,
                              be_val<BOOL> *backfaceStencil,
-                             be_val<GX2CompareFunction::Value> *frontStencilFunc,
-                             be_val<GX2StencilFunction::Value> *frontStencilZPass,
-                             be_val<GX2StencilFunction::Value> *frontStencilZFail,
-                             be_val<GX2StencilFunction::Value> *frontStencilFail,
-                             be_val<GX2CompareFunction::Value> *backStencilFunc,
-                             be_val<GX2StencilFunction::Value> *backStencilZPass,
-                             be_val<GX2StencilFunction::Value> *backStencilZFail,
-                             be_val<GX2StencilFunction::Value> *backStencilFail)
+                             be_val<GX2CompareFunction> *frontStencilFunc,
+                             be_val<GX2StencilFunction> *frontStencilZPass,
+                             be_val<GX2StencilFunction> *frontStencilZFail,
+                             be_val<GX2StencilFunction> *frontStencilFail,
+                             be_val<GX2CompareFunction> *backStencilFunc,
+                             be_val<GX2StencilFunction> *backStencilZPass,
+                             be_val<GX2StencilFunction> *backStencilZFail,
+                             be_val<GX2StencilFunction> *backStencilFail)
 {
    auto db_depth_control = reg->db_depth_control.value();
    *depthTest = db_depth_control.Z_ENABLE;
    *depthWrite = db_depth_control.Z_WRITE_ENABLE;
-   *depthCompare = static_cast<GX2CompareFunction::Value>(db_depth_control.ZFUNC);
+   *depthCompare = static_cast<GX2CompareFunction>(db_depth_control.ZFUNC);
    *stencilTest = db_depth_control.STENCIL_ENABLE;
    *backfaceStencil = db_depth_control.BACKFACE_ENABLE;
-   *frontStencilFunc = static_cast<GX2CompareFunction::Value>(db_depth_control.STENCILFUNC);
-   *frontStencilZPass = static_cast<GX2StencilFunction::Value>(db_depth_control.STENCILZPASS);
-   *frontStencilZFail = static_cast<GX2StencilFunction::Value>(db_depth_control.STENCILZFAIL);
-   *frontStencilFail = static_cast<GX2StencilFunction::Value>(db_depth_control.STENCILFAIL);
-   *backStencilFunc = static_cast<GX2CompareFunction::Value>(db_depth_control.STENCILFUNC_BF);
-   *backStencilZPass = static_cast<GX2StencilFunction::Value>(db_depth_control.STENCILZPASS_BF);
-   *backStencilZFail = static_cast<GX2StencilFunction::Value>(db_depth_control.STENCILZFAIL_BF);
-   *backStencilFail = static_cast<GX2StencilFunction::Value>(db_depth_control.STENCILFAIL_BF);
+   *frontStencilFunc = static_cast<GX2CompareFunction>(db_depth_control.STENCILFUNC);
+   *frontStencilZPass = static_cast<GX2StencilFunction>(db_depth_control.STENCILZPASS);
+   *frontStencilZFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILZFAIL);
+   *frontStencilFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILFAIL);
+   *backStencilFunc = static_cast<GX2CompareFunction>(db_depth_control.STENCILFUNC_BF);
+   *backStencilZPass = static_cast<GX2StencilFunction>(db_depth_control.STENCILZPASS_BF);
+   *backStencilZFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILZFAIL_BF);
+   *backStencilFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILFAIL_BF);
 }
 
 void
@@ -682,7 +682,7 @@ GX2SetPointLimitsReg(GX2PointLimitsReg *reg)
 }
 
 void
-GX2SetCullOnlyControl(GX2FrontFace::Value frontFace,
+GX2SetCullOnlyControl(GX2FrontFace frontFace,
                       BOOL cullFront,
                       BOOL cullBack)
 {
@@ -698,12 +698,12 @@ GX2SetCullOnlyControl(GX2FrontFace::Value frontFace,
 }
 
 void
-GX2SetPolygonControl(GX2FrontFace::Value frontFace,
+GX2SetPolygonControl(GX2FrontFace frontFace,
                      BOOL cullFront,
                      BOOL cullBack,
                      BOOL polyMode,
-                     GX2PolygonMode::Value polyModeFront,
-                     GX2PolygonMode::Value polyModeBack,
+                     GX2PolygonMode polyModeFront,
+                     GX2PolygonMode polyModeBack,
                      BOOL polyOffsetFrontEnable,
                      BOOL polyOffsetBackEnable,
                      BOOL polyOffsetParaEnable)
@@ -724,12 +724,12 @@ GX2SetPolygonControl(GX2FrontFace::Value frontFace,
 
 void
 GX2InitPolygonControlReg(GX2PolygonControlReg *reg,
-                         GX2FrontFace::Value frontFace,
+                         GX2FrontFace frontFace,
                          BOOL cullFront,
                          BOOL cullBack,
                          BOOL polyMode,
-                         GX2PolygonMode::Value polyModeFront,
-                         GX2PolygonMode::Value polyModeBack,
+                         GX2PolygonMode polyModeFront,
+                         GX2PolygonMode polyModeBack,
                          BOOL polyOffsetFrontEnable,
                          BOOL polyOffsetBackEnable,
                          BOOL polyOffsetParaEnable)
@@ -749,23 +749,23 @@ GX2InitPolygonControlReg(GX2PolygonControlReg *reg,
 
 void
 GX2GetPolygonControlReg(GX2PolygonControlReg *reg,
-                        be_val<GX2FrontFace::Value> *frontFace,
+                        be_val<GX2FrontFace> *frontFace,
                         be_val<BOOL> *cullFront,
                         be_val<BOOL> *cullBack,
                         be_val<BOOL> *polyMode,
-                        be_val<GX2PolygonMode::Value> *polyModeFront,
-                        be_val<GX2PolygonMode::Value> *polyModeBack,
+                        be_val<GX2PolygonMode> *polyModeFront,
+                        be_val<GX2PolygonMode> *polyModeBack,
                         be_val<BOOL> *polyOffsetFrontEnable,
                         be_val<BOOL> *polyOffsetBackEnable,
                         be_val<BOOL> *polyOffsetParaEnable)
 {
    auto pa_su_sc_mode_cntl = reg->pa_su_sc_mode_cntl.value();
-   *frontFace = static_cast<GX2FrontFace::Value>(pa_su_sc_mode_cntl.FACE);
+   *frontFace = static_cast<GX2FrontFace>(pa_su_sc_mode_cntl.FACE);
    *cullFront = pa_su_sc_mode_cntl.CULL_FRONT;
    *cullBack = pa_su_sc_mode_cntl.CULL_BACK;
    *polyMode = pa_su_sc_mode_cntl.POLY_MODE;
-   *polyModeFront = static_cast<GX2PolygonMode::Value>(pa_su_sc_mode_cntl.POLYMODE_FRONT_PTYPE);
-   *polyModeBack = static_cast<GX2PolygonMode::Value>(pa_su_sc_mode_cntl.POLYMODE_BACK_PTYPE);
+   *polyModeFront = static_cast<GX2PolygonMode>(pa_su_sc_mode_cntl.POLYMODE_FRONT_PTYPE);
+   *polyModeBack = static_cast<GX2PolygonMode>(pa_su_sc_mode_cntl.POLYMODE_BACK_PTYPE);
    *polyOffsetFrontEnable = pa_su_sc_mode_cntl.POLY_OFFSET_FRONT_ENABLE;
    *polyOffsetBackEnable = pa_su_sc_mode_cntl.POLY_OFFSET_BACK_ENABLE;
    *polyOffsetParaEnable = pa_su_sc_mode_cntl.POLY_OFFSET_PARA_ENABLE;
@@ -924,14 +924,14 @@ GX2SetScissorReg(GX2ScissorReg *reg)
 }
 
 void
-GX2SetTargetChannelMasks(GX2ChannelMask::Value mask0,
-                         GX2ChannelMask::Value mask1,
-                         GX2ChannelMask::Value mask2,
-                         GX2ChannelMask::Value mask3,
-                         GX2ChannelMask::Value mask4,
-                         GX2ChannelMask::Value mask5,
-                         GX2ChannelMask::Value mask6,
-                         GX2ChannelMask::Value mask7)
+GX2SetTargetChannelMasks(GX2ChannelMask mask0,
+                         GX2ChannelMask mask1,
+                         GX2ChannelMask mask2,
+                         GX2ChannelMask mask3,
+                         GX2ChannelMask mask4,
+                         GX2ChannelMask mask5,
+                         GX2ChannelMask mask6,
+                         GX2ChannelMask mask7)
 {
    GX2TargetChannelMaskReg reg;
    GX2InitTargetChannelMasksReg(&reg,
@@ -948,14 +948,14 @@ GX2SetTargetChannelMasks(GX2ChannelMask::Value mask0,
 
 void
 GX2InitTargetChannelMasksReg(GX2TargetChannelMaskReg *reg,
-                             GX2ChannelMask::Value mask0,
-                             GX2ChannelMask::Value mask1,
-                             GX2ChannelMask::Value mask2,
-                             GX2ChannelMask::Value mask3,
-                             GX2ChannelMask::Value mask4,
-                             GX2ChannelMask::Value mask5,
-                             GX2ChannelMask::Value mask6,
-                             GX2ChannelMask::Value mask7)
+                             GX2ChannelMask mask0,
+                             GX2ChannelMask mask1,
+                             GX2ChannelMask mask2,
+                             GX2ChannelMask mask3,
+                             GX2ChannelMask mask4,
+                             GX2ChannelMask mask5,
+                             GX2ChannelMask mask6,
+                             GX2ChannelMask mask7)
 {
    auto cb_target_mask = reg->cb_target_mask.value();
    cb_target_mask.TARGET0_ENABLE = mask0;
@@ -971,24 +971,24 @@ GX2InitTargetChannelMasksReg(GX2TargetChannelMaskReg *reg,
 
 void
 GX2GetTargetChannelMasksReg(GX2TargetChannelMaskReg *reg,
-                            be_val<GX2ChannelMask::Value> *mask0,
-                            be_val<GX2ChannelMask::Value> *mask1,
-                            be_val<GX2ChannelMask::Value> *mask2,
-                            be_val<GX2ChannelMask::Value> *mask3,
-                            be_val<GX2ChannelMask::Value> *mask4,
-                            be_val<GX2ChannelMask::Value> *mask5,
-                            be_val<GX2ChannelMask::Value> *mask6,
-                            be_val<GX2ChannelMask::Value> *mask7)
+                            be_val<GX2ChannelMask> *mask0,
+                            be_val<GX2ChannelMask> *mask1,
+                            be_val<GX2ChannelMask> *mask2,
+                            be_val<GX2ChannelMask> *mask3,
+                            be_val<GX2ChannelMask> *mask4,
+                            be_val<GX2ChannelMask> *mask5,
+                            be_val<GX2ChannelMask> *mask6,
+                            be_val<GX2ChannelMask> *mask7)
 {
    auto cb_target_mask = reg->cb_target_mask.value();
-   *mask0 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET0_ENABLE);
-   *mask1 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET1_ENABLE);
-   *mask2 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET2_ENABLE);
-   *mask3 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET3_ENABLE);
-   *mask4 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET4_ENABLE);
-   *mask5 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET5_ENABLE);
-   *mask6 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET6_ENABLE);
-   *mask7 = static_cast<GX2ChannelMask::Value>(cb_target_mask.TARGET7_ENABLE);
+   *mask0 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET0_ENABLE);
+   *mask1 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET1_ENABLE);
+   *mask2 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET2_ENABLE);
+   *mask3 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET3_ENABLE);
+   *mask4 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET4_ENABLE);
+   *mask5 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET5_ENABLE);
+   *mask6 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET6_ENABLE);
+   *mask7 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET7_ENABLE);
 }
 
 void

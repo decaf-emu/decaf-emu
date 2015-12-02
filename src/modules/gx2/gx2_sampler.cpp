@@ -9,8 +9,8 @@ floatToFixedPoint(float value, uint32_t bits, float min, float max)
 
 void
 GX2InitSampler(GX2Sampler *sampler,
-               GX2TexClampMode::Value clampMode,
-               GX2TexXYFilterMode::Value minMagFilterMode)
+               GX2TexClampMode clampMode,
+               GX2TexXYFilterMode minMagFilterMode)
 {
    auto word0 = sampler->regs.word0.value();
    word0.CLAMP_X = static_cast<latte::SQ_TEX_CLAMP>(clampMode);
@@ -23,7 +23,7 @@ GX2InitSampler(GX2Sampler *sampler,
 
 void
 GX2InitSamplerBorderType(GX2Sampler *sampler,
-                         GX2TexBorderType::Value borderType)
+                         GX2TexBorderType borderType)
 {
    auto word0 = sampler->regs.word0.value();
    word0.BORDER_COLOR_TYPE = static_cast<latte::SQ_TEX_BORDER_COLOR>(borderType);
@@ -32,9 +32,9 @@ GX2InitSamplerBorderType(GX2Sampler *sampler,
 
 void
 GX2InitSamplerClamping(GX2Sampler *sampler,
-                       GX2TexClampMode::Value clampX,
-                       GX2TexClampMode::Value clampY,
-                       GX2TexClampMode::Value clampZ)
+                       GX2TexClampMode clampX,
+                       GX2TexClampMode clampY,
+                       GX2TexClampMode clampZ)
 {
    auto word0 = sampler->regs.word0.value();
    word0.CLAMP_X = static_cast<latte::SQ_TEX_CLAMP>(clampX);
@@ -45,7 +45,7 @@ GX2InitSamplerClamping(GX2Sampler *sampler,
 
 void
 GX2InitSamplerDepthCompare(GX2Sampler *sampler,
-                           GX2CompareFunction::Value depthCompare)
+                           GX2CompareFunction depthCompare)
 {
    auto word0 = sampler->regs.word0.value();
    word0.DEPTH_COMPARE_FUNCTION = static_cast<latte::SQ_TEX_DEPTH_COMPARE>(depthCompare);
@@ -55,8 +55,8 @@ GX2InitSamplerDepthCompare(GX2Sampler *sampler,
 void
 GX2InitSamplerFilterAdjust(GX2Sampler *sampler,
                            BOOL highPrecision,
-                           GX2TexMipPerfMode::Value perfMip,
-                           GX2TexZPerfMode::Value perfZ)
+                           GX2TexMipPerfMode perfMip,
+                           GX2TexZPerfMode perfZ)
 {
    auto word2 = sampler->regs.word2.value();
    word2.HIGH_PRECISION_FILTER = highPrecision;
@@ -93,7 +93,7 @@ GX2InitSamplerLODAdjust(GX2Sampler *sampler,
 
 void
 GX2InitSamplerRoundingMode(GX2Sampler *sampler,
-                           GX2RoundingMode::Value roundingMode)
+                           GX2RoundingMode roundingMode)
 {
    auto word2 = sampler->regs.word2.value();
    word2.TRUNCATE_COORD = roundingMode;
@@ -102,9 +102,9 @@ GX2InitSamplerRoundingMode(GX2Sampler *sampler,
 
 void
 GX2InitSamplerXYFilter(GX2Sampler *sampler,
-                       GX2TexXYFilterMode::Value filterMag,
-                       GX2TexXYFilterMode::Value filterMin,
-                       GX2TexAnisoRatio::Value maxAniso)
+                       GX2TexXYFilterMode filterMag,
+                       GX2TexXYFilterMode filterMin,
+                       GX2TexAnisoRatio maxAniso)
 {
    auto word0 = sampler->regs.word0.value();
    word0.XY_MAG_FILTER = static_cast<latte::SQ_TEX_XY_FILTER>(filterMag);
@@ -115,8 +115,8 @@ GX2InitSamplerXYFilter(GX2Sampler *sampler,
 
 void
 GX2InitSamplerZMFilter(GX2Sampler *sampler,
-                       GX2TexZFilterMode::Value filterZ,
-                       GX2TexMipFilterMode::Value filterMip)
+                       GX2TexZFilterMode filterZ,
+                       GX2TexMipFilterMode filterMip)
 {
    auto word0 = sampler->regs.word0.value();
    word0.Z_FILTER = static_cast<latte::SQ_TEX_Z_FILTER>(filterZ);
