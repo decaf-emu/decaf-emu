@@ -32,7 +32,11 @@ OSCancelAlarmNoLock(OSAlarm *alarm)
    alarm->state = OSAlarmState::Cancelled;
    alarm->nextFire = 0;
    alarm->period = 0;
-   OSEraseFromQueue(static_cast<OSAlarmQueue*>(alarm->alarmQueue), alarm);
+
+   if (alarm->alarmQueue) {
+      OSEraseFromQueue<OSAlarmQueue>(alarm->alarmQueue, alarm);
+   }
+
    return TRUE;
 }
 
@@ -52,10 +56,14 @@ OSCancelAlarms(uint32_t alarmTag)
    for (auto i = 0u; i < 3; ++i) {
       auto queue = gAlarmQueue[i];
 
-      for (OSAlarm *alarm = queue->head; alarm; alarm = alarm->link.next) {
+      for (OSAlarm *alarm = queue->head; alarm; ) {
+         auto next = alarm->link.next;
+
          if (alarm->alarmTag == alarmTag) {
             OSCancelAlarmNoLock(alarm);
          }
+
+         alarm = next;
       }
    }
 }
