@@ -45,7 +45,7 @@ enum Status : uint32_t
 
 namespace WPADError
 {
-enum Value : uint32_t
+enum Value : int32_t
 {
    None = 0,
    NoController = -1,
