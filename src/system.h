@@ -34,22 +34,35 @@ struct ModuleHandleData
 class System
 {
 public:
-   System();
+   void
+   initialise();
 
-   void initialise();
+   uint32_t
+   registerUnimplementedFunction(const std::string &module, const std::string &name);
 
-   uint32_t registerUnimplementedFunction(const std::string &name);
-   void registerModule(const std::string &name, KernelModule *module);
-   void registerModuleAlias(const std::string &module, const std::string &alias);
-   KernelModule *findModule(const std::string &name) const;
+   void
+   registerModule(const std::string &name, KernelModule *module);
 
-   void setUserModule(LoadedModule *module);
-   LoadedModule *getUserModule() const;
+   void
+   registerModuleAlias(const std::string &module, const std::string &alias);
 
-   KernelFunction *getSyscallData(uint32_t id);
+   KernelModule *
+   findModule(const std::string &name) const;
 
-   fs::FileSystem *getFileSystem();
-   void setFileSystem(fs::FileSystem *fs);
+   void
+   setUserModule(LoadedModule *module);
+
+   const LoadedModule *
+   getUserModule() const;
+
+   const KernelFunction *
+   getSyscallData(const uint32_t id) const;
+
+   void
+   setFileSystem(fs::FileSystem *fs);
+
+   fs::FileSystem *
+   getFileSystem() const;
 
    TeenyHeap *getSystemHeap() const
    {
@@ -58,13 +71,11 @@ public:
 
 protected:
    void registerSysCall(KernelFunction *func);
-   void loadThunks();
 
 private:
    LoadedModule *mUserModule = nullptr;
    std::map<std::string, KernelModule*> mSystemModules;
 
-   void *mSystemThunks = nullptr;
    std::map<uint32_t, KernelFunction*> mSystemCalls;
 
    fs::FileSystem *mFileSystem = nullptr;

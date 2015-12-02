@@ -10,43 +10,17 @@
 #include "utils/teenyheap.h"
 #include "utils/strutils.h"
 
-System gSystem;
-
-System::System()
-{
-}
-
-static void
-kcstub(ThreadState *state, void *userData)
-{
-   KernelFunction *func = static_cast<KernelFunction*> (userData);
-   if (!func->valid) {
-      gLog->info("unimplemented kernel function {}", func->name);
-      return;
-   }
-
-   func->call(state);
-}
+System
+gSystem;
 
 void
-System::registerSysCall(KernelFunction *func)
+System::initialise()
 {
-   cpu::KernelCallEntry entry(kcstub, func);
-   func->syscallID = cpu::registerKernelCall(entry);
-   mSystemCalls[func->syscallID] = func;
+   auto heap = mem::translate(0x01000000);
+   mSystemHeap = new TeenyHeap(heap, 0x01000000);
 }
 
-uint32_t
-System::registerUnimplementedFunction(const std::string &name)
-{
-   auto ppcFn = new kernel::functions::KernelFunctionImpl<void>();
-   ppcFn->valid = false;
-   ppcFn->name = name;
-   ppcFn->wrapped_function = nullptr;
-   registerSysCall(ppcFn);
-   return ppcFn->syscallID;
-}
-
+// Register a kernel module by name
 void
 System::registerModule(const std::string &name, KernelModule *module)
 {
@@ -64,6 +38,7 @@ System::registerModule(const std::string &name, KernelModule *module)
    }
 }
 
+// Register an alternative name for a kernel module
 void
 System::registerModuleAlias(const std::string &module, const std::string &alias)
 {
@@ -74,25 +49,7 @@ System::registerModuleAlias(const std::string &module, const std::string &alias)
    }
 }
 
-void
-System::setUserModule(LoadedModule *module)
-{
-   mUserModule = module;
-}
-
-LoadedModule *
-System::getUserModule() const
-{
-   return mUserModule;
-}
-
-void
-System::initialise()
-{
-   void *systemMem = mem::translate(0x01000000);
-   mSystemHeap = new TeenyHeap(systemMem, 0x01000000);
-}
-
+// Find a kernel module by name
 KernelModule *
 System::findModule(const std::string &name) const
 {
@@ -105,40 +62,39 @@ System::findModule(const std::string &name) const
    }
 }
 
-KernelFunction *
-System::getSyscallData(uint32_t id)
+// Forwarder function which PPC will branch to for a kernel library function call
+static void
+kcstub(ThreadState *state, void *data)
 {
-   return mSystemCalls[id];
+   auto func = static_cast<KernelFunction *>(data);
+
+   if (!func->valid) {
+      gLog->info("Unimplemented kernel function {}::{}", func->module, func->name);
+      return;
+   }
+
+   func->call(state);
 }
 
+// Register a kernel call
 void
-System::loadThunks()
+System::registerSysCall(KernelFunction *func)
 {
-   uint32_t addr;
+   func->syscallID = cpu::registerKernelCall({ kcstub, func });
+   mSystemCalls[func->syscallID] = func;
+}
 
-   // Allocate space for all thunks!
-   mSystemThunks = OSAllocFromSystem(static_cast<uint32_t>(mSystemCalls.size() * 8), 4);
-   addr = mem::untranslate(mSystemThunks);
-
-   for (auto &i : mSystemCalls) {
-      auto &func = i.second;
-
-      // Set the function virtual address
-      func->vaddr = addr;
-
-      // Write syscall with symbol id
-      auto kc = gInstructionTable.encode(InstructionID::kc);
-      kc.li = func->syscallID;
-      kc.aa = 1;
-      mem::write(addr, kc.value);
-
-      // Return by Branch to LR
-      auto bclr = gInstructionTable.encode(InstructionID::bclr);
-      bclr.bo = 0x1f;
-      mem::write(addr + 4, bclr.value);
-
-      addr += 8;
-   }
+// Register an unimplemented function
+uint32_t
+System::registerUnimplementedFunction(const std::string &module, const std::string &name)
+{
+   auto ppcFn = new kernel::functions::KernelFunctionImpl<void>();
+   ppcFn->valid = false;
+   ppcFn->module = module;
+   ppcFn->name = name;
+   ppcFn->wrapped_function = nullptr;
+   registerSysCall(ppcFn);
+   return ppcFn->syscallID;
 }
 
 void
@@ -147,7 +103,26 @@ System::setFileSystem(fs::FileSystem *fs)
    mFileSystem = fs;
 }
 
-fs::FileSystem *System::getFileSystem()
+void
+System::setUserModule(LoadedModule *module)
+{
+   mUserModule = module;
+}
+
+const LoadedModule *
+System::getUserModule() const
+{
+   return mUserModule;
+}
+
+const KernelFunction *
+System::getSyscallData(const uint32_t id) const
+{
+   return mSystemCalls.at(id);
+}
+
+fs::FileSystem *
+System::getFileSystem() const
 {
    return mFileSystem;
 }
