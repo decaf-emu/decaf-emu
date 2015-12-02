@@ -37,6 +37,7 @@ OSCancelAlarmNoLock(OSAlarm *alarm)
       OSEraseFromQueue<OSAlarmQueue>(alarm->alarmQueue, alarm);
    }
 
+   OSWakeupThread(&alarm->threadQueue);
    return TRUE;
 }
 
