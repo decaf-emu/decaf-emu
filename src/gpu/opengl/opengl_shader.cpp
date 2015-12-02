@@ -81,8 +81,7 @@ getAttributeComponents(latte::SQ_DATA_FORMAT format)
    case latte::FMT_32_32_32_32_FLOAT:
       return 4;
    default:
-      throw std::logic_error("Unsupported attribute format");
-      return 4;
+      throw unimplemented_error(fmt::format("Unimplemented attribute format {}", format));
    }
 }
 
@@ -259,8 +258,7 @@ bool GLDriver::checkActiveUniforms()
       }
    } else {
       // TODO: Upload uniform blocks
-      gLog->error("Uniform blocks not supported.");
-      return false;
+      throw unimplemented_error("Unimplemented uniform blocks");
    }
 
    return true;
@@ -346,7 +344,7 @@ stridedMemcpy(void *src, void *dst, size_t size, size_t offset, size_t stride, l
       stridedMemcpy2<uint32_t, 4>(src, dst, size, offset, stride, swap);
       break;
    default:
-      throw std::logic_error("Invalid strided memcpy format");
+      throw unimplemented_error(fmt::format("Unimplemented stride memcpy format {}", format));
    }
 }
 
@@ -729,7 +727,7 @@ getSamplerType(latte::SQ_TEX_DIM dim, latte::SQ_NUM_FORMAT numFormat, latte::SQ_
    case latte::SQ_TEX_DIM_2D_ARRAY:
       return SamplerType::Sampler2DArray;
    default:
-      throw std::logic_error("Unexpected sampler type.");
+      throw unimplemented_error(fmt::format("Unimplemented sampler type {}", dim));
    }
 }
 

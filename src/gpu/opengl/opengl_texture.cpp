@@ -35,8 +35,7 @@ getTextureTarget(latte::SQ_TEX_DIM dim)
    case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
       return gl::GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
    default:
-      throw std::logic_error("Unexpected SQ_TEX_DIM");
-      return gl::GL_TEXTURE_2D;
+      throw unimplemented_error(fmt::format("Unimplemented SQ_TEX_DIM {}", dim));
    }
 }
 
@@ -90,8 +89,7 @@ getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
    case GX2SurfaceFormat::UNORM_BC5:
       return gl::GL_COMPRESSED_RG_RGTC2;
    default:
-      throw std::logic_error("Invalid texture format");
-      return gl::GL_INVALID_ENUM;
+      throw unimplemented_error(fmt::format("Unimplemented texture storage format {}", value));
    }
 }
 
@@ -118,8 +116,7 @@ getTextureType(latte::SQ_DATA_FORMAT format)
    case latte::FMT_BC5:
       return gl::GL_RG;
    default:
-      throw std::logic_error("Invalid texture format");
-      return gl::GL_INVALID_ENUM;
+      throw unimplemented_error(fmt::format("Unimplemented texture type format {}", format));
    }
 }
 
@@ -148,8 +145,7 @@ getTextureFormat(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
    case latte::FMT_8_8_8_8:
       return isSigned ? gl::GL_BYTE : gl::GL_UNSIGNED_BYTE;
    default:
-      throw std::logic_error("Invalid texture format");
-      return gl::GL_INVALID_ENUM;
+      throw unimplemented_error(fmt::format("Unimplemented texture format {}", format));
    }
 }
 
@@ -183,8 +179,7 @@ getCompressedTextureFormat(latte::SQ_DATA_FORMAT format, uint32_t degamma)
    case latte::FMT_BC5:
       return degamma ? gl::GL_COMPRESSED_SIGNED_RG_RGTC2 : gl::GL_COMPRESSED_RG_RGTC2;
    default:
-      throw std::logic_error("Invalid compressed texture format");
-      return gl::GL_INVALID_ENUM;
+      throw unimplemented_error(fmt::format("Unimplemented compressed texture format {}", format));
    }
 }
 
@@ -205,7 +200,7 @@ getTextureSwizzle(latte::SQ_SEL sel)
    case latte::SQ_SEL_1:
       return gl::GL_ONE;
    default:
-      throw std::logic_error("Invalid texture swizzle");
+      throw unimplemented_error(fmt::format("Unimplemented compressed texture swizzle {}", sel));
    }
 }
 
@@ -361,7 +356,7 @@ getTextureWrap(latte::SQ_TEX_CLAMP clamp)
    case latte::SQ_TEX_CLAMP_HALF_BORDER:
    case latte::SQ_TEX_MIRROR_ONCE_HALF_BORDER:
    default:
-      throw std::logic_error("Invalid SQ_TEX_CLAMP");
+      throw unimplemented_error(fmt::format("Unimplemented texture wrap {}", clamp));
    }
 }
 
@@ -374,7 +369,7 @@ getTextureXYFilter(latte::SQ_TEX_XY_FILTER filter)
    case latte::SQ_TEX_XY_FILTER_BILINEAR:
       return gl::GL_LINEAR;
    default:
-      throw std::logic_error("Invalid SQ_TEX_XY_FILTER");
+      throw unimplemented_error(fmt::format("Unimplemented texture xy filter {}", filter));
    }
 }
 
@@ -399,7 +394,7 @@ getTextureCompareFunction(latte::SQ_TEX_DEPTH_COMPARE func)
    case latte::SQ_TEX_DEPTH_COMPARE_ALWAYS:
       return gl::GL_ALWAYS;
    default:
-      throw std::logic_error("Invalid SQ_TEX_DEPTH_COMPARE");
+      throw unimplemented_error(fmt::format("Unimplemented texture compare function {}", func));
    }
 }
 

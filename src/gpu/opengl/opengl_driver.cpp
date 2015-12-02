@@ -246,8 +246,7 @@ getRefFunc(latte::REF_FUNC func)
    case latte::REF_ALWAYS:
       return gl::GL_ALWAYS;
    default:
-      throw std::logic_error("Invalid ref func");
-      return gl::GL_NEVER;
+      throw unimplemented_error(fmt::format("Unimplemented REF_FUNC {}", func));
    }
 }
 
@@ -294,8 +293,7 @@ getBlendFunc(latte::CB_BLEND_FUNC func)
    case latte::CB_BLEND_ONE_MINUS_CONSTANT_ALPHA:
       return gl::GL_ONE_MINUS_CONSTANT_ALPHA;
    default:
-      throw std::logic_error("Invalid blend func");
-      return gl::GL_ZERO;
+      throw unimplemented_error(fmt::format("Unimplemented CB_BLEND_FUNC {}", func));
    }
 }
 
@@ -314,8 +312,7 @@ getBlendEquation(latte::CB_COMB_FUNC func)
    case latte::CB_COMB_DST_MINUS_SRC:
       return gl::GL_FUNC_REVERSE_SUBTRACT;
    default:
-      throw std::logic_error("Invalid blend equation");
-      return gl::GL_ZERO;
+      throw unimplemented_error(fmt::format("Unimplemented CB_COMB_FUNC {}", func));
    }
 }
 
@@ -340,8 +337,7 @@ getStencilFunc(latte::DB_STENCIL_FUNC func)
    case latte::DB_STENCIL_DECR_WRAP:
       return gl::GL_DECR_WRAP;
    default:
-      throw std::logic_error("Invalid blend equation");
-      return gl::GL_ZERO;
+      throw unimplemented_error(fmt::format("Unimplemented DB_STENCIL_FUNC {}", func));
    }
 }
 
@@ -853,7 +849,7 @@ getPrimitiveMode(latte::VGT_DI_PRIMITIVE_TYPE type)
    case latte::VGT_DI_PT_LINELOOP:
       return gl::GL_LINE_LOOP;
    default:
-      throw std::logic_error("Invalid VGT_PRIMITIVE_TYPE");
+      throw unimplemented_error(fmt::format("Unimplemented VGT_PRIMITIVE_TYPE {}", type));
    }
 }
 
@@ -972,7 +968,7 @@ void GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
       auto indices = std::vector<uint16_t>(data.numIndices);
 
       if (vgt_dma_index_type.INDEX_TYPE != latte::VGT_INDEX_16) {
-         throw new std::logic_error("Unexpected INDEX_TYPE for VGT_DMA_SWAP_16_BIT");
+         throw std::logic_error(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_16_BIT", vgt_dma_index_type.INDEX_TYPE));
       }
 
       for (auto i = 0u; i < data.numIndices; ++i) {
@@ -989,7 +985,7 @@ void GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
       auto indices = std::vector<uint32_t>(data.numIndices);
 
       if (vgt_dma_index_type.INDEX_TYPE != latte::VGT_INDEX_32) {
-         throw new std::logic_error("Unexpected INDEX_TYPE for VGT_DMA_SWAP_32_BIT");
+         throw std::logic_error(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_32_BIT", vgt_dma_index_type.INDEX_TYPE));
       }
 
       for (auto i = 0u; i < data.numIndices; ++i) {
@@ -1008,7 +1004,7 @@ void GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
                      data.addr,
                      vgt_dma_index_type.INDEX_TYPE);
    } else {
-      throw std::logic_error("Invalid vgt_dma_index_type.SWAP_MODE");
+      throw unimplemented_error(fmt::format("Unimplemented vgt_dma_index_type.SWAP_MODE {}", vgt_dma_index_type.SWAP_MODE));
    }
 }
 

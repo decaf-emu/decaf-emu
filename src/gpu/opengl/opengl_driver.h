@@ -1,6 +1,7 @@
 #pragma once
 #include <glbinding/gl/types.h>
 #include <gsl.h>
+#include <exception>
 #include <map>
 #include <thread>
 #include <unordered_map>
@@ -9,6 +10,7 @@
 #include "gpu/driver.h"
 #include "gpu/latte_contextstate.h"
 #include "platform/platform.h"
+#include "utils/log.h"
 
 namespace gpu
 {
@@ -21,6 +23,16 @@ static const auto MAX_COLOR_BUFFER_COUNT = 8u;
 static const auto MAX_UNIFORM_BLOCKS = 8u;
 static const auto MAX_UNIFORM_REGISTERS = 256u;
 static const auto MAX_SAMPLERS_PER_TYPE = 16u;
+
+class unimplemented_error : public std::exception
+{
+public:
+   explicit unimplemented_error(const std::string &message)
+      : std::exception(message.c_str())
+   {
+      gLog->critical(message);
+   }
+};
 
 enum class SamplerType
 {
