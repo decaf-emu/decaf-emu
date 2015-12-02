@@ -38,7 +38,6 @@ struct Core
       id(id)
    {
       nextInterrupt = std::chrono::time_point<std::chrono::system_clock>::max();
-      std::memset(&state, 0, sizeof(cpu::CoreState));
    }
 
    uint32_t id;
