@@ -248,7 +248,7 @@ struct Section
 {
    SectionHeader header;
    std::vector<char> data;
-   
+
    // Useful for loader
    UserModule::Section *section = nullptr;
    ModuleSymbol *msym = nullptr;

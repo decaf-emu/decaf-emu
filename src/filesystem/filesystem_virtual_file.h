@@ -7,9 +7,7 @@ namespace fs
 class VirtualFile : public File
 {
 public:
-   virtual ~VirtualFile()
-   {
-   }
+   virtual ~VirtualFile() override = default;
 
    FileHandle *open(OpenMode mode) override
    {

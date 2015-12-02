@@ -18,9 +18,7 @@ public:
    {
    }
 
-   virtual ~VirtualFolderHandle()
-   {
-   }
+   virtual ~VirtualFolderHandle() override = default;
 
    virtual bool open()
    {

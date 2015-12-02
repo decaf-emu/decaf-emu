@@ -8,9 +8,14 @@
 namespace cpu
 {
 
-interrupt_handler gInterruptHandler;
+interrupt_handler
+gInterruptHandler;
 
-JitMode gJitMode = JitMode::Disabled;
+JitMode
+gJitMode = JitMode::Disabled;
+
+static CoreState
+gDefaultCoreState;
 
 void setJitMode(JitMode mode)
 {
@@ -44,8 +49,6 @@ void clearInterrupt(CoreState *core)
    core->interrupt.exchange(false);
 }
 
-static CoreState gDefaultCoreState;
-
 void executeSub(CoreState *core, ThreadState *state)
 {
    if (!core) {
@@ -61,4 +64,4 @@ void executeSub(CoreState *core, ThreadState *state)
    }
 }
 
-}
+} // namespace cpu

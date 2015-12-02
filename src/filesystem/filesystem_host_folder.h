@@ -18,9 +18,7 @@ public:
    {
    }
 
-   virtual ~HostFolder()
-   {
-   }
+   virtual ~HostFolder() override = default;
 
    virtual Node *addFolder(const std::string &name) override
    {

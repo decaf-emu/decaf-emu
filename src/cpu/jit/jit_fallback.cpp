@@ -39,7 +39,8 @@ bool jit_fallback(PPCEmuAssembler& a, Instruction instr)
 
 } // namespace cpu
 
-void fallbacksPrint() {
+void fallbacksPrint()
+{
    typedef std::pair<uint32_t, uint64_t> FallbackItem;
    std::vector<FallbackItem> callList;
    for (auto i = 0u; i < static_cast<size_t>(InstructionID::InstructionCount); ++i) {

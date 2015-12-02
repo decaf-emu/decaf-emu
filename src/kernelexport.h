@@ -21,11 +21,10 @@ struct KernelExport
    {
    }
 
-   virtual ~KernelExport()
-   {
-   }
+   virtual ~KernelExport() = default;
 
-   Type type;
+   Type type = Undefined;
    std::string name;
+   std::string module;
    void *ppcPtr = nullptr;
 };

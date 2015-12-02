@@ -20,9 +20,7 @@ public:
    {
    }
 
-   virtual ~Node()
-   {
-   }
+   virtual ~Node() = default;
 
    NodeType type = Invalid;
    std::string name;

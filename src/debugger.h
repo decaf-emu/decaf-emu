@@ -61,7 +61,9 @@ public:
 
    void addBreakpoint(uint32_t addr, uint32_t userData);
    void removeBreakpoint(uint32_t addr);
-   const BreakpointList& getBreakpoints() const {
+
+   const BreakpointList &getBreakpoints() const
+   {
       return mBreakpoints;
    }
 

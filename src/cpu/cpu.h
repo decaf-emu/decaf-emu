@@ -33,9 +33,13 @@ void clearInterrupt(CoreState *core);
 
 void executeSub(CoreState *core, ThreadState *state);
 
-typedef void (*KernelCallFn)(ThreadState *state, void *userData);
-typedef std::pair<KernelCallFn, void*> KernelCallEntry;
-uint32_t registerKernelCall(KernelCallEntry &entry);
-KernelCallEntry * getKernelCall(uint32_t id);
+using KernelCallFn = void(*)(ThreadState *state, void *userData);
+using KernelCallEntry = std::pair<KernelCallFn, void*>;
+
+uint32_t
+registerKernelCall(const KernelCallEntry &entry);
+
+KernelCallEntry *
+getKernelCall(uint32_t id);
 
 } // namespace cpu

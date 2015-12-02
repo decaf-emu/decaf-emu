@@ -49,16 +49,16 @@ updateConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& value, const
 // Add
 enum AddFlags
 {
-   AddCarry = 1 << 0, // xer[ca] = carry
-   AddExtended = 1 << 1, // d = a + b + xer[ca]
-   AddImmediate = 1 << 2, // d = a + simm
-   AddCheckRecord = 1 << 3, // Check rc and oe then update cr0 and xer
-   AddAlwaysRecord = 1 << 4, // Always update cr0 and xer
-   AddShifted = 1 << 5, // d = a + (b << 16)
-   AddToZero = 1 << 6, // d = a + 0
-   AddToMinusOne = 1 << 7, // d = a + -1
-   AddZeroRA = 1 << 8, // a = (rA == 0) ? 0 : gpr[rA]
-   AddSubtract = 1 << 9, // a = ~a and +1 when not carry
+   AddCarry          = 1 << 0, // xer[ca] = carry
+   AddExtended       = 1 << 1, // d = a + b + xer[ca]
+   AddImmediate      = 1 << 2, // d = a + simm
+   AddCheckRecord    = 1 << 3, // Check rc and oe then update cr0 and xer
+   AddAlwaysRecord   = 1 << 4, // Always update cr0 and xer
+   AddShifted        = 1 << 5, // d = a + (b << 16)
+   AddToZero         = 1 << 6, // d = a + 0
+   AddToMinusOne     = 1 << 7, // d = a + -1
+   AddZeroRA         = 1 << 8, // a = (rA == 0) ? 0 : gpr[rA]
+   AddSubtract       = 1 << 9, // a = ~a and +1 when not carry
 };
 
 template<unsigned flags = 0>
@@ -227,11 +227,11 @@ addze(PPCEmuAssembler& a, Instruction instr)
 // AND
 enum AndFlags
 {
-   AndComplement = 1 << 0, // b = ~b
-   AndCheckRecord = 1 << 1, // Check rc then update cr
-   AndImmediate = 1 << 2, // b = uimm
-   AndShifted = 1 << 3, // b = (b << 16)
-   AndAlwaysRecord = 1 << 4, // Always update cr
+   AndComplement     = 1 << 0, // b = ~b
+   AndCheckRecord    = 1 << 1, // Check rc then update cr
+   AndImmediate      = 1 << 2, // b = uimm
+   AndShifted        = 1 << 3, // b = (b << 16)
+   AndAlwaysRecord   = 1 << 4, // Always update cr
 };
 
 template<unsigned flags>
@@ -398,9 +398,9 @@ extsh(PPCEmuAssembler& a, Instruction instr)
 // Multiply
 enum MulFlags
 {
-   MulLow = 1 << 0, // (uint32_t)d
-   MulHigh = 1 << 1, // d >> 32
-   MulImmediate = 1 << 2, // b = simm
+   MulLow         = 1 << 0, // (uint32_t)d
+   MulHigh        = 1 << 1, // d >> 32
+   MulImmediate   = 1 << 2, // b = simm
    MulCheckRecord = 1 << 3, // Check rc then update cr
 };
 

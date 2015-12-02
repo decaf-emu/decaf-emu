@@ -79,8 +79,11 @@ public:
    }
 
 private:
-   ppcaddr_t registerUnimplementedData(const std::string& name);
-   ppcaddr_t registerUnimplementedFunction(const std::string& name);
+   ppcaddr_t
+   registerUnimplementedData(const std::string& name);
+
+   ppcaddr_t
+   registerUnimplementedFunction(const std::string &module, const std::string &func);
 
    std::unique_ptr<LoadedModule> loadKernelModule(const std::string &name, KernelModule *module);
    std::unique_ptr<LoadedModule> loadRPL(const std::string& name, const gsl::span<uint8_t> &data);

@@ -7,7 +7,7 @@ namespace gpu
 class Driver
 {
 public:
-   virtual ~Driver() { }
+   virtual ~Driver() = default;
 
    virtual void start() = 0;
    virtual void setTvDisplay(size_t width, size_t height) = 0;

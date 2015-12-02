@@ -43,6 +43,7 @@ Processor::start()
    platform::setThreadName(&mTimerThread, "Timer Thread");
 }
 
+// Wake up any cores which are waiting for a new thread
 void
 Processor::wakeAllCores()
 {
@@ -75,6 +76,7 @@ Processor::fiberEntryPoint(Fiber *fiber)
    OSExitThread(ppctypes::getResult<int>(&fiber->state));
 }
 
+// Entry point of newly created fibers
 void
 Fiber::fiberEntryPoint(void *param)
 {
@@ -139,6 +141,8 @@ Processor::coreEntryPoint(Core *core)
    }
 }
 
+// Return to scheduler fiber if there are any valid fibers to run
+// Will manage the scheduler unlock/relock if necessary
 void
 Processor::reschedule(bool hasSchedulerLock, bool yield)
 {
@@ -234,8 +238,8 @@ Processor::queueNoLock(Fiber *fiber)
 {
    auto compare =
       [](Fiber *lhs, Fiber *rhs) {
-      return lhs->thread->basePriority < rhs->thread->basePriority;
-   };
+         return lhs->thread->basePriority < rhs->thread->basePriority;
+      };
 
    if (tCurrentCore) {
       gLog->trace("Core {} queued thread {}", tCurrentCore->id, fiber->thread->id);

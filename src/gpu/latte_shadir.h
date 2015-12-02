@@ -24,9 +24,7 @@ struct Instruction
    {
    }
 
-   virtual ~Instruction()
-   {
-   }
+   virtual ~Instruction() = default;
 
    Type insType;
    const char *name = nullptr;
@@ -41,9 +39,7 @@ struct CfInstruction : Instruction
    {
    }
 
-   virtual ~CfInstruction() final
-   {
-   }
+   virtual ~CfInstruction()  override = default;
 
    latte::cf::inst id;
    uint32_t addr = 0;
@@ -154,9 +150,7 @@ struct AluInstruction : Instruction
    {
    }
 
-   virtual ~AluInstruction() final
-   {
-   }
+   virtual ~AluInstruction()  override = default;
 
    union
    {
@@ -184,9 +178,7 @@ struct AluReductionInstruction : Instruction
    {
    }
 
-   virtual ~AluReductionInstruction() final
-   {
-   }
+   virtual ~AluReductionInstruction() override = default;
 
    std::unique_ptr<AluInstruction> units[4];
    latte::alu::op2 op2;
@@ -199,9 +191,7 @@ struct ExportInstruction : Instruction
    {
    }
 
-   virtual ~ExportInstruction() final
-   {
-   }
+   virtual ~ExportInstruction() override = default;
 
    latte::exp::inst id;
    SelRegister src;
@@ -220,9 +210,7 @@ struct TexInstruction : Instruction
    {
    }
 
-   virtual ~TexInstruction() final
-   {
-   }
+   virtual ~TexInstruction() override = default;
 
    latte::tex::inst id;
    bool bcFracMode = false;
@@ -255,9 +243,7 @@ struct Block
    {
    }
 
-   virtual ~Block()
-   {
-   }
+   virtual ~Block() = default;
 
    Type type;
 };
@@ -271,9 +257,7 @@ struct CodeBlock : Block
    {
    }
 
-   virtual ~CodeBlock() final
-   {
-   }
+   virtual ~CodeBlock() override = default;
 
    std::vector<shadir::Instruction *> code; // Non-owning
 };
@@ -285,9 +269,7 @@ struct LoopBlock : Block
    {
    }
 
-   virtual ~LoopBlock() final
-   {
-   }
+   virtual ~LoopBlock() override = default;
 
    BlockList inner;
 };
@@ -300,9 +282,7 @@ struct ConditionalBlock : Block
    {
    }
 
-   virtual ~ConditionalBlock() final
-   {
-   }
+   virtual ~ConditionalBlock() override = default;
 
    shadir::Instruction *condition; // Non-owning
    BlockList inner;

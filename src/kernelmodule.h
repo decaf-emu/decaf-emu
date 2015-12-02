@@ -25,7 +25,7 @@ struct ModuleHandleData;
 class KernelModule
 {
 public:
-   virtual ~KernelModule() {}
+   virtual ~KernelModule() = default;
 
    virtual void initialise() = 0;
    virtual const KernelExportMap &getExportMap() const = 0;
@@ -51,7 +51,7 @@ template<typename ModuleType>
 class KernelModuleImpl : public KernelModule
 {
 public:
-   virtual ~KernelModuleImpl() { }
+   virtual ~KernelModuleImpl() override = default;
 
    KernelExport *
    findExport(const char *name) const override

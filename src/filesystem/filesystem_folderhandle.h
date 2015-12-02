@@ -21,9 +21,7 @@ struct FolderEntry
 class FolderHandle
 {
 public:
-   virtual ~FolderHandle()
-   {
-   }
+   virtual ~FolderHandle() = default;
 
    virtual bool open() = 0;
    virtual void close() = 0;

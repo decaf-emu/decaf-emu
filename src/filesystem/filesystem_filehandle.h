@@ -8,9 +8,7 @@ namespace fs
 class FileHandle
 {
 public:
-   virtual ~FileHandle()
-   {
-   }
+   virtual ~FileHandle() = default;
 
    virtual bool open() = 0;
    virtual void close() = 0;

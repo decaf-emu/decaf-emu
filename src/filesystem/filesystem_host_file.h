@@ -17,9 +17,7 @@ public:
 
    }
 
-   virtual ~HostFile()
-   {
-   }
+   virtual ~HostFile() override = default;
 
    virtual class FileHandle *open(OpenMode mode)
    {

@@ -4,8 +4,7 @@
 class Zlib125 : public KernelModuleImpl<Zlib125>
 {
 public:
-   Zlib125();
-   virtual ~Zlib125() override;
+   virtual ~Zlib125() = default;
 
    virtual void initialise() override;
 

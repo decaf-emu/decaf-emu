@@ -19,7 +19,8 @@ DebugControl::DebugControl()
 void
 DebugControl::pauseAll()
 {
-   bool prevVal = mWaitingForPause.exchange(true);
+   auto prevVal = mWaitingForPause.exchange(true);
+
    if (prevVal == true) {
       // Someone pre-empted this pause
       return;
@@ -29,12 +30,11 @@ DebugControl::pauseAll()
 void
 DebugControl::resumeAll()
 {
-   for (int i = 0; i < DCCoreCount; ++i) {
+   for (auto i = 0; i < DCCoreCount; ++i) {
       mCorePaused[i] = false;
    }
 
    mWaitingForPause.store(false);
-
    mReleaseCond.notify_all();
 }
 
@@ -49,17 +49,19 @@ DebugControl::stepCore(uint32_t coreId)
 void
 DebugControl::waitForAllPaused()
 {
-   std::unique_lock<std::mutex> lock{ mMutex };
+   std::unique_lock<std::mutex> lock { mMutex };
 
    while (true) {
       bool allCoresPaused = true;
-      for (int i = 0; i < DCCoreCount; ++i) {
+
+      for (auto i = 0; i < DCCoreCount; ++i) {
          allCoresPaused &= mCorePaused[i];
       }
+
       if (allCoresPaused) {
          break;
       }
-      
+
       gProcessor.wakeAllCores();
       mWaitCond.wait(lock);
    }
@@ -69,11 +71,10 @@ void
 DebugControl::pauseCore(ThreadState *state, uint32_t coreId)
 {
    while (mWaitingForPause.load()) {
-      std::unique_lock<std::mutex> lock{ mMutex };
+      std::unique_lock<std::mutex> lock { mMutex };
 
       mCorePaused[coreId] = true;
       mWaitCond.notify_all();
-
       mReleaseCond.wait(lock);
 
       if (mWaitingForStep.load() == coreId) {
@@ -93,7 +94,6 @@ DebugControl::preLaunch()
    gDebugger.notify(new DebugMessagePreLaunch());
    pauseCore(nullptr, OSGetCoreId());
 }
-
 
 void
 DebugControl::maybeBreak(uint32_t addr, ThreadState *state, uint32_t coreId)
@@ -115,23 +115,17 @@ DebugControl::maybeBreak(uint32_t addr, ThreadState *state, uint32_t coreId)
       return;
    }
 
-   BreakpointList bps = gDebugger.getBreakpoints();
-   uint32_t bpUserData = 0;
-   bool isBpAddr = false;
-   auto bpitr = bps->find(addr);
-   if (bpitr != bps->end()) {
-      bpUserData = bpitr->second;
-      isBpAddr = true;
-   }
+   auto &bps = gDebugger.getBreakpoints();
+   auto itr = bps->find(addr);
 
-   if (isBpAddr) {
+   if (itr != bps->end()) {
       pauseAll();
 
       // Send a message to the debugger before we pause ourself
       auto msg = new DebugMessageBpHit();
       msg->coreId = coreId;
       msg->address = addr;
-      msg->userData = bpUserData;
+      msg->userData = itr->second;
       gDebugger.notify(msg);
 
       pauseCore(state, coreId);

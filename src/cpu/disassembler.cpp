@@ -7,7 +7,8 @@
 #include "kernelfunction.h"
 #include "utils/bitutils.h"
 
-Disassembler gDisassembler;
+Disassembler
+gDisassembler;
 
 // TODO: Finish disassembler!
 
@@ -326,6 +327,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    // Specialized Handlers
    if (data->id == InstructionID::kc) {
       auto sc = gSystem.getSyscallData(dis.args[0].constantUnsigned);
+
       if (sc) {
          dis.text += " ; " + sc->name;
       } else {

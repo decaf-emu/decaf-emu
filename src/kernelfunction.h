@@ -13,9 +13,7 @@ struct KernelFunction : KernelExport
    {
    }
 
-   virtual ~KernelFunction()
-   {
-   }
+   virtual ~KernelFunction() override = default;
 
    virtual void call(ThreadState *state) = 0;
 

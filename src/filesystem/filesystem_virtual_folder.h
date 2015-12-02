@@ -15,7 +15,7 @@ public:
    {
    }
 
-   virtual ~VirtualFolder()
+   virtual ~VirtualFolder() override
    {
       for (auto node : mChildren) {
          delete node;

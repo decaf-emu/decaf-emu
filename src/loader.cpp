@@ -37,13 +37,13 @@ public:
    }
 
    ppcaddr_t
-      getCurrentAddr() const
+   getCurrentAddr() const
    {
       return mem::untranslate(mPtr);
    }
 
    void *
-      get(size_t size, uint32_t alignment = 4)
+   get(size_t size, uint32_t alignment = 4)
    {
       // Ensure section alignment
       auto alignOffset = align_up(mPtr, alignment) - mPtr;
@@ -290,6 +290,7 @@ Loader::loadRPL(std::string name)
 }
 
 
+// Load a kernel module into virtual memory space by creating thunks
 std::unique_ptr<LoadedModule>
 Loader::loadKernelModule(const std::string &name, KernelModule *module)
 {
@@ -403,15 +404,15 @@ Loader::registerUnimplementedData(const std::string& name)
 
 
 ppcaddr_t
-Loader::registerUnimplementedFunction(const std::string& name)
+Loader::registerUnimplementedFunction(const std::string &module, const std::string &func)
 {
-   auto itr = mUnimplementedFunctions.find(name);
+   auto itr = mUnimplementedFunctions.find(func);
 
    if (itr != mUnimplementedFunctions.end()) {
       return itr->second;
    }
 
-   auto id = gSystem.registerUnimplementedFunction(name);
+   auto id = gSystem.registerUnimplementedFunction(module, func);
    auto thunk = static_cast<uint32_t*>(OSAllocFromSystem(8, 4));
    auto addr = mem::untranslate(thunk);
 
@@ -424,7 +425,7 @@ Loader::registerUnimplementedFunction(const std::string& name)
    bclr.bo = 0x1f;
    *(thunk + 1) = byte_swap(bclr.value);
 
-   mUnimplementedFunctions.emplace(name, addr);
+   mUnimplementedFunctions.emplace(func, addr);
    return addr;
 }
 
@@ -620,10 +621,11 @@ Loader::processImports(LoadedModule *loadedMod, const SectionList &sections)
          if (impsec.header.type == elf::SHT_RPL_IMPORTS) {
             auto symbolTargetIter = symbolTable.find(name);
             ppcaddr_t symbolAddr = 0u;
+            auto libraryName = reinterpret_cast<const char*>(impsec.memory + 8);
 
             if (symbolTargetIter == symbolTable.end()) {
                if (type == elf::STT_FUNC) {
-                  symbolAddr = registerUnimplementedFunction(name);
+                  symbolAddr = registerUnimplementedFunction(libraryName, name);
                }
             } else {
                if (type != elf::STT_FUNC && type != elf::STT_OBJECT) {

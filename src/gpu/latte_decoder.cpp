@@ -18,7 +18,8 @@ struct DecodeState
 
 namespace KcacheMode
 {
-enum Mode {
+enum Mode
+{
    Nop = 0,
    Lock1 = 1,
    Lock2 = 2,

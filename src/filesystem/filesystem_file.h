@@ -24,9 +24,7 @@ public:
    {
    }
 
-   virtual ~File()
-   {
-   }
+   virtual ~File() override = default;
 
    virtual FileHandle *open(OpenMode mode) = 0;
 };

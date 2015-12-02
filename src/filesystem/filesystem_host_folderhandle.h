@@ -15,7 +15,7 @@ public:
    {
    }
 
-   virtual ~HostFolderHandle()
+   virtual ~HostFolderHandle() override
    {
       close();
       delete mVirtualHandle;

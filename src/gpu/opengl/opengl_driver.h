@@ -151,7 +151,7 @@ using GLContext = uint64_t;
 class GLDriver : public gpu::Driver
 {
 public:
-   virtual ~GLDriver() {}
+   virtual ~GLDriver() override = default;
 
    void start() override;
    void setTvDisplay(size_t width, size_t height) override;

@@ -27,9 +27,7 @@ struct HostFileHandle : public FileHandle
       mHandle.open(path, iosMode);
    }
 
-   virtual ~HostFileHandle()
-   {
-   }
+   virtual ~HostFileHandle() override = default;
 
    virtual bool open() override
    {
