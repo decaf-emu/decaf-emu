@@ -1,7 +1,7 @@
 #pragma once
 #include "modules/coreinit/coreinit_fs.h"
 
-using TempStatus = FSStatus;
+using TempStatus = FSStatus::Value;
 
 TempStatus
 TEMPInit();

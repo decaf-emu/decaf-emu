@@ -160,7 +160,7 @@ FSShutdown()
 }
 
 
-FSStatus
+FSStatus::Value
 FSAddClient(FSClient *client,
             uint32_t flags)
 {
@@ -170,7 +170,7 @@ FSAddClient(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSDelClient(FSClient *client,
             uint32_t flags)
 {
@@ -193,7 +193,7 @@ FSInitCmdBlock(FSCmdBlock *block)
 }
 
 
-FSStatus
+FSStatus::Value
 FSSetCmdPriority(FSCmdBlock *block,
                  FSPriority priority)
 {
@@ -208,8 +208,21 @@ FSSetStateChangeNotification(FSClient *client,
    // TODO: FSSetStateChangeNotification
 }
 
+FSVolumeState::Value
+FSGetVolumeState(FSClient *client)
+{
+   return FSVolumeState::Ready;
+}
 
-FSStatus
+FSError::Value
+FSGetLastErrorCodeForViewer(FSClient *client)
+{
+   // TODO: Return legit error code
+   return FSError::OutOfResources;
+}
+
+
+FSStatus::Value
 FSOpenFile(FSClient *client,
            FSCmdBlock *block,
            const char *path,
@@ -230,7 +243,7 @@ FSOpenFile(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSOpenFileAsync(FSClient *client,
                 FSCmdBlock *block,
                 const char *path,
@@ -247,7 +260,7 @@ FSOpenFileAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSOpenDir(FSClient *client,
           FSCmdBlock *block,
           const char *path,
@@ -266,7 +279,7 @@ FSOpenDir(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSOpenDirAsync(FSClient *client,
                FSCmdBlock *block,
                const char *path,
@@ -282,7 +295,7 @@ FSOpenDirAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSReadDir(FSClient *client,
           FSCmdBlock *block,
           FSDirectoryHandle handle,
@@ -319,7 +332,7 @@ FSReadDir(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSReadDirAsync(FSClient *client,
                FSCmdBlock *block,
                FSDirectoryHandle handle,
@@ -335,7 +348,7 @@ FSReadDirAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSCloseDir(FSClient *client,
            FSCmdBlock *block,
            FSDirectoryHandle handle,
@@ -353,7 +366,7 @@ FSCloseDir(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSCloseDirAsync(FSClient *client,
                 FSCmdBlock *block,
                 FSDirectoryHandle handle,
@@ -368,7 +381,7 @@ FSCloseDirAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSGetStat(FSClient *client,
           FSCmdBlock *block,
           const char *path,
@@ -389,7 +402,7 @@ FSGetStat(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSGetStatAsync(FSClient *client,
                FSCmdBlock *block,
                const char *path,
@@ -405,7 +418,7 @@ FSGetStatAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSGetStatFile(FSClient *client,
               FSCmdBlock *block,
               FSFileHandle handle,
@@ -424,7 +437,7 @@ FSGetStatFile(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSGetStatFileAsync(FSClient *client,
                    FSCmdBlock *block,
                    FSFileHandle handle,
@@ -440,7 +453,7 @@ FSGetStatFileAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSReadFile(FSClient *client,
            FSCmdBlock *block,
            uint8_t *buffer,
@@ -457,11 +470,11 @@ FSReadFile(FSClient *client,
    }
 
    auto read = file->read(buffer, size * count);
-   return static_cast<FSStatus>(read);
+   return static_cast<FSStatus::Value>(read);
 }
 
 
-FSStatus
+FSStatus::Value
 FSReadFileAsync(FSClient *client,
                 FSCmdBlock *block,
                 uint8_t *buffer,
@@ -480,7 +493,7 @@ FSReadFileAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSReadFileWithPos(FSClient *client,
                   FSCmdBlock *block,
                   uint8_t *buffer,
@@ -498,11 +511,11 @@ FSReadFileWithPos(FSClient *client,
    }
 
    auto read = file->read(buffer, size * count, position);
-   return static_cast<FSStatus>(read);
+   return static_cast<FSStatus::Value>(read);
 }
 
 
-FSStatus
+FSStatus::Value
 FSReadFileWithPosAsync(FSClient *client,
                        FSCmdBlock *block,
                        uint8_t *buffer,
@@ -522,7 +535,7 @@ FSReadFileWithPosAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSGetPosFile(FSClient *client,
              FSCmdBlock *block,
              FSFileHandle handle,
@@ -540,7 +553,7 @@ FSGetPosFile(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSGetPosFileAsync(FSClient *client,
                   FSCmdBlock *block,
                   FSFileHandle handle,
@@ -556,7 +569,7 @@ FSGetPosFileAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSSetPosFile(FSClient *client,
              FSCmdBlock *block,
              FSFileHandle handle,
@@ -574,7 +587,7 @@ FSSetPosFile(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSSetPosFileAsync(FSClient *client,
                   FSCmdBlock *block,
                   FSFileHandle handle,
@@ -590,7 +603,7 @@ FSSetPosFileAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSCloseFile(FSClient *client,
             FSCmdBlock *block,
             FSFileHandle handle,
@@ -608,7 +621,7 @@ FSCloseFile(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSCloseFileAsync(FSClient *client,
                  FSCmdBlock *block,
                  FSFileHandle handle,
@@ -623,7 +636,7 @@ FSCloseFileAsync(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSGetCwd(FSClient *client,
          FSCmdBlock *block,
          char *buffer,
@@ -643,7 +656,7 @@ FSGetCwd(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSChangeDir(FSClient *client,
             FSCmdBlock *block,
             const char *path,
@@ -654,7 +667,7 @@ FSChangeDir(FSClient *client,
 }
 
 
-FSStatus
+FSStatus::Value
 FSChangeDirAsync(FSClient *client,
                  FSCmdBlock *block,
                  const char *path,
@@ -668,7 +681,6 @@ FSChangeDirAsync(FSClient *client,
    return result;
 }
 
-
 void
 CoreInit::registerFileSystemFunctions()
 {
@@ -680,6 +692,8 @@ CoreInit::registerFileSystemFunctions()
    RegisterKernelFunction(FSInitCmdBlock);
    RegisterKernelFunction(FSSetCmdPriority);
    RegisterKernelFunction(FSSetStateChangeNotification);
+   RegisterKernelFunction(FSGetVolumeState);
+   RegisterKernelFunction(FSGetLastErrorCodeForViewer);
 
    RegisterKernelFunction(FSGetCwd);
    RegisterKernelFunction(FSChangeDir);

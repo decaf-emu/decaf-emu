@@ -2,7 +2,7 @@
 #include "modules/coreinit/coreinit_fs.h"
 #include "types.h"
 
-using SaveStatus = FSStatus;
+using SaveStatus = FSStatus::Value;
 
 SaveStatus
 SAVEInit();
