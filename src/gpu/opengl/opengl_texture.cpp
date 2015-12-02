@@ -72,6 +72,8 @@ getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
       return gl::GL_R8;
    case GX2SurfaceFormat::UNORM_R8_G8_B8_A8:
       return gl::GL_RGBA8;
+   case GX2SurfaceFormat::UNORM_R10_G10_B10_A2:
+      return gl::GL_RGB10_A2;
    case GX2SurfaceFormat::SNORM_R8_G8_B8_A8:
       return gl::GL_RGBA8_SNORM;
    case GX2SurfaceFormat::UINT_R8_G8_B8_A8:
@@ -80,6 +82,12 @@ getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
       return gl::GL_RGBA8I;
    case GX2SurfaceFormat::SRGB_R8_G8_B8_A8:
       return gl::GL_SRGB8_ALPHA8;
+   case GX2SurfaceFormat::SRGB_BC1:
+      return gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
+   case GX2SurfaceFormat::SRGB_BC2:
+      return gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
+   case GX2SurfaceFormat::SRGB_BC3:
+      return gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
    case GX2SurfaceFormat::UNORM_BC1:
       return gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
    case GX2SurfaceFormat::UNORM_BC2:
@@ -108,6 +116,8 @@ getTextureType(latte::SQ_DATA_FORMAT format)
    case latte::FMT_8:
       return gl::GL_RED;
    case latte::FMT_8_8_8_8:
+      return gl::GL_RGBA;
+   case latte::FMT_2_10_10_10:
       return gl::GL_RGBA;
    case latte::FMT_BC1:
    case latte::FMT_BC2:
@@ -146,6 +156,8 @@ getTextureFormat(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
    case latte::FMT_8:
    case latte::FMT_8_8_8_8:
       return isSigned ? gl::GL_BYTE : gl::GL_UNSIGNED_BYTE;
+   case latte::FMT_2_10_10_10:
+      return isSigned ? gl::GL_INT : gl::GL_UNSIGNED_INT;
    default:
       throw unimplemented_error(fmt::format("Unimplemented texture format {}", format));
    }
