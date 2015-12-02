@@ -173,9 +173,6 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
    data->thread = OSGetCurrentThread();
    data->timeout = FALSE;
 
-   // Unlock scheduler to setup alarm
-   OSUnlockScheduler();
-
    // Create an alarm to trigger timeout
    auto alarm = OSAllocFromSystem<OSAlarm>();
    OSCreateAlarm(alarm);
@@ -183,7 +180,6 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
    OSSetAlarm(alarm, timeout, pEventAlarmHandler);
 
    // Wait for the event
-   OSLockScheduler();
    OSSleepThreadNoLock(&event->queue);
    OSRescheduleNoLock();
 
