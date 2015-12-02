@@ -492,9 +492,6 @@
     <ClCompile Include="..\src\cpu\disassembler.cpp">
       <Filter>Source Files\cpu</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\cpu\instructioninfo.cpp">
-      <Filter>Source Files\cpu</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\snd_core\snd_core.cpp">
       <Filter>Source Files\modules\snd_core</Filter>
     </ClCompile>

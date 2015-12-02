@@ -4,7 +4,6 @@ set(SOURCE_FILES
     cpu.cpp
     cpu_kc.cpp
     disassembler.cpp
-    instructioninfo.cpp
     instructiontable.cpp
     interpreter/interpreter_branch.cpp
     interpreter/interpreter_condition.cpp

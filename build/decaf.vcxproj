@@ -94,7 +94,6 @@
     <ClCompile Include="..\src\cpu\cpu.cpp" />
     <ClCompile Include="..\src\cpu\cpu_kc.cpp" />
     <ClCompile Include="..\src\cpu\disassembler.cpp" />
-    <ClCompile Include="..\src\cpu\instructioninfo.cpp" />
     <ClCompile Include="..\src\cpu\instructiontable.cpp" />
     <ClCompile Include="..\src\cpu\interpreter\interpreter.cpp" />
     <ClCompile Include="..\src\cpu\interpreter\interpreter_branch.cpp" />
