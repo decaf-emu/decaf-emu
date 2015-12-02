@@ -11,6 +11,7 @@
 struct OSAlarm;
 struct OSContext;
 using AlarmCallback = wfunc_ptr<void, OSAlarm *, OSContext *>;
+using be_AlarmCallback = be_wfunc_ptr<void, OSAlarm *, OSContext *>;
 
 namespace OSAlarmState
 {
@@ -54,7 +55,7 @@ struct OSAlarm
    be_val<uint32_t> tag;
    be_ptr<const char> name;
    UNKNOWN(4);
-   AlarmCallback callback;
+   be_AlarmCallback callback;
    be_val<uint32_t> alarmTag; // Like group in memheap
    UNKNOWN(4);
    be_val<OSTime> nextFire;

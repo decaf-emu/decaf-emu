@@ -77,6 +77,11 @@ struct be_wfunc_ptr
       return ptr(args...);
    }
 
+   operator ppcaddr_t() const
+   {
+      return address;
+   }
+
    ppcaddr_t address;
 };
 
