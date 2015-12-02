@@ -32,6 +32,9 @@ GetMii(void* unk1);
 nn::Result
 GetMiiEx(void* unk1, uint8_t unk2);
 
+bool
+IsNetworkAccount();
+
 }  // namespace act
 
 }  // namespace nn
