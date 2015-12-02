@@ -416,45 +416,19 @@ OSSleepThread(OSThreadQueue *queue)
    OSUnlockScheduler();
 }
 
-static AlarmCallback
-pSleepAlarmHandler = nullptr;
-
-struct SleepAlarmData
-{
-   OSThread *thread;
-};
-
-void
-SleepAlarmHandler(OSAlarm *alarm, OSContext *context)
-{
-   OSLockScheduler();
-
-   // Wakeup the thread waiting on this alarm
-   auto data = reinterpret_cast<SleepAlarmData*>(OSGetAlarmUserData(alarm));
-   OSWakeupOneThreadNoLock(data->thread);
-
-   OSUnlockScheduler();
-}
-
 void
 OSSleepTicks(OSTime ticks)
 {
    auto thread = OSGetCurrentThread();
 
-   // Create the alarm user data
-   auto data = OSAllocFromSystem<SleepAlarmData>();
-   data->thread = thread;
-
    // Create an alarm to trigger wakeup
    auto alarm = OSAllocFromSystem<OSAlarm>();
    OSCreateAlarm(alarm);
-   OSSetAlarmUserData(alarm, data);
-   OSSetAlarm(alarm, ticks, pSleepAlarmHandler);
+   OSSetAlarm(alarm, ticks, nullptr);
 
    // Sleep thread
-   OSSleepThread(nullptr);
+   OSWaitAlarm(alarm);
 
-   OSFreeToSystem(data);
    OSFreeToSystem(alarm);
 }
 
@@ -565,11 +539,4 @@ CoreInit::registerThreadFunctions()
    RegisterKernelFunction(OSTestThreadCancel);
    RegisterKernelFunction(OSWakeupThread);
    RegisterKernelFunction(OSYieldThread);
-   RegisterKernelFunction(SleepAlarmHandler);
-}
-
-void
-CoreInit::initialiseThread()
-{
-   pSleepAlarmHandler = findExportAddress("SleepAlarmHandler");
 }

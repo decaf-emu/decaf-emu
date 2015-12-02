@@ -21,7 +21,6 @@ private:
    void initialiseSchedulerFunctions();
    void initialiseShared();
    void initialiseSystemInformation();
-   void initialiseThread();
 
 public:
    static void RegisterFunctions();
