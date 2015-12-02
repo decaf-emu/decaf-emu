@@ -171,19 +171,16 @@ InstructionTable::findAlias(InstructionData *data, Instruction instr)
          continue;
       }
 
-      bool opMatch = true;
-      for (auto &op : alias.opcode) {
+      const bool opMatch = std::all_of(alias.opcode.begin(), alias.opcode.end(), [instr](const auto &op) {
          uint32_t x = getFieldValue(op.field, instr);
          uint32_t y = op.value;
+
          if (op.field2 != Field::Invalid) {
             y = getFieldValue(op.field2, instr);
          }
 
-         if (x != y) {
-            opMatch = false;
-            break;
-         }
-      }
+         return x == y;
+      });
 
       if (opMatch) {
          return &alias;
