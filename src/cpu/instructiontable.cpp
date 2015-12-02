@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include "instructiondata.h"
 #include "utils/bitutils.h"
@@ -196,20 +197,16 @@ InstructionTable::findAlias(InstructionData *data, Instruction instr)
 bool
 InstructionTable::isA(InstructionID id, Instruction instr)
 {
-   auto &data = instructionData[static_cast<size_t>(id)];
+   const auto &data = instructionData[static_cast<size_t>(id)];
 
-   for (auto &op : data.opcode) {
+   return std::all_of(data.opcode.begin(), data.opcode.end(), [instr](const auto &op) {
       auto field = op.field;
       auto value = op.value;
       auto start = getFieldStart(field);
       auto mask = getFieldBitmask(field);
 
-      if (((instr.value & mask) >> start) != value) {
-         return false;
-      }
-   }
-
-   return true;
+      return ((instr.value & mask) >> start) == value;
+   });
 }
 
 Instruction
