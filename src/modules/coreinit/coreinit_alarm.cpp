@@ -97,7 +97,7 @@ OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback)
 BOOL
 OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback callback)
 {
-   ScopedSpinLock lock(gAlarmLock);
+   OSUninterruptibleSpinLock_Acquire(gAlarmLock);
 
    // Set alarm
    alarm->nextFire = start;
@@ -116,6 +116,8 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
    auto queue = gAlarmQueue[core];
    alarm->alarmQueue = queue;
    OSAppendQueue(queue, alarm);
+
+   OSUninterruptibleSpinLock_Release(gAlarmLock);
 
    // Set the interrupt timer in processor
    gProcessor.setInterruptTimer(core, OSTimeToChrono(alarm->nextFire));
@@ -137,18 +139,18 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data)
 BOOL
 OSWaitAlarm(OSAlarm *alarm)
 {
-   OSAcquireSpinLock(gAlarmLock);
+   OSUninterruptibleSpinLock_Acquire(gAlarmLock);
    assert(alarm);
    assert(alarm->tag == OSAlarm::Tag);
 
    if (alarm->state != OSAlarmState::Set) {
-      OSReleaseSpinLock(gAlarmLock);
+      OSUninterruptibleSpinLock_Release(gAlarmLock);
       return FALSE;
    }
 
    OSLockScheduler();
    OSSleepThreadNoLock(&alarm->threadQueue);
-   OSReleaseSpinLock(gAlarmLock);
+   OSUninterruptibleSpinLock_Release(gAlarmLock);
    OSRescheduleNoLock();
    OSUnlockScheduler();
    return TRUE;
@@ -160,7 +162,9 @@ OSTriggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
    alarm->context = context;
 
    if (alarm->callback && alarm->state != OSAlarmState::Cancelled) {
+      OSUninterruptibleSpinLock_Release(gAlarmLock);
       alarm->callback(alarm, context);
+      OSUninterruptibleSpinLock_Acquire(gAlarmLock);
    }
 
    OSWakeupThread(&alarm->threadQueue);
