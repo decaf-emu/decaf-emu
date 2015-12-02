@@ -78,6 +78,8 @@ getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
       return gl::GL_RGBA8UI;
    case GX2SurfaceFormat::SINT_R8_G8_B8_A8:
       return gl::GL_RGBA8I;
+   case GX2SurfaceFormat::SRGB_R8_G8_B8_A8:
+      return gl::GL_SRGB8_ALPHA8;
    case GX2SurfaceFormat::UNORM_BC1:
       return gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
    case GX2SurfaceFormat::UNORM_BC2:
