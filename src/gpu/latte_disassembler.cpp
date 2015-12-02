@@ -30,7 +30,7 @@ static void increaseIndent(DisassembleState &state);
 static void decreaseIndent(DisassembleState &state);
 
 static void writeSelectName(DisassembleState &state, uint32_t select);
-static void writeAluSource(DisassembleState &state, uint32_t *dwBase, uint32_t sel, uint32_t rel, uint32_t chan, uint32_t neg, bool abs);
+static void writeAluSource(DisassembleState &state, const uint32_t *dwBase, uint32_t sel, uint32_t rel, uint32_t indexMode, uint32_t chan, uint32_t neg, bool abs);
 static void writeRegisterName(DisassembleState &state, uint32_t sel);
 
 static uint32_t getUnit(bool units[5], alu::Instruction &alu);
