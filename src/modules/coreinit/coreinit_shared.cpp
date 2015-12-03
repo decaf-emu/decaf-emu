@@ -11,7 +11,8 @@ struct FontData
    uint32_t size = 0;
 };
 
-FontData gFonts[4];
+static FontData
+gFonts[4];
 
 BOOL
 OSGetSharedData(OSSharedDataType type, uint32_t, be_ptr<uint8_t> *addr, be_val<uint32_t> *size)
@@ -20,35 +21,42 @@ OSGetSharedData(OSSharedDataType type, uint32_t, be_ptr<uint8_t> *addr, be_val<u
    case OSSharedDataType::FontChinese:
       *addr = gFonts[0].data;
       *size = gFonts[0].size;
-      return TRUE;
+      break;
    case OSSharedDataType::FontKorean:
       *addr = gFonts[1].data;
       *size = gFonts[1].size;
-      return TRUE;
+      break;
    case OSSharedDataType::FontStandard:
       *addr = gFonts[2].data;
       *size = gFonts[2].size;
-      return TRUE;
+      break;
    case OSSharedDataType::FontTaiwanese:
       *addr = gFonts[3].data;
       *size = gFonts[3].size;
-      return TRUE;
+      break;
    default:
       *addr = nullptr;
       *size = 0;
-      return FALSE;
    }
+
+   return (*size > 0) ? TRUE : FALSE;
 }
 
 void
 readFont(FontData &dst, const char *src)
 {
-   std::ifstream file { src, std::ifstream::in | std::ifstream::binary };
-   file.seekg(0, std::ifstream::end);
-   dst.size = gsl::narrow_cast<uint32_t>(file.tellg());
-   dst.data = reinterpret_cast<uint8_t*>(OSAllocFromSystem(dst.size));
-   file.seekg(0, std::ifstream::beg);
-   file.read(reinterpret_cast<char*>(dst.data.get()), dst.size);
+   auto file = std::ifstream { src, std::ifstream::in | std::ifstream::binary };
+
+   if (file.is_open()) {
+      file.seekg(0, std::ifstream::end);
+      dst.size = gsl::narrow_cast<uint32_t>(file.tellg());
+      dst.data = reinterpret_cast<uint8_t *>(OSAllocFromSystem(dst.size));
+      file.seekg(0, std::ifstream::beg);
+      file.read(reinterpret_cast<char*>(dst.data.get()), dst.size);
+   } else {
+      dst.size = 0;
+      dst.data = nullptr;
+   }
 }
 
 void

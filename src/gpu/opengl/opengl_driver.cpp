@@ -617,23 +617,38 @@ void GLDriver::initGL()
    gl::glGenFramebuffers(1, &mFrameBuffer.object);
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
 
-   auto vertexCode = readFileToString("resources/shaders/screen_vertex.glsl");
-   if (!vertexCode.size()) {
-      gLog->error("Could not load resources/shaders/screen_vertex.glsl");
-   }
+   static auto vertexCode = R"(
+      #version 420 core
+      in vec2 fs_position;
+      in vec2 fs_texCoord;
+      out vec2 vs_texCoord;
 
-   auto pixelCode = readFileToString("resources/shaders/screen_pixel.glsl");
-   if (!pixelCode.size()) {
-      gLog->error("Could not load resources/shaders/screen_pixel.glsl");
-   }
+      out gl_PerVertex {
+         vec4 gl_Position;
+      };
+
+      void main()
+      {
+         vs_texCoord = fs_texCoord;
+         gl_Position = vec4(fs_position, 0.0, 1.0);
+      })";
+
+   static auto pixelCode = R"(
+      #version 420 core
+      in vec2 vs_texCoord;
+      out vec4 ps_color;
+      uniform sampler2D sampler_0;
+
+      void main()
+      {
+         ps_color = texture(sampler_0, vs_texCoord);
+      })";
 
    // Create vertex program
-   auto code = vertexCode.c_str();
-   mScreenDraw.vertexProgram = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, &code);
+   mScreenDraw.vertexProgram = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, &vertexCode);
 
    // Create pixel program
-   code = pixelCode.c_str();
-   mScreenDraw.pixelProgram = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, &code);
+   mScreenDraw.pixelProgram = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, &pixelCode);
    gl::glBindFragDataLocation(mScreenDraw.pixelProgram, 0, "ps_color");
 
    // Create pipeline
