@@ -618,7 +618,7 @@ void GLDriver::initGL()
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
 
    static auto vertexCode = R"(
-      #version 420 core
+      #version 140 core
       in vec2 fs_position;
       in vec2 fs_texCoord;
       out vec2 vs_texCoord;
@@ -634,7 +634,7 @@ void GLDriver::initGL()
       })";
 
    static auto pixelCode = R"(
-      #version 420 core
+      #version 140 core
       in vec2 vs_texCoord;
       out vec4 ps_color;
       uniform sampler2D sampler_0;
