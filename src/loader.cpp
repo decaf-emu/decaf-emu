@@ -608,6 +608,11 @@ Loader::processImports(LoadedModule *loadedMod, const SectionList &sections)
             continue;
          }
 
+         if (sym.shndx >= elf::SHN_LORESERVE) {
+            gLog->warn("Symbol {} in invalid section 0x{:X}", name, sym.shndx);
+            continue;
+         }
+
          // Calculate relocated address
          auto &impsec = sections[sym.shndx];
          auto offset = sym.value - impsec.header.addr;
@@ -758,6 +763,10 @@ Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
 
    // Read strtab
    auto shStrTab = reinterpret_cast<const char*>(sections[header.shstrndx].memory);
+   if (!shStrTab) {
+      gLog->error("Section name table missing");
+      return nullptr;
+   }
 
    // Calculate SDA Bases
    auto sdata = findSection(sections, shStrTab, ".sdata");
