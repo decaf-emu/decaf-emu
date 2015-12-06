@@ -35,6 +35,7 @@ private:
    static void registerDynLoadFunctions();
    static void registerEventFunctions();
    static void registerExceptionFunctions();
+   static void registerExitFunctions();
    static void registerExpHeapFunctions();
    static void registerFastMutexFunctions();
    static void registerFileSystemFunctions();

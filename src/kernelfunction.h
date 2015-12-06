@@ -52,5 +52,15 @@ makeFunction(Ret(*fptr)(Args...))
    func->wrapped_function = fptr;
    return func;
 }
+// For a function with no arguments:
+template<typename Ret>
+inline KernelFunction *
+makeFunction(Ret(*fptr)())
+{
+   auto func = new kernel::functions::KernelFunctionImpl<Ret>();
+   func->valid = true;
+   func->wrapped_function = fptr;
+   return func;
+}
 
 }  // namespace kernel

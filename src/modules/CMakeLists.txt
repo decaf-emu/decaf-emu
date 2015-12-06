@@ -11,6 +11,7 @@ set(SOURCE_FILES
     coreinit/coreinit_dynload.cpp
     coreinit/coreinit_event.cpp
     coreinit/coreinit_exception.cpp
+    coreinit/coreinit_exit.cpp
     coreinit/coreinit_expheap.cpp
     coreinit/coreinit_fastmutex.cpp
     coreinit/coreinit_frameheap.cpp
