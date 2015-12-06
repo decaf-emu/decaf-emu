@@ -31,6 +31,11 @@ struct ModuleHandleData
    void *ptr;
 };
 
+
+/**
+ * Contains the state of the emulator, including the filesystem, modules, exports etc.
+ */
+
 class System
 {
 public:

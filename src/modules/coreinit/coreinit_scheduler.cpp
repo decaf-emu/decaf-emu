@@ -182,7 +182,7 @@ InterruptThreadEntry(uint32_t core, void *arg2)
       auto context = gProcessor.getInterruptContext();
 
       // Check alarms for interrupts
-      OSCheckAlarms(core, context);
+      coreinit::internal::checkAlarms(core, context);
 
       // TODO: Process any other interrupts, e.g. async file system
 

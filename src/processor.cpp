@@ -24,7 +24,10 @@ Processor::Processor(size_t cores)
    }
 }
 
-// Starts up the CPU threads and Timer thread
+
+/**
+ * Starts up the CPU threads and Timer thread
+ */
 void
 Processor::start()
 {
@@ -43,14 +46,20 @@ Processor::start()
    platform::setThreadName(&mTimerThread, "Timer Thread");
 }
 
-// Wake up any cores which are waiting for a new thread
+
+/**
+ * Wake up any cores which are waiting for a new thread
+ */
 void
 Processor::wakeAllCores()
 {
    mCondition.notify_all();
 }
 
-// Wait for all threads to end
+
+/**
+ * Wait for all threads to end
+ */
 void
 Processor::join()
 {
@@ -61,7 +70,10 @@ Processor::join()
    mTimerThread.join();
 }
 
-// Entry point of new fibers
+
+/**
+ * Entry point of new fibers
+ */
 void
 Processor::fiberEntryPoint(Fiber *fiber)
 {
@@ -76,14 +88,20 @@ Processor::fiberEntryPoint(Fiber *fiber)
    OSExitThread(ppctypes::getResult<int>(&fiber->state));
 }
 
-// Entry point of newly created fibers
+
+/**
+ * Entry point of newly created fibers
+ */
 void
 Fiber::fiberEntryPoint(void *param)
 {
    gProcessor.fiberEntryPoint(reinterpret_cast<Fiber *>(param));
 }
 
-// Entry point of CPU Core threads
+
+/**
+ * Entry point of CPU Core threads
+ */
 void
 Processor::coreEntryPoint(Core *core)
 {
@@ -141,8 +159,13 @@ Processor::coreEntryPoint(Core *core)
    }
 }
 
-// Return to scheduler fiber if there are any valid fibers to run
-// Will manage the scheduler unlock/relock if necessary
+
+/**
+ * Return to scheduler fiber if there are any higher priority fibers to run.
+ *
+ * If yield is true then will switch to fibers with equal or higher priority.
+ * Will manage the scheduler unlock/relock if necessary.
+ */
 void
 Processor::reschedule(bool hasSchedulerLock, bool yield)
 {
@@ -202,14 +225,20 @@ Processor::reschedule(bool hasSchedulerLock, bool yield)
    }
 }
 
-// Yield current thread to one of equal or higher priority
+
+/**
+ * Yield current thread to one of equal or higher priority
+ */
 void
 Processor::yield()
 {
    reschedule(false, true);
 }
 
-// Exit current thread
+
+/**
+ * Exit current thread
+ */
 void
 Processor::exit()
 {
@@ -225,13 +254,17 @@ Processor::exit()
    platform::swapToFiber(fiber->handle, core->primaryFiberHandle);
 }
 
-// Insert a fiber into the run queue
+
+/**
+ * Insert a fiber into the run queue
+ */
 void
 Processor::queue(Fiber *fiber)
 {
    std::unique_lock<std::mutex> lock { mMutex };
    queueNoLock(fiber);
 }
+
 
 void
 Processor::queueNoLock(Fiber *fiber)
@@ -252,13 +285,14 @@ Processor::queueNoLock(Fiber *fiber)
    mCondition.notify_all();
 }
 
-// Create a new fiber
+
 Fiber *
 Processor::createFiber()
 {
    std::lock_guard<std::mutex> lock { mMutex };
    return createFiberNoLock();
 }
+
 
 Fiber *
 Processor::createFiberNoLock()
@@ -268,7 +302,10 @@ Processor::createFiberNoLock()
    return fiber;
 }
 
-// Find the next suitable fiber to run on a core
+
+/**
+ * Find the next suitable fiber to run on a specified core
+ */
 Fiber *
 Processor::peekNextFiberNoLock(uint32_t core)
 {
@@ -291,11 +328,13 @@ Processor::peekNextFiberNoLock(uint32_t core)
    return nullptr;
 }
 
+
 uint32_t
 Processor::getCoreID()
 {
    return tCurrentCore ? tCurrentCore->id : 4;
 }
+
 
 uint32_t
 Processor::getCoreCount()
@@ -303,11 +342,13 @@ Processor::getCoreCount()
    return static_cast<uint32_t>(mCores.size());
 }
 
+
 Fiber *
 Processor::getCurrentFiber()
 {
    return tCurrentCore ? tCurrentCore->currentFiber : nullptr;
 }
+
 
 OSContext *
 Processor::getInterruptContext()
@@ -324,7 +365,13 @@ Processor::getInterruptContext()
    }
 }
 
-// Entry point of interrupt thread
+
+/**
+ * Entry point of interrupt timer thread.
+ *
+ * Sleeps on a condition variable waiting to be notified of new timers.
+ * Sleep has a timeout based on when the next alarm is due to be triggered.
+ */
 void
 Processor::timerEntryPoint()
 {
@@ -354,7 +401,10 @@ Processor::timerEntryPoint()
    }
 }
 
-// Sleep the interrupt thread until the first interrupt happens
+
+/**
+ * Sleep the interrupt thread until the first interrupt happens
+ */
 void
 Processor::waitFirstInterrupt()
 {
@@ -365,13 +415,17 @@ Processor::waitFirstInterrupt()
    platform::swapToFiber(fiber->handle, core->primaryFiberHandle);
 }
 
+
 void
 Processor::handleInterrupt(cpu::CoreState *core, ThreadState *state)
 {
    gProcessor.handleInterrupt();
 }
 
-// Yield to interrupt thread to handle any pending interrupt
+
+/**
+ * Yield to interrupt thread to handle any pending interrupt
+ */
 void
 Processor::handleInterrupt()
 {
@@ -391,7 +445,10 @@ Processor::handleInterrupt()
    platform::swapToFiber(fiber->handle, core->primaryFiberHandle);
 }
 
-// Return to normal processing
+
+/**
+ * Return to normal processing
+ */
 void
 Processor::finishInterrupt()
 {
@@ -410,7 +467,10 @@ Processor::finishInterrupt()
    platform::swapToFiber(fiber->handle, core->primaryFiberHandle);
 }
 
-// Set the time of the next interrupt, will not overwrite sooner times
+
+/**
+ * Set the time of the next interrupt, will not overwrite sooner times
+ */
 void
 Processor::setInterruptTimer(uint32_t core, std::chrono::time_point<std::chrono::system_clock> when)
 {

@@ -22,8 +22,16 @@ OSAlarm::Tag;
 const uint32_t
 OSAlarmQueue::Tag;
 
+
+/**
+ * Internal alarm cancel.
+ *
+ * Reset the alarm state to cancelled.
+ * Wakes up all threads waiting on the alarm.
+ * Removes the alarm from any queue it is in.
+ */
 static BOOL
-OSCancelAlarmNoLock(OSAlarm *alarm)
+cancelAlarmNoLock(OSAlarm *alarm)
 {
    if (alarm->state != OSAlarmState::Set) {
       return FALSE;
@@ -41,27 +49,34 @@ OSCancelAlarmNoLock(OSAlarm *alarm)
    return TRUE;
 }
 
+
+/**
+ * Cancel an alarm.
+ */
 BOOL
 OSCancelAlarm(OSAlarm *alarm)
 {
    ScopedSpinLock lock(gAlarmLock);
-   return OSCancelAlarmNoLock(alarm);
+   return cancelAlarmNoLock(alarm);
 }
 
+
+/**
+ * Cancel all alarms which have a matching tag.
+ */
 void
-OSCancelAlarms(uint32_t alarmTag)
+OSCancelAlarms(uint32_t group)
 {
    ScopedSpinLock lock(gAlarmLock);
 
-   // Cancel all alarms with matching alarmTag
    for (auto i = 0u; i < 3; ++i) {
       auto queue = gAlarmQueue[i];
 
       for (OSAlarm *alarm = queue->head; alarm; ) {
          auto next = alarm->link.next;
 
-         if (alarm->alarmTag == alarmTag) {
-            OSCancelAlarmNoLock(alarm);
+         if (alarm->group == group) {
+            cancelAlarmNoLock(alarm);
          }
 
          alarm = next;
@@ -69,12 +84,20 @@ OSCancelAlarms(uint32_t alarmTag)
    }
 }
 
+
+/**
+ * Initialise an alarm structure.
+ */
 void
 OSCreateAlarm(OSAlarm *alarm)
 {
    OSCreateAlarmEx(alarm, nullptr);
 }
 
+
+/**
+* Initialise an alarm structure.
+*/
 void
 OSCreateAlarmEx(OSAlarm *alarm, const char *name)
 {
@@ -84,12 +107,20 @@ OSCreateAlarmEx(OSAlarm *alarm, const char *name)
    OSInitThreadQueueEx(&alarm->threadQueue, alarm);
 }
 
+
+/**
+* Return the user data stored in the alarm using OSSetAlarmUserData
+*/
 void *
 OSGetAlarmUserData(OSAlarm *alarm)
 {
    return alarm->userData;
 }
 
+
+/**
+ * Initialise an alarm queue structure
+ */
 void
 OSInitAlarmQueue(OSAlarmQueue *queue)
 {
@@ -97,12 +128,20 @@ OSInitAlarmQueue(OSAlarmQueue *queue)
    queue->tag = OSAlarmQueue::Tag;
 }
 
+
+/**
+ * Set a one shot alarm to perform a callback after an amount of time.
+ */
 BOOL
 OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback)
 {
    return OSSetPeriodicAlarm(alarm, OSGetTime() + time, 0, callback);
 }
 
+
+/**
+ * Set a repeated alarm to execute a callback every interval from start.
+ */
 BOOL
 OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback callback)
 {
@@ -131,14 +170,22 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
    return TRUE;
 }
 
+
+/**
+ * Set an alarm tag which is used in OSCancelAlarms for bulk cancellation.
+ */
 void
-OSSetAlarmTag(OSAlarm *alarm, uint32_t alarmTag)
+OSSetAlarmTag(OSAlarm *alarm, uint32_t group)
 {
    OSUninterruptibleSpinLock_Acquire(gAlarmLock);
-   alarm->alarmTag = alarmTag;
+   alarm->group = group;
    OSUninterruptibleSpinLock_Release(gAlarmLock);
 }
 
+
+/**
+ * Set alarm user data which is returned by OSGetAlarmUserData.
+ */
 void
 OSSetAlarmUserData(OSAlarm *alarm, void *data)
 {
@@ -147,6 +194,10 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data)
    OSUninterruptibleSpinLock_Release(gAlarmLock);
 }
 
+
+/**
+ * Sleep the current thread until the alarm has been triggered or cancelled.
+ */
 BOOL
 OSWaitAlarm(OSAlarm *alarm)
 {
@@ -177,8 +228,16 @@ OSWaitAlarm(OSAlarm *alarm)
    return result;
 }
 
+
+/**
+* Internal alarm handler.
+*
+* Resets the alarm state.
+* Calls the users callback.
+* Wakes up any threads waiting on the alarm.
+*/
 static void
-OSTriggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
+triggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
 {
    alarm->context = context;
 
@@ -200,8 +259,20 @@ OSTriggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
    OSWakeupThreadNoLock(&alarm->threadQueue);
 }
 
+
+namespace coreinit
+{
+
+namespace internal
+{
+
+/**
+ * Internal check to see if any alarms are ready to be triggered.
+ *
+ * Updates the processor internal interrupt timer to trigger for the next ready alarm.
+ */
 void
-OSCheckAlarms(uint32_t core, OSContext *context)
+checkAlarms(uint32_t core, OSContext *context)
 {
    auto queue = gAlarmQueue[core];
    auto now = OSGetTime();
@@ -215,7 +286,7 @@ OSCheckAlarms(uint32_t core, OSContext *context)
 
       // Trigger alarm if it is time
       if (alarm->nextFire <= now && alarm->state != OSAlarmState::Cancelled) {
-         OSTriggerAlarmNoLock(alarm, context);
+         triggerAlarmNoLock(alarm, context);
       }
 
       // Set next timer if alarm is set
@@ -235,6 +306,11 @@ OSCheckAlarms(uint32_t core, OSContext *context)
    gProcessor.setInterruptTimer(core, next);
 }
 
+} // namespace internal
+
+} // namespace coreinit
+
+
 void
 CoreInit::registerAlarmFunctions()
 {
@@ -249,6 +325,7 @@ CoreInit::registerAlarmFunctions()
    RegisterKernelFunction(OSSetAlarmUserData);
    RegisterKernelFunction(OSWaitAlarm);
 }
+
 
 void
 CoreInit::initialiseAlarm()

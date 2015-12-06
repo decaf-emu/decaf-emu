@@ -12,6 +12,10 @@
 struct OSContext;
 struct OSThread;
 
+
+/**
+ * Per Wii U thread data
+ */
 struct Fiber
 {
    Fiber()
@@ -32,6 +36,10 @@ struct Fiber
    ThreadState state;
 };
 
+
+/**
+ * Per-core data
+ */
 struct Core
 {
    Core(uint32_t id) :
@@ -53,6 +61,13 @@ struct Core
    cpu::CoreState state;
 };
 
+
+/**
+ * Thread scheduler for the CPU.
+ *
+ * Has one thread per CPU core, and a thread for running timer interrupts.
+ * Each Wii U thread is ran on a CPU core thread as a fiber.
+ */
 class Processor
 {
 public:

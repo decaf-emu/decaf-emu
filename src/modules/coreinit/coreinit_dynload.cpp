@@ -17,6 +17,10 @@ pOSDynLoad_MemAlloc;
 static wfunc_ptr<void, void *>
 pOSDynLoad_MemFree;
 
+
+/**
+ * Default implementation for pOSDynLoad_MemAlloc
+ */
 static int
 MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 {
@@ -26,6 +30,10 @@ MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
    return 0;
 }
 
+
+/**
+* Default implementation for pOSDynLoad_MemFree
+*/
 static void
 MEM_DynLoad_DefaultFree(uint8_t *addr)
 {
@@ -33,6 +41,10 @@ MEM_DynLoad_DefaultFree(uint8_t *addr)
    MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), addr);
 }
 
+
+/**
+ * Set the allocator to be used for allocating data sections for dynamically loaded libraries.
+ */
 int
 OSDynLoad_SetAllocator(ppcaddr_t allocFn, ppcaddr_t freeFn)
 {
@@ -45,6 +57,10 @@ OSDynLoad_SetAllocator(ppcaddr_t allocFn, ppcaddr_t freeFn)
    return 0;
 }
 
+
+/**
+* Return the allocators set by OSDynLoad_SetAllocator.
+*/
 int
 OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn, be_val<ppcaddr_t> *outFreeFn)
 {
@@ -53,7 +69,10 @@ OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn, be_val<ppcaddr_t> *outFree
    return 0;
 }
 
-// Wrapper func to call function pointer set by OSDynLoad_SetAllocator
+
+/**
+ * Wrapper func to call function pointer set by OSDynLoad_SetAllocator
+ */
 int
 OSDynLoad_MemAlloc(int size, int alignment, void **outPtr)
 {
@@ -63,13 +82,22 @@ OSDynLoad_MemAlloc(int size, int alignment, void **outPtr)
    return result;
 }
 
-// Wrapper func to call function pointer set by OSDynLoad_SetAllocator
+
+/**
+ * Wrapper func to call function pointer set by OSDynLoad_SetAllocator
+ */
 void
 OSDynLoad_MemFree(void *addr)
 {
    pOSDynLoad_MemFree(addr);
 }
 
+
+/**
+ * Load and return the handle of a dynamic library.
+ *
+ * If the library is already loaded then increase ref count.
+ */
 int
 OSDynLoad_Acquire(char const *name, be_ptr<LoadedModuleHandleData> *outHandle)
 {
@@ -85,6 +113,10 @@ OSDynLoad_Acquire(char const *name, be_ptr<LoadedModuleHandleData> *outHandle)
    return 0;
 }
 
+
+/**
+ * Find the export from a library handle.
+ */
 int
 OSDynLoad_FindExport(LoadedModuleHandleData *handle, int isData, char const *name, be_val<ppcaddr_t> *outAddr)
 {
@@ -101,9 +133,17 @@ OSDynLoad_FindExport(LoadedModuleHandleData *handle, int isData, char const *nam
    return 0;
 }
 
+
+/**
+ * Release handle of loaded library.
+ *
+ * Decreases the ref count of the library pointed to by handle.
+ * The library is unloaded if ref count hits 0.
+ */
 void
 OSDynLoad_Release(LoadedModuleHandleData *handle)
 {
+   // TODO: Unload library when ref count hits 0
 }
 
 void

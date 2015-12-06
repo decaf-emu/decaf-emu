@@ -48,7 +48,7 @@ struct OSAlarm
    be_ptr<const char> name;
    UNKNOWN(4);
    be_AlarmCallback callback;
-   be_val<uint32_t> alarmTag;
+   be_val<uint32_t> group;
    UNKNOWN(4);
    be_val<OSTime> nextFire;
    OSAlarmLink link;
@@ -63,7 +63,7 @@ struct OSAlarm
 CHECK_OFFSET(OSAlarm, 0x00, tag);
 CHECK_OFFSET(OSAlarm, 0x04, name);
 CHECK_OFFSET(OSAlarm, 0x0c, callback);
-CHECK_OFFSET(OSAlarm, 0x10, alarmTag);
+CHECK_OFFSET(OSAlarm, 0x10, group);
 CHECK_OFFSET(OSAlarm, 0x18, nextFire);
 CHECK_OFFSET(OSAlarm, 0x20, link);
 CHECK_OFFSET(OSAlarm, 0x28, period);
@@ -110,5 +110,15 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data);
 BOOL
 OSWaitAlarm(OSAlarm *alarm);
 
+namespace coreinit
+{
+
+namespace internal
+{
+
 void
-OSCheckAlarms(uint32_t core, OSContext *context);
+checkAlarms(uint32_t core, OSContext *context);
+
+} // namespace internal
+
+} // namespace coreinit

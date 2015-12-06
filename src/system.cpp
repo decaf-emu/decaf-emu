@@ -20,7 +20,10 @@ System::initialise()
    mSystemHeap = new TeenyHeap(heap, 0x01000000);
 }
 
-// Register a kernel module by name
+
+/**
+ * Register a kernel module by name
+ */
 void
 System::registerModule(const std::string &name, KernelModule *module)
 {
@@ -38,7 +41,10 @@ System::registerModule(const std::string &name, KernelModule *module)
    }
 }
 
-// Register an alternative name for a kernel module
+
+/**
+ * Register an alternative name for a kernel module
+ */
 void
 System::registerModuleAlias(const std::string &module, const std::string &alias)
 {
@@ -49,7 +55,10 @@ System::registerModuleAlias(const std::string &module, const std::string &alias)
    }
 }
 
-// Find a kernel module by name
+
+/**
+ * Find a kernel module by name
+ */
 KernelModule *
 System::findModule(const std::string &name) const
 {
@@ -62,7 +71,10 @@ System::findModule(const std::string &name) const
    }
 }
 
-// Forwarder function which PPC will branch to for a kernel library function call
+
+/**
+ * Forwarder function which PPC will branch to for a kernel library function call
+ */
 static void
 kcstub(ThreadState *state, void *data)
 {
@@ -76,7 +88,10 @@ kcstub(ThreadState *state, void *data)
    func->call(state);
 }
 
-// Register a kernel call
+
+/**
+ * Register a kernel call
+ */
 void
 System::registerSysCall(KernelFunction *func)
 {
@@ -84,7 +99,10 @@ System::registerSysCall(KernelFunction *func)
    mSystemCalls[func->syscallID] = func;
 }
 
-// Register an unimplemented function
+
+/**
+ * Register an unimplemented function
+ */
 uint32_t
 System::registerUnimplementedFunction(const std::string &module, const std::string &name)
 {

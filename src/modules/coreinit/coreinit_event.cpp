@@ -7,12 +7,20 @@
 
 const uint32_t OSEvent::Tag;
 
+
+/**
+ * Initialises an event structure.
+ */
 void
 OSInitEvent(OSEvent *event, bool value, OSEventMode mode)
 {
    OSInitEventEx(event, value, mode, nullptr);
 }
 
+
+/**
+* Initialises an event structure.
+*/
 void
 OSInitEventEx(OSEvent *event, bool value, OSEventMode mode, char *name)
 {
@@ -23,6 +31,20 @@ OSInitEventEx(OSEvent *event, bool value, OSEventMode mode, char *name)
    OSInitThreadQueueEx(&event->queue, event);
 }
 
+
+/**
+* Signal an event.
+*
+* This will set the events signal value to true.
+*
+* In auto reset mode if at least one thread is in the queue it will:
+* - Reset the value back to FALSE
+* - Wake up the first thread in the waiting queue
+*
+* In manual reset mode:
+* - Wake up all threads in the waiting queue
+* - The event value remains TRUE until the user calls OSResetEvent
+*/
 void
 OSSignalEvent(OSEvent *event)
 {
@@ -58,6 +80,16 @@ OSSignalEvent(OSEvent *event)
    OSUnlockScheduler();
 }
 
+
+/**
+ * Signal the event and wakeup all waiting threads regardless of mode
+ *
+ * This differs to OSSignalEvent only for auto reset mode where it
+ * will wake up all threads instead of just one.
+ *
+ * If there is at least one thread woken up and the alarm is in
+ * auto reset mode then the event value is reset to FALSE.
+ */
 void
 OSSignalEventAll(OSEvent *event)
 {
@@ -88,6 +120,10 @@ OSSignalEventAll(OSEvent *event)
    OSUnlockScheduler();
 }
 
+
+/**
+ * Reset the event value to FALSE
+ */
 void
 OSResetEvent(OSEvent *event)
 {
@@ -101,6 +137,16 @@ OSResetEvent(OSEvent *event)
    OSUnlockScheduler();
 }
 
+
+/**
+ * Wait for the event value to become TRUE.
+ *
+ * If the event value is already TRUE then this will return immediately,
+ * and will set the event value to FALSE if the event is in auto reset mode.
+ *
+ * If the event value is FALSE then the thread will sleep until the event
+ * is signalled by another thread.
+ */
 void
 OSWaitEvent(OSEvent *event)
 {
@@ -146,6 +192,14 @@ EventAlarmHandler(OSAlarm *alarm, OSContext *context)
    OSWakeupOneThreadNoLock(data->thread);
 }
 
+
+/**
+ * Wait for an event value to be TRUE with a timeout
+ *
+ * Behaves the same than OSWaitEvent but with a timeout.
+ *
+ * Returns TRUE if the event was signalled, FALSE if wait timed out.
+ */
 BOOL
 OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
 {

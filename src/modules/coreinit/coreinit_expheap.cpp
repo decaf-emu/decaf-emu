@@ -5,17 +5,6 @@
 #include "utils/align.h"
 #include "utils/virtual_ptr.h"
 
-/**
- TODO: Implement Heaps a bit better.
- The WiiU implements its heaps (at least Expanded Heap) by storing
- the free blocks using the heap header, this means that all instances
- of accessing the allowable size for a particular heap should be
- removing header size from each free block.  This is particularily
- relevant with GetExpHeapTotalFreeSize, which should be removing
- sizeof(ExpandedHeapBlock) for each free block, rather than just once
- for the whole number.
-*/
-
 #pragma pack(push, 1)
 
 struct ExpandedHeapBlock
@@ -138,19 +127,27 @@ getTail(virtual_ptr<ExpandedHeapBlock> block)
    return tail;
 }
 
+
+/**
+ * Initialise an expanded heap.
+ */
 ExpandedHeap *
 MEMCreateExpHeap(ExpandedHeap *heap, uint32_t size)
 {
    return MEMCreateExpHeapEx(heap, size, 0);
 }
 
+
+/**
+ * Initialise an expanded heap.
+ *
+ * Adds it to the list of active heaps.
+ */
 ExpandedHeap *
 MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
 {
-   // Allocate memory
-   auto base = memory_untranslate(heap);
-
    // Setup state
+   auto base = memory_untranslate(heap);
    heap->size = size;
    heap->bottom = base;
    heap->top = base + size;
@@ -168,6 +165,12 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
    return heap;
 }
 
+
+/**
+ * Destroy expanded heap.
+ *
+ * Remove it from the list of active heaps.
+ */
 ExpandedHeap *
 MEMDestroyExpHeap(ExpandedHeap *heap)
 {
@@ -175,6 +178,10 @@ MEMDestroyExpHeap(ExpandedHeap *heap)
    return heap;
 }
 
+
+/**
+ * Print debug information about the expanded heap.
+ */
 void
 MEMiDumpExpHeap(ExpandedHeap *heap)
 {
@@ -190,6 +197,10 @@ MEMiDumpExpHeap(ExpandedHeap *heap)
    }
 }
 
+
+/**
+ * Allocate memory from an expanded heap with default alignment
+ */
 void *
 MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size)
 {
@@ -197,6 +208,14 @@ MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size)
    return MEMAllocFromExpHeapEx(heap, size, 4);
 }
 
+
+/**
+ * Allocate aligned memory from an expanded heap
+ *
+ * Sets the memory block group ID to the current active group ID.
+ * If alignment is negative the memory is allocated from the top of the heap.
+ * If alignment is positive the memory is allocated from the bottom of the heap.
+ */
 void *
 MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 {
@@ -315,6 +334,10 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
    return make_virtual_ptr<void>(aligned);
 }
 
+
+/**
+ * Free a memory block in an expanded heap
+ */
 void
 MEMFreeToExpHeap(ExpandedHeap *heap, uint8_t *address)
 {
@@ -362,6 +385,14 @@ MEMFreeToExpHeap(ExpandedHeap *heap, uint8_t *address)
    }
 }
 
+
+/**
+ * Set the allocate mode for the expanded heap
+ *
+ * The two valid modes are
+ * - FirstFree: allocate the first free block which is large enough for the requested size.
+ * - NearestSize: allocate the free block which is nearest in size to the requested size.
+ */
 MEMExpHeapMode
 MEMSetAllocModeForExpHeap(ExpandedHeap *heap, MEMExpHeapMode mode)
 {
@@ -371,6 +402,10 @@ MEMSetAllocModeForExpHeap(ExpandedHeap *heap, MEMExpHeapMode mode)
    return previous;
 }
 
+
+/**
+ * Returns the allocate mode for an expanded heap.
+ */
 MEMExpHeapMode
 MEMGetAllocModeForExpHeap(ExpandedHeap *heap)
 {
@@ -378,6 +413,13 @@ MEMGetAllocModeForExpHeap(ExpandedHeap *heap)
    return heap->mode;
 }
 
+
+/**
+* Trim free blocks from the end of the expanded heap.
+*
+* Reduces the size of the heap memory region to the end of the last allocated block.
+* Returns the new size of the heap.
+*/
 uint32_t
 MEMAdjustExpHeap(ExpandedHeap *heap)
 {
@@ -397,6 +439,10 @@ MEMAdjustExpHeap(ExpandedHeap *heap)
    return heap->size;
 }
 
+
+/**
+ * Resize an allocated memory block.
+ */
 uint32_t
 MEMResizeForMBlockExpHeap(ExpandedHeap *heap, uint8_t *mblock, uint32_t size)
 {
@@ -466,14 +512,18 @@ MEMResizeForMBlockExpHeap(ExpandedHeap *heap, uint8_t *mblock, uint32_t size)
    return size;
 }
 
+
+/**
+ * Return the total free size of an expanded heap.
+ */
 uint32_t
 MEMGetTotalFreeSizeForExpHeap(ExpandedHeap *heap)
 {
    ScopedSpinLock lock(&heap->lock);
-   auto size = 0u;
+   auto size = 0;
 
    for (auto block = heap->freeBlockList; block; block = block->next) {
-      size += block->size;
+      size += block->size - sizeof(ExpandedHeapBlock);
    }
 
    // Ensure it is big enough
@@ -481,11 +531,13 @@ MEMGetTotalFreeSizeForExpHeap(ExpandedHeap *heap)
       return 0;
    }
 
-   size -= sizeof(ExpandedHeapBlock);
-
    return size;
 }
 
+
+/**
+ * Return the largest allocatable memory block in an expanded heap.
+ */
 uint32_t
 MEMGetAllocatableSizeForExpHeap(ExpandedHeap *heap)
 {
@@ -493,6 +545,10 @@ MEMGetAllocatableSizeForExpHeap(ExpandedHeap *heap)
    return MEMGetAllocatableSizeForExpHeapEx(heap, 4);
 }
 
+
+/**
+* Return the largest allocatable aligned memory block in an expanded heap.
+*/
 uint32_t
 MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap, int alignment)
 {
@@ -514,15 +570,15 @@ MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap, int alignment)
    // Return the allocatable size
    size -= sizeof(ExpandedHeapBlock);
    size -= alignment;
-
-   // TODO: Figure out why WUP-P-ARKE crashes if we have more than 994mb ram
-   if (size > 0x3e200000) {
-      return 0x3e200000;
-   } else {
-      return size;
-   }
+   return size;
 }
 
+
+/**
+ * Set the current group ID for an expanded heap.
+ *
+ * This group ID will be used for all newly allocated memory blocks.
+ */
 uint16_t
 MEMSetGroupIDForExpHeap(ExpandedHeap *heap, uint16_t id)
 {
@@ -532,6 +588,10 @@ MEMSetGroupIDForExpHeap(ExpandedHeap *heap, uint16_t id)
    return previous;
 }
 
+
+/**
+ * Get the current group id for an expanded heap.
+ */
 uint16_t
 MEMGetGroupIDForExpHeap(ExpandedHeap *heap)
 {
@@ -539,6 +599,10 @@ MEMGetGroupIDForExpHeap(ExpandedHeap *heap)
    return heap->group;
 }
 
+
+/**
+ * Return the size of an allocated memory block from an expanded heap.
+ */
 uint32_t
 MEMGetSizeForMBlockExpHeap(uint8_t *addr)
 {
@@ -546,6 +610,10 @@ MEMGetSizeForMBlockExpHeap(uint8_t *addr)
    return block->size;
 }
 
+
+/**
+ * Return the group id of an allocated memory block from an expanded heap.
+ */
 uint16_t
 MEMGetGroupIDForMBlockExpHeap(uint8_t *addr)
 {
@@ -553,12 +621,17 @@ MEMGetGroupIDForMBlockExpHeap(uint8_t *addr)
    return block->group;
 }
 
+
+/**
+* Return the allocation direction of an allocated memory block from an expanded heap.
+*/
 MEMExpHeapDirection
 MEMGetAllocDirForMBlockExpHeap(uint8_t *addr)
 {
    auto block = reinterpret_cast<ExpandedHeapBlock *>(addr - sizeof(ExpandedHeapBlock));
    return block->direction;
 }
+
 
 void
 CoreInit::registerExpHeapFunctions()
