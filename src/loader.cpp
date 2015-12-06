@@ -758,6 +758,10 @@ Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
 
    // Read strtab
    auto shStrTab = reinterpret_cast<const char*>(sections[header.shstrndx].memory);
+   if (!shStrTab) {
+      gLog->error("Section name table missing");
+      return nullptr;
+   }
 
    // Calculate SDA Bases
    auto sdata = findSection(sections, shStrTab, ".sdata");
