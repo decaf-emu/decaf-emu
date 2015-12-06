@@ -608,6 +608,11 @@ Loader::processImports(LoadedModule *loadedMod, const SectionList &sections)
             continue;
          }
 
+         if (sym.shndx >= elf::SHN_LORESERVE) {
+            gLog->warn("Symbol {} in invalid section 0x{:X}", name, sym.shndx);
+            continue;
+         }
+
          // Calculate relocated address
          auto &impsec = sections[sym.shndx];
          auto offset = sym.value - impsec.header.addr;
