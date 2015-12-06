@@ -1,7 +1,7 @@
 #pragma once
 
 void
-_Exit();
+coreinit_Exit();
 
 void
 OSFatal(const char *message);

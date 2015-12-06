@@ -76,16 +76,6 @@ ghs_flock_file(uint32_t lockIx)
    // Lock mutex for file lockIx
 }
 
-void
-ghsExit(int code)
-{
-   // TODO: ghsExit
-   tracePrint(GetCurrentFiberState(), 0, 0);
-
-   // Must never return...
-   std::runtime_error("ghsExit");
-}
-
 void ghs_mtx_init(void *mtx)
 {
    be_ptr<OSMutex> *pmutex = static_cast<be_ptr<OSMutex>*>(mtx);
@@ -125,7 +115,6 @@ CoreInit::registerGhsFunctions()
    RegisterKernelFunctionName("__ghs_mtx_dst", ghs_mtx_dst);
    RegisterKernelFunctionName("__ghs_mtx_lock", ghs_mtx_lock);
    RegisterKernelFunctionName("__ghs_mtx_unlock", ghs_mtx_unlock);
-   RegisterKernelFunctionName("exit", ghsExit);
 
    RegisterKernelDataName("__atexit_cleanup", p__atexit_cleanup);
    RegisterKernelDataName("__stdio_cleanup", p__stdio_cleanup);
