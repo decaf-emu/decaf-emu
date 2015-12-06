@@ -696,6 +696,9 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_lockedcache.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_exit.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1356,6 +1359,9 @@
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_enum.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_exit.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
