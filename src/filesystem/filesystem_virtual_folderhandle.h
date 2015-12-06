@@ -20,18 +20,18 @@ public:
 
    virtual ~VirtualFolderHandle() override = default;
 
-   virtual bool open()
+   virtual bool open() override
    {
       mIterator = mBegin;
       return true;
    }
 
-   virtual void close()
+   virtual void close() override
    {
       mIterator = mEnd;
    }
 
-   virtual bool read(FolderEntry &entry)
+   virtual bool read(FolderEntry &entry) override
    {
       if (mIterator == mEnd) {
          return false;
@@ -53,7 +53,7 @@ public:
       return true;
    }
 
-   virtual bool rewind()
+   virtual bool rewind() override
    {
       mIterator = mBegin;
       return true;
