@@ -19,7 +19,7 @@ public:
 
    virtual ~HostFile() override = default;
 
-   virtual class FileHandle *open(OpenMode mode)
+   virtual class FileHandle *open(OpenMode mode) override
    {
       auto handle = new HostFileHandle(mPath.path(), mode);
 
