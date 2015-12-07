@@ -155,6 +155,14 @@ OSConsoleWrite(const char *msg, uint32_t unk)
    gLog->debug("OSConsoleWrite[{}] {}", unk, msg);
 }
 
+static int
+coreinit__os_snprintf(char *buffer, uint32_t size, const char *fmt, ppctypes::VarList& args)
+{
+   std::string str;
+   formatString(fmt, args, str);
+   return snprintf(buffer, size, "%s", str.c_str());
+}
+
 void
 CoreInit::registerDebugFunctions()
 {
@@ -165,4 +173,5 @@ CoreInit::registerDebugFunctions()
    RegisterKernelFunction(OSVReport);
    RegisterKernelFunction(COSWarn);
    RegisterKernelFunction(OSConsoleWrite);
+   RegisterKernelFunctionName("__os_snprintf", coreinit__os_snprintf);
 }
