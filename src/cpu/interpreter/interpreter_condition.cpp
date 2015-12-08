@@ -1,4 +1,5 @@
 #include <utility>
+#include <cfenv>
 #include "interpreter_float.h"
 #include "interpreter_insreg.h"
 #include "utils/bitutils.h"
@@ -158,6 +159,7 @@ fcmpGeneric(ThreadState *state, Instruction instr)
    setCRF(state, instr.crfD, c);
    state->fpscr.fpcc = c;
    updateFX_FEX_VX(state, oldFPSCR);
+   std::feclearexcept(FE_ALL_EXCEPT);
 }
 
 static void
