@@ -239,6 +239,7 @@ fdivGeneric(ThreadState *state, Instruction instr)
    const bool vxzdz = is_zero(a) && is_zero(b);
    const bool vxidi = is_infinity(a) && is_infinity(b);
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
+   const bool zx = !(vxzdz || vxsnan) && is_zero(b);
 
    const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxzdz = vxzdz;
@@ -246,6 +247,9 @@ fdivGeneric(ThreadState *state, Instruction instr)
    state->fpscr.vxsnan = vxsnan;
 
    if ((vxzdz || vxidi || vxsnan) && state->fpscr.ve) {
+      updateFX_FEX_VX(state, oldFPSCR);
+   } else if (zx && state->fpscr.ze) {
+      state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
       d = static_cast<Type>(a / b);
