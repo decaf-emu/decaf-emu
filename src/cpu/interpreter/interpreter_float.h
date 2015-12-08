@@ -2,9 +2,6 @@
 #include "../state.h"
 
 void
-setRoundingMode(ThreadState *state);
-
-void
 updateFEX_VX(ThreadState *state);
 
 void
