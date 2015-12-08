@@ -577,7 +577,12 @@ fctiw(ThreadState *state, Instruction instr)
       vxcvi = false;
       switch (state->fpscr.rn) {
       case FloatingPointRoundMode::Nearest:
-         bi = static_cast<int32_t>(std::round(b));
+         // Note that we have to use nearbyint() instead of round() here,
+         // because round() rounds 0.5 away from zero instead of to the
+         // nearest integer.  nearbyint() is dependent on the host FPU's
+         // rounding mode, but since that will reflect FPSCR here, it's
+         // safe to use.
+         bi = static_cast<int32_t>(std::nearbyint(b));
          break;
       case FloatingPointRoundMode::Positive:
          bi = static_cast<int32_t>(std::ceil(b));
