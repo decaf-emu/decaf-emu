@@ -92,6 +92,8 @@ INS(fcmpu, (crfD), (frA, frB), (), (opcd == 63, xo1 == 0, !_9_10, !_31), "Floati
 // Floating-Point Status and Control Register
 INS(mcrfs, (crfD), (crfS), (), (opcd == 63, xo1 == 64, !_9_10, !_14_15, !_16_20, !_31), "")
 INS(mffs, (frD), (), (rc), (opcd == 63, xo1 == 583, !_11_15, !_16_20), "")
+INS(mtfsb0, (), (crfD), (rc), (opcd == 63, xo1 == 70, !_11_15, !_16_20), "")
+INS(mtfsb1, (), (crfD), (rc), (opcd == 63, xo1 == 38, !_11_15, !_16_20), "")
 INS(mtfsf, (), (fm, frB), (rc), (opcd == 63, xo1 == 711, !_6, !_15), "")
 INS(mtfsfi, (crfD), (), (rc, imm), (opcd == 63, xo1 == 134, !_9_10, !_11_15, !_20), "")
 

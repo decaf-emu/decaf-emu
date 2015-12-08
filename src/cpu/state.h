@@ -176,17 +176,42 @@ enum FloatingPointRoundMode : uint32_t
 namespace FPSCRRegisterBits
 {
 enum FPSCRRegisterBits : uint32_t {
+   FXShift = 31,
+   FEXShift = 30,
+   VXShift = 29,
+   OXShift = 28,
+   UXShift = 27,
+   ZXShift = 26,
+   XXShift = 25,
    VXSNANShift = 24,
    VXISIShift = 23,
    VXIDIShift = 22,
    VXZDZShift = 21,
    VXIMZShift = 20,
+   VXVCShift = 19,
+   VXSOFTShift = 10,
+   VXSQRTShift = 9,
+   VXCVIShift = 8,
 
+   FX = 1u << FXShift,
+   FEX = 1u << FXShift,
+   VX = 1u << FXShift,
+   OX = 1u << OXShift,
+   UX = 1u << UXShift,
+   ZX = 1u << ZXShift,
+   XX = 1u << XXShift,
    VXSNAN = 1u << VXSNANShift,
    VXISI = 1u << VXISIShift,
    VXIDI = 1u << VXIDIShift,
    VXZDZ = 1u << VXZDZShift,
    VXIMZ = 1u << VXIMZShift,
+   VXVC = 1u << VXVCShift,
+   VXSOFT = 1u << VXSOFTShift,
+   VXSQRT = 1u << VXSQRTShift,
+   VXCVI = 1u << VXCVIShift,
+
+   AllVX = VXSNAN | VXISI | VXIDI | VXZDZ | VXIMZ | VXVC | VXSOFT | VXSQRT | VXCVI,
+   AllExceptions = OX | UX | ZX | XX | AllVX,
 };
 }
 

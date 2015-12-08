@@ -1,4 +1,5 @@
 #include <utility>
+#include "interpreter_float.h"
 #include "interpreter_insreg.h"
 #include "utils/bitutils.h"
 #include "utils/floatutils.h"
@@ -297,6 +298,23 @@ mcrf(ThreadState *state, Instruction instr)
    setCRF(state, instr.crfD, getCRF(state, instr.crfS));
 }
 
+// Move to Condition Register from FPSCR
+static void
+mcrfs(ThreadState *state, Instruction instr)
+{
+   const int shiftS = 4 * (7 - instr.crfS);
+
+   const uint32_t fpscrBits = (state->fpscr.value >> shiftS) & 0xF;
+   setCRF(state, instr.crfD, fpscrBits);
+
+   // All exception bits copied are cleared; other bits are left alone.
+   // FEX and VX are updated following the normal rules.
+   const uint32_t exceptionBits = FPSCRRegisterBits::FX | FPSCRRegisterBits::AllExceptions;
+   const uint32_t bitsToClear = exceptionBits & (0xF << shiftS);
+   state->fpscr.value &= ~bitsToClear;
+   updateFEX_VX(state);
+}
+
 // Move to Condition Register from XER
 static void
 mcrxr(ThreadState *state, Instruction instr)
@@ -351,6 +369,7 @@ cpu::interpreter::registerConditionInstructions()
    RegisterInstruction(crorc);
    RegisterInstruction(crxor);
    RegisterInstruction(mcrf);
+   RegisterInstruction(mcrfs);
    RegisterInstruction(mcrxr);
    RegisterInstruction(mfcr);
    RegisterInstruction(mtcrf);

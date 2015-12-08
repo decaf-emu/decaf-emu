@@ -60,27 +60,9 @@ ppc_estimate_reciprocal(double v)
 }
 
 void
-updateFPSCR(ThreadState *state)
+updateFEX_VX(ThreadState *state)
 {
-   auto except = std::fetestexcept(FE_ALL_EXCEPT);
-   auto round = std::fegetround();
    auto &fpscr = state->fpscr;
-
-   // Underflow
-   fpscr.ux |= !!(except & FE_UNDERFLOW);
-
-   // Overflow
-   fpscr.ox |= !!(except & FE_OVERFLOW);
-
-   // Zerodivide
-   fpscr.zx |= !!(except & FE_DIVBYZERO);
-
-   // Inexact
-   fpscr.fi = !!(except & FE_INEXACT);
-   fpscr.xx |= fpscr.fi;
-
-   // Fraction Rounded
-   fpscr.fr = !!(round & FE_UPWARD);
 
    // FP Enabled Exception Summary
    fpscr.fex =
@@ -101,14 +83,49 @@ updateFPSCR(ThreadState *state)
       | fpscr.vxsqrt
       | fpscr.vxsoft
       | fpscr.vxcvi;
+}
+
+
+void
+updateFX_FEX_VX(ThreadState *state, uint32_t oldValue)
+{
+   auto &fpscr = state->fpscr;
+
+   updateFEX_VX(state);
 
    // FP Exception Summary
-   fpscr.fx =
-        fpscr.vx
-      | fpscr.ox
-      | fpscr.ux
-      | fpscr.zx
-      | fpscr.xx;
+   const uint32_t newBits = (oldValue ^ fpscr.value) & fpscr.value;
+   if (newBits & FPSCRRegisterBits::AllExceptions) {
+      fpscr.fx = 1;
+   }
+}
+
+void
+updateFPSCR(ThreadState *state)
+{
+   auto except = std::fetestexcept(FE_ALL_EXCEPT);
+   auto round = std::fegetround();
+   auto &fpscr = state->fpscr;
+
+   const uint32_t oldValue = fpscr.value;
+
+   // Underflow
+   fpscr.ux |= !!(except & FE_UNDERFLOW);
+
+   // Overflow
+   fpscr.ox |= !!(except & FE_OVERFLOW);
+
+   // Zerodivide
+   fpscr.zx |= !!(except & FE_DIVBYZERO);
+
+   // Inexact
+   fpscr.fi = !!(except & FE_INEXACT);
+   fpscr.xx |= fpscr.fi;
+
+   // Fraction Rounded
+   fpscr.fr = !!(round & FE_UPWARD);
+
+   updateFX_FEX_VX(state, oldValue);
 
    std::feclearexcept(FE_ALL_EXCEPT);
 }
@@ -720,6 +737,79 @@ fneg(ThreadState *state, Instruction instr)
    }
 }
 
+// Move from FPSCR
+static void
+mffs(ThreadState *state, Instruction instr)
+{
+   state->fpr[instr.frD].iw0 = state->fpscr.value;
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
+}
+
+// Move to FPSCR Bit 0
+static void
+mtfsb0(ThreadState *state, Instruction instr)
+{
+   state->fpscr.value = clear_bit(state->fpscr.value, 31 - instr.crbD);
+   updateFEX_VX(state);
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
+}
+
+// Move to FPSCR Bit 1
+static void
+mtfsb1(ThreadState *state, Instruction instr)
+{
+   const uint32_t oldValue = state->fpscr.value;
+   state->fpscr.value = set_bit(state->fpscr.value, 31 - instr.crbD);
+   updateFX_FEX_VX(state, oldValue);
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
+}
+
+// Move to FPSCR Fields
+static void
+mtfsf(ThreadState *state, Instruction instr)
+{
+   const uint32_t value = state->fpr[instr.frB].iw0;
+   for (int field = 0; field < 8; field++) {
+      // Technically field 0 is at the high end, but as long as the bit
+      // position in the mask and the field we operate on match up, it
+      // doesn't matter which direction we go in.  So we use host bit
+      // order for simplicity.
+      if (get_bit(instr.fm, field)) {
+         const uint32_t mask = make_bitmask(4 * field, 4 * field + 3);
+         state->fpscr.value &= ~mask;
+         state->fpscr.value |= value & mask;
+      }
+   }
+   updateFEX_VX(state);
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
+}
+
+// Move to FPSCR Field Immediate
+static void
+mtfsfi(ThreadState *state, Instruction instr)
+{
+   const int shift = 4 * (7 - instr.crfD);
+   state->fpscr.value &= ~(0xF << shift);
+   state->fpscr.value |= instr.imm << shift;
+   updateFEX_VX(state);
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
+}
+
 void
 cpu::interpreter::registerFloatInstructions()
 {
@@ -749,4 +839,9 @@ cpu::interpreter::registerFloatInstructions()
    RegisterInstruction(fnabs);
    RegisterInstruction(fmr);
    RegisterInstruction(fneg);
+   RegisterInstruction(mffs);
+   RegisterInstruction(mtfsb0);
+   RegisterInstruction(mtfsb1);
+   RegisterInstruction(mtfsf);
+   RegisterInstruction(mtfsfi);
 }

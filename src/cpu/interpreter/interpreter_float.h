@@ -2,6 +2,12 @@
 #include "../state.h"
 
 void
+updateFEX_VX(ThreadState *state);
+
+void
+updateFX_FEX_VX(ThreadState *state, uint32_t oldValue);
+
+void
 updateFPSCR(ThreadState *state);
 
 template<typename Type> void
