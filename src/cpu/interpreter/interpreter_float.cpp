@@ -565,21 +565,27 @@ fctiw(ThreadState *state, Instruction instr)
    b = state->fpr[instr.frB].value;
 
    const bool vxsnan = is_signalling_nan(b);
-   bool vxcvi;
+   bool vxcvi, fi;
 
-   if (b > static_cast<double>(INT_MAX)) {
+   if (is_nan(b)) {
       vxcvi = true;
+      fi = false;
+      bi = INT_MIN;
+   } else if (b > static_cast<double>(INT_MAX)) {
+      vxcvi = true;
+      fi = false;
       bi = INT_MAX;
    } else if (b < static_cast<double>(INT_MIN)) {
       vxcvi = true;
+      fi = false;
       bi = INT_MIN;
    } else {
       vxcvi = false;
       switch (state->fpscr.rn) {
       case FloatingPointRoundMode::Nearest:
-         // Note that we have to use nearbyint() instead of round() here,
-         // because round() rounds 0.5 away from zero instead of to the
-         // nearest integer.  nearbyint() is dependent on the host FPU's
+         // We have to use nearbyint() instead of round() here, because
+         // round() rounds 0.5 away from zero instead of to the nearest
+         // even integer.  nearbyint() is dependent on the host's FPU
          // rounding mode, but since that will reflect FPSCR here, it's
          // safe to use.
          bi = static_cast<int32_t>(std::nearbyint(b));
@@ -594,6 +600,7 @@ fctiw(ThreadState *state, Instruction instr)
          bi = static_cast<int32_t>(std::trunc(b));
          break;
       }
+      fi = get_float_bits(b).exponent < 1075 && bi != b;
    }
 
    const uint32_t oldFPSCR = state->fpscr.value;
@@ -601,11 +608,20 @@ fctiw(ThreadState *state, Instruction instr)
    state->fpscr.vxcvi |= vxcvi;
 
    if ((vxsnan || vxcvi) && state->fpscr.ve) {
+      state->fpscr.fr = 0;
+      state->fpscr.fi = 0;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
       state->fpr[instr.frD].iw1 = bi;
       state->fpr[instr.frD].iw0 = 0xFFF80000 | (is_negative_zero(b) ? 1 : 0);
       updateFPSCR(state, oldFPSCR);
+      // We need to set FPSCR[FI] manually since the rounding functions
+      // don't always raise inexact exceptions.
+      if (fi) {
+         state->fpscr.fi = 1;
+         state->fpscr.xx = 1;
+         updateFX_FEX_VX(state, oldFPSCR);
+      }
    }
 
    if (instr.rc) {
