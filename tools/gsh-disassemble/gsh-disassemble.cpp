@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include "gpu/latte.h"
 #include "gpu/opengl/glsl_generator.h"
+#include "gpu/microcode/latte_decoder.h"
 #include "utils/be_val.h"
 #include "utils/binaryfile.h"
 #include "utils/strutils.h"
@@ -43,36 +43,41 @@ struct Block
    be_val<uint32_t> dataLength;
    be_val<uint32_t> unk4;
    be_val<uint32_t> unk5;
-   gsl::array_view<uint8_t> data;
+   gsl::span<uint8_t> data;
 };
 
 }
 
 static bool
-dumpShader(latte::Shader::Type type, const gsl::array_view<uint8_t> &data)
+dumpShader(latte::shadir2::Shader::Type type, const gsl::span<const uint8_t> &data)
 {
+   latte::shadir2::Shader shader;
+   shader.type = type;
+   latte::decode(shader, data);
+
    std::string out;
-   latte::disassemble(out, data);
+   latte::disassemble(shader, out);
+
    std::cout << "----------------------------------------------" << std::endl;
    std::cout << "                  Disassembly                 " << std::endl;
    std::cout << "----------------------------------------------" << std::endl;
    std::cout << out << std::endl;
    std::cout << std::endl;
 
-   latte::Shader shader;
-   latte::decode(shader, type, data);
+   std::string out2;
+   latte::debugDumpBlocks(shader, out2);
    std::cout << "----------------------------------------------" << std::endl;
    std::cout << "                    Blocks                    " << std::endl;
    std::cout << "----------------------------------------------" << std::endl;
-   latte::dumpBlocks(shader);
+   std::cout << out2 << std::endl;
    std::cout << std::endl;
 
-   std::string hlsl;
-   gpu::opengl::glsl::generateBody(shader, hlsl);
+   std::string body;
+   gpu::opengl::glsl::generateBody(shader, body);
    std::cout << "----------------------------------------------" << std::endl;
    std::cout << "                     GLSL                     " << std::endl;
    std::cout << "----------------------------------------------" << std::endl;
-   std::cout << hlsl << std::endl;
+   std::cout << body << std::endl;
    std::cout << std::endl;
    return true;
 }
@@ -116,9 +121,9 @@ parseGSH(BinaryFile &fh)
       block.data = fh.readView(block.dataLength);
 
       if (block.type == gsh::Block::VertexShader) {
-         dumpShader(latte::Shader::Vertex, block.data);
+         dumpShader(latte::shadir2::Shader::Vertex, block.data);
       } else if (block.type == gsh::Block::PixelShader) {
-         dumpShader(latte::Shader::Pixel, block.data);
+         dumpShader(latte::shadir2::Shader::Pixel, block.data);
       }
    }
 
@@ -139,9 +144,9 @@ int main(int argc, char **argv)
       if (strType.compare("gsh") == 0) {
          return parseGSH(file) ? 0 : -1;
       } else if (strType.compare("vertex") == 0) {
-         return dumpShader(latte::Shader::Vertex, file) ? 1 : 0;
+         return dumpShader(latte::shadir2::Shader::Vertex, file.data()) ? 1 : 0;
       } else if (strType.compare("pixel") == 0) {
-         return dumpShader(latte::Shader::Pixel, file) ? 1 : 0;
+         return dumpShader(latte::shadir2::Shader::Pixel, file.data()) ? 1 : 0;
       }
    }
 

@@ -1,15 +1,14 @@
 #include <fstream>
 #include <spdlog/spdlog.h>
-
 #include "config.h"
+#include "gpu/gfd.h"
+#include "gpu/latte_format.h"
+#include "gpu/microcode/latte_decoder.h"
+#include "gpu/opengl/glsl_generator.h"
 #include "gx2_enum_string.h"
 #include "gx2_texture.h"
 #include "gx2_shaders.h"
-#include "gpu/latte.h"
-#include "gpu/opengl/glsl_generator.h"
 #include "memory_translate.h"
-#include "gpu/latte_format.h"
-#include "gpu/gfd.h"
 #include "platform/platform_dir.h"
 
 static void
@@ -112,7 +111,9 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderT
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
 
    // Disassemble
-   latte::disassemble(output, gsl::as_span(shader->data.get(), shader->size));
+   latte::Shader decoded;
+   latte::decode(decoded, gsl::as_span(shader->data.get(), shader->size));
+   latte::disassemble(decoded, output);
 
    file
       << info << std::endl
@@ -122,9 +123,7 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderT
    output.clear();
 
    // Decompiled
-   latte::Shader decompiled;
-   latte::decode(decompiled, latte::Shader::Vertex, gsl::as_span(shader->data.get(), shader->size));
-   gpu::opengl::glsl::generateBody(decompiled, output);
+   gpu::opengl::glsl::generateBody(decoded, output);
 
    file
       << "Decompiled:" << std::endl

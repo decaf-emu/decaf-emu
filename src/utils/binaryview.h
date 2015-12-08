@@ -107,7 +107,7 @@ public:
 
    operator gsl::span<uint8_t>() const
    {
-      return gsl::span<uint8_t> { mData };
+      return mData;
    }
 
 private:

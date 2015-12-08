@@ -2,8 +2,7 @@
 #include "gx2_enum.h"
 #include "gx2_format.h"
 #include "utils/align.h"
-#include "gpu/latte_instructions.h"
-#include "gpu/latte_opcodes.h"
+#include "gpu/microcode/latte_instructions.h"
 
 struct IndexMapEntry
 {
@@ -199,10 +198,10 @@ GX2CalcFetchShaderSizeEx(uint32_t attribs,
                          GX2TessellationMode mode)
 {
    auto fetch = GX2FSCalcNumFetchInsts(attribs, type);
-   auto aluBytes = latte::BytesPerALU * GX2FSCalcNumAluInsts(type, mode);
-   auto cfBytes = latte::BytesPerCF * GX2FSCalcNumCFInsts(fetch, type);
+   auto aluBytes = sizeof(latte::AluInst) * GX2FSCalcNumAluInsts(type, mode);
+   auto cfBytes = sizeof(latte::ControlFlowInst) * GX2FSCalcNumCFInsts(fetch, type);
 
-   return latte::BytesPerVTX * fetch + align_up(cfBytes + aluBytes, 16);
+   return static_cast<uint32_t>(sizeof(latte::VertexFetchInst) * fetch + align_up(cfBytes + aluBytes, 16));
 }
 
 void
@@ -231,9 +230,9 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
    auto aluCount = 0; // GX2FSCalcNumAluInsts(type, tessMode);
    auto cfCount = GX2FSCalcNumCFInsts(fetchCount, type);
 
-   auto fetchSize = fetchCount * latte::BytesPerVTX;
-   auto cfSize = cfCount * latte::BytesPerCF;
-   auto aluSize = aluCount * latte::BytesPerALU;
+   auto fetchSize = fetchCount * sizeof(latte::VertexFetchInst);
+   auto cfSize = cfCount * sizeof(latte::ControlFlowInst);
+   auto aluSize = aluCount * sizeof(latte::AluInst);
 
    auto cfOffset = 0u;
    auto aluOffset = cfSize;
@@ -267,7 +266,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          }
       } else {
          // Semantic vertex fetch
-         vfetch.word0.VTX_INST = latte::SQ_VTX_INST_SEMANTIC;
+         vfetch.word0.VTX_INST = latte::SQ_TEX_INST_VTX_SEMANTIC;
 
          // Setup source
          vfetch.word0.BUFFER_ID = attrib.buffer;
@@ -388,7 +387,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          }
 
          latte::ControlFlowInst inst = { 0, 0 };
-         inst.word0.addr = (fetchOffset + latte::BytesPerVTX * i * FetchesPerControlFlow) / 8;
+         inst.word0.ADDR = static_cast<uint32_t>((fetchOffset + sizeof(latte::VertexFetchInst) * i * FetchesPerControlFlow) / 8);
          inst.word1.COUNT = fetches & 0x7;
          inst.word1.COUNT_3 = (fetches >> 3) & 0x1;
          inst.word1.CF_INST = latte::SQ_CF_INST_VTX_TC;

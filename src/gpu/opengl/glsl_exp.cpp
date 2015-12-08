@@ -1,7 +1,6 @@
 #include "glsl_generator.h"
 
 using latte::shadir::ExportInstruction;
-using latte::shadir::SelRegister;
 
 /*
 Unimplemented:
@@ -25,41 +24,41 @@ namespace opengl
 namespace glsl
 {
 
-static bool EXP(GenerateState &state, ExportInstruction *ins)
+static bool
+EXP(GenerateState &state, ExportInstruction *ins)
 {
    assert(ins->wholeQuadMode == false);
    //assert(ins->barrier == true);
-   assert(ins->indexGpr == 0);
+   assert(ins->index == 0);
    assert(ins->elemSize == 0);
 
-   switch (ins->type) {
-   case latte::exp::Type::Position:
+   switch (ins->exportType) {
+   case latte::SQ_EXPORT_POS:
       state.out
          << "exp_position_"
-         << ins->dstReg;
+         << (ins->arrayBase - 60);
       break;
-   case latte::exp::Type::Parameter:
+   case latte::SQ_EXPORT_PARAM:
       state.out
          << "exp_param_"
-         << ins->dstReg;
+         << ins->arrayBase;
       break;
-   case latte::exp::Type::Pixel:
+   case latte::SQ_EXPORT_PIXEL:
       state.out
          << "exp_pixel_"
-         << ins->dstReg;
+         << ins->arrayBase;
       break;
    }
 
-   state.out << " = ";
-   translateSelRegister(state, ins->src);
+   state.out << " = R" << ins->rw.id;
+   translateSelectMask(state, ins->srcSel, 4);
    return true;
 }
 
 void registerExp()
 {
-   using latte::exp::inst;
-   registerGenerator(inst::EXP, EXP);
-   registerGenerator(inst::EXP_DONE, EXP);
+   registerGenerator(latte::SQ_CF_INST_EXP, EXP);
+   registerGenerator(latte::SQ_CF_INST_EXP_DONE, EXP);
 }
 
 } // namespace glsl

@@ -36,6 +36,11 @@ public:
       return BinaryView::open(mFileData);
    }
 
+   gsl::span<const uint8_t> data() const
+   {
+      return gsl::as_span<const uint8_t>(mFileData.data(), mFileData.size());
+   }
+
 private:
    std::vector<uint8_t> mFileData;
 };

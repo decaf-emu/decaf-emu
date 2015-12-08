@@ -19,23 +19,11 @@
     <Filter Include="Header Files\glsl">
       <UniqueIdentifier>{e57b3144-622c-45b5-8052-facbfc3a93dc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\stuff">
+      <UniqueIdentifier>{5d83a03e-871b-4cdf-b879-49e6c69914b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\gpu\latte_disassembler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_decoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_blockify.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_opcodes.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_analyse.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\tools\gsh-disassemble\gsh-disassemble.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -61,6 +49,36 @@
       <Filter>Source Files\glsl</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gpu\opengl\glsl_tex.cpp">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_blockify.cpp">
+      <Filter>Source Files\stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_decoder.cpp">
+      <Filter>Source Files\stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler.cpp">
+      <Filter>Source Files\stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_alu.cpp">
+      <Filter>Source Files\stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_export.cpp">
+      <Filter>Source Files\stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_tex.cpp">
+      <Filter>Source Files\stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_vtx.cpp">
+      <Filter>Source Files\stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_instructions.cpp">
+      <Filter>Source Files\stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_linearify.cpp">
+      <Filter>Source Files\stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_vtx.cpp">
       <Filter>Source Files\glsl</Filter>
     </ClCompile>
   </ItemGroup>

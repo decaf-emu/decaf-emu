@@ -196,6 +196,12 @@
     <Filter Include="Source Files\filesystem">
       <UniqueIdentifier>{acbd1f70-d96c-45bd-88d6-1fd975a9112b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\gpu\microcode">
+      <UniqueIdentifier>{5c01f210-7771-4d29-bad4-914740ff33b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gpu\microcode">
+      <UniqueIdentifier>{d17a9610-2d69-48d8-8c49-f32d87fb3f48}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -360,18 +366,6 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_shared.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_disassembler.cpp">
-      <Filter>Source Files\gpu</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_blockify.cpp">
-      <Filter>Source Files\gpu</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_decoder.cpp">
-      <Filter>Source Files\gpu</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_opcodes.cpp">
-      <Filter>Source Files\gpu</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\gameloader\gameloader.cpp">
       <Filter>Source Files\modules\gameloader</Filter>
     </ClCompile>
@@ -398,9 +392,6 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_debug.cpp">
       <Filter>Source Files\modules\gx2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_analyse.cpp">
-      <Filter>Source Files\gpu</Filter>
     </ClCompile>
     <ClCompile Include="..\src\memory_translate.cpp">
       <Filter>Source Files\system</Filter>
@@ -699,6 +690,36 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_exit.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_alu.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_linearify.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_vtx.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_tex.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_export.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_instructions.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_vtx.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_blockify.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_decoder.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -913,9 +934,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h">
       <Filter>Header Files\modules\gx2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gpu\latte.h">
-      <Filter>Header Files\gpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\gameloader\gameloader.h">
       <Filter>Header Files\modules\gameloader</Filter>
@@ -1139,12 +1157,6 @@
     <ClInclude Include="..\src\utils\binaryview.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gpu\latte_opcodes.h">
-      <Filter>Header Files\gpu</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gpu\latte_shadir.h">
-      <Filter>Header Files\gpu</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_enum.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
@@ -1248,9 +1260,6 @@
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_registers_pa.h">
-      <Filter>Header Files\gpu</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gpu\latte_instructions.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_enum_common.h">
@@ -1364,13 +1373,25 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_exit.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gpu\latte_shadir.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\microcode\latte_disassembler.h">
+      <Filter>Header Files\gpu\microcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\microcode\latte_shadir.h">
+      <Filter>Header Files\gpu\microcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\microcode\latte_decoder.h">
+      <Filter>Header Files\gpu\microcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gpu\microcode\latte_instructions.h">
+      <Filter>Header Files\gpu\microcode</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
       <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="..\src\gpu\latte_opcodes_def.inl">
-      <Filter>Header Files\gpu</Filter>
     </None>
     <None Include="..\src\cpu\instructionaliases.inl">
       <Filter>Header Files\cpu</Filter>
@@ -1383,6 +1404,9 @@
     </None>
     <None Include="..\resources\shaders\wiiu_fallback.hlsl">
       <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="..\src\gpu\microcode\latte_instructions_def.inl">
+      <Filter>Header Files\gpu\microcode</Filter>
     </None>
   </ItemGroup>
 </Project>

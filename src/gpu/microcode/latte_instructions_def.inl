@@ -45,16 +45,46 @@
 #define MEM_INST(name, value)
 #endif
 
+#ifndef ALU_REDUC
 #define ALU_REDUC Opcode::Reduction
+#endif
+
+#ifndef ALU_VEC
 #define ALU_VEC Opcode::Vector
+#endif
+
+#ifndef ALU_TRANS
 #define ALU_TRANS Opcode::Transcendental
+#endif
+
+#ifndef ALU_PRED_SET
 #define ALU_PRED_SET Opcode::PredSet
+#endif
+
+#ifndef ALU_INT
 #define ALU_INT Opcode::IntIn | Opcode::IntOut
+#endif
+
+#ifndef ALU_UINT
 #define ALU_UINT Opcode::UintIn | Opcode::UintOut
+#endif
+
+#ifndef ALU_INT_IN
 #define ALU_INT_IN Opcode::IntIn
+#endif
+
+#ifndef ALU_UINT_IN
 #define ALU_UINT_IN Opcode::UintIn
+#endif
+
+#ifndef ALU_INT_OUT
 #define ALU_INT_OUT Opcode::IntOut
+#endif
+
+#ifndef ALU_UINT_OUT
 #define ALU_UINT_OUT Opcode::UintOut
+#endif
+
 
 // CF
 CF_INST(NOP,                     0x00000000)
@@ -376,6 +406,8 @@ MEM_INST(TF_WRITE,               0x00000009)
 #undef TEX_INST
 #undef VTX_INST
 #undef MEM_INST
+
+/*
 #undef ALU_REDUC
 #undef ALU_VEC
 #undef ALU_TRANS
@@ -386,3 +418,4 @@ MEM_INST(TF_WRITE,               0x00000009)
 #undef ALU_UINT_IN
 #undef ALU_INT_OUT
 #undef ALU_UINT_OUT
+*/

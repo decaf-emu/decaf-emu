@@ -85,11 +85,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\gpu\latte_analyse.cpp" />
-    <ClCompile Include="..\src\gpu\latte_opcodes.cpp" />
-    <ClCompile Include="..\src\gpu\latte_blockify.cpp" />
-    <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
-    <ClCompile Include="..\src\gpu\latte_decoder.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_blockify.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_decoder.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_alu.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_export.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_tex.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_vtx.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_instructions.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_linearify.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_alu.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_alu_op2.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_alu_op3.cpp" />
@@ -98,6 +102,7 @@
     <ClCompile Include="..\src\gpu\opengl\glsl_exp.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_generator.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_tex.cpp" />
+    <ClCompile Include="..\src\gpu\opengl\glsl_vtx.cpp" />
     <ClCompile Include="..\tools\gsh-disassemble\gsh-disassemble.cpp" />
   </ItemGroup>
   <ItemGroup>

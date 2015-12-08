@@ -2,9 +2,7 @@
 #include "opengl_driver.h"
 #include "glsl_generator.h"
 #include "gpu/latte_registers.h"
-#include "gpu/latte_instructions.h"
-#include "gpu/latte_opcodes.h"
-#include "gpu/latte.h"
+#include "gpu/microcode/latte_decoder.h"
 #include "utils/log.h"
 #include "utils/strutils.h"
 #include <spdlog/spdlog.h>
@@ -404,14 +402,14 @@ bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
 {
    auto program = reinterpret_cast<latte::ControlFlowInst *>(buffer);
 
-   for (auto i = 0; (i < size / latte::WordsPerCF); i++) {
+   for (auto i = 0; i < size / 2; i++) {
       auto &cf = program[i];
 
       switch (cf.word1.CF_INST) {
       case latte::SQ_CF_INST_VTX:
       case latte::SQ_CF_INST_VTX_TC:
       {
-         auto vfPtr = reinterpret_cast<latte::VertexFetchInst *>(program + cf.word0.addr);
+         auto vfPtr = reinterpret_cast<latte::VertexFetchInst *>(program + cf.word0.ADDR);
          auto count = (cf.word1.COUNT_3 << 3) | cf.word1.COUNT;
 
          for (auto j = 0u; j < count; ++j) {
@@ -701,15 +699,15 @@ static void
 writeExports(fmt::MemoryWriter &out, latte::Shader &shader)
 {
    for (auto exp : shader.exports) {
-      switch (exp->type) {
-      case latte::exp::Type::Position:
-         out << "vec4 exp_position_" << exp->dstReg << ";\n";
+      switch (exp->exportType) {
+      case latte::SQ_EXPORT_POS:
+         out << "vec4 exp_position_" << (exp->arrayBase - 60) << ";\n";
          break;
-      case latte::exp::Type::Parameter:
-         out << "vec4 exp_param_" << exp->dstReg << ";\n";
+      case latte::SQ_EXPORT_PARAM:
+         out << "vec4 exp_param_" << exp->arrayBase << ";\n";
          break;
-      case latte::exp::Type::Pixel:
-         out << "vec4 exp_pixel_" << exp->dstReg << ";\n";
+      case latte::SQ_EXPORT_PIXEL:
+         out << "vec4 exp_pixel_" << exp->arrayBase << ";\n";
          break;
       }
    }
@@ -741,7 +739,9 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    FetchShader::Attrib *semanticAttribs[32];
    memset(semanticAttribs, 0, sizeof(FetchShader::Attrib *) * 32);
 
-   if (!latte::decode(shader, latte::Shader::Vertex, gsl::as_span(buffer, size))) {
+   shader.type = latte::Shader::Vertex;
+
+   if (!latte::decode(shader, gsl::as_span(buffer, size))) {
       gLog->error("Failed to decode vertex shader");
       return false;
    }
@@ -850,14 +850,14 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    out << '\n' << body << '\n';
 
    for (auto exp : shader.exports) {
-      switch (exp->type) {
-      case latte::exp::Type::Position:
-         out << "gl_Position = exp_position_" << exp->dstReg << ";\n";
+      switch (exp->exportType) {
+      case latte::SQ_EXPORT_POS:
+         out << "gl_Position = exp_position_" << (exp->arrayBase - 60) << ";\n";
          break;
-      case latte::exp::Type::Parameter:
-         out << "vs_out_" << exp->dstReg << " = exp_param_" << exp->dstReg << ";\n";
+      case latte::SQ_EXPORT_PARAM:
+         out << "vs_out_" << exp->arrayBase << " = exp_param_" << exp->arrayBase << ";\n";
          break;
-      case latte::exp::Type::Pixel:
+      case latte::SQ_EXPORT_PIXEL:
          throw std::logic_error("Unexpected pixel export in vertex shader.");
          break;
       }
@@ -879,7 +879,9 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    latte::Shader shader;
    std::string body;
 
-   if (!latte::decode(shader, latte::Shader::Pixel, gsl::as_span(buffer, size))) {
+   shader.type = latte::Shader::Pixel;
+
+   if (!latte::decode(shader, gsl::as_span(buffer, size))) {
       gLog->error("Failed to decode pixel shader");
       return false;
    }
@@ -951,18 +953,18 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    out << '\n' << body << '\n';
 
    for (auto exp : shader.exports) {
-      switch (exp->type) {
-      case latte::exp::Type::Pixel: {
-         auto mask = cb_shader_mask.value >> (4 * exp->dstReg);
+      switch (exp->exportType) {
+      case latte::SQ_EXPORT_PIXEL: {
+         auto mask = cb_shader_mask.value >> (4 * exp->arrayBase);
 
          if (!mask) {
             gLog->warn("Export is masked by cb_shader_mask");
          } else {
             out
                << "ps_out_"
-               << exp->dstReg
+               << exp->arrayBase
                << " = exp_pixel_"
-               << exp->dstReg << '.';
+               << exp->arrayBase << '.';
 
             if (mask & (1 << 0)) {
                out << 'x';
@@ -983,10 +985,10 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
             out << ";\n";
          }
       } break;
-      case latte::exp::Type::Position:
+      case latte::SQ_EXPORT_POS:
          throw std::logic_error("Unexpected position export in pixel shader.");
          break;
-      case latte::exp::Type::Parameter:
+      case latte::SQ_EXPORT_PARAM:
          throw std::logic_error("Unexpected parameter export in pixel shader.");
          break;
       }

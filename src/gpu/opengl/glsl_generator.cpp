@@ -1,6 +1,5 @@
 #include <spdlog/spdlog.h>
 #include "glsl_generator.h"
-#include "gpu/latte.h"
 #include "modules/gx2/gx2_shaders.h"
 
 static const auto indentSize = 3u;
@@ -16,12 +15,13 @@ namespace glsl
 
 static bool translateBlocks(GenerateState &state, latte::shadir::BlockList &blocks);
 
-static std::map<latte::cf::inst, TranslateFuncCF> sGeneratorTableCf;
-static std::map<latte::alu::op2, TranslateFuncALU> sGeneratorTableAluOp2;
-static std::map<latte::alu::op3, TranslateFuncALU> sGeneratorTableAluOp3;
-static std::map<latte::alu::op2, TranslateFuncALUReduction> sGeneratorTableAluOp2Reduction;
-static std::map<latte::tex::inst, TranslateFuncTEX> sGeneratorTableTex;
-static std::map<latte::exp::inst, TranslateFuncEXP> sGeneratorTableExport;
+static std::map<latte::SQ_CF_INST, TranslateFuncCF> sGeneratorTableCf;
+static std::map<latte::SQ_OP2_INST, TranslateFuncALU> sGeneratorTableAluOp2;
+static std::map<latte::SQ_OP3_INST, TranslateFuncALU> sGeneratorTableAluOp3;
+static std::map<latte::SQ_OP2_INST, TranslateFuncALUReduction> sGeneratorTableAluOp2Reduction;
+static std::map<latte::SQ_TEX_INST, TranslateFuncTEX> sGeneratorTableTex;
+static std::map<latte::SQ_TEX_INST, TranslateFuncVTX> sGeneratorTableVtx;
+static std::map<latte::SQ_CF_EXP_INST, TranslateFuncEXP> sGeneratorTableExport;
 
 
 void
@@ -35,48 +35,56 @@ intialise()
       registerAluOP3();
       registerAluReduction();
       registerTex();
+      registerVtx();
       registerExp();
    }
 }
 
 
 void
-registerGenerator(latte::cf::inst ins, TranslateFuncCF func)
+registerGenerator(latte::SQ_CF_INST ins, TranslateFuncCF func)
 {
    sGeneratorTableCf[ins] = func;
 }
 
 
 void
-registerGenerator(latte::alu::op2 ins, TranslateFuncALU func)
+registerGenerator(latte::SQ_OP2_INST ins, TranslateFuncALU func)
 {
    sGeneratorTableAluOp2[ins] = func;
 }
 
 
 void
-registerGenerator(latte::alu::op3 ins, TranslateFuncALU func)
+registerGenerator(latte::SQ_OP3_INST ins, TranslateFuncALU func)
 {
    sGeneratorTableAluOp3[ins] = func;
 }
 
 
 void
-registerGenerator(latte::alu::op2 ins, TranslateFuncALUReduction func)
+registerGenerator(latte::SQ_OP2_INST ins, TranslateFuncALUReduction func)
 {
    sGeneratorTableAluOp2Reduction[ins] = func;
 }
 
 
 void
-registerGenerator(latte::tex::inst ins, TranslateFuncTEX func)
+registerGenerator(latte::SQ_TEX_INST ins, TranslateFuncTEX func)
 {
    sGeneratorTableTex[ins] = func;
 }
 
 
 void
-registerGenerator(latte::exp::inst ins, TranslateFuncEXP func)
+registerGenerator(latte::SQ_TEX_INST ins, TranslateFuncVTX func)
+{
+   sGeneratorTableVtx[ins] = func;
+}
+
+
+void
+registerGenerator(latte::SQ_CF_EXP_INST ins, TranslateFuncEXP func)
 {
    sGeneratorTableExport[ins] = func;
 }
@@ -115,83 +123,103 @@ decreaseIndent(GenerateState &state)
 static bool
 translateInstruction(GenerateState &state, latte::shadir::Instruction *ins)
 {
-   switch (ins->insType) {
-   case latte::shadir::Instruction::ControlFlow:
-      {
-         auto ins2 = reinterpret_cast<latte::shadir::CfInstruction *>(ins);
-         auto itr = sGeneratorTableCf.find(ins2->id);
+   switch (ins->type) {
+   case latte::shadir::Instruction::CF:
+   {
+      auto ins2 = reinterpret_cast<latte::shadir::CfInstruction *>(ins);
+      auto itr = sGeneratorTableCf.find(ins2->id);
 
-         if (itr == sGeneratorTableCf.end()) {
-            state.out << "// Unimplemented " << latte::cf::name[ins2->id];
-            return false;
-         } else {
-            return (*itr->second)(state, ins2);
-         }
+      if (itr == sGeneratorTableCf.end()) {
+         state.out << "// Unimplemented " << ins->name;
+         return false;
+      } else {
+         return (*itr->second)(state, ins2);
       }
       break;
-   case latte::shadir::Instruction::TEX:
-      {
-         auto ins2 = reinterpret_cast<latte::shadir::TexInstruction *>(ins);
-         auto itr = sGeneratorTableTex.find(ins2->id);
-
-         if (itr == sGeneratorTableTex.end()) {
-            state.out << "// Unimplemented " << latte::tex::name[ins2->id];
-            return false;
-         } else {
-            return (*itr->second)(state, ins2);
-         }
-      }
-      break;
-   case latte::shadir::Instruction::AluReduction:
-      {
-         auto ins2 = reinterpret_cast<latte::shadir::AluReductionInstruction *>(ins);
-         auto itr = sGeneratorTableAluOp2Reduction.find(ins2->op2);
-
-         if (itr == sGeneratorTableAluOp2Reduction.end()) {
-            state.out << "// Unimplemented " << latte::alu::op2info[ins2->op2].name;
-            return false;
-         } else {
-            return (*itr->second)(state, ins2);
-         }
-      }
-      break;
+   }
    case latte::shadir::Instruction::ALU:
-      {
-         auto ins2 = reinterpret_cast<latte::shadir::AluInstruction *>(ins);
+   {
+      auto ins2 = reinterpret_cast<latte::shadir::AluInstruction *>(ins);
 
-         if (ins2->opType == latte::shadir::AluInstruction::OP2) {
-            auto itr = sGeneratorTableAluOp2.find(ins2->op2);
+      if (ins2->encoding == latte::SQ_ALU_OP2) {
+         auto itr = sGeneratorTableAluOp2.find(ins2->op2);
 
-            if (itr == sGeneratorTableAluOp2.end()) {
-               state.out << "// Unimplemented " << latte::alu::op2info[ins2->op2].name;
-               return false;
-            } else {
-               return (*itr->second)(state, ins2);
-            }
+         if (itr == sGeneratorTableAluOp2.end()) {
+            state.out << "// Unimplemented " << ins->name;
+            return false;
          } else {
-            auto itr = sGeneratorTableAluOp3.find(ins2->op3);
-
-            if (itr == sGeneratorTableAluOp3.end()) {
-               state.out << "// Unimplemented " << latte::alu::op3info[ins2->op3].name;
-               return false;
-            } else {
-               return (*itr->second)(state, ins2);
-            }
+            return (*itr->second)(state, ins2);
          }
-      }
-      break;
-   case latte::shadir::Instruction::Export:
-      {
-         auto ins2 = reinterpret_cast<latte::shadir::ExportInstruction *>(ins);
-         auto itr = sGeneratorTableExport.find(ins2->id);
+      } else {
+         auto itr = sGeneratorTableAluOp3.find(ins2->op3);
 
-         if (itr == sGeneratorTableExport.end()) {
-            state.out << "// Unimplemented " << latte::exp::name[ins2->id];
+         if (itr == sGeneratorTableAluOp3.end()) {
+            state.out << "// Unimplemented " << ins->name;
             return false;
          } else {
             return (*itr->second)(state, ins2);
          }
       }
+
+      break;
+   }
+   case latte::shadir::Instruction::TEX:
+   {
+      auto ins2 = reinterpret_cast<latte::shadir::TextureFetchInstruction *>(ins);
+      auto itr = sGeneratorTableTex.find(ins2->id);
+
+      if (itr == sGeneratorTableTex.end()) {
+         state.out << "// Unimplemented " << ins->name;
+         return false;
+      } else {
+         return (*itr->second)(state, ins2);
+      }
+
+      break;
+   }
+   case latte::shadir::Instruction::VTX:
+   {
+      auto ins2 = reinterpret_cast<latte::shadir::VertexFetchInstruction *>(ins);
+      auto itr = sGeneratorTableVtx.find(ins2->id);
+
+      if (itr == sGeneratorTableVtx.end()) {
+         state.out << "// Unimplemented " << ins->name;
+         return false;
+      } else {
+         return (*itr->second)(state, ins2);
+      }
+
+      break;
+   }
+   case latte::shadir::Instruction::EXP:
+   {
+      auto ins2 = reinterpret_cast<latte::shadir::ExportInstruction *>(ins);
+      auto itr = sGeneratorTableExport.find(ins2->id);
+
+      if (itr == sGeneratorTableExport.end()) {
+         state.out << "// Unimplemented " << ins->name;
+         return false;
+      } else {
+         return (*itr->second)(state, ins2);
+      }
+
+      break;
+   }
+   case latte::shadir::Instruction::ALU_REDUCTION:
+   {
+      auto ins2 = reinterpret_cast<latte::shadir::AluReductionInstruction *>(ins);
+      auto itr = sGeneratorTableAluOp2Reduction.find(ins2->op2);
+
+      if (itr == sGeneratorTableAluOp2Reduction.end()) {
+         state.out << "// Unimplemented " << ins->name;
+         return false;
+      } else {
+         return (*itr->second)(state, ins2);
+      }
+      break;
+   }
+   case latte::shadir::Instruction::CF_ALU:
+      throw std::logic_error("There should be no CF_ALU instructions in the shader blockify'd code");
       break;
    }
 

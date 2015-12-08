@@ -18,7 +18,8 @@ namespace opengl
 namespace glsl
 {
 
-static bool DOT4(GenerateState &state, AluReductionInstruction *ins)
+static bool
+DOT4(GenerateState &state, AluReductionInstruction *ins)
 {
    // dst = dot(src0, src1)
    assert(ins->units[0] && ins->units[1] && ins->units[2] && ins->units[3]);
@@ -28,23 +29,33 @@ static bool DOT4(GenerateState &state, AluReductionInstruction *ins)
    for (auto i = 0; i < 4; ++i) {
       if (ins->units[i]->writeMask) {
          assert(!dest);
-         dest = ins->units[i].get();
+         dest = ins->units[i];
       }
    }
 
    // If all units are masked we can pass unit0 to translateAluDest to generate the PV.x call
    if (!dest) {
       assert(!ins->units[0]->writeMask);
-      assert(ins->units[0]->dest.chan == latte::alu::Channel::X);
-      dest = ins->units[0].get();
+      assert(ins->units[0]->dst.chan == latte::SQ_CHAN_X);
+      dest = ins->units[0];
    }
 
    translateAluDestStart(state, dest);
 
    state.out << "dot(";
-   translateAluSourceVector(state, ins->units[0]->sources[0], ins->units[1]->sources[0], ins->units[2]->sources[0], ins->units[3]->sources[0]);
+   translateAluSourceVector(state,
+                            ins->units[0],
+                            ins->units[0]->src[0],
+                            ins->units[1]->src[0],
+                            ins->units[2]->src[0],
+                            ins->units[3]->src[0]);
    state.out << ", ";
-   translateAluSourceVector(state, ins->units[0]->sources[1], ins->units[1]->sources[1], ins->units[2]->sources[1], ins->units[3]->sources[1]);
+   translateAluSourceVector(state,
+                            ins->units[0],
+                            ins->units[0]->src[1],
+                            ins->units[1]->src[1],
+                            ins->units[2]->src[1],
+                            ins->units[3]->src[1]);
    state.out << ')';
 
    translateAluDestEnd(state, dest);
@@ -53,8 +64,7 @@ static bool DOT4(GenerateState &state, AluReductionInstruction *ins)
 
 void registerAluReduction()
 {
-   using latte::alu::op2;
-   registerGenerator(op2::DOT4, DOT4);
+   registerGenerator(latte::SQ_OP2_INST_DOT4, DOT4);
 }
 
 } // namespace glsl

@@ -4,6 +4,20 @@
 namespace latte
 {
 
+enum SQ_ALU_ENCODING : uint32_t
+{
+   SQ_ALU_OP2                       = 0,
+   SQ_ALU_OP3                       = 1,
+};
+
+enum SQ_ALU_EXECUTE_MASK_OP : uint32_t
+{
+   SQ_ALU_EXECUTE_MASK_OP_DEACTIVATE   = 0,
+   SQ_ALU_EXECUTE_MASK_OP_BREAK        = 1,
+   SQ_ALU_EXECUTE_MASK_OP_CONTINUE     = 2,
+   SQ_ALU_EXECUTE_MASK_OP_KILL         = 3,
+};
+
 enum SQ_ALU_OMOD : uint32_t
 {
    SQ_ALU_OMOD_OFF                  = 0,
@@ -14,6 +28,34 @@ enum SQ_ALU_OMOD : uint32_t
 
 enum SQ_ALU_SRC : uint32_t
 {
+   SQ_ALU_REGISTER_0                = 0,
+   SQ_ALU_REGISTER_127              = 127,
+   SQ_ALU_KCACHE_BANK0_0            = 128,
+   SQ_ALU_KCACHE_BANK0_31           = 159,
+   SQ_ALU_KCACHE_BANK1_0            = 160,
+   SQ_ALU_KCACHE_BANK1_31           = 191,
+   SQ_ALU_SRC_LDS_OQ_A              = 219,
+   SQ_ALU_SRC_LDS_OQ_B              = 220,
+   SQ_ALU_SRC_LDS_OQ_A_POP          = 221,
+   SQ_ALU_SRC_LDS_OQ_B_POP          = 222,
+   SQ_ALU_SRC_LDS_DIRECT_A          = 223,
+   SQ_ALU_SRC_LDS_DIRECT_B          = 224,
+   SQ_ALU_SRC_TIME_HI               = 227,
+   SQ_ALU_SRC_TIME_LO               = 228,
+   SQ_ALU_SRC_MASK_HI               = 229,
+   SQ_ALU_SRC_MASK_LO               = 230,
+   SQ_ALU_SRC_HW_WAVE_ID            = 231,
+   SQ_ALU_SRC_SIMD_ID               = 232,
+   SQ_ALU_SRC_SE_ID                 = 233,
+   SQ_ALU_SRC_HW_THREADGRP_ID       = 234,
+   SQ_ALU_SRC_WAVE_ID_IN_GRP        = 235,
+   SQ_ALU_SRC_NUM_THREADGRP_WAVES   = 236,
+   SQ_ALU_SRC_HW_ALU_ODD            = 237,
+   SQ_ALU_SRC_LOOP_IDX              = 238,
+   SQ_ALU_SRC_PARAM_BASE_ADDR       = 240,
+   SQ_ALU_SRC_NEW_PRIM_MASK         = 241,
+   SQ_ALU_SRC_PRIM_MASK_HI          = 242,
+   SQ_ALU_SRC_PRIM_MASK_LO          = 243,
    SQ_ALU_SRC_1_DBL_L               = 244,
    SQ_ALU_SRC_1_DBL_M               = 245,
    SQ_ALU_SRC_0_5_DBL_L             = 246,
@@ -26,6 +68,8 @@ enum SQ_ALU_SRC : uint32_t
    SQ_ALU_SRC_LITERAL               = 253,
    SQ_ALU_SRC_PV                    = 254,
    SQ_ALU_SRC_PS                    = 255,
+   SQ_ALU_SRC_CONST_FILE_0          = 256,
+   SQ_ALU_SRC_CONST_FILE_255        = 511,
 };
 
 enum SQ_ALU_VEC_BANK_SWIZZLE : uint32_t
@@ -36,6 +80,10 @@ enum SQ_ALU_VEC_BANK_SWIZZLE : uint32_t
    SQ_ALU_VEC_102                   = 3,
    SQ_ALU_VEC_201                   = 4,
    SQ_ALU_VEC_210                   = 5,
+   SQ_ALU_SCL_210                   = 0,
+   SQ_ALU_SCL_122                   = 1,
+   SQ_ALU_SCL_212                   = 2,
+   SQ_ALU_SCL_221                   = 3,
 };
 
 enum SQ_CF_COND : uint32_t
@@ -135,6 +183,7 @@ enum SQ_CHAN : uint32_t
    SQ_CHAN_Y                        = 1,
    SQ_CHAN_Z                        = 2,
    SQ_CHAN_W                        = 3,
+   SQ_CHAN_T                        = 4,
 };
 
 enum SQ_ENDIAN : uint32_t

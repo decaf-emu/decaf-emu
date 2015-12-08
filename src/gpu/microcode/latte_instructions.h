@@ -1,8 +1,6 @@
 #pragma once
 #include "types.h"
-#include "latte_enum_sq.h"
-
-// TODO: Replace latte_opcodes.h
+#include "gpu/latte_enum_sq.h"
 
 namespace latte
 {
@@ -10,49 +8,70 @@ namespace latte
 enum SQ_CF_INST : uint32_t
 {
 #define CF_INST(name, value) SQ_CF_INST_##name = value,
-#include "latte_opcodes_def.inl"
+#include "latte_instructions_def.inl"
 #undef CF_INST
 };
 
 enum SQ_CF_EXP_INST : uint32_t
 {
 #define EXP_INST(name, value) SQ_CF_INST_##name = value,
-#include "latte_opcodes_def.inl"
+#include "latte_instructions_def.inl"
 #undef EXP_INST
 };
 
 enum SQ_CF_ALU_INST : uint32_t
 {
 #define ALU_INST(name, value) SQ_CF_INST_##name = value,
-#include "latte_opcodes_def.inl"
+#include "latte_instructions_def.inl"
 #undef ALU_INST
 };
 
 enum SQ_OP2_INST : uint32_t
 {
 #define ALU_OP2(name, value, srcs, flags) SQ_OP2_INST_##name = value,
-#include "latte_opcodes_def.inl"
+#include "latte_instructions_def.inl"
 #undef ALU_OP2
 };
 
 enum SQ_OP3_INST : uint32_t
 {
 #define ALU_OP3(name, value, srcs, flags) SQ_OP3_INST_##name = value,
-#include "latte_opcodes_def.inl"
+#include "latte_instructions_def.inl"
 #undef ALU_OP3
 };
 
 enum SQ_TEX_INST : uint32_t
 {
 #define TEX_INST(name, value) SQ_TEX_INST_##name = value,
-#include "latte_opcodes_def.inl"
+#include "latte_instructions_def.inl"
 #undef TEX_INST
+};
+
+enum SQ_CF_INST_TYPE : uint32_t
+{
+   SQ_CF_INST_TYPE_NORMAL        = 0,
+   SQ_CF_INST_TYPE_EXPORT        = 1,
+   SQ_CF_INST_TYPE_ALU           = 2,
+   SQ_CF_INST_TYPE_ALU_EXTENDED  = 3,
+};
+
+enum SQ_ALU_FLAGS : uint32_t
+{
+   SQ_ALU_FLAG_NONE              = 0,
+   SQ_ALU_FLAG_VECTOR            = (1 << 0),
+   SQ_ALU_FLAG_TRANSCENDENTAL    = (1 << 1),
+   SQ_ALU_FLAG_REDUCTION         = (1 << 2),
+   SQ_ALU_FLAG_PRED_SET          = (1 << 3),
+   SQ_ALU_FLAG_INT_IN            = (1 << 4),
+   SQ_ALU_FLAG_INT_OUT           = (1 << 5),
+   SQ_ALU_FLAG_UINT_IN           = (1 << 6),
+   SQ_ALU_FLAG_UINT_OUT          = (1 << 7),
 };
 
 // Control flow instruction word 0
 struct SQ_CF_WORD0
 {
-   uint32_t addr;
+   uint32_t ADDR;
 };
 
 // Control flow instruction word 1
@@ -75,7 +94,7 @@ struct SQ_CF_WORD1
 // Control flow ALU clause instruction word 0
 struct SQ_CF_ALU_WORD0
 {
-   uint32_t ADDR : 16;
+   uint32_t ADDR : 22;
    uint32_t KCACHE_BANK0 : 4;
    uint32_t KCACHE_BANK1 : 4;
    SQ_CF_KCACHE_MODE KCACHE_MODE0 : 2;
@@ -114,7 +133,7 @@ struct SQ_ALU_WORD0
 struct SQ_ALU_WORD1
 {
    uint32_t : 15;
-   uint32_t ENCODING : 3;
+   SQ_ALU_ENCODING ENCODING : 3;
    SQ_ALU_VEC_BANK_SWIZZLE BANK_SWIZZLE : 3;
    uint32_t DST_GPR : 7;
    SQ_REL DST_REL : 1;
@@ -152,7 +171,7 @@ struct SQ_CF_ALLOC_EXPORT_WORD0
    uint32_t ARRAY_BASE : 13;
    SQ_EXPORT_TYPE TYPE : 2;
    uint32_t RW_GPR : 7;
-   SQ_SEL RW_REL : 1;
+   SQ_REL RW_REL : 1;
    uint32_t INDEX_GPR : 7;
    uint32_t ELEM_SIZE : 2;
 };
@@ -211,7 +230,7 @@ struct SQ_TEX_WORD1
    SQ_SEL DST_SEL_Y : 3;
    SQ_SEL DST_SEL_Z : 3;
    SQ_SEL DST_SEL_W : 3;
-   SQ_TEX_COORD_TYPE LOD_BIAS : 7;
+   uint32_t LOD_BIAS : 7;
    SQ_TEX_COORD_TYPE COORD_TYPE_X : 1;
    SQ_TEX_COORD_TYPE COORD_TYPE_Y : 1;
    SQ_TEX_COORD_TYPE COORD_TYPE_Z : 1;
@@ -238,7 +257,7 @@ union SQ_VTX_WORD0
 
    struct
    {
-      uint32_t VTX_INST : 5;
+      SQ_TEX_INST VTX_INST : 5;
       SQ_VTX_FETCH_TYPE FETCH_TYPE : 2;
       uint32_t FETCH_WHOLE_QUAD : 1;
       uint32_t BUFFER_ID : 8;
@@ -326,6 +345,14 @@ union ControlFlowInst
          SQ_CF_ALLOC_EXPORT_WORD1_SWIZ swiz;
       };
    } exp;
+
+   struct
+   {
+      uint32_t : 32;
+      uint32_t : 28;
+      SQ_CF_INST_TYPE CF_INST_TYPE : 2;
+      uint32_t : 2;
+   };
 };
 
 struct AluInst
@@ -362,5 +389,18 @@ struct TextureFetchInst
    SQ_TEX_WORD2 word2;
    uint32_t padding;
 };
+
+const char *getInstructionName(SQ_CF_INST id);
+const char *getInstructionName(SQ_CF_EXP_INST id);
+const char *getInstructionName(SQ_CF_ALU_INST id);
+const char *getInstructionName(SQ_OP2_INST id);
+const char *getInstructionName(SQ_OP3_INST id);
+const char *getInstructionName(SQ_TEX_INST id);
+
+uint32_t getInstructionNumSrcs(SQ_OP2_INST id);
+uint32_t getInstructionNumSrcs(SQ_OP3_INST id);
+
+SQ_ALU_FLAGS getInstructionFlags(SQ_OP2_INST id);
+SQ_ALU_FLAGS getInstructionFlags(SQ_OP3_INST id);
 
 } // namespace latte

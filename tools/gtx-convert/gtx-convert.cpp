@@ -129,7 +129,6 @@ struct Texture
 };
 
 #pragma pack(1)
-
 struct DdsPixelFormat
 {
    uint32_t	dwSize;
@@ -159,8 +158,10 @@ struct DdsHeader
    uint32_t	dwCaps4;
    uint32_t	dwReserved2;
 };
+
 static_assert(sizeof(DdsHeader) == 124, "dds header should be 124 bytes long");
 #pragma pack()
+
 bool
 convert(const std::string &filenameIn, const std::string &filenameOut)
 {

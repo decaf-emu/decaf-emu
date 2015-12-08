@@ -3,6 +3,7 @@
 using latte::shadir::AluInstruction;
 using latte::shadir::AluSource;
 using latte::shadir::AluDest;
+using latte::shadir::ValueType;
 
 /*
 Unimplemented:
@@ -81,12 +82,12 @@ namespace glsl
 static bool ADD(GenerateState &state, AluInstruction *ins)
 {
    // dst = src0 + src1
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " + ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
 
    translateAluDestEnd(state, ins);
    return true;
@@ -95,12 +96,12 @@ static bool ADD(GenerateState &state, AluInstruction *ins)
 static bool SUB(GenerateState &state, AluInstruction *ins)
 {
    // dst = src1 - src0
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
    state.out << " - ";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
 
    translateAluDestEnd(state, ins);
    return true;
@@ -109,12 +110,12 @@ static bool SUB(GenerateState &state, AluInstruction *ins)
 static bool MUL(GenerateState &state, AluInstruction *ins)
 {
    // dst = src0 * src1
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " * ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
 
    translateAluDestEnd(state, ins);
    return true;
@@ -123,12 +124,12 @@ static bool MUL(GenerateState &state, AluInstruction *ins)
 static bool AND(GenerateState &state, AluInstruction *ins)
 {
    // dst = src0 & src1
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " & ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
 
    translateAluDestEnd(state, ins);
    return true;
@@ -137,12 +138,12 @@ static bool AND(GenerateState &state, AluInstruction *ins)
 static bool OR(GenerateState &state, AluInstruction *ins)
 {
    // dst = src0 | src1
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " | ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
 
    translateAluDestEnd(state, ins);
    return true;
@@ -151,12 +152,12 @@ static bool OR(GenerateState &state, AluInstruction *ins)
 static bool XOR(GenerateState &state, AluInstruction *ins)
 {
    // dst = src0 ^ src1
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " ^ ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
 
    translateAluDestEnd(state, ins);
    return true;
@@ -165,11 +166,11 @@ static bool XOR(GenerateState &state, AluInstruction *ins)
 static bool NOT(GenerateState &state, AluInstruction *ins)
 {
    // dst = ~src0
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
    state.out << '~';
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
 
    translateAluDestEnd(state, ins);
    return true;
@@ -178,12 +179,12 @@ static bool NOT(GenerateState &state, AluInstruction *ins)
 static bool ASHR(GenerateState &state, AluInstruction *ins)
 {
    // dst = src0 >> (src1 & 0x1f)
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " >> (";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
    state.out << " & 0x1f)";
 
    translateAluDestEnd(state, ins);
@@ -193,12 +194,12 @@ static bool ASHR(GenerateState &state, AluInstruction *ins)
 static bool LSHR(GenerateState &state, AluInstruction *ins)
 {
    // dst = src0 >> (src1 & 0x1f)
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " >> (";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
    state.out << " & 0x1f)";
 
    translateAluDestEnd(state, ins);
@@ -208,12 +209,12 @@ static bool LSHR(GenerateState &state, AluInstruction *ins)
 static bool LSHL(GenerateState &state, AluInstruction *ins)
 {
    // dst = src0 << src1
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " << ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
 
    translateAluDestEnd(state, ins);
    return true;
@@ -222,13 +223,13 @@ static bool LSHL(GenerateState &state, AluInstruction *ins)
 static bool MAX(GenerateState &state, AluInstruction *ins)
 {
    // dst = max(src0, src1)
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
    state.out << "max(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ", ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -238,13 +239,13 @@ static bool MAX(GenerateState &state, AluInstruction *ins)
 static bool MIN(GenerateState &state, AluInstruction *ins)
 {
    // dst = min(src0, src1)
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
    state.out << "min(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ", ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -254,10 +255,10 @@ static bool MIN(GenerateState &state, AluInstruction *ins)
 static bool MOV(GenerateState &state, AluInstruction *ins)
 {
    // dst = src0
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
 
    translateAluDestEnd(state, ins);
    return true;
@@ -267,10 +268,10 @@ static bool MOVA_FLOOR(GenerateState &state, AluInstruction *ins)
 {
    // AR.chan = floor(src0)
    state.out << "AR.";
-   translateChannel(state, ins->dest.chan);
+   translateChannel(state, ins->dst.chan);
 
    state.out << " = int(floor(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << "))";
    return true;
 }
@@ -278,11 +279,11 @@ static bool MOVA_FLOOR(GenerateState &state, AluInstruction *ins)
 static bool CEIL(GenerateState &state, AluInstruction *ins)
 {
    // dst = ceil(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "ceil(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -292,11 +293,11 @@ static bool CEIL(GenerateState &state, AluInstruction *ins)
 static bool FLOOR(GenerateState &state, AluInstruction *ins)
 {
    // dst = floor(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "floor(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -306,11 +307,11 @@ static bool FLOOR(GenerateState &state, AluInstruction *ins)
 static bool FRACT(GenerateState &state, AluInstruction *ins)
 {
    // dst = fract(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "fract(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -320,11 +321,11 @@ static bool FRACT(GenerateState &state, AluInstruction *ins)
 static bool TRUNC(GenerateState &state, AluInstruction *ins)
 {
    // dst = trunc(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "trunc(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -334,11 +335,11 @@ static bool TRUNC(GenerateState &state, AluInstruction *ins)
 static bool COS(GenerateState &state, AluInstruction *ins)
 {
    // dst = cos(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "cos(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -348,11 +349,11 @@ static bool COS(GenerateState &state, AluInstruction *ins)
 static bool SIN(GenerateState &state, AluInstruction *ins)
 {
    // dst = sin(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "sin(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -362,11 +363,11 @@ static bool SIN(GenerateState &state, AluInstruction *ins)
 static bool EXP(GenerateState &state, AluInstruction *ins)
 {
    // dst = exp2(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "exp2(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -376,11 +377,11 @@ static bool EXP(GenerateState &state, AluInstruction *ins)
 static bool LOG(GenerateState &state, AluInstruction *ins)
 {
    // dst = log2(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "log2(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ')';
 
    translateAluDestEnd(state, ins);
@@ -390,11 +391,11 @@ static bool LOG(GenerateState &state, AluInstruction *ins)
 static bool FLT_TO_INT(GenerateState &state, AluInstruction *ins)
 {
    // dst = (int)src0
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "int(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ")";
 
    translateAluDestEnd(state, ins);
@@ -404,11 +405,11 @@ static bool FLT_TO_INT(GenerateState &state, AluInstruction *ins)
 static bool INT_TO_FLT(GenerateState &state, AluInstruction *ins)
 {
    // dst = (float)src0
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "float(floatBitsToInt(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << "))";
 
    translateAluDestEnd(state, ins);
@@ -418,11 +419,11 @@ static bool INT_TO_FLT(GenerateState &state, AluInstruction *ins)
 static bool UINT_TO_FLT(GenerateState &state, AluInstruction *ins)
 {
    // dst = (float)src0
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "float(floatBitsToUint(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << "))";
 
    translateAluDestEnd(state, ins);
@@ -432,22 +433,22 @@ static bool UINT_TO_FLT(GenerateState &state, AluInstruction *ins)
 static bool PRED_SETE(GenerateState &state, AluInstruction *ins)
 {
    // dst = (src0 == src1) ? 1 : 0
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
 
-   if (!ins->writeMask && ins->updateExecutionMask && ins->updatePredicate) {
+   if (!ins->writeMask && ins->updateExecuteMask && ins->updatePredicate) {
       // Should be inside a conditional
-      translateAluSource(state, ins->sources[0]);
+      translateAluSource(state, ins, ins->src[0]);
       state.out << " == ";
-      translateAluSource(state, ins->sources[1]);
+      translateAluSource(state, ins, ins->src[1]);
    } else {
       translateAluDestStart(state, ins);
       state.out << '(';
-      translateAluSource(state, ins->sources[0]);
+      translateAluSource(state, ins, ins->src[0]);
       state.out << " == ";
-      translateAluSource(state, ins->sources[1]);
+      translateAluSource(state, ins, ins->src[1]);
       state.out << ") ? ";
 
-      if (ins->dest.valueType == AluDest::Float) {
+      if (ins->dst.type == ValueType::Float) {
          state.out << "1.0f : 0.0f";
       } else {
          state.out << "1 : 0";
@@ -462,22 +463,22 @@ static bool PRED_SETE(GenerateState &state, AluInstruction *ins)
 static bool PRED_SETGE(GenerateState &state, AluInstruction *ins)
 {
    // dst = (src0 >= src1) ? 1 : 0
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
 
-   if (!ins->writeMask && ins->updateExecutionMask && ins->updatePredicate) {
+   if (!ins->writeMask && ins->updateExecuteMask && ins->updatePredicate) {
       // Should be inside a conditional
-      translateAluSource(state, ins->sources[0]);
+      translateAluSource(state, ins, ins->src[0]);
       state.out << " >= ";
-      translateAluSource(state, ins->sources[1]);
+      translateAluSource(state, ins, ins->src[1]);
    } else {
       translateAluDestStart(state, ins);
       state.out << '(';
-      translateAluSource(state, ins->sources[0]);
+      translateAluSource(state, ins, ins->src[0]);
       state.out << " >= ";
-      translateAluSource(state, ins->sources[1]);
+      translateAluSource(state, ins, ins->src[1]);
       state.out << ") ? ";
 
-      if (ins->dest.valueType == AluDest::Float) {
+      if (ins->dst.type == ValueType::Float) {
          state.out << "1.0f : 0.0f";
       } else {
          state.out << "1 : 0";
@@ -492,22 +493,22 @@ static bool PRED_SETGE(GenerateState &state, AluInstruction *ins)
 static bool PRED_SETGT(GenerateState &state, AluInstruction *ins)
 {
    // dst = (src0 > src1) ? 1 : 0
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
 
-   if (!ins->writeMask && ins->updateExecutionMask && ins->updatePredicate) {
+   if (!ins->writeMask && ins->updateExecuteMask && ins->updatePredicate) {
       // Should be inside a conditional
-      translateAluSource(state, ins->sources[0]);
+      translateAluSource(state, ins, ins->src[0]);
       state.out << " > ";
-      translateAluSource(state, ins->sources[1]);
+      translateAluSource(state, ins, ins->src[1]);
    } else {
       translateAluDestStart(state, ins);
       state.out << '(';
-      translateAluSource(state, ins->sources[0]);
+      translateAluSource(state, ins, ins->src[0]);
       state.out << " > ";
-      translateAluSource(state, ins->sources[1]);
+      translateAluSource(state, ins, ins->src[1]);
       state.out << ") ? ";
 
-      if (ins->dest.valueType == AluDest::Float) {
+      if (ins->dst.type == ValueType::Float) {
          state.out << "1.0f : 0.0f";
       } else {
          state.out << "1 : 0";
@@ -522,21 +523,21 @@ static bool PRED_SETGT(GenerateState &state, AluInstruction *ins)
 static bool PRED_SETNE(GenerateState &state, AluInstruction *ins)
 {
    // dst = (src0 != src1) ? 1.0f : 0.0f
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
 
-   if (!ins->writeMask && ins->updateExecutionMask && ins->updatePredicate) {
-      translateAluSource(state, ins->sources[0]);
+   if (!ins->writeMask && ins->updateExecuteMask && ins->updatePredicate) {
+      translateAluSource(state, ins, ins->src[0]);
       state.out << " != ";
-      translateAluSource(state, ins->sources[1]);
+      translateAluSource(state, ins, ins->src[1]);
    } else {
       translateAluDestStart(state, ins);
       state.out << '(';
-      translateAluSource(state, ins->sources[0]);
+      translateAluSource(state, ins, ins->src[0]);
       state.out << " != ";
-      translateAluSource(state, ins->sources[1]);
+      translateAluSource(state, ins, ins->src[1]);
       state.out << ") ? ";
 
-      if (ins->dest.valueType == AluDest::Float) {
+      if (ins->dst.type == ValueType::Float) {
          state.out << "1.0f : 0.0f";
       } else {
          state.out << "1 : 0";
@@ -551,11 +552,11 @@ static bool PRED_SETNE(GenerateState &state, AluInstruction *ins)
 static bool RECIP(GenerateState &state, AluInstruction *ins)
 {
    // dst = rcp(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "(1.0 / (";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << "))";
 
    translateAluDestEnd(state, ins);
@@ -565,11 +566,11 @@ static bool RECIP(GenerateState &state, AluInstruction *ins)
 static bool RECIPSQRT(GenerateState &state, AluInstruction *ins)
 {
    // dst = rsqrt(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "inversesqrt(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ")";
 
    translateAluDestEnd(state, ins);
@@ -579,11 +580,11 @@ static bool RECIPSQRT(GenerateState &state, AluInstruction *ins)
 static bool SQRT(GenerateState &state, AluInstruction *ins)
 {
    // dst = sqrt(src0)
-   assert(ins->numSources == 1);
+   assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
    state.out << "sqrt(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << ")";
 
    translateAluDestEnd(state, ins);
@@ -593,16 +594,16 @@ static bool SQRT(GenerateState &state, AluInstruction *ins)
 static bool SETE(GenerateState &state, AluInstruction *ins)
 {
    // dst = (src0 == src1) ? 1 : 0
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
    state.out << "(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " == ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
    state.out << ") ? ";
 
-   if (ins->dest.valueType == AluDest::Float) {
+   if (ins->dst.type == ValueType::Float) {
       state.out << "1.0f : 0.0f";
    } else {
       state.out << "1 : 0";
@@ -615,16 +616,16 @@ static bool SETE(GenerateState &state, AluInstruction *ins)
 static bool SETGE(GenerateState &state, AluInstruction *ins)
 {
    // dst = (src0 >= src1) ? 1 : 0
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
    state.out << "(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " >= ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
    state.out << ") ? ";
 
-   if (ins->dest.valueType == AluDest::Float) {
+   if (ins->dst.type == ValueType::Float) {
       state.out << "1.0f : 0.0f";
    } else {
       state.out << "1 : 0";
@@ -637,16 +638,16 @@ static bool SETGE(GenerateState &state, AluInstruction *ins)
 static bool SETGT(GenerateState &state, AluInstruction *ins)
 {
    // dst = (src0 > src1) ? 1 : 0
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
    state.out << "(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " > ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
    state.out << ") ? ";
 
-   if (ins->dest.valueType == AluDest::Float) {
+   if (ins->dst.type == ValueType::Float) {
       state.out << "1.0f : 0.0f";
    } else {
       state.out << "1 : 0";
@@ -659,16 +660,16 @@ static bool SETGT(GenerateState &state, AluInstruction *ins)
 static bool SETNE(GenerateState &state, AluInstruction *ins)
 {
    // dst = (src0 != src1) ? 1 : 0
-   assert(ins->numSources == 2);
+   assert(ins->srcCount == 2);
    translateAluDestStart(state, ins);
 
    state.out << "(";
-   translateAluSource(state, ins->sources[0]);
+   translateAluSource(state, ins, ins->src[0]);
    state.out << " != ";
-   translateAluSource(state, ins->sources[1]);
+   translateAluSource(state, ins, ins->src[1]);
    state.out << ") ? ";
 
-   if (ins->dest.valueType == AluDest::Float) {
+   if (ins->dst.type == ValueType::Float) {
       state.out << "1.0f : 0.0f";
    } else {
       state.out << "1 : 0";
@@ -680,67 +681,66 @@ static bool SETNE(GenerateState &state, AluInstruction *ins)
 
 void registerAluOP2()
 {
-   using latte::alu::op2;
-   registerGenerator(op2::ADD, ADD);
-   registerGenerator(op2::ADD_INT, ADD);
-   registerGenerator(op2::SUB_INT, SUB);
-   registerGenerator(op2::MUL, MUL);
-   registerGenerator(op2::MUL_IEEE, MUL);
-   registerGenerator(op2::AND_INT, AND);
-   registerGenerator(op2::OR_INT, OR);
-   registerGenerator(op2::XOR_INT, XOR);
-   registerGenerator(op2::NOT_INT, NOT);
-   registerGenerator(op2::ASHR_INT, ASHR);
-   registerGenerator(op2::LSHR_INT, LSHR);
-   registerGenerator(op2::LSHL_INT, LSHL);
-   registerGenerator(op2::MAX, MAX);
-   registerGenerator(op2::MIN, MIN);
-   registerGenerator(op2::MAX_DX10, MAX);
-   registerGenerator(op2::MIN_DX10, MIN);
-   registerGenerator(op2::MAX_INT, MAX);
-   registerGenerator(op2::MIN_INT, MIN);
-   registerGenerator(op2::MAX_UINT, MAX);
-   registerGenerator(op2::MIN_UINT, MIN);
-   registerGenerator(op2::MOV, MOV);
-   registerGenerator(op2::MOVA_FLOOR, MOVA_FLOOR);
-   registerGenerator(op2::CEIL, CEIL);
-   registerGenerator(op2::FLOOR, FLOOR);
-   registerGenerator(op2::TRUNC, TRUNC);
-   registerGenerator(op2::FRACT, FRACT);
-   registerGenerator(op2::SIN, SIN);
-   registerGenerator(op2::COS, COS);
-   registerGenerator(op2::EXP_IEEE, EXP);
-   registerGenerator(op2::LOG_IEEE, LOG);
-   registerGenerator(op2::PRED_SETE, PRED_SETE);
-   registerGenerator(op2::PRED_SETGE, PRED_SETGE);
-   registerGenerator(op2::PRED_SETGT, PRED_SETGT);
-   registerGenerator(op2::PRED_SETNE, PRED_SETNE);
-   registerGenerator(op2::PRED_SETE_INT, PRED_SETE);
-   registerGenerator(op2::PRED_SETGE_INT, PRED_SETGE);
-   registerGenerator(op2::PRED_SETGT_INT, PRED_SETGT);
-   registerGenerator(op2::PRED_SETNE_INT, PRED_SETNE);
-   registerGenerator(op2::PRED_SETGE_UINT, PRED_SETGE);
-   registerGenerator(op2::PRED_SETGT_UINT, PRED_SETGT);
-   registerGenerator(op2::RECIPSQRT_IEEE, RECIPSQRT);
-   registerGenerator(op2::RECIP_IEEE, RECIP);
-   registerGenerator(op2::SETE, SETE);
-   registerGenerator(op2::SETGE, SETGE);
-   registerGenerator(op2::SETGT, SETGT);
-   registerGenerator(op2::SETNE, SETNE);
-   registerGenerator(op2::SETE_DX10, SETE);
-   registerGenerator(op2::SETGE_DX10, SETGE);
-   registerGenerator(op2::SETGT_DX10, SETGT);
-   registerGenerator(op2::SETNE_DX10, SETNE);
-   registerGenerator(op2::SETE_INT, SETE);
-   registerGenerator(op2::SETGE_INT, SETGE);
-   registerGenerator(op2::SETGT_INT, SETGT);
-   registerGenerator(op2::SETNE_INT, SETNE);
-   registerGenerator(op2::SETGE_UINT, SETGE);
-   registerGenerator(op2::SETGT_UINT, SETGT);
-   registerGenerator(op2::SQRT_IEEE, SQRT);
-   registerGenerator(op2::UINT_TO_FLT, UINT_TO_FLT);
-   registerGenerator(op2::INT_TO_FLT, INT_TO_FLT);
-   registerGenerator(op2::FLT_TO_INT, FLT_TO_INT);
+   registerGenerator(latte::SQ_OP2_INST_ADD, ADD);
+   registerGenerator(latte::SQ_OP2_INST_ADD_INT, ADD);
+   registerGenerator(latte::SQ_OP2_INST_SUB_INT, SUB);
+   registerGenerator(latte::SQ_OP2_INST_MUL, MUL);
+   registerGenerator(latte::SQ_OP2_INST_MUL_IEEE, MUL);
+   registerGenerator(latte::SQ_OP2_INST_AND_INT, AND);
+   registerGenerator(latte::SQ_OP2_INST_OR_INT, OR);
+   registerGenerator(latte::SQ_OP2_INST_XOR_INT, XOR);
+   registerGenerator(latte::SQ_OP2_INST_NOT_INT, NOT);
+   registerGenerator(latte::SQ_OP2_INST_ASHR_INT, ASHR);
+   registerGenerator(latte::SQ_OP2_INST_LSHR_INT, LSHR);
+   registerGenerator(latte::SQ_OP2_INST_LSHL_INT, LSHL);
+   registerGenerator(latte::SQ_OP2_INST_MAX, MAX);
+   registerGenerator(latte::SQ_OP2_INST_MIN, MIN);
+   registerGenerator(latte::SQ_OP2_INST_MAX_DX10, MAX);
+   registerGenerator(latte::SQ_OP2_INST_MIN_DX10, MIN);
+   registerGenerator(latte::SQ_OP2_INST_MAX_INT, MAX);
+   registerGenerator(latte::SQ_OP2_INST_MIN_INT, MIN);
+   registerGenerator(latte::SQ_OP2_INST_MAX_UINT, MAX);
+   registerGenerator(latte::SQ_OP2_INST_MIN_UINT, MIN);
+   registerGenerator(latte::SQ_OP2_INST_MOV, MOV);
+   registerGenerator(latte::SQ_OP2_INST_MOVA_FLOOR, MOVA_FLOOR);
+   registerGenerator(latte::SQ_OP2_INST_CEIL, CEIL);
+   registerGenerator(latte::SQ_OP2_INST_FLOOR, FLOOR);
+   registerGenerator(latte::SQ_OP2_INST_TRUNC, TRUNC);
+   registerGenerator(latte::SQ_OP2_INST_FRACT, FRACT);
+   registerGenerator(latte::SQ_OP2_INST_SIN, SIN);
+   registerGenerator(latte::SQ_OP2_INST_COS, COS);
+   registerGenerator(latte::SQ_OP2_INST_EXP_IEEE, EXP);
+   registerGenerator(latte::SQ_OP2_INST_LOG_IEEE, LOG);
+   registerGenerator(latte::SQ_OP2_INST_PRED_SETE, PRED_SETE);
+   registerGenerator(latte::SQ_OP2_INST_PRED_SETGE, PRED_SETGE);
+   registerGenerator(latte::SQ_OP2_INST_PRED_SETGT, PRED_SETGT);
+   registerGenerator(latte::SQ_OP2_INST_PRED_SETNE, PRED_SETNE);
+   registerGenerator(latte::SQ_OP2_INST_PRED_SETE_INT, PRED_SETE);
+   registerGenerator(latte::SQ_OP2_INST_PRED_SETGE_INT, PRED_SETGE);
+   registerGenerator(latte::SQ_OP2_INST_PRED_SETGT_INT, PRED_SETGT);
+   registerGenerator(latte::SQ_OP2_INST_PRED_SETNE_INT, PRED_SETNE);
+   registerGenerator(latte::SQ_OP2_INST_PRED_SETGE_UINT, PRED_SETGE);
+   registerGenerator(latte::SQ_OP2_INST_PRED_SETGT_UINT, PRED_SETGT);
+   registerGenerator(latte::SQ_OP2_INST_RECIPSQRT_IEEE, RECIPSQRT);
+   registerGenerator(latte::SQ_OP2_INST_RECIP_IEEE, RECIP);
+   registerGenerator(latte::SQ_OP2_INST_SETE, SETE);
+   registerGenerator(latte::SQ_OP2_INST_SETGE, SETGE);
+   registerGenerator(latte::SQ_OP2_INST_SETGT, SETGT);
+   registerGenerator(latte::SQ_OP2_INST_SETNE, SETNE);
+   registerGenerator(latte::SQ_OP2_INST_SETE_DX10, SETE);
+   registerGenerator(latte::SQ_OP2_INST_SETGE_DX10, SETGE);
+   registerGenerator(latte::SQ_OP2_INST_SETGT_DX10, SETGT);
+   registerGenerator(latte::SQ_OP2_INST_SETNE_DX10, SETNE);
+   registerGenerator(latte::SQ_OP2_INST_SETE_INT, SETE);
+   registerGenerator(latte::SQ_OP2_INST_SETGE_INT, SETGE);
+   registerGenerator(latte::SQ_OP2_INST_SETGT_INT, SETGT);
+   registerGenerator(latte::SQ_OP2_INST_SETNE_INT, SETNE);
+   registerGenerator(latte::SQ_OP2_INST_SETGE_UINT, SETGE);
+   registerGenerator(latte::SQ_OP2_INST_SETGT_UINT, SETGT);
+   registerGenerator(latte::SQ_OP2_INST_SQRT_IEEE, SQRT);
+   registerGenerator(latte::SQ_OP2_INST_UINT_TO_FLT, UINT_TO_FLT);
+   registerGenerator(latte::SQ_OP2_INST_INT_TO_FLT, INT_TO_FLT);
+   registerGenerator(latte::SQ_OP2_INST_FLT_TO_INT, FLT_TO_INT);
 }
 
 } // namespace glsl

@@ -125,13 +125,17 @@
     <ClCompile Include="..\src\gpu\commandqueue.cpp" />
     <ClCompile Include="..\src\gpu\driver.cpp" />
     <ClCompile Include="..\src\gpu\gfd.cpp" />
-    <ClCompile Include="..\src\gpu\latte_analyse.cpp" />
-    <ClCompile Include="..\src\gpu\latte_blockify.cpp" />
-    <ClCompile Include="..\src\gpu\latte_decoder.cpp" />
-    <ClCompile Include="..\src\gpu\latte_disassembler.cpp" />
     <ClCompile Include="..\src\gpu\latte_format.cpp" />
-    <ClCompile Include="..\src\gpu\latte_opcodes.cpp" />
     <ClCompile Include="..\src\gpu\latte_untile.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_blockify.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_decoder.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_alu.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_export.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_tex.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_vtx.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_instructions.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_linearify.cpp" />
+    <ClCompile Include="..\src\gpu\microcode\latte_disassembler.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_alu.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_alu_op2.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_alu_op3.cpp" />
@@ -140,6 +144,7 @@
     <ClCompile Include="..\src\gpu\opengl\glsl_exp.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_generator.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_tex.cpp" />
+    <ClCompile Include="..\src\gpu\opengl\glsl_vtx.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_driver.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_shader.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_texture.cpp" />
@@ -302,7 +307,6 @@
     <ClInclude Include="..\src\gpu\commandqueue.h" />
     <ClInclude Include="..\src\gpu\driver.h" />
     <ClInclude Include="..\src\gpu\gfd.h" />
-    <ClInclude Include="..\src\gpu\latte.h" />
     <ClInclude Include="..\src\gpu\latte_contextstate.h" />
     <ClInclude Include="..\src\gpu\latte_enum_cb.h" />
     <ClInclude Include="..\src\gpu\latte_enum_common.h" />
@@ -313,8 +317,6 @@
     <ClInclude Include="..\src\gpu\latte_enum_sx.h" />
     <ClInclude Include="..\src\gpu\latte_enum_vgt.h" />
     <ClInclude Include="..\src\gpu\latte_format.h" />
-    <ClInclude Include="..\src\gpu\latte_instructions.h" />
-    <ClInclude Include="..\src\gpu\latte_opcodes.h" />
     <ClInclude Include="..\src\gpu\latte_registers_cb.h" />
     <ClInclude Include="..\src\gpu\latte_registers_db.h" />
     <ClInclude Include="..\src\gpu\latte_registers_pa.h" />
@@ -324,6 +326,10 @@
     <ClInclude Include="..\src\gpu\latte_registers_td.h" />
     <ClInclude Include="..\src\gpu\latte_registers_vgt.h" />
     <ClInclude Include="..\src\gpu\latte_shadir.h" />
+    <ClInclude Include="..\src\gpu\microcode\latte_disassembler.h" />
+    <ClInclude Include="..\src\gpu\microcode\latte_instructions.h" />
+    <ClInclude Include="..\src\gpu\microcode\latte_shadir.h" />
+    <ClInclude Include="..\src\gpu\microcode\latte_decoder.h" />
     <ClInclude Include="..\src\gpu\opengl\glsl_generator.h" />
     <ClInclude Include="..\src\gpu\opengl\opengl_driver.h" />
     <ClInclude Include="..\src\gpu\pm4.h" />
@@ -488,7 +494,7 @@
     <None Include="..\src\cpu\instructionaliases.inl" />
     <None Include="..\src\cpu\instructionfields.inl" />
     <None Include="..\src\cpu\instructions.inl" />
-    <None Include="..\src\gpu\latte_opcodes_def.inl" />
+    <None Include="..\src\gpu\microcode\latte_instructions_def.inl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\wiiu_fallback.hlsl">

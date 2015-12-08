@@ -1,13 +1,7 @@
 #include "glsl_generator.h"
 
-using latte::shadir::TexInstruction;
-using latte::shadir::SelRegister;
-
 /*
 Unimplemented:
-VTX_FETCH
-VTX_SEMANTIC
-MEM
 GET_TEXTURE_INFO
 GET_SAMPLE_INFO
 GET_COMP_TEX_LOD
@@ -41,8 +35,10 @@ GATHER4
 GATHER4_O
 GATHER4_C
 GATHER4_C_O
-GET_BUFFER_RESINFO
 */
+
+using latte::shadir::TextureFetchInstruction;
+using latte::shadir::TextureFetchRegister;
 
 namespace gpu
 {
@@ -53,59 +49,57 @@ namespace opengl
 namespace glsl
 {
 
-static bool translateSelect(GenerateState &state, latte::alu::Select::Select sel)
+static bool
+translateSelect(GenerateState &state, latte::SQ_SEL sel)
 {
    switch (sel) {
-   case latte::alu::Select::X:
+   case latte::SQ_SEL_X:
       state.out << 'x';
       break;
-   case latte::alu::Select::Y:
+   case latte::SQ_SEL_Y:
       state.out << 'y';
       break;
-   case latte::alu::Select::Z:
+   case latte::SQ_SEL_Z:
       state.out << 'z';
       break;
-   case latte::alu::Select::W:
+   case latte::SQ_SEL_W:
       state.out << 'w';
       break;
-   case latte::alu::Select::Mask:
-   case latte::alu::Select::One:
-   case latte::alu::Select::Zero:
-   case latte::alu::Select::Unknown:
+   case latte::SQ_SEL_MASK:
+   case latte::SQ_SEL_1:
+   case latte::SQ_SEL_0:
+   default:
       return false;
    }
 
    return true;
 }
 
-unsigned translateSelRegister(GenerateState &state, const SelRegister &reg, size_t maxSel)
+unsigned
+translateSelectMask(GenerateState &state, const std::array<latte::SQ_SEL, 4> &sel, size_t maxSel)
 {
-   state.out << 'R' << reg.id;
-
-   if (maxSel > 0 && reg.selX != latte::alu::Select::Mask) {
+   if (maxSel > 0 && sel[0] != latte::SQ_SEL_MASK) {
       state.out << '.';
    }
 
-   if (maxSel > 0 && !translateSelect(state, reg.selX)) {
-      return 0;
-   }
-
-   if (maxSel > 1 && !translateSelect(state, reg.selY)) {
-      return 1;
-   }
-
-   if (maxSel > 2 && !translateSelect(state, reg.selZ)) {
-      return 2;
-   }
-
-   if (maxSel > 3 && !translateSelect(state, reg.selW)) {
-      return 3;
+   for (auto i = 0u; i < sel.size(); ++i) {
+      if (maxSel > i && !translateSelect(state, sel[i])) {
+         return i;
+      }
    }
 
    return 4;
 }
 
-static void translateTexRegisterChannels(GenerateState &state, unsigned channels)
+static unsigned
+translateTextureFetchRegister(GenerateState &state, const TextureFetchRegister &reg, size_t maxSel)
+{
+   state.out << 'R' << reg.id;
+   return translateSelectMask(state, reg.sel, maxSel);
+}
+
+static void
+translateTexRegisterChannels(GenerateState &state, unsigned channels)
 {
    if (channels > 0) {
       state.out << ".x";
@@ -124,9 +118,10 @@ static void translateTexRegisterChannels(GenerateState &state, unsigned channels
    }
 }
 
-static bool SAMPLE(GenerateState &state, TexInstruction *ins)
+static bool
+SAMPLE(GenerateState &state, TextureFetchInstruction *ins)
 {
-   auto channels = translateSelRegister(state, ins->dst);
+   auto channels = translateTextureFetchRegister(state, ins->dst, 4);
 
    if (ins->resourceID != ins->samplerID) {
       throw std::logic_error("Expect resourceID == samplerID");
@@ -137,16 +132,17 @@ static bool SAMPLE(GenerateState &state, TexInstruction *ins)
       << ins->samplerID
       << ", ";
 
-   translateSelRegister(state, ins->src, 3);
+   translateTextureFetchRegister(state, ins->src, 3);
 
    state.out << ")";
    translateTexRegisterChannels(state, channels);
    return true;
 }
 
-static bool SAMPLE_C(GenerateState &state, TexInstruction *ins)
+static bool
+SAMPLE_C(GenerateState &state, TextureFetchInstruction *ins)
 {
-   auto channels = translateSelRegister(state, ins->dst);
+   auto channels = translateTextureFetchRegister(state, ins->dst, 4);
 
    if (ins->resourceID != ins->samplerID) {
       throw std::logic_error("Expect resourceID == samplerID");
@@ -157,7 +153,7 @@ static bool SAMPLE_C(GenerateState &state, TexInstruction *ins)
       << ins->samplerID
       << ", vec3(";
 
-   translateSelRegister(state, ins->src, 3);
+   translateTextureFetchRegister(state, ins->src, 3);
 
    state.out
       << ", R" << ins->src.id << ".w)";
@@ -169,9 +165,8 @@ static bool SAMPLE_C(GenerateState &state, TexInstruction *ins)
 
 void registerTex()
 {
-   using latte::tex::inst;
-   registerGenerator(inst::SAMPLE, SAMPLE);
-   registerGenerator(inst::SAMPLE_C, SAMPLE_C);
+   registerGenerator(latte::SQ_TEX_INST_SAMPLE, SAMPLE);
+   registerGenerator(latte::SQ_TEX_INST_SAMPLE_C, SAMPLE_C);
 }
 
 } // namespace glsl

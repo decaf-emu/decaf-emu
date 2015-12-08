@@ -38,13 +38,15 @@ namespace opengl
 namespace glsl
 {
 
-static bool LOOP_BREAK(GenerateState &state, CfInstruction *ins)
+static bool
+LOOP_BREAK(GenerateState &state, CfInstruction *ins)
 {
    state.out << "break;";
    return true;
 }
 
-static bool LOOP_CONTINUE(GenerateState &state, CfInstruction *ins)
+static bool
+LOOP_CONTINUE(GenerateState &state, CfInstruction *ins)
 {
    state.out << "continue;";
    return true;
@@ -52,8 +54,8 @@ static bool LOOP_CONTINUE(GenerateState &state, CfInstruction *ins)
 
 void registerCf()
 {
-   registerGenerator(latte::cf::inst::LOOP_BREAK, LOOP_BREAK);
-   registerGenerator(latte::cf::inst::LOOP_CONTINUE, LOOP_CONTINUE);
+   registerGenerator(latte::SQ_CF_INST_LOOP_BREAK, LOOP_BREAK);
+   registerGenerator(latte::SQ_CF_INST_LOOP_CONTINUE, LOOP_CONTINUE);
 }
 
 } // namespace glsl
