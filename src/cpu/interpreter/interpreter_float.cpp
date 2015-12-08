@@ -182,26 +182,81 @@ checkNan(double d, double a, double b)
    }
 }
 
-// Floating Add
-template<typename Type>
+// Floating Arithmetic
+enum FPArithOperator {
+    FPAdd,
+    FPSub,
+    FPMul,
+    FPDiv,
+};
+template<FPArithOperator op, typename Type>
 static void
-faddGeneric(ThreadState *state, Instruction instr)
+fpArithGeneric(ThreadState *state, Instruction instr)
 {
    double a, b, d;
    a = state->fpr[instr.frA].value;
-   b = state->fpr[instr.frB].value;
+   b = state->fpr[op == FPMul ? instr.frC : instr.frB].value;
 
-   const bool vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) != std::signbit(b);
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
+   bool vxisi, vximz, vxidi, vxzdz, zx;
+   switch (op) {
+   case FPAdd:
+      vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) != std::signbit(b);
+      vximz = false;
+      vxidi = false;
+      vxzdz = false;
+      zx = false;
+      break;
+   case FPSub:
+      vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) == std::signbit(b);
+      vximz = false;
+      vxidi = false;
+      vxzdz = false;
+      zx = false;
+      break;
+   case FPMul:
+      vxisi = false;
+      vximz = (is_infinity(a) && is_zero(b)) || (is_zero(a) && is_infinity(b));
+      vxidi = false;
+      vxzdz = false;
+      zx = false;
+      break;
+   case FPDiv:
+      vxisi = false;
+      vximz = false;
+      vxidi = is_infinity(a) && is_infinity(b);
+      vxzdz = is_zero(a) && is_zero(b);
+      zx = !(vxzdz || vxsnan) && is_zero(b);
+      break;
+   }
 
    const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vxisi = vxisi;
    state->fpscr.vxsnan = vxsnan;
+   state->fpscr.vxisi = vxisi;
+   state->fpscr.vximz = vximz;
+   state->fpscr.vxidi = vxidi;
+   state->fpscr.vxzdz = vxzdz;
 
-   if ((vxisi || vxsnan) && state->fpscr.ve) {
+   if ((vxsnan || vxisi || vximz || vxidi || vxzdz) && state->fpscr.ve) {
+      updateFX_FEX_VX(state, oldFPSCR);
+   } else if (zx && state->fpscr.ze) {
+      state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
-      d = static_cast<Type>(a + b);
+      switch (op) {
+      case FPAdd:
+         d = static_cast<Type>(a + b);
+         break;
+      case FPSub:
+         d = static_cast<Type>(a - b);
+         break;
+      case FPMul:
+         d = static_cast<Type>(a * b);
+         break;
+      case FPDiv:
+         d = static_cast<Type>(a / b);
+         break;
+      }
       d = checkNan<Type>(d, a, b);
       state->fpr[instr.frD].value = d;
       updateFPRF(state, d);
@@ -217,155 +272,56 @@ faddGeneric(ThreadState *state, Instruction instr)
 static void
 fadd(ThreadState *state, Instruction instr)
 {
-   faddGeneric<double>(state, instr);
+   fpArithGeneric<FPAdd, double>(state, instr);
 }
 
 // Floating Add Single
 static void
 fadds(ThreadState *state, Instruction instr)
 {
-   faddGeneric<float>(state, instr);
-}
-
-// Floating Divide
-template<typename Type>
-static void
-fdivGeneric(ThreadState *state, Instruction instr)
-{
-   double a, b, d;
-   a = state->fpr[instr.frA].value;
-   b = state->fpr[instr.frB].value;
-
-   const bool vxzdz = is_zero(a) && is_zero(b);
-   const bool vxidi = is_infinity(a) && is_infinity(b);
-   const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
-   const bool zx = !(vxzdz || vxsnan) && is_zero(b);
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vxzdz = vxzdz;
-   state->fpscr.vxidi = vxidi;
-   state->fpscr.vxsnan = vxsnan;
-
-   if ((vxzdz || vxidi || vxsnan) && state->fpscr.ve) {
-      updateFX_FEX_VX(state, oldFPSCR);
-   } else if (zx && state->fpscr.ze) {
-      state->fpscr.zx = 1;
-      updateFX_FEX_VX(state, oldFPSCR);
-   } else {
-      d = static_cast<Type>(a / b);
-      d = checkNan<Type>(d, a, b);
-      state->fpr[instr.frD].value = d;
-      updateFPRF(state, d);
-      updateFPSCR(state, oldFPSCR);
-   }
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   fpArithGeneric<FPAdd, float>(state, instr);
 }
 
 // Floating Divide Double
 static void
 fdiv(ThreadState *state, Instruction instr)
 {
-   fdivGeneric<double>(state, instr);
+   fpArithGeneric<FPDiv, double>(state, instr);
 }
 
 // Floating Divide Single
 static void
 fdivs(ThreadState *state, Instruction instr)
 {
-   fdivGeneric<float>(state, instr);
-}
-
-// Floating Multiply
-template<typename Type>
-static void
-fmulGeneric(ThreadState *state, Instruction instr)
-{
-   double a, c, d;
-   a = state->fpr[instr.frA].value;
-   c = state->fpr[instr.frC].value;
-
-   const bool vximz = (is_infinity(a) && is_zero(c)) || (is_zero(a) && is_infinity(c));
-   const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(c);
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vximz = vximz;
-   state->fpscr.vxsnan = vxsnan;
-
-   if ((vximz || vxsnan) && state->fpscr.ve) {
-      updateFX_FEX_VX(state, oldFPSCR);
-   } else {
-       d = static_cast<Type>(a * c);
-       d = checkNan<Type>(d, a, c);
-       state->fpr[instr.frD].value = d;
-       updateFPRF(state, d);
-       updateFPSCR(state, oldFPSCR);
-   }
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   fpArithGeneric<FPDiv, float>(state, instr);
 }
 
 // Floating Multiply Double
 static void
 fmul(ThreadState *state, Instruction instr)
 {
-   fmulGeneric<double>(state, instr);
+   fpArithGeneric<FPMul, double>(state, instr);
 }
 
 // Floating Multiply Single
 static void
 fmuls(ThreadState *state, Instruction instr)
 {
-   fmulGeneric<float>(state, instr);
-}
-
-// Floating Subtract
-template<typename Type>
-static void
-fsubGeneric(ThreadState *state, Instruction instr)
-{
-   double a, b, d;
-   a = state->fpr[instr.frA].value;
-   b = state->fpr[instr.frB].value;
-
-   const bool vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) == std::signbit(b);
-   const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vxisi = vxisi;
-   state->fpscr.vxsnan = vxsnan;
-
-   if ((vxisi || vxsnan) && state->fpscr.ve) {
-      updateFX_FEX_VX(state, oldFPSCR);
-   } else {
-      d = static_cast<Type>(a - b);
-      d = checkNan<Type>(d, a, b);
-      state->fpr[instr.frD].value = d;
-      updateFPRF(state, d);
-      updateFPSCR(state, oldFPSCR);
-   }
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   fpArithGeneric<FPMul, float>(state, instr);
 }
 
 // Floating Subtract Double
 static void
 fsub(ThreadState *state, Instruction instr)
 {
-   fsubGeneric<double>(state, instr);
+   fpArithGeneric<FPSub, double>(state, instr);
 }
 
 // Floating Subtract Single
 static void
 fsubs(ThreadState *state, Instruction instr)
 {
-   fsubGeneric<float>(state, instr);
+   fpArithGeneric<FPSub, float>(state, instr);
 }
 
 // Floating Reciprocal Estimate Single
