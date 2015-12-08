@@ -209,10 +209,10 @@ mftb(ThreadState *state, Instruction instr)
    auto value = 0u;
 
    switch (tbr) {
-   case SprEncoding::TBL:
+   case SprEncoding::UTBL:
       value = state->tbl;
       break;
-   case SprEncoding::TBU:
+   case SprEncoding::UTBU:
       value = state->tbu;
       break;
    default:
