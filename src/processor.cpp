@@ -84,6 +84,7 @@ Processor::fiberEntryPoint(Fiber *fiber)
       return;
    }
 
+   cpu::setRoundingMode(&fiber->state);
    cpu::executeSub(&core->state, &fiber->state);
    OSExitThread(ppctypes::getResult<int>(&fiber->state));
 }
