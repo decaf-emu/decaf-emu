@@ -10,27 +10,20 @@ struct fpr_t
 {
    union {
       struct {
-         double paired0;
-         double paired1;
+         double value;
+      };
+      struct {
+         float paired1;
+         float paired0;
       };
       struct {
          uint64_t idw;
-         uint64_t idw1;
       };
       struct
       {
-         uint32_t iw0;
          uint32_t iw1;
-         uint32_t iw2;
-         uint32_t iw3;
+         uint32_t iw0;
       };
-      struct {
-         uint64_t value0;
-         uint64_t value1;
-      };
-      struct {
-         uint64_t data[2];
-      } value;
    };
 };
 

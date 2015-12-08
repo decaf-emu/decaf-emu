@@ -34,12 +34,12 @@ printTestField(Field field, Instruction instr, RegisterState *input, RegisterSta
       gLog->debug("f{:02d}    = {:16e} {:16e} {:16e}", reg,
                   input->fr[reg - FPR_BASE],
                   output->fr[reg - FPR_BASE],
-                  state->fpr[reg].paired0);
+                  state->fpr[reg].value);
 
       gLog->debug("         {:16X} {:16X} {:16X}",
                   bit_cast<uint64_t>(input->fr[reg - FPR_BASE]),
                   bit_cast<uint64_t>(output->fr[reg - FPR_BASE]),
-                  bit_cast<uint64_t>(state->fpr[reg].paired0));
+                  bit_cast<uint64_t>(state->fpr[reg].value));
    };
 
    switch (field) {
@@ -229,7 +229,7 @@ bool runTests(const std::string &path)
          // Check all FPR
          for (auto i = 0; i < 4; ++i) {
             auto reg = i + hwtest::FPR_BASE;
-            auto value = state.fpr[reg].paired0;
+            auto value = state.fpr[reg].value;
             auto expected = test.output.fr[i];
 
             if (!is_nan(value) && !is_nan(expected) && !is_infinity(value) && !is_infinity(expected)) {
