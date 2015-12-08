@@ -2,6 +2,7 @@
 #include "interpreter_insreg.h"
 #include "mem/mem.h"
 #include "utils/bitutils.h"
+#include "utils/floatutils.h"
 
 // Load
 enum LoadFlags
@@ -13,6 +14,44 @@ enum LoadFlags
    LoadReserve       = 1 << 4, // lwarx harware reserve
    LoadZeroRA        = 1 << 5, // Use 0 instead of r0
 };
+
+// Need to handle float/double conversion specially so the host doesn't
+// raise exceptions on SNaNs or turn them into QNaNs.
+template<unsigned flags = 0>
+static void
+loadFloat(ThreadState *state, Instruction instr)
+{
+   uint32_t ea;
+   float d;
+
+   if ((flags & LoadZeroRA) && instr.rA == 0) {
+      ea = 0;
+   } else {
+      ea = state->gpr[instr.rA];
+   }
+
+   if (flags & LoadIndexed) {
+      ea += state->gpr[instr.rB];
+   } else {
+      ea += sign_extend<16, int32_t>(instr.d);
+   }
+
+   d = mem::read<float>(ea);
+
+   if (!is_signalling_nan(d)) {
+      state->fpr[instr.rD].value = static_cast<double>(d);
+   } else {
+      const uint64_t bits32 = bit_cast<uint32_t>(d);
+      const uint64_t bits64 = ((bits32 & 0x80000000) << 32
+                               | UINT64_C(0xF) << 59
+                               | (bits32 & 0x3FFFFFFF) << 29);
+      state->fpr[instr.rD].value = bit_cast<double>(bits64);
+   }
+
+   if (flags & LoadUpdate) {
+      state->gpr[instr.rA] = ea;
+   }
+}
 
 template<typename Type, unsigned flags = 0>
 static void
@@ -178,25 +217,25 @@ lwzx(ThreadState *state, Instruction instr)
 static void
 lfs(ThreadState *state, Instruction instr)
 {
-   return loadGeneric<float, LoadZeroRA>(state, instr);
+   return loadFloat<LoadZeroRA>(state, instr);
 }
 
 static void
 lfsu(ThreadState *state, Instruction instr)
 {
-   return loadGeneric<float, LoadUpdate>(state, instr);
+   return loadFloat<LoadUpdate>(state, instr);
 }
 
 static void
 lfsux(ThreadState *state, Instruction instr)
 {
-   return loadGeneric<float, LoadUpdate | LoadIndexed>(state, instr);
+   return loadFloat<LoadUpdate | LoadIndexed>(state, instr);
 }
 
 static void
 lfsx(ThreadState *state, Instruction instr)
 {
-   return loadGeneric<float, LoadZeroRA | LoadIndexed>(state, instr);
+   return loadFloat<LoadZeroRA | LoadIndexed>(state, instr);
 }
 
 static void
@@ -303,6 +342,43 @@ enum StoreFlags
    StoreZeroRA          = 1 << 4, // Use 0 instead of r0
    StoreFloatAsInteger  = 1 << 5, // stfiwx
 };
+
+template<unsigned flags = 0>
+static void
+storeFloat(ThreadState *state, Instruction instr)
+{
+   uint32_t ea;
+   double d;
+   float s;
+
+   if ((flags & StoreZeroRA) && instr.rA == 0) {
+      ea = 0;
+   } else {
+      ea = state->gpr[instr.rA];
+   }
+
+   if (flags & StoreIndexed) {
+      ea += state->gpr[instr.rB];
+   } else {
+      ea += sign_extend<16, int32_t>(instr.d);
+   }
+
+   d = state->fpr[instr.rS].value;
+   if (!is_signalling_nan(d)) {
+      s = static_cast<float>(d);
+   } else {
+      const uint64_t bits64 = bit_cast<uint64_t>(d);
+      const uint32_t bits32 = ((bits64>>32 & 0xC0000000)
+                               | (bits64>>29 & 0x3FFFFFFF));
+      s = bit_cast<float>(bits32);
+   }
+
+   mem::write<float>(ea, s);
+
+   if (flags & StoreUpdate) {
+      state->gpr[instr.rA] = ea;
+   }
+}
 
 template<typename Type, unsigned flags = 0>
 static void
@@ -455,25 +531,25 @@ stwcx(ThreadState *state, Instruction instr)
 static void
 stfs(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreZeroRA>(state, instr);
+   storeFloat<StoreZeroRA>(state, instr);
 }
 
 static void
 stfsu(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreUpdate>(state, instr);
+   storeFloat<StoreUpdate>(state, instr);
 }
 
 static void
 stfsux(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreUpdate | StoreIndexed>(state, instr);
+   storeFloat<StoreUpdate | StoreIndexed>(state, instr);
 }
 
 static void
 stfsx(ThreadState *state, Instruction instr)
 {
-   storeGeneric<float, StoreZeroRA | StoreIndexed>(state, instr);
+   storeFloat<StoreZeroRA | StoreIndexed>(state, instr);
 }
 
 static void
