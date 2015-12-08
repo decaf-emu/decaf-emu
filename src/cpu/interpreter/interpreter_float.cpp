@@ -231,11 +231,11 @@ fpArithGeneric(ThreadState *state, Instruction instr)
    }
 
    const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vxsnan = vxsnan;
-   state->fpscr.vxisi = vxisi;
-   state->fpscr.vximz = vximz;
-   state->fpscr.vxidi = vxidi;
-   state->fpscr.vxzdz = vxzdz;
+   state->fpscr.vxsnan |= vxsnan;
+   state->fpscr.vxisi |= vxisi;
+   state->fpscr.vximz |= vximz;
+   state->fpscr.vxidi |= vxidi;
+   state->fpscr.vxzdz |= vxzdz;
 
    if ((vxsnan || vxisi || vximz || vxidi || vxzdz) && state->fpscr.ve) {
       updateFX_FEX_VX(state, oldFPSCR);
@@ -436,9 +436,9 @@ fmaGeneric(ThreadState *state, Instruction instr)
    std::feclearexcept(FE_ALL_EXCEPT);  // Avoid leaking exceptions from a*c.
 
    const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vxsnan = vxsnan;
-   state->fpscr.vxisi = vxisi;
-   state->fpscr.vximz = vximz;
+   state->fpscr.vxsnan |= vxsnan;
+   state->fpscr.vxisi |= vxisi;
+   state->fpscr.vximz |= vximz;
 
    if ((vxsnan || vxisi || vximz) && state->fpscr.ve) {
       updateFX_FEX_VX(state, oldFPSCR);
