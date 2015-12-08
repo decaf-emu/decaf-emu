@@ -668,9 +668,9 @@ frsp(ThreadState *state, Instruction instr)
    state->fpscr.vxsnan |= is_signalling_nan(b);
 
    auto d = static_cast<float>(b);
+   state->fpr[instr.frD].value = static_cast<double>(d);
    updateFPSCR(state);
    updateFPRF(state, d);
-   state->fpr[instr.frD].value = static_cast<double>(d);
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
