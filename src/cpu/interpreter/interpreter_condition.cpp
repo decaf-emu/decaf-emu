@@ -133,6 +133,8 @@ fcmpGeneric(ThreadState *state, Instruction instr)
       b = static_cast<Type>(state->fpr[instr.frB].value);
    }
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    if (a < b) {
       c = ConditionRegisterFlag::LessThan;
    } else if (a > b) {
@@ -155,8 +157,7 @@ fcmpGeneric(ThreadState *state, Instruction instr)
 
    setCRF(state, instr.crfD, c);
    state->fpscr.fpcc = c;
-   state->fpscr.vx |= state->fpscr.vxvc;
-   state->fpscr.fx |= state->fpscr.vx;
+   updateFX_FEX_VX(state, oldFPSCR);
 }
 
 static void
