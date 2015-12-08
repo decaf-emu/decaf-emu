@@ -147,7 +147,7 @@ fcmpGeneric(ThreadState *state, Instruction instr)
       if (is_signalling_nan(a) || is_signalling_nan(b)) {
          state->fpscr.vxsnan = 1;
 
-         if ((flags & FCmpOrdered) && state->fpscr.ve) {
+         if ((flags & FCmpOrdered) && !state->fpscr.ve) {
             state->fpscr.vxvc = 1;
          }
       } else if ((flags & FCmpOrdered)) {
