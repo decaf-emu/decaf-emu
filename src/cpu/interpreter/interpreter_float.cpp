@@ -442,18 +442,27 @@ fsel(ThreadState *state, Instruction instr)
    }
 }
 
-// Floating Multiply-Add
+// Fused multiply-add instructions
+enum LoadFlags
+{
+   FMASubtract   = 1 << 0, // Subtract instead of add
+   FMANegate     = 1 << 1, // Negate result
+   FMASinglePrec = 1 << 2, // Round result to single precision
+};
+template<unsigned flags>
 static void
-fmadd(ThreadState *state, Instruction instr)
+fmaGeneric(ThreadState *state, Instruction instr)
 {
    double a, b, c, d;
    a = state->fpr[instr.frA].value;
    b = state->fpr[instr.frB].value;
    c = state->fpr[instr.frC].value;
+   const double addend = (flags & FMASubtract) ? -b : b;
 
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
-   const bool vxisi = is_infinity(a * c) || is_infinity(c);
-   const bool vximz = is_infinity(a * c) && is_zero(c);
+   const bool vxisi = is_infinity(a * c) && is_infinity(b) && std::signbit(a * c) != std::signbit(addend);
+   const bool vximz = (is_infinity(a) && is_zero(c)) || (is_zero(a) && is_infinity(c));
+   std::feclearexcept(FE_ALL_EXCEPT);  // Avoid leaking exceptions from a*c.
 
    const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan = vxsnan;
@@ -463,33 +472,25 @@ fmadd(ThreadState *state, Instruction instr)
    if ((vxsnan || vxisi || vximz) && state->fpscr.ve) {
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
-      d = a * c;
-      if (is_nan(d)) {
-         if (is_nan(a)) {
-            d = make_quiet(a);
-         } else if (is_nan(b)) {
-            d = make_quiet(b);
-         } else if (is_nan(c)) {
-            d = make_quiet(c);
-         } else {
-            d = make_nan<double>();
-         }
+      if (is_nan(a)) {
+         d = make_quiet(a);
+      } else if (is_nan(b)) {
+         d = make_quiet(b);
+      } else if (is_nan(c)) {
+         d = make_quiet(c);
+      } else if (vxisi || vximz) {
+         d = make_nan<double>();
       } else {
-         if (is_infinity(d) && is_infinity(b) && !(is_infinity(a) || is_infinity(c))) {
-            d = b;
-         } else {
-            d = d + b;
-            if (is_nan(d)) {
-               if (is_nan(b)) {
-                  d = make_quiet(b);
-               } else {
-                  d = make_nan<double>();
-               }
-            }
+         d = std::fma(a, c, addend);
+         if (flags & FMANegate) {
+            d = -d;
          }
       }
-
-      state->fpr[instr.frD].value = d;
+      if (flags & FMASinglePrec) {
+         state->fpr[instr.frD].value = static_cast<double>(static_cast<float>(d));
+      } else {
+         state->fpr[instr.frD].value = d;
+      }
       updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
    }
@@ -497,180 +498,62 @@ fmadd(ThreadState *state, Instruction instr)
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
+}
+
+// Floating Multiply-Add
+static void
+fmadd(ThreadState *state, Instruction instr)
+{
+   return fmaGeneric<0>(state, instr);
 }
 
 // Floating Multiply-Add Single
 static void
 fmadds(ThreadState *state, Instruction instr)
 {
-   double a, b, c, d;
-   a = state->fpr[instr.frA].value;
-   b = state->fpr[instr.frB].value;
-   c = state->fpr[instr.frC].value;
-
-   const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
-   const bool vxisi = is_infinity(a * c) || is_infinity(c);
-   const bool vximz = is_infinity(a * c) && is_zero(c);
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vxsnan = vxsnan;
-   state->fpscr.vxisi = vxisi;
-   state->fpscr.vximz = vximz;
-
-   if ((vxsnan || vxisi || vximz) && state->fpscr.ve) {
-      updateFX_FEX_VX(state, oldFPSCR);
-   } else {
-      d = a * c;
-      if (is_nan(d)) {
-         if (is_nan(a)) {
-            d = make_quiet(a);
-         } else if (is_nan(b)) {
-            d = make_quiet(b);
-         } else if (is_nan(c)) {
-            d = make_quiet(c);
-         } else {
-            d = make_nan<double>();
-         }
-      } else {
-         if (is_infinity(d) && is_infinity(b) && !(is_infinity(a) || is_infinity(c))) {
-            d = b;
-         } else {
-            d = d + b;
-            if (is_nan(d)) {
-               if (is_nan(b)) {
-                  d = make_quiet(b);
-               } else {
-                  d = make_nan<double>();
-               }
-            }
-         }
-      }
-
-      state->fpr[instr.frD].value = static_cast<float>(d);
-      updateFPRF(state, d);
-      updateFPSCR(state, oldFPSCR);
-   }
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   return fmaGeneric<FMASinglePrec>(state, instr);
 }
 
 // Floating Multiply-Sub
 static void
 fmsub(ThreadState *state, Instruction instr)
 {
-   double a, b, c, d;
-   a = state->fpr[instr.frA].value;
-   b = state->fpr[instr.frB].value;
-   c = state->fpr[instr.frC].value;
-
-   const bool vximz = is_infinity(a * c) && is_zero(c);
-   const bool vxisi = is_infinity(a * c) || is_infinity(c);
-   const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vximz = vximz;
-   state->fpscr.vxisi = vxisi;
-   state->fpscr.vxsnan = vxsnan;
-
-   if ((vxsnan || vxisi || vximz) && state->fpscr.ve) {
-      updateFX_FEX_VX(state, oldFPSCR);
-   } else {
-      d = (a * c) - b;
-      state->fpr[instr.frD].value = d;
-      updateFPRF(state, d);
-      updateFPSCR(state, oldFPSCR);
-   }
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   return fmaGeneric<FMASubtract>(state, instr);
 }
 
 // Floating Multiply-Sub Single
 static void
 fmsubs(ThreadState *state, Instruction instr)
 {
-   return fmsub(state, instr);
+   return fmaGeneric<FMASubtract | FMASinglePrec>(state, instr);
 }
 
 // Floating Negative Multiply-Add
 static void
 fnmadd(ThreadState *state, Instruction instr)
 {
-   double a, b, c, d;
-   a = state->fpr[instr.frA].value;
-   b = state->fpr[instr.frB].value;
-   c = state->fpr[instr.frC].value;
-
-   const bool vximz = is_infinity(a * c) && is_zero(c);
-   const bool vxisi = is_infinity(a * c) || is_infinity(c);
-   const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vximz = vximz;
-   state->fpscr.vxisi = vxisi;
-   state->fpscr.vxsnan = vxsnan;
-
-   if ((vxsnan || vxisi || vximz) && state->fpscr.ve) {
-      updateFX_FEX_VX(state, oldFPSCR);
-   } else {
-      d = -((a * c) + b);
-      updateFPSCR(state, oldFPSCR);
-      updateFPRF(state, d);
-      state->fpr[instr.frD].value = d;
-   }
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   return fmaGeneric<FMANegate>(state, instr);
 }
 
 // Floating Negative Multiply-Add Single
 static void
 fnmadds(ThreadState *state, Instruction instr)
 {
-   return fnmadd(state, instr);
+   return fmaGeneric<FMANegate | FMASinglePrec>(state, instr);
 }
 
 // Floating Negative Multiply-Sub
 static void
 fnmsub(ThreadState *state, Instruction instr)
 {
-   double a, b, c, d;
-   a = state->fpr[instr.frA].value;
-   b = state->fpr[instr.frB].value;
-   c = state->fpr[instr.frC].value;
-
-   const bool vximz = is_infinity(a * c) && is_zero(c);
-   const bool vxisi = is_infinity(a * c) || is_infinity(c);
-   const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vximz = vximz;
-   state->fpscr.vxisi = vxisi;
-   state->fpscr.vxsnan = vxsnan;
-
-   if ((vxsnan || vxisi || vximz) && state->fpscr.ve) {
-      updateFX_FEX_VX(state, oldFPSCR);
-   } else {
-      d = -((a * c) - b);
-      state->fpr[instr.frD].value = d;
-      updateFPRF(state, d);
-      updateFPSCR(state, oldFPSCR);
-   }
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   return fmaGeneric<FMANegate | FMASubtract>(state, instr);
 }
 
 // Floating Negative Multiply-Sub Single
 static void
 fnmsubs(ThreadState *state, Instruction instr)
 {
-   return fnmsub(state, instr);
+   return fmaGeneric<FMANegate | FMASubtract | FMASinglePrec>(state, instr);
 }
 
 // Floating Convert to Integer Word
