@@ -191,7 +191,7 @@ faddGeneric(ThreadState *state, Instruction instr)
    a = state->fpr[instr.frA].value;
    b = state->fpr[instr.frB].value;
 
-   const bool vxisi = is_infinity(a) && is_infinity(b);
+   const bool vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) != std::signbit(b);
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
    const uint32_t oldFPSCR = state->fpscr.value;
@@ -328,7 +328,7 @@ fsubGeneric(ThreadState *state, Instruction instr)
    a = state->fpr[instr.frA].value;
    b = state->fpr[instr.frB].value;
 
-   const bool vxisi = is_infinity(a) && is_infinity(b);
+   const bool vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) == std::signbit(b);
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
    const uint32_t oldFPSCR = state->fpscr.value;
