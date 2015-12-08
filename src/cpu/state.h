@@ -105,7 +105,7 @@ union xer_t
    struct
    {
       uint32_t : 28;
-      uint32_t crxr; // [0-3] condition stuff in xer
+      uint32_t crxr : 4; // [0-3] condition stuff in xer
    };
 };
 
