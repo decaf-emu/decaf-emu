@@ -207,11 +207,15 @@ INS(twi, (), (to, rA, simm), (), (opcd == 3), "")
 
 // Processor Control
 INS(mcrxr, (crfD), (XERO), (), (opcd == 31, xo1 == 512, !_9_10, !_11_15, !_16_20, !_31), "Move to Condition Register from XERO")
-INS(mfcr, (rD), (), (), (opcd == 31, xo1 == 19, !_11_15, !_16_20, !_31), "Move from Condition Register")
+// mfcr requires bit 11 to be 0 (if 1, it's the mfocrf instruction), but the
+// Espresso ignores bit 11 and treats mfocrf as mfcr.
+INS(mfcr, (rD), (), (), (opcd == 31, xo1 == 19, !_20, !_31), "Move from Condition Register")
 INS(mfmsr, (rD), (), (), (opcd == 31, xo1 == 83, !_11_15, !_16_20, !_31), "Move from Machine State Register")
 INS(mfspr, (rD), (spr), (), (opcd == 31, xo1 == 339, !_31), "Move from Special Purpose Register")
 INS(mftb, (rD), (tbr), (), (opcd == 31, xo1 == 371, !_31), "Move from Time Base Register")
-INS(mtcrf, (crm), (rS), (), (opcd == 31, xo1 == 144, !_11, !_20, !_31), "Move to Condition Register Fields")
+// mtcrf requires bit 11 to be 0 (if 1, it's the mtocrf instruction), but the
+// Espresso ignores bit 11 and treats mtocrf as mtcrf.
+INS(mtcrf, (crm), (rS), (), (opcd == 31, xo1 == 144, !_20, !_31), "Move to Condition Register Fields")
 INS(mtmsr, (), (rS), (), (opcd == 31, xo1 == 146, !_11_15, !_16_20, !_31), "Move to Machine State Register")
 INS(mtspr, (spr), (rS), (), (opcd == 31, xo1 == 467, !_31), "Move to Special Purpose Register")
 
