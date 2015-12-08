@@ -556,9 +556,9 @@ fnmsubs(ThreadState *state, Instruction instr)
    return fmaGeneric<FMANegate | FMASubtract | FMASinglePrec>(state, instr);
 }
 
-// Floating Convert to Integer Word
+// fctiw/fctiwz common implementation
 static void
-fctiw(ThreadState *state, Instruction instr)
+fctiwGeneric(ThreadState *state, Instruction instr, FloatingPointRoundMode::FloatingPointRoundMode roundMode)
 {
    double b;
    int32_t bi;
@@ -581,7 +581,7 @@ fctiw(ThreadState *state, Instruction instr)
       bi = INT_MIN;
    } else {
       vxcvi = false;
-      switch (state->fpscr.rn) {
+      switch (roundMode) {
       case FloatingPointRoundMode::Nearest:
          // We have to use nearbyint() instead of round() here, because
          // round() rounds 0.5 away from zero instead of to the nearest
@@ -590,14 +590,14 @@ fctiw(ThreadState *state, Instruction instr)
          // safe to use.
          bi = static_cast<int32_t>(std::nearbyint(b));
          break;
+      case FloatingPointRoundMode::Zero:
+         bi = static_cast<int32_t>(std::trunc(b));
+         break;
       case FloatingPointRoundMode::Positive:
          bi = static_cast<int32_t>(std::ceil(b));
          break;
       case FloatingPointRoundMode::Negative:
          bi = static_cast<int32_t>(std::floor(b));
-         break;
-      case FloatingPointRoundMode::Zero:
-         bi = static_cast<int32_t>(std::trunc(b));
          break;
       }
       fi = get_float_bits(b).exponent < 1075 && bi != b;
@@ -629,43 +629,17 @@ fctiw(ThreadState *state, Instruction instr)
    }
 }
 
+static void
+fctiw(ThreadState *state, Instruction instr)
+{
+   return fctiwGeneric(state, instr, static_cast<FloatingPointRoundMode::FloatingPointRoundMode>(state->fpscr.rn));
+}
+
 // Floating Convert to Integer Word with Round toward Zero
 static void
 fctiwz(ThreadState *state, Instruction instr)
 {
-   double b;
-   int32_t bi;
-   b = state->fpr[instr.frB].value;
-
-   const bool vxsnan = is_signalling_nan(b);
-   bool vxcvi = false;
-
-   if (b > static_cast<double>(INT_MAX)) {
-      vxcvi = true;
-      bi = INT_MAX;
-   } else if (b < static_cast<double>(INT_MIN)) {
-      vxcvi = true;
-      bi = INT_MIN;
-   } else {
-      vxcvi = false;
-      bi = static_cast<int32_t>(std::trunc(b));
-   }
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-   state->fpscr.vxsnan |= vxsnan;
-   state->fpscr.vxcvi |= vxcvi;
-
-   if ((vxsnan || vxcvi) && state->fpscr.ve) {
-      updateFX_FEX_VX(state, oldFPSCR);
-   } else {
-       state->fpr[instr.frD].iw1 = bi;
-       state->fpr[instr.frD].iw0 = 0xFFF80000 | (is_negative_zero(b) ? 1 : 0);
-       updateFPSCR(state, oldFPSCR);
-   }
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   return fctiwGeneric(state, instr, FloatingPointRoundMode::Zero);
 }
 
 // Floating Round to Single
