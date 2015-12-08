@@ -283,7 +283,7 @@ fmulGeneric(ThreadState *state, Instruction instr)
    a = state->fpr[instr.frA].value;
    c = state->fpr[instr.frC].value;
 
-   const bool vximz = is_infinity(a) && is_zero(c);
+   const bool vximz = (is_infinity(a) && is_zero(c)) || (is_zero(a) && is_infinity(c));
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(c);
 
    const uint32_t oldFPSCR = state->fpscr.value;
