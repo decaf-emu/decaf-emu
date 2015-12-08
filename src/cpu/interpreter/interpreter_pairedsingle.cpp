@@ -11,8 +11,8 @@ ps_abs(ThreadState *state, Instruction instr)
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
 
-   d1 = std::fabsf(b1);
-   d0 = std::fabsf(b0);
+   d1 = std::fabs(b1);
+   d0 = std::fabs(b0);
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
@@ -406,8 +406,8 @@ ps_nabs(ThreadState *state, Instruction instr)
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
 
-   d1 = -std::fabsf(b1);
-   d0 = -std::fabsf(b0);
+   d1 = -std::fabs(b1);
+   d0 = -std::fabs(b0);
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
@@ -484,8 +484,8 @@ ps_rsqrte(ThreadState *state, Instruction instr)
    state->fpscr.vxsqrt |=
       is_negative(b0) || is_negative(b1);
 
-   d1 = 1.0f / std::sqrtf(b1);
-   d0 = 1.0f / std::sqrtf(b0);
+   d1 = 1.0f / std::sqrt(b1);
+   d0 = 1.0f / std::sqrt(b0);
    updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d0);
 
