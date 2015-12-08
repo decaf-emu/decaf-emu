@@ -160,8 +160,8 @@ namespace FloatingPointRoundMode
 enum FloatingPointRoundMode : uint32_t
 {
    Nearest = 0,
-   Positive = 1,
-   Zero = 2,
+   Zero = 1,
+   Positive = 2,
    Negative = 3
 };
 }
