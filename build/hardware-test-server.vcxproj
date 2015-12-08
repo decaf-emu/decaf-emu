@@ -12,7 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\cpu\instructiontable.cpp" />
-    <ClCompile Include="..\tools\hardware-tests\server.cpp" />
+    <ClCompile Include="..\tools\hardware-test-server\server.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CD2AFBB6-5A6C-4FC6-B76B-F618193AEFC8}</ProjectGuid>

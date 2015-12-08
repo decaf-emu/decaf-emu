@@ -88,12 +88,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\cpu\instructiontable.cpp" />
-    <ClCompile Include="..\tools\hardware-tests\generator.cpp" />
+    <ClCompile Include="..\tools\hardware-test-generator\generator.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\tools\hardware-tests\generator_testlist.h" />
-    <ClInclude Include="..\tools\hardware-tests\generator_valuelist.h" />
-    <ClInclude Include="..\tools\testfile.h" />
+    <ClInclude Include="..\tools\hardware-test-generator\generator_testlist.h" />
+    <ClInclude Include="..\tools\hardware-test-generator\generator_valuelist.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
