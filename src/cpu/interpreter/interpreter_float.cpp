@@ -135,30 +135,26 @@ void
 updateFPRF(ThreadState *state, Type value)
 {
    auto cls = std::fpclassify(value);
-   auto neg = std::signbit(value);
    auto flags = 0u;
 
-   switch (cls) {
-   case FP_NAN:
+   if (cls == FP_NAN) {
       flags |= FloatingPointResultFlags::ClassDescriptor;
       flags |= FloatingPointResultFlags::Unordered;
-      break;
-   case FP_INFINITE:
-      flags |= FloatingPointResultFlags::Unordered;
-      break;
-   case FP_SUBNORMAL:
-      flags |= FloatingPointResultFlags::ClassDescriptor;
-      break;
-   case FP_ZERO:
-      flags |= FloatingPointResultFlags::Equal;
-      break;
-   }
-
-   if (cls != FP_NAN) {
-      if (neg) {
-         flags |= FloatingPointResultFlags::Negative;
-      } else if (cls != FP_ZERO) {
+   } else if (value != 0) {
+      if (value > 0) {
          flags |= FloatingPointResultFlags::Positive;
+      } else {
+         flags |= FloatingPointResultFlags::Negative;
+      }
+      if (cls == FP_INFINITE) {
+         flags |= FloatingPointResultFlags::Unordered;
+      } else if (cls == FP_SUBNORMAL) {
+         flags |= FloatingPointResultFlags::ClassDescriptor;
+      }
+   } else {
+      flags |= FloatingPointResultFlags::Equal;
+      if (std::signbit(value)) {
+         flags |= FloatingPointResultFlags::ClassDescriptor;
       }
    }
 
