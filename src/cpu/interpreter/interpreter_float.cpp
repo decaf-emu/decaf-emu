@@ -64,14 +64,6 @@ updateFEX_VX(ThreadState *state)
 {
    auto &fpscr = state->fpscr;
 
-   // FP Enabled Exception Summary
-   fpscr.fex =
-        (fpscr.vx & fpscr.ve)
-      | (fpscr.ox & fpscr.oe)
-      | (fpscr.ux & fpscr.ue)
-      | (fpscr.zx & fpscr.ze)
-      | (fpscr.xx & fpscr.xe);
-
    // Invalid Operation Summary
    fpscr.vx =
         fpscr.vxsnan
@@ -83,6 +75,14 @@ updateFEX_VX(ThreadState *state)
       | fpscr.vxsqrt
       | fpscr.vxsoft
       | fpscr.vxcvi;
+
+   // FP Enabled Exception Summary
+   fpscr.fex =
+        (fpscr.vx & fpscr.ve)
+      | (fpscr.ox & fpscr.oe)
+      | (fpscr.ux & fpscr.ue)
+      | (fpscr.zx & fpscr.ze)
+      | (fpscr.xx & fpscr.xe);
 }
 
 
