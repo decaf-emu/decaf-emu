@@ -215,7 +215,9 @@ union fpscr_t
 
    struct
    {
-      uint32_t : 28;
+      uint32_t : 12;
+      uint32_t fpcc : 4;
+      uint32_t : 12;
       uint32_t cr1 : 4;
    };
 

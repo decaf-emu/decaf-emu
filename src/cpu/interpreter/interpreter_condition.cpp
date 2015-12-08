@@ -154,7 +154,7 @@ fcmpGeneric(ThreadState *state, Instruction instr)
    }
 
    setCRF(state, instr.crfD, c);
-   state->fpscr.cr1 = c;
+   state->fpscr.fpcc = c;
    state->fpscr.vx |= state->fpscr.vxvc;
    state->fpscr.fx |= state->fpscr.vx;
 }
