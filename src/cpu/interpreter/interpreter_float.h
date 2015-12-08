@@ -8,7 +8,7 @@ void
 updateFX_FEX_VX(ThreadState *state, uint32_t oldValue);
 
 void
-updateFPSCR(ThreadState *state);
+updateFPSCR(ThreadState *state, uint32_t oldValue);
 
 template<typename Type> void
 updateFPRF(ThreadState *state, Type value);

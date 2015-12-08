@@ -101,13 +101,11 @@ updateFX_FEX_VX(ThreadState *state, uint32_t oldValue)
 }
 
 void
-updateFPSCR(ThreadState *state)
+updateFPSCR(ThreadState *state, uint32_t oldValue)
 {
    auto except = std::fetestexcept(FE_ALL_EXCEPT);
    auto round = std::fegetround();
    auto &fpscr = state->fpscr;
-
-   const uint32_t oldValue = fpscr.value;
 
    // Underflow
    fpscr.ux |= !!(except & FE_UNDERFLOW);
@@ -193,11 +191,12 @@ faddGeneric(ThreadState *state, Instruction instr)
    a = state->fpr[instr.frA].value;
    b = state->fpr[instr.frB].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
    d = static_cast<Type>(a + b);
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
 
    d = checkNan<Type>(d, a, b);
    updateFPRF(state, d);
@@ -231,12 +230,13 @@ fdivGeneric(ThreadState *state, Instruction instr)
    a = state->fpr[instr.frA].value;
    b = state->fpr[instr.frB].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxzdz = is_zero(a) && is_zero(b);
    state->fpscr.vxidi = is_infinity(a) && is_infinity(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
    d = static_cast<Type>(a / b);
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
 
    d = checkNan<Type>(d, a, b);
    updateFPRF(state, d);
@@ -270,11 +270,12 @@ fmulGeneric(ThreadState *state, Instruction instr)
    a = state->fpr[instr.frA].value;
    c = state->fpr[instr.frC].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vximz = is_infinity(a) && is_zero(c);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(c);
 
    d = static_cast<Type>(a * c);
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
 
    d = checkNan<Type>(d, a, c);
    updateFPRF(state, d);
@@ -308,11 +309,12 @@ fsubGeneric(ThreadState *state, Instruction instr)
    a = state->fpr[instr.frA].value;
    b = state->fpr[instr.frB].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxisi = is_infinity(a) && is_infinity(b);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
 
    d = static_cast<Type>(a - b);
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
 
    d = checkNan<Type>(d, a, b);
    updateFPRF(state, d);
@@ -344,11 +346,12 @@ fres(ThreadState *state, Instruction instr)
    double b, d;
    b = state->fpr[instr.frB].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan |= is_signalling_nan(b);
 
    d = ppc_estimate_reciprocal(b);
 
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d);
    state->fpr[instr.frD].value = d;
 
@@ -365,11 +368,12 @@ frsqrte(ThreadState *state, Instruction instr)
    b = state->fpr[instr.frB].value;
    d = 1.0 / std::sqrt(b);
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    auto vxsnan = is_signalling_nan(b);
    state->fpscr.vxsnan |= vxsnan;
    state->fpscr.vxsqrt |= vxsnan;
 
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d);
    state->fpr[instr.frD].value = d;
 
@@ -408,6 +412,7 @@ fmadd(ThreadState *state, Instruction instr)
    b = state->fpr[instr.frB].value;
    c = state->fpr[instr.frC].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
    state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
    state->fpscr.vximz = is_infinity(a * c) && is_zero(c);
@@ -438,7 +443,7 @@ fmadd(ThreadState *state, Instruction instr)
       }
    }
 
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d);
    state->fpr[instr.frD].value = d;
 
@@ -456,6 +461,7 @@ fmadds(ThreadState *state, Instruction instr)
    b = state->fpr[instr.frB].value;
    c = state->fpr[instr.frC].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
    state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
    state->fpscr.vximz = is_infinity(a * c) && is_zero(c);
@@ -486,7 +492,7 @@ fmadds(ThreadState *state, Instruction instr)
       }
    }
 
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d);
    state->fpr[instr.frD].value = static_cast<float>(d);
 
@@ -504,12 +510,13 @@ fmsub(ThreadState *state, Instruction instr)
    b = state->fpr[instr.frB].value;
    c = state->fpr[instr.frC].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vximz = is_infinity(a * c) && is_zero(c);
    state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
 
    d = (a * c) - b;
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d);
    state->fpr[instr.frD].value = d;
 
@@ -534,12 +541,13 @@ fnmadd(ThreadState *state, Instruction instr)
    b = state->fpr[instr.frB].value;
    c = state->fpr[instr.frC].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vximz = is_infinity(a * c) && is_zero(c);
    state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
 
    d = -((a * c) + b);
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d);
    state->fpr[instr.frD].value = d;
 
@@ -564,12 +572,13 @@ fnmsub(ThreadState *state, Instruction instr)
    b = state->fpr[instr.frB].value;
    c = state->fpr[instr.frC].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vximz = is_infinity(a * c) && is_zero(c);
    state->fpscr.vxisi = is_infinity(a * c) || is_infinity(c);
    state->fpscr.vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
 
    d = -((a * c) - b);
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d);
    state->fpr[instr.frD].value = d;
 
@@ -592,6 +601,8 @@ fctiw(ThreadState *state, Instruction instr)
    double b;
    int32_t bi;
    b = state->fpr[instr.frB].value;
+
+   const uint32_t oldFPSCR = state->fpscr.value;
 
    if (b > static_cast<double>(INT_MAX)) {
       bi = INT_MAX;
@@ -620,7 +631,7 @@ fctiw(ThreadState *state, Instruction instr)
    state->fpscr.vxsnan |= vxsnan;
    state->fpscr.vxcvi |= vxsnan;
 
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    state->fpr[instr.frD].iw1 = bi;
    state->fpr[instr.frD].iw0 = 0xFFF80000 | (is_negative_zero(b) ? 1 : 0);
 
@@ -637,6 +648,8 @@ fctiwz(ThreadState *state, Instruction instr)
    int32_t bi;
    b = state->fpr[instr.frB].value;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    if (b > static_cast<double>(INT_MAX)) {
       bi = INT_MAX;
       state->fpscr.vxcvi = 1;
@@ -651,7 +664,7 @@ fctiwz(ThreadState *state, Instruction instr)
    state->fpscr.vxsnan |= vxsnan;
    state->fpscr.vxcvi |= vxsnan;
 
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    state->fpr[instr.frD].iw1 = bi;
    state->fpr[instr.frD].iw0 = 0xFFF80000 | (is_negative_zero(b) ? 1 : 0);
 
@@ -665,11 +678,12 @@ static void
 frsp(ThreadState *state, Instruction instr)
 {
    auto b = state->fpr[instr.frB].value;
+   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan |= is_signalling_nan(b);
 
    auto d = static_cast<float>(b);
    state->fpr[instr.frD].value = static_cast<double>(d);
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d);
 
    if (instr.rc) {

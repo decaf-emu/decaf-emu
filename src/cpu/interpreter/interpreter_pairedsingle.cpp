@@ -34,6 +34,8 @@ ps_add(ThreadState *state, Instruction instr)
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    state->fpscr.vxisi |=
          (is_infinity(a0) && is_infinity(b0))
       || (is_infinity(a1) && is_infinity(b1));
@@ -44,7 +46,7 @@ ps_add(ThreadState *state, Instruction instr)
 
    d1 = a1 + b1;
    d0 = a0 + b0;
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d0);
 
    state->fpr[instr.frD].paired0 = d0;
@@ -67,6 +69,8 @@ ps_div(ThreadState *state, Instruction instr)
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    state->fpscr.vxidi |=
          (is_infinity(a0) && is_infinity(b0))
       || (is_infinity(a1) && is_infinity(b1));
@@ -81,7 +85,7 @@ ps_div(ThreadState *state, Instruction instr)
 
    d1 = a1 / b1;
    d0 = a0 / b0;
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d0);
 
    state->fpr[instr.frD].paired0 = d0;
@@ -124,6 +128,8 @@ maddGeneric(ThreadState *state, Instruction instr)
       c1 = state->fpr[instr.frC].paired1;
    }
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    state->fpscr.vxisi |=
          (is_infinity(a0 * c0) && is_infinity(b0))
       || (is_infinity(a1 * c1) && is_infinity(b1));
@@ -147,7 +153,7 @@ maddGeneric(ThreadState *state, Instruction instr)
       d0 = (a0 * c0) + b0;
    }
 
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d0);
 
    state->fpr[instr.frD].paired0 = d0;
@@ -272,6 +278,8 @@ msubGeneric(ThreadState *state, Instruction instr)
    c0 = state->fpr[instr.frC].paired0;
    c1 = state->fpr[instr.frC].paired1;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    state->fpscr.vxisi |=
          (is_infinity(a0 * c0) && is_infinity(b0))
       || (is_infinity(a1 * c1) && is_infinity(b1));
@@ -295,7 +303,7 @@ msubGeneric(ThreadState *state, Instruction instr)
       d0 = (a0 * c0) - b0;
    }
 
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d0);
 
    state->fpr[instr.frD].paired0 = d0;
@@ -346,6 +354,8 @@ mulGeneric(ThreadState *state, Instruction instr)
       c1 = state->fpr[instr.frC].paired1;
    }
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    state->fpscr.vximz |=
          (is_infinity(a0) && is_zero(c0))
       || (is_infinity(a1) && is_zero(c1))
@@ -358,7 +368,7 @@ mulGeneric(ThreadState *state, Instruction instr)
 
    d1 = a1 * c1;
    d0 = a0 * c0;
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d0);
 
    state->fpr[instr.frD].paired0 = d0;
@@ -436,6 +446,8 @@ ps_res(ThreadState *state, Instruction instr)
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    state->fpscr.vxsnan |=
       is_signalling_nan(b0) || is_signalling_nan(b1);
 
@@ -444,7 +456,7 @@ ps_res(ThreadState *state, Instruction instr)
 
    d1 = 1.0f / b1;
    d0 = 1.0f / b0;
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d0);
 
    state->fpr[instr.frD].paired0 = d0;
@@ -464,6 +476,8 @@ ps_rsqrte(ThreadState *state, Instruction instr)
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    state->fpscr.vxsnan |=
       is_signalling_nan(b0) || is_signalling_nan(b1);
 
@@ -472,7 +486,7 @@ ps_rsqrte(ThreadState *state, Instruction instr)
 
    d1 = 1.0f / std::sqrtf(b1);
    d0 = 1.0f / std::sqrtf(b0);
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d0);
 
    state->fpr[instr.frD].paired0 = d0;
@@ -521,6 +535,8 @@ ps_sub(ThreadState *state, Instruction instr)
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    state->fpscr.vxisi |=
          (is_infinity(a0) && is_infinity(b0))
       || (is_infinity(a1) && is_infinity(b1));
@@ -531,7 +547,7 @@ ps_sub(ThreadState *state, Instruction instr)
 
    d1 = a1 - b1;
    d0 = a0 - b0;
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d0);
 
    state->fpr[instr.frD].paired0 = d0;
@@ -563,6 +579,8 @@ sumGeneric(ThreadState *state, Instruction instr)
    c0 = state->fpr[instr.frC].paired0;
    c1 = state->fpr[instr.frC].paired1;
 
+   const uint32_t oldFPSCR = state->fpscr.value;
+
    state->fpscr.vxisi |=
       (is_infinity(a0) && is_infinity(b1));
 
@@ -580,7 +598,7 @@ sumGeneric(ThreadState *state, Instruction instr)
       d1 = a0 + b1;
    }
 
-   updateFPSCR(state);
+   updateFPSCR(state, oldFPSCR);
    updateFPRF(state, d0);
 
    state->fpr[instr.frD].paired0 = d0;
