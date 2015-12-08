@@ -376,17 +376,22 @@ fres(ThreadState *state, Instruction instr)
    b = state->fpr[instr.frB].value;
 
    const bool vxsnan = is_signalling_nan(b);
+   const bool zx = is_zero(b);
 
    const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan |= vxsnan;
 
    if (vxsnan && state->fpscr.ve) {
       updateFX_FEX_VX(state, oldFPSCR);
+   } else if (zx && state->fpscr.ze) {
+      state->fpscr.zx = 1;
+      updateFX_FEX_VX(state, oldFPSCR);
    } else {
-       d = ppc_estimate_reciprocal(b);
-       state->fpr[instr.frD].value = d;
-       updateFPRF(state, d);
-       updateFPSCR(state, oldFPSCR);
+      d = ppc_estimate_reciprocal(b);
+      state->fpr[instr.frD].value = d;
+      updateFPRF(state, d);
+      state->fpscr.zx |= zx;
+      updateFPSCR(state, oldFPSCR);
    }
 
    if (instr.rc) {
@@ -400,20 +405,30 @@ frsqrte(ThreadState *state, Instruction instr)
 {
    double b, d;
    b = state->fpr[instr.frB].value;
-   d = 1.0 / std::sqrt(b);
 
    const bool vxsnan = is_signalling_nan(b);
+   const bool vxsqrt = (b < 0);
+   const bool zx = is_zero(b);
 
    const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan |= vxsnan;
-   state->fpscr.vxsqrt |= vxsnan;
+   state->fpscr.vxsqrt |= vxsqrt;
 
-   if (vxsnan && state->fpscr.ve) {
+   if ((vxsnan || vxsqrt) && state->fpscr.ve) {
+      updateFX_FEX_VX(state, oldFPSCR);
+   } else if (zx && state->fpscr.ze) {
+      state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
-       state->fpr[instr.frD].value = d;
-       updateFPRF(state, d);
-       updateFPSCR(state, oldFPSCR);
+      if (vxsqrt) {
+         d = make_nan<double>();
+      } else {
+         d = 1.0 / std::sqrt(b);
+      }
+      state->fpr[instr.frD].value = d;
+      updateFPRF(state, d);
+      state->fpscr.zx |= zx;
+      updateFPSCR(state, oldFPSCR);
    }
 
    if (instr.rc) {
