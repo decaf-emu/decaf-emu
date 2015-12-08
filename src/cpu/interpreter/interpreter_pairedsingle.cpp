@@ -7,6 +7,8 @@
 static void
 ps_abs(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frB);
+
    float b0, b1, d0, d1;
    b0 = state->fpr[instr.frB].paired0;
    b1 = state->fpr[instr.frB].paired1;
@@ -16,6 +18,7 @@ ps_abs(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -26,6 +29,9 @@ ps_abs(ThreadState *state, Instruction instr)
 static void
 ps_add(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frA);
+   setFPRPairedSingle(state, instr.frB);
+
    float a0, a1, b0, b1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
@@ -51,6 +57,7 @@ ps_add(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -61,6 +68,9 @@ ps_add(ThreadState *state, Instruction instr)
 static void
 ps_div(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frA);
+   setFPRPairedSingle(state, instr.frB);
+
    float a0, a1, b0, b1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
@@ -90,6 +100,7 @@ ps_div(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -109,6 +120,10 @@ template<unsigned flags>
 static void
 maddGeneric(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frA);
+   setFPRPairedSingle(state, instr.frB);
+   setFPRPairedSingle(state, instr.frC);
+
    float a0, a1, b0, b1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
@@ -158,6 +173,7 @@ maddGeneric(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -199,6 +215,9 @@ template<unsigned flags = 0>
 static void
 mergeGeneric(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frA);
+   setFPRPairedSingle(state, instr.frB);
+
    float d0, d1;
 
    if (flags & MergeValue0) {
@@ -215,6 +234,7 @@ mergeGeneric(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -249,8 +269,11 @@ ps_merge10(ThreadState *state, Instruction instr)
 static void
 ps_mr(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frB);
+
    state->fpr[instr.frD].paired0 = state->fpr[instr.frB].paired0;
    state->fpr[instr.frD].paired1 = state->fpr[instr.frB].paired1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -267,6 +290,10 @@ template<unsigned flags = 0>
 static void
 msubGeneric(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frA);
+   setFPRPairedSingle(state, instr.frB);
+   setFPRPairedSingle(state, instr.frC);
+
    float a0, a1, b0, b1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
@@ -308,6 +335,7 @@ msubGeneric(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -338,6 +366,9 @@ template<unsigned flags>
 static void
 mulGeneric(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frA);
+   setFPRPairedSingle(state, instr.frC);
+
    float a0, a1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
@@ -373,6 +404,7 @@ mulGeneric(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -401,6 +433,8 @@ ps_muls1(ThreadState *state, Instruction instr)
 static void
 ps_nabs(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frB);
+
    float b0, b1, d0, d1;
 
    b0 = state->fpr[instr.frB].paired0;
@@ -411,6 +445,7 @@ ps_nabs(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -421,6 +456,8 @@ ps_nabs(ThreadState *state, Instruction instr)
 static void
 ps_neg(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frB);
+
    float b0, b1, d0, d1;
 
    b0 = state->fpr[instr.frB].paired0;
@@ -431,6 +468,7 @@ ps_neg(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -441,6 +479,8 @@ ps_neg(ThreadState *state, Instruction instr)
 static void
 ps_res(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frB);
+
    float b0, b1, d0, d1;
 
    b0 = state->fpr[instr.frB].paired0;
@@ -461,6 +501,7 @@ ps_res(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -471,6 +512,8 @@ ps_res(ThreadState *state, Instruction instr)
 static void
 ps_rsqrte(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frB);
+
    float b0, b1, d0, d1;
 
    b0 = state->fpr[instr.frB].paired0;
@@ -491,6 +534,7 @@ ps_rsqrte(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -501,6 +545,10 @@ ps_rsqrte(ThreadState *state, Instruction instr)
 static void
 ps_sel(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frA);
+   setFPRPairedSingle(state, instr.frB);
+   setFPRPairedSingle(state, instr.frC);
+
    float a0, a1, b0, b1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
@@ -517,6 +565,7 @@ ps_sel(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -527,6 +576,9 @@ ps_sel(ThreadState *state, Instruction instr)
 static void
 ps_sub(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frA);
+   setFPRPairedSingle(state, instr.frB);
+
    float a0, a1, b0, b1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
@@ -552,6 +604,7 @@ ps_sub(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -569,6 +622,10 @@ template<unsigned flags = 0>
 static void
 sumGeneric(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.frA);
+   setFPRPairedSingle(state, instr.frC);
+   setFPRPairedSingle(state, instr.frB);
+
    float a0, b0, b1, c0, c1, d0, d1;
 
    a0 = state->fpr[instr.frA].paired0;
@@ -603,6 +660,7 @@ sumGeneric(ThreadState *state, Instruction instr)
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
+   state->fpr_ps[instr.frD] = true;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);

@@ -457,4 +457,7 @@ struct ThreadState
    bool reserve;
    uint32_t reserveAddress;
    uint32_t reserveData;
+
+   // Paired-single mode flags for FPRs.
+   bool fpr_ps[32];
 };

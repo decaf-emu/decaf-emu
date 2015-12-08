@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "interpreter_float.h"
 #include "interpreter_insreg.h"
 #include "mem/mem.h"
 #include "utils/bitutils.h"
@@ -15,8 +16,6 @@ enum LoadFlags
    LoadZeroRA        = 1 << 5, // Use 0 instead of r0
 };
 
-// Need to handle float/double conversion specially so the host doesn't
-// raise exceptions on SNaNs or turn them into QNaNs.
 template<unsigned flags = 0>
 static void
 loadFloat(ThreadState *state, Instruction instr)
@@ -38,15 +37,9 @@ loadFloat(ThreadState *state, Instruction instr)
 
    d = mem::read<float>(ea);
 
-   if (!is_signalling_nan(d)) {
-      state->fpr[instr.rD].value = static_cast<double>(d);
-   } else {
-      const uint64_t bits32 = bit_cast<uint32_t>(d);
-      const uint64_t bits64 = ((bits32 & 0x80000000) << 32
-                               | UINT64_C(0xF) << 59
-                               | (bits32 & 0x3FFFFFFF) << 29);
-      state->fpr[instr.rD].value = bit_cast<double>(bits64);
-   }
+   state->fpr[instr.rD].paired0 = d;
+   state->fpr[instr.rD].paired1 = d;
+   state->fpr_ps[instr.rD] = true;
 
    if (flags & LoadUpdate) {
       state->gpr[instr.rA] = ea;
@@ -81,6 +74,7 @@ loadGeneric(ThreadState *state, Instruction instr)
 
    if (std::is_floating_point<Type>::value) {
       state->fpr[instr.rD].value = static_cast<double>(d);
+      state->fpr_ps[instr.rD] = false;
    } else {
       if (flags & LoadSignExtend) {
          state->gpr[instr.rD] = static_cast<uint32_t>(sign_extend<bit_width<Type>::value, uint64_t>(static_cast<uint64_t>(d)));
@@ -347,9 +341,9 @@ template<unsigned flags = 0>
 static void
 storeFloat(ThreadState *state, Instruction instr)
 {
+   setFPRPairedSingle(state, instr.rS);
+
    uint32_t ea;
-   double d;
-   float s;
 
    if ((flags & StoreZeroRA) && instr.rA == 0) {
       ea = 0;
@@ -363,17 +357,7 @@ storeFloat(ThreadState *state, Instruction instr)
       ea += sign_extend<16, int32_t>(instr.d);
    }
 
-   d = state->fpr[instr.rS].value;
-   if (!is_signalling_nan(d)) {
-      s = static_cast<float>(d);
-   } else {
-      const uint64_t bits64 = bit_cast<uint64_t>(d);
-      const uint32_t bits32 = ((bits64>>32 & 0xC0000000)
-                               | (bits64>>29 & 0x3FFFFFFF));
-      s = bit_cast<float>(bits32);
-   }
-
-   mem::write<float>(ea, s);
+   mem::write<float>(ea, state->fpr[instr.rS].paired0);
 
    if (flags & StoreUpdate) {
       state->gpr[instr.rA] = ea;
@@ -386,6 +370,10 @@ storeGeneric(ThreadState *state, Instruction instr)
 {
    uint32_t ea;
    Type s;
+
+   if (std::is_floating_point<Type>::value) {
+      setFPRDouble(state, instr.rS);
+   }
 
    if ((flags & StoreZeroRA) && instr.rA == 0) {
       ea = 0;

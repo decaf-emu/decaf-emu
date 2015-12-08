@@ -2,6 +2,12 @@
 #include "../state.h"
 
 void
+setFPRPairedSingle(ThreadState *state, int fpr);
+
+void
+setFPRDouble(ThreadState *state, int fpr);
+
+void
 updateFEX_VX(ThreadState *state);
 
 void
