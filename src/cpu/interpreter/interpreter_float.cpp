@@ -60,42 +60,6 @@ ppc_estimate_reciprocal(double v)
 }
 
 void
-setFPRPairedSingle(ThreadState *state, int fpr)
-{
-   if (!state->fpr_ps[fpr]) {
-      const double value = state->fpr[fpr].value;
-      state->fpr[fpr].iw1 = state->fpr[fpr].iw0;
-      if (!is_signalling_nan(value)) {
-         state->fpr[fpr].paired0 = static_cast<float>(value);
-      } else {
-         const uint64_t bits64 = bit_cast<uint64_t>(value);
-         const uint32_t bits32 = ((bits64>>32 & 0xC0000000)
-                                  | (bits64>>29 & 0x3FFFFFFF));
-         state->fpr[fpr].paired0 = bit_cast<float>(bits32);
-      }
-      state->fpr_ps[fpr] = true;
-   }
-}
-
-void
-setFPRDouble(ThreadState *state, int fpr)
-{
-   if (state->fpr_ps[fpr]) {
-      const float value = state->fpr[fpr].paired0;
-      if (!is_signalling_nan(value)) {
-         state->fpr[fpr].value = static_cast<double>(value);
-      } else {
-         const uint64_t bits32 = bit_cast<uint32_t>(value);
-         const uint64_t bits64 = ((bits32 & 0x80000000) << 32
-                                  | UINT64_C(0xF) << 59
-                                  | (bits32 & 0x3FFFFFFF) << 29);
-         state->fpr[fpr].value = bit_cast<double>(bits64);
-      }
-      state->fpr_ps[fpr] = false;
-   }
-}
-
-void
 updateFEX_VX(ThreadState *state)
 {
    auto &fpscr = state->fpscr;
@@ -229,12 +193,6 @@ template<FPArithOperator op, typename Type>
 static void
 fpArithGeneric(ThreadState *state, Instruction instr)
 {
-   // The Espresso appears to use double precision arithmetic even for
-   // single-precision instructions (for example, 2^128 * 0.5 does not
-   // cause overflow), so we do the same here.
-   setFPRDouble(state, instr.frA);
-   setFPRDouble(state, op == FPMul ? instr.frC : instr.frB);
-
    double a, b;
    Type d;
    a = state->fpr[instr.frA].value;
@@ -286,6 +244,9 @@ fpArithGeneric(ThreadState *state, Instruction instr)
       state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
+      // The Espresso appears to use double precision arithmetic even for
+      // single-precision instructions (for example, 2^128 * 0.5 does not
+      // cause overflow), so we do the same here.
       switch (op) {
       case FPAdd:
          d = static_cast<Type>(a + b);
@@ -378,8 +339,6 @@ fsubs(ThreadState *state, Instruction instr)
 static void
 fres(ThreadState *state, Instruction instr)
 {
-   setFPRDouble(state, instr.frB);
-
    double b;
    float d;
    b = state->fpr[instr.frB].value;
@@ -414,8 +373,6 @@ fres(ThreadState *state, Instruction instr)
 static void
 frsqrte(ThreadState *state, Instruction instr)
 {
-   setFPRDouble(state, instr.frB);
-
    double b, d;
    b = state->fpr[instr.frB].value;
 
@@ -453,10 +410,6 @@ frsqrte(ThreadState *state, Instruction instr)
 static void
 fsel(ThreadState *state, Instruction instr)
 {
-   setFPRDouble(state, instr.frA);
-   setFPRDouble(state, instr.frB);
-   setFPRDouble(state, instr.frC);
-
    double a, b, c, d;
    a = state->fpr[instr.frA].value;
    b = state->fpr[instr.frB].value;
@@ -487,10 +440,6 @@ template<unsigned flags>
 static void
 fmaGeneric(ThreadState *state, Instruction instr)
 {
-   setFPRDouble(state, instr.frA);
-   setFPRDouble(state, instr.frB);
-   setFPRDouble(state, instr.frC);
-
    double a, b, c, d;
    a = state->fpr[instr.frA].value;
    b = state->fpr[instr.frB].value;
@@ -601,8 +550,6 @@ fnmsubs(ThreadState *state, Instruction instr)
 static void
 fctiwGeneric(ThreadState *state, Instruction instr, FloatingPointRoundMode::FloatingPointRoundMode roundMode)
 {
-   setFPRDouble(state, instr.frB);
-
    double b;
    int32_t bi;
    b = state->fpr[instr.frB].value;
@@ -690,8 +637,6 @@ fctiwz(ThreadState *state, Instruction instr)
 static void
 frsp(ThreadState *state, Instruction instr)
 {
-   setFPRDouble(state, instr.frB);
-
    auto b = state->fpr[instr.frB].value;
    auto vxsnan = is_signalling_nan(b);
 
@@ -748,13 +693,7 @@ fnabs(ThreadState *state, Instruction instr)
 static void
 fmr(ThreadState *state, Instruction instr)
 {
-   if (state->fpr_ps[instr.frB]) {
-      setFPRPairedSingle(state, instr.frD);
-      state->fpr[instr.frD].iw0 = state->fpr[instr.frB].iw0;
-   } else {
-      state->fpr[instr.frD].idw = state->fpr[instr.frB].idw;
-      state->fpr_ps[instr.frD] = false;
-   }
+   state->fpr[instr.frD].idw = state->fpr[instr.frB].idw;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -776,7 +715,6 @@ fneg(ThreadState *state, Instruction instr)
    }
 }
 
-// TODO: do these instructions affect FPR mode?
 // Move from FPSCR
 static void
 mffs(ThreadState *state, Instruction instr)
