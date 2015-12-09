@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "latte_shadir.h"
 #include "latte_decoder.h"
 
