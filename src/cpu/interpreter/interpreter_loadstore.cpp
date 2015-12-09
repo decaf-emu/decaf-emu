@@ -659,52 +659,13 @@ stswx(ThreadState *state, Instruction instr)
    stswGeneric<StswIndexed>(state, instr);
 }
 
-// Tables copied from Dolphin source code
-const static double dequantizeTable[] =
-{
-   1.0 / (1ULL << 0), 1.0 / (1ULL << 1), 1.0 / (1ULL << 2), 1.0 / (1ULL << 3),
-   1.0 / (1ULL << 4), 1.0 / (1ULL << 5), 1.0 / (1ULL << 6), 1.0 / (1ULL << 7),
-   1.0 / (1ULL << 8), 1.0 / (1ULL << 9), 1.0 / (1ULL << 10), 1.0 / (1ULL << 11),
-   1.0 / (1ULL << 12), 1.0 / (1ULL << 13), 1.0 / (1ULL << 14), 1.0 / (1ULL << 15),
-   1.0 / (1ULL << 16), 1.0 / (1ULL << 17), 1.0 / (1ULL << 18), 1.0 / (1ULL << 19),
-   1.0 / (1ULL << 20), 1.0 / (1ULL << 21), 1.0 / (1ULL << 22), 1.0 / (1ULL << 23),
-   1.0 / (1ULL << 24), 1.0 / (1ULL << 25), 1.0 / (1ULL << 26), 1.0 / (1ULL << 27),
-   1.0 / (1ULL << 28), 1.0 / (1ULL << 29), 1.0 / (1ULL << 30), 1.0 / (1ULL << 31),
-   (1ULL << 32), (1ULL << 31), (1ULL << 30), (1ULL << 29),
-   (1ULL << 28), (1ULL << 27), (1ULL << 26), (1ULL << 25),
-   (1ULL << 24), (1ULL << 23), (1ULL << 22), (1ULL << 21),
-   (1ULL << 20), (1ULL << 19), (1ULL << 18), (1ULL << 17),
-   (1ULL << 16), (1ULL << 15), (1ULL << 14), (1ULL << 13),
-   (1ULL << 12), (1ULL << 11), (1ULL << 10), (1ULL << 9),
-   (1ULL << 8), (1ULL << 7), (1ULL << 6), (1ULL << 5),
-   (1ULL << 4), (1ULL << 3), (1ULL << 2), (1ULL << 1),
-};
-
-const static double quantizeTable[] =
-{
-   (1ULL << 0), (1ULL << 1), (1ULL << 2), (1ULL << 3),
-   (1ULL << 4), (1ULL << 5), (1ULL << 6), (1ULL << 7),
-   (1ULL << 8), (1ULL << 9), (1ULL << 10), (1ULL << 11),
-   (1ULL << 12), (1ULL << 13), (1ULL << 14), (1ULL << 15),
-   (1ULL << 16), (1ULL << 17), (1ULL << 18), (1ULL << 19),
-   (1ULL << 20), (1ULL << 21), (1ULL << 22), (1ULL << 23),
-   (1ULL << 24), (1ULL << 25), (1ULL << 26), (1ULL << 27),
-   (1ULL << 28), (1ULL << 29), (1ULL << 30), (1ULL << 31),
-   1.0 / (1ULL << 32), 1.0 / (1ULL << 31), 1.0 / (1ULL << 30), 1.0 / (1ULL << 29),
-   1.0 / (1ULL << 28), 1.0 / (1ULL << 27), 1.0 / (1ULL << 26), 1.0 / (1ULL << 25),
-   1.0 / (1ULL << 24), 1.0 / (1ULL << 23), 1.0 / (1ULL << 22), 1.0 / (1ULL << 21),
-   1.0 / (1ULL << 20), 1.0 / (1ULL << 19), 1.0 / (1ULL << 18), 1.0 / (1ULL << 17),
-   1.0 / (1ULL << 16), 1.0 / (1ULL << 15), 1.0 / (1ULL << 14), 1.0 / (1ULL << 13),
-   1.0 / (1ULL << 12), 1.0 / (1ULL << 11), 1.0 / (1ULL << 10), 1.0 / (1ULL << 9),
-   1.0 / (1ULL << 8), 1.0 / (1ULL << 7), 1.0 / (1ULL << 6), 1.0 / (1ULL << 5),
-   1.0 / (1ULL << 4), 1.0 / (1ULL << 3), 1.0 / (1ULL << 2), 1.0 / (1ULL << 1),
-};
-
+#include<cstdio>
 template<typename Type>
 static Type
 dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
 {
-   double scaleValue = dequantizeTable[scale];
+   int exp = static_cast<int>(scale);
+   exp -= (exp & 32) << 1;  // Sign extend.
    Type result;
 
    switch (type) {
@@ -716,19 +677,19 @@ dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
       }
       break;
    case QuantizedDataType::Unsigned8:
-      result = scaleValue * static_cast<Type>(mem::read<uint8_t>(ea));
+      result = std::ldexp(static_cast<Type>(mem::read<uint8_t>(ea)), -exp);
       break;
    case QuantizedDataType::Unsigned16:
-      result = scaleValue * static_cast<Type>(mem::read<uint16_t>(ea));
+      result = std::ldexp(static_cast<Type>(mem::read<uint16_t>(ea)), -exp);
       break;
    case QuantizedDataType::Signed8:
-      result = scaleValue * static_cast<Type>(mem::read<int8_t>(ea));
+      result = std::ldexp(static_cast<Type>(mem::read<int8_t>(ea)), -exp);
       break;
    case QuantizedDataType::Signed16:
-      result = scaleValue * static_cast<Type>(mem::read<int16_t>(ea));
+      result = std::ldexp(static_cast<Type>(mem::read<int16_t>(ea)), -exp);
       break;
    default:
-      assert("Unkown QuantizedDataType");
+      assert(!"Unknown QuantizedDataType");
    }
 
    return result;
@@ -747,7 +708,8 @@ template<typename Type>
 static void
 quantize(uint32_t ea, Type value, QuantizedDataType type, uint32_t scale)
 {
-   double scaleValue = dequantizeTable[scale];
+   int exp = static_cast<int>(scale);
+   exp -= (exp & 32) << 1;  // Sign extend.
 
    switch (type) {
    case QuantizedDataType::Floating:
@@ -766,19 +728,35 @@ quantize(uint32_t ea, Type value, QuantizedDataType type, uint32_t scale)
       }
       break;
    case QuantizedDataType::Unsigned8:
-      mem::write(ea, clamp<uint8_t>(value * scaleValue));
+      if (is_nan(value)) {
+         mem::write(ea, (uint8_t)(std::signbit(value) ? 0 : 0xFF));
+      } else {
+         mem::write(ea, clamp<uint8_t>(std::ldexp(value, exp)));
+      }
       break;
    case QuantizedDataType::Unsigned16:
-      mem::write(ea, clamp<uint16_t>(value * scaleValue));
+      if (is_nan(value)) {
+         mem::write(ea, (uint16_t)(std::signbit(value) ? 0 : 0xFFFF));
+      } else {
+         mem::write(ea, clamp<uint16_t>(std::ldexp(value, exp)));
+      }
       break;
    case QuantizedDataType::Signed8:
-      mem::write(ea, clamp<int8_t>(value * scaleValue));
+      if (is_nan(value)) {
+         mem::write(ea, (int8_t)(std::signbit(value) ? -0x80 : 0x7F));
+      } else {
+         mem::write(ea, clamp<int8_t>(std::ldexp(value, exp)));
+      }
       break;
    case QuantizedDataType::Signed16:
-      mem::write(ea, clamp<int16_t>(value * scaleValue));
+      if (is_nan(value)) {
+         mem::write(ea, (int16_t)(std::signbit(value) ? -0x8000 : 0x7FFF));
+      } else {
+         mem::write(ea, clamp<int16_t>(std::ldexp(value, exp)));
+      }
       break;
    default:
-      assert("Unkown QuantizedDataType");
+      assert(!"Unknown QuantizedDataType");
    }
 }
 
