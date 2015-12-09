@@ -257,6 +257,7 @@ struct Section
 struct XSection
 {
    SectionHeader header;
+   std::string name;
    uint8_t *memory;
    uint32_t virtAddress;
    uint32_t virtSize;

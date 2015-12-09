@@ -85,12 +85,27 @@ private:
    ppcaddr_t
    registerUnimplementedFunction(const std::string &module, const std::string &func);
 
-   std::unique_ptr<LoadedModule> loadKernelModule(const std::string &name, KernelModule *module);
-   std::unique_ptr<LoadedModule> loadRPL(const std::string& name, const gsl::span<uint8_t> &data);
+   std::unique_ptr<LoadedModule>
+   loadKernelModule(const std::string &name, KernelModule *module);
 
-   bool processImports(LoadedModule *loadedMod, const SectionList &sections);
-   bool processExports(LoadedModule *loadedMod, const SectionList &sections);
-   bool processRelocations(LoadedModule *loadedMod, const SectionList &sections, BigEndianView &in, const char *shStrTab, SequentialMemoryTracker &codeSeg, AddressRange &trampSeg);
+   std::unique_ptr<LoadedModule>
+   loadRPL(const std::string& name, const gsl::span<uint8_t> &data);
+
+   bool
+   processImports(LoadedModule *loadedMod,
+                  SectionList &sections);
+
+   bool
+   processExports(LoadedModule *loadedMod,
+                  const SectionList &sections);
+
+   bool
+   processRelocations(LoadedModule *loadedMod,
+                      const SectionList &sections,
+                      BigEndianView &in,
+                      const char *shStrTab,
+                      SequentialMemoryTracker &codeSeg,
+                      AddressRange &trampSeg);
 
 private:
    ModuleList mModules;

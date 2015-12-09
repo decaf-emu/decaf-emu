@@ -555,7 +555,7 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
 
 
 bool
-Loader::processImports(LoadedModule *loadedMod, const SectionList &sections)
+Loader::processImports(LoadedModule *loadedMod, SectionList &sections)
 {
    std::map<std::string, ppcaddr_t> symbolTable;
 
@@ -570,11 +570,12 @@ Loader::processImports(LoadedModule *loadedMod, const SectionList &sections)
       auto linkedModule = loadRPL(libraryName);
 
       // Zero the whole section after we have used the name
+      section.name = libraryName;
       std::memset(section.memory + 8, 0, section.virtSize - 8);
 
       if (!linkedModule) {
          // Ignore missing modules for now
-         gLog->debug("Missing library {}", libraryName);
+         gLog->debug("Missing library {}", section.name);
          continue;
       }
 
@@ -626,11 +627,10 @@ Loader::processImports(LoadedModule *loadedMod, const SectionList &sections)
          if (impsec.header.type == elf::SHT_RPL_IMPORTS) {
             auto symbolTargetIter = symbolTable.find(name);
             ppcaddr_t symbolAddr = 0u;
-            auto libraryName = reinterpret_cast<const char*>(impsec.memory + 8);
 
             if (symbolTargetIter == symbolTable.end()) {
                if (type == elf::STT_FUNC) {
-                  symbolAddr = registerUnimplementedFunction(libraryName, name);
+                  symbolAddr = registerUnimplementedFunction(impsec.name, name);
                }
             } else {
                if (type != elf::STT_FUNC && type != elf::STT_OBJECT) {
