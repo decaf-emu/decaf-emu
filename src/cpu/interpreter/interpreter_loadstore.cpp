@@ -721,7 +721,8 @@ quantize(uint32_t ea, Type value, QuantizedDataType type, uint32_t scale)
          }
       } else {
          if (get_float_bits(value).exponent <= 896) {
-            mem::write(ea, 0.0f);
+            // Make sure to write a zero with the correct sign!
+            mem::write(ea, bit_cast<float>(static_cast<uint32_t>(std::signbit(value)) << 31));
          } else {
             storeDoubleAsFloat(ea, value);
          }

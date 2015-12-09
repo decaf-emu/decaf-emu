@@ -194,7 +194,7 @@ inline uint64_t
 extend_float_bits(uint32_t v)
 {
    return ((uint64_t)(v & 0x80000000) << 32
-           | UINT64_C(0xF) << 59
+           | (v & 0x40000000 ? UINT64_C(0xF) : UINT64_C(0)) << 59
            | (uint64_t)(v & 0x3FFFFFFF) << 29);
 }
 
