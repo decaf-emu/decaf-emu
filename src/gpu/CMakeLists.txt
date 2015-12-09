@@ -4,13 +4,17 @@ set(SOURCE_FILES
     commandqueue.cpp
     driver.cpp
     gfd.cpp
-    latte_analyse.cpp
-    latte_blockify.cpp
-    latte_decoder.cpp
-    latte_disassembler.cpp
     latte_format.cpp
-    latte_opcodes.cpp
     latte_untile.cpp
+    microcode/latte_blockify.cpp
+    microcode/latte_decoder.cpp
+    microcode/latte_disassembler.cpp
+    microcode/latte_disassembler_alu.cpp
+    microcode/latte_disassembler_export.cpp
+    microcode/latte_disassembler_tex.cpp
+    microcode/latte_disassembler_vtx.cpp
+    microcode/latte_instructions.cpp
+    microcode/latte_linearify.cpp
     opengl/glsl_alu.cpp
     opengl/glsl_alu_op2.cpp
     opengl/glsl_alu_op3.cpp
@@ -19,6 +23,7 @@ set(SOURCE_FILES
     opengl/glsl_exp.cpp
     opengl/glsl_generator.cpp
     opengl/glsl_tex.cpp
+    opengl/glsl_vtx.cpp
     opengl/opengl_driver.cpp
     opengl/opengl_shader.cpp
     opengl/opengl_texture.cpp
@@ -38,9 +43,6 @@ set(HEADER_FILES
     latte_enum_sx.h
     latte_enum_vgt.h
     latte_format.h
-    latte.h
-    latte_instructions.h
-    latte_opcodes.h
     latte_registers_cb.h
     latte_registers_db.h
     latte_registers.h
@@ -50,7 +52,10 @@ set(HEADER_FILES
     latte_registers_sx.h
     latte_registers_td.h
     latte_registers_vgt.h
-    latte_shadir.h
+    microcode/latte_decoder.h
+    microcode/latte_disassembler.h
+    microcode/latte_instructions.h
+    microcode/latte_shadir.h
     opengl/glsl_generator.h
     opengl/opengl_driver.h
     pm4_buffer.h
