@@ -16,12 +16,27 @@ enum LoadFlags
    LoadZeroRA        = 1 << 5, // Use 0 instead of r0
 };
 
+static double
+convertFloatToDouble(float f)
+{
+   if (!is_signalling_nan(f)) {
+      return static_cast<double>(f);
+   } else {
+      return extend_float(f);
+   }
+}
+
+static double
+loadFloatAsDouble(uint32_t ea)
+{
+   return convertFloatToDouble(mem::read<float>(ea));
+}
+
 template<unsigned flags = 0>
 static void
 loadFloat(ThreadState *state, Instruction instr)
 {
    uint32_t ea;
-   float d;
 
    if ((flags & LoadZeroRA) && instr.rA == 0) {
       ea = 0;
@@ -35,17 +50,9 @@ loadFloat(ThreadState *state, Instruction instr)
       ea += sign_extend<16, int32_t>(instr.d);
    }
 
-   d = mem::read<float>(ea);
-   if (!is_signalling_nan(d)) {
-      state->fpr[instr.rD].paired0 = static_cast<double>(d);
-   } else {
-      const uint64_t bits32 = bit_cast<uint32_t>(d);
-      const uint64_t bits64 = ((bits32 & 0x80000000) << 32
-                               | UINT64_C(0xF) << 59
-                               | (bits32 & 0x3FFFFFFF) << 29);
-      state->fpr[instr.rD].paired0 = bit_cast<double>(bits64);
-   }
-   state->fpr[instr.rD].paired1 = d;
+   const float f = mem::read<float>(ea);
+   state->fpr[instr.rD].paired0 = convertFloatToDouble(f);
+   state->fpr[instr.rD].paired1 = f;
 
    if (flags & LoadUpdate) {
       state->gpr[instr.rA] = ea;
@@ -342,6 +349,18 @@ enum StoreFlags
    StoreFloatAsInteger  = 1 << 5, // stfiwx
 };
 
+static void
+storeDoubleAsFloat(uint32_t ea, double d)
+{
+   float f;
+   if (!is_signalling_nan(d)) {
+      f = static_cast<float>(d);
+   } else {
+      f = truncate_double(d);
+   }
+   mem::write<float>(ea, f);
+}
+
 template<unsigned flags = 0>
 static void
 storeFloat(ThreadState *state, Instruction instr)
@@ -361,13 +380,7 @@ storeFloat(ThreadState *state, Instruction instr)
    }
 
    const double d = state->fpr[instr.rS].value;
-   float f;
-   if (!is_signalling_nan(d)) {
-      f = static_cast<float>(d);
-   } else {
-      f = truncate_double(d);
-   }
-   mem::write<float>(ea, f);
+   storeDoubleAsFloat(ea, d);
 
    if (flags & StoreUpdate) {
       state->gpr[instr.rA] = ea;
@@ -686,27 +699,32 @@ const static double quantizeTable[] =
    1.0 / (1ULL << 4), 1.0 / (1ULL << 3), 1.0 / (1ULL << 2), 1.0 / (1ULL << 1),
 };
 
-static double
+template<typename Type>
+static Type
 dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
 {
    double scaleValue = dequantizeTable[scale];
-   double result;
+   Type result;
 
    switch (type) {
    case QuantizedDataType::Floating:
-      result = static_cast<double>(mem::read<float>(ea));
+      if (std::is_same<Type, float>::value) {
+         result = mem::read<float>(ea);
+      } else {
+         result = loadFloatAsDouble(ea);
+      }
       break;
    case QuantizedDataType::Unsigned8:
-      result = scaleValue * static_cast<double>(mem::read<uint8_t>(ea));
+      result = scaleValue * static_cast<Type>(mem::read<uint8_t>(ea));
       break;
    case QuantizedDataType::Unsigned16:
-      result = scaleValue * static_cast<double>(mem::read<uint16_t>(ea));
+      result = scaleValue * static_cast<Type>(mem::read<uint16_t>(ea));
       break;
    case QuantizedDataType::Signed8:
-      result = scaleValue * static_cast<double>(mem::read<int8_t>(ea));
+      result = scaleValue * static_cast<Type>(mem::read<int8_t>(ea));
       break;
    case QuantizedDataType::Signed16:
-      result = scaleValue * static_cast<double>(mem::read<int16_t>(ea));
+      result = scaleValue * static_cast<Type>(mem::read<int16_t>(ea));
       break;
    default:
       assert("Unkown QuantizedDataType");
@@ -716,38 +734,39 @@ dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
 }
 
 template<typename Type>
-inline double
+inline Type
 clamp(double value)
 {
-   double min = static_cast<double>(std::numeric_limits<uint8_t>::min());
-   double max = static_cast<double>(std::numeric_limits<uint8_t>::max());
-   return std::max(min, std::min(value, max));
+   double min = static_cast<double>(std::numeric_limits<Type>::min());
+   double max = static_cast<double>(std::numeric_limits<Type>::max());
+   return static_cast<Type>(std::max(min, std::min(value, max)));
 }
 
+template<typename Type>
 static void
-quantize(uint32_t ea, double value, QuantizedDataType type, uint32_t scale)
+quantize(uint32_t ea, Type value, QuantizedDataType type, uint32_t scale)
 {
    double scaleValue = dequantizeTable[scale];
 
    switch (type) {
    case QuantizedDataType::Floating:
-      mem::write(ea, static_cast<float>(value));
+      if (std::is_same<Type, float>::value) {
+         mem::write(ea, value);
+      } else {
+         storeDoubleAsFloat(ea, value);
+      }
       break;
    case QuantizedDataType::Unsigned8:
-      value = clamp<uint8_t>(value * scaleValue);
-      mem::write(ea, static_cast<uint8_t>(value));
+      mem::write(ea, clamp<uint8_t>(value * scaleValue));
       break;
    case QuantizedDataType::Unsigned16:
-      value = clamp<uint16_t>(value * scaleValue);
-      mem::write(ea, static_cast<uint16_t>(value));
+      mem::write(ea, clamp<uint16_t>(value * scaleValue));
       break;
    case QuantizedDataType::Signed8:
-      value = clamp<int8_t>(value * scaleValue);
-      mem::write(ea, static_cast<int8_t>(value));
+      mem::write(ea, clamp<int8_t>(value * scaleValue));
       break;
    case QuantizedDataType::Signed16:
-      value = clamp<int16_t>(value * scaleValue);
-      mem::write(ea, static_cast<int16_t>(value));
+      mem::write(ea, clamp<int16_t>(value * scaleValue));
       break;
    default:
       assert("Unkown QuantizedDataType");
@@ -800,10 +819,10 @@ psqLoad(ThreadState *state, Instruction instr)
    }
 
    if (w == 0) {
-      state->fpr[instr.frD].paired0 = dequantize(ea, lt, ls);
-      state->fpr[instr.frD].paired1 = dequantize(ea + c, lt, ls);
+      state->fpr[instr.frD].paired0 = dequantize<double>(ea, lt, ls);
+      state->fpr[instr.frD].paired1 = dequantize<float>(ea + c, lt, ls);
    } else {
-      state->fpr[instr.frD].paired0 = dequantize(ea, lt, ls);
+      state->fpr[instr.frD].paired0 = dequantize<double>(ea, lt, ls);
       state->fpr[instr.frD].paired1 = 1.0f;
    }
 
@@ -850,7 +869,6 @@ psqStore(ThreadState *state, Instruction instr)
 {
    uint32_t ea, sts, c, i, w;
    QuantizedDataType stt;
-   double s0, s1;
 
    if ((flags & PsqStoreZeroRA) && instr.rA == 0) {
       ea = 0;
@@ -882,14 +900,11 @@ psqStore(ThreadState *state, Instruction instr)
       c = 2;
    }
 
-   s0 = state->fpr[instr.frS].paired0;
-   s1 = state->fpr[instr.frS].paired1;
-
    if (w == 0) {
-      quantize(ea, s0, stt, sts);
-      quantize(ea + c, s1, stt, sts);
+      quantize<double>(ea, state->fpr[instr.frS].paired0, stt, sts);
+      quantize<float>(ea + c, state->fpr[instr.frS].paired1, stt, sts);
    } else {
-      quantize(ea, s0, stt, sts);
+      quantize<double>(ea, state->fpr[instr.frS].paired0, stt, sts);
    }
 
    if (flags & PsqStoreUpdate) {

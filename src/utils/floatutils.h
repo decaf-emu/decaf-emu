@@ -190,11 +190,28 @@ make_nan()
    return bits.v;
 }
 
+inline uint64_t
+extend_float_bits(uint32_t v)
+{
+   return ((uint64_t)(v & 0x80000000) << 32
+           | UINT64_C(0xF) << 59
+           | (uint64_t)(v & 0x3FFFFFFF) << 29);
+}
+
+inline double
+extend_float(float v)
+{
+   return bit_cast<double>(extend_float_bits(bit_cast<uint32_t>(v)));
+}
+
+inline uint32_t
+truncate_double_bits(uint64_t v)
+{
+   return (v>>32 & 0xC0000000) | (v>>29 & 0x3FFFFFFF);
+}
+
 inline float
 truncate_double(double v)
 {
-   const uint64_t bits64 = bit_cast<uint64_t>(v);
-   const uint32_t bits32 = ((bits64>>32 & 0xC0000000)
-                            | (bits64>>29 & 0x3FFFFFFF));
-   return bit_cast<float>(bits32);
+   return bit_cast<float>(truncate_double_bits(bit_cast<uint64_t>(v)));
 }

@@ -23,6 +23,7 @@ struct fpr_t
       {
          uint32_t iw1;
          uint32_t iw0;
+         uint32_t iw_paired1;
       };
    };
 };

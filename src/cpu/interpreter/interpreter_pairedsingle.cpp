@@ -3,23 +3,87 @@
 #include "interpreter_float.h"
 #include "utils/floatutils.h"
 
-// Absolute
-static void
-ps_abs(ThreadState *state, Instruction instr)
+// Register move / sign bit manipulation
+enum MoveMode
 {
-   float b0, b1, d0, d1;
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
+   MoveDirect,
+   MoveNegate,
+   MoveAbsolute,
+   MoveNegAbsolute,
+};
 
-   d1 = std::fabs(b1);
-   d0 = std::fabs(b0);
+template<MoveMode mode>
+static void
+moveGeneric(ThreadState *state, Instruction instr)
+{
+   uint32_t b0, b1, d0, d1;
+   const bool ps0_nan = is_signalling_nan(state->fpr[instr.frB].paired0);
+   if (!ps0_nan) {
+      // We have to round this if it has excess precision, so we can't just
+      // chop off the trailing bits.
+      b0 = bit_cast<uint32_t>(static_cast<float>(state->fpr[instr.frB].paired0));
+   } else {
+      b0 = truncate_double_bits(state->fpr[instr.frB].idw);
+   }
+   b1 = state->fpr[instr.frB].iw_paired1;
 
-   state->fpr[instr.frD].paired0 = d0;
-   state->fpr[instr.frD].paired1 = d1;
+   switch (mode) {
+   case MoveDirect:
+      d0 = b0;
+      d1 = b1;
+      break;
+   case MoveNegate:
+      d0 = b0 ^ 0x80000000;
+      d1 = b1 ^ 0x80000000;
+      break;
+   case MoveAbsolute:
+      d0 = b0 & ~0x80000000;
+      d1 = b1 & ~0x80000000;
+      break;
+   case MoveNegAbsolute:
+      d0 = b0 | 0x80000000;
+      d1 = b1 | 0x80000000;
+      break;
+   }
+
+   if (!ps0_nan) {
+      state->fpr[instr.frD].paired0 = static_cast<double>(bit_cast<float>(d0));
+   } else {
+      state->fpr[instr.frD].idw = extend_float_bits(d0);
+   }
+   state->fpr[instr.frD].iw_paired1 = d1;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
+}
+
+// Move Register
+static void
+ps_mr(ThreadState *state, Instruction instr)
+{
+   return moveGeneric<MoveDirect>(state, instr);
+}
+
+// Negate
+static void
+ps_neg(ThreadState *state, Instruction instr)
+{
+   return moveGeneric<MoveNegate>(state, instr);
+}
+
+// Absolute
+static void
+ps_abs(ThreadState *state, Instruction instr)
+{
+   return moveGeneric<MoveAbsolute>(state, instr);
+}
+
+// Negative Absolute
+static void
+ps_nabs(ThreadState *state, Instruction instr)
+{
+   return moveGeneric<MoveNegAbsolute>(state, instr);
 }
 
 // Add
@@ -251,18 +315,6 @@ ps_merge10(ThreadState *state, Instruction instr)
    return mergeGeneric<MergeValue0>(state, instr);
 }
 
-// Move Register
-static void
-ps_mr(ThreadState *state, Instruction instr)
-{
-   state->fpr[instr.frD].paired0 = state->fpr[instr.frB].paired0;
-   state->fpr[instr.frD].paired1 = state->fpr[instr.frB].paired1;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
-}
-
 // Multiply and sub
 enum MsubFlags
 {
@@ -401,46 +453,6 @@ static void
 ps_muls1(ThreadState *state, Instruction instr)
 {
    return mulGeneric<MultiplyScalar1>(state, instr);
-}
-
-// Negative Absolute
-static void
-ps_nabs(ThreadState *state, Instruction instr)
-{
-   float b0, b1, d0, d1;
-
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
-
-   d1 = -std::fabs(b1);
-   d0 = -std::fabs(b0);
-
-   state->fpr[instr.frD].paired0 = d0;
-   state->fpr[instr.frD].paired1 = d1;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
-}
-
-// Negate
-static void
-ps_neg(ThreadState *state, Instruction instr)
-{
-   float b0, b1, d0, d1;
-
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
-
-   d1 = -b1;
-   d0 = -b0;
-
-   state->fpr[instr.frD].paired0 = d0;
-   state->fpr[instr.frD].paired1 = d1;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
 }
 
 // Reciprocal
