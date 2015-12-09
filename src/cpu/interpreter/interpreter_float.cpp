@@ -229,10 +229,14 @@ template<FPArithOperator op, typename Type>
 static void
 fpArithGeneric(ThreadState *state, Instruction instr)
 {
+   // The Espresso appears to use double precision arithmetic even for
+   // single-precision instructions (for example, 2^128 * 0.5 does not
+   // cause overflow), so we do the same here.
    setFPRDouble(state, instr.frA);
    setFPRDouble(state, op == FPMul ? instr.frC : instr.frB);
 
-   double a, b, d;
+   double a, b;
+   Type d;
    a = state->fpr[instr.frA].value;
    b = state->fpr[op == FPMul ? instr.frC : instr.frB].value;
 
@@ -282,9 +286,6 @@ fpArithGeneric(ThreadState *state, Instruction instr)
       state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
-      // The Espresso appears to use double precision arithmetic even for
-      // single-precision instructions (for example, 2^128 * 0.5 does not
-      // cause overflow), so we do the same here.
       switch (op) {
       case FPAdd:
          d = static_cast<Type>(a + b);
@@ -300,8 +301,14 @@ fpArithGeneric(ThreadState *state, Instruction instr)
          break;
       }
       d = checkNan<Type>(d, a, b);
-      state->fpr[instr.frD].value = d;
-      state->fpr_ps[instr.frD] = false;
+      if (std::is_same<Type, float>::value) {
+         state->fpr[instr.frD].paired0 = d;
+         state->fpr[instr.frD].paired1 = d;
+         state->fpr_ps[instr.frD] = true;
+      } else {
+         state->fpr[instr.frD].value = d;
+         state->fpr_ps[instr.frD] = false;
+      }
       updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
    }
@@ -373,7 +380,8 @@ fres(ThreadState *state, Instruction instr)
 {
    setFPRDouble(state, instr.frB);
 
-   double b, d;
+   double b;
+   float d;
    b = state->fpr[instr.frB].value;
 
    const bool vxsnan = is_signalling_nan(b);
@@ -388,9 +396,10 @@ fres(ThreadState *state, Instruction instr)
       state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
-      d = ppc_estimate_reciprocal(b);
-      state->fpr[instr.frD].value = d;
-      state->fpr_ps[instr.frD] = false;
+      d = static_cast<float>(ppc_estimate_reciprocal(b));
+      state->fpr[instr.frD].paired0 = d;
+      // paired1 is left undefined in the UISA.  TODO: Check actual behavior.
+      state->fpr_ps[instr.frD] = true;
       updateFPRF(state, d);
       state->fpscr.zx |= zx;
       updateFPSCR(state, oldFPSCR);
@@ -516,11 +525,13 @@ fmaGeneric(ThreadState *state, Instruction instr)
          }
       }
       if (flags & FMASinglePrec) {
-         state->fpr[instr.frD].value = static_cast<double>(static_cast<float>(d));
+         state->fpr[instr.frD].paired0 = static_cast<float>(d);
+         state->fpr[instr.frD].paired1 = static_cast<float>(d);
+         state->fpr_ps[instr.frD] = true;
       } else {
          state->fpr[instr.frD].value = d;
+         state->fpr_ps[instr.frD] = false;
       }
-      state->fpr_ps[instr.frD] = false;
       updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
    }
