@@ -282,6 +282,9 @@ fpArithGeneric(ThreadState *state, Instruction instr)
       state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
+      // The Espresso appears to use double precision arithmetic even for
+      // single-precision instructions (for example, 2^128 * 0.5 does not
+      // cause overflow), so we do the same here.
       switch (op) {
       case FPAdd:
          d = static_cast<Type>(a + b);
