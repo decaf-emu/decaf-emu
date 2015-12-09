@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include "interpreter_float.h"
 #include "interpreter_insreg.h"
 #include "mem/mem.h"
@@ -751,9 +752,17 @@ quantize(uint32_t ea, Type value, QuantizedDataType type, uint32_t scale)
    switch (type) {
    case QuantizedDataType::Floating:
       if (std::is_same<Type, float>::value) {
-         mem::write(ea, value);
+         if (std::fpclassify(value) == FP_SUBNORMAL) {
+            mem::write(ea, 0.0f);
+         } else {
+            mem::write(ea, value);
+         }
       } else {
-         storeDoubleAsFloat(ea, value);
+         if (get_float_bits(value).exponent <= 896) {
+            mem::write(ea, 0.0f);
+         } else {
+            storeDoubleAsFloat(ea, value);
+         }
       }
       break;
    case QuantizedDataType::Unsigned8:
