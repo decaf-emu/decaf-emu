@@ -1,5 +1,6 @@
 #pragma once
 #include <numeric>
+#include "utils/bit_cast.h"
 #include "utils/bitutils.h"
 
 union FloatBitsSingle
@@ -187,4 +188,13 @@ make_nan()
    bits.exponent = bits.exponent_max;
    bits.mantissa = bits.mantissa_max;
    return bits.v;
+}
+
+inline float
+truncate_double(double v)
+{
+   const uint64_t bits64 = bit_cast<uint64_t>(v);
+   const uint32_t bits32 = ((bits64>>32 & 0xC0000000)
+                            | (bits64>>29 & 0x3FFFFFFF));
+   return bit_cast<float>(bits32);
 }

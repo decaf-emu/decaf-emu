@@ -365,10 +365,7 @@ storeFloat(ThreadState *state, Instruction instr)
    if (!is_signalling_nan(d)) {
       f = static_cast<float>(d);
    } else {
-      const uint64_t bits64 = bit_cast<uint64_t>(d);
-      const uint32_t bits32 = ((bits64>>32 & 0xC0000000)
-                               | (bits64>>29 & 0x3FFFFFFF));
-      f = bit_cast<float>(bits32);
+      f = truncate_double(d);
    }
    mem::write<float>(ea, f);
 

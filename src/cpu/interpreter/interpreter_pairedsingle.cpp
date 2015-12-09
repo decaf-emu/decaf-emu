@@ -204,13 +204,19 @@ mergeGeneric(ThreadState *state, Instruction instr)
    if (flags & MergeValue0) {
       d0 = state->fpr[instr.frA].paired1;
    } else {
-      d0 = state->fpr[instr.frA].paired0;
+      if (!is_signalling_nan(state->fpr[instr.frA].paired0)) {
+         d0 = static_cast<float>(state->fpr[instr.frA].paired0);
+      } else {
+         d0 = truncate_double(state->fpr[instr.frA].paired0);
+      }
    }
 
    if (flags & MergeValue1) {
       d1 = state->fpr[instr.frB].paired1;
    } else {
-      d1 = state->fpr[instr.frB].paired0;
+      // When inserting a double-precision value into slot 1, the mantissa
+      // is truncated rather than rounded.
+      d1 = truncate_double(state->fpr[instr.frB].paired0);
    }
 
    state->fpr[instr.frD].paired0 = d0;
