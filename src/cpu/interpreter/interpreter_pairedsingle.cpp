@@ -440,27 +440,50 @@ ps_merge10(ThreadState *state, Instruction instr)
 static void
 ps_res(ThreadState *state, Instruction instr)
 {
-   float b0, b1, d0, d1;
+   const double b0 = state->fpr[instr.frB].paired0;
+   const double b1 = extend_float(state->fpr[instr.frB].paired1);
 
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
+   const bool vxsnan0 = is_signalling_nan(b0);
+   const bool vxsnan1 = is_signalling_nan(b1);
+   const bool zx0 = is_zero(b0);
+   const bool zx1 = is_zero(b1);
 
    const uint32_t oldFPSCR = state->fpscr.value;
+   state->fpscr.vxsnan |= vxsnan0 || vxsnan1;
+   state->fpscr.zx |= zx0 || zx1;
 
-   state->fpscr.vxsnan |=
-      is_signalling_nan(b0) || is_signalling_nan(b1);
+   float d0, d1;
+   bool write = true;
+   if ((vxsnan0 && state->fpscr.ve) || (zx0 && state->fpscr.ze)) {
+      write = false;
+   } else {
+      if (is_nan(b0)) {
+         d0 = make_quiet(truncate_double(b0));
+      } else if (vxsnan0) {
+         d0 = make_nan<float>();
+      } else {
+         d0 = 1.0f / static_cast<float>(b0);
+      }
+      updateFPRF(state, d0);
+   }
+   if ((vxsnan1 && state->fpscr.ve) || (zx1 && state->fpscr.ze)) {
+      write = false;
+   } else {
+      if (is_nan(b1)) {
+         d1 = make_quiet(truncate_double(b1));
+      } else if (vxsnan1) {
+         d1 = make_nan<float>();
+      } else {
+         d1 = 1.0f / static_cast<float>(b1);
+      }
+   }
 
-   state->fpscr.zx |=
-      is_zero(b0) || is_zero(b1);
+   if (write) {
+      state->fpr[instr.frD].paired0 = extend_float(d0);
+      state->fpr[instr.frD].paired1 = d1;
+   }
 
-   d1 = 1.0f / b1;
-   d0 = 1.0f / b0;
    updateFPSCR(state, oldFPSCR);
-   updateFPRF(state, d0);
-
-   state->fpr[instr.frD].paired0 = d0;
-   state->fpr[instr.frD].paired1 = d1;
-
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
@@ -470,27 +493,53 @@ ps_res(ThreadState *state, Instruction instr)
 static void
 ps_rsqrte(ThreadState *state, Instruction instr)
 {
-   float b0, b1, d0, d1;
+   const double b0 = state->fpr[instr.frB].paired0;
+   const double b1 = extend_float(state->fpr[instr.frB].paired1);
 
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
+   const bool vxsnan0 = is_signalling_nan(b0);
+   const bool vxsnan1 = is_signalling_nan(b1);
+   const bool vxsqrt0 = !vxsnan0 && std::signbit(b0) && !is_zero(b0);
+   const bool vxsqrt1 = !vxsnan1 && std::signbit(b1) && !is_zero(b1);
+   const bool zx0 = is_zero(b0);
+   const bool zx1 = is_zero(b1);
 
    const uint32_t oldFPSCR = state->fpscr.value;
+   state->fpscr.vxsnan |= vxsnan0 || vxsnan1;
+   state->fpscr.vxsqrt |= vxsqrt0 || vxsqrt1;
+   state->fpscr.zx |= zx0 || zx1;
 
-   state->fpscr.vxsnan |=
-      is_signalling_nan(b0) || is_signalling_nan(b1);
+   float d0, d1;
+   bool write = true;
+   if (((vxsnan0 || vxsqrt0) && state->fpscr.ve) || (zx0 && state->fpscr.ze)) {
+      write = false;
+   } else {
+      if (is_nan(b0)) {
+         d0 = make_quiet(truncate_double(b0));
+      } else if (vxsnan0 || vxsqrt0) {
+         d0 = make_nan<float>();
+      } else {
+         d0 = 1.0f / std::sqrt(static_cast<float>(b0));
+      }
+      updateFPRF(state, d0);
+   }
+   if (((vxsnan1 || vxsqrt1) && state->fpscr.ve) || (zx1 && state->fpscr.ze)) {
+      write = false;
+   } else {
+      if (is_nan(b1)) {
+         d1 = make_quiet(truncate_double(b1));
+      } else if (vxsnan1 || vxsqrt1) {
+         d1 = make_nan<float>();
+      } else {
+         d1 = 1.0f / std::sqrt(static_cast<float>(b1));
+      }
+   }
 
-   state->fpscr.vxsqrt |=
-      is_negative(b0) || is_negative(b1);
+   if (write) {
+      state->fpr[instr.frD].paired0 = extend_float(d0);
+      state->fpr[instr.frD].paired1 = d1;
+   }
 
-   d1 = 1.0f / std::sqrt(b1);
-   d0 = 1.0f / std::sqrt(b0);
    updateFPSCR(state, oldFPSCR);
-   updateFPRF(state, d0);
-
-   state->fpr[instr.frD].paired0 = d0;
-   state->fpr[instr.frD].paired1 = d1;
-
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }

@@ -364,7 +364,7 @@ frsqrte(ThreadState *state, Instruction instr)
    b = state->fpr[instr.frB].value;
 
    const bool vxsnan = is_signalling_nan(b);
-   const bool vxsqrt = (b < 0);
+   const bool vxsqrt = !vxsnan && std::signbit(b) && !is_zero(b);
    const bool zx = is_zero(b);
 
    const uint32_t oldFPSCR = state->fpscr.value;
