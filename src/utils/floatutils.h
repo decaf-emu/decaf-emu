@@ -215,10 +215,10 @@ truncate_double(double v)
 {
    const FloatBitsDouble bits = get_float_bits(v);
    if (bits.exponent <= 896) {
-      return bit_cast<float>(bits.sign<<31);
+      return bit_cast<float>(static_cast<uint32_t>(bits.sign)<<31);
    } else if (bits.exponent >= 1151 && bits.exponent != 2047) {
-      return bit_cast<float>(bits.sign<<31 | 0x7F800000);
+      return bit_cast<float>(static_cast<uint32_t>(bits.sign)<<31 | 0x7F800000);
    } else {
-       return bit_cast<float>(truncate_double_bits(bit_cast<uint64_t>(v)));
+       return bit_cast<float>(truncate_double_bits(bits.uv));
    }
 }
