@@ -280,9 +280,9 @@ fmaSingle(ThreadState *state, Instruction instr, float *result)
    const double addend = (flags & FMASubtract) ? -b : b;
 
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
-   const bool vxisi = is_infinity(a * c) && is_infinity(b) && std::signbit(a * c) != std::signbit(addend);
+   const bool vxisi = ((is_infinity(a) || is_infinity(c)) && is_infinity(b)
+                       && (std::signbit(a) ^ std::signbit(c)) != std::signbit(addend));
    const bool vximz = (is_infinity(a) && is_zero(c)) || (is_zero(a) && is_infinity(c));
-   std::feclearexcept(FE_ALL_EXCEPT);  // Avoid leaking exceptions from a*c.
 
    const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan |= vxsnan;
