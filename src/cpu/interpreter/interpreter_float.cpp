@@ -265,10 +265,8 @@ fpArithGeneric(ThreadState *state, Instruction instr)
       if (std::is_same<Type, float>::value) {
          state->fpr[instr.frD].paired0 = d;
          state->fpr[instr.frD].paired1 = d;
-         state->fpr_ps[instr.frD] = true;
       } else {
          state->fpr[instr.frD].value = d;
-         state->fpr_ps[instr.frD] = false;
       }
       updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
@@ -358,7 +356,6 @@ fres(ThreadState *state, Instruction instr)
       d = static_cast<float>(ppc_estimate_reciprocal(b));
       state->fpr[instr.frD].paired0 = d;
       // paired1 is left undefined in the UISA.  TODO: Check actual behavior.
-      state->fpr_ps[instr.frD] = true;
       updateFPRF(state, d);
       state->fpscr.zx |= zx;
       updateFPSCR(state, oldFPSCR);
@@ -396,7 +393,6 @@ frsqrte(ThreadState *state, Instruction instr)
          d = 1.0 / std::sqrt(b);
       }
       state->fpr[instr.frD].value = d;
-      state->fpr_ps[instr.frD] = false;
       updateFPRF(state, d);
       state->fpscr.zx |= zx;
       updateFPSCR(state, oldFPSCR);
@@ -422,7 +418,6 @@ fsel(ThreadState *state, Instruction instr)
    }
 
    state->fpr[instr.frD].value = d;
-   state->fpr_ps[instr.frD] = false;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -476,10 +471,8 @@ fmaGeneric(ThreadState *state, Instruction instr)
       if (flags & FMASinglePrec) {
          state->fpr[instr.frD].paired0 = static_cast<float>(d);
          state->fpr[instr.frD].paired1 = static_cast<float>(d);
-         state->fpr_ps[instr.frD] = true;
       } else {
          state->fpr[instr.frD].value = d;
-         state->fpr_ps[instr.frD] = false;
       }
       updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
@@ -604,7 +597,6 @@ fctiwGeneric(ThreadState *state, Instruction instr, FloatingPointRoundMode::Floa
    } else {
       state->fpr[instr.frD].iw1 = bi;
       state->fpr[instr.frD].iw0 = 0xFFF80000 | (is_negative_zero(b) ? 1 : 0);
-      state->fpr_ps[instr.frD] = false;
       updateFPSCR(state, oldFPSCR);
       // We need to set FPSCR[FI] manually since the rounding functions
       // don't always raise inexact exceptions.
@@ -648,7 +640,6 @@ frsp(ThreadState *state, Instruction instr)
    } else {
       auto d = static_cast<float>(b);
       state->fpr[instr.frD].paired0 = d;
-      state->fpr_ps[instr.frD] = true;
       updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
    }
