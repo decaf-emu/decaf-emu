@@ -165,23 +165,6 @@ updateFloatConditionRegister(ThreadState *state)
    state->cr.cr1 = state->fpscr.cr1;
 }
 
-template<typename Type>
-static double
-checkNan(double d, double a, double b)
-{
-   if (is_nan(d)) {
-      if (is_nan(a)) {
-         return make_quiet(static_cast<Type>(a));
-      } else if (is_nan(b)) {
-         return make_quiet(static_cast<Type>(b));
-      } else {
-         return make_nan<double>();
-      }
-   } else {
-      return d;
-   }
-}
-
 // Floating Arithmetic
 enum FPArithOperator {
     FPAdd,
@@ -244,24 +227,31 @@ fpArithGeneric(ThreadState *state, Instruction instr)
       state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
-      // The Espresso appears to use double precision arithmetic even for
-      // single-precision instructions (for example, 2^128 * 0.5 does not
-      // cause overflow), so we do the same here.
-      switch (op) {
-      case FPAdd:
-         d = static_cast<Type>(a + b);
-         break;
-      case FPSub:
-         d = static_cast<Type>(a - b);
-         break;
-      case FPMul:
-         d = static_cast<Type>(a * b);
-         break;
-      case FPDiv:
-         d = static_cast<Type>(a / b);
-         break;
+      if (is_nan(a)) {
+         d = make_quiet(a);
+      } else if (is_nan(b)) {
+         d = make_quiet(b);
+      } else if (vxisi || vximz || vxidi || vxzdz) {
+         d = make_nan<double>();
+      } else {
+         // The Espresso appears to use double precision arithmetic even for
+         // single-precision instructions (for example, 2^128 * 0.5 does not
+         // cause overflow), so we do the same here.
+         switch (op) {
+         case FPAdd:
+            d = static_cast<Type>(a + b);
+            break;
+         case FPSub:
+            d = static_cast<Type>(a - b);
+            break;
+         case FPMul:
+            d = static_cast<Type>(a * b);
+            break;
+         case FPDiv:
+            d = static_cast<Type>(a / b);
+            break;
+         }
       }
-      d = checkNan<Type>(d, a, b);
       if (std::is_same<Type, float>::value) {
          state->fpr[instr.frD].paired0 = d;
          state->fpr[instr.frD].paired1 = d;

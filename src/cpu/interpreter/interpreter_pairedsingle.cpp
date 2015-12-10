@@ -49,7 +49,7 @@ moveGeneric(ThreadState *state, Instruction instr)
    if (!ps0_nan) {
       state->fpr[instr.frD].paired0 = static_cast<double>(bit_cast<float>(d0));
    } else {
-      state->fpr[instr.frD].idw = extend_float_bits(d0);
+      state->fpr[instr.frD].idw = extend_float_nan_bits(d0);
    }
    state->fpr[instr.frD].iw_paired1 = d1;
 
@@ -86,78 +86,168 @@ ps_nabs(ThreadState *state, Instruction instr)
    return moveGeneric<MoveNegAbsolute>(state, instr);
 }
 
-// Add
-static void
-ps_add(ThreadState *state, Instruction instr)
+// Paired-single arithmetic
+enum PSArithOperator {
+    PSAdd,
+    PSSub,
+    PSMul,
+    PSDiv,
+};
+
+// Returns whether a result value was written (i.e., not aborted by an
+// exception).
+template<PSArithOperator op, int slotA, int slotB>
+static bool
+psArithSingle(ThreadState *state, Instruction instr, float *result)
 {
-   float a0, a1, b0, b1, d0, d1;
+   double a, b;
+   if (slotA == 0) {
+      a = state->fpr[instr.frA].paired0;
+   } else {
+      a = extend_float(state->fpr[instr.frA].paired1);
+   }
+   if (slotB == 0) {
+      b = state->fpr[op == PSMul ? instr.frC : instr.frB].paired0;
+   } else {
+      b = extend_float(state->fpr[op == PSMul ? instr.frC : instr.frB].paired1);
+   }
 
-   a0 = state->fpr[instr.frA].paired0;
-   a1 = state->fpr[instr.frA].paired1;
+   const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
+   bool vxisi, vximz, vxidi, vxzdz, zx;
+   switch (op) {
+   case PSAdd:
+      vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) != std::signbit(b);
+      vximz = false;
+      vxidi = false;
+      vxzdz = false;
+      zx = false;
+      break;
+   case PSSub:
+      vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) == std::signbit(b);
+      vximz = false;
+      vxidi = false;
+      vxzdz = false;
+      zx = false;
+      break;
+   case PSMul:
+      vxisi = false;
+      vximz = (is_infinity(a) && is_zero(b)) || (is_zero(a) && is_infinity(b));
+      vxidi = false;
+      vxzdz = false;
+      zx = false;
+      break;
+   case PSDiv:
+      vxisi = false;
+      vximz = false;
+      vxidi = is_infinity(a) && is_infinity(b);
+      vxzdz = is_zero(a) && is_zero(b);
+      zx = !(vxzdz || vxsnan) && is_zero(b);
+      break;
+   }
 
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
+   state->fpscr.vxsnan |= vxsnan;
+   state->fpscr.vxisi |= vxisi;
+   state->fpscr.vximz |= vximz;
+   state->fpscr.vxidi |= vxidi;
+   state->fpscr.vxzdz |= vxzdz;
+   state->fpscr.zx |= zx;
 
+   const bool vxEnabled = (vxsnan || vxisi || vximz || vxidi || vxzdz) && state->fpscr.ve;
+   const bool zxEnabled = zx && state->fpscr.ze;
+   if (vxEnabled || zxEnabled) {
+      return false;
+   }
+
+   float d;
+   if (is_nan(a)) {
+      d = make_quiet(truncate_double(a));
+   } else if (is_nan(b)) {
+      d = make_quiet(truncate_double(b));
+   } else if (vxisi || vximz || vxidi || vxzdz) {
+      d = make_nan<float>();
+   } else {
+      switch (op) {
+      case PSAdd:
+         d = static_cast<float>(a + b);
+         break;
+      case PSSub:
+         d = static_cast<float>(a - b);
+         break;
+      case PSMul:
+         d = static_cast<float>(a * b);
+         break;
+      case PSDiv:
+         d = static_cast<float>(a / b);
+         break;
+      }
+   }
+
+   *result = d;
+   return true;
+}
+
+template<PSArithOperator op, int slotB0, int slotB1>
+static void
+psArithGeneric(ThreadState *state, Instruction instr)
+{
    const uint32_t oldFPSCR = state->fpscr.value;
 
-   state->fpscr.vxisi |=
-         (is_infinity(a0) && is_infinity(b0))
-      || (is_infinity(a1) && is_infinity(b1));
+   float d0, d1;
+   const bool wrote0 = psArithSingle<op, 0, slotB0>(state, instr, &d0);
+   const bool wrote1 = psArithSingle<op, 1, slotB1>(state, instr, &d1);
+   if (wrote0 && wrote1) {
+      state->fpr[instr.frD].paired0 = extend_float(d0);
+      state->fpr[instr.frD].paired1 = d1;
+   }
 
-   state->fpscr.vxsnan |=
-         is_signalling_nan(a0) || is_signalling_nan(a1)
-      || is_signalling_nan(b0) || is_signalling_nan(b1);
-
-   d1 = a1 + b1;
-   d0 = a0 + b0;
+   if (wrote0) {
+      updateFPRF(state, extend_float(d0));
+   }
    updateFPSCR(state, oldFPSCR);
-   updateFPRF(state, d0);
-
-   state->fpr[instr.frD].paired0 = d0;
-   state->fpr[instr.frD].paired1 = d1;
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
 }
 
+// Add
+static void
+ps_add(ThreadState *state, Instruction instr)
+{
+   return psArithGeneric<PSAdd, 0, 1>(state, instr);
+}
+
+// Subtract
+static void
+ps_sub(ThreadState *state, Instruction instr)
+{
+   return psArithGeneric<PSSub, 0, 1>(state, instr);
+}
+
+// Multiply
+static void
+ps_mul(ThreadState *state, Instruction instr)
+{
+   return psArithGeneric<PSMul, 0, 1>(state, instr);
+}
+
+static void
+ps_muls0(ThreadState *state, Instruction instr)
+{
+   return psArithGeneric<PSMul, 0, 0>(state, instr);
+}
+
+static void
+ps_muls1(ThreadState *state, Instruction instr)
+{
+   return psArithGeneric<PSMul, 1, 1>(state, instr);
+}
+
 // Divide
 static void
 ps_div(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, d0, d1;
-
-   a0 = state->fpr[instr.frA].paired0;
-   a1 = state->fpr[instr.frA].paired1;
-
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-
-   state->fpscr.vxidi |=
-         (is_infinity(a0) && is_infinity(b0))
-      || (is_infinity(a1) && is_infinity(b1));
-
-   state->fpscr.vxzdz |=
-         (is_zero(a0) && is_zero(b0))
-      || (is_zero(a1) && is_zero(b1));
-
-   state->fpscr.vxsnan |=
-         is_signalling_nan(a0) || is_signalling_nan(a1)
-      || is_signalling_nan(b0) || is_signalling_nan(b1);
-
-   d1 = a1 / b1;
-   d0 = a0 / b0;
-   updateFPSCR(state, oldFPSCR);
-   updateFPRF(state, d0);
-
-   state->fpr[instr.frD].paired0 = d0;
-   state->fpr[instr.frD].paired1 = d1;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
+   return psArithGeneric<PSDiv, 0, 1>(state, instr);
 }
 
 // Multiply and Add
@@ -283,7 +373,7 @@ mergeGeneric(ThreadState *state, Instruction instr)
       d1 = truncate_double(state->fpr[instr.frB].paired0);
    }
 
-   state->fpr[instr.frD].paired0 = d0;
+   state->fpr[instr.frD].paired0 = extend_float(d0);
    state->fpr[instr.frD].paired1 = d1;
 
    if (instr.rc) {
@@ -384,77 +474,6 @@ ps_nmsub(ThreadState *state, Instruction instr)
    return msubGeneric<MsubNegate>(state, instr);
 }
 
-// Multiply
-enum MultiplyFlags
-{
-   MultiplyPaired    = 1 << 0,
-   MultiplyScalar0   = 1 << 1,
-   MultiplyScalar1   = 1 << 2
-};
-
-template<unsigned flags>
-static void
-mulGeneric(ThreadState *state, Instruction instr)
-{
-   float a0, a1, c0, c1, d0, d1;
-
-   a0 = state->fpr[instr.frA].paired0;
-   a1 = state->fpr[instr.frA].paired1;
-
-   if (flags & MultiplyPaired) {
-      c0 = state->fpr[instr.frC].paired0;
-      c1 = state->fpr[instr.frC].paired1;
-   } else if (flags & MultiplyScalar0) {
-      c0 = state->fpr[instr.frC].paired0;
-      c1 = state->fpr[instr.frC].paired0;
-   } else if (flags & MultiplyScalar1) {
-      c0 = state->fpr[instr.frC].paired1;
-      c1 = state->fpr[instr.frC].paired1;
-   }
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-
-   state->fpscr.vximz |=
-         (is_infinity(a0) && is_zero(c0))
-      || (is_infinity(a1) && is_zero(c1))
-      || (is_zero(a0) && is_infinity(c0))
-      || (is_zero(a1) && is_infinity(c1));
-
-   state->fpscr.vxsnan |=
-         is_signalling_nan(a0) || is_signalling_nan(a1)
-      || is_signalling_nan(c0) || is_signalling_nan(c1);
-
-   d1 = a1 * c1;
-   d0 = a0 * c0;
-   updateFPSCR(state, oldFPSCR);
-   updateFPRF(state, d0);
-
-   state->fpr[instr.frD].paired0 = d0;
-   state->fpr[instr.frD].paired1 = d1;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
-}
-
-static void
-ps_mul(ThreadState *state, Instruction instr)
-{
-   return mulGeneric<MultiplyPaired>(state, instr);
-}
-
-static void
-ps_muls0(ThreadState *state, Instruction instr)
-{
-   return mulGeneric<MultiplyScalar0>(state, instr);
-}
-
-static void
-ps_muls1(ThreadState *state, Instruction instr)
-{
-   return mulGeneric<MultiplyScalar1>(state, instr);
-}
-
 // Reciprocal
 static void
 ps_res(ThreadState *state, Instruction instr)
@@ -532,41 +551,6 @@ ps_sel(ThreadState *state, Instruction instr)
 
    d1 = (a1 >= 0) ? c1 : b1;
    d0 = (a0 >= 0) ? c0 : b0;
-
-   state->fpr[instr.frD].paired0 = d0;
-   state->fpr[instr.frD].paired1 = d1;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
-}
-
-// Subtract
-static void
-ps_sub(ThreadState *state, Instruction instr)
-{
-   float a0, a1, b0, b1, d0, d1;
-
-   a0 = state->fpr[instr.frA].paired0;
-   a1 = state->fpr[instr.frA].paired1;
-
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-
-   state->fpscr.vxisi |=
-         (is_infinity(a0) && is_infinity(b0))
-      || (is_infinity(a1) && is_infinity(b1));
-
-   state->fpscr.vxsnan |=
-         is_signalling_nan(a0) || is_signalling_nan(a1)
-      || is_signalling_nan(b0) || is_signalling_nan(b1);
-
-   d1 = a1 - b1;
-   d0 = a0 - b0;
-   updateFPSCR(state, oldFPSCR);
-   updateFPRF(state, d0);
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
