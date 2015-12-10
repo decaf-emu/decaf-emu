@@ -415,12 +415,13 @@ fsel(ThreadState *state, Instruction instr)
 }
 
 // Fused multiply-add instructions
-enum LoadFlags
+enum FMAFlags
 {
    FMASubtract   = 1 << 0, // Subtract instead of add
    FMANegate     = 1 << 1, // Negate result
    FMASinglePrec = 1 << 2, // Round result to single precision
 };
+
 template<unsigned flags>
 static void
 fmaGeneric(ThreadState *state, Instruction instr)
