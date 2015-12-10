@@ -659,7 +659,6 @@ stswx(ThreadState *state, Instruction instr)
    stswGeneric<StswIndexed>(state, instr);
 }
 
-#include<cstdio>
 template<typename Type>
 static Type
 dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
