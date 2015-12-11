@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cfenv>
 #include "cpu/cpu.h"
 #include "cpu/state.h"
 #include "debugcontrol.h"
@@ -85,6 +86,7 @@ Processor::fiberEntryPoint(Fiber *fiber)
    }
 
    cpu::setRoundingMode(&fiber->state);
+   std::feclearexcept(FE_ALL_EXCEPT);
    cpu::executeSub(&core->state, &fiber->state);
    OSExitThread(ppctypes::getResult<int>(&fiber->state));
 }
