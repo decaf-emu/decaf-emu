@@ -251,6 +251,59 @@ ps_div(ThreadState *state, Instruction instr)
    return psArithGeneric<PSDiv, 0, 1>(state, instr);
 }
 
+template<int slot>
+static void
+psSumGeneric(ThreadState *state, Instruction instr)
+{
+   const uint32_t oldFPSCR = state->fpscr.value;
+
+   float d;
+   if (psArithSingle<PSAdd, 0, 1>(state, instr, &d)) {
+      updateFPRF(state, extend_float(d));
+      if (slot == 0) {
+          state->fpr[instr.frD].paired0 = extend_float(d);
+          state->fpr[instr.frD].iw_paired1 = state->fpr[instr.frC].iw_paired1;
+      } else {
+          float ps0;
+          if (is_nan(state->fpr[instr.frC].paired0)) {
+             ps0 = truncate_double(state->fpr[instr.frC].paired0);
+          } else {
+             const bool inexact = std::fetestexcept(FE_INEXACT);
+             const bool overflow = std::fetestexcept(FE_OVERFLOW);
+             ps0 = static_cast<float>(state->fpr[instr.frC].paired0);
+             if (!inexact) {
+                 std::feclearexcept(FE_INEXACT);
+             }
+             if (!overflow) {
+                 std::feclearexcept(FE_OVERFLOW);
+             }
+          }
+          state->fpr[instr.frD].paired0 = extend_float(ps0);
+          state->fpr[instr.frD].paired1 = d;
+      }
+   }
+
+   updateFPSCR(state, oldFPSCR);
+
+   if (instr.rc) {
+      updateFloatConditionRegister(state);
+   }
+}
+
+// Sum High
+static void
+ps_sum0(ThreadState *state, Instruction instr)
+{
+   return psSumGeneric<0>(state, instr);
+}
+
+// Sum Low
+static void
+ps_sum1(ThreadState *state, Instruction instr)
+{
+   return psSumGeneric<1>(state, instr);
+}
+
 // Fused multiply-add instructions
 enum FMAFlags
 {
@@ -569,69 +622,6 @@ ps_sel(ThreadState *state, Instruction instr)
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
-}
-
-// Sum
-enum SumFlags
-{
-   Sum0  = 1 << 0,
-   Sum1  = 1 << 1
-};
-
-template<unsigned flags = 0>
-static void
-sumGeneric(ThreadState *state, Instruction instr)
-{
-   float a0, b0, b1, c0, c1, d0, d1;
-
-   a0 = state->fpr[instr.frA].paired0;
-
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
-
-   c0 = state->fpr[instr.frC].paired0;
-   c1 = state->fpr[instr.frC].paired1;
-
-   const uint32_t oldFPSCR = state->fpscr.value;
-
-   state->fpscr.vxisi |=
-      (is_infinity(a0) && is_infinity(b1));
-
-   state->fpscr.vxsnan |=
-         is_signalling_nan(a0)
-      || is_signalling_nan(b1)
-      || is_signalling_nan(c0)
-      || is_signalling_nan(c1);
-
-   if (flags & Sum0) {
-      d0 = a0 + b1;
-      d1 = c1;
-   } else if (flags & Sum1) {
-      d0 = c0;
-      d1 = a0 + b1;
-   }
-
-   updateFPSCR(state, oldFPSCR);
-   updateFPRF(state, d0);
-
-   state->fpr[instr.frD].paired0 = d0;
-   state->fpr[instr.frD].paired1 = d1;
-
-   if (instr.rc) {
-      updateFloatConditionRegister(state);
-   }
-}
-
-static void
-ps_sum0(ThreadState *state, Instruction instr)
-{
-   return sumGeneric<Sum0>(state, instr);
-}
-
-static void
-ps_sum1(ThreadState *state, Instruction instr)
-{
-   return sumGeneric<Sum1>(state, instr);
 }
 
 void
