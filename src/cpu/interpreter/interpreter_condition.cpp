@@ -1,5 +1,4 @@
 #include <utility>
-#include <cassert>
 #include <cfenv>
 #include "interpreter_float.h"
 #include "interpreter_insreg.h"
@@ -116,19 +115,17 @@ enum FCmpFlags
    FCmpPS1        = 1 << 2,
 };
 
-template<typename Type, unsigned flags>
+template<unsigned flags>
 static void
 fcmpGeneric(ThreadState *state, Instruction instr)
 {
-   Type a, b;
+   double a, b;
    uint32_t c;
 
    if (flags & FCmpPS1) {
-      assert((std::is_same<Type, float>::value));
       a = state->fpr[instr.frA].paired1;
       b = state->fpr[instr.frB].paired1;
    } else {
-      assert((std::is_same<Type, double>::value));
       a = state->fpr[instr.frA].value;
       b = state->fpr[instr.frB].value;
    }
@@ -158,37 +155,37 @@ fcmpGeneric(ThreadState *state, Instruction instr)
 static void
 fcmpo(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<double, FCmpOrdered>(state, instr);
+   return fcmpGeneric<FCmpOrdered>(state, instr);
 }
 
 static void
 fcmpu(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<double, FCmpUnordered>(state, instr);
+   return fcmpGeneric<FCmpUnordered>(state, instr);
 }
 
 static void
 ps_cmpo0(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<double, FCmpOrdered>(state, instr);
+   return fcmpGeneric<FCmpOrdered>(state, instr);
 }
 
 static void
 ps_cmpo1(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<float, FCmpOrdered | FCmpPS1>(state, instr);
+   return fcmpGeneric<FCmpOrdered | FCmpPS1>(state, instr);
 }
 
 static void
 ps_cmpu0(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<double, FCmpUnordered>(state, instr);
+   return fcmpGeneric<FCmpUnordered>(state, instr);
 }
 
 static void
 ps_cmpu1(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<float, FCmpUnordered | FCmpPS1>(state, instr);
+   return fcmpGeneric<FCmpUnordered | FCmpPS1>(state, instr);
 }
 
 // Condition Register AND

@@ -14,16 +14,16 @@ struct fpr_t
       };
       struct {
          double paired0;  // Retains precision of a loaded double value.
-         float paired1;
+         double paired1;
       };
       struct {
          uint64_t idw;
+         uint64_t idw_paired1;
       };
       struct
       {
          uint32_t iw1;
          uint32_t iw0;
-         uint32_t iw_paired1;
       };
    };
 };

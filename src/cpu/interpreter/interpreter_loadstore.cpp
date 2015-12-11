@@ -53,7 +53,7 @@ loadFloat(ThreadState *state, Instruction instr)
 
    const float f = mem::read<float>(ea);
    state->fpr[instr.rD].paired0 = convertFloatToDouble(f);
-   state->fpr[instr.rD].paired1 = f;
+   state->fpr[instr.rD].paired1 = convertFloatToDouble(f);
 
    if (flags & LoadUpdate) {
       state->gpr[instr.rA] = ea;
@@ -659,33 +659,28 @@ stswx(ThreadState *state, Instruction instr)
    stswGeneric<StswIndexed>(state, instr);
 }
 
-template<typename Type>
-static Type
+static double
 dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
 {
    int exp = static_cast<int>(scale);
    exp -= (exp & 32) << 1;  // Sign extend.
-   Type result;
+   double result;
 
    switch (type) {
    case QuantizedDataType::Floating:
-      if (std::is_same<Type, float>::value) {
-         result = mem::read<float>(ea);
-      } else {
-         result = loadFloatAsDouble(ea);
-      }
+      result = loadFloatAsDouble(ea);
       break;
    case QuantizedDataType::Unsigned8:
-      result = std::ldexp(static_cast<Type>(mem::read<uint8_t>(ea)), -exp);
+      result = std::ldexp(static_cast<double>(mem::read<uint8_t>(ea)), -exp);
       break;
    case QuantizedDataType::Unsigned16:
-      result = std::ldexp(static_cast<Type>(mem::read<uint16_t>(ea)), -exp);
+      result = std::ldexp(static_cast<double>(mem::read<uint16_t>(ea)), -exp);
       break;
    case QuantizedDataType::Signed8:
-      result = std::ldexp(static_cast<Type>(mem::read<int8_t>(ea)), -exp);
+      result = std::ldexp(static_cast<double>(mem::read<int8_t>(ea)), -exp);
       break;
    case QuantizedDataType::Signed16:
-      result = std::ldexp(static_cast<Type>(mem::read<int16_t>(ea)), -exp);
+      result = std::ldexp(static_cast<double>(mem::read<int16_t>(ea)), -exp);
       break;
    default:
       assert(!"Unknown QuantizedDataType");
@@ -703,28 +698,19 @@ clamp(double value)
    return static_cast<Type>(std::max(min, std::min(value, max)));
 }
 
-template<typename Type>
 static void
-quantize(uint32_t ea, Type value, QuantizedDataType type, uint32_t scale)
+quantize(uint32_t ea, double value, QuantizedDataType type, uint32_t scale)
 {
    int exp = static_cast<int>(scale);
    exp -= (exp & 32) << 1;  // Sign extend.
 
    switch (type) {
    case QuantizedDataType::Floating:
-      if (std::is_same<Type, float>::value) {
-         if (std::fpclassify(value) == FP_SUBNORMAL) {
-            mem::write(ea, 0.0f);
-         } else {
-            mem::write(ea, value);
-         }
+      if (get_float_bits(value).exponent <= 896) {
+         // Make sure to write a zero with the correct sign!
+         mem::write(ea, bit_cast<float>(static_cast<uint32_t>(std::signbit(value)) << 31));
       } else {
-         if (get_float_bits(value).exponent <= 896) {
-            // Make sure to write a zero with the correct sign!
-            mem::write(ea, bit_cast<float>(static_cast<uint32_t>(std::signbit(value)) << 31));
-         } else {
-            storeDoubleAsFloat(ea, value);
-         }
+         storeDoubleAsFloat(ea, value);
       }
       break;
    case QuantizedDataType::Unsigned8:
@@ -806,11 +792,11 @@ psqLoad(ThreadState *state, Instruction instr)
    }
 
    if (w == 0) {
-      state->fpr[instr.frD].paired0 = dequantize<double>(ea, lt, ls);
-      state->fpr[instr.frD].paired1 = dequantize<float>(ea + c, lt, ls);
+      state->fpr[instr.frD].paired0 = dequantize(ea, lt, ls);
+      state->fpr[instr.frD].paired1 = dequantize(ea + c, lt, ls);
    } else {
-      state->fpr[instr.frD].paired0 = dequantize<double>(ea, lt, ls);
-      state->fpr[instr.frD].paired1 = 1.0f;
+      state->fpr[instr.frD].paired0 = dequantize(ea, lt, ls);
+      state->fpr[instr.frD].paired1 = 1.0;
    }
 
    if (flags & PsqLoadUpdate) {
@@ -888,10 +874,10 @@ psqStore(ThreadState *state, Instruction instr)
    }
 
    if (w == 0) {
-      quantize<double>(ea, state->fpr[instr.frS].paired0, stt, sts);
-      quantize<float>(ea + c, state->fpr[instr.frS].paired1, stt, sts);
+      quantize(ea, state->fpr[instr.frS].paired0, stt, sts);
+      quantize(ea + c, state->fpr[instr.frS].paired1, stt, sts);
    } else {
-      quantize<double>(ea, state->fpr[instr.frS].paired0, stt, sts);
+      quantize(ea, state->fpr[instr.frS].paired0, stt, sts);
    }
 
    if (flags & PsqStoreUpdate) {

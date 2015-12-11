@@ -253,8 +253,8 @@ fpArithGeneric(ThreadState *state, Instruction instr)
          }
       }
       if (std::is_same<Type, float>::value) {
-         state->fpr[instr.frD].paired0 = d;
-         state->fpr[instr.frD].paired1 = d;
+         state->fpr[instr.frD].paired0 = extend_float(d);
+         state->fpr[instr.frD].paired1 = extend_float(d);
       } else {
          state->fpr[instr.frD].value = d;
       }
@@ -460,8 +460,8 @@ fmaGeneric(ThreadState *state, Instruction instr)
          }
       }
       if (flags & FMASinglePrec) {
-         state->fpr[instr.frD].paired0 = static_cast<float>(d);
-         state->fpr[instr.frD].paired1 = static_cast<float>(d);
+         state->fpr[instr.frD].paired0 = extend_float(d);
+         state->fpr[instr.frD].paired1 = extend_float(d);
       } else {
          state->fpr[instr.frD].value = d;
       }

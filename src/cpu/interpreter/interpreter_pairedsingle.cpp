@@ -19,6 +19,7 @@ moveGeneric(ThreadState *state, Instruction instr)
 {
    uint32_t b0, b1, d0, d1;
    const bool ps0_nan = is_signalling_nan(state->fpr[instr.frB].paired0);
+   const bool ps1_nan = is_signalling_nan(state->fpr[instr.frB].paired1);
    if (!ps0_nan) {
       // We have to round this if it has excess precision, so we can't just
       // chop off the trailing bits.
@@ -26,7 +27,7 @@ moveGeneric(ThreadState *state, Instruction instr)
    } else {
       b0 = truncate_double_bits(state->fpr[instr.frB].idw);
    }
-   b1 = state->fpr[instr.frB].iw_paired1;
+   b1 = truncate_double_bits(state->fpr[instr.frB].idw_paired1);
 
    switch (mode) {
    case MoveDirect:
@@ -52,7 +53,11 @@ moveGeneric(ThreadState *state, Instruction instr)
    } else {
       state->fpr[instr.frD].idw = extend_float_nan_bits(d0);
    }
-   state->fpr[instr.frD].iw_paired1 = d1;
+   if (!ps1_nan) {
+      state->fpr[instr.frD].paired1 = static_cast<double>(bit_cast<float>(d1));
+   } else {
+      state->fpr[instr.frD].idw_paired1 = extend_float_nan_bits(d1);
+   }
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -105,12 +110,12 @@ psArithSingle(ThreadState *state, Instruction instr, float *result)
    if (slotA == 0) {
       a = state->fpr[instr.frA].paired0;
    } else {
-      a = extend_float(state->fpr[instr.frA].paired1);
+      a = state->fpr[instr.frA].paired1;
    }
    if (slotB == 0) {
       b = state->fpr[op == PSMul ? instr.frC : instr.frB].paired0;
    } else {
-      b = extend_float(state->fpr[op == PSMul ? instr.frC : instr.frB].paired1);
+      b = state->fpr[op == PSMul ? instr.frC : instr.frB].paired1;
    }
 
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
@@ -198,7 +203,7 @@ psArithGeneric(ThreadState *state, Instruction instr)
    const bool wrote1 = psArithSingle<op, 1, slotB1>(state, instr, &d1);
    if (wrote0 && wrote1) {
       state->fpr[instr.frD].paired0 = extend_float(d0);
-      state->fpr[instr.frD].paired1 = d1;
+      state->fpr[instr.frD].paired1 = extend_float(d1);
    }
 
    if (wrote0) {
@@ -262,7 +267,7 @@ psSumGeneric(ThreadState *state, Instruction instr)
       updateFPRF(state, extend_float(d));
       if (slot == 0) {
           state->fpr[instr.frD].paired0 = extend_float(d);
-          state->fpr[instr.frD].iw_paired1 = state->fpr[instr.frC].iw_paired1;
+          state->fpr[instr.frD].idw_paired1 = state->fpr[instr.frC].idw_paired1;
       } else {
           float ps0;
           if (is_nan(state->fpr[instr.frC].paired0)) {
@@ -279,7 +284,7 @@ psSumGeneric(ThreadState *state, Instruction instr)
              }
           }
           state->fpr[instr.frD].paired0 = extend_float(ps0);
-          state->fpr[instr.frD].paired1 = d;
+          state->fpr[instr.frD].paired1 = extend_float(d);
       }
    }
 
@@ -322,13 +327,13 @@ fmaSingle(ThreadState *state, Instruction instr, float *result)
       a = state->fpr[instr.frA].paired0;
       b = state->fpr[instr.frB].paired0;
    } else {
-      a = extend_float(state->fpr[instr.frA].paired1);
-      b = extend_float(state->fpr[instr.frB].paired1);
+      a = state->fpr[instr.frA].paired1;
+      b = state->fpr[instr.frB].paired1;
    }
    if (slotC == 0) {
       c = state->fpr[instr.frC].paired0;
    } else {
-      c = extend_float(state->fpr[instr.frC].paired1);
+      c = state->fpr[instr.frC].paired1;
    }
    const double addend = (flags & FMASubtract) ? -b : b;
 
@@ -377,7 +382,7 @@ fmaGeneric(ThreadState *state, Instruction instr)
    const bool wrote1 = fmaSingle<flags, 1, slotC1>(state, instr, &d1);
    if (wrote0 && wrote1) {
       state->fpr[instr.frD].paired0 = extend_float(d0);
-      state->fpr[instr.frD].paired1 = d1;
+      state->fpr[instr.frD].paired1 = extend_float(d1);
    }
 
    if (wrote0) {
@@ -440,7 +445,11 @@ mergeGeneric(ThreadState *state, Instruction instr)
    float d0, d1;
 
    if (flags & MergeValue0) {
-      d0 = state->fpr[instr.frA].paired1;
+      if (!is_signalling_nan(state->fpr[instr.frA].paired1)) {
+         d0 = static_cast<float>(state->fpr[instr.frA].paired1);
+      } else {
+         d0 = truncate_double(state->fpr[instr.frA].paired1);
+      }
    } else {
       if (!is_signalling_nan(state->fpr[instr.frA].paired0)) {
          d0 = static_cast<float>(state->fpr[instr.frA].paired0);
@@ -449,16 +458,16 @@ mergeGeneric(ThreadState *state, Instruction instr)
       }
    }
 
+   // When inserting a double-precision value into slot 1, the mantissa
+   // is truncated rather than rounded.
    if (flags & MergeValue1) {
-      d1 = state->fpr[instr.frB].paired1;
+      d1 = truncate_double(state->fpr[instr.frB].paired1);
    } else {
-      // When inserting a double-precision value into slot 1, the mantissa
-      // is truncated rather than rounded.
       d1 = truncate_double(state->fpr[instr.frB].paired0);
    }
 
    state->fpr[instr.frD].paired0 = extend_float(d0);
-   state->fpr[instr.frD].paired1 = d1;
+   state->fpr[instr.frD].paired1 = extend_float(d1);
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -494,7 +503,7 @@ static void
 ps_res(ThreadState *state, Instruction instr)
 {
    const double b0 = state->fpr[instr.frB].paired0;
-   const double b1 = extend_float(state->fpr[instr.frB].paired1);
+   const double b1 = state->fpr[instr.frB].paired1;
 
    const bool vxsnan0 = is_signalling_nan(b0);
    const bool vxsnan1 = is_signalling_nan(b1);
@@ -533,7 +542,7 @@ ps_res(ThreadState *state, Instruction instr)
 
    if (write) {
       state->fpr[instr.frD].paired0 = extend_float(d0);
-      state->fpr[instr.frD].paired1 = d1;
+      state->fpr[instr.frD].paired1 = extend_float(d1);
    }
 
    updateFPSCR(state, oldFPSCR);
@@ -547,7 +556,7 @@ static void
 ps_rsqrte(ThreadState *state, Instruction instr)
 {
    const double b0 = state->fpr[instr.frB].paired0;
-   const double b1 = extend_float(state->fpr[instr.frB].paired1);
+   const double b1 = state->fpr[instr.frB].paired1;
 
    const bool vxsnan0 = is_signalling_nan(b0);
    const bool vxsnan1 = is_signalling_nan(b1);
@@ -589,7 +598,7 @@ ps_rsqrte(ThreadState *state, Instruction instr)
 
    if (write) {
       state->fpr[instr.frD].paired0 = extend_float(d0);
-      state->fpr[instr.frD].paired1 = d1;
+      state->fpr[instr.frD].paired1 = extend_float(d1);
    }
 
    updateFPSCR(state, oldFPSCR);
