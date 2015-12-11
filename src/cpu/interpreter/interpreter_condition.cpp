@@ -1,4 +1,5 @@
 #include <utility>
+#include <cassert>
 #include <cfenv>
 #include "interpreter_float.h"
 #include "interpreter_insreg.h"
@@ -112,8 +113,7 @@ enum FCmpFlags
 {
    FCmpOrdered    = 1 << 0,
    FCmpUnordered  = 1 << 1,
-   FCmpSingle0    = 1 << 2,
-   FCmpSingle1    = 1 << 3,
+   FCmpPS1        = 1 << 2,
 };
 
 template<typename Type, unsigned flags>
@@ -123,43 +123,36 @@ fcmpGeneric(ThreadState *state, Instruction instr)
    Type a, b;
    uint32_t c;
 
-   if (flags & FCmpSingle0) {
-      a = static_cast<Type>(state->fpr[instr.frA].paired0);
-      b = static_cast<Type>(state->fpr[instr.frB].paired0);
-   } else if (flags & FCmpSingle1) {
-      a = static_cast<Type>(state->fpr[instr.frA].paired1);
-      b = static_cast<Type>(state->fpr[instr.frB].paired1);
+   if (flags & FCmpPS1) {
+      assert((std::is_same<Type, float>::value));
+      a = state->fpr[instr.frA].paired1;
+      b = state->fpr[instr.frB].paired1;
    } else {
-      a = static_cast<Type>(state->fpr[instr.frA].value);
-      b = static_cast<Type>(state->fpr[instr.frB].value);
+      assert((std::is_same<Type, double>::value));
+      a = state->fpr[instr.frA].value;
+      b = state->fpr[instr.frB].value;
    }
 
    const uint32_t oldFPSCR = state->fpscr.value;
 
-   if (a < b) {
+   if (is_nan(a) || is_nan(b)) {
+      c = ConditionRegisterFlag::Unordered;
+      const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
+      state->fpscr.vxsnan |= vxsnan;
+      if ((flags & FCmpOrdered) && !(vxsnan && state->fpscr.ve)) {
+         state->fpscr.vxvc = 1;
+      }
+   } else if (a < b) {
       c = ConditionRegisterFlag::LessThan;
    } else if (a > b) {
       c = ConditionRegisterFlag::GreaterThan;
-   } else if (a == b) {
+   } else {  // a == b
       c = ConditionRegisterFlag::Equal;
-   } else {
-      c = ConditionRegisterFlag::Unordered;
-
-      if (is_signalling_nan(a) || is_signalling_nan(b)) {
-         state->fpscr.vxsnan = 1;
-
-         if ((flags & FCmpOrdered) && !state->fpscr.ve) {
-            state->fpscr.vxvc = 1;
-         }
-      } else if ((flags & FCmpOrdered)) {
-         state->fpscr.vxvc = 1;
-      }
    }
 
    setCRF(state, instr.crfD, c);
    state->fpscr.fpcc = c;
    updateFX_FEX_VX(state, oldFPSCR);
-   std::feclearexcept(FE_ALL_EXCEPT);
 }
 
 static void
@@ -177,25 +170,25 @@ fcmpu(ThreadState *state, Instruction instr)
 static void
 ps_cmpo0(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<float, FCmpOrdered | FCmpSingle0>(state, instr);
+   return fcmpGeneric<double, FCmpOrdered>(state, instr);
 }
 
 static void
 ps_cmpo1(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<float, FCmpOrdered | FCmpSingle1>(state, instr);
+   return fcmpGeneric<float, FCmpOrdered | FCmpPS1>(state, instr);
 }
 
 static void
 ps_cmpu0(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<float, FCmpUnordered | FCmpSingle0>(state, instr);
+   return fcmpGeneric<double, FCmpUnordered>(state, instr);
 }
 
 static void
 ps_cmpu1(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<float, FCmpUnordered | FCmpSingle1>(state, instr);
+   return fcmpGeneric<float, FCmpUnordered | FCmpPS1>(state, instr);
 }
 
 // Condition Register AND
