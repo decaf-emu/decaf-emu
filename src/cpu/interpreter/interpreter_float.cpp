@@ -178,11 +178,13 @@ fpArithGeneric(ThreadState *state, Instruction instr)
 {
    double a, b;
    Type d;
+
    a = state->fpr[instr.frA].value;
    b = state->fpr[op == FPMul ? instr.frC : instr.frB].value;
 
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
    bool vxisi, vximz, vxidi, vxzdz, zx;
+
    switch (op) {
    case FPAdd:
       vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) != std::signbit(b);
@@ -228,11 +230,11 @@ fpArithGeneric(ThreadState *state, Instruction instr)
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
       if (is_nan(a)) {
-         d = make_quiet(a);
+         d = static_cast<Type>(make_quiet(a));
       } else if (is_nan(b)) {
-         d = make_quiet(b);
+         d = static_cast<Type>(make_quiet(b));
       } else if (vxisi || vximz || vxidi || vxzdz) {
-         d = make_nan<double>();
+         d = make_nan<Type>();
       } else {
          // The Espresso appears to use double precision arithmetic even for
          // single-precision instructions (for example, 2^128 * 0.5 does not
@@ -252,12 +254,14 @@ fpArithGeneric(ThreadState *state, Instruction instr)
             break;
          }
       }
+
       if (std::is_same<Type, float>::value) {
          state->fpr[instr.frD].paired0 = extend_float(d);
          state->fpr[instr.frD].paired1 = extend_float(d);
       } else {
          state->fpr[instr.frD].value = d;
       }
+
       updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
    }
@@ -430,6 +434,7 @@ fmaGeneric(ThreadState *state, Instruction instr)
    a = state->fpr[instr.frA].value;
    b = state->fpr[instr.frB].value;
    c = state->fpr[instr.frC].value;
+
    const double addend = (flags & FMASubtract) ? -b : b;
 
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
@@ -455,16 +460,19 @@ fmaGeneric(ThreadState *state, Instruction instr)
          d = make_nan<double>();
       } else {
          d = std::fma(a, c, addend);
+
          if (flags & FMANegate) {
             d = -d;
          }
       }
+
       if (flags & FMASinglePrec) {
          state->fpr[instr.frD].paired0 = extend_float(d);
          state->fpr[instr.frD].paired1 = extend_float(d);
       } else {
          state->fpr[instr.frD].value = d;
       }
+
       updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
    }
