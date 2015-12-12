@@ -261,28 +261,34 @@ static void
 psSumGeneric(ThreadState *state, Instruction instr)
 {
    const uint32_t oldFPSCR = state->fpscr.value;
-
    float d;
+
    if (psArithSingle<PSAdd, 0, 1>(state, instr, &d)) {
       updateFPRF(state, extend_float(d));
+
       if (slot == 0) {
           state->fpr[instr.frD].paired0 = extend_float(d);
           state->fpr[instr.frD].idw_paired1 = state->fpr[instr.frC].idw_paired1;
       } else {
           float ps0;
+
           if (is_nan(state->fpr[instr.frC].paired0)) {
              ps0 = truncate_double(state->fpr[instr.frC].paired0);
           } else {
-             const bool inexact = std::fetestexcept(FE_INEXACT);
-             const bool overflow = std::fetestexcept(FE_OVERFLOW);
+             const auto inexact = !!std::fetestexcept(FE_INEXACT);
+             const auto overflow = !!std::fetestexcept(FE_OVERFLOW);
+
              ps0 = static_cast<float>(state->fpr[instr.frC].paired0);
+
              if (!inexact) {
                  std::feclearexcept(FE_INEXACT);
              }
+
              if (!overflow) {
                  std::feclearexcept(FE_OVERFLOW);
              }
           }
+
           state->fpr[instr.frD].paired0 = extend_float(ps0);
           state->fpr[instr.frD].paired1 = extend_float(d);
       }
