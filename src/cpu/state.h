@@ -10,27 +10,21 @@ struct fpr_t
 {
    union {
       struct {
-         double paired0;
+         double value;
+      };
+      struct {
+         double paired0;  // Retains precision of a loaded double value.
          double paired1;
       };
       struct {
          uint64_t idw;
-         uint64_t idw1;
+         uint64_t idw_paired1;
       };
       struct
       {
-         uint32_t iw0;
          uint32_t iw1;
-         uint32_t iw2;
-         uint32_t iw3;
+         uint32_t iw0;
       };
-      struct {
-         uint64_t value0;
-         uint64_t value1;
-      };
-      struct {
-         uint64_t data[2];
-      } value;
    };
 };
 
@@ -112,7 +106,7 @@ union xer_t
    struct
    {
       uint32_t : 28;
-      uint32_t crxr; // [0-3] condition stuff in xer
+      uint32_t crxr : 4; // [0-3] condition stuff in xer
    };
 };
 
@@ -167,8 +161,8 @@ namespace FloatingPointRoundMode
 enum FloatingPointRoundMode : uint32_t
 {
    Nearest = 0,
-   Positive = 1,
-   Zero = 2,
+   Zero = 1,
+   Positive = 2,
    Negative = 3
 };
 }
@@ -176,17 +170,42 @@ enum FloatingPointRoundMode : uint32_t
 namespace FPSCRRegisterBits
 {
 enum FPSCRRegisterBits : uint32_t {
+   FXShift = 31,
+   FEXShift = 30,
+   VXShift = 29,
+   OXShift = 28,
+   UXShift = 27,
+   ZXShift = 26,
+   XXShift = 25,
    VXSNANShift = 24,
    VXISIShift = 23,
    VXIDIShift = 22,
    VXZDZShift = 21,
    VXIMZShift = 20,
+   VXVCShift = 19,
+   VXSOFTShift = 10,
+   VXSQRTShift = 9,
+   VXCVIShift = 8,
 
+   FX = 1u << FXShift,
+   FEX = 1u << FXShift,
+   VX = 1u << FXShift,
+   OX = 1u << OXShift,
+   UX = 1u << UXShift,
+   ZX = 1u << ZXShift,
+   XX = 1u << XXShift,
    VXSNAN = 1u << VXSNANShift,
    VXISI = 1u << VXISIShift,
    VXIDI = 1u << VXIDIShift,
    VXZDZ = 1u << VXZDZShift,
    VXIMZ = 1u << VXIMZShift,
+   VXVC = 1u << VXVCShift,
+   VXSOFT = 1u << VXSOFTShift,
+   VXSQRT = 1u << VXSQRTShift,
+   VXCVI = 1u << VXCVIShift,
+
+   AllVX = VXSNAN | VXISI | VXIDI | VXZDZ | VXIMZ | VXVC | VXSOFT | VXSQRT | VXCVI,
+   AllExceptions = OX | UX | ZX | XX | AllVX,
 };
 }
 
@@ -197,7 +216,9 @@ union fpscr_t
 
    struct
    {
-      uint32_t : 28;
+      uint32_t : 12;
+      uint32_t fpcc : 4;
+      uint32_t : 12;
       uint32_t cr1 : 4;
    };
 

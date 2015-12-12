@@ -244,8 +244,7 @@ saveStateField(const ThreadState *state, TraceFieldType type, TraceFieldValue &f
    if (type >= StateField::GPR0 && type <= StateField::GPR31) {
       field.u32v0 = state->gpr[type - StateField::GPR];
    } else if (type >= StateField::FPR0 && type <= StateField::FPR31) {
-      field.u64v0 = state->fpr[type - StateField::FPR].value0;
-      field.u64v1 = state->fpr[type - StateField::FPR].value1;
+      field.u64v0 = state->fpr[type - StateField::FPR].idw;
    } else if (type >= StateField::GQR0 && type <= StateField::GQR7) {
       field.u32v0 = state->gqr[type - StateField::GQR].value;
    } else if (type == StateField::CR) {
@@ -277,8 +276,7 @@ restoreStateField(ThreadState *state, TraceFieldType type, const TraceFieldValue
    if (type >= StateField::GPR0 && type <= StateField::GPR31) {
       state->gpr[type - StateField::GPR] = field.u32v0;
    } else if (type >= StateField::FPR0 && type <= StateField::FPR31) {
-      state->fpr[type - StateField::FPR].value0 = field.u64v0;
-      state->fpr[type - StateField::FPR].value1 = field.u64v1;
+      state->fpr[type - StateField::FPR].idw = field.u64v0;
    } else if (type >= StateField::GQR0 && type <= StateField::GQR7) {
       state->gqr[type - StateField::GQR].value = field.u32v0;
    } else if (type == StateField::CR) {

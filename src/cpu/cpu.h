@@ -31,6 +31,8 @@ void interrupt(CoreState *core);
 bool hasInterrupt(CoreState *core);
 void clearInterrupt(CoreState *core);
 
+void setRoundingMode(ThreadState *state);
+
 void executeSub(CoreState *core, ThreadState *state);
 
 using KernelCallFn = void(*)(ThreadState *state, void *userData);

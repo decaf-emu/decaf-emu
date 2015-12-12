@@ -361,10 +361,11 @@ extsh(ThreadState *state, Instruction instr)
 // Multiply
 enum MulFlags
 {
-   MulLow         = 1 << 0, // (uint32_t)d
-   MulHigh        = 1 << 1, // d >> 32
-   MulImmediate   = 1 << 2, // b = simm
-   MulCheckRecord = 1 << 3, // Check rc then update cr
+   MulLow           = 1 << 0, // (uint32_t)d
+   MulHigh          = 1 << 1, // d >> 32
+   MulImmediate     = 1 << 2, // b = simm
+   MulCheckOverflow = 1 << 3, // Check oe then update xer
+   MulCheckRecord   = 1 << 4, // Check rc then update cr
 };
 
 // Signed multiply
@@ -374,6 +375,7 @@ mulSignedGeneric(ThreadState *state, Instruction instr)
 {
    int64_t a, b;
    int32_t d;
+   bool overflow;
    a = static_cast<int32_t>(state->gpr[instr.rA]);
 
    if (flags & MulImmediate) {
@@ -383,13 +385,23 @@ mulSignedGeneric(ThreadState *state, Instruction instr)
    }
 
    if (flags & MulLow) {
-      d = static_cast<int32_t>(a * b);
+      const int64_t product = a * b;
+      d = static_cast<int32_t>(product);
+      if (flags & MulCheckOverflow) {
+         overflow = (product < INT64_C(-0x80000000) || product > 0x7FFFFFFF);
+      }
    } else if (flags & MulHigh) {
       d = (a * b) >> 32;
+      // oe is ignored for mulhw* instructions.
    }
 
    state->gpr[instr.rD] = d;
 
+   if (flags & MulCheckOverflow) {
+      if (instr.oe) {
+         updateOverflow(state, overflow);
+      }
+   }
    if (flags & MulCheckRecord) {
       if (instr.rc) {
          updateConditionRegister(state, d);
@@ -443,7 +455,7 @@ mulli(ThreadState *state, Instruction instr)
 static void
 mullw(ThreadState *state, Instruction instr)
 {
-   return mulSignedGeneric<MulLow | MulCheckRecord>(state, instr);
+   return mulSignedGeneric<MulLow | MulCheckRecord | MulCheckOverflow>(state, instr);
 }
 
 // NAND

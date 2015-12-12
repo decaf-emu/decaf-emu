@@ -1,4 +1,5 @@
 #include <vector>
+#include <cfenv>
 #include "cpu.h"
 #include "cpu_internal.h"
 #include "interpreter/interpreter.h"
@@ -47,6 +48,15 @@ bool hasInterrupt(CoreState *core)
 void clearInterrupt(CoreState *core)
 {
    core->interrupt.exchange(false);
+}
+
+void
+setRoundingMode(ThreadState *state)
+{
+   static const int modes[4] = {
+      FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD, FE_DOWNWARD
+   };
+   fesetround(modes[state->fpscr.rn]);
 }
 
 void executeSub(CoreState *core, ThreadState *state)

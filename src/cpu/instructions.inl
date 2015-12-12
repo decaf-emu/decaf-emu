@@ -9,8 +9,8 @@ INS(addme, (rD), (rA, XERC), (oe, rc), (opcd == 31, xo2 == 234, !_16_20), "Add t
 INS(addze, (rD), (rA, XERC), (oe, rc), (opcd == 31, xo2 == 202, !_16_20), "Add to Zero Extended")
 INS(divw, (rD), (rA, rB), (oe, rc), (opcd == 31, xo2 == 491), "Divide Word")
 INS(divwu, (rD), (rA, rB), (oe, rc), (opcd == 31, xo2 == 459), "Divide Word Unsigned")
-INS(mulhw, (rD), (rA, rB), (rc), (opcd == 31, xo2 == 75, !_21), "Multiply High Word")
-INS(mulhwu, (rD), (rA, rB), (rc), (opcd == 31, xo2 == 11, !_21), "Multiply High Word Unsigned")
+INS(mulhw, (rD), (rA, rB), (rc), (opcd == 31, xo2 == 75), "Multiply High Word")
+INS(mulhwu, (rD), (rA, rB), (rc), (opcd == 31, xo2 == 11), "Multiply High Word Unsigned")
 INS(mulli, (rD), (rA, simm), (), (opcd == 7), "Multiply Low Immediate")
 INS(mullw, (rD), (rA, rB), (oe, rc), (opcd == 31, xo2 == 235), "Multiply Low Word")
 INS(neg, (rD), (rA), (oe, rc), (opcd == 31, xo2 == 104, !_16_20), "Negate")
@@ -92,6 +92,8 @@ INS(fcmpu, (crfD), (frA, frB), (), (opcd == 63, xo1 == 0, !_9_10, !_31), "Floati
 // Floating-Point Status and Control Register
 INS(mcrfs, (crfD), (crfS), (), (opcd == 63, xo1 == 64, !_9_10, !_14_15, !_16_20, !_31), "")
 INS(mffs, (frD), (), (rc), (opcd == 63, xo1 == 583, !_11_15, !_16_20), "")
+INS(mtfsb0, (), (crfD), (rc), (opcd == 63, xo1 == 70, !_11_15, !_16_20), "")
+INS(mtfsb1, (), (crfD), (rc), (opcd == 63, xo1 == 38, !_11_15, !_16_20), "")
 INS(mtfsf, (), (fm, frB), (rc), (opcd == 63, xo1 == 711, !_6, !_15), "")
 INS(mtfsfi, (crfD), (), (rc, imm), (opcd == 63, xo1 == 134, !_9_10, !_11_15, !_20), "")
 
@@ -205,11 +207,15 @@ INS(twi, (), (to, rA, simm), (), (opcd == 3), "")
 
 // Processor Control
 INS(mcrxr, (crfD), (XERO), (), (opcd == 31, xo1 == 512, !_9_10, !_11_15, !_16_20, !_31), "Move to Condition Register from XERO")
-INS(mfcr, (rD), (), (), (opcd == 31, xo1 == 19, !_11_15, !_16_20, !_31), "Move from Condition Register")
+// mfcr requires bit 11 to be 0 (if 1, it's the mfocrf instruction), but the
+// Espresso ignores bit 11 and treats mfocrf as mfcr.
+INS(mfcr, (rD), (), (), (opcd == 31, xo1 == 19, !_20, !_31), "Move from Condition Register")
 INS(mfmsr, (rD), (), (), (opcd == 31, xo1 == 83, !_11_15, !_16_20, !_31), "Move from Machine State Register")
 INS(mfspr, (rD), (spr), (), (opcd == 31, xo1 == 339, !_31), "Move from Special Purpose Register")
 INS(mftb, (rD), (tbr), (), (opcd == 31, xo1 == 371, !_31), "Move from Time Base Register")
-INS(mtcrf, (crm), (rS), (), (opcd == 31, xo1 == 144, !_11, !_20, !_31), "Move to Condition Register Fields")
+// mtcrf requires bit 11 to be 0 (if 1, it's the mtocrf instruction), but the
+// Espresso ignores bit 11 and treats mtocrf as mtcrf.
+INS(mtcrf, (crm), (rS), (), (opcd == 31, xo1 == 144, !_20, !_31), "Move to Condition Register Fields")
 INS(mtmsr, (), (rS), (), (opcd == 31, xo1 == 146, !_11_15, !_16_20, !_31), "Move to Machine State Register")
 INS(mtspr, (spr), (rS), (), (opcd == 31, xo1 == 467, !_31), "Move to Special Purpose Register")
 

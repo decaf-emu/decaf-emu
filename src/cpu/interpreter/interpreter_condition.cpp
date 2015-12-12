@@ -1,4 +1,6 @@
 #include <utility>
+#include <cfenv>
+#include "interpreter_float.h"
 #include "interpreter_insreg.h"
 #include "utils/bitutils.h"
 #include "utils/floatutils.h"
@@ -110,88 +112,80 @@ enum FCmpFlags
 {
    FCmpOrdered    = 1 << 0,
    FCmpUnordered  = 1 << 1,
-   FCmpSingle0    = 1 << 2,
-   FCmpSingle1    = 1 << 3,
+   FCmpPS1        = 1 << 2,
 };
 
-template<typename Type, unsigned flags>
+template<unsigned flags>
 static void
 fcmpGeneric(ThreadState *state, Instruction instr)
 {
-   Type a, b;
+   double a, b;
    uint32_t c;
 
-   if (flags & FCmpSingle0) {
-      a = static_cast<Type>(state->fpr[instr.frA].paired0);
-      b = static_cast<Type>(state->fpr[instr.frB].paired0);
-   } else if (flags & FCmpSingle1) {
-      a = static_cast<Type>(state->fpr[instr.frA].paired1);
-      b = static_cast<Type>(state->fpr[instr.frB].paired1);
+   if (flags & FCmpPS1) {
+      a = state->fpr[instr.frA].paired1;
+      b = state->fpr[instr.frB].paired1;
    } else {
-      a = static_cast<Type>(state->fpr[instr.frA].paired0);
-      b = static_cast<Type>(state->fpr[instr.frB].paired0);
+      a = state->fpr[instr.frA].value;
+      b = state->fpr[instr.frB].value;
    }
 
-   if (a < b) {
+   const uint32_t oldFPSCR = state->fpscr.value;
+
+   if (is_nan(a) || is_nan(b)) {
+      c = ConditionRegisterFlag::Unordered;
+      const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
+      state->fpscr.vxsnan |= vxsnan;
+      if ((flags & FCmpOrdered) && !(vxsnan && state->fpscr.ve)) {
+         state->fpscr.vxvc = 1;
+      }
+   } else if (a < b) {
       c = ConditionRegisterFlag::LessThan;
    } else if (a > b) {
       c = ConditionRegisterFlag::GreaterThan;
-   } else if (a == b) {
+   } else {  // a == b
       c = ConditionRegisterFlag::Equal;
-   } else {
-      c = ConditionRegisterFlag::Unordered;
-
-      if (is_signalling_nan(a) || is_signalling_nan(b)) {
-         state->fpscr.vxsnan = 1;
-
-         if ((flags & FCmpOrdered) && state->fpscr.ve) {
-            state->fpscr.vxvc = 1;
-         }
-      } else if ((flags & FCmpOrdered)) {
-         state->fpscr.vxvc = 1;
-      }
    }
 
    setCRF(state, instr.crfD, c);
-   state->fpscr.cr1 = c;
-   state->fpscr.vx |= state->fpscr.vxvc;
-   state->fpscr.fx |= state->fpscr.vx;
+   state->fpscr.fpcc = c;
+   updateFX_FEX_VX(state, oldFPSCR);
 }
 
 static void
 fcmpo(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<double, FCmpOrdered>(state, instr);
+   return fcmpGeneric<FCmpOrdered>(state, instr);
 }
 
 static void
 fcmpu(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<double, FCmpUnordered>(state, instr);
+   return fcmpGeneric<FCmpUnordered>(state, instr);
 }
 
 static void
 ps_cmpo0(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<float, FCmpOrdered | FCmpSingle0>(state, instr);
+   return fcmpGeneric<FCmpOrdered>(state, instr);
 }
 
 static void
 ps_cmpo1(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<float, FCmpOrdered | FCmpSingle1>(state, instr);
+   return fcmpGeneric<FCmpOrdered | FCmpPS1>(state, instr);
 }
 
 static void
 ps_cmpu0(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<float, FCmpUnordered | FCmpSingle0>(state, instr);
+   return fcmpGeneric<FCmpUnordered>(state, instr);
 }
 
 static void
 ps_cmpu1(ThreadState *state, Instruction instr)
 {
-   return fcmpGeneric<float, FCmpUnordered | FCmpSingle1>(state, instr);
+   return fcmpGeneric<FCmpUnordered | FCmpPS1>(state, instr);
 }
 
 // Condition Register AND
@@ -297,6 +291,23 @@ mcrf(ThreadState *state, Instruction instr)
    setCRF(state, instr.crfD, getCRF(state, instr.crfS));
 }
 
+// Move to Condition Register from FPSCR
+static void
+mcrfs(ThreadState *state, Instruction instr)
+{
+   const int shiftS = 4 * (7 - instr.crfS);
+
+   const uint32_t fpscrBits = (state->fpscr.value >> shiftS) & 0xF;
+   setCRF(state, instr.crfD, fpscrBits);
+
+   // All exception bits copied are cleared; other bits are left alone.
+   // FEX and VX are updated following the normal rules.
+   const uint32_t exceptionBits = FPSCRRegisterBits::FX | FPSCRRegisterBits::AllExceptions;
+   const uint32_t bitsToClear = exceptionBits & (0xF << shiftS);
+   state->fpscr.value &= ~bitsToClear;
+   updateFEX_VX(state);
+}
+
 // Move to Condition Register from XER
 static void
 mcrxr(ThreadState *state, Instruction instr)
@@ -351,6 +362,7 @@ cpu::interpreter::registerConditionInstructions()
    RegisterInstruction(crorc);
    RegisterInstruction(crxor);
    RegisterInstruction(mcrf);
+   RegisterInstruction(mcrfs);
    RegisterInstruction(mcrxr);
    RegisterInstruction(mfcr);
    RegisterInstruction(mtcrf);

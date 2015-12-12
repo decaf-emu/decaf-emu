@@ -20,9 +20,6 @@ INS(rfi, (), (), (), (opcd == 19, xo1 == 50), "")
 INS(tw, (), (to, ra, rb), (), (opcd == 31, xo1 == 4), "")
 INS(twi, (), (to, ra, simm), (), (opcd == 3), "")
 
-// Cache Management
-INS(icbi, (), (ra, rb), (), (opcd == 31, xo1 == 982), "")
-
 // Lookaside Buffer Management
 INS(tlbie, (), (rb), (), (opcd == 31, xo1 == 306), "")
 INS(tlbsync, (), (), (), (opcd == 31, xo1 == 566), "")
@@ -31,6 +28,12 @@ INS(tlbsync, (), (), (), (opcd == 31, xo1 == 566), "")
 INS(eciwx, (rd), (ra, rb), (), (opcd == 31, xo1 == 310), "")
 INS(ecowx, (rd), (ra, rb), (), (opcd == 31, xo1 == 438), "")
 */
+
+// Cache Management
+static void
+icbi(ThreadState *state, Instruction instr)
+{
+}
 
 // Data Cache Block Flush
 static void
@@ -206,10 +209,10 @@ mftb(ThreadState *state, Instruction instr)
    auto value = 0u;
 
    switch (tbr) {
-   case SprEncoding::TBL:
+   case SprEncoding::UTBL:
       value = state->tbl;
       break;
-   case SprEncoding::TBU:
+   case SprEncoding::UTBU:
       value = state->tbu;
       break;
    default:
@@ -290,6 +293,7 @@ cpu::interpreter::registerSystemInstructions()
    RegisterInstruction(dcbz);
    RegisterInstruction(dcbz_l);
    RegisterInstruction(eieio);
+   RegisterInstruction(icbi);
    RegisterInstruction(isync);
    RegisterInstruction(sync);
    RegisterInstruction(mfspr);
