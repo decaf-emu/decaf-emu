@@ -611,19 +611,17 @@ ps_rsqrte(ThreadState *state, Instruction instr)
 static void
 ps_sel(ThreadState *state, Instruction instr)
 {
-   float a0, a1, b0, b1, c0, c1, d0, d1;
+   auto a0 = state->fpr[instr.frA].paired0;
+   auto a1 = state->fpr[instr.frA].paired1;
 
-   a0 = state->fpr[instr.frA].paired0;
-   a1 = state->fpr[instr.frA].paired1;
+   auto b0 = state->fpr[instr.frB].paired0;
+   auto b1 = state->fpr[instr.frB].paired1;
 
-   b0 = state->fpr[instr.frB].paired0;
-   b1 = state->fpr[instr.frB].paired1;
+   auto c0 = state->fpr[instr.frC].paired0;
+   auto c1 = state->fpr[instr.frC].paired1;
 
-   c0 = state->fpr[instr.frC].paired0;
-   c1 = state->fpr[instr.frC].paired1;
-
-   d1 = (a1 >= 0) ? c1 : b1;
-   d0 = (a0 >= 0) ? c0 : b0;
+   auto d1 = (a1 >= 0) ? c1 : b1;
+   auto d0 = (a0 >= 0) ? c0 : b0;
 
    state->fpr[instr.frD].paired0 = d0;
    state->fpr[instr.frD].paired1 = d1;
