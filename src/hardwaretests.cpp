@@ -77,7 +77,7 @@ printTestField(Field field, Instruction instr, RegisterState *input, RegisterSta
       gLog->debug("xer.so =         {:08X}         {:08X}         {:08X}", input->xer.so, output->xer.so, state->xer.so);
       break;
    case Field::FPSCR:
-      //gLog->debug("fpscr = {:08X} {:08x} {:08X}", input->fpscr.value, output->fpscr.value, state->fpscr.value);
+      gLog->debug("fpscr =          {:08X}         {:08x}         {:08X}", input->fpscr.value, output->fpscr.value, state->fpscr.value);
       break;
    default:
       break;
@@ -124,14 +124,6 @@ compareFPSCR(fpscr_t input, fpscr_t expected, fpscr_t result)
    return failed;
 }
 
-static const std::vector<std::string>
-excludeTests = {
-   "fmadds",
-   "fmsub", "fmsubs",
-   "fnmadd", "fnmadds",
-   "fnmsub", "fnmsubs",
-};
-
 bool runTests(const std::string &path)
 {
    uint32_t testsFailed = 0, testsPassed = 0;
@@ -155,12 +147,6 @@ bool runTests(const std::string &path)
       // Parse test file with cereal
       testFile.name = entry.name;
       cerealInput(testFile);
-
-      // Skip excluded tests
-      if (std::find(excludeTests.begin(), excludeTests.end(), testFile.name) != excludeTests.end()) {
-         gLog->info("Skipping {}", testFile.name);
-         continue;
-      }
 
       // Run tests
       gLog->info("Checking {}", testFile.name);
