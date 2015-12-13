@@ -1,0 +1,374 @@
+#include <cstdlib>
+#include <cstring>
+#include "gx2_addrlib.h"
+#include "gx2_surface.h"
+#include "gx2_format.h"
+#include "utils/align.h"
+
+namespace gx2
+{
+
+namespace internal
+{
+
+static ADDR_HANDLE
+gAddrLibHandle = nullptr;
+
+static void *
+allocSysMem(const ADDR_ALLOCSYSMEM_INPUT *pInput)
+{
+   return std::malloc(pInput->sizeInBytes);
+}
+
+static ADDR_E_RETURNCODE
+freeSysMem(const ADDR_FREESYSMEM_INPUT *pInput)
+{
+   std::free(pInput->pVirtAddr);
+   return ADDR_OK;
+}
+
+bool
+initAddrLib()
+{
+   ADDR_CREATE_INPUT input;
+   ADDR_CREATE_OUTPUT output;
+   std::memset(&input, 0, sizeof(input));
+   std::memset(&output, 0, sizeof(output));
+
+   input.size = sizeof(ADDR_CREATE_INPUT);
+   output.size = sizeof(ADDR_CREATE_OUTPUT);
+
+   input.chipEngine = CIASICIDGFXENGINE_R600;
+   input.chipFamily = 0x51;
+   input.chipRevision = 71;
+   input.createFlags.fillSizeFields = 1;
+   input.regValue.gbAddrConfig = 0x44902;
+
+   input.callbacks.allocSysMem = &allocSysMem;
+   input.callbacks.freeSysMem = &freeSysMem;
+
+   auto result = AddrCreate(&input, &output);
+
+   if (result != ADDR_OK) {
+      return false;
+   }
+
+   gAddrLibHandle = output.hLib;
+   return true;
+}
+
+ADDR_HANDLE
+getAddrLibHandle()
+{
+   if (!gAddrLibHandle) {
+      initAddrLib();
+   }
+
+   return gAddrLibHandle;
+}
+
+bool
+getSurfaceInfo(GX2Surface *surface, uint32_t level, ADDR_COMPUTE_SURFACE_INFO_OUTPUT *output)
+{
+   ADDR_E_RETURNCODE result = ADDR_OK;
+   auto hwFormat = surface->format & 0x3f;
+   auto height = 1u;
+   auto width = std::max<uint32_t>(1u, surface->width >> level);
+   auto numSlices = 1u;
+
+   switch (surface->dim) {
+   case GX2SurfaceDim::Texture1D:
+      height = 1;
+      numSlices = 1;
+      break;
+   case GX2SurfaceDim::Texture2D:
+      height = std::max<uint32_t>(1u, surface->height >> level);
+      numSlices = 1;
+      break;
+   case GX2SurfaceDim::Texture3D:
+      height = std::max<uint32_t>(1u, surface->height >> level);
+      numSlices = std::max<uint32_t>(1u, surface->depth >> level);
+      break;
+   case GX2SurfaceDim::TextureCube:
+      height = std::max<uint32_t>(1u, surface->height >> level);
+      numSlices = std::max<uint32_t>(6u, surface->depth);
+      break;
+   case GX2SurfaceDim::Texture1DArray:
+      height = 1;
+      numSlices = surface->depth;
+      break;
+   case GX2SurfaceDim::Texture2DArray:
+      height = std::max<uint32_t>(1u, surface->height >> level);
+      numSlices = surface->depth;
+      break;
+   case GX2SurfaceDim::Texture2DMSAA:
+      height = std::max<uint32_t>(1u, surface->height >> level);
+      numSlices = 1;
+      break;
+   case GX2SurfaceDim::Texture2DMSAAArray:
+      height = std::max<uint32_t>(1u, surface->height >> level);
+      numSlices = surface->depth;
+      break;
+   }
+
+   output->size = sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT);
+
+   if (surface->tileMode == GX2TileMode::LinearSpecial) {
+      auto numSamples = 1 << surface->aa;
+      auto elemSize = 1u;
+
+      if (hwFormat >= latte::FMT_BC1 && hwFormat <= latte::FMT_BC5) {
+         elemSize = 4;
+      }
+
+      output->bpp = GX2GetSurfaceElementBits(surface->format);
+      output->pixelBits = output->bpp;
+      output->baseAlign = 1;
+      output->pitchAlign = 1;
+      output->heightAlign = 1;
+      output->depthAlign = 1;
+
+      width = align_up(width, elemSize);
+      height = align_up(height, elemSize);
+
+      output->depth = numSlices;
+      output->pitch = std::max<uint32_t>(1u, width / elemSize);
+      output->height = std::max<uint32_t>(1u, height / elemSize);
+
+      output->pixelPitch = width;
+      output->pixelHeight = height;
+
+      output->surfSize = static_cast<uint64_t>(output->height) * output->pitch * numSamples * output->depth * (output->bpp / 8);
+
+      if (surface->dim == GX2SurfaceDim::Texture3D) {
+         output->sliceSize = static_cast<uint32_t>(output->surfSize);
+      } else {
+         output->sliceSize = static_cast<uint32_t>(output->surfSize / output->depth);
+      }
+
+      output->pitchTileMax = (output->pitch / 8) - 1;
+      output->heightTileMax = (output->height / 8) - 1;
+      output->sliceTileMax = (output->height * output->pitch / 64) - 1;
+      result = ADDR_OK;
+   } else {
+      ADDR_COMPUTE_SURFACE_INFO_INPUT input;
+      memset(&input, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT));
+      input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
+      input.tileMode = static_cast<AddrTileMode>(surface->tileMode & 0xF);
+      input.format = static_cast<AddrFormat>(hwFormat);
+      input.bpp = GX2GetSurfaceElementBits(surface->format);
+      input.width = width;
+      input.height = height;
+      input.numSlices = numSlices;
+
+      input.numSamples = 1 << surface->aa;
+      input.numFrags = input.numSamples;
+
+      input.slice = 0;
+      input.mipLevel = level;
+
+      if (surface->dim == GX2SurfaceDim::TextureCube) {
+         input.flags.cube = 1;
+      }
+
+      if (surface->use & GX2SurfaceUse::DepthBuffer) {
+         input.flags.depth = 1;
+      }
+
+      if (surface->use & GX2SurfaceUse::ScanBuffer) {
+         input.flags.display = 1;
+      }
+
+      if (surface->dim == GX2SurfaceDim::Texture3D) {
+         input.flags.volume = 1;
+      }
+
+      input.flags.inputBaseMap = (level == 0);
+      result = AddrComputeSurfaceInfo(getAddrLibHandle(), &input, output);
+   }
+
+   return (result == ADDR_OK);
+}
+
+bool
+copySurface(GX2Surface *surfaceSrc, GX2Surface *surfaceDst, uint32_t level, uint32_t depth, std::vector<uint8_t> &image, std::vector<uint8_t> &mipmap)
+{
+   ADDR_COMPUTE_SURFACE_INFO_OUTPUT srcInfoOutput;
+   ADDR_COMPUTE_SURFACE_INFO_OUTPUT dstInfoOutput;
+   ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT srcAddrInput;
+   ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT dstAddrInput;
+   ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT srcAddrOutput;
+   ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT dstAddrOutput;
+   ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT srcSwizzleInput;
+   ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT srcSwizzleOutput;
+   ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT dstSwizzleInput;
+   ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT dstSwizzleOutput;
+
+   auto handle = getAddrLibHandle();
+
+   // Initialise addrlib input/output structures
+   std::memset(&srcAddrInput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT));
+   std::memset(&srcAddrOutput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT));
+
+   std::memset(&dstAddrInput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT));
+   std::memset(&dstAddrOutput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT));
+
+   std::memset(&srcSwizzleInput, 0, sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT));
+   std::memset(&srcSwizzleOutput, 0, sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT));
+
+   std::memset(&dstSwizzleInput, 0, sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT));
+   std::memset(&dstSwizzleOutput, 0, sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT));
+
+   srcAddrInput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT);
+   srcAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
+
+   dstAddrInput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT);
+   dstAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
+
+   srcSwizzleInput.size = sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT);
+   srcSwizzleOutput.size = sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT);
+
+   dstSwizzleInput.size = sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT);
+   dstSwizzleOutput.size = sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT);
+
+   // Setup src
+   auto bpp = GX2GetSurfaceElementBits(surfaceSrc->format);
+   getSurfaceInfo(surfaceSrc, level, &srcInfoOutput);
+   srcAddrInput.slice = depth;
+   srcAddrInput.sample = 0;
+   srcAddrInput.bpp = bpp;
+   srcAddrInput.pitch = srcInfoOutput.pitch;
+   srcAddrInput.height = srcInfoOutput.height;
+   srcAddrInput.numSlices = std::max<uint32_t>(1u, srcInfoOutput.depth);
+   srcAddrInput.numSamples = 1 << surfaceSrc->aa;
+   srcAddrInput.tileMode = static_cast<AddrTileMode>(surfaceSrc->tileMode.value());
+   srcAddrInput.isDepth = !!(surfaceSrc->use & GX2SurfaceUse::DepthBuffer);
+   srcAddrInput.tileBase = 0;
+   srcAddrInput.compBits = 0;
+   srcAddrInput.numFrags = 0;
+
+   // Setup src swizzle
+   srcSwizzleInput.base256b = (surfaceSrc->swizzle >> 8) & 0xFF;
+   AddrExtractBankPipeSwizzle(handle, &srcSwizzleInput, &srcSwizzleOutput);
+
+   srcAddrInput.bankSwizzle = srcSwizzleOutput.bankSwizzle;
+   srcAddrInput.pipeSwizzle = srcSwizzleOutput.pipeSwizzle;
+
+   // Setup dst
+   getSurfaceInfo(surfaceDst, level, &dstInfoOutput);
+   dstAddrInput.slice = depth;
+   dstAddrInput.sample = 0;
+   dstAddrInput.bpp = bpp;
+   dstAddrInput.pitch = dstInfoOutput.pitch;
+   dstAddrInput.height = dstInfoOutput.height;
+   dstAddrInput.numSlices = std::max<uint32_t>(1u, dstInfoOutput.depth);
+   dstAddrInput.numSamples = 1 << surfaceDst->aa;
+   dstAddrInput.tileMode = dstInfoOutput.tileMode;
+   dstAddrInput.isDepth = !!(surfaceDst->use & GX2SurfaceUse::DepthBuffer);
+   dstAddrInput.tileBase = 0;
+   dstAddrInput.compBits = 0;
+   dstAddrInput.numFrags = 0;
+
+   // Setup dst swizzle
+   dstSwizzleInput.base256b = (surfaceDst->swizzle >> 8) & 0xFF;
+   AddrExtractBankPipeSwizzle(handle, &dstSwizzleInput, &dstSwizzleOutput);
+
+   dstAddrInput.bankSwizzle = dstSwizzleOutput.bankSwizzle;
+   dstAddrInput.pipeSwizzle = dstSwizzleOutput.pipeSwizzle;
+
+   // Setup width
+   auto srcWidth = std::max<uint32_t>(1u, surfaceSrc->width >> level);
+   auto srcHeight = std::max<uint32_t>(1u, surfaceSrc->height >> level);
+   auto hwFormatSrc = static_cast<latte::SQ_DATA_FORMAT>(surfaceSrc->format & 0x3F);
+
+   if (hwFormatSrc >= latte::FMT_BC1 && hwFormatSrc <= latte::FMT_BC5) {
+      srcWidth = (srcWidth + 3) / 4;
+      srcHeight = (srcHeight + 3) / 4;
+   }
+
+   auto dstWidth = std::max<uint32_t>(1u, surfaceDst->width >> level);
+   auto dstHeight = std::max<uint32_t>(1u, surfaceDst->height >> level);
+   auto hwFormatDst = static_cast<latte::SQ_DATA_FORMAT>(surfaceDst->format & 0x3F);
+
+   if (hwFormatDst >= latte::FMT_BC1 && hwFormatDst <= latte::FMT_BC5) {
+      dstWidth = (dstWidth + 3) / 4;
+      dstHeight = (dstHeight + 3) / 4;
+   }
+
+   uint8_t *srcBasePtr = nullptr;
+   uint8_t *dstBasePtr = nullptr;
+
+   if (level) {
+      if (level == 1) {
+         srcBasePtr = reinterpret_cast<uint8_t *>(surfaceSrc->mipmaps.get());
+         dstBasePtr = mipmap.data();
+      } else {
+         srcBasePtr = reinterpret_cast<uint8_t *>(surfaceSrc->mipmaps.get()) + surfaceSrc->mipLevelOffset[level - 1];
+         dstBasePtr = mipmap.data() + surfaceDst->mipLevelOffset[level - 1];
+      }
+   } else {
+      srcBasePtr = reinterpret_cast<uint8_t *>(surfaceSrc->image.get());
+      dstBasePtr = image.data();
+   }
+
+   for (auto y = 0u; y < dstHeight; ++y) {
+      for (auto x = 0u; x < dstWidth; ++x) {
+         srcAddrInput.x = x;
+         srcAddrInput.y = y;
+
+         dstAddrInput.x = srcWidth * x / dstHeight;
+         dstAddrInput.y = srcHeight * y / dstWidth;
+
+         if (surfaceSrc->tileMode == GX2TileMode::LinearAligned || surfaceSrc->tileMode == GX2TileMode::LinearSpecial) {
+            srcAddrOutput.addr = (bpp / 8) * (x + srcHeight * srcInfoOutput.pitch * depth + srcInfoOutput.pitch * y);
+         } else {
+            AddrComputeSurfaceAddrFromCoord(handle, &srcAddrInput, &srcAddrOutput);
+         }
+
+         if (surfaceDst->tileMode == GX2TileMode::LinearAligned || surfaceDst->tileMode == GX2TileMode::LinearSpecial) {
+            dstAddrOutput.addr = (bpp / 8) * (x + dstHeight * dstInfoOutput.pitch * depth + dstInfoOutput.pitch * y);
+         } else {
+            AddrComputeSurfaceAddrFromCoord(handle, &dstAddrInput, &dstAddrOutput);
+         }
+
+         auto src = &srcBasePtr[srcAddrOutput.addr];
+         auto dst = &dstBasePtr[dstAddrOutput.addr];
+         std::memcpy(dst, src, bpp / 8);
+      }
+   }
+
+   return true;
+}
+
+bool
+convertTiling(GX2Surface *surface, std::vector<uint8_t> &image, std::vector<uint8_t> &mipmap)
+{
+   GX2Surface outSurface(*surface);
+   outSurface.mipmaps = nullptr;
+   outSurface.image = nullptr;
+   outSurface.tileMode = GX2TileMode::LinearSpecial;
+   outSurface.swizzle &= 0xFFFF00FF;
+
+   GX2CalcSurfaceSizeAndAlignment(&outSurface);
+
+   mipmap.resize(outSurface.mipmapSize);
+   image.resize(outSurface.imageSize);
+
+   for (auto level = 0u; level < surface->mipLevels; ++level) {
+      auto levelDepth = surface->depth;
+
+      if (surface->dim == GX2SurfaceDim::Texture3D) {
+         levelDepth = std::max<uint32_t>(1u, levelDepth >> level);
+      }
+
+      for (auto depth = 0u; depth < levelDepth; ++depth) {
+         copySurface(surface, &outSurface, level, depth, image, mipmap);
+      }
+   }
+
+   return true;
+}
+
+} // namespace internal
+
+} // namespace gx2

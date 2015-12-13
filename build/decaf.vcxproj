@@ -46,11 +46,11 @@
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
@@ -67,7 +67,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>asmjit.lib;docopt.lib;glbinding.lib;glfw.lib;opengl32.lib;pugixml.lib;zlib.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;asmjit.lib;docopt.lib;glbinding.lib;glfw.lib;opengl32.lib;pugixml.lib;zlib.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -86,7 +86,7 @@
       <GenerateDebugInformation>Debug</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>asmjit.lib;docopt.lib;glbinding.lib;glfw.lib;opengl32.lib;pugixml.lib;zlib.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;asmjit.lib;docopt.lib;glbinding.lib;glfw.lib;opengl32.lib;pugixml.lib;zlib.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -125,8 +125,6 @@
     <ClCompile Include="..\src\gpu\commandqueue.cpp" />
     <ClCompile Include="..\src\gpu\driver.cpp" />
     <ClCompile Include="..\src\gpu\gfd.cpp" />
-    <ClCompile Include="..\src\gpu\latte_format.cpp" />
-    <ClCompile Include="..\src\gpu\latte_untile.cpp" />
     <ClCompile Include="..\src\gpu\microcode\latte_blockify.cpp" />
     <ClCompile Include="..\src\gpu\microcode\latte_decoder.cpp" />
     <ClCompile Include="..\src\gpu\microcode\latte_disassembler_alu.cpp" />
@@ -193,9 +191,11 @@
     <ClCompile Include="..\src\modules\gameloader\gameloader.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2r_resource.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_addrlib.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_cbpool.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_clear.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_contextstate.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_dds.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_debug.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_display.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_displaylist.cpp" />
@@ -224,6 +224,7 @@
     <ClCompile Include="..\src\modules\nn_result.cpp" />
     <ClCompile Include="..\src\modules\nn_save\nn_save.cpp" />
     <ClCompile Include="..\src\modules\nn_save\nn_save_core.cpp" />
+    <ClCompile Include="..\src\modules\nn_save\nn_save_file.cpp" />
     <ClCompile Include="..\src\modules\nn_temp\nn_temp.cpp" />
     <ClCompile Include="..\src\modules\nn_temp\nn_temp_core.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore.cpp" />
@@ -316,7 +317,6 @@
     <ClInclude Include="..\src\gpu\latte_enum_sq.h" />
     <ClInclude Include="..\src\gpu\latte_enum_sx.h" />
     <ClInclude Include="..\src\gpu\latte_enum_vgt.h" />
-    <ClInclude Include="..\src\gpu\latte_format.h" />
     <ClInclude Include="..\src\gpu\latte_registers_cb.h" />
     <ClInclude Include="..\src\gpu\latte_registers_db.h" />
     <ClInclude Include="..\src\gpu\latte_registers_pa.h" />
@@ -325,7 +325,6 @@
     <ClInclude Include="..\src\gpu\latte_registers_sx.h" />
     <ClInclude Include="..\src\gpu\latte_registers_td.h" />
     <ClInclude Include="..\src\gpu\latte_registers_vgt.h" />
-    <ClInclude Include="..\src\gpu\latte_shadir.h" />
     <ClInclude Include="..\src\gpu\microcode\latte_disassembler.h" />
     <ClInclude Include="..\src\gpu\microcode\latte_instructions.h" />
     <ClInclude Include="..\src\gpu\microcode\latte_shadir.h" />
@@ -350,8 +349,10 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h" />
     <ClInclude Include="..\src\modules\gameloader\gameloader.h" />
+    <ClInclude Include="..\src\modules\gx2\gx2_addrlib.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_cbpool.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_clear.h" />
+    <ClInclude Include="..\src\modules\gx2\gx2_dds.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_debug.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_enum.h" />
@@ -369,6 +370,7 @@
     <ClInclude Include="..\src\modules\nn_result.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_core.h" />
+    <ClInclude Include="..\src\modules\nn_save\nn_save_file.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp_core.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_kpad_status.h" />
@@ -483,6 +485,7 @@
     <ClInclude Include="..\src\utils\teenyheap.h" />
     <ClInclude Include="..\src\utils\align.h" />
     <ClInclude Include="..\src\utils\type_list.h" />
+    <ClInclude Include="..\src\utils\pow.h" />
     <ClInclude Include="..\src\utils\virtual_ptr.h" />
     <ClInclude Include="..\src\utils\wfunc_call.h" />
     <ClInclude Include="..\src\utils\wfunc_ptr.h" />

@@ -4,8 +4,6 @@ set(SOURCE_FILES
     commandqueue.cpp
     driver.cpp
     gfd.cpp
-    latte_format.cpp
-    latte_untile.cpp
     microcode/latte_blockify.cpp
     microcode/latte_decoder.cpp
     microcode/latte_disassembler.cpp
@@ -42,7 +40,6 @@ set(HEADER_FILES
     latte_enum_sq.h
     latte_enum_sx.h
     latte_enum_vgt.h
-    latte_format.h
     latte_registers_cb.h
     latte_registers_db.h
     latte_registers.h

@@ -2,7 +2,6 @@
 #include <spdlog/spdlog.h>
 #include "config.h"
 #include "gpu/gfd.h"
-#include "gpu/latte_format.h"
 #include "gpu/microcode/latte_decoder.h"
 #include "gpu/opengl/glsl_generator.h"
 #include "gx2_enum_string.h"

@@ -41,10 +41,6 @@ File::read(const std::string &filename)
       return false;
    }
 
-   if (header.version1 != 1) {
-      throw std::logic_error("Only version 1 is supported");
-   }
-
    while (!file.eof()) {
       Block block;
       file.read(block.header);
@@ -136,6 +132,17 @@ File::add(const GX2Texture *texture)
       image.header.index = header.header.index;
       image.data.resize(texture->surface.imageSize);
       std::memcpy(image.data.data(), texture->surface.image.get(), texture->surface.imageSize);
+      blocks.emplace_back(std::move(image));
+   }
+
+   // Add texture mipmap block
+   if (texture->surface.mipmaps && texture->surface.mipmapSize) {
+      gfd::Block image;
+      image.header.type = gfd::BlockType::TextureMipmap;
+      image.header.id = getUniqueID();
+      image.header.index = header.header.index;
+      image.data.resize(texture->surface.mipmapSize);
+      std::memcpy(image.data.data(), texture->surface.mipmaps.get(), texture->surface.mipmapSize);
       blocks.emplace_back(std::move(image));
    }
 }

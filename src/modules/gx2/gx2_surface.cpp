@@ -1,99 +1,122 @@
-#include "gx2_surface.h"
+#include "gx2_addrlib.h"
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
-#include "gpu/latte_format.h"
+#include "gx2_surface.h"
 #include "gpu/pm4_writer.h"
-#include "utils/log.h"
 #include "utils/align.h"
+#include "utils/log.h"
+#include "utils/pow.h"
+
+static uint32_t
+calcNumLevels(GX2Surface *surface)
+{
+   if (surface->mipLevels <= 1) {
+      return 1;
+   }
+
+   auto levels = std::max(Log2<uint32_t>(surface->width), Log2<uint32_t>(surface->height));
+
+   if (surface->dim == GX2SurfaceDim::Texture3D) {
+      levels = std::max(levels, Log2<uint32_t>(surface->depth));
+   }
+
+   return levels;
+}
 
 void
 GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
 {
-   using latte::group_bytes;
-   using latte::num_banks;
-   using latte::tile_width;
-   using latte::tile_height;
+   ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
+   auto isDepthBuffer = !!(surface->use & GX2SurfaceUse::DepthBuffer);
+   auto isColorBuffer = !!(surface->use & GX2SurfaceUse::ColorBuffer);
+   auto tileModeChanged = false;
 
    if (surface->tileMode == GX2TileMode::Default) {
-      gLog->debug("Defaulting tileMode to LinearAligned for format {}", GX2EnumAsString(surface->format));
-      surface->tileMode = GX2TileMode::LinearAligned;
+      if (surface->dim || surface->aa || isDepthBuffer) {
+         if (surface->dim != GX2SurfaceDim::Texture3D || isColorBuffer) {
+            surface->tileMode = GX2TileMode::Tiled2DThin1;
+         } else {
+            surface->tileMode = GX2TileMode::Tiled2DThick;
+         }
+
+         tileModeChanged = true;
+      } else {
+         surface->tileMode = GX2TileMode::LinearAligned;
+      }
+   }
+
+   surface->mipLevels = std::max<uint32_t>(surface->mipLevels, 1u);
+   surface->mipLevels = std::min<uint32_t>(surface->mipLevels, calcNumLevels(surface));
+
+   surface->mipLevelOffset[0] = 0;
+   surface->swizzle &= 0xFF00FFFF;
+
+   if (surface->tileMode >= GX2TileMode::Tiled2DThin1 && surface->tileMode != GX2TileMode::LinearSpecial) {
+      surface->swizzle |= 0xD0000;
+   }
+
+   auto lastTileMode = static_cast<GX2TileMode>(surface->tileMode);
+   auto prevSize = 0u;
+   auto offset0 = 0u;
+
+   for (auto level = 0u; level < surface->mipLevels; ++level) {
+      gx2::internal::getSurfaceInfo(surface, level, &output);
+
+      if (level) {
+         auto pad = 0u;
+
+         if (lastTileMode >= GX2TileMode::Tiled2DThin1 && lastTileMode != GX2TileMode::LinearSpecial) {
+            if (output.tileMode < ADDR_TM_2D_TILED_THIN1 || output.tileMode == ADDR_TM_LINEAR_SPECIAL) {
+               surface->swizzle = (level << 16) | (surface->swizzle & 0xFF00FFFF);
+               lastTileMode = static_cast<GX2TileMode>(output.tileMode);
+
+               if (level > 1) {
+                  pad = surface->swizzle & 0xFFFF;
+               }
+            }
+         }
+
+         pad += (output.baseAlign - (prevSize % output.baseAlign)) % output.baseAlign;
+
+         if (level == 1) {
+            offset0 = pad + prevSize;
+         } else {
+            surface->mipLevelOffset[level - 1] = pad + prevSize + surface->mipLevelOffset[level - 2];
+         }
+      } else {
+         if (tileModeChanged && surface->width < output.pitchAlign && surface->height < output.heightAlign) {
+            if (surface->tileMode == GX2TileMode::Tiled2DThick) {
+               surface->tileMode = GX2TileMode::Tiled1DThick;
+            } else {
+               surface->tileMode = GX2TileMode::Tiled1DThin1;
+            }
+
+            gx2::internal::getSurfaceInfo(surface, level, &output);
+            surface->swizzle &= 0xFF00FFFF;
+            lastTileMode = surface->tileMode;
+         }
+
+         surface->imageSize = static_cast<uint32_t>(output.surfSize);
+         surface->alignment = output.baseAlign;
+         surface->pitch = output.pitch;
+      }
+
+      prevSize = static_cast<uint32_t>(output.surfSize);
+   }
+
+   if (surface->mipLevels <= 1) {
+      surface->mipmapSize = 0;
    } else {
-      // Warn, because we have not checked if our calculations are correct...
-      gLog->warn("Encountered non-default tileMode {} for format {}", GX2EnumAsString(surface->tileMode), GX2EnumAsString(surface->format));
+      surface->mipmapSize = prevSize + surface->mipLevelOffset[surface->mipLevels - 2];
    }
 
-   if (!surface->width) {
-      surface->width = 1;
+   surface->mipLevelOffset[0] = offset0;
+
+   if (surface->format == GX2SurfaceFormat::UNORM_NV12) {
+      auto pad = (surface->alignment - surface->imageSize % surface->alignment) % surface->alignment;
+      surface->mipLevelOffset[0] = pad + surface->imageSize;
+      surface->imageSize = surface->mipLevelOffset[0] + (surface->imageSize >> 1);
    }
-
-   if (!surface->height) {
-      surface->height = 1;
-   }
-
-   if (!surface->depth) {
-      surface->depth = 1;
-   }
-
-   if (!surface->mipLevels) {
-      surface->mipLevels = 1;
-   }
-
-   auto blockSize = GX2GetSurfaceBlockSize(surface->format);
-   auto element_bytes = GX2GetSurfaceElementBytes(surface->format);
-   auto tile_thickness = GX2GetTileThickness(surface->tileMode);
-
-   size_t num_samples = 1;
-   size_t pitch_elements_align = 1;
-   size_t base_align = 1;
-   size_t height_align = 1;
-
-   switch (surface->tileMode) {
-   case GX2TileMode::Default:
-   case GX2TileMode::LinearSpecial:
-      break;
-   case GX2TileMode::LinearAligned:
-      base_align = group_bytes;
-      pitch_elements_align = tile_width;// std::max(64ull, group_bytes / element_bytes);
-      break;
-   case GX2TileMode::Tiled1DThick:
-      assert(num_samples == 1);
-   case GX2TileMode::Tiled1DThin1:
-      // TODO: Depth/slices pad to tile_thickness
-      base_align = group_bytes;
-      height_align = tile_height;
-      pitch_elements_align = std::max(tile_width, group_bytes / (tile_height * tile_thickness * element_bytes * num_samples));
-      break;
-   case GX2TileMode::Tiled2DThick:
-   case GX2TileMode::Tiled2BThick:
-   case GX2TileMode::Tiled3DThick:
-   case GX2TileMode::Tiled3BThick:
-      assert(num_samples == 1);
-   case GX2TileMode::Tiled2DThin1:
-   case GX2TileMode::Tiled2DThin2:
-   case GX2TileMode::Tiled2DThin4:
-   case GX2TileMode::Tiled2BThin1:
-   case GX2TileMode::Tiled2BThin2:
-   case GX2TileMode::Tiled2BThin4:
-   case GX2TileMode::Tiled3DThin1:
-   case GX2TileMode::Tiled3BThin1:
-   {
-      auto macro_tile_size = GX2GetMacroTileSize(surface->tileMode);
-      auto macro_tile_width = macro_tile_size.first;
-      auto macro_tile_height = macro_tile_size.second;
-      auto tile_bytes = tile_width * tile_height * tile_thickness * element_bytes * num_samples;
-      auto macro_tile_bytes = macro_tile_width * macro_tile_height * tile_bytes;
-
-      // TODO: Depth/slices pad to tile_thickness
-      height_align = macro_tile_height;
-      pitch_elements_align = std::max(macro_tile_width, ((group_bytes / tile_height) / (element_bytes * num_samples)) * num_banks);
-      base_align = std::max(macro_tile_bytes, pitch_elements_align * element_bytes * macro_tile_height * num_samples);
-   } break;
-   }
-
-   surface->alignment = base_align;
-   surface->pitch = align_up<uint32_t>(surface->width, pitch_elements_align);
-   surface->height = align_up<uint32_t>(surface->height, height_align);
-   surface->imageSize = surface->width * surface->height * surface->depth * element_bytes;
 }
 
 void
@@ -101,9 +124,31 @@ GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer,
                           be_val<uint32_t> *outSize,
                           be_val<uint32_t> *outAlignment)
 {
-   // TODO: GX2CalcDepthBufferHiZInfo
-   *outSize = depthBuffer->surface.imageSize / (8 * 8);
-   *outAlignment = 4;
+   ADDR_COMPUTE_HTILE_INFO_INPUT input;
+   ADDR_COMPUTE_HTILE_INFO_OUTPUT output;
+
+   std::memset(&input, 0, sizeof(ADDR_COMPUTE_HTILE_INFO_INPUT));
+   std::memset(&output, 0, sizeof(ADDR_COMPUTE_HTILE_INFO_OUTPUT));
+
+   input.size = sizeof(ADDR_COMPUTE_HTILE_INFO_INPUT);
+   output.size = sizeof(ADDR_COMPUTE_HTILE_INFO_OUTPUT);
+
+   input.pitch = depthBuffer->surface.pitch;
+   input.height = depthBuffer->surface.height;
+   input.numSlices = depthBuffer->surface.depth;
+   input.blockWidth = ADDR_HTILE_BLOCKSIZE_8;
+   input.blockHeight = ADDR_HTILE_BLOCKSIZE_8;
+   AddrComputeHtileInfo(gx2::internal::getAddrLibHandle(), &input, &output);
+
+   depthBuffer->hiZSize = gsl::narrow_cast<uint32_t>(output.htileBytes);
+
+   if (outSize) {
+      *outSize = depthBuffer->hiZSize;
+   }
+
+   if (outAlignment) {
+      *outAlignment = output.baseAlign;
+   }
 }
 
 void
@@ -181,8 +226,8 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
    memset(&colorBuffer->regs, 0, sizeof(colorBuffer->regs));
    cb_color_info.FORMAT = GX2GetSurfaceColorFormat(colorBuffer->surface.format);
 
-   cb_color_size.PITCH_TILE_MAX = (colorBuffer->surface.pitch / latte::tile_width) - 1;
-   cb_color_size.SLICE_TILE_MAX = ((colorBuffer->surface.pitch * colorBuffer->surface.height) / (latte::tile_width * latte::tile_height)) - 1;
+   cb_color_size.PITCH_TILE_MAX = (colorBuffer->surface.pitch / latte::MicroTileWidth) - 1;
+   cb_color_size.SLICE_TILE_MAX = ((colorBuffer->surface.pitch * colorBuffer->surface.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
 
    // TODO: Set more regs!
 
@@ -201,8 +246,8 @@ GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
    memset(&depthBuffer->regs, 0, sizeof(depthBuffer->regs));
    db_depth_info.FORMAT = GX2GetSurfaceDepthFormat(depthBuffer->surface.format);
 
-   db_depth_size.PITCH_TILE_MAX = (depthBuffer->surface.pitch / latte::tile_width) - 1;
-   db_depth_size.SLICE_TILE_MAX = ((depthBuffer->surface.pitch * depthBuffer->surface.height) / (latte::tile_width * latte::tile_height)) - 1;
+   db_depth_size.PITCH_TILE_MAX = (depthBuffer->surface.pitch / latte::MicroTileWidth) - 1;
+   db_depth_size.SLICE_TILE_MAX = ((depthBuffer->surface.pitch * depthBuffer->surface.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
 
    // TODO: Set more regs!
 

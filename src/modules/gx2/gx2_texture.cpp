@@ -1,7 +1,6 @@
 #include "gx2_debug.h"
 #include "gx2_format.h"
 #include "gx2_texture.h"
-#include "gpu/latte_format.h"
 #include "gpu/latte_registers.h"
 #include "gpu/pm4_writer.h"
 
@@ -50,14 +49,14 @@ GX2InitTextureRegs(GX2Texture *texture)
       word0.TILE_TYPE = 0;
    }
 
-   auto format = static_cast<latte::SQ_DATA_FORMAT>(texture->surface.format & latte::FMT_MASK);
-   auto elemSize = 1u;
+   auto format = static_cast<latte::SQ_DATA_FORMAT>(texture->surface.format & 0x3F);
+   auto pitch = texture->surface.pitch;
 
-   if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 && format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
-      elemSize = 4u;
+   if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5) {
+      pitch *= 4;
    }
 
-   word0.PITCH = ((elemSize * texture->surface.pitch) / latte::tile_width) - 1;
+   word0.PITCH = (pitch / 8) - 1;
    word0.TEX_WIDTH = texture->surface.width - 1;
 
    // Word 1
@@ -136,8 +135,15 @@ GX2InitTextureRegs(GX2Texture *texture)
 void
 GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
 {
-   auto word2 = (texture->surface.image.getAddress() ^ (texture->surface.swizzle & 0xffff)) >> 8;
-   auto word3 = texture->surface.mipmaps.getAddress() >> 8;
+   auto word2 = texture->surface.image.getAddress();
+   auto word3 = texture->surface.mipmaps.getAddress();
+
+   if (texture->surface.tileMode >= GX2TileMode::Tiled2DThin1 && texture->surface.tileMode != GX2TileMode::LinearSpecial) {
+      if ((texture->surface.swizzle >> 16) & 0xFF) {
+         word2 ^= (texture->surface.swizzle & 0xFFFF);
+         word3 ^= (texture->surface.swizzle & 0xFFFF);
+      }
+   }
 
    // Dump texture
    GX2DebugDumpTexture(texture);
@@ -146,8 +152,8 @@ GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
       (unit * 7) + latte::SQ_PS_TEX_RESOURCE_0,
       texture->regs.word0,
       texture->regs.word1,
-      word2,
-      word3,
+      word2 >> 8,
+      word3 >> 8,
       texture->regs.word4,
       texture->regs.word5,
       texture->regs.word6,
@@ -157,8 +163,15 @@ GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
 void
 GX2SetVertexTexture(GX2Texture *texture, uint32_t unit)
 {
-   auto word2 = (texture->surface.image.getAddress() ^ (texture->surface.swizzle & 0xffff)) >> 8;
-   auto word3 = texture->surface.mipmaps.getAddress() >> 8;
+   auto word2 = texture->surface.image.getAddress();
+   auto word3 = texture->surface.mipmaps.getAddress();
+
+   if (texture->surface.tileMode >= GX2TileMode::Tiled2DThin1 && texture->surface.tileMode != GX2TileMode::LinearSpecial) {
+      if ((texture->surface.swizzle >> 16) & 0xFF) {
+         word2 ^= (texture->surface.swizzle & 0xFFFF);
+         word3 ^= (texture->surface.swizzle & 0xFFFF);
+      }
+   }
 
    // Dump texture
    GX2DebugDumpTexture(texture);
@@ -167,8 +180,8 @@ GX2SetVertexTexture(GX2Texture *texture, uint32_t unit)
       (unit * 7) + latte::SQ_VS_TEX_RESOURCE_0,
       texture->regs.word0,
       texture->regs.word1,
-      word2,
-      word3,
+      word2 >> 8,
+      word3 >> 8,
       texture->regs.word4,
       texture->regs.word5,
       texture->regs.word6,

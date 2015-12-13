@@ -20,7 +20,8 @@ GX2::GX2()
 {
 }
 
-void GX2::initialise()
+void
+GX2::initialise()
 {
    initialiseVsync();
 }

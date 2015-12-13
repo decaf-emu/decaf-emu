@@ -71,7 +71,6 @@ int32_t
 OSCheckActiveThreads()
 {
    // TODO: Count threads in active thread queue
-   assert(false);
    return 1;
 }
 

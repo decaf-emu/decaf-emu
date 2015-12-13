@@ -28,3 +28,6 @@
 [submodule "libraries/gsl-lite"]
 	path = libraries/gsl-lite
 	url = https://github.com/decaf-emu/gsl-lite.git
+[submodule "libraries/addrlib"]
+	path = libraries/addrlib
+	url = https://github.com/decaf-emu/addrlib.git

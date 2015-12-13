@@ -3,8 +3,9 @@
 #include <gsl.h>
 #include "opengl_driver.h"
 #include "gpu/latte_enum_sq.h"
-#include "gpu/latte_format.h"
+#include "modules/gx2/gx2_addrlib.h"
 #include "modules/gx2/gx2_enum.h"
+#include "modules/gx2/gx2_surface.h"
 #include "utils/log.h"
 
 namespace gpu
@@ -221,7 +222,8 @@ getTextureSwizzle(latte::SQ_SEL sel)
 bool GLDriver::checkActiveTextures()
 {
    static const auto MAX_PS_TEXTURES = 16;
-   std::vector<uint8_t> untiled;
+   std::vector<uint8_t> untiledImage, untiledMipmap;
+   GX2Surface surface;
 
    for (auto i = 0; i < MAX_PS_TEXTURES; ++i) {
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
@@ -243,8 +245,8 @@ bool GLDriver::checkActiveTextures()
          continue;
       }
 
-      // Untile texture
-      auto pitch = (sq_tex_resource_word0.PITCH + 1) * gsl::narrow_cast<uint32_t>(latte::tile_width);
+      // Decode resource registers
+      auto pitch = (sq_tex_resource_word0.PITCH + 1) * 8;
       auto width = sq_tex_resource_word0.TEX_WIDTH + 1;
       auto height = sq_tex_resource_word1.TEX_HEIGHT + 1;
       auto depth = sq_tex_resource_word1.TEX_DEPTH + 1;
@@ -259,12 +261,47 @@ bool GLDriver::checkActiveTextures()
       auto addr = (sq_tex_resource_word2.BASE_ADDRESS & (~7)) << 8;
       auto swizzle = sq_tex_resource_word2.SWIZZLE << 8;
 
-      auto tiled = make_virtual_ptr<uint8_t>(addr);
+      auto imagePtr = make_virtual_ptr<uint8_t>(addr);
 
-      if (!latte::untile(tiled, width, height, depth, pitch, format, tileMode, swizzle, untiled)) {
-         gLog->error("Failed to untile texture.");
-         return false;
+      // Rebuild a GX2Surface
+      std::memset(&surface, 0, sizeof(GX2Surface));
+
+      surface.dim = static_cast<GX2SurfaceDim>(dim);
+      surface.width = width;
+      surface.height = height;
+
+      if (surface.dim == GX2SurfaceDim::TextureCube) {
+         surface.depth = depth * 6;
+      } else if (surface.dim == GX2SurfaceDim::Texture3D ||
+                 surface.dim == GX2SurfaceDim::Texture2DMSAAArray ||
+                 surface.dim == GX2SurfaceDim::Texture2DArray ||
+                 surface.dim == GX2SurfaceDim::Texture1DArray) {
+         surface.depth = depth;
+      } else {
+         surface.depth = 1;
       }
+
+      surface.mipLevels = 1;
+      surface.format = getSurfaceFormat(format,
+                                        numFormat,
+                                        formatComp,
+                                        degamma);
+
+      surface.aa = GX2AAMode::Mode1X;
+      surface.use = GX2SurfaceUse::Texture;
+
+      if (sq_tex_resource_word0.TILE_TYPE) {
+         surface.use |= GX2SurfaceUse::DepthBuffer;
+      }
+
+      surface.tileMode = static_cast<GX2TileMode>(tileMode);
+      surface.swizzle = swizzle;
+
+      surface.image = imagePtr;
+      surface.mipmaps = nullptr;
+
+      // Untile
+      gx2::internal::convertTiling(&surface, untiledImage, untiledMipmap);
 
       // Create texture
       bool compressed = isCompressedFormat(format);
@@ -272,7 +309,7 @@ bool GLDriver::checkActiveTextures()
       auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma);
       auto textureDataType = gl::GL_INVALID_ENUM;
       auto textureFormat = getTextureFormat(format);
-      auto size = untiled.size();
+      auto size = untiledImage.size();
 
       if (compressed) {
          textureDataType = getCompressedTextureDataType(format, degamma);
@@ -292,13 +329,13 @@ bool GLDriver::checkActiveTextures()
                                               0, 0,
                                               width, height,
                                               textureDataType,
-                                              gsl::narrow_cast<gl::GLsizei>(size), untiled.data());
+                                              gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
          } else {
             gl::glTextureSubImage2D(texture.object, 0,
                                     0, 0,
                                     width, height,
                                     textureFormat, textureDataType,
-                                    untiled.data());
+                                    untiledImage.data());
          }
          break;
       case latte::SQ_TEX_DIM_2D_ARRAY:
@@ -312,13 +349,13 @@ bool GLDriver::checkActiveTextures()
                                               0, 0, 0,
                                               width, height, depth,
                                               textureDataType,
-                                              gsl::narrow_cast<gl::GLsizei>(size), untiled.data());
+                                              gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
          } else {
             gl::glTextureSubImage3D(texture.object, 0,
                                     0, 0, 0,
                                     width, height, depth,
                                     textureFormat, textureDataType,
-                                    untiled.data());
+                                    untiledImage.data());
          }
          break;
       case latte::SQ_TEX_DIM_1D:

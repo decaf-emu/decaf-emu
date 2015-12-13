@@ -12,6 +12,9 @@
 namespace latte
 {
 
+static const uint32_t MicroTileWidth = 8;
+static const uint32_t MicroTileHeight = 8;
+
 namespace Register_
 {
 

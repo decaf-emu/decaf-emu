@@ -1,6 +1,6 @@
+#include <stdexcept>
 #include "gx2_format.h"
 #include "gpu/latte_enum_sq.h"
-#include "gpu/latte_format.h"
 
 struct GX2SurfaceFormatData
 {
@@ -110,7 +110,6 @@ GX2GetAttribFormatBytes(GX2AttribFormat format)
       return 16;
    default:
       throw std::logic_error("Invalid GX2AttribFormat format");
-      return 1;
    }
 }
 
@@ -143,7 +142,6 @@ GX2GetAttribFormatSwapMode(GX2AttribFormat format)
       return GX2EndianSwapMode::Swap8In32;
    default:
       throw std::logic_error("Invalid GX2AttribFormat format");
-      return GX2EndianSwapMode::None;
    }
 }
 
@@ -193,7 +191,6 @@ GX2GetAttribFormatDataFormat(GX2AttribFormat format)
       return latte::FMT_32_32_32_32_FLOAT;
    default:
       throw std::logic_error("Invalid GX2AttribFormat format");
-      return latte::FMT_8;
    }
 }
 
@@ -212,7 +209,13 @@ GX2GetSurfaceBlockSize(GX2SurfaceFormat format)
    }
 }
 
-size_t
+uint32_t
+GX2GetSurfaceElementBits(GX2SurfaceFormat format)
+{
+   return gSurfaceFormatData[format & 0x3F].bpp;
+}
+
+uint32_t
 GX2GetSurfaceElementBytes(GX2SurfaceFormat format)
 {
    return gSurfaceFormatData[format & 0x3F].bpp / 8;
@@ -322,16 +325,4 @@ GX2GetSurfaceColorFormat(GX2SurfaceFormat format)
    default:
       return latte::COLOR_INVALID;
    }
-}
-
-size_t
-GX2GetTileThickness(GX2TileMode mode)
-{
-   return latte::tileThickness(static_cast<latte::SQ_TILE_MODE>(mode));
-}
-
-std::pair<size_t, size_t>
-GX2GetMacroTileSize(GX2TileMode mode)
-{
-   return latte::macroTileSize(static_cast<latte::SQ_TILE_MODE>(mode));
 }

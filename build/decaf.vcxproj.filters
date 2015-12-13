@@ -537,9 +537,6 @@
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_untile.cpp">
-      <Filter>Source Files\gpu</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_sampler.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
@@ -639,9 +636,6 @@
     <ClCompile Include="..\src\gpu\driver.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\latte_format.cpp">
-      <Filter>Source Files\gpu</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gpu\opengl\opengl_texture.cpp">
       <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
@@ -722,6 +716,12 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\nn_save\nn_save_file.cpp">
       <Filter>Source Files\modules\nn_save</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_addrlib.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\gx2\gx2_dds.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1292,9 +1292,6 @@
     <ClInclude Include="..\src\utils\fixed.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gpu\latte_format.h">
-      <Filter>Header Files\gpu</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gpu\latte_enum_pa.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
@@ -1376,9 +1373,6 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_exit.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gpu\latte_shadir.h">
-      <Filter>Header Files\gpu</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gpu\microcode\latte_disassembler.h">
       <Filter>Header Files\gpu\microcode</Filter>
     </ClInclude>
@@ -1393,6 +1387,15 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_save\nn_save_file.h">
       <Filter>Header Files\modules\nn_save</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_addrlib.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\gx2\gx2_dds.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\pow.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,7 @@
 #pragma once
 #include "types.h"
 #include "gpu/latte_registers.h"
+#include "utils/be_array.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
@@ -10,6 +11,10 @@
 
 struct GX2Surface
 {
+   GX2Surface()
+   {
+   }
+
    be_val<GX2SurfaceDim> dim;
    be_val<uint32_t> width;
    be_val<uint32_t> height;
@@ -30,7 +35,7 @@ struct GX2Surface
    be_val<uint32_t> swizzle;
    be_val<uint32_t> alignment;
    be_val<uint32_t> pitch;
-   be_val<uint32_t> mipLevelOffset[13];
+   be_array<uint32_t, 13> mipLevelOffset;
 };
 CHECK_OFFSET(GX2Surface, 0x0, dim);
 CHECK_OFFSET(GX2Surface, 0x4, width);

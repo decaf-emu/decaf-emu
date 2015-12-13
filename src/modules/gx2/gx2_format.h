@@ -18,7 +18,10 @@ GX2GetAttribFormatDataFormat(GX2AttribFormat type);
 std::pair<size_t, size_t>
 GX2GetSurfaceBlockSize(GX2SurfaceFormat format);
 
-size_t
+uint32_t
+GX2GetSurfaceElementBits(GX2SurfaceFormat format);
+
+uint32_t
 GX2GetSurfaceElementBytes(GX2SurfaceFormat format);
 
 GX2EndianSwapMode
@@ -32,9 +35,3 @@ GX2GetSurfaceDepthFormat(GX2SurfaceFormat format);
 
 latte::CB_FORMAT
 GX2GetSurfaceColorFormat(GX2SurfaceFormat format);
-
-size_t
-GX2GetTileThickness(GX2TileMode mode);
-
-std::pair<size_t, size_t>
-GX2GetMacroTileSize(GX2TileMode mode);

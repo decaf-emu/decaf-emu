@@ -39,9 +39,11 @@ set(SOURCE_FILES
     erreula/erreula_errorviewer.cpp
     gameloader/gameloader.cpp
     gx2/gx2.cpp
+    gx2/gx2_addrlib.cpp
     gx2/gx2_cbpool.cpp
     gx2/gx2_clear.cpp
     gx2/gx2_contextstate.cpp
+    gx2/gx2_dds.cpp
     gx2/gx2_debug.cpp
     gx2/gx2_display.cpp
     gx2/gx2_displaylist.cpp
@@ -71,6 +73,7 @@ set(SOURCE_FILES
     nn_result.cpp
     nn_save/nn_save.cpp
     nn_save/nn_save_core.cpp
+    nn_save/nn_save_file.cpp
     nn_temp/nn_temp.cpp
     nn_temp/nn_temp_core.cpp
     padscore/padscore.cpp
@@ -133,9 +136,11 @@ set(HEADER_FILES
     erreula/erreula_errorviewer.h
     gameloader/gameloader.h
     gx2/gx2.h
+    gx2/gx2_addrlib.h
     gx2/gx2_cbpool.h
     gx2/gx2_clear.h
     gx2/gx2_contextstate.h
+    gx2/gx2_dds.h
     gx2/gx2_debug.h
     gx2/gx2_display.h
     gx2/gx2_displaylist.h
@@ -168,6 +173,7 @@ set(HEADER_FILES
     nn_result.h
     nn_save/nn_save.h
     nn_save/nn_save_core.h
+    nn_save/nn_save_file.h
     nn_temp/nn_temp.h
     nn_temp/nn_temp_core.h
     padscore/padscore.h

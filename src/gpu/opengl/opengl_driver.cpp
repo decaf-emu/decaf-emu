@@ -9,7 +9,6 @@
 #include "gpu/pm4_buffer.h"
 #include "gpu/pm4_reader.h"
 #include "gpu/latte_registers.h"
-#include "gpu/latte_format.h"
 #include "opengl_driver.h"
 #include "utils/log.h"
 
@@ -77,8 +76,8 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
       auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX;
       auto slice_tile_max = cb_color_size.SLICE_TILE_MAX;
 
-      auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::tile_width);
-      auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch);
+      auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::MicroTileWidth);
+      auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
       // Create color buffer
       gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &buffer->object);
@@ -105,8 +104,8 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
       auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX;
       auto slice_tile_max = db_depth_size.SLICE_TILE_MAX;
 
-      auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::tile_width);
-      auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::tile_width * latte::tile_height)) / pitch);
+      auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::MicroTileWidth);
+      auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
       // Create depth buffer
       gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &buffer->object);

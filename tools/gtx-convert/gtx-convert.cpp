@@ -4,6 +4,8 @@
 #include <spdlog/spdlog.h>
 #include "gpu/gfd.h"
 #include "gpu/latte_format.h"
+#include "modules/gx2/gx2_addrlib.h"
+#include "modules/gx2/gx2_dds.h"
 #include "modules/gx2/gx2_texture.h"
 #include "modules/gx2/gx2_shaders.h"
 #include "modules/gx2/gx2_enum_string.h"
