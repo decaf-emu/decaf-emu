@@ -10,6 +10,7 @@ build/*.txt
 *.sdf
 *.opensdf
 *.opendb
+*.ipch
 debugger/bin
 dump/
 config.json
