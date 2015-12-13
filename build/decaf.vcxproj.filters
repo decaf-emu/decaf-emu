@@ -720,6 +720,9 @@
     <ClCompile Include="..\src\gpu\microcode\latte_disassembler.cpp">
       <Filter>Source Files\gpu\microcode</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\nn_save\nn_save_file.cpp">
+      <Filter>Source Files\modules\nn_save</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1387,6 +1390,9 @@
     </ClInclude>
     <ClInclude Include="..\src\gpu\microcode\latte_instructions.h">
       <Filter>Header Files\gpu\microcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_save\nn_save_file.h">
+      <Filter>Header Files\modules\nn_save</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

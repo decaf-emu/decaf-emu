@@ -13,4 +13,5 @@ void
 NN_save::RegisterFunctions()
 {
    registerCoreFunctions();
+   registerFileFunctions();
 }
