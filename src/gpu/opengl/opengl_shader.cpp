@@ -778,24 +778,8 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    out << '\n';
 
    // Vertex Shader Exports
-   for (auto i = 0u; i <= spi_vs_out_config.VS_EXPORT_COUNT; i += 4) {
-      auto spi_vs_out_id = getRegister<latte::SPI_VS_OUT_ID_N>(latte::Register::SPI_VS_OUT_ID_0 + i * 4);
-
-      if ((i + 0) <= spi_vs_out_config.VS_EXPORT_COUNT) {
-         out << "out vec4 vs_out_" << spi_vs_out_id.SEMANTIC_0 << ";\n";
-      }
-
-      if ((i + 1) <= spi_vs_out_config.VS_EXPORT_COUNT) {
-         out << "out vec4 vs_out_" << spi_vs_out_id.SEMANTIC_1 << ";\n";
-      }
-
-      if ((i + 2) <= spi_vs_out_config.VS_EXPORT_COUNT) {
-         out << "out vec4 vs_out_" << spi_vs_out_id.SEMANTIC_2 << ";\n";
-      }
-
-      if ((i + 3) <= spi_vs_out_config.VS_EXPORT_COUNT) {
-         out << "out vec4 vs_out_" << spi_vs_out_id.SEMANTIC_3 << ";\n";
-      }
+   for (auto i = 0u; i <= spi_vs_out_config.VS_EXPORT_COUNT; i++) {
+      out << "out vec4 vs_out_" << i << ";\n";
    }
    out << '\n';
 
@@ -855,6 +839,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          out << "gl_Position = exp_position_" << (exp->arrayBase - 60) << ";\n";
          break;
       case latte::SQ_EXPORT_PARAM:
+         // TODO: Use vs_out semantics?
          out << "vs_out_" << exp->arrayBase << " = exp_param_" << exp->arrayBase << ";\n";
          break;
       case latte::SQ_EXPORT_PIXEL:
