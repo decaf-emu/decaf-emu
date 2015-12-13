@@ -1,5 +1,6 @@
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
+#include <glbinding/Meta.h>
 #include <gsl.h>
 #include <fstream>
 
@@ -587,12 +588,27 @@ void GLDriver::initGL()
    platform::ui::activateContext();
    glbinding::Binding::initialize();
 
-   glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After, { "glGetError" });
+   glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
    glbinding::setAfterCallback([](const glbinding::FunctionCall &call) {
-      auto error = gl::glGetError();
+      auto error = glbinding::Binding::GetError.directCall();
 
       if (error != gl::GL_NO_ERROR) {
-         gLog->error("OpenGL {} error: {}", call.toString(), error);
+         fmt::MemoryWriter writer;
+         writer << call.function->name() << "(";
+
+         for (unsigned i = 0; i < call.parameters.size(); ++i) {
+            writer << call.parameters[i]->asString();
+            if (i < call.parameters.size() - 1)
+               writer << ", ";
+         }
+
+         writer << ")";
+
+         if (call.returnValue) {
+            writer << " -> " << call.returnValue->asString();
+         }
+
+         gLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), writer.str());
       }
    });
 
