@@ -180,6 +180,9 @@ psArithSingle(ThreadState *state, Instruction instr, float *result)
          d = static_cast<float>(a - b);
          break;
       case PSMul:
+         if (slotB == 0) {
+            roundForMultiply(&a, &b);  // Not necessary for slot 1.
+         }
          d = static_cast<float>(a * b);
          break;
       case PSDiv:
@@ -367,7 +370,16 @@ fmaSingle(ThreadState *state, Instruction instr, float *result)
    } else if (vxisi || vximz) {
       d = make_nan<float>();
    } else {
+      if (slotC == 0) {
+         roundForMultiply(&a, &c);  // Not necessary for slot 1.
+      }
+
       d = static_cast<float>(std::fma(a, c, addend));
+
+      if (slotC == 0 && std::fetestexcept(FE_UNDERFLOW) && !is_zero(d)) {
+         std::feclearexcept(FE_UNDERFLOW);
+      }
+
       if (flags & FMANegate) {
          d = -d;
       }

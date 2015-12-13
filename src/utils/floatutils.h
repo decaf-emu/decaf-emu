@@ -111,7 +111,8 @@ inline bool
 is_denormal(Type v)
 {
    auto d = get_float_bits(v);
-   return d.exponent == d.exponent_min;
+   return d.exponent == d.exponent_min
+       && d.mantissa != 0;
 }
 
 template<typename Type>

@@ -165,6 +165,82 @@ updateFloatConditionRegister(ThreadState *state)
    state->cr.cr1 = state->fpscr.cr1;
 }
 
+// Helper for fmuls/fmadds to round the second (frC) operand appropriately.
+// May also need to modify the first operand, so both operands are passed
+// by reference.
+void
+roundForMultiply(double *a, double *c)
+{
+   // The mantissa is truncated from 52 to 24 bits, so bit 27 (counting from
+   // the LSB) is rounded.
+   const uint64_t roundBit = UINT64_C(1) << 27;
+
+   FloatBitsDouble aBits = get_float_bits(*a);
+   FloatBitsDouble cBits = get_float_bits(*c);
+
+   // If the second operand has no bits that would be rounded, this whole
+   // function is a no-op, so skip out early.
+   if (!(cBits.uv & ((roundBit << 1) - 1))) {
+      return;
+   }
+
+   // If the first operand is zero, the result is always zero (even if the
+   // second operand would round to infinity), so avoid generating any
+   // exceptions.
+   if (is_zero(*a)) {
+      *c = 0;
+      return;
+   }
+
+   // If the first operand is infinity and the second is not zero, the result
+   // is always infinity; get out now so we don't have to worry about it in
+   // normalization.
+   if (is_infinity(*a)) {
+      return;
+   }
+
+   // If the second operand is a denormal, we normalize it before rounding,
+   // adjusting the exponent of the other operand accordingly.  If the
+   // other operand becomes denormal, the product will round to zero, so we
+   // just set both values to zero and get out.
+   if (is_denormal(*c)) {
+      while (cBits.exponent == 0) {
+         cBits.uv <<= 1;
+         if (aBits.exponent == 0) {
+            *a = 0;
+            *c = 0;
+            std::feraiseexcept(FE_INEXACT | FE_UNDERFLOW);
+            return;
+         }
+         aBits.exponent--;
+      }
+   }
+
+   // Perform the rounding.  If this causes the value to go to infinity,
+   // we move a power of two to the other operand (if possible) for the
+   // case of an FMA operation in which we need to keep precision for the
+   // intermediate result.  Note that this particular rounding operation
+   // ignores FPSCR[RN].
+   const bool inexact = (cBits.uv & ((roundBit << 1) - 1)) != 0;
+   cBits.uv &= -roundBit;
+   cBits.uv += cBits.uv & roundBit;
+   if (is_infinity(cBits.v)) {
+      if (aBits.exponent == 0) {
+         aBits.uv <<= 1;
+      } else if (aBits.exponent < aBits.exponent_max - 1) {
+         aBits.exponent++;
+      } else {
+         // The product will overflow anyway, so just leave the first
+         // operand alone and let the host FPU raise exceptions as
+         // appropriate.
+      }
+      cBits.exponent--;
+   }
+
+   *a = aBits.v;
+   *c = cBits.v;
+}
+
 // Floating Arithmetic
 enum FPArithOperator {
     FPAdd,
@@ -247,6 +323,11 @@ fpArithGeneric(ThreadState *state, Instruction instr)
             d = static_cast<Type>(a - b);
             break;
          case FPMul:
+            // But!  The second operand to a single-precision multiply
+            // operation is rounded to 24 bits.
+            if (std::is_same<Type, float>::value) {
+               roundForMultiply(&a, &b);
+            }
             d = static_cast<Type>(a * b);
             break;
          case FPDiv:
@@ -459,7 +540,20 @@ fmaGeneric(ThreadState *state, Instruction instr)
       } else if (vxisi || vximz) {
          d = make_nan<double>();
       } else {
+         if (flags & FMASinglePrec) {
+            roundForMultiply(&a, &c);
+         }
+
          d = std::fma(a, c, addend);
+
+         // roundForMultiply() sets FE_UNDERFLOW if the product is known to
+         // underflow, but we shouldn't pass that through if the final
+         // result is nonzero.
+         if ((flags & FMASinglePrec)
+          && std::fetestexcept(FE_UNDERFLOW)
+          && !is_zero(d)) {
+            std::feclearexcept(FE_UNDERFLOW);
+         }
 
          if (flags & FMANegate) {
             d = -d;
@@ -467,8 +561,9 @@ fmaGeneric(ThreadState *state, Instruction instr)
       }
 
       if (flags & FMASinglePrec) {
-         state->fpr[instr.frD].paired0 = extend_float(d);
-         state->fpr[instr.frD].paired1 = extend_float(d);
+         d = extend_float(static_cast<float>(d));
+         state->fpr[instr.frD].paired0 = d;
+         state->fpr[instr.frD].paired1 = d;
       } else {
          state->fpr[instr.frD].value = d;
       }
