@@ -10,6 +10,7 @@
 #include "modules/gx2/gx2_shaders.h"
 #include "modules/gx2/gx2_enum_string.h"
 #include "utils/binaryfile.h"
+#include "fakevirtualmemory.h"
 
 static const char USAGE[] =
 R"(GTX Texture Converter
@@ -45,6 +46,8 @@ bool printInfo(const std::string &filename)
       return false;
    }
 
+   // TODO: Before we can print full shader info we must do pointer fixup in GFD::read
+
    for (auto &block : file.blocks) {
       switch (block.header.type) {
       case gfd::BlockType::VertexShaderHeader:
@@ -53,6 +56,7 @@ bool printInfo(const std::string &filename)
          auto spi_vs_out_config = shader->regs.spi_vs_out_config.value();
          auto num_spi_vs_out_id = shader->regs.num_spi_vs_out_id.value();
          auto spi_vs_out_id = shader->regs.spi_vs_out_id.value();
+
          std::cout
             << "VertexShaderHeader" << std::endl
             << "  index        = " << block.header.index << std::endl
@@ -66,6 +70,7 @@ bool printInfo(const std::string &filename)
             << "  attribVars   = " << shader->attribVarCount << std::endl
             << "  ringItemsize = " << shader->ringItemsize << std::endl
             << "  hasStreamOut = " << shader->hasStreamOut << std::endl;
+
          // TODO: Write out registers
          break;
       }
@@ -130,40 +135,6 @@ struct Texture
    gsl::span<uint8_t> mipmapData;
 };
 
-#pragma pack(1)
-struct DdsPixelFormat
-{
-   uint32_t	dwSize;
-   uint32_t	dwFlags;
-   uint32_t	dwFourCC;
-   uint32_t	dwRGBBitCount;
-   uint32_t	dwRBitMask;
-   uint32_t	dwGBitMask;
-   uint32_t	dwBBitMask;
-   uint32_t	dwABitMask;
-};
-
-struct DdsHeader
-{
-   uint32_t	dwSize;
-   uint32_t	dwFlags;
-   uint32_t	dwHeight;
-   uint32_t	dwWidth;
-   uint32_t	dwPitchOrLinearSize;
-   uint32_t	dwDepth;
-   uint32_t	dwMipMapCount;
-   uint32_t	dwReserved1[11];
-   DdsPixelFormat ddspf;
-   uint32_t	dwCaps;
-   uint32_t	dwCaps2;
-   uint32_t	dwCaps3;
-   uint32_t	dwCaps4;
-   uint32_t	dwReserved2;
-};
-
-static_assert(sizeof(DdsHeader) == 124, "dds header should be 124 bytes long");
-#pragma pack()
-
 bool
 convert(const std::string &filenameIn, const std::string &filenameOut)
 {
@@ -191,56 +162,17 @@ convert(const std::string &filenameIn, const std::string &filenameOut)
    }
 
    for (auto &tex : textures) {
-      std::vector<uint8_t> untiledData;
-      latte::untile(tex.imageData.data(),
-                    tex.header->surface.width,
-                    tex.header->surface.height,
-                    tex.header->surface.depth,
-                    tex.header->surface.pitch,
-                    static_cast<latte::SQ_DATA_FORMAT>(tex.header->surface.format & 0x3F),
-                    static_cast<latte::SQ_TILE_MODE>(tex.header->surface.tileMode.value()),
-                    tex.header->surface.swizzle,
-                    untiledData);
+      std::vector<uint8_t> untiledImage, untiledMipmap;
 
-      // MAGIC DDS
-      DdsHeader ddsHeader;
-      memset(&ddsHeader, 0, sizeof(ddsHeader));
-      ddsHeader.dwSize = sizeof(ddsHeader);
-      ddsHeader.dwFlags = 0x1 | 0x2 | 0x4 | 0x1000 | 0x80000;
-      ddsHeader.dwHeight = tex.header->surface.height;
-      ddsHeader.dwWidth = tex.header->surface.width;
-      ddsHeader.dwPitchOrLinearSize = (uint32_t)untiledData.size();
-      ddsHeader.ddspf.dwSize = sizeof(ddsHeader.ddspf);
-      ddsHeader.ddspf.dwFlags = 0x1 | 0x4;
-      ddsHeader.dwCaps = 0x1000;
+      // Map surface data to virtual memory
+      tex.header->surface.image = make_virtual_ptr<void>(memory_virtualmap(tex.imageData.data()));
+      tex.header->surface.mipmaps = make_virtual_ptr<void>(memory_virtualmap(tex.mipmapData.data()));
 
-      switch (tex.header->surface.format) {
-      case GX2SurfaceFormat::UNORM_BC1:
-         ddsHeader.ddspf.dwFourCC = '1TXD';
-         break;
-      case GX2SurfaceFormat::UNORM_BC2:
-         ddsHeader.ddspf.dwFourCC = '3TXD';
-         break;
-      case GX2SurfaceFormat::UNORM_BC3:
-         ddsHeader.ddspf.dwFourCC = '5TXD';
-         break;
-      case GX2SurfaceFormat::UNORM_BC4:
-         ddsHeader.ddspf.dwFourCC = '1ITA';
-         break;
-      case GX2SurfaceFormat::UNORM_BC5:
-         ddsHeader.ddspf.dwFourCC = '2ITA';
-         break;
-      default:
-         std::cout << "Unsupported surface format for DDS output " << GX2EnumAsString(tex.header->surface.format) << std::endl;
-         return false;
-      }
+      // Untile
+      gx2::internal::convertTiling(&tex.header->surface, untiledImage, untiledMipmap);
 
-      auto binaryDds = std::ofstream { filenameOut, std::ofstream::out | std::ofstream::binary };
-      binaryDds.write("DDS ", 4);
-      binaryDds.write(reinterpret_cast<char*>(&ddsHeader), sizeof(ddsHeader));
-      binaryDds.write(reinterpret_cast<char*>(&untiledData[0]), untiledData.size());
-
-      // Only output 1 file for now
+      // Output DDS file
+      gx2::debug::saveDDS(filenameOut, &tex.header->surface, untiledImage.data(), untiledMipmap.data());
       break;
    }
 
@@ -260,17 +192,5 @@ int main(int argc, char **argv)
       return convert(in, out) ? 0 : -1;
    }
 
-   return 0;
-}
-
-void *
-memory_translate(ppcaddr_t address)
-{
-   return nullptr;
-}
-
-ppcaddr_t
-memory_untranslate(const void *pointer)
-{
    return 0;
 }

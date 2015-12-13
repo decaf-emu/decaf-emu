@@ -13,13 +13,17 @@
   <ItemGroup>
     <ClCompile Include="..\src\gpu\gfd.cpp" />
     <ClCompile Include="..\src\gpu\latte_format.cpp" />
-    <ClCompile Include="..\src\gpu\latte_untile.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_addrlib.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_dds.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_format.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_surface.cpp" />
+    <ClCompile Include="..\tools\fakevirtualmemory.cpp" />
     <ClCompile Include="..\tools\gtx-convert\gtx-convert.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\gpu\gfd.h" />
+    <ClInclude Include="..\tools\fakevirtualmemory.h" />
     <ClInclude Include="..\tools\gtx-convert\untile.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -56,7 +60,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
@@ -65,7 +69,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\docopt;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -79,7 +83,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>docopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;docopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -97,7 +101,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>docopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;docopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

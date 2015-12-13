@@ -60,6 +60,7 @@ File::read(const std::string &filename)
       blocks.emplace_back(block);
    }
 
+   // TODO: Repair pointers inside blocks
    return true;
 }
 
