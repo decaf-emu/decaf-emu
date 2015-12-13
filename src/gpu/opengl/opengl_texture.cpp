@@ -104,7 +104,7 @@ getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
 }
 
 static gl::GLenum
-getTextureType(latte::SQ_DATA_FORMAT format)
+getTextureFormat(latte::SQ_DATA_FORMAT format)
 {
    /*
    GL_RED, GL_RG, GL_RGB, GL_RGBA
@@ -133,7 +133,7 @@ getTextureType(latte::SQ_DATA_FORMAT format)
 }
 
 static gl::GLenum
-getTextureFormat(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
+getTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
 {
    /*
    GL_FLOAT,
@@ -179,7 +179,7 @@ isCompressedFormat(latte::SQ_DATA_FORMAT format)
 }
 
 static gl::GLenum
-getCompressedTextureFormat(latte::SQ_DATA_FORMAT format, uint32_t degamma)
+getCompressedTextureDataType(latte::SQ_DATA_FORMAT format, uint32_t degamma)
 {
    switch (format) {
    case latte::FMT_BC1:
@@ -270,14 +270,14 @@ bool GLDriver::checkActiveTextures()
       bool compressed = isCompressedFormat(format);
       auto target = getTextureTarget(dim);
       auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma);
-      auto textureType = getTextureType(format);
-      auto textureFormat = gl::GL_INVALID_ENUM;
+      auto textureDataType = gl::GL_INVALID_ENUM;
+      auto textureFormat = getTextureFormat(format);
       auto size = untiled.size();
 
       if (compressed) {
-         textureFormat = getCompressedTextureFormat(format, degamma);
+         textureDataType = getCompressedTextureDataType(format, degamma);
       } else {
-         textureFormat = getTextureFormat(format, formatComp);
+         textureDataType = getTextureDataType(format, formatComp);
       }
 
       switch (dim) {
@@ -291,18 +291,18 @@ bool GLDriver::checkActiveTextures()
             gl::glCompressedTextureSubImage2D(texture.object, 0,
                                               0, 0,
                                               width, height,
-                                              textureFormat,
+                                              textureDataType,
                                               gsl::narrow_cast<gl::GLsizei>(size), untiled.data());
          } else {
             gl::glTextureSubImage2D(texture.object, 0,
                                     0, 0,
                                     width, height,
-                                    textureFormat, textureType,
+                                    textureFormat, textureDataType,
                                     untiled.data());
          }
          break;
       case latte::SQ_TEX_DIM_2D_ARRAY:
-         gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &texture.object);
+         gl::glCreateTextures(gl::GL_TEXTURE_2D_ARRAY, 1, &texture.object);
          gl::glTextureParameteri(texture.object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
          gl::glTextureParameteri(texture.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
          gl::glTextureStorage3D(texture.object, 1, storageFormat, width, height, depth);
@@ -311,13 +311,13 @@ bool GLDriver::checkActiveTextures()
             gl::glCompressedTextureSubImage3D(texture.object, 0,
                                               0, 0, 0,
                                               width, height, depth,
-                                              textureFormat,
+                                              textureDataType,
                                               gsl::narrow_cast<gl::GLsizei>(size), untiled.data());
          } else {
             gl::glTextureSubImage3D(texture.object, 0,
                                     0, 0, 0,
                                     width, height, depth,
-                                    textureFormat, textureType,
+                                    textureFormat, textureDataType,
                                     untiled.data());
          }
          break;
