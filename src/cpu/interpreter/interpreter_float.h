@@ -16,6 +16,9 @@ updateFPRF(ThreadState *state, Type value);
 void
 updateFloatConditionRegister(ThreadState *state);
 
+void
+roundForMultiply(double *a, double *c);
+
 template<typename Type> Type
 getFpr(ThreadState *state, unsigned fr);
 
