@@ -160,6 +160,7 @@ bool GLDriver::checkActiveShader()
          auto log = getProgramLog(vertexShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
          if (log.size()) {
             gLog->error("OpenGL failed to compile vertex shader:\n{}", log);
+            gLog->error("Shader Disassembly:\n{}\n", vertexShader.disassembly);
             gLog->error("Shader Code:\n{}\n", vertexShader.code);
             return false;
          }
@@ -200,6 +201,7 @@ bool GLDriver::checkActiveShader()
          auto log = getProgramLog(pixelShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
          if (log.size()) {
             gLog->error("OpenGL failed to compile pixel shader:\n{}", log);
+            gLog->error("Shader Disassembly:\n{}\n", pixelShader.disassembly);
             gLog->error("Shader Code:\n{}\n", pixelShader.code);
             return false;
          }
@@ -746,6 +748,8 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       return false;
    }
 
+   latte::disassemble(shader, vertex.disassembly);
+
    if (!glsl::generateBody(shader, body)) {
       gLog->warn("Failed to translate 100% of instructions for vertex shader");
    }
@@ -870,6 +874,8 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
       gLog->error("Failed to decode pixel shader");
       return false;
    }
+
+   latte::disassemble(shader, pixel.disassembly);
 
    if (!glsl::generateBody(shader, body)) {
       gLog->warn("Failed to translate 100% of instructions for pixel shader");

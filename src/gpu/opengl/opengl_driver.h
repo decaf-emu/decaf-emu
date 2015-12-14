@@ -80,6 +80,7 @@ struct VertexShader
    std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
    latte::SQ_PGM_START_VS pgm_start_vs;
    std::string code;
+   std::string disassembly;
 };
 
 struct PixelShader
@@ -90,6 +91,7 @@ struct PixelShader
    std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
    latte::SQ_PGM_START_PS pgm_start_ps;
    std::string code;
+   std::string disassembly;
 };
 
 using ShaderKey = std::tuple<uint32_t, uint32_t, uint32_t>;
