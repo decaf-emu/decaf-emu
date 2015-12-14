@@ -457,6 +457,7 @@ decodeAlu(DecodeState &state, const ControlFlowInst &cf)
    parent->id = cf.alu.word1.CF_INST;
    parent->name = getInstructionName(cf.alu.word1.CF_INST);
    parent->cfPC = state.cfPC;
+   parent->addr = cf.alu.word0.ADDR;
    parent->kcache[0].bank = cf.alu.word0.KCACHE_BANK0;
    parent->kcache[0].mode = cf.alu.word0.KCACHE_MODE0;
    parent->kcache[0].addr = cf.alu.word1.KCACHE_ADDR0;
