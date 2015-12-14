@@ -16,6 +16,21 @@ public:
       return mValues[index];
    }
 
+   size_t size() const
+   {
+      return Size;
+   }
+
+   be_val<Type> *data()
+   {
+      return &mValues[0];
+   }
+
+   const be_val<Type> *data() const
+   {
+      return &mValues[0];
+   }
+
    std::array<Type, Size> value() const
    {
       std::array<Type, Size> result;
