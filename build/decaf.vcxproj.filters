@@ -49,9 +49,6 @@
     <Filter Include="Source Files\modules\zlib125">
       <UniqueIdentifier>{e15b800e-59f9-40f8-bf71-3508459abb20}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\util">
-      <UniqueIdentifier>{f07bb6eb-0854-4198-85aa-ee57175b118e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\ppc">
       <UniqueIdentifier>{aad165e0-f0a4-4040-b232-84b59983ec4a}</UniqueIdentifier>
     </Filter>
@@ -93,9 +90,6 @@
     </Filter>
     <Filter Include="Header Files\modules\erreula">
       <UniqueIdentifier>{010c8799-d846-4e5d-b504-822d85fae6b4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\util">
-      <UniqueIdentifier>{295406e0-1835-4c36-86dd-07af1a5c659b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\platform">
       <UniqueIdentifier>{d66fc378-e019-47e0-a034-462bc8a28d2d}</UniqueIdentifier>
@@ -201,6 +195,12 @@
     </Filter>
     <Filter Include="Header Files\gpu\microcode">
       <UniqueIdentifier>{d17a9610-2d69-48d8-8c49-f32d87fb3f48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utils">
+      <UniqueIdentifier>{f07bb6eb-0854-4198-85aa-ee57175b118e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utils">
+      <UniqueIdentifier>{295406e0-1835-4c36-86dd-07af1a5c659b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -490,10 +490,10 @@
       <Filter>Source Files\modules\snd_core</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\wfunc_ptr.cpp">
-      <Filter>Source Files\util</Filter>
+      <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\crc32.cpp">
-      <Filter>Source Files\util</Filter>
+      <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardwaretests.cpp">
       <Filter>Source Files\ppc</Filter>
@@ -532,7 +532,7 @@
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\log.cpp">
-      <Filter>Source Files\util</Filter>
+      <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp">
       <Filter>Source Files\modules\gx2</Filter>
@@ -1062,46 +1062,46 @@
       <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\be_data.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\be_val.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\be_vec.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\bitutils.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\crc32.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\floatutils.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\log.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\structsize.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\strutils.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\teenyheap.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\virtual_ptr.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\wfunc_ptr.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\align.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\type_list.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardwaretests.h">
       <Filter>Header Files\ppc</Filter>
@@ -1128,7 +1128,7 @@
       <Filter>Header Files\cpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\wfunc_call.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\cpu\statedbg.h">
       <Filter>Header Files\cpu</Filter>
@@ -1146,19 +1146,19 @@
       <Filter>Header Files\platform</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\byte_swap.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\bit_cast.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\binaryfile.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\binaryview.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_enum.h">
       <Filter>Header Files\modules\gx2</Filter>
@@ -1173,7 +1173,7 @@
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\be_volatile.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h">
       <Filter>Header Files\modules\coreinit</Filter>
@@ -1185,10 +1185,10 @@
       <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\debuglog.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\make_array.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\pm4.h">
       <Filter>Header Files\gpu</Filter>
@@ -1269,7 +1269,7 @@
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\be_array.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\opengl\glsl_generator.h">
       <Filter>Header Files\gpu\opengl</Filter>
@@ -1290,7 +1290,7 @@
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\fixed.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gpu\latte_enum_pa.h">
       <Filter>Header Files\gpu</Filter>
@@ -1395,7 +1395,7 @@
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\pow.h">
-      <Filter>Header Files\util</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

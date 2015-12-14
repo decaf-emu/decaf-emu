@@ -16,11 +16,12 @@ struct Mapping
 static std::vector<Mapping>
 gMemoryMap =
 {
-   { "SystemData",   0x01000000, 0x02000000, 0 },
-   { "Application",  0x02000000, 0x42000000, 0 },
-   { "Foreground",   0xE0000000, 0xE4000000, 0 },
-   { "MEM1",         0xF4000000, 0xF6000000, 0 },
-   { "LockedCache",  0xF8000000, 0xF800C000, 0 },
+   { "SystemData",   SystemBase,       SystemEnd,        0 },
+   { "Application",  ApplicationBase,  ApplicationEnd,   0 },
+   { "Apertures",    AperturesBase,    AperturesEnd,     0 },
+   { "Foreground",   ForegroundBase,   ForegroundEnd,    0 },
+   { "MEM1",         MEM1Base,         MEM1End,          0 },
+   { "LockedCache",  LockedCacheBase,  LockedCacheEnd,   0 },
 };
 
 static size_t

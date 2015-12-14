@@ -1,10 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_core.h"
 #include "coreinit_lockedcache.h"
+#include "mem/mem.h"
 #include "utils/teenyheap.h"
-
-static const auto
-LockedCacheBase = 0xF8000000u;
 
 static const auto
 LockedCacheAlign = 512;
@@ -33,7 +31,7 @@ LCDealloc(void * addr)
 void
 CoreInit::initialiseLockedCache()
 {
-   auto base = reinterpret_cast<uint8_t *>(memory_translate(LockedCacheBase));
+   auto base = reinterpret_cast<uint8_t *>(memory_translate(mem::LockedCacheBase));
 
    for (auto i = 0u; i < CoreCount; ++i) {
       gLockedCache[i] = new TeenyHeap(base + (LockedCacheSize * i), LockedCacheSize);

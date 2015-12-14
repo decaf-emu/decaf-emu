@@ -23,8 +23,8 @@ struct InstructionFuzzData {
    std::vector<Field> allFields;
 };
 
-static const uint32_t instructionBase = 0x02000000;
-static const uint32_t dataBase = 0x03000000;
+static const uint32_t instructionBase = mem::ApplicationBase;
+static const uint32_t dataBase = instructionBase + 0x01000000;
 std::vector<InstructionFuzzData> instructionFuzzData;
 
 bool buildFuzzData(InstructionID instrId, InstructionFuzzData &fuzzData)

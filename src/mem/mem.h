@@ -6,6 +6,33 @@
 namespace mem
 {
 
+enum AddressSpace : ppcaddr_t
+{
+   SystemBase        = 0x01000000,
+   SystemEnd         = 0x02000000,
+   SystemSize        = SystemEnd - SystemBase,
+
+   ApplicationBase   = 0x02000000,
+   ApplicationEnd    = 0x42000000,
+   ApplicationSize   = ApplicationEnd - ApplicationBase,
+
+   AperturesBase     = 0xB0000000,
+   AperturesEnd      = 0xC0000000,
+   AperturesSize     = AperturesEnd - AperturesBase,
+
+   ForegroundBase    = 0xE0000000,
+   ForegroundEnd     = 0xE4000000,
+   ForegroundSize    = ForegroundEnd - ForegroundBase,
+
+   MEM1Base          = 0xF4000000,
+   MEM1End           = 0xF6000000,
+   MEM1Size          = MEM1End - MEM1Base,
+
+   LockedCacheBase   = 0xF8000000,
+   LockedCacheEnd    = 0xF800C000,
+   LockedCacheSize   = LockedCacheEnd - LockedCacheBase,
+};
+
 void
 initialise();
 

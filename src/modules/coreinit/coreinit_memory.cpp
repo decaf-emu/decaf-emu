@@ -38,11 +38,11 @@ coreinit_memset(void *dst, int val, ppcsize_t size)
    return dst;
 }
 
-uint32_t gMem1Start = 0xf4000000;
-uint32_t gMem1Size  = 0x02000000;
+uint32_t gMem1Start = mem::MEM1Base;
+uint32_t gMem1Size  = mem::MEM1Size;
 
-uint32_t gMem2Start = 0x02000000;
-uint32_t gMem2Size  = 0x40000000;
+uint32_t gMem2Start = mem::ApplicationBase;
+uint32_t gMem2Size  = mem::ApplicationSize;
 
 int
 OSGetMemBound(OSMemoryType type, be_val<uint32_t> *addr, be_val<uint32_t> *size)
@@ -82,17 +82,15 @@ OSSetMemBound(OSMemoryType type, uint32_t start, uint32_t size)
    return 0;
 }
 
-// First 40mb of foreground is for applications
-// Last 24mb of foreground is saved for system use
 BOOL
 OSGetForegroundBucket(be_val<uint32_t> *addr, be_val<uint32_t> *size)
 {
    if (addr) {
-      *addr = 0xe0000000;
+      *addr = mem::ForegroundBase;
    }
 
    if (size) {
-      *size = 0x04000000;
+      *size = mem::ForegroundSize;
    }
 
    return TRUE;
@@ -102,11 +100,13 @@ BOOL
 OSGetForegroundBucketFreeArea(be_val<uint32_t> *addr, be_val<uint32_t> *size)
 {
    if (addr) {
-      *addr = 0xe0000000;
+      *addr = mem::ForegroundBase;
    }
 
    if (size) {
-      *size = 0x02800000;
+      // First 40mb of foreground is for applications
+      // Last 24mb of foreground is saved for system use
+      *size = 40 * 1024 * 1024;
    }
 
    return TRUE;

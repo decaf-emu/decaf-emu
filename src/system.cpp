@@ -16,8 +16,7 @@ gSystem;
 void
 System::initialise()
 {
-   auto heap = mem::translate(0x01000000);
-   mSystemHeap = new TeenyHeap(heap, 0x01000000);
+   mSystemHeap = new TeenyHeap(mem::translate(mem::SystemBase), mem::SystemSize);
 }
 
 
