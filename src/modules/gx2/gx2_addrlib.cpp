@@ -68,7 +68,9 @@ getAddrLibHandle()
 }
 
 bool
-getSurfaceInfo(GX2Surface *surface, uint32_t level, ADDR_COMPUTE_SURFACE_INFO_OUTPUT *output)
+getSurfaceInfo(GX2Surface *surface,
+               uint32_t level,
+               ADDR_COMPUTE_SURFACE_INFO_OUTPUT *output)
 {
    ADDR_E_RETURNCODE result = ADDR_OK;
    auto hwFormat = surface->format & 0x3f;
@@ -191,7 +193,12 @@ getSurfaceInfo(GX2Surface *surface, uint32_t level, ADDR_COMPUTE_SURFACE_INFO_OU
 }
 
 bool
-copySurface(GX2Surface *surfaceSrc, GX2Surface *surfaceDst, uint32_t level, uint32_t depth, std::vector<uint8_t> &image, std::vector<uint8_t> &mipmap)
+copySurface(GX2Surface *surfaceSrc,
+            GX2Surface *surfaceDst,
+            uint32_t level,
+            uint32_t depth,
+            std::vector<uint8_t> &image,
+            std::vector<uint8_t> &mipmap)
 {
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT srcInfoOutput;
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT dstInfoOutput;
@@ -341,7 +348,9 @@ copySurface(GX2Surface *surfaceSrc, GX2Surface *surfaceDst, uint32_t level, uint
 }
 
 bool
-convertTiling(GX2Surface *surface, std::vector<uint8_t> &image, std::vector<uint8_t> &mipmap)
+convertTiling(GX2Surface *surface,
+              std::vector<uint8_t> &image,
+              std::vector<uint8_t> &mipmap)
 {
    GX2Surface outSurface(*surface);
    outSurface.mipmaps = nullptr;
@@ -367,6 +376,42 @@ convertTiling(GX2Surface *surface, std::vector<uint8_t> &image, std::vector<uint
    }
 
    return true;
+}
+
+uint32_t
+getSurfaceSliceSwizzle(GX2TileMode tileMode,
+                       uint32_t baseSwizzle,
+                       uint32_t slice)
+{
+   ADDR_COMPUTE_SLICESWIZZLE_INPUT input;
+   ADDR_COMPUTE_SLICESWIZZLE_OUTPUT output;
+   auto tileSwizzle = uint32_t { 0 };
+
+   std::memset(&input, 0, sizeof(ADDR_COMPUTE_SLICESWIZZLE_INPUT));
+   std::memset(&output, 0, sizeof(ADDR_COMPUTE_SLICESWIZZLE_OUTPUT));
+
+   input.size = sizeof(ADDR_COMPUTE_SLICESWIZZLE_INPUT);
+   output.size = sizeof(ADDR_COMPUTE_SLICESWIZZLE_OUTPUT);
+
+   if (tileMode >= GX2TileMode::Tiled2DThin1 && tileMode != GX2TileMode::LinearSpecial) {
+      input.tileMode = static_cast<AddrTileMode>(tileMode);
+      input.baseSwizzle = baseSwizzle;
+      input.slice = slice;
+      input.baseAddr = 0;
+
+      auto handle = gx2::internal::getAddrLibHandle();
+      AddrComputeSliceSwizzle(handle, &input, &output);
+      tileSwizzle = output.tileSwizzle;
+   }
+
+   return tileSwizzle;
+}
+
+uint32_t
+calcSliceSize(GX2Surface *surface,
+              ADDR_COMPUTE_SURFACE_INFO_OUTPUT *info)
+{
+   return info->pitch * info->height * (1 << surface->aa) * (info->bpp / 8);
 }
 
 } // namespace internal
