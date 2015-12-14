@@ -8,6 +8,17 @@ include_directories("${PUGIXML_DIR}/src")
 add_library(pugixml STATIC "${PUGIXML_DIR}/src/pugixml.cpp")
 set(PUGIXML_LIBRARIES pugixml)
 
+set(ADDRLIB_DIR "libraries/addrlib")
+include_directories("${ADDRLIB_DIR}/include")
+add_library(addrlib STATIC
+    "${ADDRLIB_DIR}/src/addrinterface.cpp"
+    "${ADDRLIB_DIR}/src/core/addrelemlib.cpp"
+    "${ADDRLIB_DIR}/src/core/addrlib.cpp"
+    "${ADDRLIB_DIR}/src/core/addrobject.cpp"
+    "${ADDRLIB_DIR}/src/r600/r600addrlib.cpp"
+    )
+set(ADDRLIB_LIBRARIES addrlib)
+
 set(DOCOPT_DIR "libraries/docopt")
 include_directories("${DOCOPT_DIR}")
 externalproject_add(docopt
