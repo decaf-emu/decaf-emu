@@ -252,6 +252,20 @@ static bool MIN(GenerateState &state, AluInstruction *ins)
    return true;
 }
 
+static bool RNDE(GenerateState &state, AluInstruction *ins)
+{
+   // dst = roundEven(src0)
+   assert(ins->srcCount == 1);
+   translateAluDestStart(state, ins);
+
+   state.out << "roundEven(";
+   translateAluSource(state, ins, ins->src[0]);
+   state.out << ')';
+
+   translateAluDestEnd(state, ins);
+   return true;
+}
+
 static bool MOV(GenerateState &state, AluInstruction *ins)
 {
    // dst = src0
@@ -701,6 +715,7 @@ void registerAluOP2()
    registerGenerator(latte::SQ_OP2_INST_MIN_INT, MIN);
    registerGenerator(latte::SQ_OP2_INST_MAX_UINT, MAX);
    registerGenerator(latte::SQ_OP2_INST_MIN_UINT, MIN);
+   registerGenerator(latte::SQ_OP2_INST_RNDNE, RNDE);
    registerGenerator(latte::SQ_OP2_INST_MOV, MOV);
    registerGenerator(latte::SQ_OP2_INST_MOVA_FLOOR, MOVA_FLOOR);
    registerGenerator(latte::SQ_OP2_INST_CEIL, CEIL);
