@@ -564,11 +564,14 @@ fmaGeneric(ThreadState *state, Instruction instr)
          state->fpr[instr.frD].paired1 = d;
       } else {
          state->fpr[instr.frD].value = d;
-         // Note that at least Intel Haswell CPUs have a bug in the FMA3
-         // instruction implementations which causes the underflow
-         // exception to not be raised if an FMA result is rounded up (in
-         // magnitude) to the minimum normal value, so the state of FPSCR
-         // will differ from the Espresso in such cases.
+         // Note that Intel CPUs report underflow based on the value _after_
+         // rounding, while the Espresso reports underflow _before_ rounding.
+         // (IEEE 754 allows an implementer to choose whether to report
+         // underflow before or after rounding, so both of these behaviors
+         // are technically compliant.)  Because of this, if an unrounded
+         // FMA result is slightly less in magnitude than the minimum normal
+         // value but is rounded to that value, the emulated FPSCR state will
+         // differ from a real Espresso in that the UX bit will not be set.
       }
 
       updateFPRF(state, d);
