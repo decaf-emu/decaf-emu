@@ -188,7 +188,6 @@ roundForMultiply(double *a, double *c)
    // second operand would round to infinity), so avoid generating any
    // exceptions.
    if (is_zero(*a)) {
-      *c = 0;
       return;
    }
 
@@ -201,15 +200,12 @@ roundForMultiply(double *a, double *c)
 
    // If the second operand is a denormal, we normalize it before rounding,
    // adjusting the exponent of the other operand accordingly.  If the
-   // other operand becomes denormal, the product will round to zero, so we
-   // just set both values to zero and get out.
+   // other operand becomes denormal, the product will round to zero in any
+   // case, so we just abort and let the operation proceed normally.
    if (is_denormal(*c)) {
       while (cBits.exponent == 0) {
          cBits.uv <<= 1;
          if (aBits.exponent == 0) {
-            *a = 0;
-            *c = 0;
-            std::feraiseexcept(FE_INEXACT | FE_UNDERFLOW);
             return;
          }
          aBits.exponent--;
@@ -547,15 +543,6 @@ fmaGeneric(ThreadState *state, Instruction instr)
 
          d = std::fma(a, c, addend);
 
-         // roundForMultiply() sets FE_UNDERFLOW if the product is known to
-         // underflow, but we shouldn't pass that through if the final
-         // result is nonzero.
-         if ((flags & FMASinglePrec)
-          && std::fetestexcept(FE_UNDERFLOW)
-          && !is_zero(d)) {
-            std::feclearexcept(FE_UNDERFLOW);
-         }
-
          if (flags & FMANegate) {
             d = -d;
          }
@@ -567,6 +554,11 @@ fmaGeneric(ThreadState *state, Instruction instr)
          state->fpr[instr.frD].paired1 = d;
       } else {
          state->fpr[instr.frD].value = d;
+         // Note that at least Intel Haswell CPUs have a bug in the FMA3
+         // instruction implementations which causes the underflow
+         // exception to not be raised if an FMA result is rounded up (in
+         // magnitude) to the minimum normal value, so the state of FPSCR
+         // will differ from the Espresso in such cases.
       }
 
       updateFPRF(state, d);
