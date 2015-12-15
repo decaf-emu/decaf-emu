@@ -50,7 +50,7 @@ ppc_estimate_reciprocal(double v)
       return std::copysign(std::numeric_limits<float>::max(), v);
    }
 
-   if (bits.exponent > 1149) {
+   if (bits.exponent > 1150) {
       std::feraiseexcept(FE_UNDERFLOW | FE_INEXACT);
       return std::copysign(0.0, v);
    }
