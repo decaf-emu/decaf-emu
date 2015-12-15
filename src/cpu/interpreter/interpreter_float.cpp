@@ -46,10 +46,12 @@ ppc_estimate_reciprocal(double v)
    }
 
    if (bits.exponent < 895) {
+      std::feraiseexcept(FE_OVERFLOW | FE_INEXACT);
       return std::copysign(std::numeric_limits<float>::max(), v);
    }
 
    if (bits.exponent > 1149) {
+      std::feraiseexcept(FE_UNDERFLOW | FE_INEXACT);
       return std::copysign(0.0, v);
    }
 
@@ -429,7 +431,15 @@ fres(ThreadState *state, Instruction instr)
       // paired1 is left undefined in the UISA.  TODO: Check actual behavior.
       updateFPRF(state, d);
       state->fpscr.zx |= zx;
-      updateFPSCR(state, oldFPSCR);
+      if (std::fetestexcept(FE_INEXACT)) {
+         // On inexact result, fres sets FPSCR[FI] without also setting
+         // FPSCR[XX].
+         std::feclearexcept(FE_INEXACT);
+         updateFPSCR(state, oldFPSCR);
+         state->fpscr.fi = 1;
+      } else {
+         updateFPSCR(state, oldFPSCR);
+      }
    }
 
    if (instr.rc) {
