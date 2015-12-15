@@ -519,9 +519,10 @@ fmaGeneric(ThreadState *state, Instruction instr)
    const double addend = (flags & FMASubtract) ? -b : b;
 
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
-   const bool vxisi = ((is_infinity(a) || is_infinity(c)) && is_infinity(b)
-                       && (std::signbit(a) ^ std::signbit(c)) != std::signbit(addend));
    const bool vximz = (is_infinity(a) && is_zero(c)) || (is_zero(a) && is_infinity(c));
+   const bool vxisi = (!vximz && !is_nan(a) && !is_nan(c)
+                       && (is_infinity(a) || is_infinity(c)) && is_infinity(b)
+                       && (std::signbit(a) ^ std::signbit(c)) != std::signbit(addend));
 
    const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan |= vxsnan;
