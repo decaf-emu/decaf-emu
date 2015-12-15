@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cfenv>
 #include <fstream>
 #include "cpu/cpu.h"
 #include "cpu/jit/jit.h"
@@ -173,6 +174,7 @@ bool runTests(const std::string &path)
          // Execute test
          mem::write(baseAddress, test.instr.value);
          cpu::jit::clearCache();
+         std::feclearexcept(FE_ALL_EXCEPT);
          cpu::executeSub(nullptr, &state);
 
          // Check XER (all bits)
