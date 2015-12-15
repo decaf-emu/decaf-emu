@@ -10,6 +10,7 @@ set(PUGIXML_LIBRARIES pugixml)
 
 set(ADDRLIB_DIR "libraries/addrlib")
 include_directories("${ADDRLIB_DIR}/include")
+include_directories("${ADDRLIB_DIR}/src")
 add_library(addrlib STATIC
     "${ADDRLIB_DIR}/src/addrinterface.cpp"
     "${ADDRLIB_DIR}/src/core/addrelemlib.cpp"
