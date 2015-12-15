@@ -428,7 +428,7 @@ fres(ThreadState *state, Instruction instr)
    } else {
       d = static_cast<float>(ppc_estimate_reciprocal(b));
       state->fpr[instr.frD].paired0 = d;
-      // paired1 is left undefined in the UISA.  TODO: Check actual behavior.
+      state->fpr[instr.frD].paired1 = d;
       updateFPRF(state, d);
       state->fpscr.zx |= zx;
       if (std::fetestexcept(FE_INEXACT)) {
@@ -737,6 +737,10 @@ frsp(ThreadState *state, Instruction instr)
    } else {
       auto d = static_cast<float>(b);
       state->fpr[instr.frD].paired0 = d;
+      // frD(ps1) is left undefined in the 750CL manual, but the processor
+      // actually copies the result to ps1 like other single-precision
+      // instructions.
+      state->fpr[instr.frD].paired1 = d;
       updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
    }
