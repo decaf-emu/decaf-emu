@@ -384,7 +384,7 @@ Loader::loadKernelModule(const std::string &name, KernelModule *module)
 
 
 ppcaddr_t
-Loader::registerUnimplementedData(const std::string& name)
+Loader::registerUnimplementedData(const std::string &module, const std::string& name)
 {
    auto itr = mUnimplementedData.find(name);
 
@@ -396,7 +396,7 @@ Loader::registerUnimplementedData(const std::string& name)
    auto fakeAddr = 0xFFF00000 | (id << 12);
    assert(id <= 0xFF);
 
-   gLog->info("Unimplemented data symbol {} at {:08x}", name, fakeAddr);
+   gLog->info("Unimplemented data symbol {}::{} at {:08x}", module, name, fakeAddr);
 
    mUnimplementedData.emplace(name, fakeAddr);
    return fakeAddr | 0x800;
@@ -464,7 +464,6 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
 
          auto symbol = getSymbol(symSecView, index);
          auto &symbolSection = sections[symbol.shndx];
-         auto symbolSectionName = shStrTab + symbolSection.header.name;
          auto symbolName = reinterpret_cast<const char*>(symStrTab.memory) + symbol.name;
 
          auto symAddr = getSymbolAddress(symbol, sections);
@@ -474,7 +473,7 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
             symAddr = mem::read<uint32_t>(symAddr);
 
             if (symAddr == 0) {
-               symAddr = registerUnimplementedData(symbolName);
+               symAddr = registerUnimplementedData(symbolSection.name, symbolName);
             }
          }
 

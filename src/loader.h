@@ -80,7 +80,7 @@ public:
 
 private:
    ppcaddr_t
-   registerUnimplementedData(const std::string& name);
+   registerUnimplementedData(const std::string &module, const std::string& name);
 
    ppcaddr_t
    registerUnimplementedFunction(const std::string &module, const std::string &func);
