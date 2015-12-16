@@ -28,9 +28,13 @@ enum AddressSpace : ppcaddr_t
    MEM1End           = 0xF6000000,
    MEM1Size          = MEM1End - MEM1Base,
 
-   LockedCacheBase   = 0xF8000000,
-   LockedCacheEnd    = 0xF800C000,
+   LockedCacheBase   = 0xF6000000,
+   LockedCacheEnd    = 0xF600C000,
    LockedCacheSize   = LockedCacheEnd - LockedCacheBase,
+
+   SharedDataBase    = 0xF8000000,
+   SharedDataEnd     = 0xFB000000,
+   SharedDataSize    = SharedDataEnd - SharedDataBase,
 };
 
 void

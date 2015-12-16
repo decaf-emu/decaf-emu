@@ -22,6 +22,7 @@ gMemoryMap =
    { "Foreground",   ForegroundBase,   ForegroundEnd,    0 },
    { "MEM1",         MEM1Base,         MEM1End,          0 },
    { "LockedCache",  LockedCacheBase,  LockedCacheEnd,   0 },
+   { "SharedData",   SharedDataBase,   SharedDataEnd,    0 },
 };
 
 static size_t
