@@ -8,91 +8,52 @@
 class TeenyHeap
 {
 private:
-   struct FreeBlock
+   struct MemoryBlock
    {
       uint8_t *start;
-      uint8_t *end;
+      size_t size;
    };
 
 public:
    TeenyHeap(void *buffer, size_t size) :
-      mBuffer(static_cast<uint8_t*>(buffer)),
+      mBuffer(static_cast<uint8_t *>(buffer)),
       mSize(size)
    {
-      mFreeBlocks.emplace_back(FreeBlock { mBuffer, mBuffer + mSize });
+      mFreeBlocks.emplace_back(MemoryBlock { mBuffer, mSize });
    }
 
    void *
    alloc(size_t size, size_t alignment = 4)
    {
       std::unique_lock<std::mutex> lock(mMutex);
-      // Pick first free block to allocate from
-      auto itr = mFreeBlocks.begin();
-      intptr_t alignOffset = 0;
+      auto adjSize = align_up(size, alignment);
+      auto block = mFreeBlocks.begin();
 
-      for (; itr != mFreeBlocks.end(); ++itr) {
-         uint8_t *alignedStart = align_up(itr->start, alignment);
-
-         if (static_cast<size_t>(itr->end - alignedStart) >= size) {
-            // This block is big enough
-            alignOffset = alignedStart - itr->start;
+      for (block = mFreeBlocks.begin(); block != mFreeBlocks.end(); ++block) {
+         if (block->size >= adjSize) {
             break;
          }
       }
 
-      if (itr == mFreeBlocks.end()) {
-         // No big enough blocks
+      if (block == mFreeBlocks.end()) {
          return nullptr;
       }
 
-      size_t alignedSize = size + alignOffset;
-      uint8_t *basePtr = itr->start;
-      uint8_t *alignedPtr = basePtr + alignOffset;
+      auto start = block->start;
+      block->start += adjSize;
+      block->size -= adjSize;
 
-      // Remove or shrink the chosen free block
-      if (itr->start - itr->end == alignedSize) {
-         mFreeBlocks.erase(itr);
-      } else {
-         itr->start += alignedSize;
+      // Erase block if it gets too small
+      if (block->size <= sizeof(MemoryBlock) + 4) {
+         mFreeBlocks.erase(block);
+         adjSize += block->size;
       }
 
-      // Return the alignment bytes to the free list
-      if (alignOffset > 0) {
-         mFreeBlocks.emplace_back(FreeBlock { basePtr, basePtr + alignOffset });
-      }
+      // Allocate block
+      auto alignedStart = align_up(start, alignment);
+      mAllocatedBlocks.emplace(alignedStart, MemoryBlock { start, adjSize });
 
-      // Save the size of this allocation
-      mAllocSizes.emplace(alignedPtr, size);
-      return alignedPtr;
-   }
-
-   void *
-   realloc(void *ptr, size_t size, size_t alignment = 4)
-   {
-      std::unique_lock<std::mutex> lock(mMutex);
-      auto ucptr = static_cast<uint8_t*>(ptr);
-      auto itr = mAllocSizes.find(ucptr);
-      assert(itr != mAllocSizes.end());
-
-      // Only allow shrinking reallocs right now.
-      assert(size <= itr->second);
-
-      // Ensure alignments match
-      assert(align_up(ucptr, alignment) == ucptr);
-
-      // If sizes are equal, do nothing
-      if (size == itr->second) {
-         return ptr;
-      }
-
-      // Free the extra region
-      releaseBlock({ ucptr + size, ucptr + itr->second });
-
-      // Resize this allocation to be the right place
-      itr->second = size;
-
-      // Return the same pointer since we can only shrink right now
-      return ptr;
+      return alignedStart;
    }
 
    void
@@ -100,34 +61,33 @@ public:
    {
       std::unique_lock<std::mutex> lock(mMutex);
       auto ucptr = static_cast<uint8_t*>(ptr);
-      auto itr = mAllocSizes.find(ucptr);
-      assert(itr != mAllocSizes.end());
+      auto itr = mAllocatedBlocks.find(ucptr);
+      assert(itr != mAllocatedBlocks.end());
 
-      releaseBlock({ ucptr, ucptr + itr->second });
-      mAllocSizes.erase(itr);
-   }
-
-   std::pair<void*, void*>
-   getRange() const
-   {
-      return std::make_pair((void*)mBuffer, (void*)(mBuffer + mSize));
+      releaseBlock(itr->second);
+      mAllocatedBlocks.erase(itr);
    }
 
 protected:
    void
-   releaseBlock(FreeBlock block)
+   releaseBlock(MemoryBlock block)
    {
-      for (auto i = mFreeBlocks.begin(); i != mFreeBlocks.end(); ++i) {
-         if (i->end == block.start) {
-            block.start = i->start;
-            mFreeBlocks.erase(i);
-            return releaseBlock(block);
+      auto blockStart = block.start;
+      auto blockEnd = block.start + block.size;
+
+      for (auto &free : mFreeBlocks) {
+         auto freeStart = free.start;
+         auto freeEnd = free.start + free.size;
+
+         if (blockStart == freeEnd) {
+            free.size += block.size;
+            return;
          }
 
-         if (block.end == i->start) {
-            block.end = i->end;
-            mFreeBlocks.erase(i);
-            return releaseBlock(block);
+         if (blockEnd == freeStart) {
+            free.start = blockStart;
+            free.size += block.size;
+            return;
          }
       }
 
@@ -136,7 +96,7 @@ protected:
 
    uint8_t *mBuffer;
    size_t mSize;
-   std::map<uint8_t*, size_t> mAllocSizes;
-   std::vector<FreeBlock> mFreeBlocks;
+   std::vector<MemoryBlock> mFreeBlocks;
+   std::map<uint8_t *, MemoryBlock> mAllocatedBlocks;
    std::mutex mMutex;
 };
