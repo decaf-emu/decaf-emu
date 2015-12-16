@@ -191,7 +191,9 @@
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />
     <ClCompile Include="..\src\modules\gameloader\gameloader.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2r_buffer.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2r_resource.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2r_surface.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_addrlib.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_cbpool.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_clear.cpp" />
@@ -349,7 +351,10 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_lockedcache.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_unitheap.h" />
     <ClInclude Include="..\src\modules\gameloader\gameloader.h" />
+    <ClInclude Include="..\src\modules\gx2\gx2r_buffer.h" />
+    <ClInclude Include="..\src\modules\gx2\gx2r_surface.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_addrlib.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_cbpool.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_clear.h" />

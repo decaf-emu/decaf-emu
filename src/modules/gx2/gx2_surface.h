@@ -22,15 +22,15 @@ struct GX2Surface
    be_val<uint32_t> mipLevels;
    be_val<GX2SurfaceFormat> format;
    be_val<GX2AAMode> aa;
-   union // Is this correct?? Union???
+   union
    {
-      be_val<GX2SurfaceUse> use; // GX2InitTextureRegs
-      be_val<uint32_t> resourceFlags; // G2XRCreateSurface
+      be_val<GX2SurfaceUse> use;
+      be_val<GX2RResourceFlags> resourceFlags;
    };
    be_val<uint32_t> imageSize;
-   be_ptr<void> image;
+   be_ptr<uint8_t> image;
    be_val<uint32_t> mipmapSize;
-   be_ptr<void> mipmaps;
+   be_ptr<uint8_t> mipmaps;
    be_val<GX2TileMode> tileMode;
    be_val<uint32_t> swizzle;
    be_val<uint32_t> alignment;

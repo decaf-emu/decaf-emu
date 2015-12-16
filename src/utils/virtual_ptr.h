@@ -97,28 +97,27 @@ public:
       return *this;
    }
 
-   virtual_ptr operator +(int offset) const
+   template<typename T>
+   virtual_ptr operator +(T offset) const
    {
       return { static_cast<ppcaddr_t>(getAddress() + offset * sizeof(Type)) };
    }
 
-   virtual_ptr operator -(int offset) const
+   template<typename T>
+   virtual_ptr operator -(T offset) const
    {
       return { static_cast<ppcaddr_t>(getAddress() - offset * sizeof(Type)) };
    }
 
-   virtual_ptr operator -(unsigned offset) const
-   {
-      return { static_cast<ppcaddr_t>(getAddress() - offset * sizeof(Type)) };
-   }
-
-   virtual_ptr &operator +=(int offset)
+   template<typename T>
+   virtual_ptr &operator +=(T offset)
    {
       *this = *this + offset;
       return *this;
    }
 
-   virtual_ptr &operator -=(int offset)
+   template<typename T>
+   virtual_ptr &operator -=(T offset)
    {
       *this = *this - offset;
       return *this;

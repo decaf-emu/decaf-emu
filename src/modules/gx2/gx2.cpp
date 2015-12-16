@@ -14,7 +14,9 @@
 #include "gx2_swap.h"
 #include "gx2_temp.h"
 #include "gx2_texture.h"
+#include "gx2r_buffer.h"
 #include "gx2r_resource.h"
+#include "gx2r_surface.h"
 
 GX2::GX2()
 {
@@ -85,14 +87,25 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2WaitTimeStamp);
    RegisterKernelFunctionName("VsyncAlarmHandler", gx2::internal::vsyncAlarmHandler);
 
-   // Resource (GX2R)
+   // GX2R Resource
    RegisterKernelFunction(GX2RSetAllocator);
+   RegisterKernelFunction(GX2RIsUserMemory);
+
+   // GX2R Buffer
    RegisterKernelFunction(GX2RGetBufferAlignment);
    RegisterKernelFunction(GX2RGetBufferAllocationSize);
    RegisterKernelFunction(GX2RCreateBuffer);
    RegisterKernelFunction(GX2RDestroyBufferEx);
    RegisterKernelFunction(GX2RLockBufferEx);
    RegisterKernelFunction(GX2RUnlockBufferEx);
+
+   // GX2R Surface
+   RegisterKernelFunction(GX2RCreateSurface);
+   RegisterKernelFunction(GX2RCreateSurfaceUserMemory);
+   RegisterKernelFunction(GX2RDestroySurfaceEx);
+   RegisterKernelFunction(GX2RLockSurfaceEx);
+   RegisterKernelFunction(GX2RUnlockSurfaceEx);
+   RegisterKernelFunction(GX2RIsGX2RSurface);
 
    // Mem
    RegisterKernelFunction(GX2Invalidate);
