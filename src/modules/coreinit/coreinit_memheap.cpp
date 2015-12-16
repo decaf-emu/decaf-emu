@@ -42,13 +42,13 @@ findListContainingHeap(CommonHeap *heap)
    OSGetForegroundBucket(&start, &size);
    end = start + size;
 
-   if (heap->dataStart >= start && heap->dataEnd < end) {
+   if (heap->dataStart >= start && heap->dataEnd <= end) {
       return gForegroundMemlist;
    } else {
       OSGetMemBound(OSMemoryType::MEM1, &start, &size);
       end = start + size;
 
-      if (heap->dataStart >= start && heap->dataEnd < end) {
+      if (heap->dataStart >= start && heap->dataEnd <= end) {
          return gMEM1Memlist;
       } else {
          return gMEM2Memlist;
@@ -64,13 +64,13 @@ findListContainingBlock(void *block)
    OSGetForegroundBucket(&start, &size);
    end = start + size;
 
-   if (addr >= start && addr < end) {
+   if (addr >= start && addr <= end) {
       return gForegroundMemlist;
    } else {
       OSGetMemBound(OSMemoryType::MEM1, &start, &size);
       end = start + size;
 
-      if (addr >= start && addr < end) {
+      if (addr >= start && addr <= end) {
          return gMEM1Memlist;
       } else {
          return gMEM2Memlist;
@@ -304,12 +304,6 @@ CoreInit::registerMembaseFunctions()
 void
 CoreInit::initialiseMembase()
 {
-   CoreInitDefaultHeap();
-
-   *pMEMAllocFromDefaultHeap = findExportAddress("sMEMAllocFromDefaultHeap");
-   *pMEMAllocFromDefaultHeapEx = findExportAddress("sMEMAllocFromDefaultHeapEx");
-   *pMEMFreeToDefaultHeap = findExportAddress("sMEMFreeToDefaultHeap");
-
    gForegroundMemlist = OSAllocFromSystem<MemoryList>();
    MEMInitList(gForegroundMemlist, offsetof(CommonHeap, link));
 
@@ -318,6 +312,12 @@ CoreInit::initialiseMembase()
 
    gMEM2Memlist = OSAllocFromSystem<MemoryList>();
    MEMInitList(gMEM2Memlist, offsetof(CommonHeap, link));
+
+   CoreInitDefaultHeap();
+
+   *pMEMAllocFromDefaultHeap = findExportAddress("sMEMAllocFromDefaultHeap");
+   *pMEMAllocFromDefaultHeapEx = findExportAddress("sMEMAllocFromDefaultHeapEx");
+   *pMEMFreeToDefaultHeap = findExportAddress("sMEMFreeToDefaultHeap");
 }
 
 void *
