@@ -45,30 +45,6 @@ GameLoaderRun()
    gDebugControl.preLaunch();
    gLog->debug("Succesfully loaded {}", gGameRpx);
 
-   // Call the RPX __preinit_user if it is defined
-   auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
-
-   if (userPreinit) {
-      struct HeapHandles
-      {
-         be_ptr<CommonHeap> mem1Heap;
-         be_ptr<CommonHeap> fgHeap;
-         be_ptr<CommonHeap> mem2Heap;
-      };
-
-      HeapHandles *wiiHandles = OSAllocFromSystem<HeapHandles>();
-      wiiHandles->mem1Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM1);
-      wiiHandles->fgHeap = MEMGetBaseHeapHandle(MEMBaseHeapType::FG);
-      wiiHandles->mem2Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-
-      userPreinit(&wiiHandles->mem1Heap, &wiiHandles->fgHeap, &wiiHandles->mem2Heap);
-
-      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, wiiHandles->mem1Heap);
-      MEMSetBaseHeapHandle(MEMBaseHeapType::FG, wiiHandles->fgHeap);
-      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, wiiHandles->mem2Heap);
-      OSFreeToSystem(wiiHandles);
-   }
-
    // Create default threads
    for (auto i = 0u; i < CoreCount; ++i) {
       auto thread = OSAllocFromSystem<OSThread>();
@@ -96,6 +72,30 @@ GameLoaderRun()
       OSSetInterruptThread(i, thread);
       OSSetThreadName(thread, name);
       OSResumeThread(thread);
+   }
+
+   // Call the RPX __preinit_user if it is defined
+   auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
+
+   if (userPreinit) {
+      struct HeapHandles
+      {
+         be_ptr<CommonHeap> mem1Heap;
+         be_ptr<CommonHeap> fgHeap;
+         be_ptr<CommonHeap> mem2Heap;
+      };
+
+      HeapHandles *wiiHandles = OSAllocFromSystem<HeapHandles>();
+      wiiHandles->mem1Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM1);
+      wiiHandles->fgHeap = MEMGetBaseHeapHandle(MEMBaseHeapType::FG);
+      wiiHandles->mem2Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
+
+      userPreinit(&wiiHandles->mem1Heap, &wiiHandles->fgHeap, &wiiHandles->mem2Heap);
+
+      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, wiiHandles->mem1Heap);
+      MEMSetBaseHeapHandle(MEMBaseHeapType::FG, wiiHandles->fgHeap);
+      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, wiiHandles->mem2Heap);
+      OSFreeToSystem(wiiHandles);
    }
 
    // Run thread 1
