@@ -425,6 +425,7 @@ Loader::registerUnimplementedFunction(const std::string &module, const std::stri
    bclr.bo = 0x1f;
    *(thunk + 1) = byte_swap(bclr.value);
 
+   gLog->info("Unimplemented function {}::{} at {:08x}", module, func, addr);
    mUnimplementedFunctions.emplace(func, addr);
    return addr;
 }
