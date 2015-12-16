@@ -46,10 +46,12 @@ ppc_estimate_reciprocal(double v)
    }
 
    if (bits.exponent < 895) {
+      std::feraiseexcept(FE_OVERFLOW | FE_INEXACT);
       return std::copysign(std::numeric_limits<float>::max(), v);
    }
 
-   if (bits.exponent > 1149) {
+   if (bits.exponent > 1150) {
+      std::feraiseexcept(FE_UNDERFLOW | FE_INEXACT);
       return std::copysign(0.0, v);
    }
 
@@ -188,7 +190,6 @@ roundForMultiply(double *a, double *c)
    // second operand would round to infinity), so avoid generating any
    // exceptions.
    if (is_zero(*a)) {
-      *c = 0;
       return;
    }
 
@@ -201,15 +202,12 @@ roundForMultiply(double *a, double *c)
 
    // If the second operand is a denormal, we normalize it before rounding,
    // adjusting the exponent of the other operand accordingly.  If the
-   // other operand becomes denormal, the product will round to zero, so we
-   // just set both values to zero and get out.
+   // other operand becomes denormal, the product will round to zero in any
+   // case, so we just abort and let the operation proceed normally.
    if (is_denormal(*c)) {
       while (cBits.exponent == 0) {
          cBits.uv <<= 1;
          if (aBits.exponent == 0) {
-            *a = 0;
-            *c = 0;
-            std::feraiseexcept(FE_INEXACT | FE_UNDERFLOW);
             return;
          }
          aBits.exponent--;
@@ -430,10 +428,18 @@ fres(ThreadState *state, Instruction instr)
    } else {
       d = static_cast<float>(ppc_estimate_reciprocal(b));
       state->fpr[instr.frD].paired0 = d;
-      // paired1 is left undefined in the UISA.  TODO: Check actual behavior.
+      state->fpr[instr.frD].paired1 = d;
       updateFPRF(state, d);
       state->fpscr.zx |= zx;
-      updateFPSCR(state, oldFPSCR);
+      if (std::fetestexcept(FE_INEXACT)) {
+         // On inexact result, fres sets FPSCR[FI] without also setting
+         // FPSCR[XX].
+         std::feclearexcept(FE_INEXACT);
+         updateFPSCR(state, oldFPSCR);
+         state->fpscr.fi = 1;
+      } else {
+         updateFPSCR(state, oldFPSCR);
+      }
    }
 
    if (instr.rc) {
@@ -519,9 +525,10 @@ fmaGeneric(ThreadState *state, Instruction instr)
    const double addend = (flags & FMASubtract) ? -b : b;
 
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b) || is_signalling_nan(c);
-   const bool vxisi = ((is_infinity(a) || is_infinity(c)) && is_infinity(b)
-                       && (std::signbit(a) ^ std::signbit(c)) != std::signbit(addend));
    const bool vximz = (is_infinity(a) && is_zero(c)) || (is_zero(a) && is_infinity(c));
+   const bool vxisi = (!vximz && !is_nan(a) && !is_nan(c)
+                       && (is_infinity(a) || is_infinity(c)) && is_infinity(b)
+                       && (std::signbit(a) ^ std::signbit(c)) != std::signbit(addend));
 
    const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan |= vxsnan;
@@ -546,15 +553,6 @@ fmaGeneric(ThreadState *state, Instruction instr)
 
          d = std::fma(a, c, addend);
 
-         // roundForMultiply() sets FE_UNDERFLOW if the product is known to
-         // underflow, but we shouldn't pass that through if the final
-         // result is nonzero.
-         if ((flags & FMASinglePrec)
-          && std::fetestexcept(FE_UNDERFLOW)
-          && !is_zero(d)) {
-            std::feclearexcept(FE_UNDERFLOW);
-         }
-
          if (flags & FMANegate) {
             d = -d;
          }
@@ -566,6 +564,14 @@ fmaGeneric(ThreadState *state, Instruction instr)
          state->fpr[instr.frD].paired1 = d;
       } else {
          state->fpr[instr.frD].value = d;
+         // Note that Intel CPUs report underflow based on the value _after_
+         // rounding, while the Espresso reports underflow _before_ rounding.
+         // (IEEE 754 allows an implementer to choose whether to report
+         // underflow before or after rounding, so both of these behaviors
+         // are technically compliant.)  Because of this, if an unrounded
+         // FMA result is slightly less in magnitude than the minimum normal
+         // value but is rounded to that value, the emulated FPSCR state will
+         // differ from a real Espresso in that the UX bit will not be set.
       }
 
       updateFPRF(state, d);
@@ -734,6 +740,10 @@ frsp(ThreadState *state, Instruction instr)
    } else {
       auto d = static_cast<float>(b);
       state->fpr[instr.frD].paired0 = d;
+      // frD(ps1) is left undefined in the 750CL manual, but the processor
+      // actually copies the result to ps1 like other single-precision
+      // instructions.
+      state->fpr[instr.frD].paired1 = d;
       updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
    }

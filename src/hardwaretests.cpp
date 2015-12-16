@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cfenv>
 #include <fstream>
 #include "cpu/cpu.h"
 #include "cpu/jit/jit.h"
@@ -11,7 +12,8 @@
 #include "utils/strutils.h"
 #include "filesystem/filesystem.h"
 
-static const auto TEST_FPSCR = false;
+static const auto TEST_FPSCR = true;
+static const auto TEST_FPSCR_FR = false;
 
 namespace hwtest
 {
@@ -172,6 +174,7 @@ bool runTests(const std::string &path)
          // Execute test
          mem::write(baseAddress, test.instr.value);
          cpu::jit::clearCache();
+         std::feclearexcept(FE_ALL_EXCEPT);
          cpu::executeSub(nullptr, &state);
 
          // Check XER (all bits)
@@ -186,9 +189,15 @@ bool runTests(const std::string &path)
             failed = true;
          }
 
-         // Check FPSCR (all bits)
+         // Check FPSCR (all bits except possibly FR)
          if (TEST_FPSCR) {
-            if (state.fpscr.value != test.output.fpscr.value) {
+            auto state_fpscr = state.fpscr.value;
+            auto test_fpscr = test.output.fpscr.value;
+            if (!TEST_FPSCR_FR) {
+               state_fpscr &= ~0x00040000;
+               test_fpscr &= ~0x00040000;
+            }
+            if (state_fpscr != test_fpscr) {
                gLog->error("Test failed, fpscr {:08X} found {:08X}", test.output.fpscr.value, state.fpscr.value);
                failed = true;
             }

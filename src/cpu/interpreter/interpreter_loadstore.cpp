@@ -88,6 +88,16 @@ loadGeneric(ThreadState *state, Instruction instr)
 
    if (std::is_floating_point<Type>::value) {
       state->fpr[instr.rD].value = static_cast<double>(d);
+      // Normally lfd instructions do not modify the second paired-single
+      // slot (ps1) of an FPR, but if the lfd is immediately preceded or
+      // followed by paired-single instructions, frD(ps1) may receive the
+      // high 32 bits of the loaded word or some other value that happens
+      // to be stored in the FP unit.  This data hazard is strongly
+      // dependent on pipeline state, and we don't attempt to emulate it.
+      // (Using a double-precision value with paired-single instructions
+      // is documented to result in undefined behavior anyway, so it seems
+      // unlikely this sort of instruction sequence would be found in real
+      // software.)
    } else {
       if (flags & LoadSignExtend) {
          state->gpr[instr.rD] = static_cast<uint32_t>(sign_extend<bit_width<Type>::value, uint64_t>(static_cast<uint64_t>(d)));
