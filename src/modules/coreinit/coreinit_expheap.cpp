@@ -520,15 +520,10 @@ uint32_t
 MEMGetTotalFreeSizeForExpHeap(ExpandedHeap *heap)
 {
    ScopedSpinLock lock(&heap->lock);
-   auto size = 0;
+   auto size = 0u;
 
    for (auto block = heap->freeBlockList; block; block = block->next) {
-      size += block->size - sizeof(ExpandedHeapBlock);
-   }
-
-   // Ensure it is big enough
-   if (size < sizeof(ExpandedHeapBlock)) {
-      return 0;
+      size += block->size;
    }
 
    return size;
@@ -557,9 +552,7 @@ MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap, int alignment)
 
    // Find largest block
    for (auto block = heap->freeBlockList; block; block = block->next) {
-      if (block->size > size) {
-         size = block->size;
-      }
+      size = std::max<uint32_t>(block->size, size);
    }
 
    // Ensure it is big enough for alignment
