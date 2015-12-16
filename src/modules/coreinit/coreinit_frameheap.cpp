@@ -85,6 +85,7 @@ MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment)
 
    // Ensure there is sufficient space on the heap
    if (heap->state->top - heap->state->bottom < size) {
+      gLog->error("MEMAllocFromFrmHeapEx could not allocate, insufficient free space");
       return nullptr;
    }
 

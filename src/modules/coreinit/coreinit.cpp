@@ -61,4 +61,5 @@ CoreInit::RegisterFunctions()
    registerThreadFunctions();
    registerTimeFunctions();
    registerUserConfigFunctions();
+   registerUnitHeapFunctions();
 }

@@ -185,6 +185,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_thread.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_threadqueue.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_time.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_unitheap.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_userconfig.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />

@@ -58,4 +58,5 @@ private:
    static void registerThreadFunctions();
    static void registerTimeFunctions();
    static void registerUserConfigFunctions();
+   static void registerUnitHeapFunctions();
 };

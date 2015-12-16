@@ -4,6 +4,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
 #include "coreinit_frameheap.h"
+#include "coreinit_unitheap.h"
 #include "memory_translate.h"
 #include "system.h"
 #include "utils/teenyheap.h"
@@ -123,8 +124,10 @@ MEMDumpHeap(CommonHeap *heap)
    case MEMiHeapTag::ExpandedHeap:
       MEMiDumpExpHeap(reinterpret_cast<ExpandedHeap*>(heap));
       break;
-   case MEMiHeapTag::FrameHeap:
    case MEMiHeapTag::UnitHeap:
+      MEMiDumpUnitHeap(reinterpret_cast<UnitHeap*>(heap));
+      break;
+   case MEMiHeapTag::FrameHeap:
    case MEMiHeapTag::UserHeap:
    case MEMiHeapTag::BlockHeap:
       gLog->info("Unimplemented MEMDumpHeap type");
