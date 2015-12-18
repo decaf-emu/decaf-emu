@@ -34,6 +34,7 @@ set(SOURCE_FILES
     coreinit/coreinit_thread.cpp
     coreinit/coreinit_threadqueue.cpp
     coreinit/coreinit_time.cpp
+    coreinit/coreinit_unitheap.cpp
     coreinit/coreinit_userconfig.cpp
     erreula/erreula.cpp
     erreula/erreula_errorviewer.cpp
@@ -61,7 +62,9 @@ set(SOURCE_FILES
     gx2/gx2_swap.cpp
     gx2/gx2_temp.cpp
     gx2/gx2_texture.cpp
+    gx2/gx2r_buffer.cpp
     gx2/gx2r_resource.cpp
+    gx2/gx2r_surface.cpp
     nn_ac/nn_ac.cpp
     nn_ac/nn_ac_core.cpp
     nn_act/nn_act.cpp
