@@ -221,6 +221,9 @@ translateInstruction(GenerateState &state, latte::shadir::Instruction *ins)
    case latte::shadir::Instruction::CF_ALU:
       throw std::logic_error("There should be no CF_ALU instructions in the shader blockify'd code");
       break;
+   case latte::shadir::Instruction::Invalid:
+      throw std::logic_error("Invalid instruction type encountered");
+      break;
    }
 
    return false;

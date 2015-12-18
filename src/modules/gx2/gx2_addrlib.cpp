@@ -73,7 +73,7 @@ getSurfaceInfo(GX2Surface *surface,
                ADDR_COMPUTE_SURFACE_INFO_OUTPUT *output)
 {
    ADDR_E_RETURNCODE result = ADDR_OK;
-   auto hwFormat = surface->format & 0x3f;
+   auto hwFormat = static_cast<latte::SQ_DATA_FORMAT>(surface->format & 0x3f);
    auto height = 1u;
    auto width = std::max<uint32_t>(1u, surface->width >> level);
    auto numSlices = 1u;
