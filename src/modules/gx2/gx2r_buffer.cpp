@@ -34,6 +34,14 @@ GX2RCreateBuffer(GX2RBuffer *buffer)
    return TRUE;
 }
 
+BOOL
+GX2RCreateBufferUserMemory(GX2RBuffer *buffer, void *memory, uint32_t size)
+{
+   buffer->buffer = memory;
+   buffer->flags = GX2RResourceFlags::UserMemory;
+   return TRUE;
+}
+
 void
 GX2RDestroyBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags)
 {

@@ -95,6 +95,7 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2RGetBufferAlignment);
    RegisterKernelFunction(GX2RGetBufferAllocationSize);
    RegisterKernelFunction(GX2RCreateBuffer);
+   RegisterKernelFunction(GX2RCreateBufferUserMemory);
    RegisterKernelFunction(GX2RDestroyBufferEx);
    RegisterKernelFunction(GX2RLockBufferEx);
    RegisterKernelFunction(GX2RUnlockBufferEx);

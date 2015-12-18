@@ -31,6 +31,9 @@ GX2RGetBufferAllocationSize(GX2RBuffer *buffer);
 BOOL
 GX2RCreateBuffer(GX2RBuffer *buffer);
 
+BOOL
+GX2RCreateBufferUserMemory(GX2RBuffer *buffer, void *memory, uint32_t size);
+
 void
 GX2RDestroyBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags);
 
