@@ -13,6 +13,7 @@
 #include "gx2_surface.h"
 #include "gx2_swap.h"
 #include "gx2_temp.h"
+#include "gx2_tessellation.h"
 #include "gx2_texture.h"
 #include "gx2r_buffer.h"
 #include "gx2r_resource.h"
@@ -240,6 +241,11 @@ GX2::RegisterFunctions()
 
    // Temp
    RegisterKernelFunction(GX2TempGetGPUVersion);
+
+   // Tessellation
+   RegisterKernelFunction(GX2SetTessellation);
+   RegisterKernelFunction(GX2SetMinTessellationLevel);
+   RegisterKernelFunction(GX2SetMaxTessellationLevel);
 
    // Texture
    RegisterKernelFunction(GX2InitTextureRegs);

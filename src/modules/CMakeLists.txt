@@ -61,6 +61,7 @@ set(SOURCE_FILES
     gx2/gx2_surface.cpp
     gx2/gx2_swap.cpp
     gx2/gx2_temp.cpp
+    gx2/gx2_tessellation.cpp
     gx2/gx2_texture.cpp
     gx2/gx2r_buffer.cpp
     gx2/gx2r_resource.cpp
@@ -160,6 +161,7 @@ set(HEADER_FILES
     gx2/gx2_surface.h
     gx2/gx2_swap.h
     gx2/gx2_temp.h
+    gx2/gx2_tessellation.h
     gx2/gx2_texture.h
     gx2/gx2r_resource.h
     nn_ac/nn_ac.h

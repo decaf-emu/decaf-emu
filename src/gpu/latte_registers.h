@@ -353,6 +353,8 @@ enum Value : uint32_t
    PA_SU_POINT_SIZE                 = 0x28A00,
    PA_SU_POINT_MINMAX               = 0x28A04,
    PA_SU_LINE_CNTL                  = 0x28A08,
+   VGT_HOS_MAX_TESS_LEVEL           = 0x28A18,
+   VGT_HOS_MIN_TESS_LEVEL           = 0x28A1C,
    VGT_HOS_REUSE_DEPTH              = 0x28A20,
    VGT_DMA_SIZE                     = 0x28A74,
    VGT_DMA_MAX_SIZE                 = 0x28A78,

@@ -2,8 +2,9 @@
 #include "gx2.h"
 #include "gx2_contextstate.h"
 #include "gx2_draw.h"
-#include "gx2_shaders.h"
 #include "gx2_registers.h"
+#include "gx2_shaders.h"
+#include "gx2_tessellation.h"
 #include <utility>
 
 static GX2ContextState *
@@ -268,9 +269,8 @@ GX2SetDefaultState()
 
    // GX2SetTessellation(0, 0x84, 9); 0x285 VGT_HOS_CNTL, 0x289 VGT_GROUP_PRIM_TYPE, 0x28a, 0x28b, 0x28c, 0x28e, 0x28d, 0x28f
 
-   // GX2SetMaxTessellationLevel(1.0f); 0x286
-
-   // GX2SetMinTessellationLevel(1.0f); 0x287
+   GX2SetMaxTessellationLevel(1.0f);
+   GX2SetMinTessellationLevel(1.0f);
 
    // Set 0x343 DB_RENDER_CONTROL to 0
 }

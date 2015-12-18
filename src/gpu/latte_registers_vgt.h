@@ -81,6 +81,22 @@ union VGT_HOS_REUSE_DEPTH
    };
 };
 
+// For continuous and discrete tessellation modes, this register contains the tessellation level.
+// For adaptive tessellation, this register contains the maximum tessellation level.
+union VGT_HOS_MAX_TESS_LEVEL
+{
+   uint32_t value;
+   float MAX_TESS;
+};
+
+// For continuous and discrete tessellation modes, this register is not applicable.
+// For adaptive tessellation, this register contains the minimum tessellation level.
+union VGT_HOS_MIN_TESS_LEVEL
+{
+   uint32_t value;
+   float MIN_TESS;
+};
+
 // This register enabling reseting of prim based on reset index
 union VGT_MULTI_PRIM_IB_RESET_EN
 {
