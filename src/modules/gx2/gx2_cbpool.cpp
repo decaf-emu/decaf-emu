@@ -78,15 +78,18 @@ pm4::Buffer *
 flushCommandBuffer(pm4::Buffer *cb)
 {
    auto core = OSGetCoreId();
-   auto &active = gActiveBuffer[core];
 
    if (!cb) {
-      cb = active;
-   } else {
-      assert(active == cb);
+      cb = gActiveBuffer[core];
+   } else if (cb != gActiveBuffer[core]) {
+      throw std::logic_error("Attempting to flush non-active buffer");
    }
 
-   if (active->userBuffer) {
+   if (!cb) {
+      return nullptr;
+   }
+
+   if (cb->userBuffer) {
       void *newList = nullptr;
       uint32_t newSize = 0;
 
@@ -107,10 +110,10 @@ flushCommandBuffer(pm4::Buffer *cb)
       gpu::queueCommandBuffer(cb);
 
       // Allocate new buffer
-      active = allocateCommandBuffer();
+      gActiveBuffer[core] = allocateCommandBuffer();
    }
 
-   return active;
+   return gActiveBuffer[core];
 }
 
 pm4::Buffer *

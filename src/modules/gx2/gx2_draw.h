@@ -1,6 +1,6 @@
 #pragma once
 #include "types.h"
-#include "modules/gx2/gx2_enum.h"
+#include "gx2_enum.h"
 
 void
 GX2SetAttribBuffer(uint32_t index,
