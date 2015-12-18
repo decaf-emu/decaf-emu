@@ -47,7 +47,6 @@ void
 queueUserBuffer(void *buffer, uint32_t bytes)
 {
    // TODO: Please no allocate
-   // ergggggggggghhhh i hate everything about this
    auto buf = new pm4::Buffer {};
    buf->curSize = bytes / 4;
    buf->maxSize = bytes / 4;
@@ -78,9 +77,7 @@ retireCommandBuffer(pm4::Buffer *buf)
 {
    gx2::internal::setRetiredTimestamp(buf->submitTime);
 
-   // TODO: Unlazy this
    if (buf->userBuffer) {
-      delete buf->buffer;
       delete buf;
    }
 }
