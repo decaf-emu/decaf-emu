@@ -44,8 +44,8 @@ ENUM_BEG(OSExceptionType, uint32_t)
 ENUM_END(OSExceptionType)
 
 ENUM_BEG(OSMemoryType, uint32_t)
-   ENUM_VALUE(MEM1,                 0)
-   ENUM_VALUE(MEM2,                 1)
+   ENUM_VALUE(MEM1,                 1)
+   ENUM_VALUE(MEM2,                 2)
 ENUM_END(OSMemoryType)
 
 ENUM_BEG(OSMessageFlags, uint32_t)
