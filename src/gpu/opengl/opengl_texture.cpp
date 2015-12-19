@@ -71,6 +71,8 @@ getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
    switch (value) {
    case GX2SurfaceFormat::UNORM_R8:
       return gl::GL_R8;
+   case GX2SurfaceFormat::UNORM_R5_G6_B5:
+      return gl::GL_RGB565;
    case GX2SurfaceFormat::UNORM_R8_G8_B8_A8:
       return gl::GL_RGBA8;
    case GX2SurfaceFormat::UNORM_R10_G10_B10_A2:
@@ -100,7 +102,8 @@ getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
    case GX2SurfaceFormat::UNORM_BC5:
       return gl::GL_COMPRESSED_RG_RGTC2;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented texture storage format {}", value));
+      gLog->debug("getStorageFormat: Unimplemented texture storage format {}", value);
+      return gl::GL_INVALID_ENUM;
    }
 }
 
@@ -116,6 +119,8 @@ getTextureFormat(latte::SQ_DATA_FORMAT format)
    switch (format) {
    case latte::FMT_8:
       return gl::GL_RED;
+   case latte::FMT_5_6_5:
+      return gl::GL_RGB;
    case latte::FMT_8_8_8_8:
       return gl::GL_RGBA;
    case latte::FMT_2_10_10_10:
@@ -129,7 +134,8 @@ getTextureFormat(latte::SQ_DATA_FORMAT format)
    case latte::FMT_BC5:
       return gl::GL_RG;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented texture type format {}", format));
+      gLog->debug("getTextureFormat: Unimplemented texture type format {}", format);
+      return gl::GL_INVALID_ENUM;
    }
 }
 
@@ -157,10 +163,13 @@ getTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatCom
    case latte::FMT_8:
    case latte::FMT_8_8_8_8:
       return isSigned ? gl::GL_BYTE : gl::GL_UNSIGNED_BYTE;
+   case latte::FMT_5_6_5:
+      return isSigned ? gl::GL_SHORT : gl::GL_UNSIGNED_SHORT;
    case latte::FMT_2_10_10_10:
       return isSigned ? gl::GL_INT : gl::GL_UNSIGNED_INT;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented texture format {}", format));
+      gLog->debug("getTextureDataType: Unimplemented texture format {}", format);
+      return gl::GL_INVALID_ENUM;
    }
 }
 
@@ -317,6 +326,10 @@ bool GLDriver::checkActiveTextures()
          textureDataType = getTextureDataType(format, formatComp);
       }
 
+      if (textureDataType == gl::GL_INVALID_ENUM || storageFormat == gl::GL_INVALID_ENUM || textureFormat == gl::GL_INVALID_ENUM) {
+         continue;
+      }
+
       switch (dim) {
       case latte::SQ_TEX_DIM_2D:
          gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &texture.object);
@@ -365,7 +378,10 @@ bool GLDriver::checkActiveTextures()
       case latte::SQ_TEX_DIM_2D_MSAA:
       case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
          gLog->error("Unsupported texture dim: {}", sq_tex_resource_word0.DIM);
-         return false;
+      }
+
+      if (!texture.object) {
+         continue;
       }
 
       // Setup texture swizzle
