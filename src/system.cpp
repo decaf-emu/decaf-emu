@@ -80,7 +80,7 @@ kcstub(ThreadState *state, void *data)
    auto func = static_cast<KernelFunction *>(data);
 
    if (!func->valid) {
-      gLog->info("Unimplemented kernel function {}::{}", func->module, func->name);
+      gLog->info("Unimplemented kernel function {}::{} called from 0x{:08X}", func->module, func->name, state->lr);
       return;
    }
 
