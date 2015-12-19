@@ -46,6 +46,13 @@ AXRmtGetSamplesLeft()
 }
 
 int32_t
+AXRmtGetSamples(int32_t, be_val<uint8_t> *buffer, int32_t samples)
+{
+   // TODO: AXRmtGetSamples
+   return 0;
+}
+
+int32_t
 AXRmtAdvancePtr(int32_t)
 {
    // TODO: AXRmtAdvancePtr
@@ -60,6 +67,7 @@ Snd_Core::registerCoreFunctions()
    RegisterKernelFunction(AXInitProfile);
    RegisterKernelFunction(AXSetDefaultMixerSelect);
    RegisterKernelFunction(AXRegisterAppFrameCallback);
+   RegisterKernelFunction(AXRmtGetSamples);
    RegisterKernelFunction(AXRmtGetSamplesLeft);
    RegisterKernelFunction(AXRmtAdvancePtr);
 }
