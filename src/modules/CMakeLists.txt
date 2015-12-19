@@ -87,6 +87,7 @@ set(SOURCE_FILES
     proc_ui/proc_ui.cpp
     proc_ui/proc_ui_core.cpp
     snd_core/snd_core.cpp
+    snd_core/snd_core_ai.cpp
     snd_core/snd_core_core.cpp
     snd_core/snd_core_device.cpp
     swkbd/swkbd.cpp
@@ -188,6 +189,7 @@ set(HEADER_FILES
     proc_ui/proc_ui.h
     proc_ui/proc_ui_core.h
     snd_core/snd_core.h
+    snd_core/snd_core_ai.h
     snd_core/snd_core_core.h
     snd_core/snd_core_device.h
     snd_core/snd_core_result.h

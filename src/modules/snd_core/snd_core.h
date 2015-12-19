@@ -12,6 +12,7 @@ public:
    static void RegisterFunctions();
 
 private:
+   static void registerAiFunctions();
    static void registerCoreFunctions();
    static void registerDeviceFunctions();
 };

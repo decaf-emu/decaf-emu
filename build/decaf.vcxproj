@@ -238,6 +238,7 @@
     <ClCompile Include="..\src\modules\proc_ui\proc_ui.cpp" />
     <ClCompile Include="..\src\modules\proc_ui\proc_ui_core.cpp" />
     <ClCompile Include="..\src\modules\snd_core\snd_core.cpp" />
+    <ClCompile Include="..\src\modules\snd_core\snd_core_ai.cpp" />
     <ClCompile Include="..\src\modules\snd_core\snd_core_core.cpp" />
     <ClCompile Include="..\src\modules\snd_core\snd_core_device.cpp" />
     <ClCompile Include="..\src\modules\swkbd\swkbd.cpp" />
@@ -383,6 +384,7 @@
     <ClInclude Include="..\src\modules\nn_temp\nn_temp_core.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_kpad_status.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core.h" />
+    <ClInclude Include="..\src\modules\snd_core\snd_core_ai.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core_core.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core_device.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core_result.h" />

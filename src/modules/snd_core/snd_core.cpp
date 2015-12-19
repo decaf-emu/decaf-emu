@@ -12,6 +12,7 @@ Snd_Core::initialise()
 void
 Snd_Core::RegisterFunctions()
 {
+   registerAiFunctions();
    registerCoreFunctions();
    registerDeviceFunctions();
 }
