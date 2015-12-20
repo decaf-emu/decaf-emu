@@ -628,6 +628,7 @@ void GLDriver::initGL()
    mActiveShader = nullptr;
    mActiveDepthBuffer = nullptr;
    memset(&mActiveColorBuffers[0], 0, sizeof(ColorBuffer *) * mActiveColorBuffers.size());
+   std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 
    // Create our default framebuffer
    gl::glGenFramebuffers(1, &mFrameBuffer.object);
@@ -1377,7 +1378,7 @@ void GLDriver::run()
       // Execute command buffer
       runCommandBuffer(buffer->buffer, buffer->curSize);
 
-      // Handle any active end-of-pipeline events
+      // Handle end-of-pipeline events
       handlePendingEOP();
 
       // Release command buffer

@@ -268,7 +268,7 @@ private:
 
    latte::ContextState *mContextState = nullptr;
 
-   pm4::EventWriteEOP mPendingEOP = { 0, 0, 0, 0, 0 };
+   pm4::EventWriteEOP mPendingEOP;
 
 #ifdef PLATFORM_WINDOWS
    uint64_t mDeviceContext = 0;
