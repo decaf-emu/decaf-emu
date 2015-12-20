@@ -326,17 +326,17 @@ copySurface(GX2Surface *surfaceSrc,
 
    for (auto y = 0u; y < dstHeight; ++y) {
       for (auto x = 0u; x < dstWidth; ++x) {
-         srcAddrInput.x = x;
-         srcAddrInput.y = y;
-
-         dstAddrInput.x = srcWidth * x / dstHeight;
-         dstAddrInput.y = srcHeight * y / dstWidth;
+         srcAddrInput.x = srcWidth * x / dstWidth;
+         srcAddrInput.y = srcHeight * y / dstHeight;
 
          if (surfaceSrc->tileMode == GX2TileMode::LinearAligned || surfaceSrc->tileMode == GX2TileMode::LinearSpecial) {
             srcAddrOutput.addr = (bpp / 8) * (x + srcHeight * srcInfoOutput.pitch * srcDepth + srcInfoOutput.pitch * y);
          } else {
             AddrComputeSurfaceAddrFromCoord(handle, &srcAddrInput, &srcAddrOutput);
          }
+
+         dstAddrInput.x = x;
+         dstAddrInput.y = y;
 
          if (surfaceDst->tileMode == GX2TileMode::LinearAligned || surfaceDst->tileMode == GX2TileMode::LinearSpecial) {
             dstAddrOutput.addr = (bpp / 8) * (x + dstHeight * dstInfoOutput.pitch * dstDepth + dstInfoOutput.pitch * y);
