@@ -156,3 +156,11 @@ GX2GetSurfaceSwizzle(GX2Surface *surface);
 
 void
 GX2SetSurfaceSwizzle(GX2Surface *surface, uint32_t swizzle);
+
+void
+GX2CopySurface(GX2Surface *src,
+               uint32_t srcLevel,
+               uint32_t srcDepth,
+               GX2Surface *dst,
+               uint32_t dstLevel,
+               uint32_t dstDepth);

@@ -25,11 +25,13 @@ getSurfaceInfo(GX2Surface *surface,
 
 bool
 copySurface(GX2Surface *surfaceSrc,
+            uint32_t srcLevel,
+            uint32_t srcDepth,
             GX2Surface *surfaceDst,
-            uint32_t level,
-            uint32_t depth,
-            std::vector<uint8_t> &image,
-            std::vector<uint8_t> &mipmap);
+            uint32_t dstLevel,
+            uint32_t dstDepth,
+            uint8_t *dstImage = nullptr,
+            uint8_t *dstMipmap = nullptr);
 
 bool
 convertTiling(GX2Surface *surface,

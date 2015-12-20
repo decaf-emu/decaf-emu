@@ -194,11 +194,13 @@ getSurfaceInfo(GX2Surface *surface,
 
 bool
 copySurface(GX2Surface *surfaceSrc,
+            uint32_t srcLevel,
+            uint32_t srcDepth,
             GX2Surface *surfaceDst,
-            uint32_t level,
-            uint32_t depth,
-            std::vector<uint8_t> &image,
-            std::vector<uint8_t> &mipmap)
+            uint32_t dstLevel,
+            uint32_t dstDepth,
+            uint8_t *dstImage,
+            uint8_t *dstMipmap)
 {
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT srcInfoOutput;
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT dstInfoOutput;
@@ -240,8 +242,8 @@ copySurface(GX2Surface *surfaceSrc,
 
    // Setup src
    auto bpp = GX2GetSurfaceElementBits(surfaceSrc->format);
-   getSurfaceInfo(surfaceSrc, level, &srcInfoOutput);
-   srcAddrInput.slice = depth;
+   getSurfaceInfo(surfaceSrc, srcLevel, &srcInfoOutput);
+   srcAddrInput.slice = srcDepth;
    srcAddrInput.sample = 0;
    srcAddrInput.bpp = bpp;
    srcAddrInput.pitch = srcInfoOutput.pitch;
@@ -262,8 +264,8 @@ copySurface(GX2Surface *surfaceSrc,
    srcAddrInput.pipeSwizzle = srcSwizzleOutput.pipeSwizzle;
 
    // Setup dst
-   getSurfaceInfo(surfaceDst, level, &dstInfoOutput);
-   dstAddrInput.slice = depth;
+   getSurfaceInfo(surfaceDst, srcLevel, &dstInfoOutput);
+   dstAddrInput.slice = srcDepth;
    dstAddrInput.sample = 0;
    dstAddrInput.bpp = bpp;
    dstAddrInput.pitch = dstInfoOutput.pitch;
@@ -284,8 +286,8 @@ copySurface(GX2Surface *surfaceSrc,
    dstAddrInput.pipeSwizzle = dstSwizzleOutput.pipeSwizzle;
 
    // Setup width
-   auto srcWidth = std::max<uint32_t>(1u, surfaceSrc->width >> level);
-   auto srcHeight = std::max<uint32_t>(1u, surfaceSrc->height >> level);
+   auto srcWidth = std::max<uint32_t>(1u, surfaceSrc->width >> srcLevel);
+   auto srcHeight = std::max<uint32_t>(1u, surfaceSrc->height >> srcLevel);
    auto hwFormatSrc = static_cast<latte::SQ_DATA_FORMAT>(surfaceSrc->format & 0x3F);
 
    if (hwFormatSrc >= latte::FMT_BC1 && hwFormatSrc <= latte::FMT_BC5) {
@@ -293,8 +295,8 @@ copySurface(GX2Surface *surfaceSrc,
       srcHeight = (srcHeight + 3) / 4;
    }
 
-   auto dstWidth = std::max<uint32_t>(1u, surfaceDst->width >> level);
-   auto dstHeight = std::max<uint32_t>(1u, surfaceDst->height >> level);
+   auto dstWidth = std::max<uint32_t>(1u, surfaceDst->width >> dstLevel);
+   auto dstHeight = std::max<uint32_t>(1u, surfaceDst->height >> dstLevel);
    auto hwFormatDst = static_cast<latte::SQ_DATA_FORMAT>(surfaceDst->format & 0x3F);
 
    if (hwFormatDst >= latte::FMT_BC1 && hwFormatDst <= latte::FMT_BC5) {
@@ -305,17 +307,21 @@ copySurface(GX2Surface *surfaceSrc,
    uint8_t *srcBasePtr = nullptr;
    uint8_t *dstBasePtr = nullptr;
 
-   if (level) {
-      if (level == 1) {
-         srcBasePtr = reinterpret_cast<uint8_t *>(surfaceSrc->mipmaps.get());
-         dstBasePtr = mipmap.data();
-      } else {
-         srcBasePtr = reinterpret_cast<uint8_t *>(surfaceSrc->mipmaps.get()) + surfaceSrc->mipLevelOffset[level - 1];
-         dstBasePtr = mipmap.data() + surfaceDst->mipLevelOffset[level - 1];
-      }
+   if (srcLevel == 0) {
+      srcBasePtr = surfaceSrc->image.get();
+   } else if (srcLevel == 1) {
+      srcBasePtr = surfaceSrc->mipmaps.get();
    } else {
-      srcBasePtr = reinterpret_cast<uint8_t *>(surfaceSrc->image.get());
-      dstBasePtr = image.data();
+      srcBasePtr = surfaceSrc->mipmaps.get() + surfaceSrc->mipLevelOffset[srcLevel - 1];
+   }
+
+   if (dstLevel == 0) {
+      dstBasePtr = dstImage ? dstImage : surfaceDst->image.get();
+   } else if (dstLevel == 1) {
+      dstBasePtr = dstMipmap ? dstMipmap : surfaceDst->mipmaps.get();
+   } else {
+      dstBasePtr = dstMipmap ? dstMipmap : surfaceDst->mipmaps.get();
+      dstBasePtr += surfaceDst->mipLevelOffset[dstLevel - 1];
    }
 
    for (auto y = 0u; y < dstHeight; ++y) {
@@ -327,13 +333,13 @@ copySurface(GX2Surface *surfaceSrc,
          dstAddrInput.y = srcHeight * y / dstWidth;
 
          if (surfaceSrc->tileMode == GX2TileMode::LinearAligned || surfaceSrc->tileMode == GX2TileMode::LinearSpecial) {
-            srcAddrOutput.addr = (bpp / 8) * (x + srcHeight * srcInfoOutput.pitch * depth + srcInfoOutput.pitch * y);
+            srcAddrOutput.addr = (bpp / 8) * (x + srcHeight * srcInfoOutput.pitch * srcDepth + srcInfoOutput.pitch * y);
          } else {
             AddrComputeSurfaceAddrFromCoord(handle, &srcAddrInput, &srcAddrOutput);
          }
 
          if (surfaceDst->tileMode == GX2TileMode::LinearAligned || surfaceDst->tileMode == GX2TileMode::LinearSpecial) {
-            dstAddrOutput.addr = (bpp / 8) * (x + dstHeight * dstInfoOutput.pitch * depth + dstInfoOutput.pitch * y);
+            dstAddrOutput.addr = (bpp / 8) * (x + dstHeight * dstInfoOutput.pitch * dstDepth + dstInfoOutput.pitch * y);
          } else {
             AddrComputeSurfaceAddrFromCoord(handle, &dstAddrInput, &dstAddrOutput);
          }
@@ -371,7 +377,7 @@ convertTiling(GX2Surface *surface,
       }
 
       for (auto depth = 0u; depth < levelDepth; ++depth) {
-         copySurface(surface, &outSurface, level, depth, image, mipmap);
+         copySurface(surface, level, depth, &outSurface, level, depth, image.data(), mipmap.data());
       }
    }
 
