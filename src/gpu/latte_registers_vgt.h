@@ -70,6 +70,21 @@ struct VGT_DMA_SIZE
    uint32_t NUM_INDICES;
 };
 
+// Event Initiator
+union VGT_EVENT_INITIATOR
+{
+   uint32_t value;
+
+   struct
+   {
+      latte::VGT_EVENT_TYPE EVENT_TYPE : 6;
+      uint32_t : 13;
+      uint32_t ADDRESS_HI : 8;
+      uint32_t EXTENDED_EVENT : 1;
+      uint32_t : 4;
+   };
+};
+
 union VGT_HOS_REUSE_DEPTH
 {
    uint32_t value;

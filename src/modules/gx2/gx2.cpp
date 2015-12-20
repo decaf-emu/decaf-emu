@@ -6,6 +6,7 @@
 #include "gx2_draw.h"
 #include "gx2_event.h"
 #include "gx2_mem.h"
+#include "gx2_query.h"
 #include "gx2_registers.h"
 #include "gx2_sampler.h"
 #include "gx2_shaders.h"
@@ -111,6 +112,13 @@ GX2::RegisterFunctions()
 
    // Mem
    RegisterKernelFunction(GX2Invalidate);
+
+   // Query
+   RegisterKernelFunction(GX2SampleTopGPUCycle);
+   RegisterKernelFunction(GX2SampleBottomGPUCycle);
+   RegisterKernelFunction(GX2GPUTimeToCPUTime);
+   RegisterKernelFunction(GX2GetGPUTimeout);
+   RegisterKernelFunction(GX2SetGPUTimeout);
 
    // Register
    RegisterKernelFunction(GX2SetAAMask);

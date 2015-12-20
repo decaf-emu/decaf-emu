@@ -54,6 +54,7 @@ set(SOURCE_FILES
     gx2/gx2_fetchshader.cpp
     gx2/gx2_format.cpp
     gx2/gx2_mem.cpp
+    gx2/gx2_query.cpp
     gx2/gx2_registers.cpp
     gx2/gx2_sampler.cpp
     gx2/gx2_shaders.cpp
@@ -155,6 +156,7 @@ set(HEADER_FILES
     gx2/gx2_event.h
     gx2/gx2_format.h
     gx2/gx2_mem.h
+    gx2/gx2_query.h
     gx2/gx2_registers.h
     gx2/gx2_sampler.h
     gx2/gx2_shaders.h

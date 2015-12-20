@@ -59,6 +59,48 @@ enum VGT_DMA_SWAP : uint32_t
    VGT_DMA_SWAP_WORD                = 3,
 };
 
+enum VGT_EVENT_TYPE : uint32_t
+{
+   CACHE_FLUSH_TS                   = 4,
+   CONTEXT_DONE                     = 5,
+   CACHE_FLUSH                      = 6,
+   VIZQUERY_START                   = 7,
+   VIZQUERY_END                     = 8,
+   SC_WAIT_WC                       = 9,
+   MPASS_PS_CP_REFETCH              = 10,
+   MPASS_PS_RST_START               = 11,
+   MPASS_PS_INCR_START              = 12,
+   RST_PIX_CNT                      = 13,
+   RST_VTX_CNT                      = 14,
+   VS_PARTIAL_FLUSH                 = 15,
+   PS_PARTIAL_FLUSH                 = 16,
+   CACHE_FLUSH_AND_INV_TS_EVENT     = 20,
+   ZPASS_DONE                       = 21,
+   CACHE_FLUSH_AND_INV_EVENT        = 22,
+   PERFCOUNTER_START                = 23,
+   PERFCOUNTER_STOP                 = 24,
+   PIPELINESTAT_START               = 25,
+   PIPELINESTAT_STOP                = 26,
+   PERFCOUNTER_SAMPLE               = 27,
+   FLUSH_ES_OUTPUT                  = 28,
+   FLUSH_GS_OUTPUT                  = 29,
+   SAMPLE_PIPELINESTAT              = 30,
+   SO_VGTSTREAMOUT_FLUSH            = 31,
+   SAMPLE_STREAMOUTSTATS            = 32,
+   RESET_VTX_CNT                    = 33,
+   BLOCK_CONTEXT_DONE               = 34,
+   VGT_FLUSH                        = 36,
+   SQ_NON_EVENT                     = 38,
+   SC_SEND_DB_VPZ                   = 39,
+   BOTTOM_OF_PIPE_TS                = 40,
+   FLUSH_SX_TS                      = 41,
+   DB_CACHE_FLUSH_AND_INV           = 42,
+   FLUSH_AND_INV_DB_DATA_TS         = 43,
+   FLUSH_AND_INV_DB_META            = 44,
+   FLUSH_AND_INV_CB_DATA_TS         = 45,
+   FLUSH_AND_INV_CB_META            = 46,
+};
+
 enum VGT_INDEX : uint32_t
 {
    VGT_INDEX_16                     = 0,

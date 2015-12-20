@@ -163,6 +163,8 @@ private:
    void run();
    void initGL();
 
+   uint64_t getGpuClock();
+
    void handlePacketType3(pm4::Packet3 header, const gsl::span<uint32_t> &data);
    void decafCopyColorToScan(const pm4::DecafCopyColorToScan &data);
    void decafSwapBuffers(const pm4::DecafSwapBuffers &data);
@@ -174,6 +176,9 @@ private:
    void indexType(const pm4::IndexType &data);
    void indirectBufferCall(const pm4::IndirectBufferCall &data);
    void numInstances(const pm4::NumInstances &data);
+   void memWrite(const pm4::MemWrite &data);
+   void eventWriteEOP(const pm4::EventWriteEOP &data);
+   void handlePendingEOP();
 
    void setAluConsts(const pm4::SetAluConsts &data);
    void setConfigRegs(const pm4::SetConfigRegs &data);
@@ -258,6 +263,8 @@ private:
    std::array<ColorBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;
 
    latte::ContextState *mContextState = nullptr;
+
+   pm4::EventWriteEOP mPendingEOP = { 0, 0, 0, 0, 0 };
 
 #ifdef PLATFORM_WINDOWS
    uint64_t mDeviceContext = 0;

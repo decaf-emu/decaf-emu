@@ -357,8 +357,8 @@ struct SetVtxResource
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      uint32_t unusedWord4 = 0;
-      uint32_t unusedWord5 = 0;
+      uint32_t unusedWord4 = 0xABCD1234;
+      uint32_t unusedWord5 = 0xABCD1234;
 
       se(id);
       se(baseAddress);
@@ -563,6 +563,115 @@ struct LoadControlConst
       se(addr);
       se(unusedAddrHi);
       se(values);
+   }
+};
+
+union MW_ADDR_LO
+{
+   uint32_t value;
+
+   struct
+   {
+      latte::CB_ENDIAN ENDIAN_SWAP : 2;
+      uint32_t ADDR_LO : 30;
+   };
+};
+
+enum MW_CNTR_SEL : uint32_t
+{
+   MW_WRITE_DATA     = 0,
+   MW_WRITE_CLOCK    = 1,
+};
+
+union MW_ADDR_HI
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t ADDR_HI : 8;
+      uint32_t : 8;
+      uint32_t CNTR_SEL : 1;
+      uint32_t WR_CONFIRM : 1;
+      uint32_t DATA32 : 1;
+   };
+};
+
+struct MemWrite
+{
+   static const auto Opcode = Opcode3::MEM_WRITE;
+   MW_ADDR_LO addrLo;
+   MW_ADDR_HI addrHi;
+   uint32_t dataLo;
+   uint32_t dataHi;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(addrLo.value);
+      se(addrHi.value);
+      se(dataLo);
+      se(dataHi);
+   }
+};
+
+union EW_EOP_ADDR_LO
+{
+   uint32_t value;
+
+   struct
+   {
+      latte::CB_ENDIAN ENDIAN_SWAP : 2;
+      uint32_t ADDR_LO : 30;
+   };
+};
+
+enum EW_DATA_SEL : uint32_t
+{
+   EW_DATA_DISCARD      = 0,
+   EW_DATA_32           = 1,
+   EW_DATA_64           = 2,
+   EW_DATA_CLOCK        = 3,
+};
+
+enum EW_INT_SEL : uint32_t
+{
+   EW_INT_NONE          = 0,
+   EW_INT_ONLY          = 1,
+   EW_INT_WRITE_CONFIRM = 2,
+};
+
+union EW_EOP_ADDR_HI
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t ADDR_HI : 8;
+      uint32_t : 16;
+      EW_INT_SEL INT_SEL : 2;
+      uint32_t : 3;
+      EW_DATA_SEL DATA_SEL : 3;
+   };
+};
+
+struct EventWriteEOP
+{
+   static const auto Opcode = Opcode3::EVENT_WRITE_EOP;
+   latte::VGT_EVENT_INITIATOR eventInitiator;
+   EW_EOP_ADDR_LO addrLo;
+   EW_EOP_ADDR_HI addrHi;
+   uint32_t dataLo;
+   uint32_t dataHi;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(eventInitiator.value);
+      se(addrLo.value);
+      se(addrHi.value);
+      se(dataLo);
+      se(dataHi);
    }
 };
 

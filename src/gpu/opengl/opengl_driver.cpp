@@ -9,6 +9,7 @@
 #include "gpu/pm4_buffer.h"
 #include "gpu/pm4_reader.h"
 #include "gpu/latte_registers.h"
+#include "modules/coreinit/coreinit_time.h"
 #include "opengl_driver.h"
 #include "utils/log.h"
 
@@ -1048,6 +1049,86 @@ void GLDriver::numInstances(const pm4::NumInstances &data)
    mRegisters[latte::Register::VGT_DMA_NUM_INSTANCES / 4] = data.count;
 }
 
+uint64_t GLDriver::getGpuClock()
+{
+   return OSGetTime();
+}
+
+void GLDriver::memWrite(const pm4::MemWrite &data)
+{
+   uint64_t value;
+   auto addr = memory_translate(data.addrLo.ADDR_LO << 2);
+
+   if (data.addrHi.CNTR_SEL == pm4::MW_WRITE_CLOCK) {
+      value = getGpuClock();
+   } else {
+      value = static_cast<uint64_t>(data.dataLo) | static_cast<uint64_t>(data.dataHi) << 32;
+   }
+
+   switch (data.addrLo.ENDIAN_SWAP)
+   {
+   case latte::CB_ENDIAN_8IN64:
+      value = byte_swap(value);
+      break;
+   case latte::CB_ENDIAN_8IN32:
+      value = byte_swap(static_cast<uint32_t>(value));
+      break;
+   case latte::CB_ENDIAN_8IN16:
+      throw std::logic_error("Unexpected MEM_WRITE endian swap");
+   }
+
+   if (data.addrHi.DATA32) {
+      *reinterpret_cast<uint32_t *>(addr) = static_cast<uint32_t>(value);
+   } else {
+      *reinterpret_cast<uint64_t *>(addr) = value;
+   }
+}
+
+void GLDriver::eventWriteEOP(const pm4::EventWriteEOP &data)
+{
+   mPendingEOP = data;
+}
+
+void GLDriver::handlePendingEOP()
+{
+   if (!mPendingEOP.eventInitiator.EVENT_TYPE) {
+      return;
+   }
+
+   uint64_t value = 0;
+   auto addr = memory_translate(mPendingEOP.addrLo.ADDR_LO << 2);
+
+   switch (mPendingEOP.eventInitiator.EVENT_TYPE) {
+   case latte::BOTTOM_OF_PIPE_TS:
+      value = getGpuClock();
+      break;
+   default:
+      throw std::logic_error("Unexpected EOP event type");
+   }
+
+   switch (mPendingEOP.addrLo.ENDIAN_SWAP) {
+   case latte::CB_ENDIAN_8IN64:
+      value = byte_swap(value);
+      break;
+   case latte::CB_ENDIAN_8IN32:
+      value = byte_swap(static_cast<uint32_t>(value));
+      break;
+   case latte::CB_ENDIAN_8IN16:
+      throw std::logic_error("Unexpected EOP event endian swap");
+   }
+
+   switch (mPendingEOP.addrHi.DATA_SEL) {
+   case pm4::EW_DATA_32:
+      *reinterpret_cast<uint32_t *>(addr) = static_cast<uint32_t>(value);
+      break;
+   case pm4::EW_DATA_64:
+      *reinterpret_cast<uint64_t *>(addr) = value;
+      break;
+   }
+
+   std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
+}
+
 void GLDriver::setAluConsts(const pm4::SetAluConsts &data)
 {
    for (auto i = 0u; i < data.values.size(); ++i) {
@@ -1237,6 +1318,12 @@ void GLDriver::handlePacketType3(pm4::Packet3 header, const gsl::span<uint32_t> 
    case pm4::Opcode3::INDIRECT_BUFFER_PRIV:
       indirectBufferCall(pm4::read<pm4::IndirectBufferCall>(reader));
       break;
+   case pm4::Opcode3::MEM_WRITE:
+      memWrite(pm4::read<pm4::MemWrite>(reader));
+      break;
+   case pm4::Opcode3::EVENT_WRITE_EOP:
+      eventWriteEOP(pm4::read<pm4::EventWriteEOP>(reader));
+      break;
    }
 }
 
@@ -1285,7 +1372,14 @@ void GLDriver::run()
 
    while (mRunning) {
       auto buffer = gpu::unqueueCommandBuffer();
+
+      // Execute command buffer
       runCommandBuffer(buffer->buffer, buffer->curSize);
+
+      // Handle any active end-of-pipeline events
+      handlePendingEOP();
+
+      // Release command buffer
       gpu::retireCommandBuffer(buffer);
    }
 }
