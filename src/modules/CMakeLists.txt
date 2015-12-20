@@ -41,6 +41,7 @@ set(SOURCE_FILES
     gameloader/gameloader.cpp
     gx2/gx2.cpp
     gx2/gx2_addrlib.cpp
+    gx2/gx2_aperture.cpp
     gx2/gx2_cbpool.cpp
     gx2/gx2_clear.cpp
     gx2/gx2_contextstate.cpp
@@ -143,6 +144,7 @@ set(HEADER_FILES
     gameloader/gameloader.h
     gx2/gx2.h
     gx2/gx2_addrlib.h
+    gx2/gx2_aperture.h
     gx2/gx2_cbpool.h
     gx2/gx2_clear.h
     gx2/gx2_contextstate.h
