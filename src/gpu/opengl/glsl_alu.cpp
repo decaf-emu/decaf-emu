@@ -225,11 +225,19 @@ void translateAluSource(GenerateState &state, const AluInstruction *ins, const A
    if (src.sel >= latte::SQ_ALU_REGISTER_0 && src.sel <= latte::SQ_ALU_REGISTER_127) {
       state.out << 'R' << (src.sel - latte::SQ_ALU_REGISTER_0);
       doChannelSelect = true;
-   } else if (src.sel >= latte::SQ_ALU_KCACHE_BANK0_0 && src.sel <= latte::SQ_ALU_KCACHE_BANK0_31) {
-      auto addr = ins->parent->kcache[0].addr;
-      auto bank = ins->parent->kcache[0].bank;
-      auto mode = ins->parent->kcache[0].mode;
-      auto id = (addr * 16) + (src.sel - latte::SQ_ALU_KCACHE_BANK0_0);
+   } else if ((src.sel >= latte::SQ_ALU_KCACHE_BANK0_0 && src.sel <= latte::SQ_ALU_KCACHE_BANK0_31)
+           || (src.sel >= latte::SQ_ALU_KCACHE_BANK1_0 && src.sel <= latte::SQ_ALU_KCACHE_BANK1_31)) {
+      auto index = (src.sel >= latte::SQ_ALU_KCACHE_BANK1_0) ? 1 : 0;
+      auto addr = ins->parent->kcache[index].addr;
+      auto bank = ins->parent->kcache[index].bank;
+      auto mode = ins->parent->kcache[index].mode;
+      auto id = (addr * 16);
+
+      if (src.sel >= latte::SQ_ALU_KCACHE_BANK1_0) {
+         id += src.sel - latte::SQ_ALU_KCACHE_BANK1_0;
+      } else {
+         id += src.sel - latte::SQ_ALU_KCACHE_BANK0_0;
+      }
 
       if (mode == latte::SQ_CF_KCACHE_LOCK_LOOP_INDEX) {
          throw std::logic_error("Unimplemented kcache lock mode SQ_CF_KCACHE_LOCK_LOOP_INDEX");
@@ -251,8 +259,6 @@ void translateAluSource(GenerateState &state, const AluInstruction *ins, const A
       }
 
       state.out << ']';
-      doChannelSelect = true;
-   } else if (src.sel >= latte::SQ_ALU_KCACHE_BANK1_0 && src.sel <= latte::SQ_ALU_KCACHE_BANK1_31) {
       doChannelSelect = true;
    } else if (src.sel >= latte::SQ_ALU_SRC_CONST_FILE_0 && src.sel <= latte::SQ_ALU_SRC_CONST_FILE_255) {
       if (state.shader->type == latte::Shader::Vertex) {
