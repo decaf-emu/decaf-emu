@@ -225,6 +225,7 @@ void
 GX2SetPixelUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 {
    auto loop = offset >> 16;
+
    if (loop) {
       auto id = static_cast<latte::Register>(latte::Register::SQ_LOOP_CONST_0 + 4 * loop);
       pm4::write(pm4::SetLoopConst { id, data[0] });
@@ -250,17 +251,20 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
    res.id = (location * 7) + latte::SQ_VS_BUF_RESOURCE_0;
    res.baseAddress = data;
    res.size = size - 1;
-   // GX2 actually sets a bunch of useless word2,word3 stuff
+   res.word2.STRIDE = 16;
+   res.word2.DATA_FORMAT = latte::FMT_32_32_32_32;
+   res.word2.FORMAT_COMP_ALL = latte::SQ_FORMAT_COMP_SIGNED;
+   res.word3.MEM_REQUEST_SIZE = 1;
    res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
    pm4::write(res);
 
-   uint32_t addr256 = memory_untranslate(data) >> 8;
-
    auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + location * 4);
+   auto addr256 = memory_untranslate(data) >> 8;
    pm4::write(pm4::SetContextReg { addrId, addr256 });
 
    auto sizeId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + location * 4);
-   pm4::write(pm4::SetContextReg { sizeId, size - 1 });
+   auto size256 = ((size + 255) >> 8) & 0x1FF;
+   pm4::write(pm4::SetContextReg { sizeId, size256 });
 }
 
 void
@@ -271,17 +275,20 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
    res.id = (location * 7) + latte::SQ_PS_BUF_RESOURCE_0;
    res.baseAddress = data;
    res.size = size - 1;
-   // GX2 actually sets a bunch of useless word2,word3 stuff
+   res.word2.STRIDE = 16;
+   res.word2.DATA_FORMAT = latte::FMT_32_32_32_32;
+   res.word2.FORMAT_COMP_ALL = latte::SQ_FORMAT_COMP_SIGNED;
+   res.word3.MEM_REQUEST_SIZE = 1;
    res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
    pm4::write(res);
 
-   const uint32_t addr256 = memory_untranslate(data) >> 8;
-
    auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + location * 4);
+   auto addr256 = memory_untranslate(data) >> 8;
    pm4::write(pm4::SetContextReg { addrId, addr256 });
 
    auto sizeId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + location * 4);
-   pm4::write(pm4::SetContextReg { sizeId, size - 1 });
+   auto size256 = ((size + 255) >> 8) & 0x1FF;
+   pm4::write(pm4::SetContextReg { sizeId, size256 });
 }
 
 void
