@@ -197,6 +197,7 @@
     <ClCompile Include="..\src\modules\gx2\gx2r_resource.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2r_surface.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_addrlib.cpp" />
+    <ClCompile Include="..\src\modules\gx2\gx2_aperture.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_cbpool.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_clear.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_contextstate.cpp" />
@@ -361,6 +362,7 @@
     <ClInclude Include="..\src\modules\gx2\gx2r_buffer.h" />
     <ClInclude Include="..\src\modules\gx2\gx2r_surface.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_addrlib.h" />
+    <ClInclude Include="..\src\modules\gx2\gx2_aperture.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_cbpool.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_clear.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_dds.h" />

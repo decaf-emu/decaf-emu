@@ -1,4 +1,5 @@
 #include "gx2.h"
+#include "gx2_aperture.h"
 #include "gx2_clear.h"
 #include "gx2_contextstate.h"
 #include "gx2_display.h"
@@ -33,6 +34,10 @@ GX2::initialise()
 void
 GX2::RegisterFunctions()
 {
+   // Aperture
+   RegisterKernelFunction(GX2AllocateTilingApertureEx);
+   RegisterKernelFunction(GX2FreeTilingAperture);
+
    // Clear
    RegisterKernelFunction(GX2ClearColor);
    RegisterKernelFunction(GX2ClearDepthStencil);
