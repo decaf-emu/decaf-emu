@@ -147,6 +147,10 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer);
 void
 GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer);
 
+void
+GX2InitDepthBufferHiZEnable(GX2DepthBuffer *depthBuffer,
+                            BOOL enable);
+
 uint32_t
 GX2GetSurfaceSwizzle(GX2Surface *surface);
 

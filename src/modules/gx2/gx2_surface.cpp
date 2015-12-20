@@ -256,6 +256,15 @@ GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
    depthBuffer->regs.db_depth_size = db_depth_size;
 }
 
+void
+GX2InitDepthBufferHiZEnable(GX2DepthBuffer *depthBuffer,
+                            BOOL enable)
+{
+   auto db_depth_info = depthBuffer->regs.db_depth_info.value();
+   db_depth_info.TILE_SURFACE_ENABLE = enable ? 1 : 0;
+   depthBuffer->regs.db_depth_info = db_depth_info;
+}
+
 uint32_t
 GX2GetSurfaceSwizzle(GX2Surface *surface)
 {

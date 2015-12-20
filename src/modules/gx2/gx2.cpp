@@ -227,6 +227,7 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2SetDepthBuffer);
    RegisterKernelFunction(GX2InitColorBufferRegs);
    RegisterKernelFunction(GX2InitDepthBufferRegs);
+   RegisterKernelFunction(GX2InitDepthBufferHiZEnable);
    RegisterKernelFunction(GX2GetSurfaceSwizzle);
    RegisterKernelFunction(GX2SetSurfaceSwizzle);
 
