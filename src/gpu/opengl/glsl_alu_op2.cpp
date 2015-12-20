@@ -51,7 +51,6 @@ SET_LDS_SIZE
 MUL_INT24
 MULHI_INT24
 MOVA_GPR_INT
-LOG_CLAMPED
 RECIP_CLAMPED
 RECIP_FF
 RECIPSQRT_CLAMPED
@@ -402,6 +401,28 @@ static bool LOG(GenerateState &state, AluInstruction *ins)
    return true;
 }
 
+static bool LOG_CLAMPED(GenerateState &state, AluInstruction *ins)
+{
+   /*
+   dst = log2(src0)
+
+   if (dst == -INF) {
+      dst = -MAX_FLOAT;
+   }
+   */
+   assert(ins->srcCount == 1);
+   translateAluDestStart(state, ins);
+
+   state.out << "log2(";
+   translateAluSource(state, ins, ins->src[0]);
+   state.out << ')';
+
+   // TODO: Clamp for LOG_CLAMPED
+
+   translateAluDestEnd(state, ins);
+   return true;
+}
+
 static bool FLT_TO_INT(GenerateState &state, AluInstruction *ins)
 {
    // dst = (int)src0
@@ -726,6 +747,7 @@ void registerAluOP2()
    registerGenerator(latte::SQ_OP2_INST_COS, COS);
    registerGenerator(latte::SQ_OP2_INST_EXP_IEEE, EXP);
    registerGenerator(latte::SQ_OP2_INST_LOG_IEEE, LOG);
+   registerGenerator(latte::SQ_OP2_INST_LOG_CLAMPED, LOG_CLAMPED);
    registerGenerator(latte::SQ_OP2_INST_PRED_SETE, PRED_SETE);
    registerGenerator(latte::SQ_OP2_INST_PRED_SETGE, PRED_SETGE);
    registerGenerator(latte::SQ_OP2_INST_PRED_SETGT, PRED_SETGT);
