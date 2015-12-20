@@ -1350,7 +1350,7 @@ void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
       switch (header.type) {
       case pm4::PacketType::Type3:
       {
-         auto header3 = pm4::Packet3{ header.value };
+         auto header3 = pm4::Packet3 { header.value };
          size = header3.size + 1;
          handlePacketType3(header3, gsl::as_span(&buffer[pos + 1], size));
          break;
@@ -1359,6 +1359,7 @@ void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
       case pm4::PacketType::Type1:
       case pm4::PacketType::Type2:
       default:
+         gLog->error("Invalid packet header type {}, header = 0x{:08X}", header.type, header.value);
          throw std::logic_error("What the fuck son");
       }
 

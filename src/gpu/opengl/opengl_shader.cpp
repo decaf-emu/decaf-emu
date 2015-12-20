@@ -167,12 +167,6 @@ bool GLDriver::checkActiveShader()
 
          // Get uniform locations
          vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VR");
-         vertexShader.uniformBlocks.fill(0);
-
-         for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
-            auto name = fmt::format("VertexBlock[{}]", i);
-            vertexShader.uniformBlocks[i] = gl::glGetUniformLocation(vertexShader.object, name.c_str());
-         }
 
          // Get attribute locations
          vertexShader.attribLocations.fill(0);
@@ -208,12 +202,6 @@ bool GLDriver::checkActiveShader()
 
          // Get uniform locations
          pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "PR");
-         pixelShader.uniformBlocks.fill(0);
-
-         for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
-            auto name = fmt::format("PixelBlock[{}]", i);
-            pixelShader.uniformBlocks[i] = gl::glGetUniformLocation(pixelShader.object, name.c_str());
-         }
       }
 
       shader.fetch = &fetchShader;
@@ -249,16 +237,93 @@ bool GLDriver::checkActiveUniforms()
       // Upload uniform registers
       if (mActiveShader->vertex && mActiveShader->vertex->object) {
          auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_256 / 4]);
-         gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, 256, values);
+         gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, MAX_UNIFORM_REGISTERS, values);
       }
 
       if (mActiveShader->pixel && mActiveShader->pixel->object) {
          auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_0 / 4]);
-         gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, 256, values);
+         gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, MAX_UNIFORM_REGISTERS, values);
       }
    } else {
-      // TODO: Upload uniform blocks
-      throw unimplemented_error("Unimplemented uniform blocks");
+      std::vector<float> buffer;
+
+      if (mActiveShader->vertex && mActiveShader->vertex->object) {
+         for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
+            auto resourceOffset = latte::SQ_VS_BUF_RESOURCE_0 + i * 7;
+            auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
+            auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
+            auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * resourceOffset);
+            auto sq_vtx_constant_word3 = getRegister<latte::SQ_VTX_CONSTANT_WORD3_N>(latte::Register::SQ_VTX_CONSTANT_WORD3_0 + 4 * resourceOffset);
+            auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
+
+            if (!sq_vtx_constant_word0.BASE_ADDRESS || !sq_vtx_constant_word1.SIZE) {
+               continue;
+            }
+
+            auto block = make_virtual_ptr<float>(sq_vtx_constant_word0.BASE_ADDRESS);
+            auto size = sq_vtx_constant_word1.SIZE + 1;
+            auto values = size / 4;
+
+            auto &ubo = mUniformBuffers[sq_vtx_constant_word0.BASE_ADDRESS];
+
+            if (!ubo.object) {
+               gl::glGenBuffers(1, &ubo.object);
+            }
+
+            // Swap endian
+            buffer.resize(values);
+
+            for (auto j = 0u; j < values; ++j) {
+               buffer[j] = byte_swap(block[j]);
+            }
+
+            // Upload block
+            gl::glBindBuffer(gl::GL_UNIFORM_BUFFER, ubo.object);
+            gl::glBufferData(gl::GL_UNIFORM_BUFFER, size, buffer.data(), gl::GL_DYNAMIC_DRAW);
+
+            // Bind block
+            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, ubo.object);
+         }
+      }
+
+      if (mActiveShader->pixel && mActiveShader->pixel->object) {
+         for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
+            auto resourceOffset = latte::SQ_PS_BUF_RESOURCE_0 + i * 7;
+            auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
+            auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
+            auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * resourceOffset);
+            auto sq_vtx_constant_word3 = getRegister<latte::SQ_VTX_CONSTANT_WORD3_N>(latte::Register::SQ_VTX_CONSTANT_WORD3_0 + 4 * resourceOffset);
+            auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
+
+            if (!sq_vtx_constant_word0.BASE_ADDRESS || !sq_vtx_constant_word1.SIZE) {
+               continue;
+            }
+
+            auto block = make_virtual_ptr<float>(sq_vtx_constant_word0.BASE_ADDRESS);
+            auto size = sq_vtx_constant_word1.SIZE + 1;
+            auto values = size / 4;
+
+            auto &ubo = mUniformBuffers[sq_vtx_constant_word0.BASE_ADDRESS];
+
+            if (!ubo.object) {
+               gl::glGenBuffers(1, &ubo.object);
+            }
+
+            // Swap endian
+            buffer.resize(values);
+
+            for (auto j = 0u; j < values; ++j) {
+               buffer[j] = byte_swap(block[j]);
+            }
+
+            // Upload block
+            gl::glBindBuffer(gl::GL_UNIFORM_BUFFER, ubo.object);
+            gl::glBufferData(gl::GL_UNIFORM_BUFFER, size, buffer.data(), gl::GL_DYNAMIC_DRAW);
+
+            // Bind block
+            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, ubo.object);
+         }
+      }
    }
 
    return true;
@@ -620,7 +685,7 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
       out << "[" << MAX_UNIFORM_REGISTERS << "];\n";
    } else {
       // Uniform blocks
-      out << "uniform ";
+      out << "layout (binding = 0) uniform ";
 
       if (shader.type == latte::Shader::Vertex) {
          out << "VertexBlock";
@@ -628,7 +693,8 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
          out << "PixelBlock";
       }
 
-      out << " {\n"
+      out
+         << " {\n"
          << "   vec4 values[];\n"
          << "} ";
 
@@ -638,7 +704,7 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
          out << "PB";
       }
 
-      out << "[4];\n";
+      out << "[" << MAX_UNIFORM_BLOCKS << "];\n";
    }
 
    // Samplers

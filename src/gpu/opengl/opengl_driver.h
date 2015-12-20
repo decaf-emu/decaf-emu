@@ -76,7 +76,6 @@ struct VertexShader
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
    std::array<gl::GLuint, MAX_ATTRIB_COUNT> attribLocations;
-   std::array<gl::GLuint, MAX_UNIFORM_BLOCKS> uniformBlocks;
    std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
    latte::SQ_PGM_START_VS pgm_start_vs;
    std::string code;
@@ -87,7 +86,6 @@ struct PixelShader
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
-   std::array<gl::GLuint, MAX_UNIFORM_BLOCKS> uniformBlocks;
    std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
    latte::SQ_PGM_START_PS pgm_start_ps;
    std::string code;
@@ -144,6 +142,11 @@ struct ScreenDrawData
 };
 
 struct Sampler
+{
+   gl::GLuint object = 0;
+};
+
+struct UniformBuffer
 {
    gl::GLuint object = 0;
 };
@@ -252,6 +255,7 @@ private:
    std::unordered_map<uint32_t, ColorBuffer> mColorBuffers;
    std::unordered_map<uint32_t, DepthBuffer> mDepthBuffers;
    std::unordered_map<uint32_t, AttributeBuffer> mAttribBuffers;
+   std::unordered_map<uint32_t, UniformBuffer> mUniformBuffers;
 
    std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mVertexSamplers;
    std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mPixelSamplers;
