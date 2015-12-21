@@ -455,6 +455,13 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
       pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_EN, 0 });
    }
 }
+
+void
+GX2SetStreamOutEnable(BOOL enable)
+{
+   auto vgt_strmout_en = latte::VGT_STRMOUT_EN { 0 };
+   vgt_strmout_en.STREAMOUT = enable ? 1 : 0;
+   pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_EN, vgt_strmout_en.value });
 }
 
 uint32_t

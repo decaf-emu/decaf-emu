@@ -396,6 +396,9 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
                    uint32_t numGsGpr, uint32_t numGsStackEntries,
                    uint32_t numPsGpr, uint32_t numPsStackEntries);
 
+void
+GX2SetStreamOutEnable(BOOL enable);
+
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader);
 
