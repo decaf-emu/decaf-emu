@@ -357,7 +357,9 @@ void GLDriver::setRegister(latte::Register reg, uint32_t value)
    switch (reg) {
    case latte::Register::SQ_VTX_SEMANTIC_CLEAR:
       for (auto i = 0u; i < 32; ++i) {
-         setRegister(static_cast<latte::Register>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4), 0xffffffff);
+         if (value & (1 << i)) {
+            setRegister(static_cast<latte::Register>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4), 0xffffffff);
+         }
       }
       break;
 
