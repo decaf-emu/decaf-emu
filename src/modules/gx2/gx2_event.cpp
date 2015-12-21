@@ -62,6 +62,7 @@ gEventCallbacks[GX2EventType::Max];
 BOOL
 GX2DrawDone()
 {
+   GX2Flush();
    return GX2WaitTimeStamp(GX2GetLastSubmittedTimeStamp());
 }
 
