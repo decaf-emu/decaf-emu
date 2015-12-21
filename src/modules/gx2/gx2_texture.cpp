@@ -145,9 +145,6 @@ GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
       }
    }
 
-   // Dump texture
-   GX2DebugDumpTexture(texture);
-
    pm4::write(pm4::SetTexResource {
       (unit * 7) + latte::SQ_PS_TEX_RESOURCE_0,
       texture->regs.word0,
@@ -158,6 +155,8 @@ GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
       texture->regs.word5,
       texture->regs.word6,
    });
+
+   GX2DebugDumpTexture(texture);
 }
 
 void
@@ -173,9 +172,6 @@ GX2SetVertexTexture(GX2Texture *texture, uint32_t unit)
       }
    }
 
-   // Dump texture
-   GX2DebugDumpTexture(texture);
-
    pm4::write(pm4::SetTexResource {
       (unit * 7) + latte::SQ_VS_TEX_RESOURCE_0,
       texture->regs.word0,
@@ -186,4 +182,6 @@ GX2SetVertexTexture(GX2Texture *texture, uint32_t unit)
       texture->regs.word5,
       texture->regs.word6,
    });
+
+   GX2DebugDumpTexture(texture);
 }

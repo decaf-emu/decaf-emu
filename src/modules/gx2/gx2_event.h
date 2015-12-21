@@ -53,6 +53,12 @@ GX2GetLastSubmittedTimeStamp();
 BOOL
 GX2WaitTimeStamp(OSTime time);
 
+void
+GX2GetSwapStatus(be_val<uint32_t> *swapCount,
+                 be_val<uint32_t> *flipCount,
+                 be_val<OSTime> *lastFlip,
+                 be_val<OSTime> *lastVsync);
+
 namespace gx2
 {
 
@@ -73,6 +79,12 @@ setLastSubmittedTimestamp(OSTime timestamp);
 
 void
 setRetiredTimestamp(OSTime timestamp);
+
+void
+onSwap();
+
+void
+onFlip();
 
 } // namespace internal
 

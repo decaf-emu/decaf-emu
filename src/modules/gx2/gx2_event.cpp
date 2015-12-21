@@ -16,6 +16,15 @@ static std::atomic<int64_t>
 gLastVsync { 0 };
 
 static std::atomic<int64_t>
+gLastFlip { 0 };
+
+static std::atomic<uint32_t>
+gSwapCount { 0 };
+
+static std::atomic<uint32_t>
+gFlipCount { 0 };
+
+static std::atomic<int64_t>
 gLastSubmittedTimestamp { 0 };
 
 static std::atomic<int64_t>
@@ -23,6 +32,9 @@ gRetiredTimestamp { 0 };
 
 static virtual_ptr<OSThreadQueue>
 gVsyncThreadQueue;
+
+static virtual_ptr<OSThreadQueue>
+gFlipThreadQueue;
 
 static virtual_ptr<OSAlarm>
 gVsyncAlarm;
@@ -43,6 +55,10 @@ static EventCallbackData
 gEventCallbacks[GX2EventType::Max];
 
 
+/**
+ * Sleep the current thread until the last submitted command buffer
+ * has been processed by the driver.
+ */
 BOOL
 GX2DrawDone()
 {
@@ -50,22 +66,13 @@ GX2DrawDone()
 }
 
 
+/**
+ * Set the callback and data for a type of event.
+ */
 void
-GX2WaitForVsync()
-{
-   OSSleepThread(gVsyncThreadQueue);
-}
-
-
-void
-GX2WaitForFlip()
-{
-   // TODO: What is a flip? :D
-}
-
-
-void
-GX2SetEventCallback(GX2EventType type, GX2EventCallbackFunction func, void *userData)
+GX2SetEventCallback(GX2EventType type,
+                    GX2EventCallbackFunction func,
+                    void *userData)
 {
    if (type == GX2EventType::DisplayListOverrun && !userData) {
       gLog->error("DisplayListOverrun callback set with no valid userData");
@@ -78,8 +85,13 @@ GX2SetEventCallback(GX2EventType type, GX2EventCallbackFunction func, void *user
 }
 
 
+/**
+ * Return the callback and data for a type of event.
+ */
 void
-GX2GetEventCallback(GX2EventType type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut)
+GX2GetEventCallback(GX2EventType type,
+                    be_GX2EventCallbackFunction *funcOut,
+                    be_ptr<void> *userDataOut)
 {
    if (type < GX2EventType::Max) {
       *funcOut = gEventCallbacks[type].func;
@@ -91,6 +103,9 @@ GX2GetEventCallback(GX2EventType type, be_GX2EventCallbackFunction *funcOut, be_
 }
 
 
+/**
+ * Get the timestamp of the last command buffer processed by the driver.
+ */
 OSTime
 GX2GetRetiredTimeStamp()
 {
@@ -98,6 +113,9 @@ GX2GetRetiredTimeStamp()
 }
 
 
+/**
+ * Get the timestamp of the last submitted command buffer.
+ */
 OSTime
 GX2GetLastSubmittedTimeStamp()
 {
@@ -105,6 +123,31 @@ GX2GetLastSubmittedTimeStamp()
 }
 
 
+/**
+ * Return the current swap status.
+ *
+ * swapCount is the number of swaps requested
+ * flipCount is the number of swaps performed
+ * lastFlip is the timestamp of the last flip
+ * lastVsync is the timestamp of the last vsync
+ */
+void
+GX2GetSwapStatus(be_val<uint32_t> *swapCount,
+                 be_val<uint32_t> *flipCount,
+                 be_val<OSTime> *lastFlip,
+                 be_val<OSTime> *lastVsync)
+{
+   *swapCount = gSwapCount.load(std::memory_order_acquire);
+   *flipCount = gFlipCount.load(std::memory_order_acquire);
+
+   *lastFlip = gLastFlip.load(std::memory_order_acquire);
+   *lastVsync = gLastVsync.load(std::memory_order_acquire);
+}
+
+
+/**
+ * Wait until a command buffer submitted with a timestamp has been processed by the driver.
+ */
 BOOL
 GX2WaitTimeStamp(OSTime time)
 {
@@ -120,6 +163,26 @@ GX2WaitTimeStamp(OSTime time)
 }
 
 
+/**
+ * Sleep the current thread until the vsync alarm has triggered.
+ */
+void
+GX2WaitForVsync()
+{
+   OSSleepThread(gVsyncThreadQueue);
+}
+
+
+/**
+ * Sleep the current thread until a flip has been performed.
+ */
+void
+GX2WaitForFlip()
+{
+   OSSleepThread(gFlipThreadQueue);
+}
+
+
 namespace gx2
 {
 
@@ -127,6 +190,9 @@ namespace internal
 {
 
 
+/**
+ * Start a vsync alarm.
+ */
 void
 initEvents()
 {
@@ -140,6 +206,12 @@ initEvents()
 }
 
 
+/**
+ * VSync alarm handler.
+ *
+ * Wakes up any threads waiting for vsync.
+ * If a vsync callback has been set, trigger it.
+ */
 void
 vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
@@ -155,6 +227,11 @@ vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 }
 
 
+/**
+ * Called when a GX2 command requires more space in a display list.
+ *
+ * Will call the display list overrun callback to allocate a new command buffer.
+ */
 std::pair<void *, uint32_t>
 displayListOverrun(void *list, uint32_t size)
 {
@@ -179,10 +256,14 @@ displayListOverrun(void *list, uint32_t size)
 }
 
 
+/**
+ * Update the retired timestamp.
+ *
+ * Will wakeup any threads waiting for a timestamp.
+ */
 void
 setRetiredTimestamp(OSTime timestamp)
 {
-   // TODO: Is there a non-race way to do this without acquiring scheduler lock?
    OSLockScheduler();
    gRetiredTimestamp.store(timestamp, std::memory_order_release);
    OSWakeupThreadNoLock(gWaitTimeStampQueue);
@@ -190,10 +271,35 @@ setRetiredTimestamp(OSTime timestamp)
 }
 
 
+/**
+ * Update the last submitted timestamp.
+ */
 void
 setLastSubmittedTimestamp(OSTime timestamp)
 {
    gLastSubmittedTimestamp.store(timestamp, std::memory_order_release);
+}
+
+
+/**
+ * Called when a swap is requested with GX2SwapBuffers.
+ */
+void
+onSwap()
+{
+   gSwapCount++;
+}
+
+
+/**
+ * Called when a swap is performed by the driver.
+ */
+void
+onFlip()
+{
+   gFlipCount++;
+   gLastFlip.store(OSGetSystemTime(), std::memory_order_release);
+   OSWakeupThread(gFlipThreadQueue);
 }
 
 } // namespace internal

@@ -10,6 +10,7 @@
 #include "gpu/pm4_reader.h"
 #include "gpu/latte_registers.h"
 #include "modules/coreinit/coreinit_time.h"
+#include "modules/gx2/gx2_event.h"
 #include "opengl_driver.h"
 #include "utils/log.h"
 
@@ -786,6 +787,7 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
 void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 {
    platform::ui::swapBuffers();
+   gx2::internal::onFlip();
 }
 
 void GLDriver::decafClearColor(const pm4::DecafClearColor &data)

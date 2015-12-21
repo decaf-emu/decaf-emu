@@ -19,12 +19,6 @@ GX2GetLastFrame(GX2ScanTarget scanTarget, GX2Texture *texture);
 BOOL
 GX2GetLastFrameGamma(GX2ScanTarget scanTarget, be_val<float> *gamma);
 
-void
-GX2GetSwapStatus(be_val<uint32_t> *swapCount,
-                 be_val<uint32_t> *flipCount,
-                 be_val<OSTime> *lastFlip,
-                 be_val<OSTime> *lastVsync);
-
 uint32_t
 GX2GetSwapInterval();
 
