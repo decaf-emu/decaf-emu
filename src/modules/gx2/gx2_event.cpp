@@ -200,6 +200,7 @@ initEvents()
    gVsyncThreadQueue = OSAllocFromSystem<OSThreadQueue>();
    gVsyncAlarm = OSAllocFromSystem<OSAlarm>();
    gWaitTimeStampQueue = OSAllocFromSystem<OSThreadQueue>();
+   gFlipThreadQueue = OSAllocFromSystem<OSThreadQueue>();
 
    auto ticks = static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) / 60;
    OSCreateAlarm(gVsyncAlarm);
