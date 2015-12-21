@@ -46,6 +46,8 @@ VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadErro
    memset(&buffers[0], 0, sizeof(VPADStatus));
 
    auto channel = static_cast<input::vpad::Channel>(chan);
+   input::sampleController(channel);
+
    auto &buffer = buffers[0];
 
    for (auto &pair : gButtonMap) {

@@ -1,13 +1,13 @@
 include_directories(".")
 
 set(SOURCE_FILES
-    platform_glfw_input.cpp
-    platform_glfw_ui.cpp
+    platform_sdl_input.cpp
+    platform_sdl_ui.cpp
     )
 
 set(HEADER_FILES
     platform_fiber.h
-    platform_glfw.h
+    platform_sdl.h
     platform.h
     platform_input.h
     platform_memorymap.h

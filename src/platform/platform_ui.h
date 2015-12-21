@@ -8,10 +8,16 @@ namespace ui
 {
 
 bool
-createWindow(const std::wstring &title);
+init();
+
+bool
+createWindow(const std::string &title);
 
 void
 run();
+
+void
+shutdown();
 
 void
 swapBuffers();

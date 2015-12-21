@@ -243,7 +243,11 @@ play(const fs::HostPath &path)
    gpu::driver::create(new gpu::opengl::GLDriver);
 
    // Create window
-   if (!platform::ui::createWindow(L"Decaf")) {
+   if (!platform::ui::init()) {
+      gLog->error("Error initializing UI");
+      return false;
+   }
+   if (!platform::ui::createWindow("Decaf")) {
       gLog->error("Error creating window");
       return false;
    }
@@ -319,6 +323,8 @@ play(const fs::HostPath &path)
    }
 
    platform::ui::run();
+
+   platform::ui::shutdown();
 
    // Force inclusion in release builds
    tracePrint(nullptr, 0, 0);
