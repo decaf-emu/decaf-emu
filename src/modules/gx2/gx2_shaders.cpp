@@ -105,8 +105,9 @@ GX2SetVertexShader(GX2VertexShader *shader)
    pm4::write(pm4::SetContextReg { latte::Register::VGT_VERTEX_REUSE_BLOCK_CNTL, vgt_vertex_reuse_block_cntl.value });
    pm4::write(pm4::SetContextReg { latte::Register::VGT_HOS_REUSE_DEPTH, vgt_hos_reuse_depth.value });
 
-   if (shader->loopVarCount > 0) {
-      //_GX2SetVertexLoopVar(shader->loopVars, shader->loopVars + (shader->loopVarCount << 3));
+   for (auto i = 0u; i < shader->loopVarCount; ++i) {
+      auto id = static_cast<latte::Register>(latte::Register::SQ_LOOP_CONST_VS_0 + shader->loopVars[i].offset);
+      pm4::write(pm4::SetLoopConst { id, shader->loopVars[i].value });
    }
 
    GX2DebugDumpShader(shader);
@@ -129,10 +130,10 @@ GX2SetPixelShader(GX2PixelShader *shader)
    auto sq_pgm_exports_ps = shader->regs.sq_pgm_exports_ps.value();
 
    uint32_t shaderRegData[] = {
-      shader->data.getAddress() / 256,
+      shader->data.getAddress() >> 8,
       shader->size >> 3,
-      0x10,
-      0x10,
+      0x100000,
+      0x100000,
       sq_pgm_resources_ps.value,
       sq_pgm_exports_ps.value,
    };
@@ -157,8 +158,9 @@ GX2SetPixelShader(GX2PixelShader *shader)
    pm4::write(pm4::SetContextReg { latte::Register::DB_SHADER_CONTROL, db_shader_control.value });
    pm4::write(pm4::SetContextReg { latte::Register::SPI_INPUT_Z, spi_input_z.value });
 
-   if (shader->loopVarCount > 0) {
-      //_GX2SetPixelLoopVar(shader->loopVars, shader->loopVars + (shader->loopVarCount << 3));
+   for (auto i = 0u; i < shader->loopVarCount; ++i) {
+      auto id = static_cast<latte::Register>(latte::Register::SQ_LOOP_CONST_PS_0 + shader->loopVars[i].offset);
+      pm4::write(pm4::SetLoopConst { id, shader->loopVars[i].value });
    }
 
    GX2DebugDumpShader(shader);
@@ -240,24 +242,24 @@ _GX2SetSampler(GX2Sampler *sampler, uint32_t id)
 }
 
 void
-GX2SetVertexSampler(GX2Sampler *sampler, uint32_t id)
-{
-   assert(id < 0x12);
-   _GX2SetSampler(sampler, 0x12 + id);
-}
-
-void
 GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id)
 {
    assert(id < 0x12);
-   _GX2SetSampler(sampler, 0x00 + id);
+   _GX2SetSampler(sampler, 0 + id);
+}
+
+void
+GX2SetVertexSampler(GX2Sampler *sampler, uint32_t id)
+{
+   assert(id < 0x12);
+   _GX2SetSampler(sampler, 18 + id);
 }
 
 void
 GX2SetGeometrySampler(GX2Sampler *sampler, uint32_t id)
 {
    assert(id < 0x12);
-   _GX2SetSampler(sampler, 0x24 + id);
+   _GX2SetSampler(sampler, 36 + id);
 }
 
 void
@@ -265,7 +267,7 @@ GX2SetVertexUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 {
    auto loop = offset >> 16;
    if (loop) {
-      auto id = static_cast<latte::Register>(latte::Register::SQ_LOOP_CONST_32 + 4 * loop);
+      auto id = static_cast<latte::Register>(latte::Register::SQ_LOOP_CONST_VS_0 + 4 * loop);
       pm4::write(pm4::SetLoopConst { id, data[0] });
    }
 
@@ -287,7 +289,7 @@ GX2SetPixelUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
    auto loop = offset >> 16;
 
    if (loop) {
-      auto id = static_cast<latte::Register>(latte::Register::SQ_LOOP_CONST_0 + 4 * loop);
+      auto id = static_cast<latte::Register>(latte::Register::SQ_LOOP_CONST_PS_0 + 4 * loop);
       pm4::write(pm4::SetLoopConst { id, data[0] });
    }
 

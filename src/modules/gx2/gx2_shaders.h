@@ -93,6 +93,15 @@ CHECK_OFFSET(GX2SamplerVar, 0x04, type);
 CHECK_OFFSET(GX2SamplerVar, 0x08, location);
 CHECK_SIZE(GX2SamplerVar, 0x0C);
 
+struct GX2LoopVar
+{
+   be_val<uint32_t> offset;
+   be_val<uint32_t> value;
+};
+CHECK_OFFSET(GX2LoopVar, 0x00, offset);
+CHECK_OFFSET(GX2LoopVar, 0x04, value);
+CHECK_SIZE(GX2LoopVar, 0x08);
+
 struct GX2VertexShader
 {
    struct
@@ -125,7 +134,7 @@ struct GX2VertexShader
    be_ptr<GX2UniformInitialValue> initialValues;
 
    be_val<uint32_t> loopVarCount;
-   be_ptr<void> loopVars;
+   be_ptr<GX2LoopVar> loopVars;
 
    be_val<uint32_t> samplerVarCount;
    be_ptr<GX2SamplerVar> samplerVars;
@@ -202,7 +211,7 @@ struct GX2PixelShader
    be_ptr<GX2UniformInitialValue> initialValues;
 
    be_val<uint32_t> loopVarCount;
-   be_ptr<void> loopVars;
+   be_ptr<GX2LoopVar> loopVars;
 
    be_val<uint32_t> samplerVarCount;
    be_ptr<GX2SamplerVar> samplerVars;
