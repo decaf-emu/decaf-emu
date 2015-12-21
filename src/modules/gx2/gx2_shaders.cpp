@@ -443,14 +443,14 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
       sq_stack_resource_mgmt_1.value,
       sq_stack_resource_mgmt_2.value,
    };
-   pm4::write(pm4::SetConfigRegs { latte::Register::SQ_CONFIG, regData });
+   pm4::write(pm4::SetConfigRegs { latte::Register::SQ_CONFIG, gsl::as_span(regData) });
 
    if (mode == GX2ShaderMode::ComputeShader) {
       uint32_t ringBaseData[] = { 0, 0xFFFFFF, 0, 0xFFFFFF };
-      pm4::write(pm4::SetConfigRegs { latte::Register::SQ_ESGS_RING_BASE, ringBaseData });
+      pm4::write(pm4::SetConfigRegs { latte::Register::SQ_ESGS_RING_BASE, gsl::as_span(ringBaseData) });
 
       uint32_t ringItemSizes[] = { 0, 1 };
-      pm4::write(pm4::SetContextRegs { latte::Register::SQ_ESGS_RING_ITEMSIZE, ringItemSizes });
+      pm4::write(pm4::SetContextRegs { latte::Register::SQ_ESGS_RING_ITEMSIZE, gsl::as_span(ringItemSizes) });
 
       pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_EN, 0 });
    }
