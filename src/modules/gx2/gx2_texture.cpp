@@ -132,8 +132,8 @@ GX2InitTextureRegs(GX2Texture *texture)
    texture->regs.word6 = word6;
 }
 
-void
-GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
+static void
+setTexture(GX2Texture *texture, latte::SQ_RES_OFFSET offset, uint32_t unit)
 {
    auto word2 = texture->surface.image.getAddress();
    auto word3 = texture->surface.mipmaps.getAddress();
@@ -146,7 +146,7 @@ GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
    }
 
    pm4::write(pm4::SetTexResource {
-      (unit * 7) + latte::SQ_PS_TEX_RESOURCE_0,
+      (unit * 7) + offset,
       texture->regs.word0,
       texture->regs.word1,
       word2 >> 8,
@@ -160,28 +160,19 @@ GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
 }
 
 void
+GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
+{
+   setTexture(texture, latte::SQ_PS_TEX_RESOURCE_0, unit);
+}
+
+void
 GX2SetVertexTexture(GX2Texture *texture, uint32_t unit)
 {
-   auto word2 = texture->surface.image.getAddress();
-   auto word3 = texture->surface.mipmaps.getAddress();
+   setTexture(texture, latte::SQ_VS_TEX_RESOURCE_0, unit);
+}
 
-   if (texture->surface.tileMode >= GX2TileMode::Tiled2DThin1 && texture->surface.tileMode != GX2TileMode::LinearSpecial) {
-      if ((texture->surface.swizzle >> 16) & 0xFF) {
-         word2 ^= (texture->surface.swizzle & 0xFFFF);
-         word3 ^= (texture->surface.swizzle & 0xFFFF);
-      }
-   }
-
-   pm4::write(pm4::SetTexResource {
-      (unit * 7) + latte::SQ_VS_TEX_RESOURCE_0,
-      texture->regs.word0,
-      texture->regs.word1,
-      word2 >> 8,
-      word3 >> 8,
-      texture->regs.word4,
-      texture->regs.word5,
-      texture->regs.word6,
-   });
-
-   GX2DebugDumpTexture(texture);
+void
+GX2SetGeometryTexture(GX2Texture *texture, uint32_t unit)
+{
+   setTexture(texture, latte::SQ_GS_TEX_RESOURCE_0, unit);
 }

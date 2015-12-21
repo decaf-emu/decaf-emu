@@ -266,4 +266,6 @@ GX2::RegisterFunctions()
    // Texture
    RegisterKernelFunction(GX2InitTextureRegs);
    RegisterKernelFunction(GX2SetPixelTexture);
+   RegisterKernelFunction(GX2SetVertexTexture);
+   RegisterKernelFunction(GX2SetGeometryTexture);
 }
