@@ -22,10 +22,10 @@ GX2SetFetchShader(GX2FetchShader *shader)
    auto sq_pgm_resources_fs = shader->regs.sq_pgm_resources_fs.value();
 
    uint32_t shaderRegData[] = {
-      shader->data.getAddress() / 256,
+      shader->data.getAddress() >> 8,
       shader->size >> 3,
-      0x10,
-      0x10,
+      0x100000,
+      0x100000,
       sq_pgm_resources_fs.value,
    };
    pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_FS, gsl::as_span(shaderRegData) });
@@ -57,18 +57,16 @@ GX2SetVertexShader(GX2VertexShader *shader)
    auto vgt_strmout_buffer_en = shader->regs.vgt_strmout_buffer_en.value();
    auto vgt_vertex_reuse_block_cntl = shader->regs.vgt_vertex_reuse_block_cntl.value();
 
-   // Some kind of shenanigans that involves using a hardcoded *shader
-
    uint32_t shaderRegData[] = {
-      shader->data.getAddress() / 256,
+      shader->data.getAddress() >> 8,
       shader->size >> 3,
-      0x10,
-      0x10,
+      0x100000,
+      0x100000,
       sq_pgm_resources_vs.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_VS, gsl::as_span(shaderRegData) });
 
    if (shader->mode != GX2ShaderMode::GeometryShader) {
+      pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_VS, gsl::as_span(shaderRegData) });
       pm4::write(pm4::SetContextReg { latte::Register::VGT_PRIMITIVEID_EN, vgt_primitiveid_en.value });
       pm4::write(pm4::SetContextReg { latte::Register::SPI_VS_OUT_CONFIG, spi_vs_out_config.value });
       pm4::write(pm4::SetContextReg { latte::Register::PA_CL_VS_OUT_CNTL, pa_cl_vs_out_cntl.value });
@@ -83,12 +81,15 @@ GX2SetVertexShader(GX2VertexShader *shader)
       pm4::write(pm4::SetContextReg { latte::Register::SQ_PGM_CF_OFFSET_VS, 0 });
 
       if (shader->hasStreamOut) {
-         //_GX2WriteStreamOutStride(&shader->streamOutVertexStride);
+         pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_VTX_STRIDE_0, shader->streamOutStride[0] >> 2 });
+         pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_VTX_STRIDE_1, shader->streamOutStride[1] >> 2 });
+         pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_VTX_STRIDE_2, shader->streamOutStride[2] >> 2 });
+         pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_VTX_STRIDE_3, shader->streamOutStride[3] >> 2 });
       }
 
-      pm4::write(pm4::SetContextReg { latte::Register::SQ_PGM_CF_OFFSET_VS, 0 });
       pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_BUFFER_EN, vgt_strmout_buffer_en.value });
    } else {
+      pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_ES, gsl::as_span(shaderRegData) });
       pm4::write(pm4::SetContextReg { latte::Register::SQ_ESGS_RING_ITEMSIZE, ringItemsize });
    }
 
