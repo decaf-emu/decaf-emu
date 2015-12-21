@@ -1,5 +1,6 @@
 #include "gx2.h"
 #include "gx2_event.h"
+#include "gx2_state.h"
 #include "modules/coreinit/coreinit_alarm.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_mutex.h"
