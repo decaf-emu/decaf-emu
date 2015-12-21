@@ -481,6 +481,7 @@ GX2_ENUM(GX2ShaderMode, uint32_t)
    GX2_ENUM_VALUE(UniformRegister, 0)
    GX2_ENUM_VALUE(UniformBlock, 1)
    GX2_ENUM_VALUE(GeometryShader, 2)
+   GX2_ENUM_VALUE(ComputeShader, 3)
 GX2_ENUM_END(GX2ShaderMode)
 
 GX2_ENUM(GX2ShaderVarType, uint32_t)

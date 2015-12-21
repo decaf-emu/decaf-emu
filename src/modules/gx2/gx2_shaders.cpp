@@ -360,19 +360,101 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
                    uint32_t numPsGpr, uint32_t numPsStackEntries)
 {
    auto sq_config = latte::SQ_CONFIG { 0 };
+   auto sq_gpr_resource_mgmt_1 = latte::SQ_GPR_RESOURCE_MGMT_1 { 0 };
+   auto sq_gpr_resource_mgmt_2 = latte::SQ_GPR_RESOURCE_MGMT_2 { 0 };
+   auto sq_thread_resource_mgmt = latte::SQ_THREAD_RESOURCE_MGMT { 0 };
+   auto sq_stack_resource_mgmt_1 = latte::SQ_STACK_RESOURCE_MGMT_1 { 0 };
+   auto sq_stack_resource_mgmt_2 = latte::SQ_STACK_RESOURCE_MGMT_2 { 0 };
+
+   if (mode != GX2ShaderMode::GeometryShader) {
+      auto vgt_gs_mode = latte::VGT_GS_MODE { 0 };
+
+      if (mode == GX2ShaderMode::ComputeShader) {
+         vgt_gs_mode.MODE = latte::GS_SCENARIO_G;
+         vgt_gs_mode.COMPUTE_MODE = 1;
+         vgt_gs_mode.FAST_COMPUTE_MODE = 1;
+         vgt_gs_mode.PARTIAL_THD_AT_EOI = 1;
+      } else {
+         vgt_gs_mode.MODE = latte::GS_OFF;
+      }
+
+      pm4::write(pm4::SetContextReg { latte::Register::VGT_GS_MODE, vgt_gs_mode.value });
+   }
+
+   if (mode == GX2ShaderMode::ComputeShader) {
+      sq_config.ALU_INST_PREFER_VECTOR = 1;
+      sq_config.PS_PRIO = 0;
+      sq_config.VS_PRIO = 1;
+      sq_config.GS_PRIO = 2;
+      sq_config.ES_PRIO = 3;
+   } else {
+      sq_config.PS_PRIO = 3;
+      sq_config.VS_PRIO = 2;
+      sq_config.GS_PRIO = 1;
+      sq_config.ES_PRIO = 0;
+   }
 
    if (mode == GX2ShaderMode::UniformRegister) {
       sq_config.DX9_CONSTS = 1;
-   } else if (mode == GX2ShaderMode::UniformBlock) {
-      sq_config.DX9_CONSTS = 0;
-   } else {
-      std::runtime_error("Unexpected shader mode");
    }
 
-   pm4::write(pm4::SetConfigReg { latte::Register::SQ_CONFIG, sq_config.value });
+   if (mode == GX2ShaderMode::GeometryShader) {
+      sq_gpr_resource_mgmt_1.NUM_PS_GPRS = numPsGpr;
+      sq_gpr_resource_mgmt_1.NUM_VS_GPRS = 64;
+      sq_gpr_resource_mgmt_1.NUM_CLAUSE_TEMP_GPRS = 4;
+      sq_gpr_resource_mgmt_2.NUM_ES_GPRS = numVsGpr;
+      sq_gpr_resource_mgmt_2.NUM_GS_GPRS = numGsGpr;
 
-   // Normally would do lots of SET_CONFIG_REG here,
-   //   but not needed for our drivers.
+      sq_stack_resource_mgmt_1.NUM_PS_STACK_ENTRIES = numPsStackEntries;
+      sq_stack_resource_mgmt_2.NUM_ES_STACK_ENTRIES = numVsStackEntries;
+      sq_stack_resource_mgmt_2.NUM_GS_STACK_ENTRIES = numGsStackEntries;
+
+      sq_thread_resource_mgmt.NUM_PS_THREADS = 124;
+      sq_thread_resource_mgmt.NUM_VS_THREADS = 32;
+      sq_thread_resource_mgmt.NUM_GS_THREADS = 8;
+      sq_thread_resource_mgmt.NUM_ES_THREADS = 28;
+   } else if (mode == GX2ShaderMode::ComputeShader) {
+      sq_gpr_resource_mgmt_1.NUM_CLAUSE_TEMP_GPRS = 4;
+      sq_gpr_resource_mgmt_2.NUM_ES_GPRS = 248;
+      sq_stack_resource_mgmt_2.NUM_ES_STACK_ENTRIES = 256;
+
+      sq_thread_resource_mgmt.NUM_PS_THREADS = 1;
+      sq_thread_resource_mgmt.NUM_VS_THREADS = 1;
+      sq_thread_resource_mgmt.NUM_GS_THREADS = 1;
+      sq_thread_resource_mgmt.NUM_ES_THREADS = 189;
+   } else {
+      sq_gpr_resource_mgmt_1.NUM_PS_GPRS = numPsGpr;
+      sq_gpr_resource_mgmt_1.NUM_VS_GPRS = numVsGpr;
+
+      sq_stack_resource_mgmt_1.NUM_PS_STACK_ENTRIES = numPsStackEntries;
+      sq_stack_resource_mgmt_1.NUM_VS_STACK_ENTRIES = numVsStackEntries;
+
+      sq_thread_resource_mgmt.NUM_PS_THREADS = 136;
+      sq_thread_resource_mgmt.NUM_VS_THREADS = 48;
+      sq_thread_resource_mgmt.NUM_GS_THREADS = 4;
+      sq_thread_resource_mgmt.NUM_ES_THREADS = 4;
+   }
+
+   uint32_t regData[] = {
+      sq_config.value,
+      sq_gpr_resource_mgmt_1.value,
+      sq_gpr_resource_mgmt_2.value,
+      sq_thread_resource_mgmt.value,
+      sq_stack_resource_mgmt_1.value,
+      sq_stack_resource_mgmt_2.value,
+   };
+   pm4::write(pm4::SetConfigRegs { latte::Register::SQ_CONFIG, regData });
+
+   if (mode == GX2ShaderMode::ComputeShader) {
+      uint32_t ringBaseData[] = { 0, 0xFFFFFF, 0, 0xFFFFFF };
+      pm4::write(pm4::SetConfigRegs { latte::Register::SQ_ESGS_RING_BASE, ringBaseData });
+
+      uint32_t ringItemSizes[] = { 0, 1 };
+      pm4::write(pm4::SetContextRegs { latte::Register::SQ_ESGS_RING_ITEMSIZE, ringItemSizes });
+
+      pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_EN, 0 });
+   }
+}
 }
 
 uint32_t

@@ -59,6 +59,22 @@ enum VGT_DMA_SWAP : uint32_t
    VGT_DMA_SWAP_WORD                = 3,
 };
 
+enum VGT_GS_CUT_MODE : uint32_t
+{
+   GS_CUT_1024                      = 0,
+   GS_CUT_512                       = 1,
+   GS_CUT_256                       = 2,
+   GS_CUT_128                       = 3,
+};
+
+enum VGT_GS_ENABLE_MODE : uint32_t
+{
+   GS_OFF                           = 0,
+   GS_SCENARIO_A                    = 1,
+   GS_SCENARIO_B                    = 2,
+   GS_SCENARIO_G                    = 3,
+};
+
 enum VGT_EVENT_TYPE : uint32_t
 {
    CACHE_FLUSH_TS                   = 4,
@@ -99,6 +115,13 @@ enum VGT_EVENT_TYPE : uint32_t
    FLUSH_AND_INV_DB_META            = 44,
    FLUSH_AND_INV_CB_DATA_TS         = 45,
    FLUSH_AND_INV_CB_META            = 46,
+};
+
+enum VGT_GS_OUT_PRIMITIVE_TYPE : uint32_t
+{
+   VGT_GS_OUT_PT_POINTLIST          = 0,
+   VGT_GS_OUT_PT_LINESTRIP          = 1,
+   VGT_GS_OUT_PT_TRISTRIP           = 2,
 };
 
 enum VGT_INDEX : uint32_t

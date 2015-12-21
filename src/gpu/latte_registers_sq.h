@@ -33,7 +33,8 @@ union SQ_CONFIG
 {
    uint32_t value;
 
-   struct {
+   struct
+   {
       uint32_t VC_ENABLE : 1;
       uint32_t EXPORT_SRC_C : 1;
       uint32_t DX9_CONSTS : 1;
@@ -53,18 +54,113 @@ union SQ_CONFIG
    };
 };
 
-// Used for SQ_CF_INST_LOOP and SQ_CF_INST_LOOP_NO_AL
-struct SQ_LOOP_CONST_DX9_0
+// Space allocated to a single GS output vertex in GS Temp Buffer. This defines the
+// size of a single vertex output by the GS.Multiple vertices can be output so long
+// as the total output size does not exceed SQ_GSVS_RING_ITEMSIZE.
+union SQ_GS_VERT_ITEMSIZE
 {
-   uint32_t COUNT : 12;
-   uint32_t INIT : 12;
-   uint32_t INC : 8;
+   uint32_t value;
+
+   struct
+   {
+      uint32_t ITEMSIZE : 15;
+      uint32_t : 17;
+   };
+};
+
+// Defines how GPR space is divided among the 4 thread types.
+union SQ_GPR_RESOURCE_MGMT_1
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t NUM_PS_GPRS : 8;
+      uint32_t : 8;
+      uint32_t NUM_VS_GPRS : 8;
+      uint32_t : 4;
+      uint32_t NUM_CLAUSE_TEMP_GPRS  : 4;
+   };
+};
+
+// Defines how GPR space is divided among the 4 thread types.
+union SQ_GPR_RESOURCE_MGMT_2
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t NUM_GS_GPRS : 8;
+      uint32_t : 8;
+      uint32_t NUM_ES_GPRS : 8;
+      uint32_t : 8;
+   };
+};
+
+// Used for SQ_CF_INST_LOOP and SQ_CF_INST_LOOP_NO_AL
+union SQ_LOOP_CONST_DX9_0
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t COUNT : 12;
+      uint32_t INIT : 12;
+      uint32_t INC : 8;
+   };
 };
 
 // Used for SQ_CF_INST_LOOP_DX10
-struct SQ_LOOP_CONST_DX10_0
+union SQ_LOOP_CONST_DX10_0
 {
-   uint32_t COUNT;
+   uint32_t value;
+
+   struct
+   {
+      uint32_t COUNT;
+   };
+};
+
+// Defines how thread stack space is divided among the thread types
+union SQ_STACK_RESOURCE_MGMT_1
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t NUM_PS_STACK_ENTRIES : 12;
+      uint32_t : 4;
+      uint32_t NUM_VS_STACK_ENTRIES : 12;
+      uint32_t : 4;
+   };
+};
+
+// Defines how thread stack space is divided among the thread types
+union SQ_STACK_RESOURCE_MGMT_2
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t NUM_GS_STACK_ENTRIES : 12;
+      uint32_t : 4;
+      uint32_t NUM_ES_STACK_ENTRIES : 12;
+      uint32_t : 4;
+   };
+};
+
+// Defines how thread space is divided among the thread types
+union SQ_THREAD_RESOURCE_MGMT
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t NUM_PS_THREADS : 8;
+      uint32_t NUM_VS_THREADS : 8;
+      uint32_t NUM_GS_THREADS : 8;
+      uint32_t NUM_ES_THREADS : 8;
+   };
 };
 
 union SQ_VTX_CONSTANT_WORD0_N
@@ -131,6 +227,28 @@ union SQ_VTX_CONSTANT_WORD6_N
 struct SQ_VTX_BASE_VTX_LOC
 {
    uint32_t OFFSET;
+};
+
+// Resource requirements to run the GS program
+union SQ_PGM_RESOURCES_GS
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t NUM_GPRS : 8;
+      uint32_t STACK_SIZE : 8;
+      uint32_t : 5;
+      uint32_t DX10_CLAMP : 1;
+      uint32_t PRIME_CACHE_PGM_EN : 1;
+      uint32_t PRIME_CACHE_ON_DRAW : 1;
+      uint32_t FETCH_CACHE_LINES : 3;
+      uint32_t : 1;
+      uint32_t UNCACHED_FIRST_INST : 1;
+      uint32_t PRIME_CACHE_ENABLE : 1;
+      uint32_t PRIME_CACHE_ON_CONST : 1;
+      uint32_t : 1;
+   };
 };
 
 // Resource requirements to run the Vertex Shader program

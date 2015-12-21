@@ -77,11 +77,46 @@ union VGT_EVENT_INITIATOR
 
    struct
    {
-      latte::VGT_EVENT_TYPE EVENT_TYPE : 6;
+      VGT_EVENT_TYPE EVENT_TYPE : 6;
       uint32_t : 13;
       uint32_t ADDRESS_HI : 8;
       uint32_t EXTENDED_EVENT : 1;
       uint32_t : 4;
+   };
+};
+
+// VGT GS Enable Mode
+union VGT_GS_MODE
+{
+   uint32_t value;
+
+   struct
+   {
+      VGT_GS_ENABLE_MODE MODE : 2;
+      uint32_t ES_PASSTHRU : 1;
+      VGT_GS_CUT_MODE CUT_MODE : 2;
+      uint32_t : 3;
+      uint32_t MODE_HI : 1;
+      uint32_t : 2;
+      uint32_t GS_C_PACK_EN : 1;
+      uint32_t : 2;
+      uint32_t COMPUTE_MODE : 1;
+      uint32_t FAST_COMPUTE_MODE : 1;
+      uint32_t ELEMENT_INFO_EN : 1;
+      uint32_t PARTIAL_THD_AT_EOI : 1;
+      uint32_t : 14;
+   };
+};
+
+// VGT GS output primitive type
+union VGT_GS_OUT_PRIM_TYPE
+{
+   uint32_t value;
+
+   struct
+   {
+      VGT_GS_OUT_PRIMITIVE_TYPE PRIM_TYPE : 6;
+      uint32_t : 26;
    };
 };
 
@@ -157,6 +192,18 @@ union VGT_PRIMITIVE_TYPE
    {
       VGT_DI_PRIMITIVE_TYPE PRIM_TYPE : 6;
       uint32_t : 26;
+   };
+};
+
+// This register enables streaming out
+union VGT_STRMOUT_EN
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t STREAMOUT : 1;
+      uint32_t : 31;
    };
 };
 
