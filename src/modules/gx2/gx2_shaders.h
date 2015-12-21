@@ -8,6 +8,8 @@
 #include "utils/virtual_ptr.h"
 #include "gx2_sampler.h"
 
+#pragma pack(push, 1)
+
 struct GX2FetchShader
 {
    be_val<GX2FetchShaderType > type;
@@ -221,9 +223,77 @@ CHECK_OFFSET(GX2PixelShader, 0xD0, samplerVarCount);
 CHECK_OFFSET(GX2PixelShader, 0xD4, samplerVars);
 CHECK_SIZE(GX2PixelShader, 0xe8);
 
-struct GX2GeometryShader;
+struct GX2GeometryShader
+{
+   struct
+   {
+      be_val<latte::SQ_PGM_RESOURCES_GS> sq_pgm_resources_gs;
+      be_val<latte::VGT_GS_OUT_PRIM_TYPE> vgt_gs_out_prim_type;
+      be_val<latte::VGT_GS_MODE> vgt_gs_mode;
+      be_val<latte::PA_CL_VS_OUT_CNTL> pa_cl_vs_out_cntl;
+      be_val<latte::SQ_PGM_RESOURCES_VS> sq_pgm_resources_vs;
+      be_val<latte::SQ_GS_VERT_ITEMSIZE> sq_gs_vert_itemsize;
+      be_val<latte::SPI_VS_OUT_CONFIG> spi_vs_out_config;
+      be_val<uint32_t> num_spi_vs_out_id;
+      be_array<latte::SPI_VS_OUT_ID_N, 10> spi_vs_out_id;
+      be_val<latte::VGT_STRMOUT_BUFFER_EN> vgt_strmout_buffer_en;
+   } regs;
 
-#pragma pack(push, 1)
+   be_val<uint32_t> size;
+   be_ptr<uint8_t> data;
+   be_val<uint32_t> vertexShaderSize;
+   be_ptr<uint8_t> vertexShaderData;
+   be_val<GX2ShaderMode> mode;
+
+   be_val<uint32_t> uniformBlockCount;
+   be_ptr<GX2UniformBlock> uniformBlocks;
+
+   be_val<uint32_t> uniformVarCount;
+   be_ptr<GX2UniformVar> uniformVars;
+
+   be_val<uint32_t> initialValueCount;
+   be_ptr<GX2UniformInitialValue> initialValues;
+
+   be_val<uint32_t> loopVarCount;
+   be_ptr<GX2LoopVar> loopVars;
+
+   be_val<uint32_t> samplerVarCount;
+   be_ptr<GX2SamplerVar> samplerVars;
+
+   be_val<uint32_t> ringItemSize;
+   be_val<BOOL> hasStreamOut;
+   be_array<uint32_t, 4> streamOutStride;
+   UNKNOWN(4 * 4);
+};
+CHECK_OFFSET(GX2GeometryShader, 0x00, regs.sq_pgm_resources_gs);
+CHECK_OFFSET(GX2GeometryShader, 0x04, regs.vgt_gs_out_prim_type);
+CHECK_OFFSET(GX2GeometryShader, 0x08, regs.vgt_gs_mode);
+CHECK_OFFSET(GX2GeometryShader, 0x0C, regs.pa_cl_vs_out_cntl);
+CHECK_OFFSET(GX2GeometryShader, 0x10, regs.sq_pgm_resources_vs);
+CHECK_OFFSET(GX2GeometryShader, 0x14, regs.sq_gs_vert_itemsize);
+CHECK_OFFSET(GX2GeometryShader, 0x18, regs.spi_vs_out_config);
+CHECK_OFFSET(GX2GeometryShader, 0x1C, regs.num_spi_vs_out_id);
+CHECK_OFFSET(GX2GeometryShader, 0x20, regs.spi_vs_out_id);
+CHECK_OFFSET(GX2GeometryShader, 0x48, regs.vgt_strmout_buffer_en);
+CHECK_OFFSET(GX2GeometryShader, 0x4C, size);
+CHECK_OFFSET(GX2GeometryShader, 0x50, data);
+CHECK_OFFSET(GX2GeometryShader, 0x54, vertexShaderSize);
+CHECK_OFFSET(GX2GeometryShader, 0x58, vertexShaderData);
+CHECK_OFFSET(GX2GeometryShader, 0x5C, mode);
+CHECK_OFFSET(GX2GeometryShader, 0x60, uniformBlockCount);
+CHECK_OFFSET(GX2GeometryShader, 0x64, uniformBlocks);
+CHECK_OFFSET(GX2GeometryShader, 0x68, uniformVarCount);
+CHECK_OFFSET(GX2GeometryShader, 0x6C, uniformVars);
+CHECK_OFFSET(GX2GeometryShader, 0x70, initialValueCount);
+CHECK_OFFSET(GX2GeometryShader, 0x74, initialValues);
+CHECK_OFFSET(GX2GeometryShader, 0x78, loopVarCount);
+CHECK_OFFSET(GX2GeometryShader, 0x7C, loopVars);
+CHECK_OFFSET(GX2GeometryShader, 0x80, samplerVarCount);
+CHECK_OFFSET(GX2GeometryShader, 0x84, samplerVars);
+CHECK_OFFSET(GX2GeometryShader, 0x88, ringItemSize);
+CHECK_OFFSET(GX2GeometryShader, 0x8C, hasStreamOut);
+CHECK_OFFSET(GX2GeometryShader, 0x90, streamOutStride);
+CHECK_SIZE(GX2GeometryShader, 0xB0);
 
 struct GX2AttribStream
 {
