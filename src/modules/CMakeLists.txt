@@ -68,6 +68,8 @@ set(SOURCE_FILES
     gx2/gx2r_buffer.cpp
     gx2/gx2r_resource.cpp
     gx2/gx2r_surface.cpp
+    mic/mic.cpp
+    mic/mic_core.cpp
     nn_ac/nn_ac.cpp
     nn_ac/nn_ac_core.cpp
     nn_act/nn_act.cpp
@@ -169,6 +171,8 @@ set(HEADER_FILES
     gx2/gx2_tessellation.h
     gx2/gx2_texture.h
     gx2/gx2r_resource.h
+    mic/mic.h
+    mic/mic_core.h
     nn_ac/nn_ac.h
     nn_ac/nn_ac_core.h
     nn_ac/nn_ac_result.h

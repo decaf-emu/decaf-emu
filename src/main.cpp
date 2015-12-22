@@ -21,6 +21,7 @@
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/erreula/erreula.h"
 #include "modules/gx2/gx2.h"
+#include "modules/mic/mic.h"
 #include "modules/nn_ac/nn_ac.h"
 #include "modules/nn_act/nn_act.h"
 #include "modules/nn_fp/nn_fp.h"
@@ -192,6 +193,7 @@ initialiseEmulator()
    CoreInit::RegisterFunctions();
    ErrEula::RegisterFunctions();
    GX2::RegisterFunctions();
+   Mic::RegisterFunctions();
    NN_ac::RegisterFunctions();
    NN_act::RegisterFunctions();
    NN_fp::RegisterFunctions();
@@ -211,6 +213,7 @@ initialiseEmulator()
    gSystem.registerModule("coreinit.rpl", new CoreInit {});
    gSystem.registerModule("erreula.rpl", new ErrEula {});
    gSystem.registerModule("gx2.rpl", new GX2 {});
+   gSystem.registerModule("mic.rpl", new Mic {});
    gSystem.registerModule("nn_ac.rpl", new NN_ac {});
    gSystem.registerModule("nn_act.rpl", new NN_act {});
    gSystem.registerModule("nn_fp.rpl", new NN_fp {});
