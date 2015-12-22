@@ -1,5 +1,32 @@
 #include "gx2_display.h"
+#include "gx2_format.h"
 #include "gpu/driver.h"
+
+static bool
+getTVSize(GX2TVRenderMode tvRenderMode, int *width_ret, int *height_ret)
+{
+   switch (tvRenderMode) {
+   case GX2TVRenderMode::Standard480p:
+      *width_ret = 640;
+      *height_ret = 480;
+      return true;
+   case GX2TVRenderMode::Wide480p:
+      *width_ret = 704;
+      *height_ret = 480;
+      return true;
+   case GX2TVRenderMode::Wide720p:
+      *width_ret = 1280;
+      *height_ret = 720;
+      return true;
+   case GX2TVRenderMode::Wide1080p:
+      *width_ret = 1920;
+      *height_ret = 1080;
+      return true;
+   }
+
+   return false;
+}
+
 
 void
 GX2SetTVEnable(BOOL enable)
@@ -18,7 +45,21 @@ GX2CalcTVSize(GX2TVRenderMode tvRenderMode,
               be_val<uint32_t> *size,
               be_val<uint32_t> *unkOut)
 {
-   *size = 1920 * 1080 * 4;
+   int tvWidth, tvHeight;
+   if (!getTVSize(tvRenderMode, &tvWidth, &tvHeight)) {
+      throw std::invalid_argument("Unexpected GX2CalcTVSize tvRenderMode");
+   }
+
+   const int bytesPerPixel = GX2GetSurfaceElementBytes(surfaceFormat);
+   if (!bytesPerPixel) {
+      throw std::invalid_argument("Unexpected GX2CalcTVSize surfaceFormat");
+   }
+
+   // The values of GX2BufferingMode constants are conveniently equal to
+   // the number of buffers each constant specifies.
+   const int numBuffers = static_cast<int>(bufferingMode);
+
+   *size = tvWidth * tvHeight * bytesPerPixel * numBuffers;
    *unkOut = 0;
 }
 
@@ -29,7 +70,14 @@ GX2CalcDRCSize(GX2DrcRenderMode drcRenderMode,
                be_val<uint32_t> *size,
                be_val<uint32_t> *unkOut)
 {
-   *size = 854 * 480 * 4;
+   const int bytesPerPixel = GX2GetSurfaceElementBytes(surfaceFormat);
+   if (!bytesPerPixel) {
+      throw std::invalid_argument("Unexpected GX2CalcDRCSize surfaceFormat");
+   }
+
+   const int numBuffers = static_cast<int>(bufferingMode);
+
+   *size = 864 * 480 * bytesPerPixel * numBuffers;
    *unkOut = 0;
 }
 
@@ -40,21 +88,8 @@ GX2SetTVBuffer(void *buffer,
                GX2SurfaceFormat surfaceFormat,
                GX2BufferingMode bufferingMode)
 {
-   int tvWidth = 0, tvHeight = 0;
-
-   if (tvRenderMode == GX2TVRenderMode::Standard480p) {
-      tvWidth = 640;
-      tvHeight = 480;
-   } else if (tvRenderMode == GX2TVRenderMode::Wide480p) {
-      tvWidth = 704;
-      tvHeight = 480;
-   } else if (tvRenderMode == GX2TVRenderMode::Wide720p) {
-      tvWidth = 1280;
-      tvHeight = 720;
-   } else if (tvRenderMode == GX2TVRenderMode::Wide1080p) {
-      tvWidth = 1920;
-      tvHeight = 1080;
-   } else {
+   int tvWidth, tvHeight;
+   if (!getTVSize(tvRenderMode, &tvWidth, &tvHeight)) {
       throw std::invalid_argument("Unexpected GX2SetTVBuffer tvRenderMode");
    }
 
