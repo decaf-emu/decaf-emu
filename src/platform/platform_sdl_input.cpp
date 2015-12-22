@@ -47,7 +47,7 @@ static int keyboardStateLen;
 ControllerHandle
 getControllerHandle(const std::string &name)
 {
-   if (name.compare("keyboar") == 0) {
+   if (name.compare("keyboard") == 0) {
       return keyboardHandle;
    }
 
