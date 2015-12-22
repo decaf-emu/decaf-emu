@@ -75,7 +75,7 @@ public:
 
    // Processor
    void start();
-   void join();
+   void stop();
 
    // Debugger Helper
    void wakeAllCores();

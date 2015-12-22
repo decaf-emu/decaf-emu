@@ -59,15 +59,20 @@ Processor::wakeAllCores()
 
 
 /**
- * Wait for all threads to end
+ * Stop all threads
  */
 void
-Processor::join()
+Processor::stop()
 {
+   mRunning = false;
+
+   mCondition.notify_all();
    for (auto core : mCores) {
+      cpu::interrupt(&core->state);
       core->thread.join();
    }
 
+   mTimerCondition.notify_all();
    mTimerThread.join();
 }
 
