@@ -126,25 +126,25 @@ bindTvWindow()
 int
 getDrcWidth()
 {
-   return static_cast<int>(854.0f * DrcScaleFactor);
+   return static_cast<int>(DrcWidth * DrcScaleFactor);
 }
 
 int
 getDrcHeight()
 {
-   return static_cast<int>(480.0f * DrcScaleFactor);
+   return static_cast<int>(DrcHeight * DrcScaleFactor);
 }
 
 int
 getTvWidth()
 {
-   return static_cast<int>(1280.0f * TvScaleFactor);
+   return static_cast<int>(TvWidth * TvScaleFactor);
 }
 
 int
 getTvHeight()
 {
-   return static_cast<int>(720.0f * TvScaleFactor);
+   return static_cast<int>(TvHeight * TvScaleFactor);
 }
 
 } // namespace ui

@@ -85,8 +85,6 @@ bool buildFuzzData(InstructionID instrId, InstructionFuzzData &fuzzData)
 
    for (auto i : allFields) {
       if (isFieldMarker(i)) continue;
-      auto start = getFieldStart(i);
-      auto end = getFieldEnd(i);
       auto fieldBits = getFieldBitmask(i);
       if (instrBits & fieldBits) {
          gLog->error("Instruction {} field {} overwrites bits", data->name, (uint32_t)i);

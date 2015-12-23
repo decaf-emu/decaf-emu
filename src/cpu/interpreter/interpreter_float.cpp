@@ -219,7 +219,6 @@ roundForMultiply(double *a, double *c)
    // case of an FMA operation in which we need to keep precision for the
    // intermediate result.  Note that this particular rounding operation
    // ignores FPSCR[RN].
-   const bool inexact = (cBits.uv & ((roundBit << 1) - 1)) != 0;
    cBits.uv &= -roundBit;
    cBits.uv += cBits.uv & roundBit;
    if (is_infinity(cBits.v)) {

@@ -51,8 +51,6 @@ MEMCreateUnitHeapEx(UnitHeap *heap,
    MEMiInitHeapHead(heap, MEMiHeapTag::UnitHeap, firstBlock, firstBlock + adjBlockSize * blockCount);
 
    // Setup free block list
-   auto current = heap->freeBlockList;
-
    for (auto i = 0u; i < blockCount; ++i) {
       auto block = make_virtual_ptr<UnitBlock>(firstBlock + adjBlockSize * i);
 

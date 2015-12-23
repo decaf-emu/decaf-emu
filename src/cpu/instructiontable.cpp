@@ -142,7 +142,6 @@ InstructionData *
 InstructionTable::decode(Instruction instr)
 {
    TableEntry *table = &instructionTable;
-   InstructionData *data = nullptr;
 
    while (table) {
       for (auto &fieldMap : table->fieldMaps) {
