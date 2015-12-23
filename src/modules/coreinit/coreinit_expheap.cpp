@@ -245,7 +245,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
             freeBlock = block;
             break;
          }
-      } else if (direction == MEMExpHeapDirection::FromTop) {
+      } else {  // direction == MEMExpHeapDirection::FromTop
          // Find first block large enough from top of heap
          for (auto block = getTail(heap->freeBlockList); block; block = block->prev) {
             if (block->size < size) {
@@ -271,7 +271,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
                freeBlock = block;
             }
          }
-      } else if (direction == MEMExpHeapDirection::FromTop) {
+      } else {  // direction == MEMExpHeapDirection::FromTop
          // Find block nearest in size from top of heap
          for (auto block = getTail(heap->freeBlockList); block; block = block->prev) {
             if (block->size < size) {
@@ -311,7 +311,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
          freeBlock->size = freeSize;
          replaceBlock(heap->freeBlockList, old, freeBlock);
       }
-   } else if (direction == MEMExpHeapDirection::FromTop) {
+   } else {  // direction == MEMExpHeapDirection::FromTop
       // Reduce freeblock size
       freeBlock->size -= size;
       base = freeBlock->addr + freeBlock->size;
