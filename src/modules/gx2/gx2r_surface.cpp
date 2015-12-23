@@ -46,16 +46,17 @@ GX2RCreateSurfaceUserMemory(GX2Surface *surface,
 void
 GX2RDestroySurfaceEx(GX2Surface *surface, GX2RResourceFlags flags)
 {
+   if (!surface || !surface->image)
+      return;
+
    flags = surface->resourceFlags | flags;
 
-   if (surface && surface->image) {
-      if (!GX2RIsUserMemory(surface->resourceFlags)) {
-         gx2::internal::gx2rFree(flags, surface->image);
-      }
-
-      surface->image = nullptr;
-      surface->mipmaps = nullptr;
+   if (!GX2RIsUserMemory(surface->resourceFlags)) {
+      gx2::internal::gx2rFree(flags, surface->image);
    }
+
+   surface->image = nullptr;
+   surface->mipmaps = nullptr;
 }
 
 void *
