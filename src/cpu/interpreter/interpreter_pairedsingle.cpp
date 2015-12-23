@@ -352,7 +352,6 @@ fmaSingle(ThreadState *state, Instruction instr, float *result)
                        && (is_infinity(a) || is_infinity(c)) && is_infinity(b)
                        && (std::signbit(a) ^ std::signbit(c)) != std::signbit(addend));
 
-   const uint32_t oldFPSCR = state->fpscr.value;
    state->fpscr.vxsnan |= vxsnan;
    state->fpscr.vxisi |= vxisi;
    state->fpscr.vximz |= vximz;
