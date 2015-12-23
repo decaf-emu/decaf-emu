@@ -12,6 +12,18 @@ static const auto TvWidth = 1280.0f;
 static const auto TvHeight = 720.0f;
 static const auto TvScaleFactor = 0.65f;
 
+static int
+getWindowWidth()
+{
+   return std::max(platform::ui::getTvWidth(), platform::ui::getDrcWidth());
+}
+
+static int
+getWindowHeight()
+{
+   return platform::ui::getTvHeight() + platform::ui::getDrcHeight();
+}
+
 namespace platform
 {
 
@@ -38,7 +50,7 @@ init()
 }
 
 bool
-createWindow(const std::string &title)
+createWindows(const std::string &tvTitle, const std::string &drcTitle)
 {
    auto width = getWindowWidth();
    auto height = getWindowHeight();
@@ -66,33 +78,49 @@ shutdown()
 }
 
 void
-swapBuffers()
-{
-   glfwSwapBuffers(glfw::gWindow);
-}
-
-void
 activateContext()
 {
    glfwMakeContextCurrent(glfw::gWindow);
 }
 
 void
-releaseContext()
+swapBuffers()
 {
-   glfwMakeContextCurrent(nullptr);
+   glfwSwapBuffers(glfw::gWindow);
 }
 
-int
-getWindowWidth()
+void
+bindDrcWindow()
 {
-   return std::max(getTvWidth(), getDrcWidth());
+   float wndWidth = static_cast<float>(getWindowWidth());
+   float wndHeight = static_cast<float>(getWindowHeight());
+   float tvWidth = static_cast<float>(getTvWidth());
+   float tvHeight = static_cast<float>(getTvHeight());
+   float drcWidth = static_cast<float>(getDrcWidth());
+   float drcHeight = static_cast<float>(getDrcHeight());
+
+   float tvTop = 0;
+   float tvBottom = tvTop + tvHeight;
+   float drcTop = tvBottom;
+   float drcLeft = (wndWidth - drcWidth) / 2;
+   float drcBottom = drcTop + drcHeight;
+
+   glViewport(drcLeft, wndHeight - drcBottom, drcWidth, drcHeight);
 }
 
-int
-getWindowHeight()
+void
+bindTvWindow()
 {
-   return getTvHeight() + getDrcHeight();
+   float wndWidth = static_cast<float>(getWindowWidth());
+   float wndHeight = static_cast<float>(getWindowHeight());
+   float tvWidth = static_cast<float>(getTvWidth());
+   float tvHeight = static_cast<float>(getTvHeight());
+
+   float tvTop = 0;
+   float tvLeft = (wndWidth - tvWidth) / 2;
+   float tvBottom = tvTop + tvHeight;
+
+   glViewport(tvLeft, wndHeight - tvBottom, tvWidth, tvHeight);
 }
 
 int

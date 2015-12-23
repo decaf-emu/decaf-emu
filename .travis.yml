@@ -10,7 +10,7 @@ install:
   - cd ~
   - sudo apt-add-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get -qq update
-  - sudo apt-get -qq install gcc-5 g++-5 xorg-dev libglu1-mesa-dev libsdl2-dev libxcursor-dev
+  - sudo apt-get -qq install gcc-5 g++-5 xorg-dev libglu1-mesa-dev libsdl2-dev libx11-dev libxcursor-dev
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
 
 script:
