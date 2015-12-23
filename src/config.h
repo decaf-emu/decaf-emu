@@ -76,6 +76,17 @@ extern int button_sync;
 
 } // namespace input
 
+namespace ui
+{
+
+extern int tv_window_x;
+extern int tv_window_y;
+extern int drc_window_x;
+extern int drc_window_y;
+
+} // namespace ui
+
 bool load(const std::string &path);
+void save(const std::string &path);
 
 } // namespace config

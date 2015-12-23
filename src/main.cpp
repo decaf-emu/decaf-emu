@@ -250,7 +250,7 @@ play(const fs::HostPath &path)
       gLog->error("Error initializing UI");
       return false;
    }
-   if (!platform::ui::createWindow("Decaf")) {
+   if (!platform::ui::createWindows("Decaf", "Decaf - Gamepad")) {
       gLog->error("Error creating window");
       return false;
    }
@@ -328,6 +328,7 @@ play(const fs::HostPath &path)
    platform::ui::run();
 
    platform::ui::shutdown();
+   config::save("config.json");
 
    // Force inclusion in release builds
    volatile int zero = 0;

@@ -13,6 +13,12 @@ void
 handleEvent(const SDL_Event *event)
 {
    switch (event->type) {
+   case SDL_WINDOWEVENT:
+      if (event->window.event == SDL_WINDOWEVENT_CLOSE) {
+         shouldQuit = true;
+      }
+      break;
+
    case SDL_QUIT:
       shouldQuit = true;
       break;

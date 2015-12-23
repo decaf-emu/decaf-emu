@@ -103,6 +103,16 @@ int button_sync = SDLK_4;
 
 } // namespace input
 
+namespace ui
+{
+
+int tv_window_x = INT_MIN;
+int tv_window_y = INT_MIN;
+int drc_window_x = INT_MIN;
+int drc_window_y = INT_MIN;
+
+} // namespace ui
+
 struct CerealDX12
 {
    template <class Archive>
@@ -197,20 +207,26 @@ struct CerealInput
    }
 };
 
+struct CerealUi
+{
+   template <class Archive>
+   void serialize(Archive &ar)
+   {
+      using namespace ui;
+      ar(CEREAL_NVP(tv_window_x));
+      ar(CEREAL_NVP(tv_window_y));
+      ar(CEREAL_NVP(drc_window_x));
+      ar(CEREAL_NVP(drc_window_y));
+   }
+};
+
 bool load(const std::string &path)
 {
    std::ifstream file(path, std::ios::binary);
 
    if (!file.is_open()) {
       // Create a default config file
-      std::ofstream out(path, std::ios::binary);
-      cereal::JSONOutputArchive output(out);
-      output(cereal::make_nvp("dx12", CerealDX12 {}),
-             cereal::make_nvp("gx2", CerealGX2 {}),
-             cereal::make_nvp("log", CerealLog {}),
-             cereal::make_nvp("jit", CerealJit {}),
-             cereal::make_nvp("system", CerealSystem {}),
-             cereal::make_nvp("input", CerealInput {}));
+      save(path);
       return false;
    }
 
@@ -222,13 +238,28 @@ bool load(const std::string &path)
             cereal::make_nvp("log", CerealLog {}),
             cereal::make_nvp("jit", CerealJit {}),
             cereal::make_nvp("system", CerealSystem {}),
-            cereal::make_nvp("input", CerealInput {}));
+            cereal::make_nvp("input", CerealInput {}),
+            cereal::make_nvp("ui", CerealUi {}));
    } catch (std::exception e) {
-      gLog->error("Failed to parse config.json: {}", e.what());
-      gLog->error("Try deleting your config.json to allow a new correct one to be generated (with default settings).");
+      // TODO: Can't do this because gLog is NULL here.
+      //gLog->error("Failed to parse config.json: {}", e.what());
+      //gLog->error("Try deleting your config.json to allow a new correct one to be generated (with default settings).");
    }
 
    return true;
+}
+
+void save(const std::string &path)
+{
+   std::ofstream file(path, std::ios::binary);
+   cereal::JSONOutputArchive output(file);
+   output(cereal::make_nvp("dx12", CerealDX12 {}),
+          cereal::make_nvp("gx2", CerealGX2 {}),
+          cereal::make_nvp("log", CerealLog {}),
+          cereal::make_nvp("jit", CerealJit {}),
+          cereal::make_nvp("system", CerealSystem {}),
+          cereal::make_nvp("input", CerealInput {}),
+          cereal::make_nvp("ui", CerealUi {}));
 }
 
 } // namespace config

@@ -589,6 +589,7 @@ readFileToString(const std::string &filename)
 void GLDriver::initGL()
 {
    platform::ui::activateContext();
+
    glbinding::Binding::initialize();
 
    glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
@@ -615,15 +616,17 @@ void GLDriver::initGL()
       }
    });
 
-   // Set initial viewport
-   gl::glViewport(0, 0, platform::ui::getWindowWidth(), platform::ui::getWindowHeight());
-
    // Set a background color for emu window.
    gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
+   platform::ui::bindTvWindow();
+   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+   platform::ui::bindDrcWindow();
    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
    // Sneakily assume double-buffering...
    platform::ui::swapBuffers();
-   gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
+   platform::ui::bindTvWindow();
+   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+   platform::ui::bindDrcWindow();
    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 
    // Clear active state
@@ -676,48 +679,17 @@ void GLDriver::initGL()
    gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_VERTEX_SHADER_BIT, mScreenDraw.vertexProgram);
    gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_FRAGMENT_SHADER_BIT, mScreenDraw.pixelProgram);
 
-   float wndWidth = static_cast<float>(platform::ui::getWindowWidth());
-   float wndHeight = static_cast<float>(platform::ui::getWindowHeight());
-   float tvWidth = static_cast<float>(platform::ui::getTvWidth());
-   float tvHeight = static_cast<float>(platform::ui::getTvHeight());
-   float drcWidth = static_cast<float>(platform::ui::getDrcWidth());
-   float drcHeight = static_cast<float>(platform::ui::getDrcHeight());
-
-   auto tvTop = 0;
-   auto tvLeft = (wndWidth - tvWidth) / 2;
-   auto tvBottom = tvTop + tvHeight;
-   auto tvRight = tvLeft + tvWidth;
-   auto drcTop = tvBottom;
-   auto drcLeft = (wndWidth - drcWidth) / 2;
-   auto drcBottom = drcTop + drcHeight;
-   auto drcRight = drcLeft + drcWidth;
-
-#define SX(x) (((x)/wndWidth*2)-1)
-#define SY(y) -(((y)/wndHeight*2)-1)
-
    // (TL, TR, BR)    (BR, BL, TL)
    // Create vertex buffer
    static const gl::GLfloat vertices[] = {
-      // TV
-      SX(tvLeft),  SY(tvTop),       0.0f, 1.0f,
-      SX(tvRight), SY(tvTop),       1.0f, 1.0f,
-      SX(tvRight), SY(tvBottom),    1.0f, 0.0f,
+      -1.0f,  1.0f,   0.0f, 1.0f,
+       1.0f,  1.0f,   1.0f, 1.0f,
+       1.0f, -1.0f,   1.0f, 0.0f,
 
-      SX(tvRight), SY(tvBottom),    1.0f, 0.0f,
-      SX(tvLeft),  SY(tvBottom),    0.0f, 0.0f,
-      SX(tvLeft),  SY(tvTop),       0.0f, 1.0f,
-
-      // DRC
-      SX(drcLeft),  SY(drcTop),     0.0f, 1.0f,
-      SX(drcRight), SY(drcTop),     1.0f, 1.0f,
-      SX(drcRight), SY(drcBottom),  1.0f, 0.0f,
-
-      SX(drcRight), SY(drcBottom),  1.0f, 0.0f,
-      SX(drcLeft),  SY(drcBottom),  0.0f, 0.0f,
-      SX(drcLeft),  SY(drcTop),     0.0f, 1.0f
+       1.0f, -1.0f,   1.0f, 0.0f,
+      -1.0f, -1.0f,   0.0f, 0.0f,
+      -1.0f,  1.0f,   0.0f, 1.0f,
    };
-#undef SX
-#undef SY
 
    gl::glCreateBuffers(1, &mScreenDraw.vertBuffer);
    gl::glNamedBufferData(mScreenDraw.vertBuffer, sizeof(vertices), vertices, gl::GL_STATIC_DRAW);
@@ -750,8 +722,14 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    // Unbind active framebuffer
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0);
 
-   // Setup viewport
-   gl::glViewport(0, 0, platform::ui::getWindowWidth(), platform::ui::getWindowHeight());
+   // Bind appropriate window and set viewport
+   if (data.scanTarget == SCANTARGET_TV) {
+      platform::ui::bindTvWindow();
+   } else if (data.scanTarget == SCANTARGET_DRC) {
+      platform::ui::bindDrcWindow();
+   } else {
+      gLog->error("decafCopyColorToScan called for unknown scanTarget.");
+   }
 
    // Setup screen draw shader
    gl::glBindVertexArray(mScreenDraw.vertArray);
@@ -772,13 +750,7 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    gl::glDisable(gl::GL_ALPHA_TEST);
    gl::glBindTextureUnit(0, buffer->object);
 
-   if (data.scanTarget == SCANTARGET_TV) {
-      gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
-   } else if (data.scanTarget == SCANTARGET_DRC) {
-      gl::glDrawArrays(gl::GL_TRIANGLES, 6, 6);
-   } else {
-      gLog->error("decafCopyColorToScan called for unknown scanTarget.");
-   }
+   gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
 
    // Rebind active framebuffer
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);

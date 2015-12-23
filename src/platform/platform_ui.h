@@ -11,7 +11,7 @@ bool
 init();
 
 bool
-createWindow(const std::string &title);
+createWindows(const std::string &tvTitle, const std::string &drcTitle);
 
 void
 run();
@@ -20,19 +20,16 @@ void
 shutdown();
 
 void
-swapBuffers();
-
-void
 activateContext();
 
 void
-releaseContext();
+swapBuffers();
 
-int
-getWindowWidth();
+void
+bindDrcWindow();
 
-int
-getWindowHeight();
+void
+bindTvWindow();
 
 int
 getDrcWidth();
