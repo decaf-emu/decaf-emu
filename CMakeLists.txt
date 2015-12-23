@@ -83,10 +83,12 @@ find_package(PkgConfig REQUIRED)
 if (DECAF_SDL)
     pkg_search_module(SDL2 REQUIRED sdl2)
     include_directories(${SDL2_INCLUDE_DIRS})
+    add_definitions(-DDECAF_SDL)
 endif()
 
 if (DECAF_GLFW)
     pkg_search_module(GLFW REQUIRED glfw3)
+    add_definitions(-DDECAF_GLFW)
 endif()
 
 if (NOT MSVC)
