@@ -418,8 +418,6 @@ OSSleepThread(OSThreadQueue *queue)
 void
 OSSleepTicks(OSTime ticks)
 {
-   auto thread = OSGetCurrentThread();
-
    // Create an alarm to trigger wakeup
    auto alarm = OSAllocFromSystem<OSAlarm>();
    OSCreateAlarm(alarm);
