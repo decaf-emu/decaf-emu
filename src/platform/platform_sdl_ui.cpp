@@ -1,11 +1,12 @@
+#ifdef DECAF_SDL
+#include <SDL.h>
+#include <glbinding/gl/gl.h>
 #include "config.h"
 #include "platform.h"
 #include "platform_sdl.h"
 #include "platform_ui.h"
 #include "gpu/driver.h"
 #include "utils/log.h"
-#include <SDL.h>
-#include <glbinding/gl/gl.h>
 
 #if defined(PLATFORM_WINDOWS)
    #include <windows.h>  // For GetSystemMetrics()
@@ -23,22 +24,7 @@ static const auto TvWidth = 1280.0f;
 static const auto TvHeight = 720.0f;
 static const auto TvScaleFactor = 0.65f;
 
-static SDL_GLContext glContext = nullptr;
-
 namespace platform
-{
-
-namespace sdl
-{
-
-bool shouldQuit = false;
-
-SDL_Window *tvWindow = nullptr;
-SDL_Window *drcWindow = nullptr;
-
-} // namespace sdl
-
-namespace ui
 {
 
 static int
@@ -101,7 +87,7 @@ getWindowBorderHeight(SDL_Window *window)
 }
 
 bool
-init()
+PlatformSDL::init()
 {
    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) != 0) {
       gLog->error("Failed to initialize SDL: {}", SDL_GetError());
@@ -118,7 +104,7 @@ init()
 }
 
 bool
-createWindows(const std::string &tvTitle, const std::string &drcTitle)
+PlatformSDL::createWindows(const std::string &tvTitle, const std::string &drcTitle)
 {
    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
@@ -135,10 +121,16 @@ createWindows(const std::string &tvTitle, const std::string &drcTitle)
 #endif
 
    const uint32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
-   int tvX, tvY;
-   int drcX, drcY;
+   auto tvWidth = getTvWidth();
+   auto tvHeight = getTvHeight();
+   auto tvX = SDL_WINDOWPOS_UNDEFINED;
+   auto tvY = SDL_WINDOWPOS_UNDEFINED;
+   auto drcWidth = getDrcWidth();
+   auto drcHeight = getDrcHeight();
+   auto drcX = SDL_WINDOWPOS_UNDEFINED;
+   auto drcY = SDL_WINDOWPOS_UNDEFINED;
+   auto positionsLoaded = false;
 
-   bool positionsLoaded;
    if (config::ui::tv_window_x != INT_MIN) {
       tvX = config::ui::tv_window_x;
       tvY = config::ui::tv_window_y;
@@ -146,138 +138,159 @@ createWindows(const std::string &tvTitle, const std::string &drcTitle)
       drcY = config::ui::drc_window_y;
       positionsLoaded = true;
    } else {
-      positionsLoaded = false;
+      // If no position was set in the config, add the DRC window height to the
+      // TV window and then resize after opening the TV window, so the DRC window
+      // is guaranteed to fit on screen.
+      tvHeight += getWindowBorderHeight(nullptr) + getDrcHeight();
    }
 
-   // If no position was set in the config, add the DRC window height to the
-   // TV window and then resize after opening the TV window, so the DRC window
-   // is guaranteed to fit on screen.
-   int tvHeight = getTvHeight();
-   if (!positionsLoaded) {
-      tvHeight += getWindowBorderHeight(nullptr) + getDrcHeight();
-      tvX = SDL_WINDOWPOS_UNDEFINED;
-      tvY = SDL_WINDOWPOS_UNDEFINED;
-   }
-   sdl::tvWindow = SDL_CreateWindow(
-      tvTitle.c_str(), tvX, tvY, getTvWidth(), tvHeight, flags);
-   if (!sdl::tvWindow) {
+   // Create TV window
+   mTvWindow = SDL_CreateWindow(tvTitle.c_str(), tvX, tvY, tvWidth, tvHeight, flags);
+
+   if (!mTvWindow) {
       gLog->error("Failed to create TV window: {}", SDL_GetError());
       return false;
    }
 
+   // Set default DRC position
    if (!positionsLoaded) {
-      SDL_SetWindowSize(sdl::tvWindow, getTvWidth(), getTvHeight());
-      SDL_GetWindowPosition(sdl::tvWindow, &tvX, &tvY);
+      SDL_SetWindowSize(mTvWindow, getTvWidth(), getTvHeight());
+      SDL_GetWindowPosition(mTvWindow, &tvX, &tvY);
       drcX = tvX + (getTvWidth() - getDrcWidth()) / 2;
-      drcY = tvY + getTvHeight() + getWindowBorderHeight(sdl::tvWindow);
+      drcY = tvY + getTvHeight() + getWindowBorderHeight(mTvWindow);
    }
 
-   sdl::drcWindow = SDL_CreateWindow(
-      drcTitle.c_str(), drcX, drcY, getDrcWidth(), getDrcHeight(), flags);
-   if (!sdl::drcWindow) {
+   // Create DRC window
+   mDrcWindow = SDL_CreateWindow(drcTitle.c_str(), drcX, drcY, drcWidth, drcHeight, flags);
+
+   if (!mDrcWindow) {
       gLog->error("Failed to create DRC window: {}", SDL_GetError());
-      SDL_DestroyWindow(sdl::tvWindow);
-      sdl::tvWindow = nullptr;
+      SDL_DestroyWindow(mTvWindow);
+      mTvWindow = nullptr;
       return false;
    }
 
-   glContext = SDL_GL_CreateContext(sdl::tvWindow);
-   if (!glContext) {
+   // Create OpenGL context
+   mContext = SDL_GL_CreateContext(mTvWindow);
+
+   if (!mContext) {
       gLog->error("Failed to create OpenGL context: {}", SDL_GetError());
-      SDL_DestroyWindow(sdl::drcWindow);
-      sdl::drcWindow = nullptr;
-      SDL_DestroyWindow(sdl::tvWindow);
-      sdl::tvWindow = nullptr;
+
+      SDL_DestroyWindow(mDrcWindow);
+      mDrcWindow = nullptr;
+
+      SDL_DestroyWindow(mTvWindow);
+      mTvWindow = nullptr;
       return false;
    }
 
    // SDL won't let the rendering thread take over the context unless we
    // explicitly release it from this thread.
-   SDL_GL_MakeCurrent(sdl::tvWindow, NULL);
+   SDL_GL_MakeCurrent(mTvWindow, NULL);
 
    return true;
 }
 
 void
-run()
+PlatformSDL::run()
 {
-   while (!sdl::shouldQuit) {
+   while (!mShouldQuit) {
       SDL_Event event;
+
       if (!SDL_WaitEvent(&event)) {
          gLog->error("Error waiting for event: {}", SDL_GetError());
          continue;
       }
-      sdl::handleEvent(&event);
+
+      handleEvent(&event);
    }
 }
 
 void
-shutdown()
+PlatformSDL::handleEvent(const SDL_Event *event)
 {
-   if (sdl::tvWindow) {
-      SDL_GetWindowPosition(sdl::tvWindow,
+   switch (event->type) {
+   case SDL_WINDOWEVENT:
+      if (event->window.event == SDL_WINDOWEVENT_CLOSE) {
+         mShouldQuit = true;
+      }
+      break;
+
+   case SDL_QUIT:
+      mShouldQuit = true;
+      break;
+   }
+}
+
+void
+PlatformSDL::shutdown()
+{
+   if (mTvWindow) {
+      SDL_GetWindowPosition(mTvWindow,
                             &config::ui::tv_window_x,
                             &config::ui::tv_window_y);
    }
-   if (sdl::drcWindow) {
-      SDL_GetWindowPosition(sdl::drcWindow,
+
+   if (mDrcWindow) {
+      SDL_GetWindowPosition(mDrcWindow,
                             &config::ui::drc_window_x,
                             &config::ui::drc_window_y);
    }
+
    SDL_Quit();
 }
 
 void
-activateContext()
+PlatformSDL::activateContext()
 {
-   SDL_GL_MakeCurrent(sdl::tvWindow, glContext);
+   SDL_GL_MakeCurrent(mTvWindow, mContext);
 }
 
 void
-swapBuffers()
+PlatformSDL::swapBuffers()
 {
-   SDL_GL_SwapWindow(sdl::tvWindow);
-   SDL_GL_SwapWindow(sdl::drcWindow);
+   SDL_GL_SwapWindow(mTvWindow);
+   SDL_GL_SwapWindow(mDrcWindow);
 }
 
 void
-bindDrcWindow()
+PlatformSDL::bindDrcWindow()
 {
-   SDL_GL_MakeCurrent(sdl::drcWindow, glContext);
+   SDL_GL_MakeCurrent(mDrcWindow, mContext);
    gl::glViewport(0, 0, getDrcWidth(), getDrcHeight());
 }
 
 void
-bindTvWindow()
+PlatformSDL::bindTvWindow()
 {
-   SDL_GL_MakeCurrent(sdl::tvWindow, glContext);
+   SDL_GL_MakeCurrent(mTvWindow, mContext);
    gl::glViewport(0, 0, getTvWidth(), getTvHeight());
 }
 
 int
-getDrcWidth()
+PlatformSDL::getDrcWidth()
 {
-   return static_cast<int>(854.0f * DrcScaleFactor);
+   return static_cast<int>(DrcWidth * DrcScaleFactor);
 }
 
 int
-getDrcHeight()
+PlatformSDL::getDrcHeight()
 {
-   return static_cast<int>(480.0f * DrcScaleFactor);
+   return static_cast<int>(DrcHeight * DrcScaleFactor);
 }
 
 int
-getTvWidth()
+PlatformSDL::getTvWidth()
 {
-   return static_cast<int>(1280.0f * TvScaleFactor);
+   return static_cast<int>(TvWidth * TvScaleFactor);
 }
 
 int
-getTvHeight()
+PlatformSDL::getTvHeight()
 {
-   return static_cast<int>(720.0f * TvScaleFactor);
+   return static_cast<int>(TvHeight * TvScaleFactor);
 }
-
-} // namespace ui
 
 } // namespace platform
+
+#endif // ifdef DECAF_SDL

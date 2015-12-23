@@ -1,8 +1,7 @@
-#include <GLFW/glfw3.h>
-#include "platform_glfw.h"
-#include "platform_ui.h"
-#include "gpu/driver.h"
+#ifdef DECAF_GLFW
+#include <glbinding/gl/gl.h>
 #include "utils/log.h"
+#include "platform_glfw.h"
 
 static const auto DrcWidth = 854.0f;
 static const auto DrcHeight = 480.0f;
@@ -12,36 +11,14 @@ static const auto TvWidth = 1280.0f;
 static const auto TvHeight = 720.0f;
 static const auto TvScaleFactor = 0.65f;
 
-static int
-getWindowWidth()
-{
-   return std::max(platform::ui::getTvWidth(), platform::ui::getDrcWidth());
-}
-
-static int
-getWindowHeight()
-{
-   return platform::ui::getTvHeight() + platform::ui::getDrcHeight();
-}
-
 namespace platform
 {
 
-namespace glfw
-{
-
-GLFWwindow *
-gWindow = nullptr;
-
-} // namespace glfw
-
-namespace ui
-{
-
 bool
-init()
+PlatformGLFW::init()
 {
    glfwInit();
+
    glfwSetErrorCallback([](int error, const char *desc) {
       gLog->error("GLFW 0x{:08X}: {}", error, desc);
    });
@@ -50,103 +27,124 @@ init()
 }
 
 bool
-createWindows(const std::string &tvTitle, const std::string &drcTitle)
+PlatformGLFW::createWindows(const std::string &tvTitle, const std::string &drcTitle)
 {
    auto width = getWindowWidth();
    auto height = getWindowHeight();
 
-   glfw::gWindow = glfwCreateWindow(width, height, "Decaf", NULL, NULL);
-
-   if (!glfw::gWindow) {
-      return false;
-   }
-
-   return true;
+   mWindow = glfwCreateWindow(width, height, tvTitle.c_str(), NULL, NULL);
+   return !!mWindow;
 }
 
 void
-run()
+PlatformGLFW::run()
 {
-   while (!glfwWindowShouldClose(glfw::gWindow)) {
+   while (!glfwWindowShouldClose(mWindow)) {
       glfwPollEvents();
    }
 }
 
 void
-shutdown()
+PlatformGLFW::shutdown()
 {
 }
 
 void
-activateContext()
+PlatformGLFW::activateContext()
 {
-   glfwMakeContextCurrent(glfw::gWindow);
+   glfwMakeContextCurrent(mWindow);
 }
 
 void
-swapBuffers()
+PlatformGLFW::swapBuffers()
 {
-   glfwSwapBuffers(glfw::gWindow);
+   glfwSwapBuffers(mWindow);
 }
 
 void
-bindDrcWindow()
+PlatformGLFW::bindDrcWindow()
 {
-   float wndWidth = static_cast<float>(getWindowWidth());
-   float wndHeight = static_cast<float>(getWindowHeight());
-   float tvWidth = static_cast<float>(getTvWidth());
-   float tvHeight = static_cast<float>(getTvHeight());
-   float drcWidth = static_cast<float>(getDrcWidth());
-   float drcHeight = static_cast<float>(getDrcHeight());
+   auto wndWidth = static_cast<float>(getWindowWidth());
+   auto wndHeight = static_cast<float>(getWindowHeight());
+   auto tvWidth = static_cast<float>(getTvWidth());
+   auto tvHeight = static_cast<float>(getTvHeight());
+   auto drcWidth = static_cast<float>(getDrcWidth());
+   auto drcHeight = static_cast<float>(getDrcHeight());
 
-   float tvTop = 0;
-   float tvBottom = tvTop + tvHeight;
-   float drcTop = tvBottom;
-   float drcLeft = (wndWidth - drcWidth) / 2;
-   float drcBottom = drcTop + drcHeight;
+   auto tvTop = 0.0f;
+   auto tvBottom = tvTop + tvHeight;
+   auto drcTop = tvBottom;
+   auto drcLeft = (wndWidth - drcWidth) / 2.0f;
+   auto drcBottom = drcTop + drcHeight;
 
-   glViewport(drcLeft, wndHeight - drcBottom, drcWidth, drcHeight);
+   float v[4] = {
+      drcLeft,
+      wndHeight - drcBottom,
+      drcWidth,
+      drcHeight
+   };
+
+   gl::glViewportArrayv(0, 1, v);
 }
 
 void
-bindTvWindow()
+PlatformGLFW::bindTvWindow()
 {
-   float wndWidth = static_cast<float>(getWindowWidth());
-   float wndHeight = static_cast<float>(getWindowHeight());
-   float tvWidth = static_cast<float>(getTvWidth());
-   float tvHeight = static_cast<float>(getTvHeight());
+   auto wndWidth = static_cast<float>(getWindowWidth());
+   auto wndHeight = static_cast<float>(getWindowHeight());
+   auto tvWidth = static_cast<float>(getTvWidth());
+   auto tvHeight = static_cast<float>(getTvHeight());
 
-   float tvTop = 0;
-   float tvLeft = (wndWidth - tvWidth) / 2;
-   float tvBottom = tvTop + tvHeight;
+   auto tvTop = 0.0f;
+   auto tvLeft = (wndWidth - tvWidth) / 2.0f;
+   auto tvBottom = tvTop + tvHeight;
 
-   glViewport(tvLeft, wndHeight - tvBottom, tvWidth, tvHeight);
+   float v[4] = {
+      tvLeft,
+      wndHeight - tvBottom,
+      tvWidth,
+      tvHeight
+   };
+
+   gl::glViewportArrayv(0, 1, v);
 }
 
 int
-getDrcWidth()
+PlatformGLFW::getDrcWidth()
 {
-   return static_cast<int>(854.0f * DrcScaleFactor);
+   return static_cast<int>(DrcWidth * DrcScaleFactor);
 }
 
 int
-getDrcHeight()
+PlatformGLFW::getDrcHeight()
 {
-   return static_cast<int>(480.0f * DrcScaleFactor);
+   return static_cast<int>(DrcHeight * DrcScaleFactor);
 }
 
 int
-getTvWidth()
+PlatformGLFW::getTvWidth()
 {
-   return static_cast<int>(1280.0f * TvScaleFactor);
+   return static_cast<int>(TvWidth * TvScaleFactor);
 }
 
 int
-getTvHeight()
+PlatformGLFW::getTvHeight()
 {
-   return static_cast<int>(720.0f * TvScaleFactor);
+   return static_cast<int>(TvHeight * TvScaleFactor);
 }
 
-} // namespace ui
+int
+PlatformGLFW::getWindowWidth()
+{
+   return std::max(getTvWidth(), getDrcWidth());
+}
+
+int
+PlatformGLFW::getWindowHeight()
+{
+   return getTvHeight() + getDrcHeight();
+}
 
 } // namespace platform
+
+#endif // ifdef DECAF_GLFW

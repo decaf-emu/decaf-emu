@@ -28,14 +28,14 @@ swapBuffers();
 void
 bindDrcWindow();
 
-void
-bindTvWindow();
-
 int
 getDrcWidth();
 
 int
 getDrcHeight();
+
+void
+bindTvWindow();
 
 int
 getTvWidth();

@@ -31,3 +31,6 @@
 [submodule "libraries/addrlib"]
 	path = libraries/addrlib
 	url = https://github.com/decaf-emu/addrlib.git
+[submodule "libraries/SDL-mirror"]
+	path = libraries/SDL-mirror
+	url = https://github.com/spurious/SDL-mirror.git

@@ -5,10 +5,10 @@
 namespace input
 {
 
-static platform::input::ControllerHandle
+static platform::ControllerHandle
 gVpadHandles[vpad::MaxControllers];
 
-static platform::input::ControllerHandle
+static platform::ControllerHandle
 gWpadHandles[wpad::MaxControllers];
 
 static int
@@ -58,7 +58,7 @@ getButtonMapping(vpad::Channel channel, vpad::Core button)
    return 0;
 }
 
-static platform::input::ControllerHandle
+static platform::ControllerHandle
 getControllerHandle(vpad::Channel channel)
 {
    auto id = static_cast<size_t>(channel);
@@ -70,7 +70,7 @@ getControllerHandle(vpad::Channel channel)
    }
 }
 
-static platform::input::ControllerHandle
+static platform::ControllerHandle
 getControllerHandle(wpad::Channel channel)
 {
    auto id = static_cast<size_t>(channel);

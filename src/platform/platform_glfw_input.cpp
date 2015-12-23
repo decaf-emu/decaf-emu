@@ -1,38 +1,17 @@
+#ifdef DECAF_GLFW
 #include <gsl.h>
 #include <GLFW/glfw3.h>
 #include "platform_glfw.h"
-#include "platform_input.h"
 
 namespace platform
 {
 
-namespace input
-{
-
-static const ControllerHandle
-KeyboardHandle = 1;
-
-static const ControllerHandle
-JoystickHandleStart = 10;
-
-static const ControllerHandle
-JoystickHandleEnd = 10 + GLFW_JOYSTICK_LAST;
-
-struct JoystickData
-{
-   int count = 0;
-   const unsigned char *buttons = nullptr;
-};
-
-static JoystickData
-gJoystickKeys[GLFW_JOYSTICK_LAST];
-
 ControllerHandle
-getControllerHandle(const std::string &name)
+PlatformGLFW::getControllerHandle(const std::string &name)
 {
    if (name.compare("keyboard") == 0) {
-      glfwSetInputMode(glfw::gWindow, GLFW_STICKY_KEYS, GLFW_CURSOR_NORMAL);
-      return KeyboardHandle;
+      glfwSetInputMode(mWindow, GLFW_STICKY_KEYS, GLFW_CURSOR_NORMAL);
+      return mKeyboardHandle;
    }
 
    for (auto i = 0u; i < GLFW_JOYSTICK_LAST; ++i) {
@@ -41,7 +20,7 @@ getControllerHandle(const std::string &name)
       }
 
       if (name.compare(glfwGetJoystickName(i)) == 0) {
-         return JoystickHandleStart + i;
+         return mJoystickHandleStart + i;
       }
    }
 
@@ -49,25 +28,25 @@ getControllerHandle(const std::string &name)
 }
 
 void
-sampleController(ControllerHandle controller)
+PlatformGLFW::sampleController(ControllerHandle controller)
 {
-   if (controller >= JoystickHandleStart && controller < JoystickHandleEnd) {
-      auto id = gsl::narrow_cast<int>(controller - JoystickHandleStart);
-      gJoystickKeys[id].buttons = glfwGetJoystickButtons(id, &gJoystickKeys[id].count);
+   if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
+      auto id = gsl::narrow_cast<int>(controller - mJoystickHandleStart);
+      mJoystickData[id].buttons = glfwGetJoystickButtons(id, &mJoystickData[id].count);
    }
 }
 
 ::input::ButtonStatus
-getButtonStatus(ControllerHandle controller, int key)
+PlatformGLFW::getButtonStatus(ControllerHandle controller, int key)
 {
-   if (controller == KeyboardHandle) {
-      if (glfwGetKey(glfw::gWindow, key)) {
+   if (controller == mKeyboardHandle) {
+      if (glfwGetKey(mWindow, key)) {
          return ::input::ButtonPressed;
       }
-   } else if (controller >= JoystickHandleStart && controller < JoystickHandleEnd) {
-      auto id = controller - JoystickHandleStart;
+   } else if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
+      auto joystickData = mJoystickData[controller - mJoystickHandleStart];
 
-      if (gJoystickKeys[id].buttons && key < gJoystickKeys[id].count && gJoystickKeys[id].buttons[key]) {
+      if (joystickData.buttons && key < joystickData.count && joystickData.buttons[key]) {
          return ::input::ButtonPressed;
       }
    }
@@ -75,6 +54,30 @@ getButtonStatus(ControllerHandle controller, int key)
    return ::input::ButtonReleased;
 }
 
-} // namespace input
+int
+PlatformGLFW::getPressedButton(ControllerHandle controller)
+{
+   if (controller == mKeyboardHandle) {
+      for (auto key = 0; key < GLFW_KEY_LAST; ++key) {
+         if (glfwGetKey(mWindow, key)) {
+            return key;
+         }
+      }
+   } else if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
+      auto joystickData = mJoystickData[controller - mJoystickHandleStart];
+
+      if (joystickData.buttons) {
+         for (auto key = 0; key < joystickData.count; ++key) {
+            if (joystickData.buttons[key]) {
+               return key;
+            }
+         }
+      }
+   }
+
+   return -1;
+}
 
 } // namespace platform
+
+#endif // ifdef DECAF_GLFW

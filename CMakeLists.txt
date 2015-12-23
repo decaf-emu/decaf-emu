@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8.4)
 include(ExternalProject)
 
 project(decaf-emu C CXX)
+option(DECAF_GLFW "Build with GLFW support" ON)
+option(DECAF_SDL "Build with SDL support" ON)
 
 set(PUGIXML_DIR "libraries/pugixml")
 include_directories("${PUGIXML_DIR}/src")
@@ -75,8 +77,11 @@ externalproject_get_property(glbinding BINARY_DIR)
 set(GLBINDING_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding.a")
 
 find_package(PkgConfig REQUIRED)
-pkg_search_module(SDL2 REQUIRED sdl2)
-include_directories(${SDL2_INCLUDE_DIRS})
+if (DECAF_SDL)
+    pkg_search_module(SDL2 REQUIRED sdl2)
+    include_directories(${SDL2_INCLUDE_DIRS})
+if (DECAF_GLFW)
+    pkg_search_module(GLFW REQUIRED glfw3)
 
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)

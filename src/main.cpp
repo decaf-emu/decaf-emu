@@ -35,15 +35,19 @@
 #include "modules/sysapp/sysapp.h"
 #include "modules/vpad/vpad.h"
 #include "modules/zlib125/zlib125.h"
+#include "platform/platform_glfw.h"
+#include "platform/platform_sdl.h"
 #include "platform/platform_ui.h"
 #include "system.h"
 #include "usermodule.h"
 #include "utils/log.h"
 #include "utils/teenyheap.h"
 
-static void initialiseEmulator();
-static bool fuzzTest();
-static bool play(const fs::HostPath &path);
+static void
+initialiseEmulator(const std::string &logFilename);
+
+static bool
+play(const fs::HostPath &path);
 
 static const char USAGE[] =
 R"(Decaf Emulator
@@ -83,7 +87,7 @@ int main(int argc, char **argv)
    auto has_arg = [&args](const char *name) { return args.find(name) != args.end() ? (bool)args[name] : false; };
    auto arg_bool = [&](const char *name) { return has_arg(name) && args[name].isBool() ? args[name].asBool() : false; };
    auto arg_str = [&](const char *name) { return has_arg(name) && args[name].isString() ? args[name].asString() : ""; };
-   bool result = false;
+   auto result = false;
 
    // First thing, load the config!
    config::load("config.json");
@@ -103,14 +107,6 @@ int main(int argc, char **argv)
       config::log::to_file = true;
    }
 
-   if (arg_bool("play")) {
-      config::log::filename = getGameName(arg_str("<game directory>"));
-   } else if (arg_bool("test")) {
-      config::log::filename = "tests";
-   } else if (arg_bool("hwtest")) {
-      config::log::filename = "hwtest";
-   }
-
    if (arg_bool("--log-async")) {
       config::log::async = true;
    }
@@ -123,15 +119,28 @@ int main(int argc, char **argv)
       config::system::system_path = arg_str("--sys-path");
    }
 
+   // Set log filename
+   std::string logFilename;
+
+   if (arg_bool("play")) {
+      logFilename = getGameName(arg_str("<game directory>"));
+   } else if (arg_bool("test")) {
+      logFilename = "tests";
+   } else if (arg_bool("hwtest")) {
+      logFilename = "hwtest";
+   } else {
+      logFilename = "log";
+   }
+
    // Start!
-   initialiseEmulator();
+   initialiseEmulator(logFilename);
 
    if (arg_bool("play")) {
       gLog->set_pattern("[%l:%t] %v");
       result = play(args["<game directory>"].asString());
    } else if (arg_bool("fuzz")) {
       gLog->set_pattern("%v");
-      result = fuzzTest();
+      result = executeFuzzTests();
    } else if (arg_bool("hwtest")) {
       gLog->set_pattern("%v");
       result = hwtest::runTests("tests/cpu/wiiu");
@@ -144,7 +153,7 @@ int main(int argc, char **argv)
 }
 
 static void
-initialiseEmulator()
+initialiseEmulator(const std::string &logFilename)
 {
    // Setup logger from config
    std::vector<spdlog::sink_ptr> sinks;
@@ -154,7 +163,7 @@ initialiseEmulator()
    }
 
    if (config::log::to_file) {
-      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(config::log::filename, "txt", 23, 59, true));
+      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logFilename, "txt", 23, 59, true));
    }
 
    if (config::log::async) {
@@ -234,22 +243,34 @@ initialiseEmulator()
 }
 
 static bool
-fuzzTest()
-{
-   return executeFuzzTests();
-}
-
-static bool
 play(const fs::HostPath &path)
 {
    // Create gpu driver
    gpu::driver::create(new gpu::opengl::GLDriver);
 
    // Create window
+#ifdef DECAF_GLFW
+   if (config::system::platform.compare("glfw") == 0) {
+      gLog->info("Using GLFW");
+      platform::setPlatform(new platform::PlatformGLFW);
+   } else
+#endif
+#ifdef DECAF_SDL
+   if (config::system::platform.compare("sdl") == 0) {
+      gLog->info("Using SDL");
+      platform::setPlatform(new platform::PlatformSDL);
+   } else
+#endif
+   {
+      gLog->error("Unsupported platform {}");
+      return false;
+   }
+
    if (!platform::ui::init()) {
       gLog->error("Error initializing UI");
       return false;
    }
+
    if (!platform::ui::createWindows("Decaf", "Decaf - Gamepad")) {
       gLog->error("Error creating window");
       return false;

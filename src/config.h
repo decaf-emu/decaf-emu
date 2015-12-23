@@ -26,7 +26,6 @@ extern bool async;
 extern bool to_file;
 extern bool to_stdout;
 extern bool kernel_trace;
-extern std::string filename;
 extern std::string level;
 
 } // namespace log
@@ -42,6 +41,7 @@ extern bool debug;
 namespace system
 {
 
+extern std::string platform;
 extern std::string system_path;
 
 } // namespace system

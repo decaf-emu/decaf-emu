@@ -1,79 +1,41 @@
+#ifdef DECAF_SDL
+#include <gsl.h>
+#include <SDL.h>
+#include <SDL_gamecontroller.h>
 #include "platform_sdl.h"
 #include "platform_input.h"
 #include "utils/log.h"
-#include <SDL.h>
-#include <SDL_gamecontroller.h>
 
 namespace platform
 {
 
-namespace sdl {
-
-void
-handleEvent(const SDL_Event *event)
-{
-   switch (event->type) {
-   case SDL_WINDOWEVENT:
-      if (event->window.event == SDL_WINDOWEVENT_CLOSE) {
-         shouldQuit = true;
-      }
-      break;
-
-   case SDL_QUIT:
-      shouldQuit = true;
-      break;
-   }
-}
-
-} // namespace sdl
-
-namespace input
-{
-
-enum {
-   MAX_SDL_JOYSTICKS = 16  // Arbitrary limit.
-};
-
-static const ControllerHandle keyboardHandle = 1;
-
-static const ControllerHandle joystickHandleStart = 10;
-
-static const ControllerHandle joystickHandleEnd = 10 + MAX_SDL_JOYSTICKS;
-
-struct JoystickData
-{
-   SDL_Joystick *handle;
-};
-static JoystickData joystickData[MAX_SDL_JOYSTICKS];
-
-static const uint8_t *keyboardState;
-static int keyboardStateLen;
-
-
 ControllerHandle
-getControllerHandle(const std::string &name)
+PlatformSDL::getControllerHandle(const std::string &name)
 {
    if (name.compare("keyboard") == 0) {
-      return keyboardHandle;
+      return mKeyboardHandle;
    }
 
-   for (int i = 0; i < MAX_SDL_JOYSTICKS; ++i) {
-      if (joystickData[i].handle) {
-         if (name.compare(SDL_JoystickName(joystickData[i].handle)) == 0) {
-            return joystickHandleStart + i;
+   for (int i = 0; i < mJoystickData.size(); ++i) {
+      auto &joystickData = mJoystickData[i];
+
+      if (joystickData.handle) {
+         if (name.compare(SDL_JoystickName(joystickData.handle)) == 0) {
+            return mJoystickHandleStart + i;
          } else {
             continue;
          }
       }
 
-      SDL_Joystick *joystick = SDL_JoystickOpen(i);
+      auto joystick = SDL_JoystickOpen(i);
+
       if (!joystick) {
          continue;
       }
 
-      if (name.compare(SDL_JoystickName(joystick)) == 0) {
-         joystickData[i].handle = joystick;
-         return joystickHandleStart + i;
+      if (name.compare(SDL_JoystickName(joystickData.handle)) == 0) {
+         joystickData.handle = joystick;
+         return mJoystickHandleStart + i;
       }
 
       SDL_JoystickClose(joystick);
@@ -83,31 +45,31 @@ getControllerHandle(const std::string &name)
 }
 
 void
-sampleController(ControllerHandle controller)
+PlatformSDL::sampleController(ControllerHandle controller)
 {
-   if (controller == keyboardHandle) {
-      keyboardState = SDL_GetKeyboardState(&keyboardStateLen);
-   } else if (controller >= joystickHandleStart && controller < joystickHandleEnd) {
+   if (controller == mKeyboardHandle) {
+      mKeyboardData.state = SDL_GetKeyboardState(&mKeyboardData.length);
+   } else if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
       SDL_JoystickUpdate();
    }
 }
 
 ::input::ButtonStatus
-getButtonStatus(ControllerHandle controller, int key)
+PlatformSDL::getButtonStatus(ControllerHandle controller, int key)
 {
-   if (controller == keyboardHandle) {
-      if (keyboardState) {
+   if (controller == mKeyboardHandle) {
+      if (mKeyboardData.state) {
          const int scancode = SDL_GetScancodeFromKey(key);
-         if (scancode >= 0 && scancode < keyboardStateLen
-          && keyboardState[scancode]) {
+
+         if (scancode >= 0 && scancode < mKeyboardData.length && mKeyboardData.state[scancode]) {
             return ::input::ButtonPressed;
          }
       }
-   } else if (controller >= joystickHandleStart && controller < joystickHandleEnd) {
-      const int id = controller - joystickHandleStart;
+   } else if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
+      const int id = gsl::narrow_cast<int>(controller - mJoystickHandleStart);
 
-      if (joystickData[id].handle) {
-         if (key >= 0 && SDL_JoystickGetButton(joystickData[id].handle, key)) {
+      if (mJoystickData[id].handle) {
+         if (key >= 0 && SDL_JoystickGetButton(mJoystickData[id].handle, key)) {
             return ::input::ButtonPressed;
          }
       }
@@ -116,6 +78,33 @@ getButtonStatus(ControllerHandle controller, int key)
    return ::input::ButtonReleased;
 }
 
-} // namespace input
+int
+PlatformSDL::getPressedButton(ControllerHandle controller)
+{
+   if (controller == mKeyboardHandle) {
+      if (mKeyboardData.state) {
+         for (auto key = 0; key < mKeyboardData.length; ++key) {
+            if (mKeyboardData.state[key]) {
+               return key;
+            }
+         }
+      }
+   } else if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
+      auto joystickData = mJoystickData[controller - mJoystickHandleStart];
+      auto count = SDL_JoystickNumButtons(joystickData.handle);
+
+      if (joystickData.handle) {
+         for (auto key = 0; key < count; ++key) {
+            if (SDL_JoystickGetButton(joystickData.handle, key)) {
+               return key;
+            }
+         }
+      }
+   }
+
+   return -1;
+}
 
 } // namespace platform
+
+#endif // ifdef DECAF_SDL

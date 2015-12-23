@@ -53,7 +53,7 @@ add_subdirectory(utils)
 
 add_executable(decaf-emu ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(decaf-emu cpu filesystem input mem modules gpu platform utils)
-target_link_libraries(decaf-emu z m ${ADDRLIB_LIBRARIES} ${ASMJIT_LIBRARIES} ${DOCOPT_LIBRARIES} ${PUGIXML_LIBRARIES} ${GLBINDING_LIBRARIES} ${SDL2_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES})
+target_link_libraries(decaf-emu z m ${ADDRLIB_LIBRARIES} ${ASMJIT_LIBRARIES} ${DOCOPT_LIBRARIES} ${GLBINDING_LIBRARIES} ${GLFW_LIBRARIES} ${PUGIXML_LIBRARIES} ${SDL2_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES})
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(decaf-emu X11)
 endif ()

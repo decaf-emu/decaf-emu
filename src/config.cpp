@@ -32,7 +32,6 @@ bool async = true;
 bool to_file = false;
 bool to_stdout = true;
 bool kernel_trace = true;
-std::string filename = "log";
 std::string level = "info";
 
 } // namespace log
@@ -48,6 +47,7 @@ bool debug = false;
 namespace system
 {
 
+std::string platform = "glfw";
 std::string system_path = "/undefined_system_path";
 
 } // namespace system
@@ -79,7 +79,7 @@ int button_minus = '2';
 int button_home = '3';
 int button_sync = '4';
 #else
-int button_up = SDLK_UP;
+int button_up = SDLK_U;
 int button_down = SDLK_DOWN;
 int button_left = SDLK_LEFT;
 int button_right = SDLK_RIGHT;
@@ -144,7 +144,6 @@ struct CerealLog
          CEREAL_NVP(to_file),
          CEREAL_NVP(to_stdout),
          CEREAL_NVP(kernel_trace),
-         CEREAL_NVP(filename),
          CEREAL_NVP(level));
    }
 };
@@ -166,7 +165,8 @@ struct CerealSystem
    void serialize(Archive &ar)
    {
       using namespace system;
-      ar(CEREAL_NVP(system_path));
+      ar(CEREAL_NVP(system_path),
+         CEREAL_NVP(platform));
    }
 };
 
@@ -241,9 +241,9 @@ bool load(const std::string &path)
             cereal::make_nvp("input", CerealInput {}),
             cereal::make_nvp("ui", CerealUi {}));
    } catch (std::exception e) {
-      // TODO: Can't do this because gLog is NULL here.
-      //gLog->error("Failed to parse config.json: {}", e.what());
-      //gLog->error("Try deleting your config.json to allow a new correct one to be generated (with default settings).");
+      // Can't use gLog because it is NULL here.
+      std::cout << "Failed to parse config.json: " << e.what() << std::endl;
+      std::cout << "Try deleting your config.json to allow a new correct one to be generated (with default settings)." << std::endl;
    }
 
    return true;

@@ -2,10 +2,10 @@
 #include "mic_core.h"
 
 MICHandle
-MICInit(MICHandle type, void *, void *, be_val<uint32_t> *result)
+MICInit(MICHandle type, void *, void *, be_val<int32_t> *result)
 {
-   *result = 0;
-   return type;
+   *result = -8;
+   return -1;
 }
 
 void

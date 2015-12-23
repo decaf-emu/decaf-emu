@@ -1,15 +1,14 @@
 #pragma once
 #include <string>
-#include "types.h"
 #include "input/input.h"
 
 namespace platform
 {
 
+using ControllerHandle = uint64_t;
+
 namespace input
 {
-
-using ControllerHandle = uint64_t;
 
 ControllerHandle
 getControllerHandle(const std::string &name);

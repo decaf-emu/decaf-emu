@@ -5,4 +5,4 @@
 using MICHandle = uint32_t;
 
 MICHandle
-MICInit(MICHandle type, void *, void *, be_val<uint32_t> *result);
+MICInit(MICHandle type, void *, void *, be_val<int32_t> *result);
