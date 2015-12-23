@@ -76,15 +76,18 @@ externalproject_add(glbinding
 externalproject_get_property(glbinding BINARY_DIR)
 set(GLBINDING_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding.a")
 
+find_package(Threads REQUIRED)
+find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
+
 if (DECAF_SDL)
     pkg_search_module(SDL2 REQUIRED sdl2)
     include_directories(${SDL2_INCLUDE_DIRS})
+endif()
+
 if (DECAF_GLFW)
     pkg_search_module(GLFW REQUIRED glfw3)
-
-find_package(Threads REQUIRED)
-find_package(OpenGL REQUIRED)
+endif()
 
 if (NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
