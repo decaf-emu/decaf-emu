@@ -33,7 +33,7 @@ PlatformSDL::getControllerHandle(const std::string &name)
          continue;
       }
 
-      if (name.compare(SDL_JoystickName(joystickData.handle)) == 0) {
+      if (name.compare(SDL_JoystickName(joystick)) == 0) {
          joystickData.handle = joystick;
          return mJoystickHandleStart + i;
       }

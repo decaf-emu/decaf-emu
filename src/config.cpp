@@ -47,7 +47,13 @@ bool debug = false;
 namespace system
 {
 
+#if defined(DECAF_GLFW)
 std::string platform = "glfw";
+#elif defined(DECAF_SDL)
+std::string platform = "sdl";
+#else
+#error No UI backend selected!
+#endif
 std::string system_path = "/undefined_system_path";
 
 } // namespace system
@@ -59,7 +65,7 @@ namespace vpad0
 {
 
 std::string name = "keyboard";
-#ifdef _MSC_VER
+#if defined(DECAF_GLFW)
 int button_up = 265;
 int button_down = 264;
 int button_left = 263;
@@ -78,8 +84,8 @@ int button_plus = '1';
 int button_minus = '2';
 int button_home = '3';
 int button_sync = '4';
-#else
-int button_up = SDLK_U;
+#elif defined(DECAF_SDL)
+int button_up = SDLK_UP;
 int button_down = SDLK_DOWN;
 int button_left = SDLK_LEFT;
 int button_right = SDLK_RIGHT;
