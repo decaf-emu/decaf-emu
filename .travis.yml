@@ -10,12 +10,8 @@ install:
   - cd ~
   - sudo apt-add-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get -qq update
-  - sudo apt-get -qq install gcc-5 g++-5 xorg-dev libglu1-mesa-dev libxcursor-dev
+  - sudo apt-get -qq install gcc-5 g++-5 xorg-dev libglu1-mesa-dev libsdl2-dev libxcursor-dev
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
-  - git clone https://github.com/glfw/glfw --branch 3.1.2 --depth 1
-  - mkdir -p glfw/build && cd glfw/build
-  - cmake -DBUILD_SHARED_LIBS=ON -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF ..
-  - make -j4 && sudo make install
 
 script:
   - cd "$TRAVIS_BUILD_DIR"

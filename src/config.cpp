@@ -3,6 +3,10 @@
 #include <cereal/archives/json.hpp>
 #include <fstream>
 
+#ifndef _MSC_VER
+   #include <SDL_keycode.h>
+#endif
+
 namespace config
 {
 
@@ -55,6 +59,7 @@ namespace vpad0
 {
 
 std::string name = "keyboard";
+#ifdef _MSC_VER
 int button_up = 265;
 int button_down = 264;
 int button_left = 263;
@@ -73,6 +78,26 @@ int button_plus = '1';
 int button_minus = '2';
 int button_home = '3';
 int button_sync = '4';
+#else
+int button_up = SDLK_UP;
+int button_down = SDLK_DOWN;
+int button_left = SDLK_LEFT;
+int button_right = SDLK_RIGHT;
+int button_a = SDLK_x;
+int button_b = SDLK_z;
+int button_x = SDLK_s;
+int button_y = SDLK_a;
+int button_trigger_r = SDLK_e;
+int button_trigger_l = SDLK_w;
+int button_trigger_zr = SDLK_r;
+int button_trigger_zl = SDLK_q;
+int button_stick_l = SDLK_d;
+int button_stick_r = SDLK_c;
+int button_plus = SDLK_1;
+int button_minus = SDLK_2;
+int button_home = SDLK_3;
+int button_sync = SDLK_4;
+#endif
 
 } // namespace vpad0
 

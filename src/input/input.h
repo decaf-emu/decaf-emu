@@ -141,6 +141,9 @@ enum ButtonStatus
 bool
 init();
 
+bool
+sampleController(vpad::Channel channel);
+
 ButtonStatus
 getButtonStatus(vpad::Channel channel, vpad::Core button);
 

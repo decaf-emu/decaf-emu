@@ -27,15 +27,21 @@ namespace ui
 {
 
 bool
-createWindow(const std::wstring &title)
+init()
 {
-   auto width = getWindowWidth();
-   auto height = getWindowHeight();
-
    glfwInit();
    glfwSetErrorCallback([](int error, const char *desc) {
       gLog->error("GLFW 0x{:08X}: {}", error, desc);
    });
+
+   return true;
+}
+
+bool
+createWindow(const std::string &title)
+{
+   auto width = getWindowWidth();
+   auto height = getWindowHeight();
 
    glfw::gWindow = glfwCreateWindow(width, height, "Decaf", NULL, NULL);
 
@@ -52,6 +58,11 @@ run()
    while (!glfwWindowShouldClose(glfw::gWindow)) {
       glfwPollEvents();
    }
+}
+
+void
+shutdown()
+{
 }
 
 void
