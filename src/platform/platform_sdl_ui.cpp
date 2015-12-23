@@ -27,65 +27,6 @@ static const auto TvScaleFactor = 0.65f;
 namespace platform
 {
 
-static int
-getWindowBorderHeight(SDL_Window *window)
-{
-   int height = 50;  // A hopefully reasonable default.
-
-#if defined(PLATFORM_WINDOWS)
-   // TODO: Is this correct?
-   height = GetSystemMetrics(SM_CYBORDER) * 2 + GetSystemMetrics(SM_CYCAPTION);
-
-#elif defined(PLATFORM_LINUX)
-   // Linux (more accurately X11) doesn't have any reliable way to get the
-   // border size of a window before it has been shown (or, for that matter,
-   // at any given time _after_ it has been shown).  What we can do is look
-   // through the window list for a window with _NET_FRAME_EXTENTS set, and
-   // assume that the border widths reported there are used for all windows.
-   // Since we only use this for setting initial window positions, it
-   // shouldn't be too bad even if we get the value wrong.
-
-   SDL_SysWMinfo info;
-   SDL_VERSION(&info.version);
-
-   if (window && SDL_GetWindowWMInfo(sdl::tvWindow, &info)) {
-      if (info.subsystem == SDL_SYSWM_X11) {
-         Display *display = info.info.x11.display;
-         Atom atom_NET_FRAME_EXTENTS = XInternAtom(
-            display, "_NET_FRAME_EXTENTS", True);
-         if (atom_NET_FRAME_EXTENTS) {
-            Window *windows;
-            unsigned int numWindows = 0;
-            Window dummyWindow;
-            XQueryTree(display, DefaultRootWindow(display), &dummyWindow,
-                       &dummyWindow, &windows, &numWindows);
-            for (unsigned int i = 0; i < numWindows; i++) {
-               Atom type;
-               int format;
-               unsigned long numItems, bytesAfter;
-               unsigned char *value;
-               int result = XGetWindowProperty(
-                  display, windows[i], atom_NET_FRAME_EXTENTS, 0, 4, False,
-                  AnyPropertyType, &type, &format, &numItems, &bytesAfter,
-                  &value);
-               if (result == Success && format == 32 && numItems == 4) {
-                  auto data = reinterpret_cast<const unsigned long *>(value);
-                  height = data[2] + data[3];
-                  height = std::min(height, 100);  // Sanity check, just in case.
-                  break;
-               }
-            }
-         }
-      } else {
-         gLog->warn("Unhandled window system {}, guessing border height",
-                    info.subsystem);
-      }
-   }
-#endif  // TODO: Need OS X code.
-
-   return height;
-}
-
 bool
 PlatformSDL::init()
 {
@@ -265,6 +206,63 @@ PlatformSDL::bindTvWindow()
 {
    SDL_GL_MakeCurrent(mTvWindow, mContext);
    gl::glViewport(0, 0, getTvWidth(), getTvHeight());
+}
+
+int
+PlatformSDL::getWindowBorderHeight(SDL_Window *window)
+{
+   int height = 50;  // A hopefully reasonable default.
+
+#if defined(PLATFORM_WINDOWS)
+   height = GetSystemMetrics(SM_CYBORDER) * 2 + GetSystemMetrics(SM_CYCAPTION);
+#elif defined(PLATFORM_LINUX)
+   // Linux (more accurately X11) doesn't have any reliable way to get the
+   // border size of a window before it has been shown (or, for that matter,
+   // at any given time _after_ it has been shown).  What we can do is look
+   // through the window list for a window with _NET_FRAME_EXTENTS set, and
+   // assume that the border widths reported there are used for all windows.
+   // Since we only use this for setting initial window positions, it
+   // shouldn't be too bad even if we get the value wrong.
+
+   SDL_SysWMinfo info;
+   SDL_VERSION(&info.version);
+
+   if (window && SDL_GetWindowWMInfo(mTvWindow, &info)) {
+      if (info.subsystem == SDL_SYSWM_X11) {
+         Display *display = info.info.x11.display;
+         Atom atom_NET_FRAME_EXTENTS = XInternAtom(
+            display, "_NET_FRAME_EXTENTS", True);
+         if (atom_NET_FRAME_EXTENTS) {
+            Window *windows;
+            unsigned int numWindows = 0;
+            Window dummyWindow;
+            XQueryTree(display, DefaultRootWindow(display), &dummyWindow,
+                       &dummyWindow, &windows, &numWindows);
+            for (unsigned int i = 0; i < numWindows; i++) {
+               Atom type;
+               int format;
+               unsigned long numItems, bytesAfter;
+               unsigned char *value;
+               int result = XGetWindowProperty(
+                  display, windows[i], atom_NET_FRAME_EXTENTS, 0, 4, False,
+                  AnyPropertyType, &type, &format, &numItems, &bytesAfter,
+                  &value);
+               if (result == Success && format == 32 && numItems == 4) {
+                  auto data = reinterpret_cast<const unsigned long *>(value);
+                  height = data[2] + data[3];
+                  height = std::min(height, 100);  // Sanity check, just in case.
+                  break;
+               }
+            }
+         }
+      } else {
+         gLog->warn("Unhandled window system {}, guessing border height",
+                    info.subsystem);
+      }
+   }
+#endif  // TODO: Need OS X code.
+
+   return height;
 }
 
 int

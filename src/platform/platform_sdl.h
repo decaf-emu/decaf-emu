@@ -75,6 +75,9 @@ protected:
    void
    handleEvent(const SDL_Event *event);
 
+   int
+   getWindowBorderHeight(SDL_Window *window);
+
 private:
    bool mShouldQuit = false;
    SDL_Window *mTvWindow = nullptr;
