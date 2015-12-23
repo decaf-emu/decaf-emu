@@ -324,12 +324,15 @@ play(const fs::HostPath &path)
    platform::ui::run();
 
    // Force inclusion in release builds
-   tracePrint(nullptr, 0, 0);
-   tracePrintSyscall(0);
-   fallbacksPrint();
+   volatile int zero = 0;
+   if (zero) {
+      tracePrint(nullptr, 0, 0);
+      tracePrintSyscall(0);
+      fallbacksPrint();
+   }
 
-   // Wait for all processor threads to exit
-   //gProcessor.join();
+   // Stop all processor threads
+   gProcessor.stop();
 
    // TODO: OSFreeToSystem data
    return true;
