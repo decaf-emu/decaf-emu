@@ -99,6 +99,8 @@ public:
 
    void setInterruptTimer(uint32_t core, std::chrono::time_point<std::chrono::system_clock> when);
 
+   platform::Fiber *handleAccessViolation(ppcaddr_t address);
+
    // Core
    uint32_t getCoreID();
    uint32_t getCoreCount();

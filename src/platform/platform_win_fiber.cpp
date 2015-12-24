@@ -14,6 +14,13 @@ struct Fiber
    void *entryParam = nullptr;
 };
 
+bool
+installAccessViolationHandler(std::function<Fiber *(size_t)> handler)
+{
+   // TODO: not yet implemented
+   return true;
+}
+
 // handle = ConvertThreadToFiber and getcontext
 Fiber *
 getThreadFiber()
