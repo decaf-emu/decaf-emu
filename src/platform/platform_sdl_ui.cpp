@@ -190,7 +190,9 @@ PlatformSDL::activateContext()
 void
 PlatformSDL::swapBuffers()
 {
+   SDL_GL_MakeCurrent(mTvWindow, mContext);
    SDL_GL_SwapWindow(mTvWindow);
+   SDL_GL_MakeCurrent(mDrcWindow, mContext);
    SDL_GL_SwapWindow(mDrcWindow);
 }
 
