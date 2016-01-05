@@ -106,7 +106,7 @@ readRelocationAddend(BigEndianView &in, Rela &rela)
 bool
 readFileInfo(BigEndianView &in, elf::FileInfo &info)
 {
-   in.read(info.minVersion);
+   in.read(info.version);
    in.read(info.textSize);
    in.read(info.textAlign);
    in.read(info.dataSize);
@@ -121,15 +121,16 @@ readFileInfo(BigEndianView &in, elf::FileInfo &info)
    in.read(info.filename);
    in.read(info.flags);
    in.read(info.heapSize);
-   in.read(info.tags);
-   in.read(info.unk1);
+   in.read(info.tagOffset);
+   in.read(info.minVersion);
    in.read(info.compressionLevel);
-   in.read(info.unk2);
+   in.read(info.trampAddition);
    in.read(info.fileInfoPad);
    in.read(info.cafeSdkVersion);
    in.read(info.cafeSdkRevision);
-   in.read(info.unk3);
-   in.read(info.unk4);
+   in.read(info.tlsModuleIndex);
+   in.read(info.tlsAlignShift);
+   in.read(info.runtimeFileInfoSize);
    return true;
 }
 

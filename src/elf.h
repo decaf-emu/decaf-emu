@@ -42,6 +42,7 @@ enum // e_type
    ET_DYN = 3,          // Shared object file
    ET_CORE = 4,         // Core file
    ET_LOPROC = 0xff00,  // Beginning of processor-specific codes
+   ET_CAFE_RPL = 0xff01, // Cafe RPL file
    ET_HIPROC = 0xffff   // Processor-specific
 };
 
@@ -50,7 +51,7 @@ enum // e_abi
    EABI_CAFE = 0xcafe   // WiiU CafeOS
 };
 
-enum : uint32_t // sh_flags
+enum SectionFlags : uint32_t // sh_flags
 {
    SHF_WRITE = 0x1,
    SHF_ALLOC = 0x2,
@@ -59,7 +60,7 @@ enum : uint32_t // sh_flags
    SHF_MASKPROC = 0xF0000000,
 };
 
-enum : uint32_t // sh_type
+enum SectionType : uint32_t // sh_type
 {
    SHT_NULL = 0,                 // No associated section (inactive entry).
    SHT_PROGBITS = 1,             // Program-defined contents.
@@ -88,7 +89,7 @@ enum : uint32_t // sh_type
    SHT_HIUSER = 0xffffffff       // Highest type reserved for applications.
 };
 
-enum // st_info >> 4
+enum SymbolBinding // st_info >> 4
 {
    STB_LOCAL = 0,       // Local symbol, not visible outside obj file containing def
    STB_GLOBAL = 1,      // Global symbol, visible to all object files being combined
@@ -100,7 +101,7 @@ enum // st_info >> 4
    STB_HIPROC = 15      // Highest processor-specific binding type
 };
 
-enum // st_info & f
+enum SymbolType // st_info & f
 {
    STT_NOTYPE = 0,      // Symbol's type is not specified
    STT_OBJECT = 1,      // Symbol is a data object (variable, array, etc.)
@@ -116,7 +117,7 @@ enum // st_info & f
    STT_HIPROC = 15      // Highest processor-specific symbol type
 };
 
-enum : uint16_t // st_shndx
+enum SectionIndex : uint16_t // st_shndx
 {
    SHN_UNDEF      = 0,        // Undefined
    SHN_LORESERVE  = 0xff00,   // Reserved range
@@ -126,7 +127,7 @@ enum : uint16_t // st_shndx
    SHN_HIRESERVE  = 0xffff
 };
 
-enum // r_info & 0xff
+enum RelocationType // r_info & 0xff
 {
    R_PPC_NONE = 0,
    R_PPC_ADDR32 = 1,
@@ -148,6 +149,7 @@ enum // r_info & 0xff
    R_PPC_GOT16_HA = 17,
    R_PPC_PLTREL24 = 18,
    R_PPC_JMP_SLOT = 21,
+   R_PPC_RELATIVE = 22,
    R_PPC_LOCAL24PC = 23,
    R_PPC_REL32 = 26,
    R_PPC_TLS = 67,
@@ -265,7 +267,7 @@ struct XSection
 
 struct FileInfo
 {
-   uint32_t minVersion;
+   uint32_t version;
    uint32_t textSize;
    uint32_t textAlign;
    uint32_t dataSize;
@@ -280,16 +282,18 @@ struct FileInfo
    uint32_t filename;
    uint32_t flags;
    uint32_t heapSize;
-   uint32_t tags;
-   uint32_t unk1;
-   uint32_t compressionLevel;
-   uint32_t unk2;
+   uint32_t tagOffset;
+   uint32_t minVersion;
+   int32_t compressionLevel;
+   uint32_t trampAddition;
    uint32_t fileInfoPad;
    uint32_t cafeSdkVersion;
    uint32_t cafeSdkRevision;
-   uint32_t unk3;
-   uint32_t unk4;
+   uint16_t tlsModuleIndex;
+   uint16_t tlsAlignShift;
+   uint32_t runtimeFileInfoSize;
 };
+static_assert(sizeof(FileInfo) == 0x60, "FileInfo must be 0x60 bytes");
 
 #pragma pack(pop)
 
