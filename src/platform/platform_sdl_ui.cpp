@@ -34,13 +34,13 @@ PlatformSDL::init()
       gLog->error("Failed to initialize SDL: {}", SDL_GetError());
       return false;
    }
+
    if (SDL_GL_LoadLibrary(NULL) != 0) {
       gLog->error("Failed to load OpenGL library: {}", SDL_GetError());
       return false;
    }
 
    SDL_JoystickEventState(SDL_IGNORE);
-
    return true;
 }
 

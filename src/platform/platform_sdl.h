@@ -68,6 +68,9 @@ public:
    virtual ::input::ButtonStatus
    getButtonStatus(ControllerHandle controller, int key) override;
 
+   virtual float
+   getAxisValue(ControllerHandle controller, int axis) override;
+
    virtual int
    getPressedButton(ControllerHandle controller) override;
 

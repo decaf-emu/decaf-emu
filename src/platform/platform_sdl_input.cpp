@@ -1,5 +1,6 @@
 #ifdef DECAF_SDL
 #include <gsl.h>
+#include <limits>
 #include <SDL.h>
 #include <SDL_gamecontroller.h>
 #include "platform_sdl.h"
@@ -68,14 +69,36 @@ PlatformSDL::getButtonStatus(ControllerHandle controller, int key)
    } else if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
       const int id = gsl::narrow_cast<int>(controller - mJoystickHandleStart);
 
-      if (mJoystickData[id].handle) {
-         if (key >= 0 && SDL_JoystickGetButton(mJoystickData[id].handle, key)) {
+      if (mJoystickData[id].handle && key >= 0) {
+         if (SDL_JoystickGetButton(mJoystickData[id].handle, key)) {
             return ::input::ButtonPressed;
          }
       }
    }
 
    return ::input::ButtonReleased;
+}
+
+float
+PlatformSDL::getAxisValue(ControllerHandle controller, int axis)
+{
+   if (controller == mKeyboardHandle) {
+      return 0.0f;
+   } else if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
+      const int id = gsl::narrow_cast<int>(controller - mJoystickHandleStart);
+
+      if (mJoystickData[id].handle && axis >= 0) {
+         auto value = SDL_JoystickGetAxis(mJoystickData[id].handle, axis);
+
+         if (value < 0) {
+            return static_cast<float>(value) / std::numeric_limits<Sint16>::min();
+         } else {
+            return static_cast<float>(value) / std::numeric_limits<Sint16>::max();
+         }
+      }
+   }
+
+   return 0.0f;
 }
 
 int

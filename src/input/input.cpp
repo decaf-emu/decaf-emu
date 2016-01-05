@@ -39,9 +39,9 @@ getButtonMapping(vpad::Channel channel, vpad::Core button)
       return config::input::vpad0::button_trigger_zr;
    case vpad::Core::TriggerZL:
       return config::input::vpad0::button_trigger_zl;
-   case vpad::Core::StickL:
+   case vpad::Core::LeftStick:
       return config::input::vpad0::button_stick_l;
-   case vpad::Core::StickR:
+   case vpad::Core::RightStick:
       return config::input::vpad0::button_stick_r;
    case vpad::Core::Plus:
       return config::input::vpad0::button_plus;
@@ -51,11 +51,26 @@ getButtonMapping(vpad::Channel channel, vpad::Core button)
       return config::input::vpad0::button_home;
    case vpad::Core::Sync:
       return config::input::vpad0::button_sync;
-   case vpad::Core::Invalid:
-      return 0;
    }
 
-   return 0;
+   return -1;
+}
+
+static int
+getAxisMapping(vpad::Channel channel, vpad::Core axis)
+{
+   switch (axis) {
+   case vpad::Core::LeftStickX:
+      return config::input::vpad0::left_stick_x;
+   case vpad::Core::LeftStickY:
+      return config::input::vpad0::left_stick_y;
+   case vpad::Core::RightStickX:
+      return config::input::vpad0::right_stick_x;
+   case vpad::Core::RightStickY:
+      return config::input::vpad0::right_stick_y;
+   }
+
+   return -1;
 }
 
 static platform::ControllerHandle
@@ -108,6 +123,14 @@ getButtonStatus(vpad::Channel channel, vpad::Core button)
    auto key = getButtonMapping(channel, button);
    auto controller = getControllerHandle(channel);
    return platform::input::getButtonStatus(controller, key);
+}
+
+float
+getAxisValue(vpad::Channel channel, vpad::Core id)
+{
+   auto axis = getAxisMapping(channel, id);
+   auto controller = getControllerHandle(channel);
+   return platform::input::getAxisValue(controller, axis);
 }
 
 ButtonStatus

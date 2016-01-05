@@ -11,8 +11,10 @@ class PlatformGLFW : public Platform
 {
    struct JoystickData
    {
-      int count = 0;
+      int buttonCount = 0;
       const unsigned char *buttons = nullptr;
+      int axisCount = 0;
+      const float *axes = nullptr;
    };
 
 public:
@@ -62,6 +64,9 @@ public:
 
    virtual ::input::ButtonStatus
    getButtonStatus(ControllerHandle controller, int key) override;
+
+   virtual float
+   getAxisValue(ControllerHandle controller, int axis) override;
 
    virtual int
    getPressedButton(ControllerHandle controller) override;

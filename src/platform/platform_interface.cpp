@@ -110,6 +110,12 @@ getButtonStatus(ControllerHandle controller, int key)
    return gPlatform->getButtonStatus(controller, key);
 }
 
+float
+getAxisValue(ControllerHandle controller, int axis)
+{
+   return gPlatform->getAxisValue(controller, axis);
+}
+
 } // namespace input
 
 } // namespace platform

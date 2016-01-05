@@ -37,12 +37,16 @@ enum class Core
    TriggerL,
    TriggerZR,
    TriggerZL,
-   StickL,
-   StickR,
    Plus,
    Minus,
    Home,
    Sync,
+   LeftStick,
+   LeftStickX,
+   LeftStickY,
+   RightStick,
+   RightStickX,
+   RightStickY
 };
 
 } // namespace vpad
@@ -158,5 +162,8 @@ getButtonStatus(wpad::Channel channel, wpad::Classic button);
 
 ButtonStatus
 getButtonStatus(wpad::Channel channel, wpad::Pro button);
+
+float
+getAxisValue(vpad::Channel channel, vpad::Core axis);
 
 } // namespace input

@@ -19,6 +19,9 @@ sampleController(ControllerHandle controller);
 ::input::ButtonStatus
 getButtonStatus(ControllerHandle controller, int key);
 
+float
+getAxisValue(ControllerHandle controller, int axis);
+
 } // namespace input
 
 } // namespace platform

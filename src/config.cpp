@@ -84,6 +84,10 @@ int button_plus = '1';
 int button_minus = '2';
 int button_home = '3';
 int button_sync = '4';
+int left_stick_x = -1;
+int left_stick_y = -1;
+int right_stick_x = -1;
+int right_stick_y = -1;
 #elif defined(DECAF_SDL)
 int button_up = SDLK_UP;
 int button_down = SDLK_DOWN;
@@ -103,6 +107,10 @@ int button_plus = SDLK_1;
 int button_minus = SDLK_2;
 int button_home = SDLK_3;
 int button_sync = SDLK_4;
+int left_stick_x = -1;
+int left_stick_y = -1;
+int right_stick_x = -1;
+int right_stick_y = -1;
 #endif
 
 } // namespace vpad0
@@ -200,7 +208,11 @@ struct CerealVpad0
          CEREAL_NVP(button_plus),
          CEREAL_NVP(button_minus),
          CEREAL_NVP(button_home),
-         CEREAL_NVP(button_sync));
+         CEREAL_NVP(button_sync),
+         CEREAL_NVP(left_stick_x),
+         CEREAL_NVP(left_stick_y),
+         CEREAL_NVP(right_stick_x),
+         CEREAL_NVP(right_stick_y));
    }
 };
 

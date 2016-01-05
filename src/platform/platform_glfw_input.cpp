@@ -32,7 +32,8 @@ PlatformGLFW::sampleController(ControllerHandle controller)
 {
    if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
       auto id = gsl::narrow_cast<int>(controller - mJoystickHandleStart);
-      mJoystickData[id].buttons = glfwGetJoystickButtons(id, &mJoystickData[id].count);
+      mJoystickData[id].buttons = glfwGetJoystickButtons(id, &mJoystickData[id].buttonCount);
+      mJoystickData[id].axes = glfwGetJoystickAxes(id, &mJoystickData[id].axisCount);
    }
 }
 
@@ -46,12 +47,28 @@ PlatformGLFW::getButtonStatus(ControllerHandle controller, int key)
    } else if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
       auto joystickData = mJoystickData[controller - mJoystickHandleStart];
 
-      if (joystickData.buttons && key < joystickData.count && joystickData.buttons[key]) {
+      if (joystickData.buttons && key < joystickData.buttonCount && joystickData.buttons[key]) {
          return ::input::ButtonPressed;
       }
    }
 
    return ::input::ButtonReleased;
+}
+
+float
+PlatformGLFW::getAxisValue(ControllerHandle controller, int axis)
+{
+   if (controller == mKeyboardHandle) {
+      return 0.0f;
+   } else if (controller >= mJoystickHandleStart && controller < mJoystickHandleEnd) {
+      auto joystickData = mJoystickData[controller - mJoystickHandleStart];
+
+      if (joystickData.axes && axis < joystickData.axisCount) {
+         return joystickData.axes[axis];
+      }
+   }
+
+   return 0.0f;
 }
 
 int
@@ -67,7 +84,7 @@ PlatformGLFW::getPressedButton(ControllerHandle controller)
       auto joystickData = mJoystickData[controller - mJoystickHandleStart];
 
       if (joystickData.buttons) {
-         for (auto key = 0; key < joystickData.count; ++key) {
+         for (auto key = 0; key < joystickData.buttonCount; ++key) {
             if (joystickData.buttons[key]) {
                return key;
             }

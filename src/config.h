@@ -71,6 +71,10 @@ extern int button_plus;
 extern int button_minus;
 extern int button_home;
 extern int button_sync;
+extern int left_stick_x;
+extern int left_stick_y;
+extern int right_stick_x;
+extern int right_stick_y;
 
 } // namespace vpad0
 

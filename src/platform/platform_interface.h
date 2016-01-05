@@ -57,6 +57,9 @@ public:
    virtual ::input::ButtonStatus
    getButtonStatus(ControllerHandle controller, int key) = 0;
 
+   virtual float
+   getAxisValue(ControllerHandle controller, int axis) = 0;
+
    virtual int
    getPressedButton(ControllerHandle controller) = 0;
 };

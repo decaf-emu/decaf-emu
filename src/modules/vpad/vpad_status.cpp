@@ -23,8 +23,8 @@ gButtonMap =
    { Buttons::X,        input::vpad::Core::X },
    { Buttons::B,        input::vpad::Core::B },
    { Buttons::A,        input::vpad::Core::A },
-   { Buttons::StickL,   input::vpad::Core::StickL },
-   { Buttons::StickR,   input::vpad::Core::StickR },
+   { Buttons::StickL,   input::vpad::Core::LeftStick },
+   { Buttons::StickR,   input::vpad::Core::RightStick },
 };
 
 static uint32_t
@@ -50,6 +50,7 @@ VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadErro
 
    auto &buffer = buffers[0];
 
+   // Update button state
    for (auto &pair : gButtonMap) {
       auto bit = pair.first;
       auto button = pair.second;
@@ -68,6 +69,12 @@ VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadErro
    }
 
    gLastButtonState = buffer.hold;
+
+   // Update axis state
+   buffer.leftStick.x = input::getAxisValue(channel, input::vpad::Core::LeftStickX);
+   buffer.leftStick.y = input::getAxisValue(channel, input::vpad::Core::LeftStickY);
+   buffer.rightStick.x = input::getAxisValue(channel, input::vpad::Core::RightStickX);
+   buffer.rightStick.y = input::getAxisValue(channel, input::vpad::Core::RightStickY);
 
    if (error) {
       *error = VpadReadError::Success;
