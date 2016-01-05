@@ -9,6 +9,7 @@ class GenericPath
 {
 public:
    static const char PathSeparator = Separator;
+   static const char ExtensionSeparator = '.';
 
 public:
    class Iterator
@@ -138,6 +139,18 @@ public:
          return mPath;
       } else {
          return mPath.substr(pos + 1);
+      }
+   }
+
+   std::string extension() const
+   {
+      auto fn = filename();
+      auto pos = fn.find_last_of(ExtensionSeparator);
+
+      if (pos == std::string::npos) {
+         return {};
+      } else {
+         return fn.substr(pos + 1);
       }
    }
 

@@ -29,6 +29,18 @@ public:
       return !!folder->addChild(new HostFolder(src, dst.filename()));
    }
 
+   bool mountHostFile(Path dst, HostPath src)
+   {
+      auto parent = createVirtualPath(dst.parentPath());
+
+      if (!parent || parent->type != Node::FolderNode) {
+         return false;
+      }
+
+      auto folder = reinterpret_cast<Folder *>(parent);
+      return !!folder->addChild(new HostFile(src, dst.filename()));
+   }
+
    FileHandle *openFile(Path path, File::OpenMode mode)
    {
       auto node = findNode(path);

@@ -35,6 +35,7 @@
 #include "modules/sysapp/sysapp.h"
 #include "modules/vpad/vpad.h"
 #include "modules/zlib125/zlib125.h"
+#include "platform/platform_dir.h"
 #include "platform/platform_glfw.h"
 #include "platform/platform_sdl.h"
 #include "platform/platform_ui.h"
@@ -282,37 +283,54 @@ play(const fs::HostPath &path)
    }
 
    // Setup filesystem
-   fs::HostPath sysPath = config::system::system_path;
    fs::FileSystem fs;
-   fs.mountHostFolder("/vol", path.join("data"));
+   fs::HostPath sysPath = config::system::system_path;
    fs.mountHostFolder("/vol/storage_mlc01", sysPath.join("mlc"));
+
+   if (platform::isDirectory(path.path())) {
+      // Load game directory
+      fs.mountHostFolder("/vol", path.join("data"));
+   } else if (platform::isFile(path.path())) {
+      // Load game file, currently only .rpx is supported
+      // TODO: Support .WUD .WUX
+      if (path.extension().compare("rpx") == 0) {
+         fs.mountHostFile("/vol/code/" + path.filename(), path);
+      } else {
+         gLog->error("Only loading files with .rpx extension is currently supported {}", path.path());
+         return false;
+      }
+   } else {
+      gLog->error("Could not find file or directory {}", path.path());
+      return false;
+   }
+
    gSystem.setFileSystem(&fs);
 
-   // Read cos.xml
-   pugi::xml_document doc;
-   auto fh = fs.openFile("/vol/code/cos.xml", fs::File::Read);
+   // Read cos.xml if found
+   auto maxCodeSize = 0x0E000000u;
+   auto rpx = path.filename();
 
-   if (!fh) {
-      gLog->error("Error opening /vol/code/cos.xml");
-      return false;
+   if (auto fh = fs.openFile("/vol/code/cos.xml", fs::File::Read)) {
+      auto size = fh->size();
+      auto buffer = std::vector<uint8_t>(size);
+      fh->read(buffer.data(), size);
+      fh->close();
+
+      // Parse cos.xml
+      pugi::xml_document doc;
+      auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
+
+      if (!parseResult) {
+         gLog->error("Error parsing /vol/code/cos.xml");
+         return false;
+      }
+
+      auto app = doc.child("app");
+      rpx = std::string { app.child("argstr").child_value() };
+      maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
+   } else {
+      gLog->warn("Could not open /vol/code/cos.xml, using default values");
    }
-
-   auto size = fh->size();
-   auto buffer = std::vector<uint8_t>(size);
-   fh->read(buffer.data(), size);
-   fh->close();
-
-   // Parse cos.xml
-   auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
-
-   if (!parseResult) {
-      gLog->error("Error parsing /vol/code/cos.xml");
-      return false;
-   }
-
-   auto app = doc.child("app");
-   auto rpx = std::string { app.child("argstr").child_value() };
-   auto maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
 
    // Lock out some memory for unimplemented data access
    mem::protect(0xfff00000, 0x000fffff);
