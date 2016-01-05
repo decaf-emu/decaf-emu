@@ -10,6 +10,7 @@ set(SOURCE_FILES
 
 set(HEADER_FILES
     platform.h
+    platform_exception.h
     platform_fiber.h
     platform_glfw.h
     platform_input.h
@@ -23,6 +24,7 @@ set(HEADER_FILES
 
 set(SOURCE_FILES_WINDOWS
     platform_win_dir.cpp
+    platform_win_exception.cpp
     platform_win_fiber.cpp
     platform_win_memorymap.cpp
     platform_win_thread.cpp
@@ -33,6 +35,7 @@ set(HEADER_FILES_WINDOWS
 
 set(SOURCE_FILES_POSIX
     platform_posix_dir.cpp
+    platform_posix_exception.cpp
     platform_posix_fiber.cpp
     platform_posix_memorymap.cpp
     platform_posix_thread.cpp
