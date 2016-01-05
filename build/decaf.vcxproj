@@ -261,12 +261,14 @@
     <ClCompile Include="..\src\platform\platform_glfw_ui.cpp" />
     <ClCompile Include="..\src\platform\platform_interface.cpp" />
     <ClCompile Include="..\src\platform\platform_posix_dir.cpp" />
+    <ClCompile Include="..\src\platform\platform_posix_exception.cpp" />
     <ClCompile Include="..\src\platform\platform_posix_fiber.cpp" />
     <ClCompile Include="..\src\platform\platform_posix_memorymap.cpp" />
     <ClCompile Include="..\src\platform\platform_posix_thread.cpp" />
     <ClCompile Include="..\src\platform\platform_posix_time.cpp" />
     <ClCompile Include="..\src\platform\platform_sdl_input.cpp" />
     <ClCompile Include="..\src\platform\platform_sdl_ui.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_exception.cpp" />
     <ClCompile Include="..\src\platform\platform_win_fiber.cpp" />
     <ClCompile Include="..\src\platform\platform_win_memorymap.cpp" />
     <ClCompile Include="..\src\platform\platform_win_thread.cpp" />
@@ -411,6 +413,7 @@
     <ClInclude Include="..\src\modules\vpad\vpad_status.h" />
     <ClInclude Include="..\src\platform\platform.h" />
     <ClInclude Include="..\src\platform\platform_dir.h" />
+    <ClInclude Include="..\src\platform\platform_exception.h" />
     <ClInclude Include="..\src\platform\platform_fiber.h" />
     <ClInclude Include="..\src\platform\platform_glfw.h" />
     <ClInclude Include="..\src\platform\platform_input.h" />

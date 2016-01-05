@@ -777,6 +777,12 @@
     <ClCompile Include="..\src\platform\platform_interface.cpp">
       <Filter>Source Files\platform</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\platform\platform_win_exception.cpp">
+      <Filter>Source Files\platform\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_exception.cpp">
+      <Filter>Source Files\platform\posix</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1482,6 +1488,9 @@
       <Filter>Header Files\platform</Filter>
     </ClInclude>
     <ClInclude Include="..\src\platform\platform_input.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\platform\platform_exception.h">
       <Filter>Header Files\platform</Filter>
     </ClInclude>
   </ItemGroup>

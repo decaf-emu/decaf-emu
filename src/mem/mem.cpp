@@ -1,6 +1,6 @@
 #include <gsl.h>
 #include "mem.h"
-#include "platform/platform_fiber.h"
+#include "platform/platform_exception.h"
 #include "platform/platform_memorymap.h"
 #include "processor.h"
 #include "utils/log.h"
@@ -41,13 +41,27 @@ static bool
 tryMapMemory(size_t base);
 
 // Handler for invalid memory accesses
-static platform::Fiber *handleAccessViolation(size_t address)
+static platform::Fiber *
+handleAccessViolation(platform::Exception *exception)
 {
-   if (address != 0 && (address < gMemoryBase || address >= gMemoryBase + 0x100000000ull)) {
-      return nullptr;  // Not in the emulated memory region
+   // Only handle AccessViolation exceptions
+   if (exception->type != platform::Exception::AccessViolation) {
+      return platform::UnhandledException;
    }
-   ppcaddr_t emuAddr = (address == 0) ? 0 : gsl::narrow_cast<ppcaddr_t>(address - gMemoryBase);
-   return gProcessor.handleAccessViolation(emuAddr);
+
+   auto info = reinterpret_cast<platform::AccessViolationException *>(exception);
+   auto address = info->address;
+
+   if (address != 0) {
+      if (address < gMemoryBase || address >= gMemoryBase + 0x100000000ull) {
+         // Not in the emulated memory region
+         return platform::UnhandledException;
+      } else {
+         address = address - gMemoryBase;
+      }
+   }
+
+   return gProcessor.handleAccessViolation(gsl::narrow_cast<ppcaddr_t>(address));
 }
 
 // Attempt to map all memory regions with base
@@ -116,7 +130,7 @@ initialise()
    }
 
    // Catch invalid accesses with our handler
-   platform::installAccessViolationHandler(handleAccessViolation);
+   platform::installExceptionHandler(handleAccessViolation);
 }
 
 // Return the base address of mapped memory

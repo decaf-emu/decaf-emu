@@ -22,48 +22,6 @@ struct Fiber
    std::array<char, DefaultStackSize> stack;
 };
 
-static std::function<Fiber *(size_t)> accessViolationHandler;
-static struct sigaction oldSegvHandler;
-static struct sigaction ourSegvHandler;  // Saved for segvHandler() to use.
-
-static void
-segvHandler(int unused_signum, siginfo_t *info, void *unused_context)
-{
-   Fiber *target = accessViolationHandler(reinterpret_cast<size_t>(info->si_addr));
-   if (target) {
-      // Reinstall the handler since SA_RESETHAND will have cleared it.
-      sigaction(SIGSEGV, &ourSegvHandler, nullptr);
-
-      if (target == resumeCurrentFiber) {
-         return;
-      } else {
-         setcontext(&target->context);
-      }
-   }
-
-   sigaction(SIGSEGV, &oldSegvHandler, nullptr);
-   // On return, the access will be retried, (presumably) causing another
-   // SIGSEGV which will this time go to the original handler.
-}
-
-bool
-installAccessViolationHandler(std::function<Fiber *(size_t)> handler)
-{
-   accessViolationHandler = handler;
-
-   ourSegvHandler.sa_sigaction = segvHandler;
-   sigemptyset(&ourSegvHandler.sa_mask);
-   // Set SA_RESETHAND so that a SEGV in the handler will terminate the
-   // program rather than going into an infinite loop.
-   ourSegvHandler.sa_flags = SA_SIGINFO | SA_RESETHAND;
-   if (sigaction(SIGSEGV, &ourSegvHandler, &oldSegvHandler) != 0) {
-      gLog->error("sigaction() failed: {}", strerror(errno));
-      return false;
-   }
-
-   return true;
-}
-
 Fiber *
 getThreadFiber()
 {
@@ -102,7 +60,11 @@ destroyFiber(Fiber *fiber)
 void
 swapToFiber(Fiber *current, Fiber *target)
 {
-   swapcontext(&current->context, &target->context);
+   if (!current) {
+      setcontext(&target->context);
+   } else {
+      swapcontext(&current->context, &target->context);
+   }
 }
 
 } // namespace platform
