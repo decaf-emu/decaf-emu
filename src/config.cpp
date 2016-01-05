@@ -3,8 +3,8 @@
 #include <cereal/archives/json.hpp>
 #include <fstream>
 
-#ifndef _MSC_VER
-   #include <SDL_keycode.h>
+#if defined(DECAF_SDL)
+#include <SDL_keycode.h>
 #endif
 
 namespace config
