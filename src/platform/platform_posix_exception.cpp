@@ -2,11 +2,12 @@
 #include "platform.h"
 #include "platform_exception.h"
 #include "platform_fiber.h"
+#include "utils/log.h"
 
 #ifdef PLATFORM_POSIX
-#include <array>
 #include <errno.h>
 #include <signal.h>
+#include <string.h>
 #include <ucontext.h>
 
 namespace platform
