@@ -491,6 +491,21 @@ Processor::setInterruptTimer(uint32_t core, std::chrono::time_point<std::chrono:
    mTimerCondition.notify_all();
 }
 
+platform::Fiber *Processor::handleAccessViolation(ppcaddr_t address)
+{
+   if (!tCurrentCore || !tCurrentCore->threadId) {
+      return nullptr;
+   }
+
+   auto core = tCurrentCore;
+   auto fiber = core->currentFiber;
+
+   gLog->error("Access violation at address 0x{:x} on core {}, thread {}",
+               address, core->id, core->threadId);
+   fiber->thread->state = OSThreadState::Waiting;  // TODO: does this properly stop the thread?
+   return core->primaryFiberHandle;
+}
+
 namespace spdlog
 {
 namespace details
