@@ -98,7 +98,7 @@ readFileInfo(BigEndianView &in, const SectionList &sections, elf::FileInfo &info
 
       elf::readSectionData(in, section.header, data);
 
-      BigEndianView be_view { data };
+      BigEndianView be_view { gsl::as_span(data) };
       elf::readFileInfo(be_view, info);
       return true;
    }
@@ -444,7 +444,7 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
       }
 
       elf::readSectionData(in, section.header, buffer);
-      auto in = BigEndianView { buffer };
+      auto in = BigEndianView { gsl::as_span(buffer) };
 
       auto &symSec = sections[section.header.link];
       auto &targetSec = sections[section.header.info];
@@ -711,7 +711,6 @@ Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
    elf::FileInfo info;
 
    readFileInfo(in, sections, info);
-
    codeSegAddr = mCodeHeap->alloc(info.textSize, info.textAlign);
    loadSegAddr = OSAllocFromSystem(info.loadSize, info.loadAlign);
 
