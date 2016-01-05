@@ -8,12 +8,17 @@ class BigEndianView
 {
 public:
    BigEndianView(const void *buffer, std::size_t size) :
-      mBuffer(static_cast<const uint8_t*>(buffer)), mSize(size), mOffset(0)
+      mBuffer(reinterpret_cast<const uint8_t*>(buffer)), mSize(size), mOffset(0)
    {
    }
 
    BigEndianView(const gsl::span<uint8_t> &view) :
-      mBuffer(static_cast<const uint8_t*>(view.data())), mSize(view.size()), mOffset(0)
+      mBuffer(reinterpret_cast<const uint8_t*>(view.data())), mSize(view.size()), mOffset(0)
+   {
+   }
+
+   BigEndianView(const gsl::span<char> &view) :
+      mBuffer(reinterpret_cast<const uint8_t*>(view.data())), mSize(view.size()), mOffset(0)
    {
    }
 
