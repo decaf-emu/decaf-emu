@@ -354,6 +354,30 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 }
 
 void
+GX2SetGeometryUniformBlock(uint32_t location, uint32_t size, const void *data)
+{
+   pm4::SetVtxResource res;
+   memset(&res, 0, sizeof(pm4::SetVtxResource));
+   res.id = (location * 7) + latte::SQ_GS_BUF_RESOURCE_0;
+   res.baseAddress = data;
+   res.size = size - 1;
+   res.word2.STRIDE = 16;
+   res.word2.DATA_FORMAT = latte::FMT_32_32_32_32;
+   res.word2.FORMAT_COMP_ALL = latte::SQ_FORMAT_COMP_SIGNED;
+   res.word3.MEM_REQUEST_SIZE = 1;
+   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+   pm4::write(res);
+
+   auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_GS_0 + location * 4);
+   auto addr256 = memory_untranslate(data) >> 8;
+   pm4::write(pm4::SetContextReg { addrId, addr256 });
+
+   auto sizeId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_GS_0 + location * 4);
+   auto size256 = ((size + 255) >> 8) & 0x1FF;
+   pm4::write(pm4::SetContextReg { sizeId, size256 });
+}
+
+void
 GX2SetShaderModeEx(GX2ShaderMode mode,
                    uint32_t numVsGpr, uint32_t numVsStackEntries,
                    uint32_t numGsGpr, uint32_t numGsStackEntries,

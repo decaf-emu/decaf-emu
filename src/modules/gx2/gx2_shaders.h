@@ -391,6 +391,9 @@ void
 GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data);
 
 void
+GX2SetGeometryUniformBlock(uint32_t location, uint32_t size, const void *data);
+
+void
 GX2SetShaderModeEx(GX2ShaderMode mode,
                    uint32_t numVsGpr, uint32_t numVsStackEntries,
                    uint32_t numGsGpr, uint32_t numGsStackEntries,
