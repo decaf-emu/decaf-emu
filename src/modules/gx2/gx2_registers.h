@@ -4,8 +4,6 @@
 #include "gx2_enum.h"
 #include "utils/structsize.h"
 
-struct GX2DepthBuffer;
-
 #pragma pack(push, 1)
 
 struct GX2AAMaskReg

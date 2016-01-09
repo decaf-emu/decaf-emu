@@ -5,9 +5,6 @@
 #include "types.h"
 #include "utils/be_val.h"
 
-struct GX2Texture;
-struct GX2ColorBuffer;
-
 void
 GX2SetTVEnable(BOOL enable);
 
