@@ -150,9 +150,10 @@ COSWarn(uint32_t module, const char *fmt, ppctypes::VarList& args)
 }
 
 static void
-OSConsoleWrite(const char *msg, uint32_t unk)
+OSConsoleWrite(const char *msg, uint32_t size)
 {
-   gLog->debug("OSConsoleWrite[{}] {}", unk, msg);
+   auto str = std::string { msg, size };
+   gLog->debug("OSConsoleWrite {}", str);
 }
 
 static int
