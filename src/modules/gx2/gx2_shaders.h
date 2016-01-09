@@ -410,3 +410,9 @@ GX2GetVertexShaderGPRs(GX2VertexShader *shader);
 
 uint32_t
 GX2GetVertexShaderStackEntries(GX2VertexShader *shader);
+
+uint32_t
+GX2GetGeometryShaderGPRs(GX2GeometryShader *shader);
+
+uint32_t
+GX2GetGeometryShaderStackEntries(GX2GeometryShader *shader);

@@ -226,6 +226,8 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2GetPixelShaderStackEntries);
    RegisterKernelFunction(GX2GetVertexShaderGPRs);
    RegisterKernelFunction(GX2GetVertexShaderStackEntries);
+   RegisterKernelFunction(GX2GetGeometryShaderGPRs);
+   RegisterKernelFunction(GX2GetGeometryShaderStackEntries);
 
    // State
    RegisterKernelFunction(GX2Init);

@@ -487,3 +487,15 @@ GX2GetVertexShaderStackEntries(GX2VertexShader *shader)
 {
    return shader->regs.sq_pgm_resources_vs.value().STACK_SIZE;
 }
+
+uint32_t
+GX2GetGeometryShaderGPRs(GX2GeometryShader *shader)
+{
+   return shader->regs.sq_pgm_resources_gs.value().NUM_GPRS;
+}
+
+uint32_t
+GX2GetGeometryShaderStackEntries(GX2GeometryShader *shader)
+{
+   return shader->regs.sq_pgm_resources_gs.value().STACK_SIZE;
+}
