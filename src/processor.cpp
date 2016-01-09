@@ -505,8 +505,10 @@ Processor::handleAccessViolation(ppcaddr_t address)
    auto core = tCurrentCore;
    auto fiber = core->currentFiber;
 
-   gLog->error("Access violation at address 0x{:x} on core {}, thread {}",
-               address, core->id, core->threadId);
+   gLog->error("Access violation, at 0x{:X} accessing address 0x{:X} on core {}, thread {}",
+               fiber->state.cia, address, core->id, core->threadId);
+
+   OSPrintCurrentThreadState();
 
    fiber->thread->state = OSThreadState::Waiting;  // TODO: does this properly stop the thread?
    return core->primaryFiberHandle;
