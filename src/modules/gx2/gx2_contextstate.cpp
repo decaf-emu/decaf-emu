@@ -263,9 +263,10 @@ GX2SetDefaultState()
 
    GX2SetBlendConstantColor(0.0f, 0.0f, 0.0f, 0.0f); // RGBA
 
-   // GX2SetStreamOutEnable(0); VGT_STRMOUT_EN
+   GX2SetStreamOutEnable(0);
 
-   // GX2SetRasterizerClipControl(1, 1); PA_CL_CLIP_CNTL
+   GX2SetRasterizerClipControl(TRUE,   // rasteriser
+                               TRUE);  // zclipNear
 
    // GX2SetTessellation(0, 0x84, 9); 0x285 VGT_HOS_CNTL, 0x289 VGT_GROUP_PRIM_TYPE, 0x28a, 0x28b, 0x28c, 0x28e, 0x28d, 0x28f
 
