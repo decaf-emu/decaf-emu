@@ -124,8 +124,19 @@ OSGetAlarmUserData(OSAlarm *alarm)
 void
 OSInitAlarmQueue(OSAlarmQueue *queue)
 {
+   OSInitAlarmQueueEx(queue, nullptr);
+}
+
+
+/**
+* Initialise an alarm queue structure with a name
+*/
+void
+OSInitAlarmQueueEx(OSAlarmQueue *queue, const char *name)
+{
    memset(queue, 0, sizeof(OSAlarmQueue));
    queue->tag = OSAlarmQueue::Tag;
+   queue->name = name;
 }
 
 
@@ -319,6 +330,8 @@ CoreInit::registerAlarmFunctions()
    RegisterKernelFunction(OSCreateAlarm);
    RegisterKernelFunction(OSCreateAlarmEx);
    RegisterKernelFunction(OSGetAlarmUserData);
+   RegisterKernelFunction(OSInitAlarmQueue);
+   RegisterKernelFunction(OSInitAlarmQueueEx);
    RegisterKernelFunction(OSSetAlarm);
    RegisterKernelFunction(OSSetPeriodicAlarm);
    RegisterKernelFunction(OSSetAlarmTag);

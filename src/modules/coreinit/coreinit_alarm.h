@@ -27,7 +27,7 @@ struct OSAlarmQueue
 };
 CHECK_OFFSET(OSAlarmQueue, 0x00, tag);
 CHECK_OFFSET(OSAlarmQueue, 0x04, name);
-CHECK_OFFSET(OSAlarmQueue, 0x0c, threadQueue); // What is thread queue used for?
+CHECK_OFFSET(OSAlarmQueue, 0x0c, threadQueue);
 CHECK_OFFSET(OSAlarmQueue, 0x1c, head);
 CHECK_OFFSET(OSAlarmQueue, 0x20, tail);
 CHECK_SIZE(OSAlarmQueue, 0x24);
@@ -94,6 +94,9 @@ OSGetAlarmUserData(OSAlarm *alarm);
 
 void
 OSInitAlarmQueue(OSAlarmQueue *queue);
+
+void
+OSInitAlarmQueueEx(OSAlarmQueue *queue, const char *name);
 
 BOOL
 OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback);
