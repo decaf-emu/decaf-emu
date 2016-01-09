@@ -508,7 +508,7 @@ encodeFourCCWithPitch(std::ofstream &file,
    DdsHeader header = encodeHeader(surface);
    header.ddspf.dwFourCC = fourCC;
    header.ddspf.dwFlags |= DDPF_FOURCC | flags;
-   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceElementBytes(surface->format);
+   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceFormatBytesPerElement(surface->format);
    writeData(file, &header, imagePtr, surface->imageSize, mipPtr, surface->mipmapSize);
    return true;
 }
@@ -530,8 +530,8 @@ encodeMasked(std::ofstream &file,
    header.ddspf.dwGBitMask = maskG;
    header.ddspf.dwBBitMask = maskB;
    header.ddspf.dwABitMask = maskA;
-   header.ddspf.dwRGBBitCount = GX2GetSurfaceElementBits(surface->format);
-   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceElementBytes(surface->format);
+   header.ddspf.dwRGBBitCount = GX2GetSurfaceFormatBitsPerElement(surface->format);
+   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceFormatBytesPerElement(surface->format);
    writeData(file, &header, imagePtr, surface->imageSize, mipPtr, surface->mipmapSize);
    return true;
 }
@@ -547,10 +547,10 @@ encodeLuminance(std::ofstream &file,
 {
    DdsHeader header = encodeHeader(surface);
    header.ddspf.dwFlags |= DDPF_LUMINANCE | flags;
-   header.ddspf.dwRGBBitCount = GX2GetSurfaceElementBits(surface->format);
+   header.ddspf.dwRGBBitCount = GX2GetSurfaceFormatBitsPerElement(surface->format);
    header.ddspf.dwRBitMask = maskL;
    header.ddspf.dwABitMask = maskA;
-   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceElementBytes(surface->format);
+   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceFormatBytesPerElement(surface->format);
    writeData(file, &header, imagePtr, surface->imageSize, mipPtr, surface->mipmapSize);
    return true;
 }
@@ -609,8 +609,8 @@ encode565(std::ofstream &file,
 {
    DdsHeader header = encodeHeader(surface);
    header.ddspf.dwFlags |= DDPF_RGB | flags;
-   header.ddspf.dwRGBBitCount = GX2GetSurfaceElementBits(surface->format);
-   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceElementBytes(surface->format);
+   header.ddspf.dwRGBBitCount = GX2GetSurfaceFormatBitsPerElement(surface->format);
+   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceFormatBytesPerElement(surface->format);
 
    std::vector<uint8_t> image, mipmap;
    image.resize(surface->imageSize);
@@ -632,8 +632,8 @@ encode1555(std::ofstream &file,
 {
    DdsHeader header = encodeHeader(surface);
    header.ddspf.dwFlags |= DDPF_RGB | DDPF_ALPHAPIXELS | flags;
-   header.ddspf.dwRGBBitCount = GX2GetSurfaceElementBits(surface->format);
-   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceElementBytes(surface->format);
+   header.ddspf.dwRGBBitCount = GX2GetSurfaceFormatBitsPerElement(surface->format);
+   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceFormatBytesPerElement(surface->format);
 
    header.ddspf.dwRBitMask = 0x7c00;
    header.ddspf.dwGBitMask = 0x3e0;
@@ -660,8 +660,8 @@ encode4444(std::ofstream &file,
 {
    DdsHeader header = encodeHeader(surface);
    header.ddspf.dwFlags |= DDPF_RGB | DDPF_ALPHAPIXELS | flags;
-   header.ddspf.dwRGBBitCount = GX2GetSurfaceElementBits(surface->format);
-   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceElementBytes(surface->format);
+   header.ddspf.dwRGBBitCount = GX2GetSurfaceFormatBitsPerElement(surface->format);
+   header.dwPitchOrLinearSize = surface->width * GX2GetSurfaceFormatBytesPerElement(surface->format);
 
    header.ddspf.dwRBitMask = 0xf00;
    header.ddspf.dwGBitMask = 0xf0;

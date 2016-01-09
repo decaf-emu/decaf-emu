@@ -19,10 +19,13 @@ std::pair<size_t, size_t>
 GX2GetSurfaceBlockSize(GX2SurfaceFormat format);
 
 uint32_t
-GX2GetSurfaceElementBits(GX2SurfaceFormat format);
+GX2GetSurfaceFormatBits(GX2SurfaceFormat format);
 
 uint32_t
-GX2GetSurfaceElementBytes(GX2SurfaceFormat format);
+GX2GetSurfaceFormatBitsPerElement(GX2SurfaceFormat format);
+
+uint32_t
+GX2GetSurfaceFormatBytesPerElement(GX2SurfaceFormat format);
 
 GX2EndianSwapMode
 GX2GetSurfaceSwap(GX2SurfaceFormat format);

@@ -50,7 +50,7 @@ GX2CalcTVSize(GX2TVRenderMode tvRenderMode,
       throw std::invalid_argument("Unexpected GX2CalcTVSize tvRenderMode");
    }
 
-   const int bytesPerPixel = GX2GetSurfaceElementBytes(surfaceFormat);
+   const int bytesPerPixel = GX2GetSurfaceFormatBytesPerElement(surfaceFormat);
    if (!bytesPerPixel) {
       throw std::invalid_argument("Unexpected GX2CalcTVSize surfaceFormat");
    }
@@ -70,7 +70,7 @@ GX2CalcDRCSize(GX2DrcRenderMode drcRenderMode,
                be_val<uint32_t> *size,
                be_val<uint32_t> *unkOut)
 {
-   const int bytesPerPixel = GX2GetSurfaceElementBytes(surfaceFormat);
+   const int bytesPerPixel = GX2GetSurfaceFormatBytesPerElement(surfaceFormat);
    if (!bytesPerPixel) {
       throw std::invalid_argument("Unexpected GX2CalcDRCSize surfaceFormat");
    }

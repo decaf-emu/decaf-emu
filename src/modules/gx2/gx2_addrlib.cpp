@@ -123,7 +123,7 @@ getSurfaceInfo(GX2Surface *surface,
          elemSize = 4;
       }
 
-      output->bpp = GX2GetSurfaceElementBits(surface->format);
+      output->bpp = GX2GetSurfaceFormatBitsPerElement(surface->format);
       output->pixelBits = output->bpp;
       output->baseAlign = 1;
       output->pitchAlign = 1;
@@ -158,7 +158,7 @@ getSurfaceInfo(GX2Surface *surface,
       input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
       input.tileMode = static_cast<AddrTileMode>(surface->tileMode & 0xF);
       input.format = static_cast<AddrFormat>(hwFormat);
-      input.bpp = GX2GetSurfaceElementBits(surface->format);
+      input.bpp = GX2GetSurfaceFormatBitsPerElement(surface->format);
       input.width = width;
       input.height = height;
       input.numSlices = numSlices;
@@ -241,7 +241,7 @@ copySurface(GX2Surface *surfaceSrc,
    dstSwizzleOutput.size = sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT);
 
    // Setup src
-   auto bpp = GX2GetSurfaceElementBits(surfaceSrc->format);
+   auto bpp = GX2GetSurfaceFormatBitsPerElement(surfaceSrc->format);
    getSurfaceInfo(surfaceSrc, srcLevel, &srcInfoOutput);
    srcAddrInput.slice = srcDepth;
    srcAddrInput.sample = 0;

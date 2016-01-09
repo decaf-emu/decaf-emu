@@ -6,6 +6,7 @@
 #include "gx2_displaylist.h"
 #include "gx2_draw.h"
 #include "gx2_event.h"
+#include "gx2_format.h"
 #include "gx2_mem.h"
 #include "gx2_query.h"
 #include "gx2_registers.h"
@@ -93,6 +94,10 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2GetLastSubmittedTimeStamp);
    RegisterKernelFunction(GX2WaitTimeStamp);
    RegisterKernelFunctionName("VsyncAlarmHandler", gx2::internal::vsyncAlarmHandler);
+
+   // Format
+   RegisterKernelFunction(GX2GetSurfaceFormatBits);
+   RegisterKernelFunction(GX2GetSurfaceFormatBitsPerElement);
 
    // GX2R Resource
    RegisterKernelFunction(GX2RSetAllocator);

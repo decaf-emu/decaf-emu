@@ -210,13 +210,26 @@ GX2GetSurfaceBlockSize(GX2SurfaceFormat format)
 }
 
 uint32_t
-GX2GetSurfaceElementBits(GX2SurfaceFormat format)
+GX2GetSurfaceFormatBits(GX2SurfaceFormat format)
+{
+   auto latteFormat = format & 0x3F;
+   auto bpp = gSurfaceFormatData[latteFormat].bpp;
+
+   if (latteFormat >= latte::FMT_BC1 || latteFormat <= latte::FMT_BC5) {
+      bpp >>= 4;
+   }
+
+   return bpp;
+}
+
+uint32_t
+GX2GetSurfaceFormatBitsPerElement(GX2SurfaceFormat format)
 {
    return gSurfaceFormatData[format & 0x3F].bpp;
 }
 
 uint32_t
-GX2GetSurfaceElementBytes(GX2SurfaceFormat format)
+GX2GetSurfaceFormatBytesPerElement(GX2SurfaceFormat format)
 {
    return gSurfaceFormatData[format & 0x3F].bpp / 8;
 }
