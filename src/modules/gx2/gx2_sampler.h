@@ -63,3 +63,22 @@ void
 GX2InitSamplerZMFilter(GX2Sampler *sampler,
                        GX2TexZFilterMode filterZ,
                        GX2TexMipFilterMode filterMip);
+
+void
+GX2SetPixelSamplerBorderColor(uint32_t unit,
+                              float red,
+                              float green,
+                              float blue,
+                              float alpha);
+void
+GX2SetVertexSamplerBorderColor(uint32_t unit,
+                               float red,
+                               float green,
+                               float blue,
+                               float alpha);
+void
+GX2SetGeometrySamplerBorderColor(uint32_t unit,
+                                 float red,
+                                 float green,
+                                 float blue,
+                                 float alpha);

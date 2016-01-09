@@ -203,6 +203,9 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2InitSamplerRoundingMode);
    RegisterKernelFunction(GX2InitSamplerXYFilter);
    RegisterKernelFunction(GX2InitSamplerZMFilter);
+   RegisterKernelFunction(GX2SetPixelSamplerBorderColor);
+   RegisterKernelFunction(GX2SetVertexSamplerBorderColor);
+   RegisterKernelFunction(GX2SetGeometrySamplerBorderColor);
 
    // Shader
    RegisterKernelFunction(GX2CalcGeometryShaderInputRingBufferSize);

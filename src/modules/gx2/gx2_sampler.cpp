@@ -1,5 +1,6 @@
 #include "gx2.h"
 #include "gx2_sampler.h"
+#include "gpu/pm4_writer.h"
 
 inline uint32_t
 floatToFixedPoint(float value, uint32_t bits, float min, float max)
@@ -122,4 +123,59 @@ GX2InitSamplerZMFilter(GX2Sampler *sampler,
    word0.Z_FILTER = static_cast<latte::SQ_TEX_Z_FILTER>(filterZ);
    word0.MIP_FILTER = static_cast<latte::SQ_TEX_Z_FILTER>(filterMip);
    sampler->regs.word0 = word0;
+}
+
+void
+GX2SetPixelSamplerBorderColor(uint32_t unit,
+                              float red,
+                              float green,
+                              float blue,
+                              float alpha)
+{
+   uint32_t values[] = {
+      bit_cast<uint32_t>(red),
+      bit_cast<uint32_t>(green),
+      bit_cast<uint32_t>(blue),
+      bit_cast<uint32_t>(alpha),
+   };
+
+   auto id = latte::Register::TD_PS_SAMPLER_BORDER0_RED + 4 * (unit * 4);
+   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), values });
+}
+
+
+void
+GX2SetVertexSamplerBorderColor(uint32_t unit,
+                                 float red,
+                                 float green,
+                                 float blue,
+                                 float alpha)
+{
+   uint32_t values[] = {
+      bit_cast<uint32_t>(red),
+      bit_cast<uint32_t>(green),
+      bit_cast<uint32_t>(blue),
+      bit_cast<uint32_t>(alpha),
+   };
+
+   auto id = latte::Register::TD_VS_SAMPLER_BORDER0_RED + 4 * (unit * 4);
+   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), values });
+}
+
+void
+GX2SetGeometrySamplerBorderColor(uint32_t unit,
+                                 float red,
+                                 float green,
+                                 float blue,
+                                 float alpha)
+{
+   uint32_t values[] = {
+      bit_cast<uint32_t>(red),
+      bit_cast<uint32_t>(green),
+      bit_cast<uint32_t>(blue),
+      bit_cast<uint32_t>(alpha),
+   };
+
+   auto id = latte::Register::TD_GS_SAMPLER_BORDER0_RED + 4 * (unit * 4);
+   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), values });
 }
