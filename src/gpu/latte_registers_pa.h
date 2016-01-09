@@ -6,6 +6,38 @@
 namespace latte
 {
 
+// Clipper Control Bits
+union PA_CL_CLIP_CNTL
+{
+   uint32_t value;
+
+   struct
+   {
+      uint32_t UCP_ENA_0 : 1;
+      uint32_t UCP_ENA_1 : 1;
+      uint32_t UCP_ENA_2 : 1;
+      uint32_t UCP_ENA_3 : 1;
+      uint32_t UCP_ENA_4 : 1;
+      uint32_t UCP_ENA_5 : 1;
+      uint32_t : 7;
+      uint32_t PS_UCP_Y_SCALE_NEG : 1;
+      PA_PS_UCP_MODE PS_UCP_MODE : 2;
+      uint32_t CLIP_DISABLE : 1;
+      uint32_t UCP_CULL_ONLY_ENA : 1;
+      uint32_t BOUNDARY_EDGE_FLAG_ENA : 1;
+      uint32_t DX_CLIP_SPACE_DEF : 1;
+      uint32_t DIS_CLIP_ERR_DETECT : 1;
+      uint32_t VTX_KILL_OR : 1;
+      uint32_t RASTERISER_DISABLE : 1;
+      uint32_t : 1;
+      uint32_t DX_LINEAR_ATTR_CLIP_ENA : 1;
+      uint32_t VTE_VPORT_PROVOKE_DISABLE : 1;
+      uint32_t ZCLIP_NEAR_DISABLE : 1;
+      uint32_t ZCLIP_FAR_DISABLE : 1;
+      uint32_t : 4;
+   };
+};
+
 // Horizontal Guard Band Clip Adjust Register
 union PA_CL_GB_HORZ_CLIP_ADJ
 {

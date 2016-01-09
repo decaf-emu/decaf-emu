@@ -191,6 +191,9 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2InitViewportReg);
    RegisterKernelFunction(GX2GetViewportReg);
    RegisterKernelFunction(GX2SetViewportReg);
+   RegisterKernelFunction(GX2SetRasterizerClipControl);
+   RegisterKernelFunction(GX2SetRasterizerClipControlEx);
+   RegisterKernelFunction(GX2SetRasterizerClipControlHalfZ);
 
    // Sampler
    RegisterKernelFunction(GX2InitSampler);

@@ -1144,3 +1144,25 @@ GX2SetViewportReg(GX2ViewportReg *reg)
    };
    pm4::write(pm4::SetContextRegs { latte::Register::PA_SC_VPORT_ZMIN_0, gsl::as_span(values3) });
 }
+
+void
+GX2SetRasterizerClipControl(BOOL rasteriser, BOOL zclipNear)
+{
+   GX2SetRasterizerClipControlEx(rasteriser, zclipNear, FALSE);
+}
+
+void
+GX2SetRasterizerClipControlEx(BOOL rasteriser, BOOL zclipNear, BOOL halfZ)
+{
+   auto pa_cl_clip_cntl = latte::PA_CL_CLIP_CNTL { 0 };
+   pa_cl_clip_cntl.RASTERISER_DISABLE = !rasteriser;
+   pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE = !zclipNear;
+   pa_cl_clip_cntl.DX_CLIP_SPACE_DEF = halfZ;
+   pm4::write(pm4::SetContextReg { latte::Register::PA_CL_CLIP_CNTL, pa_cl_clip_cntl.value });
+}
+
+void
+GX2SetRasterizerClipControlHalfZ(BOOL rasteriser, BOOL zclipNear, BOOL halfZ)
+{
+   GX2SetRasterizerClipControlEx(rasteriser, zclipNear, halfZ);
+}

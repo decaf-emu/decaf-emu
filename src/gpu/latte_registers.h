@@ -328,6 +328,7 @@ enum Value : uint32_t
    CB_BLEND_CONTROL                 = 0x28804,
    CB_COLOR_CONTROL                 = 0x28808,
    DB_SHADER_CONTROL                = 0x2880C,
+   PA_CL_CLIP_CNTL                  = 0x28810,
    PA_SU_SC_MODE_CNTL               = 0x28814,
    PA_CL_VS_OUT_CNTL                = 0x2881C,
    SQ_PGM_START_PS                  = 0x28840,
