@@ -159,19 +159,25 @@ zlib125_inflateEnd(WZStream *wstrm)
 static uint32_t
 zlib125_adler32(uint32_t adler, const Bytef * buf, unsigned len)
 {
-   return (uint32_t)adler32(adler, buf, len);
+   return static_cast<uint32_t>(adler32(adler, buf, len));
 }
 
 static uint32_t
 zlib125_crc32(uint32_t crc, const Bytef * buf, unsigned len)
 {
-   return (uint32_t)crc32(crc, buf, len);
+   return static_cast<uint32_t>(crc32(crc, buf, len));
+}
+
+static int
+zlib125_compress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen)
+{
+   return compress(dest, destLen, source, sourceLen);
 }
 
 static uint32_t
 zlib125_compressBound(uint32_t sourceLen)
 {
-   return (uint32_t)compressBound(sourceLen);
+   return static_cast<uint32_t>(compressBound(sourceLen));
 }
 
 static int
@@ -186,7 +192,7 @@ zlib125_uncompress(uint8_t* dest, be_val<uint32_t>* destLen, const uint8_t* sour
 static uint32_t
 zlib125_zlibCompileFlags()
 {
-   return (uint32_t)zlibCompileFlags();
+   return static_cast<uint32_t>(zlibCompileFlags());
 }
 
 void
@@ -199,6 +205,7 @@ Zlib125::registerCoreFunctions()
    RegisterKernelFunctionName("inflateInit_", zlib125_inflateInit_);
    RegisterKernelFunctionName("inflateInit2_", zlib125_inflateInit2_);
    RegisterKernelFunctionName("inflateEnd", zlib125_inflateEnd);
+   RegisterKernelFunctionName("compress", zlib125_compress);
    RegisterKernelFunctionName("compressBound", zlib125_compressBound);
    RegisterKernelFunctionName("uncompress", zlib125_uncompress);
    RegisterKernelFunctionName("zlibCompileFlags", zlib125_zlibCompileFlags);
