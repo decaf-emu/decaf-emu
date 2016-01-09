@@ -563,6 +563,10 @@ MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap, int alignment)
    // Return the allocatable size
    size -= sizeof(ExpandedHeapBlock);
    size -= alignment;
+
+   // HACK: WUP-P-ARKE behaves badly when it has more than 994 MB of memory...
+   size = std::min(size, 994u * 1024 * 1024);
+
    return size;
 }
 
