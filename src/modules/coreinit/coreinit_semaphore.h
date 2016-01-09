@@ -16,6 +16,11 @@ struct OSSemaphore
    be_val<int32_t> count;
    OSThreadQueue queue;
 };
+CHECK_OFFSET(OSSemaphore, 0x00, tag);
+CHECK_OFFSET(OSSemaphore, 0x04, name);
+CHECK_OFFSET(OSSemaphore, 0x0C, count);
+CHECK_OFFSET(OSSemaphore, 0x10, queue);
+CHECK_SIZE(OSSemaphore, 0x20);
 
 #pragma pack(pop)
 
