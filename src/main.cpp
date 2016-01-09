@@ -285,7 +285,6 @@ play(const fs::HostPath &path)
    // Setup filesystem
    fs::FileSystem fs;
    fs::HostPath sysPath = config::system::system_path;
-   fs.mountHostFolder("/vol/storage_mlc01", sysPath.join("mlc"));
 
    if (platform::isDirectory(path.path())) {
       // Load game directory
@@ -331,6 +330,9 @@ play(const fs::HostPath &path)
    } else {
       gLog->warn("Could not open /vol/code/cos.xml, using default values");
    }
+
+   // Mount system path
+   fs.mountHostFolder("/vol/storage_mlc01", sysPath.join("mlc"));
 
    // Lock out some memory for unimplemented data access
    mem::protect(0xfff00000, 0x000fffff);
