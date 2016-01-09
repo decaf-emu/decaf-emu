@@ -140,7 +140,7 @@ GX2SetPixelSamplerBorderColor(uint32_t unit,
    };
 
    auto id = latte::Register::TD_PS_SAMPLER_BORDER0_RED + 4 * (unit * 4);
-   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), values });
+   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), gsl::as_span(values) });
 }
 
 
@@ -159,7 +159,7 @@ GX2SetVertexSamplerBorderColor(uint32_t unit,
    };
 
    auto id = latte::Register::TD_VS_SAMPLER_BORDER0_RED + 4 * (unit * 4);
-   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), values });
+   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), gsl::as_span(values) });
 }
 
 void
@@ -177,5 +177,5 @@ GX2SetGeometrySamplerBorderColor(uint32_t unit,
    };
 
    auto id = latte::Register::TD_GS_SAMPLER_BORDER0_RED + 4 * (unit * 4);
-   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), values });
+   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), gsl::as_span(values) });
 }
