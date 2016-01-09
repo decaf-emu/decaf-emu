@@ -647,4 +647,5 @@ CoreInit::registerExpHeapFunctions()
    RegisterKernelFunction(MEMGetSizeForMBlockExpHeap);
    RegisterKernelFunction(MEMGetGroupIDForMBlockExpHeap);
    RegisterKernelFunction(MEMGetAllocDirForMBlockExpHeap);
+   RegisterKernelFunction(MEMiDumpExpHeap);
 }
