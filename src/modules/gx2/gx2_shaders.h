@@ -402,6 +402,12 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
 void
 GX2SetStreamOutEnable(BOOL enable);
 
+void
+GX2SetGeometryShaderInputRingBuffer(void *buffer, uint32_t size);
+
+void
+GX2SetGeometryShaderOutputRingBuffer(void *buffer, uint32_t size);
+
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader);
 

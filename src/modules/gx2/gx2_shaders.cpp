@@ -488,6 +488,44 @@ GX2SetStreamOutEnable(BOOL enable)
    pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_EN, vgt_strmout_en.value });
 }
 
+void
+GX2SetGeometryShaderInputRingBuffer(void *buffer, uint32_t size)
+{
+   pm4::write(pm4::SetConfigReg { latte::Register::SQ_ESGS_RING_BASE, memory_untranslate(buffer) >> 8 });
+   pm4::write(pm4::SetConfigReg { latte::Register::SQ_ESGS_RING_SIZE, size >> 8 });
+
+   pm4::SetVtxResource res;
+   memset(&res, 0, sizeof(pm4::SetVtxResource));
+   res.id = latte::SQ_GS_GSIN_RESOURCE;
+   res.baseAddress = buffer;
+   res.size = size - 1;
+   res.word2.STRIDE = 4;
+   res.word2.CLAMP_X = latte::SQ_VTX_CLAMP_NAN;
+   res.word2.DATA_FORMAT = latte::FMT_32_32_32_32_FLOAT;
+   res.word3.UNCACHED = 1;
+   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+   pm4::write(res);
+}
+
+void
+GX2SetGeometryShaderOutputRingBuffer(void *buffer, uint32_t size)
+{
+   pm4::write(pm4::SetConfigReg { latte::Register::SQ_GSVS_RING_BASE, memory_untranslate(buffer) >> 8 });
+   pm4::write(pm4::SetConfigReg { latte::Register::SQ_GSVS_RING_SIZE, size >> 8 });
+
+   pm4::SetVtxResource res;
+   memset(&res, 0, sizeof(pm4::SetVtxResource));
+   res.id = latte::SQ_VS_GSOUT_RESOURCE;
+   res.baseAddress = buffer;
+   res.size = size - 1;
+   res.word2.STRIDE = 4;
+   res.word2.CLAMP_X = latte::SQ_VTX_CLAMP_NAN;
+   res.word2.DATA_FORMAT = latte::FMT_32_32_32_32_FLOAT;
+   res.word3.UNCACHED = 1;
+   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+   pm4::write(res);
+}
+
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader)
 {

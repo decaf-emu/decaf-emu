@@ -226,6 +226,8 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2SetGeometryUniformBlock);
    RegisterKernelFunction(GX2SetShaderModeEx);
    RegisterKernelFunction(GX2SetStreamOutEnable);
+   RegisterKernelFunction(GX2SetGeometryShaderInputRingBuffer);
+   RegisterKernelFunction(GX2SetGeometryShaderOutputRingBuffer);
    RegisterKernelFunction(GX2GetPixelShaderGPRs);
    RegisterKernelFunction(GX2GetPixelShaderStackEntries);
    RegisterKernelFunction(GX2GetVertexShaderGPRs);
