@@ -523,7 +523,7 @@ MEMGetTotalFreeSizeForExpHeap(ExpandedHeap *heap)
    auto size = 0u;
 
    for (auto block = heap->freeBlockList; block; block = block->next) {
-      size += block->size;
+      size += block->size - sizeof(ExpandedHeapBlock);
    }
 
    return size;
