@@ -3,6 +3,8 @@
 #include "filesystem_filehandle.h"
 #include "filesystem_host_folder.h"
 #include "filesystem_host_path.h"
+#include "filesystem_link_file.h"
+#include "filesystem_link_folder.h"
 #include "filesystem_path.h"
 #include "filesystem_virtual_folder.h"
 
@@ -44,6 +46,48 @@ public:
       }
 
       return reinterpret_cast<File *>(node);
+   }
+
+   Node *makeLink(Path dst, Path src)
+   {
+      return makeLink(dst, findNode(src));
+   }
+
+   Node *makeLink(Path dst, Node *srcNode)
+   {
+      // Ensure src exists
+      if (!srcNode) {
+         return nullptr;
+      }
+
+      // Check to see if dst already exists
+      auto dstNode = findNode(dst);
+
+      if (dstNode) {
+         return dstNode;
+      }
+
+      // Create parent path
+      auto parent = createPath(dst.parentPath());
+
+      if (!parent || parent->type != Node::FolderNode) {
+         return nullptr;
+      }
+
+      auto folder = reinterpret_cast<Folder *>(parent);
+
+      // Create link
+      if (srcNode->type == Node::FolderNode) {
+         dstNode = new FolderLink(reinterpret_cast<Folder *>(srcNode), dst.filename());
+      } else if (srcNode->type == Node::FileNode) {
+         dstNode = new FileLink(reinterpret_cast<File *>(srcNode), dst.filename());
+      }
+
+      if (dstNode) {
+         dstNode = folder->addChild(dstNode);
+      }
+
+      return dstNode;
    }
 
    bool mountHostFolder(Path dst, HostPath src)

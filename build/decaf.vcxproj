@@ -367,6 +367,8 @@
     <ClInclude Include="..\src\filesystem\filesystem_host_folder.h" />
     <ClInclude Include="..\src\filesystem\filesystem_host_folderhandle.h" />
     <ClInclude Include="..\src\filesystem\filesystem_host_path.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_link_file.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_link_folder.h" />
     <ClInclude Include="..\src\filesystem\filesystem_node.h" />
     <ClInclude Include="..\src\filesystem\filesystem_path.h" />
     <ClInclude Include="..\src\filesystem\filesystem_virtual_file.h" />

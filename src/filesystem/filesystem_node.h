@@ -25,6 +25,7 @@ public:
    NodeType type = Invalid;
    std::string name;
    size_t size = 0;
+   bool isLink = false;
 };
 
 } // namespace fs

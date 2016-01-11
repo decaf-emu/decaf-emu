@@ -1529,6 +1529,12 @@
     <ClInclude Include="..\src\filesystem\filesystem_virtual_filedata.h">
       <Filter>Header Files\filesystem</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_link_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_link_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
