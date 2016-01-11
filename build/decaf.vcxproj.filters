@@ -783,6 +783,21 @@
     <ClCompile Include="..\src\platform\platform_posix_exception.cpp">
       <Filter>Source Files\platform\posix</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs_file.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs_dir.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs_client.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs_path.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs_stat.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1492,6 +1507,27 @@
     </ClInclude>
     <ClInclude Include="..\src\platform\platform_exception.h">
       <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs_client.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs_path.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs_stat.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs_file.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs_dir.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_virtual_filehandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\filesystem\filesystem_virtual_filedata.h">
+      <Filter>Header Files\filesystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

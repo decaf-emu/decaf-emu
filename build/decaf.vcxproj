@@ -216,6 +216,11 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_fastmutex.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_frameheap.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_fs.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs_client.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs_dir.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs_file.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs_path.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_fs_stat.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_ghs.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_lockedcache.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_mcp.cpp" />
@@ -410,6 +415,11 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_enum.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_exit.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs_client.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs_dir.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs_file.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs_path.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_fs_stat.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_lockedcache.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h" />
