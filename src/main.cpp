@@ -312,7 +312,7 @@ play(const fs::HostPath &path)
    if (auto fh = fs.openFile("/vol/code/cos.xml", fs::File::Read)) {
       auto size = fh->size();
       auto buffer = std::vector<uint8_t>(size);
-      fh->read(buffer.data(), size);
+      fh->read(buffer.data(), size, 1);
       fh->close();
 
       // Parse cos.xml
