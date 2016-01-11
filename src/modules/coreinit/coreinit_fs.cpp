@@ -164,6 +164,14 @@ FSStatus
 FSAddClient(FSClient *client,
             uint32_t flags)
 {
+   return FSAddClientEx(client, 0, flags);
+}
+
+FSStatus
+FSAddClientEx(FSClient *client,
+              uint32_t unk,
+              uint32_t flags)
+{
    new(client) FSClient();
    gClients.push_back(client);
    return FSStatus::OK;
@@ -687,6 +695,7 @@ CoreInit::registerFileSystemFunctions()
    RegisterKernelFunction(FSInit);
    RegisterKernelFunction(FSShutdown);
    RegisterKernelFunction(FSAddClient);
+   RegisterKernelFunction(FSAddClientEx);
    RegisterKernelFunction(FSDelClient);
    RegisterKernelFunction(FSGetClientNum);
    RegisterKernelFunction(FSInitCmdBlock);

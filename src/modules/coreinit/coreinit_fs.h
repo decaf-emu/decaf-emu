@@ -72,6 +72,11 @@ FSAddClient(FSClient *client,
             uint32_t flags);
 
 FSStatus
+FSAddClientEx(FSClient *client,
+              uint32_t unk,
+              uint32_t flags);
+
+FSStatus
 FSDelClient(FSClient *client,
             uint32_t flags);
 
