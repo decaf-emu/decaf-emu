@@ -365,6 +365,8 @@
     <ClInclude Include="..\src\filesystem\filesystem_node.h" />
     <ClInclude Include="..\src\filesystem\filesystem_path.h" />
     <ClInclude Include="..\src\filesystem\filesystem_virtual_file.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_virtual_filedata.h" />
+    <ClInclude Include="..\src\filesystem\filesystem_virtual_filehandle.h" />
     <ClInclude Include="..\src\filesystem\filesystem_virtual_folderhandle.h" />
     <ClInclude Include="..\src\filesystem\filesystem_virtual_folder.h" />
     <ClInclude Include="..\src\fuzztests.h" />
