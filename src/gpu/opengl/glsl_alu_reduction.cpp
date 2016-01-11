@@ -65,6 +65,7 @@ DOT4(GenerateState &state, AluReductionInstruction *ins)
 void registerAluReduction()
 {
    registerGenerator(latte::SQ_OP2_INST_DOT4, DOT4);
+   registerGenerator(latte::SQ_OP2_INST_DOT4_IEEE, DOT4);
 }
 
 } // namespace glsl
