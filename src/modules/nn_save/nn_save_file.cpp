@@ -1,5 +1,8 @@
 #include "nn_save.h"
+#include "nn_save_dir.h"
 #include "nn_save_file.h"
+#include "modules/coreinit/coreinit_fs_dir.h"
+#include "modules/coreinit/coreinit_fs_file.h"
 
 FSStatus
 SAVEOpenFile(FSClient *client,
@@ -10,8 +13,8 @@ SAVEOpenFile(FSClient *client,
              be_val<FSFileHandle> *handle,
              uint32_t flags)
 {
-   // TODO: SAVEOpenFile
-   return FSStatus::NotFound;
+   auto fsPath = nn_save::internal::getSavePath(accountSlotNo, path);
+   return FSOpenFile(client, block, fsPath.path().c_str(), mode, handle, flags);
 }
 
 FSStatus
@@ -24,8 +27,8 @@ SAVEOpenFileAsync(FSClient *client,
                   uint32_t flags,
                   FSAsyncData *asyncData)
 {
-   // TODO: SAVEOpenFileAsync
-   return FSStatus::FatalError;
+   auto fsPath = nn_save::internal::getSavePath(accountSlotNo, path);
+   return FSOpenFileAsync(client, block, fsPath.path().c_str(), mode, handle, flags, asyncData);
 }
 
 void

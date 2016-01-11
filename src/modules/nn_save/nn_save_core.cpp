@@ -12,46 +12,9 @@ SAVEShutdown()
 {
 }
 
-SaveStatus
-SAVEInitSaveDir(uint8_t userID)
-{
-   return SaveStatus::OK;
-}
-
-SaveStatus
-SAVEGetSharedDataTitlePath(uint64_t titleID, const char *dir, char *buffer, uint32_t bufferSize)
-{
-   auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
-   auto titleHi = static_cast<uint32_t>(titleID >> 32);
-   auto result = snprintf(buffer, bufferSize, "/vol/storage_mlc01/sys/title/%08x/%08x/content/%s", titleHi, titleLo, dir);
-
-   if (result < 0 || static_cast<uint32_t>(result) >= bufferSize) {
-      return SaveStatus::FatalError;
-   }
-
-   return SaveStatus::OK;
-}
-
-SaveStatus
-SAVEGetSharedSaveDataPath(uint64_t titleID, const char *dir, char *buffer, uint32_t bufferSize)
-{
-   auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
-   auto titleHi = static_cast<uint32_t>(titleID >> 32);
-   auto result = snprintf(buffer, bufferSize, "/vol/storage_mlc01/usr/save/%08x/%08x/user/common/%s", titleHi, titleLo, dir);
-
-   if (result < 0 || static_cast<uint32_t>(result) >= bufferSize) {
-      return SaveStatus::FatalError;
-   }
-
-   return SaveStatus::OK;
-}
-
 void
 NN_save::registerCoreFunctions()
 {
    RegisterKernelFunction(SAVEInit);
    RegisterKernelFunction(SAVEShutdown);
-   RegisterKernelFunction(SAVEInitSaveDir);
-   RegisterKernelFunction(SAVEGetSharedDataTitlePath);
-   RegisterKernelFunction(SAVEGetSharedSaveDataPath);
 }

@@ -783,6 +783,9 @@
     <ClCompile Include="..\src\platform\platform_posix_exception.cpp">
       <Filter>Source Files\platform\posix</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\nn_save\nn_save_dir.cpp">
+      <Filter>Source Files\modules\nn_save</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_fs_file.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
@@ -1507,6 +1510,9 @@
     </ClInclude>
     <ClInclude Include="..\src\platform\platform_exception.h">
       <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_save\nn_save_dir.h">
+      <Filter>Header Files\modules\nn_save</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_fs_client.h">
       <Filter>Header Files\modules\coreinit</Filter>
