@@ -798,6 +798,7 @@ getSamplerType(latte::SQ_TEX_DIM dim, latte::SQ_NUM_FORMAT numFormat, latte::SQ_
       return SamplerType::Sampler2DArray;
    default:
       gLog->error(fmt::format("Unimplemented sampler type {}", dim));
+      return SamplerType::Invalid;
    }
 }
 
