@@ -58,6 +58,11 @@ struct HostFileHandle : public FileHandle
       return true;
    }
 
+   virtual bool eof() override
+   {
+      return mHandle.eof();
+   }
+
    virtual size_t tell() override
    {
       return static_cast<size_t>(mHandle.tellg());
@@ -72,32 +77,35 @@ struct HostFileHandle : public FileHandle
       return result;
    }
 
-   virtual size_t read(uint8_t *data, size_t size) override
+   virtual size_t read(uint8_t *data, size_t size, size_t count) override
    {
-      mHandle.read(reinterpret_cast<char *>(data), size);
-      return static_cast<size_t>(mHandle.gcount());
+      auto bytes = size * count;
+      mHandle.read(reinterpret_cast<char *>(data), bytes);
+      bytes = mHandle.gcount();
+      return bytes / size;
    }
 
-   virtual size_t read(uint8_t *data, size_t size, size_t position) override
+   virtual size_t read(uint8_t *data, size_t size, size_t count, size_t position) override
    {
       auto previous = tell();
       seek(position);
-      auto result = read(data, size);
+      auto result = read(data, size, count);
       seek(previous);
       return result;
    }
 
-   virtual size_t write(uint8_t *data, size_t size) override
+   virtual size_t write(uint8_t *data, size_t size, size_t count) override
    {
-      mHandle.write(reinterpret_cast<const char *>(data), size);
-      return size;
+      auto bytes = size * count;
+      mHandle.write(reinterpret_cast<const char *>(data), bytes);
+      return count;
    }
 
-   virtual size_t write(uint8_t *data, size_t size, size_t position) override
+   virtual size_t write(uint8_t *data, size_t size, size_t count, size_t position) override
    {
       auto previous = tell();
       seek(position);
-      auto result = write(data, size);
+      auto result = write(data, size, count);
       seek(previous);
       return result;
    }
