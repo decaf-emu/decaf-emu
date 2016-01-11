@@ -12,10 +12,10 @@ class File : public Node
 public:
    enum OpenMode
    {
-      Read = 1 << 0,
-      Write = 1 << 1,
-      Append = 1 << 2,
-      Update = 1 << 3
+      Read     = 1 << 0,
+      Write    = 1 << 1,
+      Append   = 1 << 2,
+      Update   = 1 << 3,
    };
 
 public:

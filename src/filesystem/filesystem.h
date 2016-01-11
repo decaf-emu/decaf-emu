@@ -17,9 +17,38 @@ public:
    {
    }
 
+   Folder *makeFolder(Path path)
+   {
+      auto node = createPath(path);
+
+      if (!node || node->type != Node::FolderNode) {
+         return nullptr;
+      }
+
+      return reinterpret_cast<Folder *>(node);
+   }
+
+   File *makeFile(Path path)
+   {
+      auto parent = createPath(path.parentPath());
+
+      if (!parent || parent->type != Node::FolderNode) {
+         return nullptr;
+      }
+
+      auto folder = reinterpret_cast<Folder *>(parent);
+      auto node = folder->addFile(path.filename());
+
+      if (!node || node->type != Node::FileNode) {
+         return nullptr;
+      }
+
+      return reinterpret_cast<File *>(node);
+   }
+
    bool mountHostFolder(Path dst, HostPath src)
    {
-      auto parent = createVirtualPath(dst.parentPath());
+      auto parent = createPath(dst.parentPath());
 
       if (!parent || parent->type != Node::FolderNode) {
          return false;
@@ -31,7 +60,7 @@ public:
 
    bool mountHostFile(Path dst, HostPath src)
    {
-      auto parent = createVirtualPath(dst.parentPath());
+      auto parent = createPath(dst.parentPath());
 
       if (!parent || parent->type != Node::FolderNode) {
          return false;
@@ -109,7 +138,7 @@ protected:
       return node;
    }
 
-   Node *createVirtualPath(const Path &path)
+   Node *createPath(const Path &path)
    {
       auto node = reinterpret_cast<Node *>(&mRoot);
 

@@ -18,6 +18,7 @@ public:
    virtual ~Folder() override = default;
 
    virtual Node *addFolder(const std::string &name) = 0;
+   virtual Node *addFile(const std::string &name) = 0;
    virtual Node *addChild(Node *node) = 0;
    virtual Node *findChild(const std::string &name) = 0;
 

@@ -2,6 +2,7 @@
 #include <vector>
 #include "filesystem_folder.h"
 #include "filesystem_node.h"
+#include "filesystem_virtual_file.h"
 #include "filesystem_virtual_folderhandle.h"
 
 namespace fs
@@ -28,6 +29,18 @@ public:
 
       if (!node) {
          node = new VirtualFolder(name);
+         addChild(node);
+      }
+
+      return node;
+   }
+
+   virtual Node *addFile(const std::string &name) override
+   {
+      auto node = findChild(name);
+
+      if (!node) {
+         node = new VirtualFile(name);
          addChild(node);
       }
 

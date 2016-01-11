@@ -26,7 +26,20 @@ public:
 
       if (!node) {
          node = new VirtualFolder(name);
-         // TODO: Maybe create real host folder
+         // TODO: Maybe create host folder
+         addChild(node);
+      }
+
+      return node;
+   }
+
+   virtual Node *addFile(const std::string &name) override
+   {
+      auto node = findChild(name);
+
+      if (!node) {
+         node = new VirtualFile(name);
+         // TODO: Maybe create host file
          addChild(node);
       }
 
