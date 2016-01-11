@@ -219,7 +219,7 @@ roundForMultiply(double *a, double *c)
    // case of an FMA operation in which we need to keep precision for the
    // intermediate result.  Note that this particular rounding operation
    // ignores FPSCR[RN].
-   cBits.uv &= -roundBit;
+   cBits.uv &= -static_cast<int64_t>(roundBit);
    cBits.uv += cBits.uv & roundBit;
    if (is_infinity(cBits.v)) {
       if (aBits.exponent == 0) {
@@ -334,8 +334,8 @@ fpArithGeneric(ThreadState *state, Instruction instr)
       }
 
       if (std::is_same<Type, float>::value) {
-         state->fpr[instr.frD].paired0 = extend_float(d);
-         state->fpr[instr.frD].paired1 = extend_float(d);
+         state->fpr[instr.frD].paired0 = extend_float(static_cast<float>(d));
+         state->fpr[instr.frD].paired1 = extend_float(static_cast<float>(d));
       } else {
          state->fpr[instr.frD].value = d;
       }

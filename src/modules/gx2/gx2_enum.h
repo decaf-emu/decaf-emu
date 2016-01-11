@@ -437,6 +437,7 @@ GX2_ENUM_WITH_RANGE(GX2TexZFilterMode, uint32_t, 0, 2)
 GX2_ENUM_END(GX2TexZFilterMode)
 
 GX2_ENUM_WITH_RANGE(GX2TexZPerfMode, uint32_t, 0, 3)
+   GX2_ENUM_VALUE(Disabled, 0)
 GX2_ENUM_END(GX2TexZPerfMode)
 
 GX2_ENUM(GX2TileMode, uint32_t)
