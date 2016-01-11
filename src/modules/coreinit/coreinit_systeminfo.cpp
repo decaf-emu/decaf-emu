@@ -17,6 +17,12 @@ gScreenCapturePermission = TRUE;
 static BOOL
 gEnableHomeButtonMenu = FALSE;
 
+static uint64_t
+gTitleID = 0;
+
+static uint64_t
+gSystemID = 0x000500101000400Aull;
+
 OSSystemInfo *
 OSGetSystemInfo()
 {
@@ -57,6 +63,18 @@ OSBlockThreadsOnExit()
    // TODO: OSBlockThreadsOnExit
 }
 
+uint64_t
+OSGetTitleID()
+{
+   return gTitleID;
+}
+
+uint64_t
+OSGetOSID()
+{
+   return gSystemID;
+}
+
 void
 CoreInit::registerSystemInfoFunctions()
 {
@@ -66,6 +84,8 @@ CoreInit::registerSystemInfoFunctions()
    RegisterKernelFunction(OSGetConsoleType);
    RegisterKernelFunction(OSEnableHomeButtonMenu);
    RegisterKernelFunction(OSBlockThreadsOnExit);
+   RegisterKernelFunction(OSGetTitleID);
+   RegisterKernelFunction(OSGetOSID);
 }
 
 void
@@ -95,3 +115,25 @@ CoreInit::initialiseSystemInformation()
    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now - gEpochTime);
    gSystemInfo->baseTime = ns.count();
 }
+
+namespace coreinit
+{
+
+namespace internal
+{
+
+void
+setTitleID(uint64_t id)
+{
+   gTitleID = id;
+}
+
+void
+setSystemID(uint64_t id)
+{
+   gSystemID = id;
+}
+
+} // namespace internal
+
+} // namespace coreinit

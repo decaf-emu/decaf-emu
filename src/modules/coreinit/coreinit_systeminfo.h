@@ -35,3 +35,25 @@ OSEnableHomeButtonMenu(BOOL enable);
 
 void
 OSBlockThreadsOnExit();
+
+uint64_t
+OSGetTitleID();
+
+uint64_t
+OSGetOSID();
+
+namespace coreinit
+{
+
+namespace internal
+{
+
+void
+setTitleID(uint64_t id);
+
+void
+setSystemID(uint64_t id);
+
+} // namespace internal
+
+} // namespace coreinit

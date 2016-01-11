@@ -19,6 +19,7 @@
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_scheduler.h"
+#include "modules/coreinit/coreinit_systeminfo.h"
 #include "modules/erreula/erreula.h"
 #include "modules/gx2/gx2.h"
 #include "modules/mic/mic.h"
@@ -329,6 +330,32 @@ play(const fs::HostPath &path)
       maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
    } else {
       gLog->warn("Could not open /vol/code/cos.xml, using default values");
+   }
+
+   if (auto fh = fs.openFile("/vol/code/app.xml", fs::File::Read)) {
+      auto size = fh->size();
+      auto buffer = std::vector<uint8_t>(size);
+      fh->read(buffer.data(), size, 1);
+      fh->close();
+
+      // Parse app.xml
+      pugi::xml_document doc;
+      auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
+
+      if (!parseResult) {
+         gLog->error("Error parsing /vol/code/app.xml");
+         return false;
+      }
+
+      // Set os_version and title_id
+      auto app = doc.child("app");
+      auto os_version = std::stoull(app.child("os_version").child_value(), 0, 16);
+      auto title_id = std::stoull(app.child("title_id").child_value(), 0, 16);
+
+      coreinit::internal::setSystemID(os_version);
+      coreinit::internal::setTitleID(title_id);
+   } else {
+      gLog->warn("Could not open /vol/code/app.xml, using default values");
    }
 
    // Mount system path
