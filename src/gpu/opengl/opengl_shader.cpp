@@ -44,8 +44,10 @@ getAttributeFormat(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatCom
    case latte::FMT_32_32_32_FLOAT:
    case latte::FMT_32_32_32_32_FLOAT:
       return gl::GL_FLOAT;
+   case latte::FMT_2_10_10_10:
+      return gl::GL_UNSIGNED_INT_2_10_10_10_REV;
    default:
-      throw std::logic_error("Unsupported attribute format");
+      gLog->error(fmt::format("Unsupported attribute format: {}", format));
       return gl::GL_BYTE;
    }
 }
@@ -72,6 +74,7 @@ getAttributeComponents(latte::SQ_DATA_FORMAT format)
    case latte::FMT_32_32_32:
    case latte::FMT_32_32_32_FLOAT:
       return 3;
+   case latte::FMT_2_10_10_10:
    case latte::FMT_8_8_8_8:
    case latte::FMT_16_16_16_16:
    case latte::FMT_16_16_16_16_FLOAT:
@@ -79,7 +82,8 @@ getAttributeComponents(latte::SQ_DATA_FORMAT format)
    case latte::FMT_32_32_32_32_FLOAT:
       return 4;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented attribute format {}", format));
+      gLog->error(fmt::format("Unimplemented attribute format: {}", format));
+      return 1;
    }
 }
 
@@ -409,7 +413,7 @@ stridedMemcpy(void *src, void *dst, size_t size, size_t offset, size_t stride, l
       stridedMemcpy2<uint32_t, 4>(src, dst, size, offset, stride, swap);
       break;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented stride memcpy format {}", format));
+      gLog->error(fmt::format("Unimplemented stride memcpy format {}", format));
    }
 }
 
@@ -721,7 +725,7 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
          out << "sampler2DArray";
          break;
       default:
-         throw std::logic_error("Unsupported sampler type");
+         gLog->error("Unsupported sampler type: {}", static_cast<uint32_t>(type));
       }
 
       out << " sampler_" << id << ";\n";
@@ -793,7 +797,7 @@ getSamplerType(latte::SQ_TEX_DIM dim, latte::SQ_NUM_FORMAT numFormat, latte::SQ_
    case latte::SQ_TEX_DIM_2D_ARRAY:
       return SamplerType::Sampler2DArray;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented sampler type {}", dim));
+      gLog->error(fmt::format("Unimplemented sampler type {}", dim));
    }
 }
 
@@ -878,7 +882,8 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       auto attrib = semanticAttribs[id];
 
       if (!attrib) {
-         throw std::logic_error("Invalid semantic mapping");
+         gLog->error("Invalid semantic mapping: {}", id);
+         continue;
       }
 
       out << "R" << (i + 1) << " = ";
