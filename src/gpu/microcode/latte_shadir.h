@@ -363,6 +363,8 @@ struct Shader
       Unknown,
       Pixel,
       Vertex,
+      Fetch,
+      Geometry,
    };
 
    Type type = Shader::Unknown;
