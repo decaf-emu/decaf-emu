@@ -210,6 +210,7 @@ initialiseEmulator(const std::string &logFilename)
    NN_fp::RegisterFunctions();
    NN_nfp::RegisterFunctions();
    NN_save::RegisterFunctions();
+   NN_temp::RegisterFunctions();
    PadScore::RegisterFunctions();
    ProcUI::RegisterFunctions();
    Snd_Core::RegisterFunctions();
