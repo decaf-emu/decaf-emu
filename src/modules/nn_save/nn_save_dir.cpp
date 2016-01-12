@@ -14,7 +14,7 @@ SAVEInitSaveDir(uint8_t userID)
    auto titleHi = static_cast<uint32_t>(titleID >> 32);
 
    // Create title save folder
-   auto path = fmt::format("/vol/storage_mlc01/sys/title/{:08x}/%{:08x}/user", titleHi, titleLo);
+   auto path = fmt::format("/vol/storage_mlc01/sys/title/{:08x}/{:08x}/user", titleHi, titleLo);
    auto titleFolder = fs->makeFolder(path);
 
    if (!titleFolder) {
