@@ -53,6 +53,45 @@ public:
       return node;
    }
 
+   virtual bool deleteFile(const std::string &name) override
+   {
+      auto node = findChild(name);
+
+      if (!node || node->type != Node::FileNode) {
+         return false;
+      }
+
+      mChildren.erase(std::remove(mChildren.begin(), mChildren.end(), node), mChildren.end());
+      delete node;
+      return true;
+   }
+
+   virtual bool deleteFolder(const std::string &name) override
+   {
+      auto node = findChild(name);
+
+      if (!node || node->type != Node::FolderNode) {
+         return false;
+      }
+
+      mChildren.erase(std::remove(mChildren.begin(), mChildren.end(), node), mChildren.end());
+      delete node;
+      return true;
+   }
+
+   virtual bool deleteChild(Node *node) override
+   {
+      auto itr = std::remove(mChildren.begin(), mChildren.end(), node);
+
+      if (itr == mChildren.end()) {
+         return false;
+      }
+
+      mChildren.erase(itr, mChildren.end());
+      delete node;
+      return true;
+   }
+
    virtual Node *findChild(const std::string &name) override
    {
       for (auto node : mChildren) {

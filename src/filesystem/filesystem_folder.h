@@ -20,6 +20,11 @@ public:
    virtual Node *addFolder(const std::string &name) = 0;
    virtual Node *addFile(const std::string &name) = 0;
    virtual Node *addChild(Node *node) = 0;
+
+   virtual bool deleteFolder(const std::string &name) = 0;
+   virtual bool deleteFile(const std::string &name) = 0;
+   virtual bool deleteChild(Node *node) = 0;
+
    virtual Node *findChild(const std::string &name) = 0;
 
    virtual FolderHandle *open() = 0;

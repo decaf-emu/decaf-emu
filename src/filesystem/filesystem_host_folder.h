@@ -52,6 +52,24 @@ public:
       return node;
    }
 
+   virtual bool deleteFile(const std::string &name) override
+   {
+      // TODO: Maybe delete host file
+      return mVirtual.deleteFile(name);
+   }
+
+   virtual bool deleteFolder(const std::string &name) override
+   {
+      // TODO: Maybe delete host folder
+      return mVirtual.deleteFolder(name);
+   }
+
+   virtual bool deleteChild(Node *node) override
+   {
+      // TODO: Maybe delete host file/folder
+      return mVirtual.deleteChild(node);
+   }
+
    virtual Node *findChild(const std::string &name) override;
 
    virtual FolderHandle *open() override

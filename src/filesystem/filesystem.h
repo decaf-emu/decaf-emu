@@ -48,6 +48,18 @@ public:
       return reinterpret_cast<File *>(node);
    }
 
+   bool deleteFolder(Path path)
+   {
+      auto parent = findNode(path.parentPath());
+
+      if (!parent || parent->type != Node::FolderNode) {
+         return nullptr;
+      }
+
+      auto folder = reinterpret_cast<Folder *>(parent);
+      return folder->deleteFolder(path.filename());
+   }
+
    Node *makeLink(Path dst, Path src)
    {
       return makeLink(dst, findNode(src));

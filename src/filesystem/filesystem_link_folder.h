@@ -31,6 +31,21 @@ public:
       return mLink->addChild(node);
    }
 
+   virtual bool deleteFolder(const std::string &name) final override
+   {
+      return mLink->deleteFolder(name);
+   }
+
+   virtual bool deleteFile(const std::string &name) final override
+   {
+      return mLink->deleteFile(name);
+   }
+
+   virtual bool deleteChild(Node *node) final override
+   {
+      return mLink->deleteChild(node);
+   }
+
    virtual Node *findChild(const std::string &name) final override
    {
       return mLink->findChild(name);
