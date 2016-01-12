@@ -31,6 +31,10 @@ System::registerModule(const std::string &name, KernelModule *module)
    // Map syscall IDs
    auto exports = module->getExportMap();
 
+   if (exports.empty()) {
+      gLog->warn("Module {} has no exports", name);
+   }
+
    for (auto &itr : exports) {
       auto exp = itr.second;
 
