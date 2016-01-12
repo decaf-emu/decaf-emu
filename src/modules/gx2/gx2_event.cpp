@@ -153,14 +153,14 @@ GX2GetSwapStatus(be_val<uint32_t> *swapCount,
 BOOL
 GX2WaitTimeStamp(OSTime time)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
 
    while (gRetiredTimestamp.load(std::memory_order_acquire) < time) {
-      OSSleepThreadNoLock(gWaitTimeStampQueue);
-      OSRescheduleNoLock();
+      coreinit::internal::sleepThreadNoLock(gWaitTimeStampQueue);
+      coreinit::internal::rescheduleNoLock();
    }
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return TRUE;
 }
 
@@ -198,10 +198,10 @@ namespace internal
 void
 initEvents()
 {
-   gVsyncThreadQueue = OSAllocFromSystem<OSThreadQueue>();
-   gVsyncAlarm = OSAllocFromSystem<OSAlarm>();
-   gWaitTimeStampQueue = OSAllocFromSystem<OSThreadQueue>();
-   gFlipThreadQueue = OSAllocFromSystem<OSThreadQueue>();
+   gVsyncThreadQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
+   gVsyncAlarm = coreinit::internal::sysAlloc<OSAlarm>();
+   gWaitTimeStampQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
+   gFlipThreadQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
 
    auto ticks = static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) / 60;
    OSCreateAlarm(gVsyncAlarm);
@@ -219,13 +219,13 @@ void
 vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
    gLastVsync.store(OSGetSystemTime(), std::memory_order_release);
-   OSWakeupThreadNoLock(gVsyncThreadQueue);
+   coreinit::internal::wakeupThreadNoLock(gVsyncThreadQueue);
    auto callback = gEventCallbacks[GX2EventType::Vsync];
 
    if (callback.func) {
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       callback.func(GX2EventType::Vsync, callback.data);
-      OSLockScheduler();
+      coreinit::internal::lockScheduler();
    }
 }
 
@@ -267,10 +267,10 @@ displayListOverrun(void *list, uint32_t size)
 void
 setRetiredTimestamp(OSTime timestamp)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    gRetiredTimestamp.store(timestamp, std::memory_order_release);
-   OSWakeupThreadNoLock(gWaitTimeStampQueue);
-   OSUnlockScheduler();
+   coreinit::internal::wakeupThreadNoLock(gWaitTimeStampQueue);
+   coreinit::internal::unlockScheduler();
 }
 
 

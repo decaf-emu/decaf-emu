@@ -236,7 +236,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("proc_ui.rpl", new ProcUI {});
    gSystem.registerModule("snd_core.rpl", new Snd_Core {});
    gSystem.registerModuleAlias("snd_core.rpl", "sndcore2.rpl");
-   gSystem.registerModule("swkbd.rpl", new Swkbd{});
+   gSystem.registerModule("swkbd.rpl", new Swkbd {});
    gSystem.registerModule("sysapp.rpl", new SysApp {});
    gSystem.registerModule("vpad.rpl", new VPad {});
    gSystem.registerModule("zlib125.rpl", new Zlib125 {});
@@ -379,9 +379,9 @@ play(const fs::HostPath &path)
    {
       GameLoaderInit(rpx.c_str());
 
-      auto thread = OSAllocFromSystem<OSThread>();
+      auto thread = coreinit::internal::sysAlloc<OSThread>();
       auto stackSize = 2048;
-      auto stack = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+      auto stack = reinterpret_cast<uint8_t *>(coreinit::internal::sysAlloc(stackSize, 8));
       auto name = OSStringFromSystem("Loader Thread");
 
       auto gameLoader = gLoader.loadRPL("gameloader");

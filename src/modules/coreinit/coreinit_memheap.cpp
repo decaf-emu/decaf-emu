@@ -202,7 +202,7 @@ sMEMFreeToDefaultHeap(uint8_t *block)
 char *
 OSStringFromSystem(const std::string &src)
 {
-   auto buffer = reinterpret_cast<char *>(OSAllocFromSystem(src.size() + 1, 4));
+   auto buffer = reinterpret_cast<char *>(coreinit::internal::sysAlloc(src.size() + 1, 4));
    std::memcpy(buffer, src.data(), src.size());
    buffer[src.size()] = 0;
    return buffer;
@@ -263,17 +263,17 @@ CoreFreeDefaultHeap()
 
    // Free function pointers
    if (pMEMAllocFromDefaultHeap) {
-      OSFreeToSystem(pMEMAllocFromDefaultHeap);
+      coreinit::internal::sysFree(pMEMAllocFromDefaultHeap);
       pMEMAllocFromDefaultHeap = nullptr;
    }
 
    if (pMEMAllocFromDefaultHeapEx) {
-      OSFreeToSystem(pMEMAllocFromDefaultHeap);
+      coreinit::internal::sysFree(pMEMAllocFromDefaultHeap);
       pMEMAllocFromDefaultHeap = nullptr;
    }
 
    if (pMEMFreeToDefaultHeap) {
-      OSFreeToSystem(pMEMAllocFromDefaultHeap);
+      coreinit::internal::sysFree(pMEMAllocFromDefaultHeap);
       pMEMAllocFromDefaultHeap = nullptr;
    }
 }
@@ -304,13 +304,13 @@ CoreInit::registerMembaseFunctions()
 void
 CoreInit::initialiseMembase()
 {
-   gForegroundMemlist = OSAllocFromSystem<MemoryList>();
+   gForegroundMemlist = coreinit::internal::sysAlloc<MemoryList>();
    MEMInitList(gForegroundMemlist, offsetof(CommonHeap, link));
 
-   gMEM1Memlist = OSAllocFromSystem<MemoryList>();
+   gMEM1Memlist = coreinit::internal::sysAlloc<MemoryList>();
    MEMInitList(gMEM1Memlist, offsetof(CommonHeap, link));
 
-   gMEM2Memlist = OSAllocFromSystem<MemoryList>();
+   gMEM2Memlist = coreinit::internal::sysAlloc<MemoryList>();
    MEMInitList(gMEM2Memlist, offsetof(CommonHeap, link));
 
    CoreInitDefaultHeap();
@@ -320,16 +320,26 @@ CoreInit::initialiseMembase()
    *pMEMFreeToDefaultHeap = findExportAddress("sMEMFreeToDefaultHeap");
 }
 
+namespace coreinit
+{
+
+namespace internal
+{
+
 void *
-OSAllocFromSystem(size_t size, int alignment)
+sysAlloc(size_t size, int alignment)
 {
    auto systemHeap = gSystem.getSystemHeap();
    return systemHeap->alloc(size, alignment);
 }
 
 void
-OSFreeToSystem(void *addr)
+sysFree(void *addr)
 {
    auto systemHeap = gSystem.getSystemHeap();
    return systemHeap->free(addr);
 }
+
+} // namespace internal
+
+} // namespace coreinit

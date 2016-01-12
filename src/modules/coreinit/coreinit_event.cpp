@@ -48,13 +48,13 @@ OSInitEventEx(OSEvent *event, bool value, OSEventMode mode, char *name)
 void
 OSSignalEvent(OSEvent *event)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(event);
    assert(event->tag == OSEvent::Tag);
 
    if (event->value != FALSE) {
       // Event has already been set
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return;
    }
 
@@ -68,16 +68,16 @@ OSSignalEvent(OSEvent *event)
 
          // Wakeup one thread
          auto thread = OSPopFrontThreadQueue(&event->queue);
-         OSWakeupOneThreadNoLock(thread);
-         OSRescheduleNoLock();
+         coreinit::internal::wakeupOneThreadNoLock(thread);
+         coreinit::internal::rescheduleNoLock();
       } else {
          // Wakeup all threads
-         OSWakeupThreadNoLock(&event->queue);
-         OSRescheduleNoLock();
+         coreinit::internal::wakeupThreadNoLock(&event->queue);
+         coreinit::internal::rescheduleNoLock();
       }
    }
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
 }
 
 
@@ -93,13 +93,13 @@ OSSignalEvent(OSEvent *event)
 void
 OSSignalEventAll(OSEvent *event)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(event);
    assert(event->tag == OSEvent::Tag);
 
    if (event->value != FALSE) {
       // Event has already been set
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return;
    }
 
@@ -113,11 +113,11 @@ OSSignalEventAll(OSEvent *event)
       }
 
       // Wakeup all threads
-      OSWakeupThreadNoLock(&event->queue);
-      OSRescheduleNoLock();
+      coreinit::internal::wakeupThreadNoLock(&event->queue);
+      coreinit::internal::rescheduleNoLock();
    }
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
 }
 
 
@@ -127,14 +127,14 @@ OSSignalEventAll(OSEvent *event)
 void
 OSResetEvent(OSEvent *event)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(event);
    assert(event->tag == OSEvent::Tag);
 
    // Reset event
    event->value = FALSE;
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
 }
 
 
@@ -150,7 +150,7 @@ OSResetEvent(OSEvent *event)
 void
 OSWaitEvent(OSEvent *event)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(event);
    assert(event->tag == OSEvent::Tag);
 
@@ -162,15 +162,15 @@ OSWaitEvent(OSEvent *event)
          event->value = FALSE;
       }
 
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return;
    } else {
       // Wait for event to be set
-      OSSleepThreadNoLock(&event->queue);
-      OSRescheduleNoLock();
+      coreinit::internal::sleepThreadNoLock(&event->queue);
+      coreinit::internal::rescheduleNoLock();
    }
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
 }
 
 static AlarmCallback
@@ -183,13 +183,13 @@ struct EventAlarmData
    BOOL timeout;
 };
 
-void
+static void
 EventAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
    // Wakeup the thread waiting on this alarm
    auto data = reinterpret_cast<EventAlarmData*>(OSGetAlarmUserData(alarm));
    data->timeout = TRUE;
-   OSWakeupOneThreadNoLock(data->thread);
+   coreinit::internal::wakeupOneThreadNoLock(data->thread);
 }
 
 
@@ -204,7 +204,7 @@ BOOL
 OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
 {
    BOOL result = TRUE;
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
 
    // Check if event is already set
    if (event->value) {
@@ -213,25 +213,25 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
          event->value = FALSE;
       }
 
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return TRUE;
    }
 
    // Setup some alarm data for callback
-   auto data = OSAllocFromSystem<EventAlarmData>();
+   auto data = coreinit::internal::sysAlloc<EventAlarmData>();
    data->event = event;
    data->thread = OSGetCurrentThread();
    data->timeout = FALSE;
 
    // Create an alarm to trigger timeout
-   auto alarm = OSAllocFromSystem<OSAlarm>();
+   auto alarm = coreinit::internal::sysAlloc<OSAlarm>();
    OSCreateAlarm(alarm);
    OSSetAlarmUserData(alarm, data);
    OSSetAlarm(alarm, timeout, pEventAlarmHandler);
 
    // Wait for the event
-   OSSleepThreadNoLock(&event->queue);
-   OSRescheduleNoLock();
+   coreinit::internal::sleepThreadNoLock(&event->queue);
+   coreinit::internal::rescheduleNoLock();
 
    if (data->timeout) {
       // Timed out, remove from wait queue
@@ -239,9 +239,9 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
       result = FALSE;
    }
 
-   OSFreeToSystem(data);
-   OSFreeToSystem(alarm);
-   OSUnlockScheduler();
+   coreinit::internal::sysFree(data);
+   coreinit::internal::sysFree(alarm);
+   coreinit::internal::unlockScheduler();
    return result;
 }
 

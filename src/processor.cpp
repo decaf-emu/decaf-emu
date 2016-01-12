@@ -218,7 +218,7 @@ Processor::reschedule(bool hasSchedulerLock, bool yield)
    core->fiberPendingList.push_back(fiber);
 
    if (hasSchedulerLock) {
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
    }
 
    gLog->trace("Core {} leave thread {}", core->id, fiber->thread->id);
@@ -229,7 +229,7 @@ Processor::reschedule(bool hasSchedulerLock, bool yield)
 
    // Reacquire scheduler lock if needed
    if (hasSchedulerLock) {
-      OSLockScheduler();
+      coreinit::internal::lockScheduler();
    }
 }
 

@@ -10,6 +10,8 @@ public:
    virtual void initialise() override;
 
 private:
+   void initialiseClock();
+
    void initialiseAlarm();
    void initialiseAtomic64();
    void initialiseDynLoad();

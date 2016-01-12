@@ -4,17 +4,29 @@
 
 struct LoadedModuleHandleData;
 
-int
-OSDynLoad_SetAllocator(ppcaddr_t allocFn, ppcaddr_t freeFn);
+/*
+Unimplemented dynamic load functions:
+OSDynLoad_AcquireContainingModule
+OSDynLoad_AddNofifyCallback
+OSDynLoad_AddNotifyCallback
+OSDynLoad_DelNotifyCallback
+OSDynLoad_FindTag
+OSDynLoad_GetLoaderHeapStatistics
+OSDynLoad_GetModuleName
+OSDynLoad_GetNumberOfRPLs
+OSDynLoad_GetRPLInfo
+OSDynLoad_GetTLSAllocator
+OSDynLoad_IsModuleLoaded
+OSDynLoad_SetTLSAllocator
+*/
 
 int
-OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn, be_val<ppcaddr_t> *outFreeFn);
+OSDynLoad_SetAllocator(ppcaddr_t allocFn,
+                       ppcaddr_t freeFn);
 
 int
-OSDynLoad_MemAlloc(int size, int alignment, void **outPtr);
-
-void
-OSDynLoad_MemFree(void *addr);
+OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn,
+                       be_val<ppcaddr_t> *outFreeFn);
 
 int
 OSDynLoad_Acquire(char const *name, be_ptr<LoadedModuleHandleData> *outHandle);
@@ -24,3 +36,19 @@ OSDynLoad_FindExport(LoadedModuleHandleData *module, int isData, char const *nam
 
 void
 OSDynLoad_Release(LoadedModuleHandleData *handle);
+
+namespace coreinit
+{
+
+namespace internal
+{
+
+int
+dynLoadMemAlloc(int size, int alignment, void **outPtr);
+
+void
+dynLoadMemFree(void *addr);
+
+} // namespace internal
+
+} // namespace coreinit

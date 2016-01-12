@@ -63,25 +63,6 @@ OSGetMemBound(OSMemoryType type, be_val<uint32_t> *addr, be_val<uint32_t> *size)
    return 0;
 }
 
-int
-OSSetMemBound(OSMemoryType type, uint32_t start, uint32_t size)
-{
-   switch (type) {
-   case OSMemoryType::MEM1:
-      gMem1Start = start;
-      gMem1Size = size;
-      break;
-   case OSMemoryType::MEM2:
-      gMem2Start = start;
-      gMem2Size = size;
-      break;
-   default:
-      return -1;
-   }
-
-   return 0;
-}
-
 BOOL
 OSGetForegroundBucket(be_val<uint32_t> *addr, be_val<uint32_t> *size)
 {
@@ -131,3 +112,33 @@ CoreInit::registerMemoryFunctions()
    RegisterKernelFunctionName("memset", coreinit_memset);
    RegisterKernelFunctionName("memmove", coreinit_memmove);
 }
+
+namespace coreinit
+{
+
+namespace internal
+{
+
+int
+setMemBound(OSMemoryType type, uint32_t start, uint32_t size)
+{
+   switch (type) {
+   case OSMemoryType::MEM1:
+      gMem1Start = start;
+      gMem1Size = size;
+      break;
+   case OSMemoryType::MEM2:
+      gMem2Start = start;
+      gMem2Size = size;
+      break;
+   default:
+      return -1;
+   }
+
+   return 0;
+}
+
+
+} // namespace internal
+
+} // namespace coreinit

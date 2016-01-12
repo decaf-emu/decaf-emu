@@ -13,6 +13,9 @@ CoreInit::~CoreInit()
 void
 CoreInit::initialise()
 {
+   // Always initialise clock first
+   initialiseClock();
+
    initialiseAlarm();
    initialiseAtomic64();
    initialiseDynLoad();

@@ -40,8 +40,14 @@ InitialiseThreadFiber(OSThread *thread)
    traceInit(&fiber->state, 1024);
 }
 
+namespace coreinit
+{
+
+namespace internal
+{
+
 void
-OSLockScheduler()
+lockScheduler()
 {
    bool locked = false;
 
@@ -51,19 +57,19 @@ OSLockScheduler()
 }
 
 void
-OSUnlockScheduler()
+unlockScheduler()
 {
    gSchedulerLock.store(false, std::memory_order_release);
 }
 
 void
-OSRescheduleNoLock()
+rescheduleNoLock()
 {
    gProcessor.reschedule(true);
 }
 
 int32_t
-OSResumeThreadNoLock(OSThread *thread, int32_t counter)
+resumeThreadNoLock(OSThread *thread, int32_t counter)
 {
    auto old = thread->suspendCounter;
    thread->suspendCounter -= counter;
@@ -88,7 +94,7 @@ OSResumeThreadNoLock(OSThread *thread, int32_t counter)
 }
 
 void
-OSSleepThreadNoLock(OSThreadQueue *queue)
+sleepThreadNoLock(OSThreadQueue *queue)
 {
    auto thread = OSGetCurrentThread();
    thread->queue = queue;
@@ -100,50 +106,50 @@ OSSleepThreadNoLock(OSThreadQueue *queue)
 }
 
 void
-OSSuspendThreadNoLock(OSThread *thread)
+suspendThreadNoLock(OSThread *thread)
 {
    thread->requestFlag = OSThreadRequest::None;
    thread->suspendCounter += thread->needSuspend;
    thread->needSuspend = 0;
    thread->state = OSThreadState::Ready;
-   OSWakeupThreadNoLock(&thread->suspendQueue);
+   wakeupThreadNoLock(&thread->suspendQueue);
 }
 
 void
-OSTestThreadCancelNoLock()
+testThreadCancelNoLock()
 {
    auto thread = OSGetCurrentThread();
 
    if (thread->cancelState) {
       if (thread->requestFlag == OSThreadRequest::Suspend) {
-         OSSuspendThreadNoLock(thread);
-         OSRescheduleNoLock();
+         suspendThreadNoLock(thread);
+         rescheduleNoLock();
       } else if (thread->requestFlag == OSThreadRequest::Cancel) {
-         OSUnlockScheduler();
+         unlockScheduler();
          OSExitThread(-1);
       }
    }
 }
 
 void
-OSWakeupOneThreadNoLock(OSThread *thread)
+wakeupOneThreadNoLock(OSThread *thread)
 {
    thread->state = OSThreadState::Ready;
    gProcessor.queue(thread->fiber);
 }
 
 void
-OSWakeupThreadNoLock(OSThreadQueue *queue)
+wakeupThreadNoLock(OSThreadQueue *queue)
 {
    for (auto thread = queue->head; thread; thread = thread->link.next) {
-      OSWakeupOneThreadNoLock(thread);
+      wakeupOneThreadNoLock(thread);
    }
 
    OSClearThreadQueue(queue);
 }
 
 void
-OSWakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
+wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
 {
    for (auto thread = queue->head; thread; thread = thread->link.next) {
       thread->suspendResult = suspendResult;
@@ -154,23 +160,17 @@ OSWakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResul
 }
 
 OSThread *
-OSGetInterruptThread(uint32_t coreID)
-{
-   if (coreID >= CoreCount) {
-      return nullptr;
-   } else {
-      return gInterruptThreads[coreID];
-   }
-}
-
-OSThread *
-OSSetInterruptThread(uint32_t core, OSThread *thread)
+setInterruptThread(uint32_t core, OSThread *thread)
 {
    assert(core < CoreCount);
    auto old = gInterruptThreads[core];
    gInterruptThreads[core] = thread;
    return old;
 }
+
+} // namespace internal
+
+} // namespace coreinit
 
 void
 InterruptThreadEntry(uint32_t core, void *arg2)

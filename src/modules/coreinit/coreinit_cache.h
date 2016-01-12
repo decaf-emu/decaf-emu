@@ -2,25 +2,32 @@
 #include "types.h"
 
 void
-DCInvalidateRange(void *addr, uint32_t size);
+DCInvalidateRange(void *addr,
+                  uint32_t size);
 
 void
-DCFlushRange(void *addr, uint32_t size);
+DCFlushRange(void *addr,
+             uint32_t size);
 
 void
-DCStoreRange(void *addr, uint32_t size);
+DCStoreRange(void *addr,
+             uint32_t size);
 
 void
-DCFlushRangeNoSync(void *addr, uint32_t size);
+DCFlushRangeNoSync(void *addr,
+                   uint32_t size);
 
 void
-DCStoreRangeNoSync(void *addr, uint32_t size);
+DCStoreRangeNoSync(void *addr,
+                   uint32_t size);
 
 void
-DCZeroRange(void *addr, uint32_t size);
+DCZeroRange(void *addr,
+            uint32_t size);
 
 void
-DCTouchRange(void *addr, uint32_t size);
+DCTouchRange(void *addr,
+             uint32_t size);
 
 void
 OSCoherencyBarrier();

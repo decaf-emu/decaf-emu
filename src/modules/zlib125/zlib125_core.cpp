@@ -64,7 +64,7 @@ zlibAllocWrapper(void *opaque, unsigned items, unsigned size)
    if (allocFunc) {
       return allocFunc(wstrm->opaque, items, size);
    } else {
-      return OSAllocFromSystem(items * size);
+      return coreinit::internal::sysAlloc(items * size);
    }
 }
 
@@ -77,7 +77,7 @@ zlibFreeWrapper(void *opaque, void *address)
    if (freeFunc) {
       freeFunc(wstrm->opaque, address);
    } else {
-      OSFreeToSystem(address);
+      coreinit::internal::sysFree(address);
    }
 }
 

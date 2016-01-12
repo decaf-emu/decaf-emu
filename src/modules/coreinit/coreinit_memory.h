@@ -18,5 +18,15 @@ OSGetForegroundBucketFreeArea(be_val<uint32_t> *addr, be_val<uint32_t> *size);
 int
 OSGetMemBound(OSMemoryType type, be_val<uint32_t> *addr, be_val<uint32_t> *size);
 
+namespace coreinit
+{
+
+namespace internal
+{
+
 int
-OSSetMemBound(OSMemoryType type, uint32_t start, uint32_t size);
+setMemBound(OSMemoryType type, uint32_t start, uint32_t size);
+
+} // namespace internal
+
+} // namespace coreinit

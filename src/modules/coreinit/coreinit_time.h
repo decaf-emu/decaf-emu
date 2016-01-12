@@ -25,9 +25,6 @@ CHECK_SIZE(OSCalendarTime, 0x18);
 
 #pragma pack(pop)
 
-extern std::chrono::time_point<std::chrono::system_clock>
-gEpochTime;
-
 // Tick is 1 nanosecond
 using OSTick = int32_t;
 
@@ -46,8 +43,24 @@ OSGetTick();
 OSTick
 OSGetSystemTick();
 
-std::chrono::time_point<std::chrono::system_clock>
-OSTimeToChrono(OSTime time);
-
 void
 OSTicksToCalendarTime(OSTime time, OSCalendarTime *calendarTime);
+
+OSTime
+OSCalendarTimeToTicks(OSCalendarTime *calendarTime);
+
+namespace coreinit
+{
+
+namespace internal
+{
+
+std::chrono::time_point<std::chrono::system_clock>
+toTimepoint(OSTime time);
+
+OSTime
+toOSTime(std::chrono::time_point<std::chrono::system_clock> chrono);
+
+} // namespace internal
+
+} // namespace coreinit

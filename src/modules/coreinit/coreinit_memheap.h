@@ -71,16 +71,25 @@ CoreFreeDefaultHeap();
 void
 CoreInitDefaultHeap();
 
-// TODO: Move These!
+namespace coreinit
+{
+
+namespace internal
+{
+
 void *
-OSAllocFromSystem(size_t size, int alignment = 4);
+sysAlloc(size_t size, int alignment = 4);
+
+void
+sysFree(void *addr);
 
 template<typename Type>
 Type *
-OSAllocFromSystem(int alignment = 4)
+sysAlloc(int alignment = 4)
 {
-   return new (OSAllocFromSystem(sizeof(Type), alignment)) Type();
+   return new (sysAlloc(sizeof(Type), alignment)) Type();
 }
 
-void
-OSFreeToSystem(void *addr);
+} // namespace internal
+
+} // namespace coreinit

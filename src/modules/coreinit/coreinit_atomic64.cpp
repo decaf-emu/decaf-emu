@@ -109,7 +109,7 @@ OSTestAndSetAtomic64(be_val<uint64_t> *ptr, uint32_t bit)
 void
 CoreInit::initialiseAtomic64()
 {
-   gAtomic64Lock = OSAllocFromSystem<OSSpinLock>();
+   gAtomic64Lock = coreinit::internal::sysAlloc<OSSpinLock>();
 }
 
 void

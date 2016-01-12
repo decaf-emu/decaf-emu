@@ -130,6 +130,6 @@ CoreInit::initialiseGHS()
 {
    *p__gh_FOPEN_MAX = GHS_FOPEN_MAX;
 
-   ghsSpinLock = OSAllocFromSystem<OSSpinLock>();
+   ghsSpinLock = coreinit::internal::sysAlloc<OSSpinLock>();
    OSInitSpinLock(ghsSpinLock);
 }

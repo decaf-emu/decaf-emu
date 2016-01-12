@@ -63,13 +63,7 @@ void
 OSLockMutex(OSMutex *mutex);
 
 void
-OSLockMutexNoLock(OSMutex *mutex);
-
-void
 OSUnlockMutex(OSMutex *mutex);
-
-void
-OSUnlockMutexNoLock(OSMutex *mutex);
 
 BOOL
 OSTryLockMutex(OSMutex *mutex);

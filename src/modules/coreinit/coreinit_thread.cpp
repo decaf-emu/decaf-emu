@@ -39,28 +39,28 @@ void
 OSCancelThread(OSThread *thread)
 {
    bool reschedule = false;
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
 
    if (thread->requestFlag == OSThreadRequest::Suspend) {
-      OSWakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
+      coreinit::internal::wakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
       reschedule = true;
    }
 
    if (thread->suspendCounter != 0) {
       if (thread->cancelState == 0) {
-         OSResumeThreadNoLock(thread, thread->suspendCounter);
+         coreinit::internal::resumeThreadNoLock(thread, thread->suspendCounter);
          reschedule = true;
       }
    }
 
    if (reschedule) {
-      OSRescheduleNoLock();
+      coreinit::internal::rescheduleNoLock();
    }
 
    thread->suspendCounter = 0;
    thread->needSuspend = 0;
    thread->requestFlag = OSThreadRequest::Cancel;
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
 
    if (OSGetCurrentThread() == thread) {
       OSExitThread(-1);
@@ -78,7 +78,7 @@ int32_t
 OSCheckThreadStackUsage(OSThread *thread)
 {
    virtual_ptr<be_val<uint32_t>> addr;
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
 
    for (addr = thread->stackEnd + 4; addr < thread->stackStart; addr += 4) {
       if (*addr != 0xfefefefe) {
@@ -87,30 +87,30 @@ OSCheckThreadStackUsage(OSThread *thread)
    }
 
    auto result = static_cast<int32_t>(thread->stackStart.getAddress()) - static_cast<int32_t>(addr.getAddress());
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return result;
 }
 
 void
 OSClearThreadStackUsage(OSThread *thread)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
 
    if (!thread) {
       thread = OSGetCurrentThread();
    }
 
    thread->attr &= ~OSThreadAttributes::StackUsage;
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
 }
 
 void
 OSContinueThread(OSThread *thread)
 {
-   OSLockScheduler();
-   OSResumeThreadNoLock(thread, thread->suspendCounter);
-   OSRescheduleNoLock();
-   OSUnlockScheduler();
+   coreinit::internal::lockScheduler();
+   coreinit::internal::resumeThreadNoLock(thread, thread->suspendCounter);
+   coreinit::internal::rescheduleNoLock();
+   coreinit::internal::unlockScheduler();
 }
 
 // Setup thread run state, shared by OSRunThread and OSCreateThread
@@ -171,16 +171,16 @@ OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *ar
 void
 OSDetachThread(OSThread *thread)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    thread->attr |= OSThreadAttributes::Detached;
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
 }
 
 void
 OSExitThread(int value)
 {
    auto thread = OSGetCurrentThread();
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    thread->exitValue = value;
    thread->fiber = nullptr;
 
@@ -190,9 +190,9 @@ OSExitThread(int value)
       thread->state = OSThreadState::Moribund;
    }
 
-   OSWakeupThreadNoLock(&thread->joinQueue);
-   OSWakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
-   OSUnlockScheduler();
+   coreinit::internal::wakeupThreadNoLock(&thread->joinQueue);
+   coreinit::internal::wakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
+   coreinit::internal::unlockScheduler();
    gProcessor.exit();
 }
 
@@ -266,23 +266,23 @@ OSIsThreadTerminated(OSThread *thread)
 BOOL
 OSJoinThread(OSThread *thread, be_val<int> *val)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
 
    if (thread->attr & OSThreadAttributes::Detached) {
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return FALSE;
    }
 
    if (thread->state != OSThreadState::Moribund) {
-      OSSleepThreadNoLock(&thread->joinQueue);
-      OSRescheduleNoLock();
+      coreinit::internal::sleepThreadNoLock(&thread->joinQueue);
+      coreinit::internal::rescheduleNoLock();
    }
 
    if (val) {
       *val = thread->exitValue;
    }
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return TRUE;
 }
 
@@ -330,14 +330,14 @@ OSPrintCurrentThreadState()
 int32_t
 OSResumeThread(OSThread *thread)
 {
-   OSLockScheduler();
-   auto old = OSResumeThreadNoLock(thread, 1);
+   coreinit::internal::lockScheduler();
+   auto old = coreinit::internal::resumeThreadNoLock(thread, 1);
 
    if (thread->suspendCounter == 0) {
-      OSRescheduleNoLock();
+      coreinit::internal::rescheduleNoLock();
    }
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return old;
 }
 
@@ -345,16 +345,16 @@ BOOL
 OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv)
 {
    BOOL result = FALSE;
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
 
    if (OSIsThreadTerminated(thread)) {
       InitialiseThreadState(thread, entry, argc, argv);
-      OSResumeThreadNoLock(thread, 1);
-      OSRescheduleNoLock();
+      coreinit::internal::resumeThreadNoLock(thread, 1);
+      coreinit::internal::rescheduleNoLock();
       result = TRUE;
    }
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return result;
 }
 
@@ -370,11 +370,11 @@ OSSetDefaultThread(uint32_t core, OSThread *thread)
 BOOL
 OSSetThreadAffinity(OSThread *thread, uint32_t affinity)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    thread->attr &= ~OSThreadAttributes::AffinityAny;
    thread->attr |= affinity;
-   OSRescheduleNoLock();
-   OSUnlockScheduler();
+   coreinit::internal::rescheduleNoLock();
+   coreinit::internal::unlockScheduler();
    return TRUE;
 }
 
@@ -400,10 +400,10 @@ OSSetThreadPriority(OSThread *thread, uint32_t priority)
       return FALSE;
    }
 
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    thread->basePriority = priority;
-   OSRescheduleNoLock();
-   OSUnlockScheduler();
+   coreinit::internal::rescheduleNoLock();
+   coreinit::internal::unlockScheduler();
    return TRUE;
 }
 
@@ -425,57 +425,57 @@ OSSetThreadSpecific(uint32_t id, uint32_t value)
 BOOL
 OSSetThreadStackUsage(OSThread *thread)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
 
    if (!thread) {
       thread = OSGetCurrentThread();
    } else if (thread->state == OSThreadState::Running) {
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return FALSE;
    }
 
    __OSClearThreadStack32(thread, 0xfefefefe);
    thread->attr |= OSThreadAttributes::StackUsage;
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return TRUE;
 }
 
 void
 OSSleepThread(OSThreadQueue *queue)
 {
-   OSLockScheduler();
-   OSSleepThreadNoLock(queue);
-   OSRescheduleNoLock();
-   OSUnlockScheduler();
+   coreinit::internal::lockScheduler();
+   coreinit::internal::sleepThreadNoLock(queue);
+   coreinit::internal::rescheduleNoLock();
+   coreinit::internal::unlockScheduler();
 }
 
 void
 OSSleepTicks(OSTime ticks)
 {
    // Create an alarm to trigger wakeup
-   auto alarm = OSAllocFromSystem<OSAlarm>();
+   auto alarm = coreinit::internal::sysAlloc<OSAlarm>();
    OSCreateAlarm(alarm);
    OSSetAlarm(alarm, ticks, nullptr);
 
    // Sleep thread
    OSWaitAlarm(alarm);
 
-   OSFreeToSystem(alarm);
+   coreinit::internal::sysFree(alarm);
 }
 
 uint32_t
 OSSuspendThread(OSThread *thread)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    int32_t result;
 
    if (thread->state == OSThreadState::Moribund || thread->state == OSThreadState::None) {
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return -1;
    }
 
    if (thread->requestFlag == OSThreadRequest::Cancel) {
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return -1;
    }
 
@@ -483,44 +483,44 @@ OSSuspendThread(OSThread *thread)
 
    if (curThread == thread) {
       if (thread->cancelState) {
-         OSUnlockScheduler();
+         coreinit::internal::unlockScheduler();
          return -1;
       }
 
       thread->needSuspend++;
       result = thread->suspendCounter;
-      OSSuspendThreadNoLock(thread);
-      OSRescheduleNoLock();
+      coreinit::internal::suspendThreadNoLock(thread);
+      coreinit::internal::rescheduleNoLock();
    } else {
       if (thread->suspendCounter != 0) {
          result = thread->suspendCounter++;
       } else {
          thread->needSuspend++;
          thread->requestFlag = OSThreadRequest::Suspend;
-         OSSleepThreadNoLock(&thread->suspendQueue);
-         OSRescheduleNoLock();
+         coreinit::internal::sleepThreadNoLock(&thread->suspendQueue);
+         coreinit::internal::rescheduleNoLock();
          result = thread->suspendResult;
       }
    }
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return result;
 }
 
 void
 OSTestThreadCancel()
 {
-   OSLockScheduler();
-   OSTestThreadCancelNoLock();
-   OSUnlockScheduler();
+   coreinit::internal::lockScheduler();
+   coreinit::internal::testThreadCancelNoLock();
+   coreinit::internal::unlockScheduler();
 }
 
 void
 OSWakeupThread(OSThreadQueue *queue)
 {
-   OSLockScheduler();
-   OSWakeupThreadNoLock(queue);
-   OSUnlockScheduler();
+   coreinit::internal::lockScheduler();
+   coreinit::internal::wakeupThreadNoLock(queue);
+   coreinit::internal::unlockScheduler();
 }
 
 void

@@ -6,20 +6,19 @@
 #include "utils/wfunc_call.h"
 #include "memory_translate.h"
 #include "system.h"
-#include "utils/be_data.h"
 #include "utils/be_val.h"
 #include "utils/virtual_ptr.h"
 #include "utils/wfunc_ptr.h"
 
 static wfunc_ptr<int, int, int, be_val<uint32_t>*>
-pOSDynLoad_MemAlloc;
+gMemAlloc;
 
 static wfunc_ptr<void, void *>
-pOSDynLoad_MemFree;
+gMemFree;
 
 
 /**
- * Default implementation for pOSDynLoad_MemAlloc
+ * Default implementation for gMemAlloc
  */
 static int
 MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
@@ -32,8 +31,8 @@ MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 
 
 /**
-* Default implementation for pOSDynLoad_MemFree
-*/
+ * Default implementation for gMemFree
+ */
 static void
 MEM_DynLoad_DefaultFree(uint8_t *addr)
 {
@@ -52,44 +51,21 @@ OSDynLoad_SetAllocator(ppcaddr_t allocFn, ppcaddr_t freeFn)
       return 0xBAD10017;
    }
 
-   pOSDynLoad_MemAlloc = allocFn;
-   pOSDynLoad_MemFree = freeFn;
+   gMemAlloc = allocFn;
+   gMemFree = freeFn;
    return 0;
 }
 
 
 /**
-* Return the allocators set by OSDynLoad_SetAllocator.
-*/
+ * Return the allocators set by OSDynLoad_SetAllocator.
+ */
 int
 OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn, be_val<ppcaddr_t> *outFreeFn)
 {
-   *outAllocFn = static_cast<ppcaddr_t>(pOSDynLoad_MemAlloc);
-   *outFreeFn = static_cast<ppcaddr_t>(pOSDynLoad_MemFree);
+   *outAllocFn = static_cast<ppcaddr_t>(gMemAlloc);
+   *outFreeFn = static_cast<ppcaddr_t>(gMemFree);
    return 0;
-}
-
-
-/**
- * Wrapper func to call function pointer set by OSDynLoad_SetAllocator
- */
-int
-OSDynLoad_MemAlloc(int size, int alignment, void **outPtr)
-{
-   be_data<uint32_t> value;
-   auto result = pOSDynLoad_MemAlloc(size, alignment, &value);
-   *outPtr = memory_translate(value);
-   return result;
-}
-
-
-/**
- * Wrapper func to call function pointer set by OSDynLoad_SetAllocator
- */
-void
-OSDynLoad_MemFree(void *addr)
-{
-   pOSDynLoad_MemFree(addr);
 }
 
 
@@ -147,6 +123,13 @@ OSDynLoad_Release(LoadedModuleHandleData *handle)
 }
 
 void
+CoreInit::initialiseDynLoad()
+{
+   gMemAlloc = findExportAddress("MEM_DynLoad_DefaultAlloc");
+   gMemFree = findExportAddress("MEM_DynLoad_DefaultFree");
+}
+
+void
 CoreInit::registerDynLoadFunctions()
 {
    RegisterKernelFunction(OSDynLoad_Acquire);
@@ -158,9 +141,35 @@ CoreInit::registerDynLoadFunctions()
    RegisterKernelFunction(MEM_DynLoad_DefaultFree);
 }
 
-void
-CoreInit::initialiseDynLoad()
+namespace coreinit
 {
-   pOSDynLoad_MemAlloc = findExportAddress("MEM_DynLoad_DefaultAlloc");
-   pOSDynLoad_MemFree = findExportAddress("MEM_DynLoad_DefaultFree");
+
+namespace internal
+{
+
+/**
+ * Wrapper func to call function pointer set by OSDynLoad_SetAllocator
+ */
+int
+dynLoadMemAlloc(int size, int alignment, void **outPtr)
+{
+   auto value = coreinit::internal::sysAlloc<be_val<ppcaddr_t>>();
+   auto result = gMemAlloc(size, alignment, value);
+   *outPtr = memory_translate(*value);
+   coreinit::internal::sysFree(value);
+   return result;
 }
+
+
+/**
+ * Wrapper func to call function pointer set by OSDynLoad_SetAllocator
+ */
+void
+dynLoadMemFree(void *addr)
+{
+   gMemFree(addr);
+}
+
+} // namespace internal
+
+} // namespace coreinit

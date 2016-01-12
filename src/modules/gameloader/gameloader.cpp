@@ -47,9 +47,9 @@ GameLoaderRun()
 
    // Create default threads
    for (auto i = 0u; i < CoreCount; ++i) {
-      auto thread = OSAllocFromSystem<OSThread>();
+      auto thread = coreinit::internal::sysAlloc<OSThread>();
       auto stackSize = appModule->defaultStackSize;
-      auto stack = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+      auto stack = reinterpret_cast<uint8_t*>(coreinit::internal::sysAlloc(stackSize, 8));
       auto name = OSStringFromSystem(fmt::format("Default Thread {}", i));
 
       OSCreateThread(thread, 0u, 0, nullptr,
@@ -61,15 +61,15 @@ GameLoaderRun()
 
    // Create interrupt threads
    for (auto i = 0u; i < CoreCount; ++i) {
-      auto thread = OSAllocFromSystem<OSThread>();
+      auto thread = coreinit::internal::sysAlloc<OSThread>();
       auto stackSize = 16 * 1024;
-      auto stack = reinterpret_cast<uint8_t*>(OSAllocFromSystem(stackSize, 8));
+      auto stack = reinterpret_cast<uint8_t*>(coreinit::internal::sysAlloc(stackSize, 8));
       auto name = OSStringFromSystem(fmt::format("Interrupt Thread {}", i));
 
       OSCreateThread(thread, InterruptThreadEntryPoint, i, nullptr,
                      reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, -1,
                      static_cast<OSThreadAttributes::Flags>(1 << i));
-      OSSetInterruptThread(i, thread);
+      coreinit::internal::setInterruptThread(i, thread);
       OSSetThreadName(thread, name);
       OSResumeThread(thread);
    }
@@ -85,7 +85,7 @@ GameLoaderRun()
          be_ptr<CommonHeap> mem2Heap;
       };
 
-      HeapHandles *wiiHandles = OSAllocFromSystem<HeapHandles>();
+      auto wiiHandles = coreinit::internal::sysAlloc<HeapHandles>();
       wiiHandles->mem1Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM1);
       wiiHandles->fgHeap = MEMGetBaseHeapHandle(MEMBaseHeapType::FG);
       wiiHandles->mem2Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
@@ -95,7 +95,7 @@ GameLoaderRun()
       MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, wiiHandles->mem1Heap);
       MEMSetBaseHeapHandle(MEMBaseHeapType::FG, wiiHandles->fgHeap);
       MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, wiiHandles->mem2Heap);
-      OSFreeToSystem(wiiHandles);
+      coreinit::internal::sysFree(wiiHandles);
    }
 
    // Run thread 1

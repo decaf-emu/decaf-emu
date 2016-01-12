@@ -33,20 +33,20 @@ OSInitMessageQueueEx(OSMessageQueue *queue, OSMessage *messages, int32_t size, c
 BOOL
 OSSendMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(queue && queue->tag == OSMessageQueue::Tag);
    assert(message);
 
    if (!(flags & OSMessageFlags::Blocking) && queue->used == queue->size) {
       // Do not block waiting for space to insert message
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return FALSE;
    }
 
    // Wait for space in the message queue
    while (queue->used == queue->size) {
-      OSSleepThreadNoLock(&queue->sendQueue);
-      OSRescheduleNoLock();
+      coreinit::internal::sleepThreadNoLock(&queue->sendQueue);
+      coreinit::internal::rescheduleNoLock();
    }
 
    // Copy into message array
@@ -56,30 +56,30 @@ OSSendMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
    queue->used++;
 
    // Wakeup threads waiting to read message
-   OSWakeupThreadNoLock(&queue->recvQueue);
-   OSRescheduleNoLock();
+   coreinit::internal::wakeupThreadNoLock(&queue->recvQueue);
+   coreinit::internal::rescheduleNoLock();
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return TRUE;
 }
 
 BOOL
 OSJamMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(queue && queue->tag == OSMessageQueue::Tag);
    assert(message);
 
    if (!(flags & OSMessageFlags::Blocking) && queue->used == queue->size) {
       // Do not block waiting for space to insert message
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return FALSE;
    }
 
    // Wait for space in the message queue
    while (queue->used == queue->size) {
-      OSSleepThreadNoLock(&queue->sendQueue);
-      OSRescheduleNoLock();
+      coreinit::internal::sleepThreadNoLock(&queue->sendQueue);
+      coreinit::internal::rescheduleNoLock();
    }
 
    if (queue->first == 0) {
@@ -94,30 +94,30 @@ OSJamMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
    queue->used++;
 
    // Wakeup threads waiting to read message
-   OSWakeupThreadNoLock(&queue->recvQueue);
-   OSRescheduleNoLock();
+   coreinit::internal::wakeupThreadNoLock(&queue->recvQueue);
+   coreinit::internal::rescheduleNoLock();
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return TRUE;
 }
 
 BOOL
 OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(queue && queue->tag == OSMessageQueue::Tag);
    assert(message);
 
    if (!(flags & OSMessageFlags::Blocking) && queue->used == 0) {
       // Do not block waiting for a message to arrive
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return FALSE;
    }
 
    // Wait for a message to appear in queue
    while (queue->used == 0) {
-      OSSleepThreadNoLock(&queue->recvQueue);
-      OSRescheduleNoLock();
+      coreinit::internal::sleepThreadNoLock(&queue->recvQueue);
+      coreinit::internal::rescheduleNoLock();
    }
 
    // Copy into message array
@@ -127,29 +127,29 @@ OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags
    queue->used--;
 
    // Wakeup threads waiting for space to send message
-   OSWakeupThreadNoLock(&queue->sendQueue);
-   OSRescheduleNoLock();
+   coreinit::internal::wakeupThreadNoLock(&queue->sendQueue);
+   coreinit::internal::rescheduleNoLock();
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return TRUE;
 }
 
 BOOL
 OSPeekMessage(OSMessageQueue *queue, OSMessage *message)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(queue && queue->tag == OSMessageQueue::Tag);
    assert(message);
 
    if (queue->used == 0) {
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return FALSE;
    }
 
    auto src = static_cast<OSMessage*>(queue->messages) + queue->first;
    memcpy(message, src, sizeof(OSMessage));
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return TRUE;
 }
 
@@ -174,7 +174,7 @@ CoreInit::registerMessageQueueFunctions()
 void
 CoreInit::initialiseMessageQueues()
 {
-   gSystemMessageQueue = OSAllocFromSystem<OSMessageQueue>();
-   gSystemMessageArray = reinterpret_cast<OSMessage*>(OSAllocFromSystem(16 * sizeof(OSMessage)));
+   gSystemMessageQueue = coreinit::internal::sysAlloc<OSMessageQueue>();
+   gSystemMessageArray = reinterpret_cast<OSMessage*>(coreinit::internal::sysAlloc(16 * sizeof(OSMessage)));
    OSInitMessageQueue(gSystemMessageQueue, gSystemMessageArray, 16);
 }

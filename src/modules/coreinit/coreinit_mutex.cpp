@@ -24,17 +24,8 @@ OSInitMutexEx(OSMutex *mutex, const char *name)
    OSInitQueueLink(&mutex->link);
 }
 
-void
-OSLockMutex(OSMutex *mutex)
-{
-   OSLockScheduler();
-   OSTestThreadCancelNoLock();
-   OSLockMutexNoLock(mutex);
-   OSUnlockScheduler();
-}
-
-void
-OSLockMutexNoLock(OSMutex *mutex)
+static void
+lockMutexNoLock(OSMutex *mutex)
 {
    assert(mutex && mutex->tag == OSMutex::Tag);
    auto thread = OSGetCurrentThread();
@@ -43,8 +34,8 @@ OSLockMutexNoLock(OSMutex *mutex)
       thread->mutex = mutex;
 
       // Wait for other owner to unlock
-      OSSleepThreadNoLock(&mutex->queue);
-      OSRescheduleNoLock();
+      coreinit::internal::sleepThreadNoLock(&mutex->queue);
+      coreinit::internal::rescheduleNoLock();
 
       thread->mutex = nullptr;
    }
@@ -58,16 +49,25 @@ OSLockMutexNoLock(OSMutex *mutex)
    mutex->count++;
 }
 
+void
+OSLockMutex(OSMutex *mutex)
+{
+   coreinit::internal::lockScheduler();
+   coreinit::internal::testThreadCancelNoLock();
+   lockMutexNoLock(mutex);
+   coreinit::internal::unlockScheduler();
+}
+
 BOOL
 OSTryLockMutex(OSMutex *mutex)
 {
    auto thread = OSGetCurrentThread();
-   OSLockScheduler();
-   OSTestThreadCancelNoLock();
+   coreinit::internal::lockScheduler();
+   coreinit::internal::testThreadCancelNoLock();
 
    if (mutex->owner && mutex->owner != thread) {
       // Someone else owns this mutex
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return FALSE;
    }
 
@@ -78,22 +78,13 @@ OSTryLockMutex(OSMutex *mutex)
 
    mutex->owner = thread;
    mutex->count++;
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
 
    return TRUE;
 }
 
-void
-OSUnlockMutex(OSMutex *mutex)
-{
-   OSLockScheduler();
-   OSUnlockMutexNoLock(mutex);
-   OSTestThreadCancelNoLock();
-   OSUnlockScheduler();
-}
-
-void
-OSUnlockMutexNoLock(OSMutex *mutex)
+static void
+unlockMutexNoLock(OSMutex *mutex)
 {
    auto thread = OSGetCurrentThread();
    assert(mutex && mutex->tag == OSMutex::Tag);
@@ -108,9 +99,18 @@ OSUnlockMutexNoLock(OSMutex *mutex)
       OSEraseFromQueue(&thread->mutexQueue, mutex);
 
       // Wakeup any threads trying to lock this mutex
-      OSWakeupThreadNoLock(&mutex->queue);
-      OSRescheduleNoLock();
+      coreinit::internal::wakeupThreadNoLock(&mutex->queue);
+      coreinit::internal::rescheduleNoLock();
    }
+}
+
+void
+OSUnlockMutex(OSMutex *mutex)
+{
+   coreinit::internal::lockScheduler();
+   unlockMutexNoLock(mutex);
+   coreinit::internal::testThreadCancelNoLock();
+   coreinit::internal::unlockScheduler();
 }
 
 void
@@ -131,7 +131,7 @@ void
 OSWaitCond(OSCondition *condition, OSMutex *mutex)
 {
    auto thread = OSGetCurrentThread();
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(mutex && mutex->tag == OSMutex::Tag);
    assert(condition && condition->tag == OSCondition::Tag);
    assert(mutex->owner == thread);
@@ -139,17 +139,17 @@ OSWaitCond(OSCondition *condition, OSMutex *mutex)
    // Force an unlock
    auto mutexCount = mutex->count;
    mutex->count = 1;
-   OSUnlockMutexNoLock(mutex);
+   unlockMutexNoLock(mutex);
 
    // Sleep on the condition
-   OSSleepThreadNoLock(&condition->queue);
-   OSRescheduleNoLock();
+   coreinit::internal::sleepThreadNoLock(&condition->queue);
+   coreinit::internal::rescheduleNoLock();
 
    // Restore lock
-   OSLockMutexNoLock(mutex);
+   lockMutexNoLock(mutex);
    mutex->count = mutexCount;
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
 }
 
 void

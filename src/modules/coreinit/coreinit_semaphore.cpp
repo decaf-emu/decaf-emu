@@ -23,17 +23,17 @@ int32_t
 OSWaitSemaphore(OSSemaphore *semaphore)
 {
    int32_t previous;
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    while (semaphore->count <= 0) {
       // Wait until we can decrease semaphore
-      OSSleepThreadNoLock(&semaphore->queue);
-      OSRescheduleNoLock();
+      coreinit::internal::sleepThreadNoLock(&semaphore->queue);
+      coreinit::internal::rescheduleNoLock();
    }
 
    previous = semaphore->count--;
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return previous;
 }
 
@@ -41,7 +41,7 @@ int32_t
 OSTryWaitSemaphore(OSSemaphore *semaphore)
 {
    int32_t previous;
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    // Try to decrease semaphore
@@ -51,7 +51,7 @@ OSTryWaitSemaphore(OSSemaphore *semaphore)
       semaphore->count--;
    }
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return previous;
 }
 
@@ -59,17 +59,17 @@ int32_t
 OSSignalSemaphore(OSSemaphore *semaphore)
 {
    int32_t previous;
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    // Increase semaphore
    previous =  semaphore->count++;
 
    // Wakeup any waiting threads
-   OSWakeupThreadNoLock(&semaphore->queue);
-   OSRescheduleNoLock();
+   coreinit::internal::wakeupThreadNoLock(&semaphore->queue);
+   coreinit::internal::rescheduleNoLock();
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return previous;
 }
 
@@ -77,13 +77,13 @@ int32_t
 OSGetSemaphoreCount(OSSemaphore *semaphore)
 {
    int32_t count;
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    assert(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    // Return count
    count = semaphore->count;
 
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return count;
 }
 

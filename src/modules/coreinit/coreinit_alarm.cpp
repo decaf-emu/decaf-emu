@@ -177,7 +177,7 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
    OSAppendQueue(queue, alarm);
 
    // Set the interrupt timer in processor
-   gProcessor.setInterruptTimer(core, OSTimeToChrono(alarm->nextFire));
+   gProcessor.setInterruptTimer(core, coreinit::internal::toTimepoint(alarm->nextFire));
    return TRUE;
 }
 
@@ -212,7 +212,7 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data)
 BOOL
 OSWaitAlarm(OSAlarm *alarm)
 {
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    OSUninterruptibleSpinLock_Acquire(gAlarmLock);
    BOOL result = FALSE;
    assert(alarm);
@@ -220,13 +220,13 @@ OSWaitAlarm(OSAlarm *alarm)
 
    if (alarm->state != OSAlarmState::Set) {
       OSUninterruptibleSpinLock_Release(gAlarmLock);
-      OSUnlockScheduler();
+      coreinit::internal::unlockScheduler();
       return FALSE;
    }
 
-   OSSleepThreadNoLock(&alarm->threadQueue);
+   coreinit::internal::sleepThreadNoLock(&alarm->threadQueue);
    OSUninterruptibleSpinLock_Release(gAlarmLock);
-   OSRescheduleNoLock();
+   coreinit::internal::rescheduleNoLock();
 
    OSUninterruptibleSpinLock_Acquire(gAlarmLock);
 
@@ -235,18 +235,18 @@ OSWaitAlarm(OSAlarm *alarm)
    }
 
    OSUninterruptibleSpinLock_Release(gAlarmLock);
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    return result;
 }
 
 
 /**
-* Internal alarm handler.
-*
-* Resets the alarm state.
-* Calls the users callback.
-* Wakes up any threads waiting on the alarm.
-*/
+ * Internal alarm handler.
+ *
+ * Resets the alarm state.
+ * Calls the users callback.
+ * Wakes up any threads waiting on the alarm.
+ */
 static void
 triggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
 {
@@ -267,7 +267,7 @@ triggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
       OSUninterruptibleSpinLock_Acquire(gAlarmLock);
    }
 
-   OSWakeupThreadNoLock(&alarm->threadQueue);
+   coreinit::internal::wakeupThreadNoLock(&alarm->threadQueue);
 }
 
 
@@ -289,7 +289,7 @@ checkAlarms(uint32_t core, OSContext *context)
    auto now = OSGetTime();
    auto next = std::chrono::time_point<std::chrono::system_clock>::max();
 
-   OSLockScheduler();
+   coreinit::internal::lockScheduler();
    OSUninterruptibleSpinLock_Acquire(gAlarmLock);
 
    for (OSAlarm *alarm = queue->head; alarm; ) {
@@ -302,7 +302,7 @@ checkAlarms(uint32_t core, OSContext *context)
 
       // Set next timer if alarm is set
       if (alarm->state == OSAlarmState::Set && alarm->nextFire) {
-         auto nextFire = OSTimeToChrono(alarm->nextFire);
+         auto nextFire = coreinit::internal::toTimepoint(alarm->nextFire);
 
          if (nextFire < next) {
             next = nextFire;
@@ -313,7 +313,7 @@ checkAlarms(uint32_t core, OSContext *context)
    }
 
    OSUninterruptibleSpinLock_Release(gAlarmLock);
-   OSUnlockScheduler();
+   coreinit::internal::unlockScheduler();
    gProcessor.setInterruptTimer(core, next);
 }
 
@@ -343,10 +343,10 @@ CoreInit::registerAlarmFunctions()
 void
 CoreInit::initialiseAlarm()
 {
-   gAlarmLock = OSAllocFromSystem<OSSpinLock>();
+   gAlarmLock = coreinit::internal::sysAlloc<OSSpinLock>();
 
    for (auto i = 0u; i < CoreCount; ++i) {
-      gAlarmQueue[i] = OSAllocFromSystem<OSAlarmQueue>();
+      gAlarmQueue[i] = coreinit::internal::sysAlloc<OSAlarmQueue>();
       OSInitAlarmQueue(gAlarmQueue[i]);
    }
 }

@@ -229,7 +229,7 @@ Loader::initialise(ppcsize_t maxCodeSize)
    mCodeHeap = std::make_unique<TeenyHeap>(mem::translate(mem2start), maxCodeSize);
 
    // Update MEM2 to ignore the code heap region
-   OSSetMemBound(OSMemoryType::MEM2, mem2start + maxCodeSize, mem2size - maxCodeSize);
+   coreinit::internal::setMemBound(OSMemoryType::MEM2, mem2start + maxCodeSize, mem2size - maxCodeSize);
 }
 
 
@@ -319,12 +319,12 @@ Loader::loadKernelModule(const std::string &name, KernelModule *module)
    // Create module
    auto loadedMod = std::make_unique<LoadedModule>();
    loadedMod->name = name;
-   loadedMod->handle = OSAllocFromSystem<LoadedModuleHandleData>();
+   loadedMod->handle = coreinit::internal::sysAlloc<LoadedModuleHandleData>();
    loadedMod->handle->ptr = loadedMod.get();
 
    // Load code section
    if (codeSize > 0) {
-      auto codeRegion = static_cast<uint8_t*>(OSAllocFromSystem(codeSize, 4));
+      auto codeRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(codeSize, 4));
       auto start = mem::untranslate(codeRegion);
       auto end = start + codeSize;
       loadedMod->sections.emplace_back(LoadedSection { ".text", start, end });
@@ -355,7 +355,7 @@ Loader::loadKernelModule(const std::string &name, KernelModule *module)
 
    // Load data section
    if (dataSize > 0) {
-      auto dataRegion = static_cast<uint8_t*>(OSAllocFromSystem(dataSize, 4));
+      auto dataRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(dataSize, 4));
       auto start = mem::untranslate(dataRegion);
       auto end = start + codeSize;
       loadedMod->sections.emplace_back(LoadedSection { ".data", start, end });
@@ -413,7 +413,7 @@ Loader::registerUnimplementedFunction(const std::string &module, const std::stri
    }
 
    auto id = gSystem.registerUnimplementedFunction(module, func);
-   auto thunk = static_cast<uint32_t*>(OSAllocFromSystem(8, 4));
+   auto thunk = static_cast<uint32_t*>(coreinit::internal::sysAlloc(8, 4));
    auto addr = mem::untranslate(thunk);
 
    // Write syscall thunk
@@ -712,9 +712,9 @@ Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
 
    readFileInfo(in, sections, info);
    codeSegAddr = mCodeHeap->alloc(info.textSize, info.textAlign);
-   loadSegAddr = OSAllocFromSystem(info.loadSize, info.loadAlign);
+   loadSegAddr = coreinit::internal::sysAlloc(info.loadSize, info.loadAlign);
 
-   if (OSDynLoad_MemAlloc(info.dataSize, info.dataAlign, &dataSegAddr) != 0) {
+   if (coreinit::internal::dynLoadMemAlloc(info.dataSize, info.dataAlign, &dataSegAddr) != 0) {
       dataSegAddr = nullptr;
    }
 
@@ -827,13 +827,13 @@ Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
    }
 
    // Free the load segment
-   OSFreeToSystem(loadSegAddr);
+   coreinit::internal::sysFree(loadSegAddr);
    //mCodeHeap->free(loadSegAddr);
 
    loadedMod->name = name;
    loadedMod->defaultStackSize = info.stackSize;
    loadedMod->entryPoint = entryPoint;
-   loadedMod->handle = OSAllocFromSystem<LoadedModuleHandleData>();
+   loadedMod->handle = coreinit::internal::sysAlloc<LoadedModuleHandleData>();
    loadedMod->handle->ptr = loadedMod.get();
    return loadedMod;
 }
