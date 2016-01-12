@@ -93,7 +93,7 @@ GX2DebugDumpTexture(const GX2Texture *texture)
 
 template<typename ShaderType>
 static void
-GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader)
+GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader, latte::Shader::Type shaderType)
 {
    std::string output;
 
@@ -106,11 +106,17 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderT
 
    GX2DebugDumpData("dump/" + filename + ".bin", shader->data, shader->size);
 
+   // Write GSH file
+   gfd::File gsh;
+   gsh.add(shader);
+   gsh.write("dump/" + filename + ".gsh");
+
    // Write text of shader to shader_pixel_X.txt
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
 
    // Disassemble
    latte::Shader decoded;
+   decoded.type = shaderType;
    latte::decode(decoded, gsl::as_span(shader->data.get(), shader->size));
    latte::disassemble(decoded, output);
 
@@ -127,11 +133,6 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderT
    file
       << "Decompiled:" << std::endl
       << output << std::endl;
-
-   // Write GSH file
-   gfd::File gsh;
-   gsh.add(shader);
-   gsh.write("dump/" + filename + ".gsh");
 }
 
 static void
@@ -188,7 +189,8 @@ GX2DebugDumpShader(GX2FetchShader *shader)
 
    GX2DebugDumpShader("shader_fetch_" + GX2PointerAsString(shader),
                       out.str(),
-                      shader);
+                      shader,
+                      latte::Shader::Fetch);
 }
 
 void
@@ -212,7 +214,8 @@ GX2DebugDumpShader(GX2PixelShader *shader)
 
    GX2DebugDumpShader("shader_pixel_" + GX2PointerAsString(shader),
                       out.str(),
-                      shader);
+                      shader,
+                      latte::Shader::Pixel);
 }
 
 void
@@ -236,5 +239,6 @@ GX2DebugDumpShader(GX2VertexShader *shader)
 
    GX2DebugDumpShader("shader_vertex_" + GX2PointerAsString(shader),
                       out.str(),
-                      shader);
+                      shader,
+                      latte::Shader::Vertex);
 }
