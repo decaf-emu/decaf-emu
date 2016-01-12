@@ -13,4 +13,5 @@ void
 NN_temp::RegisterFunctions()
 {
    registerCoreFunctions();
+   registerDirFunctions();
 }

@@ -2,6 +2,7 @@
 #include "modules/coreinit/coreinit_fs.h"
 
 using TempStatus = FSStatus;
+using TempDirID = uint64_t;
 
 TempStatus
 TEMPInit();

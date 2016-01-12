@@ -801,6 +801,9 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_fs_stat.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\nn_temp\nn_temp_dir.cpp">
+      <Filter>Source Files\modules\nn_temp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1138,9 +1141,6 @@
     </ClInclude>
     <ClInclude Include="..\src\hostlookup.h">
       <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\be_data.h">
-      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\be_val.h">
       <Filter>Header Files\utils</Filter>
@@ -1540,6 +1540,9 @@
     </ClInclude>
     <ClInclude Include="..\src\filesystem\filesystem_link_file.h">
       <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_temp\nn_temp_dir.h">
+      <Filter>Header Files\modules\nn_temp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

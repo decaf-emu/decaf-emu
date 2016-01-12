@@ -290,6 +290,7 @@
     <ClCompile Include="..\src\modules\nn_save\nn_save_file.cpp" />
     <ClCompile Include="..\src\modules\nn_temp\nn_temp.cpp" />
     <ClCompile Include="..\src\modules\nn_temp\nn_temp_core.cpp" />
+    <ClCompile Include="..\src\modules\nn_temp\nn_temp_dir.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore_kpad.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore_kpad_status.cpp" />
@@ -460,6 +461,7 @@
     <ClInclude Include="..\src\modules\nn_save\nn_save_file.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp_core.h" />
+    <ClInclude Include="..\src\modules\nn_temp\nn_temp_dir.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_kpad_status.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core_ai.h" />
@@ -556,7 +558,6 @@
     <ClInclude Include="..\src\kernelfunction.h" />
     <ClInclude Include="..\src\kernelmodule.h" />
     <ClInclude Include="..\src\utils\be_array.h" />
-    <ClInclude Include="..\src\utils\be_data.h" />
     <ClInclude Include="..\src\utils\be_val.h" />
     <ClInclude Include="..\src\utils\be_vec.h" />
     <ClInclude Include="..\src\utils\be_volatile.h" />
