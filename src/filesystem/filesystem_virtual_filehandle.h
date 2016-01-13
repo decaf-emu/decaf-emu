@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <cstring>
 #include <vector>
 #include "filesystem_filehandle.h"
 #include "filesystem_file.h"

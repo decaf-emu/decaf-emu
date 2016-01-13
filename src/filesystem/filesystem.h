@@ -53,7 +53,7 @@ public:
       auto parent = findNode(path.parentPath());
 
       if (!parent || parent->type != Node::FolderNode) {
-         return nullptr;
+         return false;
       }
 
       auto folder = reinterpret_cast<Folder *>(parent);

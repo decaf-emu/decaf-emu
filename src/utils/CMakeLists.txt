@@ -8,7 +8,6 @@ set(SOURCE_FILES
 set(HEADER_FILES
     align.h
     be_array.h
-    be_data.h
     be_val.h
     be_vec.h
     be_volatile.h

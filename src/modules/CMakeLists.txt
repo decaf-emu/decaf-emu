@@ -1,11 +1,11 @@
 include_directories(".")
 
 set(SOURCE_FILES
-    coreinit/coreinit.cpp
     coreinit/coreinit_alarm.cpp
     coreinit/coreinit_atomic64.cpp
     coreinit/coreinit_cache.cpp
     coreinit/coreinit_core.cpp
+    coreinit/coreinit.cpp
     coreinit/coreinit_debug.cpp
     coreinit/coreinit_device.cpp
     coreinit/coreinit_dynload.cpp
@@ -15,7 +15,12 @@ set(SOURCE_FILES
     coreinit/coreinit_expheap.cpp
     coreinit/coreinit_fastmutex.cpp
     coreinit/coreinit_frameheap.cpp
+    coreinit/coreinit_fs_client.cpp
     coreinit/coreinit_fs.cpp
+    coreinit/coreinit_fs_dir.cpp
+    coreinit/coreinit_fs_file.cpp
+    coreinit/coreinit_fs_path.cpp
+    coreinit/coreinit_fs_stat.cpp
     coreinit/coreinit_ghs.cpp
     coreinit/coreinit_lockedcache.cpp
     coreinit/coreinit_mcp.cpp
@@ -39,12 +44,12 @@ set(SOURCE_FILES
     erreula/erreula.cpp
     erreula/erreula_errorviewer.cpp
     gameloader/gameloader.cpp
-    gx2/gx2.cpp
     gx2/gx2_addrlib.cpp
     gx2/gx2_aperture.cpp
     gx2/gx2_cbpool.cpp
     gx2/gx2_clear.cpp
     gx2/gx2_contextstate.cpp
+    gx2/gx2.cpp
     gx2/gx2_dds.cpp
     gx2/gx2_debug.cpp
     gx2/gx2_display.cpp
@@ -56,7 +61,10 @@ set(SOURCE_FILES
     gx2/gx2_format.cpp
     gx2/gx2_mem.cpp
     gx2/gx2_query.cpp
+    gx2/gx2r_buffer.cpp
     gx2/gx2_registers.cpp
+    gx2/gx2r_resource.cpp
+    gx2/gx2r_surface.cpp
     gx2/gx2_sampler.cpp
     gx2/gx2_shaders.cpp
     gx2/gx2_state.cpp
@@ -65,47 +73,46 @@ set(SOURCE_FILES
     gx2/gx2_temp.cpp
     gx2/gx2_tessellation.cpp
     gx2/gx2_texture.cpp
-    gx2/gx2r_buffer.cpp
-    gx2/gx2r_resource.cpp
-    gx2/gx2r_surface.cpp
-    mic/mic.cpp
     mic/mic_core.cpp
-    nn_ac/nn_ac.cpp
+    mic/mic.cpp
     nn_ac/nn_ac_core.cpp
-    nn_act/nn_act.cpp
+    nn_ac/nn_ac.cpp
     nn_act/nn_act_core.cpp
-    nn_fp/nn_fp.cpp
+    nn_act/nn_act.cpp
     nn_fp/nn_fp_core.cpp
-    nn_nfp/nn_nfp.cpp
+    nn_fp/nn_fp.cpp
     nn_nfp/nn_nfp_core.cpp
+    nn_nfp/nn_nfp.cpp
     nn_result.cpp
-    nn_save/nn_save.cpp
     nn_save/nn_save_core.cpp
+    nn_save/nn_save.cpp
+    nn_save/nn_save_dir.cpp
     nn_save/nn_save_file.cpp
-    nn_temp/nn_temp.cpp
     nn_temp/nn_temp_core.cpp
+    nn_temp/nn_temp_dir.cpp
+    nn_temp/nn_temp.cpp
     padscore/padscore.cpp
     padscore/padscore_kpad.cpp
     padscore/padscore_kpad_status.cpp
     padscore/padscore_wpad.cpp
-    proc_ui/proc_ui.cpp
     proc_ui/proc_ui_core.cpp
-    snd_core/snd_core.cpp
+    proc_ui/proc_ui.cpp
     snd_core/snd_core_ai.cpp
     snd_core/snd_core_core.cpp
+    snd_core/snd_core.cpp
     snd_core/snd_core_device.cpp
-    swkbd/swkbd.cpp
     swkbd/swkbd_core.cpp
+    swkbd/swkbd.cpp
     sysapp/sysapp.cpp
     sysapp/sysapp_title.cpp
-    vpad/vpad.cpp
     vpad/vpad_core.cpp
+    vpad/vpad.cpp
     vpad/vpad_status.cpp
-    zlib125/zlib125.cpp
     zlib125/zlib125_core.cpp
+    zlib125/zlib125.cpp
     )
+
 set(HEADER_FILES
-    coreinit/coreinit.h
     coreinit/coreinit_alarm.h
     coreinit/coreinit_atomic64.h
     coreinit/coreinit_cache.h
@@ -116,11 +123,18 @@ set(HEADER_FILES
     coreinit/coreinit_enum.h
     coreinit/coreinit_event.h
     coreinit/coreinit_exception.h
+    coreinit/coreinit_exit.h
     coreinit/coreinit_expheap.h
     coreinit/coreinit_fastmutex.h
     coreinit/coreinit_frameheap.h
+    coreinit/coreinit_fs_client.h
+    coreinit/coreinit_fs_dir.h
+    coreinit/coreinit_fs_file.h
     coreinit/coreinit_fs.h
+    coreinit/coreinit_fs_path.h
+    coreinit/coreinit_fs_stat.h
     coreinit/coreinit_ghs.h
+    coreinit/coreinit.h
     coreinit/coreinit_ios.h
     coreinit/coreinit_lockedcache.h
     coreinit/coreinit_mcp.h
@@ -140,11 +154,11 @@ set(HEADER_FILES
     coreinit/coreinit_thread.h
     coreinit/coreinit_threadqueue.h
     coreinit/coreinit_time.h
+    coreinit/coreinit_unitheap.h
     coreinit/coreinit_userconfig.h
-    erreula/erreula.h
     erreula/erreula_errorviewer.h
+    erreula/erreula.h
     gameloader/gameloader.h
-    gx2/gx2.h
     gx2/gx2_addrlib.h
     gx2/gx2_aperture.h
     gx2/gx2_cbpool.h
@@ -159,9 +173,13 @@ set(HEADER_FILES
     gx2/gx2_enum_string.h
     gx2/gx2_event.h
     gx2/gx2_format.h
+    gx2/gx2.h
     gx2/gx2_mem.h
     gx2/gx2_query.h
+    gx2/gx2r_buffer.h
     gx2/gx2_registers.h
+    gx2/gx2r_resource.h
+    gx2/gx2r_surface.h
     gx2/gx2_sampler.h
     gx2/gx2_shaders.h
     gx2/gx2_state.h
@@ -170,43 +188,44 @@ set(HEADER_FILES
     gx2/gx2_temp.h
     gx2/gx2_tessellation.h
     gx2/gx2_texture.h
-    gx2/gx2r_resource.h
-    mic/mic.h
     mic/mic_core.h
-    nn_ac/nn_ac.h
+    mic/mic.h
     nn_ac/nn_ac_core.h
+    nn_ac/nn_ac.h
     nn_ac/nn_ac_result.h
-    nn_act/nn_act.h
     nn_act/nn_act_core.h
+    nn_act/nn_act.h
     nn_act/nn_act_result.h
-    nn_fp/nn_fp.h
     nn_fp/nn_fp_core.h
-    nn_nfp/nn_nfp.h
+    nn_fp/nn_fp.h
     nn_nfp/nn_nfp_core.h
+    nn_nfp/nn_nfp.h
     nn_nfp/nn_nfp_result.h
     nn_result.h
-    nn_save/nn_save.h
     nn_save/nn_save_core.h
+    nn_save/nn_save_dir.h
     nn_save/nn_save_file.h
-    nn_temp/nn_temp.h
+    nn_save/nn_save.h
     nn_temp/nn_temp_core.h
+    nn_temp/nn_temp_dir.h
+    nn_temp/nn_temp.h
     padscore/padscore.h
     padscore/padscore_kpad.h
     padscore/padscore_kpad_status.h
     padscore/padscore_wpad.h
-    proc_ui/proc_ui.h
     proc_ui/proc_ui_core.h
-    snd_core/snd_core.h
+    proc_ui/proc_ui.h
     snd_core/snd_core_ai.h
     snd_core/snd_core_core.h
     snd_core/snd_core_device.h
+    snd_core/snd_core.h
     snd_core/snd_core_result.h
-    swkbd/swkbd.h
     swkbd/swkbd_core.h
+    swkbd/swkbd.h
     sysapp/sysapp.h
     sysapp/sysapp_title.h
-    vpad/vpad.h
     vpad/vpad_core.h
+    vpad/vpad.h
     vpad/vpad_status.h
     zlib125/zlib125.h
     )
