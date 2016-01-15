@@ -23,7 +23,7 @@ bool jit_fallback(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (TRACK_FALLBACK_CALLS) {
-      a.mov(a.zax, reinterpret_cast<intptr_t>(&sFallbackCalls[static_cast<uint32_t>(data->id)]));
+      a.mov(a.zax, asmjit::Ptr(reinterpret_cast<intptr_t>(&sFallbackCalls[static_cast<uint32_t>(data->id)])));
       a.lock();
       a.inc(asmjit::X86Mem(a.zax, 0));
    }
