@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "coreinit.h"
 #include "coreinit_core.h"
 #include "coreinit_rendezvous.h"
@@ -5,7 +6,8 @@
 void
 OSInitRendezvous(OSRendezvous *rendezvous)
 {
-   memset(rendezvous, 0, sizeof(OSRendezvous));
+   std::fill(std::begin(rendezvous->core), std::end(rendezvous->core), 0);
+   std::fill(std::begin(rendezvous->__unk0), std::end(rendezvous->__unk0), 0);
 }
 
 BOOL
