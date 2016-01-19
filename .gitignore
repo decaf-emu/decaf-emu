@@ -14,3 +14,4 @@ build/*.txt
 debugger/bin
 dump/
 config.json
+*.txt
