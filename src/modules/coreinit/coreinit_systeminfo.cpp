@@ -48,6 +48,12 @@ OSGetConsoleType()
 }
 
 BOOL
+OSIsHomeButtonMenuEnabled()
+{
+   return gEnableHomeButtonMenu;
+}
+
+BOOL
 OSEnableHomeButtonMenu(BOOL enable)
 {
    gEnableHomeButtonMenu = enable;
@@ -95,6 +101,7 @@ CoreInit::registerSystemInfoFunctions()
    RegisterKernelFunction(OSGetScreenCapturePermission);
    RegisterKernelFunction(OSGetConsoleType);
    RegisterKernelFunction(OSEnableHomeButtonMenu);
+   RegisterKernelFunction(OSIsHomeButtonMenuEnabled);
    RegisterKernelFunction(OSBlockThreadsOnExit);
    RegisterKernelFunction(OSGetTitleID);
    RegisterKernelFunction(OSGetOSID);

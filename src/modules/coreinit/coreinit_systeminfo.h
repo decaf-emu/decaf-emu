@@ -33,6 +33,9 @@ OSGetConsoleType();
 BOOL
 OSEnableHomeButtonMenu(BOOL enable);
 
+BOOL
+OSIsHomeButtonMenuEnabled();
+
 void
 OSBlockThreadsOnExit();
 
