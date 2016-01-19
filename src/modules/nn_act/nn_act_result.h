@@ -7,7 +7,7 @@ namespace nn
 namespace act
 {
 
-static const auto AccountNotFound = nn::Result{ nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 128128 };
+static const auto AccountNotFound = nn::Result { nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 128128 };
 
 } // namespace nfp
 
