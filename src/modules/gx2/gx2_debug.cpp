@@ -29,6 +29,7 @@ GX2DebugDumpData(const std::string &filename, const void *data, size_t size)
 {
    auto file = std::ofstream { filename, std::ofstream::out | std::ofstream::binary };
    file.write(static_cast<const char *>(data), size);
+   file.close();
 }
 
 static void

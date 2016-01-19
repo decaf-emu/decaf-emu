@@ -381,6 +381,7 @@ struct Shader
    std::unordered_set<uint32_t> pvUsed;         // Set of Previous Vectors used
    std::unordered_set<uint32_t> psUsed;         // Set of Previous Scalars used
    std::unordered_set<uint32_t> gprsUsed;       // Set of General Puprose Registers used
+   std::unordered_set<uint32_t> tmpsUsed;       // Set of Temporary General Puprose Registers used
    std::unordered_set<uint32_t> uniformsUsed;   // Set of Uniforms used
    std::unordered_set<uint32_t> samplersUsed;   // Set of Sampler IDs used
    std::unordered_set<uint32_t> resourcesUsed;  // Set of Resource IDs used

@@ -744,9 +744,19 @@ static void
 writeLocals(fmt::MemoryWriter &out, latte::Shader &shader)
 {
    // Registers
+   auto largestGpr = 0u;
+   auto largestTmp = 0u;
+
    for (auto id : shader.gprsUsed) {
-      out << "vec4 R" << id << ";\n";
+      largestGpr = std::max(largestGpr, id);
    }
+
+   for (auto id : shader.tmpsUsed) {
+      largestTmp = std::max(largestTmp, id);
+   }
+
+   out << "vec4 R[" << largestGpr << "];\n";
+   out << "vec4 T[" << largestTmp << "];\n";
 
    // Previous Scalar
    if (shader.psUsed.size()) {

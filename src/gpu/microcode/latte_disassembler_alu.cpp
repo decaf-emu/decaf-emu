@@ -75,14 +75,14 @@ disassembleAluSource(State &state, shadir::AluInstruction *aluIns, uint32_t sel,
       state.out << "|";
    }
 
-   if (sel >= SQ_ALU_KCACHE_BANK0_0 && sel <= SQ_ALU_KCACHE_BANK1_31) {
+   if (sel >= SQ_ALU_KCACHE_BANK0_FIRST && sel <= SQ_ALU_KCACHE_BANK1_LAST) {
       auto kcache = aluIns->parent->kcache[0];
 
-      if (sel >= SQ_ALU_KCACHE_BANK1_0 && sel <= SQ_ALU_KCACHE_BANK1_31) {
+      if (sel >= SQ_ALU_KCACHE_BANK1_FIRST && sel <= SQ_ALU_KCACHE_BANK1_LAST) {
          kcache = aluIns->parent->kcache[1];
       }
 
-      auto id = kcache.addr * 16 + (sel - SQ_ALU_KCACHE_BANK0_0);
+      auto id = kcache.addr * 16 + (sel - SQ_ALU_KCACHE_BANK0_FIRST);
 
       switch (kcache.mode) {
       case SQ_CF_KCACHE_LOCK_1:
@@ -95,10 +95,12 @@ disassembleAluSource(State &state, shadir::AluInstruction *aluIns, uint32_t sel,
       default:
          state.out << "KC_UNKNOWN_MODE";
       }
-   } else if (sel >= SQ_ALU_REGISTER_0 && sel <= SQ_ALU_REGISTER_127) {
-      state.out << "R" << (sel - SQ_ALU_REGISTER_0);
-   } else if (sel >= SQ_ALU_SRC_CONST_FILE_0 && sel <= SQ_ALU_SRC_CONST_FILE_255) {
-      state.out << "C" << (sel - SQ_ALU_SRC_CONST_FILE_0);
+   } else if (sel >= SQ_ALU_REGISTER_FIRST && sel <= SQ_ALU_REGISTER_LAST) {
+      state.out << "R" << (sel - SQ_ALU_REGISTER_FIRST);
+   } else if (sel >= SQ_ALU_TMP_REGISTER_FIRST && sel <= SQ_ALU_TMP_REGISTER_LAST) {
+      state.out << "T" << (SQ_ALU_TMP_REGISTER_LAST - sel);
+   } else if (sel >= SQ_ALU_SRC_CONST_FILE_FIRST && sel <= SQ_ALU_SRC_CONST_FILE_LAST) {
+      state.out << "C" << (sel - SQ_ALU_SRC_CONST_FILE_FIRST);
    } else {
       useChannel = false;
 

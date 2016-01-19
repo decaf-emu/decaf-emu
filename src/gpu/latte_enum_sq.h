@@ -28,12 +28,14 @@ enum SQ_ALU_OMOD : uint32_t
 
 enum SQ_ALU_SRC : uint32_t
 {
-   SQ_ALU_REGISTER_0                = 0,
-   SQ_ALU_REGISTER_127              = 127,
-   SQ_ALU_KCACHE_BANK0_0            = 128,
-   SQ_ALU_KCACHE_BANK0_31           = 159,
-   SQ_ALU_KCACHE_BANK1_0            = 160,
-   SQ_ALU_KCACHE_BANK1_31           = 191,
+   SQ_ALU_REGISTER_FIRST            = 0,
+   SQ_ALU_REGISTER_LAST             = 111,
+   SQ_ALU_TMP_REGISTER_FIRST        = 112,
+   SQ_ALU_TMP_REGISTER_LAST         = 127,
+   SQ_ALU_KCACHE_BANK0_FIRST        = 128,
+   SQ_ALU_KCACHE_BANK0_LAST         = 159,
+   SQ_ALU_KCACHE_BANK1_FIRST        = 160,
+   SQ_ALU_KCACHE_BANK1_LAST         = 191,
    SQ_ALU_SRC_LDS_OQ_A              = 219,
    SQ_ALU_SRC_LDS_OQ_B              = 220,
    SQ_ALU_SRC_LDS_OQ_A_POP          = 221,
@@ -68,8 +70,8 @@ enum SQ_ALU_SRC : uint32_t
    SQ_ALU_SRC_LITERAL               = 253,
    SQ_ALU_SRC_PV                    = 254,
    SQ_ALU_SRC_PS                    = 255,
-   SQ_ALU_SRC_CONST_FILE_0          = 256,
-   SQ_ALU_SRC_CONST_FILE_255        = 511,
+   SQ_ALU_SRC_CONST_FILE_FIRST      = 256,
+   SQ_ALU_SRC_CONST_FILE_LAST       = 511,
 };
 
 enum SQ_ALU_VEC_BANK_SWIZZLE : uint32_t

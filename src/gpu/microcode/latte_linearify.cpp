@@ -186,10 +186,12 @@ linearify(Shader &shader)
             for (auto i = 0u; i < aluIns->srcCount; ++i) {
                auto &src = aluIns->src[i];
 
-               if (src.sel >= latte::SQ_ALU_REGISTER_0 && src.sel <= SQ_ALU_REGISTER_127) {
-                  shader.gprsUsed.emplace(src.sel - latte::SQ_ALU_REGISTER_0);
-               } else if (src.sel >= latte::SQ_ALU_SRC_CONST_FILE_0 && src.sel <= SQ_ALU_SRC_CONST_FILE_255) {
-                  shader.uniformsUsed.emplace(src.sel - latte::SQ_ALU_SRC_CONST_FILE_0);
+               if (src.sel >= latte::SQ_ALU_REGISTER_FIRST && src.sel <= SQ_ALU_REGISTER_LAST) {
+                  shader.gprsUsed.emplace(src.sel - latte::SQ_ALU_REGISTER_FIRST);
+               } else if (src.sel >= latte::SQ_ALU_TMP_REGISTER_FIRST && src.sel <= SQ_ALU_TMP_REGISTER_LAST) {
+                  shader.tmpsUsed.emplace(latte::SQ_ALU_TMP_REGISTER_LAST - src.sel);
+               } else if (src.sel >= latte::SQ_ALU_SRC_CONST_FILE_FIRST && src.sel <= SQ_ALU_SRC_CONST_FILE_LAST) {
+                  shader.uniformsUsed.emplace(src.sel - latte::SQ_ALU_SRC_CONST_FILE_FIRST);
                } else if (src.sel == latte::SQ_ALU_SRC_PV) {
                   shader.pvUsed.emplace(aluIns->groupPC - 1);
                } else if (src.sel == latte::SQ_ALU_SRC_PS) {

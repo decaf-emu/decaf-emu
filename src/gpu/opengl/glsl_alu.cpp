@@ -150,10 +150,11 @@ void translateAluSource(GenerateState &state, const AluInstruction *ins, const A
       state.out << '-';
    }
 
-   if ((src.sel >= latte::SQ_ALU_REGISTER_0 && src.sel <= latte::SQ_ALU_REGISTER_127)
-    || (src.sel >= latte::SQ_ALU_KCACHE_BANK0_0 && src.sel <= latte::SQ_ALU_KCACHE_BANK0_31)
-    || (src.sel >= latte::SQ_ALU_KCACHE_BANK1_0 && src.sel <= latte::SQ_ALU_KCACHE_BANK1_31)
-    || (src.sel >= latte::SQ_ALU_SRC_CONST_FILE_0 && src.sel <= latte::SQ_ALU_SRC_CONST_FILE_255)) {
+   if ((src.sel >= latte::SQ_ALU_REGISTER_FIRST && src.sel <= latte::SQ_ALU_REGISTER_LAST)
+    || (src.sel >= latte::SQ_ALU_TMP_REGISTER_FIRST && src.sel <= latte::SQ_ALU_TMP_REGISTER_LAST)
+    || (src.sel >= latte::SQ_ALU_KCACHE_BANK0_FIRST && src.sel <= latte::SQ_ALU_KCACHE_BANK0_LAST)
+    || (src.sel >= latte::SQ_ALU_KCACHE_BANK1_FIRST && src.sel <= latte::SQ_ALU_KCACHE_BANK1_LAST)
+    || (src.sel >= latte::SQ_ALU_SRC_CONST_FILE_FIRST && src.sel <= latte::SQ_ALU_SRC_CONST_FILE_LAST)) {
       // Register, uniform register, uniform block must bit cast
       if (src.type == ValueType::Int) {
          state.out << "floatBitsToInt(";
@@ -222,21 +223,33 @@ void translateAluSource(GenerateState &state, const AluInstruction *ins, const A
    }
 
    // Output register name
-   if (src.sel >= latte::SQ_ALU_REGISTER_0 && src.sel <= latte::SQ_ALU_REGISTER_127) {
-      state.out << 'R' << (src.sel - latte::SQ_ALU_REGISTER_0);
+   if ((src.sel >= latte::SQ_ALU_REGISTER_FIRST && src.sel <= latte::SQ_ALU_REGISTER_LAST)
+    || (src.sel >= latte::SQ_ALU_TMP_REGISTER_FIRST && src.sel <= latte::SQ_ALU_TMP_REGISTER_LAST)) {
+      if (src.sel >= latte::SQ_ALU_TMP_REGISTER_FIRST && src.sel <= latte::SQ_ALU_TMP_REGISTER_LAST) {
+         state.out << "T[" << (latte::SQ_ALU_TMP_REGISTER_FIRST - src.sel);
+      } else {
+         state.out << "R[" << (src.sel - latte::SQ_ALU_REGISTER_FIRST);
+      }
+
+      if (src.rel) {
+         state.out << " + ";
+         translateIndex(state, ins->indexMode);
+      }
+
+      state.out << ']';
       doChannelSelect = true;
-   } else if ((src.sel >= latte::SQ_ALU_KCACHE_BANK0_0 && src.sel <= latte::SQ_ALU_KCACHE_BANK0_31)
-           || (src.sel >= latte::SQ_ALU_KCACHE_BANK1_0 && src.sel <= latte::SQ_ALU_KCACHE_BANK1_31)) {
-      auto index = (src.sel >= latte::SQ_ALU_KCACHE_BANK1_0) ? 1 : 0;
+   } else if ((src.sel >= latte::SQ_ALU_KCACHE_BANK0_FIRST && src.sel <= latte::SQ_ALU_KCACHE_BANK0_LAST)
+           || (src.sel >= latte::SQ_ALU_KCACHE_BANK1_FIRST && src.sel <= latte::SQ_ALU_KCACHE_BANK1_LAST)) {
+      auto index = (src.sel >= latte::SQ_ALU_KCACHE_BANK1_FIRST) ? 1 : 0;
       auto addr = ins->parent->kcache[index].addr;
       auto bank = ins->parent->kcache[index].bank;
       auto mode = ins->parent->kcache[index].mode;
       auto id = (addr * 16);
 
-      if (src.sel >= latte::SQ_ALU_KCACHE_BANK1_0) {
-         id += src.sel - latte::SQ_ALU_KCACHE_BANK1_0;
+      if (src.sel >= latte::SQ_ALU_KCACHE_BANK1_FIRST) {
+         id += src.sel - latte::SQ_ALU_KCACHE_BANK1_FIRST;
       } else {
-         id += src.sel - latte::SQ_ALU_KCACHE_BANK0_0;
+         id += src.sel - latte::SQ_ALU_KCACHE_BANK0_FIRST;
       }
 
       if (mode == latte::SQ_CF_KCACHE_LOCK_LOOP_INDEX) {
@@ -260,11 +273,11 @@ void translateAluSource(GenerateState &state, const AluInstruction *ins, const A
 
       state.out << ']';
       doChannelSelect = true;
-   } else if (src.sel >= latte::SQ_ALU_SRC_CONST_FILE_0 && src.sel <= latte::SQ_ALU_SRC_CONST_FILE_255) {
+   } else if (src.sel >= latte::SQ_ALU_SRC_CONST_FILE_FIRST && src.sel <= latte::SQ_ALU_SRC_CONST_FILE_LAST) {
       if (state.shader->type == latte::Shader::Vertex) {
-         state.out << "VR[" << (src.sel - latte::SQ_ALU_SRC_CONST_FILE_0);
+         state.out << "VR[" << (src.sel - latte::SQ_ALU_SRC_CONST_FILE_FIRST);
       } else if (state.shader->type == latte::Shader::Pixel) {
-         state.out << "PR[" << (src.sel - latte::SQ_ALU_SRC_CONST_FILE_0);
+         state.out << "PR[" << (src.sel - latte::SQ_ALU_SRC_CONST_FILE_FIRST);
       } else {
          throw std::runtime_error("Unexpected shader type for ConstantFile");
       }
@@ -342,8 +355,12 @@ void translateAluSource(GenerateState &state, const AluInstruction *ins, const A
    }
 
    if (src.rel) {
-      if (src.sel < latte::SQ_ALU_SRC_CONST_FILE_0 || src.sel > latte::SQ_ALU_SRC_CONST_FILE_255) {
-         throw std::logic_error("Relative AluSource is only supported with uniform registers");
+      if ((src.sel < latte::SQ_ALU_REGISTER_FIRST || src.sel > latte::SQ_ALU_REGISTER_LAST)
+       && (src.sel < latte::SQ_ALU_TMP_REGISTER_FIRST || src.sel > latte::SQ_ALU_TMP_REGISTER_LAST)
+       && (src.sel < latte::SQ_ALU_SRC_CONST_FILE_FIRST || src.sel > latte::SQ_ALU_SRC_CONST_FILE_LAST)
+       && (src.sel < latte::SQ_ALU_KCACHE_BANK0_FIRST || src.sel > latte::SQ_ALU_KCACHE_BANK0_LAST)
+       && (src.sel < latte::SQ_ALU_KCACHE_BANK1_FIRST || src.sel > latte::SQ_ALU_KCACHE_BANK1_LAST)) {
+         throw std::logic_error(fmt::format("Relative AluSource is only supported for registers and uniforms, src.sel: {}", src.sel));
       }
    }
 
