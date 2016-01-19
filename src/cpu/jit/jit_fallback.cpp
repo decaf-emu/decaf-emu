@@ -51,9 +51,13 @@ void fallbacksPrint()
       return b.second < a.second;
    });
 
-   debugPrint("Fallback Call Numbers:");
+   fmt::MemoryWriter out;
+   out.write("Fallback Call Numbers:\n");
+
    for (auto i : callList) {
       auto data = gInstructionTable.find(static_cast<InstructionID>(i.first));
-      debugPrint("  [{}] {}", data->name, i.second);
+      out.write("  [{}] {}\n", data->name, i.second);
    }
+
+   debugPrint(out.str());
 }

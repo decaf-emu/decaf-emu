@@ -1,17 +1,18 @@
 #pragma once
-#include <spdlog/spdlog.h>
 #include "platform/platform.h"
-
-template<typename... Args>
-static void
-debugPrint(fmt::CStringRef msg, Args... args)
-{
-   auto out = fmt::format(msg, args...);
-   out += "\n";
+#include "log.h"
 
 #ifdef PLATFORM_WINDOWS
+#include <Windows.h>
+#endif
+
+inline void
+debugPrint(std::string out)
+{
+   gLog->debug(out);
+
+#ifdef PLATFORM_WINDOWS
+   out.push_back('\n');
    OutputDebugStringA(out.c_str());
-#else
-   printf("%s", out.c_str());
 #endif
 }

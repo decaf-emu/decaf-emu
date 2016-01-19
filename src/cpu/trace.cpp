@@ -49,31 +49,31 @@ getStateFieldName(TraceFieldType type)
 }
 
 static void
-printFieldValue(Instruction instr, TraceFieldType type, const TraceFieldValue& value)
+printFieldValue(fmt::MemoryWriter &out, Instruction instr, TraceFieldType type, const TraceFieldValue& value)
 {
    if (type == StateField::Invalid) {
       return;
    }
 
    if (type >= StateField::GPR0 && type <= StateField::GPR31) {
-      debugPrint("    r{:02} = {:08x}", type - StateField::GPR, value.u32v0);
+      out.write("    r{:02} = {:08x}\n", type - StateField::GPR, value.u32v0);
    } else if (type == StateField::CR) {
       auto valX = [&](int i) { return (value.u32v0 >> ((i) * 4)) & 0xF; };
-      debugPrint("    CR = {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b}",
+      out.write("    CR = {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b}\n",
          valX(0), valX(1), valX(2), valX(3), valX(4), valX(5), valX(6), valX(7));
    } else if (type == StateField::XER) {
-      debugPrint("    XER = {:08x}", value.u32v0);
+      out.write("    XER = {:08x}\n", value.u32v0);
    } else if (type == StateField::LR) {
-      debugPrint("    LR = {:08x}", value.u32v0);
+      out.write("    LR = {:08x}\n", value.u32v0);
    } else if (type == StateField::CTR) {
-      debugPrint("    CTR = {:08x}", value.u32v0);
+      out.write("    CTR = {:08x}\n", value.u32v0);
    } else {
       assert(0);
    }
 }
 
 static void
-printInstruction(const Trace& trace, int index)
+printInstruction(fmt::MemoryWriter &out, const Trace& trace, int index)
 {
    Disassembly dis;
    gDisassembler.disassemble(trace.instr, dis, trace.cia);
@@ -88,13 +88,13 @@ printInstruction(const Trace& trace, int index)
    */
 
    for (auto &write : trace.writes) {
-      printFieldValue(trace.instr, write.type, write.value);
+      printFieldValue(out, trace.instr, write.type, write.value);
    }
 
-   debugPrint("  [{}] {:08x} {}{}", index, trace.cia, dis.text.c_str(), addend.c_str());
+   out.write("  [{}] {:08x} {}{}\n", index, trace.cia, dis.text.c_str(), addend.c_str());
 
    for (auto &read : trace.reads) {
-      printFieldValue(trace.instr, read.type, read.value);
+      printFieldValue(out, trace.instr, read.type, read.value);
    }
 }
 
@@ -458,12 +458,15 @@ tracePrint(ThreadState *state, int start, int count)
    assert(start >= 0);
    assert(end <= tracerSize);
 
-   debugPrint("Trace - Print {} to {}", start, end);
+   fmt::MemoryWriter out;
+   out.write("Trace - Print {} to {}\n", start, end);
 
    for (auto i = start; i < end; ++i) {
       auto &trace = getTrace(tracer, i);
-      printInstruction(trace, i);
+      printInstruction(out, trace, i);
    }
+
+   debugPrint(out.str());
 }
 
 int
@@ -471,8 +474,10 @@ traceReg(ThreadState *state, int start, int regIdx)
 {
    auto tracer = state->tracer;
    auto tracerSize = static_cast<int>(getTracerNumTraces(tracer));
+   bool found = false;
 
-   debugPrint("Trace - Search {} to {} for write r{}", start, tracerSize, regIdx);
+   fmt::MemoryWriter out;
+   out.write("Trace - Search {} to {} for write r{}\n", start, tracerSize, regIdx);
 
    assert(start >= 0);
    assert(start < tracerSize);
@@ -489,12 +494,17 @@ traceReg(ThreadState *state, int start, int regIdx)
       }
 
       if (wasMatchedWrite) {
-         printInstruction(trace, i);
-         return i;
+         printInstruction(out, trace, i);
+         found = true;
+         break;
       }
    }
 
-   debugPrint("  Nothing Found");
+   if (!found) {
+      out.write("  Nothing Found");
+   }
+
+   debugPrint(out.str());
    return -1;
 }
 
@@ -531,7 +541,7 @@ traceRegNext(int regIdx)
    if (trace.reads.size() == 1) {
       if (trace.reads.front().type >= StateField::GPR0 && trace.reads.front().type <= StateField::GPR31) {
          gRegTraceNextReg = trace.reads.front().type - StateField::GPR;
-         debugPrint("Suggested next register is r{}", gRegTraceNextReg);
+         debugPrint(fmt::format("Suggested next register is r{}", gRegTraceNextReg));
       } else {
          // Not a GPR read
          gRegTraceNextReg = -1;
@@ -591,12 +601,15 @@ tracePrintSyscall(int count)
       count = (int)gSyscallTrace.size();
    }
 
-   debugPrint("Trace - Last {} syscalls", count);
+   fmt::MemoryWriter out;
+   out.write("Trace - Last {} syscalls\n", count);
 
    int j = 0;
    for (auto i = gSyscallTrace.begin(); i != gSyscallTrace.end() && j < count; ++i, ++j) {
-      debugPrint("  {}", *i);
+      out.write("  {}\n", *i);
    }
+
+   debugPrint(out.str());
 }
 
 void
