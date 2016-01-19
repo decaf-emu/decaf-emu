@@ -4,7 +4,7 @@
 FSStatus
 SAVEOpenFile(FSClient *client,
              FSCmdBlock *block,
-             uint8_t accountSlotNo,
+             uint8_t account,
              const char *path,
              const char *mode,
              be_val<FSFileHandle> *handle,
@@ -13,7 +13,7 @@ SAVEOpenFile(FSClient *client,
 FSStatus
 SAVEOpenFileAsync(FSClient *client,
                   FSCmdBlock *block,
-                  uint8_t accountSlotNo,
+                  uint8_t account,
                   const char *path,
                   const char *mode,
                   be_val<FSFileHandle> *handle,

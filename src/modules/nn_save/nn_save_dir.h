@@ -22,15 +22,32 @@ SAVEGetSharedSaveDataPath(uint64_t titleID,
 FSStatus
 SAVEMakeDir(FSClient *client,
             FSCmdBlock *block,
-            uint8_t accountSlotNo,
+            uint8_t account,
             const char *path,
             uint32_t flags);
 
 FSStatus
 SAVEMakeDirAsync(FSClient *client,
                  FSCmdBlock *block,
-                 uint8_t accountSlotNo,
+                 uint8_t account,
                  const char *path,
+                 uint32_t flags,
+                 FSAsyncData *asyncData);
+
+FSStatus
+SAVEOpenDir(FSClient *client,
+            FSCmdBlock *block,
+            uint8_t account,
+            const char *path,
+            be_val<FSDirectoryHandle> *handle,
+            uint32_t flags);
+
+FSStatus
+SAVEOpenDirAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 uint8_t account,
+                 const char *path,
+                 be_val<FSDirectoryHandle> *handle,
                  uint32_t flags,
                  FSAsyncData *asyncData);
 

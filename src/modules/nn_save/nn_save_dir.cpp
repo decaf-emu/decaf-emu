@@ -73,24 +73,49 @@ SAVEGetSharedSaveDataPath(uint64_t titleID,
 FSStatus
 SAVEMakeDir(FSClient *client,
             FSCmdBlock *block,
-            uint8_t accountSlotNo,
+            uint8_t account,
             const char *path,
             uint32_t flags)
 {
-   auto fsPath = nn_save::internal::getSavePath(accountSlotNo, path);
+   auto fsPath = nn_save::internal::getSavePath(account, path);
    return FSMakeDir(client, block, fsPath.path().c_str(), flags);
+}
+
+FSStatus
+SAVEOpenDir(FSClient *client,
+            FSCmdBlock *block,
+            uint8_t account,
+            const char *path,
+            be_val<FSDirectoryHandle> *handle,
+            uint32_t flags)
+{
+   auto fsPath = nn_save::internal::getSavePath(account, path);
+   return FSOpenDir(client, block, fsPath.path().c_str(), handle, flags);
 }
 
 FSStatus
 SAVEMakeDirAsync(FSClient *client,
                  FSCmdBlock *block,
-                 uint8_t accountSlotNo,
+                 uint8_t account,
                  const char *path,
                  uint32_t flags,
                  FSAsyncData *asyncData)
 {
-   auto fsPath = nn_save::internal::getSavePath(accountSlotNo, path);
+   auto fsPath = nn_save::internal::getSavePath(account, path);
    return FSMakeDirAsync(client, block, fsPath.path().c_str(), flags, asyncData);
+}
+
+FSStatus
+SAVEOpenDirAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 uint8_t account,
+                 const char *path,
+                 be_val<FSDirectoryHandle> *handle,
+                 uint32_t flags,
+                 FSAsyncData *asyncData)
+{
+   auto fsPath = nn_save::internal::getSavePath(account, path);
+   return FSOpenDirAsync(client, block, fsPath.path().c_str(), handle, flags, asyncData);
 }
 
 void
@@ -101,6 +126,8 @@ NN_save::registerDirFunctions()
    RegisterKernelFunction(SAVEGetSharedSaveDataPath);
    RegisterKernelFunction(SAVEMakeDir);
    RegisterKernelFunction(SAVEMakeDirAsync);
+   RegisterKernelFunction(SAVEOpenDir);
+   RegisterKernelFunction(SAVEOpenDirAsync);
 }
 
 namespace nn_save
@@ -116,7 +143,8 @@ getSaveDirectory(uint32_t account)
 }
 
 fs::Path
-getSavePath(uint32_t account, const char *path)
+getSavePath(uint32_t account,
+            const char *path)
 {
    return fmt::format("/vol/save/{}/{}", account, path);
 }
