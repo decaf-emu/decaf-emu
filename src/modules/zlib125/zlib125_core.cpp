@@ -98,6 +98,75 @@ eraseZStream(WZStream *in)
 }
 
 static int
+zlib125_deflate(WZStream *wstrm, int flush)
+{
+   auto zstrm = getZStream(wstrm);
+   zstrm->next_in = wstrm->next_in;
+   zstrm->avail_in = wstrm->avail_in;
+   zstrm->total_in = wstrm->total_in;
+
+   zstrm->next_out = wstrm->next_out;
+   zstrm->avail_out = wstrm->avail_out;
+   zstrm->total_out = wstrm->total_out;
+
+   zstrm->data_type = wstrm->data_type;
+   zstrm->adler = wstrm->adler;
+
+   auto result = deflate(zstrm, flush);
+
+   wstrm->next_in = zstrm->next_in;
+   wstrm->avail_in = zstrm->avail_in;
+   wstrm->total_in = zstrm->total_in;
+
+   wstrm->next_out = zstrm->next_out;
+   wstrm->avail_out = zstrm->avail_out;
+   wstrm->total_out = zstrm->total_out;
+
+   wstrm->data_type = zstrm->data_type;
+   wstrm->adler = zstrm->adler;
+
+   return result;
+}
+
+static int
+zlib125_deflateInit_(WZStream *wstrm, int level, const char *version, int stream_size)
+{
+   assert(sizeof(WZStream) == stream_size);
+
+   auto zstrm = getZStream(wstrm);
+   auto result = deflateInit_(zstrm, level, version, sizeof(z_stream));
+
+   wstrm->msg = nullptr;
+   return result;
+}
+
+static int
+zlib125_deflateInit2_(WZStream *wstrm, int level, int method, int windowBits, int memLevel, int strategy, const char *version, int stream_size)
+{
+   assert(sizeof(WZStream) == stream_size);
+
+   auto zstrm = getZStream(wstrm);
+   auto result = deflateInit2_(zstrm, level, method, windowBits, memLevel, strategy, version, sizeof(z_stream));
+
+   wstrm->msg = nullptr;
+   return result;
+}
+
+static uint32_t
+zlib125_deflateBound(WZStream *wstrm, uint32_t sourceLen)
+{
+   auto zstrm = getZStream(wstrm);
+   return deflateBound(zstrm, sourceLen);
+}
+
+static int
+zlib125_deflateEnd(WZStream *wstrm)
+{
+   auto zstrm = getZStream(wstrm);
+   return deflateEnd(zstrm);
+}
+
+static int
 zlib125_inflate(WZStream *wstrm, int flush)
 {
    auto zstrm = getZStream(wstrm);
@@ -129,6 +198,18 @@ zlib125_inflate(WZStream *wstrm, int flush)
 }
 
 static int
+zlib125_inflateInit_(WZStream *wstrm, const char *version, int stream_size)
+{
+   assert(sizeof(WZStream) == stream_size);
+
+   auto zstrm = getZStream(wstrm);
+   auto result = inflateInit_(zstrm, version, sizeof(z_stream));
+
+   wstrm->msg = nullptr;
+   return result;
+}
+
+static int
 zlib125_inflateInit2_(WZStream *wstrm, int windowBits, const char *version, int stream_size)
 {
    assert(sizeof(WZStream) == stream_size);
@@ -137,14 +218,7 @@ zlib125_inflateInit2_(WZStream *wstrm, int windowBits, const char *version, int 
    auto result = inflateInit2_(zstrm, windowBits, version, sizeof(z_stream));
 
    wstrm->msg = nullptr;
-
    return result;
-}
-
-static int
-zlib125_inflateInit_(WZStream *wstrm, const char *version, int stream_size)
-{
-   return zlib125_inflateInit2_(wstrm, 15 /* default window bits*/, version, stream_size);
 }
 
 static int
@@ -201,6 +275,11 @@ Zlib125::registerCoreFunctions()
    // Need wrap
    RegisterKernelFunctionName("adler32", zlib125_adler32);
    RegisterKernelFunctionName("crc32", zlib125_crc32);
+   RegisterKernelFunctionName("deflate", zlib125_deflate);
+   RegisterKernelFunctionName("deflateInit_", zlib125_deflateInit_);
+   RegisterKernelFunctionName("deflateInit2_", zlib125_deflateInit2_);
+   RegisterKernelFunctionName("deflateBound", zlib125_deflateBound);
+   RegisterKernelFunctionName("deflateEnd", zlib125_deflateEnd);
    RegisterKernelFunctionName("inflate", zlib125_inflate);
    RegisterKernelFunctionName("inflateInit_", zlib125_inflateInit_);
    RegisterKernelFunctionName("inflateInit2_", zlib125_inflateInit2_);
