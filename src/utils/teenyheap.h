@@ -22,6 +22,30 @@ public:
       mFreeBlocks.emplace_back(MemoryBlock { mBuffer, mSize });
    }
 
+   size_t
+   getLargestFreeSize()
+   {
+      auto largest = size_t { 0 };
+
+      for (auto &block : mFreeBlocks) {
+         largest = std::max(largest, block.size);
+      }
+
+      return largest;
+   }
+
+   size_t
+   getTotalFreeSize()
+   {
+      auto total = size_t { 0 };
+
+      for (auto &block : mFreeBlocks) {
+         total += block.size;
+      }
+
+      return total;
+   }
+
    void *
    alloc(size_t size, size_t alignment = 4)
    {
