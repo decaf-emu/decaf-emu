@@ -1337,7 +1337,7 @@ void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
       case pm4::PacketType::Type2:
       default:
          gLog->error("Invalid packet header type {}, header = 0x{:08X}", header.type, header.value);
-         throw std::logic_error("What the fuck son");
+         break;
       }
 
       pos += size + 1;
