@@ -10,16 +10,16 @@ bool
 decode(Shader &shader, const gsl::span<const uint8_t> &binary);
 
 bool
+blockify(Shader &shader);
+
+bool
 disassemble(Shader &shader, std::string &out);
 
 void
 debugDumpBlocks(Shader &shader, std::string &out);
 
-// Internal
+// Internal, called by blockify
 bool
 linearify(Shader &shader);
-
-bool
-blockify(Shader &shader);
 
 } // namespace latte

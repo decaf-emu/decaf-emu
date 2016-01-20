@@ -339,7 +339,7 @@ decodeAluClause(DecodeState &state, shadir::CfAluInstruction *parent, uint32_t a
          }
 
          if (units[unit]) {
-            throw std::logic_error("Clause instruction unit collision");
+            decodeError(state, fmt::format("Clause instruction unit collision for unit {}", unit));
          }
 
          units[unit] = true;
@@ -514,8 +514,6 @@ decode(Shader &shader, const gsl::span<const uint8_t> &binary)
       state.cfPC++;
    }
 
-   result &= linearify(shader);
-   result &= blockify(shader);
    return result;
 }
 

@@ -831,6 +831,11 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
    latte::disassemble(shader, vertex.disassembly);
 
+   if (!latte::blockify(shader)) {
+      gLog->error("Failed to blockify vertex shader");
+      return false;
+   }
+
    if (!glsl::generateBody(shader, body)) {
       gLog->warn("Failed to translate 100% of instructions for vertex shader");
    }
@@ -958,6 +963,11 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    }
 
    latte::disassemble(shader, pixel.disassembly);
+
+   if (!latte::blockify(shader)) {
+      gLog->error("Failed to blockify pixel shader");
+      return false;
+   }
 
    if (!glsl::generateBody(shader, body)) {
       gLog->warn("Failed to translate 100% of instructions for pixel shader");

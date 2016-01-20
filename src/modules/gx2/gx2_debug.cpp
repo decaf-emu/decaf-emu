@@ -9,6 +9,7 @@
 #include "gx2_shaders.h"
 #include "memory_translate.h"
 #include "platform/platform_dir.h"
+#include "utils/log.h"
 
 static void
 createDumpDirectory()
@@ -104,6 +105,8 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderT
    if (platform::fileExists("dump/" + filename + ".bin")) {
       return;
    }
+
+   gLog->debug("Dumping shader {}", filename);
 
    GX2DebugDumpData("dump/" + filename + ".bin", shader->data, shader->size);
 

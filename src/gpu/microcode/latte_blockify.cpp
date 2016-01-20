@@ -324,6 +324,10 @@ blockify(Shader &shader)
 {
    LabelList labels;
 
+   if (!linearify(shader)) {
+      return false;
+   }
+
    if (!labelify(shader, labels)) {
       return false;
    }
