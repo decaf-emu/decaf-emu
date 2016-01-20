@@ -94,7 +94,12 @@ translateSelectMask(GenerateState &state, const std::array<latte::SQ_SEL, 4> &se
 static unsigned
 translateTextureFetchRegister(GenerateState &state, const TextureFetchRegister &reg, size_t maxSel)
 {
-   state.out << 'R' << reg.id;
+   if (reg.id >= latte::SQ_ALU_TMP_REGISTER_FIRST) {
+      state.out << "T[" << reg.id << "]";
+   } else {
+      state.out << "R[" << reg.id << "]";
+   }
+
    return translateSelectMask(state, reg.sel, maxSel);
 }
 

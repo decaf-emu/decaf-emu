@@ -67,7 +67,12 @@ void translateAluDestStart(GenerateState &state, AluInstruction *ins)
    }
 
    if (ins->writeMask) {
-      state.out << 'R' << ins->dst.sel << '.';
+      if (ins->dst.sel >= latte::SQ_ALU_TMP_REGISTER_FIRST) {
+         state.out << "T[" << (latte::SQ_ALU_TMP_REGISTER_LAST - ins->dst.sel) << "].";
+      } else {
+         state.out << "R[" << ins->dst.sel << "].";
+      }
+
       translateChannel(state, ins->dst.chan);
       state.out << " = ";
    }
@@ -226,7 +231,7 @@ void translateAluSource(GenerateState &state, const AluInstruction *ins, const A
    if ((src.sel >= latte::SQ_ALU_REGISTER_FIRST && src.sel <= latte::SQ_ALU_REGISTER_LAST)
     || (src.sel >= latte::SQ_ALU_TMP_REGISTER_FIRST && src.sel <= latte::SQ_ALU_TMP_REGISTER_LAST)) {
       if (src.sel >= latte::SQ_ALU_TMP_REGISTER_FIRST && src.sel <= latte::SQ_ALU_TMP_REGISTER_LAST) {
-         state.out << "T[" << (latte::SQ_ALU_TMP_REGISTER_FIRST - src.sel);
+         state.out << "T[" << (latte::SQ_ALU_TMP_REGISTER_LAST - src.sel);
       } else {
          state.out << "R[" << (src.sel - latte::SQ_ALU_REGISTER_FIRST);
       }

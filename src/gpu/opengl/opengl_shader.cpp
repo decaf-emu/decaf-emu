@@ -744,19 +744,24 @@ static void
 writeLocals(fmt::MemoryWriter &out, latte::Shader &shader)
 {
    // Registers
-   auto largestGpr = 0u;
-   auto largestTmp = 0u;
+   auto largestGpr = -1;
+   auto largestTmp = -1;
 
    for (auto id : shader.gprsUsed) {
-      largestGpr = std::max(largestGpr, id);
+      if (id >= latte::SQ_ALU_TMP_REGISTER_FIRST) {
+         largestTmp = std::max(largestTmp, static_cast<int>(latte::SQ_ALU_TMP_REGISTER_LAST - id));
+      } else {
+         largestGpr = std::max(largestGpr, static_cast<int>(id));
+      }
    }
 
-   for (auto id : shader.tmpsUsed) {
-      largestTmp = std::max(largestTmp, id);
+   if (largestGpr > -1) {
+      out << "vec4 R[" << (largestGpr + 1) << "];\n";
    }
 
-   out << "vec4 R[" << largestGpr << "];\n";
-   out << "vec4 T[" << largestTmp << "];\n";
+   if (largestTmp > -1) {
+      out << "vec4 T[" << (largestTmp + 1) << "];\n";
+   }
 
    // Previous Scalar
    if (shader.psUsed.size()) {
@@ -883,7 +888,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    // Initialise registers
    if (shader.gprsUsed.find(0) != shader.gprsUsed.end()) {
       // TODO: Check which order of VertexID and InstanceID for r0.x, r0.y
-      out << "R0 = vec4(intBitsToFloat(gl_VertexID), intBitsToFloat(gl_InstanceID), 0.0, 0.0);\n";
+      out << "R[0] = vec4(intBitsToFloat(gl_VertexID), intBitsToFloat(gl_InstanceID), 0.0, 0.0);\n";
    }
 
    // Assign fetch shader output to our GPR
@@ -902,7 +907,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          continue;
       }
 
-      out << "R" << (i + 1) << " = ";
+      out << "R[" << (i + 1) << "] = ";
 
       auto channels = getDataFormatChannels(attrib->format);
 
@@ -1030,7 +1035,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
          continue;
       }
 
-      out << "R" << i << " = vs_out_" << id << ";\n";
+      out << "R[" << i << "] = vs_out_" << id << ";\n";
    }
 
    out << '\n' << body << '\n';

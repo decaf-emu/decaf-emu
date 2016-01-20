@@ -50,7 +50,12 @@ EXP(GenerateState &state, ExportInstruction *ins)
       break;
    }
 
-   state.out << " = R" << ins->rw.id;
+   if (ins->rw.id >= latte::SQ_ALU_TMP_REGISTER_FIRST) {
+      state.out << " = T[" << ins->rw.id << "]";
+   } else {
+      state.out << " = R[" << ins->rw.id << "]";
+   }
+
    translateSelectMask(state, ins->srcSel, 4);
    return true;
 }
