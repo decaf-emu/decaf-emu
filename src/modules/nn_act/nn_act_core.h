@@ -45,12 +45,28 @@ bool
 IsNetworkAccountEx(uint8_t slot);
 
 nn::Result
+GetAccountId(char *accountId);
+
+nn::Result
+GetAccountIdEx(char *accountId,
+               uint8_t slot);
+
+nn::Result
+GetUuid(UUID *uuid);
+
+nn::Result
 GetUuidEx(UUID *uuid,
           uint8_t slotNo);
 
 nn::Result
+GetPrincipalId(be_val<uint32_t> *principalId);
+
+nn::Result
 GetPrincipalIdEx(be_val<uint32_t> *principalId,
                  uint8_t slotNo);
+
+nn::Result
+GetSimpleAddressId(be_val<uint32_t> *simpleAddressId);
 
 nn::Result
 GetSimpleAddressIdEx(be_val<uint32_t> *simpleAddressId,

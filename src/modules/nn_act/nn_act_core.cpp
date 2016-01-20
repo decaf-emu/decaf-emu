@@ -51,6 +51,12 @@ GetSlotNo()
 }
 
 nn::Result
+GetUuid(UUID *uuid)
+{
+   return GetUuidEx(uuid, GetSlotNo());
+}
+
+nn::Result
 GetUuidEx(UUID *uuid,
           uint8_t slot)
 {
@@ -69,10 +75,36 @@ GetUuidEx(UUID *uuid,
       uuid->at(0) = 'u';
       uuid->at(1) = 's';
       uuid->at(2) = 'r';
-      return nn::act::AccountNotFound;
+      return nn::Result::Success;
    }
 
    return nn::act::AccountNotFound;
+}
+
+nn::Result
+GetAccountId(char *accountId)
+{
+   return GetAccountIdEx(accountId, GetSlotNo());
+}
+
+nn::Result
+GetAccountIdEx(char *accountId,
+               uint8_t slot)
+{
+   if (slot != gCurrentSlot) {
+      return nn::act::AccountNotFound;
+   }
+
+   *accountId = '\0';
+   return nn::Result::Success;
+}
+
+uint32_t
+GetPrincipalId()
+{
+   be_val<uint32_t> id;
+   GetPrincipalIdEx(&id, GetSlotNo());
+   return id;
 }
 
 nn::Result
@@ -85,6 +117,14 @@ GetPrincipalIdEx(be_val<uint32_t> *principalId,
 
    *principalId = 0;
    return nn::Result::Success;
+}
+
+uint32_t
+GetSimpleAddressId()
+{
+   be_val<uint32_t> id;
+   GetSimpleAddressIdEx(&id, GetSlotNo());
+   return id;
 }
 
 nn::Result
@@ -108,8 +148,7 @@ GetTransferableId(uint32_t unk1)
 nn::Result
 GetMii(void *data)
 {
-   gLog->warn("GetMii(0x{:08X})", memory_untranslate(data));
-   return nn::act::AccountNotFound;
+   return GetMiiEx(data, GetSlotNo());
 }
 
 nn::Result
@@ -153,7 +192,11 @@ NN_act::registerCoreFunctions()
    RegisterKernelFunctionName("IsNetworkAccount__Q2_2nn3actFv", nn::act::IsNetworkAccount);
    RegisterKernelFunctionName("IsNetworkAccountEx__Q2_2nn3actFUc", nn::act::IsNetworkAccountEx);
    RegisterKernelFunctionName("GetNumOfAccounts__Q2_2nn3actFv", nn::act::GetNumOfAccounts);
+   RegisterKernelFunctionName("GetUuid__Q2_2nn3actFP7ACTUuid", nn::act::GetUuid);
    RegisterKernelFunctionName("GetUuidEx__Q2_2nn3actFP7ACTUuidUc", nn::act::GetUuidEx);
+   RegisterKernelFunctionName("GetAccountId__Q2_2nn3actFPc", nn::act::GetAccountId);
+   RegisterKernelFunctionName("GetPrincipalId__Q2_2nn3actFv", nn::act::GetPrincipalId);
    RegisterKernelFunctionName("GetPrincipalIdEx__Q2_2nn3actFPUiUc", nn::act::GetPrincipalIdEx);
+   RegisterKernelFunctionName("GetSimpleAddressId__Q2_2nn3actFv", nn::act::GetSimpleAddressId);
    RegisterKernelFunctionName("GetSimpleAddressIdEx__Q2_2nn3actFPUiUc", nn::act::GetSimpleAddressIdEx);
 }
