@@ -314,6 +314,7 @@
     <ClCompile Include="..\src\modules\snd_core\snd_core_ai.cpp" />
     <ClCompile Include="..\src\modules\snd_core\snd_core_core.cpp" />
     <ClCompile Include="..\src\modules\snd_core\snd_core_device.cpp" />
+    <ClCompile Include="..\src\modules\snd_core\snd_core_vs.cpp" />
     <ClCompile Include="..\src\modules\swkbd\swkbd.cpp" />
     <ClCompile Include="..\src\modules\swkbd\swkbd_core.cpp" />
     <ClCompile Include="..\src\modules\sysapp\sysapp.cpp" />
@@ -494,6 +495,7 @@
     <ClInclude Include="..\src\modules\snd_core\snd_core_core.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core_device.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core_result.h" />
+    <ClInclude Include="..\src\modules\snd_core\snd_core_vs.h" />
     <ClInclude Include="..\src\modules\swkbd\swkbd.h" />
     <ClInclude Include="..\src\modules\swkbd\swkbd_core.h" />
     <ClInclude Include="..\src\modules\sysapp\sysapp.h" />
