@@ -2,6 +2,9 @@
 #include "types.h"
 #include "utils/be_val.h"
 
+namespace mic
+{
+
 using MICHandle = uint32_t;
 
 MICHandle
@@ -12,3 +15,5 @@ MICOpen(MICHandle handle);
 
 int
 MICGetStatus(MICHandle handle, void *statusOut);
+
+} // namespace mic

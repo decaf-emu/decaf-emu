@@ -1,11 +1,12 @@
 #pragma once
 #include "kernelmodule.h"
 
-class Mic : public KernelModuleImpl<Mic>
+namespace mic
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   Mic();
-
    virtual void initialise() override;
 
 public:
@@ -14,3 +15,5 @@ public:
 private:
    static void registerCoreFunctions();
 };
+
+} // namespace mic

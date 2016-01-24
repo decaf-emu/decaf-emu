@@ -1,16 +1,17 @@
 #include "mic.h"
 
-Mic::Mic()
+namespace mic
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-Mic::initialise()
-{
-}
-
-void
-Mic::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerCoreFunctions();
 }
+
+} // namespace mic
