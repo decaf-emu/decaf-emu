@@ -1,11 +1,15 @@
 #pragma once
 #include "kernelmodule.h"
 
-class Swkbd : public KernelModuleImpl<Swkbd>
+namespace nn
+{
+
+namespace swkbd
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   Swkbd();
-
    virtual void initialise() override;
 
 public:
@@ -13,5 +17,8 @@ public:
 
 private:
    static void registerCoreFunctions();
-
 };
+
+} // namespace swkbd
+
+} // namespace nn

@@ -1,16 +1,22 @@
 #include "swkbd.h"
 
-Swkbd::Swkbd()
+namespace nn
+{
+
+namespace swkbd
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-Swkbd::initialise()
-{
-}
-
-void
-Swkbd::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerCoreFunctions();
 }
+
+} // namespace swkbd
+
+} // namespace nn

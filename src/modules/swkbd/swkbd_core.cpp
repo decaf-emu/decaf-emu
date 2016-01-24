@@ -7,7 +7,6 @@ namespace nn
 namespace swkbd
 {
 
-
 bool
 AppearInputForm(const AppearArg *arg)
 {
@@ -238,12 +237,8 @@ SetVersion(int32_t version)
 {
 }
 
-} // namespace swkbd
-
-} // namespace nn
-
 void
-Swkbd::registerCoreFunctions()
+Module::registerCoreFunctions()
 {
    RegisterKernelFunctionName("SwkbdAppearInputForm__3RplFRCQ3_2nn5swkbd9AppearArg", nn::swkbd::AppearInputForm);
    RegisterKernelFunctionName("SwkbdAppearKeyboard__3RplFRCQ3_2nn5swkbd11KeyboardArg", nn::swkbd::AppearKeyboard);
@@ -282,3 +277,7 @@ Swkbd::registerCoreFunctions()
    RegisterKernelFunctionName("SwkbdSetUserSoundObj__3RplFPQ3_2nn5swkbd9ISoundObj", nn::swkbd::SetUserSoundObj);
    RegisterKernelFunctionName("SwkbdSetVersion__3RplFi", nn::swkbd::SetVersion);
 }
+
+} // namespace swkbd
+
+} // namespace nn
