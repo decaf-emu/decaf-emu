@@ -201,6 +201,7 @@ ENUM_BEG(UCDataType, uint32_t)
    ENUM_VALUE(Uint8,                0x01)
    ENUM_VALUE(Uint16,               0x02)
    ENUM_VALUE(Uint32,               0x03)
+   ENUM_VALUE(Group,                0x08)
 ENUM_END(UCDataType)
 
 #undef ENUM_BEG

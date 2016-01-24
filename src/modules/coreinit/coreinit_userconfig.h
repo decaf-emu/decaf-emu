@@ -27,4 +27,11 @@ void
 UCClose(IOHandle handle);
 
 IOError
-UCReadSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings);
+UCReadSysConfig(IOHandle handle,
+                uint32_t count,
+                UCSysConfig *settings);
+
+IOError
+UCWriteSysConfig(IOHandle handle,
+                 uint32_t count,
+                 UCSysConfig *settings);
