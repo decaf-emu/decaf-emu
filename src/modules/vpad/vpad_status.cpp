@@ -4,6 +4,9 @@
 #include <vector>
 #include <utility>
 
+namespace vpad
+{
+
 static const std::vector<std::pair<Buttons::Buttons, input::vpad::Core>>
 gButtonMap =
 {
@@ -84,7 +87,9 @@ VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadErro
 }
 
 void
-VPad::registerStatusFunctions()
+Module::registerStatusFunctions()
 {
    RegisterKernelFunction(VPADRead);
 }
+
+} // namespace vpad

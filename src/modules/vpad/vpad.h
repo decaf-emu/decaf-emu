@@ -1,11 +1,12 @@
 #pragma once
 #include "kernelmodule.h"
 
-class VPad : public KernelModuleImpl<VPad>
+namespace vpad
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   VPad();
-
    virtual void initialise() override;
 
 public:
@@ -15,3 +16,5 @@ private:
    static void registerCoreFunctions();
    static void registerStatusFunctions();
 };
+
+} // namespace vpad

@@ -1,6 +1,9 @@
 #include "vpad.h"
 #include "vpad_core.h"
 
+namespace vpad
+{
+
 void
 VPADInit()
 {
@@ -22,10 +25,12 @@ VPADGetTPCalibratedPoint(uint32_t, uint32_t, uint32_t)
 }
 
 void
-VPad::registerCoreFunctions()
+Module::registerCoreFunctions()
 {
    RegisterKernelFunction(VPADInit);
    RegisterKernelFunction(VPADSetAccParam);
    RegisterKernelFunction(VPADSetBtnRepeat);
    RegisterKernelFunction(VPADGetTPCalibratedPoint);
 }
+
+} // namespace vpad

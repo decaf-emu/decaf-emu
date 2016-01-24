@@ -224,7 +224,7 @@ initialiseEmulator(const std::string &logFilename)
    snd_core::Module::RegisterFunctions();
    nn::swkbd::Module::RegisterFunctions();
    sysapp::Module::RegisterFunctions();
-   VPad::RegisterFunctions();
+   vpad::Module::RegisterFunctions();
    zlib125::Module::RegisterFunctions();
 
    // Initialise emulator systems
@@ -250,7 +250,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModuleAlias("snd_core.rpl", "sndcore2.rpl");
    gSystem.registerModule("swkbd.rpl", new nn::swkbd::Module {});
    gSystem.registerModule("sysapp.rpl", new sysapp::Module {});
-   gSystem.registerModule("vpad.rpl", new VPad {});
+   gSystem.registerModule("vpad.rpl", new vpad::Module {});
    gSystem.registerModule("zlib125.rpl", new zlib125::Module {});
 
    // Initialise debugger

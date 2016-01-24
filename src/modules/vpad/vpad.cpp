@@ -1,17 +1,18 @@
 #include "vpad.h"
 
-VPad::VPad()
+namespace vpad
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-VPad::initialise()
-{
-}
-
-void
-VPad::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerCoreFunctions();
    registerStatusFunctions();
 }
+
+} // namespace vpad
