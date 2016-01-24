@@ -1,6 +1,12 @@
 #pragma once
 #include "nn_temp_core.h"
 
+namespace nn
+{
+
+namespace temp
+{
+
 TempStatus
 TEMPCreateAndInitTempDir(uint32_t maxSize,
                          uint32_t pref,
@@ -8,9 +14,6 @@ TEMPCreateAndInitTempDir(uint32_t maxSize,
 
 TempStatus
 TEMPShutdownTempDir(TempDirID id);
-
-namespace nn_temp
-{
 
 namespace internal
 {
@@ -20,4 +23,6 @@ getTempDir(TempDirID id);
 
 } // namespace internal
 
-} // namespace nn_temp
+} // namespace temp
+
+} // namespace nn

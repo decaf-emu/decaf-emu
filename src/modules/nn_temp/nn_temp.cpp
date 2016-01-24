@@ -1,17 +1,23 @@
 #include "nn_temp.h"
 
-NN_temp::NN_temp()
+namespace nn
+{
+
+namespace temp
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-NN_temp::initialise()
-{
-}
-
-void
-NN_temp::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerCoreFunctions();
    registerDirFunctions();
 }
+
+} // namespace temp
+
+} // namespace nn

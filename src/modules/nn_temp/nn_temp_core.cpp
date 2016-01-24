@@ -1,6 +1,12 @@
 #include "nn_temp.h"
 #include "nn_temp_core.h"
 
+namespace nn
+{
+
+namespace temp
+{
+
 TempStatus
 TEMPInit()
 {
@@ -13,8 +19,12 @@ TEMPShutdown()
 }
 
 void
-NN_temp::registerCoreFunctions()
+Module::registerCoreFunctions()
 {
    RegisterKernelFunction(TEMPInit);
    RegisterKernelFunction(TEMPShutdown);
 }
+
+} // namespace temp
+
+} // namespace nn

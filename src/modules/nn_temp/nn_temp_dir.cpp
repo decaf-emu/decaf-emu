@@ -4,6 +4,12 @@
 #include "filesystem/filesystem.h"
 #include "system.h"
 
+namespace nn
+{
+
+namespace temp
+{
+
 static std::random_device
 gRandomDevice;
 
@@ -42,14 +48,11 @@ TEMPShutdownTempDir(TempDirID id)
 }
 
 void
-NN_temp::registerDirFunctions()
+Module::registerDirFunctions()
 {
    RegisterKernelFunction(TEMPCreateAndInitTempDir);
    RegisterKernelFunction(TEMPShutdownTempDir);
 }
-
-namespace nn_temp
-{
 
 namespace internal
 {
@@ -62,4 +65,7 @@ getTempDir(TempDirID id)
 
 } // namespace internal
 
-} // namespace nn_temp
+} // namespace temp
+
+} // namespace nn
+
