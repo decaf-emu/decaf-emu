@@ -209,7 +209,7 @@ initialiseEmulator(const std::string &logFilename)
    ErrEula::RegisterFunctions();
    GX2::RegisterFunctions();
    Mic::RegisterFunctions();
-   NN_ac::RegisterFunctions();
+   nn::ac::Module::RegisterFunctions();
    nn::acp::Module::RegisterFunctions();
    NN_act::RegisterFunctions();
    nn::boss::Module::RegisterFunctions();
@@ -234,7 +234,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("erreula.rpl", new ErrEula {});
    gSystem.registerModule("gx2.rpl", new GX2 {});
    gSystem.registerModule("mic.rpl", new Mic {});
-   gSystem.registerModule("nn_ac.rpl", new NN_ac {});
+   gSystem.registerModule("nn_ac.rpl", new nn::ac::Module {});
    gSystem.registerModule("nn_acp.rpl", new nn::acp::Module {});
    gSystem.registerModule("nn_act.rpl", new NN_act {});
    gSystem.registerModule("nn_boss.rpl", new nn::boss::Module {});

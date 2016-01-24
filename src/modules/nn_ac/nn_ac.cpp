@@ -1,16 +1,22 @@
 #include "nn_ac.h"
 
-NN_ac::NN_ac()
+namespace nn
+{
+
+namespace ac
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-NN_ac::initialise()
-{
-}
-
-void
-NN_ac::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerCoreFunctions();
 }
+
+} // namespace ac
+
+} // namespace nn

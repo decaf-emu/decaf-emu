@@ -47,12 +47,8 @@ GetLastErrorCode(uint32_t *error)
    return nn::Result::Success;
 }
 
-} // namespace ac
-
-} // namespace nn
-
 void
-NN_ac::registerCoreFunctions()
+Module::registerCoreFunctions()
 {
    RegisterKernelFunctionName("Initialize__Q2_2nn2acFv", nn::ac::Initialize);
    RegisterKernelFunctionName("Finalize__Q2_2nn2acFv", nn::ac::Finalize);
@@ -61,3 +57,7 @@ NN_ac::registerCoreFunctions()
    RegisterKernelFunctionName("GetConnectStatus__Q2_2nn2acFPQ3_2nn2ac6Status", nn::ac::GetConnectStatus);
    RegisterKernelFunctionName("GetLastErrorCode__Q2_2nn2acFPUi", nn::ac::GetLastErrorCode);
 }
+
+} // namespace ac
+
+} // namespace nn
