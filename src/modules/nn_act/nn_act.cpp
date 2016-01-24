@@ -1,16 +1,22 @@
 #include "nn_act.h"
 
-NN_act::NN_act()
+namespace nn
+{
+
+namespace act
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-NN_act::initialise()
-{
-}
-
-void
-NN_act::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerCoreFunctions();
 }
+
+} // namespace act
+
+} // namespace nn

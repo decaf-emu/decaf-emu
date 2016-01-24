@@ -1,11 +1,15 @@
 #pragma once
 #include "kernelmodule.h"
 
-class NN_act : public KernelModuleImpl<NN_act>
+namespace nn
+{
+
+namespace act
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   NN_act();
-
    virtual void initialise() override;
 
 public:
@@ -14,3 +18,7 @@ public:
 private:
    static void registerCoreFunctions();
 };
+
+} // namespace act
+
+} // namespace nn

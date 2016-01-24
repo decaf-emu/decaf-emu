@@ -206,12 +206,8 @@ IsNetworkAccountEx(uint8_t slot)
    return false;
 }
 
-} // namespace act
-
-} // namespace nn
-
 void
-NN_act::registerCoreFunctions()
+Module::registerCoreFunctions()
 {
    RegisterKernelFunctionName("Initialize__Q2_2nn3actFv", nn::act::Initialize);
    RegisterKernelFunctionName("Finalize__Q2_2nn3actFv", nn::act::Finalize);
@@ -236,3 +232,7 @@ NN_act::registerCoreFunctions()
    RegisterKernelFunctionName("GetTransferableId__Q2_2nn3actFUi", nn::act::GetTransferableId);
    RegisterKernelFunctionName("GetTransferableIdEx__Q2_2nn3actFPULUiUc", nn::act::GetTransferableIdEx);
 }
+
+} // namespace act
+
+} // namespace nn
