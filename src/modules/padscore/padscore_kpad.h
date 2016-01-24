@@ -1,6 +1,9 @@
 #pragma once
 #include "types.h"
 
+namespace padscore
+{
+
 void
 KPADInit();
 
@@ -15,3 +18,5 @@ KPADSetMplsWorkarea(char *buffer);
 
 void
 KPADDisableDPD(uint32_t channel);
+
+} // namespace padscore

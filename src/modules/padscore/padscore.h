@@ -1,11 +1,12 @@
 #pragma once
 #include "kernelmodule.h"
 
-class PadScore : public KernelModuleImpl<PadScore>
+namespace padscore
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   PadScore();
-
    virtual void initialise() override;
 
 public:
@@ -16,3 +17,5 @@ private:
    static void registerKPADStatusFunctions();
    static void registerWPADFunctions();
 };
+
+} // namespace padscore

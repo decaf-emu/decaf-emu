@@ -2,6 +2,9 @@
 #include "padscore_kpad.h"
 #include "padscore_wpad.h"
 
+namespace padscore
+{
+
 void
 KPADInit()
 {
@@ -39,7 +42,7 @@ KPADDisableDPD(uint32_t channel)
 }
 
 void
-PadScore::registerKPADFunctions()
+Module::registerKPADFunctions()
 {
    RegisterKernelFunction(KPADInit);
    RegisterKernelFunction(KPADInitEx);
@@ -48,3 +51,5 @@ PadScore::registerKPADFunctions()
    RegisterKernelFunction(KPADEnableDPD);
    RegisterKernelFunction(KPADDisableDPD);
 }
+
+} // namespace padscore

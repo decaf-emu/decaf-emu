@@ -5,6 +5,9 @@
 #include "utils/be_vec.h"
 #include "utils/structsize.h"
 
+namespace padscore
+{
+
 struct KPADExtStatus
 {
    UNKNOWN(0x50);
@@ -39,3 +42,5 @@ KPADRead(uint32_t chan, KPADStatus *buffers, uint32_t count);
 
 int32_t
 KPADReadEx(uint32_t chan, KPADStatus *buffers, uint32_t count, be_val<int32_t> *error);
+
+} // namespace padscore

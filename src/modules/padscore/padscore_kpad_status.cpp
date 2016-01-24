@@ -1,6 +1,9 @@
 #include "padscore.h"
 #include "padscore_kpad_status.h"
 
+namespace padscore
+{
+
 // Returns number of KPADStatus buffers filled or negative is an error code
 int32_t
 KPADRead(uint32_t chan, KPADStatus *buffers, uint32_t count)
@@ -33,8 +36,10 @@ KPADReadEx(uint32_t chan, KPADStatus *buffers, uint32_t count, be_val<int32_t> *
 }
 
 void
-PadScore::registerKPADStatusFunctions()
+Module::registerKPADStatusFunctions()
 {
    RegisterKernelFunction(KPADRead);
    RegisterKernelFunction(KPADReadEx);
 }
+
+} // namespace padscore

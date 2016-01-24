@@ -1,6 +1,9 @@
 #pragma once
 #include "types.h"
 
+namespace padscore
+{
+
 namespace WPADChan
 {
 enum Chan : uint32_t
@@ -63,3 +66,5 @@ WPADEnableURCC(BOOL enable);
 
 WPADError::Value
 WPADProbe(WPADChan::Chan chan, be_val<WPADControllerType::Value> *type);
+
+} // namespace padscore

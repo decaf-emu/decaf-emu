@@ -1,6 +1,9 @@
 #include "padscore.h"
 #include "padscore_wpad.h"
 
+namespace padscore
+{
+
 static WPADStatus::Status
 gWPADStatus = WPADStatus::Uninitialised;
 
@@ -30,10 +33,12 @@ WPADProbe(WPADChan::Chan chan, be_val<WPADControllerType::Value> *type)
 }
 
 void
-PadScore::registerWPADFunctions()
+Module::registerWPADFunctions()
 {
    RegisterKernelFunction(WPADInit);
    RegisterKernelFunction(WPADGetStatus);
    RegisterKernelFunction(WPADEnableURCC);
    RegisterKernelFunction(WPADProbe);
 }
+
+} // namespace padscore

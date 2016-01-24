@@ -1,18 +1,19 @@
 #include "padscore.h"
 
-PadScore::PadScore()
+namespace padscore
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-PadScore::initialise()
-{
-}
-
-void
-PadScore::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerKPADFunctions();
    registerKPADStatusFunctions();
    registerWPADFunctions();
 }
+
+} // namespace padscore
