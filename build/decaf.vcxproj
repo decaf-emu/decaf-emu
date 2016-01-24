@@ -281,6 +281,8 @@
     <ClCompile Include="..\src\modules\nn_act\nn_act_core.cpp" />
     <ClCompile Include="..\src\modules\nn_ac\nn_ac.cpp" />
     <ClCompile Include="..\src\modules\nn_ac\nn_ac_core.cpp" />
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss.cpp" />
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_init.cpp" />
     <ClCompile Include="..\src\modules\nn_fp\nn_fp.cpp" />
     <ClCompile Include="..\src\modules\nn_fp\nn_fp_core.cpp" />
     <ClCompile Include="..\src\modules\nn_nfp\nn_nfp.cpp" />
@@ -457,6 +459,8 @@
     <ClInclude Include="..\src\modules\nn_acp\nn_acp_title.h" />
     <ClInclude Include="..\src\modules\nn_act\nn_act_result.h" />
     <ClInclude Include="..\src\modules\nn_ac\nn_ac_result.h" />
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss.h" />
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_init.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_result.h" />
     <ClInclude Include="..\src\modules\nn_result.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp.h" />
