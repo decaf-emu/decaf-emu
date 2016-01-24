@@ -27,7 +27,7 @@ TEMPCreateAndInitTempDir(uint32_t maxSize,
    auto fs = gSystem.getFileSystem();
    auto id = gDistribution(gMersenne);
 
-   if (!fs->makeFolder(nn_temp::internal::getTempDir(id))) {
+   if (!fs->makeFolder(internal::getTempDir(id))) {
       return TempStatus::FatalError;
    }
 
@@ -40,7 +40,7 @@ TEMPShutdownTempDir(TempDirID id)
 {
    auto fs = gSystem.getFileSystem();
 
-   if (!fs->deleteFolder(nn_temp::internal::getTempDir(id))) {
+   if (!fs->deleteFolder(internal::getTempDir(id))) {
       return TempStatus::FatalError;
    }
 

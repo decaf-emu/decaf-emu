@@ -8,7 +8,10 @@ namespace fp
 {
 
 nn::Result
-GetFriendList(void *list, be_val<uint32_t> *length, uint32_t index, uint32_t listSize)
+GetFriendList(void *list,
+              be_val<uint32_t> *length,
+              uint32_t index,
+              uint32_t listSize)
 {
    *length = 0;
    return nn::Result::Success;

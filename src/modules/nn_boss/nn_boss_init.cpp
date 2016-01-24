@@ -10,10 +10,6 @@ namespace boss
 static bool
 gInitialised = false;
 
-
-static bool
-gInitialised = false;
-
 nn::Result
 Initialize()
 {
