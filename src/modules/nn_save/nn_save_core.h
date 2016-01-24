@@ -4,17 +4,18 @@
 
 using SaveStatus = FSStatus;
 
+namespace nn
+{
+
+namespace save
+{
+
 SaveStatus
 SAVEInit();
 
 void
 SAVEShutdown();
 
-SaveStatus
-SAVEInitSaveDir(uint8_t userID);
+} // namespace save
 
-SaveStatus
-SAVEGetSharedDataTitlePath(uint64_t titleID, const char *dir, char *buffer, uint32_t bufferSize);
-
-SaveStatus
-SAVEGetSharedSaveDataPath(uint64_t titleID, const char *dir, char *buffer, uint32_t bufferSize);
+} // namespace nn

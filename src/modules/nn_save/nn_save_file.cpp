@@ -4,6 +4,12 @@
 #include "modules/coreinit/coreinit_fs_dir.h"
 #include "modules/coreinit/coreinit_fs_file.h"
 
+namespace nn
+{
+
+namespace save
+{
+
 FSStatus
 SAVEOpenFile(FSClient *client,
              FSCmdBlock *block,
@@ -13,7 +19,7 @@ SAVEOpenFile(FSClient *client,
              be_val<FSFileHandle> *handle,
              uint32_t flags)
 {
-   auto fsPath = nn_save::internal::getSavePath(account, path);
+   auto fsPath = internal::getSavePath(account, path);
    return FSOpenFile(client, block, fsPath.path().c_str(), mode, handle, flags);
 }
 
@@ -27,13 +33,17 @@ SAVEOpenFileAsync(FSClient *client,
                   uint32_t flags,
                   FSAsyncData *asyncData)
 {
-   auto fsPath = nn_save::internal::getSavePath(account, path);
+   auto fsPath = internal::getSavePath(account, path);
    return FSOpenFileAsync(client, block, fsPath.path().c_str(), mode, handle, flags, asyncData);
 }
 
 void
-NN_save::registerFileFunctions()
+Module::registerFileFunctions()
 {
    RegisterKernelFunction(SAVEOpenFile);
    RegisterKernelFunction(SAVEOpenFileAsync);
 }
+
+} // namespace save
+
+} // namespace nn

@@ -4,6 +4,12 @@
 #include "filesystem/filesystem_path.h"
 #include "modules/coreinit/coreinit_fs.h"
 
+namespace nn
+{
+
+namespace save
+{
+
 SaveStatus
 SAVEInitSaveDir(uint8_t userID);
 
@@ -51,9 +57,6 @@ SAVEOpenDirAsync(FSClient *client,
                  uint32_t flags,
                  FSAsyncData *asyncData);
 
-namespace nn_save
-{
-
 namespace internal
 {
 
@@ -65,4 +68,6 @@ getSavePath(uint32_t account, const char *path);
 
 } // namespace internal
 
-} // namespace nn_save
+} // namespace save
+
+} // namespace nn

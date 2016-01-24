@@ -1,18 +1,24 @@
 #include "nn_save.h"
 
-NN_save::NN_save()
+namespace nn
+{
+
+namespace save
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-NN_save::initialise()
-{
-}
-
-void
-NN_save::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerCoreFunctions();
    registerDirFunctions();
    registerFileFunctions();
 }
+
+} // namespace save
+
+} // namespace nn

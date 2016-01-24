@@ -216,7 +216,7 @@ initialiseEmulator(const std::string &logFilename)
    nn::fp::Module::RegisterFunctions();
    nn::ndm::Module::RegisterFunctions();
    nn::nfp::Module::RegisterFunctions();
-   NN_save::RegisterFunctions();
+   nn::save::Module::RegisterFunctions();
    NN_temp::RegisterFunctions();
    nsysnet::Module::RegisterFunctions();
    PadScore::RegisterFunctions();
@@ -241,7 +241,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("nn_fp.rpl", new nn::fp::Module {});
    gSystem.registerModule("nn_nfp.rpl", new nn::nfp::Module {});
    gSystem.registerModule("nn_ndm.rpl", new nn::ndm::Module {});
-   gSystem.registerModule("nn_save.rpl", new NN_save {});
+   gSystem.registerModule("nn_save.rpl", new nn::save::Module {});
    gSystem.registerModule("nn_temp.rpl", new NN_temp {});
    gSystem.registerModule("nsysnet.rpl", new nsysnet::Module {});
    gSystem.registerModule("padscore.rpl", new PadScore {});

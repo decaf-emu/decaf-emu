@@ -1,6 +1,12 @@
 #pragma once
 #include "modules/coreinit/coreinit_fs.h"
 
+namespace nn
+{
+
+namespace save
+{
+
 FSStatus
 SAVEOpenFile(FSClient *client,
              FSCmdBlock *block,
@@ -19,3 +25,7 @@ SAVEOpenFileAsync(FSClient *client,
                   be_val<FSFileHandle> *handle,
                   uint32_t flags,
                   FSAsyncData *asyncData);
+
+} // namespace save
+
+} // namespace nn

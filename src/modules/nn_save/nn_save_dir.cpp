@@ -5,6 +5,12 @@
 #include "modules/coreinit/coreinit_systeminfo.h"
 #include "system.h"
 
+namespace nn
+{
+
+namespace save
+{
+
 SaveStatus
 SAVEInitSaveDir(uint8_t userID)
 {
@@ -27,7 +33,7 @@ SAVEInitSaveDir(uint8_t userID)
    }
 
    // Create user save folder
-   auto savePath = nn_save::internal::getSaveDirectory(userID);
+   auto savePath = internal::getSaveDirectory(userID);
 
    if (!fs->makeFolder(savePath)) {
       return SaveStatus::FatalError;
@@ -77,7 +83,7 @@ SAVEMakeDir(FSClient *client,
             const char *path,
             uint32_t flags)
 {
-   auto fsPath = nn_save::internal::getSavePath(account, path);
+   auto fsPath = internal::getSavePath(account, path);
    return FSMakeDir(client, block, fsPath.path().c_str(), flags);
 }
 
@@ -89,7 +95,7 @@ SAVEOpenDir(FSClient *client,
             be_val<FSDirectoryHandle> *handle,
             uint32_t flags)
 {
-   auto fsPath = nn_save::internal::getSavePath(account, path);
+   auto fsPath = internal::getSavePath(account, path);
    return FSOpenDir(client, block, fsPath.path().c_str(), handle, flags);
 }
 
@@ -101,7 +107,7 @@ SAVEMakeDirAsync(FSClient *client,
                  uint32_t flags,
                  FSAsyncData *asyncData)
 {
-   auto fsPath = nn_save::internal::getSavePath(account, path);
+   auto fsPath = internal::getSavePath(account, path);
    return FSMakeDirAsync(client, block, fsPath.path().c_str(), flags, asyncData);
 }
 
@@ -114,12 +120,12 @@ SAVEOpenDirAsync(FSClient *client,
                  uint32_t flags,
                  FSAsyncData *asyncData)
 {
-   auto fsPath = nn_save::internal::getSavePath(account, path);
+   auto fsPath = internal::getSavePath(account, path);
    return FSOpenDirAsync(client, block, fsPath.path().c_str(), handle, flags, asyncData);
 }
 
 void
-NN_save::registerDirFunctions()
+Module::registerDirFunctions()
 {
    RegisterKernelFunction(SAVEInitSaveDir);
    RegisterKernelFunction(SAVEGetSharedDataTitlePath);
@@ -129,9 +135,6 @@ NN_save::registerDirFunctions()
    RegisterKernelFunction(SAVEOpenDir);
    RegisterKernelFunction(SAVEOpenDirAsync);
 }
-
-namespace nn_save
-{
 
 namespace internal
 {
@@ -151,4 +154,6 @@ getSavePath(uint32_t account,
 
 } // namespace internal
 
-} // namespace nn_save
+} // namespace save
+
+} // namespace nn

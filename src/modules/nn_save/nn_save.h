@@ -1,11 +1,15 @@
 #pragma once
 #include "kernelmodule.h"
 
-class NN_save : public KernelModuleImpl<NN_save>
+namespace nn
+{
+
+namespace save
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   NN_save();
-
    virtual void initialise() override;
 
 public:
@@ -16,3 +20,7 @@ private:
    static void registerDirFunctions();
    static void registerFileFunctions();
 };
+
+} // namespace save
+
+} // namespace nn
