@@ -4,7 +4,7 @@
 #include "filesystem/filesystem.h"
 
 static fs::Path
-gWorkingPath = "/vol/code";
+gWorkingPath = "/";
 
 
 FSStatus
