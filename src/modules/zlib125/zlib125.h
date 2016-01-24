@@ -1,10 +1,13 @@
 #pragma once
 #include "kernelmodule.h"
 
-class Zlib125 : public KernelModuleImpl<Zlib125>
+namespace zlib125
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   virtual ~Zlib125() = default;
+   virtual ~Module() = default;
 
    virtual void initialise() override;
 
@@ -14,3 +17,5 @@ public:
 private:
    static void registerCoreFunctions();
 };
+
+} // namespace zlib125

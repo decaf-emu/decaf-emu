@@ -7,6 +7,9 @@
 #include "utils/wfunc_ptr.h"
 #include "zlib125.h"
 
+namespace zlib125
+{
+
 static std::map<uint32_t, z_stream>
 gStreamMap;
 
@@ -270,7 +273,7 @@ zlib125_zlibCompileFlags()
 }
 
 void
-Zlib125::registerCoreFunctions()
+Module::registerCoreFunctions()
 {
    // Need wrap
    RegisterKernelFunctionName("adler32", zlib125_adler32);
@@ -289,3 +292,5 @@ Zlib125::registerCoreFunctions()
    RegisterKernelFunctionName("uncompress", zlib125_uncompress);
    RegisterKernelFunctionName("zlibCompileFlags", zlib125_zlibCompileFlags);
 }
+
+} // namespace zlib125

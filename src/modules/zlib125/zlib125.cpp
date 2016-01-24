@@ -1,12 +1,17 @@
 #include "zlib125.h"
 
+namespace zlib125
+{
+
 void
-Zlib125::initialise()
+Module::initialise()
 {
 }
 
 void
-Zlib125::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerCoreFunctions();
 }
+
+} // namespace zlib125

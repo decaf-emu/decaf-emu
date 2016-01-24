@@ -225,7 +225,7 @@ initialiseEmulator(const std::string &logFilename)
    Swkbd::RegisterFunctions();
    SysApp::RegisterFunctions();
    VPad::RegisterFunctions();
-   Zlib125::RegisterFunctions();
+   zlib125::Module::RegisterFunctions();
 
    // Initialise emulator systems
    gSystem.initialise();
@@ -251,7 +251,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("swkbd.rpl", new Swkbd {});
    gSystem.registerModule("sysapp.rpl", new SysApp {});
    gSystem.registerModule("vpad.rpl", new VPad {});
-   gSystem.registerModule("zlib125.rpl", new Zlib125 {});
+   gSystem.registerModule("zlib125.rpl", new zlib125::Module {});
 
    // Initialise debugger
    gDebugger.initialise();
