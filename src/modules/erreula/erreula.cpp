@@ -1,16 +1,22 @@
 #include "erreula.h"
 
-ErrEula::ErrEula()
+namespace nn
+{
+
+namespace erreula
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-ErrEula::initialise()
-{
-}
-
-void
-ErrEula::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerErrorViewerFunctions();
 }
+
+} // namespace erreula
+
+} // namespace nn

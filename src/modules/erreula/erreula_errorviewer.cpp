@@ -1,7 +1,10 @@
 #include "erreula.h"
 #include "erreula_errorviewer.h"
 
-namespace Rpl
+namespace nn
+{
+
+namespace erreula
 {
 
 void
@@ -129,31 +132,33 @@ ErrEulaJump(char const *, unsigned int)
    return false;
 }
 
-} // namespace Rpl
-
-void ErrEula::registerErrorViewerFunctions()
+void Module::registerErrorViewerFunctions()
 {
-   RegisterKernelFunctionName("ErrEulaAppearError__3RplFRCQ3_2nn7erreula9AppearArg", Rpl::ErrEulaAppearError);
-   RegisterKernelFunctionName("ErrEulaCalc__3RplFRCQ3_2nn7erreula14ControllerInfo", Rpl::ErrEulaCalc);
-   RegisterKernelFunctionName("ErrEulaCreate__3RplFPUcQ3_2nn7erreula10RegionTypeQ3_2nn7erreula8LangTypeP8FSClient", Rpl::ErrEulaCreate);
-   RegisterKernelFunctionName("ErrEulaDestroy__3RplFv", Rpl::ErrEulaDestroy);
-   RegisterKernelFunctionName("ErrEulaDisappearError__3RplFv", Rpl::ErrEulaDisappearError);
-   RegisterKernelFunctionName("ErrEulaDrawDRC__3RplFv", Rpl::ErrEulaDrawDRC);
-   RegisterKernelFunctionName("ErrEulaDrawTV__3RplFv", Rpl::ErrEulaDrawTV);
-   RegisterKernelFunctionName("ErrEulaGetStateErrorViewer__3RplFv", Rpl::ErrEulaGetStateErrorViewer);
-   RegisterKernelFunctionName("ErrEulaIsDecideSelectButtonError__3RplFv", Rpl::ErrEulaIsDecideSelectButtonError);
-   RegisterKernelFunctionName("ErrEulaIsDecideSelectLeftButtonError__3RplFv", Rpl::ErrEulaIsDecideSelectLeftButtonError);
-   RegisterKernelFunctionName("ErrEulaIsDecideSelectRightButtonError__3RplFv", Rpl::ErrEulaIsDecideSelectRightButtonError);
-   RegisterKernelFunctionName("ErrEulaSetControllerRemo__3RplFQ3_2nn7erreula14ControllerType", Rpl::ErrEulaSetControllerRemo);
-   RegisterKernelFunctionName("ErrEulaAppearHomeNixSign__3RplFRCQ3_2nn7erreula14HomeNixSignArg", Rpl::ErrEulaAppearHomeNixSign);
-   RegisterKernelFunctionName("ErrEulaIsAppearHomeNixSign__3RplFv", Rpl::ErrEulaIsAppearHomeNixSign);
-   RegisterKernelFunctionName("ErrEulaDisappearHomeNixSign__3RplFv", Rpl::ErrEulaDisappearHomeNixSign);
-   RegisterKernelFunctionName("ErrEulaChangeLang__3RplFQ3_2nn7erreula8LangType", Rpl::ErrEulaChangeLang);
-   RegisterKernelFunctionName("ErrEulaIsSelectCursorActive__3RplFv", Rpl::ErrEulaIsSelectCursorActive);
-   RegisterKernelFunctionName("ErrEulaGetResultType__3RplFv", Rpl::ErrEulaGetResultType);
-   RegisterKernelFunctionName("ErrEulaGetResultCode__3RplFv", Rpl::ErrEulaGetResultCode);
-   RegisterKernelFunctionName("ErrEulaGetSelectButtonNumError__3RplFv", Rpl::ErrEulaGetSelectButtonNumError);
-   RegisterKernelFunctionName("ErrEulaSetVersion__3RplFi", Rpl::ErrEulaSetVersion);
-   RegisterKernelFunctionName("ErrEulaPlayAppearSE__3RplFb", Rpl::ErrEulaPlayAppearSE);
-   RegisterKernelFunctionName("ErrEulaJump__3RplFPCcUi", Rpl::ErrEulaJump);
+   RegisterKernelFunctionName("ErrEulaAppearError__3RplFRCQ3_2nn7erreula9AppearArg", ErrEulaAppearError);
+   RegisterKernelFunctionName("ErrEulaCalc__3RplFRCQ3_2nn7erreula14ControllerInfo", ErrEulaCalc);
+   RegisterKernelFunctionName("ErrEulaCreate__3RplFPUcQ3_2nn7erreula10RegionTypeQ3_2nn7erreula8LangTypeP8FSClient", ErrEulaCreate);
+   RegisterKernelFunctionName("ErrEulaDestroy__3RplFv", ErrEulaDestroy);
+   RegisterKernelFunctionName("ErrEulaDisappearError__3RplFv", ErrEulaDisappearError);
+   RegisterKernelFunctionName("ErrEulaDrawDRC__3RplFv", ErrEulaDrawDRC);
+   RegisterKernelFunctionName("ErrEulaDrawTV__3RplFv", ErrEulaDrawTV);
+   RegisterKernelFunctionName("ErrEulaGetStateErrorViewer__3RplFv", ErrEulaGetStateErrorViewer);
+   RegisterKernelFunctionName("ErrEulaIsDecideSelectButtonError__3RplFv", ErrEulaIsDecideSelectButtonError);
+   RegisterKernelFunctionName("ErrEulaIsDecideSelectLeftButtonError__3RplFv", ErrEulaIsDecideSelectLeftButtonError);
+   RegisterKernelFunctionName("ErrEulaIsDecideSelectRightButtonError__3RplFv", ErrEulaIsDecideSelectRightButtonError);
+   RegisterKernelFunctionName("ErrEulaSetControllerRemo__3RplFQ3_2nn7erreula14ControllerType", ErrEulaSetControllerRemo);
+   RegisterKernelFunctionName("ErrEulaAppearHomeNixSign__3RplFRCQ3_2nn7erreula14HomeNixSignArg", ErrEulaAppearHomeNixSign);
+   RegisterKernelFunctionName("ErrEulaIsAppearHomeNixSign__3RplFv", ErrEulaIsAppearHomeNixSign);
+   RegisterKernelFunctionName("ErrEulaDisappearHomeNixSign__3RplFv", ErrEulaDisappearHomeNixSign);
+   RegisterKernelFunctionName("ErrEulaChangeLang__3RplFQ3_2nn7erreula8LangType", ErrEulaChangeLang);
+   RegisterKernelFunctionName("ErrEulaIsSelectCursorActive__3RplFv", ErrEulaIsSelectCursorActive);
+   RegisterKernelFunctionName("ErrEulaGetResultType__3RplFv", ErrEulaGetResultType);
+   RegisterKernelFunctionName("ErrEulaGetResultCode__3RplFv", ErrEulaGetResultCode);
+   RegisterKernelFunctionName("ErrEulaGetSelectButtonNumError__3RplFv", ErrEulaGetSelectButtonNumError);
+   RegisterKernelFunctionName("ErrEulaSetVersion__3RplFi", ErrEulaSetVersion);
+   RegisterKernelFunctionName("ErrEulaPlayAppearSE__3RplFb", ErrEulaPlayAppearSE);
+   RegisterKernelFunctionName("ErrEulaJump__3RplFPCcUi", ErrEulaJump);
 }
+
+} // namespace erreula
+
+} // namespace nn

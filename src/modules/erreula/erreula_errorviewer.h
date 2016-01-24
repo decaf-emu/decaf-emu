@@ -44,13 +44,6 @@ struct HomeNixSignArg
    // Unknown
 };
 
-} // namespace erreula
-
-} // namespace nn
-
-namespace Rpl
-{
-
 enum class ErrorViewerState : uint32_t
 {
    None
@@ -125,4 +118,6 @@ ErrEulaPlayAppearSE(bool value);
 bool
 ErrEulaJump(char const *, unsigned int);
 
-} // namespace Rpl
+} // namespace erreula
+
+} // namespace nn

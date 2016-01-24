@@ -1,11 +1,15 @@
 #pragma once
 #include "kernelmodule.h"
 
-class ErrEula : public KernelModuleImpl<ErrEula>
+namespace nn
+{
+
+namespace erreula
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   ErrEula();
-
    virtual void initialise() override;
 
 public:
@@ -14,3 +18,7 @@ public:
 private:
    static void registerErrorViewerFunctions();
 };
+
+} // namespace erreula
+
+} // namespace nn
