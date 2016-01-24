@@ -864,6 +864,9 @@
     <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_settings.cpp">
       <Filter>Source Files\modules\nn_nfp</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\nn_acp\nn_acp_device.cpp">
+      <Filter>Source Files\modules\nn_acp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1639,6 +1642,9 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_settings.h">
       <Filter>Header Files\modules\nn_nfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_acp\nn_acp_device.h">
+      <Filter>Header Files\modules\nn_acp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

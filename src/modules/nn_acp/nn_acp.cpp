@@ -14,6 +14,7 @@ Module::initialise()
 void
 Module::RegisterFunctions()
 {
+   registerDeviceFunctions();
    registerTitleFunctions();
 }
 
