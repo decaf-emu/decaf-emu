@@ -275,6 +275,8 @@
     <ClCompile Include="..\src\modules\gx2\gx2_event.cpp" />
     <ClCompile Include="..\src\modules\mic\mic.cpp" />
     <ClCompile Include="..\src\modules\mic\mic_core.cpp" />
+    <ClCompile Include="..\src\modules\nn_acp\nn_acp.cpp" />
+    <ClCompile Include="..\src\modules\nn_acp\nn_acp_title.cpp" />
     <ClCompile Include="..\src\modules\nn_act\nn_act.cpp" />
     <ClCompile Include="..\src\modules\nn_act\nn_act_core.cpp" />
     <ClCompile Include="..\src\modules\nn_ac\nn_ac.cpp" />
@@ -451,6 +453,8 @@
     <ClInclude Include="..\src\modules\gx2\gx2_tessellation.h" />
     <ClInclude Include="..\src\modules\mic\mic.h" />
     <ClInclude Include="..\src\modules\mic\mic_core.h" />
+    <ClInclude Include="..\src\modules\nn_acp\nn_acp.h" />
+    <ClInclude Include="..\src\modules\nn_acp\nn_acp_title.h" />
     <ClInclude Include="..\src\modules\nn_act\nn_act_result.h" />
     <ClInclude Include="..\src\modules\nn_ac\nn_ac_result.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_result.h" />

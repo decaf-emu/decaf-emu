@@ -24,6 +24,7 @@
 #include "modules/gx2/gx2.h"
 #include "modules/mic/mic.h"
 #include "modules/nn_ac/nn_ac.h"
+#include "modules/nn_acp/nn_acp.h"
 #include "modules/nn_act/nn_act.h"
 #include "modules/nn_fp/nn_fp.h"
 #include "modules/nn_nfp/nn_nfp.h"
@@ -206,6 +207,7 @@ initialiseEmulator(const std::string &logFilename)
    GX2::RegisterFunctions();
    Mic::RegisterFunctions();
    NN_ac::RegisterFunctions();
+   nn::acp::Module::RegisterFunctions();
    NN_act::RegisterFunctions();
    NN_fp::RegisterFunctions();
    NN_nfp::RegisterFunctions();
@@ -227,6 +229,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("gx2.rpl", new GX2 {});
    gSystem.registerModule("mic.rpl", new Mic {});
    gSystem.registerModule("nn_ac.rpl", new NN_ac {});
+   gSystem.registerModule("nn_acp.rpl", new nn::acp::Module {});
    gSystem.registerModule("nn_act.rpl", new NN_act {});
    gSystem.registerModule("nn_fp.rpl", new NN_fp {});
    gSystem.registerModule("nn_nfp.rpl", new NN_nfp {});
