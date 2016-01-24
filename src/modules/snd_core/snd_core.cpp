@@ -1,18 +1,19 @@
 #include "snd_core.h"
 
-Snd_Core::Snd_Core()
+namespace snd_core
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-Snd_Core::initialise()
-{
-}
-
-void
-Snd_Core::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerAiFunctions();
    registerCoreFunctions();
    registerDeviceFunctions();
 }
+
+} // namespace snd_core

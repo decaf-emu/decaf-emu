@@ -1,6 +1,9 @@
 #pragma once
 #include "types.h"
 
+namespace snd_core
+{
+
 uint32_t
 AIGetDMALength();
 
@@ -12,3 +15,5 @@ AI2GetDMALength();
 
 uint32_t
 AI2GetDMAStartAddr();
+
+} // namespace snd_core

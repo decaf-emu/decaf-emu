@@ -2,6 +2,9 @@
 #include "snd_core_result.h"
 #include "utils/wfunc_ptr.h"
 
+namespace snd_core
+{
+
 struct AXProfile
 {
 };
@@ -31,3 +34,5 @@ AXRmtGetSamples(int32_t, be_val<uint8_t> *buffer, int32_t samples);
 
 int32_t
 AXRmtAdvancePtr(int32_t);
+
+} // namespace snd_core

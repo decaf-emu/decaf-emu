@@ -1,6 +1,9 @@
 #pragma once
 #include "types.h"
 
+namespace snd_core
+{
+
 namespace AXResult
 {
 enum Result : int32_t
@@ -10,3 +13,5 @@ enum Result : int32_t
    InvalidDRCVSMode = -13,
 };
 }
+
+} // namespace snd_core

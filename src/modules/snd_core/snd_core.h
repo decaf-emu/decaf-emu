@@ -1,11 +1,12 @@
 #pragma once
 #include "kernelmodule.h"
 
-class Snd_Core : public KernelModuleImpl<Snd_Core>
+namespace snd_core
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   Snd_Core();
-
    virtual void initialise() override;
 
 public:
@@ -16,3 +17,5 @@ private:
    static void registerCoreFunctions();
    static void registerDeviceFunctions();
 };
+
+} // namespace snd_core

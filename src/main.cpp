@@ -220,8 +220,8 @@ initialiseEmulator(const std::string &logFilename)
    nn::temp::Module::RegisterFunctions();
    nsysnet::Module::RegisterFunctions();
    padscore::Module::RegisterFunctions();
-   ProcUI::RegisterFunctions();
-   Snd_Core::RegisterFunctions();
+   proc_ui::Module::RegisterFunctions();
+   snd_core::Module::RegisterFunctions();
    Swkbd::RegisterFunctions();
    SysApp::RegisterFunctions();
    VPad::RegisterFunctions();
@@ -246,7 +246,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("nsysnet.rpl", new nsysnet::Module {});
    gSystem.registerModule("padscore.rpl", new padscore::Module {});
    gSystem.registerModule("proc_ui.rpl", new proc_ui::Module {});
-   gSystem.registerModule("snd_core.rpl", new Snd_Core {});
+   gSystem.registerModule("snd_core.rpl", new snd_core::Module {});
    gSystem.registerModuleAlias("snd_core.rpl", "sndcore2.rpl");
    gSystem.registerModule("swkbd.rpl", new Swkbd {});
    gSystem.registerModule("sysapp.rpl", new SysApp {});

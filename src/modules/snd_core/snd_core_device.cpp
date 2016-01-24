@@ -1,6 +1,9 @@
 #include "snd_core.h"
 #include "snd_core_device.h"
 
+namespace snd_core
+{
+
 static AXDeviceFinalMixCallback
 gDeviceFinalMixCallback;
 
@@ -63,7 +66,7 @@ AXRegisterAuxCallback(AXDeviceType::Type type, uint32_t, uint32_t, AXAuxCallback
 }
 
 void
-Snd_Core::registerDeviceFunctions()
+Module::registerDeviceFunctions()
 {
    RegisterKernelFunction(AXGetDeviceMode);
    RegisterKernelFunction(AXGetDeviceFinalMixCallback);
@@ -72,3 +75,5 @@ Snd_Core::registerDeviceFunctions()
    RegisterKernelFunction(AXGetAuxCallback);
    RegisterKernelFunction(AXRegisterAuxCallback);
 }
+
+} // namespace snd_core

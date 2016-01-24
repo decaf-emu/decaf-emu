@@ -4,6 +4,9 @@
 #include "utils/be_val.h"
 #include "utils/wfunc_ptr.h"
 
+namespace snd_core
+{
+
 namespace AXDeviceType
 {
 enum Type : uint32_t
@@ -49,3 +52,5 @@ AXGetAuxCallback(AXDeviceType::Type type, uint32_t, uint32_t, be_AXAuxCallback *
 
 AXResult::Result
 AXRegisterAuxCallback(AXDeviceType::Type type, uint32_t, uint32_t, AXAuxCallback callback, void *userData);
+
+} // namespace snd_core

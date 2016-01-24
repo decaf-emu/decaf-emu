@@ -2,6 +2,9 @@
 #include "snd_core_core.h"
 #include "utils/wfunc_ptr.h"
 
+namespace snd_core
+{
+
 static BOOL
 gAXInit = FALSE;
 
@@ -60,7 +63,7 @@ AXRmtAdvancePtr(int32_t)
 }
 
 void
-Snd_Core::registerCoreFunctions()
+Module::registerCoreFunctions()
 {
    RegisterKernelFunction(AXInit);
    RegisterKernelFunction(AXIsInit);
@@ -71,3 +74,5 @@ Snd_Core::registerCoreFunctions()
    RegisterKernelFunction(AXRmtGetSamplesLeft);
    RegisterKernelFunction(AXRmtAdvancePtr);
 }
+
+} // namespace snd_core
