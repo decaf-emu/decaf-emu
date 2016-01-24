@@ -295,6 +295,9 @@
     <ClCompile Include="..\src\modules\nn_temp\nn_temp.cpp" />
     <ClCompile Include="..\src\modules\nn_temp\nn_temp_core.cpp" />
     <ClCompile Include="..\src\modules\nn_temp\nn_temp_dir.cpp" />
+    <ClCompile Include="..\src\modules\nsysnet\nsysnet.cpp" />
+    <ClCompile Include="..\src\modules\nsysnet\nsysnet_socket_lib.cpp" />
+    <ClCompile Include="..\src\modules\nsysnet\nsysnet_ssl.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore_kpad.cpp" />
     <ClCompile Include="..\src\modules\padscore\padscore_kpad_status.cpp" />
@@ -470,6 +473,9 @@
     <ClInclude Include="..\src\modules\nn_temp\nn_temp.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp_core.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp_dir.h" />
+    <ClInclude Include="..\src\modules\nsysnet\nsysnet.h" />
+    <ClInclude Include="..\src\modules\nsysnet\nsysnet_socket_lib.h" />
+    <ClInclude Include="..\src\modules\nsysnet\nsysnet_ssl.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_kpad_status.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core.h" />
     <ClInclude Include="..\src\modules\snd_core\snd_core_ai.h" />

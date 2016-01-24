@@ -226,6 +226,12 @@
     <Filter Include="Header Files\modules\nn_acp">
       <UniqueIdentifier>{7a1c469e-64aa-438e-beaf-e2441d2e59a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\nsysnet">
+      <UniqueIdentifier>{1a1adce2-42da-4234-8e5b-c027ae5cd6e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nsysnet">
+      <UniqueIdentifier>{3298481c-82bd-4989-b87e-13e86ed74190}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\modules\nn_boss">
       <UniqueIdentifier>{2bb94dc0-c27d-4e8f-ba40-be233c44ae0b}</UniqueIdentifier>
     </Filter>
@@ -821,6 +827,15 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\nn_acp\nn_acp_title.cpp">
       <Filter>Source Files\modules\nn_acp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nsysnet\nsysnet.cpp">
+      <Filter>Source Files\modules\nsysnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nsysnet\nsysnet_socket_lib.cpp">
+      <Filter>Source Files\modules\nsysnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nsysnet\nsysnet_ssl.cpp">
+      <Filter>Source Files\modules\nsysnet</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\nn_boss\nn_boss.cpp">
       <Filter>Source Files\modules\nn_boss</Filter>
@@ -1573,6 +1588,15 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_acp\nn_acp_title.h">
       <Filter>Header Files\modules\nn_acp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nsysnet\nsysnet.h">
+      <Filter>Header Files\modules\nsysnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nsysnet\nsysnet_socket_lib.h">
+      <Filter>Header Files\modules\nsysnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nsysnet\nsysnet_ssl.h">
+      <Filter>Header Files\modules\nsysnet</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_boss\nn_boss.h">
       <Filter>Header Files\modules\nn_boss</Filter>

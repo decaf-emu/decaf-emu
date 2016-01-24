@@ -31,6 +31,7 @@
 #include "modules/nn_nfp/nn_nfp.h"
 #include "modules/nn_save/nn_save.h"
 #include "modules/nn_temp/nn_temp.h"
+#include "modules/nsysnet/nsysnet.h"
 #include "modules/proc_ui/proc_ui.h"
 #include "modules/padscore/padscore.h"
 #include "modules/snd_core/snd_core.h"
@@ -215,6 +216,7 @@ initialiseEmulator(const std::string &logFilename)
    NN_nfp::RegisterFunctions();
    NN_save::RegisterFunctions();
    NN_temp::RegisterFunctions();
+   nsysnet::Module::RegisterFunctions();
    PadScore::RegisterFunctions();
    ProcUI::RegisterFunctions();
    Snd_Core::RegisterFunctions();
@@ -238,6 +240,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("nn_nfp.rpl", new NN_nfp {});
    gSystem.registerModule("nn_save.rpl", new NN_save {});
    gSystem.registerModule("nn_temp.rpl", new NN_temp {});
+   gSystem.registerModule("nsysnet.rpl", new nsysnet::Module {});
    gSystem.registerModule("padscore.rpl", new PadScore {});
    gSystem.registerModule("proc_ui.rpl", new ProcUI {});
    gSystem.registerModule("snd_core.rpl", new Snd_Core {});
