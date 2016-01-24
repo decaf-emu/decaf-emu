@@ -8,27 +8,27 @@ namespace snd_core
 
 enum AXDRCVSMode : uint32_t
 {
-   UNKNOWN,
+   AX_DRC_VS_MODE_UNKNOWN,
 };
 
 enum AXDRCVSSpeakerPosition : uint32_t
 {
-   UNKNOWN,
+   AX_DRC_VS_SPEAKER_POS_UNKNOWN,
 };
 
 enum AXDRCVSSurroundLevelGain : uint32_t
 {
-   UNKNOWN,
+   AX_DRC_VS_SURROUND_LEVEL_GAIN_UNKNOWN,
 };
 
 enum AXDRCVSLC : uint32_t
 {
-   UNKNOWN,
+   AX_DRC_VS_LC_UNKNOWN,
 };
 
 enum AXDRCOutput : uint32_t
 {
-   UNKNOWN,
+   AX_DRC_OUTPUT_UNKNOWN,
 };
 
 AXResult::Result
