@@ -237,7 +237,7 @@ Loader::initialise(ppcsize_t maxCodeSize)
 LoadedModule *
 Loader::loadRPL(std::string name)
 {
-   std::unique_ptr<LoadedModule> module;
+   LoadedModule *module = nullptr;
    std::string moduleName;
 
    // Ensure moduleName has an extension
@@ -260,7 +260,7 @@ Loader::loadRPL(std::string name)
       auto kernelModule = gSystem.findModule(name);
 
       if (kernelModule) {
-         module = loadKernelModule(name, kernelModule);
+         module = loadKernelModule(moduleName, name, kernelModule);
       }
    }
 
@@ -274,25 +274,26 @@ Loader::loadRPL(std::string name)
          fh->read(buffer.data(), buffer.size(), 1);
          fh->close();
 
-         module = loadRPL(name, buffer);
+         module = loadRPL(moduleName, name, buffer);
       }
    }
 
    if (!module) {
       gLog->error("Failed to load module {}", name);
+      mModules.erase(moduleName);
       return nullptr;
    } else {
-      auto result = module.get();
       gLog->info("Loaded module {}", name);
-      mModules.emplace(moduleName, std::move(module));
-      return result;
+      return module;
    }
 }
 
 
 // Load a kernel module into virtual memory space by creating thunks
-std::unique_ptr<LoadedModule>
-Loader::loadKernelModule(const std::string &name, KernelModule *module)
+LoadedModule *
+Loader::loadKernelModule(const std::string &moduleName,
+                         const std::string &name,
+                         KernelModule *module)
 {
    std::vector<KernelFunction*> funcExports;
    std::vector<KernelData*> dataExports;
@@ -317,10 +318,11 @@ Loader::loadKernelModule(const std::string &name, KernelModule *module)
    }
 
    // Create module
-   auto loadedMod = std::make_unique<LoadedModule>();
+   auto loadedMod = new LoadedModule {};
+   mModules.emplace(moduleName, std::unique_ptr<LoadedModule> { loadedMod });
    loadedMod->name = name;
    loadedMod->handle = coreinit::internal::sysAlloc<LoadedModuleHandleData>();
-   loadedMod->handle->ptr = loadedMod.get();
+   loadedMod->handle->ptr = loadedMod;
 
    // Load code section
    if (codeSize > 0) {
@@ -677,12 +679,13 @@ Loader::processExports(LoadedModule *loadedMod, const SectionList &sections)
 }
 
 
-std::unique_ptr<LoadedModule>
-Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
+LoadedModule *
+Loader::loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<uint8_t> &data)
 {
    std::vector<uint8_t> buffer;
    auto in = BigEndianView { data };
-   auto loadedMod = std::make_unique<LoadedModule>();
+   auto loadedMod = new LoadedModule();
+   mModules.emplace(moduleName, std::unique_ptr<LoadedModule> { loadedMod });
 
    // Read header
    auto header = elf::Header {};
@@ -775,8 +778,14 @@ Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
    loadedMod->sdaBase = calculateSdaBase(sdata, sbss);
    loadedMod->sda2Base = calculateSdaBase(sdata2, sbss2);
 
+   // Process exports
+   if (!processExports(loadedMod, sections)) {
+      gLog->error("Error loading exports");
+      return nullptr;
+   }
+
    // Process Imports
-   if (!processImports(loadedMod.get(), sections)) {
+   if (!processImports(loadedMod, sections)) {
       gLog->error("Error loading imports");
       return nullptr;
    }
@@ -784,7 +793,7 @@ Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
    // Process relocations
    auto trampSeg = AddressRange {};
 
-   if (!processRelocations(loadedMod.get(), sections, in, shStrTab, codeSeg, trampSeg)) {
+   if (!processRelocations(loadedMod, sections, in, shStrTab, codeSeg, trampSeg)) {
       gLog->error("Error loading relocations");
       return nullptr;
    }
@@ -802,12 +811,6 @@ Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
 
          break;
       }
-   }
-
-   // Process exports
-   if (!processExports(loadedMod.get(), sections)) {
-      gLog->error("Error loading exports");
-      return nullptr;
    }
 
    // Create sections list
@@ -834,6 +837,6 @@ Loader::loadRPL(const std::string& name, const gsl::span<uint8_t> &data)
    loadedMod->defaultStackSize = info.stackSize;
    loadedMod->entryPoint = entryPoint;
    loadedMod->handle = coreinit::internal::sysAlloc<LoadedModuleHandleData>();
-   loadedMod->handle->ptr = loadedMod.get();
+   loadedMod->handle->ptr = loadedMod;
    return loadedMod;
 }

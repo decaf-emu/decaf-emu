@@ -85,11 +85,15 @@ private:
    ppcaddr_t
    registerUnimplementedFunction(const std::string &module, const std::string &func);
 
-   std::unique_ptr<LoadedModule>
-   loadKernelModule(const std::string &name, KernelModule *module);
+   LoadedModule *
+   loadKernelModule(const std::string &moduleName,
+                    const std::string &name,
+                    KernelModule *module);
 
-   std::unique_ptr<LoadedModule>
-   loadRPL(const std::string& name, const gsl::span<uint8_t> &data);
+   LoadedModule *
+   loadRPL(const std::string &name,
+           const std::string &filename,
+           const gsl::span<uint8_t> &data);
 
    bool
    processImports(LoadedModule *loadedMod,
