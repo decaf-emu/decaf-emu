@@ -1,16 +1,24 @@
 #include "nn_nfp.h"
 
-NN_nfp::NN_nfp()
+namespace nn
+{
+
+namespace nfp
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-NN_nfp::initialise()
+Module::RegisterFunctions()
 {
+   registerInitFunctions();
+   registerDetectionFunctions();
+   registerSettingsFunctions();
 }
 
-void
-NN_nfp::RegisterFunctions()
-{
-   registerCoreFunctions();
-}
+} // namespace nfp
+
+} // namespace nn

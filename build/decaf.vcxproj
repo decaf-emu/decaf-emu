@@ -289,7 +289,9 @@
     <ClCompile Include="..\src\modules\nn_ndm\nn_ndm.cpp" />
     <ClCompile Include="..\src\modules\nn_ndm\nn_ndm_init.cpp" />
     <ClCompile Include="..\src\modules\nn_nfp\nn_nfp.cpp" />
-    <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_core.cpp" />
+    <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_init.cpp" />
+    <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_detection.cpp" />
+    <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_settings.cpp" />
     <ClCompile Include="..\src\modules\nn_result.cpp" />
     <ClCompile Include="..\src\modules\nn_save\nn_save.cpp" />
     <ClCompile Include="..\src\modules\nn_save\nn_save_core.cpp" />
@@ -470,10 +472,12 @@
     <ClInclude Include="..\src\modules\nn_fp\nn_fp_friends.h" />
     <ClInclude Include="..\src\modules\nn_ndm\nn_ndm.h" />
     <ClInclude Include="..\src\modules\nn_ndm\nn_ndm_init.h" />
+    <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_detection.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_result.h" />
+    <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_settings.h" />
     <ClInclude Include="..\src\modules\nn_result.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp.h" />
-    <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_core.h" />
+    <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_init.h" />
     <ClInclude Include="..\src\modules\nn_save\nn_save_dir.h" />
     <ClInclude Include="..\src\modules\nn_save\nn_save_file.h" />
     <ClInclude Include="..\src\modules\nn_temp\nn_temp.h" />

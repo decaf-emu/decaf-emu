@@ -13,16 +13,11 @@ struct AmiiboSettingsArgs
 {
    UNKNOWN(0x5D);
 };
-
-nn::Result
-Initialize();
-
-nn::Result
-Finalize();
+CHECK_SIZE(AmiiboSettingsArgs, 0x5D);
 
 nn::Result
 GetAmiiboSettingsArgs(AmiiboSettingsArgs *args);
 
-}  // namespace fp
+}  // namespace nfp
 
 }  // namespace nn

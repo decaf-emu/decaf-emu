@@ -215,7 +215,7 @@ initialiseEmulator(const std::string &logFilename)
    nn::boss::Module::RegisterFunctions();
    nn::fp::Module::RegisterFunctions();
    nn::ndm::Module::RegisterFunctions();
-   NN_nfp::RegisterFunctions();
+   nn::nfp::Module::RegisterFunctions();
    NN_save::RegisterFunctions();
    NN_temp::RegisterFunctions();
    nsysnet::Module::RegisterFunctions();
@@ -239,7 +239,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("nn_act.rpl", new nn::act::Module {});
    gSystem.registerModule("nn_boss.rpl", new nn::boss::Module {});
    gSystem.registerModule("nn_fp.rpl", new nn::fp::Module {});
-   gSystem.registerModule("nn_nfp.rpl", new NN_nfp {});
+   gSystem.registerModule("nn_nfp.rpl", new nn::nfp::Module {});
    gSystem.registerModule("nn_ndm.rpl", new nn::ndm::Module {});
    gSystem.registerModule("nn_save.rpl", new NN_save {});
    gSystem.registerModule("nn_temp.rpl", new NN_temp {});

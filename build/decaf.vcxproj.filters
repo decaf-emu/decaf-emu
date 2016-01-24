@@ -441,9 +441,6 @@
     <ClCompile Include="..\src\modules\nn_nfp\nn_nfp.cpp">
       <Filter>Source Files\modules\nn_nfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_core.cpp">
-      <Filter>Source Files\modules\nn_nfp</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\nn_result.cpp">
       <Filter>Source Files\modules</Filter>
     </ClCompile>
@@ -858,6 +855,15 @@
     <ClCompile Include="..\src\modules\nn_fp\nn_fp_init.cpp">
       <Filter>Source Files\modules\nn_fp</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_detection.cpp">
+      <Filter>Source Files\modules\nn_nfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_init.cpp">
+      <Filter>Source Files\modules\nn_nfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_settings.cpp">
+      <Filter>Source Files\modules\nn_nfp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1113,9 +1119,6 @@
       <Filter>Header Files\ppc</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp.h">
-      <Filter>Header Files\modules\nn_nfp</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_core.h">
       <Filter>Header Files\modules\nn_nfp</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_result.h">
@@ -1627,6 +1630,15 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_fp\nn_fp_friends.h">
       <Filter>Header Files\modules\nn_fp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_init.h">
+      <Filter>Header Files\modules\nn_nfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_detection.h">
+      <Filter>Header Files\modules\nn_nfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_settings.h">
+      <Filter>Header Files\modules\nn_nfp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
