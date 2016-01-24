@@ -29,9 +29,6 @@ Cancel();
 uint8_t
 GetSlotNo();
 
-uint32_t
-GetTransferableId(uint32_t unk1);
-
 nn::Result
 GetMii(void *data);
 
@@ -58,19 +55,32 @@ nn::Result
 GetUuidEx(UUID *uuid,
           uint8_t slotNo);
 
+uint8_t
+GetParentalControlSlotNo();
+
 nn::Result
-GetPrincipalId(be_val<uint32_t> *principalId);
+GetParentalControlSlotNoEx(uint8_t *parentSlot, uint8_t slot);
+
+uint32_t
+GetPrincipalId();
 
 nn::Result
 GetPrincipalIdEx(be_val<uint32_t> *principalId,
                  uint8_t slotNo);
 
-nn::Result
-GetSimpleAddressId(be_val<uint32_t> *simpleAddressId);
+uint32_t
+GetSimpleAddressId();
 
 nn::Result
 GetSimpleAddressIdEx(be_val<uint32_t> *simpleAddressId,
                      uint8_t slotNo);
+uint64_t
+GetTransferableId(uint32_t unk1);
+
+nn::Result
+GetTransferableIdEx(be_val<uint64_t> *transferableId,
+                    uint32_t unk1,
+                    uint8_t slot);
 
 }  // namespace act
 

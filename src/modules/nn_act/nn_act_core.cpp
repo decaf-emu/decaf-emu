@@ -99,6 +99,25 @@ GetAccountIdEx(char *accountId,
    return nn::Result::Success;
 }
 
+uint8_t
+GetParentalControlSlotNo()
+{
+   uint8_t parentSlot = 0;
+   GetParentalControlSlotNoEx(&parentSlot, GetSlotNo());
+   return parentSlot;
+}
+
+nn::Result
+GetParentalControlSlotNoEx(uint8_t *parentSlot, uint8_t slot)
+{
+   if (slot != gCurrentSlot) {
+      return nn::act::AccountNotFound;
+   }
+
+   *parentSlot = 1;
+   return nn::Result::Success;
+}
+
 uint32_t
 GetPrincipalId()
 {
@@ -139,10 +158,23 @@ GetSimpleAddressIdEx(be_val<uint32_t> *simpleAddressId,
    return nn::Result::Success;
 }
 
-uint32_t
+uint64_t
 GetTransferableId(uint32_t unk1)
 {
-   return 0;
+   be_val<uint64_t> id;
+   GetTransferableIdEx(&id, unk1, GetSlotNo());
+   return id;
+}
+
+nn::Result
+GetTransferableIdEx(be_val<uint64_t> *transferableId, uint32_t unk1, uint8_t slot)
+{
+   if (slot != gCurrentSlot) {
+      return nn::act::AccountNotFound;
+   }
+
+   *transferableId = 0;
+   return nn::Result::Success;
 }
 
 nn::Result
@@ -186,7 +218,6 @@ NN_act::registerCoreFunctions()
    RegisterKernelFunctionName("Cancel__Q2_2nn3actFv", nn::act::Cancel);
    RegisterKernelFunctionName("IsSlotOccupied__Q2_2nn3actFUc", nn::act::GetSlotNo);
    RegisterKernelFunctionName("GetSlotNo__Q2_2nn3actFv", nn::act::GetSlotNo);
-   RegisterKernelFunctionName("GetTransferableId__Q2_2nn3actFUi", nn::act::GetTransferableId);
    RegisterKernelFunctionName("GetMii__Q2_2nn3actFP12FFLStoreData", nn::act::GetMii);
    RegisterKernelFunctionName("GetMiiEx__Q2_2nn3actFP12FFLStoreDataUc", nn::act::GetMiiEx);
    RegisterKernelFunctionName("IsNetworkAccount__Q2_2nn3actFv", nn::act::IsNetworkAccount);
@@ -195,8 +226,13 @@ NN_act::registerCoreFunctions()
    RegisterKernelFunctionName("GetUuid__Q2_2nn3actFP7ACTUuid", nn::act::GetUuid);
    RegisterKernelFunctionName("GetUuidEx__Q2_2nn3actFP7ACTUuidUc", nn::act::GetUuidEx);
    RegisterKernelFunctionName("GetAccountId__Q2_2nn3actFPc", nn::act::GetAccountId);
+   RegisterKernelFunctionName("GetAccountIdEx__Q2_2nn3actFPcUc", nn::act::GetAccountIdEx);
+   RegisterKernelFunctionName("GetParentalControlSlotNo__Q2_2nn3actFv", nn::act::GetParentalControlSlotNo);
+   RegisterKernelFunctionName("GetParentalControlSlotNoEx__Q2_2nn3actFPUcUc", nn::act::GetParentalControlSlotNoEx);
    RegisterKernelFunctionName("GetPrincipalId__Q2_2nn3actFv", nn::act::GetPrincipalId);
    RegisterKernelFunctionName("GetPrincipalIdEx__Q2_2nn3actFPUiUc", nn::act::GetPrincipalIdEx);
    RegisterKernelFunctionName("GetSimpleAddressId__Q2_2nn3actFv", nn::act::GetSimpleAddressId);
    RegisterKernelFunctionName("GetSimpleAddressIdEx__Q2_2nn3actFPUiUc", nn::act::GetSimpleAddressIdEx);
+   RegisterKernelFunctionName("GetTransferableId__Q2_2nn3actFUi", nn::act::GetTransferableId);
+   RegisterKernelFunctionName("GetTransferableIdEx__Q2_2nn3actFPULUiUc", nn::act::GetTransferableIdEx);
 }
