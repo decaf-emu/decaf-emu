@@ -396,9 +396,6 @@
     <ClCompile Include="..\src\modules\nn_fp\nn_fp.cpp">
       <Filter>Source Files\modules\nn_fp</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\modules\nn_fp\nn_fp_core.cpp">
-      <Filter>Source Files\modules\nn_fp</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\erreula\erreula.cpp">
       <Filter>Source Files\modules\erreula</Filter>
     </ClCompile>
@@ -855,6 +852,12 @@
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_init.cpp">
       <Filter>Source Files\modules\nn_boss</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\nn_fp\nn_fp_friends.cpp">
+      <Filter>Source Files\modules\nn_fp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_fp\nn_fp_init.cpp">
+      <Filter>Source Files\modules\nn_fp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1038,9 +1041,6 @@
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_fp\nn_fp.h">
-      <Filter>Header Files\modules\nn_fp</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\nn_fp\nn_fp_core.h">
       <Filter>Header Files\modules\nn_fp</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\erreula\erreula.h">
@@ -1621,6 +1621,12 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_init.h">
       <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_fp\nn_fp_init.h">
+      <Filter>Header Files\modules\nn_fp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_fp\nn_fp_friends.h">
+      <Filter>Header Files\modules\nn_fp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

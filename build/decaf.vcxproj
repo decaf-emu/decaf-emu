@@ -284,7 +284,8 @@
     <ClCompile Include="..\src\modules\nn_boss\nn_boss.cpp" />
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_init.cpp" />
     <ClCompile Include="..\src\modules\nn_fp\nn_fp.cpp" />
-    <ClCompile Include="..\src\modules\nn_fp\nn_fp_core.cpp" />
+    <ClCompile Include="..\src\modules\nn_fp\nn_fp_init.cpp" />
+    <ClCompile Include="..\src\modules\nn_fp\nn_fp_friends.cpp" />
     <ClCompile Include="..\src\modules\nn_ndm\nn_ndm.cpp" />
     <ClCompile Include="..\src\modules\nn_ndm\nn_ndm_init.cpp" />
     <ClCompile Include="..\src\modules\nn_nfp\nn_nfp.cpp" />
@@ -466,6 +467,7 @@
     <ClInclude Include="..\src\modules\nn_ac\nn_ac_result.h" />
     <ClInclude Include="..\src\modules\nn_boss\nn_boss.h" />
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_init.h" />
+    <ClInclude Include="..\src\modules\nn_fp\nn_fp_friends.h" />
     <ClInclude Include="..\src\modules\nn_ndm\nn_ndm.h" />
     <ClInclude Include="..\src\modules\nn_ndm\nn_ndm_init.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_result.h" />
@@ -531,7 +533,7 @@
     <ClInclude Include="..\src\modules\nn_ac\nn_ac.h" />
     <ClInclude Include="..\src\modules\nn_ac\nn_ac_core.h" />
     <ClInclude Include="..\src\modules\nn_fp\nn_fp.h" />
-    <ClInclude Include="..\src\modules\nn_fp\nn_fp_core.h" />
+    <ClInclude Include="..\src\modules\nn_fp\nn_fp_init.h" />
     <ClInclude Include="..\src\modules\padscore\padscore.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_kpad.h" />
     <ClInclude Include="..\src\modules\padscore\padscore_wpad.h" />

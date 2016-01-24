@@ -1,16 +1,25 @@
 #pragma once
 #include "kernelmodule.h"
 
-class NN_fp : public KernelModuleImpl<NN_fp>
+namespace nn
+{
+
+namespace fp
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   NN_fp();
-
    virtual void initialise() override;
 
 public:
    static void RegisterFunctions();
 
 private:
-   static void registerCoreFunctions();
+   static void registerInitFunctions();
+   static void registerFriendsFunctions();
 };
+
+} // namespace fp
+
+} // namespace nn

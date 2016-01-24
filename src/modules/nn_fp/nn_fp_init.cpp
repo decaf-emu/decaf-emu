@@ -1,5 +1,5 @@
 #include "nn_fp.h"
-#include "nn_fp_core.h"
+#include "nn_fp_init.h"
 
 namespace nn
 {
@@ -37,15 +37,15 @@ GetFriendList(void *list, be_val<uint32_t> *length, uint32_t index, uint32_t lis
    return nn::Result::Success;
 }
 
-} // namespace fp
-
-} // namespace nn
-
 void
-NN_fp::registerCoreFunctions()
+Module::registerInitFunctions()
 {
    RegisterKernelFunctionName("Initialize__Q2_2nn2fpFv", nn::fp::Initialize);
    RegisterKernelFunctionName("Finalize__Q2_2nn2fpFv", nn::fp::Finalize);
    RegisterKernelFunctionName("IsInitialized__Q2_2nn2fpFv", nn::fp::IsInitialized);
    RegisterKernelFunctionName("GetFriendList__Q2_2nn2fpFPUiT1UiT3", nn::fp::GetFriendList);
 }
+
+} // namespace fp
+
+} // namespace nn

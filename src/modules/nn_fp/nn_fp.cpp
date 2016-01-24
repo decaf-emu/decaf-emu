@@ -1,16 +1,23 @@
 #include "nn_fp.h"
 
-NN_fp::NN_fp()
+namespace nn
+{
+
+namespace fp
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-NN_fp::initialise()
+Module::RegisterFunctions()
 {
+   registerInitFunctions();
+   registerFriendsFunctions();
 }
 
-void
-NN_fp::RegisterFunctions()
-{
-   registerCoreFunctions();
-}
+} // namespace fp
+
+} // namespace nn
