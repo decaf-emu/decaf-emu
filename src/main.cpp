@@ -28,6 +28,7 @@
 #include "modules/nn_act/nn_act.h"
 #include "modules/nn_boss/nn_boss.h"
 #include "modules/nn_fp/nn_fp.h"
+#include "modules/nn_ndm/nn_ndm.h"
 #include "modules/nn_nfp/nn_nfp.h"
 #include "modules/nn_save/nn_save.h"
 #include "modules/nn_temp/nn_temp.h"
@@ -213,6 +214,7 @@ initialiseEmulator(const std::string &logFilename)
    NN_act::RegisterFunctions();
    nn::boss::Module::RegisterFunctions();
    NN_fp::RegisterFunctions();
+   nn::ndm::Module::RegisterFunctions();
    NN_nfp::RegisterFunctions();
    NN_save::RegisterFunctions();
    NN_temp::RegisterFunctions();
@@ -238,6 +240,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("nn_boss.rpl", new nn::boss::Module {});
    gSystem.registerModule("nn_fp.rpl", new NN_fp {});
    gSystem.registerModule("nn_nfp.rpl", new NN_nfp {});
+   gSystem.registerModule("nn_ndm.rpl", new nn::ndm::Module {});
    gSystem.registerModule("nn_save.rpl", new NN_save {});
    gSystem.registerModule("nn_temp.rpl", new NN_temp {});
    gSystem.registerModule("nsysnet.rpl", new nsysnet::Module {});

@@ -232,6 +232,12 @@
     <Filter Include="Header Files\modules\nsysnet">
       <UniqueIdentifier>{3298481c-82bd-4989-b87e-13e86ed74190}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\nn_ndm">
+      <UniqueIdentifier>{94012bed-96ae-4ea5-8275-8ea94efbb65d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_ndm">
+      <UniqueIdentifier>{463782a2-f667-4f9e-b4da-a1e1d52cb37f}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\modules\nn_boss">
       <UniqueIdentifier>{2bb94dc0-c27d-4e8f-ba40-be233c44ae0b}</UniqueIdentifier>
     </Filter>
@@ -836,6 +842,12 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\nsysnet\nsysnet_ssl.cpp">
       <Filter>Source Files\modules\nsysnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_ndm\nn_ndm.cpp">
+      <Filter>Source Files\modules\nn_ndm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_ndm\nn_ndm_init.cpp">
+      <Filter>Source Files\modules\nn_ndm</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\nn_boss\nn_boss.cpp">
       <Filter>Source Files\modules\nn_boss</Filter>
@@ -1597,6 +1609,12 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\nsysnet\nsysnet_ssl.h">
       <Filter>Header Files\modules\nsysnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_ndm\nn_ndm.h">
+      <Filter>Header Files\modules\nn_ndm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_ndm\nn_ndm_init.h">
+      <Filter>Header Files\modules\nn_ndm</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_boss\nn_boss.h">
       <Filter>Header Files\modules\nn_boss</Filter>
