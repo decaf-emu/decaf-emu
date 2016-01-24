@@ -16,6 +16,7 @@ void
 Module::RegisterFunctions()
 {
    registerSocketLibFunctions();
+   registerSSLFunctions();
 }
 
 } // namespace nsysnet
