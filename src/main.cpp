@@ -245,7 +245,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("nn_temp.rpl", new nn::temp::Module {});
    gSystem.registerModule("nsysnet.rpl", new nsysnet::Module {});
    gSystem.registerModule("padscore.rpl", new padscore::Module {});
-   gSystem.registerModule("proc_ui.rpl", new ProcUI {});
+   gSystem.registerModule("proc_ui.rpl", new proc_ui::Module {});
    gSystem.registerModule("snd_core.rpl", new Snd_Core {});
    gSystem.registerModuleAlias("snd_core.rpl", "sndcore2.rpl");
    gSystem.registerModule("swkbd.rpl", new Swkbd {});

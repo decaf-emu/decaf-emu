@@ -2,6 +2,9 @@
 #include "types.h"
 #include "utils/wfunc_ptr.h"
 
+namespace proc_ui
+{
+
 // Unknown parameters.
 using ProcUISaveCallback = wfunc_ptr<void>;
 using ProcUISaveCallbackEx = wfunc_ptr<uint32_t, void*>;
@@ -11,6 +14,7 @@ namespace ProcUICallbackType
 {
 enum Type
 {
+   UNKNOWN,
 };
 }
 
@@ -31,3 +35,5 @@ ProcUIRegisterCallback(ProcUICallbackType::Type type, ProcUICallback callback, v
 
 void
 ProcUISetMEM1Storage(void *buffer, uint32_t size);
+
+} // namespace proc_ui

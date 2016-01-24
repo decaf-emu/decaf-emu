@@ -1,16 +1,17 @@
 #include "proc_ui.h"
 
-ProcUI::ProcUI()
+namespace proc_ui
+{
+
+void
+Module::initialise()
 {
 }
 
 void
-ProcUI::initialise()
-{
-}
-
-void
-ProcUI::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerCoreFunctions();
 }
+
+} // namespace proc_ui

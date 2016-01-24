@@ -1,6 +1,9 @@
 #include "proc_ui.h"
 #include "proc_ui_core.h"
 
+namespace proc_ui
+{
+
 static ProcUISaveCallback
 gSaveCallback;
 
@@ -53,7 +56,7 @@ ProcUISetMEM1Storage(void *buffer, uint32_t size)
 }
 
 void
-ProcUI::registerCoreFunctions()
+Module::registerCoreFunctions()
 {
    RegisterKernelFunction(ProcUIInit);
    RegisterKernelFunction(ProcUIInitEx);
@@ -62,3 +65,5 @@ ProcUI::registerCoreFunctions()
    RegisterKernelFunction(ProcUIRegisterCallback);
    RegisterKernelFunction(ProcUISetMEM1Storage);
 }
+
+} // namespace proc_ui
