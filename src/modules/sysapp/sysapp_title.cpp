@@ -1,6 +1,9 @@
 #include "sysapp.h"
 #include "sysapp_title.h"
 
+namespace sysapp
+{
+
 uint64_t
 SYSGetSystemApplicationTitleId()
 {
@@ -9,7 +12,9 @@ SYSGetSystemApplicationTitleId()
 }
 
 void
-SysApp::registerTitleFunctions()
+Module::registerTitleFunctions()
 {
    RegisterKernelFunctionName("_SYSGetSystemApplicationTitleId", SYSGetSystemApplicationTitleId);
 }
+
+} // namespace sysapp

@@ -1,12 +1,17 @@
 #include "sysapp.h"
 
+namespace sysapp
+{
+
 void
-SysApp::initialise()
+Module::initialise()
 {
 }
 
 void
-SysApp::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerTitleFunctions();
 }
+
+} // namespace sysapp

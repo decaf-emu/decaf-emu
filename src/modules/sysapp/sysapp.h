@@ -1,7 +1,10 @@
 #pragma once
 #include "kernelmodule.h"
 
-class SysApp : public KernelModuleImpl<SysApp>
+namespace sysapp
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
    virtual void initialise() override;
@@ -12,3 +15,5 @@ public:
 private:
    static void registerTitleFunctions();
 };
+
+} // namespace sysapp
