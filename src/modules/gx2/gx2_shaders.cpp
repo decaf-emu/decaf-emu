@@ -7,13 +7,13 @@
 uint32_t
 GX2CalcGeometryShaderInputRingBufferSize(uint32_t ringItemSize)
 {
-   return 0;
+   return ringItemSize * 16384;
 }
 
 uint32_t
 GX2CalcGeometryShaderOutputRingBufferSize(uint32_t ringItemSize)
 {
-   return 0;
+   return ringItemSize * 16384;
 }
 
 void
