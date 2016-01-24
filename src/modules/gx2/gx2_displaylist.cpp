@@ -4,6 +4,7 @@
 #include "gpu/commandqueue.h"
 #include "gpu/pm4_writer.h"
 #include "modules/coreinit/coreinit_core.h"
+#include "utils/align.h"
 #include <array>
 
 static std::array<pm4::Buffer, CoreCount>
@@ -40,7 +41,8 @@ GX2EndDisplayList(void *displayList)
       return 0;
    }
 
-   auto bytes = active.curSize * 4;
+   // Display list is meant to be padded to 32 bytes
+   auto bytes = align_up(active.curSize * 4, 32);
 
    // Reset active dlist
    active.buffer = nullptr;
