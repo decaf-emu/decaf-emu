@@ -15,7 +15,7 @@ SaveStatus
 SAVEInitSaveDir(uint8_t userID)
 {
    auto fs = gSystem.getFileSystem();
-   auto titleID = OSGetTitleID();
+   auto titleID = coreinit::OSGetTitleID();
    auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
    auto titleHi = static_cast<uint32_t>(titleID >> 32);
 

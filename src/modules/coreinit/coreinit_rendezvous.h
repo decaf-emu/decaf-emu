@@ -4,6 +4,9 @@
 #include "utils/structsize.h"
 #include <atomic>
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct OSRendezvous
@@ -25,3 +28,5 @@ OSWaitRendezvous(OSRendezvous *rendezvous, uint32_t coreMask);
 
 BOOL
 OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous, uint32_t coreMask, OSTime timeout);
+
+} // namespace coreinit

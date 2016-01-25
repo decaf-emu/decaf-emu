@@ -7,6 +7,11 @@ namespace nn
 namespace save
 {
 
+using coreinit::FSAsyncData;
+using coreinit::FSClient;
+using coreinit::FSCmdBlock;
+using coreinit::FSFileHandle;
+
 FSStatus
 SAVEOpenFile(FSClient *client,
              FSCmdBlock *block,

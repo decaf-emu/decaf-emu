@@ -7,6 +7,9 @@
 #include "utils/align.h"
 #include "utils/virtual_ptr.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct FrameHeapState
@@ -231,7 +234,7 @@ MEMGetAllocatableSizeForFrmHeapEx(FrameHeap *heap, int alignment)
 }
 
 void
-CoreInit::registerFrameHeapFunctions()
+Module::registerFrameHeapFunctions()
 {
    RegisterKernelFunction(MEMCreateFrmHeap);
    RegisterKernelFunction(MEMCreateFrmHeapEx);
@@ -246,3 +249,5 @@ CoreInit::registerFrameHeapFunctions()
    RegisterKernelFunction(MEMGetAllocatableSizeForFrmHeap);
    RegisterKernelFunction(MEMGetAllocatableSizeForFrmHeapEx);
 }
+
+} // namespace coreinit

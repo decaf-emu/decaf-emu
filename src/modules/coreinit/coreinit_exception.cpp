@@ -1,6 +1,9 @@
 #include "coreinit.h"
 #include "coreinit_exception.h"
 
+namespace coreinit
+{
+
 static OSExceptionCallback
 gExceptionCallbacks[OSExceptionType::Max];
 
@@ -29,8 +32,10 @@ OSSetExceptionCallbackEx(uint32_t unk1, OSExceptionType exceptionType, OSExcepti
 
 
 void
-CoreInit::registerExceptionFunctions()
+Module::registerExceptionFunctions()
 {
    RegisterKernelFunction(OSSetExceptionCallback);
    RegisterKernelFunction(OSSetExceptionCallbackEx);
 }
+
+} // namespace coreinit

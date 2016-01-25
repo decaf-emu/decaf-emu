@@ -5,6 +5,9 @@
 #include "utils/structsize.h"
 #include "utils/wfunc_ptr.h"
 
+namespace coreinit
+{
+
 using FSDirectoryHandle = uint32_t;
 using FSFileHandle = uint32_t;
 using FSPriority = uint32_t;
@@ -147,3 +150,5 @@ FSInitCmdBlock(FSCmdBlock *block);
 FSStatus
 FSSetCmdPriority(FSCmdBlock *block,
                  FSPriority priority);
+
+} // namespace coreinit

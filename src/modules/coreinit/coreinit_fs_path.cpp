@@ -3,6 +3,9 @@
 #include "coreinit_fs_path.h"
 #include "filesystem/filesystem.h"
 
+namespace coreinit
+{
+
 static fs::Path
 gWorkingPath = "/";
 
@@ -50,9 +53,6 @@ FSChangeDirAsync(FSClient *client,
    return result;
 }
 
-
-namespace coreinit
-{
 
 namespace internal
 {

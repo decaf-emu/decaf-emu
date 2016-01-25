@@ -2,6 +2,9 @@
 #include "coreinit_cache.h"
 #include "utils/align.h"
 
+namespace coreinit
+{
+
 void
 DCInvalidateRange(void *addr, uint32_t size)
 {
@@ -54,7 +57,7 @@ OSCoherencyBarrier()
 }
 
 void
-CoreInit::registerCacheFunctions()
+Module::registerCacheFunctions()
 {
    RegisterKernelFunction(DCInvalidateRange);
    RegisterKernelFunction(DCFlushRange);
@@ -65,3 +68,5 @@ CoreInit::registerCacheFunctions()
    RegisterKernelFunction(DCTouchRange);
    RegisterKernelFunction(OSCoherencyBarrier);
 }
+
+} // namespace coreinit

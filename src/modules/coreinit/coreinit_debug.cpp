@@ -7,6 +7,9 @@
 #include "utils/make_array.h"
 #include "utils/strutils.h"
 
+namespace coreinit
+{
+
 BOOL
 OSIsDebuggerPresent()
 {
@@ -169,7 +172,7 @@ coreinit__os_snprintf(char *buffer, uint32_t size, const char *fmt, ppctypes::Va
 }
 
 void
-CoreInit::registerDebugFunctions()
+Module::registerDebugFunctions()
 {
    RegisterKernelFunction(OSIsDebuggerPresent);
    RegisterKernelFunction(OSIsDebuggerInitialized);
@@ -180,3 +183,5 @@ CoreInit::registerDebugFunctions()
    RegisterKernelFunction(OSConsoleWrite);
    RegisterKernelFunctionName("__os_snprintf", coreinit__os_snprintf);
 }
+
+} // namespace coreinit

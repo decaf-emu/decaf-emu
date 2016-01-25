@@ -8,6 +8,9 @@
 #include "utils/virtual_ptr.h"
 #include "utils/wfunc_ptr.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct OSAlarm;
@@ -112,9 +115,6 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data);
 
 BOOL
 OSWaitAlarm(OSAlarm *alarm);
-
-namespace coreinit
-{
 
 namespace internal
 {

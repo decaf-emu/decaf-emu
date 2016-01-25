@@ -205,7 +205,7 @@ initialiseEmulator(const std::string &logFilename)
 
    // Kernel modules
    GameLoader::RegisterFunctions();
-   CoreInit::RegisterFunctions();
+   coreinit::Module::RegisterFunctions();
    nn::erreula::Module::RegisterFunctions();
    gx2::Module::RegisterFunctions();
    mic::Module::RegisterFunctions();
@@ -230,7 +230,7 @@ initialiseEmulator(const std::string &logFilename)
    // Initialise emulator systems
    gSystem.initialise();
    gSystem.registerModule("gameloader.rpl", new GameLoader{});
-   gSystem.registerModule("coreinit.rpl", new CoreInit {});
+   gSystem.registerModule("coreinit.rpl", new coreinit::Module {});
    gSystem.registerModule("erreula.rpl", new nn::erreula::Module {});
    gSystem.registerModule("gx2.rpl", new gx2::Module {});
    gSystem.registerModule("mic.rpl", new mic::Module {});
@@ -389,6 +389,7 @@ play(const fs::HostPath &path)
 
    // Start the loader
    {
+      using namespace coreinit;
       GameLoaderInit(rpx.c_str());
 
       auto thread = coreinit::internal::sysAlloc<OSThread>();
@@ -401,7 +402,7 @@ play(const fs::HostPath &path)
 
       OSCreateThread(thread, 0, 0, nullptr,
                      reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, -2,
-                     static_cast<OSThreadAttributes::Flags>(1 << 1));
+                     OSThreadAttributes::AffinityCPU1);
       OSSetThreadName(thread, name);
       OSRunThread(thread, gameLoaderRun, 0, nullptr);
    }

@@ -3,6 +3,9 @@
 #include "coreinit_enum.h"
 #include "coreinit_memheap.h"
 
+namespace coreinit
+{
+
 struct ExpandedHeap;
 
 ExpandedHeap *
@@ -61,3 +64,5 @@ MEMGetGroupIDForMBlockExpHeap(uint8_t *addr);
 
 MEMExpHeapDirection
 MEMGetAllocDirForMBlockExpHeap(uint8_t *addr);
+
+} // namespace coreinit

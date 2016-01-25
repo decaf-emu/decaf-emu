@@ -4,6 +4,9 @@
 #include "coreinit_fs.h"
 #include "filesystem/filesystem.h"
 
+namespace coreinit
+{
+
 class FSClient
 {
 public:
@@ -68,8 +71,6 @@ void
 FSSetStateChangeNotification(FSClient *client,
                              FSStateChangeInfo *info);
 
-namespace coreinit
-{
 
 namespace internal
 {

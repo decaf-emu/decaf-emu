@@ -4,6 +4,9 @@
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct OSSemaphore
@@ -41,3 +44,5 @@ OSSignalSemaphore(OSSemaphore *semaphore);
 
 int32_t
 OSGetSemaphoreCount(OSSemaphore *semaphore);
+
+} // namespace coreinit

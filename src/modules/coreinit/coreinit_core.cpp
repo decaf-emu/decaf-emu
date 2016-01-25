@@ -2,6 +2,9 @@
 #include "coreinit_core.h"
 #include "processor.h"
 
+namespace coreinit
+{
+
 uint32_t
 OSGetCoreCount()
 {
@@ -27,10 +30,12 @@ OSIsMainCore()
 }
 
 void
-CoreInit::registerCoreFunctions()
+Module::registerCoreFunctions()
 {
    RegisterKernelFunction(OSGetCoreCount);
    RegisterKernelFunction(OSGetCoreId);
    RegisterKernelFunction(OSGetMainCoreId);
    RegisterKernelFunction(OSIsMainCore);
 }
+
+} // namespace coreinit

@@ -3,6 +3,9 @@
 #include "coreinit_systeminfo.h"
 #include "platform/platform_time.h"
 
+namespace coreinit
+{
+
 static std::chrono::time_point<std::chrono::system_clock>
 gEpochTime;
 
@@ -90,7 +93,7 @@ OSCalendarTimeToTicks(OSCalendarTime *calendarTime)
 }
 
 void
-CoreInit::initialiseClock()
+Module::initialiseClock()
 {
    // Calculate the Wii U epoch (01/01/2000)
    std::tm tm = { 0 };
@@ -105,7 +108,7 @@ CoreInit::initialiseClock()
 }
 
 void
-CoreInit::registerTimeFunctions()
+Module::registerTimeFunctions()
 {
    RegisterKernelFunction(OSGetTime);
    RegisterKernelFunction(OSGetTick);
@@ -114,9 +117,6 @@ CoreInit::registerTimeFunctions()
    RegisterKernelFunction(OSTicksToCalendarTime);
    RegisterKernelFunction(OSCalendarTimeToTicks);
 }
-
-namespace coreinit
-{
 
 namespace internal
 {

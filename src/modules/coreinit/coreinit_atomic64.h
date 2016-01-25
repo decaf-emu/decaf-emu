@@ -2,6 +2,9 @@
 #include "types.h"
 #include "utils/be_val.h"
 
+namespace coreinit
+{
+
 uint64_t
 OSGetAtomic64(be_val<uint64_t> *ptr);
 
@@ -47,3 +50,5 @@ OSTestAndClearAtomic64(be_val<uint64_t> *ptr,
 BOOL
 OSTestAndSetAtomic64(be_val<uint64_t> *ptr,
                      uint32_t bit);
+
+} // namespace coreinit

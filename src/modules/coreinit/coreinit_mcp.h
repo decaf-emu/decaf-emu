@@ -5,6 +5,9 @@
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct MCPSysProdSettings
@@ -29,3 +32,5 @@ MCP_Close(IOHandle handle);
 
 IOError
 MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings);
+
+} // namespace coreinit

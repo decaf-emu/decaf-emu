@@ -34,6 +34,7 @@ GameLoaderInit(const char *rpxName)
 void
 GameLoaderRun()
 {
+   using namespace coreinit;
    auto appModule = gLoader.loadRPL(gGameRpx.c_str());
 
    if (!appModule) {
@@ -54,7 +55,7 @@ GameLoaderRun()
 
       OSCreateThread(thread, 0u, 0, nullptr,
                      reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, 16,
-                     static_cast<OSThreadAttributes::Flags>(1 << i));
+                     static_cast<OSThreadAttributes>(1 << i));
       OSSetDefaultThread(i, thread);
       OSSetThreadName(thread, name);
    }
@@ -68,7 +69,7 @@ GameLoaderRun()
 
       OSCreateThread(thread, InterruptThreadEntryPoint, i, nullptr,
                      reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, -1,
-                     static_cast<OSThreadAttributes::Flags>(1 << i));
+                     static_cast<OSThreadAttributes>(1 << i));
       coreinit::internal::setInterruptThread(i, thread);
       OSSetThreadName(thread, name);
       OSResumeThread(thread);

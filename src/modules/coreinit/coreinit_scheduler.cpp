@@ -7,6 +7,9 @@
 #include "processor.h"
 #include "cpu/trace.h"
 
+namespace coreinit
+{
+
 static std::atomic_bool
 gSchedulerLock { false };
 
@@ -39,9 +42,6 @@ InitialiseThreadFiber(OSThread *thread)
    // Initialise tracer
    traceInit(&fiber->state, 1024);
 }
-
-namespace coreinit
-{
 
 namespace internal
 {
@@ -170,8 +170,6 @@ setInterruptThread(uint32_t core, OSThread *thread)
 
 } // namespace internal
 
-} // namespace coreinit
-
 void
 InterruptThreadEntry(uint32_t core, void *arg2)
 {
@@ -192,13 +190,15 @@ InterruptThreadEntry(uint32_t core, void *arg2)
 }
 
 void
-CoreInit::registerSchedulerFunctions()
+Module::registerSchedulerFunctions()
 {
    RegisterKernelFunction(InterruptThreadEntry);
 }
 
 void
-CoreInit::initialiseSchedulerFunctions()
+Module::initialiseSchedulerFunctions()
 {
    InterruptThreadEntryPoint = findExportAddress("InterruptThreadEntry");
 }
+
+} // namespace coreinit

@@ -11,6 +11,9 @@
 #include "system.h"
 #include "usermodule.h"
 
+namespace coreinit
+{
+
 static OSThread *
 gDefaultThreads[CoreCount];
 
@@ -115,7 +118,10 @@ OSContinueThread(OSThread *thread)
 
 // Setup thread run state, shared by OSRunThread and OSCreateThread
 static void
-InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *argv)
+InitialiseThreadState(OSThread *thread,
+                      uint32_t entry,
+                      uint32_t argc,
+                      void *argv)
 {
    auto module = gSystem.getUserModule();
    auto sdaBase = module ? module->sdaBase : 0u;
@@ -148,7 +154,14 @@ InitialiseThreadState(OSThread *thread, uint32_t entry, uint32_t argc, void *arg
 }
 
 BOOL
-OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, be_val<uint32_t> *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes::Flags attributes)
+OSCreateThread(OSThread *thread,
+               ThreadEntryPoint entry,
+               uint32_t argc,
+               void *argv,
+               be_val<uint32_t> *stack,
+               uint32_t stackSize,
+               int32_t priority,
+               OSThreadAttributes attributes)
 {
    // Setup OSThread
    memset(thread, 0, sizeof(OSThread));
@@ -530,7 +543,7 @@ OSYieldThread()
 }
 
 void
-CoreInit::registerThreadFunctions()
+Module::registerThreadFunctions()
 {
    RegisterKernelFunction(OSCancelThread);
    RegisterKernelFunction(OSCheckActiveThreads);
@@ -571,3 +584,5 @@ CoreInit::registerThreadFunctions()
    RegisterKernelFunction(OSWakeupThread);
    RegisterKernelFunction(OSYieldThread);
 }
+
+} // namespace coreinit

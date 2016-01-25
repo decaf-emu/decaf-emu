@@ -3,6 +3,9 @@
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct MemoryLink
@@ -53,3 +56,5 @@ MEMGetPrevListObject(MemoryList *list, void *object);
 
 void *
 MEMGetNthListObject(MemoryList *list, uint16_t n);
+
+} // namespace coreinit

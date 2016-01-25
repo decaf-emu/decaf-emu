@@ -1,11 +1,13 @@
 #pragma once
 #include "kernelmodule.h"
 
-class CoreInit : public KernelModuleImpl<CoreInit>
+namespace coreinit
+{
+
+class Module : public KernelModuleImpl<Module>
 {
 public:
-   CoreInit();
-   virtual ~CoreInit() override;
+   virtual ~Module() override;
 
    virtual void initialise() override;
 
@@ -63,3 +65,5 @@ private:
    static void registerUserConfigFunctions();
    static void registerUnitHeapFunctions();
 };
+
+} // namespace coreinit

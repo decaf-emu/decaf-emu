@@ -1,6 +1,9 @@
 #pragma once
 #include "coreinit_fs.h"
 
+namespace coreinit
+{
+
 FSStatus
 FSGetStat(FSClient *client,
           FSCmdBlock *block,
@@ -30,3 +33,5 @@ FSGetStatFileAsync(FSClient *client,
                    FSStat *stat,
                    uint32_t flags,
                    FSAsyncData *asyncData);
+
+} // namespace coreinit

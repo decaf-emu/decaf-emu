@@ -4,6 +4,9 @@
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct OSMutex;
@@ -79,3 +82,5 @@ OSWaitCond(OSCondition *condition, OSMutex *mutex);
 
 void
 OSSignalCond(OSCondition *condition);
+
+} // namespace coreinit

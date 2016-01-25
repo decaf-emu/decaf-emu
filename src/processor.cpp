@@ -13,7 +13,7 @@
 #include "utils/log.h"
 
 Processor
-gProcessor { CoreCount };
+gProcessor { coreinit::CoreCount };
 
 static thread_local Core *
 tCurrentCore = nullptr;
@@ -93,7 +93,7 @@ Processor::fiberEntryPoint(Fiber *fiber)
    cpu::setRoundingMode(&fiber->state);
    std::feclearexcept(FE_ALL_EXCEPT);
    cpu::executeSub(&core->state, &fiber->state);
-   OSExitThread(ppctypes::getResult<int>(&fiber->state));
+   coreinit::OSExitThread(ppctypes::getResult<int>(&fiber->state));
 }
 
 
@@ -358,7 +358,7 @@ Processor::getCurrentFiber()
 }
 
 
-OSContext *
+coreinit::OSContext *
 Processor::getInterruptContext()
 {
    if (!tCurrentCore) {
@@ -507,7 +507,7 @@ Processor::handleAccessViolation(ppcaddr_t address)
 
    gLog->error("Access violation, at 0x{:X} accessing address 0x{:X} on core {}, thread {}",
                fiber->state.cia, address, core->id, core->threadId);
-   OSPrintCurrentThreadState();
+   coreinit::OSPrintCurrentThreadState();
    tracePrint(&fiber->state, 0, 0);
 
    fiber->thread->state = OSThreadState::Waiting;  // TODO: does this properly stop the thread?

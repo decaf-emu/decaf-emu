@@ -5,6 +5,9 @@
 #include "filesystem/filesystem.h"
 #include "system.h"
 
+namespace coreinit
+{
+
 
 FSStatus
 FSGetStat(FSClient *client,
@@ -71,3 +74,5 @@ FSGetStatFileAsync(FSClient *client,
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
    return result;
 }
+
+} // namespace coreinit

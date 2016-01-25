@@ -3,6 +3,9 @@
 #include "utils/virtual_ptr.h"
 #include "utils/wfunc_ptr.h"
 
+namespace coreinit
+{
+
 #define GHS_FOPEN_MAX 0x14
 
 extern be_wfunc_ptr<void>*
@@ -51,3 +54,5 @@ ghs_flock_ptr(void *file);
 
 void
 ghs_flock_file(uint32_t lockIx);
+
+} // namespace coreinit

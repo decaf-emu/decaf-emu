@@ -3,6 +3,9 @@
 #include "coreinit_core.h"
 #include "coreinit_rendezvous.h"
 
+namespace coreinit
+{
+
 void
 OSInitRendezvous(OSRendezvous *rendezvous)
 {
@@ -48,9 +51,11 @@ OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous, uint32_t coreMask, OSTime 
 }
 
 void
-CoreInit::registerRendezvousFunctions()
+Module::registerRendezvousFunctions()
 {
    RegisterKernelFunction(OSInitRendezvous);
    RegisterKernelFunction(OSWaitRendezvous);
    RegisterKernelFunction(OSWaitRendezvousWithTimeout);
 }
+
+} // namespace coreinit

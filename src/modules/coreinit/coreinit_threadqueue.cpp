@@ -3,6 +3,9 @@
 #include "coreinit_threadqueue.h"
 #include "coreinit_queue.h"
 
+namespace coreinit
+{
+
 void
 OSInitThreadQueue(OSThreadQueue *queue)
 {
@@ -79,3 +82,5 @@ OSPopFrontThreadQueue(OSThreadQueue *queue)
 {
    return OSPopFrontFromQueue(queue);
 }
+
+} // namespace coreinit

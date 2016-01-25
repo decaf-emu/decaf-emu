@@ -1,6 +1,9 @@
 #pragma once
 #include "types.h"
 
+namespace coreinit
+{
+
 void
 DCInvalidateRange(void *addr,
                   uint32_t size);
@@ -31,3 +34,5 @@ DCTouchRange(void *addr,
 
 void
 OSCoherencyBarrier();
+
+} // namespace coreinit

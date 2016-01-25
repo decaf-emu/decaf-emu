@@ -1,4 +1,5 @@
 #pragma once
+#include "coreinit_enum.h"
 #include "coreinit_time.h"
 #include "coreinit_threadqueue.h"
 #include "utils/be_val.h"
@@ -6,9 +7,12 @@
 #include "utils/virtual_ptr.h"
 #include "utils/wfunc_ptr.h"
 
-#pragma pack(push, 1)
-
 struct Fiber;
+
+namespace coreinit
+{
+
+#pragma pack(push, 1)
 
 struct OSContext
 {
@@ -65,40 +69,6 @@ CHECK_OFFSET(OSContext, 0x318, mmcr0);
 CHECK_OFFSET(OSContext, 0x31c, mmcr1);
 CHECK_SIZE(OSContext, 0x320);
 
-// refs: __OSDumpActiveThreads
-namespace OSThreadState
-{
-enum Flags : uint8_t
-{
-   None     = 0,
-   Ready    = 1 << 0,
-   Running  = 1 << 1,
-   Waiting  = 1 << 2,
-   Moribund = 1 << 3 // define:Moribund "at the point of death."
-};
-}
-
-enum class OSThreadRequest : uint32_t
-{
-   None = 0,
-   Suspend = 1,
-   Cancel = 2,
-};
-
-namespace OSThreadAttributes
-{
-enum Flags : uint8_t
-{
-   AffinityCPU0 = 1 << 0,
-   AffinityCPU1 = 1 << 1,
-   AffinityCPU2 = 1 << 2,
-   AffinityAny = AffinityCPU0 | AffinityCPU1 | AffinityCPU2,
-   Detached = 1 << 3,
-   // ? 1 << 4
-   StackUsage = 1 << 5,
-};
-}
-
 struct OSMutex;
 
 struct OSMutexQueue
@@ -130,8 +100,8 @@ struct OSThread
 
    OSContext context;
    be_val<uint32_t> tag;
-   be_val<OSThreadState::Flags> state;
-   be_val<OSThreadAttributes::Flags> attr; // OSSetThreadAffinity / OSCreateThread
+   be_val<OSThreadState> state;
+   be_val<OSThreadAttributes> attr;       // OSSetThreadAffinity / OSCreateThread
    be_val<uint16_t> id;
    be_val<int32_t> suspendCounter;
    be_val<int32_t> priority;
@@ -212,7 +182,7 @@ void
 OSContinueThread(OSThread *thread);
 
 BOOL
-OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, be_val<uint32_t> *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes::Flags attributes);
+OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, be_val<uint32_t> *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes attributes);
 
 void
 OSDetachThread(OSThread *thread);
@@ -303,3 +273,5 @@ OSWakeupThread(OSThreadQueue *queue);
 
 void
 OSYieldThread();
+
+} // namespace coreinit

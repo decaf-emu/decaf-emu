@@ -2,6 +2,9 @@
 #include "coreinit_userconfig.h"
 #include "utils/bitutils.h"
 
+namespace coreinit
+{
+
 struct UCConfigEntry
 {
    std::string name;
@@ -172,7 +175,7 @@ addBlob(const std::string &name, const std::vector<uint8_t> &data)
 }
 
 void
-CoreInit::initialiseUserConfig()
+Module::initialiseUserConfig()
 {
    auto invisible_titles = std::vector<uint8_t> {};
    invisible_titles.resize(512, 0);
@@ -202,10 +205,12 @@ CoreInit::initialiseUserConfig()
 }
 
 void
-CoreInit::registerUserConfigFunctions()
+Module::registerUserConfigFunctions()
 {
    RegisterKernelFunction(UCOpen);
    RegisterKernelFunction(UCClose);
    RegisterKernelFunction(UCReadSysConfig);
    RegisterKernelFunction(UCWriteSysConfig);
 }
+
+} // namespace coreinit

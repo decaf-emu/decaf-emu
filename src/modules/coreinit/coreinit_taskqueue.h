@@ -10,6 +10,9 @@
 #include "utils/virtual_ptr.h"
 #include "utils/wfunc_ptr.h"
 
+namespace coreinit
+{
+
 struct MPTaskQueue;
 
 #pragma pack(push, 1)
@@ -175,3 +178,5 @@ MPRunTasksFromTaskQ(MPTaskQueue *queue,
 
 BOOL
 MPRunTask(MPTask *task);
+
+} // namespace coreinit

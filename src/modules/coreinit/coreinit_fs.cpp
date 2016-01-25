@@ -7,6 +7,9 @@
 #include "coreinit_fs_stat.h"
 #include "filesystem/filesystem.h"
 
+namespace coreinit
+{
+
 void
 FSInit()
 {
@@ -34,7 +37,7 @@ FSSetCmdPriority(FSCmdBlock *block,
 
 
 void
-CoreInit::registerFileSystemFunctions()
+Module::registerFileSystemFunctions()
 {
    RegisterKernelFunction(FSInit);
    RegisterKernelFunction(FSShutdown);
@@ -93,3 +96,5 @@ CoreInit::registerFileSystemFunctions()
    RegisterKernelFunction(FSRewindDir);
    RegisterKernelFunction(FSRewindDirAsync);
 }
+
+} // namespace coreinit

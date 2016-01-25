@@ -3,6 +3,9 @@
 #include "coreinit_messagequeue.h"
 #include "coreinit_scheduler.h"
 
+namespace coreinit
+{
+
 const uint32_t OSMessageQueue::Tag;
 
 static OSMessageQueue *
@@ -160,7 +163,7 @@ OSGetSystemMessageQueue()
 }
 
 void
-CoreInit::registerMessageQueueFunctions()
+Module::registerMessageQueueFunctions()
 {
    RegisterKernelFunction(OSInitMessageQueue);
    RegisterKernelFunction(OSInitMessageQueueEx);
@@ -172,9 +175,11 @@ CoreInit::registerMessageQueueFunctions()
 }
 
 void
-CoreInit::initialiseMessageQueues()
+Module::initialiseMessageQueues()
 {
    gSystemMessageQueue = coreinit::internal::sysAlloc<OSMessageQueue>();
    gSystemMessageArray = reinterpret_cast<OSMessage*>(coreinit::internal::sysAlloc(16 * sizeof(OSMessage)));
    OSInitMessageQueue(gSystemMessageQueue, gSystemMessageArray, 16);
 }
+
+} // namespace coreinit

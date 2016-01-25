@@ -2,6 +2,9 @@
 #include "coreinit_exit.h"
 #include "utils/log.h"
 
+namespace coreinit
+{
+
 // TODO: Do a clean game exit rather than terminating execution.
 
 void
@@ -26,9 +29,11 @@ ghs_exit(int code)
 }
 
 void
-CoreInit::registerExitFunctions()
+Module::registerExitFunctions()
 {
    RegisterKernelFunction(OSFatal);
    RegisterKernelFunctionName("_Exit", coreinit_Exit);
    RegisterKernelFunctionName("exit", ghs_exit);
 }
+
+} // namespace coreinit

@@ -5,6 +5,9 @@
 #include "filesystem/filesystem.h"
 #include "system.h"
 
+namespace coreinit
+{
+
 
 FSStatus
 FSOpenDir(FSClient *client,
@@ -178,3 +181,5 @@ FSRewindDirAsync(FSClient *client,
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
    return result;
 }
+
+} // namespace coreinit

@@ -6,6 +6,9 @@
 #include "utils/structsize.h"
 #include "utils/wfunc_ptr.h"
 
+namespace coreinit
+{
+
 static const uint32_t MEM_MAX_HEAP_TABLE = 0x20;
 
 #pragma pack(push, 1)
@@ -67,9 +70,6 @@ CoreFreeDefaultHeap();
 
 void
 CoreInitDefaultHeap();
-
-namespace coreinit
-{
 
 namespace internal
 {

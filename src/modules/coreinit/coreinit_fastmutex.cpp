@@ -2,7 +2,10 @@
 #include "coreinit_fastmutex.h"
 #include "coreinit_mutex.h"
 
-// TODO: Implement fast mutex
+namespace coreinit
+{
+
+// TODO: Implement real fast mutex
 
 void
 OSFastMutex_Init(OSFastMutex *mutex, const char *name)
@@ -47,7 +50,7 @@ OSFastCond_Signal(OSFastCondition *condition)
 }
 
 void
-CoreInit::registerFastMutexFunctions()
+Module::registerFastMutexFunctions()
 {
    RegisterKernelFunction(OSFastMutex_Init);
    RegisterKernelFunction(OSFastMutex_Lock);
@@ -57,3 +60,5 @@ CoreInit::registerFastMutexFunctions()
    RegisterKernelFunction(OSFastCond_Wait);
    RegisterKernelFunction(OSFastCond_Signal);
 }
+
+} // namespace coreinit

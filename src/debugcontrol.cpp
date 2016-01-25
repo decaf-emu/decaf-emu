@@ -92,7 +92,7 @@ DebugControl::preLaunch()
 
    pauseAll();
    gDebugger.notify(new DebugMessagePreLaunch());
-   pauseCore(nullptr, OSGetCoreId());
+   pauseCore(nullptr, coreinit::OSGetCoreId());
 }
 
 void

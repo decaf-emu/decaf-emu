@@ -10,6 +10,9 @@
 #include "utils/virtual_ptr.h"
 #include "utils/wfunc_ptr.h"
 
+namespace coreinit
+{
+
 static wfunc_ptr<int, int, int, be_val<uint32_t>*>
 gMemAlloc;
 
@@ -123,14 +126,14 @@ OSDynLoad_Release(LoadedModuleHandleData *handle)
 }
 
 void
-CoreInit::initialiseDynLoad()
+Module::initialiseDynLoad()
 {
    gMemAlloc = findExportAddress("MEM_DynLoad_DefaultAlloc");
    gMemFree = findExportAddress("MEM_DynLoad_DefaultFree");
 }
 
 void
-CoreInit::registerDynLoadFunctions()
+Module::registerDynLoadFunctions()
 {
    RegisterKernelFunction(OSDynLoad_Acquire);
    RegisterKernelFunction(OSDynLoad_FindExport);
@@ -140,9 +143,6 @@ CoreInit::registerDynLoadFunctions()
    RegisterKernelFunction(MEM_DynLoad_DefaultAlloc);
    RegisterKernelFunction(MEM_DynLoad_DefaultFree);
 }
-
-namespace coreinit
-{
 
 namespace internal
 {

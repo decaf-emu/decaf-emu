@@ -1,6 +1,9 @@
 #pragma once
 #include "filesystem/filesystem.h"
 
+namespace coreinit
+{
+
 FSStatus
 FSGetCwd(FSClient *client,
          FSCmdBlock *block,
@@ -20,9 +23,6 @@ FSChangeDirAsync(FSClient *client,
                  const char *path,
                  uint32_t flags,
                  FSAsyncData *asyncData);
-
-namespace coreinit
-{
 
 namespace internal
 {

@@ -2,14 +2,14 @@
 #include "types.h"
 #include "coreinit_thread.h"
 
+namespace coreinit
+{
+
 struct OSThread;
 struct OSThreadQueue;
 
 extern ThreadEntryPoint
 InterruptThreadEntryPoint;
-
-namespace coreinit
-{
 
 namespace internal
 {

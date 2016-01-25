@@ -147,7 +147,8 @@ populateDebugPauseInfo(DebugPauseInfo& info)
    auto &coreList = gProcessor.getCoreList();
    auto &fiberList = gProcessor.getFiberList();
 
-   std::map<OSThread*, Fiber*> threads;
+   std::map<coreinit::OSThread *, Fiber *> threads;
+
    for (auto &fiber : fiberList) {
       auto &thread = fiber->thread;
       auto titer = threads.find(thread);

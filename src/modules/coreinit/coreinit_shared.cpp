@@ -6,6 +6,9 @@
 #include "utils/virtual_ptr.h"
 #include "utils/teenyheap.h"
 
+namespace coreinit
+{
+
 struct FontData
 {
    virtual_ptr<uint8_t> data = nullptr;
@@ -64,7 +67,7 @@ readFont(FontData &dst, const char *src)
 }
 
 void
-CoreInit::initialiseShared()
+Module::initialiseShared()
 {
    gSharedHeap = new TeenyHeap(memory_translate(mem::SharedDataBase), mem::SharedDataSize);
    readFont(gFonts[0], "resources/fonts/SourceSansPro-Regular.ttf");
@@ -74,9 +77,9 @@ CoreInit::initialiseShared()
 }
 
 void
-CoreInit::registerSharedFunctions()
+Module::registerSharedFunctions()
 {
    RegisterKernelFunction(OSGetSharedData);
 }
 
-
+} // namespace coreinit

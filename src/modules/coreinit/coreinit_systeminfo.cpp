@@ -5,6 +5,9 @@
 #include "coreinit_time.h"
 #include "platform/platform_time.h"
 
+namespace coreinit
+{
+
 static OSSystemInfo *
 gSystemInfo = nullptr;
 
@@ -79,7 +82,7 @@ OSGetOSID()
 }
 
 void
-CoreInit::initialiseSystemInformation()
+Module::initialiseSystemInformation()
 {
    // Setup gSystemInfo
    gSystemInfo = coreinit::internal::sysAlloc<OSSystemInfo>();
@@ -94,7 +97,7 @@ CoreInit::initialiseSystemInformation()
 }
 
 void
-CoreInit::registerSystemInfoFunctions()
+Module::registerSystemInfoFunctions()
 {
    RegisterKernelFunction(OSGetSystemInfo);
    RegisterKernelFunction(OSSetScreenCapturePermission);
@@ -106,9 +109,6 @@ CoreInit::registerSystemInfoFunctions()
    RegisterKernelFunction(OSGetTitleID);
    RegisterKernelFunction(OSGetOSID);
 }
-
-namespace coreinit
-{
 
 namespace internal
 {

@@ -3,6 +3,9 @@
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct OSSystemInfo
@@ -44,9 +47,6 @@ OSGetTitleID();
 
 uint64_t
 OSGetOSID();
-
-namespace coreinit
-{
 
 namespace internal
 {

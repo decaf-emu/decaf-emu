@@ -3,6 +3,9 @@
 #include "coreinit_enum.h"
 #include "utils/be_val.h"
 
+namespace coreinit
+{
+
 void *
 OSBlockMove(void *dst, const void *src, ppcsize_t size, BOOL flush);
 
@@ -17,9 +20,6 @@ OSGetForegroundBucketFreeArea(be_val<uint32_t> *addr, be_val<uint32_t> *size);
 
 int
 OSGetMemBound(OSMemoryType type, be_val<uint32_t> *addr, be_val<uint32_t> *size);
-
-namespace coreinit
-{
 
 namespace internal
 {

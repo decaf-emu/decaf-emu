@@ -1,6 +1,9 @@
 #pragma once
 #include "coreinit_fs.h"
 
+namespace coreinit
+{
+
 FSStatus
 FSOpenFile(FSClient *client,
            FSCmdBlock *block,
@@ -174,3 +177,5 @@ FSTruncateFileAsync(FSClient *client,
                     FSFileHandle handle,
                     uint32_t flags,
                     FSAsyncData *asyncData);
+
+} // namespace coreinit

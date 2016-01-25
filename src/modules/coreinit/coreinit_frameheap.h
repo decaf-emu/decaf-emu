@@ -3,6 +3,9 @@
 #include "coreinit_enum.h"
 #include "coreinit_memory.h"
 
+namespace coreinit
+{
+
 struct FrameHeap;
 
 FrameHeap *
@@ -40,3 +43,5 @@ MEMGetAllocatableSizeForFrmHeap(FrameHeap *heap);
 
 uint32_t
 MEMGetAllocatableSizeForFrmHeapEx(FrameHeap *heap, int alignment);
+
+} // namespace coreinit

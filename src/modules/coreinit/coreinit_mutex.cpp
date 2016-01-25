@@ -4,6 +4,9 @@
 #include "coreinit_thread.h"
 #include "coreinit_queue.h"
 
+namespace coreinit
+{
+
 const uint32_t OSMutex::Tag;
 const uint32_t OSCondition::Tag;
 
@@ -160,7 +163,7 @@ OSSignalCond(OSCondition *condition)
 }
 
 void
-CoreInit::registerMutexFunctions()
+Module::registerMutexFunctions()
 {
    RegisterKernelFunction(OSInitMutex);
    RegisterKernelFunction(OSInitMutexEx);
@@ -172,3 +175,5 @@ CoreInit::registerMutexFunctions()
    RegisterKernelFunction(OSWaitCond);
    RegisterKernelFunction(OSSignalCond);
 }
+
+} // namespace coreinit

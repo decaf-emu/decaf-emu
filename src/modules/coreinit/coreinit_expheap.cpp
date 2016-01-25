@@ -5,6 +5,9 @@
 #include "utils/align.h"
 #include "utils/virtual_ptr.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct ExpandedHeapBlock
@@ -631,7 +634,7 @@ MEMGetAllocDirForMBlockExpHeap(uint8_t *addr)
 
 
 void
-CoreInit::registerExpHeapFunctions()
+Module::registerExpHeapFunctions()
 {
    RegisterKernelFunction(MEMCreateExpHeap);
    RegisterKernelFunction(MEMCreateExpHeapEx);
@@ -653,3 +656,5 @@ CoreInit::registerExpHeapFunctions()
    RegisterKernelFunction(MEMGetAllocDirForMBlockExpHeap);
    RegisterKernelFunction(MEMiDumpExpHeap);
 }
+
+} // namespace coreinit

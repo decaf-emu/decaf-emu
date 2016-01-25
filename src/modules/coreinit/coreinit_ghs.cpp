@@ -7,6 +7,9 @@
 #include "utils/wfunc_call.h"
 #include "cpu/trace.h"
 
+namespace coreinit
+{
+
 static OSSpinLock *
 ghsSpinLock;
 
@@ -103,7 +106,7 @@ void ghs_mtx_unlock(void *mtx)
 }
 
 void
-CoreInit::registerGhsFunctions()
+Module::registerGhsFunctions()
 {
    RegisterKernelFunctionName("__ghsLock", ghsLock);
    RegisterKernelFunctionName("__ghsUnlock", ghsUnlock);
@@ -126,10 +129,12 @@ CoreInit::registerGhsFunctions()
 }
 
 void
-CoreInit::initialiseGHS()
+Module::initialiseGHS()
 {
    *p__gh_FOPEN_MAX = GHS_FOPEN_MAX;
 
    ghsSpinLock = coreinit::internal::sysAlloc<OSSpinLock>();
    OSInitSpinLock(ghsSpinLock);
 }
+
+} // namespace coreinit

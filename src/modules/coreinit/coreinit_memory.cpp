@@ -3,6 +3,9 @@
 #include "coreinit_core.h"
 #include "mem/mem.h"
 
+namespace coreinit
+{
+
 void *
 OSBlockMove(void *dst, const void *src, ppcsize_t size, BOOL flush)
 {
@@ -100,7 +103,7 @@ OSMemoryBarrier()
 }
 
 void
-CoreInit::registerMemoryFunctions()
+Module::registerMemoryFunctions()
 {
    RegisterKernelFunction(OSBlockMove);
    RegisterKernelFunction(OSBlockSet);
@@ -112,9 +115,6 @@ CoreInit::registerMemoryFunctions()
    RegisterKernelFunctionName("memset", coreinit_memset);
    RegisterKernelFunctionName("memmove", coreinit_memmove);
 }
-
-namespace coreinit
-{
 
 namespace internal
 {
@@ -137,7 +137,6 @@ setMemBound(OSMemoryType type, uint32_t start, uint32_t size)
 
    return 0;
 }
-
 
 } // namespace internal
 

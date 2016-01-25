@@ -3,6 +3,9 @@
 #include "utils/align.h"
 #include "utils/log.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct UnitBlock
@@ -161,7 +164,7 @@ MEMCalcHeapSizeForUnitHeap(uint32_t blockSize,
 
 
 void
-CoreInit::registerUnitHeapFunctions()
+Module::registerUnitHeapFunctions()
 {
    RegisterKernelFunction(MEMCreateUnitHeapEx);
    RegisterKernelFunction(MEMDestroyUnitHeap);
@@ -171,3 +174,5 @@ CoreInit::registerUnitHeapFunctions()
    RegisterKernelFunction(MEMCountFreeBlockForUnitHeap);
    RegisterKernelFunction(MEMCalcHeapSizeForUnitHeap);
 }
+
+} // namespace coreinit

@@ -3,6 +3,9 @@
 #include "coreinit_fs_client.h"
 #include "utils/wfunc_call.h"
 
+namespace coreinit
+{
+
 static std::vector<FSClient*>
 gClients;
 
@@ -184,9 +187,6 @@ FSSetStateChangeNotification(FSClient *client,
    // TODO: FSSetStateChangeNotification
 }
 
-
-namespace coreinit
-{
 
 namespace internal
 {

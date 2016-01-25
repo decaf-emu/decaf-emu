@@ -4,6 +4,9 @@
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct OSSpinLock
@@ -61,3 +64,5 @@ struct ScopedSpinLock
 
    OSSpinLock *lock;
 };
+
+} // namespace coreinit

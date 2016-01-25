@@ -9,8 +9,11 @@
 #include "modules/coreinit/coreinit_mutex.h"
 #include "platform/platform_fiber.h"
 
+namespace coreinit
+{
 struct OSContext;
 struct OSThread;
+}
 
 
 /**
@@ -32,7 +35,7 @@ struct Fiber
 
    uint32_t coreID = 0;
    platform::Fiber *handle = nullptr;
-   OSThread *thread = nullptr;
+   coreinit::OSThread *thread = nullptr;
    ThreadState state;
 };
 
@@ -74,43 +77,71 @@ public:
    Processor(size_t cores);
 
    // Processor
-   void start();
-   void stop();
+   void
+   start();
+
+   void
+   stop();
 
    // Debugger Helper
-   void wakeAllCores();
+   void
+   wakeAllCores();
 
    // Fiber
-   Fiber *createFiber();
+   Fiber *
+   createFiber();
 
-   void queue(Fiber *fiber);
-   void reschedule(bool hasSchedulerLock, bool yield = false);
-   void yield();
-   void exit();
+   void
+   queue(Fiber *fiber);
 
-   Fiber *getCurrentFiber();
+   void
+   reschedule(bool hasSchedulerLock,
+              bool yield = false);
+
+   void
+   yield();
+
+   void
+   exit();
+
+   Fiber *
+   getCurrentFiber();
 
    // Interrupts
-   void handleInterrupt();
-   void finishInterrupt();
-   void waitFirstInterrupt();
+   void
+   handleInterrupt();
 
-   OSContext *getInterruptContext();
+   void
+   finishInterrupt();
 
-   void setInterruptTimer(uint32_t core, std::chrono::time_point<std::chrono::system_clock> when);
+   void
+   waitFirstInterrupt();
 
-   platform::Fiber *handleAccessViolation(ppcaddr_t address);
+   coreinit::OSContext *
+   getInterruptContext();
+
+   void
+   setInterruptTimer(uint32_t core,
+                     std::chrono::time_point<std::chrono::system_clock> when);
+
+   platform::Fiber *
+   handleAccessViolation(ppcaddr_t address);
 
    // Core
-   uint32_t getCoreID();
-   uint32_t getCoreCount();
+   uint32_t
+   getCoreID();
 
-   const std::vector<Core *> getCoreList() const
+   uint32_t
+   getCoreCount();
+
+   const std::vector<Core *>
+   getCoreList() const
    {
       return mCores;
    }
 
-   const std::vector<Fiber *> getFiberList() const
+   const std::vector<Fiber *>
+   getFiberList() const
    {
       return mFiberList;
    }
@@ -119,14 +150,26 @@ protected:
    friend Core;
    friend Fiber;
 
-   void timerEntryPoint();
-   void coreEntryPoint(Core *core);
-   void fiberEntryPoint(Fiber *fiber);
-   static void handleInterrupt(cpu::CoreState *core, ThreadState *state);
+   void
+   timerEntryPoint();
 
-   Fiber *createFiberNoLock();
-   Fiber *peekNextFiberNoLock(uint32_t core);
-   void queueNoLock(Fiber *fiber);
+   void
+   coreEntryPoint(Core *core);
+
+   void
+   fiberEntryPoint(Fiber *fiber);
+
+   static void
+   handleInterrupt(cpu::CoreState *core, ThreadState *state);
+
+   Fiber *
+   createFiberNoLock();
+
+   Fiber *
+   peekNextFiberNoLock(uint32_t core);
+
+   void
+   queueNoLock(Fiber *fiber);
 
 private:
    std::atomic<bool> mRunning { false };

@@ -10,6 +10,11 @@ namespace nn
 namespace save
 {
 
+using coreinit::FSAsyncData;
+using coreinit::FSClient;
+using coreinit::FSCmdBlock;
+using coreinit::FSDirectoryHandle;
+
 SaveStatus
 SAVEInitSaveDir(uint8_t userID);
 

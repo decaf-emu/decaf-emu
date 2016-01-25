@@ -3,6 +3,9 @@
 #include "coreinit_enum.h"
 #include "coreinit_memheap.h"
 
+namespace coreinit
+{
+
 struct UnitHeap;
 
 UnitHeap *
@@ -31,3 +34,5 @@ uint32_t
 MEMCalcHeapSizeForUnitHeap(uint32_t blockSize,
                            uint32_t count,
                            int alignment);
+
+} // namespace coreinit

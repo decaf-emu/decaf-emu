@@ -5,6 +5,9 @@
 #include "memory_translate.h"
 #include "processor.h"
 
+namespace coreinit
+{
+
 static void
 spinLock(OSSpinLock *spinlock)
 {
@@ -143,7 +146,7 @@ OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock)
 }
 
 void
-CoreInit::registerSpinLockFunctions()
+Module::registerSpinLockFunctions()
 {
    RegisterKernelFunction(OSInitSpinLock);
    RegisterKernelFunction(OSAcquireSpinLock);
@@ -155,3 +158,5 @@ CoreInit::registerSpinLockFunctions()
    RegisterKernelFunction(OSUninterruptibleSpinLock_TryAcquireWithTimeout);
    RegisterKernelFunction(OSUninterruptibleSpinLock_Release);
 }
+
+} // namespace coreinit

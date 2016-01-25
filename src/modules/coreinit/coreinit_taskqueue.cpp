@@ -3,6 +3,9 @@
 #include "coreinit_taskqueue.h"
 #include "utils/wfunc_call.h"
 
+namespace coreinit
+{
+
 void
 MPInitTaskQ(MPTaskQueue *queue,
             be_ptr<MPTask> *taskBuffer,
@@ -400,7 +403,7 @@ MPRunTask(MPTask *task)
 }
 
 void
-CoreInit::registerTaskQueueFunctions()
+Module::registerTaskQueueFunctions()
 {
    RegisterKernelFunction(MPInitTaskQ);
    RegisterKernelFunction(MPTermTaskQ);
@@ -422,3 +425,5 @@ CoreInit::registerTaskQueueFunctions()
    RegisterKernelFunction(MPRunTasksFromTaskQ);
    RegisterKernelFunction(MPRunTask);
 }
+
+} // namespace coreinit

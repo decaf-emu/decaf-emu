@@ -1,5 +1,8 @@
 #pragma once
 
+namespace coreinit
+{
+
 template<typename QueueType>
 static void inline
 OSInitQueue(QueueType *queue)
@@ -118,3 +121,5 @@ OSPopFrontFromQueue(QueueType *queue)
 
    return result;
 }
+
+} // namespace coreinit

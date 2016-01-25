@@ -4,6 +4,9 @@
 #include "coreinit_ios.h"
 #include "utils/structsize.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct UCSysConfig
@@ -35,3 +38,5 @@ IOError
 UCWriteSysConfig(IOHandle handle,
                  uint32_t count,
                  UCSysConfig *settings);
+
+} // namespace coreinit

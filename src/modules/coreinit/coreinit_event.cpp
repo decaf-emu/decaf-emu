@@ -5,6 +5,9 @@
 #include "coreinit_scheduler.h"
 #include "system.h"
 
+namespace coreinit
+{
+
 const uint32_t OSEvent::Tag;
 
 
@@ -246,7 +249,7 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
 }
 
 void
-CoreInit::registerEventFunctions()
+Module::registerEventFunctions()
 {
    RegisterKernelFunction(OSInitEvent);
    RegisterKernelFunction(OSInitEventEx);
@@ -259,7 +262,9 @@ CoreInit::registerEventFunctions()
 }
 
 void
-CoreInit::initialiseEvent()
+Module::initialiseEvent()
 {
    pEventAlarmHandler = findExportAddress("EventAlarmHandler");
 }
+
+} // namespace coreinit

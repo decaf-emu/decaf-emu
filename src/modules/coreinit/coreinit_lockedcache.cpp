@@ -5,6 +5,9 @@
 #include "mem/mem.h"
 #include "utils/teenyheap.h"
 
+namespace coreinit
+{
+
 static const auto
 LockedCacheAlign = 512;
 
@@ -133,7 +136,7 @@ LCWaitDMAQueue(uint32_t queueLength)
 }
 
 void
-CoreInit::initialiseLockedCache()
+Module::initialiseLockedCache()
 {
    auto base = reinterpret_cast<uint8_t *>(memory_translate(mem::LockedCacheBase));
 
@@ -143,7 +146,7 @@ CoreInit::initialiseLockedCache()
 }
 
 void
-CoreInit::registerLockedCacheFunctions()
+Module::registerLockedCacheFunctions()
 {
    RegisterKernelFunction(LCHardwareIsAvailable);
    RegisterKernelFunction(LCAlloc);
@@ -159,3 +162,5 @@ CoreInit::registerLockedCacheFunctions()
    RegisterKernelFunction(LCStoreDMABlocks);
    RegisterKernelFunction(LCWaitDMAQueue);
 }
+
+} // namespace coreinit

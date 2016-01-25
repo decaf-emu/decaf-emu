@@ -1,17 +1,16 @@
 #include "coreinit.h"
 #include "coreinit_memheap.h"
 
-CoreInit::CoreInit()
+namespace coreinit
 {
-}
 
-CoreInit::~CoreInit()
+Module::~Module()
 {
    CoreFreeDefaultHeap();
 }
 
 void
-CoreInit::initialise()
+Module::initialise()
 {
    // Always initialise clock first
    initialiseClock();
@@ -31,7 +30,7 @@ CoreInit::initialise()
 }
 
 void
-CoreInit::RegisterFunctions()
+Module::RegisterFunctions()
 {
    registerAlarmFunctions();
    registerAtomic64Functions();
@@ -67,3 +66,5 @@ CoreInit::RegisterFunctions()
    registerUserConfigFunctions();
    registerUnitHeapFunctions();
 }
+
+} // namespace coreinit

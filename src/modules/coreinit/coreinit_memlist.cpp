@@ -1,6 +1,9 @@
 #include "coreinit.h"
 #include "coreinit_memlist.h"
 
+namespace coreinit
+{
+
 static MemoryLink *
 getLink(MemoryList *list, void *object)
 {
@@ -166,7 +169,7 @@ MEMGetNthListObject(MemoryList *list, uint16_t n)
 }
 
 void
-CoreInit::registerMemlistFunctions()
+Module::registerMemlistFunctions()
 {
    RegisterKernelFunction(MEMInitList);
    RegisterKernelFunction(MEMAppendListObject);
@@ -177,3 +180,5 @@ CoreInit::registerMemlistFunctions()
    RegisterKernelFunction(MEMGetPrevListObject);
    RegisterKernelFunction(MEMGetNthListObject);
 }
+
+} // namespace coreinit

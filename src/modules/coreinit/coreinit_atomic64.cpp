@@ -5,6 +5,9 @@
 #include "utils/bitutils.h"
 #include "types.h"
 
+namespace coreinit
+{
+
 static
 OSSpinLock *gAtomic64Lock;
 
@@ -107,13 +110,13 @@ OSTestAndSetAtomic64(be_val<uint64_t> *ptr, uint32_t bit)
 }
 
 void
-CoreInit::initialiseAtomic64()
+Module::initialiseAtomic64()
 {
    gAtomic64Lock = coreinit::internal::sysAlloc<OSSpinLock>();
 }
 
 void
-CoreInit::registerAtomic64Functions()
+Module::registerAtomic64Functions()
 {
    RegisterKernelFunction(OSGetAtomic64);
    RegisterKernelFunction(OSSetAtomic64);
@@ -127,3 +130,5 @@ CoreInit::registerAtomic64Functions()
    RegisterKernelFunction(OSTestAndClearAtomic64);
    RegisterKernelFunction(OSTestAndSetAtomic64);
 }
+
+} // namespace coreinit

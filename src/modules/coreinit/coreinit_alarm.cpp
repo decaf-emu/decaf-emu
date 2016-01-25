@@ -10,6 +10,9 @@
 #include "utils/wfunc_call.h"
 #include "processor.h"
 
+namespace coreinit
+{
+
 static OSSpinLock *
 gAlarmLock;
 
@@ -239,6 +242,36 @@ OSWaitAlarm(OSAlarm *alarm)
    return result;
 }
 
+void
+Module::registerAlarmFunctions()
+{
+   RegisterKernelFunction(OSCancelAlarm);
+   RegisterKernelFunction(OSCancelAlarms);
+   RegisterKernelFunction(OSCreateAlarm);
+   RegisterKernelFunction(OSCreateAlarmEx);
+   RegisterKernelFunction(OSGetAlarmUserData);
+   RegisterKernelFunction(OSInitAlarmQueue);
+   RegisterKernelFunction(OSInitAlarmQueueEx);
+   RegisterKernelFunction(OSSetAlarm);
+   RegisterKernelFunction(OSSetPeriodicAlarm);
+   RegisterKernelFunction(OSSetAlarmTag);
+   RegisterKernelFunction(OSSetAlarmUserData);
+   RegisterKernelFunction(OSWaitAlarm);
+}
+
+void
+Module::initialiseAlarm()
+{
+   gAlarmLock = coreinit::internal::sysAlloc<OSSpinLock>();
+
+   for (auto i = 0u; i < CoreCount; ++i) {
+      gAlarmQueue[i] = coreinit::internal::sysAlloc<OSAlarmQueue>();
+      OSInitAlarmQueue(gAlarmQueue[i]);
+   }
+}
+
+namespace internal
+{
 
 /**
  * Internal alarm handler.
@@ -270,12 +303,6 @@ triggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
    coreinit::internal::wakeupThreadNoLock(&alarm->threadQueue);
 }
 
-
-namespace coreinit
-{
-
-namespace internal
-{
 
 /**
  * Internal check to see if any alarms are ready to be triggered.
@@ -320,33 +347,3 @@ checkAlarms(uint32_t core, OSContext *context)
 } // namespace internal
 
 } // namespace coreinit
-
-
-void
-CoreInit::registerAlarmFunctions()
-{
-   RegisterKernelFunction(OSCancelAlarm);
-   RegisterKernelFunction(OSCancelAlarms);
-   RegisterKernelFunction(OSCreateAlarm);
-   RegisterKernelFunction(OSCreateAlarmEx);
-   RegisterKernelFunction(OSGetAlarmUserData);
-   RegisterKernelFunction(OSInitAlarmQueue);
-   RegisterKernelFunction(OSInitAlarmQueueEx);
-   RegisterKernelFunction(OSSetAlarm);
-   RegisterKernelFunction(OSSetPeriodicAlarm);
-   RegisterKernelFunction(OSSetAlarmTag);
-   RegisterKernelFunction(OSSetAlarmUserData);
-   RegisterKernelFunction(OSWaitAlarm);
-}
-
-
-void
-CoreInit::initialiseAlarm()
-{
-   gAlarmLock = coreinit::internal::sysAlloc<OSSpinLock>();
-
-   for (auto i = 0u; i < CoreCount; ++i) {
-      gAlarmQueue[i] = coreinit::internal::sysAlloc<OSAlarmQueue>();
-      OSInitAlarmQueue(gAlarmQueue[i]);
-   }
-}

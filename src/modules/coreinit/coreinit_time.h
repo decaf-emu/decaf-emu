@@ -3,6 +3,9 @@
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 
+namespace coreinit
+{
+
 #pragma pack(push, 1)
 
 struct OSCalendarTime
@@ -48,9 +51,6 @@ OSTicksToCalendarTime(OSTime time, OSCalendarTime *calendarTime);
 
 OSTime
 OSCalendarTimeToTicks(OSCalendarTime *calendarTime);
-
-namespace coreinit
-{
 
 namespace internal
 {

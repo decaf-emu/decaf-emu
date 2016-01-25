@@ -2,6 +2,9 @@
 #include "coreinit_semaphore.h"
 #include "coreinit_scheduler.h"
 
+namespace coreinit
+{
+
 const uint32_t OSSemaphore::Tag;
 
 void
@@ -88,7 +91,7 @@ OSGetSemaphoreCount(OSSemaphore *semaphore)
 }
 
 void
-CoreInit::registerSemaphoreFunctions()
+Module::registerSemaphoreFunctions()
 {
    RegisterKernelFunction(OSInitSemaphore);
    RegisterKernelFunction(OSInitSemaphoreEx);
@@ -97,3 +100,5 @@ CoreInit::registerSemaphoreFunctions()
    RegisterKernelFunction(OSSignalSemaphore);
    RegisterKernelFunction(OSGetSemaphoreCount);
 }
+
+} // namespace coreinit

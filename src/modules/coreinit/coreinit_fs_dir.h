@@ -1,6 +1,9 @@
 #pragma once
 #include "coreinit_fs.h"
 
+namespace coreinit
+{
+
 FSStatus
 FSOpenDir(FSClient *client,
           FSCmdBlock *block,
@@ -69,3 +72,5 @@ FSRewindDirAsync(FSClient *client,
                  FSDirectoryHandle handle,
                  uint32_t flags,
                  FSAsyncData *asyncData);
+
+} // namespace coreinit

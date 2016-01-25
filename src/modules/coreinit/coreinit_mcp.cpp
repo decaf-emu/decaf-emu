@@ -1,6 +1,9 @@
 #include "coreinit.h"
 #include "coreinit_mcp.h"
 
+namespace coreinit
+{
+
 static const IOHandle
 gMCPHandle = 0x12345678;
 
@@ -30,9 +33,11 @@ MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings)
 }
 
 void
-CoreInit::registerMcpFunctions()
+Module::registerMcpFunctions()
 {
    RegisterKernelFunction(MCP_Open);
    RegisterKernelFunction(MCP_Close);
    RegisterKernelFunction(MCP_GetSysProdSettings);
 }
+
+} // namespace coreinit
