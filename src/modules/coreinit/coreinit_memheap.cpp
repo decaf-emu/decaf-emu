@@ -178,36 +178,6 @@ MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap)
    }
 }
 
-static void *
-sMEMAllocFromDefaultHeap(uint32_t size)
-{
-   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   return MEMAllocFromExpHeap(reinterpret_cast<ExpandedHeap*>(heap), size);
-}
-
-static void *
-sMEMAllocFromDefaultHeapEx(uint32_t size, int alignment)
-{
-   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
-}
-
-static void
-sMEMFreeToDefaultHeap(uint8_t *block)
-{
-   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
-}
-
-char *
-OSStringFromSystem(const std::string &src)
-{
-   auto buffer = reinterpret_cast<char *>(coreinit::internal::sysAlloc(src.size() + 1, 4));
-   std::memcpy(buffer, src.data(), src.size());
-   buffer[src.size()] = 0;
-   return buffer;
-}
-
 void
 CoreInitDefaultHeap()
 {
@@ -278,48 +248,6 @@ CoreFreeDefaultHeap()
    }
 }
 
-void
-CoreInit::registerMembaseFunctions()
-{
-   gMemArenas.fill(nullptr);
-
-   RegisterKernelFunction(MEMGetBaseHeapHandle);
-   RegisterKernelFunction(MEMSetBaseHeapHandle);
-   RegisterKernelFunction(MEMGetArena);
-   RegisterKernelDataName("MEMAllocFromDefaultHeap", pMEMAllocFromDefaultHeap);
-   RegisterKernelDataName("MEMAllocFromDefaultHeapEx", pMEMAllocFromDefaultHeapEx);
-   RegisterKernelDataName("MEMFreeToDefaultHeap", pMEMFreeToDefaultHeap);
-   RegisterKernelFunction(MEMiInitHeapHead);
-   RegisterKernelFunction(MEMiFinaliseHeap);
-   RegisterKernelFunction(MEMFindContainHeap);
-   RegisterKernelFunction(MEMDumpHeap);
-
-   // These are default implementations for function pointers, register as exports
-   // so we will have function thunks generated
-   RegisterKernelFunction(sMEMAllocFromDefaultHeap);
-   RegisterKernelFunction(sMEMAllocFromDefaultHeapEx);
-   RegisterKernelFunction(sMEMFreeToDefaultHeap);
-}
-
-void
-CoreInit::initialiseMembase()
-{
-   gForegroundMemlist = coreinit::internal::sysAlloc<MemoryList>();
-   MEMInitList(gForegroundMemlist, offsetof(CommonHeap, link));
-
-   gMEM1Memlist = coreinit::internal::sysAlloc<MemoryList>();
-   MEMInitList(gMEM1Memlist, offsetof(CommonHeap, link));
-
-   gMEM2Memlist = coreinit::internal::sysAlloc<MemoryList>();
-   MEMInitList(gMEM2Memlist, offsetof(CommonHeap, link));
-
-   CoreInitDefaultHeap();
-
-   *pMEMAllocFromDefaultHeap = findExportAddress("sMEMAllocFromDefaultHeap");
-   *pMEMAllocFromDefaultHeapEx = findExportAddress("sMEMAllocFromDefaultHeapEx");
-   *pMEMFreeToDefaultHeap = findExportAddress("sMEMFreeToDefaultHeap");
-}
-
 namespace coreinit
 {
 
@@ -340,6 +268,78 @@ sysFree(void *addr)
    return systemHeap->free(addr);
 }
 
+char *
+sysStrDup(const std::string &src)
+{
+   auto buffer = reinterpret_cast<char *>(coreinit::internal::sysAlloc(src.size() + 1, 4));
+   std::memcpy(buffer, src.data(), src.size());
+   buffer[src.size()] = 0;
+   return buffer;
+}
+
+void *
+defaultAllocFromDefaultHeap(uint32_t size)
+{
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
+   return MEMAllocFromExpHeap(reinterpret_cast<ExpandedHeap*>(heap), size);
+}
+
+void *
+defaultAllocFromDefaultHeapEx(uint32_t size, int alignment)
+{
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
+   return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
+}
+
+void
+defaultFreeToDefaultHeap(void *block)
+{
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
+   return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), reinterpret_cast<uint8_t *>(block));
+}
+
 } // namespace internal
 
 } // namespace coreinit
+
+void
+CoreInit::registerMembaseFunctions()
+{
+   gMemArenas.fill(nullptr);
+
+   RegisterKernelFunction(MEMGetBaseHeapHandle);
+   RegisterKernelFunction(MEMSetBaseHeapHandle);
+   RegisterKernelFunction(MEMGetArena);
+   RegisterKernelDataName("MEMAllocFromDefaultHeap", pMEMAllocFromDefaultHeap);
+   RegisterKernelDataName("MEMAllocFromDefaultHeapEx", pMEMAllocFromDefaultHeapEx);
+   RegisterKernelDataName("MEMFreeToDefaultHeap", pMEMFreeToDefaultHeap);
+   RegisterKernelFunction(MEMiInitHeapHead);
+   RegisterKernelFunction(MEMiFinaliseHeap);
+   RegisterKernelFunction(MEMFindContainHeap);
+   RegisterKernelFunction(MEMDumpHeap);
+
+   // These are default implementations for function pointers, register as exports
+   // so we will have function thunks generated
+   RegisterKernelFunctionName("internal_defaultAlloc", coreinit::internal::defaultAllocFromDefaultHeap);
+   RegisterKernelFunctionName("internal_defaultAllocEx", coreinit::internal::defaultAllocFromDefaultHeapEx);
+   RegisterKernelFunctionName("internal_defaultFree", coreinit::internal::defaultFreeToDefaultHeap);
+}
+
+void
+CoreInit::initialiseMembase()
+{
+   gForegroundMemlist = coreinit::internal::sysAlloc<MemoryList>();
+   MEMInitList(gForegroundMemlist, offsetof(CommonHeap, link));
+
+   gMEM1Memlist = coreinit::internal::sysAlloc<MemoryList>();
+   MEMInitList(gMEM1Memlist, offsetof(CommonHeap, link));
+
+   gMEM2Memlist = coreinit::internal::sysAlloc<MemoryList>();
+   MEMInitList(gMEM2Memlist, offsetof(CommonHeap, link));
+
+   CoreInitDefaultHeap();
+
+   *pMEMAllocFromDefaultHeap = findExportAddress("internal_defaultAlloc");
+   *pMEMAllocFromDefaultHeapEx = findExportAddress("internal_defaultAllocEx");
+   *pMEMFreeToDefaultHeap = findExportAddress("internal_defaultFree");
+}

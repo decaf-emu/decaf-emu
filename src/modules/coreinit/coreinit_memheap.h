@@ -62,9 +62,6 @@ MEMGetBaseHeapHandle(MEMBaseHeapType type);
 CommonHeap *
 MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap);
 
-char *
-OSStringFromSystem(const std::string &src);
-
 void
 CoreFreeDefaultHeap();
 
@@ -89,6 +86,18 @@ sysAlloc(int alignment = 4)
 {
    return new (sysAlloc(sizeof(Type), alignment)) Type();
 }
+
+char *
+sysStrDup(const std::string &src);
+
+void *
+defaultAllocFromDefaultHeap(uint32_t size);
+
+void *
+defaultAllocFromDefaultHeapEx(uint32_t size, int alignment);
+
+void
+defaultFreeToDefaultHeap(void *block);
 
 } // namespace internal
 

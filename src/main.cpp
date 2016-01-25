@@ -394,7 +394,7 @@ play(const fs::HostPath &path)
       auto thread = coreinit::internal::sysAlloc<OSThread>();
       auto stackSize = 2048;
       auto stack = reinterpret_cast<uint8_t *>(coreinit::internal::sysAlloc(stackSize, 8));
-      auto name = OSStringFromSystem("Loader Thread");
+      auto name = coreinit::internal::sysStrDup("Loader Thread");
 
       auto gameLoader = gLoader.loadRPL("gameloader");
       auto gameLoaderRun = gameLoader->findExport("GameLoaderRun");
