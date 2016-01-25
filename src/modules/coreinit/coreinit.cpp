@@ -27,6 +27,7 @@ CoreInit::initialise()
    initialiseSchedulerFunctions();
    initialiseShared();
    initialiseSystemInformation();
+   initialiseUserConfig();
 }
 
 void

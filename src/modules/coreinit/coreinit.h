@@ -23,6 +23,7 @@ private:
    void initialiseSchedulerFunctions();
    void initialiseShared();
    void initialiseSystemInformation();
+   void initialiseUserConfig();
 
 public:
    static void RegisterFunctions();
