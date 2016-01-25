@@ -441,6 +441,155 @@ printInfo(const std::string &filename)
          }
          endGroup(out);
          break;
+      case gfd::BlockType::GeometryShaderHeader:
+         startGroup(out, "GeometryShaderHeader");
+         {
+            auto shader = reinterpret_cast<gx2::GX2GeometryShader *>(block.data.data());
+            writeField(out, "index", block.header.index);
+            writeField(out, "size", shader->size);
+            writeField(out, "vshSize", shader->vertexShaderSize);
+            writeField(out, "mode", GX2EnumAsString(shader->mode));
+            writeField(out, "uniformBlocks", shader->uniformBlockCount);
+            writeField(out, "uniformVars", shader->uniformVarCount);
+            writeField(out, "initVars", shader->initialValueCount);
+            writeField(out, "loopVars", shader->loopVarCount);
+            writeField(out, "samplerVars", shader->samplerVarCount);
+            writeField(out, "ringItemSize", shader->ringItemSize);
+            writeField(out, "hasStreamOut", shader->hasStreamOut);
+
+            for (auto i = 0u; i < shader->streamOutStride.size(); ++i) {
+               writeField(out, fmt::format("streamOutStride[{}]", i), shader->streamOutStride[i]);
+            }
+
+            startGroup(out, "SQ_PGM_RESOURCES_GS");
+            {
+               auto sq_pgm_resources_gs = shader->regs.sq_pgm_resources_gs.value();
+               writeField(out, "NUM_GPRS", sq_pgm_resources_gs.NUM_GPRS);
+               writeField(out, "STACK_SIZE", sq_pgm_resources_gs.STACK_SIZE);
+               writeField(out, "DX10_CLAMP", sq_pgm_resources_gs.DX10_CLAMP);
+               writeField(out, "PRIME_CACHE_PGM_EN", sq_pgm_resources_gs.PRIME_CACHE_PGM_EN);
+               writeField(out, "PRIME_CACHE_ON_DRAW", sq_pgm_resources_gs.PRIME_CACHE_ON_DRAW);
+               writeField(out, "FETCH_CACHE_LINES", sq_pgm_resources_gs.FETCH_CACHE_LINES);
+               writeField(out, "UNCACHED_FIRST_INST", sq_pgm_resources_gs.UNCACHED_FIRST_INST);
+               writeField(out, "PRIME_CACHE_ENABLE", sq_pgm_resources_gs.PRIME_CACHE_ENABLE);
+               writeField(out, "PRIME_CACHE_ON_CONST", sq_pgm_resources_gs.PRIME_CACHE_ON_CONST);
+            }
+            endGroup(out);
+
+            startGroup(out, "VGT_GS_OUT_PRIM_TYPE");
+            {
+               auto vgt_gs_out_prim_type = shader->regs.vgt_gs_out_prim_type.value();
+               writeField(out, "PRIM_TYPE", vgt_gs_out_prim_type.PRIM_TYPE);
+            }
+            endGroup(out);
+
+            startGroup(out, "VGT_GS_MODE");
+            {
+               auto vgt_gs_mode = shader->regs.vgt_gs_mode.value();
+               writeField(out, "MODE", vgt_gs_mode.MODE);
+               writeField(out, "ES_PASSTHRU", vgt_gs_mode.ES_PASSTHRU);
+               writeField(out, "CUT_MODE", vgt_gs_mode.CUT_MODE);
+               writeField(out, "MODE_HI", vgt_gs_mode.MODE_HI);
+               writeField(out, "GS_C_PACK_EN", vgt_gs_mode.GS_C_PACK_EN);
+               writeField(out, "COMPUTE_MODE", vgt_gs_mode.COMPUTE_MODE);
+               writeField(out, "FAST_COMPUTE_MODE", vgt_gs_mode.FAST_COMPUTE_MODE);
+               writeField(out, "ELEMENT_INFO_EN", vgt_gs_mode.ELEMENT_INFO_EN);
+               writeField(out, "PARTIAL_THD_AT_EOI", vgt_gs_mode.PARTIAL_THD_AT_EOI);
+            }
+            endGroup(out);
+
+            startGroup(out, "PA_CL_VS_OUT_CNTL");
+            {
+               auto pa_cl_vs_out_cntl = shader->regs.pa_cl_vs_out_cntl.value();
+               writeField(out, "CLIP_DIST_ENA_0", pa_cl_vs_out_cntl.CLIP_DIST_ENA_0);
+               writeField(out, "CLIP_DIST_ENA_1", pa_cl_vs_out_cntl.CLIP_DIST_ENA_1);
+               writeField(out, "CLIP_DIST_ENA_2", pa_cl_vs_out_cntl.CLIP_DIST_ENA_2);
+               writeField(out, "CLIP_DIST_ENA_3", pa_cl_vs_out_cntl.CLIP_DIST_ENA_3);
+               writeField(out, "CLIP_DIST_ENA_4", pa_cl_vs_out_cntl.CLIP_DIST_ENA_4);
+               writeField(out, "CLIP_DIST_ENA_5", pa_cl_vs_out_cntl.CLIP_DIST_ENA_5);
+               writeField(out, "CLIP_DIST_ENA_6", pa_cl_vs_out_cntl.CLIP_DIST_ENA_6);
+               writeField(out, "CLIP_DIST_ENA_7", pa_cl_vs_out_cntl.CLIP_DIST_ENA_7);
+               writeField(out, "CULL_DIST_ENA_0", pa_cl_vs_out_cntl.CULL_DIST_ENA_0);
+               writeField(out, "CULL_DIST_ENA_1", pa_cl_vs_out_cntl.CULL_DIST_ENA_1);
+               writeField(out, "CULL_DIST_ENA_2", pa_cl_vs_out_cntl.CULL_DIST_ENA_2);
+               writeField(out, "CULL_DIST_ENA_3", pa_cl_vs_out_cntl.CULL_DIST_ENA_3);
+               writeField(out, "CULL_DIST_ENA_4", pa_cl_vs_out_cntl.CULL_DIST_ENA_4);
+               writeField(out, "CULL_DIST_ENA_5", pa_cl_vs_out_cntl.CULL_DIST_ENA_5);
+               writeField(out, "CULL_DIST_ENA_6", pa_cl_vs_out_cntl.CULL_DIST_ENA_6);
+               writeField(out, "CULL_DIST_ENA_7", pa_cl_vs_out_cntl.CULL_DIST_ENA_7);
+               writeField(out, "USE_VTX_POINT_SIZE", pa_cl_vs_out_cntl.USE_VTX_POINT_SIZE);
+               writeField(out, "USE_VTX_EDGE_FLAG", pa_cl_vs_out_cntl.USE_VTX_EDGE_FLAG);
+               writeField(out, "USE_VTX_RENDER_TARGET_INDX", pa_cl_vs_out_cntl.USE_VTX_RENDER_TARGET_INDX);
+               writeField(out, "USE_VTX_VIEWPORT_INDX", pa_cl_vs_out_cntl.USE_VTX_VIEWPORT_INDX);
+               writeField(out, "USE_VTX_KILL_FLAG", pa_cl_vs_out_cntl.USE_VTX_KILL_FLAG);
+               writeField(out, "VS_OUT_MISC_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_MISC_VEC_ENA);
+               writeField(out, "VS_OUT_CCDIST0_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_CCDIST0_VEC_ENA);
+               writeField(out, "VS_OUT_CCDIST1_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_CCDIST1_VEC_ENA);
+               writeField(out, "VS_OUT_MISC_SIDE_BUS_ENA", pa_cl_vs_out_cntl.VS_OUT_MISC_SIDE_BUS_ENA);
+               writeField(out, "USE_VTX_GS_CUT_FLAG", pa_cl_vs_out_cntl.USE_VTX_GS_CUT_FLAG);
+            }
+            endGroup(out);
+
+            auto num_spi_vs_out_id = shader->regs.num_spi_vs_out_id.value();
+            writeField(out, "NUM_SPI_VS_OUT_ID", num_spi_vs_out_id);
+
+            auto spi_vs_out_id = shader->regs.spi_vs_out_id.value();
+
+            for (auto i = 0u; i < std::min<size_t>(num_spi_vs_out_id, spi_vs_out_id.size()); ++i) {
+               startGroup(out, fmt::format("SPI_VS_OUT_ID[{}]", i));
+               {
+                  writeField(out, "SEMANTIC_0", spi_vs_out_id[i].SEMANTIC_0);
+                  writeField(out, "SEMANTIC_1", spi_vs_out_id[i].SEMANTIC_1);
+                  writeField(out, "SEMANTIC_2", spi_vs_out_id[i].SEMANTIC_2);
+                  writeField(out, "SEMANTIC_3", spi_vs_out_id[i].SEMANTIC_3);
+               }
+               endGroup(out);
+            }
+
+            startGroup(out, "SQ_PGM_RESOURCES_VS");
+            {
+               auto sq_pgm_resources_vs = shader->regs.sq_pgm_resources_vs.value();
+               writeField(out, "NUM_GPRS", sq_pgm_resources_vs.NUM_GPRS);
+               writeField(out, "STACK_SIZE", sq_pgm_resources_vs.STACK_SIZE);
+               writeField(out, "DX10_CLAMP", sq_pgm_resources_vs.DX10_CLAMP);
+               writeField(out, "PRIME_CACHE_PGM_EN", sq_pgm_resources_vs.PRIME_CACHE_PGM_EN);
+               writeField(out, "PRIME_CACHE_ON_DRAW", sq_pgm_resources_vs.PRIME_CACHE_ON_DRAW);
+               writeField(out, "FETCH_CACHE_LINES", sq_pgm_resources_vs.FETCH_CACHE_LINES);
+               writeField(out, "UNCACHED_FIRST_INST", sq_pgm_resources_vs.UNCACHED_FIRST_INST);
+               writeField(out, "PRIME_CACHE_ENABLE", sq_pgm_resources_vs.PRIME_CACHE_ENABLE);
+               writeField(out, "PRIME_CACHE_ON_CONST", sq_pgm_resources_vs.PRIME_CACHE_ON_CONST);
+            }
+            endGroup(out);
+
+            startGroup(out, "SQ_GS_VERT_ITEMSIZE");
+            {
+               auto sq_gs_vert_itemsize = shader->regs.sq_gs_vert_itemsize.value();
+               writeField(out, "ITEMSIZE", sq_gs_vert_itemsize.ITEMSIZE);
+            }
+            endGroup(out);
+
+            startGroup(out, "SPI_VS_OUT_CONFIG");
+            {
+               auto spi_vs_out_config = shader->regs.spi_vs_out_config.value();
+               writeField(out, "VS_PER_COMPONENT", spi_vs_out_config.VS_PER_COMPONENT);
+               writeField(out, "VS_EXPORT_COUNT", spi_vs_out_config.VS_EXPORT_COUNT);
+               writeField(out, "VS_EXPORTS_FOG", spi_vs_out_config.VS_EXPORTS_FOG);
+               writeField(out, "VS_OUT_FOG_VEC_ADDR", spi_vs_out_config.VS_OUT_FOG_VEC_ADDR);
+            }
+            endGroup(out);
+
+            startGroup(out, "VGT_STRMOUT_BUFFER_EN");
+            {
+               auto vgt_strmout_buffer_en = shader->regs.vgt_strmout_buffer_en.value();
+               writeField(out, "BUFFER_0_EN", vgt_strmout_buffer_en.BUFFER_0_EN);
+               writeField(out, "BUFFER_1_EN", vgt_strmout_buffer_en.BUFFER_1_EN);
+               writeField(out, "BUFFER_2_EN", vgt_strmout_buffer_en.BUFFER_2_EN);
+               writeField(out, "BUFFER_3_EN", vgt_strmout_buffer_en.BUFFER_3_EN);
+            }
+            endGroup(out);
+         }
+         endGroup(out);
+         break;
       case gfd::BlockType::VertexShaderProgram:
          startGroup(out, "VertexShaderProgram");
          {
@@ -466,6 +615,22 @@ printInfo(const std::string &filename)
             latte::Shader shader;
             std::string disassembly;
             shader.type = latte::Shader::Pixel;
+            latte::decode(shader, block.data);
+            latte::disassemble(shader, disassembly);
+
+            out.writer << '\n' << disassembly;
+         }
+         endGroup(out);
+         break;
+      case gfd::BlockType::GeometryShaderProgram:
+         startGroup(out, "GeometryShaderProgram");
+         {
+            writeField(out, "index", block.header.index);
+            writeField(out, "size", block.data.size());
+
+            latte::Shader shader;
+            std::string disassembly;
+            shader.type = latte::Shader::Geometry;
             latte::decode(shader, block.data);
             latte::disassemble(shader, disassembly);
 
