@@ -25,32 +25,32 @@ Usage:
 
 struct Texture
 {
-   GX2Texture *header;
+   gx2::GX2Texture *header;
    gsl::span<uint8_t> imageData;
    gsl::span<uint8_t> mipmapData;
 };
 
 struct VertexShader
 {
-   GX2VertexShader *header;
+   gx2::GX2VertexShader *header;
    gsl::span<uint8_t> program;
 };
 
 struct PixelShader
 {
-   GX2PixelShader *header;
+   gx2::GX2PixelShader *header;
    gsl::span<uint8_t> program;
 };
 
 struct GeometryShader
 {
-   GX2GeometryShader *header;
+   gx2::GX2GeometryShader *header;
    gsl::span<uint8_t> program;
 };
 
 struct FetchShader
 {
-   GX2FetchShader *header;
+   gx2::GX2FetchShader *header;
    gsl::span<uint8_t> program;
 };
 
@@ -69,35 +69,35 @@ getGfdData(gfd::File &file, GfdData &data)
    for (auto &block : file.blocks) {
       switch (block.header.type) {
       case gfd::BlockType::VertexShaderHeader:
-         data.vertexShaders[block.header.index].header = reinterpret_cast<GX2VertexShader *>(block.data.data());
+         data.vertexShaders[block.header.index].header = reinterpret_cast<gx2::GX2VertexShader *>(block.data.data());
          break;
       case gfd::BlockType::VertexShaderProgram:
          data.vertexShaders[block.header.index].program = block.data;
          break;
 
       case gfd::BlockType::PixelShaderHeader:
-         data.pixelShaders[block.header.index].header = reinterpret_cast<GX2PixelShader *>(block.data.data());
+         data.pixelShaders[block.header.index].header = reinterpret_cast<gx2::GX2PixelShader *>(block.data.data());
          break;
       case gfd::BlockType::PixelShaderProgram:
          data.pixelShaders[block.header.index].program = block.data;
          break;
 
       case gfd::BlockType::GeometryShaderHeader:
-         data.geometryShaders[block.header.index].header = reinterpret_cast<GX2GeometryShader *>(block.data.data());
+         data.geometryShaders[block.header.index].header = reinterpret_cast<gx2::GX2GeometryShader *>(block.data.data());
          break;
       case gfd::BlockType::GeometryShaderProgram:
          data.geometryShaders[block.header.index].program = block.data;
          break;
 
       case gfd::BlockType::FetchShaderHeader:
-         data.fetchShaders[block.header.index].header = reinterpret_cast<GX2FetchShader *>(block.data.data());
+         data.fetchShaders[block.header.index].header = reinterpret_cast<gx2::GX2FetchShader *>(block.data.data());
          break;
       case gfd::BlockType::FetchShaderProgram:
          data.fetchShaders[block.header.index].program = block.data;
          break;
 
       case gfd::BlockType::TextureHeader:
-         data.textures[block.header.index].header = reinterpret_cast<GX2Texture *>(block.data.data());
+         data.textures[block.header.index].header = reinterpret_cast<gx2::GX2Texture *>(block.data.data());
       break;
       case gfd::BlockType::TextureImage:
          data.textures[block.header.index].imageData = block.data;
@@ -166,7 +166,7 @@ printInfo(const std::string &filename)
       case gfd::BlockType::VertexShaderHeader:
          startGroup(out, "VertexShaderHeader");
          {
-            auto shader = reinterpret_cast<GX2VertexShader *>(block.data.data());
+            auto shader = reinterpret_cast<gx2::GX2VertexShader *>(block.data.data());
             writeField(out, "index", block.header.index);
             writeField(out, "size", shader->size);
             writeField(out, "mode", GX2EnumAsString(shader->mode));
@@ -307,7 +307,7 @@ printInfo(const std::string &filename)
       case gfd::BlockType::PixelShaderHeader:
          startGroup(out, "PixelShaderHeader");
          {
-            auto shader = reinterpret_cast<GX2PixelShader *>(block.data.data());
+            auto shader = reinterpret_cast<gx2::GX2PixelShader *>(block.data.data());
             writeField(out, "index", block.header.index);
             writeField(out, "size", shader->size);
             writeField(out, "mode", GX2EnumAsString(shader->mode));
@@ -479,7 +479,7 @@ printInfo(const std::string &filename)
 
          startGroup(out, "TextureHeader");
          {
-            auto tex = reinterpret_cast<GX2Texture *>(block.data.data());
+            auto tex = reinterpret_cast<gx2::GX2Texture *>(block.data.data());
             writeField(out, "index", block.header.index);
             writeField(out, "dim", GX2EnumAsString(tex->surface.dim));
             writeField(out, "width", tex->surface.width);
@@ -506,7 +506,6 @@ printInfo(const std::string &filename)
             writeField(out, "viewNumSlices", tex->viewNumSlices);
             writeField(out, "compMap", tex->compMap);
 
-            // TODO:
             startGroup(out, "SQ_TEX_RESOURCE_WORD0_0");
             {
                auto word0 = tex->regs.word0.value();
