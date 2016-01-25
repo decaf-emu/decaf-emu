@@ -286,6 +286,14 @@ GX2CopySurface(GX2Surface *src,
                uint32_t dstLevel,
                uint32_t dstDepth)
 {
+   if (src->format == GX2SurfaceFormat::INVALID || src->width == 0 || src->height == 0) {
+      return;
+   }
+
+   if (dst->format == GX2SurfaceFormat::INVALID) {
+      return;
+   }
+
    gx2::internal::copySurface(src, srcLevel, srcDepth,
                               dst, dstLevel, dstDepth);
 }
