@@ -7,7 +7,10 @@
 #include "utils/align.h"
 #include <array>
 
-static std::array<pm4::Buffer, CoreCount>
+namespace gx2
+{
+
+static std::array<pm4::Buffer, coreinit::CoreCount>
 gActiveDisplayList;
 
 void
@@ -19,7 +22,7 @@ GX2BeginDisplayList(void *displayList, uint32_t bytes)
 void
 GX2BeginDisplayListEx(void *displayList, uint32_t bytes, BOOL unk1)
 {
-   auto core = OSGetCoreId();
+   auto core = coreinit::OSGetCoreId();
    auto &active = gActiveDisplayList[core];
 
    // Set active display list
@@ -34,7 +37,7 @@ GX2BeginDisplayListEx(void *displayList, uint32_t bytes, BOOL unk1)
 uint32_t
 GX2EndDisplayList(void *displayList)
 {
-   auto core = OSGetCoreId();
+   auto core = coreinit::OSGetCoreId();
    auto &active = gActiveDisplayList[core];
 
    if (active.buffer != displayList) {
@@ -57,7 +60,7 @@ GX2EndDisplayList(void *displayList)
 BOOL
 GX2GetDisplayListWriteStatus()
 {
-   auto core = OSGetCoreId();
+   auto core = coreinit::OSGetCoreId();
    auto &active = gActiveDisplayList[core];
    return active.buffer ? TRUE : FALSE;
 }
@@ -65,7 +68,7 @@ GX2GetDisplayListWriteStatus()
 BOOL
 GX2GetCurrentDisplayList(be_ptr<void> *outDisplayList, be_val<uint32_t> *outSize)
 {
-   auto core = OSGetCoreId();
+   auto core = coreinit::OSGetCoreId();
    auto &active = gActiveDisplayList[core];
 
    if (outDisplayList) {
@@ -101,3 +104,5 @@ GX2CopyDisplayList(void *displayList, uint32_t bytes)
    memcpy(&dst->buffer[dst->curSize], displayList, bytes);
    dst->curSize += words;
 }
+
+} // namespace gx2

@@ -4,6 +4,9 @@
 #include "utils/structsize.h"
 #include "gpu/latte_registers.h"
 
+namespace gx2
+{
+
 #pragma pack(push, 1)
 
 struct GX2Sampler
@@ -82,3 +85,5 @@ GX2SetGeometrySamplerBorderColor(uint32_t unit,
                                  float green,
                                  float blue,
                                  float alpha);
+
+} // namespace gx2

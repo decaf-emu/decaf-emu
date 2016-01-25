@@ -59,7 +59,7 @@ queueUserBuffer(void *buffer, uint32_t bytes)
 void
 queueCommandBuffer(pm4::Buffer *buf)
 {
-   buf->submitTime = OSGetTime();
+   buf->submitTime = coreinit::OSGetTime();
    gx2::internal::setLastSubmittedTimestamp(buf->submitTime);
    gQueue.appendBuffer(buf);
 }

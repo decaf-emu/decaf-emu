@@ -5,6 +5,9 @@
 #include "types.h"
 #include "utils/be_val.h"
 
+namespace gx2
+{
+
 void
 GX2SetTVEnable(BOOL enable);
 
@@ -50,3 +53,5 @@ GX2GetSystemTVScanMode();
 
 GX2DrcRenderMode
 GX2GetSystemDRCMode();
+
+} // namespace gx2

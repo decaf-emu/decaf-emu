@@ -4,6 +4,9 @@
 #include "utils/align.h"
 #include "gpu/microcode/latte_instructions.h"
 
+namespace gx2
+{
+
 struct IndexMapEntry
 {
    uint32_t gpr;
@@ -412,3 +415,5 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
    sq_pgm_resources_fs.NUM_GPRS = numGPRs;
    fetchShader->regs.sq_pgm_resources_fs = sq_pgm_resources_fs;
 }
+
+} // namespace gx2

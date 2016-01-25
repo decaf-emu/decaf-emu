@@ -3,6 +3,9 @@
 #include "gx2_swap.h"
 #include "gpu/pm4_writer.h"
 
+namespace gx2
+{
+
 static uint32_t
 gSwapInterval { 1 };
 
@@ -59,3 +62,5 @@ GX2SetSwapInterval(uint32_t interval)
 {
    gSwapInterval = interval;
 }
+
+} // namespace gx2

@@ -7,6 +7,9 @@
 #include "utils/virtual_ptr.h"
 #include "gx2_enum.h"
 
+namespace gx2
+{
+
 #pragma pack(push, 1)
 
 struct GX2Surface
@@ -164,3 +167,5 @@ GX2CopySurface(GX2Surface *src,
                GX2Surface *dst,
                uint32_t dstLevel,
                uint32_t dstDepth);
+
+} // namespace gx2

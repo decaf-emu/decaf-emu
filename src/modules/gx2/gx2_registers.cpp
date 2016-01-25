@@ -2,6 +2,9 @@
 #include "gpu/pm4_writer.h"
 #include "gx2_registers.h"
 
+namespace gx2
+{
+
 void
 GX2SetAAMask(uint8_t upperLeft,
              uint8_t upperRight,
@@ -1166,3 +1169,5 @@ GX2SetRasterizerClipControlHalfZ(BOOL rasteriser, BOOL zclipNear, BOOL halfZ)
 {
    GX2SetRasterizerClipControlEx(rasteriser, zclipNear, halfZ);
 }
+
+} // namespace gx2

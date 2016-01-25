@@ -3,6 +3,9 @@
 #include "utils/align.h"
 #include "utils/log.h"
 
+namespace gx2
+{
+
 uint32_t
 GX2RGetBufferAlignment(GX2RResourceFlags flags)
 {
@@ -67,3 +70,5 @@ GX2RUnlockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags)
 {
    buffer->flags &= ~GX2RResourceFlags::Locked;
 }
+
+} // namespace gx2

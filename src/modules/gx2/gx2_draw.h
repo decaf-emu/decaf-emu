@@ -2,6 +2,9 @@
 #include "types.h"
 #include "gx2_enum.h"
 
+namespace gx2
+{
+
 void
 GX2SetAttribBuffer(uint32_t index,
                    uint32_t size,
@@ -24,3 +27,5 @@ GX2DrawIndexedEx(GX2PrimitiveMode mode,
 
 void
 GX2SetPrimitiveRestartIndex(uint32_t index);
+
+} // namespace gx2

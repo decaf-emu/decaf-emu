@@ -1,12 +1,13 @@
 #pragma once
+#include "modules/coreinit/coreinit_alarm.h"
 #include "modules/coreinit/coreinit_time.h"
 #include "gx2_enum.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/wfunc_ptr.h"
 
-struct OSAlarm;
-struct OSContext;
+namespace gx2
+{
 
 #pragma pack(push, 1)
 
@@ -44,23 +45,20 @@ GX2SetEventCallback(GX2EventType type, GX2EventCallbackFunction func, void *user
 void
 GX2GetEventCallback(GX2EventType type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut);
 
-OSTime
+coreinit::OSTime
 GX2GetRetiredTimeStamp();
 
-OSTime
+coreinit::OSTime
 GX2GetLastSubmittedTimeStamp();
 
 BOOL
-GX2WaitTimeStamp(OSTime time);
+GX2WaitTimeStamp(coreinit::OSTime time);
 
 void
 GX2GetSwapStatus(be_val<uint32_t> *swapCount,
                  be_val<uint32_t> *flipCount,
-                 be_val<OSTime> *lastFlip,
-                 be_val<OSTime> *lastVsync);
-
-namespace gx2
-{
+                 be_val<coreinit::OSTime> *lastFlip,
+                 be_val<coreinit::OSTime> *lastVsync);
 
 namespace internal
 {
@@ -69,16 +67,17 @@ void
 initEvents();
 
 void
-vsyncAlarmHandler(OSAlarm *alarm, OSContext *context);
+vsyncAlarmHandler(coreinit::OSAlarm *alarm,
+                  coreinit::OSContext *context);
 
 std::pair<void *, uint32_t>
 displayListOverrun(void *list, uint32_t size);
 
 void
-setLastSubmittedTimestamp(OSTime timestamp);
+setLastSubmittedTimestamp(coreinit::OSTime timestamp);
 
 void
-setRetiredTimestamp(OSTime timestamp);
+setRetiredTimestamp(coreinit::OSTime timestamp);
 
 void
 onSwap();

@@ -4,6 +4,9 @@
 #include "utils/be_val.h"
 #include "utils/virtual_ptr.h"
 
+namespace gx2
+{
+
 struct GX2Surface;
 
 using GX2ApertureHandle = uint32_t;
@@ -18,3 +21,5 @@ GX2AllocateTilingApertureEx(GX2Surface *surface,
 
 void
 GX2FreeTilingAperture(GX2ApertureHandle handle);
+
+} // namespace gx2

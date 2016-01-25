@@ -2,6 +2,9 @@
 #include "types.h"
 #include "modules/gx2/gx2_enum.h"
 
+namespace gx2
+{
+
 struct GX2ColorBuffer;
 struct GX2DepthBuffer;
 
@@ -47,3 +50,5 @@ void
 GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
                         float depth,
                         uint8_t stencil);
+
+} // namespace gx2

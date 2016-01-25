@@ -5,6 +5,9 @@
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
 
+namespace gx2
+{
+
 #pragma pack(push, 1)
 
 struct GX2RBuffer
@@ -42,3 +45,5 @@ GX2RLockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags);
 
 void
 GX2RUnlockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags);
+
+} // namespace gx2

@@ -1,6 +1,9 @@
 #include "gx2_query.h"
 #include "gpu/pm4_writer.h"
 
+namespace gx2
+{
+
 static uint32_t
 gGpuTimeout = 10000;
 
@@ -54,3 +57,5 @@ GX2SetGPUTimeout(uint32_t timeout)
 {
    gGpuTimeout = timeout;
 }
+
+} // namespace gx2

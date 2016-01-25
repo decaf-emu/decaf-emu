@@ -1028,7 +1028,7 @@ void GLDriver::numInstances(const pm4::NumInstances &data)
 
 uint64_t GLDriver::getGpuClock()
 {
-   return OSGetTime();
+   return coreinit::OSGetTime();
 }
 
 void GLDriver::memWrite(const pm4::MemWrite &data)

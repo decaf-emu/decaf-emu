@@ -2,6 +2,9 @@
 #include "types.h"
 #include "utils/be_val.h"
 
+namespace gx2
+{
+
 void
 GX2SampleTopGPUCycle(be_val<uint64_t> *result);
 
@@ -16,3 +19,5 @@ GX2GetGPUTimeout();
 
 void
 GX2SetGPUTimeout(uint32_t timeout);
+
+} // namespace gx2

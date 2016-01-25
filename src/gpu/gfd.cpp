@@ -114,15 +114,15 @@ uint32_t File::getIndex(BlockType::Type type)
 }
 
 void
-File::add(const GX2Texture *texture)
+File::add(const gx2::GX2Texture *texture)
 {
    // Add texture header block
    gfd::Block header;
    header.header.type = BlockType::TextureHeader;
    header.header.id = getUniqueID();
    header.header.index = getIndex(header.header.type);
-   header.data.resize(sizeof(GX2Texture));
-   std::memcpy(header.data.data(), texture, sizeof(GX2Texture));
+   header.data.resize(sizeof(gx2::GX2Texture));
+   std::memcpy(header.data.data(), texture, sizeof(gx2::GX2Texture));
    blocks.emplace_back(std::move(header));
 
    // Add texture image block
@@ -149,15 +149,15 @@ File::add(const GX2Texture *texture)
 }
 
 void
-File::add(const GX2FetchShader *shader)
+File::add(const gx2::GX2FetchShader *shader)
 {
    // Add shader header block
    gfd::Block header;
    header.header.type = gfd::BlockType::FetchShaderHeader;
    header.header.id = getUniqueID();
    header.header.index = getIndex(header.header.type);
-   header.data.resize(sizeof(GX2FetchShader));
-   std::memcpy(header.data.data(), shader, sizeof(GX2FetchShader));
+   header.data.resize(sizeof(gx2::GX2FetchShader));
+   std::memcpy(header.data.data(), shader, sizeof(gx2::GX2FetchShader));
    blocks.emplace_back(std::move(header));
 
    // Add shader program block
@@ -173,15 +173,15 @@ File::add(const GX2FetchShader *shader)
 }
 
 void
-File::add(const GX2VertexShader *shader)
+File::add(const gx2::GX2VertexShader *shader)
 {
    // Add shader header block
    gfd::Block header;
    header.header.type = gfd::BlockType::VertexShaderHeader;
    header.header.id = getUniqueID();
    header.header.index = getIndex(header.header.type);
-   header.data.resize(sizeof(GX2VertexShader));
-   std::memcpy(header.data.data(), shader, sizeof(GX2VertexShader));
+   header.data.resize(sizeof(gx2::GX2VertexShader));
+   std::memcpy(header.data.data(), shader, sizeof(gx2::GX2VertexShader));
    blocks.emplace_back(std::move(header));
 
    // Add shader program block
@@ -197,15 +197,15 @@ File::add(const GX2VertexShader *shader)
 }
 
 void
-File::add(const GX2PixelShader *shader)
+File::add(const gx2::GX2PixelShader *shader)
 {
    // Add shader header block
    gfd::Block header;
    header.header.type = gfd::BlockType::PixelShaderHeader;
    header.header.id = getUniqueID();
    header.header.index = getIndex(header.header.type);
-   header.data.resize(sizeof(GX2PixelShader));
-   std::memcpy(header.data.data(), shader, sizeof(GX2PixelShader));
+   header.data.resize(sizeof(gx2::GX2PixelShader));
+   std::memcpy(header.data.data(), shader, sizeof(gx2::GX2PixelShader));
    blocks.emplace_back(std::move(header));
 
    // Add shader program block
@@ -221,7 +221,7 @@ File::add(const GX2PixelShader *shader)
 }
 
 void
-File::add(const GX2GeometryShader *shader)
+File::add(const gx2::GX2GeometryShader *shader)
 {
    // TODO: Enable when we have defined GX2GeometryShader
 #if 0

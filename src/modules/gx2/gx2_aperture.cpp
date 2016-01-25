@@ -4,6 +4,9 @@
 #include "mem/mem.h"
 #include "utils/teenyheap.h"
 
+namespace gx2
+{
+
 static GX2ApertureHandle
 gUniqueHandle = 1;
 
@@ -31,3 +34,5 @@ GX2FreeTilingAperture(GX2ApertureHandle handle)
 {
    // TODO: Retile from temporary memory to original memory
 }
+
+} // namespace gx2

@@ -23,7 +23,7 @@ static CommandBufferPool
 gCommandBufferPool;
 
 static pm4::Buffer *
-gActiveBuffer[CoreCount] = { nullptr, nullptr, nullptr };
+gActiveBuffer[coreinit::CoreCount] = { nullptr, nullptr, nullptr };
 
 namespace gx2
 {
@@ -34,13 +34,13 @@ namespace internal
 static pm4::Buffer *
 allocateCommandBuffer()
 {
-   if (gx2::internal::getMainCoreId() != OSGetCoreId()) {
+   if (gx2::internal::getMainCoreId() != coreinit::OSGetCoreId()) {
       // Only the main core can have command buffers
       gLog->warn("Tried to allocate command buffer on non-main graphics core");
       return nullptr;
    }
 
-   OSTime retiredTimestamp = GX2GetRetiredTimeStamp();
+   auto retiredTimestamp = GX2GetRetiredTimeStamp();
    auto buffer = &gCommandBufferPool.items[gCommandBufferPool.itemsHead];
 
    if (buffer->submitTime > retiredTimestamp) {
@@ -64,7 +64,7 @@ allocateCommandBuffer()
 void
 initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size, uint32_t itemSize)
 {
-   auto core = OSGetCoreId();
+   auto core = coreinit::OSGetCoreId();
    assert(gx2::internal::getMainCoreId() == core);
 
    gCommandBufferPool.base = base;
@@ -77,7 +77,7 @@ initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size, uint32_t itemSi
 pm4::Buffer *
 flushCommandBuffer(pm4::Buffer *cb)
 {
-   auto core = OSGetCoreId();
+   auto core = coreinit::OSGetCoreId();
 
    if (!cb) {
       cb = gActiveBuffer[core];
@@ -119,7 +119,7 @@ flushCommandBuffer(pm4::Buffer *cb)
 pm4::Buffer *
 getCommandBuffer(uint32_t size)
 {
-   auto core = OSGetCoreId();
+   auto core = coreinit::OSGetCoreId();
    auto &active = gActiveBuffer[core];
 
    if (!active) {
@@ -134,7 +134,7 @@ getCommandBuffer(uint32_t size)
 void
 setUserCommandBuffer(pm4::Buffer *buffer)
 {
-   auto core = OSGetCoreId();
+   auto core = coreinit::OSGetCoreId();
 
    if (buffer) {
       buffer->userBuffer = true;

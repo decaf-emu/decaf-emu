@@ -2,6 +2,9 @@
 #include "gx2_format.h"
 #include "gpu/driver.h"
 
+namespace gx2
+{
+
 static bool
 getTVSize(GX2TVRenderMode tvRenderMode, int *width_ret, int *height_ret)
 {
@@ -128,3 +131,5 @@ GX2GetSystemDRCMode()
 {
    return GX2DrcRenderMode::Single;
 }
+
+} // namespace gx2

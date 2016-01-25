@@ -403,7 +403,7 @@ bool GLDriver::checkActiveTextures()
 {
    static const auto MAX_PS_TEXTURES = 16;
    std::vector<uint8_t> untiledImage, untiledMipmap;
-   GX2Surface surface;
+   gx2::GX2Surface surface;
 
    for (auto i = 0; i < MAX_PS_TEXTURES; ++i) {
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
@@ -444,7 +444,7 @@ bool GLDriver::checkActiveTextures()
       auto imagePtr = make_virtual_ptr<uint8_t>(addr);
 
       // Rebuild a GX2Surface
-      std::memset(&surface, 0, sizeof(GX2Surface));
+      std::memset(&surface, 0, sizeof(gx2::GX2Surface));
 
       surface.dim = static_cast<GX2SurfaceDim>(dim);
       surface.width = width;

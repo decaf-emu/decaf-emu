@@ -2,6 +2,9 @@
 #include "types.h"
 #include "gx2_enum.h"
 
+namespace gx2
+{
+
 struct GX2Surface;
 
 bool
@@ -30,3 +33,5 @@ GX2RUnlockSurfaceEx(GX2Surface *surface,
 
 BOOL
 GX2RIsGX2RSurface(GX2RResourceFlags flags);
+
+} // namespace gx2

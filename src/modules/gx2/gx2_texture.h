@@ -6,6 +6,9 @@
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 
+namespace gx2
+{
+
 struct GX2Sampler;
 
 #pragma pack(push, 1)
@@ -54,3 +57,5 @@ GX2SetVertexTexture(GX2Texture *texture, uint32_t unit);
 
 void
 GX2SetGeometryTexture(GX2Texture *texture, uint32_t unit);
+
+} // namespace gx2

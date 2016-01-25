@@ -3,11 +3,16 @@
 #include <vector>
 #include "utils/be_val.h"
 
+namespace gx2
+{
+
 struct GX2Texture;
 struct GX2FetchShader;
 struct GX2VertexShader;
 struct GX2PixelShader;
 struct GX2GeometryShader;
+
+} // namespace gx2
 
 namespace gfd
 {
@@ -90,11 +95,11 @@ struct File
    bool read(const std::string &filename);
    bool write(const std::string &filename);
 
-   void add(const GX2Texture *texture);
-   void add(const GX2FetchShader *shader);
-   void add(const GX2VertexShader *shader);
-   void add(const GX2PixelShader *shader);
-   void add(const GX2GeometryShader *shader);
+   void add(const gx2::GX2Texture *texture);
+   void add(const gx2::GX2FetchShader *shader);
+   void add(const gx2::GX2VertexShader *shader);
+   void add(const gx2::GX2PixelShader *shader);
+   void add(const gx2::GX2GeometryShader *shader);
 };
 
 } // namespace gfd

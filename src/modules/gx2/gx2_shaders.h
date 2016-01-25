@@ -8,6 +8,9 @@
 #include "utils/virtual_ptr.h"
 #include "gx2_sampler.h"
 
+namespace gx2
+{
+
 #pragma pack(push, 1)
 
 struct GX2FetchShader
@@ -425,3 +428,5 @@ GX2GetGeometryShaderGPRs(GX2GeometryShader *shader);
 
 uint32_t
 GX2GetGeometryShaderStackEntries(GX2GeometryShader *shader);
+
+} // namespace gx2

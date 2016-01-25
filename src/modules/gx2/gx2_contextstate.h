@@ -7,6 +7,9 @@
 #include "utils/virtual_ptr.h"
 #include "types.h"
 
+namespace gx2
+{
+
 #pragma pack(push, 1)
 
 // Internal display list is used to create LOAD_ dlist for the shadow state
@@ -40,3 +43,5 @@ GX2SetContextState(GX2ContextState *state);
 
 void
 GX2SetDefaultState();
+
+} // namespace gx2

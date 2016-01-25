@@ -1,6 +1,9 @@
 #include "gx2_tessellation.h"
 #include "gpu/pm4_writer.h"
 
+namespace gx2
+{
+
 void
 GX2SetTessellation(GX2TessellationMode tessellationMode,
                    GX2PrimitiveMode primitiveMode,
@@ -24,3 +27,5 @@ GX2SetMaxTessellationLevel(float max)
    vgt_hos_max_tess_level.MAX_TESS = max;
    pm4::write(pm4::SetContextReg { latte::Register::VGT_HOS_MAX_TESS_LEVEL, vgt_hos_max_tess_level.value });
 }
+
+} // namespace gx2

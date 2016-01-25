@@ -3,7 +3,11 @@
 #include "gx2_format.h"
 #include "gx2_surface.h"
 
-constexpr inline uint32_t make_fourcc(uint8_t c0, uint8_t c1, uint8_t c2, uint8_t c3)
+namespace gx2
+{
+
+constexpr inline uint32_t
+make_fourcc(uint8_t c0, uint8_t c1, uint8_t c2, uint8_t c3)
 {
    return c0 | (c1 << 8) | (c2 << 16) | (c3 << 24);
 }
@@ -744,9 +748,6 @@ encodeDX10(std::ofstream &file,
 
    return true;
 }
-
-namespace gx2
-{
 
 namespace debug
 {

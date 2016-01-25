@@ -4,6 +4,9 @@
 #include "gx2_enum.h"
 #include "utils/structsize.h"
 
+namespace gx2
+{
+
 #pragma pack(push, 1)
 
 struct GX2AAMaskReg
@@ -597,3 +600,5 @@ void
 GX2SetRasterizerClipControlHalfZ(BOOL rasteriser,
                                  BOOL zclipNear,
                                  BOOL halfZ);
+
+} // namespace gx2

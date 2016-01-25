@@ -3,6 +3,9 @@
 #include "gpu/pm4_writer.h"
 #include "utils/bit_cast.h"
 
+namespace gx2
+{
+
 void
 GX2ClearColor(GX2ColorBuffer *colorBuffer,
               float red,
@@ -124,3 +127,5 @@ GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
 
    pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::as_span(values) });
 }
+
+} // namespace gx2

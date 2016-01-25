@@ -5,6 +5,9 @@
 #include "utils/align.h"
 #include "utils/wfunc_call.h"
 
+namespace gx2
+{
+
 static GX2RAllocFuncPtr
 gGX2RMemAlloc = nullptr;
 
@@ -24,9 +27,6 @@ GX2RIsUserMemory(GX2RResourceFlags flags)
 {
    return (flags & GX2RResourceFlags::UserMemory) ? TRUE : FALSE;
 }
-
-namespace gx2
-{
 
 namespace internal
 {
@@ -57,10 +57,8 @@ gx2rDefaultFree(GX2RResourceFlags flags, void *buffer)
 
 } // namespace internal
 
-} // namespace gx2
-
 void
-GX2::RegisterGX2RResourceFunctions()
+Module::RegisterGX2RResourceFunctions()
 {
    RegisterKernelFunction(GX2RSetAllocator);
    RegisterKernelFunction(GX2RIsUserMemory);
@@ -69,8 +67,10 @@ GX2::RegisterGX2RResourceFunctions()
 }
 
 void
-GX2::initialiseResourceAllocator()
+Module::initialiseResourceAllocator()
 {
    gGX2RMemAlloc = findExportAddress("internal_gx2rDefaultAlloc");
    gGX2RMemFree = findExportAddress("internal_gx2rDefaultFree");
 }
+
+} // namespace gx2

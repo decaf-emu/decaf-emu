@@ -6,6 +6,9 @@
 #include "gpu/latte_enum_db.h"
 #include "gpu/latte_enum_sq.h"
 
+namespace gx2
+{
+
 size_t
 GX2GetAttribFormatBytes(GX2AttribFormat format);
 
@@ -38,3 +41,5 @@ GX2GetSurfaceDepthFormat(GX2SurfaceFormat format);
 
 latte::CB_FORMAT
 GX2GetSurfaceColorFormat(GX2SurfaceFormat format);
+
+} // namespace gx2

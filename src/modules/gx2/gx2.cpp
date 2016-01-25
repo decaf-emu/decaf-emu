@@ -22,19 +22,18 @@
 #include "gx2r_resource.h"
 #include "gx2r_surface.h"
 
-GX2::GX2()
+namespace gx2
 {
-}
 
 void
-GX2::initialise()
+Module::initialise()
 {
    initialiseVsync();
    initialiseResourceAllocator();
 }
 
 void
-GX2::RegisterFunctions()
+Module::RegisterFunctions()
 {
    // Aperture
    RegisterKernelFunction(GX2AllocateTilingApertureEx);
@@ -285,3 +284,5 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2SetVertexTexture);
    RegisterKernelFunction(GX2SetGeometryTexture);
 }
+
+} // namespace gx2

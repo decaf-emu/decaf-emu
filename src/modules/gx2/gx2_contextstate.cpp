@@ -7,6 +7,9 @@
 #include "gx2_tessellation.h"
 #include <utility>
 
+namespace gx2
+{
+
 static GX2ContextState *
 gActiveContext = nullptr;
 
@@ -275,3 +278,5 @@ GX2SetDefaultState()
 
    // Set 0x343 DB_RENDER_CONTROL to 0
 }
+
+} // namespace gx2

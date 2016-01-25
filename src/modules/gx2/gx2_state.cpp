@@ -11,6 +11,9 @@
 #include "utils/virtual_ptr.h"
 #include "utils/wfunc_call.h"
 
+namespace gx2
+{
+
 static uint32_t
 gMainCoreId = 0;
 
@@ -24,7 +27,7 @@ GX2Init(be_val<uint32_t> *attributes)
    uint32_t argc = 0;
 
    // Set main gx2 core
-   gMainCoreId = OSGetCoreId();
+   gMainCoreId = coreinit::OSGetCoreId();
 
    // Parse attributes
    while (attributes && *attributes != GX2InitAttrib::End) {
@@ -54,7 +57,7 @@ GX2Init(be_val<uint32_t> *attributes)
 
    // Allocate command buffer pool
    if (!cbPoolBase) {
-      cbPoolBase = reinterpret_cast<uint32_t*>((*pMEMAllocFromDefaultHeapEx)(cbPoolSize, 0x100));
+      cbPoolBase = reinterpret_cast<uint32_t*>((*coreinit::pMEMAllocFromDefaultHeapEx)(cbPoolSize, 0x100));
    }
 
    // Init event handler stuff (vsync, flips, etc)
@@ -85,9 +88,6 @@ GX2Flush()
 
    gx2::internal::flushCommandBuffer(nullptr);
 }
-
-namespace gx2
-{
 
 namespace internal
 {

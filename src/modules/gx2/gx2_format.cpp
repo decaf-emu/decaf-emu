@@ -2,6 +2,9 @@
 #include "gx2_format.h"
 #include "gpu/latte_enum_sq.h"
 
+namespace gx2
+{
+
 struct GX2SurfaceFormatData
 {
    uint8_t bpp;
@@ -339,3 +342,5 @@ GX2GetSurfaceColorFormat(GX2SurfaceFormat format)
       return latte::COLOR_INVALID;
    }
 }
+
+} // namespace gx2

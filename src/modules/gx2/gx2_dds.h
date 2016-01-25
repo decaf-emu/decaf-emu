@@ -1,10 +1,10 @@
 #pragma once
 #include <string>
 
-struct GX2Surface;
-
 namespace gx2
 {
+
+struct GX2Surface;
 
 namespace debug
 {

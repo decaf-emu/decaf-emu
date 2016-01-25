@@ -3,6 +3,9 @@
 #include "gx2_enum.h"
 #include "utils/wfunc_ptr.h"
 
+namespace gx2
+{
+
 using GX2RAllocFuncPtr = wfunc_ptr<void *, GX2RResourceFlags, uint32_t, uint32_t>;
 using GX2RFreeFuncPtr = wfunc_ptr<void, GX2RResourceFlags, void *>;
 
@@ -11,9 +14,6 @@ GX2RSetAllocator(GX2RAllocFuncPtr allocFn, GX2RFreeFuncPtr freeFn);
 
 BOOL
 GX2RIsUserMemory(GX2RResourceFlags flags);
-
-namespace gx2
-{
 
 namespace internal
 {

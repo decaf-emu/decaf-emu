@@ -4,6 +4,9 @@
 #include "gx2_shaders.h"
 #include "gpu/pm4_writer.h"
 
+namespace gx2
+{
+
 uint32_t
 GX2CalcGeometryShaderInputRingBufferSize(uint32_t ringItemSize)
 {
@@ -561,3 +564,5 @@ GX2GetGeometryShaderStackEntries(GX2GeometryShader *shader)
 {
    return shader->regs.sq_pgm_resources_gs.value().STACK_SIZE;
 }
+
+} // namespace gx2

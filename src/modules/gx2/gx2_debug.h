@@ -1,5 +1,8 @@
 #pragma once
 
+namespace gx2
+{
+
 struct GX2Texture;
 struct GX2FetchShader;
 struct GX2PixelShader;
@@ -16,3 +19,5 @@ GX2DebugDumpShader(GX2PixelShader *shader);
 
 void
 GX2DebugDumpShader(GX2VertexShader *shader);
+
+} // namespace gx2

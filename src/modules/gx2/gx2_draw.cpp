@@ -1,6 +1,9 @@
 #include "gx2_draw.h"
 #include "gpu/pm4_writer.h"
 
+namespace gx2
+{
+
 void
 GX2SetAttribBuffer(uint32_t index,
                    uint32_t size,
@@ -50,3 +53,5 @@ GX2SetPrimitiveRestartIndex(uint32_t index)
 {
    pm4::write(pm4::SetContextReg { latte::Register::VGT_MULTI_PRIM_IB_RESET_INDX, index });
 }
+
+} // namespace gx2

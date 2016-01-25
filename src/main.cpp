@@ -207,7 +207,7 @@ initialiseEmulator(const std::string &logFilename)
    GameLoader::RegisterFunctions();
    CoreInit::RegisterFunctions();
    nn::erreula::Module::RegisterFunctions();
-   GX2::RegisterFunctions();
+   gx2::Module::RegisterFunctions();
    mic::Module::RegisterFunctions();
    nn::ac::Module::RegisterFunctions();
    nn::acp::Module::RegisterFunctions();
@@ -232,7 +232,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("gameloader.rpl", new GameLoader{});
    gSystem.registerModule("coreinit.rpl", new CoreInit {});
    gSystem.registerModule("erreula.rpl", new nn::erreula::Module {});
-   gSystem.registerModule("gx2.rpl", new GX2 {});
+   gSystem.registerModule("gx2.rpl", new gx2::Module {});
    gSystem.registerModule("mic.rpl", new mic::Module {});
    gSystem.registerModule("nn_ac.rpl", new nn::ac::Module {});
    gSystem.registerModule("nn_acp.rpl", new nn::acp::Module {});

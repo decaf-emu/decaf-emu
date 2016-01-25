@@ -4,6 +4,9 @@
 #include "modules/coreinit/coreinit_time.h"
 #include "utils/be_val.h"
 
+namespace gx2
+{
+
 struct GX2ColorBuffer;
 struct GX2Texture;
 
@@ -24,4 +27,6 @@ GX2GetSwapInterval();
 
 void
 GX2SetSwapInterval(uint32_t interval);
+
+} // namespace gx2
 

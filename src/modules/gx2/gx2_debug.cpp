@@ -11,6 +11,9 @@
 #include "platform/platform_dir.h"
 #include "utils/log.h"
 
+namespace gx2
+{
+
 static void
 createDumpDirectory()
 {
@@ -246,3 +249,5 @@ GX2DebugDumpShader(GX2VertexShader *shader)
                       shader,
                       latte::Shader::Vertex);
 }
+
+} // namespace gx2

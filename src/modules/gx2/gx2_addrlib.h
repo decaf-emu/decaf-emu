@@ -4,10 +4,10 @@
 #include <vector>
 #include "gx2_enum.h"
 
-struct GX2Surface;
-
 namespace gx2
 {
+
+struct GX2Surface;
 
 namespace internal
 {

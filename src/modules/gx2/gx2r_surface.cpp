@@ -2,6 +2,9 @@
 #include "gx2r_surface.h"
 #include "gx2_surface.h"
 
+namespace gx2
+{
+
 bool
 GX2RCreateSurface(GX2Surface *surface,
                   GX2RResourceFlags flags)
@@ -77,3 +80,5 @@ GX2RIsGX2RSurface(GX2RResourceFlags flags)
 {
    return (flags & (GX2RResourceFlags::UsageCpuReadWrite | GX2RResourceFlags::UsageGpuReadWrite)) ? TRUE : FALSE;
 }
+
+} // namespace gx2

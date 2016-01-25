@@ -13,6 +13,11 @@
 #include <atomic>
 #include <chrono>
 
+using namespace coreinit;
+
+namespace gx2
+{
+
 static std::atomic<int64_t>
 gLastVsync { 0 };
 
@@ -185,9 +190,6 @@ GX2WaitForFlip()
 }
 
 
-namespace gx2
-{
-
 namespace internal
 {
 
@@ -307,11 +309,11 @@ onFlip()
 
 } // namespace internal
 
-} // namespace gx2
-
 
 void
-GX2::initialiseVsync()
+Module::initialiseVsync()
 {
    pVsyncAlarmHandler = findExportAddress("VsyncAlarmHandler");
 }
+
+} // namespace gx2

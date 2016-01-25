@@ -4,6 +4,9 @@
 #include "gpu/latte_registers.h"
 #include "gpu/pm4_writer.h"
 
+namespace gx2
+{
+
 void
 GX2InitTextureRegs(GX2Texture *texture)
 {
@@ -176,3 +179,5 @@ GX2SetGeometryTexture(GX2Texture *texture, uint32_t unit)
 {
    setTexture(texture, latte::SQ_GS_TEX_RESOURCE_0, unit);
 }
+
+} // namespace gx2

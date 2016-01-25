@@ -7,6 +7,9 @@
 #include "utils/log.h"
 #include "utils/pow.h"
 
+namespace gx2
+{
+
 static uint32_t
 calcNumLevels(GX2Surface *surface)
 {
@@ -297,3 +300,5 @@ GX2CopySurface(GX2Surface *src,
    gx2::internal::copySurface(src, srcLevel, srcDepth,
                               dst, dstLevel, dstDepth);
 }
+
+} // namespace gx2

@@ -3,6 +3,9 @@
 #include "modules/coreinit/coreinit_time.h"
 #include "utils/be_val.h"
 
+namespace gx2
+{
+
 namespace GX2InitAttrib
 {
 enum Value
@@ -23,9 +26,6 @@ GX2Shutdown();
 
 void
 GX2Flush();
-
-namespace gx2
-{
 
 namespace internal
 {

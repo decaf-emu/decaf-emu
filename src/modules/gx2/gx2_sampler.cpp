@@ -2,6 +2,9 @@
 #include "gx2_sampler.h"
 #include "gpu/pm4_writer.h"
 
+namespace gx2
+{
+
 inline uint32_t
 floatToFixedPoint(float value, uint32_t bits, float min, float max)
 {
@@ -179,3 +182,5 @@ GX2SetGeometrySamplerBorderColor(uint32_t unit,
    auto id = latte::Register::TD_GS_SAMPLER_BORDER0_RED + 4 * (unit * 4);
    pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), gsl::as_span(values) });
 }
+
+} // namespace gx2

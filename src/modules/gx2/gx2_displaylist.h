@@ -3,6 +3,9 @@
 #include "utils/be_val.h"
 #include "utils/virtual_ptr.h"
 
+namespace gx2
+{
+
 #define GX2_DISPLAY_LIST_ALIGNMENT 0x20
 
 void
@@ -28,3 +31,5 @@ GX2GetCurrentDisplayList(be_ptr<void> *outDisplayList, be_val<uint32_t> *outSize
 
 void
 GX2CopyDisplayList(void *displayList, uint32_t bytes);
+
+} // namespace gx2
