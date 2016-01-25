@@ -1301,6 +1301,8 @@ void GLDriver::handlePacketType3(pm4::Packet3 header, const gsl::span<uint32_t> 
    case pm4::Opcode3::EVENT_WRITE_EOP:
       eventWriteEOP(pm4::read<pm4::EventWriteEOP>(reader));
       break;
+   default:
+      gLog->debug("Unhandled pm4 packet type 3 opcode {}", header.opcode);
    }
 }
 
@@ -1320,9 +1322,23 @@ void GLDriver::setDrcDisplay(size_t width, size_t height)
 
 void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
 {
+   std::vector<uint32_t> swapped;
+   swapped.resize(buffer_size);
+
+   for (auto i = 0u; i < buffer_size; ++i) {
+      swapped[i] = byte_swap(buffer[i]);
+   }
+
+   buffer = swapped.data();
+
    for (auto pos = 0u; pos < buffer_size; ) {
       auto header = *reinterpret_cast<pm4::PacketHeader *>(&buffer[pos]);
       auto size = 0u;
+
+      if (buffer[pos] == 0) {
+         // 0 padding at end of buffer
+         break;
+      }
 
       switch (header.type) {
       case pm4::PacketType::Type3:
@@ -1337,6 +1353,7 @@ void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
       case pm4::PacketType::Type2:
       default:
          gLog->error("Invalid packet header type {}, header = 0x{:08X}", header.type, header.value);
+         pos = buffer_size;
          break;
       }
 

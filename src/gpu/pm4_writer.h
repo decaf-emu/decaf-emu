@@ -32,6 +32,11 @@ public:
       if (mBuffer) {
          auto header = reinterpret_cast<Packet3 *>(&mBuffer->buffer[mSaveSize]);
          header->size = (mBuffer->curSize - mSaveSize) - 2;
+
+         // Swap to big endian
+         for (auto i = mSaveSize; i < mBuffer->curSize; ++i) {
+            mBuffer->buffer[i] = byte_swap(mBuffer->buffer[i]);
+         }
       }
    }
 
