@@ -130,7 +130,6 @@ set(HEADER_FILES
     coreinit/coreinit.h
     coreinit/coreinit_alarm.h
     coreinit/coreinit_atomic64.h
-    coreinit/coreinit_cache.cpp
     coreinit/coreinit_cache.h
     coreinit/coreinit_core.h
     coreinit/coreinit_debug.h
@@ -140,25 +139,19 @@ set(HEADER_FILES
     coreinit/coreinit_event.h
     coreinit/coreinit_exception.h
     coreinit/coreinit_exit.h
-    coreinit/coreinit_expheap.cpp
     coreinit/coreinit_expheap.h
     coreinit/coreinit_fastmutex.h
-    coreinit/coreinit_frameheap.cpp
     coreinit/coreinit_frameheap.h
     coreinit/coreinit_fs.h
     coreinit/coreinit_fs_client.h
     coreinit/coreinit_fs_dir.h
     coreinit/coreinit_fs_file.h
-    coreinit/coreinit_fs_path.cpp
     coreinit/coreinit_fs_path.h
     coreinit/coreinit_fs_stat.h
-    coreinit/coreinit_ghs.cpp
     coreinit/coreinit_ghs.h
     coreinit/coreinit_ios.h
-    coreinit/coreinit_lockedcache.cpp
     coreinit/coreinit_lockedcache.h
     coreinit/coreinit_mcp.h
-    coreinit/coreinit_memheap.cpp
     coreinit/coreinit_memheap.h
     coreinit/coreinit_memlist.h
     coreinit/coreinit_memory.h
@@ -166,21 +159,15 @@ set(HEADER_FILES
     coreinit/coreinit_mutex.h
     coreinit/coreinit_queue.h
     coreinit/coreinit_rendezvous.h
-    coreinit/coreinit_scheduler.cpp
     coreinit/coreinit_scheduler.h
-    coreinit/coreinit_semaphore.cpp
     coreinit/coreinit_semaphore.h
-    coreinit/coreinit_shared.cpp
     coreinit/coreinit_shared.h
     coreinit/coreinit_spinlock.h
     coreinit/coreinit_systeminfo.h
     coreinit/coreinit_taskqueue.h
-    coreinit/coreinit_thread.cpp
     coreinit/coreinit_thread.h
-    coreinit/coreinit_threadqueue.cpp
     coreinit/coreinit_threadqueue.h
     coreinit/coreinit_time.h
-    coreinit/coreinit_unitheap.cpp
     coreinit/coreinit_unitheap.h
     coreinit/coreinit_userconfig.h
     erreula/erreula.h
@@ -203,13 +190,11 @@ set(HEADER_FILES
     gx2/gx2_enum.h
     gx2/gx2_enum_string.h
     gx2/gx2_event.h
-    gx2/gx2_fetchshader.cpp
     gx2/gx2_format.h
     gx2/gx2_mem.h
     gx2/gx2_query.h
     gx2/gx2_registers.h
     gx2/gx2_sampler.h
-    gx2/gx2_shaders.cpp
     gx2/gx2_shaders.h
     gx2/gx2_state.h
     gx2/gx2_surface.h
@@ -217,7 +202,6 @@ set(HEADER_FILES
     gx2/gx2_temp.h
     gx2/gx2_tessellation.h
     gx2/gx2_texture.h
-    hdr.txt
     mic/mic.h
     mic/mic_core.h
     nn_ac/nn_ac.h
