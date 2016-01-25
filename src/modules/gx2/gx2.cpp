@@ -30,6 +30,7 @@ void
 GX2::initialise()
 {
    initialiseVsync();
+   initialiseResourceAllocator();
 }
 
 void
@@ -100,8 +101,7 @@ GX2::RegisterFunctions()
    RegisterKernelFunction(GX2GetSurfaceFormatBitsPerElement);
 
    // GX2R Resource
-   RegisterKernelFunction(GX2RSetAllocator);
-   RegisterKernelFunction(GX2RIsUserMemory);
+   RegisterGX2RResourceFunctions();
 
    // GX2R Buffer
    RegisterKernelFunction(GX2RGetBufferAlignment);

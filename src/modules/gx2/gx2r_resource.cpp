@@ -1,13 +1,15 @@
 #include "gx2.h"
 #include "gx2r_resource.h"
+#include "modules/coreinit/coreinit_memheap.h"
+#include "system.h"
 #include "utils/align.h"
 #include "utils/wfunc_call.h"
 
 static GX2RAllocFuncPtr
-gGX2RMemAlloc;
+gGX2RMemAlloc = nullptr;
 
 static GX2RFreeFuncPtr
-gGX2RMemFree;
+gGX2RMemFree = nullptr;
 
 void
 GX2RSetAllocator(GX2RAllocFuncPtr allocFn,
@@ -41,6 +43,34 @@ gx2rFree(GX2RResourceFlags flags, void *buffer)
    return gGX2RMemFree(flags, buffer);
 }
 
+void *
+gx2rDefaultAlloc(GX2RResourceFlags flags, uint32_t size, uint32_t align)
+{
+   return coreinit::internal::defaultAllocFromDefaultHeapEx(size, align);
+}
+
+void
+gx2rDefaultFree(GX2RResourceFlags flags, void *buffer)
+{
+   coreinit::internal::defaultFreeToDefaultHeap(buffer);
+}
+
 } // namespace internal
 
 } // namespace gx2
+
+void
+GX2::RegisterGX2RResourceFunctions()
+{
+   RegisterKernelFunction(GX2RSetAllocator);
+   RegisterKernelFunction(GX2RIsUserMemory);
+   RegisterKernelFunctionName("internal_gx2rDefaultAlloc", gx2::internal::gx2rDefaultAlloc);
+   RegisterKernelFunctionName("internal_gx2rDefaultFree", gx2::internal::gx2rDefaultFree);
+}
+
+void
+GX2::initialiseResourceAllocator()
+{
+   gGX2RMemAlloc = findExportAddress("internal_gx2rDefaultAlloc");
+   gGX2RMemFree = findExportAddress("internal_gx2rDefaultFree");
+}
