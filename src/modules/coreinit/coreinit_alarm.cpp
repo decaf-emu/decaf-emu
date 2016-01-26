@@ -46,6 +46,7 @@ cancelAlarmNoLock(OSAlarm *alarm)
 
    if (alarm->alarmQueue) {
       OSEraseFromQueue<OSAlarmQueue>(alarm->alarmQueue, alarm);
+      alarm->alarmQueue = nullptr;
    }
 
    OSWakeupThread(&alarm->threadQueue);
@@ -171,6 +172,7 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
    // Erase from old alarm queue
    if (alarm->alarmQueue) {
       OSEraseFromQueue(static_cast<OSAlarmQueue*>(alarm->alarmQueue), alarm);
+      alarm->alarmQueue = nullptr;
    }
 
    // Add to this core's alarm queue
@@ -281,7 +283,7 @@ namespace internal
  * Wakes up any threads waiting on the alarm.
  */
 static void
-triggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
+triggerAlarmNoLock(OSAlarmQueue *queue, OSAlarm *alarm, OSContext *context)
 {
    alarm->context = context;
 
@@ -291,7 +293,8 @@ triggerAlarmNoLock(OSAlarm *alarm, OSContext *context)
    } else {
       alarm->nextFire = 0;
       alarm->state = OSAlarmState::None;
-      OSEraseFromQueue<OSAlarmQueue>(alarm->alarmQueue, alarm);
+      alarm->alarmQueue = nullptr;
+      OSEraseFromQueue<OSAlarmQueue>(queue, alarm);
    }
 
    if (alarm->callback) {
@@ -319,15 +322,21 @@ checkAlarms(uint32_t core, OSContext *context)
    coreinit::internal::lockScheduler();
    OSUninterruptibleSpinLock_Acquire(gAlarmLock);
 
+   // Trigger all pending alarms
    for (OSAlarm *alarm = queue->head; alarm; ) {
       auto nextAlarm = alarm->link.next;
 
-      // Trigger alarm if it is time
       if (alarm->nextFire <= now && alarm->state != OSAlarmState::Cancelled) {
-         triggerAlarmNoLock(alarm, context);
+         triggerAlarmNoLock(queue, alarm, context);
       }
 
-      // Set next timer if alarm is set
+      alarm = nextAlarm;
+   }
+
+   // Find next set alarm
+   for (OSAlarm *alarm = queue->head; alarm; ) {
+      auto nextAlarm = alarm->link.next;
+
       if (alarm->state == OSAlarmState::Set && alarm->nextFire) {
          auto nextFire = coreinit::internal::toTimepoint(alarm->nextFire);
 
