@@ -239,12 +239,16 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
    if (data->timeout) {
       // Timed out, remove from wait queue
       OSEraseFromThreadQueue(&event->queue, data->thread);
+      coreinit::internal::unlockScheduler();
       result = FALSE;
+   } else {
+      // Did not time out, cancel pending alarm
+      coreinit::internal::unlockScheduler();
+      OSCancelAlarm(alarm);
    }
 
    coreinit::internal::sysFree(data);
    coreinit::internal::sysFree(alarm);
-   coreinit::internal::unlockScheduler();
    return result;
 }
 
