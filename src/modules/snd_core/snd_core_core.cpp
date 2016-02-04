@@ -22,9 +22,15 @@ AXIsInit()
 }
 
 void
-AXInitProfile(AXProfile *profile, uint32_t maxProfiles)
+AXInitProfile(AXProfile *profile, uint32_t count)
 {
    // TODO: AXInitProfile
+}
+
+uint32_t
+AXGetSwapProfile(AXProfile *profile, uint32_t count)
+{
+   return 0;
 }
 
 AXResult::Result
@@ -68,6 +74,7 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXInit);
    RegisterKernelFunction(AXIsInit);
    RegisterKernelFunction(AXInitProfile);
+   RegisterKernelFunction(AXGetSwapProfile);
    RegisterKernelFunction(AXSetDefaultMixerSelect);
    RegisterKernelFunction(AXRegisterAppFrameCallback);
    RegisterKernelFunction(AXRmtGetSamples);

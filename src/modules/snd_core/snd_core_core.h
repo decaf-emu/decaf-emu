@@ -18,7 +18,10 @@ BOOL
 AXIsInit();
 
 void
-AXInitProfile(AXProfile *profile, uint32_t maxProfiles);
+AXInitProfile(AXProfile *profile, uint32_t count);
+
+uint32_t
+AXGetSwapProfile(AXProfile *profile, uint32_t count);
 
 AXResult::Result
 AXSetDefaultMixerSelect(uint32_t);
