@@ -4,9 +4,9 @@
 Researching Wii U emulation. Licensed under the terms of the GNU General Public License, version 2 or later (GPLv2+).
 
 ## Requirements
-- Windows, Linux
+- Windows with Visual Studio 2015
+- Linux with CMake and a modern C++11/14 friendly compiler
 - 64 bit
-- Visual Studio 2015
 - OpenGL 4.5 (using direct state access, available on older OpenGL versions as an extension).
 
 ## Compatibility
