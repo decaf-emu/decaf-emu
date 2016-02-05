@@ -69,8 +69,8 @@ public:
 
       // Erase block if it gets too small
       if (block->size <= sizeof(MemoryBlock) + 4) {
-         mFreeBlocks.erase(block);
          adjSize += block->size;
+         mFreeBlocks.erase(block);
       }
 
       // Allocate block
