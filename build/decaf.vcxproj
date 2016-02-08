@@ -285,6 +285,11 @@
     <ClCompile Include="..\src\modules\nn_ac\nn_ac_core.cpp" />
     <ClCompile Include="..\src\modules\nn_boss\nn_boss.cpp" />
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_init.cpp" />
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_nettasksetting.cpp" />
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_playreportsetting.cpp" />
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_rawultasksetting.cpp" />
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_tasksetting.cpp" />
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_titleid.cpp" />
     <ClCompile Include="..\src\modules\nn_fp\nn_fp.cpp" />
     <ClCompile Include="..\src\modules\nn_fp\nn_fp_init.cpp" />
     <ClCompile Include="..\src\modules\nn_fp\nn_fp_friends.cpp" />
@@ -474,6 +479,12 @@
     <ClInclude Include="..\src\modules\nn_ac\nn_ac_result.h" />
     <ClInclude Include="..\src\modules\nn_boss\nn_boss.h" />
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_init.h" />
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_nettasksetting.h" />
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_playreportsetting.h" />
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_rawultasksetting.h" />
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_result.h" />
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_tasksetting.h" />
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_titleid.h" />
     <ClInclude Include="..\src\modules\nn_fp\nn_fp_friends.h" />
     <ClInclude Include="..\src\modules\nn_ndm\nn_ndm.h" />
     <ClInclude Include="..\src\modules\nn_ndm\nn_ndm_init.h" />

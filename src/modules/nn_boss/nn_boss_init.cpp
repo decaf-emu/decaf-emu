@@ -1,5 +1,7 @@
 #include "nn_boss.h"
 #include "nn_boss_init.h"
+#include "modules/coreinit/coreinit_ghs_typeinfo.h"
+#include "modules/coreinit/coreinit_memheap.h"
 
 namespace nn
 {

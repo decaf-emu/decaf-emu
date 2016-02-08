@@ -873,6 +873,21 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_ghs_typeinfo.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_tasksetting.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_nettasksetting.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_rawultasksetting.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_playreportsetting.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_titleid.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1657,6 +1672,24 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_ghs_typeinfo.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_tasksetting.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_result.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_nettasksetting.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_titleid.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_rawultasksetting.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_playreportsetting.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
