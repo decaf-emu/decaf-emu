@@ -28,38 +28,97 @@ namespace kernel
 namespace functions
 {
 
-// Function with non-void return type
-template<typename Ret, typename... Args>
+template<typename ReturnType, typename... Args>
 struct KernelFunctionImpl : KernelFunction
 {
-   Ret(*wrapped_function)(Args...);
+   ReturnType (*wrapped_function)(Args...);
 
    virtual void call(ThreadState *thread) override
    {
-      ppctypes::invoke(thread, wrapped_function, this->name);
+      ppctypes::invoke(thread, wrapped_function, name);
+   }
+};
+
+template<typename ReturnType, typename ObjectType, typename... Args>
+struct KernelMemberFunctionImpl : KernelFunction
+{
+   ReturnType (ObjectType::*wrapped_function)(Args...);
+
+   virtual void call(ThreadState *thread) override
+   {
+      ppctypes::invokeMemberFn(thread, wrapped_function, name);
+   }
+};
+
+template<typename ObjectType>
+struct KernelConstructorFunctionImpl : KernelFunction
+{
+   static void trampFunction(ObjectType *object)
+   {
+      new (object) ObjectType();
+   }
+
+   virtual void call(ThreadState *thread) override
+   {
+      ppctypes::invoke(thread, &trampFunction, name);
+   }
+};
+
+template<typename ObjectType>
+struct KernelDestructorFunctionImpl : KernelFunction
+{
+   static void trampFunction(ObjectType *object)
+   {
+      object->~ObjectType();
+   }
+
+   virtual void call(ThreadState *thread) override
+   {
+      ppctypes::invoke(thread, &trampFunction, name);
    }
 };
 
 } // namespace functions
 
-// Create a SystemFunction export from a function pointer
-template<typename Ret, typename... Args>
+// Regular Function
+template<typename ReturnType, typename... Args>
 inline KernelFunction *
-makeFunction(Ret(*fptr)(Args...))
+makeFunction(ReturnType (*fptr)(Args...))
 {
-   auto func = new kernel::functions::KernelFunctionImpl<Ret, Args...>();
+   auto func = new kernel::functions::KernelFunctionImpl<ReturnType, Args...>();
    func->valid = true;
    func->wrapped_function = fptr;
    return func;
 }
-// For a function with no arguments:
-template<typename Ret>
+
+// Member Function
+template<typename ReturnType, typename Class, typename... Args>
 inline KernelFunction *
-makeFunction(Ret(*fptr)())
+makeFunction(ReturnType (Class::*fptr)(Args...))
 {
-   auto func = new kernel::functions::KernelFunctionImpl<Ret>();
+   auto func = new kernel::functions::KernelMemberFunctionImpl<ReturnType, Class, Args...>();
    func->valid = true;
    func->wrapped_function = fptr;
+   return func;
+}
+
+// Constructor
+template<typename Class>
+inline KernelFunction *
+makeConstructor()
+{
+   auto func = new kernel::functions::KernelConstructorFunctionImpl<Class>();
+   func->valid = true;
+   return func;
+}
+
+// Destructor
+template<typename Class>
+inline KernelFunction *
+makeDestructor()
+{
+   auto func = new kernel::functions::KernelDestructorFunctionImpl<Class>();
+   func->valid = true;
    return func;
 }
 

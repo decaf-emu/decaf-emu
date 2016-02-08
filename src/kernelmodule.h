@@ -12,6 +12,12 @@
 #define RegisterKernelFunctionName(name, fn) \
    registerExport(name, kernel::makeFunction(fn))
 
+#define RegisterKernelFunctionConstructorName(name, cls) \
+   registerExport(name, kernel::makeConstructor<cls>())
+
+#define RegisterKernelFunctionDestructorName(name, cls) \
+   registerExport(name, kernel::makeDestructor<cls>())
+
 #define RegisterKernelDataName(name, data) \
    registerExport(name, kernel::makeData(&data))
 
