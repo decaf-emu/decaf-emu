@@ -50,12 +50,12 @@ struct KernelMemberFunctionImpl : KernelFunction
    }
 };
 
-template<typename ObjectType>
+template<typename ObjectType, typename... Args>
 struct KernelConstructorFunctionImpl : KernelFunction
 {
-   static void trampFunction(ObjectType *object)
+   static void trampFunction(ObjectType *object, Args... args)
    {
-      new (object) ObjectType();
+      new (object) ObjectType(args...);
    }
 
    virtual void call(ThreadState *thread) override
@@ -102,12 +102,12 @@ makeFunction(ReturnType (Class::*fptr)(Args...))
    return func;
 }
 
-// Constructor
-template<typename Class>
+// Constructor Args
+template<typename Class, typename... Args>
 inline KernelFunction *
 makeConstructor()
 {
-   auto func = new kernel::functions::KernelConstructorFunctionImpl<Class>();
+   auto func = new kernel::functions::KernelConstructorFunctionImpl<Class, Args...>();
    func->valid = true;
    return func;
 }
