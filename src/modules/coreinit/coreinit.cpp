@@ -20,6 +20,7 @@ Module::initialise()
    initialiseDynLoad();
    initialiseEvent();
    initialiseGHS();
+   initialiseGhsTypeInfo();
    initialiseLockedCache();
    initialiseMembase();
    initialiseMessageQueues();
@@ -47,6 +48,7 @@ Module::RegisterFunctions()
    registerFileSystemFunctions();
    registerFrameHeapFunctions();
    registerGhsFunctions();
+   registerGhsTypeInfoFunctions();
    registerLockedCacheFunctions();
    registerMcpFunctions();
    registerMemoryFunctions();
