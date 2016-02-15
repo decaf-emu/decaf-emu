@@ -33,14 +33,14 @@ AXGetSwapProfile(AXProfile *profile, uint32_t count)
    return 0;
 }
 
-AXResult::Result
+AXResult
 AXSetDefaultMixerSelect(uint32_t)
 {
    // TODO: AXSetDefaultMixerSelect
    return AXResult::Success;
 }
 
-AXResult::Result
+AXResult
 AXRegisterAppFrameCallback(AXFrameCallback callback)
 {
    // TODO: AXRegisterAppFrameCallback

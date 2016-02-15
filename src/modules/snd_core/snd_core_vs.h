@@ -31,38 +31,38 @@ enum AXDRCOutput : uint32_t
    AX_DRC_OUTPUT_UNKNOWN,
 };
 
-AXResult::Result
+AXResult
 AXGetDRCVSMode(be_val<AXDRCVSMode> *mode);
 
-AXResult::Result
+AXResult
 AXSetDRCVSMode(AXDRCVSMode mode);
 
-AXResult::Result
+AXResult
 AXSetDRCVSDownmixBalance(AXDRCOutput output,
                          float balance);
 
-AXResult::Result
+AXResult
 AXSetDRCVSLC(AXDRCVSLC lc);
 
-AXResult::Result
+AXResult
 AXSetDRCVSLimiter(BOOL limit);
 
-AXResult::Result
+AXResult
 AXSetDRCVSLimiterThreshold(float threshold);
 
-AXResult::Result
+AXResult
 AXSetDRCVSOutputGain(AXDRCOutput output,
                      float gain);
 
-AXResult::Result
+AXResult
 AXSetDRCVSSpeakerPosition(AXDRCOutput output,
                           AXDRCVSSpeakerPosition pos);
 
-AXResult::Result
+AXResult
 AXSetDRCVSSurroundDepth(AXDRCOutput output,
                         float depth);
 
-AXResult::Result
+AXResult
 AXSetDRCVSSurroundLevelGain(AXDRCVSSurroundLevelGain gain);
 
 } // namespace snd_core

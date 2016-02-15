@@ -7,16 +7,16 @@ namespace snd_core
 static AXDeviceFinalMixCallback
 gDeviceFinalMixCallback;
 
-AXResult::Result
-AXGetDeviceMode(AXDeviceType::Type type, be_val<AXDeviceMode::Mode>* mode)
+AXResult
+AXGetDeviceMode(AXDeviceType type, be_val<AXDeviceMode>* mode)
 {
    // TODO: AXGetDeviceMode
-   *mode = static_cast<AXDeviceMode::Mode>(0);
+   *mode = static_cast<AXDeviceMode>(0);
    return AXResult::Success;
 }
 
-AXResult::Result
-AXGetDeviceFinalMixCallback(AXDeviceType::Type type, be_AXDeviceFinalMixCallback *func)
+AXResult
+AXGetDeviceFinalMixCallback(AXDeviceType type, be_AXDeviceFinalMixCallback *func)
 {
    if (func != nullptr) {
       *func = gDeviceFinalMixCallback;
@@ -25,15 +25,15 @@ AXGetDeviceFinalMixCallback(AXDeviceType::Type type, be_AXDeviceFinalMixCallback
    return AXResult::Success;
 }
 
-AXResult::Result
-AXRegisterDeviceFinalMixCallback(AXDeviceType::Type type, AXDeviceFinalMixCallback func)
+AXResult
+AXRegisterDeviceFinalMixCallback(AXDeviceType type, AXDeviceFinalMixCallback func)
 {
    gDeviceFinalMixCallback = func;
    return AXResult::Success;
 }
 
-AXResult::Result
-AXSetDRCVSMode(AXDRCVSMode::Mode mode)
+AXResult
+AXSetDRCVSMode(AXDRCVSMode mode)
 {
    if (mode >= AXDRCVSMode::Max) {
       return AXResult::InvalidDRCVSMode;
@@ -43,8 +43,8 @@ AXSetDRCVSMode(AXDRCVSMode::Mode mode)
    return AXResult::Success;
 }
 
-AXResult::Result
-AXGetAuxCallback(AXDeviceType::Type type, uint32_t, uint32_t, be_AXAuxCallback *callback, be_ptr<void> *userData)
+AXResult
+AXGetAuxCallback(AXDeviceType type, uint32_t, uint32_t, be_AXAuxCallback *callback, be_ptr<void> *userData)
 {
    // TODO: AXGetAuxCallback
    if (callback) {
@@ -58,10 +58,31 @@ AXGetAuxCallback(AXDeviceType::Type type, uint32_t, uint32_t, be_AXAuxCallback *
    return AXResult::Success;
 }
 
-AXResult::Result
-AXRegisterAuxCallback(AXDeviceType::Type type, uint32_t, uint32_t, AXAuxCallback callback, void *userData)
+AXResult
+AXRegisterAuxCallback(AXDeviceType type, uint32_t, uint32_t, AXAuxCallback callback, void *userData)
 {
    // TODO: AXRegisterAuxCallback
+   return AXResult::Success;
+}
+
+AXResult
+AXSetDeviceLinearUpsampler(AXDeviceType type, uint32_t, uint32_t)
+{
+   // TODO: AXSetDeviceLinearUpsampler
+   return AXResult::Success;
+}
+
+AXResult
+AXSetDeviceCompressor(AXDeviceType type, uint32_t)
+{
+   // TODO: AXSetDeviceCompressor
+   return AXResult::Success;
+}
+
+AXResult
+AXSetDeviceUpsampleStage(AXDeviceType type, uint32_t)
+{
+   // TODO: AXSetDeviceUpsampleStage
    return AXResult::Success;
 }
 
@@ -74,6 +95,9 @@ Module::registerDeviceFunctions()
    RegisterKernelFunction(AXSetDRCVSMode);
    RegisterKernelFunction(AXGetAuxCallback);
    RegisterKernelFunction(AXRegisterAuxCallback);
+   RegisterKernelFunction(AXSetDeviceLinearUpsampler);
+   RegisterKernelFunction(AXSetDeviceCompressor);
+   RegisterKernelFunction(AXSetDeviceUpsampleStage);
 }
 
 } // namespace snd_core

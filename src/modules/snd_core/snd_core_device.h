@@ -7,7 +7,7 @@
 namespace snd_core
 {
 
-namespace AXDeviceType
+namespace AXDeviceType_
 {
 enum Type : uint32_t
 {
@@ -15,14 +15,18 @@ enum Type : uint32_t
 };
 }
 
-namespace AXDeviceMode
+using AXDeviceType = AXDeviceType_::Type;
+
+namespace AXDeviceMode_
 {
 enum Mode : uint32_t
 {
 };
 }
 
-namespace AXDRCVSMode
+using AXDeviceMode = AXDeviceMode_::Mode;
+
+namespace AXDRCVSMode_
 {
 enum Mode : uint32_t
 {
@@ -30,27 +34,38 @@ enum Mode : uint32_t
 };
 }
 
+using AXDRCVSMode = AXDRCVSMode_::Mode;
+
 using AXDeviceFinalMixCallback = wfunc_ptr<void>;
 using be_AXDeviceFinalMixCallback = be_wfunc_ptr<void>;
 using AXAuxCallback = wfunc_ptr<void>;
 using be_AXAuxCallback = wfunc_ptr<void>;
 
-AXResult::Result
-AXGetDeviceMode(AXDeviceType::Type type, be_val<AXDeviceMode::Mode>* mode);
+AXResult
+AXGetDeviceMode(AXDeviceType type, be_val<AXDeviceMode>* mode);
 
-AXResult::Result
-AXGetDeviceFinalMixCallback(AXDeviceType::Type type, be_AXDeviceFinalMixCallback *func);
+AXResult
+AXGetDeviceFinalMixCallback(AXDeviceType type, be_AXDeviceFinalMixCallback *func);
 
-AXResult::Result
-AXRegisterDeviceFinalMixCallback(AXDeviceType::Type type, AXDeviceFinalMixCallback func);
+AXResult
+AXRegisterDeviceFinalMixCallback(AXDeviceType type, AXDeviceFinalMixCallback func);
 
-AXResult::Result
-AXSetDRCVSMode(AXDRCVSMode::Mode mode);
+AXResult
+AXSetDRCVSMode(AXDRCVSMode mode);
 
-AXResult::Result
-AXGetAuxCallback(AXDeviceType::Type type, uint32_t, uint32_t, be_AXAuxCallback *callback, be_ptr<void> *userData);
+AXResult
+AXGetAuxCallback(AXDeviceType type, uint32_t, uint32_t, be_AXAuxCallback *callback, be_ptr<void> *userData);
 
-AXResult::Result
-AXRegisterAuxCallback(AXDeviceType::Type type, uint32_t, uint32_t, AXAuxCallback callback, void *userData);
+AXResult
+AXRegisterAuxCallback(AXDeviceType type, uint32_t, uint32_t, AXAuxCallback callback, void *userData);
+
+AXResult
+AXSetDeviceLinearUpsampler(AXDeviceType type, uint32_t, uint32_t);
+
+AXResult
+AXSetDeviceCompressor(AXDeviceType type, uint32_t);
+
+AXResult
+AXSetDeviceUpsampleStage(AXDeviceType type, uint32_t);
 
 } // namespace snd_core

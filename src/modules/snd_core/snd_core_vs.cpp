@@ -4,65 +4,65 @@
 namespace snd_core
 {
 
-AXResult::Result
+AXResult
 AXGetDRCVSMode(be_val<AXDRCVSMode> *mode)
 {
    return AXResult::Success;
 }
 
-AXResult::Result
+AXResult
 AXSetDRCVSMode(AXDRCVSMode mode)
 {
    return AXResult::Success;
 }
 
-AXResult::Result
+AXResult
 AXSetDRCVSDownmixBalance(AXDRCOutput output,
                          float balance)
 {
    return AXResult::Success;
 }
 
-AXResult::Result
+AXResult
 AXSetDRCVSLC(AXDRCVSLC lc)
 {
    return AXResult::Success;
 }
 
-AXResult::Result
+AXResult
 AXSetDRCVSLimiter(BOOL limit)
 {
    return AXResult::Success;
 }
 
-AXResult::Result
+AXResult
 AXSetDRCVSLimiterThreshold(float threshold)
 {
    return AXResult::Success;
 }
 
-AXResult::Result
+AXResult
 AXSetDRCVSOutputGain(AXDRCOutput output,
                      float gain)
 {
    return AXResult::Success;
 }
 
-AXResult::Result
+AXResult
 AXSetDRCVSSpeakerPosition(AXDRCOutput output,
                           AXDRCVSSpeakerPosition pos)
 {
    return AXResult::Success;
 }
 
-AXResult::Result
+AXResult
 AXSetDRCVSSurroundDepth(AXDRCOutput output,
                         float depth)
 {
    return AXResult::Success;
 }
 
-AXResult::Result
+AXResult
 AXSetDRCVSSurroundLevelGain(AXDRCVSSurroundLevelGain gain)
 {
    return AXResult::Success;

@@ -4,7 +4,7 @@
 namespace snd_core
 {
 
-namespace AXResult
+namespace AXResult_
 {
 enum Result : int32_t
 {
@@ -13,5 +13,7 @@ enum Result : int32_t
    InvalidDRCVSMode = -13,
 };
 }
+
+using AXResult = AXResult_::Result;
 
 } // namespace snd_core

@@ -23,10 +23,10 @@ AXInitProfile(AXProfile *profile, uint32_t count);
 uint32_t
 AXGetSwapProfile(AXProfile *profile, uint32_t count);
 
-AXResult::Result
+AXResult
 AXSetDefaultMixerSelect(uint32_t);
 
-AXResult::Result
+AXResult
 AXRegisterAppFrameCallback(AXFrameCallback callback);
 
 int32_t
