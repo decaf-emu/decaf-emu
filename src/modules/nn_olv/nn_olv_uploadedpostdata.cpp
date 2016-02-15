@@ -80,7 +80,9 @@ Module::registerUploadedPostData()
 void
 Module::initialiseUploadedPostData()
 {
-   UploadedPostData::TypeInfo = ghs::internal::makeTypeDescriptor("nn::olv::UploadedPostData");
+   UploadedPostData::TypeInfo = ghs::internal::makeTypeDescriptor("nn::olv::UploadedPostData", {
+      { UploadedDataBase::TypeInfo, 0x1600 },
+   });
 
    UploadedPostData::VirtualTable = ghs::internal::makeVirtualTable({
       { 0, UploadedPostData::TypeInfo },
