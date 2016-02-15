@@ -30,6 +30,7 @@
 #include "modules/nn_fp/nn_fp.h"
 #include "modules/nn_ndm/nn_ndm.h"
 #include "modules/nn_nfp/nn_nfp.h"
+#include "modules/nn_olv/nn_olv.h"
 #include "modules/nn_save/nn_save.h"
 #include "modules/nn_temp/nn_temp.h"
 #include "modules/nsysnet/nsysnet.h"
@@ -216,6 +217,7 @@ initialiseEmulator(const std::string &logFilename)
    nn::fp::Module::RegisterFunctions();
    nn::ndm::Module::RegisterFunctions();
    nn::nfp::Module::RegisterFunctions();
+   nn::olv::Module::RegisterFunctions();
    nn::save::Module::RegisterFunctions();
    nn::temp::Module::RegisterFunctions();
    nsysnet::Module::RegisterFunctions();
@@ -241,6 +243,7 @@ initialiseEmulator(const std::string &logFilename)
    gSystem.registerModule("nn_fp.rpl", new nn::fp::Module {});
    gSystem.registerModule("nn_nfp.rpl", new nn::nfp::Module {});
    gSystem.registerModule("nn_ndm.rpl", new nn::ndm::Module {});
+   gSystem.registerModule("nn_olv.rpl", new nn::olv::Module {});
    gSystem.registerModule("nn_save.rpl", new nn::save::Module {});
    gSystem.registerModule("nn_temp.rpl", new nn::temp::Module {});
    gSystem.registerModule("nsysnet.rpl", new nsysnet::Module {});

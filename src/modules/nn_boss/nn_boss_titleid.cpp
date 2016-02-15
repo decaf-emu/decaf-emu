@@ -67,7 +67,6 @@ Module::registerTitleIDFunctions()
    RegisterKernelFunctionName("GetTitleId__Q3_2nn4boss7TitleIDCFv", &TitleID::GetTitleID);
    RegisterKernelFunctionName("GetTitleCode__Q3_2nn4boss7TitleIDCFv", &TitleID::GetTitleCode);
    RegisterKernelFunctionName("GetUniqueId__Q3_2nn4boss7TitleIDCFv", &TitleID::GetUniqueId);
-
 }
 
 } // namespace boss

@@ -299,6 +299,11 @@
     <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_init.cpp" />
     <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_detection.cpp" />
     <ClCompile Include="..\src\modules\nn_nfp\nn_nfp_settings.cpp" />
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv.cpp" />
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv_downloadedcommunitydata.cpp" />
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv_downloadedtopicdata.cpp" />
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv_uploadeddatabase.cpp" />
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv_uploadedpostdata.cpp" />
     <ClCompile Include="..\src\modules\nn_result.cpp" />
     <ClCompile Include="..\src\modules\nn_save\nn_save.cpp" />
     <ClCompile Include="..\src\modules\nn_save\nn_save_core.cpp" />
@@ -492,6 +497,12 @@
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_detection.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_result.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_settings.h" />
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv.h" />
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_downloadedcommunitydata.h" />
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_downloadedtopicdata.h" />
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_result.h" />
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_uploadeddatabase.h" />
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_uploadedpostdata.h" />
     <ClInclude Include="..\src\modules\nn_result.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp.h" />
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp_init.h" />

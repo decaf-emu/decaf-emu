@@ -244,6 +244,12 @@
     <Filter Include="Header Files\modules\nn_boss">
       <UniqueIdentifier>{c419925f-32e0-4d1c-af23-c7acd608215d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\modules\nn_olv">
+      <UniqueIdentifier>{028e69cf-7131-4551-a8af-27943977e5fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_olv">
+      <UniqueIdentifier>{be5a4401-1610-4711-b006-4a4be04702ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -887,6 +893,21 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_titleid.cpp">
       <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv_downloadedtopicdata.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv_downloadedcommunitydata.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv_uploadeddatabase.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv_uploadedpostdata.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1691,8 +1712,26 @@
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_playreportsetting.h">
       <Filter>Header Files\modules\nn_boss</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_downloadedtopicdata.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_downloadedcommunitydata.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\modules\nn_ffl.h">
       <Filter>Header Files\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_result.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_uploadeddatabase.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_uploadedpostdata.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
