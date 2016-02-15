@@ -1,6 +1,11 @@
 #pragma once
 #include <cstddef>
 
+// Workaround weird macro concat ## behaviour
+#define PP_CAT(a, b) PP_CAT_I(a, b)
+#define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)
+#define PP_CAT_II(p, res) res
+
 // Ensure our structs are correct size & offsets to match WiiU
 #define CHECK_SIZE(Type, Size) \
    static_assert(sizeof(Type) == Size, \
@@ -10,13 +15,14 @@
    static_assert(offsetof(Type, Field) == Offset, \
                  #Type "::" #Field " must be at offset " #Offset)
 
-// TODO: Figure out how to implement this, might be impossible without complex constexpr?
-#define CHECK_BIT_OFFSET(Type, Offset, Field)
+#define CHECK_MEMBER_OFFSET_START \
+   void PP_CAT(__verifyMemberOffsets, __COUNTER__) () {
 
-// Workaround weird macro concat ## behaviour
-#define PP_CAT(a, b) PP_CAT_I(a, b)
-#define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)
-#define PP_CAT_II(p, res) res
+#define CHECK_MEMBER_OFFSET_END \
+   }
+
+// TODO: Figure out how to implement this, might be impossible?
+#define CHECK_BIT_OFFSET(Type, Offset, Field)
 
 // Allow us to easily add UNKNOWN / PADDING bytes into our structs,
 // generates unique variable names using __COUNTER__
