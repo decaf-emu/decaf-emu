@@ -22,6 +22,7 @@ set(SOURCE_FILES
     coreinit/coreinit_fs_path.cpp
     coreinit/coreinit_fs_stat.cpp
     coreinit/coreinit_ghs.cpp
+    coreinit/coreinit_ghs_typeinfo.cpp
     coreinit/coreinit_lockedcache.cpp
     coreinit/coreinit_mcp.cpp
     coreinit/coreinit_memheap.cpp
@@ -84,6 +85,11 @@ set(SOURCE_FILES
     nn_act/nn_act_core.cpp
     nn_boss/nn_boss.cpp
     nn_boss/nn_boss_init.cpp
+    nn_boss/nn_boss_nettasksetting.cpp
+    nn_boss/nn_boss_playreportsetting.cpp
+    nn_boss/nn_boss_rawultasksetting.cpp
+    nn_boss/nn_boss_tasksetting.cpp
+    nn_boss/nn_boss_titleid.cpp
     nn_fp/nn_fp.cpp
     nn_fp/nn_fp_friends.cpp
     nn_fp/nn_fp_init.cpp
@@ -93,6 +99,11 @@ set(SOURCE_FILES
     nn_nfp/nn_nfp_detection.cpp
     nn_nfp/nn_nfp_init.cpp
     nn_nfp/nn_nfp_settings.cpp
+    nn_olv/nn_olv.cpp
+    nn_olv/nn_olv_downloadedcommunitydata.cpp
+    nn_olv/nn_olv_downloadedtopicdata.cpp
+    nn_olv/nn_olv_uploadeddatabase.cpp
+    nn_olv/nn_olv_uploadedpostdata.cpp
     nn_result.cpp
     nn_save/nn_save.cpp
     nn_save/nn_save_core.cpp
@@ -149,6 +160,7 @@ set(HEADER_FILES
     coreinit/coreinit_fs_path.h
     coreinit/coreinit_fs_stat.h
     coreinit/coreinit_ghs.h
+    coreinit/coreinit_ghs_typeinfo.h
     coreinit/coreinit_ios.h
     coreinit/coreinit_lockedcache.h
     coreinit/coreinit_mcp.h
@@ -215,6 +227,13 @@ set(HEADER_FILES
     nn_act/nn_act_result.h
     nn_boss/nn_boss.h
     nn_boss/nn_boss_init.h
+    nn_boss/nn_boss_nettasksetting.h
+    nn_boss/nn_boss_playreportsetting.h
+    nn_boss/nn_boss_rawultasksetting.h
+    nn_boss/nn_boss_result.h
+    nn_boss/nn_boss_tasksetting.h
+    nn_boss/nn_boss_titleid.h
+    nn_ffl.h
     nn_fp/nn_fp.h
     nn_fp/nn_fp_friends.h
     nn_fp/nn_fp_init.h
@@ -225,6 +244,12 @@ set(HEADER_FILES
     nn_nfp/nn_nfp_init.h
     nn_nfp/nn_nfp_result.h
     nn_nfp/nn_nfp_settings.h
+    nn_olv/nn_olv.h
+    nn_olv/nn_olv_downloadedcommunitydata.h
+    nn_olv/nn_olv_downloadedtopicdata.h
+    nn_olv/nn_olv_result.h
+    nn_olv/nn_olv_uploadeddatabase.h
+    nn_olv/nn_olv_uploadedpostdata.h
     nn_result.h
     nn_save/nn_save.h
     nn_save/nn_save_core.h
