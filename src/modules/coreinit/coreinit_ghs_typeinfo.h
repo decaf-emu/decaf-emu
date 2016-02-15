@@ -38,6 +38,9 @@ public:
    ~type_info();
 };
 
+extern void *
+PureVirtualCall;
+
 namespace internal
 {
 

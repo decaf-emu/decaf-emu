@@ -11,8 +11,17 @@ type_info::VirtualTable = nullptr;
 TypeDescriptor *
 type_info::TypeInfo = nullptr;
 
+void *
+PureVirtualCall = nullptr;
+
 type_info::~type_info()
 {
+}
+
+static void
+pure_virtual_called()
+{
+   gLog->error("Pure virtual called");
 }
 
 namespace internal
@@ -81,6 +90,7 @@ void
 Module::registerGhsTypeInfoFunctions()
 {
    RegisterKernelFunctionDestructor("__dt__Q2_3std9type_infoFv", ghs::type_info);
+   RegisterKernelFunctionName("__pure_virtual_called", ghs::pure_virtual_called);
 }
 
 void
@@ -91,6 +101,8 @@ Module::initialiseGhsTypeInfo()
 
    ghs::type_info::VirtualTable[0] = { 0, ghs::type_info::TypeInfo };
    ghs::type_info::VirtualTable[1] = { 0, findExport("__dt__Q2_3std9type_infoFv") };
+
+   ghs::PureVirtualCall = findExport("__pure_virtual_called");
 }
 
 } // namespace coreinit
