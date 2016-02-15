@@ -178,13 +178,13 @@ GetTransferableIdEx(be_val<uint64_t> *transferableId, uint32_t unk1, uint8_t slo
 }
 
 nn::Result
-GetMii(void *data)
+GetMii(FFLStoreData *data)
 {
    return GetMiiEx(data, GetSlotNo());
 }
 
 nn::Result
-GetMiiEx(void *data, uint8_t slot)
+GetMiiEx(FFLStoreData *data, uint8_t slot)
 {
    if (slot != gCurrentSlot) {
       return nn::act::AccountNotFound;

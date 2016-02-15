@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include "types.h"
+#include "modules/nn_ffl.h"
 #include "modules/nn_result.h"
 
 namespace nn
@@ -30,10 +31,10 @@ uint8_t
 GetSlotNo();
 
 nn::Result
-GetMii(void *data);
+GetMii(FFLStoreData *data);
 
 nn::Result
-GetMiiEx(void *data, uint8_t slot);
+GetMiiEx(FFLStoreData *data, uint8_t slot);
 
 bool
 IsNetworkAccount();

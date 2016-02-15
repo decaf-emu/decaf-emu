@@ -1691,6 +1691,9 @@
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_playreportsetting.h">
       <Filter>Header Files\modules\nn_boss</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\modules\nn_ffl.h">
+      <Filter>Header Files\modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
