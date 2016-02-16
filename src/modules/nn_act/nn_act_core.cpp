@@ -119,6 +119,22 @@ GetParentalControlSlotNoEx(uint8_t *parentSlot, uint8_t slot)
 }
 
 uint32_t
+GetPersistentId()
+{
+   return GetPersistentIdEx(gCurrentSlot);
+}
+
+uint32_t
+GetPersistentIdEx(uint8_t slot)
+{
+   if (slot == gCurrentSlot) {
+      return 1;
+   } else {
+      return 0;
+   }
+}
+
+uint32_t
 GetPrincipalId()
 {
    be_val<uint32_t> id;
@@ -225,6 +241,8 @@ Module::registerCoreFunctions()
    RegisterKernelFunctionName("GetAccountIdEx__Q2_2nn3actFPcUc", nn::act::GetAccountIdEx);
    RegisterKernelFunctionName("GetParentalControlSlotNo__Q2_2nn3actFv", nn::act::GetParentalControlSlotNo);
    RegisterKernelFunctionName("GetParentalControlSlotNoEx__Q2_2nn3actFPUcUc", nn::act::GetParentalControlSlotNoEx);
+   RegisterKernelFunctionName("GetPersistentId__Q2_2nn3actFv", nn::act::GetPersistentId);
+   RegisterKernelFunctionName("GetPersistentIdEx__Q2_2nn3actFv", nn::act::GetPersistentIdEx);
    RegisterKernelFunctionName("GetPrincipalId__Q2_2nn3actFv", nn::act::GetPrincipalId);
    RegisterKernelFunctionName("GetPrincipalIdEx__Q2_2nn3actFPUiUc", nn::act::GetPrincipalIdEx);
    RegisterKernelFunctionName("GetSimpleAddressId__Q2_2nn3actFv", nn::act::GetSimpleAddressId);

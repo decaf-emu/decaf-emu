@@ -63,6 +63,12 @@ nn::Result
 GetParentalControlSlotNoEx(uint8_t *parentSlot, uint8_t slot);
 
 uint32_t
+GetPersistentId();
+
+uint32_t
+GetPersistentIdEx(uint8_t slot);
+
+uint32_t
 GetPrincipalId();
 
 nn::Result
