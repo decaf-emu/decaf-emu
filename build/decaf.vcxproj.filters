@@ -909,6 +909,9 @@
     <ClCompile Include="..\src\modules\nn_olv\nn_olv_uploadedpostdata.cpp">
       <Filter>Source Files\modules\nn_olv</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv_init.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1731,6 +1734,9 @@
       <Filter>Header Files\modules\nn_olv</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_olv\nn_olv_uploadedpostdata.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_init.h">
       <Filter>Header Files\modules\nn_olv</Filter>
     </ClInclude>
   </ItemGroup>

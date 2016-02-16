@@ -19,6 +19,7 @@ public:
    static void RegisterFunctions();
 
 private:
+   static void registerInitFunctions();
    static void registerDownloadedCommunityData();
    static void registerDownloadedTopicData();
    static void registerUploadedDataBase();

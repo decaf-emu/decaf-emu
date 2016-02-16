@@ -16,6 +16,7 @@ Module::initialise()
 void
 Module::RegisterFunctions()
 {
+   registerInitFunctions();
    registerDownloadedCommunityData();
    registerDownloadedTopicData();
    registerUploadedDataBase();

@@ -302,6 +302,7 @@
     <ClCompile Include="..\src\modules\nn_olv\nn_olv.cpp" />
     <ClCompile Include="..\src\modules\nn_olv\nn_olv_downloadedcommunitydata.cpp" />
     <ClCompile Include="..\src\modules\nn_olv\nn_olv_downloadedtopicdata.cpp" />
+    <ClCompile Include="..\src\modules\nn_olv\nn_olv_init.cpp" />
     <ClCompile Include="..\src\modules\nn_olv\nn_olv_uploadeddatabase.cpp" />
     <ClCompile Include="..\src\modules\nn_olv\nn_olv_uploadedpostdata.cpp" />
     <ClCompile Include="..\src\modules\nn_result.cpp" />
@@ -500,6 +501,7 @@
     <ClInclude Include="..\src\modules\nn_olv\nn_olv.h" />
     <ClInclude Include="..\src\modules\nn_olv\nn_olv_downloadedcommunitydata.h" />
     <ClInclude Include="..\src\modules\nn_olv\nn_olv_downloadedtopicdata.h" />
+    <ClInclude Include="..\src\modules\nn_olv\nn_olv_init.h" />
     <ClInclude Include="..\src\modules\nn_olv\nn_olv_result.h" />
     <ClInclude Include="..\src\modules\nn_olv\nn_olv_uploadeddatabase.h" />
     <ClInclude Include="..\src\modules\nn_olv\nn_olv_uploadedpostdata.h" />
