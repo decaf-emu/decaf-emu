@@ -23,6 +23,7 @@ public:
 private:
    static void registerInitFunctions();
    static void registerTitleIDFunctions();
+   static void registerTaskID();
    static void registerTaskSettingFunctions();
    static void registerNetTaskSettingFunctions();
    static void registerRawUlTaskSettingFunctions();

@@ -20,6 +20,7 @@ Module::RegisterFunctions()
 {
    registerInitFunctions();
    registerTitleIDFunctions();
+   registerTaskID();
    registerTaskSettingFunctions();
    registerNetTaskSettingFunctions();
    registerRawUlTaskSettingFunctions();
