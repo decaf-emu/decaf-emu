@@ -150,7 +150,7 @@ GetPrincipalIdEx(be_val<uint32_t> *principalId,
       return nn::act::AccountNotFound;
    }
 
-   *principalId = 0;
+   *principalId = 1;
    return nn::Result::Success;
 }
 
@@ -170,7 +170,7 @@ GetSimpleAddressIdEx(be_val<uint32_t> *simpleAddressId,
       return nn::act::AccountNotFound;
    }
 
-   *simpleAddressId = 0;
+   *simpleAddressId = 1;
    return nn::Result::Success;
 }
 
@@ -189,7 +189,7 @@ GetTransferableIdEx(be_val<uint64_t> *transferableId, uint32_t unk1, uint8_t slo
       return nn::act::AccountNotFound;
    }
 
-   *transferableId = 0;
+   *transferableId = 1;
    return nn::Result::Success;
 }
 
