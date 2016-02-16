@@ -40,6 +40,12 @@ public:
 private:
    be_val<uint32_t> mLower;
    be_val<uint32_t> mUpper;
+
+protected:
+   CHECK_MEMBER_OFFSET_START
+   CHECK_OFFSET(TitleID, 0x00, mLower);
+   CHECK_OFFSET(TitleID, 0x04, mUpper);
+   CHECK_MEMBER_OFFSET_END
 };
 CHECK_SIZE(TitleID, 8);
 

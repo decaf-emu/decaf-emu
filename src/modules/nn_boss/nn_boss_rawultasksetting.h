@@ -41,6 +41,14 @@ protected:
    uint32_t mRawUlUnk2;
    uint32_t mRawUlUnk3;
    char mRawUlData[0x200];
+
+protected:
+   CHECK_MEMBER_OFFSET_START
+   CHECK_OFFSET(RawUlTaskSetting, 0x1004, mRawUlUnk1);
+   CHECK_OFFSET(RawUlTaskSetting, 0x1008, mRawUlUnk2);
+   CHECK_OFFSET(RawUlTaskSetting, 0x100C, mRawUlUnk3);
+   CHECK_OFFSET(RawUlTaskSetting, 0x1010, mRawUlData);
+   CHECK_MEMBER_OFFSET_END
 };
 CHECK_SIZE(RawUlTaskSetting, 0x1210);
 

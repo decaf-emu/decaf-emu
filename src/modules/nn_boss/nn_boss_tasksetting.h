@@ -36,6 +36,12 @@ public:
 protected:
    char mTaskSettingData[0x1000];
    be_ptr<ghs::VirtualTableEntry> mVirtualTable;
+
+protected:
+   CHECK_MEMBER_OFFSET_START
+   CHECK_OFFSET(TaskSetting, 0x00, mTaskSettingData);
+   CHECK_OFFSET(TaskSetting, 0x1000, mVirtualTable);
+   CHECK_MEMBER_OFFSET_END
 };
 CHECK_SIZE(TaskSetting, 0x1004);
 

@@ -42,6 +42,14 @@ protected:
    uint32_t mPlayReportUnk2;
    uint32_t mPlayReportUnk3;
    uint32_t mPlayReportUnk4;
+
+protected:
+   CHECK_MEMBER_OFFSET_START
+   CHECK_OFFSET(PlayReportSetting, 0x1210, mPlayReportUnk1);
+   CHECK_OFFSET(PlayReportSetting, 0x1214, mPlayReportUnk2);
+   CHECK_OFFSET(PlayReportSetting, 0x1218, mPlayReportUnk3);
+   CHECK_OFFSET(PlayReportSetting, 0x121C, mPlayReportUnk4);
+   CHECK_MEMBER_OFFSET_END
 };
 CHECK_SIZE(PlayReportSetting, 0x1220);
 
