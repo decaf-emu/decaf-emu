@@ -9,6 +9,7 @@ namespace boss
 void
 Module::initialise()
 {
+   initialiseTask();
    initialiseTaskSetting();
    initialiseNetTaskSetting();
    initialiseRawUlTaskSetting();
@@ -19,9 +20,10 @@ void
 Module::RegisterFunctions()
 {
    registerInitFunctions();
-   registerTitleIDFunctions();
+   registerTask();
    registerTaskID();
    registerTaskSettingFunctions();
+   registerTitleIDFunctions();
    registerNetTaskSettingFunctions();
    registerRawUlTaskSettingFunctions();
    registerPlayReportSettingFunctions();

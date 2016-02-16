@@ -288,6 +288,7 @@
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_nettasksetting.cpp" />
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_playreportsetting.cpp" />
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_rawultasksetting.cpp" />
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_task.cpp" />
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_taskid.cpp" />
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_tasksetting.cpp" />
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_titleid.cpp" />
@@ -490,6 +491,7 @@
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_playreportsetting.h" />
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_rawultasksetting.h" />
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_result.h" />
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_task.h" />
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_tasksetting.h" />
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_titleid.h" />
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_taskid.h" />

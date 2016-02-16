@@ -915,6 +915,9 @@
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_taskid.cpp">
       <Filter>Source Files\modules\nn_boss</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\nn_boss\nn_boss_task.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1741,6 +1744,9 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_olv\nn_olv_init.h">
       <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\nn_boss\nn_boss_task.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_taskid.h">
       <Filter>Header Files\modules\nn_boss</Filter>
