@@ -287,15 +287,18 @@ decodeAluClause(DecodeState &state, shadir::CfAluInstruction *parent, uint32_t a
          }
 
          if (srcCount > 0 && inst.word0.SRC0_SEL == SQ_ALU_SRC_LITERAL) {
-            literalCount = std::max<unsigned>(literalCount, inst.word0.SRC0_CHAN + 1);
+            literalCount = std::max(literalCount,
+                                    static_cast<unsigned>(inst.word0.SRC0_CHAN) + 1u);
          }
 
          if (srcCount > 1 && inst.word0.SRC1_SEL == SQ_ALU_SRC_LITERAL) {
-            literalCount = std::max<unsigned>(literalCount, inst.word0.SRC1_CHAN + 1);
+            literalCount = std::max(literalCount,
+                                    static_cast<unsigned>(inst.word0.SRC1_CHAN) + 1u);
          }
 
          if (srcCount > 2 && inst.op3.SRC2_SEL == SQ_ALU_SRC_LITERAL) {
-            literalCount = std::max<unsigned>(literalCount, inst.op3.SRC2_CHAN + 1);
+            literalCount = std::max(literalCount,
+                                    static_cast<unsigned>(inst.op3.SRC2_CHAN) + 1u);
          }
 
          if (inst.word0.LAST) {
