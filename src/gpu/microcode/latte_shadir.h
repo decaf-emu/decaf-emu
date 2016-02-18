@@ -205,7 +205,7 @@ struct VertexFetchInstruction : Instruction
 
    virtual ~VertexFetchInstruction() override = default;
 
-   SQ_TEX_INST id;
+   SQ_VTX_INST id;
    SQ_VTX_FETCH_TYPE fetchType;
 
    SQ_DATA_FORMAT dataFormat;

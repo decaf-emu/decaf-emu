@@ -96,11 +96,8 @@ decodeVTX(DecodeState &state, shadir::CfInstruction *parent, uint32_t addr, uint
       auto id = vtx.word0.VTX_INST;
       auto name = getInstructionName(id);
 
-      if (id == SQ_TEX_INST_MEM) {
-         decodeError(state, fmt::format("Unexpected mem instruction in vertex fetch clause {} {}", id, name));
-         result = false;
-      } else if (id != SQ_TEX_INST_VTX_FETCH && id != SQ_TEX_INST_VTX_SEMANTIC && id != SQ_TEX_INST_GET_BUFFER_RESINFO) {
-         decodeError(state, fmt::format("Unexpected texture fetch instruction in vertex fetch clause {} {}", id, name));
+      if (id != SQ_VTX_INST_FETCH && id != SQ_VTX_INST_SEMANTIC && id != SQ_VTX_INST_BUFINFO) {
+         decodeError(state, fmt::format("Unexpected instruction in vertex fetch clause {} {}", id, name));
          result = false;
       } else {
          auto inst = new shadir::VertexFetchInstruction {};
@@ -116,7 +113,7 @@ decodeVTX(DecodeState &state, shadir::CfInstruction *parent, uint32_t addr, uint
          inst->src.rel = vtx.word0.SRC_REL;
          inst->src.sel = vtx.word0.SRC_SEL_X;
 
-         if (id == SQ_TEX_INST_VTX_SEMANTIC) {
+         if (id == SQ_VTX_INST_SEMANTIC) {
             inst->dst.id = vtx.word1.SEM.SEMANTIC_ID;
             inst->dst.rel = SQ_ABSOLUTE;
          } else {

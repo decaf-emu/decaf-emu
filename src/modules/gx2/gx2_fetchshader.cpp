@@ -269,7 +269,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          }
       } else {
          // Semantic vertex fetch
-         vfetch.word0.VTX_INST = latte::SQ_TEX_INST_VTX_SEMANTIC;
+         vfetch.word0.VTX_INST = latte::SQ_VTX_INST_SEMANTIC;
 
          // Setup source
          vfetch.word0.BUFFER_ID = attrib.buffer;

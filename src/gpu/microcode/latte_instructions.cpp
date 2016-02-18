@@ -94,6 +94,17 @@ const char *getInstructionName(SQ_TEX_INST id)
    }
 }
 
+const char *getInstructionName(SQ_VTX_INST id)
+{
+   switch (id) {
+#define VTX_INST(name, value) case SQ_VTX_INST_##name: return #name;
+#include "latte_instructions_def.inl"
+#undef VTX_INST
+   default:
+      return "UNKNOWN";
+   }
+}
+
 uint32_t getInstructionNumSrcs(SQ_OP2_INST id)
 {
    switch (id) {

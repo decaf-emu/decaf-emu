@@ -20,7 +20,7 @@ static std::map<latte::SQ_OP2_INST, TranslateFuncALU> sGeneratorTableAluOp2;
 static std::map<latte::SQ_OP3_INST, TranslateFuncALU> sGeneratorTableAluOp3;
 static std::map<latte::SQ_OP2_INST, TranslateFuncALUReduction> sGeneratorTableAluOp2Reduction;
 static std::map<latte::SQ_TEX_INST, TranslateFuncTEX> sGeneratorTableTex;
-static std::map<latte::SQ_TEX_INST, TranslateFuncVTX> sGeneratorTableVtx;
+static std::map<latte::SQ_VTX_INST, TranslateFuncVTX> sGeneratorTableVtx;
 static std::map<latte::SQ_CF_EXP_INST, TranslateFuncEXP> sGeneratorTableExport;
 
 
@@ -77,7 +77,7 @@ registerGenerator(latte::SQ_TEX_INST ins, TranslateFuncTEX func)
 
 
 void
-registerGenerator(latte::SQ_TEX_INST ins, TranslateFuncVTX func)
+registerGenerator(latte::SQ_VTX_INST ins, TranslateFuncVTX func)
 {
    sGeneratorTableVtx[ins] = func;
 }

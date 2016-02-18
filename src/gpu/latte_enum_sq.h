@@ -321,12 +321,6 @@ enum SQ_VTX_FETCH_TYPE : uint32_t
    SQ_VTX_FETCH_NO_INDEX_OFFSET     = 2,
 };
 
-enum SQ_VTX_INST_TYPE : uint32_t
-{
-   SQ_VTX_INST_FETCH                = 0,
-   SQ_VTX_INST_SEMANTIC             = 1,
-};
-
 enum SQ_TEX_CLAMP : uint32_t
 {
    SQ_TEX_WRAP = 0,

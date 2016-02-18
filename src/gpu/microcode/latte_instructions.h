@@ -47,6 +47,13 @@ enum SQ_TEX_INST : uint32_t
 #undef TEX_INST
 };
 
+enum SQ_VTX_INST : uint32_t
+{
+#define VTX_INST(name, value) SQ_VTX_INST_##name = value,
+#include "latte_instructions_def.inl"
+#undef VTX_INST
+};
+
 enum SQ_CF_INST_TYPE : uint32_t
 {
    SQ_CF_INST_TYPE_NORMAL        = 0,
@@ -257,7 +264,7 @@ union SQ_VTX_WORD0
 
    struct
    {
-      SQ_TEX_INST VTX_INST : 5;
+      SQ_VTX_INST VTX_INST : 5;
       SQ_VTX_FETCH_TYPE FETCH_TYPE : 2;
       uint32_t FETCH_WHOLE_QUAD : 1;
       uint32_t BUFFER_ID : 8;
@@ -396,6 +403,7 @@ const char *getInstructionName(SQ_CF_ALU_INST id);
 const char *getInstructionName(SQ_OP2_INST id);
 const char *getInstructionName(SQ_OP3_INST id);
 const char *getInstructionName(SQ_TEX_INST id);
+const char *getInstructionName(SQ_VTX_INST id);
 
 uint32_t getInstructionNumSrcs(SQ_OP2_INST id);
 uint32_t getInstructionNumSrcs(SQ_OP3_INST id);

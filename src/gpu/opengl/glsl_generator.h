@@ -37,7 +37,7 @@ void registerGenerator(latte::SQ_OP2_INST ins, TranslateFuncALU func);
 void registerGenerator(latte::SQ_OP3_INST ins, TranslateFuncALU func);
 void registerGenerator(latte::SQ_OP2_INST ins, TranslateFuncALUReduction func);
 void registerGenerator(latte::SQ_TEX_INST ins, TranslateFuncTEX func);
-void registerGenerator(latte::SQ_TEX_INST ins, TranslateFuncVTX func);
+void registerGenerator(latte::SQ_VTX_INST ins, TranslateFuncVTX func);
 void registerGenerator(latte::SQ_CF_EXP_INST ins, TranslateFuncEXP func);
 
 void registerCf();
