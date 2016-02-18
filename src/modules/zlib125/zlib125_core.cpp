@@ -18,13 +18,13 @@ gStreamMap;
 
 struct WZStream
 {
-   be_ptr<Bytef> next_in;
-   be_val<uInt> avail_in;
-   be_val<uLong> total_in;
+   be_ptr<uint8_t> next_in;
+   be_val<uint32_t> avail_in;
+   be_val<uint32_t> total_in;
 
-   be_ptr<Bytef> next_out;
-   be_val<uInt> avail_out;
-   be_val<uLong> total_out;
+   be_ptr<uint8_t> next_out;
+   be_val<uint32_t> avail_out;
+   be_val<uint32_t> total_out;
 
    be_ptr<char> msg;
    be_ptr<struct internal_state> state;
@@ -34,32 +34,34 @@ struct WZStream
    be_ptr<void> opaque;
 
    be_val<int> data_type;
-   be_val<uLong> adler;
-   be_val<uLong> reserved;
+   be_val<uint32_t> adler;
+   be_val<uint32_t> reserved;
 };
 
 struct WZHeader
 {
    be_val<int> text;
-   be_val<uLong> time;
+   be_val<uint32_t> time;
    be_val<int> xflags;
    be_val<int> os;
-   be_ptr<Bytef> extra;
-   be_val<uInt> extra_len;
-   be_val<uInt> extra_max;
-   be_ptr<Bytef> name;
-   be_val<uInt> name_max;
-   be_ptr<Bytef> comment;
-   be_val<uInt> comm_max;
+   be_ptr<uint8_t> extra;
+   be_val<uint32_t> extra_len;
+   be_val<uint32_t> extra_max;
+   be_ptr<uint8_t> name;
+   be_val<uint32_t> name_max;
+   be_ptr<uint8_t> comment;
+   be_val<uint32_t> comm_max;
    be_val<int> hcrc;
    be_val<int> done;
 };
 
-using ZlibAllocFunc = wfunc_ptr<void*, void*, uint32_t, uint32_t>;
-using ZlibFreeFunc = wfunc_ptr<void, void*, void*>;
+using ZlibAllocFunc = wfunc_ptr<void *, void *, uint32_t, uint32_t>;
+using ZlibFreeFunc = wfunc_ptr<void, void *, void *>;
 
 static void *
-zlibAllocWrapper(void *opaque, unsigned items, unsigned size)
+zlibAllocWrapper(void *opaque,
+                 unsigned items,
+                 unsigned size)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
    ZlibAllocFunc allocFunc = wstrm->zalloc;
@@ -72,7 +74,8 @@ zlibAllocWrapper(void *opaque, unsigned items, unsigned size)
 }
 
 static void
-zlibFreeWrapper(void *opaque, void *address)
+zlibFreeWrapper(void *opaque,
+                void *address)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
    ZlibFreeFunc freeFunc = wstrm->zfree;
@@ -101,7 +104,8 @@ eraseZStream(WZStream *in)
 }
 
 static int
-zlib125_deflate(WZStream *wstrm, int flush)
+zlib125_deflate(WZStream *wstrm,
+                int32_t flush)
 {
    auto zstrm = getZStream(wstrm);
    zstrm->next_in = wstrm->next_in;
@@ -132,7 +136,10 @@ zlib125_deflate(WZStream *wstrm, int flush)
 }
 
 static int
-zlib125_deflateInit_(WZStream *wstrm, int level, const char *version, int stream_size)
+zlib125_deflateInit_(WZStream *wstrm,
+                     int32_t level,
+                     const char *version,
+                     int32_t stream_size)
 {
    assert(sizeof(WZStream) == stream_size);
 
@@ -144,7 +151,14 @@ zlib125_deflateInit_(WZStream *wstrm, int level, const char *version, int stream
 }
 
 static int
-zlib125_deflateInit2_(WZStream *wstrm, int level, int method, int windowBits, int memLevel, int strategy, const char *version, int stream_size)
+zlib125_deflateInit2_(WZStream *wstrm,
+                      int32_t level,
+                      int32_t method,
+                      int32_t windowBits,
+                      int32_t memLevel,
+                      int32_t strategy,
+                      const char *version,
+                      int32_t stream_size)
 {
    assert(sizeof(WZStream) == stream_size);
 
@@ -156,7 +170,8 @@ zlib125_deflateInit2_(WZStream *wstrm, int level, int method, int windowBits, in
 }
 
 static uint32_t
-zlib125_deflateBound(WZStream *wstrm, uint32_t sourceLen)
+zlib125_deflateBound(WZStream *wstrm,
+                     uint32_t sourceLen)
 {
    auto zstrm = getZStream(wstrm);
    return deflateBound(zstrm, sourceLen);
@@ -170,7 +185,8 @@ zlib125_deflateEnd(WZStream *wstrm)
 }
 
 static int
-zlib125_inflate(WZStream *wstrm, int flush)
+zlib125_inflate(WZStream *wstrm,
+                int32_t flush)
 {
    auto zstrm = getZStream(wstrm);
    zstrm->next_in = wstrm->next_in;
@@ -201,7 +217,9 @@ zlib125_inflate(WZStream *wstrm, int flush)
 }
 
 static int
-zlib125_inflateInit_(WZStream *wstrm, const char *version, int stream_size)
+zlib125_inflateInit_(WZStream *wstrm,
+                     const char *version,
+                     int32_t stream_size)
 {
    assert(sizeof(WZStream) == stream_size);
 
@@ -213,7 +231,10 @@ zlib125_inflateInit_(WZStream *wstrm, const char *version, int stream_size)
 }
 
 static int
-zlib125_inflateInit2_(WZStream *wstrm, int windowBits, const char *version, int stream_size)
+zlib125_inflateInit2_(WZStream *wstrm,
+                      int32_t windowBits,
+                      const char *version,
+                      int32_t stream_size)
 {
    assert(sizeof(WZStream) == stream_size);
 
@@ -234,13 +255,17 @@ zlib125_inflateEnd(WZStream *wstrm)
 }
 
 static uint32_t
-zlib125_adler32(uint32_t adler, const Bytef * buf, unsigned len)
+zlib125_adler32(uint32_t adler,
+                const uint8_t *buf,
+                uint32_t len)
 {
    return static_cast<uint32_t>(adler32(adler, buf, len));
 }
 
 static uint32_t
-zlib125_crc32(uint32_t crc, const Bytef * buf, unsigned len)
+zlib125_crc32(uint32_t crc,
+              const uint8_t *buf,
+              uint32_t len)
 {
    return static_cast<uint32_t>(crc32(crc, buf, len));
 }
@@ -264,7 +289,10 @@ zlib125_compressBound(uint32_t sourceLen)
 }
 
 static int
-zlib125_uncompress(uint8_t* dest, be_val<uint32_t>* destLen, const uint8_t* source, uint32_t sourceLen)
+zlib125_uncompress(uint8_t *dest,
+                   be_val<uint32_t>* destLen,
+                   const uint8_t* source,
+                   uint32_t sourceLen)
 {
    unsigned long realDestLen = *destLen;
    auto result = uncompress(dest, &realDestLen, source, sourceLen);
