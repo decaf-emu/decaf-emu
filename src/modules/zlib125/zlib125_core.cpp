@@ -246,9 +246,15 @@ zlib125_crc32(uint32_t crc, const Bytef * buf, unsigned len)
 }
 
 static int
-zlib125_compress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen)
+zlib125_compress(uint8_t *dest,
+                 be_val<uint32_t> *destLen,
+                 const uint8_t *source,
+                 uint32_t sourceLen)
 {
-   return compress(dest, destLen, source, sourceLen);
+   unsigned long realDestLen = *destLen;
+   auto result = compress(dest, &realDestLen, source, sourceLen);
+   *destLen = realDestLen;
+   return result;
 }
 
 static uint32_t
