@@ -406,7 +406,7 @@ void executeSub(ThreadState *state)
    state->lr = lr;
 }
 
-bool PPCEmuAssembler::ErrorHandler::handleError(asmjit::Error code, const char* message)
+bool PPCEmuAssembler::ErrorHandler::handleError(asmjit::Error code, const char* message, void* origin)
 {
    gLog->error("ASMJit Error {}: {}\n", code, message);
    return true;
