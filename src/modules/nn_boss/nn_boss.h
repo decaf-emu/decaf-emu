@@ -14,6 +14,7 @@ public:
 
    void initialiseTask();
    void initialiseTaskSetting();
+   void initialiseTitle();
    void initialiseNetTaskSetting();
    void initialiseRawUlTaskSetting();
    void initialisePlayReportSetting();
@@ -26,6 +27,7 @@ private:
    static void registerTask();
    static void registerTaskID();
    static void registerTaskSettingFunctions();
+   static void registerTitleFunctions();
    static void registerTitleIDFunctions();
    static void registerNetTaskSettingFunctions();
    static void registerRawUlTaskSettingFunctions();

@@ -11,6 +11,7 @@ Module::initialise()
 {
    initialiseTask();
    initialiseTaskSetting();
+   initialiseTitle();
    initialiseNetTaskSetting();
    initialiseRawUlTaskSetting();
    initialisePlayReportSetting();
@@ -23,6 +24,7 @@ Module::RegisterFunctions()
    registerTask();
    registerTaskID();
    registerTaskSettingFunctions();
+   registerTitleFunctions();
    registerTitleIDFunctions();
    registerNetTaskSettingFunctions();
    registerRawUlTaskSettingFunctions();
