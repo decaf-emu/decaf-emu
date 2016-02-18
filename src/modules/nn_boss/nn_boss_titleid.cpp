@@ -59,8 +59,8 @@ void
 Module::registerTitleIDFunctions()
 {
    RegisterKernelFunctionConstructor("__ct__Q3_2nn4boss7TitleIDFv", TitleID);
-   RegisterKernelFunctionConstructor("__ct__Q3_2nn4boss7TitleIDFRCQ3_2nn4boss7TitleID", TitleID, TitleID *);
-   RegisterKernelFunctionConstructor("__ct__Q3_2nn4boss7TitleIDFUL", TitleID, uint64_t);
+   RegisterKernelFunctionConstructorArgs("__ct__Q3_2nn4boss7TitleIDFRCQ3_2nn4boss7TitleID", TitleID, TitleID *);
+   RegisterKernelFunctionConstructorArgs("__ct__Q3_2nn4boss7TitleIDFUL", TitleID, uint64_t);
 
    RegisterKernelFunctionName("IsValid__Q3_2nn4boss7TitleIDCFv", &TitleID::IsValid);
    RegisterKernelFunctionName("GetValue__Q3_2nn4boss7TitleIDCFv", &TitleID::GetValue);

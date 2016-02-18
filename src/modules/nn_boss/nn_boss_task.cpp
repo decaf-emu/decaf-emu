@@ -94,9 +94,9 @@ Task::GetTitleID(TitleID *id)
 void Module::registerTask()
 {
    RegisterKernelFunctionConstructor("__ct__Q3_2nn4boss4TaskFv", Task);
-   RegisterKernelFunctionConstructor("__ct__Q3_2nn4boss4TaskFPCc", Task, const char *);
-   RegisterKernelFunctionConstructor("__ct__Q3_2nn4boss4TaskFPCcUi", Task, const char *, uint32_t);
-   RegisterKernelFunctionConstructor("__ct__Q3_2nn4boss4TaskFUcPCc", Task, uint8_t, const char *);
+   RegisterKernelFunctionConstructorArgs("__ct__Q3_2nn4boss4TaskFPCc", Task, const char *);
+   RegisterKernelFunctionConstructorArgs("__ct__Q3_2nn4boss4TaskFPCcUi", Task, const char *, uint32_t);
+   RegisterKernelFunctionConstructorArgs("__ct__Q3_2nn4boss4TaskFUcPCc", Task, uint8_t, const char *);
    RegisterKernelFunctionDestructor("__dt__Q3_2nn4boss4TaskFv", Task);
 
    RegisterKernelFunctionName("Initialize__Q3_2nn4boss4TaskFPCc", static_cast<nn::Result (Task::*)(const char *)>(&Task::Initialize));

@@ -62,8 +62,8 @@ void
 Module::registerTaskID()
 {
    RegisterKernelFunctionConstructor("__ct__Q3_2nn4boss6TaskIDFv", TaskID);
-   RegisterKernelFunctionConstructor("__ct__Q3_2nn4boss6TaskIDFPCc", TaskID, const char *);
-   RegisterKernelFunctionConstructor("__ct__Q3_2nn4boss6TaskIDFRCQ3_2nn4boss6TaskID", TaskID, TaskID *);
+   RegisterKernelFunctionConstructorArgs("__ct__Q3_2nn4boss6TaskIDFPCc", TaskID, const char *);
+   RegisterKernelFunctionConstructorArgs("__ct__Q3_2nn4boss6TaskIDFRCQ3_2nn4boss6TaskID", TaskID, TaskID *);
    RegisterKernelFunctionName("__as__Q3_2nn4boss6TaskIDFPCc", static_cast<TaskID *(TaskID::*)(const char *)>(&TaskID::operator =));
    RegisterKernelFunctionName("__eq__Q3_2nn4boss6TaskIDCFPCc", static_cast<bool (TaskID::*)(const char* )>(&TaskID::operator ==));
    RegisterKernelFunctionName("__eq__Q3_2nn4boss6TaskIDCFRCQ3_2nn4boss6TaskID", static_cast<bool (TaskID::*)(TaskID *)>(&TaskID::operator ==));
