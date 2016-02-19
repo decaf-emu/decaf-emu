@@ -48,9 +48,6 @@
     <ClCompile Include="..\libraries\glfw\src\window.c">
       <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="..\libraries\glfw\src\winmm_joystick.c">
-      <Filter>Source Files\win32</Filter>
-    </ClCompile>
     <ClCompile Include="..\libraries\glfw\src\win32_window.c">
       <Filter>Source Files\win32</Filter>
     </ClCompile>
@@ -69,6 +66,12 @@
     <ClCompile Include="..\libraries\glfw\src\wgl_context.c">
       <Filter>Source Files\wgl</Filter>
     </ClCompile>
+    <ClCompile Include="..\libraries\glfw\src\win32_joystick.c">
+      <Filter>Source Files\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libraries\glfw\src\vulkan.c">
+      <Filter>Source Files\wgl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libraries\glfw\src\internal.h">
@@ -80,9 +83,6 @@
     <ClInclude Include="..\libraries\glfw\include\GLFW\glfw3native.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\libraries\glfw\src\winmm_joystick.h">
-      <Filter>Header Files\win32</Filter>
-    </ClInclude>
     <ClInclude Include="..\libraries\glfw\src\win32_tls.h">
       <Filter>Header Files\win32</Filter>
     </ClInclude>
@@ -91,6 +91,9 @@
     </ClInclude>
     <ClInclude Include="..\libraries\glfw\src\wgl_context.h">
       <Filter>Header Files\wgl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libraries\glfw\src\win32_joystick.h">
+      <Filter>Header Files\win32</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

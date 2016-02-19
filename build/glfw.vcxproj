@@ -19,23 +19,24 @@
     <ClCompile Include="..\libraries\glfw\src\init.c" />
     <ClCompile Include="..\libraries\glfw\src\input.c" />
     <ClCompile Include="..\libraries\glfw\src\monitor.c" />
+    <ClCompile Include="..\libraries\glfw\src\vulkan.c" />
     <ClCompile Include="..\libraries\glfw\src\wgl_context.c" />
     <ClCompile Include="..\libraries\glfw\src\win32_init.c" />
+    <ClCompile Include="..\libraries\glfw\src\win32_joystick.c" />
     <ClCompile Include="..\libraries\glfw\src\win32_monitor.c" />
     <ClCompile Include="..\libraries\glfw\src\win32_time.c" />
     <ClCompile Include="..\libraries\glfw\src\win32_tls.c" />
     <ClCompile Include="..\libraries\glfw\src\win32_window.c" />
     <ClCompile Include="..\libraries\glfw\src\window.c" />
-    <ClCompile Include="..\libraries\glfw\src\winmm_joystick.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libraries\glfw\include\GLFW\glfw3.h" />
     <ClInclude Include="..\libraries\glfw\include\GLFW\glfw3native.h" />
     <ClInclude Include="..\libraries\glfw\src\internal.h" />
     <ClInclude Include="..\libraries\glfw\src\wgl_context.h" />
+    <ClInclude Include="..\libraries\glfw\src\win32_joystick.h" />
     <ClInclude Include="..\libraries\glfw\src\win32_platform.h" />
     <ClInclude Include="..\libraries\glfw\src\win32_tls.h" />
-    <ClInclude Include="..\libraries\glfw\src\winmm_joystick.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF7}</ProjectGuid>
