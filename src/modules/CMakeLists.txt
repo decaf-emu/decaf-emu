@@ -46,9 +46,6 @@ set(SOURCE_FILES
     erreula/erreula_errorviewer.cpp
     gameloader/gameloader.cpp
     gx2/gx2.cpp
-    gx2/gx2r_buffer.cpp
-    gx2/gx2r_resource.cpp
-    gx2/gx2r_surface.cpp
     gx2/gx2_addrlib.cpp
     gx2/gx2_aperture.cpp
     gx2/gx2_cbpool.cpp
@@ -74,6 +71,9 @@ set(SOURCE_FILES
     gx2/gx2_temp.cpp
     gx2/gx2_tessellation.cpp
     gx2/gx2_texture.cpp
+    gx2/gx2r_buffer.cpp
+    gx2/gx2r_resource.cpp
+    gx2/gx2r_surface.cpp
     mic/mic.cpp
     mic/mic_core.cpp
     nn_ac/nn_ac.cpp
@@ -88,7 +88,10 @@ set(SOURCE_FILES
     nn_boss/nn_boss_nettasksetting.cpp
     nn_boss/nn_boss_playreportsetting.cpp
     nn_boss/nn_boss_rawultasksetting.cpp
+    nn_boss/nn_boss_task.cpp
+    nn_boss/nn_boss_taskid.cpp
     nn_boss/nn_boss_tasksetting.cpp
+    nn_boss/nn_boss_title.cpp
     nn_boss/nn_boss_titleid.cpp
     nn_fp/nn_fp.cpp
     nn_fp/nn_fp_friends.cpp
@@ -102,6 +105,7 @@ set(SOURCE_FILES
     nn_olv/nn_olv.cpp
     nn_olv/nn_olv_downloadedcommunitydata.cpp
     nn_olv/nn_olv_downloadedtopicdata.cpp
+    nn_olv/nn_olv_init.cpp
     nn_olv/nn_olv_uploadeddatabase.cpp
     nn_olv/nn_olv_uploadedpostdata.cpp
     nn_result.cpp
@@ -186,9 +190,6 @@ set(HEADER_FILES
     erreula/erreula_errorviewer.h
     gameloader/gameloader.h
     gx2/gx2.h
-    gx2/gx2r_buffer.h
-    gx2/gx2r_resource.h
-    gx2/gx2r_surface.h
     gx2/gx2_addrlib.h
     gx2/gx2_aperture.h
     gx2/gx2_cbpool.h
@@ -214,6 +215,9 @@ set(HEADER_FILES
     gx2/gx2_temp.h
     gx2/gx2_tessellation.h
     gx2/gx2_texture.h
+    gx2/gx2r_buffer.h
+    gx2/gx2r_resource.h
+    gx2/gx2r_surface.h
     mic/mic.h
     mic/mic_core.h
     nn_ac/nn_ac.h
@@ -231,7 +235,10 @@ set(HEADER_FILES
     nn_boss/nn_boss_playreportsetting.h
     nn_boss/nn_boss_rawultasksetting.h
     nn_boss/nn_boss_result.h
+    nn_boss/nn_boss_task.h
+    nn_boss/nn_boss_taskid.h
     nn_boss/nn_boss_tasksetting.h
+    nn_boss/nn_boss_title.h
     nn_boss/nn_boss_titleid.h
     nn_ffl.h
     nn_fp/nn_fp.h
@@ -247,6 +254,7 @@ set(HEADER_FILES
     nn_olv/nn_olv.h
     nn_olv/nn_olv_downloadedcommunitydata.h
     nn_olv/nn_olv_downloadedtopicdata.h
+    nn_olv/nn_olv_init.h
     nn_olv/nn_olv_result.h
     nn_olv/nn_olv_uploadeddatabase.h
     nn_olv/nn_olv_uploadedpostdata.h
