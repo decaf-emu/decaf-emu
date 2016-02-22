@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstdint>
 #include "jit_insreg.h"
 #include "jit_float.h"
 #include "utils/bitutils.h"
@@ -283,7 +284,7 @@ fnmadd(PPCEmuAssembler& a, Instruction instr)
    a.movq(a.xmm1, a.ppcfpr[instr.frB]);
    a.addsd(a.xmm0, a.xmm1);
 
-   a.mov(a.zax, 0x8000000000000000ull);
+   a.mov(a.zax, UINT64_C(0x8000000000000000));
    a.movq(a.xmm1, a.zax);
    a.pxor(a.xmm0, a.xmm1);
 
@@ -308,7 +309,7 @@ fnmadds(PPCEmuAssembler& a, Instruction instr)
    a.movq(a.xmm1, a.ppcfpr[instr.frB]);
    a.addsd(a.xmm0, a.xmm1);
 
-   a.mov(a.zax, 0x8000000000000000ull);
+   a.mov(a.zax, UINT64_C(0x8000000000000000));
    a.movq(a.xmm1, a.zax);
    a.pxor(a.xmm0, a.xmm1);
 
@@ -335,7 +336,7 @@ fnmsub(PPCEmuAssembler& a, Instruction instr)
    a.movq(a.xmm1, a.ppcfpr[instr.frB]);
    a.subsd(a.xmm0, a.xmm1);
 
-   a.mov(a.zax, 0x8000000000000000ull);
+   a.mov(a.zax, UINT64_C(0x8000000000000000));
    a.movq(a.xmm1, a.zax);
    a.pxor(a.xmm0, a.xmm1);
 
@@ -360,7 +361,7 @@ fnmsubs(PPCEmuAssembler& a, Instruction instr)
    a.movq(a.xmm1, a.ppcfpr[instr.frB]);
    a.subsd(a.xmm0, a.xmm1);
 
-   a.mov(a.zax, 0x8000000000000000ull);
+   a.mov(a.zax, UINT64_C(0x8000000000000000));
    a.movq(a.xmm1, a.zax);
    a.pxor(a.xmm0, a.xmm1);
 
@@ -400,7 +401,7 @@ fabs(PPCEmuAssembler& a, Instruction instr)
 
    a.movq(a.xmm0, a.ppcfpr[instr.frB]);
 
-   a.mov(a.zax, 0x7FFFFFFFFFFFFFFFull);
+   a.mov(a.zax, UINT64_C(0x7FFFFFFFFFFFFFFF));
    a.movq(a.xmm1, a.zax);
    a.pand(a.xmm0, a.xmm1);
 
@@ -420,11 +421,11 @@ fnabs(PPCEmuAssembler& a, Instruction instr)
 
    a.movq(a.xmm0, a.ppcfpr[instr.frB]);
 
-   a.mov(a.zax, 0x7FFFFFFFFFFFFFFFull);
+   a.mov(a.zax, UINT64_C(0x7FFFFFFFFFFFFFFF));
    a.movq(a.xmm1, a.zax);
    a.pand(a.xmm0, a.xmm1);
 
-   a.mov(a.zax, 0x8000000000000000ull);
+   a.mov(a.zax, UINT64_C(0x8000000000000000));
    a.movq(a.xmm1, a.zax);
    a.pxor(a.xmm0, a.xmm1);
 
@@ -459,7 +460,7 @@ fneg(PPCEmuAssembler& a, Instruction instr)
 
    a.movq(a.xmm0, a.ppcfpr[instr.frB]);
 
-   a.mov(a.zax, 0x8000000000000000ull);
+   a.mov(a.zax, UINT64_C(0x8000000000000000));
    a.movq(a.xmm1, a.zax);
    a.pxor(a.xmm0, a.xmm1);
 
