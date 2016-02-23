@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <stack>
 #include <spdlog/details/format.h>
