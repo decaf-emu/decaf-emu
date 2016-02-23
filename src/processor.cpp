@@ -531,9 +531,12 @@ size_t thread_id()
    if (tCurrentCore) {
       coreID = tCurrentCore->id;
       threadID = tCurrentCore->threadId;
+   } else {
+      coreID = 0xFF;
+      threadID = 0xFF;
    }
 
-   return (coreID << 8) | threadID;
+   return (coreID << 16) | threadID;
 }
 }
 }
