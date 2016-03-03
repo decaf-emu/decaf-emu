@@ -640,7 +640,7 @@ printInfo(const std::string &filename)
          break;
       case gfd::BlockType::TextureHeader:
       {
-         assert(block.data.size() >= sizeof(GX2Texture));
+         assert(block.data.size() >= sizeof(gx2::GX2Texture));
 
          startGroup(out, "TextureHeader");
          {
