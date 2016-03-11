@@ -161,6 +161,10 @@ updateFPRF(ThreadState *state, Type value)
    state->fpscr.fprf = flags;
 }
 
+// Make sure both float and double versions are available to other sources:
+template void updateFPRF(ThreadState *state, float value);
+template void updateFPRF(ThreadState *state, double value);
+
 void
 updateFloatConditionRegister(ThreadState *state)
 {
