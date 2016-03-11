@@ -50,7 +50,7 @@ disassembleExport(State &state, shadir::ExportInstruction *inst)
       state.out << ", ";
 
       if (inst->rw.rel == SQ_RELATIVE) {
-         state.out << "R[AL + " << inst->rw.id + "]";
+         state.out << "R[AL + " << inst->rw.id << "]";
       } else {
          state.out << "R" << inst->rw.id;
       }
@@ -61,8 +61,6 @@ disassembleExport(State &state, shadir::ExportInstruction *inst)
          << disassembleDestMask(inst->srcSel[1])
          << disassembleDestMask(inst->srcSel[2])
          << disassembleDestMask(inst->srcSel[3]);
-
-      inst->rw.rel;
    } else {
       // TODO: Disassemble export MEM_*
       state.out << " MEM_UNKNOWN_FORMAT";
