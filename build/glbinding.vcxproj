@@ -38,6 +38,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Binding_pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">Binding_pch.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\Binding_objects_0.cpp" />
     <ClCompile Include="..\libraries\glbinding\source\glbinding\source\Binding_objects_a.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Binding_pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
@@ -254,6 +255,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Binding_pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">Binding_pch.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\CallbackMask.cpp" />
     <ClCompile Include="..\libraries\glbinding\source\glbinding\source\callbacks.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">NotUsing</PrecompiledHeader>
@@ -269,6 +271,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\FunctionCall.cpp" />
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\functions-patches.cpp" />
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\functions_0.cpp" />
     <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\functions_a.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../Binding_pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">../Binding_pch.h</PrecompiledHeaderFile>
@@ -630,24 +635,24 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>GLBINDING_STATIC;EXTENSIVE_META;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLBINDING_STATIC;EXTENSIVE_META;SYSTEM_WINDOWS;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
     </ClCompile>
     <Link>
@@ -662,7 +667,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>GLBINDING_STATIC;EXTENSIVE_META;WIN32;N_DEBUG;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLBINDING_STATIC;EXTENSIVE_META;SYSTEM_WINDOWS;WIN32;N_DEBUG;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
     </ClCompile>
@@ -680,7 +685,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>GLBINDING_STATIC;EXTENSIVE_META;WIN32;N_DEBUG;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLBINDING_STATIC;EXTENSIVE_META;SYSTEM_WINDOWS;WIN32;N_DEBUG;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <WholeProgramOptimization>false</WholeProgramOptimization>

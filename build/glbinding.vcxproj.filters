@@ -255,6 +255,21 @@
     <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\types.cpp">
       <Filter>Source Files\gl</Filter>
     </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\Binding_objects_0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\CallbackMask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\FunctionCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\functions_0.cpp">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\functions-patches.cpp">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libraries\glbinding\source\glbinding\source\Binding_pch.h">
