@@ -476,36 +476,36 @@ bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
    for (auto i = 0; i < size / 2; i++) {
       auto &cf = program[i];
 
-      switch (cf.word1.CF_INST) {
+      switch (cf.word1.CF_INST()) {
       case latte::SQ_CF_INST_VTX:
       case latte::SQ_CF_INST_VTX_TC:
       {
          auto vfPtr = reinterpret_cast<latte::VertexFetchInst *>(program + cf.word0.ADDR);
-         auto count = (cf.word1.COUNT_3 << 3) | cf.word1.COUNT;
+         auto count = (cf.word1.COUNT_3() << 3) | cf.word1.COUNT();
 
          for (auto j = 0u; j < count; ++j) {
             auto &vf = vfPtr[j];
 
-            if (vf.word0.VTX_INST != latte::SQ_VTX_INST_SEMANTIC) {
-               gLog->error("Unexpected fetch shader VTX_INST {}", vf.word0.VTX_INST);
+            if (vf.word0.VTX_INST() != latte::SQ_VTX_INST_SEMANTIC) {
+               gLog->error("Unexpected fetch shader VTX_INST {}", vf.word0.VTX_INST());
                continue;
             }
 
             // Parse new attrib
             shader.attribs.emplace_back();
             auto &attrib = shader.attribs.back();
-            attrib.bytesPerElement = vf.word0.MEGA_FETCH_COUNT + 1;
-            attrib.format = vf.word1.DATA_FORMAT;
-            attrib.buffer = vf.word0.BUFFER_ID;
-            attrib.location = vf.gpr.DST_GPR;
-            attrib.offset = vf.word2.OFFSET;
-            attrib.formatComp = vf.word1.FORMAT_COMP_ALL;
-            attrib.numFormat = vf.word1.NUM_FORMAT_ALL;
-            attrib.endianSwap = vf.word2.ENDIAN_SWAP;
-            attrib.dstSel[0] = vf.word1.DST_SEL_X;
-            attrib.dstSel[1] = vf.word1.DST_SEL_Y;
-            attrib.dstSel[2] = vf.word1.DST_SEL_Z;
-            attrib.dstSel[3] = vf.word1.DST_SEL_W;
+            attrib.bytesPerElement = vf.word0.MEGA_FETCH_COUNT() + 1;
+            attrib.format = vf.word1.DATA_FORMAT();
+            attrib.buffer = vf.word0.BUFFER_ID();
+            attrib.location = vf.gpr.DST_GPR();
+            attrib.offset = vf.word2.OFFSET();
+            attrib.formatComp = vf.word1.FORMAT_COMP_ALL();
+            attrib.numFormat = vf.word1.NUM_FORMAT_ALL();
+            attrib.endianSwap = vf.word2.ENDIAN_SWAP();
+            attrib.dstSel[0] = vf.word1.DST_SEL_X();
+            attrib.dstSel[1] = vf.word1.DST_SEL_Y();
+            attrib.dstSel[2] = vf.word1.DST_SEL_Z();
+            attrib.dstSel[3] = vf.word1.DST_SEL_W();
          }
          break;
       }
@@ -513,10 +513,10 @@ bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
       case latte::SQ_CF_INST_END_PROGRAM:
          return true;
       default:
-         gLog->error("Unexpected fetch shader instruction {}", cf.word1.CF_INST);
+         gLog->error("Unexpected fetch shader instruction {}", cf.word1.CF_INST());
       }
 
-      if (cf.word1.END_OF_PROGRAM) {
+      if (cf.word1.END_OF_PROGRAM()) {
          return true;
       }
    }

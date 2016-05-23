@@ -30,7 +30,7 @@ decodeTEX(DecodeState &state, shadir::CfInstruction *parent, uint32_t addr, uint
 
    for (auto i = 0u; i < count; ++i) {
       const auto &tex = clause[i];
-      auto id = tex.word0.TEX_INST;
+      auto id = tex.word0.TEX_INST();
       auto name = getInstructionName(id);
 
       if (id == SQ_TEX_INST_VTX_FETCH || id == SQ_TEX_INST_VTX_SEMANTIC || id == SQ_TEX_INST_GET_BUFFER_RESINFO) {
@@ -46,36 +46,36 @@ decodeTEX(DecodeState &state, shadir::CfInstruction *parent, uint32_t addr, uint
          inst->groupPC = state.groupPC;
 
          inst->id = id;
-         inst->bcFracMode = tex.word0.BC_FRAC_MODE;
-         inst->fetchWholeQuad = tex.word0.FETCH_WHOLE_QUAD;
-         inst->altConst = tex.word0.ALT_CONST;
-         inst->resourceID = tex.word0.RESOURCE_ID;
-         inst->samplerID = tex.word2.SAMPLER_ID;
+         inst->bcFracMode = tex.word0.BC_FRAC_MODE();
+         inst->fetchWholeQuad = tex.word0.FETCH_WHOLE_QUAD();
+         inst->altConst = tex.word0.ALT_CONST();
+         inst->resourceID = tex.word0.RESOURCE_ID();
+         inst->samplerID = tex.word2.SAMPLER_ID();
 
-         inst->src.id = tex.word0.SRC_GPR;
-         inst->src.rel = tex.word0.SRC_REL;
-         inst->src.sel[0] = tex.word2.SRC_SEL_X;
-         inst->src.sel[1] = tex.word2.SRC_SEL_Y;
-         inst->src.sel[2] = tex.word2.SRC_SEL_Z;
-         inst->src.sel[3] = tex.word2.SRC_SEL_W;
+         inst->src.id = tex.word0.SRC_GPR();
+         inst->src.rel = tex.word0.SRC_REL();
+         inst->src.sel[0] = tex.word2.SRC_SEL_X();
+         inst->src.sel[1] = tex.word2.SRC_SEL_Y();
+         inst->src.sel[2] = tex.word2.SRC_SEL_Z();
+         inst->src.sel[3] = tex.word2.SRC_SEL_W();
 
-         inst->dst.id = tex.word1.DST_GPR;
-         inst->dst.rel = tex.word1.DST_REL;
-         inst->dst.sel[0] = tex.word1.DST_SEL_X;
-         inst->dst.sel[1] = tex.word1.DST_SEL_Y;
-         inst->dst.sel[2] = tex.word1.DST_SEL_Z;
-         inst->dst.sel[3] = tex.word1.DST_SEL_W;
+         inst->dst.id = tex.word1.DST_GPR();
+         inst->dst.rel = tex.word1.DST_REL();
+         inst->dst.sel[0] = tex.word1.DST_SEL_X();
+         inst->dst.sel[1] = tex.word1.DST_SEL_Y();
+         inst->dst.sel[2] = tex.word1.DST_SEL_Z();
+         inst->dst.sel[3] = tex.word1.DST_SEL_W();
 
-         inst->lodBias = sign_extend<7>(tex.word1.LOD_BIAS);
+         inst->lodBias = sign_extend<7>(tex.word1.LOD_BIAS().get());
 
-         inst->offset[0] = sign_extend<5>(tex.word2.OFFSET_X);
-         inst->offset[1] = sign_extend<5>(tex.word2.OFFSET_Y);
-         inst->offset[2] = sign_extend<5>(tex.word2.OFFSET_Z);
+         inst->offset[0] = sign_extend<5>(tex.word2.OFFSET_X().get());
+         inst->offset[1] = sign_extend<5>(tex.word2.OFFSET_Y().get());
+         inst->offset[2] = sign_extend<5>(tex.word2.OFFSET_Z().get());
 
-         inst->coordNormalise[0] = !!tex.word1.COORD_TYPE_X;
-         inst->coordNormalise[1] = !!tex.word1.COORD_TYPE_Y;
-         inst->coordNormalise[2] = !!tex.word1.COORD_TYPE_Z;
-         inst->coordNormalise[3] = !!tex.word1.COORD_TYPE_W;
+         inst->coordNormalise[0] = !!tex.word1.COORD_TYPE_X();
+         inst->coordNormalise[1] = !!tex.word1.COORD_TYPE_Y();
+         inst->coordNormalise[2] = !!tex.word1.COORD_TYPE_Z();
+         inst->coordNormalise[3] = !!tex.word1.COORD_TYPE_W();
          parent->clause.emplace_back(inst);
       }
 
@@ -93,7 +93,7 @@ decodeVTX(DecodeState &state, shadir::CfInstruction *parent, uint32_t addr, uint
 
    for (auto i = 0u; i < count; ++i) {
       const auto &vtx = clause[i];
-      auto id = vtx.word0.VTX_INST;
+      auto id = vtx.word0.VTX_INST();
       auto name = getInstructionName(id);
 
       if (id != SQ_VTX_INST_FETCH && id != SQ_VTX_INST_SEMANTIC && id != SQ_VTX_INST_BUFINFO) {
@@ -106,39 +106,39 @@ decodeVTX(DecodeState &state, shadir::CfInstruction *parent, uint32_t addr, uint
          inst->groupPC = state.groupPC;
 
          inst->id = id;
-         inst->fetchType = vtx.word0.FETCH_TYPE;
-         inst->fetchWholeQuad = !!vtx.word0.FETCH_WHOLE_QUAD;
-         inst->bufferID = vtx.word0.BUFFER_ID;
-         inst->src.id = vtx.word0.SRC_GPR;
-         inst->src.rel = vtx.word0.SRC_REL;
-         inst->src.sel = vtx.word0.SRC_SEL_X;
+         inst->fetchType = vtx.word0.FETCH_TYPE();
+         inst->fetchWholeQuad = !!vtx.word0.FETCH_WHOLE_QUAD();
+         inst->bufferID = vtx.word0.BUFFER_ID();
+         inst->src.id = vtx.word0.SRC_GPR();
+         inst->src.rel = vtx.word0.SRC_REL();
+         inst->src.sel = vtx.word0.SRC_SEL_X();
 
          if (id == SQ_VTX_INST_SEMANTIC) {
-            inst->dst.id = vtx.word1.SEM.SEMANTIC_ID;
+            inst->dst.id = vtx.sem.SEMANTIC_ID();
             inst->dst.rel = SQ_ABSOLUTE;
          } else {
-            inst->dst.id = vtx.word1.GPR.DST_GPR;
-            inst->dst.rel = vtx.word1.GPR.DST_REL;
+            inst->dst.id = vtx.gpr.DST_GPR();
+            inst->dst.rel = vtx.gpr.DST_REL();
          }
 
-         inst->dst.sel[0] = vtx.word1.DST_SEL_X;
-         inst->dst.sel[1] = vtx.word1.DST_SEL_Y;
-         inst->dst.sel[2] = vtx.word1.DST_SEL_Z;
-         inst->dst.sel[3] = vtx.word1.DST_SEL_W;
+         inst->dst.sel[0] = vtx.word1.DST_SEL_X();
+         inst->dst.sel[1] = vtx.word1.DST_SEL_Y();
+         inst->dst.sel[2] = vtx.word1.DST_SEL_Z();
+         inst->dst.sel[3] = vtx.word1.DST_SEL_W();
 
-         inst->useConstFields = vtx.word1.USE_CONST_FIELDS;
-         inst->dataFormat = vtx.word1.DATA_FORMAT;
-         inst->numFormat = vtx.word1.NUM_FORMAT_ALL;
-         inst->formatComp = vtx.word1.FORMAT_COMP_ALL;
-         inst->srfMode = vtx.word1.SRF_MODE_ALL;
-         inst->endian = vtx.word2.ENDIAN_SWAP;
+         inst->useConstFields = vtx.word1.USE_CONST_FIELDS();
+         inst->dataFormat = vtx.word1.DATA_FORMAT();
+         inst->numFormat = vtx.word1.NUM_FORMAT_ALL();
+         inst->formatComp = vtx.word1.FORMAT_COMP_ALL();
+         inst->srfMode = vtx.word1.SRF_MODE_ALL();
+         inst->endian = vtx.word2.ENDIAN_SWAP();
 
-         inst->offset = vtx.word2.OFFSET;
-         inst->constBufNoStride = vtx.word2.CONST_BUF_NO_STRIDE;
-         inst->altConst = vtx.word2.ALT_CONST;
+         inst->offset = vtx.word2.OFFSET();
+         inst->constBufNoStride = vtx.word2.CONST_BUF_NO_STRIDE();
+         inst->altConst = vtx.word2.ALT_CONST();
 
-         inst->megaFetch = vtx.word2.MEGA_FETCH;
-         inst->megaFetchCount = vtx.word0.MEGA_FETCH_COUNT;
+         inst->megaFetch = vtx.word2.MEGA_FETCH();
+         inst->megaFetchCount = vtx.word0.MEGA_FETCH_COUNT();
          parent->clause.emplace_back(inst);
       }
 
@@ -152,7 +152,7 @@ static bool
 decodeNormal(DecodeState &state, const ControlFlowInst &inst)
 {
    auto result = true;
-   auto id = inst.word1.CF_INST;
+   auto id = inst.word1.CF_INST();
    auto name = getInstructionName(id);
 
    switch (id) {
@@ -170,16 +170,16 @@ decodeNormal(DecodeState &state, const ControlFlowInst &inst)
 
    cf->id = id;
    cf->addr = inst.word0.ADDR;
-   cf->popCount = inst.word1.POP_COUNT;
-   cf->callCount = inst.word1.CALL_COUNT;
-   cf->constant = inst.word1.CF_CONST;
-   cf->cond = inst.word1.COND;
-   cf->barrier = !!inst.word1.BARRIER;
-   cf->validPixelMode = !!inst.word1.VALID_PIXEL_MODE;
-   cf->wholeQuadMode = !!inst.word1.WHOLE_QUAD_MODE;
+   cf->popCount = inst.word1.POP_COUNT();
+   cf->callCount = inst.word1.CALL_COUNT();
+   cf->constant = inst.word1.CF_CONST();
+   cf->cond = inst.word1.COND();
+   cf->barrier = !!inst.word1.BARRIER();
+   cf->validPixelMode = !!inst.word1.VALID_PIXEL_MODE();
+   cf->wholeQuadMode = !!inst.word1.WHOLE_QUAD_MODE();
 
    auto addr = inst.word0.ADDR;
-   auto count = (inst.word1.COUNT + 1) | (inst.word1.COUNT_3 << 3);
+   auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
 
    // Decode instruction clause
    switch (id) {
@@ -199,7 +199,7 @@ decodeNormal(DecodeState &state, const ControlFlowInst &inst)
 static bool
 decodeExport(DecodeState &state, const ControlFlowInst &cf)
 {
-   auto id = cf.exp.word1.CF_INST;
+   auto id = cf.exp.word1.CF_INST();
    auto name = getInstructionName(id);
 
    auto inst = new shadir::ExportInstruction {};
@@ -207,27 +207,27 @@ decodeExport(DecodeState &state, const ControlFlowInst &cf)
    inst->name = name;
 
    inst->id = id;
-   inst->arrayBase = cf.exp.word0.ARRAY_BASE;
-   inst->exportType = cf.exp.word0.TYPE;
-   inst->rw.id = cf.exp.word0.RW_GPR;
-   inst->rw.rel = cf.exp.word0.RW_REL;
-   inst->index = cf.exp.word0.INDEX_GPR;
-   inst->elemSize = cf.exp.word0.ELEM_SIZE;
-   inst->burstCount = cf.exp.word1.BURST_COUNT;
-   inst->validPixelMode = !!cf.exp.word1.VALID_PIXEL_MODE;
-   inst->wholeQuadMode = !!cf.exp.word1.WHOLE_QUAD_MODE;
-   inst->barrier = !!cf.exp.word1.BARRIER;
+   inst->arrayBase = cf.exp.word0.ARRAY_BASE();
+   inst->exportType = cf.exp.word0.TYPE();
+   inst->rw.id = cf.exp.word0.RW_GPR();
+   inst->rw.rel = cf.exp.word0.RW_REL();
+   inst->index = cf.exp.word0.INDEX_GPR();
+   inst->elemSize = cf.exp.word0.ELEM_SIZE();
+   inst->burstCount = cf.exp.word1.BURST_COUNT();
+   inst->validPixelMode = !!cf.exp.word1.VALID_PIXEL_MODE();
+   inst->wholeQuadMode = !!cf.exp.word1.WHOLE_QUAD_MODE();
+   inst->barrier = !!cf.exp.word1.BARRIER();
 
    if (id == SQ_CF_INST_EXP || id == SQ_CF_INST_EXP_DONE) {
       inst->isSemantic = true;
-      inst->srcSel[0] = cf.exp.swiz.SRC_SEL_X;
-      inst->srcSel[1] = cf.exp.swiz.SRC_SEL_Y;
-      inst->srcSel[2] = cf.exp.swiz.SRC_SEL_Z;
-      inst->srcSel[3] = cf.exp.swiz.SRC_SEL_W;
+      inst->srcSel[0] = cf.exp.swiz.SRC_SEL_X();
+      inst->srcSel[1] = cf.exp.swiz.SRC_SEL_Y();
+      inst->srcSel[2] = cf.exp.swiz.SRC_SEL_Z();
+      inst->srcSel[3] = cf.exp.swiz.SRC_SEL_W();
    } else {
       inst->isSemantic = false;
-      inst->arraySize = cf.exp.buf.ARRAY_SIZE;
-      inst->compMask = cf.exp.buf.COMP_MASK;
+      inst->arraySize = cf.exp.buf.ARRAY_SIZE();
+      inst->compMask = cf.exp.buf.COMP_MASK();
    }
 
    state.shader->exports.push_back(inst);
@@ -280,28 +280,28 @@ decodeAluClause(DecodeState &state, shadir::CfAluInstruction *parent, uint32_t a
          auto &inst = group[instructionCount - 1];
          auto srcCount = 0u;
 
-         if (inst.word1.ENCODING == SQ_ALU_OP2) {
-            srcCount = getInstructionNumSrcs(inst.op2.ALU_INST);
+         if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+            srcCount = getInstructionNumSrcs(inst.op2.ALU_INST());
          } else {
-            srcCount = getInstructionNumSrcs(inst.op3.ALU_INST);
+            srcCount = getInstructionNumSrcs(inst.op3.ALU_INST());
          }
 
-         if (srcCount > 0 && inst.word0.SRC0_SEL == SQ_ALU_SRC_LITERAL) {
+         if (srcCount > 0 && inst.word0.SRC0_SEL() == SQ_ALU_SRC_LITERAL) {
             literalCount = std::max(literalCount,
-                                    static_cast<unsigned>(inst.word0.SRC0_CHAN) + 1u);
+                                    static_cast<unsigned>(inst.word0.SRC0_CHAN()) + 1u);
          }
 
-         if (srcCount > 1 && inst.word0.SRC1_SEL == SQ_ALU_SRC_LITERAL) {
+         if (srcCount > 1 && inst.word0.SRC1_SEL() == SQ_ALU_SRC_LITERAL) {
             literalCount = std::max(literalCount,
-                                    static_cast<unsigned>(inst.word0.SRC1_CHAN) + 1u);
+                                    static_cast<unsigned>(inst.word0.SRC1_CHAN()) + 1u);
          }
 
-         if (srcCount > 2 && inst.op3.SRC2_SEL == SQ_ALU_SRC_LITERAL) {
+         if (srcCount > 2 && inst.op3.SRC2_SEL() == SQ_ALU_SRC_LITERAL) {
             literalCount = std::max(literalCount,
-                                    static_cast<unsigned>(inst.op3.SRC2_CHAN) + 1u);
+                                    static_cast<unsigned>(inst.op3.SRC2_CHAN()) + 1u);
          }
 
-         if (inst.word0.LAST) {
+         if (inst.word0.LAST()) {
             break;
          }
       }
@@ -315,14 +315,14 @@ decodeAluClause(DecodeState &state, shadir::CfAluInstruction *parent, uint32_t a
          auto srcCount = 0u;
          SQ_ALU_FLAGS flags;
 
-         if (inst.word1.ENCODING == SQ_ALU_OP2) {
-            name = getInstructionName(inst.op2.ALU_INST);
-            flags = getInstructionFlags(inst.op2.ALU_INST);
-            srcCount = getInstructionNumSrcs(inst.op2.ALU_INST);
+         if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+            name = getInstructionName(inst.op2.ALU_INST());
+            flags = getInstructionFlags(inst.op2.ALU_INST());
+            srcCount = getInstructionNumSrcs(inst.op2.ALU_INST());
          } else {
-            name = getInstructionName(inst.op3.ALU_INST);
-            flags = getInstructionFlags(inst.op3.ALU_INST);
-            srcCount = getInstructionNumSrcs(inst.op3.ALU_INST);
+            name = getInstructionName(inst.op3.ALU_INST());
+            flags = getInstructionFlags(inst.op3.ALU_INST());
+            srcCount = getInstructionNumSrcs(inst.op3.ALU_INST());
          }
 
          // Find execution scalar unit
@@ -331,11 +331,11 @@ decodeAluClause(DecodeState &state, shadir::CfAluInstruction *parent, uint32_t a
          if (isTranscendentalOnly(flags)) {
             unit = SQ_CHAN_T;
          } else if (isVectorOnly(flags)) {
-            unit = inst.word1.DST_CHAN;
-         } else if (units[inst.word1.DST_CHAN]) {
+            unit = inst.word1.DST_CHAN();
+         } else if (units[inst.word1.DST_CHAN()]) {
             unit = SQ_CHAN_T;
          } else {
-            unit = inst.word1.DST_CHAN;
+            unit = inst.word1.DST_CHAN();
          }
 
          if (units[unit]) {
@@ -352,23 +352,23 @@ decodeAluClause(DecodeState &state, shadir::CfAluInstruction *parent, uint32_t a
          alu->flags = flags;
          alu->srcCount = srcCount;
 
-         alu->encoding = inst.word1.ENCODING;
+         alu->encoding = inst.word1.ENCODING();
          alu->unit = static_cast<SQ_CHAN>(unit);
          alu->parent = parent;
-         alu->bankSwizzle = inst.word1.BANK_SWIZZLE;
-         alu->predSel = inst.word0.PRED_SEL;
-         alu->indexMode = inst.word0.INDEX_MODE;
+         alu->bankSwizzle = inst.word1.BANK_SWIZZLE();
+         alu->predSel = inst.word0.PRED_SEL();
+         alu->indexMode = inst.word0.INDEX_MODE();
 
-         if (inst.word1.ENCODING == SQ_ALU_OP2) {
-            alu->op2 = inst.op2.ALU_INST;
-            alu->updateExecuteMask = inst.op2.UPDATE_EXECUTE_MASK;
-            alu->updatePredicate = inst.op2.UPDATE_PRED;
-            alu->writeMask = inst.op2.WRITE_MASK;
-            alu->outputModifier = inst.op2.OMOD;
-            src0_abs = !!inst.op2.SRC0_ABS;
-            src1_abs = !!inst.op2.SRC1_ABS;
+         if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+            alu->op2 = inst.op2.ALU_INST();
+            alu->updateExecuteMask = inst.op2.UPDATE_EXECUTE_MASK();
+            alu->updatePredicate = inst.op2.UPDATE_PRED();
+            alu->writeMask = inst.op2.WRITE_MASK();
+            alu->outputModifier = inst.op2.OMOD();
+            src0_abs = !!inst.op2.SRC0_ABS();
+            src1_abs = !!inst.op2.SRC1_ABS();
          } else {
-            alu->op3 = inst.op3.ALU_INST;
+            alu->op3 = inst.op3.ALU_INST();
             alu->encoding = SQ_ALU_OP3;
             src0_abs = false;
             src1_abs = false;
@@ -385,10 +385,10 @@ decodeAluClause(DecodeState &state, shadir::CfAluInstruction *parent, uint32_t a
          // Decode sources
          if (alu->srcCount > 0) {
             auto &src = alu->src[0];
-            src.sel = inst.word0.SRC0_SEL;
-            src.rel = inst.word0.SRC0_REL;
-            src.chan = inst.word0.SRC0_CHAN;
-            src.negate = inst.word0.SRC0_NEG;
+            src.sel = inst.word0.SRC0_SEL();
+            src.rel = inst.word0.SRC0_REL();
+            src.chan = inst.word0.SRC0_CHAN();
+            src.negate = inst.word0.SRC0_NEG();
             src.absolute = src0_abs;
             src.type = srcType;
 
@@ -399,10 +399,10 @@ decodeAluClause(DecodeState &state, shadir::CfAluInstruction *parent, uint32_t a
 
          if (alu->srcCount > 1) {
             auto &src = alu->src[1];
-            src.sel = inst.word0.SRC1_SEL;
-            src.rel = inst.word0.SRC1_REL;
-            src.chan = inst.word0.SRC1_CHAN;
-            src.negate = inst.word0.SRC1_NEG;
+            src.sel = inst.word0.SRC1_SEL();
+            src.rel = inst.word0.SRC1_REL();
+            src.chan = inst.word0.SRC1_CHAN();
+            src.negate = inst.word0.SRC1_NEG();
             src.absolute = src1_abs;
             src.type = srcType;
 
@@ -413,10 +413,10 @@ decodeAluClause(DecodeState &state, shadir::CfAluInstruction *parent, uint32_t a
 
          if (alu->srcCount > 2) {
             auto &src = alu->src[2];
-            src.sel = inst.op3.SRC2_SEL;
-            src.rel = inst.op3.SRC2_REL;
-            src.chan = inst.op3.SRC2_CHAN;
-            src.negate = inst.op3.SRC2_NEG;
+            src.sel = inst.op3.SRC2_SEL();
+            src.rel = inst.op3.SRC2_REL();
+            src.chan = inst.op3.SRC2_CHAN();
+            src.negate = inst.op3.SRC2_NEG();
             src.absolute = false;
             src.type = srcType;
 
@@ -426,10 +426,10 @@ decodeAluClause(DecodeState &state, shadir::CfAluInstruction *parent, uint32_t a
          }
 
          // Decode dest
-         alu->dst.sel = inst.word1.DST_GPR;
-         alu->dst.rel = inst.word1.DST_REL;
-         alu->dst.chan = inst.word1.DST_CHAN;
-         alu->dst.clamp = inst.word1.CLAMP;
+         alu->dst.sel = inst.word1.DST_GPR();
+         alu->dst.rel = inst.word1.DST_REL();
+         alu->dst.chan = inst.word1.DST_CHAN();
+         alu->dst.clamp = inst.word1.CLAMP();
 
          if (flags & SQ_ALU_FLAG_INT_OUT) {
             alu->dst.type = shadir::ValueType::Int;
@@ -454,23 +454,23 @@ static bool
 decodeAlu(DecodeState &state, const ControlFlowInst &cf)
 {
    auto parent = new shadir::CfAluInstruction {};
-   parent->id = cf.alu.word1.CF_INST;
-   parent->name = getInstructionName(cf.alu.word1.CF_INST);
+   parent->id = cf.alu.word1.CF_INST();
+   parent->name = getInstructionName(cf.alu.word1.CF_INST());
    parent->cfPC = state.cfPC;
-   parent->addr = cf.alu.word0.ADDR;
-   parent->kcache[0].bank = cf.alu.word0.KCACHE_BANK0;
-   parent->kcache[0].mode = cf.alu.word0.KCACHE_MODE0;
-   parent->kcache[0].addr = cf.alu.word1.KCACHE_ADDR0;
-   parent->kcache[1].bank = cf.alu.word0.KCACHE_BANK1;
-   parent->kcache[1].mode = cf.alu.word1.KCACHE_MODE1;
-   parent->kcache[1].addr = cf.alu.word1.KCACHE_ADDR1;
-   parent->altConst = cf.alu.word1.ALT_CONST;
-   parent->wholeQuadMode = cf.alu.word1.WHOLE_QUAD_MODE;
-   parent->barrier = cf.alu.word1.BARRIER;
+   parent->addr = cf.alu.word0.ADDR();
+   parent->kcache[0].bank = cf.alu.word0.KCACHE_BANK0();
+   parent->kcache[0].mode = cf.alu.word0.KCACHE_MODE0();
+   parent->kcache[0].addr = cf.alu.word1.KCACHE_ADDR0();
+   parent->kcache[1].bank = cf.alu.word0.KCACHE_BANK1();
+   parent->kcache[1].mode = cf.alu.word1.KCACHE_MODE1();
+   parent->kcache[1].addr = cf.alu.word1.KCACHE_ADDR1();
+   parent->altConst = cf.alu.word1.ALT_CONST();
+   parent->wholeQuadMode = cf.alu.word1.WHOLE_QUAD_MODE();
+   parent->barrier = cf.alu.word1.BARRIER();
    state.shader->code.emplace_back(parent);
 
-   auto addr = cf.alu.word0.ADDR;
-   auto count = cf.alu.word1.COUNT + 1;
+   auto addr = cf.alu.word0.ADDR();
+   auto count = cf.alu.word1.COUNT() + 1;
    return decodeAluClause(state, parent, addr, count);
 }
 
@@ -490,7 +490,7 @@ decode(Shader &shader, const gsl::span<const uint8_t> &binary)
 
    for (auto i = 0; i < binary.size(); i += sizeof(ControlFlowInst)) {
       auto cf = *reinterpret_cast<const ControlFlowInst *>(binary.data() + i);
-      auto id = cf.word1.CF_INST;
+      auto id = cf.word1.CF_INST();
 
       switch (cf.CF_INST_TYPE) {
       case SQ_CF_INST_TYPE_NORMAL:
@@ -506,7 +506,7 @@ decode(Shader &shader, const gsl::span<const uint8_t> &binary)
       }
 
       if (cf.CF_INST_TYPE == SQ_CF_INST_TYPE_NORMAL || cf.CF_INST_TYPE == SQ_CF_INST_TYPE_EXPORT) {
-         if (cf.word1.END_OF_PROGRAM) {
+         if (cf.word1.END_OF_PROGRAM()) {
             break;
          }
       }
