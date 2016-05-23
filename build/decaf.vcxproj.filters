@@ -1760,6 +1760,9 @@
     <ClInclude Include="..\src\cpu\cpu_registers.h">
       <Filter>Header Files\cpu</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\bitfield.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

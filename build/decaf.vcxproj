@@ -625,6 +625,7 @@
     <ClInclude Include="..\src\utils\be_volatile.h" />
     <ClInclude Include="..\src\utils\binaryfile.h" />
     <ClInclude Include="..\src\utils\binaryview.h" />
+    <ClInclude Include="..\src\utils\bitfield.h" />
     <ClInclude Include="..\src\utils\bitutils.h" />
     <ClInclude Include="..\src\utils\bit_cast.h" />
     <ClInclude Include="..\src\utils\byte_swap.h" />
