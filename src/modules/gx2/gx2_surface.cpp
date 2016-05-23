@@ -227,10 +227,16 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
 
    // Update register values
    memset(&colorBuffer->regs, 0, sizeof(colorBuffer->regs));
-   cb_color_info.FORMAT = GX2GetSurfaceColorFormat(colorBuffer->surface.format);
+   auto format = GX2GetSurfaceColorFormat(colorBuffer->surface.format);
+   auto pitch = (colorBuffer->surface.pitch / latte::MicroTileWidth) - 1;
+   auto slice = ((colorBuffer->surface.pitch * colorBuffer->surface.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
 
-   cb_color_size.PITCH_TILE_MAX = (colorBuffer->surface.pitch / latte::MicroTileWidth) - 1;
-   cb_color_size.SLICE_TILE_MAX = ((colorBuffer->surface.pitch * colorBuffer->surface.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
+   cb_color_info = cb_color_info
+      .FORMAT().set(format);
+
+   cb_color_size = cb_color_size
+      .PITCH_TILE_MAX().set(pitch)
+      .SLICE_TILE_MAX().set(slice);
 
    // TODO: Set more regs!
 

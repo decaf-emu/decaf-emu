@@ -287,13 +287,14 @@ GX2InitBlendControlReg(GX2BlendControlReg *reg,
 {
    auto cb_blend_control = reg->cb_blend_control.value();
    reg->target = target;
-   cb_blend_control.COLOR_SRCBLEND = static_cast<latte::CB_BLEND_FUNC>(colorSrcBlend);
-   cb_blend_control.COLOR_DESTBLEND = static_cast<latte::CB_BLEND_FUNC>(colorDstBlend);
-   cb_blend_control.COLOR_COMB_FCN = static_cast<latte::CB_COMB_FUNC>(colorCombine);
-   cb_blend_control.SEPARATE_ALPHA_BLEND = useAlphaBlend;
-   cb_blend_control.ALPHA_SRCBLEND = static_cast<latte::CB_BLEND_FUNC>(alphaSrcBlend);
-   cb_blend_control.ALPHA_DESTBLEND = static_cast<latte::CB_BLEND_FUNC>(alphaDstBlend);
-   cb_blend_control.ALPHA_COMB_FCN = static_cast<latte::CB_COMB_FUNC>(alphaCombine);
+   cb_blend_control = cb_blend_control
+      .COLOR_SRCBLEND().set(static_cast<latte::CB_BLEND_FUNC>(colorSrcBlend))
+      .COLOR_DESTBLEND().set(static_cast<latte::CB_BLEND_FUNC>(colorDstBlend))
+      .COLOR_COMB_FCN().set(static_cast<latte::CB_COMB_FUNC>(colorCombine))
+      .SEPARATE_ALPHA_BLEND().set(useAlphaBlend)
+      .ALPHA_SRCBLEND().set(static_cast<latte::CB_BLEND_FUNC>(alphaSrcBlend))
+      .ALPHA_DESTBLEND().set(static_cast<latte::CB_BLEND_FUNC>(alphaDstBlend))
+      .ALPHA_COMB_FCN().set(static_cast<latte::CB_COMB_FUNC>(alphaCombine));
    reg->cb_blend_control = cb_blend_control;
 }
 
@@ -311,13 +312,13 @@ GX2GetBlendControlReg(GX2BlendControlReg *reg,
    *target = reg->target;
 
    auto cb_blend_control = reg->cb_blend_control.value();
-   *colorSrcBlend = static_cast<GX2BlendMode>(cb_blend_control.COLOR_SRCBLEND);
-   *colorDstBlend = static_cast<GX2BlendMode>(cb_blend_control.COLOR_DESTBLEND);
-   *colorCombine = static_cast<GX2BlendCombineMode>(cb_blend_control.COLOR_COMB_FCN);
-   *useAlphaBlend = cb_blend_control.SEPARATE_ALPHA_BLEND;
-   *alphaSrcBlend = static_cast<GX2BlendMode>(cb_blend_control.ALPHA_SRCBLEND);
-   *alphaDstBlend = static_cast<GX2BlendMode>(cb_blend_control.ALPHA_DESTBLEND);
-   *alphaCombine = static_cast<GX2BlendCombineMode>(cb_blend_control.ALPHA_COMB_FCN);
+   *colorSrcBlend = static_cast<GX2BlendMode>(cb_blend_control.COLOR_SRCBLEND().get());
+   *colorDstBlend = static_cast<GX2BlendMode>(cb_blend_control.COLOR_DESTBLEND().get());
+   *colorCombine = static_cast<GX2BlendCombineMode>(cb_blend_control.COLOR_COMB_FCN().get());
+   *useAlphaBlend = cb_blend_control.SEPARATE_ALPHA_BLEND().get();
+   *alphaSrcBlend = static_cast<GX2BlendMode>(cb_blend_control.ALPHA_SRCBLEND().get());
+   *alphaDstBlend = static_cast<GX2BlendMode>(cb_blend_control.ALPHA_DESTBLEND().get());
+   *alphaCombine = static_cast<GX2BlendCombineMode>(cb_blend_control.ALPHA_COMB_FCN().get());
 }
 
 void
@@ -351,15 +352,17 @@ GX2InitColorControlReg(GX2ColorControlReg *reg,
                        BOOL colorWriteEnable)
 {
    auto cb_color_control = reg->cb_color_control.value();
-   cb_color_control.ROP3 = rop3;
-   cb_color_control.TARGET_BLEND_ENABLE = targetBlendEnable;
-   cb_color_control.MULTIWRITE_ENABLE = multiWriteEnable;
+   auto specialOp = latte::CB_SPECIAL_DISABLE;
 
    if (colorWriteEnable) {
-      cb_color_control.SPECIAL_OP = latte::CB_SPECIAL_NORMAL;
-   } else {
-      cb_color_control.SPECIAL_OP = latte::CB_SPECIAL_DISABLE;
+      specialOp = latte::CB_SPECIAL_NORMAL;
    }
+
+   cb_color_control = cb_color_control
+      .ROP3().set(rop3)
+      .TARGET_BLEND_ENABLE().set(targetBlendEnable)
+      .MULTIWRITE_ENABLE().set(multiWriteEnable)
+      .SPECIAL_OP().set(specialOp);
 
    reg->cb_color_control = cb_color_control;
 }
@@ -372,11 +375,11 @@ GX2GetColorControlReg(GX2ColorControlReg *reg,
                       be_val<BOOL> *colorWriteEnable)
 {
    auto cb_color_control = reg->cb_color_control.value();
-   *rop3 = static_cast<GX2LogicOp>(cb_color_control.ROP3);
-   *targetBlendEnable = cb_color_control.TARGET_BLEND_ENABLE;
-   *multiWriteEnable = cb_color_control.MULTIWRITE_ENABLE;
+   *rop3 = static_cast<GX2LogicOp>(cb_color_control.ROP3().get());
+   *targetBlendEnable = cb_color_control.TARGET_BLEND_ENABLE();
+   *multiWriteEnable = cb_color_control.MULTIWRITE_ENABLE();
 
-   if (cb_color_control.SPECIAL_OP == latte::CB_SPECIAL_DISABLE) {
+   if (cb_color_control.SPECIAL_OP() == latte::CB_SPECIAL_DISABLE) {
       *colorWriteEnable = FALSE;
    } else {
       *colorWriteEnable = TRUE;
@@ -946,6 +949,7 @@ GX2SetTargetChannelMasks(GX2ChannelMask mask0,
                                 mask5,
                                 mask6,
                                 mask7);
+
    GX2SetTargetChannelMasksReg(&reg);
 }
 
@@ -961,14 +965,17 @@ GX2InitTargetChannelMasksReg(GX2TargetChannelMaskReg *reg,
                              GX2ChannelMask mask7)
 {
    auto cb_target_mask = reg->cb_target_mask.value();
-   cb_target_mask.TARGET0_ENABLE = mask0;
-   cb_target_mask.TARGET1_ENABLE = mask1;
-   cb_target_mask.TARGET2_ENABLE = mask2;
-   cb_target_mask.TARGET3_ENABLE = mask3;
-   cb_target_mask.TARGET4_ENABLE = mask4;
-   cb_target_mask.TARGET5_ENABLE = mask5;
-   cb_target_mask.TARGET6_ENABLE = mask6;
-   cb_target_mask.TARGET7_ENABLE = mask7;
+
+   cb_target_mask = cb_target_mask
+      .TARGET0_ENABLE().set(mask0)
+      .TARGET1_ENABLE().set(mask1)
+      .TARGET2_ENABLE().set(mask2)
+      .TARGET3_ENABLE().set(mask3)
+      .TARGET4_ENABLE().set(mask4)
+      .TARGET5_ENABLE().set(mask5)
+      .TARGET6_ENABLE().set(mask6)
+      .TARGET7_ENABLE().set(mask7);
+
    reg->cb_target_mask = cb_target_mask;
 }
 
@@ -984,14 +991,14 @@ GX2GetTargetChannelMasksReg(GX2TargetChannelMaskReg *reg,
                             be_val<GX2ChannelMask> *mask7)
 {
    auto cb_target_mask = reg->cb_target_mask.value();
-   *mask0 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET0_ENABLE);
-   *mask1 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET1_ENABLE);
-   *mask2 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET2_ENABLE);
-   *mask3 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET3_ENABLE);
-   *mask4 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET4_ENABLE);
-   *mask5 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET5_ENABLE);
-   *mask6 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET6_ENABLE);
-   *mask7 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET7_ENABLE);
+   *mask0 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET0_ENABLE().get());
+   *mask1 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET1_ENABLE().get());
+   *mask2 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET2_ENABLE().get());
+   *mask3 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET3_ENABLE().get());
+   *mask4 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET4_ENABLE().get());
+   *mask5 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET5_ENABLE().get());
+   *mask6 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET6_ENABLE().get());
+   *mask7 = static_cast<GX2ChannelMask>(cb_target_mask.TARGET7_ENABLE().get());
 }
 
 void

@@ -235,7 +235,8 @@ private:
    template<typename Type>
    Type getRegister(uint32_t id)
    {
-      return Type { mRegisters[id / 4] };
+      static_assert(sizeof(Type) == 4, "Register storage must be a uint32_t");
+      return *reinterpret_cast<Type *>(&mRegisters[id / 4]);
    }
 
 private:

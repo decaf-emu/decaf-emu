@@ -70,13 +70,12 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
                          latte::CB_COLORN_SIZE cb_color_size,
                          latte::CB_COLORN_INFO cb_color_info)
 {
-   auto buffer = &mColorBuffers[cb_color_base.value ^ cb_color_size.value ^ cb_color_info.value];
+   auto buffer = &mColorBuffers[cb_color_base.BASE_256B ^ cb_color_size.value ^ cb_color_info.value];
    buffer->cb_color_base = cb_color_base;
 
    if (!buffer->object) {
-      auto format = cb_color_info.FORMAT;
-      auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX;
-      auto slice_tile_max = cb_color_size.SLICE_TILE_MAX;
+      auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX();
+      auto slice_tile_max = cb_color_size.SLICE_TILE_MAX();
 
       auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::MicroTileWidth);
       auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
@@ -102,7 +101,6 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
    buffer->db_depth_base = db_depth_base;
 
    if (!buffer->object) {
-      auto format = db_depth_info.FORMAT;
       auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX;
       auto slice_tile_max = db_depth_size.SLICE_TILE_MAX;
 
@@ -374,18 +372,18 @@ void GLDriver::setRegister(latte::Register reg, uint32_t value)
    case latte::Register::CB_BLEND7_CONTROL:
    {
       auto target = (reg - latte::Register::CB_BLEND0_CONTROL) / 4;
-      auto cb_blend_control = latte::CB_BLENDN_CONTROL { value };
-      auto dstRGB = getBlendFunc(cb_blend_control.COLOR_DESTBLEND);
-      auto srcRGB = getBlendFunc(cb_blend_control.COLOR_SRCBLEND);
-      auto modeRGB = getBlendEquation(cb_blend_control.COLOR_COMB_FCN);
+      auto cb_blend_control = latte::CB_BLENDN_CONTROL::get(value);
+      auto dstRGB = getBlendFunc(cb_blend_control.COLOR_DESTBLEND());
+      auto srcRGB = getBlendFunc(cb_blend_control.COLOR_SRCBLEND());
+      auto modeRGB = getBlendEquation(cb_blend_control.COLOR_COMB_FCN());
 
-      if (!cb_blend_control.SEPARATE_ALPHA_BLEND) {
+      if (!cb_blend_control.SEPARATE_ALPHA_BLEND()) {
          gl::glBlendFunci(target, srcRGB, dstRGB);
          gl::glBlendEquationi(target, modeRGB);
       } else {
-         auto dstAlpha = getBlendFunc(cb_blend_control.ALPHA_DESTBLEND);
-         auto srcAlpha = getBlendFunc(cb_blend_control.ALPHA_SRCBLEND);
-         auto modeAlpha = getBlendEquation(cb_blend_control.ALPHA_COMB_FCN);
+         auto dstAlpha = getBlendFunc(cb_blend_control.ALPHA_DESTBLEND());
+         auto srcAlpha = getBlendFunc(cb_blend_control.ALPHA_SRCBLEND());
+         auto modeAlpha = getBlendEquation(cb_blend_control.ALPHA_COMB_FCN());
          gl::glBlendFuncSeparatei(target, srcRGB, dstRGB, srcAlpha, dstAlpha);
          gl::glBlendEquationSeparatei(target, modeRGB, modeAlpha);
       }
@@ -393,10 +391,10 @@ void GLDriver::setRegister(latte::Register reg, uint32_t value)
 
    case latte::Register::CB_COLOR_CONTROL:
    {
-      auto cb_color_control = latte::CB_COLOR_CONTROL { value };
+      auto cb_color_control = latte::CB_COLOR_CONTROL::get(value);
 
       for (auto i = 0u; i < 8; ++i) {
-         if (cb_color_control.TARGET_BLEND_ENABLE & (1 << i)) {
+         if (cb_color_control.TARGET_BLEND_ENABLE() & (1 << i)) {
             gl::glEnablei(gl::GL_BLEND, i);
          } else {
             gl::glDisablei(gl::GL_BLEND, i);
@@ -406,7 +404,7 @@ void GLDriver::setRegister(latte::Register reg, uint32_t value)
 
    case latte::Register::CB_TARGET_MASK:
    {
-      auto cb_target_mask = latte::CB_TARGET_MASK { value };
+      auto cb_target_mask = latte::CB_TARGET_MASK::get(value);
       auto mask = cb_target_mask.value;
 
       for (auto i = 0; i < 8; ++i, mask >>= 4) {
