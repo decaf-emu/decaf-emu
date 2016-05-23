@@ -15,12 +15,12 @@ struct Bitfield
       static const auto MaxValue = static_cast<ValueType>((static_cast<StorageType>(1) << Bits) - 1);
       static const auto Mask = ((static_cast<StorageType>(1) << Bits) - 1) << Position;
 
-      ValueType get() const
+      constexpr ValueType get() const
       {
          return static_cast<ValueType>((parent.value & Mask) >> Position);
       }
 
-      BitfieldType set(ValueType value)
+      inline BitfieldType set(ValueType value)
       {
          assert(value >= MinValue);
          assert(value <= MaxValue);
@@ -74,4 +74,4 @@ struct Bitfield
    static_assert(std::is_integral<StorageType>::value, "Bitfield storage type must be an integer type");
 };
 
-#define BITFIELD_ENTRY(Pos, Size, Type, Name) Field<Type, Pos, Size> Name() const { return { *this }; }
+#define BITFIELD_ENTRY(Pos, Size, Type, Name) inline Field<Type, Pos, Size> Name() const { return { *this }; }
