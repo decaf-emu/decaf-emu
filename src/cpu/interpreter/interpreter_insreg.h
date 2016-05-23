@@ -1,6 +1,7 @@
 #pragma once
 #include "../state.h"
 #include "../instruction.h"
+#include "../instructiondata.h"
 #include "../instructionid.h"
 
 namespace cpu

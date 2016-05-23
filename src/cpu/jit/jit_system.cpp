@@ -9,12 +9,6 @@ namespace cpu
 namespace jit
 {
 
-static SprEncoding
-decodeSPR(Instruction instr)
-{
-   return static_cast<SprEncoding>(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
-}
-
 // Enforce In-Order Execution of I/O
 static bool
 eieio(PPCEmuAssembler& a, Instruction instr)
@@ -40,7 +34,8 @@ isync(PPCEmuAssembler& a, Instruction instr)
 static bool
 mfspr(PPCEmuAssembler& a, Instruction instr)
 {
-   auto spr = decodeSPR(instr);
+   auto spr = static_cast<SprEncoding>(decodeSPR(instr));
+
    switch (spr) {
    case SprEncoding::XER:
       a.mov(a.eax, a.ppcxer);

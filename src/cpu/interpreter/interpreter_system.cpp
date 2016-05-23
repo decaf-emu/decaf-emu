@@ -6,12 +6,6 @@
 #include "utils/align.h"
 #include "utils/log.h"
 
-static SprEncoding
-decodeSPR(Instruction instr)
-{
-   return static_cast<SprEncoding>(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
-}
-
 /*
 // System Linkage
 INS(rfi, (), (), (), (opcd == 19, xo1 == 50), "")

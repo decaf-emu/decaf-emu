@@ -1757,6 +1757,9 @@
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_title.h">
       <Filter>Header Files\modules\nn_boss</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\cpu\cpu_registers.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

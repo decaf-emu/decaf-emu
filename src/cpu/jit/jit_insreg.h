@@ -2,6 +2,7 @@
 #include "../state.h"
 #include "../instruction.h"
 #include "../instructionid.h"
+#include "../instructiondata.h"
 #include "jit_internal.h"
 
 namespace cpu

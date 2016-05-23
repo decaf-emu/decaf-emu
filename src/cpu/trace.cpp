@@ -133,12 +133,6 @@ traceInit(ThreadState *state, size_t size)
 #endif
 }
 
-static SprEncoding
-decodeSPR(Instruction instr)
-{
-   return static_cast<SprEncoding>(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
-}
-
 static uint32_t
 getFieldStateField(Instruction instr, Field field)
 {

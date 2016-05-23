@@ -120,7 +120,8 @@ getFieldBitmask(Field field)
    return make_bitmask(getFieldStart(field), getFieldEnd(field));
 }
 
-uint32_t getFieldValue(const Field& field, Instruction instr)
+uint32_t
+getFieldValue(const Field& field, Instruction instr)
 {
    auto mask = getFieldBitmask(field);
    auto start = getFieldStart(field);
@@ -129,6 +130,12 @@ uint32_t getFieldValue(const Field& field, Instruction instr)
       res = ((res << 5) & 0x3E0) | ((res >> 5) & 0x1F);
    }
    return res;
+}
+
+SprEncoding
+decodeSPR(Instruction instr)
+{
+   return static_cast<SprEncoding>(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
 }
 
 InstructionData *

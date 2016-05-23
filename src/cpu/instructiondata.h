@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include "cpu_registers.h"
 #include "instruction.h"
 #include "instructionid.h"
 
@@ -93,6 +94,9 @@ getFieldWidth(Field field);
 
 uint32_t
 getFieldBitmask(Field field);
+
+SprEncoding
+decodeSPR(Instruction instr);
 
 template<InstructionID id>
 bool

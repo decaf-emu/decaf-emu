@@ -367,6 +367,7 @@
     <ClInclude Include="..\src\config.h" />
     <ClInclude Include="..\src\cpu\cpu.h" />
     <ClInclude Include="..\src\cpu\cpu_internal.h" />
+    <ClInclude Include="..\src\cpu\cpu_registers.h" />
     <ClInclude Include="..\src\cpu\disassembler.h" />
     <ClInclude Include="..\src\cpu\instruction.h" />
     <ClInclude Include="..\src\cpu\instructiondata.h" />
