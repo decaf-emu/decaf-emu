@@ -37,6 +37,32 @@ struct Bitfield
       BitfieldType parent;
    };
 
+   // Specialise for bool because of compiler warnings for static_cast<bool>(int)
+   template<unsigned Position, unsigned Bits>
+   struct Field<bool, Position, Bits>
+   {
+      static const auto Mask = ((static_cast<StorageType>(1) << Bits) - 1) << Position;
+
+      constexpr bool get() const
+      {
+         return !!((parent.value & Mask) >> Position);
+      }
+
+      inline BitfieldType set(bool value)
+      {
+         parent.value &= ~Mask;
+         parent.value |= static_cast<StorageType>(value ? 1 : 0) << Position;
+         return parent;
+      }
+
+      operator bool() const
+      {
+         return get();
+      }
+
+      BitfieldType parent;
+   };
+
    static BitfieldType get(StorageType value)
    {
       BitfieldType bitfield;
