@@ -130,6 +130,7 @@ struct AttributeBuffer
 struct Texture
 {
    gl::GLuint object = 0;
+   uint32_t words[7];
 };
 
 struct ScreenDrawData

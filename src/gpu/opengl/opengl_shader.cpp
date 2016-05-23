@@ -96,8 +96,8 @@ bool GLDriver::checkActiveShader()
    auto pgm_size_vs = getRegister<latte::SQ_PGM_SIZE_VS>(latte::Register::SQ_PGM_SIZE_VS);
    auto pgm_size_ps = getRegister<latte::SQ_PGM_SIZE_PS>(latte::Register::SQ_PGM_SIZE_PS);
 
-   if (mActiveShader &&
-       mActiveShader->fetch && mActiveShader->fetch->pgm_start_fs.PGM_START == pgm_start_fs.PGM_START
+   if (mActiveShader
+       && mActiveShader->fetch && mActiveShader->fetch->pgm_start_fs.PGM_START == pgm_start_fs.PGM_START
        && mActiveShader->vertex && mActiveShader->vertex->pgm_start_vs.PGM_START == pgm_start_vs.PGM_START
        && mActiveShader->pixel && mActiveShader->pixel->pgm_start_ps.PGM_START == pgm_start_ps.PGM_START) {
       // OpenGL shader matches latte shader
@@ -420,8 +420,8 @@ stridedMemcpy(void *src, void *dst, size_t size, size_t offset, size_t stride, l
 bool GLDriver::checkActiveAttribBuffers()
 {
    if (!mActiveShader
-       || !mActiveShader->fetch || !mActiveShader->fetch->attribs.size()
-       || !mActiveShader->vertex || !mActiveShader->vertex->object) {
+    || !mActiveShader->fetch || !mActiveShader->fetch->attribs.size()
+    || !mActiveShader->vertex || !mActiveShader->vertex->object) {
       return false;
    }
 

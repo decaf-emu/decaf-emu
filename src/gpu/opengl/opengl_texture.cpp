@@ -421,8 +421,19 @@ bool GLDriver::checkActiveTextures()
       auto &texture = mTextures[sq_tex_resource_word2.BASE_ADDRESS];
 
       if (texture.object) {
-         gl::glBindTextureUnit(i, texture.object);
-         continue;
+         if (texture.words[0] == sq_tex_resource_word0.value
+          && texture.words[1] == sq_tex_resource_word1.value
+          && texture.words[2] == sq_tex_resource_word2.value
+          && texture.words[3] == sq_tex_resource_word3.value
+          && texture.words[4] == sq_tex_resource_word4.value
+          && texture.words[5] == sq_tex_resource_word5.value
+          && texture.words[6] == sq_tex_resource_word6.value) {
+            gl::glBindTextureUnit(i, texture.object);
+            continue;
+         } else {
+            gl::glDeleteTextures(1, &texture.object);
+            texture.object = 0;
+         }
       }
 
       // Decode resource registers
@@ -571,6 +582,14 @@ bool GLDriver::checkActiveTextures()
 
       gl::glTextureParameteriv(texture.object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
       gl::glBindTextureUnit(i, texture.object);
+
+      texture.words[0] = sq_tex_resource_word0.value;
+      texture.words[1] = sq_tex_resource_word1.value;
+      texture.words[2] = sq_tex_resource_word2.value;
+      texture.words[3] = sq_tex_resource_word3.value;
+      texture.words[4] = sq_tex_resource_word4.value;
+      texture.words[5] = sq_tex_resource_word5.value;
+      texture.words[6] = sq_tex_resource_word6.value;
    }
 
    return true;
@@ -646,7 +665,9 @@ bool GLDriver::checkActiveSamplers()
       auto sq_tex_sampler_word1 = getRegister<latte::SQ_TEX_SAMPLER_WORD1_N>(latte::Register::SQ_TEX_SAMPLER_WORD1_0 + 4 * (i * 3));
       auto sq_tex_sampler_word2 = getRegister<latte::SQ_TEX_SAMPLER_WORD2_N>(latte::Register::SQ_TEX_SAMPLER_WORD2_0 + 4 * (i * 3));
 
-      if (sq_tex_sampler_word0.value == 0 && sq_tex_sampler_word1.value == 0 && sq_tex_sampler_word2.value == 0) {
+      if (sq_tex_sampler_word0.value == 0
+       && sq_tex_sampler_word1.value == 0
+       && sq_tex_sampler_word2.value == 0) {
          gl::glBindSampler(i, 0);
          continue;
       }
