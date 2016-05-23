@@ -34,7 +34,7 @@ externalproject_add(docopt
     INSTALL_COMMAND ""
     )
 externalproject_get_property(docopt BINARY_DIR)
-set(DOCOPT_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}docopt_s.a")
+set(DOCOPT_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}docopt.a")
 
 set(SPDLOG_DIR "libraries/spdlog")
 include_directories("${SPDLOG_DIR}/include")
@@ -69,12 +69,13 @@ externalproject_add(glbinding
         -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
         -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
         -DCMAKE_CXX_FLAGS:string=${CMAKE_CXX_FLAGS}
-        -DOPTION_BUILD_STATIC:string=on
+        -DBUILD_SHARED_LIBS:string=off
         -DOPTION_BUILD_TESTS:string=off
     INSTALL_COMMAND ""
     )
 externalproject_get_property(glbinding BINARY_DIR)
 set(GLBINDING_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding.a")
+include_directories("${BINARY_DIR}/source/glbinding/include")
 
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)

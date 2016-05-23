@@ -15,13 +15,13 @@ namespace coreinit
 {
 
 be_wfunc_ptr<void*, uint32_t>*
-sMEMAllocFromDefaultHeap;
+pMEMAllocFromDefaultHeap;
 
 be_wfunc_ptr<void*, uint32_t, int>*
-sMEMAllocFromDefaultHeapEx;
+pMEMAllocFromDefaultHeapEx;
 
 be_wfunc_ptr<void, void*>*
-sMEMFreeToDefaultHeap;
+pMEMFreeToDefaultHeap;
 
 static std::array<CommonHeap *, MEMBaseHeapType::Max>
 sMemArenas;
@@ -233,19 +233,19 @@ CoreFreeDefaultHeap()
    sSystemHeap = nullptr;
 
    // Free function pointers
-   if (sMEMAllocFromDefaultHeap) {
-      coreinit::internal::sysFree(sMEMAllocFromDefaultHeap);
-      sMEMAllocFromDefaultHeap = nullptr;
+   if (pMEMAllocFromDefaultHeap) {
+      coreinit::internal::sysFree(pMEMAllocFromDefaultHeap);
+      pMEMAllocFromDefaultHeap = nullptr;
    }
 
-   if (sMEMAllocFromDefaultHeapEx) {
-      coreinit::internal::sysFree(sMEMAllocFromDefaultHeap);
-      sMEMAllocFromDefaultHeap = nullptr;
+   if (pMEMAllocFromDefaultHeapEx) {
+      coreinit::internal::sysFree(pMEMAllocFromDefaultHeap);
+      pMEMAllocFromDefaultHeap = nullptr;
    }
 
-   if (sMEMFreeToDefaultHeap) {
-      coreinit::internal::sysFree(sMEMAllocFromDefaultHeap);
-      sMEMAllocFromDefaultHeap = nullptr;
+   if (pMEMFreeToDefaultHeap) {
+      coreinit::internal::sysFree(pMEMAllocFromDefaultHeap);
+      pMEMAllocFromDefaultHeap = nullptr;
    }
 }
 
@@ -257,9 +257,9 @@ Module::registerMembaseFunctions()
    RegisterKernelFunction(MEMGetBaseHeapHandle);
    RegisterKernelFunction(MEMSetBaseHeapHandle);
    RegisterKernelFunction(MEMGetArena);
-   RegisterKernelDataName("MEMAllocFromDefaultHeap", sMEMAllocFromDefaultHeap);
-   RegisterKernelDataName("MEMAllocFromDefaultHeapEx", sMEMAllocFromDefaultHeapEx);
-   RegisterKernelDataName("MEMFreeToDefaultHeap", sMEMFreeToDefaultHeap);
+   RegisterKernelDataName("MEMAllocFromDefaultHeap", pMEMAllocFromDefaultHeap);
+   RegisterKernelDataName("MEMAllocFromDefaultHeapEx", pMEMAllocFromDefaultHeapEx);
+   RegisterKernelDataName("MEMFreeToDefaultHeap", pMEMFreeToDefaultHeap);
    RegisterKernelFunction(MEMiInitHeapHead);
    RegisterKernelFunction(MEMiFinaliseHeap);
    RegisterKernelFunction(MEMFindContainHeap);
@@ -289,9 +289,9 @@ Module::initialiseMembase()
 
    CoreInitDefaultHeap();
 
-   *sMEMAllocFromDefaultHeap = findExportAddress("internal_defaultAlloc");
-   *sMEMAllocFromDefaultHeapEx = findExportAddress("internal_defaultAllocEx");
-   *sMEMFreeToDefaultHeap = findExportAddress("internal_defaultFree");
+   *pMEMAllocFromDefaultHeap = findExportAddress("internal_defaultAlloc");
+   *pMEMAllocFromDefaultHeapEx = findExportAddress("internal_defaultAllocEx");
+   *pMEMFreeToDefaultHeap = findExportAddress("internal_defaultFree");
 }
 
 namespace internal

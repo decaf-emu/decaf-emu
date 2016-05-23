@@ -27,6 +27,7 @@ set(SOURCE_FILES
 set(HEADER_FILES
     cpu.h
     cpu_internal.h
+    cpu_registers.h
     disassembler.h
     instructiondata.h
     instruction.h
