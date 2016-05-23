@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\libraries\glfw\src\context.c" />
+    <ClCompile Include="..\libraries\glfw\src\egl_context.c" />
     <ClCompile Include="..\libraries\glfw\src\init.c" />
     <ClCompile Include="..\libraries\glfw\src\input.c" />
     <ClCompile Include="..\libraries\glfw\src\monitor.c" />

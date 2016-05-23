@@ -72,6 +72,9 @@
     <ClCompile Include="..\libraries\glfw\src\vulkan.c">
       <Filter>Source Files\wgl</Filter>
     </ClCompile>
+    <ClCompile Include="..\libraries\glfw\src\egl_context.c">
+      <Filter>Source Files\wgl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libraries\glfw\src\internal.h">
