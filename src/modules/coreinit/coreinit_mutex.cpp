@@ -7,8 +7,11 @@
 namespace coreinit
 {
 
-const uint32_t OSMutex::Tag;
-const uint32_t OSCondition::Tag;
+const uint32_t
+OSMutex::Tag;
+
+const uint32_t
+OSCondition::Tag;
 
 void
 OSInitMutex(OSMutex *mutex)

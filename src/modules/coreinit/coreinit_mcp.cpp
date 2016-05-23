@@ -5,24 +5,24 @@ namespace coreinit
 {
 
 static const IOHandle
-gMCPHandle = 0x12345678;
+sMCPHandle = 0x12345678;
 
 IOHandle
 MCP_Open()
 {
-   return gMCPHandle;
+   return sMCPHandle;
 }
 
 void
 MCP_Close(IOHandle handle)
 {
-   assert(handle == gMCPHandle);
+   assert(handle == sMCPHandle);
 }
 
 IOError
 MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings)
 {
-   if (handle != gMCPHandle) {
+   if (handle != sMCPHandle) {
       return IOError::Generic;
    }
 

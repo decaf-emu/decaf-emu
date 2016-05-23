@@ -14,14 +14,14 @@ namespace coreinit
 {
 
 static wfunc_ptr<int, int, int, be_val<uint32_t>*>
-gMemAlloc;
+sMemAlloc;
 
 static wfunc_ptr<void, void *>
-gMemFree;
+sMemFree;
 
 
 /**
- * Default implementation for gMemAlloc
+ * Default implementation for sMemAlloc
  */
 static int
 MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
@@ -34,7 +34,7 @@ MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 
 
 /**
- * Default implementation for gMemFree
+ * Default implementation for sMemFree
  */
 static void
 MEM_DynLoad_DefaultFree(uint8_t *addr)
@@ -54,8 +54,8 @@ OSDynLoad_SetAllocator(ppcaddr_t allocFn, ppcaddr_t freeFn)
       return 0xBAD10017;
    }
 
-   gMemAlloc = allocFn;
-   gMemFree = freeFn;
+   sMemAlloc = allocFn;
+   sMemFree = freeFn;
    return 0;
 }
 
@@ -66,8 +66,8 @@ OSDynLoad_SetAllocator(ppcaddr_t allocFn, ppcaddr_t freeFn)
 int
 OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn, be_val<ppcaddr_t> *outFreeFn)
 {
-   *outAllocFn = static_cast<ppcaddr_t>(gMemAlloc);
-   *outFreeFn = static_cast<ppcaddr_t>(gMemFree);
+   *outAllocFn = static_cast<ppcaddr_t>(sMemAlloc);
+   *outFreeFn = static_cast<ppcaddr_t>(sMemFree);
    return 0;
 }
 
@@ -128,8 +128,8 @@ OSDynLoad_Release(LoadedModuleHandleData *handle)
 void
 Module::initialiseDynLoad()
 {
-   gMemAlloc = findExportAddress("MEM_DynLoad_DefaultAlloc");
-   gMemFree = findExportAddress("MEM_DynLoad_DefaultFree");
+   sMemAlloc = findExportAddress("MEM_DynLoad_DefaultAlloc");
+   sMemFree = findExportAddress("MEM_DynLoad_DefaultFree");
 }
 
 void
@@ -154,7 +154,7 @@ int
 dynLoadMemAlloc(int size, int alignment, void **outPtr)
 {
    auto value = coreinit::internal::sysAlloc<be_val<ppcaddr_t>>();
-   auto result = gMemAlloc(size, alignment, value);
+   auto result = sMemAlloc(size, alignment, value);
    *outPtr = memory_translate(*value);
    coreinit::internal::sysFree(value);
    return result;
@@ -167,7 +167,7 @@ dynLoadMemAlloc(int size, int alignment, void **outPtr)
 void
 dynLoadMemFree(void *addr)
 {
-   gMemFree(addr);
+   sMemFree(addr);
 }
 
 } // namespace internal

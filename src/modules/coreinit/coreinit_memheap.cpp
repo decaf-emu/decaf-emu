@@ -15,28 +15,28 @@ namespace coreinit
 {
 
 be_wfunc_ptr<void*, uint32_t>*
-pMEMAllocFromDefaultHeap;
+sMEMAllocFromDefaultHeap;
 
 be_wfunc_ptr<void*, uint32_t, int>*
-pMEMAllocFromDefaultHeapEx;
+sMEMAllocFromDefaultHeapEx;
 
 be_wfunc_ptr<void, void*>*
-pMEMFreeToDefaultHeap;
+sMEMFreeToDefaultHeap;
 
 static std::array<CommonHeap *, MEMBaseHeapType::Max>
-gMemArenas;
+sMemArenas;
 
 static ExpandedHeap *
-gSystemHeap = nullptr;
+sSystemHeap = nullptr;
 
 static MemoryList *
-gForegroundMemlist = nullptr;
+sForegroundMemlist = nullptr;
 
 static MemoryList *
-gMEM1Memlist = nullptr;
+sMEM1Memlist = nullptr;
 
 static MemoryList *
-gMEM2Memlist = nullptr;
+sMEM2Memlist = nullptr;
 
 static MemoryList *
 findListContainingHeap(CommonHeap *heap)
@@ -46,15 +46,15 @@ findListContainingHeap(CommonHeap *heap)
    end = start + size;
 
    if (heap->dataStart >= start && heap->dataEnd <= end) {
-      return gForegroundMemlist;
+      return sForegroundMemlist;
    } else {
       OSGetMemBound(OSMemoryType::MEM1, &start, &size);
       end = start + size;
 
       if (heap->dataStart >= start && heap->dataEnd <= end) {
-         return gMEM1Memlist;
+         return sMEM1Memlist;
       } else {
-         return gMEM2Memlist;
+         return sMEM2Memlist;
       }
    }
 }
@@ -68,15 +68,15 @@ findListContainingBlock(void *block)
    end = start + size;
 
    if (addr >= start && addr <= end) {
-      return gForegroundMemlist;
+      return sForegroundMemlist;
    } else {
       OSGetMemBound(OSMemoryType::MEM1, &start, &size);
       end = start + size;
 
       if (addr >= start && addr <= end) {
-         return gMEM1Memlist;
+         return sMEM1Memlist;
       } else {
-         return gMEM2Memlist;
+         return sMEM2Memlist;
       }
    }
 }
@@ -150,8 +150,8 @@ MEMFindContainHeap(void *block)
 MEMBaseHeapType
 MEMGetArena(CommonHeap *heap)
 {
-   for (auto i = 0u; i < gMemArenas.size(); ++i) {
-      if (gMemArenas[i] == heap) {
+   for (auto i = 0u; i < sMemArenas.size(); ++i) {
+      if (sMemArenas[i] == heap) {
          return static_cast<MEMBaseHeapType>(i);
       }
    }
@@ -162,8 +162,8 @@ MEMGetArena(CommonHeap *heap)
 CommonHeap *
 MEMGetBaseHeapHandle(MEMBaseHeapType type)
 {
-   if (type < gMemArenas.size()) {
-      return gMemArenas[type];
+   if (type < sMemArenas.size()) {
+      return sMemArenas[type];
    } else {
       return nullptr;
    }
@@ -172,9 +172,9 @@ MEMGetBaseHeapHandle(MEMBaseHeapType type)
 CommonHeap *
 MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap)
 {
-   if (type < gMemArenas.size()) {
-      auto previous = gMemArenas[type];
-      gMemArenas[type] = heap;
+   if (type < sMemArenas.size()) {
+      auto previous = sMemArenas[type];
+      sMemArenas[type] = heap;
       return previous;
    } else {
       return nullptr;
@@ -184,23 +184,21 @@ MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap)
 void
 CoreInitDefaultHeap()
 {
-   ExpandedHeap *mem2;
-   FrameHeap *mem1, *fg;
    be_val<uint32_t> addr, size;
 
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
-   mem2 = MEMCreateExpHeap(make_virtual_ptr<ExpandedHeap>(addr), size);
+   auto mem2 = MEMCreateExpHeap(make_virtual_ptr<ExpandedHeap>(addr), size);
    MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, reinterpret_cast<CommonHeap*>(mem2));
 
    // Create frame heap for MEM1
    OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
-   mem1 = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
+   auto mem1 = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
    MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, reinterpret_cast<CommonHeap*>(mem1));
 
    // Create frame heap for Foreground
    OSGetForegroundBucketFreeArea(&addr, &size);
-   fg = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
+   auto fg = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
    MEMSetBaseHeapHandle(MEMBaseHeapType::FG, reinterpret_cast<CommonHeap*>(fg));
 }
 
@@ -209,8 +207,8 @@ CoreFreeDefaultHeap()
 {
    // Delete all base heaps
    for (auto i = 0u; i < MEMBaseHeapType::Max; ++i) {
-      if (gMemArenas[i]) {
-         auto heap = reinterpret_cast<CommonHeap*>(gMemArenas[i]);
+      if (sMemArenas[i]) {
+         auto heap = reinterpret_cast<CommonHeap*>(sMemArenas[i]);
 
          switch (heap->tag) {
          case MEMiHeapTag::ExpandedHeap:
@@ -226,42 +224,42 @@ CoreFreeDefaultHeap()
             assert(false);
          }
 
-         gMemArenas[i] = nullptr;
+         sMemArenas[i] = nullptr;
       }
    }
 
    // Delete system heap
-   MEMDestroyExpHeap(gSystemHeap);
-   gSystemHeap = nullptr;
+   MEMDestroyExpHeap(sSystemHeap);
+   sSystemHeap = nullptr;
 
    // Free function pointers
-   if (pMEMAllocFromDefaultHeap) {
-      coreinit::internal::sysFree(pMEMAllocFromDefaultHeap);
-      pMEMAllocFromDefaultHeap = nullptr;
+   if (sMEMAllocFromDefaultHeap) {
+      coreinit::internal::sysFree(sMEMAllocFromDefaultHeap);
+      sMEMAllocFromDefaultHeap = nullptr;
    }
 
-   if (pMEMAllocFromDefaultHeapEx) {
-      coreinit::internal::sysFree(pMEMAllocFromDefaultHeap);
-      pMEMAllocFromDefaultHeap = nullptr;
+   if (sMEMAllocFromDefaultHeapEx) {
+      coreinit::internal::sysFree(sMEMAllocFromDefaultHeap);
+      sMEMAllocFromDefaultHeap = nullptr;
    }
 
-   if (pMEMFreeToDefaultHeap) {
-      coreinit::internal::sysFree(pMEMAllocFromDefaultHeap);
-      pMEMAllocFromDefaultHeap = nullptr;
+   if (sMEMFreeToDefaultHeap) {
+      coreinit::internal::sysFree(sMEMAllocFromDefaultHeap);
+      sMEMAllocFromDefaultHeap = nullptr;
    }
 }
 
 void
 Module::registerMembaseFunctions()
 {
-   gMemArenas.fill(nullptr);
+   sMemArenas.fill(nullptr);
 
    RegisterKernelFunction(MEMGetBaseHeapHandle);
    RegisterKernelFunction(MEMSetBaseHeapHandle);
    RegisterKernelFunction(MEMGetArena);
-   RegisterKernelDataName("MEMAllocFromDefaultHeap", pMEMAllocFromDefaultHeap);
-   RegisterKernelDataName("MEMAllocFromDefaultHeapEx", pMEMAllocFromDefaultHeapEx);
-   RegisterKernelDataName("MEMFreeToDefaultHeap", pMEMFreeToDefaultHeap);
+   RegisterKernelDataName("MEMAllocFromDefaultHeap", sMEMAllocFromDefaultHeap);
+   RegisterKernelDataName("MEMAllocFromDefaultHeapEx", sMEMAllocFromDefaultHeapEx);
+   RegisterKernelDataName("MEMFreeToDefaultHeap", sMEMFreeToDefaultHeap);
    RegisterKernelFunction(MEMiInitHeapHead);
    RegisterKernelFunction(MEMiFinaliseHeap);
    RegisterKernelFunction(MEMFindContainHeap);
@@ -277,20 +275,23 @@ Module::registerMembaseFunctions()
 void
 Module::initialiseMembase()
 {
-   gForegroundMemlist = coreinit::internal::sysAlloc<MemoryList>();
-   MEMInitList(gForegroundMemlist, offsetof(CommonHeap, link));
+   sSystemHeap = nullptr;
+   sMemArenas.fill(nullptr);
 
-   gMEM1Memlist = coreinit::internal::sysAlloc<MemoryList>();
-   MEMInitList(gMEM1Memlist, offsetof(CommonHeap, link));
+   sForegroundMemlist = coreinit::internal::sysAlloc<MemoryList>();
+   MEMInitList(sForegroundMemlist, offsetof(CommonHeap, link));
 
-   gMEM2Memlist = coreinit::internal::sysAlloc<MemoryList>();
-   MEMInitList(gMEM2Memlist, offsetof(CommonHeap, link));
+   sMEM1Memlist = coreinit::internal::sysAlloc<MemoryList>();
+   MEMInitList(sMEM1Memlist, offsetof(CommonHeap, link));
+
+   sMEM2Memlist = coreinit::internal::sysAlloc<MemoryList>();
+   MEMInitList(sMEM2Memlist, offsetof(CommonHeap, link));
 
    CoreInitDefaultHeap();
 
-   *pMEMAllocFromDefaultHeap = findExportAddress("internal_defaultAlloc");
-   *pMEMAllocFromDefaultHeapEx = findExportAddress("internal_defaultAllocEx");
-   *pMEMFreeToDefaultHeap = findExportAddress("internal_defaultFree");
+   *sMEMAllocFromDefaultHeap = findExportAddress("internal_defaultAlloc");
+   *sMEMAllocFromDefaultHeapEx = findExportAddress("internal_defaultAllocEx");
+   *sMEMFreeToDefaultHeap = findExportAddress("internal_defaultFree");
 }
 
 namespace internal

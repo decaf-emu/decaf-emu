@@ -1,3 +1,4 @@
+#include <array>
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
@@ -13,8 +14,8 @@ namespace coreinit
 static std::atomic_bool
 gSchedulerLock { false };
 
-static OSThread *
-gInterruptThreads[CoreCount];
+static std::array<OSThread *, CoreCount>
+sInterruptThreads;
 
 ThreadEntryPoint
 InterruptThreadEntryPoint;
@@ -163,8 +164,8 @@ OSThread *
 setInterruptThread(uint32_t core, OSThread *thread)
 {
    assert(core < CoreCount);
-   auto old = gInterruptThreads[core];
-   gInterruptThreads[core] = thread;
+   auto old = sInterruptThreads[core];
+   sInterruptThreads[core] = thread;
    return old;
 }
 
@@ -198,6 +199,7 @@ Module::registerSchedulerFunctions()
 void
 Module::initialiseSchedulerFunctions()
 {
+   sInterruptThreads.fill(nullptr);
    InterruptThreadEntryPoint = findExportAddress("InterruptThreadEntry");
 }
 

@@ -5,7 +5,8 @@
 namespace coreinit
 {
 
-const uint32_t OSSemaphore::Tag;
+const uint32_t
+OSSemaphore::Tag;
 
 void
 OSInitSemaphore(OSSemaphore *semaphore, int32_t count)

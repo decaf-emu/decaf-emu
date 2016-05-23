@@ -34,7 +34,7 @@ struct ExpandedHeap : CommonHeap
 #pragma pack(pop)
 
 static const uint32_t
-minimumBlockSize = sizeof(ExpandedHeapBlock) + 4;
+sMinimumBlockSize = sizeof(ExpandedHeapBlock) + 4;
 
 static virtual_ptr<ExpandedHeapBlock>
 findBlock(virtual_ptr<ExpandedHeapBlock> head, uint32_t addr)
@@ -300,7 +300,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
       base = freeBlock->addr;
       freeBlock->size -= size;
 
-      if (freeBlock->size < minimumBlockSize) {
+      if (freeBlock->size < sMinimumBlockSize) {
          // Absorb free block as it is too small
          size += freeBlock->size;
          eraseBlock(heap->freeBlockList, freeBlock);
@@ -319,7 +319,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
       freeBlock->size -= size;
       base = freeBlock->addr + freeBlock->size;
 
-      if (freeBlock->size < minimumBlockSize) {
+      if (freeBlock->size < sMinimumBlockSize) {
          // Absorb free block as it is too small
          size += freeBlock->size;
          eraseBlock(heap->freeBlockList, freeBlock);
@@ -476,7 +476,7 @@ MEMResizeForMBlockExpHeap(ExpandedHeap *heap, uint8_t *mblock, uint32_t size)
          // Free block is too small, return fail
          return 0;
       } else {
-         if (freeBlock->size - difSize < minimumBlockSize) {
+         if (freeBlock->size - difSize < sMinimumBlockSize) {
             // The free block will be smaller than minimum size, so just absorb it completely
             freeBlockSize = 0;
             newSize = freeBlock->size;
@@ -489,7 +489,7 @@ MEMResizeForMBlockExpHeap(ExpandedHeap *heap, uint8_t *mblock, uint32_t size)
       if (freeBlock) {
          // Increase size of free block
          freeBlockSize = freeBlock->size - difSize;
-      } else if (difSize < minimumBlockSize) {
+      } else if (difSize < sMinimumBlockSize) {
          // We can't fit a new free block in the gap, so return current size
          return block->size;
       } else {

@@ -1,3 +1,4 @@
+#include <array>
 #include "coreinit.h"
 #include "coreinit_core.h"
 #include "coreinit_lockedcache.h"
@@ -9,16 +10,16 @@ namespace coreinit
 {
 
 static const auto
-LockedCacheAlign = 512;
+sLockedCacheAlign = 512;
 
 static const auto
-LockedCacheSize = 16u * 1024;
+sLockedCacheSize = 16u * 1024;
 
-static TeenyHeap *
-gLockedCache[CoreCount];
+static std::array<TeenyHeap *, CoreCount>
+sLockedCache;
 
-static bool
-gDMAEnabled[CoreCount];
+static std::array<bool, CoreCount>
+sDMAEnabled;
 
 BOOL
 LCHardwareIsAvailable()
@@ -29,41 +30,41 @@ LCHardwareIsAvailable()
 void *
 LCAlloc(uint32_t size)
 {
-   auto cache = gLockedCache[OSGetCoreId()];
-   return cache->alloc(size, LockedCacheAlign);
+   auto cache = sLockedCache[OSGetCoreId()];
+   return cache->alloc(size, sLockedCacheAlign);
 }
 
 void
 LCDealloc(void * addr)
 {
-   auto cache = gLockedCache[OSGetCoreId()];
+   auto cache = sLockedCache[OSGetCoreId()];
    cache->free(addr);
 }
 
 uint32_t
 LCGetMaxSize()
 {
-   return LockedCacheSize;
+   return sLockedCacheSize;
 }
 
 uint32_t
 LCGetAllocatableSize()
 {
-   auto cache = gLockedCache[OSGetCoreId()];
+   auto cache = sLockedCache[OSGetCoreId()];
    return static_cast<uint32_t>(cache->getLargestFreeSize());
 }
 
 uint32_t
 LCGetUnallocated()
 {
-   auto cache = gLockedCache[OSGetCoreId()];
+   auto cache = sLockedCache[OSGetCoreId()];
    return static_cast<uint32_t>(cache->getTotalFreeSize());
 }
 
 BOOL
 LCIsDMAEnabled()
 {
-   return gDMAEnabled[OSGetCoreId()] ? TRUE : FALSE;
+   return sDMAEnabled[OSGetCoreId()] ? TRUE : FALSE;
 }
 
 BOOL
@@ -86,14 +87,14 @@ LCEnableDMA()
       return FALSE;
    }
 
-   gDMAEnabled[OSGetCoreId()] = TRUE;
+   sDMAEnabled[OSGetCoreId()] = true;
    return TRUE;
 }
 
 void
 LCDisableDMA()
 {
-   gDMAEnabled[OSGetCoreId()] = FALSE;
+   sDMAEnabled[OSGetCoreId()] = false;
 }
 
 uint32_t
@@ -139,9 +140,10 @@ void
 Module::initialiseLockedCache()
 {
    auto base = reinterpret_cast<uint8_t *>(memory_translate(mem::LockedCacheBase));
+   sDMAEnabled.fill(false);
 
    for (auto i = 0u; i < CoreCount; ++i) {
-      gLockedCache[i] = new TeenyHeap(base + (LockedCacheSize * i), LockedCacheSize);
+      sLockedCache[i] = new TeenyHeap(base + (sLockedCacheSize * i), sLockedCacheSize);
    }
 }
 

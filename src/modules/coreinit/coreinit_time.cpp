@@ -7,7 +7,7 @@ namespace coreinit
 {
 
 static std::chrono::time_point<std::chrono::system_clock>
-gEpochTime;
+sEpochTime;
 
 
 /**
@@ -17,7 +17,7 @@ OSTime
 OSGetTime()
 {
    auto now = std::chrono::system_clock::now();
-   auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now - gEpochTime);
+   auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now - sEpochTime);
    return ns.count();
 }
 
@@ -104,7 +104,7 @@ Module::initialiseClock()
    tm.tm_mon = 1;
    tm.tm_year = 100;
    tm.tm_isdst = -1;
-   gEpochTime = std::chrono::system_clock::from_time_t(platform::make_gm_time(tm));
+   sEpochTime = std::chrono::system_clock::from_time_t(platform::make_gm_time(tm));
 }
 
 void
@@ -124,14 +124,14 @@ namespace internal
 std::chrono::time_point<std::chrono::system_clock>
 toTimepoint(OSTime time)
 {
-   auto chrono = gEpochTime + std::chrono::nanoseconds(time);
+   auto chrono = sEpochTime + std::chrono::nanoseconds(time);
    return std::chrono::time_point_cast<std::chrono::system_clock::duration>(chrono);
 }
 
 OSTime
 toOSTime(std::chrono::time_point<std::chrono::system_clock> chrono)
 {
-   return std::chrono::duration_cast<std::chrono::nanoseconds>(chrono - gEpochTime).count();
+   return std::chrono::duration_cast<std::chrono::nanoseconds>(chrono - sEpochTime).count();
 }
 
 } // namespace internal

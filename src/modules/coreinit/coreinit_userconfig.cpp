@@ -13,15 +13,15 @@ struct UCConfigEntry
 };
 
 static std::vector<UCConfigEntry>
-gUserConfig;
+sUserConfig;
 
 static const IOHandle
-gUCHandle = 0x12345678;
+sUCHandle = 0x12345678;
 
 static bool
 readSetting(UCSysConfig &setting)
 {
-   for (auto &entry : gUserConfig) {
+   for (auto &entry : sUserConfig) {
       if (entry.name.compare(setting.name) != 0) {
          continue;
       }
@@ -48,7 +48,7 @@ readSetting(UCSysConfig &setting)
 static bool
 updateSetting(UCSysConfig &setting)
 {
-   for (auto &entry : gUserConfig) {
+   for (auto &entry : sUserConfig) {
       if (entry.name.compare(setting.name) != 0) {
          continue;
       }
@@ -75,19 +75,19 @@ updateSetting(UCSysConfig &setting)
 IOHandle
 UCOpen()
 {
-   return gUCHandle;
+   return sUCHandle;
 }
 
 void
 UCClose(IOHandle handle)
 {
-   assert(handle == gUCHandle);
+   assert(handle == sUCHandle);
 }
 
 IOError
 UCReadSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
 {
-   if (handle != gUCHandle) {
+   if (handle != sUCHandle) {
       return IOError::Generic;
    }
 
@@ -105,7 +105,7 @@ UCReadSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
 IOError
 UCWriteSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
 {
-   if (handle != gUCHandle) {
+   if (handle != sUCHandle) {
       return IOError::Generic;
    }
 
@@ -121,7 +121,7 @@ UCWriteSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
          entry.type = setting.dataType;
          entry.data.resize(setting.dataSize);
          std::memcpy(entry.data.data(), setting.data.get(), setting.dataSize);
-         gUserConfig.emplace_back(std::move(entry));
+         sUserConfig.emplace_back(std::move(entry));
       }
    }
 
@@ -134,7 +134,7 @@ addGroup(const std::string &name)
    auto entry = UCConfigEntry {};
    entry.name = name;
    entry.type = UCDataType::Group;
-   gUserConfig.emplace_back(std::move(entry));
+   sUserConfig.emplace_back(std::move(entry));
 }
 
 static void
@@ -161,7 +161,7 @@ addValue(const std::string &name, UCDataType type, uint32_t value)
       throw std::logic_error("Invalid writeSetting type");
    }
 
-   gUserConfig.emplace_back(std::move(entry));
+   sUserConfig.emplace_back(std::move(entry));
 }
 
 static void
@@ -171,7 +171,7 @@ addBlob(const std::string &name, const std::vector<uint8_t> &data)
    entry.name = name;
    entry.type = UCDataType::Blob;
    entry.data = data;
-   gUserConfig.emplace_back(std::move(entry));
+   sUserConfig.emplace_back(std::move(entry));
 }
 
 void
@@ -180,7 +180,7 @@ Module::initialiseUserConfig()
    auto invisible_titles = std::vector<uint8_t> {};
    invisible_titles.resize(512, 0);
 
-   gUserConfig.clear();
+   sUserConfig.clear();
 
    addGroup("cafe");
    addValue("cafe.cntry_reg",             UCDataType::Uint32,  SCICountryCode::USA);

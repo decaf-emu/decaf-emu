@@ -1,3 +1,4 @@
+#include <array>
 #include <fstream>
 #include <gsl.h>
 #include "coreinit.h"
@@ -11,35 +12,36 @@ namespace coreinit
 
 struct FontData
 {
-   virtual_ptr<uint8_t> data = nullptr;
+   uint8_t *data = nullptr;
    uint32_t size = 0;
 };
 
-static FontData
-gFonts[4];
+static std::array<FontData, 4>
+sFonts;
 
+// TODO: Delete me on game unload
 static TeenyHeap *
-gSharedHeap = nullptr;
+sSharedHeap = nullptr;
 
 BOOL
 OSGetSharedData(OSSharedDataType type, uint32_t, be_ptr<uint8_t> *addr, be_val<uint32_t> *size)
 {
    switch (type) {
    case OSSharedDataType::FontChinese:
-      *addr = gFonts[0].data;
-      *size = gFonts[0].size;
+      *addr = sFonts[0].data;
+      *size = sFonts[0].size;
       break;
    case OSSharedDataType::FontKorean:
-      *addr = gFonts[1].data;
-      *size = gFonts[1].size;
+      *addr = sFonts[1].data;
+      *size = sFonts[1].size;
       break;
    case OSSharedDataType::FontStandard:
-      *addr = gFonts[2].data;
-      *size = gFonts[2].size;
+      *addr = sFonts[2].data;
+      *size = sFonts[2].size;
       break;
    case OSSharedDataType::FontTaiwanese:
-      *addr = gFonts[3].data;
-      *size = gFonts[3].size;
+      *addr = sFonts[3].data;
+      *size = sFonts[3].size;
       break;
    default:
       *addr = nullptr;
@@ -57,9 +59,9 @@ readFont(FontData &dst, const char *src)
    if (file.is_open()) {
       file.seekg(0, std::ifstream::end);
       dst.size = gsl::narrow_cast<uint32_t>(file.tellg());
-      dst.data = reinterpret_cast<uint8_t *>(gSharedHeap->alloc(dst.size));
+      dst.data = reinterpret_cast<uint8_t *>(sSharedHeap->alloc(dst.size));
       file.seekg(0, std::ifstream::beg);
-      file.read(reinterpret_cast<char*>(dst.data.get()), dst.size);
+      file.read(reinterpret_cast<char*>(dst.data), dst.size);
    } else {
       dst.size = 0;
       dst.data = nullptr;
@@ -69,11 +71,11 @@ readFont(FontData &dst, const char *src)
 void
 Module::initialiseShared()
 {
-   gSharedHeap = new TeenyHeap(memory_translate(mem::SharedDataBase), mem::SharedDataSize);
-   readFont(gFonts[0], "resources/fonts/SourceSansPro-Regular.ttf");
-   gFonts[1] = gFonts[0];
-   gFonts[2] = gFonts[0];
-   gFonts[3] = gFonts[0];
+   sSharedHeap = new TeenyHeap(memory_translate(mem::SharedDataBase), mem::SharedDataSize);
+   readFont(sFonts[0], "resources/fonts/SourceSansPro-Regular.ttf");
+   sFonts[1] = sFonts[0];
+   sFonts[2] = sFonts[0];
+   sFonts[3] = sFonts[0];
 }
 
 void

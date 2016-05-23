@@ -10,7 +10,7 @@
 #include "utils/virtual_ptr.h"
 
 static std::string
-gGameRpx;
+sGameRpx;
 
 
 GameLoader::GameLoader()
@@ -27,7 +27,7 @@ GameLoader::initialise()
 void
 GameLoaderInit(const char *rpxName)
 {
-   gGameRpx = rpxName;
+   sGameRpx = rpxName;
 }
 
 
@@ -35,16 +35,16 @@ void
 GameLoaderRun()
 {
    using namespace coreinit;
-   auto appModule = gLoader.loadRPL(gGameRpx.c_str());
+   auto appModule = gLoader.loadRPL(sGameRpx.c_str());
 
    if (!appModule) {
-      gLog->error("Could not load {}", gGameRpx);
+      gLog->error("Could not load {}", sGameRpx);
       return;
    }
 
    gSystem.setUserModule(appModule);
    gDebugControl.preLaunch();
-   gLog->debug("Succesfully loaded {}", gGameRpx);
+   gLog->debug("Succesfully loaded {}", sGameRpx);
 
    // Create default threads
    for (auto i = 0u; i < CoreCount; ++i) {

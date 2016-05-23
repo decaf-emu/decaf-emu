@@ -6,13 +6,14 @@
 namespace coreinit
 {
 
-const uint32_t OSMessageQueue::Tag;
+const uint32_t
+OSMessageQueue::Tag;
 
 static OSMessageQueue *
-gSystemMessageQueue;
+sSystemMessageQueue;
 
 static OSMessage *
-gSystemMessageArray;
+sSystemMessageArray;
 
 void
 OSInitMessageQueue(OSMessageQueue *queue, OSMessage *messages, int32_t size)
@@ -159,7 +160,7 @@ OSPeekMessage(OSMessageQueue *queue, OSMessage *message)
 OSMessageQueue *
 OSGetSystemMessageQueue()
 {
-   return gSystemMessageQueue;
+   return sSystemMessageQueue;
 }
 
 void
@@ -177,9 +178,9 @@ Module::registerMessageQueueFunctions()
 void
 Module::initialiseMessageQueues()
 {
-   gSystemMessageQueue = coreinit::internal::sysAlloc<OSMessageQueue>();
-   gSystemMessageArray = reinterpret_cast<OSMessage*>(coreinit::internal::sysAlloc(16 * sizeof(OSMessage)));
-   OSInitMessageQueue(gSystemMessageQueue, gSystemMessageArray, 16);
+   sSystemMessageQueue = coreinit::internal::sysAlloc<OSMessageQueue>();
+   sSystemMessageArray = reinterpret_cast<OSMessage*>(coreinit::internal::sysAlloc(16 * sizeof(OSMessage)));
+   OSInitMessageQueue(sSystemMessageQueue, sSystemMessageArray, 16);
 }
 
 } // namespace coreinit

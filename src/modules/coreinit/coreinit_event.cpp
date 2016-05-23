@@ -8,7 +8,8 @@
 namespace coreinit
 {
 
-const uint32_t OSEvent::Tag;
+const uint32_t
+OSEvent::Tag;
 
 
 /**

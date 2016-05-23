@@ -6,6 +6,19 @@
 namespace coreinit
 {
 
+// TODO: These values need to reset after game is unloaded
+static uint32_t
+sMem1Start = mem::MEM1Base;
+
+static uint32_t
+sMem1Size = mem::MEM1Size;
+
+static uint32_t
+sMem2Start = mem::ApplicationBase;
+
+static uint32_t
+sMem2Size = mem::ApplicationSize;
+
 void *
 OSBlockMove(void *dst, const void *src, ppcsize_t size, BOOL flush)
 {
@@ -41,23 +54,17 @@ coreinit_memset(void *dst, int val, ppcsize_t size)
    return dst;
 }
 
-uint32_t gMem1Start = mem::MEM1Base;
-uint32_t gMem1Size  = mem::MEM1Size;
-
-uint32_t gMem2Start = mem::ApplicationBase;
-uint32_t gMem2Size  = mem::ApplicationSize;
-
 int
 OSGetMemBound(OSMemoryType type, be_val<uint32_t> *addr, be_val<uint32_t> *size)
 {
    switch (type) {
    case OSMemoryType::MEM1:
-      *addr = gMem1Start;
-      *size = gMem1Size;
+      *addr = sMem1Start;
+      *size = sMem1Size;
       break;
    case OSMemoryType::MEM2:
-      *addr = gMem2Start;
-      *size = gMem2Size;
+      *addr = sMem2Start;
+      *size = sMem2Size;
       break;
    default:
       return -1;
@@ -124,12 +131,12 @@ setMemBound(OSMemoryType type, uint32_t start, uint32_t size)
 {
    switch (type) {
    case OSMemoryType::MEM1:
-      gMem1Start = start;
-      gMem1Size = size;
+      sMem1Start = start;
+      sMem1Size = size;
       break;
    case OSMemoryType::MEM2:
-      gMem2Start = start;
-      gMem2Size = size;
+      sMem2Start = start;
+      sMem2Size = size;
       break;
    default:
       return -1;

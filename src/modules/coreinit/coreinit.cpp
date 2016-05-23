@@ -19,6 +19,7 @@ Module::initialise()
    initialiseAtomic64();
    initialiseDynLoad();
    initialiseEvent();
+   initialiseExceptions();
    initialiseGHS();
    initialiseGhsTypeInfo();
    initialiseLockedCache();
@@ -27,6 +28,7 @@ Module::initialise()
    initialiseSchedulerFunctions();
    initialiseShared();
    initialiseSystemInformation();
+   initialiseThreadFunctions();
    initialiseUserConfig();
 }
 

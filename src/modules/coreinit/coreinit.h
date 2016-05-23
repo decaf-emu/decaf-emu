@@ -18,6 +18,7 @@ private:
    void initialiseAtomic64();
    void initialiseDynLoad();
    void initialiseEvent();
+   void initialiseExceptions();
    void initialiseGHS();
    void initialiseGhsTypeInfo();
    void initialiseLockedCache();
@@ -26,6 +27,7 @@ private:
    void initialiseSchedulerFunctions();
    void initialiseShared();
    void initialiseSystemInformation();
+   void initialiseThreadFunctions();
    void initialiseUserConfig();
 
 public:

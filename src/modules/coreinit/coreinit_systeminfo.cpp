@@ -9,38 +9,38 @@ namespace coreinit
 {
 
 static OSSystemInfo *
-gSystemInfo = nullptr;
+sSystemInfo = nullptr;
 
 static BOOL
-gScreenCapturePermission = TRUE;
+sScreenCapturePermission = TRUE;
 
 static BOOL
-gEnableHomeButtonMenu = FALSE;
+sEnableHomeButtonMenu = TRUE;
 
 static uint64_t
-gTitleID = 0;
+sTitleID = 0;
 
 static uint64_t
-gSystemID = 0x000500101000400Aull;
+sSystemID = 0x000500101000400Aull;
 
 OSSystemInfo *
 OSGetSystemInfo()
 {
-   return gSystemInfo;
+   return sSystemInfo;
 }
 
 BOOL
 OSSetScreenCapturePermission(BOOL enabled)
 {
-   auto old = gScreenCapturePermission;
-   gScreenCapturePermission = enabled;
+   auto old = sScreenCapturePermission;
+   sScreenCapturePermission = enabled;
    return old;
 }
 
 BOOL
 OSGetScreenCapturePermission()
 {
-   return gScreenCapturePermission;
+   return sScreenCapturePermission;
 }
 
 uint32_t
@@ -53,13 +53,13 @@ OSGetConsoleType()
 BOOL
 OSIsHomeButtonMenuEnabled()
 {
-   return gEnableHomeButtonMenu;
+   return sEnableHomeButtonMenu;
 }
 
 BOOL
 OSEnableHomeButtonMenu(BOOL enable)
 {
-   gEnableHomeButtonMenu = enable;
+   sEnableHomeButtonMenu = enable;
    return TRUE;
 }
 
@@ -72,28 +72,30 @@ OSBlockThreadsOnExit()
 uint64_t
 OSGetTitleID()
 {
-   return gTitleID;
+   return sTitleID;
 }
 
 uint64_t
 OSGetOSID()
 {
-   return gSystemID;
+   return sSystemID;
 }
 
 void
 Module::initialiseSystemInformation()
 {
-   // Setup gSystemInfo
-   gSystemInfo = coreinit::internal::sysAlloc<OSSystemInfo>();
+   sSystemInfo = coreinit::internal::sysAlloc<OSSystemInfo>();
 
    // Clockspeed is 4 * 1 second in ticks
    auto oneSecond = std::chrono::seconds(1);
    auto oneSecondNS = std::chrono::duration_cast<std::chrono::nanoseconds>(oneSecond);
-   gSystemInfo->clockSpeed = oneSecondNS.count() * 4;
+   sSystemInfo->clockSpeed = oneSecondNS.count() * 4;
 
    // Set startup time
-   gSystemInfo->baseTime = OSGetTime();
+   sSystemInfo->baseTime = OSGetTime();
+
+   sScreenCapturePermission = TRUE;
+   sEnableHomeButtonMenu = TRUE;
 }
 
 void
@@ -116,13 +118,13 @@ namespace internal
 void
 setTitleID(uint64_t id)
 {
-   gTitleID = id;
+   sTitleID = id;
 }
 
 void
 setSystemID(uint64_t id)
 {
-   gSystemID = id;
+   sSystemID = id;
 }
 
 } // namespace internal

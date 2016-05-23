@@ -1,3 +1,4 @@
+#include <array>
 #include <limits>
 #include "coreinit.h"
 #include "coreinit_alarm.h"
@@ -14,11 +15,11 @@
 namespace coreinit
 {
 
-static OSThread *
-gDefaultThreads[CoreCount];
+static std::array<OSThread *, CoreCount>
+sDefaultThreads;
 
 static uint32_t
-gThreadId = 1;
+sThreadId = 1;
 
 void
 __OSClearThreadStack32(OSThread *thread, uint32_t value)
@@ -170,7 +171,7 @@ OSCreateThread(OSThread *thread,
    thread->stackEnd = reinterpret_cast<be_val<uint32_t>*>(reinterpret_cast<uint8_t*>(stack) - stackSize);
    thread->basePriority = priority;
    thread->attr = attributes;
-   thread->id = gThreadId++;
+   thread->id = sThreadId++;
 
    // Write magic stack ending!
    *thread->stackEnd = 0xDEADBABE;
@@ -230,7 +231,7 @@ OSGetDefaultThread(uint32_t coreID)
       return nullptr;
    }
 
-   return gDefaultThreads[coreID];
+   return sDefaultThreads[coreID];
 }
 
 uint32_t
@@ -375,8 +376,8 @@ OSThread *
 OSSetDefaultThread(uint32_t core, OSThread *thread)
 {
    assert(core < CoreCount);
-   auto old = gDefaultThreads[core];
-   gDefaultThreads[core] = thread;
+   auto old = sDefaultThreads[core];
+   sDefaultThreads[core] = thread;
    return old;
 }
 
@@ -540,6 +541,12 @@ void
 OSYieldThread()
 {
    gProcessor.yield();
+}
+
+void
+Module::initialiseThreadFunctions()
+{
+   sDefaultThreads.fill(nullptr);
 }
 
 void

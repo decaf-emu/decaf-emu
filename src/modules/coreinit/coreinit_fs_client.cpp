@@ -7,7 +7,7 @@ namespace coreinit
 {
 
 static std::vector<FSClient*>
-gClients;
+sClients;
 
 FSClient::FSClient()
 {
@@ -144,7 +144,7 @@ FSAddClientEx(FSClient *client,
               uint32_t flags)
 {
    new(client) FSClient();
-   gClients.push_back(client);
+   sClients.push_back(client);
    return FSStatus::OK;
 }
 
@@ -154,7 +154,7 @@ FSDelClient(FSClient *client,
             uint32_t flags)
 {
    client->~FSClient();
-   gClients.erase(std::remove(gClients.begin(), gClients.end(), client), gClients.end());
+   sClients.erase(std::remove(sClients.begin(), sClients.end(), client), sClients.end());
    return FSStatus::OK;
 }
 
@@ -162,7 +162,7 @@ FSDelClient(FSClient *client,
 uint32_t
 FSGetClientNum()
 {
-   return static_cast<uint32_t>(gClients.size());
+   return static_cast<uint32_t>(sClients.size());
 }
 
 

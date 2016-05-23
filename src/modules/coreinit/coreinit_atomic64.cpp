@@ -9,19 +9,19 @@ namespace coreinit
 {
 
 static
-OSSpinLock *gAtomic64Lock;
+OSSpinLock *sAtomic64Lock;
 
 uint64_t
 OSGetAtomic64(be_val<uint64_t> *ptr)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
    return *ptr;
 }
 
 uint64_t
 OSSetAtomic64(be_val<uint64_t> *ptr, uint64_t value)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
    auto old = *ptr;
    *ptr = value;
    return old;
@@ -30,7 +30,7 @@ OSSetAtomic64(be_val<uint64_t> *ptr, uint64_t value)
 BOOL
 OSCompareAndSwapAtomic64(be_val<uint64_t> *ptr, uint64_t compare, uint64_t value)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
 
    if (*ptr == compare) {
       *ptr = value;
@@ -43,7 +43,7 @@ OSCompareAndSwapAtomic64(be_val<uint64_t> *ptr, uint64_t compare, uint64_t value
 BOOL
 OSCompareAndSwapAtomicEx64(be_val<uint64_t> *ptr, uint64_t compare, uint64_t value, uint64_t *old)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
    *old = *ptr;
 
    if (*ptr == compare) {
@@ -57,7 +57,7 @@ OSCompareAndSwapAtomicEx64(be_val<uint64_t> *ptr, uint64_t compare, uint64_t val
 uint64_t
 OSSwapAtomic64(be_val<uint64_t> *ptr, uint64_t value)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
    auto old = *ptr;
    *ptr = value;
    return old;
@@ -66,35 +66,35 @@ OSSwapAtomic64(be_val<uint64_t> *ptr, uint64_t value)
 int64_t
 OSAddAtomic64(be_val<int64_t> *ptr, int64_t value)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
    return (*ptr += value);
 }
 
 uint64_t
 OSAndAtomic64(be_val<uint64_t> *ptr, uint64_t value)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
    return (*ptr &= value);
 }
 
 uint64_t
 OSOrAtomic64(be_val<uint64_t> *ptr, uint64_t value)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
    return (*ptr |= value);
 }
 
 uint64_t
 OSXorAtomic64(be_val<uint64_t> *ptr, uint64_t value)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
    return (*ptr ^= value);
 }
 
 BOOL
 OSTestAndClearAtomic64(be_val<uint64_t> *ptr, uint32_t bit)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
    auto result = get_bit(*ptr, bit) ? TRUE : FALSE;
    *ptr = clear_bit(*ptr, bit);
    return result;
@@ -103,7 +103,7 @@ OSTestAndClearAtomic64(be_val<uint64_t> *ptr, uint32_t bit)
 BOOL
 OSTestAndSetAtomic64(be_val<uint64_t> *ptr, uint32_t bit)
 {
-   ScopedSpinLock lock(gAtomic64Lock);
+   ScopedSpinLock lock(sAtomic64Lock);
    auto result = get_bit(*ptr, bit) ? TRUE : FALSE;
    *ptr = set_bit(*ptr, bit);
    return result;
@@ -112,7 +112,7 @@ OSTestAndSetAtomic64(be_val<uint64_t> *ptr, uint32_t bit)
 void
 Module::initialiseAtomic64()
 {
-   gAtomic64Lock = coreinit::internal::sysAlloc<OSSpinLock>();
+   sAtomic64Lock = coreinit::internal::sysAlloc<OSSpinLock>();
 }
 
 void

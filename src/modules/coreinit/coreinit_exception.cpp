@@ -1,11 +1,12 @@
+#include <array>
 #include "coreinit.h"
 #include "coreinit_exception.h"
 
 namespace coreinit
 {
 
-static OSExceptionCallback
-gExceptionCallbacks[OSExceptionType::Max];
+static std::array<OSExceptionCallback, OSExceptionType::Max>
+sExceptionCallbacks;
 
 
 /**
@@ -25,11 +26,16 @@ OSExceptionCallback
 OSSetExceptionCallbackEx(uint32_t unk1, OSExceptionType exceptionType, OSExceptionCallback callback)
 {
    auto index = static_cast<size_t>(exceptionType);
-   auto previous = gExceptionCallbacks[index];
-   gExceptionCallbacks[index] = callback;
+   auto previous = sExceptionCallbacks[index];
+   sExceptionCallbacks[index] = callback;
    return previous;
 }
 
+void
+Module::initialiseExceptions()
+{
+   sExceptionCallbacks.fill(nullptr);
+}
 
 void
 Module::registerExceptionFunctions()
