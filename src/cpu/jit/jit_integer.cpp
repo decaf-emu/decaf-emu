@@ -297,7 +297,7 @@ andis(PPCEmuAssembler& a, Instruction instr)
 static bool
 cntlzw(PPCEmuAssembler& a, Instruction instr)
 {
-   asmjit::Label lblZero(a);
+   auto lblZero = a.newLabel();
 
    a.mov(a.ecx, a.ppcgpr[instr.rS]);
    a.mov(a.eax, 32);

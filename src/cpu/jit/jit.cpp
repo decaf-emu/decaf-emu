@@ -30,8 +30,8 @@ void initStubs()
 {
    PPCEmuAssembler a(sRuntime);
 
-   asmjit::Label introLabel(a);
-   asmjit::Label extroLabel(a);
+   auto introLabel = a.newLabel();
+   auto extroLabel = a.newLabel();
 
    a.bind(introLabel);
    a.push(a.zbx);
@@ -131,7 +131,7 @@ bool gen(JitBlock& block)
    JumpLabelMap jumpLabels;
    for (auto i = block.targets.begin(); i != block.targets.end(); ++i) {
       if (i->first >= block.start && i->first < block.end) {
-         jumpLabels[i->first] = asmjit::Label(a);
+         jumpLabels[i->first] = a.newLabel();
       }
    }
 
@@ -142,7 +142,7 @@ bool gen(JitBlock& block)
       }
    }
 
-   asmjit::Label codeStart(a);
+   auto codeStart = a.newLabel();
    a.bind(codeStart);
 
    auto lclCia = block.start;
@@ -406,7 +406,7 @@ void executeSub(ThreadState *state)
    state->lr = lr;
 }
 
-bool PPCEmuAssembler::ErrorHandler::handleError(asmjit::Error code, const char* message, void* origin)
+bool PPCEmuAssembler::ErrorHandler::handleError(asmjit::Error code, const char* message, void *origin) noexcept
 {
    gLog->error("ASMJit Error {}: {}\n", code, message);
    return true;

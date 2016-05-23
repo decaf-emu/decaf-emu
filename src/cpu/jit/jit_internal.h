@@ -28,7 +28,7 @@ private:
    class ErrorHandler : public asmjit::ErrorHandler
    {
    public:
-      bool handleError(asmjit::Error code, const char* message, void *origin) override;
+      bool handleError(asmjit::Error code, const char* message, void *origin) noexcept override;
    } errHandler;
 
 public:

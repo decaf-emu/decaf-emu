@@ -33,7 +33,7 @@ jit_interrupt_stub(ThreadState *state)
 void
 jit_b_check_interrupt(PPCEmuAssembler& a, uint32_t cia)
 {
-   asmjit::Label noInterrupt(a);
+   auto noInterrupt = a.newLabel();
    a.cmp(asmjit::X86Mem(a.interruptAddr, 0, 4), 0);
    a.je(noInterrupt);
    a.mov(a.zcx, a.state);
@@ -78,7 +78,7 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMa
    jit_b_check_interrupt(a, cia);
 
    uint32_t bo = instr.bo;
-   asmjit::Label doCondFailLbl(a);
+   auto doCondFailLbl = a.newLabel();
 
    if (flags & BcCheckCtr) {
       if (!get_bit<NoCheckCtr>(bo)) {

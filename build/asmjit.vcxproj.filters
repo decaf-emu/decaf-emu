@@ -39,9 +39,6 @@
     <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86compilerfunc.cpp">
       <Filter>Source Files\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86cpuinfo.cpp">
-      <Filter>Source Files\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86inst.cpp">
       <Filter>Source Files\x86</Filter>
     </ClCompile>
@@ -49,9 +46,6 @@
       <Filter>Source Files\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86operand_regs.cpp">
-      <Filter>Source Files\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86scheduler.cpp">
       <Filter>Source Files\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\libraries\asmjit\src\asmjit\base\assembler.cpp">
@@ -96,11 +90,11 @@
     <ClCompile Include="..\libraries\asmjit\src\asmjit\base\zone.cpp">
       <Filter>Source Files\base</Filter>
     </ClCompile>
+    <ClCompile Include="..\libraries\asmjit\src\asmjit\base\podvector.cpp">
+      <Filter>Source Files\base</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86scheduler_p.h">
-      <Filter>Header Files\x86</Filter>
-    </ClInclude>
     <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86assembler.h">
       <Filter>Header Files\x86</Filter>
     </ClInclude>
@@ -111,9 +105,6 @@
       <Filter>Header Files\x86</Filter>
     </ClInclude>
     <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86compilerfunc.h">
-      <Filter>Header Files\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86cpuinfo.h">
       <Filter>Header Files\x86</Filter>
     </ClInclude>
     <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86inst.h">
@@ -190,6 +181,9 @@
     </ClInclude>
     <ClInclude Include="..\libraries\asmjit\src\asmjit\x86.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libraries\asmjit\src\asmjit\base\podvector.h">
+      <Filter>Header Files\base</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

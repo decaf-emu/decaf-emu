@@ -25,6 +25,7 @@
     <ClCompile Include="..\libraries\asmjit\src\asmjit\base\hlstream.cpp" />
     <ClCompile Include="..\libraries\asmjit\src\asmjit\base\logger.cpp" />
     <ClCompile Include="..\libraries\asmjit\src\asmjit\base\operand.cpp" />
+    <ClCompile Include="..\libraries\asmjit\src\asmjit\base\podvector.cpp" />
     <ClCompile Include="..\libraries\asmjit\src\asmjit\base\runtime.cpp" />
     <ClCompile Include="..\libraries\asmjit\src\asmjit\base\utils.cpp" />
     <ClCompile Include="..\libraries\asmjit\src\asmjit\base\vmem.cpp" />
@@ -33,11 +34,9 @@
     <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86compiler.cpp" />
     <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86compilercontext.cpp" />
     <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86compilerfunc.cpp" />
-    <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86cpuinfo.cpp" />
     <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86inst.cpp" />
     <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86operand.cpp" />
     <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86operand_regs.cpp" />
-    <ClCompile Include="..\libraries\asmjit\src\asmjit\x86\x86scheduler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libraries\asmjit\src\asmjit\apibegin.h" />
@@ -55,6 +54,7 @@
     <ClInclude Include="..\libraries\asmjit\src\asmjit\base\hlstream.h" />
     <ClInclude Include="..\libraries\asmjit\src\asmjit\base\logger.h" />
     <ClInclude Include="..\libraries\asmjit\src\asmjit\base\operand.h" />
+    <ClInclude Include="..\libraries\asmjit\src\asmjit\base\podvector.h" />
     <ClInclude Include="..\libraries\asmjit\src\asmjit\base\runtime.h" />
     <ClInclude Include="..\libraries\asmjit\src\asmjit\base\utils.h" />
     <ClInclude Include="..\libraries\asmjit\src\asmjit\base\vectypes.h" />
@@ -67,10 +67,8 @@
     <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86compiler.h" />
     <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86compilercontext_p.h" />
     <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86compilerfunc.h" />
-    <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86cpuinfo.h" />
     <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86inst.h" />
     <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86operand.h" />
-    <ClInclude Include="..\libraries\asmjit\src\asmjit\x86\x86scheduler_p.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E}</ProjectGuid>
@@ -147,7 +145,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_LIB;WIN32;_WINDOWS;_UNICODE;ASMJIT_DISABLE_COMPILER;ASMJIT_STATIC;ASMJIT_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_LIB;WIN32;_WINDOWS;_UNICODE;ASMJIT_DISABLE_COMPILER;ASMJIT_STATIC;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -164,7 +162,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_LIB;WIN32;_WINDOWS;_UNICODE;ASMJIT_DISABLE_COMPILER;ASMJIT_STATIC;ASMJIT_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_LIB;WIN32;_WINDOWS;_UNICODE;ASMJIT_DISABLE_COMPILER;ASMJIT_STATIC;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
