@@ -237,7 +237,7 @@ bool GLDriver::checkActiveUniforms()
       return true;
    }
 
-   if (sq_config.DX9_CONSTS) {
+   if (sq_config.DX9_CONSTS()) {
       // Upload uniform registers
       if (mActiveShader->vertex && mActiveShader->vertex->object) {
          auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_256 / 4]);
@@ -260,12 +260,12 @@ bool GLDriver::checkActiveUniforms()
             auto sq_vtx_constant_word3 = getRegister<latte::SQ_VTX_CONSTANT_WORD3_N>(latte::Register::SQ_VTX_CONSTANT_WORD3_0 + 4 * resourceOffset);
             auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
 
-            if (!sq_vtx_constant_word0.BASE_ADDRESS || !sq_vtx_constant_word1.SIZE) {
+            if (!sq_vtx_constant_word0.BASE_ADDRESS || !sq_vtx_constant_word1.SIZE()) {
                continue;
             }
 
             auto block = make_virtual_ptr<float>(sq_vtx_constant_word0.BASE_ADDRESS);
-            auto size = sq_vtx_constant_word1.SIZE + 1;
+            auto size = sq_vtx_constant_word1.SIZE() + 1;
             auto values = size / 4;
 
             auto &ubo = mUniformBuffers[sq_vtx_constant_word0.BASE_ADDRESS];
@@ -299,12 +299,12 @@ bool GLDriver::checkActiveUniforms()
             auto sq_vtx_constant_word3 = getRegister<latte::SQ_VTX_CONSTANT_WORD3_N>(latte::Register::SQ_VTX_CONSTANT_WORD3_0 + 4 * resourceOffset);
             auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
 
-            if (!sq_vtx_constant_word0.BASE_ADDRESS || !sq_vtx_constant_word1.SIZE) {
+            if (!sq_vtx_constant_word0.BASE_ADDRESS || !sq_vtx_constant_word1.SIZE()) {
                continue;
             }
 
             auto block = make_virtual_ptr<float>(sq_vtx_constant_word0.BASE_ADDRESS);
-            auto size = sq_vtx_constant_word1.SIZE + 1;
+            auto size = sq_vtx_constant_word1.SIZE() + 1;
             auto values = size / 4;
 
             auto &ubo = mUniformBuffers[sq_vtx_constant_word0.BASE_ADDRESS];
@@ -432,14 +432,14 @@ bool GLDriver::checkActiveAttribBuffers()
       auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
       auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
 
-      if (sq_vtx_constant_word6.TYPE != latte::SQ_TEX_VTX_VALID_BUFFER) {
+      if (sq_vtx_constant_word6.TYPE() != latte::SQ_TEX_VTX_VALID_BUFFER) {
          gLog->error("No valid buffer set for attrib resource {}", index);
          return false;
       }
 
       auto addr = sq_vtx_constant_word0.BASE_ADDRESS;
-      auto size = sq_vtx_constant_word1.SIZE + 1;
-      auto stride = sq_vtx_constant_word2.STRIDE;
+      auto size = sq_vtx_constant_word1.SIZE() + 1;
+      auto stride = sq_vtx_constant_word2.STRIDE();
       auto &buffer = mAttribBuffers[addr];
 
       if (!buffer.object) {
@@ -676,7 +676,7 @@ writeHeader(fmt::MemoryWriter &out)
 static void
 writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq_config, std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> &samplerTypes)
 {
-   if (sq_config.DX9_CONSTS) {
+   if (sq_config.DX9_CONSTS()) {
       // Uniform registers
       out << "uniform vec4 ";
 
@@ -850,9 +850,9 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
 
-      vertex.samplerTypes[i] = getSamplerType(sq_tex_resource_word0.DIM,
-                                              sq_tex_resource_word4.NUM_FORMAT_ALL,
-                                              sq_tex_resource_word4.FORMAT_COMP_X);
+      vertex.samplerTypes[i] = getSamplerType(sq_tex_resource_word0.DIM(),
+                                              sq_tex_resource_word4.NUM_FORMAT_ALL(),
+                                              sq_tex_resource_word4.FORMAT_COMP_X());
    }
 
    // Write header
@@ -894,9 +894,9 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    // Assign fetch shader output to our GPR
    for (auto i = 0u; i < 32; ++i) {
       auto sq_vtx_semantic = getRegister<latte::SQ_VTX_SEMANTIC_N>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4);
-      auto id = sq_vtx_semantic.SEMANTIC_ID;
+      auto id = sq_vtx_semantic.SEMANTIC_ID();
 
-      if (sq_vtx_semantic.SEMANTIC_ID == 0xff) {
+      if (id == 0xff) {
          continue;
       }
 
@@ -983,9 +983,9 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
 
-      pixel.samplerTypes[i] = getSamplerType(sq_tex_resource_word0.DIM,
-                                             sq_tex_resource_word4.NUM_FORMAT_ALL,
-                                             sq_tex_resource_word4.FORMAT_COMP_X);
+      pixel.samplerTypes[i] = getSamplerType(sq_tex_resource_word0.DIM(),
+                                             sq_tex_resource_word4.NUM_FORMAT_ALL(),
+                                             sq_tex_resource_word4.FORMAT_COMP_X());
    }
 
    // Write header

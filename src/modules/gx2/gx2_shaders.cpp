@@ -155,7 +155,9 @@ GX2SetPixelShader(GX2PixelShader *shader)
       });
    }
 
-   db_shader_control.DUAL_EXPORT_ENABLE = 1;
+   db_shader_control = db_shader_control
+      .DUAL_EXPORT_ENABLE().set(1);
+
    pm4::write(pm4::SetContextReg { latte::Register::CB_SHADER_MASK, cb_shader_mask.value });
    pm4::write(pm4::SetContextReg { latte::Register::CB_SHADER_CONTROL, cb_shader_control.value });
    pm4::write(pm4::SetContextReg { latte::Register::DB_SHADER_CONTROL, db_shader_control.value });
@@ -316,11 +318,18 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
    res.id = (location * 7) + latte::SQ_VS_BUF_RESOURCE_0;
    res.baseAddress = data;
    res.size = size - 1;
-   res.word2.STRIDE = 16;
-   res.word2.DATA_FORMAT = latte::FMT_32_32_32_32;
-   res.word2.FORMAT_COMP_ALL = latte::SQ_FORMAT_COMP_SIGNED;
-   res.word3.MEM_REQUEST_SIZE = 1;
-   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+
+   res.word2 = res.word2
+      .STRIDE().set(16)
+      .DATA_FORMAT().set(latte::FMT_32_32_32_32)
+      .FORMAT_COMP_ALL().set(latte::SQ_FORMAT_COMP_SIGNED);
+
+   res.word3 = res.word3
+      .MEM_REQUEST_SIZE().set(1);
+
+   res.word6 = res.word6
+      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+
    pm4::write(res);
 
    auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + location * 4);
@@ -340,11 +349,18 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
    res.id = (location * 7) + latte::SQ_PS_BUF_RESOURCE_0;
    res.baseAddress = data;
    res.size = size - 1;
-   res.word2.STRIDE = 16;
-   res.word2.DATA_FORMAT = latte::FMT_32_32_32_32;
-   res.word2.FORMAT_COMP_ALL = latte::SQ_FORMAT_COMP_SIGNED;
-   res.word3.MEM_REQUEST_SIZE = 1;
-   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+
+   res.word2 = res.word2
+      .STRIDE().set(16)
+      .DATA_FORMAT().set(latte::FMT_32_32_32_32)
+      .FORMAT_COMP_ALL().set(latte::SQ_FORMAT_COMP_SIGNED);
+
+   res.word3 = res.word3
+      .MEM_REQUEST_SIZE().set(1);
+
+   res.word6 = res.word6
+      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+
    pm4::write(res);
 
    auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + location * 4);
@@ -364,11 +380,18 @@ GX2SetGeometryUniformBlock(uint32_t location, uint32_t size, const void *data)
    res.id = (location * 7) + latte::SQ_GS_BUF_RESOURCE_0;
    res.baseAddress = data;
    res.size = size - 1;
-   res.word2.STRIDE = 16;
-   res.word2.DATA_FORMAT = latte::FMT_32_32_32_32;
-   res.word2.FORMAT_COMP_ALL = latte::SQ_FORMAT_COMP_SIGNED;
-   res.word3.MEM_REQUEST_SIZE = 1;
-   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+
+   res.word2 = res.word2
+      .STRIDE().set(16)
+      .DATA_FORMAT().set(latte::FMT_32_32_32_32)
+      .FORMAT_COMP_ALL().set(latte::SQ_FORMAT_COMP_SIGNED);
+
+   res.word3 = res.word3
+      .MEM_REQUEST_SIZE().set(1);
+
+   res.word6 = res.word6
+      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+
    pm4::write(res);
 
    auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_GS_0 + location * 4);
@@ -386,80 +409,103 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
                    uint32_t numGsGpr, uint32_t numGsStackEntries,
                    uint32_t numPsGpr, uint32_t numPsStackEntries)
 {
-   auto sq_config = latte::SQ_CONFIG { 0 };
-   auto sq_gpr_resource_mgmt_1 = latte::SQ_GPR_RESOURCE_MGMT_1 { 0 };
-   auto sq_gpr_resource_mgmt_2 = latte::SQ_GPR_RESOURCE_MGMT_2 { 0 };
-   auto sq_thread_resource_mgmt = latte::SQ_THREAD_RESOURCE_MGMT { 0 };
-   auto sq_stack_resource_mgmt_1 = latte::SQ_STACK_RESOURCE_MGMT_1 { 0 };
-   auto sq_stack_resource_mgmt_2 = latte::SQ_STACK_RESOURCE_MGMT_2 { 0 };
+   auto sq_config = latte::SQ_CONFIG::get(0);
+   auto sq_gpr_resource_mgmt_1 = latte::SQ_GPR_RESOURCE_MGMT_1::get(0);
+   auto sq_gpr_resource_mgmt_2 = latte::SQ_GPR_RESOURCE_MGMT_2::get(0);
+   auto sq_thread_resource_mgmt = latte::SQ_THREAD_RESOURCE_MGMT::get(0);
+   auto sq_stack_resource_mgmt_1 = latte::SQ_STACK_RESOURCE_MGMT_1::get(0);
+   auto sq_stack_resource_mgmt_2 = latte::SQ_STACK_RESOURCE_MGMT_2::get(0);
 
    if (mode != GX2ShaderMode::GeometryShader) {
-      auto vgt_gs_mode = latte::VGT_GS_MODE { 0 };
+      auto vgt_gs_mode = latte::VGT_GS_MODE::get(0);
 
       if (mode == GX2ShaderMode::ComputeShader) {
-         vgt_gs_mode.MODE = latte::GS_SCENARIO_G;
-         vgt_gs_mode.COMPUTE_MODE = 1;
-         vgt_gs_mode.FAST_COMPUTE_MODE = 1;
-         vgt_gs_mode.PARTIAL_THD_AT_EOI = 1;
+         vgt_gs_mode = vgt_gs_mode
+            .MODE().set(latte::GS_SCENARIO_G)
+            .COMPUTE_MODE().set(1)
+            .FAST_COMPUTE_MODE().set(1)
+            .PARTIAL_THD_AT_EOI().set(1);
       } else {
-         vgt_gs_mode.MODE = latte::GS_OFF;
+         vgt_gs_mode = vgt_gs_mode
+            .MODE().set(latte::GS_OFF);
       }
 
       pm4::write(pm4::SetContextReg { latte::Register::VGT_GS_MODE, vgt_gs_mode.value });
    }
 
    if (mode == GX2ShaderMode::ComputeShader) {
-      sq_config.ALU_INST_PREFER_VECTOR = 1;
-      sq_config.PS_PRIO = 0;
-      sq_config.VS_PRIO = 1;
-      sq_config.GS_PRIO = 2;
-      sq_config.ES_PRIO = 3;
+      sq_config = sq_config
+         .ALU_INST_PREFER_VECTOR().set(1)
+         .PS_PRIO().set(0)
+         .VS_PRIO().set(1)
+         .GS_PRIO().set(2)
+         .ES_PRIO().set(3);
    } else {
-      sq_config.PS_PRIO = 3;
-      sq_config.VS_PRIO = 2;
-      sq_config.GS_PRIO = 1;
-      sq_config.ES_PRIO = 0;
+      sq_config = sq_config
+         .PS_PRIO().set(3)
+         .VS_PRIO().set(2)
+         .GS_PRIO().set(1)
+         .ES_PRIO().set(0);
    }
 
    if (mode == GX2ShaderMode::UniformRegister) {
-      sq_config.DX9_CONSTS = 1;
+      sq_config = sq_config
+         .DX9_CONSTS().set(1);
    }
 
    if (mode == GX2ShaderMode::GeometryShader) {
-      sq_gpr_resource_mgmt_1.NUM_PS_GPRS = numPsGpr;
-      sq_gpr_resource_mgmt_1.NUM_VS_GPRS = 64;
-      sq_gpr_resource_mgmt_1.NUM_CLAUSE_TEMP_GPRS = 4;
-      sq_gpr_resource_mgmt_2.NUM_ES_GPRS = numVsGpr;
-      sq_gpr_resource_mgmt_2.NUM_GS_GPRS = numGsGpr;
+      sq_gpr_resource_mgmt_1 = sq_gpr_resource_mgmt_1
+         .NUM_PS_GPRS().set(numPsGpr)
+         .NUM_VS_GPRS().set(64)
+         .NUM_CLAUSE_TEMP_GPRS().set(4);
 
-      sq_stack_resource_mgmt_1.NUM_PS_STACK_ENTRIES = numPsStackEntries;
-      sq_stack_resource_mgmt_2.NUM_ES_STACK_ENTRIES = numVsStackEntries;
-      sq_stack_resource_mgmt_2.NUM_GS_STACK_ENTRIES = numGsStackEntries;
+      sq_gpr_resource_mgmt_2 = sq_gpr_resource_mgmt_2
+         .NUM_ES_GPRS().set(numVsGpr)
+         .NUM_GS_GPRS().set(numGsGpr);
 
-      sq_thread_resource_mgmt.NUM_PS_THREADS = 124;
-      sq_thread_resource_mgmt.NUM_VS_THREADS = 32;
-      sq_thread_resource_mgmt.NUM_GS_THREADS = 8;
-      sq_thread_resource_mgmt.NUM_ES_THREADS = 28;
+      sq_stack_resource_mgmt_1 = sq_stack_resource_mgmt_1
+         .NUM_PS_STACK_ENTRIES().set(numPsStackEntries);
+
+      sq_stack_resource_mgmt_2
+         .NUM_ES_STACK_ENTRIES().set(numVsStackEntries);
+
+      sq_stack_resource_mgmt_2
+         .NUM_GS_STACK_ENTRIES().set(numGsStackEntries);
+
+      sq_thread_resource_mgmt = sq_thread_resource_mgmt
+         .NUM_PS_THREADS().set(124)
+         .NUM_VS_THREADS().set(32)
+         .NUM_GS_THREADS().set(8)
+         .NUM_ES_THREADS().set(28);
    } else if (mode == GX2ShaderMode::ComputeShader) {
-      sq_gpr_resource_mgmt_1.NUM_CLAUSE_TEMP_GPRS = 4;
-      sq_gpr_resource_mgmt_2.NUM_ES_GPRS = 248;
-      sq_stack_resource_mgmt_2.NUM_ES_STACK_ENTRIES = 256;
+      sq_gpr_resource_mgmt_1 = sq_gpr_resource_mgmt_1
+         .NUM_CLAUSE_TEMP_GPRS().set(4);
 
-      sq_thread_resource_mgmt.NUM_PS_THREADS = 1;
-      sq_thread_resource_mgmt.NUM_VS_THREADS = 1;
-      sq_thread_resource_mgmt.NUM_GS_THREADS = 1;
-      sq_thread_resource_mgmt.NUM_ES_THREADS = 189;
+      sq_gpr_resource_mgmt_2 = sq_gpr_resource_mgmt_2
+         .NUM_ES_GPRS().set(248);
+
+      sq_stack_resource_mgmt_2 = sq_stack_resource_mgmt_2
+         .NUM_ES_STACK_ENTRIES().set(256);
+
+      sq_thread_resource_mgmt = sq_thread_resource_mgmt
+         .NUM_PS_THREADS().set(1)
+         .NUM_VS_THREADS().set(1)
+         .NUM_GS_THREADS().set(1)
+         .NUM_ES_THREADS().set(189);
    } else {
-      sq_gpr_resource_mgmt_1.NUM_PS_GPRS = numPsGpr;
-      sq_gpr_resource_mgmt_1.NUM_VS_GPRS = numVsGpr;
+      sq_gpr_resource_mgmt_1 = sq_gpr_resource_mgmt_1
+         .NUM_PS_GPRS().set(numPsGpr)
+         .NUM_VS_GPRS().set(numVsGpr);
 
-      sq_stack_resource_mgmt_1.NUM_PS_STACK_ENTRIES = numPsStackEntries;
-      sq_stack_resource_mgmt_1.NUM_VS_STACK_ENTRIES = numVsStackEntries;
+      sq_stack_resource_mgmt_1 = sq_stack_resource_mgmt_1
+         .NUM_PS_STACK_ENTRIES().set(numPsStackEntries)
+         .NUM_VS_STACK_ENTRIES().set(numVsStackEntries);
 
-      sq_thread_resource_mgmt.NUM_PS_THREADS = 136;
-      sq_thread_resource_mgmt.NUM_VS_THREADS = 48;
-      sq_thread_resource_mgmt.NUM_GS_THREADS = 4;
-      sq_thread_resource_mgmt.NUM_ES_THREADS = 4;
+      sq_thread_resource_mgmt = sq_thread_resource_mgmt
+         .NUM_PS_THREADS().set(136)
+         .NUM_VS_THREADS().set(48)
+         .NUM_GS_THREADS().set(4)
+         .NUM_ES_THREADS().set(4);
    }
 
    uint32_t regData[] = {
@@ -486,8 +532,11 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
 void
 GX2SetStreamOutEnable(BOOL enable)
 {
-   auto vgt_strmout_en = latte::VGT_STRMOUT_EN { 0 };
-   vgt_strmout_en.STREAMOUT = enable ? 1 : 0;
+   auto vgt_strmout_en = latte::VGT_STRMOUT_EN::get(0);
+
+   vgt_strmout_en = vgt_strmout_en
+      .STREAMOUT().set(!!enable);
+
    pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_EN, vgt_strmout_en.value });
 }
 
@@ -502,11 +551,18 @@ GX2SetGeometryShaderInputRingBuffer(void *buffer, uint32_t size)
    res.id = latte::SQ_GS_GSIN_RESOURCE;
    res.baseAddress = buffer;
    res.size = size - 1;
-   res.word2.STRIDE = 4;
-   res.word2.CLAMP_X = latte::SQ_VTX_CLAMP_NAN;
-   res.word2.DATA_FORMAT = latte::FMT_32_32_32_32_FLOAT;
-   res.word3.UNCACHED = 1;
-   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+
+   res.word2 = res.word2
+      .STRIDE().set(4)
+      .CLAMP_X().set(latte::SQ_VTX_CLAMP_NAN)
+      .DATA_FORMAT().set(latte::FMT_32_32_32_32_FLOAT);
+
+   res.word3 = res.word3
+      .UNCACHED().set(1);
+
+   res.word6 = res.word6
+      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+
    pm4::write(res);
 }
 
@@ -521,48 +577,55 @@ GX2SetGeometryShaderOutputRingBuffer(void *buffer, uint32_t size)
    res.id = latte::SQ_VS_GSOUT_RESOURCE;
    res.baseAddress = buffer;
    res.size = size - 1;
-   res.word2.STRIDE = 4;
-   res.word2.CLAMP_X = latte::SQ_VTX_CLAMP_NAN;
-   res.word2.DATA_FORMAT = latte::FMT_32_32_32_32_FLOAT;
-   res.word3.UNCACHED = 1;
-   res.word6.TYPE = latte::SQ_TEX_VTX_VALID_BUFFER;
+
+   res.word2 = res.word2
+      .STRIDE().set(4)
+      .CLAMP_X().set(latte::SQ_VTX_CLAMP_NAN)
+      .DATA_FORMAT().set(latte::FMT_32_32_32_32_FLOAT);
+
+   res.word3 = res.word3
+      .UNCACHED().set(1);
+
+   res.word6 = res.word6
+      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+
    pm4::write(res);
 }
 
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader)
 {
-   return shader->regs.sq_pgm_resources_ps.value().NUM_GPRS;
+   return shader->regs.sq_pgm_resources_ps.value().NUM_GPRS();
 }
 
 uint32_t
 GX2GetPixelShaderStackEntries(GX2PixelShader *shader)
 {
-   return shader->regs.sq_pgm_resources_ps.value().STACK_SIZE;
+   return shader->regs.sq_pgm_resources_ps.value().STACK_SIZE();
 }
 
 uint32_t
 GX2GetVertexShaderGPRs(GX2VertexShader *shader)
 {
-   return shader->regs.sq_pgm_resources_vs.value().NUM_GPRS;
+   return shader->regs.sq_pgm_resources_vs.value().NUM_GPRS();
 }
 
 uint32_t
 GX2GetVertexShaderStackEntries(GX2VertexShader *shader)
 {
-   return shader->regs.sq_pgm_resources_vs.value().STACK_SIZE;
+   return shader->regs.sq_pgm_resources_vs.value().STACK_SIZE();
 }
 
 uint32_t
 GX2GetGeometryShaderGPRs(GX2GeometryShader *shader)
 {
-   return shader->regs.sq_pgm_resources_gs.value().NUM_GPRS;
+   return shader->regs.sq_pgm_resources_gs.value().NUM_GPRS();
 }
 
 uint32_t
 GX2GetGeometryShaderStackEntries(GX2GeometryShader *shader)
 {
-   return shader->regs.sq_pgm_resources_gs.value().STACK_SIZE;
+   return shader->regs.sq_pgm_resources_gs.value().STACK_SIZE();
 }
 
 } // namespace gx2

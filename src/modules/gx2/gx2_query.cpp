@@ -27,8 +27,8 @@ GX2SampleBottomGPUCycle(be_val<uint64_t> *result)
 {
    *result = -1;
 
-   auto eventInitiator = latte::VGT_EVENT_INITIATOR { 0 };
-   eventInitiator.EVENT_TYPE = latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS;
+   auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
+      .EVENT_TYPE().set(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS);
 
    auto addrLo = pm4::EW_EOP_ADDR_LO { 0 };
    addrLo.ADDR_LO = memory_untranslate(result) >> 2;

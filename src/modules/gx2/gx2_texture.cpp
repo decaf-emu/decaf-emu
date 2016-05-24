@@ -10,9 +10,9 @@ namespace gx2
 void
 GX2InitTextureRegs(GX2Texture *texture)
 {
-   auto word0 = texture->regs.word0.value();
-   auto word1 = texture->regs.word1.value();
-   auto word4 = texture->regs.word4.value();
+   auto word0 = latte::SQ_TEX_RESOURCE_WORD0_N::get(0);
+   auto word1 = latte::SQ_TEX_RESOURCE_WORD1_N::get(0);
+   auto word4 = latte::SQ_TEX_RESOURCE_WORD4_N::get(0);
    auto word5 = texture->regs.word5.value();
    auto word6 = texture->regs.word6.value();
 
@@ -42,90 +42,99 @@ GX2InitTextureRegs(GX2Texture *texture)
    }
 
    // Word 0
-   word0.value = 0;
-   word0.DIM = static_cast<latte::SQ_TEX_DIM>(texture->surface.dim & 0x7);
-   word0.TILE_MODE = static_cast<latte::SQ_TILE_MODE>(texture->surface.tileMode.value());
-
-   if (texture->surface.use & GX2SurfaceUse::DepthBuffer) {
-      word0.TILE_TYPE = 1;
-   } else {
-      word0.TILE_TYPE = 0;
-   }
-
+   auto tileType = 0;
    auto format = static_cast<latte::SQ_DATA_FORMAT>(texture->surface.format & 0x3F);
    auto pitch = texture->surface.pitch;
+
+   if (texture->surface.use & GX2SurfaceUse::DepthBuffer) {
+      tileType = 1;
+   }
 
    if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5) {
       pitch *= 4;
    }
 
-   word0.PITCH = (pitch / 8) - 1;
-   word0.TEX_WIDTH = texture->surface.width - 1;
+   word0 = word0
+      .DIM().set(static_cast<latte::SQ_TEX_DIM>(texture->surface.dim & 0x7))
+      .TILE_MODE().set(static_cast<latte::SQ_TILE_MODE>(texture->surface.tileMode.value()))
+      .TILE_TYPE().set(tileType)
+      .PITCH().set((pitch / 8) - 1)
+      .TEX_WIDTH().set(texture->surface.width - 1);
 
    // Word 1
-   word1.value = 0;
-   word1.TEX_HEIGHT = texture->surface.height - 1;
+   auto depth = 0u;
 
    if (texture->surface.dim == GX2SurfaceDim::TextureCube) {
-      word1.TEX_DEPTH = (texture->surface.depth / 6) - 1;
+      depth = (texture->surface.depth / 6) - 1;
    } else if (texture->surface.dim == GX2SurfaceDim::Texture3D ||
               texture->surface.dim == GX2SurfaceDim::Texture2DMSAAArray ||
               texture->surface.dim == GX2SurfaceDim::Texture2DArray ||
               texture->surface.dim == GX2SurfaceDim::Texture1DArray) {
-      word1.TEX_DEPTH = texture->surface.depth - 1;
-   } else {
-      word1.TEX_DEPTH = 0;
+      depth = texture->surface.depth - 1;
    }
 
-   word1.DATA_FORMAT = format;
+   word1 = word1
+      .TEX_HEIGHT().set(texture->surface.height - 1)
+      .TEX_DEPTH().set(depth);
 
    // Word 4
    auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   auto numFormat = latte::SQ_NUM_FORMAT_NORM;
+   auto forceDegamma = false;
 
    if (texture->surface.format & GX2AttribFormatFlags::SIGNED) {
       formatComp = latte::SQ_FORMAT_COMP_SIGNED;
    }
 
-   word4.value = 0;
-   word4.FORMAT_COMP_X = formatComp;
-   word4.FORMAT_COMP_Y = formatComp;
-   word4.FORMAT_COMP_Z = formatComp;
-   word4.FORMAT_COMP_W = formatComp;
-
    if (texture->surface.format & GX2AttribFormatFlags::SCALED) {
-      word4.NUM_FORMAT_ALL = latte::SQ_NUM_FORMAT_SCALED;
+      numFormat = latte::SQ_NUM_FORMAT_SCALED;
    } else if (texture->surface.format & GX2AttribFormatFlags::INTEGER) {
-      word4.NUM_FORMAT_ALL = latte::SQ_NUM_FORMAT_INT;
-   } else {
-      word4.NUM_FORMAT_ALL = latte::SQ_NUM_FORMAT_NORM;
+      numFormat = latte::SQ_NUM_FORMAT_INT;
    }
 
    if (texture->surface.format & GX2AttribFormatFlags::DEGAMMA) {
-      word4.FORCE_DEGAMMA = 1;
+      forceDegamma = true;
    }
 
-   word4.ENDIAN_SWAP = static_cast<latte::SQ_ENDIAN>(GX2GetSurfaceSwap(texture->surface.format));
-   word4.REQUEST_SIZE = 2;
+   auto endian = static_cast<latte::SQ_ENDIAN>(GX2GetSurfaceSwap(texture->surface.format));
+   auto dstSelX = static_cast<latte::SQ_SEL>((texture->compMap >> 24) & 0x7);
+   auto dstSelY = static_cast<latte::SQ_SEL>((texture->compMap >> 16) & 0x7);
+   auto dstSelZ = static_cast<latte::SQ_SEL>((texture->compMap >> 8) & 0x7);
+   auto dstSelW = static_cast<latte::SQ_SEL>(texture->compMap & 0x7);
 
-   word4.DST_SEL_X = static_cast<latte::SQ_SEL>((texture->compMap >> 24) & 0x7);
-   word4.DST_SEL_Y = static_cast<latte::SQ_SEL>((texture->compMap >> 16) & 0x7);
-   word4.DST_SEL_Z = static_cast<latte::SQ_SEL>((texture->compMap >> 8) & 0x7);
-   word4.DST_SEL_W = static_cast<latte::SQ_SEL>(texture->compMap & 0x7);
-   word4.BASE_LEVEL = texture->viewFirstMip;
+   word4 = word4
+      .FORMAT_COMP_X().set(formatComp)
+      .FORMAT_COMP_Y().set(formatComp)
+      .FORMAT_COMP_Z().set(formatComp)
+      .FORMAT_COMP_W().set(formatComp)
+      .NUM_FORMAT_ALL().set(numFormat)
+      .FORCE_DEGAMMA().set(forceDegamma)
+      .ENDIAN_SWAP().set(endian)
+      .REQUEST_SIZE().set(2)
+      .DST_SEL_X().set(dstSelX)
+      .DST_SEL_Y().set(dstSelY)
+      .DST_SEL_Z().set(dstSelZ)
+      .DST_SEL_W().set(dstSelW)
+      .BASE_LEVEL().set(texture->viewFirstMip);
 
    // Word 5
-   word5.LAST_LEVEL = texture->viewFirstMip + texture->viewNumMips - 1;
-   word5.BASE_ARRAY = texture->viewFirstSlice;
-   word5.LAST_ARRAY = texture->viewFirstSlice + texture->viewNumSlices - 1;
+   auto yuvConv = 0u;
 
-   if (texture->surface.dim == GX2SurfaceDim::TextureCube && word1.TEX_DEPTH) {
-      word5.YUV_CONV = 1;
+   if (texture->surface.dim == GX2SurfaceDim::TextureCube && word1.TEX_DEPTH()) {
+      yuvConv = 1;
    }
 
+   word5 = word5
+      .LAST_LEVEL().set(texture->viewFirstMip + texture->viewNumMips - 1)
+      .BASE_ARRAY().set(texture->viewFirstSlice)
+      .LAST_ARRAY().set(texture->viewFirstSlice + texture->viewNumSlices - 1)
+      .YUV_CONV().set(yuvConv);
+
    // Word 6
-   word6.MAX_ANISO_RATIO = 4;
-   word6.PERF_MODULATION = 7;
-   word6.TYPE = latte::SQ_TEX_VTX_VALID_TEXTURE;
+   word6 = word6
+      .MAX_ANISO_RATIO().set(4)
+      .PERF_MODULATION().set(7)
+      .TYPE().set(latte::SQ_TEX_VTX_VALID_TEXTURE);
 
    // Update big endian register in texture
    texture->regs.word0 = word0;
@@ -138,22 +147,25 @@ GX2InitTextureRegs(GX2Texture *texture)
 static void
 setTexture(GX2Texture *texture, latte::SQ_RES_OFFSET offset, uint32_t unit)
 {
-   auto word2 = texture->surface.image.getAddress();
-   auto word3 = texture->surface.mipmaps.getAddress();
+   auto imageAddress = texture->surface.image.getAddress();
+   auto mipAddress = texture->surface.mipmaps.getAddress();
 
    if (texture->surface.tileMode >= GX2TileMode::Tiled2DThin1 && texture->surface.tileMode != GX2TileMode::LinearSpecial) {
       if ((texture->surface.swizzle >> 16) & 0xFF) {
-         word2 ^= (texture->surface.swizzle & 0xFFFF);
-         word3 ^= (texture->surface.swizzle & 0xFFFF);
+         imageAddress ^= (texture->surface.swizzle & 0xFFFF);
+         mipAddress ^= (texture->surface.swizzle & 0xFFFF);
       }
    }
+
+   auto word2 = latte::SQ_TEX_RESOURCE_WORD2_N::get(imageAddress >> 8);
+   auto word3 = latte::SQ_TEX_RESOURCE_WORD3_N::get(mipAddress >> 8);
 
    pm4::write(pm4::SetTexResource {
       (unit * 7) + offset,
       texture->regs.word0,
       texture->regs.word1,
-      word2 >> 8,
-      word3 >> 8,
+      word2,
+      word3,
       texture->regs.word4,
       texture->regs.word5,
       texture->regs.word6,

@@ -414,11 +414,11 @@ bool GLDriver::checkActiveTextures()
       auto sq_tex_resource_word5 = getRegister<latte::SQ_TEX_RESOURCE_WORD5_N>(latte::Register::SQ_TEX_RESOURCE_WORD5_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
       auto sq_tex_resource_word6 = getRegister<latte::SQ_TEX_RESOURCE_WORD6_N>(latte::Register::SQ_TEX_RESOURCE_WORD6_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
 
-      if (!sq_tex_resource_word2.BASE_ADDRESS) {
+      if (!sq_tex_resource_word2.BASE_ADDRESS()) {
          continue;
       }
 
-      auto &texture = mTextures[sq_tex_resource_word2.BASE_ADDRESS];
+      auto &texture = mTextures[sq_tex_resource_word2.BASE_ADDRESS()];
 
       if (texture.object) {
          if (texture.words[0] == sq_tex_resource_word0.value
@@ -437,20 +437,20 @@ bool GLDriver::checkActiveTextures()
       }
 
       // Decode resource registers
-      auto pitch = (sq_tex_resource_word0.PITCH + 1) * 8;
-      auto width = sq_tex_resource_word0.TEX_WIDTH + 1;
-      auto height = sq_tex_resource_word1.TEX_HEIGHT + 1;
-      auto depth = sq_tex_resource_word1.TEX_DEPTH + 1;
+      auto pitch = (sq_tex_resource_word0.PITCH() + 1) * 8;
+      auto width = sq_tex_resource_word0.TEX_WIDTH() + 1;
+      auto height = sq_tex_resource_word1.TEX_HEIGHT() + 1;
+      auto depth = sq_tex_resource_word1.TEX_DEPTH() + 1;
 
-      auto format = sq_tex_resource_word1.DATA_FORMAT;
-      auto tileMode = sq_tex_resource_word0.TILE_MODE;
-      auto numFormat = sq_tex_resource_word4.NUM_FORMAT_ALL;
-      auto formatComp = sq_tex_resource_word4.FORMAT_COMP_X;
-      auto degamma = sq_tex_resource_word4.FORCE_DEGAMMA;
-      auto dim = sq_tex_resource_word0.DIM;
+      auto format = sq_tex_resource_word1.DATA_FORMAT();
+      auto tileMode = sq_tex_resource_word0.TILE_MODE().get();
+      auto numFormat = sq_tex_resource_word4.NUM_FORMAT_ALL();
+      auto formatComp = sq_tex_resource_word4.FORMAT_COMP_X();
+      auto degamma = sq_tex_resource_word4.FORCE_DEGAMMA();
+      auto dim = sq_tex_resource_word0.DIM().get();
 
-      auto addr = (sq_tex_resource_word2.BASE_ADDRESS & (~7)) << 8;
-      auto swizzle = sq_tex_resource_word2.SWIZZLE << 8;
+      auto addr = (sq_tex_resource_word2.BASE_ADDRESS() & (~7)) << 8;
+      auto swizzle = sq_tex_resource_word2.SWIZZLE() << 8;
 
       auto imagePtr = make_virtual_ptr<uint8_t>(addr);
 
@@ -481,7 +481,7 @@ bool GLDriver::checkActiveTextures()
       surface.aa = GX2AAMode::Mode1X;
       surface.use = GX2SurfaceUse::Texture;
 
-      if (sq_tex_resource_word0.TILE_TYPE) {
+      if (sq_tex_resource_word0.TILE_TYPE()) {
          surface.use |= GX2SurfaceUse::DepthBuffer;
       }
 
@@ -560,7 +560,7 @@ bool GLDriver::checkActiveTextures()
       case latte::SQ_TEX_DIM_1D_ARRAY:
       case latte::SQ_TEX_DIM_2D_MSAA:
       case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
-         gLog->error("Unsupported texture dim: {}", sq_tex_resource_word0.DIM);
+         gLog->error("Unsupported texture dim: {}", sq_tex_resource_word0.DIM().get());
       }
 
       if (!texture.object) {
@@ -568,10 +568,10 @@ bool GLDriver::checkActiveTextures()
       }
 
       // Setup texture swizzle
-      auto dst_sel_x = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_X);
-      auto dst_sel_y = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Y);
-      auto dst_sel_z = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Z);
-      auto dst_sel_w = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_W);
+      auto dst_sel_x = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_X());
+      auto dst_sel_y = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Y());
+      auto dst_sel_z = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Z());
+      auto dst_sel_w = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_W());
 
       gl::GLint textureSwizzle[] = {
          static_cast<gl::GLint>(dst_sel_x),
@@ -679,23 +679,23 @@ bool GLDriver::checkActiveSamplers()
       }
 
       // Texture clamp
-      auto clamp_x = getTextureWrap(sq_tex_sampler_word0.CLAMP_X);
-      auto clamp_y = getTextureWrap(sq_tex_sampler_word0.CLAMP_Y);
-      auto clamp_z = getTextureWrap(sq_tex_sampler_word0.CLAMP_Z);
+      auto clamp_x = getTextureWrap(sq_tex_sampler_word0.CLAMP_X());
+      auto clamp_y = getTextureWrap(sq_tex_sampler_word0.CLAMP_Y());
+      auto clamp_z = getTextureWrap(sq_tex_sampler_word0.CLAMP_Z());
 
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_S, static_cast<gl::GLint>(clamp_x));
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_T, static_cast<gl::GLint>(clamp_y));
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_R, static_cast<gl::GLint>(clamp_z));
 
       // Texture filter
-      auto xy_min_filter = getTextureXYFilter(sq_tex_sampler_word0.XY_MIN_FILTER);
-      auto xy_mag_filter = getTextureXYFilter(sq_tex_sampler_word0.XY_MAG_FILTER);
+      auto xy_min_filter = getTextureXYFilter(sq_tex_sampler_word0.XY_MIN_FILTER());
+      auto xy_mag_filter = getTextureXYFilter(sq_tex_sampler_word0.XY_MAG_FILTER());
 
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MIN_FILTER, static_cast<gl::GLint>(xy_min_filter));
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<gl::GLint>(xy_mag_filter));
 
       // Setup border color
-      auto border_color_type = sq_tex_sampler_word0.BORDER_COLOR_TYPE;
+      auto border_color_type = sq_tex_sampler_word0.BORDER_COLOR_TYPE();
       std::array<float, 4> colors;
 
       switch (border_color_type) {
@@ -726,13 +726,13 @@ bool GLDriver::checkActiveSamplers()
       gl::glSamplerParameterfv(sampler.object, gl::GL_TEXTURE_BORDER_COLOR, &colors[0]);
 
       // Depth compare
-      auto depth_compare_function = getTextureCompareFunction(sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION);
+      auto depth_compare_function = getTextureCompareFunction(sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION());
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_FUNC, static_cast<gl::GLint>(depth_compare_function));
 
       // Setup texture LOD
-      auto min_lod = sq_tex_sampler_word1.MIN_LOD;
-      auto max_lod = sq_tex_sampler_word1.MAX_LOD;
-      auto lod_bias = sq_tex_sampler_word1.LOD_BIAS;
+      auto min_lod = sq_tex_sampler_word1.MIN_LOD();
+      auto max_lod = sq_tex_sampler_word1.MAX_LOD();
+      auto lod_bias = sq_tex_sampler_word1.LOD_BIAS();
 
       // TODO: GL_TEXTURE_MIN_LOD, GL_TEXTURE_MAX_LOD, GL_TEXTURE_LOD_BIAS
 
