@@ -328,7 +328,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
             .MEGA_FETCH().set(1);
 
          vfetch.word0 = vfetch.word0
-            .MEGA_FETCH_COUNT().set(GX2GetAttribFormatBytes(attrib.format) - 1);
+            .MEGA_FETCH_COUNT().set(static_cast<uint32_t>(GX2GetAttribFormatBytes(attrib.format) - 1));
 
          // Setup format
          auto dataFormat = GX2GetAttribFormatDataFormat(attrib.format);
@@ -445,7 +445,8 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 
    // Set sq_pgm_resources_fs
    auto sq_pgm_resources_fs = fetchShader->regs.sq_pgm_resources_fs.value();
-   sq_pgm_resources_fs.NUM_GPRS = numGPRs;
+   sq_pgm_resources_fs = sq_pgm_resources_fs
+      .NUM_GPRS().set(numGPRs);
    fetchShader->regs.sq_pgm_resources_fs = sq_pgm_resources_fs;
 }
 
