@@ -1,10 +1,13 @@
 #include <cassert>
 #include "cpu/cpu.h"
+#include "cpu/espresso/espresso_spr.h"
 #include "interpreter_insreg.h"
 #include "memory_translate.h"
 #include "utils/bitutils.h"
 #include "utils/align.h"
 #include "utils/log.h"
+
+using espresso::SPR;
 
 /*
 // System Linkage
@@ -109,37 +112,37 @@ mfspr(ThreadState *state, Instruction instr)
    auto value = 0u;
 
    switch (spr) {
-   case SprEncoding::XER:
+   case SPR::XER:
       value = state->xer.value;
       break;
-   case SprEncoding::LR:
+   case SPR::LR:
       value = state->lr;
       break;
-   case SprEncoding::CTR:
+   case SPR::CTR:
       value = state->ctr;
       break;
-   case SprEncoding::UGQR0:
+   case SPR::UGQR0:
       value = state->gqr[0].value;
       break;
-   case SprEncoding::UGQR1:
+   case SPR::UGQR1:
       value = state->gqr[1].value;
       break;
-   case SprEncoding::UGQR2:
+   case SPR::UGQR2:
       value = state->gqr[2].value;
       break;
-   case SprEncoding::UGQR3:
+   case SPR::UGQR3:
       value = state->gqr[3].value;
       break;
-   case SprEncoding::UGQR4:
+   case SPR::UGQR4:
       value = state->gqr[4].value;
       break;
-   case SprEncoding::UGQR5:
+   case SPR::UGQR5:
       value = state->gqr[5].value;
       break;
-   case SprEncoding::UGQR6:
+   case SPR::UGQR6:
       value = state->gqr[6].value;
       break;
-   case SprEncoding::UGQR7:
+   case SPR::UGQR7:
       value = state->gqr[7].value;
       break;
    default:
@@ -157,37 +160,37 @@ mtspr(ThreadState *state, Instruction instr)
    auto value = state->gpr[instr.rS];
 
    switch (spr) {
-   case SprEncoding::XER:
+   case SPR::XER:
       state->xer.value = value;
       break;
-   case SprEncoding::LR:
+   case SPR::LR:
       state->lr = value;
       break;
-   case SprEncoding::CTR:
+   case SPR::CTR:
       state->ctr = value;
       break;
-   case SprEncoding::UGQR0:
+   case SPR::UGQR0:
       state->gqr[0].value = value;
       break;
-   case SprEncoding::UGQR1:
+   case SPR::UGQR1:
       state->gqr[1].value = value;
       break;
-   case SprEncoding::UGQR2:
+   case SPR::UGQR2:
       state->gqr[2].value = value;
       break;
-   case SprEncoding::UGQR3:
+   case SPR::UGQR3:
       state->gqr[3].value = value;
       break;
-   case SprEncoding::UGQR4:
+   case SPR::UGQR4:
       state->gqr[4].value = value;
       break;
-   case SprEncoding::UGQR5:
+   case SPR::UGQR5:
       state->gqr[5].value = value;
       break;
-   case SprEncoding::UGQR6:
+   case SPR::UGQR6:
       state->gqr[6].value = value;
       break;
-   case SprEncoding::UGQR7:
+   case SPR::UGQR7:
       state->gqr[7].value = value;
       break;
    default:
@@ -203,10 +206,10 @@ mftb(ThreadState *state, Instruction instr)
    auto value = 0u;
 
    switch (tbr) {
-   case SprEncoding::UTBL:
+   case SPR::UTBL:
       value = state->tbl;
       break;
-   case SprEncoding::UTBU:
+   case SPR::UTBU:
       value = state->tbu;
       break;
    default:

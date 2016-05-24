@@ -3,7 +3,8 @@
 #include <cereal/archives/binary.hpp>
 #include <vector>
 #include "cpu/state.h"
-#include "cpu/instructiondata.h"
+#include "cpu/espresso/espresso_instruction.h"
+#include "cpu/espresso/espresso_registers.h"
 #include "utils/be_val.h"
 
 namespace hwtest
@@ -16,9 +17,9 @@ static const auto CRB_BASE = 8;
 
 struct RegisterState
 {
-   xer_t xer;
-   cr_t cr;
-   fpscr_t fpscr;
+   espresso::xer_t xer;
+   espresso::cr_t cr;
+   espresso::fpscr_t fpscr;
    uint32_t ctr;
    uint32_t gpr[4];
    double fr[4];
@@ -43,7 +44,7 @@ struct RegisterState
 
 struct TestData
 {
-   Instruction instr;
+   espresso::Instruction instr;
    RegisterState input;
    RegisterState output;
 

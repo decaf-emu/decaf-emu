@@ -2,6 +2,8 @@
 #include <cstdint>
 #include "state.h"
 
+// TODO: Move these getCRX functions
+
 uint32_t
 getCRF(ThreadState *state, uint32_t field);
 

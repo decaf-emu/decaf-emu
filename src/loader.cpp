@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <zlib.h>
-#include "cpu/instructiondata.h"
+#include "cpu/espresso/espresso_instructionset.h"
 #include "elf.h"
 #include "filesystem/filesystem.h"
 #include "kernelmodule.h"
@@ -192,7 +192,7 @@ getTrampAddress(LoadedModule *loadedMod, SequentialMemoryTracker &codeSeg, Tramp
       tramp = static_cast<uint32_t*>(codeSeg.get(4));
 
       // Short jump using b
-      auto b = gInstructionTable.encode(InstructionID::b);
+      auto b = espresso::encodeInstruction(espresso::InstructionID::b);
       b.li = delta >> 2;
       b.lk = 0;
       b.aa = 0;
@@ -201,7 +201,7 @@ getTrampAddress(LoadedModule *loadedMod, SequentialMemoryTracker &codeSeg, Tramp
       tramp = static_cast<uint32_t*>(codeSeg.get(4));
 
       // Absolute jump using b
-      auto b = gInstructionTable.encode(InstructionID::b);
+      auto b = espresso::encodeInstruction(espresso::InstructionID::b);
       b.li = targetAddr >> 2;
       b.lk = 0;
       b.aa = 1;
@@ -338,11 +338,11 @@ Loader::loadKernelModule(const std::string &moduleName,
          codeRegion += 8;
 
          // Write syscall thunk
-         auto kc = gInstructionTable.encode(InstructionID::kc);
+         auto kc = espresso::encodeInstruction(espresso::InstructionID::kc);
          kc.kcn = func->syscallID;
          *(thunk + 0) = byte_swap(kc.value);
 
-         auto bclr = gInstructionTable.encode(InstructionID::bclr);
+         auto bclr = espresso::encodeInstruction(espresso::InstructionID::bclr);
          bclr.bo = 0x1f;
          *(thunk + 1) = byte_swap(bclr.value);
 
@@ -419,11 +419,11 @@ Loader::registerUnimplementedFunction(const std::string &module, const std::stri
    auto addr = mem::untranslate(thunk);
 
    // Write syscall thunk
-   auto kc = gInstructionTable.encode(InstructionID::kc);
+   auto kc = espresso::encodeInstruction(espresso::InstructionID::kc);
    kc.kcn = id;
    *(thunk + 0) = byte_swap(kc.value);
 
-   auto bclr = gInstructionTable.encode(InstructionID::bclr);
+   auto bclr = espresso::encodeInstruction(espresso::InstructionID::bclr);
    bclr.bo = 0x1f;
    *(thunk + 1) = byte_swap(bclr.value);
 
@@ -498,11 +498,11 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
             break;
          case elf::R_PPC_REL24:
          {
-            auto ins = Instruction { byte_swap(*ptr32) };
-            auto data = gInstructionTable.decode(ins);
+            auto ins = espresso::Instruction { byte_swap(*ptr32) };
+            auto data = espresso::decodeInstruction(ins);
 
             // Our REL24 trampolines only work for a branch instruction...
-            assert(data->id == InstructionID::b);
+            assert(data->id == espresso::InstructionID::b);
 
             auto delta = static_cast<ptrdiff_t>(symAddr) - static_cast<ptrdiff_t>(reloAddr);
 
@@ -521,7 +521,7 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
          }
          case elf::R_PPC_EMB_SDA21:
          {
-            auto ins = Instruction { byte_swap(*ptr32) };
+            auto ins = espresso::Instruction { byte_swap(*ptr32) };
             ptrdiff_t offset = 0;
 
             if (ins.rA == 0) {

@@ -1,8 +1,11 @@
 #pragma once
 #include "../state.h"
-#include "../instruction.h"
-#include "../instructiondata.h"
-#include "../instructionid.h"
+#include "cpu/espresso/espresso_instruction.h"
+#include "cpu/espresso/espresso_instructionid.h"
+
+// TODO: Remove me
+using espresso::Instruction;
+using espresso::InstructionID;
 
 namespace cpu
 {
@@ -11,9 +14,9 @@ namespace interpreter
 
 using instrfptr_t = void(*)(ThreadState*, Instruction);
 
-bool hasInstruction(InstructionID instrId);
-instrfptr_t getInstructionHandler(InstructionID id);
-void registerInstruction(InstructionID id, instrfptr_t fptr);
+bool hasInstruction(espresso::InstructionID instrId);
+instrfptr_t getInstructionHandler(espresso::InstructionID id);
+void registerInstruction(espresso::InstructionID id, instrfptr_t fptr);
 void registerBranchInstructions();
 void registerConditionInstructions();
 void registerFloatInstructions();
@@ -29,6 +32,6 @@ void registerSystemInstructions();
 #undef RegisterInstructionFn
 
 #define RegisterInstruction(x) \
-   cpu::interpreter::registerInstruction(InstructionID::x, &x)
+   cpu::interpreter::registerInstruction(espresso::InstructionID::x, &x)
 #define RegisterInstructionFn(x, fn) \
-   cpu::interpreter::registerInstruction(InstructionID::x, &fn)
+   cpu::interpreter::registerInstruction(espresso::InstructionID::x, &fn)

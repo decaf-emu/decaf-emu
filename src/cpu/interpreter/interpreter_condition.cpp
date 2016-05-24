@@ -5,6 +5,11 @@
 #include "utils/bitutils.h"
 #include "utils/floatutils.h"
 
+using espresso::ConditionRegisterFlag;
+using espresso::FPSCRRegisterBits;
+
+// TODO: Move these getCRX functions
+
 static std::pair<uint32_t, uint32_t>
 getCRFRange(uint32_t field)
 {

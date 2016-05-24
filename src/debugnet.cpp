@@ -9,8 +9,8 @@
 #include "debugnet.h"
 #include "debugmsg.h"
 #include "debugger.h"
-#include "cpu/disassembler.h"
-#include "cpu/instructiondata.h"
+#include "cpu/espresso/espresso_disassembler.h"
+#include "cpu/espresso/espresso_instructionset.h"
 #include "mem/mem.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "processor.h"
@@ -689,10 +689,12 @@ DebugNet::handlePacket(DebugPacket *pak)
 
       uint32_t curAddr = fiber->state.cia;
 
-      auto instr = mem::read<Instruction>(curAddr);
-      auto data = gInstructionTable.decode(instr);
-      if (data->id == InstructionID::b || data->id == InstructionID::bc ||
-         data->id == InstructionID::bcctr || data->id == InstructionID::bclr) {
+      auto instr = mem::read<espresso::Instruction>(curAddr);
+      auto data = espresso::decodeInstruction(instr);
+      if (data->id == espresso::InstructionID::b
+       || data->id == espresso::InstructionID::bc
+       || data->id == espresso::InstructionID::bcctr
+       || data->id == espresso::InstructionID::bclr) {
          if (instr.lk) {
             // This is a branch-and-link.  Put a BP after the next instruction
             gDebugger.addBreakpoint(curAddr + 4, 0xFFFFFFFF);
@@ -730,9 +732,9 @@ DebugNet::handlePacket(DebugPacket *pak)
          pakO->address = dPak->address;
          auto curAddr = dPak->address;
          for (int i = 0; i < (int)dPak->numInstr; ++i, curAddr += 4) {
-            auto instr = mem::read<Instruction>(curAddr);
-            Disassembly dis;
-            gDisassembler.disassemble(instr, dis, curAddr);
+            auto instr = mem::read<espresso::Instruction>(curAddr);
+            espresso::Disassembly dis;
+            espresso::disassemble(instr, dis, curAddr);
 
             pakO->lines.push_back(dis.text);
          }

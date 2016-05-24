@@ -1,8 +1,6 @@
 #include <random>
 #include <string>
 #include "fuzztests.h"
-#include "cpu/instructionid.h"
-#include "cpu/instructiondata.h"
 #include "cpu/interpreter/interpreter.h"
 #include "cpu/interpreter/interpreter_insreg.h"
 #include "cpu/jit/jit.h"
@@ -13,6 +11,10 @@
 #include "cpu/trace.h"
 #include "utils/bitutils.h"
 #include "utils/log.h"
+#include "cpu/espresso/espresso_instructionset.h"
+#include "cpu/espresso/espresso_spr.h"
+
+using namespace espresso;
 
 template<size_t SIZE, class T> inline size_t array_size(T (&arr)[SIZE]) {
    return SIZE;
@@ -20,7 +22,7 @@ template<size_t SIZE, class T> inline size_t array_size(T (&arr)[SIZE]) {
 
 struct InstructionFuzzData {
    uint32_t baseInstr;
-   std::vector<Field> allFields;
+   std::vector<InstructionField> allFields;
 };
 
 static const uint32_t instructionBase = mem::ApplicationBase;
@@ -33,7 +35,7 @@ bool buildFuzzData(InstructionID instrId, InstructionFuzzData &fuzzData)
       return true;
    }
 
-   InstructionData *data = gInstructionTable.find(instrId);
+   auto data = findInstructionInfo(instrId);
 
    // Verify JIT and Interpreter have everything registered...
    bool hasInterpHandler = cpu::interpreter::hasInstruction(static_cast<InstructionID>(instrId));
@@ -53,9 +55,9 @@ bool buildFuzzData(InstructionID instrId, InstructionFuzzData &fuzzData)
    for (auto &op : data->opcode) {
       auto field = op.field;
       auto value = op.value;
-      auto start = getFieldStart(field);
+      auto start = getInstructionFieldStart(field);
       if (start >= 32) continue;
-      auto fieldBits = getFieldBitmask(field);
+      auto fieldBits = getInstructionFieldBitmask(field);
       if (instrBits & fieldBits) {
          gLog->error("Instruction {} opcode {} overwrites bits", data->name, (uint32_t)field);
          gLog->error("  {:032b} on {:032b}", fieldBits, instrBits);
@@ -65,7 +67,7 @@ bool buildFuzzData(InstructionID instrId, InstructionFuzzData &fuzzData)
       instr |= value << start;
    }
 
-   std::vector<Field> allFields;
+   std::vector<InstructionField> allFields;
 
    for (auto i : data->read) {
       if (std::find(allFields.begin(), allFields.end(), i) == allFields.end()) {
@@ -84,8 +86,8 @@ bool buildFuzzData(InstructionID instrId, InstructionFuzzData &fuzzData)
    }
 
    for (auto i : allFields) {
-      if (isFieldMarker(i)) continue;
-      auto fieldBits = getFieldBitmask(i);
+      if (isInstructionFieldMarker(i)) continue;
+      auto fieldBits = getInstructionFieldBitmask(i);
       if (instrBits & fieldBits) {
          gLog->error("Instruction {} field {} overwrites bits", data->name, (uint32_t)i);
          gLog->error("  {:032b} on {:032b}", fieldBits, instrBits);
@@ -115,15 +117,8 @@ setupFuzzData() {
    return res;
 }
 
-void setFieldValue(Instruction &instr, Field field, uint32_t value) {
-   instr.value |= (value << getFieldStart(field)) & getFieldBitmask(field);
-}
-
-static void
-encodeSPR(Instruction &instr, SprEncoding spr)
-{
-   uint32_t sprInt = (uint32_t)spr;
-   instr.spr = ((sprInt << 5) & 0x3E0) | ((sprInt >> 5) & 0x1F);
+void setFieldValue(Instruction &instr, InstructionField field, uint32_t value) {
+   instr.value |= (value << getInstructionFieldStart(field)) & getInstructionFieldBitmask(field);
 }
 
 bool
@@ -202,7 +197,7 @@ executeInstrTest(uint32_t test_seed)
       break;
    }
 
-   const InstructionData *data = gInstructionTable.find(instrId);
+   const auto data = findInstructionInfo(instrId);
    const InstructionFuzzData *fuzzData = &instructionFuzzData[(int)instrId];
    if (!data || !fuzzData) {
       return false;
@@ -236,80 +231,82 @@ executeInstrTest(uint32_t test_seed)
          return gqrAllocatable[gqrAlloc++];
       };
       for (auto i : fuzzData->allFields) {
-         if (isFieldMarker(i)) {
+         if (isInstructionFieldMarker(i)) {
             continue;
          }
 
          switch (i) {
-         case Field::rA: // gpr Targets
-         case Field::rB:
-         case Field::rD:
-         case Field::rS:
+         case InstructionField::rA: // gpr Targets
+         case InstructionField::rB:
+         case InstructionField::rD:
+         case InstructionField::rS:
             setFieldValue(instr, i, nextGpr());
             break;
-         case Field::frA: // fpr Targets
-         case Field::frB:
-         case Field::frC:
-         case Field::frD:
-         case Field::frS:
+         case InstructionField::frA: // fpr Targets
+         case InstructionField::frB:
+         case InstructionField::frC:
+         case InstructionField::frD:
+         case InstructionField::frS:
             setFieldValue(instr, i, nextFpr());
             break;
-         case Field::i: // gqr Targets
-         case Field::qi:
+         case InstructionField::i: // gqr Targets
+         case InstructionField::qi:
             setFieldValue(instr, i, test_rand() & 4);
-         case Field::crbA: // crb Targets
-         case Field::crbB:
-         case Field::crbD:
+         case InstructionField::crbA: // crb Targets
+         case InstructionField::crbB:
+         case InstructionField::crbD:
             setFieldValue(instr, i, test_rand());
             break;
-         case Field::crfD: // crf Targets
-         case Field::crfS:
+         case InstructionField::crfD: // crf Targets
+         case InstructionField::crfS:
             setFieldValue(instr, i, test_rand());
             break;
-         case Field::imm: // Random Values
-         case Field::simm:
-         case Field::uimm:
-         case Field::rc: // Record Condition
-         case Field::frc:
-         case Field::oe:
-         case Field::crm:
-         case Field::fm:
-         case Field::w:
-         case Field::qw:
-         case Field::sh: // Shift Registers
-         case Field::mb:
-         case Field::me:
+         case InstructionField::imm: // Random Values
+         case InstructionField::simm:
+         case InstructionField::uimm:
+         case InstructionField::rc: // Record Condition
+         case InstructionField::frc:
+         case InstructionField::oe:
+         case InstructionField::crm:
+         case InstructionField::fm:
+         case InstructionField::w:
+         case InstructionField::qw:
+         case InstructionField::sh: // Shift Registers
+         case InstructionField::mb:
+         case InstructionField::me:
             setFieldValue(instr, i, test_rand());
             break;
-         case Field::d: // Memory Delta...
-         case Field::qd:
+         case InstructionField::d: // Memory Delta...
+         case InstructionField::qd:
             setFieldValue(instr, i, test_rand());
             break;
-         case Field::spr: // Special Purpose Registers
+         case InstructionField::spr: // Special Purpose Registers
          {
-            SprEncoding validSprs[] = {
-               SprEncoding::XER,
-               SprEncoding::CTR,
-               SprEncoding::GQR0,
-               SprEncoding::GQR1,
-               SprEncoding::GQR2,
-               SprEncoding::GQR3,
-               SprEncoding::GQR4,
-               SprEncoding::GQR5,
-               SprEncoding::GQR6,
-               SprEncoding::GQR7 };
+            SPR validSprs[] = {
+               SPR::XER,
+               SPR::CTR,
+               SPR::GQR0,
+               SPR::GQR1,
+               SPR::GQR2,
+               SPR::GQR3,
+               SPR::GQR4,
+               SPR::GQR5,
+               SPR::GQR6,
+               SPR::GQR7
+            };
             encodeSPR(instr, validSprs[test_rand() % array_size(validSprs)]);
             break;
          }
-         case Field::tbr: // Time Base Registers
+         case InstructionField::tbr: // Time Base Registers
          {
-            SprEncoding validTbrs[] = {
-               SprEncoding::TBL,
-               SprEncoding::TBU };
+            SPR validTbrs[] = {
+               SPR::TBL,
+               SPR::TBU
+            };
             encodeSPR(instr, validTbrs[test_rand() % array_size(validTbrs)]);
             break;
          }
-         case Field::l:
+         case InstructionField::l:
             // l always must be 0
             instr.l = 0;
             break;
@@ -325,7 +322,7 @@ executeInstrTest(uint32_t test_seed)
    mem::write(instructionBase + 0, instr.value);
 
    // Write a return for the Interpreter
-   Instruction bclr = gInstructionTable.encode(InstructionID::bclr);
+   auto bclr = encodeInstruction(InstructionID::bclr);
    bclr.bo = 0x1f;
    mem::write(instructionBase + 4, bclr.value);
 

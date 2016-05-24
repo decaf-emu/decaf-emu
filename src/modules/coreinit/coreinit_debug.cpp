@@ -124,7 +124,7 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
 }
 
 static void
-OSPanic(const char *file, int line, const char *fmt, ppctypes::VarList& args)
+OSPanic(const char *file, int line, const char *fmt, ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
@@ -133,7 +133,7 @@ OSPanic(const char *file, int line, const char *fmt, ppctypes::VarList& args)
 }
 
 static void
-OSReport(const char *fmt, ppctypes::VarList& args)
+OSReport(const char *fmt, ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
@@ -141,7 +141,7 @@ OSReport(const char *fmt, ppctypes::VarList& args)
 }
 
 static void
-OSVReport(const char *fmt, ppctypes::VarList& args)
+OSVReport(const char *fmt, ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
@@ -149,7 +149,7 @@ OSVReport(const char *fmt, ppctypes::VarList& args)
 }
 
 static void
-COSWarn(uint32_t module, const char *fmt, ppctypes::VarList& args)
+COSWarn(uint32_t module, const char *fmt, ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
@@ -164,7 +164,7 @@ OSConsoleWrite(const char *msg, uint32_t size)
 }
 
 static int
-coreinit__os_snprintf(char *buffer, uint32_t size, const char *fmt, ppctypes::VarList& args)
+coreinit__os_snprintf(char *buffer, uint32_t size, const char *fmt, ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);

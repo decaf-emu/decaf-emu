@@ -3,7 +3,6 @@
 #include <fstream>
 #include "cpu/cpu.h"
 #include "cpu/jit/jit.h"
-#include "cpu/disassembler.h"
 #include "hardwaretests.h"
 #include "mem/mem.h"
 #include "utils/bit_cast.h"
@@ -12,6 +11,12 @@
 #include "utils/strutils.h"
 #include "filesystem/filesystem.h"
 
+#include "cpu/espresso/espresso_disassembler.h"
+#include "cpu/espresso/espresso_instructionset.h"
+#include "cpu/espresso/espresso_registers.h"
+
+using namespace espresso;
+
 static const auto TEST_FPSCR = true;
 static const auto TEST_FPSCR_FR = false;
 
@@ -19,7 +24,7 @@ namespace hwtest
 {
 
 static void
-printTestField(Field field, Instruction instr, RegisterState *input, RegisterState *output, ThreadState *state)
+printTestField(InstructionField field, Instruction instr, RegisterState *input, RegisterState *output, ThreadState *state)
 {
    auto printGPR = [&](uint32_t reg) {
       assert(reg >= GPR_BASE);
@@ -45,40 +50,40 @@ printTestField(Field field, Instruction instr, RegisterState *input, RegisterSta
    };
 
    switch (field) {
-   case Field::rA:
+   case InstructionField::rA:
       printGPR(instr.rA);
       break;
-   case Field::rB:
+   case InstructionField::rB:
       printGPR(instr.rB);
       break;
-   case Field::rD:
+   case InstructionField::rD:
       printGPR(instr.rS);
       break;
-   case Field::rS:
+   case InstructionField::rS:
       printGPR(instr.rS);
       break;
-   case Field::frA:
+   case InstructionField::frA:
       printFPR(instr.frA);
       break;
-   case Field::frB:
+   case InstructionField::frB:
       printFPR(instr.frB);
       break;
-   case Field::frC:
+   case InstructionField::frC:
       printFPR(instr.frC);
       break;
-   case Field::frD:
+   case InstructionField::frD:
       printFPR(instr.frD);
       break;
-   case Field::frS:
+   case InstructionField::frS:
       printFPR(instr.frS);
       break;
-   case Field::XERC:
+   case InstructionField::XERC:
       gLog->debug("xer.ca =         {:08X}         {:08X}         {:08X}", input->xer.ca, output->xer.ca, state->xer.ca);
       break;
-   case Field::XERSO:
+   case InstructionField::XERSO:
       gLog->debug("xer.so =         {:08X}         {:08X}         {:08X}", input->xer.so, output->xer.so, state->xer.so);
       break;
-   case Field::FPSCR:
+   case InstructionField::FPSCR:
       gLog->debug("fpscr =          {:08X}         {:08x}         {:08X}", input->fpscr.value, output->fpscr.value, state->fpscr.value);
       break;
    default:
@@ -131,7 +136,7 @@ bool runTests(const std::string &path)
    uint32_t testsFailed = 0, testsPassed = 0;
    uint32_t baseAddress = mem::ApplicationBase;
 
-   Instruction bclr = gInstructionTable.encode(InstructionID::bclr);
+   Instruction bclr = encodeInstruction(InstructionID::bclr);
    bclr.bo = 0x1f;
    mem::write(baseAddress + 4, bclr.value);
 
@@ -252,7 +257,7 @@ bool runTests(const std::string &path)
             Disassembly dis;
 
             // Print disassembly
-            gDisassembler.disassemble(test.instr, dis, baseAddress);
+            disassemble(test.instr, dis, baseAddress);
             gLog->debug(dis.text);
 
             // Print all test fields

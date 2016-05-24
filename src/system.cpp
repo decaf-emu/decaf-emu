@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <functional>
 #include "cpu/cpu.h"
-#include "cpu/instructiondata.h"
 #include "kernelfunction.h"
 #include "kernelmodule.h"
 #include "mem/mem.h"

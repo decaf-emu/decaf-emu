@@ -1,8 +1,9 @@
 #include <cassert>
 #include "jit_internal.h"
-#include "cpu/instructiondata.h"
 #include "cpu/interpreter/interpreter_insreg.h"
 #include "utils/debuglog.h"
+
+#include "cpu/espresso/espresso_instructionset.h"
 
 static const bool TRACK_FALLBACK_CALLS = true;
 
@@ -12,11 +13,11 @@ namespace cpu
 namespace jit
 {
 
-static uint64_t sFallbackCalls[static_cast<size_t>(InstructionID::InstructionCount)] = { 0 };
+static uint64_t sFallbackCalls[static_cast<size_t>(espresso::InstructionID::InstructionCount)] = { 0 };
 
-bool jit_fallback(PPCEmuAssembler& a, Instruction instr)
+bool jit_fallback(PPCEmuAssembler& a, espresso::Instruction instr)
 {
-   auto data = gInstructionTable.decode(instr);
+   auto data = espresso::decodeInstruction(instr);
    auto fptr = cpu::interpreter::getInstructionHandler(data->id);
    if (!fptr) {
       throw;
@@ -43,7 +44,7 @@ void fallbacksPrint()
 {
    typedef std::pair<uint32_t, uint64_t> FallbackItem;
    std::vector<FallbackItem> callList;
-   for (auto i = 0u; i < static_cast<size_t>(InstructionID::InstructionCount); ++i) {
+   for (auto i = 0u; i < static_cast<size_t>(espresso::InstructionID::InstructionCount); ++i) {
       callList.emplace_back(i, cpu::jit::sFallbackCalls[i]);
    }
 
@@ -55,7 +56,7 @@ void fallbacksPrint()
    out.write("Fallback Call Numbers:\n");
 
    for (auto i : callList) {
-      auto data = gInstructionTable.find(static_cast<InstructionID>(i.first));
+      auto data = espresso::findInstructionInfo(static_cast<espresso::InstructionID>(i.first));
       out.write("  [{}] {}\n", data->name, i.second);
    }
 

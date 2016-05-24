@@ -1,7 +1,10 @@
 #include <cassert>
+#include "cpu/espresso/espresso_spr.h"
 #include "jit_insreg.h"
 #include "utils/bitutils.h"
 #include "utils/log.h"
+
+using espresso::SPR;
 
 namespace cpu
 {
@@ -34,40 +37,40 @@ isync(PPCEmuAssembler& a, Instruction instr)
 static bool
 mfspr(PPCEmuAssembler& a, Instruction instr)
 {
-   auto spr = static_cast<SprEncoding>(decodeSPR(instr));
+   auto spr = decodeSPR(instr);
 
    switch (spr) {
-   case SprEncoding::XER:
+   case SPR::XER:
       a.mov(a.eax, a.ppcxer);
       break;
-   case SprEncoding::LR:
+   case SPR::LR:
       a.mov(a.eax, a.ppclr);
       break;
-   case SprEncoding::CTR:
+   case SPR::CTR:
       a.mov(a.eax, a.ppcctr);
       break;
-   case SprEncoding::UGQR0:
+   case SPR::UGQR0:
       a.mov(a.eax, a.ppcgpr[0]);
       break;
-   case SprEncoding::UGQR1:
+   case SPR::UGQR1:
       a.mov(a.eax, a.ppcgpr[1]);
       break;
-   case SprEncoding::UGQR2:
+   case SPR::UGQR2:
       a.mov(a.eax, a.ppcgpr[2]);
       break;
-   case SprEncoding::UGQR3:
+   case SPR::UGQR3:
       a.mov(a.eax, a.ppcgpr[3]);
       break;
-   case SprEncoding::UGQR4:
+   case SPR::UGQR4:
       a.mov(a.eax, a.ppcgpr[4]);
       break;
-   case SprEncoding::UGQR5:
+   case SPR::UGQR5:
       a.mov(a.eax, a.ppcgpr[5]);
       break;
-   case SprEncoding::UGQR6:
+   case SPR::UGQR6:
       a.mov(a.eax, a.ppcgpr[6]);
       break;
-   case SprEncoding::UGQR7:
+   case SPR::UGQR7:
       a.mov(a.eax, a.ppcgpr[7]);
       break;
    default:
@@ -85,38 +88,39 @@ mtspr(PPCEmuAssembler& a, Instruction instr)
    a.mov(a.eax, a.ppcgpr[instr.rD]);
 
    auto spr = decodeSPR(instr);
+
    switch (spr) {
-   case SprEncoding::XER:
+   case SPR::XER:
       a.mov(a.ppcxer, a.eax);
       break;
-   case SprEncoding::LR:
+   case SPR::LR:
       a.mov(a.ppclr, a.eax);
       break;
-   case SprEncoding::CTR:
+   case SPR::CTR:
       a.mov(a.ppcctr, a.eax);
       break;
-   case SprEncoding::UGQR0:
+   case SPR::UGQR0:
       a.mov(a.ppcgqr[0], a.eax);
       break;
-   case SprEncoding::UGQR1:
+   case SPR::UGQR1:
       a.mov(a.ppcgqr[1], a.eax);
       break;
-   case SprEncoding::UGQR2:
+   case SPR::UGQR2:
       a.mov(a.ppcgqr[2], a.eax);
       break;
-   case SprEncoding::UGQR3:
+   case SPR::UGQR3:
       a.mov(a.ppcgqr[3], a.eax);
       break;
-   case SprEncoding::UGQR4:
+   case SPR::UGQR4:
       a.mov(a.ppcgqr[4], a.eax);
       break;
-   case SprEncoding::UGQR5:
+   case SPR::UGQR5:
       a.mov(a.ppcgqr[5], a.eax);
       break;
-   case SprEncoding::UGQR6:
+   case SPR::UGQR6:
       a.mov(a.ppcgqr[6], a.eax);
       break;
-   case SprEncoding::UGQR7:
+   case SPR::UGQR7:
       a.mov(a.ppcgqr[7], a.eax);
       break;
    default:

@@ -1,184 +1,184 @@
 #include <sstream>
 #include <iomanip>
 #include <list>
-#include "disassembler.h"
-#include "instructiondata.h"
+#include "espresso_disassembler.h"
+#include "espresso_instructionset.h"
 #include "system.h"
 #include "kernelfunction.h"
 #include "utils/bitutils.h"
 
-Disassembler
-gDisassembler;
+namespace espresso
+{
 
 // TODO: Finish disassembler!
 
 static Disassembly::Argument
-disassembleField(uint32_t cia, Instruction instr, InstructionData *data, Field field)
+disassembleField(uint32_t cia, Instruction instr, InstructionInfo *data, InstructionField field)
 {
    Disassembly::Argument result;
 
    switch (field) {
-   case Field::aa:
+   case InstructionField::aa:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.aa;
       break;
-   case Field::bd:
+   case InstructionField::bd:
       result.type = Disassembly::Argument::Address;
       result.address = sign_extend<16>(instr.bd << 2) + (instr.aa ? 0 : cia);
       break;
-   case Field::bi:
+   case InstructionField::bi:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.bi;
       break;
-   case Field::bo:
+   case InstructionField::bo:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.bo;
       break;
-   case Field::crbA:
+   case InstructionField::crbA:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.crbA;
       break;
-   case Field::crbB:
+   case InstructionField::crbB:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.crbB;
       break;
-   case Field::crbD:
+   case InstructionField::crbD:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.crbD;
       break;
-   case Field::crfD:
+   case InstructionField::crfD:
       result.type = Disassembly::Argument::Register;
       result.text = "crf" + std::to_string(instr.crfD);
       break;
-   case Field::crfS:
+   case InstructionField::crfS:
       result.type = Disassembly::Argument::Register;
       result.text = "crf" + std::to_string(instr.crfS);
       break;
-   case Field::crm:
+   case InstructionField::crm:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.crm;
       break;
-   case Field::d:
+   case InstructionField::d:
       result.type = Disassembly::Argument::ValueSigned;
       result.valueSigned = sign_extend<16>(instr.d);
       break;
-   case Field::fm:
+   case InstructionField::fm:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.fm;
       break;
-   case Field::frA:
+   case InstructionField::frA:
       result.type = Disassembly::Argument::Register;
       result.text = "f" + std::to_string(instr.frA);
       break;
-   case Field::frB:
+   case InstructionField::frB:
       result.type = Disassembly::Argument::Register;
       result.text = "f" + std::to_string(instr.frB);
       break;
-   case Field::frC:
+   case InstructionField::frC:
       result.type = Disassembly::Argument::Register;
       result.text = "f" + std::to_string(instr.frC);
       break;
-   case Field::frD:
+   case InstructionField::frD:
       result.type = Disassembly::Argument::Register;
       result.text = "f" + std::to_string(instr.frD);
       break;
-   case Field::frS:
+   case InstructionField::frS:
       result.type = Disassembly::Argument::Register;
       result.text = "f" + std::to_string(instr.frS);
       break;
-   case Field::i:
+   case InstructionField::i:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.i;
       break;
-   case Field::imm:
+   case InstructionField::imm:
       result.type = Disassembly::Argument::ValueUnsigned;
       result.valueUnsigned = instr.imm;
       break;
-   case Field::kcn:
+   case InstructionField::kcn:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.kcn;
       break;
-   case Field::li:
+   case InstructionField::li:
       result.type = Disassembly::Argument::Address;
       result.address = sign_extend<26>(instr.li << 2) + (instr.aa ? 0 : cia);
       break;
-   case Field::lk:
+   case InstructionField::lk:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.lk;
       break;
-   case Field::mb:
+   case InstructionField::mb:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.mb;
       break;
-   case Field::me:
+   case InstructionField::me:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.me;
       break;
-   case Field::nb:
+   case InstructionField::nb:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.nb;
       break;
-   case Field::oe:
+   case InstructionField::oe:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.oe;
       break;
-   case Field::qd:
+   case InstructionField::qd:
       result.type = Disassembly::Argument::ValueSigned;
       result.valueSigned = sign_extend<12>(instr.qd);
       break;
-   case Field::rA:
+   case InstructionField::rA:
       result.type = Disassembly::Argument::Register;
       result.text = "r" + std::to_string(instr.rA);
       break;
-   case Field::rB:
+   case InstructionField::rB:
       result.type = Disassembly::Argument::Register;
       result.text = "r" + std::to_string(instr.rB);
       break;
-   case Field::rc:
+   case InstructionField::rc:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.rc;
       break;
-   case Field::rD:
+   case InstructionField::rD:
       result.type = Disassembly::Argument::Register;
       result.text = "r" + std::to_string(instr.rD);
       break;
-   case Field::rS:
+   case InstructionField::rS:
       result.type = Disassembly::Argument::Register;
       result.text = "r" + std::to_string(instr.rS);
       break;
-   case Field::sh:
+   case InstructionField::sh:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.sh;
       break;
-   case Field::simm:
+   case InstructionField::simm:
       result.type = Disassembly::Argument::ValueSigned;
       result.valueSigned = sign_extend<16>(instr.simm);
       break;
-   case Field::sr:
+   case InstructionField::sr:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.sr;
       break;
-   case Field::spr: // TODO: Real SPR name
+   case InstructionField::spr: // TODO: Real SPR name
       result.type = Disassembly::Argument::Register;
       result.text = "spr" + std::to_string(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
       break;
-   case Field::to:
+   case InstructionField::to:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.to;
       break;
-   case Field::tbr:
+   case InstructionField::tbr:
       result.type = Disassembly::Argument::Register;
       result.text = "tbr" + std::to_string(instr.spr);
       break;
-   case Field::uimm:
+   case InstructionField::uimm:
       result.type = Disassembly::Argument::ValueUnsigned;
       result.valueUnsigned = instr.uimm;
       break;
-   case Field::opcd:
-   case Field::xo1:
-   case Field::xo2:
-   case Field::xo3:
-   case Field::xo4:
+   case InstructionField::opcd:
+   case InstructionField::xo1:
+   case InstructionField::xo2:
+   case InstructionField::xo3:
+   case InstructionField::xo4:
    default:
       result.type = Disassembly::Argument::Invalid;
       break;
@@ -226,21 +226,20 @@ argumentToText(Disassembly::Argument &arg)
 }
 
 bool
-Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
+disassemble(Instruction instr, Disassembly &dis, uint32_t address)
 {
-   auto data = gInstructionTable.decode(instr);
+   auto data = decodeInstruction(instr);
 
    if (!data) {
       return false;
    }
 
-   InstructionAlias *alias = gInstructionTable.findAlias(data, instr);
-
+   auto alias = findInstructionAlias(data, instr);
    dis.name = data->name;
    dis.instruction = data;
    dis.address = address;
 
-   std::list<Field> args;
+   std::list<InstructionField> args;
 
    for (auto &field : data->write) {
       // Skip arguments that are in read list as well
@@ -254,7 +253,7 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
       }
 
       // Ignore trace only fields for disassembly
-      if (isFieldMarker(field)) {
+      if (isInstructionFieldMarker(field)) {
          continue;
       }
 
@@ -286,10 +285,10 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
          }
       }
 
-      if (field == Field::aa ||
-          field == Field::lk ||
-          field == Field::oe ||
-          field == Field::rc) {
+      if (field == InstructionField::aa ||
+          field == InstructionField::lk ||
+          field == InstructionField::oe ||
+          field == InstructionField::rc) {
          continue;
       }
 
@@ -297,13 +296,13 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    }
 
    for (auto &field : data->flags) {
-      if (field == Field::aa && instr.aa) {
+      if (field == InstructionField::aa && instr.aa) {
          dis.name += 'a';
-      } else if (field == Field::lk && instr.lk) {
+      } else if (field == InstructionField::lk && instr.lk) {
          dis.name += 'l';
-      } else if (field == Field::oe && instr.oe) {
+      } else if (field == InstructionField::oe && instr.oe) {
          dis.name += 'o';
-      } else if (field == Field::rc && instr.rc) {
+      } else if (field == InstructionField::rc && instr.rc) {
          dis.name += '.';
       }
    }
@@ -337,3 +336,5 @@ Disassembler::disassemble(Instruction instr, Disassembly &dis, uint32_t address)
 
    return true;
 }
+
+} // namespace espresso

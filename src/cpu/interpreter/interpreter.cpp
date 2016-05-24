@@ -1,6 +1,6 @@
 #include "interpreter.h"
 #include "interpreter_insreg.h"
-#include "../instructiondata.h"
+#include "cpu/espresso/espresso_instructionset.h"
 #include "../trace.h"
 #include "../cpu_internal.h"
 #include "debugcontrol.h"
@@ -19,7 +19,7 @@ sInstructionMap;
 
 void initialise()
 {
-   sInstructionMap.resize(static_cast<size_t>(InstructionID::InstructionCount), nullptr);
+   sInstructionMap.resize(static_cast<size_t>(espresso::InstructionID::InstructionCount), nullptr);
 
    // Register instruction handlers
    registerBranchInstructions();
@@ -31,7 +31,7 @@ void initialise()
    registerSystemInstructions();
 }
 
-instrfptr_t getInstructionHandler(InstructionID id)
+instrfptr_t getInstructionHandler(espresso::InstructionID id)
 {
    auto instrId = static_cast<size_t>(id);
 
@@ -42,14 +42,14 @@ instrfptr_t getInstructionHandler(InstructionID id)
    return sInstructionMap[instrId];
 }
 
-void registerInstruction(InstructionID id, instrfptr_t fptr)
+void registerInstruction(espresso::InstructionID id, instrfptr_t fptr)
 {
    sInstructionMap[static_cast<size_t>(id)] = fptr;
 }
 
-bool hasInstruction(InstructionID instrId)
+bool hasInstruction(espresso::InstructionID id)
 {
-   return getInstructionHandler(instrId) != nullptr;
+   return getInstructionHandler(id) != nullptr;
 }
 
 void execute(ThreadState *state)
@@ -65,8 +65,8 @@ void execute(ThreadState *state)
 
       gDebugControl.maybeBreak(state->cia, state, gProcessor.getCoreID());
 
-      auto instr = mem::read<Instruction>(state->cia);
-      auto data = gInstructionTable.decode(instr);
+      auto instr = mem::read<espresso::Instruction>(state->cia);
+      auto data = espresso::decodeInstruction(instr);
 
       if (!data) {
          gLog->error("Could not decode instruction at {:08x} = {:08x}", state->cia, instr.value);

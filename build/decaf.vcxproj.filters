@@ -250,6 +250,12 @@
     <Filter Include="Source Files\modules\nn_olv">
       <UniqueIdentifier>{be5a4401-1610-4711-b006-4a4be04702ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\cpu\espresso">
+      <UniqueIdentifier>{0d107a30-8dce-4ece-bdab-15125ac782b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cpu\espresso">
+      <UniqueIdentifier>{7bb428d3-a25b-4109-9b10-f756512bcd72}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -518,12 +524,6 @@
     </ClCompile>
     <ClCompile Include="..\src\cpu\jit\jit_fallback.cpp">
       <Filter>Source Files\cpu\jit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\cpu\instructiontable.cpp">
-      <Filter>Source Files\cpu</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\cpu\disassembler.cpp">
-      <Filter>Source Files\cpu</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\snd_core\snd_core.cpp">
       <Filter>Source Files\modules\snd_core</Filter>
@@ -921,6 +921,12 @@
     <ClCompile Include="..\src\modules\nn_boss\nn_boss_title.cpp">
       <Filter>Source Files\modules\nn_boss</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\cpu\espresso\espresso_disassembler.cpp">
+      <Filter>Source Files\cpu\espresso</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cpu\espresso\espresso_instructionset.cpp">
+      <Filter>Source Files\cpu\espresso</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1222,21 +1228,6 @@
     </ClInclude>
     <ClInclude Include="..\src\cpu\jit\jit_float.h">
       <Filter>Header Files\cpu\jit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\cpu\utils.h">
-      <Filter>Header Files\cpu</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\cpu\instruction.h">
-      <Filter>Header Files\cpu</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\cpu\instructiondata.h">
-      <Filter>Header Files\cpu</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\cpu\instructionid.h">
-      <Filter>Header Files\cpu</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\cpu\disassembler.h">
-      <Filter>Header Files\cpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\cpu\interpreter\interpreter_insreg.h">
       <Filter>Header Files\cpu\interpreter</Filter>
@@ -1757,31 +1748,49 @@
     <ClInclude Include="..\src\modules\nn_boss\nn_boss_title.h">
       <Filter>Header Files\modules\nn_boss</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\cpu\cpu_registers.h">
-      <Filter>Header Files\cpu</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\bitfield.h">
       <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\espresso\espresso_disassembler.h">
+      <Filter>Header Files\cpu\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\espresso\espresso_instruction.h">
+      <Filter>Header Files\cpu\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\espresso\espresso_instructionid.h">
+      <Filter>Header Files\cpu\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\espresso\espresso_instructionset.h">
+      <Filter>Header Files\cpu\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\espresso\espresso_registers.h">
+      <Filter>Header Files\cpu\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\espresso\espresso_spr.h">
+      <Filter>Header Files\cpu\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\utils.h">
+      <Filter>Header Files\cpu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="..\src\cpu\instructionaliases.inl">
-      <Filter>Header Files\cpu</Filter>
-    </None>
-    <None Include="..\src\cpu\instructionfields.inl">
-      <Filter>Header Files\cpu</Filter>
-    </None>
-    <None Include="..\src\cpu\instructions.inl">
-      <Filter>Header Files\cpu</Filter>
-    </None>
     <None Include="..\resources\shaders\wiiu_fallback.hlsl">
       <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="..\src\gpu\microcode\latte_instructions_def.inl">
       <Filter>Header Files\gpu\microcode</Filter>
+    </None>
+    <None Include="..\src\cpu\espresso\espresso_instruction_aliases.inl">
+      <Filter>Header Files\cpu\espresso</Filter>
+    </None>
+    <None Include="..\src\cpu\espresso\espresso_instruction_definitions.inl">
+      <Filter>Header Files\cpu\espresso</Filter>
+    </None>
+    <None Include="..\src\cpu\espresso\espresso_instruction_fields.inl">
+      <Filter>Header Files\cpu\espresso</Filter>
     </None>
   </ItemGroup>
 </Project>

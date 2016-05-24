@@ -5,6 +5,10 @@
 #include "utils/bitutils.h"
 #include "utils/floatutils.h"
 
+using espresso::FPSCRRegisterBits;
+using espresso::FloatingPointResultFlags;
+using espresso::FloatingPointRoundMode;
+
 const int fres_expected_base[] =
 {
    0x7ff800, 0x783800, 0x70ea00, 0x6a0800,
@@ -644,7 +648,7 @@ fnmsubs(ThreadState *state, Instruction instr)
 
 // fctiw/fctiwz common implementation
 static void
-fctiwGeneric(ThreadState *state, Instruction instr, FloatingPointRoundMode::FloatingPointRoundMode roundMode)
+fctiwGeneric(ThreadState *state, Instruction instr, FloatingPointRoundMode roundMode)
 {
    double b;
    int32_t bi;
@@ -718,7 +722,7 @@ fctiwGeneric(ThreadState *state, Instruction instr, FloatingPointRoundMode::Floa
 static void
 fctiw(ThreadState *state, Instruction instr)
 {
-   return fctiwGeneric(state, instr, static_cast<FloatingPointRoundMode::FloatingPointRoundMode>(state->fpscr.rn));
+   return fctiwGeneric(state, instr, static_cast<FloatingPointRoundMode>(state->fpscr.rn));
 }
 
 // Floating Convert to Integer Word with Round toward Zero

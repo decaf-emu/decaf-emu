@@ -1,11 +1,11 @@
 #include <vector>
-#include "cpu/instructiondata.h"
 #include "jit.h"
 #include "jit_internal.h"
 #include "jit_insreg.h"
 #include "mem/mem.h"
 #include "utils/log.h"
 #include "utils/bitutils.h"
+#include "cpu/espresso/espresso_instructionset.h"
 
 namespace cpu
 {
@@ -62,7 +62,7 @@ void initialise()
    sRuntime = new asmjit::JitRuntime();
    initStubs();
 
-   sInstructionMap.resize(static_cast<size_t>(InstructionID::InstructionCount), nullptr);
+   sInstructionMap.resize(static_cast<size_t>(espresso::InstructionID::InstructionCount), nullptr);
 
    // Register instruction handlers
    registerBranchInstructions();
@@ -74,7 +74,7 @@ void initialise()
    registerSystemInstructions();
 }
 
-jitinstrfptr_t getInstructionHandler(InstructionID id)
+jitinstrfptr_t getInstructionHandler(espresso::InstructionID id)
 {
    auto instrId = static_cast<size_t>(id);
    if (instrId >= sInstructionMap.size()) {
@@ -83,21 +83,21 @@ jitinstrfptr_t getInstructionHandler(InstructionID id)
    return sInstructionMap[instrId];
 }
 
-void registerInstruction(InstructionID id, jitinstrfptr_t fptr)
+void registerInstruction(espresso::InstructionID id, jitinstrfptr_t fptr)
 {
    sInstructionMap[static_cast<size_t>(id)] = fptr;
 }
 
-bool hasInstruction(InstructionID instrId)
+bool hasInstruction(espresso::InstructionID instrId)
 {
    switch (instrId) {
-   case InstructionID::b:
+   case espresso::InstructionID::b:
       return true;
-   case InstructionID::bc:
+   case espresso::InstructionID::bc:
       return true;
-   case InstructionID::bcctr:
+   case espresso::InstructionID::bcctr:
       return true;
-   case InstructionID::bclr:
+   case espresso::InstructionID::bclr:
       return true;
    default:
       return getInstructionHandler(instrId) != nullptr;
@@ -117,10 +117,10 @@ void clearCache()
    initStubs();
 }
 
-bool jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
-bool jit_bc(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
-bool jit_bcctr(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
-bool jit_bclr(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
+bool jit_b(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
+bool jit_bc(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
+bool jit_bcctr(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
+bool jit_bclr(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
 
 using JumpTargetList = std::vector<uint32_t>;
 
@@ -156,17 +156,17 @@ bool gen(JitBlock& block)
          a.mov(a.cia, lclCia);
       }
 
-      auto instr = mem::read<Instruction>(lclCia);
-      auto data = gInstructionTable.decode(instr);
+      auto instr = mem::read<espresso::Instruction>(lclCia);
+      auto data = espresso::decodeInstruction(instr);
 
       bool genSuccess = false;
-      if (data->id == InstructionID::b) {
+      if (data->id == espresso::InstructionID::b) {
          genSuccess = jit_b(a, instr, lclCia, jumpLabels);
-      } else if (data->id == InstructionID::bc) {
+      } else if (data->id == espresso::InstructionID::bc) {
          genSuccess = jit_bc(a, instr, lclCia, jumpLabels);
-      } else if (data->id == InstructionID::bcctr) {
+      } else if (data->id == espresso::InstructionID::bcctr) {
          genSuccess = jit_bcctr(a, instr, lclCia, jumpLabels);
-      } else if (data->id == InstructionID::bclr) {
+      } else if (data->id == espresso::InstructionID::bclr) {
          genSuccess = jit_bclr(a, instr, lclCia, jumpLabels);
       } else {
          auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
@@ -220,8 +220,8 @@ bool identBlock(JitBlock& block)
 
    auto lclCia = fnStart;
    while (lclCia) {
-      auto instr = mem::read<Instruction>(lclCia);
-      auto data = gInstructionTable.decode(instr);
+      auto instr = mem::read<espresso::Instruction>(lclCia);
+      auto data = espresso::decodeInstruction(instr);
 
       if (!data) {
          // Looks like we found a tail call function??
@@ -234,7 +234,7 @@ bool identBlock(JitBlock& block)
 
       uint32_t nia;
       switch (data->id) {
-      case InstructionID::b:
+      case espresso::InstructionID::b:
          if (instr.lk) {
             jumpTargets.push_back(lclCia + 4);
          }
@@ -250,7 +250,7 @@ bool identBlock(JitBlock& block)
             }
          }
          break;
-      case InstructionID::bc:
+      case espresso::InstructionID::bc:
          if (instr.lk) {
             jumpTargets.push_back(lclCia + 4);
          }
@@ -266,14 +266,14 @@ bool identBlock(JitBlock& block)
             }
          }
          break;
-      case InstructionID::bcctr:
+      case espresso::InstructionID::bcctr:
          // Target is unknown (CTR)
          if (instr.lk) {
             jumpTargets.push_back(lclCia + 4);
          }
 
          break;
-      case InstructionID::bclr:
+      case espresso::InstructionID::bclr:
          // Target is unknown (LR)
          if (instr.lk) {
             jumpTargets.push_back(lclCia + 4);

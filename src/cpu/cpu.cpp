@@ -4,7 +4,7 @@
 #include "cpu_internal.h"
 #include "interpreter/interpreter.h"
 #include "jit/jit.h"
-#include "instructiondata.h"
+#include "espresso/espresso_instructionset.h"
 
 namespace cpu
 {
@@ -25,7 +25,7 @@ void setJitMode(JitMode mode)
 
 void initialise()
 {
-   gInstructionTable.initialise();
+   espresso::initialiseInstructionSet();
    cpu::interpreter::initialise();
    cpu::jit::initialise();
 }

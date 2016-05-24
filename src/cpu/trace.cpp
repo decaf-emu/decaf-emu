@@ -1,11 +1,18 @@
 #include "trace.h"
-#include "disassembler.h"
-#include "instruction.h"
-#include "instructiondata.h"
 #include "state.h"
 #include "statedbg.h"
 #include "utils/log.h"
 #include "utils/debuglog.h"
+
+#include "espresso/espresso_disassembler.h"
+#include "espresso/espresso_instructionset.h"
+#include "espresso/espresso_spr.h"
+
+using espresso::Instruction;
+using espresso::InstructionID;
+using espresso::InstructionInfo;
+using espresso::InstructionField;
+using espresso::SPR;
 
 //#define TRACE_ENABLED
 //#define TRACE_SC_ENABLED
@@ -75,8 +82,8 @@ printFieldValue(fmt::MemoryWriter &out, Instruction instr, TraceFieldType type, 
 static void
 printInstruction(fmt::MemoryWriter &out, const Trace& trace, int index)
 {
-   Disassembly dis;
-   gDisassembler.disassemble(trace.instr, dis, trace.cia);
+   espresso::Disassembly dis;
+   espresso::disassemble(trace.instr, dis, trace.cia);
 
    std::string addend = "";
 
@@ -134,90 +141,90 @@ traceInit(ThreadState *state, size_t size)
 }
 
 static uint32_t
-getFieldStateField(Instruction instr, Field field)
+getFieldStateField(Instruction instr, InstructionField field)
 {
    switch (field) {
-   case Field::rA:
+   case InstructionField::rA:
       return StateField::GPR + instr.rA;
-   case Field::rB:
+   case InstructionField::rB:
       return StateField::GPR + instr.rB;
-   case Field::rS:
+   case InstructionField::rS:
       return StateField::GPR + instr.rS;
-   case Field::rD:
+   case InstructionField::rD:
       return StateField::GPR + instr.rD;
-   case Field::frA:
+   case InstructionField::frA:
       return StateField::FPR + instr.frA;
-   case Field::frB:
+   case InstructionField::frB:
       return StateField::FPR + instr.frB;
-   case Field::frC:
+   case InstructionField::frC:
       return StateField::FPR + instr.frC;
-   case Field::frD:
+   case InstructionField::frD:
       return StateField::FPR + instr.frD;
-   case Field::frS:
+   case InstructionField::frS:
       return StateField::FPR + instr.frS;
-   case Field::spr:
+   case InstructionField::spr:
       switch (decodeSPR(instr)) {
-      case SprEncoding::CTR:
+      case SPR::CTR:
          return StateField::CTR;
-      case SprEncoding::LR:
+      case SPR::LR:
          return StateField::LR;
-      case SprEncoding::XER:
+      case SPR::XER:
          return StateField::XER;
-      case SprEncoding::GQR0:
+      case SPR::GQR0:
          return StateField::GQR + 0;
-      case SprEncoding::GQR1:
+      case SPR::GQR1:
          return StateField::GQR + 1;
-      case SprEncoding::GQR2:
+      case SPR::GQR2:
          return StateField::GQR + 2;
-      case SprEncoding::GQR3:
+      case SPR::GQR3:
          return StateField::GQR + 3;
-      case SprEncoding::GQR4:
+      case SPR::GQR4:
          return StateField::GQR + 4;
-      case SprEncoding::GQR5:
+      case SPR::GQR5:
          return StateField::GQR + 5;
-      case SprEncoding::GQR6:
+      case SPR::GQR6:
          return StateField::GQR + 6;
-      case SprEncoding::GQR7:
+      case SPR::GQR7:
          return StateField::GQR + 7;
       default:
          break;
       }
       break;
-   case Field::bo:
+   case InstructionField::bo:
       if ((instr.bo & 4) == 0) {
          return StateField::CTR;
       }
       break;
-   case Field::bi:
+   case InstructionField::bi:
       return StateField::CR;
-   case Field::crbA:
-   case Field::crbB:
-   case Field::crbD:
-   case Field::crfD:
-   case Field::crfS:
-   case Field::crm:
+   case InstructionField::crbA:
+   case InstructionField::crbB:
+   case InstructionField::crbD:
+   case InstructionField::crfD:
+   case InstructionField::crfS:
+   case InstructionField::crm:
       return StateField::CR;
-   case Field::oe:
+   case InstructionField::oe:
       if (instr.oe) {
          return StateField::XER;
       }
       break;
-   case Field::rc:
+   case InstructionField::rc:
       if (instr.rc) {
          return StateField::CR;
       }
       break;
-   case Field::lk:
+   case InstructionField::lk:
       return StateField::LR;
-   case Field::XERO:
+   case InstructionField::XERO:
       return StateField::XER;
-   case Field::CTR:
+   case InstructionField::CTR:
       return StateField::CTR;
-   case Field::LR:
+   case InstructionField::LR:
       return StateField::LR;
-   case Field::FPSCR:
+   case InstructionField::FPSCR:
       return StateField::FPSCR;
-   case Field::RSRV:
+   case InstructionField::RSRV:
       return StateField::ReserveAddress;
    default:
       break;
@@ -310,7 +317,7 @@ pushUniqueField(std::vector<T> &fields, uint32_t fieldId)
 }
 
 Trace *
-traceInstructionStart(Instruction instr, InstructionData *data, ThreadState *state)
+traceInstructionStart(Instruction instr, InstructionInfo *data, ThreadState *state)
 {
    if (!state->tracer) {
       return nullptr;
@@ -385,7 +392,7 @@ traceInstructionStart(Instruction instr, InstructionData *data, ThreadState *sta
 }
 
 void
-traceInstructionEnd(Trace *trace, Instruction instr, InstructionData *data, ThreadState *state)
+traceInstructionEnd(Trace *trace, Instruction instr, InstructionInfo *data, ThreadState *state)
 {
    if (!trace) {
       return;

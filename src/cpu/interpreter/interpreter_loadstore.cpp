@@ -6,6 +6,9 @@
 #include "utils/bitutils.h"
 #include "utils/floatutils.h"
 
+using espresso::QuantizedDataType;
+using espresso::ConditionRegisterFlag;
+
 // Load
 enum LoadFlags
 {

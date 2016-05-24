@@ -2,6 +2,8 @@
 #include "interpreter_insreg.h"
 #include "utils/bitutils.h"
 
+using espresso::ConditionRegisterFlag;
+
 // Update cr0 with value
 static void
 updateConditionRegister(ThreadState *state, uint32_t value)

@@ -2,9 +2,12 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "instruction.h"
+#include "espresso_instruction.h"
 
-struct InstructionData;
+namespace espresso
+{
+
+struct InstructionInfo;
 
 struct Disassembly
 {
@@ -35,15 +38,12 @@ struct Disassembly
    };
 
    uint32_t address;
-   InstructionData *instruction;
+   InstructionInfo *instruction;
    std::string name;
    std::vector<Argument> args;
    std::string text;
 };
 
-struct Disassembler
-{
-   bool disassemble(Instruction bin, Disassembly &out, uint32_t address);
-};
+bool disassemble(Instruction bin, Disassembly &out, uint32_t address);
 
-extern Disassembler gDisassembler;
+} // namespace espresso

@@ -1,3 +1,4 @@
+// Intger Arithmetic
 INS(add, (rD), (rA, rB), (oe, rc), (opcd == 31, xo2 == 266), "Add")
 INS(addc, (rD, XERC), (rA, rB), (oe, rc), (opcd == 31, xo2 == 10), "Add with Carry")
 INS(adde, (rD), (rA, rB, XERC), (oe, rc), (opcd == 31, xo2 == 138), "Add Extended")

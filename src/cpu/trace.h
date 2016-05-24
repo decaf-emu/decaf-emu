@@ -2,10 +2,9 @@
 #include <vector>
 #include <list>
 #include <string>
+#include "espresso/espresso_instruction.h"
+#include "espresso/espresso_instructionset.h"
 
-#include "instruction.h"
-
-struct InstructionData;
 struct ThreadState;
 struct Tracer;
 
@@ -100,7 +99,7 @@ struct Trace
       TraceFieldValue prevalue;
    };
 
-   Instruction instr;
+   espresso::Instruction instr;
    uint32_t cia;
    std::vector<_R> reads;
    std::vector<_W> writes;
@@ -114,10 +113,10 @@ void
 traceInit(ThreadState *state, size_t size);
 
 Trace *
-traceInstructionStart(Instruction instr, InstructionData *data, ThreadState *state);
+traceInstructionStart(espresso::Instruction instr, espresso::InstructionInfo *data, ThreadState *state);
 
 void
-traceInstructionEnd(Trace *trace, Instruction instr, InstructionData *data, ThreadState *state);
+traceInstructionEnd(Trace *trace, espresso::Instruction instr, espresso::InstructionInfo *data, ThreadState *state);
 
 void
 tracePrint(ThreadState *state, int start, int count);

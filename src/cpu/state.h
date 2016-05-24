@@ -1,6 +1,6 @@
 #pragma once
 #include <atomic>
-#include "cpu_registers.h"
+#include "cpu/espresso/espresso_registers.h"
 
 namespace cpu
 {
@@ -16,6 +16,16 @@ struct CoreState
 // TODO: Some system registers may not be thread-specific!
 struct ThreadState
 {
+   // TODO: Remove these
+   using gpr_t = espresso::gpr_t;
+   using fpr_t = espresso::fpr_t;
+   using cr_t = espresso::cr_t;
+   using xer_t = espresso::xer_t;
+   using fpscr_t = espresso::fpscr_t;
+   using pvr_t = espresso::pvr_t;
+   using msr_t = espresso::msr_t;
+   using gqr_t = espresso::gqr_t;
+
    cpu::CoreState *core;
    struct Tracer *tracer;
 

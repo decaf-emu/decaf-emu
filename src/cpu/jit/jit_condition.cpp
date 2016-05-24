@@ -1,6 +1,9 @@
 #include "jit_insreg.h"
 #include "utils/bitutils.h"
 
+using espresso::XERegisterBits;
+using espresso::ConditionRegisterFlag;
+
 namespace cpu
 {
 
