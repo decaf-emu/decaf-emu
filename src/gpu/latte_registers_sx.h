@@ -1,33 +1,23 @@
 #pragma once
 #include "types.h"
+#include "utils/bitfield.h"
 #include "latte_enum_common.h"
 #include "latte_enum_sx.h"
 
 namespace latte
 {
 
-union SX_ALPHA_TEST_CONTROL
+struct SX_ALPHA_TEST_CONTROL : Bitfield<SX_ALPHA_TEST_CONTROL, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      REF_FUNC ALPHA_FUNC: 3;
-      uint32_t ALPHA_TEST_ENABLE : 1;
-      uint32_t : 4;
-      uint32_t ALPHA_TEST_BYPASS : 1;
-      uint32_t : 23;
-   };
+   BITFIELD_ENTRY(0, 3, REF_FUNC, ALPHA_FUNC);
+   BITFIELD_ENTRY(3, 1, bool, ALPHA_TEST_ENABLE);
+   BITFIELD_ENTRY(8, 1, bool, ALPHA_TEST_BYPASS);
 };
 
 union SX_ALPHA_REF
 {
    uint32_t value;
-
-   struct
-   {
-      float ALPHA_REF;
-   };
+   float ALPHA_REF;
 };
 
 } // namespace latte
