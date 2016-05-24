@@ -12,12 +12,12 @@ struct Bitfield
    struct Field
    {
       static const auto MinValue = static_cast<ValueType>(0);
-      static const auto MaxValue = static_cast<ValueType>((static_cast<StorageType>(1) << Bits) - 1);
-      static const auto Mask = ((static_cast<StorageType>(1) << Bits) - 1) << Position;
+      static const auto MaxValue = static_cast<ValueType>((1ull << (Bits)) - 1);
+      static const auto Mask = (static_cast<StorageType>((1ull << (Bits)) - 1)) << (Position);
 
       constexpr ValueType get() const
       {
-         return static_cast<ValueType>((parent.value & Mask) >> Position);
+         return static_cast<ValueType>((parent.value & Mask) >> (Position));
       }
 
       inline BitfieldType set(ValueType value)
@@ -25,7 +25,7 @@ struct Bitfield
          assert(value >= MinValue);
          assert(value <= MaxValue);
          parent.value &= ~Mask;
-         parent.value |= static_cast<StorageType>(value) << Position;
+         parent.value |= static_cast<StorageType>(value) << (Position);
          return parent;
       }
 
@@ -41,17 +41,17 @@ struct Bitfield
    template<unsigned Position, unsigned Bits>
    struct Field<bool, Position, Bits>
    {
-      static const auto Mask = ((static_cast<StorageType>(1) << Bits) - 1) << Position;
+      static const auto Mask = (static_cast<StorageType>((1ull << (Bits)) - 1)) << (Position);
 
       constexpr bool get() const
       {
-         return !!((parent.value & Mask) >> Position);
+         return !!((parent.value & Mask) >> (Position));
       }
 
       inline BitfieldType set(bool value)
       {
          parent.value &= ~Mask;
-         parent.value |= static_cast<StorageType>(value ? 1 : 0) << Position;
+         parent.value |= (static_cast<StorageType>(value ? 1 : 0)) << (Position);
          return parent;
       }
 
