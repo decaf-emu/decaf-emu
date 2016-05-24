@@ -9,9 +9,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\cpu\instructiontable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\tools\hardware-test-server\server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -125,7 +125,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\cpu\instructiontable.cpp" />
+    <ClCompile Include="..\src\cpu\espresso\espresso_instructionset.cpp" />
     <ClCompile Include="..\tools\hardware-test-generator\generator.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
-#include "cpu/instructiondata.h"
+#include "cpu/espresso/espresso_instructionid.h"
+
+using espresso::InstructionID;
 
 static const auto gIntegerArithmetic =
 {

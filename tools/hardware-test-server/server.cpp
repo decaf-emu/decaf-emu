@@ -7,7 +7,6 @@
 #include <vector>
 #include <ovsocket/socket.h>
 #include <ovsocket/networkthread.h>
-#include "cpu/instructiondata.h"
 #include "hardwaretests.h"
 #include "utils/be_val.h"
 
@@ -290,7 +289,6 @@ int main(int argc, char **argv)
    WSAStartup(MAKEWORD(2, 2), &wsaData);
 
    loadTests();
-   gInstructionTable.initialise();
 
    NetworkThread thread;
    auto socket = new Socket();

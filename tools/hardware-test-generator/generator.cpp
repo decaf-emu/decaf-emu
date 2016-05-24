@@ -7,12 +7,14 @@
 #include <vector>
 #include <spdlog/spdlog.h>
 #include "cpu/state.h"
-#include "cpu/instructiondata.h"
+#include "cpu/espresso/espresso_instructionset.h"
 #include "utils/be_val.h"
 #include "utils/bitutils.h"
 #include "hardwaretests.h"
 #include "generator_testlist.h"
 #include "generator_valuelist.h"
+
+using namespace espresso;
 
 static void
 setCRB(hwtest::RegisterState &state, uint32_t bit, uint32_t value)
@@ -21,7 +23,7 @@ setCRB(hwtest::RegisterState &state, uint32_t bit, uint32_t value)
 }
 
 static void
-generateTests(InstructionData *data)
+generateTests(InstructionInfo *data)
 {
    std::vector<size_t> indexCur, indexMax;
    std::vector<bool> flagSet;
@@ -34,40 +36,40 @@ generateTests(InstructionData *data)
       indexCur.push_back(0);
 
       switch (field) {
-      case Field::rA:
-      case Field::rB:
-      case Field::rS:
+      case InstructionField::rA:
+      case InstructionField::rB:
+      case InstructionField::rS:
          indexMax.push_back(gValuesGPR.size());
          break;
-      case Field::frA:
-      case Field::frB:
-      case Field::frC:
-      case Field::frS:
+      case InstructionField::frA:
+      case InstructionField::frB:
+      case InstructionField::frC:
+      case InstructionField::frS:
          indexMax.push_back(gValuesFPR.size());
          break;
-      case Field::crbA:
-      case Field::crbB:
+      case InstructionField::crbA:
+      case InstructionField::crbB:
          indexMax.push_back(gValuesCRB.size());
          break;
-      case Field::simm:
+      case InstructionField::simm:
          indexMax.push_back(gValuesSIMM.size());
          break;
-      case Field::sh:
+      case InstructionField::sh:
          indexMax.push_back(gValuesSH.size());
          break;
-      case Field::mb:
+      case InstructionField::mb:
          indexMax.push_back(gValuesMB.size());
          break;
-      case Field::me:
+      case InstructionField::me:
          indexMax.push_back(gValuesME.size());
          break;
-      case Field::uimm:
+      case InstructionField::uimm:
          indexMax.push_back(gValuesUIMM.size());
          break;
-      case Field::XERC:
+      case InstructionField::XERC:
          indexMax.push_back(gValuesXERC.size());
          break;
-      case Field::XERSO:
+      case InstructionField::XERSO:
          indexMax.push_back(gValuesXERSO.size());
          break;
       default:
@@ -84,68 +86,68 @@ generateTests(InstructionData *data)
       hwtest::TestData test;
       memset(&test, 0, sizeof(hwtest::TestData));
 
-      test.instr = gInstructionTable.encode(data->id);
+      test.instr = encodeInstruction(data->id);
 
       for (auto i = 0; i < data->read.size(); ++i) {
          auto index = indexCur[i];
 
          // Generate read field values
          switch (data->read[i]) {
-         case Field::rA:
+         case InstructionField::rA:
             test.instr.rA = gpr + hwtest::GPR_BASE;
             test.input.gpr[gpr++] = gValuesGPR[index];
             break;
-         case Field::rB:
+         case InstructionField::rB:
             test.instr.rB = gpr + hwtest::GPR_BASE;
             test.input.gpr[gpr++] = gValuesGPR[index];
             break;
-         case Field::rS:
+         case InstructionField::rS:
             test.instr.rS = gpr + hwtest::GPR_BASE;
             test.input.gpr[gpr++] = gValuesGPR[index];
             break;
-         case Field::frA:
+         case InstructionField::frA:
             test.instr.frA = fpr + hwtest::FPR_BASE;
             test.input.fr[fpr++] = gValuesFPR[index];
             break;
-         case Field::frB:
+         case InstructionField::frB:
             test.instr.frB = fpr + hwtest::FPR_BASE;
             test.input.fr[fpr++] = gValuesFPR[index];
             break;
-         case Field::frC:
+         case InstructionField::frC:
             test.instr.frC = fpr + hwtest::FPR_BASE;
             test.input.fr[fpr++] = gValuesFPR[index];
             break;
-         case Field::frS:
+         case InstructionField::frS:
             test.instr.frS = fpr + hwtest::FPR_BASE;
             test.input.fr[fpr++] = gValuesFPR[index];
             break;
-         case Field::crbA:
+         case InstructionField::crbA:
             test.instr.crbA = (crb++) + hwtest::CRB_BASE;
             setCRB(test.input, test.instr.crbA, gValuesCRB[index]);
             break;
-         case Field::crbB:
+         case InstructionField::crbB:
             test.instr.crbB = (crb++) + hwtest::CRB_BASE;
             setCRB(test.input, test.instr.crbB, gValuesCRB[index]);
             break;
-         case Field::simm:
+         case InstructionField::simm:
             test.instr.simm = gValuesSIMM[index];
             break;
-         case Field::sh:
+         case InstructionField::sh:
             test.instr.sh = gValuesSH[index];
             break;
-         case Field::mb:
+         case InstructionField::mb:
             test.instr.mb = gValuesMB[index];
             break;
-         case Field::me:
+         case InstructionField::me:
             test.instr.me = gValuesME[index];
             break;
-         case Field::uimm:
+         case InstructionField::uimm:
             test.instr.uimm = gValuesUIMM[index];
             break;
-         case Field::XERC:
+         case InstructionField::XERC:
             test.input.xer.ca = gValuesXERC[index];
             break;
-         case Field::XERSO:
+         case InstructionField::XERSO:
             test.input.xer.so = gValuesXERSO[index];
             break;
          default:
@@ -156,32 +158,32 @@ generateTests(InstructionData *data)
       // Generate write field values
       for (auto field : data->write) {
          switch (field) {
-         case Field::rA:
+         case InstructionField::rA:
             test.instr.rA = gpr + hwtest::GPR_BASE;
             gpr++;
             break;
-         case Field::rD:
+         case InstructionField::rD:
             test.instr.rD = gpr + hwtest::GPR_BASE;
             gpr++;
             break;
-         case Field::frD:
+         case InstructionField::frD:
             test.instr.frD = fpr + hwtest::FPR_BASE;
             fpr++;
             break;
-         case Field::crfD:
+         case InstructionField::crfD:
             test.instr.crfD = crf + hwtest::CRF_BASE;
             crf++;
             break;
-         case Field::crbD:
+         case InstructionField::crbD:
             test.instr.crbD = crb + hwtest::CRB_BASE;
             crb++;
             break;
-         case Field::XERC:
-         case Field::XERSO:
-         case Field::FCRISI:
-         case Field::FCRZDZ:
-         case Field::FCRIDI:
-         case Field::FCRSNAN:
+         case InstructionField::XERC:
+         case InstructionField::XERSO:
+         case InstructionField::FCRISI:
+         case InstructionField::FCRZDZ:
+         case InstructionField::FCRIDI:
+         case InstructionField::FCRSNAN:
             break;
          default:
             assert(false);
@@ -239,11 +241,11 @@ generateTests(InstructionData *data)
 
 int main(int argc, char **argv)
 {
-   gInstructionTable.initialise();
+   initialiseInstructionSet();
 
    for (auto &group : gTestInstructions) {
       for (auto id : group) {
-         auto data = gInstructionTable.find(id);
+         auto data = findInstructionInfo(id);
          generateTests(data);
       }
    }
