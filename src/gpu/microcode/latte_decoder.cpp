@@ -492,7 +492,7 @@ decode(Shader &shader, const gsl::span<const uint8_t> &binary)
       auto cf = *reinterpret_cast<const ControlFlowInst *>(binary.data() + i);
       auto id = cf.word1.CF_INST();
 
-      switch (cf.CF_INST_TYPE) {
+      switch (cf.word1.CF_INST_TYPE().get()) {
       case SQ_CF_INST_TYPE_NORMAL:
          result &= decodeNormal(state, cf);
          break;
@@ -505,7 +505,8 @@ decode(Shader &shader, const gsl::span<const uint8_t> &binary)
          break;
       }
 
-      if (cf.CF_INST_TYPE == SQ_CF_INST_TYPE_NORMAL || cf.CF_INST_TYPE == SQ_CF_INST_TYPE_EXPORT) {
+      if (cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_NORMAL
+       || cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_EXPORT) {
          if (cf.word1.END_OF_PROGRAM()) {
             break;
          }

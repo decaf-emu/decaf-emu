@@ -94,6 +94,7 @@ struct SQ_CF_WORD1 : Bitfield<SQ_CF_WORD1, uint32_t>
    BITFIELD_ENTRY(21, 1, bool, END_OF_PROGRAM);
    BITFIELD_ENTRY(22, 1, bool, VALID_PIXEL_MODE);
    BITFIELD_ENTRY(23, 7, SQ_CF_INST, CF_INST);
+   BITFIELD_ENTRY(28, 2, SQ_CF_INST_TYPE, CF_INST_TYPE);
    BITFIELD_ENTRY(30, 1, bool, WHOLE_QUAD_MODE);
    BITFIELD_ENTRY(31, 1, bool, BARRIER);
 };
@@ -323,14 +324,6 @@ union ControlFlowInst
          SQ_CF_ALLOC_EXPORT_WORD1_SWIZ swiz;
       };
    } exp;
-
-   struct
-   {
-      uint32_t : 32;
-      uint32_t : 28;
-      SQ_CF_INST_TYPE CF_INST_TYPE : 2;
-      uint32_t : 2;
-   };
 };
 
 struct AluInst
