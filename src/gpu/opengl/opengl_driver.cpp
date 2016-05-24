@@ -1217,7 +1217,7 @@ void GLDriver::handlePacketType3(pm4::Packet3 header, const gsl::span<uint32_t> 
 {
    pm4::PacketReader reader { data };
 
-   switch (header.opcode) {
+   switch (header.opcode()) {
    case pm4::Opcode3::DECAF_COPY_COLOR_TO_SCAN:
       decafCopyColorToScan(pm4::read<pm4::DecafCopyColorToScan>(reader));
       break;
@@ -1300,7 +1300,7 @@ void GLDriver::handlePacketType3(pm4::Packet3 header, const gsl::span<uint32_t> 
       eventWriteEOP(pm4::read<pm4::EventWriteEOP>(reader));
       break;
    default:
-      gLog->debug("Unhandled pm4 packet type 3 opcode {}", header.opcode);
+      gLog->debug("Unhandled pm4 packet type 3 opcode {}", header.opcode().get());
    }
 }
 
@@ -1338,11 +1338,11 @@ void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          break;
       }
 
-      switch (header.type) {
+      switch (header.type()) {
       case pm4::PacketType::Type3:
       {
-         auto header3 = pm4::Packet3 { header.value };
-         size = header3.size + 1;
+         auto header3 = pm4::Packet3::get(header.value);
+         size = header3.size() + 1;
          handlePacketType3(header3, gsl::as_span(&buffer[pos + 1], size));
          break;
       }
@@ -1350,7 +1350,7 @@ void GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
       case pm4::PacketType::Type1:
       case pm4::PacketType::Type2:
       default:
-         gLog->error("Invalid packet header type {}, header = 0x{:08X}", header.type, header.value);
+         gLog->error("Invalid packet header type {}, header = 0x{:08X}", header.type().get(), header.value);
          pos = buffer_size;
          break;
       }

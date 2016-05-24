@@ -13,25 +13,31 @@ namespace pm4
 class PacketWriter
 {
 public:
-   PacketWriter(Opcode3::Value opCode)
+   PacketWriter(Opcode3::Value op)
    {
       mBuffer = pm4::getBuffer(1);
 
       if (mBuffer) {
          mSaveSize = mBuffer->curSize;
 
-         auto header = reinterpret_cast<Packet3 *>(&mBuffer->buffer[mBuffer->curSize++]);
-         header->value = 0;
-         header->type = PacketType::Type3;
-         header->opcode = opCode;
+         auto header = Packet3::get(0)
+            .type().set(PacketType::Type3)
+            .opcode().set(op);
+
+         *reinterpret_cast<Packet3 *>(&mBuffer->buffer[mBuffer->curSize++]) = header;
       }
    }
 
    ~PacketWriter()
    {
       if (mBuffer) {
-         auto header = reinterpret_cast<Packet3 *>(&mBuffer->buffer[mSaveSize]);
-         header->size = (mBuffer->curSize - mSaveSize) - 2;
+         // Update header
+         auto header = *reinterpret_cast<Packet3 *>(&mBuffer->buffer[mSaveSize]);
+
+         header = header
+            .size().set((mBuffer->curSize - mSaveSize) - 2);
+
+         *reinterpret_cast<Packet3 *>(&mBuffer->buffer[mSaveSize]) = header;
 
          // Swap to big endian
          for (auto i = mSaveSize; i < mBuffer->curSize; ++i) {

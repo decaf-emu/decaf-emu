@@ -79,7 +79,7 @@ GX2InitAlphaTestReg(GX2AlphaTestReg *reg,
    auto sx_alpha_test_control = reg->sx_alpha_test_control.value();
 
    sx_alpha_test_control = sx_alpha_test_control
-      .ALPHA_TEST_ENABLE().set(alphaTest)
+      .ALPHA_TEST_ENABLE().set(!!alphaTest)
       .ALPHA_FUNC().set(static_cast<latte::REF_FUNC>(func));
 
    sx_alpha_ref.ALPHA_REF = ref;

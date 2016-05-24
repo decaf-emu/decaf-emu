@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "utils/bitfield.h"
 
 #pragma pack(push, 1)
 
@@ -115,52 +116,29 @@ enum Value : uint32_t
 };
 }
 
-union PacketHeader
+struct PacketHeader : Bitfield<PacketHeader, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t : 30;
-      PacketType::Value type : 2;
-   };
+   BITFIELD_ENTRY(30, 8, PacketType::Value, type);
 };
 
-union Packet0
+struct Packet0 : Bitfield<Packet0, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t baseIndex : 16;
-      uint32_t count : 14;
-      PacketType::Value type : 2;
-   };
+   BITFIELD_ENTRY(0, 16, uint32_t, baseIndex);
+   BITFIELD_ENTRY(16, 14, uint32_t, count);
+   BITFIELD_ENTRY(30, 8, PacketType::Value, type);
 };
 
-union Packet2
+struct Packet2 : Bitfield<Packet2, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t : 30;
-      PacketType::Value type : 2;
-   };
+   BITFIELD_ENTRY(30, 8, PacketType::Value, type);
 };
 
-union Packet3
+struct Packet3 : Bitfield<Packet3, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t predicate : 1;
-      uint32_t : 7;
-      Opcode3::Value opcode : 8;
-      uint32_t size : 14;
-      PacketType::Value type : 2;
-   };
+   BITFIELD_ENTRY(0, 1, bool, predicate);
+   BITFIELD_ENTRY(8, 8, Opcode3::Value, opcode);
+   BITFIELD_ENTRY(16, 14, uint32_t, size);
+   BITFIELD_ENTRY(30, 8, PacketType::Value, type);
 };
 
 #pragma pack(pop)
