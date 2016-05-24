@@ -2,6 +2,7 @@
 #include <gsl.h>
 #include "pm4_format.h"
 #include "latte_registers.h"
+#include "utils/bitfield.h"
 #include "utils/virtual_ptr.h"
 
 #pragma pack(push, 1)
@@ -566,15 +567,10 @@ struct LoadControlConst
    }
 };
 
-union MW_ADDR_LO
+struct MW_ADDR_LO : Bitfield<MW_ADDR_LO, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      latte::CB_ENDIAN ENDIAN_SWAP : 2;
-      uint32_t ADDR_LO : 30;
-   };
+   BITFIELD_ENTRY(0, 2, latte::CB_ENDIAN, ENDIAN_SWAP);
+   BITFIELD_ENTRY(2, 30, uint32_t, ADDR_LO);
 };
 
 enum MW_CNTR_SEL : uint32_t
@@ -583,18 +579,12 @@ enum MW_CNTR_SEL : uint32_t
    MW_WRITE_CLOCK    = 1,
 };
 
-union MW_ADDR_HI
+struct MW_ADDR_HI : Bitfield<MW_ADDR_HI, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t ADDR_HI : 8;
-      uint32_t : 8;
-      uint32_t CNTR_SEL : 1;
-      uint32_t WR_CONFIRM : 1;
-      uint32_t DATA32 : 1;
-   };
+   BITFIELD_ENTRY(0, 8, uint32_t, ADDR_HI);
+   BITFIELD_ENTRY(16, 1, MW_CNTR_SEL, CNTR_SEL);
+   BITFIELD_ENTRY(17, 1, bool, WR_CONFIRM);
+   BITFIELD_ENTRY(18, 1, bool, DATA32);
 };
 
 struct MemWrite
@@ -615,15 +605,10 @@ struct MemWrite
    }
 };
 
-union EW_EOP_ADDR_LO
+struct EW_EOP_ADDR_LO : Bitfield<EW_EOP_ADDR_LO, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      latte::CB_ENDIAN ENDIAN_SWAP : 2;
-      uint32_t ADDR_LO : 30;
-   };
+   BITFIELD_ENTRY(0, 2, latte::CB_ENDIAN, ENDIAN_SWAP);
+   BITFIELD_ENTRY(2, 30, uint32_t, ADDR_LO);
 };
 
 enum EW_DATA_SEL : uint32_t
@@ -641,18 +626,11 @@ enum EW_INT_SEL : uint32_t
    EW_INT_WRITE_CONFIRM = 2,
 };
 
-union EW_EOP_ADDR_HI
+struct EW_EOP_ADDR_HI : Bitfield<EW_EOP_ADDR_HI, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t ADDR_HI : 8;
-      uint32_t : 16;
-      EW_INT_SEL INT_SEL : 2;
-      uint32_t : 3;
-      EW_DATA_SEL DATA_SEL : 3;
-   };
+   BITFIELD_ENTRY(0, 8, uint32_t, ADDR_HI);
+   BITFIELD_ENTRY(24, 2, EW_INT_SEL, INT_SEL);
+   BITFIELD_ENTRY(29, 3, EW_DATA_SEL, DATA_SEL);
 };
 
 struct EventWriteEOP

@@ -12,12 +12,12 @@ GX2SampleTopGPUCycle(be_val<uint64_t> *result)
 {
    *result = -1;
 
-   auto addrLo = pm4::MW_ADDR_LO { 0 };
-   addrLo.ADDR_LO = memory_untranslate(result) >> 2;
-   addrLo.ENDIAN_SWAP = latte::CB_ENDIAN_8IN64;
+   auto addrLo = pm4::MW_ADDR_LO::get(0)
+      .ADDR_LO().set(memory_untranslate(result) >> 2)
+      .ENDIAN_SWAP().set(latte::CB_ENDIAN_8IN64);
 
-   auto addrHi = pm4::MW_ADDR_HI { 0 };
-   addrHi.CNTR_SEL = pm4::MW_WRITE_CLOCK;
+   auto addrHi = pm4::MW_ADDR_HI::get(0)
+      .CNTR_SEL().set(pm4::MW_WRITE_CLOCK);
 
    pm4::write(pm4::MemWrite { addrLo, addrHi, 0, 0 });
 }
@@ -30,12 +30,12 @@ GX2SampleBottomGPUCycle(be_val<uint64_t> *result)
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
       .EVENT_TYPE().set(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS);
 
-   auto addrLo = pm4::EW_EOP_ADDR_LO { 0 };
-   addrLo.ADDR_LO = memory_untranslate(result) >> 2;
-   addrLo.ENDIAN_SWAP = latte::CB_ENDIAN_8IN64;
+   auto addrLo = pm4::EW_EOP_ADDR_LO::get(0)
+      .ADDR_LO().set(memory_untranslate(result) >> 2)
+      .ENDIAN_SWAP().set(latte::CB_ENDIAN_8IN64);
 
-   auto addrHi = pm4::EW_EOP_ADDR_HI { 0 };
-   addrHi.DATA_SEL = pm4::EW_DATA_CLOCK;
+   auto addrHi = pm4::EW_EOP_ADDR_HI::get(0)
+      .DATA_SEL().set(pm4::EW_DATA_CLOCK);
 
    pm4::write(pm4::EventWriteEOP { eventInitiator, addrLo, addrHi, 0, 0 });
 }

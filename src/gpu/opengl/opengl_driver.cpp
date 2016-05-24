@@ -1032,15 +1032,15 @@ uint64_t GLDriver::getGpuClock()
 void GLDriver::memWrite(const pm4::MemWrite &data)
 {
    uint64_t value;
-   auto addr = memory_translate(data.addrLo.ADDR_LO << 2);
+   auto addr = memory_translate(data.addrLo.ADDR_LO() << 2);
 
-   if (data.addrHi.CNTR_SEL == pm4::MW_WRITE_CLOCK) {
+   if (data.addrHi.CNTR_SEL() == pm4::MW_WRITE_CLOCK) {
       value = getGpuClock();
    } else {
       value = static_cast<uint64_t>(data.dataLo) | static_cast<uint64_t>(data.dataHi) << 32;
    }
 
-   switch (data.addrLo.ENDIAN_SWAP)
+   switch (data.addrLo.ENDIAN_SWAP())
    {
    case latte::CB_ENDIAN_8IN64:
       value = byte_swap(value);
@@ -1052,7 +1052,7 @@ void GLDriver::memWrite(const pm4::MemWrite &data)
       throw std::logic_error("Unexpected MEM_WRITE endian swap");
    }
 
-   if (data.addrHi.DATA32) {
+   if (data.addrHi.DATA32()) {
       *reinterpret_cast<uint32_t *>(addr) = static_cast<uint32_t>(value);
    } else {
       *reinterpret_cast<uint64_t *>(addr) = value;
@@ -1071,7 +1071,7 @@ void GLDriver::handlePendingEOP()
    }
 
    uint64_t value = 0;
-   auto addr = memory_translate(mPendingEOP.addrLo.ADDR_LO << 2);
+   auto addr = memory_translate(mPendingEOP.addrLo.ADDR_LO() << 2);
 
    switch (mPendingEOP.eventInitiator.EVENT_TYPE()) {
    case latte::BOTTOM_OF_PIPE_TS:
@@ -1081,7 +1081,7 @@ void GLDriver::handlePendingEOP()
       throw std::logic_error("Unexpected EOP event type");
    }
 
-   switch (mPendingEOP.addrLo.ENDIAN_SWAP) {
+   switch (mPendingEOP.addrLo.ENDIAN_SWAP()) {
    case latte::CB_ENDIAN_8IN64:
       value = byte_swap(value);
       break;
@@ -1092,7 +1092,7 @@ void GLDriver::handlePendingEOP()
       throw std::logic_error("Unexpected EOP event endian swap");
    }
 
-   switch (mPendingEOP.addrHi.DATA_SEL) {
+   switch (mPendingEOP.addrHi.DATA_SEL()) {
    case pm4::EW_DATA_32:
       *reinterpret_cast<uint32_t *>(addr) = static_cast<uint32_t>(value);
       break;
