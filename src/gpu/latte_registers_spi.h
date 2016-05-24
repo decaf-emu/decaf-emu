@@ -1,79 +1,58 @@
 #pragma once
 #include "types.h"
+#include "utils/bitfield.h"
 #include "latte_enum_spi.h"
 
 namespace latte
 {
 
-union SPI_INPUT_Z
+struct SPI_INPUT_Z : Bitfield<SPI_INPUT_Z, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t PROVIDE_Z_TO_SPI : 1;
-      uint32_t : 31;
-   };
+   BITFIELD_ENTRY(0, 1, bool, PROVIDE_Z_TO_SPI);
 };
 
 // Interpolator control settings
-union SPI_PS_IN_CONTROL_0
+struct SPI_PS_IN_CONTROL_0 : Bitfield<SPI_PS_IN_CONTROL_0, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t NUM_INTERP : 6;
-      uint32_t POSITION_ENA : 1;
-      uint32_t POSITION_CENTROID : 1;
-      uint32_t POSITION_ADDR : 5;
-      uint32_t PARAM_GEN : 4;
-      uint32_t PARAM_GEN_ADDR : 7;
-      SPI_BARYC_CNTL BARYC_SAMPLE_CNTL : 2;
-      uint32_t PERSP_GRADIENT_ENA : 1;
-      uint32_t LINEAR_GRADIENT_ENA : 1;
-      uint32_t POSITION_SAMPLE : 1;
-      uint32_t BARYC_AT_SAMPLE_ENA : 1;
-   };
+   BITFIELD_ENTRY(0, 6, uint32_t, NUM_INTERP);
+   BITFIELD_ENTRY(8, 1, bool, POSITION_ENA);
+   BITFIELD_ENTRY(9, 1, bool, POSITION_CENTROID);
+   BITFIELD_ENTRY(10, 5, uint32_t, POSITION_ADDR);
+   BITFIELD_ENTRY(15, 4, uint32_t, PARAM_GEN);
+   BITFIELD_ENTRY(19, 7, uint32_t, PARAM_GEN_ADDR);
+   BITFIELD_ENTRY(26, 2, SPI_BARYC_CNTL, BARYC_SAMPLE_CNTL);
+   BITFIELD_ENTRY(28, 1, bool, PERSP_GRADIENT_ENA);
+   BITFIELD_ENTRY(29, 1, bool, LINEAR_GRADIENT_ENA);
+   BITFIELD_ENTRY(30, 1, bool, POSITION_SAMPLE);
+   BITFIELD_ENTRY(31, 1, bool, BARYC_AT_SAMPLE_ENA);
 };
 
 // Interpolator control settings
-union SPI_PS_IN_CONTROL_1
+struct SPI_PS_IN_CONTROL_1 : Bitfield<SPI_PS_IN_CONTROL_1, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t GEN_INDEX_PIX : 1;
-      uint32_t GEN_INDEX_PIX_ADDR : 7;
-      uint32_t FRONT_FACE_ENA : 1;
-      uint32_t FRONT_FACE_CHAN : 2;
-      uint32_t FRONT_FACE_ALL_BITS : 1;
-      uint32_t FRONT_FACE_ADDR : 5;
-      uint32_t FOG_ADDR : 7;
-      uint32_t FIXED_PT_POSITION_ENA : 1;
-      uint32_t FIXED_PT_POSITION_ADDR : 5;
-      uint32_t POSITION_ULC : 1;
-   };
+   BITFIELD_ENTRY(0, 1, bool, GEN_INDEX_PIX);
+   BITFIELD_ENTRY(1, 7, uint32_t, GEN_INDEX_PIX_ADDR);
+   BITFIELD_ENTRY(8, 1, bool, FRONT_FACE_ENA);
+   BITFIELD_ENTRY(9, 2, uint32_t, FRONT_FACE_CHAN);
+   BITFIELD_ENTRY(11, 1, bool, FRONT_FACE_ALL_BITS);
+   BITFIELD_ENTRY(12, 5, uint32_t, FRONT_FACE_ADDR);
+   BITFIELD_ENTRY(17, 7, uint32_t, FOG_ADDR);
+   BITFIELD_ENTRY(24, 1, bool, FIXED_PT_POSITION_ENA);
+   BITFIELD_ENTRY(25, 5, uint32_t, FIXED_PT_POSITION_ADDR);
+   BITFIELD_ENTRY(30, 1, bool, POSITION_ULC);
 };
 
 // PS interpolator setttings for parameter N
-union SPI_PS_INPUT_CNTL_N
+struct SPI_PS_INPUT_CNTL_N : Bitfield<SPI_PS_INPUT_CNTL_N, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t SEMANTIC : 8;
-      uint32_t DEFAULT_VAL : 2;
-      uint32_t FLAT_SHADE : 1;
-      uint32_t SEL_CENTROID : 1;
-      uint32_t SEL_LINEAR : 1;
-      uint32_t CYL_WRAP : 4;
-      uint32_t PT_SPRITE_TEX : 1;
-      uint32_t SEL_SAMPLE : 1;
-      uint32_t : 13;
-   };
+   BITFIELD_ENTRY(0, 8, uint32_t, SEMANTIC);
+   BITFIELD_ENTRY(8, 2, uint32_t, DEFAULT_VAL);
+   BITFIELD_ENTRY(10, 1, bool, FLAT_SHADE);
+   BITFIELD_ENTRY(11, 1, bool, SEL_CENTROID);
+   BITFIELD_ENTRY(12, 1, bool, SEL_LINEAR);
+   BITFIELD_ENTRY(13, 4, uint32_t, CYL_WRAP);
+   BITFIELD_ENTRY(17, 1, bool, PT_SPRITE_TEX);
+   BITFIELD_ENTRY(18, 1, bool, SEL_SAMPLE);
 };
 
 using SPI_PS_INPUT_CNTL_0 = SPI_PS_INPUT_CNTL_N;
@@ -109,33 +88,21 @@ using SPI_PS_INPUT_CNTL_29 = SPI_PS_INPUT_CNTL_N;
 using SPI_PS_INPUT_CNTL_30 = SPI_PS_INPUT_CNTL_N;
 
 // Vertex Shader output configuration
-union SPI_VS_OUT_CONFIG
+struct SPI_VS_OUT_CONFIG : Bitfield<SPI_VS_OUT_CONFIG, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t VS_PER_COMPONENT : 1;
-      uint32_t VS_EXPORT_COUNT : 5;
-      uint32_t : 2;
-      uint32_t VS_EXPORTS_FOG : 1;
-      uint32_t VS_OUT_FOG_VEC_ADDR : 5;
-      uint32_t : 18;
-   };
+   BITFIELD_ENTRY(0, 1, bool, VS_PER_COMPONENT);
+   BITFIELD_ENTRY(1, 5, uint32_t, VS_EXPORT_COUNT);
+   BITFIELD_ENTRY(8, 1, bool, VS_EXPORTS_FOG);
+   BITFIELD_ENTRY(9, 5, uint32_t, VS_OUT_FOG_VEC_ADDR);
 };
 
 // Vertex Shader output semantic mapping
-union SPI_VS_OUT_ID_N
+struct SPI_VS_OUT_ID_N : Bitfield<SPI_VS_OUT_ID_N, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t SEMANTIC_0 : 8;
-      uint32_t SEMANTIC_1 : 8;
-      uint32_t SEMANTIC_2 : 8;
-      uint32_t SEMANTIC_3 : 8;
-   };
+   BITFIELD_ENTRY(0, 8, uint32_t, SEMANTIC_0);
+   BITFIELD_ENTRY(8, 8, uint32_t, SEMANTIC_1);
+   BITFIELD_ENTRY(16, 8, uint32_t, SEMANTIC_2);
+   BITFIELD_ENTRY(24, 8, uint32_t, SEMANTIC_3);
 };
 
 using SPI_VS_OUT_ID_0 = SPI_VS_OUT_ID_N;

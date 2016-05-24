@@ -873,7 +873,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    out << '\n';
 
    // Vertex Shader Exports
-   for (auto i = 0u; i <= spi_vs_out_config.VS_EXPORT_COUNT; i++) {
+   for (auto i = 0u; i <= spi_vs_out_config.VS_EXPORT_COUNT(); i++) {
       out << "out vec4 vs_out_" << i << ";\n";
    }
    out << '\n';
@@ -996,14 +996,14 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    out << '\n';
 
    // Pixel Shader Inputs
-   for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP; ++i) {
+   for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
       auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
 
-      if (spi_ps_input_cntl.FLAT_SHADE) {
+      if (spi_ps_input_cntl.FLAT_SHADE()) {
          out << "flat ";
       }
 
-      out << "in vec4 vs_out_" << spi_ps_input_cntl.SEMANTIC << ";\n";
+      out << "in vec4 vs_out_" << spi_ps_input_cntl.SEMANTIC() << ";\n";
    }
    out << '\n';
 
@@ -1027,9 +1027,9 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    writeExports(out, shader);
 
    // Assign vertex shader output to our GPR
-   for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP; ++i) {
+   for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
       auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
-      auto id = spi_ps_input_cntl.SEMANTIC;
+      auto id = spi_ps_input_cntl.SEMANTIC();
 
       if (id == 0xff) {
          continue;
