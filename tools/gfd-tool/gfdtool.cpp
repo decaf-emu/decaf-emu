@@ -182,32 +182,32 @@ printInfo(const std::string &filename)
             startGroup(out, "SQ_PGM_RESOURCES_VS");
             {
                auto sq_pgm_resources_vs = shader->regs.sq_pgm_resources_vs.value();
-               writeField(out, "NUM_GPRS", sq_pgm_resources_vs.NUM_GPRS);
-               writeField(out, "STACK_SIZE", sq_pgm_resources_vs.STACK_SIZE);
-               writeField(out, "DX10_CLAMP", sq_pgm_resources_vs.DX10_CLAMP);
-               writeField(out, "PRIME_CACHE_PGM_EN", sq_pgm_resources_vs.PRIME_CACHE_PGM_EN);
-               writeField(out, "PRIME_CACHE_ON_DRAW", sq_pgm_resources_vs.PRIME_CACHE_ON_DRAW);
-               writeField(out, "FETCH_CACHE_LINES", sq_pgm_resources_vs.FETCH_CACHE_LINES);
-               writeField(out, "UNCACHED_FIRST_INST", sq_pgm_resources_vs.UNCACHED_FIRST_INST);
-               writeField(out, "PRIME_CACHE_ENABLE", sq_pgm_resources_vs.PRIME_CACHE_ENABLE);
-               writeField(out, "PRIME_CACHE_ON_CONST", sq_pgm_resources_vs.PRIME_CACHE_ON_CONST);
+               writeField(out, "NUM_GPRS", sq_pgm_resources_vs.NUM_GPRS().get());
+               writeField(out, "STACK_SIZE", sq_pgm_resources_vs.STACK_SIZE().get());
+               writeField(out, "DX10_CLAMP", sq_pgm_resources_vs.DX10_CLAMP().get());
+               writeField(out, "PRIME_CACHE_PGM_EN", sq_pgm_resources_vs.PRIME_CACHE_PGM_EN().get());
+               writeField(out, "PRIME_CACHE_ON_DRAW", sq_pgm_resources_vs.PRIME_CACHE_ON_DRAW().get());
+               writeField(out, "FETCH_CACHE_LINES", sq_pgm_resources_vs.FETCH_CACHE_LINES().get());
+               writeField(out, "UNCACHED_FIRST_INST", sq_pgm_resources_vs.UNCACHED_FIRST_INST().get());
+               writeField(out, "PRIME_CACHE_ENABLE", sq_pgm_resources_vs.PRIME_CACHE_ENABLE().get());
+               writeField(out, "PRIME_CACHE_ON_CONST", sq_pgm_resources_vs.PRIME_CACHE_ON_CONST().get());
             }
             endGroup(out);
 
             startGroup(out, "VGT_PRIMITIVEID_EN");
             {
                auto vgt_primitiveid_en = shader->regs.vgt_primitiveid_en.value();
-               writeField(out, "PRIMITIVEID_EN", vgt_primitiveid_en.PRIMITIVEID_EN);
+               writeField(out, "PRIMITIVEID_EN", vgt_primitiveid_en.PRIMITIVEID_EN().get());
             }
             endGroup(out);
 
             startGroup(out, "SPI_VS_OUT_CONFIG");
             {
                auto spi_vs_out_config = shader->regs.spi_vs_out_config.value();
-               writeField(out, "VS_PER_COMPONENT", spi_vs_out_config.VS_PER_COMPONENT);
-               writeField(out, "VS_EXPORT_COUNT", spi_vs_out_config.VS_EXPORT_COUNT);
-               writeField(out, "VS_EXPORTS_FOG", spi_vs_out_config.VS_EXPORTS_FOG);
-               writeField(out, "VS_OUT_FOG_VEC_ADDR", spi_vs_out_config.VS_OUT_FOG_VEC_ADDR);
+               writeField(out, "VS_PER_COMPONENT", spi_vs_out_config.VS_PER_COMPONENT().get());
+               writeField(out, "VS_EXPORT_COUNT", spi_vs_out_config.VS_EXPORT_COUNT().get());
+               writeField(out, "VS_EXPORTS_FOG", spi_vs_out_config.VS_EXPORTS_FOG().get());
+               writeField(out, "VS_OUT_FOG_VEC_ADDR", spi_vs_out_config.VS_OUT_FOG_VEC_ADDR().get());
             }
             endGroup(out);
 
@@ -219,10 +219,10 @@ printInfo(const std::string &filename)
             for (auto i = 0u; i < std::min<size_t>(num_spi_vs_out_id, spi_vs_out_id.size()); ++i) {
                startGroup(out, fmt::format("SPI_VS_OUT_ID[{}]", i));
                {
-                  writeField(out, "SEMANTIC_0", spi_vs_out_id[i].SEMANTIC_0);
-                  writeField(out, "SEMANTIC_1", spi_vs_out_id[i].SEMANTIC_1);
-                  writeField(out, "SEMANTIC_2", spi_vs_out_id[i].SEMANTIC_2);
-                  writeField(out, "SEMANTIC_3", spi_vs_out_id[i].SEMANTIC_3);
+                  writeField(out, "SEMANTIC_0", spi_vs_out_id[i].SEMANTIC_0().get());
+                  writeField(out, "SEMANTIC_1", spi_vs_out_id[i].SEMANTIC_1().get());
+                  writeField(out, "SEMANTIC_2", spi_vs_out_id[i].SEMANTIC_2().get());
+                  writeField(out, "SEMANTIC_3", spi_vs_out_id[i].SEMANTIC_3().get());
                }
                endGroup(out);
             }
@@ -230,32 +230,32 @@ printInfo(const std::string &filename)
             startGroup(out, "PA_CL_VS_OUT_CNTL");
             {
                auto pa_cl_vs_out_cntl = shader->regs.pa_cl_vs_out_cntl.value();
-               writeField(out, "CLIP_DIST_ENA_0", pa_cl_vs_out_cntl.CLIP_DIST_ENA_0);
-               writeField(out, "CLIP_DIST_ENA_1", pa_cl_vs_out_cntl.CLIP_DIST_ENA_1);
-               writeField(out, "CLIP_DIST_ENA_2", pa_cl_vs_out_cntl.CLIP_DIST_ENA_2);
-               writeField(out, "CLIP_DIST_ENA_3", pa_cl_vs_out_cntl.CLIP_DIST_ENA_3);
-               writeField(out, "CLIP_DIST_ENA_4", pa_cl_vs_out_cntl.CLIP_DIST_ENA_4);
-               writeField(out, "CLIP_DIST_ENA_5", pa_cl_vs_out_cntl.CLIP_DIST_ENA_5);
-               writeField(out, "CLIP_DIST_ENA_6", pa_cl_vs_out_cntl.CLIP_DIST_ENA_6);
-               writeField(out, "CLIP_DIST_ENA_7", pa_cl_vs_out_cntl.CLIP_DIST_ENA_7);
-               writeField(out, "CULL_DIST_ENA_0", pa_cl_vs_out_cntl.CULL_DIST_ENA_0);
-               writeField(out, "CULL_DIST_ENA_1", pa_cl_vs_out_cntl.CULL_DIST_ENA_1);
-               writeField(out, "CULL_DIST_ENA_2", pa_cl_vs_out_cntl.CULL_DIST_ENA_2);
-               writeField(out, "CULL_DIST_ENA_3", pa_cl_vs_out_cntl.CULL_DIST_ENA_3);
-               writeField(out, "CULL_DIST_ENA_4", pa_cl_vs_out_cntl.CULL_DIST_ENA_4);
-               writeField(out, "CULL_DIST_ENA_5", pa_cl_vs_out_cntl.CULL_DIST_ENA_5);
-               writeField(out, "CULL_DIST_ENA_6", pa_cl_vs_out_cntl.CULL_DIST_ENA_6);
-               writeField(out, "CULL_DIST_ENA_7", pa_cl_vs_out_cntl.CULL_DIST_ENA_7);
-               writeField(out, "USE_VTX_POINT_SIZE", pa_cl_vs_out_cntl.USE_VTX_POINT_SIZE);
-               writeField(out, "USE_VTX_EDGE_FLAG", pa_cl_vs_out_cntl.USE_VTX_EDGE_FLAG);
-               writeField(out, "USE_VTX_RENDER_TARGET_INDX", pa_cl_vs_out_cntl.USE_VTX_RENDER_TARGET_INDX);
-               writeField(out, "USE_VTX_VIEWPORT_INDX", pa_cl_vs_out_cntl.USE_VTX_VIEWPORT_INDX);
-               writeField(out, "USE_VTX_KILL_FLAG", pa_cl_vs_out_cntl.USE_VTX_KILL_FLAG);
-               writeField(out, "VS_OUT_MISC_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_MISC_VEC_ENA);
-               writeField(out, "VS_OUT_CCDIST0_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_CCDIST0_VEC_ENA);
-               writeField(out, "VS_OUT_CCDIST1_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_CCDIST1_VEC_ENA);
-               writeField(out, "VS_OUT_MISC_SIDE_BUS_ENA", pa_cl_vs_out_cntl.VS_OUT_MISC_SIDE_BUS_ENA);
-               writeField(out, "USE_VTX_GS_CUT_FLAG", pa_cl_vs_out_cntl.USE_VTX_GS_CUT_FLAG);
+               writeField(out, "CLIP_DIST_ENA_0", pa_cl_vs_out_cntl.CLIP_DIST_ENA_0().get());
+               writeField(out, "CLIP_DIST_ENA_1", pa_cl_vs_out_cntl.CLIP_DIST_ENA_1().get());
+               writeField(out, "CLIP_DIST_ENA_2", pa_cl_vs_out_cntl.CLIP_DIST_ENA_2().get());
+               writeField(out, "CLIP_DIST_ENA_3", pa_cl_vs_out_cntl.CLIP_DIST_ENA_3().get());
+               writeField(out, "CLIP_DIST_ENA_4", pa_cl_vs_out_cntl.CLIP_DIST_ENA_4().get());
+               writeField(out, "CLIP_DIST_ENA_5", pa_cl_vs_out_cntl.CLIP_DIST_ENA_5().get());
+               writeField(out, "CLIP_DIST_ENA_6", pa_cl_vs_out_cntl.CLIP_DIST_ENA_6().get());
+               writeField(out, "CLIP_DIST_ENA_7", pa_cl_vs_out_cntl.CLIP_DIST_ENA_7().get());
+               writeField(out, "CULL_DIST_ENA_0", pa_cl_vs_out_cntl.CULL_DIST_ENA_0().get());
+               writeField(out, "CULL_DIST_ENA_1", pa_cl_vs_out_cntl.CULL_DIST_ENA_1().get());
+               writeField(out, "CULL_DIST_ENA_2", pa_cl_vs_out_cntl.CULL_DIST_ENA_2().get());
+               writeField(out, "CULL_DIST_ENA_3", pa_cl_vs_out_cntl.CULL_DIST_ENA_3().get());
+               writeField(out, "CULL_DIST_ENA_4", pa_cl_vs_out_cntl.CULL_DIST_ENA_4().get());
+               writeField(out, "CULL_DIST_ENA_5", pa_cl_vs_out_cntl.CULL_DIST_ENA_5().get());
+               writeField(out, "CULL_DIST_ENA_6", pa_cl_vs_out_cntl.CULL_DIST_ENA_6().get());
+               writeField(out, "CULL_DIST_ENA_7", pa_cl_vs_out_cntl.CULL_DIST_ENA_7().get());
+               writeField(out, "USE_VTX_POINT_SIZE", pa_cl_vs_out_cntl.USE_VTX_POINT_SIZE().get());
+               writeField(out, "USE_VTX_EDGE_FLAG", pa_cl_vs_out_cntl.USE_VTX_EDGE_FLAG().get());
+               writeField(out, "USE_VTX_RENDER_TARGET_INDX", pa_cl_vs_out_cntl.USE_VTX_RENDER_TARGET_INDX().get());
+               writeField(out, "USE_VTX_VIEWPORT_INDX", pa_cl_vs_out_cntl.USE_VTX_VIEWPORT_INDX().get());
+               writeField(out, "USE_VTX_KILL_FLAG", pa_cl_vs_out_cntl.USE_VTX_KILL_FLAG().get());
+               writeField(out, "VS_OUT_MISC_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_MISC_VEC_ENA().get());
+               writeField(out, "VS_OUT_CCDIST0_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_CCDIST0_VEC_ENA().get());
+               writeField(out, "VS_OUT_CCDIST1_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_CCDIST1_VEC_ENA().get());
+               writeField(out, "VS_OUT_MISC_SIDE_BUS_ENA", pa_cl_vs_out_cntl.VS_OUT_MISC_SIDE_BUS_ENA().get());
+               writeField(out, "USE_VTX_GS_CUT_FLAG", pa_cl_vs_out_cntl.USE_VTX_GS_CUT_FLAG().get());
             }
             endGroup(out);
 
@@ -273,7 +273,7 @@ printInfo(const std::string &filename)
             for (auto i = 0u; i < std::min<size_t>(num_sq_vtx_semantic, sq_vtx_semantic.size()); ++i) {
                startGroup(out, fmt::format("SQ_VTX_SEMANTIC[{}]", i));
                {
-                  writeField(out, "SEMANTIC_ID", sq_vtx_semantic[i].SEMANTIC_ID);
+                  writeField(out, "SEMANTIC_ID", sq_vtx_semantic[i].SEMANTIC_ID().get());
                }
                endGroup(out);
             }
@@ -281,24 +281,24 @@ printInfo(const std::string &filename)
             startGroup(out, "VGT_STRMOUT_BUFFER_EN");
             {
                auto vgt_strmout_buffer_en = shader->regs.vgt_strmout_buffer_en.value();
-               writeField(out, "BUFFER_0_EN", vgt_strmout_buffer_en.BUFFER_0_EN);
-               writeField(out, "BUFFER_1_EN", vgt_strmout_buffer_en.BUFFER_1_EN);
-               writeField(out, "BUFFER_2_EN", vgt_strmout_buffer_en.BUFFER_2_EN);
-               writeField(out, "BUFFER_3_EN", vgt_strmout_buffer_en.BUFFER_3_EN);
+               writeField(out, "BUFFER_0_EN", vgt_strmout_buffer_en.BUFFER_0_EN().get());
+               writeField(out, "BUFFER_1_EN", vgt_strmout_buffer_en.BUFFER_1_EN().get());
+               writeField(out, "BUFFER_2_EN", vgt_strmout_buffer_en.BUFFER_2_EN().get());
+               writeField(out, "BUFFER_3_EN", vgt_strmout_buffer_en.BUFFER_3_EN().get());
             }
             endGroup(out);
 
             startGroup(out, "VGT_VERTEX_REUSE_BLOCK_CNTL");
             {
                auto vgt_vertex_reuse_block_cntl = shader->regs.vgt_vertex_reuse_block_cntl.value();
-               writeField(out, "VTX_REUSE_DEPTH", vgt_vertex_reuse_block_cntl.VTX_REUSE_DEPTH);
+               writeField(out, "VTX_REUSE_DEPTH", vgt_vertex_reuse_block_cntl.VTX_REUSE_DEPTH().get());
             }
             endGroup(out);
 
             startGroup(out, "SQ_VTX_SEMANTIC_CLEAR");
             {
                auto vgt_hos_reuse_depth = shader->regs.vgt_hos_reuse_depth.value();
-               writeField(out, "REUSE_DEPTH", vgt_hos_reuse_depth.REUSE_DEPTH);
+               writeField(out, "REUSE_DEPTH", vgt_hos_reuse_depth.REUSE_DEPTH().get());
             }
             endGroup(out);
          }
@@ -320,56 +320,56 @@ printInfo(const std::string &filename)
             startGroup(out, "SQ_PGM_RESOURCES_PS");
             {
                auto sq_pgm_resources_ps = shader->regs.sq_pgm_resources_ps.value();
-               writeField(out, "NUM_GPRS", sq_pgm_resources_ps.NUM_GPRS);
-               writeField(out, "STACK_SIZE", sq_pgm_resources_ps.STACK_SIZE);
-               writeField(out, "DX10_CLAMP", sq_pgm_resources_ps.DX10_CLAMP);
-               writeField(out, "PRIME_CACHE_PGM_EN", sq_pgm_resources_ps.PRIME_CACHE_PGM_EN);
-               writeField(out, "PRIME_CACHE_ON_DRAW", sq_pgm_resources_ps.PRIME_CACHE_ON_DRAW);
-               writeField(out, "FETCH_CACHE_LINES", sq_pgm_resources_ps.FETCH_CACHE_LINES);
-               writeField(out, "UNCACHED_FIRST_INST", sq_pgm_resources_ps.UNCACHED_FIRST_INST);
-               writeField(out, "PRIME_CACHE_ENABLE", sq_pgm_resources_ps.PRIME_CACHE_ENABLE);
-               writeField(out, "PRIME_CACHE_ON_CONST", sq_pgm_resources_ps.PRIME_CACHE_ON_CONST);
-               writeField(out, "CLAMP_CONSTS", sq_pgm_resources_ps.CLAMP_CONSTS);
+               writeField(out, "NUM_GPRS", sq_pgm_resources_ps.NUM_GPRS().get());
+               writeField(out, "STACK_SIZE", sq_pgm_resources_ps.STACK_SIZE().get());
+               writeField(out, "DX10_CLAMP", sq_pgm_resources_ps.DX10_CLAMP().get());
+               writeField(out, "PRIME_CACHE_PGM_EN", sq_pgm_resources_ps.PRIME_CACHE_PGM_EN().get());
+               writeField(out, "PRIME_CACHE_ON_DRAW", sq_pgm_resources_ps.PRIME_CACHE_ON_DRAW().get());
+               writeField(out, "FETCH_CACHE_LINES", sq_pgm_resources_ps.FETCH_CACHE_LINES().get());
+               writeField(out, "UNCACHED_FIRST_INST", sq_pgm_resources_ps.UNCACHED_FIRST_INST().get());
+               writeField(out, "PRIME_CACHE_ENABLE", sq_pgm_resources_ps.PRIME_CACHE_ENABLE().get());
+               writeField(out, "PRIME_CACHE_ON_CONST", sq_pgm_resources_ps.PRIME_CACHE_ON_CONST().get());
+               writeField(out, "CLAMP_CONSTS", sq_pgm_resources_ps.CLAMP_CONSTS().get());
             }
             endGroup(out);
 
             startGroup(out, "SQ_PGM_EXPORTS_PS");
             {
                auto sq_pgm_exports_ps = shader->regs.sq_pgm_exports_ps.value();
-               writeField(out, "EXPORT_MODE", sq_pgm_exports_ps.EXPORT_MODE);
+               writeField(out, "EXPORT_MODE", sq_pgm_exports_ps.EXPORT_MODE().get());
             }
             endGroup(out);
 
             startGroup(out, "SPI_PS_IN_CONTROL_0");
             {
                auto spi_ps_in_control_0 = shader->regs.spi_ps_in_control_0.value();
-               writeField(out, "NUM_INTERP", spi_ps_in_control_0.NUM_INTERP);
-               writeField(out, "POSITION_ENA", spi_ps_in_control_0.POSITION_ENA);
-               writeField(out, "POSITION_CENTROID", spi_ps_in_control_0.POSITION_CENTROID);
-               writeField(out, "POSITION_ADDR", spi_ps_in_control_0.POSITION_ADDR);
-               writeField(out, "PARAM_GEN", spi_ps_in_control_0.PARAM_GEN);
-               writeField(out, "PARAM_GEN_ADDR", spi_ps_in_control_0.PARAM_GEN_ADDR);
-               writeField(out, "BARYC_SAMPLE_CNTL", spi_ps_in_control_0.BARYC_SAMPLE_CNTL);
-               writeField(out, "PERSP_GRADIENT_ENA", spi_ps_in_control_0.PERSP_GRADIENT_ENA);
-               writeField(out, "LINEAR_GRADIENT_ENA", spi_ps_in_control_0.LINEAR_GRADIENT_ENA);
-               writeField(out, "POSITION_SAMPLE", spi_ps_in_control_0.POSITION_SAMPLE);
-               writeField(out, "BARYC_AT_SAMPLE_ENA", spi_ps_in_control_0.BARYC_AT_SAMPLE_ENA);
+               writeField(out, "NUM_INTERP", spi_ps_in_control_0.NUM_INTERP().get());
+               writeField(out, "POSITION_ENA", spi_ps_in_control_0.POSITION_ENA().get());
+               writeField(out, "POSITION_CENTROID", spi_ps_in_control_0.POSITION_CENTROID().get());
+               writeField(out, "POSITION_ADDR", spi_ps_in_control_0.POSITION_ADDR().get());
+               writeField(out, "PARAM_GEN", spi_ps_in_control_0.PARAM_GEN().get());
+               writeField(out, "PARAM_GEN_ADDR", spi_ps_in_control_0.PARAM_GEN_ADDR().get());
+               writeField(out, "BARYC_SAMPLE_CNTL", spi_ps_in_control_0.BARYC_SAMPLE_CNTL().get());
+               writeField(out, "PERSP_GRADIENT_ENA", spi_ps_in_control_0.PERSP_GRADIENT_ENA().get());
+               writeField(out, "LINEAR_GRADIENT_ENA", spi_ps_in_control_0.LINEAR_GRADIENT_ENA().get());
+               writeField(out, "POSITION_SAMPLE", spi_ps_in_control_0.POSITION_SAMPLE().get());
+               writeField(out, "BARYC_AT_SAMPLE_ENA", spi_ps_in_control_0.BARYC_AT_SAMPLE_ENA().get());
             }
             endGroup(out);
 
             startGroup(out, "SPI_PS_IN_CONTROL_1");
             {
                auto spi_ps_in_control_1 = shader->regs.spi_ps_in_control_1.value();
-               writeField(out, "GEN_INDEX_PIX", spi_ps_in_control_1.GEN_INDEX_PIX);
-               writeField(out, "GEN_INDEX_PIX_ADDR", spi_ps_in_control_1.GEN_INDEX_PIX_ADDR);
-               writeField(out, "FRONT_FACE_ENA", spi_ps_in_control_1.FRONT_FACE_ENA);
-               writeField(out, "FRONT_FACE_CHAN", spi_ps_in_control_1.FRONT_FACE_CHAN);
-               writeField(out, "FRONT_FACE_ALL_BITS", spi_ps_in_control_1.FRONT_FACE_ALL_BITS);
-               writeField(out, "FRONT_FACE_ADDR", spi_ps_in_control_1.FRONT_FACE_ADDR);
-               writeField(out, "FOG_ADDR", spi_ps_in_control_1.FOG_ADDR);
-               writeField(out, "FIXED_PT_POSITION_ENA", spi_ps_in_control_1.FIXED_PT_POSITION_ENA);
-               writeField(out, "FIXED_PT_POSITION_ADDR", spi_ps_in_control_1.FIXED_PT_POSITION_ADDR);
-               writeField(out, "POSITION_ULC", spi_ps_in_control_1.POSITION_ULC);
+               writeField(out, "GEN_INDEX_PIX", spi_ps_in_control_1.GEN_INDEX_PIX().get());
+               writeField(out, "GEN_INDEX_PIX_ADDR", spi_ps_in_control_1.GEN_INDEX_PIX_ADDR().get());
+               writeField(out, "FRONT_FACE_ENA", spi_ps_in_control_1.FRONT_FACE_ENA().get());
+               writeField(out, "FRONT_FACE_CHAN", spi_ps_in_control_1.FRONT_FACE_CHAN().get());
+               writeField(out, "FRONT_FACE_ALL_BITS", spi_ps_in_control_1.FRONT_FACE_ALL_BITS().get());
+               writeField(out, "FRONT_FACE_ADDR", spi_ps_in_control_1.FRONT_FACE_ADDR().get());
+               writeField(out, "FOG_ADDR", spi_ps_in_control_1.FOG_ADDR().get());
+               writeField(out, "FIXED_PT_POSITION_ENA", spi_ps_in_control_1.FIXED_PT_POSITION_ENA().get());
+               writeField(out, "FIXED_PT_POSITION_ADDR", spi_ps_in_control_1.FIXED_PT_POSITION_ADDR().get());
+               writeField(out, "POSITION_ULC", spi_ps_in_control_1.POSITION_ULC().get());
             }
             endGroup(out);
 
@@ -378,27 +378,27 @@ printInfo(const std::string &filename)
             writeField(out, "NUM_SPI_PS_INPUT_CNTL", num_spi_ps_input_cntl);
 
             for (auto i = 0u; i < std::min<size_t>(num_spi_ps_input_cntl, spi_ps_input_cntls.size()); ++i) {
-               writeField(out, "SEMANTIC", spi_ps_input_cntls[i].SEMANTIC);
-               writeField(out, "DEFAULT_VAL", spi_ps_input_cntls[i].DEFAULT_VAL);
-               writeField(out, "FLAT_SHADE", spi_ps_input_cntls[i].FLAT_SHADE);
-               writeField(out, "SEL_CENTROID", spi_ps_input_cntls[i].SEL_CENTROID);
-               writeField(out, "SEL_LINEAR", spi_ps_input_cntls[i].SEL_LINEAR);
-               writeField(out, "CYL_WRAP", spi_ps_input_cntls[i].CYL_WRAP);
-               writeField(out, "PT_SPRITE_TEX", spi_ps_input_cntls[i].PT_SPRITE_TEX);
-               writeField(out, "SEL_SAMPLE", spi_ps_input_cntls[i].SEL_SAMPLE);
+               writeField(out, "SEMANTIC", spi_ps_input_cntls[i].SEMANTIC().get());
+               writeField(out, "DEFAULT_VAL", spi_ps_input_cntls[i].DEFAULT_VAL().get());
+               writeField(out, "FLAT_SHADE", spi_ps_input_cntls[i].FLAT_SHADE().get());
+               writeField(out, "SEL_CENTROID", spi_ps_input_cntls[i].SEL_CENTROID().get());
+               writeField(out, "SEL_LINEAR", spi_ps_input_cntls[i].SEL_LINEAR().get());
+               writeField(out, "CYL_WRAP", spi_ps_input_cntls[i].CYL_WRAP().get());
+               writeField(out, "PT_SPRITE_TEX", spi_ps_input_cntls[i].PT_SPRITE_TEX().get());
+               writeField(out, "SEL_SAMPLE", spi_ps_input_cntls[i].SEL_SAMPLE().get());
             }
 
             startGroup(out, "CB_SHADER_MASK");
             {
                auto cb_shader_mask = shader->regs.cb_shader_mask.value();
-               writeField(out, "OUTPUT0_ENABLE", cb_shader_mask.OUTPUT0_ENABLE);
-               writeField(out, "OUTPUT1_ENABLE", cb_shader_mask.OUTPUT1_ENABLE);
-               writeField(out, "OUTPUT2_ENABLE", cb_shader_mask.OUTPUT2_ENABLE);
-               writeField(out, "OUTPUT3_ENABLE", cb_shader_mask.OUTPUT3_ENABLE);
-               writeField(out, "OUTPUT4_ENABLE", cb_shader_mask.OUTPUT4_ENABLE);
-               writeField(out, "OUTPUT5_ENABLE", cb_shader_mask.OUTPUT5_ENABLE);
-               writeField(out, "OUTPUT6_ENABLE", cb_shader_mask.OUTPUT6_ENABLE);
-               writeField(out, "OUTPUT7_ENABLE", cb_shader_mask.OUTPUT7_ENABLE);
+               writeField(out, "OUTPUT0_ENABLE", cb_shader_mask.OUTPUT0_ENABLE().get());
+               writeField(out, "OUTPUT1_ENABLE", cb_shader_mask.OUTPUT1_ENABLE().get());
+               writeField(out, "OUTPUT2_ENABLE", cb_shader_mask.OUTPUT2_ENABLE().get());
+               writeField(out, "OUTPUT3_ENABLE", cb_shader_mask.OUTPUT3_ENABLE().get());
+               writeField(out, "OUTPUT4_ENABLE", cb_shader_mask.OUTPUT4_ENABLE().get());
+               writeField(out, "OUTPUT5_ENABLE", cb_shader_mask.OUTPUT5_ENABLE().get());
+               writeField(out, "OUTPUT6_ENABLE", cb_shader_mask.OUTPUT6_ENABLE().get());
+               writeField(out, "OUTPUT7_ENABLE", cb_shader_mask.OUTPUT7_ENABLE().get());
             }
             endGroup(out);
 
@@ -419,23 +419,23 @@ printInfo(const std::string &filename)
             startGroup(out, "DB_SHADER_CONTROL");
             {
                auto db_shader_control = shader->regs.db_shader_control.value();
-               writeField(out, "Z_EXPORT_ENABLE", db_shader_control.Z_EXPORT_ENABLE);
-               writeField(out, "STENCIL_REF_EXPORT_ENABLE", db_shader_control.STENCIL_REF_EXPORT_ENABLE);
-               writeField(out, "Z_ORDER", db_shader_control.Z_ORDER);
-               writeField(out, "KILL_ENABLE", db_shader_control.KILL_ENABLE);
-               writeField(out, "COVERAGE_TO_MASK_ENABLE", db_shader_control.COVERAGE_TO_MASK_ENABLE);
-               writeField(out, "MASK_EXPORT_ENABLE", db_shader_control.MASK_EXPORT_ENABLE);
-               writeField(out, "DUAL_EXPORT_ENABLE", db_shader_control.DUAL_EXPORT_ENABLE);
-               writeField(out, "EXEC_ON_HIER_FAIL", db_shader_control.EXEC_ON_HIER_FAIL);
-               writeField(out, "EXEC_ON_NOOP", db_shader_control.EXEC_ON_NOOP);
-               writeField(out, "ALPHA_TO_MASK_DISABLE", db_shader_control.ALPHA_TO_MASK_DISABLE);
+               writeField(out, "Z_EXPORT_ENABLE", db_shader_control.Z_EXPORT_ENABLE().get());
+               writeField(out, "STENCIL_REF_EXPORT_ENABLE", db_shader_control.STENCIL_REF_EXPORT_ENABLE().get());
+               writeField(out, "Z_ORDER", db_shader_control.Z_ORDER().get());
+               writeField(out, "KILL_ENABLE", db_shader_control.KILL_ENABLE().get());
+               writeField(out, "COVERAGE_TO_MASK_ENABLE", db_shader_control.COVERAGE_TO_MASK_ENABLE().get());
+               writeField(out, "MASK_EXPORT_ENABLE", db_shader_control.MASK_EXPORT_ENABLE().get());
+               writeField(out, "DUAL_EXPORT_ENABLE", db_shader_control.DUAL_EXPORT_ENABLE().get());
+               writeField(out, "EXEC_ON_HIER_FAIL", db_shader_control.EXEC_ON_HIER_FAIL().get());
+               writeField(out, "EXEC_ON_NOOP", db_shader_control.EXEC_ON_NOOP().get());
+               writeField(out, "ALPHA_TO_MASK_DISABLE", db_shader_control.ALPHA_TO_MASK_DISABLE().get());
             }
             endGroup(out);
 
             startGroup(out, "SPI_INPUT_Z");
             {
                auto spi_input_z = shader->regs.spi_input_z.value();
-               writeField(out, "PROVIDE_Z_TO_SPI", spi_input_z.PROVIDE_Z_TO_SPI);
+               writeField(out, "PROVIDE_Z_TO_SPI", spi_input_z.PROVIDE_Z_TO_SPI().get());
             }
             endGroup(out);
          }
@@ -464,69 +464,69 @@ printInfo(const std::string &filename)
             startGroup(out, "SQ_PGM_RESOURCES_GS");
             {
                auto sq_pgm_resources_gs = shader->regs.sq_pgm_resources_gs.value();
-               writeField(out, "NUM_GPRS", sq_pgm_resources_gs.NUM_GPRS);
-               writeField(out, "STACK_SIZE", sq_pgm_resources_gs.STACK_SIZE);
-               writeField(out, "DX10_CLAMP", sq_pgm_resources_gs.DX10_CLAMP);
-               writeField(out, "PRIME_CACHE_PGM_EN", sq_pgm_resources_gs.PRIME_CACHE_PGM_EN);
-               writeField(out, "PRIME_CACHE_ON_DRAW", sq_pgm_resources_gs.PRIME_CACHE_ON_DRAW);
-               writeField(out, "FETCH_CACHE_LINES", sq_pgm_resources_gs.FETCH_CACHE_LINES);
-               writeField(out, "UNCACHED_FIRST_INST", sq_pgm_resources_gs.UNCACHED_FIRST_INST);
-               writeField(out, "PRIME_CACHE_ENABLE", sq_pgm_resources_gs.PRIME_CACHE_ENABLE);
-               writeField(out, "PRIME_CACHE_ON_CONST", sq_pgm_resources_gs.PRIME_CACHE_ON_CONST);
+               writeField(out, "NUM_GPRS", sq_pgm_resources_gs.NUM_GPRS().get());
+               writeField(out, "STACK_SIZE", sq_pgm_resources_gs.STACK_SIZE().get());
+               writeField(out, "DX10_CLAMP", sq_pgm_resources_gs.DX10_CLAMP().get());
+               writeField(out, "PRIME_CACHE_PGM_EN", sq_pgm_resources_gs.PRIME_CACHE_PGM_EN().get());
+               writeField(out, "PRIME_CACHE_ON_DRAW", sq_pgm_resources_gs.PRIME_CACHE_ON_DRAW().get());
+               writeField(out, "FETCH_CACHE_LINES", sq_pgm_resources_gs.FETCH_CACHE_LINES().get());
+               writeField(out, "UNCACHED_FIRST_INST", sq_pgm_resources_gs.UNCACHED_FIRST_INST().get());
+               writeField(out, "PRIME_CACHE_ENABLE", sq_pgm_resources_gs.PRIME_CACHE_ENABLE().get());
+               writeField(out, "PRIME_CACHE_ON_CONST", sq_pgm_resources_gs.PRIME_CACHE_ON_CONST().get());
             }
             endGroup(out);
 
             startGroup(out, "VGT_GS_OUT_PRIM_TYPE");
             {
                auto vgt_gs_out_prim_type = shader->regs.vgt_gs_out_prim_type.value();
-               writeField(out, "PRIM_TYPE", vgt_gs_out_prim_type.PRIM_TYPE);
+               writeField(out, "PRIM_TYPE", vgt_gs_out_prim_type.PRIM_TYPE().get());
             }
             endGroup(out);
 
             startGroup(out, "VGT_GS_MODE");
             {
                auto vgt_gs_mode = shader->regs.vgt_gs_mode.value();
-               writeField(out, "MODE", vgt_gs_mode.MODE);
-               writeField(out, "ES_PASSTHRU", vgt_gs_mode.ES_PASSTHRU);
-               writeField(out, "CUT_MODE", vgt_gs_mode.CUT_MODE);
-               writeField(out, "MODE_HI", vgt_gs_mode.MODE_HI);
-               writeField(out, "GS_C_PACK_EN", vgt_gs_mode.GS_C_PACK_EN);
-               writeField(out, "COMPUTE_MODE", vgt_gs_mode.COMPUTE_MODE);
-               writeField(out, "FAST_COMPUTE_MODE", vgt_gs_mode.FAST_COMPUTE_MODE);
-               writeField(out, "ELEMENT_INFO_EN", vgt_gs_mode.ELEMENT_INFO_EN);
-               writeField(out, "PARTIAL_THD_AT_EOI", vgt_gs_mode.PARTIAL_THD_AT_EOI);
+               writeField(out, "MODE", vgt_gs_mode.MODE().get());
+               writeField(out, "ES_PASSTHRU", vgt_gs_mode.ES_PASSTHRU().get());
+               writeField(out, "CUT_MODE", vgt_gs_mode.CUT_MODE().get());
+               writeField(out, "MODE_HI", vgt_gs_mode.MODE_HI().get());
+               writeField(out, "GS_C_PACK_EN", vgt_gs_mode.GS_C_PACK_EN().get());
+               writeField(out, "COMPUTE_MODE", vgt_gs_mode.COMPUTE_MODE().get());
+               writeField(out, "FAST_COMPUTE_MODE", vgt_gs_mode.FAST_COMPUTE_MODE().get());
+               writeField(out, "ELEMENT_INFO_EN", vgt_gs_mode.ELEMENT_INFO_EN().get());
+               writeField(out, "PARTIAL_THD_AT_EOI", vgt_gs_mode.PARTIAL_THD_AT_EOI().get());
             }
             endGroup(out);
 
             startGroup(out, "PA_CL_VS_OUT_CNTL");
             {
                auto pa_cl_vs_out_cntl = shader->regs.pa_cl_vs_out_cntl.value();
-               writeField(out, "CLIP_DIST_ENA_0", pa_cl_vs_out_cntl.CLIP_DIST_ENA_0);
-               writeField(out, "CLIP_DIST_ENA_1", pa_cl_vs_out_cntl.CLIP_DIST_ENA_1);
-               writeField(out, "CLIP_DIST_ENA_2", pa_cl_vs_out_cntl.CLIP_DIST_ENA_2);
-               writeField(out, "CLIP_DIST_ENA_3", pa_cl_vs_out_cntl.CLIP_DIST_ENA_3);
-               writeField(out, "CLIP_DIST_ENA_4", pa_cl_vs_out_cntl.CLIP_DIST_ENA_4);
-               writeField(out, "CLIP_DIST_ENA_5", pa_cl_vs_out_cntl.CLIP_DIST_ENA_5);
-               writeField(out, "CLIP_DIST_ENA_6", pa_cl_vs_out_cntl.CLIP_DIST_ENA_6);
-               writeField(out, "CLIP_DIST_ENA_7", pa_cl_vs_out_cntl.CLIP_DIST_ENA_7);
-               writeField(out, "CULL_DIST_ENA_0", pa_cl_vs_out_cntl.CULL_DIST_ENA_0);
-               writeField(out, "CULL_DIST_ENA_1", pa_cl_vs_out_cntl.CULL_DIST_ENA_1);
-               writeField(out, "CULL_DIST_ENA_2", pa_cl_vs_out_cntl.CULL_DIST_ENA_2);
-               writeField(out, "CULL_DIST_ENA_3", pa_cl_vs_out_cntl.CULL_DIST_ENA_3);
-               writeField(out, "CULL_DIST_ENA_4", pa_cl_vs_out_cntl.CULL_DIST_ENA_4);
-               writeField(out, "CULL_DIST_ENA_5", pa_cl_vs_out_cntl.CULL_DIST_ENA_5);
-               writeField(out, "CULL_DIST_ENA_6", pa_cl_vs_out_cntl.CULL_DIST_ENA_6);
-               writeField(out, "CULL_DIST_ENA_7", pa_cl_vs_out_cntl.CULL_DIST_ENA_7);
-               writeField(out, "USE_VTX_POINT_SIZE", pa_cl_vs_out_cntl.USE_VTX_POINT_SIZE);
-               writeField(out, "USE_VTX_EDGE_FLAG", pa_cl_vs_out_cntl.USE_VTX_EDGE_FLAG);
-               writeField(out, "USE_VTX_RENDER_TARGET_INDX", pa_cl_vs_out_cntl.USE_VTX_RENDER_TARGET_INDX);
-               writeField(out, "USE_VTX_VIEWPORT_INDX", pa_cl_vs_out_cntl.USE_VTX_VIEWPORT_INDX);
-               writeField(out, "USE_VTX_KILL_FLAG", pa_cl_vs_out_cntl.USE_VTX_KILL_FLAG);
-               writeField(out, "VS_OUT_MISC_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_MISC_VEC_ENA);
-               writeField(out, "VS_OUT_CCDIST0_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_CCDIST0_VEC_ENA);
-               writeField(out, "VS_OUT_CCDIST1_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_CCDIST1_VEC_ENA);
-               writeField(out, "VS_OUT_MISC_SIDE_BUS_ENA", pa_cl_vs_out_cntl.VS_OUT_MISC_SIDE_BUS_ENA);
-               writeField(out, "USE_VTX_GS_CUT_FLAG", pa_cl_vs_out_cntl.USE_VTX_GS_CUT_FLAG);
+               writeField(out, "CLIP_DIST_ENA_0", pa_cl_vs_out_cntl.CLIP_DIST_ENA_0().get());
+               writeField(out, "CLIP_DIST_ENA_1", pa_cl_vs_out_cntl.CLIP_DIST_ENA_1().get());
+               writeField(out, "CLIP_DIST_ENA_2", pa_cl_vs_out_cntl.CLIP_DIST_ENA_2().get());
+               writeField(out, "CLIP_DIST_ENA_3", pa_cl_vs_out_cntl.CLIP_DIST_ENA_3().get());
+               writeField(out, "CLIP_DIST_ENA_4", pa_cl_vs_out_cntl.CLIP_DIST_ENA_4().get());
+               writeField(out, "CLIP_DIST_ENA_5", pa_cl_vs_out_cntl.CLIP_DIST_ENA_5().get());
+               writeField(out, "CLIP_DIST_ENA_6", pa_cl_vs_out_cntl.CLIP_DIST_ENA_6().get());
+               writeField(out, "CLIP_DIST_ENA_7", pa_cl_vs_out_cntl.CLIP_DIST_ENA_7().get());
+               writeField(out, "CULL_DIST_ENA_0", pa_cl_vs_out_cntl.CULL_DIST_ENA_0().get());
+               writeField(out, "CULL_DIST_ENA_1", pa_cl_vs_out_cntl.CULL_DIST_ENA_1().get());
+               writeField(out, "CULL_DIST_ENA_2", pa_cl_vs_out_cntl.CULL_DIST_ENA_2().get());
+               writeField(out, "CULL_DIST_ENA_3", pa_cl_vs_out_cntl.CULL_DIST_ENA_3().get());
+               writeField(out, "CULL_DIST_ENA_4", pa_cl_vs_out_cntl.CULL_DIST_ENA_4().get());
+               writeField(out, "CULL_DIST_ENA_5", pa_cl_vs_out_cntl.CULL_DIST_ENA_5().get());
+               writeField(out, "CULL_DIST_ENA_6", pa_cl_vs_out_cntl.CULL_DIST_ENA_6().get());
+               writeField(out, "CULL_DIST_ENA_7", pa_cl_vs_out_cntl.CULL_DIST_ENA_7().get());
+               writeField(out, "USE_VTX_POINT_SIZE", pa_cl_vs_out_cntl.USE_VTX_POINT_SIZE().get());
+               writeField(out, "USE_VTX_EDGE_FLAG", pa_cl_vs_out_cntl.USE_VTX_EDGE_FLAG().get());
+               writeField(out, "USE_VTX_RENDER_TARGET_INDX", pa_cl_vs_out_cntl.USE_VTX_RENDER_TARGET_INDX().get());
+               writeField(out, "USE_VTX_VIEWPORT_INDX", pa_cl_vs_out_cntl.USE_VTX_VIEWPORT_INDX().get());
+               writeField(out, "USE_VTX_KILL_FLAG", pa_cl_vs_out_cntl.USE_VTX_KILL_FLAG().get());
+               writeField(out, "VS_OUT_MISC_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_MISC_VEC_ENA().get());
+               writeField(out, "VS_OUT_CCDIST0_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_CCDIST0_VEC_ENA().get());
+               writeField(out, "VS_OUT_CCDIST1_VEC_ENA", pa_cl_vs_out_cntl.VS_OUT_CCDIST1_VEC_ENA().get());
+               writeField(out, "VS_OUT_MISC_SIDE_BUS_ENA", pa_cl_vs_out_cntl.VS_OUT_MISC_SIDE_BUS_ENA().get());
+               writeField(out, "USE_VTX_GS_CUT_FLAG", pa_cl_vs_out_cntl.USE_VTX_GS_CUT_FLAG().get());
             }
             endGroup(out);
 
@@ -538,10 +538,10 @@ printInfo(const std::string &filename)
             for (auto i = 0u; i < std::min<size_t>(num_spi_vs_out_id, spi_vs_out_id.size()); ++i) {
                startGroup(out, fmt::format("SPI_VS_OUT_ID[{}]", i));
                {
-                  writeField(out, "SEMANTIC_0", spi_vs_out_id[i].SEMANTIC_0);
-                  writeField(out, "SEMANTIC_1", spi_vs_out_id[i].SEMANTIC_1);
-                  writeField(out, "SEMANTIC_2", spi_vs_out_id[i].SEMANTIC_2);
-                  writeField(out, "SEMANTIC_3", spi_vs_out_id[i].SEMANTIC_3);
+                  writeField(out, "SEMANTIC_0", spi_vs_out_id[i].SEMANTIC_0().get());
+                  writeField(out, "SEMANTIC_1", spi_vs_out_id[i].SEMANTIC_1().get());
+                  writeField(out, "SEMANTIC_2", spi_vs_out_id[i].SEMANTIC_2().get());
+                  writeField(out, "SEMANTIC_3", spi_vs_out_id[i].SEMANTIC_3().get());
                }
                endGroup(out);
             }
@@ -549,42 +549,42 @@ printInfo(const std::string &filename)
             startGroup(out, "SQ_PGM_RESOURCES_VS");
             {
                auto sq_pgm_resources_vs = shader->regs.sq_pgm_resources_vs.value();
-               writeField(out, "NUM_GPRS", sq_pgm_resources_vs.NUM_GPRS);
-               writeField(out, "STACK_SIZE", sq_pgm_resources_vs.STACK_SIZE);
-               writeField(out, "DX10_CLAMP", sq_pgm_resources_vs.DX10_CLAMP);
-               writeField(out, "PRIME_CACHE_PGM_EN", sq_pgm_resources_vs.PRIME_CACHE_PGM_EN);
-               writeField(out, "PRIME_CACHE_ON_DRAW", sq_pgm_resources_vs.PRIME_CACHE_ON_DRAW);
-               writeField(out, "FETCH_CACHE_LINES", sq_pgm_resources_vs.FETCH_CACHE_LINES);
-               writeField(out, "UNCACHED_FIRST_INST", sq_pgm_resources_vs.UNCACHED_FIRST_INST);
-               writeField(out, "PRIME_CACHE_ENABLE", sq_pgm_resources_vs.PRIME_CACHE_ENABLE);
-               writeField(out, "PRIME_CACHE_ON_CONST", sq_pgm_resources_vs.PRIME_CACHE_ON_CONST);
+               writeField(out, "NUM_GPRS", sq_pgm_resources_vs.NUM_GPRS().get());
+               writeField(out, "STACK_SIZE", sq_pgm_resources_vs.STACK_SIZE().get());
+               writeField(out, "DX10_CLAMP", sq_pgm_resources_vs.DX10_CLAMP().get());
+               writeField(out, "PRIME_CACHE_PGM_EN", sq_pgm_resources_vs.PRIME_CACHE_PGM_EN().get());
+               writeField(out, "PRIME_CACHE_ON_DRAW", sq_pgm_resources_vs.PRIME_CACHE_ON_DRAW().get());
+               writeField(out, "FETCH_CACHE_LINES", sq_pgm_resources_vs.FETCH_CACHE_LINES().get());
+               writeField(out, "UNCACHED_FIRST_INST", sq_pgm_resources_vs.UNCACHED_FIRST_INST().get());
+               writeField(out, "PRIME_CACHE_ENABLE", sq_pgm_resources_vs.PRIME_CACHE_ENABLE().get());
+               writeField(out, "PRIME_CACHE_ON_CONST", sq_pgm_resources_vs.PRIME_CACHE_ON_CONST().get());
             }
             endGroup(out);
 
             startGroup(out, "SQ_GS_VERT_ITEMSIZE");
             {
                auto sq_gs_vert_itemsize = shader->regs.sq_gs_vert_itemsize.value();
-               writeField(out, "ITEMSIZE", sq_gs_vert_itemsize.ITEMSIZE);
+               writeField(out, "ITEMSIZE", sq_gs_vert_itemsize.ITEMSIZE().get());
             }
             endGroup(out);
 
             startGroup(out, "SPI_VS_OUT_CONFIG");
             {
                auto spi_vs_out_config = shader->regs.spi_vs_out_config.value();
-               writeField(out, "VS_PER_COMPONENT", spi_vs_out_config.VS_PER_COMPONENT);
-               writeField(out, "VS_EXPORT_COUNT", spi_vs_out_config.VS_EXPORT_COUNT);
-               writeField(out, "VS_EXPORTS_FOG", spi_vs_out_config.VS_EXPORTS_FOG);
-               writeField(out, "VS_OUT_FOG_VEC_ADDR", spi_vs_out_config.VS_OUT_FOG_VEC_ADDR);
+               writeField(out, "VS_PER_COMPONENT", spi_vs_out_config.VS_PER_COMPONENT().get());
+               writeField(out, "VS_EXPORT_COUNT", spi_vs_out_config.VS_EXPORT_COUNT().get());
+               writeField(out, "VS_EXPORTS_FOG", spi_vs_out_config.VS_EXPORTS_FOG().get());
+               writeField(out, "VS_OUT_FOG_VEC_ADDR", spi_vs_out_config.VS_OUT_FOG_VEC_ADDR().get());
             }
             endGroup(out);
 
             startGroup(out, "VGT_STRMOUT_BUFFER_EN");
             {
                auto vgt_strmout_buffer_en = shader->regs.vgt_strmout_buffer_en.value();
-               writeField(out, "BUFFER_0_EN", vgt_strmout_buffer_en.BUFFER_0_EN);
-               writeField(out, "BUFFER_1_EN", vgt_strmout_buffer_en.BUFFER_1_EN);
-               writeField(out, "BUFFER_2_EN", vgt_strmout_buffer_en.BUFFER_2_EN);
-               writeField(out, "BUFFER_3_EN", vgt_strmout_buffer_en.BUFFER_3_EN);
+               writeField(out, "BUFFER_0_EN", vgt_strmout_buffer_en.BUFFER_0_EN().get());
+               writeField(out, "BUFFER_1_EN", vgt_strmout_buffer_en.BUFFER_1_EN().get());
+               writeField(out, "BUFFER_2_EN", vgt_strmout_buffer_en.BUFFER_2_EN().get());
+               writeField(out, "BUFFER_3_EN", vgt_strmout_buffer_en.BUFFER_3_EN().get());
             }
             endGroup(out);
          }
@@ -674,63 +674,63 @@ printInfo(const std::string &filename)
             startGroup(out, "SQ_TEX_RESOURCE_WORD0_0");
             {
                auto word0 = tex->regs.word0.value();
-               writeField(out, "DIM", word0.DIM);
-               writeField(out, "TILE_MODE", word0.TILE_MODE);
-               writeField(out, "TILE_TYPE", word0.TILE_TYPE);
-               writeField(out, "PITCH", word0.PITCH);
-               writeField(out, "TEX_WIDTH", word0.TEX_WIDTH);
+               writeField(out, "DIM", word0.DIM().get());
+               writeField(out, "TILE_MODE", word0.TILE_MODE().get());
+               writeField(out, "TILE_TYPE", word0.TILE_TYPE().get());
+               writeField(out, "PITCH", word0.PITCH().get());
+               writeField(out, "TEX_WIDTH", word0.TEX_WIDTH().get());
             }
             endGroup(out);
 
             startGroup(out, "SQ_TEX_RESOURCE_WORD0_1");
             {
                auto word1 = tex->regs.word1.value();
-               writeField(out, "TEX_HEIGHT", word1.TEX_HEIGHT);
-               writeField(out, "TEX_DEPTH", word1.TEX_DEPTH);
-               writeField(out, "DATA_FORMAT", word1.DATA_FORMAT);
+               writeField(out, "TEX_HEIGHT", word1.TEX_HEIGHT().get());
+               writeField(out, "TEX_DEPTH", word1.TEX_DEPTH().get());
+               writeField(out, "DATA_FORMAT", word1.DATA_FORMAT().get());
             }
             endGroup(out);
 
             startGroup(out, "SQ_TEX_RESOURCE_WORD0_4");
             {
                auto word4 = tex->regs.word4.value();
-               writeField(out, "FORMAT_COMP_X", word4.FORMAT_COMP_X);
-               writeField(out, "FORMAT_COMP_Y", word4.FORMAT_COMP_Y);
-               writeField(out, "FORMAT_COMP_Z", word4.FORMAT_COMP_Z);
-               writeField(out, "FORMAT_COMP_W", word4.FORMAT_COMP_W);
-               writeField(out, "NUM_FORMAT_ALL", word4.NUM_FORMAT_ALL);
-               writeField(out, "SRF_MODE_ALL", word4.SRF_MODE_ALL);
-               writeField(out, "FORCE_DEGAMMA", word4.FORCE_DEGAMMA);
-               writeField(out, "ENDIAN_SWAP", word4.ENDIAN_SWAP);
-               writeField(out, "REQUEST_SIZE", word4.REQUEST_SIZE);
-               writeField(out, "DST_SEL_X", word4.DST_SEL_X);
-               writeField(out, "DST_SEL_Y", word4.DST_SEL_Y);
-               writeField(out, "DST_SEL_Z", word4.DST_SEL_Z);
-               writeField(out, "DST_SEL_W", word4.DST_SEL_W);
-               writeField(out, "BASE_LEVEL", word4.BASE_LEVEL);
+               writeField(out, "FORMAT_COMP_X", word4.FORMAT_COMP_X().get());
+               writeField(out, "FORMAT_COMP_Y", word4.FORMAT_COMP_Y().get());
+               writeField(out, "FORMAT_COMP_Z", word4.FORMAT_COMP_Z().get());
+               writeField(out, "FORMAT_COMP_W", word4.FORMAT_COMP_W().get());
+               writeField(out, "NUM_FORMAT_ALL", word4.NUM_FORMAT_ALL().get());
+               writeField(out, "SRF_MODE_ALL", word4.SRF_MODE_ALL().get());
+               writeField(out, "FORCE_DEGAMMA", word4.FORCE_DEGAMMA().get());
+               writeField(out, "ENDIAN_SWAP", word4.ENDIAN_SWAP().get());
+               writeField(out, "REQUEST_SIZE", word4.REQUEST_SIZE().get());
+               writeField(out, "DST_SEL_X", word4.DST_SEL_X().get());
+               writeField(out, "DST_SEL_Y", word4.DST_SEL_Y().get());
+               writeField(out, "DST_SEL_Z", word4.DST_SEL_Z().get());
+               writeField(out, "DST_SEL_W", word4.DST_SEL_W().get());
+               writeField(out, "BASE_LEVEL", word4.BASE_LEVEL().get());
             }
             endGroup(out);
 
             startGroup(out, "SQ_TEX_RESOURCE_WORD0_5");
             {
                auto word5 = tex->regs.word5.value();
-               writeField(out, "LAST_LEVEL", word5.LAST_LEVEL);
-               writeField(out, "BASE_ARRAY", word5.BASE_ARRAY);
-               writeField(out, "LAST_ARRAY", word5.LAST_ARRAY);
-               writeField(out, "YUV_CONV", word5.YUV_CONV);
+               writeField(out, "LAST_LEVEL", word5.LAST_LEVEL().get());
+               writeField(out, "BASE_ARRAY", word5.BASE_ARRAY().get());
+               writeField(out, "LAST_ARRAY", word5.LAST_ARRAY().get());
+               writeField(out, "YUV_CONV", word5.YUV_CONV().get());
             }
             endGroup(out);
 
             startGroup(out, "SQ_TEX_RESOURCE_WORD0_6");
             {
                auto word6 = tex->regs.word6.value();
-               writeField(out, "MPEG_CLAMP", word6.MPEG_CLAMP);
-               writeField(out, "MAX_ANISO_RATIO", word6.MAX_ANISO_RATIO);
-               writeField(out, "PERF_MODULATION", word6.PERF_MODULATION);
-               writeField(out, "INTERLACED", word6.INTERLACED);
-               writeField(out, "ADVIS_FAULT_LOD", word6.ADVIS_FAULT_LOD);
-               writeField(out, "ADVIS_CLAMP_LOD", word6.ADVIS_CLAMP_LOD);
-               writeField(out, "TYPE", word6.TYPE);
+               writeField(out, "MPEG_CLAMP", word6.MPEG_CLAMP().get());
+               writeField(out, "MAX_ANISO_RATIO", word6.MAX_ANISO_RATIO().get());
+               writeField(out, "PERF_MODULATION", word6.PERF_MODULATION().get());
+               writeField(out, "INTERLACED", word6.INTERLACED().get());
+               writeField(out, "ADVIS_FAULT_LOD", word6.ADVIS_FAULT_LOD().get());
+               writeField(out, "ADVIS_CLAMP_LOD", word6.ADVIS_CLAMP_LOD().get());
+               writeField(out, "TYPE", word6.TYPE().get());
             }
             endGroup(out);
          }
