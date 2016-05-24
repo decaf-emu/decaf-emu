@@ -122,46 +122,52 @@ GX2InitAlphaToMaskReg(GX2AlphaToMaskReg *reg,
                       GX2AlphaToMaskMode mode)
 {
    auto db_alpha_to_mask = reg->db_alpha_to_mask.value();
-   db_alpha_to_mask.ALPHA_TO_MASK_ENABLE = alphaToMask;
+   db_alpha_to_mask = db_alpha_to_mask
+      .ALPHA_TO_MASK_ENABLE().set(!!alphaToMask);
 
    switch (mode) {
    case GX2AlphaToMaskMode::NonDithered:
       // 0xAA = 10 10 10 10
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = 2;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET1 = 2;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET2 = 2;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET3 = 2;
+      db_alpha_to_mask = db_alpha_to_mask
+         .ALPHA_TO_MASK_OFFSET0().set(2)
+         .ALPHA_TO_MASK_OFFSET1().set(2)
+         .ALPHA_TO_MASK_OFFSET2().set(2)
+         .ALPHA_TO_MASK_OFFSET3().set(2);
       break;
    case GX2AlphaToMaskMode::Dither0:
       // 0x78 = 01 11 10 00
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = 0;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET1 = 2;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET2 = 3;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET3 = 1;
+      db_alpha_to_mask = db_alpha_to_mask
+         .ALPHA_TO_MASK_OFFSET0().set(0)
+         .ALPHA_TO_MASK_OFFSET1().set(2)
+         .ALPHA_TO_MASK_OFFSET2().set(3)
+         .ALPHA_TO_MASK_OFFSET3().set(1);
       break;
    case GX2AlphaToMaskMode::Dither90:
       // 0xC6 = 11 00 01 10
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = 2;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET1 = 1;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET2 = 0;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET3 = 3;
+      db_alpha_to_mask = db_alpha_to_mask
+         .ALPHA_TO_MASK_OFFSET0().set(2)
+         .ALPHA_TO_MASK_OFFSET1().set(1)
+         .ALPHA_TO_MASK_OFFSET2().set(0)
+         .ALPHA_TO_MASK_OFFSET3().set(3);
       break;
    case GX2AlphaToMaskMode::Dither180:
       // 0x2D = 00 10 11 01
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = 1;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET1 = 3;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET2 = 2;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET3 = 0;
+      db_alpha_to_mask = db_alpha_to_mask
+         .ALPHA_TO_MASK_OFFSET0().set(1)
+         .ALPHA_TO_MASK_OFFSET1().set(3)
+         .ALPHA_TO_MASK_OFFSET2().set(2)
+         .ALPHA_TO_MASK_OFFSET3().set(0);
       break;
    case GX2AlphaToMaskMode::Dither270:
       // 0x93 = 10 01 00 11
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = 3;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET1 = 0;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET2 = 1;
-      db_alpha_to_mask.ALPHA_TO_MASK_OFFSET3 = 2;
+      db_alpha_to_mask = db_alpha_to_mask
+         .ALPHA_TO_MASK_OFFSET0().set(3)
+         .ALPHA_TO_MASK_OFFSET1().set(0)
+         .ALPHA_TO_MASK_OFFSET2().set(1)
+         .ALPHA_TO_MASK_OFFSET3().set(2);
       break;
    }
-   db_alpha_to_mask.ALPHA_TO_MASK_OFFSET0 = mode;
+
    reg->db_alpha_to_mask = db_alpha_to_mask;
 }
 
@@ -172,7 +178,7 @@ GX2GetAlphaToMaskReg(const GX2AlphaToMaskReg *reg,
 {
    auto db_alpha_to_mask = reg->db_alpha_to_mask.value();
    auto value = (db_alpha_to_mask.value >> 8) & 0xff;
-   *alphaToMask = db_alpha_to_mask.ALPHA_TO_MASK_ENABLE;
+   *alphaToMask = db_alpha_to_mask.ALPHA_TO_MASK_ENABLE().get();
 
    switch (value) {
    case 0x78:
@@ -309,9 +315,8 @@ GX2GetBlendControlReg(GX2BlendControlReg *reg,
                       be_val<GX2BlendMode> *alphaDstBlend,
                       be_val<GX2BlendCombineMode> *alphaCombine)
 {
-   *target = reg->target;
-
    auto cb_blend_control = reg->cb_blend_control.value();
+   *target = reg->target;
    *colorSrcBlend = static_cast<GX2BlendMode>(cb_blend_control.COLOR_SRCBLEND().get());
    *colorDstBlend = static_cast<GX2BlendMode>(cb_blend_control.COLOR_DESTBLEND().get());
    *colorCombine = static_cast<GX2BlendCombineMode>(cb_blend_control.COLOR_COMB_FCN().get());
@@ -375,6 +380,7 @@ GX2GetColorControlReg(GX2ColorControlReg *reg,
                       be_val<BOOL> *colorWriteEnable)
 {
    auto cb_color_control = reg->cb_color_control.value();
+
    *rop3 = static_cast<GX2LogicOp>(cb_color_control.ROP3().get());
    *targetBlendEnable = cb_color_control.TARGET_BLEND_ENABLE();
    *multiWriteEnable = cb_color_control.MULTIWRITE_ENABLE();
@@ -463,19 +469,22 @@ GX2InitDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                               GX2StencilFunction backStencilFail)
 {
    auto db_depth_control = reg->db_depth_control.value();
-   db_depth_control.Z_ENABLE = depthTest;
-   db_depth_control.Z_WRITE_ENABLE = depthWrite;
-   db_depth_control.ZFUNC = static_cast<latte::REF_FUNC>(depthCompare);
-   db_depth_control.STENCIL_ENABLE = stencilTest;
-   db_depth_control.BACKFACE_ENABLE = backfaceStencil;
-   db_depth_control.STENCILFUNC = static_cast<latte::REF_FUNC>(frontStencilFunc);
-   db_depth_control.STENCILZPASS = static_cast<latte::DB_STENCIL_FUNC>(frontStencilZPass);
-   db_depth_control.STENCILZFAIL = static_cast<latte::DB_STENCIL_FUNC>(frontStencilZFail);
-   db_depth_control.STENCILFAIL = static_cast<latte::DB_STENCIL_FUNC>(frontStencilFail);
-   db_depth_control.STENCILFUNC_BF = static_cast<latte::REF_FUNC>(backStencilFunc);
-   db_depth_control.STENCILZPASS_BF = static_cast<latte::DB_STENCIL_FUNC>(backStencilZPass);
-   db_depth_control.STENCILZFAIL_BF = static_cast<latte::DB_STENCIL_FUNC>(backStencilZFail);
-   db_depth_control.STENCILFAIL_BF = static_cast<latte::DB_STENCIL_FUNC>(backStencilFail);
+
+   db_depth_control = db_depth_control
+      .Z_ENABLE().set(!!depthTest)
+      .Z_WRITE_ENABLE().set(!!depthWrite)
+      .ZFUNC().set(static_cast<latte::REF_FUNC>(depthCompare))
+      .STENCIL_ENABLE().set(!!stencilTest)
+      .BACKFACE_ENABLE().set(!!backfaceStencil)
+      .STENCILFUNC().set(static_cast<latte::REF_FUNC>(frontStencilFunc))
+      .STENCILZPASS().set(static_cast<latte::DB_STENCIL_FUNC>(frontStencilZPass))
+      .STENCILZFAIL().set(static_cast<latte::DB_STENCIL_FUNC>(frontStencilZFail))
+      .STENCILFAIL().set(static_cast<latte::DB_STENCIL_FUNC>(frontStencilFail))
+      .STENCILFUNC_BF().set(static_cast<latte::REF_FUNC>(backStencilFunc))
+      .STENCILZPASS_BF().set(static_cast<latte::DB_STENCIL_FUNC>(backStencilZPass))
+      .STENCILZFAIL_BF().set(static_cast<latte::DB_STENCIL_FUNC>(backStencilZFail))
+      .STENCILFAIL_BF().set(static_cast<latte::DB_STENCIL_FUNC>(backStencilFail));
+
    reg->db_depth_control = db_depth_control;
 }
 
@@ -496,19 +505,19 @@ GX2GetDepthStencilControlReg(GX2DepthStencilControlReg *reg,
                              be_val<GX2StencilFunction> *backStencilFail)
 {
    auto db_depth_control = reg->db_depth_control.value();
-   *depthTest = db_depth_control.Z_ENABLE;
-   *depthWrite = db_depth_control.Z_WRITE_ENABLE;
-   *depthCompare = static_cast<GX2CompareFunction>(db_depth_control.ZFUNC);
-   *stencilTest = db_depth_control.STENCIL_ENABLE;
-   *backfaceStencil = db_depth_control.BACKFACE_ENABLE;
-   *frontStencilFunc = static_cast<GX2CompareFunction>(db_depth_control.STENCILFUNC);
-   *frontStencilZPass = static_cast<GX2StencilFunction>(db_depth_control.STENCILZPASS);
-   *frontStencilZFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILZFAIL);
-   *frontStencilFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILFAIL);
-   *backStencilFunc = static_cast<GX2CompareFunction>(db_depth_control.STENCILFUNC_BF);
-   *backStencilZPass = static_cast<GX2StencilFunction>(db_depth_control.STENCILZPASS_BF);
-   *backStencilZFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILZFAIL_BF);
-   *backStencilFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILFAIL_BF);
+   *depthTest = db_depth_control.Z_ENABLE();
+   *depthWrite = db_depth_control.Z_WRITE_ENABLE();
+   *depthCompare = static_cast<GX2CompareFunction>(db_depth_control.ZFUNC().get());
+   *stencilTest = db_depth_control.STENCIL_ENABLE();
+   *backfaceStencil = db_depth_control.BACKFACE_ENABLE();
+   *frontStencilFunc = static_cast<GX2CompareFunction>(db_depth_control.STENCILFUNC().get());
+   *frontStencilZPass = static_cast<GX2StencilFunction>(db_depth_control.STENCILZPASS().get());
+   *frontStencilZFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILZFAIL().get());
+   *frontStencilFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILFAIL().get());
+   *backStencilFunc = static_cast<GX2CompareFunction>(db_depth_control.STENCILFUNC_BF().get());
+   *backStencilZPass = static_cast<GX2StencilFunction>(db_depth_control.STENCILZPASS_BF().get());
+   *backStencilZFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILZFAIL_BF().get());
+   *backStencilFail = static_cast<GX2StencilFunction>(db_depth_control.STENCILFAIL_BF().get());
 }
 
 void
@@ -541,13 +550,15 @@ void GX2InitStencilMaskReg(GX2StencilMaskReg *reg,
    auto db_stencilrefmask = reg->db_stencilrefmask.value();
    auto db_stencilrefmask_bf = reg->db_stencilrefmask_bf.value();
 
-   db_stencilrefmask.STENCILREF = frontRef;
-   db_stencilrefmask.STENCILMASK = frontMask;
-   db_stencilrefmask.STENCILWRITEMASK = frontWriteMask;
+   db_stencilrefmask = db_stencilrefmask
+      .STENCILREF().set(frontRef)
+      .STENCILMASK().set(frontMask)
+      .STENCILWRITEMASK().set(frontWriteMask);
 
-   db_stencilrefmask_bf.STENCILREF_BF = backRef;
-   db_stencilrefmask_bf.STENCILMASK_BF = backMask;
-   db_stencilrefmask_bf.STENCILWRITEMASK_BF = backWriteMask;
+   db_stencilrefmask_bf = db_stencilrefmask_bf
+      .STENCILREF_BF().set(backRef)
+      .STENCILMASK_BF().set(backMask)
+      .STENCILWRITEMASK_BF().set(backWriteMask);
 
    reg->db_stencilrefmask = db_stencilrefmask;
    reg->db_stencilrefmask_bf = db_stencilrefmask_bf;
@@ -564,13 +575,13 @@ void GX2GetStencilMaskReg(GX2StencilMaskReg *reg,
    auto db_stencilrefmask = reg->db_stencilrefmask.value();
    auto db_stencilrefmask_bf = reg->db_stencilrefmask_bf.value();
 
-   *frontRef = db_stencilrefmask.STENCILREF;
-   *frontMask = db_stencilrefmask.STENCILMASK;
-   *frontWriteMask = db_stencilrefmask.STENCILWRITEMASK;
+   *frontRef = db_stencilrefmask.STENCILREF();
+   *frontMask = db_stencilrefmask.STENCILMASK();
+   *frontWriteMask = db_stencilrefmask.STENCILWRITEMASK();
 
-   *backRef = db_stencilrefmask_bf.STENCILREF_BF;
-   *backMask = db_stencilrefmask_bf.STENCILMASK_BF;
-   *backWriteMask = db_stencilrefmask_bf.STENCILWRITEMASK_BF;
+   *backRef = db_stencilrefmask_bf.STENCILREF_BF();
+   *backMask = db_stencilrefmask_bf.STENCILMASK_BF();
+   *backWriteMask = db_stencilrefmask_bf.STENCILWRITEMASK_BF();
 }
 
 void GX2SetStencilMaskReg(GX2StencilMaskReg *reg)

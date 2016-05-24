@@ -1,6 +1,6 @@
 #pragma once
-#include "utils/bitfield.h"
 #include "types.h"
+#include "utils/bitfield.h"
 #include "latte_enum_cb.h"
 #include "latte_enum_common.h"
 
@@ -30,23 +30,27 @@ using CB_BLEND5_CONTROL = CB_BLENDN_CONTROL;
 using CB_BLEND6_CONTROL = CB_BLENDN_CONTROL;
 using CB_BLEND7_CONTROL = CB_BLENDN_CONTROL;
 
-struct CB_BLEND_RED
+union CB_BLEND_RED
 {
+   uint32_t value;
    float BLEND_RED;
 };
 
-struct CB_BLEND_GREEN
+union CB_BLEND_GREEN
 {
+   uint32_t value;
    float BLEND_GREEN;
 };
 
-struct CB_BLEND_BLUE
+union CB_BLEND_BLUE
 {
+   uint32_t value;
    float BLEND_BLUE;
 };
 
-struct CB_BLEND_ALPHA
+union CB_BLEND_ALPHA
 {
+   uint32_t value;
    float BLEND_ALPHA;
 };
 

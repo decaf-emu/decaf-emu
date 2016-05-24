@@ -222,11 +222,10 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
 void
 GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
 {
-   auto cb_color_info = colorBuffer->regs.cb_color_info.value();
-   auto cb_color_size = colorBuffer->regs.cb_color_size.value();
+   auto cb_color_info = latte::CB_COLOR0_INFO::get(0);
+   auto cb_color_size = latte::CB_COLOR0_SIZE::get(0);
 
    // Update register values
-   memset(&colorBuffer->regs, 0, sizeof(colorBuffer->regs));
    auto format = GX2GetSurfaceColorFormat(colorBuffer->surface.format);
    auto pitch = (colorBuffer->surface.pitch / latte::MicroTileWidth) - 1;
    auto slice = ((colorBuffer->surface.pitch * colorBuffer->surface.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
@@ -241,6 +240,7 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
    // TODO: Set more regs!
 
    // Save big endian registers
+   std::memset(&colorBuffer->regs, 0, sizeof(colorBuffer->regs));
    colorBuffer->regs.cb_color_info = cb_color_info;
    colorBuffer->regs.cb_color_size = cb_color_size;
 }
@@ -248,19 +248,25 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
 void
 GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
 {
-   auto db_depth_info = depthBuffer->regs.db_depth_info.value();
-   auto db_depth_size = depthBuffer->regs.db_depth_size.value();
+   auto db_depth_info = latte::DB_DEPTH_INFO::get(0);
+   auto db_depth_size = latte::DB_DEPTH_SIZE::get(0);
 
    // Update register values
-   memset(&depthBuffer->regs, 0, sizeof(depthBuffer->regs));
-   db_depth_info.FORMAT = GX2GetSurfaceDepthFormat(depthBuffer->surface.format);
+   auto format = GX2GetSurfaceDepthFormat(depthBuffer->surface.format);
+   auto pitch = (depthBuffer->surface.pitch / latte::MicroTileWidth) - 1;
+   auto slice = ((depthBuffer->surface.pitch * depthBuffer->surface.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
 
-   db_depth_size.PITCH_TILE_MAX = (depthBuffer->surface.pitch / latte::MicroTileWidth) - 1;
-   db_depth_size.SLICE_TILE_MAX = ((depthBuffer->surface.pitch * depthBuffer->surface.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
+   db_depth_info = db_depth_info
+      .FORMAT().set(format);
+
+   db_depth_size = db_depth_size
+      .PITCH_TILE_MAX().set(pitch)
+      .SLICE_TILE_MAX().set(slice);
 
    // TODO: Set more regs!
 
    // Save big endian registers
+   std::memset(&depthBuffer->regs, 0, sizeof(depthBuffer->regs));
    depthBuffer->regs.db_depth_info = db_depth_info;
    depthBuffer->regs.db_depth_size = db_depth_size;
 }
@@ -270,7 +276,10 @@ GX2InitDepthBufferHiZEnable(GX2DepthBuffer *depthBuffer,
                             BOOL enable)
 {
    auto db_depth_info = depthBuffer->regs.db_depth_info.value();
-   db_depth_info.TILE_SURFACE_ENABLE = enable ? 1 : 0;
+
+   db_depth_info = db_depth_info
+      .TILE_SURFACE_ENABLE().set(!!enable);
+
    depthBuffer->regs.db_depth_info = db_depth_info;
 }
 

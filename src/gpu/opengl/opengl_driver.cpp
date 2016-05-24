@@ -97,12 +97,12 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
                          latte::DB_DEPTH_SIZE db_depth_size,
                          latte::DB_DEPTH_INFO db_depth_info)
 {
-   auto buffer = &mDepthBuffers[db_depth_base.value ^ db_depth_size.value ^ db_depth_info.value];
+   auto buffer = &mDepthBuffers[db_depth_base.BASE_256B ^ db_depth_size.value ^ db_depth_info.value];
    buffer->db_depth_base = db_depth_base;
 
    if (!buffer->object) {
-      auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX;
-      auto slice_tile_max = db_depth_size.SLICE_TILE_MAX;
+      auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX();
+      auto slice_tile_max = db_depth_size.SLICE_TILE_MAX();
 
       auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::MicroTileWidth);
       auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
@@ -424,72 +424,72 @@ void GLDriver::setRegister(latte::Register reg, uint32_t value)
    case latte::Register::DB_STENCILREFMASK_BF:
    {
       auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
-      auto db_stencilrefmask_bf = latte::DB_STENCILREFMASK_BF { value };
-      auto backStencilFunc = getRefFunc(db_depth_control.STENCILFUNC_BF);
+      auto db_stencilrefmask_bf = latte::DB_STENCILREFMASK_BF::get(value);
+      auto backStencilFunc = getRefFunc(db_depth_control.STENCILFUNC_BF());
 
-      if (db_depth_control.BACKFACE_ENABLE) {
-         gl::glStencilFuncSeparate(gl::GL_BACK, backStencilFunc, db_stencilrefmask_bf.STENCILREF_BF, db_stencilrefmask_bf.STENCILMASK_BF);
+      if (db_depth_control.BACKFACE_ENABLE()) {
+         gl::glStencilFuncSeparate(gl::GL_BACK, backStencilFunc, db_stencilrefmask_bf.STENCILREF_BF(), db_stencilrefmask_bf.STENCILMASK_BF());
       }
    } break;
 
    case latte::Register::DB_STENCILREFMASK:
    {
       auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
-      auto db_stencilrefmask = latte::DB_STENCILREFMASK { value };
-      auto frontStencilFunc = getRefFunc(db_depth_control.STENCILFUNC);
+      auto db_stencilrefmask = latte::DB_STENCILREFMASK::get(value);
+      auto frontStencilFunc = getRefFunc(db_depth_control.STENCILFUNC());
 
-      if (!db_depth_control.BACKFACE_ENABLE) {
-         gl::glStencilFuncSeparate(gl::GL_FRONT_AND_BACK, frontStencilFunc, db_stencilrefmask.STENCILREF, db_stencilrefmask.STENCILMASK);
+      if (!db_depth_control.BACKFACE_ENABLE()) {
+         gl::glStencilFuncSeparate(gl::GL_FRONT_AND_BACK, frontStencilFunc, db_stencilrefmask.STENCILREF(), db_stencilrefmask.STENCILMASK());
       } else {
-         gl::glStencilFuncSeparate(gl::GL_FRONT, frontStencilFunc, db_stencilrefmask.STENCILREF, db_stencilrefmask.STENCILMASK);
+         gl::glStencilFuncSeparate(gl::GL_FRONT, frontStencilFunc, db_stencilrefmask.STENCILREF(), db_stencilrefmask.STENCILMASK());
       }
    } break;
 
    case latte::Register::DB_DEPTH_CONTROL:
    {
-      auto db_depth_control = latte::DB_DEPTH_CONTROL { value };
+      auto db_depth_control = latte::DB_DEPTH_CONTROL::get(value);
       auto db_stencilrefmask = getRegister<latte::DB_STENCILREFMASK>(latte::Register::DB_STENCILREFMASK);
       auto db_stencilrefmask_bf = getRegister<latte::DB_STENCILREFMASK_BF>(latte::Register::DB_STENCILREFMASK_BF);
 
-      if (db_depth_control.Z_ENABLE) {
+      if (db_depth_control.Z_ENABLE()) {
          gl::glEnable(gl::GL_DEPTH_TEST);
       } else {
          gl::glDisable(gl::GL_DEPTH_TEST);
       }
 
-      if (db_depth_control.Z_WRITE_ENABLE) {
+      if (db_depth_control.Z_WRITE_ENABLE()) {
          gl::glDepthMask(gl::GL_TRUE);
       } else {
          gl::glDepthMask(gl::GL_FALSE);
       }
 
-      auto zfunc = getRefFunc(db_depth_control.ZFUNC);
+      auto zfunc = getRefFunc(db_depth_control.ZFUNC());
       gl::glDepthFunc(zfunc);
 
-      if (db_depth_control.STENCIL_ENABLE) {
+      if (db_depth_control.STENCIL_ENABLE()) {
          gl::glEnable(gl::GL_STENCIL_TEST);
       } else {
          gl::glDisable(gl::GL_STENCIL_TEST);
       }
 
-      auto frontStencilFunc = getRefFunc(db_depth_control.STENCILFUNC);
-      auto frontStencilZPass = getStencilFunc(db_depth_control.STENCILZPASS);
-      auto frontStencilZFail = getStencilFunc(db_depth_control.STENCILZFAIL);
-      auto frontStencilFail = getStencilFunc(db_depth_control.STENCILFAIL);
+      auto frontStencilFunc = getRefFunc(db_depth_control.STENCILFUNC());
+      auto frontStencilZPass = getStencilFunc(db_depth_control.STENCILZPASS());
+      auto frontStencilZFail = getStencilFunc(db_depth_control.STENCILZFAIL());
+      auto frontStencilFail = getStencilFunc(db_depth_control.STENCILFAIL());
 
-      if (!db_depth_control.BACKFACE_ENABLE) {
-         gl::glStencilFuncSeparate(gl::GL_FRONT_AND_BACK, frontStencilFunc, db_stencilrefmask.STENCILREF, db_stencilrefmask.STENCILMASK);
+      if (!db_depth_control.BACKFACE_ENABLE()) {
+         gl::glStencilFuncSeparate(gl::GL_FRONT_AND_BACK, frontStencilFunc, db_stencilrefmask.STENCILREF(), db_stencilrefmask.STENCILMASK());
          gl::glStencilOpSeparate(gl::GL_FRONT_AND_BACK, frontStencilFail, frontStencilZFail, frontStencilZPass);
       } else {
-         auto backStencilFunc = getRefFunc(db_depth_control.STENCILFUNC_BF);
-         auto backStencilZPass = getStencilFunc(db_depth_control.STENCILZPASS_BF);
-         auto backStencilZFail = getStencilFunc(db_depth_control.STENCILZFAIL_BF);
-         auto backStencilFail = getStencilFunc(db_depth_control.STENCILFAIL_BF);
+         auto backStencilFunc = getRefFunc(db_depth_control.STENCILFUNC_BF());
+         auto backStencilZPass = getStencilFunc(db_depth_control.STENCILZPASS_BF());
+         auto backStencilZFail = getStencilFunc(db_depth_control.STENCILZFAIL_BF());
+         auto backStencilFail = getStencilFunc(db_depth_control.STENCILFAIL_BF());
 
-         gl::glStencilFuncSeparate(gl::GL_FRONT, frontStencilFunc, db_stencilrefmask.STENCILREF, db_stencilrefmask.STENCILMASK);
+         gl::glStencilFuncSeparate(gl::GL_FRONT, frontStencilFunc, db_stencilrefmask.STENCILREF(), db_stencilrefmask.STENCILMASK());
          gl::glStencilOpSeparate(gl::GL_FRONT, frontStencilFail, frontStencilZFail, frontStencilZPass);
 
-         gl::glStencilFuncSeparate(gl::GL_BACK, backStencilFunc, db_stencilrefmask_bf.STENCILREF_BF, db_stencilrefmask_bf.STENCILMASK_BF);
+         gl::glStencilFuncSeparate(gl::GL_BACK, backStencilFunc, db_stencilrefmask_bf.STENCILREF_BF(), db_stencilrefmask_bf.STENCILMASK_BF());
          gl::glStencilOpSeparate(gl::GL_BACK, backStencilFail, backStencilZFail, backStencilZPass);
       }
    } break;
@@ -809,7 +809,7 @@ void GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    // Check if this is the active depth buffer
    if (mActiveDepthBuffer && mActiveDepthBuffer->db_depth_base.BASE_256B == data.bufferAddr) {
       // Clear active
-      gl::glClearBufferfi(gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR);
+      gl::glClearBufferfi(gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR());
       return;
    }
 
@@ -821,7 +821,7 @@ void GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, buffer->object, 0);
 
    // Clear depth buffer
-   gl::glClearBufferfi(gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR);
+   gl::glClearBufferfi(gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR());
 
    // Restore original depth buffer
    if (mActiveDepthBuffer) {
