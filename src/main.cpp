@@ -51,7 +51,7 @@
 #include "utils/teenyheap.h"
 
 static void
-initialiseEmulator(const std::string &logFilename);
+initialiseEmulator();
 
 static bool
 play(const fs::HostPath &path);
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
    }
 
    // Start!
-   initialiseEmulator(logFilename);
+   logging::initialise(logFilename);
 
    if (arg_bool("play")) {
       gLog->set_pattern("[%l:%t] %v");
@@ -160,35 +160,8 @@ int main(int argc, char **argv)
 }
 
 static void
-initialiseEmulator(const std::string &logFilename)
+initialiseEmulator()
 {
-   // Setup logger from config
-   std::vector<spdlog::sink_ptr> sinks;
-
-   if (config::log::to_stdout) {
-      sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
-   }
-
-   if (config::log::to_file) {
-      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logFilename, "txt", 23, 59, true));
-   }
-
-   if (config::log::async) {
-      spdlog::set_async_mode(0x1000);
-   }
-
-   gLog = std::make_shared<spdlog::logger>("logger", begin(sinks), end(sinks));
-   gLog->set_level(spdlog::level::info);
-
-   for (int i = spdlog::level::trace; i <= spdlog::level::off; i++) {
-      auto level = static_cast<spdlog::level::level_enum>(i);
-
-      if (spdlog::level::to_str(level) == config::log::level) {
-         gLog->set_level(level);
-         break;
-      }
-   }
-
    // Setup jit from config
    if (config::jit::enabled) {
       if (config::jit::debug) {
