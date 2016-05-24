@@ -212,10 +212,10 @@ GLDriver::checkViewport()
       auto pa_sc_generic_scissor_tl = getRegister<latte::PA_SC_GENERIC_SCISSOR_TL>(latte::Register::PA_SC_GENERIC_SCISSOR_TL);
       auto pa_sc_generic_scissor_br = getRegister<latte::PA_SC_GENERIC_SCISSOR_BR>(latte::Register::PA_SC_GENERIC_SCISSOR_BR);
 
-      auto x = pa_sc_generic_scissor_tl.TL_X;
-      auto y = pa_sc_generic_scissor_tl.TL_Y;
-      auto width = pa_sc_generic_scissor_br.BR_X - pa_sc_generic_scissor_tl.TL_X;
-      auto height = pa_sc_generic_scissor_br.BR_Y - pa_sc_generic_scissor_tl.TL_Y;
+      auto x = pa_sc_generic_scissor_tl.TL_X();
+      auto y = pa_sc_generic_scissor_tl.TL_Y();
+      auto width = pa_sc_generic_scissor_br.BR_X() - x;
+      auto height = pa_sc_generic_scissor_br.BR_Y() - y;
 
       gl::glEnable(gl::GL_SCISSOR_TEST);
       gl::glScissor(x, y, width, height);
@@ -543,21 +543,21 @@ void GLDriver::setRegister(latte::Register reg, uint32_t value)
 
    case latte::Register::PA_SU_SC_MODE_CNTL:
    {
-      auto pa_su_sc_mode_cntl = latte::PA_SU_SC_MODE_CNTL { value };
+      auto pa_su_sc_mode_cntl = latte::PA_SU_SC_MODE_CNTL::get(value);
 
-      if (pa_su_sc_mode_cntl.FACE == latte::FACE_CW) {
+      if (pa_su_sc_mode_cntl.FACE() == latte::FACE_CW) {
          gl::glFrontFace(gl::GL_CW);
       } else {
          gl::glFrontFace(gl::GL_CCW);
       }
 
-      if (pa_su_sc_mode_cntl.CULL_FRONT && pa_su_sc_mode_cntl.CULL_BACK) {
+      if (pa_su_sc_mode_cntl.CULL_FRONT() && pa_su_sc_mode_cntl.CULL_BACK()) {
          gl::glEnable(gl::GL_CULL_FACE);
          gl::glCullFace(gl::GL_FRONT_AND_BACK);
-      } else if (pa_su_sc_mode_cntl.CULL_FRONT) {
+      } else if (pa_su_sc_mode_cntl.CULL_FRONT()) {
          gl::glEnable(gl::GL_CULL_FACE);
          gl::glCullFace(gl::GL_FRONT);
-      } else if (pa_su_sc_mode_cntl.CULL_BACK) {
+      } else if (pa_su_sc_mode_cntl.CULL_BACK()) {
          gl::glEnable(gl::GL_CULL_FACE);
          gl::glCullFace(gl::GL_BACK);
       } else {
