@@ -949,7 +949,7 @@ void GLDriver::drawIndexAuto(const pm4::DrawIndexAuto &data)
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
 
-   drawPrimitives(vgt_primitive_type.PRIM_TYPE,
+   drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
                   sq_vtx_base_vtx_loc.OFFSET,
                   data.indexCount,
                   nullptr,
@@ -969,48 +969,48 @@ void GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
    // Swap and indexBytes are separate because you can have 32-bit swap,
    //   but 16-bit indices in some cases...  This is also why we pre-swap
    //   the data before intercepting QUAD and POLYGON draws.
-   if (vgt_dma_index_type.SWAP_MODE == latte::VGT_DMA_SWAP_16_BIT) {
+   if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_16_BIT) {
       auto *src = static_cast<uint16_t*>(data.addr.get());
       auto indices = std::vector<uint16_t>(data.numIndices);
 
-      if (vgt_dma_index_type.INDEX_TYPE != latte::VGT_INDEX_16) {
-         throw std::logic_error(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_16_BIT", vgt_dma_index_type.INDEX_TYPE));
+      if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_16) {
+         throw std::logic_error(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_16_BIT", vgt_dma_index_type.INDEX_TYPE()));
       }
 
       for (auto i = 0u; i < data.numIndices; ++i) {
          indices[i] = byte_swap(src[i]);
       }
 
-      drawPrimitives(vgt_primitive_type.PRIM_TYPE,
+      drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
                      sq_vtx_base_vtx_loc.OFFSET,
                      data.numIndices,
                      indices.data(),
-                     vgt_dma_index_type.INDEX_TYPE);
-   } else if (vgt_dma_index_type.SWAP_MODE == latte::VGT_DMA_SWAP_32_BIT) {
+                     vgt_dma_index_type.INDEX_TYPE());
+   } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_32_BIT) {
       auto *src = static_cast<uint32_t*>(data.addr.get());
       auto indices = std::vector<uint32_t>(data.numIndices);
 
-      if (vgt_dma_index_type.INDEX_TYPE != latte::VGT_INDEX_32) {
-         throw std::logic_error(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_32_BIT", vgt_dma_index_type.INDEX_TYPE));
+      if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_32) {
+         throw std::logic_error(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_32_BIT", vgt_dma_index_type.INDEX_TYPE()));
       }
 
       for (auto i = 0u; i < data.numIndices; ++i) {
          indices[i] = byte_swap(src[i]);
       }
 
-      drawPrimitives(vgt_primitive_type.PRIM_TYPE,
+      drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
                      sq_vtx_base_vtx_loc.OFFSET,
                      data.numIndices,
                      indices.data(),
-                     vgt_dma_index_type.INDEX_TYPE);
-   } else if (vgt_dma_index_type.SWAP_MODE == latte::VGT_DMA_SWAP_NONE) {
-      drawPrimitives(vgt_primitive_type.PRIM_TYPE,
+                     vgt_dma_index_type.INDEX_TYPE());
+   } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_NONE) {
+      drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
                      sq_vtx_base_vtx_loc.OFFSET,
                      data.numIndices,
                      data.addr,
-                     vgt_dma_index_type.INDEX_TYPE);
+                     vgt_dma_index_type.INDEX_TYPE());
    } else {
-      throw unimplemented_error(fmt::format("Unimplemented vgt_dma_index_type.SWAP_MODE {}", vgt_dma_index_type.SWAP_MODE));
+      throw unimplemented_error(fmt::format("Unimplemented vgt_dma_index_type.SWAP_MODE {}", vgt_dma_index_type.SWAP_MODE()));
    }
 }
 
@@ -1066,14 +1066,14 @@ void GLDriver::eventWriteEOP(const pm4::EventWriteEOP &data)
 
 void GLDriver::handlePendingEOP()
 {
-   if (!mPendingEOP.eventInitiator.EVENT_TYPE) {
+   if (!mPendingEOP.eventInitiator.EVENT_TYPE()) {
       return;
    }
 
    uint64_t value = 0;
    auto addr = memory_translate(mPendingEOP.addrLo.ADDR_LO << 2);
 
-   switch (mPendingEOP.eventInitiator.EVENT_TYPE) {
+   switch (mPendingEOP.eventInitiator.EVENT_TYPE()) {
    case latte::BOTTOM_OF_PIPE_TS:
       value = getGpuClock();
       break;
