@@ -1,5 +1,5 @@
 #include <pugixml.hpp>
-#include <docopt.h>
+#include <excmd.h>
 #include "config.h"
 #include "utils/bitutils.h"
 #include "cpu/cpu.h"
@@ -56,84 +56,131 @@ initialiseEmulator();
 static bool
 play(const fs::HostPath &path);
 
-static const char USAGE[] =
-R"(Decaf Emulator
-
-Usage:
-   decaf play [--jit | --jit-debug] [--log-file] [--log-async] [--no-log-stdout] [--log-level=<log-level>] [--sys-path=<sys-path>] <game directory>
-   decaf fuzz
-   decaf hwtest [--log-file] [--jit]
-   decaf (-h | --help)
-   decaf --version
-
-Options:
-   -h --help     Show this screen.
-   --version     Show version.
-   --jit         Enables the JIT engine.
-   --jit-debug   Verify JIT implementation against interpreter.
-   --no-log-stdout
-                 Disable logging to stdout
-   --log-file    Redirect log output to file.
-   --log-async   Enable asynchronous logging.
-   --log-level=<log-level> [default: trace]
-                 Only display logs with severity equal to or greater than this level.
-                 Available levels: trace, debug, info, notice, warning, error, critical, alert, emerg, off
-   --sys-path=<sys-path> 
-                 Where to locate any external system files.
-)";
-
 static const std::string
 getGameName(const fs::HostPath &path)
 {
    return path.filename();
 }
 
+excmd::parser
+getCommandLineParser()
+{
+   excmd::parser parser;
+   using excmd::description;
+   using excmd::optional;
+   using excmd::default_value;
+   using excmd::allowed;
+   using excmd::value;
+
+   parser.global_options()
+      .add_option("v,version", description { "Show version." })
+      .add_option("h,help", description { "Show help." });
+
+   parser.add_command("help")
+      .add_argument("help-command", optional {}, value<std::string> {});
+
+   auto jit_options = parser.add_option_group("JIT Options")
+      .add_option("jit", description { "Enables the JIT engine." })
+      .add_option("jit-debug", description { "Verify JIT implementation against interpreter." });
+
+   auto log_options = parser.add_option_group("Log Options")
+      .add_option("log-file", description { "Redirect log output to file." })
+      .add_option("log-async", description { "Enable asynchronous logging." })
+      .add_option("log-no-stdout", description { "Disable logging to stdout." })
+      .add_option("log-level", description { "Only display logs with severity equal to or greater than this level." },
+                  default_value<std::string> { "trace" },
+                  allowed<std::string> {
+                     {
+                        "trace", "debug", "info", "notice", "warning", "error", "critical", "alert", "emerg", "off"
+                     } });
+
+   auto sys_options = parser.add_option_group("System Options")
+      .add_option("sys-path", description { "Where to locate any external system files." }, value<std::string> {});
+
+   parser.add_command("play")
+      .add_option_group(jit_options)
+      .add_option_group(log_options)
+      .add_option_group(sys_options)
+      .add_argument("game directory", value<std::string> {});
+
+   parser.add_command("fuzztest");
+
+   parser.add_command("hwtest")
+      .add_option_group(jit_options)
+      .add_option_group(log_options);
+
+   return parser;
+}
+
 int main(int argc, char **argv)
 {
-   auto args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true, "Decaf 0.1");
-   auto has_arg = [&args](const char *name) { return args.find(name) != args.end() ? (bool)args[name] : false; };
-   auto arg_bool = [&](const char *name) { return has_arg(name) && args[name].isBool() ? args[name].asBool() : false; };
-   auto arg_str = [&](const char *name) { return has_arg(name) && args[name].isString() ? args[name].asString() : ""; };
-   auto result = false;
+   auto parser = getCommandLineParser();
+   excmd::option_state options;
+   auto result = -1;
+
+   try {
+      options = parser.parse(argc, argv);
+   } catch (excmd::exception ex) {
+      std::cout << "Error parsing options: " << ex.what() << std::endl;
+      std::exit(-1);
+   }
+
+   // Print version
+   if (options.has("version")) {
+      // TODO: print git hash
+      std::cout << "Decaf Emulator version 0.0.1" << std::endl;
+      std::exit(0);
+   }
+
+   // Print help
+   if (argc == 1 || options.has("help")) {
+      if (options.has("help-command")) {
+         std::cout << parser.format_help("decaf", options.get<std::string>("help-command")) << std::endl;
+      } else {
+         std::cout << parser.format_help("decaf") << std::endl;
+      }
+
+      std::exit(0);
+   }
 
    // First thing, load the config!
    config::load("config.json");
 
    // Allow command line options to override config
-   if (arg_bool("--jit-debug")) {
+   if (options.has("jit-debug")) {
       config::jit::debug = true;
-   } else if (arg_bool("--jit")) {
+   }
+
+   if (options.has("jit")) {
       config::jit::enabled = true;
    }
 
-   if (arg_bool("--no-log-stdout")) {
+   if (options.has("log-no-stdout")) {
       config::log::to_stdout = true;
    }
 
-   if (arg_bool("--log-file")) {
+   if (options.has("log-file")) {
       config::log::to_file = true;
    }
 
-   if (arg_bool("--log-async")) {
+   if (options.has("log-async")) {
       config::log::async = true;
    }
 
-   if (has_arg("--log-level")) {
-      config::log::level = arg_str("--log-level");
+   if (options.has("log-level")) {
+      config::log::level = options.get<std::string>("log-level");
    }
 
-   if (has_arg("--sys-path")) {
-      config::system::system_path = arg_str("--sys-path");
+   if (options.has("sys-path")) {
+      config::system::system_path = options.get<std::string>("sys-path");
    }
 
    // Set log filename
    std::string logFilename;
 
-   if (arg_bool("play")) {
-      logFilename = getGameName(arg_str("<game directory>"));
-   } else if (arg_bool("test")) {
-      logFilename = "tests";
-   } else if (arg_bool("hwtest")) {
+   if (options.has("play")) {
+      logFilename = getGameName(options.get<std::string>("game directory"));
+   } else if (options.has("hwtest")) {
       logFilename = "hwtest";
    } else {
       logFilename = "log";
@@ -141,14 +188,15 @@ int main(int argc, char **argv)
 
    // Start!
    logging::initialise(logFilename);
+   initialiseEmulator();
 
-   if (arg_bool("play")) {
+   if (options.has("play")) {
       gLog->set_pattern("[%l:%t] %v");
-      result = play(args["<game directory>"].asString());
-   } else if (arg_bool("fuzz")) {
+      result = play(options.get<std::string>("game directory"));
+   } else if (options.has("fuzztest")) {
       gLog->set_pattern("%v");
       result = executeFuzzTests();
-   } else if (arg_bool("hwtest")) {
+   } else if (options.has("hwtest")) {
       gLog->set_pattern("%v");
       result = hwtest::runTests("tests/cpu/wiiu");
    }
