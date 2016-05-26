@@ -62,7 +62,7 @@ getGameName(const fs::HostPath &path)
    return path.filename();
 }
 
-excmd::parser
+static excmd::parser
 getCommandLineParser()
 {
    excmd::parser parser;
@@ -89,10 +89,9 @@ getCommandLineParser()
       .add_option("log-no-stdout", description { "Disable logging to stdout." })
       .add_option("log-level", description { "Only display logs with severity equal to or greater than this level." },
                   default_value<std::string> { "trace" },
-                  allowed<std::string> {
-                     {
-                        "trace", "debug", "info", "notice", "warning", "error", "critical", "alert", "emerg", "off"
-                     } });
+                  allowed<std::string> { {
+                     "trace", "debug", "info", "notice", "warning", "error", "critical", "alert", "emerg", "off"
+                  } });
 
    auto sys_options = parser.add_option_group("System Options")
       .add_option("sys-path", description { "Where to locate any external system files." }, value<std::string> {});

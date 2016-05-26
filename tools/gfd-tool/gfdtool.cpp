@@ -1,5 +1,5 @@
 #include <cassert>
-#include <docopt.h>
+#include <excmd.h>
 #include <gsl.h>
 #include <spdlog/spdlog.h>
 #include "gpu/gfd.h"
@@ -11,17 +11,6 @@
 #include "modules/gx2/gx2_enum_string.h"
 #include "utils/binaryfile.h"
 #include "fakevirtualmemory.h"
-
-static const char USAGE[] =
-R"(GFD Tool
-
-Usage:
-   gfd-tool info <file in>
-   gfd-tool convert <file in>
-
-   Options:
-   -h --help     Show this screen.
-)";
 
 struct Texture
 {
@@ -845,13 +834,46 @@ convertTexture(const std::string &path)
 
 int main(int argc, char **argv)
 {
-   auto args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true);
+   excmd::parser parser;
+   excmd::option_state options;
 
-   if (args["info"].asBool()) {
-      auto in = args["<file in>"].asString();
+   // Setup command line options
+   parser.global_options()
+      .add_option("h,help", excmd::description { "Show the help." });
+
+   parser.add_command("help")
+      .add_argument("command");
+
+   parser.add_command("info")
+      .add_argument("file in");
+
+   parser.add_command("convert")
+      .add_argument("file in");
+
+   // Parse command line
+   try {
+      options = parser.parse(argc, argv);
+   } catch (excmd::exception ex) {
+      std::cout << "Error parsing command line: " << ex.what() << std::endl;
+      std::exit(-1);
+   }
+
+   // Print help
+   if (argc == 1 || options.has("help")) {
+      if (options.has("command")) {
+         std::cout << parser.format_help("gfdtool", options.get<std::string>("command")) << std::endl;
+      } else {
+         std::cout << parser.format_help("gfdtool") << std::endl;
+      }
+
+      std::exit(0);
+   }
+
+   if (options.has("info")) {
+      auto in = options.get<std::string>("file in");
       return printInfo(in) ? 0 : -1;
-   } else if (args["convert"].asBool()) {
-      auto in = args["<file in>"].asString();
+   } else if (options.has("convert")) {
+      auto in = options.get<std::string>("file in");
       return convertTexture(in) ? 0 : -1;
    }
 
