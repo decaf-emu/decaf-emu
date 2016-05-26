@@ -3,8 +3,8 @@ include_directories(".")
 set(SOURCE_FILES
     cpu.cpp
     cpu_kc.cpp
-    disassembler.cpp
-    instructiontable.cpp
+    espresso/espresso_disassembler.cpp
+    espresso/espresso_instructionset.cpp
     interpreter/interpreter_branch.cpp
     interpreter/interpreter_condition.cpp
     interpreter/interpreter.cpp
@@ -24,14 +24,19 @@ set(SOURCE_FILES
     jit/jit_system.cpp
     trace.cpp
     )
+
 set(HEADER_FILES
     cpu.h
     cpu_internal.h
-    cpu_registers.h
-    disassembler.h
-    instructiondata.h
-    instruction.h
-    instructionid.h
+    espresso/espresso_disassembler.h
+    espresso/espresso_instruction.h
+    espresso/espresso_instruction_aliases.inl
+    espresso/espresso_instruction_definitions.inl
+    espresso/espresso_instruction_fields.inl
+    espresso/espresso_instructionid.h
+    espresso/espresso_instructionset.h
+    espresso/espresso_registers.h
+    espresso/espresso_spr.h
     interpreter/interpreter_float.h
     interpreter/interpreter.h
     interpreter/interpreter_insreg.h

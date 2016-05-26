@@ -22,19 +22,8 @@ add_library(addrlib STATIC
     )
 set(ADDRLIB_LIBRARIES addrlib)
 
-set(DOCOPT_DIR "libraries/docopt")
-include_directories("${DOCOPT_DIR}")
-externalproject_add(docopt
-    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${DOCOPT_DIR}"
-    CMAKE_CACHE_ARGS
-        -DCMAKE_C_COMPILER:string=${CMAKE_C_COMPILER}
-        -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
-        -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
-        -DCMAKE_CXX_FLAGS:string=${CMAKE_CXX_FLAGS}
-    INSTALL_COMMAND ""
-    )
-externalproject_get_property(docopt BINARY_DIR)
-set(DOCOPT_LIBRARIES "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}docopt.a")
+set(EXCMD_DIR "libraries/excmd")
+include_directories("${EXCMD_DIR}/src")
 
 set(SPDLOG_DIR "libraries/spdlog")
 include_directories("${SPDLOG_DIR}/include")
