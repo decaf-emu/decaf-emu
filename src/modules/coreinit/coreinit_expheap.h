@@ -6,6 +6,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_expheap Expanded Heap
+ * \ingroup coreinit
+ * @{
+ */
+
 struct ExpandedHeap;
 
 ExpandedHeap *
@@ -64,5 +70,7 @@ MEMGetGroupIDForMBlockExpHeap(uint8_t *addr);
 
 MEMExpHeapDirection
 MEMGetAllocDirForMBlockExpHeap(uint8_t *addr);
+
+/** @} */
 
 } // namespace coreinit

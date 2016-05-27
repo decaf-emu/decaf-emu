@@ -13,6 +13,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_taskqueue Task Queue
+ * \ingroup coreinit
+ * @{
+ */
+
 struct MPTaskQueue;
 
 #pragma pack(push, 1)
@@ -178,5 +184,7 @@ MPRunTasksFromTaskQ(MPTaskQueue *queue,
 
 BOOL
 MPRunTask(MPTask *task);
+
+/** @} */
 
 } // namespace coreinit

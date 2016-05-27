@@ -101,8 +101,8 @@ OSCreateAlarm(OSAlarm *alarm)
 
 
 /**
-* Initialise an alarm structure.
-*/
+ * Initialise an alarm structure.
+ */
 void
 OSCreateAlarmEx(OSAlarm *alarm, const char *name)
 {
@@ -114,8 +114,8 @@ OSCreateAlarmEx(OSAlarm *alarm, const char *name)
 
 
 /**
-* Return the user data stored in the alarm using OSSetAlarmUserData
-*/
+ * Return the user data stored in the alarm using OSSetAlarmUserData
+ */
 void *
 OSGetAlarmUserData(OSAlarm *alarm)
 {
@@ -134,8 +134,8 @@ OSInitAlarmQueue(OSAlarmQueue *queue)
 
 
 /**
-* Initialise an alarm queue structure with a name
-*/
+ * Initialise an alarm queue structure with a name
+ */
 void
 OSInitAlarmQueueEx(OSAlarmQueue *queue, const char *name)
 {
@@ -244,6 +244,7 @@ OSWaitAlarm(OSAlarm *alarm)
    coreinit::internal::unlockScheduler();
    return result;
 }
+
 
 void
 Module::registerAlarmFunctions()

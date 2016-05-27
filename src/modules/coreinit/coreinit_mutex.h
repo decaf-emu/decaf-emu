@@ -7,6 +7,17 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_mutex Mutex
+ * \ingroup coreinit
+ *
+ * Standard mutex and condition variable implementation.
+ *
+ * Similar to <a href="http://en.cppreference.com/w/cpp/thread/condition_variable">std::condition_variable</a>.
+ * Similar to <a href="http://en.cppreference.com/w/cpp/thread/recursive_mutex">std::recursive_mutex</a>.
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct OSMutex;
@@ -24,13 +35,25 @@ struct OSMutex
 {
    static const uint32_t Tag = 0x6D557458;
 
+   //! Should always be set to the value OSMutex::Tag.
    be_val<uint32_t> tag;
+
+   //! Name set by OSInitMutexEx.
    be_ptr<const char> name;
+
    UNKNOWN(4);
+
+   //! Queue of threads waiting for this mutex to unlock.
    OSThreadQueue queue;
+
+   //! Current owner of mutex.
    be_ptr<OSThread> owner;
+
+   //! Current recursion lock count of mutex.
    be_val<int32_t> count;
-   OSMutexLink link;       // For thread's mutexQueue
+
+   //! Link used inside OSThread's mutex queue.
+   OSMutexLink link;
 };
 CHECK_OFFSET(OSMutex, 0x00, tag);
 CHECK_OFFSET(OSMutex, 0x04, name);
@@ -44,9 +67,15 @@ struct OSCondition
 {
    static const uint32_t Tag = 0x634E6456;
 
+   //! Should always be set to the value OSCondition::Tag.
    be_val<uint32_t> tag;
+
+   //! Name set by OSInitCondEx.
    be_ptr<const char> name;
+
    UNKNOWN(4);
+
+   //! Queue of threads currently waiting on condition with OSWaitCond.
    OSThreadQueue queue;
 };
 CHECK_OFFSET(OSCondition, 0x00, tag);
@@ -82,5 +111,7 @@ OSWaitCond(OSCondition *condition, OSMutex *mutex);
 
 void
 OSSignalCond(OSCondition *condition);
+
+/** @} */
 
 } // namespace coreinit

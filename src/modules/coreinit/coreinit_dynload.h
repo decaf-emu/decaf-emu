@@ -7,6 +7,12 @@ struct LoadedModuleHandleData;
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_dynload Dynamic Loading
+ * \ingroup coreinit
+ * @{
+ */
+
 /*
 Unimplemented dynamic load functions:
 OSDynLoad_AcquireContainingModule
@@ -39,6 +45,8 @@ OSDynLoad_FindExport(LoadedModuleHandleData *module, int isData, char const *nam
 
 void
 OSDynLoad_Release(LoadedModuleHandleData *handle);
+
+/** @} */
 
 namespace internal
 {

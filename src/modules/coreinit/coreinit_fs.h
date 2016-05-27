@@ -8,6 +8,11 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_fs Filesystem
+ * \ingroup coreinit
+ */
+
 using FSDirectoryHandle = uint32_t;
 using FSFileHandle = uint32_t;
 using FSPriority = uint32_t;
@@ -150,5 +155,7 @@ FSInitCmdBlock(FSCmdBlock *block);
 FSStatus
 FSSetCmdPriority(FSCmdBlock *block,
                  FSPriority priority);
+
+/** @} */
 
 } // namespace coreinit

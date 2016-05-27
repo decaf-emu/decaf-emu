@@ -10,17 +10,37 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_event Event Object
+ * \ingroup coreinit
+ *
+ * Standard event object implementation. There are two supported event object modes, check OSEventMode.
+ *
+ * Similar to Windows <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms682655(v=vs.85).aspx">Event Objects</a>.
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct OSEvent
 {
    static const uint32_t Tag = 0x65566E54;
 
+   //! Should always be set to the value OSEvent::Tag.
    be_val<uint32_t> tag;
+
+   //! Name set by OSInitEventEx.
    be_ptr<const char> name;
+
    UNKNOWN(4);
+
+   //! The current value of the event object.
    be_val<uint32_t> value;
+
+   //! The threads currently waiting on this event object with OSWaitEvent.
    OSThreadQueue queue;
+
+   //! The mode of the event object, set by OSInitEvent.
    be_val<OSEventMode> mode;
 };
 CHECK_OFFSET(OSEvent, 0x0, tag);
@@ -52,5 +72,7 @@ OSResetEvent(OSEvent *event);
 
 BOOL
 OSWaitEventWithTimeout(OSEvent *event, OSTime timeout);
+
+/** @} */
 
 } // namespace coreinit

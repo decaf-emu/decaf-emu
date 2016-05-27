@@ -7,16 +7,32 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_semaphore Semaphore
+ * \ingroup coreinit
+ *
+ * Similar to Windows <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms685129(v=vs.85).aspx">Semaphore Objects</a>.
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct OSSemaphore
 {
    static const uint32_t Tag = 0x73506852;
 
+   //! Should always be set to the value OSSemaphore::Tag.
    be_val<uint32_t> tag;
+
+   //! Name set by OSInitMutexEx.
    be_ptr<const char> name;
+
    UNKNOWN(4);
+
+   //! Current count of semaphore
    be_val<int32_t> count;
+
+   //! Queue of threads waiting on semaphore object with OSWaitSemaphore
    OSThreadQueue queue;
 };
 CHECK_OFFSET(OSSemaphore, 0x00, tag);
@@ -44,5 +60,7 @@ OSSignalSemaphore(OSSemaphore *semaphore);
 
 int32_t
 OSGetSemaphoreCount(OSSemaphore *semaphore);
+
+/** @} */
 
 } // namespace coreinit

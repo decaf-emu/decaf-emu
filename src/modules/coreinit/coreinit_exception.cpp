@@ -20,8 +20,8 @@ OSSetExceptionCallback(OSExceptionType exceptionType, OSExceptionCallback callba
 
 
 /**
-* Set an exception handler.
-*/
+ * Set an exception handler.
+ */
 OSExceptionCallback
 OSSetExceptionCallbackEx(uint32_t unk1, OSExceptionType exceptionType, OSExceptionCallback callback)
 {

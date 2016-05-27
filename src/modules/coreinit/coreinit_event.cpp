@@ -23,8 +23,8 @@ OSInitEvent(OSEvent *event, bool value, OSEventMode mode)
 
 
 /**
-* Initialises an event structure.
-*/
+ * Initialises an event structure.
+ */
 void
 OSInitEventEx(OSEvent *event, bool value, OSEventMode mode, char *name)
 {
@@ -37,18 +37,18 @@ OSInitEventEx(OSEvent *event, bool value, OSEventMode mode, char *name)
 
 
 /**
-* Signal an event.
-*
-* This will set the events signal value to true.
-*
-* In auto reset mode if at least one thread is in the queue it will:
-* - Reset the value back to FALSE
-* - Wake up the first thread in the waiting queue
-*
-* In manual reset mode:
-* - Wake up all threads in the waiting queue
-* - The event value remains TRUE until the user calls OSResetEvent
-*/
+ * Signal an event.
+ *
+ * This will set the events signal value to true.
+ *
+ * In auto reset mode if at least one thread is in the queue it will:
+ * - Reset the value back to FALSE
+ * - Wake up the first thread in the waiting queue
+ *
+ * In manual reset mode:
+ * - Wake up all threads in the waiting queue
+ * - The event value remains TRUE until the user calls OSResetEvent
+ */
 void
 OSSignalEvent(OSEvent *event)
 {
@@ -176,6 +176,7 @@ OSWaitEvent(OSEvent *event)
 
    coreinit::internal::unlockScheduler();
 }
+
 
 static AlarmCallback
 pEventAlarmHandler = nullptr;

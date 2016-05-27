@@ -17,7 +17,7 @@ gSchedulerLock { false };
 static std::array<OSThread *, CoreCount>
 sInterruptThreads;
 
-ThreadEntryPoint
+OSThreadEntryPointFn
 InterruptThreadEntryPoint;
 
 // Setup a thread fiber, used by OSRunThread and OSResumeThread

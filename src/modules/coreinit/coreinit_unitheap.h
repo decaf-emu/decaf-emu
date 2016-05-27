@@ -6,6 +6,15 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_unitheap Unit Heap
+ * \ingroup coreinit
+ *
+ * A unit heap is a memory heap where every allocation is of a fixed size
+ * determined at heap creation.
+ * @{
+ */
+
 struct UnitHeap;
 
 UnitHeap *
@@ -34,5 +43,7 @@ uint32_t
 MEMCalcHeapSizeForUnitHeap(uint32_t blockSize,
                            uint32_t count,
                            int alignment);
+
+/** @} */
 
 } // namespace coreinit

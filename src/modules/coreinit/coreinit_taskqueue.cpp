@@ -6,6 +6,10 @@
 namespace coreinit
 {
 
+
+/**
+ * Initialise a task queue structure.
+ */
 void
 MPInitTaskQ(MPTaskQueue *queue,
             be_ptr<MPTask> *taskBuffer,
@@ -24,12 +28,22 @@ MPInitTaskQ(MPTaskQueue *queue,
    queue->queueMaxSize = taskBufferLen;
 }
 
+
+/**
+ * Terminates a task queue.
+ *
+ * Yes this really does only return TRUE in coreinit.rpl
+ */
 BOOL
 MPTermTaskQ(MPTaskQueue *queue)
 {
    return TRUE;
 }
 
+
+/**
+ * Get the status of a task queue.
+ */
 BOOL
 MPGetTaskQInfo(MPTaskQueue *queue,
                MPTaskQueueInfo *info)
@@ -43,6 +57,14 @@ MPGetTaskQInfo(MPTaskQueue *queue,
    return TRUE;
 }
 
+
+/**
+ * Starts a task queue.
+ *
+ * Sets the task state to Ready.
+ *
+ * \return Returns true if state was previously Initialised or Stopped.
+ */
 BOOL
 MPStartTaskQ(MPTaskQueue *queue)
 {
@@ -56,6 +78,15 @@ MPStartTaskQ(MPTaskQueue *queue)
    return FALSE;
 }
 
+
+/**
+ * Stops a task queue.
+ *
+ * If there are tasks running the state is set to  Stopping.
+ * If there are no tasks running the state is set to Stopped.
+ *
+ * \return Returns FALSE if the task queue is not in the Ready state.
+ */
 BOOL
 MPStopTaskQ(MPTaskQueue *queue)
 {
@@ -76,12 +107,11 @@ MPStopTaskQ(MPTaskQueue *queue)
 
 
 /**
-* Resets the state of the task queue.
-*
-* This does not remove any tasks from the queue. It just resets the task queue
-* such that all tasks are ready to be run again.
-*/
-
+ * Resets the state of the task queue.
+ *
+ * This does not remove any tasks from the queue. It just resets the task queue
+ * such that all tasks are ready to be run again.
+ */
 BOOL
 MPResetTaskQ(MPTaskQueue *queue)
 {
@@ -111,7 +141,15 @@ MPResetTaskQ(MPTaskQueue *queue)
 }
 
 
-// Add a task to the end of the queue.
+/**
+ * Add a task to the end of the queue.
+ *
+ * Returns FALSE if the task state is not set to Initialised.
+ * Returns FALSE if the task queue is full.
+ * Returns FALSE if the task queue state is not valid.
+ *
+ * \return Returns TRUE if the task was added to the queue.
+ */
 BOOL
 MPEnqueTask(MPTaskQueue *queue,
             MPTask *task)
@@ -147,11 +185,12 @@ MPEnqueTask(MPTaskQueue *queue,
 
 
 /**
-* Dequeue 1 task at queueIndex
-*
-* Does not remove tasks from queue buffer.
-*/
-
+ * Dequeue 1 task at queueIndex
+ *
+ * Does not remove tasks from queue buffer.
+ *
+ * \return Returns dequeued task.
+ */
 MPTask *
 MPDequeTask(MPTaskQueue *queue)
 {
@@ -172,11 +211,12 @@ MPDequeTask(MPTaskQueue *queue)
 
 
 /**
-* Dequeue N tasks from queueIndex
-*
-* Does not remove tasks from queue buffer.
-*/
-
+ * Dequeue N tasks from queueIndex
+ *
+ * Does not remove tasks from queue buffer.
+ *
+ * \return Returns number of tasks dequeued.
+ */
 uint32_t
 MPDequeTasks(MPTaskQueue *queue,
              be_ptr<MPTask> *taskBuffer,
@@ -201,17 +241,29 @@ MPDequeTasks(MPTaskQueue *queue,
 }
 
 
-// Busy wait until state mask matches mask (ewwww)
+/**
+ * Busy wait until state matches mask.
+ *
+ * \return Always returns TRUE.
+ */
 BOOL
-MPWaitTaskQ(MPTaskQueue *queue, MPTaskQueueState mask)
+MPWaitTaskQ(MPTaskQueue *queue,
+            MPTaskQueueState mask)
 {
    while ((queue->state & mask) == 0);
    return TRUE;
 }
 
 
+/**
+ * Busy wait with timeout until state matches mask.
+ *
+ * \return Returns FALSE if wait timed out.
+ */
 BOOL
-MPWaitTaskQWithTimeout(MPTaskQueue *queue, MPTaskQueueState mask, OSTime timeout)
+MPWaitTaskQWithTimeout(MPTaskQueue *queue,
+                       MPTaskQueueState mask,
+                       OSTime timeout)
 {
    auto start = OSGetTime();
    auto end = start + timeout;
@@ -226,15 +278,26 @@ MPWaitTaskQWithTimeout(MPTaskQueue *queue, MPTaskQueueState mask, OSTime timeout
 }
 
 
+/**
+ * Print debug information about task queue.
+ */
 BOOL
-MPPrintTaskQStats(MPTaskQueue *queue, uint32_t unk)
+MPPrintTaskQStats(MPTaskQueue *queue,
+                  uint32_t unk)
 {
+   // TODO: Implement MPPrintTaskQStats
    return TRUE;
 }
 
 
+/**
+ * Initialises a task structure.
+ */
 void
-MPInitTask(MPTask *task, MPTaskFunc func, uint32_t userArg1, uint32_t userArg2)
+MPInitTask(MPTask *task,
+           MPTaskFunc func,
+           uint32_t userArg1,
+           uint32_t userArg2)
 {
    task->self = task;
    task->queue = nullptr;
@@ -249,6 +312,11 @@ MPInitTask(MPTask *task, MPTaskFunc func, uint32_t userArg1, uint32_t userArg2)
 }
 
 
+/**
+ * Terminates a task.
+ *
+ * Yes this really does only return TRUE in coreinit.rpl
+ */
 BOOL
 MPTermTask(MPTask *task)
 {
@@ -256,8 +324,14 @@ MPTermTask(MPTask *task)
 }
 
 
+/**
+ * Get information about a task.
+ *
+ * \return Returns TRUE if successful.
+ */
 BOOL
-MPGetTaskInfo(MPTask *task, MPTaskInfo *info)
+MPGetTaskInfo(MPTask *task,
+              MPTaskInfo *info)
 {
    info->coreID = task->coreID;
    info->duration = task->duration;
@@ -267,6 +341,9 @@ MPGetTaskInfo(MPTask *task, MPTaskInfo *info)
 }
 
 
+/**
+ * Returns a task's user data which can be set with MPSetTaskUserData.
+ */
 void *
 MPGetTaskUserData(MPTask *task)
 {
@@ -274,6 +351,9 @@ MPGetTaskUserData(MPTask *task)
 }
 
 
+/**
+ * Sets a task's user data which can be retrieved with MPGetTaskUserData.
+ */
 void
 MPSetTaskUserData(MPTask *task, void *userData)
 {
@@ -282,19 +362,18 @@ MPSetTaskUserData(MPTask *task, void *userData)
 
 
 /**
-* Run N tasks from queue.
-*
-* Does not remove tasks from queue.
-* Can be run from multiple threads at once.
-*
-* Side Effects:
-* - Sets state to Stopped if state is Stopping and tasksRunning reaches 0.
-* - Sets state to Finished if all tasks are finished.
-* - TasksReady -> TasksRunning -> TasksFinished.
-*
-* Returns TRUE if at least 1 task is run.
-*/
-
+ * Run N tasks from queue.
+ *
+ * Does not remove tasks from queue.
+ * Can be run from multiple threads at once.
+ *
+ * Side Effects:
+ * - Sets state to Stopped if state is Stopping and tasksRunning reaches 0.
+ * - Sets state to Finished if all tasks are finished.
+ * - TasksReady -> TasksRunning -> TasksFinished.
+ *
+ * Returns TRUE if at least 1 task is run.
+ */
 BOOL
 MPRunTasksFromTaskQ(MPTaskQueue *queue,
                     uint32_t tasks)
@@ -358,17 +437,26 @@ MPRunTasksFromTaskQ(MPTaskQueue *queue,
 }
 
 
-// Run 1 task which belongs to a queue
+/**
+ * Run a specific task.
+ *
+ * The task must belong to a queue.
+ * The task must be in the Ready state.
+ *
+ * \return Returns TRUE if task was run.
+ */
 BOOL
 MPRunTask(MPTask *task)
 {
    auto queue = task->queue;
 
-   if (task->state != MPTaskState::Ready || !queue) {
+   if (task->state != MPTaskState::Ready) {
       return FALSE;
    }
 
-   if (queue->state == MPTaskQueueState::Stopping || queue->state == MPTaskQueueState::Stopped) {
+   if (!queue
+     || queue->state == MPTaskQueueState::Stopping
+     || queue->state == MPTaskQueueState::Stopped) {
       return FALSE;
    }
 

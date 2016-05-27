@@ -4,6 +4,10 @@
 namespace coreinit
 {
 
+/**
+ * \ingroup coreinit_fs
+ */
+
 FSStatus
 FSOpenDir(FSClient *client,
           FSCmdBlock *block,
@@ -72,5 +76,7 @@ FSRewindDirAsync(FSClient *client,
                  FSDirectoryHandle handle,
                  uint32_t flags,
                  FSAsyncData *asyncData);
+
+/** @} */
 
 } // namespace coreinit

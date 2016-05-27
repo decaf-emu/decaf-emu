@@ -4,6 +4,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_cache Cache
+ * \ingroup coreinit
+ * @{
+ */
+
 void
 DCInvalidateRange(void *addr,
                   uint32_t size);
@@ -34,5 +40,7 @@ DCTouchRange(void *addr,
 
 void
 OSCoherencyBarrier();
+
+/** @} */
 
 } // namespace coreinit

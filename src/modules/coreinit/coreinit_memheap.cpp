@@ -181,6 +181,7 @@ MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap)
    }
 }
 
+// TODO: Move to coreinit::internal
 void
 CoreInitDefaultHeap()
 {
@@ -202,6 +203,7 @@ CoreInitDefaultHeap()
    MEMSetBaseHeapHandle(MEMBaseHeapType::FG, reinterpret_cast<CommonHeap*>(fg));
 }
 
+// TODO: Move to coreinit::internal
 void
 CoreFreeDefaultHeap()
 {

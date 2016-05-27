@@ -4,6 +4,10 @@
 namespace coreinit
 {
 
+/**
+ * \ingroup coreinit_fs
+ */
+
 FSStatus
 FSGetCwd(FSClient *client,
          FSCmdBlock *block,
@@ -23,6 +27,8 @@ FSChangeDirAsync(FSClient *client,
                  const char *path,
                  uint32_t flags,
                  FSAsyncData *asyncData);
+
+/** @} */
 
 namespace internal
 {

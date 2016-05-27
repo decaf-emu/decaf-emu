@@ -8,12 +8,20 @@ namespace coreinit
 const uint32_t
 OSSemaphore::Tag;
 
+
+/**
+ * Initialise semaphore object with count.
+ */
 void
 OSInitSemaphore(OSSemaphore *semaphore, int32_t count)
 {
    OSInitSemaphoreEx(semaphore, count, nullptr);
 }
 
+
+/**
+ * Initialise semaphore object with count and name.
+ */
 void
 OSInitSemaphoreEx(OSSemaphore *semaphore, int32_t count, char *name)
 {
@@ -23,6 +31,13 @@ OSInitSemaphoreEx(OSSemaphore *semaphore, int32_t count, char *name)
    OSInitThreadQueueEx(&semaphore->queue, semaphore);
 }
 
+
+/**
+ * Decrease the semaphore value.
+ *
+ * If the value is less than or equal to zero the current thread will be put to
+ * sleep until the count is above zero and it can decrement it safely.
+ */
 int32_t
 OSWaitSemaphore(OSSemaphore *semaphore)
 {
@@ -41,6 +56,16 @@ OSWaitSemaphore(OSSemaphore *semaphore)
    return previous;
 }
 
+
+/**
+ * Try to decrease the semaphore value.
+ *
+ * If the value is greater than zero then it will be decremented, else the function
+ * will return immediately with a value <= 0 indicating a failure.
+ *
+ * \return Returns previous semaphore count, before the decrement in this function.
+ *         If the value is >0 then it means the call was succesful.
+ */
 int32_t
 OSTryWaitSemaphore(OSSemaphore *semaphore)
 {
@@ -59,6 +84,12 @@ OSTryWaitSemaphore(OSSemaphore *semaphore)
    return previous;
 }
 
+
+/**
+ * Increase the semaphore value.
+ *
+ * If any threads are waiting for semaphore, they are woken.
+ */
 int32_t
 OSSignalSemaphore(OSSemaphore *semaphore)
 {
@@ -77,6 +108,10 @@ OSSignalSemaphore(OSSemaphore *semaphore)
    return previous;
 }
 
+
+/**
+ * Get the current semaphore count.
+ */
 int32_t
 OSGetSemaphoreCount(OSSemaphore *semaphore)
 {

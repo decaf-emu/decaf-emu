@@ -4,6 +4,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_lockedcache Locked Cache
+ * \ingroup coreinit
+ * @{
+ */
+
 BOOL
 LCHardwareIsAvailable();
 
@@ -42,5 +48,7 @@ LCStoreDMABlocks(void *dst, const void *src, uint32_t size);
 
 void
 LCWaitDMAQueue(uint32_t queueLength);
+
+/** @} */
 
 } // namespace coreinit

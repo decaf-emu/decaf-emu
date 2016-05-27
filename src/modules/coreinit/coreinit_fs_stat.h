@@ -4,6 +4,10 @@
 namespace coreinit
 {
 
+/**
+ * \ingroup coreinit_fs
+ */
+
 FSStatus
 FSGetStat(FSClient *client,
           FSCmdBlock *block,
@@ -33,5 +37,7 @@ FSGetStatFileAsync(FSClient *client,
                    FSStat *stat,
                    uint32_t flags,
                    FSAsyncData *asyncData);
+
+/** @} */
 
 } // namespace coreinit

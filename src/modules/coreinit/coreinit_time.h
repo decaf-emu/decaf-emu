@@ -6,6 +6,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_time Time
+ * \ingroup coreinit
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct OSCalendarTime
@@ -28,10 +34,10 @@ CHECK_SIZE(OSCalendarTime, 0x18);
 
 #pragma pack(pop)
 
-// Tick is 1 nanosecond
+//! OSTick is 1 nanosecond
 using OSTick = int32_t;
 
-// Time is ticks since epoch
+//! OSTime is ticks since epoch
 using OSTime = int64_t;
 
 OSTime
@@ -51,6 +57,8 @@ OSTicksToCalendarTime(OSTime time, OSCalendarTime *calendarTime);
 
 OSTime
 OSCalendarTimeToTicks(OSCalendarTime *calendarTime);
+
+/** @} */
 
 namespace internal
 {

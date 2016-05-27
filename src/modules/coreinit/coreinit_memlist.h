@@ -6,6 +6,14 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_memlist Memory List
+ * \ingroup coreinit
+ *
+ * A linked list used for memory heaps.
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct MemoryLink
@@ -56,5 +64,7 @@ MEMGetPrevListObject(MemoryList *list, void *object);
 
 void *
 MEMGetNthListObject(MemoryList *list, uint16_t n);
+
+/** @} */
 
 } // namespace coreinit

@@ -418,11 +418,11 @@ MEMGetAllocModeForExpHeap(ExpandedHeap *heap)
 
 
 /**
-* Trim free blocks from the end of the expanded heap.
-*
-* Reduces the size of the heap memory region to the end of the last allocated block.
-* Returns the new size of the heap.
-*/
+ * Trim free blocks from the end of the expanded heap.
+ *
+ * Reduces the size of the heap memory region to the end of the last allocated block.
+ * Returns the new size of the heap.
+ */
 uint32_t
 MEMAdjustExpHeap(ExpandedHeap *heap)
 {
@@ -545,8 +545,8 @@ MEMGetAllocatableSizeForExpHeap(ExpandedHeap *heap)
 
 
 /**
-* Return the largest allocatable aligned memory block in an expanded heap.
-*/
+ * Return the largest allocatable aligned memory block in an expanded heap.
+ */
 uint32_t
 MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap, int alignment)
 {
@@ -623,8 +623,8 @@ MEMGetGroupIDForMBlockExpHeap(uint8_t *addr)
 
 
 /**
-* Return the allocation direction of an allocated memory block from an expanded heap.
-*/
+ * Return the allocation direction of an allocated memory block from an expanded heap.
+ */
 MEMExpHeapDirection
 MEMGetAllocDirForMBlockExpHeap(uint8_t *addr)
 {

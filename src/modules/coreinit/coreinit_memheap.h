@@ -9,6 +9,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_memheap Memory Heap
+ * \ingroup coreinit
+ * @{
+ */
+
 static const uint32_t MEM_MAX_HEAP_TABLE = 0x20;
 
 #pragma pack(push, 1)
@@ -64,6 +70,8 @@ MEMGetBaseHeapHandle(MEMBaseHeapType type);
 
 CommonHeap *
 MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap);
+
+/** @} */
 
 void
 CoreFreeDefaultHeap();

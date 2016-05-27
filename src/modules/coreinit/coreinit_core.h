@@ -4,6 +4,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_core Core Identification
+ * \ingroup coreinit
+ * @{
+ */
+
 static const uint32_t CoreCount = 3;
 
 uint32_t
@@ -17,5 +23,7 @@ OSGetMainCoreId();
 
 BOOL
 OSIsMainCore();
+
+/** @} */
 
 } // namespace coreinit

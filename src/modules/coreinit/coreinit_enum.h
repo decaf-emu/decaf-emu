@@ -20,7 +20,10 @@ ENUM_BEG(OSAlarmState, uint32_t)
 ENUM_END(OSAlarmState)
 
 ENUM_BEG(OSEventMode, uint32_t)
+   //! A manual event will only reset when OSResetEvent is called.
    ENUM_VALUE(ManualReset,          0)
+
+   //! An auto event will reset everytime a thread is woken.
    ENUM_VALUE(AutoReset,            1)
 ENUM_END(OSEventMode)
 
@@ -61,11 +64,22 @@ ENUM_BEG(OSSharedDataType, uint32_t)
 ENUM_END(OSSharedDataType)
 
 ENUM_BEG(OSThreadAttributes, uint8_t)
+   //! Allow the thread to run on CPU0.
    ENUM_VALUE(AffinityCPU0,         1 << 0)
+
+   //! Allow the thread to run on CPU1.
    ENUM_VALUE(AffinityCPU1,         1 << 1)
+
+   //! Allow the thread to run on CPU2.
    ENUM_VALUE(AffinityCPU2,         1 << 2)
+
+   //! Allow the thread to run any CPU.
    ENUM_VALUE(AffinityAny,          (1 << 0) | (1 << 1) | (1 << 2))
+
+   //! Start the thread detached.
    ENUM_VALUE(Detached,             1 << 3)
+
+   //! Enables tracking of stack usage.
    ENUM_VALUE(StackUsage,           1 << 5)
 ENUM_END(OSThreadAttributes)
 
@@ -77,9 +91,17 @@ ENUM_END(OSThreadRequest)
 
 ENUM_BEG(OSThreadState, uint8_t)
    ENUM_VALUE(None,                 0)
+
+   //! Thread is ready to run
    ENUM_VALUE(Ready,                1 << 0)
+
+   //! Thread is running
    ENUM_VALUE(Running,              1 << 1)
+
+   //! Thread is waiting, i.e. on a mutex
    ENUM_VALUE(Waiting,              1 << 2)
+
+   //! Thread is about to terminate
    ENUM_VALUE(Moribund,             1 << 3)
 ENUM_END(OSThreadState)
 

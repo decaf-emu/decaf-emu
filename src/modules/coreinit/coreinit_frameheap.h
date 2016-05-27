@@ -6,6 +6,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_frameheap Frame Heap
+ * \ingroup coreinit
+ * @{
+ */
+
 struct FrameHeap;
 
 FrameHeap *
@@ -43,5 +49,7 @@ MEMGetAllocatableSizeForFrmHeap(FrameHeap *heap);
 
 uint32_t
 MEMGetAllocatableSizeForFrmHeapEx(FrameHeap *heap, int alignment);
+
+/** @} */
 
 } // namespace coreinit

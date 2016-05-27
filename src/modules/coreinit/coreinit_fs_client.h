@@ -7,6 +7,10 @@
 namespace coreinit
 {
 
+/**
+ * \ingroup coreinit_fs
+ */
+
 class FSClient
 {
 public:
@@ -71,6 +75,7 @@ void
 FSSetStateChangeNotification(FSClient *client,
                              FSStateChangeInfo *info);
 
+/** @} */
 
 namespace internal
 {

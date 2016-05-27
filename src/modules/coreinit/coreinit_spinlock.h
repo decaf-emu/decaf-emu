@@ -7,6 +7,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_spinlock Spinlock
+ * \ingroup coreinit
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct OSSpinLock
@@ -64,5 +70,7 @@ struct ScopedSpinLock
 
    OSSpinLock *lock;
 };
+
+/** @} */
 
 } // namespace coreinit

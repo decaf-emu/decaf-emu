@@ -1,6 +1,13 @@
 #pragma once
 #include "kernelmodule.h"
 
+/**
+ * \defgroup coreinit coreinit
+ *
+ * Contains all core operating system functions such as threads, synchronisation
+ * objects, filesystem, memory, exception handling, etc...
+ */
+
 namespace coreinit
 {
 

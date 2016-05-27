@@ -13,12 +13,20 @@ OSMutex::Tag;
 const uint32_t
 OSCondition::Tag;
 
+
+/**
+ * Initialise a mutex structure.
+ */
 void
 OSInitMutex(OSMutex *mutex)
 {
    OSInitMutexEx(mutex, nullptr);
 }
 
+
+/**
+ * Initialise a mutex structure with a name.
+ */
 void
 OSInitMutexEx(OSMutex *mutex, const char *name)
 {
@@ -29,6 +37,7 @@ OSInitMutexEx(OSMutex *mutex, const char *name)
    OSInitThreadQueueEx(&mutex->queue, mutex);
    OSInitQueueLink(&mutex->link);
 }
+
 
 static void
 lockMutexNoLock(OSMutex *mutex)
@@ -55,6 +64,17 @@ lockMutexNoLock(OSMutex *mutex)
    mutex->count++;
 }
 
+
+/**
+ * Lock the mutex.
+ *
+ * If no one owns the mutex, set current thread as owner.
+ * If the lock is owned by the current thread, increase the recursion count.
+ * If the lock is owned by another thread, the current thread will sleep until
+ * the owner has unlocked this mutex.
+ *
+ * Similar to <a href="http://en.cppreference.com/w/cpp/thread/recursive_mutex/lock">std::recursive_mutex::lock</a>.
+ */
 void
 OSLockMutex(OSMutex *mutex)
 {
@@ -64,6 +84,18 @@ OSLockMutex(OSMutex *mutex)
    coreinit::internal::unlockScheduler();
 }
 
+
+/**
+ * Try to lock a mutex.
+ *
+ * If no one owns the mutex, set current thread as owner.
+ * If the lock is owned by the current thread, increase the recursion count.
+ * If the lock is owned by another thread, do not block, return FALSE.
+ *
+ * \return TRUE if the mutex is locked, FALSE if the mutex is owned by another thread.
+ *
+ * Similar to <a href="http://en.cppreference.com/w/cpp/thread/recursive_mutex/try_lock">std::recursive_mutex::try_lock</a>.
+ */
 BOOL
 OSTryLockMutex(OSMutex *mutex)
 {
@@ -89,6 +121,7 @@ OSTryLockMutex(OSMutex *mutex)
    return TRUE;
 }
 
+
 static void
 unlockMutexNoLock(OSMutex *mutex)
 {
@@ -110,6 +143,16 @@ unlockMutexNoLock(OSMutex *mutex)
    }
 }
 
+
+/**
+ * Unlocks the mutex.
+ *
+ * Will decrease the recursion count, will only unlock the mutex when the
+ * recursion count reaches 0.
+ * If any other threads are waiting to lock the mutex they will be woken.
+ *
+ * Similar to <a href="http://en.cppreference.com/w/cpp/thread/recursive_mutex/unlock">std::recursive_mutex::unlock</a>.
+ */
 void
 OSUnlockMutex(OSMutex *mutex)
 {
@@ -119,12 +162,20 @@ OSUnlockMutex(OSMutex *mutex)
    coreinit::internal::unlockScheduler();
 }
 
+
+/**
+ * Initialise a condition variable structure.
+ */
 void
 OSInitCond(OSCondition *condition)
 {
    OSInitCondEx(condition, nullptr);
 }
 
+
+/**
+ * Initialise a condition variable structure with a name.
+ */
 void
 OSInitCondEx(OSCondition *condition, const char *name)
 {
@@ -133,6 +184,15 @@ OSInitCondEx(OSCondition *condition, const char *name)
    OSInitThreadQueueEx(&condition->queue, condition);
 }
 
+
+/**
+ * Sleep the current thread until the condition variable has been signalled.
+ *
+ * The mutex must be locked when entering this function.
+ * Will unlock the mutex and then sleep, reacquiring the mutex when woken.
+ *
+ * Similar to <a href="http://en.cppreference.com/w/cpp/thread/condition_variable/wait">std::condition_variable::wait</a>.
+ */
 void
 OSWaitCond(OSCondition *condition, OSMutex *mutex)
 {
@@ -158,12 +218,19 @@ OSWaitCond(OSCondition *condition, OSMutex *mutex)
    coreinit::internal::unlockScheduler();
 }
 
+
+/**
+ * Will wake up any threads waiting on the condition with OSWaitCond.
+ *
+ * Similar to <a href="http://en.cppreference.com/w/cpp/thread/condition_variable/notify_all">std::condition_variable::notify_all</a>.
+ */
 void
 OSSignalCond(OSCondition *condition)
 {
    assert(condition && condition->tag == OSCondition::Tag);
    OSWakeupThread(&condition->queue);
 }
+
 
 void
 Module::registerMutexFunctions()

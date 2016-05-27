@@ -12,11 +12,43 @@ struct Fiber;
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_thread Thread
+ * \ingroup coreinit
+ *
+ * The thread scheduler in the Wii U uses co-operative scheduling, this is different
+ * to the usual pre-emptive scheduling that most operating systems use (such as
+ * Windows, Linux, etc). In co-operative scheduling threads must voluntarily yield
+ * execution to other threads. In pre-emptive threads are switched by the operating
+ * system after an amount of time.
+ *
+ * With the Wii U's scheduling model the thread with the highest priority which
+ * is in a non-waiting state will always be running (where 0 is the highest
+ * priority and 31 is the lowest). Execution will only switch to other threads
+ * once this thread has been forced to wait, such as when waiting to acquire a
+ * mutex, or when the thread voluntarily yields execution to other threads which
+ * have the same priority using OSYieldThread. OSYieldThread will never yield to
+ * a thread with lower priority than the current thread.
+ * @{
+ */
+
 #pragma pack(push, 1)
+
+struct OSThread;
+
+using OSThreadEntryPointFn = wfunc_ptr<uint32_t, uint32_t, void*>;
+using OSThreadCleanupCallbackFn = wfunc_ptr<void, OSThread *, void *>;
+using OSThreadDeallocatorFn = wfunc_ptr<void, OSThread *, void *>;
+
+using be_OSThreadEntryPointFn = be_wfunc_ptr<uint32_t, uint32_t, void*>;
+using be_OSThreadCleanupCallbackFn = be_wfunc_ptr<void, OSThread *, void *>;
+using be_OSThreadDeallocatorFn = be_wfunc_ptr<void, OSThread *, void *>;
 
 struct OSContext
 {
    static const uint64_t Tag1 = 0x4F53436F6E747874ull;
+
+   //! Should always be set to the value OSContext::Tag.
    be_val<uint64_t> tag;
    be_val<uint32_t> gpr[32];
    be_val<uint32_t> cr;
@@ -99,38 +131,94 @@ struct OSThread
    static const uint32_t Tag = 0x74487244;
 
    OSContext context;
+
+   //! Should always be set to the value OSThread::Tag.
    be_val<uint32_t> tag;
+
+   //! Bitfield of OSThreadState
    be_val<OSThreadState> state;
-   be_val<OSThreadAttributes> attr;       // OSSetThreadAffinity / OSCreateThread
+
+   //! Bitfield of OSThreadAttributes
+   be_val<OSThreadAttributes> attr;
+
+   //! Unique thread ID
    be_val<uint16_t> id;
+
+   //! Suspend count (increased by OSSuspendThread).
    be_val<int32_t> suspendCounter;
+
+   //! Actual priority of thread.
    be_val<int32_t> priority;
-   be_val<int32_t> basePriority;          // "ba" in DumpActiveThreads and returned in OSGetThreadPriority
-   be_val<uint32_t> exitValue;            // Exit value of thread
-   Fiber *fiber;                          // Naughty, hopefully not overriding anything important
+
+   //! Base priority of thread, 0 is highest priority, 31 is lowest priority.
+   be_val<int32_t> basePriority;
+
+   //! Exit value of the thread
+   be_val<uint32_t> exitValue;
+
+   //! Naughty, and hopefully not overriding anything important
+   Fiber *fiber;
    UNKNOWN(0x35c - 0x340);
-   be_ptr<OSThreadQueue> queue;           // Queue the thread is on
-   OSThreadLink link;                     // Thread queue link
-   OSThreadQueue joinQueue;               // Queue of threads waiting to join this
-   be_ptr<OSMutex> mutex;                 // Mutex we are waiting to lock
-   OSMutexQueue mutexQueue;               // Mutexes owned by this thread
-   OSThreadLink activeLink;               // Link on active thread queue
-   be_ptr<be_val<uint32_t>> stackStart;   // Stack starting value (top, highest address)
-   be_ptr<be_val<uint32_t>> stackEnd;     // Stack end value (bottom, lowest address)
-   be_val<uint32_t> entryPoint;           // Entry point from OSCreateThread
+
+   //! Queue the thread is currently waiting on
+   be_ptr<OSThreadQueue> queue;
+
+   //! Link used for thread queue
+   OSThreadLink link;
+
+   //! Queue of threads waiting to join this thread
+   OSThreadQueue joinQueue;
+
+   //! Mutex this thread is waiting to lock
+   be_ptr<OSMutex> mutex;
+
+   //! Queue of mutexes this thread owns
+   OSMutexQueue mutexQueue;
+
+   //! Link for global active thread queue
+   OSThreadLink activeLink;
+
+   //! Stack start (top, highest address)
+   be_ptr<be_val<uint32_t>> stackStart;
+
+   //! Stack end (bottom, lowest address)
+   be_ptr<be_val<uint32_t>> stackEnd;
+
+   //! Thread entry point set in OSCreateThread
+   be_OSThreadEntryPointFn entryPoint;
    UNKNOWN(0x57c - 0x3a0);
+
+   //! Thread specific values, accessed with OSSetThreadSpecific and OSGetThreadSpecific.
    be_val<uint32_t> specific[0x10];
    UNKNOWN(0x5c0 - 0x5bc);
-   be_ptr<const char> name;               // Thread name
+
+   //! Thread name, accessed with OSSetThreadName and OSGetThreadName.
+   be_ptr<const char> name;
    UNKNOWN(0x4);
-   be_ptr<be_val<uint32_t>> userStackPointer; // The stack specified in OSCreateThread
-   be_val<uint32_t> cleanupCallback;
-   be_val<uint32_t> deallocator;
-   be_val<uint32_t> cancelState;          // Is listening to requestFlag enabled
-   be_val<OSThreadRequest> requestFlag;   // Request flag for cancel or suspend
-   be_val<int32_t> needSuspend;           // How many pending suspends we have
-   be_val<int32_t> suspendResult;         // Result of suspend
-   OSThreadQueue suspendQueue;            // Queue of threads waiting for suspend to finish
+
+   //! The stack pointer passed in OSCreateThread.
+   be_ptr<be_val<uint32_t>> userStackPointer;
+
+   //! Called just before thread is terminated, set with OSSetThreadCleanupCallback
+   be_OSThreadCleanupCallbackFn cleanupCallback;
+
+   //! Called just after a thread is terminated, set with OSSetThreadDeallocator
+   be_OSThreadDeallocatorFn deallocator;
+
+   //! If TRUE then a thread can be cancelled or suspended, set with OSSetThreadCancelState
+   be_val<uint32_t> cancelState;
+
+   //! Current thread request, used for cancelleing and suspending the thread.
+   be_val<OSThreadRequest> requestFlag;
+
+   //! Pending suspend request count
+   be_val<int32_t> needSuspend;
+
+   //! Result of thread suspend
+   be_val<int32_t> suspendResult;
+
+   //! Queue of threads waiting for a thread to be suspended.
+   OSThreadQueue suspendQueue;
    UNKNOWN(0x69c - 0x5f4);
 };
 CHECK_OFFSET(OSThread, 0x320, tag);
@@ -164,8 +252,6 @@ CHECK_SIZE(OSThread, 0x69c);
 
 #pragma pack(pop)
 
-using ThreadEntryPoint = wfunc_ptr<uint32_t, uint32_t, void*>;
-
 void
 OSCancelThread(OSThread *thread);
 
@@ -182,7 +268,14 @@ void
 OSContinueThread(OSThread *thread);
 
 BOOL
-OSCreateThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv, be_val<uint32_t> *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes attributes);
+OSCreateThread(OSThread *thread,
+               OSThreadEntryPointFn entry,
+               uint32_t argc,
+               void *argv,
+               be_val<uint32_t> *stack,
+               uint32_t stackSize,
+               int32_t priority,
+               OSThreadAttributes attributes);
 
 void
 OSDetachThread(OSThread *thread);
@@ -191,7 +284,8 @@ void
 OSExitThread(int value);
 
 void
-OSGetActiveThreadLink(OSThread *thread, OSThreadLink *link);
+OSGetActiveThreadLink(OSThread *thread,
+                      OSThreadLink *link);
 
 OSThread *
 OSGetCurrentThread();
@@ -221,7 +315,8 @@ BOOL
 OSIsThreadTerminated(OSThread *thread);
 
 BOOL
-OSJoinThread(OSThread *thread, be_val<int> *val);
+OSJoinThread(OSThread *thread,
+             be_val<int> *exitValue);
 
 void
 OSPrintCurrentThreadState();
@@ -230,13 +325,18 @@ int32_t
 OSResumeThread(OSThread *thread);
 
 BOOL
-OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv);
+OSRunThread(OSThread *thread,
+            OSThreadEntryPointFn entry,
+            uint32_t argc,
+            void *argv);
 
 OSThread *
-OSSetDefaultThread(uint32_t core, OSThread *thread);
+OSSetDefaultThread(uint32_t core,
+                   OSThread *thread);
 
 BOOL
-OSSetThreadAffinity(OSThread *thread, uint32_t affinity);
+OSSetThreadAffinity(OSThread *thread,
+                    uint32_t affinity);
 
 BOOL
 OSSetThreadCancelState(BOOL state);
@@ -249,16 +349,20 @@ OSSetThreadDeallocator(OSThread *thread,
                        OSThreadDeallocatorFn deallocator);
 
 void
-OSSetThreadName(OSThread* thread, const char *name);
+OSSetThreadName(OSThread* thread,
+                const char *name);
 
 BOOL
-OSSetThreadPriority(OSThread* thread, uint32_t priority);
+OSSetThreadPriority(OSThread* thread,
+                    uint32_t priority);
 
 BOOL
-OSSetThreadRunQuantum(OSThread* thread, uint32_t quantum);
+OSSetThreadRunQuantum(OSThread* thread,
+                      uint32_t quantum);
 
 void
-OSSetThreadSpecific(uint32_t id, uint32_t value);
+OSSetThreadSpecific(uint32_t id,
+                    uint32_t value);
 
 BOOL
 OSSetThreadStackUsage(OSThread *thread);
@@ -280,5 +384,7 @@ OSWakeupThread(OSThreadQueue *queue);
 
 void
 OSYieldThread();
+
+/** @} */
 
 } // namespace coreinit

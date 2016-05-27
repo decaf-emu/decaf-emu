@@ -5,36 +5,64 @@
 namespace coreinit
 {
 
+
+/**
+ * Equivalent to dcbi instruction.
+ */
 void
 DCInvalidateRange(void *addr, uint32_t size)
 {
    // TODO: DCInvalidateRange
 }
 
+
+/**
+ * Equivalent to dcbf, sync, eieio.
+ */
 void
 DCFlushRange(void *addr, uint32_t size)
 {
    // TODO: DCFlushRange
 }
 
+
+/**
+ * Equivalent to dcbst, sync, eieio.
+ */
 void
 DCStoreRange(void *addr, uint32_t size)
 {
    // TODO: DCStoreRange
 }
 
+
+/**
+ * Equivalent to dcbf.
+ *
+ * Does not perform sync, eieio like DCFlushRange.
+ */
 void
 DCFlushRangeNoSync(void *addr, uint32_t size)
 {
    // TODO: DCFlushRangeNoSync
 }
 
+
+/**
+ * Equivalent to dcbst.
+ *
+ * Does not perform sync, eieio like DCStoreRange.
+ */
 void
 DCStoreRangeNoSync(void *addr, uint32_t size)
 {
    // TODO: DCStoreRangeNoSync
 }
 
+
+/**
+ * Equivalent to dcbz instruction.
+ */
 void
 DCZeroRange(void *addr, uint32_t size)
 {
@@ -44,17 +72,23 @@ DCZeroRange(void *addr, uint32_t size)
    memset(addr, 0, size);
 }
 
+
+/**
+ * Equivalent to dcbt instruction.
+ */
 void
 DCTouchRange(void *addr, uint32_t size)
 {
    // TODO: DCTouchRange
 }
 
+
 void
 OSCoherencyBarrier()
 {
    // TODO: OSCoherencyBarrier
 }
+
 
 void
 Module::registerCacheFunctions()

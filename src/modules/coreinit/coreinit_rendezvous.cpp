@@ -6,6 +6,10 @@
 namespace coreinit
 {
 
+
+/**
+ * Initialise a rendezvous structure.
+ */
 void
 OSInitRendezvous(OSRendezvous *rendezvous)
 {
@@ -13,14 +17,30 @@ OSInitRendezvous(OSRendezvous *rendezvous)
    std::fill(std::begin(rendezvous->__unk0), std::end(rendezvous->__unk0), 0);
 }
 
+
+/**
+ * Wait on a rendezvous with infinite timeout.
+ */
 BOOL
-OSWaitRendezvous(OSRendezvous *rendezvous, uint32_t coreMask)
+OSWaitRendezvous(OSRendezvous *rendezvous,
+                 uint32_t coreMask)
 {
    return OSWaitRendezvousWithTimeout(rendezvous, coreMask, -1);
 }
 
+
+/**
+ * Wait on a rendezvous with a timeout.
+ *
+ * This will wait with a timeout until all cores matching coreMask have
+ * reached the rendezvous point.
+ *
+ * \return Returns TRUE on success, FALSE on timeout.
+ */
 BOOL
-OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous, uint32_t coreMask, OSTime timeout)
+OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous,
+                            uint32_t coreMask,
+                            OSTime timeout)
 {
    auto core = OSGetCoreId();
    auto success = FALSE;
@@ -49,6 +69,7 @@ OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous, uint32_t coreMask, OSTime 
 
    return success;
 }
+
 
 void
 Module::registerRendezvousFunctions()

@@ -22,7 +22,8 @@ static uint32_t
 sThreadId = 1;
 
 void
-__OSClearThreadStack32(OSThread *thread, uint32_t value)
+__OSClearThreadStack32(OSThread *thread,
+                       uint32_t value)
 {
    virtual_ptr<be_val<uint32_t>> clearStart, clearEnd;
 
@@ -39,6 +40,13 @@ __OSClearThreadStack32(OSThread *thread, uint32_t value)
    }
 }
 
+
+/**
+ * Cancels a thread.
+ *
+ * This sets the threads requestFlag to OSThreadRequest::Cancel, the thread will
+ * be terminated next time OSTestThreadCancel is called.
+ */
 void
 OSCancelThread(OSThread *thread)
 {
@@ -71,6 +79,10 @@ OSCancelThread(OSThread *thread)
    }
 }
 
+
+/**
+ * Returns the count of active threads.
+ */
 int32_t
 OSCheckActiveThreads()
 {
@@ -78,6 +90,10 @@ OSCheckActiveThreads()
    return 1;
 }
 
+
+/**
+ * Get the maximum amount of stack the thread has used.
+ */
 int32_t
 OSCheckThreadStackUsage(OSThread *thread)
 {
@@ -95,6 +111,10 @@ OSCheckThreadStackUsage(OSThread *thread)
    return result;
 }
 
+
+/**
+ * Disable tracking of thread stack usage
+ */
 void
 OSClearThreadStackUsage(OSThread *thread)
 {
@@ -108,6 +128,10 @@ OSClearThreadStackUsage(OSThread *thread)
    coreinit::internal::unlockScheduler();
 }
 
+
+/**
+ * Clears a thread's suspend counter and resumes it.
+ */
 void
 OSContinueThread(OSThread *thread)
 {
@@ -117,7 +141,10 @@ OSContinueThread(OSThread *thread)
    coreinit::internal::unlockScheduler();
 }
 
-// Setup thread run state, shared by OSRunThread and OSCreateThread
+
+/**
+ * Setup thread run state, shared by OSRunThread and OSCreateThread
+ */
 static void
 InitialiseThreadState(OSThread *thread,
                       uint32_t entry,
@@ -154,9 +181,22 @@ InitialiseThreadState(OSThread *thread,
    thread->needSuspend = 0;
 }
 
+
+/**
+ * Create a new thread.
+ *
+ * \param thread Thread to initialise.
+ * \param entry Thread entry point.
+ * \param argc argc argument passed to entry point.
+ * \param argv argv argument passed to entry point.
+ * \param stack Top of stack (highest address).
+ * \param stackSize Size of stack.
+ * \param priority Thread priority, 0 is highest priorty, 31 is lowest.
+ * \param attributes Thread attributes, see OSThreadAttributes.
+ */
 BOOL
 OSCreateThread(OSThread *thread,
-               ThreadEntryPoint entry,
+               OSThreadEntryPointFn entry,
                uint32_t argc,
                void *argv,
                be_val<uint32_t> *stack,
@@ -182,6 +222,10 @@ OSCreateThread(OSThread *thread,
    return TRUE;
 }
 
+
+/**
+ * Detach thread.
+ */
 void
 OSDetachThread(OSThread *thread)
 {
@@ -190,6 +234,12 @@ OSDetachThread(OSThread *thread)
    coreinit::internal::unlockScheduler();
 }
 
+
+/**
+ * Exit the current thread with a exit code.
+ *
+ * This function is implicitly called when the thread entry point returns.
+ */
 void
 OSExitThread(int value)
 {
@@ -210,13 +260,22 @@ OSExitThread(int value)
    gProcessor.exit();
 }
 
+
+/**
+ * Get the next and previous thread in the thread's active queue.
+ */
 void
-OSGetActiveThreadLink(OSThread *thread, OSThreadLink *link)
+OSGetActiveThreadLink(OSThread *thread,
+                      OSThreadLink *link)
 {
    link->next = thread->activeLink.next;
    link->prev = thread->activeLink.prev;
 }
 
+
+/**
+ * Return pointer to OSThread object for the current thread.
+ */
 OSThread *
 OSGetCurrentThread()
 {
@@ -224,6 +283,14 @@ OSGetCurrentThread()
    return fiber ? fiber->thread : nullptr;
 }
 
+
+/**
+ * Returns the default thread for a specific core.
+ *
+ * Each core has 1 default thread created before the game boots. The default
+ * thread for core 1 calls the RPX entry point, the default threads for core 0
+ * and 2 are suspended and can be used with OSRunThread.
+ */
 OSThread *
 OSGetDefaultThread(uint32_t coreID)
 {
@@ -234,42 +301,70 @@ OSGetDefaultThread(uint32_t coreID)
    return sDefaultThreads[coreID];
 }
 
+
+/**
+ * Return current stack pointer, value of r1 register.
+ */
 uint32_t
 OSGetStackPointer()
 {
    return OSGetCurrentThread()->fiber->state.gpr[1];
 }
 
+
+/**
+ * Get a thread's affinity.
+ */
 uint32_t
 OSGetThreadAffinity(OSThread *thread)
 {
    return thread->attr & OSThreadAttributes::AffinityAny;
 }
 
+
+/**
+ * Get a thread's name.
+ */
 const char *
 OSGetThreadName(OSThread *thread)
 {
    return thread->name;
 }
 
+
+/**
+ * Get a thread's base priority.
+ */
 uint32_t
 OSGetThreadPriority(OSThread *thread)
 {
    return thread->basePriority;
 }
 
+
+/**
+ * Get a thread's specific value set by OSSetThreadSpecific.
+ */
 uint32_t
 OSGetThreadSpecific(uint32_t id)
 {
    return OSGetCurrentThread()->specific[id];
 }
 
+
+/**
+ * Returns TRUE if a thread is suspended.
+ */
 BOOL
 OSIsThreadSuspended(OSThread *thread)
 {
    return thread->suspendCounter > 0;
 }
 
+
+/**
+ * Returns TRUE if a thread is terminated.
+ */
 BOOL
 OSIsThreadTerminated(OSThread *thread)
 {
@@ -277,8 +372,19 @@ OSIsThreadTerminated(OSThread *thread)
        || thread->state == OSThreadState::Moribund;
 }
 
+
+/**
+ * Wait until thread is terminated.
+ *
+ * If the target thread is detached, returns FALSE.
+ *
+ * \param thread Thread to wait for
+ * \param exitValue Pointer to store thread exit value in.
+ * \returns Returns TRUE if thread has terminated, FALSE if thread is detached.
+ */
 BOOL
-OSJoinThread(OSThread *thread, be_val<int> *val)
+OSJoinThread(OSThread *thread,
+             be_val<int> *exitValue)
 {
    coreinit::internal::lockScheduler();
 
@@ -292,14 +398,16 @@ OSJoinThread(OSThread *thread, be_val<int> *val)
       coreinit::internal::rescheduleNoLock();
    }
 
-   if (val) {
-      *val = thread->exitValue;
+   if (exitValue) {
+      *exitValue = thread->exitValue;
    }
 
    coreinit::internal::unlockScheduler();
    return TRUE;
 }
 
+
+// TODO: Move to coreinit::internal
 void
 OSPrintCurrentThreadState()
 {
@@ -341,6 +449,15 @@ OSPrintCurrentThreadState()
    gLog->info(out.str());
 }
 
+
+/**
+ * Resumes a thread.
+ *
+ * Decrements the thread's suspend counter, if the counter reaches 0 the thread
+ * is resumed.
+ *
+ * \returns Returns the previous value of the suspend counter.
+ */
 int32_t
 OSResumeThread(OSThread *thread)
 {
@@ -355,8 +472,17 @@ OSResumeThread(OSThread *thread)
    return old;
 }
 
+
+/**
+ * Run a function on an already created thread.
+ *
+ * Can only be used on idle threads.
+ */
 BOOL
-OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv)
+OSRunThread(OSThread *thread,
+            OSThreadEntryPointFn entry,
+            uint32_t argc,
+            void *argv)
 {
    BOOL result = FALSE;
    coreinit::internal::lockScheduler();
@@ -372,8 +498,11 @@ OSRunThread(OSThread *thread, ThreadEntryPoint entry, uint32_t argc, void *argv)
    return result;
 }
 
+
+// TODO: Move to coreinit::internal
 OSThread *
-OSSetDefaultThread(uint32_t core, OSThread *thread)
+OSSetDefaultThread(uint32_t core,
+                   OSThread *thread)
 {
    assert(core < CoreCount);
    auto old = sDefaultThreads[core];
@@ -381,8 +510,13 @@ OSSetDefaultThread(uint32_t core, OSThread *thread)
    return old;
 }
 
+
+/**
+ * Set a thread's affinity.
+ */
 BOOL
-OSSetThreadAffinity(OSThread *thread, uint32_t affinity)
+OSSetThreadAffinity(OSThread *thread,
+                    uint32_t affinity)
 {
    coreinit::internal::lockScheduler();
    thread->attr &= ~OSThreadAttributes::AffinityAny;
@@ -392,6 +526,13 @@ OSSetThreadAffinity(OSThread *thread, uint32_t affinity)
    return TRUE;
 }
 
+
+/**
+ * Set a thread's cancellation state.
+ *
+ * If the state is TRUE then the thread can be suspended or cancelled when
+ * OSTestThreadCancel is called.
+ */
 BOOL
 OSSetThreadCancelState(BOOL state)
 {
@@ -433,14 +574,24 @@ OSSetThreadDeallocator(OSThread *thread,
    return old;
 }
 
+
+/**
+ * Set a thread's name.
+ */
 void
-OSSetThreadName(OSThread *thread, const char *name)
+OSSetThreadName(OSThread *thread,
+                const char *name)
 {
    thread->name = name;
 }
 
+
+/**
+ * Set a thread's priority.
+ */
 BOOL
-OSSetThreadPriority(OSThread *thread, uint32_t priority)
+OSSetThreadPriority(OSThread *thread,
+                    uint32_t priority)
 {
    if (priority > 31) {
       return FALSE;
@@ -453,21 +604,39 @@ OSSetThreadPriority(OSThread *thread, uint32_t priority)
    return TRUE;
 }
 
+
+/**
+ * Set a thread's run quantum.
+ *
+ * This is the maximum amount of time the thread can run for before being forced
+ * to yield.
+ */
 BOOL
-OSSetThreadRunQuantum(OSThread *thread, uint32_t quantum)
+OSSetThreadRunQuantum(OSThread *thread,
+                      uint32_t quantum)
 {
    // TODO: Implement OSSetThreadRunQuantum
    assert(false);
    return FALSE;
 }
 
+
+/**
+ * Set a thread specific value.
+ *
+ * Can be read with OSGetThreadSpecific.
+ */
 void
-OSSetThreadSpecific(uint32_t id, uint32_t value)
+OSSetThreadSpecific(uint32_t id,
+                    uint32_t value)
 {
    OSGetCurrentThread()->specific[id] = value;
 }
 
 
+/**
+ * Set thread stack usage tracking.
+ */
 BOOL
 OSSetThreadStackUsage(OSThread *thread)
 {
@@ -486,6 +655,12 @@ OSSetThreadStackUsage(OSThread *thread)
    return TRUE;
 }
 
+
+/**
+ * Sleep the current thread and add it to a thread queue.
+ *
+ * Will sleep until the thread queue is woken with OSWakeupThread.
+ */
 void
 OSSleepThread(OSThreadQueue *queue)
 {
@@ -495,6 +670,10 @@ OSSleepThread(OSThreadQueue *queue)
    coreinit::internal::unlockScheduler();
 }
 
+
+/**
+ * Sleep the current thread for a period of time.
+ */
 void
 OSSleepTicks(OSTime ticks)
 {
@@ -509,6 +688,15 @@ OSSleepTicks(OSTime ticks)
    coreinit::internal::sysFree(alarm);
 }
 
+
+/**
+ * Suspend a thread.
+ *
+ * Increases a thread's suspend counter, if the counter is >0 then the thread is
+ * suspended.
+ *
+ * \returns Returns the thread's previous suspend counter value
+ */
 uint32_t
 OSSuspendThread(OSThread *thread)
 {
@@ -553,6 +741,20 @@ OSSuspendThread(OSThread *thread)
    return result;
 }
 
+
+/**
+ * Check to see if the current thread should be cancelled or suspended.
+ *
+ * This is implicitly called in:
+ * - OSLockMutex
+ * - OSTryLockMutex
+ * - OSUnlockMutex
+ * - OSAcquireSpinLock
+ * - OSTryAcquireSpinLock
+ * - OSTryAcquireSpinLockWithTimeout
+ * - OSReleaseSpinLock
+ * - OSCancelThread
+ */
 void
 OSTestThreadCancel()
 {
@@ -561,6 +763,12 @@ OSTestThreadCancel()
    coreinit::internal::unlockScheduler();
 }
 
+
+/**
+ * Wake up all threads in queue.
+ *
+ * Clears the thread queue.
+ */
 void
 OSWakeupThread(OSThreadQueue *queue)
 {
@@ -569,6 +777,13 @@ OSWakeupThread(OSThreadQueue *queue)
    coreinit::internal::unlockScheduler();
 }
 
+
+/**
+ * Yield execution to waiting threads with same priority.
+ *
+ * This will never switch to a thread with a lower priority than the current
+ * thread.
+ */
 void
 OSYieldThread()
 {

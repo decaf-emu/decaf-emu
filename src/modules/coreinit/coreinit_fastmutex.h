@@ -7,6 +7,15 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_fastmutex Fast Mutex
+ * \ingroup coreinit
+ *
+ * Similar to OSMutex but tries to acquire the mutex without using the global
+ * scheduler lock, and does not test for thread cancel.
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct OSFastMutex;
@@ -73,5 +82,7 @@ OSFastCond_Wait(OSFastCondition *condition, OSFastMutex *mutex);
 
 void
 OSFastCond_Signal(OSFastCondition *condition);
+
+/** @} */
 
 } // namespace coreinit

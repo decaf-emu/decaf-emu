@@ -4,6 +4,10 @@
 namespace coreinit
 {
 
+/**
+ * \ingroup coreinit_fs
+ */
+
 FSStatus
 FSOpenFile(FSClient *client,
            FSCmdBlock *block,
@@ -177,5 +181,7 @@ FSTruncateFileAsync(FSClient *client,
                     FSFileHandle handle,
                     uint32_t flags,
                     FSAsyncData *asyncData);
+
+/** @} */
 
 } // namespace coreinit

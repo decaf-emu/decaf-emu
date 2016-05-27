@@ -7,6 +7,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_userconfig User Config
+ * \ingroup coreinit
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct UCSysConfig
@@ -38,5 +44,7 @@ IOError
 UCWriteSysConfig(IOHandle handle,
                  uint32_t count,
                  UCSysConfig *settings);
+
+/** @} */
 
 } // namespace coreinit

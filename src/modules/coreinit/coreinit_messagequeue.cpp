@@ -15,14 +15,27 @@ sSystemMessageQueue;
 static OSMessage *
 sSystemMessageArray;
 
+
+/**
+ * Initialise a message queue structure.
+ */
 void
-OSInitMessageQueue(OSMessageQueue *queue, OSMessage *messages, int32_t size)
+OSInitMessageQueue(OSMessageQueue *queue,
+                   OSMessage *messages,
+                   int32_t size)
 {
    OSInitMessageQueueEx(queue, messages, size, nullptr);
 }
 
+
+/**
+ * Initialise a message queue structure with a name.
+ */
 void
-OSInitMessageQueueEx(OSMessageQueue *queue, OSMessage *messages, int32_t size, const char *name)
+OSInitMessageQueueEx(OSMessageQueue *queue,
+                     OSMessage *messages,
+                     int32_t size,
+                     const char *name)
 {
    queue->tag = OSMessageQueue::Tag;
    queue->name = name;
@@ -34,8 +47,20 @@ OSInitMessageQueueEx(OSMessageQueue *queue, OSMessage *messages, int32_t size, c
    OSInitThreadQueueEx(&queue->recvQueue, queue);
 }
 
+
+/**
+ * Insert a message into the queue.
+ *
+ * If flags has OSMessageFlags::Blocking then the current thread will block
+ * until there is space in the queue to insert the message, else it will
+ * return immediately with the return value of FALSE.
+ *
+ * \return Returns TRUE if the message was inserted in the queue.
+ */
 BOOL
-OSSendMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
+OSSendMessage(OSMessageQueue *queue,
+              OSMessage *message,
+              OSMessageFlags flags)
 {
    coreinit::internal::lockScheduler();
    assert(queue && queue->tag == OSMessageQueue::Tag);
@@ -67,8 +92,20 @@ OSSendMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
    return TRUE;
 }
 
+
+/**
+ * Insert a message into the front of the queue.
+ *
+ * If flags has OSMessageFlags::Blocking then the current thread will block
+ * until there is space in the queue to insert the message, else it will
+ * return immediately with the return value of FALSE.
+ *
+ * \return Returns TRUE if the message was inserted in the queue.
+ */
 BOOL
-OSJamMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
+OSJamMessage(OSMessageQueue *queue,
+             OSMessage *message,
+             OSMessageFlags flags)
 {
    coreinit::internal::lockScheduler();
    assert(queue && queue->tag == OSMessageQueue::Tag);
@@ -105,8 +142,20 @@ OSJamMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
    return TRUE;
 }
 
+
+/**
+ * Read and remove a message from the queue.
+ *
+ * If flags has OSMessageFlags::Blocking then the current thread will block
+ * until there is a mesasge in the queue to read, else it will return
+ * immediately with the return value of FALSE.
+ *
+ * \return Returns TRUE if a message was read from the queue.
+ */
 BOOL
-OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags)
+OSReceiveMessage(OSMessageQueue *queue,
+                 OSMessage *message,
+                 OSMessageFlags flags)
 {
    coreinit::internal::lockScheduler();
    assert(queue && queue->tag == OSMessageQueue::Tag);
@@ -138,6 +187,12 @@ OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags
    return TRUE;
 }
 
+
+/**
+ * Read and do NOT remove a message from the queue.
+ *
+ * \return Returns TRUE if a message was read from the queue.
+ */
 BOOL
 OSPeekMessage(OSMessageQueue *queue, OSMessage *message)
 {
@@ -157,11 +212,16 @@ OSPeekMessage(OSMessageQueue *queue, OSMessage *message)
    return TRUE;
 }
 
+
+/**
+ * Get the global system message queue.
+ */
 OSMessageQueue *
 OSGetSystemMessageQueue()
 {
    return sSystemMessageQueue;
 }
+
 
 void
 Module::registerMessageQueueFunctions()

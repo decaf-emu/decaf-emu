@@ -8,7 +8,7 @@ namespace coreinit
 struct OSThread;
 struct OSThreadQueue;
 
-extern ThreadEntryPoint
+extern OSThreadEntryPointFn
 InterruptThreadEntryPoint;
 
 namespace internal

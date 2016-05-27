@@ -11,6 +11,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_alarms Alarms
+ * \ingroup coreinit
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct OSAlarm;
@@ -21,11 +27,22 @@ using be_AlarmCallback = be_wfunc_ptr<void, OSAlarm *, OSContext *>;
 struct OSAlarmQueue
 {
    static const uint32_t Tag = 0x614C6D51;
+
+   //! Should always be set to the value OSAlarmQueue::Tag.
    be_val<uint32_t> tag;
+
+   //! Name set from OSInitAlarmQueueEx.
    be_ptr<const char> name;
+
    UNKNOWN(4);
+
+   //! List of threads waiting on this alarm queue.
    OSThreadQueue threadQueue;
+
+   //! First alarm in the queue.
    be_ptr<OSAlarm> head;
+
+   //! Last alarm in the queue.
    be_ptr<OSAlarm> tail;
 };
 CHECK_OFFSET(OSAlarmQueue, 0x00, tag);
@@ -37,7 +54,10 @@ CHECK_SIZE(OSAlarmQueue, 0x24);
 
 struct OSAlarmLink
 {
+   //! Previous alarm in the queue.
    be_ptr<OSAlarm> prev;
+
+   //! Next alarm in the queue.
    be_ptr<OSAlarm> next;
 };
 CHECK_OFFSET(OSAlarmLink, 0x00, prev);
@@ -47,20 +67,48 @@ CHECK_SIZE(OSAlarmLink, 0x08);
 struct OSAlarm
 {
    static const uint32_t Tag = 0x614C724D;
+
+   //! Should always be set to the value OSAlarm::Tag.
    be_val<uint32_t> tag;
+
+   //! Name set from OSCreateAlarmEx.
    be_ptr<const char> name;
+
    UNKNOWN(4);
+
+   //! The callback to execute once the alarm is triggered.
    be_AlarmCallback callback;
+
+   //! Used with OSCancelAlarms for bulk cancellation of alarms.
    be_val<uint32_t> group;
+
    UNKNOWN(4);
+
+   //! The time when the alarm will next be triggered.
    be_val<OSTime> nextFire;
+
+   //! Link used for when this OSAlarm object is inside an OSAlarmQueue
    OSAlarmLink link;
+
+   //! The period between alarm triggers, this is only set for periodic alarms.
    be_val<OSTime> period;
+
+   //! The time the alarm was started.
    be_val<OSTime> tbrStart;
+
+   //! User data set with OSSetAlarmUserData and retrieved with OSGetAlarmUserData.
    be_ptr<void> userData;
+
+   //! The current state of the alarm.
    be_val<OSAlarmState> state;
+
+   //! Queue of threads currently waiting for the alarm to trigger with OSWaitAlarm.
    OSThreadQueue threadQueue;
+
+   //! The queue that this alarm is currently in.
    be_ptr<OSAlarmQueue> alarmQueue;
+
+   //! The context the alarm was triggered on.
    be_ptr<OSContext> context;
 };
 CHECK_OFFSET(OSAlarm, 0x00, tag);
@@ -115,6 +163,8 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data);
 
 BOOL
 OSWaitAlarm(OSAlarm *alarm);
+
+/** @} */
 
 namespace internal
 {

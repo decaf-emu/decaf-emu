@@ -8,6 +8,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_mcp MCP
+ * \ingroup coreinit
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct MCPSysProdSettings
@@ -32,5 +38,7 @@ MCP_Close(IOHandle handle);
 
 IOError
 MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings);
+
+/** @} */
 
 } // namespace coreinit

@@ -9,6 +9,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_messagequeue Message Queue
+ * \ingroup coreinit
+ * @{
+ */
+
 #pragma pack(push, 1)
 
 struct OSMessage
@@ -47,24 +53,38 @@ CHECK_SIZE(OSMessageQueue, 0x3c);
 #pragma pack(pop)
 
 void
-OSInitMessageQueue(OSMessageQueue *queue, OSMessage *messages, int32_t size);
+OSInitMessageQueue(OSMessageQueue *queue,
+                   OSMessage *messages,
+                   int32_t size);
 
 void
-OSInitMessageQueueEx(OSMessageQueue *queue, OSMessage *messages, int32_t size, const char *name);
+OSInitMessageQueueEx(OSMessageQueue *queue,
+                     OSMessage *messages,
+                     int32_t size,
+                     const char *name);
 
 BOOL
-OSSendMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags);
+OSSendMessage(OSMessageQueue *queue,
+              OSMessage *message,
+              OSMessageFlags flags);
 
 BOOL
-OSJamMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags);
+OSJamMessage(OSMessageQueue *queue,
+             OSMessage *message,
+             OSMessageFlags flags);
 
 BOOL
-OSReceiveMessage(OSMessageQueue *queue, OSMessage *message, OSMessageFlags flags);
+OSReceiveMessage(OSMessageQueue *queue,
+                 OSMessage *message,
+                 OSMessageFlags flags);
 
 BOOL
-OSPeekMessage(OSMessageQueue *queue, OSMessage *message);
+OSPeekMessage(OSMessageQueue *queue,
+              OSMessage *message);
 
 OSMessageQueue *
 OSGetSystemMessageQueue();
+
+/** @} */
 
 } // namespace coreinit

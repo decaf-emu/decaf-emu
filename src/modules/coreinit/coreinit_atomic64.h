@@ -5,6 +5,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_atomic64 Atomic64
+ * \ingroup coreinit
+ * @{
+ */
+
 uint64_t
 OSGetAtomic64(be_val<uint64_t> *ptr);
 
@@ -50,5 +56,7 @@ OSTestAndClearAtomic64(be_val<uint64_t> *ptr,
 BOOL
 OSTestAndSetAtomic64(be_val<uint64_t> *ptr,
                      uint32_t bit);
+
+/** @} */
 
 } // namespace coreinit
