@@ -9,6 +9,9 @@ ThreadState *GetCurrentFiberState();
 #pragma pack(push, 1)
 
 template<typename ReturnType, typename... Args>
+struct be_wfunc_ptr;
+
+template<typename ReturnType, typename... Args>
 struct wfunc_ptr
 {
    wfunc_ptr() :
@@ -28,6 +31,11 @@ struct wfunc_ptr
 
    wfunc_ptr(ppcaddr_t addr) :
       address(addr)
+   {
+   }
+
+   wfunc_ptr(be_wfunc_ptr<ReturnType, Args...> func) :
+      address(func.getAddress())
    {
    }
 
@@ -52,6 +60,11 @@ struct be_wfunc_ptr
 {
    be_wfunc_ptr() :
       address(0)
+   {
+   }
+
+   be_wfunc_ptr(wfunc_ptr<ReturnType, Args...> func) :
+      address(func.getAddress())
    {
    }
 
