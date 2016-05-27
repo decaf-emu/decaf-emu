@@ -77,6 +77,9 @@ void
 setLastSubmittedTimestamp(coreinit::OSTime timestamp);
 
 void
+handleGpuInterrupt();
+
+void
 setRetiredTimestamp(coreinit::OSTime timestamp);
 
 void

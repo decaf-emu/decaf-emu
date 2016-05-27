@@ -6,6 +6,7 @@
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
 #include "utils/wfunc_ptr.h"
+#include "kernel/kernel.h"
 
 struct Fiber;
 
@@ -157,7 +158,7 @@ struct OSThread
    be_val<uint32_t> exitValue;
 
    //! Naughty, and hopefully not overriding anything important
-   Fiber *fiber;
+   kernel::Fiber *fiber;
    UNKNOWN(0x35c - 0x340);
 
    //! Queue the thread is currently waiting on

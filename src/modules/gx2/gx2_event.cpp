@@ -260,19 +260,24 @@ displayListOverrun(void *list, uint32_t size)
    return { nullptr, 0 };
 }
 
+/*
+ * This is called by the GPU interrupt handler.
+ * Will wakeup any threads waiting for a timestamp.
+ */
+void
+handleGpuInterrupt()
+{
+   coreinit::internal::wakeupThreadNoLock(gWaitTimeStampQueue);
+}
 
 /**
  * Update the retired timestamp.
- *
- * Will wakeup any threads waiting for a timestamp.
  */
 void
 setRetiredTimestamp(OSTime timestamp)
 {
-   coreinit::internal::lockScheduler();
    gRetiredTimestamp.store(timestamp, std::memory_order_release);
-   coreinit::internal::wakeupThreadNoLock(gWaitTimeStampQueue);
-   coreinit::internal::unlockScheduler();
+   cpu::interrupt(gx2::internal::getMainCoreId(), cpu::GPU_INTERRUPT);
 }
 
 

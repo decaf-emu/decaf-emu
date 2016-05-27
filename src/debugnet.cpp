@@ -13,7 +13,6 @@
 #include "cpu/espresso/espresso_instructionset.h"
 #include "mem/mem.h"
 #include "modules/coreinit/coreinit_thread.h"
-#include "processor.h"
 #include "platform/platform.h"
 #include "system.h"
 #include "cpu/trace.h"
@@ -144,6 +143,8 @@ populateDebugPauseInfo(DebugPauseInfo& info)
    }
    info.userModuleIdx = static_cast<uint32_t>(userModuleIdx);
 
+   // TODO: FIX ALL OF THIS!
+   /*
    auto &coreList = gProcessor.getCoreList();
    auto &fiberList = gProcessor.getFiberList();
 
@@ -189,6 +190,7 @@ populateDebugPauseInfo(DebugPauseInfo& info)
 
       info.threads.push_back(tinfo);
    }
+   */
 }
 
 static void populateDebugTraceEntrys(std::vector<DebugTraceEntry>& entries, ThreadState *state)
@@ -672,6 +674,8 @@ DebugNet::handlePacket(DebugPacket *pak)
          break;
       }
 
+      // TODO: FIX THIS TOO!
+      /*
       auto &coreList = gProcessor.getCoreList();
       auto &core = coreList[scPak->coreId];
 
@@ -707,6 +711,7 @@ DebugNet::handlePacket(DebugPacket *pak)
          // Not a branch, just step
          gDebugger.stepCore(scPak->coreId);
       }
+      */
 
       break;
    }
@@ -746,6 +751,8 @@ DebugNet::handlePacket(DebugPacket *pak)
    case DebugPacketType::GetTrace: {
       auto *tPak = static_cast<DebugPacketGetTrace*>(pak);
 
+      // TODO: Fix this as well!
+      /*
       Fiber *fiber = nullptr;
       auto fiberList = gProcessor.getFiberList();
       for (auto &i : fiberList) {
@@ -761,6 +768,7 @@ DebugNet::handlePacket(DebugPacket *pak)
       auto pakO = new DebugPacketGetTraceRes();
       populateDebugTraceEntrys(pakO->info, &fiber->state);
       writePacket(pakO);
+      */
 
       break;
    }

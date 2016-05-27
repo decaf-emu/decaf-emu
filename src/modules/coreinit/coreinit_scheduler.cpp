@@ -3,16 +3,18 @@
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
 #include "coreinit_scheduler.h"
+#include "coreinit_event.h"
+#include "coreinit_memheap.h"
 #include "coreinit_thread.h"
 #include "coreinit_queue.h"
-#include "processor.h"
+#include "kernel/kernel.h"
 #include "cpu/trace.h"
 
 namespace coreinit
 {
 
 static std::atomic_bool
-gSchedulerLock { false };
+sSchedulerLock { false };
 
 static std::array<OSThread *, CoreCount>
 sInterruptThreads;
@@ -20,29 +22,8 @@ sInterruptThreads;
 OSThreadEntryPointFn
 InterruptThreadEntryPoint;
 
-// Setup a thread fiber, used by OSRunThread and OSResumeThread
-static void
-InitialiseThreadFiber(OSThread *thread)
-{
-   // Create a fiber for the thread
-   auto fiber = gProcessor.createFiber();
-   thread->fiber = fiber;
-   fiber->thread = thread;
-
-   // Setup thread state
-   memset(&fiber->state, 0, sizeof(ThreadState));
-
-   for (auto i = 0u; i < 32; ++i) {
-      fiber->state.gpr[i] = thread->context.gpr[i];
-   }
-
-   // Setup entry point
-   fiber->state.cia = 0;
-   fiber->state.nia = thread->entryPoint;
-
-   // Initialise tracer
-   traceInit(&fiber->state, 1024);
-}
+static std::array<OSEvent *, CoreCount>
+sIoThreadEvent;
 
 namespace internal
 {
@@ -52,7 +33,7 @@ lockScheduler()
 {
    bool locked = false;
 
-   while (!gSchedulerLock.compare_exchange_weak(locked, true, std::memory_order_acquire)) {
+   while (!sSchedulerLock.compare_exchange_weak(locked, true, std::memory_order_acquire)) {
       locked = false;
    }
 }
@@ -60,13 +41,13 @@ lockScheduler()
 void
 unlockScheduler()
 {
-   gSchedulerLock.store(false, std::memory_order_release);
+   sSchedulerLock.store(false, std::memory_order_release);
 }
 
 void
 rescheduleNoLock()
 {
-   gProcessor.reschedule(true);
+   kernel::rescheduleNoLock(true);
 }
 
 int32_t
@@ -82,12 +63,7 @@ resumeThreadNoLock(OSThread *thread, int32_t counter)
 
    if (thread->suspendCounter == 0) {
       if (thread->state == OSThreadState::Ready) {
-         // Create a fiber for the thread to run on, if this is the first time!
-         if (!thread->fiber) {
-            InitialiseThreadFiber(thread);
-         }
-
-         gProcessor.queue(thread->fiber);
+         kernel::queueThreadNoLock(thread);
       }
    }
 
@@ -136,7 +112,7 @@ void
 wakeupOneThreadNoLock(OSThread *thread)
 {
    thread->state = OSThreadState::Ready;
-   gProcessor.queue(thread->fiber);
+   kernel::queueThreadNoLock(thread);
 }
 
 void
@@ -154,39 +130,29 @@ wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
 {
    for (auto thread = queue->head; thread; thread = thread->link.next) {
       thread->suspendResult = suspendResult;
-      gProcessor.queue(thread->fiber);
+      kernel::queueThreadNoLock(thread);
    }
 
    OSClearThreadQueue(queue);
 }
 
-OSThread *
-setInterruptThread(uint32_t core, OSThread *thread)
+void signalIoThreadNoLock(uint32_t core_id)
 {
-   assert(core < CoreCount);
-   auto old = sInterruptThreads[core];
-   sInterruptThreads[core] = thread;
-   return old;
+   coreinit::internal::signalEventNoLock(sIoThreadEvent[core_id]);
 }
 
 } // namespace internal
 
+// This is actually IoThreadEntry...
 void
-InterruptThreadEntry(uint32_t core, void *arg2)
+InterruptThreadEntry(uint32_t core_id, void *arg2)
 {
-   // Initially keep thread dead until an interrupt wakes it
-   gProcessor.waitFirstInterrupt();
-
    while (true) {
-      auto context = gProcessor.getInterruptContext();
+      OSResetEvent(sIoThreadEvent[core_id]);
 
-      // Check alarms for interrupts
-      coreinit::internal::checkAlarms(core, context);
+      coreinit::internal::checkAlarms(core_id);
 
-      // TODO: Process any other interrupts, e.g. async file system
-
-      // Return to interrupted fiber
-      gProcessor.finishInterrupt();
+      OSWaitEvent(sIoThreadEvent[core_id]);
    }
 }
 
@@ -201,6 +167,12 @@ Module::initialiseSchedulerFunctions()
 {
    sInterruptThreads.fill(nullptr);
    InterruptThreadEntryPoint = findExportAddress("InterruptThreadEntry");
+
+   for (auto i = 0; i < 3; ++i) {
+      auto event = coreinit::internal::sysAlloc<OSEvent>();
+      OSInitEvent(event, false, OSEventMode::ManualReset);
+      sIoThreadEvent[i] = event;
+   }
 }
 
 } // namespace coreinit

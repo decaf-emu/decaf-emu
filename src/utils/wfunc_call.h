@@ -5,7 +5,7 @@
 template<typename ReturnType, typename... Args>
 ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
 {
-   ThreadState *state = GetCurrentFiberState();
+   ThreadState *state = GetCurrentCoreState();
 
    // Push args
    ppctypes::applyArguments(state, args...);
@@ -16,7 +16,7 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
    // Set state
    state->cia = 0;
    state->nia = address;
-   cpu::executeSub(state->core, state);
+   cpu::core_execute_sub();
 
    // Restore state
    state->nia = nia;

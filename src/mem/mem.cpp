@@ -2,7 +2,6 @@
 #include "mem.h"
 #include "platform/platform_exception.h"
 #include "platform/platform_memorymap.h"
-#include "processor.h"
 #include "utils/log.h"
 
 namespace mem
@@ -61,7 +60,9 @@ handleAccessViolation(platform::Exception *exception)
       }
    }
 
-   return gProcessor.handleAccessViolation(gsl::narrow_cast<ppcaddr_t>(address));
+   // TODO: FIX THIS (DEBUGCONTROL)
+   return platform::UnhandledException;
+   //return gProcessor.handleAccessViolation(gsl::narrow_cast<ppcaddr_t>(address));
 }
 
 // Attempt to map all memory regions with base

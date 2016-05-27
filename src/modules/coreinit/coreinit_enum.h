@@ -16,7 +16,7 @@
 ENUM_BEG(OSAlarmState, uint32_t)
    ENUM_VALUE(None,                 0)
    ENUM_VALUE(Set,                  1)
-   ENUM_VALUE(Cancelled,            2)
+   ENUM_VALUE(Expired,              2)
 ENUM_END(OSAlarmState)
 
 ENUM_BEG(OSEventMode, uint32_t)

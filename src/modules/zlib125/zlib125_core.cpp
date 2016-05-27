@@ -2,7 +2,6 @@
 #include "utils/wfunc_call.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "memory_translate.h"
-#include "processor.h"
 #include "utils/virtual_ptr.h"
 #include "utils/wfunc_ptr.h"
 #include "zlib125.h"

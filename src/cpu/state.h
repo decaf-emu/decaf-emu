@@ -1,16 +1,7 @@
 #pragma once
 #include <atomic>
+#include <thread>
 #include "cpu/espresso/espresso_registers.h"
-
-namespace cpu
-{
-
-struct CoreState
-{
-   std::atomic_bool interrupt { false };
-};
-
-}
 
 // Thread registers
 // TODO: Some system registers may not be thread-specific!
@@ -26,7 +17,6 @@ struct ThreadState
    using msr_t = espresso::msr_t;
    using gqr_t = espresso::gqr_t;
 
-   cpu::CoreState *core;
    struct Tracer *tracer;
 
    uint32_t cia;     // Current execution address
@@ -55,3 +45,17 @@ struct ThreadState
    uint32_t reserveAddress;
    uint32_t reserveData;
 };
+
+namespace cpu {
+
+struct Core
+{
+   uint32_t id;
+   std::thread thread;
+   std::atomic_uint32_t interrupt{ 0 };
+   std::chrono::system_clock::time_point next_alarm;
+
+   ThreadState state;
+};
+
+}

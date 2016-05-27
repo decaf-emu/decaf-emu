@@ -10,7 +10,6 @@
 #include "debugmsg.h"
 #include "debugnet.h"
 #include "debugcontrol.h"
-#include "processor.h"
 #include "utils/log.h"
 
 static const bool FORCE_DEBUGGER_ON = false;

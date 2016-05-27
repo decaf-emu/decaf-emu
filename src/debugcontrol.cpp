@@ -1,6 +1,5 @@
 #include "debugcontrol.h"
 #include "debugmsg.h"
-#include "processor.h"
 #include "debugger.h"
 
 DebugControl
@@ -62,7 +61,8 @@ DebugControl::waitForAllPaused()
          break;
       }
 
-      gProcessor.wakeAllCores();
+      // TODO: FIX THIS (DEBUGCONTROL)
+      //gProcessor.wakeAllCores();
       mWaitCond.wait(lock);
    }
 }

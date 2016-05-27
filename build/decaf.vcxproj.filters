@@ -106,12 +106,6 @@
     <Filter Include="Header Files\gpu">
       <UniqueIdentifier>{f5262755-c0da-4cd1-b97e-3d097bb6f6d5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\modules\gameloader">
-      <UniqueIdentifier>{abfe221e-19f4-40ac-bf45-54ee4321cfb1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\modules\gameloader">
-      <UniqueIdentifier>{37fb1798-b28c-42be-98bf-45dd2cabcf43}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\modules\nn_temp">
       <UniqueIdentifier>{8317143f-0494-487a-a088-d71930bcf6cf}</UniqueIdentifier>
     </Filter>
@@ -256,6 +250,12 @@
     <Filter Include="Source Files\cpu\espresso">
       <UniqueIdentifier>{7bb428d3-a25b-4109-9b10-f756512bcd72}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\kernel">
+      <UniqueIdentifier>{e55521c1-299c-471e-a6ef-8be12b60c8c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\kernel">
+      <UniqueIdentifier>{62fe467f-3498-4c83-a4ee-3b0c171b2771}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -393,9 +393,6 @@
     <ClCompile Include="..\src\modules\nn_ac\nn_ac_core.cpp">
       <Filter>Source Files\modules\nn_ac</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\processor.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_scheduler.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
@@ -416,9 +413,6 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_shared.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\modules\gameloader\gameloader.cpp">
-      <Filter>Source Files\modules\gameloader</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\nn_temp\nn_temp.cpp">
       <Filter>Source Files\modules\nn_temp</Filter>
@@ -927,6 +921,12 @@
     <ClCompile Include="..\src\cpu\espresso\espresso_instructionset.cpp">
       <Filter>Source Files\cpu\espresso</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\kernel\kernel.cpp">
+      <Filter>Source Files\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\kernel\kernel_fibers.cpp">
+      <Filter>Source Files\kernel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1094,9 +1094,6 @@
     <ClInclude Include="..\src\modules\nn_ac\nn_ac_core.h">
       <Filter>Header Files\modules\nn_ac</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\processor.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_scheduler.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
@@ -1138,9 +1135,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h">
       <Filter>Header Files\modules\gx2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\gameloader\gameloader.h">
-      <Filter>Header Files\modules\gameloader</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_temp\nn_temp.h">
       <Filter>Header Files\modules\nn_temp</Filter>
@@ -1771,6 +1765,9 @@
     </ClInclude>
     <ClInclude Include="..\src\cpu\utils.h">
       <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernel\kernel.h">
+      <Filter>Header Files\kernel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

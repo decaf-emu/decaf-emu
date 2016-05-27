@@ -8,9 +8,9 @@
 #include "coreinit_systeminfo.h"
 #include "coreinit_thread.h"
 #include "memory_translate.h"
-#include "processor.h"
 #include "system.h"
 #include "usermodule.h"
+#include "cpu/cpu.h"
 
 namespace coreinit
 {
@@ -31,8 +31,11 @@ __OSClearThreadStack32(OSThread *thread,
       clearStart = thread->stackEnd + 4;
       clearEnd = make_virtual_ptr<be_val<uint32_t>>(OSGetStackPointer());
    } else {
+      // We assume that the thread must be paused while this is happening...
+      // This might be a bad assumption to make, but otherwise we run
+      // into some sketchy race conditions.
       clearStart = thread->stackEnd + 4;
-      clearEnd = make_virtual_ptr<be_val<uint32_t>>(thread->fiber->state.gpr[1]);
+      clearEnd = make_virtual_ptr<be_val<uint32_t>>(thread->context.gpr[1]);
    }
 
    for (auto addr = clearStart; addr < clearEnd; addr += 4) {
@@ -246,7 +249,6 @@ OSExitThread(int value)
    auto thread = OSGetCurrentThread();
    coreinit::internal::lockScheduler();
    thread->exitValue = value;
-   thread->fiber = nullptr;
 
    if (thread->attr & OSThreadAttributes::Detached) {
       thread->state = OSThreadState::None;
@@ -256,8 +258,9 @@ OSExitThread(int value)
 
    coreinit::internal::wakeupThreadNoLock(&thread->joinQueue);
    coreinit::internal::wakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
-   coreinit::internal::unlockScheduler();
-   gProcessor.exit();
+
+   kernel::exitThreadNoLock();
+   // no need to unlock the scheduler as exitThread never returns
 }
 
 
@@ -279,8 +282,7 @@ OSGetActiveThreadLink(OSThread *thread,
 OSThread *
 OSGetCurrentThread()
 {
-   auto fiber = gProcessor.getCurrentFiber();
-   return fiber ? fiber->thread : nullptr;
+   return kernel::getCurrentThread();
 }
 
 
@@ -308,7 +310,7 @@ OSGetDefaultThread(uint32_t coreID)
 uint32_t
 OSGetStackPointer()
 {
-   return OSGetCurrentThread()->fiber->state.gpr[1];
+   return cpu::get_current_core()->state.gpr[1];
 }
 
 
@@ -417,7 +419,7 @@ OSPrintCurrentThreadState()
       return;
    }
 
-   auto &state = thread->fiber->state;
+   auto &state = cpu::get_current_core()->state;
 
    fmt::MemoryWriter out;
    out.write("id   = {}\n", thread->id);
@@ -787,7 +789,9 @@ OSWakeupThread(OSThreadQueue *queue)
 void
 OSYieldThread()
 {
-   gProcessor.yield();
+   coreinit::internal::lockScheduler();
+   kernel::rescheduleNoLock(true);
+   coreinit::internal::unlockScheduler();
 }
 
 void

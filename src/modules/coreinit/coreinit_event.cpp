@@ -35,24 +35,11 @@ OSInitEventEx(OSEvent *event, bool value, OSEventMode mode, char *name)
    OSInitThreadQueueEx(&event->queue, event);
 }
 
-
-/**
- * Signal an event.
- *
- * This will set the events signal value to true.
- *
- * In auto reset mode if at least one thread is in the queue it will:
- * - Reset the value back to FALSE
- * - Wake up the first thread in the waiting queue
- *
- * In manual reset mode:
- * - Wake up all threads in the waiting queue
- * - The event value remains TRUE until the user calls OSResetEvent
- */
-void
-OSSignalEvent(OSEvent *event)
+namespace internal
 {
-   coreinit::internal::lockScheduler();
+
+void signalEventNoLock(OSEvent *event)
+{
    assert(event);
    assert(event->tag == OSEvent::Tag);
 
@@ -80,7 +67,28 @@ OSSignalEvent(OSEvent *event)
          coreinit::internal::rescheduleNoLock();
       }
    }
+}
 
+}
+
+/**
+ * Signal an event.
+ *
+ * This will set the events signal value to true.
+ *
+ * In auto reset mode if at least one thread is in the queue it will:
+ * - Reset the value back to FALSE
+ * - Wake up the first thread in the waiting queue
+ *
+ * In manual reset mode:
+ * - Wake up all threads in the waiting queue
+ * - The event value remains TRUE until the user calls OSResetEvent
+ */
+void
+OSSignalEvent(OSEvent *event)
+{
+   coreinit::internal::lockScheduler();
+   coreinit::internal::signalEventNoLock(event);
    coreinit::internal::unlockScheduler();
 }
 

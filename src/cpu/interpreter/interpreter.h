@@ -8,7 +8,8 @@ namespace interpreter
 
 void initialise();
 
-void executeSub(ThreadState *state);
+void step_one(Core *core);
+void resume(Core *core);
 
 }
 }

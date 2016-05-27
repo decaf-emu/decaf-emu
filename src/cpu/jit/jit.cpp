@@ -377,33 +377,25 @@ JitCode getSingle(uint32_t addr)
    return block.entry;
 }
 
-uint32_t execute(ThreadState *state, JitCode block)
+uint32_t execute(Core *core, JitCode block)
 {
-   return gCallFn(state, state->core, block);
+   return gCallFn(&core->state, block);
 }
 
-void execute(ThreadState *state)
+void resume(Core *core)
 {
+   ThreadState *state = &core->state;
+
    while (state->nia != cpu::CALLBACK_ADDR) {
       JitCode jitFn = get(state->nia);
       if (!jitFn) {
          throw;
       }
 
-      auto newNia = execute(state, jitFn);
+      auto newNia = execute(core, jitFn);
       state->cia = 0;
       state->nia = newNia;
    }
-}
-
-void executeSub(ThreadState *state)
-{
-   auto lr = state->lr;
-   state->lr = CALLBACK_ADDR;
-
-   execute(state);
-
-   state->lr = lr;
 }
 
 bool PPCEmuAssembler::ErrorHandler::handleError(asmjit::Error code, const char* message, void *origin) noexcept

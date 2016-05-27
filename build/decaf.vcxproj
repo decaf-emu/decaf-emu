@@ -198,6 +198,8 @@
     <ClCompile Include="..\src\gpu\pm4.cpp" />
     <ClCompile Include="..\src\hardwaretests.cpp" />
     <ClCompile Include="..\src\input\input.cpp" />
+    <ClCompile Include="..\src\kernel\kernel.cpp" />
+    <ClCompile Include="..\src\kernel\kernel_fibers.cpp" />
     <ClCompile Include="..\src\loader.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\mem\mem.cpp" />
@@ -244,7 +246,6 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_userconfig.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />
-    <ClCompile Include="..\src\modules\gameloader\gameloader.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2r_buffer.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2r_resource.cpp" />
@@ -356,7 +357,6 @@
     <ClCompile Include="..\src\platform\platform_win_thread.cpp" />
     <ClCompile Include="..\src\platform\platform_win_time.cpp" />
     <ClCompile Include="..\src\platform\platform_win_dir.cpp" />
-    <ClCompile Include="..\src\processor.cpp" />
     <ClCompile Include="..\src\system.cpp" />
     <ClCompile Include="..\src\memory_translate.cpp" />
     <ClCompile Include="..\src\utils\crc32.cpp" />
@@ -445,6 +445,7 @@
     <ClInclude Include="..\src\hardwaretests.h" />
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\input\input.h" />
+    <ClInclude Include="..\src\kernel\kernel.h" />
     <ClInclude Include="..\src\memory_translate.h" />
     <ClInclude Include="..\src\mem\mem.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
@@ -460,7 +461,6 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_unitheap.h" />
-    <ClInclude Include="..\src\modules\gameloader\gameloader.h" />
     <ClInclude Include="..\src\modules\gx2\gx2r_buffer.h" />
     <ClInclude Include="..\src\modules\gx2\gx2r_surface.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_addrlib.h" />
@@ -584,7 +584,6 @@
     <ClInclude Include="..\src\modules\proc_ui\proc_ui_core.h" />
     <ClInclude Include="..\src\ppcinvoke.h" />
     <ClInclude Include="..\src\ppctypes.h" />
-    <ClInclude Include="..\src\processor.h" />
     <ClInclude Include="..\src\types.h" />
     <ClInclude Include="..\src\usermodule.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit.h" />

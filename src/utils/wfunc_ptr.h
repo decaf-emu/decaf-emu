@@ -4,7 +4,7 @@
 #include "ppctypes.h"
 #include "utils/virtual_ptr.h"
 
-ThreadState *GetCurrentFiberState();
+ThreadState *GetCurrentCoreState();
 
 #pragma pack(push, 1)
 

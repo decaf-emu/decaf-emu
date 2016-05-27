@@ -6,7 +6,6 @@
 #include "debugcontrol.h"
 #include "mem/mem.h"
 #include "utils/log.h"
-#include "processor.h"
 
 namespace cpu
 {
@@ -52,49 +51,44 @@ bool hasInstruction(espresso::InstructionID id)
    return getInstructionHandler(id) != nullptr;
 }
 
-void execute(ThreadState *state)
+void step_one(Core *core)
 {
-   while (state->nia != cpu::CALLBACK_ADDR) {
-      if (state->core->interrupt.load()) {
-         cpu::gInterruptHandler(state->core, state);
-      }
+   ThreadState *state = &core->state;
 
-      // Interpreter Loop!
-      state->cia = state->nia;
-      state->nia = state->cia + 4;
-
-      gDebugControl.maybeBreak(state->cia, state, gProcessor.getCoreID());
-
-      auto instr = mem::read<espresso::Instruction>(state->cia);
-      auto data = espresso::decodeInstruction(instr);
-
-      if (!data) {
-         gLog->error("Could not decode instruction at {:08x} = {:08x}", state->cia, instr.value);
-      }
-      assert(data);
-
-      auto trace = traceInstructionStart(instr, data, state);
-      auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
-
-      if (!fptr) {
-         gLog->error("Unimplemented interpreter instruction {}", data->name);
-      }
-      assert(fptr);
-
-      fptr(state, instr);
-      traceInstructionEnd(trace, instr, data, state);
+   uint32_t interrupt_flags = core->interrupt.exchange(0);
+   if (interrupt_flags != 0) {
+      cpu::gInterruptHandler(interrupt_flags);
    }
+
+   state->cia = state->nia;
+   state->nia = state->cia + 4;
+
+   auto instr = mem::read<espresso::Instruction>(state->cia);
+   auto data = espresso::decodeInstruction(instr);
+
+   if (!data) {
+      gLog->error("Could not decode instruction at {:08x} = {:08x}", state->cia, instr.value);
+   }
+   assert(data);
+
+   auto trace = traceInstructionStart(instr, data, state);
+   auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
+
+   if (!fptr) {
+      gLog->error("Unimplemented interpreter instruction {}", data->name);
+   }
+   assert(fptr);
+
+   fptr(state, instr);
+   traceInstructionEnd(trace, instr, data, state);
 }
 
-
-void executeSub(ThreadState *state)
+void resume(Core *core)
 {
-   auto lr = state->lr;
-   state->lr = CALLBACK_ADDR;
-
-   execute(state);
-
-   state->lr = lr;
+   ThreadState *state = &core->state;
+   while (state->nia != cpu::CALLBACK_ADDR) {
+      step_one(core);
+   }
 }
 
 } // namespace interpreter

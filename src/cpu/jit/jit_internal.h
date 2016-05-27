@@ -128,7 +128,7 @@ T asmjit_cast(Z* base, size_t offset = 0)
 }
 
 using JitCode = void *;
-using JitCall = uint32_t(*)(ThreadState*, cpu::CoreState*, JitCode);
+using JitCall = uint32_t(*)(ThreadState*, JitCode);
 using JitFinale = JitCall;
 
 using JumpLabelMap = std::map<uint32_t, asmjit::Label>;

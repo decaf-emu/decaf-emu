@@ -11,10 +11,8 @@
 #include "gpu/opengl/opengl_driver.h"
 #include "hardwaretests.h"
 #include "input/input.h"
-#include "processor.h"
 #include "loader.h"
 #include "mem/mem.h"
-#include "modules/gameloader/gameloader.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"
@@ -49,6 +47,7 @@
 #include "usermodule.h"
 #include "utils/log.h"
 #include "utils/teenyheap.h"
+#include "kernel/kernel.h"
 
 static void
 initialiseEmulator();
@@ -223,9 +222,9 @@ initialiseEmulator()
    // Setup core
    mem::initialise();
    cpu::initialise();
+   kernel::initialise();
 
    // Kernel modules
-   GameLoader::RegisterFunctions();
    coreinit::Module::RegisterFunctions();
    nn::erreula::Module::RegisterFunctions();
    gx2::Module::RegisterFunctions();
@@ -251,7 +250,6 @@ initialiseEmulator()
 
    // Initialise emulator systems
    gSystem.initialise();
-   gSystem.registerModule("gameloader.rpl", new GameLoader{});
    gSystem.registerModule("coreinit.rpl", new coreinit::Module {});
    gSystem.registerModule("erreula.rpl", new nn::erreula::Module {});
    gSystem.registerModule("gx2.rpl", new gx2::Module {});
@@ -341,96 +339,20 @@ play(const fs::HostPath &path)
    }
 
    gSystem.setFileSystem(&fs);
-
-   // Read cos.xml if found
-   auto maxCodeSize = 0x0E000000u;
-   auto rpx = path.filename();
-
-   if (auto fh = fs.openFile("/vol/code/cos.xml", fs::File::Read)) {
-      auto size = fh->size();
-      auto buffer = std::vector<uint8_t>(size);
-      fh->read(buffer.data(), size, 1);
-      fh->close();
-
-      // Parse cos.xml
-      pugi::xml_document doc;
-      auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
-
-      if (!parseResult) {
-         gLog->error("Error parsing /vol/code/cos.xml");
-         return false;
-      }
-
-      auto app = doc.child("app");
-      rpx = std::string { app.child("argstr").child_value() };
-      maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
-   } else {
-      gLog->warn("Could not open /vol/code/cos.xml, using default values");
-   }
-
-   if (auto fh = fs.openFile("/vol/code/app.xml", fs::File::Read)) {
-      auto size = fh->size();
-      auto buffer = std::vector<uint8_t>(size);
-      fh->read(buffer.data(), size, 1);
-      fh->close();
-
-      // Parse app.xml
-      pugi::xml_document doc;
-      auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
-
-      if (!parseResult) {
-         gLog->error("Error parsing /vol/code/app.xml");
-         return false;
-      }
-
-      // Set os_version and title_id
-      auto app = doc.child("app");
-      auto os_version = std::stoull(app.child("os_version").child_value(), 0, 16);
-      auto title_id = std::stoull(app.child("title_id").child_value(), 0, 16);
-
-      coreinit::internal::setSystemID(os_version);
-      coreinit::internal::setTitleID(title_id);
-   } else {
-      gLog->warn("Could not open /vol/code/app.xml, using default values");
-   }
-
-   // Mount system path
-   fs.mountHostFolder("/vol/storage_mlc01", sysPath.join("mlc"));
+   kernel::set_game_name(path.filename());
 
    // Lock out some memory for unimplemented data access
    mem::protect(0xfff00000, 0x000fffff);
 
-   // Set up stuff..
-   gLoader.initialise(maxCodeSize);
+   // Mount system path
+   fs.mountHostFolder("/vol/storage_mlc01", sysPath.join("mlc"));
 
-   // System preloaded modules
-   gLoader.loadRPL("gameloader");
-   gLoader.loadRPL("coreinit");
-
-   // Startup processor
-   gProcessor.start();
-
-   // Start the loader
-   {
-      using namespace coreinit;
-      GameLoaderInit(rpx.c_str());
-
-      auto thread = coreinit::internal::sysAlloc<OSThread>();
-      auto stackSize = 2048;
-      auto stack = reinterpret_cast<uint8_t *>(coreinit::internal::sysAlloc(stackSize, 8));
-      auto name = coreinit::internal::sysStrDup("Loader Thread");
-
-      auto gameLoader = gLoader.loadRPL("gameloader");
-      auto gameLoaderRun = gameLoader->findExport("GameLoaderRun");
-
-      OSCreateThread(thread, 0, 0, nullptr,
-                     reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, -2,
-                     OSThreadAttributes::AffinityCPU1);
-      OSSetThreadName(thread, name);
-      OSRunThread(thread, gameLoaderRun, 0, nullptr);
-   }
+   // Start up our CPUs
+   cpu::start();
 
    platform::ui::run();
+
+   cpu::halt();
 
    platform::ui::shutdown();
    config::save("config.json");
@@ -442,9 +364,6 @@ play(const fs::HostPath &path)
       tracePrintSyscall(0);
       fallbacksPrint();
    }
-
-   // Stop all processor threads
-   gProcessor.stop();
 
    // TODO: OSFreeToSystem data
    return true;

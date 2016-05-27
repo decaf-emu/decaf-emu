@@ -44,8 +44,8 @@ wakeupThreadNoLock(OSThreadQueue *queue);
 void
 wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult);
 
-OSThread *
-setInterruptThread(uint32_t core, OSThread *thread);
+void
+signalIoThreadNoLock(uint32_t core_id);
 
 } // namespace internal
 

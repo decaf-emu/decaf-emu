@@ -2,7 +2,6 @@
 #include "coreinit_debug.h"
 #include "coreinit_thread.h"
 #include "cpu/trace.h"
-#include "processor.h"
 #include "utils/log.h"
 #include "utils/make_array.h"
 #include "utils/strutils.h"
@@ -129,7 +128,8 @@ OSPanic(const char *file, int line, const char *fmt, ppctypes::VarList &args)
    std::string str;
    formatString(fmt, args, str);
    gLog->error("OSPanic {}:{} {}", file, line, str);
-   tracePrint(&OSGetCurrentThread()->fiber->state, 0, 0);
+   // TODO: Fix This!
+   //tracePrint(&OSGetCurrentThread()->fiber->state, 0, 0);
 }
 
 static void

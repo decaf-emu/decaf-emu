@@ -9,7 +9,7 @@ namespace jit
 void initialise();
 
 void clearCache();
-void executeSub(ThreadState *state);
+void resume(Core *core);
 
 }
 }

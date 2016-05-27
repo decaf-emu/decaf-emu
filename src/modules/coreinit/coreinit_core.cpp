@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_core.h"
-#include "processor.h"
+#include "cpu/cpu.h"
 
 namespace coreinit
 {
@@ -11,7 +11,7 @@ namespace coreinit
 uint32_t
 OSGetCoreCount()
 {
-   return gProcessor.getCoreCount();
+   return 3;
 }
 
 
@@ -21,7 +21,7 @@ OSGetCoreCount()
 uint32_t
 OSGetCoreId()
 {
-   return gProcessor.getCoreID();
+   return cpu::get_current_core_id();
 }
 
 

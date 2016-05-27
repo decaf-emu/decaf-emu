@@ -3,7 +3,6 @@
 #include "coreinit_spinlock.h"
 #include "coreinit_thread.h"
 #include "memory_translate.h"
-#include "processor.h"
 
 namespace coreinit
 {

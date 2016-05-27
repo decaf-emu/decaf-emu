@@ -1,8 +1,8 @@
-#include "processor.h"
+#include "cpu/cpu.h"
 #include "utils/wfunc_ptr.h"
 
 ThreadState *
-GetCurrentFiberState()
+GetCurrentCoreState()
 {
-   return &gProcessor.getCurrentFiber()->state;
+   return &cpu::get_current_core()->state;
 }

@@ -9,10 +9,15 @@
 #include "coreinit_time.h"
 #include "coreinit_queue.h"
 #include "utils/wfunc_call.h"
-#include "processor.h"
+#include "cpu/cpu.h"
 
 namespace coreinit
 {
+
+namespace internal
+{
+   void updateCpuAlarm();
+}
 
 const uint32_t
 OSAlarm::Tag;
@@ -41,7 +46,7 @@ cancelAlarmNoLock(OSAlarm *alarm)
       return FALSE;
    }
 
-   alarm->state = OSAlarmState::Cancelled;
+   alarm->state = OSAlarmState::None;
    alarm->nextFire = 0;
    alarm->period = 0;
 
@@ -62,7 +67,9 @@ BOOL
 OSCancelAlarm(OSAlarm *alarm)
 {
    ScopedSpinLock lock(sAlarmLock);
-   return cancelAlarmNoLock(alarm);
+   BOOL result = cancelAlarmNoLock(alarm);
+   internal::updateCpuAlarm();
+   return result;
 }
 
 
@@ -87,6 +94,7 @@ OSCancelAlarms(uint32_t group)
          alarm = next;
       }
    }
+   internal::updateCpuAlarm();
 }
 
 
@@ -183,7 +191,7 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
    OSAppendQueue(queue, alarm);
 
    // Set the interrupt timer in processor
-   gProcessor.setInterruptTimer(core, coreinit::internal::toTimepoint(alarm->nextFire));
+   internal::updateCpuAlarm();
    return TRUE;
 }
 
@@ -236,7 +244,7 @@ OSWaitAlarm(OSAlarm *alarm)
 
    OSUninterruptibleSpinLock_Acquire(sAlarmLock);
 
-   if (alarm->state != OSAlarmState::Cancelled) {
+   if (alarm->state == OSAlarmState::Expired) {
       result = TRUE;
    }
 
@@ -292,6 +300,7 @@ triggerAlarmNoLock(OSAlarmQueue *queue, OSAlarm *alarm, OSContext *context)
    if (alarm->period) {
       alarm->nextFire = OSGetTime() + alarm->period;
       alarm->state = OSAlarmState::Set;
+      coreinit::internal::updateCpuAlarm();
    } else {
       alarm->nextFire = 0;
       alarm->state = OSAlarmState::None;
@@ -308,37 +317,18 @@ triggerAlarmNoLock(OSAlarmQueue *queue, OSAlarm *alarm, OSContext *context)
    coreinit::internal::wakeupThreadNoLock(&alarm->threadQueue);
 }
 
-
-/**
- * Internal check to see if any alarms are ready to be triggered.
- *
- * Updates the processor internal interrupt timer to trigger for the next ready alarm.
- */
 void
-checkAlarms(uint32_t core, OSContext *context)
+updateCpuAlarm()
 {
-   auto queue = sAlarmQueue[core];
-   auto now = OSGetTime();
+   auto queue = sAlarmQueue[cpu::get_current_core_id()];
    auto next = std::chrono::time_point<std::chrono::system_clock>::max();
 
-   coreinit::internal::lockScheduler();
    OSUninterruptibleSpinLock_Acquire(sAlarmLock);
 
-   // Trigger all pending alarms
    for (OSAlarm *alarm = queue->head; alarm; ) {
       auto nextAlarm = alarm->link.next;
 
-      if (alarm->nextFire <= now && alarm->state != OSAlarmState::Cancelled) {
-         triggerAlarmNoLock(queue, alarm, context);
-      }
-
-      alarm = nextAlarm;
-   }
-
-   // Find next set alarm
-   for (OSAlarm *alarm = queue->head; alarm; ) {
-      auto nextAlarm = alarm->link.next;
-
+      // Update next if its not past yet
       if (alarm->state == OSAlarmState::Set && alarm->nextFire) {
          auto nextFire = coreinit::internal::toTimepoint(alarm->nextFire);
 
@@ -351,8 +341,77 @@ checkAlarms(uint32_t core, OSContext *context)
    }
 
    OSUninterruptibleSpinLock_Release(sAlarmLock);
-   coreinit::internal::unlockScheduler();
-   gProcessor.setInterruptTimer(core, next);
+
+   cpu::core_set_next_alarm(next);
+}
+
+void
+handleAlarmInterrupt(uint32_t core_id, OSContext *context)
+{
+   auto queue = sAlarmQueue[core_id];
+   auto now = OSGetTime();
+   auto next = std::chrono::time_point<std::chrono::system_clock>::max();
+   bool alarmExpired = false;
+
+   OSUninterruptibleSpinLock_Acquire(sAlarmLock);
+
+   for (OSAlarm *alarm = queue->head; alarm; ) {
+      auto nextAlarm = alarm->link.next;
+
+      // Expire it if its past its nextFire time
+      if (alarm->nextFire <= now && alarm->state == OSAlarmState::Set) {
+         alarm->state = OSAlarmState::Expired;
+         alarm->context = context;
+         alarmExpired = true;
+      }
+
+      // Update next if its not past yet
+      if (alarm->state == OSAlarmState::Set && alarm->nextFire) {
+         auto nextFire = coreinit::internal::toTimepoint(alarm->nextFire);
+
+         if (nextFire < next) {
+            next = nextFire;
+         }
+      }
+
+      alarm = nextAlarm;
+   }
+
+   OSUninterruptibleSpinLock_Release(sAlarmLock);
+
+   if (alarmExpired) {
+      coreinit::internal::signalIoThreadNoLock(core_id);
+   }
+
+   cpu::core_set_next_alarm(next);
+}
+
+/**
+ * Internal check to see if any alarms are ready to be triggered.
+ *
+ * Updates the processor internal interrupt timer to trigger for the next ready alarm.
+ */
+void
+checkAlarms(uint32_t core_id)
+{
+   auto queue = sAlarmQueue[core_id];
+   auto now = OSGetTime();
+   auto next = std::chrono::time_point<std::chrono::system_clock>::max();
+
+   OSUninterruptibleSpinLock_Acquire(sAlarmLock);
+
+   // Trigger all pending alarms
+   for (OSAlarm *alarm = queue->head; alarm; ) {
+      auto nextAlarm = alarm->link.next;
+
+      if (alarm->state == OSAlarmState::Expired) {
+         triggerAlarmNoLock(queue, alarm, alarm->context);
+      }
+
+      alarm = nextAlarm;
+   }
+
+   OSUninterruptibleSpinLock_Release(sAlarmLock);
 }
 
 } // namespace internal
