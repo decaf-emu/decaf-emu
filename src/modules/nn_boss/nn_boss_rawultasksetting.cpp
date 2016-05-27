@@ -55,9 +55,9 @@ void Module::initialiseRawUlTaskSetting()
 
    RawUlTaskSetting::VirtualTable = ghs::internal::makeVirtualTable({
       { 0, RawUlTaskSetting::TypeInfo },
-      { 0, findExport("__dt__Q3_2nn4boss16RawUlTaskSettingFv") },
-      { 0, findExport("RegisterPreprocess__Q3_2nn4boss16RawUlTaskSettingFUiQ3_2nn4boss7TitleIDPCc") },
-      { 0, findExport("RegisterPostprocess__Q3_2nn4boss16RawUlTaskSettingFUiQ3_2nn4boss7TitleIDPCcQ2_2nn6Result") },
+      { 0, findExportAddress("__dt__Q3_2nn4boss16RawUlTaskSettingFv") },
+      { 0, findExportAddress("RegisterPreprocess__Q3_2nn4boss16RawUlTaskSettingFUiQ3_2nn4boss7TitleIDPCc") },
+      { 0, findExportAddress("RegisterPostprocess__Q3_2nn4boss16RawUlTaskSettingFUiQ3_2nn4boss7TitleIDPCcQ2_2nn6Result") },
    });
 }
 

@@ -65,9 +65,10 @@ public:
    KernelExport *
    findExport(const char *name) const override
    {
-      auto itr = getExportMap().find(name);
+      auto &map = getExportMap();
+      auto itr = map.find(name);
 
-      if (itr == getExportMap().end()) {
+      if (itr == map.end()) {
          return nullptr;
       } else {
          return itr->second;

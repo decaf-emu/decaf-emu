@@ -69,8 +69,8 @@ void Module::initialisePlayReportSetting()
 
    PlayReportSetting::VirtualTable = ghs::internal::makeVirtualTable({
       { 0, PlayReportSetting::TypeInfo },
-      { 0, findExport("__dt__Q3_2nn4boss17PlayReportSettingFv") },
-      { 0, findExport("RegisterPreprocess__Q3_2nn4boss17PlayReportSettingFUiQ3_2nn4boss7TitleIDPCc") },
+      { 0, findExportAddress("__dt__Q3_2nn4boss17PlayReportSettingFv") },
+      { 0, findExportAddress("RegisterPreprocess__Q3_2nn4boss17PlayReportSettingFUiQ3_2nn4boss7TitleIDPCc") },
       RawUlTaskSetting::VirtualTable[3],
    });
 }

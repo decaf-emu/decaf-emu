@@ -76,9 +76,9 @@ void Module::initialiseTaskSetting()
 
    TaskSetting::VirtualTable = ghs::internal::makeVirtualTable({
       { 0, TaskSetting::TypeInfo },
-      { 0, findExport("__dt__Q3_2nn4boss11TaskSettingFv") },
-      { 0, findExport("RegisterPreprocess__Q3_2nn4boss11TaskSettingFUiQ3_2nn4boss7TitleIDPCc") },
-      { 0, findExport("RegisterPostprocess__Q3_2nn4boss11TaskSettingFUiQ3_2nn4boss7TitleIDPCcQ2_2nn6Result") },
+      { 0, findExportAddress("__dt__Q3_2nn4boss11TaskSettingFv") },
+      { 0, findExportAddress("RegisterPreprocess__Q3_2nn4boss11TaskSettingFUiQ3_2nn4boss7TitleIDPCc") },
+      { 0, findExportAddress("RegisterPostprocess__Q3_2nn4boss11TaskSettingFUiQ3_2nn4boss7TitleIDPCcQ2_2nn6Result") },
    });
 }
 

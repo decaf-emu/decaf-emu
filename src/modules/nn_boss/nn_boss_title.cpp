@@ -63,7 +63,7 @@ Module::initialiseTitle()
 
    Title::VirtualTable = ghs::internal::makeVirtualTable({
       { 0, Title::TypeInfo },
-      { 0, findExport("__dt__Q3_2nn4boss5TitleFv") },
+      { 0, findExportAddress("__dt__Q3_2nn4boss5TitleFv") },
    });
 }
 

@@ -116,7 +116,7 @@ void Module::initialiseTask()
 
    Task::VirtualTable = ghs::internal::makeVirtualTable({
       { 0, Task::TypeInfo },
-      { 0, findExport("__dt__Q3_2nn4boss4TaskFv") },
+      { 0, findExportAddress("__dt__Q3_2nn4boss4TaskFv") },
    });
 }
 

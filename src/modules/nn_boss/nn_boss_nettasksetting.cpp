@@ -36,7 +36,7 @@ void Module::initialiseNetTaskSetting()
 
    NetTaskSetting::VirtualTable = ghs::internal::makeVirtualTable({
       { 0, NetTaskSetting::TypeInfo },
-      { 0, findExport("__dt__Q3_2nn4boss14NetTaskSettingFv") },
+      { 0, findExportAddress("__dt__Q3_2nn4boss14NetTaskSettingFv") },
       TaskSetting::VirtualTable[2],
       TaskSetting::VirtualTable[3],
    });

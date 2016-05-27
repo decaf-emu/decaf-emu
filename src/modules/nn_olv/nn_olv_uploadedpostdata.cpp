@@ -86,7 +86,7 @@ Module::initialiseUploadedPostData()
 
    UploadedPostData::VirtualTable = ghs::internal::makeVirtualTable({
       { 0, UploadedPostData::TypeInfo },
-      { 0, findExport("__dt__Q3_2nn3olv16UploadedPostDataFv") },
+      { 0, findExportAddress("__dt__Q3_2nn3olv16UploadedPostDataFv") },
    });
 }
 

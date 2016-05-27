@@ -100,9 +100,9 @@ Module::initialiseGhsTypeInfo()
    ghs::type_info::TypeInfo = ghs::internal::makeTypeDescriptor("std::type_info");
 
    ghs::type_info::VirtualTable[0] = { 0, ghs::type_info::TypeInfo };
-   ghs::type_info::VirtualTable[1] = { 0, findExport("__dt__Q2_3std9type_infoFv") };
+   ghs::type_info::VirtualTable[1] = { 0, findExportAddress("__dt__Q2_3std9type_infoFv") };
 
-   ghs::PureVirtualCall = findExport("__pure_virtual_called");
+   ghs::PureVirtualCall = findExportAddress("__pure_virtual_called");
 }
 
 } // namespace coreinit
