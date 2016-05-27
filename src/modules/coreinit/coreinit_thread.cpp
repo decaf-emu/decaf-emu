@@ -401,6 +401,38 @@ OSSetThreadCancelState(BOOL state)
    return old;
 }
 
+
+/**
+ * Set the callback to be called just before a thread is terminated.
+ *
+ * \return Returns the previous callback function.
+ */
+OSThreadCleanupCallbackFn
+OSSetThreadCleanupCallback(OSThread *thread,
+                           OSThreadCleanupCallbackFn callback)
+{
+   coreinit::internal::lockScheduler();
+   auto old = thread->cleanupCallback;
+   thread->cleanupCallback = callback;
+   coreinit::internal::unlockScheduler();
+   return old;
+}
+
+
+/**
+ * Set the callback to be called just after a thread is terminated.
+ */
+OSThreadDeallocatorFn
+OSSetThreadDeallocator(OSThread *thread,
+                       OSThreadDeallocatorFn deallocator)
+{
+   coreinit::internal::lockScheduler();
+   auto old = thread->deallocator;
+   thread->deallocator = deallocator;
+   coreinit::internal::unlockScheduler();
+   return old;
+}
+
 void
 OSSetThreadName(OSThread *thread, const char *name)
 {
@@ -579,6 +611,8 @@ Module::registerThreadFunctions()
    RegisterKernelFunction(OSRunThread);
    RegisterKernelFunction(OSSetThreadAffinity);
    RegisterKernelFunction(OSSetThreadCancelState);
+   RegisterKernelFunction(OSSetThreadCleanupCallback);
+   RegisterKernelFunction(OSSetThreadDeallocator);
    RegisterKernelFunction(OSSetThreadName);
    RegisterKernelFunction(OSSetThreadPriority);
    RegisterKernelFunction(OSSetThreadRunQuantum);

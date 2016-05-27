@@ -241,6 +241,13 @@ OSSetThreadAffinity(OSThread *thread, uint32_t affinity);
 BOOL
 OSSetThreadCancelState(BOOL state);
 
+OSThreadCleanupCallbackFn
+OSSetThreadCleanupCallback(OSThread *thread,
+                           OSThreadCleanupCallbackFn callback);
+OSThreadDeallocatorFn
+OSSetThreadDeallocator(OSThread *thread,
+                       OSThreadDeallocatorFn deallocator);
+
 void
 OSSetThreadName(OSThread* thread, const char *name);
 
