@@ -90,7 +90,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>addrlib.lib;asmjit.lib;docopt.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;asmjit.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -110,7 +110,7 @@
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>addrlib.lib;asmjit.lib;docopt.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;asmjit.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/verbose:incr %(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -133,7 +133,7 @@
       <GenerateDebugInformation>Debug</GenerateDebugInformation>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
-      <AdditionalDependencies>addrlib.lib;asmjit.lib;docopt.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;asmjit.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/verbose:incr %(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
