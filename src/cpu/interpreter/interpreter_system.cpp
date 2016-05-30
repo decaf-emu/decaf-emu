@@ -1,5 +1,6 @@
 #include <cassert>
 #include "cpu/cpu.h"
+#include "cpu/cpu_internal.h"
 #include "cpu/espresso/espresso_spr.h"
 #include "interpreter_insreg.h"
 #include "memory_translate.h"
@@ -269,7 +270,7 @@ kc(ThreadState *state, Instruction instr)
 {
    auto id = instr.kcn;
 
-   auto kc = cpu::getKernelCall(id);
+   auto kc = cpu::get_kernel_call(id);
    if (!kc) {
       gLog->error("Encountered invalid Kernel Call ID {}", id);
       assert(0);

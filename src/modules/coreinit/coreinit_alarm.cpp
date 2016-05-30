@@ -320,7 +320,7 @@ triggerAlarmNoLock(OSAlarmQueue *queue, OSAlarm *alarm, OSContext *context)
 void
 updateCpuAlarm()
 {
-   auto queue = sAlarmQueue[cpu::get_current_core_id()];
+   auto queue = sAlarmQueue[cpu::this_core::id()];
    auto next = std::chrono::time_point<std::chrono::system_clock>::max();
 
    OSUninterruptibleSpinLock_Acquire(sAlarmLock);
@@ -342,12 +342,13 @@ updateCpuAlarm()
 
    OSUninterruptibleSpinLock_Release(sAlarmLock);
 
-   cpu::core_set_next_alarm(next);
+   cpu::this_core::set_next_alarm(next);
 }
 
 void
-handleAlarmInterrupt(uint32_t core_id, OSContext *context)
+handleAlarmInterrupt(OSContext *context)
 {
+   auto core_id = cpu::this_core::id();
    auto queue = sAlarmQueue[core_id];
    auto now = OSGetTime();
    auto next = std::chrono::time_point<std::chrono::system_clock>::max();
@@ -383,7 +384,7 @@ handleAlarmInterrupt(uint32_t core_id, OSContext *context)
       coreinit::internal::signalIoThreadNoLock(core_id);
    }
 
-   cpu::core_set_next_alarm(next);
+   cpu::this_core::set_next_alarm(next);
 }
 
 /**

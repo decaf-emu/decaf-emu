@@ -170,7 +170,7 @@ namespace internal
 {
 
 void
-handleAlarmInterrupt(uint32_t core_id, OSContext *context);
+handleAlarmInterrupt(OSContext *context);
 
 void
 checkAlarms(uint32_t core_id);

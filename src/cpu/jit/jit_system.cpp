@@ -1,5 +1,6 @@
 #include <cassert>
 #include "cpu/espresso/espresso_spr.h"
+#include "cpu/cpu_internal.h"
 #include "jit_insreg.h"
 #include "utils/bitutils.h"
 #include "utils/log.h"
@@ -136,7 +137,7 @@ kc(PPCEmuAssembler& a, Instruction instr)
 {
    auto id = instr.kcn;
 
-   auto kc = cpu::getKernelCall(id);
+   auto kc = cpu::get_kernel_call(id);
    if (!kc) {
       gLog->error("Encountered invalid Kernel Call ID {}", id);
       a.int3();

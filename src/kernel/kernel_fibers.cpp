@@ -25,7 +25,7 @@ struct Fiber
 };
 
 coreinit::OSThread * getCurrentThread() {
-   return tCurrentThread[cpu::get_current_core()->id];
+   return tCurrentThread[cpu::this_core::id()];
 }
 
 // This must be called under the same scheduler lock
@@ -33,7 +33,7 @@ coreinit::OSThread * getCurrentThread() {
 // the thread_local to pass it between fibers.
 void checkDeadThread()
 {
-   auto core_id = cpu::get_current_core_id();
+   auto core_id = cpu::this_core::id();
    auto deadThread = tDeadThread[core_id];
    if (deadThread) {
       tDeadThread[core_id] = nullptr;
@@ -51,19 +51,16 @@ void fiberEntryPoint(void*)
 {
    checkDeadThread();
 
-   cpu::setRoundingMode(&cpu::get_current_core()->state);
-   std::feclearexcept(FE_ALL_EXCEPT);
-
    // Our scheduler will have been locked by whoever
    // scheduled this fiber.
    coreinit::internal::unlockScheduler();
 
-   auto core = cpu::get_current_core();
+   auto core = cpu::this_core::state();
    auto thread = getCurrentThread();
    core->state.cia = 0;
    core->state.nia = thread->entryPoint.getAddress();
 
-   cpu::core_execute_sub();
+   cpu::this_core::execute_sub();
 
    coreinit::OSExitThread(ppctypes::getResult<int>(&core->state));
 }
@@ -71,7 +68,7 @@ void fiberEntryPoint(void*)
 void init_core_fiber()
 {
    // Grab the currently running core state.
-   auto core_id = cpu::get_current_core_id();
+   auto core_id = cpu::this_core::id();
 
    // Grab the system fiber
    auto fiber = platform::getThreadFiber();
@@ -92,7 +89,7 @@ exitThreadNoLock()
    gFiberQueue.erase(std::remove(gFiberQueue.begin(), gFiberQueue.end(), thread->fiber), gFiberQueue.end());
 
    // Mark this fiber to be cleaned up
-   tDeadThread[cpu::get_current_core_id()] = thread;
+   tDeadThread[cpu::this_core::id()] = thread;
 
    // Reschedule to another thread, this will never return.
    rescheduleNoLock(false);
@@ -138,7 +135,7 @@ queueThreadNoLock(coreinit::OSThread *thread)
       return lhs->thread->basePriority < rhs->thread->basePriority;
    };
 
-   gLog->trace("Core {} queued thread {}", cpu::get_current_core_id(), fiber->thread->id);
+   gLog->trace("Core {} queued thread {}", cpu::this_core::id(), fiber->thread->id);
 
    // Add this fiber to the fiber queue
    auto pos = std::upper_bound(gFiberQueue.begin(), gFiberQueue.end(), fiber, compare);
@@ -154,7 +151,7 @@ queueThreadNoLock(coreinit::OSThread *thread)
 
 void saveContext(coreinit::OSContext *context)
 {
-   auto &state = cpu::get_current_core()->state;
+   auto &state = cpu::this_core::state()->state;
    for (auto i = 0; i < 32; ++i) {
       context->gpr[i] = state.gpr[i];
    }
@@ -176,7 +173,7 @@ void saveContext(coreinit::OSContext *context)
 
 void restoreContext(coreinit::OSContext *context)
 {
-   auto &state = cpu::get_current_core()->state;
+   auto &state = cpu::this_core::state()->state;
    for (auto i = 0; i < 32; ++i) {
       state.gpr[i] = context->gpr[i];
    }
@@ -198,7 +195,7 @@ void restoreContext(coreinit::OSContext *context)
 
 void rescheduleNoLock(bool yielding)
 {
-   auto core_id = cpu::get_current_core_id();
+   auto core_id = cpu::this_core::id();
    auto thread = getCurrentThread();
 
    auto next = peekNextFiberNoLock(core_id);
@@ -252,7 +249,7 @@ void rescheduleNoLock(bool yielding)
    }
 
    // Save our CIA for when we come back.
-   auto core = cpu::get_current_core();
+   auto core = cpu::this_core::state();
    auto cia = core->state.cia;
    auto nia = core->state.nia;
 
@@ -294,7 +291,7 @@ size_t thread_id()
 {
    size_t coreID = 0xFF, threadID = 0XFF;
 
-   auto core = cpu::get_current_core();
+   auto core = cpu::this_core::state();
    if (core) {
       coreID = core->id;
       auto thread = kernel::getCurrentThread();

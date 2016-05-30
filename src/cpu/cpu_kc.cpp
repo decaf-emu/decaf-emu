@@ -4,18 +4,18 @@
 namespace cpu
 {
 
-static std::vector<KernelCallEntry>
+static std::vector<kernel_call_entry>
 gKernelCalls;
 
 uint32_t
-registerKernelCall(const KernelCallEntry &entry)
+register_kernel_call(const kernel_call_entry &entry)
 {
    gKernelCalls.push_back(entry);
    return static_cast<uint32_t>(gKernelCalls.size() - 1);
 }
 
-KernelCallEntry *
-getKernelCall(uint32_t id)
+kernel_call_entry *
+get_kernel_call(uint32_t id)
 {
    if (id >= gKernelCalls.size()) {
       return nullptr;

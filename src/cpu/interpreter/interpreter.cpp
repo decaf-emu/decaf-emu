@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include <cfenv>
 #include "interpreter_insreg.h"
 #include "cpu/espresso/espresso_instructionset.h"
 #include "../trace.h"
@@ -86,6 +87,11 @@ void step_one(Core *core)
 void resume(Core *core)
 {
    ThreadState *state = &core->state;
+
+   // Before we resume, we need to update our states!
+   cpu::update_rounding_mode(state);
+   std::feclearexcept(FE_ALL_EXCEPT);
+
    while (state->nia != cpu::CALLBACK_ADDR) {
       step_one(core);
    }

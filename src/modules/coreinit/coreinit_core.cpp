@@ -21,7 +21,7 @@ OSGetCoreCount()
 uint32_t
 OSGetCoreId()
 {
-   return cpu::get_current_core_id();
+   return cpu::this_core::id();
 }
 
 

@@ -51,7 +51,7 @@ void cpu_interrupt_handler(uint32_t interrupt_flags) {
    coreinit::internal::lockScheduler();
 
    if (interrupt_flags & cpu::ALARM_INTERRUPT) {
-      coreinit::internal::handleAlarmInterrupt(cpu::get_current_core_id(), &interruptedThread->context);
+      coreinit::internal::handleAlarmInterrupt(&interruptedThread->context);
    }
    
    if (interrupt_flags & cpu::GPU_INTERRUPT) {
@@ -71,7 +71,7 @@ void cpu_entrypoint()
    //  as this fibre can be arbitrarily destroyed.
    init_core_fiber();
 
-   if (cpu::get_current_core_id() == 1) {
+   if (cpu::this_core::id() == 1) {
       // Run the setup on core 1, which will also run the loader
       launch_game();
 
@@ -82,7 +82,7 @@ void cpu_entrypoint()
    // Run the scheduler loop, this is what will
    //   execute when there is nothing else to do.
    while (gRunning) {
-      cpu::core_wait_for_interrupt();
+      cpu::this_core::wait_for_interrupt();
    }
 }
 
@@ -212,7 +212,7 @@ bool launch_game()
 
          auto stackSize = 2048;
          auto stack = reinterpret_cast<uint8_t *>(coreinit::internal::sysAlloc(stackSize, 8));
-         auto &state = cpu::get_current_core()->state;
+         auto &state = cpu::this_core::state()->state;
 
          // Setup a valid context
          state.gpr[0] = 0;

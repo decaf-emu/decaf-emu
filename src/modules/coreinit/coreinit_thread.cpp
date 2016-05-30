@@ -310,7 +310,7 @@ OSGetDefaultThread(uint32_t coreID)
 uint32_t
 OSGetStackPointer()
 {
-   return cpu::get_current_core()->state.gpr[1];
+   return cpu::this_core::state()->state.gpr[1];
 }
 
 
@@ -419,7 +419,7 @@ OSPrintCurrentThreadState()
       return;
    }
 
-   auto &state = cpu::get_current_core()->state;
+   auto &state = cpu::this_core::state()->state;
 
    fmt::MemoryWriter out;
    out.write("id   = {}\n", thread->id);

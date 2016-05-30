@@ -17,30 +17,44 @@ const uint32_t DBGBREAK_INTERRUPT = 1 << 2;
 const uint32_t GPU_INTERRUPT = 1 << 3;
 const uint32_t SRESET_INTERRUPT = 1 << 4;
 
-enum class JitMode {
-   Enabled,
-   Disabled,
-   Debug
+enum class jit_mode {
+   enabled,
+   disabled,
+   debug
 };
 
 static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 
+typedef void(*entrypoint_handler)();
+typedef void(*interrupt_handler)(uint32_t interrupt_flags);
+using kernel_call_fn = void(*)(ThreadState *state, void *userData);
+using kernel_call_entry = std::pair<kernel_call_fn, void*>;
+
 void initialise();
-void setJitMode(JitMode mode);
+void set_jit_mode(jit_mode mode);
+void set_core_entrypoint_handler(entrypoint_handler handler);
+void set_interrupt_handler(interrupt_handler handler);
+
+uint32_t register_kernel_call(const kernel_call_entry &entry);
 
 void start();
 void halt();
 
-void core_resume();
-void core_execute_sub();
-void core_wait_for_interrupt();
+void interrupt(int core_idx, uint32_t flags);
 
-void core_set_next_alarm(std::chrono::time_point<std::chrono::system_clock> alarm_time);
+namespace this_core
+{
 
-Core * get_current_core();
+void resume();
+void execute_sub();
+void wait_for_interrupt();
 
-static uint32_t get_current_core_id() {
-   auto core = get_current_core();
+void set_next_alarm(std::chrono::time_point<std::chrono::system_clock> alarm_time);
+
+Core * state();
+
+static uint32_t id() {
+   auto core = state();
    if (core) {
       return core->id;
    } else {
@@ -48,23 +62,6 @@ static uint32_t get_current_core_id() {
    }
 }
 
-void interrupt(int coreIdx, uint32_t flags);
-
-typedef void(*interrupt_handler)(uint32_t interrupt_flags);
-void set_interrupt_handler(interrupt_handler handler);
-
-typedef void(*entrypoint_handler)();
-void set_core_entrypoint_handler(entrypoint_handler handler);
-
-void setRoundingMode(ThreadState *state);
-
-using KernelCallFn = void(*)(ThreadState *state, void *userData);
-using KernelCallEntry = std::pair<KernelCallFn, void*>;
-
-uint32_t
-registerKernelCall(const KernelCallEntry &entry);
-
-KernelCallEntry *
-getKernelCall(uint32_t id);
+}
 
 } // namespace cpu

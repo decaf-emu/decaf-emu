@@ -16,8 +16,8 @@ gCoreEntryPointHandler;
 interrupt_handler
 gInterruptHandler;
 
-JitMode
-gJitMode = JitMode::Disabled;
+jit_mode
+gJitMode = jit_mode::disabled;
 
 static Core
 gCore[3];
@@ -40,16 +40,16 @@ gTimerCondition;
 std::thread
 gTimerThread;
 
-void setJitMode(JitMode mode)
-{
-   gJitMode = mode;
-}
-
 void initialise()
 {
    espresso::initialiseInstructionSet();
    cpu::interpreter::initialise();
    cpu::jit::initialise();
+}
+
+void set_jit_mode(jit_mode mode)
+{
+   gJitMode = mode;
 }
 
 void
@@ -115,40 +115,32 @@ void halt()
    }
 }
 
-Core * get_current_core()
+namespace this_core
+{
+
+Core * state()
 {
    return tCurrentCore;
 }
 
-void set_core_entrypoint_handler(entrypoint_handler handler)
+void resume()
 {
-   gCoreEntryPointHandler = handler;
-}
-
-void set_interrupt_handler(interrupt_handler handler)
-{
-   gInterruptHandler = handler;
-}
-
-void core_resume()
-{
-   if (gJitMode == JitMode::Enabled) {
+   if (gJitMode == jit_mode::enabled) {
       jit::resume(tCurrentCore);
-   }
-   else {
+   } else {
       interpreter::resume(tCurrentCore);
    }
 }
 
-void core_execute_sub()
+void execute_sub()
 {
    auto lr = tCurrentCore->state.lr;
    tCurrentCore->state.lr = CALLBACK_ADDR;
-   core_resume();
+   resume();
    tCurrentCore->state.lr = lr;
 }
 
-void core_wait_for_interrupt()
+void wait_for_interrupt()
 {
    Core *core = tCurrentCore;
    std::unique_lock<std::mutex> lock{ gInterruptMutex };
@@ -161,21 +153,33 @@ void core_wait_for_interrupt()
    }
 }
 
-void core_set_next_alarm(std::chrono::time_point<std::chrono::system_clock> alarm_time)
+void set_next_alarm(std::chrono::time_point<std::chrono::system_clock> alarm_time)
 {
    std::unique_lock<std::mutex> lock{ gTimerMutex };
    tCurrentCore->next_alarm = alarm_time;
    gTimerCondition.notify_all();
 }
 
-void interrupt(int coreIdx, uint32_t flags)
+}
+
+void set_core_entrypoint_handler(entrypoint_handler handler)
 {
-   gCore[coreIdx].interrupt.fetch_or(flags);
+   gCoreEntryPointHandler = handler;
+}
+
+void set_interrupt_handler(interrupt_handler handler)
+{
+   gInterruptHandler = handler;
+}
+
+void interrupt(int core_idx, uint32_t flags)
+{
+   gCore[core_idx].interrupt.fetch_or(flags);
    gInterruptCondition.notify_all();
 }
 
 void
-setRoundingMode(ThreadState *state)
+update_rounding_mode(ThreadState *state)
 {
    static const int modes[4] = {
       FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD, FE_DOWNWARD

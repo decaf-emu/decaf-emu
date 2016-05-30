@@ -211,12 +211,12 @@ initialiseEmulator()
    // Setup jit from config
    if (config::jit::enabled) {
       if (config::jit::debug) {
-         cpu::setJitMode(cpu::JitMode::Debug);
+         cpu::set_jit_mode(cpu::jit_mode::debug);
       } else {
-         cpu::setJitMode(cpu::JitMode::Enabled);
+         cpu::set_jit_mode(cpu::jit_mode::enabled);
       }
    } else {
-      cpu::setJitMode(cpu::JitMode::Disabled);
+      cpu::set_jit_mode(cpu::jit_mode::disabled);
    }
 
    // Setup core

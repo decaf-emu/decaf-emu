@@ -1,5 +1,7 @@
-#include <vector>
 #include "jit.h"
+#include <vector>
+#include <cfenv>
+#include "cpu/cpu_internal.h"
 #include "jit_internal.h"
 #include "jit_insreg.h"
 #include "mem/mem.h"
@@ -385,6 +387,10 @@ uint32_t execute(Core *core, JitCode block)
 void resume(Core *core)
 {
    ThreadState *state = &core->state;
+
+   // Before we resume, we need to update our states!
+   cpu::update_rounding_mode(state);
+   std::feclearexcept(FE_ALL_EXCEPT);
 
    while (state->nia != cpu::CALLBACK_ADDR) {
       JitCode jitFn = get(state->nia);

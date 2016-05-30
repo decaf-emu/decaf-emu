@@ -1,5 +1,6 @@
 #include <cfenv>
 #include <numeric>
+#include "cpu/cpu_internal.h"
 #include "interpreter_insreg.h"
 #include "interpreter.h"
 #include "utils/bitutils.h"
@@ -835,7 +836,7 @@ mtfsb0(ThreadState *state, Instruction instr)
    state->fpscr.value = clear_bit(state->fpscr.value, 31 - instr.crbD);
    updateFEX_VX(state);
    if (instr.crbD >= 30) {
-       cpu::setRoundingMode(state);
+      cpu::update_rounding_mode(state);
    }
 
    if (instr.rc) {
@@ -851,7 +852,7 @@ mtfsb1(ThreadState *state, Instruction instr)
    state->fpscr.value = set_bit(state->fpscr.value, 31 - instr.crbD);
    updateFX_FEX_VX(state, oldValue);
    if (instr.crbD >= 30) {
-       cpu::setRoundingMode(state);
+      cpu::update_rounding_mode(state);
    }
 
    if (instr.rc) {
@@ -877,7 +878,7 @@ mtfsf(ThreadState *state, Instruction instr)
    }
    updateFEX_VX(state);
    if (get_bit(instr.fm, 0)) {
-       cpu::setRoundingMode(state);
+      cpu::update_rounding_mode(state);
    }
 
    if (instr.rc) {
@@ -894,7 +895,7 @@ mtfsfi(ThreadState *state, Instruction instr)
    state->fpscr.value |= instr.imm << shift;
    updateFEX_VX(state);
    if (instr.crfD == 7) {
-       cpu::setRoundingMode(state);
+      cpu::update_rounding_mode(state);
    }
 
    if (instr.rc) {

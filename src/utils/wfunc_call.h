@@ -5,7 +5,7 @@
 template<typename ReturnType, typename... Args>
 ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
 {
-   ThreadState *state = &cpu::get_current_core()->state;
+   ThreadState *state = &cpu::this_core::state()->state;
 
    // Push args
    ppctypes::applyArguments(state, args...);
@@ -16,7 +16,7 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
    // Set state
    state->cia = 0;
    state->nia = address;
-   cpu::core_execute_sub();
+   cpu::this_core::execute_sub();
 
    // Restore state
    state->nia = nia;
