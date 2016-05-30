@@ -525,9 +525,6 @@
     <ClCompile Include="..\src\modules\snd_core\snd_core_core.cpp">
       <Filter>Source Files\modules\snd_core</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\wfunc_ptr.cpp">
-      <Filter>Source Files\utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\crc32.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
