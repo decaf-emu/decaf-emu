@@ -3,7 +3,7 @@
 #include "statedbg.h"
 #include "utils/log.h"
 #include "utils/debuglog.h"
-
+#include "cpu/cpu.h"
 #include "espresso/espresso_disassembler.h"
 #include "espresso/espresso_instructionset.h"
 #include "espresso/espresso_spr.h"
@@ -25,6 +25,42 @@ struct Tracer
    std::vector<Trace> traces;
    cpu::Core prevState;
 };
+
+namespace cpu
+{
+
+cpu::Tracer *alloc_tracer(size_t size)
+{
+   // TODO: TRACE_ENABLED should actually be handled by kernel
+#ifdef TRACE_ENABLED
+   auto tracer = new Tracer();
+   tracer->index = 0;
+   tracer->numTraces = 0;
+   tracer->traces.resize(size);
+   return tracer;
+#else
+   return nullptr;
+#endif
+}
+
+void free_tracer(cpu::Tracer *tracer)
+{
+   if (tracer) {
+      delete tracer;
+   }
+}
+
+namespace this_core
+{
+
+void set_tracer(cpu::Tracer *tracer)
+{
+   state()->tracer = tracer;
+}
+
+}
+
+}
 
 std::string
 getStateFieldName(TraceFieldType type)

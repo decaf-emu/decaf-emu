@@ -1,6 +1,7 @@
 #include "kernel.h"
 #include <algorithm>
 #include <cfenv>
+#include "cpu/cpu.h"
 #include "platform/platform_fiber.h"
 #include "platform/platform_thread.h"
 #include "modules/coreinit/coreinit.h"
@@ -22,31 +23,14 @@ struct Fiber
 {
    platform::Fiber *handle = nullptr;
    coreinit::OSThread *thread = nullptr;
+   cpu::Tracer *tracer = nullptr;
 };
 
 coreinit::OSThread * getCurrentThread() {
    return tCurrentThread[cpu::this_core::id()];
 }
 
-// This must be called under the same scheduler lock
-// that added the thread to tDeadThread, we simply use
-// the thread_local to pass it between fibers.
-void checkDeadThread()
-{
-   auto core_id = cpu::this_core::id();
-   auto deadThread = tDeadThread[core_id];
-   if (deadThread) {
-      tDeadThread[core_id] = nullptr;
-
-      // Something is broken if we have no fiber
-      assert(deadThread->fiber);
-
-      // Destroy the fiber
-      auto fiber = deadThread->fiber;
-      platform::destroyFiber(fiber->handle);
-   }
-}
-
+void checkDeadThread();
 void fiberEntryPoint(void*)
 {
    checkDeadThread();
@@ -63,6 +47,37 @@ void fiberEntryPoint(void*)
    cpu::this_core::execute_sub();
 
    coreinit::OSExitThread(ppctypes::getResult<int>(core));
+}
+
+Fiber * allocateFiber(coreinit::OSThread *thread) {
+   auto fiber = new Fiber();
+   fiber->tracer = cpu::alloc_tracer(1024);
+   fiber->handle = platform::createFiber(fiberEntryPoint, nullptr);
+   fiber->thread = thread;
+   return fiber;
+}
+
+void freeFiber(Fiber *fiber) {
+   cpu::free_tracer(fiber->tracer);
+   platform::destroyFiber(fiber->handle);
+}
+
+// This must be called under the same scheduler lock
+// that added the thread to tDeadThread, we simply use
+// the thread_local to pass it between fibers.
+void checkDeadThread()
+{
+   auto core_id = cpu::this_core::id();
+   auto deadThread = tDeadThread[core_id];
+   if (deadThread) {
+      tDeadThread[core_id] = nullptr;
+
+      // Something is broken if we have no fiber
+      assert(deadThread->fiber);
+
+      // Destroy the fiber
+      freeFiber(deadThread->fiber);
+   }
 }
 
 void init_core_fiber()
@@ -124,10 +139,8 @@ queueThreadNoLock(coreinit::OSThread *thread)
    
    // Initialise this if its the first time!
    if (fiber == nullptr) {
-      fiber = new Fiber();
-      fiber->handle = platform::createFiber(fiberEntryPoint, nullptr);
-      fiber->thread = thread;
-      thread->fiber = fiber;
+      thread->fiber = allocateFiber(thread);
+      fiber = thread->fiber;
    }
 
    auto compare =

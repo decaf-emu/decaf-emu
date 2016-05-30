@@ -6,7 +6,7 @@
 #include "ppcinvoke.h"
 #include "state.h"
 
-struct Core;
+struct Tracer;
 
 namespace cpu
 {
@@ -40,10 +40,16 @@ uint32_t register_kernel_call(const kernel_call_entry &entry);
 void start();
 void halt();
 
+typedef ::Tracer Tracer;
+Tracer *alloc_tracer(size_t size);
+void free_tracer(Tracer *tracer);
+
 void interrupt(int core_idx, uint32_t flags);
 
 namespace this_core
 {
+
+void set_tracer(Tracer *tracer);
 
 void resume();
 void execute_sub();
