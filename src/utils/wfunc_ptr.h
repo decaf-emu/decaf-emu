@@ -4,8 +4,6 @@
 #include "ppctypes.h"
 #include "utils/virtual_ptr.h"
 
-ThreadState *GetCurrentCoreState();
-
 #pragma pack(push, 1)
 
 template<typename ReturnType, typename... Args>

@@ -246,16 +246,6 @@ struct Rela
    int32_t addend;
 };
 
-struct Section
-{
-   SectionHeader header;
-   std::vector<char> data;
-
-   // Useful for loader
-   UserModule::Section *section = nullptr;
-   ModuleSymbol *msym = nullptr;
-};
-
 struct XSection
 {
    SectionHeader header;
@@ -311,9 +301,6 @@ readRelocationAddend(BigEndianView &in, Rela &rela);
 
 bool
 readFileInfo(BigEndianView &in, elf::FileInfo &info);
-
-bool
-readSections(BigEndianView &in, Header &header, std::vector<Section> &sections);
 
 bool
 readSectionHeaders(BigEndianView &in, Header &header, std::vector<XSection>& sections);
