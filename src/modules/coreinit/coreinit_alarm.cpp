@@ -380,11 +380,11 @@ handleAlarmInterrupt(OSContext *context)
 
    OSUninterruptibleSpinLock_Release(sAlarmLock);
 
+   cpu::this_core::set_next_alarm(next);
+
    if (alarmExpired) {
       coreinit::internal::signalIoThreadNoLock(core_id);
    }
-
-   cpu::this_core::set_next_alarm(next);
 }
 
 /**
