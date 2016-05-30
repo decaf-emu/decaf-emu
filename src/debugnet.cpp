@@ -193,7 +193,7 @@ populateDebugPauseInfo(DebugPauseInfo& info)
    */
 }
 
-static void populateDebugTraceEntrys(std::vector<DebugTraceEntry>& entries, ThreadState *state)
+static void populateDebugTraceEntrys(std::vector<DebugTraceEntry>& entries, cpu::Core *state)
 {
    auto &tracer = state->tracer;
 

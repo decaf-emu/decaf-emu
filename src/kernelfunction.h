@@ -15,7 +15,7 @@ struct KernelFunction : KernelExport
 
    virtual ~KernelFunction() override = default;
 
-   virtual void call(ThreadState *state) = 0;
+   virtual void call(cpu::Core *state) = 0;
 
    bool valid = false;
    uint32_t syscallID = 0;
@@ -33,7 +33,7 @@ struct KernelFunctionImpl : KernelFunction
 {
    ReturnType (*wrapped_function)(Args...);
 
-   virtual void call(ThreadState *thread) override
+   virtual void call(cpu::Core *thread) override
    {
       ppctypes::invoke(thread, wrapped_function, name);
    }
@@ -44,7 +44,7 @@ struct KernelMemberFunctionImpl : KernelFunction
 {
    ReturnType (ObjectType::*wrapped_function)(Args...);
 
-   virtual void call(ThreadState *thread) override
+   virtual void call(cpu::Core *thread) override
    {
       ppctypes::invokeMemberFn(thread, wrapped_function, name);
    }
@@ -58,7 +58,7 @@ struct KernelConstructorFunctionImpl : KernelFunction
       new (object) ObjectType(args...);
    }
 
-   virtual void call(ThreadState *thread) override
+   virtual void call(cpu::Core *thread) override
    {
       ppctypes::invoke(thread, &trampFunction, name);
    }
@@ -72,7 +72,7 @@ struct KernelDestructorFunctionImpl : KernelFunction
       object->~ObjectType();
    }
 
-   virtual void call(ThreadState *thread) override
+   virtual void call(cpu::Core *thread) override
    {
       ppctypes::invoke(thread, &trampFunction, name);
    }

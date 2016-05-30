@@ -24,7 +24,7 @@ namespace hwtest
 {
 
 static void
-printTestField(InstructionField field, Instruction instr, RegisterState *input, RegisterState *output, ThreadState *state)
+printTestField(InstructionField field, Instruction instr, RegisterState *input, RegisterState *output, cpu::Core *state)
 {
    auto printGPR = [&](uint32_t reg) {
       assert(reg >= GPR_BASE);
@@ -159,11 +159,11 @@ bool runTests(const std::string &path)
       gLog->info("Checking {}", testFile.name);
 
       for (auto &test : testFile.tests) {
-         ThreadState state;
+         cpu::Core state;
          bool failed = false;
 
          // Setup thread state from test input
-         memset(&state, 0, sizeof(ThreadState));
+         memset(&state, 0, sizeof(cpu::Core));
          state.cia = 0;
          state.nia = baseAddress;
          state.xer = test.input.xer;

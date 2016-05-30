@@ -29,43 +29,43 @@ INS(ecowx, (rd), (ra, rb), (), (opcd == 31, xo1 == 438), "")
 
 // Cache Management
 static void
-icbi(ThreadState *state, Instruction instr)
+icbi(cpu::Core *state, Instruction instr)
 {
 }
 
 // Data Cache Block Flush
 static void
-dcbf(ThreadState *state, Instruction instr)
+dcbf(cpu::Core *state, Instruction instr)
 {
 }
 
 // Data Cache Block Invalidate
 static void
-dcbi(ThreadState *state, Instruction instr)
+dcbi(cpu::Core *state, Instruction instr)
 {
 }
 
 // Data Cache Block Store
 static void
-dcbst(ThreadState *state, Instruction instr)
+dcbst(cpu::Core *state, Instruction instr)
 {
 }
 
 // Data Cache Block Touch
 static void
-dcbt(ThreadState *state, Instruction instr)
+dcbt(cpu::Core *state, Instruction instr)
 {
 }
 
 // Data Cache Block Touch for Store
 static void
-dcbtst(ThreadState *state, Instruction instr)
+dcbtst(cpu::Core *state, Instruction instr)
 {
 }
 
 // Data Cache Block Zero
 static void
-dcbz(ThreadState *state, Instruction instr)
+dcbz(cpu::Core *state, Instruction instr)
 {
    uint32_t addr;
 
@@ -82,32 +82,32 @@ dcbz(ThreadState *state, Instruction instr)
 
 // Data Cache Block Zero Locked
 static void
-dcbz_l(ThreadState *state, Instruction instr)
+dcbz_l(cpu::Core *state, Instruction instr)
 {
    dcbz(state, instr);
 }
 
 // Enforce In-Order Execution of I/O
 static void
-eieio(ThreadState *state, Instruction instr)
+eieio(cpu::Core *state, Instruction instr)
 {
 }
 
 // Synchronise
 static void
-sync(ThreadState *state, Instruction instr)
+sync(cpu::Core *state, Instruction instr)
 {
 }
 
 // Instruction Synchronise
 static void
-isync(ThreadState *state, Instruction instr)
+isync(cpu::Core *state, Instruction instr)
 {
 }
 
 // Move from Special Purpose Register
 static void
-mfspr(ThreadState *state, Instruction instr)
+mfspr(cpu::Core *state, Instruction instr)
 {
    auto spr = decodeSPR(instr);
    auto value = 0u;
@@ -155,7 +155,7 @@ mfspr(ThreadState *state, Instruction instr)
 
 // Move to Special Purpose Register
 static void
-mtspr(ThreadState *state, Instruction instr)
+mtspr(cpu::Core *state, Instruction instr)
 {
    auto spr = decodeSPR(instr);
    auto value = state->gpr[instr.rS];
@@ -201,7 +201,7 @@ mtspr(ThreadState *state, Instruction instr)
 
 // Move from Time Base Register
 static void
-mftb(ThreadState *state, Instruction instr)
+mftb(cpu::Core *state, Instruction instr)
 {
    auto tbr = decodeSPR(instr);
    auto value = 0u;
@@ -222,28 +222,28 @@ mftb(ThreadState *state, Instruction instr)
 
 // Move from Machine State Register
 static void
-mfmsr(ThreadState *state, Instruction instr)
+mfmsr(cpu::Core *state, Instruction instr)
 {
    state->gpr[instr.rD] = state->msr.value;
 }
 
 // Move to Machine State Register
 static void
-mtmsr(ThreadState *state, Instruction instr)
+mtmsr(cpu::Core *state, Instruction instr)
 {
    state->msr.value = state->gpr[instr.rS];
 }
 
 // Move from Segment Register
 static void
-mfsr(ThreadState *state, Instruction instr)
+mfsr(cpu::Core *state, Instruction instr)
 {
    state->gpr[instr.rD] = state->sr[instr.sr];
 }
 
 // Move from Segment Register Indirect
 static void
-mfsrin(ThreadState *state, Instruction instr)
+mfsrin(cpu::Core *state, Instruction instr)
 {
    auto sr = state->gpr[instr.rB] & 0xf;
    state->gpr[instr.rD] = state->sr[sr];
@@ -251,14 +251,14 @@ mfsrin(ThreadState *state, Instruction instr)
 
 // Move to Segment Register
 static void
-mtsr(ThreadState *state, Instruction instr)
+mtsr(cpu::Core *state, Instruction instr)
 {
    state->sr[instr.sr] = state->gpr[instr.rS];
 }
 
 // Move to Segment Register Indirect
 static void
-mtsrin(ThreadState *state, Instruction instr)
+mtsrin(cpu::Core *state, Instruction instr)
 {
    auto sr = state->gpr[instr.rB] & 0xf;
    state->sr[sr] = state->gpr[instr.rS];
@@ -266,7 +266,7 @@ mtsrin(ThreadState *state, Instruction instr)
 
 // Kernel call
 static void
-kc(ThreadState *state, Instruction instr)
+kc(cpu::Core *state, Instruction instr)
 {
    auto id = instr.kcn;
 

@@ -6,7 +6,7 @@
 #include "ppcinvoke.h"
 #include "state.h"
 
-struct ThreadState;
+struct Core;
 
 namespace cpu
 {
@@ -27,7 +27,7 @@ static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 
 typedef void(*entrypoint_handler)();
 typedef void(*interrupt_handler)(uint32_t interrupt_flags);
-using kernel_call_fn = void(*)(ThreadState *state, void *userData);
+using kernel_call_fn = void(*)(Core *state, void *userData);
 using kernel_call_entry = std::pair<kernel_call_fn, void*>;
 
 void initialise();
@@ -51,7 +51,7 @@ void wait_for_interrupt();
 
 void set_next_alarm(std::chrono::time_point<std::chrono::system_clock> alarm_time);
 
-Core * state();
+cpu::Core * state();
 
 static uint32_t id() {
    auto core = state();

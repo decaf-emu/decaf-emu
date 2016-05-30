@@ -12,7 +12,7 @@ namespace cpu
 namespace interpreter
 {
 
-using instrfptr_t = void(*)(ThreadState*, Instruction);
+using instrfptr_t = void(*)(Core*, Instruction);
 
 bool hasInstruction(espresso::InstructionID instrId);
 instrfptr_t getInstructionHandler(espresso::InstructionID id);

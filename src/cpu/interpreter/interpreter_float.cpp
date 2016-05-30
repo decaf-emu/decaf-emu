@@ -67,7 +67,7 @@ ppc_estimate_reciprocal(double v)
 }
 
 void
-updateFEX_VX(ThreadState *state)
+updateFEX_VX(cpu::Core *state)
 {
    auto &fpscr = state->fpscr;
 
@@ -94,7 +94,7 @@ updateFEX_VX(ThreadState *state)
 
 
 void
-updateFX_FEX_VX(ThreadState *state, uint32_t oldValue)
+updateFX_FEX_VX(cpu::Core *state, uint32_t oldValue)
 {
    auto &fpscr = state->fpscr;
 
@@ -108,7 +108,7 @@ updateFX_FEX_VX(ThreadState *state, uint32_t oldValue)
 }
 
 void
-updateFPSCR(ThreadState *state, uint32_t oldValue)
+updateFPSCR(cpu::Core *state, uint32_t oldValue)
 {
    auto except = std::fetestexcept(FE_ALL_EXCEPT);
    auto round = std::fegetround();
@@ -137,7 +137,7 @@ updateFPSCR(ThreadState *state, uint32_t oldValue)
 
 template<typename Type>
 void
-updateFPRF(ThreadState *state, Type value)
+updateFPRF(cpu::Core *state, Type value)
 {
    auto cls = std::fpclassify(value);
    auto flags = 0u;
@@ -167,11 +167,11 @@ updateFPRF(ThreadState *state, Type value)
 }
 
 // Make sure both float and double versions are available to other sources:
-template void updateFPRF(ThreadState *state, float value);
-template void updateFPRF(ThreadState *state, double value);
+template void updateFPRF(cpu::Core *state, float value);
+template void updateFPRF(cpu::Core *state, double value);
 
 void
-updateFloatConditionRegister(ThreadState *state)
+updateFloatConditionRegister(cpu::Core *state)
 {
    state->cr.cr1 = state->fpscr.cr1;
 }
@@ -256,7 +256,7 @@ enum FPArithOperator {
 };
 template<FPArithOperator op, typename Type>
 static void
-fpArithGeneric(ThreadState *state, Instruction instr)
+fpArithGeneric(cpu::Core *state, Instruction instr)
 {
    double a, b;
    Type d;
@@ -360,63 +360,63 @@ fpArithGeneric(ThreadState *state, Instruction instr)
 
 // Floating Add Double
 static void
-fadd(ThreadState *state, Instruction instr)
+fadd(cpu::Core *state, Instruction instr)
 {
    fpArithGeneric<FPAdd, double>(state, instr);
 }
 
 // Floating Add Single
 static void
-fadds(ThreadState *state, Instruction instr)
+fadds(cpu::Core *state, Instruction instr)
 {
    fpArithGeneric<FPAdd, float>(state, instr);
 }
 
 // Floating Divide Double
 static void
-fdiv(ThreadState *state, Instruction instr)
+fdiv(cpu::Core *state, Instruction instr)
 {
    fpArithGeneric<FPDiv, double>(state, instr);
 }
 
 // Floating Divide Single
 static void
-fdivs(ThreadState *state, Instruction instr)
+fdivs(cpu::Core *state, Instruction instr)
 {
    fpArithGeneric<FPDiv, float>(state, instr);
 }
 
 // Floating Multiply Double
 static void
-fmul(ThreadState *state, Instruction instr)
+fmul(cpu::Core *state, Instruction instr)
 {
    fpArithGeneric<FPMul, double>(state, instr);
 }
 
 // Floating Multiply Single
 static void
-fmuls(ThreadState *state, Instruction instr)
+fmuls(cpu::Core *state, Instruction instr)
 {
    fpArithGeneric<FPMul, float>(state, instr);
 }
 
 // Floating Subtract Double
 static void
-fsub(ThreadState *state, Instruction instr)
+fsub(cpu::Core *state, Instruction instr)
 {
    fpArithGeneric<FPSub, double>(state, instr);
 }
 
 // Floating Subtract Single
 static void
-fsubs(ThreadState *state, Instruction instr)
+fsubs(cpu::Core *state, Instruction instr)
 {
    fpArithGeneric<FPSub, float>(state, instr);
 }
 
 // Floating Reciprocal Estimate Single
 static void
-fres(ThreadState *state, Instruction instr)
+fres(cpu::Core *state, Instruction instr)
 {
    double b;
    float d;
@@ -457,7 +457,7 @@ fres(ThreadState *state, Instruction instr)
 
 // Floating Reciprocal Square Root Estimate
 static void
-frsqrte(ThreadState *state, Instruction instr)
+frsqrte(cpu::Core *state, Instruction instr)
 {
    double b, d;
    b = state->fpr[instr.frB].value;
@@ -493,7 +493,7 @@ frsqrte(ThreadState *state, Instruction instr)
 }
 
 static void
-fsel(ThreadState *state, Instruction instr)
+fsel(cpu::Core *state, Instruction instr)
 {
    double a, b, c, d;
    a = state->fpr[instr.frA].value;
@@ -523,7 +523,7 @@ enum FMAFlags
 
 template<unsigned flags>
 static void
-fmaGeneric(ThreadState *state, Instruction instr)
+fmaGeneric(cpu::Core *state, Instruction instr)
 {
    double a, b, c, d;
    a = state->fpr[instr.frA].value;
@@ -593,63 +593,63 @@ fmaGeneric(ThreadState *state, Instruction instr)
 
 // Floating Multiply-Add
 static void
-fmadd(ThreadState *state, Instruction instr)
+fmadd(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<0>(state, instr);
 }
 
 // Floating Multiply-Add Single
 static void
-fmadds(ThreadState *state, Instruction instr)
+fmadds(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<FMASinglePrec>(state, instr);
 }
 
 // Floating Multiply-Sub
 static void
-fmsub(ThreadState *state, Instruction instr)
+fmsub(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<FMASubtract>(state, instr);
 }
 
 // Floating Multiply-Sub Single
 static void
-fmsubs(ThreadState *state, Instruction instr)
+fmsubs(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<FMASubtract | FMASinglePrec>(state, instr);
 }
 
 // Floating Negative Multiply-Add
 static void
-fnmadd(ThreadState *state, Instruction instr)
+fnmadd(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<FMANegate>(state, instr);
 }
 
 // Floating Negative Multiply-Add Single
 static void
-fnmadds(ThreadState *state, Instruction instr)
+fnmadds(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<FMANegate | FMASinglePrec>(state, instr);
 }
 
 // Floating Negative Multiply-Sub
 static void
-fnmsub(ThreadState *state, Instruction instr)
+fnmsub(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<FMANegate | FMASubtract>(state, instr);
 }
 
 // Floating Negative Multiply-Sub Single
 static void
-fnmsubs(ThreadState *state, Instruction instr)
+fnmsubs(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<FMANegate | FMASubtract | FMASinglePrec>(state, instr);
 }
 
 // fctiw/fctiwz common implementation
 static void
-fctiwGeneric(ThreadState *state, Instruction instr, FloatingPointRoundMode roundMode)
+fctiwGeneric(cpu::Core *state, Instruction instr, FloatingPointRoundMode roundMode)
 {
    double b;
    int32_t bi;
@@ -721,21 +721,21 @@ fctiwGeneric(ThreadState *state, Instruction instr, FloatingPointRoundMode round
 }
 
 static void
-fctiw(ThreadState *state, Instruction instr)
+fctiw(cpu::Core *state, Instruction instr)
 {
    return fctiwGeneric(state, instr, static_cast<FloatingPointRoundMode>(state->fpscr.rn));
 }
 
 // Floating Convert to Integer Word with Round toward Zero
 static void
-fctiwz(ThreadState *state, Instruction instr)
+fctiwz(cpu::Core *state, Instruction instr)
 {
    return fctiwGeneric(state, instr, FloatingPointRoundMode::Zero);
 }
 
 // Floating Round to Single
 static void
-frsp(ThreadState *state, Instruction instr)
+frsp(cpu::Core *state, Instruction instr)
 {
    auto b = state->fpr[instr.frB].value;
    auto vxsnan = is_signalling_nan(b);
@@ -764,7 +764,7 @@ frsp(ThreadState *state, Instruction instr)
 // TODO: do fabs/fnabs/fneg behave like fmr w.r.t. paired singles?
 // Floating Absolute Value
 static void
-fabs(ThreadState *state, Instruction instr)
+fabs(cpu::Core *state, Instruction instr)
 {
    uint64_t b, d;
 
@@ -779,7 +779,7 @@ fabs(ThreadState *state, Instruction instr)
 
 // Floating Negative Absolute Value
 static void
-fnabs(ThreadState *state, Instruction instr)
+fnabs(cpu::Core *state, Instruction instr)
 {
    uint64_t b, d;
 
@@ -794,7 +794,7 @@ fnabs(ThreadState *state, Instruction instr)
 
 // Floating Move Register
 static void
-fmr(ThreadState *state, Instruction instr)
+fmr(cpu::Core *state, Instruction instr)
 {
    state->fpr[instr.frD].idw = state->fpr[instr.frB].idw;
 
@@ -805,7 +805,7 @@ fmr(ThreadState *state, Instruction instr)
 
 // Floating Negate
 static void
-fneg(ThreadState *state, Instruction instr)
+fneg(cpu::Core *state, Instruction instr)
 {
    uint64_t b, d;
 
@@ -820,7 +820,7 @@ fneg(ThreadState *state, Instruction instr)
 
 // Move from FPSCR
 static void
-mffs(ThreadState *state, Instruction instr)
+mffs(cpu::Core *state, Instruction instr)
 {
    state->fpr[instr.frD].iw1 = state->fpscr.value;
 
@@ -831,7 +831,7 @@ mffs(ThreadState *state, Instruction instr)
 
 // Move to FPSCR Bit 0
 static void
-mtfsb0(ThreadState *state, Instruction instr)
+mtfsb0(cpu::Core *state, Instruction instr)
 {
    state->fpscr.value = clear_bit(state->fpscr.value, 31 - instr.crbD);
    updateFEX_VX(state);
@@ -846,7 +846,7 @@ mtfsb0(ThreadState *state, Instruction instr)
 
 // Move to FPSCR Bit 1
 static void
-mtfsb1(ThreadState *state, Instruction instr)
+mtfsb1(cpu::Core *state, Instruction instr)
 {
    const uint32_t oldValue = state->fpscr.value;
    state->fpscr.value = set_bit(state->fpscr.value, 31 - instr.crbD);
@@ -862,7 +862,7 @@ mtfsb1(ThreadState *state, Instruction instr)
 
 // Move to FPSCR Fields
 static void
-mtfsf(ThreadState *state, Instruction instr)
+mtfsf(cpu::Core *state, Instruction instr)
 {
    const uint32_t value = state->fpr[instr.frB].iw1;
    for (int field = 0; field < 8; field++) {
@@ -888,7 +888,7 @@ mtfsf(ThreadState *state, Instruction instr)
 
 // Move to FPSCR Field Immediate
 static void
-mtfsfi(ThreadState *state, Instruction instr)
+mtfsfi(cpu::Core *state, Instruction instr)
 {
    const int shift = 4 * (7 - instr.crfD);
    state->fpscr.value &= ~(0xF << shift);

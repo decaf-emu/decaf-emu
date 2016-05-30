@@ -2,7 +2,7 @@
 #include "utils/bitutils.h"
 
 static void
-b(ThreadState *state, Instruction instr)
+b(cpu::Core *state, Instruction instr)
 {
    uint32_t nia;
    nia = sign_extend<26>(instr.li << 2);
@@ -37,7 +37,7 @@ enum BcFlags
 
 template<unsigned flags>
 static void
-bcGeneric(ThreadState *state, Instruction instr)
+bcGeneric(cpu::Core *state, Instruction instr)
 {
    auto bo = instr.bo;
    auto ctr_ok = true;
@@ -86,21 +86,21 @@ bcGeneric(ThreadState *state, Instruction instr)
 
 // Branch Conditional
 static void
-bc(ThreadState *state, Instruction instr)
+bc(cpu::Core *state, Instruction instr)
 {
    return bcGeneric<BcCheckCtr | BcCheckCond>(state, instr);
 }
 
 // Branch Conditional to CTR
 static void
-bcctr(ThreadState *state, Instruction instr)
+bcctr(cpu::Core *state, Instruction instr)
 {
    return bcGeneric<BcBranchCTR | BcCheckCond>(state, instr);
 }
 
 // Branch Conditional to LR
 static void
-bclr(ThreadState *state, Instruction instr)
+bclr(cpu::Core *state, Instruction instr)
 {
    return bcGeneric<BcBranchLR | BcCheckCtr | BcCheckCond>(state, instr);
 }

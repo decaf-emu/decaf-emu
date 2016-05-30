@@ -23,7 +23,7 @@ struct Tracer
    size_t index;
    size_t numTraces;
    std::vector<Trace> traces;
-   ThreadState prevState;
+   cpu::Core prevState;
 };
 
 std::string
@@ -128,7 +128,7 @@ getTracerNumTraces(Tracer *tracer)
 }
 
 void
-traceInit(ThreadState *state, size_t size)
+traceInit(cpu::Core *state, size_t size)
 {
 #ifdef TRACE_ENABLED
    state->tracer = new Tracer();
@@ -233,7 +233,7 @@ getFieldStateField(Instruction instr, InstructionField field)
 }
 
 void
-saveStateField(const ThreadState *state, TraceFieldType type, TraceFieldValue &field)
+saveStateField(const cpu::Core *state, TraceFieldType type, TraceFieldValue &field)
 {
    field.u64v0 = 0;
    field.u64v1 = 0;
@@ -268,7 +268,7 @@ saveStateField(const ThreadState *state, TraceFieldType type, TraceFieldValue &f
 }
 
 void
-restoreStateField(ThreadState *state, TraceFieldType type, const TraceFieldValue &field)
+restoreStateField(cpu::Core *state, TraceFieldType type, const TraceFieldValue &field)
 {
    if (type == StateField::Invalid) {
       return;
@@ -317,7 +317,7 @@ pushUniqueField(std::vector<T> &fields, uint32_t fieldId)
 }
 
 Trace *
-traceInstructionStart(Instruction instr, InstructionInfo *data, ThreadState *state)
+traceInstructionStart(Instruction instr, InstructionInfo *data, cpu::Core *state)
 {
    if (!state->tracer) {
       return nullptr;
@@ -387,12 +387,13 @@ traceInstructionStart(Instruction instr, InstructionInfo *data, ThreadState *sta
       saveStateField(state, i.type, i.prevalue);
    }
 
-   tracer->prevState = *state;
+   // TODO: This is a bit of a hack... We should probably not do this...
+   memcpy(&tracer->prevState, state, offsetof(cpu::Core, tracer));
    return &trace;
 }
 
 void
-traceInstructionEnd(Trace *trace, Instruction instr, InstructionInfo *data, ThreadState *state)
+traceInstructionEnd(Trace *trace, Instruction instr, InstructionInfo *data, cpu::Core *state)
 {
    if (!trace) {
       return;
@@ -446,7 +447,7 @@ traceInstructionEnd(Trace *trace, Instruction instr, InstructionInfo *data, Thre
 }
 
 void
-tracePrint(ThreadState *state, int start, int count)
+tracePrint(cpu::Core *state, int start, int count)
 {
    auto tracer = state->tracer;
    auto tracerSize = static_cast<int>(getTracerNumTraces(tracer));
@@ -471,7 +472,7 @@ tracePrint(ThreadState *state, int start, int count)
 }
 
 int
-traceReg(ThreadState *state, int start, int regIdx)
+traceReg(cpu::Core *state, int start, int regIdx)
 {
    auto tracer = state->tracer;
    auto tracerSize = static_cast<int>(getTracerNumTraces(tracer));
@@ -509,12 +510,12 @@ traceReg(ThreadState *state, int start, int regIdx)
    return -1;
 }
 
-static ThreadState *gRegTraceState = nullptr;
+static cpu::Core *gRegTraceState = nullptr;
 static int gRegTraceIndex = 0;
 static int gRegTraceNextReg = -1;
 
 void
-traceRegStart(ThreadState *state, int start, int regIdx)
+traceRegStart(cpu::Core *state, int start, int regIdx)
 {
    gRegTraceState = state;
    gRegTraceIndex = start;

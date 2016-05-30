@@ -351,7 +351,7 @@ executeInstrTest(uint32_t test_seed)
    size_t numRandFields = array_size(randFields);
 
    // Build some randomized state data
-   ThreadState iState, jState;
+   cpu::Core iState, jState;
    for (auto i = 0u; i < numRandFields; ++i) {
       auto field = randFields[i];
 

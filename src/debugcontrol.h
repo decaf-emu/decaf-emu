@@ -7,7 +7,9 @@
 // TODO: Need to use CoreCount, but needs to not be in CoreInit...
 static const int DCCoreCount = 3;
 
-struct ThreadState;
+namespace cpu {
+   struct Core;
+}
 
 class DebugControl
 {
@@ -15,9 +17,9 @@ public:
    DebugControl();
 
    void preLaunch();
-   void maybeBreak(uint32_t addr, ThreadState *state, uint32_t coreIdx);
+   void maybeBreak(uint32_t addr, cpu::Core *state, uint32_t coreIdx);
 
-   void pauseCore(ThreadState *state, uint32_t coreId);
+   void pauseCore(cpu::Core *state, uint32_t coreId);
    void pauseAll();
    void resumeAll();
    void stepCore(uint32_t coreId);

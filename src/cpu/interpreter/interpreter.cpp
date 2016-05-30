@@ -54,25 +54,23 @@ bool hasInstruction(espresso::InstructionID id)
 
 void step_one(Core *core)
 {
-   ThreadState *state = &core->state;
-
    uint32_t interrupt_flags = core->interrupt.exchange(0);
    if (interrupt_flags != 0) {
       cpu::gInterruptHandler(interrupt_flags);
    }
 
-   state->cia = state->nia;
-   state->nia = state->cia + 4;
+   core->cia = core->nia;
+   core->nia = core->cia + 4;
 
-   auto instr = mem::read<espresso::Instruction>(state->cia);
+   auto instr = mem::read<espresso::Instruction>(core->cia);
    auto data = espresso::decodeInstruction(instr);
 
    if (!data) {
-      gLog->error("Could not decode instruction at {:08x} = {:08x}", state->cia, instr.value);
+      gLog->error("Could not decode instruction at {:08x} = {:08x}", core->cia, instr.value);
    }
    assert(data);
 
-   auto trace = traceInstructionStart(instr, data, state);
+   auto trace = traceInstructionStart(instr, data, core);
    auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
 
    if (!fptr) {
@@ -80,19 +78,17 @@ void step_one(Core *core)
    }
    assert(fptr);
 
-   fptr(state, instr);
-   traceInstructionEnd(trace, instr, data, state);
+   fptr(core, instr);
+   traceInstructionEnd(trace, instr, data, core);
 }
 
 void resume(Core *core)
 {
-   ThreadState *state = &core->state;
-
    // Before we resume, we need to update our states!
-   cpu::update_rounding_mode(state);
+   cpu::update_rounding_mode(core);
    std::feclearexcept(FE_ALL_EXCEPT);
 
-   while (state->nia != cpu::CALLBACK_ADDR) {
+   while (core->nia != cpu::CALLBACK_ADDR) {
       step_one(core);
    }
 }

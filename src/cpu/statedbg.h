@@ -14,9 +14,9 @@ static std::string to_hex_string(T i)
    return oss.str();
 }
 
-inline bool dbgStateCmp(ThreadState* state, ThreadState* estate, std::vector<std::string>& errors)
+inline bool dbgStateCmp(cpu::Core* state, cpu::Core* estate, std::vector<std::string>& errors)
 {
-   if (memcmp(state, estate, sizeof(ThreadState)) == 0) {
+   if (memcmp(state, estate, sizeof(cpu::Core)) == 0) {
       return true;
    }
 

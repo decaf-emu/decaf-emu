@@ -68,7 +68,7 @@ DebugControl::waitForAllPaused()
 }
 
 void
-DebugControl::pauseCore(ThreadState *state, uint32_t coreId)
+DebugControl::pauseCore(cpu::Core *state, uint32_t coreId)
 {
    while (mWaitingForPause.load()) {
       std::unique_lock<std::mutex> lock { mMutex };
@@ -96,7 +96,7 @@ DebugControl::preLaunch()
 }
 
 void
-DebugControl::maybeBreak(uint32_t addr, ThreadState *state, uint32_t coreId)
+DebugControl::maybeBreak(uint32_t addr, cpu::Core *state, uint32_t coreId)
 {
    if (!gDebugger.isEnabled()) {
       return;

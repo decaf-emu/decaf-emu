@@ -5,22 +5,22 @@
 template<typename ReturnType, typename... Args>
 ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
 {
-   ThreadState *state = &cpu::this_core::state()->state;
+   auto core = cpu::this_core::state();
 
    // Push args
-   ppctypes::applyArguments(state, args...);
+   ppctypes::applyArguments(core, args...);
 
    // Save state
-   auto nia = state->nia;
+   auto nia = core->nia;
 
    // Set state
-   state->cia = 0;
-   state->nia = address;
+   core->cia = 0;
+   core->nia = address;
    cpu::this_core::execute_sub();
 
    // Restore state
-   state->nia = nia;
+   core->nia = nia;
 
    // Return the result
-   return ppctypes::getResult<ReturnType>(state);
+   return ppctypes::getResult<ReturnType>(core);
 }

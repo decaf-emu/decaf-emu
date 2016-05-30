@@ -381,26 +381,24 @@ JitCode getSingle(uint32_t addr)
 
 uint32_t execute(Core *core, JitCode block)
 {
-   return gCallFn(&core->state, block);
+   return gCallFn(core, block);
 }
 
 void resume(Core *core)
 {
-   ThreadState *state = &core->state;
-
    // Before we resume, we need to update our states!
-   cpu::update_rounding_mode(state);
+   cpu::update_rounding_mode(core);
    std::feclearexcept(FE_ALL_EXCEPT);
 
-   while (state->nia != cpu::CALLBACK_ADDR) {
-      JitCode jitFn = get(state->nia);
+   while (core->nia != cpu::CALLBACK_ADDR) {
+      JitCode jitFn = get(core->nia);
       if (!jitFn) {
          throw;
       }
 
       auto newNia = execute(core, jitFn);
-      state->cia = 0;
-      state->nia = newNia;
+      core->cia = 0;
+      core->nia = newNia;
    }
 }
 

@@ -310,7 +310,7 @@ OSGetDefaultThread(uint32_t coreID)
 uint32_t
 OSGetStackPointer()
 {
-   return cpu::this_core::state()->state.gpr[1];
+   return cpu::this_core::state()->gpr[1];
 }
 
 
@@ -419,7 +419,7 @@ OSPrintCurrentThreadState()
       return;
    }
 
-   auto &state = cpu::this_core::state()->state;
+   auto state = cpu::this_core::state();
 
    fmt::MemoryWriter out;
    out.write("id   = {}\n", thread->id);
@@ -428,24 +428,24 @@ OSPrintCurrentThreadState()
       out.write("name  = {}\n", thread->name.get());
    }
 
-   out.write("cia   = 0x{:08X}\n", state.cia);
-   out.write("lr    = 0x{:08X}\n", state.lr);
-   out.write("cr    = 0x{:08X}\n", state.cr.value);
-   out.write("xer   = 0x{:08X}\n", state.xer.value);
-   out.write("ctr   = 0x{:08X}\n", state.ctr);
+   out.write("cia   = 0x{:08X}\n", state->cia);
+   out.write("lr    = 0x{:08X}\n", state->lr);
+   out.write("cr    = 0x{:08X}\n", state->cr.value);
+   out.write("xer   = 0x{:08X}\n", state->xer.value);
+   out.write("ctr   = 0x{:08X}\n", state->ctr);
 
    for (auto i = 0u; i < 32; ++i) {
-      out.write("r{:<2}   = 0x{:08X}\n", i, state.gpr[i]);
+      out.write("r{:<2}   = 0x{:08X}\n", i, state->gpr[i]);
    }
 
-   out.write("fpscr = 0x{:08X}\n", state.fpscr.value);
+   out.write("fpscr = 0x{:08X}\n", state->fpscr.value);
 
    for (auto i = 0u; i < 32; ++i) {
-      out.write("f{:<2}   = {}\n", i, state.fpr[i].value);
+      out.write("f{:<2}   = {}\n", i, state->fpr[i].value);
    }
 
    for (auto i = 0u; i < 32; ++i) {
-      out.write("ps{:<2}   = {:<16} ps{:<2}   = {}\n", i, state.fpr[i].paired0, i, state.fpr[i].paired1);
+      out.write("ps{:<2}   = {:<16} ps{:<2}   = {}\n", i, state->fpr[i].paired0, i, state->fpr[i].paired1);
    }
 
    gLog->info(out.str());

@@ -136,7 +136,7 @@ struct OSThread
    //! Should always be set to the value OSThread::Tag.
    be_val<uint32_t> tag;
 
-   //! Bitfield of OSThreadState
+   //! Bitfield of OScpu::Core
    be_val<OSThreadState> state;
 
    //! Bitfield of OSThreadAttributes

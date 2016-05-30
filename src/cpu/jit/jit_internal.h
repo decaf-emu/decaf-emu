@@ -16,7 +16,7 @@ RCX . Scratch
 RDX . Scratch
 RDI . Scratch
 RSI . mem::base()
-RBX . ThreadState*
+RBX . Core*
 RBP .
 RSP . Emu Stack Pointer.
 R8-R15 . PPCGPR Storage
@@ -54,7 +54,7 @@ public:
       xmm3 = asmjit::x86::xmm3;
 
 #define offsetof2(s, m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
-#define PPCTSReg(mm) asmjit::X86Mem(zbx, (int32_t)offsetof2(ThreadState, mm), sizeof(ThreadState::mm))
+#define PPCTSReg(mm) asmjit::X86Mem(zbx, (int32_t)offsetof2(Core, mm), sizeof(Core::mm))
       for (auto i = 0; i < 32; ++i) {
          ppcgpr[i] = PPCTSReg(gpr[i]);
       }
@@ -128,7 +128,7 @@ T asmjit_cast(Z* base, size_t offset = 0)
 }
 
 using JitCode = void *;
-using JitCall = uint32_t(*)(ThreadState*, JitCode);
+using JitCall = uint32_t(*)(Core*, JitCode);
 using JitFinale = JitCall;
 
 using JumpLabelMap = std::map<uint32_t, asmjit::Label>;

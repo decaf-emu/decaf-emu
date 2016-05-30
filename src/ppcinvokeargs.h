@@ -11,7 +11,7 @@ template <PpcType PpcTypeId, typename Type>
 struct arg_converter_t;
 
 inline uint32_t
-getNextGPR(ThreadState *state, size_t &r)
+getNextGPR(cpu::Core *state, size_t &r)
 {
    uint32_t value;
 
@@ -27,7 +27,7 @@ getNextGPR(ThreadState *state, size_t &r)
 }
 
 inline void
-setNextGPR(ThreadState *state, size_t &r, uint32_t value)
+setNextGPR(cpu::Core *state, size_t &r, uint32_t value)
 {
    if (r > 10) {
       auto addr = state->gpr[1] + 8 +  4 * static_cast<uint32_t>(r - 11);
@@ -42,12 +42,12 @@ setNextGPR(ThreadState *state, size_t &r, uint32_t value)
 template<typename Type>
 struct arg_converter_t<PpcType::WORD, Type>
 {
-   static inline Type get(ThreadState *state, size_t &r, size_t &f)
+   static inline Type get(cpu::Core *state, size_t &r, size_t &f)
    {
       return ppctype_converter_t<Type>::from_ppc(getNextGPR(state, r));
    }
 
-   static inline void set(ThreadState *state, size_t &r, size_t &f, Type v)
+   static inline void set(cpu::Core *state, size_t &r, size_t &f, Type v)
    {
       uint32_t x;
       ppctype_converter_t<Type>::to_ppc(v, x);
@@ -58,14 +58,14 @@ struct arg_converter_t<PpcType::WORD, Type>
 template<typename Type>
 struct arg_converter_t<PpcType::DWORD, Type>
 {
-   static inline Type get(ThreadState *state, size_t &r, size_t &f)
+   static inline Type get(cpu::Core *state, size_t &r, size_t &f)
    {
       auto x = getNextGPR(state, r);
       auto y = getNextGPR(state, r);
       return ppctype_converter_t<Type>::from_ppc(x, y);
    }
 
-   static inline void set(ThreadState *state, size_t &r, size_t &f, Type v)
+   static inline void set(cpu::Core *state, size_t &r, size_t &f, Type v)
    {
       uint32_t x, y;
       ppctype_converter_t<Type>::to_ppc(v, x, y);
@@ -77,13 +77,13 @@ struct arg_converter_t<PpcType::DWORD, Type>
 template<typename Type>
 struct arg_converter_t<PpcType::FLOAT, Type>
 {
-   static inline Type get(ThreadState *state, size_t &r, size_t &f)
+   static inline Type get(cpu::Core *state, size_t &r, size_t &f)
    {
       auto& x = state->fpr[f++].paired0;
       return ppctype_converter_t<Type>::from_ppc(x);
    }
 
-   static inline void set(ThreadState *state, size_t &r, size_t &f, Type v)
+   static inline void set(cpu::Core *state, size_t &r, size_t &f, Type v)
    {
       auto& x = state->fpr[f++].paired0;
       ppctype_converter_t<Type>::to_ppc(v, x);
@@ -93,13 +93,13 @@ struct arg_converter_t<PpcType::FLOAT, Type>
 template<typename Type>
 struct arg_converter_t<PpcType::DOUBLE, Type>
 {
-   static inline Type get(ThreadState *state, size_t &r, size_t &f)
+   static inline Type get(cpu::Core *state, size_t &r, size_t &f)
    {
       auto& x = state->fpr[f++].paired0;
       return ppctype_converter_t<Type>::from_ppc(x);
    }
 
-   static inline void set(ThreadState *state, size_t &r, size_t &f, Type v)
+   static inline void set(cpu::Core *state, size_t &r, size_t &f, Type v)
    {
       auto& x = state->fpr[f++].paired0;
       ppctype_converter_t<Type>::to_ppc(v, x);
@@ -114,7 +114,7 @@ alignRegister64(size_t r)
 
 template<typename Type>
 inline void
-setArgument(ThreadState *state, size_t &r, size_t &f, Type v)
+setArgument(cpu::Core *state, size_t &r, size_t &f, Type v)
 {
    if (ppctype_converter_t<Type>::ppc_type == PpcType::DWORD) {
       r = alignRegister64(r);
@@ -126,7 +126,7 @@ setArgument(ThreadState *state, size_t &r, size_t &f, Type v)
 // Grab an argument from registers for function
 template<typename Type>
 inline Type
-getArgument(ThreadState *state, size_t &r, size_t &f)
+getArgument(cpu::Core *state, size_t &r, size_t &f)
 {
    if (ppctype_converter_t<Type>::ppc_type == PpcType::DWORD) {
       r = alignRegister64(r);

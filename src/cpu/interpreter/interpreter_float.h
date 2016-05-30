@@ -2,34 +2,34 @@
 #include "../state.h"
 
 void
-updateFEX_VX(ThreadState *state);
+updateFEX_VX(cpu::Core *state);
 
 void
-updateFX_FEX_VX(ThreadState *state, uint32_t oldValue);
+updateFX_FEX_VX(cpu::Core *state, uint32_t oldValue);
 
 void
-updateFPSCR(ThreadState *state, uint32_t oldValue);
+updateFPSCR(cpu::Core *state, uint32_t oldValue);
 
 template<typename Type> void
-updateFPRF(ThreadState *state, Type value);
+updateFPRF(cpu::Core *state, Type value);
 
 void
-updateFloatConditionRegister(ThreadState *state);
+updateFloatConditionRegister(cpu::Core *state);
 
 void
 roundForMultiply(double *a, double *c);
 
 template<typename Type> Type
-getFpr(ThreadState *state, unsigned fr);
+getFpr(cpu::Core *state, unsigned fr);
 
 template<> float
-getFpr<float>(ThreadState *state, unsigned fr);
+getFpr<float>(cpu::Core *state, unsigned fr);
 
 template<> double
-getFpr<double>(ThreadState *state, unsigned fr);
+getFpr<double>(cpu::Core *state, unsigned fr);
 
 void
-setFpr(ThreadState *state, unsigned fr, float value);
+setFpr(cpu::Core *state, unsigned fr, float value);
 
 void
-setFpr(ThreadState *state, unsigned fr, double value);
+setFpr(cpu::Core *state, unsigned fr, double value);

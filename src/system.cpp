@@ -78,7 +78,7 @@ System::findModule(const std::string &name) const
  * Forwarder function which PPC will branch to for a kernel library function call
  */
 static void
-kcstub(ThreadState *state, void *data)
+kcstub(cpu::Core *state, void *data)
 {
    auto func = static_cast<KernelFunction *>(data);
 

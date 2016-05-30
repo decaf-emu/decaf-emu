@@ -14,7 +14,7 @@ namespace ppctypes
 struct _argumentsState
 {
    LogState log;
-   ThreadState *thread;
+   cpu::Core *thread;
    size_t r;
    size_t f;
 };
@@ -57,7 +57,7 @@ applyArguments2(_argumentsState& state, Last last)
 // Apply host function call arguments to PowerPC registers
 template<typename... Args>
 inline void
-applyArguments(ThreadState *state, Args&&... args)
+applyArguments(cpu::Core *state, Args&&... args)
 {
    _argumentsState argstate;
    argstate.thread = state;
@@ -131,7 +131,7 @@ invoke2(_argumentsState& state, void func(FnArgs...), type_list<>, Args... args)
 // Call a static function from PPC
 template<typename ReturnType, typename... Args>
 inline void
-invoke(ThreadState *state, ReturnType (*func)(Args...), const std::string &name = "")
+invoke(cpu::Core *state, ReturnType (*func)(Args...), const std::string &name = "")
 {
    _argumentsState argstate;
    argstate.thread = state;
@@ -203,7 +203,7 @@ invokeMemberFn2(_argumentsState& state, void (ObjectType::*func)(FnArgs...), typ
 // Call a member function from PPC
 template<typename ObjectType, typename ReturnType, typename... Args>
 inline void
-invokeMemberFn(ThreadState *state, ReturnType (ObjectType::*func)(Args...), const std::string &name = "")
+invokeMemberFn(cpu::Core *state, ReturnType (ObjectType::*func)(Args...), const std::string &name = "")
 {
    // Start arguments from r4, as r3=this
    _argumentsState argstate;

@@ -38,7 +38,7 @@ loadFloatAsDouble(uint32_t ea)
 
 template<unsigned flags = 0>
 static void
-loadFloat(ThreadState *state, Instruction instr)
+loadFloat(cpu::Core *state, Instruction instr)
 {
    uint32_t ea;
 
@@ -65,7 +65,7 @@ loadFloat(ThreadState *state, Instruction instr)
 
 template<typename Type, unsigned flags = 0>
 static void
-loadGeneric(ThreadState *state, Instruction instr)
+loadGeneric(cpu::Core *state, Instruction instr)
 {
    uint32_t ea;
    Type d;
@@ -121,163 +121,163 @@ loadGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-lbz(ThreadState *state, Instruction instr)
+lbz(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint8_t, LoadZeroRA>(state, instr);
 }
 
 static void
-lbzu(ThreadState *state, Instruction instr)
+lbzu(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint8_t, LoadUpdate>(state, instr);
 }
 
 static void
-lbzux(ThreadState *state, Instruction instr)
+lbzux(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint8_t, LoadUpdate | LoadIndexed>(state, instr);
 }
 
 static void
-lbzx(ThreadState *state, Instruction instr)
+lbzx(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint8_t, LoadIndexed | LoadZeroRA>(state, instr);
 }
 
 static void
-lha(ThreadState *state, Instruction instr)
+lha(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint16_t, LoadSignExtend | LoadZeroRA>(state, instr);
 }
 
 static void
-lhau(ThreadState *state, Instruction instr)
+lhau(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint16_t, LoadSignExtend | LoadUpdate>(state, instr);
 }
 
 static void
-lhaux(ThreadState *state, Instruction instr)
+lhaux(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint16_t, LoadSignExtend | LoadUpdate | LoadIndexed>(state, instr);
 }
 
 static void
-lhax(ThreadState *state, Instruction instr)
+lhax(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint16_t, LoadSignExtend | LoadIndexed | LoadZeroRA>(state, instr);
 }
 
 static void
-lhbrx(ThreadState *state, Instruction instr)
+lhbrx(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint16_t, LoadByteReverse | LoadIndexed | LoadZeroRA>(state, instr);
 }
 
 static void
-lhz(ThreadState *state, Instruction instr)
+lhz(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint16_t, LoadZeroRA>(state, instr);
 }
 
 static void
-lhzu(ThreadState *state, Instruction instr)
+lhzu(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint16_t, LoadUpdate>(state, instr);
 }
 
 static void
-lhzux(ThreadState *state, Instruction instr)
+lhzux(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint16_t, LoadUpdate | LoadIndexed>(state, instr);
 }
 
 static void
-lhzx(ThreadState *state, Instruction instr)
+lhzx(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint16_t, LoadIndexed | LoadZeroRA>(state, instr);
 }
 
 static void
-lwbrx(ThreadState *state, Instruction instr)
+lwbrx(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint32_t, LoadByteReverse | LoadIndexed | LoadZeroRA>(state, instr);
 }
 
 static void
-lwarx(ThreadState *state, Instruction instr)
+lwarx(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint32_t, LoadReserve | LoadIndexed | LoadZeroRA>(state, instr);
 }
 
 static void
-lwz(ThreadState *state, Instruction instr)
+lwz(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint32_t, LoadZeroRA>(state, instr);
 }
 
 static void
-lwzu(ThreadState *state, Instruction instr)
+lwzu(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint32_t, LoadUpdate>(state, instr);
 }
 
 static void
-lwzux(ThreadState *state, Instruction instr)
+lwzux(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint32_t, LoadUpdate | LoadIndexed>(state, instr);
 }
 
 static void
-lwzx(ThreadState *state, Instruction instr)
+lwzx(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<uint32_t, LoadIndexed | LoadZeroRA>(state, instr);
 }
 
 static void
-lfs(ThreadState *state, Instruction instr)
+lfs(cpu::Core *state, Instruction instr)
 {
    return loadFloat<LoadZeroRA>(state, instr);
 }
 
 static void
-lfsu(ThreadState *state, Instruction instr)
+lfsu(cpu::Core *state, Instruction instr)
 {
    return loadFloat<LoadUpdate>(state, instr);
 }
 
 static void
-lfsux(ThreadState *state, Instruction instr)
+lfsux(cpu::Core *state, Instruction instr)
 {
    return loadFloat<LoadUpdate | LoadIndexed>(state, instr);
 }
 
 static void
-lfsx(ThreadState *state, Instruction instr)
+lfsx(cpu::Core *state, Instruction instr)
 {
    return loadFloat<LoadZeroRA | LoadIndexed>(state, instr);
 }
 
 static void
-lfd(ThreadState *state, Instruction instr)
+lfd(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<double, LoadZeroRA>(state, instr);
 }
 
 static void
-lfdu(ThreadState *state, Instruction instr)
+lfdu(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<double, LoadUpdate>(state, instr);
 }
 
 static void
-lfdux(ThreadState *state, Instruction instr)
+lfdux(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<double, LoadUpdate | LoadIndexed>(state, instr);
 }
 
 static void
-lfdx(ThreadState *state, Instruction instr)
+lfdx(cpu::Core *state, Instruction instr)
 {
    return loadGeneric<double, LoadZeroRA | LoadIndexed>(state, instr);
 }
@@ -285,7 +285,7 @@ lfdx(ThreadState *state, Instruction instr)
 // Load Multiple Words
 // Fills registers from rD to r31 with consecutive words from memory
 static void
-lmw(ThreadState *state, Instruction instr)
+lmw(cpu::Core *state, Instruction instr)
 {
    uint32_t b, ea, r;
 
@@ -310,7 +310,7 @@ enum LswFlags
 
 template<unsigned flags = 0>
 static void
-lswGeneric(ThreadState *state, Instruction instr)
+lswGeneric(cpu::Core *state, Instruction instr)
 {
    uint32_t ea, i, n, r;
 
@@ -341,13 +341,13 @@ lswGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-lswi(ThreadState *state, Instruction instr)
+lswi(cpu::Core *state, Instruction instr)
 {
    lswGeneric(state, instr);
 }
 
 static void
-lswx(ThreadState *state, Instruction instr)
+lswx(cpu::Core *state, Instruction instr)
 {
    lswGeneric<LswIndexed>(state, instr);
 }
@@ -377,7 +377,7 @@ storeDoubleAsFloat(uint32_t ea, double d)
 
 template<unsigned flags = 0>
 static void
-storeFloat(ThreadState *state, Instruction instr)
+storeFloat(cpu::Core *state, Instruction instr)
 {
    uint32_t ea;
 
@@ -403,7 +403,7 @@ storeFloat(ThreadState *state, Instruction instr)
 
 template<typename Type, unsigned flags = 0>
 static void
-storeGeneric(ThreadState *state, Instruction instr)
+storeGeneric(cpu::Core *state, Instruction instr)
 {
    uint32_t ea;
    Type s;
@@ -460,145 +460,145 @@ storeGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-stb(ThreadState *state, Instruction instr)
+stb(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint8_t, StoreZeroRA>(state, instr);
 }
 
 static void
-stbu(ThreadState *state, Instruction instr)
+stbu(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint8_t, StoreUpdate>(state, instr);
 }
 
 static void
-stbux(ThreadState *state, Instruction instr)
+stbux(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint8_t, StoreUpdate | StoreIndexed>(state, instr);
 }
 
 static void
-stbx(ThreadState *state, Instruction instr)
+stbx(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint8_t, StoreZeroRA | StoreIndexed>(state, instr);
 }
 
 static void
-sth(ThreadState *state, Instruction instr)
+sth(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint16_t, StoreZeroRA>(state, instr);
 }
 
 static void
-sthu(ThreadState *state, Instruction instr)
+sthu(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint16_t, StoreUpdate>(state, instr);
 }
 
 static void
-sthux(ThreadState *state, Instruction instr)
+sthux(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint16_t, StoreUpdate | StoreIndexed>(state, instr);
 }
 
 static void
-sthx(ThreadState *state, Instruction instr)
+sthx(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint16_t, StoreZeroRA | StoreIndexed>(state, instr);
 }
 
 static void
-stw(ThreadState *state, Instruction instr)
+stw(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint32_t, StoreZeroRA>(state, instr);
 }
 
 static void
-stwu(ThreadState *state, Instruction instr)
+stwu(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint32_t, StoreUpdate>(state, instr);
 }
 
 static void
-stwux(ThreadState *state, Instruction instr)
+stwux(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint32_t, StoreUpdate | StoreIndexed>(state, instr);
 }
 
 static void
-stwx(ThreadState *state, Instruction instr)
+stwx(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint32_t, StoreZeroRA | StoreIndexed>(state, instr);
 }
 
 static void
-sthbrx(ThreadState *state, Instruction instr)
+sthbrx(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint16_t, StoreZeroRA | StoreByteReverse | StoreIndexed>(state, instr);
 }
 
 static void
-stwbrx(ThreadState *state, Instruction instr)
+stwbrx(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint32_t, StoreZeroRA | StoreByteReverse | StoreIndexed>(state, instr);
 }
 
 static void
-stwcx(ThreadState *state, Instruction instr)
+stwcx(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint32_t, StoreZeroRA | StoreConditional | StoreIndexed>(state, instr);
 }
 
 static void
-stfs(ThreadState *state, Instruction instr)
+stfs(cpu::Core *state, Instruction instr)
 {
    storeFloat<StoreZeroRA>(state, instr);
 }
 
 static void
-stfsu(ThreadState *state, Instruction instr)
+stfsu(cpu::Core *state, Instruction instr)
 {
    storeFloat<StoreUpdate>(state, instr);
 }
 
 static void
-stfsux(ThreadState *state, Instruction instr)
+stfsux(cpu::Core *state, Instruction instr)
 {
    storeFloat<StoreUpdate | StoreIndexed>(state, instr);
 }
 
 static void
-stfsx(ThreadState *state, Instruction instr)
+stfsx(cpu::Core *state, Instruction instr)
 {
    storeFloat<StoreZeroRA | StoreIndexed>(state, instr);
 }
 
 static void
-stfd(ThreadState *state, Instruction instr)
+stfd(cpu::Core *state, Instruction instr)
 {
    storeGeneric<double, StoreZeroRA>(state, instr);
 }
 
 static void
-stfdu(ThreadState *state, Instruction instr)
+stfdu(cpu::Core *state, Instruction instr)
 {
    storeGeneric<double, StoreUpdate>(state, instr);
 }
 
 static void
-stfdux(ThreadState *state, Instruction instr)
+stfdux(cpu::Core *state, Instruction instr)
 {
    storeGeneric<double, StoreUpdate | StoreIndexed>(state, instr);
 }
 
 static void
-stfdx(ThreadState *state, Instruction instr)
+stfdx(cpu::Core *state, Instruction instr)
 {
    storeGeneric<double, StoreZeroRA | StoreIndexed>(state, instr);
 }
 
 static void
-stfiwx(ThreadState *state, Instruction instr)
+stfiwx(cpu::Core *state, Instruction instr)
 {
    storeGeneric<uint32_t, StoreFloatAsInteger | StoreZeroRA | StoreIndexed>(state, instr);
 }
@@ -606,7 +606,7 @@ stfiwx(ThreadState *state, Instruction instr)
 // Store Multiple Words
 // Writes consecutive words to memory from rS to r31
 static void
-stmw(ThreadState *state, Instruction instr)
+stmw(cpu::Core *state, Instruction instr)
 {
    uint32_t b, ea, r;
 
@@ -631,7 +631,7 @@ enum StswFlags
 
 template<unsigned flags = 0>
 static void
-stswGeneric(ThreadState *state, Instruction instr)
+stswGeneric(cpu::Core *state, Instruction instr)
 {
    uint32_t ea, i, n, r;
 
@@ -661,13 +661,13 @@ stswGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-stswi(ThreadState *state, Instruction instr)
+stswi(cpu::Core *state, Instruction instr)
 {
    stswGeneric(state, instr);
 }
 
 static void
-stswx(ThreadState *state, Instruction instr)
+stswx(cpu::Core *state, Instruction instr)
 {
    stswGeneric<StswIndexed>(state, instr);
 }
@@ -769,7 +769,7 @@ enum PsqLoadFlags
 
 template<unsigned flags = 0>
 static void
-psqLoad(ThreadState *state, Instruction instr)
+psqLoad(cpu::Core *state, Instruction instr)
 {
    uint32_t ea, ls, c, i, w;
    QuantizedDataType lt;
@@ -818,25 +818,25 @@ psqLoad(ThreadState *state, Instruction instr)
 }
 
 static void
-psq_l(ThreadState *state, Instruction instr)
+psq_l(cpu::Core *state, Instruction instr)
 {
    psqLoad<PsqLoadZeroRA>(state, instr);
 }
 
 static void
-psq_lu(ThreadState *state, Instruction instr)
+psq_lu(cpu::Core *state, Instruction instr)
 {
    psqLoad<PsqLoadUpdate>(state, instr);
 }
 
 static void
-psq_lx(ThreadState *state, Instruction instr)
+psq_lx(cpu::Core *state, Instruction instr)
 {
    psqLoad<PsqLoadZeroRA | PsqLoadIndexed>(state, instr);
 }
 
 static void
-psq_lux(ThreadState *state, Instruction instr)
+psq_lux(cpu::Core *state, Instruction instr)
 {
    psqLoad<PsqLoadUpdate | PsqLoadIndexed>(state, instr);
 }
@@ -851,7 +851,7 @@ enum PsqStoreFlags
 
 template<unsigned flags = 0>
 static void
-psqStore(ThreadState *state, Instruction instr)
+psqStore(cpu::Core *state, Instruction instr)
 {
    uint32_t ea, sts, c, i, w;
    QuantizedDataType stt;
@@ -899,25 +899,25 @@ psqStore(ThreadState *state, Instruction instr)
 }
 
 static void
-psq_st(ThreadState *state, Instruction instr)
+psq_st(cpu::Core *state, Instruction instr)
 {
    psqStore<PsqStoreZeroRA>(state, instr);
 }
 
 static void
-psq_stu(ThreadState *state, Instruction instr)
+psq_stu(cpu::Core *state, Instruction instr)
 {
    psqStore<PsqLoadUpdate>(state, instr);
 }
 
 static void
-psq_stx(ThreadState *state, Instruction instr)
+psq_stx(cpu::Core *state, Instruction instr)
 {
    psqStore<PsqStoreZeroRA | PsqStoreIndexed>(state, instr);
 }
 
 static void
-psq_stux(ThreadState *state, Instruction instr)
+psq_stux(cpu::Core *state, Instruction instr)
 {
    psqStore<PsqStoreUpdate | PsqStoreIndexed>(state, instr);
 }

@@ -5,7 +5,9 @@
 #include "espresso/espresso_instruction.h"
 #include "espresso/espresso_instructionset.h"
 
-struct ThreadState;
+namespace cpu {
+   struct Core;
+}
 struct Tracer;
 
 // TODO: Probably should rename this to something reasonable
@@ -82,10 +84,10 @@ std::string
 getStateFieldName(TraceFieldType type);
 
 void
-saveStateField(const ThreadState *state, TraceFieldType type, TraceFieldValue &field);
+saveStateField(const cpu::Core *state, TraceFieldType type, TraceFieldValue &field);
 
 void
-restoreStateField(ThreadState *state, TraceFieldType type, const TraceFieldValue &field);
+restoreStateField(cpu::Core *state, TraceFieldType type, const TraceFieldValue &field);
 
 struct Trace
 {
@@ -110,22 +112,22 @@ const Trace& getTrace(Tracer *tracer, int index);
 size_t getTracerNumTraces(Tracer *tracer);
 
 void
-traceInit(ThreadState *state, size_t size);
+traceInit(cpu::Core *state, size_t size);
 
 Trace *
-traceInstructionStart(espresso::Instruction instr, espresso::InstructionInfo *data, ThreadState *state);
+traceInstructionStart(espresso::Instruction instr, espresso::InstructionInfo *data, cpu::Core *state);
 
 void
-traceInstructionEnd(Trace *trace, espresso::Instruction instr, espresso::InstructionInfo *data, ThreadState *state);
+traceInstructionEnd(Trace *trace, espresso::Instruction instr, espresso::InstructionInfo *data, cpu::Core *state);
 
 void
-tracePrint(ThreadState *state, int start, int count);
+tracePrint(cpu::Core *state, int start, int count);
 
 int
-traceReg(ThreadState *state, int start, int regIdx);
+traceReg(cpu::Core *state, int start, int regIdx);
 
 void
-traceRegStart(ThreadState *state, int start, int regIdx);
+traceRegStart(cpu::Core *state, int start, int regIdx);
 
 void
 traceRegNext(int regIdx);

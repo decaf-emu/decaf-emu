@@ -3,9 +3,11 @@
 #include <thread>
 #include "cpu/espresso/espresso_registers.h"
 
-// Thread registers
-// TODO: Some system registers may not be thread-specific!
-struct ThreadState
+struct Tracer;
+
+namespace cpu {
+
+struct Core
 {
    // TODO: Remove these
    using gpr_t = espresso::gpr_t;
@@ -16,8 +18,6 @@ struct ThreadState
    using pvr_t = espresso::pvr_t;
    using msr_t = espresso::msr_t;
    using gqr_t = espresso::gqr_t;
-
-   struct Tracer *tracer;
 
    uint32_t cia;     // Current execution address
    uint32_t nia;     // Next execution address
@@ -44,18 +44,16 @@ struct ThreadState
    bool reserve;
    uint32_t reserveAddress;
    uint32_t reserveData;
-};
 
-namespace cpu {
+   // Tracer used to record executed instructions
+   Tracer *tracer;
 
-struct Core
-{
+   // State data used by the CPU executors
    uint32_t id;
    std::thread thread;
    std::atomic_uint32_t interrupt{ 0 };
    std::chrono::system_clock::time_point next_alarm;
 
-   ThreadState state;
 };
 
 }

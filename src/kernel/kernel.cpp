@@ -212,13 +212,13 @@ bool launch_game()
 
          auto stackSize = 2048;
          auto stack = reinterpret_cast<uint8_t *>(coreinit::internal::sysAlloc(stackSize, 8));
-         auto &state = cpu::this_core::state()->state;
+         auto state = cpu::this_core::state();
 
          // Setup a valid context
-         state.gpr[0] = 0;
-         state.gpr[1] = mem::untranslate(stack) + stackSize - 4;
-         state.gpr[2] = sda2Base;
-         state.gpr[13] = sdaBase;
+         state->gpr[0] = 0;
+         state->gpr[1] = mem::untranslate(stack) + stackSize - 4;
+         state->gpr[2] = sda2Base;
+         state->gpr[13] = sdaBase;
 
          userPreinit(&wiiHandles->mem1Heap, &wiiHandles->fgHeap, &wiiHandles->mem2Heap);
 

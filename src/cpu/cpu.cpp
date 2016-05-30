@@ -22,7 +22,7 @@ gJitMode = jit_mode::disabled;
 static Core
 gCore[3];
 
-static thread_local Core *
+static thread_local cpu::Core *
 tCurrentCore = nullptr;
 
 std::mutex
@@ -93,7 +93,7 @@ void start()
 		auto &core = gCore[i];
       
       core.id = i;
-		core.thread = std::thread(std::bind(&cpu::coreEntryPoint, &core));
+		core.thread = std::thread(std::bind(&coreEntryPoint, &core));
       core.next_alarm = std::chrono::time_point<std::chrono::system_clock>::max();
 
 		static const std::string coreNames[] = { "Core #0", "Core #1", "Core #2" };
@@ -118,7 +118,7 @@ void halt()
 namespace this_core
 {
 
-Core * state()
+cpu::Core * state()
 {
    return tCurrentCore;
 }
@@ -134,15 +134,15 @@ void resume()
 
 void execute_sub()
 {
-   auto lr = tCurrentCore->state.lr;
-   tCurrentCore->state.lr = CALLBACK_ADDR;
+   auto lr = tCurrentCore->lr;
+   tCurrentCore->lr = CALLBACK_ADDR;
    resume();
-   tCurrentCore->state.lr = lr;
+   tCurrentCore->lr = lr;
 }
 
 void wait_for_interrupt()
 {
-   Core *core = tCurrentCore;
+   cpu::Core *core = tCurrentCore;
    std::unique_lock<std::mutex> lock{ gInterruptMutex };
    while (true) {
       if (core->interrupt.load()) {
@@ -179,7 +179,7 @@ void interrupt(int core_idx, uint32_t flags)
 }
 
 void
-update_rounding_mode(ThreadState *state)
+update_rounding_mode(Core *state)
 {
    static const int modes[4] = {
       FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD, FE_DOWNWARD

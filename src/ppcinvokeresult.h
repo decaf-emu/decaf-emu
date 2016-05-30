@@ -12,12 +12,12 @@ struct result_converter_t;
 template<typename Type>
 struct result_converter_t<PpcType::WORD, Type>
 {
-   static inline void set(ThreadState *state, Type v)
+   static inline void set(cpu::Core *state, Type v)
    {
       ppctype_converter_t<Type>::to_ppc(v, state->gpr[3]);
    }
 
-   static inline Type get(ThreadState *state)
+   static inline Type get(cpu::Core *state)
    {
       return ppctype_converter_t<Type>::from_ppc(state->gpr[3]);
    }
@@ -26,12 +26,12 @@ struct result_converter_t<PpcType::WORD, Type>
 template<typename Type>
 struct result_converter_t<PpcType::DWORD, Type>
 {
-   static inline void set(ThreadState *state, Type v)
+   static inline void set(cpu::Core *state, Type v)
    {
       ppctype_converter_t<Type>::to_ppc(v, state->gpr[3], state->gpr[4]);
    }
 
-   static inline Type get(ThreadState *state)
+   static inline Type get(cpu::Core *state)
    {
       return ppctype_converter_t<Type>::from_ppc(state->gpr[3], state->gpr[4]);
    }
@@ -40,21 +40,21 @@ struct result_converter_t<PpcType::DWORD, Type>
 // Copy return result to registers
 template<typename Type>
 inline void
-setResult(ThreadState *state, Type v)
+setResult(cpu::Core *state, Type v)
 {
    result_converter_t<ppctype_converter_t<Type>::ppc_type, Type>::set(state, v);
 }
 
 template<typename Type>
 inline Type
-getResult(ThreadState *state)
+getResult(cpu::Core *state)
 {
    return result_converter_t<ppctype_converter_t<Type>::ppc_type, Type>::get(state);
 }
 
 template <>
 inline void
-getResult<void>(ThreadState *state)
+getResult<void>(cpu::Core *state)
 {
 }
 

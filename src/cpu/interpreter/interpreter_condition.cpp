@@ -19,14 +19,14 @@ getCRFRange(uint32_t field)
 }
 
 uint32_t
-getCRF(ThreadState *state, uint32_t field)
+getCRF(cpu::Core *state, uint32_t field)
 {
    auto bits = getCRFRange(field);
    return (state->cr.value >> bits.first) & 0xf;
 }
 
 void
-setCRF(ThreadState *state, uint32_t field, uint32_t value)
+setCRF(cpu::Core *state, uint32_t field, uint32_t value)
 {
    auto cr = state->cr.value;
    auto bits = getCRFRange(field);
@@ -37,13 +37,13 @@ setCRF(ThreadState *state, uint32_t field, uint32_t value)
 }
 
 uint32_t
-getCRB(ThreadState *state, uint32_t bit)
+getCRB(cpu::Core *state, uint32_t bit)
 {
    return get_bit(state->cr.value, 31 - bit);
 }
 
 void
-setCRB(ThreadState *state, uint32_t bit, uint32_t value)
+setCRB(cpu::Core *state, uint32_t bit, uint32_t value)
 {
    state->cr.value = set_bit_value(state->cr.value, 31 - bit, value);
 }
@@ -56,7 +56,7 @@ enum CmpFlags
 
 template<typename Type, unsigned flags = 0>
 static void
-cmpGeneric(ThreadState *state, Instruction instr)
+cmpGeneric(cpu::Core *state, Instruction instr)
 {
    Type a, b;
    uint32_t c;
@@ -89,25 +89,25 @@ cmpGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-cmp(ThreadState *state, Instruction instr)
+cmp(cpu::Core *state, Instruction instr)
 {
    return cmpGeneric<int32_t>(state, instr);
 }
 
 static void
-cmpi(ThreadState *state, Instruction instr)
+cmpi(cpu::Core *state, Instruction instr)
 {
    return cmpGeneric<int32_t, CmpImmediate>(state, instr);
 }
 
 static void
-cmpl(ThreadState *state, Instruction instr)
+cmpl(cpu::Core *state, Instruction instr)
 {
    return cmpGeneric<uint32_t>(state, instr);
 }
 
 static void
-cmpli(ThreadState *state, Instruction instr)
+cmpli(cpu::Core *state, Instruction instr)
 {
    return cmpGeneric<uint32_t, CmpImmediate>(state, instr);
 }
@@ -122,7 +122,7 @@ enum FCmpFlags
 
 template<unsigned flags>
 static void
-fcmpGeneric(ThreadState *state, Instruction instr)
+fcmpGeneric(cpu::Core *state, Instruction instr)
 {
    double a, b;
    uint32_t c;
@@ -158,44 +158,44 @@ fcmpGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-fcmpo(ThreadState *state, Instruction instr)
+fcmpo(cpu::Core *state, Instruction instr)
 {
    return fcmpGeneric<FCmpOrdered>(state, instr);
 }
 
 static void
-fcmpu(ThreadState *state, Instruction instr)
+fcmpu(cpu::Core *state, Instruction instr)
 {
    return fcmpGeneric<FCmpUnordered>(state, instr);
 }
 
 static void
-ps_cmpo0(ThreadState *state, Instruction instr)
+ps_cmpo0(cpu::Core *state, Instruction instr)
 {
    return fcmpGeneric<FCmpOrdered>(state, instr);
 }
 
 static void
-ps_cmpo1(ThreadState *state, Instruction instr)
+ps_cmpo1(cpu::Core *state, Instruction instr)
 {
    return fcmpGeneric<FCmpOrdered | FCmpPS1>(state, instr);
 }
 
 static void
-ps_cmpu0(ThreadState *state, Instruction instr)
+ps_cmpu0(cpu::Core *state, Instruction instr)
 {
    return fcmpGeneric<FCmpUnordered>(state, instr);
 }
 
 static void
-ps_cmpu1(ThreadState *state, Instruction instr)
+ps_cmpu1(cpu::Core *state, Instruction instr)
 {
    return fcmpGeneric<FCmpUnordered | FCmpPS1>(state, instr);
 }
 
 // Condition Register AND
 static void
-crand(ThreadState *state, Instruction instr)
+crand(cpu::Core *state, Instruction instr)
 {
    uint32_t a, b, d;
    a = getCRB(state, instr.crbA);
@@ -207,7 +207,7 @@ crand(ThreadState *state, Instruction instr)
 
 // Condition Register AND with Complement
 static void
-crandc(ThreadState *state, Instruction instr)
+crandc(cpu::Core *state, Instruction instr)
 {
    uint32_t a, b, d;
    a = getCRB(state, instr.crbA);
@@ -219,7 +219,7 @@ crandc(ThreadState *state, Instruction instr)
 
 // Condition Register Equivalent
 static void
-creqv(ThreadState *state, Instruction instr)
+creqv(cpu::Core *state, Instruction instr)
 {
    uint32_t a, b, d;
    a = getCRB(state, instr.crbA);
@@ -231,7 +231,7 @@ creqv(ThreadState *state, Instruction instr)
 
 // Condition Register NAND
 static void
-crnand(ThreadState *state, Instruction instr)
+crnand(cpu::Core *state, Instruction instr)
 {
    uint32_t a, b, d;
    a = getCRB(state, instr.crbA);
@@ -243,7 +243,7 @@ crnand(ThreadState *state, Instruction instr)
 
 // Condition Register NOR
 static void
-crnor(ThreadState *state, Instruction instr)
+crnor(cpu::Core *state, Instruction instr)
 {
    uint32_t a, b, d;
    a = getCRB(state, instr.crbA);
@@ -255,7 +255,7 @@ crnor(ThreadState *state, Instruction instr)
 
 // Condition Register OR
 static void
-cror(ThreadState *state, Instruction instr)
+cror(cpu::Core *state, Instruction instr)
 {
    uint32_t a, b, d;
    a = getCRB(state, instr.crbA);
@@ -267,7 +267,7 @@ cror(ThreadState *state, Instruction instr)
 
 // Condition Register OR with Complement
 static void
-crorc(ThreadState *state, Instruction instr)
+crorc(cpu::Core *state, Instruction instr)
 {
    uint32_t a, b, d;
    a = getCRB(state, instr.crbA);
@@ -279,7 +279,7 @@ crorc(ThreadState *state, Instruction instr)
 
 // Condition Register XOR
 static void
-crxor(ThreadState *state, Instruction instr)
+crxor(cpu::Core *state, Instruction instr)
 {
    uint32_t a, b, d;
    a = getCRB(state, instr.crbA);
@@ -291,14 +291,14 @@ crxor(ThreadState *state, Instruction instr)
 
 // Move Condition Register Field
 static void
-mcrf(ThreadState *state, Instruction instr)
+mcrf(cpu::Core *state, Instruction instr)
 {
    setCRF(state, instr.crfD, getCRF(state, instr.crfS));
 }
 
 // Move to Condition Register from FPSCR
 static void
-mcrfs(ThreadState *state, Instruction instr)
+mcrfs(cpu::Core *state, Instruction instr)
 {
    const int shiftS = 4 * (7 - instr.crfS);
 
@@ -315,7 +315,7 @@ mcrfs(ThreadState *state, Instruction instr)
 
 // Move to Condition Register from XER
 static void
-mcrxr(ThreadState *state, Instruction instr)
+mcrxr(cpu::Core *state, Instruction instr)
 {
    setCRF(state, instr.crfD, state->xer.crxr);
    state->xer.crxr = 0;
@@ -323,14 +323,14 @@ mcrxr(ThreadState *state, Instruction instr)
 
 // Move from Condition Register
 static void
-mfcr(ThreadState *state, Instruction instr)
+mfcr(cpu::Core *state, Instruction instr)
 {
    state->gpr[instr.rD] = state->cr.value;
 }
 
 // Move to Condition Register Fields
 static void
-mtcrf(ThreadState *state, Instruction instr)
+mtcrf(cpu::Core *state, Instruction instr)
 {
    uint32_t cr, crm, s, mask;
 

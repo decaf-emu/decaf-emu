@@ -15,7 +15,7 @@ enum MoveMode
 
 template<MoveMode mode>
 static void
-moveGeneric(ThreadState *state, Instruction instr)
+moveGeneric(cpu::Core *state, Instruction instr)
 {
    uint32_t b0, b1, d0, d1;
    const bool ps0_nan = is_signalling_nan(state->fpr[instr.frB].paired0);
@@ -66,28 +66,28 @@ moveGeneric(ThreadState *state, Instruction instr)
 
 // Move Register
 static void
-ps_mr(ThreadState *state, Instruction instr)
+ps_mr(cpu::Core *state, Instruction instr)
 {
    return moveGeneric<MoveDirect>(state, instr);
 }
 
 // Negate
 static void
-ps_neg(ThreadState *state, Instruction instr)
+ps_neg(cpu::Core *state, Instruction instr)
 {
    return moveGeneric<MoveNegate>(state, instr);
 }
 
 // Absolute
 static void
-ps_abs(ThreadState *state, Instruction instr)
+ps_abs(cpu::Core *state, Instruction instr)
 {
    return moveGeneric<MoveAbsolute>(state, instr);
 }
 
 // Negative Absolute
 static void
-ps_nabs(ThreadState *state, Instruction instr)
+ps_nabs(cpu::Core *state, Instruction instr)
 {
    return moveGeneric<MoveNegAbsolute>(state, instr);
 }
@@ -104,7 +104,7 @@ enum PSArithOperator {
 // exception).
 template<PSArithOperator op, int slotA, int slotB>
 static bool
-psArithSingle(ThreadState *state, Instruction instr, float *result)
+psArithSingle(cpu::Core *state, Instruction instr, float *result)
 {
    double a, b;
    if (slotA == 0) {
@@ -197,7 +197,7 @@ psArithSingle(ThreadState *state, Instruction instr, float *result)
 
 template<PSArithOperator op, int slotB0, int slotB1>
 static void
-psArithGeneric(ThreadState *state, Instruction instr)
+psArithGeneric(cpu::Core *state, Instruction instr)
 {
    const uint32_t oldFPSCR = state->fpscr.value;
 
@@ -221,47 +221,47 @@ psArithGeneric(ThreadState *state, Instruction instr)
 
 // Add
 static void
-ps_add(ThreadState *state, Instruction instr)
+ps_add(cpu::Core *state, Instruction instr)
 {
    return psArithGeneric<PSAdd, 0, 1>(state, instr);
 }
 
 // Subtract
 static void
-ps_sub(ThreadState *state, Instruction instr)
+ps_sub(cpu::Core *state, Instruction instr)
 {
    return psArithGeneric<PSSub, 0, 1>(state, instr);
 }
 
 // Multiply
 static void
-ps_mul(ThreadState *state, Instruction instr)
+ps_mul(cpu::Core *state, Instruction instr)
 {
    return psArithGeneric<PSMul, 0, 1>(state, instr);
 }
 
 static void
-ps_muls0(ThreadState *state, Instruction instr)
+ps_muls0(cpu::Core *state, Instruction instr)
 {
    return psArithGeneric<PSMul, 0, 0>(state, instr);
 }
 
 static void
-ps_muls1(ThreadState *state, Instruction instr)
+ps_muls1(cpu::Core *state, Instruction instr)
 {
    return psArithGeneric<PSMul, 1, 1>(state, instr);
 }
 
 // Divide
 static void
-ps_div(ThreadState *state, Instruction instr)
+ps_div(cpu::Core *state, Instruction instr)
 {
    return psArithGeneric<PSDiv, 0, 1>(state, instr);
 }
 
 template<int slot>
 static void
-psSumGeneric(ThreadState *state, Instruction instr)
+psSumGeneric(cpu::Core *state, Instruction instr)
 {
    const uint32_t oldFPSCR = state->fpscr.value;
    float d;
@@ -306,14 +306,14 @@ psSumGeneric(ThreadState *state, Instruction instr)
 
 // Sum High
 static void
-ps_sum0(ThreadState *state, Instruction instr)
+ps_sum0(cpu::Core *state, Instruction instr)
 {
    return psSumGeneric<0>(state, instr);
 }
 
 // Sum Low
 static void
-ps_sum1(ThreadState *state, Instruction instr)
+ps_sum1(cpu::Core *state, Instruction instr)
 {
    return psSumGeneric<1>(state, instr);
 }
@@ -329,7 +329,7 @@ enum FMAFlags
 // exception).
 template<unsigned flags, int slotAB, int slotC>
 static bool
-fmaSingle(ThreadState *state, Instruction instr, float *result)
+fmaSingle(cpu::Core *state, Instruction instr, float *result)
 {
    double a, b, c;
    if (slotAB == 0) {
@@ -387,7 +387,7 @@ fmaSingle(ThreadState *state, Instruction instr, float *result)
 
 template<unsigned flags, int slotC0, int slotC1>
 static void
-fmaGeneric(ThreadState *state, Instruction instr)
+fmaGeneric(cpu::Core *state, Instruction instr)
 {
    const uint32_t oldFPSCR = state->fpscr.value;
 
@@ -410,37 +410,37 @@ fmaGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-ps_madd(ThreadState *state, Instruction instr)
+ps_madd(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<0, 0, 1>(state, instr);
 }
 
 static void
-ps_madds0(ThreadState *state, Instruction instr)
+ps_madds0(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<0, 0, 0>(state, instr);
 }
 
 static void
-ps_madds1(ThreadState *state, Instruction instr)
+ps_madds1(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<0, 1, 1>(state, instr);
 }
 
 static void
-ps_msub(ThreadState *state, Instruction instr)
+ps_msub(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<FMASubtract, 0, 1>(state, instr);
 }
 
 static void
-ps_nmadd(ThreadState *state, Instruction instr)
+ps_nmadd(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<FMANegate, 0, 1>(state, instr);
 }
 
 static void
-ps_nmsub(ThreadState *state, Instruction instr)
+ps_nmsub(cpu::Core *state, Instruction instr)
 {
    return fmaGeneric<FMANegate | FMASubtract, 0, 1>(state, instr);
 }
@@ -454,7 +454,7 @@ enum MergeFlags
 
 template<unsigned flags = 0>
 static void
-mergeGeneric(ThreadState *state, Instruction instr)
+mergeGeneric(cpu::Core *state, Instruction instr)
 {
    float d0, d1;
 
@@ -489,32 +489,32 @@ mergeGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-ps_merge00(ThreadState *state, Instruction instr)
+ps_merge00(cpu::Core *state, Instruction instr)
 {
    return mergeGeneric(state, instr);
 }
 
 static void
-ps_merge01(ThreadState *state, Instruction instr)
+ps_merge01(cpu::Core *state, Instruction instr)
 {
    return mergeGeneric<MergeValue1>(state, instr);
 }
 
 static void
-ps_merge11(ThreadState *state, Instruction instr)
+ps_merge11(cpu::Core *state, Instruction instr)
 {
    return mergeGeneric<MergeValue0 | MergeValue1>(state, instr);
 }
 
 static void
-ps_merge10(ThreadState *state, Instruction instr)
+ps_merge10(cpu::Core *state, Instruction instr)
 {
    return mergeGeneric<MergeValue0>(state, instr);
 }
 
 // Reciprocal
 static void
-ps_res(ThreadState *state, Instruction instr)
+ps_res(cpu::Core *state, Instruction instr)
 {
    const double b0 = state->fpr[instr.frB].paired0;
    const double b1 = state->fpr[instr.frB].paired1;
@@ -567,7 +567,7 @@ ps_res(ThreadState *state, Instruction instr)
 
 // Reciprocal Square Root
 static void
-ps_rsqrte(ThreadState *state, Instruction instr)
+ps_rsqrte(cpu::Core *state, Instruction instr)
 {
    const double b0 = state->fpr[instr.frB].paired0;
    const double b1 = state->fpr[instr.frB].paired1;
@@ -623,7 +623,7 @@ ps_rsqrte(ThreadState *state, Instruction instr)
 
 // Select
 static void
-ps_sel(ThreadState *state, Instruction instr)
+ps_sel(cpu::Core *state, Instruction instr)
 {
    auto a0 = state->fpr[instr.frA].paired0;
    auto a1 = state->fpr[instr.frA].paired1;

@@ -25,7 +25,7 @@ enum BcFlags
 };
 
 void
-jit_interrupt_stub(ThreadState *state)
+jit_interrupt_stub(cpu::Core *state)
 {
    auto core = cpu::this_core::state();
 

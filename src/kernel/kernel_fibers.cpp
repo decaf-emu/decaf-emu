@@ -57,12 +57,12 @@ void fiberEntryPoint(void*)
 
    auto core = cpu::this_core::state();
    auto thread = getCurrentThread();
-   core->state.cia = 0;
-   core->state.nia = thread->entryPoint.getAddress();
+   core->cia = 0;
+   core->nia = thread->entryPoint.getAddress();
 
    cpu::this_core::execute_sub();
 
-   coreinit::OSExitThread(ppctypes::getResult<int>(&core->state));
+   coreinit::OSExitThread(ppctypes::getResult<int>(core));
 }
 
 void init_core_fiber()
@@ -151,46 +151,46 @@ queueThreadNoLock(coreinit::OSThread *thread)
 
 void saveContext(coreinit::OSContext *context)
 {
-   auto &state = cpu::this_core::state()->state;
+   auto state = cpu::this_core::state();
    for (auto i = 0; i < 32; ++i) {
-      context->gpr[i] = state.gpr[i];
+      context->gpr[i] = state->gpr[i];
    }
    for (auto i = 0; i < 32; ++i) {
-      context->fpr[i] = state.fpr[i].value;
-      context->psf[i] = state.fpr[i].paired1;
+      context->fpr[i] = state->fpr[i].value;
+      context->psf[i] = state->fpr[i].paired1;
    }
    for (auto i = 0; i < 8; ++i) {
-      context->gqr[i] = state.gqr[i].value;
+      context->gqr[i] = state->gqr[i].value;
    }
-   context->cr = state.cr.value;
-   context->lr = state.lr;
-   context->ctr = state.ctr;
-   context->xer = state.xer.value;
-   //context->srr0 = state.sr[0];
-   //context->srr1 = state.sr[1];
-   context->fpscr = state.fpscr.value;
+   context->cr = state->cr.value;
+   context->lr = state->lr;
+   context->ctr = state->ctr;
+   context->xer = state->xer.value;
+   //context->srr0 = state->sr[0];
+   //context->srr1 = state->sr[1];
+   context->fpscr = state->fpscr.value;
 }
 
 void restoreContext(coreinit::OSContext *context)
 {
-   auto &state = cpu::this_core::state()->state;
+   auto state = cpu::this_core::state();
    for (auto i = 0; i < 32; ++i) {
-      state.gpr[i] = context->gpr[i];
+      state->gpr[i] = context->gpr[i];
    }
    for (auto i = 0; i < 32; ++i) {
-      state.fpr[i].value = context->fpr[i];
-      state.fpr[i].paired1 = context->psf[i];
+      state->fpr[i].value = context->fpr[i];
+      state->fpr[i].paired1 = context->psf[i];
    }
    for (auto i = 0; i < 8; ++i) {
-      state.gqr[i].value = context->gqr[i];
+      state->gqr[i].value = context->gqr[i];
    }
-   state.cr.value = context->cr;
-   state.lr = context->lr;
-   state.ctr = context->ctr;
-   state.xer.value = context->xer;
-   //state.sr[0] = context->srr0;
-   //state.sr[1] = context->srr1;
-   state.fpscr.value = context->fpscr;
+   state->cr.value = context->cr;
+   state->lr = context->lr;
+   state->ctr = context->ctr;
+   state->xer.value = context->xer;
+   //state->sr[0] = context->srr0;
+   //state->sr[1] = context->srr1;
+   state->fpscr.value = context->fpscr;
 }
 
 void rescheduleNoLock(bool yielding)
@@ -250,8 +250,8 @@ void rescheduleNoLock(bool yielding)
 
    // Save our CIA for when we come back.
    auto core = cpu::this_core::state();
-   auto cia = core->state.cia;
-   auto nia = core->state.nia;
+   auto cia = core->cia;
+   auto nia = core->nia;
 
    // If we have a current context, save it
    if (thread) {
@@ -272,8 +272,8 @@ void rescheduleNoLock(bool yielding)
 
    checkDeadThread();
 
-   core->state.cia = cia;
-   core->state.nia = nia;
+   core->cia = cia;
+   core->nia = nia;
 }
 
 }

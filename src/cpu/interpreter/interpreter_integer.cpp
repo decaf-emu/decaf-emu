@@ -6,7 +6,7 @@ using espresso::ConditionRegisterFlag;
 
 // Update cr0 with value
 static void
-updateConditionRegister(ThreadState *state, uint32_t value)
+updateConditionRegister(cpu::Core *state, uint32_t value)
 {
    auto flags = 0;
 
@@ -27,14 +27,14 @@ updateConditionRegister(ThreadState *state, uint32_t value)
 
 // Update carry flags
 static void
-updateCarry(ThreadState *state, bool carry)
+updateCarry(cpu::Core *state, bool carry)
 {
    state->xer.ca = carry;
 }
 
 // Update overflow flags
 static void
-updateOverflow(ThreadState *state, bool overflow)
+updateOverflow(cpu::Core *state, bool overflow)
 {
    state->xer.ov = overflow;
    state->xer.so |= overflow;
@@ -57,7 +57,7 @@ enum AddFlags
 
 template<unsigned flags = 0>
 static void
-addGeneric(ThreadState *state, Instruction instr)
+addGeneric(cpu::Core *state, Instruction instr)
 {
    uint32_t a, b, d;
 
@@ -123,55 +123,55 @@ addGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-add(ThreadState *state, Instruction instr)
+add(cpu::Core *state, Instruction instr)
 {
    return addGeneric<AddCheckRecord>(state, instr);
 }
 
 static void
-addc(ThreadState *state, Instruction instr)
+addc(cpu::Core *state, Instruction instr)
 {
    return addGeneric<AddCarry | AddCheckRecord>(state, instr);
 }
 
 static void
-adde(ThreadState *state, Instruction instr)
+adde(cpu::Core *state, Instruction instr)
 {
    return addGeneric<AddExtended | AddCarry | AddCheckRecord>(state, instr);
 }
 
 static void
-addi(ThreadState *state, Instruction instr)
+addi(cpu::Core *state, Instruction instr)
 {
    return addGeneric<AddImmediate | AddZeroRA>(state, instr);
 }
 
 static void
-addic(ThreadState *state, Instruction instr)
+addic(cpu::Core *state, Instruction instr)
 {
    return addGeneric<AddImmediate | AddCarry>(state, instr);
 }
 
 static void
-addicx(ThreadState *state, Instruction instr)
+addicx(cpu::Core *state, Instruction instr)
 {
    return addGeneric<AddImmediate | AddCarry | AddAlwaysRecord>(state, instr);
 }
 
 static void
-addis(ThreadState *state, Instruction instr)
+addis(cpu::Core *state, Instruction instr)
 {
    return addGeneric<AddImmediate | AddShifted | AddZeroRA>(state, instr);
 }
 
 static void
-addme(ThreadState *state, Instruction instr)
+addme(cpu::Core *state, Instruction instr)
 {
    return addGeneric<AddCheckRecord | AddCarry | AddExtended | AddToMinusOne>(state, instr);
 }
 
 static void
-addze(ThreadState *state, Instruction instr)
+addze(cpu::Core *state, Instruction instr)
 {
    return addGeneric<AddCheckRecord | AddCarry | AddExtended | AddToZero>(state, instr);
 }
@@ -188,7 +188,7 @@ enum AndFlags
 
 template<unsigned flags>
 static void
-andGeneric(ThreadState *state, Instruction instr)
+andGeneric(cpu::Core *state, Instruction instr)
 {
    uint32_t s, a, b;
 
@@ -221,32 +221,32 @@ andGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-and_(ThreadState *state, Instruction instr)
+and_(cpu::Core *state, Instruction instr)
 {
    return andGeneric<AndCheckRecord>(state, instr);
 }
 
 static void
-andc(ThreadState *state, Instruction instr)
+andc(cpu::Core *state, Instruction instr)
 {
    return andGeneric<AndCheckRecord | AndComplement>(state, instr);
 }
 
 static void
-andi(ThreadState *state, Instruction instr)
+andi(cpu::Core *state, Instruction instr)
 {
    return andGeneric<AndAlwaysRecord | AndImmediate>(state, instr);
 }
 
 static void
-andis(ThreadState *state, Instruction instr)
+andis(cpu::Core *state, Instruction instr)
 {
    return andGeneric<AndAlwaysRecord | AndImmediate | AndShifted>(state, instr);
 }
 
 // Count Leading Zeroes Word
 static void
-cntlzw(ThreadState *state, Instruction instr)
+cntlzw(cpu::Core *state, Instruction instr)
 {
    unsigned long a;
    uint32_t s;
@@ -269,7 +269,7 @@ cntlzw(ThreadState *state, Instruction instr)
 // Divide
 template<typename Type>
 static void
-divGeneric(ThreadState *state, Instruction instr)
+divGeneric(cpu::Core *state, Instruction instr)
 {
    Type a, b, d;
    a = state->gpr[instr.rA];
@@ -300,20 +300,20 @@ divGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-divw(ThreadState *state, Instruction instr)
+divw(cpu::Core *state, Instruction instr)
 {
    return divGeneric<int32_t>(state, instr);
 }
 
 static void
-divwu(ThreadState *state, Instruction instr)
+divwu(cpu::Core *state, Instruction instr)
 {
    return divGeneric<uint32_t>(state, instr);
 }
 
 // Equivalent
 static void
-eqv(ThreadState *state, Instruction instr)
+eqv(cpu::Core *state, Instruction instr)
 {
    uint32_t a, s, b;
 
@@ -330,7 +330,7 @@ eqv(ThreadState *state, Instruction instr)
 
 // Extend Sign Byte
 static void
-extsb(ThreadState *state, Instruction instr)
+extsb(cpu::Core *state, Instruction instr)
 {
    uint32_t a, s;
 
@@ -346,7 +346,7 @@ extsb(ThreadState *state, Instruction instr)
 
 // Extend Sign Half Word
 static void
-extsh(ThreadState *state, Instruction instr)
+extsh(cpu::Core *state, Instruction instr)
 {
    uint32_t a, s;
 
@@ -373,7 +373,7 @@ enum MulFlags
 // Signed multiply
 template<unsigned flags>
 static void
-mulSignedGeneric(ThreadState *state, Instruction instr)
+mulSignedGeneric(cpu::Core *state, Instruction instr)
 {
    int64_t a, b;
    int32_t d;
@@ -414,7 +414,7 @@ mulSignedGeneric(ThreadState *state, Instruction instr)
 // Unsigned multiply
 template<unsigned flags>
 static void
-mulUnsignedGeneric(ThreadState *state, Instruction instr)
+mulUnsignedGeneric(cpu::Core *state, Instruction instr)
 {
    uint64_t a, b;
    uint32_t d;
@@ -437,32 +437,32 @@ mulUnsignedGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-mulhw(ThreadState *state, Instruction instr)
+mulhw(cpu::Core *state, Instruction instr)
 {
    return mulSignedGeneric<MulHigh | MulCheckRecord>(state, instr);
 }
 
 static void
-mulhwu(ThreadState *state, Instruction instr)
+mulhwu(cpu::Core *state, Instruction instr)
 {
    return mulUnsignedGeneric<MulHigh | MulCheckRecord>(state, instr);
 }
 
 static void
-mulli(ThreadState *state, Instruction instr)
+mulli(cpu::Core *state, Instruction instr)
 {
    return mulSignedGeneric<MulImmediate | MulLow>(state, instr);
 }
 
 static void
-mullw(ThreadState *state, Instruction instr)
+mullw(cpu::Core *state, Instruction instr)
 {
    return mulSignedGeneric<MulLow | MulCheckRecord | MulCheckOverflow>(state, instr);
 }
 
 // NAND
 static void
-nand(ThreadState *state, Instruction instr)
+nand(cpu::Core *state, Instruction instr)
 {
    uint32_t a, s, b;
 
@@ -479,7 +479,7 @@ nand(ThreadState *state, Instruction instr)
 
 // Negate
 static void
-neg(ThreadState *state, Instruction instr)
+neg(cpu::Core *state, Instruction instr)
 {
    uint32_t a, d;
 
@@ -501,7 +501,7 @@ neg(ThreadState *state, Instruction instr)
 
 // NOR
 static void
-nor(ThreadState *state, Instruction instr)
+nor(cpu::Core *state, Instruction instr)
 {
    uint32_t a, s, b;
 
@@ -528,7 +528,7 @@ enum OrFlags
 
 template<unsigned flags>
 static void
-orGeneric(ThreadState *state, Instruction instr)
+orGeneric(cpu::Core *state, Instruction instr)
 {
    uint32_t s, a, b;
 
@@ -561,25 +561,25 @@ orGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-or_(ThreadState *state, Instruction instr)
+or_(cpu::Core *state, Instruction instr)
 {
    return orGeneric<OrCheckRecord>(state, instr);
 }
 
 static void
-orc(ThreadState *state, Instruction instr)
+orc(cpu::Core *state, Instruction instr)
 {
    return orGeneric<OrCheckRecord | OrComplement>(state, instr);
 }
 
 static void
-ori(ThreadState *state, Instruction instr)
+ori(cpu::Core *state, Instruction instr)
 {
    return orGeneric<OrImmediate>(state, instr);
 }
 
 static void
-oris(ThreadState *state, Instruction instr)
+oris(cpu::Core *state, Instruction instr)
 {
    return orGeneric<OrImmediate | OrShifted>(state, instr);
 }
@@ -594,7 +594,7 @@ enum RlwFlags
 
 template<unsigned flags>
 static void
-rlwGeneric(ThreadState *state, Instruction instr)
+rlwGeneric(cpu::Core *state, Instruction instr)
 {
    uint32_t s, n, r, m, a;
 
@@ -625,21 +625,21 @@ rlwGeneric(ThreadState *state, Instruction instr)
 
 // Rotate Left Word Immediate then Mask Insert
 static void
-rlwimi(ThreadState *state, Instruction instr)
+rlwimi(cpu::Core *state, Instruction instr)
 {
    return rlwGeneric<RlwImmediate | RlwInsert>(state, instr);
 }
 
 // Rotate Left Word Immediate then AND with Mask
 static void
-rlwinm(ThreadState *state, Instruction instr)
+rlwinm(cpu::Core *state, Instruction instr)
 {
    return rlwGeneric<RlwImmediate | RlwAnd>(state, instr);
 }
 
 // Rotate Left Word then AND with Mask
 static void
-rlwnm(ThreadState *state, Instruction instr)
+rlwnm(cpu::Core *state, Instruction instr)
 {
    return rlwGeneric<RlwAnd>(state, instr);
 }
@@ -654,7 +654,7 @@ enum ShiftFlags
 
 template<unsigned flags>
 static void
-shiftLogical(ThreadState *state, Instruction instr)
+shiftLogical(cpu::Core *state, Instruction instr)
 {
    uint32_t n, s, b, a;
 
@@ -685,14 +685,14 @@ shiftLogical(ThreadState *state, Instruction instr)
 
 // Shift Left Word
 static void
-slw(ThreadState *state, Instruction instr)
+slw(cpu::Core *state, Instruction instr)
 {
    shiftLogical<ShiftLeft>(state, instr);
 }
 
 // Shift Right Word
 static void
-srw(ThreadState *state, Instruction instr)
+srw(cpu::Core *state, Instruction instr)
 {
    shiftLogical<ShiftRight>(state, instr);
 }
@@ -700,7 +700,7 @@ srw(ThreadState *state, Instruction instr)
 // Shift Arithmetic
 template<unsigned flags>
 static void
-shiftArithmetic(ThreadState *state, Instruction instr)
+shiftArithmetic(cpu::Core *state, Instruction instr)
 {
    if (!(flags & ShiftRight)) {
       throw;
@@ -747,50 +747,50 @@ shiftArithmetic(ThreadState *state, Instruction instr)
 }
 
 static void
-sraw(ThreadState *state, Instruction instr)
+sraw(cpu::Core *state, Instruction instr)
 {
    shiftArithmetic<ShiftRight>(state, instr);
 }
 
 static void
-srawi(ThreadState *state, Instruction instr)
+srawi(cpu::Core *state, Instruction instr)
 {
    shiftArithmetic<ShiftRight | ShiftImmediate>(state, instr);
 }
 
 // Because sub is rD = ~rA + rB + 1 we can reuse our generic add
 static void
-subf(ThreadState *state, Instruction instr)
+subf(cpu::Core *state, Instruction instr)
 {
    addGeneric<AddSubtract | AddCheckRecord>(state, instr);
 }
 
 static void
-subfc(ThreadState *state, Instruction instr)
+subfc(cpu::Core *state, Instruction instr)
 {
    addGeneric<AddCarry | AddSubtract | AddCheckRecord>(state, instr);
 }
 
 static void
-subfe(ThreadState *state, Instruction instr)
+subfe(cpu::Core *state, Instruction instr)
 {
    addGeneric<AddExtended | AddCarry | AddSubtract | AddCheckRecord>(state, instr);
 }
 
 static void
-subfic(ThreadState *state, Instruction instr)
+subfic(cpu::Core *state, Instruction instr)
 {
    addGeneric<AddImmediate | AddCarry | AddSubtract>(state, instr);
 }
 
 static void
-subfme(ThreadState *state, Instruction instr)
+subfme(cpu::Core *state, Instruction instr)
 {
    addGeneric<AddToMinusOne | AddExtended | AddCarry | AddCheckRecord | AddSubtract>(state, instr);
 }
 
 static void
-subfze(ThreadState *state, Instruction instr)
+subfze(cpu::Core *state, Instruction instr)
 {
    addGeneric<AddToZero | AddExtended | AddCarry | AddCheckRecord | AddSubtract>(state, instr);
 }
@@ -805,7 +805,7 @@ enum XorFlags
 
 template<unsigned flags>
 static void
-xorGeneric(ThreadState *state, Instruction instr)
+xorGeneric(cpu::Core *state, Instruction instr)
 {
    uint32_t s, a, b;
 
@@ -832,19 +832,19 @@ xorGeneric(ThreadState *state, Instruction instr)
 }
 
 static void
-xor_(ThreadState *state, Instruction instr)
+xor_(cpu::Core *state, Instruction instr)
 {
    return xorGeneric<XorCheckRecord>(state, instr);
 }
 
 static void
-xori(ThreadState *state, Instruction instr)
+xori(cpu::Core *state, Instruction instr)
 {
    return xorGeneric<XorImmediate>(state, instr);
 }
 
 static void
-xoris(ThreadState *state, Instruction instr)
+xoris(cpu::Core *state, Instruction instr)
 {
    return xorGeneric<XorImmediate | XorShifted>(state, instr);
 }
