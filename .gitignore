@@ -15,3 +15,4 @@ debugger/bin
 dump/
 config.json
 *.txt
+!CMakeLists.txt
