@@ -231,6 +231,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_fs_stat.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_ghs.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_ghs_typeinfo.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_interrupts.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_lockedcache.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_mcp.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_memheap.cpp" />
@@ -462,6 +463,7 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_fs_path.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_fs_stat.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_ghs_typeinfo.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_interrupts.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_lockedcache.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h" />

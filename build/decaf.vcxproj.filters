@@ -945,6 +945,9 @@
     <ClCompile Include="..\src\gpu\opengl\opengl_registers.cpp">
       <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_interrupts.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1786,6 +1789,9 @@
     </ClInclude>
     <ClInclude Include="..\src\kernel\kernel.h">
       <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_interrupts.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -122,6 +122,15 @@ OSReleaseSpinLock(OSSpinLock *spinlock)
    return TRUE;
 }
 
+
+/**
+ * Acquires an Uninterruptible Spin Lock.
+ *
+ * Will block until spin lock is acquired.
+ * Disables interrupts before returning.
+ *
+ * \return Returns TRUE if the lock was acquired.
+ */
 BOOL
 OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock)
 {
@@ -130,6 +139,15 @@ OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock)
    return TRUE;
 }
 
+
+/**
+ * Try acquire an Uninterruptible Spin Lock.
+ *
+ * Will return immediately if the lock has already been acquired by another thread.
+ * If lock is acquired, interrupts will be disabled.
+ *
+ * \return Returns TRUE if the lock was acquired.
+ */
 BOOL
 OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock)
 {
@@ -141,6 +159,15 @@ OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock)
    return TRUE;
 }
 
+
+/**
+ * Try acquire an Uninterruptible Spin Lock with a timeout.
+ *
+ * Will return after a timeout if unable to acquire lock.
+ * If lock is acquired, interrupts will be disabled.
+ *
+ * \return Returns TRUE if the lock was acquired.
+ */
 BOOL
 OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock, OSTime timeout)
 {
@@ -152,16 +179,25 @@ OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock, OSTime tim
    return TRUE;
 }
 
+
+/**
+ * Release an Uninterruptible Spin Lock.
+ *
+ * Interrupts will be restored to their previous state before
+ * the lock was acquired.
+ *
+ * \return Returns TRUE if the lock was released.
+ */
 BOOL
 OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock)
 {
-   if (!spinReleaseLock(spinlock)) {
-      return FALSE;
+   if (spinReleaseLock(spinlock)) {
+      OSRestoreInterrupts(spinlock->restoreInterruptState);
    }
 
-   OSRestoreInterrupts(spinlock->restoreInterruptState);
    return TRUE;
 }
+
 
 void
 Module::registerSpinLockFunctions()
