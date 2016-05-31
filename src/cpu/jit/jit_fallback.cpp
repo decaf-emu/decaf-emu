@@ -1,4 +1,5 @@
 #include <cassert>
+#include <algorithm>
 #include "jit_internal.h"
 #include "cpu/interpreter/interpreter_insreg.h"
 #include "utils/debuglog.h"

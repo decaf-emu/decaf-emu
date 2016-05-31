@@ -1,4 +1,5 @@
 #pragma once
+#include "ppcinvoke.h"
 #include "cpu/cpu.h"
 #include "wfunc_ptr.h"
 
