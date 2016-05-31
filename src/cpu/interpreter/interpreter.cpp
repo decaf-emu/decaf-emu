@@ -54,9 +54,12 @@ bool hasInstruction(espresso::InstructionID id)
 
 void step_one(Core *core)
 {
-   uint32_t interrupt_flags = core->interrupt.exchange(0);
-   if (interrupt_flags != 0) {
-      cpu::gInterruptHandler(interrupt_flags);
+   if (core->interruptEnabled.load(std::memory_order_acquire)) {
+      uint32_t interrupt_flags = core->interrupt.exchange(0);
+
+      if (interrupt_flags != 0) {
+         cpu::gInterruptHandler(interrupt_flags);
+      }
    }
 
    core->cia = core->nia;

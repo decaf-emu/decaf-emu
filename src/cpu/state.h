@@ -51,7 +51,8 @@ struct Core
    // State data used by the CPU executors
    uint32_t id;
    std::thread thread;
-   std::atomic<uint32_t> interrupt{ 0 };
+   std::atomic_bool interruptEnabled { true };
+   std::atomic<uint32_t> interrupt { 0 };
    std::chrono::system_clock::time_point next_alarm;
 };
 

@@ -51,6 +51,10 @@ namespace this_core
 
 void set_tracer(Tracer *tracer);
 
+bool isInterruptsEnabled();
+bool enableInterrupts();
+bool disableInterrupts();
+
 void resume();
 void execute_sub();
 void wait_for_interrupt();

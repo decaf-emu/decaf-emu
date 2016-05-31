@@ -140,6 +140,21 @@ void execute_sub()
    tCurrentCore->lr = lr;
 }
 
+bool isInterruptsEnabled()
+{
+   return tCurrentCore->interruptEnabled.load(std::memory_order_acquire);
+}
+
+bool enableInterrupts()
+{
+   return tCurrentCore->interruptEnabled.exchange(true);
+}
+
+bool disableInterrupts()
+{
+   return tCurrentCore->interruptEnabled.exchange(false);
+}
+
 void wait_for_interrupt()
 {
    cpu::Core *core = tCurrentCore;
