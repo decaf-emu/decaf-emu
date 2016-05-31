@@ -3,7 +3,6 @@ include_directories(".")
 set(SOURCE_FILES
     crc32.cpp
     log.cpp
-    wfunc_ptr.cpp
     )
 set(HEADER_FILES
     align.h

@@ -44,7 +44,6 @@ set(SOURCE_FILES
     coreinit/coreinit_userconfig.cpp
     erreula/erreula.cpp
     erreula/erreula_errorviewer.cpp
-    gameloader/gameloader.cpp
     gx2/gx2.cpp
     gx2/gx2_addrlib.cpp
     gx2/gx2_aperture.cpp
@@ -188,7 +187,6 @@ set(HEADER_FILES
     coreinit/coreinit_userconfig.h
     erreula/erreula.h
     erreula/erreula_errorviewer.h
-    gameloader/gameloader.h
     gx2/gx2.h
     gx2/gx2_addrlib.h
     gx2/gx2_aperture.h

@@ -22,9 +22,15 @@ set(SOURCE_FILES
     opengl/glsl_generator.cpp
     opengl/glsl_tex.cpp
     opengl/glsl_vtx.cpp
+    opengl/opengl_colorbuffer.cpp
+    opengl/opengl_depthbuffer.cpp
+    opengl/opengl_draw.cpp
     opengl/opengl_driver.cpp
+    opengl/opengl_pm4.cpp
+    opengl/opengl_registers.cpp
     opengl/opengl_shader.cpp
     opengl/opengl_texture.cpp
+    opengl/opengl_viewport.cpp
     pm4.cpp
     )
 set(HEADER_FILES

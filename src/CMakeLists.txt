@@ -11,7 +11,6 @@ set(SOURCE_FILES
     loader.cpp
     main.cpp
     memory_translate.cpp
-    processor.cpp
     system.cpp
     )
 set(HEADER_FILES
@@ -35,7 +34,6 @@ set(HEADER_FILES
     ppcinvokelog.h
     ppcinvokeresult.h
     ppctypes.h
-    processor.h
     system.h
     traceiter.h
     types.h
@@ -46,13 +44,14 @@ add_subdirectory(cpu)
 add_subdirectory(filesystem)
 add_subdirectory(gpu)
 add_subdirectory(input)
+add_subdirectory(kernel)
 add_subdirectory(mem)
 add_subdirectory(modules)
 add_subdirectory(platform)
 add_subdirectory(utils)
 
 add_executable(decaf-emu ${SOURCE_FILES} ${HEADER_FILES})
-target_link_libraries(decaf-emu cpu filesystem input mem modules gpu platform utils)
+target_link_libraries(decaf-emu cpu filesystem input kernel mem modules gpu platform utils)
 target_link_libraries(decaf-emu z m ${ADDRLIB_LIBRARIES} ${ASMJIT_LIBRARIES} ${DOCOPT_LIBRARIES} ${GLBINDING_LIBRARIES} ${GLFW_LIBRARIES} ${PUGIXML_LIBRARIES} ${SDL2_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES})
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(decaf-emu X11)
