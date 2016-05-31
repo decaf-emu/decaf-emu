@@ -19,37 +19,37 @@ namespace gx2
 {
 
 static std::atomic<int64_t>
-gLastVsync { 0 };
+sLastVsync { 0 };
 
 static std::atomic<int64_t>
-gLastFlip { 0 };
+sLastFlip { 0 };
 
 static std::atomic<uint32_t>
-gSwapCount { 0 };
+sSwapCount { 0 };
 
 static std::atomic<uint32_t>
-gFlipCount { 0 };
+sFlipCount { 0 };
 
 static std::atomic<int64_t>
-gLastSubmittedTimestamp { 0 };
+sLastSubmittedTimestamp { 0 };
 
 static std::atomic<int64_t>
-gRetiredTimestamp { 0 };
+sRetiredTimestamp { 0 };
 
 static virtual_ptr<OSThreadQueue>
-gVsyncThreadQueue;
+sVsyncThreadQueue;
 
 static virtual_ptr<OSThreadQueue>
-gFlipThreadQueue;
+sFlipThreadQueue;
 
 static virtual_ptr<OSAlarm>
-gVsyncAlarm;
+sVsyncAlarm;
 
 static AlarmCallback
-pVsyncAlarmHandler = nullptr;
+sVsyncAlarmHandler = nullptr;
 
 static virtual_ptr<OSThreadQueue>
-gWaitTimeStampQueue = nullptr;
+sWaitTimeStampQueue = nullptr;
 
 struct EventCallbackData
 {
@@ -58,7 +58,7 @@ struct EventCallbackData
 };
 
 static EventCallbackData
-gEventCallbacks[GX2EventType::Max];
+sEventCallbacks[GX2EventType::Max];
 
 
 /**
@@ -86,8 +86,8 @@ GX2SetEventCallback(GX2EventType type,
    }
 
    if (type < GX2EventType::Max) {
-      gEventCallbacks[type].func = func;
-      gEventCallbacks[type].data = userData;
+      sEventCallbacks[type].func = func;
+      sEventCallbacks[type].data = userData;
    }
 }
 
@@ -101,8 +101,8 @@ GX2GetEventCallback(GX2EventType type,
                     be_ptr<void> *userDataOut)
 {
    if (type < GX2EventType::Max) {
-      *funcOut = gEventCallbacks[type].func;
-      *userDataOut = gEventCallbacks[type].data;
+      *funcOut = sEventCallbacks[type].func;
+      *userDataOut = sEventCallbacks[type].data;
    } else {
       *funcOut = nullptr;
       *userDataOut = nullptr;
@@ -116,7 +116,7 @@ GX2GetEventCallback(GX2EventType type,
 OSTime
 GX2GetRetiredTimeStamp()
 {
-   return gRetiredTimestamp.load(std::memory_order_acquire);
+   return sRetiredTimestamp.load(std::memory_order_acquire);
 }
 
 
@@ -126,7 +126,7 @@ GX2GetRetiredTimeStamp()
 OSTime
 GX2GetLastSubmittedTimeStamp()
 {
-   return gLastSubmittedTimestamp.load(std::memory_order_acquire);
+   return sLastSubmittedTimestamp.load(std::memory_order_acquire);
 }
 
 
@@ -144,11 +144,11 @@ GX2GetSwapStatus(be_val<uint32_t> *swapCount,
                  be_val<OSTime> *lastFlip,
                  be_val<OSTime> *lastVsync)
 {
-   *swapCount = gSwapCount.load(std::memory_order_acquire);
-   *flipCount = gFlipCount.load(std::memory_order_acquire);
+   *swapCount = sSwapCount.load(std::memory_order_acquire);
+   *flipCount = sFlipCount.load(std::memory_order_acquire);
 
-   *lastFlip = gLastFlip.load(std::memory_order_acquire);
-   *lastVsync = gLastVsync.load(std::memory_order_acquire);
+   *lastFlip = sLastFlip.load(std::memory_order_acquire);
+   *lastVsync = sLastVsync.load(std::memory_order_acquire);
 }
 
 
@@ -160,8 +160,8 @@ GX2WaitTimeStamp(OSTime time)
 {
    coreinit::internal::lockScheduler();
 
-   while (gRetiredTimestamp.load(std::memory_order_acquire) < time) {
-      coreinit::internal::sleepThreadNoLock(gWaitTimeStampQueue);
+   while (sRetiredTimestamp.load(std::memory_order_acquire) < time) {
+      coreinit::internal::sleepThreadNoLock(sWaitTimeStampQueue);
       coreinit::internal::rescheduleNoLock();
    }
 
@@ -176,7 +176,7 @@ GX2WaitTimeStamp(OSTime time)
 void
 GX2WaitForVsync()
 {
-   OSSleepThread(gVsyncThreadQueue);
+   OSSleepThread(sVsyncThreadQueue);
 }
 
 
@@ -186,7 +186,7 @@ GX2WaitForVsync()
 void
 GX2WaitForFlip()
 {
-   OSSleepThread(gFlipThreadQueue);
+   OSSleepThread(sFlipThreadQueue);
 }
 
 
@@ -200,14 +200,14 @@ namespace internal
 void
 initEvents()
 {
-   gVsyncThreadQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
-   gVsyncAlarm = coreinit::internal::sysAlloc<OSAlarm>();
-   gWaitTimeStampQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
-   gFlipThreadQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
+   sVsyncThreadQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
+   sVsyncAlarm = coreinit::internal::sysAlloc<OSAlarm>();
+   sWaitTimeStampQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
+   sFlipThreadQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
 
    auto ticks = static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) / 60;
-   OSCreateAlarm(gVsyncAlarm);
-   OSSetPeriodicAlarm(gVsyncAlarm, OSGetTime(), ticks, pVsyncAlarmHandler);
+   OSCreateAlarm(sVsyncAlarm);
+   OSSetPeriodicAlarm(sVsyncAlarm, OSGetTime(), ticks, sVsyncAlarmHandler);
 }
 
 
@@ -220,9 +220,9 @@ initEvents()
 void
 vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
-   gLastVsync.store(OSGetSystemTime(), std::memory_order_release);
-   coreinit::internal::wakeupThreadNoLock(gVsyncThreadQueue);
-   auto callback = gEventCallbacks[GX2EventType::Vsync];
+   sLastVsync.store(OSGetSystemTime(), std::memory_order_release);
+   coreinit::internal::wakeupThreadNoLock(sVsyncThreadQueue);
+   auto callback = sEventCallbacks[GX2EventType::Vsync];
 
    if (callback.func) {
       coreinit::internal::unlockScheduler();
@@ -240,7 +240,7 @@ vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 std::pair<void *, uint32_t>
 displayListOverrun(void *list, uint32_t size)
 {
-   auto callback = gEventCallbacks[GX2EventType::DisplayListOverrun];
+   auto callback = sEventCallbacks[GX2EventType::DisplayListOverrun];
    void *newList = nullptr;
    uint32_t newSize = 0u;
 
@@ -267,7 +267,7 @@ displayListOverrun(void *list, uint32_t size)
 void
 handleGpuInterrupt()
 {
-   coreinit::internal::wakeupThreadNoLock(gWaitTimeStampQueue);
+   coreinit::internal::wakeupThreadNoLock(sWaitTimeStampQueue);
 }
 
 /**
@@ -276,7 +276,7 @@ handleGpuInterrupt()
 void
 setRetiredTimestamp(OSTime timestamp)
 {
-   gRetiredTimestamp.store(timestamp, std::memory_order_release);
+   sRetiredTimestamp.store(timestamp, std::memory_order_release);
    cpu::interrupt(gx2::internal::getMainCoreId(), cpu::GPU_INTERRUPT);
 }
 
@@ -287,7 +287,7 @@ setRetiredTimestamp(OSTime timestamp)
 void
 setLastSubmittedTimestamp(OSTime timestamp)
 {
-   gLastSubmittedTimestamp.store(timestamp, std::memory_order_release);
+   sLastSubmittedTimestamp.store(timestamp, std::memory_order_release);
 }
 
 
@@ -297,7 +297,7 @@ setLastSubmittedTimestamp(OSTime timestamp)
 void
 onSwap()
 {
-   gSwapCount++;
+   sSwapCount++;
 }
 
 
@@ -307,9 +307,9 @@ onSwap()
 void
 onFlip()
 {
-   gFlipCount++;
-   gLastFlip.store(OSGetSystemTime(), std::memory_order_release);
-   OSWakeupThread(gFlipThreadQueue);
+   sFlipCount++;
+   sLastFlip.store(OSGetSystemTime(), std::memory_order_release);
+   OSWakeupThread(sFlipThreadQueue);
 }
 
 } // namespace internal
@@ -318,7 +318,7 @@ onFlip()
 void
 Module::initialiseVsync()
 {
-   pVsyncAlarmHandler = findExportAddress("VsyncAlarmHandler");
+   sVsyncAlarmHandler = findExportAddress("VsyncAlarmHandler");
 }
 
 } // namespace gx2
