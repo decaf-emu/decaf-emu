@@ -383,13 +383,17 @@ checkAlarms(uint32_t core_id)
             OSEraseFromQueue<OSAlarmQueue>(queue, alarm);
          }
 
+         // TODO: This is technically not safe, as someone could mess with
+         // this alarm while we are trying to dispatch callbacks and wake things.
+         OSUninterruptibleSpinLock_Release(sAlarmLock);
+
          if (alarm->callback) {
-            OSUninterruptibleSpinLock_Release(sAlarmLock);
             alarm->callback(alarm, alarm->context);
-            OSUninterruptibleSpinLock_Acquire(sAlarmLock);
          }
 
          OSWakeupThread(&alarm->threadQueue);
+
+         OSUninterruptibleSpinLock_Acquire(sAlarmLock);
       }
 
       alarm = nextAlarm;
