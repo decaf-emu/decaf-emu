@@ -79,19 +79,19 @@ logArgument(LogState &state, const char *value)
    }
 }
 
-// char *
-inline void
-logArgument(LogState &state, char *value)
-{
-   logArgument(state, const_cast<const char*>(value));
-}
-
 // virtual_ptr<Type>
 template<typename Type>
 inline void
 logArgument(LogState &state, virtual_ptr<Type> value)
 {
    logArgument(state, value.getAddress());
+}
+
+// char *
+inline void
+logArgument(LogState &state, char *value)
+{
+   logArgument(state, make_virtual_ptr<char>(value));
 }
 
 // Type *
