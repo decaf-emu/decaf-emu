@@ -16,7 +16,7 @@ namespace coreinit
 
 namespace internal
 {
-   void updateCpuAlarm();
+   void updateCpuAlarmNoLock();
 }
 
 const uint32_t
@@ -67,9 +67,7 @@ BOOL
 OSCancelAlarm(OSAlarm *alarm)
 {
    ScopedSpinLock lock(sAlarmLock);
-   BOOL result = cancelAlarmNoLock(alarm);
-   internal::updateCpuAlarm();
-   return result;
+   return cancelAlarmNoLock(alarm);
 }
 
 
@@ -94,7 +92,6 @@ OSCancelAlarms(uint32_t group)
          alarm = next;
       }
    }
-   internal::updateCpuAlarm();
 }
 
 
@@ -191,7 +188,9 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
    OSAppendQueue(queue, alarm);
 
    // Set the interrupt timer in processor
-   internal::updateCpuAlarm();
+   // TODO: Store the last set CPU alarm time, and simply check this
+   // alarm against that time to make finding the soonest alarm cheaper.
+   internal::updateCpuAlarmNoLock();
    return TRUE;
 }
 
@@ -285,40 +284,8 @@ Module::initialiseAlarm()
 namespace internal
 {
 
-/**
- * Internal alarm handler.
- *
- * Resets the alarm state.
- * Calls the users callback.
- * Wakes up any threads waiting on the alarm.
- */
-static void
-triggerAlarmNoLock(OSAlarmQueue *queue, OSAlarm *alarm, OSContext *context)
-{
-   alarm->context = context;
-
-   if (alarm->period) {
-      alarm->nextFire = alarm->nextFire + alarm->period;
-      alarm->state = OSAlarmState::Set;
-      coreinit::internal::updateCpuAlarm();
-   } else {
-      alarm->nextFire = 0;
-      alarm->state = OSAlarmState::None;
-      alarm->alarmQueue = nullptr;
-      OSEraseFromQueue<OSAlarmQueue>(queue, alarm);
-   }
-
-   if (alarm->callback) {
-      OSUninterruptibleSpinLock_Release(sAlarmLock);
-      alarm->callback(alarm, context);
-      OSUninterruptibleSpinLock_Acquire(sAlarmLock);
-   }
-
-   coreinit::internal::wakeupThreadNoLock(&alarm->threadQueue);
-}
-
 void
-updateCpuAlarm()
+updateCpuAlarmNoLock()
 {
    auto queue = sAlarmQueue[cpu::this_core::id()];
    auto next = std::chrono::time_point<std::chrono::system_clock>::max();
@@ -340,9 +307,9 @@ updateCpuAlarm()
       alarm = nextAlarm;
    }
 
-   OSUninterruptibleSpinLock_Release(sAlarmLock);
-
    cpu::this_core::set_next_alarm(next);
+
+   OSUninterruptibleSpinLock_Release(sAlarmLock);
 }
 
 void
@@ -378,9 +345,9 @@ handleAlarmInterrupt(OSContext *context)
       alarm = nextAlarm;
    }
 
-   OSUninterruptibleSpinLock_Release(sAlarmLock);
-
    cpu::this_core::set_next_alarm(next);
+
+   OSUninterruptibleSpinLock_Release(sAlarmLock);
 
    if (alarmExpired) {
       coreinit::internal::signalIoThreadNoLock(core_id);
@@ -396,8 +363,7 @@ void
 checkAlarms(uint32_t core_id)
 {
    auto queue = sAlarmQueue[core_id];
-   auto now = OSGetTime();
-   auto next = std::chrono::time_point<std::chrono::system_clock>::max();
+   bool alarmsScheduled = false;
 
    OSUninterruptibleSpinLock_Acquire(sAlarmLock);
 
@@ -405,11 +371,33 @@ checkAlarms(uint32_t core_id)
    for (OSAlarm *alarm = queue->head; alarm; ) {
       auto nextAlarm = alarm->link.next;
 
-      if (alarm->state == OSAlarmState::Expired) {
-         triggerAlarmNoLock(queue, alarm, alarm->context);
+      if (alarm->state == OSAlarmState::Expired)
+      {
+         if (alarm->period) {
+            alarm->nextFire = alarm->nextFire + alarm->period;
+            alarm->state = OSAlarmState::Set;
+            alarmsScheduled = true;
+         } else {
+            alarm->nextFire = 0;
+            alarm->alarmQueue = nullptr;
+            OSEraseFromQueue<OSAlarmQueue>(queue, alarm);
+         }
+
+         if (alarm->callback) {
+            OSUninterruptibleSpinLock_Release(sAlarmLock);
+            alarm->callback(alarm, alarm->context);
+            OSUninterruptibleSpinLock_Acquire(sAlarmLock);
+         }
+
+         coreinit::internal::wakeupThreadNoLock(&alarm->threadQueue);
       }
 
       alarm = nextAlarm;
+   }
+
+   // If any alarms were rescheduled, we need to update the CPU timer.
+   if (alarmsScheduled) {
+      coreinit::internal::updateCpuAlarmNoLock();
    }
 
    OSUninterruptibleSpinLock_Release(sAlarmLock);
