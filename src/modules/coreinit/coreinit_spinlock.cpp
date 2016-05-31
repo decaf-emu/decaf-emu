@@ -1,5 +1,6 @@
 #include <atomic>
 #include "coreinit.h"
+#include "coreinit_interrupts.h"
 #include "coreinit_spinlock.h"
 #include "coreinit_thread.h"
 #include "memory_translate.h"
@@ -8,76 +9,80 @@ namespace coreinit
 {
 
 static void
-spinLock(OSSpinLock *spinlock)
+spinAcquireLock(OSSpinLock *spinlock)
 {
-   uint32_t owner, expected;
-   auto thread = OSGetCurrentThread();
-
-   if (!thread) {
-      return;
-   }
-
-   owner = memory_untranslate(thread);
+   auto owner = memory_untranslate(OSGetCurrentThread());
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
       return;
    }
 
-   expected = 0;
+   uint32_t expected = 0;
 
    while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
       expected = 0;
    }
 }
 
-static BOOL
+static bool
 spinTryLock(OSSpinLock *spinlock)
 {
-   uint32_t owner, expected;
-   auto thread = OSGetCurrentThread();
-
-   if (!thread) {
-      return FALSE;
-   }
-
-   owner = memory_untranslate(thread);
+   auto owner = memory_untranslate(OSGetCurrentThread());
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
-      return TRUE;
+      return true;
    }
 
-   expected = 0;
+   uint32_t expected = 0;
 
    if (spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
-      return TRUE;
+      return true;
    } else {
-      return FALSE;
+      return false;
    }
 }
 
-static BOOL
-spinReleaseLock(OSSpinLock *spinlock)
+static bool
+spinTryLockWithTimeout(OSSpinLock *spinlock, OSTime duration)
 {
-   uint32_t owner;
-   auto thread = OSGetCurrentThread();
+   auto owner = memory_untranslate(OSGetCurrentThread());
 
-   if (!thread) {
-      return FALSE;
+   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
+      ++spinlock->recursion;
+      return true;
    }
 
-   owner = memory_untranslate(OSGetCurrentThread());
+   uint32_t expected = 0;
+   auto timeout = OSGetSystemTime() + duration;
+
+   while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
+      if (OSGetSystemTime() >= timeout) {
+         return false;
+      }
+
+      expected = 0;
+   }
+
+   return true;
+}
+
+static bool
+spinReleaseLock(OSSpinLock *spinlock)
+{
+   auto owner = memory_untranslate(OSGetCurrentThread());
 
    if (spinlock->recursion > 0u) {
       --spinlock->recursion;
-      return TRUE;
+      return false;
    } else if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       spinlock->owner = 0u;
-      return TRUE;
+      return true;
    }
 
-   return FALSE;
+   gLog->error("Attempt to release spin lock which is not owned.");
+   return true;
 }
 
 void
@@ -91,7 +96,7 @@ BOOL
 OSAcquireSpinLock(OSSpinLock *spinlock)
 {
    OSTestThreadCancel();
-   spinLock(spinlock);
+   spinAcquireLock(spinlock);
    return TRUE;
 }
 
@@ -99,49 +104,63 @@ BOOL
 OSTryAcquireSpinLock(OSSpinLock *spinlock)
 {
    OSTestThreadCancel();
-   return spinTryLock(spinlock);
+   return spinTryLock(spinlock) ? TRUE : FALSE;
 }
 
 BOOL
-OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock, int64_t timeout)
+OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock, OSTime timeout)
 {
    OSTestThreadCancel();
-   assert(false);
-   return FALSE;
+   return spinTryLockWithTimeout(spinlock, timeout) ? TRUE : FALSE;
 }
 
 BOOL
 OSReleaseSpinLock(OSSpinLock *spinlock)
 {
-   auto result = spinReleaseLock(spinlock);
+   spinReleaseLock(spinlock);
    OSTestThreadCancel();
-   return result;
+   return TRUE;
 }
 
 BOOL
 OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock)
 {
-   spinLock(spinlock);
+   spinAcquireLock(spinlock);
+   spinlock->restoreInterruptState = OSDisableInterrupts();
    return TRUE;
 }
 
 BOOL
 OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock)
 {
-   return spinTryLock(spinlock);
+   if (!spinTryLock(spinlock)) {
+      return FALSE;
+   }
+
+   spinlock->restoreInterruptState = OSDisableInterrupts();
+   return TRUE;
 }
 
 BOOL
-OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock, int64_t timeout)
+OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock, OSTime timeout)
 {
-   assert(false);
-   return FALSE;
+   if (!spinTryLockWithTimeout(spinlock, timeout)) {
+      return FALSE;
+   }
+
+   spinlock->restoreInterruptState = OSDisableInterrupts();
+   return TRUE;
 }
 
 BOOL
 OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock)
 {
-   return spinReleaseLock(spinlock);
+   if (!spinReleaseLock(spinlock)) {
+      return FALSE;
+   }
+
+   OSRestoreInterrupts(spinlock->restoreInterruptState);
+   return TRUE;
 }
 
 void
