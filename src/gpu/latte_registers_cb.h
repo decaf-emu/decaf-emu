@@ -54,8 +54,9 @@ union CB_BLEND_ALPHA
    float BLEND_ALPHA;
 };
 
-struct CB_COLORN_BASE
+union CB_COLORN_BASE
 {
+   uint32_t value;
    uint32_t BASE_256B;
 };
 
@@ -68,8 +69,9 @@ using CB_COLOR5_BASE = CB_COLORN_BASE;
 using CB_COLOR6_BASE = CB_COLORN_BASE;
 using CB_COLOR7_BASE = CB_COLORN_BASE;
 
-struct CB_COLORN_TILE
+union CB_COLORN_TILE
 {
+   uint32_t value;
    uint32_t BASE_256B;
 };
 
@@ -82,8 +84,9 @@ using CB_COLOR5_TILE = CB_COLORN_TILE;
 using CB_COLOR6_TILE = CB_COLORN_TILE;
 using CB_COLOR7_TILE = CB_COLORN_TILE;
 
-struct CB_COLORN_FRAG
+union CB_COLORN_FRAG
 {
+   uint32_t value;
    uint32_t BASE_256B;
 };
 

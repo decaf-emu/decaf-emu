@@ -106,12 +106,16 @@ struct ColorBuffer
 {
    gl::GLuint object = 0;
    latte::CB_COLORN_BASE cb_color_base;
+   latte::CB_COLORN_SIZE cb_color_size;
+   latte::CB_COLORN_INFO cb_color_info;
 };
 
 struct DepthBuffer
 {
    gl::GLuint object = 0;
    latte::DB_DEPTH_BASE db_depth_base;
+   latte::DB_DEPTH_SIZE db_depth_size;
+   latte::DB_DEPTH_INFO db_depth_info;
 };
 
 struct FrameBuffer

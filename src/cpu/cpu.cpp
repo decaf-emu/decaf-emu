@@ -89,16 +89,15 @@ void coreEntryPoint(Core *core)
 
 void start()
 {
-	for (auto i = 0; i < 3; ++i) {
-		auto &core = gCore[i];
-      
+   for (auto i = 0; i < 3; ++i) {
+      auto &core = gCore[i];
       core.id = i;
-		core.thread = std::thread(std::bind(&coreEntryPoint, &core));
+      core.thread = std::thread(std::bind(&coreEntryPoint, &core));
       core.next_alarm = std::chrono::time_point<std::chrono::system_clock>::max();
 
-		static const std::string coreNames[] = { "Core #0", "Core #1", "Core #2" };
-		platform::setThreadName(&core.thread, coreNames[core.id]);
-	}
+      static const std::string coreNames[] = { "Core #0", "Core #1", "Core #2" };
+      platform::setThreadName(&core.thread, coreNames[core.id]);
+   }
 
    gTimerThread = std::thread(std::bind(&timerEntryPoint));
    platform::setThreadName(&gTimerThread, "Timer Thread");

@@ -17,13 +17,15 @@ struct DB_ALPHA_TO_MASK : Bitfield<DB_ALPHA_TO_MASK, uint32_t>
    BITFIELD_ENTRY(16, 1, bool, OFFSET_ROUND);
 };
 
-struct DB_DEPTH_BASE
+union DB_DEPTH_BASE
 {
+   uint32_t value;
    uint32_t BASE_256B;
 };
 
-struct DB_DEPTH_HTILE_DATA_BASE
+union DB_DEPTH_HTILE_DATA_BASE
 {
+   uint32_t value;
    uint32_t BASE_256B;
 };
 

@@ -192,9 +192,15 @@
     <ClCompile Include="..\src\gpu\opengl\glsl_generator.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_tex.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_vtx.cpp" />
+    <ClCompile Include="..\src\gpu\opengl\opengl_colorbuffer.cpp" />
+    <ClCompile Include="..\src\gpu\opengl\opengl_depthbuffer.cpp" />
+    <ClCompile Include="..\src\gpu\opengl\opengl_draw.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_driver.cpp" />
+    <ClCompile Include="..\src\gpu\opengl\opengl_pm4.cpp" />
+    <ClCompile Include="..\src\gpu\opengl\opengl_registers.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_shader.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_texture.cpp" />
+    <ClCompile Include="..\src\gpu\opengl\opengl_viewport.cpp" />
     <ClCompile Include="..\src\gpu\pm4.cpp" />
     <ClCompile Include="..\src\hardwaretests.cpp" />
     <ClCompile Include="..\src\input\input.cpp" />

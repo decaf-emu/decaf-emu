@@ -256,6 +256,9 @@
     <Filter Include="Source Files\kernel">
       <UniqueIdentifier>{62fe467f-3498-4c83-a4ee-3b0c171b2771}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\gpu\opengl\glsl">
+      <UniqueIdentifier>{f306da50-fb65-489b-92da-097e44cc1dec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -621,30 +624,6 @@
     <ClCompile Include="..\src\modules\gx2\gx2_fetchshader.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpu\opengl\glsl_alu.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\opengl\glsl_alu_op2.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\opengl\glsl_alu_op3.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\opengl\glsl_alu_reduction.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\opengl\glsl_cf.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\opengl\glsl_exp.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\opengl\glsl_generator.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\opengl\glsl_tex.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gpu\opengl\opengl_driver.cpp">
       <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
@@ -698,9 +677,6 @@
     </ClCompile>
     <ClCompile Include="..\src\gpu\microcode\latte_instructions.cpp">
       <Filter>Source Files\gpu\microcode</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpu\opengl\glsl_vtx.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gpu\microcode\latte_blockify.cpp">
       <Filter>Source Files\gpu\microcode</Filter>
@@ -923,6 +899,51 @@
     </ClCompile>
     <ClCompile Include="..\src\kernel\kernel_fibers.cpp">
       <Filter>Source Files\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_alu.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_alu_op2.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_alu_op3.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_alu_reduction.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_cf.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_exp.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_generator.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_tex.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\glsl_vtx.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\opengl_colorbuffer.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\opengl_depthbuffer.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\opengl_viewport.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\opengl_draw.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\opengl_pm4.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\opengl_registers.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
