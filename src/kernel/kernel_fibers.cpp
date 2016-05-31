@@ -277,9 +277,11 @@ void rescheduleNoLock(bool yielding)
 
       tCurrentThread[core_id] = next->thread;
       restoreContext(&next->thread->context);
+      cpu::this_core::set_tracer(next->tracer);
       platform::swapToFiber(nullptr, next->handle);
    } else {
       tCurrentThread[core_id] = nullptr;
+      cpu::this_core::set_tracer(nullptr);
       platform::swapToFiber(nullptr, tIdleFiber[core_id]);
    }
 
