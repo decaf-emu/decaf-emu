@@ -27,25 +27,45 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
    buffer = swapped.data();
 
    for (auto pos = 0u; pos < buffer_size; ) {
-      auto header = *reinterpret_cast<pm4::PacketHeader *>(&buffer[pos]);
+      auto header = *reinterpret_cast<pm4::Header *>(&buffer[pos]);
       auto size = 0u;
 
       if (buffer[pos] == 0) {
-         // 0 padding at end of buffer
          break;
       }
 
       switch (header.type()) {
-      case pm4::PacketType::Type3:
+      case pm4::Header::Type3:
       {
-         auto header3 = pm4::Packet3::get(header.value);
+         auto header3 = pm4::type3::Header::get(header.value);
          size = header3.size() + 1;
-         handlePacketType3(header3, gsl::as_span(&buffer[pos + 1], size));
+
+         if (pos + size >= buffer_size) {
+            gLog->error("Invalid packet type3 size: {}", size);
+         } else {
+            handlePacketType3(header3, gsl::as_span(&buffer[pos + 1], size));
+         }
          break;
       }
-      case pm4::PacketType::Type0:
-      case pm4::PacketType::Type1:
-      case pm4::PacketType::Type2:
+      case pm4::Header::Type0:
+      {
+         auto header0 = pm4::type0::Header::get(header.value);
+         size = header0.count() + 1;
+
+         if (pos + size >= buffer_size) {
+            gLog->error("Invalid packet type0 size: {}", size);
+         } else {
+            handlePacketType0(header0, gsl::as_span(&buffer[pos + 1], size));
+         }
+
+         break;
+      }
+      case pm4::Header::Type2:
+      {
+         // Filler packet, ignore
+         break;
+      }
+      case pm4::Header::Type1:
       default:
          gLog->error("Invalid packet header type {}, header = 0x{:08X}", header.type().get(), header.value);
          pos = buffer_size;
@@ -57,90 +77,102 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
 }
 
 void
-GLDriver::handlePacketType3(pm4::Packet3 header, const gsl::span<uint32_t> &data)
+GLDriver::handlePacketType0(pm4::type0::Header header, const gsl::span<uint32_t> &data)
+{
+   auto base = header.baseIndex();
+
+   for (auto i = 0; i < data.size(); ++i) {
+      auto index = base + i;
+      // Set mRegisters[base + i];
+      gLog->info("Type0 set register 0x{:08X} = 0x{:08X}", index, data[i]);
+   }
+}
+
+void
+GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t> &data)
 {
    pm4::PacketReader reader { data };
 
    switch (header.opcode()) {
-   case pm4::Opcode3::DECAF_COPY_COLOR_TO_SCAN:
+   case pm4::type3::DECAF_COPY_COLOR_TO_SCAN:
       decafCopyColorToScan(pm4::read<pm4::DecafCopyColorToScan>(reader));
       break;
-   case pm4::Opcode3::DECAF_SWAP_BUFFERS:
+   case pm4::type3::DECAF_SWAP_BUFFERS:
       decafSwapBuffers(pm4::read<pm4::DecafSwapBuffers>(reader));
       break;
-   case pm4::Opcode3::DECAF_CLEAR_COLOR:
+   case pm4::type3::DECAF_CLEAR_COLOR:
       decafClearColor(pm4::read<pm4::DecafClearColor>(reader));
       break;
-   case pm4::Opcode3::DECAF_CLEAR_DEPTH_STENCIL:
+   case pm4::type3::DECAF_CLEAR_DEPTH_STENCIL:
       decafClearDepthStencil(pm4::read<pm4::DecafClearDepthStencil>(reader));
       break;
-   case pm4::Opcode3::DECAF_SET_CONTEXT_STATE:
+   case pm4::type3::DECAF_SET_CONTEXT_STATE:
       decafSetContextState(pm4::read<pm4::DecafSetContextState>(reader));
       break;
-   case pm4::Opcode3::DRAW_INDEX_AUTO:
+   case pm4::type3::DRAW_INDEX_AUTO:
       drawIndexAuto(pm4::read<pm4::DrawIndexAuto>(reader));
       break;
-   case pm4::Opcode3::DRAW_INDEX_2:
+   case pm4::type3::DRAW_INDEX_2:
       drawIndex2(pm4::read<pm4::DrawIndex2>(reader));
       break;
-   case pm4::Opcode3::INDEX_TYPE:
+   case pm4::type3::INDEX_TYPE:
       indexType(pm4::read<pm4::IndexType>(reader));
       break;
-   case pm4::Opcode3::NUM_INSTANCES:
+   case pm4::type3::NUM_INSTANCES:
       numInstances(pm4::read<pm4::NumInstances>(reader));
       break;
-   case pm4::Opcode3::SET_ALU_CONST:
+   case pm4::type3::SET_ALU_CONST:
       setAluConsts(pm4::read<pm4::SetAluConsts>(reader));
       break;
-   case pm4::Opcode3::SET_CONFIG_REG:
+   case pm4::type3::SET_CONFIG_REG:
       setConfigRegs(pm4::read<pm4::SetConfigRegs>(reader));
       break;
-   case pm4::Opcode3::SET_CONTEXT_REG:
+   case pm4::type3::SET_CONTEXT_REG:
       setContextRegs(pm4::read<pm4::SetContextRegs>(reader));
       break;
-   case pm4::Opcode3::SET_CTL_CONST:
+   case pm4::type3::SET_CTL_CONST:
       setControlConstants(pm4::read<pm4::SetControlConstants>(reader));
       break;
-   case pm4::Opcode3::SET_LOOP_CONST:
+   case pm4::type3::SET_LOOP_CONST:
       setLoopConsts(pm4::read<pm4::SetLoopConsts>(reader));
       break;
-   case pm4::Opcode3::SET_SAMPLER:
+   case pm4::type3::SET_SAMPLER:
       setSamplers(pm4::read<pm4::SetSamplers>(reader));
       break;
-   case pm4::Opcode3::SET_RESOURCE:
+   case pm4::type3::SET_RESOURCE:
       setResources(pm4::read<pm4::SetResources>(reader));
       break;
-   case pm4::Opcode3::LOAD_CONFIG_REG:
+   case pm4::type3::LOAD_CONFIG_REG:
       loadConfigRegs(pm4::read<pm4::LoadConfigReg>(reader));
       break;
-   case pm4::Opcode3::LOAD_CONTEXT_REG:
+   case pm4::type3::LOAD_CONTEXT_REG:
       loadContextRegs(pm4::read<pm4::LoadContextReg>(reader));
       break;
-   case pm4::Opcode3::LOAD_ALU_CONST:
+   case pm4::type3::LOAD_ALU_CONST:
       loadAluConsts(pm4::read<pm4::LoadAluConst>(reader));
       break;
-   case pm4::Opcode3::LOAD_BOOL_CONST:
+   case pm4::type3::LOAD_BOOL_CONST:
       loadBoolConsts(pm4::read<pm4::LoadBoolConst>(reader));
       break;
-   case pm4::Opcode3::LOAD_LOOP_CONST:
+   case pm4::type3::LOAD_LOOP_CONST:
       loadLoopConsts(pm4::read<pm4::LoadLoopConst>(reader));
       break;
-   case pm4::Opcode3::LOAD_RESOURCE:
+   case pm4::type3::LOAD_RESOURCE:
       loadResources(pm4::read<pm4::LoadResource>(reader));
       break;
-   case pm4::Opcode3::LOAD_SAMPLER:
+   case pm4::type3::LOAD_SAMPLER:
       loadSamplers(pm4::read<pm4::LoadSampler>(reader));
       break;
-   case pm4::Opcode3::LOAD_CTL_CONST:
+   case pm4::type3::LOAD_CTL_CONST:
       loadControlConstants(pm4::read<pm4::LoadControlConst>(reader));
       break;
-   case pm4::Opcode3::INDIRECT_BUFFER_PRIV:
+   case pm4::type3::INDIRECT_BUFFER_PRIV:
       indirectBufferCall(pm4::read<pm4::IndirectBufferCall>(reader));
       break;
-   case pm4::Opcode3::MEM_WRITE:
+   case pm4::type3::MEM_WRITE:
       memWrite(pm4::read<pm4::MemWrite>(reader));
       break;
-   case pm4::Opcode3::EVENT_WRITE_EOP:
+   case pm4::type3::EVENT_WRITE_EOP:
       eventWriteEOP(pm4::read<pm4::EventWriteEOP>(reader));
       break;
    default:

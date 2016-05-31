@@ -7,9 +7,9 @@
 namespace pm4
 {
 
-namespace Opcode3
+namespace type3
 {
-enum Value : uint32_t
+enum IT_OPCODE : uint32_t
 {
    DECAF_COPY_COLOR_TO_SCAN   = 0x01,
    DECAF_SWAP_BUFFERS         = 0x02,
@@ -105,41 +105,53 @@ enum Value : uint32_t
 };
 }
 
-namespace PacketType
+struct Header : Bitfield<Header, uint32_t>
 {
-enum Value : uint32_t
-{
-   Type0 = 0,
-   Type1 = 1,
-   Type2 = 2,
-   Type3 = 3
-};
-}
+   enum Type
+   {
+      Type0 = 0,
+      Type1 = 1,
+      Type2 = 2,
+      Type3 = 3,
+   };
 
-struct PacketHeader : Bitfield<PacketHeader, uint32_t>
-{
-   BITFIELD_ENTRY(30, 8, PacketType::Value, type);
+   BITFIELD_ENTRY(30, 8, Type, type);
 };
 
-struct Packet0 : Bitfield<Packet0, uint32_t>
+namespace type0
+{
+
+struct Header : Bitfield<Header, uint32_t>
 {
    BITFIELD_ENTRY(0, 16, uint32_t, baseIndex);
    BITFIELD_ENTRY(16, 14, uint32_t, count);
-   BITFIELD_ENTRY(30, 8, PacketType::Value, type);
+   BITFIELD_ENTRY(30, 8, pm4::Header::Type, type);
 };
 
-struct Packet2 : Bitfield<Packet2, uint32_t>
+} // type0
+
+namespace type2
 {
-   BITFIELD_ENTRY(30, 8, PacketType::Value, type);
+
+struct Header : Bitfield<Header, uint32_t>
+{
+   BITFIELD_ENTRY(30, 8, pm4::Header::Type, type);
 };
 
-struct Packet3 : Bitfield<Packet3, uint32_t>
+} // type2
+
+namespace type3
+{
+
+struct Header : Bitfield<Header, uint32_t>
 {
    BITFIELD_ENTRY(0, 1, bool, predicate);
-   BITFIELD_ENTRY(8, 8, Opcode3::Value, opcode);
+   BITFIELD_ENTRY(8, 8, IT_OPCODE, opcode);
    BITFIELD_ENTRY(16, 14, uint32_t, size);
-   BITFIELD_ENTRY(30, 8, PacketType::Value, type);
+   BITFIELD_ENTRY(30, 8, pm4::Header::Type, type);
 };
+
+} // type3
 
 #pragma pack(pop)
 

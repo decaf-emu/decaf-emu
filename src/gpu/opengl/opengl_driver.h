@@ -173,7 +173,8 @@ private:
 
    uint64_t getGpuClock();
 
-   void handlePacketType3(pm4::Packet3 header, const gsl::span<uint32_t> &data);
+   void handlePacketType0(pm4::type0::Header header, const gsl::span<uint32_t> &data);
+   void handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t> &data);
    void decafCopyColorToScan(const pm4::DecafCopyColorToScan &data);
    void decafSwapBuffers(const pm4::DecafSwapBuffers &data);
    void decafClearColor(const pm4::DecafClearColor &data);

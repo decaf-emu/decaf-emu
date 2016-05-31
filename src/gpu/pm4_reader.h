@@ -51,12 +51,21 @@ public:
       return *this;
    }
 
-   // Read one word as a register
+   // Read one word as a REG_OFFSET
    template<typename Type>
-   PacketReader &reg(Type &value, uint32_t base)
+   PacketReader &REG_OFFSET(Type &value, uint32_t base)
    {
       checkSize(1);
-      value = static_cast<Type>((mBuffer[mPosition++] * 4) + base);
+      value = static_cast<Type>(((mBuffer[mPosition++] & 0xFFFF) * 4) + base);
+      return *this;
+   }
+
+   // Read one word as a CONST_OFFSET
+   template<typename Type>
+   PacketReader &CONST_OFFSET(Type &value)
+   {
+      checkSize(1);
+      value = static_cast<Type>(mBuffer[mPosition++] & 0xFFFF);
       return *this;
    }
 

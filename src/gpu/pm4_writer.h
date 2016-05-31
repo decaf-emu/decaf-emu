@@ -13,18 +13,18 @@ namespace pm4
 class PacketWriter
 {
 public:
-   PacketWriter(Opcode3::Value op)
+   PacketWriter(type3::IT_OPCODE op)
    {
       mBuffer = pm4::getBuffer(1);
 
       if (mBuffer) {
          mSaveSize = mBuffer->curSize;
 
-         auto header = Packet3::get(0)
-            .type().set(PacketType::Type3)
+         auto header = type3::Header::get(0)
+            .type().set(Header::Type3)
             .opcode().set(op);
 
-         *reinterpret_cast<Packet3 *>(&mBuffer->buffer[mBuffer->curSize++]) = header;
+         *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mBuffer->curSize++]) = header;
       }
    }
 
@@ -32,12 +32,12 @@ public:
    {
       if (mBuffer) {
          // Update header
-         auto header = *reinterpret_cast<Packet3 *>(&mBuffer->buffer[mSaveSize]);
+         auto header = *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mSaveSize]);
 
          header = header
             .size().set((mBuffer->curSize - mSaveSize) - 2);
 
-         *reinterpret_cast<Packet3 *>(&mBuffer->buffer[mSaveSize]) = header;
+         *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mSaveSize]) = header;
 
          // Swap to big endian
          for (auto i = mSaveSize; i < mBuffer->curSize; ++i) {
@@ -87,12 +87,22 @@ public:
       return *this;
    }
 
-   // Write one word as a register
+   // Write one word as a REG_OFFSET
    template<typename Type>
-   PacketWriter &reg(Type value, latte::Register base)
+   PacketWriter &REG_OFFSET(Type value, latte::Register base)
+   {
+      auto offset = static_cast<uint32_t>(value) - static_cast<uint32_t>(base);
+      checkSize(1);
+      mBuffer->buffer[mBuffer->curSize++] = (offset / 4) & 0xFFFF;
+      return *this;
+   }
+
+   // Write one word as a CONST_OFFSET
+   template<typename Type>
+   PacketWriter &CONST_OFFSET(Type value)
    {
       checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = (static_cast<uint32_t>(value) - static_cast<uint32_t>(base)) / 4;
+      mBuffer->buffer[mBuffer->curSize++] = static_cast<uint32_t>(value) & 0xFFFF;
       return *this;
    }
 

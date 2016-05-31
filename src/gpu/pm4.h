@@ -12,7 +12,7 @@ namespace pm4
 
 struct DecafSwapBuffers
 {
-   static const auto Opcode = Opcode3::DECAF_SWAP_BUFFERS;
+   static const auto Opcode = type3::DECAF_SWAP_BUFFERS;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -22,7 +22,7 @@ struct DecafSwapBuffers
 
 struct DecafSetContextState
 {
-   static const auto Opcode = Opcode3::DECAF_SET_CONTEXT_STATE;
+   static const auto Opcode = type3::DECAF_SET_CONTEXT_STATE;
 
    virtual_ptr<void> context;
 
@@ -35,7 +35,7 @@ struct DecafSetContextState
 
 struct DecafCopyColorToScan
 {
-   static const auto Opcode = Opcode3::DECAF_COPY_COLOR_TO_SCAN;
+   static const auto Opcode = type3::DECAF_COPY_COLOR_TO_SCAN;
 
    uint32_t scanTarget;
    uint32_t bufferAddr;
@@ -60,7 +60,7 @@ struct DecafCopyColorToScan
 
 struct DecafClearColor
 {
-   static const auto Opcode = Opcode3::DECAF_CLEAR_COLOR;
+   static const auto Opcode = type3::DECAF_CLEAR_COLOR;
 
    float red;
    float green;
@@ -91,7 +91,7 @@ struct DecafClearColor
 
 struct DecafClearDepthStencil
 {
-   static const auto Opcode = Opcode3::DECAF_CLEAR_DEPTH_STENCIL;
+   static const auto Opcode = type3::DECAF_CLEAR_DEPTH_STENCIL;
 
    uint32_t flags;
    uint32_t bufferAddr;
@@ -114,7 +114,7 @@ struct DecafClearDepthStencil
 
 struct DrawIndexAuto
 {
-   static const auto Opcode = Opcode3::DRAW_INDEX_AUTO;
+   static const auto Opcode = type3::DRAW_INDEX_AUTO;
 
    uint32_t indexCount;
    latte::VGT_DRAW_INITIATOR drawInitiator;
@@ -129,7 +129,7 @@ struct DrawIndexAuto
 
 struct DrawIndex2
 {
-   static const auto Opcode = Opcode3::DRAW_INDEX_2;
+   static const auto Opcode = type3::DRAW_INDEX_2;
 
    uint32_t maxIndices;                      // VGT_DMA_MAX_SIZE
    virtual_ptr<void> addr;                   // VGT_DMA_BASE
@@ -151,7 +151,7 @@ struct DrawIndex2
 
 struct IndexType
 {
-   static const auto Opcode = Opcode3::INDEX_TYPE;
+   static const auto Opcode = type3::INDEX_TYPE;
 
    latte::VGT_DMA_INDEX_TYPE type; // VGT_DMA_INDEX_TYPE
 
@@ -164,7 +164,7 @@ struct IndexType
 
 struct NumInstances
 {
-   static const auto Opcode = Opcode3::NUM_INSTANCES;
+   static const auto Opcode = type3::NUM_INSTANCES;
 
    uint32_t count; // VGT_DMA_NUM_INSTANCES
 
@@ -177,7 +177,7 @@ struct NumInstances
 
 struct SetAluConsts
 {
-   static const auto Opcode = Opcode3::SET_ALU_CONST;
+   static const auto Opcode = type3::SET_ALU_CONST;
 
    latte::Register id;
    gsl::span<uint32_t> values;
@@ -185,14 +185,14 @@ struct SetAluConsts
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::AluConstRegisterBase);
+      se.REG_OFFSET(id, latte::Register::AluConstRegisterBase);
       se(values);
    }
 };
 
 struct SetConfigReg
 {
-   static const auto Opcode = Opcode3::SET_CONFIG_REG;
+   static const auto Opcode = type3::SET_CONFIG_REG;
 
    latte::Register id;
    uint32_t value;
@@ -200,14 +200,14 @@ struct SetConfigReg
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::ConfigRegisterBase);
+      se.REG_OFFSET(id, latte::Register::ConfigRegisterBase);
       se(value);
    }
 };
 
 struct SetConfigRegs
 {
-   static const auto Opcode = Opcode3::SET_CONFIG_REG;
+   static const auto Opcode = type3::SET_CONFIG_REG;
 
    latte::Register id;
    gsl::span<uint32_t> values;
@@ -215,14 +215,14 @@ struct SetConfigRegs
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::ConfigRegisterBase);
+      se.REG_OFFSET(id, latte::Register::ConfigRegisterBase);
       se(values);
    }
 };
 
 struct SetContextReg
 {
-   static const auto Opcode = Opcode3::SET_CONTEXT_REG;
+   static const auto Opcode = type3::SET_CONTEXT_REG;
 
    latte::Register id;
    uint32_t value;
@@ -230,14 +230,14 @@ struct SetContextReg
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::ContextRegisterBase);
+      se.REG_OFFSET(id, latte::Register::ContextRegisterBase);
       se(value);
    }
 };
 
 struct SetContextRegs
 {
-   static const auto Opcode = Opcode3::SET_CONTEXT_REG;
+   static const auto Opcode = type3::SET_CONTEXT_REG;
 
    latte::Register id;
    gsl::span<uint32_t> values;
@@ -245,44 +245,44 @@ struct SetContextRegs
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::ContextRegisterBase);
+      se.REG_OFFSET(id, latte::Register::ContextRegisterBase);
       se(values);
    }
 };
 
 struct SetControlConstant
 {
-   static const auto Opcode = Opcode3::SET_CTL_CONST;
+   static const auto Opcode = type3::SET_CTL_CONST;
 
-   uint32_t id;
+   latte::Register id;
    uint32_t value;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::ControlRegisterBase);
+      se.REG_OFFSET(id, latte::Register::ControlRegisterBase);
       se(value);
    }
 };
 
 struct SetControlConstants
 {
-   static const auto Opcode = Opcode3::SET_CTL_CONST;
+   static const auto Opcode = type3::SET_CTL_CONST;
 
-   uint32_t id;
+   latte::Register id;
    gsl::span<uint32_t> values;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::ControlRegisterBase);
+      se.REG_OFFSET(id, latte::Register::ControlRegisterBase);
       se(values);
    }
 };
 
 struct SetLoopConst
 {
-   static const auto Opcode = Opcode3::SET_LOOP_CONST;
+   static const auto Opcode = type3::SET_LOOP_CONST;
 
    latte::Register id;
    uint32_t value;
@@ -290,14 +290,14 @@ struct SetLoopConst
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::LoopConstRegisterBase);
+      se.REG_OFFSET(id, latte::Register::LoopConstRegisterBase);
       se(value);
    }
 };
 
 struct SetLoopConsts
 {
-   static const auto Opcode = Opcode3::SET_LOOP_CONST;
+   static const auto Opcode = type3::SET_LOOP_CONST;
 
    latte::Register id;
    gsl::span<uint32_t> values;
@@ -305,14 +305,14 @@ struct SetLoopConsts
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::LoopConstRegisterBase);
+      se.REG_OFFSET(id, latte::Register::LoopConstRegisterBase);
       se(values);
    }
 };
 
 struct SetSamplerAttrib
 {
-   static const auto Opcode = Opcode3::SET_SAMPLER;
+   static const auto Opcode = type3::SET_SAMPLER;
 
    uint32_t id;
    latte::SQ_TEX_SAMPLER_WORD0_N word0;
@@ -322,7 +322,7 @@ struct SetSamplerAttrib
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se(id);
+      se.CONST_OFFSET(id);
       se(word0.value);
       se(word1.value);
       se(word2.value);
@@ -331,7 +331,7 @@ struct SetSamplerAttrib
 
 struct SetSamplers
 {
-   static const auto Opcode = Opcode3::SET_SAMPLER;
+   static const auto Opcode = type3::SET_SAMPLER;
 
    latte::Register id;
    gsl::span<uint32_t> values;
@@ -339,14 +339,14 @@ struct SetSamplers
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se.reg(id, latte::Register::SamplerRegisterBase);
+      se.REG_OFFSET(id, latte::Register::SamplerRegisterBase);
       se(values);
    }
 };
 
 struct SetVtxResource
 {
-   static const auto Opcode = Opcode3::SET_RESOURCE;
+   static const auto Opcode = type3::SET_RESOURCE;
 
    uint32_t id;
    virtual_ptr<const void> baseAddress;
@@ -361,7 +361,7 @@ struct SetVtxResource
       uint32_t unusedWord4 = 0xABCD1234;
       uint32_t unusedWord5 = 0xABCD1234;
 
-      se(id);
+      se.CONST_OFFSET(id);
       se(baseAddress);
       se(size);
       se(word2.value);
@@ -374,7 +374,7 @@ struct SetVtxResource
 
 struct SetTexResource
 {
-   static const auto Opcode = Opcode3::SET_RESOURCE;
+   static const auto Opcode = type3::SET_RESOURCE;
 
    uint32_t id;
    latte::SQ_TEX_RESOURCE_WORD0_N word0;
@@ -388,7 +388,7 @@ struct SetTexResource
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se(id);
+      se.CONST_OFFSET(id);
       se(word0.value);
       se(word1.value);
       se(word2.value);
@@ -401,7 +401,7 @@ struct SetTexResource
 
 struct SetResources
 {
-   static const auto Opcode = Opcode3::SET_RESOURCE;
+   static const auto Opcode = type3::SET_RESOURCE;
 
    uint32_t id;
    gsl::span<uint32_t> values;
@@ -409,14 +409,14 @@ struct SetResources
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se(id);
+      se.CONST_OFFSET(id);
       se(values);
    }
 };
 
 struct IndirectBufferCall
 {
-   static const auto Opcode = Opcode3::INDIRECT_BUFFER_PRIV;
+   static const auto Opcode = type3::INDIRECT_BUFFER_PRIV;
    virtual_ptr<void> addr;
    uint32_t size;
 
@@ -433,7 +433,7 @@ struct IndirectBufferCall
 
 struct LoadConfigReg
 {
-   static const auto Opcode = Opcode3::LOAD_CONFIG_REG;
+   static const auto Opcode = type3::LOAD_CONFIG_REG;
    virtual_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
@@ -450,7 +450,7 @@ struct LoadConfigReg
 
 struct LoadContextReg
 {
-   static const auto Opcode = Opcode3::LOAD_CONTEXT_REG;
+   static const auto Opcode = type3::LOAD_CONTEXT_REG;
    virtual_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
@@ -467,7 +467,7 @@ struct LoadContextReg
 
 struct LoadAluConst
 {
-   static const auto Opcode = Opcode3::LOAD_ALU_CONST;
+   static const auto Opcode = type3::LOAD_ALU_CONST;
    virtual_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
@@ -484,7 +484,7 @@ struct LoadAluConst
 
 struct LoadBoolConst
 {
-   static const auto Opcode = Opcode3::LOAD_BOOL_CONST;
+   static const auto Opcode = type3::LOAD_BOOL_CONST;
    virtual_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
@@ -501,7 +501,7 @@ struct LoadBoolConst
 
 struct LoadLoopConst
 {
-   static const auto Opcode = Opcode3::LOAD_LOOP_CONST;
+   static const auto Opcode = type3::LOAD_LOOP_CONST;
    virtual_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
@@ -518,7 +518,7 @@ struct LoadLoopConst
 
 struct LoadResource
 {
-   static const auto Opcode = Opcode3::LOAD_RESOURCE;
+   static const auto Opcode = type3::LOAD_RESOURCE;
    virtual_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
@@ -535,7 +535,7 @@ struct LoadResource
 
 struct LoadSampler
 {
-   static const auto Opcode = Opcode3::LOAD_SAMPLER;
+   static const auto Opcode = type3::LOAD_SAMPLER;
    virtual_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
@@ -552,7 +552,7 @@ struct LoadSampler
 
 struct LoadControlConst
 {
-   static const auto Opcode = Opcode3::LOAD_CTL_CONST;
+   static const auto Opcode = type3::LOAD_CTL_CONST;
    virtual_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
@@ -589,7 +589,7 @@ struct MW_ADDR_HI : Bitfield<MW_ADDR_HI, uint32_t>
 
 struct MemWrite
 {
-   static const auto Opcode = Opcode3::MEM_WRITE;
+   static const auto Opcode = type3::MEM_WRITE;
    MW_ADDR_LO addrLo;
    MW_ADDR_HI addrHi;
    uint32_t dataLo;
@@ -635,7 +635,7 @@ struct EW_EOP_ADDR_HI : Bitfield<EW_EOP_ADDR_HI, uint32_t>
 
 struct EventWriteEOP
 {
-   static const auto Opcode = Opcode3::EVENT_WRITE_EOP;
+   static const auto Opcode = type3::EVENT_WRITE_EOP;
    latte::VGT_EVENT_INITIATOR eventInitiator;
    EW_EOP_ADDR_LO addrLo;
    EW_EOP_ADDR_HI addrHi;

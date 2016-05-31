@@ -281,7 +281,7 @@ GX2SetVertexUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 
    // Custom write packet so we can endian swap data
    pm4::PacketWriter writer { pm4::SetAluConsts::Opcode };
-   writer.reg(id, latte::Register::AluConstRegisterBase);
+   writer.REG_OFFSET(id, latte::Register::AluConstRegisterBase);
 
    for (auto i = 0u; i < count; ++i) {
       writer(data[i].value());
@@ -303,7 +303,7 @@ GX2SetPixelUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 
    // Custom write packet so we can endian swap data
    pm4::PacketWriter writer { pm4::SetAluConsts::Opcode };
-   writer.reg(id, latte::Register::AluConstRegisterBase);
+   writer.REG_OFFSET(id, latte::Register::AluConstRegisterBase);
 
    for (auto i = 0u; i < count; ++i) {
       writer(data[i].value());
