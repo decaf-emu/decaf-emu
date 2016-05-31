@@ -104,8 +104,8 @@ GX2GetEventCallback(GX2EventType type,
       *funcOut = gEventCallbacks[type].func;
       *userDataOut = gEventCallbacks[type].data;
    } else {
-      *funcOut = 0;
-      *userDataOut = 0;
+      *funcOut = nullptr;
+      *userDataOut = nullptr;
    }
 }
 

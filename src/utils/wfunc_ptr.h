@@ -12,40 +12,45 @@ struct be_wfunc_ptr;
 template<typename ReturnType, typename... Args>
 struct wfunc_ptr
 {
-   wfunc_ptr() :
-      address(0)
+   wfunc_ptr()
    {
+      setAddress(0);
    }
 
-   wfunc_ptr(std::nullptr_t) :
-      address(0)
+   wfunc_ptr(std::nullptr_t)
    {
+      setAddress(0);
    }
 
-   wfunc_ptr(int addr) :
-      address(addr)
+   wfunc_ptr(ppcaddr_t addr)
    {
+      setAddress(addr);
    }
 
-   wfunc_ptr(ppcaddr_t addr) :
-      address(addr)
+   wfunc_ptr(be_wfunc_ptr<ReturnType, Args...> func)
    {
-   }
-
-   wfunc_ptr(be_wfunc_ptr<ReturnType, Args...> func) :
-      address(func.getAddress())
-   {
+      setAddress(func.getAddress());
    }
 
    template<bool Endian>
-   wfunc_ptr(const virtual_ptr<void, Endian> &ptr) :
-      address(ptr.getAddress())
+   wfunc_ptr(const virtual_ptr<void, Endian> &ptr)
    {
+      setAddress(ptr.getAddress());
+   }
+
+   void setAddress(ppcaddr_t addr)
+   {
+      address = addr;
+   }
+
+   ppcaddr_t getAddress() const
+   {
+      return address;
    }
 
    operator ppcaddr_t() const
    {
-      return address;
+      return getAddress();
    }
 
    ReturnType operator()(Args... args);
@@ -56,14 +61,14 @@ struct wfunc_ptr
 template<typename ReturnType, typename... Args>
 struct be_wfunc_ptr
 {
-   be_wfunc_ptr() :
-      address(0)
+   be_wfunc_ptr()
    {
+      setAddress(0);
    }
 
-   be_wfunc_ptr(wfunc_ptr<ReturnType, Args...> func) :
-      address(func.getAddress())
+   be_wfunc_ptr(wfunc_ptr<ReturnType, Args...> func)
    {
+      setAddress(func.getAddress());
    }
 
    void setAddress(ppcaddr_t addr)
@@ -90,7 +95,7 @@ struct be_wfunc_ptr
 
    operator ppcaddr_t() const
    {
-      return address;
+      return getAddress();
    }
 
    ppcaddr_t address;
