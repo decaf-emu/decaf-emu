@@ -146,9 +146,12 @@ void wait_for_interrupt()
    while (true) {
       if (core->interrupt.load()) {
          uint32_t flags = core->interrupt.exchange(0);
+         lock.unlock();
          gInterruptHandler(flags);
+         lock.lock();
+      } else {
+         gInterruptCondition.wait(lock);
       }
-      gInterruptCondition.wait(lock);
    }
 }
 
@@ -173,6 +176,7 @@ void set_interrupt_handler(interrupt_handler handler)
 
 void interrupt(int core_idx, uint32_t flags)
 {
+   std::unique_lock<std::mutex> lock{ gInterruptMutex };
    gCore[core_idx].interrupt.fetch_or(flags);
    gInterruptCondition.notify_all();
 }
