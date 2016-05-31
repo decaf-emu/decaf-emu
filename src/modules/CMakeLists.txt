@@ -23,6 +23,7 @@ set(SOURCE_FILES
     coreinit/coreinit_fs_stat.cpp
     coreinit/coreinit_ghs.cpp
     coreinit/coreinit_ghs_typeinfo.cpp
+    coreinit/coreinit_interrupts.cpp
     coreinit/coreinit_lockedcache.cpp
     coreinit/coreinit_mcp.cpp
     coreinit/coreinit_memheap.cpp
@@ -164,6 +165,7 @@ set(HEADER_FILES
     coreinit/coreinit_fs_stat.h
     coreinit/coreinit_ghs.h
     coreinit/coreinit_ghs_typeinfo.h
+    coreinit/coreinit_interrupts.h
     coreinit/coreinit_ios.h
     coreinit/coreinit_lockedcache.h
     coreinit/coreinit_mcp.h
