@@ -389,7 +389,7 @@ checkAlarms(uint32_t core_id)
             OSUninterruptibleSpinLock_Acquire(sAlarmLock);
          }
 
-         coreinit::internal::wakeupThreadNoLock(&alarm->threadQueue);
+         OSWakeupThread(&alarm->threadQueue);
       }
 
       alarm = nextAlarm;
