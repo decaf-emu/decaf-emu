@@ -298,7 +298,7 @@ triggerAlarmNoLock(OSAlarmQueue *queue, OSAlarm *alarm, OSContext *context)
    alarm->context = context;
 
    if (alarm->period) {
-      alarm->nextFire = OSGetTime() + alarm->period;
+      alarm->nextFire = alarm->nextFire + alarm->period;
       alarm->state = OSAlarmState::Set;
       coreinit::internal::updateCpuAlarm();
    } else {
