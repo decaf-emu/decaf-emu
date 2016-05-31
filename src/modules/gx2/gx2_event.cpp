@@ -221,13 +221,11 @@ void
 vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
    sLastVsync.store(OSGetSystemTime(), std::memory_order_release);
-   coreinit::internal::wakeupThreadNoLock(sVsyncThreadQueue);
+   OSWakeupThread(sVsyncThreadQueue);
    auto callback = sEventCallbacks[GX2EventType::Vsync];
 
    if (callback.func) {
-      coreinit::internal::unlockScheduler();
       callback.func(GX2EventType::Vsync, callback.data);
-      coreinit::internal::lockScheduler();
    }
 }
 
