@@ -12,7 +12,7 @@ bool GLDriver::checkActiveDepthBuffer()
    auto db_depth_base = getRegister<latte::DB_DEPTH_BASE>(latte::Register::DB_DEPTH_BASE);
    auto &active = mActiveDepthBuffer;
 
-   if (!db_depth_base.value) {
+   if (!db_depth_base.BASE_256B) {
       if (active) {
          // Unbind depth buffer
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, 0, 0);
@@ -35,8 +35,11 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
                          latte::DB_DEPTH_SIZE db_depth_size,
                          latte::DB_DEPTH_INFO db_depth_info)
 {
-   auto buffer = &mDepthBuffers[db_depth_base.value];
-   buffer->db_depth_base = db_depth_base;
+   auto buffer = &mDepthBuffers[db_depth_base.BASE_256B ^ db_depth_size.value ^ db_depth_info.value];
+
+   /* TODO: Games can reuse the same GPU memory for multiple depth buffers,
+            for example, Amiibo Settings uses same BASE_256B for the TV
+            and DRC screens which have different db_color_size.
 
    if (buffer->object) {
       if (buffer->db_depth_info.value != db_depth_info.value ||
@@ -45,7 +48,11 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
          gl::glDeleteTextures(1, &buffer->object);
          buffer->object = 0;
       }
-   }
+   }*/
+
+   buffer->db_depth_base = db_depth_base;
+   buffer->db_depth_info = db_depth_info;
+   buffer->db_depth_size = db_depth_size;
 
    if (!buffer->object) {
       auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX();

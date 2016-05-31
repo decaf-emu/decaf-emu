@@ -38,8 +38,11 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
                          latte::CB_COLORN_SIZE cb_color_size,
                          latte::CB_COLORN_INFO cb_color_info)
 {
-   auto buffer = &mColorBuffers[cb_color_base.value];
-   buffer->cb_color_base = cb_color_base;
+   auto buffer = &mColorBuffers[cb_color_base.BASE_256B ^ cb_color_size.value ^ cb_color_info.value];
+
+   /* TODO: Games can reuse the same GPU memory for multiple color buffers,
+            for example, Amiibo Settings uses same BASE_256B for the TV
+            and DRC screens which have different cb_color_size.
 
    if (buffer->object) {
       if (buffer->cb_color_info.value != cb_color_info.value ||
@@ -48,7 +51,11 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
          gl::glDeleteTextures(1, &buffer->object);
          buffer->object = 0;
       }
-   }
+   }*/
+
+   buffer->cb_color_base = cb_color_base;
+   buffer->cb_color_info = cb_color_info;
+   buffer->cb_color_size = cb_color_size;
 
    if (!buffer->object) {
       auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX();
