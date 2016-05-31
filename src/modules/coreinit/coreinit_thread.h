@@ -187,7 +187,16 @@ struct OSThread
 
    //! Thread entry point set in OSCreateThread
    be_OSThreadEntryPointFn entryPoint;
-   UNKNOWN(0x57c - 0x3a0);
+
+   UNKNOWN(0x408 - 0x3a0);
+
+   //! GEH Exception handling thread-specifics
+   be_ptr<void> _ghs__eh_globals;
+   be_ptr<void> _ghs__eh_mem_manage[9];
+   be_ptr<void> _ghs__eh_store_globals[6];
+   be_ptr<void> _ghs__eh_store_globals_tdeh[76];
+
+   UNKNOWN(0x57c - 0x578);
 
    //! Thread specific values, accessed with OSSetThreadSpecific and OSGetThreadSpecific.
    be_val<uint32_t> specific[0x10];

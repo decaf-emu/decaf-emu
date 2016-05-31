@@ -13,8 +13,8 @@ namespace coreinit
 static OSSpinLock *
 ghsSpinLock;
 
-thread_local uint32_t
-ghsErrno = 0;
+be_val<uint32_t>*
+p__gh_errno;
 
 be_wfunc_ptr<void>*
 p__atexit_cleanup;
@@ -59,16 +59,52 @@ ghs_flock_ptr(void *file)
    return &(*p_iob_lock)[index];
 }
 
+be_val<uint32_t>*
+ghs_errno_ptr()
+{
+   return p__gh_errno;
+}
+
 uint32_t
 ghs_get_errno()
 {
-   return ghsErrno;
+   return *p__gh_errno;
 }
 
 void
 ghs_set_errno(uint32_t err)
 {
-   ghsErrno = err;
+   *p__gh_errno = err;
+}
+
+void *
+ghs_get_eh_globals()
+{
+   return OSGetCurrentThread()->_ghs__eh_globals;
+}
+
+void *
+ghs_get_eh_init_block()
+{
+   return nullptr;
+}
+
+void *
+ghs_get_eh_mem_manage()
+{
+   return &OSGetCurrentThread()->_ghs__eh_mem_manage;
+}
+
+void *
+ghs_get_eh_store_globals()
+{
+   return &OSGetCurrentThread()->_ghs__eh_store_globals;
+}
+
+void *
+ghs_get_eh_store_globals_tdeh()
+{
+   return &OSGetCurrentThread()->_ghs__eh_store_globals_tdeh;
 }
 
 void
@@ -110,8 +146,14 @@ Module::registerGhsFunctions()
 {
    RegisterKernelFunctionName("__ghsLock", ghsLock);
    RegisterKernelFunctionName("__ghsUnlock", ghsUnlock);
+   RegisterKernelFunctionName("__gh_errno_ptr", ghs_errno_ptr);
    RegisterKernelFunctionName("__gh_set_errno", ghs_set_errno);
    RegisterKernelFunctionName("__gh_get_errno", ghs_get_errno);
+   RegisterKernelFunctionName("__get_eh_globals", ghs_get_eh_globals);
+   RegisterKernelFunctionName("__get_eh_init_block", ghs_get_eh_init_block);
+   RegisterKernelFunctionName("__get_eh_mem_manage", ghs_get_eh_mem_manage);
+   RegisterKernelFunctionName("__get_eh_store_globals", ghs_get_eh_store_globals);
+   RegisterKernelFunctionName("__get_eh_store_globals_tdeh", ghs_get_eh_store_globals_tdeh);
    RegisterKernelFunctionName("__ghs_flock_ptr", ghs_flock_ptr);
    RegisterKernelFunctionName("__ghs_flock_file", ghs_flock_file);
    RegisterKernelFunctionName("__ghs_mtx_init", ghs_mtx_init);
@@ -126,11 +168,15 @@ Module::registerGhsFunctions()
    RegisterKernelDataName("__gh_FOPEN_MAX", p__gh_FOPEN_MAX);
    RegisterKernelDataName("_iob", p_iob);
    RegisterKernelDataName("_iob_lock", p_iob_lock);
+
+   // TODO: This is actually technically private data
+   RegisterKernelDataName("__gh_errno", p__gh_errno);
 }
 
 void
 Module::initialiseGHS()
 {
+   *p__gh_errno = 0;
    *p__gh_FOPEN_MAX = GHS_FOPEN_MAX;
 
    ghsSpinLock = coreinit::internal::sysAlloc<OSSpinLock>();
