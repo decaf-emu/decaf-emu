@@ -75,7 +75,8 @@ GX2InitTextureRegs(GX2Texture *texture)
 
    word1 = word1
       .TEX_HEIGHT().set(texture->surface.height - 1)
-      .TEX_DEPTH().set(depth);
+      .TEX_DEPTH().set(depth)
+      .DATA_FORMAT().set(format);
 
    // Word 4
    auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
