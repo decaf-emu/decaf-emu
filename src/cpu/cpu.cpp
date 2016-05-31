@@ -1,5 +1,6 @@
-#include <vector>
 #include <cfenv>
+#include <condition_variable>
+#include <vector>
 #include "cpu.h"
 #include "cpu_internal.h"
 #include "interpreter/interpreter.h"
