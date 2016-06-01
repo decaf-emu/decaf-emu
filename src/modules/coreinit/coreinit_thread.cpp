@@ -409,7 +409,6 @@ OSJoinThread(OSThread *thread,
 }
 
 
-// TODO: Move to coreinit::internal
 void
 OSPrintCurrentThreadState()
 {
