@@ -591,6 +591,7 @@
     <ClInclude Include="..\src\modules\proc_ui\proc_ui_core.h" />
     <ClInclude Include="..\src\ppcinvoke.h" />
     <ClInclude Include="..\src\ppctypes.h" />
+    <ClInclude Include="..\src\ppcutils\stackobject.h" />
     <ClInclude Include="..\src\types.h" />
     <ClInclude Include="..\src\usermodule.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit.h" />

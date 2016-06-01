@@ -259,6 +259,9 @@
     <Filter Include="Source Files\gpu\opengl\glsl">
       <UniqueIdentifier>{f306da50-fb65-489b-92da-097e44cc1dec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ppcutils">
+      <UniqueIdentifier>{b4e0a7f1-0fc8-4c6a-b4f1-cf839b7d4c90}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -1792,6 +1795,9 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_interrupts.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppcutils\stackobject.h">
+      <Filter>Header Files\ppcutils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
