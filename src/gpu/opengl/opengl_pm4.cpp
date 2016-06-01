@@ -40,7 +40,7 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          auto header3 = pm4::type3::Header::get(header.value);
          size = header3.size() + 1;
 
-         if (pos + size >= buffer_size) {
+         if (pos + size > buffer_size) {
             gLog->error("Invalid packet type3 size: {}", size);
          } else {
             handlePacketType3(header3, gsl::as_span(&buffer[pos + 1], size));
@@ -52,7 +52,7 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          auto header0 = pm4::type0::Header::get(header.value);
          size = header0.count() + 1;
 
-         if (pos + size >= buffer_size) {
+         if (pos + size > buffer_size) {
             gLog->error("Invalid packet type0 size: {}", size);
          } else {
             handlePacketType0(header0, gsl::as_span(&buffer[pos + 1], size));
