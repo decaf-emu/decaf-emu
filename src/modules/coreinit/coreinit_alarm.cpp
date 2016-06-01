@@ -346,7 +346,9 @@ handleAlarmInterrupt(OSContext *context)
    OSUninterruptibleSpinLock_Release(sAlarmLock);
 
    if (alarmExpired) {
+      coreinit::internal::lockScheduler();
       coreinit::internal::signalIoThreadNoLock(core_id);
+      coreinit::internal::unlockScheduler();
    }
 }
 

@@ -265,7 +265,7 @@ displayListOverrun(void *list, uint32_t size)
 void
 handleGpuInterrupt()
 {
-   coreinit::internal::wakeupThreadNoLock(sWaitTimeStampQueue);
+   OSWakeupThread(sWaitTimeStampQueue);
 }
 
 /**
