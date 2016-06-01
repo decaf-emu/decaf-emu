@@ -31,11 +31,17 @@ public:
    ~PacketWriter()
    {
       if (mBuffer) {
+         auto size = mBuffer->curSize - mSaveSize;
+         if (size < 2) {
+            // This really is an std::logic_error, but we can't throw from destructors.
+            gLog->warn("Encoded a pm4 type3 packet with size < 2.");
+         }
+
          // Update header
          auto header = *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mSaveSize]);
 
          header = header
-            .size().set((mBuffer->curSize - mSaveSize) - 2);
+            .size().set(size - 2);
 
          *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mSaveSize]) = header;
 
