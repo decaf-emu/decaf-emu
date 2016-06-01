@@ -88,21 +88,19 @@ public:
    }
 
    // Write one word as a REG_OFFSET
-   template<typename Type>
-   PacketWriter &REG_OFFSET(Type value, latte::Register base)
+   PacketWriter &REG_OFFSET(latte::Register value, latte::Register base)
    {
       auto offset = static_cast<uint32_t>(value) - static_cast<uint32_t>(base);
       checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = (offset / 4) & 0xFFFF;
+      mBuffer->buffer[mBuffer->curSize++] = offset / 4;
       return *this;
    }
 
    // Write one word as a CONST_OFFSET
-   template<typename Type>
-   PacketWriter &CONST_OFFSET(Type value)
+   PacketWriter &CONST_OFFSET(uint32_t value)
    {
       checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = static_cast<uint32_t>(value) & 0xFFFF;
+      mBuffer->buffer[mBuffer->curSize++] = value;
       return *this;
    }
 

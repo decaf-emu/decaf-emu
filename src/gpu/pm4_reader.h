@@ -52,20 +52,18 @@ public:
    }
 
    // Read one word as a REG_OFFSET
-   template<typename Type>
-   PacketReader &REG_OFFSET(Type &value, uint32_t base)
+   PacketReader &REG_OFFSET(latte::Register &value, latte::Register base)
    {
       checkSize(1);
-      value = static_cast<Type>(((mBuffer[mPosition++] & 0xFFFF) * 4) + base);
+      value = static_cast<latte::Register>(((mBuffer[mPosition++] & 0xFFFF) * 4) + (uint32_t)base);
       return *this;
    }
 
    // Read one word as a CONST_OFFSET
-   template<typename Type>
-   PacketReader &CONST_OFFSET(Type &value)
+   PacketReader &CONST_OFFSET(uint32_t &value)
    {
       checkSize(1);
-      value = static_cast<Type>(mBuffer[mPosition++] & 0xFFFF);
+      value = mBuffer[mPosition++] & 0xFFFF;
       return *this;
    }
 
