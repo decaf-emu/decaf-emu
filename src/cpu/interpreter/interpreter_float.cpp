@@ -1,4 +1,5 @@
 #include <cfenv>
+#include <cmath>
 #include <numeric>
 #include "cpu/cpu_internal.h"
 #include "interpreter_insreg.h"
