@@ -14,9 +14,12 @@ struct DecafSwapBuffers
 {
    static const auto Opcode = type3::DECAF_SWAP_BUFFERS;
 
+   uint32_t dummy;
+
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
+      se(dummy);
    }
 };
 
