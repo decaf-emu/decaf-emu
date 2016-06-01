@@ -16,7 +16,7 @@ namespace coreinit
 
 namespace internal
 {
-   void updateCpuAlarmNoLock();
+   void updateCpuAlarmNoALock();
 }
 
 const uint32_t
@@ -190,7 +190,7 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
    // Set the interrupt timer in processor
    // TODO: Store the last set CPU alarm time, and simply check this
    // alarm against that time to make finding the soonest alarm cheaper.
-   internal::updateCpuAlarmNoLock();
+   internal::updateCpuAlarmNoALock();
    return TRUE;
 }
 
@@ -285,12 +285,10 @@ namespace internal
 {
 
 void
-updateCpuAlarmNoLock()
+updateCpuAlarmNoALock()
 {
    auto queue = sAlarmQueue[cpu::this_core::id()];
    auto next = std::chrono::time_point<std::chrono::system_clock>::max();
-
-   OSUninterruptibleSpinLock_Acquire(sAlarmLock);
 
    for (OSAlarm *alarm = queue->head; alarm; ) {
       auto nextAlarm = alarm->link.next;
@@ -308,8 +306,6 @@ updateCpuAlarmNoLock()
    }
 
    cpu::this_core::set_next_alarm(next);
-
-   OSUninterruptibleSpinLock_Release(sAlarmLock);
 }
 
 void
@@ -401,7 +397,7 @@ checkAlarms(uint32_t core_id)
 
    // If any alarms were rescheduled, we need to update the CPU timer.
    if (alarmsScheduled) {
-      coreinit::internal::updateCpuAlarmNoLock();
+      coreinit::internal::updateCpuAlarmNoALock();
    }
 
    OSUninterruptibleSpinLock_Release(sAlarmLock);
