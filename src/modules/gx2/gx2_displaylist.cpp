@@ -47,6 +47,15 @@ GX2EndDisplayList(void *displayList)
    // Display list is meant to be padded to 32 bytes
    auto bytes = align_up(active.curSize * 4, 32);
 
+   // Fill up the new space with padding
+   uint32_t alignedSize = bytes / 4;
+   if (alignedSize > active.maxSize) {
+      throw std::logic_error("Display list buffer was not 32-byte aligned when trying to pad");
+   }
+   for (uint32_t i = active.curSize; i < alignedSize; ++i) {
+      active.buffer[i] = byte_swap(0xBEEF2929);
+   }
+
    // Reset active dlist
    active.buffer = nullptr;
    active.curSize = 0;
