@@ -225,7 +225,6 @@ OSSetAlarmUserData(OSAlarm *alarm, void *data)
 BOOL
 OSWaitAlarm(OSAlarm *alarm)
 {
-   coreinit::internal::lockScheduler();
    OSUninterruptibleSpinLock_Acquire(sAlarmLock);
    BOOL result = FALSE;
    assert(alarm);
@@ -233,13 +232,15 @@ OSWaitAlarm(OSAlarm *alarm)
 
    if (alarm->state != OSAlarmState::Set) {
       OSUninterruptibleSpinLock_Release(sAlarmLock);
-      coreinit::internal::unlockScheduler();
       return FALSE;
    }
 
-   coreinit::internal::sleepThreadNoLock(&alarm->threadQueue);
    OSUninterruptibleSpinLock_Release(sAlarmLock);
+
+   coreinit::internal::lockScheduler();
+   coreinit::internal::sleepThreadNoLock(&alarm->threadQueue);
    coreinit::internal::rescheduleNoLock();
+   coreinit::internal::unlockScheduler();
 
    OSUninterruptibleSpinLock_Acquire(sAlarmLock);
 
@@ -248,7 +249,7 @@ OSWaitAlarm(OSAlarm *alarm)
    }
 
    OSUninterruptibleSpinLock_Release(sAlarmLock);
-   coreinit::internal::unlockScheduler();
+
    return result;
 }
 
