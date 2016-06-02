@@ -42,17 +42,17 @@ int32_t
 OSWaitSemaphore(OSSemaphore *semaphore)
 {
    int32_t previous;
-   coreinit::internal::lockScheduler();
+   internal::lockScheduler();
    assert(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    while (semaphore->count <= 0) {
       // Wait until we can decrease semaphore
-      coreinit::internal::sleepThreadNoLock(&semaphore->queue);
-      coreinit::internal::rescheduleNoLock();
+      internal::sleepThreadNoLock(&semaphore->queue);
+      internal::rescheduleSelfNoLock();
    }
 
    previous = semaphore->count--;
-   coreinit::internal::unlockScheduler();
+   internal::unlockScheduler();
    return previous;
 }
 
@@ -70,7 +70,7 @@ int32_t
 OSTryWaitSemaphore(OSSemaphore *semaphore)
 {
    int32_t previous;
-   coreinit::internal::lockScheduler();
+   internal::lockScheduler();
    assert(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    // Try to decrease semaphore
@@ -80,7 +80,7 @@ OSTryWaitSemaphore(OSSemaphore *semaphore)
       semaphore->count--;
    }
 
-   coreinit::internal::unlockScheduler();
+   internal::unlockScheduler();
    return previous;
 }
 
@@ -94,17 +94,17 @@ int32_t
 OSSignalSemaphore(OSSemaphore *semaphore)
 {
    int32_t previous;
-   coreinit::internal::lockScheduler();
+   internal::lockScheduler();
    assert(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    // Increase semaphore
    previous =  semaphore->count++;
 
    // Wakeup any waiting threads
-   coreinit::internal::wakeupThreadNoLock(&semaphore->queue);
-   coreinit::internal::rescheduleNoLock();
+   internal::wakeupThreadNoLock(&semaphore->queue);
+   internal::rescheduleAllCoreNoLock();
 
-   coreinit::internal::unlockScheduler();
+   internal::unlockScheduler();
    return previous;
 }
 
@@ -116,13 +116,13 @@ int32_t
 OSGetSemaphoreCount(OSSemaphore *semaphore)
 {
    int32_t count;
-   coreinit::internal::lockScheduler();
+   internal::lockScheduler();
    assert(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    // Return count
    count = semaphore->count;
 
-   coreinit::internal::unlockScheduler();
+   internal::unlockScheduler();
    return count;
 }
 
