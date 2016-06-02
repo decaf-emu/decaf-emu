@@ -53,14 +53,14 @@ void signalEventNoLock(OSEvent *event)
    // Set event
    event->value = TRUE;
 
-   if (!OSIsThreadQueueEmpty(&event->queue)) {
+   if (!internal::ThreadQueue::empty(&event->queue)) {
       if (event->mode == OSEventMode::AutoReset) {
          // Reset value
          event->value = FALSE;
 
          // Wakeup one thread
          // TODO: This needs to pick the highest priority thread
-         auto thread = OSPopFrontThreadQueue(&event->queue);
+         auto thread = internal::ThreadQueue::popFront(&event->queue);
 
          // Cancel timeout alarm
          if (thread->waitEventTimeoutAlarm) {
@@ -141,7 +141,7 @@ OSSignalEventAll(OSEvent *event)
    // Set event
    event->value = TRUE;
 
-   if (!OSIsThreadQueueEmpty(&event->queue)) {
+   if (!internal::ThreadQueue::empty(&event->queue)) {
       if (event->mode == OSEventMode::AutoReset) {
          // Reset event
          event->value = FALSE;
@@ -291,7 +291,7 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
 
    if (data->timeout) {
       // Timed out, remove from wait queue
-      OSEraseFromThreadQueue(&event->queue, thread);
+      internal::ThreadQueue::erase(&event->queue, thread);
       result = FALSE;
    }
 

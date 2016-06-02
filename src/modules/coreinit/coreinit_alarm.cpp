@@ -18,11 +18,10 @@ namespace coreinit
 namespace internal
 {
 
-   using AlarmQueueFuncs = QueueFuncs<OSAlarmQueue, OSAlarmLink, OSAlarm, &OSAlarm::link>;
+using AlarmQueue = Queue<OSAlarmQueue, OSAlarmLink, OSAlarm, &OSAlarm::link>;
+void updateCpuAlarmNoALock();
 
-   void updateCpuAlarmNoALock();
-
-}
+} // namespace internal
 
 static OSThreadEntryPointFn
 sAlarmCallbackThreadEntryPoint;
@@ -69,7 +68,7 @@ cancelAlarmNoAlarmLock(OSAlarm *alarm)
    alarm->period = 0;
 
    if (alarm->alarmQueue) {
-      internal::AlarmQueueFuncs::erase(alarm->alarmQueue, alarm);
+      internal::AlarmQueue::erase(alarm->alarmQueue, alarm);
       alarm->alarmQueue = nullptr;
    }
 
@@ -230,7 +229,7 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
 
    // Erase from old alarm queue
    if (alarm->alarmQueue) {
-      internal::AlarmQueueFuncs::erase(alarm->alarmQueue, alarm);
+      internal::AlarmQueue::erase(alarm->alarmQueue, alarm);
       alarm->alarmQueue = nullptr;
    }
 
@@ -238,7 +237,7 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
    auto core = OSGetCoreId();
    auto queue = sAlarmQueue[core];
    alarm->alarmQueue = queue;
-   internal::AlarmQueueFuncs::append(queue, alarm);
+   internal::AlarmQueue::append(queue, alarm);
 
    // Set the interrupt timer in processor
    // TODO: Store the last set CPU alarm time, and simply check this
@@ -321,7 +320,7 @@ AlarmCallbackThreadEntry(uint32_t core_id, void *arg2)
       internal::lockScheduler();
       internal::acquireIdLock(sAlarmLock);
 
-      OSAlarm *alarm = internal::AlarmQueueFuncs::popFront(cbQueue);
+      OSAlarm *alarm = internal::AlarmQueue::popFront(cbQueue);
       if (alarm == nullptr) {
          // No alarms currently pending for callback
          internal::sleepThreadNoLock(threadQueue);
@@ -335,7 +334,7 @@ AlarmCallbackThreadEntry(uint32_t core_id, void *arg2)
       if (alarm->period) {
          alarm->nextFire = alarm->nextFire + alarm->period;
          alarm->state = OSAlarmState::Set;
-         internal::AlarmQueueFuncs::append(queue, alarm);
+         internal::AlarmQueue::append(queue, alarm);
          alarm->alarmQueue = queue;
       }
 
@@ -466,7 +465,7 @@ handleAlarmInterrupt(OSContext *context)
       if (alarm->nextFire <= now) {
          //assert(alarm->state == OSAlarmState::Set)
 
-         internal::AlarmQueueFuncs::erase(queue, alarm);
+         internal::AlarmQueue::erase(queue, alarm);
          alarm->alarmQueue = nullptr;
 
          alarm->state = OSAlarmState::Expired;
@@ -483,7 +482,7 @@ handleAlarmInterrupt(OSContext *context)
                alarm->callback(alarm, context);
             }
          } else {
-            internal::AlarmQueueFuncs::append(cbQueue, alarm);
+            internal::AlarmQueue::append(cbQueue, alarm);
             alarm->alarmQueue = cbQueue;
 
             wakeupThreadNoLock(cbThreadQueue);

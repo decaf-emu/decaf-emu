@@ -7,7 +7,6 @@
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
 #include "modules/coreinit/coreinit_thread.h"
-#include "modules/coreinit/coreinit_threadqueue.h"
 #include "modules/coreinit/coreinit_time.h"
 #include "utils/wfunc_call.h"
 #include <atomic>

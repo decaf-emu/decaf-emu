@@ -248,7 +248,6 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_spinlock.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_systeminfo.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_thread.cpp" />
-    <ClCompile Include="..\src\modules\coreinit\coreinit_threadqueue.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_time.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_unitheap.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_userconfig.cpp" />
@@ -574,7 +573,6 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_scheduler.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_semaphore.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_shared.h" />
-    <ClInclude Include="..\src\modules\coreinit\coreinit_threadqueue.h" />
     <ClInclude Include="..\src\modules\erreula\erreula.h" />
     <ClInclude Include="..\src\modules\erreula\erreula_errorviewer.h" />
     <ClInclude Include="..\src\modules\gx2\gx2r_resource.h" />

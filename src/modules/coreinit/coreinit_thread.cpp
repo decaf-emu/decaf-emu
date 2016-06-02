@@ -356,6 +356,29 @@ OSGetThreadSpecific(uint32_t id)
 
 
 /**
+* Initialise a thread queue object.
+*/
+void
+OSInitThreadQueue(OSThreadQueue *queue)
+{
+   OSInitThreadQueueEx(queue, nullptr);
+}
+
+
+/**
+* Initialise a thread queue object with a parent.
+*/
+void
+OSInitThreadQueueEx(OSThreadQueue *queue,
+                    void *parent)
+{
+   queue->head = nullptr;
+   queue->tail = nullptr;
+   queue->parent = parent;
+}
+
+
+/**
  * Returns TRUE if a thread is suspended.
  */
 BOOL
@@ -824,7 +847,6 @@ Module::registerThreadFunctions()
    RegisterKernelFunction(OSGetThreadSpecific);
    RegisterKernelFunction(OSInitThreadQueue);
    RegisterKernelFunction(OSInitThreadQueueEx);
-   RegisterKernelFunction(OSInsertThreadQueue);
    RegisterKernelFunction(OSIsThreadSuspended);
    RegisterKernelFunction(OSIsThreadTerminated);
    RegisterKernelFunction(OSJoinThread);
@@ -847,5 +869,15 @@ Module::registerThreadFunctions()
    RegisterKernelFunction(OSWakeupThread);
    RegisterKernelFunction(OSYieldThread);
 }
+
+namespace internal
+{
+
+bool threadSortFunc(OSThread *lhs, OSThread *rhs)
+{
+   return lhs->priority < rhs->priority;
+}
+
+} // namespace internal
 
 } // namespace coreinit

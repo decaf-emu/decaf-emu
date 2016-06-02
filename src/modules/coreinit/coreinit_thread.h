@@ -1,7 +1,7 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_time.h"
-#include "coreinit_threadqueue.h"
+#include "coreinit_internal_queue.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
@@ -127,6 +127,36 @@ struct OSFastMutexQueue
 CHECK_OFFSET(OSFastMutexQueue, 0x00, head);
 CHECK_OFFSET(OSFastMutexQueue, 0x04, tail);
 CHECK_SIZE(OSFastMutexQueue, 0x08);
+
+struct OSThreadLink
+{
+   be_ptr<OSThread> prev;
+   be_ptr<OSThread> next;
+};
+CHECK_OFFSET(OSThreadLink, 0x00, prev);
+CHECK_OFFSET(OSThreadLink, 0x04, next);
+CHECK_SIZE(OSThreadLink, 0x8);
+
+struct OSThreadQueue
+{
+   be_ptr<OSThread> head;
+   be_ptr<OSThread> tail;
+   be_ptr<void> parent;
+   UNKNOWN(4);
+};
+CHECK_OFFSET(OSThreadQueue, 0x00, head);
+CHECK_OFFSET(OSThreadQueue, 0x04, tail);
+CHECK_OFFSET(OSThreadQueue, 0x08, parent);
+CHECK_SIZE(OSThreadQueue, 0x10);
+
+struct OSThreadSimpleQueue
+{
+   be_ptr<OSThread> head;
+   be_ptr<OSThread> tail;
+};
+CHECK_OFFSET(OSThreadSimpleQueue, 0x00, head);
+CHECK_OFFSET(OSThreadSimpleQueue, 0x04, tail);
+CHECK_SIZE(OSThreadSimpleQueue, 0x08);
 
 struct OSThread
 {
@@ -337,6 +367,13 @@ OSGetThreadPriority(OSThread *thread);
 uint32_t
 OSGetThreadSpecific(uint32_t id);
 
+void
+OSInitThreadQueue(OSThreadQueue *queue);
+
+void
+OSInitThreadQueueEx(OSThreadQueue *queue,
+                    void *parent);
+
 BOOL
 OSIsThreadSuspended(OSThread *thread);
 
@@ -415,5 +452,13 @@ void
 OSYieldThread();
 
 /** @} */
+
+namespace internal
+{
+
+bool threadSortFunc(OSThread *lhs, OSThread *rhs);
+using ThreadQueue = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::link, threadSortFunc>;
+
+} // namespace internal
 
 } // namespace coreinit

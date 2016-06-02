@@ -402,9 +402,6 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_scheduler.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\modules\coreinit\coreinit_threadqueue.cpp">
-      <Filter>Source Files\modules\coreinit</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_alarm.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
@@ -1122,9 +1119,6 @@
       <Filter>Header Files\modules\nn_ac</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_scheduler.h">
-      <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\modules\coreinit\coreinit_threadqueue.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_alarm.h">

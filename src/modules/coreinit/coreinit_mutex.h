@@ -1,5 +1,5 @@
 #pragma once
-#include "coreinit_threadqueue.h"
+#include "coreinit_thread.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
 #include "utils/virtual_ptr.h"
