@@ -13,6 +13,7 @@
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
+#include "modules/coreinit/coreinit_interrupts.h"
 #include "modules/gx2/gx2_event.h"
 #include "mem/mem.h"
 #include "utils/wfunc_call.h"
@@ -47,7 +48,11 @@ void initialise()
 
 void cpu_interrupt_handler(uint32_t interrupt_flags) {
    // We need to disable the scheduler while we handle interrupts so we
-   // do not reschedule before we are done with our interrupts.
+   // do not reschedule before we are done with our interrupts.  We disable
+   // interrupts if they were on so any PPC callbacks executed do not
+   // immediately and reentrantly interrupt.
+
+   auto originalInterruptState = coreinit::OSDisableInterrupts();
    coreinit::internal::disableScheduler();
 
    coreinit::OSThread *interruptedThread = coreinit::internal::getCurrentThread();
@@ -65,6 +70,7 @@ void cpu_interrupt_handler(uint32_t interrupt_flags) {
    }
 
    coreinit::internal::enableScheduler();
+   coreinit::OSRestoreInterrupts(originalInterruptState);
 
    // We must never receive an interrupt while processing a kernel
    // function as if the scheduler is locked, we are in for some shit.

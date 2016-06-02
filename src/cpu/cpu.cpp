@@ -160,6 +160,10 @@ void wait_for_interrupt()
    cpu::Core *core = tCurrentCore;
    std::unique_lock<std::mutex> lock{ gInterruptMutex };
    while (true) {
+      if (!core->interruptEnabled.load()) {
+         throw std::logic_error("We ended up in the wfi thread while interrupts were disabled");
+      }
+
       if (core->interrupt.load()) {
          uint32_t flags = core->interrupt.exchange(0);
          lock.unlock();

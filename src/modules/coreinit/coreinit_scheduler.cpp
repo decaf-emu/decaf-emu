@@ -70,6 +70,7 @@ unlockScheduler()
 void
 enableScheduler()
 {
+   assert(!cpu::this_core::isInterruptsEnabled());
    uint32_t coreId = cpu::this_core::id();
    sSchedulerEnabled[coreId] = true;
 }
@@ -77,6 +78,7 @@ enableScheduler()
 void
 disableScheduler()
 {
+   assert(!cpu::this_core::isInterruptsEnabled());
    uint32_t coreId = cpu::this_core::id();
    sSchedulerEnabled[coreId] = false;
 }
