@@ -51,8 +51,33 @@ GX2DrawIndexedEx(GX2PrimitiveMode mode,
                  uint32_t offset,
                  uint32_t numInstances)
 {
+   auto index_type = latte::VGT_INDEX::VGT_INDEX_16;
+   auto swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_NONE;
+
+   switch (indexType) {
+   case GX2IndexType::U16:
+      index_type = latte::VGT_INDEX::VGT_INDEX_16;
+      swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_16_BIT;
+      break;
+   case GX2IndexType::U16_LE:
+      index_type = latte::VGT_INDEX::VGT_INDEX_16;
+      swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_NONE;
+      break;
+   case GX2IndexType::U32:
+      index_type = latte::VGT_INDEX::VGT_INDEX_32;
+      swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_32_BIT;
+      break;
+   case GX2IndexType::U32_LE:
+      index_type = latte::VGT_INDEX::VGT_INDEX_32;
+      swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_NONE;
+      break;
+   default:
+      gLog->error("GX2DrawIndexedEx: Unknown GX2IndexType {}", indexType);
+   }
+
    auto vgt_dma_index_type = latte::VGT_DMA_INDEX_TYPE::get(0)
-      .INDEX_TYPE().set(static_cast<latte::VGT_INDEX>(indexType));
+      .INDEX_TYPE().set(index_type)
+      .SWAP_MODE().set(swap_mode);
 
    auto vgt_draw_initiator = latte::VGT_DRAW_INITIATOR::get(0);
 
