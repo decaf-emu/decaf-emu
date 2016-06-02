@@ -10,11 +10,12 @@ struct Tracer;
 namespace cpu
 {
 
-const uint32_t GENERIC_INTERRUPT = 1 << 0;
-const uint32_t ALARM_INTERRUPT = 1 << 1;
-const uint32_t DBGBREAK_INTERRUPT = 1 << 2;
-const uint32_t GPU_INTERRUPT = 1 << 3;
-const uint32_t SRESET_INTERRUPT = 1 << 4;
+const uint32_t SRESET_INTERRUPT = 1 << 0;
+const uint32_t GENERIC_INTERRUPT = 1 << 1;
+const uint32_t ALARM_INTERRUPT = 1 << 2;
+const uint32_t DBGBREAK_INTERRUPT = 1 << 3;
+const uint32_t GPU_RETIRE_INTERRUPT = 1 << 4;
+const uint32_t GPU_FLIP_INTERRUPT = 1 << 5;
 
 enum class jit_mode {
    enabled,

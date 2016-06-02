@@ -77,13 +77,16 @@ void
 setLastSubmittedTimestamp(coreinit::OSTime timestamp);
 
 void
-handleGpuInterrupt();
+handleGpuRetireInterrupt();
 
 void
 setRetiredTimestamp(coreinit::OSTime timestamp);
 
 void
 onSwap();
+
+void
+handleGpuFlipInterrupt();
 
 void
 onFlip();

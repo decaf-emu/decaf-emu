@@ -336,6 +336,7 @@ AlarmCallbackThreadEntry(uint32_t core_id, void *arg2)
          alarm->state = OSAlarmState::Set;
          internal::AlarmQueue::append(queue, alarm);
          alarm->alarmQueue = queue;
+         internal::updateCpuAlarmNoALock();
       }
 
       internal::releaseIdLock(sAlarmLock);

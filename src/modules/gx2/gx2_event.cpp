@@ -258,11 +258,11 @@ displayListOverrun(void *list, uint32_t size)
 }
 
 /*
- * This is called by the GPU interrupt handler.
+ * This is called by the GPU retire interrupt handler.
  * Will wakeup any threads waiting for a timestamp.
  */
 void
-handleGpuInterrupt()
+handleGpuRetireInterrupt()
 {
    OSWakeupThread(sWaitTimeStampQueue);
 }
@@ -274,7 +274,7 @@ void
 setRetiredTimestamp(OSTime timestamp)
 {
    sRetiredTimestamp.store(timestamp, std::memory_order_release);
-   cpu::interrupt(gx2::internal::getMainCoreId(), cpu::GPU_INTERRUPT);
+   cpu::interrupt(gx2::internal::getMainCoreId(), cpu::GPU_RETIRE_INTERRUPT);
 }
 
 
@@ -298,6 +298,17 @@ onSwap()
 }
 
 
+/*
+* This is called by the GPU flip interrupt handler.
+* Will wakeup any threads waiting for a flip.
+*/
+void
+handleGpuFlipInterrupt()
+{
+   OSWakeupThread(sFlipThreadQueue);
+}
+
+
 /**
  * Called when a swap is performed by the driver.
  */
@@ -306,7 +317,7 @@ onFlip()
 {
    sFlipCount++;
    sLastFlip.store(OSGetSystemTime(), std::memory_order_release);
-   OSWakeupThread(sFlipThreadQueue);
+   cpu::interrupt(gx2::internal::getMainCoreId(), cpu::GPU_FLIP_INTERRUPT);
 }
 
 } // namespace internal

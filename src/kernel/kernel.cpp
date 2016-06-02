@@ -52,8 +52,12 @@ void cpu_interrupt_handler(uint32_t interrupt_flags) {
       coreinit::internal::handleAlarmInterrupt(&interruptedThread->context);
    }
 
-   if (interrupt_flags & cpu::GPU_INTERRUPT) {
-      gx2::internal::handleGpuInterrupt();
+   if (interrupt_flags & cpu::GPU_RETIRE_INTERRUPT) {
+      gx2::internal::handleGpuRetireInterrupt();
+   }
+
+   if (interrupt_flags & cpu::GPU_FLIP_INTERRUPT) {
+      gx2::internal::handleGpuFlipInterrupt();
    }
 
    // We must never receive an interrupt while processing a kernel
