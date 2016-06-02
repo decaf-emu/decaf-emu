@@ -99,7 +99,7 @@ void
 exitThreadNoLock()
 {
    coreinit::OSThread *thread = getCurrentThread();
-   
+
    // Remove the threads fiber from the queue
    gFiberQueue.erase(std::remove(gFiberQueue.begin(), gFiberQueue.end(), thread->fiber), gFiberQueue.end());
 
@@ -107,7 +107,7 @@ exitThreadNoLock()
    tDeadThread[cpu::this_core::id()] = thread;
 
    // Reschedule to another thread, this will never return.
-   rescheduleNoLock(false);
+   checkActiveThread(false);
 }
 
 Fiber *
@@ -206,7 +206,7 @@ void restoreContext(coreinit::OSContext *context)
    state->fpscr.value = context->fpscr;
 }
 
-void rescheduleNoLock(bool yielding)
+void checkActiveThread(bool yielding)
 {
    auto core_id = cpu::this_core::id();
    auto thread = getCurrentThread();

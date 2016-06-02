@@ -51,7 +51,7 @@ void cpu_interrupt_handler(uint32_t interrupt_flags) {
    if (interrupt_flags & cpu::ALARM_INTERRUPT) {
       coreinit::internal::handleAlarmInterrupt(&interruptedThread->context);
    }
-   
+
    if (interrupt_flags & cpu::GPU_INTERRUPT) {
       gx2::internal::handleGpuInterrupt();
    }
@@ -59,7 +59,7 @@ void cpu_interrupt_handler(uint32_t interrupt_flags) {
    // We must never receive an interrupt while processing a kernel
    // function as if the scheduler is locked, we are in for some shit.
    coreinit::internal::lockScheduler();
-   rescheduleNoLock(false);
+   checkActiveThread(false);
    coreinit::internal::unlockScheduler();
 }
 
@@ -146,7 +146,7 @@ bool launch_game()
 
    // System preloaded modules
    gLoader.loadRPL("coreinit");
-   
+
    using namespace coreinit;
    auto appModule = gLoader.loadRPL(rpx.c_str());
 

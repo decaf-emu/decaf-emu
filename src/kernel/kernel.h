@@ -18,6 +18,6 @@ void set_game_name(const std::string& name);
 coreinit::OSThread * getCurrentThread();
 void exitThreadNoLock();
 void queueThreadNoLock(coreinit::OSThread *thread);
-void rescheduleNoLock(bool yielding);
+void checkActiveThread(bool yielding);
 
 }
