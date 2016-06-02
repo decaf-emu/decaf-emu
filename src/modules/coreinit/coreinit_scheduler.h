@@ -24,6 +24,12 @@ void
 unlockScheduler();
 
 void
+enableScheduler();
+
+void
+disableScheduler();
+
+void
 checkRunningThreadNoLock(bool yielding);
 
 void

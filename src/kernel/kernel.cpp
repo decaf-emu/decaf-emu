@@ -46,6 +46,10 @@ void initialise()
 }
 
 void cpu_interrupt_handler(uint32_t interrupt_flags) {
+   // We need to disable the scheduler while we handle interrupts so we
+   // do not reschedule before we are done with our interrupts.
+   coreinit::internal::disableScheduler();
+
    coreinit::OSThread *interruptedThread = coreinit::internal::getCurrentThread();
 
    if (interrupt_flags & cpu::ALARM_INTERRUPT) {
@@ -59,6 +63,8 @@ void cpu_interrupt_handler(uint32_t interrupt_flags) {
    if (interrupt_flags & cpu::GPU_FLIP_INTERRUPT) {
       gx2::internal::handleGpuFlipInterrupt();
    }
+
+   coreinit::internal::enableScheduler();
 
    // We must never receive an interrupt while processing a kernel
    // function as if the scheduler is locked, we are in for some shit.

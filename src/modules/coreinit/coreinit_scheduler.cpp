@@ -13,6 +13,9 @@
 namespace coreinit
 {
 
+static bool
+sSchedulerEnabled[3];
+
 static std::atomic<uint32_t>
 sSchedulerLock { 0 };
 
@@ -62,6 +65,20 @@ void
 unlockScheduler()
 {
    sSchedulerLock.store(0, std::memory_order_release);
+}
+
+void
+enableScheduler()
+{
+   uint32_t coreId = cpu::this_core::id();
+   sSchedulerEnabled[coreId] = true;
+}
+
+void
+disableScheduler()
+{
+   uint32_t coreId = cpu::this_core::id();
+   sSchedulerEnabled[coreId] = false;
 }
 
 static void
@@ -130,6 +147,11 @@ void checkRunningThreadNoLock(bool yielding)
 {
    assert(isSchedulerLocked());
    auto coreId = cpu::this_core::id();
+
+   if (!sSchedulerEnabled[coreId]) {
+      return;
+   }
+
    auto thread = sCurrentThread[coreId];
    auto next = peekNextThreadNoLock(coreId);
 
@@ -192,19 +214,19 @@ void checkRunningThreadNoLock(bool yielding)
 }
 
 void
-rescheduleNoLock(uint32_t core)
+rescheduleSelfNoLock()
 {
-   if (core == cpu::this_core::id()) {
-      checkRunningThreadNoLock(false);
-   } else {
-      cpu::interrupt(core, cpu::GENERIC_INTERRUPT);
-   }
+   checkRunningThreadNoLock(false);
 }
 
 void
-rescheduleSelfNoLock()
+rescheduleNoLock(uint32_t core)
 {
-   rescheduleNoLock(cpu::this_core::id());
+   if (core == cpu::this_core::id()) {
+      rescheduleSelfNoLock();
+   } else {
+      cpu::interrupt(core, cpu::GENERIC_INTERRUPT);
+   }
 }
 
 void
@@ -324,6 +346,7 @@ void
 Module::initialiseSchedulerFunctions()
 {
    for (auto i = 0; i < 3; ++i) {
+      sSchedulerEnabled[i] = true;
       sCurrentThread[i] = nullptr;
       sCoreRunQueue[i] = coreinit::internal::sysAlloc<OSThreadQueue>();
       OSInitThreadQueue(sCoreRunQueue[i]);
