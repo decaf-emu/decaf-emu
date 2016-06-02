@@ -35,6 +35,7 @@ namespace coreinit
 
 #pragma pack(push, 1)
 
+struct OSAlarm;
 struct OSThread;
 
 using OSThreadEntryPointFn = wfunc_ptr<uint32_t, uint32_t, void*>;
@@ -196,7 +197,7 @@ struct OSThread
    be_ptr<void> _ghs__eh_store_globals[6];
    be_ptr<void> _ghs__eh_store_globals_tdeh[76];
 
-   UNKNOWN(0x57c - 0x578);
+   be_val<uint32_t> alarmCancelled;
 
    //! Thread specific values, accessed with OSSetThreadSpecific and OSGetThreadSpecific.
    be_val<uint32_t> specific[0x10];
@@ -204,7 +205,9 @@ struct OSThread
 
    //! Thread name, accessed with OSSetThreadName and OSGetThreadName.
    be_ptr<const char> name;
-   UNKNOWN(0x4);
+
+   //! Alarm the thread is waiting on in OSWaitEventWithTimeout
+   be_ptr<OSAlarm> waitEventTimeoutAlarm;
 
    //! The stack pointer passed in OSCreateThread.
    be_ptr<be_val<uint32_t>> userStackPointer;
@@ -248,8 +251,10 @@ CHECK_OFFSET(OSThread, 0x38c, activeLink);
 CHECK_OFFSET(OSThread, 0x394, stackStart);
 CHECK_OFFSET(OSThread, 0x398, stackEnd);
 CHECK_OFFSET(OSThread, 0x39c, entryPoint);
+CHECK_OFFSET(OSThread, 0x578, alarmCancelled);
 CHECK_OFFSET(OSThread, 0x57c, specific);
 CHECK_OFFSET(OSThread, 0x5c0, name);
+CHECK_OFFSET(OSThread, 0x5c4, waitEventTimeoutAlarm);
 CHECK_OFFSET(OSThread, 0x5c8, userStackPointer);
 CHECK_OFFSET(OSThread, 0x5cc, cleanupCallback);
 CHECK_OFFSET(OSThread, 0x5d0, deallocator);
