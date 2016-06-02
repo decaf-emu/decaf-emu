@@ -136,7 +136,7 @@ void
 queueThreadNoLock(coreinit::OSThread *thread)
 {
    auto fiber = thread->fiber;
-   
+
    // Initialise this if its the first time!
    if (fiber == nullptr) {
       thread->fiber = allocateFiber(thread);
@@ -153,13 +153,6 @@ queueThreadNoLock(coreinit::OSThread *thread)
    // Add this fiber to the fiber queue
    auto pos = std::upper_bound(gFiberQueue.begin(), gFiberQueue.end(), fiber, compare);
    gFiberQueue.insert(pos, fiber);
-
-   // Check if a core is idling and has something to run, if so, interrupt it.
-   for (auto i = 0; i < 3; ++i) {
-      if (!tCurrentThread[i] && peekNextFiberNoLock(i)) {
-         cpu::interrupt(i, cpu::GENERIC_INTERRUPT);
-      }
-   }
 }
 
 void saveContext(coreinit::OSContext *context)
