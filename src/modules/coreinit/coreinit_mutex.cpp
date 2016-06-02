@@ -2,10 +2,17 @@
 #include "coreinit_mutex.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
-#include "coreinit_queue.h"
+#include "coreinit_internal_queue.h"
 
 namespace coreinit
 {
+
+namespace internal
+{
+
+using MutexQueueFuncs = QueueFuncs<OSMutexQueue, OSMutexLink, OSMutex, &OSMutex::link>;
+
+}
 
 const uint32_t
 OSMutex::Tag;
@@ -35,7 +42,7 @@ OSInitMutexEx(OSMutex *mutex, const char *name)
    mutex->owner = nullptr;
    mutex->count = 0;
    OSInitThreadQueueEx(&mutex->queue, mutex);
-   OSInitQueueLink(&mutex->link);
+   internal::MutexQueueFuncs::initItemLink(mutex);
 }
 
 
@@ -57,7 +64,7 @@ lockMutexNoLock(OSMutex *mutex)
 
    if (mutex->owner != thread) {
       // Add to mutex queue
-      OSAppendQueue(&thread->mutexQueue, mutex);
+      internal::MutexQueueFuncs::append(&thread->mutexQueue, mutex);
    }
 
    mutex->owner = thread;
@@ -111,7 +118,7 @@ OSTryLockMutex(OSMutex *mutex)
 
    if (mutex->owner != thread) {
       // Add to mutex queue
-      OSAppendQueue(&thread->mutexQueue, mutex);
+      internal::MutexQueueFuncs::append(&thread->mutexQueue, mutex);
    }
 
    mutex->owner = thread;
@@ -135,7 +142,7 @@ unlockMutexNoLock(OSMutex *mutex)
       mutex->owner = nullptr;
 
       // Remove mutex from thread's mutex queue
-      OSEraseFromQueue(&thread->mutexQueue, mutex);
+      internal::MutexQueueFuncs::erase(&thread->mutexQueue, mutex);
 
       // Wakeup any threads trying to lock this mutex
       internal::wakeupThreadNoLock(&mutex->queue);

@@ -6,7 +6,7 @@
 #include "coreinit_event.h"
 #include "coreinit_memheap.h"
 #include "coreinit_thread.h"
-#include "coreinit_queue.h"
+#include "coreinit_internal_queue.h"
 #include "kernel/kernel.h"
 #include "cpu/trace.h"
 
@@ -15,15 +15,6 @@ namespace coreinit
 
 static std::atomic_bool
 sSchedulerLock { false };
-
-static std::array<OSThread *, CoreCount>
-sInterruptThreads;
-
-OSThreadEntryPointFn
-InterruptThreadEntryPoint;
-
-static std::array<OSEvent *, CoreCount>
-sIoThreadEvent;
 
 namespace internal
 {
@@ -166,44 +157,16 @@ wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
    OSClearThreadQueue(queue);
 }
 
-void signalIoThreadNoLock(uint32_t core_id)
-{
-   // TODO: Brett check if we should really be signalEventNoLock here as it calls reschedule
-   coreinit::internal::signalEventNoLock(sIoThreadEvent[core_id]);
-}
-
 } // namespace internal
-
-// This is actually IoThreadEntry...
-void
-InterruptThreadEntry(uint32_t core_id, void *arg2)
-{
-   while (true) {
-      OSResetEvent(sIoThreadEvent[core_id]);
-
-      coreinit::internal::checkAlarms(core_id);
-
-      OSWaitEvent(sIoThreadEvent[core_id]);
-   }
-}
 
 void
 Module::registerSchedulerFunctions()
 {
-   RegisterKernelFunction(InterruptThreadEntry);
 }
 
 void
 Module::initialiseSchedulerFunctions()
 {
-   sInterruptThreads.fill(nullptr);
-   InterruptThreadEntryPoint = findExportAddress("InterruptThreadEntry");
-
-   for (auto i = 0; i < 3; ++i) {
-      auto event = coreinit::internal::sysAlloc<OSEvent>();
-      OSInitEvent(event, false, OSEventMode::ManualReset);
-      sIoThreadEvent[i] = event;
-   }
 }
 
 } // namespace coreinit

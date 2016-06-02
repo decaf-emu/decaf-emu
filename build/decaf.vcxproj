@@ -570,7 +570,7 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_fastmutex.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_memheap.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_memlist.h" />
-    <ClInclude Include="..\src\modules\coreinit\coreinit_queue.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_internal_queue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_scheduler.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_semaphore.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_shared.h" />

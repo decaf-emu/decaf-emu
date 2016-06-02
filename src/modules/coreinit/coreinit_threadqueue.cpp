@@ -1,86 +1,65 @@
 #include "coreinit.h"
 #include "coreinit_thread.h"
 #include "coreinit_threadqueue.h"
-#include "coreinit_queue.h"
+#include "coreinit_internal_queue.h"
 
 namespace coreinit
 {
 
+namespace internal
+{
+
+bool ThreadSortFunc(OSThread *a, OSThread *b) {
+   return a->priority < b->priority;
+}
+
+using ThreadQueueFuncs = SortedQueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::link, ThreadSortFunc> ;
+
+}
+
 void
 OSInitThreadQueue(OSThreadQueue *queue)
 {
-   OSInitQueueEx(queue, nullptr);
+   internal::ThreadQueueFuncs::init(queue);
+   queue->parent = nullptr;
 }
 
 void
 OSInitThreadQueueEx(OSThreadQueue *queue, void *parent)
 {
-   OSInitQueueEx(queue, parent);
+   internal::ThreadQueueFuncs::init(queue);
+   queue->parent = parent;
 }
 
 void
 OSClearThreadQueue(OSThreadQueue *queue)
 {
-   OSClearQueue(queue);
+   internal::ThreadQueueFuncs::clear(queue);
 }
 
 void
 OSEraseFromThreadQueue(OSThreadQueue *queue, OSThread *thread)
 {
-   OSEraseFromQueue(queue, thread);
+   internal::ThreadQueueFuncs::erase(queue, thread);
 }
 
 void
 OSInsertThreadQueue(OSThreadQueue *queue, OSThread *thread)
 {
+   internal::ThreadQueueFuncs::insert(queue, thread);
    thread->queue = queue;
-
-   if (!queue->head) {
-      // Insert only item
-      thread->link.prev = nullptr;
-      thread->link.next = nullptr;
-      queue->head = thread;
-      queue->tail = thread;
-   } else {
-      OSThread *insertBefore = nullptr;
-
-      // Find insert location based on priority
-      for (insertBefore = queue->head; insertBefore; insertBefore = insertBefore->link.next) {
-         if (insertBefore->basePriority > thread->priority) {
-            break;
-         }
-      }
-
-      if (!insertBefore) {
-         // Insert at tail
-         queue->tail->link.next = thread;
-         thread->link.next = nullptr;
-         thread->link.prev = queue->tail;
-         queue->tail = thread;
-      } else {
-         // Insert in middle
-         thread->link.next = insertBefore;
-         thread->link.prev = insertBefore->link.prev;
-
-         if (insertBefore->link.prev) {
-            insertBefore->link.prev->link.next = thread;
-         }
-
-         insertBefore->link.prev = thread;
-      }
-   }
 }
 
 BOOL
 OSIsThreadQueueEmpty(OSThreadQueue *queue)
 {
-   return OSIsEmptyQueue(queue);
+   return internal::ThreadQueueFuncs::isEmpty(queue);
 }
 
 OSThread *
 OSPopFrontThreadQueue(OSThreadQueue *queue)
 {
-   return OSPopFrontFromQueue(queue);
+   return internal::ThreadQueueFuncs::popFront(queue);
 }
 
 } // namespace coreinit

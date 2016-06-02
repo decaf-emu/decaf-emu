@@ -8,9 +8,6 @@ namespace coreinit
 struct OSThread;
 struct OSThreadQueue;
 
-extern OSThreadEntryPointFn
-InterruptThreadEntryPoint;
-
 namespace internal
 {
 
@@ -52,9 +49,6 @@ wakeupThreadNoLock(OSThreadQueue *queue);
 
 void
 wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult);
-
-void
-signalIoThreadNoLock(uint32_t core_id);
 
 } // namespace internal
 

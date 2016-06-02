@@ -1130,9 +1130,6 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_alarm.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\modules\coreinit\coreinit_queue.h">
-      <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\nn_fp\nn_fp.h">
       <Filter>Header Files\modules\nn_fp</Filter>
     </ClInclude>
@@ -1803,6 +1800,9 @@
       <Filter>Header Files\ppcutils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_internal_idlock.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_internal_queue.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>

@@ -59,15 +59,23 @@ void signalEventNoLock(OSEvent *event)
          event->value = FALSE;
 
          // Wakeup one thread
+         // TODO: This needs to pick the highest priority thread
          auto thread = OSPopFrontThreadQueue(&event->queue);
 
          // Cancel timeout alarm
          if (thread->waitEventTimeoutAlarm) {
-            internal::cancelAlarm(thread->waitEventTimeoutAlarm);
+            // TODO: Probably best if we try other threads on the queue if there
+            // are any when its going to timeout.
+            if (internal::cancelAlarm(thread->waitEventTimeoutAlarm)) {
+               internal::wakeupOneThreadNoLock(thread);
+               internal::rescheduleAllCoreNoLock();
+            }
+         } else {
+            internal::wakeupOneThreadNoLock(thread);
+            internal::rescheduleAllCoreNoLock();
          }
 
-         internal::wakeupOneThreadNoLock(thread);
-         internal::rescheduleAllCoreNoLock();
+
       } else {
          // Cancel any pending timeout alarms
          for (auto thread = event->queue.head; thread; thread = thread->link.next) {
@@ -142,12 +150,12 @@ OSSignalEventAll(OSEvent *event)
       // Cancel any pending timeout alarms
       for (auto thread = event->queue.head; thread; thread = thread->link.next) {
          if (thread->waitEventTimeoutAlarm) {
-            internal::cancelAlarm(thread->waitEventTimeoutAlarm);
+            if (internal::cancelAlarm(thread->waitEventTimeoutAlarm)) {
+               internal::wakeupOneThreadNoLock(thread);
+            }
          }
       }
 
-      // Wakeup all threads
-      internal::wakeupThreadNoLock(&event->queue);
       internal::rescheduleAllCoreNoLock();
    }
 
@@ -224,7 +232,9 @@ EventAlarmHandler(OSAlarm *alarm, OSContext *context)
    // Wakeup the thread waiting on this alarm
    auto data = reinterpret_cast<EventAlarmData*>(OSGetAlarmUserData(alarm));
    data->timeout = TRUE;
+   internal::lockScheduler();
    internal::wakeupOneThreadNoLock(data->thread);
+   internal::unlockScheduler();
 }
 
 
@@ -262,13 +272,13 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
    data->thread = thread;
    data->timeout = FALSE;
 
-   // Set waitEventTimeoutAlarm so we can cancel it when event is signalled
-   thread->waitEventTimeoutAlarm = alarm;
-
    // Create an alarm to trigger timeout
    OSCreateAlarm(alarm);
    OSSetAlarmUserData(alarm, data);
    OSSetAlarm(alarm, timeout, pEventAlarmHandler);
+
+   // Set waitEventTimeoutAlarm so we can cancel it when event is signalled
+   thread->waitEventTimeoutAlarm = alarm;
 
    // Wait for the event
    internal::sleepThreadNoLock(&event->queue);

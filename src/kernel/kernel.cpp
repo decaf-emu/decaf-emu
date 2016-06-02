@@ -159,6 +159,8 @@ bool launch_game()
    gDebugControl.preLaunch();
    gLog->debug("Succesfully loaded {}", rpx);
 
+   internal::startAlarmCallbackThreads();
+
    // Create default threads
    for (auto i = 0u; i < CoreCount; ++i) {
       auto thread = coreinit::internal::sysAlloc<OSThread>();
@@ -171,20 +173,6 @@ bool launch_game()
          static_cast<OSThreadAttributes>(1 << i));
       OSSetDefaultThread(i, thread);
       OSSetThreadName(thread, name);
-   }
-
-   // Create interrupt threads
-   for (auto i = 0u; i < CoreCount; ++i) {
-      auto thread = coreinit::internal::sysAlloc<OSThread>();
-      auto stackSize = 16 * 1024;
-      auto stack = reinterpret_cast<uint8_t*>(coreinit::internal::sysAlloc(stackSize, 8));
-      auto name = coreinit::internal::sysStrDup(fmt::format("I/O Thread {}", i));
-
-      OSCreateThread(thread, InterruptThreadEntryPoint, i, nullptr,
-         reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, -1,
-         static_cast<OSThreadAttributes>(1 << i));
-      OSSetThreadName(thread, name);
-      OSResumeThread(thread);
    }
 
    // Call the RPX __preinit_user if it is defined

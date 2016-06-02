@@ -169,6 +169,12 @@ OSWaitAlarm(OSAlarm *alarm);
 namespace internal
 {
 
+void
+startAlarmCallbackThreads();
+
+BOOL
+setAlarmInternal(OSAlarm *alarm, OSTime time, AlarmCallback callback);
+
 bool
 cancelAlarm(OSAlarm *alarm);
 
