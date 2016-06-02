@@ -22,7 +22,6 @@ private:
    void initialiseClock();
 
    void initialiseAlarm();
-   void initialiseAtomic64();
    void initialiseDynLoad();
    void initialiseEvent();
    void initialiseExceptions();

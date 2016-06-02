@@ -16,7 +16,6 @@ Module::initialise()
    initialiseClock();
 
    initialiseAlarm();
-   initialiseAtomic64();
    initialiseDynLoad();
    initialiseEvent();
    initialiseExceptions();
