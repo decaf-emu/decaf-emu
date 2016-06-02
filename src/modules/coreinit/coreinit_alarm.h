@@ -169,6 +169,9 @@ OSWaitAlarm(OSAlarm *alarm);
 namespace internal
 {
 
+bool
+cancelAlarm(OSAlarm *alarm);
+
 void
 handleAlarmInterrupt(OSContext *context);
 

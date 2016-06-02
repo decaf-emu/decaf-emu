@@ -8,6 +8,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_time.h"
 #include "coreinit_queue.h"
+#include "coreinit_internal_idlock.h"
 #include "utils/wfunc_call.h"
 #include "cpu/cpu.h"
 
@@ -25,12 +26,11 @@ OSAlarm::Tag;
 const uint32_t
 OSAlarmQueue::Tag;
 
-static OSSpinLock *
+static internal::IdLock
 sAlarmLock;
 
 static std::array<OSAlarmQueue *, CoreCount>
 sAlarmQueue;
-
 
 /**
  * Internal alarm cancel.
@@ -40,7 +40,7 @@ sAlarmQueue;
  * Removes the alarm from any queue it is in.
  */
 static BOOL
-cancelAlarmNoLock(OSAlarm *alarm)
+cancelAlarmNoAlarmLock(OSAlarm *alarm)
 {
    if (alarm->state != OSAlarmState::Set) {
       return FALSE;
@@ -55,7 +55,6 @@ cancelAlarmNoLock(OSAlarm *alarm)
       alarm->alarmQueue = nullptr;
    }
 
-   OSWakeupThread(&alarm->threadQueue);
    return TRUE;
 }
 
@@ -66,8 +65,26 @@ cancelAlarmNoLock(OSAlarm *alarm)
 BOOL
 OSCancelAlarm(OSAlarm *alarm)
 {
-   ScopedSpinLock lock(sAlarmLock);
-   return cancelAlarmNoLock(alarm);
+   // First cancel the alarm whilst holding alarm lock
+   internal::acquireIdLock(sAlarmLock, alarm);
+   auto result = cancelAlarmNoAlarmLock(alarm);
+   internal::releaseIdLock(sAlarmLock, alarm);
+
+   if (!result) {
+      return FALSE;
+   }
+
+   // Now wakeup any waiting threads
+   internal::lockScheduler();
+
+   for (auto thread = alarm->threadQueue.head; thread; thread = thread->link.next) {
+      thread->alarmCancelled = TRUE;
+   }
+
+   internal::wakeupThreadNoLock(&alarm->threadQueue);
+   internal::rescheduleAllCoreNoLock();
+   internal::unlockScheduler();
+   return TRUE;
 }
 
 
@@ -77,7 +94,8 @@ OSCancelAlarm(OSAlarm *alarm)
 void
 OSCancelAlarms(uint32_t group)
 {
-   ScopedSpinLock lock(sAlarmLock);
+   internal::lockScheduler();
+   internal::acquireIdLock(sAlarmLock);
 
    for (auto i = 0u; i < 3; ++i) {
       auto queue = sAlarmQueue[i];
@@ -86,12 +104,23 @@ OSCancelAlarms(uint32_t group)
          auto next = alarm->link.next;
 
          if (alarm->group == group) {
-            cancelAlarmNoLock(alarm);
+            if (cancelAlarmNoAlarmLock(alarm)) {
+               for (auto thread = alarm->threadQueue.head; thread; thread = thread->link.next) {
+                  thread->alarmCancelled = TRUE;
+               }
+
+               internal::wakeupThreadNoLock(&alarm->threadQueue);
+            }
          }
 
          alarm = next;
       }
    }
+
+   internal::releaseIdLock(sAlarmLock);
+
+   internal::rescheduleAllCoreNoLock();
+   internal::unlockScheduler();
 }
 
 
@@ -166,7 +195,7 @@ OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback)
 BOOL
 OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback callback)
 {
-   ScopedSpinLock lock(sAlarmLock);
+   internal::acquireIdLock(sAlarmLock, alarm);
 
    // Set alarm
    alarm->nextFire = start;
@@ -191,6 +220,8 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
    // TODO: Store the last set CPU alarm time, and simply check this
    // alarm against that time to make finding the soonest alarm cheaper.
    internal::updateCpuAlarmNoALock();
+
+   internal::releaseIdLock(sAlarmLock, alarm);
    return TRUE;
 }
 
@@ -201,9 +232,9 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
 void
 OSSetAlarmTag(OSAlarm *alarm, uint32_t group)
 {
-   OSUninterruptibleSpinLock_Acquire(sAlarmLock);
+   internal::acquireIdLock(sAlarmLock, alarm);
    alarm->group = group;
-   OSUninterruptibleSpinLock_Release(sAlarmLock);
+   internal::releaseIdLock(sAlarmLock, alarm);
 }
 
 
@@ -213,44 +244,45 @@ OSSetAlarmTag(OSAlarm *alarm, uint32_t group)
 void
 OSSetAlarmUserData(OSAlarm *alarm, void *data)
 {
-   OSUninterruptibleSpinLock_Acquire(sAlarmLock);
+   internal::acquireIdLock(sAlarmLock, alarm);
    alarm->userData = data;
-   OSUninterruptibleSpinLock_Release(sAlarmLock);
+   internal::releaseIdLock(sAlarmLock, alarm);
 }
 
 
 /**
  * Sleep the current thread until the alarm has been triggered or cancelled.
+ *
+ * \return Returns TRUE if alarm expired, FALSE if alarm cancelled
  */
 BOOL
 OSWaitAlarm(OSAlarm *alarm)
 {
-   OSUninterruptibleSpinLock_Acquire(sAlarmLock);
-   BOOL result = FALSE;
+   internal::lockScheduler();
+   internal::acquireIdLock(sAlarmLock, alarm);
+
    assert(alarm);
    assert(alarm->tag == OSAlarm::Tag);
 
    if (alarm->state != OSAlarmState::Set) {
-      OSUninterruptibleSpinLock_Release(sAlarmLock);
+      internal::releaseIdLock(sAlarmLock, alarm);
+      internal::unlockScheduler();
       return FALSE;
    }
 
-   OSUninterruptibleSpinLock_Release(sAlarmLock);
+   internal::sleepThreadNoLock(&alarm->threadQueue);
+   internal::releaseIdLock(sAlarmLock, alarm);
 
-   coreinit::internal::lockScheduler();
-   coreinit::internal::sleepThreadNoLock(&alarm->threadQueue);
-   coreinit::internal::rescheduleNoLock();
-   coreinit::internal::unlockScheduler();
+   internal::rescheduleSelfNoLock();
 
-   OSUninterruptibleSpinLock_Acquire(sAlarmLock);
+   auto cancelled = OSGetCurrentThread()->alarmCancelled;
+   internal::unlockScheduler();
 
-   if (alarm->state == OSAlarmState::Expired) {
-      result = TRUE;
+   if (cancelled) {
+      return FALSE;
+   } else {
+      return TRUE;
    }
-
-   OSUninterruptibleSpinLock_Release(sAlarmLock);
-
-   return result;
 }
 
 
@@ -274,16 +306,23 @@ Module::registerAlarmFunctions()
 void
 Module::initialiseAlarm()
 {
-   sAlarmLock = coreinit::internal::sysAlloc<OSSpinLock>();
-
    for (auto i = 0u; i < CoreCount; ++i) {
-      sAlarmQueue[i] = coreinit::internal::sysAlloc<OSAlarmQueue>();
+      sAlarmQueue[i] = internal::sysAlloc<OSAlarmQueue>();
       OSInitAlarmQueue(sAlarmQueue[i]);
    }
 }
 
 namespace internal
 {
+
+bool
+cancelAlarm(OSAlarm *alarm)
+{
+   internal::acquireIdLock(sAlarmLock, alarm);
+   auto result = cancelAlarmNoAlarmLock(alarm);
+   internal::releaseIdLock(sAlarmLock, alarm);
+   return result == TRUE;
+}
 
 void
 updateCpuAlarmNoALock()
@@ -296,7 +335,7 @@ updateCpuAlarmNoALock()
 
       // Update next if its not past yet
       if (alarm->state == OSAlarmState::Set && alarm->nextFire) {
-         auto nextFire = coreinit::internal::toTimepoint(alarm->nextFire);
+         auto nextFire = internal::toTimepoint(alarm->nextFire);
 
          if (nextFire < next) {
             next = nextFire;
@@ -318,7 +357,9 @@ handleAlarmInterrupt(OSContext *context)
    auto next = std::chrono::time_point<std::chrono::system_clock>::max();
    bool alarmExpired = false;
 
-   OSUninterruptibleSpinLock_Acquire(sAlarmLock);
+   // TODO: Brett check my logic!
+
+   acquireIdLock(sAlarmLock);
 
    for (OSAlarm *alarm = queue->head; alarm; ) {
       auto nextAlarm = alarm->link.next;
@@ -332,7 +373,7 @@ handleAlarmInterrupt(OSContext *context)
 
       // Update next if its not past yet
       if (alarm->state == OSAlarmState::Set && alarm->nextFire) {
-         auto nextFire = coreinit::internal::toTimepoint(alarm->nextFire);
+         auto nextFire = internal::toTimepoint(alarm->nextFire);
 
          if (nextFire < next) {
             next = nextFire;
@@ -344,12 +385,12 @@ handleAlarmInterrupt(OSContext *context)
 
    cpu::this_core::set_next_alarm(next);
 
-   OSUninterruptibleSpinLock_Release(sAlarmLock);
+   releaseIdLock(sAlarmLock);
 
    if (alarmExpired) {
-      coreinit::internal::lockScheduler();
-      coreinit::internal::signalIoThreadNoLock(core_id);
-      coreinit::internal::unlockScheduler();
+      internal::lockScheduler();
+      internal::signalIoThreadNoLock(core_id);
+      internal::unlockScheduler();
    }
 }
 
@@ -364,7 +405,9 @@ checkAlarms(uint32_t core_id)
    auto queue = sAlarmQueue[core_id];
    bool alarmsScheduled = false;
 
-   OSUninterruptibleSpinLock_Acquire(sAlarmLock);
+   // TODO: Brett check my logic!
+
+   acquireIdLock(sAlarmLock);
 
    // Trigger all pending alarms
    for (OSAlarm *alarm = queue->head; alarm; ) {
@@ -384,7 +427,7 @@ checkAlarms(uint32_t core_id)
 
          // TODO: This is technically not safe, as someone could mess with
          // this alarm while we are trying to dispatch callbacks and wake things.
-         OSUninterruptibleSpinLock_Release(sAlarmLock);
+         releaseIdLock(sAlarmLock);
 
          if (alarm->callback) {
             alarm->callback(alarm, alarm->context);
@@ -392,7 +435,7 @@ checkAlarms(uint32_t core_id)
 
          OSWakeupThread(&alarm->threadQueue);
 
-         OSUninterruptibleSpinLock_Acquire(sAlarmLock);
+         acquireIdLock(sAlarmLock);
       }
 
       alarm = nextAlarm;
@@ -400,10 +443,10 @@ checkAlarms(uint32_t core_id)
 
    // If any alarms were rescheduled, we need to update the CPU timer.
    if (alarmsScheduled) {
-      coreinit::internal::updateCpuAlarmNoALock();
+      internal::updateCpuAlarmNoALock();
    }
 
-   OSUninterruptibleSpinLock_Release(sAlarmLock);
+   releaseIdLock(sAlarmLock);
 }
 
 } // namespace internal
