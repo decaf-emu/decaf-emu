@@ -322,8 +322,18 @@ play(const fs::HostPath &path)
    fs::HostPath sysPath = config::system::system_path;
 
    if (platform::isDirectory(path.path())) {
-      // Load game directory
-      fs.mountHostFolder("/vol", path.join("data"));
+      // See if we can find path/cos.xml
+      fs.mountHostFolder("/vol", path);
+      auto fh = fs.openFile("/vol/code/cos.xml", fs::File::Read);
+
+      if (fh) {
+         fh->close();
+         delete fh;
+      } else {
+         // Try path/data
+         fs.deleteFolder("/vol");
+         fs.mountHostFolder("/vol", path.join("data"));
+      }
    } else if (platform::isFile(path.path())) {
       // Load game file, currently only .rpx is supported
       // TODO: Support .WUD .WUX
