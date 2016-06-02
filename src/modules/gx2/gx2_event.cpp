@@ -162,7 +162,7 @@ GX2WaitTimeStamp(OSTime time)
 
    while (sRetiredTimestamp.load(std::memory_order_acquire) < time) {
       coreinit::internal::sleepThreadNoLock(sWaitTimeStampQueue);
-      coreinit::internal::rescheduleNoLock();
+      coreinit::internal::rescheduleSelfNoLock();
    }
 
    coreinit::internal::unlockScheduler();
