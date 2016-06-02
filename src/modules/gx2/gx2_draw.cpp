@@ -31,14 +31,10 @@ GX2DrawEx(GX2PrimitiveMode mode,
           uint32_t offset,
           uint32_t numInstances)
 {
-   auto vgt_dma_index_type = latte::VGT_DMA_INDEX_TYPE::get(0)
-      .INDEX_TYPE().set(static_cast<latte::VGT_INDEX>(GX2IndexType::U32));
-
    auto vgt_draw_initiator = latte::VGT_DRAW_INITIATOR::get(0);
 
    pm4::write(pm4::SetControlConstant { latte::Register::SQ_VTX_BASE_VTX_LOC, offset });
    pm4::write(pm4::SetConfigReg { latte::Register::VGT_PRIMITIVE_TYPE, mode });
-   pm4::write(pm4::IndexType { vgt_dma_index_type });
    pm4::write(pm4::NumInstances { numInstances });
    pm4::write(pm4::DrawIndexAuto { numVertices, vgt_draw_initiator });
 }
