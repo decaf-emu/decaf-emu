@@ -21,7 +21,16 @@ void
 unlockScheduler();
 
 void
-rescheduleNoLock();
+rescheduleNoLock(uint32_t core);
+
+void
+rescheduleSelfNoLock();
+
+void
+rescheduleOtherCoreNoLock();
+
+void
+rescheduleAllCoreNoLock();
 
 int32_t
 resumeThreadNoLock(OSThread *thread, int32_t counter);

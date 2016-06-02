@@ -45,9 +45,39 @@ unlockScheduler()
 }
 
 void
-rescheduleNoLock()
+rescheduleNoLock(uint32_t core)
 {
-   kernel::rescheduleNoLock(true);
+   if (core == cpu::this_core::id()) {
+      kernel::checkActiveThread(false);
+   } else {
+      cpu::interrupt(core, cpu::GENERIC_INTERRUPT);
+   }
+}
+
+void
+rescheduleSelfNoLock()
+{
+   rescheduleNoLock(cpu::this_core::id());
+}
+
+void
+rescheduleOtherCoreNoLock()
+{
+   auto core = cpu::this_core::id();
+
+   for (auto i = 0u; i < 3; ++i) {
+      if (i != core) {
+         rescheduleNoLock(i);
+      }
+   }
+}
+
+void
+rescheduleAllCoreNoLock()
+{
+   // Reschedule other cores first, or we might exit early!
+   rescheduleOtherCoreNoLock();
+   rescheduleSelfNoLock();
 }
 
 int32_t
@@ -100,7 +130,7 @@ testThreadCancelNoLock()
    if (thread->cancelState) {
       if (thread->requestFlag == OSThreadRequest::Suspend) {
          suspendThreadNoLock(thread);
-         rescheduleNoLock();
+         rescheduleAllCoreNoLock();
       } else if (thread->requestFlag == OSThreadRequest::Cancel) {
          unlockScheduler();
          OSExitThread(-1);
@@ -138,6 +168,7 @@ wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
 
 void signalIoThreadNoLock(uint32_t core_id)
 {
+   // TODO: Brett check if we should really be signalEventNoLock here as it calls reschedule
    coreinit::internal::signalEventNoLock(sIoThreadEvent[core_id]);
 }
 
