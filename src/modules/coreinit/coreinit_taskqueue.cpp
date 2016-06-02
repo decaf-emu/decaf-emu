@@ -48,12 +48,13 @@ BOOL
 MPGetTaskQInfo(MPTaskQueue *queue,
                MPTaskQueueInfo *info)
 {
-   ScopedSpinLock lock(&queue->lock);
+   OSUninterruptibleSpinLock_Acquire(&queue->lock);
    info->state = queue->state;
    info->tasks = queue->tasks;
    info->tasksReady = queue->tasksReady;
    info->tasksRunning = queue->tasksRunning;
    info->tasksFinished = queue->tasksFinished;
+   OSUninterruptibleSpinLock_Release(&queue->lock);
    return TRUE;
 }
 
@@ -68,13 +69,15 @@ MPGetTaskQInfo(MPTaskQueue *queue,
 BOOL
 MPStartTaskQ(MPTaskQueue *queue)
 {
-   ScopedSpinLock lock(&queue->lock);
+   OSUninterruptibleSpinLock_Acquire(&queue->lock);
 
    if (queue->state == MPTaskQueueState::Initialised || queue->state == MPTaskQueueState::Stopped) {
       queue->state = MPTaskQueueState::Ready;
+      OSUninterruptibleSpinLock_Release(&queue->lock);
       return TRUE;
    }
 
+   OSUninterruptibleSpinLock_Release(&queue->lock);
    return FALSE;
 }
 
@@ -90,9 +93,10 @@ MPStartTaskQ(MPTaskQueue *queue)
 BOOL
 MPStopTaskQ(MPTaskQueue *queue)
 {
-   ScopedSpinLock lock(&queue->lock);
+   OSUninterruptibleSpinLock_Acquire(&queue->lock);
 
    if (queue->state == MPTaskQueueState::Ready) {
+      OSUninterruptibleSpinLock_Release(&queue->lock);
       return FALSE;
    }
 
@@ -102,6 +106,7 @@ MPStopTaskQ(MPTaskQueue *queue)
       queue->state = MPTaskQueueState::Stopping;
    }
 
+   OSUninterruptibleSpinLock_Release(&queue->lock);
    return TRUE;
 }
 
@@ -115,10 +120,11 @@ MPStopTaskQ(MPTaskQueue *queue)
 BOOL
 MPResetTaskQ(MPTaskQueue *queue)
 {
-   ScopedSpinLock lock(&queue->lock);
+   OSUninterruptibleSpinLock_Acquire(&queue->lock);
 
    if (queue->state != MPTaskQueueState::Finished &&
        queue->state != MPTaskQueueState::Stopped) {
+      OSUninterruptibleSpinLock_Release(&queue->lock);
       return FALSE;
    }
 
@@ -137,6 +143,7 @@ MPResetTaskQ(MPTaskQueue *queue)
       task->state = MPTaskState::Ready;
    }
 
+   OSUninterruptibleSpinLock_Release(&queue->lock);
    return TRUE;
 }
 
@@ -158,13 +165,15 @@ MPEnqueTask(MPTaskQueue *queue,
       return FALSE;
    }
 
-   ScopedSpinLock lock(&queue->lock);
+   OSUninterruptibleSpinLock_Acquire(&queue->lock);
 
    if (queue->queueSize >= queue->queueMaxSize) {
+      OSUninterruptibleSpinLock_Release(&queue->lock);
       return FALSE;
    }
 
    if (queue->state < MPTaskQueueState::Initialised || queue->state > MPTaskQueueState::Finished) {
+      OSUninterruptibleSpinLock_Release(&queue->lock);
       return FALSE;
    }
 
@@ -180,6 +189,7 @@ MPEnqueTask(MPTaskQueue *queue,
       queue->state = MPTaskQueueState::Ready;
    }
 
+   OSUninterruptibleSpinLock_Release(&queue->lock);
    return TRUE;
 }
 
@@ -194,18 +204,17 @@ MPEnqueTask(MPTaskQueue *queue,
 MPTask *
 MPDequeTask(MPTaskQueue *queue)
 {
-   ScopedSpinLock lock(&queue->lock);
+   OSUninterruptibleSpinLock_Acquire(&queue->lock);
 
-   if (queue->state != MPTaskQueueState::Ready) {
-      return nullptr;
-   }
-
-   if (queue->queueIndex == queue->queueSize) {
+   if (queue->state != MPTaskQueueState::Ready
+    || queue->queueIndex == queue->queueSize) {
+      OSUninterruptibleSpinLock_Release(&queue->lock);
       return nullptr;
    }
 
    auto task = queue->queue[queue->queueIndex];
    queue->queueIndex++;
+   OSUninterruptibleSpinLock_Release(&queue->lock);
    return task;
 }
 
@@ -222,10 +231,11 @@ MPDequeTasks(MPTaskQueue *queue,
              be_ptr<MPTask> *taskBuffer,
              uint32_t taskBufferLen)
 {
-   ScopedSpinLock lock(&queue->lock);
+   OSUninterruptibleSpinLock_Acquire(&queue->lock);
    uint32_t count, available;
 
    if (queue->state != MPTaskQueueState::Ready) {
+      OSUninterruptibleSpinLock_Release(&queue->lock);
       return 0;
    }
 
@@ -237,6 +247,7 @@ MPDequeTasks(MPTaskQueue *queue,
       queue->queueIndex++;
    }
 
+   OSUninterruptibleSpinLock_Release(&queue->lock);
    return count;
 }
 
