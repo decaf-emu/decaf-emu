@@ -951,6 +951,9 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_interrupts.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_internal_idlock.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1798,6 +1801,9 @@
     </ClInclude>
     <ClInclude Include="..\src\ppcutils\stackobject.h">
       <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_internal_idlock.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
