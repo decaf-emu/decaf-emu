@@ -129,7 +129,7 @@ OSReleaseSpinLock(OSSpinLock *spinlock)
  * Acquires an Uninterruptible Spin Lock.
  *
  * Will block until spin lock is acquired.
- * Disables interrupts before returning.
+ * Disables interrupts before returning, only if non recursive lock.
  *
  * \return Returns TRUE if the lock was acquired.
  */
@@ -139,6 +139,7 @@ OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock)
    if (spinAcquireLock(spinlock)) {
       spinlock->restoreInterruptState = OSDisableInterrupts();
    }
+
    return TRUE;
 }
 

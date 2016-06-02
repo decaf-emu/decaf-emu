@@ -81,8 +81,6 @@ FSCloseFile(FSClient *client,
       return FSStatus::FatalError;
    }
 
-   file->close();
-   delete file;
    client->removeOpenFile(handle);
    return FSStatus::OK;
 }

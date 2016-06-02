@@ -10,7 +10,11 @@
 #include "modules/gx2/gx2_shaders.h"
 #include "modules/gx2/gx2_enum_string.h"
 #include "utils/binaryfile.h"
+#include "utils/log.h"
 #include "fakevirtualmemory.h"
+
+std::shared_ptr<spdlog::logger>
+gLog;
 
 struct Texture
 {
@@ -878,4 +882,21 @@ int main(int argc, char **argv)
    }
 
    return 0;
+}
+
+/**
+ * Hmmmm....
+ */
+namespace spdlog
+{
+namespace details
+{
+namespace os
+{
+size_t thread_id()
+{
+   return 0;
+}
+}
+}
 }

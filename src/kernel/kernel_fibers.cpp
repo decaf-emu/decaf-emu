@@ -195,8 +195,8 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
 }
 
 /**
-* Our cheeky hack to get user thread ID into spdlog output
-*/
+ * Our cheeky hack to get user thread ID into spdlog output
+ */
 namespace spdlog
 {
 namespace details

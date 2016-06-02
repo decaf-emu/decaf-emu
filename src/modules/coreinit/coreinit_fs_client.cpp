@@ -94,6 +94,7 @@ FSClient::removeOpenDirectory(FSDirectoryHandle handle)
          mOpenFolders[handle]->close();
       }
 
+      delete mOpenFolders[handle];
       mOpenFolders[handle] = nullptr;
    }
 }
@@ -111,6 +112,7 @@ FSClient::removeOpenFile(FSFileHandle handle)
          mOpenFiles[handle]->close();
       }
 
+      delete mOpenFiles[handle];
       mOpenFiles[handle] = nullptr;
    }
 }
