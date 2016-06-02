@@ -8,14 +8,14 @@
 namespace coreinit
 {
 
-static void
+static bool
 spinAcquireLock(OSSpinLock *spinlock)
 {
    auto owner = memory_untranslate(OSGetCurrentThread());
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
-      return;
+      return false;
    }
 
    uint32_t expected = 0;
@@ -23,6 +23,8 @@ spinAcquireLock(OSSpinLock *spinlock)
    while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
       expected = 0;
    }
+
+   return true;
 }
 
 static bool
@@ -134,8 +136,9 @@ OSReleaseSpinLock(OSSpinLock *spinlock)
 BOOL
 OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock)
 {
-   spinAcquireLock(spinlock);
-   spinlock->restoreInterruptState = OSDisableInterrupts();
+   if (spinAcquireLock(spinlock)) {
+      spinlock->restoreInterruptState = OSDisableInterrupts();
+   }
    return TRUE;
 }
 
