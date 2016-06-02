@@ -41,6 +41,7 @@ FSCloseDir(FSClient *client,
    }
 
    directory->close();
+   delete directory;
    client->removeOpenDirectory(handle);
    return FSStatus::OK;
 }
