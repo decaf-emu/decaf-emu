@@ -1,6 +1,7 @@
 #pragma once
 #include "cpu/cpu.h"
 #include "mem/mem.h"
+#include "utils/align.h"
 
 namespace ppcutils
 {
@@ -8,12 +9,14 @@ namespace ppcutils
 template <typename Type>
 class StackObject
 {
+   const uint32_t AlignedSize = align_up(static_cast<uint32_t>(sizeof(Type)), 4);
+
 public:
    StackObject()
    {
       auto core = cpu::this_core::state();
       core->gpr[1] -= AlignedSize;
-      mPtr = mem::translate(core->gpr[1]);
+      mPtr = mem::translate<Type>(core->gpr[1]);
    }
 
    ~StackObject()
@@ -24,23 +27,23 @@ public:
       core->gpr[1] += AlignedSize;
    }
 
-   Type* operator->() const {
+   Type* operator->() const
+   {
       return mPtr;
    }
 
-   Type& operator*() const {
+   Type& operator*() const
+   {
       return *mPtr;
    }
 
-   operator Type*() const {
+   operator Type*() const
+   {
       return mPtr;
    }
 
 private:
-   const size_t AlignedSize = align_up(sizeof(Type), 4);
-
    Type *mPtr;
-
 };
 
 }
