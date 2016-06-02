@@ -261,7 +261,9 @@ OSExitThread(int value)
    internal::wakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
 
    kernel::exitThreadNoLock();
-   // no need to unlock the scheduler as exitThread never returns
+   internal::rescheduleSelfNoLock();
+
+   // We do not need to unlockScheduler as OSExitThread never returns.
 }
 
 
@@ -816,9 +818,10 @@ void
 OSYieldThread()
 {
    internal::lockScheduler();
-   kernel::checkActiveThread(true);
+   internal::checkRunningThreadNoLock(true);
    internal::unlockScheduler();
 }
+
 
 void
 Module::initialiseThreadFunctions()

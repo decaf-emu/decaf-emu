@@ -17,8 +17,6 @@ static coreinit::OSThread *tCurrentThread[3];
 static coreinit::OSThread *tDeadThread[3];
 static platform::Fiber *tIdleFiber[3];
 
-static std::vector<Fiber *> gFiberQueue;
-
 struct Fiber
 {
    platform::Fiber *handle = nullptr;
@@ -26,12 +24,17 @@ struct Fiber
    cpu::Tracer *tracer = nullptr;
 };
 
-coreinit::OSThread * getCurrentThread() {
+coreinit::OSThread *
+getCurrentThread()
+{
    return tCurrentThread[cpu::this_core::id()];
 }
 
-void checkDeadThread();
-void fiberEntryPoint(void*)
+static void
+checkDeadThread();
+
+static void
+fiberEntryPoint(void*)
 {
    checkDeadThread();
 
@@ -49,7 +52,9 @@ void fiberEntryPoint(void*)
    coreinit::OSExitThread(ppctypes::getResult<int>(core));
 }
 
-Fiber * allocateFiber(coreinit::OSThread *thread) {
+static Fiber *
+allocateFiber(coreinit::OSThread *thread)
+{
    auto fiber = new Fiber();
    fiber->tracer = cpu::alloc_tracer(1024);
    fiber->handle = platform::createFiber(fiberEntryPoint, nullptr);
@@ -57,7 +62,9 @@ Fiber * allocateFiber(coreinit::OSThread *thread) {
    return fiber;
 }
 
-void freeFiber(Fiber *fiber) {
+static void
+freeFiber(Fiber *fiber)
+{
    cpu::free_tracer(fiber->tracer);
    platform::destroyFiber(fiber->handle);
 }
@@ -65,12 +72,14 @@ void freeFiber(Fiber *fiber) {
 // This must be called under the same scheduler lock
 // that added the thread to tDeadThread, we simply use
 // the thread_local to pass it between fibers.
-void checkDeadThread()
+static void
+checkDeadThread()
 {
-   auto core_id = cpu::this_core::id();
-   auto deadThread = tDeadThread[core_id];
+   auto coreId = cpu::this_core::id();
+   auto deadThread = tDeadThread[coreId];
+
    if (deadThread) {
-      tDeadThread[core_id] = nullptr;
+      tDeadThread[coreId] = nullptr;
 
       // Something is broken if we have no fiber
       assert(deadThread->fiber);
@@ -94,80 +103,31 @@ void init_core_fiber()
    tDeadThread[core_id] = nullptr;
 }
 
-// TODO: this should probably go away once coreinit handles schedulering
 void
 exitThreadNoLock()
 {
-   coreinit::OSThread *thread = getCurrentThread();
-
-   // Remove the threads fiber from the queue
-   gFiberQueue.erase(std::remove(gFiberQueue.begin(), gFiberQueue.end(), thread->fiber), gFiberQueue.end());
-
    // Mark this fiber to be cleaned up
-   tDeadThread[cpu::this_core::id()] = thread;
-
-   // Reschedule to another thread, this will never return.
-   checkActiveThread(false);
+   tDeadThread[cpu::this_core::id()] = getCurrentThread();
 }
 
-Fiber *
-peekNextFiberNoLock(uint32_t core)
-{
-   auto bit = 1 << core;
-
-   for (auto fiber : gFiberQueue) {
-      if (fiber->thread->state != OSThreadState::Ready) {
-         continue;
-      }
-
-      if (fiber->thread->suspendCounter > 0) {
-         continue;
-      }
-
-      if (fiber->thread->attr & bit) {
-         return fiber;
-      }
-   }
-
-   return nullptr;
-}
-
-void
-queueThreadNoLock(coreinit::OSThread *thread)
-{
-   auto fiber = thread->fiber;
-
-   // Initialise this if its the first time!
-   if (fiber == nullptr) {
-      thread->fiber = allocateFiber(thread);
-      fiber = thread->fiber;
-   }
-
-   auto compare =
-      [](Fiber *lhs, Fiber *rhs) {
-      return lhs->thread->basePriority < rhs->thread->basePriority;
-   };
-
-   gLog->trace("Core {} queued thread {}", cpu::this_core::id(), fiber->thread->id);
-
-   // Add this fiber to the fiber queue
-   auto pos = std::upper_bound(gFiberQueue.begin(), gFiberQueue.end(), fiber, compare);
-   gFiberQueue.insert(pos, fiber);
-}
-
-void saveContext(coreinit::OSContext *context)
+static void
+saveContext(coreinit::OSContext *context)
 {
    auto state = cpu::this_core::state();
+
    for (auto i = 0; i < 32; ++i) {
       context->gpr[i] = state->gpr[i];
    }
+
    for (auto i = 0; i < 32; ++i) {
       context->fpr[i] = state->fpr[i].value;
       context->psf[i] = state->fpr[i].paired1;
    }
+
    for (auto i = 0; i < 8; ++i) {
       context->gqr[i] = state->gqr[i].value;
    }
+
    context->cr = state->cr.value;
    context->lr = state->lr;
    context->ctr = state->ctr;
@@ -177,19 +137,24 @@ void saveContext(coreinit::OSContext *context)
    context->fpscr = state->fpscr.value;
 }
 
-void restoreContext(coreinit::OSContext *context)
+static void
+restoreContext(coreinit::OSContext *context)
 {
    auto state = cpu::this_core::state();
+
    for (auto i = 0; i < 32; ++i) {
       state->gpr[i] = context->gpr[i];
    }
+
    for (auto i = 0; i < 32; ++i) {
       state->fpr[i].value = context->fpr[i];
       state->fpr[i].paired1 = context->psf[i];
    }
+
    for (auto i = 0; i < 8; ++i) {
       state->gqr[i].value = context->gqr[i];
    }
+
    state->cr.value = context->cr;
    state->lr = context->lr;
    state->ctr = context->ctr;
@@ -199,83 +164,35 @@ void restoreContext(coreinit::OSContext *context)
    state->fpscr.value = context->fpscr;
 }
 
-void checkActiveThread(bool yielding)
+void
+switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
 {
-   auto core_id = cpu::this_core::id();
-   auto thread = getCurrentThread();
-
-   auto next = peekNextFiberNoLock(core_id);
-
-   // Priority is 0 = highest, 31 = lowest
-   if (thread && thread->suspendCounter <= 0 && thread->state == OSThreadState::Running) {
-      if (!next) {
-         // There is no thread to reschedule to
-         return;
-      }
-
-      if (yielding) {
-         // Yield will transfer control to threads with equal or better priority
-         if (thread->basePriority < next->thread->basePriority) {
-            return;
-         }
-      }
-      else {
-         // Only reschedule to more important threads
-         if (thread->basePriority <= next->thread->basePriority) {
-            return;
-         }
-      }
-   }
-
-   // Change state to ready, only if this thread is running
-   if (thread && thread->state == OSThreadState::Running) {
-      thread->state = OSThreadState::Ready;
-   }
-
-   const char *threadName = "?";
-   const char *nextName = "?";
-   if (thread && thread->name) {
-      threadName = thread->name;
-   }
-   if (next && next->thread->name) {
-      nextName = next->thread->name;
-   }
-   if (thread) {
-      if (next) {
-         gLog->trace("Core {} leaving thread {}[{}] to thread {}[{}]", core_id, thread->id, threadName, next->thread->id, nextName);
-      } else {
-         gLog->trace("Core {} leaving thread {}[{}] to idle", core_id, thread->id, threadName);
-      }
-   } else {
-      if (next) {
-         gLog->trace("Core {} leaving idle to thread {}[{}]", core_id, next->thread->id, nextName);
-      } else {
-         gLog->trace("Core {} leaving idle to idle", core_id);
-      }
-   }
-
    // Save our CIA for when we come back.
    auto core = cpu::this_core::state();
    auto cia = core->cia;
    auto nia = core->nia;
 
    // If we have a current context, save it
-   if (thread) {
-      saveContext(&thread->context);
+   if (previous) {
+      saveContext(&previous->context);
+   }
+
+   if (next && !next->fiber) {
+      next->fiber = allocateFiber(next);
    }
 
    // Switch to the new thread
    if (next) {
-      next->thread->state = OSThreadState::Running;
+      tCurrentThread[core->id] = next;
+      restoreContext(&next->context);
 
-      tCurrentThread[core_id] = next->thread;
-      restoreContext(&next->thread->context);
-      cpu::this_core::set_tracer(next->tracer);
-      platform::swapToFiber(nullptr, next->handle);
+      auto fiber = next->fiber;
+      cpu::this_core::set_tracer(fiber->tracer);
+      platform::swapToFiber(nullptr, fiber->handle);
    } else {
-      tCurrentThread[core_id] = nullptr;
+      tCurrentThread[core->id] = nullptr;
       cpu::this_core::set_tracer(nullptr);
-      platform::swapToFiber(nullptr, tIdleFiber[core_id]);
+      platform::swapToFiber(nullptr, tIdleFiber[core->id]);
    }
 
    checkDeadThread();

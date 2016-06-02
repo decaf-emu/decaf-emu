@@ -59,7 +59,7 @@ void cpu_interrupt_handler(uint32_t interrupt_flags) {
    // We must never receive an interrupt while processing a kernel
    // function as if the scheduler is locked, we are in for some shit.
    coreinit::internal::lockScheduler();
-   checkActiveThread(false);
+   coreinit::internal::checkRunningThreadNoLock(false);
    coreinit::internal::unlockScheduler();
 }
 

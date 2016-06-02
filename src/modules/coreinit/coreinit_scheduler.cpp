@@ -13,89 +13,179 @@
 namespace coreinit
 {
 
-static std::atomic_bool
-sSchedulerLock { false };
+static std::atomic<uint32_t>
+sSchedulerLock { 0 };
 
-OSThreadQueue *
+// TODO: Use sActiveThreads with OSThread::activeLink
+static OSThreadQueue *
 sActiveThreads;
 
-OSThreadQueue *
+static OSThreadQueue *
 sCoreRunQueue[3];
 
 namespace internal
 {
 
-using ActiveThreadQueueFuncs = QueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::activeLink >;
-using Core0RunThreadQueueFuncs = SortedQueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::core0RunQueueLink, ThreadQueueSortFunc>;
-using Core1RunThreadQueueFuncs = SortedQueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::core1RunQueueLink, ThreadQueueSortFunc>;
-using Core2RunThreadQueueFuncs = SortedQueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::core2RunQueueLink, ThreadQueueSortFunc>;
+using ActiveQueue = Queue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::activeLink>;
+using CoreRunQueue0 = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::coreRunQueueLink0, threadSortFunc>;
+using CoreRunQueue1 = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::coreRunQueueLink1, threadSortFunc>;
+using CoreRunQueue2 = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::coreRunQueueLink2, threadSortFunc>;
 
 void
 lockScheduler()
 {
-   bool locked = false;
+   uint32_t expected = 0;
+   auto core = 1 << cpu::this_core::id();
 
-   while (!sSchedulerLock.compare_exchange_weak(locked, true, std::memory_order_acquire)) {
-      locked = false;
+   while (!sSchedulerLock.compare_exchange_weak(expected, core, std::memory_order_acquire)) {
+      expected = 0;
    }
+}
+
+bool
+isSchedulerLocked()
+{
+   auto core = 1 << cpu::this_core::id();
+   return sSchedulerLock.load(std::memory_order_acquire) == core;
 }
 
 void
 unlockScheduler()
 {
-   sSchedulerLock.store(false, std::memory_order_release);
+   sSchedulerLock.store(0, std::memory_order_release);
 }
 
-void
+static void
 queueThreadNoLock(OSThread *thread)
 {
-   //assert(ThisCoreIsHoldingSchedulerLock())
+   assert(isSchedulerLocked());
    //assert(!ThreadIsSuspended(thread));
    //assert(thread->state == OSThreadState::Ready);
    //assert(thread->priority >= 0 && thread->priority <= 32);
 
    // Schedule this thread on any cores which can run it!
-   for (auto i = 0; i < 3; ++i) {
-      auto core_attr_bit = 1 << i;
-      if (!(thread->attr & core_attr_bit)) {
-         // The threads affinity doesn't allow it to run on this core.
-         continue;
-      }
+   if (thread->attr & OSThreadAttributes::AffinityCPU0) {
+      CoreRunQueue0::insert(sCoreRunQueue[0], thread);
+   }
 
-      switch (i) {
-      case 0: Core0RunThreadQueueFuncs::insert(sCoreRunQueue[0], thread); break;
-      case 1: Core1RunThreadQueueFuncs::insert(sCoreRunQueue[1], thread); break;
-      case 2: Core2RunThreadQueueFuncs::insert(sCoreRunQueue[2], thread); break;
-      }
+   if (thread->attr & OSThreadAttributes::AffinityCPU1) {
+      CoreRunQueue1::insert(sCoreRunQueue[1], thread);
+   }
+
+   if (thread->attr & OSThreadAttributes::AffinityCPU2) {
+      CoreRunQueue2::insert(sCoreRunQueue[2], thread);
    }
 }
 
-void
+static void
 unqueueThreadNoLock(OSThread *thread)
 {
-   //assert(ThisCoreIsHoldingSchedulerLock())
-   //assert(thread->state != OSThreadState::Running);
-
-   Core0RunThreadQueueFuncs::erase(sCoreRunQueue[0], thread);
-   Core1RunThreadQueueFuncs::erase(sCoreRunQueue[1], thread);
-   Core2RunThreadQueueFuncs::erase(sCoreRunQueue[2], thread);
+   CoreRunQueue0::erase(sCoreRunQueue[0], thread);
+   CoreRunQueue1::erase(sCoreRunQueue[1], thread);
+   CoreRunQueue2::erase(sCoreRunQueue[2], thread);
 }
 
-void checkRunningThread(bool yield)
+static OSThread *
+peekNextThreadNoLock(uint32_t core)
 {
-   // Check my run queue for something new
-   // If nothing better, return 
-  
-   // queueThreadNoLock(thisThread);
-   // unqueueThreadNoLock(newThread);
-   // kernel::switchContext(newThread->context);
+   assert(isSchedulerLocked());
+   auto thread = sCoreRunQueue[core]->head;
+   auto bit = 1 << core;
+
+   while (thread) {
+      if (thread->state != OSThreadState::Ready) {
+         continue;
+      }
+
+      if (thread->suspendCounter > 0) {
+         continue;
+      }
+
+      if (thread->attr & bit) {
+         return thread;
+      }
+
+      if (core == 0) {
+         thread = thread->coreRunQueueLink0.next;
+      } else if (core == 1) {
+         thread = thread->coreRunQueueLink1.next;
+      } else {
+         thread = thread->coreRunQueueLink2.next;
+      }
+   }
+
+   return nullptr;
+}
+
+void checkRunningThreadNoLock(bool yielding)
+{
+   assert(isSchedulerLocked());
+   auto coreId = cpu::this_core::id();
+   auto thread = kernel::getCurrentThread();
+   auto next = peekNextThreadNoLock(coreId);
+
+   if (thread
+    && thread->suspendCounter <= 0
+    && thread->state == OSThreadState::Running) {
+      if (!next) {
+         // There is no other viable thread, keep running current.
+         return;
+      }
+
+      if (thread->priority < next->priority) {
+         // Next thread has lower priority, keep running current.
+         return;
+      } else if (!yielding && thread->priority == next->priority) {
+         // Next thread has same priority, but we are not yielding.
+         return;
+      }
+   }
+
+   // If thread is in running state then leave it in Ready to run state
+   if (thread && thread->state == OSThreadState::Running) {
+      thread->state = OSThreadState::Ready;
+      queueThreadNoLock(thread);
+   }
+
+   // *snip* log thread switch *snip* ...
+
+   const char *threadName = "?";
+   const char *nextName = "?";
+   if (thread && thread->name) {
+      threadName = thread->name;
+   }
+   if (next && next->name) {
+      nextName = next->name;
+   }
+   if (thread) {
+      if (next) {
+         gLog->trace("Core {} leaving thread {}[{}] to thread {}[{}]", coreId, thread->id, threadName, next->id, nextName);
+      } else {
+         gLog->trace("Core {} leaving thread {}[{}] to idle", coreId, thread->id, threadName);
+      }
+   } else {
+      if (next) {
+         gLog->trace("Core {} leaving idle to thread {}[{}]", coreId, next->id, nextName);
+      } else {
+         gLog->trace("Core {} leaving idle to idle", coreId);
+      }
+   }
+
+   // Remove next thread from Run Queue
+   if (next) {
+      next->state = OSThreadState::Running;
+      unqueueThreadNoLock(next);
+   }
+
+   // Switch thread
+   kernel::switchThread(thread, next);
 }
 
 void
 rescheduleNoLock(uint32_t core)
 {
    if (core == cpu::this_core::id()) {
-      kernel::checkActiveThread(false);
+      checkRunningThreadNoLock(false);
    } else {
       cpu::interrupt(core, cpu::GENERIC_INTERRUPT);
    }
@@ -140,7 +230,7 @@ resumeThreadNoLock(OSThread *thread, int32_t counter)
 
    if (thread->suspendCounter == 0) {
       if (thread->state == OSThreadState::Ready) {
-         kernel::queueThreadNoLock(thread);
+         queueThreadNoLock(thread);
       }
    }
 
@@ -155,7 +245,7 @@ sleepThreadNoLock(OSThreadQueue *queue)
    thread->state = OSThreadState::Waiting;
 
    if (queue) {
-      OSInsertThreadQueue(queue, thread);
+      ThreadQueue::insert(queue, thread);
    }
 }
 
@@ -189,7 +279,7 @@ void
 wakeupOneThreadNoLock(OSThread *thread)
 {
    thread->state = OSThreadState::Ready;
-   kernel::queueThreadNoLock(thread);
+   queueThreadNoLock(thread);
 }
 
 void
@@ -199,7 +289,7 @@ wakeupThreadNoLock(OSThreadQueue *queue)
       wakeupOneThreadNoLock(thread);
    }
 
-   OSClearThreadQueue(queue);
+   ThreadQueue::clear(queue);
 }
 
 void
@@ -207,10 +297,10 @@ wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
 {
    for (auto thread = queue->head; thread; thread = thread->link.next) {
       thread->suspendResult = suspendResult;
-      kernel::queueThreadNoLock(thread);
+      queueThreadNoLock(thread);
    }
 
-   OSClearThreadQueue(queue);
+   ThreadQueue::clear(queue);
 }
 
 } // namespace internal
@@ -225,6 +315,7 @@ Module::initialiseSchedulerFunctions()
 {
    for (auto i = 0; i < 3; ++i) {
       sCoreRunQueue[i] = coreinit::internal::sysAlloc<OSThreadQueue>();
+      OSInitThreadQueue(sCoreRunQueue[i]);
    }
 }
 

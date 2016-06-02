@@ -14,11 +14,14 @@ namespace internal
 void
 lockScheduler();
 
+bool
+isSchedulerLocked();
+
 void
 unlockScheduler();
 
 void
-queueThreadNoLock(OSThread *thread);
+checkRunningThreadNoLock(bool yielding);
 
 void
 rescheduleNoLock(uint32_t core);
@@ -43,6 +46,9 @@ suspendThreadNoLock(OSThread *thread);
 
 void
 testThreadCancelNoLock();
+
+void
+unqueueThreadNoLock(OSThread *thread);
 
 void
 wakeupOneThreadNoLock(OSThread *thread);

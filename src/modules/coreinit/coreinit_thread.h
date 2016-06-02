@@ -189,12 +189,12 @@ struct OSThread
    be_val<uint32_t> exitValue;
 
    //! Core run queue stuff
-   be_ptr<OSThreadQueue> core0RunQueue;
-   be_ptr<OSThreadQueue> core1RunQueue;
-   be_ptr<OSThreadQueue> core2RunQueue;
-   OSThreadLink core0RunQueueLink;
-   OSThreadLink core1RunQueueLink;
-   OSThreadLink core2RunQueueLink;
+   be_ptr<OSThreadQueue> coreRunQueue0;
+   be_ptr<OSThreadQueue> coreRunQueue1;
+   be_ptr<OSThreadQueue> coreRunQueue2;
+   OSThreadLink coreRunQueueLink0;
+   OSThreadLink coreRunQueueLink1;
+   OSThreadLink coreRunQueueLink2;
 
    //! Queue the thread is currently waiting on
    be_ptr<OSThreadQueue> queue;
@@ -280,12 +280,12 @@ CHECK_OFFSET(OSThread, 0x328, suspendCounter);
 CHECK_OFFSET(OSThread, 0x32c, priority);
 CHECK_OFFSET(OSThread, 0x330, basePriority);
 CHECK_OFFSET(OSThread, 0x334, exitValue);
-CHECK_OFFSET(OSThread, 0x338, core0RunQueue);
-CHECK_OFFSET(OSThread, 0x33c, core1RunQueue);
-CHECK_OFFSET(OSThread, 0x340, core2RunQueue);
-CHECK_OFFSET(OSThread, 0x344, core0RunQueueLink);
-CHECK_OFFSET(OSThread, 0x34c, core1RunQueueLink);
-CHECK_OFFSET(OSThread, 0x354, core2RunQueueLink);
+CHECK_OFFSET(OSThread, 0x338, coreRunQueue0);
+CHECK_OFFSET(OSThread, 0x33C, coreRunQueue1);
+CHECK_OFFSET(OSThread, 0x340, coreRunQueue2);
+CHECK_OFFSET(OSThread, 0x344, coreRunQueueLink0);
+CHECK_OFFSET(OSThread, 0x34C, coreRunQueueLink1);
+CHECK_OFFSET(OSThread, 0x354, coreRunQueueLink2);
 CHECK_OFFSET(OSThread, 0x35c, queue);
 CHECK_OFFSET(OSThread, 0x360, link);
 CHECK_OFFSET(OSThread, 0x368, joinQueue);
