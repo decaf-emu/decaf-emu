@@ -23,6 +23,9 @@ sActiveThreads;
 static OSThreadQueue *
 sCoreRunQueue[3];
 
+static OSThread *
+sCurrentThread[3];
+
 namespace internal
 {
 
@@ -30,6 +33,12 @@ using ActiveQueue = Queue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::acti
 using CoreRunQueue0 = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::coreRunQueueLink0, threadSortFunc>;
 using CoreRunQueue1 = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::coreRunQueueLink1, threadSortFunc>;
 using CoreRunQueue2 = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::coreRunQueueLink2, threadSortFunc>;
+
+OSThread *
+getCurrentThread()
+{
+   return sCurrentThread[cpu::this_core::id()];
+}
 
 void
 lockScheduler()
@@ -121,7 +130,7 @@ void checkRunningThreadNoLock(bool yielding)
 {
    assert(isSchedulerLocked());
    auto coreId = cpu::this_core::id();
-   auto thread = kernel::getCurrentThread();
+   auto thread = sCurrentThread[coreId];
    auto next = peekNextThreadNoLock(coreId);
 
    if (thread
@@ -178,6 +187,7 @@ void checkRunningThreadNoLock(bool yielding)
    }
 
    // Switch thread
+   sCurrentThread[coreId] = next;
    kernel::switchThread(thread, next);
 }
 
@@ -314,6 +324,7 @@ void
 Module::initialiseSchedulerFunctions()
 {
    for (auto i = 0; i < 3; ++i) {
+      sCurrentThread[i] = nullptr;
       sCoreRunQueue[i] = coreinit::internal::sysAlloc<OSThreadQueue>();
       OSInitThreadQueue(sCoreRunQueue[i]);
    }

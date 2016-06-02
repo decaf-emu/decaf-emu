@@ -217,7 +217,7 @@ OSWaitEvent(OSEvent *event)
 
 
 static AlarmCallback
-pEventAlarmHandler = nullptr;
+sEventAlarmHandler = nullptr;
 
 struct EventAlarmData
 {
@@ -232,9 +232,9 @@ EventAlarmHandler(OSAlarm *alarm, OSContext *context)
    // Wakeup the thread waiting on this alarm
    auto data = reinterpret_cast<EventAlarmData*>(OSGetAlarmUserData(alarm));
    data->timeout = TRUE;
-   internal::lockScheduler();
+
+   // System Alarm, we already have the scheduler lock
    internal::wakeupOneThreadNoLock(data->thread);
-   internal::unlockScheduler();
 }
 
 
@@ -274,8 +274,7 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
 
    // Create an alarm to trigger timeout
    OSCreateAlarm(alarm);
-   OSSetAlarmUserData(alarm, data);
-   OSSetAlarm(alarm, timeout, pEventAlarmHandler);
+   internal::setAlarmInternal(alarm, timeout, sEventAlarmHandler, data);
 
    // Set waitEventTimeoutAlarm so we can cancel it when event is signalled
    thread->waitEventTimeoutAlarm = alarm;
@@ -315,7 +314,7 @@ Module::registerEventFunctions()
 void
 Module::initialiseEvent()
 {
-   pEventAlarmHandler = findExportAddress("EventAlarmHandler");
+   sEventAlarmHandler = findExportAddress("EventAlarmHandler");
 }
 
 } // namespace coreinit

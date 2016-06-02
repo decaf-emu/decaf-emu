@@ -15,8 +15,6 @@ struct Fiber;
 void initialise();
 void set_game_name(const std::string& name);
 
-coreinit::OSThread * getCurrentThread();
-
 void exitThreadNoLock();
 
 void

@@ -173,7 +173,7 @@ void
 startAlarmCallbackThreads();
 
 BOOL
-setAlarmInternal(OSAlarm *alarm, OSTime time, AlarmCallback callback);
+setAlarmInternal(OSAlarm *alarm, OSTime time, AlarmCallback callback, void *userData);
 
 bool
 cancelAlarm(OSAlarm *alarm);

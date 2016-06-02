@@ -404,9 +404,10 @@ startAlarmCallbackThreads()
 }
 
 BOOL
-setAlarmInternal(OSAlarm *alarm, OSTime time, AlarmCallback callback)
+setAlarmInternal(OSAlarm *alarm, OSTime time, AlarmCallback callback, void *userData)
 {
    alarm->group = 0xFFFFFFFF;
+   alarm->userData = userData;
    return OSSetAlarm(alarm, time, callback);
 }
 

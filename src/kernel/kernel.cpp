@@ -46,7 +46,7 @@ void initialise()
 }
 
 void cpu_interrupt_handler(uint32_t interrupt_flags) {
-   coreinit::OSThread *interruptedThread = getCurrentThread();
+   coreinit::OSThread *interruptedThread = coreinit::internal::getCurrentThread();
 
    if (interrupt_flags & cpu::ALARM_INTERRUPT) {
       coreinit::internal::handleAlarmInterrupt(&interruptedThread->context);

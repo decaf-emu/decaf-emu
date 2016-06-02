@@ -22,6 +22,9 @@ sDefaultThreads;
 static uint32_t
 sThreadId = 1;
 
+static AlarmCallback
+sSleepAlarmHandler = nullptr;
+
 void
 __OSClearThreadStack32(OSThread *thread,
                        uint32_t value)
@@ -285,7 +288,7 @@ OSGetActiveThreadLink(OSThread *thread,
 OSThread *
 OSGetCurrentThread()
 {
-   return kernel::getCurrentThread();
+   return internal::getCurrentThread();
 }
 
 
@@ -701,6 +704,15 @@ OSSleepThread(OSThreadQueue *queue)
    internal::unlockScheduler();
 }
 
+static void
+SleepAlarmHandler(OSAlarm *alarm, OSContext *context)
+{
+   // Wakeup the thread waiting on this alarm
+   auto data = reinterpret_cast<OSThread*>(OSGetAlarmUserData(alarm));
+   
+   // System Alarm, we already have the scheduler lock
+   internal::wakeupOneThreadNoLock(data);
+}
 
 /**
  * Sleep the current thread for a period of time.
@@ -710,11 +722,18 @@ OSSleepTicks(OSTime ticks)
 {
    // Create an alarm to trigger wakeup
    ppcutils::StackObject<OSAlarm> alarm;
+   ppcutils::StackObject<OSThreadQueue> queue;
+   
    OSCreateAlarm(alarm);
-   OSSetAlarm(alarm, ticks, nullptr);
+   OSInitThreadQueue(queue);
 
-   // Sleep thread
-   OSWaitAlarm(alarm);
+   internal::lockScheduler();
+   internal::setAlarmInternal(alarm, ticks, sSleepAlarmHandler, OSGetCurrentThread());
+
+   internal::sleepThreadNoLock(queue);
+   internal::rescheduleSelfNoLock();
+
+   internal::unlockScheduler();
 }
 
 
@@ -826,6 +845,7 @@ OSYieldThread()
 void
 Module::initialiseThreadFunctions()
 {
+   sSleepAlarmHandler = findExportAddress("SleepAlarmHandler");
    sDefaultThreads.fill(nullptr);
 }
 
@@ -871,6 +891,8 @@ Module::registerThreadFunctions()
    RegisterKernelFunction(OSTestThreadCancel);
    RegisterKernelFunction(OSWakeupThread);
    RegisterKernelFunction(OSYieldThread);
+
+   RegisterKernelFunction(SleepAlarmHandler);
 }
 
 namespace internal

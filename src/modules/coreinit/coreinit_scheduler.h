@@ -11,6 +11,9 @@ struct OSThreadQueue;
 namespace internal
 {
 
+OSThread *
+getCurrentThread();
+
 void
 lockScheduler();
 

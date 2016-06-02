@@ -13,7 +13,6 @@
 namespace kernel
 {
 
-static coreinit::OSThread *tCurrentThread[3];
 static coreinit::OSThread *tDeadThread[3];
 static platform::Fiber *tIdleFiber[3];
 
@@ -23,12 +22,6 @@ struct Fiber
    coreinit::OSThread *thread = nullptr;
    cpu::Tracer *tracer = nullptr;
 };
-
-coreinit::OSThread *
-getCurrentThread()
-{
-   return tCurrentThread[cpu::this_core::id()];
-}
 
 static void
 checkDeadThread();
@@ -43,7 +36,8 @@ fiberEntryPoint(void*)
    coreinit::internal::unlockScheduler();
 
    auto core = cpu::this_core::state();
-   auto thread = getCurrentThread();
+   // TODO: Do not use coreinit from the kernel...
+   auto thread = coreinit::internal::getCurrentThread();
    core->cia = 0;
    core->nia = thread->entryPoint.getAddress();
 
@@ -99,7 +93,6 @@ void init_core_fiber()
 
    // Save some needed information about the fiber run states.
    tIdleFiber[core_id] = fiber;
-   tCurrentThread[core_id] = nullptr;
    tDeadThread[core_id] = nullptr;
 }
 
@@ -107,7 +100,7 @@ void
 exitThreadNoLock()
 {
    // Mark this fiber to be cleaned up
-   tDeadThread[cpu::this_core::id()] = getCurrentThread();
+   tDeadThread[cpu::this_core::id()] = coreinit::internal::getCurrentThread();
 }
 
 static void
@@ -177,20 +170,18 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
       saveContext(&previous->context);
    }
 
-   if (next && !next->fiber) {
-      next->fiber = allocateFiber(next);
-   }
-
    // Switch to the new thread
    if (next) {
-      tCurrentThread[core->id] = next;
+      if (!next->fiber) {
+         next->fiber = allocateFiber(next);
+      }
+
       restoreContext(&next->context);
 
       auto fiber = next->fiber;
       cpu::this_core::set_tracer(fiber->tracer);
       platform::swapToFiber(nullptr, fiber->handle);
    } else {
-      tCurrentThread[core->id] = nullptr;
       cpu::this_core::set_tracer(nullptr);
       platform::swapToFiber(nullptr, tIdleFiber[core->id]);
    }
@@ -219,7 +210,7 @@ size_t thread_id()
    auto core = cpu::this_core::state();
    if (core) {
       coreID = core->id;
-      auto thread = kernel::getCurrentThread();
+      auto thread = coreinit::internal::getCurrentThread();
       if (thread) {
          threadID = thread->id;
       }
