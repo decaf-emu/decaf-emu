@@ -18,6 +18,9 @@ void
 unlockScheduler();
 
 void
+queueThreadNoLock(OSThread *thread);
+
+void
 rescheduleNoLock(uint32_t core);
 
 void

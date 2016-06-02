@@ -68,6 +68,13 @@ OSIsThreadQueueEmpty(OSThreadQueue *queue);
 OSThread *
 OSPopFrontThreadQueue(OSThreadQueue *queue);
 
+namespace internal
+{
+
+bool ThreadQueueSortFunc(OSThread *a, OSThread *b);
+
+} // namespace internal
+
 /** @} */
 
 } // namespace coreinit

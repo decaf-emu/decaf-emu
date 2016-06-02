@@ -158,9 +158,13 @@ struct OSThread
    //! Exit value of the thread
    be_val<uint32_t> exitValue;
 
-   //! Naughty, and hopefully not overriding anything important
-   kernel::Fiber *fiber;
-   UNKNOWN(0x35c - 0x340);
+   //! Core run queue stuff
+   be_ptr<OSThreadQueue> core0RunQueue;
+   be_ptr<OSThreadQueue> core1RunQueue;
+   be_ptr<OSThreadQueue> core2RunQueue;
+   OSThreadLink core0RunQueueLink;
+   OSThreadLink core1RunQueueLink;
+   OSThreadLink core2RunQueueLink;
 
    //! Queue the thread is currently waiting on
    be_ptr<OSThreadQueue> queue;
@@ -232,7 +236,11 @@ struct OSThread
 
    //! Queue of threads waiting for a thread to be suspended.
    OSThreadQueue suspendQueue;
-   UNKNOWN(0x69c - 0x5f4);
+
+   UNKNOWN(0x694 - 0x5f4);
+
+   //! Naughty, and hopefully not overriding anything important
+   kernel::Fiber *fiber;
 };
 CHECK_OFFSET(OSThread, 0x320, tag);
 CHECK_OFFSET(OSThread, 0x324, state);
@@ -242,6 +250,12 @@ CHECK_OFFSET(OSThread, 0x328, suspendCounter);
 CHECK_OFFSET(OSThread, 0x32c, priority);
 CHECK_OFFSET(OSThread, 0x330, basePriority);
 CHECK_OFFSET(OSThread, 0x334, exitValue);
+CHECK_OFFSET(OSThread, 0x338, core0RunQueue);
+CHECK_OFFSET(OSThread, 0x33c, core1RunQueue);
+CHECK_OFFSET(OSThread, 0x340, core2RunQueue);
+CHECK_OFFSET(OSThread, 0x344, core0RunQueueLink);
+CHECK_OFFSET(OSThread, 0x34c, core1RunQueueLink);
+CHECK_OFFSET(OSThread, 0x354, core2RunQueueLink);
 CHECK_OFFSET(OSThread, 0x35c, queue);
 CHECK_OFFSET(OSThread, 0x360, link);
 CHECK_OFFSET(OSThread, 0x368, joinQueue);

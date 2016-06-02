@@ -16,8 +16,19 @@ namespace coreinit
 static std::atomic_bool
 sSchedulerLock { false };
 
+OSThreadQueue *
+sActiveThreads;
+
+OSThreadQueue *
+sCoreRunQueue[3];
+
 namespace internal
 {
+
+using ActiveThreadQueueFuncs = QueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::activeLink >;
+using Core0RunThreadQueueFuncs = SortedQueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::core0RunQueueLink, ThreadQueueSortFunc>;
+using Core1RunThreadQueueFuncs = SortedQueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::core1RunQueueLink, ThreadQueueSortFunc>;
+using Core2RunThreadQueueFuncs = SortedQueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::core2RunQueueLink, ThreadQueueSortFunc>;
 
 void
 lockScheduler()
@@ -33,6 +44,51 @@ void
 unlockScheduler()
 {
    sSchedulerLock.store(false, std::memory_order_release);
+}
+
+void
+queueThreadNoLock(OSThread *thread)
+{
+   //assert(ThisCoreIsHoldingSchedulerLock())
+   //assert(!ThreadIsSuspended(thread));
+   //assert(thread->state == OSThreadState::Ready);
+   //assert(thread->priority >= 0 && thread->priority <= 32);
+
+   // Schedule this thread on any cores which can run it!
+   for (auto i = 0; i < 3; ++i) {
+      auto core_attr_bit = 1 << i;
+      if (!(thread->attr & core_attr_bit)) {
+         // The threads affinity doesn't allow it to run on this core.
+         continue;
+      }
+
+      switch (i) {
+      case 0: Core0RunThreadQueueFuncs::insert(sCoreRunQueue[0], thread); break;
+      case 1: Core1RunThreadQueueFuncs::insert(sCoreRunQueue[1], thread); break;
+      case 2: Core2RunThreadQueueFuncs::insert(sCoreRunQueue[2], thread); break;
+      }
+   }
+}
+
+void
+unqueueThreadNoLock(OSThread *thread)
+{
+   //assert(ThisCoreIsHoldingSchedulerLock())
+   //assert(thread->state != OSThreadState::Running);
+
+   Core0RunThreadQueueFuncs::erase(sCoreRunQueue[0], thread);
+   Core1RunThreadQueueFuncs::erase(sCoreRunQueue[1], thread);
+   Core2RunThreadQueueFuncs::erase(sCoreRunQueue[2], thread);
+}
+
+void checkRunningThread(bool yield)
+{
+   // Check my run queue for something new
+   // If nothing better, return 
+  
+   // queueThreadNoLock(thisThread);
+   // unqueueThreadNoLock(newThread);
+   // kernel::switchContext(newThread->context);
 }
 
 void
@@ -167,6 +223,9 @@ Module::registerSchedulerFunctions()
 void
 Module::initialiseSchedulerFunctions()
 {
+   for (auto i = 0; i < 3; ++i) {
+      sCoreRunQueue[i] = coreinit::internal::sysAlloc<OSThreadQueue>();
+   }
 }
 
 } // namespace coreinit

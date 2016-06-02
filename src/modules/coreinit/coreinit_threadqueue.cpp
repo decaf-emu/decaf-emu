@@ -9,11 +9,11 @@ namespace coreinit
 namespace internal
 {
 
-bool ThreadSortFunc(OSThread *a, OSThread *b) {
+bool ThreadQueueSortFunc(OSThread *a, OSThread *b) {
    return a->priority < b->priority;
 }
 
-using ThreadQueueFuncs = SortedQueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::link, ThreadSortFunc> ;
+using ThreadQueueFuncs = SortedQueueFuncs < OSThreadQueue, OSThreadLink, OSThread, &OSThread::link, ThreadQueueSortFunc> ;
 
 }
 
