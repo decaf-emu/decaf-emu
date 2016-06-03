@@ -27,7 +27,7 @@ struct LoadedSection
 
 struct LoadedModule
 {
-   ppcaddr_t findExport(const std::string& name)
+   ppcaddr_t findExport(const std::string& name) const
    {
       auto itr = exports.find(name);
 
@@ -40,13 +40,13 @@ struct LoadedModule
 
    template<typename ReturnType, typename... Args>
    wfunc_ptr<ReturnType, Args...>
-   findFuncExport(const std::string& name)
+   findFuncExport(const std::string& name) const
    {
       return wfunc_ptr<ReturnType, Args...>(findExport(name));
    }
 
    template<typename Type>
-   Type *findDataExport(const std::string& name)
+   Type *findDataExport(const std::string& name) const
    {
       return reinterpret_cast<Type *>(memory_translate(findExport(name)));
    }

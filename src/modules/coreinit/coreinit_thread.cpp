@@ -164,17 +164,10 @@ InitialiseThreadState(OSThread *thread,
 
    assert(thread->fiber == nullptr);
 
-   // We allocate an extra 8 bytes to deal with any main() calling
-   //  conventions where the stack is allocated by the caller?
-   //  Honestly I don't have any clue why the PPC entrypoint is
-   //  trampling past the edge of the stack, since I don't think
-   //  WiiU calling convention actually says that its supposed to
-   //  be doing this... Arg...
-   const uint32_t EXTRA_STACK_ALLOC = 8;
-
    // Setup context
+   thread->context.lr = entry;
    thread->context.gpr[0] = 0;
-   thread->context.gpr[1] = thread->stackStart.getAddress() - 4 - EXTRA_STACK_ALLOC;
+   thread->context.gpr[1] = thread->stackStart.getAddress() - 4;
    thread->context.gpr[2] = sda2Base;
    thread->context.gpr[3] = argc;
    thread->context.gpr[4] = memory_untranslate(argv);

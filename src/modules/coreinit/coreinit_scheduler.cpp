@@ -9,6 +9,9 @@
 #include "coreinit_internal_queue.h"
 #include "kernel/kernel.h"
 #include "cpu/trace.h"
+#include "system.h"
+#include "utils/wfunc_call.h"
+#include "ppcutils/stackobject.h"
 
 namespace coreinit
 {
@@ -340,8 +343,34 @@ wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
 } // namespace internal
 
 void
+GameThreadEntry(uint32_t argc, void *argv)
+{
+   auto appModule = gSystem.getUserModule();
+
+   auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
+   if (userPreinit) {
+      ppcutils::StackObject<be_ptr<CommonHeap>> mem1HeapPtr;
+      ppcutils::StackObject<be_ptr<CommonHeap>> fgHeapPtr;
+      ppcutils::StackObject<be_ptr<CommonHeap>> mem2HeapPtr;
+
+      *mem1HeapPtr = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM1);
+      *fgHeapPtr = MEMGetBaseHeapHandle(MEMBaseHeapType::FG);
+      *mem2HeapPtr = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
+
+      userPreinit(mem1HeapPtr, fgHeapPtr, mem2HeapPtr);
+
+      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, *mem1HeapPtr);
+      MEMSetBaseHeapHandle(MEMBaseHeapType::FG, *fgHeapPtr);
+      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, *mem2HeapPtr);
+   }
+
+   OSThreadEntryPointFn(appModule->entryPoint)(argc, argv);
+}
+
+void
 Module::registerSchedulerFunctions()
 {
+   RegisterKernelFunction(GameThreadEntry);
 }
 
 void

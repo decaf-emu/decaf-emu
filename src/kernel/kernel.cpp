@@ -161,7 +161,7 @@ bool launch_game()
    gLoader.initialise(maxCodeSize);
 
    // System preloaded modules
-   gLoader.loadRPL("coreinit");
+   auto coreinitModule = gLoader.loadRPL("coreinit");
 
    using namespace coreinit;
    auto appModule = gLoader.loadRPL(rpx.c_str());
@@ -191,51 +191,9 @@ bool launch_game()
       OSSetThreadName(thread, name);
    }
 
-   // Call the RPX __preinit_user if it is defined
-   auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
-
-   if (userPreinit) {
-      struct HeapHandles
-      {
-         be_ptr<CommonHeap> mem1Heap;
-         be_ptr<CommonHeap> fgHeap;
-         be_ptr<CommonHeap> mem2Heap;
-      };
-
-      auto wiiHandles = coreinit::internal::sysAlloc<HeapHandles>();
-      wiiHandles->mem1Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM1);
-      wiiHandles->fgHeap = MEMGetBaseHeapHandle(MEMBaseHeapType::FG);
-      wiiHandles->mem2Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-
-      {
-         auto module = gSystem.getUserModule();
-         auto sdaBase = module ? module->sdaBase : 0u;
-         auto sda2Base = module ? module->sda2Base : 0u;
-
-         auto stackSize = 2048;
-         auto stack = reinterpret_cast<uint8_t *>(coreinit::internal::sysAlloc(stackSize, 8));
-         auto state = cpu::this_core::state();
-
-         // Setup a valid context
-         state->gpr[0] = 0;
-         state->gpr[1] = mem::untranslate(stack) + stackSize - 4;
-         state->gpr[2] = sda2Base;
-         state->gpr[13] = sdaBase;
-
-         userPreinit(&wiiHandles->mem1Heap, &wiiHandles->fgHeap, &wiiHandles->mem2Heap);
-
-         coreinit::internal::sysFree(stack);
-      }
-
-
-      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, wiiHandles->mem1Heap);
-      MEMSetBaseHeapHandle(MEMBaseHeapType::FG, wiiHandles->fgHeap);
-      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, wiiHandles->mem2Heap);
-      coreinit::internal::sysFree(wiiHandles);
-   }
-
    // Run thread 1
-   OSRunThread(OSGetDefaultThread(1), appModule->entryPoint, 0, nullptr);
+   auto gameThreadEntry = coreinitModule->findFuncExport<uint32_t, uint32_t, void*>("GameThreadEntry");
+   OSRunThread(OSGetDefaultThread(1), gameThreadEntry, 0, nullptr);
 
    return true;
 }

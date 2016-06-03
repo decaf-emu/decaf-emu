@@ -7,6 +7,7 @@
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"
+#include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
 
@@ -38,12 +39,11 @@ fiberEntryPoint(void*)
    auto core = cpu::this_core::state();
    // TODO: Do not use coreinit from the kernel...
    auto thread = coreinit::internal::getCurrentThread();
-   core->cia = 0;
-   core->nia = thread->entryPoint.getAddress();
 
-   cpu::this_core::execute_sub();
-
-   coreinit::OSExitThread(ppctypes::getResult<int>(core));
+   auto entryPoint = coreinit::OSThreadEntryPointFn(core->lr);
+   auto argc = core->gpr[3];
+   auto argv = reinterpret_cast<void*>(core->gpr[4]);
+   coreinit::OSExitThread(entryPoint(argc, argv));
 }
 
 static Fiber *
