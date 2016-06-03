@@ -60,9 +60,6 @@ void
 testThreadCancelNoLock();
 
 void
-unqueueThreadNoLock(OSThread *thread);
-
-void
 wakeupOneThreadNoLock(OSThread *thread);
 
 void
