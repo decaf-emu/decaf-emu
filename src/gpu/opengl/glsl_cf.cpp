@@ -21,7 +21,6 @@ RETURN
 EMIT_VERTEX
 EMIT_CUT_VERTEX
 CUT_VERTEX
-KILL
 END_PROGRAM
 WAIT_ACK
 TEX_ACK
@@ -52,10 +51,17 @@ LOOP_CONTINUE(GenerateState &state, CfInstruction *ins)
    return true;
 }
 
+static bool
+KILL(GenerateState &state, CfInstruction *ins)
+{
+   state.out << "discard;";
+   return true;
+}
 void registerCf()
 {
    registerGenerator(latte::SQ_CF_INST_LOOP_BREAK, LOOP_BREAK);
    registerGenerator(latte::SQ_CF_INST_LOOP_CONTINUE, LOOP_CONTINUE);
+   registerGenerator(latte::SQ_CF_INST_KILL, KILL);
 }
 
 } // namespace glsl
