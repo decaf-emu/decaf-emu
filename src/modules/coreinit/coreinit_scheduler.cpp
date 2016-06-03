@@ -6,6 +6,7 @@
 #include "coreinit_interrupts.h"
 #include "coreinit_event.h"
 #include "coreinit_memheap.h"
+#include "coreinit_mutex.h"
 #include "coreinit_thread.h"
 #include "coreinit_internal_queue.h"
 #include "kernel/kernel.h"
@@ -130,7 +131,7 @@ peekNextThreadNoLock(uint32_t core)
 {
    emuassert(isSchedulerLocked());
    auto thread = sCoreRunQueue[core]->head;
-   
+
    if (thread) {
       emuassert(thread->state == OSThreadState::Ready);
       emuassert(thread->suspendCounter == 0);
@@ -160,10 +161,10 @@ void checkRunningThreadNoLock(bool yielding)
          return;
       }
 
-      if (thread->basePriority < next->basePriority) {
+      if (thread->priority < next->priority) {
          // Next thread has lower priority, keep running current.
          return;
-      } else if (!yielding && thread->basePriority == next->basePriority) {
+      } else if (!yielding && thread->priority == next->priority) {
          // Next thread has same priority, but we are not yielding.
          return;
       }
@@ -259,6 +260,7 @@ resumeThreadNoLock(OSThread *thread, int32_t counter)
 
    if (thread->suspendCounter == 0) {
       if (thread->state == OSThreadState::Ready) {
+         thread->priority = calculateThreadPriorityNoLock(thread);
          queueThreadNoLock(thread);
       }
    }
@@ -336,6 +338,102 @@ wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
    }
 
    ThreadQueue::clear(queue);
+}
+
+int32_t
+calculateThreadPriorityNoLock(OSThread *thread)
+{
+   emuassert(isSchedulerLocked());
+   auto priority = thread->basePriority;
+
+   // If thread is holding a spinlock, it is always highest priority
+   if (thread->context.spinLockCount > 0) {
+      return 0;
+   }
+
+   // For all mutex we own, boost our priority over anyone waiting to own our mutex
+   for (auto mutex = thread->mutexQueue.head; mutex; mutex = mutex->link.next) {
+      // We only need to check the head of mutex thread queue as it is in priority order
+      auto other = mutex->queue.head;
+
+      if (other && other->priority < priority) {
+         priority = other->priority;
+      }
+   }
+
+   // TODO: Owned Fast Mutex queue
+   return priority;
+}
+
+OSThread *
+setThreadActualPriorityNoLock(OSThread *thread, int32_t priority)
+{
+   emuassert(isSchedulerLocked());
+   thread->priority = priority;
+
+   if (thread->state == OSThreadState::Ready) {
+      unqueueThreadNoLock(thread);
+      queueThreadNoLock(thread);
+   } else if (thread->state == OSThreadState::Waiting) {
+      // Move towards head of queue if needed
+      while (thread->link.prev && priority < thread->link.prev->priority) {
+         auto prev = thread->link.prev;
+         auto next = thread->link.next;
+
+         thread->link.prev = prev->link.prev;
+         thread->link.next = prev;
+
+         prev->link.prev = thread;
+         prev->link.next = next;
+
+         if (next) {
+            next->link.prev = prev;
+         }
+      }
+
+      // Move towards tail of queue if needed
+      while (thread->link.next && thread->link.next->priority < priority) {
+         auto prev = thread->link.prev;
+         auto next = thread->link.next;
+
+         thread->link.prev = next;
+         thread->link.next = next->link.next;
+
+         next->link.prev = prev;
+         next->link.next = thread;
+
+         if (prev) {
+            prev->link.next = next;
+         }
+      }
+
+      // If we are waiting for a mutex, return its owner
+      if (thread->mutex) {
+         return thread->mutex->owner;
+      }
+   }
+
+   return nullptr;
+}
+
+void
+updateThreadPriorityNoLock(OSThread *thread)
+{
+   // Update the threads priority, and any thread chain of mutex owners
+   while (thread) {
+      auto priority = calculateThreadPriorityNoLock(thread);
+      thread = setThreadActualPriorityNoLock(thread, priority);
+   }
+}
+
+void
+promoteThreadPriorityNoLock(OSThread *thread, int32_t priority)
+{
+   while (thread) {
+      if (priority < thread->priority) {
+         thread = setThreadActualPriorityNoLock(thread, priority);
+      }
+   }
 }
 
 } // namespace internal

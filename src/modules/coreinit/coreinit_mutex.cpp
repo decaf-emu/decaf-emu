@@ -50,6 +50,9 @@ lockMutexNoLock(OSMutex *mutex)
    while (mutex->owner && mutex->owner != thread) {
       thread->mutex = mutex;
 
+      // Promote mutex owner priority
+      internal::promoteThreadPriorityNoLock(mutex->owner, thread->priority);
+
       // Wait for other owner to unlock
       internal::sleepThreadNoLock(&mutex->queue);
       internal::rescheduleSelfNoLock();
@@ -135,6 +138,11 @@ unlockMutexNoLock(OSMutex *mutex)
 
    if (mutex->count == 0) {
       mutex->owner = nullptr;
+
+      // If we have a promoted priority, reset it.
+      if (thread->priority < thread->basePriority) {
+         thread->priority = internal::calculateThreadPriorityNoLock(thread);
+      }
 
       // Remove mutex from thread's mutex queue
       MutexQueue::erase(&thread->mutexQueue, mutex);

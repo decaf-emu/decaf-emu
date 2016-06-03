@@ -210,6 +210,7 @@ OSCreateThread(OSThread *thread,
    thread->stackStart = stack;
    thread->stackEnd = reinterpret_cast<be_val<uint32_t>*>(reinterpret_cast<uint8_t*>(stack) - stackSize);
    thread->basePriority = priority;
+   thread->priority = thread->basePriority;
    thread->attr = attributes;
    thread->id = sThreadId++;
 
@@ -626,6 +627,7 @@ OSSetThreadPriority(OSThread *thread,
 
    internal::lockScheduler();
    thread->basePriority = priority;
+   internal::updateThreadPriorityNoLock(thread);
    internal::rescheduleAllCoreNoLock();
    internal::unlockScheduler();
    return TRUE;
@@ -702,7 +704,7 @@ SleepAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
    // Wakeup the thread waiting on this alarm
    auto data = reinterpret_cast<OSThread*>(OSGetAlarmUserData(alarm));
-   
+
    // System Alarm, we already have the scheduler lock
    internal::wakeupOneThreadNoLock(data);
 }
@@ -716,7 +718,7 @@ OSSleepTicks(OSTime ticks)
    // Create an alarm to trigger wakeup
    ppcutils::StackObject<OSAlarm> alarm;
    ppcutils::StackObject<OSThreadQueue> queue;
-   
+
    OSCreateAlarm(alarm);
    OSInitThreadQueue(queue);
 
@@ -893,7 +895,7 @@ namespace internal
 
 bool threadSortFunc(OSThread *lhs, OSThread *rhs)
 {
-   return lhs->basePriority < rhs->basePriority;
+   return lhs->priority < rhs->priority;
 }
 
 } // namespace internal

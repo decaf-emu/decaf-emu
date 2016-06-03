@@ -71,6 +71,18 @@ wakeupThreadNoLock(OSThreadQueue *queue);
 void
 wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult);
 
+int32_t
+calculateThreadPriorityNoLock(OSThread *thread);
+
+OSThread *
+setThreadActualPriorityNoLock(OSThread *thread, int32_t priority);
+
+void
+updateThreadPriorityNoLock(OSThread *thread);
+
+void
+promoteThreadPriorityNoLock(OSThread *thread, int32_t priority);
+
 } // namespace internal
 
 } // namespace coreinit

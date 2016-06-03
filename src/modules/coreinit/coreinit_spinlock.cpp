@@ -2,16 +2,36 @@
 #include "coreinit.h"
 #include "coreinit_interrupts.h"
 #include "coreinit_spinlock.h"
+#include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
 #include "memory_translate.h"
 
 namespace coreinit
 {
 
+static void
+increaseSpinLockCount(OSThread *thread)
+{
+   internal::lockScheduler();
+   thread->context.spinLockCount++;
+   thread->priority = 0;
+   internal::unlockScheduler();
+}
+
+static void
+decreaseSpinLockCount(OSThread *thread)
+{
+   internal::lockScheduler();
+   thread->context.spinLockCount++;
+   thread->priority = internal::calculateThreadPriorityNoLock(thread);
+   internal::unlockScheduler();
+}
+
 static bool
 spinAcquireLock(OSSpinLock *spinlock)
 {
-   auto owner = memory_untranslate(OSGetCurrentThread());
+   auto thread = OSGetCurrentThread();
+   auto owner = memory_untranslate(thread);
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
@@ -24,13 +44,15 @@ spinAcquireLock(OSSpinLock *spinlock)
       expected = 0;
    }
 
+   increaseSpinLockCount(thread);
    return true;
 }
 
 static bool
 spinTryLock(OSSpinLock *spinlock)
 {
-   auto owner = memory_untranslate(OSGetCurrentThread());
+   auto thread = OSGetCurrentThread();
+   auto owner = memory_untranslate(thread);
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
@@ -40,6 +62,7 @@ spinTryLock(OSSpinLock *spinlock)
    uint32_t expected = 0;
 
    if (spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
+      increaseSpinLockCount(thread);
       return true;
    } else {
       return false;
@@ -49,7 +72,8 @@ spinTryLock(OSSpinLock *spinlock)
 static bool
 spinTryLockWithTimeout(OSSpinLock *spinlock, OSTime duration)
 {
-   auto owner = memory_untranslate(OSGetCurrentThread());
+   auto thread = OSGetCurrentThread();
+   auto owner = memory_untranslate(thread);
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
@@ -67,19 +91,22 @@ spinTryLockWithTimeout(OSSpinLock *spinlock, OSTime duration)
       expected = 0;
    }
 
+   increaseSpinLockCount(thread);
    return true;
 }
 
 static bool
 spinReleaseLock(OSSpinLock *spinlock)
 {
-   auto owner = memory_untranslate(OSGetCurrentThread());
+   auto thread = OSGetCurrentThread();
+   auto owner = memory_untranslate(thread);
 
    if (spinlock->recursion > 0u) {
       --spinlock->recursion;
       return false;
    } else if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       spinlock->owner = 0u;
+      decreaseSpinLockCount(thread);
       return true;
    }
 
