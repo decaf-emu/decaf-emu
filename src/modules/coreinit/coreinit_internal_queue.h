@@ -134,7 +134,7 @@ public:
    }
 };
 
-template <typename QueueType, typename LinkType, typename ItemType, LinkType ItemType::*LinkField, bool SortFunc(ItemType*,ItemType*)>
+template <typename QueueType, typename LinkType, typename ItemType, LinkType ItemType::*LinkField, bool IsLess(ItemType*,ItemType*)>
 class SortedQueue : public Queue<QueueType, LinkType, ItemType, LinkField>
 {
 private:
@@ -155,9 +155,9 @@ public:
       } else {
          OSThread *insertBefore = nullptr;
 
-         // Find insert location based on priority
+         // Find insert location based on sort function
          for (insertBefore = queue->head; insertBefore; insertBefore = link(insertBefore).next) {
-            if (SortFunc(insertBefore, item)) {
+            if (!IsLess(insertBefore, item)) {
                break;
             }
          }
