@@ -135,14 +135,19 @@ public:
 template <typename QueueType, typename LinkType, typename ItemType, LinkType ItemType::*LinkField, bool SortFunc(ItemType*,ItemType*)>
 class SortedQueue : public Queue<QueueType, LinkType, ItemType, LinkField>
 {
+private:
+   // Hide append as it is not valid here
+   using Queue<QueueType, LinkType, ItemType, LinkField>::append;
+
 public:
    static void inline
    insert(QueueType *queue, ItemType *item)
    {
+      emuassert(link(item).next == nullptr);
+      emuassert(link(item).prev == nullptr);
+
       if (!queue->head) {
          // Insert only item
-         link(item).prev = nullptr;
-         link(item).next = nullptr;
          queue->head = item;
          queue->tail = item;
       } else {
