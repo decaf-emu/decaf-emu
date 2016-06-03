@@ -9,7 +9,10 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
    auto core = cpu::this_core::state();
 
    // Push args
-   ppctypes::applyArguments(core, args...);
+   auto registersUsed = static_cast<uint32_t>(ppctypes::applyArguments(core, args...));
+
+   // Allocate callee args stack space
+   core->gpr[1] -= registersUsed * 4;
 
    // Save state
    auto nia = core->nia;
@@ -21,6 +24,9 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
 
    // Restore state
    core->nia = nia;
+
+   // Restore callee args stack space
+   core->gpr[1] += registersUsed * 4;
 
    // Return the result
    return ppctypes::getResult<ReturnType>(core);

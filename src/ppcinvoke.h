@@ -56,7 +56,7 @@ applyArguments2(_argumentsState& state, Last last)
 
 // Apply host function call arguments to PowerPC registers
 template<typename... Args>
-inline void
+inline size_t
 applyArguments(cpu::Core *state, Args&&... args)
 {
    _argumentsState argstate;
@@ -64,6 +64,7 @@ applyArguments(cpu::Core *state, Args&&... args)
    argstate.r = 3;
    argstate.f = 1;
    applyArguments2(argstate, std::forward<Args>(args)...);
+   return argstate.r - 3;
 }
 
 // Log the function call
