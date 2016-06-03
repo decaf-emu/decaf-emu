@@ -3,6 +3,7 @@
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
 #include "coreinit_scheduler.h"
+#include "coreinit_interrupts.h"
 #include "coreinit_event.h"
 #include "coreinit_memheap.h"
 #include "coreinit_thread.h"
@@ -12,6 +13,7 @@
 #include "system.h"
 #include "utils/wfunc_call.h"
 #include "ppcutils/stackobject.h"
+#include "utils/emuassert.h"
 
 namespace coreinit
 {
@@ -73,7 +75,7 @@ unlockScheduler()
 void
 enableScheduler()
 {
-   assert(!cpu::this_core::isInterruptsEnabled());
+   emuassert(!OSIsInterruptEnabled());
    uint32_t coreId = cpu::this_core::id();
    sSchedulerEnabled[coreId] = true;
 }
@@ -81,7 +83,7 @@ enableScheduler()
 void
 disableScheduler()
 {
-   assert(!cpu::this_core::isInterruptsEnabled());
+   emuassert(!OSIsInterruptEnabled());
    uint32_t coreId = cpu::this_core::id();
    sSchedulerEnabled[coreId] = false;
 }
@@ -89,10 +91,10 @@ disableScheduler()
 static void
 queueThreadNoLock(OSThread *thread)
 {
-   assert(isSchedulerLocked());
-   //assert(!ThreadIsSuspended(thread));
-   //assert(thread->state == OSThreadState::Ready);
-   //assert(thread->priority >= 0 && thread->priority <= 32);
+   emuassert(isSchedulerLocked());
+   emuassert(!OSIsThreadSuspended(thread));
+   emuassert(thread->state == OSThreadState::Ready);
+   emuassert(thread->priority >= 0 && thread->priority <= 32);
 
    // Schedule this thread on any cores which can run it!
    if (thread->attr & OSThreadAttributes::AffinityCPU0) {
@@ -119,38 +121,21 @@ unqueueThreadNoLock(OSThread *thread)
 static OSThread *
 peekNextThreadNoLock(uint32_t core)
 {
-   assert(isSchedulerLocked());
+   emuassert(isSchedulerLocked());
    auto thread = sCoreRunQueue[core]->head;
-   auto bit = 1 << core;
-
-   while (thread) {
-      if (thread->state != OSThreadState::Ready) {
-         throw std::logic_error("A non-ready thread was found in the run queue");
-      }
-
-      if (thread->suspendCounter > 0) {
-         continue;
-      }
-
-      if (thread->attr & bit) {
-         return thread;
-      }
-
-      if (core == 0) {
-         thread = thread->coreRunQueueLink0.next;
-      } else if (core == 1) {
-         thread = thread->coreRunQueueLink1.next;
-      } else {
-         thread = thread->coreRunQueueLink2.next;
-      }
+   
+   if (thread) {
+      emuassert(thread->state == OSThreadState::Ready);
+      emuassert(thread->suspendCounter == 0);
+      emuassert(thread->attr & (1 << core));
    }
 
-   return nullptr;
+   return thread;
 }
 
 void checkRunningThreadNoLock(bool yielding)
 {
-   assert(isSchedulerLocked());
+   emuassert(isSchedulerLocked());
    auto coreId = cpu::this_core::id();
 
    if (!sSchedulerEnabled[coreId]) {
