@@ -102,7 +102,7 @@ queueThreadNoLock(OSThread *thread)
    emuassert(isSchedulerLocked());
    emuassert(!OSIsThreadSuspended(thread));
    emuassert(thread->state == OSThreadState::Ready);
-   emuassert(thread->priority >= 0 && thread->priority <= 32);
+   emuassert(thread->priority >= -1 && thread->priority <= 32);
 
    // Schedule this thread on any cores which can run it!
    if (thread->attr & OSThreadAttributes::AffinityCPU0) {
