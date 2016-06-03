@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include "coreinit_thread.h"
 #include "utils/be_val.h"
 #include "utils/structsize.h"
@@ -33,26 +34,49 @@ struct OSFastMutex
 {
    static const uint32_t Tag = 0x664D7458;
 
+   //! Should always be set to the value OSFastMutex::Tag.
    be_val<uint32_t> tag;
+
+   //! Name set by OSFastMutex_Init.
    be_ptr<const char> name;
+
    UNKNOWN(4);
+
+   //! Queue of threads waiting for this mutex to unlock.
    OSThreadSimpleQueue queue;
+
+   //! Link used inside OSThread's fast mutex queue.
    OSFastMutexLink link;
-   UNKNOWN(16);
+
+   //! Current owner of mutex.
+   std::atomic<uint32_t> owner;
+
+   //! Current recursion lock count of mutex.
+   be_val<int32_t> count;
+
+   UNKNOWN(8);
 };
 CHECK_OFFSET(OSFastMutex, 0x00, tag);
 CHECK_OFFSET(OSFastMutex, 0x04, name);
 CHECK_OFFSET(OSFastMutex, 0x0c, queue);
 CHECK_OFFSET(OSFastMutex, 0x14, link);
+CHECK_OFFSET(OSFastMutex, 0x1c, owner);
+CHECK_OFFSET(OSFastMutex, 0x20, count);
 CHECK_SIZE(OSFastMutex, 0x2c);
 
 struct OSFastCondition
 {
    static const uint32_t Tag = 0x664E6456;
 
+   //! Should always be set to the value OSFastCondition::Tag.
    be_val<uint32_t> tag;
+
+   //! Name set by OSFastCond_Init.
    be_ptr<const char> name;
+
    UNKNOWN(4);
+
+   //! Queue of threads waiting for this condition to signal.
    OSThreadQueue queue;
 };
 CHECK_OFFSET(OSFastCondition, 0x00, tag);
