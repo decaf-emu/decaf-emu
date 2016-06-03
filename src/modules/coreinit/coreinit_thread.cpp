@@ -893,7 +893,7 @@ namespace internal
 
 bool threadSortFunc(OSThread *lhs, OSThread *rhs)
 {
-   return lhs->priority < rhs->priority;
+   return lhs->basePriority < rhs->basePriority;
 }
 
 } // namespace internal

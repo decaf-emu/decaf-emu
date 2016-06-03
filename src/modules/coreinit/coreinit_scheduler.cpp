@@ -168,10 +168,10 @@ void checkRunningThreadNoLock(bool yielding)
          return;
       }
 
-      if (thread->priority < next->priority) {
+      if (thread->basePriority < next->basePriority) {
          // Next thread has lower priority, keep running current.
          return;
-      } else if (!yielding && thread->priority == next->priority) {
+      } else if (!yielding && thread->basePriority == next->basePriority) {
          // Next thread has same priority, but we are not yielding.
          return;
       }
