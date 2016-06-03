@@ -156,6 +156,10 @@ restoreContext(coreinit::OSContext *context)
    //state->sr[0] = context->srr0;
    //state->sr[1] = context->srr1;
    state->fpscr.value = context->fpscr;
+
+   state->reserve = false;
+   state->reserveAddress = 0;
+   state->reserveData = 0;
 }
 
 void
