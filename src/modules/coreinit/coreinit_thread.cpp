@@ -254,11 +254,18 @@ OSExitThread(int value)
       thread->state = OSThreadState::Moribund;
    }
 
+   // We must reschedule all cores if there was anyone waiting on joinQueue or suspendQueue
+   auto rescheduleAll = thread->joinQueue.head || thread->suspendQueue.head;
    internal::wakeupThreadNoLock(&thread->joinQueue);
    internal::wakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
 
    kernel::exitThreadNoLock();
-   internal::rescheduleSelfNoLock();
+
+   if (rescheduleAll) {
+      internal::rescheduleAllCoreNoLock();
+   } else {
+      internal::rescheduleSelfNoLock();
+   }
 
    // We do not need to unlockScheduler as OSExitThread never returns.
 }
