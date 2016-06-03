@@ -140,6 +140,7 @@ class SortedQueue : public Queue<QueueType, LinkType, ItemType, LinkField>
 private:
    // Hide append as it is not valid here
    using Queue<QueueType, LinkType, ItemType, LinkField>::append;
+   using Queue<QueueType, LinkType, ItemType, LinkField>::link;
 
 public:
    static void inline
@@ -153,7 +154,7 @@ public:
          queue->head = item;
          queue->tail = item;
       } else {
-         OSThread *insertBefore = nullptr;
+         ItemType *insertBefore = nullptr;
 
          // Find insert location based on sort function
          for (insertBefore = queue->head; insertBefore; insertBefore = link(insertBefore).next) {
