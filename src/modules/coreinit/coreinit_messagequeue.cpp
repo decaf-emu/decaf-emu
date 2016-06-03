@@ -173,6 +173,8 @@ OSReceiveMessage(OSMessageQueue *queue,
       internal::rescheduleSelfNoLock();
    }
 
+   emuassert(queue->used > 0);
+
    // Copy into message array
    auto src = static_cast<OSMessage*>(queue->messages) + queue->first;
    memcpy(message, src, sizeof(OSMessage));

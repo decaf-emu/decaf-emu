@@ -60,6 +60,8 @@ public:
       emuassert(link(item).prev == nullptr);
 
       if (!queue->tail) {
+         emuassert(!queue->head);
+
          queue->head = item;
          queue->tail = item;
          link(item).next = nullptr;

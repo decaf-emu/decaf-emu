@@ -11,6 +11,7 @@
 #include "coreinit_internal_idlock.h"
 #include "utils/wfunc_call.h"
 #include "cpu/cpu.h"
+#include "utils/emuassert.h"
 
 namespace coreinit
 {
@@ -465,7 +466,7 @@ handleAlarmInterrupt(OSContext *context)
 
       // Expire it if its past its nextFire time
       if (alarm->nextFire <= now) {
-         //assert(alarm->state == OSAlarmState::Set)
+         emuassert(alarm->state == OSAlarmState::Set);
 
          internal::AlarmQueue::erase(queue, alarm);
          alarm->alarmQueue = nullptr;
