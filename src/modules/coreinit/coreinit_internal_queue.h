@@ -1,4 +1,5 @@
 #pragma once
+#include "utils/emuassert.h"
 
 namespace coreinit
 {
@@ -55,6 +56,9 @@ public:
    static inline void
    append(QueueType *queue, ItemType *item)
    {
+      emuassert(link(item).next == nullptr);
+      emuassert(link(item).prev == nullptr);
+
       if (!queue->tail) {
          queue->head = item;
          queue->tail = item;
