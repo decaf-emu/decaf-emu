@@ -125,7 +125,7 @@ peekNextThreadNoLock(uint32_t core)
 
    while (thread) {
       if (thread->state != OSThreadState::Ready) {
-         continue;
+         throw std::logic_error("A non-ready thread was found in the run queue");
       }
 
       if (thread->suspendCounter > 0) {
