@@ -167,7 +167,7 @@ public:
             link(item).prev = queue->tail;
             queue->tail = item;
          } else {
-            // Insert in middle
+            // Insert in head or middle
             link(item).next = insertBefore;
             link(item).prev = link(insertBefore).prev;
 
@@ -176,6 +176,10 @@ public:
             }
 
             link(insertBefore).prev = item;
+
+            if (queue->head == insertBefore) {
+               queue->head = item;
+            }
          }
       }
    }
