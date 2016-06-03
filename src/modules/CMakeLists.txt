@@ -24,6 +24,7 @@ set(SOURCE_FILES
     coreinit/coreinit_ghs.cpp
     coreinit/coreinit_ghs_typeinfo.cpp
     coreinit/coreinit_interrupts.cpp
+    coreinit/coreinit_internal_idlock.cpp
     coreinit/coreinit_lockedcache.cpp
     coreinit/coreinit_mcp.cpp
     coreinit/coreinit_memheap.cpp
@@ -39,7 +40,6 @@ set(SOURCE_FILES
     coreinit/coreinit_systeminfo.cpp
     coreinit/coreinit_taskqueue.cpp
     coreinit/coreinit_thread.cpp
-    coreinit/coreinit_threadqueue.cpp
     coreinit/coreinit_time.cpp
     coreinit/coreinit_unitheap.cpp
     coreinit/coreinit_userconfig.cpp
@@ -166,6 +166,8 @@ set(HEADER_FILES
     coreinit/coreinit_ghs.h
     coreinit/coreinit_ghs_typeinfo.h
     coreinit/coreinit_interrupts.h
+    coreinit/coreinit_internal_idlock.h
+    coreinit/coreinit_internal_queue.h
     coreinit/coreinit_ios.h
     coreinit/coreinit_lockedcache.h
     coreinit/coreinit_mcp.h
@@ -174,7 +176,6 @@ set(HEADER_FILES
     coreinit/coreinit_memory.h
     coreinit/coreinit_messagequeue.h
     coreinit/coreinit_mutex.h
-    coreinit/coreinit_queue.h
     coreinit/coreinit_rendezvous.h
     coreinit/coreinit_scheduler.h
     coreinit/coreinit_semaphore.h
@@ -183,7 +184,6 @@ set(HEADER_FILES
     coreinit/coreinit_systeminfo.h
     coreinit/coreinit_taskqueue.h
     coreinit/coreinit_thread.h
-    coreinit/coreinit_threadqueue.h
     coreinit/coreinit_time.h
     coreinit/coreinit_unitheap.h
     coreinit/coreinit_userconfig.h

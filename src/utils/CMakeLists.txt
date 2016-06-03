@@ -18,6 +18,7 @@ set(HEADER_FILES
     byte_swap.h
     crc32.h
     debuglog.h
+    emuassert.h
     fixed.h
     floatutils.h
     log.h
