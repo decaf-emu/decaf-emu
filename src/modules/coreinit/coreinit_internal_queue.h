@@ -101,6 +101,9 @@ public:
             link(next).prev = prev;
          }
       }
+
+      link(item).next = nullptr;
+      link(item).prev = nullptr;
    }
 
    static inline ItemType *
@@ -118,6 +121,11 @@ public:
 
       if (result == queue->tail) {
          queue->tail = nullptr;
+      }
+
+      if (result) {
+         link(result).next = nullptr;
+         link(result).prev = nullptr;
       }
 
       return result;
