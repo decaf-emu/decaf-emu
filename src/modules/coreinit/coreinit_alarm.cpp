@@ -324,7 +324,7 @@ AlarmCallbackThreadEntry(uint32_t core_id, void *arg2)
       if (alarm == nullptr) {
          // No alarms currently pending for callback
          internal::sleepThreadNoLock(threadQueue);
-         internal::releaseIdLock(sAlarmLock, alarm);
+         internal::releaseIdLock(sAlarmLock);
 
          internal::rescheduleSelfNoLock();
          internal::unlockScheduler();
