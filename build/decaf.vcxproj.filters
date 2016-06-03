@@ -1823,4 +1823,7 @@
       <Filter>Header Files\cpu\espresso</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\src\utils\NatvisDefs.natvis" />
+  </ItemGroup>
 </Project>
