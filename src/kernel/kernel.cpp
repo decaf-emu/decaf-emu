@@ -50,7 +50,11 @@ void cpu_interrupt_handler(uint32_t interrupt_flags) {
    // We need to disable the scheduler while we handle interrupts so we
    // do not reschedule before we are done with our interrupts.  We disable
    // interrupts if they were on so any PPC callbacks executed do not
-   // immediately and reentrantly interrupt.
+   // immediately and reentrantly interrupt.  We also make sure did not
+   // interrupt someone who disabled the scheduler, since that should never
+   // happen and will cause bugs.
+
+   emuassert(coreinit::internal::isSchedulerEnabled());
 
    auto originalInterruptState = coreinit::OSDisableInterrupts();
    coreinit::internal::disableScheduler();

@@ -23,6 +23,9 @@ isSchedulerLocked();
 void
 unlockScheduler();
 
+bool
+isSchedulerEnabled();
+
 void
 enableScheduler();
 

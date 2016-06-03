@@ -72,6 +72,13 @@ unlockScheduler()
    sSchedulerLock.store(0, std::memory_order_release);
 }
 
+bool
+isSchedulerEnabled()
+{
+   uint32_t coreId = cpu::this_core::id();
+   return sSchedulerEnabled[coreId];
+}
+
 void
 enableScheduler()
 {
