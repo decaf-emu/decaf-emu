@@ -307,6 +307,12 @@ testThreadCancelNoLock()
 void
 wakeupOneThreadNoLock(OSThread *thread)
 {
+   if (thread->state == OSThreadState::Running ||
+      thread->state == OSThreadState::Ready) {
+      // This thread is already running or ready
+      return;
+   }
+
    thread->state = OSThreadState::Ready;
    queueThreadNoLock(thread);
 }
@@ -326,7 +332,7 @@ wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
 {
    for (auto thread = queue->head; thread; thread = thread->link.next) {
       thread->suspendResult = suspendResult;
-      queueThreadNoLock(thread);
+      wakeupOneThreadNoLock(thread);
    }
 
    ThreadQueue::clear(queue);
