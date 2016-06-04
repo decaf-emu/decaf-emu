@@ -4,6 +4,7 @@
 #include <functional>
 #include <utility>
 #include "state.h"
+#include "types.h"
 
 struct Tracer;
 
@@ -18,6 +19,9 @@ const uint32_t GPU_RETIRE_INTERRUPT = 1 << 4;
 const uint32_t GPU_FLIP_INTERRUPT = 1 << 5;
 const uint32_t INTERRUPT_MASK = 0xFFFFFFFF;
 const uint32_t NONMASKABLE_INTERRUPTS = DBGBREAK_INTERRUPT;
+
+const uint32_t SYSTEM_BPFLAG = 1 << 0;
+const uint32_t USER_BPFLAG = 1 << 1;
 
 enum class jit_mode {
    enabled,
@@ -47,6 +51,10 @@ Tracer *alloc_tracer(size_t size);
 void free_tracer(Tracer *tracer);
 
 void interrupt(int core_idx, uint32_t flags);
+
+bool clear_breakpoints(uint32_t flags_mask);
+bool add_breakpoint(ppcaddr_t address, uint32_t flags);
+bool remove_breakpoint(ppcaddr_t address, uint32_t flags);
 
 namespace this_core
 {

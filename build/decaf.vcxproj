@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\config.cpp" />
     <ClCompile Include="..\src\cpu\cpu.cpp" />
+    <ClCompile Include="..\src\cpu\cpu_breakpoints.cpp" />
     <ClCompile Include="..\src\cpu\cpu_interrupts.cpp" />
     <ClCompile Include="..\src\cpu\cpu_kc.cpp" />
     <ClCompile Include="..\src\cpu\espresso\espresso_disassembler.cpp" />

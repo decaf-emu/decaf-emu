@@ -7,6 +7,10 @@ namespace cpu
 extern entrypoint_handler gCoreEntryPointHandler;
 extern interrupt_handler gInterruptHandler;
 
+bool has_breakpoints();
+
+bool pop_breakpoint(ppcaddr_t address);
+
 void timerEntryPoint();
 
 kernel_call_entry *

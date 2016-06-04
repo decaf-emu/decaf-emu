@@ -91,6 +91,20 @@ void check_interrupts()
 
    uint32_t interrupt_mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;
    uint32_t interrupt_flags = core->interrupt.fetch_and(~interrupt_mask);
+
+   // Check if we hit any breakpoints
+   if (pop_breakpoint(core->nia)) {
+      // Need to interrupt all the other cores
+      for (auto i = 0; i < 3; ++i) {
+         if (i != core->id) {
+            interrupt(i, DBGBREAK_INTERRUPT);
+         }
+      }
+
+      // Our core we can just add it to the local interrupt list
+      interrupt_flags |= DBGBREAK_INTERRUPT;
+   }
+
    if (interrupt_flags & interrupt_mask) {
       cpu::gInterruptHandler(interrupt_flags);
    }
