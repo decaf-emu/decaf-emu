@@ -79,15 +79,6 @@ void set_core_entrypoint_handler(entrypoint_handler handler)
    gCoreEntryPointHandler = handler;
 }
 
-void
-update_rounding_mode(Core *state)
-{
-   static const int modes[4] = {
-      FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD, FE_DOWNWARD
-   };
-   fesetround(modes[state->fpscr.rn]);
-}
-
 namespace this_core
 {
 
@@ -120,6 +111,17 @@ void execute_sub()
    tCurrentCore->lr = CALLBACK_ADDR;
    resume();
    tCurrentCore->lr = lr;
+}
+
+void
+update_rounding_mode()
+{
+   Core *core = tCurrentCore;
+
+   static const int modes[4] = {
+      FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD, FE_DOWNWARD
+   };
+   fesetround(modes[core->fpscr.rn]);
 }
 
 } // namespace this_core

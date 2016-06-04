@@ -82,7 +82,7 @@ void step_one(Core *core)
 void resume(Core *core)
 {
    // Before we resume, we need to update our states!
-   cpu::update_rounding_mode(core);
+   this_core::update_rounding_mode();
    std::feclearexcept(FE_ALL_EXCEPT);
 
    while (core->nia != cpu::CALLBACK_ADDR) {
