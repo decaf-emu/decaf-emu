@@ -951,6 +951,9 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_internal_idlock.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\cpu\cpu_interrupts.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">

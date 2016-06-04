@@ -16,6 +16,8 @@ const uint32_t ALARM_INTERRUPT = 1 << 2;
 const uint32_t DBGBREAK_INTERRUPT = 1 << 3;
 const uint32_t GPU_RETIRE_INTERRUPT = 1 << 4;
 const uint32_t GPU_FLIP_INTERRUPT = 1 << 5;
+const uint32_t INTERRUPT_MASK = 0xFFFFFFFF;
+const uint32_t NONMASKABLE_INTERRUPTS = DBGBREAK_INTERRUPT;
 
 enum class jit_mode {
    enabled,
@@ -51,13 +53,12 @@ namespace this_core
 
 void set_tracer(Tracer *tracer);
 
-bool isInterruptsEnabled();
-bool enableInterrupts();
-bool disableInterrupts();
-
 void resume();
 void execute_sub();
 void wait_for_interrupt();
+uint32_t interrupt_mask();
+uint32_t set_interrupt_mask(uint32_t mask);
+void clear_interrupt(uint32_t flags);
 
 void set_next_alarm(std::chrono::time_point<std::chrono::system_clock> alarm_time);
 

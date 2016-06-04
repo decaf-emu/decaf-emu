@@ -27,15 +27,7 @@ enum BcFlags
 void
 jit_interrupt_stub(cpu::Core *state)
 {
-   auto core = cpu::this_core::state();
-
-   if (core->interruptEnabled.load(std::memory_order_acquire)) {
-      uint32_t interrupt_flags = core->interrupt.exchange(0);
-
-      if (interrupt_flags != 0) {
-         cpu::gInterruptHandler(interrupt_flags);
-      }
-   }
+   this_core::check_interrupts();
 }
 
 void

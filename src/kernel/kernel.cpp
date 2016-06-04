@@ -46,7 +46,15 @@ void initialise()
    cpu::set_interrupt_handler(&cpu_interrupt_handler);
 }
 
-void cpu_interrupt_handler(uint32_t interrupt_flags) {
+void cpu_interrupt_handler(uint32_t interrupt_flags)
+{
+   if (!(interrupt_flags & ~cpu::NONMASKABLE_INTERRUPTS)) {
+      // Due to the fact that non-maskable interrupts are not able to be disabled
+      // it is possible the application has the scheduler lock or something, so we
+      // need to stop processing here or else bad things could happen.
+      return;
+   }
+
    // We need to disable the scheduler while we handle interrupts so we
    // do not reschedule before we are done with our interrupts.  We disable
    // interrupts if they were on so any PPC callbacks executed do not
