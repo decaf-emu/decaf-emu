@@ -12,6 +12,12 @@ namespace internal
 {
 
 OSThread *
+getCoreRunningThread(uint32_t coreId);
+
+OSThread *
+getFirstActiveThread();
+
+OSThread *
 getCurrentThread();
 
 void

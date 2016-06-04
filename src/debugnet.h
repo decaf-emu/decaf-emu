@@ -12,8 +12,7 @@ public:
    void setTarget(const std::string& address, uint16_t port);
    bool connect();
 
-   void writePrelaunch();
-   void writeBreakpointHit(uint32_t coreId, uint32_t userData);
+   void writeBreakpointHit(uint32_t coreId);
    void writeCoreStepped(uint32_t coreId);
    void writePaused();
 

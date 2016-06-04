@@ -16,22 +16,17 @@ class DebugControl
 public:
    DebugControl();
 
-   void preLaunch();
-   void maybeBreak(uint32_t addr, cpu::Core *state, uint32_t coreIdx);
-
-   void pauseCore(cpu::Core *state, uint32_t coreId);
+   void handleDbgBreakInterrupt();
    void pauseAll();
    void resumeAll();
    void stepCore(uint32_t coreId);
-   void waitForAllPaused();
 
 protected:
    std::mutex mMutex;
-   bool mCorePaused[DCCoreCount];
-   std::atomic_bool mWaitingForPause;
-   std::atomic_uint mWaitingForStep;
    std::condition_variable mWaitCond;
    std::condition_variable mReleaseCond;
+   bool mShouldBePaused;
+   uint32_t mWaitingForStep;
 };
 
 extern DebugControl gDebugControl;

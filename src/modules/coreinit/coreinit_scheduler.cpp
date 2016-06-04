@@ -15,6 +15,7 @@
 #include "utils/wfunc_call.h"
 #include "ppcutils/stackobject.h"
 #include "utils/emuassert.h"
+#include "debugger.h"
 
 namespace coreinit
 {
@@ -41,6 +42,18 @@ using ActiveQueue = Queue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::acti
 using CoreRunQueue0 = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::coreRunQueueLink0, threadSortFunc>;
 using CoreRunQueue1 = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::coreRunQueueLink1, threadSortFunc>;
 using CoreRunQueue2 = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::coreRunQueueLink2, threadSortFunc>;
+
+OSThread *
+getCoreRunningThread(uint32_t coreId)
+{
+   return sCurrentThread[coreId];
+}
+
+OSThread *
+getFirstActiveThread()
+{
+   return sActiveThreads->head;
+}
 
 OSThread *
 getCurrentThread()
@@ -454,6 +467,13 @@ GameThreadEntry(uint32_t argc, void *argv)
 
    auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
    auto start = OSThreadEntryPointFn(appModule->entryPoint);
+
+   if (gDebugger.isEnabled()) {
+      if (userPreinit) {
+         cpu::add_breakpoint(userPreinit, cpu::SYSTEM_BPFLAG);
+      }
+      cpu::add_breakpoint(start, cpu::SYSTEM_BPFLAG);
+   }
 
    if (userPreinit) {
       ppcutils::StackObject<be_ptr<CommonHeap>> mem1HeapPtr;

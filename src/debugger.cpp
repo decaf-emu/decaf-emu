@@ -11,6 +11,10 @@
 #include "debugnet.h"
 #include "debugcontrol.h"
 #include "utils/log.h"
+#include "cpu/cpu.h"
+#include "mem/mem.h"
+#include "cpu/espresso/espresso_disassembler.h"
+#include "cpu/espresso/espresso_instructionset.h"
 
 static const bool FORCE_DEBUGGER_ON = false;
 
@@ -18,14 +22,14 @@ Debugger
 gDebugger;
 
 Debugger::Debugger()
-   : mEnabled(false), mBreakpoints(new BreakpointListType())
+   : mEnabled(false), mPaused(false), mWaitingForStep(-1), mWaitingForPause(false)
 {
 }
 
 void
 Debugger::debugThread()
 {
-   printf("Debugger Thread Started");
+   gLog->info("Debugger Thread Started");
 
    while (true) {
       std::unique_lock<std::mutex> lock{ mMsgLock };
@@ -43,58 +47,66 @@ Debugger::debugThread()
    }
 }
 
+const cpu::Core * Debugger::getCorePauseState(uint32_t coreId) const
+{
+   return mCorePauseState[coreId];
+}
+
 void
 Debugger::handleMessage(DebugMessage *msg)
 {
-   gLog->debug("Handling message {}", (int)msg->type());
+   gLog->debug("Handling debug message {}", (int)msg->type());
 
    switch (msg->type()) {
    case DebugMessageType::DebuggerDc: {
-      gDebugControl.pauseAll();
+      bool wasAlreadyPaused = mPaused;
+      if (!wasAlreadyPaused) {
+         gDebugControl.pauseAll();
 
-      gLog->debug("Debugger disconnected, game paused to wait for debugger.");
+         // We can do this because this thread blocks above, so all the pause
+         // messages from the pause above will still be pending in the queue.
+         mWaitingForPause = true;
+      }
 
-      gDebugControl.waitForAllPaused();
+      gLog->info("Debugger disconnected, game paused to wait for debugger.");
+
       while (!gDebugNet.connect()) {
          std::this_thread::sleep_for(std::chrono::milliseconds(400));
       }
-      gDebugNet.writePaused();
 
-      break;
-   }
-
-   case DebugMessageType::PreLaunch: {
-      gDebugControl.waitForAllPaused();
-
-      gLog->debug("Prelaunch Occured");
-      gDebugNet.writePrelaunch();
-      break;
-   }
-   case DebugMessageType::BpHit: {
-      auto bpMsg = reinterpret_cast<DebugMessageBpHit*>(msg);
-
-      gDebugControl.waitForAllPaused();
-
-      if (bpMsg->userData == 0xFFFFFFFF) {
-         // Temporary step-over breakpoint
-         gDebugger.removeBreakpoint(bpMsg->address);
-
-         gLog->debug("StepOver BP Hit on Core #{}", bpMsg->coreId);
-         gDebugNet.writeCoreStepped(bpMsg->coreId);
-      } else {
-         gLog->debug("Breakpoint Hit on Core #{}", bpMsg->coreId);
-         gDebugNet.writeBreakpointHit(bpMsg->coreId, bpMsg->userData);
+      if (wasAlreadyPaused) {
+         gDebugNet.writePaused();
       }
 
       break;
    }
-   case DebugMessageType::CoreStepped: {
-      auto bpMsg = reinterpret_cast<DebugMessageCoreStepped*>(msg);
+   case DebugMessageType::CorePaused: {
+      auto bpMsg = reinterpret_cast<DebugMessageCorePaused*>(msg);
 
-      gDebugControl.waitForAllPaused();
+      mCorePauseState[bpMsg->coreId] = bpMsg->state;
 
-      gLog->debug("Core #{} Stepped", bpMsg->coreId);
-      gDebugNet.writeCoreStepped(bpMsg->coreId);
+      if (bpMsg->wasInitiator) {
+         mPauseInitiatorCoreId = bpMsg->coreId;
+      }
+
+      if (mCorePauseState[0] && mCorePauseState[1] && mCorePauseState[2]) {
+         if (mWaitingForPause) {
+            gLog->info("Application Paused");
+            gDebugNet.writePaused();
+         } else if (mWaitingForStep != -1) {
+            gLog->info("Core #{} Stepped", mPauseInitiatorCoreId);
+            gDebugNet.writeCoreStepped(mPauseInitiatorCoreId);
+         } else {
+            gLog->info("Breakpoint Hit on Core #{}", mPauseInitiatorCoreId);
+            gDebugNet.writeBreakpointHit(mPauseInitiatorCoreId);
+         }
+
+         mWaitingForPause = false;
+         mWaitingForStep = -1;
+         mPaused = true;
+      }
+
+      gLog->info("Core #{} Paused", bpMsg->coreId);
 
       break;
    }
@@ -110,13 +122,13 @@ Debugger::initialise()
    if (gDebugNet.connect()) {
       // Debugging is connected!
       mEnabled = true;
-      gLog->debug("Debugger Enabled! Remote");
+      gLog->info("Debugger Enabled! Remote");
    } else if (FORCE_DEBUGGER_ON) {
       mEnabled = true;
-      gLog->debug("Debugger Enabled! Local");
+      gLog->info("Debugger Enabled! Local");
    } else {
       mEnabled = false;
-      gLog->debug("Debugger Disabled.");
+      gLog->info("Debugger Disabled.");
    }
 
    if (mEnabled) {
@@ -143,42 +155,78 @@ Debugger::notify(DebugMessage *msg)
 void
 Debugger::pause()
 {
-   gDebugControl.pauseAll();
-   gDebugControl.waitForAllPaused();
+   if (mPaused) {
+      return;
+   }
 
-   gDebugNet.writePaused();
+   mWaitingForPause = true;
+   gDebugControl.pauseAll();
 }
 
 void
 Debugger::resume()
 {
+   assert(mPaused);
+
+   mPaused = false;
+   mCorePauseState[0] = nullptr;
+   mCorePauseState[1] = nullptr;
+   mCorePauseState[2] = nullptr;
    gDebugControl.resumeAll();
 }
 
 void
 Debugger::stepCore(uint32_t coreId)
 {
+   if (!mPaused) {
+      return;
+   }
+
    gDebugControl.stepCore(coreId);
 }
 
 void
-Debugger::addBreakpoint(uint32_t addr, uint32_t userData)
+Debugger::stepCoreOver(uint32_t coreId)
+{
+   if (!mPaused) {
+      return;
+   }
+
+   auto curAddr = mCorePauseState[coreId]->nia;
+   auto instr = mem::read<espresso::Instruction>(curAddr);
+   auto data = espresso::decodeInstruction(instr);
+   if (data->id == espresso::InstructionID::b
+      || data->id == espresso::InstructionID::bc
+      || data->id == espresso::InstructionID::bcctr
+      || data->id == espresso::InstructionID::bclr) {
+      if (instr.lk) {
+         // This is a branch-and-link.  Put a BP after the next instruction
+         cpu::add_breakpoint(curAddr + 4, cpu::SYSTEM_BPFLAG);
+         gDebugger.resume();
+      } else {
+         // Direct branch, just step
+         gDebugControl.stepCore(coreId);
+      }
+   } else {
+      // Not a branch, just step
+      gDebugControl.stepCore(coreId);
+   }
+}
+
+void
+Debugger::clearBreakpoints()
 {
    assert(mEnabled);
 
-   while (true) {
-      BreakpointList oldList = mBreakpoints;
-      BreakpointList newList(new BreakpointListType(*oldList));
-      newList->emplace(addr, userData);
+   cpu::clear_breakpoints(cpu::USER_BPFLAG);
+}
 
-      if (!std::atomic_compare_exchange_weak(&mBreakpoints, &oldList, newList)) {
-         // Keep trying until success!
-         continue;
-      }
+void
+Debugger::addBreakpoint(uint32_t addr)
+{
+   assert(mEnabled);
 
-      // Successful swap!
-      break;
-   }
+   cpu::add_breakpoint(addr, cpu::USER_BPFLAG);
 }
 
 void
@@ -186,21 +234,7 @@ Debugger::removeBreakpoint(uint32_t addr)
 {
    assert(mEnabled);
 
-   while (true) {
-      BreakpointList oldList = mBreakpoints;
-      BreakpointList newList(new BreakpointListType(*oldList));
-      auto bpitr = newList->find(addr);
-      if (bpitr != newList->end()) {
-         newList->erase(bpitr);
-      }
-
-      if (!std::atomic_compare_exchange_weak(&mBreakpoints, &oldList, newList)) {
-         // Keep trying until success!
-         continue;
-      }
-
-      break;
-   }
+   cpu::remove_breakpoint(addr, cpu::USER_BPFLAG);
 }
 
 

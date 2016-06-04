@@ -13,6 +13,7 @@
 #include "cpu/espresso/espresso_instructionset.h"
 #include "mem/mem.h"
 #include "modules/coreinit/coreinit_thread.h"
+#include "modules/coreinit/coreinit_scheduler.h"
 #include "platform/platform.h"
 #include "system.h"
 #include "cpu/trace.h"
@@ -143,36 +144,37 @@ populateDebugPauseInfo(DebugPauseInfo& info)
    }
    info.userModuleIdx = static_cast<uint32_t>(userModuleIdx);
 
-   // TODO: FIX ALL OF THIS!
-   /*
-   auto &coreList = gProcessor.getCoreList();
-   auto &fiberList = gProcessor.getFiberList();
+   coreinit::OSThread *firstActiveThread = 
+      coreinit::internal::getFirstActiveThread();
+   coreinit::OSThread *coreThread[3] = {
+      coreinit::internal::getCoreRunningThread(0),
+      coreinit::internal::getCoreRunningThread(1),
+      coreinit::internal::getCoreRunningThread(2)
+   };
+   const cpu::Core *coreState[3] = {
+      gDebugger.getCorePauseState(0),
+      gDebugger.getCorePauseState(1),
+      gDebugger.getCorePauseState(2)
+   };
 
-   std::map<coreinit::OSThread *, Fiber *> threads;
-
-   for (auto &fiber : fiberList) {
-      auto &thread = fiber->thread;
-      auto titer = threads.find(thread);
-      assert(titer == threads.end());
-
-      threads.emplace(thread, fiber);
-   }
-
-   for (auto &i : threads) {
-      auto &thread = i.first;
-      auto &fiber = i.second;
-
+   for (auto thread = firstActiveThread; thread; thread = thread->activeLink.next) {
       DebugThreadInfo tinfo;
       tinfo.name = thread->name;
       tinfo.id = thread->id;
-
-      tinfo.curCoreId = -1;
-      for (auto &core : coreList) {
-         if (core->currentFiber) {
-            if (thread == core->currentFiber->thread) {
-               tinfo.curCoreId = core->id;
-            }
-         }
+      
+      const cpu::Core *threadCoreState = nullptr;
+      if (thread == coreThread[0]) {
+         tinfo.curCoreId = 0;
+         threadCoreState = coreState[0];
+      } else if (thread == coreThread[1]) {
+         tinfo.curCoreId = 1;
+         threadCoreState = coreState[1];
+      } else if(thread == coreThread[2]) {
+         tinfo.curCoreId = 2;
+         threadCoreState = coreState[2];
+      } else {
+         tinfo.curCoreId = -1;
+         threadCoreState = nullptr;
       }
 
       tinfo.entryPoint = thread->entryPoint;
@@ -182,42 +184,32 @@ populateDebugPauseInfo(DebugPauseInfo& info)
       tinfo.attribs = thread->attr;
       tinfo.state = thread->state;
 
-      tinfo.cia = fiber->state.cia;
-      tinfo.lr = fiber->state.lr;
-      tinfo.ctr = fiber->state.ctr;
-      tinfo.crf = fiber->state.cr.value;
-      memcpy(tinfo.gpr, fiber->state.gpr, sizeof(uint32_t) * 32);
+      if (threadCoreState) {
+         tinfo.cia = threadCoreState->nia;
+         tinfo.lr = threadCoreState->lr;
+         tinfo.ctr = threadCoreState->ctr;
+         tinfo.crf = threadCoreState->cr.value;
+         memcpy(tinfo.gpr, threadCoreState->gpr, sizeof(uint32_t) * 32);
+      } else {
+         tinfo.cia = 0xFFFFFFFF;
+         tinfo.lr = thread->context.lr;
+         tinfo.ctr = thread->context.ctr;
+         tinfo.crf = thread->context.cr;
+         memcpy(tinfo.gpr, thread->context.gpr, sizeof(uint32_t) * 32);
+      }
 
       info.threads.push_back(tinfo);
    }
-   */
 }
 
 static void populateDebugTraceEntrys(std::vector<DebugTraceEntry>& entries, cpu::Core *state)
 {
-   auto &tracer = state->tracer;
-
-   auto numTraces = static_cast<int>(getTracerNumTraces(tracer));
-   for (int i = 0; i < numTraces; ++i) {
-      auto &trace = getTrace(tracer, i);
-
-      DebugTraceEntry entry;
-      entry.cia = trace.cia;
-
-      for (auto &i : trace.writes) {
-         DebugTraceEntryField field;
-         field.type = i.type;
-         field.data = i.prevalue;
-         entry.fields.push_back(field);
-      }
-
-      entries.push_back(entry);
-   }
+   // TODO: Implement me
 }
 
 enum class DebugPacketType : uint16_t {
    Invalid = 0,
-   PreLaunch = 1,
+   //PreLaunch - No longer used
    BpHit = 2,
    Pause = 3,
    Resume = 4,
@@ -250,23 +242,11 @@ using DebugPacketBase = MessageClassBase<DebugPacket, TypeId>;
 class DebugPacketBpHit : public DebugPacketBase<DebugPacketType::BpHit> {
 public:
    uint32_t coreId;
-   uint32_t userData;
    DebugPauseInfo info;
 
    template <class Archive>
    void serialize(Archive &ar) {
-      ar(coreId, userData, info);
-   }
-
-};
-
-class DebugPacketPreLaunch : public DebugPacketBase<DebugPacketType::PreLaunch> {
-public:
-   DebugPauseInfo info;
-
-   template <class Archive>
-   void serialize(Archive &ar) {
-      ar(info);
+      ar(coreId, info);
    }
 
 };
@@ -288,11 +268,10 @@ public:
 class DebugPacketBpAdd : public DebugPacketBase<DebugPacketType::AddBreakpoint> {
 public:
    uint32_t address;
-   uint32_t userData;
 
    template <class Archive>
    void serialize(Archive &ar) {
-      ar(address, userData);
+      ar(address);
    }
 
 };
@@ -460,8 +439,6 @@ int deserializePacket2(const std::vector<uint8_t> &data, DebugPacket *&packet) {
 int serializePacket(std::vector<uint8_t> &data, DebugPacket *packet)
 {
    switch (packet->type()) {
-   case DebugPacketType::PreLaunch:
-      return serializePacket2<DebugPacketPreLaunch>(data, packet);
    case DebugPacketType::BpHit:
       return serializePacket2<DebugPacketBpHit>(data, packet);
    case DebugPacketType::Pause:
@@ -502,8 +479,6 @@ int deserializePacket(const std::vector<uint8_t> &data, DebugPacket *&packet) {
    assert(data.size() == header.size);
 
    switch (header.command) {
-   case DebugPacketType::PreLaunch:
-      return deserializePacket2<DebugPacketPreLaunch>(data, packet);
    case DebugPacketType::BpHit:
       return deserializePacket2<DebugPacketBpHit>(data, packet);
    case DebugPacketType::Pause:
@@ -646,7 +621,7 @@ DebugNet::handlePacket(DebugPacket *pak)
    switch (pak->type()) {
    case DebugPacketType::AddBreakpoint: {
       auto *bpPak = static_cast<DebugPacketBpAdd*>(pak);
-      gDebugger.addBreakpoint(bpPak->address, bpPak->userData);
+      gDebugger.addBreakpoint(bpPak->address);
       break;
    }
    case DebugPacketType::RemoveBreakpoint: {
@@ -669,50 +644,7 @@ DebugNet::handlePacket(DebugPacket *pak)
    }
    case DebugPacketType::StepCoreOver: {
       auto *scPak = static_cast<DebugPacketStepCoreOver*>(pak);
-
-      if (scPak->coreId >= 3) {
-         break;
-      }
-
-      // TODO: FIX THIS TOO!
-      /*
-      auto &coreList = gProcessor.getCoreList();
-      auto &core = coreList[scPak->coreId];
-
-      Fiber *fiber = nullptr;
-      auto fiberList = gProcessor.getFiberList();
-      for (auto &i : fiberList) {
-         if (i == core->currentFiber) {
-            fiber = i;
-            break;
-         }
-      }
-      if (!fiber) {
-         break;
-      }
-
-      uint32_t curAddr = fiber->state.cia;
-
-      auto instr = mem::read<espresso::Instruction>(curAddr);
-      auto data = espresso::decodeInstruction(instr);
-      if (data->id == espresso::InstructionID::b
-       || data->id == espresso::InstructionID::bc
-       || data->id == espresso::InstructionID::bcctr
-       || data->id == espresso::InstructionID::bclr) {
-         if (instr.lk) {
-            // This is a branch-and-link.  Put a BP after the next instruction
-            gDebugger.addBreakpoint(curAddr + 4, 0xFFFFFFFF);
-            gDebugger.resume();
-         } else {
-            // Direct branch, just step
-            gDebugger.stepCore(scPak->coreId);
-         }
-      } else {
-         // Not a branch, just step
-         gDebugger.stepCore(scPak->coreId);
-      }
-      */
-
+      gDebugger.stepCoreOver(scPak->coreId);
       break;
    }
    case DebugPacketType::ReadMem: {
@@ -792,19 +724,10 @@ DebugNet::writePacket(DebugPacket *pak)
 }
 
 void
-DebugNet::writePrelaunch()
-{
-   auto pak = new DebugPacketPreLaunch();
-   populateDebugPauseInfo(pak->info);
-   writePacket(pak);
-}
-
-void
-DebugNet::writeBreakpointHit(uint32_t coreId, uint32_t userData)
+DebugNet::writeBreakpointHit(uint32_t coreId)
 {
    auto pak = new DebugPacketBpHit();
    pak->coreId = coreId;
-   pak->userData = userData;
    populateDebugPauseInfo(pak->info);
    writePacket(pak);
 }

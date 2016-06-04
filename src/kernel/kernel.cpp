@@ -48,6 +48,10 @@ void initialise()
 
 void cpu_interrupt_handler(uint32_t interrupt_flags)
 {
+   if (interrupt_flags & cpu::DBGBREAK_INTERRUPT) {
+      gDebugControl.handleDbgBreakInterrupt();
+   }
+
    if (!(interrupt_flags & ~cpu::NONMASKABLE_INTERRUPTS)) {
       // Due to the fact that non-maskable interrupts are not able to be disabled
       // it is possible the application has the scheduler lock or something, so we
@@ -184,7 +188,6 @@ bool launch_game()
    }
 
    gSystem.setUserModule(appModule);
-   gDebugControl.preLaunch();
    gLog->debug("Succesfully loaded {}", rpx);
 
    internal::startAlarmCallbackThreads();

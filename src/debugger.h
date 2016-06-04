@@ -8,6 +8,7 @@
 #include <queue>
 #include "debugmsg.h"
 #include "modules/coreinit/coreinit_core.h"
+#include "cpu/cpu.h"
 
 class DebugPacket;
 class DebugMessage;
@@ -17,30 +18,19 @@ typedef std::shared_ptr<BreakpointListType> BreakpointList;
 
 enum class DebugMessageType : uint16_t {
    Invalid,
-   PreLaunch,
    DebuggerDc,
-   BpHit,
-   CoreStepped,
+   CorePaused,
 };
 
 class DebugMessage : public MessageClass<DebugMessageType> { };
 template<DebugMessageType TypeId>
 using DebugMessageBase = MessageClassBase<DebugMessage, TypeId>;
 
-class DebugMessageBpHit : public DebugMessageBase<DebugMessageType::BpHit> {
+class DebugMessageCorePaused : public DebugMessageBase<DebugMessageType::CorePaused> {
 public:
    uint32_t coreId;
-   uint32_t address;
-   uint32_t userData;
-};
-
-class DebugMessageCoreStepped : public DebugMessageBase<DebugMessageType::CoreStepped> {
-public:
-   uint32_t coreId;
-};
-
-class DebugMessagePreLaunch : public DebugMessageBase<DebugMessageType::PreLaunch> {
-public:
+   bool wasInitiator;
+   cpu::Core *state;
 };
 
 class DebugMessageDebuggerDc : public DebugMessageBase<DebugMessageType::DebuggerDc> {
@@ -58,14 +48,13 @@ public:
    void pause();
    void resume();
    void stepCore(uint32_t coreId);
+   void stepCoreOver(uint32_t coreId);
 
-   void addBreakpoint(uint32_t addr, uint32_t userData);
+   void clearBreakpoints();
+   void addBreakpoint(uint32_t addr);
    void removeBreakpoint(uint32_t addr);
 
-   const BreakpointList &getBreakpoints() const
-   {
-      return mBreakpoints;
-   }
+   const cpu::Core * getCorePauseState(uint32_t addr) const;
 
    void notify(DebugMessage *msg);
 
@@ -74,8 +63,12 @@ protected:
    void debugThread();
 
    bool mEnabled;
+   bool mPaused;
+   bool mWaitingForPause;
+   int mWaitingForStep;
    std::thread mDebuggerThread;
-   BreakpointList mBreakpoints;
+   uint32_t mPauseInitiatorCoreId;
+   cpu::Core *mCorePauseState[3];
 
    std::queue<DebugMessage*> mMsgQueue;
    std::mutex mMsgLock;
