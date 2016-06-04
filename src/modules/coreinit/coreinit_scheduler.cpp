@@ -453,6 +453,8 @@ GameThreadEntry(uint32_t argc, void *argv)
    auto appModule = gSystem.getUserModule();
 
    auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
+   auto start = OSThreadEntryPointFn(appModule->entryPoint);
+
    if (userPreinit) {
       ppcutils::StackObject<be_ptr<CommonHeap>> mem1HeapPtr;
       ppcutils::StackObject<be_ptr<CommonHeap>> fgHeapPtr;
@@ -469,7 +471,7 @@ GameThreadEntry(uint32_t argc, void *argv)
       MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, *mem2HeapPtr);
    }
 
-   OSThreadEntryPointFn(appModule->entryPoint)(argc, argv);
+   start(argc, argv);
 }
 
 void
