@@ -93,8 +93,23 @@ OSCancelThread(OSThread *thread)
 int32_t
 OSCheckActiveThreads()
 {
-   // TODO: Count threads in active thread queue
-   return 1;
+   internal::lockScheduler();
+   OSThread *thread = OSGetCurrentThread();
+   
+   // Counter for the number of threads, 1 for the current thread
+   int32_t threadCount = 1;
+
+   // Count threads before this one
+   for (OSThread *threadIter = thread->activeLink.next; threadIter != nullptr; threadIter = threadIter->activeLink.next) {
+      threadCount++;
+   }
+   // Count threads after this one
+   for (OSThread *threadIter = thread->activeLink.prev; threadIter != nullptr; threadIter = threadIter->activeLink.prev) {
+      threadCount++;
+   }
+
+   internal::unlockScheduler();
+   return threadCount;
 }
 
 
@@ -220,6 +235,8 @@ OSCreateThread(OSThread *thread,
    // Setup thread state
    InitialiseThreadState(thread, entry, argc, argv);
 
+   internal::markThreadActiveNoLock(thread);
+
    return TRUE;
 }
 
@@ -231,7 +248,16 @@ void
 OSDetachThread(OSThread *thread)
 {
    internal::lockScheduler();
-   thread->attr |= OSThreadAttributes::Detached;
+
+   if (!(thread->attr & OSThreadAttributes::Detached)) {
+      if (thread->state == OSThreadState::Moribund) {
+         // Thread has already ended, remove it from the active list
+         internal::markThreadInactiveNoLock(thread);
+      }
+
+      thread->attr |= OSThreadAttributes::Detached;
+   }
+
    internal::unlockScheduler();
 }
 
@@ -249,6 +275,8 @@ OSExitThread(int value)
    thread->exitValue = value;
 
    if (thread->attr & OSThreadAttributes::Detached) {
+      internal::markThreadInactiveNoLock(thread);
+
       thread->state = OSThreadState::None;
    } else {
       thread->state = OSThreadState::Moribund;
@@ -278,8 +306,7 @@ void
 OSGetActiveThreadLink(OSThread *thread,
                       OSThreadLink *link)
 {
-   link->next = thread->activeLink.next;
-   link->prev = thread->activeLink.prev;
+   *link = thread->activeLink;
 }
 
 

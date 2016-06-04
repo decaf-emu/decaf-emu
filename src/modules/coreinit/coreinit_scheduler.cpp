@@ -25,7 +25,6 @@ sSchedulerEnabled[3];
 static std::atomic<uint32_t>
 sSchedulerLock { 0 };
 
-// TODO: Use sActiveThreads with OSThread::activeLink
 static OSThreadQueue *
 sActiveThreads;
 
@@ -94,6 +93,16 @@ disableScheduler()
    emuassert(!OSIsInterruptEnabled());
    uint32_t coreId = cpu::this_core::id();
    sSchedulerEnabled[coreId] = false;
+}
+
+void markThreadActiveNoLock(OSThread *thread)
+{
+   ActiveQueue::append(sActiveThreads, thread);
+}
+
+void markThreadInactiveNoLock(OSThread *thread)
+{
+   ActiveQueue::erase(sActiveThreads, thread);
 }
 
 static void
@@ -472,6 +481,7 @@ Module::registerSchedulerFunctions()
 void
 Module::initialiseSchedulerFunctions()
 {
+   sActiveThreads = coreinit::internal::sysAlloc<OSThreadQueue>();
    for (auto i = 0; i < 3; ++i) {
       sSchedulerEnabled[i] = true;
       sCurrentThread[i] = nullptr;

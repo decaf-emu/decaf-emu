@@ -33,6 +33,12 @@ void
 disableScheduler();
 
 void
+markThreadActiveNoLock(OSThread *thread);
+
+void
+markThreadInactiveNoLock(OSThread *thread);
+
+void
 checkRunningThreadNoLock(bool yielding);
 
 void
