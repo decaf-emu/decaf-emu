@@ -167,13 +167,23 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
 {
    // Save our CIA for when we come back.
    auto core = cpu::this_core::state();
-   auto cia = core->cia;
-   auto nia = core->nia;
+
+   uint32_t *stackTop = nullptr;
+   if (previous) {
+      core->gpr[1] -= 8;
+      stackTop = mem::translate<uint32_t>(core->gpr[1]);
+      stackTop[0] = core->cia;
+      stackTop[1] = core->nia;
+   }
 
    // If we have a current context, save it
    if (previous) {
       saveContext(&previous->context);
    }
+
+   // We now effectively have nothing on the core
+   core->nia = 0xFFFFFFFF;
+   core->cia = 0xFFFFFFFF;
 
    // Switch to the new thread
    if (next) {
@@ -187,14 +197,22 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
       cpu::this_core::set_tracer(fiber->tracer);
       platform::swapToFiber(nullptr, fiber->handle);
    } else {
+      // If we switch to the idle thread, set ourselves to
+      // a known bad state to help with debugging...
+      coreinit::OSContext blankContext = { 0 };
+      restoreContext(&blankContext);
+
       cpu::this_core::set_tracer(nullptr);
       platform::swapToFiber(nullptr, tIdleFiber[core->id]);
    }
 
    checkDeadThread();
 
-   core->cia = cia;
-   core->nia = nia;
+   if (stackTop) {
+      core->cia = stackTop[0];
+      core->nia = stackTop[1];
+      core->gpr[1] += 8;
+   }
 }
 
 }
