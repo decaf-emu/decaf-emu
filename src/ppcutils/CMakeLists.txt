@@ -9,3 +9,4 @@ set(HEADER_FILES
     )
 
 add_library(ppcutils STATIC ${SOURCE_FILES} ${HEADER_FILES})
+set_target_properties(ppcutils PROPERTIES LINKER_LANGUAGE CXX)

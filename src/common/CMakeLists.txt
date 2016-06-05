@@ -12,15 +12,16 @@ set(HEADER_FILES
     binaryfile.h
     binaryview.h
     bit_cast.h
+    bitfield.h
     bitutils.h
     byte_swap.h
-    crc32.h
     debuglog.h
     emuassert.h
     fixed.h
     floatutils.h
     log.h
     make_array.h
+    pow.h
     structsize.h
     strutils.h
     teenyheap.h
@@ -29,3 +30,4 @@ set(HEADER_FILES
     )
 
 add_library(common STATIC ${SOURCE_FILES} ${HEADER_FILES})
+set_target_properties(common PROPERTIES LINKER_LANGUAGE CXX)

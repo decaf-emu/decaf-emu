@@ -6,8 +6,7 @@ set(SOURCE_FILES
     debugger.cpp
     debugnet.cpp
     elf.cpp
-    fuzztests.cpp
-    hardwaretests.cpp
+    emulog.cpp
     loader.cpp
     main.cpp
     system.cpp
@@ -19,8 +18,6 @@ set(HEADER_FILES
     debugmsg.h
     debugnet.h
     elf.h
-    fuzztests.h
-    hardwaretests.h
     hostlookup.h
     kerneldata.h
     kernelexport.h
@@ -36,21 +33,20 @@ set(HEADER_FILES
     traceiter.h
     types.h
     usermodule.h
-    ppccommon/stackobject.h
     )
 
+add_subdirectory(common)
 add_subdirectory(cpu)
 add_subdirectory(filesystem)
 add_subdirectory(gpu)
 add_subdirectory(input)
 add_subdirectory(kernel)
-add_subdirectory(mem)
 add_subdirectory(modules)
 add_subdirectory(platform)
-add_subdirectory(utils)
+add_subdirectory(ppcutils)
 
 add_executable(decaf-emu ${SOURCE_FILES} ${HEADER_FILES})
-target_link_libraries(decaf-emu cpu filesystem input kernel mem modules gpu platform utils)
+target_link_libraries(decaf-emu common cpu filesystem input kernel modules gpu platform ppcutils)
 target_link_libraries(decaf-emu z m ${ADDRLIB_LIBRARIES} ${ASMJIT_LIBRARIES} ${DOCOPT_LIBRARIES} ${GLBINDING_LIBRARIES} ${GLFW_LIBRARIES} ${PUGIXML_LIBRARIES} ${SDL2_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES})
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(decaf-emu X11)

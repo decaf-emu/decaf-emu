@@ -2,8 +2,10 @@ include_directories(".")
 
 set(SOURCE_FILES
     cpu.cpp
+    cpu_breakpoints.cpp
+    cpu_interrupts.cpp
     cpu_kc.cpp
-	mem.cpp
+    mem.cpp
     espresso/espresso_disassembler.cpp
     espresso/espresso_instructionset.cpp
     interpreter/interpreter_branch.cpp
@@ -29,7 +31,7 @@ set(SOURCE_FILES
 set(HEADER_FILES
     cpu.h
     cpu_internal.h
-	mem.h
+    mem.h
     espresso/espresso_disassembler.h
     espresso/espresso_instruction.h
     espresso/espresso_instruction_aliases.inl
