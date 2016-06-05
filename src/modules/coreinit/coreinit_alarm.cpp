@@ -482,7 +482,15 @@ handleAlarmInterrupt(OSContext *context)
          if (alarm->group == 0xFFFFFFFF) {
             // System-internal alarm
             if (alarm->callback) {
+               // Save r3, r4 as calling alarm->callback tramples them
+               auto core = cpu::this_core::state();
+               auto r3 = core->gpr[3];
+               auto r4 = core->gpr[4];
+
                alarm->callback(alarm, context);
+
+               core->gpr[3] = r3;
+               core->gpr[4] = r4;
             }
          } else {
             internal::AlarmQueue::append(cbQueue, alarm);
