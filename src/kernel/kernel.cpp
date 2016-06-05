@@ -15,7 +15,7 @@
 #include "modules/coreinit/coreinit_systeminfo.h"
 #include "modules/coreinit/coreinit_interrupts.h"
 #include "modules/gx2/gx2_event.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "utils/wfunc_call.h"
 
 namespace coreinit

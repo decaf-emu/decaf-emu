@@ -3,7 +3,7 @@
 #include "coreinit_core.h"
 #include "coreinit_lockedcache.h"
 #include "coreinit_thread.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "utils/teenyheap.h"
 
 namespace coreinit

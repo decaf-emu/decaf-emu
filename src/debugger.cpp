@@ -12,7 +12,7 @@
 #include "debugcontrol.h"
 #include "utils/log.h"
 #include "cpu/cpu.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "cpu/espresso/espresso_disassembler.h"
 #include "cpu/espresso/espresso_instructionset.h"
 

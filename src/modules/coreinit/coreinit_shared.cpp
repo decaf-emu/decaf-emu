@@ -3,7 +3,7 @@
 #include <gsl.h>
 #include "coreinit.h"
 #include "coreinit_shared.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "utils/virtual_ptr.h"
 #include "utils/teenyheap.h"
 

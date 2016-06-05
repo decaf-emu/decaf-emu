@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cfenv>
 #include "cpu/cpu.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "platform/platform_fiber.h"
 #include "platform/platform_thread.h"
 #include "modules/coreinit/coreinit.h"

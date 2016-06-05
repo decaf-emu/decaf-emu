@@ -11,7 +11,7 @@
 #include "debugger.h"
 #include "cpu/espresso/espresso_disassembler.h"
 #include "cpu/espresso/espresso_instructionset.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "platform/platform.h"

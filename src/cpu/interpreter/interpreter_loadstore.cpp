@@ -2,7 +2,7 @@
 #include <cmath>
 #include "interpreter_float.h"
 #include "interpreter_insreg.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "utils/bitutils.h"
 #include "utils/floatutils.h"
 

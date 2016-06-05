@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_expheap.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "system.h"
 #include "utils/align.h"
 #include "utils/virtual_ptr.h"

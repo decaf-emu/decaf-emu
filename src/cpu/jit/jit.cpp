@@ -4,7 +4,7 @@
 #include "cpu/cpu_internal.h"
 #include "jit_internal.h"
 #include "jit_insreg.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "utils/log.h"
 #include "utils/bitutils.h"
 #include "cpu/espresso/espresso_instructionset.h"

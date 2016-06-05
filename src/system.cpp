@@ -3,7 +3,7 @@
 #include "cpu/cpu.h"
 #include "kernelfunction.h"
 #include "kernelmodule.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "system.h"
 #include "utils/teenyheap.h"

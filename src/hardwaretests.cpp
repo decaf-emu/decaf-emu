@@ -4,7 +4,7 @@
 #include "cpu/cpu.h"
 #include "cpu/jit/jit.h"
 #include "hardwaretests.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "utils/bit_cast.h"
 #include "utils/floatutils.h"
 #include "utils/log.h"

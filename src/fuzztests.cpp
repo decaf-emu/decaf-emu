@@ -8,7 +8,7 @@
 #include "cpu/jit/jit_insreg.h"
 #include "cpu/state.h"
 #include "cpu/utils.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "cpu/trace.h"
 #include "utils/bitutils.h"
 #include "utils/log.h"

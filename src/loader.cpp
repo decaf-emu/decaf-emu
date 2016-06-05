@@ -11,7 +11,7 @@
 #include "filesystem/filesystem.h"
 #include "kernelmodule.h"
 #include "loader.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "modules/coreinit/coreinit_dynload.h"
 #include "modules/coreinit/coreinit_memory.h"
 #include "modules/coreinit/coreinit_memheap.h"

@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_memory.h"
 #include "coreinit_core.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 
 namespace coreinit
 {

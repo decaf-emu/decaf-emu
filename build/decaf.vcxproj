@@ -163,6 +163,7 @@
     <ClCompile Include="..\src\cpu\jit\jit_loadstore.cpp" />
     <ClCompile Include="..\src\cpu\jit\jit_pairedsingle.cpp" />
     <ClCompile Include="..\src\cpu\jit\jit_system.cpp" />
+    <ClCompile Include="..\src\cpu\mem.cpp" />
     <ClCompile Include="..\src\cpu\trace.cpp" />
     <ClCompile Include="..\src\debugcontrol.cpp" />
     <ClCompile Include="..\src\debugger.cpp" />
@@ -210,7 +211,6 @@
     <ClCompile Include="..\src\kernel\kernel_fibers.cpp" />
     <ClCompile Include="..\src\loader.cpp" />
     <ClCompile Include="..\src\main.cpp" />
-    <ClCompile Include="..\src\mem\mem.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_alarm.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_atomic64.cpp" />
@@ -388,6 +388,7 @@
     <ClInclude Include="..\src\cpu\jit\jit_float.h" />
     <ClInclude Include="..\src\cpu\jit\jit_insreg.h" />
     <ClInclude Include="..\src\cpu\jit\jit_internal.h" />
+    <ClInclude Include="..\src\cpu\mem.h" />
     <ClInclude Include="..\src\cpu\state.h" />
     <ClInclude Include="..\src\cpu\statedbg.h" />
     <ClInclude Include="..\src\cpu\trace.h" />
@@ -455,7 +456,6 @@
     <ClInclude Include="..\src\input\input.h" />
     <ClInclude Include="..\src\kernel\kernel.h" />
     <ClInclude Include="..\src\memory_translate.h" />
-    <ClInclude Include="..\src\mem\mem.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_enum.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_exit.h" />

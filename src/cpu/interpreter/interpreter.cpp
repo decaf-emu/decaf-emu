@@ -5,7 +5,7 @@
 #include "../trace.h"
 #include "../cpu_internal.h"
 #include "debugcontrol.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "utils/log.h"
 
 namespace cpu

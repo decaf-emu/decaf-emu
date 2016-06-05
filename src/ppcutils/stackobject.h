@@ -1,6 +1,6 @@
 #pragma once
 #include "cpu/cpu.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "utils/align.h"
 
 namespace ppcutils

@@ -154,9 +154,6 @@
     <Filter Include="Header Files\mem">
       <UniqueIdentifier>{ff6e7ce9-9a00-4c47-8776-9aec31aaa7d8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\mem">
-      <UniqueIdentifier>{2a8ea741-97ef-4e99-a138-ff658e13c1ab}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\modules\snd_core">
       <UniqueIdentifier>{24a575bd-52b5-420b-8213-0556bfc28da1}</UniqueIdentifier>
     </Filter>
@@ -494,9 +491,6 @@
     </ClCompile>
     <ClCompile Include="..\src\cpu\interpreter\interpreter_system.cpp">
       <Filter>Source Files\cpu\interpreter</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mem\mem.cpp">
-      <Filter>Source Files\mem</Filter>
     </ClCompile>
     <ClCompile Include="..\src\cpu\jit\jit_branch.cpp">
       <Filter>Source Files\cpu\jit</Filter>
@@ -957,6 +951,9 @@
     <ClCompile Include="..\src\cpu\cpu_interrupts.cpp">
       <Filter>Source Files\cpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\cpu\mem.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1231,9 +1228,6 @@
     </ClInclude>
     <ClInclude Include="..\src\cpu\interpreter\interpreter.h">
       <Filter>Header Files\cpu\interpreter</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mem\mem.h">
-      <Filter>Header Files\mem</Filter>
     </ClInclude>
     <ClInclude Include="..\src\cpu\state.h">
       <Filter>Header Files\cpu</Filter>
@@ -1807,6 +1801,9 @@
     </ClInclude>
     <ClInclude Include="..\src\utils\emuassert.h">
       <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\mem.h">
+      <Filter>Header Files\cpu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

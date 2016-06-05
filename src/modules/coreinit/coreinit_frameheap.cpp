@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_memheap.h"
 #include "coreinit_frameheap.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "memory_translate.h"
 #include "system.h"
 #include "utils/align.h"

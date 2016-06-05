@@ -12,7 +12,7 @@
 #include "hardwaretests.h"
 #include "input/input.h"
 #include "loader.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"

@@ -1,7 +1,7 @@
 #include "gx2_addrlib.h"
 #include "gx2_aperture.h"
 #include "gx2_surface.h"
-#include "mem/mem.h"
+#include "cpu/mem.h"
 #include "utils/teenyheap.h"
 
 namespace gx2
