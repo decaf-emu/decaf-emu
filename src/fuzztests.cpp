@@ -5,7 +5,6 @@
 #include "cpu/interpreter/interpreter.h"
 #include "cpu/interpreter/interpreter_insreg.h"
 #include "cpu/jit/jit.h"
-#include "cpu/jit/jit_insreg.h"
 #include "cpu/state.h"
 #include "cpu/utils.h"
 #include "cpu/mem.h"

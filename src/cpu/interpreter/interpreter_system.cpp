@@ -1,9 +1,9 @@
 #include <cassert>
-#include "cpu/cpu.h"
-#include "cpu/cpu_internal.h"
-#include "cpu/espresso/espresso_spr.h"
+#include "../cpu.h"
+#include "../cpu_internal.h"
+#include "../mem.h"
+#include "../espresso/espresso_spr.h"
 #include "interpreter_insreg.h"
-#include "memory_translate.h"
 #include "utils/bitutils.h"
 #include "utils/align.h"
 #include "utils/log.h"
@@ -77,7 +77,7 @@ dcbz(cpu::Core *state, Instruction instr)
 
    addr += state->gpr[instr.rB];
    addr = align_down(addr, 32);
-   memset(memory_translate(addr), 0, 32);
+   memset(mem::translate(addr), 0, 32);
 }
 
 // Data Cache Block Zero Locked

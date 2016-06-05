@@ -3,7 +3,7 @@
 #include "statedbg.h"
 #include "utils/log.h"
 #include "utils/debuglog.h"
-#include "cpu/cpu.h"
+#include "cpu.h"
 #include "espresso/espresso_disassembler.h"
 #include "espresso/espresso_instructionset.h"
 #include "espresso/espresso_spr.h"

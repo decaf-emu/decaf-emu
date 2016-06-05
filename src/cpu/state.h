@@ -1,7 +1,7 @@
 #pragma once
 #include <atomic>
 #include <thread>
-#include "cpu/espresso/espresso_registers.h"
+#include "espresso/espresso_registers.h"
 
 struct Tracer;
 

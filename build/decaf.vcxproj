@@ -60,18 +60,18 @@
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
@@ -82,15 +82,14 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>DECAF_SDL;DECAF_GLFW;ASMJIT_EMBED;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessorDefinitions>DECAF_SDL;DECAF_GLFW;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>addrlib.lib;asmjit.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -101,7 +100,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;ASMJIT_EMBED;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -110,7 +109,7 @@
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>addrlib.lib;asmjit.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/verbose:incr %(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -123,7 +122,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;ASMJIT_EMBED;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>false</WholeProgramOptimization>
@@ -133,38 +132,13 @@
       <GenerateDebugInformation>Debug</GenerateDebugInformation>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
-      <AdditionalDependencies>addrlib.lib;asmjit.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/verbose:incr %(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\config.cpp" />
-    <ClCompile Include="..\src\cpu\cpu.cpp" />
-    <ClCompile Include="..\src\cpu\cpu_breakpoints.cpp" />
-    <ClCompile Include="..\src\cpu\cpu_interrupts.cpp" />
-    <ClCompile Include="..\src\cpu\cpu_kc.cpp" />
-    <ClCompile Include="..\src\cpu\espresso\espresso_disassembler.cpp" />
-    <ClCompile Include="..\src\cpu\espresso\espresso_instructionset.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_branch.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_condition.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_float.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_integer.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_loadstore.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_pairedsingle.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_system.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_branch.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_condition.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_fallback.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_float.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_integer.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_loadstore.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_pairedsingle.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_system.cpp" />
-    <ClCompile Include="..\src\cpu\mem.cpp" />
-    <ClCompile Include="..\src\cpu\trace.cpp" />
     <ClCompile Include="..\src\debugcontrol.cpp" />
     <ClCompile Include="..\src\debugger.cpp" />
     <ClCompile Include="..\src\debugnet.cpp" />
@@ -373,26 +347,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\config.h" />
-    <ClInclude Include="..\src\cpu\cpu.h" />
-    <ClInclude Include="..\src\cpu\cpu_internal.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_disassembler.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_instruction.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_instructionid.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_instructionset.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_registers.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_spr.h" />
-    <ClInclude Include="..\src\cpu\interpreter\interpreter.h" />
-    <ClInclude Include="..\src\cpu\interpreter\interpreter_float.h" />
-    <ClInclude Include="..\src\cpu\interpreter\interpreter_insreg.h" />
-    <ClInclude Include="..\src\cpu\jit\jit.h" />
-    <ClInclude Include="..\src\cpu\jit\jit_float.h" />
-    <ClInclude Include="..\src\cpu\jit\jit_insreg.h" />
-    <ClInclude Include="..\src\cpu\jit\jit_internal.h" />
-    <ClInclude Include="..\src\cpu\mem.h" />
-    <ClInclude Include="..\src\cpu\state.h" />
-    <ClInclude Include="..\src\cpu\statedbg.h" />
-    <ClInclude Include="..\src\cpu\trace.h" />
-    <ClInclude Include="..\src\cpu\utils.h" />
     <ClInclude Include="..\src\debugcontrol.h" />
     <ClInclude Include="..\src\debugger.h" />
     <ClInclude Include="..\src\debugmsg.h" />
@@ -660,9 +614,6 @@
     <None Include="..\resources\shaders\screendraw.hlsl">
       <FileType>Document</FileType>
     </None>
-    <None Include="..\src\cpu\espresso\espresso_instruction_aliases.inl" />
-    <None Include="..\src\cpu\espresso\espresso_instruction_definitions.inl" />
-    <None Include="..\src\cpu\espresso\espresso_instruction_fields.inl" />
     <None Include="..\src\gpu\microcode\latte_instructions_def.inl" />
   </ItemGroup>
   <ItemGroup>

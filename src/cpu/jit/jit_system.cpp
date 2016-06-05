@@ -1,6 +1,6 @@
 #include <cassert>
-#include "cpu/espresso/espresso_spr.h"
-#include "cpu/cpu_internal.h"
+#include "../espresso/espresso_spr.h"
+#include "../cpu_internal.h"
 #include "jit_insreg.h"
 #include "utils/bitutils.h"
 #include "utils/log.h"

@@ -3,8 +3,6 @@
 #include <list>
 #include "espresso_disassembler.h"
 #include "espresso_instructionset.h"
-#include "system.h"
-#include "kernelfunction.h"
 #include "utils/bitutils.h"
 
 namespace espresso
@@ -324,6 +322,9 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    }
 
    // Specialized Handlers
+   // TODO: Store this name information with the actual KC rather
+   //  than the old way of using gSystem.
+   /*
    if (data->id == InstructionID::kc) {
       auto sc = gSystem.getSyscallData(dis.args[0].constantUnsigned);
 
@@ -333,6 +334,7 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
          dis.text += " ; ?";
       }
    }
+   */
 
    return true;
 }

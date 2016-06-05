@@ -1,7 +1,7 @@
 #pragma once
 #include "../state.h"
-#include "cpu/espresso/espresso_instruction.h"
-#include "cpu/espresso/espresso_instructionid.h"
+#include "../espresso/espresso_instruction.h"
+#include "../espresso/espresso_instructionid.h"
 
 // TODO: Remove me
 using espresso::Instruction;

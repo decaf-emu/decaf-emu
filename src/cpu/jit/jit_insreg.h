@@ -1,7 +1,7 @@
 #pragma once
 #include "../state.h"
-#include "cpu/espresso/espresso_instruction.h"
-#include "cpu/espresso/espresso_instructionid.h"
+#include "../espresso/espresso_instruction.h"
+#include "../espresso/espresso_instructionid.h"
 #include "jit_internal.h"
 
 // TODO: Remove me
@@ -15,7 +15,6 @@ namespace jit
 
 using jitinstrfptr_t = bool(*)(PPCEmuAssembler&, Instruction);
 
-bool hasInstruction(espresso::InstructionID instrId);
 void registerInstruction(espresso::InstructionID id, jitinstrfptr_t fptr);
 void registerBranchInstructions();
 void registerConditionInstructions();

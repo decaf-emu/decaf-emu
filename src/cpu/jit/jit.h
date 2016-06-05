@@ -1,5 +1,6 @@
 #pragma once
 #include "../cpu.h"
+#include "../espresso/espresso_instructionid.h"
 
 namespace cpu
 {
@@ -10,6 +11,8 @@ void initialise();
 
 void clearCache();
 void resume(Core *core);
+
+bool hasInstruction(espresso::InstructionID instrId);
 
 }
 }
