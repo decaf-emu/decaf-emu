@@ -27,63 +27,66 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\cpu\cpu.h" />
-    <ClInclude Include="..\src\cpu\cpu_internal.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_disassembler.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_instruction.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_instructionid.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_instructionset.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_registers.h" />
-    <ClInclude Include="..\src\cpu\espresso\espresso_spr.h" />
-    <ClInclude Include="..\src\cpu\interpreter\interpreter.h" />
-    <ClInclude Include="..\src\cpu\interpreter\interpreter_float.h" />
-    <ClInclude Include="..\src\cpu\interpreter\interpreter_insreg.h" />
-    <ClInclude Include="..\src\cpu\jit\jit.h" />
-    <ClInclude Include="..\src\cpu\jit\jit_float.h" />
-    <ClInclude Include="..\src\cpu\jit\jit_insreg.h" />
-    <ClInclude Include="..\src\cpu\jit\jit_internal.h" />
-    <ClInclude Include="..\src\cpu\mem.h" />
-    <ClInclude Include="..\src\cpu\state.h" />
-    <ClInclude Include="..\src\cpu\statedbg.h" />
-    <ClInclude Include="..\src\cpu\trace.h" />
-    <ClInclude Include="..\src\cpu\utils.h" />
+    <ClInclude Include="..\src\platform\platform.h" />
+    <ClInclude Include="..\src\platform\platform_dir.h" />
+    <ClInclude Include="..\src\platform\platform_exception.h" />
+    <ClInclude Include="..\src\platform\platform_fiber.h" />
+    <ClInclude Include="..\src\platform\platform_glfw.h" />
+    <ClInclude Include="..\src\platform\platform_input.h" />
+    <ClInclude Include="..\src\platform\platform_interface.h" />
+    <ClInclude Include="..\src\platform\platform_memorymap.h" />
+    <ClInclude Include="..\src\platform\platform_sdl.h" />
+    <ClInclude Include="..\src\platform\platform_thread.h" />
+    <ClInclude Include="..\src\platform\platform_time.h" />
+    <ClInclude Include="..\src\platform\platform_ui.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\cpu\espresso\espresso_instruction_aliases.inl" />
-    <None Include="..\src\cpu\espresso\espresso_instruction_definitions.inl" />
-    <None Include="..\src\cpu\espresso\espresso_instruction_fields.inl" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\src\cpu\cpu.cpp" />
-    <ClCompile Include="..\src\cpu\cpu_breakpoints.cpp" />
-    <ClCompile Include="..\src\cpu\cpu_interrupts.cpp" />
-    <ClCompile Include="..\src\cpu\cpu_kc.cpp" />
-    <ClCompile Include="..\src\cpu\espresso\espresso_disassembler.cpp" />
-    <ClCompile Include="..\src\cpu\espresso\espresso_instructionset.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_branch.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_condition.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_float.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_integer.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_loadstore.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_pairedsingle.cpp" />
-    <ClCompile Include="..\src\cpu\interpreter\interpreter_system.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_branch.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_condition.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_fallback.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_float.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_integer.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_loadstore.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_pairedsingle.cpp" />
-    <ClCompile Include="..\src\cpu\jit\jit_system.cpp" />
-    <ClCompile Include="..\src\cpu\mem.cpp" />
-    <ClCompile Include="..\src\cpu\trace.cpp" />
+    <ClCompile Include="..\src\platform\platform_glfw_input.cpp" />
+    <ClCompile Include="..\src\platform\platform_glfw_ui.cpp" />
+    <ClCompile Include="..\src\platform\platform_interface.cpp" />
+    <ClCompile Include="..\src\platform\platform_posix_dir.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_exception.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_fiber.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_memorymap.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_thread.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_posix_time.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\platform_sdl_input.cpp" />
+    <ClCompile Include="..\src\platform\platform_sdl_ui.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_dir.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_exception.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_fiber.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_memorymap.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_thread.cpp" />
+    <ClCompile Include="..\src\platform\platform_win_time.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{2CDEC1A4-EE8C-4243-9D7E-53869431B35E}</ProjectGuid>
+    <ProjectGuid>{8B16AB20-CA50-420E-AD86-12CDD2CB7D88}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>decafcpu</RootNamespace>
+    <RootNamespace>decafplatform</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -152,19 +155,19 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\asmjit\src;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
+    <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
@@ -176,7 +179,6 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -188,14 +190,13 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>ASMJIT_EMBED;NOMINMAX;GSL_THROWS_FOR_TESTING;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
     </Link>
     <Lib>
-      <AdditionalDependencies>decaf-platform.lib;asmjit.lib;</AdditionalDependencies>
+      <AdditionalDependencies>glfw.lib;sdl.lib;</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -207,7 +208,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -224,7 +224,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -240,8 +239,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>ASMJIT_EMBED;NOMINMAX;GSL_THROWS_FOR_TESTING;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -249,7 +247,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>decaf-platform.lib;asmjit.lib;</AdditionalDependencies>
+      <AdditionalDependencies>glfw.lib;sdl.lib;</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
@@ -260,9 +258,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>ASMJIT_EMBED;NOMINMAX;GSL_THROWS_FOR_TESTING;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DebugInformationFormat>OldStyle</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -271,7 +267,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>decaf-platform.lib;asmjit.lib;</AdditionalDependencies>
+      <AdditionalDependencies>glfw.lib;sdl.lib;</AdditionalDependencies>
       <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
     </Lib>
   </ItemDefinitionGroup>

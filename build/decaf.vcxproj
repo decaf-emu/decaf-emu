@@ -82,14 +82,14 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>DECAF_SDL;DECAF_GLFW;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;glbinding.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -109,7 +109,7 @@
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;glbinding.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/verbose:incr %(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -132,7 +132,7 @@
       <GenerateDebugInformation>Debug</GenerateDebugInformation>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
-      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;glbinding.lib;glfw.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;sdl.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;glbinding.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/verbose:incr %(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
@@ -323,23 +323,6 @@
     <ClCompile Include="..\src\modules\vpad\vpad_status.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
-    <ClCompile Include="..\src\platform\platform_glfw_input.cpp" />
-    <ClCompile Include="..\src\platform\platform_glfw_ui.cpp" />
-    <ClCompile Include="..\src\platform\platform_interface.cpp" />
-    <ClCompile Include="..\src\platform\platform_posix_dir.cpp" />
-    <ClCompile Include="..\src\platform\platform_posix_exception.cpp" />
-    <ClCompile Include="..\src\platform\platform_posix_fiber.cpp" />
-    <ClCompile Include="..\src\platform\platform_posix_memorymap.cpp" />
-    <ClCompile Include="..\src\platform\platform_posix_thread.cpp" />
-    <ClCompile Include="..\src\platform\platform_posix_time.cpp" />
-    <ClCompile Include="..\src\platform\platform_sdl_input.cpp" />
-    <ClCompile Include="..\src\platform\platform_sdl_ui.cpp" />
-    <ClCompile Include="..\src\platform\platform_win_exception.cpp" />
-    <ClCompile Include="..\src\platform\platform_win_fiber.cpp" />
-    <ClCompile Include="..\src\platform\platform_win_memorymap.cpp" />
-    <ClCompile Include="..\src\platform\platform_win_thread.cpp" />
-    <ClCompile Include="..\src\platform\platform_win_time.cpp" />
-    <ClCompile Include="..\src\platform\platform_win_dir.cpp" />
     <ClCompile Include="..\src\system.cpp" />
     <ClCompile Include="..\src\memory_translate.cpp" />
     <ClCompile Include="..\src\utils\crc32.cpp" />
@@ -502,18 +485,6 @@
     <ClInclude Include="..\src\modules\vpad\vpad.h" />
     <ClInclude Include="..\src\modules\vpad\vpad_core.h" />
     <ClInclude Include="..\src\modules\vpad\vpad_status.h" />
-    <ClInclude Include="..\src\platform\platform.h" />
-    <ClInclude Include="..\src\platform\platform_dir.h" />
-    <ClInclude Include="..\src\platform\platform_exception.h" />
-    <ClInclude Include="..\src\platform\platform_fiber.h" />
-    <ClInclude Include="..\src\platform\platform_glfw.h" />
-    <ClInclude Include="..\src\platform\platform_input.h" />
-    <ClInclude Include="..\src\platform\platform_interface.h" />
-    <ClInclude Include="..\src\platform\platform_memorymap.h" />
-    <ClInclude Include="..\src\platform\platform_sdl.h" />
-    <ClInclude Include="..\src\platform\platform_thread.h" />
-    <ClInclude Include="..\src\platform\platform_time.h" />
-    <ClInclude Include="..\src\platform\platform_ui.h" />
     <ClInclude Include="..\src\ppcinvokeargs.h" />
     <ClInclude Include="..\src\ppcinvokelog.h" />
     <ClInclude Include="..\src\ppcinvokeresult.h" />
