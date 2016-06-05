@@ -121,9 +121,6 @@
     <Filter Include="Source Files\modules\vpad">
       <UniqueIdentifier>{42794536-3b80-4746-a81d-c98ba2a0f8fb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\mem">
-      <UniqueIdentifier>{ff6e7ce9-9a00-4c47-8776-9aec31aaa7d8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\modules\snd_core">
       <UniqueIdentifier>{24a575bd-52b5-420b-8213-0556bfc28da1}</UniqueIdentifier>
     </Filter>

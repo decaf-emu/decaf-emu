@@ -30,12 +30,10 @@
     <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_format.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2_surface.cpp" />
-    <ClCompile Include="..\tools\fakevirtualmemory.cpp" />
     <ClCompile Include="..\tools\gfd-tool\gfdtool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\gpu\gfd.h" />
-    <ClInclude Include="..\tools\fakevirtualmemory.h" />
     <ClInclude Include="..\tools\gtx-convert\untile.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -113,7 +111,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>addrlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;decaf-cpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,7 +129,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>addrlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;decaf-cpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
@@ -149,7 +147,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
-      <AdditionalDependencies>addrlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;decaf-cpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>

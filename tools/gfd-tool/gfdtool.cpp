@@ -2,19 +2,22 @@
 #include <excmd.h>
 #include <gsl.h>
 #include <spdlog/spdlog.h>
+#include "common/teenyheap.h"
+#include "cpu/mem.h"
 #include "gpu/gfd.h"
 #include "gpu/microcode/latte_decoder.h"
+#include "gpu/pm4_buffer.h"
 #include "modules/gx2/gx2_addrlib.h"
 #include "modules/gx2/gx2_dds.h"
 #include "modules/gx2/gx2_texture.h"
 #include "modules/gx2/gx2_shaders.h"
 #include "modules/gx2/gx2_enum_string.h"
-#include "utils/binaryfile.h"
-#include "utils/log.h"
-#include "fakevirtualmemory.h"
 
 std::shared_ptr<spdlog::logger>
 gLog;
+
+TeenyHeap *
+gHeap;
 
 struct Texture
 {
@@ -821,9 +824,15 @@ convertTexture(const std::string &path)
       auto index = pair.first;
       auto &tex = pair.second;
 
-      // Map surface data to virtual memory
-      tex.header->surface.image = make_virtual_ptr<uint8_t>(memory_virtualmap(tex.imageData.data()));
-      tex.header->surface.mipmaps = make_virtual_ptr<uint8_t>(memory_virtualmap(tex.mipmapData.data()));
+      // Copy surface data to virtual memory
+      auto image = reinterpret_cast<uint8_t*>(gHeap->alloc(tex.imageData.size()));
+      auto mipmap = reinterpret_cast<uint8_t*>(gHeap->alloc(tex.mipmapData.size()));
+
+      memcpy(image, tex.imageData.data(), tex.imageData.size());
+      memcpy(mipmap, tex.mipmapData.data(), tex.mipmapData.size());
+
+      tex.header->surface.image = make_virtual_ptr<uint8_t>(image);
+      tex.header->surface.mipmaps = make_virtual_ptr(mipmap);
 
       // Untile
       gx2::internal::convertTiling(&tex.header->surface, untiledImage, untiledMipmap);
@@ -831,6 +840,9 @@ convertTexture(const std::string &path)
       // Output DDS file
       auto outname = fmt::format("{}_texture{}.dds", basename, index);
       gx2::debug::saveDDS(outname, &tex.header->surface, untiledImage.data(), untiledMipmap.data());
+
+      gHeap->free(image);
+      gHeap->free(mipmap);
    }
 
    return true;
@@ -840,6 +852,9 @@ int main(int argc, char **argv)
 {
    excmd::parser parser;
    excmd::option_state options;
+
+   mem::initialise();
+   gHeap = new TeenyHeap(mem::translate(mem::SystemBase), mem::SystemSize);
 
    // Setup command line options
    parser.global_options()
@@ -900,3 +915,18 @@ size_t thread_id()
 }
 }
 }
+
+namespace pm4
+{
+Buffer *
+getBuffer(uint32_t size)
+{
+   return nullptr;
+}
+
+Buffer *
+flushBuffer(Buffer *buffer)
+{
+   return nullptr;
+}
+} // namespace pm4

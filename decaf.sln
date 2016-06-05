@@ -44,6 +44,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "addrlib", "build\addrlib.vcxproj", "{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7EF6}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfd-tool", "build\gfd-tool.vcxproj", "{7CB8D060-968B-4173-B2BF-1E29088107F2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2CDEC1A4-EE8C-4243-9D7E-53869431B35E} = {2CDEC1A4-EE8C-4243-9D7E-53869431B35E}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sdl", "build\sdl.vcxproj", "{2808B8EB-ACC1-4EC3-B22E-8D2C16AB3DF6}"
 EndProject
