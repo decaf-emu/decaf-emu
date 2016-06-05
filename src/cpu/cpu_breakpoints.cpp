@@ -1,7 +1,8 @@
-#include <vector>
+#include <atomic>
+#include <cstring>
 #include <functional>
 #include <memory>
-#include <atomic>
+#include <vector>
 #include "cpu.h"
 
 namespace cpu
