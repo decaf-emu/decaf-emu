@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\ppc">
-      <UniqueIdentifier>{218a3501-38a3-41cf-bf13-8a79d70a0bfd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\modules">
       <UniqueIdentifier>{543deb93-600a-46cd-af7e-bb64e64765d6}</UniqueIdentifier>
     </Filter>
@@ -48,9 +45,6 @@
     </Filter>
     <Filter Include="Source Files\modules\zlib125">
       <UniqueIdentifier>{e15b800e-59f9-40f8-bf71-3508459abb20}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\ppc">
-      <UniqueIdentifier>{aad165e0-f0a4-4040-b232-84b59983ec4a}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\system">
       <UniqueIdentifier>{8c8252e9-b776-49cf-ab0a-ec5a801be21e}</UniqueIdentifier>
@@ -425,9 +419,6 @@
     </ClCompile>
     <ClCompile Include="..\src\utils\crc32.cpp">
       <Filter>Source Files\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardwaretests.cpp">
-      <Filter>Source Files\ppc</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\snd_core\snd_core_device.cpp">
       <Filter>Source Files\modules\snd_core</Filter>
@@ -1093,9 +1084,6 @@
     </ClInclude>
     <ClInclude Include="..\src\utils\type_list.h">
       <Filter>Header Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\hardwaretests.h">
-      <Filter>Header Files\ppc</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\snd_core\snd_core_device.h">
       <Filter>Header Files\modules\snd_core</Filter>

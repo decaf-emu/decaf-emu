@@ -178,7 +178,6 @@
     <ClCompile Include="..\src\gpu\opengl\opengl_texture.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_viewport.cpp" />
     <ClCompile Include="..\src\gpu\pm4.cpp" />
-    <ClCompile Include="..\src\hardwaretests.cpp" />
     <ClCompile Include="..\src\input\input.cpp" />
     <ClCompile Include="..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\src\kernel\kernel_fibers.cpp" />
@@ -386,7 +385,6 @@
     <ClInclude Include="..\src\gpu\pm4_reader.h" />
     <ClInclude Include="..\src\gpu\latte_registers.h" />
     <ClInclude Include="..\src\gpu\pm4_writer.h" />
-    <ClInclude Include="..\src\hardwaretests.h" />
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\input\input.h" />
     <ClInclude Include="..\src\kernel\kernel.h" />

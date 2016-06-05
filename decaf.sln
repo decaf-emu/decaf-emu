@@ -63,6 +63,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "decaf-platform", "build\dec
 		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF7} = {2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF7}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hardware-test", "build\hardware-test.vcxproj", "{E0E54771-6AAD-4CD4-B252-2C667F593DB8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2CDEC1A4-EE8C-4243-9D7E-53869431B35E} = {2CDEC1A4-EE8C-4243-9D7E-53869431B35E}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -94,6 +99,7 @@ Global
 		{CDFC321E-07C6-44E1-B145-02749935DDFE}.Debug|x64.ActiveCfg = Debug|x64
 		{CDFC321E-07C6-44E1-B145-02749935DDFE}.Release|x64.ActiveCfg = Release|x64
 		{CDFC321E-07C6-44E1-B145-02749935DDFE}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{CDFC321E-07C6-44E1-B145-02749935DDFE}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
 		{01016351-42D4-4D49-A433-00CF4E1F7A8C}.Debug|x64.ActiveCfg = Debug|x64
 		{01016351-42D4-4D49-A433-00CF4E1F7A8C}.Debug|x64.Build.0 = Debug|x64
 		{01016351-42D4-4D49-A433-00CF4E1F7A8C}.Release|x64.ActiveCfg = Release|x64
@@ -154,6 +160,12 @@ Global
 		{8B16AB20-CA50-420E-AD86-12CDD2CB7D88}.Release|x64.Build.0 = Release|x64
 		{8B16AB20-CA50-420E-AD86-12CDD2CB7D88}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
 		{8B16AB20-CA50-420E-AD86-12CDD2CB7D88}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
+		{E0E54771-6AAD-4CD4-B252-2C667F593DB8}.Debug|x64.ActiveCfg = Debug|x64
+		{E0E54771-6AAD-4CD4-B252-2C667F593DB8}.Debug|x64.Build.0 = Debug|x64
+		{E0E54771-6AAD-4CD4-B252-2C667F593DB8}.Release|x64.ActiveCfg = Release|x64
+		{E0E54771-6AAD-4CD4-B252-2C667F593DB8}.Release|x64.Build.0 = Release|x64
+		{E0E54771-6AAD-4CD4-B252-2C667F593DB8}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
+		{E0E54771-6AAD-4CD4-B252-2C667F593DB8}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -171,5 +183,6 @@ Global
 		{7CB8D060-968B-4173-B2BF-1E29088107F2} = {4E2164E9-068E-44D0-BC5B-E8A68B30D4CE}
 		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB3DF6} = {A7137181-83E5-46FB-A880-B4FB4F4BF3C3}
 		{5EAE0EB7-E259-4ED8-AC7B-1794E0A2D304} = {4E2164E9-068E-44D0-BC5B-E8A68B30D4CE}
+		{E0E54771-6AAD-4CD4-B252-2C667F593DB8} = {4E2164E9-068E-44D0-BC5B-E8A68B30D4CE}
 	EndGlobalSection
 EndGlobal

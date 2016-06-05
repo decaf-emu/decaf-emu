@@ -8,7 +8,6 @@
 #include "debugger.h"
 #include "filesystem/filesystem.h"
 #include "gpu/opengl/opengl_driver.h"
-#include "hardwaretests.h"
 #include "input/input.h"
 #include "loader.h"
 #include "cpu/mem.h"
@@ -190,9 +189,6 @@ int main(int argc, char **argv)
    if (options.has("play")) {
       gLog->set_pattern("[%l:%t] %v");
       result = play(options.get<std::string>("game directory"));
-   } else if (options.has("hwtest")) {
-      gLog->set_pattern("%v");
-      result = hwtest::runTests("tests/cpu/wiiu");
    }
 
 #ifdef PLATFORM_WINDOWS
