@@ -124,35 +124,6 @@ findSection(const SectionList &sections, const char *shStrTab, const std::string
 }
 
 
-// Calculate the SDA base address based off sdata and sbss sections
-static uint32_t
-calculateSdaBase(const elf::XSection *sdata, const elf::XSection *sbss)
-{
-   uint32_t start, end;
-   auto sdataAddr = sdata ? sdata->virtAddress : 0u;
-   auto sbssAddr = sbss ? sbss->virtAddress : 0u;
-
-   if (sdata && sbss) {
-      start = std::min(sdataAddr, sbssAddr);
-      end = std::max(sdataAddr + sdata->virtSize, sbssAddr + sbss->virtSize);
-   } else if (sdata) {
-      start = sdataAddr;
-      end = sdataAddr + sdata->virtSize;
-   } else if (sbss) {
-      start = sbssAddr;
-      end = sbssAddr + sbss->virtSize;
-   } else {
-      return 0;
-   }
-
-   if ((end - start) > 0xffff) {
-      gLog->error("Small data and bss do not fit in a 16 bit range");
-   }
-
-   return ((end - start) / 2) + start;
-}
-
-
 // Get symbol at index
 static elf::Symbol
 getSymbol(BigEndianView &symSecView, uint32_t index)
@@ -772,11 +743,16 @@ Loader::loadRPL(const std::string &moduleName, const std::string &name, const gs
 
    // Calculate SDA Bases
    auto sdata = findSection(sections, shStrTab, ".sdata");
-   auto sbss = findSection(sections, shStrTab, ".sbss");
+
+   if (sdata) {
+      loadedMod->sdaBase = sdata->virtAddress + 0x8000;
+   }
+
    auto sdata2 = findSection(sections, shStrTab, ".sdata2");
-   auto sbss2 = findSection(sections, shStrTab, ".sbss2");
-   loadedMod->sdaBase = calculateSdaBase(sdata, sbss);
-   loadedMod->sda2Base = calculateSdaBase(sdata2, sbss2);
+
+   if (sdata2) {
+      loadedMod->sda2Base = sdata2->virtAddress + 0x8000;
+   }
 
    // Process exports
    if (!processExports(loadedMod, sections)) {
