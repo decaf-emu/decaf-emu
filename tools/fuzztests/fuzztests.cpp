@@ -2,6 +2,8 @@
 #include <random>
 #include <string>
 #include "fuzztests.h"
+#include "common/bitutils.h"
+#include "common/log.h"
 #include "cpu/interpreter/interpreter.h"
 #include "cpu/interpreter/interpreter_insreg.h"
 #include "cpu/jit/jit.h"
@@ -9,8 +11,6 @@
 #include "cpu/utils.h"
 #include "cpu/mem.h"
 #include "cpu/trace.h"
-#include "utils/bitutils.h"
-#include "utils/log.h"
 #include "cpu/espresso/espresso_instructionset.h"
 #include "cpu/espresso/espresso_spr.h"
 
