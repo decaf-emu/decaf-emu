@@ -86,9 +86,6 @@
     <ClInclude Include="..\libraries\glfw\include\GLFW\glfw3native.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\libraries\glfw\src\win32_tls.h">
-      <Filter>Header Files\win32</Filter>
-    </ClInclude>
     <ClInclude Include="..\libraries\glfw\src\win32_platform.h">
       <Filter>Header Files\win32</Filter>
     </ClInclude>

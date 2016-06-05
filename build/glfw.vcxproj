@@ -37,7 +37,6 @@
     <ClInclude Include="..\libraries\glfw\src\wgl_context.h" />
     <ClInclude Include="..\libraries\glfw\src\win32_joystick.h" />
     <ClInclude Include="..\libraries\glfw\src\win32_platform.h" />
-    <ClInclude Include="..\libraries\glfw\src\win32_tls.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF7}</ProjectGuid>
