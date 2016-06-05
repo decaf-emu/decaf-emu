@@ -147,7 +147,6 @@
     <ClCompile Include="..\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_win_host_folder.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_win_host_folderhandle.cpp" />
-    <ClCompile Include="..\src\fuzztests.cpp" />
     <ClCompile Include="..\src\gpu\commandqueue.cpp" />
     <ClCompile Include="..\src\gpu\driver.cpp" />
     <ClCompile Include="..\src\gpu\gfd.cpp" />
@@ -355,7 +354,6 @@
     <ClInclude Include="..\src\filesystem\filesystem_virtual_filehandle.h" />
     <ClInclude Include="..\src\filesystem\filesystem_virtual_folderhandle.h" />
     <ClInclude Include="..\src\filesystem\filesystem_virtual_folder.h" />
-    <ClInclude Include="..\src\fuzztests.h" />
     <ClInclude Include="..\src\gpu\commandqueue.h" />
     <ClInclude Include="..\src\gpu\driver.h" />
     <ClInclude Include="..\src\gpu\gfd.h" />

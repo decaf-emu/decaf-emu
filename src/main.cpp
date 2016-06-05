@@ -6,7 +6,6 @@
 #include "cpu/trace.h"
 #include "cpu/jit/jit.h"
 #include "debugger.h"
-#include "fuzztests.h"
 #include "filesystem/filesystem.h"
 #include "gpu/opengl/opengl_driver.h"
 #include "hardwaretests.h"
@@ -191,9 +190,6 @@ int main(int argc, char **argv)
    if (options.has("play")) {
       gLog->set_pattern("[%l:%t] %v");
       result = play(options.get<std::string>("game directory"));
-   } else if (options.has("fuzztest")) {
-      gLog->set_pattern("%v");
-      result = executeFuzzTests();
    } else if (options.has("hwtest")) {
       gLog->set_pattern("%v");
       result = hwtest::runTests("tests/cpu/wiiu");

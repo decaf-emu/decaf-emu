@@ -399,9 +399,6 @@
     <ClCompile Include="..\src\memory_translate.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\fuzztests.cpp">
-      <Filter>Source Files\ppc</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\nn_nfp\nn_nfp.cpp">
       <Filter>Source Files\modules\nn_nfp</Filter>
     </ClCompile>
@@ -1024,9 +1021,6 @@
     </ClInclude>
     <ClInclude Include="..\src\memory_translate.h">
       <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\fuzztests.h">
-      <Filter>Header Files\ppc</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\nn_nfp\nn_nfp.h">
       <Filter>Header Files\modules\nn_nfp</Filter>
