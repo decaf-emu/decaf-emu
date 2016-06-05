@@ -451,10 +451,8 @@ updateThreadPriorityNoLock(OSThread *thread)
 void
 promoteThreadPriorityNoLock(OSThread *thread, int32_t priority)
 {
-   while (thread) {
-      if (priority < thread->priority) {
-         thread = setThreadActualPriorityNoLock(thread, priority);
-      }
+   while (thread && priority < thread->priority) {
+      thread = setThreadActualPriorityNoLock(thread, priority);
    }
 }
 
