@@ -160,9 +160,12 @@ bool GLDriver::checkActiveShader()
          const gl::GLchar *code[] = { vertexShader.code.c_str() };
          vertexShader.object = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
 
-         // Check program log
-         auto log = getProgramLog(vertexShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
-         if (log.size()) {
+         // Check if shader compiled & linked properly
+         gl::GLint isLinked = 0;
+         gl::glGetProgramiv(vertexShader.object, gl::GL_LINK_STATUS, &isLinked);
+
+         if (!isLinked) {
+            auto log = getProgramLog(vertexShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
             gLog->error("OpenGL failed to compile vertex shader:\n{}", log);
             gLog->error("Shader Disassembly:\n{}\n", vertexShader.disassembly);
             gLog->error("Shader Code:\n{}\n", vertexShader.code);
@@ -195,9 +198,12 @@ bool GLDriver::checkActiveShader()
          const gl::GLchar *code[] = { pixelShader.code.c_str() };
          pixelShader.object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
 
-         // Check program log
-         auto log = getProgramLog(pixelShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
-         if (log.size()) {
+         // Check if shader compiled & linked properly
+         gl::GLint isLinked = 0;
+         gl::glGetProgramiv(pixelShader.object, gl::GL_LINK_STATUS, &isLinked);
+
+         if (!isLinked) {
+            auto log = getProgramLog(pixelShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
             gLog->error("OpenGL failed to compile pixel shader:\n{}", log);
             gLog->error("Shader Disassembly:\n{}\n", pixelShader.disassembly);
             gLog->error("Shader Code:\n{}\n", pixelShader.code);
