@@ -322,21 +322,6 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
       dis.text += argumentToText(arg);
    }
 
-   // Specialized Handlers
-   // TODO: Store this name information with the actual KC rather
-   //  than the old way of using gSystem.
-   /*
-   if (data->id == InstructionID::kc) {
-      auto sc = gSystem.getSyscallData(dis.args[0].constantUnsigned);
-
-      if (sc) {
-         dis.text += " ; " + sc->name;
-      } else {
-         dis.text += " ; ?";
-      }
-   }
-   */
-
    return true;
 }
 
