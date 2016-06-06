@@ -145,8 +145,8 @@ kc(PPCEmuAssembler& a, Instruction instr)
    }
 
    a.mov(a.zcx, a.state);
-   a.mov(a.zdx, asmjit::Ptr(kc->second));
-   a.call(asmjit::Ptr(kc->first));
+   a.mov(a.zdx, asmjit::Ptr(kc->user_data));
+   a.call(asmjit::Ptr(kc->fn));
    return true;
 }
 

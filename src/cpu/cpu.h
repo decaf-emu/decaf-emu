@@ -34,7 +34,12 @@ static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 typedef void(*entrypoint_handler)();
 typedef void(*interrupt_handler)(uint32_t interrupt_flags);
 using kernel_call_fn = void(*)(Core *state, void *userData);
-using kernel_call_entry = std::pair<kernel_call_fn, void*>;
+
+struct kernel_call_entry
+{
+   kernel_call_fn fn;
+   void * user_data;
+};
 
 void initialise();
 void set_jit_mode(jit_mode mode);

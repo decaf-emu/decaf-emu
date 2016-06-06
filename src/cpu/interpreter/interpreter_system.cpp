@@ -277,7 +277,7 @@ kc(cpu::Core *state, Instruction instr)
       return;
    }
 
-   kc->first(state, kc->second);
+   kc->fn(state, kc->user_data);
 }
 
 void
