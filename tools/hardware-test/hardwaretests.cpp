@@ -24,7 +24,7 @@ namespace hwtest
 {
 
 static void
-printTestField(InstructionField field, Instruction instr, RegisterState *input, RegisterState *output, cpu::Core *state)
+printTestField(InstructionField field, Instruction instr, RegisterState *input, RegisterState *output, cpu::CoreRegs *state)
 {
    auto printGPR = [&](uint32_t reg) {
       assert(reg >= GPR_BASE);
@@ -159,66 +159,64 @@ bool runTests(const std::string &path)
       gLog->info("Checking {}", testFile.name);
 
       for (auto &test : testFile.tests) {
-         cpu::Core state;
          bool failed = false;
 
-         // Setup thread state from test input
-         memset(&state, 0, sizeof(cpu::Core));
-         state.cia = 0;
-         state.nia = baseAddress;
-         state.xer = test.input.xer;
-         state.cr = test.input.cr;
-         state.fpscr = test.input.fpscr;
-         state.ctr = test.input.ctr;
+         // Setup core state from test input
+         cpu::CoreRegs *state = cpu::this_core::state();
+         memset(state, 0, sizeof(cpu::CoreRegs));
+         state->cia = 0;
+         state->nia = baseAddress;
+         state->xer = test.input.xer;
+         state->cr = test.input.cr;
+         state->fpscr = test.input.fpscr;
+         state->ctr = test.input.ctr;
 
          for (auto i = 0; i < 4; ++i) {
-            state.gpr[i + 3] = test.input.gpr[i];
-            state.fpr[i + 1].paired0 = test.input.fr[i];
+            state->gpr[i + 3] = test.input.gpr[i];
+            state->fpr[i + 1].paired0 = test.input.fr[i];
          }
 
          // Execute test
          mem::write(baseAddress, test.instr.value);
          cpu::jit::clearCache();
-         std::feclearexcept(FE_ALL_EXCEPT);
-         // TODO: Fix This!
-         //cpu::executeSub(nullptr, &state);
+         cpu::this_core::execute_sub();
 
          // Check XER (all bits)
-         if (state.xer.value != test.output.xer.value) {
-            gLog->error("Test failed, xer expected {:08X} found {:08X}", test.output.xer.value, state.xer.value);
+         if (state->xer.value != test.output.xer.value) {
+            gLog->error("Test failed, xer expected {:08X} found {:08X}", test.output.xer.value, state->xer.value);
             failed = true;
          }
 
          // Check Condition Register (all bits)
-         if (state.cr.value != test.output.cr.value) {
-            gLog->error("Test failed, cr expected {:08X} found {:08X}", test.output.cr.value, state.cr.value);
+         if (state->cr.value != test.output.cr.value) {
+            gLog->error("Test failed, cr expected {:08X} found {:08X}", test.output.cr.value, state->cr.value);
             failed = true;
          }
 
          // Check FPSCR (all bits except possibly FR)
          if (TEST_FPSCR) {
-            auto state_fpscr = state.fpscr.value;
+            auto state_fpscr = state->fpscr.value;
             auto test_fpscr = test.output.fpscr.value;
             if (!TEST_FPSCR_FR) {
                state_fpscr &= ~0x00040000;
                test_fpscr &= ~0x00040000;
             }
             if (state_fpscr != test_fpscr) {
-               gLog->error("Test failed, fpscr {:08X} found {:08X}", test.output.fpscr.value, state.fpscr.value);
+               gLog->error("Test failed, fpscr {:08X} found {:08X}", test.output.fpscr.value, state->fpscr.value);
                failed = true;
             }
          }
 
          // Check CTR
-         if (state.ctr != test.output.ctr) {
-            gLog->error("Test failed, ctr expected {:08X} found {:08X}", test.output.ctr, state.ctr);
+         if (state->ctr != test.output.ctr) {
+            gLog->error("Test failed, ctr expected {:08X} found {:08X}", test.output.ctr, state->ctr);
             failed = true;
          }
 
          // Check all GPR
          for (auto i = 0; i < 4; ++i) {
             auto reg = i + hwtest::GPR_BASE;
-            auto value = state.gpr[reg];
+            auto value = state->gpr[reg];
             auto expected = test.output.gpr[i];
 
             if (value != expected) {
@@ -230,7 +228,7 @@ bool runTests(const std::string &path)
          // Check all FPR
          for (auto i = 0; i < 4; ++i) {
             auto reg = i + hwtest::FPR_BASE;
-            auto value = state.fpr[reg].value;
+            auto value = state->fpr[reg].value;
             auto expected = test.output.fr[i];
 
             if (!is_nan(value) && !is_nan(expected) && !is_infinity(value) && !is_infinity(expected)) {
@@ -265,15 +263,15 @@ bool runTests(const std::string &path)
             gLog->debug("{:08x}            Input         Hardware           Interp", test.instr.value);
 
             for (auto field : dis.instruction->read) {
-               printTestField(field, test.instr, &test.input, &test.output, &state);
+               printTestField(field, test.instr, &test.input, &test.output, state);
             }
 
             for (auto field : dis.instruction->write) {
-               printTestField(field, test.instr, &test.input, &test.output, &state);
+               printTestField(field, test.instr, &test.input, &test.output, state);
             }
 
             for (auto field : dis.instruction->flags) {
-               printTestField(field, test.instr, &test.input, &test.output, &state);
+               printTestField(field, test.instr, &test.input, &test.output, state);
             }
 
             gLog->debug("");

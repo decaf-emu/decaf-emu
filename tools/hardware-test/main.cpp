@@ -7,6 +7,8 @@
 std::shared_ptr<spdlog::logger>
 gLog;
 
+static int runResult;
+
 int main(int argc, char *argv[])
 {
    gLog = std::make_shared<spdlog::logger>("logger", std::make_shared<spdlog::sinks::stdout_sink_st>());
@@ -15,10 +17,18 @@ int main(int argc, char *argv[])
    mem::initialise();
    cpu::initialise();
 
-   auto result = hwtest::runTests("tests/cpu/wiiu") ? 0 : 1;
-
+   // We need to run the tests on a core.
+   cpu::set_core_entrypoint_handler([]() {
+      if (cpu::this_core::id() == 1) {
+         // Run the tests on only a single core.
+         runResult = hwtest::runTests("tests/cpu/wiiu") ? 0 : 1;
+      }
+   });
+   cpu::start();
+   cpu::join();
+   
    system("PAUSE");
-   return result;
+   return runResult;
 }
 
 namespace spdlog {
