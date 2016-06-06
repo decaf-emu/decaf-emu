@@ -1,6 +1,6 @@
 #ifdef DECAF_GLFW
 #include <glbinding/gl/gl.h>
-#include "utils/log.h"
+#include "common/log.h"
 #include "platform_glfw.h"
 
 static const auto DrcWidth = 854.0f;

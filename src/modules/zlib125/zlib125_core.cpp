@@ -1,9 +1,9 @@
 #include <zlib.h>
-#include "utils/wfunc_call.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "memory_translate.h"
-#include "utils/virtual_ptr.h"
-#include "utils/wfunc_ptr.h"
+#include "common/virtual_ptr.h"
+#include "ppcutils/wfunc_ptr.h"
+#include "ppcutils/wfunc_call.h"
 #include "zlib125.h"
 
 namespace zlib125

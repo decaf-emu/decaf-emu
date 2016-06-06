@@ -3,7 +3,7 @@
 #include "gx2_addrlib.h"
 #include "gx2_surface.h"
 #include "gx2_format.h"
-#include "utils/align.h"
+#include "common/align.h"
 
 namespace gx2
 {

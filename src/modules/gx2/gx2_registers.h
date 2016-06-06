@@ -2,7 +2,7 @@
 #include "types.h"
 #include "gpu/latte_registers.h"
 #include "gx2_enum.h"
-#include "utils/structsize.h"
+#include "common/structsize.h"
 
 namespace gx2
 {

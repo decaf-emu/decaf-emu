@@ -5,8 +5,8 @@
 #include "jit_internal.h"
 #include "jit_insreg.h"
 #include "cpu/mem.h"
-#include "utils/log.h"
-#include "utils/bitutils.h"
+#include "common/log.h"
+#include "common/bitutils.h"
 #include "cpu/espresso/espresso_instructionset.h"
 
 namespace cpu

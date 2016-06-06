@@ -4,8 +4,8 @@
 #include "../cpu_internal.h"
 #include "interpreter_insreg.h"
 #include "interpreter.h"
-#include "utils/bitutils.h"
-#include "utils/floatutils.h"
+#include "common/bitutils.h"
+#include "common/floatutils.h"
 
 using espresso::FPSCRRegisterBits;
 using espresso::FloatingPointResultFlags;

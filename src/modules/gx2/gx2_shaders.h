@@ -2,10 +2,10 @@
 #include "types.h"
 #include "gpu/latte_registers.h"
 #include "modules/gx2/gx2_enum.h"
-#include "utils/be_array.h"
-#include "utils/be_val.h"
-#include "utils/structsize.h"
-#include "utils/virtual_ptr.h"
+#include "common/be_array.h"
+#include "common/be_val.h"
+#include "common/structsize.h"
+#include "common/virtual_ptr.h"
 #include "gx2_sampler.h"
 
 namespace gx2

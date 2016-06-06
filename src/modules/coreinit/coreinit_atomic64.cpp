@@ -2,7 +2,7 @@
 #include "coreinit_atomic64.h"
 #include "coreinit_memheap.h"
 #include "coreinit_internal_idlock.h"
-#include "utils/bitutils.h"
+#include "common/bitutils.h"
 #include "types.h"
 
 namespace coreinit

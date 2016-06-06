@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/structsize.h"
+#include "common/structsize.h"
 #include "types.h"
 #include "latte_registers.h"
 

@@ -3,8 +3,8 @@
 #include "glsl_generator.h"
 #include "gpu/latte_registers.h"
 #include "gpu/microcode/latte_decoder.h"
-#include "utils/log.h"
-#include "utils/strutils.h"
+#include "common/log.h"
+#include "common/strutils.h"
 #include <spdlog/spdlog.h>
 
 namespace gpu

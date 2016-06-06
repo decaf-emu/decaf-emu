@@ -8,7 +8,7 @@
 #include "gpu/pm4_buffer.h"
 #include "gpu/commandqueue.h"
 #include "modules/coreinit/coreinit_core.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 struct CommandBufferPool
 {

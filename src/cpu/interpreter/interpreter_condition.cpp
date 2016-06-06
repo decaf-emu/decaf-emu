@@ -2,8 +2,8 @@
 #include <cfenv>
 #include "interpreter_float.h"
 #include "interpreter_insreg.h"
-#include "utils/bitutils.h"
-#include "utils/floatutils.h"
+#include "common/bitutils.h"
+#include "common/floatutils.h"
 
 using espresso::ConditionRegisterFlag;
 using espresso::FPSCRRegisterBits;

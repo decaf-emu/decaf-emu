@@ -1,5 +1,5 @@
 #include "config.h"
-#include "utils/log.h"
+#include "common/log.h"
 #include <cereal/archives/json.hpp>
 #include <fstream>
 

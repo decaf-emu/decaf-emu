@@ -6,7 +6,7 @@
 #include "../cpu_internal.h"
 #include "debugcontrol.h"
 #include "cpu/mem.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 namespace cpu
 {

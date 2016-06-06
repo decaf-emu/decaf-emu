@@ -1,6 +1,6 @@
 #include <cassert>
 #include "jit_insreg.h"
-#include "utils/bitutils.h"
+#include "common/bitutils.h"
 
 using espresso::ConditionRegisterFlag;
 using espresso::XERegisterBits;

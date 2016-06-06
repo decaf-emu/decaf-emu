@@ -6,7 +6,7 @@
 #include "platform_sdl.h"
 #include "platform_ui.h"
 #include "gpu/driver.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 #if defined(PLATFORM_WINDOWS)
    #include <windows.h>  // For GetSystemMetrics()

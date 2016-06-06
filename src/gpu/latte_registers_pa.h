@@ -1,6 +1,6 @@
 #pragma once
 #include "types.h"
-#include "utils/bitfield.h"
+#include "common/bitfield.h"
 #include "latte_enum_spi.h"
 #include "latte_enum_pa.h"
 

@@ -1,8 +1,8 @@
 #pragma once
 #include <atomic>
 #include "coreinit_thread.h"
-#include "utils/be_val.h"
-#include "utils/structsize.h"
+#include "common/be_val.h"
+#include "common/structsize.h"
 
 namespace coreinit
 {

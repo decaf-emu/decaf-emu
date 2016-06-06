@@ -1,5 +1,5 @@
 #include "latte_disassembler.h"
-#include "utils/bit_cast.h"
+#include "common/bit_cast.h"
 
 namespace latte
 {

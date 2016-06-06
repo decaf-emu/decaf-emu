@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_unitheap.h"
-#include "utils/align.h"
-#include "utils/log.h"
+#include "common/align.h"
+#include "common/log.h"
 
 namespace coreinit
 {

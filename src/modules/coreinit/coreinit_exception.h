@@ -2,7 +2,7 @@
 #include "types.h"
 #include "coreinit_enum.h"
 #include "coreinit_thread.h"
-#include "utils/wfunc_ptr.h"
+#include "ppcutils/wfunc_ptr.h"
 
 namespace coreinit
 {

@@ -2,7 +2,7 @@
 #include "types.h"
 #include "gx2_enum.h"
 #include "modules/coreinit/coreinit_time.h"
-#include "utils/be_val.h"
+#include "common/be_val.h"
 
 namespace gx2
 {

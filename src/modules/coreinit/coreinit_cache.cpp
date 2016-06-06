@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_cache.h"
-#include "utils/align.h"
+#include "common/align.h"
 
 namespace coreinit
 {

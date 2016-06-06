@@ -1,7 +1,7 @@
 #pragma once
 #include "types.h"
 #include "gx2_enum.h"
-#include "utils/wfunc_ptr.h"
+#include "ppcutils/wfunc_ptr.h"
 
 namespace gx2
 {

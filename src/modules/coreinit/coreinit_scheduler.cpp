@@ -12,9 +12,9 @@
 #include "kernel/kernel.h"
 #include "cpu/trace.h"
 #include "system.h"
-#include "utils/wfunc_call.h"
+#include "ppcutils/wfunc_call.h"
 #include "ppcutils/stackobject.h"
-#include "utils/emuassert.h"
+#include "common/emuassert.h"
 #include "debugger.h"
 
 namespace coreinit

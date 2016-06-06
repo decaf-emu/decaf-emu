@@ -6,7 +6,7 @@
 #include "modules/gx2/gx2_addrlib.h"
 #include "modules/gx2/gx2_enum.h"
 #include "modules/gx2/gx2_surface.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 namespace gpu
 {

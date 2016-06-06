@@ -1,6 +1,6 @@
 #pragma once
 #include "snd_core_result.h"
-#include "utils/wfunc_ptr.h"
+#include "ppcutils/wfunc_ptr.h"
 
 namespace snd_core
 {

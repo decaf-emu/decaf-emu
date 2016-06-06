@@ -1,7 +1,7 @@
 #pragma once
 #include "types.h"
 #include "snd_core_result.h"
-#include "utils/be_val.h"
+#include "common/be_val.h"
 
 namespace snd_core
 {

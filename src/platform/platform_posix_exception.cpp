@@ -2,7 +2,7 @@
 #include "platform.h"
 #include "platform_exception.h"
 #include "platform_fiber.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 #ifdef PLATFORM_POSIX
 #include <errno.h>

@@ -2,8 +2,8 @@
 #include "types.h"
 #include "coreinit_enum.h"
 #include "coreinit_ios.h"
-#include "utils/be_val.h"
-#include "utils/structsize.h"
+#include "common/be_val.h"
+#include "common/structsize.h"
 
 namespace coreinit
 {

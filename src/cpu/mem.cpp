@@ -2,7 +2,7 @@
 #include "mem.h"
 #include "platform/platform_exception.h"
 #include "platform/platform_memorymap.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 namespace mem
 {

@@ -3,12 +3,12 @@
 #include "coreinit_dynload.h"
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
-#include "utils/wfunc_call.h"
 #include "memory_translate.h"
 #include "system.h"
-#include "utils/be_val.h"
-#include "utils/virtual_ptr.h"
-#include "utils/wfunc_ptr.h"
+#include "common/be_val.h"
+#include "common/virtual_ptr.h"
+#include "ppcutils/wfunc_ptr.h"
+#include "ppcutils/wfunc_call.h"
 
 namespace coreinit
 {

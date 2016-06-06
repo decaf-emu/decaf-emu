@@ -1,7 +1,7 @@
 #pragma once
 #include <ostream>
 #include <type_traits>
-#include "utils/byte_swap.h"
+#include "common/byte_swap.h"
 
 template<typename Type>
 class be_val

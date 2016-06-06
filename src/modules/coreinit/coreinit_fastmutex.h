@@ -1,9 +1,9 @@
 #pragma once
 #include <atomic>
 #include "coreinit_thread.h"
-#include "utils/be_val.h"
-#include "utils/structsize.h"
-#include "utils/virtual_ptr.h"
+#include "common/be_val.h"
+#include "common/structsize.h"
+#include "common/virtual_ptr.h"
 
 namespace coreinit
 {

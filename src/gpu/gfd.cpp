@@ -1,5 +1,5 @@
 #include "gfd.h"
-#include "utils/binaryfile.h"
+#include "common/binaryfile.h"
 #include "modules/gx2/gx2_texture.h"
 #include "modules/gx2/gx2_shaders.h"
 

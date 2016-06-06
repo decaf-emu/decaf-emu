@@ -2,9 +2,9 @@
 #include "gpu/latte_contextstate.h"
 #include "modules/gx2/gx2_displaylist.h"
 #include "modules/gx2/gx2_enum.h"
-#include "utils/be_val.h"
-#include "utils/structsize.h"
-#include "utils/virtual_ptr.h"
+#include "common/be_val.h"
+#include "common/structsize.h"
+#include "common/virtual_ptr.h"
 #include "types.h"
 
 namespace gx2

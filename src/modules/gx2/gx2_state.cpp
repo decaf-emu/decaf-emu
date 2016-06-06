@@ -7,9 +7,9 @@
 #include "gx2_state.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"
-#include "utils/log.h"
-#include "utils/virtual_ptr.h"
-#include "utils/wfunc_call.h"
+#include "common/log.h"
+#include "common/virtual_ptr.h"
+#include "ppcutils/wfunc_call.h"
 
 namespace gx2
 {

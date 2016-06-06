@@ -1,7 +1,7 @@
 #pragma once
 #include "coreinit_time.h"
 #include "types.h"
-#include "utils/structsize.h"
+#include "common/structsize.h"
 #include <atomic>
 
 namespace coreinit

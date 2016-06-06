@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "utils/wfunc_ptr.h"
+#include "ppcutils/wfunc_ptr.h"
 
 class KernelModule;
 struct KernelFunction;

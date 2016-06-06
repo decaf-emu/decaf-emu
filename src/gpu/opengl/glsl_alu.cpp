@@ -1,5 +1,5 @@
 #include "glsl_generator.h"
-#include "utils/bit_cast.h"
+#include "common/bit_cast.h"
 
 using latte::shadir::AluInstruction;
 using latte::shadir::AluSource;

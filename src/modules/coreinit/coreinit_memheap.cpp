@@ -7,9 +7,9 @@
 #include "coreinit_unitheap.h"
 #include "memory_translate.h"
 #include "system.h"
-#include "utils/teenyheap.h"
-#include "utils/strutils.h"
-#include "utils/virtual_ptr.h"
+#include "common/teenyheap.h"
+#include "common/strutils.h"
+#include "common/virtual_ptr.h"
 
 namespace coreinit
 {

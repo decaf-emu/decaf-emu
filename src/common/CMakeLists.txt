@@ -1,8 +1,6 @@
 include_directories(".")
 
 set(SOURCE_FILES
-    crc32.cpp
-    log.cpp
     )
 set(HEADER_FILES
     align.h
@@ -28,8 +26,6 @@ set(HEADER_FILES
     teenyheap.h
     type_list.h
     virtual_ptr.h
-    wfunc_call.h
-    wfunc_ptr.h
     )
 
-add_library(utils STATIC ${SOURCE_FILES} ${HEADER_FILES})
+add_library(common STATIC ${SOURCE_FILES} ${HEADER_FILES})

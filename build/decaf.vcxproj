@@ -143,6 +143,7 @@
     <ClCompile Include="..\src\debugger.cpp" />
     <ClCompile Include="..\src\debugnet.cpp" />
     <ClCompile Include="..\src\elf.cpp" />
+    <ClCompile Include="..\src\emulog.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_posix_host_folder.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_win_host_folder.cpp" />
@@ -323,8 +324,6 @@
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
     <ClCompile Include="..\src\system.cpp" />
     <ClCompile Include="..\src\memory_translate.cpp" />
-    <ClCompile Include="..\src\utils\crc32.cpp" />
-    <ClCompile Include="..\src\utils\log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\config.h" />
@@ -333,6 +332,7 @@
     <ClInclude Include="..\src\debugmsg.h" />
     <ClInclude Include="..\src\debugnet.h" />
     <ClInclude Include="..\src\elf.h" />
+    <ClInclude Include="..\src\emulog.h" />
     <ClInclude Include="..\src\filesystem.h" />
     <ClInclude Include="..\src\filesystem\filesystem.h" />
     <ClInclude Include="..\src\filesystem\filesystem_file.h" />
@@ -515,6 +515,8 @@
     <ClInclude Include="..\src\ppcinvoke.h" />
     <ClInclude Include="..\src\ppctypes.h" />
     <ClInclude Include="..\src\ppcutils\stackobject.h" />
+    <ClInclude Include="..\src\ppcutils\wfunc_call.h" />
+    <ClInclude Include="..\src\ppcutils\wfunc_ptr.h" />
     <ClInclude Include="..\src\types.h" />
     <ClInclude Include="..\src\usermodule.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit.h" />
@@ -550,32 +552,6 @@
     <ClInclude Include="..\src\kernelexport.h" />
     <ClInclude Include="..\src\kernelfunction.h" />
     <ClInclude Include="..\src\kernelmodule.h" />
-    <ClInclude Include="..\src\utils\be_array.h" />
-    <ClInclude Include="..\src\utils\be_val.h" />
-    <ClInclude Include="..\src\utils\be_vec.h" />
-    <ClInclude Include="..\src\utils\be_volatile.h" />
-    <ClInclude Include="..\src\utils\binaryfile.h" />
-    <ClInclude Include="..\src\utils\binaryview.h" />
-    <ClInclude Include="..\src\utils\bitfield.h" />
-    <ClInclude Include="..\src\utils\bitutils.h" />
-    <ClInclude Include="..\src\utils\bit_cast.h" />
-    <ClInclude Include="..\src\utils\byte_swap.h" />
-    <ClInclude Include="..\src\utils\crc32.h" />
-    <ClInclude Include="..\src\utils\debuglog.h" />
-    <ClInclude Include="..\src\utils\emuassert.h" />
-    <ClInclude Include="..\src\utils\fixed.h" />
-    <ClInclude Include="..\src\utils\floatutils.h" />
-    <ClInclude Include="..\src\utils\log.h" />
-    <ClInclude Include="..\src\utils\make_array.h" />
-    <ClInclude Include="..\src\utils\structsize.h" />
-    <ClInclude Include="..\src\utils\strutils.h" />
-    <ClInclude Include="..\src\utils\teenyheap.h" />
-    <ClInclude Include="..\src\utils\align.h" />
-    <ClInclude Include="..\src\utils\type_list.h" />
-    <ClInclude Include="..\src\utils\pow.h" />
-    <ClInclude Include="..\src\utils\virtual_ptr.h" />
-    <ClInclude Include="..\src\utils\wfunc_call.h" />
-    <ClInclude Include="..\src\utils\wfunc_ptr.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">
@@ -589,7 +565,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="..\src\utils\NatvisDefs.natvis" />
+    <Natvis Include="..\vsdebuggervis.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

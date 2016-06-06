@@ -6,8 +6,8 @@
 #include "cpu/mem.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "system.h"
-#include "utils/teenyheap.h"
-#include "utils/strutils.h"
+#include "common/teenyheap.h"
+#include "common/strutils.h"
 
 System
 gSystem;

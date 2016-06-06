@@ -3,7 +3,7 @@
 #include "modules/coreinit/coreinit_ghs_typeinfo.h"
 #include "nn_boss_titleid.h"
 #include "types.h"
-#include "utils/structsize.h"
+#include "common/structsize.h"
 
 namespace nn
 {

@@ -3,8 +3,8 @@
 #include "gpu/latte_registers.h"
 #include "modules/gx2/gx2_enum.h"
 #include "modules/gx2/gx2_surface.h"
-#include "utils/be_val.h"
-#include "utils/structsize.h"
+#include "common/be_val.h"
+#include "common/structsize.h"
 
 namespace gx2
 {

@@ -2,9 +2,9 @@
 #include "coreinit_debug.h"
 #include "coreinit_thread.h"
 #include "cpu/trace.h"
-#include "utils/log.h"
-#include "utils/make_array.h"
-#include "utils/strutils.h"
+#include "common/log.h"
+#include "common/make_array.h"
+#include "common/strutils.h"
 
 namespace coreinit
 {

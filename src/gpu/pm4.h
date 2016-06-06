@@ -2,8 +2,8 @@
 #include <gsl.h>
 #include "pm4_format.h"
 #include "latte_registers.h"
-#include "utils/bitfield.h"
-#include "utils/virtual_ptr.h"
+#include "common/bitfield.h"
+#include "common/virtual_ptr.h"
 
 #pragma pack(push, 1)
 

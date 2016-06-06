@@ -38,7 +38,7 @@ set(HEADER_FILES
     traceiter.h
     types.h
     usermodule.h
-    ppcutils/stackobject.h
+    ppccommon/stackobject.h
     )
 
 add_subdirectory(cpu)

@@ -2,8 +2,8 @@
 #include "modules/nn_result.h"
 #include "modules/coreinit/coreinit_ghs_typeinfo.h"
 #include "types.h"
-#include "utils/be_val.h"
-#include "utils/structsize.h"
+#include "common/be_val.h"
+#include "common/structsize.h"
 #include "nn_boss_taskid.h"
 #include "nn_boss_titleid.h"
 

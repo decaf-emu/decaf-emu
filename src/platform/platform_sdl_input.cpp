@@ -5,7 +5,7 @@
 #include <SDL_gamecontroller.h>
 #include "platform_sdl.h"
 #include "platform_input.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 namespace platform
 {

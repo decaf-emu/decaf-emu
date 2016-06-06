@@ -2,7 +2,7 @@
 #include "gx2_aperture.h"
 #include "gx2_surface.h"
 #include "cpu/mem.h"
-#include "utils/teenyheap.h"
+#include "common/teenyheap.h"
 
 namespace gx2
 {

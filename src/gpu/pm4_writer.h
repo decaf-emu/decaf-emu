@@ -4,8 +4,8 @@
 #include "pm4_buffer.h"
 #include "pm4_format.h"
 #include "latte_registers.h"
-#include "utils/virtual_ptr.h"
-#include "utils/log.h"
+#include "common/virtual_ptr.h"
+#include "common/log.h"
 
 namespace pm4
 {

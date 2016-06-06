@@ -4,9 +4,9 @@
 #include "../mem.h"
 #include "../espresso/espresso_spr.h"
 #include "interpreter_insreg.h"
-#include "utils/bitutils.h"
-#include "utils/align.h"
-#include "utils/log.h"
+#include "common/bitutils.h"
+#include "common/align.h"
+#include "common/log.h"
 
 using espresso::SPR;
 

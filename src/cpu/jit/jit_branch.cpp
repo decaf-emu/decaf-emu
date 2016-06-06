@@ -1,6 +1,6 @@
 #include "jit_insreg.h"
 #include "../cpu_internal.h"
-#include "utils/bitutils.h"
+#include "common/bitutils.h"
 
 namespace cpu
 {

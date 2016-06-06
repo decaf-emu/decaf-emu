@@ -1,6 +1,6 @@
 #pragma once
 #include "types.h"
-#include "utils/wfunc_ptr.h"
+#include "ppcutils/wfunc_ptr.h"
 
 namespace proc_ui
 {

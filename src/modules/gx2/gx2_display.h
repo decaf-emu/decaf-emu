@@ -3,7 +3,7 @@
 #include "modules/gx2/gx2_enum.h"
 #include "modules/gx2/gx2_surface.h"
 #include "types.h"
-#include "utils/be_val.h"
+#include "common/be_val.h"
 
 namespace gx2
 {

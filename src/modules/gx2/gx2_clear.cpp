@@ -1,7 +1,7 @@
 #include "gx2_clear.h"
 #include "gx2_surface.h"
 #include "gpu/pm4_writer.h"
-#include "utils/bit_cast.h"
+#include "common/bit_cast.h"
 
 namespace gx2
 {

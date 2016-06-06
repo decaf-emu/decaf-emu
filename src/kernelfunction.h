@@ -3,7 +3,7 @@
 #include "cpu/state.h"
 #include "kernelexport.h"
 #include "ppcinvoke.h"
-#include "utils/type_list.h"
+#include "common/type_list.h"
 
 // Kernel Function Export
 struct KernelFunction : KernelExport

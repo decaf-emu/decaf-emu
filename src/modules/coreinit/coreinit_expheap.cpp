@@ -2,8 +2,8 @@
 #include "coreinit_expheap.h"
 #include "cpu/mem.h"
 #include "system.h"
-#include "utils/align.h"
-#include "utils/virtual_ptr.h"
+#include "common/align.h"
+#include "common/virtual_ptr.h"
 
 namespace coreinit
 {

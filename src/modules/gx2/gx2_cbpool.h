@@ -1,6 +1,6 @@
 #pragma once
 #include "types.h"
-#include "utils/virtual_ptr.h"
+#include "common/virtual_ptr.h"
 
 namespace pm4
 {

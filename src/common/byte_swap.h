@@ -1,6 +1,6 @@
 #pragma once
 #include "platform/platform.h"
-#include "utils/bit_cast.h"
+#include "common/bit_cast.h"
 
 #ifdef PLATFORM_LINUX
 #include <byteswap.h>

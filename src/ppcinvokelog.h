@@ -2,8 +2,8 @@
 #include <cstdio>
 #include <string>
 #include "config.h"
-#include "utils/strutils.h"
-#include "utils/virtual_ptr.h"
+#include "common/strutils.h"
+#include "common/virtual_ptr.h"
 #include <spdlog/details/format.h>
 
 namespace ppctypes

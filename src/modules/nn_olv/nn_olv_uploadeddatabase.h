@@ -1,8 +1,8 @@
 #pragma once
 #include "nn_olv.h"
 #include "nn_olv_result.h"
-#include "utils/be_val.h"
-#include "utils/structsize.h"
+#include "common/be_val.h"
+#include "common/structsize.h"
 #include "modules/coreinit/coreinit_ghs_typeinfo.h"
 
 namespace nn

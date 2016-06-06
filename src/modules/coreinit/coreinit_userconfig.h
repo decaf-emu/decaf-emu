@@ -2,7 +2,7 @@
 #include "types.h"
 #include "coreinit_enum.h"
 #include "coreinit_ios.h"
-#include "utils/structsize.h"
+#include "common/structsize.h"
 
 namespace coreinit
 {

@@ -4,8 +4,8 @@
 #include "coreinit.h"
 #include "coreinit_shared.h"
 #include "cpu/mem.h"
-#include "utils/virtual_ptr.h"
-#include "utils/teenyheap.h"
+#include "common/virtual_ptr.h"
+#include "common/teenyheap.h"
 
 namespace coreinit
 {

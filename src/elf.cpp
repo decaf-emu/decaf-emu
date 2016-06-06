@@ -2,8 +2,8 @@
 #include <vector>
 #include <zlib.h>
 #include "elf.h"
-#include "utils/bigendianview.h"
-#include "utils/log.h"
+#include "common/bigendianview.h"
+#include "common/log.h"
 
 const unsigned elf::Header::Magic;
 

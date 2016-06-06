@@ -1,7 +1,7 @@
 #pragma once
 #include <cassert>
 #include "types.h"
-#include "utils/byte_swap.h"
+#include "common/byte_swap.h"
 
 namespace mem
 {

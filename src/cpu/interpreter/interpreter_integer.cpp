@@ -1,6 +1,6 @@
 #include <type_traits>
 #include "interpreter_insreg.h"
-#include "utils/bitutils.h"
+#include "common/bitutils.h"
 
 using espresso::ConditionRegisterFlag;
 

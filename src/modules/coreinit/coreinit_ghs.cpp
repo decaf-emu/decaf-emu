@@ -4,7 +4,7 @@
 #include "coreinit_spinlock.h"
 #include "coreinit_memheap.h"
 #include "coreinit_mutex.h"
-#include "utils/wfunc_call.h"
+#include "ppcutils/wfunc_call.h"
 #include "cpu/trace.h"
 
 namespace coreinit

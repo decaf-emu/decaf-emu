@@ -10,7 +10,7 @@
 #include "debugmsg.h"
 #include "debugnet.h"
 #include "debugcontrol.h"
-#include "utils/log.h"
+#include "common/log.h"
 #include "cpu/cpu.h"
 #include "cpu/mem.h"
 #include "cpu/espresso/espresso_disassembler.h"

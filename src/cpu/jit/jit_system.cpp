@@ -2,8 +2,8 @@
 #include "../espresso/espresso_spr.h"
 #include "../cpu_internal.h"
 #include "jit_insreg.h"
-#include "utils/bitutils.h"
-#include "utils/log.h"
+#include "common/bitutils.h"
+#include "common/log.h"
 
 using espresso::SPR;
 

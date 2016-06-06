@@ -1,6 +1,6 @@
 #pragma once
 #include "types.h"
-#include "utils/bitfield.h"
+#include "common/bitfield.h"
 #include "latte_enum_vgt.h"
 
 namespace latte

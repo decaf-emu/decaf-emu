@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "jit_insreg.h"
 #include "jit_float.h"
-#include "utils/bitutils.h"
+#include "common/bitutils.h"
 
 namespace cpu
 {

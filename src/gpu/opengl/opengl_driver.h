@@ -10,7 +10,7 @@
 #include "gpu/driver.h"
 #include "gpu/latte_contextstate.h"
 #include "platform/platform.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 namespace gpu
 {

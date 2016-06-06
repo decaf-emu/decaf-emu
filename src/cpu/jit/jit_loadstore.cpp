@@ -1,7 +1,7 @@
 #include <cassert>
 #include <algorithm>
 #include "jit_insreg.h"
-#include "utils/bitutils.h"
+#include "common/bitutils.h"
 
 namespace cpu
 {

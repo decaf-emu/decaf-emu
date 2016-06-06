@@ -1,7 +1,7 @@
 #pragma once
 #include "types.h"
 #include "gx2_enum.h"
-#include "utils/structsize.h"
+#include "common/structsize.h"
 #include "gpu/latte_registers.h"
 
 namespace gx2

@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "coreinit_fs.h"
 #include "coreinit_fs_client.h"
-#include "utils/wfunc_call.h"
+#include "ppcutils/wfunc_call.h"
 
 namespace coreinit
 {

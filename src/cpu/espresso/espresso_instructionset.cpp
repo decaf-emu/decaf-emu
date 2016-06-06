@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <cassert>
-#include "utils/bitutils.h"
+#include "common/bitutils.h"
 #include "espresso_instructionset.h"
 #include "espresso_spr.h"
 

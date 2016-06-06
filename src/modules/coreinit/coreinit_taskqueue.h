@@ -4,11 +4,11 @@
 #include "coreinit_enum.h"
 #include "coreinit_spinlock.h"
 #include "coreinit_time.h"
-#include "utils/be_val.h"
-#include "utils/be_volatile.h"
-#include "utils/structsize.h"
-#include "utils/virtual_ptr.h"
-#include "utils/wfunc_ptr.h"
+#include "common/be_val.h"
+#include "common/be_volatile.h"
+#include "common/structsize.h"
+#include "common/virtual_ptr.h"
+#include "ppcutils/wfunc_ptr.h"
 
 namespace coreinit
 {

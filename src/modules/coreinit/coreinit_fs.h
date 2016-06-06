@@ -1,9 +1,9 @@
 #pragma once
 #include "types.h"
 #include "coreinit_enum.h"
-#include "utils/be_val.h"
-#include "utils/structsize.h"
-#include "utils/wfunc_ptr.h"
+#include "common/be_val.h"
+#include "common/structsize.h"
+#include "ppcutils/wfunc_ptr.h"
 
 namespace coreinit
 {

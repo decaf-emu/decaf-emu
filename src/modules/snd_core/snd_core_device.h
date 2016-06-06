@@ -1,8 +1,8 @@
 #pragma once
 #include "modules/snd_core/snd_core_result.h"
 #include "types.h"
-#include "utils/be_val.h"
-#include "utils/wfunc_ptr.h"
+#include "common/be_val.h"
+#include "ppcutils/wfunc_ptr.h"
 
 namespace snd_core
 {

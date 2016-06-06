@@ -17,7 +17,7 @@
 #include "platform/platform.h"
 #include "system.h"
 #include "cpu/trace.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 DebugNet
 gDebugNet;

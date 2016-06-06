@@ -1,8 +1,8 @@
 #pragma once
 #include <ostream>
-#include "bitutils.h"
+#include "common/bitutils.h"
 #include "ppctypes.h"
-#include "utils/virtual_ptr.h"
+#include "common/virtual_ptr.h"
 
 #pragma pack(push, 1)
 

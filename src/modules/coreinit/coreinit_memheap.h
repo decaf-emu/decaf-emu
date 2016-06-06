@@ -3,8 +3,8 @@
 #include "coreinit_enum.h"
 #include "coreinit_memlist.h"
 #include "coreinit_spinlock.h"
-#include "utils/structsize.h"
-#include "utils/wfunc_ptr.h"
+#include "common/structsize.h"
+#include "ppcutils/wfunc_ptr.h"
 
 namespace coreinit
 {

@@ -11,7 +11,7 @@
 #include "modules/coreinit/coreinit_time.h"
 #include "modules/gx2/gx2_event.h"
 #include "opengl_driver.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 namespace gpu
 {

@@ -2,7 +2,7 @@
 #include <gsl.h>
 #include "pm4_buffer.h"
 #include "pm4_format.h"
-#include "utils/virtual_ptr.h"
+#include "common/virtual_ptr.h"
 
 namespace pm4
 {

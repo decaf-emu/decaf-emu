@@ -1,6 +1,6 @@
 #include "platform.h"
 #include "platform_fiber.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 #ifdef PLATFORM_POSIX
 #include <array>

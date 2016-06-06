@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/emuassert.h"
+#include "common/emuassert.h"
 
 namespace coreinit
 {

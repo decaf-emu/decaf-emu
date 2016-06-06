@@ -4,7 +4,7 @@
 #include "gpu/commandqueue.h"
 #include "gpu/pm4_writer.h"
 #include "modules/coreinit/coreinit_core.h"
-#include "utils/align.h"
+#include "common/align.h"
 #include <array>
 
 namespace gx2

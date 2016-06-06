@@ -4,8 +4,8 @@
 #include "ppcinvokeargs.h"
 #include "ppcinvokeresult.h"
 #include "ppcinvokelog.h"
-#include "utils/log.h"
-#include "utils/type_list.h"
+#include "common/log.h"
+#include "common/type_list.h"
 #include "cpu/trace.h"
 
 namespace ppctypes

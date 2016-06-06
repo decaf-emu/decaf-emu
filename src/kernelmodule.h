@@ -4,7 +4,7 @@
 #include "kernelexport.h"
 #include "kernelfunction.h"
 #include "kerneldata.h"
-#include "utils/virtual_ptr.h"
+#include "common/virtual_ptr.h"
 
 #define RegisterKernelFunction(fn) \
    registerExport(#fn, kernel::makeFunction(fn))

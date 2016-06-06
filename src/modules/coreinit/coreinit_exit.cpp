@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_exit.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 namespace coreinit
 {

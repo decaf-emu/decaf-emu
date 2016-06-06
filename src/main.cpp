@@ -1,7 +1,8 @@
 #include <pugixml.hpp>
 #include <excmd.h>
 #include "config.h"
-#include "utils/bitutils.h"
+#include "emulog.h"
+#include "common/bitutils.h"
 #include "cpu/cpu.h"
 #include "cpu/trace.h"
 #include "cpu/jit/jit.h"
@@ -43,8 +44,8 @@
 #include "platform/platform_ui.h"
 #include "system.h"
 #include "usermodule.h"
-#include "utils/log.h"
-#include "utils/teenyheap.h"
+#include "common/log.h"
+#include "common/teenyheap.h"
 #include "kernel/kernel.h"
 
 static void

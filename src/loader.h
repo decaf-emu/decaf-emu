@@ -7,7 +7,7 @@
 #include "elf.h"
 #include "memory_translate.h"
 #include "types.h"
-#include "utils/wfunc_ptr.h"
+#include "ppcutils/wfunc_ptr.h"
 
 class KernelModule;
 class TeenyHeap;

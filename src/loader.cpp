@@ -18,12 +18,12 @@
 #include "system.h"
 #include "types.h"
 #include "usermodule.h"
-#include "utils/align.h"
-#include "utils/bigendianview.h"
-#include "utils/byte_swap.h"
-#include "utils/log.h"
-#include "utils/strutils.h"
-#include "utils/teenyheap.h"
+#include "common/align.h"
+#include "common/bigendianview.h"
+#include "common/byte_swap.h"
+#include "common/log.h"
+#include "common/strutils.h"
+#include "common/teenyheap.h"
 
 Loader gLoader;
 using TrampolineMap = std::map<ppcaddr_t, ppcaddr_t>;

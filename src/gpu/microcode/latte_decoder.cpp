@@ -1,8 +1,8 @@
 #include <gsl.h>
 #include <spdlog/details/format.h>
 #include "latte_decoder.h"
-#include "utils/bit_cast.h"
-#include "utils/bitutils.h"
+#include "common/bit_cast.h"
+#include "common/bitutils.h"
 
 namespace latte
 {

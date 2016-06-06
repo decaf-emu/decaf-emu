@@ -9,7 +9,7 @@
 #include "gx2_shaders.h"
 #include "memory_translate.h"
 #include "platform/platform_dir.h"
-#include "utils/log.h"
+#include "common/log.h"
 
 namespace gx2
 {

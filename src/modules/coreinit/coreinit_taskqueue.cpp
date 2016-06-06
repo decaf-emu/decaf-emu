@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "coreinit.h"
 #include "coreinit_taskqueue.h"
-#include "utils/wfunc_call.h"
+#include "ppcutils/wfunc_call.h"
 
 namespace coreinit
 {

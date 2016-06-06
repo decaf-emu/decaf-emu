@@ -1,6 +1,6 @@
 #pragma once
-#include "utils/be_val.h"
-#include "utils/virtual_ptr.h"
+#include "common/be_val.h"
+#include "common/virtual_ptr.h"
 
 struct LoadedModuleHandleData;
 

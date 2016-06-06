@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/bitfield.h"
+#include "common/bitfield.h"
 #include "types.h"
 #include "gpu/latte_enum_sq.h"
 

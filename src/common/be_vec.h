@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/be_val.h"
+#include "common/be_val.h"
 
 template<typename Type>
 struct be_vec2

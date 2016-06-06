@@ -1,7 +1,7 @@
 #include "gx2_shaders.h"
 #include "gx2_enum.h"
 #include "gx2_format.h"
-#include "utils/align.h"
+#include "common/align.h"
 #include "gpu/microcode/latte_instructions.h"
 
 namespace gx2

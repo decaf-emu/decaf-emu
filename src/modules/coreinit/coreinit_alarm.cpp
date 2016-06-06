@@ -9,9 +9,9 @@
 #include "coreinit_time.h"
 #include "coreinit_internal_queue.h"
 #include "coreinit_internal_idlock.h"
-#include "utils/wfunc_call.h"
+#include "ppcutils/wfunc_call.h"
 #include "cpu/cpu.h"
-#include "utils/emuassert.h"
+#include "common/emuassert.h"
 
 namespace coreinit
 {

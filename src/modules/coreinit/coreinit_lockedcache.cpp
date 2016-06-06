@@ -4,7 +4,7 @@
 #include "coreinit_lockedcache.h"
 #include "coreinit_thread.h"
 #include "cpu/mem.h"
-#include "utils/teenyheap.h"
+#include "common/teenyheap.h"
 
 namespace coreinit
 {

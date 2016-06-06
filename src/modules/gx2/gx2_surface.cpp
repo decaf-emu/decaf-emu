@@ -3,9 +3,9 @@
 #include "gx2_format.h"
 #include "gx2_surface.h"
 #include "gpu/pm4_writer.h"
-#include "utils/align.h"
-#include "utils/log.h"
-#include "utils/pow.h"
+#include "common/align.h"
+#include "common/log.h"
+#include "common/pow.h"
 
 namespace gx2
 {

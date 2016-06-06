@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_userconfig.h"
-#include "utils/bitutils.h"
+#include "common/bitutils.h"
 
 namespace coreinit
 {

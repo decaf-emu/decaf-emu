@@ -3,7 +3,7 @@
 #include <stack>
 #include <spdlog/details/format.h>
 #include "latte_decoder.h"
-#include "utils/bitutils.h"
+#include "common/bitutils.h"
 
 namespace latte
 {

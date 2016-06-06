@@ -1,5 +1,5 @@
 #include "interpreter_insreg.h"
-#include "utils/bitutils.h"
+#include "common/bitutils.h"
 
 static void
 b(cpu::Core *state, Instruction instr)
