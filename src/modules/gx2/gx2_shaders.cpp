@@ -333,7 +333,7 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
    pm4::write(res);
 
    auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + location * 4);
-   auto addr256 = memory_untranslate(data) >> 8;
+   auto addr256 = mem::untranslate(data) >> 8;
    pm4::write(pm4::SetContextReg { addrId, addr256 });
 
    auto sizeId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + location * 4);
@@ -364,7 +364,7 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
    pm4::write(res);
 
    auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + location * 4);
-   auto addr256 = memory_untranslate(data) >> 8;
+   auto addr256 = mem::untranslate(data) >> 8;
    pm4::write(pm4::SetContextReg { addrId, addr256 });
 
    auto sizeId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + location * 4);
@@ -395,7 +395,7 @@ GX2SetGeometryUniformBlock(uint32_t location, uint32_t size, const void *data)
    pm4::write(res);
 
    auto addrId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_CACHE_GS_0 + location * 4);
-   auto addr256 = memory_untranslate(data) >> 8;
+   auto addr256 = mem::untranslate(data) >> 8;
    pm4::write(pm4::SetContextReg { addrId, addr256 });
 
    auto sizeId = static_cast<latte::Register>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_GS_0 + location * 4);
@@ -543,7 +543,7 @@ GX2SetStreamOutEnable(BOOL enable)
 void
 GX2SetGeometryShaderInputRingBuffer(void *buffer, uint32_t size)
 {
-   pm4::write(pm4::SetConfigReg { latte::Register::SQ_ESGS_RING_BASE, memory_untranslate(buffer) >> 8 });
+   pm4::write(pm4::SetConfigReg { latte::Register::SQ_ESGS_RING_BASE, mem::untranslate(buffer) >> 8 });
    pm4::write(pm4::SetConfigReg { latte::Register::SQ_ESGS_RING_SIZE, size >> 8 });
 
    pm4::SetVtxResource res;
@@ -569,7 +569,7 @@ GX2SetGeometryShaderInputRingBuffer(void *buffer, uint32_t size)
 void
 GX2SetGeometryShaderOutputRingBuffer(void *buffer, uint32_t size)
 {
-   pm4::write(pm4::SetConfigReg { latte::Register::SQ_GSVS_RING_BASE, memory_untranslate(buffer) >> 8 });
+   pm4::write(pm4::SetConfigReg { latte::Register::SQ_GSVS_RING_BASE, mem::untranslate(buffer) >> 8 });
    pm4::write(pm4::SetConfigReg { latte::Register::SQ_GSVS_RING_SIZE, size >> 8 });
 
    pm4::SetVtxResource res;

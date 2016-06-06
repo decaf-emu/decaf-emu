@@ -5,7 +5,7 @@
 #include "coreinit_expheap.h"
 #include "coreinit_frameheap.h"
 #include "coreinit_unitheap.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 #include "system.h"
 #include "common/teenyheap.h"
 #include "common/strutils.h"
@@ -63,7 +63,7 @@ static MemoryList *
 findListContainingBlock(void *block)
 {
    be_val<uint32_t> start, size, end;
-   uint32_t addr = memory_untranslate(block);
+   uint32_t addr = mem::untranslate(block);
    OSGetForegroundBucket(&start, &size);
    end = start + size;
 
@@ -85,7 +85,7 @@ static CommonHeap *
 findHeapContainingBlock(MemoryList *list, void *block)
 {
    CommonHeap *heap = nullptr;
-   uint32_t addr = memory_untranslate(block);
+   uint32_t addr = mem::untranslate(block);
 
    while ((heap = reinterpret_cast<CommonHeap*>(MEMGetNextListObject(list, heap)))) {
       if (addr >= heap->dataStart && addr < heap->dataEnd) {

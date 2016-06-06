@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <type_traits>
 #include "cpu/state.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 
 namespace ppctypes
 {
@@ -26,7 +26,7 @@ struct ppctype_converter_t<Type *>
 
    static inline void to_ppc(Type *ptr, uint32_t& out)
    {
-      out = memory_untranslate(ptr);
+      out = mem::untranslate(ptr);
    }
 
    static inline Type * from_ppc(uint32_t in)
@@ -34,7 +34,7 @@ struct ppctype_converter_t<Type *>
       if (in == 0) {
          return nullptr;
       } else {
-         return reinterpret_cast<Type*>(memory_translate(in));
+         return reinterpret_cast<Type*>(mem::translate(in));
       }
    }
 };

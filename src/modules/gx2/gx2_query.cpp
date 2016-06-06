@@ -13,7 +13,7 @@ GX2SampleTopGPUCycle(be_val<uint64_t> *result)
    *result = -1;
 
    auto addrLo = pm4::MW_ADDR_LO::get(0)
-      .ADDR_LO().set(memory_untranslate(result) >> 2)
+      .ADDR_LO().set(mem::untranslate(result) >> 2)
       .ENDIAN_SWAP().set(latte::CB_ENDIAN_8IN64);
 
    auto addrHi = pm4::MW_ADDR_HI::get(0)
@@ -31,7 +31,7 @@ GX2SampleBottomGPUCycle(be_val<uint64_t> *result)
       .EVENT_TYPE().set(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS);
 
    auto addrLo = pm4::EW_EOP_ADDR_LO::get(0)
-      .ADDR_LO().set(memory_untranslate(result) >> 2)
+      .ADDR_LO().set(mem::untranslate(result) >> 2)
       .ENDIAN_SWAP().set(latte::CB_ENDIAN_8IN64);
 
    auto addrHi = pm4::EW_EOP_ADDR_HI::get(0)

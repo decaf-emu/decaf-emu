@@ -7,7 +7,7 @@
 #include "gx2_enum_string.h"
 #include "gx2_texture.h"
 #include "gx2_shaders.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 #include "platform/platform_dir.h"
 #include "common/log.h"
 
@@ -24,7 +24,7 @@ static std::string
 GX2PointerAsString(const void *pointer)
 {
    fmt::MemoryWriter format;
-   format.write("{:08X}", memory_untranslate(pointer));
+   format.write("{:08X}", mem::untranslate(pointer));
    return format.str();
 }
 

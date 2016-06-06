@@ -38,7 +38,7 @@ MEMCreateUnitHeapEx(UnitHeap *heap,
    auto adjBlockSize = static_cast<uint32_t>(align_up(blockSize + sizeof(UnitBlock), alignment));
 
    // Calculate blocks
-   auto base = memory_untranslate(heap);
+   auto base = mem::untranslate(heap);
    auto firstBlock = static_cast<uint32_t>(align_up(base + sizeof(UnitHeap) + sizeof(UnitBlock), alignment) - sizeof(UnitBlock));
    auto blockCount = (size - (firstBlock - base)) / adjBlockSize;
 
@@ -107,7 +107,7 @@ void
 MEMFreeToUnitHeap(UnitHeap *heap, void *block)
 {
    ScopedSpinLock lock(&heap->lock);
-   auto blockAddr = memory_untranslate(block);
+   auto blockAddr = mem::untranslate(block);
    auto unitBlock = make_virtual_ptr<UnitBlock>(blockAddr - sizeof(UnitBlock));
    unitBlock->next = heap->freeBlockList;
    heap->freeBlockList = unitBlock;
@@ -126,7 +126,7 @@ MEMiDumpUnitHeap(UnitHeap *heap)
    auto usedSize = totalSize - freeSize;
    auto percent = static_cast<float>(usedSize) / static_cast<float>(totalSize);
 
-   gLog->debug("MEMiDumpUnitHeap({:8x})", memory_untranslate(heap));
+   gLog->debug("MEMiDumpUnitHeap({:8x})", mem::untranslate(heap));
    gLog->debug("{} out of {} bytes ({}%) used", usedSize, totalSize, percent);
 }
 

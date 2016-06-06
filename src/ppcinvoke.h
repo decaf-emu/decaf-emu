@@ -183,7 +183,7 @@ invokeMemberFn2(_argumentsState& state, FnReturnType (ObjectType::*func)(FnArgs.
       invokeEndLog(state);
    }
 
-   auto object = reinterpret_cast<ObjectType *>(memory_translate(state.thread->gpr[3]));
+   auto object = reinterpret_cast<ObjectType *>(mem::translate(state.thread->gpr[3]));
    auto result = (object->*func)(args...);
    setResult<FnReturnType>(state.thread, result);
 }
@@ -197,7 +197,7 @@ invokeMemberFn2(_argumentsState& state, void (ObjectType::*func)(FnArgs...), typ
       invokeEndLog(state);
    }
 
-   auto object = reinterpret_cast<ObjectType *>(memory_translate(state.thread->gpr[3]));
+   auto object = reinterpret_cast<ObjectType *>(mem::translate(state.thread->gpr[3]));
    (object->*func)(args...);
 }
 

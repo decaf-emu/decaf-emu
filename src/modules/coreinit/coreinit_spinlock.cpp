@@ -4,7 +4,7 @@
 #include "coreinit_spinlock.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 
 namespace coreinit
 {
@@ -31,7 +31,7 @@ static bool
 spinAcquireLock(OSSpinLock *spinlock)
 {
    auto thread = OSGetCurrentThread();
-   auto owner = memory_untranslate(thread);
+   auto owner = mem::untranslate(thread);
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
@@ -52,7 +52,7 @@ static bool
 spinTryLock(OSSpinLock *spinlock)
 {
    auto thread = OSGetCurrentThread();
-   auto owner = memory_untranslate(thread);
+   auto owner = mem::untranslate(thread);
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
@@ -73,7 +73,7 @@ static bool
 spinTryLockWithTimeout(OSSpinLock *spinlock, OSTime duration)
 {
    auto thread = OSGetCurrentThread();
-   auto owner = memory_untranslate(thread);
+   auto owner = mem::untranslate(thread);
 
    if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
       ++spinlock->recursion;
@@ -99,7 +99,7 @@ static bool
 spinReleaseLock(OSSpinLock *spinlock)
 {
    auto thread = OSGetCurrentThread();
-   auto owner = memory_untranslate(thread);
+   auto owner = mem::untranslate(thread);
 
    if (spinlock->recursion > 0u) {
       --spinlock->recursion;

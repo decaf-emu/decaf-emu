@@ -10,7 +10,6 @@ set(SOURCE_FILES
     hardwaretests.cpp
     loader.cpp
     main.cpp
-    memory_translate.cpp
     system.cpp
     )
 set(HEADER_FILES
@@ -28,7 +27,6 @@ set(HEADER_FILES
     kernelfunction.h
     kernelmodule.h
     loader.h
-    memory_translate.h
     ppcinvokeargs.h
     ppcinvoke.h
     ppcinvokelog.h

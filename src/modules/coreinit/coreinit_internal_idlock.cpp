@@ -1,5 +1,5 @@
 #include "coreinit_internal_idlock.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 
 namespace coreinit
 {
@@ -26,13 +26,13 @@ releaseIdLock(IdLock &lock, uint32_t id)
 void
 acquireIdLock(IdLock &lock, void *owner)
 {
-   acquireIdLock(lock, memory_untranslate(owner));
+   acquireIdLock(lock, mem::untranslate(owner));
 }
 
 void
 releaseIdLock(IdLock &lock, void *owner)
 {
-   releaseIdLock(lock, memory_untranslate(owner));
+   releaseIdLock(lock, mem::untranslate(owner));
 }
 
 void

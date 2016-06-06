@@ -324,7 +324,6 @@
     <ClCompile Include="..\src\modules\zlib125\zlib125.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
     <ClCompile Include="..\src\system.cpp" />
-    <ClCompile Include="..\src\memory_translate.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\config.h" />
@@ -390,7 +389,6 @@
     <ClInclude Include="..\src\input\input.h" />
     <ClInclude Include="..\src\kernel\kernel.h" />
     <ClInclude Include="..\src\kernel\kernel_internal.h" />
-    <ClInclude Include="..\src\memory_translate.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_enum.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_exit.h" />

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include "elf.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 #include "types.h"
 #include "ppcutils/wfunc_ptr.h"
 
@@ -48,7 +48,7 @@ struct LoadedModule
    template<typename Type>
    Type *findDataExport(const std::string& name) const
    {
-      return reinterpret_cast<Type *>(memory_translate(findExport(name)));
+      return reinterpret_cast<Type *>(mem::translate(findExport(name)));
    }
 
    std::string name;

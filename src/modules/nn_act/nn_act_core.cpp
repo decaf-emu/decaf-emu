@@ -206,7 +206,7 @@ GetMiiEx(FFLStoreData *data, uint8_t slot)
       return nn::act::AccountNotFound;
    }
 
-   gLog->warn("GetMiiEx(0x{:08X}, {})", memory_untranslate(data), static_cast<uint32_t>(slot));
+   gLog->warn("GetMiiEx(0x{:08X}, {})", mem::untranslate(data), static_cast<uint32_t>(slot));
    return nn::Result::Success;
 }
 

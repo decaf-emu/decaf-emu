@@ -2,7 +2,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_frameheap.h"
 #include "cpu/mem.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 #include "system.h"
 #include "common/align.h"
 #include "common/virtual_ptr.h"
@@ -40,7 +40,7 @@ FrameHeap *
 MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags)
 {
    // Allocate memory
-   auto base = memory_untranslate(heap);
+   auto base = mem::untranslate(heap);
 
    // Setup state
    heap->size = size;
@@ -185,7 +185,7 @@ MEMAdjustFrmHeap(FrameHeap *heap)
 
    heap->top = heap->bottom;
    heap->state->top = heap->top;
-   heap->size = heap->state->top - memory_untranslate(heap);
+   heap->size = heap->state->top - mem::untranslate(heap);
    return heap->size;
 }
 

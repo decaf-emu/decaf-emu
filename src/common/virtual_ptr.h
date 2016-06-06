@@ -1,6 +1,6 @@
 #pragma once
 #include "types.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 #include "common/byte_swap.h"
 
 template<typename Type, bool IsBigEndian = false>
@@ -37,7 +37,7 @@ public:
 
    Type *get() const
    {
-      return reinterpret_cast<Type *>(memory_translate(getAddress()));
+      return reinterpret_cast<Type *>(mem::translate(getAddress()));
    }
 
    ppcaddr_t getAddress() const
@@ -60,7 +60,7 @@ public:
 
    void setPointer(Type *pointer)
    {
-      setAddress(memory_untranslate(pointer));
+      setAddress(mem::untranslate(pointer));
    }
 
    Type *operator ->() const

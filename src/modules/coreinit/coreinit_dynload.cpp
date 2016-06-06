@@ -3,7 +3,7 @@
 #include "coreinit_dynload.h"
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 #include "system.h"
 #include "common/be_val.h"
 #include "common/virtual_ptr.h"
@@ -28,7 +28,7 @@ MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 {
    auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
    auto memory = MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
-   *outPtr = memory_untranslate(memory);
+   *outPtr = mem::untranslate(memory);
    return 0;
 }
 
@@ -155,7 +155,7 @@ dynLoadMemAlloc(int size, int alignment, void **outPtr)
 {
    auto value = coreinit::internal::sysAlloc<be_val<ppcaddr_t>>();
    auto result = sMemAlloc(size, alignment, value);
-   *outPtr = memory_translate(*value);
+   *outPtr = mem::translate(*value);
    coreinit::internal::sysFree(value);
    return result;
 }

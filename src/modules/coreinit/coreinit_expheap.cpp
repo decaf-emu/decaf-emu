@@ -150,7 +150,7 @@ ExpandedHeap *
 MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
 {
    // Setup state
-   auto base = memory_untranslate(heap);
+   auto base = mem::untranslate(heap);
    heap->size = size;
    heap->bottom = base;
    heap->top = base + size;
@@ -188,7 +188,7 @@ MEMDestroyExpHeap(ExpandedHeap *heap)
 void
 MEMiDumpExpHeap(ExpandedHeap *heap)
 {
-   gLog->debug("MEMiDumpExpHeap({:8x})", memory_untranslate(heap));
+   gLog->debug("MEMiDumpExpHeap({:8x})", mem::untranslate(heap));
    gLog->debug("Status Address Size Group");
 
    for (auto block = heap->freeBlockList; block; block = block->next) {
@@ -345,7 +345,7 @@ void
 MEMFreeToExpHeap(ExpandedHeap *heap, uint8_t *address)
 {
    ScopedSpinLock lock(&heap->lock);
-   auto base = memory_untranslate(address);
+   auto base = mem::untranslate(address);
 
    if (!base) {
       return;
@@ -452,7 +452,7 @@ MEMResizeForMBlockExpHeap(ExpandedHeap *heap, uint8_t *mblock, uint32_t size)
    ScopedSpinLock lock(&heap->lock);
 
    // Get the block header
-   auto address = memory_untranslate(mblock);
+   auto address = mem::untranslate(mblock);
    auto base = address - static_cast<uint32_t>(sizeof(ExpandedHeapBlock));
 
    auto block = make_virtual_ptr<ExpandedHeapBlock>(base);

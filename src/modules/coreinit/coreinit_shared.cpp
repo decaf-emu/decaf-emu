@@ -71,7 +71,7 @@ readFont(FontData &dst, const char *src)
 void
 Module::initialiseShared()
 {
-   sSharedHeap = new TeenyHeap(memory_translate(mem::SharedDataBase), mem::SharedDataSize);
+   sSharedHeap = new TeenyHeap(mem::translate(mem::SharedDataBase), mem::SharedDataSize);
    readFont(sFonts[0], "resources/fonts/SourceSansPro-Regular.ttf");
    sFonts[1] = sFonts[0];
    sFonts[2] = sFonts[0];

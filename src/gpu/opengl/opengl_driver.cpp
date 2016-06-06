@@ -208,7 +208,7 @@ uint64_t GLDriver::getGpuClock()
 void GLDriver::memWrite(const pm4::MemWrite &data)
 {
    uint64_t value;
-   auto addr = memory_translate(data.addrLo.ADDR_LO() << 2);
+   auto addr = mem::translate(data.addrLo.ADDR_LO() << 2);
 
    if (data.addrHi.CNTR_SEL() == pm4::MW_WRITE_CLOCK) {
       value = getGpuClock();
@@ -247,7 +247,7 @@ void GLDriver::handlePendingEOP()
    }
 
    uint64_t value = 0;
-   auto addr = memory_translate(mPendingEOP.addrLo.ADDR_LO() << 2);
+   auto addr = mem::translate(mPendingEOP.addrLo.ADDR_LO() << 2);
 
    switch (mPendingEOP.eventInitiator.EVENT_TYPE()) {
    case latte::BOTTOM_OF_PIPE_TS:

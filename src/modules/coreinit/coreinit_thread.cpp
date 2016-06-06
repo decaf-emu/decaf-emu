@@ -7,7 +7,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
 #include "coreinit_thread.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 #include "system.h"
 #include "usermodule.h"
 #include "cpu/cpu.h"
@@ -185,7 +185,7 @@ InitialiseThreadState(OSThread *thread,
    thread->context.gpr[1] = thread->stackStart.getAddress() - 4;
    thread->context.gpr[2] = sda2Base;
    thread->context.gpr[3] = argc;
-   thread->context.gpr[4] = memory_untranslate(argv);
+   thread->context.gpr[4] = mem::untranslate(argv);
    thread->context.gpr[13] = sdaBase;
 
    // Setup thread

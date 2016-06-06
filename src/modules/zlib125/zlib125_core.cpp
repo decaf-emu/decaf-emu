@@ -1,6 +1,6 @@
 #include <zlib.h>
 #include "modules/coreinit/coreinit_memheap.h"
-#include "memory_translate.h"
+#include "cpu/mem.h"
 #include "common/virtual_ptr.h"
 #include "ppcutils/wfunc_ptr.h"
 #include "ppcutils/wfunc_call.h"
@@ -89,7 +89,7 @@ zlibFreeWrapper(void *opaque,
 z_stream *
 getZStream(WZStream *in)
 {
-   auto zstream = &gStreamMap[memory_untranslate(in)];
+   auto zstream = &gStreamMap[mem::untranslate(in)];
    zstream->opaque = in;
    zstream->zalloc = &zlibAllocWrapper;
    zstream->zfree = &zlibFreeWrapper;
@@ -99,7 +99,7 @@ getZStream(WZStream *in)
 void
 eraseZStream(WZStream *in)
 {
-   gStreamMap.erase(memory_untranslate(in));
+   gStreamMap.erase(mem::untranslate(in));
 }
 
 static int

@@ -196,7 +196,7 @@ LCWaitDMAQueue(uint32_t queueLength)
 void
 Module::initialiseLockedCache()
 {
-   auto base = reinterpret_cast<uint8_t *>(memory_translate(mem::LockedCacheBase));
+   auto base = reinterpret_cast<uint8_t *>(mem::translate(mem::LockedCacheBase));
    sDMAEnabled.fill(false);
 
    for (auto i = 0u; i < CoreCount; ++i) {
