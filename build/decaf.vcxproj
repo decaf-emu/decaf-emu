@@ -187,6 +187,7 @@
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_alarm.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_allocator.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_atomic64.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_cache.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_core.cpp" />
@@ -389,6 +390,7 @@
     <ClInclude Include="..\src\input\input.h" />
     <ClInclude Include="..\src\kernel\kernel.h" />
     <ClInclude Include="..\src\kernel\kernel_internal.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_allocator.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_enum.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_exit.h" />

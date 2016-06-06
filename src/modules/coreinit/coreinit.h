@@ -22,6 +22,7 @@ private:
    void initialiseClock();
 
    void initialiseAlarm();
+   void initialiseAllocatorFunctions();
    void initialiseDynLoad();
    void initialiseEvent();
    void initialiseExceptions();
@@ -41,6 +42,7 @@ public:
 
 private:
    static void registerAlarmFunctions();
+   static void registerAllocatorFunctions();
    static void registerAtomic64Functions();
    static void registerCoreFunctions();
    static void registerCacheFunctions();

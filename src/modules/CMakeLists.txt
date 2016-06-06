@@ -3,6 +3,7 @@ include_directories(".")
 set(SOURCE_FILES
     coreinit/coreinit.cpp
     coreinit/coreinit_alarm.cpp
+    coreinit/coreinit_allocator.cpp
     coreinit/coreinit_atomic64.cpp
     coreinit/coreinit_cache.cpp
     coreinit/coreinit_core.cpp
@@ -144,6 +145,7 @@ set(SOURCE_FILES
 set(HEADER_FILES
     coreinit/coreinit.h
     coreinit/coreinit_alarm.h
+    coreinit/coreinit_allocator.h
     coreinit/coreinit_atomic64.h
     coreinit/coreinit_cache.h
     coreinit/coreinit_core.h

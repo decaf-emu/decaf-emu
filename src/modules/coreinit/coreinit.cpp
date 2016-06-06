@@ -16,6 +16,7 @@ Module::initialise()
    initialiseClock();
 
    initialiseAlarm();
+   initialiseAllocatorFunctions();
    initialiseDynLoad();
    initialiseEvent();
    initialiseExceptions();
@@ -35,6 +36,7 @@ void
 Module::RegisterFunctions()
 {
    registerAlarmFunctions();
+   registerAllocatorFunctions();
    registerAtomic64Functions();
    registerCoreFunctions();
    registerCacheFunctions();

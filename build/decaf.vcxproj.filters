@@ -762,6 +762,9 @@
     <ClCompile Include="..\src\kernel\kernel_hle_modules.cpp">
       <Filter>Source Files\kernel</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_allocator.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1441,6 +1444,9 @@
     </ClInclude>
     <ClInclude Include="..\src\kernel\kernel_internal.h">
       <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_allocator.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
