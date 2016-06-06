@@ -334,7 +334,6 @@
     <ClInclude Include="..\src\debugnet.h" />
     <ClInclude Include="..\src\elf.h" />
     <ClInclude Include="..\src\emulog.h" />
-    <ClInclude Include="..\src\filesystem.h" />
     <ClInclude Include="..\src\filesystem\filesystem.h" />
     <ClInclude Include="..\src\filesystem\filesystem_file.h" />
     <ClInclude Include="..\src\filesystem\filesystem_filehandle.h" />

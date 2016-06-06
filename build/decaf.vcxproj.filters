@@ -875,9 +875,6 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_device.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\filesystem.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_semaphore.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
