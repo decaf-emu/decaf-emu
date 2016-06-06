@@ -15,10 +15,13 @@ namespace coreinit
 struct ExpandedHeap;
 
 ExpandedHeap *
-MEMCreateExpHeap(ExpandedHeap *heap, uint32_t size);
+MEMCreateExpHeap(ExpandedHeap *heap,
+                 uint32_t size);
 
 ExpandedHeap *
-MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags);
+MEMCreateExpHeapEx(ExpandedHeap *heap,
+                   uint32_t size,
+                   uint16_t flags);
 
 ExpandedHeap *
 MEMDestroyExpHeap(ExpandedHeap *heap);
@@ -27,16 +30,21 @@ void
 MEMiDumpExpHeap(ExpandedHeap *heap);
 
 void *
-MEMAllocFromExpHeap(ExpandedHeap *heap, uint32_t size);
+MEMAllocFromExpHeap(ExpandedHeap *heap,
+                    uint32_t size);
 
 void *
-MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment);
+MEMAllocFromExpHeapEx(ExpandedHeap *heap,
+                      uint32_t size,
+                      int alignment);
 
 void
-MEMFreeToExpHeap(ExpandedHeap *heap, uint8_t *block);
+MEMFreeToExpHeap(ExpandedHeap *heap,
+                 void *block);
 
 MEMExpHeapMode
-MEMSetAllocModeForExpHeap(ExpandedHeap *heap, MEMExpHeapMode mode);
+MEMSetAllocModeForExpHeap(ExpandedHeap *heap,
+                          MEMExpHeapMode mode);
 
 MEMExpHeapMode
 MEMGetAllocModeForExpHeap(ExpandedHeap *heap);
@@ -45,7 +53,9 @@ uint32_t
 MEMAdjustExpHeap(ExpandedHeap *heap);
 
 uint32_t
-MEMResizeForMBlockExpHeap(ExpandedHeap *heap, uint8_t *address, uint32_t size);
+MEMResizeForMBlockExpHeap(ExpandedHeap *heap,
+                          uint8_t *address,
+                          uint32_t size);
 
 uint32_t
 MEMGetTotalFreeSizeForExpHeap(ExpandedHeap *heap);
@@ -54,10 +64,12 @@ uint32_t
 MEMGetAllocatableSizeForExpHeap(ExpandedHeap *heap);
 
 uint32_t
-MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap, int alignment);
+MEMGetAllocatableSizeForExpHeapEx(ExpandedHeap *heap,
+                                  int alignment);
 
 uint16_t
-MEMSetGroupIDForExpHeap(ExpandedHeap *heap, uint16_t id);
+MEMSetGroupIDForExpHeap(ExpandedHeap *heap,
+                        uint16_t id);
 
 uint16_t
 MEMGetGroupIDForExpHeap(ExpandedHeap *heap);

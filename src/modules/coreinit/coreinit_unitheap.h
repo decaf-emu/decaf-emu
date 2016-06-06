@@ -31,7 +31,8 @@ void *
 MEMAllocFromUnitHeap(UnitHeap *heap);
 
 void
-MEMFreeToUnitHeap(UnitHeap *heap, void *block);
+MEMFreeToUnitHeap(UnitHeap *heap,
+                  void *block);
 
 void
 MEMiDumpUnitHeap(UnitHeap *heap);

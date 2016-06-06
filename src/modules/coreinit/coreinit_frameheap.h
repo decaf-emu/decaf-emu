@@ -15,40 +15,52 @@ namespace coreinit
 struct FrameHeap;
 
 FrameHeap *
-MEMCreateFrmHeap(FrameHeap *heap, uint32_t size);
+MEMCreateFrmHeap(FrameHeap *heap,
+                 uint32_t size);
 
 FrameHeap *
-MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags);
+MEMCreateFrmHeapEx(FrameHeap *heap,
+                   uint32_t size,
+                   uint16_t flags);
 
 void *
 MEMDestroyFrmHeap(FrameHeap *heap);
 
 void *
-MEMAllocFromFrmHeap(FrameHeap *heap, uint32_t size);
+MEMAllocFromFrmHeap(FrameHeap *heap,
+                    uint32_t size);
 
 void *
-MEMAllocFromFrmHeapEx(FrameHeap *heap, uint32_t size, int alignment);
+MEMAllocFromFrmHeapEx(FrameHeap *heap,
+                      uint32_t size,
+                      int alignment);
 
 void
-MEMFreeToFrmHeap(FrameHeap *heap, MEMFrameHeapFreeMode mode);
+MEMFreeToFrmHeap(FrameHeap *heap,
+                 MEMFrameHeapFreeMode mode);
 
 BOOL
-MEMRecordStateForFrmHeap(FrameHeap *heap, uint32_t tag);
+MEMRecordStateForFrmHeap(FrameHeap *heap,
+                         uint32_t tag);
 
 BOOL
-MEMFreeByStateToFrmHeap(FrameHeap *heap, uint32_t tag);
+MEMFreeByStateToFrmHeap(FrameHeap *heap,
+                        uint32_t tag);
 
 uint32_t
 MEMAdjustFrmHeap(FrameHeap *heap);
 
 uint32_t
-MEMResizeForMBlockFrmHeap(FrameHeap *heap, uint32_t addr, uint32_t size);
+MEMResizeForMBlockFrmHeap(FrameHeap *heap,
+                          uint32_t addr,
+                          uint32_t size);
 
 uint32_t
 MEMGetAllocatableSizeForFrmHeap(FrameHeap *heap);
 
 uint32_t
-MEMGetAllocatableSizeForFrmHeapEx(FrameHeap *heap, int alignment);
+MEMGetAllocatableSizeForFrmHeapEx(FrameHeap *heap,
+                                  int alignment);
 
 /** @} */
 

@@ -342,10 +342,10 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
  * Free a memory block in an expanded heap
  */
 void
-MEMFreeToExpHeap(ExpandedHeap *heap, uint8_t *address)
+MEMFreeToExpHeap(ExpandedHeap *heap, void *block)
 {
    ScopedSpinLock lock(&heap->lock);
-   auto base = mem::untranslate(address);
+   auto base = mem::untranslate(block);
 
    if (!base) {
       return;

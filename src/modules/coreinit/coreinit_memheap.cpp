@@ -82,7 +82,8 @@ findListContainingBlock(void *block)
 }
 
 static CommonHeap *
-findHeapContainingBlock(MemoryList *list, void *block)
+findHeapContainingBlock(MemoryList *list,
+                        void *block)
 {
    CommonHeap *heap = nullptr;
    uint32_t addr = mem::untranslate(block);
@@ -98,7 +99,10 @@ findHeapContainingBlock(MemoryList *list, void *block)
 }
 
 void
-MEMiInitHeapHead(CommonHeap *heap, MEMiHeapTag tag, uint32_t dataStart, uint32_t dataEnd)
+MEMiInitHeapHead(CommonHeap *heap,
+                 MEMiHeapTag tag,
+                 uint32_t dataStart,
+                 uint32_t dataEnd)
 {
    heap->tag = tag;
    MEMInitList(&heap->list, offsetof(CommonHeap, link));
@@ -170,7 +174,8 @@ MEMGetBaseHeapHandle(MEMBaseHeapType type)
 }
 
 CommonHeap *
-MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap)
+MEMSetBaseHeapHandle(MEMBaseHeapType type,
+                     CommonHeap *heap)
 {
    if (type < sMemArenas.size()) {
       auto previous = sMemArenas[type];
@@ -340,7 +345,7 @@ void
 defaultFreeToDefaultHeap(void *block)
 {
    auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), reinterpret_cast<uint8_t *>(block));
+   return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
 }
 
 } // namespace internal
