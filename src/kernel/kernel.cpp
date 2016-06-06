@@ -70,6 +70,9 @@ void cpu_interrupt_handler(uint32_t interrupt_flags)
 
    emuassert(coreinit::internal::isSchedulerEnabled());
 
+   coreinit::OSContext savedContext;
+   kernel::saveContext(&savedContext);
+
    auto originalInterruptState = coreinit::OSDisableInterrupts();
    coreinit::internal::disableScheduler();
 
@@ -89,6 +92,8 @@ void cpu_interrupt_handler(uint32_t interrupt_flags)
 
    coreinit::internal::enableScheduler();
    coreinit::OSRestoreInterrupts(originalInterruptState);
+
+   kernel::restoreContext(&savedContext);
 
    // We must never receive an interrupt while processing a kernel
    // function as if the scheduler is locked, we are in for some shit.

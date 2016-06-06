@@ -104,7 +104,7 @@ exitThreadNoLock()
    tDeadThread[cpu::this_core::id()] = coreinit::internal::getCurrentThread();
 }
 
-static void
+void
 saveContext(coreinit::OSContext *context)
 {
    auto state = cpu::this_core::state();
@@ -131,7 +131,7 @@ saveContext(coreinit::OSContext *context)
    context->fpscr = state->fpscr.value;
 }
 
-static void
+void
 restoreContext(coreinit::OSContext *context)
 {
    auto state = cpu::this_core::state();
