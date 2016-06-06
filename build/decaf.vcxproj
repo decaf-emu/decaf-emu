@@ -182,6 +182,7 @@
     <ClCompile Include="..\src\input\input.cpp" />
     <ClCompile Include="..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\src\kernel\kernel_fibers.cpp" />
+    <ClCompile Include="..\src\kernel\kernel_hle_modules.cpp" />
     <ClCompile Include="..\src\loader.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp" />
@@ -388,6 +389,7 @@
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\input\input.h" />
     <ClInclude Include="..\src\kernel\kernel.h" />
+    <ClInclude Include="..\src\kernel\kernel_internal.h" />
     <ClInclude Include="..\src\memory_translate.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_enum.h" />

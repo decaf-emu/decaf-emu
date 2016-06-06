@@ -3,6 +3,7 @@ include_directories(".")
 set(SOURCE_FILES
     kernel.cpp
     kernel_fibers.cpp
+    kernel_hle_modules.cpp
     )
 
 set(HEADER_FILES

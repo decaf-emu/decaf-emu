@@ -765,6 +765,9 @@
     <ClCompile Include="..\src\emulog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\kernel\kernel_hle_modules.cpp">
+      <Filter>Source Files\kernel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -1444,6 +1447,9 @@
     </ClInclude>
     <ClInclude Include="..\src\ppcutils\wfunc_ptr.h">
       <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernel\kernel_internal.h">
+      <Filter>Header Files\kernel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
