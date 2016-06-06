@@ -93,7 +93,7 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2GetRetiredTimeStamp);
    RegisterKernelFunction(GX2GetLastSubmittedTimeStamp);
    RegisterKernelFunction(GX2WaitTimeStamp);
-   RegisterKernelFunctionName("VsyncAlarmHandler", gx2::internal::vsyncAlarmHandler);
+   RegisterKernelFunctionName("internal_VsyncAlarmHandler", gx2::internal::vsyncAlarmHandler);
 
    // Format
    RegisterKernelFunction(GX2GetSurfaceFormatBits);

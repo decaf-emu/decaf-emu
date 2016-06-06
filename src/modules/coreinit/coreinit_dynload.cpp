@@ -24,7 +24,7 @@ sMemFree;
  * Default implementation for sMemAlloc
  */
 static int
-MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
+dynloadDefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 {
    auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
    auto memory = MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
@@ -37,7 +37,7 @@ MEM_DynLoad_DefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
  * Default implementation for sMemFree
  */
 static void
-MEM_DynLoad_DefaultFree(uint8_t *addr)
+dynloadDefaultFree(void *addr)
 {
    auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
    MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), addr);
@@ -128,8 +128,8 @@ OSDynLoad_Release(LoadedModuleHandleData *handle)
 void
 Module::initialiseDynLoad()
 {
-   sMemAlloc = findExportAddress("MEM_DynLoad_DefaultAlloc");
-   sMemFree = findExportAddress("MEM_DynLoad_DefaultFree");
+   sMemAlloc = findExportAddress("internal_dynloadDefaultAlloc");
+   sMemFree = findExportAddress("internal_dynloadDefaultFree");
 }
 
 void
@@ -140,8 +140,8 @@ Module::registerDynLoadFunctions()
    RegisterKernelFunction(OSDynLoad_Release);
    RegisterKernelFunction(OSDynLoad_SetAllocator);
    RegisterKernelFunction(OSDynLoad_GetAllocator);
-   RegisterKernelFunction(MEM_DynLoad_DefaultAlloc);
-   RegisterKernelFunction(MEM_DynLoad_DefaultFree);
+   RegisterKernelFunctionName("internal_dynloadDefaultAlloc", dynloadDefaultAlloc);
+   RegisterKernelFunctionName("internal_dynloadDefaultFree", dynloadDefaultFree);
 }
 
 namespace internal

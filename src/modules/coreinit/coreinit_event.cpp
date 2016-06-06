@@ -299,6 +299,12 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
 }
 
 void
+Module::initialiseEvent()
+{
+   sEventAlarmHandler = findExportAddress("internal_EventAlarmHandler");
+}
+
+void
 Module::registerEventFunctions()
 {
    RegisterKernelFunction(OSInitEvent);
@@ -308,13 +314,7 @@ Module::registerEventFunctions()
    RegisterKernelFunction(OSResetEvent);
    RegisterKernelFunction(OSWaitEvent);
    RegisterKernelFunction(OSWaitEventWithTimeout);
-   RegisterKernelFunction(EventAlarmHandler);
-}
-
-void
-Module::initialiseEvent()
-{
-   sEventAlarmHandler = findExportAddress("EventAlarmHandler");
+   RegisterKernelFunctionName("internal_EventAlarmHandler", EventAlarmHandler);
 }
 
 } // namespace coreinit

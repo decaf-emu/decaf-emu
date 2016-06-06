@@ -365,13 +365,13 @@ Module::registerAlarmFunctions()
    RegisterKernelFunction(OSSetAlarmUserData);
    RegisterKernelFunction(OSWaitAlarm);
 
-   RegisterKernelFunction(AlarmCallbackThreadEntry);
+   RegisterKernelFunctionName("internal_AlarmCallbackThreadEntry", AlarmCallbackThreadEntry);
 }
 
 void
 Module::initialiseAlarm()
 {
-   sAlarmCallbackThreadEntryPoint = findExportAddress("AlarmCallbackThreadEntry");
+   sAlarmCallbackThreadEntryPoint = findExportAddress("internal_AlarmCallbackThreadEntry");
 
    for (auto i = 0u; i < CoreCount; ++i) {
       sAlarmQueue[i] = internal::sysAlloc<OSAlarmQueue>();

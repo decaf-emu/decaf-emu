@@ -326,7 +326,7 @@ onFlip()
 void
 Module::initialiseVsync()
 {
-   sVsyncAlarmHandler = findExportAddress("VsyncAlarmHandler");
+   sVsyncAlarmHandler = findExportAddress("internal_VsyncAlarmHandler");
 }
 
 } // namespace gx2

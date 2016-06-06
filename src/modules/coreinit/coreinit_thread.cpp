@@ -95,7 +95,7 @@ OSCheckActiveThreads()
 {
    internal::lockScheduler();
    OSThread *thread = OSGetCurrentThread();
-   
+
    // Counter for the number of threads, 1 for the current thread
    int32_t threadCount = 1;
 
@@ -874,7 +874,7 @@ OSYieldThread()
 void
 Module::initialiseThreadFunctions()
 {
-   sSleepAlarmHandler = findExportAddress("SleepAlarmHandler");
+   sSleepAlarmHandler = findExportAddress("internal_SleepAlarmHandler");
    sDefaultThreads.fill(nullptr);
 }
 
@@ -921,7 +921,7 @@ Module::registerThreadFunctions()
    RegisterKernelFunction(OSWakeupThread);
    RegisterKernelFunction(OSYieldThread);
 
-   RegisterKernelFunction(SleepAlarmHandler);
+   RegisterKernelFunctionName("internal_SleepAlarmHandler", SleepAlarmHandler);
 }
 
 namespace internal
