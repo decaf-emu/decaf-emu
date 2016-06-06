@@ -120,9 +120,10 @@ union SQ_VTX_CONSTANT_WORD0_N
    uint32_t BASE_ADDRESS;
 };
 
-struct SQ_VTX_CONSTANT_WORD1_N : Bitfield<SQ_VTX_CONSTANT_WORD1_N, uint32_t>
+union SQ_VTX_CONSTANT_WORD1_N
 {
-   BITFIELD_ENTRY(0, 11, uint32_t, SIZE);
+   uint32_t value;
+   uint32_t SIZE;
 };
 
 struct SQ_VTX_CONSTANT_WORD2_N : Bitfield<SQ_VTX_CONSTANT_WORD2_N, uint32_t>

@@ -266,12 +266,12 @@ bool GLDriver::checkActiveUniforms()
             auto sq_vtx_constant_word3 = getRegister<latte::SQ_VTX_CONSTANT_WORD3_N>(latte::Register::SQ_VTX_CONSTANT_WORD3_0 + 4 * resourceOffset);
             auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
 
-            if (!sq_vtx_constant_word0.BASE_ADDRESS || !sq_vtx_constant_word1.SIZE()) {
+            if (!sq_vtx_constant_word0.BASE_ADDRESS) {
                continue;
             }
 
             auto block = make_virtual_ptr<float>(sq_vtx_constant_word0.BASE_ADDRESS);
-            auto size = sq_vtx_constant_word1.SIZE() + 1;
+            auto size = sq_vtx_constant_word1.SIZE + 1;
             auto values = size / 4;
 
             auto &ubo = mUniformBuffers[sq_vtx_constant_word0.BASE_ADDRESS];
@@ -305,12 +305,12 @@ bool GLDriver::checkActiveUniforms()
             auto sq_vtx_constant_word3 = getRegister<latte::SQ_VTX_CONSTANT_WORD3_N>(latte::Register::SQ_VTX_CONSTANT_WORD3_0 + 4 * resourceOffset);
             auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
 
-            if (!sq_vtx_constant_word0.BASE_ADDRESS || !sq_vtx_constant_word1.SIZE()) {
+            if (!sq_vtx_constant_word0.BASE_ADDRESS) {
                continue;
             }
 
             auto block = make_virtual_ptr<float>(sq_vtx_constant_word0.BASE_ADDRESS);
-            auto size = sq_vtx_constant_word1.SIZE() + 1;
+            auto size = sq_vtx_constant_word1.SIZE + 1;
             auto values = size / 4;
 
             auto &ubo = mUniformBuffers[sq_vtx_constant_word0.BASE_ADDRESS];
@@ -444,9 +444,14 @@ bool GLDriver::checkActiveAttribBuffers()
       }
 
       auto addr = sq_vtx_constant_word0.BASE_ADDRESS;
-      auto size = sq_vtx_constant_word1.SIZE() + 1;
+      auto size = sq_vtx_constant_word1.SIZE + 1;
       auto stride = sq_vtx_constant_word2.STRIDE();
       auto &buffer = mAttribBuffers[addr];
+
+      if (size % stride) {
+         gLog->error("Error, size: {} is not multiple of stride: {}", size, stride);
+         return false;
+      }
 
       if (!buffer.object) {
          buffer.size = size;

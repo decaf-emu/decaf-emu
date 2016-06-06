@@ -353,7 +353,7 @@ struct SetVtxResource
 
    uint32_t id;
    virtual_ptr<const void> baseAddress;
-   uint32_t size;
+   latte::SQ_VTX_CONSTANT_WORD1_N word1;
    latte::SQ_VTX_CONSTANT_WORD2_N word2;
    latte::SQ_VTX_CONSTANT_WORD3_N word3;
    latte::SQ_VTX_CONSTANT_WORD6_N word6;
@@ -366,7 +366,7 @@ struct SetVtxResource
 
       se.CONST_OFFSET(id);
       se(baseAddress);
-      se(size);
+      se(word1.value);
       se(word2.value);
       se(word3.value);
       se(unusedWord4);
