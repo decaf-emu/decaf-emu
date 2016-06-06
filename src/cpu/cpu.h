@@ -44,6 +44,7 @@ void set_interrupt_handler(interrupt_handler handler);
 uint32_t register_kernel_call(const kernel_call_entry &entry);
 
 void start();
+void join();
 void halt();
 
 typedef ::Tracer Tracer;

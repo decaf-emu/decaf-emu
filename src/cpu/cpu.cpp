@@ -14,6 +14,9 @@
 namespace cpu
 {
 
+std::atomic_bool
+gRunning;
+
 entrypoint_handler
 gCoreEntryPointHandler;
 
@@ -25,9 +28,6 @@ gCore[3];
 
 static thread_local cpu::Core *
 tCurrentCore = nullptr;
-
-std::thread
-gTimerThread;
 
 void initialise()
 {
@@ -49,6 +49,8 @@ void coreEntryPoint(Core *core)
 
 void start()
 {
+   gRunning.store(true);
+
    for (auto i = 0; i < 3; ++i) {
       auto &core = gCore[i];
       core.id = i;
@@ -63,15 +65,29 @@ void start()
    platform::setThreadName(&gTimerThread, "Timer Thread");
 }
 
+void join()
+{
+   for (auto i = 0; i < 3; ++i) {
+      gCore[i].thread.join();
+   }
+
+   // Mark the CPU as no longer running
+   gRunning.store(false);
+   
+   // Notify the timer thread that something changed
+   gTimerCondition.notify_all();
+
+   // Wait for the timer thread to shut down
+   gTimerThread.join();
+}
+
 void halt()
 {
    for (auto i = 0; i < 3; ++i) {
       interrupt(i, SRESET_INTERRUPT);
    }
 
-   for (auto i = 0; i < 3; ++i) {
-      gCore[i].thread.join();
-   }
+   join();
 }
 
 void set_core_entrypoint_handler(entrypoint_handler handler)

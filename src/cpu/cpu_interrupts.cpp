@@ -6,9 +6,6 @@
 namespace cpu
 {
 
-extern Core
-gCore[3];
-
 interrupt_handler
 gInterruptHandler;
 
@@ -23,6 +20,9 @@ gTimerMutex;
 
 std::condition_variable
 gTimerCondition;
+
+std::thread
+gTimerThread;
 
 void set_interrupt_handler(interrupt_handler handler)
 {
@@ -39,7 +39,7 @@ void interrupt(int core_idx, uint32_t flags)
 void
 timerEntryPoint()
 {
-   while (true) {
+   while (gRunning.load()) {
       std::unique_lock<std::mutex> lock{ gTimerMutex };
       auto now = std::chrono::system_clock::now();
       auto next = std::chrono::time_point<std::chrono::system_clock>::max();

@@ -1,11 +1,27 @@
 #pragma once
 #include "cpu.h"
+#include <condition_variable>
 
 namespace cpu
 {
 
-extern entrypoint_handler gCoreEntryPointHandler;
-extern interrupt_handler gInterruptHandler;
+extern Core
+gCore[3];
+
+extern std::atomic_bool
+gRunning;
+
+extern entrypoint_handler
+gCoreEntryPointHandler;
+
+extern interrupt_handler
+gInterruptHandler;
+
+extern std::condition_variable
+gTimerCondition;
+
+extern std::thread
+gTimerThread;
 
 bool has_breakpoints();
 
