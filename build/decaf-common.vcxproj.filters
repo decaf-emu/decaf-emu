@@ -15,76 +15,76 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\common\binaryfile.h">
+    <ClInclude Include="..\src\common\align.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\binaryview.h">
+    <ClInclude Include="..\src\common\be_array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\bit_cast.h">
+    <ClInclude Include="..\src\common\be_val.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\bitfield.h">
+    <ClInclude Include="..\src\common\be_vec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\bitutils.h">
+    <ClInclude Include="..\src\common\be_volatile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\byte_swap.h">
+    <ClInclude Include="..\src\common\bigendianview.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\debuglog.h">
+    <ClInclude Include="..\src\common\binaryfile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\emuassert.h">
+    <ClInclude Include="..\src\common\binaryview.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\fixed.h">
+    <ClInclude Include="..\src\common\bit_cast.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\floatutils.h">
+    <ClInclude Include="..\src\common\bitfield.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\log.h">
+    <ClInclude Include="..\src\common\bitutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\make_array.h">
+    <ClInclude Include="..\src\common\byte_swap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\pow.h">
+    <ClInclude Include="..\src\common\debuglog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\structsize.h">
+    <ClInclude Include="..\src\common\emuassert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\strutils.h">
+    <ClInclude Include="..\src\common\fixed.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\teenyheap.h">
+    <ClInclude Include="..\src\common\floatutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\type_list.h">
+    <ClInclude Include="..\src\common\log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\virtual_ptr.h">
+    <ClInclude Include="..\src\common\make_array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\align.h">
+    <ClInclude Include="..\src\common\pow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\be_array.h">
+    <ClInclude Include="..\src\common\structsize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\be_val.h">
+    <ClInclude Include="..\src\common\strutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\be_vec.h">
+    <ClInclude Include="..\src\common\teenyheap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\be_volatile.h">
+    <ClInclude Include="..\src\common\type_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\bigendianview.h">
+    <ClInclude Include="..\src\common\virtual_ptr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

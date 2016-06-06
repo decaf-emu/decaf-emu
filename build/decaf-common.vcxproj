@@ -14,6 +14,32 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\common\align.h" />
+    <ClInclude Include="..\src\common\be_array.h" />
+    <ClInclude Include="..\src\common\be_val.h" />
+    <ClInclude Include="..\src\common\be_vec.h" />
+    <ClInclude Include="..\src\common\be_volatile.h" />
+    <ClInclude Include="..\src\common\bigendianview.h" />
+    <ClInclude Include="..\src\common\binaryfile.h" />
+    <ClInclude Include="..\src\common\binaryview.h" />
+    <ClInclude Include="..\src\common\bitfield.h" />
+    <ClInclude Include="..\src\common\bitutils.h" />
+    <ClInclude Include="..\src\common\bit_cast.h" />
+    <ClInclude Include="..\src\common\byte_swap.h" />
+    <ClInclude Include="..\src\common\debuglog.h" />
+    <ClInclude Include="..\src\common\emuassert.h" />
+    <ClInclude Include="..\src\common\fixed.h" />
+    <ClInclude Include="..\src\common\floatutils.h" />
+    <ClInclude Include="..\src\common\log.h" />
+    <ClInclude Include="..\src\common\make_array.h" />
+    <ClInclude Include="..\src\common\pow.h" />
+    <ClInclude Include="..\src\common\structsize.h" />
+    <ClInclude Include="..\src\common\strutils.h" />
+    <ClInclude Include="..\src\common\teenyheap.h" />
+    <ClInclude Include="..\src\common\type_list.h" />
+    <ClInclude Include="..\src\common\virtual_ptr.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F75C0F3B-F503-4B49-9198-8529390D5C0C}</ProjectGuid>
     <RootNamespace>decafcommon</RootNamespace>
@@ -24,21 +50,21 @@
     <ConfigurationType>Utility</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Utility</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'" Label="Configuration">
     <ConfigurationType>Utility</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -100,32 +126,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\src\common\align.h" />
-    <ClInclude Include="..\..\src\common\be_array.h" />
-    <ClInclude Include="..\..\src\common\be_val.h" />
-    <ClInclude Include="..\..\src\common\be_vec.h" />
-    <ClInclude Include="..\..\src\common\be_volatile.h" />
-    <ClInclude Include="..\..\src\common\bigendianview.h" />
-    <ClInclude Include="..\..\src\common\binaryfile.h" />
-    <ClInclude Include="..\..\src\common\binaryview.h" />
-    <ClInclude Include="..\..\src\common\bitfield.h" />
-    <ClInclude Include="..\..\src\common\bitutils.h" />
-    <ClInclude Include="..\..\src\common\bit_cast.h" />
-    <ClInclude Include="..\..\src\common\byte_swap.h" />
-    <ClInclude Include="..\..\src\common\debuglog.h" />
-    <ClInclude Include="..\..\src\common\emuassert.h" />
-    <ClInclude Include="..\..\src\common\fixed.h" />
-    <ClInclude Include="..\..\src\common\floatutils.h" />
-    <ClInclude Include="..\..\src\common\log.h" />
-    <ClInclude Include="..\..\src\common\make_array.h" />
-    <ClInclude Include="..\..\src\common\pow.h" />
-    <ClInclude Include="..\..\src\common\structsize.h" />
-    <ClInclude Include="..\..\src\common\strutils.h" />
-    <ClInclude Include="..\..\src\common\teenyheap.h" />
-    <ClInclude Include="..\..\src\common\type_list.h" />
-    <ClInclude Include="..\..\src\common\virtual_ptr.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

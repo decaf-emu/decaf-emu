@@ -74,7 +74,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hardware-test", "build\hard
 		{2CDEC1A4-EE8C-4243-9D7E-53869431B35E} = {2CDEC1A4-EE8C-4243-9D7E-53869431B35E}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "decaf-common", "build\decaf-common\decaf-common.vcxproj", "{F75C0F3B-F503-4B49-9198-8529390D5C0C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "decaf-common", "build\decaf-common.vcxproj", "{F75C0F3B-F503-4B49-9198-8529390D5C0C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
