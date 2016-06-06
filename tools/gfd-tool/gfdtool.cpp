@@ -815,7 +815,7 @@ convertTexture(const std::string &path)
    }
 
    auto filename = getFilename(path);
-   auto basename = getFileBasename(filename);
+   auto basename = getFileBasename(path);
 
    getGfdData(file, data);
 
@@ -838,7 +838,16 @@ convertTexture(const std::string &path)
       gx2::internal::convertTiling(&tex.header->surface, untiledImage, untiledMipmap);
 
       // Output DDS file
-      auto outname = fmt::format("{}_texture{}.dds", basename, index);
+      std::string outname;
+
+      if (data.textures.size()) {
+         outname = fmt::format("{}.gtx.{}.dds", basename, index);
+      } else {
+         outname = fmt::format("{}.gtx.dds", basename);
+      }
+
+      tex.header->surface.imageSize = untiledImage.size();
+      tex.header->surface.mipmapSize = untiledMipmap.size();
       gx2::debug::saveDDS(outname, &tex.header->surface, untiledImage.data(), untiledMipmap.data());
 
       gHeap->free(image);
@@ -850,6 +859,7 @@ convertTexture(const std::string &path)
 
 int main(int argc, char **argv)
 {
+   int result = -1;
    excmd::parser parser;
    excmd::option_state options;
 
@@ -861,13 +871,13 @@ int main(int argc, char **argv)
       .add_option("h,help", excmd::description { "Show the help." });
 
    parser.add_command("help")
-      .add_argument("command");
+      .add_argument("command", excmd::value<std::string> { });
 
    parser.add_command("info")
-      .add_argument("file in");
+      .add_argument("file in", excmd::value<std::string> { });
 
    parser.add_command("convert")
-      .add_argument("file in");
+      .add_argument("src", excmd::value<std::string> { });
 
    // Parse command line
    try {
@@ -890,13 +900,13 @@ int main(int argc, char **argv)
 
    if (options.has("info")) {
       auto in = options.get<std::string>("file in");
-      return printInfo(in) ? 0 : -1;
+      result = printInfo(in) ? 0 : -1;
    } else if (options.has("convert")) {
-      auto in = options.get<std::string>("file in");
-      return convertTexture(in) ? 0 : -1;
+      auto src = options.get<std::string>("src");
+      result = convertTexture(src) ? 0 : -1;
    }
 
-   return 0;
+   return result;
 }
 
 /**
