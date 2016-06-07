@@ -24,11 +24,6 @@ set(HEADER_FILES
     kernelfunction.h
     kernelmodule.h
     loader.h
-    ppcinvokeargs.h
-    ppcinvoke.h
-    ppcinvokelog.h
-    ppcinvokeresult.h
-    ppctypes.h
     system.h
     traceiter.h
     types.h

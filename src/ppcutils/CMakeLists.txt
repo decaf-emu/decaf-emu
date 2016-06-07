@@ -3,6 +3,11 @@ include_directories(".")
 set(SOURCE_FILES
     )
 set(HEADER_FILES
+    ppcinvokeargs.h
+    ppcinvoke.h
+    ppcinvokelog.h
+    ppcinvokeresult.h
+    ppctypeconv.h
     stackobject.h
     wfunc_call.h
     wfunc_ptr.h

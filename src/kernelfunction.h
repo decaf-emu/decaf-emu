@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "cpu/state.h"
 #include "kernelexport.h"
-#include "ppcinvoke.h"
+#include "ppcutils/ppcinvoke.h"
 #include "common/type_list.h"
 
 // Kernel Function Export

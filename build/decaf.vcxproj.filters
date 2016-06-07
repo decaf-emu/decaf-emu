@@ -947,21 +947,6 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_shared.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppctypes.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppcinvoke.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppcinvokelog.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppcinvokeargs.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppcinvokeresult.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_draw.h">
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
@@ -1444,6 +1429,21 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_allocator.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppcutils\ppcinvokeresult.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppcutils\ppctypeconv.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppcutils\ppcinvoke.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppcutils\ppcinvokeargs.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppcutils\ppcinvokelog.h">
+      <Filter>Header Files\ppcutils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

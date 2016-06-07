@@ -1,7 +1,7 @@
 #pragma once
 #include <gsl.h>
 #include "types.h"
-#include "ppctypes.h"
+#include "ppcutils/ppctypeconv.h"
 
 namespace nn
 {

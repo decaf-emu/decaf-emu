@@ -482,9 +482,6 @@
     <ClInclude Include="..\src\modules\vpad\vpad.h" />
     <ClInclude Include="..\src\modules\vpad\vpad_core.h" />
     <ClInclude Include="..\src\modules\vpad\vpad_status.h" />
-    <ClInclude Include="..\src\ppcinvokeargs.h" />
-    <ClInclude Include="..\src\ppcinvokelog.h" />
-    <ClInclude Include="..\src\ppcinvokeresult.h" />
     <ClInclude Include="..\src\loader.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_alarm.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_core.h" />
@@ -513,8 +510,11 @@
     <ClInclude Include="..\src\modules\padscore\padscore_wpad.h" />
     <ClInclude Include="..\src\modules\proc_ui\proc_ui.h" />
     <ClInclude Include="..\src\modules\proc_ui\proc_ui_core.h" />
-    <ClInclude Include="..\src\ppcinvoke.h" />
-    <ClInclude Include="..\src\ppctypes.h" />
+    <ClInclude Include="..\src\ppcutils\ppcinvoke.h" />
+    <ClInclude Include="..\src\ppcutils\ppcinvokeargs.h" />
+    <ClInclude Include="..\src\ppcutils\ppcinvokelog.h" />
+    <ClInclude Include="..\src\ppcutils\ppcinvokeresult.h" />
+    <ClInclude Include="..\src\ppcutils\ppctypeconv.h" />
     <ClInclude Include="..\src\ppcutils\stackobject.h" />
     <ClInclude Include="..\src\ppcutils\wfunc_call.h" />
     <ClInclude Include="..\src\ppcutils\wfunc_ptr.h" />
