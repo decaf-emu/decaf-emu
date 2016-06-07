@@ -136,7 +136,7 @@ bool GLDriver::checkActiveShader()
          gl::glCreateVertexArrays(1, &fetchShader.object);
 
          for (auto &attrib : fetchShader.attribs) {
-            auto normalise = attrib.numFormat == latte::SQ_NUM_FORMAT_SCALED ? gl::GL_TRUE : gl::GL_FALSE;
+            auto normalise = attrib.numFormat == latte::SQ_NUM_FORMAT_NORM ? gl::GL_TRUE : gl::GL_FALSE;
             auto type = getAttributeFormat(attrib.format, attrib.formatComp);
             auto components = getAttributeComponents(attrib.format);
 
