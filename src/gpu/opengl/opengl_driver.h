@@ -1,7 +1,8 @@
 #pragma once
+#include <chrono>
+#include <exception>
 #include <glbinding/gl/types.h>
 #include <gsl.h>
-#include <exception>
 #include <map>
 #include <thread>
 #include <unordered_map>
@@ -276,6 +277,11 @@ private:
    latte::ContextState *mContextState = nullptr;
 
    pm4::EventWriteEOP mPendingEOP;
+
+   using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
+   using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;
+   std::chrono::time_point<std::chrono::system_clock> mLastSwap;
+   duration_system_clock mAverageFrameTime;
 
 #ifdef PLATFORM_WINDOWS
    uint64_t mDeviceContext = 0;

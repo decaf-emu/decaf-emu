@@ -191,8 +191,23 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
 
 void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 {
+   static const auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds { 1 }).count();
+   static const auto weight = 0.9;
+
    platform::ui::swapBuffers();
    gx2::internal::onFlip();
+
+   auto now = std::chrono::system_clock::now();
+
+   if (mLastSwap.time_since_epoch().count()) {
+      mAverageFrameTime = weight * mAverageFrameTime + (1.0 - weight) * (now - mLastSwap);
+
+      auto fps = second / mAverageFrameTime.count();
+      auto time = std::chrono::duration_cast<duration_ms>(mAverageFrameTime);
+      platform::ui::setTvTitle(fmt::format("Decaf - FPS: {:.2f} Frame Time: {:.2f}", fps, time.count()));
+   }
+
+   mLastSwap = now;
 }
 
 void GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)

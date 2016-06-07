@@ -133,6 +133,18 @@ PlatformSDL::createWindows(const std::string &tvTitle, const std::string &drcTit
 }
 
 void
+PlatformSDL::setTvTitle(const std::string &title)
+{
+   SDL_SetWindowTitle(mTvWindow, title.c_str());
+}
+
+void
+PlatformSDL::setDrcTitle(const std::string &title)
+{
+   SDL_SetWindowTitle(mDrcWindow, title.c_str());
+}
+
+void
 PlatformSDL::run()
 {
    while (!mShouldQuit) {

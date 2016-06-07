@@ -19,6 +19,12 @@ public:
    createWindows(const std::string &tvTitle, const std::string &drcTitle) = 0;
 
    virtual void
+   setTvTitle(const std::string &title) = 0;
+
+   virtual void
+   setDrcTitle(const std::string &title) = 0;
+
+   virtual void
    run() = 0;
 
    virtual void

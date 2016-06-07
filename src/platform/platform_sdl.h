@@ -30,6 +30,12 @@ public:
    createWindows(const std::string &tvTitle, const std::string &drcTitle) override;
 
    virtual void
+   setTvTitle(const std::string &title) override;
+
+   virtual void
+   setDrcTitle(const std::string &title) override;
+
+   virtual void
    run() override;
 
    virtual void

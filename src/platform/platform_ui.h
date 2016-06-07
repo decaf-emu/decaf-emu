@@ -14,6 +14,12 @@ bool
 createWindows(const std::string &tvTitle, const std::string &drcTitle);
 
 void
+setTvTitle(const std::string &title);
+
+void
+setDrcTitle(const std::string &title);
+
+void
 run();
 
 void

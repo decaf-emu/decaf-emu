@@ -37,6 +37,17 @@ PlatformGLFW::createWindows(const std::string &tvTitle, const std::string &drcTi
 }
 
 void
+PlatformGLFW::setTvTitle(const std::string &title)
+{
+   glfwSetWindowTitle(mWindow, title.c_str());
+}
+
+void
+PlatformGLFW::setDrcTitle(const std::string &title)
+{
+}
+
+void
 PlatformGLFW::run()
 {
    while (!glfwWindowShouldClose(mWindow)) {

@@ -28,6 +28,18 @@ createWindows(const std::string &tvTitle, const std::string &drcTitle)
 }
 
 void
+setTvTitle(const std::string &title)
+{
+   gPlatform->setTvTitle(title);
+}
+
+void
+setDrcTitle(const std::string &title)
+{
+   gPlatform->setDrcTitle(title);
+}
+
+void
 run()
 {
    gPlatform->run();
