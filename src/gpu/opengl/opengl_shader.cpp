@@ -968,6 +968,8 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
    out << "}\n";
 
+   out << "/*\n" << vertex.disassembly << "\n*/\n";
+
    vertex.code = out.str();
    return true;
 }
@@ -1105,6 +1107,8 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    }
 
    out << "}\n";
+
+   out << "/*\n" << pixel.disassembly << "\n*/\n";
 
    pixel.code = out.str();
    return true;
