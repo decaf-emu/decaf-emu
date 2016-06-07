@@ -124,14 +124,14 @@ unpackQuadList(uint32_t count,
       auto index_bl = 3u;
 
       for (auto i = 0u; i < count / 4; ++i) {
-         auto offset = i * 4;
-         *(dst++) = index_tl + offset;
-         *(dst++) = index_tr + offset;
-         *(dst++) = index_bl + offset;
+         auto index = i * 4;
+         *(dst++) = index_tl + index;
+         *(dst++) = index_tr + index;
+         *(dst++) = index_bl + index;
 
-         *(dst++) = index_bl + offset;
-         *(dst++) = index_tr + offset;
-         *(dst++) = index_br + offset;
+         *(dst++) = index_bl + index;
+         *(dst++) = index_tr + index;
+         *(dst++) = index_br + index;
       }
    }
 
