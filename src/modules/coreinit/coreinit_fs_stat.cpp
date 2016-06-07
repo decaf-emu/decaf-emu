@@ -3,7 +3,7 @@
 #include "coreinit_fs_path.h"
 #include "coreinit_fs_stat.h"
 #include "filesystem/filesystem.h"
-#include "system.h"
+#include "kernel/kernel_filesystem.h"
 #include <gsl.h>
 
 namespace coreinit
@@ -18,7 +18,7 @@ FSGetStat(FSClient *client,
           uint32_t flags)
 {
    auto entry = fs::FolderEntry {};
-   auto fs = gSystem.getFileSystem();
+   auto fs = kernel::getFileSystem();
    auto file = fs->findEntry(coreinit::internal::translatePath(path), entry);
 
    if (!file) {

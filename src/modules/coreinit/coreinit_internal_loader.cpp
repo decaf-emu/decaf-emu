@@ -3,10 +3,10 @@
 #include "kernel/kernel_hle.h"
 #include "kernel/kernel_hlemodule.h"
 #include "kernel/kernel_hlefunction.h"
+#include "kernel/kernel_filesystem.h"
 #include "modules/coreinit/coreinit_memory.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_dynload.h"
-#include "system.h"
 #include "filesystem/filesystem.h"
 #include "common/align.h"
 #include "common/bigendianview.h"
@@ -806,7 +806,7 @@ LoadedModule *loadRPL(const std::string& name)
 
    // Try to find module in the game code directory
    if (!module) {
-      auto fs = gSystem.getFileSystem();
+      auto fs = kernel::getFileSystem();
       auto fh = fs->openFile("/vol/code/" + fileName, fs::File::Read);
 
       if (fh) {

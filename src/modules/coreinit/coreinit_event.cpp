@@ -3,7 +3,6 @@
 #include "coreinit_event.h"
 #include "coreinit_memheap.h"
 #include "coreinit_scheduler.h"
-#include "system.h"
 #include "ppcutils/stackobject.h"
 
 namespace coreinit

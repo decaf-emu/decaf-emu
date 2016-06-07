@@ -181,6 +181,7 @@
     <ClCompile Include="..\src\input\input.cpp" />
     <ClCompile Include="..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\src\kernel\kernel_fibers.cpp" />
+    <ClCompile Include="..\src\kernel\kernel_filesystem.cpp" />
     <ClCompile Include="..\src\kernel\kernel_hle.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp" />
@@ -324,7 +325,6 @@
     <ClCompile Include="..\src\modules\vpad\vpad_status.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125.cpp" />
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
-    <ClCompile Include="..\src\system.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\config.h" />
@@ -387,6 +387,7 @@
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\input\input.h" />
     <ClInclude Include="..\src\kernel\kernel.h" />
+    <ClInclude Include="..\src\kernel\kernel_filesystem.h" />
     <ClInclude Include="..\src\kernel\kernel_hle.h" />
     <ClInclude Include="..\src\kernel\kernel_hledata.h" />
     <ClInclude Include="..\src\kernel\kernel_hleexport.h" />
@@ -553,7 +554,6 @@
     <ClInclude Include="..\src\modules\nn_save\nn_save.h" />
     <ClInclude Include="..\src\modules\nn_save\nn_save_core.h" />
     <ClInclude Include="..\src\modules\zlib125\zlib125.h" />
-    <ClInclude Include="..\src\system.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

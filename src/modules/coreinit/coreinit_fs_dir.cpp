@@ -3,7 +3,7 @@
 #include "coreinit_fs_dir.h"
 #include "coreinit_fs_path.h"
 #include "filesystem/filesystem.h"
-#include "system.h"
+#include "kernel/kernel_filesystem.h"
 #include <gsl.h>
 
 namespace coreinit
@@ -17,7 +17,7 @@ FSOpenDir(FSClient *client,
           be_val<FSDirectoryHandle> *handle,
           uint32_t flags)
 {
-   auto fs = gSystem.getFileSystem();
+   auto fs = kernel::getFileSystem();
    auto dir = fs->openFolder(coreinit::internal::translatePath(path));
 
    if (!dir) {
@@ -52,7 +52,7 @@ FSMakeDir(FSClient *client,
           const char *path,
           uint32_t flags)
 {
-   auto fs = gSystem.getFileSystem();
+   auto fs = kernel::getFileSystem();
 
    if (!fs->makeFolder(coreinit::internal::translatePath(path))) {
       return FSStatus::FatalError;

@@ -6,7 +6,6 @@
 #include "coreinit_frameheap.h"
 #include "coreinit_unitheap.h"
 #include "cpu/mem.h"
-#include "system.h"
 #include "common/teenyheap.h"
 #include "common/strutils.h"
 #include "common/virtual_ptr.h"
@@ -26,9 +25,6 @@ pMEMFreeToDefaultHeap;
 
 static std::array<CommonHeap *, MEMBaseHeapType::Max>
 sMemArenas;
-
-static ExpandedHeap *
-sSystemHeap = nullptr;
 
 static MemoryList *
 sForegroundMemlist = nullptr;
@@ -236,10 +232,6 @@ CoreFreeDefaultHeap()
       }
    }
 
-   // Delete system heap
-   MEMDestroyExpHeap(sSystemHeap);
-   sSystemHeap = nullptr;
-
    // Free function pointers
    if (pMEMAllocFromDefaultHeap) {
       coreinit::internal::sysFree(pMEMAllocFromDefaultHeap);
@@ -283,7 +275,6 @@ Module::registerMembaseFunctions()
 void
 Module::initialiseMembase()
 {
-   sSystemHeap = nullptr;
    sMemArenas.fill(nullptr);
 
    sForegroundMemlist = coreinit::internal::sysAlloc<MemoryList>();
@@ -308,14 +299,14 @@ namespace internal
 void *
 sysAlloc(size_t size, int alignment)
 {
-   auto systemHeap = gSystem.getSystemHeap();
+   auto systemHeap = kernel::getSystemHeap();
    return systemHeap->alloc(size, alignment);
 }
 
 void
 sysFree(void *addr)
 {
-   auto systemHeap = gSystem.getSystemHeap();
+   auto systemHeap = kernel::getSystemHeap();
    return systemHeap->free(addr);
 }
 

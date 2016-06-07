@@ -12,7 +12,6 @@
 #include "coreinit_internal_loader.h"
 #include "kernel/kernel.h"
 #include "cpu/trace.h"
-#include "system.h"
 #include "ppcutils/wfunc_call.h"
 #include "ppcutils/stackobject.h"
 #include "common/emuassert.h"

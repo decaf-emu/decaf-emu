@@ -3,7 +3,7 @@
 #include "filesystem/filesystem.h"
 #include "modules/coreinit/coreinit_fs_dir.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
-#include "system.h"
+#include "kernel/kernel_filesystem.h"
 
 namespace nn
 {
@@ -14,7 +14,7 @@ namespace save
 SaveStatus
 SAVEInitSaveDir(uint8_t userID)
 {
-   auto fs = gSystem.getFileSystem();
+   auto fs = kernel::getFileSystem();
    auto titleID = coreinit::OSGetTitleID();
    auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
    auto titleHi = static_cast<uint32_t>(titleID >> 32);

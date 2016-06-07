@@ -1,7 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_expheap.h"
 #include "cpu/mem.h"
-#include "system.h"
 #include "common/align.h"
 #include "common/virtual_ptr.h"
 

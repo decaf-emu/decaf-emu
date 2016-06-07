@@ -16,7 +16,6 @@
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
 #include "platform/platform.h"
-#include "system.h"
 #include "cpu/trace.h"
 #include "common/log.h"
 

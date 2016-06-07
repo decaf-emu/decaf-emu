@@ -1,7 +1,6 @@
 #include "gx2.h"
 #include "gx2r_resource.h"
 #include "modules/coreinit/coreinit_memheap.h"
-#include "system.h"
 #include "common/align.h"
 #include "ppcutils/wfunc_call.h"
 

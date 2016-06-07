@@ -2,7 +2,7 @@
 #include "nn_temp.h"
 #include "nn_temp_dir.h"
 #include "filesystem/filesystem.h"
-#include "system.h"
+#include "kernel/kernel_filesystem.h"
 
 namespace nn
 {
@@ -24,7 +24,7 @@ TEMPCreateAndInitTempDir(uint32_t maxSize,
                          uint32_t pref,
                          be_val<TempDirID> *idOut)
 {
-   auto fs = gSystem.getFileSystem();
+   auto fs = kernel::getFileSystem();
    auto id = gDistribution(gMersenne);
 
    if (!fs->makeFolder(internal::getTempDir(id))) {
@@ -38,7 +38,7 @@ TEMPCreateAndInitTempDir(uint32_t maxSize,
 TempStatus
 TEMPShutdownTempDir(TempDirID id)
 {
-   auto fs = gSystem.getFileSystem();
+   auto fs = kernel::getFileSystem();
 
    if (!fs->deleteFolder(internal::getTempDir(id))) {
       return TempStatus::FatalError;

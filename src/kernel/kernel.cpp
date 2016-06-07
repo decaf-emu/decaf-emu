@@ -1,9 +1,9 @@
 #include "kernel.h"
 #include "kernel_internal.h"
 #include "kernel_hle.h"
+#include "kernel_filesystem.h"
 #include <pugixml.hpp>
 #include <excmd.h>
-#include "system.h"
 #include "debugcontrol.h"
 #include "filesystem/filesystem.h"
 #include "platform/platform_fiber.h"
@@ -19,6 +19,7 @@
 #include "modules/gx2/gx2_event.h"
 #include "cpu/mem.h"
 #include "ppcutils/wfunc_call.h"
+#include "common/teenyheap.h"
 
 namespace coreinit
 {
@@ -37,6 +38,9 @@ bool launch_game();
 static bool gRunning = true;
 static std::string gGameName;
 
+static TeenyHeap *
+sSystemHeap;
+
 void set_game_name(const std::string& name)
 {
    gGameName = name;
@@ -48,6 +52,14 @@ void initialise()
 
    cpu::set_core_entrypoint_handler(&cpu_entrypoint);
    cpu::set_interrupt_handler(&cpu_interrupt_handler);
+
+   sSystemHeap = new TeenyHeap(mem::translate(mem::SystemBase), mem::SystemSize);
+}
+
+TeenyHeap *
+getSystemHeap()
+{
+   return sSystemHeap;
 }
 
 void cpu_interrupt_handler(uint32_t interrupt_flags)
@@ -130,7 +142,7 @@ bool launch_game()
    // Read cos.xml if found
    auto maxCodeSize = 0x0E000000u;
    auto rpx = gGameName;
-   auto fs = gSystem.getFileSystem();
+   auto fs = getFileSystem();
 
    if (auto fh = fs->openFile("/vol/code/cos.xml", fs::File::Read)) {
       auto size = fh->size();

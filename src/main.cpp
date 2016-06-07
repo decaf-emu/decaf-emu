@@ -14,9 +14,9 @@
 #include "platform/platform_glfw.h"
 #include "platform/platform_sdl.h"
 #include "platform/platform_ui.h"
-#include "system.h"
 #include "common/log.h"
 #include "kernel/kernel.h"
+#include "kernel/kernel_filesystem.h"
 
 static void
 initialiseEmulator();
@@ -187,9 +187,6 @@ initialiseEmulator()
    cpu::initialise();
    kernel::initialise();
 
-   // Initialise emulator systems
-   gSystem.initialise();
-
    // Initialise debugger
    gDebugger.initialise();
 }
@@ -264,7 +261,7 @@ play(const fs::HostPath &path)
       return false;
    }
 
-   gSystem.setFileSystem(&fs);
+   kernel::setFileSystem(&fs);
    kernel::set_game_name(path.filename());
 
    // Lock out some memory for unimplemented data access

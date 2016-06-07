@@ -9,7 +9,6 @@ set(SOURCE_FILES
     emulog.cpp
     loader.cpp
     main.cpp
-    system.cpp
     )
 set(HEADER_FILES
     config.h
@@ -20,7 +19,6 @@ set(HEADER_FILES
     elf.h
     hostlookup.h
     loader.h
-    system.h
     traceiter.h
     types.h
     usermodule.h

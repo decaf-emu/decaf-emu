@@ -1,6 +1,5 @@
 #include "kernel_hle.h"
 #include "kernel_internal.h"
-#include "system.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"

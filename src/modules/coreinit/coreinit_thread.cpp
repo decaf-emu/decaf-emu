@@ -9,7 +9,6 @@
 #include "coreinit_thread.h"
 #include "coreinit_internal_loader.h"
 #include "cpu/mem.h"
-#include "system.h"
 #include "usermodule.h"
 #include "cpu/cpu.h"
 #include "ppcutils/stackobject.h"

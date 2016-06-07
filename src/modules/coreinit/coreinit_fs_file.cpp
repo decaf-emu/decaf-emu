@@ -3,7 +3,7 @@
 #include "coreinit_fs_path.h"
 #include "coreinit_fs_file.h"
 #include "filesystem/filesystem.h"
-#include "system.h"
+#include "kernel/kernel_filesystem.h"
 
 namespace coreinit
 {
@@ -40,7 +40,7 @@ FSOpenFile(FSClient *client,
            be_val<FSFileHandle> *outHandle,
            uint32_t flags)
 {
-   auto fs = gSystem.getFileSystem();
+   auto fs = kernel::getFileSystem();
    auto path = coreinit::internal::translatePath(pathStr);
    auto mode = parseOpenMode(modeStr);
 
