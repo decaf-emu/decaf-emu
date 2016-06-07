@@ -19,6 +19,7 @@ using namespace espresso;
 
 static const auto TEST_FPSCR = true;
 static const auto TEST_FPSCR_FR = false;
+static const auto TEST_FPSCR_UX = false;
 
 namespace hwtest
 {
@@ -198,6 +199,11 @@ bool runTests(const std::string &path)
             if (!TEST_FPSCR_FR) {
                state->fpscr.fr = 0;
                test.output.fpscr.fr = 0;
+            }
+
+            if (!TEST_FPSCR_UX) {
+               state->fpscr.ux = 0;
+               test.output.fpscr.ux = 0;
             }
 
             auto state_fpscr = state->fpscr.value;
