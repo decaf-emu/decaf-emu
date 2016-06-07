@@ -401,14 +401,14 @@ printInfo(const std::string &filename)
             startGroup(out, "CB_SHADER_CONTROL");
             {
                auto cb_shader_control = shader->regs.cb_shader_control.value();
-               writeField(out, "RT0_ENABLE", cb_shader_control.RT0_ENABLE);
-               writeField(out, "RT1_ENABLE", cb_shader_control.RT1_ENABLE);
-               writeField(out, "RT2_ENABLE", cb_shader_control.RT2_ENABLE);
-               writeField(out, "RT3_ENABLE", cb_shader_control.RT3_ENABLE);
-               writeField(out, "RT4_ENABLE", cb_shader_control.RT4_ENABLE);
-               writeField(out, "RT5_ENABLE", cb_shader_control.RT5_ENABLE);
-               writeField(out, "RT6_ENABLE", cb_shader_control.RT6_ENABLE);
-               writeField(out, "RT7_ENABLE", cb_shader_control.RT7_ENABLE);
+               writeField(out, "RT0_ENABLE", cb_shader_control.RT0_ENABLE().get());
+               writeField(out, "RT1_ENABLE", cb_shader_control.RT1_ENABLE().get());
+               writeField(out, "RT2_ENABLE", cb_shader_control.RT2_ENABLE().get());
+               writeField(out, "RT3_ENABLE", cb_shader_control.RT3_ENABLE().get());
+               writeField(out, "RT4_ENABLE", cb_shader_control.RT4_ENABLE().get());
+               writeField(out, "RT5_ENABLE", cb_shader_control.RT5_ENABLE().get());
+               writeField(out, "RT6_ENABLE", cb_shader_control.RT6_ENABLE().get());
+               writeField(out, "RT7_ENABLE", cb_shader_control.RT7_ENABLE().get());
             }
             endGroup(out);
 

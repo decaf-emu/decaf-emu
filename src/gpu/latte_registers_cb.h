@@ -185,22 +185,16 @@ struct CB_COLOR_CONTROL : public Bitfield<CB_COLOR_CONTROL, uint32_t>
    BITFIELD_ENTRY(16, 8, uint32_t, ROP3);
 };
 
-union CB_SHADER_CONTROL
+struct CB_SHADER_CONTROL : public Bitfield<CB_SHADER_CONTROL, uint32_t>
 {
-   uint32_t value;
-
-   struct
-   {
-      uint32_t RT0_ENABLE : 1;
-      uint32_t RT1_ENABLE : 1;
-      uint32_t RT2_ENABLE : 1;
-      uint32_t RT3_ENABLE : 1;
-      uint32_t RT4_ENABLE : 1;
-      uint32_t RT5_ENABLE : 1;
-      uint32_t RT6_ENABLE : 1;
-      uint32_t RT7_ENABLE : 1;
-      uint32_t : 24;
-   };
+   BITFIELD_ENTRY(0, 1, bool, RT0_ENABLE);
+   BITFIELD_ENTRY(1, 1, bool, RT1_ENABLE);
+   BITFIELD_ENTRY(2, 1, bool, RT2_ENABLE);
+   BITFIELD_ENTRY(3, 1, bool, RT3_ENABLE);
+   BITFIELD_ENTRY(4, 1, bool, RT4_ENABLE);
+   BITFIELD_ENTRY(5, 1, bool, RT5_ENABLE);
+   BITFIELD_ENTRY(6, 1, bool, RT6_ENABLE);
+   BITFIELD_ENTRY(7, 1, bool, RT7_ENABLE);
 };
 
 // Contains color component mask fields for the colors output by the shader
