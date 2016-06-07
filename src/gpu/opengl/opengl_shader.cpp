@@ -341,15 +341,20 @@ bool GLDriver::checkActiveUniforms()
 
 template<typename Type, int N>
 static void
-stridedMemcpy2(void *srcBuffer, void *dstBuffer, size_t size, size_t offset, size_t stride, bool endian)
+stridedMemcpy2(const void *srcBuffer,
+               void *dstBuffer,
+               size_t size,
+               size_t offset,
+               size_t stride,
+               bool endian)
 {
-   auto src = reinterpret_cast<uint8_t *>(srcBuffer) + offset;
+   auto src = reinterpret_cast<const uint8_t *>(srcBuffer) + offset;
+   auto end = reinterpret_cast<const uint8_t *>(srcBuffer) + size;
    auto dst = reinterpret_cast<uint8_t *>(dstBuffer) + offset;
-   auto end = reinterpret_cast<uint8_t *>(srcBuffer) + size;
 
    if (endian) {
       while (src < end) {
-         auto srcPtr = reinterpret_cast<Type *>(src);
+         auto srcPtr = reinterpret_cast<const Type *>(src);
          auto dstPtr = reinterpret_cast<Type *>(dst);
 
          for (auto i = 0u; i < N; ++i) {
@@ -361,7 +366,7 @@ stridedMemcpy2(void *srcBuffer, void *dstBuffer, size_t size, size_t offset, siz
       }
    } else {
       while (src < end) {
-         memcpy(src, dst, sizeof(Type) * N);
+         std::memcpy(dst, src, sizeof(Type) * N);
          src += stride;
          dst += stride;
       }
@@ -369,7 +374,13 @@ stridedMemcpy2(void *srcBuffer, void *dstBuffer, size_t size, size_t offset, siz
 }
 
 static void
-stridedMemcpy(void *src, void *dst, size_t size, size_t offset, size_t stride, latte::SQ_ENDIAN endian, latte::SQ_DATA_FORMAT format)
+stridedMemcpy(const void *src,
+              void *dst,
+              size_t size,
+              size_t offset,
+              size_t stride,
+              latte::SQ_ENDIAN endian,
+              latte::SQ_DATA_FORMAT format)
 {
    bool swap = (endian != latte::SQ_ENDIAN_NONE);
 
@@ -464,7 +475,7 @@ bool GLDriver::checkActiveAttribBuffers()
          throw std::logic_error("Buffer size has changed!");
       }
 
-      stridedMemcpy(make_virtual_ptr<void *>(addr),
+      stridedMemcpy(mem::translate<const void>(addr),
                     buffer.mappedBuffer,
                     buffer.size,
                     attrib.offset,
