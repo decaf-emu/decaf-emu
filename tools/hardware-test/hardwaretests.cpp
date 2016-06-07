@@ -93,7 +93,7 @@ printTestField(InstructionField field, Instruction instr, RegisterState *input, 
 
 #define CompareFPSCRField(field) \
    if (result.field != expected.field) { \
-      gLog->debug("fpscr." #field " = {} {} {}", input.field, expected.field, result.field); \
+      gLog->debug("fpscr." #field " = input {} expected {} found {}", input.field, expected.field, result.field); \
       failed = true; \
    }
 
@@ -193,16 +193,19 @@ bool runTests(const std::string &path)
             failed = true;
          }
 
-         // Check FPSCR (all bits except possibly FR)
+         // Check FPSCR
          if (TEST_FPSCR) {
+            if (!TEST_FPSCR_FR) {
+               state->fpscr.fr = 0;
+               test.output.fpscr.fr = 0;
+            }
+
             auto state_fpscr = state->fpscr.value;
             auto test_fpscr = test.output.fpscr.value;
-            if (!TEST_FPSCR_FR) {
-               state_fpscr &= ~0x00040000;
-               test_fpscr &= ~0x00040000;
-            }
+
             if (state_fpscr != test_fpscr) {
                gLog->error("Test failed, fpscr {:08X} found {:08X}", test.output.fpscr.value, state->fpscr.value);
+               compareFPSCR(test.input.fpscr, state->fpscr, test.output.fpscr);
                failed = true;
             }
          }
