@@ -6,11 +6,11 @@
 #include <memory>
 #include <vector>
 #include <spdlog/spdlog.h>
+#include "common/be_val.h"
+#include "common/bitutils.h"
 #include "cpu/state.h"
 #include "cpu/espresso/espresso_instructionset.h"
-#include "utils/be_val.h"
-#include "utils/bitutils.h"
-#include "hardwaretests.h"
+#include "hardware-test/hardwaretests.h"
 #include "generator_testlist.h"
 #include "generator_valuelist.h"
 

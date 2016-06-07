@@ -7,8 +7,8 @@
 #include <vector>
 #include <ovsocket/socket.h>
 #include <ovsocket/networkthread.h>
-#include "hardwaretests.h"
-#include "utils/be_val.h"
+#include "hardware-test/hardwaretests.h"
+#include "common/be_val.h"
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "ovsocket.lib")
