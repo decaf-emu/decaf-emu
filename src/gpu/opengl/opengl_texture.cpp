@@ -729,12 +729,14 @@ bool GLDriver::checkActiveSamplers()
       auto depth_compare_function = getTextureCompareFunction(sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION());
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_FUNC, static_cast<gl::GLint>(depth_compare_function));
 
-      // Setup texture LOD
+      // Setup texture LOD/BIAS
       auto min_lod = sq_tex_sampler_word1.MIN_LOD();
       auto max_lod = sq_tex_sampler_word1.MAX_LOD();
       auto lod_bias = sq_tex_sampler_word1.LOD_BIAS();
 
-      // TODO: GL_TEXTURE_MIN_LOD, GL_TEXTURE_MAX_LOD, GL_TEXTURE_LOD_BIAS
+      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MIN_LOD, min_lod);
+      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MAX_LOD, max_lod);
+      gl::glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, lod_bias);
 
       // Bind sampler
       gl::glBindSampler(i, sampler.object);
