@@ -291,7 +291,7 @@ printInfo(const std::string &filename)
             }
             endGroup(out);
 
-            startGroup(out, "SQ_VTX_SEMANTIC_CLEAR");
+            startGroup(out, "VGT_HOS_REUSE_DEPTH");
             {
                auto vgt_hos_reuse_depth = shader->regs.vgt_hos_reuse_depth.value();
                writeField(out, "REUSE_DEPTH", vgt_hos_reuse_depth.REUSE_DEPTH().get());
