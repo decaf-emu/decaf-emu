@@ -19,10 +19,6 @@ set(HEADER_FILES
     debugnet.h
     elf.h
     hostlookup.h
-    kerneldata.h
-    kernelexport.h
-    kernelfunction.h
-    kernelmodule.h
     loader.h
     system.h
     traceiter.h

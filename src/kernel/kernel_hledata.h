@@ -1,11 +1,14 @@
 #pragma once
 #include <cstdint>
-#include "kernelexport.h"
+#include "kernel_hleexport.h"
 
-struct KernelData : public KernelExport
+namespace kernel
 {
-   KernelData() :
-      KernelExport(KernelExport::Data)
+
+struct HleData : public HleExport
+{
+   HleData() :
+      HleExport(HleExport::Data)
    {
    }
 
@@ -13,15 +16,12 @@ struct KernelData : public KernelExport
    uint32_t size = 0;
 };
 
-namespace kernel
-{
-
-// Create a KernelData export from a data pointer
+// Create a HleData export from a data pointer
 template<typename Type>
-inline KernelData *
+inline HleData *
 makeData(Type **value)
 {
-   auto data = new KernelData();
+   auto data = new HleData();
    data->hostPtr = reinterpret_cast<void**>(value);
    data->size = sizeof(Type);
    return data;

@@ -1,10 +1,10 @@
 #pragma once
-#include "kernelmodule.h"
+#include "kernel/kernel_hlemodule.h"
 
 namespace nsysnet
 {
 
-class Module : public KernelModuleImpl<Module>
+class Module : public kernel::HleModuleImpl<Module>
 {
 public:
    Module();

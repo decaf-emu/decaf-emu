@@ -1,5 +1,5 @@
 #pragma once
-#include "kernelmodule.h"
+#include "kernel/kernel_hlemodule.h"
 
 namespace nn
 {
@@ -7,7 +7,7 @@ namespace nn
 namespace ac
 {
 
-class Module : public KernelModuleImpl<Module>
+class Module : public kernel::HleModuleImpl<Module>
 {
 public:
    virtual void initialise() override;

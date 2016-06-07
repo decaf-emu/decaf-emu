@@ -1,9 +1,9 @@
 #pragma once
 #include <cstdint>
 #include <map>
-#include "kernelexport.h"
-#include "kernelfunction.h"
-#include "kerneldata.h"
+#include "kernel_hleexport.h"
+#include "kernel_hlefunction.h"
+#include "kernel_hledata.h"
 #include "common/virtual_ptr.h"
 
 #define RegisterKernelFunction(fn) \
@@ -27,43 +27,31 @@
 #define RegisterKernelData(data) \
    registerExport(#data, kernel::makeData(&data))
 
-using KernelExportMap = std::map<std::string, KernelExport*>;
+namespace kernel
+{
 
-struct ModuleHandleData;
+using HleExportMap = std::map<std::string, HleExport*>;
 
-class KernelModule
+class HleModule
 {
 public:
-   virtual ~KernelModule() = default;
+   virtual ~HleModule() = default;
 
    virtual void initialise() = 0;
-   virtual const KernelExportMap &getExportMap() const = 0;
-   virtual KernelExport *findExport(const char *name) const = 0;
+   virtual const HleExportMap &getExportMap() const = 0;
+   virtual HleExport *findExport(const char *name) const = 0;
    virtual virtual_ptr<void> findExportAddress(const char *name) const = 0;
 
-   virtual_ptr<ModuleHandleData>
-   getHandle() const
-   {
-      return mHandle;
-   }
-
-   void setHandle(virtual_ptr<ModuleHandleData> handle)
-   {
-      mHandle = handle;
-   }
-
-protected:
-   virtual_ptr<ModuleHandleData> mHandle;
 };
 
 template<typename ModuleType>
-class KernelModuleImpl : public KernelModule
+class HleModuleImpl : public HleModule
 {
 public:
-   virtual ~KernelModuleImpl() override = default;
+   virtual ~HleModuleImpl() override = default;
 
-   KernelExport *
-   findExport(const char *name) const override
+   HleExport *
+      findExport(const char *name) const override
    {
       auto &map = getExportMap();
       auto itr = map.find(name);
@@ -76,7 +64,7 @@ public:
    }
 
    virtual_ptr<void>
-   findExportAddress(const char *name) const override
+      findExportAddress(const char *name) const override
    {
       auto exp = findExport(name);
 
@@ -87,24 +75,26 @@ public:
       return exp->ppcPtr;
    }
 
-   virtual const KernelExportMap &
-   getExportMap() const override
+   virtual const HleExportMap &
+      getExportMap() const override
    {
-      return KernelModuleImpl::getStaticExportMap();
+      return HleModuleImpl::getStaticExportMap();
    }
 
 protected:
-   static KernelExportMap &
-   getStaticExportMap()
+   static HleExportMap &
+      getStaticExportMap()
    {
-      static std::map<std::string, KernelExport*> sExport;
+      static std::map<std::string, HleExport*> sExport;
       return sExport;
    }
 
    static void
-   registerExport(const char *name, KernelExport *exp)
+      registerExport(const char *name, HleExport *exp)
    {
       exp->name = name;
       getStaticExportMap().insert(std::make_pair(std::string(name), exp));
    }
 };
+
+} // namespace kernel

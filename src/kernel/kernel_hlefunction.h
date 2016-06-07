@@ -1,19 +1,21 @@
 #pragma once
 #include <cstdint>
 #include "cpu/state.h"
-#include "kernelexport.h"
+#include "kernel_hleexport.h"
 #include "ppcutils/ppcinvoke.h"
 #include "common/type_list.h"
 
-// Kernel Function Export
-struct KernelFunction : KernelExport
+namespace kernel
 {
-   KernelFunction() :
-      KernelExport(KernelExport::Function)
+
+struct HleFunction : HleExport
+{
+   HleFunction() :
+      HleExport(HleExport::Function)
    {
    }
 
-   virtual ~KernelFunction() override = default;
+   virtual ~HleFunction() override = default;
 
    virtual void call(cpu::Core *state) = 0;
 
@@ -22,16 +24,13 @@ struct KernelFunction : KernelExport
    uint32_t vaddr = 0;
 };
 
-namespace kernel
-{
-
 namespace functions
 {
 
 template<typename ReturnType, typename... Args>
-struct KernelFunctionImpl : KernelFunction
+struct HleFunctionImpl : HleFunction
 {
-   ReturnType (*wrapped_function)(Args...);
+   ReturnType(*wrapped_function)(Args...);
 
    virtual void call(cpu::Core *thread) override
    {
@@ -40,9 +39,9 @@ struct KernelFunctionImpl : KernelFunction
 };
 
 template<typename ReturnType, typename ObjectType, typename... Args>
-struct KernelMemberFunctionImpl : KernelFunction
+struct HleMemberFunctionImpl : HleFunction
 {
-   ReturnType (ObjectType::*wrapped_function)(Args...);
+   ReturnType(ObjectType::*wrapped_function)(Args...);
 
    virtual void call(cpu::Core *thread) override
    {
@@ -51,7 +50,7 @@ struct KernelMemberFunctionImpl : KernelFunction
 };
 
 template<typename ObjectType, typename... Args>
-struct KernelConstructorFunctionImpl : KernelFunction
+struct HleConstructorFunctionImpl : HleFunction
 {
    static void trampFunction(ObjectType *object, Args... args)
    {
@@ -65,7 +64,7 @@ struct KernelConstructorFunctionImpl : KernelFunction
 };
 
 template<typename ObjectType>
-struct KernelDestructorFunctionImpl : KernelFunction
+struct HleDestructorFunctionImpl : HleFunction
 {
    static void trampFunction(ObjectType *object)
    {
@@ -80,12 +79,12 @@ struct KernelDestructorFunctionImpl : KernelFunction
 
 } // namespace functions
 
-// Regular Function
+  // Regular Function
 template<typename ReturnType, typename... Args>
-inline KernelFunction *
-makeFunction(ReturnType (*fptr)(Args...))
+inline HleFunction *
+makeFunction(ReturnType(*fptr)(Args...))
 {
-   auto func = new kernel::functions::KernelFunctionImpl<ReturnType, Args...>();
+   auto func = new kernel::functions::HleFunctionImpl<ReturnType, Args...>();
    func->valid = true;
    func->wrapped_function = fptr;
    return func;
@@ -93,10 +92,10 @@ makeFunction(ReturnType (*fptr)(Args...))
 
 // Member Function
 template<typename ReturnType, typename Class, typename... Args>
-inline KernelFunction *
-makeFunction(ReturnType (Class::*fptr)(Args...))
+inline HleFunction *
+makeFunction(ReturnType(Class::*fptr)(Args...))
 {
-   auto func = new kernel::functions::KernelMemberFunctionImpl<ReturnType, Class, Args...>();
+   auto func = new kernel::functions::HleMemberFunctionImpl<ReturnType, Class, Args...>();
    func->valid = true;
    func->wrapped_function = fptr;
    return func;
@@ -104,20 +103,20 @@ makeFunction(ReturnType (Class::*fptr)(Args...))
 
 // Constructor Args
 template<typename Class, typename... Args>
-inline KernelFunction *
+inline HleFunction *
 makeConstructor()
 {
-   auto func = new kernel::functions::KernelConstructorFunctionImpl<Class, Args...>();
+   auto func = new kernel::functions::HleConstructorFunctionImpl<Class, Args...>();
    func->valid = true;
    return func;
 }
 
 // Destructor
 template<typename Class>
-inline KernelFunction *
+inline HleFunction *
 makeDestructor()
 {
-   auto func = new kernel::functions::KernelDestructorFunctionImpl<Class>();
+   auto func = new kernel::functions::HleDestructorFunctionImpl<Class>();
    func->valid = true;
    return func;
 }

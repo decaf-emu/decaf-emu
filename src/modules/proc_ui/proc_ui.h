@@ -1,10 +1,10 @@
 #pragma once
-#include "kernelmodule.h"
+#include "kernel/kernel_hlemodule.h"
 
 namespace proc_ui
 {
 
-class Module : public KernelModuleImpl<Module>
+class Module : public kernel::HleModuleImpl<Module>
 {
 public:
    virtual void initialise() override;

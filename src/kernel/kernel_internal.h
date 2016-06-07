@@ -5,8 +5,6 @@
 namespace kernel
 {
 
-void initialise_hle_modules();
-
 void
 saveContext(coreinit::OSContext *context);
 

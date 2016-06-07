@@ -5,13 +5,16 @@
 #include <string>
 #include <vector>
 #include "elf.h"
-#include "cpu/mem.h"
 #include "types.h"
 #include "ppcutils/wfunc_ptr.h"
 
-class KernelModule;
 class TeenyHeap;
 struct LoadedModule;
+
+namespace kernel
+{
+class HleModule;
+} // namespace kernel
 
 struct LoadedModuleHandleData
 {
@@ -86,9 +89,9 @@ private:
    registerUnimplementedFunction(const std::string &module, const std::string &func);
 
    LoadedModule *
-   loadKernelModule(const std::string &moduleName,
+   loadHleModule(const std::string &moduleName,
                     const std::string &name,
-                    KernelModule *module);
+                    kernel::HleModule *module);
 
    LoadedModule *
    loadRPL(const std::string &name,

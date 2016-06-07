@@ -759,11 +759,11 @@
     <ClCompile Include="..\src\emulog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\kernel\kernel_hle_modules.cpp">
-      <Filter>Source Files\kernel</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_allocator.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\kernel\kernel_hle.cpp">
+      <Filter>Source Files\kernel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -883,18 +883,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\gx2\gx2_temp.h">
       <Filter>Header Files\modules\gx2</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\kernelexport.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\kernelfunction.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\kerneldata.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\kernelmodule.h">
-      <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_memlist.h">
       <Filter>Header Files\modules\coreinit</Filter>
@@ -1444,6 +1432,21 @@
     </ClInclude>
     <ClInclude Include="..\src\ppcutils\ppcinvokelog.h">
       <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernel\kernel_hle.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernel\kernel_hleexport.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernel\kernel_hlemodule.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernel\kernel_hlefunction.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernel\kernel_hledata.h">
+      <Filter>Header Files\kernel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

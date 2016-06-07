@@ -9,7 +9,6 @@
 #include "cpu/espresso/espresso_instructionset.h"
 #include "elf.h"
 #include "filesystem/filesystem.h"
-#include "kernelmodule.h"
 #include "loader.h"
 #include "cpu/mem.h"
 #include "modules/coreinit/coreinit_dynload.h"
@@ -24,6 +23,9 @@
 #include "common/log.h"
 #include "common/strutils.h"
 #include "common/teenyheap.h"
+#include "kernel/kernel_hle.h"
+#include "kernel/kernel_hlemodule.h"
+#include "kernel/kernel_hlefunction.h"
 
 Loader gLoader;
 using TrampolineMap = std::map<ppcaddr_t, ppcaddr_t>;
@@ -228,10 +230,10 @@ Loader::loadRPL(std::string name)
 
    // Try to find module in system kernel library list
    if (!module) {
-      auto kernelModule = gSystem.findModule(name);
+      auto hleModule = kernel::findHleModule(name);
 
-      if (kernelModule) {
-         module = loadKernelModule(moduleName, name, kernelModule);
+      if (hleModule) {
+         module = loadHleModule(moduleName, name, hleModule);
       }
    }
 
@@ -262,24 +264,24 @@ Loader::loadRPL(std::string name)
 
 // Load a kernel module into virtual memory space by creating thunks
 LoadedModule *
-Loader::loadKernelModule(const std::string &moduleName,
+Loader::loadHleModule(const std::string &moduleName,
                          const std::string &name,
-                         KernelModule *module)
+                         kernel::HleModule *module)
 {
-   std::vector<KernelFunction*> funcExports;
-   std::vector<KernelData*> dataExports;
+   std::vector<kernel::HleFunction*> funcExports;
+   std::vector<kernel::HleData*> dataExports;
    uint32_t dataSize = 0, codeSize = 0;
    auto &exports = module->getExportMap();
 
    for (auto &pair : exports) {
       auto exportInfo = pair.second;
 
-      if (exportInfo->type == KernelExport::Function) {
-         auto funcExport = static_cast<KernelFunction*>(exportInfo);
+      if (exportInfo->type == kernel::HleExport::Function) {
+         auto funcExport = static_cast<kernel::HleFunction*>(exportInfo);
          codeSize += 8;
          funcExports.emplace_back(funcExport);
-      } else if (exportInfo->type == KernelExport::Data) {
-         auto dataExport = static_cast<KernelData*>(exportInfo);
+      } else if (exportInfo->type == kernel::HleExport::Data) {
+         auto dataExport = static_cast<kernel::HleData*>(exportInfo);
          dataSize += dataExport->size;
          dataExports.emplace_back(dataExport);
       } else {
@@ -385,7 +387,7 @@ Loader::registerUnimplementedFunction(const std::string &module, const std::stri
       return itr->second;
    }
 
-   auto id = gSystem.registerUnimplementedFunction(module, func);
+   auto id = kernel::registerUnimplementedHleFunc(module, func);
    auto thunk = static_cast<uint32_t*>(coreinit::internal::sysAlloc(8, 4));
    auto addr = mem::untranslate(thunk);
 

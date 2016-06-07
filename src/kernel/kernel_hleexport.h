@@ -1,8 +1,10 @@
 #pragma once
-
 #include <string>
 
-struct KernelExport
+namespace kernel
+{
+
+struct HleExport
 {
    enum Type
    {
@@ -11,20 +13,22 @@ struct KernelExport
       Data
    };
 
-   KernelExport() :
+   HleExport() :
       type(Undefined)
    {
    }
 
-   KernelExport(Type type) :
+   HleExport(Type type) :
       type(type)
    {
    }
 
-   virtual ~KernelExport() = default;
+   virtual ~HleExport() = default;
 
    Type type = Undefined;
    std::string name;
    std::string module;
    void *ppcPtr = nullptr;
 };
+
+} // namespace kernel

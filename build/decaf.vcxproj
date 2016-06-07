@@ -182,7 +182,7 @@
     <ClCompile Include="..\src\input\input.cpp" />
     <ClCompile Include="..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\src\kernel\kernel_fibers.cpp" />
-    <ClCompile Include="..\src\kernel\kernel_hle_modules.cpp" />
+    <ClCompile Include="..\src\kernel\kernel_hle.cpp" />
     <ClCompile Include="..\src\loader.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp" />
@@ -388,6 +388,11 @@
     <ClInclude Include="..\src\hostlookup.h" />
     <ClInclude Include="..\src\input\input.h" />
     <ClInclude Include="..\src\kernel\kernel.h" />
+    <ClInclude Include="..\src\kernel\kernel_hle.h" />
+    <ClInclude Include="..\src\kernel\kernel_hledata.h" />
+    <ClInclude Include="..\src\kernel\kernel_hleexport.h" />
+    <ClInclude Include="..\src\kernel\kernel_hlefunction.h" />
+    <ClInclude Include="..\src\kernel\kernel_hlemodule.h" />
     <ClInclude Include="..\src\kernel\kernel_internal.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_allocator.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_atomic64.h" />
@@ -549,10 +554,6 @@
     <ClInclude Include="..\src\modules\nn_save\nn_save_core.h" />
     <ClInclude Include="..\src\modules\zlib125\zlib125.h" />
     <ClInclude Include="..\src\system.h" />
-    <ClInclude Include="..\src\kerneldata.h" />
-    <ClInclude Include="..\src\kernelexport.h" />
-    <ClInclude Include="..\src\kernelfunction.h" />
-    <ClInclude Include="..\src\kernelmodule.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shaders\screendraw.hlsl">

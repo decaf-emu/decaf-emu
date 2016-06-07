@@ -1,5 +1,6 @@
 #include "kernel.h"
 #include "kernel_internal.h"
+#include "kernel_hle.h"
 #include <pugixml.hpp>
 #include <excmd.h>
 #include "system.h"
@@ -42,7 +43,7 @@ void set_game_name(const std::string& name)
 
 void initialise()
 {
-   initialise_hle_modules();
+   initialiseHleMmodules();
 
    cpu::set_core_entrypoint_handler(&cpu_entrypoint);
    cpu::set_interrupt_handler(&cpu_interrupt_handler);
