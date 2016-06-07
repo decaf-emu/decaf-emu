@@ -134,7 +134,7 @@ struct SQ_ALU_WORD0 : Bitfield<SQ_ALU_WORD0, uint32_t>
    BITFIELD_ENTRY(25, 1, bool, SRC1_NEG);
    BITFIELD_ENTRY(26, 3, SQ_INDEX_MODE, INDEX_MODE);
    BITFIELD_ENTRY(29, 2, SQ_PRED_SEL, PRED_SEL);
-   BITFIELD_ENTRY(31, 1, uint32_t, LAST);
+   BITFIELD_ENTRY(31, 1, bool, LAST);
 };
 
 // ALU instruction word 1
