@@ -4,6 +4,7 @@
 #include "coreinit_fs_path.h"
 #include "filesystem/filesystem.h"
 #include "system.h"
+#include <gsl.h>
 
 namespace coreinit
 {

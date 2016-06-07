@@ -10,6 +10,7 @@
 #include "common/teenyheap.h"
 #include "common/strutils.h"
 #include "common/virtual_ptr.h"
+#include <array>
 
 namespace coreinit
 {

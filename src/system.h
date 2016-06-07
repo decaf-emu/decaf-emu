@@ -5,7 +5,6 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#include "loader.h"
 
 class Memory;
 class Thread;
@@ -14,6 +13,14 @@ class TeenyHeap;
 namespace fs
 {
 class FileSystem;
+}
+
+namespace coreinit
+{
+namespace internal
+{
+struct LoadedModule;
+}
 }
 
 /**
@@ -27,12 +34,6 @@ public:
    initialise();
 
    void
-   setUserModule(LoadedModule *module);
-
-   const LoadedModule *
-   getUserModule() const;
-
-   void
    setFileSystem(fs::FileSystem *fs);
 
    fs::FileSystem *
@@ -44,7 +45,7 @@ public:
    }
 
 private:
-   LoadedModule *mUserModule = nullptr;
+   coreinit::internal::LoadedModule *mUserModule = nullptr;
 
    fs::FileSystem *mFileSystem = nullptr;
    TeenyHeap *mSystemHeap = nullptr;

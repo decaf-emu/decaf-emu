@@ -142,7 +142,6 @@
     <ClCompile Include="..\src\debugcontrol.cpp" />
     <ClCompile Include="..\src\debugger.cpp" />
     <ClCompile Include="..\src\debugnet.cpp" />
-    <ClCompile Include="..\src\elf.cpp" />
     <ClCompile Include="..\src\emulog.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_posix_host_folder.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
@@ -183,7 +182,6 @@
     <ClCompile Include="..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\src\kernel\kernel_fibers.cpp" />
     <ClCompile Include="..\src\kernel\kernel_hle.cpp" />
-    <ClCompile Include="..\src\loader.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_alarm.cpp" />
@@ -209,6 +207,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_ghs.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_ghs_typeinfo.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_internal_idlock.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\coreinit_internal_loader.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_interrupts.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_lockedcache.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_mcp.cpp" />
@@ -228,6 +227,7 @@
     <ClCompile Include="..\src\modules\coreinit\coreinit_time.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_unitheap.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_userconfig.cpp" />
+    <ClCompile Include="..\src\modules\coreinit\elf.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula.cpp" />
     <ClCompile Include="..\src\modules\erreula\erreula_errorviewer.cpp" />
     <ClCompile Include="..\src\modules\gx2\gx2.cpp" />
@@ -332,7 +332,6 @@
     <ClInclude Include="..\src\debugger.h" />
     <ClInclude Include="..\src\debugmsg.h" />
     <ClInclude Include="..\src\debugnet.h" />
-    <ClInclude Include="..\src\elf.h" />
     <ClInclude Include="..\src\emulog.h" />
     <ClInclude Include="..\src\filesystem\filesystem.h" />
     <ClInclude Include="..\src\filesystem\filesystem_file.h" />
@@ -405,11 +404,13 @@
     <ClInclude Include="..\src\modules\coreinit\coreinit_fs_stat.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_ghs_typeinfo.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_internal_idlock.h" />
+    <ClInclude Include="..\src\modules\coreinit\coreinit_internal_loader.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_interrupts.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_lockedcache.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_rendezvous.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_unitheap.h" />
+    <ClInclude Include="..\src\modules\coreinit\elf.h" />
     <ClInclude Include="..\src\modules\gx2\gx2r_buffer.h" />
     <ClInclude Include="..\src\modules\gx2\gx2r_surface.h" />
     <ClInclude Include="..\src\modules\gx2\gx2_addrlib.h" />
@@ -487,7 +488,6 @@
     <ClInclude Include="..\src\modules\vpad\vpad.h" />
     <ClInclude Include="..\src\modules\vpad\vpad_core.h" />
     <ClInclude Include="..\src\modules\vpad\vpad_status.h" />
-    <ClInclude Include="..\src\loader.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_alarm.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_core.h" />
     <ClInclude Include="..\src\modules\coreinit\coreinit_device.h" />

@@ -1,34 +1,17 @@
-#define ZLIB_CONST
-#include <algorithm>
-#include <cassert>
-#include <gsl.h>
-#include <limits>
-#include <string>
-#include <vector>
-#include <zlib.h>
-#include "cpu/espresso/espresso_instructionset.h"
-#include "elf.h"
-#include "filesystem/filesystem.h"
-#include "loader.h"
-#include "cpu/mem.h"
-#include "modules/coreinit/coreinit_dynload.h"
-#include "modules/coreinit/coreinit_memory.h"
-#include "modules/coreinit/coreinit_memheap.h"
-#include "system.h"
-#include "types.h"
-#include "usermodule.h"
-#include "common/align.h"
-#include "common/bigendianview.h"
-#include "common/byte_swap.h"
-#include "common/log.h"
+#include "coreinit_internal_loader.h"
 #include "common/strutils.h"
-#include "common/teenyheap.h"
 #include "kernel/kernel_hle.h"
 #include "kernel/kernel_hlemodule.h"
 #include "kernel/kernel_hlefunction.h"
-
-Loader gLoader;
-using TrampolineMap = std::map<ppcaddr_t, ppcaddr_t>;
+#include "modules/coreinit/coreinit_memory.h"
+#include "modules/coreinit/coreinit_memheap.h"
+#include "modules/coreinit/coreinit_dynload.h"
+#include "system.h"
+#include "filesystem/filesystem.h"
+#include "common/align.h"
+#include "common/bigendianview.h"
+#include "common/teenyheap.h"
+#include "elf.h"
 
 class SequentialMemoryTracker
 {
@@ -39,13 +22,13 @@ public:
    }
 
    ppcaddr_t
-   getCurrentAddr() const
+      getCurrentAddr() const
    {
       return mem::untranslate(mPtr);
    }
 
    void *
-   get(size_t size, uint32_t alignment = 4)
+      get(size_t size, uint32_t alignment = 4)
    {
       // Ensure section alignment
       auto alignOffset = align_up(mPtr, alignment) - mPtr;
@@ -68,6 +51,49 @@ protected:
    uint8_t *mPtr;
 };
 
+namespace coreinit
+{
+
+namespace internal
+{
+
+using TrampolineMap = std::map<ppcaddr_t, ppcaddr_t>;
+using SectionList = std::vector<elf::XSection>;
+using AddressRange = std::pair<ppcaddr_t, ppcaddr_t>;
+
+static std::map<std::string, LoadedModule*>
+gLoadedModules;
+
+static LoadedModule *
+gUserModule;
+
+static TeenyHeap*
+gCodeHeap;
+
+static std::map<std::string, ppcaddr_t>
+gUnimplementedFunctions;
+
+static std::map<std::string, int>
+gUnimplementedData;
+
+void initialiseCodeHeap(ppcsize_t maxCodeSize)
+{
+   // Get the MEM2 Region
+   be_val<uint32_t> mem2start, mem2size;
+   coreinit::OSGetMemBound(OSMemoryType::MEM2, &mem2start, &mem2size);
+
+   // Steal some space for code heap
+   gCodeHeap = new TeenyHeap(mem::translate(mem2start), maxCodeSize);
+
+   // Update MEM2 to ignore the code heap region
+   coreinit::internal::setMemBound(OSMemoryType::MEM2, mem2start + maxCodeSize, mem2size - maxCodeSize);
+}
+
+std::map<std::string, LoadedModule*> getLoadedModules()
+{
+   return gLoadedModules;
+}
+
 static ppcaddr_t
 getTrampAddress(LoadedModule *loadedMod, SequentialMemoryTracker &codeSeg, TrampolineMap &trampolines, void *target, const std::string& symbolName);
 
@@ -76,9 +102,6 @@ readFileInfo(BigEndianView &in, const SectionList &sections, elf::FileInfo &info
 
 static const elf::XSection *
 findSection(const SectionList &sections, const char *shStrTab, const std::string &name);
-
-static uint32_t
-calculateSdaBase(const elf::XSection *sdata, const elf::XSection *sbss);
 
 static elf::Symbol
 getSymbol(BigEndianView &symSecView, uint32_t index);
@@ -100,7 +123,7 @@ readFileInfo(BigEndianView &in, const SectionList &sections, elf::FileInfo &info
 
       elf::readSectionData(in, section.header, data);
 
-      BigEndianView be_view { gsl::as_span(data) };
+      BigEndianView be_view{ gsl::as_span(data) };
       elf::readFileInfo(be_view, info);
       return true;
    }
@@ -190,83 +213,59 @@ getTrampAddress(LoadedModule *loadedMod, SequentialMemoryTracker &codeSeg, Tramp
 }
 
 
-// Allocates the loader heap from the MEM2 region
-void
-Loader::initialise(ppcsize_t maxCodeSize)
+ppcaddr_t
+generateUnimplementedDataThunk(const std::string &module, const std::string& name)
 {
-   // Get the MEM2 Region
-   be_val<uint32_t> mem2start, mem2size;
-   coreinit::OSGetMemBound(OSMemoryType::MEM2, &mem2start, &mem2size);
+   auto itr = gUnimplementedData.find(name);
 
-   // Steal some space for code heap
-   mCodeHeap = std::make_unique<TeenyHeap>(mem::translate(mem2start), maxCodeSize);
+   if (itr != gUnimplementedData.end()) {
+      return itr->second | 0x800;
+   }
 
-   // Update MEM2 to ignore the code heap region
-   coreinit::internal::setMemBound(OSMemoryType::MEM2, mem2start + maxCodeSize, mem2size - maxCodeSize);
+   auto id = gsl::narrow_cast<uint32_t>(gUnimplementedData.size());
+   auto fakeAddr = 0xFFF00000 | (id << 12);
+   assert(id <= 0xFF);
+
+   gLog->info("Unimplemented data symbol {}::{} at {:08x}", module, name, fakeAddr);
+
+   gUnimplementedData.emplace(name, fakeAddr);
+   return fakeAddr | 0x800;
 }
 
 
-// Load RPL by name, could load a kernel module or a user module
-LoadedModule *
-Loader::loadRPL(std::string name)
+ppcaddr_t
+generateUnimplementedFunctionThunk(const std::string &module, const std::string &func)
 {
-   LoadedModule *module = nullptr;
-   std::string moduleName;
+   auto itr = gUnimplementedFunctions.find(func);
 
-   // Ensure moduleName has an extension
-   if (!ends_with(name, ".rpl") && !ends_with(name, ".rpx")) {
-      moduleName = name;
-      name = name + ".rpl";
-   } else {
-      moduleName = name.substr(0, name.size() - 4);
+   if (itr != gUnimplementedFunctions.end()) {
+      return itr->second;
    }
 
-   // Check if we already have this module loaded
-   auto itr = mModules.find(moduleName);
+   auto id = kernel::registerUnimplementedHleFunc(module, func);
+   auto thunk = static_cast<uint32_t*>(coreinit::internal::sysAlloc(8, 4));
+   auto addr = mem::untranslate(thunk);
 
-   if (itr != mModules.end()) {
-      return itr->second.get();
-   }
+   // Write syscall thunk
+   auto kc = espresso::encodeInstruction(espresso::InstructionID::kc);
+   kc.kcn = id;
+   *(thunk + 0) = byte_swap(kc.value);
 
-   // Try to find module in system kernel library list
-   if (!module) {
-      auto hleModule = kernel::findHleModule(name);
+   auto bclr = espresso::encodeInstruction(espresso::InstructionID::bclr);
+   bclr.bo = 0x1f;
+   *(thunk + 1) = byte_swap(bclr.value);
 
-      if (hleModule) {
-         module = loadHleModule(moduleName, name, hleModule);
-      }
-   }
-
-   // Try to find module in the game code directory
-   if (!module) {
-      auto fs = gSystem.getFileSystem();
-      auto fh = fs->openFile("/vol/code/" + name, fs::File::Read);
-
-      if (fh) {
-         auto buffer = std::vector<uint8_t>(fh->size());
-         fh->read(buffer.data(), buffer.size(), 1);
-         fh->close();
-
-         module = loadRPL(moduleName, name, buffer);
-      }
-   }
-
-   if (!module) {
-      gLog->error("Failed to load module {}", name);
-      mModules.erase(moduleName);
-      return nullptr;
-   } else {
-      gLog->info("Loaded module {}", name);
-      return module;
-   }
+   gLog->info("Unimplemented function {}::{} at {:08x}", module, func, addr);
+   gUnimplementedFunctions.emplace(func, addr);
+   return addr;
 }
 
 
 // Load a kernel module into virtual memory space by creating thunks
 LoadedModule *
-Loader::loadHleModule(const std::string &moduleName,
-                         const std::string &name,
-                         kernel::HleModule *module)
+loadHleModule(const std::string &moduleName,
+   const std::string &name,
+   kernel::HleModule *module)
 {
    std::vector<kernel::HleFunction*> funcExports;
    std::vector<kernel::HleData*> dataExports;
@@ -291,8 +290,8 @@ Loader::loadHleModule(const std::string &moduleName,
    }
 
    // Create module
-   auto loadedMod = new LoadedModule {};
-   mModules.emplace(moduleName, std::unique_ptr<LoadedModule> { loadedMod });
+   auto loadedMod = new LoadedModule{};
+   gLoadedModules.emplace(moduleName, loadedMod);
    loadedMod->name = name;
    loadedMod->handle = coreinit::internal::sysAlloc<LoadedModuleHandleData>();
    loadedMod->handle->ptr = loadedMod;
@@ -302,7 +301,7 @@ Loader::loadHleModule(const std::string &moduleName,
       auto codeRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(codeSize, 4));
       auto start = mem::untranslate(codeRegion);
       auto end = start + codeSize;
-      loadedMod->sections.emplace_back(LoadedSection { ".text", start, end });
+      loadedMod->sections.emplace_back(LoadedSection{ ".text", start, end });
 
       for (auto &func : funcExports) {
          // Allocate some space for the thunk
@@ -333,7 +332,7 @@ Loader::loadHleModule(const std::string &moduleName,
       auto dataRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(dataSize, 4));
       auto start = mem::untranslate(dataRegion);
       auto end = start + codeSize;
-      loadedMod->sections.emplace_back(LoadedSection { ".data", start, end });
+      loadedMod->sections.emplace_back(LoadedSection{ ".data", start, end });
 
       for (auto &data : dataExports) {
          // Allocate the same for this export
@@ -357,60 +356,11 @@ Loader::loadHleModule(const std::string &moduleName,
    return loadedMod;
 }
 
-
-ppcaddr_t
-Loader::registerUnimplementedData(const std::string &module, const std::string& name)
-{
-   auto itr = mUnimplementedData.find(name);
-
-   if (itr != mUnimplementedData.end()) {
-      return itr->second | 0x800;
-   }
-
-   auto id = gsl::narrow_cast<uint32_t>(mUnimplementedData.size());
-   auto fakeAddr = 0xFFF00000 | (id << 12);
-   assert(id <= 0xFF);
-
-   gLog->info("Unimplemented data symbol {}::{} at {:08x}", module, name, fakeAddr);
-
-   mUnimplementedData.emplace(name, fakeAddr);
-   return fakeAddr | 0x800;
-}
-
-
-ppcaddr_t
-Loader::registerUnimplementedFunction(const std::string &module, const std::string &func)
-{
-   auto itr = mUnimplementedFunctions.find(func);
-
-   if (itr != mUnimplementedFunctions.end()) {
-      return itr->second;
-   }
-
-   auto id = kernel::registerUnimplementedHleFunc(module, func);
-   auto thunk = static_cast<uint32_t*>(coreinit::internal::sysAlloc(8, 4));
-   auto addr = mem::untranslate(thunk);
-
-   // Write syscall thunk
-   auto kc = espresso::encodeInstruction(espresso::InstructionID::kc);
-   kc.kcn = id;
-   *(thunk + 0) = byte_swap(kc.value);
-
-   auto bclr = espresso::encodeInstruction(espresso::InstructionID::bclr);
-   bclr.bo = 0x1f;
-   *(thunk + 1) = byte_swap(bclr.value);
-
-   gLog->info("Unimplemented function {}::{} at {:08x}", module, func, addr);
-   mUnimplementedFunctions.emplace(func, addr);
-   return addr;
-}
-
-
 bool
-Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections, BigEndianView &in, const char *shStrTab, SequentialMemoryTracker &codeSeg, AddressRange &trampSeg)
+processRelocations(LoadedModule *loadedMod, const SectionList &sections, BigEndianView &in, const char *shStrTab, SequentialMemoryTracker &codeSeg, AddressRange &trampSeg)
 {
-   auto trampolines = TrampolineMap {};
-   auto buffer = std::vector<uint8_t> {};
+   auto trampolines = TrampolineMap{};
+   auto buffer = std::vector<uint8_t>{};
    trampSeg.first = codeSeg.getCurrentAddr();
 
    for (auto &section : sections) {
@@ -419,11 +369,11 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
       }
 
       elf::readSectionData(in, section.header, buffer);
-      auto in = BigEndianView { gsl::as_span(buffer) };
+      auto in = BigEndianView{ gsl::as_span(buffer) };
 
       auto &symSec = sections[section.header.link];
       auto &targetSec = sections[section.header.info];
-      auto symSecView = BigEndianView { symSec.memory, symSec.virtSize };
+      auto symSecView = BigEndianView{ symSec.memory, symSec.virtSize };
       auto &symStrTab = sections[symSec.header.link];
 
       auto targetBaseAddr = targetSec.header.addr;
@@ -448,7 +398,7 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
             symAddr = mem::read<uint32_t>(symAddr);
 
             if (symAddr == 0) {
-               symAddr = registerUnimplementedData(symbolSection.name, symbolName);
+               symAddr = generateUnimplementedDataThunk(symbolSection.name, symbolName);
             }
          }
 
@@ -471,7 +421,7 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
             break;
          case elf::R_PPC_REL24:
          {
-            auto ins = espresso::Instruction { byte_swap(*ptr32) };
+            auto ins = espresso::Instruction{ byte_swap(*ptr32) };
             auto data = espresso::decodeInstruction(ins);
 
             // Our REL24 trampolines only work for a branch instruction...
@@ -494,7 +444,7 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
          }
          case elf::R_PPC_EMB_SDA21:
          {
-            auto ins = espresso::Instruction { byte_swap(*ptr32) };
+            auto ins = espresso::Instruction{ byte_swap(*ptr32) };
             ptrdiff_t offset = 0;
 
             if (ins.rA == 0) {
@@ -530,7 +480,7 @@ Loader::processRelocations(LoadedModule *loadedMod, const SectionList &sections,
 
 
 bool
-Loader::processImports(LoadedModule *loadedMod, SectionList &sections)
+processImports(LoadedModule *loadedMod, SectionList &sections)
 {
    std::map<std::string, ppcaddr_t> symbolTable;
 
@@ -567,7 +517,7 @@ Loader::processImports(LoadedModule *loadedMod, SectionList &sections)
       }
 
       auto strTab = reinterpret_cast<const char*>(sections[section.header.link].memory);
-      auto symIn = BigEndianView { section.memory, section.virtSize };
+      auto symIn = BigEndianView{ section.memory, section.virtSize };
 
       while (!symIn.eof()) {
          elf::Symbol sym;
@@ -605,7 +555,7 @@ Loader::processImports(LoadedModule *loadedMod, SectionList &sections)
 
             if (symbolTargetIter == symbolTable.end()) {
                if (type == elf::STT_FUNC) {
-                  symbolAddr = registerUnimplementedFunction(impsec.name, name);
+                  symbolAddr = generateUnimplementedFunctionThunk(impsec.name, name);
                }
             } else {
                if (type != elf::STT_FUNC && type != elf::STT_OBJECT) {
@@ -626,7 +576,7 @@ Loader::processImports(LoadedModule *loadedMod, SectionList &sections)
 
 
 bool
-Loader::processExports(LoadedModule *loadedMod, const SectionList &sections)
+processExports(LoadedModule *loadedMod, const SectionList &sections)
 {
    for (auto &section : sections) {
       if (section.header.type != elf::SHT_RPL_EXPORTS) {
@@ -653,15 +603,15 @@ Loader::processExports(LoadedModule *loadedMod, const SectionList &sections)
 
 
 LoadedModule *
-Loader::loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<uint8_t> &data)
+loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<uint8_t> &data)
 {
    std::vector<uint8_t> buffer;
-   auto in = BigEndianView { data };
+   auto in = BigEndianView{ data };
    auto loadedMod = new LoadedModule();
-   mModules.emplace(moduleName, std::unique_ptr<LoadedModule> { loadedMod });
+   gLoadedModules.emplace(moduleName, loadedMod);
 
    // Read header
-   auto header = elf::Header {};
+   auto header = elf::Header{};
 
    if (!elf::readHeader(in, header)) {
       gLog->error("Failed elf::readHeader");
@@ -675,7 +625,7 @@ Loader::loadRPL(const std::string &moduleName, const std::string &name, const gs
    }
 
    // Read sections
-   auto sections = std::vector<elf::XSection> {};
+   auto sections = std::vector<elf::XSection>{};
 
    if (!elf::readSectionHeaders(in, header, sections)) {
       gLog->error("Failed elf::readSectionHeaders");
@@ -687,7 +637,7 @@ Loader::loadRPL(const std::string &moduleName, const std::string &name, const gs
    elf::FileInfo info;
 
    readFileInfo(in, sections, info);
-   codeSegAddr = mCodeHeap->alloc(info.textSize, info.textAlign);
+   codeSegAddr = gCodeHeap->alloc(info.textSize, info.textAlign);
    loadSegAddr = coreinit::internal::sysAlloc(info.loadSize, info.loadAlign);
 
    if (coreinit::internal::dynLoadMemAlloc(info.dataSize, info.dataAlign, &dataSegAddr) != 0) {
@@ -698,9 +648,9 @@ Loader::loadRPL(const std::string &moduleName, const std::string &name, const gs
    assert(loadSegAddr);
    assert(codeSegAddr);
 
-   auto codeSeg = SequentialMemoryTracker { codeSegAddr, info.textSize };
-   auto dataSeg = SequentialMemoryTracker { dataSegAddr, info.dataSize };
-   auto loadSeg = SequentialMemoryTracker { loadSegAddr, info.loadSize };
+   auto codeSeg = SequentialMemoryTracker{ codeSegAddr, info.textSize };
+   auto dataSeg = SequentialMemoryTracker{ dataSegAddr, info.dataSize };
+   auto loadSeg = SequentialMemoryTracker{ loadSegAddr, info.loadSize };
 
    // Allocate sections from our memory segments
    for (auto &section : sections) {
@@ -769,7 +719,7 @@ Loader::loadRPL(const std::string &moduleName, const std::string &name, const gs
    }
 
    // Process relocations
-   auto trampSeg = AddressRange {};
+   auto trampSeg = AddressRange{};
 
    if (!processRelocations(loadedMod, sections, in, shStrTab, codeSeg, trampSeg)) {
       gLog->error("Error loading relocations");
@@ -798,13 +748,13 @@ Loader::loadRPL(const std::string &moduleName, const std::string &name, const gs
             auto sectionName = shStrTab + section.header.name;
             auto start = section.virtAddress;
             auto end = section.virtAddress + section.virtSize;
-            loadedMod->sections.emplace_back(LoadedSection { sectionName, start, end });
+            loadedMod->sections.emplace_back(LoadedSection{ sectionName, start, end });
          }
       }
    }
 
    if (trampSeg.second > trampSeg.first) {
-      loadedMod->sections.emplace_back(LoadedSection { "loader_thunks", trampSeg.first, trampSeg.second });
+      loadedMod->sections.emplace_back(LoadedSection{ "loader_thunks", trampSeg.first, trampSeg.second });
    }
 
    // Free the load segment
@@ -818,3 +768,103 @@ Loader::loadRPL(const std::string &moduleName, const std::string &name, const gs
    loadedMod->handle->ptr = loadedMod;
    return loadedMod;
 }
+
+void normalizeModuleName(const std::string& name, std::string& moduleName, std::string& fileName)
+{
+   if (!ends_with(name, ".rpl") && !ends_with(name, ".rpx")) {
+      moduleName = name;
+      fileName = name + ".rpl";
+   } else {
+      moduleName = name.substr(0, name.size() - 4);
+      fileName = name;
+   }
+}
+
+LoadedModule *loadRPL(const std::string& name)
+{
+   LoadedModule *module = nullptr;
+   std::string moduleName;
+   std::string fileName;
+
+   normalizeModuleName(name, moduleName, fileName);
+
+   // Check if we already have this module loaded
+   auto itr = gLoadedModules.find(moduleName);
+
+   if (itr != gLoadedModules.end()) {
+      return itr->second;
+   }
+
+   // Try to find module in system kernel library list
+   if (!module) {
+      auto kernelModule = kernel::findHleModule(fileName);
+
+      if (kernelModule) {
+         module = loadHleModule(moduleName, fileName, kernelModule);
+      }
+   }
+
+   // Try to find module in the game code directory
+   if (!module) {
+      auto fs = gSystem.getFileSystem();
+      auto fh = fs->openFile("/vol/code/" + fileName, fs::File::Read);
+
+      if (fh) {
+         auto buffer = std::vector<uint8_t>(fh->size());
+         fh->read(buffer.data(), buffer.size(), 1);
+         fh->close();
+
+         module = loadRPL(moduleName, fileName, buffer);
+      }
+   }
+
+   if (!module) {
+      gLog->error("Failed to load module {}", fileName);
+      gLoadedModules.erase(moduleName);
+      return nullptr;
+   } else {
+      gLog->info("Loaded module {}", fileName);
+      return module;
+   }
+}
+
+LoadedModule * loadRPX(ppcsize_t maxCodeSize, const std::string& name)
+{
+   // Initialise the code-heap information
+   initialiseCodeHeap(maxCodeSize);
+
+   // Force-load coreinit which is a default system-loaded library
+   // Note that this needs to be here as its DefaultHeapInit method
+   // makes assumptions about the MEM bounds which are changed by the
+   // initialiseCodeHeap call above.
+   loadRPL("coreinit");
+
+   // Load the RPX as a normal module
+   gUserModule = loadRPL(name);
+   return gUserModule;
+}
+
+LoadedModule * findModule(const std::string& name)
+{
+   std::string moduleName;
+   std::string fileName;
+   normalizeModuleName(name, moduleName, fileName);
+
+   // Check if we already have this module loaded
+   auto itr = gLoadedModules.find(moduleName);
+
+   if (itr == gLoadedModules.end()) {
+      return nullptr;
+   }
+
+   return itr->second;
+}
+
+LoadedModule * getUserModule()
+{
+   return gUserModule;
+}
+
+} // namespace internal
+
+} // namespace coreinit

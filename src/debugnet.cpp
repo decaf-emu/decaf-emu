@@ -14,6 +14,7 @@
 #include "cpu/mem.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
+#include "modules/coreinit/coreinit_internal_loader.h"
 #include "platform/platform.h"
 #include "system.h"
 #include "cpu/trace.h"
@@ -114,10 +115,10 @@ struct DebugPauseInfo {
 static void
 populateDebugPauseInfo(DebugPauseInfo& info)
 {
-   auto &loadedModules = gLoader.getLoadedModules();
+   auto &loadedModules = coreinit::internal::getLoadedModules();
    int moduleIdx = 0;
    int userModuleIdx = -1;
-   auto userModule = gSystem.getUserModule();
+   auto userModule = coreinit::internal::getUserModule();
 
    for (auto &modItr : loadedModules) {
       auto &moduleName = modItr.first;
@@ -137,7 +138,7 @@ populateDebugPauseInfo(DebugPauseInfo& info)
          info.symbols.push_back(tsym);
       }
 
-      if (loadedModule.get() == userModule) {
+      if (loadedModule == userModule) {
          userModuleIdx = moduleIdx;
       }
       moduleIdx++;

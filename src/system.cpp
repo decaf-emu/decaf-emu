@@ -22,18 +22,6 @@ System::setFileSystem(fs::FileSystem *fs)
    mFileSystem = fs;
 }
 
-void
-System::setUserModule(LoadedModule *module)
-{
-   mUserModule = module;
-}
-
-const LoadedModule *
-System::getUserModule() const
-{
-   return mUserModule;
-}
-
 fs::FileSystem *
 System::getFileSystem() const
 {

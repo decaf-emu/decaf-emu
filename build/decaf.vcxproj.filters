@@ -273,9 +273,6 @@
     <ClCompile Include="..\src\system.cpp">
       <Filter>Source Files\system</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\loader.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_event.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
@@ -299,9 +296,6 @@
     </ClCompile>
     <ClCompile Include="..\src\modules\gx2\gx2_temp.cpp">
       <Filter>Source Files\modules\gx2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\elf.cpp">
-      <Filter>Source Files\system</Filter>
     </ClCompile>
     <ClCompile Include="..\src\modules\coreinit\coreinit_memlist.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
@@ -765,6 +759,12 @@
     <ClCompile Include="..\src\kernel\kernel_hle.cpp">
       <Filter>Source Files\kernel</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\coreinit_internal_loader.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\modules\coreinit\elf.cpp">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\modules\coreinit\coreinit.h">
@@ -847,12 +847,6 @@
     </ClInclude>
     <ClInclude Include="..\src\modules\coreinit\coreinit_event.h">
       <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\elf.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\loader.h">
-      <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\src\usermodule.h">
       <Filter>Header Files\system</Filter>
@@ -1447,6 +1441,12 @@
     </ClInclude>
     <ClInclude Include="..\src\kernel\kernel_hledata.h">
       <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\coreinit_internal_loader.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\modules\coreinit\elf.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -7,6 +7,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
 #include "coreinit_thread.h"
+#include "coreinit_internal_loader.h"
 #include "cpu/mem.h"
 #include "system.h"
 #include "usermodule.h"
@@ -173,7 +174,7 @@ InitialiseThreadState(OSThread *thread,
                       uint32_t argc,
                       void *argv)
 {
-   auto module = gSystem.getUserModule();
+   auto module = internal::getUserModule();
    auto sdaBase = module ? module->sdaBase : 0u;
    auto sda2Base = module ? module->sda2Base : 0u;
 

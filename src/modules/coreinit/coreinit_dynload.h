@@ -2,10 +2,13 @@
 #include "common/be_val.h"
 #include "common/virtual_ptr.h"
 
-struct LoadedModuleHandleData;
-
 namespace coreinit
 {
+
+namespace internal
+{
+   struct LoadedModuleHandleData;
+}
 
 /**
  * \defgroup coreinit_dynload Dynamic Loading
@@ -38,13 +41,13 @@ OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn,
                        be_val<ppcaddr_t> *outFreeFn);
 
 int
-OSDynLoad_Acquire(char const *name, be_ptr<LoadedModuleHandleData> *outHandle);
+OSDynLoad_Acquire(char const *name, be_ptr<coreinit::internal::LoadedModuleHandleData> *outHandle);
 
 int
-OSDynLoad_FindExport(LoadedModuleHandleData *module, int isData, char const *name, be_val<ppcaddr_t> *outAddr);
+OSDynLoad_FindExport(coreinit::internal::LoadedModuleHandleData *module, int isData, char const *name, be_val<ppcaddr_t> *outAddr);
 
 void
-OSDynLoad_Release(LoadedModuleHandleData *handle);
+OSDynLoad_Release(coreinit::internal::LoadedModuleHandleData *handle);
 
 /** @} */
 

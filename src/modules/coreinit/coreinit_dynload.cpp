@@ -4,7 +4,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
 #include "cpu/mem.h"
-#include "system.h"
+#include "coreinit_internal_loader.h"
 #include "common/be_val.h"
 #include "common/virtual_ptr.h"
 #include "ppcutils/wfunc_ptr.h"
@@ -78,9 +78,9 @@ OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn, be_val<ppcaddr_t> *outFree
  * If the library is already loaded then increase ref count.
  */
 int
-OSDynLoad_Acquire(char const *name, be_ptr<LoadedModuleHandleData> *outHandle)
+OSDynLoad_Acquire(char const *name, be_ptr<coreinit::internal::LoadedModuleHandleData> *outHandle)
 {
-   auto* module = gLoader.loadRPL(name);
+   auto module = coreinit::internal::loadRPL(name);
 
    if (!module) {
       gLog->debug("OSDynLoad_Acquire {} failed", name);
@@ -97,7 +97,7 @@ OSDynLoad_Acquire(char const *name, be_ptr<LoadedModuleHandleData> *outHandle)
  * Find the export from a library handle.
  */
 int
-OSDynLoad_FindExport(LoadedModuleHandleData *handle, int isData, char const *name, be_val<ppcaddr_t> *outAddr)
+OSDynLoad_FindExport(coreinit::internal::LoadedModuleHandleData *handle, int isData, char const *name, be_val<ppcaddr_t> *outAddr)
 {
    auto module = handle->ptr;
    auto exportPtr = module->findExport(name);
@@ -120,7 +120,7 @@ OSDynLoad_FindExport(LoadedModuleHandleData *handle, int isData, char const *nam
  * The library is unloaded if ref count hits 0.
  */
 void
-OSDynLoad_Release(LoadedModuleHandleData *handle)
+OSDynLoad_Release(coreinit::internal::LoadedModuleHandleData *handle)
 {
    // TODO: Unload library when ref count hits 0
 }

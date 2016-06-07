@@ -15,6 +15,7 @@
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
 #include "modules/coreinit/coreinit_interrupts.h"
+#include "modules/coreinit/coreinit_internal_loader.h"
 #include "modules/gx2/gx2_event.h"
 #include "cpu/mem.h"
 #include "ppcutils/wfunc_call.h"
@@ -181,21 +182,16 @@ bool launch_game()
       gLog->warn("Could not open /vol/code/app.xml, using default values");
    }
 
-   // Set up stuff..
-   gLoader.initialise(maxCodeSize);
-
-   // System preloaded modules
-   auto coreinitModule = gLoader.loadRPL("coreinit");
-
    using namespace coreinit;
-   auto appModule = gLoader.loadRPL(rpx.c_str());
+
+   // Load the application
+   auto appModule = internal::loadRPX(maxCodeSize, rpx);
 
    if (!appModule) {
       gLog->error("Could not load {}", rpx);
       return false;
    }
 
-   gSystem.setUserModule(appModule);
    gLog->debug("Succesfully loaded {}", rpx);
 
    internal::startAlarmCallbackThreads();
@@ -215,6 +211,7 @@ bool launch_game()
    }
 
    // Run thread 1
+   auto coreinitModule = internal::findModule("coreinit");
    auto gameThreadEntry = coreinitModule->findFuncExport<uint32_t, uint32_t, void*>("GameThreadEntry");
    OSRunThread(OSGetDefaultThread(1), gameThreadEntry, 0, nullptr);
 

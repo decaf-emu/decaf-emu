@@ -9,6 +9,7 @@
 #include "coreinit_mutex.h"
 #include "coreinit_thread.h"
 #include "coreinit_internal_queue.h"
+#include "coreinit_internal_loader.h"
 #include "kernel/kernel.h"
 #include "cpu/trace.h"
 #include "system.h"
@@ -461,7 +462,7 @@ promoteThreadPriorityNoLock(OSThread *thread, int32_t priority)
 void
 GameThreadEntry(uint32_t argc, void *argv)
 {
-   auto appModule = gSystem.getUserModule();
+   auto appModule = internal::getUserModule();
 
    auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
    auto start = OSThreadEntryPointFn(appModule->entryPoint);
