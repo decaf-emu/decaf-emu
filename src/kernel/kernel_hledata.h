@@ -1,18 +1,17 @@
 #pragma once
 #include <cstdint>
-#include "kernel_hleexport.h"
+#include "kernel_hlesymbol.h"
 
 namespace kernel
 {
 
-struct HleData : public HleExport
+struct HleData : public HleSymbol
 {
    HleData() :
-      HleExport(HleExport::Data)
+      HleSymbol(HleSymbol::Data)
    {
    }
 
-   void **hostPtr = nullptr;
    uint32_t size = 0;
 };
 

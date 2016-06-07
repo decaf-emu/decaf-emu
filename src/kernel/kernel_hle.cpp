@@ -86,13 +86,10 @@ registerHleModule(const std::string &name, HleModule *module)
    // TODO: Handle if there is a collision
    gHleModules.emplace(name, module);
 
-   auto exports = module->getExportMap();
-
-   for (auto &itr : exports) {
-      auto exp = itr.second;
-
-      if (exp->type == HleExport::Function) {
-         registerHleFunc(reinterpret_cast<HleFunction*>(exp));
+   auto symbols = module->getSymbols();
+   for (auto &sym : symbols) {
+      if (sym->type == HleSymbol::Function) {
+         registerHleFunc(reinterpret_cast<HleFunction*>(sym));
       }
    }
 }

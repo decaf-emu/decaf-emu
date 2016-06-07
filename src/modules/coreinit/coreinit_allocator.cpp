@@ -24,6 +24,17 @@ sFrameHeapFunctions = nullptr;
 static AllocatorFunctions *
 sUnitHeapFunctions = nullptr;
 
+static AllocatorAllocFn sAllocatorDefaultHeapAlloc;
+static AllocatorFreeFn sAllocatorDefaultHeapFree;
+static AllocatorAllocFn sAllocatorBlockHeapAlloc;
+static AllocatorFreeFn sAllocatorBlockHeapFree;
+static AllocatorAllocFn sAllocatorExpHeapAlloc;
+static AllocatorFreeFn sAllocatorExpHeapFree;
+static AllocatorAllocFn sAllocatorFrmHeapAlloc;
+static AllocatorFreeFn sAllocatorFrmHeapFree;
+static AllocatorAllocFn sAllocatorUnitHeapAlloc;
+static AllocatorFreeFn sAllocatorUnitHeapFree;
+
 
 /**
  * Initialise an Allocator struct for the default heap.
@@ -207,25 +218,20 @@ allocatorUnitHeapFree(Allocator *allocator,
 void
 Module::initialiseAllocatorFunctions()
 {
-   sDefaultHeapFunctions = internal::sysAlloc<AllocatorFunctions>();
-   sDefaultHeapFunctions->alloc = findExportAddress("internal_allocatorDefaultHeapAlloc");
-   sDefaultHeapFunctions->free = findExportAddress("internal_allocatorDefaultHeapFree");
+   sDefaultHeapFunctions->alloc = sAllocatorDefaultHeapAlloc;
+   sDefaultHeapFunctions->free = sAllocatorDefaultHeapFree;
 
-   sBlockHeapFunctions = internal::sysAlloc<AllocatorFunctions>();
-   sBlockHeapFunctions->alloc = findExportAddress("internal_allocatorBlockHeapAlloc");
-   sBlockHeapFunctions->free = findExportAddress("internal_allocatorBlockHeapFree");
+   sBlockHeapFunctions->alloc = sAllocatorBlockHeapAlloc;
+   sBlockHeapFunctions->free = sAllocatorBlockHeapFree;
 
-   sExpHeapFunctions = internal::sysAlloc<AllocatorFunctions>();
-   sExpHeapFunctions->alloc = findExportAddress("internal_allocatorExpHeapAlloc");
-   sExpHeapFunctions->free = findExportAddress("internal_allocatorExpHeapFree");
+   sExpHeapFunctions->alloc = sAllocatorExpHeapAlloc;
+   sExpHeapFunctions->free = sAllocatorExpHeapFree;
 
-   sFrameHeapFunctions = internal::sysAlloc<AllocatorFunctions>();
-   sFrameHeapFunctions->alloc = findExportAddress("internal_allocatorFrmHeapAlloc");
-   sFrameHeapFunctions->free = findExportAddress("internal_allocatorFrmHeapFree");
+   sFrameHeapFunctions->alloc = sAllocatorFrmHeapAlloc;
+   sFrameHeapFunctions->free = sAllocatorFrmHeapFree;
 
-   sUnitHeapFunctions = internal::sysAlloc<AllocatorFunctions>();
-   sUnitHeapFunctions->alloc = findExportAddress("internal_allocatorUnitHeapAlloc");
-   sUnitHeapFunctions->free = findExportAddress("internal_allocatorUnitHeapFree");
+   sUnitHeapFunctions->alloc = sAllocatorUnitHeapAlloc;
+   sUnitHeapFunctions->free = sAllocatorUnitHeapFree;
 }
 
 void
@@ -239,16 +245,22 @@ Module::registerAllocatorFunctions()
    RegisterKernelFunction(MEMAllocFromAllocator);
    RegisterKernelFunction(MEMFreeToAllocator);
 
-   RegisterKernelFunctionName("internal_allocatorDefaultHeapAlloc", allocatorDefaultHeapAlloc);
-   RegisterKernelFunctionName("internal_allocatorDefaultHeapFree", allocatorDefaultHeapFree);
-   RegisterKernelFunctionName("internal_allocatorBlockHeapAlloc", allocatorBlockHeapAlloc);
-   RegisterKernelFunctionName("internal_allocatorBlockHeapFree", allocatorBlockHeapFree);
-   RegisterKernelFunctionName("internal_allocatorExpHeapAlloc", allocatorExpHeapAlloc);
-   RegisterKernelFunctionName("internal_allocatorExpHeapFree", allocatorExpHeapFree);
-   RegisterKernelFunctionName("internal_allocatorFrmHeapAlloc", allocatorFrmHeapAlloc);
-   RegisterKernelFunctionName("internal_allocatorFrmHeapFree", allocatorFrmHeapFree);
-   RegisterKernelFunctionName("internal_allocatorUnitHeapAlloc", allocatorUnitHeapAlloc);
-   RegisterKernelFunctionName("internal_allocatorUnitHeapFree", allocatorUnitHeapFree);
+   RegisterInternalFunction(allocatorDefaultHeapAlloc, sAllocatorDefaultHeapAlloc);
+   RegisterInternalFunction(allocatorDefaultHeapFree, sAllocatorDefaultHeapFree);
+   RegisterInternalFunction(allocatorBlockHeapAlloc, sAllocatorBlockHeapAlloc);
+   RegisterInternalFunction(allocatorBlockHeapFree, sAllocatorBlockHeapFree);
+   RegisterInternalFunction(allocatorExpHeapAlloc, sAllocatorExpHeapAlloc);
+   RegisterInternalFunction(allocatorExpHeapFree, sAllocatorExpHeapFree);
+   RegisterInternalFunction(allocatorFrmHeapAlloc, sAllocatorFrmHeapAlloc);
+   RegisterInternalFunction(allocatorFrmHeapFree, sAllocatorFrmHeapFree);
+   RegisterInternalFunction(allocatorUnitHeapAlloc, sAllocatorUnitHeapAlloc);
+   RegisterInternalFunction(allocatorUnitHeapFree, sAllocatorUnitHeapFree);
+
+   RegisterInternalData(sDefaultHeapFunctions);
+   RegisterInternalData(sBlockHeapFunctions);
+   RegisterInternalData(sExpHeapFunctions);
+   RegisterInternalData(sFrameHeapFunctions);
+   RegisterInternalData(sUnitHeapFunctions);
 }
 
 } // namespace coreinit

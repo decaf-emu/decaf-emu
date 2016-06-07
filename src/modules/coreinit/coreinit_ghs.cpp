@@ -169,8 +169,8 @@ Module::registerGhsFunctions()
    RegisterKernelDataName("_iob", p_iob);
    RegisterKernelDataName("_iob_lock", p_iob_lock);
 
-   // TODO: This is actually technically private data
-   RegisterKernelDataName("__gh_errno", p__gh_errno);
+   RegisterInternalDataName("__gh_errno", p__gh_errno);
+   RegisterInternalData(ghsSpinLock);
 }
 
 void
@@ -179,7 +179,6 @@ Module::initialiseGHS()
    *p__gh_errno = 0;
    *p__gh_FOPEN_MAX = GHS_FOPEN_MAX;
 
-   ghsSpinLock = coreinit::internal::sysAlloc<OSSpinLock>();
    OSInitSpinLock(ghsSpinLock);
 }
 

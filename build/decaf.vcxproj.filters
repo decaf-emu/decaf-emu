@@ -1427,9 +1427,6 @@
     <ClInclude Include="..\src\kernel\kernel_hle.h">
       <Filter>Header Files\kernel</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\kernel\kernel_hleexport.h">
-      <Filter>Header Files\kernel</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\kernel\kernel_hlemodule.h">
       <Filter>Header Files\kernel</Filter>
     </ClInclude>
@@ -1446,6 +1443,9 @@
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\kernel\kernel_filesystem.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kernel\kernel_hlesymbol.h">
       <Filter>Header Files\kernel</Filter>
     </ClInclude>
   </ItemGroup>

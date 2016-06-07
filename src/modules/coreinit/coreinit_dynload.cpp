@@ -128,8 +128,6 @@ OSDynLoad_Release(coreinit::internal::LoadedModuleHandleData *handle)
 void
 Module::initialiseDynLoad()
 {
-   sMemAlloc = findExportAddress("internal_dynloadDefaultAlloc");
-   sMemFree = findExportAddress("internal_dynloadDefaultFree");
 }
 
 void
@@ -140,8 +138,9 @@ Module::registerDynLoadFunctions()
    RegisterKernelFunction(OSDynLoad_Release);
    RegisterKernelFunction(OSDynLoad_SetAllocator);
    RegisterKernelFunction(OSDynLoad_GetAllocator);
-   RegisterKernelFunctionName("internal_dynloadDefaultAlloc", dynloadDefaultAlloc);
-   RegisterKernelFunctionName("internal_dynloadDefaultFree", dynloadDefaultFree);
+
+   RegisterInternalFunction(dynloadDefaultAlloc, sMemAlloc);
+   RegisterInternalFunction(dynloadDefaultFree, sMemFree);
 }
 
 namespace internal

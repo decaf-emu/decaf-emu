@@ -13,7 +13,7 @@ set(HEADER_FILES
     kernel_internal.h
     kernel_hle.h
     kernel_hledata.h
-    kernel_hleexport.h
+    kernel_hlesymbol.h
     kernel_hlefunction.h
     kernel_hlemodule.h
     )

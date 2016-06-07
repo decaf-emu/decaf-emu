@@ -1,17 +1,17 @@
 #pragma once
 #include <cstdint>
 #include "cpu/state.h"
-#include "kernel_hleexport.h"
+#include "kernel_hlesymbol.h"
 #include "ppcutils/ppcinvoke.h"
 #include "common/type_list.h"
 
 namespace kernel
 {
 
-struct HleFunction : HleExport
+struct HleFunction : HleSymbol
 {
    HleFunction() :
-      HleExport(HleExport::Function)
+      HleSymbol(HleSymbol::Function)
    {
    }
 
@@ -82,22 +82,24 @@ struct HleDestructorFunctionImpl : HleFunction
   // Regular Function
 template<typename ReturnType, typename... Args>
 inline HleFunction *
-makeFunction(ReturnType(*fptr)(Args...))
+makeFunction(ReturnType(*fptr)(Args...), void* hostPtr = nullptr)
 {
    auto func = new kernel::functions::HleFunctionImpl<ReturnType, Args...>();
    func->valid = true;
    func->wrapped_function = fptr;
+   func->hostPtr = hostPtr;
    return func;
 }
 
 // Member Function
 template<typename ReturnType, typename Class, typename... Args>
 inline HleFunction *
-makeFunction(ReturnType(Class::*fptr)(Args...))
+makeFunction(ReturnType(Class::*fptr)(Args...), void* hostPtr = nullptr)
 {
    auto func = new kernel::functions::HleMemberFunctionImpl<ReturnType, Class, Args...>();
    func->valid = true;
    func->wrapped_function = fptr;
+   func->hostPtr = hostPtr;
    return func;
 }
 

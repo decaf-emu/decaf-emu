@@ -267,24 +267,22 @@ loadHleModule(const std::string &moduleName,
    const std::string &name,
    kernel::HleModule *module)
 {
-   std::vector<kernel::HleFunction*> funcExports;
-   std::vector<kernel::HleData*> dataExports;
+   std::vector<kernel::HleFunction*> funcSymbols;
+   std::vector<kernel::HleData*> dataSymbols;
    uint32_t dataSize = 0, codeSize = 0;
-   auto &exports = module->getExportMap();
+   auto &symbols = module->getSymbols();
 
-   for (auto &pair : exports) {
-      auto exportInfo = pair.second;
-
-      if (exportInfo->type == kernel::HleExport::Function) {
-         auto funcExport = static_cast<kernel::HleFunction*>(exportInfo);
+   for (auto &symbol : symbols) {
+      if (symbol->type == kernel::HleSymbol::Function) {
+         auto funcSymbol = static_cast<kernel::HleFunction*>(symbol);
          codeSize += 8;
-         funcExports.emplace_back(funcExport);
-      } else if (exportInfo->type == kernel::HleExport::Data) {
-         auto dataExport = static_cast<kernel::HleData*>(exportInfo);
-         dataSize += dataExport->size;
-         dataExports.emplace_back(dataExport);
+         funcSymbols.emplace_back(funcSymbol);
+      } else if (symbol->type == kernel::HleSymbol::Data) {
+         auto dataSymbol = static_cast<kernel::HleData*>(symbol);
+         dataSize += dataSymbol->size;
+         dataSymbols.emplace_back(dataSymbol);
       } else {
-         gLog->error("Unexpected KernelExport type");
+         gLog->error("Unexpected HleSymbol type");
          return nullptr;
       }
    }
@@ -303,7 +301,7 @@ loadHleModule(const std::string &moduleName,
       auto end = start + codeSize;
       loadedMod->sections.emplace_back(LoadedSection{ ".text", start, end });
 
-      for (auto &func : funcExports) {
+      for (auto &func : funcSymbols) {
          // Allocate some space for the thunk
          auto thunk = reinterpret_cast<uint32_t*>(codeRegion);
          auto addr = mem::untranslate(thunk);
@@ -318,12 +316,16 @@ loadHleModule(const std::string &moduleName,
          bclr.bo = 0x1f;
          *(thunk + 1) = byte_swap(bclr.value);
 
-         // Add to exports list
-         loadedMod->exports.emplace(func->name, addr);
+         // Add to symbols list
          loadedMod->symbols.emplace(func->name, addr);
 
          // Save the PPC ptr for internal lookups
          func->ppcPtr = thunk;
+
+         // Map host memory pointer to PPC region
+         if (func->hostPtr) {
+            *reinterpret_cast<ppcaddr_t*>(func->hostPtr) = addr;
+         }
       }
    }
 
@@ -334,22 +336,29 @@ loadHleModule(const std::string &moduleName,
       auto end = start + codeSize;
       loadedMod->sections.emplace_back(LoadedSection{ ".data", start, end });
 
-      for (auto &data : dataExports) {
+      for (auto &data : dataSymbols) {
          // Allocate the same for this export
          auto thunk = dataRegion;
          auto addr = mem::untranslate(thunk);
          dataRegion += data->size;
 
          // Add to exports list
-         loadedMod->exports.emplace(data->name, addr);
          loadedMod->symbols.emplace(data->name, addr);
 
          // Save the PPC ptr for internal lookups
          data->ppcPtr = thunk;
 
          // Map host memory pointer to PPC region
-         *data->hostPtr = thunk;
+         if (data->hostPtr) {
+            *reinterpret_cast<void**>(data->hostPtr) = thunk;
+         }
       }
+   }
+
+   // Export everything which is an export
+   auto &exports = module->getExports();
+   for (auto &exp : exports) {
+      loadedMod->exports.emplace(exp->name, mem::untranslate(exp->ppcPtr));
    }
 
    module->initialise();

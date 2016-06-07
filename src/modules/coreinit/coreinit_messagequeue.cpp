@@ -1,3 +1,4 @@
+#include <array>
 #include "coreinit.h"
 #include "coreinit_memheap.h"
 #include "coreinit_messagequeue.h"
@@ -12,7 +13,7 @@ OSMessageQueue::Tag;
 static OSMessageQueue *
 sSystemMessageQueue;
 
-static OSMessage *
+static std::array<OSMessage, 16> *
 sSystemMessageArray;
 
 
@@ -235,14 +236,15 @@ Module::registerMessageQueueFunctions()
    RegisterKernelFunction(OSReceiveMessage);
    RegisterKernelFunction(OSPeekMessage);
    RegisterKernelFunction(OSGetSystemMessageQueue);
+
+   RegisterInternalData(sSystemMessageQueue);
+   RegisterInternalData(sSystemMessageArray);
 }
 
 void
 Module::initialiseMessageQueues()
 {
-   sSystemMessageQueue = internal::sysAlloc<OSMessageQueue>();
-   sSystemMessageArray = reinterpret_cast<OSMessage*>(internal::sysAlloc(16 * sizeof(OSMessage)));
-   OSInitMessageQueue(sSystemMessageQueue, sSystemMessageArray, 16);
+   OSInitMessageQueue(sSystemMessageQueue, sSystemMessageArray->data(), 16);
 }
 
 } // namespace coreinit

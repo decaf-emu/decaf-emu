@@ -4,7 +4,7 @@
 namespace kernel
 {
 
-struct HleExport
+struct HleSymbol
 {
    enum Type
    {
@@ -13,21 +13,22 @@ struct HleExport
       Data
    };
 
-   HleExport() :
-      type(Undefined)
+   HleSymbol() :
+      type(Undefined), ppcPtr(nullptr), hostPtr(nullptr)
    {
    }
 
-   HleExport(Type type) :
-      type(type)
+   HleSymbol(Type type) :
+      type(type), ppcPtr(nullptr), hostPtr(nullptr)
    {
    }
 
-   virtual ~HleExport() = default;
+   virtual ~HleSymbol() = default;
 
    Type type = Undefined;
    std::string name;
    std::string module;
+   void *hostPtr = nullptr;
    void *ppcPtr = nullptr;
 };
 

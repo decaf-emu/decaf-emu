@@ -310,7 +310,7 @@ OSWaitAlarm(OSAlarm *alarm)
    }
 }
 
-void
+uint32_t
 AlarmCallbackThreadEntry(uint32_t core_id, void *arg2)
 {
    auto queue = sAlarmQueue[core_id];
@@ -347,6 +347,7 @@ AlarmCallbackThreadEntry(uint32_t core_id, void *arg2)
          alarm->callback(alarm, alarm->context);
       }
    }
+   return 0;
 }
 
 void
@@ -365,22 +366,20 @@ Module::registerAlarmFunctions()
    RegisterKernelFunction(OSSetAlarmUserData);
    RegisterKernelFunction(OSWaitAlarm);
 
-   RegisterKernelFunctionName("internal_AlarmCallbackThreadEntry", AlarmCallbackThreadEntry);
+   RegisterInternalFunction(AlarmCallbackThreadEntry, sAlarmCallbackThreadEntryPoint);
+   RegisterInternalData(sAlarmQueue);
+   RegisterInternalData(sAlarmCallbackQueue);
+   RegisterInternalData(sAlarmCallbackThreadQueue);
+   RegisterInternalData(sAlarmCallbackThread);
 }
 
 void
 Module::initialiseAlarm()
 {
-   sAlarmCallbackThreadEntryPoint = findExportAddress("internal_AlarmCallbackThreadEntry");
-
    for (auto i = 0u; i < CoreCount; ++i) {
-      sAlarmQueue[i] = internal::sysAlloc<OSAlarmQueue>();
       OSInitAlarmQueue(sAlarmQueue[i]);
-      sAlarmCallbackQueue[i] = internal::sysAlloc<OSAlarmQueue>();
       OSInitAlarmQueue(sAlarmCallbackQueue[i]);
-      sAlarmCallbackThreadQueue[i] = internal::sysAlloc<OSThreadQueue>();
       OSInitThreadQueue(sAlarmCallbackThreadQueue[i]);
-      sAlarmCallbackThread[i] = nullptr;
    }
 }
 
@@ -391,7 +390,7 @@ void
 startAlarmCallbackThreads()
 {
    for (auto i = 0u; i < CoreCount; ++i) {
-      auto thread = coreinit::internal::sysAlloc<OSThread>();
+      auto &thread = sAlarmCallbackThread[i];
       auto stackSize = 16 * 1024;
       auto stack = reinterpret_cast<uint8_t*>(coreinit::internal::sysAlloc(stackSize, 8));
       auto name = coreinit::internal::sysStrDup(fmt::format("Alarm Thread {}", i));
@@ -401,7 +400,6 @@ startAlarmCallbackThreads()
          static_cast<OSThreadAttributes>(1 << i));
       OSSetThreadName(thread, name);
       OSResumeThread(thread);
-      sAlarmCallbackThread[i] = thread;
    }
 }
 

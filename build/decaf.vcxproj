@@ -390,7 +390,7 @@
     <ClInclude Include="..\src\kernel\kernel_filesystem.h" />
     <ClInclude Include="..\src\kernel\kernel_hle.h" />
     <ClInclude Include="..\src\kernel\kernel_hledata.h" />
-    <ClInclude Include="..\src\kernel\kernel_hleexport.h" />
+    <ClInclude Include="..\src\kernel\kernel_hlesymbol.h" />
     <ClInclude Include="..\src\kernel\kernel_hlefunction.h" />
     <ClInclude Include="..\src\kernel\kernel_hlemodule.h" />
     <ClInclude Include="..\src\kernel\kernel_internal.h" />
