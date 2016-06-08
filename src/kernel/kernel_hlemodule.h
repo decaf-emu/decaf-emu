@@ -5,6 +5,7 @@
 #include "kernel_hlefunction.h"
 #include "kernel_hledata.h"
 #include "common/virtual_ptr.h"
+#include "ppcutils/wfunc_ptr.h"
 
 #define RegisterKernelFunction(fn) \
    RegisterKernelFunctionName(#fn, fn)
