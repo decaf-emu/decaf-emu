@@ -87,5 +87,8 @@
     <ClInclude Include="..\src\common\virtual_ptr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\common\fastregionmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

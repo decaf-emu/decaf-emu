@@ -8,6 +8,7 @@
 #include "common/log.h"
 #include "common/bitutils.h"
 #include "cpu/espresso/espresso_instructionset.h"
+#include "common/fastregionmap.h"
 
 namespace cpu
 {
@@ -22,8 +23,7 @@ static std::vector<jitinstrfptr_t>
 sInstructionMap;
 
 static asmjit::JitRuntime* sRuntime;
-static std::map<uint32_t, JitCode> sBlocks;
-static std::map<uint32_t, JitCode> sSingleBlocks;
+static FastRegionMap<JitCode> sJitBlocks;
 
 JitCall gCallFn;
 JitFinale gFinaleFn;
@@ -113,16 +113,15 @@ void clearCache()
       sRuntime = nullptr;
    }
 
+   sJitBlocks.clear();
    sRuntime = new asmjit::JitRuntime();
-   sBlocks.clear();
-   sSingleBlocks.clear();
    initStubs();
 }
 
-bool jit_b(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
-bool jit_bc(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
-bool jit_bcctr(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
-bool jit_bclr(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels);
+bool jit_b(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia);
+bool jit_bc(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia);
+bool jit_bcctr(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia);
+bool jit_bclr(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia);
 
 using JumpTargetList = std::vector<uint32_t>;
 
@@ -130,30 +129,11 @@ bool gen(JitBlock& block)
 {
    PPCEmuAssembler a(sRuntime);
 
-   JumpLabelMap jumpLabels;
-   for (auto i = block.targets.begin(); i != block.targets.end(); ++i) {
-      if (i->first >= block.start && i->first < block.end) {
-         jumpLabels[i->first] = a.newLabel();
-      }
-   }
-
-   // Fix VS debug viewer...
-   if (JIT_DEBUG) {
-      for (int i = 0; i < 8; ++i) {
-         a.nop();
-      }
-   }
-
    auto codeStart = a.newLabel();
    a.bind(codeStart);
 
    auto lclCia = block.start;
    while (lclCia < block.end) {
-      auto ciaLbl = jumpLabels.find(lclCia);
-      if (ciaLbl != jumpLabels.end()) {
-         a.bind(ciaLbl->second);
-      }
-
       if (JIT_DEBUG) {
          a.mov(a.cia, lclCia);
       }
@@ -163,13 +143,13 @@ bool gen(JitBlock& block)
 
       bool genSuccess = false;
       if (data->id == espresso::InstructionID::b) {
-         genSuccess = jit_b(a, instr, lclCia, jumpLabels);
+         genSuccess = jit_b(a, instr, lclCia);
       } else if (data->id == espresso::InstructionID::bc) {
-         genSuccess = jit_bc(a, instr, lclCia, jumpLabels);
+         genSuccess = jit_bc(a, instr, lclCia);
       } else if (data->id == espresso::InstructionID::bcctr) {
-         genSuccess = jit_bcctr(a, instr, lclCia, jumpLabels);
+         genSuccess = jit_bcctr(a, instr, lclCia);
       } else if (data->id == espresso::InstructionID::bclr) {
-         genSuccess = jit_bclr(a, instr, lclCia, jumpLabels);
+         genSuccess = jit_bclr(a, instr, lclCia);
       } else {
          auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
          if (fptr) {
@@ -188,14 +168,7 @@ bool gen(JitBlock& block)
       lclCia += 4;
    }
 
-   // Debug Check
-   for (auto i = jumpLabels.begin(); i != jumpLabels.end(); ++i) {
-      if (!a.isLabelValid(i->second) || !a.isLabelBound(i->second)) {
-         gLog->error("Jump target {:08x} was never initialized...", i->first);
-      }
-   }
-
-   a.mov(a.eax, block.end);
+   a.mov(a.eax, lclCia);
    a.jmp(asmjit::Ptr(gFinaleFn));
 
    JitCode func = asmjit_cast<JitCode>(a.make());
@@ -206,9 +179,6 @@ bool gen(JitBlock& block)
 
    auto baseAddr = asmjit_cast<JitCode>(func, a.getLabelOffset(codeStart));
    block.entry = baseAddr;
-   for (auto i = jumpLabels.cbegin(); i != jumpLabels.cend(); ++i) {
-      block.targets[i->first] = asmjit_cast<JitCode>(func, a.getLabelOffset(i->second));
-   }
 
    return true;
 }
@@ -216,7 +186,6 @@ bool gen(JitBlock& block)
 bool identBlock(JitBlock& block)
 {
    auto fnStart = block.start;
-   auto fnMax = fnStart;
    auto fnEnd = fnStart;
    JumpTargetList jumpTargets;
 
@@ -228,65 +197,17 @@ bool identBlock(JitBlock& block)
       if (!data) {
          // Looks like we found a tail call function??
 
-         fnMax = lclCia - 4;
-         fnEnd = fnMax + 4;
+         fnEnd = lclCia;
          gLog->warn("Bailing on JIT {:08x} ident due to failed decode at {:08x}", block.start, lclCia);
          break;
       }
 
-      uint32_t nia;
       switch (data->id) {
       case espresso::InstructionID::b:
-         if (instr.lk) {
-            jumpTargets.push_back(lclCia + 4);
-         }
-
-         nia = sign_extend<26>(instr.li << 2);
-         if (!instr.aa) {
-            nia += lclCia;
-         }
-         if (!instr.lk) {
-            jumpTargets.push_back(nia);
-            if (nia > fnMax) {
-               fnMax = nia;
-            }
-         }
-         break;
       case espresso::InstructionID::bc:
-         if (instr.lk) {
-            jumpTargets.push_back(lclCia + 4);
-         }
-
-         nia = sign_extend<16>(instr.bd << 2);
-         if (!instr.aa) {
-            nia += lclCia;
-         }
-         if (!instr.lk) {
-            jumpTargets.push_back(nia);
-            if (nia > fnMax) {
-               fnMax = nia;
-            }
-         }
-         break;
       case espresso::InstructionID::bcctr:
-         // Target is unknown (CTR)
-         if (instr.lk) {
-            jumpTargets.push_back(lclCia + 4);
-         }
-
-         break;
       case espresso::InstructionID::bclr:
-         // Target is unknown (LR)
-         if (instr.lk) {
-            jumpTargets.push_back(lclCia + 4);
-         }
-
-         if (get_bit<2>(instr.bo) && get_bit<4>(instr.bo)) {
-            if (lclCia > fnMax) {
-               fnMax = lclCia;
-               fnEnd = fnMax + 4;
-            }
-         }
+         fnEnd = lclCia + 4;
          break;
       default:
          break;
@@ -300,8 +221,7 @@ bool identBlock(JitBlock& block)
       lclCia += 4;
 
       if (((lclCia - fnStart) >> 2) > JIT_MAX_INST) {
-         fnMax = lclCia - 4;
-         fnEnd = fnMax + 4;
+         fnEnd = lclCia;
          gLog->trace("Bailing on JIT {:08x} due to max instruction limit at {:08x}", block.start, lclCia);
          break;
       }
@@ -316,20 +236,12 @@ bool identBlock(JitBlock& block)
    return true;
 }
 
-static std::mutex sMutex;
-
 JitCode get(uint32_t addr)
 {
-   std::unique_lock<std::mutex> lock(sMutex);
-
-   auto i = sBlocks.find(addr);
-   if (i != sBlocks.end()) {
-      return i->second;
+   auto foundBlock = sJitBlocks.find(addr);
+   if (foundBlock) {
+      return foundBlock;
    }
-
-   // Set it to nullptr first so we don't
-   //   try to regenerate after a failed attempt.
-   sBlocks[addr] = nullptr;
 
    JitBlock block(addr);
 
@@ -345,43 +257,18 @@ JitCode get(uint32_t addr)
       return nullptr;
    }
 
-   sBlocks[block.start] = block.entry;
+   sJitBlocks.set(addr, block.entry);
    for (auto i = block.targets.cbegin(); i != block.targets.cend(); ++i) {
       if (i->second) {
-         sBlocks[i->first] = i->second;
+         sJitBlocks.set(i->first, i->second);
       }
    }
    return block.entry;
 }
 
-bool prepare(uint32_t addr)
-{
-   return get(addr) != nullptr;
-}
-
-JitCode getSingle(uint32_t addr)
-{
-   auto i = sSingleBlocks.find(addr);
-   if (i != sSingleBlocks.end()) {
-      return i->second;
-   }
-
-   sSingleBlocks[addr] = nullptr;
-
-   JitBlock block(addr);
-   block.end = block.start + 4;
-
-   if (!gen(block)) {
-      return nullptr;
-   }
-
-   sSingleBlocks[addr] = block.entry;
-   return block.entry;
-}
-
 uint32_t execute(Core *core, JitCode block)
 {
-   return gCallFn(core, block);
+   return gCallFn(core, reinterpret_cast<uint32_t*>(&core->interrupt), block);
 }
 
 void resume(Core *core)
@@ -393,7 +280,7 @@ void resume(Core *core)
    while (core->nia != cpu::CALLBACK_ADDR) {
       JitCode jitFn = get(core->nia);
       if (!jitFn) {
-         throw;
+         throw std::runtime_error("failed to generate JIT block to execute");
       }
 
       auto newNia = execute(core, jitFn);

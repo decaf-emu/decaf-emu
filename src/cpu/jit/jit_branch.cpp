@@ -25,7 +25,7 @@ enum BcFlags
 };
 
 void
-jit_interrupt_stub(cpu::Core *state)
+jit_interrupt_stub()
 {
    this_core::check_interrupts();
 }
@@ -36,13 +36,12 @@ jit_b_check_interrupt(PPCEmuAssembler& a, uint32_t cia)
    auto noInterrupt = a.newLabel();
    a.cmp(asmjit::X86Mem(a.interruptAddr, 0, 4), 0);
    a.je(noInterrupt);
-   a.mov(a.zcx, a.state);
    a.call(asmjit::Ptr(jit_interrupt_stub));
    a.bind(noInterrupt);
 }
 
 bool
-jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels)
+jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
 {
    jit_b_check_interrupt(a, cia);
 
@@ -54,26 +53,16 @@ jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& j
    if (instr.lk) {
       a.mov(a.eax, cia + 4u);
       a.mov(a.ppclr, a.eax);
-
-      a.mov(a.eax, nia);
-      a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
-      return true;
    }
 
-   auto i = jumpLabels.find(nia);
-   if (i != jumpLabels.end()) {
-      a.jmp(i->second);
-   } else {
-      a.mov(a.eax, nia);
-      a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
-   }
-
+   a.mov(a.eax, nia);
+   a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    return true;
 }
 
 template<unsigned flags>
 static bool
-bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels)
+bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
 {
    jit_b_check_interrupt(a, cia);
 
@@ -82,9 +71,6 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMa
 
    if (flags & BcCheckCtr) {
       if (!get_bit<NoCheckCtr>(bo)) {
-         //state->ctr--;
-         //ctr_ok = !!((state->ctr != 0) ^ (get_bit<CtrValue>(bo)));
-
          a.dec(a.ppcctr);
 
          a.mov(a.eax, a.ppcctr);
@@ -99,10 +85,6 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMa
 
    if (flags & BcCheckCond) {
       if (!get_bit<NoCheckCond>(bo)) {
-         //auto crb = get_bit(state->cr.value, 31 - instr.bi);
-         //auto crv = get_bit<CondValue>(bo);
-         //cond_ok = (crb == crv);
-
          a.mov(a.eax, a.ppccr);
          a.and_(a.eax, 1 << (31 - instr.bi));
          a.cmp(a.eax, 0);
@@ -133,35 +115,31 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMa
       a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    } else {
       uint32_t nia = cia + sign_extend<16>(instr.bd << 2);
-      auto i = jumpLabels.find(nia);
-      if (i != jumpLabels.end()) {
-         a.jmp(i->second);
-      } else {
-         a.mov(a.eax, nia);
-         a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
-      }
+      a.mov(a.eax, nia);
+      a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    }
 
    a.bind(doCondFailLbl);
+
    return true;
 }
 
 bool
-jit_bc(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels)
+jit_bc(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
 {
-   return bcGeneric<BcCheckCtr | BcCheckCond>(a, instr, cia, jumpLabels);
+   return bcGeneric<BcCheckCtr | BcCheckCond>(a, instr, cia);
 }
 
 bool
-jit_bcctr(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels)
+jit_bcctr(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
 {
-   return bcGeneric<BcBranchCTR | BcCheckCond>(a, instr, cia, jumpLabels);
+   return bcGeneric<BcBranchCTR | BcCheckCond>(a, instr, cia);
 }
 
 bool
-jit_bclr(PPCEmuAssembler& a, Instruction instr, uint32_t cia, const JumpLabelMap& jumpLabels)
+jit_bclr(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
 {
-   return bcGeneric<BcBranchLR | BcCheckCtr | BcCheckCond>(a, instr, cia, jumpLabels);
+   return bcGeneric<BcBranchLR | BcCheckCtr | BcCheckCond>(a, instr, cia);
 }
 
 void registerBranchInstructions()

@@ -29,6 +29,7 @@
     <ClInclude Include="..\src\common\byte_swap.h" />
     <ClInclude Include="..\src\common\debuglog.h" />
     <ClInclude Include="..\src\common\emuassert.h" />
+    <ClInclude Include="..\src\common\fastregionmap.h" />
     <ClInclude Include="..\src\common\fixed.h" />
     <ClInclude Include="..\src\common\floatutils.h" />
     <ClInclude Include="..\src\common\log.h" />
