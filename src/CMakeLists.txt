@@ -5,9 +5,7 @@ set(SOURCE_FILES
     debugcontrol.cpp
     debugger.cpp
     debugnet.cpp
-    elf.cpp
     emulog.cpp
-    loader.cpp
     main.cpp
     )
 set(HEADER_FILES
@@ -16,9 +14,7 @@ set(HEADER_FILES
     debugger.h
     debugmsg.h
     debugnet.h
-    elf.h
     hostlookup.h
-    loader.h
     traceiter.h
     types.h
     usermodule.h
