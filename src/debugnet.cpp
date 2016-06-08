@@ -114,7 +114,7 @@ struct DebugPauseInfo {
 static void
 populateDebugPauseInfo(DebugPauseInfo& info)
 {
-   auto &loadedModules = coreinit::internal::getLoadedModules();
+   const auto &loadedModules = coreinit::internal::getLoadedModules();
    int moduleIdx = 0;
    int userModuleIdx = -1;
    auto userModule = coreinit::internal::getUserModule();
