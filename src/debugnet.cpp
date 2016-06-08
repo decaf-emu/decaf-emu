@@ -159,7 +159,9 @@ populateDebugPauseInfo(DebugPauseInfo& info)
 
    for (auto thread = firstActiveThread; thread; thread = thread->activeLink.next) {
       DebugThreadInfo tinfo;
-      tinfo.name = thread->name;
+      if (thread->name) {
+         tinfo.name = thread->name;
+      }
       tinfo.id = thread->id;
       
       const cpu::Core *threadCoreState = nullptr;
