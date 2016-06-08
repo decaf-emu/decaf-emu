@@ -128,8 +128,7 @@ OSPanic(const char *file, int line, const char *fmt, ppctypes::VarList &args)
    std::string str;
    formatString(fmt, args, str);
    gLog->error("OSPanic {}:{} {}", file, line, str);
-   // TODO: Fix This!
-   //tracePrint(&OSGetCurrentThread()->fiber->state, 0, 0);
+   _exit(1);
 }
 
 static void
