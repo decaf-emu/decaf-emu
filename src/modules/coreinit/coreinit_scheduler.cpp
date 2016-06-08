@@ -394,8 +394,10 @@ setThreadActualPriorityNoLock(OSThread *thread, int32_t priority)
    thread->priority = priority;
 
    if (thread->state == OSThreadState::Ready) {
-      unqueueThreadNoLock(thread);
-      queueThreadNoLock(thread);
+      if (thread->suspendCounter == 0) {
+         unqueueThreadNoLock(thread);
+         queueThreadNoLock(thread);
+      }
    } else if (thread->state == OSThreadState::Waiting) {
       // Move towards head of queue if needed
       while (thread->link.prev && priority < thread->link.prev->priority) {
