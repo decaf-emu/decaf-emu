@@ -26,6 +26,7 @@ set(SOURCE_FILES
     coreinit/coreinit_ghs_typeinfo.cpp
     coreinit/coreinit_interrupts.cpp
     coreinit/coreinit_internal_idlock.cpp
+    coreinit/coreinit_internal_loader.cpp
     coreinit/coreinit_lockedcache.cpp
     coreinit/coreinit_mcp.cpp
     coreinit/coreinit_memheap.cpp
@@ -44,6 +45,7 @@ set(SOURCE_FILES
     coreinit/coreinit_time.cpp
     coreinit/coreinit_unitheap.cpp
     coreinit/coreinit_userconfig.cpp
+    coreinit/elf.cpp
     erreula/erreula.cpp
     erreula/erreula_errorviewer.cpp
     gx2/gx2.cpp
@@ -169,6 +171,7 @@ set(HEADER_FILES
     coreinit/coreinit_ghs_typeinfo.h
     coreinit/coreinit_interrupts.h
     coreinit/coreinit_internal_idlock.h
+    coreinit/coreinit_internal_loader.h
     coreinit/coreinit_internal_queue.h
     coreinit/coreinit_ios.h
     coreinit/coreinit_lockedcache.h
@@ -189,6 +192,7 @@ set(HEADER_FILES
     coreinit/coreinit_time.h
     coreinit/coreinit_unitheap.h
     coreinit/coreinit_userconfig.h
+    coreinit/elf.h
     erreula/erreula.h
     erreula/erreula_errorviewer.h
     gx2/gx2.h

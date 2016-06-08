@@ -24,7 +24,7 @@ initialiseEmulator();
 static bool
 play(const fs::HostPath &path);
 
-static const std::string
+static std::string
 getGameName(const fs::HostPath &path)
 {
    return path.filename();
