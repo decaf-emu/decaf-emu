@@ -341,7 +341,7 @@ blockify(Shader &shader)
  * Recursive function to dump a list of blocks to string.
  */
 static void
-dumpBlockList(shadir::BlockList &blocks, fmt::MemoryWriter &out, std::string indent)
+dumpBlockList(shadir::BlockList &blocks, fmt::MemoryWriter &out, const std::string &indent)
 {
    for (auto &block : blocks) {
       switch (block->type) {

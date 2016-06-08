@@ -11,7 +11,7 @@ namespace fs
 class VirtualFolder : public Folder
 {
 public:
-   VirtualFolder(std::string name) :
+   VirtualFolder(const std::string &name) :
       Folder(name)
    {
    }
