@@ -443,9 +443,9 @@ static bool INT_TO_FLT(GenerateState &state, AluInstruction *ins)
    assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "float(floatBitsToInt(";
+   state.out << "float(";
    translateAluSource(state, ins, ins->src[0]);
-   state.out << "))";
+   state.out << ")";
 
    translateAluDestEnd(state, ins);
    return true;
@@ -457,9 +457,9 @@ static bool UINT_TO_FLT(GenerateState &state, AluInstruction *ins)
    assert(ins->srcCount == 1);
    translateAluDestStart(state, ins);
 
-   state.out << "float(floatBitsToUint(";
+   state.out << "float(";
    translateAluSource(state, ins, ins->src[0]);
-   state.out << "))";
+   state.out << ")";
 
    translateAluDestEnd(state, ins);
    return true;
