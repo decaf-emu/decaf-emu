@@ -148,6 +148,20 @@ unqueueThreadNoLock(OSThread *thread)
    CoreRunQueue2::erase(sCoreRunQueue[2], thread);
 }
 
+void
+setThreadAffinityNoLock(OSThread *thread, uint32_t affinity)
+{
+   thread->attr &= ~OSThreadAttributes::AffinityAny;
+   thread->attr |= affinity;
+
+   if (thread->state == OSThreadState::Ready) {
+      if (thread->suspendCounter == 0) {
+         unqueueThreadNoLock(thread);
+         queueThreadNoLock(thread);
+      }
+   }
+}
+
 static OSThread *
 peekNextThreadNoLock(uint32_t core)
 {

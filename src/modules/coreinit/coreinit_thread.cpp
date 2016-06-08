@@ -577,8 +577,8 @@ OSSetThreadAffinity(OSThread *thread,
                     uint32_t affinity)
 {
    internal::lockScheduler();
-   thread->attr &= ~OSThreadAttributes::AffinityAny;
-   thread->attr |= affinity;
+
+   internal::setThreadAffinityNoLock(thread, affinity);
 
    if (thread->state == OSThreadState::Ready && affinity != 0) {
       internal::rescheduleAllCoreNoLock();

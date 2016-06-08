@@ -45,6 +45,9 @@ void
 markThreadInactiveNoLock(OSThread *thread);
 
 void
+setThreadAffinityNoLock(OSThread *thread, uint32_t affinity);
+
+void
 checkRunningThreadNoLock(bool yielding);
 
 void
