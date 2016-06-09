@@ -33,15 +33,16 @@ struct AccessViolationException : Exception
    uint64_t address;
 };
 
-using ExceptionHandler = std::function<Fiber *(Exception *exception)>;
+typedef void (*ExceptionResumeFunc)();
+using ExceptionHandler = std::function<ExceptionResumeFunc(Exception *exception)>;
 
 // Can be returned from ExceptionHandler to indicate to resume
 // execute of current fiber.
-static Fiber * const
-HandledException = reinterpret_cast<Fiber *>(static_cast<uintptr_t>(-1));
+static ExceptionResumeFunc const
+HandledException = reinterpret_cast<ExceptionResumeFunc>(static_cast<uintptr_t>(-1));
 
-static Fiber * const
-UnhandledException = reinterpret_cast<Fiber *>(static_cast<uintptr_t>(0));
+static ExceptionResumeFunc const
+UnhandledException = reinterpret_cast<ExceptionResumeFunc>(static_cast<uintptr_t>(0));
 
 bool
 installExceptionHandler(ExceptionHandler handler);

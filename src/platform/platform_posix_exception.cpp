@@ -5,6 +5,7 @@
 #include "common/log.h"
 
 #ifdef PLATFORM_POSIX
+#define _GNU_SOURCE
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
@@ -28,9 +29,9 @@ segvHandler(int unused_signum, siginfo_t *info, void *unused_context)
    auto exception = AccessViolationException { reinterpret_cast<uint64_t>(info->si_addr) };
 
    for (auto &handler : gExceptionHandlers) {
-      auto fiber = handler(&exception);
+      auto func = handler(&exception);
 
-      if (fiber == UnhandledException) {
+      if (func == UnhandledException) {
          // Exception unhandled, try another handler
          continue;
       }
@@ -38,12 +39,13 @@ segvHandler(int unused_signum, siginfo_t *info, void *unused_context)
       // Reinstall the handler since SA_RESETHAND will have cleared it.
       sigaction(SIGSEGV, &gSegvHandler, nullptr);
 
-      if (fiber == HandledException) {
+      if (func == HandledException) {
          // Exception handled, resume execution
          return;
       } else {
-         // Exception handled, switch execution to target fiber
-         swapToFiber(nullptr, fiber);
+         // Exception handled, switch execution to target function
+         ctx->uc_mcontext.gregs[REG_RIP] = reinterpret_cast<DWORD64>(func);
+         return;
       }
    }
 

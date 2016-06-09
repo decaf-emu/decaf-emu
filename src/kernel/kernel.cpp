@@ -33,6 +33,7 @@ namespace kernel
 void init_core_fiber();
 void cpu_entrypoint();
 void cpu_interrupt_handler(uint32_t interrupt_flags);
+void cpu_segfault_handler(uint32_t address);
 bool launch_game();
 
 static bool gRunning = true;
@@ -51,6 +52,7 @@ void initialise()
    initialiseHleMmodules();
 
    cpu::set_core_entrypoint_handler(&cpu_entrypoint);
+   cpu::set_segfault_handler(&cpu_segfault_handler);
    cpu::set_interrupt_handler(&cpu_interrupt_handler);
 
    sSystemHeap = new TeenyHeap(mem::translate(mem::SystemBase), mem::SystemSize);
@@ -60,6 +62,21 @@ TeenyHeap *
 getSystemHeap()
 {
    return sSystemHeap;
+}
+
+void cpu_segfault_handler(uint32_t address)
+{
+   // We may have been in the middle of a kernel function...
+   if (coreinit::internal::isSchedulerLocked()) {
+      coreinit::internal::unlockScheduler();
+   }
+
+   // Alert the debugger if it cares.
+   printf("Segfault occured at %08x\n", address);
+
+   // This will shut down the thread and reschedule.  This is required
+   //  since returning from the segfault handler is an error.
+   coreinit::OSExitThread(0);
 }
 
 void cpu_interrupt_handler(uint32_t interrupt_flags)

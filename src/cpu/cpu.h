@@ -33,6 +33,8 @@ static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 
 typedef void(*entrypoint_handler)();
 typedef void(*interrupt_handler)(uint32_t interrupt_flags);
+typedef void(*segfault_handler)(uint32_t address);
+
 using kernel_call_fn = void(*)(Core *state, void *userData);
 
 struct kernel_call_entry
@@ -45,6 +47,7 @@ void initialise();
 void set_jit_mode(jit_mode mode);
 void set_core_entrypoint_handler(entrypoint_handler handler);
 void set_interrupt_handler(interrupt_handler handler);
+void set_segfault_handler(segfault_handler handler);
 
 uint32_t register_kernel_call(const kernel_call_entry &entry);
 

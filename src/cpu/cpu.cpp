@@ -9,7 +9,9 @@
 #include "interpreter/interpreter.h"
 #include "jit/jit.h"
 #include "espresso/espresso_instructionset.h"
+#include "mem.h"
 #include "platform/platform_thread.h"
+#include "platform/platform_exception.h"
 
 namespace cpu
 {
@@ -20,6 +22,9 @@ gRunning;
 entrypoint_handler
 gCoreEntryPointHandler;
 
+segfault_handler
+gSegfaultHandler;
+
 jit_mode
 gJitMode = jit_mode::disabled;
 
@@ -28,6 +33,9 @@ gCore[3];
 
 static thread_local cpu::Core *
 tCurrentCore = nullptr;
+
+static thread_local uint32_t
+sSegfaultAddr = 0;
 
 void initialise()
 {
@@ -41,6 +49,50 @@ void set_jit_mode(jit_mode mode)
    gJitMode = mode;
 }
 
+void
+coreExceptionEntry()
+{
+   gSegfaultHandler(sSegfaultAddr);
+   throw std::logic_error("The CPU segfault handler must never return.");
+}
+
+static platform::ExceptionResumeFunc
+exceptionHandler(platform::Exception *exception)
+{
+   // Only handle AccessViolation exceptions
+   if (exception->type != platform::Exception::AccessViolation) {
+      return platform::UnhandledException;
+   }
+
+   // Only handle exceptions from the CPU cores
+   if (this_core::id() >= 0xFF) {
+      return platform::UnhandledException;
+   }
+
+   // Retreive the exception information
+   auto info = reinterpret_cast<platform::AccessViolationException *>(exception);
+   auto address = info->address;
+
+   // Only handle exceptions within the memory bounds
+   auto memBase = mem::base();
+   if (address != 0 && (address < memBase || address >= memBase + 0x100000000)) {
+      return platform::UnhandledException;
+   }
+
+   sSegfaultAddr = static_cast<uint32_t>(address - memBase);
+   return coreExceptionEntry;
+}
+
+void
+installExceptionHandler()
+{
+   static bool handlerInstalled = false;
+   if (!handlerInstalled) {
+      handlerInstalled = true;
+      platform::installExceptionHandler(exceptionHandler);
+   }
+}
+
 void coreEntryPoint(Core *core)
 {
    tCurrentCore = core;
@@ -49,6 +101,8 @@ void coreEntryPoint(Core *core)
 
 void start()
 {
+   installExceptionHandler();
+
    gRunning.store(true);
 
    for (auto i = 0; i < 3; ++i) {
@@ -95,6 +149,11 @@ void set_core_entrypoint_handler(entrypoint_handler handler)
    gCoreEntryPointHandler = handler;
 }
 
+void set_segfault_handler(segfault_handler handler)
+{
+   gSegfaultHandler = handler;
+}
+
 namespace this_core
 {
 
@@ -103,7 +162,7 @@ cpu::Core * state()
    return tCurrentCore;
 }
 
-void resume()
+static inline void resume()
 {
    // If we have breakpoints set, we have to fall back to interpreter loop
    // This is because JIT wont check for breakpoints on each instruction.

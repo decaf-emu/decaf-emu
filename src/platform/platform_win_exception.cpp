@@ -21,17 +21,18 @@ exceptionHandler(PEXCEPTION_POINTERS info)
       auto exception = AccessViolationException { address };
 
       for (auto &handler : gExceptionHandlers) {
-         auto fiber = handler(&exception);
+         auto func = handler(&exception);
 
-         if (fiber == UnhandledException) {
+         if (func == UnhandledException) {
             // Exception unhandled, try another handler
             continue;
-         } else if (fiber == HandledException) {
+         } else if (func == HandledException) {
             // Exception handled, resume execution
             return EXCEPTION_CONTINUE_EXECUTION;
          } else {
-            // Exception handled, switch execution to target fiber
-            swapToFiber(nullptr, fiber);
+            // Exception handled, jump to new function
+            info->ContextRecord->Rip = reinterpret_cast<DWORD64>(func);
+            return EXCEPTION_CONTINUE_EXECUTION;
          }
       }
       break;

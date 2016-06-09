@@ -1,6 +1,5 @@
 #include <gsl.h>
 #include "mem.h"
-#include "platform/platform_exception.h"
 #include "platform/platform_memorymap.h"
 #include "common/log.h"
 
@@ -38,32 +37,6 @@ unmapMemory();
 
 static bool
 tryMapMemory(size_t base);
-
-// Handler for invalid memory accesses
-static platform::Fiber *
-handleAccessViolation(platform::Exception *exception)
-{
-   // Only handle AccessViolation exceptions
-   if (exception->type != platform::Exception::AccessViolation) {
-      return platform::UnhandledException;
-   }
-
-   auto info = reinterpret_cast<platform::AccessViolationException *>(exception);
-   auto address = info->address;
-
-   if (address != 0) {
-      if (address < gMemoryBase || address >= gMemoryBase + 0x100000000ull) {
-         // Not in the emulated memory region
-         return platform::UnhandledException;
-      } else {
-         address = address - gMemoryBase;
-      }
-   }
-
-   // TODO: FIX THIS (DEBUGCONTROL)
-   return platform::UnhandledException;
-   //return gProcessor.handleAccessViolation(gsl::narrow_cast<ppcaddr_t>(address));
-}
 
 // Attempt to map all memory regions with base
 static bool
@@ -129,9 +102,6 @@ initialise()
          throw std::runtime_error("Failed to allocate mapped memory");
       }
    }
-
-   // Catch invalid accesses with our handler
-   platform::installExceptionHandler(handleAccessViolation);
 }
 
 // Return the base address of mapped memory
