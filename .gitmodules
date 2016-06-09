@@ -34,3 +34,6 @@
 [submodule "libraries/excmd"]
 	path = libraries/excmd
 	url = https://github.com/exjam/excmd
+[submodule "libraries/imgui"]
+	path = libraries/imgui
+	url = https://github.com/ocornut/imgui.git

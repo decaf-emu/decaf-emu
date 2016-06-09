@@ -17,3 +17,4 @@ config.json
 *.txt
 !CMakeLists.txt
 *.VC.db
+*.ini
