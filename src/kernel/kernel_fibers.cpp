@@ -216,31 +216,3 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
 }
 
 }
-
-/**
- * Our cheeky hack to get user thread ID into spdlog output
- */
-namespace spdlog
-{
-namespace details
-{
-namespace os
-{
-size_t thread_id()
-{
-   size_t coreID = 0xFF, threadID = 0XFF;
-
-   auto core = cpu::this_core::state();
-   if (core) {
-      coreID = core->id;
-      auto thread = coreinit::internal::getCurrentThread();
-      if (thread) {
-         threadID = thread->id;
-      }
-   }
-
-   return (coreID << 16) | threadID;
-}
-}
-}
-}

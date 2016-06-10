@@ -9,7 +9,7 @@
 	url = https://github.com/kobalicek/asmjit.git
 [submodule "libraries/spdlog"]
 	path = libraries/spdlog
-	url = https://github.com/exjam/spdlog.git
+	url = https://github.com/gabime/spdlog.git
 [submodule "libraries/cereal"]
 	path = libraries/cereal
 	url = https://github.com/USCiLab/cereal.git

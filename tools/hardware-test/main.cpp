@@ -30,13 +30,3 @@ int main(int argc, char *argv[])
    system("PAUSE");
    return runResult;
 }
-
-namespace spdlog {
-namespace details {
-namespace os {
-size_t thread_id() {
-   return 0;
-}
-}
-}
-}
