@@ -1,6 +1,6 @@
 #include "gx2_display.h"
 #include "gx2_format.h"
-#include "gpu/driver.h"
+#include "gpu/pm4_writer.h"
 
 namespace gx2
 {
@@ -96,7 +96,13 @@ GX2SetTVBuffer(void *buffer,
       throw std::invalid_argument("Unexpected GX2SetTVBuffer tvRenderMode");
    }
 
-   gpu::driver::setTvDisplay(tvWidth, tvHeight);
+   // bufferingMode is conveniently equal to the number of buffers
+   pm4::write(pm4::DecafSetBuffer{
+      1, 
+      bufferingMode, 
+      static_cast<uint32_t>(tvWidth), 
+      static_cast<uint32_t>(tvHeight)
+   });
 }
 
 void
@@ -107,7 +113,14 @@ GX2SetDRCBuffer(void *buffer,
                 GX2BufferingMode bufferingMode)
 {
    int drcWidth = 854, drcHeight = 480;
-   gpu::driver::setDrcDisplay(drcWidth, drcHeight);
+
+   // bufferingMode is conveniently equal to the number of buffers
+   pm4::write(pm4::DecafSetBuffer{
+      0,
+      bufferingMode,
+      static_cast<uint32_t>(drcWidth),
+      static_cast<uint32_t>(drcHeight)
+   });
 }
 
 void

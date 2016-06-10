@@ -119,6 +119,13 @@ struct DepthBuffer
    latte::DB_DEPTH_INFO db_depth_info;
 };
 
+struct ScanBufferChain
+{
+   gl::GLuint object = 0;
+   uint32_t width;
+   uint32_t height;
+};
+
 struct FrameBuffer
 {
    gl::GLuint object = 0;
@@ -176,10 +183,12 @@ private:
 
    void handlePacketType0(pm4::type0::Header header, const gsl::span<uint32_t> &data);
    void handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t> &data);
+   void decafSetBuffer(const pm4::DecafSetBuffer &data);
    void decafCopyColorToScan(const pm4::DecafCopyColorToScan &data);
    void decafSwapBuffers(const pm4::DecafSwapBuffers &data);
    void decafClearColor(const pm4::DecafClearColor &data);
    void decafClearDepthStencil(const pm4::DecafClearDepthStencil &data);
+   void drawScanBuffer(ScanBufferChain &chain);
    void decafSetContextState(const pm4::DecafSetContextState &data);
    void drawIndexAuto(const pm4::DrawIndexAuto &data);
    void drawIndex2(const pm4::DrawIndex2 &data);
@@ -273,6 +282,8 @@ private:
    Shader *mActiveShader = nullptr;
    DepthBuffer *mActiveDepthBuffer = nullptr;
    std::array<ColorBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;
+   ScanBufferChain mTvScanBuffers;
+   ScanBufferChain mDrcScanBuffers;
 
    latte::ContextState *mContextState = nullptr;
 

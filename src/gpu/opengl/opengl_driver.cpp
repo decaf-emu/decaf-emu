@@ -141,6 +141,43 @@ void GLDriver::initGL()
    gl::glVertexArrayAttribBinding(mScreenDraw.vertArray, fs_texCoord, 0);
 }
 
+void GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
+{
+   ScanBufferChain *chain = data.isTv ? &mTvScanBuffers : &mDrcScanBuffers;
+
+   // Destroy any old chain
+   if (chain->object) {
+      gl::glDeleteTextures(1, &chain->object);
+      chain->object = 0;
+   }
+
+   // NOTE: A SwapBufferChain is not really a chain as we rely on OpenGL
+   //  to provide the buffering for us.  This means we do not always match
+   //  the games buffering mode, but in practice this is probably meaningless.
+
+   // Create the chain
+   gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &chain->object);
+   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
+   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+   gl::glTextureStorage2D(chain->object, 1, gl::GL_RGBA8, data.width, data.height);
+   chain->width = data.width;
+   chain->height = data.height;
+
+   // Initialize the pixels to a more useful color
+#define rf_to_ru(x) (static_cast<uint32_t>(x * 256) & 0xFF)
+#define rgbaf_to_rgbau(r,g,b,a) (rf_to_ru(r) | (rf_to_ru(g) << 8) | (rf_to_ru(b) << 16) | (rf_to_ru(a) << 24))
+   uint32_t pixelCount = data.width * data.height;
+   uint32_t *tmpClearBuf = new uint32_t[pixelCount];
+   uint32_t clearColor = rgbaf_to_rgbau(0.7f, 0.3f, 0.3f, 1.0f);
+   for (uint32_t i = 0; i < pixelCount; ++i) {
+      tmpClearBuf[i] = clearColor;
+   }
+   gl::glTextureSubImage2D(chain->object, 0, 0, 0, data.width, data.height, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, tmpClearBuf);
+   delete[] tmpClearBuf;
+}
+
 enum
 {
    SCANTARGET_TV = 1,
@@ -152,25 +189,39 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
    auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
 
-   // Unbind active framebuffer
-   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0);
-
-   // Bind appropriate window and set viewport
+   ScanBufferChain *target = nullptr;
    if (data.scanTarget == SCANTARGET_TV) {
-      platform::ui::bindTvWindow();
+      target = &mTvScanBuffers;
    } else if (data.scanTarget == SCANTARGET_DRC) {
-      platform::ui::bindDrcWindow();
+      target = &mDrcScanBuffers;
    } else {
       gLog->error("decafCopyColorToScan called for unknown scanTarget.");
+      return;
    }
+
+   auto pitch_tile_max = data.cb_color_size.PITCH_TILE_MAX();
+   auto slice_tile_max = data.cb_color_size.SLICE_TILE_MAX();
+
+   auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::MicroTileWidth);
+   auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
+
+   assert(pitch >= target->width);
+   assert(height >= target->height);
+
+   gl::glCopyImageSubData(buffer->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, target->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, target->width, target->height, 1);
+}
+
+void GLDriver::drawScanBuffer(ScanBufferChain &chain)
+{
+   // NOTE: This is all in it's own function as we potentially have
+   //  different contexts between the TV and DRC draws.
+
+   auto object = chain.object;
 
    // Setup screen draw shader
    gl::glBindVertexArray(mScreenDraw.vertArray);
    gl::glBindVertexBuffer(0, mScreenDraw.vertBuffer, 0, 4 * sizeof(gl::GLfloat));
    gl::glBindProgramPipeline(mScreenDraw.pipeline);
-
-   // Set active shader to nullptr so it has to rebind.
-   mActiveShader = nullptr;
 
    // Draw screen quad
    gl::glColorMaski(0, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE);
@@ -181,18 +232,36 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    gl::glDisable(gl::GL_SCISSOR_TEST);
    gl::glDisable(gl::GL_CULL_FACE);
    gl::glDisable(gl::GL_ALPHA_TEST);
-   gl::glBindTextureUnit(0, buffer->object);
+   gl::glBindTextureUnit(0, object);
 
    gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
-
-   // Rebind active framebuffer
-   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
 }
 
 void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 {
    static const auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds { 1 }).count();
    static const auto weight = 0.9;
+
+   // Unbind active framebuffer
+   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0);
+
+   // Draw the TV scan buffer to the screen if we have one set
+   if (mTvScanBuffers.object) {
+      platform::ui::bindTvWindow();
+      drawScanBuffer(mTvScanBuffers);
+   }
+
+   // Draw the DRC scan buffer to the screen if we have one set
+   if (mDrcScanBuffers.object) {
+      platform::ui::bindDrcWindow();
+      drawScanBuffer(mDrcScanBuffers);
+   }
+
+   // Rebind active framebuffer
+   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
+
+   // Mark our shader state as being dirty
+   mActiveShader = nullptr;
 
    platform::ui::swapBuffers();
    gx2::internal::onFlip();

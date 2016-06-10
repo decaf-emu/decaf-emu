@@ -115,6 +115,25 @@ struct DecafClearDepthStencil
    }
 };
 
+struct DecafSetBuffer
+{
+   static const auto Opcode = type3::DECAF_SET_BUFFER;
+
+   uint32_t isTv;
+   uint32_t numBuffers;
+   uint32_t width;
+   uint32_t height;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(isTv);
+      se(numBuffers);
+      se(width);
+      se(height);
+   }
+};
+
 struct DrawIndexAuto
 {
    static const auto Opcode = type3::DRAW_INDEX_AUTO;
