@@ -60,7 +60,7 @@ VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadErro
       auto status = input::getButtonStatus(channel, button);
       auto previous = gLastButtonState & bit;
 
-      if (status == input::ButtonPressed) {
+      if (status == input::ButtonStatus::ButtonPressed) {
          if (!previous) {
             buffer.trigger |= bit;
          }

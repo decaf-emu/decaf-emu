@@ -33,6 +33,9 @@ namespace kernel
 namespace functions
 {
 
+bool
+enableTrace = false;
+
 void kcTraceHandler(const std::string& str)
 {
    traceLogSyscall(str);

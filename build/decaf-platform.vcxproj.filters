@@ -13,14 +13,8 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\glfw">
-      <UniqueIdentifier>{18e0c18c-bc39-49e7-9d8d-fc4592b8cab8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\posix">
       <UniqueIdentifier>{af6e15fd-f2ff-4c37-a87b-8bf22f26001f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\sdl2">
-      <UniqueIdentifier>{1876d36d-517c-4f80-bbbd-9510d0522753}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\win">
       <UniqueIdentifier>{c2742a1e-8b28-40a0-a971-646fff17ad53}</UniqueIdentifier>
@@ -39,19 +33,7 @@
     <ClInclude Include="..\src\platform\platform_fiber.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\platform\platform_glfw.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\platform\platform_input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\platform\platform_interface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\platform\platform_memorymap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\platform\platform_sdl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\platform\platform_thread.h">
@@ -60,17 +42,8 @@
     <ClInclude Include="..\src\platform\platform_time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\platform\platform_ui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\platform\platform_glfw_input.cpp">
-      <Filter>Source Files\glfw</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\platform\platform_glfw_ui.cpp">
-      <Filter>Source Files\glfw</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\platform\platform_posix_dir.cpp">
       <Filter>Source Files\posix</Filter>
     </ClCompile>
@@ -89,12 +62,6 @@
     <ClCompile Include="..\src\platform\platform_posix_time.cpp">
       <Filter>Source Files\posix</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\platform\platform_sdl_input.cpp">
-      <Filter>Source Files\sdl2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\platform\platform_sdl_ui.cpp">
-      <Filter>Source Files\sdl2</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\platform\platform_win_exception.cpp">
       <Filter>Source Files\win</Filter>
     </ClCompile>
@@ -112,9 +79,6 @@
     </ClCompile>
     <ClCompile Include="..\src\platform\platform_win_dir.cpp">
       <Filter>Source Files\win</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\platform\platform_interface.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

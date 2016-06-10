@@ -23,20 +23,20 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -82,15 +82,18 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;imgui.lib;glbinding.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Lib>
+      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;imgui.lib;glbinding.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -100,19 +103,22 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>No</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;imgui.lib;glbinding.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/verbose:incr %(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
+    <Lib>
+      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;imgui.lib;glbinding.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
     <ClCompile>
@@ -122,33 +128,36 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_CONSOLE;_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;GLBINDING_STATIC;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>Debug</GenerateDebugInformation>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
-      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;imgui.lib;glbinding.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/verbose:incr %(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
+    <Lib>
+      <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
+      <AdditionalDependencies>decaf-cpu.lib;addrlib.lib;imgui.lib;glbinding.lib;imm32.lib;opengl32.lib;pugixml.lib;version.lib;zlib.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\config.cpp" />
     <ClCompile Include="..\src\debugcontrol.cpp" />
     <ClCompile Include="..\src\debugger.cpp" />
     <ClCompile Include="..\src\debugnet.cpp" />
+    <ClCompile Include="..\src\decaf\decaf.cpp" />
     <ClCompile Include="..\src\emulog.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_posix_host_folder.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_win_host_folder.cpp" />
     <ClCompile Include="..\src\filesystem\filesystem_win_host_folderhandle.cpp" />
     <ClCompile Include="..\src\gpu\commandqueue.cpp" />
-    <ClCompile Include="..\src\gpu\driver.cpp" />
     <ClCompile Include="..\src\gpu\gfd.cpp" />
     <ClCompile Include="..\src\gpu\microcode\latte_blockify.cpp" />
     <ClCompile Include="..\src\gpu\microcode\latte_decoder.cpp" />
@@ -183,7 +192,6 @@
     <ClCompile Include="..\src\kernel\kernel_fibers.cpp" />
     <ClCompile Include="..\src\kernel\kernel_filesystem.cpp" />
     <ClCompile Include="..\src\kernel\kernel_hle.cpp" />
-    <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_alarm.cpp" />
     <ClCompile Include="..\src\modules\coreinit\coreinit_allocator.cpp" />
@@ -327,12 +335,12 @@
     <ClCompile Include="..\src\modules\zlib125\zlib125_core.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\config.h" />
     <ClInclude Include="..\src\debugcontrol.h" />
     <ClInclude Include="..\src\debugger.h" />
     <ClInclude Include="..\src\debugmsg.h" />
     <ClInclude Include="..\src\debugnet.h" />
-    <ClInclude Include="..\src\emulog.h" />
+    <ClInclude Include="..\src\decaf\decaf.h" />
+    <ClInclude Include="..\src\decaf\decaf_input.h" />
     <ClInclude Include="..\src\filesystem\filesystem.h" />
     <ClInclude Include="..\src\filesystem\filesystem_file.h" />
     <ClInclude Include="..\src\filesystem\filesystem_filehandle.h" />
@@ -353,7 +361,6 @@
     <ClInclude Include="..\src\filesystem\filesystem_virtual_folderhandle.h" />
     <ClInclude Include="..\src\filesystem\filesystem_virtual_folder.h" />
     <ClInclude Include="..\src\gpu\commandqueue.h" />
-    <ClInclude Include="..\src\gpu\driver.h" />
     <ClInclude Include="..\src\gpu\gfd.h" />
     <ClInclude Include="..\src\gpu\latte_contextstate.h" />
     <ClInclude Include="..\src\gpu\latte_enum_cb.h" />

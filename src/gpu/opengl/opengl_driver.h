@@ -7,8 +7,8 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <chrono>
 #include "gpu/pm4.h"
-#include "gpu/driver.h"
 #include "gpu/latte_contextstate.h"
 #include "platform/platform.h"
 #include "common/log.h"
@@ -145,15 +145,6 @@ struct Texture
    uint32_t words[7];
 };
 
-struct ScreenDrawData
-{
-   gl::GLuint vertexProgram;
-   gl::GLuint pixelProgram;
-   gl::GLuint pipeline;
-   gl::GLuint vertArray;
-   gl::GLuint vertBuffer;
-};
-
 struct Sampler
 {
    gl::GLuint object = 0;
@@ -166,17 +157,18 @@ struct UniformBuffer
 
 using GLContext = uint64_t;
 
-class GLDriver : public gpu::Driver
+class GLDriver
 {
 public:
-   virtual ~GLDriver() override = default;
+   virtual ~GLDriver() = default;
 
-   void start() override;
-   void setTvDisplay(size_t width, size_t height) override;
-   void setDrcDisplay(size_t width, size_t height) override;
+   void run();
+   void stop();
+
+   void getSwapBuffers(gl::GLuint *tv, gl::GLuint *drc);
+   float getAverageFps();
 
 private:
-   void run();
    void initGL();
 
    uint64_t getGpuClock();
@@ -188,7 +180,6 @@ private:
    void decafSwapBuffers(const pm4::DecafSwapBuffers &data);
    void decafClearColor(const pm4::DecafClearColor &data);
    void decafClearDepthStencil(const pm4::DecafClearDepthStencil &data);
-   void drawScanBuffer(ScanBufferChain &chain);
    void decafSetContextState(const pm4::DecafSetContextState &data);
    void drawIndexAuto(const pm4::DrawIndexAuto &data);
    void drawIndex2(const pm4::DrawIndex2 &data);
@@ -261,9 +252,7 @@ private:
 
    bool mViewportDirty = false;
    bool mScissorDirty = false;
-
-   ScreenDrawData mScreenDraw;
-
+   
    std::unordered_map<uint32_t, FetchShader> mFetchShaders;
    std::unordered_map<uint32_t, VertexShader> mVertexShaders;
    std::unordered_map<uint32_t, PixelShader> mPixelShaders;

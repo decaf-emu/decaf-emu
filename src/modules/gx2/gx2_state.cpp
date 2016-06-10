@@ -1,4 +1,3 @@
-#include "gpu/driver.h"
 #include "gpu/pm4.h"
 #include "gx2_cbpool.h"
 #include "gx2_contextstate.h"
@@ -66,9 +65,6 @@ GX2Init(be_val<uint32_t> *attributes)
    // Initialise command buffer pools
    gx2::internal::initCommandBufferPool(cbPoolBase, cbPoolSize, cbPoolItemSize);
 
-   // Start our driver!
-   gpu::driver::start();
-
    // Setup default gx2 state
    GX2SetDefaultState();
 }
@@ -76,7 +72,6 @@ GX2Init(be_val<uint32_t> *attributes)
 void
 GX2Shutdown()
 {
-   gpu::driver::destroy();
 }
 
 void

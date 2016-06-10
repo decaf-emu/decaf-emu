@@ -1,10 +1,8 @@
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
-#include <glbinding/Meta.h>
 #include <gsl.h>
 #include <fstream>
 
-#include "platform/platform_ui.h"
 #include "gpu/commandqueue.h"
 #include "gpu/latte_registers.h"
 #include "gpu/pm4_buffer.h"
@@ -21,47 +19,6 @@ namespace opengl
 
 void GLDriver::initGL()
 {
-   platform::ui::activateContext();
-
-   glbinding::Binding::initialize();
-
-   glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
-   glbinding::setAfterCallback([](const glbinding::FunctionCall &call) {
-      auto error = glbinding::Binding::GetError.directCall();
-
-      if (error != gl::GL_NO_ERROR) {
-         fmt::MemoryWriter writer;
-         writer << call.function->name() << "(";
-
-         for (unsigned i = 0; i < call.parameters.size(); ++i) {
-            writer << call.parameters[i]->asString();
-            if (i < call.parameters.size() - 1)
-               writer << ", ";
-         }
-
-         writer << ")";
-
-         if (call.returnValue) {
-            writer << " -> " << call.returnValue->asString();
-         }
-
-         gLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), writer.str());
-      }
-   });
-
-   // Set a background color for emu window.
-   gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
-   platform::ui::bindTvWindow();
-   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
-   platform::ui::bindDrcWindow();
-   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
-   // Sneakily assume double-buffering...
-   platform::ui::swapBuffers();
-   platform::ui::bindTvWindow();
-   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
-   platform::ui::bindDrcWindow();
-   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
-
    // Clear active state
    mRegisters.fill(0);
    mActiveShader = nullptr;
@@ -72,73 +29,6 @@ void GLDriver::initGL()
    // Create our default framebuffer
    gl::glGenFramebuffers(1, &mFrameBuffer.object);
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
-
-   static auto vertexCode = R"(
-      #version 420 core
-      in vec2 fs_position;
-      in vec2 fs_texCoord;
-      out vec2 vs_texCoord;
-
-      out gl_PerVertex {
-         vec4 gl_Position;
-      };
-
-      void main()
-      {
-         vs_texCoord = fs_texCoord;
-         gl_Position = vec4(fs_position, 0.0, 1.0);
-      })";
-
-   static auto pixelCode = R"(
-      #version 420 core
-      in vec2 vs_texCoord;
-      out vec4 ps_color;
-      uniform sampler2D sampler_0;
-
-      void main()
-      {
-         ps_color = texture(sampler_0, vs_texCoord);
-      })";
-
-   // Create vertex program
-   mScreenDraw.vertexProgram = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, &vertexCode);
-
-   // Create pixel program
-   mScreenDraw.pixelProgram = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, &pixelCode);
-   gl::glBindFragDataLocation(mScreenDraw.pixelProgram, 0, "ps_color");
-
-   // Create pipeline
-   gl::glGenProgramPipelines(1, &mScreenDraw.pipeline);
-   gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_VERTEX_SHADER_BIT, mScreenDraw.vertexProgram);
-   gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_FRAGMENT_SHADER_BIT, mScreenDraw.pixelProgram);
-
-   // (TL, TR, BR)    (BR, BL, TL)
-   // Create vertex buffer
-   static const gl::GLfloat vertices[] = {
-      -1.0f,  1.0f,   0.0f, 1.0f,
-       1.0f,  1.0f,   1.0f, 1.0f,
-       1.0f, -1.0f,   1.0f, 0.0f,
-
-       1.0f, -1.0f,   1.0f, 0.0f,
-      -1.0f, -1.0f,   0.0f, 0.0f,
-      -1.0f,  1.0f,   0.0f, 1.0f,
-   };
-
-   gl::glCreateBuffers(1, &mScreenDraw.vertBuffer);
-   gl::glNamedBufferData(mScreenDraw.vertBuffer, sizeof(vertices), vertices, gl::GL_STATIC_DRAW);
-
-   // Create vertex array
-   gl::glCreateVertexArrays(1, &mScreenDraw.vertArray);
-
-   auto fs_position = gl::glGetAttribLocation(mScreenDraw.vertexProgram, "fs_position");
-   gl::glEnableVertexArrayAttrib(mScreenDraw.vertArray, fs_position);
-   gl::glVertexArrayAttribFormat(mScreenDraw.vertArray, fs_position, 2, gl::GL_FLOAT, gl::GL_FALSE, 0);
-   gl::glVertexArrayAttribBinding(mScreenDraw.vertArray, fs_position, 0);
-
-   auto fs_texCoord = gl::glGetAttribLocation(mScreenDraw.vertexProgram, "fs_texCoord");
-   gl::glEnableVertexArrayAttrib(mScreenDraw.vertArray, fs_texCoord);
-   gl::glVertexArrayAttribFormat(mScreenDraw.vertArray, fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 2 * sizeof(gl::GLfloat));
-   gl::glVertexArrayAttribBinding(mScreenDraw.vertArray, fs_texCoord, 0);
 }
 
 void GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
@@ -211,69 +101,21 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    gl::glCopyImageSubData(buffer->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, target->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, target->width, target->height, 1);
 }
 
-void GLDriver::drawScanBuffer(ScanBufferChain &chain)
-{
-   // NOTE: This is all in it's own function as we potentially have
-   //  different contexts between the TV and DRC draws.
-
-   auto object = chain.object;
-
-   // Setup screen draw shader
-   gl::glBindVertexArray(mScreenDraw.vertArray);
-   gl::glBindVertexBuffer(0, mScreenDraw.vertBuffer, 0, 4 * sizeof(gl::GLfloat));
-   gl::glBindProgramPipeline(mScreenDraw.pipeline);
-
-   // Draw screen quad
-   gl::glColorMaski(0, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE);
-   gl::glBindSampler(0, 0);
-   gl::glDisablei(gl::GL_BLEND, 0);
-   gl::glDisable(gl::GL_DEPTH_TEST);
-   gl::glDisable(gl::GL_STENCIL_TEST);
-   gl::glDisable(gl::GL_SCISSOR_TEST);
-   gl::glDisable(gl::GL_CULL_FACE);
-   gl::glDisable(gl::GL_ALPHA_TEST);
-   gl::glBindTextureUnit(0, object);
-
-   gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
-}
-
 void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 {
-   static const auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds { 1 }).count();
    static const auto weight = 0.9;
 
-   // Unbind active framebuffer
-   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0);
+   // We do not need to actually call swap as our driver does this automatically with the vsync.
 
-   // Draw the TV scan buffer to the screen if we have one set
-   if (mTvScanBuffers.object) {
-      platform::ui::bindTvWindow();
-      drawScanBuffer(mTvScanBuffers);
-   }
+   // TODO: We should have a render chain of 2 buffers so that we don't render stuff
+   //  until the game actually asked us to.
 
-   // Draw the DRC scan buffer to the screen if we have one set
-   if (mDrcScanBuffers.object) {
-      platform::ui::bindDrcWindow();
-      drawScanBuffer(mDrcScanBuffers);
-   }
-
-   // Rebind active framebuffer
-   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
-
-   // Mark our shader state as being dirty
-   mActiveShader = nullptr;
-
-   platform::ui::swapBuffers();
    gx2::internal::onFlip();
 
    auto now = std::chrono::system_clock::now();
 
    if (mLastSwap.time_since_epoch().count()) {
       mAverageFrameTime = weight * mAverageFrameTime + (1.0 - weight) * (now - mLastSwap);
-
-      auto fps = second / mAverageFrameTime.count();
-      auto time = std::chrono::duration_cast<duration_ms>(mAverageFrameTime);
-      platform::ui::setTvTitle(fmt::format("Decaf - FPS: {:.2f} Frame Time: {:.2f}", fps, time.count()));
    }
 
    mLastSwap = now;
@@ -282,6 +124,19 @@ void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 void GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
 {
    mContextState = reinterpret_cast<latte::ContextState *>(data.context.get());
+}
+
+void GLDriver::getSwapBuffers(gl::GLuint *tv, gl::GLuint *drc)
+{
+   *tv = mTvScanBuffers.object;
+   *drc = mDrcScanBuffers.object;
+}
+
+float GLDriver::getAverageFps()
+{
+   // TODO: This is not thread safe...
+   static const auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds{ 1 }).count();
+   return static_cast<float>(second / mAverageFrameTime.count());
 }
 
 uint64_t GLDriver::getGpuClock()
@@ -364,26 +219,17 @@ void GLDriver::handlePendingEOP()
    std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 }
 
-void GLDriver::start()
-{
-   mRunning = true;
-   mThread = std::thread(&GLDriver::run, this);
-}
-
-void GLDriver::setTvDisplay(size_t width, size_t height)
-{
-}
-
-void GLDriver::setDrcDisplay(size_t width, size_t height)
-{
-}
-
 void GLDriver::run()
 {
+   mRunning = true;
+
    initGL();
 
    while (mRunning) {
       auto buffer = gpu::unqueueCommandBuffer();
+      if (!buffer) {
+         continue;
+      }
 
       // Execute command buffer
       runCommandBuffer(buffer->buffer, buffer->curSize);
@@ -394,6 +240,14 @@ void GLDriver::run()
       // Release command buffer
       gpu::retireCommandBuffer(buffer);
    }
+}
+
+void GLDriver::stop()
+{
+   mRunning = false;
+
+   // Wake the GPU thread
+   gpu::queueUserBuffer(nullptr, 0);
 }
 
 } // namespace opengl

@@ -27,6 +27,9 @@ struct HleFunction : HleSymbol
 namespace functions
 {
 
+extern bool
+enableTrace;
+
 void kcTraceHandler(const std::string& str);
 
 template<typename ReturnType, typename... Args>
@@ -36,7 +39,7 @@ struct HleFunctionImpl : HleFunction
 
    virtual void call(cpu::Core *thread) override
    {
-      if (config::log::kernel_trace) {
+      if (enableTrace) {
          ppctypes::invoke<kcTraceHandler>(thread, wrapped_function, name);
       } else {
          ppctypes::invoke<nullptr>(thread, wrapped_function, name);
@@ -51,7 +54,7 @@ struct HleMemberFunctionImpl : HleFunction
 
    virtual void call(cpu::Core *thread) override
    {
-      if (config::log::kernel_trace) {
+      if (enableTrace) {
          ppctypes::invokeMemberFn<kcTraceHandler>(thread, wrapped_function, name);
       } else {
          ppctypes::invokeMemberFn<nullptr>(thread, wrapped_function, name);
@@ -69,7 +72,7 @@ struct HleConstructorFunctionImpl : HleFunction
 
    virtual void call(cpu::Core *thread) override
    {
-      if (config::log::kernel_trace) {
+      if (enableTrace) {
          ppctypes::invoke<kcTraceHandler>(thread, &trampFunction, name);
       } else {
          ppctypes::invoke<nullptr>(thread, &trampFunction, name);
@@ -87,7 +90,7 @@ struct HleDestructorFunctionImpl : HleFunction
 
    virtual void call(cpu::Core *thread) override
    {
-      if (config::log::kernel_trace) {
+      if (enableTrace) {
          ppctypes::invoke<kcTraceHandler>(thread, &trampFunction, name);
       } else {
          ppctypes::invoke<nullptr>(thread, &trampFunction, name);
