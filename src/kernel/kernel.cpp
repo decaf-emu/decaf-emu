@@ -81,6 +81,10 @@ void cpu_segfault_handler(uint32_t address)
 
 void cpu_interrupt_handler(uint32_t interrupt_flags)
 {
+   if (interrupt_flags & cpu::SRESET_INTERRUPT) {
+      ExitThread(0);
+   }
+
    if (interrupt_flags & cpu::DBGBREAK_INTERRUPT) {
       gDebugControl.handleDbgBreakInterrupt();
    }
