@@ -30,6 +30,17 @@ struct OSThread;
 namespace kernel
 {
 
+namespace functions
+{
+
+void kcTraceHandler(const std::string& str)
+{
+   traceLogSyscall(str);
+   gLog->debug(str);
+}
+
+}
+
 void init_core_fiber();
 void cpu_entrypoint();
 void cpu_interrupt_handler(uint32_t interrupt_flags);

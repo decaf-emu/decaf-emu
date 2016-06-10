@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdio>
 #include <string>
-#include "config.h"
 #include "common/strutils.h"
 #include "common/virtual_ptr.h"
 #include <spdlog/details/format.h>
@@ -18,20 +17,14 @@ struct LogState
 inline void
 logCall(LogState &state, uint32_t lr, const std::string &name)
 {
-   if (config::log::kernel_trace) {
-      state.out.write("0x{:08X} {}(", lr, name.c_str());
-   }
+   state.out.write("0x{:08X} {}(", lr, name.c_str());
 }
 
 inline std::string
 logCallEnd(LogState &state)
 {
-   if (config::log::kernel_trace) {
-      state.out.write(")");
-      return state.out.str();
-   } else {
-      return nullptr;
-   }
+   state.out.write(")");
+   return state.out.str();
 }
 
 inline void
