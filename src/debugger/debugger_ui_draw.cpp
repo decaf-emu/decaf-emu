@@ -24,11 +24,17 @@ class MemoryMapView
 
 public:
    bool isVisible = true;
+   bool activateFocus = false;
 
    void draw()
    {
       if (!isVisible) {
          return;
+      }
+
+      if (activateFocus) {
+         ImGui::SetNextWindowFocus();
+         activateFocus = false;
       }
 
       ImGui::SetNextWindowSize(ImVec2(550, 300), ImGuiSetCond_FirstUseEver);
@@ -119,11 +125,17 @@ class ThreadsView
 
 public:
    bool isVisible = true;
+   bool activateFocus = false;
 
    void draw()
    {
       if (!isVisible) {
          return;
+      }
+
+      if (activateFocus) {
+         ImGui::SetNextWindowFocus();
+         activateFocus = false;
       }
 
       ImGui::SetNextWindowSize(ImVec2(550, 300), ImGuiSetCond_FirstUseEver);
@@ -200,7 +212,7 @@ protected:
 };
 
 static MemoryMapView
-sMemoryMap;
+sMemoryMapView;
 
 static ThreadsView
 sThreadsView;
@@ -241,14 +253,14 @@ void draw()
       }
       ImGui::EndMainMenuBar();
 
-      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::M), false)) {
-         sMemoryMap.isVisible = !sMemoryMap.isVisible;
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::S), false)) {
+         sMemoryMapView.isVisible = !sMemoryMapView.isVisible;
       }
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::T), false)) {
          sThreadsView.isVisible = !sThreadsView.isVisible;
       }
 
-      sMemoryMap.draw();
+      sMemoryMapView.draw();
       sThreadsView.draw();
    }
 }
