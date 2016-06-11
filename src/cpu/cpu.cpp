@@ -162,7 +162,7 @@ cpu::Core * state()
    return tCurrentCore;
 }
 
-static inline void resume()
+void resume()
 {
    // If we have breakpoints set, we have to fall back to interpreter loop
    // This is because JIT wont check for breakpoints on each instruction.
