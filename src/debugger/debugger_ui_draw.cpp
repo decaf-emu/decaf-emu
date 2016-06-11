@@ -6,12 +6,35 @@
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
 #include "kernel/kernel_hlefunction.h"
+#include "decaf/decaf.h"
 
 namespace debugger
 {
 
 namespace ui
 {
+
+class InfoView
+{
+public:
+   void draw()
+   {
+      auto &io = ImGui::GetIO();
+      auto ImgGuiNoBorder = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs;
+
+      ImGui::SetNextWindowPos(ImVec2(8.0f, 25.0f));
+      ImGui::SetNextWindowSize(ImVec2(180.0f, 27.0f));
+      ImGui::Begin("Info", nullptr, ImgGuiNoBorder);
+      float fps = decaf::getAverageFps();
+      ImGui::Text("FPS: %.1f (%.3f ms)", fps, 1000.0f / fps);
+      ImGui::End();
+   }
+
+
+protected:
+
+};
 
 class MemoryMapView
 {
@@ -211,6 +234,9 @@ protected:
 
 };
 
+static InfoView
+sInfoView;
+
 static MemoryMapView
 sMemoryMapView;
 
@@ -260,6 +286,7 @@ void draw()
          sThreadsView.isVisible = !sThreadsView.isVisible;
       }
 
+      sInfoView.draw();
       sMemoryMapView.draw();
       sThreadsView.draw();
    }
