@@ -208,6 +208,12 @@
     <Filter Include="Source Files\decaf">
       <UniqueIdentifier>{073abadf-b1a3-429b-bc9a-8e9a1b8f77a0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\debugger">
+      <UniqueIdentifier>{75910a07-5861-4b65-a8c0-c4f02676cdcf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\debugger">
+      <UniqueIdentifier>{0f72afdf-62fc-40a7-bd0f-61221aa0173f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\modules\coreinit\coreinit.cpp">
@@ -764,6 +770,15 @@
     </ClCompile>
     <ClCompile Include="..\src\decaf\decaf.cpp">
       <Filter>Source Files\decaf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu\opengl\opengl_dbgui.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\debugger\debugger_ui.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\debugger\debugger_ui_draw.cpp">
+      <Filter>Source Files\debugger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1444,6 +1459,9 @@
     </ClInclude>
     <ClInclude Include="..\src\decaf\decaf_input.h">
       <Filter>Header Files\decaf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\debugger\debugger_ui.h">
+      <Filter>Header Files\debugger</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

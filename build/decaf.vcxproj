@@ -150,6 +150,8 @@
   <ItemGroup>
     <ClCompile Include="..\src\debugcontrol.cpp" />
     <ClCompile Include="..\src\debugger.cpp" />
+    <ClCompile Include="..\src\debugger\debugger_ui.cpp" />
+    <ClCompile Include="..\src\debugger\debugger_ui_draw.cpp" />
     <ClCompile Include="..\src\debugnet.cpp" />
     <ClCompile Include="..\src\decaf\decaf.cpp" />
     <ClCompile Include="..\src\emulog.cpp" />
@@ -178,6 +180,7 @@
     <ClCompile Include="..\src\gpu\opengl\glsl_tex.cpp" />
     <ClCompile Include="..\src\gpu\opengl\glsl_vtx.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_colorbuffer.cpp" />
+    <ClCompile Include="..\src\gpu\opengl\opengl_dbgui.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_depthbuffer.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_draw.cpp" />
     <ClCompile Include="..\src\gpu\opengl\opengl_driver.cpp" />
@@ -337,6 +340,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\debugcontrol.h" />
     <ClInclude Include="..\src\debugger.h" />
+    <ClInclude Include="..\src\debugger\debugger_ui.h" />
     <ClInclude Include="..\src\debugmsg.h" />
     <ClInclude Include="..\src\debugnet.h" />
     <ClInclude Include="..\src\decaf\decaf.h" />

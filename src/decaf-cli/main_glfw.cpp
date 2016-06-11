@@ -18,6 +18,72 @@ gUserWindow = nullptr;
 static GLFWwindow *
 gBgWindow = nullptr;
 
+decaf::input::KeyboardKey translateKeyCode(int key)
+{
+   switch (key) {
+   case GLFW_KEY_TAB:
+      return decaf::input::KeyboardKey::Tab;
+   case GLFW_KEY_LEFT:
+      return decaf::input::KeyboardKey::LeftArrow;
+   case GLFW_KEY_RIGHT:
+      return decaf::input::KeyboardKey::RightArrow;
+   case GLFW_KEY_UP:
+      return decaf::input::KeyboardKey::UpArrow;
+   case GLFW_KEY_DOWN:
+      return decaf::input::KeyboardKey::DownArrow;
+   case GLFW_KEY_PAGE_UP:
+      return decaf::input::KeyboardKey::PageUp;
+   case GLFW_KEY_PAGE_DOWN:
+      return decaf::input::KeyboardKey::PageDown;
+   case GLFW_KEY_HOME:
+      return decaf::input::KeyboardKey::Home;
+   case GLFW_KEY_END:
+      return decaf::input::KeyboardKey::End;
+   case GLFW_KEY_DELETE:
+      return decaf::input::KeyboardKey::Delete;
+   case GLFW_KEY_BACKSPACE:
+      return decaf::input::KeyboardKey::Backspace;
+   case GLFW_KEY_ENTER:
+      return decaf::input::KeyboardKey::Enter;
+   case GLFW_KEY_ESCAPE:
+      return decaf::input::KeyboardKey::Escape;
+   case GLFW_KEY_LEFT_CONTROL:
+      return decaf::input::KeyboardKey::LeftControl;
+   case GLFW_KEY_RIGHT_CONTROL:
+      return decaf::input::KeyboardKey::RightControl;
+   case GLFW_KEY_LEFT_SHIFT:
+      return decaf::input::KeyboardKey::LeftShift;
+   case GLFW_KEY_RIGHT_SHIFT:
+      return decaf::input::KeyboardKey::RightShift;
+   case GLFW_KEY_LEFT_ALT:
+      return decaf::input::KeyboardKey::LeftAlt;
+   case GLFW_KEY_RIGHT_ALT:
+      return decaf::input::KeyboardKey::RightAlt;
+   case GLFW_KEY_LEFT_SUPER:
+      return decaf::input::KeyboardKey::LeftSuper;
+   case GLFW_KEY_RIGHT_SUPER:
+      return decaf::input::KeyboardKey::RightSuper;
+   case GLFW_KEY_A:
+      return decaf::input::KeyboardKey::A;
+   case GLFW_KEY_C:
+      return decaf::input::KeyboardKey::C;
+   case GLFW_KEY_V:
+      return decaf::input::KeyboardKey::V;
+   case GLFW_KEY_X:
+      return decaf::input::KeyboardKey::X;
+   case GLFW_KEY_Y:
+      return decaf::input::KeyboardKey::Y;
+   case GLFW_KEY_Z:
+      return decaf::input::KeyboardKey::Z;
+   default:
+      if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
+         return static_cast<decaf::input::KeyboardKey>(
+            (key - GLFW_KEY_A) + static_cast<int>(decaf::input::KeyboardKey::A));
+      }
+      return decaf::input::KeyboardKey::Unknown;
+   }
+}
+
 int glfwStart()
 {
    static int windowWidth = 1420;
@@ -56,8 +122,40 @@ int glfwStart()
    });
 
    decaf::start();
+   
+   glfwSetMouseButtonCallback(gUserWindow, [](GLFWwindow*, int button, int action, int /*mods*/) {
+      if (action == GLFW_PRESS) {
+         decaf::injectMouseButtonInput(button, decaf::input::MouseAction::Press);
+      } else if (action == GLFW_RELEASE) {
+         decaf::injectMouseButtonInput(button, decaf::input::MouseAction::Release);
+      }
+   });
+   glfwSetScrollCallback(gUserWindow, [](GLFWwindow*, double xoffset, double yoffset) {
+      decaf::injectScrollInput(xoffset, yoffset);
+   });
+   glfwSetKeyCallback(gUserWindow, [](GLFWwindow*, int key, int, int action, int /*mods*/) {
+      if (action == GLFW_PRESS) {
+         decaf::injectKeyInput(translateKeyCode(key), decaf::input::KeyboardAction::Press);
+      } else if (action == GLFW_RELEASE) {
+         decaf::injectKeyInput(translateKeyCode(key), decaf::input::KeyboardAction::Release);
+      }
+   });
+   glfwSetCharCallback(gUserWindow, [](GLFWwindow*, unsigned int c) {
+      if (c > 0 && c < 0x10000) {
+         decaf::injectCharInput(static_cast<unsigned short>(c));
+      }
+   });
+   glfwSetCursorPosCallback(gUserWindow, [](GLFWwindow*, double x, double y) {
+      decaf::injectMousePos(x, y);
+   });
+   decaf::setClipboardTextCallbacks([]() {
+      return glfwGetClipboardString(gUserWindow);
+   }, [](auto text) {
+      glfwSetClipboardString(gUserWindow, text);
+   });
 
    cglInitialise();
+   decaf::initialiseDbgUi();
 
    while (!glfwWindowShouldClose(gUserWindow)) {
       glfwPollEvents();
@@ -114,6 +212,8 @@ int glfwStart()
 
       gl::glViewportArrayv(0, 1, drcVp);
       cglDrawScanBuffer(drcBuffer);
+
+      decaf::drawDbgUi(windowWidth, windowHeight);
 
       glfwSwapBuffers(gUserWindow);
 

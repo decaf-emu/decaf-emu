@@ -4,19 +4,7 @@
 #include <glbinding/Meta.h>
 #include "clilog.h"
 
-// Stupid hacks because some stuff includes gl.h
-#undef GL_COLOR_BUFFER_BIT
-#undef GL_NO_ERROR
-#undef GL_FLOAT
-#undef GL_FALSE
-#undef GL_TRUE
-#undef GL_BLEND
-#undef GL_DEPTH_TEST
-#undef GL_STENCIL_TEST
-#undef GL_SCISSOR_TEST
-#undef GL_CULL_FACE
-#undef GL_ALPHA_TEST
-#undef GL_TRIANGLES
+
 
 void setupGlErrorHandling()
 {

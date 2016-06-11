@@ -155,6 +155,22 @@ struct UniformBuffer
    gl::GLuint object = 0;
 };
 
+struct DebugDrawData
+{
+   gl::GLuint fontTexture;
+   gl::GLuint shaderHandle;
+   gl::GLuint vertHandle;
+   gl::GLuint fragHandle;
+   gl::GLuint vboHandle;
+   gl::GLuint vaoHandle;
+   gl::GLuint elementsHandle;
+   gl::GLuint attribLocTex;
+   gl::GLuint attribLocProjMtx;
+   gl::GLuint attribLocPos;
+   gl::GLuint attribLocUV;
+   gl::GLuint attribLocColor;
+};
+
 using GLContext = uint64_t;
 
 class GLDriver
@@ -167,6 +183,9 @@ public:
 
    void getSwapBuffers(gl::GLuint *tv, gl::GLuint *drc);
    float getAverageFps();
+
+   void initialiseDbgUi();
+   void drawDbgUi(uint32_t width, uint32_t height);
 
 private:
    void initGL();
@@ -273,6 +292,7 @@ private:
    std::array<ColorBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
+   DebugDrawData mDebugDrawData;
 
    latte::ContextState *mContextState = nullptr;
 
