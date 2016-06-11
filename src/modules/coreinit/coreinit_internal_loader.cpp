@@ -7,6 +7,7 @@
 #include "modules/coreinit/coreinit_memory.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_dynload.h"
+#include "modules/coreinit/coreinit_scheduler.h"
 #include "filesystem/filesystem.h"
 #include "common/align.h"
 #include "common/bigendianview.h"
@@ -93,6 +94,8 @@ std::map<std::string, LoadedModule*> getLoadedModules()
 {
    return gLoadedModules;
 }
+
+LoadedModule *loadRPLNoLock(const std::string& name);
 
 static ppcaddr_t
 getTrampAddress(LoadedModule *loadedMod, SequentialMemoryTracker &codeSeg, TrampolineMap &trampolines, void *target, const std::string& symbolName);
@@ -501,7 +504,7 @@ processImports(LoadedModule *loadedMod, SectionList &sections)
 
       // Load library
       auto libraryName = reinterpret_cast<const char*>(section.memory + 8);
-      auto linkedModule = loadRPL(libraryName);
+      auto linkedModule = loadRPLNoLock(libraryName);
 
       // Zero the whole section after we have used the name
       section.name = libraryName;
@@ -789,7 +792,7 @@ void normalizeModuleName(const std::string& name, std::string& moduleName, std::
    }
 }
 
-LoadedModule *loadRPL(const std::string& name)
+LoadedModule *loadRPLNoLock(const std::string& name)
 {
    LoadedModule *module = nullptr;
    std::string moduleName;
@@ -835,6 +838,15 @@ LoadedModule *loadRPL(const std::string& name)
       gLog->info("Loaded module {}", fileName);
       return module;
    }
+}
+
+LoadedModule *loadRPL(const std::string& name)
+{
+   // Use the scheduler lock to protect access to the loaders memory
+   internal::lockScheduler();
+   auto res = loadRPLNoLock(name);
+   internal::unlockScheduler();
+   return res;
 }
 
 LoadedModule * loadRPX(ppcsize_t maxCodeSize, const std::string& name)
