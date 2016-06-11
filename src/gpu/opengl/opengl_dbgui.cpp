@@ -95,7 +95,7 @@ void GLDriver::drawDbgUi(uint32_t width, uint32_t height)
 
    // Update some per-frame state information
    io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
-   io.DeltaTime = 0.1;
+   io.DeltaTime = 1.0f / 60.0f;
    debugger::ui::updateInput();
 
    // Start the frame
