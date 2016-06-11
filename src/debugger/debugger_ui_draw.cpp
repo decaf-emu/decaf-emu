@@ -243,10 +243,10 @@ void draw()
          ImGui::EndMenu();
       }
       if (ImGui::BeginMenu("Windows")) {
-         if (ImGui::MenuItem("Memory Map", nullptr, sMemoryMap.isVisible, true)) {
-            sMemoryMap.isVisible = !sMemoryMap.isVisible;
+         if (ImGui::MenuItem("Memory Map", "CTRL+S", sMemoryMapView.isVisible, true)) {
+            sMemoryMapView.isVisible = !sMemoryMapView.isVisible;
          }
-         if (ImGui::MenuItem("Threads", nullptr, sThreadsView.isVisible, true)) {
+         if (ImGui::MenuItem("Threads", "CTRL+T", sThreadsView.isVisible, true)) {
             sThreadsView.isVisible = !sThreadsView.isVisible;
          }
          ImGui::EndMenu();
