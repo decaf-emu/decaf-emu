@@ -23,13 +23,13 @@ public:
    }
 
    ppcaddr_t
-      getCurrentAddr() const
+   getCurrentAddr() const
    {
       return mem::untranslate(mPtr);
    }
 
    void *
-      get(size_t size, uint32_t alignment = 4)
+   get(size_t size, uint32_t alignment = 4)
    {
       // Ensure section alignment
       auto alignOffset = align_up(mPtr, alignment) - mPtr;

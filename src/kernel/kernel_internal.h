@@ -14,4 +14,4 @@ saveContext(coreinit::OSContext *context);
 void
 restoreContext(coreinit::OSContext *context);
 
-}
+} // namespace kernel

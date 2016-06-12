@@ -271,7 +271,7 @@ private:
 
    bool mViewportDirty = false;
    bool mScissorDirty = false;
-   
+
    std::unordered_map<uint32_t, FetchShader> mFetchShaders;
    std::unordered_map<uint32_t, VertexShader> mVertexShaders;
    std::unordered_map<uint32_t, PixelShader> mPixelShaders;

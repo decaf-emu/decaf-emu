@@ -16,4 +16,4 @@ findHleModule(const std::string &name);
 uint32_t
 registerUnimplementedHleFunc(const std::string &module, const std::string &name);
 
-}
+} // namespace kernel

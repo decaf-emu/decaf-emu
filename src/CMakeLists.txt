@@ -11,7 +11,6 @@ set(HEADER_FILES
     debugger.h
     debugmsg.h
     debugnet.h
-    hostlookup.h
     traceiter.h
     types.h
     usermodule.h

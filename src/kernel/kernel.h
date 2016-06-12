@@ -29,4 +29,4 @@ getSystemHeap();
 void
 switchThread(coreinit::OSThread *previous, coreinit::OSThread *next);
 
-}
+} // namespace kernel

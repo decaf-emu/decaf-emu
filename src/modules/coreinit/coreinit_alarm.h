@@ -181,9 +181,6 @@ cancelAlarm(OSAlarm *alarm);
 void
 handleAlarmInterrupt(OSContext *context);
 
-void
-checkAlarms(uint32_t core_id);
-
 } // namespace internal
 
 } // namespace coreinit

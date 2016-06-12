@@ -26,4 +26,4 @@ makeData(Type **value)
    return data;
 }
 
-};
+} // namespace kernel

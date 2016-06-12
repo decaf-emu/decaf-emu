@@ -15,8 +15,11 @@
 namespace kernel
 {
 
-static coreinit::OSThread *tDeadThread[3];
-static platform::Fiber *tIdleFiber[3];
+static coreinit::OSThread *
+tDeadThread[3];
+
+static platform::Fiber *
+tIdleFiber[3];
 
 struct Fiber
 {

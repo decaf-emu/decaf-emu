@@ -47,4 +47,4 @@ private:
    Type *mPtr;
 };
 
-}
+} // namespace ppcutils

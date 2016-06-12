@@ -105,7 +105,8 @@ registerHleModuleAlias(const std::string &module, const std::string &alias)
    }
 }
 
-void initialiseHleMmodules()
+void
+initialiseHleMmodules()
 {
    coreinit::Module::RegisterFunctions();
    nn::erreula::Module::RegisterFunctions();

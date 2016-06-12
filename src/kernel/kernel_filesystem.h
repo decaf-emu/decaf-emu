@@ -10,4 +10,4 @@ setFileSystem(fs::FileSystem *fs);
 fs::FileSystem *
 getFileSystem();
 
-}
+} // namespace kernel

@@ -227,6 +227,7 @@ void GLDriver::run()
 
    while (mRunning) {
       auto buffer = gpu::unqueueCommandBuffer();
+
       if (!buffer) {
          continue;
       }

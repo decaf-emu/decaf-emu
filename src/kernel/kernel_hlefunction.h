@@ -100,7 +100,7 @@ struct HleDestructorFunctionImpl : HleFunction
 
 } // namespace functions
 
-  // Regular Function
+// Regular Function
 template<typename ReturnType, typename... Args>
 inline HleFunction *
 makeFunction(ReturnType(*fptr)(Args...), void* hostPtr = nullptr)

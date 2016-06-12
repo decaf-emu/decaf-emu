@@ -57,6 +57,7 @@ KILL(GenerateState &state, CfInstruction *ins)
    state.out << "discard;";
    return true;
 }
+
 void registerCf()
 {
    registerGenerator(latte::SQ_CF_INST_LOOP_BREAK, LOOP_BREAK);

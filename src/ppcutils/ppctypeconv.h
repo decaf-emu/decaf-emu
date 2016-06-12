@@ -153,4 +153,4 @@ struct ppctype_converter_t
    }
 };
 
-}
+} // namespace ppctypes
