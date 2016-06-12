@@ -441,7 +441,7 @@ updateCpuAlarmNoALock()
       alarm = nextAlarm;
    }
 
-   cpu::this_core::set_next_alarm(next);
+   cpu::this_core::setNextAlarm(next);
 }
 
 void

@@ -13,7 +13,7 @@ namespace coreinit
 BOOL
 OSEnableInterrupts()
 {
-   return cpu::this_core::set_interrupt_mask(cpu::INTERRUPT_MASK) == cpu::INTERRUPT_MASK;
+   return cpu::this_core::setInterruptMask(cpu::INTERRUPT_MASK) == cpu::INTERRUPT_MASK;
 }
 
 
@@ -25,7 +25,7 @@ OSEnableInterrupts()
 BOOL
 OSDisableInterrupts()
 {
-   return cpu::this_core::set_interrupt_mask(0) == cpu::INTERRUPT_MASK;
+   return cpu::this_core::setInterruptMask(0) == cpu::INTERRUPT_MASK;
 }
 
 
@@ -53,7 +53,7 @@ OSRestoreInterrupts(BOOL enable)
 BOOL
 OSIsInterruptEnabled()
 {
-   return cpu::this_core::interrupt_mask() == cpu::INTERRUPT_MASK;
+   return cpu::this_core::interruptMask() == cpu::INTERRUPT_MASK;
 }
 
 void

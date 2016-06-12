@@ -29,7 +29,8 @@ struct Tracer
 namespace cpu
 {
 
-cpu::Tracer *alloc_tracer(size_t size)
+cpu::Tracer *
+allocTracer(size_t size)
 {
    // TODO: TRACE_ENABLED should actually be handled by kernel
 #ifdef TRACE_ENABLED
@@ -43,7 +44,8 @@ cpu::Tracer *alloc_tracer(size_t size)
 #endif
 }
 
-void free_tracer(cpu::Tracer *tracer)
+void
+freeTracer(cpu::Tracer *tracer)
 {
    if (tracer) {
       delete tracer;
@@ -53,14 +55,14 @@ void free_tracer(cpu::Tracer *tracer)
 namespace this_core
 {
 
-void set_tracer(cpu::Tracer *tracer)
+void setTracer(cpu::Tracer *tracer)
 {
    state()->tracer = tracer;
 }
 
-}
+} // namespace this_core
 
-}
+} // namespace cpu
 
 std::string
 getStateFieldName(TraceFieldType type)

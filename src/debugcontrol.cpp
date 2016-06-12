@@ -58,7 +58,7 @@ DebugControl::handleDbgBreakInterrupt()
    if (mWaitingForStep == coreId) {
       mWaitingForStep = -1;
    }
-   
+
    auto msg = new DebugMessageCorePaused();
    msg->coreId = coreId;
    msg->state = cpu::this_core::state();
@@ -67,13 +67,13 @@ DebugControl::handleDbgBreakInterrupt()
 
    mShouldBePaused = true;
    mWaitCond.notify_all();
-   
+
    while (mShouldBePaused) {
       mReleaseCond.wait(lock);
    }
 
    // Clear any additional DBGBREAK's that occured
-   cpu::this_core::clear_interrupt(cpu::DBGBREAK_INTERRUPT);
+   cpu::this_core::clearInterrupt(cpu::DBGBREAK_INTERRUPT);
 
    // If we want to single-step this core, we need to interrupt
    // We rely on the fact that our cpu emulator only processes a

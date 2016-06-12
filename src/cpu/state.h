@@ -5,7 +5,8 @@
 
 struct Tracer;
 
-namespace cpu {
+namespace cpu
+{
 
 struct CoreRegs
 {
@@ -45,8 +46,8 @@ struct Core : CoreRegs
    uint32_t id;
    std::thread thread;
    uint32_t interrupt_mask { 0xFFFFFFFF };
-   std::atomic<uint32_t> interrupt{ 0 };
+   std::atomic<uint32_t> interrupt { 0 };
    std::chrono::system_clock::time_point next_alarm;
 };
 
-}
+} // namespace cpu

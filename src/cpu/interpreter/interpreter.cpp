@@ -54,7 +54,7 @@ bool hasInstruction(espresso::InstructionID id)
 
 void step_one(Core *core)
 {
-   this_core::check_interrupts();
+   this_core::checkInterrupts();
 
    core->cia = core->nia;
    core->nia = core->cia + 4;
@@ -82,7 +82,7 @@ void step_one(Core *core)
 void resume(Core *core)
 {
    // Before we resume, we need to update our states!
-   this_core::update_rounding_mode();
+   this_core::updateRoundingMode();
    std::feclearexcept(FE_ALL_EXCEPT);
 
    while (core->nia != cpu::CALLBACK_ADDR) {

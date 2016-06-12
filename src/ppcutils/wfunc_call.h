@@ -20,7 +20,7 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
    // Set state
    core->cia = 0;
    core->nia = address;
-   cpu::this_core::execute_sub();
+   cpu::this_core::executeSub();
 
    // Restore state
    core->nia = nia;

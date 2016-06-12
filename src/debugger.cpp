@@ -201,7 +201,7 @@ Debugger::stepCoreOver(uint32_t coreId)
       || data->id == espresso::InstructionID::bclr) {
       if (instr.lk) {
          // This is a branch-and-link.  Put a BP after the next instruction
-         cpu::add_breakpoint(curAddr + 4, cpu::SYSTEM_BPFLAG);
+         cpu::addBreakpoint(curAddr + 4, cpu::SYSTEM_BPFLAG);
          gDebugger.resume();
       } else {
          // Direct branch, just step
@@ -217,25 +217,19 @@ void
 Debugger::clearBreakpoints()
 {
    assert(mEnabled);
-
-   cpu::clear_breakpoints(cpu::USER_BPFLAG);
+   cpu::clearBreakpoints(cpu::USER_BPFLAG);
 }
 
 void
 Debugger::addBreakpoint(uint32_t addr)
 {
    assert(mEnabled);
-
-   cpu::add_breakpoint(addr, cpu::USER_BPFLAG);
+   cpu::addBreakpoint(addr, cpu::USER_BPFLAG);
 }
 
 void
 Debugger::removeBreakpoint(uint32_t addr)
 {
    assert(mEnabled);
-
-   cpu::remove_breakpoint(addr, cpu::USER_BPFLAG);
+   cpu::removeBreakpoint(addr, cpu::USER_BPFLAG);
 }
-
-
-

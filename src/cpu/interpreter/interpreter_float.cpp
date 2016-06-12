@@ -837,7 +837,7 @@ mtfsb0(cpu::Core *state, Instruction instr)
    state->fpscr.value = clear_bit(state->fpscr.value, 31 - instr.crbD);
    updateFEX_VX(state);
    if (instr.crbD >= 30) {
-      cpu::this_core::update_rounding_mode();
+      cpu::this_core::updateRoundingMode();
    }
 
    if (instr.rc) {
@@ -853,7 +853,7 @@ mtfsb1(cpu::Core *state, Instruction instr)
    state->fpscr.value = set_bit(state->fpscr.value, 31 - instr.crbD);
    updateFX_FEX_VX(state, oldValue);
    if (instr.crbD >= 30) {
-      cpu::this_core::update_rounding_mode();
+      cpu::this_core::updateRoundingMode();
    }
 
    if (instr.rc) {
@@ -879,7 +879,7 @@ mtfsf(cpu::Core *state, Instruction instr)
    }
    updateFEX_VX(state);
    if (get_bit(instr.fm, 0)) {
-      cpu::this_core::update_rounding_mode();
+      cpu::this_core::updateRoundingMode();
    }
 
    if (instr.rc) {
@@ -896,7 +896,7 @@ mtfsfi(cpu::Core *state, Instruction instr)
    state->fpscr.value |= instr.imm << shift;
    updateFEX_VX(state);
    if (instr.crfD == 7) {
-      cpu::this_core::update_rounding_mode();
+      cpu::this_core::updateRoundingMode();
    }
 
    if (instr.rc) {

@@ -11,10 +11,10 @@ gCore[3];
 extern std::atomic_bool
 gRunning;
 
-extern entrypoint_handler
+extern EntrypointHandler
 gCoreEntryPointHandler;
 
-extern interrupt_handler
+extern InterruptHandler
 gInterruptHandler;
 
 extern std::condition_variable
@@ -23,24 +23,27 @@ gTimerCondition;
 extern std::thread
 gTimerThread;
 
-bool has_breakpoints();
+bool
+hasBreakpoints();
 
-bool pop_breakpoint(ppcaddr_t address);
+bool
+popBreakpoint(ppcaddr_t address);
 
-void timerEntryPoint();
+void
+timerEntryPoint();
 
-kernel_call_entry *
-get_kernel_call(uint32_t id);
+KernelCallEntry *
+getKernelCall(uint32_t id);
 
 namespace this_core
 {
 
 void
-check_interrupts();
+checkInterrupts();
 
 void
-update_rounding_mode();
+updateRoundingMode();
 
-}
+} // namespace this_core
 
-}
+} // namespace cpu

@@ -9,24 +9,45 @@ using espresso::InstructionID;
 
 namespace cpu
 {
+
 namespace interpreter
 {
 
 using instrfptr_t = void(*)(Core*, Instruction);
 
-bool hasInstruction(espresso::InstructionID instrId);
-instrfptr_t getInstructionHandler(espresso::InstructionID id);
-void registerInstruction(espresso::InstructionID id, instrfptr_t fptr);
-void registerBranchInstructions();
-void registerConditionInstructions();
-void registerFloatInstructions();
-void registerIntegerInstructions();
-void registerLoadStoreInstructions();
-void registerPairedInstructions();
-void registerSystemInstructions();
+bool
+hasInstruction(espresso::InstructionID instrId);
 
-}
-}
+instrfptr_t
+getInstructionHandler(espresso::InstructionID id);
+
+void
+registerInstruction(espresso::InstructionID id, instrfptr_t fptr);
+
+void
+registerBranchInstructions();
+
+void
+registerConditionInstructions();
+
+void
+registerFloatInstructions();
+
+void
+registerIntegerInstructions();
+
+void
+registerLoadStoreInstructions();
+
+void
+registerPairedInstructions();
+
+void
+registerSystemInstructions();
+
+} // namespace interpreter
+
+} // namespace cpu
 
 #undef RegisterInstruction
 #undef RegisterInstructionFn

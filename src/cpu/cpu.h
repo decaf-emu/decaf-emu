@@ -31,58 +31,101 @@ enum class jit_mode {
 
 static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 
-typedef void(*entrypoint_handler)();
-typedef void(*interrupt_handler)(uint32_t interrupt_flags);
-typedef void(*segfault_handler)(uint32_t address);
+using EntrypointHandler = void(*)();
+using InterruptHandler = void (*)(uint32_t interrupt_flags);
+using SegfaultHandler = void(*)(uint32_t address);
+using KernelCallFunction = void(*)(Core *state, void *userData);
 
-using kernel_call_fn = void(*)(Core *state, void *userData);
-
-struct kernel_call_entry
+struct KernelCallEntry
 {
-   kernel_call_fn fn;
-   void * user_data;
+   KernelCallFunction func;
+   void *user_data;
 };
 
-void initialise();
-void set_jit_mode(jit_mode mode);
-void set_core_entrypoint_handler(entrypoint_handler handler);
-void set_interrupt_handler(interrupt_handler handler);
-void set_segfault_handler(segfault_handler handler);
+void
+initialise();
 
-uint32_t register_kernel_call(const kernel_call_entry &entry);
+void
+setJitMode(jit_mode mode);
 
-void start();
-void join();
-void halt();
+void
+setCoreEntrypointHandler(EntrypointHandler handler);
 
-typedef ::Tracer Tracer;
-Tracer *alloc_tracer(size_t size);
-void free_tracer(Tracer *tracer);
+void
+setInterruptHandler(InterruptHandler handler);
 
-void interrupt(int core_idx, uint32_t flags);
+void
+setSegfaultHandler(SegfaultHandler handler);
 
-bool clear_breakpoints(uint32_t flags_mask);
-bool add_breakpoint(ppcaddr_t address, uint32_t flags);
-bool remove_breakpoint(ppcaddr_t address, uint32_t flags);
+uint32_t
+registerKernelCall(const KernelCallEntry &entry);
+
+void
+start();
+
+void
+join();
+
+void
+halt();
+
+using Tracer = ::Tracer;
+
+Tracer *
+allocTracer(size_t size);
+
+void
+freeTracer(Tracer *tracer);
+
+void
+interrupt(int core_idx,
+          uint32_t flags);
+
+bool
+clearBreakpoints(uint32_t flags_mask);
+
+bool
+addBreakpoint(ppcaddr_t address,
+              uint32_t flags);
+
+bool
+removeBreakpoint(ppcaddr_t address,
+                 uint32_t flags);
 
 namespace this_core
 {
 
-void set_tracer(Tracer *tracer);
+void
+setTracer(Tracer *tracer);
 
-void resume();
-void execute_sub();
-void wait_for_interrupt();
-uint32_t interrupt_mask();
-uint32_t set_interrupt_mask(uint32_t mask);
-void clear_interrupt(uint32_t flags);
+void
+resume();
 
-void set_next_alarm(std::chrono::time_point<std::chrono::system_clock> alarm_time);
+void
+executeSub();
 
-cpu::Core * state();
+void
+waitForInterrupt();
 
-static uint32_t id() {
+uint32_t
+interruptMask();
+
+uint32_t
+setInterruptMask(uint32_t mask);
+
+void
+clearInterrupt(uint32_t flags);
+
+void
+setNextAlarm(std::chrono::time_point<std::chrono::system_clock> alarm_time);
+
+cpu::Core *
+state();
+
+static uint32_t id()
+{
    auto core = state();
+
    if (core) {
       return core->id;
    } else {
@@ -90,6 +133,6 @@ static uint32_t id() {
    }
 }
 
-}
+} // namespace this_core
 
 } // namespace cpu

@@ -19,10 +19,10 @@ namespace cpu
 std::atomic_bool
 gRunning;
 
-entrypoint_handler
+EntrypointHandler
 gCoreEntryPointHandler;
 
-segfault_handler
+SegfaultHandler
 gSegfaultHandler;
 
 jit_mode
@@ -37,14 +37,16 @@ tCurrentCore = nullptr;
 static thread_local uint32_t
 sSegfaultAddr = 0;
 
-void initialise()
+void
+initialise()
 {
    espresso::initialiseInstructionSet();
    cpu::interpreter::initialise();
    cpu::jit::initialise();
 }
 
-void set_jit_mode(jit_mode mode)
+void
+setJitMode(jit_mode mode)
 {
    gJitMode = mode;
 }
@@ -93,13 +95,15 @@ installExceptionHandler()
    }
 }
 
-void coreEntryPoint(Core *core)
+void
+coreEntryPoint(Core *core)
 {
    tCurrentCore = core;
    gCoreEntryPointHandler();
 }
 
-void start()
+void
+start()
 {
    installExceptionHandler();
 
@@ -119,7 +123,8 @@ void start()
    platform::setThreadName(&gTimerThread, "Timer Thread");
 }
 
-void join()
+void
+join()
 {
    for (auto i = 0; i < 3; ++i) {
       gCore[i].thread.join();
@@ -127,7 +132,7 @@ void join()
 
    // Mark the CPU as no longer running
    gRunning.store(false);
-   
+
    // Notify the timer thread that something changed
    gTimerCondition.notify_all();
 
@@ -135,7 +140,8 @@ void join()
    gTimerThread.join();
 }
 
-void halt()
+void
+halt()
 {
    for (auto i = 0; i < 3; ++i) {
       interrupt(i, SRESET_INTERRUPT);
@@ -144,12 +150,14 @@ void halt()
    join();
 }
 
-void set_core_entrypoint_handler(entrypoint_handler handler)
+void
+setCoreEntrypointHandler(EntrypointHandler handler)
 {
    gCoreEntryPointHandler = handler;
 }
 
-void set_segfault_handler(segfault_handler handler)
+void
+setSegfaultHandler(SegfaultHandler handler)
 {
    gSegfaultHandler = handler;
 }
@@ -157,18 +165,20 @@ void set_segfault_handler(segfault_handler handler)
 namespace this_core
 {
 
-cpu::Core * state()
+cpu::Core *
+state()
 {
    return tCurrentCore;
 }
 
-void resume()
+void
+resume()
 {
    // If we have breakpoints set, we have to fall back to interpreter loop
    // This is because JIT wont check for breakpoints on each instruction.
    // TODO: Make JIT account for breakpoints by inserting breakpoint checks
    // in the appropriate places in the instruction stream.
-   if (has_breakpoints()) {
+   if (hasBreakpoints()) {
       interpreter::resume(tCurrentCore);
    }
 
@@ -180,7 +190,8 @@ void resume()
    }
 }
 
-void execute_sub()
+void
+executeSub()
 {
    auto lr = tCurrentCore->lr;
    tCurrentCore->lr = CALLBACK_ADDR;
@@ -189,7 +200,7 @@ void execute_sub()
 }
 
 void
-update_rounding_mode()
+updateRoundingMode()
 {
    Core *core = tCurrentCore;
 

@@ -59,12 +59,12 @@ setJitMode(bool enabled,
 {
    if (enabled) {
       if (!debug) {
-         cpu::set_jit_mode(cpu::jit_mode::enabled);
+         cpu::setJitMode(cpu::jit_mode::enabled);
       } else {
-         cpu::set_jit_mode(cpu::jit_mode::debug);
+         cpu::setJitMode(cpu::jit_mode::debug);
       }
    } else {
-      cpu::set_jit_mode(cpu::jit_mode::disabled);
+      cpu::setJitMode(cpu::jit_mode::disabled);
    }
 }
 
@@ -155,7 +155,7 @@ initialise()
    }
 
    kernel::setFileSystem(fs);
-   kernel::set_game_name(path.filename());
+   kernel::setGameName(path.filename());
 
    // Lock out some memory for unimplemented data access
    mem::protect(0xfff00000, 0x000fffff);

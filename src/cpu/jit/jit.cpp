@@ -274,7 +274,7 @@ uint32_t execute(Core *core, JitCode block)
 void resume(Core *core)
 {
    // Before we resume, we need to update our states!
-   this_core::update_rounding_mode();
+   this_core::updateRoundingMode();
    std::feclearexcept(FE_ALL_EXCEPT);
 
    while (core->nia != cpu::CALLBACK_ADDR) {

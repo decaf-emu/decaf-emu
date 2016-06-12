@@ -14,10 +14,14 @@ namespace kernel
 
 struct Fiber;
 
-void initialise();
-void set_game_name(const std::string& name);
+void
+initialise();
 
-void exitThreadNoLock();
+void
+setGameName(const std::string& name);
+
+void
+exitThreadNoLock();
 
 TeenyHeap *
 getSystemHeap();

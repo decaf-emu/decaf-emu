@@ -6,7 +6,7 @@
 namespace cpu
 {
 
-interrupt_handler
+InterruptHandler
 gInterruptHandler;
 
 std::mutex
@@ -24,12 +24,14 @@ gTimerCondition;
 std::thread
 gTimerThread;
 
-void set_interrupt_handler(interrupt_handler handler)
+void
+setInterruptHandler(InterruptHandler handler)
 {
    gInterruptHandler = handler;
 }
 
-void interrupt(int core_idx, uint32_t flags)
+void
+interrupt(int core_idx, uint32_t flags)
 {
    std::unique_lock<std::mutex> lock{ gInterruptMutex };
    gCore[core_idx].interrupt.fetch_or(flags);
@@ -65,35 +67,39 @@ timerEntryPoint()
    }
 }
 
-namespace this_core {
+namespace this_core
+{
 
-void clear_interrupt(uint32_t flags)
+void
+clearInterrupt(uint32_t flags)
 {
    state()->interrupt.fetch_and(~flags);
 }
 
-uint32_t interrupt_mask()
+uint32_t
+interruptMask()
 {
    return state()->interrupt_mask;
 }
 
-uint32_t set_interrupt_mask(uint32_t mask)
+uint32_t
+setInterruptMask(uint32_t mask)
 {
-   Core *core = state();
-   uint32_t old_mask = core->interrupt_mask;
+   auto core = state();
+   auto old_mask = core->interrupt_mask;
    core->interrupt_mask = mask;
    return old_mask;
 }
 
-void check_interrupts()
+void
+checkInterrupts()
 {
-   cpu::Core *core = state();
-
-   uint32_t interrupt_mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;
-   uint32_t interrupt_flags = core->interrupt.fetch_and(~interrupt_mask);
+   auto core = state();
+   auto mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;
+   auto flags = core->interrupt.fetch_and(~mask);
 
    // Check if we hit any breakpoints
-   if (pop_breakpoint(core->nia)) {
+   if (popBreakpoint(core->nia)) {
       // Need to interrupt all the other cores
       for (auto i = 0; i < 3; ++i) {
          if (i != core->id) {
@@ -102,28 +108,31 @@ void check_interrupts()
       }
 
       // Our core we can just add it to the local interrupt list
-      interrupt_flags |= DBGBREAK_INTERRUPT;
+      flags |= DBGBREAK_INTERRUPT;
    }
 
-   if (interrupt_flags & interrupt_mask) {
-      cpu::gInterruptHandler(interrupt_flags);
+   if (flags & mask) {
+      cpu::gInterruptHandler(flags);
    }
 }
 
-void wait_for_interrupt()
+void
+waitForInterrupt()
 {
-   cpu::Core *core = this_core::state();
-   std::unique_lock<std::mutex> lock{ gInterruptMutex };
+   auto core = this_core::state();
+   std::unique_lock<std::mutex> lock { gInterruptMutex };
+
    while (true) {
       if (!(core->interrupt_mask & ~NONMASKABLE_INTERRUPTS)) {
          throw std::logic_error("WFI thread found all maskable interrupts were disabled");
       }
 
-      uint32_t interrupt_mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;
-      uint32_t interrupt_flags = core->interrupt.fetch_and(~interrupt_mask);
-      if (interrupt_flags & interrupt_mask) {
+      auto mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;
+      auto flags = core->interrupt.fetch_and(~mask);
+
+      if (flags & mask) {
          lock.unlock();
-         gInterruptHandler(interrupt_flags);
+         gInterruptHandler(flags);
          lock.lock();
       } else {
          gInterruptCondition.wait(lock);
@@ -131,11 +140,12 @@ void wait_for_interrupt()
    }
 }
 
-void set_next_alarm(std::chrono::time_point<std::chrono::system_clock> alarm_time)
+void
+setNextAlarm(std::chrono::time_point<std::chrono::system_clock> time)
 {
-   cpu::Core *core = this_core::state();
-   std::unique_lock<std::mutex> lock{ gTimerMutex };
-   core->next_alarm = alarm_time;
+   auto core = this_core::state();
+   std::unique_lock<std::mutex> lock { gTimerMutex };
+   core->next_alarm = time;
    gTimerCondition.notify_all();
 }
 

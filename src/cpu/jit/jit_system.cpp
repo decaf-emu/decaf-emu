@@ -136,8 +136,8 @@ static bool
 kc(PPCEmuAssembler& a, Instruction instr)
 {
    auto id = instr.kcn;
+   auto kc = cpu::getKernelCall(id);
 
-   auto kc = cpu::get_kernel_call(id);
    if (!kc) {
       gLog->error("Encountered invalid Kernel Call ID {}", id);
       a.int3();
@@ -146,7 +146,7 @@ kc(PPCEmuAssembler& a, Instruction instr)
 
    a.mov(a.zcx, a.state);
    a.mov(a.zdx, asmjit::Ptr(kc->user_data));
-   a.call(asmjit::Ptr(kc->fn));
+   a.call(asmjit::Ptr(kc->func));
    return true;
 }
 

@@ -7,7 +7,7 @@
 #include "state.h"
 
 template<typename T>
-static std::string to_hex_string(T i)
+static std::string toHexString(T i)
 {
    std::ostringstream oss;
    oss << "0x" << std::hex << i;
@@ -20,7 +20,7 @@ inline bool dbgStateCmp(cpu::Core* state, cpu::Core* estate, std::vector<std::st
       return true;
    }
 
-#define CHECKONE(n, m) if (state->n != estate->n) errors.push_back(std::string(m) + " (got:" + to_hex_string(state->n)  + " expected:" + to_hex_string(estate->n) + ")")
+#define CHECKONE(n, m) if (state->n != estate->n) errors.push_back(std::string(m) + " (got:" + toHexString(state->n)  + " expected:" + toHexString(estate->n) + ")")
 #define CHECKONEI(n, m, i) CHECKONE(n, std::string(m) + "[" + std::to_string(i) + "]")
    CHECKONE(cia, "CIA");
    CHECKONE(nia, "NIA");

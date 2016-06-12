@@ -484,9 +484,10 @@ GameThreadEntry(uint32_t argc, void *argv)
 
    if (gDebugger.isEnabled()) {
       if (userPreinit) {
-         cpu::add_breakpoint(userPreinit, cpu::SYSTEM_BPFLAG);
+         cpu::addBreakpoint(userPreinit, cpu::SYSTEM_BPFLAG);
       }
-      cpu::add_breakpoint(start, cpu::SYSTEM_BPFLAG);
+
+      cpu::addBreakpoint(start, cpu::SYSTEM_BPFLAG);
    }
 
    if (userPreinit) {

@@ -4,24 +4,24 @@
 namespace cpu
 {
 
-static std::vector<kernel_call_entry>
-gKernelCalls;
+static std::vector<KernelCallEntry>
+sKernelCalls;
 
 uint32_t
-register_kernel_call(const kernel_call_entry &entry)
+registerKernelCall(const KernelCallEntry &entry)
 {
-   gKernelCalls.push_back(entry);
-   return static_cast<uint32_t>(gKernelCalls.size() - 1);
+   sKernelCalls.push_back(entry);
+   return static_cast<uint32_t>(sKernelCalls.size() - 1);
 }
 
-kernel_call_entry *
-get_kernel_call(uint32_t id)
+KernelCallEntry *
+getKernelCall(uint32_t id)
 {
-   if (id >= gKernelCalls.size()) {
+   if (id >= sKernelCalls.size()) {
       return nullptr;
    }
 
-   return &gKernelCalls[id];
+   return &sKernelCalls[id];
 }
 
 } // namespace cpu

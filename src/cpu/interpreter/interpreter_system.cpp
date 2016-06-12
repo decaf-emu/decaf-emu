@@ -269,15 +269,15 @@ static void
 kc(cpu::Core *state, Instruction instr)
 {
    auto id = instr.kcn;
+   auto kc = cpu::getKernelCall(id);
 
-   auto kc = cpu::get_kernel_call(id);
    if (!kc) {
       gLog->error("Encountered invalid Kernel Call ID {}", id);
       assert(0);
       return;
    }
 
-   kc->fn(state, kc->user_data);
+   kc->func(state, kc->user_data);
 }
 
 void

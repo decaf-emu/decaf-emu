@@ -6,6 +6,9 @@ namespace kernel
 {
 
 void
+initCoreFiber();
+
+void
 saveContext(coreinit::OSContext *context);
 
 void

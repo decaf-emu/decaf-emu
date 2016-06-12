@@ -36,7 +36,8 @@ namespace functions
 bool
 enableTrace = false;
 
-void kcTraceHandler(const std::string& str)
+void
+kcTraceHandler(const std::string& str)
 {
    traceLogSyscall(str);
    gLog->debug(str);
@@ -44,30 +45,40 @@ void kcTraceHandler(const std::string& str)
 
 }
 
-void init_core_fiber();
-void cpu_entrypoint();
-void cpu_interrupt_handler(uint32_t interrupt_flags);
-void cpu_segfault_handler(uint32_t address);
-bool launch_game();
+static void
+cpuEntrypoint();
 
-static bool gRunning = true;
-static std::string gGameName;
+static void
+cpuInterruptHandler(uint32_t interrupt_flags);
+
+static void
+cpuSegfaultHandler(uint32_t address);
+
+static bool
+launchGame();
+
+static bool
+gRunning = true;
+
+static std::string
+gGameName;
 
 static TeenyHeap *
 sSystemHeap;
 
-void set_game_name(const std::string& name)
+void
+setGameName(const std::string& name)
 {
    gGameName = name;
 }
 
-void initialise()
+void
+initialise()
 {
    initialiseHleMmodules();
-
-   cpu::set_core_entrypoint_handler(&cpu_entrypoint);
-   cpu::set_segfault_handler(&cpu_segfault_handler);
-   cpu::set_interrupt_handler(&cpu_interrupt_handler);
+   cpu::setCoreEntrypointHandler(&cpuEntrypoint);
+   cpu::setSegfaultHandler(&cpuSegfaultHandler);
+   cpu::setInterruptHandler(&cpuInterruptHandler);
 
    sSystemHeap = new TeenyHeap(mem::translate(mem::SystemBase), mem::SystemSize);
 }
@@ -78,7 +89,8 @@ getSystemHeap()
    return sSystemHeap;
 }
 
-void cpu_segfault_handler(uint32_t address)
+void
+cpuSegfaultHandler(uint32_t address)
 {
    // We may have been in the middle of a kernel function...
    if (coreinit::internal::isSchedulerLocked()) {
@@ -93,7 +105,8 @@ void cpu_segfault_handler(uint32_t address)
    coreinit::OSExitThread(0);
 }
 
-void cpu_interrupt_handler(uint32_t interrupt_flags)
+void
+cpuInterruptHandler(uint32_t interrupt_flags)
 {
    if (interrupt_flags & cpu::SRESET_INTERRUPT) {
       platform::exitThread(0);
@@ -125,7 +138,7 @@ void cpu_interrupt_handler(uint32_t interrupt_flags)
    auto originalInterruptState = coreinit::OSDisableInterrupts();
    coreinit::internal::disableScheduler();
 
-   coreinit::OSThread *interruptedThread = coreinit::internal::getCurrentThread();
+   auto interruptedThread = coreinit::internal::getCurrentThread();
 
    if (interrupt_flags & cpu::ALARM_INTERRUPT) {
       coreinit::internal::handleAlarmInterrupt(&interruptedThread->context);
@@ -151,15 +164,16 @@ void cpu_interrupt_handler(uint32_t interrupt_flags)
    coreinit::internal::unlockScheduler();
 }
 
-void cpu_entrypoint()
+void
+cpuEntrypoint()
 {
    // Make a fibre, we need to be cautious not to allocate here
    //  as this fibre can be arbitrarily destroyed.
-   init_core_fiber();
+   initCoreFiber();
 
    if (cpu::this_core::id() == 1) {
       // Run the setup on core 1, which will also run the loader
-      launch_game();
+      launchGame();
 
       // Trip an interrupt on core 1 to force it to schedule the loader.
       cpu::interrupt(1, cpu::GENERIC_INTERRUPT);
@@ -168,11 +182,12 @@ void cpu_entrypoint()
    // Run the scheduler loop, this is what will
    //   execute when there is nothing else to do.
    while (gRunning) {
-      cpu::this_core::wait_for_interrupt();
+      cpu::this_core::waitForInterrupt();
    }
 }
 
-bool launch_game()
+bool
+launchGame()
 {
    // Read cos.xml if found
    auto maxCodeSize = 0x0E000000u;
@@ -265,4 +280,4 @@ bool launch_game()
    return true;
 }
 
-}
+} // namespace kernel

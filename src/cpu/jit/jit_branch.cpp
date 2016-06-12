@@ -27,7 +27,7 @@ enum BcFlags
 void
 jit_interrupt_stub()
 {
-   this_core::check_interrupts();
+   this_core::checkInterrupts();
 }
 
 void

@@ -52,7 +52,7 @@ kcstub(cpu::Core *state, void *data)
 void
 registerHleFunc(HleFunction *func)
 {
-   func->syscallID = cpu::register_kernel_call({ kcstub, func });
+   func->syscallID = cpu::registerKernelCall({ kcstub, func });
    gHleFuncs[func->syscallID] = func;
 }
 

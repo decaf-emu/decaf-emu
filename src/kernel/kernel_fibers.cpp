@@ -51,7 +51,7 @@ static Fiber *
 allocateFiber(coreinit::OSThread *thread)
 {
    auto fiber = new Fiber();
-   fiber->tracer = cpu::alloc_tracer(1024);
+   fiber->tracer = cpu::allocTracer(1024);
    fiber->handle = platform::createFiber(fiberEntryPoint, nullptr);
    fiber->thread = thread;
    return fiber;
@@ -60,7 +60,7 @@ allocateFiber(coreinit::OSThread *thread)
 static void
 freeFiber(Fiber *fiber)
 {
-   cpu::free_tracer(fiber->tracer);
+   cpu::freeTracer(fiber->tracer);
    platform::destroyFiber(fiber->handle);
 }
 
@@ -84,7 +84,8 @@ checkDeadThread()
    }
 }
 
-void init_core_fiber()
+void
+initCoreFiber()
 {
    // Grab the currently running core state.
    auto core_id = cpu::this_core::id();
@@ -197,7 +198,7 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
       restoreContext(&next->context);
 
       auto fiber = next->fiber;
-      cpu::this_core::set_tracer(fiber->tracer);
+      cpu::this_core::setTracer(fiber->tracer);
       platform::swapToFiber(prevFiberHandle, fiber->handle);
    } else {
       // If we switch to the idle thread, set ourselves to
@@ -205,7 +206,7 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
       coreinit::OSContext blankContext = { 0 };
       restoreContext(&blankContext);
 
-      cpu::this_core::set_tracer(nullptr);
+      cpu::this_core::setTracer(nullptr);
       platform::swapToFiber(prevFiberHandle, tIdleFiber[core->id]);
    }
 
@@ -218,4 +219,4 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
    }
 }
 
-}
+} // namespace kernel
