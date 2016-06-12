@@ -1,8 +1,8 @@
+#include "clilog.h"
 #include "gl_common.h"
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
-#include "clilog.h"
 
 
 
