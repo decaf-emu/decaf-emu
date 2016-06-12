@@ -5,7 +5,9 @@
 #include "common/log.h"
 
 #ifdef PLATFORM_POSIX
-#define _GNU_SOURCE
+#ifndef _GNU_SOURCE
+#  define _GNU_SOURCE
+#endif
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
@@ -24,7 +26,7 @@ static struct sigaction
 gSegvHandler;
 
 static void
-segvHandler(int unused_signum, siginfo_t *info, void *unused_context)
+segvHandler(int unused_signum, siginfo_t *info, void *context)
 {
    auto exception = AccessViolationException { reinterpret_cast<uint64_t>(info->si_addr) };
 
@@ -44,7 +46,8 @@ segvHandler(int unused_signum, siginfo_t *info, void *unused_context)
          return;
       } else {
          // Exception handled, switch execution to target function
-         ctx->uc_mcontext.gregs[REG_RIP] = reinterpret_cast<DWORD64>(func);
+         auto ctx = reinterpret_cast<ucontext *>(context);
+         ctx->uc_mcontext.gregs[REG_RIP] = reinterpret_cast<uint64_t>(func);
          return;
       }
    }
