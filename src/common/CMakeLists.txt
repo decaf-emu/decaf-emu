@@ -17,6 +17,7 @@ set(HEADER_FILES
     byte_swap.h
     debuglog.h
     emuassert.h
+    fastregionmap.h
     fixed.h
     floatutils.h
     log.h
