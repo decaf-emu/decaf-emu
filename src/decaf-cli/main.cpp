@@ -64,7 +64,9 @@ getCommandLineParser()
    return parser;
 }
 
-int start(excmd::option_state &options)
+int
+start(excmd::parser &parser,
+      excmd::option_state &options)
 {
    // Print version
    if (options.has("version")) {
@@ -74,9 +76,7 @@ int start(excmd::option_state &options)
    }
 
    // Print help
-   if (options.has("help")) {
-      // TODO: Why do we need to call this a second time? :(
-      auto parser = getCommandLineParser();
+   if (options.empty() || options.has("help")) {
       if (options.has("help-command")) {
          std::cout << parser.format_help("decaf", options.get<std::string>("help-command")) << std::endl;
       } else {
@@ -123,9 +123,12 @@ int start(excmd::option_state &options)
    }
 
    std::vector<spdlog::sink_ptr> sinks;
+   auto logLevel = spdlog::level::info;
+
    if (config::log::to_stdout) {
       sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
    }
+
    if (config::log::to_file) {
       sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>("log", "txt", 23, 59, true));
    }
@@ -134,7 +137,6 @@ int start(excmd::option_state &options)
       spdlog::set_async_mode(0x1000);
    }
 
-   spdlog::level::level_enum logLevel = spdlog::level::info;
    for (int i = spdlog::level::trace; i <= spdlog::level::off; i++) {
       auto level = static_cast<spdlog::level::level_enum>(i);
 
@@ -148,7 +150,6 @@ int start(excmd::option_state &options)
    decaf::setJitMode(config::jit::enabled, config::jit::debug);
    decaf::setSystemPath(config::system::system_path);
    decaf::setGamePath(options.get<std::string>("game directory"));
-
 
 #ifdef DECAF_GLFW
    if (config::system::platform.compare("glfw") == 0) {
@@ -171,7 +172,12 @@ int start(excmd::option_state &options)
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
+int WINAPI
+WinMain(HINSTANCE hInstance,
+        HINSTANCE hPrevInstance,
+        LPSTR lpCmdLine,
+        int nShowCmd)
+{
    auto parser = getCommandLineParser();
    excmd::option_state options;
 
@@ -182,7 +188,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
       std::exit(-1);
    }
 
-   return start(options);
+   return start(parser, options);
 }
 #else
 int main(int argc, char **argv) {
@@ -196,6 +202,6 @@ int main(int argc, char **argv) {
       std::exit(-1);
    }
 
-   return start(options);
+   return start(parser, options);
 }
 #endif
