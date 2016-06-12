@@ -40,9 +40,9 @@ struct HleFunctionImpl : HleFunction
    virtual void call(cpu::Core *thread) override
    {
       if (enableTrace) {
-         ppctypes::invoke<kcTraceHandler>(thread, wrapped_function, name);
+         ppctypes::invoke(kcTraceHandler, thread, wrapped_function, name);
       } else {
-         ppctypes::invoke<nullptr>(thread, wrapped_function, name);
+         ppctypes::invoke(nullptr, thread, wrapped_function, name);
       }
    }
 };
@@ -55,9 +55,9 @@ struct HleMemberFunctionImpl : HleFunction
    virtual void call(cpu::Core *thread) override
    {
       if (enableTrace) {
-         ppctypes::invokeMemberFn<kcTraceHandler>(thread, wrapped_function, name);
+         ppctypes::invokeMemberFn(kcTraceHandler, thread, wrapped_function, name);
       } else {
-         ppctypes::invokeMemberFn<nullptr>(thread, wrapped_function, name);
+         ppctypes::invokeMemberFn(nullptr, thread, wrapped_function, name);
       }
    }
 };
@@ -73,9 +73,9 @@ struct HleConstructorFunctionImpl : HleFunction
    virtual void call(cpu::Core *thread) override
    {
       if (enableTrace) {
-         ppctypes::invoke<kcTraceHandler>(thread, &trampFunction, name);
+         ppctypes::invoke(kcTraceHandler, thread, &trampFunction, name);
       } else {
-         ppctypes::invoke<nullptr>(thread, &trampFunction, name);
+         ppctypes::invoke(nullptr, thread, &trampFunction, name);
       }
    }
 };
@@ -91,9 +91,9 @@ struct HleDestructorFunctionImpl : HleFunction
    virtual void call(cpu::Core *thread) override
    {
       if (enableTrace) {
-         ppctypes::invoke<kcTraceHandler>(thread, &trampFunction, name);
+         ppctypes::invoke(kcTraceHandler, thread, &trampFunction, name);
       } else {
-         ppctypes::invoke<nullptr>(thread, &trampFunction, name);
+         ppctypes::invoke(nullptr, thread, &trampFunction, name);
       }
    }
 };
