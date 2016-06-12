@@ -1,14 +1,12 @@
 #ifdef DECAF_GLFW
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <thread>
-#include "decaf/decaf.h"
 #include "clilog.h"
 #include "config.h"
-#include "input_common.h"
+#include "decaf/decaf.h"
 #include "gl_common.h"
+#include "input_common.h"
 #include <GLFW/glfw3.h>
+#include <thread>
 
 using namespace decaf::input;
 
@@ -122,7 +120,7 @@ int glfwStart()
    });
 
    decaf::start();
-   
+
    glfwSetMouseButtonCallback(gUserWindow, [](GLFWwindow*, int button, int action, int /*mods*/) {
       if (action == GLFW_PRESS) {
          decaf::injectMouseButtonInput(button, decaf::input::MouseAction::Press);
