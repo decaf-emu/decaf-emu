@@ -1,4 +1,5 @@
 #include "config.h"
+#include <climits>
 #include <cereal/archives/json.hpp>
 #include <fstream>
 
