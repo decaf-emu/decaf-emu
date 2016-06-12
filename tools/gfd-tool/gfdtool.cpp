@@ -1,4 +1,5 @@
 #include <cassert>
+#include <iostream>
 #include <excmd.h>
 #include <gsl.h>
 #include <spdlog/spdlog.h>
