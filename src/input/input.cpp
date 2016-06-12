@@ -3,12 +3,13 @@
 namespace input
 {
 
-static ButtonStatus(*sGetVpadCoreButtonStatus)(vpad::Channel channel, vpad::Core button);
+static VpadSampleCallback
+sGetVpadCoreButtonStatus = nullptr;
 
 void
-setVpadCoreButtonCallback(ButtonStatus(*fn)(vpad::Channel channel, vpad::Core button))
+setVpadCoreButtonCallback(VpadSampleCallback callback)
 {
-   sGetVpadCoreButtonStatus = fn;
+   sGetVpadCoreButtonStatus = callback;
 }
 
 bool
@@ -18,37 +19,47 @@ sampleController(vpad::Channel channel)
 }
 
 float
-getAxisValue(vpad::Channel channel, vpad::Core id)
+getAxisValue(vpad::Channel channel,
+             vpad::Core id)
 {
    return 0.0f;
 }
 
 ButtonStatus
-getButtonStatus(vpad::Channel channel, vpad::Core button)
+getButtonStatus(vpad::Channel channel,
+                vpad::Core button)
 {
-   return sGetVpadCoreButtonStatus(channel, button);
+   if (sGetVpadCoreButtonStatus) {
+      return sGetVpadCoreButtonStatus(channel, button);
+   } else {
+      return ButtonStatus::ButtonReleased;
+   }
 }
 
 ButtonStatus
-getButtonStatus(wpad::Channel channel, wpad::Core button)
-{
-   return ButtonStatus::ButtonReleased;
-}
-
-ButtonStatus
-getButtonStatus(wpad::Channel channel, wpad::Nunchuck button)
-{
-   return ButtonStatus::ButtonReleased;
-}
-
-ButtonStatus
-getButtonStatus(wpad::Channel channel, wpad::Classic button)
+getButtonStatus(wpad::Channel channel,
+                wpad::Core button)
 {
    return ButtonStatus::ButtonReleased;
 }
 
 ButtonStatus
-getButtonStatus(wpad::Channel channel, wpad::Pro button)
+getButtonStatus(wpad::Channel channel,
+                wpad::Nunchuck button)
+{
+   return ButtonStatus::ButtonReleased;
+}
+
+ButtonStatus
+getButtonStatus(wpad::Channel channel,
+                wpad::Classic button)
+{
+   return ButtonStatus::ButtonReleased;
+}
+
+ButtonStatus
+getButtonStatus(wpad::Channel channel,
+                wpad::Pro button)
 {
    return ButtonStatus::ButtonReleased;
 }

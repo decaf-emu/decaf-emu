@@ -170,14 +170,14 @@ void shutdown()
 }
 
 void runGpuDriver()
-{  
+{
    std::unique_lock<std::mutex> lock(sGpuMutex);
    gGpuRunning.store(true);
 
    lock.unlock();
    gGlDriver->run();
    lock.lock();
-   
+
    gGpuRunning.store(false);
    sGpuCond.notify_one();
 }
@@ -204,48 +204,63 @@ float getAverageFps()
    return gGlDriver->getAverageFps();
 }
 
-void setVpadCoreButtonCallback(input::ButtonStatus(*fn)(input::vpad::Channel channel, input::vpad::Core button))
+void
+setVpadCoreButtonCallback(VpadSampleCallback callback)
 {
-   ::input::setVpadCoreButtonCallback(fn);
+   ::input::setVpadCoreButtonCallback(callback);
 }
 
-void initialiseDbgUi()
+void
+initialiseDbgUi()
 {
    debugger::ui::initialise();
    gGlDriver->initialiseDbgUi();
 }
 
-void drawDbgUi(uint32_t width, uint32_t height)
+void
+drawDbgUi(uint32_t width,
+          uint32_t height)
 {
    gGlDriver->drawDbgUi(width, height);
 }
 
-void injectMouseButtonInput(int button, input::MouseAction action)
+void
+injectMouseButtonInput(int button,
+                       input::MouseAction action)
 {
    debugger::ui::injectMouseButtonInput(button, action);
 }
 
-void injectMousePos(double x, double y)
+void
+injectMousePos(float x,
+               float y)
 {
    debugger::ui::injectMousePos(x, y);
 }
 
-void injectScrollInput(double xoffset, double yoffset)
+void
+injectScrollInput(float xoffset,
+                  float yoffset)
 {
    debugger::ui::injectScrollInput(xoffset, yoffset);
 }
 
-void injectKeyInput(input::KeyboardKey key, input::KeyboardAction action)
+void
+injectKeyInput(input::KeyboardKey key,
+               input::KeyboardAction action)
 {
    debugger::ui::injectKeyInput(key, action);
 }
 
-void injectCharInput(unsigned short c)
+void
+injectCharInput(unsigned short c)
 {
    debugger::ui::injectCharInput(c);
 }
 
-void setClipboardTextCallbacks(const char *(*getter)(), void(*setter)(const char*))
+void
+setClipboardTextCallbacks(ClipboardTextGetCallback getter,
+                          ClipboardTextSetCallback setter)
 {
    debugger::ui::setClipboardTextCallbacks(getter, setter);
 }

@@ -13,25 +13,33 @@ typedef decaf::input::ButtonStatus ButtonStatus;
 bool
 sampleController(vpad::Channel channel);
 
+using VpadSampleCallback = ButtonStatus (*)(vpad::Channel channel, vpad::Core button);
+
 void
-setVpadCoreButtonCallback(ButtonStatus(vpad::Channel channel, vpad::Core button));
+setVpadCoreButtonCallback(VpadSampleCallback callback);
 
 ButtonStatus
-getButtonStatus(vpad::Channel channel, vpad::Core button);
+getButtonStatus(vpad::Channel channel,
+                vpad::Core button);
 
 ButtonStatus
-getButtonStatus(wpad::Channel channel, wpad::Core button);
+getButtonStatus(wpad::Channel channel,
+                wpad::Core button);
 
 ButtonStatus
-getButtonStatus(wpad::Channel channel, wpad::Nunchuck button);
+getButtonStatus(wpad::Channel channel,
+                wpad::Nunchuck button);
 
 ButtonStatus
-getButtonStatus(wpad::Channel channel, wpad::Classic button);
+getButtonStatus(wpad::Channel channel,
+                wpad::Classic button);
 
 ButtonStatus
-getButtonStatus(wpad::Channel channel, wpad::Pro button);
+getButtonStatus(wpad::Channel channel,
+                wpad::Pro button);
 
 float
-getAxisValue(vpad::Channel channel, vpad::Core axis);
+getAxisValue(vpad::Channel channel,
+             vpad::Core axis);
 
 } // namespace input

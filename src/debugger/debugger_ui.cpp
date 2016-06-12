@@ -9,8 +9,11 @@ namespace debugger
 namespace ui
 {
 
-const char *(*sGetClipboardText)() = nullptr;
-void(*sSetClipboardText)(const char*) = nullptr;
+static ClipboardTextGetCallback
+sGetClipboardText = nullptr;
+
+static ClipboardTextSetCallback
+sSetClipboardText = nullptr;
 
 static bool
 sMousePressed[3] = { false, false, false };
@@ -24,12 +27,15 @@ sMouseWheel = 0.0f;
 static float
 sMousePosX = 0.0f, sMousePosY = 0.0f;
 
-void initialise()
+void
+initialise()
 {
    ImGuiIO& io = ImGui::GetIO();
+
    io.GetClipboardTextFn = []() {
       return sGetClipboardText ? sGetClipboardText() : "";
    };
+
    io.SetClipboardTextFn = [](const char *text) {
       if (sSetClipboardText) {
          sSetClipboardText(text);
@@ -57,7 +63,8 @@ void initialise()
    io.KeyMap[ImGuiKey_Z] = static_cast<int>(KeyboardKey::Z);
 }
 
-void injectMouseButtonInput(int button, MouseAction action)
+void
+injectMouseButtonInput(int button, MouseAction action)
 {
    if (button < 0 || button >= 3) {
       return;
@@ -71,48 +78,67 @@ void injectMouseButtonInput(int button, MouseAction action)
    }
 }
 
-void injectMousePos(double x, double y)
+void
+injectMousePos(float x, float y)
 {
-   sMousePosX = static_cast<float>(x);
-   sMousePosY = static_cast<float>(y);
+   sMousePosX = x;
+   sMousePosY = y;
 }
 
-void injectScrollInput(double xoffset, double yoffset)
+void
+injectScrollInput(float xoffset, float yoffset)
 {
-   sMouseWheel += static_cast<float>(yoffset);
+   sMouseWheel += yoffset;
 }
 
-void injectKeyInput(KeyboardKey key, KeyboardAction action)
+void
+injectKeyInput(KeyboardKey key, KeyboardAction action)
 {
    ImGuiIO& io = ImGui::GetIO();
-   if (action == KeyboardAction::Press)
-      io.KeysDown[static_cast<int>(key)] = true;
-   if (action == KeyboardAction::Release)
-      io.KeysDown[static_cast<int>(key)] = false;
+   auto idx = static_cast<int>(key);
 
-   io.KeyCtrl = io.KeysDown[static_cast<int>(KeyboardKey::LeftControl)] || 
+   if (action == KeyboardAction::Press) {
+      io.KeysDown[idx] = true;
+   }
+
+   if (action == KeyboardAction::Release) {
+      io.KeysDown[idx] = false;
+   }
+
+   io.KeyCtrl =
+      io.KeysDown[static_cast<int>(KeyboardKey::LeftControl)] ||
       io.KeysDown[static_cast<int>(KeyboardKey::RightControl)];
-   io.KeyShift = io.KeysDown[static_cast<int>(KeyboardKey::LeftShift)] ||
+
+   io.KeyShift =
+      io.KeysDown[static_cast<int>(KeyboardKey::LeftShift)] ||
       io.KeysDown[static_cast<int>(KeyboardKey::RightShift)];
-   io.KeyAlt = io.KeysDown[static_cast<int>(KeyboardKey::LeftAlt)] ||
+
+   io.KeyAlt =
+      io.KeysDown[static_cast<int>(KeyboardKey::LeftAlt)] ||
       io.KeysDown[static_cast<int>(KeyboardKey::RightAlt)];
-   io.KeySuper = io.KeysDown[static_cast<int>(KeyboardKey::LeftSuper)] ||
+
+   io.KeySuper =
+      io.KeysDown[static_cast<int>(KeyboardKey::LeftSuper)] ||
       io.KeysDown[static_cast<int>(KeyboardKey::RightSuper)];
 }
 
-void injectCharInput(unsigned short c)
+void
+injectCharInput(unsigned short c)
 {
    ImGuiIO &io = ImGui::GetIO();
    io.AddInputCharacter(c);
 }
 
-void setClipboardTextCallbacks(const char *(*getter)(), void(*setter)(const char*))
+void
+setClipboardTextCallbacks(ClipboardTextGetCallback getter,
+                          ClipboardTextSetCallback setter)
 {
    sGetClipboardText = getter;
    sSetClipboardText = setter;
 }
 
-void updateInput()
+void
+updateInput()
 {
    ImGuiIO& io = ImGui::GetIO();
 
@@ -125,7 +151,7 @@ void updateInput()
    }
 
    io.MouseWheel = sMouseWheel;
-   sMouseWheel = 0.0f;
+   sMouseWheel = 0.0;
 }
 
 } // namespace ui
