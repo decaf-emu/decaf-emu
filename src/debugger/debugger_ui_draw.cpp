@@ -79,7 +79,7 @@ public:
       mSegments.push_back(Segment{ "SharedData", mem::SharedDataBase, mem::SharedDataEnd });
 
       coreinit::internal::lockScheduler();
-      auto &modules = coreinit::internal::getLoadedModules();
+      const auto &modules = coreinit::internal::getLoadedModules();
       for (auto &mod : modules) {
          for (auto &sec : mod.second->sections) {
             addSegmentItem(mSegments, Segment{
@@ -488,7 +488,7 @@ private:
       //  then we default to a surrounding default region.
 
       coreinit::internal::lockScheduler();
-      auto &modules = coreinit::internal::getLoadedModules();
+      const auto &modules = coreinit::internal::getLoadedModules();
       for (auto &mod : modules) {
          for (auto &sec : mod.second->sections) {
             if (addr >= sec.start && addr < sec.end) {
