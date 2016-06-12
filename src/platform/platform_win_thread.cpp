@@ -21,7 +21,9 @@ typedef struct tagTHREADNAME_INFO
 namespace platform
 {
 
-void setThreadName(std::thread* thread, const std::string& threadName)
+void
+setThreadName(std::thread *thread,
+              const std::string &threadName)
 {
    DWORD dwThreadID = ::GetThreadId(static_cast<HANDLE>(thread->native_handle()));
 
@@ -36,6 +38,12 @@ void setThreadName(std::thread* thread, const std::string& threadName)
    } __except (EXCEPTION_EXECUTE_HANDLER)
    {
    }
+}
+
+void
+exitThread(int result)
+{
+   ExitThread(result);
 }
 
 } // namespace platform

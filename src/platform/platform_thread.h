@@ -6,6 +6,10 @@ namespace platform
 {
 
 void
-setThreadName(std::thread *thread, const std::string& name);
+setThreadName(std::thread *thread,
+			  const std::string &name);
+
+void
+exitThread(int result);
 
 } // namespace platform
