@@ -180,7 +180,7 @@ bool runTests(const std::string &path)
          // Execute test
          mem::write(baseAddress, test.instr.value);
          cpu::jit::clearCache();
-         cpu::this_core::execute_sub();
+         cpu::this_core::executeSub();
 
          // Check XER (all bits)
          if (state->xer.value != test.output.xer.value) {

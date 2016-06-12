@@ -18,15 +18,17 @@ int main(int argc, char *argv[])
    cpu::initialise();
 
    // We need to run the tests on a core.
-   cpu::set_core_entrypoint_handler([]() {
-      if (cpu::this_core::id() == 1) {
-         // Run the tests on only a single core.
-         runResult = hwtest::runTests("tests/cpu/wiiu") ? 0 : 1;
-      }
-   });
+   cpu::setCoreEntrypointHandler(
+      []() {
+         if (cpu::this_core::id() == 1) {
+            // Run the tests on only a single core.
+            runResult = hwtest::runTests("tests/cpu/wiiu") ? 0 : 1;
+         }
+      });
+
    cpu::start();
    cpu::join();
-   
+
    system("PAUSE");
    return runResult;
 }
