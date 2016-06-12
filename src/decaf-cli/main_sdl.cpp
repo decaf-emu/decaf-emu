@@ -39,7 +39,7 @@ getWindowBorderHeight(SDL_Window *window)
    SDL_SysWMinfo info;
    SDL_VERSION(&info.version);
 
-   if (window && SDL_GetWindowWMInfo(mTvWindow, &info)) {
+   if (window && SDL_GetWindowWMInfo(window, &info)) {
       if (info.subsystem == SDL_SYSWM_X11) {
          Display *display = info.info.x11.display;
          Atom atom_NET_FRAME_EXTENTS = XInternAtom(
