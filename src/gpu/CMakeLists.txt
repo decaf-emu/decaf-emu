@@ -2,7 +2,6 @@ include_directories(".")
 
 set(SOURCE_FILES
     commandqueue.cpp
-    driver.cpp
     gfd.cpp
     microcode/latte_blockify.cpp
     microcode/latte_decoder.cpp
@@ -24,6 +23,7 @@ set(SOURCE_FILES
     opengl/glsl_vtx.cpp
     opengl/opengl_colorbuffer.cpp
     opengl/opengl_depthbuffer.cpp
+    opengl/opengl_dbgui.cpp
     opengl/opengl_draw.cpp
     opengl/opengl_driver.cpp
     opengl/opengl_pm4.cpp
@@ -35,7 +35,6 @@ set(SOURCE_FILES
     )
 set(HEADER_FILES
     commandqueue.h
-    driver.h
     gfd.h
     latte_contextstate.h
     latte_enum_cb.h
