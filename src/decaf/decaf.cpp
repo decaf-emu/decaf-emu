@@ -26,22 +26,36 @@ gGamePath = "";
 static gpu::opengl::GLDriver *
 gGlDriver;
 
-void setSystemPath(const std::string &path)
+static std::mutex
+sGpuMutex;
+
+static std::condition_variable
+sGpuCond;
+
+static std::atomic_bool
+gGpuRunning { false };
+
+void
+setSystemPath(const std::string &path)
 {
    gSystemPath = path;
 }
 
-void setGamePath(const std::string &path)
+void
+setGamePath(const std::string &path)
 {
    gGamePath = path;
 }
 
-void setKernelTraceEnabled(bool enabled)
+void
+setKernelTraceEnabled(bool enabled)
 {
    kernel::functions::enableTrace = enabled;
 }
 
-void setJitMode(bool enabled, bool debug)
+void
+setJitMode(bool enabled,
+           bool debug)
 {
    if (enabled) {
       if (!debug) {
@@ -84,14 +98,17 @@ public:
    }
 };
 
-void initLogging(std::vector<spdlog::sink_ptr> &sinks, spdlog::level::level_enum level)
+void
+initLogging(std::vector<spdlog::sink_ptr> &sinks,
+            spdlog::level::level_enum level)
 {
    gLog = std::make_shared<spdlog::logger>("logger", begin(sinks), end(sinks));
    gLog->set_level(level);
    gLog->set_formatter(std::make_shared<LogFormatter>());
 }
 
-bool initialise()
+bool
+initialise()
 {
    // Setup core
    mem::initialise();
@@ -149,27 +166,21 @@ bool initialise()
    return true;
 }
 
-static std::mutex
-sGpuMutex;
-
-static std::condition_variable
-sGpuCond;
-
-static std::atomic_bool
-gGpuRunning = false;
-
-void start()
+void
+start()
 {
    cpu::start();
 }
 
-void shutdown()
+void
+shutdown()
 {
    // Completely shut down the CPU (this waits for it to stop)
    cpu::halt();
 }
 
-void runGpuDriver()
+void
+runGpuDriver()
 {
    std::unique_lock<std::mutex> lock(sGpuMutex);
    gGpuRunning.store(true);
@@ -182,7 +193,8 @@ void runGpuDriver()
    sGpuCond.notify_one();
 }
 
-void shutdownGpuDriver()
+void
+shutdownGpuDriver()
 {
    // Alert the GPU that it needs to stop
    gGlDriver->stop();
@@ -194,12 +206,15 @@ void shutdownGpuDriver()
    }
 }
 
-void getSwapBuffers(gl::GLuint* tv, gl::GLuint* drc)
+void
+getSwapBuffers(gl::GLuint* tv,
+               gl::GLuint* drc)
 {
    gGlDriver->getSwapBuffers(tv, drc);
 }
 
-float getAverageFps()
+float
+getAverageFps()
 {
    return gGlDriver->getAverageFps();
 }
