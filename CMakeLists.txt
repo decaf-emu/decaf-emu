@@ -31,6 +31,14 @@ include_directories("${SPDLOG_DIR}/include")
 set(GSL_DIR "libraries/gsl-lite")
 include_directories("${GSL_DIR}/include")
 
+set(IMGUI_DIR "libraries/imgui")
+include_directories("${IMGUI_DIR}")
+add_library(imgui STATIC
+    "${IMGUI_DIR}/imgui.cpp"
+    "${IMGUI_DIR}/imgui_draw.cpp"
+    )
+set(IMGUI_LIBRARIES imgui)
+
 set(CEREAL_DIR "libraries/cereal")
 include_directories("${CEREAL_DIR}/include")
 
