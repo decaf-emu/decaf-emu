@@ -4,7 +4,17 @@
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
 
+struct ScreenDrawData
+{
+   gl::GLuint vertexProgram;
+   gl::GLuint pixelProgram;
+   gl::GLuint pipeline;
+   gl::GLuint vertArray;
+   gl::GLuint vertBuffer;
+};
 
+static ScreenDrawData
+mScreenDraw;
 
 void setupGlErrorHandling()
 {
@@ -32,17 +42,6 @@ void setupGlErrorHandling()
       }
    });
 }
-
-struct ScreenDrawData
-{
-   gl::GLuint vertexProgram;
-   gl::GLuint pixelProgram;
-   gl::GLuint pipeline;
-   gl::GLuint vertArray;
-   gl::GLuint vertBuffer;
-};
-
-ScreenDrawData mScreenDraw;
 
 void cglInitialise()
 {

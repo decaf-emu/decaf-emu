@@ -17,7 +17,8 @@ gUserWindow = nullptr;
 static GLFWwindow *
 gBgWindow = nullptr;
 
-decaf::input::KeyboardKey translateKeyCode(int key)
+static decaf::input::KeyboardKey
+translateKeyCode(int key)
 {
    switch (key) {
    case GLFW_KEY_TAB:
@@ -90,9 +91,10 @@ int glfwStart()
 
    glfwInit();
 
-   glfwSetErrorCallback([](int error, const char *desc) {
-      gLog->error("GLFW 0x{:08X}: {}", error, desc);
-   });
+   glfwSetErrorCallback(
+      [](int error, const char *desc) {
+         gLog->error("GLFW 0x{:08X}: {}", error, desc);
+      });
 
    gUserWindow = glfwCreateWindow(windowWidth, windowHeight, "Decaf", NULL, NULL);
 
@@ -102,13 +104,16 @@ int glfwStart()
    glfwMakeContextCurrent(gUserWindow);
    cglContextInitialise();
 
-   decaf::setVpadCoreButtonCallback([](auto channel, auto button) {
-      auto key = getButtonMapping(channel, button);
-      if (glfwGetKey(gUserWindow, key)) {
-         return decaf::input::ButtonPressed;
-      }
-      return decaf::input::ButtonReleased;
-   });
+   decaf::setVpadCoreButtonCallback(
+      [](auto channel, auto button) {
+         auto key = getButtonMapping(channel, button);
+
+         if (glfwGetKey(gUserWindow, key)) {
+            return decaf::input::ButtonPressed;
+         }
+
+         return decaf::input::ButtonReleased;
+      });
 
    if (!decaf::initialise()) {
       return 1;
@@ -122,36 +127,48 @@ int glfwStart()
 
    decaf::start();
 
-   glfwSetMouseButtonCallback(gUserWindow, [](GLFWwindow*, int button, int action, int /*mods*/) {
-      if (action == GLFW_PRESS) {
-         decaf::injectMouseButtonInput(button, decaf::input::MouseAction::Press);
-      } else if (action == GLFW_RELEASE) {
-         decaf::injectMouseButtonInput(button, decaf::input::MouseAction::Release);
-      }
-   });
-   glfwSetScrollCallback(gUserWindow, [](GLFWwindow*, double xoffset, double yoffset) {
-      decaf::injectScrollInput(xoffset, yoffset);
-   });
-   glfwSetKeyCallback(gUserWindow, [](GLFWwindow*, int key, int, int action, int /*mods*/) {
-      if (action == GLFW_PRESS) {
-         decaf::injectKeyInput(translateKeyCode(key), decaf::input::KeyboardAction::Press);
-      } else if (action == GLFW_RELEASE) {
-         decaf::injectKeyInput(translateKeyCode(key), decaf::input::KeyboardAction::Release);
-      }
-   });
-   glfwSetCharCallback(gUserWindow, [](GLFWwindow*, unsigned int c) {
-      if (c > 0 && c < 0x10000) {
-         decaf::injectCharInput(static_cast<unsigned short>(c));
-      }
-   });
-   glfwSetCursorPosCallback(gUserWindow, [](GLFWwindow*, double x, double y) {
-      decaf::injectMousePos(x, y);
-   });
-   decaf::setClipboardTextCallbacks([]() {
-      return glfwGetClipboardString(gUserWindow);
-   }, [](auto text) {
-      glfwSetClipboardString(gUserWindow, text);
-   });
+   glfwSetMouseButtonCallback(gUserWindow,
+      [](GLFWwindow *, int button, int action, int /*mods*/) {
+         if (action == GLFW_PRESS) {
+            decaf::injectMouseButtonInput(button, decaf::input::MouseAction::Press);
+         } else if (action == GLFW_RELEASE) {
+            decaf::injectMouseButtonInput(button, decaf::input::MouseAction::Release);
+         }
+      });
+
+   glfwSetScrollCallback(gUserWindow,
+      [](GLFWwindow *, double xoffset, double yoffset) {
+         decaf::injectScrollInput(static_cast<float>(xoffset), static_cast<float>(yoffset));
+      });
+
+   glfwSetKeyCallback(gUserWindow,
+      [](GLFWwindow *, int key, int, int action, int /*mods*/) {
+         if (action == GLFW_PRESS) {
+            decaf::injectKeyInput(translateKeyCode(key), decaf::input::KeyboardAction::Press);
+         } else if (action == GLFW_RELEASE) {
+            decaf::injectKeyInput(translateKeyCode(key), decaf::input::KeyboardAction::Release);
+         }
+      });
+
+   glfwSetCharCallback(gUserWindow,
+      [](GLFWwindow *, unsigned int c) {
+         if (c > 0 && c < 0x10000) {
+            decaf::injectCharInput(static_cast<unsigned short>(c));
+         }
+      });
+
+   glfwSetCursorPosCallback(gUserWindow,
+      [](GLFWwindow *, double x, double y) {
+         decaf::injectMousePos(static_cast<float>(x), static_cast<float>(y));
+      });
+
+   decaf::setClipboardTextCallbacks(
+      []() {
+         return glfwGetClipboardString(gUserWindow);
+      },
+      [](auto text) {
+         glfwSetClipboardString(gUserWindow, text);
+      });
 
    cglInitialise();
    decaf::initialiseDbgUi();

@@ -20,7 +20,7 @@
 
 using namespace decaf::input;
 
-int
+static int
 getWindowBorderHeight(SDL_Window *window)
 {
    int height = 50;  // A hopefully reasonable default.
@@ -208,12 +208,14 @@ int sdlStart()
 
    decaf::setVpadCoreButtonCallback([](auto channel, auto button) {
       auto key = getButtonMapping(channel, button);
-      const int scancode = SDL_GetScancodeFromKey(key);
+      auto scancode = SDL_GetScancodeFromKey(key);
       int numKeys = 0;
-      const uint8_t *state = SDL_GetKeyboardState(&numKeys);
+      auto state = SDL_GetKeyboardState(&numKeys);
+
       if (scancode >= 0 && scancode < numKeys && state[scancode]) {
          return decaf::input::ButtonPressed;
       }
+
       return decaf::input::ButtonReleased;
    });
 
