@@ -2,6 +2,7 @@
 
 #include "clilog.h"
 #include "config.h"
+#include "common/strutils.h"
 #include "decaf/decaf.h"
 #include "gl_common.h"
 #include "input_common.h"
@@ -216,7 +217,7 @@ int glfwStart()
       glfwSwapBuffers(gUserWindow);
 
       static char newTitle[1024];
-      sprintf(newTitle, "Decaf - FPS: %.02f", decaf::getAverageFps());
+      snprintf(newTitle, 1024, "Decaf - FPS: %.02f", decaf::getAverageFps());
       glfwSetWindowTitle(gUserWindow, newTitle);
    }
 

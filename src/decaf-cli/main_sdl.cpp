@@ -1,13 +1,14 @@
 #ifdef DECAF_SDL
 
-#include <thread>
-#include "platform/platform.h"
-#include "decaf/decaf.h"
 #include "clilog.h"
 #include "config.h"
-#include "input_common.h"
+#include "common/strutils.h"
+#include "decaf/decaf.h"
 #include "gl_common.h"
+#include "input_common.h"
+#include "platform/platform.h"
 #include <SDL.h>
+#include <thread>
 
 #if defined(PLATFORM_WINDOWS)
 #include <Windows.h>  // For GetSystemMetrics()
@@ -82,7 +83,7 @@ gTvWindow = nullptr;
 static SDL_Window *
 gDrcWindow = nullptr;
 
-static SDL_GLContext 
+static SDL_GLContext
 gContext = nullptr;
 
 static SDL_GLContext
@@ -263,7 +264,7 @@ int sdlStart()
       SDL_GL_SwapWindow(gDrcWindow);
 
       static char newTitle[1024];
-      sprintf(newTitle, "Decaf - FPS: %.02f", decaf::getAverageFps());
+      snprintf(newTitle, 1024, "Decaf - FPS: %.02f", decaf::getAverageFps());
       SDL_SetWindowTitle(gTvWindow, newTitle);
    }
 
