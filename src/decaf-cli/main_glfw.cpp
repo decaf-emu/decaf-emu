@@ -63,23 +63,12 @@ translateKeyCode(int key)
       return decaf::input::KeyboardKey::LeftSuper;
    case GLFW_KEY_RIGHT_SUPER:
       return decaf::input::KeyboardKey::RightSuper;
-   case GLFW_KEY_A:
-      return decaf::input::KeyboardKey::A;
-   case GLFW_KEY_C:
-      return decaf::input::KeyboardKey::C;
-   case GLFW_KEY_V:
-      return decaf::input::KeyboardKey::V;
-   case GLFW_KEY_X:
-      return decaf::input::KeyboardKey::X;
-   case GLFW_KEY_Y:
-      return decaf::input::KeyboardKey::Y;
-   case GLFW_KEY_Z:
-      return decaf::input::KeyboardKey::Z;
    default:
       if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
-         return static_cast<decaf::input::KeyboardKey>(
-            (key - GLFW_KEY_A) + static_cast<int>(decaf::input::KeyboardKey::A));
+         auto id = (key - GLFW_KEY_A) + static_cast<int>(decaf::input::KeyboardKey::A);
+         return static_cast<decaf::input::KeyboardKey>(id);
       }
+
       return decaf::input::KeyboardKey::Unknown;
    }
 }
