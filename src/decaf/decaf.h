@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <spdlog\spdlog.h>
+#include <spdlog/spdlog.h>
 #include <glbinding/gl/gl.h>
 #include "decaf_input.h"
 
