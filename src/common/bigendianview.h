@@ -1,8 +1,8 @@
 #pragma once
+#include "byte_swap.h"
 #include <cstring>
 #include <gsl.h>
 #include <string>
-#include "byte_swap.h"
 
 class BigEndianView
 {

@@ -1,8 +1,8 @@
 #pragma once
+#include "platform.h"
 #include <climits>
 #include <cstdint>
 #include <cstddef>
-#include "platform.h"
 
 #ifdef PLATFORM_WINDOWS
 #include <Windows.h>

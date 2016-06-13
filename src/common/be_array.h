@@ -1,6 +1,6 @@
 #pragma once
-#include <array>
 #include "be_val.h"
+#include <array>
 
 template<typename Type, size_t Size>
 class be_array

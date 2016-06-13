@@ -1,6 +1,7 @@
 #pragma once
 #include "platform.h"
 #include "bit_cast.h"
+#include <cstdint>
 
 #ifdef PLATFORM_LINUX
 #include <byteswap.h>

@@ -1,10 +1,10 @@
 #pragma once
+#include "platform.h"
 #include <algorithm>
 #include <cstdarg>
 #include <cstdio>
 #include <string>
 #include <vector>
-#include "platform.h"
 
 #ifdef PLATFORM_WINDOWS
    #define snprintf sprintf_s

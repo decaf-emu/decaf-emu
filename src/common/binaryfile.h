@@ -1,6 +1,6 @@
 #pragma once
-#include <fstream>
 #include "binaryview.h"
+#include <fstream>
 
 class BinaryFile : public BinaryView
 {

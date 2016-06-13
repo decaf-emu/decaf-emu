@@ -1,7 +1,7 @@
 #pragma once
-#include <numeric>
 #include "bit_cast.h"
 #include "bitutils.h"
+#include <numeric>
 
 union FloatBitsSingle
 {
