@@ -67,6 +67,9 @@ translateKeyCode(int key)
       if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
          auto id = (key - GLFW_KEY_A) + static_cast<int>(decaf::input::KeyboardKey::A);
          return static_cast<decaf::input::KeyboardKey>(id);
+      } else if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F12) {
+         auto id = (key - GLFW_KEY_F1) + static_cast<int>(decaf::input::KeyboardKey::F1);
+         return static_cast<decaf::input::KeyboardKey>(id);
       }
 
       return decaf::input::KeyboardKey::Unknown;
