@@ -7,16 +7,17 @@
 namespace platform
 {
 
-static int flagsToProt(ProtectFlags flags) {
+static int flagsToProt(ProtectFlags flags)
+{
    switch (flags) {
    case ProtectFlags::ReadOnly:
       return PROT_READ;
    case ProtectFlags::ReadWrite:
       return PROT_READ | PROT_WRITE;
    case ProtectFlags::ReadExecute:
-      return PROT_READ | PROT_EXECUTE;
+      return PROT_READ | PROT_EXEC;
    case ProtectFlags::ReadWriteExecute:
-      return PROT_READ | PROT_WRITE | PROT_EXECUTE;
+      return PROT_READ | PROT_WRITE | PROT_EXEC;
    case ProtectFlags::NoAccess:
    default:
       return PROT_WRITE;
@@ -36,6 +37,7 @@ reserveMemory(size_t address, size_t size)
       if (result != nullptr) {
          freeMemory(address, size);
       }
+
       return false;
    }
 
