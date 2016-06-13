@@ -154,8 +154,8 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_draw.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_opengl.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\decaf\decaf.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\decaf\decaf_config.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf_config.cpp" />
     <ClCompile Include="..\src\libdecaf\src\emulog.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folderhandle.cpp" />

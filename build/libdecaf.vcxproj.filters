@@ -196,9 +196,6 @@
     <Filter Include="Header Files\ppcutils">
       <UniqueIdentifier>{b4e0a7f1-0fc8-4c6a-b4f1-cf839b7d4c90}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\decaf">
-      <UniqueIdentifier>{073abadf-b1a3-429b-bc9a-8e9a1b8f77a0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\debugger">
       <UniqueIdentifier>{75910a07-5861-4b65-a8c0-c4f02676cdcf}</UniqueIdentifier>
     </Filter>
@@ -750,9 +747,6 @@
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_filesystem.cpp">
       <Filter>Source Files\kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\decaf\decaf.cpp">
-      <Filter>Source Files\decaf</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui.cpp">
       <Filter>Source Files\debugger</Filter>
     </ClCompile>
@@ -762,14 +756,17 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_opengl.cpp">
       <Filter>Source Files\debugger</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\decaf\decaf_config.cpp">
-      <Filter>Source Files\decaf</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger.cpp">
       <Filter>Source Files\debugger</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum_string.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\decaf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\decaf_config.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
