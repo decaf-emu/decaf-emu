@@ -22,10 +22,10 @@ private:
    void drawScanBuffer(gl::GLuint object);
 
    decaf::input::KeyboardKey
-   DecafSDL::translateKeyCode(SDL_Keysym sym);
+   translateKeyCode(SDL_Keysym sym);
 
    decaf::input::MouseButton
-   DecafSDL::translateMouseButton(int button);
+   translateMouseButton(int button);
 
    // VPAD
    virtual vpad::Type
