@@ -205,6 +205,7 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_debug.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_device.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_dynload.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum_string.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_event.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_exception.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_exit.cpp" />
@@ -409,6 +410,7 @@
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_atomic64.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum_string.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_exit.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_client.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_dir.h" />

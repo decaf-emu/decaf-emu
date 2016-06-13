@@ -768,6 +768,9 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger.cpp">
       <Filter>Source Files\debugger</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum_string.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1447,6 +1450,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger.h">
       <Filter>Header Files\debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum_string.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

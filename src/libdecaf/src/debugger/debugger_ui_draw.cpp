@@ -1,7 +1,5 @@
-#include <imgui.h>
-#include <vector>
-#include <spdlog/spdlog.h>
 #include "common/emuassert.h"
+#include "common/strutils.h"
 #include "debugger.h"
 #include "debugger_ui.h"
 #include "decaf.h"
@@ -9,6 +7,11 @@
 #include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
+#include "modules/coreinit/coreinit_enum_string.h"
+#include <imgui.h>
+#include <spdlog/spdlog.h>
+#include <sstream>
+#include <vector>
 
 #define HEXTOF(h) static_cast<float>(h&0xFF)/255.0f
 #define HEXTOIMV4(h, a) ImVec4(HEXTOF(h>>16), HEXTOF(h>>8), HEXTOF(h>>0), a)
@@ -56,8 +59,13 @@ public:
    void draw()
    {
       auto &io = ImGui::GetIO();
-      auto ImgGuiNoBorder = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs;
+      auto ImgGuiNoBorder =
+         ImGuiWindowFlags_NoTitleBar
+         | ImGuiWindowFlags_NoResize
+         | ImGuiWindowFlags_NoMove
+         | ImGuiWindowFlags_NoScrollbar
+         | ImGuiWindowFlags_NoSavedSettings
+         | ImGuiWindowFlags_NoInputs;
 
       ImGui::SetNextWindowPos(ImVec2(8.0f, 25.0f));
       ImGui::SetNextWindowSize(ImVec2(180.0f, 45.0f));
@@ -77,14 +85,13 @@ public:
       ImGui::End();
    }
 
-
 protected:
-
 };
 
 class MemoryMapView
 {
-   struct Segment {
+   struct Segment
+   {
       std::string name;
       uint32_t start;
       uint32_t end;
@@ -151,18 +158,23 @@ public:
    }
 
 protected:
-   void drawSegments(const std::vector<Segment> &segments, std::string tabs) {
+   void drawSegments(const std::vector<Segment> &segments, std::string tabs)
+   {
       for (auto &seg : segments) {
          ImGui::Selectable(fmt::format("{}{}", tabs, seg.name).c_str()); ImGui::NextColumn();
+
          if (ImGui::BeginPopupContextItem(fmt::format("{}{}-actions", tabs, seg.name).c_str(), 1)) {
             if (ImGui::MenuItem("Go to in Debugger")) {
-
+               // TODO: openAddrInDebugger
             }
+
             if (ImGui::MenuItem("Go to in Memory View")) {
                openAddrInMemoryView(seg.start);
             }
+
             ImGui::EndPopup();
          }
+
          ImGui::Text(fmt::format("{:08x}", seg.start).c_str()); ImGui::NextColumn();
          ImGui::Text(fmt::format("{:08x}", seg.end).c_str()); ImGui::NextColumn();
          drawSegments(seg.items, tabs + "  ");
@@ -177,6 +189,7 @@ protected:
             return;
          }
       }
+
       segments.push_back(item);
    }
 
@@ -185,11 +198,12 @@ protected:
 
 class ThreadsView
 {
-   struct ThreadInfo {
+   struct ThreadInfo
+   {
       coreinit::OSThread *thread;
       uint32_t id;
       std::string name;
-      OSThreadState state;
+      coreinit::OSThreadState state;
       int coreId;
    };
 
@@ -220,10 +234,10 @@ public:
       auto core0Thread = coreinit::internal::getCoreRunningThread(0);
       auto core1Thread = coreinit::internal::getCoreRunningThread(1);
       auto core2Thread = coreinit::internal::getCoreRunningThread(2);
-      coreinit::OSThread *firstThread = coreinit::internal::getFirstActiveThread();
+      auto firstThread = coreinit::internal::getFirstActiveThread();
+
       for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
          ThreadInfo tinfo;
-
          tinfo.thread = thread;
          tinfo.id = thread->id;
          tinfo.name = thread->name ? thread->name.get() : "";
@@ -241,6 +255,7 @@ public:
 
          mThreads.push_back(tinfo);
       }
+
       coreinit::internal::unlockScheduler();
 
       ImGui::Columns(5, "threadList", false);
@@ -261,40 +276,24 @@ public:
          ImGui::Text(fmt::format("{}", thread.id).c_str()); ImGui::NextColumn();
          ImGui::Text(thread.name.c_str());
          ImGui::NextColumn();
+
          if (sIsPaused) {
             ImGui::Text(fmt::format("{:08x}", getThreadNia(thread.thread)).c_str());
          } else {
             ImGui::Text("        ");
          }
+
          ImGui::NextColumn();
-         ImGui::Text(getThreadStateName(thread.state));  ImGui::NextColumn();
+         ImGui::Text(coreinit::enumAsString(thread.state).c_str());  ImGui::NextColumn();
          ImGui::NextColumn();
       }
+
       ImGui::Columns(1);
       ImGui::End();
    }
 
-
 protected:
-   const char * getThreadStateName(OSThreadState state) {
-      switch (state) {
-      case OSThreadState::None:
-         return "None";
-      case OSThreadState::Ready:
-         return "Ready";
-      case OSThreadState::Running:
-         return "Running";
-      case OSThreadState::Waiting:
-         return "Waiting";
-      case OSThreadState::Moribund:
-         return "Moribund";
-      default:
-         return "???";
-      }
-   }
-
    std::vector<ThreadInfo> mThreads;
-
 };
 
 class MemoryView
