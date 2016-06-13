@@ -14,6 +14,14 @@ enum class KeyboardAction
    Release
 };
 
+enum class MouseButton
+{
+   Left,
+   Right,
+   Middle,
+   Unknown
+};
+
 enum class MouseAction
 {
    Press,
@@ -67,11 +75,18 @@ enum class Category
 namespace vpad
 {
 
-static const size_t MaxControllers = 1;
+static const size_t
+MaxControllers = 1;
 
 enum class Channel : size_t
 {
-   Drc0 = 0,
+   Gamepad0 = 0,
+};
+
+enum class Type
+{
+   Disconnected,
+   DRC,
 };
 
 enum class Core
@@ -94,11 +109,15 @@ enum class Core
    Home,
    Sync,
    LeftStick,
+   RightStick,
+};
+
+enum class CoreAxis
+{
    LeftStickX,
    LeftStickY,
-   RightStick,
    RightStickX,
-   RightStickY
+   RightStickY,
 };
 
 } // namespace vpad
@@ -106,7 +125,8 @@ enum class Core
 namespace wpad
 {
 
-static const size_t MaxControllers = 4;
+static const size_t
+MaxControllers = 4;
 
 enum class Channel : size_t
 {
@@ -118,7 +138,7 @@ enum class Channel : size_t
 
 enum class Type
 {
-   Invalid,
+   Disconnected,
    WiiRemote,
    WiiRemoteNunchunk,
    Classic,
@@ -144,6 +164,12 @@ enum class Nunchuck
 {
    Z,
    C,
+};
+
+enum class NunchuckAxis
+{
+   StickX,
+   StickY,
 };
 
 enum class Classic
@@ -182,18 +208,64 @@ enum class Pro
    Plus,
    Home,
    Minus,
-   StickR,
-   StickL,
+   LeftStick,
+   RightStick,
+};
+
+enum class ProAxis
+{
+   LeftStickX,
+   LeftStickY,
+   RightStickX,
+   RightStickY,
 };
 
 } // namespace wpad
 
-enum ButtonStatus : uint32_t
+enum class ButtonStatus : uint32_t
 {
    ButtonReleased,
    ButtonPressed
 };
 
 } // namespace input
+
+class InputProvider
+{
+public:
+   // VPAD
+   virtual input::vpad::Type
+   getControllerType(input::vpad::Channel channel) = 0;
+
+   virtual input::ButtonStatus
+   getButtonStatus(input::vpad::Channel channel, input::vpad::Core button) = 0;
+
+   virtual float
+   getAxisValue(input::vpad::Channel channel, input::vpad::CoreAxis axis) = 0;
+
+   // WPAD
+   virtual input::wpad::Type
+   getControllerType(input::wpad::Channel channel) = 0;
+
+   virtual input::ButtonStatus
+   getButtonStatus(input::wpad::Channel channel, input::wpad::Core button) = 0;
+
+   virtual input::ButtonStatus
+   getButtonStatus(input::wpad::Channel channel, input::wpad::Classic button) = 0;
+
+   virtual input::ButtonStatus
+   getButtonStatus(input::wpad::Channel channel, input::wpad::Nunchuck button) = 0;
+
+   virtual input::ButtonStatus
+   getButtonStatus(input::wpad::Channel channel, input::wpad::Pro button) = 0;
+
+   virtual float
+   getAxisValue(input::wpad::Channel channel, input::wpad::NunchuckAxis axis) = 0;
+
+   virtual float
+   getAxisValue(input::wpad::Channel channel, input::wpad::ProAxis axis) = 0;
+
+   // TODO: Accelorometers, microphone, etc...
+};
 
 } // namespace decaf

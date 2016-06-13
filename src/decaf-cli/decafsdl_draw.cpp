@@ -1,23 +1,11 @@
 #include "clilog.h"
-#include "gl_common.h"
-#include <glbinding/gl/gl.h>
+#include "decafsdl.h"
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
 
-struct ScreenDrawData
+void DecafSDL::initialiseContext()
 {
-   gl::GLuint vertexProgram;
-   gl::GLuint pixelProgram;
-   gl::GLuint pipeline;
-   gl::GLuint vertArray;
-   gl::GLuint vertBuffer;
-};
-
-static ScreenDrawData
-mScreenDraw;
-
-void setupGlErrorHandling()
-{
+   glbinding::Binding::initialize();
    glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
    glbinding::setAfterCallback([](const glbinding::FunctionCall &call) {
       auto error = glbinding::Binding::GetError.directCall();
@@ -38,12 +26,12 @@ void setupGlErrorHandling()
             writer << " -> " << call.returnValue->asString();
          }
 
-         gLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), writer.str());
+         gCliLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), writer.str());
       }
    });
 }
 
-void cglInitialise()
+void DecafSDL::initialiseDraw()
 {
    static auto vertexCode = R"(
       #version 420 core
@@ -73,16 +61,16 @@ void cglInitialise()
       })";
 
    // Create vertex program
-   mScreenDraw.vertexProgram = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, &vertexCode);
+   mVertexProgram = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, &vertexCode);
 
    // Create pixel program
-   mScreenDraw.pixelProgram = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, &pixelCode);
-   gl::glBindFragDataLocation(mScreenDraw.pixelProgram, 0, "ps_color");
+   mPixelProgram = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, &pixelCode);
+   gl::glBindFragDataLocation(mPixelProgram, 0, "ps_color");
 
    // Create pipeline
-   gl::glGenProgramPipelines(1, &mScreenDraw.pipeline);
-   gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_VERTEX_SHADER_BIT, mScreenDraw.vertexProgram);
-   gl::glUseProgramStages(mScreenDraw.pipeline, gl::GL_FRAGMENT_SHADER_BIT, mScreenDraw.pixelProgram);
+   gl::glGenProgramPipelines(1, &mPipeline);
+   gl::glUseProgramStages(mPipeline, gl::GL_VERTEX_SHADER_BIT, mVertexProgram);
+   gl::glUseProgramStages(mPipeline, gl::GL_FRAGMENT_SHADER_BIT, mPixelProgram);
 
    // (TL, TR, BR)    (BR, BL, TL)
    // Create vertex buffer
@@ -96,41 +84,29 @@ void cglInitialise()
       -1.0f,  1.0f,   0.0f, 1.0f,
    };
 
-   gl::glCreateBuffers(1, &mScreenDraw.vertBuffer);
-   gl::glNamedBufferData(mScreenDraw.vertBuffer, sizeof(vertices), vertices, gl::GL_STATIC_DRAW);
+   gl::glCreateBuffers(1, &mVertBuffer);
+   gl::glNamedBufferData(mVertBuffer, sizeof(vertices), vertices, gl::GL_STATIC_DRAW);
 
    // Create vertex array
-   gl::glCreateVertexArrays(1, &mScreenDraw.vertArray);
+   gl::glCreateVertexArrays(1, &mVertArray);
 
-   auto fs_position = gl::glGetAttribLocation(mScreenDraw.vertexProgram, "fs_position");
-   gl::glEnableVertexArrayAttrib(mScreenDraw.vertArray, fs_position);
-   gl::glVertexArrayAttribFormat(mScreenDraw.vertArray, fs_position, 2, gl::GL_FLOAT, gl::GL_FALSE, 0);
-   gl::glVertexArrayAttribBinding(mScreenDraw.vertArray, fs_position, 0);
+   auto fs_position = gl::glGetAttribLocation(mVertexProgram, "fs_position");
+   gl::glEnableVertexArrayAttrib(mVertArray, fs_position);
+   gl::glVertexArrayAttribFormat(mVertArray, fs_position, 2, gl::GL_FLOAT, gl::GL_FALSE, 0);
+   gl::glVertexArrayAttribBinding(mVertArray, fs_position, 0);
 
-   auto fs_texCoord = gl::glGetAttribLocation(mScreenDraw.vertexProgram, "fs_texCoord");
-   gl::glEnableVertexArrayAttrib(mScreenDraw.vertArray, fs_texCoord);
-   gl::glVertexArrayAttribFormat(mScreenDraw.vertArray, fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 2 * sizeof(gl::GLfloat));
-   gl::glVertexArrayAttribBinding(mScreenDraw.vertArray, fs_texCoord, 0);
+   auto fs_texCoord = gl::glGetAttribLocation(mVertexProgram, "fs_texCoord");
+   gl::glEnableVertexArrayAttrib(mVertArray, fs_texCoord);
+   gl::glVertexArrayAttribFormat(mVertArray, fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 2 * sizeof(gl::GLfloat));
+   gl::glVertexArrayAttribBinding(mVertArray, fs_texCoord, 0);
 }
 
-void cglContextInitialise()
-{
-   glbinding::Binding::initialize();
-   setupGlErrorHandling();
-}
-
-void cglClear()
-{
-   gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
-   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
-}
-
-void cglDrawScanBuffer(gl::GLuint object)
+void DecafSDL::drawScanBuffer(gl::GLuint object)
 {
    // Setup screen draw shader
-   gl::glBindVertexArray(mScreenDraw.vertArray);
-   gl::glBindVertexBuffer(0, mScreenDraw.vertBuffer, 0, 4 * sizeof(gl::GLfloat));
-   gl::glBindProgramPipeline(mScreenDraw.pipeline);
+   gl::glBindVertexArray(mVertArray);
+   gl::glBindVertexBuffer(0, mVertBuffer, 0, 4 * sizeof(gl::GLfloat));
+   gl::glBindProgramPipeline(mPipeline);
 
    // Draw screen quad
    gl::glColorMaski(0, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE);

@@ -34,7 +34,10 @@ static uint32_t
 gLastButtonState = 0;
 
 int32_t
-VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadError::Error> *error)
+VPADRead(uint32_t chan,
+         VPADStatus *buffers,
+         uint32_t count,
+         be_val<VpadReadError::Error> *error)
 {
    assert(count >= 1);
 
@@ -49,8 +52,6 @@ VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadErro
    memset(&buffers[0], 0, sizeof(VPADStatus));
 
    auto channel = static_cast<input::vpad::Channel>(chan);
-   input::sampleController(channel);
-
    auto &buffer = buffers[0];
 
    // Update button state
@@ -74,10 +75,10 @@ VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadErro
    gLastButtonState = buffer.hold;
 
    // Update axis state
-   buffer.leftStick.x = input::getAxisValue(channel, input::vpad::Core::LeftStickX);
-   buffer.leftStick.y = input::getAxisValue(channel, input::vpad::Core::LeftStickY);
-   buffer.rightStick.x = input::getAxisValue(channel, input::vpad::Core::RightStickX);
-   buffer.rightStick.y = input::getAxisValue(channel, input::vpad::Core::RightStickY);
+   buffer.leftStick.x = input::getAxisValue(channel, input::vpad::CoreAxis::LeftStickX);
+   buffer.leftStick.y = input::getAxisValue(channel, input::vpad::CoreAxis::LeftStickY);
+   buffer.rightStick.x = input::getAxisValue(channel, input::vpad::CoreAxis::RightStickX);
+   buffer.rightStick.y = input::getAxisValue(channel, input::vpad::CoreAxis::RightStickY);
 
    if (error) {
       *error = VpadReadError::Success;

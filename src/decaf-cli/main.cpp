@@ -1,19 +1,15 @@
+#include "clilog.h"
+#include "config.h"
+#include "decafsdl.h"
+#include "libdecaf/decaf.h"
 #include <pugixml.hpp>
 #include <excmd.h>
 #include <iostream>
-#include "config.h"
-#include "clilog.h"
-#include "libdecaf/decaf.h"
+
+std::shared_ptr<spdlog::logger>
+gCliLog;
 
 using namespace decaf::input;
-
-#ifdef DECAF_GLFW
-int glfwStart();
-#endif
-
-#ifdef DECAF_SDL
-int sdlStart();
-#endif
 
 static excmd::parser
 getCommandLineParser()
@@ -64,6 +60,18 @@ getCommandLineParser()
    return parser;
 }
 
+static std::string
+getPathBasename(const std::string &path)
+{
+   auto pos = path.find_last_of("/\\");
+
+   if (!pos) {
+      return path;
+   } else {
+      return path.substr(pos);
+   }
+}
+
 int
 start(excmd::parser &parser,
       excmd::option_state &options)
@@ -95,11 +103,11 @@ start(excmd::parser &parser,
 
    // Allow command line options to override config
    if (options.has("jit-debug")) {
-      config::jit::debug = true;
+      decaf::config::jit::debug = true;
    }
 
    if (options.has("jit")) {
-      config::jit::enabled = true;
+      decaf::config::jit::enabled = true;
    }
 
    if (options.has("log-no-stdout")) {
@@ -119,22 +127,24 @@ start(excmd::parser &parser,
    }
 
    if (options.has("sys-path")) {
-      config::system::system_path = options.get<std::string>("sys-path");
+      decaf::config::system::system_path = options.get<std::string>("sys-path");
    }
 
-   std::vector<spdlog::sink_ptr> sinks;
+   auto gamePath = options.get<std::string>("game directory");
+   auto logFile = getPathBasename(gamePath);
    auto logLevel = spdlog::level::info;
+   std::vector<spdlog::sink_ptr> sinks;
 
    if (config::log::to_stdout) {
-      sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+      sinks.push_back(spdlog::sinks::stdout_sink_st::instance());
    }
 
    if (config::log::to_file) {
-      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>("log", "txt", 23, 59, true));
+      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logFile, "txt", 23, 59, true));
    }
 
    if (config::log::async) {
-      spdlog::set_async_mode(0x1000);
+      spdlog::set_async_mode(1024);
    }
 
    for (int i = spdlog::level::trace; i <= spdlog::level::off; i++) {
@@ -146,27 +156,27 @@ start(excmd::parser &parser,
       }
    }
 
-   decaf::initLogging(sinks, logLevel);
-   decaf::setJitMode(config::jit::enabled, config::jit::debug);
-   decaf::setSystemPath(config::system::system_path);
-   decaf::setGamePath(options.get<std::string>("game directory"));
+   // Initialise libdecaf logger
+   decaf::initialiseLogging(sinks, logLevel);
 
-#ifdef DECAF_GLFW
-   if (config::system::platform.compare("glfw") == 0) {
-      gLog->info("Using GLFW");
-      return glfwStart();
+   // Initialise decaf-cli logger
+   gCliLog = std::make_shared<spdlog::logger>("decaf-cli", begin(sinks), end(sinks));
+   gCliLog->set_level(logLevel);
+   gCliLog->set_pattern("[%l] %v");
+
+   DecafSDL sdl;
+
+   if (!sdl.createWindow()) {
+      gCliLog->error("Failed to start game");
+      return -1;
    }
-#endif
 
-#ifdef DECAF_SDL
-   if (config::system::platform.compare("sdl") == 0) {
-      gLog->info("Using SDL");
-      return sdlStart();
+   if (!sdl.run(gamePath)) {
+      gCliLog->error("Failed to start game");
+      return -1;
    }
-#endif
 
-   gLog->error("Unsupported platform {}", config::system::platform);
-   return -1;
+   return 0;
 }
 
 #ifdef _WIN32

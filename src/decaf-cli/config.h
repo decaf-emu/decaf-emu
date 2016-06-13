@@ -4,47 +4,15 @@
 namespace config
 {
 
-namespace dx12
-{
-
-extern bool use_warp;
-
-} // namespace dx12
-
-namespace gx2
-{
-
-extern bool dump_textures;
-extern bool dump_shaders;
-
-} // namespace gx2
-
 namespace log
 {
 
 extern bool async;
 extern bool to_file;
 extern bool to_stdout;
-extern bool kernel_trace;
 extern std::string level;
 
-} // namespace log
-
-namespace jit
-{
-
-extern bool enabled;
-extern bool debug;
-
-} // namespace jit
-
-namespace system
-{
-
-extern std::string platform;
-extern std::string system_path;
-
-} // namespace system
+}
 
 namespace input
 {
@@ -79,16 +47,6 @@ extern int right_stick_y;
 } // namespace vpad0
 
 } // namespace input
-
-namespace ui
-{
-
-extern int tv_window_x;
-extern int tv_window_y;
-extern int drc_window_x;
-extern int drc_window_y;
-
-} // namespace ui
 
 bool load(const std::string &path);
 void save(const std::string &path);

@@ -33,9 +33,6 @@ namespace kernel
 namespace functions
 {
 
-bool
-enableTrace = false;
-
 void
 kcTraceHandler(const std::string& str)
 {
@@ -212,8 +209,7 @@ launchGame()
       auto app = doc.child("app");
       rpx = std::string{ app.child("argstr").child_value() };
       maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
-   }
-   else {
+   } else {
       gLog->warn("Could not open /vol/code/cos.xml, using default values");
    }
 

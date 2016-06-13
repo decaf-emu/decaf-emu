@@ -154,8 +154,10 @@
     <ClCompile Include="..\src\libdecaf\src\debugger.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_draw.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_opengl.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugnet.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf\decaf.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf\decaf_config.cpp" />
     <ClCompile Include="..\src\libdecaf\src\emulog.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
@@ -182,7 +184,6 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_tex.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_vtx.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_colorbuffer.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_dbgui.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_depthbuffer.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_draw.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.cpp" />
@@ -341,6 +342,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\decaf.h" />
+    <ClInclude Include="..\src\libdecaf\decaf_config.h" />
+    <ClInclude Include="..\src\libdecaf\decaf_debugger.h" />
+    <ClInclude Include="..\src\libdecaf\decaf_graphicsdriver.h" />
     <ClInclude Include="..\src\libdecaf\decaf_input.h" />
     <ClInclude Include="..\src\libdecaf\src\debugcontrol.h" />
     <ClInclude Include="..\src\libdecaf\src\debugger.h" />
@@ -536,7 +540,6 @@
     <ClInclude Include="..\src\libdecaf\src\ppcutils\stackobject.h" />
     <ClInclude Include="..\src\libdecaf\src\ppcutils\wfunc_call.h" />
     <ClInclude Include="..\src\libdecaf\src\ppcutils\wfunc_ptr.h" />
-    <ClInclude Include="..\src\libdecaf\src\types.h" />
     <ClInclude Include="..\src\libdecaf\src\usermodule.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_cache.h" />

@@ -2,18 +2,38 @@
 #include <glbinding/Binding.h>
 #include <gsl.h>
 #include <imgui.h>
-#include "opengl_driver.h"
 #include "debugger/debugger_ui.h"
+#include "decaf_debugger.h"
 
-namespace gpu
+namespace decaf
 {
 
-namespace opengl
+namespace debugger
 {
 
-void GLDriver::initialiseDbgUi()
+struct DebugDrawData
 {
-   auto &data = mDebugDrawData;
+   gl::GLuint fontTexture;
+   gl::GLuint shaderHandle;
+   gl::GLuint vertHandle;
+   gl::GLuint fragHandle;
+   gl::GLuint vboHandle;
+   gl::GLuint vaoHandle;
+   gl::GLuint elementsHandle;
+   gl::GLuint attribLocTex;
+   gl::GLuint attribLocProjMtx;
+   gl::GLuint attribLocPos;
+   gl::GLuint attribLocUV;
+   gl::GLuint attribLocColor;
+};
+
+static DebugDrawData
+sDebugDrawData;
+
+void
+initialiseUiGL()
+{
+   auto &data = sDebugDrawData;
    ImGuiIO& io = ImGui::GetIO();
 
    const gl::GLchar *vertex_shader =
@@ -89,22 +109,23 @@ void GLDriver::initialiseDbgUi()
    io.Fonts->TexID = reinterpret_cast<void*>(static_cast<int64_t>(data.fontTexture));
 }
 
-void GLDriver::drawDbgUi(uint32_t width, uint32_t height)
+void
+drawUiGL(uint32_t width, uint32_t height)
 {
    ImGuiIO& io = ImGui::GetIO();
 
    // Update some per-frame state information
    io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
    io.DeltaTime = 1.0f / 60.0f;
-   debugger::ui::updateInput();
+   ::debugger::ui::updateInput();
 
    // Start the frame
    ImGui::NewFrame();
 
-   debugger::ui::draw();
+   ::debugger::ui::draw();
 
    ImGui::Render();
-   auto data = mDebugDrawData;
+   auto &data = sDebugDrawData;
    auto drawData = ImGui::GetDrawData();
    int fbWidth = static_cast<int>(io.DisplaySize.x * io.DisplayFramebufferScale.x);
    int fbHeight = static_cast<int>(io.DisplaySize.y * io.DisplayFramebufferScale.y);
@@ -194,6 +215,6 @@ void GLDriver::drawDbgUi(uint32_t width, uint32_t height)
    gl::glScissor(last_scissor[0], last_scissor[1], last_scissor[2], last_scissor[3]);
 }
 
-} // namespace opengl
+} // namespace debugger
 
-} // namespace gpu
+} // namespace decaf

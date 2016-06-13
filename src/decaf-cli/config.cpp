@@ -1,62 +1,22 @@
 #include "config.h"
+#include "libdecaf/decaf_config.h"
 #include <climits>
 #include <cereal/archives/json.hpp>
 #include <fstream>
-
-#if defined(DECAF_SDL)
 #include <SDL_keycode.h>
-#endif
 
 namespace config
 {
 
-namespace dx12
-{
-
-bool use_warp = true;
-
-} // namespace dx12
-
-namespace gx2
-{
-
-bool dump_textures = false;
-bool dump_shaders = false;
-
-} // namespace gx2
-
 namespace log
 {
 
-bool async = true;
+bool async = false;
 bool to_file = false;
-bool to_stdout = true;
-bool kernel_trace = true;
-std::string level = "info";
+bool to_stdout = false;
+std::string level = "debug";
 
-} // namespace log
-
-namespace jit
-{
-
-bool enabled = false;
-bool debug = false;
-
-} // namespace jit
-
-namespace system
-{
-
-#if defined(DECAF_GLFW)
-std::string platform = "glfw";
-#elif defined(DECAF_SDL)
-std::string platform = "sdl";
-#else
-#error No UI backend selected!
-#endif
-std::string system_path = "/undefined_system_path";
-
-} // namespace system
+}
 
 namespace input
 {
@@ -65,84 +25,39 @@ namespace vpad0
 {
 
 std::string name = "keyboard";
-#if defined(DECAF_GLFW)
-int button_up = 265;
-int button_down = 264;
-int button_left = 263;
-int button_right = 262;
-int button_a = 'X';
-int button_b = 'Z';
-int button_x = 'S';
-int button_y = 'A';
-int button_trigger_r = 'E';
-int button_trigger_l = 'W';
-int button_trigger_zr = 'R';
-int button_trigger_zl = 'Q';
-int button_stick_l = 'D';
-int button_stick_r = 'C';
-int button_plus = '1';
-int button_minus = '2';
-int button_home = '3';
-int button_sync = '4';
+int button_up = SDL_SCANCODE_UP;
+int button_down = SDL_SCANCODE_DOWN;
+int button_left = SDL_SCANCODE_LEFT;
+int button_right = SDL_SCANCODE_RIGHT;
+int button_a = SDL_SCANCODE_X;
+int button_b = SDL_SCANCODE_Z;
+int button_x = SDL_SCANCODE_S;
+int button_y = SDL_SCANCODE_A;
+int button_trigger_r = SDL_SCANCODE_E;
+int button_trigger_l = SDL_SCANCODE_W;
+int button_trigger_zr = SDL_SCANCODE_R;
+int button_trigger_zl = SDL_SCANCODE_Q;
+int button_stick_l = SDL_SCANCODE_D;
+int button_stick_r = SDL_SCANCODE_C;
+int button_plus = SDL_SCANCODE_1;
+int button_minus = SDL_SCANCODE_2;
+int button_home = SDL_SCANCODE_3;
+int button_sync = SDL_SCANCODE_4;
 int left_stick_x = -1;
 int left_stick_y = -1;
 int right_stick_x = -1;
 int right_stick_y = -1;
-#elif defined(DECAF_SDL)
-int button_up = SDLK_UP;
-int button_down = SDLK_DOWN;
-int button_left = SDLK_LEFT;
-int button_right = SDLK_RIGHT;
-int button_a = SDLK_x;
-int button_b = SDLK_z;
-int button_x = SDLK_s;
-int button_y = SDLK_a;
-int button_trigger_r = SDLK_e;
-int button_trigger_l = SDLK_w;
-int button_trigger_zr = SDLK_r;
-int button_trigger_zl = SDLK_q;
-int button_stick_l = SDLK_d;
-int button_stick_r = SDLK_c;
-int button_plus = SDLK_1;
-int button_minus = SDLK_2;
-int button_home = SDLK_3;
-int button_sync = SDLK_4;
-int left_stick_x = -1;
-int left_stick_y = -1;
-int right_stick_x = -1;
-int right_stick_y = -1;
-#endif
 
 } // namespace vpad0
 
 } // namespace input
-
-namespace ui
-{
-
-int tv_window_x = INT_MIN;
-int tv_window_y = INT_MIN;
-int drc_window_x = INT_MIN;
-int drc_window_y = INT_MIN;
-
-} // namespace ui
-
-struct CerealDX12
-{
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace dx12;
-      ar(CEREAL_NVP(use_warp));
-   }
-};
 
 struct CerealGX2
 {
    template <class Archive>
    void serialize(Archive &ar)
    {
-      using namespace gx2;
+      using namespace decaf::config::gx2;
       ar(CEREAL_NVP(dump_textures),
          CEREAL_NVP(dump_shaders));
    }
@@ -153,7 +68,8 @@ struct CerealLog
    template <class Archive>
    void serialize(Archive &ar)
    {
-      using namespace log;
+      using namespace config::log;
+      using namespace decaf::config::log;
       ar(CEREAL_NVP(async),
          CEREAL_NVP(to_file),
          CEREAL_NVP(to_stdout),
@@ -167,7 +83,7 @@ struct CerealJit
    template <class Archive>
    void serialize(Archive &ar)
    {
-      using namespace jit;
+      using namespace decaf::config::jit;
       ar(CEREAL_NVP(enabled),
          CEREAL_NVP(debug));
    }
@@ -178,9 +94,8 @@ struct CerealSystem
    template <class Archive>
    void serialize(Archive &ar)
    {
-      using namespace system;
-      ar(CEREAL_NVP(system_path),
-         CEREAL_NVP(platform));
+      using namespace decaf::config::system;
+      ar(CEREAL_NVP(system_path));
    }
 };
 
@@ -225,19 +140,6 @@ struct CerealInput
    }
 };
 
-struct CerealUi
-{
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace ui;
-      ar(CEREAL_NVP(tv_window_x));
-      ar(CEREAL_NVP(tv_window_y));
-      ar(CEREAL_NVP(drc_window_x));
-      ar(CEREAL_NVP(drc_window_y));
-   }
-};
-
 bool load(const std::string &path)
 {
    std::ifstream file(path, std::ios::binary);
@@ -251,13 +153,11 @@ bool load(const std::string &path)
    cereal::JSONInputArchive input(file);
 
    try {
-      input(cereal::make_nvp("dx12", CerealDX12 {}),
-            cereal::make_nvp("gx2", CerealGX2 {}),
+      input(cereal::make_nvp("gx2", CerealGX2 {}),
             cereal::make_nvp("log", CerealLog {}),
             cereal::make_nvp("jit", CerealJit {}),
             cereal::make_nvp("system", CerealSystem {}),
-            cereal::make_nvp("input", CerealInput {}),
-            cereal::make_nvp("ui", CerealUi {}));
+            cereal::make_nvp("input", CerealInput {}));
    } catch (std::exception e) {
       // Can't use gLog because it is NULL here.
       std::cout << "Failed to parse config.json: " << e.what() << std::endl;
@@ -271,13 +171,11 @@ void save(const std::string &path)
 {
    std::ofstream file(path, std::ios::binary);
    cereal::JSONOutputArchive output(file);
-   output(cereal::make_nvp("dx12", CerealDX12 {}),
-          cereal::make_nvp("gx2", CerealGX2 {}),
+   output(cereal::make_nvp("gx2", CerealGX2 {}),
           cereal::make_nvp("log", CerealLog {}),
           cereal::make_nvp("jit", CerealJit {}),
           cereal::make_nvp("system", CerealSystem {}),
-          cereal::make_nvp("input", CerealInput {}),
-          cereal::make_nvp("ui", CerealUi {}));
+          cereal::make_nvp("input", CerealInput {}));
 }
 
 } // namespace config

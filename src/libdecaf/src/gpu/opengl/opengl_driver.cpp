@@ -126,13 +126,13 @@ void GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
    mContextState = reinterpret_cast<latte::ContextState *>(data.context.get());
 }
 
-void GLDriver::getSwapBuffers(gl::GLuint *tv, gl::GLuint *drc)
+void GLDriver::getSwapBuffers(unsigned int *tv, unsigned int *drc)
 {
    *tv = mTvScanBuffers.object;
    *drc = mDrcScanBuffers.object;
 }
 
-float GLDriver::getAverageFps()
+float GLDriver::getAverageFPS()
 {
    // TODO: This is not thread safe...
    static const auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds{ 1 }).count();

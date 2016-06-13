@@ -1,67 +1,75 @@
+#include "decaf.h"
 #include "input.h"
 
 namespace input
 {
 
-static VpadSampleCallback
-sGetVpadCoreButtonStatus = nullptr;
-
-void
-setVpadCoreButtonCallback(VpadSampleCallback callback)
+vpad::Type
+getControllerType(vpad::Channel channel)
 {
-   sGetVpadCoreButtonStatus = callback;
-}
-
-bool
-sampleController(vpad::Channel channel)
-{
-   return true;
-}
-
-float
-getAxisValue(vpad::Channel channel,
-             vpad::Core id)
-{
-   return 0.0f;
+   return decaf::getInputProvider()->getControllerType(channel);
 }
 
 ButtonStatus
 getButtonStatus(vpad::Channel channel,
                 vpad::Core button)
 {
-   if (sGetVpadCoreButtonStatus) {
-      return sGetVpadCoreButtonStatus(channel, button);
-   } else {
-      return ButtonStatus::ButtonReleased;
-   }
+   return decaf::getInputProvider()->getButtonStatus(channel, button);
+}
+
+float
+getAxisValue(vpad::Channel channel,
+             vpad::CoreAxis axis)
+{
+   return decaf::getInputProvider()->getAxisValue(channel, axis);
+}
+
+wpad::Type
+getControllerType(wpad::Channel channel)
+{
+   return decaf::getInputProvider()->getControllerType(channel);
 }
 
 ButtonStatus
 getButtonStatus(wpad::Channel channel,
                 wpad::Core button)
 {
-   return ButtonStatus::ButtonReleased;
+   return decaf::getInputProvider()->getButtonStatus(channel, button);
 }
 
 ButtonStatus
 getButtonStatus(wpad::Channel channel,
                 wpad::Nunchuck button)
 {
-   return ButtonStatus::ButtonReleased;
+   return decaf::getInputProvider()->getButtonStatus(channel, button);
 }
 
 ButtonStatus
 getButtonStatus(wpad::Channel channel,
                 wpad::Classic button)
 {
-   return ButtonStatus::ButtonReleased;
+   return decaf::getInputProvider()->getButtonStatus(channel, button);
 }
 
 ButtonStatus
 getButtonStatus(wpad::Channel channel,
                 wpad::Pro button)
 {
-   return ButtonStatus::ButtonReleased;
+   return decaf::getInputProvider()->getButtonStatus(channel, button);
+}
+
+float
+getAxisValue(wpad::Channel channel,
+             wpad::NunchuckAxis axis)
+{
+   return decaf::getInputProvider()->getAxisValue(channel, axis);
+}
+
+float
+getAxisValue(wpad::Channel channel,
+             wpad::ProAxis axis)
+{
+   return decaf::getInputProvider()->getAxisValue(channel, axis);
 }
 
 } // namespace input

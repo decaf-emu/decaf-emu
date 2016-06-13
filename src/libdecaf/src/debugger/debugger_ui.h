@@ -8,7 +8,7 @@ namespace ui
 {
 
 void
-injectMouseButtonInput(int button,
+injectMouseButtonInput(decaf::input::MouseButton button,
                        decaf::input::MouseAction action);
 
 void
@@ -24,7 +24,7 @@ injectKeyInput(decaf::input::KeyboardKey key,
                decaf::input::KeyboardAction action);
 
 void
-injectCharInput(unsigned short c);
+injectTextInput(const char *text);
 
 using ClipboardTextGetCallback = const char *(*)();
 using ClipboardTextSetCallback = void(*)(const char*);

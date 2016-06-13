@@ -1,9 +1,10 @@
 #pragma once
-#include <cstdint>
-#include "libcpu/state.h"
-#include "kernel_hlesymbol.h"
-#include "ppcutils/ppcinvoke.h"
 #include "common/type_list.h"
+#include "decaf_config.h"
+#include "kernel_hlesymbol.h"
+#include "libcpu/state.h"
+#include "ppcutils/ppcinvoke.h"
+#include <cstdint>
 
 namespace kernel
 {
@@ -27,9 +28,6 @@ struct HleFunction : HleSymbol
 namespace functions
 {
 
-extern bool
-enableTrace;
-
 void kcTraceHandler(const std::string& str);
 
 template<typename ReturnType, typename... Args>
@@ -39,7 +37,7 @@ struct HleFunctionImpl : HleFunction
 
    virtual void call(cpu::Core *thread) override
    {
-      if (enableTrace) {
+      if (decaf::config::log::kernel_trace) {
          ppctypes::invoke(kcTraceHandler, thread, wrapped_function, name);
       } else {
          ppctypes::invoke(nullptr, thread, wrapped_function, name);
@@ -54,7 +52,7 @@ struct HleMemberFunctionImpl : HleFunction
 
    virtual void call(cpu::Core *thread) override
    {
-      if (enableTrace) {
+      if (decaf::config::log::kernel_trace) {
          ppctypes::invokeMemberFn(kcTraceHandler, thread, wrapped_function, name);
       } else {
          ppctypes::invokeMemberFn(nullptr, thread, wrapped_function, name);
@@ -72,7 +70,7 @@ struct HleConstructorFunctionImpl : HleFunction
 
    virtual void call(cpu::Core *thread) override
    {
-      if (enableTrace) {
+      if (decaf::config::log::kernel_trace) {
          ppctypes::invoke(kcTraceHandler, thread, &trampFunction, name);
       } else {
          ppctypes::invoke(nullptr, thread, &trampFunction, name);
@@ -90,7 +88,7 @@ struct HleDestructorFunctionImpl : HleFunction
 
    virtual void call(cpu::Core *thread) override
    {
-      if (enableTrace) {
+      if (decaf::config::log::kernel_trace) {
          ppctypes::invoke(kcTraceHandler, thread, &trampFunction, name);
       } else {
          ppctypes::invoke(nullptr, thread, &trampFunction, name);

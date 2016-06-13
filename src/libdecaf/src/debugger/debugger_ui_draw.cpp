@@ -28,7 +28,7 @@ public:
       ImGui::SetNextWindowPos(ImVec2(8.0f, 25.0f));
       ImGui::SetNextWindowSize(ImVec2(180.0f, 27.0f));
       ImGui::Begin("Info", nullptr, ImgGuiNoBorder);
-      float fps = decaf::getAverageFps();
+      float fps = decaf::getGraphicsDriver()->getAverageFPS();
       ImGui::Text("FPS: %.1f (%.3f ms)", fps, 1000.0f / fps);
       ImGui::End();
    }
@@ -557,8 +557,8 @@ void draw()
          ImGui::MenuItem("Step Over", nullptr, false, false);
          ImGui::MenuItem("Step Into", nullptr, false, false);
          ImGui::Separator();
-         if (ImGui::MenuItem("Kernel Trace Enabled", nullptr, kernel::functions::enableTrace, true)) {
-            kernel::functions::enableTrace = !kernel::functions::enableTrace;
+         if (ImGui::MenuItem("Kernel Trace Enabled", nullptr, decaf::config::log::kernel_trace, true)) {
+            decaf::config::log::kernel_trace = !decaf::config::log::kernel_trace;
          }
          ImGui::MenuItem("GX2 Texture Dump Enabled", nullptr, false, false);
          ImGui::MenuItem("GX2 Shader Dump Enabled", nullptr, false, false);

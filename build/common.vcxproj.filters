@@ -152,9 +152,6 @@
     <ClInclude Include="..\src\common\type_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\common\virtual_ptr.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\common\types.h">
       <Filter>Header Files</Filter>
     </ClInclude>

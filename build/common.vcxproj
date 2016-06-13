@@ -85,7 +85,6 @@
     <ClInclude Include="..\src\common\teenyheap.h" />
     <ClInclude Include="..\src\common\types.h" />
     <ClInclude Include="..\src\common\type_list.h" />
-    <ClInclude Include="..\src\common\virtual_ptr.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F75C0F3B-F503-4B49-9198-8529390D5C0C}</ProjectGuid>

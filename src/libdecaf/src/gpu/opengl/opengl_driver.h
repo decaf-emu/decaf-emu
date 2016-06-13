@@ -1,4 +1,9 @@
 #pragma once
+#include "common/platform.h"
+#include "common/log.h"
+#include "gpu/pm4.h"
+#include "gpu/latte_contextstate.h"
+#include "libdecaf/decaf_graphicsdriver.h"
 #include <chrono>
 #include <exception>
 #include <glbinding/gl/types.h>
@@ -8,10 +13,6 @@
 #include <unordered_map>
 #include <vector>
 #include <chrono>
-#include "gpu/pm4.h"
-#include "gpu/latte_contextstate.h"
-#include "common/platform.h"
-#include "common/log.h"
 
 namespace gpu
 {
@@ -155,37 +156,17 @@ struct UniformBuffer
    gl::GLuint object = 0;
 };
 
-struct DebugDrawData
-{
-   gl::GLuint fontTexture;
-   gl::GLuint shaderHandle;
-   gl::GLuint vertHandle;
-   gl::GLuint fragHandle;
-   gl::GLuint vboHandle;
-   gl::GLuint vaoHandle;
-   gl::GLuint elementsHandle;
-   gl::GLuint attribLocTex;
-   gl::GLuint attribLocProjMtx;
-   gl::GLuint attribLocPos;
-   gl::GLuint attribLocUV;
-   gl::GLuint attribLocColor;
-};
-
 using GLContext = uint64_t;
 
-class GLDriver
+class GLDriver : public decaf::OpenGLDriver
 {
 public:
    virtual ~GLDriver() = default;
 
-   void run();
-   void stop();
-
-   void getSwapBuffers(gl::GLuint *tv, gl::GLuint *drc);
-   float getAverageFps();
-
-   void initialiseDbgUi();
-   void drawDbgUi(uint32_t width, uint32_t height);
+   virtual void run() override;
+   virtual void stop() override;
+   virtual float getAverageFPS() override;
+   virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
 
 private:
    void initGL();
@@ -292,7 +273,6 @@ private:
    std::array<ColorBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
-   DebugDrawData mDebugDrawData;
 
    latte::ContextState *mContextState = nullptr;
 

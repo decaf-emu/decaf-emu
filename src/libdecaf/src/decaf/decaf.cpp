@@ -1,5 +1,6 @@
 #include "common/platform_dir.h"
 #include "decaf.h"
+#include "decaf_config.h"
 #include "debugger.h"
 #include "debugger/debugger_ui.h"
 #include "filesystem/filesystem.h"
@@ -17,62 +18,17 @@
 namespace decaf
 {
 
-static std::string
-gSystemPath = "";
+static GraphicsDriver *
+sGraphicsDriver = nullptr;
 
-static std::string
-gGamePath = "";
-
-static gpu::opengl::GLDriver *
-gGlDriver;
-
-static std::mutex
-sGpuMutex;
-
-static std::condition_variable
-sGpuCond;
-
-static std::atomic_bool
-gGpuRunning { false };
-
-void
-setSystemPath(const std::string &path)
-{
-   gSystemPath = path;
-}
-
-void
-setGamePath(const std::string &path)
-{
-   gGamePath = path;
-}
-
-void
-setKernelTraceEnabled(bool enabled)
-{
-   kernel::functions::enableTrace = enabled;
-}
-
-void
-setJitMode(bool enabled,
-           bool debug)
-{
-   if (enabled) {
-      if (!debug) {
-         cpu::setJitMode(cpu::jit_mode::enabled);
-      } else {
-         cpu::setJitMode(cpu::jit_mode::debug);
-      }
-   } else {
-      cpu::setJitMode(cpu::jit_mode::disabled);
-   }
-}
+static InputProvider *
+sInputProvider = nullptr;
 
 class LogFormatter : public spdlog::formatter
 {
 public:
-   void format(spdlog::details::log_msg& msg) override {
-
+   void format(spdlog::details::log_msg& msg) override
+   {
       msg.formatted << '[';
 
       msg.formatted << spdlog::level::to_str(msg.level);
@@ -99,17 +55,38 @@ public:
 };
 
 void
-initLogging(std::vector<spdlog::sink_ptr> &sinks,
-            spdlog::level::level_enum level)
+initialiseLogging(std::vector<spdlog::sink_ptr> &sinks,
+                  spdlog::level::level_enum level)
 {
-   gLog = std::make_shared<spdlog::logger>("logger", begin(sinks), end(sinks));
+   gLog = std::make_shared<spdlog::logger>("decaf", begin(sinks), end(sinks));
    gLog->set_level(level);
    gLog->set_formatter(std::make_shared<LogFormatter>());
 }
 
 bool
-initialise()
+initialise(const std::string &gamePath)
 {
+   if (!sInputProvider) {
+      gLog->error("No input provider set");
+      return false;
+   }
+
+   if (!sGraphicsDriver) {
+      gLog->error("No graphics driver set");
+      return false;
+   }
+
+   // Set JIT mode
+   if (decaf::config::jit::enabled) {
+      if (!decaf::config::jit::debug) {
+         cpu::setJitMode(cpu::jit_mode::enabled);
+      } else {
+         cpu::setJitMode(cpu::jit_mode::debug);
+      }
+   } else {
+      cpu::setJitMode(cpu::jit_mode::disabled);
+   }
+
    // Setup core
    mem::initialise();
    cpu::initialise();
@@ -118,33 +95,28 @@ initialise()
    // Initialise debugger
    gDebugger.initialise();
 
-   gGlDriver = new gpu::opengl::GLDriver();
-
-   // Initialise Input stuff...
-
    // Setup filesystem
-   fs::FileSystem *fs = new fs::FileSystem();
-   fs::HostPath path = gGamePath;
-   fs::HostPath sysPath = gSystemPath;
+   auto filesystem = new fs::FileSystem();
+   auto path = fs::HostPath { gamePath };
 
    if (platform::isDirectory(path.path())) {
       // See if we can find path/cos.xml
-      fs->mountHostFolder("/vol", path);
-      auto fh = fs->openFile("/vol/code/cos.xml", fs::File::Read);
+      filesystem->mountHostFolder("/vol", path);
+      auto fh = filesystem->openFile("/vol/code/cos.xml", fs::File::Read);
 
       if (fh) {
          fh->close();
          delete fh;
       } else {
          // Try path/data
-         fs->deleteFolder("/vol");
-         fs->mountHostFolder("/vol", path.join("data"));
+         filesystem->deleteFolder("/vol");
+         filesystem->mountHostFolder("/vol", path.join("data"));
       }
    } else if (platform::isFile(path.path())) {
       // Load game file, currently only .rpx is supported
       // TODO: Support .WUD .WUX
       if (path.extension().compare("rpx") == 0) {
-         fs->mountHostFile("/vol/code/" + path.filename(), path);
+         filesystem->mountHostFile("/vol/code/" + path.filename(), path);
       } else {
          gLog->error("Only loading files with .rpx extension is currently supported {}", path.path());
          return false;
@@ -154,21 +126,30 @@ initialise()
       return false;
    }
 
-   kernel::setFileSystem(fs);
+   // Setup kernel
+   kernel::setFileSystem(filesystem);
    kernel::setGameName(path.filename());
 
    // Lock out some memory for unimplemented data access
    mem::protect(0xfff00000, 0x000fffff);
 
    // Mount system path
-   fs->mountHostFolder("/vol/storage_mlc01", sysPath.join("mlc"));
+   auto systemPath = fs::HostPath { decaf::config::system::system_path };
+   filesystem->mountHostFolder("/vol/storage_mlc01", systemPath.join("mlc"));
 
    return true;
+}
+
+OpenGLDriver *
+createGLDriver()
+{
+   return new gpu::opengl::GLDriver();
 }
 
 void
 start()
 {
+   ::debugger::ui::initialise();
    cpu::start();
 }
 
@@ -180,104 +161,68 @@ shutdown()
 }
 
 void
-runGpuDriver()
+setGraphicsDriver(GraphicsDriver *driver)
 {
-   std::unique_lock<std::mutex> lock(sGpuMutex);
-   gGpuRunning.store(true);
+   sGraphicsDriver = driver;
+}
 
-   lock.unlock();
-   gGlDriver->run();
-   lock.lock();
-
-   gGpuRunning.store(false);
-   sGpuCond.notify_one();
+GraphicsDriver *
+getGraphicsDriver()
+{
+   return sGraphicsDriver;
 }
 
 void
-shutdownGpuDriver()
+setInputProvider(InputProvider *provider)
 {
-   // Alert the GPU that it needs to stop
-   gGlDriver->stop();
+   sInputProvider = provider;
+}
 
-   // Wait for the GPU to shut down
-   std::unique_lock<std::mutex> lock(sGpuMutex);
-   while (gGpuRunning.load()) {
-      sGpuCond.wait(lock);
-   }
+InputProvider *
+getInputProvider()
+{
+   return sInputProvider;
 }
 
 void
-getSwapBuffers(gl::GLuint* tv,
-               gl::GLuint* drc)
-{
-   gGlDriver->getSwapBuffers(tv, drc);
-}
-
-float
-getAverageFps()
-{
-   return gGlDriver->getAverageFps();
-}
-
-void
-setVpadCoreButtonCallback(VpadSampleCallback callback)
-{
-   ::input::setVpadCoreButtonCallback(callback);
-}
-
-void
-initialiseDbgUi()
-{
-   debugger::ui::initialise();
-   gGlDriver->initialiseDbgUi();
-}
-
-void
-drawDbgUi(uint32_t width,
-          uint32_t height)
-{
-   gGlDriver->drawDbgUi(width, height);
-}
-
-void
-injectMouseButtonInput(int button,
+injectMouseButtonInput(input::MouseButton button,
                        input::MouseAction action)
 {
-   debugger::ui::injectMouseButtonInput(button, action);
+   ::debugger::ui::injectMouseButtonInput(button, action);
 }
 
 void
 injectMousePos(float x,
                float y)
 {
-   debugger::ui::injectMousePos(x, y);
+   ::debugger::ui::injectMousePos(x, y);
 }
 
 void
 injectScrollInput(float xoffset,
                   float yoffset)
 {
-   debugger::ui::injectScrollInput(xoffset, yoffset);
+   ::debugger::ui::injectScrollInput(xoffset, yoffset);
 }
 
 void
 injectKeyInput(input::KeyboardKey key,
                input::KeyboardAction action)
 {
-   debugger::ui::injectKeyInput(key, action);
+   ::debugger::ui::injectKeyInput(key, action);
 }
 
 void
-injectCharInput(unsigned short c)
+injectTextInput(const char *text)
 {
-   debugger::ui::injectCharInput(c);
+   ::debugger::ui::injectTextInput(text);
 }
 
 void
 setClipboardTextCallbacks(ClipboardTextGetCallback getter,
                           ClipboardTextSetCallback setter)
 {
-   debugger::ui::setClipboardTextCallbacks(getter, setter);
+   ::debugger::ui::setClipboardTextCallbacks(getter, setter);
 }
 
 } // namespace decaf

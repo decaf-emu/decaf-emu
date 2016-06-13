@@ -74,17 +74,19 @@ initialise()
 }
 
 void
-injectMouseButtonInput(int button, MouseAction action)
+injectMouseButtonInput(MouseButton button, MouseAction action)
 {
-   if (button < 0 || button >= 3) {
+   if (button == MouseButton::Unknown) {
       return;
    }
 
+   auto id = static_cast<int>(button);
+
    if (action == MouseAction::Press) {
-      sMousePressed[button] = true;
-      sMouseClicked[button] = true;
+      sMousePressed[id] = true;
+      sMouseClicked[id] = true;
    } else if (action == MouseAction::Release) {
-      sMousePressed[button] = false;
+      sMousePressed[id] = false;
    }
 }
 
@@ -133,10 +135,10 @@ injectKeyInput(KeyboardKey key, KeyboardAction action)
 }
 
 void
-injectCharInput(unsigned short c)
+injectTextInput(const char *text)
 {
    ImGuiIO &io = ImGui::GetIO();
-   io.AddInputCharacter(c);
+   io.AddInputCharactersUTF8(text);
 }
 
 void

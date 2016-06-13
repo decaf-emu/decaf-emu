@@ -21,13 +21,13 @@
     <ClCompile Include="..\src\decaf-cli\config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\decaf-cli\main_glfw.cpp">
+    <ClCompile Include="..\src\decaf-cli\decafsdl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\decaf-cli\main_sdl.cpp">
+    <ClCompile Include="..\src\decaf-cli\decafsdl_draw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\decaf-cli\gl_common.cpp">
+    <ClCompile Include="..\src\decaf-cli\decafsdl_input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,13 +35,10 @@
     <ClInclude Include="..\src\decaf-cli\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\decaf-cli\gl_common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\decaf-cli\input_common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\decaf-cli\clilog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\decaf-cli\decafsdl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
