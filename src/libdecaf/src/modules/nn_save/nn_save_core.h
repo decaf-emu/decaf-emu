@@ -2,13 +2,13 @@
 #include "modules/coreinit/coreinit_fs.h"
 #include "common/types.h"
 
-using SaveStatus = FSStatus;
-
 namespace nn
 {
 
 namespace save
 {
+
+using SaveStatus = coreinit::FSStatus;
 
 SaveStatus
 SAVEInit();

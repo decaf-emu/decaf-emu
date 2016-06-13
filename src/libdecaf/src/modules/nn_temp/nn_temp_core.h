@@ -7,7 +7,7 @@ namespace nn
 namespace temp
 {
 
-using TempStatus = FSStatus;
+using TempStatus = coreinit::FSStatus;
 using TempDirID = uint64_t;
 
 TempStatus

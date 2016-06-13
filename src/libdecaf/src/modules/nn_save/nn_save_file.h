@@ -11,6 +11,7 @@ using coreinit::FSAsyncData;
 using coreinit::FSClient;
 using coreinit::FSCmdBlock;
 using coreinit::FSFileHandle;
+using coreinit::FSStatus;
 
 FSStatus
 SAVEOpenFile(FSClient *client,

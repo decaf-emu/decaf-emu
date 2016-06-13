@@ -14,6 +14,7 @@ using coreinit::FSAsyncData;
 using coreinit::FSClient;
 using coreinit::FSCmdBlock;
 using coreinit::FSDirectoryHandle;
+using coreinit::FSStatus;
 
 SaveStatus
 SAVEInitSaveDir(uint8_t userID);

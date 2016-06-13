@@ -13,6 +13,16 @@
 #define ENUM_VALUE(key, value) key = value,
 #endif
 
+#ifndef ENUM_NAMESPACE_BEG
+#define ENUM_NAMESPACE_BEG(name) namespace name {
+#endif
+
+#ifndef ENUM_NAMESPACE_END
+#define ENUM_NAMESPACE_END(name) }
+#endif
+
+ENUM_NAMESPACE_BEG(coreinit)
+
 ENUM_BEG(OSAlarmState, uint32_t)
    ENUM_VALUE(None,                 0)
    ENUM_VALUE(Set,                  1)
@@ -250,8 +260,12 @@ ENUM_BEG(UCDataType, uint32_t)
    ENUM_VALUE(Group,                0x08)
 ENUM_END(UCDataType)
 
+ENUM_NAMESPACE_END(coreinit)
+
 #undef ENUM_BEG
 #undef ENUM_END
 #undef ENUM_VALUE
+#undef ENUM_NAMESPACE_BEG
+#undef ENUM_NAMESPACE_END
 
 #endif // ifdef COREINIT_ENUM_H
