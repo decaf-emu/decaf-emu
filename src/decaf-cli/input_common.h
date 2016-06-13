@@ -1,5 +1,5 @@
 #pragma once
-#include "decaf/decaf_input.h"
+#include "libdecaf/decaf_input.h"
 
 using namespace decaf::input;
 

@@ -2,7 +2,7 @@
 #include <cstring>
 #include <gsl.h>
 #include <string>
-#include "common/byte_swap.h"
+#include "byte_swap.h"
 
 class BigEndianView
 {

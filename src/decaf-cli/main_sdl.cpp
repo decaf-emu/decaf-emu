@@ -3,10 +3,10 @@
 #include "clilog.h"
 #include "config.h"
 #include "common/strutils.h"
-#include "decaf/decaf.h"
+#include "libdecaf/decaf.h"
 #include "gl_common.h"
 #include "input_common.h"
-#include "platform/platform.h"
+#include "common/platform.h"
 #include <SDL.h>
 #include <thread>
 

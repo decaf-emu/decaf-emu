@@ -1,0 +1,579 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseDebug|x64">
+      <Configuration>ReleaseDebug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{D528F1B0-3DA2-496D-9E59-CE80141BD149}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>libdecaf</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(SolutionDir)\libraries\imgui;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(SolutionDir)\libraries\imgui;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\zlib;$(SolutionDir)\libraries\imgui;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>common.lib;libcpu.lib;addrlib.lib;imgui.lib;glbinding.lib;pugixml.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/verbose:incr %(AdditionalOptions)</AdditionalOptions>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>common.lib;libcpu.lib;addrlib.lib;imgui.lib;glbinding.lib;pugixml.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>false</OptimizeReferences>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/verbose:incr %(AdditionalOptions)</AdditionalOptions>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+    </Link>
+    <Lib>
+      <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
+      <AdditionalDependencies>common.lib;libcpu.lib;addrlib.lib;imgui.lib;glbinding.lib;pugixml.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\libdecaf\src\debugcontrol.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\debugger.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_draw.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\debugnet.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf\decaf.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\emulog.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folder.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folderhandle.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\commandqueue.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\gfd.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_blockify.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_decoder.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_alu.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_export.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_tex.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_vtx.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_instructions.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_linearify.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_alu.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_alu_op2.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_alu_op3.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_alu_reduction.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_cf.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_exp.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_generator.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_tex.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_vtx.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_colorbuffer.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_dbgui.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_depthbuffer.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_draw.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_pm4.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_registers.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_shader.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_texture.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_viewport.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\pm4.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\input\input.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_fibers.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_filesystem.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_hle.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_alarm.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_atomic64.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_cache.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_debug.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_device.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_dynload.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_event.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_exception.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_exit.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_expheap.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fastmutex.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_frameheap.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_client.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_dir.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_file.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_path.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_stat.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs_typeinfo.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_idlock.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_loader.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_interrupts.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_lockedcache.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_mcp.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memheap.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memlist.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memory.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_messagequeue.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_taskqueue.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_mutex.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_rendezvous.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_scheduler.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_semaphore.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_shared.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_spinlock.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_systeminfo.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_thread.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_time.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_unitheap.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_userconfig.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\elf.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\erreula\erreula.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\erreula\erreula_errorviewer.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2r_buffer.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2r_resource.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2r_surface.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_addrlib.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_aperture.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_cbpool.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_clear.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_contextstate.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_dds.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_debug.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_display.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_displaylist.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_draw.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_enum_string.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_fetchshader.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_format.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_mem.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_query.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_registers.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_sampler.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_shaders.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_state.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_surface.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_swap.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_temp.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_tessellation.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_texture.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_event.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\mic\mic.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\mic\mic_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_acp\nn_acp.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_acp\nn_acp_device.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_acp\nn_acp_title.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_act\nn_act.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_act\nn_act_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_ac\nn_ac.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_ac\nn_ac_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_init.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_nettasksetting.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_playreportsetting.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_rawultasksetting.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_task.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_taskid.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_tasksetting.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_title.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_titleid.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_fp\nn_fp.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_fp\nn_fp_init.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_fp\nn_fp_friends.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_ndm\nn_ndm.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_ndm\nn_ndm_init.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_init.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_detection.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_settings.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_downloadedcommunitydata.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_downloadedtopicdata.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_init.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_uploadeddatabase.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_uploadedpostdata.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_result.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_save\nn_save.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_save\nn_save_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_save\nn_save_dir.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_save\nn_save_file.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_temp\nn_temp.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_dir.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_socket_lib.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_ssl.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\padscore\padscore.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\padscore\padscore_kpad.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\padscore\padscore_kpad_status.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\padscore\padscore_wpad.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\proc_ui\proc_ui.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\proc_ui\proc_ui_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_ai.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_device.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_vs.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\swkbd\swkbd.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\swkbd\swkbd_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\sysapp\sysapp.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\sysapp\sysapp_title.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\vpad\vpad.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\vpad\vpad_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\vpad\vpad_status.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\zlib125\zlib125.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\zlib125\zlib125_core.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\libdecaf\decaf.h" />
+    <ClInclude Include="..\src\libdecaf\decaf_input.h" />
+    <ClInclude Include="..\src\libdecaf\src\debugcontrol.h" />
+    <ClInclude Include="..\src\libdecaf\src\debugger.h" />
+    <ClInclude Include="..\src\libdecaf\src\debugger\debugger_ui.h" />
+    <ClInclude Include="..\src\libdecaf\src\debugmsg.h" />
+    <ClInclude Include="..\src\libdecaf\src\debugnet.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_file.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_filehandle.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_folder.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_folderhandle.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_file.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_filehandle.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_folder.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_folderhandle.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_path.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_link_file.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_link_folder.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_node.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_path.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_file.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_filedata.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_filehandle.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_folderhandle.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_folder.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\commandqueue.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\gfd.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_contextstate.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_cb.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_common.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_db.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_pa.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_spi.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_sq.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_sx.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_vgt.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_cb.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_db.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_pa.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_spi.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_sq.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_sx.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_td.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_vgt.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_instructions.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_shadir.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_decoder.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl_generator.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_buffer.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_format.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_reader.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_writer.h" />
+    <ClInclude Include="..\src\libdecaf\src\input\input.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_filesystem.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hle.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hledata.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hlesymbol.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hlefunction.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hlemodule.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_internal.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_atomic64.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_exit.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_client.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_dir.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_file.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_path.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_stat.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs_typeinfo.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_idlock.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_loader.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_interrupts.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_lockedcache.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_taskqueue.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_rendezvous.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_unitheap.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\elf.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2r_buffer.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2r_surface.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_addrlib.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_aperture.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_cbpool.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_clear.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_dds.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_debug.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_draw.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_enum.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_enum_string.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_format.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_mem.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_query.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_state.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_registers.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_sampler.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_event.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_swap.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_tessellation.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\mic\mic.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\mic\mic_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_acp\nn_acp.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_acp\nn_acp_device.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_acp\nn_acp_title.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_act\nn_act_result.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ac\nn_ac_result.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_init.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_nettasksetting.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_playreportsetting.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_rawultasksetting.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_result.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_task.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_tasksetting.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_title.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_titleid.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_taskid.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ffl.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_fp\nn_fp_friends.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ndm\nn_ndm.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ndm\nn_ndm_init.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_detection.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_result.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_settings.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_downloadedcommunitydata.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_downloadedtopicdata.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_init.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_result.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_uploadeddatabase.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_uploadedpostdata.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_result.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_init.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_save\nn_save_dir.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_save\nn_save_file.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_temp\nn_temp.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_dir.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_socket_lib.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_ssl.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\padscore\padscore_kpad_status.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_ai.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_device.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_result.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_vs.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\swkbd\swkbd.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\swkbd\swkbd_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\sysapp\sysapp.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\sysapp\sysapp_title.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad_status.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_alarm.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_device.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_exception.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fastmutex.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memheap.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memlist.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_queue.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_scheduler.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_semaphore.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_shared.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\erreula\erreula.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\erreula\erreula_errorviewer.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2r_resource.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_surface.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_temp.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_act\nn_act.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_act\nn_act_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ac\nn_ac.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ac\nn_ac_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_fp\nn_fp.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_fp\nn_fp_init.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\padscore\padscore.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\padscore\padscore_kpad.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\padscore\padscore_wpad.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\proc_ui\proc_ui.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\proc_ui\proc_ui_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\ppcinvoke.h" />
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\ppcinvokeargs.h" />
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\ppcinvokelog.h" />
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\ppcinvokeresult.h" />
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\ppctypeconv.h" />
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\stackobject.h" />
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\wfunc_call.h" />
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\wfunc_ptr.h" />
+    <ClInclude Include="..\src\libdecaf\src\types.h" />
+    <ClInclude Include="..\src\libdecaf\src\usermodule.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_cache.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_debug.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_dynload.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_event.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_expheap.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_frameheap.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_ios.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_mcp.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memory.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_messagequeue.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_mutex.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_spinlock.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_systeminfo.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_thread.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_time.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_userconfig.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_contextstate.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_display.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_displaylist.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_shaders.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_texture.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_save\nn_save.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_save\nn_save_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\zlib125\zlib125.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\libdecaf\src\gpu\microcode\latte_instructions_def.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\vsdebuggervis.natvis" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

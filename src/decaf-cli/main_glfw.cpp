@@ -3,7 +3,7 @@
 #include "clilog.h"
 #include "config.h"
 #include "common/strutils.h"
-#include "decaf/decaf.h"
+#include "libdecaf/decaf.h"
 #include "gl_common.h"
 #include "input_common.h"
 #include <GLFW/glfw3.h>

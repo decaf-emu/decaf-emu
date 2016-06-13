@@ -2,7 +2,7 @@
 #include <climits>
 #include <cstdint>
 #include <cstddef>
-#include "platform/platform.h"
+#include "platform.h"
 
 #ifdef PLATFORM_WINDOWS
 #include <Windows.h>

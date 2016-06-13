@@ -1,0 +1,1469 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\modules">
+      <UniqueIdentifier>{543deb93-600a-46cd-af7e-bb64e64765d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\coreinit">
+      <UniqueIdentifier>{d0f73c84-a542-4d8b-a914-cc52fbd45fea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\gx2">
+      <UniqueIdentifier>{7540a965-6c9f-48ea-a9fb-16cc6110f005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_save">
+      <UniqueIdentifier>{b3e4a6a2-bd57-4e2f-a3ae-89b0a243bf91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\zlib125">
+      <UniqueIdentifier>{37d2f781-6c1c-45a6-a293-bf45ce7a5536}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\system">
+      <UniqueIdentifier>{4cfe8e72-73f4-4e2a-bf23-dad845a4fcf6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules">
+      <UniqueIdentifier>{783a79f2-1542-47e2-b26b-e1cacdbc1985}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\coreinit">
+      <UniqueIdentifier>{6a085612-0a41-4cfd-9588-06e478c184a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\gx2">
+      <UniqueIdentifier>{8d97eeba-d583-4e7c-b20e-9dcdfe8ea718}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_save">
+      <UniqueIdentifier>{52c27dc3-eb10-4e57-9de1-cefec0731ed0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\zlib125">
+      <UniqueIdentifier>{e15b800e-59f9-40f8-bf71-3508459abb20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\system">
+      <UniqueIdentifier>{8c8252e9-b776-49cf-ab0a-ec5a801be21e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_act">
+      <UniqueIdentifier>{99e874d6-385b-42d6-ba40-a1157f13fef9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\proc_ui">
+      <UniqueIdentifier>{0aa10194-42a7-4e39-9998-6af69405988a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\proc_ui">
+      <UniqueIdentifier>{72395e1c-4360-4eae-911c-852cf298c907}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\padscore">
+      <UniqueIdentifier>{2cdf8556-ef95-41f4-9e49-2808859ff48e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\padscore">
+      <UniqueIdentifier>{25ed9994-d801-4aee-bf49-dad286cdc7e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_act">
+      <UniqueIdentifier>{7a0f3ce7-ff2c-46c3-a241-a16fe45be793}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_ac">
+      <UniqueIdentifier>{a11e6dc7-f304-489b-9fc8-f4f4e875f534}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_ac">
+      <UniqueIdentifier>{cb366671-817d-4a6a-9d48-94be9fdd1e38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_fp">
+      <UniqueIdentifier>{47bf8d66-1078-4899-a425-5f6ccc188f2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_fp">
+      <UniqueIdentifier>{178a2d6d-4321-43d7-a6df-e35e3e97d905}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\erreula">
+      <UniqueIdentifier>{323fa520-1886-44d4-a996-7cb1ead86177}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\erreula">
+      <UniqueIdentifier>{010c8799-d846-4e5d-b504-822d85fae6b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gpu">
+      <UniqueIdentifier>{1af0bbc4-a7a4-4aee-b92b-7a4151663a9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gpu">
+      <UniqueIdentifier>{f5262755-c0da-4cd1-b97e-3d097bb6f6d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_temp">
+      <UniqueIdentifier>{8317143f-0494-487a-a088-d71930bcf6cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_temp">
+      <UniqueIdentifier>{a127f8bf-8978-412c-9a92-ebb3b9f32893}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\sysapp">
+      <UniqueIdentifier>{5304bcc9-e23a-4716-ae39-07defd05091b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\sysapp">
+      <UniqueIdentifier>{44a664bb-41e9-4f34-a8bc-387c15e42edb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\filesystem">
+      <UniqueIdentifier>{3ef84099-716b-4231-a2e4-d1d0b9efe35d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_nfp">
+      <UniqueIdentifier>{fdb1a51c-1ded-4a58-ac82-da062692f7c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_nfp">
+      <UniqueIdentifier>{e1614a33-ed25-4116-8835-d481a393c887}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\vpad">
+      <UniqueIdentifier>{f7aacdc2-e9bd-4f0c-b415-75cb99d29d80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\vpad">
+      <UniqueIdentifier>{42794536-3b80-4746-a81d-c98ba2a0f8fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\snd_core">
+      <UniqueIdentifier>{24a575bd-52b5-420b-8213-0556bfc28da1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\snd_core">
+      <UniqueIdentifier>{949077ca-3dcf-4204-85b9-661694c30c33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\swkbd">
+      <UniqueIdentifier>{ba43997a-13af-4af7-8dcf-b999d882bf9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\swkbd">
+      <UniqueIdentifier>{3c3e0cf6-ac1e-4075-9e7d-4c3643ae9654}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gpu\opengl">
+      <UniqueIdentifier>{3da4a358-56b9-4d93-a6c8-03a40f540257}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gpu\opengl">
+      <UniqueIdentifier>{bb897b6e-cc4f-4511-a07d-0bf46f2dc485}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\input">
+      <UniqueIdentifier>{da917015-c2f1-4b4c-9c16-25384aee9bc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\input">
+      <UniqueIdentifier>{9d72e53e-68e5-45b6-89f4-b5ae00b4025b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\filesystem">
+      <UniqueIdentifier>{acbd1f70-d96c-45bd-88d6-1fd975a9112b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gpu\microcode">
+      <UniqueIdentifier>{5c01f210-7771-4d29-bad4-914740ff33b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gpu\microcode">
+      <UniqueIdentifier>{d17a9610-2d69-48d8-8c49-f32d87fb3f48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\mic">
+      <UniqueIdentifier>{e676b56c-bcfa-4ce8-9f9e-e3473d5ff4b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\mic">
+      <UniqueIdentifier>{d60b4e4e-f8aa-4cc2-bf20-b5aeb5f6fde2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_acp">
+      <UniqueIdentifier>{8ada5e06-78ab-479c-b4e5-e3e4c82b1df5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_acp">
+      <UniqueIdentifier>{7a1c469e-64aa-438e-beaf-e2441d2e59a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nsysnet">
+      <UniqueIdentifier>{1a1adce2-42da-4234-8e5b-c027ae5cd6e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nsysnet">
+      <UniqueIdentifier>{3298481c-82bd-4989-b87e-13e86ed74190}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_ndm">
+      <UniqueIdentifier>{94012bed-96ae-4ea5-8275-8ea94efbb65d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_ndm">
+      <UniqueIdentifier>{463782a2-f667-4f9e-b4da-a1e1d52cb37f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_boss">
+      <UniqueIdentifier>{2bb94dc0-c27d-4e8f-ba40-be233c44ae0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_boss">
+      <UniqueIdentifier>{c419925f-32e0-4d1c-af23-c7acd608215d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_olv">
+      <UniqueIdentifier>{028e69cf-7131-4551-a8af-27943977e5fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\nn_olv">
+      <UniqueIdentifier>{be5a4401-1610-4711-b006-4a4be04702ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\kernel">
+      <UniqueIdentifier>{e55521c1-299c-471e-a6ef-8be12b60c8c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\kernel">
+      <UniqueIdentifier>{62fe467f-3498-4c83-a4ee-3b0c171b2771}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gpu\opengl\glsl">
+      <UniqueIdentifier>{f306da50-fb65-489b-92da-097e44cc1dec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppcutils">
+      <UniqueIdentifier>{b4e0a7f1-0fc8-4c6a-b4f1-cf839b7d4c90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\decaf">
+      <UniqueIdentifier>{66269dfc-8471-49e0-a8a5-0bd9e6146626}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\decaf">
+      <UniqueIdentifier>{073abadf-b1a3-429b-bc9a-8e9a1b8f77a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\debugger">
+      <UniqueIdentifier>{75910a07-5861-4b65-a8c0-c4f02676cdcf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\debugger">
+      <UniqueIdentifier>{0f72afdf-62fc-40a7-bd0f-61221aa0173f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_debug.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_thread.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memory.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_mutex.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_systeminfo.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_spinlock.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_expheap.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_frameheap.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_dynload.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_messagequeue.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_time.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_mcp.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_userconfig.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_cache.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_save\nn_save.cpp">
+      <Filter>Source Files\modules\nn_save</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_save\nn_save_core.cpp">
+      <Filter>Source Files\modules\nn_save</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\zlib125\zlib125.cpp">
+      <Filter>Source Files\modules\zlib125</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\zlib125\zlib125_core.cpp">
+      <Filter>Source Files\modules\zlib125</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_event.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fastmutex.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_core.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2r_resource.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_device.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_semaphore.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_exception.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_temp.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memlist.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memheap.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\proc_ui\proc_ui.cpp">
+      <Filter>Source Files\modules\proc_ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\proc_ui\proc_ui_core.cpp">
+      <Filter>Source Files\modules\proc_ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\padscore\padscore_wpad.cpp">
+      <Filter>Source Files\modules\padscore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\padscore\padscore.cpp">
+      <Filter>Source Files\modules\padscore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\padscore\padscore_kpad.cpp">
+      <Filter>Source Files\modules\padscore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_act\nn_act.cpp">
+      <Filter>Source Files\modules\nn_act</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_act\nn_act_core.cpp">
+      <Filter>Source Files\modules\nn_act</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_ac\nn_ac.cpp">
+      <Filter>Source Files\modules\nn_ac</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_ac\nn_ac_core.cpp">
+      <Filter>Source Files\modules\nn_ac</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_scheduler.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_alarm.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_fp\nn_fp.cpp">
+      <Filter>Source Files\modules\nn_fp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\erreula\erreula.cpp">
+      <Filter>Source Files\modules\erreula</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\erreula\erreula_errorviewer.cpp">
+      <Filter>Source Files\modules\erreula</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_shared.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_temp\nn_temp.cpp">
+      <Filter>Source Files\modules\nn_temp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_core.cpp">
+      <Filter>Source Files\modules\nn_temp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugnet.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugcontrol.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\sysapp\sysapp.cpp">
+      <Filter>Source Files\modules\sysapp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\sysapp\sysapp_title.cpp">
+      <Filter>Source Files\modules\sysapp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_debug.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp.cpp">
+      <Filter>Source Files\modules\nn_nfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_result.cpp">
+      <Filter>Source Files\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\vpad\vpad.cpp">
+      <Filter>Source Files\modules\vpad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\vpad\vpad_core.cpp">
+      <Filter>Source Files\modules\vpad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\vpad\vpad_status.cpp">
+      <Filter>Source Files\modules\vpad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\padscore\padscore_kpad_status.cpp">
+      <Filter>Source Files\modules\padscore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core.cpp">
+      <Filter>Source Files\modules\snd_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_core.cpp">
+      <Filter>Source Files\modules\snd_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_device.cpp">
+      <Filter>Source Files\modules\snd_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_atomic64.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\swkbd\swkbd.cpp">
+      <Filter>Source Files\modules\swkbd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\swkbd\swkbd_core.cpp">
+      <Filter>Source Files\modules\swkbd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_rendezvous.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_enum_string.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_sampler.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_surface.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_format.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_taskqueue.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\gfd.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_registers.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_state.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\pm4.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_contextstate.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_mem.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_display.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_displaylist.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_draw.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_shaders.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_texture.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_event.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_swap.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_cbpool.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_clear.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_fetchshader.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_shader.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\commandqueue.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_texture.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\input\input.cpp">
+      <Filter>Source Files\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp">
+      <Filter>Source Files\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folderhandle.cpp">
+      <Filter>Source Files\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folder.cpp">
+      <Filter>Source Files\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folderhandle.cpp">
+      <Filter>Source Files\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_lockedcache.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_exit.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_alu.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_linearify.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_vtx.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_tex.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_export.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_instructions.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_blockify.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_decoder.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler.cpp">
+      <Filter>Source Files\gpu\microcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_save\nn_save_file.cpp">
+      <Filter>Source Files\modules\nn_save</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_addrlib.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_dds.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_aperture.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2r_surface.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2r_buffer.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_unitheap.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_tessellation.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_ai.cpp">
+      <Filter>Source Files\modules\snd_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_query.cpp">
+      <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\mic\mic.cpp">
+      <Filter>Source Files\modules\mic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\mic\mic_core.cpp">
+      <Filter>Source Files\modules\mic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_save\nn_save_dir.cpp">
+      <Filter>Source Files\modules\nn_save</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_file.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_dir.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_client.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_path.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_stat.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_dir.cpp">
+      <Filter>Source Files\modules\nn_temp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_acp\nn_acp.cpp">
+      <Filter>Source Files\modules\nn_acp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_acp\nn_acp_title.cpp">
+      <Filter>Source Files\modules\nn_acp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet.cpp">
+      <Filter>Source Files\modules\nsysnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_socket_lib.cpp">
+      <Filter>Source Files\modules\nsysnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_ssl.cpp">
+      <Filter>Source Files\modules\nsysnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_ndm\nn_ndm.cpp">
+      <Filter>Source Files\modules\nn_ndm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_ndm\nn_ndm_init.cpp">
+      <Filter>Source Files\modules\nn_ndm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_init.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_fp\nn_fp_friends.cpp">
+      <Filter>Source Files\modules\nn_fp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_fp\nn_fp_init.cpp">
+      <Filter>Source Files\modules\nn_fp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_detection.cpp">
+      <Filter>Source Files\modules\nn_nfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_init.cpp">
+      <Filter>Source Files\modules\nn_nfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_settings.cpp">
+      <Filter>Source Files\modules\nn_nfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_acp\nn_acp_device.cpp">
+      <Filter>Source Files\modules\nn_acp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_vs.cpp">
+      <Filter>Source Files\modules\snd_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs_typeinfo.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_tasksetting.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_nettasksetting.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_rawultasksetting.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_playreportsetting.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_titleid.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_downloadedtopicdata.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_downloadedcommunitydata.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_uploadeddatabase.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_uploadedpostdata.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_init.cpp">
+      <Filter>Source Files\modules\nn_olv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_taskid.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_task.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_title.cpp">
+      <Filter>Source Files\modules\nn_boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel.cpp">
+      <Filter>Source Files\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_fibers.cpp">
+      <Filter>Source Files\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_alu.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_alu_op2.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_alu_op3.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_alu_reduction.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_cf.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_exp.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_generator.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_tex.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl_vtx.cpp">
+      <Filter>Source Files\gpu\opengl\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_colorbuffer.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_depthbuffer.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_viewport.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_draw.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_pm4.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_registers.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_interrupts.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_idlock.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\emulog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_hle.cpp">
+      <Filter>Source Files\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_loader.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\elf.cpp">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_filesystem.cpp">
+      <Filter>Source Files\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\decaf\decaf.cpp">
+      <Filter>Source Files\decaf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_dbgui.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_draw.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_debug.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memory.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_thread.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_texture.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_mutex.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_systeminfo.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_spinlock.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_expheap.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_frameheap.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_dynload.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_messagequeue.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_time.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_mcp.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_userconfig.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_ios.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_display.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_cache.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_displaylist.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_shaders.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_save\nn_save.h">
+      <Filter>Header Files\modules\nn_save</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_save\nn_save_core.h">
+      <Filter>Header Files\modules\nn_save</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\zlib125\zlib125.h">
+      <Filter>Header Files\modules\zlib125</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_event.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\usermodule.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fastmutex.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_core.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2r_resource.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_surface.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_device.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_semaphore.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_exception.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_temp.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memlist.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memheap.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\proc_ui\proc_ui.h">
+      <Filter>Header Files\modules\proc_ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\proc_ui\proc_ui_core.h">
+      <Filter>Header Files\modules\proc_ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\padscore\padscore.h">
+      <Filter>Header Files\modules\padscore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\padscore\padscore_wpad.h">
+      <Filter>Header Files\modules\padscore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\padscore\padscore_kpad.h">
+      <Filter>Header Files\modules\padscore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_act\nn_act.h">
+      <Filter>Header Files\modules\nn_act</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_act\nn_act_core.h">
+      <Filter>Header Files\modules\nn_act</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ac\nn_ac.h">
+      <Filter>Header Files\modules\nn_ac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ac\nn_ac_core.h">
+      <Filter>Header Files\modules\nn_ac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_scheduler.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_alarm.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_fp\nn_fp.h">
+      <Filter>Header Files\modules\nn_fp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\erreula\erreula.h">
+      <Filter>Header Files\modules\erreula</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\erreula\erreula_errorviewer.h">
+      <Filter>Header Files\modules\erreula</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_shared.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_draw.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_temp\nn_temp.h">
+      <Filter>Header Files\modules\nn_temp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_core.h">
+      <Filter>Header Files\modules\nn_temp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\debugger.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\debugnet.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\debugmsg.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\debugcontrol.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\sysapp\sysapp.h">
+      <Filter>Header Files\modules\sysapp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\sysapp\sysapp_title.h">
+      <Filter>Header Files\modules\sysapp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\types.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_debug.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp.h">
+      <Filter>Header Files\modules\nn_nfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_result.h">
+      <Filter>Header Files\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_result.h">
+      <Filter>Header Files\modules\nn_nfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ac\nn_ac_result.h">
+      <Filter>Header Files\modules\nn_ac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad.h">
+      <Filter>Header Files\modules\vpad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad_core.h">
+      <Filter>Header Files\modules\vpad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad_status.h">
+      <Filter>Header Files\modules\vpad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\padscore\padscore_kpad_status.h">
+      <Filter>Header Files\modules\padscore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core.h">
+      <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_act\nn_act_result.h">
+      <Filter>Header Files\modules\nn_act</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_device.h">
+      <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_result.h">
+      <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_core.h">
+      <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_atomic64.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\swkbd\swkbd.h">
+      <Filter>Header Files\modules\swkbd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\swkbd\swkbd_core.h">
+      <Filter>Header Files\modules\swkbd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_rendezvous.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_enum.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_enum_string.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_sampler.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_format.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_taskqueue.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\gfd.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_registers.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_state.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_contextstate.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_mem.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_event.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_swap.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_cbpool.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_writer.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_format.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_buffer.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_reader.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_clear.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_sq.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_sq.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_cb.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_cb.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_db.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_db.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_vgt.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_vgt.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_spi.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_spi.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_pa.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_common.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl_generator.h">
+      <Filter>Header Files\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.h">
+      <Filter>Header Files\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\commandqueue.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_sx.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_sx.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_pa.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_contextstate.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_td.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\input\input.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_path.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_node.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_filehandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_folderhandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_folderhandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_filehandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_folderhandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_path.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_lockedcache.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_exit.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler.h">
+      <Filter>Header Files\gpu\microcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_shadir.h">
+      <Filter>Header Files\gpu\microcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_decoder.h">
+      <Filter>Header Files\gpu\microcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_instructions.h">
+      <Filter>Header Files\gpu\microcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_save\nn_save_file.h">
+      <Filter>Header Files\modules\nn_save</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_addrlib.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_dds.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_aperture.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2r_buffer.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2r_surface.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_unitheap.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_tessellation.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_ai.h">
+      <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2_query.h">
+      <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\mic\mic.h">
+      <Filter>Header Files\modules\mic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\mic\mic_core.h">
+      <Filter>Header Files\modules\mic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_save\nn_save_dir.h">
+      <Filter>Header Files\modules\nn_save</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_client.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_path.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_stat.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_file.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_dir.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_filehandle.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_filedata.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_link_folder.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_link_file.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_dir.h">
+      <Filter>Header Files\modules\nn_temp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_acp\nn_acp.h">
+      <Filter>Header Files\modules\nn_acp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_acp\nn_acp_title.h">
+      <Filter>Header Files\modules\nn_acp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet.h">
+      <Filter>Header Files\modules\nsysnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_socket_lib.h">
+      <Filter>Header Files\modules\nsysnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_ssl.h">
+      <Filter>Header Files\modules\nsysnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ndm\nn_ndm.h">
+      <Filter>Header Files\modules\nn_ndm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ndm\nn_ndm_init.h">
+      <Filter>Header Files\modules\nn_ndm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_init.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_fp\nn_fp_init.h">
+      <Filter>Header Files\modules\nn_fp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_fp\nn_fp_friends.h">
+      <Filter>Header Files\modules\nn_fp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_init.h">
+      <Filter>Header Files\modules\nn_nfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_detection.h">
+      <Filter>Header Files\modules\nn_nfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_settings.h">
+      <Filter>Header Files\modules\nn_nfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_acp\nn_acp_device.h">
+      <Filter>Header Files\modules\nn_acp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_vs.h">
+      <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs_typeinfo.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_tasksetting.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_result.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_nettasksetting.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_titleid.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_rawultasksetting.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_playreportsetting.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_downloadedtopicdata.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_downloadedcommunitydata.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_ffl.h">
+      <Filter>Header Files\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_result.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_uploadeddatabase.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_uploadedpostdata.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv_init.h">
+      <Filter>Header Files\modules\nn_olv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_task.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_taskid.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_title.h">
+      <Filter>Header Files\modules\nn_boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_interrupts.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\stackobject.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_idlock.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_queue.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\wfunc_call.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\wfunc_ptr.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_internal.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\ppcinvokeresult.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\ppctypeconv.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\ppcinvoke.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\ppcinvokeargs.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\ppcinvokelog.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hle.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hlemodule.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hlefunction.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hledata.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_loader.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\elf.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_filesystem.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hlesymbol.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\debugger\debugger_ui.h">
+      <Filter>Header Files\debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\decaf.h">
+      <Filter>Header Files\decaf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\decaf_input.h">
+      <Filter>Header Files\decaf</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\libdecaf\src\gpu\microcode\latte_instructions_def.inl">
+      <Filter>Header Files\gpu\microcode</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\vsdebuggervis.natvis" />
+  </ItemGroup>
+</Project>

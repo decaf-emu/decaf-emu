@@ -3,7 +3,7 @@
 #include <iostream>
 #include "config.h"
 #include "clilog.h"
-#include "decaf/decaf.h"
+#include "libdecaf/decaf.h"
 
 using namespace decaf::input;
 

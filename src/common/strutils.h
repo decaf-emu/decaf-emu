@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-#include "platform/platform.h"
+#include "platform.h"
 
 #ifdef PLATFORM_WINDOWS
    #define snprintf sprintf_s

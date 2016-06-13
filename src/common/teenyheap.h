@@ -3,7 +3,7 @@
 #include <map>
 #include <vector>
 #include <mutex>
-#include "common/align.h"
+#include "align.h"
 
 class TeenyHeap
 {
