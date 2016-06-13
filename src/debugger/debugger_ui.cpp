@@ -61,6 +61,16 @@ initialise()
    io.KeyMap[ImGuiKey_X] = static_cast<int>(KeyboardKey::X);
    io.KeyMap[ImGuiKey_Y] = static_cast<int>(KeyboardKey::Y);
    io.KeyMap[ImGuiKey_Z] = static_cast<int>(KeyboardKey::Z);
+
+   io.Fonts->AddFontDefault();
+   static const ImWchar icons_ranges[] = { 0x2500, 0x25ff, 0 };
+   ImFontConfig config;
+   config.MergeMode = true;
+   config.MergeGlyphCenterV = true;
+   io.Fonts->AddFontFromFileTTF("DejaVuSansMono.ttf", 13.0f, &config, icons_ranges);
+
+   auto &style = ImGui::GetStyle();
+   style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.95f);
 }
 
 void
