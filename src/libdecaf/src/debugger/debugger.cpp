@@ -1,10 +1,11 @@
-#include <atomic>
 #include "common/emuassert.h"
 #include "common/log.h"
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
 #include "debugger/debugger_branchcalc.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
+#include <atomic>
+#include <condition_variable>
 
 namespace debugger
 {
