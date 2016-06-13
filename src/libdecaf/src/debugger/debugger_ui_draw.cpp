@@ -305,8 +305,8 @@ public:
       gotoTargetAddr = -1;
       editAddr = -1;
       editTakeFocus = false;
-      strcpy(dataInput, "");
-      strcpy(addrInput, "");
+      dataInput[0] = 0;
+      addrInput[0] = 0;
       allowEditing = true;
       regionStart = 0x00000000;
       regionSize = 0x00000000;
@@ -424,8 +424,9 @@ public:
                {
                   if (mem::valid(regionStart + addr)) {
                      ImGui::SetKeyboardFocusHere();
-                     sprintf(addrInput, "%08X", base_display_addr + addr);
-                     sprintf(dataInput, "%02X", mem::read<unsigned char>(regionStart + addr));
+
+                     snprintf(addrInput, 32, "%08X", base_display_addr + addr);
+                     snprintf(dataInput, 32, "%02X", mem::read<unsigned char>(regionStart + addr));
                   }
                }
                ImGui::PushItemWidth(ImGui::CalcTextSize("FF").x);
@@ -440,8 +441,9 @@ public:
                   data_write = data_next = true;
                if (data_write)
                {
+                  std::istringstream is(dataInput);
                   int data;
-                  if (sscanf(dataInput, "%X", &data) == 1)
+                  if (is >> data)
                      mem::write(regionStart + addr, static_cast<unsigned char>(data));
                }
                ImGui::PopID();
@@ -513,8 +515,9 @@ public:
       ImGui::PushItemWidth(70);
       if (ImGui::InputText("##addr", addrInput, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
       {
+         std::istringstream is(addrInput);
          uint32_t goto_addr;
-         if (sscanf(addrInput, "%X", &goto_addr) == 1) {
+         if ((is >> std::hex >> goto_addr)) {
             gotoAddress(goto_addr);
          }
       }
