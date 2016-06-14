@@ -513,6 +513,7 @@ void
 Module::initialiseSchedulerFunctions()
 {
    sActiveThreads = coreinit::internal::sysAlloc<OSThreadQueue>();
+
    for (auto i = 0; i < 3; ++i) {
       sSchedulerEnabled[i] = true;
       sCurrentThread[i] = nullptr;

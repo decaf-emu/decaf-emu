@@ -557,18 +557,6 @@ OSRunThread(OSThread *thread,
 }
 
 
-// TODO: Move to internal
-OSThread *
-OSSetDefaultThread(uint32_t core,
-                   OSThread *thread)
-{
-   assert(core < CoreCount);
-   auto old = sDefaultThreads[core];
-   sDefaultThreads[core] = thread;
-   return old;
-}
-
-
 /**
  * Set a thread's affinity.
  */
@@ -926,6 +914,13 @@ Module::registerThreadFunctions()
 
 namespace internal
 {
+
+void
+setDefaultThread(uint32_t core,
+                 OSThread *thread)
+{
+   sDefaultThreads[core] = thread;
+}
 
 bool threadSortFunc(OSThread *lhs, OSThread *rhs)
 {

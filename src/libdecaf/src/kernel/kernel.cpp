@@ -264,7 +264,7 @@ launchGame()
       OSCreateThread(thread, 0u, 0, nullptr,
          reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, 16,
          static_cast<OSThreadAttributes>(1 << i));
-      OSSetDefaultThread(i, thread);
+      internal::setDefaultThread(i, thread);
       OSSetThreadName(thread, name);
    }
 

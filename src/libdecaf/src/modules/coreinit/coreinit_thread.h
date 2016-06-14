@@ -396,10 +396,6 @@ OSRunThread(OSThread *thread,
             uint32_t argc,
             void *argv);
 
-OSThread *
-OSSetDefaultThread(uint32_t core,
-                   OSThread *thread);
-
 BOOL
 OSSetThreadAffinity(OSThread *thread,
                     uint32_t affinity);
@@ -456,7 +452,13 @@ OSYieldThread();
 namespace internal
 {
 
-bool threadSortFunc(OSThread *lhs, OSThread *rhs);
+void
+setDefaultThread(uint32_t core,
+                 OSThread *thread);
+
+bool threadSortFunc(OSThread *lhs,
+                    OSThread *rhs);
+
 using ThreadQueue = SortedQueue<OSThreadQueue, OSThreadLink, OSThread, &OSThread::link, threadSortFunc>;
 
 } // namespace internal
