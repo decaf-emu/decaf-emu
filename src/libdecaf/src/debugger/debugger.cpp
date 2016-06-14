@@ -135,7 +135,7 @@ void handleDbgBreakInterrupt()
    }
 
    // Spin around the release condition while we are paused
-   while (sIsPaused.load()) {
+   while (sIsPausing.load() || sIsPaused.load()) {
       sPauseReleaseCond.wait(lock);
    }
 
