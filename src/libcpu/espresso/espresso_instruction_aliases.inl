@@ -3,9 +3,11 @@ INSA(lis, addis, (rS == 0))
 
 INSA(mflr, mfspr, (spr == 8))
 INSA(mfctr, mfspr, (spr == 9))
+INSA(mfxer, mfspr, (spr == 1))
 
 INSA(mtlr, mtspr, (spr == 8))
 INSA(mtctr, mtspr, (spr == 9))
+INSA(mtxer, mtspr, (spr == 1))
 
 INSA(mtcr, mtcrf, (crm == 0xFF))
 
