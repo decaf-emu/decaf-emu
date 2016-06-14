@@ -768,10 +768,16 @@
     <ClCompile Include="..\src\libdecaf\src\decaf_config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\decaf_input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\libdecaf\decaf_graphics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\decaf_nullgraphicsdriver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\decaf_nullinputdriver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1453,6 +1459,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum_string.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\decaf_nullinputdriver.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\decaf_nullgraphicsdriver.h">
       <Filter>Header Files</Filter>

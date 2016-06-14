@@ -152,6 +152,8 @@
   <ItemGroup>
     <ClCompile Include="..\src\libdecaf\decaf_graphics.cpp" />
     <ClCompile Include="..\src\libdecaf\decaf_nullgraphicsdriver.cpp" />
+    <ClCompile Include="..\src\libdecaf\decaf_input.cpp" />
+    <ClCompile Include="..\src\libdecaf\decaf_nullinputdriver.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_draw.cpp" />
@@ -348,6 +350,7 @@
     <ClInclude Include="..\src\libdecaf\decaf_graphics.h" />
     <ClInclude Include="..\src\libdecaf\decaf_input.h" />
     <ClInclude Include="..\src\libdecaf\decaf_nullgraphicsdriver.h" />
+    <ClInclude Include="..\src\libdecaf\decaf_nullinputdriver.h" />
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger.h" />
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger_branchcalc.h" />
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger_ui.h" />
