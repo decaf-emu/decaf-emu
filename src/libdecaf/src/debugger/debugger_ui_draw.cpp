@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <vector>
 #include <spdlog/spdlog.h>
+#include "debugger.h"
 #include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
@@ -13,6 +14,11 @@ namespace debugger
 
 namespace ui
 {
+
+// We store this locally so that we do not end up with isRunning
+//  switching whilst we are in the midst of drawing the UI.
+static bool
+sIsPaused = false;
 
 void openAddrInMemoryView(uint32_t addr);
 
@@ -543,7 +549,19 @@ void draw()
 {
    static bool debugViewsVisible = false;
 
+   if (!debugger::isEnabled()) {
+      return;
+   }
+
    auto &io = ImGui::GetIO();
+
+   if (debugger::isPaused() && !sIsPaused) {
+      // Just Paused
+      sIsPaused = true;
+
+      // Force the debugger to pop up
+      debugViewsVisible = true;
+   }
 
    if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::D), false)) {
       debugViewsVisible = !debugViewsVisible;
@@ -552,8 +570,13 @@ void draw()
    if (debugViewsVisible) {
       ImGui::BeginMainMenuBar();
       if (ImGui::BeginMenu("Debug")) {
-         ImGui::MenuItem("Pause", nullptr, false, false);
-         ImGui::MenuItem("Resume", nullptr, false, false);
+         if (ImGui::MenuItem("Pause", nullptr, false, !sIsPaused)) {
+            debugger::pauseAll();
+         }
+         if (ImGui::MenuItem("Resume", nullptr, false, sIsPaused)) {
+            debugger::resumeAll();
+            sIsPaused = false;
+         }
          ImGui::MenuItem("Step Over", nullptr, false, false);
          ImGui::MenuItem("Step Into", nullptr, false, false);
          ImGui::Separator();

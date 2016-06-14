@@ -4,7 +4,7 @@
 #include "kernel_filesystem.h"
 #include <pugixml.hpp>
 #include <excmd.h>
-#include "debugcontrol.h"
+#include "debugger/debugger.h"
 #include "filesystem/filesystem.h"
 #include "common/platform_fiber.h"
 #include "common/platform_thread.h"
@@ -110,7 +110,7 @@ cpuInterruptHandler(uint32_t interrupt_flags)
    }
 
    if (interrupt_flags & cpu::DBGBREAK_INTERRUPT) {
-      gDebugControl.handleDbgBreakInterrupt();
+      debugger::handleDbgBreakInterrupt();
    }
 
    if (!(interrupt_flags & ~cpu::NONMASKABLE_INTERRUPTS)) {

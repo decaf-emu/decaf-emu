@@ -10,12 +10,12 @@
 #include "coreinit_thread.h"
 #include "coreinit_internal_queue.h"
 #include "coreinit_internal_loader.h"
+#include "debugger/debugger.h"
 #include "kernel/kernel.h"
 #include "libcpu/trace.h"
 #include "ppcutils/wfunc_call.h"
 #include "ppcutils/stackobject.h"
 #include "common/emuassert.h"
-#include "debugger.h"
 
 namespace coreinit
 {
@@ -482,13 +482,7 @@ GameThreadEntry(uint32_t argc, void *argv)
    auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
    auto start = OSThreadEntryPointFn(appModule->entryPoint);
 
-   if (gDebugger.isEnabled()) {
-      if (userPreinit) {
-         cpu::addBreakpoint(userPreinit, cpu::SYSTEM_BPFLAG);
-      }
-
-      cpu::addBreakpoint(start, cpu::SYSTEM_BPFLAG);
-   }
+   debugger::handlePreLaunch();
 
    if (userPreinit) {
       ppcutils::StackObject<be_ptr<CommonHeap>> mem1HeapPtr;

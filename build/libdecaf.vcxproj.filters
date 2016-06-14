@@ -46,9 +46,6 @@
     <Filter Include="Source Files\modules\zlib125">
       <UniqueIdentifier>{e15b800e-59f9-40f8-bf71-3508459abb20}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\system">
-      <UniqueIdentifier>{8c8252e9-b776-49cf-ab0a-ec5a801be21e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\modules\nn_act">
       <UniqueIdentifier>{99e874d6-385b-42d6-ba40-a1157f13fef9}</UniqueIdentifier>
     </Filter>
@@ -356,15 +353,6 @@
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_core.cpp">
       <Filter>Source Files\modules\nn_temp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\debugger.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\debugnet.cpp">
-      <Filter>Source Files\system</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\debugcontrol.cpp">
-      <Filter>Source Files\system</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\modules\sysapp\sysapp.cpp">
       <Filter>Source Files\modules\sysapp</Filter>
@@ -777,6 +765,9 @@
     <ClCompile Include="..\src\libdecaf\src\decaf\decaf_config.cpp">
       <Filter>Source Files\decaf</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -946,18 +937,6 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_core.h">
       <Filter>Header Files\modules\nn_temp</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\debugger.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\debugnet.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\debugmsg.h">
-      <Filter>Header Files\system</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\debugcontrol.h">
-      <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\sysapp\sysapp.h">
       <Filter>Header Files\modules\sysapp</Filter>
@@ -1462,6 +1441,12 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\decaf_debugger.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\debugger\debugger_branchcalc.h">
+      <Filter>Header Files\debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\debugger\debugger.h">
+      <Filter>Header Files\debugger</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

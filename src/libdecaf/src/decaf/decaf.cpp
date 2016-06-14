@@ -1,7 +1,7 @@
 #include "common/platform_dir.h"
 #include "decaf.h"
 #include "decaf_config.h"
-#include "debugger.h"
+#include "debugger/debugger.h"
 #include "debugger/debugger_ui.h"
 #include "filesystem/filesystem.h"
 #include "gpu/opengl/opengl_driver.h"
@@ -91,9 +91,7 @@ initialise(const std::string &gamePath)
    mem::initialise();
    cpu::initialise();
    kernel::initialise();
-
-   // Initialise debugger
-   gDebugger.initialise();
+   ::debugger::initialise();
 
    // Setup filesystem
    auto filesystem = new fs::FileSystem();

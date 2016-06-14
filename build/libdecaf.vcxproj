@@ -150,12 +150,10 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\libdecaf\src\debugcontrol.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\debugger.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_draw.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_opengl.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\debugnet.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf\decaf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf\decaf_config.cpp" />
     <ClCompile Include="..\src\libdecaf\src\emulog.cpp" />
@@ -346,11 +344,9 @@
     <ClInclude Include="..\src\libdecaf\decaf_debugger.h" />
     <ClInclude Include="..\src\libdecaf\decaf_graphicsdriver.h" />
     <ClInclude Include="..\src\libdecaf\decaf_input.h" />
-    <ClInclude Include="..\src\libdecaf\src\debugcontrol.h" />
-    <ClInclude Include="..\src\libdecaf\src\debugger.h" />
+    <ClInclude Include="..\src\libdecaf\src\debugger\debugger.h" />
+    <ClInclude Include="..\src\libdecaf\src\debugger\debugger_branchcalc.h" />
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger_ui.h" />
-    <ClInclude Include="..\src\libdecaf\src\debugmsg.h" />
-    <ClInclude Include="..\src\libdecaf\src\debugnet.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_file.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_filehandle.h" />
