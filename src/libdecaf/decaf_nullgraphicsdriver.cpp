@@ -29,6 +29,9 @@ void
 NullGraphicsDriver::stop()
 {
    mRunning = false;
+
+   // Wake the GPU thread
+   gpu::queueUserBuffer(nullptr, 0);
 }
 
 float
