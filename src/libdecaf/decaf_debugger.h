@@ -8,6 +8,9 @@ namespace debugger
 {
 
 void
+initialise();
+
+void
 initialiseUiGL();
 
 void

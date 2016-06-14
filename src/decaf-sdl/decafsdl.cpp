@@ -105,6 +105,8 @@ DecafSDL::run(const std::string &gamePath)
       return false;
    }
 
+   decaf::debugger::initialise();
+
    // Start graphics thread
    mGraphicsThread = std::thread {
       [this]() {

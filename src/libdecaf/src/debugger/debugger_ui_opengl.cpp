@@ -31,6 +31,12 @@ static DebugDrawData
 sDebugDrawData;
 
 void
+initialise()
+{
+   ::debugger::ui::initialise();
+}
+
+void
 initialiseUiGL()
 {
    auto &data = sDebugDrawData;

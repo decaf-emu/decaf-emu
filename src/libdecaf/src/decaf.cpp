@@ -132,7 +132,6 @@ initialise(const std::string &gamePath)
 void
 start()
 {
-   ::debugger::ui::initialise();
    cpu::start();
 }
 
