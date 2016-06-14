@@ -51,12 +51,6 @@ getCommandLineParser()
       .add_option_group(sys_options)
       .add_argument("game directory", value<std::string> {});
 
-   parser.add_command("fuzztest");
-
-   parser.add_command("hwtest")
-      .add_option_group(jit_options)
-      .add_option_group(log_options);
-
    return parser;
 }
 
