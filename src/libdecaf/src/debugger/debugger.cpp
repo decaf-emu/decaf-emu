@@ -44,7 +44,7 @@ paused()
 cpu::Core *
 getPausedCoreState(uint32_t coreId)
 {
-   assert(isPaused());
+   assert(paused());
    return sCorePauseState[coreId];
 }
 
