@@ -136,6 +136,18 @@ start()
    cpu::start();
 }
 
+int
+waitForExit()
+{
+   // Wait for CPU to finish
+   cpu::join();
+
+   // Make sure we clean up
+   decaf::shutdown();
+
+   return kernel::getExitCode();
+}
+
 void
 shutdown()
 {
@@ -147,8 +159,20 @@ shutdown()
       ::debugger::resumeAll();
    }
 
-   // Completely shut down the CPU (this waits for it to stop)
+   // Shut down CPU
    cpu::halt();
+
+   // Wait for CPU to finish
+   cpu::join();
+
+   // Stop graphics driver
+   auto graphicsDriver = getGraphicsDriver();
+
+   if (graphicsDriver) {
+      graphicsDriver->stop();
+   }
+
+   setGraphicsDriver(nullptr);
 }
 
 void

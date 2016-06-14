@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_debug.h"
+#include "coreinit_exit.h"
 #include "coreinit_thread.h"
 #include "libcpu/trace.h"
 #include "common/log.h"
@@ -128,7 +129,7 @@ OSPanic(const char *file, int line, const char *fmt, ppctypes::VarList &args)
    std::string str;
    formatString(fmt, args, str);
    gLog->error("OSPanic {}:{} {}", file, line, str);
-   _exit(1);
+   ghs_exit(-1);
 }
 
 static void

@@ -21,6 +21,9 @@ initialise(const std::string &gamePath);
 void
 start();
 
+int
+waitForExit();
+
 void
 shutdown();
 

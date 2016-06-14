@@ -14,6 +14,7 @@
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
+#include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_interrupts.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
 #include "modules/gx2/gx2_event.h"
@@ -61,7 +62,10 @@ static std::string
 gGameName;
 
 static TeenyHeap *
-sSystemHeap;
+sSystemHeap = nullptr;
+
+static int
+sExitCode = 0;
 
 void
 setGameName(const std::string& name)
@@ -274,6 +278,21 @@ launchGame()
    OSRunThread(OSGetDefaultThread(1), gameThreadEntry, 0, nullptr);
 
    return true;
+}
+
+void
+exitProcess(int code)
+{
+   sExitCode = code;
+   gRunning = false;
+   cpu::halt();
+   switchThread(coreinit::OSGetCurrentThread(), nullptr);
+}
+
+int
+getExitCode()
+{
+   return sExitCode;
 }
 
 } // namespace kernel

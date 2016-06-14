@@ -127,7 +127,9 @@ void
 join()
 {
    for (auto i = 0; i < 3; ++i) {
-      gCore[i].thread.join();
+      if (gCore[i].thread.joinable()) {
+         gCore[i].thread.join();
+      }
    }
 
    // Mark the CPU as no longer running
@@ -137,7 +139,9 @@ join()
    gTimerCondition.notify_all();
 
    // Wait for the timer thread to shut down
-   gTimerThread.join();
+   if (gTimerThread.joinable()) {
+      gTimerThread.join();
+   }
 }
 
 void
@@ -146,8 +150,6 @@ halt()
    for (auto i = 0; i < 3; ++i) {
       interrupt(i, SRESET_INTERRUPT);
    }
-
-   join();
 }
 
 void
