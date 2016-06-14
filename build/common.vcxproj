@@ -30,7 +30,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\common\src\platform_posix_memorymap.cpp">
+    <ClCompile Include="..\src\common\src\platform_posix_memory.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -48,7 +48,7 @@
     <ClCompile Include="..\src\common\src\platform_win_dir.cpp" />
     <ClCompile Include="..\src\common\src\platform_win_exception.cpp" />
     <ClCompile Include="..\src\common\src\platform_win_fiber.cpp" />
-    <ClCompile Include="..\src\common\src\platform_win_memorymap.cpp" />
+    <ClCompile Include="..\src\common\src\platform_win_memory.cpp" />
     <ClCompile Include="..\src\common\src\platform_win_thread.cpp" />
     <ClCompile Include="..\src\common\src\platform_win_time.cpp" />
   </ItemGroup>
@@ -76,7 +76,7 @@
     <ClInclude Include="..\src\common\platform_dir.h" />
     <ClInclude Include="..\src\common\platform_exception.h" />
     <ClInclude Include="..\src\common\platform_fiber.h" />
-    <ClInclude Include="..\src\common\platform_memorymap.h" />
+    <ClInclude Include="..\src\common\platform_memory.h" />
     <ClInclude Include="..\src\common\platform_thread.h" />
     <ClInclude Include="..\src\common\platform_time.h" />
     <ClInclude Include="..\src\common\pow.h" />

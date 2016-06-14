@@ -130,9 +130,6 @@ initialise(const std::string &gamePath)
    kernel::setFileSystem(filesystem);
    kernel::setGameName(path.filename());
 
-   // Lock out some memory for unimplemented data access
-   mem::protect(0xfff00000, 0x000fffff);
-
    // Mount system path
    auto systemPath = fs::HostPath { decaf::config::system::system_path };
    filesystem->mountHostFolder("/vol/storage_mlc01", systemPath.join("mlc"));

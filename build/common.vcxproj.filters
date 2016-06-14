@@ -30,7 +30,7 @@
     <ClCompile Include="..\src\common\src\platform_win_fiber.cpp">
       <Filter>Source Files\win</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\common\src\platform_win_memorymap.cpp">
+    <ClCompile Include="..\src\common\src\platform_win_memory.cpp">
       <Filter>Source Files\win</Filter>
     </ClCompile>
     <ClCompile Include="..\src\common\src\platform_win_thread.cpp">
@@ -48,7 +48,7 @@
     <ClCompile Include="..\src\common\src\platform_posix_fiber.cpp">
       <Filter>Source Files\posix</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\common\src\platform_posix_memorymap.cpp">
+    <ClCompile Include="..\src\common\src\platform_posix_memory.cpp">
       <Filter>Source Files\posix</Filter>
     </ClCompile>
     <ClCompile Include="..\src\common\src\platform_posix_thread.cpp">
@@ -128,7 +128,7 @@
     <ClInclude Include="..\src\common\platform_fiber.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\common\platform_memorymap.h">
+    <ClInclude Include="..\src\common\platform_memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\common\platform_thread.h">
