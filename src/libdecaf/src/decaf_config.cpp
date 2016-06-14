@@ -6,6 +6,14 @@ namespace decaf
 namespace config
 {
 
+namespace debugger
+{
+
+bool enabled = true;
+bool break_on_entry = false;
+
+} // namespace debugger
+
 namespace gx2
 {
 

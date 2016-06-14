@@ -91,7 +91,6 @@ initialise(const std::string &gamePath)
    mem::initialise();
    cpu::initialise();
    kernel::initialise();
-   ::debugger::initialise();
 
    // Setup filesystem
    auto filesystem = new fs::FileSystem();
@@ -152,7 +151,7 @@ void
 shutdown()
 {
    // Make sure the CPU stops being blocked by the debugger.
-   if (::debugger::isPaused()) {
+   if (::debugger::paused()) {
       // TODO: This is technically a race as the debugger is designed such that
       //  it controls when the cores resume.  This might need to be routed through
       //  debugger::ui for that reason.

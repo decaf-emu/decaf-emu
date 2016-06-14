@@ -52,6 +52,17 @@ int right_stick_y = -1;
 
 } // namespace input
 
+struct CerealDebugger
+{
+   template <class Archive>
+   void serialize(Archive &ar)
+   {
+      using namespace decaf::config::debugger;
+      ar(CEREAL_NVP(enabled),
+         CEREAL_NVP(break_on_entry));
+   }
+};
+
 struct CerealGX2
 {
    template <class Archive>
@@ -153,11 +164,12 @@ bool load(const std::string &path)
    cereal::JSONInputArchive input(file);
 
    try {
-      input(cereal::make_nvp("gx2", CerealGX2 {}),
-            cereal::make_nvp("log", CerealLog {}),
+      input(cereal::make_nvp("debugger", CerealDebugger {}),
+            cereal::make_nvp("gx2", CerealGX2 {}),
+            cereal::make_nvp("input", CerealInput {}),
             cereal::make_nvp("jit", CerealJit {}),
-            cereal::make_nvp("system", CerealSystem {}),
-            cereal::make_nvp("input", CerealInput {}));
+            cereal::make_nvp("log", CerealLog {}),
+            cereal::make_nvp("system", CerealSystem {}));
    } catch (std::exception e) {
       // Can't use gLog because it is NULL here.
       std::cout << "Failed to parse config.json: " << e.what() << std::endl;
@@ -171,11 +183,12 @@ void save(const std::string &path)
 {
    std::ofstream file(path, std::ios::binary);
    cereal::JSONOutputArchive output(file);
-   output(cereal::make_nvp("gx2", CerealGX2 {}),
-          cereal::make_nvp("log", CerealLog {}),
+   output(cereal::make_nvp("debugger", CerealDebugger {}),
+          cereal::make_nvp("gx2", CerealGX2 {}),
+          cereal::make_nvp("input", CerealInput {}),
           cereal::make_nvp("jit", CerealJit {}),
-          cereal::make_nvp("system", CerealSystem {}),
-          cereal::make_nvp("input", CerealInput {}));
+          cereal::make_nvp("log", CerealLog {}),
+          cereal::make_nvp("system", CerealSystem {}));
 }
 
 } // namespace config

@@ -1,5 +1,6 @@
 #include "common/emuassert.h"
 #include "common/log.h"
+#include "decaf_config.h"
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
 #include "debugger/debugger_branchcalc.h"
@@ -9,9 +10,6 @@
 
 namespace debugger
 {
-
-static bool
-sIsInitialised;
 
 static std::mutex
 sMutex;
@@ -31,35 +29,35 @@ sCorePauseState[3];
 static uint32_t
 sPauseInitiatorCoreId;
 
-void initialise()
+bool
+enabled()
 {
-   sIsInitialised = true;
+   return decaf::config::debugger::enabled;
 }
 
-bool isEnabled()
-{
-   return sIsInitialised;
-}
-
-bool isPaused()
+bool
+paused()
 {
    return sIsPaused.load();
 }
 
-cpu::Core *getPausedCoreState(uint32_t coreId)
+cpu::Core *
+getPausedCoreState(uint32_t coreId)
 {
    assert(isPaused());
    return sCorePauseState[coreId];
 }
 
-void pauseAll()
+void
+pauseAll()
 {
    for (auto i = 0; i < 3; ++i) {
       cpu::interrupt(i, cpu::DBGBREAK_INTERRUPT);
    }
 }
 
-void resumeAll()
+void
+resumeAll()
 {
    auto oldState = sIsPaused.exchange(false);
    emuassert(oldState);
@@ -69,7 +67,8 @@ void resumeAll()
    sPauseReleaseCond.notify_all();
 }
 
-static void stepCore(uint32_t coreId, bool stepOver)
+static void
+stepCore(uint32_t coreId, bool stepOver)
 {
    emuassert(sIsPaused.load());
 
@@ -80,26 +79,34 @@ static void stepCore(uint32_t coreId, bool stepOver)
    resumeAll();
 }
 
-void stepCoreInto(uint32_t coreId)
+void
+stepCoreInto(uint32_t coreId)
 {
    stepCore(coreId, false);
 }
 
-void stepCoreOver(uint32_t coreId)
+void
+stepCoreOver(uint32_t coreId)
 {
    stepCore(coreId, true);
 }
 
-void handlePreLaunch()
+void
+handlePreLaunch()
 {
-   // If we are not initialised, we should ignore the PreLaunch event
-   if (!sIsInitialised) {
+   // Do not add entry breakpoints if debugger is disabled
+   if (!decaf::config::debugger::enabled) {
+      return;
+   }
+
+   // Do not add entry breakpoints if it is disabled
+   if (!decaf::config::debugger::break_on_entry) {
       return;
    }
 
    auto appModule = coreinit::internal::getUserModule();
-
    auto userPreinit = appModule->findExport("__preinit_user");
+
    if (userPreinit) {
       cpu::addBreakpoint(userPreinit, cpu::SYSTEM_BPFLAG);
    }
@@ -108,10 +115,11 @@ void handlePreLaunch()
    cpu::addBreakpoint(start, cpu::SYSTEM_BPFLAG);
 }
 
-void handleDbgBreakInterrupt()
+void
+handleDbgBreakInterrupt()
 {
    // If we are not initialised, we should ignore DbgBreaks
-   if (!sIsInitialised) {
+   if (!decaf::config::debugger::enabled) {
       return;
    }
 

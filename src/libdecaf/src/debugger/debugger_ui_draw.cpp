@@ -606,13 +606,13 @@ void draw()
 {
    static bool debugViewsVisible = false;
 
-   if (!debugger::isEnabled()) {
+   if (!debugger::enabled()) {
       return;
    }
 
    auto &io = ImGui::GetIO();
 
-   if (debugger::isPaused() && !sIsPaused) {
+   if (debugger::paused() && !sIsPaused) {
       // Just Paused
       sIsPaused = true;
 

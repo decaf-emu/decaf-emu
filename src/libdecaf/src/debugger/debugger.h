@@ -5,18 +5,31 @@
 namespace debugger
 {
 
-void initialise();
-bool isEnabled();
-bool isPaused();
+bool
+enabled();
 
-cpu::Core *getPausedCoreState(uint32_t coreId);
+bool
+paused();
 
-void pauseAll();
-void resumeAll();
-void stepCoreInto(uint32_t coreId);
-void stepCoreOver(uint32_t coreId);
+cpu::Core *
+getPausedCoreState(uint32_t coreId);
 
-void handlePreLaunch();
-void handleDbgBreakInterrupt();
+void
+pauseAll();
+
+void
+resumeAll();
+
+void
+stepCoreInto(uint32_t coreId);
+
+void
+stepCoreOver(uint32_t coreId);
+
+void
+handlePreLaunch();
+
+void
+handleDbgBreakInterrupt();
 
 } // namespace debugger
