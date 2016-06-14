@@ -90,7 +90,7 @@ DecafSDL::run(const std::string &gamePath)
    decaf::setGraphicsDriver(mGraphicsDriver);
 
    // Set input provider
-   decaf::setInputProvider(this);
+   decaf::setInputDriver(this);
 
    decaf::setClipboardTextCallbacks(
       []() -> const char * {

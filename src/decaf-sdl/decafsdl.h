@@ -5,7 +5,7 @@
 
 using namespace decaf::input;
 
-class DecafSDL : public decaf::InputProvider
+class DecafSDL : public decaf::InputDriver
 {
    static const auto WindowWidth = 1420;
    static const auto WindowHeight = 768;

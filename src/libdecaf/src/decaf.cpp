@@ -1,6 +1,7 @@
 #include "common/platform_dir.h"
 #include "decaf.h"
 #include "decaf_config.h"
+#include "decaf_input.h"
 #include "debugger/debugger.h"
 #include "debugger/debugger_ui.h"
 #include "filesystem/filesystem.h"
@@ -17,12 +18,6 @@
 
 namespace decaf
 {
-
-static GraphicsDriver *
-sGraphicsDriver = nullptr;
-
-static InputProvider *
-sInputProvider = nullptr;
 
 class LogFormatter : public spdlog::formatter
 {
@@ -66,8 +61,8 @@ initialiseLogging(std::vector<spdlog::sink_ptr> &sinks,
 bool
 initialise(const std::string &gamePath)
 {
-   if (!sInputProvider) {
-      gLog->error("No input provider set");
+   if (!getInputDriver()) {
+      gLog->error("No input driver set");
       return false;
    }
 
@@ -172,18 +167,6 @@ GraphicsDriver *
 getGraphicsDriver()
 {
    return sGraphicsDriver;
-}
-
-void
-setInputProvider(InputProvider *provider)
-{
-   sInputProvider = provider;
-}
-
-InputProvider *
-getInputProvider()
-{
-   return sInputProvider;
 }
 
 void

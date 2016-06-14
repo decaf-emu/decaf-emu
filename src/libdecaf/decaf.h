@@ -30,12 +30,6 @@ setGraphicsDriver(GraphicsDriver *driver);
 GraphicsDriver *
 getGraphicsDriver();
 
-void
-setInputProvider(InputProvider *provider);
-
-InputProvider *
-getInputProvider();
-
 // Stuff for the debugger
 void
 injectMouseButtonInput(input::MouseButton button,

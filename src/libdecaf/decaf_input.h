@@ -230,7 +230,7 @@ enum class ButtonStatus : uint32_t
 
 } // namespace input
 
-class InputProvider
+class InputDriver
 {
 public:
    // VPAD
@@ -267,5 +267,11 @@ public:
 
    // TODO: Accelorometers, microphone, etc...
 };
+
+void
+setInputDriver(InputDriver *driver);
+
+InputDriver *
+getInputDriver();
 
 } // namespace decaf
