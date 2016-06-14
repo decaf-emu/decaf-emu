@@ -151,6 +151,14 @@ start()
 void
 shutdown()
 {
+   // Make sure the CPU stops being blocked by the debugger.
+   if (::debugger::isPaused()) {
+      // TODO: This is technically a race as the debugger is designed such that
+      //  it controls when the cores resume.  This might need to be routed through
+      //  debugger::ui for that reason.
+      ::debugger::resumeAll();
+   }
+
    // Completely shut down the CPU (this waits for it to stop)
    cpu::halt();
 }
