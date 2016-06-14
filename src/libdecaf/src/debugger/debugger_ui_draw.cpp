@@ -9,6 +9,9 @@
 #include "kernel/kernel_hlefunction.h"
 #include "decaf.h"
 
+#define HEXTOF(h) static_cast<float>(h&0xFF)/255.0f
+#define HEXTOIMV4(h, a) ImVec4(HEXTOF(h>>16), HEXTOF(h>>8), HEXTOF(h>>0), a)
+
 namespace debugger
 {
 
@@ -22,6 +25,9 @@ sIsPaused = false;
 
 void openAddrInMemoryView(uint32_t addr);
 
+static const ImVec4 InfoPausedTextColor = HEXTOIMV4(0xEF5350, 1.0f);
+static const ImVec4 InfoRunningTextColor = HEXTOIMV4(0x8BC34A, 1.0f);
+
 class InfoView
 {
 public:
@@ -32,10 +38,20 @@ public:
          ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs;
 
       ImGui::SetNextWindowPos(ImVec2(8.0f, 25.0f));
-      ImGui::SetNextWindowSize(ImVec2(180.0f, 27.0f));
+      ImGui::SetNextWindowSize(ImVec2(180.0f, 45.0f));
       ImGui::Begin("Info", nullptr, ImgGuiNoBorder);
+
       float fps = decaf::getGraphicsDriver()->getAverageFPS();
       ImGui::Text("FPS: %.1f (%.3f ms)", fps, 1000.0f / fps);
+
+      ImGui::Text("Status: ");
+      ImGui::SameLine();
+      if (sIsPaused) {
+         ImGui::TextColored(InfoPausedTextColor, "Paused");
+      } else {
+         ImGui::TextColored(InfoRunningTextColor, "Running...");
+      }
+
       ImGui::End();
    }
 
