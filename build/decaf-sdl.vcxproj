@@ -15,16 +15,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\decaf-cli\config.cpp" />
-    <ClCompile Include="..\src\decaf-cli\decafsdl_draw.cpp" />
-    <ClCompile Include="..\src\decaf-cli\decafsdl_input.cpp" />
-    <ClCompile Include="..\src\decaf-cli\main.cpp" />
-    <ClCompile Include="..\src\decaf-cli\decafsdl.cpp" />
+    <ClCompile Include="..\src\decaf-sdl\config.cpp" />
+    <ClCompile Include="..\src\decaf-sdl\decafsdl_draw.cpp" />
+    <ClCompile Include="..\src\decaf-sdl\decafsdl_input.cpp" />
+    <ClCompile Include="..\src\decaf-sdl\main.cpp" />
+    <ClCompile Include="..\src\decaf-sdl\decafsdl.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\decaf-cli\config.h" />
-    <ClInclude Include="..\src\decaf-cli\decafsdl.h" />
-    <ClInclude Include="..\src\decaf-cli\clilog.h" />
+    <ClInclude Include="..\src\decaf-sdl\config.h" />
+    <ClInclude Include="..\src\decaf-sdl\decafsdl.h" />
+    <ClInclude Include="..\src\decaf-sdl\clilog.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E10BC5AA-C1A4-4B17-943D-9C1B4BCD52A9}</ProjectGuid>
@@ -72,21 +72,21 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\decaf-cli;$(SolutionDir)\src\decaf-cli\src;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\decaf-sdl;$(SolutionDir)\src\decaf-sdl\src;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\decaf-cli;$(SolutionDir)\src\decaf-cli\src;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\decaf-sdl;$(SolutionDir)\src\decaf-sdl\src;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\decaf-cli;$(SolutionDir)\src\decaf-cli\src;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\decaf-sdl;$(SolutionDir)\src\decaf-sdl\src;$(SolutionDir)\libraries\pugixml\src;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\cereal\include;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\SDL-mirror\include;$(SolutionDir)\libraries\glbinding\source\glbinding\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

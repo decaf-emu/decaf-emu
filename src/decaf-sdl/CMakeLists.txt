@@ -3,14 +3,14 @@ include_directories(".")
 file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h)
 
-add_executable(decaf-cli ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(decaf-sdl ${SOURCE_FILES} ${HEADER_FILES})
 
-target_link_libraries(decaf-cli
+target_link_libraries(decaf-sdl
     libdecaf
     libcpu
     common)
 
-target_link_libraries(decaf-cli
+target_link_libraries(decaf-sdl
     z
     m
     ${ADDRLIB_LIBRARIES}
@@ -23,7 +23,7 @@ target_link_libraries(decaf-cli
     ${OPENGL_LIBRARIES})
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    target_link_libraries(decaf-cli X11)
+    target_link_libraries(decaf-sdl X11)
 endif ()
 
-install(TARGETS decaf-cli RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+install(TARGETS decaf-sdl RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")

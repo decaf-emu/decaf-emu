@@ -15,30 +15,30 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\decaf-cli\main.cpp">
+    <ClCompile Include="..\src\decaf-sdl\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\decaf-cli\config.cpp">
+    <ClCompile Include="..\src\decaf-sdl\config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\decaf-cli\decafsdl.cpp">
+    <ClCompile Include="..\src\decaf-sdl\decafsdl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\decaf-cli\decafsdl_draw.cpp">
+    <ClCompile Include="..\src\decaf-sdl\decafsdl_draw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\decaf-cli\decafsdl_input.cpp">
+    <ClCompile Include="..\src\decaf-sdl\decafsdl_input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\decaf-cli\config.h">
+    <ClInclude Include="..\src\decaf-sdl\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\decaf-cli\clilog.h">
+    <ClInclude Include="..\src\decaf-sdl\clilog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\decaf-cli\decafsdl.h">
+    <ClInclude Include="..\src\decaf-sdl\decafsdl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
