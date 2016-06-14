@@ -29,6 +29,8 @@ static FastRegionMap<JitCode> sJitBlocks;
 JitCall gCallFn;
 JitFinale gFinaleFn;
 
+void registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr);
+
 void initStubs()
 {
    PPCEmuAssembler a(sRuntime);
@@ -64,6 +66,8 @@ void initialiseRuntime()
 {
    sRuntime = new VMemRuntime(0x20000, 0x40000000);
    initStubs();
+   // TODO: Need to unregister this when the runtime is destroyed
+   registerUnwindTable(sRuntime, reinterpret_cast<intptr_t>(gCallFn));
 }
 
 void freeRuntime()

@@ -38,6 +38,8 @@
     <ClCompile Include="..\src\libcpu\src\jit\jit_loadstore.cpp" />
     <ClCompile Include="..\src\libcpu\src\jit\jit_pairedsingle.cpp" />
     <ClCompile Include="..\src\libcpu\src\jit\jit_system.cpp" />
+    <ClCompile Include="..\src\libcpu\src\jit\jit_unwind_other.cpp" />
+    <ClCompile Include="..\src\libcpu\src\jit\jit_unwind_win.cpp" />
     <ClCompile Include="..\src\libcpu\src\mem.cpp" />
     <ClCompile Include="..\src\libcpu\src\trace.cpp" />
   </ItemGroup>

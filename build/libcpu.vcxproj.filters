@@ -108,6 +108,12 @@
     <ClCompile Include="..\src\libcpu\espresso\espresso_instructionset.cpp">
       <Filter>Source Files\espresso</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_unwind_win.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_unwind_other.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libcpu\src\interpreter\interpreter.h">
