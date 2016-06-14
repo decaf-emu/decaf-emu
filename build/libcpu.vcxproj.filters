@@ -173,6 +173,9 @@
     <ClInclude Include="..\src\libcpu\trace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\jit\jit_vmemruntime.h">
+      <Filter>Header Files\jit</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\libcpu\espresso\espresso_instruction_aliases.inl">

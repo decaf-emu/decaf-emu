@@ -6,6 +6,7 @@
 #include "jit.h"
 #include "jit_internal.h"
 #include "jit_insreg.h"
+#include "jit_vmemruntime.h"
 #include "mem.h"
 #include <vector>
 #include <cfenv>
@@ -22,7 +23,7 @@ static const int JIT_MAX_INST = 500;
 static std::vector<jitinstrfptr_t>
 sInstructionMap;
 
-static asmjit::JitRuntime* sRuntime;
+static VMemRuntime* sRuntime;
 static FastRegionMap<JitCode> sJitBlocks;
 
 JitCall gCallFn;
@@ -59,10 +60,23 @@ void initStubs()
    gFinaleFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(extroLabel));
 }
 
+void initialiseRuntime()
+{
+   sRuntime = new VMemRuntime(0x20000, 0x40000000);
+   initStubs();
+}
+
+void freeRuntime()
+{
+   if (sRuntime) {
+      delete sRuntime;
+      sRuntime = nullptr;
+   }
+}
+
 void initialise()
 {
-   sRuntime = new asmjit::JitRuntime();
-   initStubs();
+   initialiseRuntime();
 
    sInstructionMap.resize(static_cast<size_t>(espresso::InstructionID::InstructionCount), nullptr);
 
@@ -108,14 +122,10 @@ bool hasInstruction(espresso::InstructionID instrId)
 
 void clearCache()
 {
-   if (sRuntime) {
-      delete sRuntime;
-      sRuntime = nullptr;
-   }
+   freeRuntime();
+   initialiseRuntime();
 
    sJitBlocks.clear();
-   sRuntime = new asmjit::JitRuntime();
-   initStubs();
 }
 
 bool jit_b(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia);

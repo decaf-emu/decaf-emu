@@ -59,6 +59,7 @@
     <ClInclude Include="..\src\libcpu\src\jit\jit_float.h" />
     <ClInclude Include="..\src\libcpu\src\jit\jit_insreg.h" />
     <ClInclude Include="..\src\libcpu\src\jit\jit_internal.h" />
+    <ClInclude Include="..\src\libcpu\src\jit\jit_vmemruntime.h" />
     <ClInclude Include="..\src\libcpu\src\statedbg.h" />
     <ClInclude Include="..\src\libcpu\src\utils.h" />
     <ClInclude Include="..\src\libcpu\state.h" />
