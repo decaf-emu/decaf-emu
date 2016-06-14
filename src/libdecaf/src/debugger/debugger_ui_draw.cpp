@@ -1,13 +1,14 @@
-#include "debugger_ui.h"
 #include <imgui.h>
 #include <vector>
 #include <spdlog/spdlog.h>
+#include "common/emuassert.h"
 #include "debugger.h"
+#include "debugger_ui.h"
+#include "decaf.h"
+#include "kernel/kernel_hlefunction.h"
 #include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
-#include "kernel/kernel_hlefunction.h"
-#include "decaf.h"
 
 #define HEXTOF(h) static_cast<float>(h&0xFF)/255.0f
 #define HEXTOIMV4(h, a) ImVec4(HEXTOF(h>>16), HEXTOF(h>>8), HEXTOF(h>>0), a)
@@ -18,6 +19,9 @@ namespace debugger
 namespace ui
 {
 
+static const ImVec4 InfoPausedTextColor = HEXTOIMV4(0xEF5350, 1.0f);
+static const ImVec4 InfoRunningTextColor = HEXTOIMV4(0x8BC34A, 1.0f);
+
 // We store this locally so that we do not end up with isRunning
 //  switching whilst we are in the midst of drawing the UI.
 static bool
@@ -25,8 +29,26 @@ sIsPaused = false;
 
 void openAddrInMemoryView(uint32_t addr);
 
-static const ImVec4 InfoPausedTextColor = HEXTOIMV4(0xEF5350, 1.0f);
-static const ImVec4 InfoRunningTextColor = HEXTOIMV4(0x8BC34A, 1.0f);
+uint32_t getThreadNia(coreinit::OSThread *thread)
+{
+   emuassert(sIsPaused);
+
+   coreinit::OSThread *coreThread[3] = {
+      coreinit::internal::getCoreRunningThread(0),
+      coreinit::internal::getCoreRunningThread(1),
+      coreinit::internal::getCoreRunningThread(2)
+   };
+
+   if (thread == coreThread[0]) {
+      return debugger::getPausedCoreState(0)->nia;
+   } else if (thread == coreThread[1]) {
+      return debugger::getPausedCoreState(1)->nia;
+   } else if (thread == coreThread[2]) {
+      return debugger::getPausedCoreState(2)->nia;
+   } else {
+      return mem::read<uint32_t>(thread->context.gpr[1]);
+   }
+}
 
 class InfoView
 {
@@ -164,6 +186,7 @@ protected:
 class ThreadsView
 {
    struct ThreadInfo {
+      coreinit::OSThread *thread;
       uint32_t id;
       std::string name;
       OSThreadState state;
@@ -199,35 +222,51 @@ public:
       auto core2Thread = coreinit::internal::getCoreRunningThread(2);
       coreinit::OSThread *firstThread = coreinit::internal::getFirstActiveThread();
       for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
-         int coreId = -1;
-         if (thread == core0Thread) coreId = 0;
-         if (thread == core1Thread) coreId = 1;
-         if (thread == core2Thread) coreId = 2;
+         ThreadInfo tinfo;
 
-         mThreads.push_back(ThreadInfo{
-            thread->id,
-            thread->name ? thread->name.get() : "",
-            thread->state,
-            coreId
-         });
+         tinfo.thread = thread;
+         tinfo.id = thread->id;
+         tinfo.name = thread->name ? thread->name.get() : "";
+         tinfo.state = thread->state;
+
+         if (thread == core0Thread) {
+            tinfo.coreId = 0;
+         } else if (thread == core1Thread) {
+            tinfo.coreId = 1;
+         } else if (thread == core2Thread) {
+            tinfo.coreId = 2;
+         } else {
+            tinfo.coreId = -1;
+         }
+
+         mThreads.push_back(tinfo);
       }
       coreinit::internal::unlockScheduler();
 
-      ImGui::Columns(4, "threadList", false);
+      ImGui::Columns(5, "threadList", false);
       ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.0f);
       ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.1f);
-      ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.7f);
-      ImGui::SetColumnOffset(3, ImGui::GetWindowWidth() * 0.9f);
+      ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.6f);
+      ImGui::SetColumnOffset(3, ImGui::GetWindowWidth() * 0.75f);
+      ImGui::SetColumnOffset(4, ImGui::GetWindowWidth() * 0.9f);
 
       ImGui::Text("ID"); ImGui::NextColumn();
       ImGui::Text("Name"); ImGui::NextColumn();
+      ImGui::Text("NIA"); ImGui::NextColumn();
       ImGui::Text("State"); ImGui::NextColumn();
       ImGui::Text("Core#"); ImGui::NextColumn();
       ImGui::Separator();
 
       for (auto &thread : mThreads) {
          ImGui::Text(fmt::format("{}", thread.id).c_str()); ImGui::NextColumn();
-         ImGui::Selectable(thread.name.c_str()); ImGui::NextColumn();
+         ImGui::Text(thread.name.c_str());
+         ImGui::NextColumn();
+         if (sIsPaused) {
+            ImGui::Text(fmt::format("{:08x}", getThreadNia(thread.thread)).c_str());
+         } else {
+            ImGui::Text("        ");
+         }
+         ImGui::NextColumn();
          ImGui::Text(getThreadStateName(thread.state));  ImGui::NextColumn();
          ImGui::NextColumn();
       }
