@@ -1,3 +1,5 @@
+//INS(name, write, read, flags, opcodes, fullname)
+
 // Intger Arithmetic
 INS(add, (rD), (rA, rB), (oe, rc), (opcd == 31, xo2 == 266), "Add")
 INS(addc, (rD, XERC), (rA, rB), (oe, rc), (opcd == 31, xo2 == 10), "Add with Carry")

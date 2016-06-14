@@ -11,16 +11,10 @@ namespace espresso
 
 // TODO: Finish disassembler!
 
-static Disassembly::Argument
-disassembleField(uint32_t cia, Instruction instr, InstructionInfo *data, InstructionField field)
+static bool
+disassembleField(Disassembly::Argument &result, uint32_t cia, Instruction instr, InstructionInfo *data, InstructionField field)
 {
-   Disassembly::Argument result;
-
    switch (field) {
-   case InstructionField::aa:
-      result.type = Disassembly::Argument::ConstantUnsigned;
-      result.constantUnsigned = instr.aa;
-      break;
    case InstructionField::bd:
       result.type = Disassembly::Argument::Address;
       result.address = sign_extend<16>(instr.bd << 2) + (instr.aa ? 0 : cia);
@@ -101,10 +95,6 @@ disassembleField(uint32_t cia, Instruction instr, InstructionInfo *data, Instruc
       result.type = Disassembly::Argument::Address;
       result.address = sign_extend<26>(instr.li << 2) + (instr.aa ? 0 : cia);
       break;
-   case InstructionField::lk:
-      result.type = Disassembly::Argument::ConstantUnsigned;
-      result.constantUnsigned = instr.lk;
-      break;
    case InstructionField::mb:
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.mb;
@@ -117,10 +107,6 @@ disassembleField(uint32_t cia, Instruction instr, InstructionInfo *data, Instruc
       result.type = Disassembly::Argument::ConstantUnsigned;
       result.constantUnsigned = instr.nb;
       break;
-   case InstructionField::oe:
-      result.type = Disassembly::Argument::ConstantUnsigned;
-      result.constantUnsigned = instr.oe;
-      break;
    case InstructionField::qd:
       result.type = Disassembly::Argument::ValueSigned;
       result.valueSigned = sign_extend<12>(instr.qd);
@@ -132,10 +118,6 @@ disassembleField(uint32_t cia, Instruction instr, InstructionInfo *data, Instruc
    case InstructionField::rB:
       result.type = Disassembly::Argument::Register;
       result.text = "r" + std::to_string(instr.rB);
-      break;
-   case InstructionField::rc:
-      result.type = Disassembly::Argument::ConstantUnsigned;
-      result.constantUnsigned = instr.rc;
       break;
    case InstructionField::rD:
       result.type = Disassembly::Argument::Register;
@@ -173,17 +155,44 @@ disassembleField(uint32_t cia, Instruction instr, InstructionInfo *data, Instruc
       result.type = Disassembly::Argument::ValueUnsigned;
       result.valueUnsigned = instr.uimm;
       break;
+   // Ignore opcode fields
    case InstructionField::opcd:
    case InstructionField::xo1:
    case InstructionField::xo2:
    case InstructionField::xo3:
    case InstructionField::xo4:
+
+   // Ignore name modifiers
+   case InstructionField::aa:
+   case InstructionField::lk:
+   case InstructionField::oe:
+   case InstructionField::rc:
+
+   // Ogmpre ,arker fields
+   case InstructionField::PS:
+   case InstructionField::XERO:
+   case InstructionField::XERSO:
+   case InstructionField::XERC:
+   case InstructionField::CR0:
+   case InstructionField::CR1:
+   case InstructionField::FCRISI:
+   case InstructionField::FCRIDI:
+   case InstructionField::FCRSNAN:
+   case InstructionField::FCRZDZ:
+   case InstructionField::FPRF:
+   case InstructionField::AOE:
+   case InstructionField::ARC:
+   case InstructionField::LR:
+   case InstructionField::CTR:
+   case InstructionField::FPSCR:
+   case InstructionField::RSRV:
+      return false;
    default:
       result.type = Disassembly::Argument::Invalid;
       break;
    }
 
-   return result;
+   return true;
 }
 
 static std::string
@@ -270,28 +279,27 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
 
 
    for (auto &field : args) {
+      espresso::Disassembly::Argument arg;
+
       // If we have an alias, then don't put the first opcode field in the args...
       if (alias) {
          bool skipField = false;
+
          for (auto &op : alias->opcode) {
             if (field == op.field) {
                skipField = true;
                break;
             }
          }
+
          if (skipField) {
             continue;
          }
       }
 
-      if (field == InstructionField::aa ||
-          field == InstructionField::lk ||
-          field == InstructionField::oe ||
-          field == InstructionField::rc) {
-         continue;
+      if (disassembleField(arg, dis.address, instr, data, field)) {
+         dis.args.push_back(arg);
       }
-
-      dis.args.push_back(disassembleField(dis.address, instr, data, field));
    }
 
    for (auto &field : data->flags) {
