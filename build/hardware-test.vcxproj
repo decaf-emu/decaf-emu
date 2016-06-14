@@ -18,10 +18,10 @@
     <ClInclude Include="..\tools\hardware-test\hardwaretests.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\filesystem\filesystem_posix_host_folder.cpp" />
-    <ClCompile Include="..\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
-    <ClCompile Include="..\src\filesystem\filesystem_win_host_folder.cpp" />
-    <ClCompile Include="..\src\filesystem\filesystem_win_host_folderhandle.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folder.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folderhandle.cpp" />
     <ClCompile Include="..\tools\hardware-test\hardwaretests.cpp" />
     <ClCompile Include="..\tools\hardware-test\main.cpp" />
   </ItemGroup>
@@ -71,21 +71,21 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\cereal\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\src\libcpu\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\cereal\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\cereal\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\src\libcpu\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\cereal\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\cereal\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\src;$(SolutionDir)\src\libcpu\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\cereal\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -100,7 +100,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>decaf-cpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>common.lib;libcpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -119,7 +119,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>decaf-cpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>common.lib;libcpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
@@ -139,7 +139,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>decaf-cpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>common.lib;libcpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>

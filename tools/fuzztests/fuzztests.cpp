@@ -4,16 +4,15 @@
 #include "fuzztests.h"
 #include "common/bitutils.h"
 #include "common/log.h"
-#include "cpu/interpreter/interpreter.h"
-#include "cpu/interpreter/interpreter_insreg.h"
-#include "cpu/jit/jit.h"
-#include "cpu/state.h"
-#include "cpu/utils.h"
-#include "cpu/mem.h"
-#include "cpu/trace.h"
-#include "cpu/espresso/espresso_instructionset.h"
-#include "cpu/espresso/espresso_spr.h"
-
+#include "libcpu/src/interpreter/interpreter.h"
+#include "libcpu/src/interpreter/interpreter_insreg.h"
+#include "libcpu/src/jit/jit.h"
+#include "libcpu/state.h"
+#include "libcpu/src/utils.h"
+#include "libcpu/mem.h"
+#include "libcpu/trace.h"
+#include "libcpu/espresso/espresso_instructionset.h"
+#include "libcpu/espresso/espresso_spr.h"
 using namespace espresso;
 
 template<size_t SIZE, class T> inline size_t array_size(T (&arr)[SIZE]) {

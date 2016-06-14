@@ -1,8 +1,8 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include "hardwaretests.h"
-#include "cpu/cpu.h"
-#include "cpu/mem.h"
+#include "libcpu/cpu.h"
+#include "libcpu/mem.h"
 
 std::shared_ptr<spdlog::logger>
 gLog;
@@ -16,6 +16,9 @@ int main(int argc, char *argv[])
 
    mem::initialise();
    cpu::initialise();
+
+   // Force diasble JIT until we fix cpu::jit::clearCache
+   cpu::setJitMode(cpu::jit_mode::disabled);
 
    // We need to run the tests on a core.
    cpu::setCoreEntrypointHandler(

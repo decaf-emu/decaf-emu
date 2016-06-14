@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 
 template<typename Type>
 constexpr inline Type

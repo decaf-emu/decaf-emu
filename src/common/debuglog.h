@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/platform.h"
+#include "platform.h"
 #include "log.h"
 
 #ifdef PLATFORM_WINDOWS

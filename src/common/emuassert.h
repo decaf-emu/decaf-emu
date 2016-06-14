@@ -1,4 +1,5 @@
 #pragma once
+#include <stdexcept>
 #include <string>
 
 #define EMULATOR_ASSERTIONS
@@ -7,7 +8,9 @@
 
 #ifdef EMULATOR_ASSERTIONS
 
-static void _emuassert(bool x, const char *stmt) {
+static void
+_emuassert(bool x, const char *stmt)
+{
    if (!x) {
       throw std::logic_error(stmt);
    }
@@ -15,8 +18,8 @@ static void _emuassert(bool x, const char *stmt) {
 
 #define emuassert(x) _emuassert(!!(x), #x)
 
-#else
+#else // ifdef EMULATOR_ASSERTIONS
 
 #define emuassert(x) ((void)0)
 
-#endif
+#endif // EMULATOR_ASSERTIONS

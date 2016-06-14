@@ -1,7 +1,7 @@
 #pragma once
+#include "byte_swap.h"
 #include <ostream>
 #include <type_traits>
-#include "common/byte_swap.h"
 
 // Should be identical to be_val except volatile mValue
 template<typename Type>

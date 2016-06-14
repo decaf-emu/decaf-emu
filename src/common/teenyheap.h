@@ -1,9 +1,9 @@
 #pragma once
+#include "align.h"
 #include <assert.h>
 #include <map>
 #include <vector>
 #include <mutex>
-#include "common/align.h"
 
 class TeenyHeap
 {

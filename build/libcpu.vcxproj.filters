@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\espresso">
+      <UniqueIdentifier>{999cc1a3-2576-4056-9a1b-03cf39658a12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\interpreter">
+      <UniqueIdentifier>{13fc8f02-55ed-4dbd-ba17-12bce9d06950}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\jit">
+      <UniqueIdentifier>{b240763b-3b44-4c9a-a138-adab8b2ec35f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\espresso">
+      <UniqueIdentifier>{4421692b-e652-40fb-b180-8e354bde392d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\interpreter">
+      <UniqueIdentifier>{c4d631d0-0e0b-4afb-aead-5479b849a7e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\jit">
+      <UniqueIdentifier>{11be0956-bc2b-4fe5-827f-63be2c7f3589}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\libcpu\src\interpreter\interpreter.cpp">
+      <Filter>Source Files\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\interpreter\interpreter_branch.cpp">
+      <Filter>Source Files\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\interpreter\interpreter_condition.cpp">
+      <Filter>Source Files\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\interpreter\interpreter_float.cpp">
+      <Filter>Source Files\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\interpreter\interpreter_integer.cpp">
+      <Filter>Source Files\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\interpreter\interpreter_loadstore.cpp">
+      <Filter>Source Files\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\interpreter\interpreter_pairedsingle.cpp">
+      <Filter>Source Files\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\interpreter\interpreter_system.cpp">
+      <Filter>Source Files\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_branch.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_condition.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_fallback.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_float.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_integer.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_loadstore.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_pairedsingle.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_system.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\cpu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\cpu_breakpoints.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\cpu_interrupts.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\cpu_kc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\mem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\trace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\espresso\espresso_disassembler.cpp">
+      <Filter>Source Files\espresso</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\espresso\espresso_instructionset.cpp">
+      <Filter>Source Files\espresso</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_unwind_win.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libcpu\src\jit\jit_unwind_other.cpp">
+      <Filter>Source Files\jit</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\libcpu\src\interpreter\interpreter.h">
+      <Filter>Header Files\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\interpreter\interpreter_float.h">
+      <Filter>Header Files\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\interpreter\interpreter_insreg.h">
+      <Filter>Header Files\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\interpreter\interpreter_internal.h">
+      <Filter>Header Files\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\jit\jit.h">
+      <Filter>Header Files\jit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\jit\jit_float.h">
+      <Filter>Header Files\jit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\jit\jit_insreg.h">
+      <Filter>Header Files\jit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\jit\jit_internal.h">
+      <Filter>Header Files\jit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\cpu_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\statedbg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\cpu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\espresso\espresso_disassembler.h">
+      <Filter>Header Files\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\espresso\espresso_instruction.h">
+      <Filter>Header Files\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\espresso\espresso_instructionid.h">
+      <Filter>Header Files\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\espresso\espresso_instructionset.h">
+      <Filter>Header Files\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\espresso\espresso_registers.h">
+      <Filter>Header Files\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\espresso\espresso_spr.h">
+      <Filter>Header Files\espresso</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\mem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\trace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libcpu\src\jit\jit_vmemruntime.h">
+      <Filter>Header Files\jit</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\libcpu\espresso\espresso_instruction_aliases.inl">
+      <Filter>Header Files\espresso</Filter>
+    </None>
+    <None Include="..\src\libcpu\espresso\espresso_instruction_definitions.inl">
+      <Filter>Header Files\espresso</Filter>
+    </None>
+    <None Include="..\src\libcpu\espresso\espresso_instruction_fields.inl">
+      <Filter>Header Files\espresso</Filter>
+    </None>
+  </ItemGroup>
+</Project>

@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "cpu/espresso/espresso_instructionid.h"
+#include "libcpu/espresso/espresso_instructionid.h"
 
 using espresso::InstructionID;
 

@@ -29,16 +29,16 @@
     <ClCompile Include="..\tools\hardware-test\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\filesystem\filesystem_posix_host_folder.cpp">
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp">
       <Filter>Source Files\filesystem-PROJECTIFYTHIS</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\filesystem\filesystem_posix_host_folderhandle.cpp">
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folderhandle.cpp">
       <Filter>Source Files\filesystem-PROJECTIFYTHIS</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\filesystem\filesystem_win_host_folder.cpp">
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folder.cpp">
       <Filter>Source Files\filesystem-PROJECTIFYTHIS</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\filesystem\filesystem_win_host_folderhandle.cpp">
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folderhandle.cpp">
       <Filter>Source Files\filesystem-PROJECTIFYTHIS</Filter>
     </ClCompile>
   </ItemGroup>

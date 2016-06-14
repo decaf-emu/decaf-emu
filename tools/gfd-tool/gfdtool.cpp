@@ -4,7 +4,7 @@
 #include <gsl.h>
 #include <spdlog/spdlog.h>
 #include "common/teenyheap.h"
-#include "cpu/mem.h"
+#include "libcpu/mem.h"
 #include "gpu/gfd.h"
 #include "gpu/microcode/latte_decoder.h"
 #include "gpu/pm4_buffer.h"
