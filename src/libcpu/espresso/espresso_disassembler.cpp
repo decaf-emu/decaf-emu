@@ -9,7 +9,8 @@
 namespace espresso
 {
 
-// TODO: Finish disassembler!
+static void
+checkBranchConditionAlias(Instruction instr, Disassembly &dis);
 
 static bool
 disassembleField(Disassembly::Argument &result, uint32_t cia, Instruction instr, InstructionInfo *data, InstructionField field)
@@ -243,7 +244,7 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    }
 
    auto alias = findInstructionAlias(data, instr);
-   dis.name = data->name;
+   dis.name = alias ? alias->name : data->name;
    dis.instruction = data;
    dis.address = address;
 
@@ -277,11 +278,10 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
       args.push_back(field);
    }
 
-
    for (auto &field : args) {
       espresso::Disassembly::Argument arg;
 
-      // If we have an alias, then don't put the first opcode field in the args...
+      // If we have an alias, then skip the LHS field of each alias comparison
       if (alias) {
          bool skipField = false;
 
@@ -302,6 +302,11 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
       }
    }
 
+   // Check for bc alias
+   if (data->id == InstructionID::bc || data->id == InstructionID::bcctr || data->id == InstructionID::bclr) {
+      checkBranchConditionAlias(instr, dis);
+   }
+
    for (auto &field : data->flags) {
       if (field == InstructionField::aa && instr.aa) {
          dis.name += 'a';
@@ -314,11 +319,8 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
       }
    }
 
-   if (alias) {
-      dis.text = alias->name;
-   } else {
-      dis.text = dis.name;
-   }
+   // Create text disassembly
+   dis.text = dis.name;
 
    for (auto &arg : dis.args) {
       if (&arg == &dis.args[0]) {
@@ -331,6 +333,46 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    }
 
    return true;
+}
+
+void
+checkBranchConditionAlias(Instruction instr, Disassembly &dis)
+{
+   auto bi = instr.bi % 4;
+   auto bo = instr.bo;
+   auto name = std::string {};
+
+   if (bo == 12 && bi == 0) {
+      name = "blt";
+   } else if (bo == 4, bi == 1) {
+      name = "ble";
+   } else if (bo == 12, bi == 2) {
+      name = "beq";
+   } else if (bo == 4, bi == 0) {
+      name = "bge";
+   } else if (bo == 12, bi == 3) {
+      name = "bgt";
+   } else if (bo == 4, bi == 2) {
+      name = "bne";
+   } else if (bo == 12, bi == 3) {
+      name = "bso";
+   } else if (bo == 4, bi == 3) {
+      name = "bns";
+   }
+
+   if (!name.empty()) {
+      // Remove bo, bi from args
+      dis.args.erase(dis.args.begin(), dis.args.begin() + 1);
+
+      // Add crS argument
+      espresso::Disassembly::Argument cr;
+      cr.type = Disassembly::Argument::Register;
+      cr.text = "cr" + std::to_string(instr.bi / 4);
+      dis.args.push_back(cr);
+
+      // Update name
+      dis.name = name;
+   }
 }
 
 } // namespace espresso
