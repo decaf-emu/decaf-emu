@@ -5,8 +5,8 @@
 #include <glbinding/gl/gl.h>
 #include "decaf_config.h"
 #include "decaf_debugger.h"
+#include "decaf_graphics.h"
 #include "decaf_input.h"
-#include "decaf_graphicsdriver.h"
 
 namespace decaf
 {
@@ -23,12 +23,6 @@ start();
 
 void
 shutdown();
-
-void
-setGraphicsDriver(GraphicsDriver *driver);
-
-GraphicsDriver *
-getGraphicsDriver();
 
 // Stuff for the debugger
 void

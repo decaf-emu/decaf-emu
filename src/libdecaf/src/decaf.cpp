@@ -1,11 +1,11 @@
 #include "common/platform_dir.h"
 #include "decaf.h"
 #include "decaf_config.h"
+#include "decaf_graphics.h"
 #include "decaf_input.h"
 #include "debugger/debugger.h"
 #include "debugger/debugger_ui.h"
 #include "filesystem/filesystem.h"
-#include "gpu/opengl/opengl_driver.h"
 #include "input/input.h"
 #include "kernel/kernel.h"
 #include "kernel/kernel_hlefunction.h"
@@ -66,7 +66,7 @@ initialise(const std::string &gamePath)
       return false;
    }
 
-   if (!sGraphicsDriver) {
+   if (!getGraphicsDriver()) {
       gLog->error("No graphics driver set");
       return false;
    }
@@ -129,12 +129,6 @@ initialise(const std::string &gamePath)
    return true;
 }
 
-OpenGLDriver *
-createGLDriver()
-{
-   return new gpu::opengl::GLDriver();
-}
-
 void
 start()
 {
@@ -155,18 +149,6 @@ shutdown()
 
    // Completely shut down the CPU (this waits for it to stop)
    cpu::halt();
-}
-
-void
-setGraphicsDriver(GraphicsDriver *driver)
-{
-   sGraphicsDriver = driver;
-}
-
-GraphicsDriver *
-getGraphicsDriver()
-{
-   return sGraphicsDriver;
 }
 
 void

@@ -3,7 +3,7 @@
 #include "common/log.h"
 #include "gpu/pm4.h"
 #include "gpu/latte_contextstate.h"
-#include "libdecaf/decaf_graphicsdriver.h"
+#include "libdecaf/decaf_graphics.h"
 #include <chrono>
 #include <exception>
 #include <glbinding/gl/types.h>
