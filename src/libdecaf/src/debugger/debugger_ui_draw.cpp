@@ -155,8 +155,8 @@ private:
 
       // Make sure we stay within the bounds of our memory
       int64_t maxScrollPos = (numTotalLines - mNumVisibleLines) * mNumColumns;
-      position = std::max(0ll, position);
-      position = std::min(position, maxScrollPos);
+      position = std::max<int64_t>(0, position);
+      position = std::min<int64_t>(position, maxScrollPos);
 
       // Remap the scroll position to the closest line start
       position -= position % mNumColumns;
@@ -490,8 +490,8 @@ public:
          }
 
          // Clamp the edit address
-         mEditAddress = std::max(0ll, mEditAddress);
-         mEditAddress = std::min(mEditAddress, 0xFFFFFFFFll);
+         mEditAddress = std::max<int64_t>(0, mEditAddress);
+         mEditAddress = std::min<int64_t>(mEditAddress, 0xFFFFFFFF);
 
          // Make sure that the address always stays visible!  We do this before
          //  checking for valid memory so you can still goto an invalid address.
