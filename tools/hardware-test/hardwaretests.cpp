@@ -1,19 +1,19 @@
 #include <cassert>
 #include <cfenv>
 #include <fstream>
-#include "cpu/cpu.h"
-#include "cpu/jit/jit.h"
+#include "libcpu/cpu.h"
+#include "libcpu/src/jit/jit.h"
 #include "hardwaretests.h"
-#include "cpu/mem.h"
+#include "libcpu/mem.h"
 #include "common/bit_cast.h"
 #include "common/floatutils.h"
 #include "common/log.h"
 #include "common/strutils.h"
-#include "filesystem/filesystem.h"
+#include "libdecaf/src/filesystem/filesystem.h"
 
-#include "cpu/espresso/espresso_disassembler.h"
-#include "cpu/espresso/espresso_instructionset.h"
-#include "cpu/espresso/espresso_registers.h"
+#include "libcpu/espresso/espresso_disassembler.h"
+#include "libcpu/espresso/espresso_instructionset.h"
+#include "libcpu/espresso/espresso_registers.h"
 
 using namespace espresso;
 
@@ -179,7 +179,8 @@ bool runTests(const std::string &path)
 
          // Execute test
          mem::write(baseAddress, test.instr.value);
-         cpu::jit::clearCache();
+         // TODO: Fix when enable jit hwtests again
+         // cpu::jit::clearCache();
          cpu::this_core::executeSub();
 
          // Check XER (all bits)

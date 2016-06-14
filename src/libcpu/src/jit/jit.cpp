@@ -128,7 +128,6 @@ void clearCache()
 {
    freeRuntime();
    initialiseRuntime();
-
    sJitBlocks.clear();
 }
 

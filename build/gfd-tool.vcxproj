@@ -15,26 +15,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\gpu\gfd.cpp" />
-    <ClCompile Include="..\src\gpu\microcode\latte_blockify.cpp" />
-    <ClCompile Include="..\src\gpu\microcode\latte_decoder.cpp" />
-    <ClCompile Include="..\src\gpu\microcode\latte_disassembler.cpp" />
-    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_alu.cpp" />
-    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_export.cpp" />
-    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_tex.cpp" />
-    <ClCompile Include="..\src\gpu\microcode\latte_disassembler_vtx.cpp" />
-    <ClCompile Include="..\src\gpu\microcode\latte_instructions.cpp" />
-    <ClCompile Include="..\src\gpu\microcode\latte_linearify.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_addrlib.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_dds.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_enum_string.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_format.cpp" />
-    <ClCompile Include="..\src\modules\gx2\gx2_surface.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\gfd.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_blockify.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_decoder.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_alu.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_export.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_tex.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_vtx.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_instructions.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_linearify.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_addrlib.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_dds.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_enum_string.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_format.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2_surface.cpp" />
     <ClCompile Include="..\tools\gfd-tool\gfdtool.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\src\gpu\gfd.h" />
-    <ClInclude Include="..\tools\gtx-convert\untile.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7CB8D060-968B-4173-B2BF-1E29088107F2}</ProjectGuid>
@@ -61,7 +57,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -81,7 +77,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
@@ -90,14 +86,14 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -111,7 +107,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>addrlib.lib;decaf-cpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;common.lib;libcpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -129,7 +125,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>addrlib.lib;decaf-cpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;common.lib;libcpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
@@ -147,7 +143,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
-      <AdditionalDependencies>addrlib.lib;decaf-cpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>addrlib.lib;common.lib;libcpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>

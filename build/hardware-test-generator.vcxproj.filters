@@ -18,9 +18,6 @@
     <ClCompile Include="..\tools\hardware-test-generator\generator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\cpu\espresso\espresso_instructionset.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tools\hardware-test-generator\generator_testlist.h">

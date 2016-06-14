@@ -1,8 +1,8 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include "fuzztests.h"
-#include "cpu/cpu.h"
-#include "cpu/mem.h"
+#include "libcpu/cpu.h"
+#include "libcpu/mem.h"
 
 std::shared_ptr<spdlog::logger>
 gLog;
