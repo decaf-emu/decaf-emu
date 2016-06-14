@@ -45,6 +45,12 @@ bool isPaused()
    return sIsPaused.load();
 }
 
+cpu::Core *getPausedCoreState(uint32_t coreId)
+{
+   assert(isPaused());
+   return sCorePauseState[coreId];
+}
+
 void pauseAll()
 {
    for (auto i = 0; i < 3; ++i) {
@@ -56,6 +62,9 @@ void resumeAll()
 {
    auto oldState = sIsPaused.exchange(false);
    emuassert(oldState);
+   for (auto i = 0; i < 3; ++i) {
+      sCorePauseState[i] = nullptr;
+   }
    sPauseReleaseCond.notify_all();
 }
 
@@ -112,6 +121,9 @@ void handleDbgBreakInterrupt()
    for (auto i = 0; i < 3; ++i) {
       cpu::interrupt(i, cpu::DBGBREAK_INTERRUPT);
    }
+
+   // Store our core state before we flip isPaused
+   sCorePauseState[coreId] = cpu::this_core::state();
 
    // Check to see if we were the last core to join on the fun
    auto coreBit = 1 << coreId;

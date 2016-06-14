@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "libcpu/state.h"
 
 namespace debugger
 {
@@ -7,6 +8,8 @@ namespace debugger
 void initialise();
 bool isEnabled();
 bool isPaused();
+
+cpu::Core *getPausedCoreState(uint32_t coreId);
 
 void pauseAll();
 void resumeAll();
