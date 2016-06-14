@@ -51,7 +51,7 @@ DecafSDL::createWindow()
                               SDL_WINDOWPOS_UNDEFINED,
                               SDL_WINDOWPOS_UNDEFINED,
                               WindowWidth, WindowHeight,
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
 
    if (!mWindow) {
       gCliLog->error("Failed to create TV window: {}", SDL_GetError());
