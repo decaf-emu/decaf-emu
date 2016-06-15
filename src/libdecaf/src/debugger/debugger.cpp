@@ -20,6 +20,9 @@ sPauseReleaseCond;
 static std::atomic<uint32_t>
 sIsPausing;
 
+static std::atomic<uint32_t>
+sIsResuming;
+
 static std::atomic_bool
 sIsPaused;
 
@@ -141,6 +144,7 @@ handleDbgBreakInterrupt()
       // This was the last core to join.
       sIsPaused.store(true);
       sIsPausing.store(0);
+      sIsResuming.store(0);
    }
 
    // Spin around the release condition while we are paused
@@ -150,6 +154,15 @@ handleDbgBreakInterrupt()
 
    // Clear any additional DbgBreaks that occured
    cpu::this_core::clearInterrupt(cpu::DBGBREAK_INTERRUPT);
+
+   // Everyone needs to leave at once in case new breakpoints occur.
+   if ((sIsResuming.fetch_or(coreBit) | coreBit) == (1 | 2 | 4)) {
+      sPauseReleaseCond.notify_all();
+   } else {
+      while ((sIsResuming.load() | coreBit) != (1 | 2 | 4)) {
+         sPauseReleaseCond.wait(lock);
+      }
+   }
 }
 
 } // namespace debugger
