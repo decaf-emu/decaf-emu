@@ -466,6 +466,10 @@ public:
       auto wndDynRegionSize = ImGui::GetWindowContentRegionWidth() - addrAdvance - gapAdvance;
       int64_t numColumns = static_cast<int64_t>(wndDynRegionSize / (cellAdvance + charAdvance));
 
+      // Impose a limit on the number of columns in case the window
+      //  does not yet have a size.
+      numColumns = std::min<int64_t>(numColumns, 64);
+
       // Clear the last edit address whenever our current address is cleared
       if (mEditAddress == -1) {
          mLastEditAddress = -1;
