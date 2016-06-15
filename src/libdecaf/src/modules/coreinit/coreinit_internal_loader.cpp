@@ -317,7 +317,8 @@ loadHleModule(const std::string &moduleName,
          *(thunk + 0) = byte_swap(kc.value);
 
          auto bclr = espresso::encodeInstruction(espresso::InstructionID::bclr);
-         bclr.bo = 0x1f;
+         bclr.bo = 20;
+         bclr.bi = 0;
          *(thunk + 1) = byte_swap(bclr.value);
 
          // Add to symbols list
