@@ -62,6 +62,9 @@ using TrampolineMap = std::map<ppcaddr_t, ppcaddr_t>;
 using SectionList = std::vector<elf::XSection>;
 using AddressRange = std::pair<ppcaddr_t, ppcaddr_t>;
 
+static std::atomic<uint32_t>
+sLoaderLock{ 0 };
+
 static std::map<std::string, LoadedModule*>
 gLoadedModules;
 
@@ -76,6 +79,25 @@ gUnimplementedFunctions;
 
 static std::map<std::string, int>
 gUnimplementedData;
+
+void
+lockLoader()
+{
+   uint32_t expected = 0;
+   auto core = 1 << cpu::this_core::id();
+
+   while (!sLoaderLock.compare_exchange_weak(expected, core, std::memory_order_acquire)) {
+      expected = 0;
+   }
+}
+
+void
+unlockLoader()
+{
+   auto core = 1 << cpu::this_core::id();
+   auto oldCore = sLoaderLock.exchange(0, std::memory_order_release);
+   emuassert(oldCore == core);
+}
 
 void initialiseCodeHeap(ppcsize_t maxCodeSize)
 {
@@ -845,9 +867,9 @@ LoadedModule *loadRPLNoLock(const std::string& name)
 LoadedModule *loadRPL(const std::string& name)
 {
    // Use the scheduler lock to protect access to the loaders memory
-   internal::lockScheduler();
+   internal::lockLoader();
    auto res = loadRPLNoLock(name);
-   internal::unlockScheduler();
+   internal::unlockLoader();
    return res;
 }
 

@@ -62,6 +62,9 @@ struct LoadedModule
    std::map<std::string, ppcaddr_t> symbols;
 };
 
+void lockLoader();
+void unlockLoader();
+
 LoadedModule * loadRPX(ppcsize_t maxCodeSize, const std::string& name);
 LoadedModule * loadRPL(const std::string& name);
 

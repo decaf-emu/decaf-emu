@@ -249,7 +249,7 @@ public:
       mSegments.push_back(Segment{ "LockedCache", mem::LockedCacheBase, mem::LockedCacheEnd });
       mSegments.push_back(Segment{ "SharedData", mem::SharedDataBase, mem::SharedDataEnd });
 
-      coreinit::internal::lockScheduler();
+      coreinit::internal::lockLoader();
       const auto &modules = coreinit::internal::getLoadedModules();
       for (auto &mod : modules) {
          for (auto &sec : mod.second->sections) {
@@ -260,7 +260,7 @@ public:
             });
          }
       }
-      coreinit::internal::unlockScheduler();
+      coreinit::internal::unlockLoader();
 
       ImGui::Columns(3, "memLis", false);
       ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.0f);
