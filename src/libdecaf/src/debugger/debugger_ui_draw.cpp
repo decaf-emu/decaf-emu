@@ -866,6 +866,7 @@ void handleGameResumed()
 
 void draw()
 {
+   static bool firstActivation = true;
    static bool debugViewsVisible = false;
 
    if (!debugger::enabled()) {
@@ -894,6 +895,13 @@ void draw()
    bool wantsStepInto = false;
 
    if (debugViewsVisible) {
+      auto userModule = coreinit::internal::getUserModule();
+      if (firstActivation && userModule) {
+         sMemoryView.gotoAddress(userModule->entryPoint);
+         sDisassemblyView.gotoAddress(userModule->entryPoint);
+         firstActivation = false;
+      }
+
       ImGui::BeginMainMenuBar();
       if (ImGui::BeginMenu("Debug")) {
          if (ImGui::MenuItem("Pause", nullptr, false, !sIsPaused)) {
