@@ -1,4 +1,3 @@
-#include "common/align.h"
 #include "common/platform.h"
 #include "jit_vmemruntime.h"
 
@@ -71,13 +70,6 @@ namespace cpu
 namespace jit
 {
 
-static inline void* allocFromJitRuntime(VMemRuntime *runtime, size_t size, size_t alignment = 4) {
-   runtime->_baseAddress = align_up(runtime->_baseAddress, alignment);
-   void *ptr = reinterpret_cast<void*>(runtime->_baseAddress);
-   runtime->_baseAddress += size;
-   return ptr;
-}
-
 void registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr)
 {
    // This function assumes the following prologue for the jit intro:
@@ -90,8 +82,8 @@ void registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr)
    auto unwindCodeCount = 5;
    auto unwindInfoSize = sizeof(UNWIND_INFO) + ((unwindCodeCount + 1) & ~0x1) - 1;
 
-   UNWIND_INFO *unwindInfo = reinterpret_cast<UNWIND_INFO*>(allocFromJitRuntime(runtime, unwindInfoSize, 8));
-   RUNTIME_FUNCTION *rfuncs = static_cast<RUNTIME_FUNCTION*>(allocFromJitRuntime(runtime, sizeof(RUNTIME_FUNCTION) * 1, 8));
+   UNWIND_INFO *unwindInfo = reinterpret_cast<UNWIND_INFO*>(runtime->allocate(unwindInfoSize, 8));
+   RUNTIME_FUNCTION *rfuncs = static_cast<RUNTIME_FUNCTION*>(runtime->allocate(sizeof(RUNTIME_FUNCTION) * 1, 8));
 
    unwindInfo->Version = 1;
    unwindInfo->Flags = 0;
@@ -115,7 +107,7 @@ void registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr)
    unwindInfo->UnwindCode[4].UnwindOp = UWOP_PUSH_NONVOL;
    unwindInfo->UnwindCode[4].OpInfo = UWRC_RBX;
 
-   auto rootAddress = runtime->_rootAddress;
+   auto rootAddress = runtime->getRootAddress();
    rfuncs[0].BeginAddress = static_cast<DWORD>(jitCallAddr - rootAddress);
    rfuncs[0].EndAddress = static_cast<DWORD>(runtime->_sizeLimit);
    rfuncs[0].UnwindData = static_cast<DWORD>(reinterpret_cast<intptr_t>(unwindInfo) - rootAddress);
