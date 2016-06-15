@@ -342,6 +342,22 @@ checkBranchConditionAlias(Instruction instr, Disassembly &dis)
    auto bo = instr.bo;
    auto name = std::string {};
 
+   // Check for unconditional branch
+   if (bo == 20 && bi == 0) {
+      // Remove bo, bi from args
+      dis.args.erase(dis.args.begin(), dis.args.begin() + 2);
+
+      if (dis.instruction->id == espresso::InstructionID::bcctr) {
+         dis.name = "bctr";
+      } else if (dis.instruction->id == espresso::InstructionID::bclr) {
+         dis.name = "blr";
+      } else if (dis.instruction->id == espresso::InstructionID::bc) {
+         dis.name = "b";
+      }
+
+      return;
+   }
+
    if (bo == 12 && bi == 0) {
       name = "blt";
    } else if (bo == 4 && bi == 1) {
@@ -362,7 +378,7 @@ checkBranchConditionAlias(Instruction instr, Disassembly &dis)
 
    if (!name.empty()) {
       // Remove bo, bi from args
-      dis.args.erase(dis.args.begin(), dis.args.begin() + 1);
+      dis.args.erase(dis.args.begin(), dis.args.begin() + 2);
 
       // Add crS argument
       espresso::Disassembly::Argument cr;
