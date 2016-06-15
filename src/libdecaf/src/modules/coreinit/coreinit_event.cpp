@@ -45,7 +45,6 @@ void signalEventNoLock(OSEvent *event)
 
    if (event->value != FALSE) {
       // Event has already been set
-      internal::unlockScheduler();
       return;
    }
 
@@ -202,9 +201,6 @@ OSWaitEvent(OSEvent *event)
          // Reset event
          event->value = FALSE;
       }
-
-      internal::unlockScheduler();
-      return;
    } else {
       // Wait for event to be set
       internal::sleepThreadNoLock(&event->queue);
@@ -249,8 +245,6 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
 {
    ppcutils::StackObject<EventAlarmData> data;
    ppcutils::StackObject<OSAlarm> alarm;
-
-   // TODO: Brett check logic
 
    internal::lockScheduler();
 
