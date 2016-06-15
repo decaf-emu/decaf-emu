@@ -172,7 +172,6 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
    // Save our CIA for when we come back.
    auto core = cpu::this_core::state();
    auto prevFiberHandle = tIdleFiber[core->id];
-   uint32_t *stackTop = nullptr;
 
    if (previous == next) {
       return;
@@ -180,9 +179,8 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
 
    if (previous) {
       core->gpr[1] -= 8;
-      stackTop = mem::translate<uint32_t>(core->gpr[1]);
-      stackTop[0] = core->cia;
-      stackTop[1] = core->nia;
+      mem::write<uint32_t>(core->gpr[1] + 0, core->cia);
+      mem::write<uint32_t>(core->gpr[1] + 4, core->nia);
 
       saveContext(&previous->context);
       prevFiberHandle = previous->fiber->handle;
@@ -215,9 +213,9 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
 
    checkDeadThread();
 
-   if (stackTop) {
-      core->cia = stackTop[0];
-      core->nia = stackTop[1];
+   if (previous) {
+      core->cia = mem::read<uint32_t>(core->gpr[1] + 0);
+      core->nia = mem::read<uint32_t>(core->gpr[1] + 4);
       core->gpr[1] += 8;
    }
 }
