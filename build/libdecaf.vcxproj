@@ -161,8 +161,16 @@
     <ClCompile Include="..\src\libdecaf\src\decaf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf_config.cpp" />
     <ClCompile Include="..\src\libdecaf\src\emulog.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folderhandle.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folder.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folderhandle.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\commandqueue.cpp" />
