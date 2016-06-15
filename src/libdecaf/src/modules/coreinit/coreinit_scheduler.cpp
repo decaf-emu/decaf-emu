@@ -82,7 +82,9 @@ isSchedulerLocked()
 void
 unlockScheduler()
 {
-   sSchedulerLock.store(0, std::memory_order_release);
+   auto core = 1 << cpu::this_core::id();
+   auto oldCore = sSchedulerLock.exchange(0, std::memory_order_release);
+   emuassert(oldCore == core);
 }
 
 bool
