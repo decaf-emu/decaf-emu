@@ -480,7 +480,9 @@ handleAlarmInterrupt(OSContext *context)
          if (alarm->group == 0xFFFFFFFF) {
             // System-internal alarm
             if (alarm->callback) {
+               auto originalMask = cpu::this_core::setInterruptMask(0);
                alarm->callback(alarm, context);
+               cpu::this_core::setInterruptMask(originalMask);
             }
          } else {
             internal::AlarmQueue::append(cbQueue, alarm);

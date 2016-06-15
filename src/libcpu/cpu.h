@@ -18,7 +18,7 @@ const uint32_t DBGBREAK_INTERRUPT = 1 << 3;
 const uint32_t GPU_RETIRE_INTERRUPT = 1 << 4;
 const uint32_t GPU_FLIP_INTERRUPT = 1 << 5;
 const uint32_t INTERRUPT_MASK = 0xFFFFFFFF;
-const uint32_t NONMASKABLE_INTERRUPTS = DBGBREAK_INTERRUPT;
+const uint32_t NONMASKABLE_INTERRUPTS = 0;
 
 const uint32_t SYSTEM_BPFLAG = 1 << 0;
 const uint32_t USER_BPFLAG = 1 << 1;
