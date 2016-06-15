@@ -62,7 +62,7 @@ getPathBasename(const std::string &path)
    if (!pos) {
       return path;
    } else {
-      return path.substr(pos);
+      return path.substr(pos + 1);
    }
 }
 
