@@ -40,6 +40,8 @@
     <ClCompile Include="..\src\libcpu\src\jit\jit_system.cpp" />
     <ClCompile Include="..\src\libcpu\src\jit\jit_unwind_other.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\libcpu\src\jit\jit_unwind_win.cpp" />
     <ClCompile Include="..\src\libcpu\src\mem.cpp" />
