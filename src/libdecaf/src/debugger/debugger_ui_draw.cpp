@@ -4,6 +4,7 @@
 #include "debugger_ui.h"
 #include "decaf.h"
 #include "kernel/kernel_hlefunction.h"
+#include "libcpu/espresso/espresso_disassembler.h"
 #include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
@@ -24,6 +25,10 @@ namespace ui
 
 static const ImVec4 InfoPausedTextColor = HEXTOIMV4(0xEF5350, 1.0f);
 static const ImVec4 InfoRunningTextColor = HEXTOIMV4(0x8BC34A, 1.0f);
+static const ImVec4 DisasmDataColor = HEXTOIMV4(0x90A4AE, 1.0f);
+static const ImVec4 DisasmFuncLinkColor = HEXTOIMV4(0x7E57C2, 1.0f);
+static const ImVec4 DisasmJmpColor = HEXTOIMV4(0xFF5722, 1.0f);
+static const ImVec4 DisasmNiaColor = HEXTOIMV4(0x00E676, 1.0f);
 
 // We store this locally so that we do not end up with isRunning
 //  switching whilst we are in the midst of drawing the UI.
@@ -37,6 +42,7 @@ static coreinit::OSThread *
 sActiveThread = nullptr;
 
 void openAddrInMemoryView(uint32_t addr);
+void openAddrInDisassemblyView(uint32_t addr);
 void setActiveThread(coreinit::OSThread *thread);
 
 uint32_t getThreadNia(coreinit::OSThread *thread)
@@ -64,7 +70,7 @@ class AddressScroller
 {
 public:
    AddressScroller()
-      : mNumColumns(1), mScrollPos(0xFFFFFFFF), mScrollToAddress(-1)
+      : mNumColumns(1), mScrollPos(0x00000000), mScrollToAddress(0xFFFFFFFF)
    {
    }
 
@@ -279,7 +285,7 @@ protected:
 
          if (ImGui::BeginPopupContextItem(fmt::format("{}{}-actions", tabs, seg.name).c_str(), 1)) {
             if (ImGui::MenuItem("Go to in Debugger")) {
-               // TODO: openAddrInDebugger
+               openAddrInDisassemblyView(seg.start);
             }
 
             if (ImGui::MenuItem("Go to in Memory View")) {
@@ -635,6 +641,134 @@ private:
 
 };
 
+class DisassemblyView
+{
+public:
+   DisassemblyView()
+   {
+   }
+
+   bool isVisible = true;
+   bool activateFocus = false;
+
+   void draw()
+   {
+      if (!isVisible) {
+         return;
+      }
+
+      if (activateFocus) {
+         ImGui::SetNextWindowFocus();
+         activateFocus = false;
+      }
+
+      std::string windowKey = "Disassembly";
+      if (!ImGui::Begin(windowKey.c_str(), &isVisible)) {
+         ImGui::End();
+         return;
+      }
+
+      // We use this 'hack' to get the true with without line-advance offsets.
+      float glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
+
+      // We precalcalculate
+      float addrAdvance = glyphWidth * 10.0f;
+      float dataAdvance = glyphWidth * 10.0f;
+      float funcLineAdvance = glyphWidth * 1.0f;
+      float jmpLineAdvance = glyphWidth * 1.0f;
+      float instrAdvance = glyphWidth * 6.0f;
+
+      mScroller.Begin(4, ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+      for (auto addr = mScroller.Reset(); mScroller.HasMore(); addr = mScroller.Advance()) {
+         auto linePos = ImGui::GetCursorPos();
+
+         // Render the address for this line
+         ImGui::Text("%08X:", addr);
+         linePos.x += addrAdvance;
+
+         // Stop drawing if this is invalid memory
+         if (!mem::valid(addr)) {
+            continue;
+         }
+
+         // Render the instructions bytes
+         ImGui::SetCursorPos(linePos);
+         ImGui::TextColored(DisasmDataColor, "%02x%02x%02x%02x",
+            mem::read<unsigned char>(addr + 0),
+            mem::read<unsigned char>(addr + 1),
+            mem::read<unsigned char>(addr + 2),
+            mem::read<unsigned char>(addr + 3));
+         linePos.x += dataAdvance;
+
+         // TODO: Render the function bounds determined during
+         //  analysis here with DisasmFuncLinkColor
+         //   Function Start Glyph: u8"\x250f"
+         //   Function Continue Glyph: u8"\x2503"
+         linePos.x += funcLineAdvance;
+
+         // This should be simpler...  gActiveCoreIdx instead maybe?
+         ImGui::SetCursorPos(linePos);
+         if (sActiveThread && addr == getThreadNia(sActiveThread)) {
+            // We should show the direction of the jump in NIA color when we are on that jump
+            ImGui::TextColored(DisasmNiaColor, u8"\x25B6");
+         } else {
+           // TODO: Check if this is a jump and put an arrow,
+           //  DisasmJmpColor can be used for this.
+           //   Up Glyph: u8"\x25B4"
+           //   Down Glyph: u8"\x25BE"
+         }
+         linePos.x += jmpLineAdvance;
+
+         ImGui::SetCursorPos(linePos);
+         auto instr = mem::read<espresso::Instruction>(addr);
+         espresso::Disassembly dis;
+         if (espresso::disassemble(instr, dis, addr)) {
+            // TODO: Better integration with the disassembler,
+            //  as well as providing per-arg highlighting?
+            auto cmdVsArgs = dis.text.find(' ');
+            if (cmdVsArgs != std::string::npos) {
+               auto cmd = dis.text.substr(0, cmdVsArgs);
+               auto args = dis.text.substr(cmdVsArgs + 1);
+               ImGui::Text("%- 6s %s", cmd.c_str(), args.c_str());
+            } else {
+               ImGui::Text("%- 6s", dis.text.c_str());
+            }
+         } else {
+            ImGui::Text("??");
+         }
+      }
+      mScroller.End();
+
+      ImGui::Separator();
+
+      // Render the bottom bar for the window
+      ImGui::AlignFirstTextHeightToWidgets();
+      ImGui::Text("Go To Address: ");
+      ImGui::SameLine();
+      ImGui::PushItemWidth(70);
+      if (ImGui::InputText("##addr", mAddressInput, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
+         std::istringstream is(mAddressInput);
+         uint32_t goto_addr;
+         if ((is >> std::hex >> goto_addr)) {
+            gotoAddress(goto_addr);
+         }
+      }
+      ImGui::PopItemWidth();
+
+      ImGui::End();
+   }
+
+   void gotoAddress(uint32_t addr)
+   {
+      mScroller.ScrollTo(addr);
+   }
+
+private:
+   AddressScroller mScroller;
+   char mAddressInput[32];
+
+};
+
 static InfoView
 sInfoView;
 
@@ -647,11 +781,21 @@ sThreadsView;
 static MemoryView
 sMemoryView;
 
+static DisassemblyView
+sDisassemblyView;
+
 void openAddrInMemoryView(uint32_t addr)
 {
    sMemoryView.gotoAddress(addr);
    sMemoryView.activateFocus = true;
    sMemoryView.isVisible = true;
+}
+
+void openAddrInDisassemblyView(uint32_t addr)
+{
+   sDisassemblyView.gotoAddress(addr);
+   sDisassemblyView.activateFocus = true;
+   sDisassemblyView.isVisible = true;
 }
 
 void setActiveThread(coreinit::OSThread *thread)
@@ -677,7 +821,7 @@ void setActiveThread(coreinit::OSThread *thread)
    }
 
    if (sActiveThread) {
-      // TODO: openAddrInDebugger
+      openAddrInDisassemblyView(getThreadNia(sActiveThread));
    }
 }
 
@@ -782,6 +926,9 @@ void draw()
          if (ImGui::MenuItem("Memory", "CTRL+M", sMemoryView.isVisible, true)) {
             sMemoryView.isVisible = !sMemoryView.isVisible;
          }
+         if (ImGui::MenuItem("Disassembly", "CTRL+I", sDisassemblyView.isVisible, true)) {
+            sDisassemblyView.isVisible = !sDisassemblyView.isVisible;
+         }
          ImGui::EndMenu();
       }
       ImGui::EndMainMenuBar();
@@ -829,6 +976,7 @@ void draw()
       sMemoryMapView.draw();
       sThreadsView.draw();
       sMemoryView.draw();
+      sDisassemblyView.draw();
    }
 }
 
