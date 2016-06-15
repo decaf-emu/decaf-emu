@@ -53,6 +53,113 @@ uint32_t getThreadNia(coreinit::OSThread *thread)
    }
 }
 
+class AddressScroller
+{
+public:
+   AddressScroller()
+      : mNumColumns(1), mScrollPos(0xFFFFFFFF), mScrollToAddress(-1)
+   {
+   }
+
+   void Begin(int64_t numColumns, ImVec2 size)
+   {
+      ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+      ImGui::BeginChild("##scrolling", size, false, flags);
+      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+      ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+
+      // There is a differentiation between visible and rendered lines as if
+      //  a line is half-visible, we don't want to count it as being a 'visible'
+      //  line, on the other hand, we should render the half-line if we can.
+      float lineHeight = ImGui::GetTextLineHeight();
+      float clipHeight = ImGui::GetWindowHeight();
+      int64_t numVisibleLines = static_cast<int64_t>(std::floor(clipHeight / lineHeight));
+      int64_t numDrawLines = static_cast<int64_t>(std::ceil(clipHeight / lineHeight));
+
+      if (ImGui::IsWindowHovered()) {
+         auto &io = ImGui::GetIO();
+         int64_t scrollDelta = -static_cast<int64_t>(io.MouseWheel);
+         SetScrollPos(mScrollPos + scrollDelta * numColumns);
+      }
+
+      mNumColumns = numColumns;
+      mNumDrawLines = numDrawLines;
+      mNumVisibleLines = numVisibleLines;
+
+      // We defer ScrollTo requests to make sure we have all the meta-data
+      //  we need in order to accurately calculate the scroll position.
+      if (mScrollToAddress != -1) {
+         const int64_t minVisBound = mNumColumns;
+         const int64_t maxVisBound = (mNumVisibleLines * mNumColumns) - mNumColumns - mNumColumns;
+
+         if (mScrollToAddress < mScrollPos + minVisBound) {
+            SetScrollPos(mScrollToAddress - minVisBound);
+         }
+         if (mScrollToAddress >= mScrollPos + maxVisBound) {
+            SetScrollPos(mScrollToAddress - maxVisBound);
+         }
+
+         mScrollToAddress = -1;
+      }
+   }
+
+   void End()
+   {
+      ImGui::PopStyleVar(2);
+      ImGui::EndChild();
+   }
+
+   uint32_t Reset()
+   {
+      mIterPos = mScrollPos;
+      return static_cast<uint32_t>(mIterPos);
+   }
+
+   uint32_t Advance()
+   {
+      mIterPos += mNumColumns;
+      return static_cast<uint32_t>(mIterPos);
+   }
+
+   bool HasMore()
+   {
+      return mIterPos < mScrollPos + mNumDrawLines * mNumColumns && mIterPos < 0x100000000;
+   }
+
+   bool IsValidOffset(uint32_t offset) {
+      return mIterPos + static_cast<int64_t>(offset) < 0x100000000;
+   }
+
+   void ScrollTo(uint32_t address)
+   {
+      mScrollToAddress = address;
+   }
+
+private:
+   void SetScrollPos(int64_t position)
+   {
+      int64_t numTotalLines = (0x100000000 + mNumColumns - 1) / mNumColumns;
+
+      // Make sure we stay within the bounds of our memory
+      int64_t maxScrollPos = (numTotalLines - mNumVisibleLines) * mNumColumns;
+      position = std::max(0ll, position);
+      position = std::min(position, maxScrollPos);
+
+      // Remap the scroll position to the closest line start
+      position -= position % mNumColumns;
+
+      mScrollPos = position;
+   }
+
+   int64_t mNumColumns;
+   int64_t mScrollPos;
+   int64_t mIterPos;
+   int64_t mNumDrawLines;
+   int64_t mNumVisibleLines;
+   int64_t mScrollToAddress;
+
+};
+
 class InfoView
 {
 public:
@@ -300,18 +407,11 @@ class MemoryView
 {
 public:
    MemoryView()
+      : mGotoTargetAddr(-1), mLastEditAddress(-1), 
+         mEditAddress(-1), mEditingEnabled(true)
    {
-      numColumns = 16;
-      gotoTargetAddr = -1;
-      editAddr = -1;
-      editTakeFocus = false;
-      dataInput[0] = 0;
-      addrInput[0] = 0;
-      allowEditing = true;
-      regionStart = 0x00000000;
-      regionSize = 0x00000000;
-      userModule = 0;
-      regionName = "?";
+      mAddressInput[0] = 0;
+      mDataInput[0] = 0;
    }
 
    bool isVisible = true;
@@ -328,258 +428,197 @@ public:
          activateFocus = false;
       }
 
-      std::string windowKey = "Memory - " + regionName + "###Memory";
+      std::string windowKey = "Memory";
       if (!ImGui::Begin(windowKey.c_str(), &isVisible)) {
          ImGui::End();
          return;
       }
 
-      auto base_display_addr = regionStart;
-      auto mem_size = regionSize;
+      // We use this 'hack' to get the true with without line-advance offsets.
+      float glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
+      float cellWidth = glyphWidth * 3;
 
-      ImGui::BeginChild("##scrolling", ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+      // We precalcalculate these so we can reverse engineer our column
+      //  count and line render locations.
+      float addrAdvance = glyphWidth * 10.0f;
+      float cellAdvance = glyphWidth * 2.5f;
+      float gapAdvance = glyphWidth * 1.0f;
+      float charAdvance = glyphWidth * 1.0f;
+      auto wndDynRegionSize = ImGui::GetWindowContentRegionWidth() - addrAdvance - gapAdvance;
+      int64_t numColumns = static_cast<int64_t>(wndDynRegionSize / (cellAdvance + charAdvance));
 
-      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-      ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-
-      float glyph_width = ImGui::CalcTextSize("F").x;
-      float cell_width = glyph_width * 3; // "FF " we include trailing space in the width to easily catch clicks everywhere
-
-      float line_height = ImGui::GetTextLineHeight();
-      int line_total_count = (int)((mem_size + numColumns - 1) / numColumns);
-      ImGuiListClipper clipper(line_total_count, line_height);
-      int visible_start_addr = clipper.DisplayStart * numColumns;
-      int visible_end_addr = clipper.DisplayEnd * numColumns;
-
-      if (gotoTargetAddr != -1) {
-         updateRegion(static_cast<uint32_t>(gotoTargetAddr));
-         editAddr = gotoTargetAddr - regionStart;
-         editTakeFocus = true;
-         ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (editAddr / numColumns) * ImGui::GetTextLineHeight());
-         gotoTargetAddr = -1;
+      // Clear the last edit address whenever our current address is cleared
+      if (mEditAddress == -1) {
+         mLastEditAddress = -1;
       }
 
-      bool data_next = false;
-
-      if (!allowEditing || editAddr >= mem_size)
-         editAddr = -1;
-
-      int64_t data_editing_addr_backup = editAddr;
-      if (editAddr != -1)
+      // Check if we need to move around or scroll
+      if (mEditAddress != -1)
       {
-         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)) && editAddr >= numColumns) {
-            editAddr -= numColumns;
-            editTakeFocus = true;
-         } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && editAddr < mem_size - numColumns) {
-            editAddr += numColumns;
-            editTakeFocus = true;
-         } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && editAddr > 0) {
-            editAddr -= 1;
-            editTakeFocus = true;
-         } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)) && editAddr < mem_size - 1) {
-            editAddr += 1;
-            editTakeFocus = true;
+         // Check if the user wants to move
+         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow))) {
+            mEditAddress -= numColumns;
+         } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow))) {
+            mEditAddress += numColumns;
+         } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow))) {
+            mEditAddress--;
+         } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow))) {
+            mEditAddress++;
+         }
+
+         // Clamp the edit address
+         mEditAddress = std::max(0ll, mEditAddress);
+         mEditAddress = std::min(mEditAddress, 0xFFFFFFFFll);
+
+         // Make sure that the address always stays visible!  We do this before
+         //  checking for valid memory so you can still goto an invalid address.
+         mScroller.ScrollTo(static_cast<uint32_t>(mEditAddress));
+
+         // Before we start processing an edit, lets make sure it's valid memory to be editing...
+         if (!mem::valid(static_cast<uint32_t>(mEditAddress))) {
+            mEditAddress = -1;
          }
       }
-      if ((editAddr / numColumns) != (data_editing_addr_backup / numColumns))
-      {
-         // Track cursor movements
-         float scroll_offset = ((editAddr / numColumns) - (data_editing_addr_backup / numColumns)) * line_height;
-         bool scroll_desired = (scroll_offset < 0.0f && editAddr < visible_start_addr + numColumns * 2) || (scroll_offset > 0.0f && editAddr > visible_end_addr - numColumns * 2);
-         if (scroll_desired)
-            ImGui::SetScrollY(ImGui::GetScrollY() + scroll_offset);
-      }
 
-      bool draw_separator = true;
-      for (int line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++) // display only visible items
-      {
-         uint32_t addr = line_i * numColumns;
-         ImGui::Text("%08X: ", base_display_addr + addr);
-         ImGui::SameLine();
+      int64_t editAddress = mEditAddress;
 
-         // Draw Hexadecimal
-         float line_start_x = ImGui::GetCursorPosX();
-         for (int n = 0; n < numColumns && addr < mem_size; n++, addr++)
-         {
-            ImGui::SameLine(line_start_x + cell_width * n);
+      mScroller.Begin(numColumns, ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+      for (auto addr = mScroller.Reset(); mScroller.HasMore(); addr = mScroller.Advance()) {
+         auto linePos = ImGui::GetCursorPos();
 
-            if (editAddr == addr)
-            {
-               // Display text input on current byte
-               ImGui::PushID(addr);
-               struct FuncHolder
-               {
-                  // FIXME: We should have a way to retrieve the text edit cursor position more easily in the API, this is rather tedious.
-                  static int Callback(ImGuiTextEditCallbackData* data)
-                  {
-                     int* p_cursor_pos = (int*)data->UserData;
-                     if (!data->HasSelection())
-                        *p_cursor_pos = data->CursorPos;
-                     return 0;
-                  }
-               };
-               int cursor_pos = -1;
-               bool data_write = false;
-               if (editTakeFocus)
-               {
-                  if (mem::valid(regionStart + addr)) {
-                     ImGui::SetKeyboardFocusHere();
+         // Render the address for this line
+         ImGui::Text("%08X:", addr);
+         linePos.x += addrAdvance;
 
-                     snprintf(addrInput, 32, "%08X", base_display_addr + addr);
-                     snprintf(dataInput, 32, "%02X", mem::read<unsigned char>(regionStart + addr));
-                  }
-               }
-               ImGui::PushItemWidth(ImGui::CalcTextSize("FF").x);
-               ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode | ImGuiInputTextFlags_CallbackAlways;
-               if (ImGui::InputText("##data", dataInput, 32, flags, FuncHolder::Callback, &cursor_pos))
-                  data_write = data_next = true;
-               else if (!editTakeFocus && !ImGui::IsItemActive())
-                  editAddr = -1;
-               editTakeFocus = false;
-               ImGui::PopItemWidth();
-               if (cursor_pos >= 2)
-                  data_write = data_next = true;
-               if (data_write)
-               {
-                  std::istringstream is(dataInput);
-                  int data;
-                  if (is >> data)
-                     mem::write(regionStart + addr, static_cast<unsigned char>(data));
-               }
-               ImGui::PopID();
-            } else
-            {
-               if (mem::valid(regionStart + addr)) {
-                  ImGui::Text("%02X ", mem::read<unsigned char>(regionStart + addr));
-                  if (allowEditing && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
-                  {
-                     editTakeFocus = true;
-                     editAddr = addr;
+         // Draw all of the hex cells
+         for (uint32_t i = 0; i < numColumns; ++i) {
+           if (static_cast<int64_t>(addr + i) == editAddress) {
+              // If this is the address that we are currently editing, lets
+              //  render an input box rather than just text...
+              ImGui::SetCursorPos(linePos);
+              ImGui::PushID(addr + i);
+
+              // If the active edit address has changed, lets make sure to force
+              //  the focus to the new input box.
+              bool newlyFocused = false;
+              if (mLastEditAddress != editAddress) {
+                 ImGui::SetKeyboardFocusHere();
+
+                 uint32_t targetAddress = static_cast<uint32_t>(editAddress);
+                 snprintf(mAddressInput, 32, "%08X", targetAddress);
+                 snprintf(mDataInput, 32, "%02X", mem::read<unsigned char>(targetAddress));
+
+                 mLastEditAddress = editAddress;
+                 newlyFocused = true;
+              }
+
+              // Draw the actual input box for the hex input
+              int cursorPos = -1;
+              ImGui::PushItemWidth(glyphWidth * 2);
+              ImGuiInputTextFlags flags = 
+                 ImGuiInputTextFlags_CharsHexadecimal | 
+                 ImGuiInputTextFlags_EnterReturnsTrue | 
+                 ImGuiInputTextFlags_AutoSelectAll | 
+                 ImGuiInputTextFlags_NoHorizontalScroll | 
+                 ImGuiInputTextFlags_AlwaysInsertMode | 
+                 ImGuiInputTextFlags_CallbackAlways;
+              if (ImGui::InputText("##data", mDataInput, 32, flags, [](auto data) {
+                 auto cursorPosPtr = static_cast<int*>(data->UserData);
+                 if (!data->HasSelection())
+                    *cursorPosPtr = data->CursorPos;
+                 return 0;
+              }, &cursorPos)) {
+                 mEditAddress += 1;
+              } else if (!newlyFocused && !ImGui::IsItemActive()) {
+                 mEditAddress = -1;
+              }
+              if (cursorPos >= 2) {
+                 mEditAddress += 1;
+              }
+              ImGui::PopItemWidth();
+
+              ImGui::PopID();
+
+              if (mEditAddress != mLastEditAddress) {
+                 // If the edit address has changed, we need to update
+                 //  the memory itself.
+                 std::istringstream is(mDataInput);
+                 int data;
+                 if (is >> std::hex >> data) {
+                    mem::write(addr + i, static_cast<unsigned char>(data));
+                 }
+              }
+
+            } else {
+              ImGui::SetCursorPos(linePos);
+               if (mScroller.IsValidOffset(i) && mem::valid(addr + i)) {
+                  ImGui::Text("%02X ", mem::read<unsigned char>(addr + i));
+                  if (mEditingEnabled && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0)) {
+                     mEditAddress = addr + i;
                   }
                } else {
-                  ImGui::Text("   ");
+                  ImGui::Text("??");
                }
             }
+
+            linePos.x += cellAdvance;
          }
 
-         ImGui::SameLine(line_start_x + cell_width * numColumns + glyph_width * 2);
-
-         if (draw_separator)
-         {
-            ImVec2 screen_pos = ImGui::GetCursorScreenPos();
-            ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x - glyph_width, screen_pos.y - 9999), ImVec2(screen_pos.x - glyph_width, screen_pos.y + 9999), ImColor(ImGui::GetStyle().Colors[ImGuiCol_Border]));
-            draw_separator = false;
-         }
-
-         // Draw ASCII values
-         addr = line_i * numColumns;
-         for (int n = 0; n < numColumns && addr < mem_size; n++, addr++)
-         {
-            if (n > 0) ImGui::SameLine();
-            if (mem::valid(regionStart + addr)) {
-               unsigned char c = mem::read<unsigned char>(regionStart + addr);
+         // Draw a line?
+         linePos.x += gapAdvance;
+         
+         // Draw all of the ASCII characters
+         for (uint32_t i = 0; i < numColumns; ++i) {
+            if (mScroller.IsValidOffset(i) && mem::valid(addr + i)) {
+               ImGui::SetCursorPos(linePos);
+               unsigned char c = mem::read<unsigned char>(addr + i);
                ImGui::Text("%c", (c >= 32 && c < 128) ? c : '.');
-            } else {
-               ImGui::Text(" ");
             }
+
+            linePos.x += charAdvance;
          }
-      }
-      clipper.End();
-      ImGui::PopStyleVar(2);
 
-      ImGui::EndChild();
-
-      if (data_next && editAddr < mem_size)
-      {
-         editAddr = editAddr + 1;
-         editTakeFocus = true;
       }
+      mScroller.End();
 
       ImGui::Separator();
 
+      // Render the bottom bar for the window
       ImGui::AlignFirstTextHeightToWidgets();
-      ImGui::PushItemWidth(50);
-      ImGui::PushAllowKeyboardFocus(false);
-      int rows_backup = numColumns;
-      if (ImGui::DragInt("##cols", &numColumns, 0.2f, 4, 32, "%.0f cols"))
-      {
-         ImVec2 new_window_size = ImGui::GetWindowSize();
-         new_window_size.x += (numColumns - rows_backup) * (cell_width + glyph_width);
-         ImGui::SetWindowSize(new_window_size);
-      }
-      ImGui::PopAllowKeyboardFocus();
-      ImGui::PopItemWidth();
-      ImGui::SameLine();
-      ImGui::Text("Range %08X..%08X", (int)base_display_addr, (int)base_display_addr + mem_size - 1);
+      ImGui::Text("Go To Address: ");
       ImGui::SameLine();
       ImGui::PushItemWidth(70);
-      if (ImGui::InputText("##addr", addrInput, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
-      {
-         std::istringstream is(addrInput);
+      if (ImGui::InputText("##addr", mAddressInput, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
+         std::istringstream is(mAddressInput);
          uint32_t goto_addr;
          if ((is >> std::hex >> goto_addr)) {
             gotoAddress(goto_addr);
          }
       }
-
       ImGui::PopItemWidth();
+      ImGui::SameLine();
+      ImGui::Text("Showing %d Columns", numColumns);
+
+      // End the memory view window
       ImGui::End();
    }
 
    void gotoAddress(uint32_t addr)
    {
-      gotoTargetAddr = addr;
+      mScroller.ScrollTo(addr);
+      mEditAddress = addr;
    }
 
 private:
-   void calcDefaultRegion(uint32_t addr, uint32_t *start, uint32_t *size) {
-      static const int64_t DefaultRegionPad = 0x10000;
-      int64_t calcStart = (addr & 0xFFFF0000) - DefaultRegionPad;
-      int64_t calcSize = 2 * DefaultRegionPad;
-      if (calcStart < 0) {
-         calcStart = 0;
-      }
-      if (calcStart + calcSize >= 0x100000000) {
-         calcSize = 0x100000000 - calcStart;
-      }
-      *start = static_cast<uint32_t>(calcStart);
-      *size = static_cast<uint32_t>(calcSize);
-   }
-
-   void updateRegion(uint32_t addr) {
-      // First we look for a matching section,
-      //  then we default to a surrounding default region.
-
-      coreinit::internal::lockScheduler();
-      const auto &modules = coreinit::internal::getLoadedModules();
-      for (auto &mod : modules) {
-         for (auto &sec : mod.second->sections) {
-            if (addr >= sec.start && addr < sec.end) {
-               regionName = mod.second->name + ":" + sec.name;
-               regionStart = sec.start;
-               regionSize = sec.end - sec.start;
-               coreinit::internal::unlockScheduler();
-               return;
-            }
-         }
-      }
-      coreinit::internal::unlockScheduler();
-
-      regionName = "?";
-      calcDefaultRegion(addr, &regionStart, &regionSize);
-   }
-
-   coreinit::internal::LoadedModule *userModule;
-   int64_t   gotoTargetAddr;
-   bool      allowEditing;
-   int       numColumns;
-   int64_t   editAddr;
-   bool      editTakeFocus;
-   char      dataInput[32];
-   char      addrInput[32];
-   std::string regionName;
-   uint32_t  regionStart;
-   uint32_t  regionSize;
+   // We use 64-bit here so we can deal with the 32-bit PPC memory
+   //  ranges easier without reverting to inclusive ranges.
+   AddressScroller mScroller;
+   bool mEditingEnabled;
+   int64_t mEditAddress;
+   int64_t mLastEditAddress;
+   int64_t mGotoTargetAddr;
+   char mAddressInput[32];
+   char mDataInput[32];
 
 };
 
