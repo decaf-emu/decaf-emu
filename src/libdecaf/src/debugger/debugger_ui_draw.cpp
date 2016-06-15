@@ -624,15 +624,18 @@ void draw()
       debugViewsVisible = !debugViewsVisible;
    }
 
+   // This is a stupid hack to avoid code duplation everywhere her...
+   bool wantsPause = false;
+   bool wantsResume = false;
+
    if (debugViewsVisible) {
       ImGui::BeginMainMenuBar();
       if (ImGui::BeginMenu("Debug")) {
          if (ImGui::MenuItem("Pause", nullptr, false, !sIsPaused)) {
-            debugger::pauseAll();
+            wantsPause = true;
          }
          if (ImGui::MenuItem("Resume", nullptr, false, sIsPaused)) {
-            debugger::resumeAll();
-            sIsPaused = false;
+            wantsResume = true;
          }
          ImGui::MenuItem("Step Over", nullptr, false, false);
          ImGui::MenuItem("Step Into", nullptr, false, false);
@@ -666,6 +669,16 @@ void draw()
       }
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::M), false)) {
          sMemoryView.isVisible = !sMemoryView.isVisible;
+      }
+
+
+      if (wantsPause && !sIsPaused) {
+         debugger::pauseAll();
+      }
+      if (wantsResume && sIsPaused) {
+         debugger::resumeAll();
+         sIsPaused = false;
+         handleGameResumed();
       }
 
       sInfoView.draw();
