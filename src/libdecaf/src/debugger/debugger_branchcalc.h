@@ -68,20 +68,30 @@ calculateNextInstrBc(const cpu::CoreRegs *state, espresso::Instruction instr)
          nia = sign_extend<16>(instr.bd << 2);
 
          if (!instr.aa) {
-            nia += state->cia;
+            nia += state->nia;
          }
       }
 
       return nia;
    }
 
-   return state->cia + 4;
+   return state->nia + 4;
 }
 
 static uint32_t calculateNextInstr(const cpu::CoreRegs *state, bool stepOver)
 {
    auto instr = mem::read<espresso::Instruction>(state->nia);
    auto data = espresso::decodeInstruction(instr);
+   if (stepOver) {
+      if (data->id == espresso::InstructionID::b
+         || data->id == espresso::InstructionID::bc
+         || data->id == espresso::InstructionID::bcctr
+         || data->id == espresso::InstructionID::bclr) {
+         if (instr.lk) {
+            return state->nia + 4;
+         }
+      }
+   }
    if (data->id == espresso::InstructionID::b) {
       return calculateNextInstrB(state, instr);
    } else if (data->id == espresso::InstructionID::bc) {
