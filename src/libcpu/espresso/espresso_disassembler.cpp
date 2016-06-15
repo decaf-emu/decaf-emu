@@ -344,19 +344,19 @@ checkBranchConditionAlias(Instruction instr, Disassembly &dis)
 
    if (bo == 12 && bi == 0) {
       name = "blt";
-   } else if (bo == 4, bi == 1) {
+   } else if (bo == 4 && bi == 1) {
       name = "ble";
-   } else if (bo == 12, bi == 2) {
+   } else if (bo == 12 && bi == 2) {
       name = "beq";
-   } else if (bo == 4, bi == 0) {
+   } else if (bo == 4 && bi == 0) {
       name = "bge";
-   } else if (bo == 12, bi == 3) {
+   } else if (bo == 12 && bi == 3) {
       name = "bgt";
-   } else if (bo == 4, bi == 2) {
+   } else if (bo == 4 && bi == 2) {
       name = "bne";
-   } else if (bo == 12, bi == 3) {
+   } else if (bo == 12 && bi == 3) {
       name = "bso";
-   } else if (bo == 4, bi == 3) {
+   } else if (bo == 4 && bi == 3) {
       name = "bns";
    }
 
