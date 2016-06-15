@@ -1,5 +1,5 @@
-INSA(li, addi, (rS == 0))
-INSA(lis, addis, (rS == 0))
+INSA(li, addi, (rA == 0))
+INSA(lis, addis, (rA == 0))
 
 INSA(mflr, mfspr, (spr == 8))
 INSA(mfctr, mfspr, (spr == 9))
