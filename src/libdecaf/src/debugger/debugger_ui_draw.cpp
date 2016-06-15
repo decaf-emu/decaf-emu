@@ -30,7 +30,14 @@ static const ImVec4 InfoRunningTextColor = HEXTOIMV4(0x8BC34A, 1.0f);
 static bool
 sIsPaused = false;
 
+static uint32_t
+sActiveCore = 1;
+
+static coreinit::OSThread *
+sActiveThread = nullptr;
+
 void openAddrInMemoryView(uint32_t addr);
+void setActiveThread(coreinit::OSThread *thread);
 
 uint32_t getThreadNia(coreinit::OSThread *thread)
 {
@@ -381,7 +388,13 @@ public:
 
       for (auto &thread : mThreads) {
          ImGui::Text(fmt::format("{}", thread.id).c_str()); ImGui::NextColumn();
-         ImGui::Text(thread.name.c_str());
+         if (sIsPaused) {
+            if (ImGui::Selectable(thread.name.c_str())) {
+               setActiveThread(thread.thread);
+            }
+         } else {
+            ImGui::Text(thread.name.c_str());
+         }
          ImGui::NextColumn();
 
          if (sIsPaused) {
@@ -566,7 +579,7 @@ public:
 
          // Draw a line?
          linePos.x += gapAdvance;
-         
+
          // Draw all of the ASCII characters
          for (uint32_t i = 0; i < numColumns; ++i) {
             if (mScroller.IsValidOffset(i) && mem::valid(addr + i)) {
@@ -641,6 +654,72 @@ void openAddrInMemoryView(uint32_t addr)
    sMemoryView.isVisible = true;
 }
 
+void setActiveThread(coreinit::OSThread *thread)
+{
+   emuassert(sIsPaused);
+
+   coreinit::OSThread *coreThread[3] = {
+      coreinit::internal::getCoreRunningThread(0),
+      coreinit::internal::getCoreRunningThread(1),
+      coreinit::internal::getCoreRunningThread(2)
+   };
+
+   sActiveThread = thread;
+
+   if (sActiveThread == coreThread[0]) {
+      sActiveCore = 0;
+   } else if (sActiveThread == coreThread[1]) {
+      sActiveCore = 1;
+   } else if (sActiveThread == coreThread[2]) {
+      sActiveCore = 2;
+   } else {
+      sActiveCore = -1;
+   }
+
+   if (sActiveThread) {
+      // TODO: openAddrInDebugger
+   }
+}
+
+void handleGamePaused()
+{
+   coreinit::OSThread *firstActiveThread =
+      coreinit::internal::getFirstActiveThread();
+   coreinit::OSThread *coreThread[3] = {
+      coreinit::internal::getCoreRunningThread(0),
+      coreinit::internal::getCoreRunningThread(1),
+      coreinit::internal::getCoreRunningThread(2)
+   };
+
+   if (!sActiveThread) {
+      // Lets first try to find the thread running on our core.
+      if (coreThread[sActiveCore]) {
+         sActiveThread = coreThread[sActiveCore];
+      }
+   }
+   if (!sActiveThread) {
+      // Now lets just try to find any running thread.
+      sActiveThread = coreThread[0];
+      if (!sActiveThread) {
+         sActiveThread = coreThread[1];
+         if (!sActiveThread) {
+            sActiveThread = coreThread[2];
+         }
+      }
+   }
+   if (!sActiveThread) {
+      // Gezus... Pick the first one...
+      sActiveThread = firstActiveThread;
+   }
+
+   setActiveThread(sActiveThread);
+}
+
+void handleGameResumed()
+{
+   sActiveThread = nullptr;
+}
+
 void draw()
 {
    static bool debugViewsVisible = false;
@@ -654,6 +733,7 @@ void draw()
    if (debugger::paused() && !sIsPaused) {
       // Just Paused
       sIsPaused = true;
+      handleGamePaused();
 
       // Force the debugger to pop up
       debugViewsVisible = true;
@@ -666,6 +746,8 @@ void draw()
    // This is a stupid hack to avoid code duplation everywhere her...
    bool wantsPause = false;
    bool wantsResume = false;
+   bool wantsStepOver = false;
+   bool wantsStepInto = false;
 
    if (debugViewsVisible) {
       ImGui::BeginMainMenuBar();
@@ -673,11 +755,15 @@ void draw()
          if (ImGui::MenuItem("Pause", nullptr, false, !sIsPaused)) {
             wantsPause = true;
          }
-         if (ImGui::MenuItem("Resume", nullptr, false, sIsPaused)) {
+         if (ImGui::MenuItem("Resume", "F5", false, sIsPaused)) {
             wantsResume = true;
          }
-         ImGui::MenuItem("Step Over", nullptr, false, false);
-         ImGui::MenuItem("Step Into", nullptr, false, false);
+         if (ImGui::MenuItem("Step Over", "F10", false, sIsPaused && sActiveCore != -1)) {
+            wantsStepOver = true;
+         }
+         if (ImGui::MenuItem("Step Into", "F11", false, sIsPaused && sActiveCore != -1)) {
+            wantsStepInto = true;
+         }
          ImGui::Separator();
          if (ImGui::MenuItem("Kernel Trace Enabled", nullptr, decaf::config::log::kernel_trace, true)) {
             decaf::config::log::kernel_trace = !decaf::config::log::kernel_trace;
@@ -710,12 +796,31 @@ void draw()
          sMemoryView.isVisible = !sMemoryView.isVisible;
       }
 
+      if (sIsPaused && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F5), false)) {
+         wantsResume = true;
+      }
+      if (sIsPaused && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F10), false)) {
+         wantsStepOver = true;
+      }
+      if (sIsPaused && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F11), false)) {
+         wantsStepInto = true;
+      }
 
       if (wantsPause && !sIsPaused) {
          debugger::pauseAll();
       }
       if (wantsResume && sIsPaused) {
          debugger::resumeAll();
+         sIsPaused = false;
+         handleGameResumed();
+      }
+      if (wantsStepOver && sIsPaused && sActiveCore != -1) {
+         debugger::stepCoreOver(sActiveCore);
+         sIsPaused = false;
+         handleGameResumed();
+      }
+      if (wantsStepInto && sIsPaused && sActiveCore != -1) {
+         debugger::stepCoreInto(sActiveCore);
          sIsPaused = false;
          handleGameResumed();
       }
