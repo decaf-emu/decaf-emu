@@ -104,14 +104,24 @@ public:
       // We defer ScrollTo requests to make sure we have all the meta-data
       //  we need in order to accurately calculate the scroll position.
       if (mScrollToAddress != -1) {
-         const int64_t minVisBound = mNumColumns;
-         const int64_t maxVisBound = (mNumVisibleLines * mNumColumns) - mNumColumns - mNumColumns;
+         if (std::abs(mScrollToAddress - mScrollPos) >= 0x400) {
+            // If we are making a significant jump, don't bother doing a friendly
+            //  scroll, lets just put the address at the top of the view.
 
-         if (mScrollToAddress < mScrollPos + minVisBound) {
-            SetScrollPos(mScrollToAddress - minVisBound);
-         }
-         if (mScrollToAddress >= mScrollPos + maxVisBound) {
-            SetScrollPos(mScrollToAddress - maxVisBound);
+            SetScrollPos(mScrollToAddress - mNumColumns);
+         } else {
+            // Try to just scroll the view so that the user can keep track
+            //  of the icon easier after scrolling...
+
+            const int64_t minVisBound = mNumColumns;
+            const int64_t maxVisBound = (mNumVisibleLines * mNumColumns) - mNumColumns - mNumColumns;
+
+            if (mScrollToAddress < mScrollPos + minVisBound) {
+               SetScrollPos(mScrollToAddress - minVisBound);
+            }
+            if (mScrollToAddress >= mScrollPos + maxVisBound) {
+               SetScrollPos(mScrollToAddress - maxVisBound);
+            }
          }
 
          mScrollToAddress = -1;
@@ -480,6 +490,8 @@ public:
       // Check if we need to move around or scroll
       if (mEditAddress != -1)
       {
+         auto originalAddress = mEditAddress;
+
          // Check if the user wants to move
          if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow))) {
             mEditAddress -= numColumns;
@@ -495,13 +507,15 @@ public:
          mEditAddress = std::max<int64_t>(0, mEditAddress);
          mEditAddress = std::min<int64_t>(mEditAddress, 0xFFFFFFFF);
 
-         // Make sure that the address always stays visible!  We do this before
-         //  checking for valid memory so you can still goto an invalid address.
-         mScroller.ScrollTo(static_cast<uint32_t>(mEditAddress));
-
          // Before we start processing an edit, lets make sure it's valid memory to be editing...
          if (!mem::valid(static_cast<uint32_t>(mEditAddress))) {
             mEditAddress = -1;
+         }
+
+         // Make sure that the address always stays visible!  We do this before
+         //  checking for valid memory so you can still goto an invalid address.
+         if (mEditAddress != originalAddress && mEditAddress != -1) {
+            mScroller.ScrollTo(static_cast<uint32_t>(mEditAddress));
          }
       }
 
