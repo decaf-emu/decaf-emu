@@ -114,7 +114,9 @@ cpuInterruptHandler(uint32_t interrupt_flags)
    }
 
    if (interrupt_flags & cpu::DBGBREAK_INTERRUPT) {
+      coreinit::internal::pauseCoreTime(true);
       debugger::handleDbgBreakInterrupt();
+      coreinit::internal::pauseCoreTime(false);
    }
 
    if (!(interrupt_flags & ~cpu::NONMASKABLE_INTERRUPTS)) {

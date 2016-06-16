@@ -267,7 +267,16 @@ struct OSThread
    //! Queue of threads waiting for a thread to be suspended.
    OSThreadQueue suspendQueue;
 
-   UNKNOWN(0x694 - 0x5f4);
+   UNKNOWN(8); // uint64_t
+
+   // The total amount of core time consumed by this thread
+   // (Does not include time while Running)
+   be_val<uint64_t> coreTimeConsumedNs;
+
+   // The number of times this thread has been awoken.
+   be_val<uint64_t> wakeCount;
+
+   UNKNOWN(0x694 - 0x60c);
 
    //! Naughty, and hopefully not overriding anything important
    kernel::Fiber *fiber;

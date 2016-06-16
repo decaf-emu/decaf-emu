@@ -1,4 +1,5 @@
 #include <array>
+#include <chrono>
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
@@ -35,6 +36,12 @@ sCoreRunQueue[3];
 static OSThread *
 sCurrentThread[3];
 
+static std::chrono::time_point<std::chrono::high_resolution_clock>
+sLastSwitchTime[3];
+
+static std::chrono::time_point<std::chrono::high_resolution_clock>
+sCorePauseTime[3];
+
 namespace internal
 {
 
@@ -47,6 +54,27 @@ OSThread *
 getCoreRunningThread(uint32_t coreId)
 {
    return sCurrentThread[coreId];
+}
+
+uint64_t
+getCoreThreadRunningTime(uint32_t coreId) {
+   auto now = std::chrono::high_resolution_clock::now();
+   if (sCorePauseTime[coreId] != std::chrono::time_point<std::chrono::high_resolution_clock>::max()) {
+      now = sCorePauseTime[coreId];
+   }
+   return (now - sLastSwitchTime[coreId]).count();
+}
+
+void
+pauseCoreTime(bool isPaused) {
+   auto coreId = cpu::this_core::id();
+   auto now = std::chrono::high_resolution_clock::now();
+   if (isPaused) {
+      sCorePauseTime[coreId] = now;
+   } else {
+      sLastSwitchTime[coreId] += now - sCorePauseTime[coreId];
+      sCorePauseTime[coreId] = std::chrono::time_point<std::chrono::high_resolution_clock>::max();
+   }
 }
 
 OSThread *
@@ -242,6 +270,17 @@ void checkRunningThreadNoLock(bool yielding)
    if (next) {
       next->state = OSThreadState::Running;
       unqueueThreadNoLock(next);
+   }
+
+   // Update thread core time tracking stuff
+   if (thread) {
+      auto now = std::chrono::high_resolution_clock::now();
+      auto diff = now - sLastSwitchTime[coreId];
+      thread->coreTimeConsumedNs += diff.count();
+      sLastSwitchTime[coreId] = now;
+   }
+   if (next) {
+      next->wakeCount++;
    }
 
    // Switch thread
@@ -521,6 +560,8 @@ Module::initialiseSchedulerFunctions()
       sCurrentThread[i] = nullptr;
       sCoreRunQueue[i] = coreinit::internal::sysAlloc<OSThreadQueue>();
       OSInitThreadQueue(sCoreRunQueue[i]);
+      sLastSwitchTime[i] = std::chrono::high_resolution_clock::now();
+      sCorePauseTime[i] = std::chrono::time_point<std::chrono::high_resolution_clock>::max();
    }
 }
 

@@ -14,6 +14,12 @@ namespace internal
 OSThread *
 getCoreRunningThread(uint32_t coreId);
 
+uint64_t
+getCoreThreadRunningTime(uint32_t coreId);
+
+void
+pauseCoreTime(bool isPaused);
+
 OSThread *
 getFirstActiveThread();
 
