@@ -4,16 +4,31 @@
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
 #include "libcpu/espresso/espresso_instructionset.h"
+#include <stdexcept>
 
-static uint32_t
-calculateNextInstrB(const cpu::CoreRegs *state, espresso::Instruction instr)
+struct BranchMetaInfo {
+   bool isVariable;
+   uint32_t target;
+   bool isConditional;
+   bool conditionSatisfied;
+   bool isCall;
+};
+
+static BranchMetaInfo
+getBranchMetaB(uint32_t address, espresso::Instruction instr, const cpu::CoreRegs *state)
 {
-   uint32_t nia;
-   nia = sign_extend<26>(instr.li << 2);
+   BranchMetaInfo meta;
+   meta.isVariable = false;
+   meta.isCall = instr.lk;
+   meta.isConditional = false;
+   meta.conditionSatisfied = true;
+
+   meta.target = sign_extend<26>(instr.li << 2);
    if (!instr.aa) {
-      nia += state->nia;
+      meta.target += address;
    }
-   return nia;
+
+   return meta;
 }
 
 // Branch Conditional
@@ -34,73 +49,108 @@ enum BcFlags
 };
 
 template<unsigned flags>
-static uint32_t
-calculateNextInstrBc(const cpu::CoreRegs *state, espresso::Instruction instr)
+static BranchMetaInfo
+getBranchMetaBX(uint32_t address, espresso::Instruction instr, const cpu::CoreRegs *state)
 {
+   BranchMetaInfo meta;
+   meta.isVariable = false;
+   meta.isCall = instr.lk;
+   meta.isConditional = false;
+   meta.conditionSatisfied = true;
+   meta.target = 0xFFFFFFFF;
+
    auto bo = instr.bo;
-   auto ctr_ok = true;
-   auto cond_ok = true;
 
    if (flags & BcCheckCtr) {
       if (!get_bit<NoCheckCtr>(bo)) {
-         auto ctb = static_cast<uint32_t>(state->ctr - 1 != 0);
-         auto ctv = get_bit<CtrValue>(bo);
-         ctr_ok = !!(ctb ^ ctv);
+         meta.isConditional = true;
+         if (state) {
+            auto ctb = static_cast<uint32_t>(state->ctr - 1 != 0);
+            auto ctv = get_bit<CtrValue>(bo);
+            if (!(ctb ^ ctv)) {
+               meta.conditionSatisfied = false;
+            }
+         }
       }
    }
 
    if (flags & BcCheckCond) {
       if (!get_bit<NoCheckCond>(bo)) {
-         auto crb = get_bit(state->cr.value, 31 - instr.bi);
-         auto crv = get_bit<CondValue>(bo);
-         cond_ok = (crb == crv);
-      }
-   }
-
-   if (ctr_ok && cond_ok) {
-      uint32_t nia;
-
-      if (flags & BcBranchCTR) {
-         nia = state->ctr & ~0x3;
-      } else if (flags & BcBranchLR) {
-         nia = state->lr & ~0x3;
-      } else {
-         nia = sign_extend<16>(instr.bd << 2);
-
-         if (!instr.aa) {
-            nia += state->nia;
+         meta.isConditional = true;
+         if (state) {
+            auto crb = get_bit(state->cr.value, 31 - instr.bi);
+            auto crv = get_bit<CondValue>(bo);
+            if (crb != crv) {
+               meta.conditionSatisfied = false;
+            }
          }
       }
-
-      return nia;
    }
 
-   return state->nia + 4;
+   if (flags & BcBranchCTR) {
+      meta.isVariable = true;
+      if (state) {
+         meta.target = state->ctr & ~0x3;
+      }
+   } else if (flags & BcBranchLR) {
+      meta.isVariable = true;
+      if (state) {
+         meta.target = state->lr & ~0x3;
+      }
+   } else {
+      meta.target = sign_extend<16>(instr.bd << 2);
+
+      if (!instr.aa) {
+         meta.target += address;
+      }
+   }
+
+   return meta;
+}
+
+static BranchMetaInfo 
+getBranchMeta(uint32_t address, espresso::Instruction instr, espresso::InstructionInfo *data, const cpu::CoreRegs *state)
+{
+   if (data->id == espresso::InstructionID::b) {
+      return getBranchMetaB(address, instr, state);
+   } else if (data->id == espresso::InstructionID::bc) {
+      return getBranchMetaBX<BcCheckCtr | BcCheckCond>(address, instr, state);
+   } else if (data->id == espresso::InstructionID::bcctr) {
+      return getBranchMetaBX<BcBranchCTR | BcCheckCond>(address, instr, state);
+   } else if (data->id == espresso::InstructionID::bclr) {
+      return getBranchMetaBX<BcBranchLR | BcCheckCtr | BcCheckCond>(address, instr, state);
+   } else {
+      throw std::logic_error("Instruction was not a branch");
+   }
+}
+
+static bool
+isBranchInstr(espresso::InstructionInfo *data)
+{
+   return data->id == espresso::InstructionID::b
+      || data->id == espresso::InstructionID::bc
+      || data->id == espresso::InstructionID::bcctr
+      || data->id == espresso::InstructionID::bclr;
 }
 
 static uint32_t calculateNextInstr(const cpu::CoreRegs *state, bool stepOver)
 {
    auto instr = mem::read<espresso::Instruction>(state->nia);
    auto data = espresso::decodeInstruction(instr);
-   if (stepOver) {
-      if (data->id == espresso::InstructionID::b
-         || data->id == espresso::InstructionID::bc
-         || data->id == espresso::InstructionID::bcctr
-         || data->id == espresso::InstructionID::bclr) {
-         if (instr.lk) {
-            return state->nia + 4;
-         }
+   if (isBranchInstr(data)) {
+      auto meta = getBranchMeta(state->nia, instr, data, state);
+      if (meta.isCall && stepOver) {
+         // This is a call and we are stepping over...
+         return state->nia + 4;
       }
-   }
-   if (data->id == espresso::InstructionID::b) {
-      return calculateNextInstrB(state, instr);
-   } else if (data->id == espresso::InstructionID::bc) {
-      return calculateNextInstrBc<BcCheckCtr | BcCheckCond>(state, instr);
-   } else if (data->id == espresso::InstructionID::bcctr) {
-      return calculateNextInstrBc<BcBranchCTR | BcCheckCond>(state, instr);
-   } else if (data->id == espresso::InstructionID::bclr) {
-      return calculateNextInstrBc<BcBranchLR | BcCheckCtr | BcCheckCond>(state, instr);
+
+      if (meta.conditionSatisfied) {
+         return meta.target;
+      } else {
+         return state->nia + 4;
+      }
    } else {
+      // This is not a branch instruction
       return state->nia + 4;
    }
 }
