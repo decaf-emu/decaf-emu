@@ -1312,7 +1312,7 @@ void handleGamePaused()
       coreinit::internal::getCoreRunningThread(2)
    };
 
-   if (!sActiveThread) {
+   if (!sActiveThread && sActiveCore != -1) {
       // Lets first try to find the thread running on our core.
       if (coreThread[sActiveCore]) {
          sActiveThread = coreThread[sActiveCore];
