@@ -722,10 +722,35 @@ public:
          return;
       }
 
-      // Check if we need to move around or scroll
+      // Lets grab the active core registers if they are available to us...
+      cpu::CoreRegs *activeCoreRegs = nullptr;
+      if (sActiveThread && sActiveCore != -1) {
+         activeCoreRegs = getPausedCoreState(sActiveCore);
+      }
+
+      // Check if we need to move around or scroll or mark stuff
       if (mSelectedAddr != -1)
       {
          auto originalAddress = mSelectedAddr;
+
+         // Check if the user tapped F, if so, mark this as a function!
+         if (ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F))) {
+            analysis::toggleAsFunction(static_cast<uint32_t>(mSelectedAddr));
+         }
+
+         // Check if the user tapped Enter, if so, jump to the branch target!
+         if (ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::Enter))) {
+            uint32_t selectedAddr = static_cast<uint32_t>(mSelectedAddr);
+            auto instr = mem::read<espresso::Instruction>(selectedAddr);
+            auto data = espresso::decodeInstruction(instr);
+
+            if (isBranchInstr(data)) {
+               auto meta = getBranchMeta(selectedAddr, instr, data, activeCoreRegs);
+               if (!meta.isVariable || activeCoreRegs) {
+                  mSelectedAddr = meta.target;
+               }
+            }
+         }
 
          // Check if the user wants to move
          if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow))) {
@@ -765,12 +790,6 @@ public:
       // We grab some stuff to do some custom rendering...
       auto drawList = ImGui::GetWindowDrawList();
       auto wndWidth = ImGui::GetWindowContentRegionWidth();
-
-      // Lets grab the active core registers if they are available to us...
-      cpu::CoreRegs *activeCoreRegs = nullptr;
-      if (sActiveThread && sActiveCore != -1) {
-         activeCoreRegs = getPausedCoreState(sActiveCore);
-      }
 
       // Lets precalculate some stuff we need for the currently visible instructions
       enum class BranchGlyph : uint32_t {
@@ -822,7 +841,7 @@ public:
          auto info = analysis::get(selectedAddr);
 
          bool isVisBranchSource = false;
-         if (isBranchInstr(data)) {
+         if (data && isBranchInstr(data)) {
             auto meta = getBranchMeta(selectedAddr, instr, data, activeCoreRegs);
             if (!meta.isCall && (!meta.isVariable || activeCoreRegs)) {
                ForEachVisInstr(selectedAddr, meta.target, [&](uint32_t addr, VisInstrInfo &vii) {
@@ -902,13 +921,6 @@ public:
          auto rootPos = ImGui::GetCursorScreenPos();
          auto linePos = ImGui::GetCursorPos();
 
-         auto instr = mem::read<espresso::Instruction>(addr);
-         auto data = espresso::decodeInstruction(instr);
-         auto info = analysis::get(addr);
-
-         auto visInfoIter = visInstrInfo.find(addr);
-         auto *visInfo = visInfoIter != visInstrInfo.end() ? &visInfoIter->second : nullptr;
-
          auto lineMin = ImVec2(rootPos.x, rootPos.y);
          auto lineMax = ImVec2(rootPos.x + wndWidth, rootPos.y + lineHeight);
 
@@ -961,6 +973,13 @@ public:
             continue;
          }
 
+         auto instr = mem::read<espresso::Instruction>(addr);
+         auto data = espresso::decodeInstruction(instr);
+         auto info = analysis::get(addr);
+
+         auto visInfoIter = visInstrInfo.find(addr);
+         auto *visInfo = visInfoIter != visInstrInfo.end() ? &visInfoIter->second : nullptr;
+
          // Render the instructions bytes
          ImGui::SetCursorPos(linePos);
          ImGui::TextColored(DisasmDataColor, "%02x%02x%02x%02x",
@@ -974,6 +993,12 @@ public:
             ImGui::SetCursorPos(linePos);
             if (addr == info.func->start) {
                ImGui::TextColored(DisasmFuncColor, u8"\x250f");
+            } else if (info.func->end == 0xFFFFFFFF) {
+               if (addr == info.func->start + 4) {
+                  ImGui::TextColored(DisasmFuncColor, u8"\x2575");
+                  ImGui::SetCursorPos(linePos);
+                  ImGui::TextColored(DisasmFuncColor, u8"\x25BE");
+               }
             } else if (addr == info.func->end - 4) {
                ImGui::TextColored(DisasmFuncColor, u8"\x2517");
             } else {
@@ -983,7 +1008,7 @@ public:
          linePos.x += funcLineAdvance;
 
          // This renders an arrow representing the direction of any branch statement
-         if (isBranchInstr(data)) {
+         if (data && isBranchInstr(data)) {
             auto meta = getBranchMeta(addr, instr, data, nullptr);
             if (!meta.isVariable && !meta.isCall) {
                ImGui::SetCursorPos(linePos);
