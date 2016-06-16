@@ -793,6 +793,9 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
       loadedMod->sections.emplace_back(LoadedSection{ "loader_thunks", trampSeg.first, trampSeg.second });
    }
 
+   // Add the modules entry point as an symbol called 'start'
+   loadedMod->symbols.emplace("__start", entryPoint);
+
    // Free the load segment
    coreinit::internal::sysFree(loadSegAddr);
    //mCodeHeap->free(loadSegAddr);
