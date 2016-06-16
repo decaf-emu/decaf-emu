@@ -1,6 +1,8 @@
 #include "common/emuassert.h"
 #include "common/strutils.h"
 #include "debugger.h"
+#include "debugger_analysis.h"
+#include "debugger_branchcalc.h"
 #include "debugger_ui.h"
 #include "decaf.h"
 #include "kernel/kernel_hlefunction.h"
@@ -901,8 +903,18 @@ void draw()
    if (debugViewsVisible) {
       auto userModule = coreinit::internal::getUserModule();
       if (firstActivation && userModule) {
+         // Place the views somewhere sane to start
          sMemoryView.gotoAddress(userModule->entryPoint);
          sDisassemblyView.gotoAddress(userModule->entryPoint);
+
+         // Automatically analyse the primary user module
+         for (auto &sec : userModule->sections) {
+            if (sec.name.compare(".text") == 0) {
+               analysis::analyse(sec.start, sec.end);
+               break;
+            }
+         }
+
          firstActivation = false;
       }
 

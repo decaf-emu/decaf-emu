@@ -780,6 +780,9 @@
     <ClCompile Include="..\src\libdecaf\decaf_nullinputdriver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_analysis.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1468,6 +1471,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\decaf_graphics.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\debugger\debugger_analysis.h">
+      <Filter>Header Files\debugger</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
