@@ -40,11 +40,15 @@ static const ImVec4 DisasmNiaColor = HEXTOIMV4(0x000000, 1.0f);
 static const ImVec4 DisasmNiaBgColor = HEXTOIMV4(0x00E676, 1.0f);
 static const ImVec4 DisasmBpColor = HEXTOIMV4(0x000000, 1.0f);
 static const ImVec4 DisasmBpBgColor = HEXTOIMV4(0xF44336, 1.0f);
+static const ImVec4 RegsChangedColor = HEXTOIMV4(0xF44336, 1.0f);
 
 // We store this locally so that we do not end up with isRunning
 //  switching whilst we are in the midst of drawing the UI.
 static bool
 sIsPaused = false;
+
+static uint64_t
+sResumeCount = 0;
 
 static uint32_t
 sActiveCore = 1;
@@ -454,8 +458,8 @@ public:
          ImGui::Text(coreinit::enumAsString(thread.state).c_str());  ImGui::NextColumn();
          ImGui::NextColumn();
       }
-
       ImGui::Columns(1);
+
       ImGui::End();
    }
 
@@ -1088,6 +1092,132 @@ private:
 
 };
 
+class RegistersView
+{
+
+public:
+   bool isVisible = true;
+   bool activateFocus = false;
+
+   void draw()
+   {
+      if (!isVisible) {
+         return;
+      }
+
+      if (activateFocus) {
+         ImGui::SetNextWindowFocus();
+         activateFocus = false;
+      }
+
+      ImGui::SetNextWindowSize(ImVec2(300, 500), ImGuiSetCond_FirstUseEver);
+      if (!ImGui::Begin("Registers", &isVisible)) {
+         ImGui::End();
+         return;
+      }
+
+      // The reason we store current/previous separately is because
+      //  by the time resumeCount has been updated to indicate that we
+      //  need to swap around the previous registers, the game is already
+      //  resumed making it impossible to grab the registers.
+      if (mLastResumeCount != sResumeCount) {
+         mPreviousRegs = mCurrentRegs;
+         mLastResumeCount = sResumeCount;
+      }
+
+      if (sActiveThread && sActiveCore != -1) {
+         mCurrentRegs = *getPausedCoreState(sActiveCore);
+      }
+
+      ImGui::Columns(4, "regsList", false);
+      ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.00f);
+      ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.15f);
+      ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.50f);
+      ImGui::SetColumnOffset(3, ImGui::GetWindowWidth() * 0.65f);
+
+      auto DrawRegCol = [](const std::string& name, const std::string& value, bool hasChanged) {
+         ImGui::Text(name.c_str());
+         ImGui::NextColumn();
+         if (sIsPaused) {
+            if (!hasChanged) {
+               ImGui::Text(value.c_str());
+            } else {
+               ImGui::TextColored(RegsChangedColor, value.c_str());
+            }
+         }
+         ImGui::NextColumn();
+      };
+
+      for (auto i = 0, j = 16; i < 16; i++, j++) {
+         DrawRegCol(fmt::format("r{}", i),
+            fmt::format("{:08x}", mCurrentRegs.gpr[i]), 
+            mCurrentRegs.gpr[i] != mPreviousRegs.gpr[i]);
+
+         DrawRegCol(fmt::format("r{}", j),
+            fmt::format("{:08x}", mCurrentRegs.gpr[j]),
+            mCurrentRegs.gpr[j] != mPreviousRegs.gpr[j]);
+      }
+
+      ImGui::Separator();
+
+      DrawRegCol("LR",
+         fmt::format("{:08x}", mCurrentRegs.lr),
+         mCurrentRegs.lr != mPreviousRegs.lr);
+      DrawRegCol("CTR",
+         fmt::format("{:08x}", mCurrentRegs.ctr),
+         mCurrentRegs.ctr != mPreviousRegs.ctr);
+
+      ImGui::Separator();
+
+      ImGui::NextColumn();
+      ImGui::Text("O Z + -"); ImGui::NextColumn();
+      ImGui::NextColumn();
+      ImGui::Text("O Z + -"); ImGui::NextColumn();
+
+      auto DrawCrfCol = [](uint32_t crfNum, uint32_t val, bool hasChanged) {
+         ImGui::Text("crf%d", crfNum);
+         ImGui::NextColumn();
+         if (sIsPaused) {
+            if (!hasChanged) {
+               ImGui::Text("%c %c %c %c", 
+                  (val & espresso::ConditionRegisterFlag::SummaryOverflow) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Zero) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Positive) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Negative) ? 'X' : '_');
+            } else {
+               ImGui::TextColored(RegsChangedColor, "%c %c %c %c",
+                  (val & espresso::ConditionRegisterFlag::SummaryOverflow) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Zero) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Positive) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Negative) ? 'X' : '_');
+            }
+         }
+         ImGui::NextColumn();
+      };
+
+      for (auto i = 0, j = 4; i < 4; i++, j++) {
+         auto iVal = (mCurrentRegs.cr.value >> ((7-i) * 4)) & 0xF;
+         auto jVal = (mCurrentRegs.cr.value >> ((7-j) * 4)) & 0xF;
+         auto iPrevVal = (mPreviousRegs.cr.value >> ((7-i) * 4)) & 0xF;
+         auto jPrevVal = (mPreviousRegs.cr.value >> ((7-j) * 4)) & 0xF;
+
+         DrawCrfCol(i, iVal, iVal != iPrevVal);
+         DrawCrfCol(j, jVal, jVal != jPrevVal);
+      }
+
+      
+      ImGui::Columns(1);
+      
+      ImGui::End();
+   }
+
+protected:
+   cpu::CoreRegs mCurrentRegs;
+   cpu::CoreRegs mPreviousRegs;
+   uint64_t mLastResumeCount;
+
+};
+
 static InfoView
 sInfoView;
 
@@ -1102,6 +1232,9 @@ sMemoryView;
 
 static DisassemblyView
 sDisassemblyView;
+
+static RegistersView
+sRegistersView;
 
 void openAddrInMemoryView(uint32_t addr)
 {
@@ -1180,6 +1313,7 @@ void handleGamePaused()
 
 void handleGameResumed()
 {
+   sResumeCount++;
    sActiveThread = nullptr;
 }
 
@@ -1266,6 +1400,9 @@ void draw()
          if (ImGui::MenuItem("Disassembly", "CTRL+I", sDisassemblyView.isVisible, true)) {
             sDisassemblyView.isVisible = !sDisassemblyView.isVisible;
          }
+         if (ImGui::MenuItem("Registers", "CTRL+R", sRegistersView.isVisible, true)) {
+            sRegistersView.isVisible = !sRegistersView.isVisible;
+         }
          ImGui::EndMenu();
       }
       ImGui::EndMainMenuBar();
@@ -1281,6 +1418,9 @@ void draw()
       }
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::I), false)) {
          sDisassemblyView.isVisible = !sDisassemblyView.isVisible;
+      }
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::R), false)) {
+         sRegistersView.isVisible = !sRegistersView.isVisible;
       }
 
       if (sIsPaused && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F5), false)) {
@@ -1317,6 +1457,7 @@ void draw()
       sThreadsView.draw();
       sMemoryView.draw();
       sDisassemblyView.draw();
+      sRegistersView.draw();
    }
 }
 
