@@ -11,7 +11,9 @@
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
 #include "modules/coreinit/coreinit_enum_string.h"
+#include <functional>
 #include <imgui.h>
+#include <map>
 #include <spdlog/spdlog.h>
 #include <sstream>
 #include <vector>
@@ -27,10 +29,17 @@ namespace ui
 
 static const ImVec4 InfoPausedTextColor = HEXTOIMV4(0xEF5350, 1.0f);
 static const ImVec4 InfoRunningTextColor = HEXTOIMV4(0x8BC34A, 1.0f);
-static const ImVec4 DisasmDataColor = HEXTOIMV4(0x90A4AE, 1.0f);
-static const ImVec4 DisasmFuncLinkColor = HEXTOIMV4(0x7E57C2, 1.0f);
+static const ImVec4 DisasmDataColor = HEXTOIMV4(0xB0C4CE, 1.0f);
+static const ImVec4 DisasmFuncColor = HEXTOIMV4(0xAB47BC, 1.0f);
+static const ImVec4 DisasmFuncLinkColor = HEXTOIMV4(0xCFD8DC, 1.0f);
+static const ImVec4 DisasmFuncFollowColor = HEXTOIMV4(0x66BB6A, 1.0f);
+static const ImVec4 DisasmFuncSkipColor = HEXTOIMV4(0xF44336, 1.0f);
 static const ImVec4 DisasmJmpColor = HEXTOIMV4(0xFF5722, 1.0f);
-static const ImVec4 DisasmNiaColor = HEXTOIMV4(0x00E676, 1.0f);
+static const ImVec4 DisasmSelBgColor = HEXTOIMV4(0x263238, 1.0f);
+static const ImVec4 DisasmNiaColor = HEXTOIMV4(0x000000, 1.0f);
+static const ImVec4 DisasmNiaBgColor = HEXTOIMV4(0x00E676, 1.0f);
+static const ImVec4 DisasmBpColor = HEXTOIMV4(0x000000, 1.0f);
+static const ImVec4 DisasmBpBgColor = HEXTOIMV4(0xF44336, 1.0f);
 
 // We store this locally so that we do not end up with isRunning
 //  switching whilst we are in the midst of drawing the UI.
@@ -43,9 +52,29 @@ sActiveCore = 1;
 static coreinit::OSThread *
 sActiveThread = nullptr;
 
+static std::map<uint32_t, bool>
+sBreakpoints;
+
 void openAddrInMemoryView(uint32_t addr);
 void openAddrInDisassemblyView(uint32_t addr);
 void setActiveThread(coreinit::OSThread *thread);
+
+bool hasBreakpoint(uint32_t address)
+{
+   auto bpIter = sBreakpoints.find(address);
+   return bpIter != sBreakpoints.end() && bpIter->second;
+}
+
+void toggleBreakpoint(uint32_t address)
+{
+   if (sBreakpoints[address]) {
+      cpu::removeBreakpoint(address, cpu::USER_BPFLAG);
+      sBreakpoints[address] = false;
+   } else {
+      cpu::addBreakpoint(address, cpu::USER_BPFLAG);
+      sBreakpoints[address] = true;
+   }
+}
 
 uint32_t getThreadNia(coreinit::OSThread *thread)
 {
@@ -665,6 +694,7 @@ class DisassemblyView
 {
 public:
    DisassemblyView()
+      : mSelectedAddr(-1)
    {
    }
 
@@ -688,22 +718,238 @@ public:
          return;
       }
 
+      // Check if we need to move around or scroll
+      if (mSelectedAddr != -1)
+      {
+         auto originalAddress = mSelectedAddr;
+
+         // Check if the user wants to move
+         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow))) {
+            mSelectedAddr -= 4;
+         } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow))) {
+            mSelectedAddr += 4;
+         }
+
+         // Clamp the edit address
+         mSelectedAddr = std::max<int64_t>(0, mSelectedAddr);
+         mSelectedAddr = std::min<int64_t>(mSelectedAddr, 0xFFFFFFFF);
+
+         // Before we start processing an edit, lets make sure it's valid memory to be editing...
+         if (!mem::valid(static_cast<uint32_t>(mSelectedAddr))) {
+            mSelectedAddr = -1;
+         }
+
+         // Make sure that the address always stays visible!  We do this before
+         //  checking for valid memory so you can still goto an invalid address.
+         if (mSelectedAddr != originalAddress && mSelectedAddr != -1) {
+            mScroller.ScrollTo(static_cast<uint32_t>(mSelectedAddr));
+         }
+      }
+
       // We use this 'hack' to get the true with without line-advance offsets.
+      auto lineHeight = ImGui::GetTextLineHeight();
       float glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
 
       // We precalcalculate
       float addrAdvance = glyphWidth * 10.0f;
-      float dataAdvance = glyphWidth * 10.0f;
+      float dataAdvance = glyphWidth * 9.0f;
       float funcLineAdvance = glyphWidth * 1.0f;
+      float jmpArrowAdvance = glyphWidth * 1.0f;
       float jmpLineAdvance = glyphWidth * 1.0f;
-      float instrAdvance = glyphWidth * 6.0f;
+      float instrAdvance = glyphWidth * 28.0f;
+
+      // We grab some stuff to do some custom rendering...
+      auto drawList = ImGui::GetWindowDrawList();
+      auto wndWidth = ImGui::GetWindowContentRegionWidth();
+
+      // Lets grab the active core registers if they are available to us...
+      cpu::CoreRegs *activeCoreRegs = nullptr;
+      if (sActiveThread && sActiveCore != -1) {
+         activeCoreRegs = getPausedCoreState(sActiveCore);
+      }
+
+      // Lets precalculate some stuff we need for the currently visible instructions
+      enum class BranchGlyph : uint32_t {
+         None,
+         StartDown,
+         StartUp,
+         EndDown,
+         EndUp,
+         Middle,
+         EndBoth,
+      };
+      struct VisInstrInfo {
+         BranchGlyph branchGlyph;
+         ImVec4 branchColor;
+      };
+      std::map<uint32_t, VisInstrInfo> visInstrInfo;
 
       mScroller.Begin(4, ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+
+      // Find the upper and lower bounds of the visible area
+      uint32_t visFirstAddr = mScroller.Reset();
+      uint32_t visLastAddr = visFirstAddr;
+      for (auto addr = visFirstAddr; mScroller.HasMore(); addr = mScroller.Advance()) {
+         visLastAddr = addr;
+      }
+
+      auto ForEachVisInstr = [&](uint32_t first, uint32_t last, std::function<void(uint32_t,VisInstrInfo&)> fn) {
+         if (first > last) {
+            std::swap(first, last);
+         }
+
+         auto visLoopFirst = std::max(first, visFirstAddr);
+         auto visLoopLast = std::min(last, visLastAddr);
+         if (visLoopFirst > visLastAddr || visLoopLast < visFirstAddr) {
+            return;
+         }
+         for (uint32_t addr = visLoopFirst; ; addr += 4) {
+            fn(addr, visInstrInfo[addr]);
+            if (addr == visLoopLast) {
+               break;
+            }
+         }
+      };
+
+      if (mSelectedAddr != -1) {
+         uint32_t selectedAddr = static_cast<uint32_t>(mSelectedAddr);
+         auto instr = mem::read<espresso::Instruction>(selectedAddr);
+         auto data = espresso::decodeInstruction(instr);
+         auto info = analysis::get(selectedAddr);
+
+         bool isVisBranchSource = false;
+         if (isBranchInstr(data)) {
+            auto meta = getBranchMeta(selectedAddr, instr, data, activeCoreRegs);
+            if (!meta.isCall && (!meta.isVariable || activeCoreRegs)) {
+               ForEachVisInstr(selectedAddr, meta.target, [&](uint32_t addr, VisInstrInfo &vii) {
+                  if (addr == selectedAddr) {
+                     if (meta.target < selectedAddr) {
+                        vii.branchGlyph = BranchGlyph::StartUp;
+                     } else {
+                        vii.branchGlyph = BranchGlyph::StartDown;
+                     }
+                  } else if (addr == meta.target) {
+                     if (meta.target < selectedAddr) {
+                        vii.branchGlyph = BranchGlyph::EndUp;
+                     } else {
+                        vii.branchGlyph = BranchGlyph::EndDown;
+                     }
+                  } else {
+                     vii.branchGlyph = BranchGlyph::Middle;
+                  }
+                  if (activeCoreRegs && meta.conditionSatisfied) {
+                     vii.branchColor = DisasmFuncFollowColor;;
+                  } else if (activeCoreRegs && !meta.conditionSatisfied) {
+                     vii.branchColor = DisasmFuncSkipColor;
+                  } else {
+                     vii.branchColor = DisasmFuncLinkColor;
+                  }
+               });
+               isVisBranchSource = true;
+            }
+         }
+         if (!isVisBranchSource) {
+            if (info.instr) {
+               auto &visInfo = visInstrInfo[selectedAddr];
+
+               uint32_t selectedMinSource = selectedAddr;
+               uint32_t selectedMaxSource = selectedAddr;
+
+               for (auto sourceAddr : info.instr->sourceBranches) {
+                  if (sourceAddr > selectedMaxSource) {
+                     selectedMaxSource = sourceAddr;
+                  }
+                  if (sourceAddr < selectedMinSource) {
+                     selectedMinSource = sourceAddr;
+                  }
+
+                  auto &sourceVisInfo = visInstrInfo[sourceAddr];
+                  if (sourceAddr > selectedAddr) {
+                     sourceVisInfo.branchGlyph = BranchGlyph::StartUp;
+                  } else {
+                     sourceVisInfo.branchGlyph = BranchGlyph::StartDown;
+                  }
+                  sourceVisInfo.branchColor = DisasmFuncLinkColor;
+               }
+
+               if (selectedMinSource < selectedAddr && selectedMaxSource > selectedAddr) {
+                  visInfo.branchGlyph = BranchGlyph::EndBoth;
+               } else if (selectedMinSource < selectedAddr) {
+                  visInfo.branchGlyph = BranchGlyph::EndDown;
+               } else if (selectedMaxSource > selectedAddr) {
+                  visInfo.branchGlyph = BranchGlyph::EndUp;
+               }
+
+               if (selectedMinSource != selectedMaxSource) {
+                  ForEachVisInstr(selectedMinSource, selectedMaxSource, [&](uint32_t addr, VisInstrInfo &vii) {
+                     if (vii.branchGlyph == BranchGlyph::None) {
+                        vii.branchGlyph = BranchGlyph::Middle;
+                        vii.branchColor = DisasmFuncLinkColor;
+                     }
+                  });
+               }
+
+               visInfo.branchColor = DisasmFuncLinkColor;
+            }
+         }
+      }
+
       for (auto addr = mScroller.Reset(); mScroller.HasMore(); addr = mScroller.Advance()) {
+         auto rootPos = ImGui::GetCursorScreenPos();
          auto linePos = ImGui::GetCursorPos();
 
-         // Render the address for this line
-         ImGui::Text("%08X:", addr);
+         auto instr = mem::read<espresso::Instruction>(addr);
+         auto data = espresso::decodeInstruction(instr);
+         auto info = analysis::get(addr);
+
+         auto visInfoIter = visInstrInfo.find(addr);
+         auto *visInfo = visInfoIter != visInstrInfo.end() ? &visInfoIter->second : nullptr;
+
+         auto lineMin = ImVec2(rootPos.x, rootPos.y);
+         auto lineMax = ImVec2(rootPos.x + wndWidth, rootPos.y + lineHeight);
+
+         // Handle a new address being selected
+         if (ImGui::IsMouseHoveringRect(lineMin, lineMax)) {
+            if (ImGui::IsMouseClicked(0) || ImGui::IsMouseDown(0)) {
+               mSelectedAddr = addr;
+            }
+            // Maybe render a 'highlight' here?
+         }
+
+         // Draw the rectangle for the current line selection
+         if (static_cast<int64_t>(addr) == mSelectedAddr) {
+            auto lineMinB = ImVec2(lineMin.x - 1, lineMin.y);
+            auto lineMaxB = ImVec2(lineMax.x + 1, lineMax.y);
+            drawList->AddRectFilled(lineMinB, lineMaxB, ImColor(DisasmSelBgColor), 2.0f);
+         }
+
+         // Check if this is the current instruction
+         // This should be simpler...  gActiveCoreIdx instead maybe?
+         if (sActiveThread && addr == getThreadNia(sActiveThread)) {
+            // Render a green BG behind the address
+            auto lineMinC = ImVec2(lineMin.x - 1, lineMin.y);
+            auto lineMaxC = ImVec2(lineMin.x + (glyphWidth * 8) + 2, lineMax.y);
+            drawList->AddRectFilled(lineMinC, lineMaxC, ImColor(DisasmNiaBgColor), 2.0f);
+
+            // Render the address for this line
+            //  (custom colored text so it is easy to see)
+            ImGui::TextColored(DisasmNiaColor, "%08X:", addr);
+         } else if (hasBreakpoint(addr)) {
+            // Render a red BG behind the address
+            auto lineMinC = ImVec2(lineMin.x - 1, lineMin.y);
+            auto lineMaxC = ImVec2(lineMin.x + (glyphWidth * 8) + 2, lineMax.y);
+            drawList->AddRectFilled(lineMinC, lineMaxC, ImColor(DisasmBpBgColor), 2.0f);
+
+            // Render the address for this line
+            //  (custom colored text so it is easy to see)
+            ImGui::TextColored(DisasmBpColor, "%08X:", addr);
+         } else {
+            // Render the address for this line in normal color
+            ImGui::Text("%08X:", addr);
+         }
+         if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+            toggleBreakpoint(addr);
+         }
          linePos.x += addrAdvance;
 
          // Stop drawing if this is invalid memory
@@ -720,27 +966,62 @@ public:
             mem::read<unsigned char>(addr + 3));
          linePos.x += dataAdvance;
 
-         // TODO: Render the function bounds determined during
-         //  analysis here with DisasmFuncLinkColor
-         //   Function Start Glyph: u8"\x250f"
-         //   Function Continue Glyph: u8"\x2503"
+         if (info.func) {
+            ImGui::SetCursorPos(linePos);
+            if (addr == info.func->start) {
+               ImGui::TextColored(DisasmFuncColor, u8"\x250f");
+            } else if (addr == info.func->end - 4) {
+               ImGui::TextColored(DisasmFuncColor, u8"\x2517");
+            } else {
+               ImGui::TextColored(DisasmFuncColor, u8"\x2503");
+            }
+         }
          linePos.x += funcLineAdvance;
 
-         // This should be simpler...  gActiveCoreIdx instead maybe?
-         ImGui::SetCursorPos(linePos);
-         if (sActiveThread && addr == getThreadNia(sActiveThread)) {
-            // We should show the direction of the jump in NIA color when we are on that jump
-            ImGui::TextColored(DisasmNiaColor, u8"\x25B6");
-         } else {
-           // TODO: Check if this is a jump and put an arrow,
-           //  DisasmJmpColor can be used for this.
-           //   Up Glyph: u8"\x25B4"
-           //   Down Glyph: u8"\x25BE"
+         // This renders an arrow representing the direction of any branch statement
+         if (isBranchInstr(data)) {
+            auto meta = getBranchMeta(addr, instr, data, nullptr);
+            if (!meta.isVariable && !meta.isCall) {
+               ImGui::SetCursorPos(linePos);
+               if (meta.target > addr) {
+                  ImGui::TextColored(DisasmJmpColor, u8"\x25BE");
+               } else {
+                  ImGui::TextColored(DisasmJmpColor, u8"\x25B4");
+               }
+            }
+         }
+         linePos.x += jmpArrowAdvance;
+
+         // This renders the brackets which display jump source/destinations
+         //  for the currently selected instruction
+         if (visInfo) {
+            auto selectedGlyph = visInfo->branchGlyph;
+            auto selectedColor = visInfo->branchColor;
+            if (selectedGlyph != BranchGlyph::None) {
+               // This drawing is a bit of a hack to be honest, but it looks nicer...
+               ImGui::SetCursorPos(ImVec2(linePos.x - glyphWidth*0.25f, linePos.y));
+               if (selectedGlyph == BranchGlyph::StartDown) {
+                  ImGui::TextColored(selectedColor, u8"\x256D");
+               } else if (selectedGlyph == BranchGlyph::StartUp) {
+                  ImGui::TextColored(selectedColor, u8"\x2570");
+               } else if (selectedGlyph == BranchGlyph::Middle) {
+                  ImGui::TextColored(selectedColor, u8"\x2502");
+               } else if (selectedGlyph == BranchGlyph::EndDown) {
+                  ImGui::TextColored(selectedColor, u8"\x2570");
+                  ImGui::SetCursorPos(ImVec2(linePos.x + glyphWidth*0.25f, linePos.y));
+                  ImGui::TextColored(selectedColor, u8"\x25B8");
+               } else if (selectedGlyph == BranchGlyph::EndUp) {
+                  ImGui::TextColored(selectedColor, u8"\x256D");
+                  ImGui::SetCursorPos(ImVec2(linePos.x + glyphWidth*0.25f, linePos.y));
+                  ImGui::TextColored(selectedColor, u8"\x25B8");
+               } else if (selectedGlyph == BranchGlyph::EndBoth) {
+                  ImGui::TextColored(selectedColor, u8"\x251C");
+               }
+            }
          }
          linePos.x += jmpLineAdvance;
 
          ImGui::SetCursorPos(linePos);
-         auto instr = mem::read<espresso::Instruction>(addr);
          espresso::Disassembly dis;
          if (espresso::disassemble(instr, dis, addr)) {
             // TODO: Better integration with the disassembler,
@@ -755,6 +1036,22 @@ public:
             }
          } else {
             ImGui::Text("??");
+         }
+         linePos.x += instrAdvance;
+
+         std::string lineInfo;
+         if (info.func && addr == info.func->start && info.func->name.size() > 0) {
+            lineInfo = info.func->name;
+         }
+         if (info.instr && info.instr->comments.size() > 0) {
+            if (lineInfo.size() > 0) {
+               lineInfo += " - ";
+               lineInfo += info.instr->comments;
+            }
+         }
+         if (lineInfo.size() > 0) {
+            ImGui::SetCursorPos(linePos);
+            ImGui::Text("; %s", lineInfo.c_str());
          }
       }
       mScroller.End();
@@ -781,10 +1078,12 @@ public:
    void gotoAddress(uint32_t addr)
    {
       mScroller.ScrollTo(addr);
+      mSelectedAddr = addr;
    }
 
 private:
    AddressScroller mScroller;
+   int64_t mSelectedAddr;
    char mAddressInput[32];
 
 };
