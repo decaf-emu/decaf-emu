@@ -1279,6 +1279,9 @@ void draw()
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::M), false)) {
          sMemoryView.isVisible = !sMemoryView.isVisible;
       }
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::I), false)) {
+         sDisassemblyView.isVisible = !sDisassemblyView.isVisible;
+      }
 
       if (sIsPaused && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F5), false)) {
          wantsResume = true;
