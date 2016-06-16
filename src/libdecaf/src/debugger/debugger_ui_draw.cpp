@@ -369,7 +369,11 @@ class ThreadsView
       uint32_t id;
       std::string name;
       coreinit::OSThreadState state;
-      int coreId;
+      int32_t coreId;
+      uint64_t coreTimeNs;
+      int32_t priority;
+      int32_t basePriority;
+      uint32_t affinity;
    };
 
 public:
@@ -387,7 +391,7 @@ public:
          activateFocus = false;
       }
 
-      ImGui::SetNextWindowSize(ImVec2(550, 300), ImGuiSetCond_FirstUseEver);
+      ImGui::SetNextWindowSize(ImVec2(600, 300), ImGuiSetCond_FirstUseEver);
       if (!ImGui::Begin("Threads", &isVisible)) {
          ImGui::End();
          return;
@@ -407,6 +411,9 @@ public:
          tinfo.id = thread->id;
          tinfo.name = thread->name ? thread->name.get() : "";
          tinfo.state = thread->state;
+         tinfo.priority = thread->priority;
+         tinfo.basePriority = thread->basePriority;
+         tinfo.affinity = thread->attr & coreinit::OSThreadAttributes::AffinityAny;
 
          if (thread == core0Thread) {
             tinfo.coreId = 0;
@@ -418,29 +425,48 @@ public:
             tinfo.coreId = -1;
          }
 
+         tinfo.coreTimeNs = thread->coreTimeConsumedNs;
+         if (tinfo.coreId != -1) {
+            tinfo.coreTimeNs += coreinit::internal::getCoreThreadRunningTime(0);
+         }
+
          mThreads.push_back(tinfo);
       }
 
       coreinit::internal::unlockScheduler();
 
-      ImGui::Columns(5, "threadList", false);
-      ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.0f);
-      ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.1f);
-      ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.6f);
-      ImGui::SetColumnOffset(3, ImGui::GetWindowWidth() * 0.75f);
-      ImGui::SetColumnOffset(4, ImGui::GetWindowWidth() * 0.9f);
+      ImGui::Columns(8, "threadList", false);
+      ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.00f);
+      ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.05f);
+      ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.35f);
+      ImGui::SetColumnOffset(3, ImGui::GetWindowWidth() * 0.50f);
+      ImGui::SetColumnOffset(4, ImGui::GetWindowWidth() * 0.60f);
+      ImGui::SetColumnOffset(5, ImGui::GetWindowWidth() * 0.70f);
+      ImGui::SetColumnOffset(6, ImGui::GetWindowWidth() * 0.75f);
+      ImGui::SetColumnOffset(7, ImGui::GetWindowWidth() * 0.84f);
 
       ImGui::Text("ID"); ImGui::NextColumn();
       ImGui::Text("Name"); ImGui::NextColumn();
       ImGui::Text("NIA"); ImGui::NextColumn();
       ImGui::Text("State"); ImGui::NextColumn();
-      ImGui::Text("Core#"); ImGui::NextColumn();
+      ImGui::Text("Prio"); ImGui::NextColumn();
+      ImGui::Text("Aff"); ImGui::NextColumn();
+      ImGui::Text("Core"); ImGui::NextColumn();
+      ImGui::Text("Core Time"); ImGui::NextColumn();
       ImGui::Separator();
 
       for (auto &thread : mThreads) {
-         ImGui::Text(fmt::format("{}", thread.id).c_str()); ImGui::NextColumn();
+         // ID
+         ImGui::Text("%d", thread.id);
+         ImGui::NextColumn();
+         
+         // Name
          if (sIsPaused) {
-            if (ImGui::Selectable(thread.name.c_str())) {
+            const char *threadName = "    ";
+            if (thread.name.size() > 0) {
+               threadName = thread.name.c_str();
+            }
+            if (ImGui::Selectable(threadName)) {
                setActiveThread(thread.thread);
             }
          } else {
@@ -448,14 +474,52 @@ public:
          }
          ImGui::NextColumn();
 
+         // NIA
          if (sIsPaused) {
-            ImGui::Text(fmt::format("{:08x}", getThreadNia(thread.thread)).c_str());
+            ImGui::Text("%08x", getThreadNia(thread.thread));
          } else {
             ImGui::Text("        ");
          }
-
          ImGui::NextColumn();
-         ImGui::Text(coreinit::enumAsString(thread.state).c_str());  ImGui::NextColumn();
+
+         // Thread State
+         ImGui::Text(coreinit::enumAsString(thread.state).c_str());
+         ImGui::NextColumn();
+
+         // Priority
+         ImGui::Text("%d (%d)", thread.priority, thread.basePriority);
+         ImGui::NextColumn();
+
+         // Affinity
+         std::string coreAff;
+         if (thread.affinity & coreinit::OSThreadAttributes::AffinityCPU0) {
+            coreAff += "0";
+         }
+         if (thread.affinity & coreinit::OSThreadAttributes::AffinityCPU1) {
+            if (coreAff.size() != 0) {
+               coreAff += "|1";
+            } else {
+               coreAff += "1";
+            }
+         }
+         if (thread.affinity & coreinit::OSThreadAttributes::AffinityCPU2) {
+            if (coreAff.size() != 0) {
+               coreAff += "|2";
+            } else {
+               coreAff += "2";
+            }
+         }
+         ImGui::Text(coreAff.c_str());
+         ImGui::NextColumn();
+
+         // Core Id
+         if (thread.coreId != -1) {
+            ImGui::Text("%d", thread.coreId);
+         }
+         ImGui::NextColumn();
+
+         // Core Time
+         ImGui::Text("%lld", thread.coreTimeNs / 1000);
          ImGui::NextColumn();
       }
       ImGui::Columns(1);
@@ -1135,7 +1199,7 @@ public:
          activateFocus = false;
       }
 
-      ImGui::SetNextWindowSize(ImVec2(300, 500), ImGuiSetCond_FirstUseEver);
+      ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiSetCond_FirstUseEver);
       if (!ImGui::Begin("Registers", &isVisible)) {
          ImGui::End();
          return;
