@@ -4,7 +4,7 @@
 #include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
 #include <map>
-#include <spdlog\formatter.h>
+#include <spdlog/formatter.h>
 #include <unordered_map>
 
 namespace debugger
