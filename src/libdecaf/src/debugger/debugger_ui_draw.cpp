@@ -11,6 +11,7 @@
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
 #include "modules/coreinit/coreinit_enum_string.h"
+#include <cinttypes>
 #include <functional>
 #include <imgui.h>
 #include <map>
@@ -340,8 +341,8 @@ protected:
             ImGui::EndPopup();
          }
 
-         ImGui::Text(fmt::format("{:08x}", seg.start).c_str()); ImGui::NextColumn();
-         ImGui::Text(fmt::format("{:08x}", seg.end).c_str()); ImGui::NextColumn();
+         ImGui::Text("%08x", seg.start); ImGui::NextColumn();
+         ImGui::Text("%08x", seg.end); ImGui::NextColumn();
          drawSegments(seg.items, tabs + "  ");
       }
    }
@@ -470,7 +471,7 @@ public:
                setActiveThread(thread.thread);
             }
          } else {
-            ImGui::Text(thread.name.c_str());
+            ImGui::Text("%s", thread.name.c_str());
          }
          ImGui::NextColumn();
 
@@ -483,7 +484,7 @@ public:
          ImGui::NextColumn();
 
          // Thread State
-         ImGui::Text(coreinit::enumAsString(thread.state).c_str());
+         ImGui::Text("%s", coreinit::enumAsString(thread.state).c_str());
          ImGui::NextColumn();
 
          // Priority
@@ -509,7 +510,7 @@ public:
                coreAff += "2";
             }
          }
-         ImGui::Text(coreAff.c_str());
+         ImGui::Text("%s", coreAff.c_str());
          ImGui::NextColumn();
 
          // Core Id
@@ -519,7 +520,7 @@ public:
          ImGui::NextColumn();
 
          // Core Time
-         ImGui::Text("%lld", thread.coreTimeNs / 1000);
+         ImGui::Text("%" PRIu64, thread.coreTimeNs / 1000);
          ImGui::NextColumn();
       }
       ImGui::Columns(1);
@@ -733,7 +734,7 @@ public:
       }
       ImGui::PopItemWidth();
       ImGui::SameLine();
-      ImGui::Text("Showing %d Columns", numColumns);
+      ImGui::Text("Showing %d Columns", static_cast<int>(numColumns));
 
       // End the memory view window
       ImGui::End();
@@ -1056,17 +1057,17 @@ public:
          if (info.func) {
             ImGui::SetCursorPos(linePos);
             if (addr == info.func->start) {
-               ImGui::TextColored(DisasmFuncColor, u8"\x250f");
+               ImGui::TextColored(DisasmFuncColor, u8"\u250f");
             } else if (info.func->end == 0xFFFFFFFF) {
                if (addr == info.func->start + 4) {
-                  ImGui::TextColored(DisasmFuncColor, u8"\x2575");
+                  ImGui::TextColored(DisasmFuncColor, u8"\u2575");
                   ImGui::SetCursorPos(linePos);
-                  ImGui::TextColored(DisasmFuncColor, u8"\x25BE");
+                  ImGui::TextColored(DisasmFuncColor, u8"\u25BE");
                }
             } else if (addr == info.func->end - 4) {
-               ImGui::TextColored(DisasmFuncColor, u8"\x2517");
+               ImGui::TextColored(DisasmFuncColor, u8"\u2517");
             } else {
-               ImGui::TextColored(DisasmFuncColor, u8"\x2503");
+               ImGui::TextColored(DisasmFuncColor, u8"\u2503");
             }
          }
          linePos.x += funcLineAdvance;
@@ -1077,9 +1078,9 @@ public:
             if (!meta.isVariable && !meta.isCall) {
                ImGui::SetCursorPos(linePos);
                if (meta.target > addr) {
-                  ImGui::TextColored(DisasmJmpColor, u8"\x25BE");
+                  ImGui::TextColored(DisasmJmpColor, u8"\u25BE");
                } else {
-                  ImGui::TextColored(DisasmJmpColor, u8"\x25B4");
+                  ImGui::TextColored(DisasmJmpColor, u8"\u25B4");
                }
             }
          }
@@ -1094,21 +1095,21 @@ public:
                // This drawing is a bit of a hack to be honest, but it looks nicer...
                ImGui::SetCursorPos(ImVec2(linePos.x - glyphWidth*0.25f, linePos.y));
                if (selectedGlyph == BranchGlyph::StartDown) {
-                  ImGui::TextColored(selectedColor, u8"\x256D");
+                  ImGui::TextColored(selectedColor, u8"\u256D");
                } else if (selectedGlyph == BranchGlyph::StartUp) {
-                  ImGui::TextColored(selectedColor, u8"\x2570");
+                  ImGui::TextColored(selectedColor, u8"\u2570");
                } else if (selectedGlyph == BranchGlyph::Middle) {
-                  ImGui::TextColored(selectedColor, u8"\x2502");
+                  ImGui::TextColored(selectedColor, u8"\u2502");
                } else if (selectedGlyph == BranchGlyph::EndDown) {
-                  ImGui::TextColored(selectedColor, u8"\x2570");
+                  ImGui::TextColored(selectedColor, u8"\u2570");
                   ImGui::SetCursorPos(ImVec2(linePos.x + glyphWidth*0.25f, linePos.y));
-                  ImGui::TextColored(selectedColor, u8"\x25B8");
+                  ImGui::TextColored(selectedColor, u8"\u25B8");
                } else if (selectedGlyph == BranchGlyph::EndUp) {
-                  ImGui::TextColored(selectedColor, u8"\x256D");
+                  ImGui::TextColored(selectedColor, u8"\u256D");
                   ImGui::SetCursorPos(ImVec2(linePos.x + glyphWidth*0.25f, linePos.y));
-                  ImGui::TextColored(selectedColor, u8"\x25B8");
+                  ImGui::TextColored(selectedColor, u8"\u25B8");
                } else if (selectedGlyph == BranchGlyph::EndBoth) {
-                  ImGui::TextColored(selectedColor, u8"\x251C");
+                  ImGui::TextColored(selectedColor, u8"\u251C");
                }
             }
          }
@@ -1123,9 +1124,9 @@ public:
             if (cmdVsArgs != std::string::npos) {
                auto cmd = dis.text.substr(0, cmdVsArgs);
                auto args = dis.text.substr(cmdVsArgs + 1);
-               ImGui::Text("%- 6s %s", cmd.c_str(), args.c_str());
+               ImGui::Text("%-6s %s", cmd.c_str(), args.c_str());
             } else {
-               ImGui::Text("%- 6s", dis.text.c_str());
+               ImGui::Text("%-6s", dis.text.c_str());
             }
          } else {
             ImGui::Text("??");
@@ -1225,13 +1226,13 @@ public:
       ImGui::SetColumnOffset(3, ImGui::GetWindowWidth() * 0.65f);
 
       auto DrawRegCol = [](const std::string& name, const std::string& value, bool hasChanged) {
-         ImGui::Text(name.c_str());
+         ImGui::Text("%s", name.c_str());
          ImGui::NextColumn();
          if (sIsPaused) {
             if (!hasChanged) {
-               ImGui::Text(value.c_str());
+               ImGui::Text("%s", value.c_str());
             } else {
-               ImGui::TextColored(RegsChangedColor, value.c_str());
+               ImGui::TextColored(RegsChangedColor, "%s", value.c_str());
             }
          }
          ImGui::NextColumn();
