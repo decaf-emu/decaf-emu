@@ -89,7 +89,7 @@ flushCommandBuffer(pm4::Buffer *cb)
       return nullptr;
    }
 
-   if (cb->userBuffer) {
+   if (cb->displayList) {
       void *newList = nullptr;
       uint32_t newSize = 0;
 
@@ -140,6 +140,14 @@ setUserCommandBuffer(pm4::Buffer *buffer)
       buffer->userBuffer = true;
    }
 
+   // Flush current active buffer
+   auto active = gActiveBuffer[core];
+
+   if (active && !active->displayList) {
+      gpu::queueCommandBuffer(active);
+   }
+
+   // Set new active buffer to user command buffer
    gActiveBuffer[core] = buffer;
 }
 

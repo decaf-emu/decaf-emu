@@ -26,9 +26,10 @@ GX2BeginDisplayListEx(void *displayList, uint32_t bytes, BOOL unk1)
    auto &active = gActiveDisplayList[core];
 
    // Set active display list
-   active.buffer = reinterpret_cast<uint32_t*>(displayList);
+   active.buffer = reinterpret_cast<uint32_t *>(displayList);
    active.curSize = 0;
    active.maxSize = bytes / 4;
+   active.displayList = true;
 
    // Set active command buffer to the display list
    gx2::internal::setUserCommandBuffer(&active);
