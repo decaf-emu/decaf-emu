@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include "platform.h"
 
 // Workaround weird macro concat ## behaviour
 #define PP_CAT(a, b) PP_CAT_I(a, b)
@@ -15,11 +16,23 @@
    static_assert(offsetof(Type, Field) == Offset, \
                  #Type "::" #Field " must be at offset " #Offset)
 
-#define CHECK_MEMBER_OFFSET_START \
+#define _CHECK_MEMBER_OFFSET_START \
    void PP_CAT(__verifyMemberOffsets, __COUNTER__) () {
 
-#define CHECK_MEMBER_OFFSET_END \
+#define _CHECK_MEMBER_OFFSET_END \
    }
+
+#ifdef PLATFORM_WINDOWS
+#define CHECK_MEMBER_OFFSET_START _CHECK_MEMBER_OFFSET_START
+#define CHECK_MEMBER_OFFSET_END _CHECK_MEMBER_OFFSET_END
+#else
+#define CHECK_MEMBER_OFFSET_START \
+   _Pragma("GCC diagnostic ignored \"-Winvalid-offsetof\"") \
+   _CHECK_MEMBER_OFFSET_START
+#define CHECK_MEMBER_OFFSET_END \
+   _CHECK_MEMBER_OFFSET_END \
+   _Pragma("GCC diagnostic pop")
+#endif
 
 // TODO: Figure out how to implement this, might be impossible?
 #define CHECK_BIT_OFFSET(Type, Offset, Field)
