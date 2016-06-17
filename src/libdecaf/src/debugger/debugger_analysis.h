@@ -32,6 +32,7 @@ struct InstrInfo
    InstrData *instr;
 };
 
+FuncData* getFunction(uint32_t address);
 InstrInfo get(uint32_t address);
 void markAsFunction(uint32_t address);
 void toggleAsFunction(uint32_t address);

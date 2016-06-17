@@ -19,7 +19,18 @@ sFuncData;
 static std::unordered_map<uint32_t, InstrData>
 sInstrData;
 
-InstrInfo get(uint32_t address)
+FuncData *
+getFunction(uint32_t address)
+{
+   auto funcIter = sFuncData.find(address);
+   if (funcIter != sFuncData.end()) {
+      return &funcIter->second;
+   }
+   return nullptr;
+}
+
+InstrInfo
+get(uint32_t address)
 {
    InstrInfo info = { 0 };
 

@@ -1137,11 +1137,23 @@ public:
          if (info.func && addr == info.func->start && info.func->name.size() > 0) {
             lineInfo = info.func->name;
          }
+         if (data && isBranchInstr(data)) {
+            auto meta = getBranchMeta(addr, instr, data, nullptr);
+            if (!meta.isVariable) {
+               auto func = analysis::getFunction(meta.target);
+               if (func) {
+                  if (lineInfo.size() > 0) {
+                     lineInfo += " - ";
+                  }
+                  lineInfo += "<" + func->name + ">";
+               }
+            }
+         }
          if (info.instr && info.instr->comments.size() > 0) {
             if (lineInfo.size() > 0) {
                lineInfo += " - ";
-               lineInfo += info.instr->comments;
             }
+            lineInfo += info.instr->comments;
          }
          if (lineInfo.size() > 0) {
             ImGui::SetCursorPos(linePos);
