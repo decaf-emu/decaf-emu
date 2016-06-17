@@ -4,7 +4,6 @@
 #include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
 #include <map>
-#include <string>
 #include <spdlog/formatter.h>
 #include <unordered_map>
 
