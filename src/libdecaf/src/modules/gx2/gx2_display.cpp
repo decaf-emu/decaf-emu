@@ -98,9 +98,9 @@ GX2SetTVBuffer(void *buffer,
 
    // bufferingMode is conveniently equal to the number of buffers
    pm4::write(pm4::DecafSetBuffer{
-      1, 
-      bufferingMode, 
-      static_cast<uint32_t>(tvWidth), 
+      1,
+      bufferingMode,
+      static_cast<uint32_t>(tvWidth),
       static_cast<uint32_t>(tvHeight)
    });
 }
