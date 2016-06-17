@@ -161,6 +161,7 @@ restoreContext(coreinit::OSContext *context)
    //state->sr[1] = context->srr1;
    state->fpscr.value = context->fpscr;
 
+   // TODO: This should not be in the CoreRegs
    state->reserve = false;
    state->reserveAddress = 0;
    state->reserveData = 0;

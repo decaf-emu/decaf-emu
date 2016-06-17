@@ -1198,6 +1198,11 @@ class RegistersView
 {
 
 public:
+   RegistersView()
+      : mLastActiveThread(nullptr), mLastResumeCount(0)
+   {
+   }
+
    bool isVisible = true;
    bool activateFocus = false;
 
@@ -1222,13 +1227,43 @@ public:
       //  by the time resumeCount has been updated to indicate that we
       //  need to swap around the previous registers, the game is already
       //  resumed making it impossible to grab the registers.
-      if (mLastResumeCount != sResumeCount) {
+      if (mLastResumeCount != sResumeCount || mLastActiveThread != sActiveThread) {
          mPreviousRegs = mCurrentRegs;
          mLastResumeCount = sResumeCount;
+         mLastActiveThread = sActiveThread;
       }
 
-      if (sActiveThread && sActiveCore != -1) {
-         mCurrentRegs = *getPausedCoreState(sActiveCore);
+      if (sActiveThread) {
+         if (sActiveCore != -1) {
+            mCurrentRegs = *getPausedCoreState(sActiveCore);
+         } else {
+            // Set everything to some error so its obvious if something is not restored.
+            memset(&mCurrentRegs, 0xF1, sizeof(cpu::CoreRegs));
+
+            // TODO: Kernel and Debugger should share OSContext reload code
+            auto state = &mCurrentRegs;
+            auto context = &sActiveThread->context;
+            for (auto i = 0; i < 32; ++i) {
+               state->gpr[i] = context->gpr[i];
+            }
+
+            for (auto i = 0; i < 32; ++i) {
+               state->fpr[i].value = context->fpr[i];
+               state->fpr[i].paired1 = context->psf[i];
+            }
+
+            for (auto i = 0; i < 8; ++i) {
+               state->gqr[i].value = context->gqr[i];
+            }
+
+            state->cr.value = context->cr;
+            state->lr = context->lr;
+            state->ctr = context->ctr;
+            state->xer.value = context->xer;
+            //state->sr[0] = context->srr0;
+            //state->sr[1] = context->srr1;
+            state->fpscr.value = context->fpscr;
+         }
       }
 
       ImGui::Columns(4, "regsList", false);
@@ -1307,9 +1342,9 @@ public:
          DrawCrfCol(j, jVal, jVal != jPrevVal);
       }
 
-      
+
       ImGui::Columns(1);
-      
+
       ImGui::End();
    }
 
@@ -1317,6 +1352,7 @@ protected:
    cpu::CoreRegs mCurrentRegs;
    cpu::CoreRegs mPreviousRegs;
    uint64_t mLastResumeCount;
+   coreinit::OSThread *mLastActiveThread;
 
 };
 
