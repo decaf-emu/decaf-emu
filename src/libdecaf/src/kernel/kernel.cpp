@@ -99,7 +99,9 @@ cpuSegfaultHandler(uint32_t address)
    }
 
    // Alert the debugger if it cares.
-   printf("Segfault occured at %08x\n", address);
+   coreinit::internal::pauseCoreTime(true);
+   debugger::handleDbgBreakInterrupt();
+   coreinit::internal::pauseCoreTime(false);
 
    // This will shut down the thread and reschedule.  This is required
    //  since returning from the segfault handler is an error.
