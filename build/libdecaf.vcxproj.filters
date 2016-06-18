@@ -783,6 +783,9 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_analysis.cpp">
       <Filter>Source Files\debugger</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_voice.cpp">
+      <Filter>Source Files\modules\snd_core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1474,6 +1477,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger_analysis.h">
       <Filter>Header Files\debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_voice.h">
+      <Filter>Header Files\modules\snd_core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

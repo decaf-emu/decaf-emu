@@ -1,5 +1,6 @@
 #include "snd_core.h"
 #include "snd_core_core.h"
+#include "snd_core_voice.h"
 #include "ppcutils/wfunc_ptr.h"
 
 namespace snd_core
@@ -12,6 +13,7 @@ void
 AXInit()
 {
    // TODO: AXInit
+   internal::axInitVoices();
    gAXInit = TRUE;
 }
 

@@ -14,6 +14,7 @@ Module::RegisterFunctions()
    registerAiFunctions();
    registerCoreFunctions();
    registerDeviceFunctions();
+   registerVoiceFunctions();
    registerVSFunctions();
 }
 
