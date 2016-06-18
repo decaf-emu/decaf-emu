@@ -23,6 +23,7 @@ void GLDriver::initGL()
    mRegisters.fill(0);
    mActiveShader = nullptr;
    mActiveDepthBuffer = nullptr;
+   mSyncFlipCount = 0;
    memset(&mActiveColorBuffers[0], 0, sizeof(SurfaceBuffer *) * mActiveColorBuffers.size());
    std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 
@@ -33,8 +34,7 @@ void GLDriver::initGL()
 
 void GLDriver::setForcedGpuSync(bool enabled)
 {
-   mSyncEnabled = true;
-   mSyncFlipCount = 0;
+   mSyncEnabled = enabled;
 }
 
 void GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
