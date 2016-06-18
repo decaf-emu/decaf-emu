@@ -3,6 +3,8 @@
 # decaf-emu
 Researching Wii U emulation. Licensed under the terms of the GNU General Public License, version 2 or later (GPLv2+).
 
+You can find us at #wiiu-emu on freenode.
+
 ## Requirements
 - Windows with Visual Studio 2015 Update 2
 - Linux with a modern C++14 friendly compiler (gcc, clang)
