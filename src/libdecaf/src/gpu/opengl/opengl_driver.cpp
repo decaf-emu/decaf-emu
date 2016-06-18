@@ -1,15 +1,14 @@
-#include <glbinding/gl/gl.h>
-#include <glbinding/Binding.h>
-#include <gsl.h>
-#include <fstream>
-
+#include "common/log.h"
 #include "gpu/commandqueue.h"
 #include "gpu/latte_registers.h"
 #include "gpu/pm4_buffer.h"
 #include "modules/coreinit/coreinit_time.h"
 #include "modules/gx2/gx2_event.h"
 #include "opengl_driver.h"
-#include "common/log.h"
+#include <fstream>
+#include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
+#include <gsl.h>
 
 namespace gpu
 {

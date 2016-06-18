@@ -1,10 +1,10 @@
-#include <glbinding/gl/gl.h>
-#include "opengl_driver.h"
+#include "common/log.h"
+#include "common/strutils.h"
 #include "glsl_generator.h"
 #include "gpu/latte_registers.h"
 #include "gpu/microcode/latte_decoder.h"
-#include "common/log.h"
-#include "common/strutils.h"
+#include "opengl_driver.h"
+#include <glbinding/gl/gl.h>
 #include <spdlog/spdlog.h>
 
 namespace gpu

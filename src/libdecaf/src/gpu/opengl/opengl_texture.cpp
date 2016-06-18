@@ -1,12 +1,12 @@
-#include <glbinding/gl/gl.h>
-#include <glbinding/Binding.h>
-#include <gsl.h>
-#include "opengl_driver.h"
+#include "common/log.h"
 #include "gpu/latte_enum_sq.h"
 #include "modules/gx2/gx2_addrlib.h"
 #include "modules/gx2/gx2_enum.h"
 #include "modules/gx2/gx2_surface.h"
-#include "common/log.h"
+#include "opengl_driver.h"
+#include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
+#include <gsl.h>
 
 namespace gpu
 {
