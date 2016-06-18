@@ -935,13 +935,13 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
       switch (channels) {
       case 1:
-         out << "vec4(fs_out_" << attrib->location << ", 0.0, 0.0, 0.0);\n";
+         out << "vec4(fs_out_" << attrib->location << ", 0.0, 0.0, 1.0);\n";
          break;
       case 2:
-         out << "vec4(fs_out_" << attrib->location << ", 0.0, 0.0);\n";
+         out << "vec4(fs_out_" << attrib->location << ", 0.0, 1.0);\n";
          break;
       case 3:
-         out << "vec4(fs_out_" << attrib->location << ", 0.0);\n";
+         out << "vec4(fs_out_" << attrib->location << ", 1.0);\n";
          break;
       case 4:
          out << "fs_out_" << attrib->location << ";\n";
