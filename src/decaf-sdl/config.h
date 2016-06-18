@@ -4,6 +4,13 @@
 namespace config
 {
 
+namespace gpu
+{
+
+extern bool force_sync;
+
+} // namespace gpu
+
 namespace log
 {
 

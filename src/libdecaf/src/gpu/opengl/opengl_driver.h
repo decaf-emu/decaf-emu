@@ -5,10 +5,12 @@
 #include "gpu/latte_contextstate.h"
 #include "libdecaf/decaf_graphics.h"
 #include <chrono>
+#include <condition_variable>
 #include <exception>
 #include <glbinding/gl/types.h>
 #include <gsl.h>
 #include <map>
+#include <mutex>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -167,6 +169,7 @@ public:
    virtual void stop() override;
    virtual float getAverageFPS() override;
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
+   virtual void setForcedGpuSync(bool enabled) override;
 
 private:
    void initGL();
@@ -247,8 +250,13 @@ private:
 
 private:
    volatile bool mRunning = true;
-   std::array<uint32_t, 0x10000> mRegisters;
    std::thread mThread;
+   bool mSyncEnabled;
+   std::mutex mSyncLock;
+   std::condition_variable mSyncCond;
+   uint64_t mSyncFlipCount;
+   
+   std::array<uint32_t, 0x10000> mRegisters;
 
    bool mViewportDirty = false;
    bool mScissorDirty = false;

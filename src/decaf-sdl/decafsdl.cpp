@@ -1,4 +1,5 @@
 #include "clilog.h"
+#include "config.h"
 #include "decafsdl.h"
 
 DecafSDL::~DecafSDL()
@@ -87,6 +88,7 @@ DecafSDL::run(const std::string &gamePath)
 
    // Setup OpenGL graphics driver
    mGraphicsDriver = decaf::createGLDriver();
+   mGraphicsDriver->setForcedGpuSync(config::gpu::force_sync);
    decaf::setGraphicsDriver(mGraphicsDriver);
 
    // Set input provider

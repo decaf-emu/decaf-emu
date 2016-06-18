@@ -8,6 +8,13 @@
 namespace config
 {
 
+namespace gpu
+{
+
+bool force_sync = false;
+
+}
+
 namespace log
 {
 
@@ -60,6 +67,16 @@ struct CerealDebugger
       using namespace decaf::config::debugger;
       ar(CEREAL_NVP(enabled),
          CEREAL_NVP(break_on_entry));
+   }
+};
+
+struct CerealGPU
+{
+   template <class Archive>
+   void serialize(Archive &ar)
+   {
+      using namespace gpu;
+      ar(CEREAL_NVP(force_sync));
    }
 };
 
@@ -165,6 +182,7 @@ bool load(const std::string &path)
 
    try {
       input(cereal::make_nvp("debugger", CerealDebugger {}),
+            cereal::make_nvp("gpu", CerealGPU{}),
             cereal::make_nvp("gx2", CerealGX2 {}),
             cereal::make_nvp("input", CerealInput {}),
             cereal::make_nvp("jit", CerealJit {}),
@@ -184,6 +202,7 @@ void save(const std::string &path)
    std::ofstream file(path, std::ios::binary);
    cereal::JSONOutputArchive output(file);
    output(cereal::make_nvp("debugger", CerealDebugger {}),
+          cereal::make_nvp("gpu", CerealGPU{}),
           cereal::make_nvp("gx2", CerealGX2 {}),
           cereal::make_nvp("input", CerealInput {}),
           cereal::make_nvp("jit", CerealJit {}),

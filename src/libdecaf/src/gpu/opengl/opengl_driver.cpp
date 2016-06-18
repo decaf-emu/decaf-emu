@@ -31,6 +31,12 @@ void GLDriver::initGL()
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
 }
 
+void GLDriver::setForcedGpuSync(bool enabled)
+{
+   mSyncEnabled = true;
+   mSyncFlipCount = 0;
+}
+
 void GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
 {
    ScanBufferChain *chain = data.isTv ? &mTvScanBuffers : &mDrcScanBuffers;
@@ -119,6 +125,12 @@ void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
    }
 
    mLastSwap = now;
+
+   if (mSyncEnabled) {
+      std::unique_lock<std::mutex> lock(mSyncLock);
+      mSyncFlipCount++;
+      mSyncCond.notify_all();
+   }
 }
 
 void GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
@@ -128,6 +140,14 @@ void GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
 
 void GLDriver::getSwapBuffers(unsigned int *tv, unsigned int *drc)
 {
+   if (mSyncEnabled) {
+      std::unique_lock<std::mutex> lock(mSyncLock);
+      auto lastSyncFlip = mSyncFlipCount;
+      while (mSyncFlipCount == lastSyncFlip) {
+         mSyncCond.wait(lock);
+      }
+   }
+
    *tv = mTvScanBuffers.object;
    *drc = mDrcScanBuffers.object;
 }

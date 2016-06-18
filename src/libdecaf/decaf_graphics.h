@@ -23,6 +23,7 @@ public:
    }
 
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) = 0;
+   virtual void setForcedGpuSync(bool enabled) = 0;
 };
 
 OpenGLDriver *
