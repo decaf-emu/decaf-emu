@@ -1,4 +1,6 @@
 #include "opengl_driver.h"
+#include "gpu/latte_enum_cb.h"
+#include "gpu/latte_enum_sq.h"
 #include <glbinding/gl/gl.h>
 
 namespace gpu
@@ -33,46 +35,67 @@ bool GLDriver::checkActiveColorBuffer()
    return true;
 }
 
-ColorBuffer *
+static latte::SQ_DATA_FORMAT
+CBFormatToSqDataFormat(latte::CB_FORMAT format)
+{
+   // These map directly, we can just cast them!
+   return static_cast<latte::SQ_DATA_FORMAT>(format);
+}
+
+SurfaceBuffer *
 GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
                          latte::CB_COLORN_SIZE cb_color_size,
                          latte::CB_COLORN_INFO cb_color_info)
 {
-   auto buffer = &mColorBuffers[cb_color_base.BASE_256B ^ cb_color_size.value ^ cb_color_info.value];
+   auto baseAddress = (cb_color_base.BASE_256B << 8) & 0xFFFFF800;
+   auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX();
+   auto slice_tile_max = cb_color_size.SLICE_TILE_MAX();
 
-   /* TODO: Games can reuse the same GPU memory for multiple color buffers,
-            for example, Amiibo Settings uses same BASE_256B for the TV
-            and DRC screens which have different cb_color_size.
+   auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * latte::MicroTileWidth);
+   auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
-   if (buffer->object) {
-      if (buffer->cb_color_info.value != cb_color_info.value ||
-          buffer->cb_color_size.value != cb_color_size.value) {
-         // We must recreate color buffer if it has changed
-         gl::glDeleteTextures(1, &buffer->object);
-         buffer->object = 0;
-      }
-   }*/
+   latte::SQ_DATA_FORMAT format = CBFormatToSqDataFormat(cb_color_info.FORMAT());
+   latte::SQ_NUM_FORMAT numFormat;
+   latte::SQ_FORMAT_COMP formatComp;
+   uint32_t degamma;
 
-   buffer->cb_color_base = cb_color_base;
-   buffer->cb_color_info = cb_color_info;
-   buffer->cb_color_size = cb_color_size;
-
-   if (!buffer->object) {
-      auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX();
-      auto slice_tile_max = cb_color_size.SLICE_TILE_MAX();
-
-      auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::MicroTileWidth);
-      auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
-
-      // Create color buffer
-      gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &buffer->object);
-      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-      gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-      gl::glTextureStorage2D(buffer->object, 1, gl::GL_RGBA8, pitch, height);
+   auto cbNumberType = cb_color_info.NUMBER_TYPE();
+   switch (cbNumberType) {
+   case latte::CB_NUMBER_TYPE::NUMBER_UNORM:
+      numFormat = latte::SQ_NUM_FORMAT_NORM;
+      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      degamma = 0;
+      break;
+   case latte::CB_NUMBER_TYPE::NUMBER_SNORM:
+      numFormat = latte::SQ_NUM_FORMAT_NORM;
+      formatComp = latte::SQ_FORMAT_COMP_SIGNED;
+      degamma = 0;
+      break;
+   case latte::CB_NUMBER_TYPE::NUMBER_UINT:
+      numFormat = latte::SQ_NUM_FORMAT_INT;
+      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      degamma = 0;
+      break;
+   case latte::CB_NUMBER_TYPE::NUMBER_SINT:
+      numFormat = latte::SQ_NUM_FORMAT_INT;
+      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      degamma = 0;
+      break;
+   case latte::CB_NUMBER_TYPE::NUMBER_SRGB:
+   case latte::CB_NUMBER_TYPE::NUMBER_FLOAT:
+   default:
+      gLog->debug("Skipping color buffer with unsupported number type {}", cbNumberType);
+      return nullptr;
    }
 
+   auto buffer = getSurfaceBuffer(baseAddress, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma);
+
+   gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
+   gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+   gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+   gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+
+   buffer->state = SurfaceUseState::GpuWritten;
    return buffer;
 }
 

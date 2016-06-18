@@ -248,20 +248,6 @@ GLDriver::decafClearColor(const pm4::DecafClearColor &data)
       data.alpha
    };
 
-   // Check if the color buffer is actively bound
-   for (auto i = 0; i < 8; ++i) {
-      auto active = mActiveColorBuffers[i];
-
-      if (!active) {
-         continue;
-      }
-
-      if (active->cb_color_base.BASE_256B == data.bufferAddr) {
-         gl::glClearBufferfv(gl::GL_COLOR, i, colors);
-         return;
-      }
-   }
-
    // Find our colorbuffer to clear
    auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
    auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
@@ -285,13 +271,6 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
 {
    auto db_depth_clear = getRegister<latte::DB_DEPTH_CLEAR>(latte::Register::DB_DEPTH_CLEAR);
    auto db_stencil_clear = getRegister<latte::DB_STENCIL_CLEAR>(latte::Register::DB_STENCIL_CLEAR);
-
-   // Check if this is the active depth buffer
-   if (mActiveDepthBuffer && mActiveDepthBuffer->db_depth_base.BASE_256B == data.bufferAddr) {
-      // Clear active
-      gl::glClearBufferfi(gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR());
-      return;
-   }
 
    // Find our depthbuffer to clear
    auto db_depth_base = bit_cast<latte::DB_DEPTH_BASE>(data.bufferAddr);

@@ -106,20 +106,20 @@ struct Shader
    PixelShader *pixel;
 };
 
-struct ColorBuffer
+enum class SurfaceUseState : uint32_t
 {
-   gl::GLuint object = 0;
-   latte::CB_COLORN_BASE cb_color_base;
-   latte::CB_COLORN_SIZE cb_color_size;
-   latte::CB_COLORN_INFO cb_color_info;
+   None,
+   CpuWritten,
+   GpuWritten
 };
 
-struct DepthBuffer
+struct SurfaceBuffer
 {
    gl::GLuint object = 0;
-   latte::DB_DEPTH_BASE db_depth_base;
-   latte::DB_DEPTH_SIZE db_depth_size;
-   latte::DB_DEPTH_INFO db_depth_info;
+   SurfaceUseState state = SurfaceUseState::None;
+   uint32_t width = 0;
+   uint32_t height = 0;
+   uint32_t depth = 0;
 };
 
 struct ScanBufferChain
@@ -213,12 +213,17 @@ private:
                       uint32_t *src,
                       const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
 
-   ColorBuffer *
+   SurfaceBuffer *
+   getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t height, uint32_t depth,
+                    latte::SQ_TEX_DIM dim, latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat,
+                    latte::SQ_FORMAT_COMP formatComp, uint32_t degamma);
+
+   SurfaceBuffer *
    getColorBuffer(latte::CB_COLORN_BASE base,
                   latte::CB_COLORN_SIZE size,
                   latte::CB_COLORN_INFO info);
 
-   DepthBuffer *
+   SurfaceBuffer *
    getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
                   latte::DB_DEPTH_SIZE db_depth_size,
                   latte::DB_DEPTH_INFO db_depth_info);
@@ -255,7 +260,7 @@ private:
    std::mutex mSyncLock;
    std::condition_variable mSyncCond;
    uint64_t mSyncFlipCount;
-   
+
    std::array<uint32_t, 0x10000> mRegisters;
 
    bool mViewportDirty = false;
@@ -265,9 +270,8 @@ private:
    std::unordered_map<uint32_t, VertexShader> mVertexShaders;
    std::unordered_map<uint32_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
+   std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;
    std::unordered_map<uint32_t, Texture> mTextures;
-   std::unordered_map<uint32_t, ColorBuffer> mColorBuffers;
-   std::unordered_map<uint32_t, DepthBuffer> mDepthBuffers;
    std::unordered_map<uint32_t, AttributeBuffer> mAttribBuffers;
    std::unordered_map<uint32_t, UniformBuffer> mUniformBuffers;
 
@@ -277,8 +281,8 @@ private:
 
    FrameBuffer mFrameBuffer;
    Shader *mActiveShader = nullptr;
-   DepthBuffer *mActiveDepthBuffer = nullptr;
-   std::array<ColorBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;
+   SurfaceBuffer *mActiveDepthBuffer = nullptr;
+   std::array<SurfaceBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
 

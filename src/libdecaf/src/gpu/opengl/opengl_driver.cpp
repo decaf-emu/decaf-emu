@@ -23,7 +23,7 @@ void GLDriver::initGL()
    mRegisters.fill(0);
    mActiveShader = nullptr;
    mActiveDepthBuffer = nullptr;
-   memset(&mActiveColorBuffers[0], 0, sizeof(ColorBuffer *) * mActiveColorBuffers.size());
+   memset(&mActiveColorBuffers[0], 0, sizeof(SurfaceBuffer *) * mActiveColorBuffers.size());
    std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 
    // Create our default framebuffer

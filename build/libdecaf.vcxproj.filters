@@ -786,6 +786,9 @@
     <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_voice.cpp">
       <Filter>Source Files\modules\snd_core</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_surface.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">

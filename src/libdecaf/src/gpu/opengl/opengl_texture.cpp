@@ -63,142 +63,6 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
 }
 
 static gl::GLenum
-getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, latte::SQ_FORMAT_COMP formatComp, uint32_t degamma)
-{
-   // TODO: Not use gx2, but its fucking effort
-   auto value = getSurfaceFormat(format, numFormat, formatComp, degamma);
-
-   switch (value) {
-   // GX2_ENUM_VALUE(UNORM_R4_G4, 0x02)
-   // GX2_ENUM_VALUE(UNORM_A1_B5_G5_R5, 0x0c)
-   // GX2_ENUM_VALUE(UNORM_A2_B10_G10_R10, 0x01b)
-   // GX2_ENUM_VALUE(UNORM_R10_G10_B10_A2, 0x019)
-   // GX2_ENUM_VALUE(UNORM_NV12, 0x081)
-   case GX2SurfaceFormat::UNORM_R4_G4_B4_A4:
-      return gl::GL_RGBA4;
-   case GX2SurfaceFormat::UNORM_R8:
-      return gl::GL_R8;
-   case GX2SurfaceFormat::UNORM_R8_G8:
-      return gl::GL_RG8;
-   case GX2SurfaceFormat::UNORM_R8_G8_B8_A8:
-      return gl::GL_RGBA8;
-   case GX2SurfaceFormat::UNORM_R16:
-      return gl::GL_R16;
-   case GX2SurfaceFormat::UNORM_R16_G16:
-      return gl::GL_RG16;
-   case GX2SurfaceFormat::UNORM_R16_G16_B16_A16:
-      return gl::GL_RGBA16;
-   case GX2SurfaceFormat::UNORM_R5_G6_B5:
-      return gl::GL_RGB565;
-   case GX2SurfaceFormat::UNORM_R5_G5_B5_A1:
-      return gl::GL_RGB5_A1;
-   case GX2SurfaceFormat::UNORM_R10_G10_B10_A2:
-      return gl::GL_RGB10_A2;
-   case GX2SurfaceFormat::UNORM_BC1:
-      return gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-   case GX2SurfaceFormat::UNORM_BC2:
-      return gl::GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-   case GX2SurfaceFormat::UNORM_BC3:
-      return gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-   case GX2SurfaceFormat::UNORM_BC4:
-      return gl::GL_COMPRESSED_RED_RGTC1;
-   case GX2SurfaceFormat::UNORM_BC5:
-      return gl::GL_COMPRESSED_RG_RGTC2;
-
-   // GX2_ENUM_VALUE(UINT_A2_B10_G10_R10, 0x11b)
-   // GX2_ENUM_VALUE(UINT_X24_G8, 0x111)
-   // GX2_ENUM_VALUE(UINT_G8_X24, 0x11c)
-   case GX2SurfaceFormat::UINT_R8:
-      return gl::GL_R8UI;
-   case GX2SurfaceFormat::UINT_R8_G8:
-      return gl::GL_RG8UI;
-   case GX2SurfaceFormat::UINT_R8_G8_B8_A8:
-      return gl::GL_RGBA8UI;
-   case GX2SurfaceFormat::UINT_R16:
-      return gl::GL_R16UI;
-   case GX2SurfaceFormat::UINT_R16_G16:
-      return gl::GL_RG16UI;
-   case GX2SurfaceFormat::UINT_R16_G16_B16_A16:
-      return gl::GL_RGBA16UI;
-   case GX2SurfaceFormat::UINT_R32:
-      return gl::GL_R32UI;
-   case GX2SurfaceFormat::UINT_R32_G32:
-      return gl::GL_RG32UI;
-   case GX2SurfaceFormat::UINT_R32_G32_B32_A32:
-      return gl::GL_RGBA32UI;
-   case GX2SurfaceFormat::UINT_R10_G10_B10_A2:
-      return gl::GL_RGB10_A2UI;
-
-   // GX2_ENUM_VALUE(SNORM_R10_G10_B10_A2, 0x219)
-   case GX2SurfaceFormat::SNORM_R8:
-      return gl::GL_R8_SNORM;
-   case GX2SurfaceFormat::SNORM_R8_G8:
-      return gl::GL_RG8_SNORM;
-   case GX2SurfaceFormat::SNORM_R8_G8_B8_A8:
-      return gl::GL_RGBA8_SNORM;
-   case GX2SurfaceFormat::SNORM_R16:
-      return gl::GL_R16_SNORM;
-   case GX2SurfaceFormat::SNORM_R16_G16:
-      return gl::GL_RG16_SNORM;
-   case GX2SurfaceFormat::SNORM_R16_G16_B16_A16:
-      return gl::GL_RGBA16_SNORM;
-   case GX2SurfaceFormat::SNORM_BC4:
-      return gl::GL_COMPRESSED_SIGNED_RED_RGTC1;
-   case GX2SurfaceFormat::SNORM_BC5:
-      return gl::GL_COMPRESSED_SIGNED_RG_RGTC2;
-
-   // GX2_ENUM_VALUE(SINT_R10_G10_B10_A2, 0x319)
-   case GX2SurfaceFormat::SINT_R8:
-      return gl::GL_R8I;
-   case GX2SurfaceFormat::SINT_R8_G8:
-      return gl::GL_RG8I;
-   case GX2SurfaceFormat::SINT_R8_G8_B8_A8:
-      return gl::GL_RGBA8I;
-   case GX2SurfaceFormat::SINT_R16:
-      return gl::GL_R16I;
-   case GX2SurfaceFormat::SINT_R16_G16:
-      return gl::GL_RG16I;
-   case GX2SurfaceFormat::SINT_R16_G16_B16_A16:
-      return gl::GL_RGBA16I;
-   case GX2SurfaceFormat::SINT_R32:
-      return gl::GL_R32I;
-   case GX2SurfaceFormat::SINT_R32_G32:
-      return gl::GL_RG32I;
-   case GX2SurfaceFormat::SINT_R32_G32_B32_A32:
-      return gl::GL_RGBA32I;
-
-   case GX2SurfaceFormat::SRGB_R8_G8_B8_A8:
-      return gl::GL_SRGB8_ALPHA8;
-   case GX2SurfaceFormat::SRGB_BC1:
-      return gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
-   case GX2SurfaceFormat::SRGB_BC2:
-      return gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
-   case GX2SurfaceFormat::SRGB_BC3:
-      return gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
-
-   // GX2_ENUM_VALUE(FLOAT_D24_S8, 0x811)
-   // GX2_ENUM_VALUE(FLOAT_X8_X24, 0x81c)
-   case GX2SurfaceFormat::FLOAT_R32:
-      return gl::GL_R32F;
-   case GX2SurfaceFormat::FLOAT_R32_G32:
-      return gl::GL_RG32F;
-   case GX2SurfaceFormat::FLOAT_R32_G32_B32_A32:
-      return gl::GL_RGBA32F;
-   case GX2SurfaceFormat::FLOAT_R16:
-      return gl::GL_R16F;
-   case GX2SurfaceFormat::FLOAT_R16_G16:
-      return gl::GL_RG16F;
-   case GX2SurfaceFormat::FLOAT_R16_G16_B16_A16:
-      return gl::GL_RGBA16F;
-   case GX2SurfaceFormat::FLOAT_R11_G11_B10:
-      return gl::GL_R11F_G11F_B10F;
-   default:
-      gLog->debug("getStorageFormat: Unimplemented texture storage format 0x{:X}", value);
-      return gl::GL_INVALID_ENUM;
-   }
-}
-
-static gl::GLenum
 getTextureFormat(latte::SQ_DATA_FORMAT format)
 {
    /*
@@ -414,26 +278,9 @@ bool GLDriver::checkActiveTextures()
       auto sq_tex_resource_word5 = getRegister<latte::SQ_TEX_RESOURCE_WORD5_N>(latte::Register::SQ_TEX_RESOURCE_WORD5_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
       auto sq_tex_resource_word6 = getRegister<latte::SQ_TEX_RESOURCE_WORD6_N>(latte::Register::SQ_TEX_RESOURCE_WORD6_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
 
-      if (!sq_tex_resource_word2.BASE_ADDRESS()) {
+      auto baseAddress = (sq_tex_resource_word2.BASE_ADDRESS() << 8) & 0xFFFFF800;
+      if (!baseAddress) {
          continue;
-      }
-
-      auto &texture = mTextures[sq_tex_resource_word2.BASE_ADDRESS()];
-
-      if (texture.object) {
-         if (texture.words[0] == sq_tex_resource_word0.value
-          && texture.words[1] == sq_tex_resource_word1.value
-          && texture.words[2] == sq_tex_resource_word2.value
-          && texture.words[3] == sq_tex_resource_word3.value
-          && texture.words[4] == sq_tex_resource_word4.value
-          && texture.words[5] == sq_tex_resource_word5.value
-          && texture.words[6] == sq_tex_resource_word6.value) {
-            gl::glBindTextureUnit(i, texture.object);
-            continue;
-         } else {
-            gl::glDeleteTextures(1, &texture.object);
-            texture.object = 0;
-         }
       }
 
       // Decode resource registers
@@ -448,6 +295,14 @@ bool GLDriver::checkActiveTextures()
       auto formatComp = sq_tex_resource_word4.FORMAT_COMP_X();
       auto degamma = sq_tex_resource_word4.FORCE_DEGAMMA();
       auto dim = sq_tex_resource_word0.DIM().get();
+
+      auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma);
+
+      if (buffer->state != SurfaceUseState::None) {
+         // TODO: We need to validate that the CPU has not written to the memory region!
+         gl::glBindTextureUnit(i, buffer->object);
+         continue;
+      }
 
       auto addr = (sq_tex_resource_word2.BASE_ADDRESS() & (~7)) << 8;
       auto swizzle = sq_tex_resource_word2.SWIZZLE() << 8;
@@ -497,7 +352,6 @@ bool GLDriver::checkActiveTextures()
       // Create texture
       bool compressed = isCompressedFormat(format);
       auto target = getTextureTarget(dim);
-      auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma);
       auto textureDataType = gl::GL_INVALID_ENUM;
       auto textureFormat = getTextureFormat(format);
       auto size = untiledImage.size();
@@ -508,26 +362,24 @@ bool GLDriver::checkActiveTextures()
          textureDataType = getTextureDataType(format, formatComp);
       }
 
-      if (textureDataType == gl::GL_INVALID_ENUM || storageFormat == gl::GL_INVALID_ENUM || textureFormat == gl::GL_INVALID_ENUM) {
+      if (textureDataType == gl::GL_INVALID_ENUM || textureFormat == gl::GL_INVALID_ENUM) {
          gLog->debug("Skipping texture with unsupported format {}", surface.format.value());
          continue;
       }
 
       switch (dim) {
       case latte::SQ_TEX_DIM_2D:
-         gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &texture.object);
-         gl::glTextureParameteri(texture.object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-         gl::glTextureParameteri(texture.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-         gl::glTextureStorage2D(texture.object, 1, storageFormat, width, height);
+         gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+         gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
 
          if (compressed) {
-            gl::glCompressedTextureSubImage2D(texture.object, 0,
+            gl::glCompressedTextureSubImage2D(buffer->object, 0,
                                               0, 0,
                                               width, height,
                                               textureDataType,
                                               gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
          } else {
-            gl::glTextureSubImage2D(texture.object, 0,
+            gl::glTextureSubImage2D(buffer->object, 0,
                                     0, 0,
                                     width, height,
                                     textureFormat, textureDataType,
@@ -535,19 +387,17 @@ bool GLDriver::checkActiveTextures()
          }
          break;
       case latte::SQ_TEX_DIM_2D_ARRAY:
-         gl::glCreateTextures(gl::GL_TEXTURE_2D_ARRAY, 1, &texture.object);
-         gl::glTextureParameteri(texture.object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-         gl::glTextureParameteri(texture.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-         gl::glTextureStorage3D(texture.object, 1, storageFormat, width, height, depth);
+         gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+         gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
 
          if (compressed) {
-            gl::glCompressedTextureSubImage3D(texture.object, 0,
+            gl::glCompressedTextureSubImage3D(buffer->object, 0,
                                               0, 0, 0,
                                               width, height, depth,
                                               textureDataType,
                                               gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
          } else {
-            gl::glTextureSubImage3D(texture.object, 0,
+            gl::glTextureSubImage3D(buffer->object, 0,
                                     0, 0, 0,
                                     width, height, depth,
                                     textureFormat, textureDataType,
@@ -561,9 +411,6 @@ bool GLDriver::checkActiveTextures()
       case latte::SQ_TEX_DIM_2D_MSAA:
       case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
          gLog->error("Unsupported texture dim: {}", sq_tex_resource_word0.DIM().get());
-      }
-
-      if (!texture.object) {
          continue;
       }
 
@@ -580,16 +427,10 @@ bool GLDriver::checkActiveTextures()
          static_cast<gl::GLint>(dst_sel_w),
       };
 
-      gl::glTextureParameteriv(texture.object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
-      gl::glBindTextureUnit(i, texture.object);
+      gl::glTextureParameteriv(buffer->object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
+      gl::glBindTextureUnit(i, buffer->object);
 
-      texture.words[0] = sq_tex_resource_word0.value;
-      texture.words[1] = sq_tex_resource_word1.value;
-      texture.words[2] = sq_tex_resource_word2.value;
-      texture.words[3] = sq_tex_resource_word3.value;
-      texture.words[4] = sq_tex_resource_word4.value;
-      texture.words[5] = sq_tex_resource_word5.value;
-      texture.words[6] = sq_tex_resource_word6.value;
+      buffer->state = SurfaceUseState::CpuWritten;
    }
 
    return true;
