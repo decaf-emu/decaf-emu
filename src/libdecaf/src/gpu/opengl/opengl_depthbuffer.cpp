@@ -30,30 +30,6 @@ bool GLDriver::checkActiveDepthBuffer()
    return true;
 }
 
-static latte::SQ_DATA_FORMAT
-DbFormatToSqDataFormat(latte::DB_DEPTH_FORMAT format)
-{
-   switch (format) {
-   case latte::DB_DEPTH_FORMAT::DEPTH_16:
-      return latte::SQ_DATA_FORMAT::FMT_16;
-   case latte::DB_DEPTH_FORMAT::DEPTH_8_24:
-      return latte::SQ_DATA_FORMAT::FMT_8_24;
-   case latte::DB_DEPTH_FORMAT::DEPTH_8_24_FLOAT:
-      return latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT;
-   case latte::DB_DEPTH_FORMAT::DEPTH_32_FLOAT:
-      return latte::SQ_DATA_FORMAT::FMT_32_FLOAT;
-   case latte::DB_DEPTH_FORMAT::DEPTH_X24_8_32_FLOAT:
-      return latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT;
-
-   case latte::DB_DEPTH_FORMAT::DEPTH_INVALID:
-   case latte::DB_DEPTH_FORMAT::DEPTH_X8_24:
-   case latte::DB_DEPTH_FORMAT::DEPTH_X8_24_FLOAT:
-   default:
-      return latte::SQ_DATA_FORMAT::FMT_INVALID;
-   }
-}
-
-#pragma optimize("", off)
 SurfaceBuffer *
 GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
                          latte::DB_DEPTH_SIZE db_depth_size,
@@ -66,13 +42,54 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
    auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * latte::MicroTileWidth);
    auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
-   latte::SQ_DATA_FORMAT format = DbFormatToSqDataFormat(db_depth_info.FORMAT());
+   latte::SQ_DATA_FORMAT format = latte::SQ_DATA_FORMAT::FMT_INVALID;
    latte::SQ_NUM_FORMAT numFormat = latte::SQ_NUM_FORMAT_NORM;
    latte::SQ_FORMAT_COMP formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
    uint32_t degamma = 0;
 
+   auto dbFormat = static_cast<latte::DB_DEPTH_FORMAT>(db_depth_info.FORMAT());
+   switch (dbFormat) {
+   case latte::DB_DEPTH_FORMAT::DEPTH_16:
+      format = latte::SQ_DATA_FORMAT::FMT_16;
+      numFormat = latte::SQ_NUM_FORMAT_NORM;
+      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      degamma = 0;
+      break;
+   case latte::DB_DEPTH_FORMAT::DEPTH_8_24:
+      format = latte::SQ_DATA_FORMAT::FMT_8_24;
+      numFormat = latte::SQ_NUM_FORMAT_NORM;
+      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      degamma = 0;
+      break;
+   case latte::DB_DEPTH_FORMAT::DEPTH_8_24_FLOAT:
+      format = latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT;
+      numFormat = latte::SQ_NUM_FORMAT_SCALED;
+      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      degamma = 0;
+      break;
+   case latte::DB_DEPTH_FORMAT::DEPTH_32_FLOAT:
+      format = latte::SQ_DATA_FORMAT::FMT_32_FLOAT;
+      numFormat = latte::SQ_NUM_FORMAT_SCALED;
+      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      degamma = 0;
+      break;
+   case latte::DB_DEPTH_FORMAT::DEPTH_X24_8_32_FLOAT:
+      format = latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT;
+      numFormat = latte::SQ_NUM_FORMAT_SCALED;
+      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      degamma = 0;
+      break;
+
+   case latte::DB_DEPTH_FORMAT::DEPTH_X8_24:
+   case latte::DB_DEPTH_FORMAT::DEPTH_X8_24_FLOAT:
+   case latte::DB_DEPTH_FORMAT::DEPTH_INVALID:
+   default:
+      gLog->debug("Skipping depth buffer with unsupported format {}", dbFormat);
+      return nullptr;
+   }
+
    auto buffer = getSurfaceBuffer(baseAddress, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma);
-   //gl::glTextureStorage2D(buffer->object, 1, gl::GL_DEPTH_COMPONENT32F, pitch, height);
+
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));

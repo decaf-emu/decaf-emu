@@ -35,13 +35,6 @@ bool GLDriver::checkActiveColorBuffer()
    return true;
 }
 
-static latte::SQ_DATA_FORMAT
-CBFormatToSqDataFormat(latte::CB_FORMAT format)
-{
-   // These map directly, we can just cast them!
-   return static_cast<latte::SQ_DATA_FORMAT>(format);
-}
-
 SurfaceBuffer *
 GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
                          latte::CB_COLORN_SIZE cb_color_size,
@@ -54,7 +47,8 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
    auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * latte::MicroTileWidth);
    auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
-   latte::SQ_DATA_FORMAT format = CBFormatToSqDataFormat(cb_color_info.FORMAT());
+   auto cbFormat = static_cast<latte::CB_FORMAT>(cb_color_info.FORMAT());
+   latte::SQ_DATA_FORMAT format = static_cast<latte::SQ_DATA_FORMAT>(cbFormat);
    latte::SQ_NUM_FORMAT numFormat;
    latte::SQ_FORMAT_COMP formatComp;
    uint32_t degamma;
@@ -81,6 +75,7 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
       formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
       degamma = 0;
       break;
+
    case latte::CB_NUMBER_TYPE::NUMBER_SRGB:
    case latte::CB_NUMBER_TYPE::NUMBER_FLOAT:
    default:
