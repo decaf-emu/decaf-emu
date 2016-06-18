@@ -212,12 +212,16 @@ DecafSDL::run(const std::string &gamePath)
       gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 
       // Draw TV display
-      gl::glViewportArrayv(0, 1, tvVp);
-      drawScanBuffer(tvBuffer);
+      if (tvBuffer != 0) {
+         gl::glViewportArrayv(0, 1, tvVp);
+         drawScanBuffer(tvBuffer);
+      }
 
       // Draw DRC display
-      gl::glViewportArrayv(0, 1, drcVp);
-      drawScanBuffer(drcBuffer);
+      if (drcBuffer != 0) {
+         gl::glViewportArrayv(0, 1, drcVp);
+         drawScanBuffer(drcBuffer);
+      }
 
       // Draw UI
       decaf::debugger::drawUiGL(windowWidth, windowHeight);
