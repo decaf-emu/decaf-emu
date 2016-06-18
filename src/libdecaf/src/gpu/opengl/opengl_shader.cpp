@@ -464,28 +464,28 @@ bool GLDriver::checkActiveAttribBuffers()
          return false;
       }
 
-      if (!buffer.object) {
-         buffer.size = size;
-         buffer.stride = stride;
+      if (!buffer.object || buffer.size < size) {
+         if (buffer.object) {
+            gl::glUnmapNamedBuffer(buffer.object);
+            gl::glDeleteBuffers(1, &buffer.object);
+         }
 
          gl::glCreateBuffers(1, &buffer.object);
          gl::glNamedBufferStorage(buffer.object, size, NULL, gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
          buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
-      } else if (buffer.size != size || buffer.stride != stride) {
-         throw std::logic_error("Buffer size has changed!");
+         buffer.size = size;
       }
 
       stridedMemcpy(mem::translate<const void>(addr),
                     buffer.mappedBuffer,
                     buffer.size,
                     attrib.offset,
-                    buffer.stride,
+                    stride,
                     attrib.endianSwap,
                     attrib.format);
 
-      // TODO: Only flush + bind once per buffer
       gl::glFlushMappedNamedBufferRange(buffer.object, 0, buffer.size);
-      gl::glBindVertexBuffer(attrib.buffer, buffer.object, 0, buffer.stride);
+      gl::glBindVertexBuffer(attrib.buffer, buffer.object, 0, stride);
    }
 
    return true;
