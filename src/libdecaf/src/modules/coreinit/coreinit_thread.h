@@ -57,8 +57,12 @@ struct OSContext
    be_val<uint32_t> lr;
    be_val<uint32_t> ctr;
    be_val<uint32_t> xer;
-   be_val<uint32_t> srr0;
-   be_val<uint32_t> srr1;
+
+   // srr0 and srr1 would usually be here, however because these are used
+   //  for operating system things and we are HLE, it should be safe to
+   //  override them with our internal HLE linkup.
+   kernel::Fiber *fiber;
+
    UNKNOWN(0x14);
    be_val<uint32_t> fpscr;
    be_val<double> fpr[32];
@@ -84,8 +88,8 @@ CHECK_OFFSET(OSContext, 0x88, cr);
 CHECK_OFFSET(OSContext, 0x8c, lr);
 CHECK_OFFSET(OSContext, 0x90, ctr);
 CHECK_OFFSET(OSContext, 0x94, xer);
-CHECK_OFFSET(OSContext, 0x98, srr0);
-CHECK_OFFSET(OSContext, 0x9c, srr1);
+//CHECK_OFFSET(OSContext, 0x98, srr0);
+//CHECK_OFFSET(OSContext, 0x9c, srr1);
 CHECK_OFFSET(OSContext, 0xb4, fpscr);
 CHECK_OFFSET(OSContext, 0xb8, fpr);
 CHECK_OFFSET(OSContext, 0x1b8, spinLockCount);
@@ -276,10 +280,7 @@ struct OSThread
    // The number of times this thread has been awoken.
    be_val<uint64_t> wakeCount;
 
-   UNKNOWN(0x694 - 0x60c);
-
-   //! Naughty, and hopefully not overriding anything important
-   kernel::Fiber *fiber;
+   UNKNOWN(0x69c - 0x60c);
 };
 CHECK_OFFSET(OSThread, 0x320, tag);
 CHECK_OFFSET(OSThread, 0x324, state);

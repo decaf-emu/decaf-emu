@@ -177,7 +177,7 @@ InitialiseThreadState(OSThread *thread,
    auto sdaBase = module ? module->sdaBase : 0u;
    auto sda2Base = module ? module->sda2Base : 0u;
 
-   assert(thread->fiber == nullptr);
+   assert(thread->context.fiber == nullptr);
 
    // Setup context
    thread->context.lr = entry;
@@ -478,7 +478,7 @@ OSPrintCurrentThreadState()
 {
    auto thread = OSGetCurrentThread();
 
-   if (!thread || !thread->fiber) {
+   if (!thread) {
       return;
    }
 

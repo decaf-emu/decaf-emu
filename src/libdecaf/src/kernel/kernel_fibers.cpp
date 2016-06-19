@@ -80,10 +80,10 @@ checkDeadThread()
       tDeadThread[coreId] = nullptr;
 
       // Something is broken if we have no fiber
-      assert(deadThread->fiber);
+      assert(deadThread->context.fiber);
 
       // Destroy the fiber
-      freeFiber(deadThread->fiber);
+      freeFiber(deadThread->context.fiber);
    }
 }
 
@@ -184,7 +184,7 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
       mem::write<uint32_t>(core->gpr[1] + 4, core->nia);
 
       saveContext(&previous->context);
-      prevFiberHandle = previous->fiber->handle;
+      prevFiberHandle = previous->context.fiber->handle;
    }
 
    // We now effectively have nothing on the core
@@ -193,13 +193,13 @@ switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
 
    // Switch to the new thread
    if (next) {
-      if (!next->fiber) {
-         next->fiber = allocateFiber(next);
+      if (!next->context.fiber) {
+         next->context.fiber = allocateFiber(next);
       }
 
       restoreContext(&next->context);
 
-      auto fiber = next->fiber;
+      auto fiber = next->context.fiber;
       cpu::this_core::setTracer(fiber->tracer);
       platform::swapToFiber(prevFiberHandle, fiber->handle);
    } else {
