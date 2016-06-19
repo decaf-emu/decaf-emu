@@ -1,3 +1,6 @@
+#include <atomic>
+#include <map>
+#include <unordered_map>
 #include "coreinit_internal_loader.h"
 #include "common/strutils.h"
 #include "kernel/kernel_hle.h"
@@ -73,6 +76,9 @@ gUserModule;
 
 static TeenyHeap*
 gCodeHeap;
+
+std::unordered_map<ppcaddr_t, std::string>
+gGlobalSymbolLookup;
 
 static std::map<std::string, ppcaddr_t>
 gUnimplementedFunctions;
@@ -844,6 +850,11 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
    coreinit::internal::sysFree(loadSegAddr);
    //mCodeHeap->free(loadSegAddr);
 
+   // Add all the modules symbols to the Global Symbol Map
+   for (auto &i : loadedMod->symbols) {
+      gGlobalSymbolLookup.emplace(i.second, fmt::format("{}:{}", loadedMod->name, i.first));
+   }
+
    loadedMod->name = name;
    loadedMod->defaultStackSize = info.stackSize;
    loadedMod->entryPoint = entryPoint;
@@ -955,6 +966,15 @@ LoadedModule * findModule(const std::string& name)
 LoadedModule * getUserModule()
 {
    return gUserModule;
+}
+
+std::string * findSymbolNameForAddress(ppcaddr_t address)
+{
+   auto symIter = gGlobalSymbolLookup.find(address);
+   if (symIter == gGlobalSymbolLookup.end()) {
+      return nullptr;
+   }
+   return &symIter->second;
 }
 
 } // namespace internal

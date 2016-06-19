@@ -71,6 +71,8 @@ LoadedModule * loadRPL(const std::string& name);
 LoadedModule * findModule(const std::string& name);
 LoadedModule * getUserModule();
 
+std::string * findSymbolNameForAddress(ppcaddr_t address);
+
 std::map<std::string, LoadedModule*> getLoadedModules();
 
 } // namespace internal
