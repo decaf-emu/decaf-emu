@@ -258,13 +258,9 @@ JitCode get(uint32_t addr)
 
    JitBlock block(addr);
 
-   gLog->debug("Attempting to JIT {:08x}", block.start);
-
    if (!identBlock(block)) {
       return nullptr;
    }
-
-   gLog->debug("Found end at {:08x}", block.end);
 
    if (!gen(block)) {
       return nullptr;
