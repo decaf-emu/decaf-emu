@@ -219,6 +219,13 @@ OSCreateThread(OSThread *thread,
                int32_t priority,
                OSThreadAttributes attributes)
 {
+   // If no affinity is defined, we need to copy the affinity from the calling thread
+   if ((attributes & OSThreadAttributes::AffinityAny) == 0) {
+      auto curAttr = internal::getCurrentThread()->attr;
+      uint32_t newAttr = attributes | (curAttr & OSThreadAttributes::AffinityAny);
+      attributes = static_cast<OSThreadAttributes>(newAttr);
+   }
+
    // Setup OSThread
    memset(thread, 0, sizeof(OSThread));
    thread->userStackPointer = stack;
