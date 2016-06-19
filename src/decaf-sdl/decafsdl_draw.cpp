@@ -75,13 +75,13 @@ void DecafSDL::initialiseDraw()
    // (TL, TR, BR)    (BR, BL, TL)
    // Create vertex buffer
    static const gl::GLfloat vertices[] = {
-      -1.0f,  1.0f,   0.0f, 1.0f,
-      1.0f,  1.0f,   1.0f, 1.0f,
-      1.0f, -1.0f,   1.0f, 0.0f,
+      -1.0f,  -1.0f,   0.0f, 1.0f,
+      1.0f,  -1.0f,   1.0f, 1.0f,
+      1.0f, 1.0f,   1.0f, 0.0f,
 
-      1.0f, -1.0f,   1.0f, 0.0f,
-      -1.0f, -1.0f,   0.0f, 0.0f,
-      -1.0f,  1.0f,   0.0f, 1.0f,
+      1.0f, 1.0f,   1.0f, 0.0f,
+      -1.0f, 1.0f,   0.0f, 0.0f,
+      -1.0f,  -1.0f,   0.0f, 1.0f,
    };
 
    gl::glCreateBuffers(1, &mVertBuffer);
