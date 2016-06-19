@@ -514,7 +514,6 @@ processRelocations(LoadedModule *loadedMod, const SectionList &sections, BigEndi
    return true;
 }
 
-
 bool
 processImports(LoadedModule *loadedMod, SectionList &sections)
 {

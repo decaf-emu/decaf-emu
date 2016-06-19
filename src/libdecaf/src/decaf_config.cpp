@@ -33,7 +33,7 @@ bool debug = false;
 namespace log
 {
 
-bool kernel_trace = true;
+bool kernel_trace = false;
 
 } // namespace log
 
