@@ -88,6 +88,12 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
       return nullptr;
    }
 
+   // Force the format for now...
+   format = latte::SQ_DATA_FORMAT::FMT_32_FLOAT;
+   numFormat = latte::SQ_NUM_FORMAT_SCALED;
+   formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   degamma = 0;
+
    auto buffer = getSurfaceBuffer(baseAddress, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma);
 
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
