@@ -152,7 +152,7 @@ getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
       // GX2_ENUM_VALUE(FLOAT_D24_S8, 0x811)
       // GX2_ENUM_VALUE(FLOAT_X8_X24, 0x81c)
    case GX2SurfaceFormat::FLOAT_R32:
-      return gl::GL_R32F;
+      return gl::GL_DEPTH_COMPONENT32F;
    case GX2SurfaceFormat::FLOAT_R32_G32:
       return gl::GL_RG32F;
    case GX2SurfaceFormat::FLOAT_R32_G32_B32_A32:
