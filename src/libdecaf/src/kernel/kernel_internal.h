@@ -9,6 +9,9 @@ void
 initCoreFiber();
 
 void
+reallocateContextFiber(coreinit::OSContext *context, void(*fn)(void*));
+
+void
 saveContext(coreinit::OSContext *context);
 
 void

@@ -60,6 +60,15 @@ allocateFiber(coreinit::OSThread *thread)
    return fiber;
 }
 
+void
+reallocateContextFiber(coreinit::OSContext *context, void(*fn)(void*))
+{
+   auto oldFiber = context->fiber->handle;
+   auto newFiber = platform::createFiber(fn, nullptr);
+   context->fiber->handle = newFiber;
+   platform::swapToFiber(oldFiber, newFiber);
+}
+
 static void
 freeFiber(Fiber *fiber)
 {

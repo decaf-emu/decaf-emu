@@ -90,8 +90,8 @@ getSystemHeap()
    return sSystemHeap;
 }
 
-void
-cpuSegfaultHandler(uint32_t address)
+static void
+cpuSegfaultFiberEntryPoint(void*)
 {
    // We may have been in the middle of a kernel function...
    if (coreinit::internal::isSchedulerLocked()) {
@@ -106,6 +106,15 @@ cpuSegfaultHandler(uint32_t address)
    // This will shut down the thread and reschedule.  This is required
    //  since returning from the segfault handler is an error.
    coreinit::OSExitThread(0);
+}
+
+void
+cpuSegfaultHandler(uint32_t address)
+{
+   // A bit of trickery to get a stable stack and other
+   //  host platform context after an exception occurs.
+   auto thread = coreinit::internal::getCurrentThread();
+   reallocateContextFiber(&thread->context, cpuSegfaultFiberEntryPoint);
 }
 
 void
