@@ -825,13 +825,11 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
 
    // Create sections list
    for (auto &section : sections) {
-      if (section.header.flags & elf::SHF_ALLOC) {
-         if (section.header.type == elf::SHT_PROGBITS || section.header.type == elf::SHT_NOBITS) {
-            auto sectionName = shStrTab + section.header.name;
-            auto start = section.virtAddress;
-            auto end = section.virtAddress + section.virtSize;
-            loadedMod->sections.emplace_back(LoadedSection{ sectionName, start, end });
-         }
+      if (section.virtSize) {
+         auto sectionName = shStrTab + section.header.name;
+         auto start = section.virtAddress;
+         auto end = section.virtAddress + section.virtSize;
+         loadedMod->sections.emplace_back(LoadedSection{ sectionName, start, end });
       }
    }
 
