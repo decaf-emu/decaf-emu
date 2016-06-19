@@ -609,6 +609,48 @@ processImports(LoadedModule *loadedMod, SectionList &sections)
    return true;
 }
 
+bool
+processSymbols(LoadedModule *loadedMod, SectionList &sections)
+{
+   // Process symbols
+   for (auto &section : sections) {
+      if (section.header.type != elf::SHT_SYMTAB) {
+         continue;
+      }
+
+      auto strTab = reinterpret_cast<const char*>(sections[section.header.link].memory);
+      auto symIn = BigEndianView{ section.memory, section.virtSize };
+
+      while (!symIn.eof()) {
+         elf::Symbol sym;
+         elf::readSymbol(symIn, sym);
+
+         // Create symbol data
+         auto name = strTab + sym.name;
+         auto binding = sym.info >> 4;
+         auto type = sym.info & 0xf;
+
+         if (sym.shndx >= elf::SHN_LORESERVE) {
+            gLog->warn("Symbol {} in invalid section 0x{:X}", name, sym.shndx);
+            continue;
+         }
+
+         // Calculate relocated address
+         auto &symsec = sections[sym.shndx];
+         auto offset = sym.value - symsec.header.addr;
+         if (!symsec.virtSize) {
+            // Ignore symbols in unused sections...
+            continue;
+         }
+
+         auto baseAddress = symsec.virtAddress;
+         auto virtAddress = baseAddress + offset;
+         loadedMod->symbols.emplace(name, virtAddress);
+      }
+   }
+
+   return true;
+}
 
 bool
 processExports(LoadedModule *loadedMod, const SectionList &sections)
@@ -629,7 +671,6 @@ processExports(LoadedModule *loadedMod, const SectionList &sections)
          auto exportsName = secNames + exportNameOff;
 
          loadedMod->exports.emplace(exportsName, exportsAddr);
-         loadedMod->symbols.emplace(exportsName, exportsAddr);
       }
    }
 
@@ -747,9 +788,15 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
       return nullptr;
    }
 
-   // Process Imports
+   // Process imports
    if (!processImports(loadedMod, sections)) {
       gLog->error("Error loading imports");
+      return nullptr;
+   }
+
+   // Process symbols
+   if (!processSymbols(loadedMod, sections)) {
+      gLog->error("Error loading symbols");
       return nullptr;
    }
 
