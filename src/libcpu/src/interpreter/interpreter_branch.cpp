@@ -1,5 +1,6 @@
-#include "interpreter_insreg.h"
 #include "common/bitutils.h"
+#include "cpu_internal.h"
+#include "interpreter_insreg.h"
 
 static void
 b(cpu::Core *state, Instruction instr)
@@ -15,6 +16,10 @@ b(cpu::Core *state, Instruction instr)
 
    if (instr.lk) {
       state->lr = state->cia + 4;
+   }
+
+   if (cpu::gBranchTraceHandler) {
+      cpu::gBranchTraceHandler(state->nia);
    }
 }
 
@@ -81,6 +86,10 @@ bcGeneric(cpu::Core *state, Instruction instr)
       if (instr.lk) {
          state->lr = state->cia + 4;
       }
+   }
+
+   if (cpu::gBranchTraceHandler) {
+      cpu::gBranchTraceHandler(state->nia);
    }
 }
 

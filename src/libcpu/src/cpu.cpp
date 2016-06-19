@@ -25,6 +25,9 @@ gCoreEntryPointHandler;
 SegfaultHandler
 gSegfaultHandler;
 
+BranchTraceHandler
+gBranchTraceHandler;
+
 jit_mode
 gJitMode = jit_mode::disabled;
 
@@ -162,6 +165,12 @@ void
 setSegfaultHandler(SegfaultHandler handler)
 {
    gSegfaultHandler = handler;
+}
+
+void
+setBranchTraceHandler(BranchTraceHandler handler)
+{
+   gBranchTraceHandler = handler;
 }
 
 namespace this_core

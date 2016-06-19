@@ -52,6 +52,9 @@ cpuInterruptHandler(uint32_t interrupt_flags);
 static void
 cpuSegfaultHandler(uint32_t address);
 
+static void
+cpuBranchTraceHandler(uint32_t target);
+
 static bool
 launchGame();
 
@@ -81,6 +84,10 @@ initialise()
    cpu::setSegfaultHandler(&cpuSegfaultHandler);
    cpu::setInterruptHandler(&cpuInterruptHandler);
 
+   if (decaf::config::log::branch_trace) {
+      cpu::setBranchTraceHandler(&cpuBranchTraceHandler);
+   }
+
    sSystemHeap = new TeenyHeap(mem::translate(mem::SystemBase), mem::SystemSize);
 }
 
@@ -88,6 +95,17 @@ TeenyHeap *
 getSystemHeap()
 {
    return sSystemHeap;
+}
+
+static void
+cpuBranchTraceHandler(uint32_t target)
+{
+   auto symNamePtr = coreinit::internal::findSymbolNameForAddress(target);
+   if (!symNamePtr) {
+      return;
+   }
+
+   gLog->debug("CPU branched to: {}", *symNamePtr);
 }
 
 static void

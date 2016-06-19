@@ -295,6 +295,10 @@ void resume(Core *core)
       auto newNia = execute(core, jitFn);
       core->cia = 0;
       core->nia = newNia;
+
+      if (gBranchTraceHandler) {
+         gBranchTraceHandler(newNia);
+      }
    }
 }
 

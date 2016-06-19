@@ -17,6 +17,9 @@ gCoreEntryPointHandler;
 extern InterruptHandler
 gInterruptHandler;
 
+extern BranchTraceHandler
+gBranchTraceHandler;
+
 extern std::condition_variable
 gTimerCondition;
 

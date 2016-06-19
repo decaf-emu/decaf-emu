@@ -34,6 +34,7 @@ namespace log
 {
 
 bool kernel_trace = false;
+bool branch_trace = false;
 
 } // namespace log
 

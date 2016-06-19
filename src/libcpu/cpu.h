@@ -34,6 +34,7 @@ static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 using EntrypointHandler = void(*)();
 using InterruptHandler = void (*)(uint32_t interrupt_flags);
 using SegfaultHandler = void(*)(uint32_t address);
+using BranchTraceHandler = void(*)(uint32_t target);
 using KernelCallFunction = void(*)(Core *state, void *userData);
 
 struct KernelCallEntry
@@ -56,6 +57,9 @@ setInterruptHandler(InterruptHandler handler);
 
 void
 setSegfaultHandler(SegfaultHandler handler);
+
+void
+setBranchTraceHandler(BranchTraceHandler handler);
 
 uint32_t
 registerKernelCall(const KernelCallEntry &entry);

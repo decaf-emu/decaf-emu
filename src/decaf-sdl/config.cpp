@@ -102,6 +102,7 @@ struct CerealLog
          CEREAL_NVP(to_file),
          CEREAL_NVP(to_stdout),
          CEREAL_NVP(kernel_trace),
+         CEREAL_NVP(branch_trace),
          CEREAL_NVP(level));
    }
 };

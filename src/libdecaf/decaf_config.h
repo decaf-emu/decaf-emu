@@ -46,6 +46,9 @@ namespace log
 //! Enable logging for all HLE function calls
 extern bool kernel_trace;
 
+//! Enable logging of every branch which targets a known symbol
+extern bool branch_trace;
+
 } // namespace log
 
 namespace system
