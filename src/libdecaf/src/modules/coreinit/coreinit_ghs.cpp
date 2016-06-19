@@ -1,9 +1,11 @@
 #include <stdexcept>
 #include "coreinit.h"
 #include "coreinit_ghs.h"
+#include "coreinit_interrupts.h"
 #include "coreinit_spinlock.h"
 #include "coreinit_memheap.h"
 #include "coreinit_mutex.h"
+#include "coreinit_scheduler.h"
 #include "ppcutils/wfunc_call.h"
 #include "libcpu/trace.h"
 
@@ -140,6 +142,26 @@ void ghs_mtx_unlock(void *mtx)
    be_ptr<OSMutex> *pmutex = static_cast<be_ptr<OSMutex>*>(mtx);
    OSUnlockMutex(*pmutex);
 }
+
+namespace internal
+{
+
+void ghsSetupExceptions()
+{
+   if (p__cpp_exception_init_ptr->getAddress()) {
+      auto thread = getCurrentThread();
+
+      // Disable interrupt since we are calling into PPC code...
+      auto prevInterruptsEnabled = OSDisableInterrupts();
+
+      // Invoke the exception initializer
+      (*p__cpp_exception_init_ptr)(&thread->_ghs__eh_globals);
+
+      OSRestoreInterrupts(prevInterruptsEnabled);
+   }
+}
+
+} // namespace internal
 
 void
 Module::registerGhsFunctions()

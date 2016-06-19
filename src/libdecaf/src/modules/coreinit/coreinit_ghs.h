@@ -55,4 +55,11 @@ ghs_flock_ptr(void *file);
 void
 ghs_flock_file(uint32_t lockIx);
 
+namespace internal
+{
+
+void ghsSetupExceptions();
+
+} // namespace internal
+
 } // namespace coreinit

@@ -7,6 +7,7 @@
 #include "common/platform_thread.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_core.h"
+#include "modules/coreinit/coreinit_ghs.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
@@ -44,9 +45,17 @@ fiberEntryPoint(void*)
    // TODO: Do not use coreinit from the kernel...
    auto thread = coreinit::internal::getCurrentThread();
 
+   // We grab these before invoking the exception handler setup
+   //  since it is plausible that it might damage the GPR's.
    auto entryPoint = coreinit::OSThreadEntryPointFn(core->lr);
    auto argc = core->gpr[3];
    auto argv = mem::translate<void>(core->gpr[4]);
+
+   // Entrypoint is actually supposed to be adjusted to the exception
+   //  setup when you call OSCreateThread rather than having it called
+   //  always but it doesn't hurt to have this set up on default threads.
+   coreinit::internal::ghsSetupExceptions();
+
    coreinit::OSExitThread(entryPoint(argc, argv));
 }
 
