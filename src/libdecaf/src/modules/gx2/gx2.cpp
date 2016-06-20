@@ -19,6 +19,7 @@
 #include "gx2_tessellation.h"
 #include "gx2_texture.h"
 #include "gx2r_buffer.h"
+#include "gx2r_draw.h"
 #include "gx2r_resource.h"
 #include "gx2r_surface.h"
 
@@ -110,6 +111,9 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2RDestroyBufferEx);
    RegisterKernelFunction(GX2RLockBufferEx);
    RegisterKernelFunction(GX2RUnlockBufferEx);
+
+   // GX2R Draw
+   RegisterKernelFunction(GX2RSetAttributeBuffer);
 
    // GX2R Surface
    RegisterKernelFunction(GX2RCreateSurface);
