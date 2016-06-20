@@ -460,7 +460,7 @@ public:
          // ID
          ImGui::Text("%d", thread.id);
          ImGui::NextColumn();
-         
+
          // Name
          if (sIsPaused) {
             const char *threadName = "    ";
@@ -536,7 +536,7 @@ class MemoryView
 {
 public:
    MemoryView()
-      : mGotoTargetAddr(-1), mLastEditAddress(-1), 
+      : mGotoTargetAddr(-1), mLastEditAddress(-1),
          mEditAddress(-1), mEditingEnabled(true)
    {
       mAddressInput[0] = 0;
@@ -652,12 +652,12 @@ public:
               // Draw the actual input box for the hex input
               int cursorPos = -1;
               ImGui::PushItemWidth(glyphWidth * 2);
-              ImGuiInputTextFlags flags = 
-                 ImGuiInputTextFlags_CharsHexadecimal | 
-                 ImGuiInputTextFlags_EnterReturnsTrue | 
-                 ImGuiInputTextFlags_AutoSelectAll | 
-                 ImGuiInputTextFlags_NoHorizontalScroll | 
-                 ImGuiInputTextFlags_AlwaysInsertMode | 
+              ImGuiInputTextFlags flags =
+                 ImGuiInputTextFlags_CharsHexadecimal |
+                 ImGuiInputTextFlags_EnterReturnsTrue |
+                 ImGuiInputTextFlags_AutoSelectAll |
+                 ImGuiInputTextFlags_NoHorizontalScroll |
+                 ImGuiInputTextFlags_AlwaysInsertMode |
                  ImGuiInputTextFlags_CallbackAlways;
               if (ImGui::InputText("##data", mDataInput, 32, flags, [](auto data) {
                  auto cursorPosPtr = static_cast<int*>(data->UserData);
@@ -1287,7 +1287,7 @@ public:
 
       for (auto i = 0, j = 16; i < 16; i++, j++) {
          DrawRegCol(fmt::format("r{}", i),
-            fmt::format("{:08x}", mCurrentRegs.gpr[i]), 
+            fmt::format("{:08x}", mCurrentRegs.gpr[i]),
             mCurrentRegs.gpr[i] != mPreviousRegs.gpr[i]);
 
          DrawRegCol(fmt::format("r{}", j),
@@ -1316,7 +1316,7 @@ public:
          ImGui::NextColumn();
          if (sIsPaused) {
             if (!hasChanged) {
-               ImGui::Text("%c %c %c %c", 
+               ImGui::Text("%c %c %c %c",
                   (val & espresso::ConditionRegisterFlag::SummaryOverflow) ? 'X' : '_',
                   (val & espresso::ConditionRegisterFlag::Zero) ? 'X' : '_',
                   (val & espresso::ConditionRegisterFlag::Positive) ? 'X' : '_',
@@ -1356,6 +1356,83 @@ protected:
 
 };
 
+class StatsView
+{
+public:
+   bool isVisible = true;
+   bool activateFocus = false;
+
+   void draw()
+   {
+      if (!isVisible) {
+         return;
+      }
+
+      if (activateFocus) {
+         ImGui::SetNextWindowFocus();
+         activateFocus = false;
+      }
+
+      ImGui::SetNextWindowSize(ImVec2(600, 300), ImGuiSetCond_FirstUseEver);
+      if (!ImGui::Begin("Stats", &isVisible)) {
+         ImGui::End();
+         return;
+      }
+
+      ImGui::Columns(3, "statsList", false);
+      ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.00f);
+      ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.60f);
+      ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.90f);
+
+      ImGui::Text("Name"); ImGui::NextColumn();
+      ImGui::Text("Value"); ImGui::NextColumn();
+      ImGui::Text("IPS"); ImGui::NextColumn();
+      ImGui::Separator();
+
+      if (ImGui::TreeNode("JIT Fallback"))
+      {
+         ImGui::NextColumn();
+         ImGui::NextColumn();
+
+         uint64_t *fallbackStats = cpu::getJitFallbackStats();
+         auto instrCount = static_cast<size_t>(espresso::InstructionID::InstructionCount);
+         mJitFallbackStats.clear();
+         for (size_t i = 0; i < instrCount; ++i) {
+            mJitFallbackStats.emplace_back(i, fallbackStats[i]);
+         }
+         std::sort(mJitFallbackStats.begin(), mJitFallbackStats.end(),
+            [](const std::pair<size_t, uint64_t> &a, const std::pair<size_t, uint64_t> &b) {
+            return b.second < a.second;
+         });
+         for (size_t i = 0; i < mJitFallbackStats.size(); ++i) {
+            auto instrId = static_cast<espresso::InstructionID>(mJitFallbackStats[i].first);
+            auto info = espresso::findInstructionInfo(instrId);
+            if (!info) {
+               continue;
+            }
+
+            ImGui::Text("%s", info->name);
+            ImGui::NextColumn();
+            ImGui::Text("%llu", mJitFallbackStats[i].second);
+            ImGui::NextColumn();
+            ImGui::Text("%f", mJitFallbackStats[i].second);
+            ImGui::NextColumn();
+         }
+
+         ImGui::TreePop();
+      }
+
+      ImGui::Columns(1);
+
+      ImGui::End();
+   }
+
+protected:
+   std::vector<std::pair<size_t, uint64_t>> mJitFallbackStats;
+
+
+};
+
 static InfoView
 sInfoView;
 
@@ -1373,6 +1450,9 @@ sDisassemblyView;
 
 static RegistersView
 sRegistersView;
+
+static StatsView
+sStatsView;
 
 void openAddrInMemoryView(uint32_t addr)
 {
@@ -1541,6 +1621,9 @@ void draw()
          if (ImGui::MenuItem("Registers", "CTRL+R", sRegistersView.isVisible, true)) {
             sRegistersView.isVisible = !sRegistersView.isVisible;
          }
+         if (ImGui::MenuItem("Stats", "CTRL+Q", sStatsView.isVisible, true)) {
+            sStatsView.isVisible = !sStatsView.isVisible;
+         }
          ImGui::EndMenu();
       }
       ImGui::EndMainMenuBar();
@@ -1559,6 +1642,9 @@ void draw()
       }
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::R), false)) {
          sRegistersView.isVisible = !sRegistersView.isVisible;
+      }
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::Q), false)) {
+         sStatsView.isVisible = !sStatsView.isVisible;
       }
 
       if (sIsPaused && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F5), false)) {
@@ -1596,6 +1682,7 @@ void draw()
       sMemoryView.draw();
       sDisassemblyView.draw();
       sRegistersView.draw();
+      sStatsView.draw();
    }
 }
 

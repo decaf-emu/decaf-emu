@@ -96,6 +96,9 @@ bool
 removeBreakpoint(ppcaddr_t address,
                  uint32_t flags);
 
+uint64_t *
+getJitFallbackStats();
+
 namespace this_core
 {
 

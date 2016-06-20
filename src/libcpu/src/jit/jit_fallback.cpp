@@ -38,27 +38,10 @@ bool jit_fallback(PPCEmuAssembler& a, espresso::Instruction instr)
 
 } // namespace jit
 
-} // namespace cpu
-
-void fallbacksPrint()
+uint64_t *
+getJitFallbackStats()
 {
-   typedef std::pair<uint32_t, uint64_t> FallbackItem;
-   std::vector<FallbackItem> callList;
-   for (auto i = 0u; i < static_cast<size_t>(espresso::InstructionID::InstructionCount); ++i) {
-      callList.emplace_back(i, cpu::jit::sFallbackCalls[i]);
-   }
-
-   std::sort(callList.begin(), callList.end(), [](const FallbackItem &a, const FallbackItem &b) {
-      return b.second < a.second;
-   });
-
-   fmt::MemoryWriter out;
-   out.write("Fallback Call Numbers:\n");
-
-   for (auto i : callList) {
-      auto data = espresso::findInstructionInfo(static_cast<espresso::InstructionID>(i.first));
-      out.write("  [{}] {}\n", data->name, i.second);
-   }
-
-   debugPrint(out.str());
+   return jit::sFallbackCalls;
 }
+
+} // namespace cpu
