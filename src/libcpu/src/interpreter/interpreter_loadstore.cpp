@@ -5,9 +5,28 @@
 #include "mem.h"
 #include <algorithm>
 #include <cmath>
+#include <mutex>
 
 using espresso::QuantizedDataType;
 using espresso::ConditionRegisterFlag;
+
+static std::mutex
+gAtomicityLock;
+
+template<bool>
+struct AtomicityLock {
+   AtomicityLock()
+   {
+   }
+};
+
+template<>
+struct AtomicityLock<true> : std::unique_lock<std::mutex> {
+   AtomicityLock()
+      : std::unique_lock<std::mutex>(gAtomicityLock)
+   {
+   }
+};
 
 // Load
 enum LoadFlags
@@ -82,12 +101,22 @@ loadGeneric(cpu::Core *state, Instruction instr)
       ea += sign_extend<16, int32_t>(instr.d);
    }
 
-   if (flags & LoadByteReverse) {
-      // Read already does byte_swap, so we readNoSwap for byte reverse
-      d = mem::readNoSwap<Type>(ea);
-   } else {
-      d = mem::read<Type>(ea);
-   }
+   { // + restricted lock scope
+      AtomicityLock<(flags & LoadReserve) != 0> lock;
+
+      Type memd = mem::readNoSwap<Type>(ea);
+      if (flags & LoadByteReverse) {
+         d = memd;
+      } else {
+         d = byte_swap(memd);
+      }
+
+      if (flags & LoadReserve) {
+         state->reserve = true;
+         state->reserveAddress = ea;
+         state->reserveData = *reinterpret_cast<uint32_t*>(&memd);
+      }
+   }  // - restricted lock scope
 
    if (std::is_floating_point<Type>::value) {
       state->fpr[instr.rD].value = static_cast<double>(d);
@@ -107,12 +136,6 @@ loadGeneric(cpu::Core *state, Instruction instr)
       } else {
          state->gpr[instr.rD] = static_cast<uint32_t>(d);
       }
-   }
-
-   if (flags & LoadReserve) {
-      state->reserve = true;
-      state->reserveAddress = ea;
-      state->reserveData = mem::read<uint32_t>(state->reserveAddress);
    }
 
    if (flags & LoadUpdate) {
@@ -420,25 +443,6 @@ storeGeneric(cpu::Core *state, Instruction instr)
       ea += sign_extend<16, int32_t>(instr.d);
    }
 
-   if (flags & StoreConditional) {
-      state->cr.cr0 = state->xer.so ? ConditionRegisterFlag::SummaryOverflow : 0;
-
-      if (state->reserve) {
-         state->reserve = false;
-
-         if (mem::read<uint32_t>(state->reserveAddress) == state->reserveData) {
-            // Store is succesful, clear reserve bit and set CR0[EQ]
-            state->cr.cr0 |= ConditionRegisterFlag::Equal;
-         } else {
-            // Reservation has been written by another process
-            return;
-         }
-      } else {
-         // Reserve bit is not set, do not write.
-         return;
-      }
-   }
-
    if (flags & StoreFloatAsInteger) {
       s = static_cast<Type>(state->fpr[instr.rS].iw1);
    } else if (std::is_floating_point<Type>::value) {
@@ -447,12 +451,35 @@ storeGeneric(cpu::Core *state, Instruction instr)
       s = static_cast<Type>(state->gpr[instr.rS]);
    }
 
-   if (flags & StoreByteReverse) {
-      // Write already does byte_swap, so we writeNoSwap for byte reverse
-      mem::writeNoSwap<Type>(ea, s);
-   } else {
-      mem::write<Type>(ea, s);
-   }
+   { // + restricted lock scope
+      AtomicityLock<(flags & StoreConditional) != 0> lock;
+
+      if (flags & StoreConditional) {
+         state->cr.cr0 = state->xer.so ? ConditionRegisterFlag::SummaryOverflow : 0;
+
+         if (state->reserve) {
+            state->reserve = false;
+
+            if (mem::readNoSwap<uint32_t>(state->reserveAddress) == state->reserveData) {
+               // Store is succesful, clear reserve bit and set CR0[EQ]
+               state->cr.cr0 |= ConditionRegisterFlag::Equal;
+            } else {
+               // Reservation has been written by another core
+               return;
+            }
+         } else {
+            // Reserve bit is not set, do not write.
+            return;
+         }
+      }
+
+      if (flags & StoreByteReverse) {
+         // Write already does byte_swap, so we writeNoSwap for byte reverse
+         mem::writeNoSwap<Type>(ea, s);
+      } else {
+         mem::write<Type>(ea, s);
+      }
+   } // - restricted lock scope
 
    if (flags & StoreUpdate) {
       state->gpr[instr.rA] = ea;

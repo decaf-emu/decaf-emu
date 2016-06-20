@@ -24,6 +24,11 @@ template<typename Type, unsigned flags = 0>
 static bool
 loadGeneric(PPCEmuAssembler& a, Instruction instr)
 {
+   if (flags & LoadReserve) {
+      // Early out for if statement below.
+      return jit_fallback(a, instr);
+   }
+
    if ((flags & LoadZeroRA) && instr.rA == 0) {
       a.mov(a.ecx, 0u);
    } else {
@@ -84,6 +89,7 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (flags & LoadReserve) {
+      /*
       a.mov(a.ppcreserve, 1u);
       a.mov(a.ppcreserveAddress, a.ecx);
       a.mov(a.zdx, a.ecx);
@@ -91,6 +97,7 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.eax, asmjit::X86Mem(a.zdx, 0));
       a.bswap(a.eax);
       a.mov(a.ppcreserveData, a.eax);
+      */
    }
 
    if (flags & LoadUpdate) {
