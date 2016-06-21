@@ -9,6 +9,8 @@ class Module : public kernel::HleModuleImpl<Module>
 public:
    virtual void initialise() override;
 
+   void initialiseCore();
+
 public:
    static void RegisterFunctions();
 

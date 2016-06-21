@@ -85,7 +85,7 @@ AXIsVoiceRunning(AXVoice *voice)
 namespace internal
 {
 
-void axInitVoices()
+void initVoices()
 {
    for (auto i = 0; i < MaxVoices; ++i) {
       auto newVoice = coreinit::internal::sysAlloc<AXVoice>();

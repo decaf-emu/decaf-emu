@@ -38,4 +38,11 @@ AXRmtGetSamples(int32_t, be_val<uint8_t> *buffer, int32_t samples);
 int32_t
 AXRmtAdvancePtr(int32_t);
 
+namespace internal
+{
+
+void initEvents();
+
+} // namespace internal
+
 } // namespace snd_core

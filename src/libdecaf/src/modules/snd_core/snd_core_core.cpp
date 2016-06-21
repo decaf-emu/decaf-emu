@@ -1,19 +1,47 @@
 #include "snd_core.h"
 #include "snd_core_core.h"
 #include "snd_core_voice.h"
+#include "modules/coreinit/coreinit_alarm.h"
+#include "modules/coreinit/coreinit_interrupts.h"
+#include "modules/coreinit/coreinit_memheap.h"
+#include "modules/coreinit/coreinit_scheduler.h"
+#include "modules/coreinit/coreinit_systeminfo.h"
+#include "modules/coreinit/coreinit_thread.h"
+#include "modules/coreinit/coreinit_time.h"
 #include "ppcutils/wfunc_ptr.h"
+#include "ppcutils/wfunc_call.h"
 
 namespace snd_core
 {
 
+static const size_t MaxFrameCallbacks = 64;
+
 static BOOL
 gAXInit = FALSE;
+
+static coreinit::OSThreadEntryPointFn
+sFrameCallbackThreadEntryPoint;
+
+static coreinit::AlarmCallback
+sFrameAlarmHandler = nullptr;
+
+static virtual_ptr<coreinit::OSAlarm>
+sFrameAlarm;
+
+static coreinit::OSThread *
+sFrameCallbackThread;
+
+static coreinit::OSThreadQueue *
+sFrameCallbackThreadQueue;
+
+static AXFrameCallback
+sFrameCallbacks[MaxFrameCallbacks];
 
 void
 AXInit()
 {
-   // TODO: AXInit
-   internal::axInitVoices();
+   internal::initVoices();
+   internal::initEvents();
    gAXInit = TRUE;
 }
 
@@ -45,8 +73,21 @@ AXSetDefaultMixerSelect(uint32_t)
 AXResult
 AXRegisterAppFrameCallback(AXFrameCallback callback)
 {
-   // TODO: AXRegisterAppFrameCallback
+   for (auto i = 0; i < MaxFrameCallbacks; ++i) {
+      if (!sFrameCallbacks[i]) {
+         sFrameCallbacks[i] = callback;
+         return AXResult::Success;
+      }
+   }
+   // TODO: Return the appropriate error here
    return AXResult::Success;
+}
+
+AXResult
+AXRegisterFrameCallback(AXFrameCallback callback)
+{
+   // TODO: Maybe this is meant to be separate?
+   return AXRegisterAppFrameCallback(callback);
 }
 
 int32_t
@@ -70,6 +111,71 @@ AXRmtAdvancePtr(int32_t)
    return 0;
 }
 
+uint32_t
+FrameCallbackThreadEntry(uint32_t core_id, void *arg2)
+{
+   while (true) {
+      coreinit::internal::lockScheduler();
+      coreinit::internal::sleepThreadNoLock(sFrameCallbackThreadQueue);
+      coreinit::internal::rescheduleSelfNoLock();
+      coreinit::internal::unlockScheduler();
+
+      for (auto i = 0; i < MaxFrameCallbacks; ++i) {
+         if (sFrameCallbacks[i]) {
+            sFrameCallbacks[i]();
+         }
+      }
+   }
+   return 0;
+}
+
+namespace internal
+{
+
+void
+startFrameAlarmThread()
+{
+   using namespace coreinit;
+
+   auto stackSize = 16 * 1024;
+   auto stack = reinterpret_cast<uint8_t*>(coreinit::internal::sysAlloc(stackSize, 8));
+   auto name = coreinit::internal::sysStrDup("AX Callback Thread");
+
+   OSCreateThread(sFrameCallbackThread, sFrameCallbackThreadEntryPoint, 0, nullptr,
+      reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, -1,
+      static_cast<OSThreadAttributes>(1 << cpu::this_core::id()));
+   OSSetThreadName(sFrameCallbackThread, name);
+   OSResumeThread(sFrameCallbackThread);
+}
+
+void
+frameAlarmHandler(coreinit::OSAlarm *alarm, coreinit::OSContext *context)
+{
+   coreinit::internal::lockScheduler();
+   coreinit::internal::wakeupThreadNoLock(sFrameCallbackThreadQueue);
+   coreinit::internal::unlockScheduler();
+}
+
+void
+initEvents()
+{
+   using namespace coreinit;
+
+   for (auto i = 0; i < MaxFrameCallbacks; ++i) {
+      sFrameCallbacks[i] = nullptr;
+   }
+
+   startFrameAlarmThread();
+
+   sFrameAlarm = coreinit::internal::sysAlloc<OSAlarm>();
+   auto ticks = static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) / 333;
+   OSCreateAlarm(sFrameAlarm);
+   //TODO: Enable this to start AX frame callbacks
+   //OSSetPeriodicAlarm(sFrameAlarm, OSGetTime(), ticks, sFrameAlarmHandler);
+}
+
+}
+
 void
 Module::registerCoreFunctions()
 {
@@ -82,6 +188,16 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXRmtGetSamples);
    RegisterKernelFunction(AXRmtGetSamplesLeft);
    RegisterKernelFunction(AXRmtAdvancePtr);
+   RegisterKernelFunctionName("internal_FrameAlarmHandler", snd_core::internal::frameAlarmHandler);
+   RegisterInternalFunction(FrameCallbackThreadEntry, sFrameCallbackThreadEntryPoint);
+   RegisterInternalData(sFrameCallbackThreadQueue);
+   RegisterInternalData(sFrameCallbackThread);
+}
+
+void
+Module::initialiseCore()
+{
+   sFrameAlarmHandler = findExportAddress("internal_FrameAlarmHandler");
 }
 
 } // namespace snd_core

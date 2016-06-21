@@ -76,7 +76,7 @@ AXIsVoiceRunning(AXVoice *voice);
 namespace internal
 {
 
-void axInitVoices();
+void initVoices();
 
 } // namespace internal
 
