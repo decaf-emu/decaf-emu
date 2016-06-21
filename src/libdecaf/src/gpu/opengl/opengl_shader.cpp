@@ -104,6 +104,10 @@ bool GLDriver::checkActiveShader()
       return true;
    }
 
+   if (!pgm_start_fs.PGM_START || !pgm_start_vs.PGM_START || !pgm_start_ps.PGM_START) {
+      return false;
+   }
+
    // Update OpenGL shader
    auto &fetchShader = mFetchShaders[pgm_start_fs.PGM_START];
    auto &vertexShader = mVertexShaders[pgm_start_vs.PGM_START];
