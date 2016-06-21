@@ -8,6 +8,7 @@
 namespace cpu
 {
 struct Core;
+struct CoreRegs;
 } // namespace cpu
 
 struct Tracer;
@@ -107,12 +108,12 @@ std::string
 getStateFieldName(TraceFieldType type);
 
 void
-saveStateField(const cpu::Core *state,
+saveStateField(const cpu::CoreRegs *state,
                TraceFieldType type,
                TraceFieldValue &field);
 
 void
-restoreStateField(cpu::Core *state,
+restoreStateField(cpu::CoreRegs *state,
                   TraceFieldType type,
                   const TraceFieldValue &field);
 
