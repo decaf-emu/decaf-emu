@@ -23,7 +23,7 @@ struct Tracer
    size_t index;
    size_t numTraces;
    std::vector<Trace> traces;
-   cpu::Core prevState;
+   cpu::CoreRegs prevState;
 };
 
 namespace cpu
@@ -271,7 +271,7 @@ getFieldStateField(Instruction instr, InstructionField field)
 }
 
 void
-saveStateField(const cpu::Core *state, TraceFieldType type, TraceFieldValue &field)
+saveStateField(const cpu::CoreRegs *state, TraceFieldType type, TraceFieldValue &field)
 {
    field.u64v0 = 0;
    field.u64v1 = 0;
@@ -306,7 +306,7 @@ saveStateField(const cpu::Core *state, TraceFieldType type, TraceFieldValue &fie
 }
 
 void
-restoreStateField(cpu::Core *state, TraceFieldType type, const TraceFieldValue &field)
+restoreStateField(cpu::CoreRegs *state, TraceFieldType type, const TraceFieldValue &field)
 {
    if (type == StateField::Invalid) {
       return;
@@ -426,7 +426,7 @@ traceInstructionStart(Instruction instr, InstructionInfo *data, cpu::Core *state
    }
 
    // TODO: This is a bit of a hack... We should probably not do this...
-   memcpy(&tracer->prevState, state, offsetof(cpu::Core, tracer));
+   tracer->prevState = *state;
    return &trace;
 }
 
