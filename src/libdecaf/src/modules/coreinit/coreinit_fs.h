@@ -1,6 +1,7 @@
 #pragma once
 #include "common/types.h"
 #include "coreinit_enum.h"
+#include "coreinit_messagequeue.h"
 #include "common/be_val.h"
 #include "common/structsize.h"
 #include "ppcutils/wfunc_ptr.h"
@@ -125,10 +126,11 @@ struct FSAsyncData
 {
    be_val<uint32_t> callback;
    be_val<uint32_t> param;
-   be_val<uint32_t> unk1;
+   be_ptr<OSMessageQueue> queue;
 };
 CHECK_OFFSET(FSAsyncData, 0x00, callback);
 CHECK_OFFSET(FSAsyncData, 0x04, param);
+CHECK_OFFSET(FSAsyncData, 0x08, queue);
 CHECK_SIZE(FSAsyncData, 0xC);
 
 struct FSDirectoryEntry
@@ -138,6 +140,21 @@ struct FSDirectoryEntry
 };
 CHECK_OFFSET(FSDirectoryEntry, 0x64, name);
 CHECK_SIZE(FSDirectoryEntry, 0x164);
+
+struct FSAsyncResult
+{
+   FSAsyncData userParams;
+   OSMessage ioMsg;
+   be_ptr<FSClient> client;
+   be_ptr<FSCmdBlock> block;
+   FSStatus status;
+};
+CHECK_OFFSET(FSAsyncResult, 0x00, userParams);
+CHECK_OFFSET(FSAsyncResult, 0x0c, ioMsg);
+CHECK_OFFSET(FSAsyncResult, 0x1c, client);
+CHECK_OFFSET(FSAsyncResult, 0x20, block);
+CHECK_OFFSET(FSAsyncResult, 0x24, status);
+CHECK_SIZE(FSAsyncResult, 0x28);
 
 using FSAsyncCallback = wfunc_ptr<void, FSClient *, FSCmdBlock *, FSStatus, uint32_t>;
 

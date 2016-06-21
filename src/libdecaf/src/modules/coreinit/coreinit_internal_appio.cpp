@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_core.h"
+#include "coreinit_fs_client.h"
 #include "coreinit_internal_appio.h"
 #include "coreinit_memheap.h"
 #include "coreinit_messagequeue.h"
@@ -31,6 +32,9 @@ AppIoThreadEntry(uint32_t core_id, void *arg2)
 
       switch (static_cast<internal::AppIoEventType>(msg.args[2].value()))
       {
+      case internal::AppIoEventType::FsAsyncCallback:
+         internal::handleAsyncCallback(static_cast<FSAsyncResult*>(msg.message.get()));
+         break;
       default:
          throw std::logic_error("App IO thread received unrecognized event type");
       }

@@ -81,6 +81,9 @@ namespace internal
 {
 
 void
+handleAsyncCallback(FSAsyncResult *result);
+
+void
 doAsyncFileCallback(FSClient *client,
                     FSCmdBlock *block,
                     FSStatus result,

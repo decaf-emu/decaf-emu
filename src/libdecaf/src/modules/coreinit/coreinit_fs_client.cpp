@@ -1,6 +1,9 @@
 #include <algorithm>
+#include "common/emuassert.h"
 #include "coreinit_fs.h"
 #include "coreinit_fs_client.h"
+#include "coreinit_memheap.h"
+#include "coreinit_internal_appio.h"
 #include "ppcutils/wfunc_call.h"
 
 namespace coreinit
@@ -194,15 +197,28 @@ namespace internal
 {
 
 void
+handleAsyncCallback(FSAsyncResult *result)
+{
+   auto callback = static_cast<FSAsyncCallback>(result->userParams.callback);
+   callback(result->client, result->block, result->status, result->userParams.param);
+
+   coreinit::internal::sysFree(result);
+}
+
+void
 doAsyncFileCallback(FSClient *client, FSCmdBlock *block, FSStatus result, FSAsyncData *asyncData)
 {
-   if (!asyncData->callback) {
-      throw std::logic_error("Async file command with null callback");
-   }
+   emuassert(!asyncData->queue);
 
-   // Immediately call async callback
-   auto callback = static_cast<FSAsyncCallback>(asyncData->callback);
-   callback(client, block, result, asyncData->param);
+   FSAsyncResult *asyncRes = coreinit::internal::sysAlloc<FSAsyncResult>();
+   asyncRes->userParams = *asyncData;
+   asyncRes->status = result;
+   asyncRes->client = client;
+   asyncRes->block = block;
+
+   asyncRes->ioMsg.message = asyncRes;
+   asyncRes->ioMsg.args[2] = AppIoEventType::FsAsyncCallback;
+   internal::sendMessage(&asyncRes->ioMsg);
 }
 
 } // namespace internal
