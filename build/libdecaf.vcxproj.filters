@@ -792,6 +792,9 @@
     <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2r_draw.cpp">
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_appio.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1489,6 +1492,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2r_draw.h">
       <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_appio.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

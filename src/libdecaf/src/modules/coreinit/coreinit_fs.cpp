@@ -35,7 +35,6 @@ FSSetCmdPriority(FSCmdBlock *block,
    return FSStatus::OK;
 }
 
-
 void
 Module::registerFileSystemFunctions()
 {

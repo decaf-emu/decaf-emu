@@ -16,6 +16,7 @@
 #include "modules/coreinit/coreinit_systeminfo.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_interrupts.h"
+#include "modules/coreinit/coreinit_internal_appio.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
 #include "modules/gx2/gx2_event.h"
 #include "libcpu/mem.h"
@@ -304,6 +305,7 @@ launchGame()
    gLog->debug("Succesfully loaded {}", rpx);
 
    internal::startAlarmCallbackThreads();
+   internal::startAppIoThreads();
 
    // Create default threads
    for (auto i = 0u; i < CoreCount; ++i) {
