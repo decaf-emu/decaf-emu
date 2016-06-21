@@ -197,10 +197,22 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t heigh
          gl::glCreateTextures(gl::GL_TEXTURE_2D_ARRAY, 1, &buffer->object);
          gl::glTextureStorage3D(buffer->object, 1, storageFormat, width, height, depth);
          break;
-      case latte::SQ_TEX_DIM_1D:
-      case latte::SQ_TEX_DIM_3D:
       case latte::SQ_TEX_DIM_CUBEMAP:
+         gl::glCreateTextures(gl::GL_TEXTURE_CUBE_MAP, 1, &buffer->object);
+         gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
+         break;
+      case latte::SQ_TEX_DIM_1D:
+         gl::glCreateTextures(gl::GL_TEXTURE_1D, 1, &buffer->object);
+         gl::glTextureStorage1D(buffer->object, 1, storageFormat, width);
+         break;
+      case latte::SQ_TEX_DIM_3D:
+         gl::glCreateTextures(gl::GL_TEXTURE_3D, 1, &buffer->object);
+         gl::glTextureStorage3D(buffer->object, 1, storageFormat, width, height, depth);
+         break;
       case latte::SQ_TEX_DIM_1D_ARRAY:
+         gl::glCreateTextures(gl::GL_TEXTURE_1D_ARRAY, 1, &buffer->object);
+         gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
+         break;
       case latte::SQ_TEX_DIM_2D_MSAA:
       case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
          gLog->error("Unsupported texture dim: {}", dim);
