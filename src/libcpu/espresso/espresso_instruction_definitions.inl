@@ -153,7 +153,7 @@ INS(eieio, (), (), (), (opcd == 31, xo1 == 854, !_6_10, !_11_15, !_16_20, !_31),
 INS(isync, (), (), (), (opcd == 19, xo1 == 150, !_6_10, !_11_15, !_16_20, !_31), "Instruction Synchronise")
 INS(lwarx, (rD, RSRV), (rA, rB), (), (opcd == 31, xo1 == 20, !_31), "Load Word and Reserve Indexed")
 INS(stwcx, (RSRV), (rS, rA, rB), (), (opcd == 31, xo1 == 150, _31 == 1), "Store Word Conditional Indexed")
-INS(sync, (), (), (), (opcd == 31, xo1 == 598, !_6_10, !_11_15, !_16_20, !_31), "Synchronise")
+INS(sync, (), (), (l), (opcd == 31, xo1 == 598, !_6_9, !_11_15, !_16_20, !_31), "Synchronise")
 
 // Floating-Point Load
 INS(lfd, (frD), (rA, d), (), (opcd == 50), "Load Floating-Point Double")
