@@ -98,7 +98,7 @@ checkDeadThread()
       tDeadThread[coreId] = nullptr;
 
       // Something is broken if we have no fiber
-      assert(deadThread->context.fiber);
+      emuassert(deadThread->context.fiber);
 
       // Destroy the fiber
       freeFiber(deadThread->context.fiber);

@@ -102,8 +102,8 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::MicroTileWidth);
    auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
-   assert(pitch >= target->width);
-   assert(height >= target->height);
+   emuassert(pitch >= static_cast<gl::GLsizei>(target->width));
+   emuassert(height >= static_cast<gl::GLsizei>(target->height));
 
    gl::glCopyImageSubData(buffer->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, target->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, target->width, target->height, 1);
 }
