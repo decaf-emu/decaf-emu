@@ -102,10 +102,13 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::MicroTileWidth);
    auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
-   emuassert(pitch >= static_cast<gl::GLsizei>(target->width));
-   emuassert(height >= static_cast<gl::GLsizei>(target->height));
+   // This is somewhat of a hack, but seems appropriate in this case
+   //  as it will be enormously obvious when we bump into this issue
+   //  simply by inspecting the call in the GPU debugger.
+   auto copyWidth = std::min<gl::GLsizei>(pitch, target->width);
+   auto copyHeight = std::min<gl::GLsizei>(height, target->height);
 
-   gl::glCopyImageSubData(buffer->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, target->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, target->width, target->height, 1);
+   gl::glCopyImageSubData(buffer->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, target->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, copyWidth, copyHeight, 1);
 }
 
 void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
