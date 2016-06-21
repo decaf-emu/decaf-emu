@@ -22,7 +22,7 @@ static void
 decreaseSpinLockCount(OSThread *thread)
 {
    internal::lockScheduler();
-   thread->context.spinLockCount++;
+   thread->context.spinLockCount--;
    thread->priority = internal::calculateThreadPriorityNoLock(thread);
    internal::unlockScheduler();
 }
