@@ -37,6 +37,9 @@ sFrameCallbackThreadQueue;
 static AXFrameCallback
 sFrameCallbacks[MaxFrameCallbacks];
 
+static std::atomic<int32_t>
+sProtectLock = { 0 };
+
 void
 AXInit()
 {
@@ -90,10 +93,38 @@ AXRegisterFrameCallback(AXFrameCallback callback)
    return AXRegisterAppFrameCallback(callback);
 }
 
-BOOL
-AXUserIsProtected()
+int32_t
+AXUserBegin()
 {
-   return FALSE;
+   // TODO: Implement this properly
+   return sProtectLock.fetch_add(1);
+}
+
+int32_t
+AXUserEnd()
+{
+   // TODO: Implement this properly
+   return sProtectLock.fetch_sub(1);
+}
+
+int32_t
+AXVoiceBegin(AXVoice *voice)
+{
+   // TODO: Implement this properly
+   return AXUserBegin();
+}
+
+int32_t
+AXVoiceEnd(AXVoice *voice)
+{
+   // TODO: Implement this properly
+   return AXUserEnd();
+}
+
+BOOL AXUserIsProtected()
+{
+   // TODO: Implement this properly
+   return sProtectLock.load() > 0;
 }
 
 int32_t
@@ -192,6 +223,10 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXSetDefaultMixerSelect);
    RegisterKernelFunction(AXRegisterAppFrameCallback);
    RegisterKernelFunction(AXRegisterFrameCallback);
+   RegisterKernelFunction(AXUserBegin);
+   RegisterKernelFunction(AXUserEnd);
+   RegisterKernelFunction(AXVoiceBegin);
+   RegisterKernelFunction(AXVoiceEnd);
    RegisterKernelFunction(AXUserIsProtected);
    RegisterKernelFunction(AXRmtGetSamples);
    RegisterKernelFunction(AXRmtGetSamplesLeft);
