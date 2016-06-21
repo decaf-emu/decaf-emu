@@ -1358,7 +1358,14 @@ protected:
 
 class StatsView
 {
+   static const size_t InstrCount = static_cast<size_t>(espresso::InstructionID::InstructionCount);
+
 public:
+   StatsView()
+      : mFirstSeen(std::chrono::time_point<std::chrono::system_clock>::max())
+   {
+   }
+
    bool isVisible = true;
    bool activateFocus = false;
 
@@ -1382,7 +1389,7 @@ public:
       ImGui::Columns(3, "statsList", false);
       ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.00f);
       ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.60f);
-      ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.90f);
+      ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.80f);
 
       ImGui::Text("Name"); ImGui::NextColumn();
       ImGui::Text("Value"); ImGui::NextColumn();
@@ -1393,29 +1400,42 @@ public:
       {
          ImGui::NextColumn();
          ImGui::NextColumn();
+         ImGui::NextColumn();
 
          uint64_t *fallbackStats = cpu::getJitFallbackStats();
-         auto instrCount = static_cast<size_t>(espresso::InstructionID::InstructionCount);
+         if (mFirstSeen == std::chrono::time_point<std::chrono::system_clock>::max()) {
+            mFirstSeen = std::chrono::system_clock::now();
+            for (size_t i = 0; i < InstrCount; ++i) {
+               mFirstSeenValues[i] = fallbackStats[i];
+            }
+         }
          mJitFallbackStats.clear();
-         for (size_t i = 0; i < instrCount; ++i) {
+         for (size_t i = 0; i < InstrCount; ++i) {
             mJitFallbackStats.emplace_back(i, fallbackStats[i]);
          }
          std::sort(mJitFallbackStats.begin(), mJitFallbackStats.end(),
             [](const std::pair<size_t, uint64_t> &a, const std::pair<size_t, uint64_t> &b) {
             return b.second < a.second;
          });
+         auto timeDelta = std::chrono::system_clock::now() - mFirstSeen;
+         using seconds_duration = std::chrono::duration<float, std::chrono::seconds::period>;
+         auto secondsDelta = std::chrono::duration_cast<seconds_duration>(timeDelta).count();
          for (size_t i = 0; i < mJitFallbackStats.size(); ++i) {
-            auto instrId = static_cast<espresso::InstructionID>(mJitFallbackStats[i].first);
+            auto instrIdx = mJitFallbackStats[i].first;
+            auto instrId = static_cast<espresso::InstructionID>(instrIdx);
             auto info = espresso::findInstructionInfo(instrId);
             if (!info) {
                continue;
             }
 
-            ImGui::Text("%s", info->name);
+            auto instrOps = mJitFallbackStats[i].second;
+            auto ips = static_cast<float>(instrOps - mFirstSeenValues[instrIdx]) / static_cast<float>(secondsDelta);
+
+            ImGui::Text("%s", info->name.c_str());
             ImGui::NextColumn();
-            ImGui::Text("%llu", mJitFallbackStats[i].second);
+            ImGui::Text("%" PRIu64, instrOps);
             ImGui::NextColumn();
-            ImGui::Text("%f", mJitFallbackStats[i].second);
+            ImGui::Text("%.0f", ips);
             ImGui::NextColumn();
          }
 
@@ -1429,7 +1449,8 @@ public:
 
 protected:
    std::vector<std::pair<size_t, uint64_t>> mJitFallbackStats;
-
+   std::chrono::time_point<std::chrono::system_clock> mFirstSeen;
+   uint64_t mFirstSeenValues[InstrCount];
 
 };
 
