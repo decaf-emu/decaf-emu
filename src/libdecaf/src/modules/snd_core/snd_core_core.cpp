@@ -90,6 +90,12 @@ AXRegisterFrameCallback(AXFrameCallback callback)
    return AXRegisterAppFrameCallback(callback);
 }
 
+BOOL
+AXUserIsProtected()
+{
+   return FALSE;
+}
+
 int32_t
 AXRmtGetSamplesLeft()
 {
@@ -185,6 +191,8 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXGetSwapProfile);
    RegisterKernelFunction(AXSetDefaultMixerSelect);
    RegisterKernelFunction(AXRegisterAppFrameCallback);
+   RegisterKernelFunction(AXRegisterFrameCallback);
+   RegisterKernelFunction(AXUserIsProtected);
    RegisterKernelFunction(AXRmtGetSamples);
    RegisterKernelFunction(AXRmtGetSamplesLeft);
    RegisterKernelFunction(AXRmtAdvancePtr);
