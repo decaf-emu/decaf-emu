@@ -315,7 +315,7 @@ bool GLDriver::checkActiveUniforms()
             gl::glBufferData(gl::GL_UNIFORM_BUFFER, size, block, gl::GL_DYNAMIC_DRAW);
 
             // Bind block
-            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, ubo.object);
+            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, ubo.object);
          }
       }
    }
@@ -695,26 +695,28 @@ writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq
       out << "[" << MAX_UNIFORM_REGISTERS << "];\n";
    } else {
       // Uniform blocks
-      out << "layout (binding = 0) uniform ";
+      for (uint32_t id = 0; id < MAX_UNIFORM_BLOCKS; ++id) {
+         if (shader.type == latte::Shader::Vertex) {
+            out << "layout (binding = " << id << ") uniform ";
+            out << "VertexBlock_" << id;
+         } else {
+            out << "layout (binding = " << (16+id) << ") uniform ";
+            out << "PixelBlock_" << id;
+         }
 
-      if (shader.type == latte::Shader::Vertex) {
-         out << "VertexBlock";
-      } else {
-         out << "PixelBlock";
+         out
+            << " {\n"
+            << "   vec4 values[];\n"
+            << "} ";
+
+         if (shader.type == latte::Shader::Vertex) {
+            out << "VB_";
+         } else {
+            out << "PB_";
+         }
+
+         out << id << ";\n";
       }
-
-      out
-         << " {\n"
-         << "   vec4 values[];\n"
-         << "} ";
-
-      if (shader.type == latte::Shader::Vertex) {
-         out << "VB";
-      } else {
-         out << "PB";
-      }
-
-      out << "[" << MAX_UNIFORM_BLOCKS << "];\n";
    }
 
    // Samplers

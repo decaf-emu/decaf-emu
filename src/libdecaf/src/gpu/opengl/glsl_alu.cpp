@@ -264,9 +264,9 @@ void translateAluSource(GenerateState &state, const AluInstruction *ins, const A
       }
 
       if (state.shader->type == latte::Shader::Vertex) {
-         state.out << "VB[" << bank << "].values[" << id;
+         state.out << "VB_" << bank << ".values[" << id;
       } else if (state.shader->type == latte::Shader::Pixel) {
-         state.out << "PB[" << bank << "].values[" << id;
+         state.out << "PB_" << bank << ".values[" << id;
       } else {
          throw std::logic_error("Unexpected shader type");
       }
