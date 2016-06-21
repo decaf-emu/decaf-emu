@@ -255,8 +255,6 @@ bool GLDriver::checkActiveUniforms()
          gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, MAX_UNIFORM_REGISTERS, values);
       }
    } else {
-      std::vector<float> buffer;
-
       if (mActiveShader->vertex && mActiveShader->vertex->object) {
          for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
             auto resourceOffset = latte::SQ_VS_BUF_RESOURCE_0 + i * 7;
@@ -280,16 +278,9 @@ bool GLDriver::checkActiveUniforms()
                gl::glGenBuffers(1, &ubo.object);
             }
 
-            // Swap endian
-            buffer.resize(values);
-
-            for (auto j = 0u; j < values; ++j) {
-               buffer[j] = byte_swap(block[j]);
-            }
-
             // Upload block
             gl::glBindBuffer(gl::GL_UNIFORM_BUFFER, ubo.object);
-            gl::glBufferData(gl::GL_UNIFORM_BUFFER, size, buffer.data(), gl::GL_DYNAMIC_DRAW);
+            gl::glBufferData(gl::GL_UNIFORM_BUFFER, size, block, gl::GL_DYNAMIC_DRAW);
 
             // Bind block
             gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, ubo.object);
@@ -319,16 +310,9 @@ bool GLDriver::checkActiveUniforms()
                gl::glGenBuffers(1, &ubo.object);
             }
 
-            // Swap endian
-            buffer.resize(values);
-
-            for (auto j = 0u; j < values; ++j) {
-               buffer[j] = byte_swap(block[j]);
-            }
-
             // Upload block
             gl::glBindBuffer(gl::GL_UNIFORM_BUFFER, ubo.object);
-            gl::glBufferData(gl::GL_UNIFORM_BUFFER, size, buffer.data(), gl::GL_DYNAMIC_DRAW);
+            gl::glBufferData(gl::GL_UNIFORM_BUFFER, size, block, gl::GL_DYNAMIC_DRAW);
 
             // Bind block
             gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, ubo.object);
