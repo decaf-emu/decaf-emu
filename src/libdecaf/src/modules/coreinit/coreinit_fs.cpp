@@ -49,6 +49,7 @@ Module::registerFileSystemFunctions()
    RegisterKernelFunction(FSSetStateChangeNotification);
    RegisterKernelFunction(FSGetVolumeState);
    RegisterKernelFunction(FSGetLastErrorCodeForViewer);
+   RegisterKernelFunction(FSGetAsyncResult);
 
    // coreinit_fs_path
    RegisterKernelFunction(FSGetCwd);

@@ -75,6 +75,9 @@ void
 FSSetStateChangeNotification(FSClient *client,
                              FSStateChangeInfo *info);
 
+FSAsyncResult*
+FSGetAsyncResult(OSMessage *ioMsg);
+
 /** @} */
 
 namespace internal

@@ -192,6 +192,11 @@ FSSetStateChangeNotification(FSClient *client,
    // TODO: FSSetStateChangeNotification
 }
 
+FSAsyncResult*
+FSGetAsyncResult(OSMessage *ioMsg)
+{
+   return static_cast<FSAsyncResult*>(ioMsg->message.get());
+}
 
 namespace internal
 {
