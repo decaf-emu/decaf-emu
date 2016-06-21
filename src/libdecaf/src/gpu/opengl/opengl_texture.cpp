@@ -369,9 +369,6 @@ bool GLDriver::checkActiveTextures()
 
       switch (dim) {
       case latte::SQ_TEX_DIM_2D:
-         gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-         gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-
          if (compressed) {
             gl::glCompressedTextureSubImage2D(buffer->object, 0,
                                               0, 0,
@@ -387,9 +384,6 @@ bool GLDriver::checkActiveTextures()
          }
          break;
       case latte::SQ_TEX_DIM_2D_ARRAY:
-         gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-         gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-
          if (compressed) {
             gl::glCompressedTextureSubImage3D(buffer->object, 0,
                                               0, 0, 0,
