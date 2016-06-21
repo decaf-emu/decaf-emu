@@ -66,6 +66,12 @@ applyArguments(cpu::Core *state, Args&&... args)
    return argstate.r - 3;
 }
 
+inline size_t
+applyArguments(cpu::Core *state)
+{
+   return 0;
+}
+
 using LogFunc = void (*)(const std::string &);
 
 // Static function process normal arguments
