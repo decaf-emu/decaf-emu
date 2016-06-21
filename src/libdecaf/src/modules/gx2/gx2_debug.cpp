@@ -1,14 +1,15 @@
-#include <fstream>
-#include <spdlog/spdlog.h>
+#include "common/log.h"
+#include "common/platform_dir.h"
+#include "decaf_config.h"
 #include "gpu/gfd.h"
 #include "gpu/microcode/latte_decoder.h"
 #include "gpu/opengl/glsl_generator.h"
 #include "gx2_enum_string.h"
-#include "gx2_texture.h"
 #include "gx2_shaders.h"
+#include "gx2_texture.h"
 #include "libcpu/mem.h"
-#include "common/platform_dir.h"
-#include "common/log.h"
+#include <fstream>
+#include <spdlog/spdlog.h>
 
 namespace gx2
 {
@@ -44,10 +45,9 @@ GX2DebugDumpData(std::ofstream &file, const void *data, size_t size)
 void
 GX2DebugDumpTexture(const GX2Texture *texture)
 {
-   // TODO: Fix dump_textures config
-   //if (!config::gx2::dump_textures) {
+   if (!decaf::config::gx2::dump_textures) {
       return;
-   //}
+   }
 
    createDumpDirectory();
 
@@ -229,10 +229,9 @@ formatSamplerVars(fmt::MemoryWriter &out, uint32_t count, GX2SamplerVar *vars)
 void
 GX2DebugDumpShader(GX2FetchShader *shader)
 {
-   // TODO: Fix dump_shaders config
-   //if (!config::gx2::dump_shaders) {
+   if (!decaf::config::gx2::dump_shaders) {
       return;
-   //}
+   }
 
    fmt::MemoryWriter out;
    out << "GX2FetchShader:\n"
@@ -247,10 +246,9 @@ GX2DebugDumpShader(GX2FetchShader *shader)
 void
 GX2DebugDumpShader(GX2PixelShader *shader)
 {
-   // TODO: Fix dump_shaders config
-   //if (!config::gx2::dump_shaders) {
+   if (!decaf::config::gx2::dump_shaders) {
       return;
-   //}
+   }
 
    fmt::MemoryWriter out;
    out << "GX2PixelShader:\n"
@@ -272,10 +270,9 @@ GX2DebugDumpShader(GX2PixelShader *shader)
 void
 GX2DebugDumpShader(GX2VertexShader *shader)
 {
-   // TODO: Fix dump_shaders config
-   //if (!config::gx2::dump_shaders) {
+   if (!decaf::config::gx2::dump_shaders) {
       return;
-   //}
+   }
 
    fmt::MemoryWriter out;
    out << "GX2VertexShader:\n"
