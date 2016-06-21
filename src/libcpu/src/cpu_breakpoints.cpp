@@ -8,40 +8,32 @@
 namespace cpu
 {
 
-static std::shared_ptr<uint32_t>
+static std::atomic<uint32_t*>
 gBreakpoints;
 
 using BreakpointListFn = std::function<uint32_t * (uint32_t*)>;
 
 static inline void
-compareAndSwapBreakpoints(std::shared_ptr<uint32_t> &bpListPtr, BreakpointListFn functor)
+compareAndSwapBreakpoints(uint32_t *bpList, BreakpointListFn functor)
 {
-   std::shared_ptr<uint32_t> newBpListPtr;
-
+   uint32_t *newBpList = nullptr;
    do {
-      auto bpList = bpListPtr.get();
-      auto newBpList = functor(bpList);
-
+      newBpList = functor(bpList);
       if (newBpList == bpList) {
          // No changes were made
          return;
-      } else if (newBpList) {
-         // We got a new list
-         newBpListPtr = std::shared_ptr<uint32_t>(newBpList, std::default_delete<uint32_t[]>());
-      } else {
-         // We are swapping to an empty list
-         newBpListPtr = std::shared_ptr<uint32_t>();
       }
-   } while (!std::atomic_compare_exchange_weak(&gBreakpoints, &bpListPtr, newBpListPtr));
+
+   } while (!std::atomic_compare_exchange_weak(&gBreakpoints, &bpList, newBpList));
 }
 
 static inline bool
-addBreakpoint(std::shared_ptr<uint32_t>& bpListPtr, ppcaddr_t address, uint32_t flags)
+addBreakpoint(uint32_t* bpList, ppcaddr_t address, uint32_t flags)
 {
    std::vector<uint32_t> newBpListVec;
    bool bp_changed = true;
 
-   compareAndSwapBreakpoints(bpListPtr, [&](auto bpList) {
+   compareAndSwapBreakpoints(bpList, [&](auto bpList) {
       // Reset from any last iteration attempt
       newBpListVec.clear();
       bp_changed = true;
@@ -87,14 +79,14 @@ addBreakpoint(std::shared_ptr<uint32_t>& bpListPtr, ppcaddr_t address, uint32_t 
 }
 
 static inline bool
-removeBreakpoint(std::shared_ptr<uint32_t> &bpListPtr,
+removeBreakpoint(uint32_t *bpList,
                  ppcaddr_t address,
                  uint32_t flags)
 {
    std::vector<uint32_t> newBpListVec;
    bool bp_matched = false;
 
-   compareAndSwapBreakpoints(bpListPtr, [&](auto bpList) {
+   compareAndSwapBreakpoints(bpList, [&](auto bpList) {
       // If there is no existing list, we have nothing to do
       if (!bpList) {
          return bpList;
@@ -149,13 +141,13 @@ removeBreakpoint(std::shared_ptr<uint32_t> &bpListPtr,
 }
 
 static inline bool
-clearBreakpoints(std::shared_ptr<uint32_t> &bpListPtr,
+clearBreakpoints(uint32_t *bpList,
                  uint32_t flags_mask)
 {
    std::vector<uint32_t> newBpListVec;
    bool bps_changed = false;
 
-   compareAndSwapBreakpoints(bpListPtr, [&](auto bpList) {
+   compareAndSwapBreakpoints(bpList, [&](auto bpList) {
       // If there is no existing list, we have nothing to do
       if (!bpList) {
          return bpList;
@@ -208,15 +200,13 @@ clearBreakpoints(std::shared_ptr<uint32_t> &bpListPtr,
 bool
 hasBreakpoints()
 {
-   auto bpListPtr = std::atomic_load(&gBreakpoints);
-   return bpListPtr.get() != nullptr;
+   return std::atomic_load(&gBreakpoints) != nullptr;
 }
 
 bool
 popBreakpoint(ppcaddr_t address)
 {
-   auto bpListPtr = std::atomic_load(&gBreakpoints);
-   auto bpList = bpListPtr.get();
+   auto bpList = std::atomic_load(&gBreakpoints);
 
    if (bpList == nullptr) {
       // No breakpoints
@@ -246,14 +236,14 @@ popBreakpoint(ppcaddr_t address)
    // remove_breakpoint will return false if it fails to find and remove that
    // breakpoint.  We have no need to loop as we are guarenteed not to find it
    // by looping again since we only pass remove_breakpoint one flag.
-   return removeBreakpoint(bpListPtr, address, SYSTEM_BPFLAG);
+   return removeBreakpoint(bpList, address, SYSTEM_BPFLAG);
 }
 
 bool
 clearBreakpoints(uint32_t flags_mask)
 {
-   auto bpListPtr = std::atomic_load(&gBreakpoints);
-   return clearBreakpoints(bpListPtr, flags_mask);
+   auto bpList = std::atomic_load(&gBreakpoints);
+   return clearBreakpoints(bpList, flags_mask);
 }
 
 bool
@@ -269,16 +259,16 @@ addBreakpoint(ppcaddr_t address,
       throw std::logic_error("You must specify at least a single flag for a breakpoint");
    }
 
-   auto bpListPtr = std::atomic_load(&gBreakpoints);
-   return addBreakpoint(bpListPtr, address, flags);
+   auto bpList = std::atomic_load(&gBreakpoints);
+   return addBreakpoint(bpList, address, flags);
 }
 
 bool
 removeBreakpoint(ppcaddr_t address,
                  uint32_t flags)
 {
-   auto bpListPtr = std::atomic_load(&gBreakpoints);
-   return removeBreakpoint(bpListPtr, address, flags);
+   auto bpList = std::atomic_load(&gBreakpoints);
+   return removeBreakpoint(bpList, address, flags);
 }
 
 } // namespace cpu
