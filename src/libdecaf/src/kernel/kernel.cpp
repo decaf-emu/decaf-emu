@@ -133,6 +133,10 @@ cpuSegfaultFiberEntryPoint(void*)
       coreinit::internal::unlockScheduler();
    }
 
+   // Move back an instruction so we can re-exucute the failed instruction
+   //  and so that the debugger shows the right stop point.
+   cpu::this_core::state()->nia -= 4;
+
    // Alert the debugger if it cares.
    coreinit::internal::pauseCoreTime(true);
    debugger::handleDbgBreakInterrupt();
