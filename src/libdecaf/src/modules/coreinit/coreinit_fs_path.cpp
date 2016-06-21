@@ -50,7 +50,7 @@ FSChangeDirAsync(FSClient *client,
 {
    auto result = FSChangeDir(client, block, path, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 

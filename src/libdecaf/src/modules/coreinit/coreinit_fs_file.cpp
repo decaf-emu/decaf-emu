@@ -256,7 +256,7 @@ FSOpenFileAsync(FSClient *client,
 {
    auto result = FSOpenFile(client, block, path, mode, outHandle, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -273,7 +273,7 @@ FSReadFileAsync(FSClient *client,
 {
    auto result = FSReadFile(client, block, buffer, size, count, handle, unk1, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 FSStatus
@@ -290,7 +290,7 @@ FSReadFileWithPosAsync(FSClient *client,
 {
    auto result = FSReadFileWithPos(client, block, buffer, size, count, position, handle, unk1, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -307,7 +307,7 @@ FSWriteFileAsync(FSClient *client,
 {
    auto result = FSWriteFile(client, block, buffer, size, count, handle, unk1, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -325,7 +325,7 @@ FSWriteFileWithPosAsync(FSClient *client,
 {
    auto result = FSWriteFileWithPos(client, block, buffer, size, count, position, handle, unk1, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 FSStatus
@@ -337,7 +337,7 @@ FSIsEofAsync(FSClient *client,
 {
    auto result = FSIsEof(client, block, handle, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -351,7 +351,7 @@ FSGetPosFileAsync(FSClient *client,
 {
    auto result = FSGetPosFile(client, block, handle, pos, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -365,7 +365,7 @@ FSSetPosFileAsync(FSClient *client,
 {
    auto result = FSSetPosFile(client, block, handle, pos, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -378,7 +378,7 @@ FSCloseFileAsync(FSClient *client,
 {
    auto result = FSCloseFile(client, block, handle, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -391,7 +391,7 @@ FSTruncateFileAsync(FSClient *client,
 {
    auto result = FSTruncateFile(client, block, handle, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 } // namespace coreinit

@@ -59,7 +59,7 @@ FSGetStatAsync(FSClient *client,
 {
    auto result = FSGetStat(client, block, path, stat, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -73,7 +73,7 @@ FSGetStatFileAsync(FSClient *client,
 {
    auto result = FSGetStatFile(client, block, handle, stat, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 } // namespace coreinit

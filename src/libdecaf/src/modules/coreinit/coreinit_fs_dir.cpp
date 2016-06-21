@@ -125,7 +125,7 @@ FSMakeDirAsync(FSClient *client,
 {
    auto result = FSMakeDir(client, block, path, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -139,7 +139,7 @@ FSOpenDirAsync(FSClient *client,
 {
    auto result = FSOpenDir(client, block, path, handle, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -153,7 +153,7 @@ FSReadDirAsync(FSClient *client,
 {
    auto result = FSReadDir(client, block, handle, entry, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -166,7 +166,7 @@ FSCloseDirAsync(FSClient *client,
 {
    auto result = FSCloseDir(client, block, handle, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 
@@ -179,7 +179,7 @@ FSRewindDirAsync(FSClient *client,
 {
    auto result = FSRewindDir(client, block, handle, flags);
    coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
-   return result;
+   return FSStatus::OK;
 }
 
 } // namespace coreinit
