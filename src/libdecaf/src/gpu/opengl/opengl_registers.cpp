@@ -244,6 +244,29 @@ GLDriver::setRegister(latte::Register reg,
          gl::glDisable(gl::GL_CULL_FACE);
       }
    } break;
+
+   case latte::Register::PA_CL_CLIP_CNTL:
+   {
+      auto pa_cl_clip_cntl = latte::PA_CL_CLIP_CNTL::get(value);
+
+      if (pa_cl_clip_cntl.RASTERISER_DISABLE()) {
+         gl::glEnable(gl::GL_RASTERIZER_DISCARD);
+      } else {
+         gl::glDisable(gl::GL_RASTERIZER_DISCARD);
+      }
+
+      if (pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE()) {
+         glDisable(gl::GL_DEPTH_CLAMP);
+      } else {
+         glEnable(gl::GL_DEPTH_CLAMP);
+      }
+
+      if (pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {
+         gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_NEGATIVE_ONE_TO_ONE);
+      } else {
+         gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_ZERO_TO_ONE);
+      }
+   } break;
    }
 }
 

@@ -29,8 +29,6 @@ void GLDriver::initGL()
    // Create our default framebuffer
    gl::glGenFramebuffers(1, &mFrameBuffer.object);
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
-
-   gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_NEGATIVE_ONE_TO_ONE);
 }
 
 void GLDriver::setForcedGpuSync(bool enabled)
