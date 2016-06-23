@@ -15,6 +15,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\common\src\murmur3.cpp" />
     <ClCompile Include="..\src\common\src\platform_posix_dir.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
@@ -72,6 +73,7 @@
     <ClInclude Include="..\src\common\floatutils.h" />
     <ClInclude Include="..\src\common\log.h" />
     <ClInclude Include="..\src\common\make_array.h" />
+    <ClInclude Include="..\src\common\murmur3.h" />
     <ClInclude Include="..\src\common\platform.h" />
     <ClInclude Include="..\src\common\platform_dir.h" />
     <ClInclude Include="..\src\common\platform_exception.h" />

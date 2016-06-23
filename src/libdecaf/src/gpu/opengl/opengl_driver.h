@@ -127,6 +127,7 @@ struct SurfaceBuffer : Resource
    gl::GLuint object = 0;
    SurfaceUseState state = SurfaceUseState::None;
    bool dirtyAsTexture = true;
+   uint64_t cpuMemHash[2] = { 0 };
    uint32_t width = 0;
    uint32_t height = 0;
    uint32_t depth = 0;

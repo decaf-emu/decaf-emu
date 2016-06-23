@@ -1,4 +1,5 @@
 #include "common/log.h"
+#include "common/murmur3.h"
 #include "gpu/latte_enum_sq.h"
 #include "modules/gx2/gx2_addrlib.h"
 #include "modules/gx2/gx2_enum.h"
@@ -298,8 +299,6 @@ bool GLDriver::checkActiveTextures()
 
       auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma);
 
-      // If the GPU has written this memory region, then we need to be sure
-      //  that we do not overwrite it with the random data from the CPU.
       if (buffer->dirtyAsTexture) {
          auto addr = (sq_tex_resource_word2.BASE_ADDRESS() & (~7)) << 8;
          auto swizzle = sq_tex_resource_word2.SWIZZLE() << 8;
@@ -343,66 +342,82 @@ bool GLDriver::checkActiveTextures()
          surface.image = imagePtr;
          surface.mipmaps = nullptr;
 
-         // Untile
-         gx2::internal::convertTiling(&surface, untiledImage, untiledMipmap);
+         // Update the sizing information for the surface
+         GX2CalcSurfaceSizeAndAlignment(&surface);
 
-         // Create texture
-         bool compressed = isCompressedFormat(format);
-         auto target = getTextureTarget(dim);
-         auto textureDataType = gl::GL_INVALID_ENUM;
-         auto textureFormat = getTextureFormat(format);
-         auto size = untiledImage.size();
+         // Calculate a new memory CRC
+         uint64_t newHash[2] = { 0 };
+         MurmurHash3_x64_128(surface.image, surface.imageSize, 0, newHash);
 
-         if (compressed) {
-            textureDataType = getCompressedTextureDataType(format, degamma);
-         } else {
-            textureDataType = getTextureDataType(format, formatComp);
-         }
+         // If the CPU memory has changed, we should re-upload this.  This hashing is
+         //  also means that if the application temporarily uses one of its buffers as
+         //  a color buffer, we are able to accurately handle this.  Providing they are
+         //  not updating the memory at the same time.
+         if (newHash[0] != buffer->cpuMemHash[0] || newHash[1] != buffer->cpuMemHash[1]) {
+            buffer->cpuMemHash[0] = newHash[0];
+            buffer->cpuMemHash[1] = newHash[1];
 
-         if (textureDataType == gl::GL_INVALID_ENUM || textureFormat == gl::GL_INVALID_ENUM) {
-            gLog->debug("Skipping texture with unsupported format {}", surface.format.value());
-            continue;
-         }
+            // Untile
+            gx2::internal::convertTiling(&surface, untiledImage, untiledMipmap);
 
-         switch (dim) {
-         case latte::SQ_TEX_DIM_2D:
+            // Create texture
+            bool compressed = isCompressedFormat(format);
+            auto target = getTextureTarget(dim);
+            auto textureDataType = gl::GL_INVALID_ENUM;
+            auto textureFormat = getTextureFormat(format);
+            auto size = untiledImage.size();
+
             if (compressed) {
-               gl::glCompressedTextureSubImage2D(buffer->object, 0,
-                  0, 0,
-                  width, height,
-                  textureDataType,
-                  gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
+               textureDataType = getCompressedTextureDataType(format, degamma);
             } else {
-               gl::glTextureSubImage2D(buffer->object, 0,
-                  0, 0,
-                  width, height,
-                  textureFormat, textureDataType,
-                  untiledImage.data());
+               textureDataType = getTextureDataType(format, formatComp);
             }
-            break;
-         case latte::SQ_TEX_DIM_2D_ARRAY:
-            if (compressed) {
-               gl::glCompressedTextureSubImage3D(buffer->object, 0,
-                  0, 0, 0,
-                  width, height, depth,
-                  textureDataType,
-                  gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
-            } else {
-               gl::glTextureSubImage3D(buffer->object, 0,
-                  0, 0, 0,
-                  width, height, depth,
-                  textureFormat, textureDataType,
-                  untiledImage.data());
+
+            if (textureDataType == gl::GL_INVALID_ENUM || textureFormat == gl::GL_INVALID_ENUM) {
+               gLog->debug("Skipping texture with unsupported format {}", surface.format.value());
+               continue;
             }
-            break;
-         case latte::SQ_TEX_DIM_1D:
-         case latte::SQ_TEX_DIM_3D:
-         case latte::SQ_TEX_DIM_CUBEMAP:
-         case latte::SQ_TEX_DIM_1D_ARRAY:
-         case latte::SQ_TEX_DIM_2D_MSAA:
-         case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
-            gLog->error("Unsupported texture dim: {}", sq_tex_resource_word0.DIM().get());
-            continue;
+
+            switch (dim) {
+            case latte::SQ_TEX_DIM_2D:
+               if (compressed) {
+                  gl::glCompressedTextureSubImage2D(buffer->object, 0,
+                     0, 0,
+                     width, height,
+                     textureDataType,
+                     gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
+               } else {
+                  gl::glTextureSubImage2D(buffer->object, 0,
+                     0, 0,
+                     width, height,
+                     textureFormat, textureDataType,
+                     untiledImage.data());
+               }
+               break;
+            case latte::SQ_TEX_DIM_2D_ARRAY:
+               if (compressed) {
+                  gl::glCompressedTextureSubImage3D(buffer->object, 0,
+                     0, 0, 0,
+                     width, height, depth,
+                     textureDataType,
+                     gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
+               } else {
+                  gl::glTextureSubImage3D(buffer->object, 0,
+                     0, 0, 0,
+                     width, height, depth,
+                     textureFormat, textureDataType,
+                     untiledImage.data());
+               }
+               break;
+            case latte::SQ_TEX_DIM_1D:
+            case latte::SQ_TEX_DIM_3D:
+            case latte::SQ_TEX_DIM_CUBEMAP:
+            case latte::SQ_TEX_DIM_1D_ARRAY:
+            case latte::SQ_TEX_DIM_2D_MSAA:
+            case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+               gLog->error("Unsupported texture dim: {}", sq_tex_resource_word0.DIM().get());
+               continue;
+            }
          }
 
          buffer->dirtyAsTexture = false;

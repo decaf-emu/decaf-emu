@@ -157,12 +157,6 @@ void GLDriver::decafInvalidate(const pm4::DecafInvalidate &data)
             continue;
          }
 
-         if (surf.second.state == SurfaceUseState::GpuWritten) {
-            gLog->warn("CPU invalidated GPU owned object: invalidate:{:08x}-{:08x}, obj:{:08x}-{:08x}",
-               memStart, memEnd, surf.second.cpuMemStart, surf.second.cpuMemEnd);
-            continue;
-         }
-
          surf.second.dirtyAsTexture = true;
       }
    }

@@ -57,6 +57,9 @@
     <ClCompile Include="..\src\common\src\platform_posix_time.cpp">
       <Filter>Source Files\posix</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\common\src\murmur3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\common\align.h">
@@ -153,6 +156,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\common\types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\murmur3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
