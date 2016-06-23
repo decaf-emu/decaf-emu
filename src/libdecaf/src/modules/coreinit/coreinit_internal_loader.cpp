@@ -636,6 +636,16 @@ processSymbols(LoadedModule *loadedMod, SectionList &sections)
          auto binding = sym.info >> 4;
          auto type = sym.info & 0xf;
 
+         if (sym.shndx == elf::SHN_ABS && sym.value == 0) {
+            // This is an no-value absolute symbol, probably for a FILE object.
+            continue;
+         }
+
+         if (sym.shndx == elf::SHN_HIRESERVE && sym.value == 0) {
+            // Not actually sure what this is, but it doens't point to anything.
+            continue;
+         }
+
          if (sym.shndx >= elf::SHN_LORESERVE) {
             gLog->warn("Unexpected symbol definition: shndx {:04x}, info {:02x}, size {:08x}, other {:02x}, value {:08x}, name {}",
                sym.shndx, sym.info, sym.size, sym.other, sym.value, name);
