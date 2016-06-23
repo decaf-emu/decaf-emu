@@ -5,6 +5,9 @@
 namespace gx2
 {
 
+const static GX2TVScanMode
+sTvScanMode = GX2TVScanMode::P1080;
+
 static bool
 getTVSize(GX2TVRenderMode tvRenderMode, int *width_ret, int *height_ret)
 {
@@ -136,13 +139,30 @@ GX2SetDRCScale(uint32_t x, uint32_t y)
 GX2TVScanMode
 GX2GetSystemTVScanMode()
 {
-   return GX2TVScanMode::None;
+   return sTvScanMode;
 }
 
 GX2DrcRenderMode
 GX2GetSystemDRCMode()
 {
    return GX2DrcRenderMode::Single;
+}
+
+GX2AspectRatio
+GX2GetSystemTVAspectRatio()
+{
+   switch (sTvScanMode) {
+   case GX2TVScanMode::None:
+   case GX2TVScanMode::I480:
+   case GX2TVScanMode::P480:
+      return GX2AspectRatio::Normal;
+   case GX2TVScanMode::P720:
+   case GX2TVScanMode::I1080:
+   case GX2TVScanMode::P1080:
+      return GX2AspectRatio::Widescreen;
+   default:
+      throw std::logic_error("Unimplemented TV scan mode");
+   }
 }
 
 } // namespace gx2

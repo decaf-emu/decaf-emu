@@ -54,4 +54,7 @@ GX2GetSystemTVScanMode();
 GX2DrcRenderMode
 GX2GetSystemDRCMode();
 
+GX2AspectRatio
+GX2GetSystemTVAspectRatio();
+
 } // namespace gx2
