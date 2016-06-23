@@ -1,5 +1,6 @@
 #include <cassert>
 #include <stdexcept>
+#include "common/emuassert.h"
 #include "gx2_debug.h"
 #include "gx2_shaders.h"
 #include "gpu/pm4_writer.h"
@@ -60,9 +61,19 @@ GX2SetVertexShader(GX2VertexShader *shader)
    auto vgt_strmout_buffer_en = shader->regs.vgt_strmout_buffer_en.value();
    auto vgt_vertex_reuse_block_cntl = shader->regs.vgt_vertex_reuse_block_cntl.value();
 
+   uint32_t shaderProgAddr = shader->data.getAddress();
+   uint32_t shaderProgSize = shader->size;
+   if (!shaderProgAddr) {
+      shaderProgAddr = shader->gx2rData.buffer.getAddress();
+      shaderProgSize = shader->gx2rData.elemCount * shader->gx2rData.elemSize;
+   }
+
+   emuassert(shaderProgAddr);
+   emuassert(shaderProgSize);
+
    uint32_t shaderRegData[] = {
-      shader->data.getAddress() >> 8,
-      shader->size >> 3,
+      shaderProgAddr >> 8,
+      shaderProgSize >> 3,
       0x100000,
       0x100000,
       sq_pgm_resources_vs.value,
@@ -132,9 +143,19 @@ GX2SetPixelShader(GX2PixelShader *shader)
    auto sq_pgm_resources_ps = shader->regs.sq_pgm_resources_ps.value();
    auto sq_pgm_exports_ps = shader->regs.sq_pgm_exports_ps.value();
 
+   uint32_t shaderProgAddr = shader->data.getAddress();
+   uint32_t shaderProgSize = shader->size;
+   if (!shaderProgAddr) {
+      shaderProgAddr = shader->gx2rData.buffer.getAddress();
+      shaderProgSize = shader->gx2rData.elemCount * shader->gx2rData.elemSize;
+   }
+
+   emuassert(shaderProgAddr);
+   emuassert(shaderProgSize);
+
    uint32_t shaderRegData[] = {
-      shader->data.getAddress() >> 8,
-      shader->size >> 3,
+      shaderProgAddr >> 8,
+      shaderProgSize >> 3,
       0x100000,
       0x100000,
       sq_pgm_resources_ps.value,
@@ -181,9 +202,19 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
    auto vgt_gs_mode = shader->regs.vgt_gs_mode.value();
    auto vgt_strmout_buffer_en = shader->regs.vgt_strmout_buffer_en.value();
 
+   uint32_t shaderProgAddr = shader->data.getAddress();
+   uint32_t shaderProgSize = shader->size;
+   if (!shaderProgAddr) {
+      shaderProgAddr = shader->gx2rData.buffer.getAddress();
+      shaderProgSize = shader->gx2rData.elemCount * shader->gx2rData.elemSize;
+   }
+
+   emuassert(shaderProgAddr);
+   emuassert(shaderProgSize);
+
    uint32_t shaderRegData[] = {
-      shader->data.getAddress() >> 8,
-      shader->size >> 3,
+      shaderProgAddr >> 8,
+      shaderProgSize >> 3,
       0,
       0,
       sq_pgm_resources_gs.value,

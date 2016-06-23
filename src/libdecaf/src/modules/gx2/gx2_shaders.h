@@ -7,6 +7,7 @@
 #include "common/structsize.h"
 #include "virtual_ptr.h"
 #include "gx2_sampler.h"
+#include "gx2r_buffer.h"
 
 namespace gx2
 {
@@ -150,7 +151,7 @@ struct GX2VertexShader
    be_val<BOOL> hasStreamOut;
    be_val<uint32_t> streamOutStride[4];
 
-   UNKNOWN(4 * 4);
+   GX2RBuffer gx2rData;
 };
 CHECK_OFFSET(GX2VertexShader, 0x00, regs.sq_pgm_resources_vs);
 CHECK_OFFSET(GX2VertexShader, 0x04, regs.vgt_primitiveid_en);
@@ -182,6 +183,7 @@ CHECK_OFFSET(GX2VertexShader, 0x108, attribVars);
 CHECK_OFFSET(GX2VertexShader, 0x10c, ringItemsize);
 CHECK_OFFSET(GX2VertexShader, 0x110, hasStreamOut);
 CHECK_OFFSET(GX2VertexShader, 0x114, streamOutStride);
+CHECK_OFFSET(GX2VertexShader, 0x124, gx2rData);
 CHECK_SIZE(GX2VertexShader, 0x134);
 
 struct GX2PixelShader
@@ -219,7 +221,7 @@ struct GX2PixelShader
    be_val<uint32_t> samplerVarCount;
    be_ptr<GX2SamplerVar> samplerVars;
 
-   UNKNOWN(4 * 4);
+   GX2RBuffer gx2rData;
 };
 CHECK_OFFSET(GX2PixelShader, 0x00, regs.sq_pgm_resources_ps);
 CHECK_OFFSET(GX2PixelShader, 0x04, regs.sq_pgm_exports_ps);
@@ -244,6 +246,7 @@ CHECK_OFFSET(GX2PixelShader, 0xC8, loopVarCount);
 CHECK_OFFSET(GX2PixelShader, 0xCC, loopVars);
 CHECK_OFFSET(GX2PixelShader, 0xD0, samplerVarCount);
 CHECK_OFFSET(GX2PixelShader, 0xD4, samplerVars);
+CHECK_OFFSET(GX2PixelShader, 0xD8, gx2rData);
 CHECK_SIZE(GX2PixelShader, 0xe8);
 
 struct GX2GeometryShader
@@ -286,7 +289,8 @@ struct GX2GeometryShader
    be_val<uint32_t> ringItemSize;
    be_val<BOOL> hasStreamOut;
    be_array<uint32_t, 4> streamOutStride;
-   UNKNOWN(4 * 4);
+
+   GX2RBuffer gx2rData;
 };
 CHECK_OFFSET(GX2GeometryShader, 0x00, regs.sq_pgm_resources_gs);
 CHECK_OFFSET(GX2GeometryShader, 0x04, regs.vgt_gs_out_prim_type);
@@ -316,6 +320,7 @@ CHECK_OFFSET(GX2GeometryShader, 0x84, samplerVars);
 CHECK_OFFSET(GX2GeometryShader, 0x88, ringItemSize);
 CHECK_OFFSET(GX2GeometryShader, 0x8C, hasStreamOut);
 CHECK_OFFSET(GX2GeometryShader, 0x90, streamOutStride);
+CHECK_OFFSET(GX2GeometryShader, 0xA0, gx2rData);
 CHECK_SIZE(GX2GeometryShader, 0xB0);
 
 struct GX2AttribStream
