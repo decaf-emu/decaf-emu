@@ -187,31 +187,46 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t heigh
       return nullptr;
    }
 
+   // We need to keep track of the memory region every GPU resource uses
+   //  so that we are able to invalidate them as needed.
+   buffer->cpuMemStart = baseAddress;
+   buffer->cpuMemEnd = baseAddress;
+
+   // TODO: Calculate the true size of the texture instead of cheating
+   //  and assuming the texture is 32 bits per pixel.
+   auto bytesPerPixel = 4;
+
    if (!buffer->object) {
       switch (dim) {
       case latte::SQ_TEX_DIM_2D:
          gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &buffer->object);
          gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
+         buffer->cpuMemEnd = baseAddress + (width * height * bytesPerPixel);
          break;
       case latte::SQ_TEX_DIM_2D_ARRAY:
          gl::glCreateTextures(gl::GL_TEXTURE_2D_ARRAY, 1, &buffer->object);
          gl::glTextureStorage3D(buffer->object, 1, storageFormat, width, height, depth);
+         buffer->cpuMemEnd = baseAddress + (width * height * depth * bytesPerPixel);
          break;
       case latte::SQ_TEX_DIM_CUBEMAP:
          gl::glCreateTextures(gl::GL_TEXTURE_CUBE_MAP, 1, &buffer->object);
          gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
+         buffer->cpuMemEnd = baseAddress + (width * height * bytesPerPixel);
          break;
       case latte::SQ_TEX_DIM_1D:
          gl::glCreateTextures(gl::GL_TEXTURE_1D, 1, &buffer->object);
          gl::glTextureStorage1D(buffer->object, 1, storageFormat, width);
+         buffer->cpuMemEnd = baseAddress + (width * bytesPerPixel);
          break;
       case latte::SQ_TEX_DIM_3D:
          gl::glCreateTextures(gl::GL_TEXTURE_3D, 1, &buffer->object);
          gl::glTextureStorage3D(buffer->object, 1, storageFormat, width, height, depth);
+         buffer->cpuMemEnd = baseAddress + (width * height * depth * bytesPerPixel);
          break;
       case latte::SQ_TEX_DIM_1D_ARRAY:
          gl::glCreateTextures(gl::GL_TEXTURE_1D_ARRAY, 1, &buffer->object);
          gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
+         buffer->cpuMemEnd = baseAddress + (width * height * bytesPerPixel);
          break;
       case latte::SQ_TEX_DIM_2D_MSAA:
       case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:

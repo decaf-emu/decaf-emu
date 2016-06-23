@@ -4,6 +4,7 @@
 #include "gpu/pm4_buffer.h"
 #include "modules/coreinit/coreinit_time.h"
 #include "modules/gx2/gx2_event.h"
+#include "modules/gx2/gx2_enum.h"
 #include "opengl_driver.h"
 #include <fstream>
 #include <glbinding/gl/gl.h>
@@ -138,6 +139,28 @@ void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 void GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
 {
    mContextState = reinterpret_cast<latte::ContextState *>(data.context.get());
+}
+
+void GLDriver::decafInvalidate(const pm4::DecafInvalidate &data)
+{
+   GX2InvalidateMode mode = static_cast<GX2InvalidateMode>(data.mode);
+   uint32_t memStart = data.memStart;
+   uint32_t memEnd = data.memEnd;
+
+   if (mode & GX2InvalidateMode::Texture) {
+      for (auto &surf : mSurfaces) {
+         if (surf.second.cpuMemStart >= memEnd || surf.second.cpuMemEnd < memStart) {
+            continue;
+         }
+
+         if (surf.second.state == SurfaceUseState::GpuWritten) {
+            gLog->warn("Application invalidated memory that is GPU controlled");
+            continue;
+         }
+
+         surf.second.dirtyAsTexture = true;
+      }
+   }
 }
 
 void GLDriver::getSwapBuffers(unsigned int *tv, unsigned int *drc)

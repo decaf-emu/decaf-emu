@@ -113,10 +113,20 @@ enum class SurfaceUseState : uint32_t
    GpuWritten
 };
 
-struct SurfaceBuffer
+struct Resource
+{
+   //! The start of the CPU memory region this occupies
+   uint32_t cpuMemStart;
+
+   //! The end of the CPU memory region this occupies
+   uint32_t cpuMemEnd;
+};
+
+struct SurfaceBuffer : Resource
 {
    gl::GLuint object = 0;
    SurfaceUseState state = SurfaceUseState::None;
+   bool dirtyAsTexture = true;
    uint32_t width = 0;
    uint32_t height = 0;
    uint32_t depth = 0;
@@ -183,6 +193,7 @@ private:
    void decafClearColor(const pm4::DecafClearColor &data);
    void decafClearDepthStencil(const pm4::DecafClearDepthStencil &data);
    void decafSetContextState(const pm4::DecafSetContextState &data);
+   void decafInvalidate(const pm4::DecafInvalidate &data);
    void drawIndexAuto(const pm4::DrawIndexAuto &data);
    void drawIndex2(const pm4::DrawIndex2 &data);
    void indexType(const pm4::IndexType &data);

@@ -101,6 +101,7 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
 
+   buffer->dirtyAsTexture = false;
    buffer->state = SurfaceUseState::GpuWritten;
    return buffer;
 }

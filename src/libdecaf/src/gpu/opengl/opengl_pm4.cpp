@@ -112,6 +112,9 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
    case pm4::type3::DECAF_SET_BUFFER:
       decafSetBuffer(pm4::read<pm4::DecafSetBuffer>(reader));
       break;
+   case pm4::type3::DECAF_INVALIDATE:
+      decafInvalidate(pm4::read<pm4::DecafInvalidate>(reader));
+      break;
    case pm4::type3::DRAW_INDEX_AUTO:
       drawIndexAuto(pm4::read<pm4::DrawIndexAuto>(reader));
       break;
