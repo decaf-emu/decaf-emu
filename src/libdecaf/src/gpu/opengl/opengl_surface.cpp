@@ -1,3 +1,4 @@
+#include "common/emuassert.h"
 #include "gpu/latte_enum_sq.h"
 #include "modules/gx2/gx2_addrlib.h"
 #include "modules/gx2/gx2_enum.h"
@@ -176,10 +177,21 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t heigh
    latte::SQ_TEX_DIM dim, latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat,
    latte::SQ_FORMAT_COMP formatComp, uint32_t degamma)
 {
+   emuassert(baseAddress);
+   emuassert(width);
+   emuassert(height);
+   emuassert(depth);
+
    uint64_t surfaceKey = static_cast<uint64_t>(baseAddress) << 32;
    surfaceKey ^= width ^ height ^ depth ^ dim;
    surfaceKey ^= format ^ numFormat ^ formatComp ^ degamma;
-   auto buffer = &mSurfaces[surfaceKey];
+   auto bufferIter = mSurfaces.find(surfaceKey);
+   if (bufferIter != mSurfaces.end()) {
+      return &bufferIter->second;
+   }
+
+   auto insertRes = mSurfaces.emplace(surfaceKey, SurfaceBuffer{});
+   auto buffer = &insertRes.first->second;
 
    auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma);
    if (storageFormat == gl::GL_INVALID_ENUM) {
@@ -230,6 +242,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t heigh
          break;
       case latte::SQ_TEX_DIM_2D_MSAA:
       case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+      default:
          gLog->error("Unsupported texture dim: {}", dim);
          return nullptr;
       }
