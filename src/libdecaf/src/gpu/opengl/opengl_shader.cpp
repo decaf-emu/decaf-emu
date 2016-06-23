@@ -104,7 +104,16 @@ bool GLDriver::checkActiveShader()
       return true;
    }
 
-   if (!pgm_start_fs.PGM_START || !pgm_start_vs.PGM_START || !pgm_start_ps.PGM_START) {
+   if (!pgm_start_fs.PGM_START) {
+      gLog->error("Fetch shader was not set");
+      return false;
+   }
+   if (!pgm_start_vs.PGM_START) {
+      gLog->error("Vertex shader was not set");
+      return false;
+   }
+   if (!pgm_start_ps.PGM_START) {
+      gLog->error("Pixel shader was not set");
       return false;
    }
 
