@@ -118,8 +118,8 @@ unpackQuadList(uint32_t count,
          *(dst++) = index_br;
       }
    } else {
-      auto index_tl = 1u;
-      auto index_tr = 0u;
+      auto index_tl = 0u;
+      auto index_tr = 1u;
       auto index_br = 2u;
       auto index_bl = 3u;
 
