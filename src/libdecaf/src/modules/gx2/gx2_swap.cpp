@@ -1,3 +1,4 @@
+#include "gx2_debug.h"
 #include "gx2_event.h"
 #include "gx2_surface.h"
 #include "gx2_swap.h"
@@ -35,6 +36,10 @@ GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget scanTarget)
 void
 GX2SwapScanBuffers()
 {
+   // For Debugging
+   static uint32_t debugSwapCount = 0;
+   internal::writeDebugMarker("SwapScanBuffers", debugSwapCount++);
+
    gx2::internal::onSwap();
    pm4::write(pm4::DecafSwapBuffers { });
 }
