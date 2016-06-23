@@ -637,7 +637,8 @@ processSymbols(LoadedModule *loadedMod, SectionList &sections)
          auto type = sym.info & 0xf;
 
          if (sym.shndx >= elf::SHN_LORESERVE) {
-            gLog->warn("Symbol {} in invalid section 0x{:X}", name, sym.shndx);
+            gLog->warn("Unexpected symbol definition: shndx {:04x}, info {:02x}, size {:08x}, other {:02x}, value {:08x}, name {}",
+               sym.shndx, sym.info, sym.size, sym.other, sym.value, name);
             continue;
          }
 
@@ -691,6 +692,8 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
    auto in = BigEndianView{ data };
    auto loadedMod = new LoadedModule();
    gLoadedModules.emplace(moduleName, loadedMod);
+
+   gLog->debug("Loading module {}", moduleName);
 
    // Read header
    auto header = elf::Header{};
@@ -773,6 +776,17 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
    if (!shStrTab) {
       gLog->error("Section name table missing");
       return nullptr;
+   }
+
+   for (auto &section : sections) {
+      auto sectionName = shStrTab + section.header.name;
+      gLog->debug("  found section: type {:08x}, flags {:08x}, info {:08x}, addr {:08x}, size {:>8x}, name {}",
+         section.header.type,
+         section.header.flags,
+         section.header.info,
+         section.header.addr,
+         section.header.size,
+         sectionName);
    }
 
    // Calculate SDA Bases
