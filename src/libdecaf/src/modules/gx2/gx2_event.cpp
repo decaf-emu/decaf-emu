@@ -185,6 +185,11 @@ GX2WaitForVsync()
 void
 GX2WaitForFlip()
 {
+   if (sFlipCount == sSwapCount) {
+      // The user has no more pending flips, return immediately.
+      return;
+   }
+
    OSSleepThread(sFlipThreadQueue);
 }
 
