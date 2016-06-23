@@ -114,7 +114,11 @@ void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 {
    static const auto weight = 0.9;
 
-   // We do not need to actually call swap as our driver does this automatically with the vsync.
+   // We do not need to actually call swap as our driver does this
+   //  automatically with the vsync.  We do however need to make sure
+   //  that we've finished all our OpenGL commands before we continue,
+   //  otherwise, we may overwrite a buffer used on this frame.
+   gl::glFinish();
 
    // TODO: We should have a render chain of 2 buffers so that we don't render stuff
    //  until the game actually asked us to.
