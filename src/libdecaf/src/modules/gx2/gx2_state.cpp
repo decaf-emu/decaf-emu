@@ -14,7 +14,7 @@ namespace gx2
 {
 
 static uint32_t
-gMainCoreId = 0;
+gMainCoreId = 0xFF;
 
 void
 GX2Init(be_val<uint32_t> *attributes)
@@ -86,6 +86,11 @@ GX2Flush()
 
 namespace internal
 {
+
+bool isInited()
+{
+   return gMainCoreId != 0xFF;
+}
 
 uint32_t getMainCoreId()
 {

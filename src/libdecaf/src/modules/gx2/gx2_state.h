@@ -30,6 +30,8 @@ GX2Flush();
 namespace internal
 {
 
+bool isInited();
+
 uint32_t getMainCoreId();
 
 } // namespace internal
