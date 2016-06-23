@@ -151,6 +151,21 @@ struct DecafInvalidate
    }
 };
 
+struct DecafDebugMarker
+{
+   static const auto Opcode = type3::DECAF_DEBUGMARKER;
+
+   uint32_t id;
+   gsl::span<char> key;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(id);
+      se(key);
+   }
+};
+
 struct DrawIndexAuto
 {
    static const auto Opcode = type3::DRAW_INDEX_AUTO;

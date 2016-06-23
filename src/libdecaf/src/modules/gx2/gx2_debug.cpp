@@ -1,9 +1,11 @@
+#include "common/align.h"
 #include "common/log.h"
 #include "common/platform_dir.h"
 #include "decaf_config.h"
 #include "gpu/gfd.h"
 #include "gpu/microcode/latte_decoder.h"
 #include "gpu/opengl/glsl_generator.h"
+#include "gpu/pm4_writer.h"
 #include "gx2_enum_string.h"
 #include "gx2_shaders.h"
 #include "gx2_texture.h"
@@ -291,5 +293,29 @@ GX2DebugDumpShader(GX2VertexShader *shader)
                       shader,
                       latte::Shader::Vertex);
 }
+
+namespace internal
+{
+
+void writeDebugMarker(const char *key, uint32_t id)
+{
+   gLog->debug("CPU Debug Marker: {} {}", key, id);
+
+   // PM4 commands must be 32 bit aligned, we need to copy it
+   //  to a temporary local buffer so the gsl span doesn't
+   //  overrun the variable which was passed by the user.
+   static char tmpBuf[128];
+   size_t strLen = strlen(key) + 1;
+   size_t alignedStrLen = align_up(strLen, 4);
+   memset(tmpBuf, 0, 128);
+   memcpy(tmpBuf, key, strLen);
+
+   pm4::write(pm4::DecafDebugMarker{
+      id,
+      gsl::as_span(tmpBuf, alignedStrLen),
+   });
+}
+
+} // namespace internal
 
 } // namespace gx2

@@ -18,6 +18,7 @@ enum IT_OPCODE : uint32_t
    DECAF_SET_CONTEXT_STATE    = 0x05,
    DECAF_SET_BUFFER           = 0x06,
    DECAF_INVALIDATE           = 0x07,
+   DECAF_DEBUGMARKER          = 0x08,
 
    NOP                        = 0x10,
    INDIRECT_BUFFER_END        = 0x17,
