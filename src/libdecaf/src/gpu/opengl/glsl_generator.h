@@ -72,7 +72,7 @@ void translateAluSourceVector(GenerateState &state,
                               const AluSource &srcW);
 
 void translateChannel(GenerateState &state, latte::SQ_CHAN channel);
-unsigned translateSelectMask(GenerateState &state, const std::array<latte::SQ_SEL, 4> &sel, size_t maxSel);
+void translateSelectMask(GenerateState &state, const std::array<latte::SQ_SEL, 4> &sel, size_t maxSel);
 
 } // namespace glsl
 

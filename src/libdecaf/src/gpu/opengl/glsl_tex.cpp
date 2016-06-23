@@ -49,129 +49,166 @@ namespace opengl
 namespace glsl
 {
 
-static bool
-translateSelect(GenerateState &state, latte::SQ_SEL sel)
-{
-   switch (sel) {
-   case latte::SQ_SEL_X:
-      state.out << 'x';
-      break;
-   case latte::SQ_SEL_Y:
-      state.out << 'y';
-      break;
-   case latte::SQ_SEL_Z:
-      state.out << 'z';
-      break;
-   case latte::SQ_SEL_W:
-      state.out << 'w';
-      break;
-   case latte::SQ_SEL_MASK:
-   case latte::SQ_SEL_1:
-   case latte::SQ_SEL_0:
-   default:
-      return false;
-   }
-
-   return true;
-}
-
-unsigned
+void
 translateSelectMask(GenerateState &state, const std::array<latte::SQ_SEL, 4> &sel, size_t maxSel)
 {
-   if (maxSel > 0 && sel[0] != latte::SQ_SEL_MASK) {
-      state.out << '.';
-   }
+   state.out << '.';
 
-   for (auto i = 0u; i < sel.size(); ++i) {
-      if (maxSel > i && !translateSelect(state, sel[i])) {
-         return i;
+   for (auto i = 0u; i < sel.size() && i < maxSel; ++i) {
+      switch (sel[i]) {
+      case latte::SQ_SEL_X:
+         state.out << 'x';
+         break;
+      case latte::SQ_SEL_Y:
+         state.out << 'y';
+         break;
+      case latte::SQ_SEL_Z:
+         state.out << 'z';
+         break;
+      case latte::SQ_SEL_W:
+         state.out << 'w';
+         break;
+      case latte::SQ_SEL_MASK:
+         state.out << '_';
+         break;
+      case latte::SQ_SEL_1:
+      case latte::SQ_SEL_0:
+         throw std::logic_error("Support for constant-value swizzles is not implemented");
+      }
+   }
+}
+
+void
+translateRegisterFetch(GenerateState &state, uint32_t id, const std::array<latte::SQ_SEL, 4> &sel, size_t maxSel)
+{
+   state.out << '.';
+
+   for (auto i = 0u; i < sel.size() && i < maxSel; ++i) {
+      switch (sel[i]) {
+      case latte::SQ_SEL_X:
+         state.out << 'x';
+         break;
+      case latte::SQ_SEL_Y:
+         state.out << 'y';
+         break;
+      case latte::SQ_SEL_Z:
+         state.out << 'z';
+         break;
+      case latte::SQ_SEL_W:
+         state.out << 'w';
+         break;
+      case latte::SQ_SEL_MASK:
+         state.out << '_';
+         break;
+      case latte::SQ_SEL_1:
+      case latte::SQ_SEL_0:
+         throw std::logic_error("Support for constant-value swizzles is not implemented");
+      }
+   }
+}
+
+static size_t
+getSamplerMaxSel(GenerateState &state, uint32_t samplerId)
+{
+   size_t maxSel = 2;
+   auto samplerDim = state.shader->samplers[samplerId];
+   switch (samplerDim) {
+   case latte::SQ_TEX_DIM_1D:
+      return 1;
+   case latte::SQ_TEX_DIM_2D:
+      return 2;
+   case latte::SQ_TEX_DIM_2D_ARRAY:
+      return 3;
+   default:
+      throw std::logic_error("Sampler dim is not supported for latte TEX sample.");
+   }
+}
+
+//! Takes X.x__w = Y.xxxx; and collapses to X.xw = Y.xx;
+static size_t
+collapseSwizzle(std::array<latte::SQ_SEL, 4> &dstSel, std::array<latte::SQ_SEL, 4> &srcSel)
+{
+   size_t maxSel = 0;
+
+   for (auto i = 0u; i < srcSel.size(); ++i) {
+      switch (srcSel[i]) {
+      case latte::SQ_SEL_MASK:
+         break;
+      case latte::SQ_SEL_X:
+      case latte::SQ_SEL_Y:
+      case latte::SQ_SEL_Z:
+      case latte::SQ_SEL_W:
+      case latte::SQ_SEL_1:
+      case latte::SQ_SEL_0:
+         dstSel[maxSel] = dstSel[i];
+         srcSel[maxSel] = srcSel[i];
+         maxSel++;
+         break;
       }
    }
 
-   return 4;
-}
-
-static unsigned
-translateTextureFetchRegister(GenerateState &state, const TextureFetchRegister &reg, size_t maxSel)
-{
-   if (reg.id >= latte::SQ_ALU_TMP_REGISTER_FIRST) {
-      state.out << "T[" << reg.id << "]";
-   } else {
-      state.out << "R[" << reg.id << "]";
+   for (auto i = maxSel; i < 4u; ++i) {
+      dstSel[i] = latte::SQ_SEL_MASK;
+      srcSel[i] = latte::SQ_SEL_MASK;
    }
 
-   return translateSelectMask(state, reg.sel, maxSel);
-}
-
-static void
-translateTexRegisterChannels(GenerateState &state, unsigned channels)
-{
-   if (channels > 0) {
-      state.out << ".x";
-   }
-
-   if (channels > 1) {
-      state.out << 'y';
-   }
-
-   if (channels > 2) {
-      state.out << 'z';
-   }
-
-   if (channels > 3) {
-      state.out << 'w';
-   }
+   return maxSel;
 }
 
 static bool
 SAMPLE(GenerateState &state, TextureFetchInstruction *ins)
 {
-   auto channels = translateTextureFetchRegister(state, ins->dst, 4);
-
    if (ins->resourceID != ins->samplerID) {
       throw std::logic_error("Expect resourceID == samplerID");
    }
+
+   std::array<latte::SQ_SEL, 4> dstSel;
+   dstSel[0] = latte::SQ_SEL_X;
+   dstSel[1] = latte::SQ_SEL_Y;
+   dstSel[2] = latte::SQ_SEL_Z;
+   dstSel[3] = latte::SQ_SEL_W;
+   std::array<latte::SQ_SEL, 4> srcSel = ins->dst.sel;
+
+   size_t maxSel = collapseSwizzle(dstSel, srcSel);
+
+   if (ins->dst.id >= latte::SQ_ALU_TMP_REGISTER_FIRST) {
+      state.out << "T[" << ins->dst.id << "]";
+   } else {
+      state.out << "R[" << ins->dst.id << "]";
+   }
+
+   translateSelectMask(state, dstSel, maxSel);
 
    state.out
       << " = texture(sampler_"
       << ins->samplerID
       << ", ";
 
-   translateTextureFetchRegister(state, ins->src, 3);
-
-   state.out << ")";
-   translateTexRegisterChannels(state, channels);
-   return true;
-}
-
-static bool
-SAMPLE_C(GenerateState &state, TextureFetchInstruction *ins)
-{
-   auto channels = translateTextureFetchRegister(state, ins->dst, 4);
-
-   if (ins->resourceID != ins->samplerID) {
-      throw std::logic_error("Expect resourceID == samplerID");
+   // TODO: We need access to sampler DIM information to be able
+   //  to select accurate maxSel number...  Additionally we need
+   //  some plumbing that allows us to convert something like
+   //  R0.xy0w into vec4(R0.xy, 0, w).  Keeping in mind that
+   //  with a function like this, we should store the texture
+   //  result in an intermediate to save calling it multiple times.
+   //  A function for handling selecting and assigning is probably in order.
+   if (ins->src.id >= latte::SQ_ALU_TMP_REGISTER_FIRST) {
+      state.out << "T[" << ins->src.id << "]";
+   } else {
+      state.out << "R[" << ins->src.id << "]";
    }
 
-   state.out
-      << " = texture(sampler_"
-      << ins->samplerID
-      << ", vec3(";
-
-   translateTextureFetchRegister(state, ins->src, 3);
-
-   state.out
-      << ", R" << ins->src.id << ".w)";
+   // Half-implement the above comments concerns...
+   translateSelectMask(state, ins->src.sel, getSamplerMaxSel(state, ins->samplerID));
 
    state.out << ")";
-   translateTexRegisterChannels(state, channels);
+   translateSelectMask(state, srcSel, maxSel);
+
    return true;
 }
 
 void registerTex()
 {
    registerGenerator(latte::SQ_TEX_INST_SAMPLE, SAMPLE);
-   registerGenerator(latte::SQ_TEX_INST_SAMPLE_C, SAMPLE_C);
 }
 
 } // namespace glsl

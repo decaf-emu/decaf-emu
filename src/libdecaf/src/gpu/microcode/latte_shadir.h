@@ -369,6 +369,7 @@ struct Shader
 
    Type type = Shader::Unknown;
    std::vector<std::unique_ptr<shadir::Instruction>> code;
+   std::vector<latte::SQ_TEX_DIM> samplers;
    std::vector<shadir::Instruction *> linear;
    std::vector<shadir::ExportInstruction *> exports;
    std::vector<std::unique_ptr<shadir::Instruction>> custom;

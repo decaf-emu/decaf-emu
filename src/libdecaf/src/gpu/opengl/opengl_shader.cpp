@@ -841,6 +841,11 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
    shader.type = latte::Shader::Vertex;
 
+   for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
+      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_VS_TEX_RESOURCE_0 + i * 7));
+      shader.samplers.emplace_back(sq_tex_resource_word0.DIM());
+   }
+
    if (!latte::decode(shader, gsl::as_span(buffer, size))) {
       gLog->error("Failed to decode vertex shader");
       return false;
@@ -975,6 +980,11 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    std::string body;
 
    shader.type = latte::Shader::Pixel;
+
+   for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
+      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
+      shader.samplers.emplace_back(sq_tex_resource_word0.DIM());
+   }
 
    if (!latte::decode(shader, gsl::as_span(buffer, size))) {
       gLog->error("Failed to decode pixel shader");
