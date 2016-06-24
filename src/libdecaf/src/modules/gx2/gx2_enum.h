@@ -21,6 +21,11 @@ GX2_ENUM(GX2AAMode, uint32_t)
    GX2_ENUM_VALUE(Mode1X, 0)
 GX2_ENUM_END(GX2AAMode)
 
+GX2_ENUM_WITH_RANGE(GX2AspectRatio, uint32_t, 0, 1)
+   GX2_ENUM_VALUE(Normal, 0)
+   GX2_ENUM_VALUE(Widescreen, 1)
+GX2_ENUM_END(GX2AspectRatio)
+
 GX2_ENUM_WITH_RANGE(GX2AttribFormatType, uint32_t, 0, 0x1F)
    GX2_ENUM_VALUE(TYPE_8, 0x00)
    GX2_ENUM_VALUE(TYPE_4_4, 0x01)
@@ -170,11 +175,6 @@ GX2_ENUM_WITH_RANGE(GX2DrcRenderMode, uint32_t, 0, 3)
    GX2_ENUM_VALUE(Disabled,      0)
    GX2_ENUM_VALUE(Single,        1)
 GX2_ENUM_END(GX2DrcRenderMode)
-
-GX2_ENUM_WITH_RANGE(GX2AspectRatio, uint32_t, 0, 1)
-GX2_ENUM_VALUE(Normal, 0)
-GX2_ENUM_VALUE(Widescreen, 1)
-GX2_ENUM_END(GX2AspectRatio)
 
 GX2_ENUM_WITH_RANGE(GX2EndianSwapMode, uint32_t, 0, 3)
    GX2_ENUM_VALUE(None, 0)
