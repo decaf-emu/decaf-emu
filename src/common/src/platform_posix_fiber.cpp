@@ -45,7 +45,7 @@ createFiber(FiberEntryPoint entry, void *entryParam)
    getcontext(&fiber->context);
    fiber->context.uc_stack.ss_sp = &fiber->stack[0];
    fiber->context.uc_stack.ss_size = fiber->stack.size();
-   fiber->context.uc_link = NULL;
+   fiber->context.uc_link = nullptr;
 
    makecontext(&fiber->context, reinterpret_cast<void(*)()>(&fiberEntryPoint), 1, fiber);
    return fiber;
