@@ -12,6 +12,7 @@
 #include "kernel/kernel_filesystem.h"
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
+#include "modules/coreinit/coreinit_fs.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include <condition_variable>
 #include <mutex>
@@ -126,6 +127,9 @@ initialise(const std::string &gamePath)
    auto systemPath = fs::HostPath { decaf::config::system::system_path };
    filesystem->mountHostFolder("/vol/storage_mlc01", systemPath.join("mlc"));
 
+   // Startup the filesystem thread
+   coreinit::internal::startFsThread();
+
    return true;
 }
 
@@ -163,6 +167,9 @@ shutdown()
 
    // Wait for CPU to finish
    cpu::join();
+
+   // Stop the FS
+   coreinit::internal::shutdownFsThread();
 
    // Stop graphics driver
    auto graphicsDriver = getGraphicsDriver();

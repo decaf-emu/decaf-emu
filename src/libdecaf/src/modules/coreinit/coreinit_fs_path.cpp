@@ -29,18 +29,6 @@ FSGetCwd(FSClient *client,
    return FSStatus::OK;
 }
 
-
-FSStatus
-FSChangeDir(FSClient *client,
-            FSCmdBlock *block,
-            const char *path,
-            uint32_t flags)
-{
-   gWorkingPath = coreinit::internal::translatePath(path);
-   return FSStatus::OK;
-}
-
-
 FSStatus
 FSChangeDirAsync(FSClient *client,
                  FSCmdBlock *block,
@@ -48,11 +36,23 @@ FSChangeDirAsync(FSClient *client,
                  uint32_t flags,
                  FSAsyncData *asyncData)
 {
-   auto result = FSChangeDir(client, block, path, flags);
-   coreinit::internal::doAsyncFileCallback(client, block, result, asyncData);
+   internal::queueFsWork(client, block, asyncData, [=]() {
+      gWorkingPath = coreinit::internal::translatePath(path);
+      return FSStatus::OK;
+   });
    return FSStatus::OK;
 }
 
+FSStatus
+FSChangeDir(FSClient *client,
+            FSCmdBlock *block,
+            const char *path,
+            uint32_t flags)
+{
+   auto asyncData = internal::prepareSyncOp(client, block);
+   FSChangeDirAsync(client, block, path, flags, asyncData);
+   return internal::resolveSyncOp(client, block);
+}
 
 namespace internal
 {

@@ -62,6 +62,7 @@ ENUM_BEG(OSMemoryType, uint32_t)
 ENUM_END(OSMemoryType)
 
 ENUM_BEG(OSMessageFlags, uint32_t)
+   ENUM_VALUE(None,                 0)
    ENUM_VALUE(Blocking,             1 << 0)
    ENUM_VALUE(HighPriority,         1 << 1)
 ENUM_END(OSMessageFlags)

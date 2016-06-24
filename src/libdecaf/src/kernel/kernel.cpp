@@ -11,6 +11,7 @@
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_alarm.h"
 #include "modules/coreinit/coreinit_core.h"
+#include "modules/coreinit/coreinit_fs.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
@@ -203,6 +204,10 @@ cpuInterruptHandler(uint32_t interrupt_flags)
 
    if (interrupt_flags & cpu::GPU_FLIP_INTERRUPT) {
       gx2::internal::handleGpuFlipInterrupt();
+   }
+
+   if (interrupt_flags & cpu::FS_DONE_INTERRUPT) {
+      coreinit::internal::handleFsDoneInterrupt();
    }
 
    coreinit::internal::enableScheduler();

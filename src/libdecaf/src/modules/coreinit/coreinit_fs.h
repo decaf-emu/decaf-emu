@@ -5,6 +5,7 @@
 #include "common/be_val.h"
 #include "common/structsize.h"
 #include "ppcutils/wfunc_ptr.h"
+#include <functional>
 
 namespace coreinit
 {
@@ -93,10 +94,45 @@ FSUnmountAsync
 #pragma pack(push, 1)
 
 class FSClient;
+struct FSCmdBlock;
+
+struct FSAsyncData
+{
+   be_val<uint32_t> callback;
+   be_val<uint32_t> param;
+   be_ptr<OSMessageQueue> queue;
+};
+CHECK_OFFSET(FSAsyncData, 0x00, callback);
+CHECK_OFFSET(FSAsyncData, 0x04, param);
+CHECK_OFFSET(FSAsyncData, 0x08, queue);
+CHECK_SIZE(FSAsyncData, 0xC);
+
+struct FSAsyncResult
+{
+   FSAsyncData userParams;
+   OSMessage ioMsg;
+   be_ptr<FSClient> client;
+   be_ptr<FSCmdBlock> block;
+   FSStatus status;
+};
+CHECK_OFFSET(FSAsyncResult, 0x00, userParams);
+CHECK_OFFSET(FSAsyncResult, 0x0c, ioMsg);
+CHECK_OFFSET(FSAsyncResult, 0x1c, client);
+CHECK_OFFSET(FSAsyncResult, 0x20, block);
+CHECK_OFFSET(FSAsyncResult, 0x24, status);
+CHECK_SIZE(FSAsyncResult, 0x28);
 
 struct FSCmdBlock
 {
-   UNKNOWN(0xa80);
+   // HACK: We store our own stuff into PPC memory...  This is
+   //  especially bad as std::function is not really meant to be
+   //  randomly memset...
+   uint32_t priority;
+   FSAsyncResult result;
+   std::function<FSStatus()> func;
+   OSMessageQueue syncQueue;
+   OSMessage syncQueueMsgs[1];
+   UNKNOWN(0xa08 - sizeof(std::function<FSStatus()>));
 };
 CHECK_SIZE(FSCmdBlock, 0xa80);
 
@@ -122,17 +158,6 @@ struct FSStateChangeInfo
 };
 CHECK_SIZE(FSStateChangeInfo, 0xC);
 
-struct FSAsyncData
-{
-   be_val<uint32_t> callback;
-   be_val<uint32_t> param;
-   be_ptr<OSMessageQueue> queue;
-};
-CHECK_OFFSET(FSAsyncData, 0x00, callback);
-CHECK_OFFSET(FSAsyncData, 0x04, param);
-CHECK_OFFSET(FSAsyncData, 0x08, queue);
-CHECK_SIZE(FSAsyncData, 0xC);
-
 struct FSDirectoryEntry
 {
    FSStat info;
@@ -140,21 +165,6 @@ struct FSDirectoryEntry
 };
 CHECK_OFFSET(FSDirectoryEntry, 0x64, name);
 CHECK_SIZE(FSDirectoryEntry, 0x164);
-
-struct FSAsyncResult
-{
-   FSAsyncData userParams;
-   OSMessage ioMsg;
-   be_ptr<FSClient> client;
-   be_ptr<FSCmdBlock> block;
-   FSStatus status;
-};
-CHECK_OFFSET(FSAsyncResult, 0x00, userParams);
-CHECK_OFFSET(FSAsyncResult, 0x0c, ioMsg);
-CHECK_OFFSET(FSAsyncResult, 0x1c, client);
-CHECK_OFFSET(FSAsyncResult, 0x20, block);
-CHECK_OFFSET(FSAsyncResult, 0x24, status);
-CHECK_SIZE(FSAsyncResult, 0x28);
 
 using FSAsyncCallback = wfunc_ptr<void, FSClient *, FSCmdBlock *, FSStatus, uint32_t>;
 
@@ -174,5 +184,34 @@ FSSetCmdPriority(FSCmdBlock *block,
                  FSPriority priority);
 
 /** @} */
+
+namespace internal
+{
+
+void
+startFsThread();
+
+void
+shutdownFsThread();
+
+void
+handleFsDoneInterrupt();
+
+FSAsyncData *
+prepareSyncOp(FSClient *client, FSCmdBlock *block);
+
+FSStatus
+resolveSyncOp(FSClient *client, FSCmdBlock *block);
+
+void
+queueFsWork(FSClient *client, FSCmdBlock *block, FSAsyncData *asyncData, std::function<FSStatus()> func);
+
+bool
+cancelFsWork(FSCmdBlock *cmd);
+
+void
+cancelAllFsWork();
+
+} // namespace internal
 
 } // namespace coreinit
