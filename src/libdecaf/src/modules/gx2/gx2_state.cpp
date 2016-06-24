@@ -87,7 +87,7 @@ GX2Flush()
 namespace internal
 {
 
-bool isInited()
+bool isInitialised()
 {
    return gMainCoreId != 0xFF;
 }

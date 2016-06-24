@@ -8,7 +8,7 @@ namespace gx2
 void
 GX2Invalidate(GX2InvalidateMode mode, void *buffer, uint32_t size)
 {
-   if (!internal::isInited()) {
+   if (!internal::isInitialised()) {
       return;
    }
 
