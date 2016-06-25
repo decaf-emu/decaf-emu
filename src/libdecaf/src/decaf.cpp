@@ -137,6 +137,15 @@ void
 start()
 {
    cpu::start();
+
+   volatile int zero = 0;
+   if (zero) {
+      tracePrint(nullptr, 0, 0);
+      traceReg(nullptr, 0, 0);
+      traceRegStart(nullptr, 0, 0);
+      traceRegNext(0);
+      traceRegContinue();
+   }
 }
 
 int
