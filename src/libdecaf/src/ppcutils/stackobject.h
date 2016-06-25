@@ -22,8 +22,9 @@ public:
    ~StackObject()
    {
       auto core = cpu::this_core::state();
-      if (core->gpr[1] != mem::untranslate(mPtr)) {
-         gLog->critical("StackObject restore did not return stack to the expected position");
+      auto oldStackPtr = mem::untranslate(mPtr);
+      if (core->gpr[1] != oldStackPtr) {
+         gLog->critical("StackObject restore did not return stack to the expected position {:08x} != {:08x}", core->gpr[1], oldStackPtr);
       }
       core->gpr[1] += AlignedSize;
    }
