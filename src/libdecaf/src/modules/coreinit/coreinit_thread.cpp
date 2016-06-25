@@ -668,8 +668,7 @@ BOOL
 OSSetThreadRunQuantum(OSThread *thread,
                       uint32_t quantum)
 {
-   // TODO: Implement OSSetThreadRunQuantum
-   assert(false);
+   throw std::logic_error("Run quantums are not supported");
    return FALSE;
 }
 
