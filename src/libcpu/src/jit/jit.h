@@ -10,7 +10,7 @@ namespace jit
 void initialise();
 
 void clearCache();
-void resume(Core *core);
+void resume();
 
 bool hasInstruction(espresso::InstructionID instrId);
 

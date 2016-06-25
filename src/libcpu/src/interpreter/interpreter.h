@@ -11,10 +11,7 @@ void
 initialise();
 
 void
-step_one(Core *core);
-
-void
-resume(Core *core);
+resume();
 
 } // namespace interpreter
 

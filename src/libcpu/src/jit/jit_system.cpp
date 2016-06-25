@@ -131,6 +131,15 @@ mtspr(PPCEmuAssembler& a, Instruction instr)
    return true;
 }
 
+static Core *
+kc_stub(cpu::KernelCallFunction func, void *userData)
+{
+   auto core = cpu::this_core::state();
+   func(core, userData);
+   // We grab new core since it may have changed while executing!
+   return cpu::this_core::state();
+}
+
 // Kernel call
 static bool
 kc(PPCEmuAssembler& a, Instruction instr)
@@ -144,9 +153,10 @@ kc(PPCEmuAssembler& a, Instruction instr)
       return false;
    }
 
-   a.mov(a.zcx, a.state);
+   a.mov(a.zcx, asmjit::Ptr(kc->func));
    a.mov(a.zdx, asmjit::Ptr(kc->user_data));
-   a.call(asmjit::Ptr(kc->func));
+   a.call(asmjit::Ptr(&kc_stub));
+   a.mov(a.state, a.zax);
    return true;
 }
 

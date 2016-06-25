@@ -50,6 +50,8 @@ void initStubs()
    a.jmp(asmjit::x86::r8d);
 
    a.bind(extroLabel);
+   a.mov(a.ppcnia, a.eax);
+   a.mov(a.zax, a.state);
    a.add(a.zsp, 0x38);
    a.pop(asmjit::x86::r12);
    a.pop(a.zsi);
@@ -280,29 +282,34 @@ JitCode get(uint32_t addr)
    return block.entry;
 }
 
-uint32_t execute(Core *core, JitCode block)
+Core * execute(Core *core, JitCode block)
 {
    return gCallFn(core, reinterpret_cast<uint32_t*>(&core->interrupt), block);
 }
 
-void resume(Core *core)
+void resume()
 {
    // Before we resume, we need to update our states!
    this_core::updateRoundingMode();
    std::feclearexcept(FE_ALL_EXCEPT);
 
+   // Grab the core as we currently know it
+   auto core = this_core::state();
+
+   // Just to help when debugging
+   core->cia = 0xFFFFFFFD;
+
+   // Loop around executing blocks of JIT'd code
    while (core->nia != cpu::CALLBACK_ADDR) {
       JitCode jitFn = get(core->nia);
       if (!jitFn) {
          throw std::runtime_error("failed to generate JIT block to execute");
       }
 
-      auto newNia = execute(core, jitFn);
-      core->cia = 0;
-      core->nia = newNia;
+      core = execute(core, jitFn);
 
       if (gBranchTraceHandler) {
-         gBranchTraceHandler(newNia);
+         gBranchTraceHandler(core->nia);
       }
    }
 }

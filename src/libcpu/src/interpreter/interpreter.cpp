@@ -1,3 +1,4 @@
+#include "common/emuassert.h"
 #include "common/log.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
@@ -16,7 +17,8 @@ namespace interpreter
 static std::vector<instrfptr_t>
 sInstructionMap;
 
-void initialise()
+void
+initialise()
 {
    sInstructionMap.resize(static_cast<size_t>(espresso::InstructionID::InstructionCount), nullptr);
 
@@ -30,7 +32,8 @@ void initialise()
    registerSystemInstructions();
 }
 
-instrfptr_t getInstructionHandler(espresso::InstructionID id)
+instrfptr_t
+getInstructionHandler(espresso::InstructionID id)
 {
    auto instrId = static_cast<size_t>(id);
 
@@ -41,30 +44,39 @@ instrfptr_t getInstructionHandler(espresso::InstructionID id)
    return sInstructionMap[instrId];
 }
 
-void registerInstruction(espresso::InstructionID id, instrfptr_t fptr)
+void
+registerInstruction(espresso::InstructionID id, instrfptr_t fptr)
 {
    sInstructionMap[static_cast<size_t>(id)] = fptr;
 }
 
-bool hasInstruction(espresso::InstructionID id)
+bool
+hasInstruction(espresso::InstructionID id)
 {
    return getInstructionHandler(id) != nullptr;
 }
 
-void step_one(Core *core)
+Core *
+step_one(Core *core)
 {
    this_core::checkInterrupts();
 
-   core->cia = core->nia;
-   core->nia = core->cia + 4;
+   // This is volatile because otherwise we appear to encounter
+   //  some kind of compiler optimization error, where the value
+   //  in cia is not correctly persisted.
+   uint32_t cia = core->nia;
+   core->nia = cia + 4;
 
-   auto instr = mem::read<espresso::Instruction>(core->cia);
+   // For debugging purposes.
+   core->cia = cia;
+
+   auto instr = mem::read<espresso::Instruction>(cia);
    auto data = espresso::decodeInstruction(instr);
 
    if (!data) {
-      gLog->error("Could not decode instruction at {:08x} = {:08x}", core->cia, instr.value);
+      gLog->error("Could not decode instruction at {:08x} = {:08x}", cia, instr.value);
    }
-   assert(data);
+   emuassert(data);
 
    auto trace = traceInstructionStart(instr, data, core);
    auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
@@ -72,20 +84,32 @@ void step_one(Core *core)
    if (!fptr) {
       gLog->error("Unimplemented interpreter instruction {}", data->name);
    }
-   assert(fptr);
+   emuassert(fptr);
 
    fptr(core, instr);
+
+   if (data->id == InstructionID::kc) {
+      // If this is a KC, there is the potential that we are running on a
+      //  different core now.  Lets make sure that we are using the right one.
+      core = this_core::state();
+   }
+
+   emuassert(core->cia == cia);
    traceInstructionEnd(trace, instr, data, core);
+
+   return core;
 }
 
-void resume(Core *core)
+void
+resume()
 {
    // Before we resume, we need to update our states!
    this_core::updateRoundingMode();
    std::feclearexcept(FE_ALL_EXCEPT);
 
+   auto core = cpu::this_core::state();
    while (core->nia != cpu::CALLBACK_ADDR) {
-      step_one(core);
+      core = step_one(core);
    }
 }
 

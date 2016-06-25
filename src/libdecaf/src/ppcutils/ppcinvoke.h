@@ -5,6 +5,7 @@
 #include "ppcinvokelog.h"
 #include "common/log.h"
 #include "common/type_list.h"
+#include "libcpu/cpu.h"
 #include "libcpu/trace.h"
 
 namespace ppctypes
@@ -112,6 +113,7 @@ invoke2(LogFunc logFn, _argumentsState& state, FnReturnType func(FnArgs...), typ
    }
 
    auto result = func(args...);
+   state.thread = cpu::this_core::state();
    setResult<FnReturnType>(state.thread, result);
 }
 
@@ -183,6 +185,7 @@ invokeMemberFn2(LogFunc logFn, _argumentsState& state, FnReturnType (ObjectType:
 
    auto object = reinterpret_cast<ObjectType *>(mem::translate(state.thread->gpr[3]));
    auto result = (object->*func)(args...);
+   state.thread = cpu::this_core::state();
    setResult<FnReturnType>(state.thread, result);
 }
 

@@ -190,14 +190,14 @@ resume()
    // TODO: Make JIT account for breakpoints by inserting breakpoint checks
    // in the appropriate places in the instruction stream.
    if (hasBreakpoints()) {
-      interpreter::resume(tCurrentCore);
+      interpreter::resume();
    }
 
    // Use appropriate jit mode
    if (gJitMode == jit_mode::enabled) {
-      jit::resume(tCurrentCore);
+      jit::resume();
    } else {
-      interpreter::resume(tCurrentCore);
+      interpreter::resume();
    }
 }
 

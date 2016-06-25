@@ -70,6 +70,7 @@ public:
       ppclr = PPCTSReg(lr);
       ppcctr = PPCTSReg(ctr);
       ppcfpscr = PPCTSReg(fpscr);
+      ppcnia = PPCTSReg(nia);
 
       for (auto i = 0; i < 8; ++i) {
          ppcgqr[i] = PPCTSReg(gqr[i].value);
@@ -115,6 +116,7 @@ public:
    asmjit::X86Mem ppcctr;
    asmjit::X86Mem ppcfpscr;
    asmjit::X86Mem ppcgqr[8];
+   asmjit::X86Mem ppcnia;
 
    asmjit::X86Mem ppcreserve;
    asmjit::X86Mem ppcreserveAddress;
@@ -128,7 +130,7 @@ T asmjit_cast(Z* base, size_t offset = 0)
 }
 
 using JitCode = void *;
-using JitCall = uint32_t(*)(Core*, uint32_t*, JitCode);
+using JitCall = Core*(*)(Core*, uint32_t*, JitCode);
 using JitFinale = JitCall;
 
 using JumpLabelMap = std::map<uint32_t, asmjit::Label>;
