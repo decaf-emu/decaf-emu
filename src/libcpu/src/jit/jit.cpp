@@ -145,6 +145,11 @@ bool gen(JitBlock& block)
    auto codeStart = a.newLabel();
    a.bind(codeStart);
 
+   // Visual studio disassembler sucks.  We need to write some NOPS!
+   for (auto i = 0; i < 8; ++i) {
+      a.nop();
+   }
+
    auto lclCia = block.start;
    while (lclCia < block.end) {
       if (JIT_DEBUG) {
