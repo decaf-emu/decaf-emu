@@ -385,6 +385,7 @@ OSGetThreadPriority(OSThread *thread)
 uint32_t
 OSGetThreadSpecific(uint32_t id)
 {
+   emuassert(id >= 0 && id < 0x10);
    return OSGetCurrentThread()->specific[id];
 }
 
