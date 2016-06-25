@@ -219,6 +219,10 @@ OSCreateThread(OSThread *thread,
                int32_t priority,
                OSThreadAttributes attributes)
 {
+   internal::lockScheduler();
+   uint32_t newThreadId = sThreadId++;
+   internal::unlockScheduler();
+
    // If no affinity is defined, we need to copy the affinity from the calling thread
    if ((attributes & OSThreadAttributes::AffinityAny) == 0) {
       auto curAttr = internal::getCurrentThread()->attr;
@@ -234,7 +238,7 @@ OSCreateThread(OSThread *thread,
    thread->basePriority = priority;
    thread->priority = thread->basePriority;
    thread->attr = attributes;
-   thread->id = sThreadId++;
+   thread->id = newThreadId;
 
    // Write magic stack ending!
    *thread->stackEnd = 0xDEADBABE;
