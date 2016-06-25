@@ -36,6 +36,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\common\src\platform_posix_stacktrace.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\common\src\platform_posix_thread.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
@@ -50,6 +55,7 @@
     <ClCompile Include="..\src\common\src\platform_win_exception.cpp" />
     <ClCompile Include="..\src\common\src\platform_win_fiber.cpp" />
     <ClCompile Include="..\src\common\src\platform_win_memory.cpp" />
+    <ClCompile Include="..\src\common\src\platform_win_stacktrace.cpp" />
     <ClCompile Include="..\src\common\src\platform_win_thread.cpp" />
     <ClCompile Include="..\src\common\src\platform_win_time.cpp" />
   </ItemGroup>
@@ -79,6 +85,7 @@
     <ClInclude Include="..\src\common\platform_exception.h" />
     <ClInclude Include="..\src\common\platform_fiber.h" />
     <ClInclude Include="..\src\common\platform_memory.h" />
+    <ClInclude Include="..\src\common\platform_stacktrace.h" />
     <ClInclude Include="..\src\common\platform_thread.h" />
     <ClInclude Include="..\src\common\platform_time.h" />
     <ClInclude Include="..\src\common\pow.h" />

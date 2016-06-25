@@ -60,6 +60,12 @@
     <ClCompile Include="..\src\common\src\murmur3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\common\src\platform_win_stacktrace.cpp">
+      <Filter>Source Files\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\common\src\platform_posix_stacktrace.cpp">
+      <Filter>Source Files\posix</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\common\align.h">
@@ -159,6 +165,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\common\murmur3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\platform_stacktrace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
