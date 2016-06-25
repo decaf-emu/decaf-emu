@@ -16,115 +16,27 @@
 namespace kernel
 {
 
-static coreinit::OSThread *
-tDeadThread[3];
+static coreinit::OSContext *
+sCurrentContext[3];
+
+static coreinit::OSContext *
+sDeadContext[3];
 
 static platform::Fiber *
-tIdleFiber[3];
+sIdleFiber[3];
+
+static coreinit::OSContext
+sIdleContext[3];
 
 struct Fiber
 {
    platform::Fiber *handle = nullptr;
-   coreinit::OSThread *thread = nullptr;
+   coreinit::OSContext *context = nullptr;
    cpu::Tracer *tracer = nullptr;
 };
 
 static void
-checkDeadThread();
-
-static void
-fiberEntryPoint(void*)
-{
-   checkDeadThread();
-
-   // Our scheduler will have been locked by whoever
-   // scheduled this fiber.
-   coreinit::internal::unlockScheduler();
-
-   auto core = cpu::this_core::state();
-   // TODO: Do not use coreinit from the kernel...
-   auto thread = coreinit::internal::getCurrentThread();
-
-   // We grab these before invoking the exception handler setup
-   //  since it is plausible that it might damage the GPR's.
-   auto entryPoint = coreinit::OSThreadEntryPointFn(core->lr);
-   auto argc = core->gpr[3];
-   auto argv = mem::translate<void>(core->gpr[4]);
-
-   // Entrypoint is actually supposed to be adjusted to the exception
-   //  setup when you call OSCreateThread rather than having it called
-   //  always but it doesn't hurt to have this set up on default threads.
-   coreinit::internal::ghsSetupExceptions();
-
-   coreinit::OSExitThread(entryPoint(argc, argv));
-}
-
-static Fiber *
-allocateFiber(coreinit::OSThread *thread)
-{
-   auto fiber = new Fiber();
-   fiber->tracer = cpu::allocTracer(1024);
-   fiber->handle = platform::createFiber(fiberEntryPoint, nullptr);
-   fiber->thread = thread;
-   return fiber;
-}
-
-void
-reallocateContextFiber(coreinit::OSContext *context, void(*fn)(void*))
-{
-   auto oldFiber = context->fiber->handle;
-   auto newFiber = platform::createFiber(fn, nullptr);
-   context->fiber->handle = newFiber;
-   platform::swapToFiber(oldFiber, newFiber);
-}
-
-static void
-freeFiber(Fiber *fiber)
-{
-   cpu::freeTracer(fiber->tracer);
-   platform::destroyFiber(fiber->handle);
-}
-
-// This must be called under the same scheduler lock
-// that added the thread to tDeadThread, we simply use
-// the thread_local to pass it between fibers.
-static void
-checkDeadThread()
-{
-   auto coreId = cpu::this_core::id();
-   auto deadThread = tDeadThread[coreId];
-
-   if (deadThread) {
-      tDeadThread[coreId] = nullptr;
-
-      // Something is broken if we have no fiber
-      emuassert(deadThread->context.fiber);
-
-      // Destroy the fiber
-      freeFiber(deadThread->context.fiber);
-   }
-}
-
-void
-initCoreFiber()
-{
-   // Grab the currently running core state.
-   auto core_id = cpu::this_core::id();
-
-   // Grab the system fiber
-   auto fiber = platform::getThreadFiber();
-
-   // Save some needed information about the fiber run states.
-   tIdleFiber[core_id] = fiber;
-   tDeadThread[core_id] = nullptr;
-}
-
-void
-exitThreadNoLock()
-{
-   // Mark this fiber to be cleaned up
-   tDeadThread[cpu::this_core::id()] = coreinit::internal::getCurrentThread();
-}
+checkDeadContext();
 
 void
 saveContext(coreinit::OSContext *context)
@@ -185,58 +97,218 @@ restoreContext(coreinit::OSContext *context)
    state->reserveData = 0;
 }
 
-void
-switchThread(coreinit::OSThread *previous, coreinit::OSThread *next)
+static void
+sleepCurrentContext()
 {
-   // Save our CIA for when we come back.
+   // Grab the current core and context information
    auto core = cpu::this_core::state();
-   auto prevFiberHandle = tIdleFiber[core->id];
+   auto context = sCurrentContext[core->id];
 
-   if (previous == next) {
+   if (context) {
+      // Save NIA/CIA to the stack
+      core->gpr[1] -= 8 + 8 + 8;
+      mem::write<uint32_t>(core->gpr[1] + 0, 0xDFDFDFDF);
+      mem::write<uint32_t>(core->gpr[1] + 4, 0xDFDFDFDF);
+      mem::write<uint32_t>(core->gpr[1] + 8, core->nia);
+      mem::write<uint32_t>(core->gpr[1] + 12, core->cia);
+      mem::write<uint32_t>(core->gpr[1] + 16, 0xDFDFDFDF);
+      mem::write<uint32_t>(core->gpr[1] + 20, 0xDFDFDFDF);
+
+      // Save all our registers to the context
+      saveContext(context);
+   } else {
+      // We save the idle context's register information as well
+      //  mainly so that it doesn't complain about core state loss.
+      saveContext(&sIdleContext[core->id]);
+   }
+
+   // Some things to help us when debugging...
+   core->nia = 0xFFFFFFFF;
+   core->cia = 0xFFFFFFFF;
+   cpu::this_core::setTracer(nullptr);
+}
+
+static void
+wakeCurrentContext()
+{
+   // Clean up any dead fibers
+   checkDeadContext();
+
+   // Grab the current core and context information
+   auto core = cpu::this_core::state();
+   auto context = sCurrentContext[core->id];
+
+   // If we switched into a new context, we need to restore it back
+   //  to how it was configured before we suspended it.
+   if (context) {
+      // Restore our context from the OSContext
+      restoreContext(context);
+
+      // Pull NIA/CIA out of the stack and confirm no corruption
+      emuassert(mem::read<uint32_t>(core->gpr[1] + 0) == 0xDFDFDFDF);
+      emuassert(mem::read<uint32_t>(core->gpr[1] + 4) == 0xDFDFDFDF);
+      core->nia = mem::read<uint32_t>(core->gpr[1] + 8);
+      core->cia = mem::read<uint32_t>(core->gpr[1] + 12);
+      emuassert(mem::read<uint32_t>(core->gpr[1] + 16) == 0xDFDFDFDF);
+      emuassert(mem::read<uint32_t>(core->gpr[1] + 20) == 0xDFDFDFDF);
+      core->gpr[1] += 8 + 8 + 8;
+
+      // Some things to help us when debugging...
+      cpu::this_core::setTracer(context->fiber->tracer);
+   } else {
+      // Restore the idle context information stored earlier
+      restoreContext(&sIdleContext[core->id]);
+
+      // These are the 'defacto' idle-thread values
+      core->nia = 0xFFFFFFFF;
+      core->cia = 0xFFFFFFFF;
+   }
+}
+
+static void
+fiberEntryPoint(void*)
+{
+   // Load up the context set up by the InitialiseThreadEntry method.
+   wakeCurrentContext();
+
+   // The following code must follow the conventions set by reschedule/
+   //  InitialiseThreadState as this method is technically emulating
+   //  a PPC method (__crt_init).  It is worth mentioning that this
+   //  fiberEntryPoint method essentially assumes that we are always
+   //  called only when a thread is first started.  If this assumption
+   //  ever needs to be broken, we will need to update InitThreadState
+   //   so it calls an internal PPC function which does the behaviour.
+
+   // We grab these before invoking the exception handler setup
+   //  since it is plausible that it might damage the GPR's.
+   auto core = cpu::this_core::state();
+   auto entryPoint = coreinit::OSThreadEntryPointFn(core->nia);
+   auto argc = core->gpr[3];
+   auto argv = mem::translate<void>(core->gpr[4]);
+
+   // Entrypoint is actually supposed to be adjusted to the __crt_init
+   //  when you call OSCreateThread rather than having it called always
+   //  but it doesn't hurt to have this set up on default threads.
+   coreinit::internal::ghsSetupExceptions();
+
+   coreinit::OSExitThread(entryPoint(argc, argv));
+}
+
+static Fiber *
+allocateFiber(coreinit::OSContext *context)
+{
+   auto fiber = new Fiber();
+   fiber->tracer = cpu::allocTracer(1024 * 10 * 10);
+   fiber->handle = platform::createFiber(fiberEntryPoint, nullptr);
+   fiber->context = context;
+   return fiber;
+}
+
+void
+reallocateContextFiber(coreinit::OSContext *context, void(*fn)(void*))
+{
+   auto oldFiber = context->fiber->handle;
+   auto newFiber = platform::createFiber(fn, nullptr);
+   context->fiber->handle = newFiber;
+   platform::swapToFiber(oldFiber, newFiber);
+}
+
+static void
+freeFiber(Fiber *fiber)
+{
+   cpu::freeTracer(fiber->tracer);
+   platform::destroyFiber(fiber->handle);
+}
+
+// This must be called under the same scheduler lock
+// that added the thread to tDeadThread, we simply use
+// the thread_local to pass it between fibers.
+static void
+checkDeadContext()
+{
+   auto coreId = cpu::this_core::id();
+   auto deadContext = sDeadContext[coreId];
+
+   if (deadContext) {
+      sDeadContext[coreId] = nullptr;
+
+      // Something broken if we are accidentally cleaning
+      //  up currently active context...
+      emuassert(deadContext != sCurrentContext[coreId]);
+
+      // Something is broken if we have no fiber
+      emuassert(deadContext->fiber);
+
+      // Destroy the fiber
+      freeFiber(deadContext->fiber);
+      deadContext->fiber = nullptr;
+   }
+}
+
+void
+initCoreFiber()
+{
+   // Grab the currently running core state.
+   auto coreId = cpu::this_core::id();
+
+   // Grab the system fiber
+   auto fiber = platform::getThreadFiber();
+
+   // Save some needed information about the fiber run states.
+   sIdleFiber[coreId] = fiber;
+   sCurrentContext[coreId] = nullptr;
+   sDeadContext[coreId] = nullptr;
+}
+
+void
+exitThreadNoLock()
+{
+   uint32_t coreId = cpu::this_core::id();
+
+   // Make sure exitThread is not called multiple times
+   emuassert(!sDeadContext[coreId]);
+
+   // Mark this fiber to be cleaned up
+   sDeadContext[coreId] = sCurrentContext[coreId];
+}
+
+static platform::Fiber *
+getContextFiber(coreinit::OSContext *context)
+{
+   auto coreId = cpu::this_core::id();
+
+   if (!context) {
+      return sIdleFiber[coreId];
+   }
+
+   if (!context->fiber) {
+      context->fiber = allocateFiber(context);
+   }
+
+   return context->fiber->handle;
+}
+
+void
+setContext(coreinit::OSContext *next)
+{
+   // Don't do anything if we are switching to the same context.
+   auto coreId = cpu::this_core::id();
+   auto current = sCurrentContext[coreId];
+   if (current == next) {
       return;
    }
 
-   if (previous) {
-      core->gpr[1] -= 8;
-      mem::write<uint32_t>(core->gpr[1] + 0, core->cia);
-      mem::write<uint32_t>(core->gpr[1] + 4, core->nia);
+   // Perform savage operations before the switch
+   sleepCurrentContext();
 
-      saveContext(&previous->context);
-      prevFiberHandle = previous->context.fiber->handle;
-   }
+   // Switch to the new fiber, note that coreId is no longer valid
+   // after this point, as this context may have been switched to
+   // a new core.
+   sCurrentContext[coreId] = next;
+   platform::swapToFiber(getContextFiber(current), getContextFiber(next));
 
-   // We now effectively have nothing on the core
-   core->nia = 0xFFFFFFFF;
-   core->cia = 0xFFFFFFFF;
-
-   // Switch to the new thread
-   if (next) {
-      if (!next->context.fiber) {
-         next->context.fiber = allocateFiber(next);
-      }
-
-      restoreContext(&next->context);
-
-      auto fiber = next->context.fiber;
-      cpu::this_core::setTracer(fiber->tracer);
-      platform::swapToFiber(prevFiberHandle, fiber->handle);
-   } else {
-      // If we switch to the idle thread, set ourselves to
-      // a known bad state to help with debugging...
-      coreinit::OSContext blankContext = { 0 };
-      restoreContext(&blankContext);
-
-      cpu::this_core::setTracer(nullptr);
-      platform::swapToFiber(prevFiberHandle, tIdleFiber[core->id]);
-   }
-
-   checkDeadThread();
-
-   if (previous) {
-      core->cia = mem::read<uint32_t>(core->gpr[1] + 0);
-      core->nia = mem::read<uint32_t>(core->gpr[1] + 4);
-      core->gpr[1] += 8;
-   }
+   // Perform restoral operations after the switch
+   wakeCurrentContext();
 }
 
 } // namespace kernel

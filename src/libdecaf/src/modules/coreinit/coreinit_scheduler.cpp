@@ -321,7 +321,10 @@ void checkRunningThreadNoLock(bool yielding)
 
    // Switch thread
    sCurrentThread[coreId] = next;
-   kernel::switchThread(thread, next);
+
+   internal::unlockScheduler();
+   kernel::setContext(&next->context);
+   internal::lockScheduler();
 
    if (thread) {
       checkActiveThreadsNoLock();

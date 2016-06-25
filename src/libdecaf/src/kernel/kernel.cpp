@@ -237,6 +237,13 @@ cpuEntrypoint()
       cpu::interrupt(1, cpu::GENERIC_INTERRUPT);
    }
 
+   // Set up the default expected state for the nia/cia of idle threads.
+   //  This must be kept in sync with reschedule which sets them to this
+   //  for debugging purposes.
+   auto core = cpu::this_core::state();
+   core->nia = 0xFFFFFFFF;
+   core->cia = 0xFFFFFFFF;
+
    // Run the scheduler loop, this is what will
    //   execute when there is nothing else to do.
    while (gRunning) {
@@ -344,7 +351,7 @@ exitProcess(int code)
    sExitCode = code;
    gRunning = false;
    cpu::halt();
-   switchThread(coreinit::OSGetCurrentThread(), nullptr);
+   setContext(nullptr);
 }
 
 int

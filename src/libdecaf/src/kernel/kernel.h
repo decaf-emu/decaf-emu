@@ -6,7 +6,7 @@ class TeenyHeap;
 
 namespace coreinit
 {
-struct OSThread;
+struct OSContext;
 }
 
 namespace kernel
@@ -27,7 +27,7 @@ TeenyHeap *
 getSystemHeap();
 
 void
-switchThread(coreinit::OSThread *previous, coreinit::OSThread *next);
+setContext(coreinit::OSContext *next);
 
 void
 exitProcess(int code);
