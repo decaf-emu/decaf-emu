@@ -257,6 +257,7 @@ Module::RegisterFunctions()
    // Surface
    RegisterKernelFunction(GX2CalcSurfaceSizeAndAlignment);
    RegisterKernelFunction(GX2CalcDepthBufferHiZInfo);
+   RegisterKernelFunction(GX2CalcColorBufferAuxInfo);
    RegisterKernelFunction(GX2SetColorBuffer);
    RegisterKernelFunction(GX2SetDepthBuffer);
    RegisterKernelFunction(GX2InitColorBufferRegs);
