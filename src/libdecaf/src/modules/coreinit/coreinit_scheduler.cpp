@@ -207,16 +207,52 @@ peekNextThreadNoLock(uint32_t core)
    return thread;
 }
 
+static void
+validateThread(OSThread *thread)
+{
+   emuassert(*thread->stackEnd == 0xDEADBABE);
+   emuassert((thread->attr & OSThreadAttributes::AffinityAny) != 0);
+}
+
+int32_t
+checkActiveThreadsNoLock()
+{
+   auto thread = OSGetCurrentThread();
+
+   // Counter for the number of threads, 1 for the current thread
+   int32_t threadCount = 1;
+
+   validateThread(thread);
+
+   // Count threads before this one
+   for (OSThread *threadIter = thread->activeLink.next; threadIter != nullptr; threadIter = threadIter->activeLink.next) {
+      validateThread(threadIter);
+      threadCount++;
+   }
+   // Count threads after this one
+   for (OSThread *threadIter = thread->activeLink.prev; threadIter != nullptr; threadIter = threadIter->activeLink.prev) {
+      validateThread(threadIter);
+      threadCount++;
+   }
+
+   return threadCount;
+}
+
 void checkRunningThreadNoLock(bool yielding)
 {
    emuassert(isSchedulerLocked());
    auto coreId = cpu::this_core::id();
+   auto thread = sCurrentThread[coreId];
+
+   // Do a check to see if anything has become corrupted...
+   if (thread) {
+      checkActiveThreadsNoLock();
+   }
 
    if (!sSchedulerEnabled[coreId]) {
       return;
    }
 
-   auto thread = sCurrentThread[coreId];
    auto next = peekNextThreadNoLock(coreId);
 
    if (thread
