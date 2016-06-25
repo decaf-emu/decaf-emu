@@ -53,6 +53,17 @@ public:
       queue->tail = nullptr;
    }
 
+   static inline bool
+   contains(QueueType *queue, ItemType *item)
+   {
+      for (auto itemIter = queue->head; itemIter != nullptr; itemIter = link(itemIter).next) {
+         if (itemIter == item) {
+            return true;
+         }
+      }
+      return false;
+   }
+
    static inline void
    append(QueueType *queue, ItemType *item)
    {
