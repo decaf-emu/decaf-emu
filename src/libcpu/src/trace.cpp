@@ -488,6 +488,11 @@ void
 tracePrint(cpu::Core *state, int start, int count)
 {
    auto tracer = state->tracer;
+   if (!tracer) {
+      debugPrint("Tracing is disabled");
+      return;
+   }
+
    auto tracerSize = static_cast<int>(getTracerNumTraces(tracer));
 
    if (count == 0) {
