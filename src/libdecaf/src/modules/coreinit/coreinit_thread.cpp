@@ -209,10 +209,6 @@ OSCreateThread(OSThread *thread,
                int32_t priority,
                OSThreadAttributes attributes)
 {
-   internal::lockScheduler();
-   uint32_t newThreadId = sThreadId++;
-   internal::unlockScheduler();
-
    // If no affinity is defined, we need to copy the affinity from the calling thread
    if ((attributes & OSThreadAttributes::AffinityAny) == 0) {
       auto curAttr = internal::getCurrentThread()->attr;
@@ -228,7 +224,6 @@ OSCreateThread(OSThread *thread,
    thread->basePriority = priority;
    thread->priority = thread->basePriority;
    thread->attr = attributes;
-   thread->id = newThreadId;
 
    // Write magic stack ending!
    *thread->stackEnd = 0xDEADBABE;
@@ -236,7 +231,15 @@ OSCreateThread(OSThread *thread,
    // Setup thread state
    InitialiseThreadState(thread, entry, argc, argv);
 
+   internal::lockScheduler();
+   thread->id = sThreadId++;
    internal::markThreadActiveNoLock(thread);
+   internal::unlockScheduler();
+
+   gLog->debug("Thread Created: ptr {:08x}, id {:x}, basePriority {}, attr {:08x}, stackStart {:08x}, stackEnd {:08x}",
+      mem::untranslate(thread), static_cast<uint16_t>(thread->id),
+      static_cast<int32_t>(thread->basePriority), static_cast<uint32_t>(thread->attr),
+      thread->stackStart.getAddress(), thread->stackEnd.getAddress());
 
    return TRUE;
 }
@@ -481,6 +484,7 @@ OSJoinThread(OSThread *thread,
       *exitValue = thread->exitValue;
    }
 
+   internal::markThreadInactiveNoLock(thread);
    thread->state = OSThreadState::None;
 
    if (thread->deallocator) {

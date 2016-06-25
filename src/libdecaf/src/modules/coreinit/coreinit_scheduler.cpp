@@ -140,12 +140,16 @@ disableScheduler()
 
 void markThreadActiveNoLock(OSThread *thread)
 {
+   emuassert(!ActiveQueue::contains(sActiveThreads, thread));
    ActiveQueue::append(sActiveThreads, thread);
+   checkActiveThreadsNoLock();
 }
 
 void markThreadInactiveNoLock(OSThread *thread)
 {
+   emuassert(ActiveQueue::contains(sActiveThreads, thread));
    ActiveQueue::erase(sActiveThreads, thread);
+   checkActiveThreadsNoLock();
 }
 
 bool isThreadActiveNoLock(OSThread *thread)
@@ -222,20 +226,11 @@ validateThread(OSThread *thread)
 int32_t
 checkActiveThreadsNoLock()
 {
-   auto thread = OSGetCurrentThread();
-
    // Counter for the number of threads, 1 for the current thread
-   int32_t threadCount = 1;
-
-   validateThread(thread);
+   int32_t threadCount = 0;
 
    // Count threads before this one
-   for (OSThread *threadIter = thread->activeLink.next; threadIter != nullptr; threadIter = threadIter->activeLink.next) {
-      validateThread(threadIter);
-      threadCount++;
-   }
-   // Count threads after this one
-   for (OSThread *threadIter = thread->activeLink.prev; threadIter != nullptr; threadIter = threadIter->activeLink.prev) {
+   for (OSThread *threadIter = sActiveThreads->head; threadIter != nullptr; threadIter = threadIter->activeLink.next) {
       validateThread(threadIter);
       threadCount++;
    }
@@ -327,6 +322,10 @@ void checkRunningThreadNoLock(bool yielding)
    // Switch thread
    sCurrentThread[coreId] = next;
    kernel::switchThread(thread, next);
+
+   if (thread) {
+      checkActiveThreadsNoLock();
+   }
 }
 
 void
@@ -595,6 +594,7 @@ void
 Module::initialiseSchedulerFunctions()
 {
    sActiveThreads = coreinit::internal::sysAlloc<OSThreadQueue>();
+   OSInitThreadQueue(sActiveThreads);
 
    for (auto i = 0; i < 3; ++i) {
       sSchedulerEnabled[i] = true;
