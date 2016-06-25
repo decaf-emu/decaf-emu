@@ -50,6 +50,9 @@ markThreadActiveNoLock(OSThread *thread);
 void
 markThreadInactiveNoLock(OSThread *thread);
 
+bool
+isThreadActiveNoLock(OSThread *thread);
+
 void
 setThreadAffinityNoLock(OSThread *thread, uint32_t affinity);
 

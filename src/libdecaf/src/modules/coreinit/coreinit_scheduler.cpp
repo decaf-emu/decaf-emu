@@ -148,6 +148,11 @@ void markThreadInactiveNoLock(OSThread *thread)
    ActiveQueue::erase(sActiveThreads, thread);
 }
 
+bool isThreadActiveNoLock(OSThread *thread)
+{
+   return ActiveQueue::contains(sActiveThreads, thread);
+}
+
 static void
 queueThreadNoLock(OSThread *thread)
 {

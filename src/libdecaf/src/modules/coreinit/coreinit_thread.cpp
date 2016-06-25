@@ -449,18 +449,43 @@ OSJoinThread(OSThread *thread,
 {
    internal::lockScheduler();
 
-   if (thread->attr & OSThreadAttributes::Detached) {
+   if (!internal::isThreadActiveNoLock(thread)) {
+      emuassert(0);
       internal::unlockScheduler();
       return FALSE;
    }
 
+   if (!(thread->attr & OSThreadAttributes::Detached)) {
+      if (thread->state != OSThreadState::Moribund) {
+         if (thread->joinQueue.head) {
+            internal::unlockScheduler();
+            return FALSE;
+         }
+
+         internal::sleepThreadNoLock(&thread->joinQueue);
+         internal::rescheduleSelfNoLock();
+
+         if (!internal::isThreadActiveNoLock(thread)) {
+            internal::unlockScheduler();
+            return FALSE;
+         }
+      }
+   }
+
    if (thread->state != OSThreadState::Moribund) {
-      internal::sleepThreadNoLock(&thread->joinQueue);
-      internal::rescheduleSelfNoLock();
+      internal::unlockScheduler();
+      return FALSE;
    }
 
    if (exitValue) {
       *exitValue = thread->exitValue;
+   }
+
+   thread->state = OSThreadState::None;
+
+   if (thread->deallocator) {
+      // TODO: The thread should be put on some
+      //  kind of queue for deallocation...
    }
 
    internal::unlockScheduler();
