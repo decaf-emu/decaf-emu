@@ -171,28 +171,9 @@ void queueFsWork(FSClient *client, FSCmdBlock *block, FSAsyncData *asyncData, st
    asyncRes.block = block;
 
    block->func = func;
-
-   {
-      auto item = block;
-      item->result.status = item->func();
-
-      auto &ioMsg = item->result.ioMsg;
-      ioMsg.message = &item->result;
-      ioMsg.args[2] = AppIoEventType::FsAsyncCallback;
-
-      auto destQueue = item->result.userParams.queue;
-      if (destQueue) {
-         OSSendMessage(destQueue, &ioMsg, OSMessageFlags::None);
-      } else {
-         internal::sendMessage(&ioMsg);
-      }
-   }
-
-   /*
    std::unique_lock<std::mutex> lock(sFsQueueMutex);
    sFsQueue.push(block);
    sFsQueueCond.notify_all();
-   */
 }
 
 // We do not implement the following as I do not know the expected
