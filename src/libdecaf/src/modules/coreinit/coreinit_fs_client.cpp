@@ -192,10 +192,10 @@ FSSetStateChangeNotification(FSClient *client,
    // TODO: FSSetStateChangeNotification
 }
 
-FSAsyncResult*
+FSAsyncResult *
 FSGetAsyncResult(OSMessage *ioMsg)
 {
-   return static_cast<FSAsyncResult*>(ioMsg->message.get());
+   return static_cast<FSAsyncResult *>(ioMsg->message.get());
 }
 
 namespace internal
@@ -206,15 +206,16 @@ handleAsyncCallback(FSAsyncResult *result)
 {
    auto callback = static_cast<FSAsyncCallback>(result->userParams.callback);
    callback(result->client, result->block, result->status, result->userParams.param);
-
    coreinit::internal::sysFree(result);
 }
 
 void
-doAsyncFileCallback(FSClient *client, FSCmdBlock *block, FSStatus result, FSAsyncData *asyncData)
+doAsyncFileCallback(FSClient *client,
+                    FSCmdBlock *block,
+                    FSStatus result,
+                    FSAsyncData *asyncData)
 {
    emuassert(!asyncData->queue);
-
    FSAsyncResult *asyncRes = coreinit::internal::sysAlloc<FSAsyncResult>();
    asyncRes->userParams = *asyncData;
    asyncRes->status = result;

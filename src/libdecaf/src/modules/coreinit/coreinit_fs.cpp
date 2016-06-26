@@ -61,9 +61,9 @@ namespace internal
 
 struct FSCmdBlockSortFn
 {
-   bool operator()(const FSCmdBlock *a, const FSCmdBlock *b) const
+   bool operator()(const FSCmdBlock *lhs, const FSCmdBlock *rhs) const
    {
-      return a->priority < b->priority;
+      return lhs->priority < rhs->priority;
    }
 };
 
@@ -79,34 +79,36 @@ sFsQueueMutex;
 static std::condition_variable
 sFsQueueCond;
 
-static std::priority_queue<FSCmdBlock*, std::vector<FSCmdBlock*>, FSCmdBlockSortFn>
+static std::priority_queue<FSCmdBlock *, std::vector<FSCmdBlock *>, FSCmdBlockSortFn>
 sFsQueue;
 
-static std::queue<FSCmdBlock*>
+static std::queue<FSCmdBlock *>
 sFsDoneQueue;
 
 void
 handleFsDoneInterrupt()
 {
    std::unique_lock<std::mutex> lock(sFsQueueMutex);
+
    while (!sFsDoneQueue.empty()) {
       auto item = sFsDoneQueue.front();
+      auto queue = item->result.userParams.queue;
+      auto &msg = item->result.ioMsg;
       sFsDoneQueue.pop();
 
-      auto &ioMsg = item->result.ioMsg;
-      ioMsg.message = &item->result;
-      ioMsg.args[2] = AppIoEventType::FsAsyncCallback;
+      msg.message = &item->result;
+      msg.args[2] = AppIoEventType::FsAsyncCallback;
 
-      auto destQueue = item->result.userParams.queue;
-      if (destQueue) {
-         OSSendMessage(destQueue, &ioMsg, OSMessageFlags::None);
+      if (queue) {
+         OSSendMessage(queue, &msg, OSMessageFlags::None);
       } else {
-         internal::sendMessage(&ioMsg);
+         internal::sendMessage(&msg);
       }
    }
 }
 
-void fsThreadEntry()
+void
+fsThreadEntry()
 {
    std::unique_lock<std::mutex> lock(sFsQueueMutex);
 
@@ -120,7 +122,6 @@ void fsThreadEntry()
          item->result.status = item->func();
 
          lock.lock();
-
          sFsDoneQueue.push(item);
          cpu::interrupt(sFsCoreId, cpu::FS_DONE_INTERRUPT);
       }
@@ -129,22 +130,27 @@ void fsThreadEntry()
    }
 }
 
-void startFsThread()
+void
+startFsThread()
 {
    std::unique_lock<std::mutex> lock(sFsQueueMutex);
    sFsThreadRunning.store(true);
    sFsThread = std::thread(std::bind(&fsThreadEntry));
 }
 
-void shutdownFsThread()
+void
+shutdownFsThread()
 {
    if (sFsThreadRunning.exchange(false)) {
       sFsQueueCond.notify_all();
       sFsThread.join();
+      sFsThreadRunning.store(false);
    }
 }
 
-FSAsyncData *prepareSyncOp(FSClient *client, FSCmdBlock *block)
+FSAsyncData *
+prepareSyncOp(FSClient *client,
+              FSCmdBlock *block)
 {
    OSInitMessageQueue(&block->syncQueue, block->syncQueueMsgs, 1);
 
@@ -155,7 +161,9 @@ FSAsyncData *prepareSyncOp(FSClient *client, FSCmdBlock *block)
    return asyncData;
 }
 
-FSStatus resolveSyncOp(FSClient *client, FSCmdBlock *block)
+FSStatus
+resolveSyncOp(FSClient *client,
+              FSCmdBlock *block)
 {
    OSMessage ioMsg;
    OSReceiveMessage(&block->syncQueue, &ioMsg, OSMessageFlags::Blocking);
@@ -163,7 +171,11 @@ FSStatus resolveSyncOp(FSClient *client, FSCmdBlock *block)
    return result->status;
 }
 
-void queueFsWork(FSClient *client, FSCmdBlock *block, FSAsyncData *asyncData, std::function<FSStatus()> func)
+void
+queueFsWork(FSClient *client,
+            FSCmdBlock *block,
+            FSAsyncData *asyncData,
+            std::function<FSStatus()> func)
 {
    auto &asyncRes = block->result;
    asyncRes.userParams = *asyncData;

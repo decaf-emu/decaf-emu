@@ -69,6 +69,7 @@ FSOpenFileAsync(FSClient *client,
       *outHandle = client->addOpenFile(fh);
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 
@@ -102,6 +103,7 @@ FSCloseFileAsync(FSClient *client,
       client->removeOpenFile(handle);
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 
@@ -137,6 +139,7 @@ FSReadFileAsync(FSClient *client,
       auto read = file->read(buffer, size, count);
       return static_cast<FSStatus>(read);
    });
+
    return FSStatus::OK;
 }
 
@@ -177,6 +180,7 @@ FSReadFileWithPosAsync(FSClient *client,
       auto read = file->read(buffer, size, count, position);
       return static_cast<FSStatus>(read);
    });
+
    return FSStatus::OK;
 }
 
@@ -217,6 +221,7 @@ FSWriteFileAsync(FSClient *client,
       auto wrote = file->write(buffer, size, count);
       return static_cast<FSStatus>(wrote);
    });
+
    return FSStatus::OK;
 }
 
@@ -257,6 +262,7 @@ FSWriteFileWithPosAsync(FSClient *client,
       auto wrote = file->write(buffer, size, count, position);
       return static_cast<FSStatus>(wrote);
    });
+
    return FSStatus::OK;
 }
 
@@ -296,6 +302,7 @@ FSIsEofAsync(FSClient *client,
 
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 
@@ -328,6 +335,7 @@ FSGetPosFileAsync(FSClient *client,
       *pos = file->tell();
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 
@@ -361,6 +369,7 @@ FSSetPosFileAsync(FSClient *client,
       file->seek(pos);
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 
@@ -393,6 +402,7 @@ FSTruncateFileAsync(FSClient *client,
       file->truncate();
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 

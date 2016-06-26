@@ -138,21 +138,24 @@ disableScheduler()
    sSchedulerEnabled[coreId] = false;
 }
 
-void markThreadActiveNoLock(OSThread *thread)
+void
+markThreadActiveNoLock(OSThread *thread)
 {
    emuassert(!ActiveQueue::contains(sActiveThreads, thread));
    ActiveQueue::append(sActiveThreads, thread);
    checkActiveThreadsNoLock();
 }
 
-void markThreadInactiveNoLock(OSThread *thread)
+void
+markThreadInactiveNoLock(OSThread *thread)
 {
    emuassert(ActiveQueue::contains(sActiveThreads, thread));
    ActiveQueue::erase(sActiveThreads, thread);
    checkActiveThreadsNoLock();
 }
 
-bool isThreadActiveNoLock(OSThread *thread)
+bool
+isThreadActiveNoLock(OSThread *thread)
 {
    return ActiveQueue::contains(sActiveThreads, thread);
 }

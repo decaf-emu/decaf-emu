@@ -10,7 +10,8 @@
 namespace coreinit
 {
 
-static const size_t AppIoMsgQueuePerThreadSize = 256;
+static const size_t
+AppIoMsgQueuePerThreadSize = 256;
 
 static OSThreadEntryPointFn
 sAppIoThreadEntryPoint;
@@ -33,7 +34,7 @@ AppIoThreadEntry(uint32_t core_id, void *arg2)
       switch (static_cast<internal::AppIoEventType>(msg.args[2].value()))
       {
       case internal::AppIoEventType::FsAsyncCallback:
-         internal::handleAsyncCallback(static_cast<FSAsyncResult*>(msg.message.get()));
+         internal::handleAsyncCallback(static_cast<FSAsyncResult *>(msg.message.get()));
          break;
       default:
          throw std::logic_error("App IO thread received unrecognized event type");
@@ -46,7 +47,9 @@ AppIoThreadEntry(uint32_t core_id, void *arg2)
 namespace internal
 {
 
-void sendMessage(OSMessage *message) {
+void
+sendMessage(OSMessage *message)
+{
    auto core_id = cpu::this_core::id();
    OSSendMessage(sAppIoMsgQueue[core_id], message, OSMessageFlags::Blocking);
 }
@@ -74,7 +77,7 @@ void
 Module::initialiseAppIo()
 {
    for (auto i = 0u; i < CoreCount; ++i) {
-      OSMessage *messages = static_cast<OSMessage*>(internal::sysAlloc(sizeof(OSMessage) * AppIoMsgQueuePerThreadSize));
+      auto messages = reinterpret_cast<OSMessage*>(internal::sysAlloc(sizeof(OSMessage) * AppIoMsgQueuePerThreadSize));
       OSInitMessageQueue(sAppIoMsgQueue[i], messages, AppIoMsgQueuePerThreadSize);
    }
 }

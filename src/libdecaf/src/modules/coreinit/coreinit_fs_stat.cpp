@@ -18,7 +18,7 @@ FSGetStatAsync(FSClient *client,
                FSAsyncData *asyncData)
 {
    internal::queueFsWork(client, block, asyncData, [=]() {
-      auto entry = fs::FolderEntry{};
+      auto entry = fs::FolderEntry {};
       auto fs = kernel::getFileSystem();
       auto file = fs->findEntry(coreinit::internal::translatePath(path), entry);
 
@@ -30,6 +30,7 @@ FSGetStatAsync(FSClient *client,
       stat->size = gsl::narrow_cast<uint32_t>(entry.size);
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 
@@ -64,6 +65,7 @@ FSGetStatFileAsync(FSClient *client,
       stat->size = static_cast<uint32_t>(file->size());
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 

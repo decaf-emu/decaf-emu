@@ -40,6 +40,7 @@ FSChangeDirAsync(FSClient *client,
       gWorkingPath = coreinit::internal::translatePath(path);
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 

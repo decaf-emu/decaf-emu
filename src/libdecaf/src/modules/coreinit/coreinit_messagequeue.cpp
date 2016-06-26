@@ -82,7 +82,7 @@ OSSendMessage(OSMessageQueue *queue,
    // Copy into message array
    auto index = (queue->first + queue->used) % queue->size;
    auto dst = static_cast<OSMessage*>(queue->messages) + index;
-   memcpy(dst, message, sizeof(OSMessage));
+   std::memcpy(dst, message, sizeof(OSMessage));
    queue->used++;
 
    // Wakeup threads waiting to read message
