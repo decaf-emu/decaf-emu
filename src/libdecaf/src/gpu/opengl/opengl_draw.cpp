@@ -256,7 +256,9 @@ GLDriver::decafClearColor(const pm4::DecafClearColor &data)
    gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, buffer->object, 0);
 
    // Clear color buffer
+   gl::glDisable(gl::GL_SCISSOR_TEST);
    gl::glClearBufferfv(gl::GL_COLOR, 0, colors);
+   gl::glEnable(gl::GL_SCISSOR_TEST);
 
    // Restore original color buffer
    if (mActiveColorBuffers[0]) {
@@ -280,7 +282,9 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, buffer->object, 0);
 
    // Clear depth buffer
+   gl::glDisable(gl::GL_SCISSOR_TEST);
    gl::glClearBufferfi(gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR());
+   gl::glEnable(gl::GL_SCISSOR_TEST);
 
    // Restore original depth buffer
    if (mActiveDepthBuffer) {
