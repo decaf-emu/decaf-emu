@@ -3,8 +3,7 @@
 #include "common/platform_dir.h"
 #include "decaf_config.h"
 #include "gpu/gfd.h"
-#include "gpu/microcode/latte_decoder.h"
-#include "gpu/opengl/glsl_generator.h"
+#include "gpu/microcode/latte_disassembler.h"
 #include "gpu/pm4_writer.h"
 #include "gx2_enum_string.h"
 #include "gx2_shaders.h"
@@ -100,7 +99,7 @@ GX2DebugDumpTexture(const GX2Texture *texture)
 
 template<typename ShaderType>
 static void
-GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader, latte::Shader::Type shaderType)
+GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader)
 {
    std::string output;
 
@@ -124,23 +123,11 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderT
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
 
    // Disassemble
-   latte::Shader decoded;
-   decoded.type = shaderType;
-   latte::decode(decoded, gsl::as_span(shader->data.get(), shader->size));
-   latte::disassemble(decoded, output);
+   output = latte::disassemble(gsl::as_span(shader->data.get(), shader->size));
 
    file
       << info << std::endl
       << "Disassembly:" << std::endl
-      << output << std::endl;
-
-   output.clear();
-
-   // Decompiled
-   gpu::opengl::glsl::generateBody(decoded, output);
-
-   file
-      << "Decompiled:" << std::endl
       << output << std::endl;
 }
 
@@ -241,8 +228,7 @@ GX2DebugDumpShader(GX2FetchShader *shader)
 
    GX2DebugDumpShader("shader_fetch_" + GX2PointerAsString(shader),
                       out.str(),
-                      shader,
-                      latte::Shader::Fetch);
+                      shader);
 }
 
 void
@@ -265,8 +251,7 @@ GX2DebugDumpShader(GX2PixelShader *shader)
 
    GX2DebugDumpShader("shader_pixel_" + GX2PointerAsString(shader),
                       out.str(),
-                      shader,
-                      latte::Shader::Pixel);
+                      shader);
 }
 
 void
@@ -290,8 +275,7 @@ GX2DebugDumpShader(GX2VertexShader *shader)
 
    GX2DebugDumpShader("shader_vertex_" + GX2PointerAsString(shader),
                       out.str(),
-                      shader,
-                      latte::Shader::Vertex);
+                      shader);
 }
 
 namespace internal

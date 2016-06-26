@@ -80,7 +80,6 @@ struct VertexShader
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
    std::array<gl::GLuint, MAX_ATTRIB_COUNT> attribLocations;
-   std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
    latte::SQ_PGM_START_VS pgm_start_vs;
    std::string code;
    std::string disassembly;
@@ -90,8 +89,10 @@ struct PixelShader
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
+   gl::GLuint uniformAlphaRef = 0;
    std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
    latte::SQ_PGM_START_PS pgm_start_ps;
+   latte::SX_ALPHA_TEST_CONTROL sx_alpha_test_control;
    std::string code;
    std::string disassembly;
 };

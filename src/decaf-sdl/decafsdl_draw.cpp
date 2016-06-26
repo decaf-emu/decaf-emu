@@ -164,7 +164,6 @@ void DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
    gl::glDisable(gl::GL_STENCIL_TEST);
    gl::glDisable(gl::GL_SCISSOR_TEST);
    gl::glDisable(gl::GL_CULL_FACE);
-   gl::glDisable(gl::GL_ALPHA_TEST);
 
    // Clear screen
    gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);

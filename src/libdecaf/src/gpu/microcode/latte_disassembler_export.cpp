@@ -6,7 +6,7 @@ namespace latte
 namespace disassembler
 {
 
-static char
+char
 disassembleDestMask(SQ_SEL sel)
 {
    switch (sel) {
@@ -29,61 +29,72 @@ disassembleDestMask(SQ_SEL sel)
    }
 }
 
-bool
-disassembleExport(State &state, shadir::ExportInstruction *inst)
+void
+disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 {
-   state.out.write("{}{:02} {}", state.indent, inst->cfPC, inst->name);
+   auto id = inst.exp.word1.CF_INST();
+   auto name = getInstructionName(id);
+   out << name;
 
-   if (inst->isSemantic) {
-      switch (inst->exportType) {
+   if (id == SQ_CF_INST_EXP || id == SQ_CF_INST_EXP_DONE) {
+      auto arrayBase = inst.exp.word0.ARRAY_BASE();
+
+      switch (inst.exp.word0.TYPE()) {
       case SQ_EXPORT_PIXEL:
-         state.out << " PIXEL" << inst->arrayBase;
+         out << " PIXEL" << arrayBase;
          break;
       case SQ_EXPORT_POS:
-         state.out << " POS" << (inst->arrayBase - 60);
+         out << " POS" << (arrayBase - 60);
          break;
       case SQ_EXPORT_PARAM:
-         state.out << " PARAM" << inst->arrayBase;
+         out << " PARAM" << arrayBase;
          break;
       }
 
-      state.out << ", ";
+      out << ", ";
 
-      if (inst->rw.rel == SQ_RELATIVE) {
-         state.out << "R[AL + " << inst->rw.id << "]";
+      if (inst.exp.word0.RW_REL() == SQ_RELATIVE) {
+         out << "R[AL + " << inst.exp.word0.RW_GPR() << "]";
       } else {
-         state.out << "R" << inst->rw.id;
+         out << "R" << inst.exp.word0.RW_GPR();
       }
 
-      state.out
+      out
          << '.'
-         << disassembleDestMask(inst->srcSel[0])
-         << disassembleDestMask(inst->srcSel[1])
-         << disassembleDestMask(inst->srcSel[2])
-         << disassembleDestMask(inst->srcSel[3]);
+         << disassembleDestMask(inst.exp.swiz.SRC_SEL_X())
+         << disassembleDestMask(inst.exp.swiz.SRC_SEL_Y())
+         << disassembleDestMask(inst.exp.swiz.SRC_SEL_Z())
+         << disassembleDestMask(inst.exp.swiz.SRC_SEL_W());
    } else {
       // TODO: Disassemble export MEM_*
-      state.out << " MEM_UNKNOWN_FORMAT";
+      out << " MEM_UNKNOWN_FORMAT";
    }
 
-   if (inst->burstCount) {
-      state.out << " BURSTCNT(" << inst->burstCount << ")";
+   if (inst.exp.word1.BURST_COUNT()) {
+      out << " BURSTCNT(" << inst.exp.word1.BURST_COUNT() << ")";
    }
 
-   if (!inst->barrier) {
-      state.out << " NO_BARRIER";
+   if (!inst.exp.word1.BARRIER()) {
+      out << " NO_BARRIER";
    }
 
-   if (inst->wholeQuadMode) {
-      state.out << " WHOLE_QUAD";
+   if (inst.exp.word1.WHOLE_QUAD_MODE()) {
+      out << " WHOLE_QUAD";
    }
 
-   if (inst->validPixelMode) {
-      state.out << " VALID_PIX";
+   if (inst.word1.VALID_PIXEL_MODE()) {
+      out << " VALID_PIX";
    }
+}
 
+void
+disassembleExport(State &state, const ControlFlowInst &inst)
+{
+   auto id = inst.exp.word1.CF_INST();
+   auto name = getInstructionName(id);
+   state.out.write("{}{:02} ", state.indent, state.cfPC);
+   disassembleExpInstruction(state.out, inst);
    state.out << "\n";
-   return true;
 }
 
 } // namespace disassembler

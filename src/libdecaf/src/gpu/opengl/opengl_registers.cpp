@@ -206,21 +206,6 @@ GLDriver::setRegister(latte::Register reg,
       mScissorDirty = true;
       break;
 
-   case latte::Register::SX_ALPHA_REF:
-   case latte::Register::SX_ALPHA_TEST_CONTROL:
-   {
-      auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
-      auto sx_alpha_ref = getRegister<latte::SX_ALPHA_REF>(latte::Register::SX_ALPHA_REF);
-
-      if (sx_alpha_test_control.ALPHA_TEST_ENABLE()) {
-         gl::glEnable(gl::GL_ALPHA_TEST);
-      } else {
-         gl::glDisable(gl::GL_ALPHA_TEST);
-      }
-
-      gl::glAlphaFunc(getRefFunc(sx_alpha_test_control.ALPHA_FUNC()), sx_alpha_ref.ALPHA_REF);
-   } break;
-
    case latte::Register::PA_SU_SC_MODE_CNTL:
    {
       auto pa_su_sc_mode_cntl = latte::PA_SU_SC_MODE_CNTL::get(value);

@@ -29,9 +29,7 @@ enum SQ_ALU_OMOD : uint32_t
 enum SQ_ALU_SRC : uint32_t
 {
    SQ_ALU_REGISTER_FIRST            = 0,
-   SQ_ALU_REGISTER_LAST             = 111,
-   SQ_ALU_TMP_REGISTER_FIRST        = 112,
-   SQ_ALU_TMP_REGISTER_LAST         = 127,
+   SQ_ALU_REGISTER_LAST             = 127,
    SQ_ALU_KCACHE_BANK0_FIRST        = 128,
    SQ_ALU_KCACHE_BANK0_LAST         = 159,
    SQ_ALU_KCACHE_BANK1_FIRST        = 160,
