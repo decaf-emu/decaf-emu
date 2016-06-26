@@ -1,11 +1,13 @@
 #include "common/log.h"
 #include "common/strutils.h"
-#include "glsl_generator.h"
+#include "glsl2_translate.h"
 #include "gpu/latte_registers.h"
-#include "gpu/microcode/latte_decoder.h"
+#include "gpu/microcode/latte_disassembler.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
 #include <spdlog/spdlog.h>
+
+#pragma optimize("", off)
 
 namespace gpu
 {
@@ -186,7 +188,7 @@ bool GLDriver::checkActiveShader()
          }
 
          // Get uniform locations
-         vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VR");
+         vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "UR");
 
          // Get attribute locations
          vertexShader.attribLocations.fill(0);
@@ -224,7 +226,7 @@ bool GLDriver::checkActiveShader()
          }
 
          // Get uniform locations
-         pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "PR");
+         pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "UR");
       }
 
       shader.fetch = &fetchShader;
@@ -686,155 +688,24 @@ getGLSLDataFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT num, latte:
    return "vec4";
 }
 
-static void
-writeHeader(fmt::MemoryWriter &out)
-{
-   out << "#version 420 core\n";
-}
-
-static void
-writeUniforms(fmt::MemoryWriter &out, latte::Shader &shader, latte::SQ_CONFIG sq_config, std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> &samplerTypes)
-{
-   if (sq_config.DX9_CONSTS()) {
-      // Uniform registers
-      out << "uniform vec4 ";
-
-      if (shader.type == latte::Shader::Vertex) {
-         out << "VR";
-      } else {
-         out << "PR";
-      }
-
-      out << "[" << MAX_UNIFORM_REGISTERS << "];\n";
-   } else {
-      // Uniform blocks
-      for (uint32_t id = 0; id < MAX_UNIFORM_BLOCKS; ++id) {
-         if (shader.type == latte::Shader::Vertex) {
-            out << "layout (binding = " << id << ") uniform ";
-            out << "VertexBlock_" << id;
-         } else {
-            out << "layout (binding = " << (16+id) << ") uniform ";
-            out << "PixelBlock_" << id;
-         }
-
-         out
-            << " {\n"
-            << "   vec4 values[];\n"
-            << "} ";
-
-         if (shader.type == latte::Shader::Vertex) {
-            out << "VB_";
-         } else {
-            out << "PB_";
-         }
-
-         out << id << ";\n";
-      }
-   }
-
-   // Samplers
-   for (auto id : shader.samplersUsed) {
-      auto type = samplerTypes[id];
-
-      out << "layout (binding = " << id << ") uniform ";
-
-      switch (type) {
-      case SamplerType::Sampler2D:
-         out << "sampler2D";
-         break;
-      case SamplerType::Sampler2DArray:
-         out << "sampler2DArray";
-         break;
-      default:
-         gLog->error("Unsupported sampler type: {}", static_cast<uint32_t>(type));
-      }
-
-      out << " sampler_" << id << ";\n";
-   }
-
-   // Redeclare gl_PerVertex for Vertex Shaders
-   if (shader.type == latte::Shader::Vertex) {
-      out
-         << "out gl_PerVertex {\n"
-         << "   vec4 gl_Position;\n"
-         << "};";
-   }
-}
-
-static void
-writeLocals(fmt::MemoryWriter &out, latte::Shader &shader)
-{
-   // Registers
-   auto largestGpr = -1;
-   auto largestTmp = -1;
-
-   for (auto id : shader.gprsUsed) {
-      if (id >= latte::SQ_ALU_TMP_REGISTER_FIRST) {
-         largestTmp = std::max(largestTmp, static_cast<int>(latte::SQ_ALU_TMP_REGISTER_LAST - id));
-      } else {
-         largestGpr = std::max(largestGpr, static_cast<int>(id));
-      }
-   }
-
-   if (largestGpr > -1) {
-      out << "vec4 R[" << (largestGpr + 1) << "];\n";
-   }
-
-   if (largestTmp > -1) {
-      out << "vec4 T[" << (largestTmp + 1) << "];\n";
-   }
-
-   // Previous Scalar
-   if (shader.psUsed.size()) {
-      out << "float PS;\n"
-          << "float PSo;\n";
-   }
-
-   // Previous Vector
-   if (shader.pvUsed.size()) {
-      out << "vec4 PV;\n"
-          << "vec4 PVo = vec4(0, 0, 0, 0);\n";
-   }
-
-   // Address Register (TODO: Only print if used)
-   out << "ivec4 AR;\n";
-
-   // Loop Index (TODO: Only print if used)
-   out << "int AL;\n";
-}
-
-static void
-writeExports(fmt::MemoryWriter &out, latte::Shader &shader)
-{
-   for (auto exp : shader.exports) {
-      switch (exp->exportType) {
-      case latte::SQ_EXPORT_POS:
-         out << "vec4 exp_position_" << (exp->arrayBase - 60) << ";\n";
-         break;
-      case latte::SQ_EXPORT_PARAM:
-         out << "vec4 exp_param_" << exp->arrayBase << ";\n";
-         break;
-      case latte::SQ_EXPORT_PIXEL:
-         out << "vec4 exp_pixel_" << exp->arrayBase << ";\n";
-         break;
-      }
-   }
-}
-
-static SamplerType
+static glsl2::SamplerType
 getSamplerType(latte::SQ_TEX_DIM dim, latte::SQ_NUM_FORMAT numFormat, latte::SQ_FORMAT_COMP formatComp)
 {
-   // TODO: Use numFormat and formatComp for signed/unsigned sampler
    switch (dim) {
    case latte::SQ_TEX_DIM_1D:
-      return SamplerType::Sampler1D;
+      return glsl2::SamplerType::Sampler1D;
    case latte::SQ_TEX_DIM_2D:
-      return SamplerType::Sampler2D;
+      return glsl2::SamplerType::Sampler2D;
+   case latte::SQ_TEX_DIM_3D:
+      return glsl2::SamplerType::Sampler3D;
+   case latte::SQ_TEX_DIM_CUBEMAP:
+      return glsl2::SamplerType::SamplerCube;
+   case latte::SQ_TEX_DIM_1D_ARRAY:
+      return glsl2::SamplerType::Sampler1DArray;
    case latte::SQ_TEX_DIM_2D_ARRAY:
-      return SamplerType::Sampler2DArray;
+      return glsl2::SamplerType::Sampler2DArray;
    default:
-      gLog->error(fmt::format("Unimplemented sampler type {}", dim));
-      return SamplerType::Invalid;
+      throw std::logic_error(fmt::format("Invalid sampler type {}", dim));
    }
 }
 
@@ -842,59 +713,44 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 {
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
    auto spi_vs_out_config = getRegister<latte::SPI_VS_OUT_CONFIG>(latte::Register::SPI_VS_OUT_CONFIG);
-   fmt::MemoryWriter out;
-   latte::Shader shader;
-   std::string body;
    FetchShader::Attrib *semanticAttribs[32];
-   memset(semanticAttribs, 0, sizeof(FetchShader::Attrib *) * 32);
+   std::memset(semanticAttribs, 0, sizeof(FetchShader::Attrib *) * 32);
 
-   shader.type = latte::Shader::Vertex;
+   glsl2::Shader shader;
+   shader.type = glsl2::Shader::VertexShader;
 
-   for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
-      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_VS_TEX_RESOURCE_0 + i * 7));
-      shader.samplers.emplace_back(sq_tex_resource_word0.DIM());
-   }
-
-   if (!latte::decode(shader, gsl::as_span(buffer, size))) {
-      gLog->error("Failed to decode vertex shader");
-      return false;
-   }
-
-   latte::disassemble(shader, vertex.disassembly);
-
-   if (!latte::blockify(shader)) {
-      gLog->error("Failed to blockify vertex shader");
-      return false;
-   }
-
-   if (!glsl::generateBody(shader, body)) {
-      gLog->warn("Failed to translate 100% of instructions for vertex shader");
-   }
-
-   // Get vertex sampler types
    for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_VS_TEX_RESOURCE_0 + i * 7));
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_VS_TEX_RESOURCE_0 + i * 7));
 
-      vertex.samplerTypes[i] = getSamplerType(sq_tex_resource_word0.DIM(),
-                                              sq_tex_resource_word4.NUM_FORMAT_ALL(),
-                                              sq_tex_resource_word4.FORMAT_COMP_X());
+      shader.samplers[i] = getSamplerType(sq_tex_resource_word0.DIM(),
+                                           sq_tex_resource_word4.NUM_FORMAT_ALL(),
+                                           sq_tex_resource_word4.FORMAT_COMP_X());
    }
 
-   // Write header
-   writeHeader(out);
+   if (sq_config.DX9_CONSTS()) {
+      shader.uniformRegistersEnabled = true;
+   } else {
+      shader.uniformBlocksEnabled = true;
+   }
 
-   // Uniforms
-   writeUniforms(out, shader, sq_config, vertex.samplerTypes);
-   out << '\n';
+   vertex.disassembly = latte::disassemble(gsl::as_span(buffer, size));
+
+   if (!glsl2::translate(shader, gsl::as_span(buffer, size))) {
+      gLog->error("Failed to decode vertex shader\n{}", vertex.disassembly);
+      return false;
+   }
+
+   fmt::MemoryWriter out;
+   out << shader.fileHeader;
 
    // Vertex Shader Inputs
    for (auto &attrib : fetch.attribs) {
       semanticAttribs[attrib.location] = &attrib;
 
       out << "in "
-          << getGLSLDataFormat(attrib.format, attrib.numFormat, attrib.formatComp)
-          << " fs_out_" << attrib.location << ";\n";
+         << getGLSLDataFormat(attrib.format, attrib.numFormat, attrib.formatComp)
+         << " fs_out_" << attrib.location << ";\n";
    }
    out << '\n';
 
@@ -904,18 +760,10 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    }
    out << '\n';
 
-   // Program code
-   out << "void main()\n"
-       << "{\n";
-
-   writeLocals(out, shader);
-   writeExports(out, shader);
-
-   // Initialise registers
-   if (shader.gprsUsed.find(0) != shader.gprsUsed.end()) {
-      // TODO: Check which order of VertexID and InstanceID for r0.x, r0.y
-      out << "R[0] = vec4(intBitsToFloat(gl_VertexID), intBitsToFloat(gl_InstanceID), 0.0, 0.0);\n";
-   }
+   out
+      << "void main()\n"
+      << "{\n"
+      << shader.codeHeader;
 
    // Assign fetch shader output to our GPR
    for (auto i = 0u; i < 32; ++i) {
@@ -953,16 +801,16 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       }
    }
 
-   out << '\n' << body << '\n';
+   out << '\n' << shader.codeBody << '\n';
 
-   for (auto exp : shader.exports) {
-      switch (exp->exportType) {
+   for (auto &exp : shader.exports) {
+      switch (exp.type) {
       case latte::SQ_EXPORT_POS:
-         out << "gl_Position = exp_position_" << (exp->arrayBase - 60) << ";\n";
+         out << "gl_Position = exp_position_" << exp.id << ";\n";
          break;
       case latte::SQ_EXPORT_PARAM:
          // TODO: Use vs_out semantics?
-         out << "vs_out_" << exp->arrayBase << " = exp_param_" << exp->arrayBase << ";\n";
+         out << "vs_out_" << exp.id << " = exp_param_" << exp.id << ";\n";
          break;
       case latte::SQ_EXPORT_PIXEL:
          throw std::logic_error("Unexpected pixel export in vertex shader.");
@@ -971,9 +819,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    }
 
    out << "}\n";
-
    out << "/*\n" << vertex.disassembly << "\n*/\n";
-
    vertex.code = out.str();
    return true;
 }
@@ -984,49 +830,35 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    auto spi_ps_in_control_0 = getRegister<latte::SPI_PS_IN_CONTROL_0>(latte::Register::SPI_PS_IN_CONTROL_0);
    auto spi_ps_in_control_1 = getRegister<latte::SPI_PS_IN_CONTROL_1>(latte::Register::SPI_PS_IN_CONTROL_1);
    auto cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
-   fmt::MemoryWriter out;
-   latte::Shader shader;
-   std::string body;
 
-   shader.type = latte::Shader::Pixel;
+   glsl2::Shader shader;
+   shader.type = glsl2::Shader::PixelShader;
 
-   for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
-      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
-      shader.samplers.emplace_back(sq_tex_resource_word0.DIM());
-   }
-
-   if (!latte::decode(shader, gsl::as_span(buffer, size))) {
-      gLog->error("Failed to decode pixel shader");
-      return false;
-   }
-
-   latte::disassemble(shader, pixel.disassembly);
-
-   if (!latte::blockify(shader)) {
-      gLog->error("Failed to blockify pixel shader");
-      return false;
-   }
-
-   if (!glsl::generateBody(shader, body)) {
-      gLog->warn("Failed to translate 100% of instructions for pixel shader");
-   }
-
-   // Get pixel sampler types
+   // Gather Samplers
    for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
 
-      pixel.samplerTypes[i] = getSamplerType(sq_tex_resource_word0.DIM(),
-                                             sq_tex_resource_word4.NUM_FORMAT_ALL(),
-                                             sq_tex_resource_word4.FORMAT_COMP_X());
+      shader.samplers[i] = getSamplerType(sq_tex_resource_word0.DIM(),
+                                           sq_tex_resource_word4.NUM_FORMAT_ALL(),
+                                           sq_tex_resource_word4.FORMAT_COMP_X());
    }
 
-   // Write header
-   writeHeader(out);
+   if (sq_config.DX9_CONSTS()) {
+      shader.uniformRegistersEnabled = true;
+   } else {
+      shader.uniformBlocksEnabled = true;
+   }
 
-   // Uniforms
-   writeUniforms(out, shader, sq_config, pixel.samplerTypes);
-   out << '\n';
+   pixel.disassembly = latte::disassemble(gsl::as_span(buffer, size));
+
+   if (!glsl2::translate(shader, gsl::as_span(buffer, size))) {
+      gLog->error("Failed to decode vertex shader\n{}", pixel.disassembly);
+      return false;
+   }
+
+   fmt::MemoryWriter out;
+   out << shader.fileHeader;
 
    // Pixel Shader Inputs
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
@@ -1052,12 +884,10 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    }
    out << '\n';
 
-   // Program code
-   out << "void main()\n"
-      << "{\n";
-
-   writeLocals(out, shader);
-   writeExports(out, shader);
+   out
+      << "void main()\n"
+      << "{\n"
+      << shader.codeHeader;
 
    // Assign vertex shader output to our GPR
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
@@ -1071,41 +901,43 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
       out << "R[" << i << "] = vs_out_" << id << ";\n";
    }
 
-   out << '\n' << body << '\n';
+   out << '\n' << shader.codeBody << '\n';
 
-   for (auto exp : shader.exports) {
-      switch (exp->exportType) {
-      case latte::SQ_EXPORT_PIXEL: {
-         auto mask = cb_shader_mask.value >> (4 * exp->arrayBase);
+   for (auto &exp : shader.exports) {
+      switch (exp.type) {
+      case latte::SQ_EXPORT_PIXEL:
+      {
+         auto mask = cb_shader_mask.value >> (4 * exp.id);
 
          if (!mask) {
             gLog->warn("Export is masked by cb_shader_mask");
          } else {
-            out
-               << "ps_out_"
-               << exp->arrayBase
-               << " = exp_pixel_"
-               << exp->arrayBase << '.';
+            std::string strMask;
 
             if (mask & (1 << 0)) {
-               out << 'x';
+               strMask.push_back('x');
             }
 
             if (mask & (1 << 1)) {
-               out << 'y';
+               strMask.push_back('y');
             }
 
             if (mask & (1 << 2)) {
-               out << 'z';
+               strMask.push_back('z');
             }
 
             if (mask & (1 << 3)) {
-               out << 'w';
+               strMask.push_back('w');
             }
+
+            out
+               << "ps_out_" << exp.id << "." << strMask
+               << " = exp_pixel_" << exp.id << "." << strMask;
 
             out << ";\n";
          }
-      } break;
+         break;
+      }
       case latte::SQ_EXPORT_POS:
          throw std::logic_error("Unexpected position export in pixel shader.");
          break;
