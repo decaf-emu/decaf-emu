@@ -98,7 +98,7 @@ DecafSDL::run(const std::string &gamePath)
       []() -> const char * {
          return SDL_GetClipboardText();
       },
-      [](auto text) {
+      [](const char *text) {
          SDL_SetClipboardText(text);
       });
 

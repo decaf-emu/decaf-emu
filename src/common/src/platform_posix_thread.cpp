@@ -2,6 +2,7 @@
 #include "platform_thread.h"
 
 #ifdef PLATFORM_POSIX
+#include <cstdlib>
 #include <pthread.h>
 
 namespace platform
