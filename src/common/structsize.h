@@ -27,6 +27,7 @@
 #define CHECK_MEMBER_OFFSET_END _CHECK_MEMBER_OFFSET_END
 #else
 #define CHECK_MEMBER_OFFSET_START \
+   _Pragma("GCC diagnostic push") \
    _Pragma("GCC diagnostic ignored \"-Winvalid-offsetof\"") \
    _CHECK_MEMBER_OFFSET_START
 #define CHECK_MEMBER_OFFSET_END \
