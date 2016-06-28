@@ -147,18 +147,15 @@ void GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
 
 void GLDriver::decafInvalidate(const pm4::DecafInvalidate &data)
 {
-   GX2InvalidateMode mode = static_cast<GX2InvalidateMode>(data.mode);
-   uint32_t memStart = data.memStart;
-   uint32_t memEnd = data.memEnd;
+   auto start = data.memStart;
+   auto end = data.memEnd;
 
-   if (mode & GX2InvalidateMode::Texture) {
-      for (auto &surf : mSurfaces) {
-         if (surf.second.cpuMemStart >= memEnd || surf.second.cpuMemEnd < memStart) {
-            continue;
-         }
-
-         surf.second.dirtyAsTexture = true;
+   for (auto &surf : mSurfaces) {
+      if (surf.second.cpuMemStart >= end || surf.second.cpuMemEnd < start) {
+         continue;
       }
+
+      surf.second.dirtyAsTexture = true;
    }
 }
 
