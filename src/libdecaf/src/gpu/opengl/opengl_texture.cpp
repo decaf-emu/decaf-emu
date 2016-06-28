@@ -278,8 +278,8 @@ bool GLDriver::checkActiveTextures()
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
       auto sq_tex_resource_word5 = getRegister<latte::SQ_TEX_RESOURCE_WORD5_N>(latte::Register::SQ_TEX_RESOURCE_WORD5_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
       auto sq_tex_resource_word6 = getRegister<latte::SQ_TEX_RESOURCE_WORD6_N>(latte::Register::SQ_TEX_RESOURCE_WORD6_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
+      auto baseAddress = sq_tex_resource_word2.BASE_ADDRESS() << 8;
 
-      auto baseAddress = (sq_tex_resource_word2.BASE_ADDRESS() << 8) & 0xFFFFF800;
       if (!baseAddress) {
          continue;
       }
@@ -300,10 +300,8 @@ bool GLDriver::checkActiveTextures()
       auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma);
 
       if (buffer->dirtyAsTexture) {
-         auto addr = (sq_tex_resource_word2.BASE_ADDRESS() & (~7)) << 8;
          auto swizzle = sq_tex_resource_word2.SWIZZLE() << 8;
-
-         auto imagePtr = make_virtual_ptr<uint8_t>(addr);
+         auto imagePtr = make_virtual_ptr<uint8_t>(baseAddress);
 
          // Rebuild a GX2Surface
          std::memset(&surface, 0, sizeof(gx2::GX2Surface));
@@ -324,10 +322,7 @@ bool GLDriver::checkActiveTextures()
          }
 
          surface.mipLevels = 1;
-         surface.format = getSurfaceFormat(format,
-            numFormat,
-            formatComp,
-            degamma);
+         surface.format = getSurfaceFormat(format, numFormat, formatComp, degamma);
 
          surface.aa = GX2AAMode::Mode1X;
          surface.use = GX2SurfaceUse::Texture;
