@@ -203,8 +203,6 @@ gen(JitBlock &block)
       if (JIT_DEBUG) {
          a.nop();
       }
-
-      lclCia += 4;
    }
 
    a.mov(a.eax, lclCia);
