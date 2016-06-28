@@ -92,9 +92,10 @@ step_one(Core *core)
       // If this is a KC, there is the potential that we are running on a
       //  different core now.  Lets make sure that we are using the right one.
       core = this_core::state();
+   } else {
+      emuassert(core->cia == cia);
    }
 
-   emuassert(core->cia == cia);
    traceInstructionEnd(trace, instr, data, core);
 
    return core;
