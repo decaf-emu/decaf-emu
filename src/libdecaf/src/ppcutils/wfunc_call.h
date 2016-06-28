@@ -20,6 +20,7 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
    core->gpr[1] -= 2 * 4;
 
    // Save state
+   auto cia = core->cia;
    auto nia = core->nia;
 
    // Set state to our function to call
@@ -33,6 +34,7 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
    core = cpu::this_core::state();
 
    // Restore state
+   core->cia = cia;
    core->nia = nia;
 
    // Restore callee args stack space
