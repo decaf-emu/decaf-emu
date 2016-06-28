@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "build\zlib.vcxproj", "{C0166DC5-84C8-466C-BD6C-037951915569}"
 EndProject
@@ -119,7 +119,6 @@ Global
 		{CDFC321E-07C6-44E1-B145-02749935DDFE}.Debug|x64.ActiveCfg = Debug|x64
 		{CDFC321E-07C6-44E1-B145-02749935DDFE}.Release|x64.ActiveCfg = Release|x64
 		{CDFC321E-07C6-44E1-B145-02749935DDFE}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
-		{CDFC321E-07C6-44E1-B145-02749935DDFE}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
 		{01016351-42D4-4D49-A433-00CF4E1F7A8C}.Debug|x64.ActiveCfg = Debug|x64
 		{01016351-42D4-4D49-A433-00CF4E1F7A8C}.Debug|x64.Build.0 = Debug|x64
 		{01016351-42D4-4D49-A433-00CF4E1F7A8C}.Release|x64.ActiveCfg = Release|x64
@@ -143,7 +142,6 @@ Global
 		{7CB8D060-968B-4173-B2BF-1E29088107F2}.Release|x64.ActiveCfg = Release|x64
 		{7CB8D060-968B-4173-B2BF-1E29088107F2}.Release|x64.Build.0 = Release|x64
 		{7CB8D060-968B-4173-B2BF-1E29088107F2}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
-		{7CB8D060-968B-4173-B2BF-1E29088107F2}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
 		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB3DF6}.Debug|x64.ActiveCfg = Debug|x64
 		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB3DF6}.Debug|x64.Build.0 = Debug|x64
 		{2808B8EB-ACC1-4EC3-B22E-8D2C16AB3DF6}.Release|x64.ActiveCfg = Release|x64
@@ -161,7 +159,6 @@ Global
 		{E0E54771-6AAD-4CD4-B252-2C667F593DB8}.Release|x64.ActiveCfg = Release|x64
 		{E0E54771-6AAD-4CD4-B252-2C667F593DB8}.Release|x64.Build.0 = Release|x64
 		{E0E54771-6AAD-4CD4-B252-2C667F593DB8}.ReleaseDebug|x64.ActiveCfg = ReleaseDebug|x64
-		{E0E54771-6AAD-4CD4-B252-2C667F593DB8}.ReleaseDebug|x64.Build.0 = ReleaseDebug|x64
 		{C0166DC5-84C4-466C-BD6C-023451915569}.Debug|x64.ActiveCfg = Debug|x64
 		{C0166DC5-84C4-466C-BD6C-023451915569}.Debug|x64.Build.0 = Debug|x64
 		{C0166DC5-84C4-466C-BD6C-023451915569}.Release|x64.ActiveCfg = Release|x64
