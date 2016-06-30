@@ -12,6 +12,7 @@
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
+#include "ppcutils/wfunc_call.h"
 
 namespace kernel
 {
