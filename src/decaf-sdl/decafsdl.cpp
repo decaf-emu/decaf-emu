@@ -109,6 +109,13 @@ DecafSDL::run(const std::string &gamePath)
 
    decaf::debugger::initialise();
 
+   // Setup rendering
+   SDL_GL_MakeCurrent(mWindow, mContext);
+   SDL_GL_SetSwapInterval(1);
+   initialiseContext();
+   initialiseDraw();
+   decaf::debugger::initialiseUiGL();
+
    // Start graphics thread
    mGraphicsThread = std::thread {
       [this]() {
@@ -119,13 +126,6 @@ DecafSDL::run(const std::string &gamePath)
 
    // Start emulator
    decaf::start();
-
-   // Start rendering
-   SDL_GL_MakeCurrent(mWindow, mContext);
-   SDL_GL_SetSwapInterval(1);
-   initialiseContext();
-   initialiseDraw();
-   decaf::debugger::initialiseUiGL();
 
    while (!shouldQuit) {
       SDL_Event event;
