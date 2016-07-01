@@ -135,7 +135,7 @@ startFsThread()
 {
    std::unique_lock<std::mutex> lock(sFsQueueMutex);
    sFsThreadRunning.store(true);
-   sFsThread = std::thread(std::bind(&fsThreadEntry));
+   sFsThread = std::thread(fsThreadEntry);
 }
 
 void
