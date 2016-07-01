@@ -301,7 +301,6 @@ bool GLDriver::checkActiveTextures()
 
       if (buffer->dirtyAsTexture) {
          auto swizzle = sq_tex_resource_word2.SWIZZLE() << 8;
-         auto imagePtr = make_virtual_ptr<uint8_t>(baseAddress);
 
          // Rebuild a GX2Surface
          std::memset(&surface, 0, sizeof(gx2::GX2Surface));
@@ -334,11 +333,18 @@ bool GLDriver::checkActiveTextures()
          surface.tileMode = static_cast<GX2TileMode>(tileMode);
          surface.swizzle = swizzle;
 
-         surface.image = imagePtr;
-         surface.mipmaps = nullptr;
-
          // Update the sizing information for the surface
          GX2CalcSurfaceSizeAndAlignment(&surface);
+
+         // Align address
+         if (baseAddress  & (surface.alignment - 1)) {
+            gLog->warn("Aligning texture address {:08X} to {} alignment", baseAddress, surface.alignment);
+         }
+
+         baseAddress &= ~(surface.alignment - 1);
+
+         surface.image = make_virtual_ptr<uint8_t>(baseAddress);
+         surface.mipmaps = nullptr;
 
          // Calculate a new memory CRC
          uint64_t newHash[2] = { 0 };
