@@ -41,15 +41,17 @@ get(uint32_t address)
 
    if (sFuncData.size() > 0) {
       auto funcIter = sFuncData.upper_bound(address);
-      funcIter--;
-      if (funcIter != sFuncData.end()) {
-         auto &func = funcIter->second;
-         if (address >= func.start && address < func.end) {
-            // The function needs to have an end, or be the first two instructions
-            //  since we apply some special display logic to the first two instructions
-            //  in a never-ending function...
-            if (func.end != 0xFFFFFFFF || (address == func.start || address == func.start + 4)) {
-               info.func = &func;
+      if (funcIter != sFuncData.begin()) {
+         funcIter--;
+         if (funcIter != sFuncData.end()) {
+            auto &func = funcIter->second;
+            if (address >= func.start && address < func.end) {
+               // The function needs to have an end, or be the first two instructions
+               //  since we apply some special display logic to the first two instructions
+               //  in a never-ending function...
+               if (func.end != 0xFFFFFFFF || (address == func.start || address == func.start + 4)) {
+                  info.func = &func;
+               }
             }
          }
       }
