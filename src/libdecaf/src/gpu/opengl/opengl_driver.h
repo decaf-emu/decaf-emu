@@ -80,7 +80,6 @@ struct VertexShader
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
    std::array<gl::GLuint, MAX_ATTRIB_COUNT> attribLocations;
-   std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
    latte::SQ_PGM_START_VS pgm_start_vs;
    std::string code;
    std::string disassembly;

@@ -6,8 +6,9 @@
 #include "common/teenyheap.h"
 #include "libcpu/mem.h"
 #include "gpu/gfd.h"
-#include "gpu/microcode/latte_decoder.h"
+#include "gpu/microcode/latte_disassembler.h"
 #include "gpu/pm4_buffer.h"
+#include "gpu/opengl/glsl2_translate.h"
 #include "modules/gx2/gx2_addrlib.h"
 #include "modules/gx2/gx2_dds.h"
 #include "modules/gx2/gx2_texture.h"
@@ -593,13 +594,14 @@ printInfo(const std::string &filename)
             writeField(out, "index", block.header.index);
             writeField(out, "size", block.data.size());
 
-            latte::Shader shader;
             std::string disassembly;
-            shader.type = latte::Shader::Vertex;
-            latte::decode(shader, block.data);
-            latte::disassemble(shader, disassembly);
-
+            disassembly = latte::disassemble(block.data);
             out.writer << '\n' << disassembly;
+
+            glsl2::Shader shader;
+            shader.type = glsl2::Shader::VertexShader;
+            glsl2::translate(shader, block.data);
+            out.writer << '\n' << shader.codeBody;
          }
          endGroup(out);
          break;
@@ -609,13 +611,14 @@ printInfo(const std::string &filename)
             writeField(out, "index", block.header.index);
             writeField(out, "size", block.data.size());
 
-            latte::Shader shader;
             std::string disassembly;
-            shader.type = latte::Shader::Pixel;
-            latte::decode(shader, block.data);
-            latte::disassemble(shader, disassembly);
-
+            disassembly = latte::disassemble(block.data);
             out.writer << '\n' << disassembly;
+
+            glsl2::Shader shader;
+            shader.type = glsl2::Shader::PixelShader;
+            glsl2::translate(shader, block.data);
+            out.writer << '\n' << shader.codeBody;
          }
          endGroup(out);
          break;
@@ -625,13 +628,14 @@ printInfo(const std::string &filename)
             writeField(out, "index", block.header.index);
             writeField(out, "size", block.data.size());
 
-            latte::Shader shader;
             std::string disassembly;
-            shader.type = latte::Shader::Geometry;
-            latte::decode(shader, block.data);
-            latte::disassemble(shader, disassembly);
-
+            disassembly = latte::disassemble(block.data);
             out.writer << '\n' << disassembly;
+
+            glsl2::Shader shader;
+            shader.type = glsl2::Shader::GeometryShader;
+            glsl2::translate(shader, block.data);
+            out.writer << '\n' << shader.codeBody;
          }
          endGroup(out);
          break;

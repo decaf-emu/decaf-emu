@@ -1,8 +1,7 @@
-#include <spdlog/details/format.h>
-#include <gsl.h>
 #include "latte_instructions.h"
-#include "latte_shadir.h"
 #include "latte_disassembler.h"
+#include <gsl.h>
+#include <spdlog/details/format.h>
 
 namespace latte
 {
@@ -28,194 +27,235 @@ decreaseIndent(State &state)
    }
 }
 
-bool
-disassembleCondition(State &state, shadir::CfInstruction *inst)
+void
+disassembleCondition(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 {
-   if (inst->cond) {
-      state.out << " CND(";
+   if (inst.word1.COND()) {
+      out << " CND(";
 
-      switch (inst->cond) {
+      switch (inst.word1.COND()) {
       case SQ_CF_COND_FALSE:
-         state.out << "FALSE";
+         out << "FALSE";
          break;
       case SQ_CF_COND_BOOL:
-         state.out << "BOOL";
+         out << "BOOL";
          break;
       case SQ_CF_COND_NOT_BOOL:
-         state.out << "NOT_BOOL";
+         out << "NOT_BOOL";
          break;
       }
 
-      state.out << ") CF_CONST(" << inst->constant << ")";
+      out << ") CF_CONST(" << inst.word1.CF_CONST() << ")";
    }
-
-   return true;
 }
 
-static bool
-disassembleLoop(State &state, shadir::CfInstruction *inst)
+static void
+disassembleLoop(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 {
-   switch (inst->id) {
+   switch (inst.word1.CF_INST()) {
    case SQ_CF_INST_LOOP_START:
    case SQ_CF_INST_LOOP_START_DX10:
    case SQ_CF_INST_LOOP_START_NO_AL:
-      state.out << " FAIL_JUMP_ADDR(" << inst->addr << ")";
-      increaseIndent(state);
+      out << " FAIL_JUMP_ADDR(" << inst.word0.ADDR << ")";
       break;
    case SQ_CF_INST_LOOP_CONTINUE:
    case SQ_CF_INST_LOOP_BREAK:
-      state.out << " ADDR(" << inst->addr << ")";
+      out << " ADDR(" << inst.word0.ADDR << ")";
       break;
    case SQ_CF_INST_LOOP_END:
-      state.out << " PASS_JUMP_ADDR(" << inst->addr << ")";
-      decreaseIndent(state);
+      out << " PASS_JUMP_ADDR(" << inst.word0.ADDR << ")";
       break;
    default:
-      state.out << " UNKNOWN_LOOP_CF_INST";
+      out << " UNKNOWN_LOOP_CF_INST";
    }
 
-   if (inst->popCount) {
-      state.out << " POP_COUNT(" << inst->popCount << ")";
+   if (inst.word1.POP_COUNT()) {
+      out << " POP_COUNT(" << inst.word1.POP_COUNT() << ")";
    }
 
-   if (inst->validPixelMode) {
-      state.out << " VALID_PIX";
+   if (inst.word1.VALID_PIXEL_MODE()) {
+      out << " VALID_PIX";
    }
 
-   if (!inst->barrier) {
-      state.out << " NO_BARRIER";
+   if (!inst.word1.BARRIER()) {
+      out << " NO_BARRIER";
    }
-
-   state.out << '\n';
-   return true;
 }
 
-static bool
-disassembleJump(State &state, shadir::CfInstruction *inst)
+static void
+disassembleJump(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 {
-   if (inst->id == SQ_CF_INST_CALL && inst->callCount) {
-      state.out << " CALL_COUNT(" << inst->callCount << ")";
+   auto id = inst.word1.CF_INST();
+
+   if (id == SQ_CF_INST_CALL && inst.word1.CALL_COUNT()) {
+      out << " CALL_COUNT(" << inst.word1.CALL_COUNT() << ")";
    }
 
-   disassembleCondition(state, inst);
+   disassembleCondition(out, inst);
 
-   if (inst->popCount) {
-      state.out << " POP_COUNT(" << inst->popCount << ")";
+   if (inst.word1.POP_COUNT()) {
+      out << " POP_COUNT(" << inst.word1.POP_COUNT() << ")";
    }
 
-   if (inst->id == SQ_CF_INST_CALL || inst->id == SQ_CF_INST_ELSE || inst->id == SQ_CF_INST_JUMP) {
-      state.out << " ADDR(" << inst->addr << ")";
+   if (id == SQ_CF_INST_CALL || id == SQ_CF_INST_ELSE || id == SQ_CF_INST_JUMP) {
+      out << " ADDR(" << inst.word0.ADDR << ")";
    }
 
-   if (inst->validPixelMode) {
-      state.out << " VALID_PIX";
+   if (inst.word1.VALID_PIXEL_MODE()) {
+      out << " VALID_PIX";
    }
 
-   if (!inst->barrier) {
-      state.out << " NO_BARRIER";
+   if (!inst.word1.BARRIER()) {
+      out << " NO_BARRIER";
    }
-
-   state.out << '\n';
-   return true;
 }
 
-bool
-disassembleControlFlow(State &state, shadir::CfInstruction *inst)
+void
+disassembleCF(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 {
-   state.out.write("{}{:02} {}", state.indent, inst->cfPC, inst->name);
+   auto id = inst.word1.CF_INST();
+   auto name = getInstructionName(id);
+   out << name;
 
-   switch (inst->id) {
+   switch (id) {
    case SQ_CF_INST_TEX:
-      return disassembleTEX(state, inst);
+      disassembleCfTEX(out, inst);
+      break;
    case SQ_CF_INST_VTX:
    case SQ_CF_INST_VTX_TC:
-      return disassembleVTX(state, inst);
+      disassembleCfVTX(out, inst);
+      break;
    case SQ_CF_INST_LOOP_START:
    case SQ_CF_INST_LOOP_START_DX10:
    case SQ_CF_INST_LOOP_START_NO_AL:
    case SQ_CF_INST_LOOP_END:
    case SQ_CF_INST_LOOP_CONTINUE:
    case SQ_CF_INST_LOOP_BREAK:
-      return disassembleLoop(state, inst);
+      disassembleLoop(out, inst);
+      break;
    case SQ_CF_INST_JUMP:
    case SQ_CF_INST_ELSE:
    case SQ_CF_INST_CALL:
    case SQ_CF_INST_CALL_FS:
    case SQ_CF_INST_RETURN:
    case SQ_CF_INST_POP_JUMP:
-      return disassembleJump(state, inst);
+      disassembleJump(out, inst);
+      break;
    case SQ_CF_INST_EMIT_VERTEX:
    case SQ_CF_INST_EMIT_CUT_VERTEX:
    case SQ_CF_INST_CUT_VERTEX:
-      if (!inst->barrier) {
-         state.out << " NO_BARRIER";
+      if (!inst.word1.BARRIER()) {
+         out << " NO_BARRIER";
       }
-
-      state.out << '\n';
       break;
    case SQ_CF_INST_PUSH:
    case SQ_CF_INST_PUSH_ELSE:
    case SQ_CF_INST_KILL:
-      disassembleCondition(state, inst);
-      // pass through
+      disassembleCondition(out, inst);
+      // switch case pass through
    case SQ_CF_INST_POP:
    case SQ_CF_INST_POP_PUSH:
    case SQ_CF_INST_POP_PUSH_ELSE:
-      if (inst->popCount) {
-         state.out << " POP_COUNT(" << inst->popCount << ")";
+      if (inst.word1.POP_COUNT()) {
+         out << " POP_COUNT(" << inst.word1.POP_COUNT() << ")";
       }
 
-      if (inst->validPixelMode) {
-         state.out << " VALID_PIX";
+      if (inst.word1.VALID_PIXEL_MODE()) {
+         out << " VALID_PIX";
       }
-
-      state.out << '\n';
       break;
    case SQ_CF_INST_END_PROGRAM:
    case SQ_CF_INST_NOP:
-      state.out << '\n';
       break;
    case SQ_CF_INST_WAIT_ACK:
    case SQ_CF_INST_TEX_ACK:
    case SQ_CF_INST_VTX_ACK:
    case SQ_CF_INST_VTX_TC_ACK:
    default:
-      state.out << " UNK_FORMAT\n";
+      out << " UNK_FORMAT";
       break;
    }
+}
 
-   return false;
+static void
+disassembleNormal(State &state, const ControlFlowInst &inst)
+{
+   auto id = inst.word1.CF_INST();
+   auto name = getInstructionName(id);
+
+   switch (id) {
+   case SQ_CF_INST_WAIT_ACK:
+   case SQ_CF_INST_TEX_ACK:
+   case SQ_CF_INST_VTX_ACK:
+   case SQ_CF_INST_VTX_TC_ACK:
+      throw std::logic_error(fmt::format("Unable to decode instruction {} {}", id, name));
+   }
+
+   // Decode instruction clause
+   state.out.write("{}{:02} ", state.indent, state.cfPC);
+   disassembleCF(state.out, inst);
+   state.out << "\n";
+
+   switch (id) {
+   case SQ_CF_INST_LOOP_START:
+   case SQ_CF_INST_LOOP_START_DX10:
+   case SQ_CF_INST_LOOP_START_NO_AL:
+      increaseIndent(state);
+      break;
+   case SQ_CF_INST_LOOP_END:
+      decreaseIndent(state);
+      break;
+   case SQ_CF_INST_TEX:
+      disassembleTEXClause(state, inst);
+      break;
+   case SQ_CF_INST_VTX:
+   case SQ_CF_INST_VTX_TC:
+      disassembleVtxClause(state, inst);
+      break;
+   }
 }
 
 } // namespace disassembler
 
-bool
-disassemble(Shader &shader, std::string &out)
+std::string
+disassemble(const gsl::span<const uint8_t> &binary)
 {
-   auto result = true;
    disassembler::State state;
-   state.shader = &shader;
+   state.binary = binary;
+   state.cfPC = 0;
+   state.groupPC = 0;
 
-   for (auto &ins : shader.code) {
-      switch (ins->type) {
-      case shadir::Instruction::CF:
-         result &= disassembler::disassembleControlFlow(state, reinterpret_cast<shadir::CfInstruction *>(ins.get()));
+   for (auto i = 0; i < binary.size(); i += sizeof(ControlFlowInst)) {
+      auto cf = *reinterpret_cast<const ControlFlowInst *>(binary.data() + i);
+      auto id = cf.word1.CF_INST();
+
+      switch (cf.word1.CF_INST_TYPE().get()) {
+      case SQ_CF_INST_TYPE_NORMAL:
+         disassembler::disassembleNormal(state, cf);
          break;
-      case shadir::Instruction::CF_ALU:
-         result &= disassembler::disassembleControlFlowALU(state, reinterpret_cast<shadir::CfAluInstruction *>(ins.get()));
+      case SQ_CF_INST_TYPE_EXPORT:
+         disassembler::disassembleExport(state, cf);
          break;
-      case shadir::Instruction::EXP:
-         result &= disassembler::disassembleExport(state, reinterpret_cast<shadir::ExportInstruction *>(ins.get()));
+      case SQ_CF_INST_TYPE_ALU:
+      case SQ_CF_INST_TYPE_ALU_EXTENDED:
+         disassembler::disassembleControlFlowALU(state, cf);
          break;
       default:
          throw std::logic_error("Invalid top level instruction type");
       }
 
+      if (cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_NORMAL
+       || cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_EXPORT) {
+         if (cf.word1.END_OF_PROGRAM()) {
+            break;
+         }
+      }
+
+      state.cfPC++;
       state.out << "\n";
    }
 
-   out = state.out.str();
-   return result;
+   return state.out.str();
 }
 
 } // namespace latte
