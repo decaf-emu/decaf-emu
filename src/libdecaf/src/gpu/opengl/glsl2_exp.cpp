@@ -1,3 +1,4 @@
+#include "common/log.h"
 #include "glsl2_translate.h"
 #include "gpu/microcode/latte_instructions.h"
 
@@ -195,6 +196,11 @@ EXP(State &state, const ControlFlowInst &cf)
    auto selW = cf.exp.swiz.SRC_SEL_W();
    auto src = getExportRegister(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL());
 
+   if (selX == SQ_SEL_MASK && selY == SQ_SEL_MASK && selZ == SQ_SEL_MASK && selW == SQ_SEL_MASK) {
+      gLog->warn("Unusual shader with a fully masked export");
+      return;
+   }
+
    if (selX == SQ_SEL_MASK || selY == SQ_SEL_MASK || selZ == SQ_SEL_MASK || selW == SQ_SEL_MASK) {
       // It doesn't really ever make sense for exports to use masking, so lets make
       //  sure to crash in this instance.  If there is a valid use-case for this, we
@@ -203,7 +209,6 @@ EXP(State &state, const ControlFlowInst &cf)
    }
 
    registerExport(state, type, arrayBase);
-
    insertLineStart(state);
 
    switch (type) {
