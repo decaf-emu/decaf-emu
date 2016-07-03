@@ -209,24 +209,6 @@ handleAsyncCallback(FSAsyncResult *result)
    coreinit::internal::sysFree(result);
 }
 
-void
-doAsyncFileCallback(FSClient *client,
-                    FSCmdBlock *block,
-                    FSStatus result,
-                    FSAsyncData *asyncData)
-{
-   emuassert(!asyncData->queue);
-   FSAsyncResult *asyncRes = coreinit::internal::sysAlloc<FSAsyncResult>();
-   asyncRes->userParams = *asyncData;
-   asyncRes->status = result;
-   asyncRes->client = client;
-   asyncRes->block = block;
-
-   asyncRes->ioMsg.message = asyncRes;
-   asyncRes->ioMsg.args[2] = AppIoEventType::FsAsyncCallback;
-   internal::sendMessage(&asyncRes->ioMsg);
-}
-
 } // namespace internal
 
 } // namespace coreinit
