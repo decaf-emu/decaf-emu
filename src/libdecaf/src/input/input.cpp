@@ -24,6 +24,13 @@ getAxisValue(vpad::Channel channel,
    return decaf::getInputDriver()->getAxisValue(channel, axis);
 }
 
+bool
+getTouchPosition(input::vpad::Channel channel,
+                 input::vpad::TouchPosition &position)
+{
+   return decaf::getInputDriver()->getTouchPosition(channel, position);
+}
+
 wpad::Type
 getControllerType(wpad::Channel channel)
 {

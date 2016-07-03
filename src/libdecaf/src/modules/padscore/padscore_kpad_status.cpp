@@ -4,9 +4,13 @@
 namespace padscore
 {
 
-// Returns number of KPADStatus buffers filled or negative is an error code
+/**
+ * \return Returns number of KPADStatus buffers filled or negative is an error code
+ */
 int32_t
-KPADRead(uint32_t chan, KPADStatus *buffers, uint32_t count)
+KPADRead(uint32_t chan,
+         KPADStatus *buffers,
+         uint32_t count)
 {
    be_val<int32_t> error = 0;
    auto result = KPADReadEx(chan, buffers, count, &error);
@@ -18,7 +22,9 @@ KPADRead(uint32_t chan, KPADStatus *buffers, uint32_t count)
    }
 }
 
-// Returns number of KPADStatus buffers filled
+/**
+ * \return Returns number of KPADStatus buffers filled
+ */
 int32_t
 KPADReadEx(uint32_t chan, KPADStatus *buffers, uint32_t count, be_val<int32_t> *error)
 {
@@ -31,7 +37,7 @@ KPADReadEx(uint32_t chan, KPADStatus *buffers, uint32_t count, be_val<int32_t> *
       *error = 0;
    }
 
-   memset(&buffers[0], 0, sizeof(KPADStatus));
+   std::memset(&buffers[0], 0, sizeof(KPADStatus));
    return 1;
 }
 

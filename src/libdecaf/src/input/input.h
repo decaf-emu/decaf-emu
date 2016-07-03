@@ -20,6 +20,10 @@ float
 getAxisValue(vpad::Channel channel,
              vpad::CoreAxis axis);
 
+bool
+getTouchPosition(input::vpad::Channel channel,
+                 input::vpad::TouchPosition &position);
+
 wpad::Type
 getControllerType(wpad::Channel channel);
 

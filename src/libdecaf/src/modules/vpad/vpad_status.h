@@ -3,60 +3,17 @@
 #include "common/be_val.h"
 #include "common/be_vec.h"
 #include "common/structsize.h"
+#include "vpad_enum.h"
 
-namespace Buttons
+namespace vpad
 {
-enum Buttons : uint32_t
-{
-   Sync     = 1 << 0,
-   Home     = 1 << 1,
-   Minus    = 1 << 2,
-   Plus     = 1 << 3,
-   R        = 1 << 4,
-   L        = 1 << 5,
-   ZR       = 1 << 6,
-   ZL       = 1 << 7,
-   Down     = 1 << 8,
-   Up       = 1 << 9,
-   Right    = 1 << 10,
-   Left     = 1 << 11,
-   Y        = 1 << 12,
-   X        = 1 << 13,
-   B        = 1 << 14,
-   A        = 1 << 15,
-   // ?
-   StickR   = 1 << 17,
-   StickL   = 1 << 18,
-};
-}
-
-namespace TouchPadValidity
-{
-enum Validity : uint16_t
-{
-   Valid = 0,
-   InvalidX = 1 << 0,
-   InvalidY = 1 << 1,
-   InvalidXY = InvalidX | InvalidY
-};
-}
-
-namespace VpadReadError
-{
-enum Error : int32_t
-{
-   Success = 0,
-   NoSamples = -1,
-   InvalidController = -2,
-};
-}
 
 struct VPADTouchPadStatus
 {
    be_val<uint16_t> x;
    be_val<uint16_t> y;
    be_val<uint16_t> touched;
-   be_val<TouchPadValidity::Validity> validity;
+   be_val<TouchPadValidity> validity;
 };
 CHECK_OFFSET(VPADTouchPadStatus, 0x00, x);
 CHECK_OFFSET(VPADTouchPadStatus, 0x02, y);
@@ -89,9 +46,9 @@ CHECK_SIZE(VPADGyroStatus, 0x18);
 
 struct VPADStatus
 {
-   be_val<Buttons::Buttons> hold;
-   be_val<Buttons::Buttons> trigger;
-   be_val<Buttons::Buttons> release;
+   be_val<Buttons> hold;
+   be_val<Buttons> trigger;
+   be_val<Buttons> release;
    be_vec2<float> leftStick;
    be_vec2<float> rightStick;
    VPADAccStatus accelorometer;
@@ -125,5 +82,28 @@ CHECK_OFFSET(VPADStatus, 0xA2, micStatus);
 CHECK_OFFSET(VPADStatus, 0xA3, slideVolumeEx);
 CHECK_SIZE(VPADStatus, 0xAC);
 
+struct VPADTouchData
+{
+   be_val<uint16_t> x;
+   be_val<uint16_t> y;
+   be_val<uint16_t> down;
+   be_val<uint16_t> unk1;
+};
+CHECK_OFFSET(VPADTouchData, 0x00, x);
+CHECK_OFFSET(VPADTouchData, 0x02, y);
+CHECK_OFFSET(VPADTouchData, 0x04, down);
+CHECK_OFFSET(VPADTouchData, 0x06, unk1);
+CHECK_SIZE(VPADTouchData, 0x8);
+
 int32_t
-VPADRead(uint32_t chan, VPADStatus *buffers, uint32_t count, be_val<VpadReadError::Error> *error);
+VPADRead(uint32_t chan,
+         VPADStatus *buffers,
+         uint32_t count,
+         be_val<VPADReadError> *error);
+
+void
+VPADGetTPCalibratedPoint(uint32_t chan,
+                         VPADTouchData *calibratedData,
+                         VPADTouchData *uncalibratedData);
+
+} // namespace vpad

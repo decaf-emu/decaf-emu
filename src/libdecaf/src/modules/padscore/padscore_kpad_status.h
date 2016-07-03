@@ -20,9 +20,9 @@ struct KPADMotionPlusStatus
 
 struct KPADStatus
 {
-   be_val<Buttons::Buttons> hold;
-   be_val<Buttons::Buttons> trigger;
-   be_val<Buttons::Buttons> release;
+   be_val<vpad::Buttons> hold;
+   be_val<vpad::Buttons> trigger;
+   be_val<vpad::Buttons> release;
    UNKNOWN(0x48);
    be_vec2<float> accVertical;
    UNKNOWN(0x04);
@@ -38,9 +38,14 @@ CHECK_OFFSET(KPADStatus, 0xB0, motionPlus);
 CHECK_SIZE(KPADStatus, 0xF0);
 
 int32_t
-KPADRead(uint32_t chan, KPADStatus *buffers, uint32_t count);
+KPADRead(uint32_t chan,
+         KPADStatus *buffers,
+         uint32_t count);
 
 int32_t
-KPADReadEx(uint32_t chan, KPADStatus *buffers, uint32_t count, be_val<int32_t> *error);
+KPADReadEx(uint32_t chan,
+           KPADStatus *buffers,
+           uint32_t count,
+           be_val<int32_t> *error);
 
 } // namespace padscore

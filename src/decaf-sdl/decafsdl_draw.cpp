@@ -115,11 +115,11 @@ void DecafSDL::drawScanBuffer(gl::GLuint object)
    gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
 }
 
-void DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
+void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
 {
-   const auto drcRatio = 0.25f;
-   const auto overallScale = 0.75f;
-   const auto sepGap = 5.0f;
+   static const auto DrcRatio = 0.25f;
+   static const auto OverallScale = 0.75f;
+   static const auto ScreenSeperation = 5.0f;
 
    static const auto DrcWidth = 854.0f;
    static const auto DrcHeight = 480.0f;
@@ -129,33 +129,35 @@ void DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
    int windowWidth, windowHeight;
    SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
 
-   auto tvWidth = windowWidth * (1.0f - drcRatio) * overallScale;
+   auto tvWidth = windowWidth * (1.0f - DrcRatio) * OverallScale;
    auto tvHeight = TvHeight * (tvWidth / TvWidth);
-   auto drcWidth = windowWidth * (drcRatio)* overallScale;
+   auto drcWidth = windowWidth * (DrcRatio)* OverallScale;
    auto drcHeight = DrcHeight * (drcWidth / DrcWidth);
    auto totalWidth = std::max(tvWidth, drcWidth);
-   auto totalHeight = tvHeight + drcHeight + sepGap;
+   auto totalHeight = tvHeight + drcHeight + ScreenSeperation;
    auto baseLeft = (windowWidth / 2) - (totalWidth / 2);
    auto baseBottom = -(windowHeight / 2) + (totalHeight / 2);
 
    auto tvLeft = 0.0f;
    auto tvBottom = windowHeight - tvHeight;
    auto drcLeft = (tvWidth / 2) - (drcWidth / 2);
-   auto drcBottom = windowHeight - tvHeight - drcHeight - sepGap;
+   auto drcBottom = windowHeight - tvHeight - drcHeight - ScreenSeperation;
 
-   float tvVp[4] = {
-      baseLeft + tvLeft,
-      baseBottom + tvBottom,
-      tvWidth,
-      tvHeight
-   };
+   tv[0] = baseLeft + tvLeft;
+   tv[1] = baseBottom + tvBottom;
+   tv[2] = tvWidth;
+   tv[3] = tvHeight;
 
-   float drcVp[4] = {
-      baseLeft + drcLeft,
-      baseBottom + drcBottom,
-      drcWidth,
-      drcHeight
-   };
+   drc[0] = baseLeft + drcLeft;
+   drc[1] = baseBottom + drcBottom;
+   drc[2] = drcWidth;
+   drc[3] = drcHeight;
+}
+
+void DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
+{
+   float tvViewport[4], drcViewport[4];
+   calculateScreenViewports(tvViewport, drcViewport);
 
    // Set up some needed GL state
    gl::glColorMaski(0, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE);
@@ -171,18 +173,20 @@ void DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
 
    // Draw TV display
    if (tvBuffer != 0) {
-      gl::glViewportArrayv(0, 1, tvVp);
+      gl::glViewportArrayv(0, 1, tvViewport);
       drawScanBuffer(tvBuffer);
    }
 
    // Draw DRC display
    if (drcBuffer != 0) {
-      gl::glViewportArrayv(0, 1, drcVp);
+      gl::glViewportArrayv(0, 1, drcViewport);
       drawScanBuffer(drcBuffer);
    }
 
    // Draw UI
-   decaf::debugger::drawUiGL(windowWidth, windowHeight);
+   int width, height;
+   SDL_GetWindowSize(mWindow, &width, &height);
+   decaf::debugger::drawUiGL(width, height);
 
    // Swap
    SDL_GL_SwapWindow(mWindow);

@@ -24,6 +24,14 @@ NullInputDriver::getAxisValue(vpad::Channel channel, vpad::CoreAxis axis)
    return 0.0f;
 }
 
+bool
+NullInputDriver::getTouchPosition(input::vpad::Channel channel, input::vpad::TouchPosition &position)
+{
+   position.x = 0.0f;
+   position.y = 0.0f;
+   return false;
+}
+
 // WPAD
 wpad::Type
 NullInputDriver::getControllerType(wpad::Channel channel)

@@ -1493,6 +1493,9 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_cf.h">
       <Filter>Header Files\gpu\opengl</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad_enum.h">
+      <Filter>Header Files\modules\vpad</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\libdecaf\src\gpu\microcode\latte_instructions_def.inl">

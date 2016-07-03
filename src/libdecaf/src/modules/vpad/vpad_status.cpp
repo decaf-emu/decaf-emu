@@ -7,7 +7,7 @@
 namespace vpad
 {
 
-static const std::vector<std::pair<Buttons::Buttons, input::vpad::Core>>
+static const std::vector<std::pair<Buttons, input::vpad::Core>>
 gButtonMap =
 {
    { Buttons::Sync,     input::vpad::Core::Sync },
@@ -37,13 +37,19 @@ int32_t
 VPADRead(uint32_t chan,
          VPADStatus *buffers,
          uint32_t count,
-         be_val<VpadReadError::Error> *error)
+         be_val<VPADReadError> *error)
 {
-   assert(count >= 1);
+   if (count < 1) {
+      if (error) {
+         *error = VPADReadError::NoSamples;
+      }
+
+      return 0;
+   }
 
    if (chan >= input::vpad::MaxControllers) {
       if (error) {
-         *error = VpadReadError::InvalidController;
+         *error = VPADReadError::InvalidController;
       }
 
       return 0;
@@ -80,17 +86,46 @@ VPADRead(uint32_t chan,
    buffer.rightStick.x = input::getAxisValue(channel, input::vpad::CoreAxis::RightStickX);
    buffer.rightStick.y = input::getAxisValue(channel, input::vpad::CoreAxis::RightStickY);
 
+   // Update touchpad data
+   input::vpad::TouchPosition position;
+
+   if (input::getTouchPosition(channel, position)) {
+      buffer.tpNormal.touched = 1;
+      buffer.tpNormal.x = static_cast<uint16_t>(position.x * 1280.0f);
+      buffer.tpNormal.y = static_cast<uint16_t>(position.y * 720.0f);
+      buffer.tpNormal.validity = vpad::TouchPadValidity::Valid;
+
+      // For now, lets just copy instantaneous position tpNormal to tpFiltered.
+      // My guess is that tpFiltered1/2 "filter" results over a period of time
+      // to allow for smoother input, due to the fact that touch screens aren't
+      // super precise and people's fingers are fat. I would guess tpFiltered1
+      // is filtered over a shorter period and tpFiltered2 over a longer period.
+      buffer.tpFiltered1 = buffer.tpNormal;
+      buffer.tpFiltered2 = buffer.tpNormal;
+   }
+
    if (error) {
-      *error = VpadReadError::Success;
+      *error = VPADReadError::Success;
    }
 
    return 1;
 }
 
 void
+VPADGetTPCalibratedPoint(uint32_t chan,
+                         VPADTouchData *calibratedData,
+                         VPADTouchData *uncalibratedData)
+{
+   // TODO: Actually I think we are meant to adjust uncalibratedData based
+   // off of what is set by VPADSetTPCalibrationParam
+   std::memcpy(calibratedData, uncalibratedData, sizeof(VPADTouchData));
+}
+
+void
 Module::registerStatusFunctions()
 {
    RegisterKernelFunction(VPADRead);
+   RegisterKernelFunction(VPADGetTPCalibratedPoint);
 }
 
 } // namespace vpad

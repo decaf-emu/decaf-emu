@@ -120,6 +120,15 @@ enum class CoreAxis
    RightStickY,
 };
 
+struct TouchPosition
+{
+   //! Normalised X position of input, from 0 to 1
+   float x;
+
+   //! Normalised Y position of touch input, from 0 to 1
+   float y;
+};
+
 } // namespace vpad
 
 namespace wpad
@@ -242,6 +251,9 @@ public:
 
    virtual float
    getAxisValue(input::vpad::Channel channel, input::vpad::CoreAxis axis) = 0;
+
+   virtual bool
+   getTouchPosition(input::vpad::Channel channel, input::vpad::TouchPosition &position) = 0;
 
    // WPAD
    virtual input::wpad::Type

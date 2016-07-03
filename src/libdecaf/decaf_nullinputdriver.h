@@ -17,6 +17,9 @@ public:
    virtual float
    getAxisValue(input::vpad::Channel channel, input::vpad::CoreAxis axis) override;
 
+   virtual bool
+   getTouchPosition(input::vpad::Channel channel, input::vpad::TouchPosition &position) override;
+
    // WPAD
    virtual input::wpad::Type
    getControllerType(input::wpad::Channel channel) override;

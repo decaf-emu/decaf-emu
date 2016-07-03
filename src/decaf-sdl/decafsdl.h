@@ -13,14 +13,27 @@ class DecafSDL : public decaf::InputDriver
 public:
    ~DecafSDL();
 
-   bool createWindow();
-   bool run(const std::string &gamePath);
+   bool
+   createWindow();
+
+   bool
+   run(const std::string &gamePath);
 
 private:
-   void initialiseContext();
-   void initialiseDraw();
-   void drawScanBuffer(gl::GLuint object);
-   void drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer);
+   void
+   initialiseContext();
+
+   void
+   initialiseDraw();
+
+   void
+   calculateScreenViewports(float(&tv)[4], float(&drc)[4]);
+
+   void
+   drawScanBuffer(gl::GLuint object);
+
+   void
+   drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer);
 
    decaf::input::KeyboardKey
    translateKeyCode(SDL_Keysym sym);
@@ -37,6 +50,9 @@ private:
 
    virtual float
    getAxisValue(vpad::Channel channel, vpad::CoreAxis axis) override;
+
+   virtual bool
+   getTouchPosition(vpad::Channel channel, vpad::TouchPosition &position) override;
 
    // WPAD
    virtual wpad::Type

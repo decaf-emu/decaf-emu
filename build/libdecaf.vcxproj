@@ -527,6 +527,7 @@
     <ClInclude Include="..\src\libdecaf\src\modules\sysapp\sysapp_title.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad_enum.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad_status.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_alarm.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_core.h" />

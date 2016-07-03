@@ -164,6 +164,40 @@ DecafSDL::getAxisValue(vpad::Channel channel, vpad::CoreAxis axis)
    return 0.0f;
 }
 
+bool
+DecafSDL::getTouchPosition(vpad::Channel channel, vpad::TouchPosition &position)
+{
+   int mouseX, mouseY;
+   auto mouseButtons = SDL_GetMouseState(&mouseX, &mouseY);
+
+   // Only look for touch if left mouse button is pressed
+   if (!(mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT))) {
+      return false;
+   }
+
+   // Calculate screen position
+   float tvViewport[4], drcViewport[4];
+   int windowWidth, windowHeight;
+   SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
+   calculateScreenViewports(tvViewport, drcViewport);
+
+   auto drcWidth = drcViewport[2];
+   auto drcHeight = drcViewport[3];
+   auto drcLeft = drcViewport[0];
+   auto drcBottom = windowHeight - drcViewport[1];
+   auto drcRight = drcLeft + drcWidth;
+   auto drcTop = drcBottom - drcHeight;
+
+   // Check that mouse is inside DRC screen
+   if (mouseX >= drcLeft && mouseX <= drcRight && mouseY >= drcTop && mouseY <= drcBottom) {
+      position.x = (mouseX - drcLeft) / drcWidth;
+      position.y = (mouseY - drcTop) / drcHeight;
+      return true;
+   }
+
+   return false;
+}
+
 // WPAD
 wpad::Type
 DecafSDL::getControllerType(wpad::Channel channel)
