@@ -206,7 +206,6 @@ handleAsyncCallback(FSAsyncResult *result)
 {
    auto callback = static_cast<FSAsyncCallback>(result->userParams.callback);
    callback(result->client, result->block, result->status, result->userParams.param);
-   coreinit::internal::sysFree(result);
 }
 
 } // namespace internal
