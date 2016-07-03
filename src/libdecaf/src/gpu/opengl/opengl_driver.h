@@ -179,10 +179,11 @@ public:
    virtual void stop() override;
    virtual float getAverageFPS() override;
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
-   virtual void setForcedGpuSync(bool enabled) override;
+   virtual void syncPoll(std::function<void(unsigned int, unsigned int)> swapFunc) override;
 
 private:
    void initGL();
+   void poll();
 
    uint64_t getGpuClock();
 
@@ -266,12 +267,9 @@ private:
    }
 
 private:
-   volatile bool mRunning = true;
+   volatile bool mRunning = false;
    std::thread mThread;
-   bool mSyncEnabled;
-   std::mutex mSyncLock;
-   std::condition_variable mSyncCond;
-   uint64_t mSyncFlipCount;
+   std::function<void(unsigned int, unsigned int)> mSwapFunc;
 
    std::array<uint32_t, 0x10000> mRegisters;
 

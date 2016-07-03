@@ -20,6 +20,7 @@ private:
    void initialiseContext();
    void initialiseDraw();
    void drawScanBuffer(gl::GLuint object);
+   void drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer);
 
    decaf::input::KeyboardKey
    translateKeyCode(SDL_Keysym sym);

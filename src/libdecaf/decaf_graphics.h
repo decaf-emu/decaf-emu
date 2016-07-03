@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 
 namespace decaf
 {
@@ -23,7 +24,7 @@ public:
    }
 
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) = 0;
-   virtual void setForcedGpuSync(bool enabled) = 0;
+   virtual void syncPoll(std::function<void(unsigned int, unsigned int)> swapFunc) = 0;
 };
 
 OpenGLDriver *

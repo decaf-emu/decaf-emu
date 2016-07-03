@@ -23,18 +23,12 @@ void GLDriver::initGL()
    mRegisters.fill(0);
    mActiveShader = nullptr;
    mActiveDepthBuffer = nullptr;
-   mSyncFlipCount = 0;
    memset(&mActiveColorBuffers[0], 0, sizeof(SurfaceBuffer *) * mActiveColorBuffers.size());
    std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 
    // Create our default framebuffer
    gl::glGenFramebuffers(1, &mFrameBuffer.object);
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
-}
-
-void GLDriver::setForcedGpuSync(bool enabled)
-{
-   mSyncEnabled = enabled;
 }
 
 void GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
@@ -133,10 +127,8 @@ void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 
    mLastSwap = now;
 
-   if (mSyncEnabled) {
-      std::unique_lock<std::mutex> lock(mSyncLock);
-      mSyncFlipCount++;
-      mSyncCond.notify_all();
+   if (mSwapFunc) {
+      mSwapFunc(mTvScanBuffers.object, mDrcScanBuffers.object);
    }
 }
 
@@ -166,14 +158,6 @@ void GLDriver::decafDebugMarker(const pm4::DecafDebugMarker &data)
 
 void GLDriver::getSwapBuffers(unsigned int *tv, unsigned int *drc)
 {
-   if (mSyncEnabled) {
-      std::unique_lock<std::mutex> lock(mSyncLock);
-      auto lastSyncFlip = mSyncFlipCount;
-      while (mSyncFlipCount == lastSyncFlip) {
-         mSyncCond.wait(lock);
-      }
-   }
-
    *tv = mTvScanBuffers.object;
    *drc = mDrcScanBuffers.object;
 }
@@ -265,6 +249,35 @@ void GLDriver::handlePendingEOP()
    std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 }
 
+void GLDriver::poll()
+{
+   auto buffer = gpu::unqueueCommandBuffer();
+
+   if (!buffer) {
+      return;
+   }
+
+   // Execute command buffer
+   runCommandBuffer(buffer->buffer, buffer->curSize);
+
+   // Handle end-of-pipeline events
+   handlePendingEOP();
+
+   // Release command buffer
+   gpu::retireCommandBuffer(buffer);
+}
+
+void GLDriver::syncPoll(std::function<void(gl::GLuint, gl::GLuint)> swapFunc)
+{
+   if (!mRunning) {
+      initGL();
+      mRunning = true;
+   }
+
+   mSwapFunc = swapFunc;
+   poll();
+}
+
 void GLDriver::run()
 {
    mRunning = true;
@@ -272,20 +285,7 @@ void GLDriver::run()
    initGL();
 
    while (mRunning) {
-      auto buffer = gpu::unqueueCommandBuffer();
-
-      if (!buffer) {
-         continue;
-      }
-
-      // Execute command buffer
-      runCommandBuffer(buffer->buffer, buffer->curSize);
-
-      // Handle end-of-pipeline events
-      handlePendingEOP();
-
-      // Release command buffer
-      gpu::retireCommandBuffer(buffer);
+      poll();
    }
 }
 

@@ -88,7 +88,6 @@ DecafSDL::run(const std::string &gamePath)
 
    // Setup OpenGL graphics driver
    mGraphicsDriver = decaf::createGLDriver();
-   mGraphicsDriver->setForcedGpuSync(config::gpu::force_sync);
    decaf::setGraphicsDriver(mGraphicsDriver);
 
    // Set input provider
@@ -117,12 +116,14 @@ DecafSDL::run(const std::string &gamePath)
    decaf::debugger::initialiseUiGL();
 
    // Start graphics thread
-   mGraphicsThread = std::thread {
-      [this]() {
-         SDL_GL_MakeCurrent(mWindow, mThreadContext);
-         initialiseContext();
-         mGraphicsDriver->run();
-      } };
+   if (!config::gpu::force_sync) {
+      mGraphicsThread = std::thread{
+         [this]() {
+            SDL_GL_MakeCurrent(mWindow, mThreadContext);
+            initialiseContext();
+            mGraphicsDriver->run();
+         } };
+   }
 
    // Start emulator
    decaf::start();
@@ -165,78 +166,29 @@ DecafSDL::run(const std::string &gamePath)
          }
       }
 
-      gl::GLuint tvBuffer = 0;
-      gl::GLuint drcBuffer = 0;
-      mGraphicsDriver->getSwapBuffers(&tvBuffer, &drcBuffer);
-
-      const auto drcRatio = 0.25f;
-      const auto overallScale = 0.75f;
-      const auto sepGap = 5.0f;
-
-      static const auto DrcWidth = 854.0f;
-      static const auto DrcHeight = 480.0f;
-      static const auto TvWidth = 1280.0f;
-      static const auto TvHeight = 720.0f;
-
-      int windowWidth, windowHeight;
-      SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
-
-      auto tvWidth = windowWidth * (1.0f - drcRatio) * overallScale;
-      auto tvHeight = TvHeight * (tvWidth / TvWidth);
-      auto drcWidth = windowWidth * (drcRatio)* overallScale;
-      auto drcHeight = DrcHeight * (drcWidth / DrcWidth);
-      auto totalWidth = std::max(tvWidth, drcWidth);
-      auto totalHeight = tvHeight + drcHeight + sepGap;
-      auto baseLeft = (windowWidth / 2) - (totalWidth / 2);
-      auto baseBottom = -(windowHeight / 2) + (totalHeight / 2);
-
-      auto tvLeft = 0.0f;
-      auto tvBottom = windowHeight - tvHeight;
-      auto drcLeft = (tvWidth / 2) - (drcWidth / 2);
-      auto drcBottom = windowHeight - tvHeight - drcHeight - sepGap;
-
-      float tvVp[4] = {
-         baseLeft + tvLeft,
-         baseBottom + tvBottom,
-         tvWidth,
-         tvHeight
-      };
-
-      float drcVp[4] = {
-         baseLeft + drcLeft,
-         baseBottom + drcBottom,
-         drcWidth,
-         drcHeight
-      };
-
-      // Clear screen
-      gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
-      gl::glClear(gl::GL_COLOR_BUFFER_BIT);
-
-      // Draw TV display
-      if (tvBuffer != 0) {
-         gl::glViewportArrayv(0, 1, tvVp);
-         drawScanBuffer(tvBuffer);
+      if (!config::gpu::force_sync) {
+         gl::GLuint tvBuffer = 0;
+         gl::GLuint drcBuffer = 0;
+         mGraphicsDriver->getSwapBuffers(&tvBuffer, &drcBuffer);
+         drawScanBuffers(tvBuffer, drcBuffer);
+      } else {
+         SDL_GL_MakeCurrent(mWindow, mThreadContext);
+         mGraphicsDriver->syncPoll([&](unsigned int tvBuffer, unsigned int drcBuffer) {
+            SDL_GL_MakeCurrent(mWindow, mContext);
+            drawScanBuffers(tvBuffer, drcBuffer);
+            SDL_GL_MakeCurrent(mWindow, mThreadContext);
+         });
+         SDL_GL_MakeCurrent(mWindow, mContext);
       }
-
-      // Draw DRC display
-      if (drcBuffer != 0) {
-         gl::glViewportArrayv(0, 1, drcVp);
-         drawScanBuffer(drcBuffer);
-      }
-
-      // Draw UI
-      decaf::debugger::drawUiGL(windowWidth, windowHeight);
-
-      // Swap
-      SDL_GL_SwapWindow(mWindow);
    }
 
    // Shut down decaf
    decaf::shutdown();
 
    // Shut down the GPU
-   mGraphicsDriver->stop();
-   mGraphicsThread.join();
+   if (!config::gpu::force_sync) {
+      mGraphicsDriver->stop();
+      mGraphicsThread.join();
+   }
    return true;
 }

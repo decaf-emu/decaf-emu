@@ -256,9 +256,9 @@ GLDriver::setRegister(latte::Register reg,
       }
 
       if (pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE()) {
-         glDisable(gl::GL_DEPTH_CLAMP);
+         gl::glDisable(gl::GL_DEPTH_CLAMP);
       } else {
-         glEnable(gl::GL_DEPTH_CLAMP);
+         gl::glEnable(gl::GL_DEPTH_CLAMP);
       }
 
       if (pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {
