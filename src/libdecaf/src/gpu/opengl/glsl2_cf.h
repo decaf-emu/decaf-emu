@@ -13,6 +13,9 @@ insertPop(State &state,
           unsigned count = 1);
 
 void
+insertElse(State &state);
+
+void
 condStart(State &state,
           latte::SQ_CF_COND cond);
 

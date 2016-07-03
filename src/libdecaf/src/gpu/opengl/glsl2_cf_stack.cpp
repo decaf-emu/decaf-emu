@@ -28,6 +28,24 @@ insertPop(State &state,
 }
 
 void
+insertElse(State &state)
+{
+   insertLineStart(state);
+   state.out << "if (stack[stackIndex - 1]) {";
+   insertLineEnd(state);
+
+   increaseIndent(state);
+   insertLineStart(state);
+   state.out << "activeMask = !activeMask;";
+   insertLineEnd(state);
+   decreaseIndent(state);
+
+   insertLineStart(state);
+   state.out << "}";
+   insertLineEnd(state);
+}
+
+void
 condStart(State &state,
           SQ_CF_COND cond)
 {

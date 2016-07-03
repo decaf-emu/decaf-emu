@@ -40,19 +40,7 @@ CALL_FS(State &state, const ControlFlowInst &cf)
 static void
 ELSE(State &state, const ControlFlowInst &cf)
 {
-   insertLineStart(state);
-   state.out << "if (stack[stackIndex - 1]) {";
-   insertLineEnd(state);
-
-   increaseIndent(state);
-   insertLineStart(state);
-   state.out << "activeMask = !activeMask;";
-   insertLineEnd(state);
-   decreaseIndent(state);
-
-   insertLineStart(state);
-   state.out << "}";
-   insertLineEnd(state);
+   insertElse(state);
 }
 
 static void

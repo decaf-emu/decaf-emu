@@ -241,6 +241,7 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
 
    switch (id) {
    case SQ_CF_INST_ALU_PUSH_BEFORE:
+   case SQ_CF_INST_ALU_ELSE_AFTER:
       insertPush(state);
       state.out << '\n';
       break;
@@ -249,9 +250,6 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       break;
    case SQ_CF_INST_ALU_CONTINUE:
       throw std::logic_error("Unimplemented SQ_CF_INST_ALU_CONTINUE");
-      break;
-   case SQ_CF_INST_ALU_ELSE_AFTER:
-      throw std::logic_error("Unimplemented SQ_CF_INST_ALU_ELSE_AFTER");
       break;
    }
 
@@ -354,6 +352,10 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
    case SQ_CF_INST_ALU_POP2_AFTER:
       state.out << '\n';
       insertPop(state, 2);
+      break;
+   case SQ_CF_INST_ALU_ELSE_AFTER:
+      state.out << '\n';
+      insertElse(state);
       break;
    }
 
