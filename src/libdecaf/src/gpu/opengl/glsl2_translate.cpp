@@ -7,8 +7,6 @@
 #include "gpu/microcode/latte_disassembler.h"
 #include <map>
 
-#pragma optimize("", off)
-
 using namespace latte;
 
 namespace glsl2
@@ -220,8 +218,6 @@ isReductionInstruction(const AluInst &inst)
 
    return !!(flags & SQ_ALU_FLAG_REDUCTION);
 }
-
-#pragma optimize("", off)
 
 static void
 translateControlFlowALU(State &state, const ControlFlowInst &cf)

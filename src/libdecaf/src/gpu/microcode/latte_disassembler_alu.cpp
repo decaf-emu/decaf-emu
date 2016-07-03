@@ -3,8 +3,6 @@
 #include "common/bit_cast.h"
 #include "common/log.h"
 
-#pragma optimize("", off)
-
 namespace latte
 {
 

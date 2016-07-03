@@ -7,8 +7,6 @@
 #include <glbinding/gl/gl.h>
 #include <spdlog/spdlog.h>
 
-#pragma optimize("", off)
-
 namespace gpu
 {
 
