@@ -169,6 +169,12 @@ DecafSDL::run(const std::string &gamePath)
          drawScanBuffers(tvBuffer, drcBuffer);
       } else {
          SDL_GL_MakeCurrent(mWindow, mThreadContext);
+
+         // Set the swap interval to 0 so that we don't slow
+         //  down the GPU system when presenting...  The game should
+         //  throttle our swapping automatically anyways.
+         SDL_GL_SetSwapInterval(0);
+
          mGraphicsDriver->syncPoll([&](unsigned int tvBuffer, unsigned int drcBuffer) {
             SDL_GL_MakeCurrent(mWindow, mContext);
             drawScanBuffers(tvBuffer, drcBuffer);
