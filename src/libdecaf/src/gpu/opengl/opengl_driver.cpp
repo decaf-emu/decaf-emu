@@ -153,7 +153,7 @@ void GLDriver::decafInvalidate(const pm4::DecafInvalidate &data)
 
 void GLDriver::decafDebugMarker(const pm4::DecafDebugMarker &data)
 {
-   gLog->debug("GPU Debug Marker: {} {}", data.key.data(), data.id);
+   gLog->trace("GPU Debug Marker: {} {}", data.key.data(), data.id);
 }
 
 void GLDriver::getSwapBuffers(unsigned int *tv, unsigned int *drc)

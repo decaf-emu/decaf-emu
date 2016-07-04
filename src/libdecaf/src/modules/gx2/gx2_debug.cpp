@@ -283,18 +283,18 @@ namespace internal
 
 void writeDebugMarker(const char *key, uint32_t id)
 {
-   gLog->debug("CPU Debug Marker: {} {}", key, id);
+   gLog->trace("CPU Debug Marker: {} {}", key, id);
 
    // PM4 commands must be 32 bit aligned, we need to copy it
    //  to a temporary local buffer so the gsl span doesn't
    //  overrun the variable which was passed by the user.
    static char tmpBuf[128];
-   size_t strLen = strlen(key) + 1;
-   size_t alignedStrLen = align_up(strLen, 4);
+   auto strLen = strlen(key) + 1;
+   auto alignedStrLen = align_up(strLen, 4);
    memset(tmpBuf, 0, 128);
    memcpy(tmpBuf, key, strLen);
 
-   pm4::write(pm4::DecafDebugMarker{
+   pm4::write(pm4::DecafDebugMarker {
       id,
       gsl::as_span(tmpBuf, alignedStrLen),
    });
