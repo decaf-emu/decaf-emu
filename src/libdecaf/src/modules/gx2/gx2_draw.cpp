@@ -28,7 +28,7 @@ GX2SetAttribBuffer(uint32_t index,
 
 void
 GX2DrawEx(GX2PrimitiveMode mode,
-          uint32_t numVertices,
+          uint32_t count,
           uint32_t offset,
           uint32_t numInstances)
 {
@@ -37,12 +37,12 @@ GX2DrawEx(GX2PrimitiveMode mode,
    pm4::write(pm4::SetControlConstant { latte::Register::SQ_VTX_BASE_VTX_LOC, offset });
    pm4::write(pm4::SetConfigReg { latte::Register::VGT_PRIMITIVE_TYPE, mode });
    pm4::write(pm4::NumInstances { numInstances });
-   pm4::write(pm4::DrawIndexAuto { numVertices, vgt_draw_initiator });
+   pm4::write(pm4::DrawIndexAuto { count, vgt_draw_initiator });
 }
 
 void
 GX2DrawIndexedEx(GX2PrimitiveMode mode,
-                 uint32_t numVertices,
+                 uint32_t count,
                  GX2IndexType indexType,
                  void *indices,
                  uint32_t offset,
@@ -82,7 +82,7 @@ GX2DrawIndexedEx(GX2PrimitiveMode mode,
    pm4::write(pm4::SetConfigReg { latte::Register::VGT_PRIMITIVE_TYPE, mode });
    pm4::write(pm4::IndexType { vgt_dma_index_type });
    pm4::write(pm4::NumInstances { numInstances });
-   pm4::write(pm4::DrawIndex2 { static_cast<uint32_t>(-1), indices, numVertices, vgt_draw_initiator });
+   pm4::write(pm4::DrawIndex2 { static_cast<uint32_t>(-1), indices, count, vgt_draw_initiator });
 }
 
 void

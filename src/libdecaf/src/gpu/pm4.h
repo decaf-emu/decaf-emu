@@ -170,13 +170,13 @@ struct DrawIndexAuto
 {
    static const auto Opcode = type3::DRAW_INDEX_AUTO;
 
-   uint32_t indexCount;
+   uint32_t count;
    latte::VGT_DRAW_INITIATOR drawInitiator;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se(indexCount);
+      se(count);
       se(drawInitiator.value);
    }
 };
@@ -187,7 +187,7 @@ struct DrawIndex2
 
    uint32_t maxIndices;                      // VGT_DMA_MAX_SIZE
    virtual_ptr<void> addr;                   // VGT_DMA_BASE
-   uint32_t numIndices;                      // VGT_DMA_SIZE
+   uint32_t count;                           // VGT_DMA_SIZE
    latte::VGT_DRAW_INITIATOR drawInitiator;  // VGT_DRAW_INITIATOR
 
    template<typename Serialiser>
@@ -198,7 +198,7 @@ struct DrawIndex2
       se(maxIndices);
       se(addr);
       se(unusedAddrHi);
-      se(numIndices);
+      se(count);
       se(drawInitiator.value);
    }
 };

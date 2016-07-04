@@ -185,7 +185,9 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t heigh
    uint64_t surfaceKey = static_cast<uint64_t>(baseAddress) << 32;
    surfaceKey ^= width ^ height ^ depth ^ dim;
    surfaceKey ^= format ^ numFormat ^ formatComp ^ degamma;
+
    auto bufferIter = mSurfaces.find(surfaceKey);
+
    if (bufferIter != mSurfaces.end()) {
       return &bufferIter->second;
    }
@@ -194,6 +196,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t heigh
    auto buffer = &insertRes.first->second;
 
    auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma);
+
    if (storageFormat == gl::GL_INVALID_ENUM) {
       gLog->debug("Skipping texture with unsupported format {} {} {} {}", format, numFormat, formatComp, degamma);
       return nullptr;

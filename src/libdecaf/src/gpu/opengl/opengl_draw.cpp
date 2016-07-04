@@ -174,7 +174,7 @@ GLDriver::drawIndexAuto(const pm4::DrawIndexAuto &data)
 
    drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
                   sq_vtx_base_vtx_loc.OFFSET,
-                  data.indexCount,
+                  data.count,
                   nullptr,
                   latte::VGT_INDEX_32);
 }
@@ -195,42 +195,42 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
    //   the data before intercepting QUAD and POLYGON draws.
    if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_16_BIT) {
       auto *src = static_cast<uint16_t*>(data.addr.get());
-      auto indices = std::vector<uint16_t>(data.numIndices);
+      auto indices = std::vector<uint16_t>(data.count);
 
       if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_16) {
          throw std::logic_error(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_16_BIT", vgt_dma_index_type.INDEX_TYPE()));
       }
 
-      for (auto i = 0u; i < data.numIndices; ++i) {
+      for (auto i = 0u; i < data.count; ++i) {
          indices[i] = byte_swap(src[i]);
       }
 
       drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
                      sq_vtx_base_vtx_loc.OFFSET,
-                     data.numIndices,
+                     data.count,
                      indices.data(),
                      vgt_dma_index_type.INDEX_TYPE());
    } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_32_BIT) {
       auto *src = static_cast<uint32_t*>(data.addr.get());
-      auto indices = std::vector<uint32_t>(data.numIndices);
+      auto indices = std::vector<uint32_t>(data.count);
 
       if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_32) {
          throw std::logic_error(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_32_BIT", vgt_dma_index_type.INDEX_TYPE()));
       }
 
-      for (auto i = 0u; i < data.numIndices; ++i) {
+      for (auto i = 0u; i < data.count; ++i) {
          indices[i] = byte_swap(src[i]);
       }
 
       drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
                      sq_vtx_base_vtx_loc.OFFSET,
-                     data.numIndices,
+                     data.count,
                      indices.data(),
                      vgt_dma_index_type.INDEX_TYPE());
    } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_NONE) {
       drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
                      sq_vtx_base_vtx_loc.OFFSET,
-                     data.numIndices,
+                     data.count,
                      data.addr,
                      vgt_dma_index_type.INDEX_TYPE());
    } else {
