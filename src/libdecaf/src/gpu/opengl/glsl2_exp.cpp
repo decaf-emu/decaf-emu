@@ -38,32 +38,7 @@ getExportRegister(uint32_t gpr, SQ_REL rel)
    return out.str();
 }
 
-std::string
-getSelectDestinationMask(SQ_SEL x, SQ_SEL y, SQ_SEL z, SQ_SEL w)
-{
-   std::string value;
-   value.reserve(4);
-
-   if (x != SQ_SEL_MASK) {
-      value.push_back('x');
-   }
-
-   if (y != SQ_SEL_MASK) {
-      value.push_back('y');
-   }
-
-   if (z != SQ_SEL_MASK) {
-      value.push_back('z');
-   }
-
-   if (w != SQ_SEL_MASK) {
-      value.push_back('w');
-   }
-
-   return value;
-}
-
-bool
+static bool
 insertSelectValue(fmt::MemoryWriter &out, const std::string &src, SQ_SEL sel)
 {
    switch (sel) {
@@ -86,12 +61,106 @@ insertSelectValue(fmt::MemoryWriter &out, const std::string &src, SQ_SEL sel)
       out << "1";
       break;
    case SQ_SEL_MASK:
-      return false;
+      // These should never show up since if it does, it means that need
+      //  to actually do a condensing first and adjust the target swizzle.
+      throw std::logic_error("Unexpected SQ_SEL_MASK");
    default:
       throw std::logic_error(fmt::format("Unexpected SQ_SEL value {}", sel));
    }
 
    return true;
+}
+
+bool
+insertSelectVector(fmt::MemoryWriter &out, const std::string &src, SQ_SEL selX, SQ_SEL selY, SQ_SEL selZ, SQ_SEL selW, uint32_t numSels)
+{
+   SQ_SEL sels[4] = { selX, selY, selZ, selW };
+
+   if (numSels == 1) {
+      insertSelectValue(out, src, sels[0]);
+   } else {
+      bool isTrivialSwizzle = true;
+      for (uint32_t i = 0; i < numSels; ++i) {
+         if (sels[i] != SQ_SEL_X && sels[i] != SQ_SEL_Y && sels[i] != SQ_SEL_Z && sels[i] != SQ_SEL_W) {
+            isTrivialSwizzle = false;
+         }
+      }
+
+      if (isTrivialSwizzle) {
+         out << src << ".";
+         for (uint32_t i = 0; i < numSels; ++i) {
+            switch (sels[i]) {
+            case SQ_SEL_X:
+               out << "x";
+               break;
+            case SQ_SEL_Y:
+               out << "y";
+               break;
+            case SQ_SEL_Z:
+               out << "z";
+               break;
+            case SQ_SEL_W:
+               out << "w";
+               break;
+            }
+         }
+      } else {
+         out << "vec" << numSels << "(";
+
+         insertSelectValue(out, src, sels[0]);
+
+         if (numSels >= 2) {
+            out << ", ";
+            insertSelectValue(out, src, sels[1]);
+         }
+
+         if (numSels >= 3) {
+            out << ", ";
+            insertSelectValue(out, src, sels[2]);
+         }
+
+         if (numSels >= 4) {
+            out << ", ";
+            insertSelectValue(out, src, sels[3]);
+         }
+
+         out << ")";
+      }
+   }
+
+   return true;
+}
+
+std::string
+condenseSelections(SQ_SEL &selX, SQ_SEL &selY, SQ_SEL &selZ, SQ_SEL &selW, uint32_t &numSels)
+{
+   std::string value;
+   value.reserve(4);
+   uint32_t numSelsOut = 0;
+   SQ_SEL sels[4] = { selX, selY, selZ, selW };
+
+   for (uint32_t i = 0; i < numSels; ++i) {
+      if (sels[i] != SQ_SEL_MASK) {
+         sels[numSelsOut] = sels[i];
+         numSelsOut++;
+         if (i == 0) {
+            value.push_back('x');
+         } else if (i == 1) {
+            value.push_back('y');
+         } else if (i == 2) {
+            value.push_back('z');
+         } else if (i == 3) {
+            value.push_back('w');
+         }
+      }
+   }
+
+   selX = sels[0];
+   selY = sels[1];
+   selZ = sels[2];
+   selW = sels[3];
+   numSels = numSelsOut;
+   return value;
 }
 
 static void
@@ -116,6 +185,20 @@ EXP(State &state, const ControlFlowInst &cf)
 {
    auto type = cf.exp.word0.TYPE();
    auto arrayBase = cf.exp.word0.ARRAY_BASE();
+
+   auto selX = cf.exp.swiz.SRC_SEL_X();
+   auto selY = cf.exp.swiz.SRC_SEL_Y();
+   auto selZ = cf.exp.swiz.SRC_SEL_Z();
+   auto selW = cf.exp.swiz.SRC_SEL_W();
+   auto src = getExportRegister(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL());
+
+   if (selX == SQ_SEL_MASK || selY == SQ_SEL_MASK || selZ == SQ_SEL_MASK || selW == SQ_SEL_MASK) {
+      // It doesn't really ever make sense for exports to use masking, so lets make
+      //  sure to crash in this instance.  If there is a valid use-case for this, we
+      //  just need to switch back to using condenseSelections instead.
+      throw std::logic_error("Masking exports is non-sense");
+   }
+
    registerExport(state, type, arrayBase);
 
    insertLineStart(state);
@@ -134,31 +217,9 @@ EXP(State &state, const ControlFlowInst &cf)
       throw std::logic_error(fmt::format("Unsupported export type {}", cf.exp.word0.TYPE()));
    }
 
-   auto selX = cf.exp.swiz.SRC_SEL_X();
-   auto selY = cf.exp.swiz.SRC_SEL_Y();
-   auto selZ = cf.exp.swiz.SRC_SEL_Z();
-   auto selW = cf.exp.swiz.SRC_SEL_W();
-   auto src = getExportRegister(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL());
-
-   auto dstMask = getSelectDestinationMask(selX, selY, selZ, selW);
-   state.out << "." << dstMask << " = ";
-
-   state.out << "vec" << dstMask.length() << "(";
-
-   if (insertSelectValue(state.out, src, selX)) {
-      state.out << ", ";
-   }
-
-   if (insertSelectValue(state.out, src, selY)) {
-      state.out << ", ";
-   }
-
-   if (insertSelectValue(state.out, src, selZ)) {
-      state.out << ", ";
-   }
-
-   insertSelectValue(state.out, src, selW);
-   state.out << ");";
+   state.out << " = ";
+   insertSelectVector(state.out, src, selX, selY, selZ, selW, 4);
+   state.out << ";";
 
    insertLineEnd(state);
 }

@@ -1,8 +1,6 @@
 #include "glsl2_translate.h"
 #include "gpu/microcode/latte_instructions.h"
 
-#pragma optimize("", off)
-
 using namespace latte;
 
 /*
@@ -117,10 +115,10 @@ registerSamplerID(State &state, unsigned id)
 static void
 SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
-   auto dstSelX = inst.word1.DST_SEL_X();
-   auto dstSelY = inst.word1.DST_SEL_Y();
-   auto dstSelZ = inst.word1.DST_SEL_Z();
-   auto dstSelW = inst.word1.DST_SEL_W();
+   latte::SQ_SEL dstSelX = inst.word1.DST_SEL_X();
+   latte::SQ_SEL dstSelY = inst.word1.DST_SEL_Y();
+   latte::SQ_SEL dstSelZ = inst.word1.DST_SEL_Z();
+   latte::SQ_SEL dstSelW = inst.word1.DST_SEL_W();
 
    auto srcSelX = inst.word2.SRC_SEL_X();
    auto srcSelY = inst.word2.SRC_SEL_Y();
@@ -142,53 +140,29 @@ SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetch
 
    auto dst = getExportRegister(inst.word1.DST_GPR(), inst.word1.DST_REL());
    auto src = getExportRegister(inst.word0.SRC_GPR(), inst.word0.SRC_REL());
-   auto dstSelMask = getSelectDestinationMask(dstSelX, dstSelY, dstSelZ, dstSelW);
 
-   insertLineStart(state);
-   state.out << dst << "." << dstSelMask;
-   state.out << " = texture(sampler_" << samplerID << ", ";
+   uint32_t numDstSels = 4;
+   auto dstSelMask = condenseSelections(dstSelX, dstSelY, dstSelZ, dstSelW, numDstSels);
 
-   auto samplerElements = getSamplerArgCount(samplerType);
+   if (numDstSels > 0)
+   {
+      insertLineStart(state);
+      state.out << "texTmp = texture(sampler_" << samplerID << ", ";
 
-   if (samplerElements == 1) {
-      insertSelectValue(state.out, src, srcSelX);
-   } else {
-      auto srcSelCount = 0u;
-      state.out << "vec" << samplerElements << "(";
+      auto samplerElements = getSamplerArgCount(samplerType);
+      insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, samplerElements);
 
-      if (srcSelCount < samplerElements && insertSelectValue(state.out, src, srcSelX)) {
-         srcSelCount++;
+      state.out << ");";
 
-         if (srcSelCount < samplerElements) {
-            state.out << ", ";
-         }
-      }
+      insertLineEnd(state);
 
-      if (srcSelCount < samplerElements && insertSelectValue(state.out, src, srcSelY)) {
-         srcSelCount++;
-
-         if (srcSelCount < samplerElements) {
-            state.out << ", ";
-         }
-      }
-
-      if (srcSelCount < samplerElements && insertSelectValue(state.out, src, srcSelZ)) {
-         srcSelCount++;
-
-         if (srcSelCount < samplerElements) {
-            state.out << ", ";
-         }
-      }
-
-      if (srcSelCount < samplerElements && insertSelectValue(state.out, src, srcSelW)) {
-         srcSelCount++;
-      }
-
-      state.out << ")";
+      insertLineStart(state);
+      state.out << dst << "." << dstSelMask;
+      state.out << " = ";
+      insertSelectVector(state.out, "texTmp", dstSelX, dstSelY, dstSelZ, dstSelW, numDstSels);
+      state.out << ";";
+      insertLineEnd(state);
    }
-
-   state.out << ")." << dstSelMask  << ';';
-   insertLineEnd(state);
 }
 
 void

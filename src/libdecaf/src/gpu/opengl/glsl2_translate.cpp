@@ -606,6 +606,7 @@ insertCodeHeader(State &state)
       << "vec4 PVo;\n"
       << "float PS;\n"
       << "float PSo;\n"
+      << "vec4 texTmp;\n"
       << "ivec4 AR;\n"
       << "int AL;\n";
 

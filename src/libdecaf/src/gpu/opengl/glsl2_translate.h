@@ -156,10 +156,10 @@ insertExportRegister(fmt::MemoryWriter &out, uint32_t gpr, latte::SQ_REL rel);
 std::string
 getExportRegister(uint32_t gpr, latte::SQ_REL rel);
 
-std::string
-getSelectDestinationMask(latte::SQ_SEL x, latte::SQ_SEL y, latte::SQ_SEL z, latte::SQ_SEL w);
-
 bool
-insertSelectValue(fmt::MemoryWriter &out, const std::string &src, latte::SQ_SEL sel);
+insertSelectVector(fmt::MemoryWriter &out, const std::string &src, latte::SQ_SEL selX, latte::SQ_SEL selY, latte::SQ_SEL selZ, latte::SQ_SEL selW, uint32_t numSels);
+
+std::string
+condenseSelections(latte::SQ_SEL &selX, latte::SQ_SEL &selY, latte::SQ_SEL &selZ, latte::SQ_SEL &selW, uint32_t &numSels);
 
 } // namespace glsl2
