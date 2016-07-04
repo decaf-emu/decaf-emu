@@ -5,6 +5,7 @@
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
+#include "modules/dmae/dmae.h"
 #include "modules/erreula/erreula.h"
 #include "modules/gx2/gx2.h"
 #include "modules/mic/mic.h"
@@ -110,6 +111,7 @@ void
 initialiseHleMmodules()
 {
    coreinit::Module::RegisterFunctions();
+   dmae::Module::RegisterFunctions();
    nn::erreula::Module::RegisterFunctions();
    gx2::Module::RegisterFunctions();
    mic::Module::RegisterFunctions();
@@ -133,6 +135,7 @@ initialiseHleMmodules()
    zlib125::Module::RegisterFunctions();
 
    registerHleModule("coreinit.rpl", new coreinit::Module{});
+   registerHleModule("dmae.rpl", new dmae::Module{});
    registerHleModule("erreula.rpl", new nn::erreula::Module{});
    registerHleModule("gx2.rpl", new gx2::Module{});
    registerHleModule("mic.rpl", new mic::Module{});

@@ -202,6 +202,12 @@
     <Filter Include="Source Files\gpu\opengl\glsl2">
       <UniqueIdentifier>{9575a576-e657-4f86-8f04-60487c894634}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\dmae">
+      <UniqueIdentifier>{232e246a-30f6-42d9-b9d1-c732654bbabb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\dmae">
+      <UniqueIdentifier>{186d1ad5-6eb6-42b7-8707-cb2c370ee42c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit.cpp">
@@ -788,6 +794,12 @@
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu_reduction.cpp">
       <Filter>Source Files\gpu\opengl\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\dmae\dmae.cpp">
+      <Filter>Source Files\modules\dmae</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\dmae\dmae_core.cpp">
+      <Filter>Source Files\modules\dmae</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1495,6 +1507,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad_enum.h">
       <Filter>Header Files\modules\vpad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\dmae\dmae.h">
+      <Filter>Header Files\modules\dmae</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
