@@ -47,13 +47,14 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
    auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * latte::MicroTileWidth);
    auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
-   auto cbFormat = static_cast<latte::CB_FORMAT>(cb_color_info.FORMAT());
-   latte::SQ_DATA_FORMAT format = static_cast<latte::SQ_DATA_FORMAT>(cbFormat);
-   latte::SQ_NUM_FORMAT numFormat;
-   latte::SQ_FORMAT_COMP formatComp;
-   uint32_t degamma;
-
    auto cbNumberType = cb_color_info.NUMBER_TYPE();
+   auto cbFormat = cb_color_info.FORMAT().get();
+   auto format = static_cast<latte::SQ_DATA_FORMAT>(cbFormat);
+
+   auto numFormat = latte::SQ_NUM_FORMAT_NORM;
+   auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   auto degamma = 0u;
+
    switch (cbNumberType) {
    case latte::CB_NUMBER_TYPE::NUMBER_UNORM:
       numFormat = latte::SQ_NUM_FORMAT_NORM;
@@ -85,12 +86,11 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
 
    // Force the format for now...
    format = latte::SQ_DATA_FORMAT::FMT_8_8_8_8;
-   numFormat = latte::SQ_NUM_FORMAT_NORM;;
+   numFormat = latte::SQ_NUM_FORMAT_NORM;
    formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
    degamma = 0;
 
    auto buffer = getSurfaceBuffer(baseAddress, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma);
-
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
