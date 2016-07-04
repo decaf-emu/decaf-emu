@@ -72,23 +72,25 @@ insertSelectValue(fmt::MemoryWriter &out, const std::string &src, SQ_SEL sel)
 }
 
 bool
-insertSelectVector(fmt::MemoryWriter &out, const std::string &src, SQ_SEL selX, SQ_SEL selY, SQ_SEL selZ, SQ_SEL selW, uint32_t numSels)
+insertSelectVector(fmt::MemoryWriter &out, const std::string &src, SQ_SEL selX, SQ_SEL selY, SQ_SEL selZ, SQ_SEL selW, unsigned numSels)
 {
    SQ_SEL sels[4] = { selX, selY, selZ, selW };
 
    if (numSels == 1) {
       insertSelectValue(out, src, sels[0]);
    } else {
-      bool isTrivialSwizzle = true;
-      for (uint32_t i = 0; i < numSels; ++i) {
+      auto isTrivialSwizzle = true;
+
+      for (auto i = 0u; i < numSels; ++i) {
          if (sels[i] != SQ_SEL_X && sels[i] != SQ_SEL_Y && sels[i] != SQ_SEL_Z && sels[i] != SQ_SEL_W) {
             isTrivialSwizzle = false;
          }
       }
 
       if (isTrivialSwizzle) {
+
          out << src << ".";
-         for (uint32_t i = 0; i < numSels; ++i) {
+         for (auto i = 0u; i < numSels; ++i) {
             switch (sels[i]) {
             case SQ_SEL_X:
                out << "x";
@@ -132,17 +134,18 @@ insertSelectVector(fmt::MemoryWriter &out, const std::string &src, SQ_SEL selX, 
 }
 
 std::string
-condenseSelections(SQ_SEL &selX, SQ_SEL &selY, SQ_SEL &selZ, SQ_SEL &selW, uint32_t &numSels)
+condenseSelections(SQ_SEL &selX, SQ_SEL &selY, SQ_SEL &selZ, SQ_SEL &selW, unsigned &numSels)
 {
    std::string value;
    value.reserve(4);
-   uint32_t numSelsOut = 0;
+   auto numSelsOut = 0u;
    SQ_SEL sels[4] = { selX, selY, selZ, selW };
 
-   for (uint32_t i = 0; i < numSels; ++i) {
+   for (auto i = 0u; i < numSels; ++i) {
       if (sels[i] != SQ_SEL_MASK) {
          sels[numSelsOut] = sels[i];
          numSelsOut++;
+
          if (i == 0) {
             value.push_back('x');
          } else if (i == 1) {

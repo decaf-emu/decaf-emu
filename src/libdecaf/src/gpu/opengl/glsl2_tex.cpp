@@ -113,12 +113,12 @@ registerSamplerID(State &state, unsigned id)
 }
 
 static void
-SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst, const std::string &func, const std::string &extraArgs = "")
 {
-   latte::SQ_SEL dstSelX = inst.word1.DST_SEL_X();
-   latte::SQ_SEL dstSelY = inst.word1.DST_SEL_Y();
-   latte::SQ_SEL dstSelZ = inst.word1.DST_SEL_Z();
-   latte::SQ_SEL dstSelW = inst.word1.DST_SEL_W();
+   auto dstSelX = inst.word1.DST_SEL_X().get();
+   auto dstSelY = inst.word1.DST_SEL_Y().get();
+   auto dstSelZ = inst.word1.DST_SEL_Z().get();
+   auto dstSelW = inst.word1.DST_SEL_W().get();
 
    auto srcSelX = inst.word2.SRC_SEL_X();
    auto srcSelY = inst.word2.SRC_SEL_Y();
@@ -141,19 +141,17 @@ SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetch
    auto dst = getExportRegister(inst.word1.DST_GPR(), inst.word1.DST_REL());
    auto src = getExportRegister(inst.word0.SRC_GPR(), inst.word0.SRC_REL());
 
-   uint32_t numDstSels = 4;
+   auto numDstSels = 4u;
    auto dstSelMask = condenseSelections(dstSelX, dstSelY, dstSelZ, dstSelW, numDstSels);
 
-   if (numDstSels > 0)
-   {
+   if (numDstSels > 0) {
       insertLineStart(state);
-      state.out << "texTmp = texture(sampler_" << samplerID << ", ";
+      state.out << "texTmp = " << func << "(sampler_" << samplerID << ", ";
 
       auto samplerElements = getSamplerArgCount(samplerType);
       insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, samplerElements);
 
-      state.out << ");";
-
+      state.out << extraArgs << ");";
       insertLineEnd(state);
 
       insertLineStart(state);
@@ -165,10 +163,24 @@ SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetch
    }
 }
 
+static void
+SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+   sampleFunc(state, cf, inst, "texture");
+}
+
+static void
+SAMPLE_LZ(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+   // Sample with LOD Zero
+   sampleFunc(state, cf, inst, "textureLod", ", 0");
+}
+
 void
 registerTexFunctions()
 {
    registerInstruction(SQ_TEX_INST_SAMPLE, SAMPLE);
+   registerInstruction(SQ_TEX_INST_SAMPLE_LZ, SAMPLE_LZ);
 }
 
 } // namespace glsl2
