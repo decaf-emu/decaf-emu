@@ -181,6 +181,8 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t heigh
    emuassert(width);
    emuassert(height);
    emuassert(depth);
+   emuassert(width <= 8192);
+   emuassert(height <= 8192);
 
    uint64_t surfaceKey = static_cast<uint64_t>(baseAddress) << 32;
    surfaceKey ^= width ^ height ^ depth ^ dim;
