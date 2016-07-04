@@ -304,6 +304,14 @@ GX2SetSurfaceSwizzle(GX2Surface *surface, uint32_t swizzle)
    surface->swizzle |= swizzle << 8;
 }
 
+uint32_t
+GX2GetSurfaceMipPitch(GX2Surface *surface, uint32_t level)
+{
+   ADDR_COMPUTE_SURFACE_INFO_OUTPUT info;
+   internal::getSurfaceInfo(surface, level, &info);
+   return info.pitch;
+}
+
 void
 GX2CopySurface(GX2Surface *src,
                uint32_t srcLevel,
