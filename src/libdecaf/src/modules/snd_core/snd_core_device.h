@@ -68,4 +68,7 @@ AXSetDeviceCompressor(AXDeviceType type, uint32_t);
 AXResult
 AXSetDeviceUpsampleStage(AXDeviceType type, uint32_t);
 
+AXResult
+AXSetDeviceVolume(AXDeviceType type, uint32_t id, uint16_t volume);
+
 } // namespace snd_core

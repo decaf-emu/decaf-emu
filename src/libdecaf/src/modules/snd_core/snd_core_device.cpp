@@ -86,6 +86,12 @@ AXSetDeviceUpsampleStage(AXDeviceType type, uint32_t)
    return AXResult::Success;
 }
 
+AXResult
+AXSetDeviceVolume(AXDeviceType type, uint32_t id, uint16_t volume)
+{
+   return AXResult::Success;
+}
+
 void
 Module::registerDeviceFunctions()
 {
@@ -98,6 +104,7 @@ Module::registerDeviceFunctions()
    RegisterKernelFunction(AXSetDeviceLinearUpsampler);
    RegisterKernelFunction(AXSetDeviceCompressor);
    RegisterKernelFunction(AXSetDeviceUpsampleStage);
+   RegisterKernelFunction(AXSetDeviceVolume);
 }
 
 } // namespace snd_core
