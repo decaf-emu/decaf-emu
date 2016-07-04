@@ -83,8 +83,7 @@ struct SQ_CF_WORD0
 };
 
 // Control flow instruction word 1
-struct SQ_CF_WORD1 : Bitfield<SQ_CF_WORD1, uint32_t>
-{
+BITFIELD(SQ_CF_WORD1, uint32_t)
    BITFIELD_ENTRY(0, 3, uint32_t, POP_COUNT);
    BITFIELD_ENTRY(3, 5, uint32_t, CF_CONST);
    BITFIELD_ENTRY(8, 2, SQ_CF_COND, COND);
@@ -97,20 +96,18 @@ struct SQ_CF_WORD1 : Bitfield<SQ_CF_WORD1, uint32_t>
    BITFIELD_ENTRY(28, 2, SQ_CF_INST_TYPE, CF_INST_TYPE);
    BITFIELD_ENTRY(30, 1, bool, WHOLE_QUAD_MODE);
    BITFIELD_ENTRY(31, 1, bool, BARRIER);
-};
+BITFIELD_END
 
 // Control flow ALU clause instruction word 0
-struct SQ_CF_ALU_WORD0 : Bitfield<SQ_CF_ALU_WORD0, uint32_t>
-{
+BITFIELD(SQ_CF_ALU_WORD0, uint32_t)
    BITFIELD_ENTRY(0, 22, uint32_t, ADDR);
    BITFIELD_ENTRY(22, 4, uint32_t, KCACHE_BANK0);
    BITFIELD_ENTRY(26, 4, uint32_t, KCACHE_BANK1);
    BITFIELD_ENTRY(30, 2, SQ_CF_KCACHE_MODE, KCACHE_MODE0);
-};
+BITFIELD_END
 
 // Control flow ALU clause instruction word 1
-struct SQ_CF_ALU_WORD1 : Bitfield<SQ_CF_ALU_WORD1, uint32_t>
-{
+BITFIELD(SQ_CF_ALU_WORD1, uint32_t)
    BITFIELD_ENTRY(0, 2, SQ_CF_KCACHE_MODE, KCACHE_MODE1);
    BITFIELD_ENTRY(2, 8, uint32_t, KCACHE_ADDR0);
    BITFIELD_ENTRY(10, 8, uint32_t, KCACHE_ADDR1);
@@ -119,11 +116,10 @@ struct SQ_CF_ALU_WORD1 : Bitfield<SQ_CF_ALU_WORD1, uint32_t>
    BITFIELD_ENTRY(26, 4, SQ_CF_ALU_INST, CF_INST);
    BITFIELD_ENTRY(30, 1, bool, WHOLE_QUAD_MODE);
    BITFIELD_ENTRY(31, 1, bool, BARRIER);
-};
+BITFIELD_END
 
 // ALU instruction word 0
-struct SQ_ALU_WORD0 : Bitfield<SQ_ALU_WORD0, uint32_t>
-{
+BITFIELD(SQ_ALU_WORD0, uint32_t)
    BITFIELD_ENTRY(0, 9, SQ_ALU_SRC, SRC0_SEL);
    BITFIELD_ENTRY(9, 1, SQ_REL, SRC0_REL);
    BITFIELD_ENTRY(10, 2, SQ_CHAN, SRC0_CHAN);
@@ -135,22 +131,20 @@ struct SQ_ALU_WORD0 : Bitfield<SQ_ALU_WORD0, uint32_t>
    BITFIELD_ENTRY(26, 3, SQ_INDEX_MODE, INDEX_MODE);
    BITFIELD_ENTRY(29, 2, SQ_PRED_SEL, PRED_SEL);
    BITFIELD_ENTRY(31, 1, bool, LAST);
-};
+BITFIELD_END
 
 // ALU instruction word 1
-struct SQ_ALU_WORD1 : Bitfield<SQ_ALU_WORD1, uint32_t>
-{
+BITFIELD(SQ_ALU_WORD1, uint32_t)
    BITFIELD_ENTRY(15, 3, SQ_ALU_ENCODING, ENCODING);
    BITFIELD_ENTRY(18, 3, SQ_ALU_VEC_BANK_SWIZZLE, BANK_SWIZZLE);
    BITFIELD_ENTRY(21, 7, uint32_t, DST_GPR);
    BITFIELD_ENTRY(28, 1, SQ_REL, DST_REL);
    BITFIELD_ENTRY(29, 2, SQ_CHAN, DST_CHAN);
    BITFIELD_ENTRY(31, 1, bool, CLAMP);
-};
+BITFIELD_END
 
 // ALU instruction word 1. This subencoding is used for instructions taking 0-2 operands.
-struct SQ_ALU_WORD1_OP2 : Bitfield<SQ_ALU_WORD1_OP2, uint32_t>
-{
+BITFIELD(SQ_ALU_WORD1_OP2, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, SRC0_ABS);
    BITFIELD_ENTRY(1, 1, bool, SRC1_ABS);
    BITFIELD_ENTRY(2, 1, bool, UPDATE_EXECUTE_MASK);
@@ -159,61 +153,55 @@ struct SQ_ALU_WORD1_OP2 : Bitfield<SQ_ALU_WORD1_OP2, uint32_t>
    BITFIELD_ENTRY(5, 2, SQ_ALU_OMOD, OMOD);
    BITFIELD_ENTRY(5, 2, SQ_ALU_EXECUTE_MASK_OP, EXECUTE_MASK_OP);
    BITFIELD_ENTRY(7, 11, SQ_OP2_INST, ALU_INST);
-};
+BITFIELD_END
 
 // ALU instruction word 1. This subencoding is used for instructions taking 3 operands.
-struct SQ_ALU_WORD1_OP3 : Bitfield<SQ_ALU_WORD1_OP3, uint32_t>
-{
+BITFIELD(SQ_ALU_WORD1_OP3, uint32_t)
    BITFIELD_ENTRY(0, 9, SQ_ALU_SRC, SRC2_SEL);
    BITFIELD_ENTRY(9, 1, SQ_REL, SRC2_REL);
    BITFIELD_ENTRY(10, 2, SQ_CHAN, SRC2_CHAN);
    BITFIELD_ENTRY(12, 1, bool, SRC2_NEG);
    BITFIELD_ENTRY(13, 5, SQ_OP3_INST, ALU_INST);
-};
+BITFIELD_END
 
 // Word 0 of the control flow instruction for alloc/export.
-struct SQ_CF_ALLOC_EXPORT_WORD0 : Bitfield<SQ_CF_ALLOC_EXPORT_WORD0, uint32_t>
-{
+BITFIELD(SQ_CF_ALLOC_EXPORT_WORD0, uint32_t)
    BITFIELD_ENTRY(0, 13, uint32_t, ARRAY_BASE);
    BITFIELD_ENTRY(13, 2, SQ_EXPORT_TYPE, TYPE);
    BITFIELD_ENTRY(15, 7, uint32_t, RW_GPR);
    BITFIELD_ENTRY(22, 1, SQ_REL, RW_REL);
    BITFIELD_ENTRY(23, 7, uint32_t, INDEX_GPR);
    BITFIELD_ENTRY(30, 2, uint32_t, ELEM_SIZE);
-};
+BITFIELD_END
 
 // Word 1 of the control flow instruction
-struct SQ_CF_ALLOC_EXPORT_WORD1 : Bitfield<SQ_CF_ALLOC_EXPORT_WORD1, uint32_t>
-{
+BITFIELD(SQ_CF_ALLOC_EXPORT_WORD1, uint32_t)
    BITFIELD_ENTRY(17, 4, uint32_t, BURST_COUNT);
    BITFIELD_ENTRY(21, 1, bool, END_OF_PROGRAM);
    BITFIELD_ENTRY(22, 1, bool, VALID_PIXEL_MODE);
    BITFIELD_ENTRY(23, 7, SQ_CF_EXP_INST, CF_INST);
    BITFIELD_ENTRY(30, 1, bool, WHOLE_QUAD_MODE);
    BITFIELD_ENTRY(31, 1, bool, BARRIER);
-};
+BITFIELD_END
 
 // Word 1 of the control flow instruction. This subencoding is used by alloc/exports
 // for all input / outputs to scratch / ring / stream / reduction buffers.
-struct SQ_CF_ALLOC_EXPORT_WORD1_BUF : Bitfield<SQ_CF_ALLOC_EXPORT_WORD1_BUF, uint32_t>
-{
+BITFIELD(SQ_CF_ALLOC_EXPORT_WORD1_BUF, uint32_t)
    BITFIELD_ENTRY(0, 12, uint32_t, ARRAY_SIZE);
    BITFIELD_ENTRY(12, 4, uint32_t, COMP_MASK);
-};
+BITFIELD_END
 
 // Word 1 of the control flow instruction. This subencoding is used by
 // alloc/exports for PIXEL, POS, and PARAM.
-struct SQ_CF_ALLOC_EXPORT_WORD1_SWIZ : Bitfield<SQ_CF_ALLOC_EXPORT_WORD1_SWIZ, uint32_t>
-{
+BITFIELD(SQ_CF_ALLOC_EXPORT_WORD1_SWIZ, uint32_t)
    BITFIELD_ENTRY(0, 3, SQ_SEL, SRC_SEL_X);
    BITFIELD_ENTRY(3, 3, SQ_SEL, SRC_SEL_Y);
    BITFIELD_ENTRY(6, 3, SQ_SEL, SRC_SEL_Z);
    BITFIELD_ENTRY(9, 3, SQ_SEL, SRC_SEL_W);
-};
+BITFIELD_END
 
 // Texture fetch clause instruction word 0
-struct SQ_TEX_WORD0 : Bitfield<SQ_TEX_WORD0, uint32_t>
-{
+BITFIELD(SQ_TEX_WORD0, uint32_t)
    BITFIELD_ENTRY(0, 5, SQ_TEX_INST, TEX_INST);
    BITFIELD_ENTRY(5, 1, bool, BC_FRAC_MODE);
    BITFIELD_ENTRY(7, 1, bool, FETCH_WHOLE_QUAD);
@@ -221,11 +209,10 @@ struct SQ_TEX_WORD0 : Bitfield<SQ_TEX_WORD0, uint32_t>
    BITFIELD_ENTRY(16, 7, uint32_t, SRC_GPR);
    BITFIELD_ENTRY(23, 1, SQ_REL, SRC_REL);
    BITFIELD_ENTRY(24, 1, bool, ALT_CONST);
-};
+BITFIELD_END
 
 // Texture fetch clause instruction word 1
-struct SQ_TEX_WORD1 : Bitfield<SQ_TEX_WORD1, uint32_t>
-{
+BITFIELD(SQ_TEX_WORD1, uint32_t)
    BITFIELD_ENTRY(0, 7, uint32_t, DST_GPR);
    BITFIELD_ENTRY(7, 1, SQ_REL, DST_REL);
    BITFIELD_ENTRY(9, 3, SQ_SEL, DST_SEL_X);
@@ -237,11 +224,10 @@ struct SQ_TEX_WORD1 : Bitfield<SQ_TEX_WORD1, uint32_t>
    BITFIELD_ENTRY(29, 1, SQ_TEX_COORD_TYPE, COORD_TYPE_Y);
    BITFIELD_ENTRY(30, 1, SQ_TEX_COORD_TYPE, COORD_TYPE_Z);
    BITFIELD_ENTRY(31, 1, SQ_TEX_COORD_TYPE, COORD_TYPE_W);
-};
+BITFIELD_END
 
 // Texture fetch clause instruction word 2
-struct SQ_TEX_WORD2 : Bitfield<SQ_TEX_WORD2, uint32_t>
-{
+BITFIELD(SQ_TEX_WORD2, uint32_t)
    BITFIELD_ENTRY(0, 5, uint32_t, OFFSET_X);
    BITFIELD_ENTRY(5, 5, uint32_t, OFFSET_Y);
    BITFIELD_ENTRY(10, 5, uint32_t, OFFSET_Z);
@@ -250,11 +236,10 @@ struct SQ_TEX_WORD2 : Bitfield<SQ_TEX_WORD2, uint32_t>
    BITFIELD_ENTRY(23, 3, SQ_SEL, SRC_SEL_Y);
    BITFIELD_ENTRY(26, 3, SQ_SEL, SRC_SEL_Z);
    BITFIELD_ENTRY(29, 3, SQ_SEL, SRC_SEL_W);
-};
+BITFIELD_END
 
 // Vertex fetch clause instruction word 0.
-struct SQ_VTX_WORD0 : Bitfield<SQ_VTX_WORD0, uint32_t>
-{
+BITFIELD(SQ_VTX_WORD0, uint32_t)
    BITFIELD_ENTRY(0, 5, SQ_VTX_INST, VTX_INST);
    BITFIELD_ENTRY(5, 2, SQ_VTX_FETCH_TYPE, FETCH_TYPE);
    BITFIELD_ENTRY(7, 1, uint32_t, FETCH_WHOLE_QUAD);
@@ -263,22 +248,19 @@ struct SQ_VTX_WORD0 : Bitfield<SQ_VTX_WORD0, uint32_t>
    BITFIELD_ENTRY(23, 1, SQ_REL, SRC_REL);
    BITFIELD_ENTRY(24, 2, SQ_SEL, SRC_SEL_X);
    BITFIELD_ENTRY(26, 6, uint32_t, MEGA_FETCH_COUNT);
-};
+BITFIELD_END
 
 // Vertex fetch clause instruction word 1
-struct SQ_VTX_WORD1_SEM : Bitfield<SQ_VTX_WORD1_SEM, uint32_t>
-{
+BITFIELD(SQ_VTX_WORD1_SEM, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, SEMANTIC_ID);
-};
+BITFIELD_END
 
-struct SQ_VTX_WORD1_GPR : Bitfield<SQ_VTX_WORD1_GPR, uint32_t>
-{
+BITFIELD(SQ_VTX_WORD1_GPR, uint32_t)
    BITFIELD_ENTRY(0, 7, uint32_t, DST_GPR);
    BITFIELD_ENTRY(7, 1, SQ_REL, DST_REL);
-};
+BITFIELD_END
 
-struct SQ_VTX_WORD1 : Bitfield<SQ_VTX_WORD1, uint32_t>
-{
+BITFIELD(SQ_VTX_WORD1, uint32_t)
    BITFIELD_ENTRY(9, 3, SQ_SEL, DST_SEL_X);
    BITFIELD_ENTRY(12, 3, SQ_SEL, DST_SEL_Y);
    BITFIELD_ENTRY(15, 3, SQ_SEL, DST_SEL_Z);
@@ -288,17 +270,16 @@ struct SQ_VTX_WORD1 : Bitfield<SQ_VTX_WORD1, uint32_t>
    BITFIELD_ENTRY(28, 2, SQ_NUM_FORMAT, NUM_FORMAT_ALL);
    BITFIELD_ENTRY(30, 1, SQ_FORMAT_COMP, FORMAT_COMP_ALL);
    BITFIELD_ENTRY(31, 1, SQ_SRF_MODE, SRF_MODE_ALL);
-};
+BITFIELD_END
 
 // Vertex fetch clause instruction word 2
-struct SQ_VTX_WORD2 : Bitfield<SQ_VTX_WORD2, uint32_t>
-{
+BITFIELD(SQ_VTX_WORD2, uint32_t)
    BITFIELD_ENTRY(0, 16, uint32_t, OFFSET);
    BITFIELD_ENTRY(16, 2, SQ_ENDIAN, ENDIAN_SWAP);
    BITFIELD_ENTRY(18, 1, bool, CONST_BUF_NO_STRIDE);
    BITFIELD_ENTRY(19, 1, bool, MEGA_FETCH);
    BITFIELD_ENTRY(20, 1, bool, ALT_CONST);
-};
+BITFIELD_END
 
 union ControlFlowInst
 {

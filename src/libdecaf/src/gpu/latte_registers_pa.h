@@ -8,8 +8,7 @@ namespace latte
 {
 
 // Clipper Control Bits
-struct PA_CL_CLIP_CNTL : Bitfield<PA_CL_CLIP_CNTL, uint32_t>
-{
+BITFIELD(PA_CL_CLIP_CNTL, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, UCP_ENA_0);
    BITFIELD_ENTRY(1, 1, bool, UCP_ENA_1);
    BITFIELD_ENTRY(2, 1, bool, UCP_ENA_2);
@@ -29,7 +28,7 @@ struct PA_CL_CLIP_CNTL : Bitfield<PA_CL_CLIP_CNTL, uint32_t>
    BITFIELD_ENTRY(25, 1, bool, VTE_VPORT_PROVOKE_DISABLE);
    BITFIELD_ENTRY(26, 1, bool, ZCLIP_NEAR_DISABLE);
    BITFIELD_ENTRY(27, 1, bool, ZCLIP_FAR_DISABLE);
-};
+BITFIELD_END
 
 // Horizontal Guard Band Clip Adjust Register
 union PA_CL_GB_HORZ_CLIP_ADJ
@@ -204,8 +203,7 @@ using PA_CL_VPORT_ZOFFSET_14 = PA_CL_VPORT_ZOFFSET_N;
 using PA_CL_VPORT_ZOFFSET_15 = PA_CL_VPORT_ZOFFSET_N;
 
 // Vertex Shader Output Control
-struct PA_CL_VS_OUT_CNTL : Bitfield<PA_CL_VS_OUT_CNTL, uint32_t>
-{
+BITFIELD(PA_CL_VS_OUT_CNTL, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, CLIP_DIST_ENA_0);
    BITFIELD_ENTRY(1, 1, bool, CLIP_DIST_ENA_1);
    BITFIELD_ENTRY(2, 1, bool, CLIP_DIST_ENA_2);
@@ -232,31 +230,28 @@ struct PA_CL_VS_OUT_CNTL : Bitfield<PA_CL_VS_OUT_CNTL, uint32_t>
    BITFIELD_ENTRY(23, 1, bool, VS_OUT_CCDIST1_VEC_ENA);
    BITFIELD_ENTRY(24, 1, bool, VS_OUT_MISC_SIDE_BUS_ENA);
    BITFIELD_ENTRY(25, 1, bool, USE_VTX_GS_CUT_FLAG);
-};
+BITFIELD_END
 
 // Multisample AA Mask
-struct PA_SC_AA_MASK : Bitfield<PA_SC_AA_MASK, uint32_t>
-{
+BITFIELD(PA_SC_AA_MASK, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, AA_MASK_ULC);
    BITFIELD_ENTRY(0, 8, uint32_t, AA_MASK_URC);
    BITFIELD_ENTRY(0, 8, uint32_t, AA_MASK_LLC);
    BITFIELD_ENTRY(0, 8, uint32_t, AA_MASK_LRC);
-};
+BITFIELD_END
 
 // Generic Scissor rectangle specification
-struct PA_SC_GENERIC_SCISSOR_BR : Bitfield<PA_SC_GENERIC_SCISSOR_BR, uint32_t>
-{
+BITFIELD(PA_SC_GENERIC_SCISSOR_BR, uint32_t)
    BITFIELD_ENTRY(0, 14, uint32_t, BR_X);
    BITFIELD_ENTRY(16, 14, uint32_t, BR_Y);
-};
+BITFIELD_END
 
 // Generic Scissor rectangle specification
-struct PA_SC_GENERIC_SCISSOR_TL : Bitfield<PA_SC_GENERIC_SCISSOR_TL, uint32_t>
-{
+BITFIELD(PA_SC_GENERIC_SCISSOR_TL, uint32_t)
    BITFIELD_ENTRY(0, 14, uint32_t, TL_X);
    BITFIELD_ENTRY(16, 14, uint32_t, TL_Y);
    BITFIELD_ENTRY(31, 1, uint32_t, WINDOW_OFFSET_DISABLE);
-};
+BITFIELD_END
 
 // Viewport Transform Z Min Clamp
 union PA_SC_VPORT_ZMIN_N
@@ -307,24 +302,21 @@ using PA_SC_VPORT_ZMAX_14 = PA_SC_VPORT_ZMAX_N;
 using PA_SC_VPORT_ZMAX_15 = PA_SC_VPORT_ZMAX_N;
 
 // Line control
-struct PA_SU_LINE_CNTL : Bitfield<PA_SU_LINE_CNTL, uint32_t>
-{
+BITFIELD(PA_SU_LINE_CNTL, uint32_t)
    BITFIELD_ENTRY(0, 16, uint32_t, WIDTH); // 16.0 fixed
-};
+BITFIELD_END
 
 // Specifies maximum and minimum point & sprite sizes for per vertex size specification
-struct PA_SU_POINT_MINMAX : Bitfield<PA_SU_POINT_MINMAX, uint32_t>
-{
+BITFIELD(PA_SU_POINT_MINMAX, uint32_t)
    BITFIELD_ENTRY(0, 16, uint32_t, MIN_SIZE); // 12.4 fixed
    BITFIELD_ENTRY(16, 16, uint32_t, MAX_SIZE); // 12.4 fixed
-};
+BITFIELD_END
 
 // Dimensions for Points
-struct PA_SU_POINT_SIZE : Bitfield<PA_SU_POINT_SIZE, uint32_t>
-{
+BITFIELD(PA_SU_POINT_SIZE, uint32_t)
    BITFIELD_ENTRY(0, 16, uint32_t, HEIGHT); // 12.4 fixed
    BITFIELD_ENTRY(16, 16, uint32_t, WIDTH); // 12.4 fixed
-};
+BITFIELD_END
 
 // Clamp Value for Polygon Offset
 union PA_SU_POLY_OFFSET_CLAMP
@@ -362,8 +354,7 @@ union PA_SU_POLY_OFFSET_FRONT_OFFSET
 };
 
 // SU/SC Controls for Facedness Culling, Polymode, Polygon Offset, and various Enables
-struct PA_SU_SC_MODE_CNTL : Bitfield<PA_SU_SC_MODE_CNTL, uint32_t>
-{
+BITFIELD(PA_SU_SC_MODE_CNTL, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, CULL_FRONT);
    BITFIELD_ENTRY(1, 1, bool, CULL_BACK);
    BITFIELD_ENTRY(2, 1, PA_FACE, FACE);
@@ -377,13 +368,12 @@ struct PA_SU_SC_MODE_CNTL : Bitfield<PA_SU_SC_MODE_CNTL, uint32_t>
    BITFIELD_ENTRY(19, 1, bool, PROVOKING_VTX_LAST);
    BITFIELD_ENTRY(20, 1, bool, PERSP_CORR_DIS);
    BITFIELD_ENTRY(21, 1, bool, MULTI_PRIM_IB_ENA);
-};
+BITFIELD_END
 
 // Polygon Offset Depth Buffer Format Control
-struct PA_SU_POLY_OFFSET_DB_FMT_CNTL : Bitfield<PA_SU_POLY_OFFSET_DB_FMT_CNTL, uint32_t>
-{
+BITFIELD(PA_SU_POLY_OFFSET_DB_FMT_CNTL, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, POLY_OFFSET_NEG_NUM_DB_BITS);
    BITFIELD_ENTRY(8, 1, uint32_t, POLY_OFFSET_DB_IS_FLOAT_FMT);
-};
+BITFIELD_END
 
 } // namespace latte

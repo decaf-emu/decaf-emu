@@ -621,11 +621,10 @@ struct LoadControlConst
    }
 };
 
-struct MW_ADDR_LO : Bitfield<MW_ADDR_LO, uint32_t>
-{
+BITFIELD(MW_ADDR_LO, uint32_t)
    BITFIELD_ENTRY(0, 2, latte::CB_ENDIAN, ENDIAN_SWAP);
    BITFIELD_ENTRY(2, 30, uint32_t, ADDR_LO);
-};
+BITFIELD_END
 
 enum MW_CNTR_SEL : uint32_t
 {
@@ -633,13 +632,12 @@ enum MW_CNTR_SEL : uint32_t
    MW_WRITE_CLOCK    = 1,
 };
 
-struct MW_ADDR_HI : Bitfield<MW_ADDR_HI, uint32_t>
-{
+BITFIELD(MW_ADDR_HI, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, ADDR_HI);
    BITFIELD_ENTRY(16, 1, MW_CNTR_SEL, CNTR_SEL);
    BITFIELD_ENTRY(17, 1, bool, WR_CONFIRM);
    BITFIELD_ENTRY(18, 1, bool, DATA32);
-};
+BITFIELD_END
 
 struct MemWrite
 {
@@ -659,11 +657,10 @@ struct MemWrite
    }
 };
 
-struct EW_EOP_ADDR_LO : Bitfield<EW_EOP_ADDR_LO, uint32_t>
-{
+BITFIELD(EW_EOP_ADDR_LO, uint32_t)
    BITFIELD_ENTRY(0, 2, latte::CB_ENDIAN, ENDIAN_SWAP);
    BITFIELD_ENTRY(2, 30, uint32_t, ADDR_LO);
-};
+BITFIELD_END
 
 enum EW_DATA_SEL : uint32_t
 {
@@ -680,12 +677,11 @@ enum EW_INT_SEL : uint32_t
    EW_INT_WRITE_CONFIRM = 2,
 };
 
-struct EW_EOP_ADDR_HI : Bitfield<EW_EOP_ADDR_HI, uint32_t>
-{
+BITFIELD(EW_EOP_ADDR_HI, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, ADDR_HI);
    BITFIELD_ENTRY(24, 2, EW_INT_SEL, INT_SEL);
    BITFIELD_ENTRY(29, 3, EW_DATA_SEL, DATA_SEL);
-};
+BITFIELD_END
 
 struct EventWriteEOP
 {

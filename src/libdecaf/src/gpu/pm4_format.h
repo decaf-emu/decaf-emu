@@ -108,8 +108,7 @@ enum IT_OPCODE : uint32_t
 };
 }
 
-struct Header : Bitfield<Header, uint32_t>
-{
+BITFIELD(Header, uint32_t)
    enum Type
    {
       Type0 = 0,
@@ -119,40 +118,37 @@ struct Header : Bitfield<Header, uint32_t>
    };
 
    BITFIELD_ENTRY(30, 8, Type, type);
-};
+BITFIELD_END
 
 namespace type0
 {
 
-struct Header : Bitfield<Header, uint32_t>
-{
+BITFIELD(Header, uint32_t)
    BITFIELD_ENTRY(0, 16, uint32_t, baseIndex);
    BITFIELD_ENTRY(16, 14, uint32_t, count);
    BITFIELD_ENTRY(30, 8, pm4::Header::Type, type);
-};
+BITFIELD_END
 
 } // type0
 
 namespace type2
 {
 
-struct Header : Bitfield<Header, uint32_t>
-{
+BITFIELD(Header, uint32_t)
    BITFIELD_ENTRY(30, 8, pm4::Header::Type, type);
-};
+BITFIELD_END
 
 } // type2
 
 namespace type3
 {
 
-struct Header : Bitfield<Header, uint32_t>
-{
+BITFIELD(Header, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, predicate);
    BITFIELD_ENTRY(8, 8, IT_OPCODE, opcode);
    BITFIELD_ENTRY(16, 14, uint32_t, size);
    BITFIELD_ENTRY(30, 8, pm4::Header::Type, type);
-};
+BITFIELD_END
 
 } // type3
 

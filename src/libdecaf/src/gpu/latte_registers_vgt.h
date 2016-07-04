@@ -7,14 +7,13 @@ namespace latte
 {
 
 // Draw Inititiator
-struct VGT_DRAW_INITIATOR : public Bitfield<VGT_DRAW_INITIATOR, uint32_t>
-{
+BITFIELD(VGT_DRAW_INITIATOR, uint32_t)
    BITFIELD_ENTRY(0, 2, VGT_DI_SRC_SEL, SOURCE_SELECT);
    BITFIELD_ENTRY(2, 2, VGT_DI_MAJOR_MODE, MAJOR_MODE);
    BITFIELD_ENTRY(4, 1, bool, SPRITE_EN_R6XX);
    BITFIELD_ENTRY(5, 1, bool, NOT_EOP);
    BITFIELD_ENTRY(6, 1, bool, USE_OPAQUE);
-};
+BITFIELD_END
 
 // VGT DMA Base Address
 union VGT_DMA_BASE
@@ -24,17 +23,15 @@ union VGT_DMA_BASE
 };
 
 // VGT DMA Base Address : upper 8-bits of 40 bit address
-struct VGT_DMA_BASE_HI : public Bitfield<VGT_DMA_BASE_HI, uint32_t>
-{
+BITFIELD(VGT_DMA_BASE_HI, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, BASE_ADDR);
-};
+BITFIELD_END
 
 // VGT DMA Index Type and Mode
-struct VGT_DMA_INDEX_TYPE : public Bitfield<VGT_DMA_INDEX_TYPE, uint32_t>
-{
+BITFIELD(VGT_DMA_INDEX_TYPE, uint32_t)
    BITFIELD_ENTRY(0, 2, VGT_INDEX, INDEX_TYPE);
    BITFIELD_ENTRY(2, 2, VGT_DMA_SWAP, SWAP_MODE);
-};
+BITFIELD_END
 
 // VGT DMA Maximum Size
 union VGT_DMA_MAX_SIZE
@@ -58,16 +55,14 @@ union VGT_DMA_SIZE
 };
 
 // Event Initiator
-struct VGT_EVENT_INITIATOR : public Bitfield<VGT_EVENT_INITIATOR, uint32_t>
-{
+BITFIELD(VGT_EVENT_INITIATOR, uint32_t)
    BITFIELD_ENTRY(0, 6, VGT_EVENT_TYPE, EVENT_TYPE);
    BITFIELD_ENTRY(19, 8, uint32_t, ADDRESS_HI);
    BITFIELD_ENTRY(27, 1, uint32_t, EXTENDED_EVENT);
-};
+BITFIELD_END
 
 // VGT GS Enable Mode
-struct VGT_GS_MODE : public Bitfield<VGT_GS_MODE, uint32_t>
-{
+BITFIELD(VGT_GS_MODE, uint32_t)
    BITFIELD_ENTRY(0, 2, VGT_GS_ENABLE_MODE, MODE);
    BITFIELD_ENTRY(2, 1, bool, ES_PASSTHRU);
    BITFIELD_ENTRY(3, 2, VGT_GS_CUT_MODE, CUT_MODE);
@@ -77,18 +72,16 @@ struct VGT_GS_MODE : public Bitfield<VGT_GS_MODE, uint32_t>
    BITFIELD_ENTRY(15, 1, bool, FAST_COMPUTE_MODE);
    BITFIELD_ENTRY(16, 1, bool, ELEMENT_INFO_EN);
    BITFIELD_ENTRY(17, 1, bool, PARTIAL_THD_AT_EOI);
-};
+BITFIELD_END
 
 // VGT GS output primitive type
-struct VGT_GS_OUT_PRIM_TYPE : public Bitfield<VGT_GS_OUT_PRIM_TYPE, uint32_t>
-{
+BITFIELD(VGT_GS_OUT_PRIM_TYPE, uint32_t)
    BITFIELD_ENTRY(0, 6, VGT_GS_OUT_PRIMITIVE_TYPE, PRIM_TYPE);
-};
+BITFIELD_END
 
-struct VGT_HOS_REUSE_DEPTH : public Bitfield<VGT_HOS_REUSE_DEPTH, uint32_t>
-{
+BITFIELD(VGT_HOS_REUSE_DEPTH, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, REUSE_DEPTH);
-};
+BITFIELD_END
 
 // For continuous and discrete tessellation modes, this register contains the tessellation level.
 // For adaptive tessellation, this register contains the maximum tessellation level.
@@ -107,10 +100,9 @@ union VGT_HOS_MIN_TESS_LEVEL
 };
 
 // This register enabling reseting of prim based on reset index
-struct VGT_MULTI_PRIM_IB_RESET_EN : public Bitfield<VGT_MULTI_PRIM_IB_RESET_EN, uint32_t>
-{
+BITFIELD(VGT_MULTI_PRIM_IB_RESET_EN, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, RESET_EN);
-};
+BITFIELD_END
 
 // This register defines the index which resets primitive sets when MULTI_PRIM_IB is enabled.
 union VGT_MULTI_PRIM_IB_RESET_INDX
@@ -127,36 +119,31 @@ union VGT_NUM_INDICES
 };
 
 // Primitive ID generation is enabled
-struct VGT_PRIMITIVEID_EN : public Bitfield<VGT_PRIMITIVEID_EN, uint32_t>
-{
+BITFIELD(VGT_PRIMITIVEID_EN, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, PRIMITIVEID_EN);
-};
+BITFIELD_END
 
 // VGT Primitive Type
-struct VGT_PRIMITIVE_TYPE : public Bitfield<VGT_PRIMITIVE_TYPE, uint32_t>
-{
+BITFIELD(VGT_PRIMITIVE_TYPE, uint32_t)
    BITFIELD_ENTRY(0, 6, VGT_DI_PRIMITIVE_TYPE, PRIM_TYPE);
-};
+BITFIELD_END
 
 // This register enables streaming out
-struct VGT_STRMOUT_EN : public Bitfield<VGT_STRMOUT_EN, uint32_t>
-{
+BITFIELD(VGT_STRMOUT_EN, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, STREAMOUT);
-};
+BITFIELD_END
 
 // Stream out enable bits.
-struct VGT_STRMOUT_BUFFER_EN : public Bitfield<VGT_STRMOUT_BUFFER_EN, uint32_t>
-{
+BITFIELD(VGT_STRMOUT_BUFFER_EN, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, BUFFER_0_EN);
    BITFIELD_ENTRY(1, 1, bool, BUFFER_1_EN);
    BITFIELD_ENTRY(2, 1, bool, BUFFER_2_EN);
    BITFIELD_ENTRY(3, 1, bool, BUFFER_3_EN);
-};
+BITFIELD_END
 
 // This register controls the behavior of the Vertex Reuse block at the backend of the VGT.
-struct VGT_VERTEX_REUSE_BLOCK_CNTL : public Bitfield<VGT_VERTEX_REUSE_BLOCK_CNTL, uint32_t>
-{
+BITFIELD(VGT_VERTEX_REUSE_BLOCK_CNTL, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, VTX_REUSE_DEPTH);
-};
+BITFIELD_END
 
 } // namespace latte
