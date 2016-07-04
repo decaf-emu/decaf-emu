@@ -287,7 +287,7 @@ insertSource(fmt::MemoryWriter &out,
          throw std::logic_error("Invalid kcache lock mode SQ_CF_KCACHE_NOP");
       }
 
-      out << "UB[" << bank << "].values[" << id;
+      out << "UB_" << bank << ".values[" << id;
 
       if (rel) {
          out << " + ";
