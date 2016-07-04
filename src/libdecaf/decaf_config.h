@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 namespace decaf
 {
@@ -48,6 +49,9 @@ extern bool kernel_trace;
 
 //! Enable logging of every branch which targets a known symbol
 extern bool branch_trace;
+
+//! RegEx filters for kernel trace function name matching
+extern std::vector<std::string> kernel_trace_filters;
 
 } // namespace log
 

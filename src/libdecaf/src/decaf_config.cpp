@@ -35,6 +35,16 @@ namespace log
 
 bool kernel_trace = false;
 bool branch_trace = false;
+std::vector<std::string> kernel_trace_filters = {
+   "-coreinit::__ghsLock",
+   "-coreinit::__ghsUnlock",
+   "-coreinit::__gh_errno_ptr",
+   "-coreinit::__gh_set_errno",
+   "-coreinit::__gh_get_errno",
+   "-coreinit::__get_eh_globals",
+   "-coreinit::OSGetTime",
+   "-coreinit::OSGetSystemTime",
+};
 
 } // namespace log
 

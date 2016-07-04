@@ -286,20 +286,20 @@ public:
       }
 
       mSegments.clear();
-
-      mSegments.push_back(Segment{ "SystemData", mem::SystemBase, mem::SystemEnd });
-      mSegments.push_back(Segment{ "Application", mem::ApplicationBase, mem::ApplicationEnd });
-      mSegments.push_back(Segment{ "Apertures", mem::AperturesBase, mem::AperturesEnd });
-      mSegments.push_back(Segment{ "Foreground", mem::ForegroundBase, mem::ForegroundEnd });
-      mSegments.push_back(Segment{ "MEM1", mem::MEM1Base, mem::MEM1End });
-      mSegments.push_back(Segment{ "LockedCache", mem::LockedCacheBase, mem::LockedCacheEnd });
-      mSegments.push_back(Segment{ "SharedData", mem::SharedDataBase, mem::SharedDataEnd });
+      mSegments.push_back(Segment { "SystemData", mem::SystemBase, mem::SystemEnd });
+      mSegments.push_back(Segment { "Application", mem::ApplicationBase, mem::ApplicationEnd });
+      mSegments.push_back(Segment { "Apertures", mem::AperturesBase, mem::AperturesEnd });
+      mSegments.push_back(Segment { "Foreground", mem::ForegroundBase, mem::ForegroundEnd });
+      mSegments.push_back(Segment { "MEM1", mem::MEM1Base, mem::MEM1End });
+      mSegments.push_back(Segment { "LockedCache", mem::LockedCacheBase, mem::LockedCacheEnd });
+      mSegments.push_back(Segment { "SharedData", mem::SharedDataBase, mem::SharedDataEnd });
 
       coreinit::internal::lockLoader();
       const auto &modules = coreinit::internal::getLoadedModules();
+
       for (auto &mod : modules) {
          for (auto &sec : mod.second->sections) {
-            addSegmentItem(mSegments, Segment{
+            addSegmentItem(mSegments, Segment {
                fmt::format("{}:{}", mod.second->name, sec.name),
                sec.start,
                sec.end

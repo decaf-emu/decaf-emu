@@ -1,6 +1,8 @@
 #include "config.h"
 #include "libdecaf/decaf_config.h"
 #include <climits>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
 #include <cereal/archives/json.hpp>
 #include <fstream>
 #include <SDL_keycode.h>
@@ -102,6 +104,7 @@ struct CerealLog
          CEREAL_NVP(to_file),
          CEREAL_NVP(to_stdout),
          CEREAL_NVP(kernel_trace),
+         CEREAL_NVP(kernel_trace_filters),
          CEREAL_NVP(branch_trace),
          CEREAL_NVP(level));
    }

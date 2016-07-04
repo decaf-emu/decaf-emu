@@ -17,10 +17,10 @@ struct HleFunction : HleSymbol
    }
 
    virtual ~HleFunction() override = default;
-
    virtual void call(cpu::Core *state) = 0;
 
    bool valid = false;
+   bool traceEnabled = true;
    uint32_t syscallID = 0;
    uint32_t vaddr = 0;
 };
@@ -33,11 +33,11 @@ void kcTraceHandler(const std::string& str);
 template<typename ReturnType, typename... Args>
 struct HleFunctionImpl : HleFunction
 {
-   ReturnType(*wrapped_function)(Args...);
+   ReturnType (*wrapped_function)(Args...);
 
    virtual void call(cpu::Core *thread) override
    {
-      if (decaf::config::log::kernel_trace) {
+      if (decaf::config::log::kernel_trace && traceEnabled) {
          ppctypes::invoke(kcTraceHandler, thread, wrapped_function, name);
       } else {
          ppctypes::invoke(nullptr, thread, wrapped_function, name);
@@ -48,11 +48,11 @@ struct HleFunctionImpl : HleFunction
 template<typename ReturnType, typename ObjectType, typename... Args>
 struct HleMemberFunctionImpl : HleFunction
 {
-   ReturnType(ObjectType::*wrapped_function)(Args...);
+   ReturnType (ObjectType::*wrapped_function)(Args...);
 
    virtual void call(cpu::Core *thread) override
    {
-      if (decaf::config::log::kernel_trace) {
+      if (decaf::config::log::kernel_trace && traceEnabled) {
          ppctypes::invokeMemberFn(kcTraceHandler, thread, wrapped_function, name);
       } else {
          ppctypes::invokeMemberFn(nullptr, thread, wrapped_function, name);
@@ -70,7 +70,7 @@ struct HleConstructorFunctionImpl : HleFunction
 
    virtual void call(cpu::Core *thread) override
    {
-      if (decaf::config::log::kernel_trace) {
+      if (decaf::config::log::kernel_trace && traceEnabled) {
          ppctypes::invoke(kcTraceHandler, thread, &trampFunction, name);
       } else {
          ppctypes::invoke(nullptr, thread, &trampFunction, name);
@@ -88,7 +88,7 @@ struct HleDestructorFunctionImpl : HleFunction
 
    virtual void call(cpu::Core *thread) override
    {
-      if (decaf::config::log::kernel_trace) {
+      if (decaf::config::log::kernel_trace && traceEnabled) {
          ppctypes::invoke(kcTraceHandler, thread, &trampFunction, name);
       } else {
          ppctypes::invoke(nullptr, thread, &trampFunction, name);

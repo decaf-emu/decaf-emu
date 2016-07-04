@@ -30,8 +30,6 @@ struct OSContext;
 struct OSThread;
 }
 
-static const bool TRACE_SUPER_COMMON = false;
-
 namespace kernel
 {
 
@@ -41,20 +39,6 @@ namespace functions
 void
 kcTraceHandler(const std::string& str)
 {
-   if (!TRACE_SUPER_COMMON) {
-#define IGNORE_KC(fname) \
-   if (str.find(fname) != std::string::npos) return;
-      IGNORE_KC("__ghsLock");
-      IGNORE_KC("__ghsUnlock");
-      IGNORE_KC("__gh_errno_ptr");
-      IGNORE_KC("__gh_set_errno");
-      IGNORE_KC("__gh_get_errno");
-      IGNORE_KC("__get_eh_globals");
-      IGNORE_KC("OSGetTime");
-      IGNORE_KC("OSGetSystemTime");
-#undef IGNORE_KC
-   }
-
    traceLogSyscall(str);
    gLog->debug(str);
 }

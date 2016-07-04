@@ -87,6 +87,7 @@ registerHleModule(const std::string &name, HleModule *module)
    gHleModules.emplace(name, module);
 
    auto symbols = module->getSymbols();
+
    for (auto &sym : symbols) {
       if (sym->type == HleSymbol::Function) {
          registerHleFunc(reinterpret_cast<HleFunction*>(sym));

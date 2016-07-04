@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "coreinit_internal_loader.h"
 #include "common/strutils.h"
+#include "decaf_config.h"
 #include "kernel/kernel_hle.h"
 #include "kernel/kernel_hlemodule.h"
 #include "kernel/kernel_hlefunction.h"
@@ -293,24 +294,113 @@ generateUnimplementedFunctionThunk(const std::string &module, const std::string 
 }
 
 
-// Load a kernel module into virtual memory space by creating thunks
+void
+processKernelTraceFilters(const std::string &module, std::vector<kernel::HleFunction *> &functions)
+{
+   struct TraceFilter
+   {
+      bool enable = false;
+      gsl::span<const char> name;
+      bool wildcard = false;
+   };
+
+   // Create list of filters appropriate for this module
+   std::vector<TraceFilter> filters;
+   filters.reserve(decaf::config::log::kernel_trace_filters.size());
+
+   for (auto &filterText : decaf::config::log::kernel_trace_filters) {
+      TraceFilter filter;
+
+      // First character is + enable or - disable
+      if (filterText[0] == '+') {
+         filter.enable = true;
+      } else if (filterText[0] == '-') {
+         filter.enable = false;
+      } else {
+         gLog->error("Invalid kernel_trace_filter {}", filterText);
+         throw std::logic_error("Invalid kernel trace filter");
+      }
+
+      // Find module::name
+      auto nameSeparator = filterText.find("::");
+      auto functionName = gsl::span<const char> {};
+      auto moduleName = gsl::span<const char> {};
+      auto moduleWildcard = false;
+
+      if (nameSeparator != std::string::npos) {
+         moduleName = gsl::as_span(filterText.c_str() + 1, nameSeparator - 1);
+         functionName = gsl::as_span(filterText.c_str() + nameSeparator + 2, filterText.size() - nameSeparator - 2);
+      } else {
+         moduleName = gsl::as_span(filterText.c_str() + 1, filterText.size() - 1);
+         filter.wildcard = true;
+      }
+
+      if (!moduleName.empty() && *(moduleName.end() - 1) == '*') {
+         moduleWildcard = true;
+         moduleName = moduleName.subspan(0, moduleName.size() - 1);
+      }
+
+      if (moduleWildcard) {
+         // Check this module matches the module filter partially
+         if (!moduleName.empty() && module.compare(0, moduleName.size(), moduleName.data(), moduleName.size()) != 0) {
+            continue;
+         }
+      } else {
+         // Check this module matches the module filter exactly
+         if (module.compare(0, std::string::npos, moduleName.data(), moduleName.size()) != 0) {
+            continue;
+         }
+      }
+
+      if (!functionName.empty() && *(functionName.end() - 1) == '*') {
+         filter.wildcard = true;
+         functionName = functionName.subspan(0, functionName.size() - 1);
+      }
+
+      filter.name = functionName;
+      filters.emplace_back(filter);
+   }
+
+   // Now check filters against all functions
+   for (auto &func : functions) {
+      for (auto &filter : filters) {
+         if (filter.wildcard) {
+            // Check this function name matches the filter partially
+            if (!filter.name.empty() && func->name.compare(0, filter.name.size(), filter.name.data(), filter.name.size()) != 0) {
+               continue;
+            }
+         } else {
+            // Check this function name matches the filter exactly
+            if (func->name.compare(0, std::string::npos, filter.name.data(), filter.name.size()) != 0) {
+               continue;
+            }
+         }
+
+         func->traceEnabled = filter.enable;
+      }
+   }
+}
+
+
+//! Load a kernel module into virtual memory space by creating thunks
 LoadedModule *
 loadHleModule(const std::string &moduleName,
-   const std::string &name,
-   kernel::HleModule *module)
+              const std::string &name,
+              kernel::HleModule *module)
 {
-   std::vector<kernel::HleFunction*> funcSymbols;
-   std::vector<kernel::HleData*> dataSymbols;
+   std::vector<kernel::HleFunction *> funcSymbols;
+   std::vector<kernel::HleData *> dataSymbols;
    uint32_t dataSize = 0, codeSize = 0;
    auto &symbols = module->getSymbols();
 
+   // Get all function and data symbols exported from module
    for (auto &symbol : symbols) {
       if (symbol->type == kernel::HleSymbol::Function) {
-         auto funcSymbol = static_cast<kernel::HleFunction*>(symbol);
+         auto funcSymbol = static_cast<kernel::HleFunction *>(symbol);
          codeSize += 8;
          funcSymbols.emplace_back(funcSymbol);
       } else if (symbol->type == kernel::HleSymbol::Data) {
-         auto dataSymbol = static_cast<kernel::HleData*>(symbol);
+         auto dataSymbol = static_cast<kernel::HleData *>(symbol);
          dataSize += dataSymbol->size;
          dataSymbols.emplace_back(dataSymbol);
       } else {
@@ -319,8 +409,11 @@ loadHleModule(const std::string &moduleName,
       }
    }
 
+   // Process kernel_trace_filters
+   processKernelTraceFilters(moduleName, funcSymbols);
+
    // Create module
-   auto loadedMod = new LoadedModule{};
+   auto loadedMod = new LoadedModule {};
    gLoadedModules.emplace(moduleName, loadedMod);
    loadedMod->name = name;
    loadedMod->handle = coreinit::internal::sysAlloc<LoadedModuleHandleData>();
@@ -367,7 +460,7 @@ loadHleModule(const std::string &moduleName,
       auto dataRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(dataSize, 4));
       auto start = mem::untranslate(dataRegion);
       auto end = start + codeSize;
-      loadedMod->sections.emplace_back(LoadedSection{ ".data", start, end });
+      loadedMod->sections.emplace_back(LoadedSection { ".data", start, end });
 
       for (auto &data : dataSymbols) {
          // Allocate the same for this export
@@ -390,6 +483,7 @@ loadHleModule(const std::string &moduleName,
 
    // Export everything which is an export
    auto &exports = module->getExports();
+
    for (auto &exp : exports) {
       loadedMod->exports.emplace(exp->name, mem::untranslate(exp->ppcPtr));
    }
