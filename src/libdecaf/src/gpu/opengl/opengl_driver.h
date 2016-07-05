@@ -132,9 +132,16 @@ struct SurfaceBuffer : Resource
    SurfaceUseState state = SurfaceUseState::None;
    bool dirtyAsTexture = true;
    uint64_t cpuMemHash[2] = { 0 };
-   uint32_t width = 0;
-   uint32_t height = 0;
-   uint32_t depth = 0;
+   struct {
+      uint32_t width = 0;
+      uint32_t height = 0;
+      uint32_t depth = 0;
+      latte::SQ_TEX_DIM dim;
+      latte::SQ_DATA_FORMAT format;
+      latte::SQ_NUM_FORMAT numFormat;
+      latte::SQ_FORMAT_COMP formatComp;
+      uint32_t degamma;
+   } dbgInfo;
 };
 
 struct ScanBufferChain

@@ -209,6 +209,16 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t heigh
    buffer->cpuMemStart = baseAddress;
    buffer->cpuMemEnd = baseAddress;
 
+   // Lets track some other useful information
+   buffer->dbgInfo.width = width;
+   buffer->dbgInfo.height = height;
+   buffer->dbgInfo.depth = depth;
+   buffer->dbgInfo.dim = dim;
+   buffer->dbgInfo.format = format;
+   buffer->dbgInfo.numFormat = numFormat;
+   buffer->dbgInfo.formatComp = formatComp;
+   buffer->dbgInfo.degamma = degamma;
+
    // TODO: Calculate the true size of the texture instead of cheating
    //  and assuming the texture is 32 bits per pixel.
    auto bytesPerPixel = 4;
