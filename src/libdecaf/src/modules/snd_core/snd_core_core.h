@@ -1,13 +1,12 @@
 #pragma once
-#include "snd_core_result.h"
 #include "ppcutils/wfunc_ptr.h"
+#include "snd_core_enum.h"
 
 namespace snd_core
 {
 
-struct AXProfile
-{
-};
+// TODO: Reverse AXProfile
+struct AXProfile;
 
 using AXFrameCallback = wfunc_ptr<void>;
 
@@ -18,10 +17,12 @@ BOOL
 AXIsInit();
 
 void
-AXInitProfile(AXProfile *profile, uint32_t count);
+AXInitProfile(AXProfile *profile,
+              uint32_t count);
 
 uint32_t
-AXGetSwapProfile(AXProfile *profile, uint32_t count);
+AXGetSwapProfile(AXProfile *profile,
+                 uint32_t count);
 
 AXResult
 AXSetDefaultMixerSelect(uint32_t);
@@ -33,7 +34,9 @@ int32_t
 AXRmtGetSamplesLeft();
 
 int32_t
-AXRmtGetSamples(int32_t, be_val<uint8_t> *buffer, int32_t samples);
+AXRmtGetSamples(int32_t,
+                be_val<uint8_t> *buffer,
+                int32_t samples);
 
 int32_t
 AXRmtAdvancePtr(int32_t);

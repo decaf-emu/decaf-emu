@@ -1016,9 +1016,6 @@
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_device.h">
       <Filter>Header Files\modules\snd_core</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_result.h">
-      <Filter>Header Files\modules\snd_core</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_core.h">
       <Filter>Header Files\modules\snd_core</Filter>
     </ClInclude>
@@ -1510,6 +1507,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\dmae\dmae.h">
       <Filter>Header Files\modules\dmae</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_enum.h">
+      <Filter>Header Files\modules\snd_core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

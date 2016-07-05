@@ -521,7 +521,7 @@
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_ai.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_core.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_device.h" />
-    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_result.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_enum.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_voice.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_vs.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\swkbd\swkbd.h" />

@@ -16,7 +16,9 @@ static std::queue<AXVoice*>
 sAvailVoiceStack;
 
 AXVoice *
-AXAcquireVoice(uint32_t priority, AXVoiceCallbackFn callback, void *userContext)
+AXAcquireVoice(uint32_t priority,
+               AXVoiceCallbackFn callback,
+               void *userContext)
 {
    // Because the callback first parameter matches, we can simply forward
    //  it to AXAcquireVoiceEx and get the same effect. COS does this too.
@@ -24,7 +26,9 @@ AXAcquireVoice(uint32_t priority, AXVoiceCallbackFn callback, void *userContext)
 }
 
 AXVoice *
-AXAcquireVoiceEx(uint32_t priority, AXVoiceCallbackExFn callback, void *userContext)
+AXAcquireVoiceEx(uint32_t priority,
+                 AXVoiceCallbackExFn callback,
+                 void *userContext)
 {
    if (sAvailVoiceStack.empty()) {
       // If there are no available voices, try to force-deallocate one...
@@ -71,23 +75,32 @@ AXFreeVoice(AXVoice *voice)
    sAvailVoiceStack.push(voice);
 }
 
+uint32_t
+AXGetMaxVoices()
+{
+   return MaxVoices;
+}
+
 void
-AXSetVoiceVe(AXVoice *voice, void *_unk)
+AXSetVoiceVe(AXVoice *voice,
+             AXVoiceVeData *veData)
 {
 }
 
 void
-AXSetVoiceOffsets(AXVoice *voice, AXVoiceOffsets *offsets)
+AXSetVoiceOffsets(AXVoice *voice,
+                  AXVoiceOffsets *offsets)
 {
    voice->offsets = *offsets;
 }
 
 void
-AXGetVoiceOffsets(AXVoice *voice, AXVoiceOffsets *offsets)
+AXGetVoiceOffsets(AXVoice *voice,
+                  AXVoiceOffsets *offsets)
 {
    // Trick the game into thinking the audio is progressing.
-
    voice->offsets.currentOffset += 20;
+
    if (voice->offsets.currentOffset > voice->offsets.endOffset) {
       if (voice->offsets.loopingEnabled) {
          voice->offsets.currentOffset -= (voice->offsets.endOffset - voice->offsets.loopOffset);
@@ -103,6 +116,49 @@ BOOL
 AXIsVoiceRunning(AXVoice *voice)
 {
    return FALSE;
+}
+
+void
+AXSetVoiceAdpcmLoop(AXVoice *voice,
+                    AXVoiceAdpcmLoopData *loopData)
+{
+}
+
+AXResult
+AXSetVoiceDeviceMix(AXVoice *voice,
+                    AXDeviceType type,
+                    uint32_t id,
+                    AXVoiceDeviceMixData *mixData)
+{
+   return AXResult::Success;
+}
+
+void
+AXSetVoiceLoop(AXVoice *voice,
+               AXVoiceLoop loop)
+{
+   voice->offsets.loopingEnabled = loop;
+}
+
+void
+AXSetVoiceState(AXVoice *voice,
+                AXVoiceState state)
+{
+   voice->state = state;
+}
+
+AXVoiceSrcRatioResult
+AXSetVoiceSrcRatio(AXVoice *voice,
+                   float ratio)
+{
+   return AXVoiceSrcRatioResult::Success;
+}
+
+void
+AXSetVoiceEndOffset(AXVoice *voice,
+                    uint32_t offset)
+{
+   voice->offsets.endOffset = offset;
 }
 
 namespace internal
@@ -125,10 +181,17 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXAcquireVoice);
    RegisterKernelFunction(AXAcquireVoiceEx);
    RegisterKernelFunction(AXFreeVoice);
+   RegisterKernelFunction(AXGetMaxVoices);
    RegisterKernelFunction(AXSetVoiceVe);
    RegisterKernelFunction(AXIsVoiceRunning);
    RegisterKernelFunction(AXSetVoiceOffsets);
    RegisterKernelFunction(AXGetVoiceOffsets);
+   RegisterKernelFunction(AXSetVoiceAdpcmLoop);
+   RegisterKernelFunction(AXSetVoiceDeviceMix);
+   RegisterKernelFunction(AXSetVoiceState);
+   RegisterKernelFunction(AXSetVoiceLoop);
+   RegisterKernelFunction(AXSetVoiceSrcRatio);
+   RegisterKernelFunction(AXSetVoiceEndOffset);
 }
 
 } // namespace snd_core
