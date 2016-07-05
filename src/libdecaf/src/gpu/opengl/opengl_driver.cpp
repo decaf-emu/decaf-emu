@@ -101,10 +101,12 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    gl::glNamedFramebufferTexture(mBlitFrameBuffers[0], gl::GL_COLOR_ATTACHMENT0, target->object, 0);
    gl::glNamedFramebufferTexture(mBlitFrameBuffers[1], gl::GL_COLOR_ATTACHMENT0, buffer->object, 0);
 
+   gl::glDisable(gl::GL_SCISSOR_TEST);
    gl::glBlitNamedFramebuffer(mBlitFrameBuffers[1], mBlitFrameBuffers[0],
       0, 0, pitch, height,
       0, 0, target->width, target->height,
       gl::GL_COLOR_BUFFER_BIT, gl::GL_LINEAR);
+   gl::glEnable(gl::GL_SCISSOR_TEST);
 }
 
 void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
