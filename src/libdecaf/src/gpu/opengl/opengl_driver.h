@@ -97,7 +97,7 @@ struct PixelShader
    std::string disassembly;
 };
 
-using ShaderKey = std::tuple<uint32_t, uint32_t, uint32_t>;
+using ShaderKey = std::tuple<uint64_t, uint64_t, uint64_t>;
 
 struct Shader
 {
@@ -105,6 +105,9 @@ struct Shader
    FetchShader *fetch;
    VertexShader *vertex;
    PixelShader *pixel;
+   uint64_t fetchKey;
+   uint64_t vertexKey;
+   uint64_t pixelKey;
 };
 
 enum class SurfaceUseState : uint32_t
@@ -277,9 +280,9 @@ private:
    bool mViewportDirty = false;
    bool mScissorDirty = false;
 
-   std::unordered_map<uint32_t, FetchShader> mFetchShaders;
-   std::unordered_map<uint32_t, VertexShader> mVertexShaders;
-   std::unordered_map<uint32_t, PixelShader> mPixelShaders;
+   std::unordered_map<uint64_t, FetchShader> mFetchShaders;
+   std::unordered_map<uint64_t, VertexShader> mVertexShaders;
+   std::unordered_map<uint64_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
    std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;
 

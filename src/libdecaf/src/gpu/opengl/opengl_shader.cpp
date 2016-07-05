@@ -95,20 +95,9 @@ bool GLDriver::checkActiveShader()
    auto pgm_size_fs = getRegister<latte::SQ_PGM_SIZE_FS>(latte::Register::SQ_PGM_SIZE_FS);
    auto pgm_size_vs = getRegister<latte::SQ_PGM_SIZE_VS>(latte::Register::SQ_PGM_SIZE_VS);
    auto pgm_size_ps = getRegister<latte::SQ_PGM_SIZE_PS>(latte::Register::SQ_PGM_SIZE_PS);
+   auto cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
    auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
    auto sx_alpha_ref = getRegister<latte::SX_ALPHA_REF>(latte::Register::SX_ALPHA_REF);
-
-   // Check to see if current shader is already bound
-   if (mActiveShader
-    && mActiveShader->fetch && mActiveShader->fetch->pgm_start_fs.PGM_START == pgm_start_fs.PGM_START
-    && mActiveShader->vertex && mActiveShader->vertex->pgm_start_vs.PGM_START == pgm_start_vs.PGM_START
-    && mActiveShader->pixel && mActiveShader->pixel->pgm_start_ps.PGM_START == pgm_start_ps.PGM_START) {
-      if (mActiveShader->pixel->sx_alpha_test_control.value != sx_alpha_test_control.value) {
-         gLog->error("Unimplemented same pixel shader but different sx_alpha_test_control");
-      }
-
-      return true;
-   }
 
    if (!pgm_start_fs.PGM_START) {
       gLog->error("Fetch shader was not set");
@@ -123,11 +112,35 @@ bool GLDriver::checkActiveShader()
       return false;
    }
 
-   // Update OpenGL shader
-   auto &fetchShader = mFetchShaders[pgm_start_fs.PGM_START];
-   auto &vertexShader = mVertexShaders[pgm_start_vs.PGM_START];
-   auto &pixelShader = mPixelShaders[pgm_start_ps.PGM_START];
-   auto &shader = mShaders[ShaderKey { pgm_start_fs.PGM_START, pgm_start_vs.PGM_START, pgm_start_ps.PGM_START }];
+   ppcaddr_t fsPgmAddress = pgm_start_fs.PGM_START << 8;
+   ppcaddr_t vsPgmAddress = pgm_start_vs.PGM_START << 8;
+   ppcaddr_t psPgmAddress = pgm_start_ps.PGM_START << 8;
+   auto fsPgmSize = pgm_size_fs.PGM_SIZE << 3;
+   auto vsPgmSize = pgm_size_vs.PGM_SIZE << 3;
+   auto psPgmSize = pgm_size_ps.PGM_SIZE << 3;
+
+   auto alphaTestFunc = sx_alpha_test_control.ALPHA_FUNC().get();
+   if (!sx_alpha_test_control.ALPHA_TEST_ENABLE() || sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
+      alphaTestFunc = latte::REF_ALWAYS;
+   }
+
+   uint64_t fsShaderKey = static_cast<uint64_t>(fsPgmAddress) << 32;
+   uint64_t vsShaderKey = static_cast<uint64_t>(vsPgmAddress) << 32;
+   uint64_t psShaderKey = static_cast<uint64_t>(psPgmAddress) << 32;
+   psShaderKey ^= alphaTestFunc << 28;
+   psShaderKey ^= cb_shader_mask.value & 0xFF;
+
+   if (mActiveShader &&
+      mActiveShader->fetch && mActiveShader->fetchKey == fsShaderKey &&
+      mActiveShader->vertex && mActiveShader->vertexKey == vsShaderKey &&
+      mActiveShader->pixel && mActiveShader->pixelKey == psShaderKey)
+   {
+      // We already have the current shader bound, nothing special to do.
+      return true;
+   }
+
+   auto shaderKey = ShaderKey{ fsShaderKey, vsShaderKey, psShaderKey };
+   auto &shader = mShaders[shaderKey];
 
    auto getProgramLog = [](auto program, auto getFn, auto getInfoFn) {
       gl::GLint logLength = 0;
@@ -139,14 +152,14 @@ bool GLDriver::checkActiveShader()
       return logMessage;
    };
 
-   // Genearte shader if needed
-   if (!shader.object) {
+   // Generate shader if needed
+   if (!shader.object)
+   {
       // Parse fetch shader if needed
-      if (!fetchShader.object) {
-         auto program = make_virtual_ptr<void>(pgm_start_fs.PGM_START << 8);
-         auto size = pgm_size_fs.PGM_SIZE << 3;
-
-         if (!parseFetchShader(fetchShader, program, size)) {
+      auto &fetchShader = mFetchShaders[fsShaderKey];
+      if (!fetchShader.object)
+      {
+         if (!parseFetchShader(fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
             gLog->error("Failed to parse fetch shader");
             return false;
          }
@@ -166,11 +179,9 @@ bool GLDriver::checkActiveShader()
       }
 
       // Compile vertex shader if needed
+      auto &vertexShader = mVertexShaders[vsShaderKey];
       if (!vertexShader.object) {
-         auto program = make_virtual_ptr<uint8_t>(pgm_start_vs.PGM_START << 8);
-         auto size = pgm_size_vs.PGM_SIZE << 3;
-
-         if (!compileVertexShader(vertexShader, fetchShader, program, size)) {
+         if (!compileVertexShader(vertexShader, fetchShader, make_virtual_ptr<uint8_t>(vsPgmAddress), vsPgmSize)) {
             gLog->error("Failed to recompile vertex shader");
             return false;
          }
@@ -204,11 +215,9 @@ bool GLDriver::checkActiveShader()
       }
 
       // Compile pixel shader if needed
+      auto &pixelShader = mPixelShaders[psShaderKey];
       if (!pixelShader.object) {
-         auto program = make_virtual_ptr<uint8_t>(pgm_start_ps.PGM_START << 8);
-         auto size = pgm_size_ps.PGM_SIZE << 3;
-
-         if (!compilePixelShader(pixelShader, program, size)) {
+         if (!compilePixelShader(pixelShader, make_virtual_ptr<uint8_t>(psPgmAddress), psPgmSize)) {
             gLog->error("Failed to recompile pixel shader");
             return false;
          }
@@ -238,6 +247,9 @@ bool GLDriver::checkActiveShader()
       shader.fetch = &fetchShader;
       shader.vertex = &vertexShader;
       shader.pixel = &pixelShader;
+      shader.fetchKey = fsShaderKey;
+      shader.vertexKey = vsShaderKey;
+      shader.pixelKey = psShaderKey;
 
       // Create pipeline
       gl::glGenProgramPipelines(1, &shader.object);
@@ -248,12 +260,10 @@ bool GLDriver::checkActiveShader()
    // Set active shader
    mActiveShader = &shader;
 
-   if (mActiveShader->pixel->sx_alpha_test_control.value != sx_alpha_test_control.value) {
-      gLog->error("Unimplemented same pixel shader but different sx_alpha_test_control");
-   }
-
    // Set alpha reference
-   gl::glProgramUniform1f(mActiveShader->pixel->object, mActiveShader->pixel->uniformAlphaRef, sx_alpha_ref.ALPHA_REF);
+   if (alphaTestFunc != latte::REF_ALWAYS && alphaTestFunc != latte::REF_NEVER) {
+      gl::glProgramUniform1f(mActiveShader->pixel->object, mActiveShader->pixel->uniformAlphaRef, sx_alpha_ref.ALPHA_REF);
+   }
 
    // Bind fetch shader
    gl::glBindVertexArray(shader.fetch->object);
