@@ -103,43 +103,44 @@ bool GLDriver::checkActiveShader()
       gLog->error("Fetch shader was not set");
       return false;
    }
+
    if (!pgm_start_vs.PGM_START) {
       gLog->error("Vertex shader was not set");
       return false;
    }
+
    if (!pgm_start_ps.PGM_START) {
       gLog->error("Pixel shader was not set");
       return false;
    }
 
-   ppcaddr_t fsPgmAddress = pgm_start_fs.PGM_START << 8;
-   ppcaddr_t vsPgmAddress = pgm_start_vs.PGM_START << 8;
-   ppcaddr_t psPgmAddress = pgm_start_ps.PGM_START << 8;
+   auto fsPgmAddress = pgm_start_fs.PGM_START << 8;
+   auto vsPgmAddress = pgm_start_vs.PGM_START << 8;
+   auto psPgmAddress = pgm_start_ps.PGM_START << 8;
    auto fsPgmSize = pgm_size_fs.PGM_SIZE << 3;
    auto vsPgmSize = pgm_size_vs.PGM_SIZE << 3;
    auto psPgmSize = pgm_size_ps.PGM_SIZE << 3;
-
    auto alphaTestFunc = sx_alpha_test_control.ALPHA_FUNC().get();
+
    if (!sx_alpha_test_control.ALPHA_TEST_ENABLE() || sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
       alphaTestFunc = latte::REF_ALWAYS;
    }
 
-   uint64_t fsShaderKey = static_cast<uint64_t>(fsPgmAddress) << 32;
-   uint64_t vsShaderKey = static_cast<uint64_t>(vsPgmAddress) << 32;
-   uint64_t psShaderKey = static_cast<uint64_t>(psPgmAddress) << 32;
+   auto fsShaderKey = static_cast<uint64_t>(fsPgmAddress) << 32;
+   auto vsShaderKey = static_cast<uint64_t>(vsPgmAddress) << 32;
+   auto psShaderKey = static_cast<uint64_t>(psPgmAddress) << 32;
    psShaderKey ^= alphaTestFunc << 28;
    psShaderKey ^= cb_shader_mask.value & 0xFF;
 
-   if (mActiveShader &&
-      mActiveShader->fetch && mActiveShader->fetchKey == fsShaderKey &&
-      mActiveShader->vertex && mActiveShader->vertexKey == vsShaderKey &&
-      mActiveShader->pixel && mActiveShader->pixelKey == psShaderKey)
-   {
+   if (mActiveShader
+    && mActiveShader->fetch && mActiveShader->fetchKey == fsShaderKey
+    && mActiveShader->vertex && mActiveShader->vertexKey == vsShaderKey
+    && mActiveShader->pixel && mActiveShader->pixelKey == psShaderKey) {
       // We already have the current shader bound, nothing special to do.
       return true;
    }
 
-   auto shaderKey = ShaderKey{ fsShaderKey, vsShaderKey, psShaderKey };
+   auto shaderKey = ShaderKey { fsShaderKey, vsShaderKey, psShaderKey };
    auto &shader = mShaders[shaderKey];
 
    auto getProgramLog = [](auto program, auto getFn, auto getInfoFn) {
@@ -153,12 +154,11 @@ bool GLDriver::checkActiveShader()
    };
 
    // Generate shader if needed
-   if (!shader.object)
-   {
+   if (!shader.object) {
       // Parse fetch shader if needed
       auto &fetchShader = mFetchShaders[fsShaderKey];
-      if (!fetchShader.object)
-      {
+
+      if (!fetchShader.object) {
          if (!parseFetchShader(fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
             gLog->error("Failed to parse fetch shader");
             return false;
@@ -180,6 +180,7 @@ bool GLDriver::checkActiveShader()
 
       // Compile vertex shader if needed
       auto &vertexShader = mVertexShaders[vsShaderKey];
+
       if (!vertexShader.object) {
          if (!compileVertexShader(vertexShader, fetchShader, make_virtual_ptr<uint8_t>(vsPgmAddress), vsPgmSize)) {
             gLog->error("Failed to recompile vertex shader");
@@ -216,6 +217,7 @@ bool GLDriver::checkActiveShader()
 
       // Compile pixel shader if needed
       auto &pixelShader = mPixelShaders[psShaderKey];
+
       if (!pixelShader.object) {
          if (!compilePixelShader(pixelShader, make_virtual_ptr<uint8_t>(psPgmAddress), psPgmSize)) {
             gLog->error("Failed to recompile pixel shader");

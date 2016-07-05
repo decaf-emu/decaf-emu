@@ -156,12 +156,6 @@ struct AttributeBuffer
    void *mappedBuffer = nullptr;
 };
 
-struct Texture
-{
-   gl::GLuint object = 0;
-   uint32_t words[7];
-};
-
 struct Sampler
 {
    gl::GLuint object = 0;
@@ -285,7 +279,6 @@ private:
    std::unordered_map<uint64_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
    std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;
-
    std::unordered_map<uint32_t, AttributeBuffer> mAttribBuffers;
    std::unordered_map<uint32_t, UniformBuffer> mUniformBuffers;
 
