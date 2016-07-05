@@ -1,7 +1,6 @@
 #include "coreinit_enum_string.h"
 
-#define ENUM_BEG(name, type) std::string enumAsString(name enumValue) { using namespace name##_; switch (enumValue) {
-#define ENUM_END(name) default: return std::to_string(static_cast<int>(enumValue)); } }
-#define ENUM_VALUE(key, value) case key: return #key;
-
+#undef COREINIT_ENUM_H
+#include "common/enum_string_define.h"
 #include "coreinit_enum.h"
+#include "common/enum_end.h"

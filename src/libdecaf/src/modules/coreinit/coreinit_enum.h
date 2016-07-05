@@ -1,25 +1,7 @@
 #ifndef COREINIT_ENUM_H
 #define COREINIT_ENUM_H
 
-#ifndef ENUM_BEG
-#define ENUM_BEG(name, type) namespace name##_ { enum Value : type {
-#endif
-
-#ifndef ENUM_END
-#define ENUM_END(name) }; } using name = name##_::Value;
-#endif
-
-#ifndef ENUM_VALUE
-#define ENUM_VALUE(key, value) key = value,
-#endif
-
-#ifndef ENUM_NAMESPACE_BEG
-#define ENUM_NAMESPACE_BEG(name) namespace name {
-#endif
-
-#ifndef ENUM_NAMESPACE_END
-#define ENUM_NAMESPACE_END(name) }
-#endif
+#include "common/enum_start.h"
 
 ENUM_NAMESPACE_BEG(coreinit)
 
@@ -263,10 +245,6 @@ ENUM_END(UCDataType)
 
 ENUM_NAMESPACE_END(coreinit)
 
-#undef ENUM_BEG
-#undef ENUM_END
-#undef ENUM_VALUE
-#undef ENUM_NAMESPACE_BEG
-#undef ENUM_NAMESPACE_END
+#include "common/enum_end.h"
 
 #endif // ifdef COREINIT_ENUM_H
