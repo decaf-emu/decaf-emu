@@ -337,7 +337,7 @@ void
 GX2SetBlendControlReg(GX2BlendControlReg *reg)
 {
    auto cb_blend_control = reg->cb_blend_control.value();
-   auto id = static_cast<latte::Register>(latte::Register::CB_BLEND0_CONTROL + reg->target);
+   auto id = static_cast<latte::Register>(latte::Register::CB_BLEND0_CONTROL + reg->target * 4);
    pm4::write(pm4::SetContextReg { id, cb_blend_control.value });
 }
 
