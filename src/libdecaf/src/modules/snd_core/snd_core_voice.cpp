@@ -7,7 +7,8 @@
 namespace snd_core
 {
 
-static const int MaxVoices = 6;
+static const auto
+MaxVoices = 96u;
 
 static std::vector<AXVoice*>
 sAcquiredVoices;
