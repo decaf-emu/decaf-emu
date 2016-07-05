@@ -151,11 +151,6 @@ struct ScanBufferChain
    uint32_t height;
 };
 
-struct FrameBuffer
-{
-   gl::GLuint object = 0;
-};
-
 struct AttributeBuffer
 {
    gl::GLuint object = 0;
@@ -294,7 +289,7 @@ private:
    std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mGeometrySamplers;
 
    gl::GLuint mBlitFrameBuffers[2];
-   FrameBuffer mFrameBuffer;
+   gl::GLuint mFrameBuffer;
    Shader *mActiveShader = nullptr;
    SurfaceBuffer *mActiveDepthBuffer = nullptr;
    std::array<SurfaceBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;

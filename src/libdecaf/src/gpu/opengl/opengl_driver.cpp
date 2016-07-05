@@ -30,8 +30,8 @@ void GLDriver::initGL()
    gl::glCreateFramebuffers(2, mBlitFrameBuffers);
 
    // Create our default framebuffer
-   gl::glCreateFramebuffers(1, &mFrameBuffer.object);
-   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
+   gl::glCreateFramebuffers(1, &mFrameBuffer);
+   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer);
 }
 
 void GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
