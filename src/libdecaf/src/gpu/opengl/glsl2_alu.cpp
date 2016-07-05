@@ -64,12 +64,18 @@ insertSource0(fmt::MemoryWriter &out,
               const ControlFlowInst &cf,
               const AluInst &inst)
 {
+   auto abs = false;
+
+   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+      abs = inst.op2.SRC0_ABS();
+   }
+
    insertSource(out, literals, cf,
                 inst,
                 inst.word0.SRC0_SEL(),
                 inst.word0.SRC0_REL(),
                 inst.word0.SRC0_CHAN(),
-                inst.op2.SRC0_ABS(),
+                abs,
                 inst.word0.SRC0_NEG());
 }
 
@@ -79,12 +85,18 @@ insertSource1(fmt::MemoryWriter &out,
               const ControlFlowInst &cf,
               const AluInst &inst)
 {
+   auto abs = false;
+
+   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+      abs = inst.op2.SRC1_ABS();
+   }
+
    insertSource(out, literals, cf,
                 inst,
                 inst.word0.SRC1_SEL(),
                 inst.word0.SRC1_REL(),
                 inst.word0.SRC1_CHAN(),
-                inst.op2.SRC1_ABS(),
+                abs,
                 inst.word0.SRC1_NEG());
 }
 
