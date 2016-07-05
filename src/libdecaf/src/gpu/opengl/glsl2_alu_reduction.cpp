@@ -30,7 +30,7 @@ DOT4(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       if (group[i].op2.WRITE_MASK()) {
          hasWriteMask = true;
          writeUnit = i;
-         insertDestBegin(state.out, cf, group[i], static_cast<SQ_CHAN>(i));
+         insertDestBegin(state.out, cf, group[i], static_cast<SQ_CHAN>(SQ_CHAN_X));
          break;
       }
    }
