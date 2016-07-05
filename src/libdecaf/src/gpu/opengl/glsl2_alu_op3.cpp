@@ -33,11 +33,11 @@ conditionalMove(State &state,
    insertDestBegin(state.out, cf, alu, state.unit);
 
    state.out << "(";
-   insertSource0(state.out, state.literals, cf, alu);
+   insertSource0(state, state.out, cf, alu);
    state.out << op << "0) ? ";
-   insertSource1(state.out, state.literals, cf, alu);
+   insertSource1(state, state.out, cf, alu);
    state.out << " : ";
-   insertSource2(state.out, state.literals, cf, alu);
+   insertSource2(state, state.out, cf, alu);
 
    insertDestEnd(state.out, cf, alu);
    state.out << ';';
@@ -58,11 +58,11 @@ multiplyAdd(State &state,
       state.out << "(";
    }
 
-   insertSource0(state.out, state.literals, cf, alu);
+   insertSource0(state, state.out, cf, alu);
    state.out << " * ";
-   insertSource1(state.out, state.literals, cf, alu);
+   insertSource1(state, state.out, cf, alu);
    state.out << " + ";
-   insertSource2(state.out, state.literals, cf, alu);
+   insertSource2(state, state.out, cf, alu);
 
    if (modifier) {
       state.out << ")" << modifier;

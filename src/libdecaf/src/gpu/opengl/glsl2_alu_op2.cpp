@@ -65,7 +65,7 @@ unaryFunction(State &state,
    insertDestBegin(state.out, cf, alu, state.unit);
 
    state.out << func << "(";
-   insertSource0(state.out, state.literals, cf, alu);
+   insertSource0(state, state.out, cf, alu);
    state.out << ")";
 
    insertDestEnd(state.out, cf, alu);
@@ -84,9 +84,9 @@ binaryFunction(State &state,
    insertDestBegin(state.out, cf, alu, state.unit);
 
    state.out << func << "(";
-   insertSource0(state.out, state.literals, cf, alu);
+   insertSource0(state, state.out, cf, alu);
    state.out << ", ";
-   insertSource1(state.out, state.literals, cf, alu);
+   insertSource1(state, state.out, cf, alu);
    state.out << ")";
 
    insertDestEnd(state.out, cf, alu);
@@ -104,9 +104,9 @@ binaryOperator(State &state,
    insertLineStart(state);
    insertDestBegin(state.out, cf, alu, state.unit);
 
-   insertSource0(state.out, state.literals, cf, alu);
+   insertSource0(state, state.out, cf, alu);
    state.out << op;
-   insertSource1(state.out, state.literals, cf, alu);
+   insertSource1(state, state.out, cf, alu);
 
    insertDestEnd(state.out, cf, alu);
    state.out << ';';
@@ -121,9 +121,9 @@ binaryPredicate(State &state,
 {
    // predicate (src0 op src1)
    fmt::MemoryWriter condition;
-   insertSource0(condition, state.literals, cf, alu);
+   insertSource0(state, condition, cf, alu);
    condition << op;
-   insertSource1(condition, state.literals, cf, alu);
+   insertSource1(state, condition, cf, alu);
    updatePredicate(state, cf, alu, condition.str());
 }
 
@@ -140,9 +140,9 @@ binaryCompareSet(State &state,
    insertDestBegin(state.out, cf, alu, state.unit);
 
    state.out << "(";
-   insertSource0(state.out, state.literals, cf, alu);
+   insertSource0(state, state.out, cf, alu);
    state.out << op;
-   insertSource1(state.out, state.literals, cf, alu);
+   insertSource1(state, state.out, cf, alu);
    state.out << ") ? ";
 
    if ((flags & SQ_ALU_FLAG_INT_OUT) || (flags & SQ_ALU_FLAG_UINT_OUT)) {
@@ -167,9 +167,9 @@ binaryCompareKill(State &state,
 
    insertLineStart(state);
    state.out << "if (";
-   insertSource0(state.out, state.literals, cf, alu);
+   insertSource0(state, state.out, cf, alu);
    state.out << op;
-   insertSource1(state.out, state.literals, cf, alu);
+   insertSource1(state, state.out, cf, alu);
    state.out << ") {";
    insertLineEnd(state);
 
@@ -324,7 +324,7 @@ MOV(State &state, const ControlFlowInst &cf, const AluInst &alu)
    insertLineStart(state);
    insertDestBegin(state.out, cf, alu, state.unit);
 
-   insertSource0(state.out, state.literals, cf, alu);
+   insertSource0(state, state.out, cf, alu);
 
    insertDestEnd(state.out, cf, alu);
    state.out << ';';
@@ -347,7 +347,7 @@ MOVA_FLOOR(State &state, const ControlFlowInst &cf, const AluInst &alu)
 
    insertLineStart(state);
    state.out << "AR.x = int(clamp(floor(";
-   insertSource0(state.out, state.literals, cf, alu);
+   insertSource0(state, state.out, cf, alu);
    state.out << "), -256, 256));";
    insertLineEnd(state);
 }

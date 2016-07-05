@@ -204,7 +204,7 @@ bool GLDriver::checkActiveShader()
          }
 
          // Get uniform locations
-         vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "UR");
+         vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VR");
 
          // Get attribute locations
          vertexShader.attribLocations.fill(0);
@@ -241,7 +241,7 @@ bool GLDriver::checkActiveShader()
          }
 
          // Get uniform locations
-         pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "UR");
+         pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "PR");
          pixelShader.uniformAlphaRef = gl::glGetUniformLocation(pixelShader.object, "uAlphaRef");
          pixelShader.sx_alpha_test_control = sx_alpha_test_control;
       }

@@ -489,7 +489,13 @@ insertFileHeader(State &state)
    }
 
    if (state.shader->uniformRegistersEnabled) {
-      out << "uniform vec4 UR[256];\n";
+      if (state.shader->type == Shader::PixelShader) {
+         out << "uniform vec4 PR[256];\n";
+      } else if (state.shader->type == Shader::VertexShader) {
+         out << "uniform vec4 VR[256];\n";
+      } else if (state.shader->type == Shader::GeometryShader) {
+         out << "uniform vec4 GR[256];\n";
+      }
    }
 
    if (state.shader->uniformBlocksEnabled) {

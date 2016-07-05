@@ -12,25 +12,25 @@ insertChannel(fmt::MemoryWriter &out,
               latte::SQ_CHAN channel);
 
 void
-insertSource0(fmt::MemoryWriter &out,
-              const gsl::span<const uint32_t> &literals,
+insertSource0(State &state,
+              fmt::MemoryWriter &out,
               const latte::ControlFlowInst &cf,
               const latte::AluInst &inst);
 
 void
-insertSource1(fmt::MemoryWriter &out,
-              const gsl::span<const uint32_t> &literals,
+insertSource1(State &state,
+              fmt::MemoryWriter &out,
               const latte::ControlFlowInst &cf,
               const latte::AluInst &inst);
 void
-insertSource2(fmt::MemoryWriter &out,
-              const gsl::span<const uint32_t> &literals,
+insertSource2(State &state,
+              fmt::MemoryWriter &out,
               const latte::ControlFlowInst &cf,
               const latte::AluInst &inst);
 
 void
-insertSource0Vector(fmt::MemoryWriter &out,
-                    const gsl::span<const uint32_t> &literals,
+insertSource0Vector(State &state,
+                    fmt::MemoryWriter &out,
                     const latte::ControlFlowInst &cf,
                     const latte::AluInst &x,
                     const latte::AluInst &y,
@@ -38,8 +38,8 @@ insertSource0Vector(fmt::MemoryWriter &out,
                     const latte::AluInst &w);
 
 void
-insertSource1Vector(fmt::MemoryWriter &out,
-                    const gsl::span<const uint32_t> &literals,
+insertSource1Vector(State &state,
+                    fmt::MemoryWriter &out,
                     const latte::ControlFlowInst &cf,
                     const latte::AluInst &x,
                     const latte::AluInst &y,
@@ -47,8 +47,8 @@ insertSource1Vector(fmt::MemoryWriter &out,
                     const latte::AluInst &w);
 
 void
-insertSource2Vector(fmt::MemoryWriter &out,
-                    const gsl::span<const uint32_t> &literals,
+insertSource2Vector(State &state,
+                    fmt::MemoryWriter &out,
                     const latte::ControlFlowInst &cf,
                     const latte::AluInst &x,
                     const latte::AluInst &y,
@@ -56,8 +56,8 @@ insertSource2Vector(fmt::MemoryWriter &out,
                     const latte::AluInst &w);
 
 void
-insertSource(fmt::MemoryWriter &out,
-             const gsl::span<const uint32_t> &literals,
+insertSource(State &state,
+             fmt::MemoryWriter &out,
              const latte::ControlFlowInst &cf,
              const latte::AluInst &inst,
              const latte::SQ_ALU_SRC sel,

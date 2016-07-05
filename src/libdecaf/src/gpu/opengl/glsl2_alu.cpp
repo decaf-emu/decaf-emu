@@ -14,7 +14,8 @@ union LiteralValue
 };
 
 void
-insertIndexMode(fmt::MemoryWriter &out, SQ_INDEX_MODE index)
+insertIndexMode(fmt::MemoryWriter &out,
+                SQ_INDEX_MODE index)
 {
    switch (index) {
    case SQ_INDEX_AR_X:
@@ -38,7 +39,8 @@ insertIndexMode(fmt::MemoryWriter &out, SQ_INDEX_MODE index)
 }
 
 void
-insertChannel(fmt::MemoryWriter &out, SQ_CHAN channel)
+insertChannel(fmt::MemoryWriter &out,
+              SQ_CHAN channel)
 {
    switch (channel) {
    case SQ_CHAN_X:
@@ -59,8 +61,8 @@ insertChannel(fmt::MemoryWriter &out, SQ_CHAN channel)
 }
 
 void
-insertSource0(fmt::MemoryWriter &out,
-              const gsl::span<const uint32_t> &literals,
+insertSource0(State &state,
+              fmt::MemoryWriter &out,
               const ControlFlowInst &cf,
               const AluInst &inst)
 {
@@ -70,7 +72,7 @@ insertSource0(fmt::MemoryWriter &out,
       abs = inst.op2.SRC0_ABS();
    }
 
-   insertSource(out, literals, cf,
+   insertSource(state, out, cf,
                 inst,
                 inst.word0.SRC0_SEL(),
                 inst.word0.SRC0_REL(),
@@ -80,8 +82,8 @@ insertSource0(fmt::MemoryWriter &out,
 }
 
 void
-insertSource1(fmt::MemoryWriter &out,
-              const gsl::span<const uint32_t> &literals,
+insertSource1(State &state,
+              fmt::MemoryWriter &out,
               const ControlFlowInst &cf,
               const AluInst &inst)
 {
@@ -91,7 +93,7 @@ insertSource1(fmt::MemoryWriter &out,
       abs = inst.op2.SRC1_ABS();
    }
 
-   insertSource(out, literals, cf,
+   insertSource(state, out, cf,
                 inst,
                 inst.word0.SRC1_SEL(),
                 inst.word0.SRC1_REL(),
@@ -101,12 +103,12 @@ insertSource1(fmt::MemoryWriter &out,
 }
 
 void
-insertSource2(fmt::MemoryWriter &out,
-              const gsl::span<const uint32_t> &literals,
+insertSource2(State &state,
+              fmt::MemoryWriter &out,
               const ControlFlowInst &cf,
               const AluInst &inst)
 {
-   insertSource(out, literals, cf,
+   insertSource(state, out, cf,
                 inst,
                 inst.op3.SRC2_SEL(),
                 inst.op3.SRC2_REL(),
@@ -116,8 +118,8 @@ insertSource2(fmt::MemoryWriter &out,
 }
 
 void
-insertSource0Vector(fmt::MemoryWriter &out,
-                    const gsl::span<const uint32_t> &literals,
+insertSource0Vector(State &state,
+                    fmt::MemoryWriter &out,
                     const ControlFlowInst &cf,
                     const AluInst &x,
                     const AluInst &y,
@@ -125,19 +127,19 @@ insertSource0Vector(fmt::MemoryWriter &out,
                     const AluInst &w)
 {
    out << "vec4(";
-   insertSource0(out, literals, cf, x);
+   insertSource0(state, out, cf, x);
    out << ", ";
-   insertSource0(out, literals, cf, y);
+   insertSource0(state, out, cf, y);
    out << ", ";
-   insertSource0(out, literals, cf, z);
+   insertSource0(state, out, cf, z);
    out << ", ";
-   insertSource0(out, literals, cf, w);
+   insertSource0(state, out, cf, w);
    out << ")";
 }
 
 void
-insertSource1Vector(fmt::MemoryWriter &out,
-                    const gsl::span<const uint32_t> &literals,
+insertSource1Vector(State &state,
+                    fmt::MemoryWriter &out,
                     const ControlFlowInst &cf,
                     const AluInst &x,
                     const AluInst &y,
@@ -145,19 +147,19 @@ insertSource1Vector(fmt::MemoryWriter &out,
                     const AluInst &w)
 {
    out << "vec4(";
-   insertSource1(out, literals, cf, x);
+   insertSource1(state, out, cf, x);
    out << ", ";
-   insertSource1(out, literals, cf, y);
+   insertSource1(state, out, cf, y);
    out << ", ";
-   insertSource1(out, literals, cf, z);
+   insertSource1(state, out, cf, z);
    out << ", ";
-   insertSource1(out, literals, cf, w);
+   insertSource1(state, out, cf, w);
    out << ")";
 }
 
 void
-insertSource2Vector(fmt::MemoryWriter &out,
-                    const gsl::span<const uint32_t> &literals,
+insertSource2Vector(State &state,
+                    fmt::MemoryWriter &out,
                     const ControlFlowInst &cf,
                     const AluInst &x,
                     const AluInst &y,
@@ -165,19 +167,19 @@ insertSource2Vector(fmt::MemoryWriter &out,
                     const AluInst &w)
 {
    out << "vec4(";
-   insertSource2(out, literals, cf, x);
+   insertSource2(state, out, cf, x);
    out << ", ";
-   insertSource2(out, literals, cf, y);
+   insertSource2(state, out, cf, y);
    out << ", ";
-   insertSource2(out, literals, cf, z);
+   insertSource2(state, out, cf, z);
    out << ", ";
-   insertSource2(out, literals, cf, w);
+   insertSource2(state, out, cf, w);
    out << ")";
 }
 
 void
-insertSource(fmt::MemoryWriter &out,
-             const gsl::span<const uint32_t> &literals,
+insertSource(State &state,
+             fmt::MemoryWriter &out,
              const ControlFlowInst &cf,
              const AluInst &inst,
              const SQ_ALU_SRC sel,
@@ -309,7 +311,17 @@ insertSource(fmt::MemoryWriter &out,
       out << ']';
       needsChannelSelect = true;
    } else if (sel >= SQ_ALU_SRC_CONST_FILE_FIRST && sel <= SQ_ALU_SRC_CONST_FILE_LAST) {
-      out << "UR[" << (sel - SQ_ALU_SRC_CONST_FILE_FIRST);
+      if (!state.shader) {
+         out << "UR[";
+      } else if (state.shader->type == Shader::PixelShader) {
+         out << "PR[";
+      } else if (state.shader->type == Shader::VertexShader) {
+         out << "VR[";
+      } else if (state.shader->type == Shader::GeometryShader) {
+         out << "GR[";
+      }
+
+      out << (sel - SQ_ALU_SRC_CONST_FILE_FIRST);
 
       if (rel) {
          out << " + ";
@@ -343,7 +355,7 @@ insertSource(fmt::MemoryWriter &out,
          out << "-1";
          break;
       case SQ_ALU_SRC_LITERAL:
-         value.asUint = literals[chan];
+         value.asUint = state.literals[chan];
 
          if (flags & SQ_ALU_FLAG_INT_IN) {
             out << value.asInt;

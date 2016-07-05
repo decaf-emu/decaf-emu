@@ -41,9 +41,9 @@ DOT4(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
    }
 
    state.out << "dot(";
-   insertSource0Vector(state.out, state.literals, cf, group[0], group[1], group[2], group[3]);
+   insertSource0Vector(state, state.out, cf, group[0], group[1], group[2], group[3]);
    state.out << ", ";
-   insertSource1Vector(state.out, state.literals, cf, group[0], group[1], group[2], group[3]);
+   insertSource1Vector(state, state.out, cf, group[0], group[1], group[2], group[3]);
    state.out << ")";
 
    if (hasWriteMask) {
