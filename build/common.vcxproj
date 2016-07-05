@@ -74,6 +74,10 @@
     <ClInclude Include="..\src\common\byte_swap.h" />
     <ClInclude Include="..\src\common\debuglog.h" />
     <ClInclude Include="..\src\common\emuassert.h" />
+    <ClInclude Include="..\src\common\enum_end.h" />
+    <ClInclude Include="..\src\common\enum_start.h" />
+    <ClInclude Include="..\src\common\enum_string_declare.h" />
+    <ClInclude Include="..\src\common\enum_string_define.h" />
     <ClInclude Include="..\src\common\fastregionmap.h" />
     <ClInclude Include="..\src\common\fixed.h" />
     <ClInclude Include="..\src\common\floatutils.h" />

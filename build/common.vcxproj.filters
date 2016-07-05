@@ -170,5 +170,17 @@
     <ClInclude Include="..\src\common\platform_stacktrace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\common\enum_start.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\enum_end.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\enum_string_declare.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\enum_string_define.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

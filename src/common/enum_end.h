@@ -1,0 +1,6 @@
+
+#undef ENUM_BEG
+#undef ENUM_END
+#undef ENUM_VALUE
+#undef ENUM_NAMESPACE_BEG
+#undef ENUM_NAMESPACE_END
