@@ -255,6 +255,14 @@ GLDriver::setRegister(latte::Register reg,
          gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_ZERO_TO_ONE);
       }
    } break;
+
+   case latte::Register::VGT_MULTI_PRIM_IB_RESET_INDX:
+   {
+      auto vgt_multi_prim_ib_reset_indx = *reinterpret_cast<latte::VGT_MULTI_PRIM_IB_RESET_INDX*>(&value);
+      gl::glEnable(gl::GL_PRIMITIVE_RESTART);
+      gl::glPrimitiveRestartIndex(vgt_multi_prim_ib_reset_indx.RESET_INDX);
+   } break;
+
    }
 }
 
