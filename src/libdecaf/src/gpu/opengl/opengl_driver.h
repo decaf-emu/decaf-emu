@@ -282,7 +282,7 @@ private:
    std::unordered_map<uint32_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
    std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;
-   std::unordered_map<uint32_t, Texture> mTextures;
+
    std::unordered_map<uint32_t, AttributeBuffer> mAttribBuffers;
    std::unordered_map<uint32_t, UniformBuffer> mUniformBuffers;
 
