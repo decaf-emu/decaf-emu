@@ -25,9 +25,6 @@ AXRegisterDeviceFinalMixCallback(AXDeviceType type,
                                  AXDeviceFinalMixCallback func);
 
 AXResult
-AXSetDRCVSMode(AXDRCVSMode mode);
-
-AXResult
 AXGetAuxCallback(AXDeviceType type,
                  uint32_t,
                  uint32_t,

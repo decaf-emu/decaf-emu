@@ -87,7 +87,6 @@ Module::registerDeviceFunctions()
    RegisterKernelFunction(AXGetDeviceMode);
    RegisterKernelFunction(AXGetDeviceFinalMixCallback);
    RegisterKernelFunction(AXRegisterDeviceFinalMixCallback);
-   RegisterKernelFunction(AXSetDRCVSMode);
    RegisterKernelFunction(AXGetAuxCallback);
    RegisterKernelFunction(AXRegisterAuxCallback);
    RegisterKernelFunction(AXSetDeviceLinearUpsampler);
