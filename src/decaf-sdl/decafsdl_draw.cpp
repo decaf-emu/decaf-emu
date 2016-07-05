@@ -117,14 +117,14 @@ void DecafSDL::drawScanBuffer(gl::GLuint object)
 
 void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
 {
-   static const auto DrcRatio = 0.25f;
-   static const auto OverallScale = 0.75f;
-   static const auto ScreenSeperation = 5.0f;
-
    static const auto DrcWidth = 854.0f;
    static const auto DrcHeight = 480.0f;
    static const auto TvWidth = 1280.0f;
    static const auto TvHeight = 720.0f;
+
+   static const auto DrcRatio = 1.0f - (DrcHeight / TvHeight);
+   static const auto OverallScale = 1.0f;
+   static const auto ScreenSeperation = 5.0f;
 
    int windowWidth, windowHeight;
    SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
