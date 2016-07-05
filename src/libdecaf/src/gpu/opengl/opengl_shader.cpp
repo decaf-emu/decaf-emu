@@ -967,32 +967,32 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
                   break;
                case latte::REF_LESS:
                   out << "REF_LESS\n";
-                  out << "if (exp_pixel_" << exp.id << ".w < uAlphaRef) {\n";
+                  out << "if (!(exp_pixel_" << exp.id << ".w < uAlphaRef)) {\n";
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_EQUAL:
                   out << "REF_EQUAL\n";
-                  out << "if (exp_pixel_" << exp.id << ".w == uAlphaRef) {\n";
+                  out << "if (!(exp_pixel_" << exp.id << ".w == uAlphaRef)) {\n";
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_LEQUAL:
                   out << "REF_LEQUAL\n";
-                  out << "if (exp_pixel_" << exp.id << ".w <= uAlphaRef) {\n";
+                  out << "if (!(exp_pixel_" << exp.id << ".w <= uAlphaRef)) {\n";
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_GREATER:
                   out << "REF_GREATER\n";
-                  out << "if (exp_pixel_" << exp.id << ".w > uAlphaRef) {\n";
+                  out << "if (!(exp_pixel_" << exp.id << ".w > uAlphaRef)) {\n";
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_NOTEQUAL:
                   out << "REF_NOTEQUAL\n";
-                  out << "if (exp_pixel_" << exp.id << ".w != uAlphaRef) {\n";
+                  out << "if (!(exp_pixel_" << exp.id << ".w != uAlphaRef)) {\n";
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_GEQUAL:
                   out << "REF_GEQUAL\n";
-                  out << "if (exp_pixel_" << exp.id << ".w >= uAlphaRef) {\n";
+                  out << "if (!(exp_pixel_" << exp.id << ".w >= uAlphaRef)) {\n";
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_ALWAYS:
