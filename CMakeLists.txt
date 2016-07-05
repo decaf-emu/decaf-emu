@@ -81,6 +81,7 @@ find_package(PkgConfig REQUIRED)
 pkg_search_module(SDL2 REQUIRED sdl2)
 include_directories(${SDL2_INCLUDE_DIRS})
 add_definitions(-DDECAF_SDL)
+add_definitions(-DDECAF_USE_STDLAYOUT_BITFIELD)
 
 if (NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")

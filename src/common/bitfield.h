@@ -69,15 +69,18 @@ struct BitfieldField<BitfieldType, bool, Position, Bits>
          return bitfield; \
       }
 
-#ifdef _MSC_VER
-#define BITFIELD_DBGFIELD_PROT private
-#else
-#define BITFIELD_DBGFIELD_PROT public
-#endif
+#ifndef DECAF_USE_STDLAYOUT_BITFIELD
 
 #define BITFIELD_ENTRY(Pos, Size, Type, Name) \
-   BITFIELD_DBGFIELD_PROT: struct { StorageType : Pos; StorageType _##Name : Size; }; \
+   private: struct { StorageType : Pos; StorageType _##Name : Size; }; \
    public: inline BitfieldField<MyType, Type, Pos, Size> Name() const { return { *this }; }
+
+#else
+
+#define BITFIELD_ENTRY(Pos, Size, Type, Name) \
+   inline BitfieldField<MyType, Type, Pos, Size> Name() const { return { *this }; }
+
+#endif
 
 #define BITFIELD_END \
    };
