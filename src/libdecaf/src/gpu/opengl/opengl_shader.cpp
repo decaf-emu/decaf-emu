@@ -957,8 +957,8 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
                strMask.push_back('w');
             }
 
-            if (sx_alpha_test_control.ALPHA_TEST_ENABLE()) {
-               out << "// Alpha Test";
+            if (sx_alpha_test_control.ALPHA_TEST_ENABLE() && !sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
+               out << "// Alpha Test ";
 
                switch (sx_alpha_test_control.ALPHA_FUNC()) {
                case latte::REF_NEVER:
@@ -971,27 +971,27 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_EQUAL:
-                  out << "REF_LESS\n";
+                  out << "REF_EQUAL\n";
                   out << "if (exp_pixel_" << exp.id << ".w == uAlphaRef) {\n";
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_LEQUAL:
-                  out << "REF_LESS\n";
+                  out << "REF_LEQUAL\n";
                   out << "if (exp_pixel_" << exp.id << ".w <= uAlphaRef) {\n";
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_GREATER:
-                  out << "REF_LESS\n";
+                  out << "REF_GREATER\n";
                   out << "if (exp_pixel_" << exp.id << ".w > uAlphaRef) {\n";
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_NOTEQUAL:
-                  out << "REF_LESS\n";
+                  out << "REF_NOTEQUAL\n";
                   out << "if (exp_pixel_" << exp.id << ".w != uAlphaRef) {\n";
                   out << "   discard;\n}\n";
                   break;
                case latte::REF_GEQUAL:
-                  out << "REF_LESS\n";
+                  out << "REF_GEQUAL\n";
                   out << "if (exp_pixel_" << exp.id << ".w >= uAlphaRef) {\n";
                   out << "   discard;\n}\n";
                   break;
