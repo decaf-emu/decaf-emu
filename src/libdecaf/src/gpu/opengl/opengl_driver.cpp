@@ -27,7 +27,7 @@ void GLDriver::initGL()
    std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 
    // Create our default framebuffer
-   gl::glGenFramebuffers(1, &mFrameBuffer.object);
+   gl::glCreateFramebuffers(1, &mFrameBuffer.object);
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
 }
 
