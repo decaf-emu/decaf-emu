@@ -237,7 +237,6 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
 
    switch (id) {
    case SQ_CF_INST_ALU_PUSH_BEFORE:
-   case SQ_CF_INST_ALU_ELSE_AFTER:
       insertPush(state);
       state.out << '\n';
       break;
