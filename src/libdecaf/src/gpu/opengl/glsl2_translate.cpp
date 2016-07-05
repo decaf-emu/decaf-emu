@@ -589,7 +589,7 @@ insertFileHeader(State &state)
       out
          << "out gl_PerVertex {\n"
          << "   vec4 gl_Position;\n"
-         << "};";
+         << "};\n";
    }
 }
 
