@@ -15,11 +15,14 @@ GX2ClearColor(GX2ColorBuffer *colorBuffer,
 {
    uint32_t addr256, aaAddr256;
    addr256 = colorBuffer->surface.image.getAddress() >> 8;
+
    if (colorBuffer->surface.aa != 0) {
       aaAddr256 = colorBuffer->aaBuffer.getAddress() >> 8;
    } else {
       aaAddr256 = 0;
    }
+
+   GX2InitColorBufferRegs(colorBuffer);
 
    pm4::write(pm4::DecafClearColor {
       red, green, blue, alpha,
@@ -36,6 +39,8 @@ void
 DecafClearDepthStencil(GX2DepthBuffer *depthBuffer,
                        GX2ClearFlags clearFlags)
 {
+   GX2InitDepthBufferRegs(depthBuffer);
+
    pm4::write(pm4::DecafClearDepthStencil {
       clearFlags,
       depthBuffer->surface.image.getAddress(),

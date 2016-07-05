@@ -22,6 +22,8 @@ GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget scanTarget)
       aaAddr256 = 0;
    }
 
+   GX2InitColorBufferRegs(buffer);
+
    pm4::write(pm4::DecafCopyColorToScan {
       scanTarget,
       addr256,
