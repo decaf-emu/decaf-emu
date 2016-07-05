@@ -15,7 +15,7 @@ GX2Invalidate(GX2InvalidateMode mode, void *buffer, uint32_t size)
    auto memStart = mem::untranslate(buffer);
    auto memEnd = memStart + size;
 
-   pm4::write(pm4::DecafInvalidate{
+   pm4::write(pm4::DecafInvalidate {
       mode,
       memStart,
       memEnd

@@ -100,7 +100,7 @@ GX2SetTVBuffer(void *buffer,
    }
 
    // bufferingMode is conveniently equal to the number of buffers
-   pm4::write(pm4::DecafSetBuffer{
+   pm4::write(pm4::DecafSetBuffer {
       1,
       bufferingMode,
       static_cast<uint32_t>(tvWidth),
@@ -118,7 +118,7 @@ GX2SetDRCBuffer(void *buffer,
    int drcWidth = 854, drcHeight = 480;
 
    // bufferingMode is conveniently equal to the number of buffers
-   pm4::write(pm4::DecafSetBuffer{
+   pm4::write(pm4::DecafSetBuffer {
       0,
       bufferingMode,
       static_cast<uint32_t>(drcWidth),
