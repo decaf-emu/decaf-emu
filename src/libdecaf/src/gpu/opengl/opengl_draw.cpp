@@ -19,6 +19,12 @@ bool GLDriver::checkReadyDraw()
       return false;
    }
 
+   gl::GLenum fbStatus = gl::glCheckFramebufferStatus(gl::GL_FRAMEBUFFER);
+   if (fbStatus != gl::GL_FRAMEBUFFER_COMPLETE) {
+      gLog->warn("Draw attempted with an incomplete framebuffer.");
+      return false;
+   }
+
    if (!checkActiveShader()) {
       gLog->warn("Skipping draw with invalid shader.");
       return false;
