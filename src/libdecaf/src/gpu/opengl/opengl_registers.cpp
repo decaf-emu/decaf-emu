@@ -1,3 +1,4 @@
+#include "common/emuassert.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
 
@@ -23,6 +24,8 @@ void
 GLDriver::setRegister(latte::Register reg,
                       uint32_t value)
 {
+   emuassert((reg % 4) == 0);
+
    // Save to my state
    mRegisters[reg / 4] = value;
 
