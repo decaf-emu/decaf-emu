@@ -63,20 +63,20 @@ GX2DebugDumpTexture(const GX2Texture *texture)
    auto format = fmt::MemoryWriter {};
 
    format
-      << "surface.dim = " << GX2EnumAsString(texture->surface.dim) << '\n'
+      << "surface.dim = " << gx2::enumAsString(texture->surface.dim) << '\n'
       << "surface.width = " << texture->surface.width << '\n'
       << "surface.height = " << texture->surface.height << '\n'
       << "surface.depth = " << texture->surface.depth << '\n'
       << "surface.mipLevels = " << texture->surface.mipLevels << '\n'
-      << "surface.format = " << GX2EnumAsString(texture->surface.format) << '\n'
-      << "surface.aa = " << GX2EnumAsString(texture->surface.aa) << '\n'
-      << "surface.use = " << GX2EnumAsString(texture->surface.use) << '\n'
+      << "surface.format = " << gx2::enumAsString(texture->surface.format) << '\n'
+      << "surface.aa = " << gx2::enumAsString(texture->surface.aa) << '\n'
+      << "surface.use = " << gx2::enumAsString(texture->surface.use) << '\n'
       << "surface.resourceFlags = " << texture->surface.resourceFlags << '\n'
       << "surface.imageSize = " << texture->surface.imageSize << '\n'
       << "surface.image = " << GX2PointerAsString(texture->surface.image) << '\n'
       << "surface.mipmapSize = " << texture->surface.mipmapSize << '\n'
       << "surface.mipmaps = " << GX2PointerAsString(texture->surface.mipmaps) << '\n'
-      << "surface.tileMode = " << GX2EnumAsString(texture->surface.tileMode) << '\n'
+      << "surface.tileMode = " << gx2::enumAsString(texture->surface.tileMode) << '\n'
       << "surface.swizzle = " << texture->surface.swizzle << '\n'
       << "surface.alignment = " << texture->surface.alignment << '\n'
       << "surface.pitch = " << texture->surface.pitch << '\n'
@@ -152,7 +152,7 @@ formatAttribVars(fmt::MemoryWriter &out, uint32_t count, GX2AttribVar *vars)
    for (auto i = 0u; i < count; ++i) {
       out << "    Var " << i << "\n"
          << "      name: " << vars[i].name.get() << "\n"
-         << "      type: " << GX2EnumAsString(vars[i].type) << "\n"
+         << "      type: " << gx2::enumAsString(vars[i].type) << "\n"
          << "      count: " << vars[i].count << "\n"
          << "      location: " << vars[i].location << "\n";
    }
@@ -195,7 +195,7 @@ formatUniformVars(fmt::MemoryWriter &out, uint32_t count, GX2UniformVar *vars)
    for (auto i = 0u; i < count; ++i) {
       out << "    Var " << i << "\n"
          << "      name: " << vars[i].name.get() << "\n"
-         << "      type: " << GX2EnumAsString(vars[i].type) << "\n"
+         << "      type: " << gx2::enumAsString(vars[i].type) << "\n"
          << "      count: " << vars[i].count << "\n"
          << "      offset: " << vars[i].offset << "\n"
          << "      block: " << vars[i].block << "\n";
@@ -210,7 +210,7 @@ formatSamplerVars(fmt::MemoryWriter &out, uint32_t count, GX2SamplerVar *vars)
    for (auto i = 0u; i < count; ++i) {
       out << "    Var " << i << "\n"
          << "      name: " << vars[i].name.get() << "\n"
-         << "      type: " << GX2EnumAsString(vars[i].type) << "\n"
+         << "      type: " << gx2::enumAsString(vars[i].type) << "\n"
          << "      location: " << vars[i].location << "\n";
    }
 }
@@ -241,7 +241,7 @@ GX2DebugDumpShader(GX2PixelShader *shader)
    fmt::MemoryWriter out;
    out << "GX2PixelShader:\n"
       << "  size: " << shader->size << "\n"
-      << "  mode: " << GX2EnumAsString(shader->mode) << "\n";
+      << "  mode: " << gx2::enumAsString(shader->mode) << "\n";
 
    formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
    formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
@@ -264,7 +264,7 @@ GX2DebugDumpShader(GX2VertexShader *shader)
    fmt::MemoryWriter out;
    out << "GX2VertexShader:\n"
       << "  size: " << shader->size << "\n"
-      << "  mode: " << GX2EnumAsString(shader->mode) << "\n";
+      << "  mode: " << gx2::enumAsString(shader->mode) << "\n";
 
    formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
    formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);

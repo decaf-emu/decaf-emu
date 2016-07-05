@@ -41,26 +41,26 @@ getTextureTarget(latte::SQ_TEX_DIM dim)
    }
 }
 
-static GX2SurfaceFormat
+static gx2::GX2SurfaceFormat
 getSurfaceFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, latte::SQ_FORMAT_COMP formatComp, uint32_t degamma)
 {
    uint32_t value = format;
 
    if (numFormat == latte::SQ_NUM_FORMAT_SCALED) {
-      value |= GX2AttribFormatFlags::SCALED;
+      value |= gx2::GX2AttribFormatFlags::SCALED;
    } else if (numFormat == latte::SQ_NUM_FORMAT_INT) {
-      value |= GX2AttribFormatFlags::INTEGER;
+      value |= gx2::GX2AttribFormatFlags::INTEGER;
    }
 
    if (formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
-      value |= GX2AttribFormatFlags::SIGNED;
+      value |= gx2::GX2AttribFormatFlags::SIGNED;
    }
 
    if (degamma) {
-      value |= GX2AttribFormatFlags::DEGAMMA;
+      value |= gx2::GX2AttribFormatFlags::DEGAMMA;
    }
 
-   return static_cast<GX2SurfaceFormat>(value);
+   return static_cast<gx2::GX2SurfaceFormat>(value);
 }
 
 static gl::GLenum
@@ -305,16 +305,16 @@ bool GLDriver::checkActiveTextures()
          // Rebuild a GX2Surface
          std::memset(&surface, 0, sizeof(gx2::GX2Surface));
 
-         surface.dim = static_cast<GX2SurfaceDim>(dim);
+         surface.dim = static_cast<gx2::GX2SurfaceDim>(dim);
          surface.width = width;
          surface.height = height;
 
-         if (surface.dim == GX2SurfaceDim::TextureCube) {
+         if (surface.dim == gx2::GX2SurfaceDim::TextureCube) {
             surface.depth = depth * 6;
-         } else if (surface.dim == GX2SurfaceDim::Texture3D ||
-            surface.dim == GX2SurfaceDim::Texture2DMSAAArray ||
-            surface.dim == GX2SurfaceDim::Texture2DArray ||
-            surface.dim == GX2SurfaceDim::Texture1DArray) {
+         } else if (surface.dim == gx2::GX2SurfaceDim::Texture3D ||
+            surface.dim == gx2::GX2SurfaceDim::Texture2DMSAAArray ||
+            surface.dim == gx2::GX2SurfaceDim::Texture2DArray ||
+            surface.dim == gx2::GX2SurfaceDim::Texture1DArray) {
             surface.depth = depth;
          } else {
             surface.depth = 1;
@@ -323,14 +323,14 @@ bool GLDriver::checkActiveTextures()
          surface.mipLevels = 1;
          surface.format = getSurfaceFormat(format, numFormat, formatComp, degamma);
 
-         surface.aa = GX2AAMode::Mode1X;
-         surface.use = GX2SurfaceUse::Texture;
+         surface.aa = gx2::GX2AAMode::Mode1X;
+         surface.use = gx2::GX2SurfaceUse::Texture;
 
          if (sq_tex_resource_word0.TILE_TYPE()) {
-            surface.use |= GX2SurfaceUse::DepthBuffer;
+            surface.use |= gx2::GX2SurfaceUse::DepthBuffer;
          }
 
-         surface.tileMode = static_cast<GX2TileMode>(tileMode);
+         surface.tileMode = static_cast<gx2::GX2TileMode>(tileMode);
          surface.swizzle = swizzle;
 
          // Update the sizing information for the surface
@@ -358,7 +358,7 @@ bool GLDriver::checkActiveTextures()
             gx2::internal::convertTiling(&surface, untiledImage, untiledMipmap);
 
             // Create texture
-            bool compressed = isCompressedFormat(format);
+            auto compressed = isCompressedFormat(format);
             auto target = getTextureTarget(dim);
             auto textureDataType = gl::GL_INVALID_ENUM;
             auto textureFormat = getTextureFormat(format);

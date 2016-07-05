@@ -167,7 +167,7 @@ printInfo(const std::string &filename)
             auto shader = reinterpret_cast<gx2::GX2VertexShader *>(block.data.data());
             writeField(out, "index", block.header.index);
             writeField(out, "size", shader->size);
-            writeField(out, "mode", GX2EnumAsString(shader->mode));
+            writeField(out, "mode", gx2::enumAsString(shader->mode));
             writeField(out, "uniformBlocks", shader->uniformBlockCount);
             writeField(out, "uniformVars", shader->uniformVarCount);
             writeField(out, "initVars", shader->initialValueCount);
@@ -308,7 +308,7 @@ printInfo(const std::string &filename)
             auto shader = reinterpret_cast<gx2::GX2PixelShader *>(block.data.data());
             writeField(out, "index", block.header.index);
             writeField(out, "size", shader->size);
-            writeField(out, "mode", GX2EnumAsString(shader->mode));
+            writeField(out, "mode", gx2::enumAsString(shader->mode));
             writeField(out, "uniformBlocks", shader->uniformBlockCount);
             writeField(out, "uniformVars", shader->uniformVarCount);
             writeField(out, "initVars", shader->initialValueCount);
@@ -446,7 +446,7 @@ printInfo(const std::string &filename)
             writeField(out, "index", block.header.index);
             writeField(out, "size", shader->size);
             writeField(out, "vshSize", shader->vertexShaderSize);
-            writeField(out, "mode", GX2EnumAsString(shader->mode));
+            writeField(out, "mode", gx2::enumAsString(shader->mode));
             writeField(out, "uniformBlocks", shader->uniformBlockCount);
             writeField(out, "uniformVars", shader->uniformVarCount);
             writeField(out, "initVars", shader->initialValueCount);
@@ -647,17 +647,17 @@ printInfo(const std::string &filename)
          {
             auto tex = reinterpret_cast<gx2::GX2Texture *>(block.data.data());
             writeField(out, "index", block.header.index);
-            writeField(out, "dim", GX2EnumAsString(tex->surface.dim));
+            writeField(out, "dim", gx2::enumAsString(tex->surface.dim));
             writeField(out, "width", tex->surface.width);
             writeField(out, "height", tex->surface.height);
             writeField(out, "depth", tex->surface.depth);
             writeField(out, "mipLevels", tex->surface.mipLevels);
-            writeField(out, "format", GX2EnumAsString(tex->surface.format));
-            writeField(out, "aa", GX2EnumAsString(tex->surface.aa));
-            writeField(out, "use", GX2EnumAsString(tex->surface.use));
+            writeField(out, "format", gx2::enumAsString(tex->surface.format));
+            writeField(out, "aa", gx2::enumAsString(tex->surface.aa));
+            writeField(out, "use", gx2::enumAsString(tex->surface.use));
             writeField(out, "imageSize", tex->surface.imageSize);
             writeField(out, "mipmapSize", tex->surface.mipmapSize);
-            writeField(out, "tileMode", GX2EnumAsString(tex->surface.tileMode));
+            writeField(out, "tileMode", gx2::enumAsString(tex->surface.tileMode));
             writeField(out, "swizzle", tex->surface.swizzle);
             writeField(out, "alignment", tex->surface.alignment);
             writeField(out, "pitch", tex->surface.pitch);
