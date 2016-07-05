@@ -30,7 +30,7 @@ void GLDriver::initGL()
    gl::glCreateFramebuffers(2, mBlitFrameBuffers);
 
    // Create our default framebuffer
-   gl::glCreateFramebuffers(1, &mFrameBuffer);
+   gl::glGenFramebuffers(1, &mFrameBuffer);
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer);
 }
 
