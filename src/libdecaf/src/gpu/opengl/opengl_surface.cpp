@@ -12,163 +12,160 @@ namespace gpu
 namespace opengl
 {
 
-static GX2SurfaceFormat
-getSurfaceFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, latte::SQ_FORMAT_COMP formatComp, uint32_t degamma)
+static gl::GLenum
+getStorageFormat(latte::SQ_NUM_FORMAT numFormat, latte::SQ_FORMAT_COMP formatComp, uint32_t degamma,
+   gl::GLenum unorm, gl::GLenum snorm, gl::GLenum uint, gl::GLenum sint, gl::GLenum srgb)
 {
-   uint32_t value = format;
-
-   if (numFormat == latte::SQ_NUM_FORMAT_SCALED) {
-      value |= GX2AttribFormatFlags::SCALED;
-   } else if (numFormat == latte::SQ_NUM_FORMAT_INT) {
-      value |= GX2AttribFormatFlags::INTEGER;
+   if (!degamma) {
+      if (numFormat == latte::SQ_NUM_FORMAT_NORM) {
+         if (formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+            return snorm;
+         } else if (formatComp == latte::SQ_FORMAT_COMP_UNSIGNED) {
+            return unorm;
+         } else {
+            return gl::GL_INVALID_ENUM;
+         }
+      } else if (numFormat == latte::SQ_NUM_FORMAT_INT) {
+         if (formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+            return sint;
+         } else if (formatComp == latte::SQ_FORMAT_COMP_UNSIGNED) {
+            return uint;
+         } else {
+            return gl::GL_INVALID_ENUM;
+         }
+      } else {
+         return gl::GL_INVALID_ENUM;
+      }
+   } else {
+      if (numFormat == 0 && formatComp == 0) {
+         return srgb;
+      } else {
+         return gl::GL_INVALID_ENUM;
+      }
    }
-
-   if (formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
-      value |= GX2AttribFormatFlags::SIGNED;
-   }
-
-   if (degamma) {
-      value |= GX2AttribFormatFlags::DEGAMMA;
-   }
-
-   return static_cast<GX2SurfaceFormat>(value);
 }
 
 static gl::GLenum
 getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, latte::SQ_FORMAT_COMP formatComp, uint32_t degamma)
 {
-   // TODO: Not use gx2, but its fucking effort
-   auto value = getSurfaceFormat(format, numFormat, formatComp, degamma);
+   static const auto BADFMT = gl::GL_INVALID_ENUM;
 
-   switch (value) {
-      // GX2_ENUM_VALUE(UNORM_R4_G4, 0x02)
-      // GX2_ENUM_VALUE(UNORM_A1_B5_G5_R5, 0x0c)
-      // GX2_ENUM_VALUE(UNORM_A2_B10_G10_R10, 0x01b)
-      // GX2_ENUM_VALUE(UNORM_R10_G10_B10_A2, 0x019)
-      // GX2_ENUM_VALUE(UNORM_NV12, 0x081)
-   case GX2SurfaceFormat::UNORM_R24_X8:
-      return gl::GL_DEPTH24_STENCIL8;
-   case GX2SurfaceFormat::UNORM_R4_G4_B4_A4:
-      return gl::GL_RGBA4;
-   case GX2SurfaceFormat::UNORM_R8:
-      return gl::GL_R8;
-   case GX2SurfaceFormat::UNORM_R8_G8:
-      return gl::GL_RG8;
-   case GX2SurfaceFormat::UNORM_R8_G8_B8_A8:
-      return gl::GL_RGBA8;
-   case GX2SurfaceFormat::UNORM_R16:
-      return gl::GL_R16;
-   case GX2SurfaceFormat::UNORM_R16_G16:
-      return gl::GL_RG16;
-   case GX2SurfaceFormat::UNORM_R16_G16_B16_A16:
-      return gl::GL_RGBA16;
-   case GX2SurfaceFormat::UNORM_R5_G6_B5:
-      return gl::GL_RGB565;
-   case GX2SurfaceFormat::UNORM_R5_G5_B5_A1:
-      return gl::GL_RGB5_A1;
-   case GX2SurfaceFormat::UNORM_R10_G10_B10_A2:
-      return gl::GL_RGB10_A2;
-   case GX2SurfaceFormat::UNORM_BC1:
-      return gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-   case GX2SurfaceFormat::UNORM_BC2:
-      return gl::GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-   case GX2SurfaceFormat::UNORM_BC3:
-      return gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-   case GX2SurfaceFormat::UNORM_BC4:
-      return gl::GL_COMPRESSED_RED_RGTC1;
-   case GX2SurfaceFormat::UNORM_BC5:
-      return gl::GL_COMPRESSED_RG_RGTC2;
+   switch (format) {
+      // Normal Types
+      case latte::SQ_DATA_FORMAT::FMT_8:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_R8, gl::GL_R8_SNORM, gl::GL_R8UI, gl::GL_R8I, gl::GL_SRGB8);
+      //case latte::SQ_DATA_FORMAT::FMT_4_4:
+      //case latte::SQ_DATA_FORMAT::FMT_3_3_2:
+      case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_R16, gl::GL_R16_SNORM, gl::GL_R16UI, gl::GL_R16I, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_8_8:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_RG8, gl::GL_RG8_SNORM, gl::GL_RG8UI, gl::GL_RG8I, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_5_6_5:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_RGB565, BADFMT, BADFMT, BADFMT, BADFMT);
+      //case latte::SQ_DATA_FORMAT::FMT_6_5_5:
+      //case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
+      case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_RGBA4, BADFMT, BADFMT, BADFMT, BADFMT);
+      //case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
+      case latte::SQ_DATA_FORMAT::FMT_32:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            BADFMT, BADFMT, gl::GL_R32UI, gl::GL_R32I, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_16_16:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_RG16, gl::GL_RG16_SNORM, gl::GL_RG16UI, gl::GL_RG16I, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT:
+         return gl::GL_RG16F;
+      //case latte::SQ_DATA_FORMAT::FMT_24_8:
+      //case latte::SQ_DATA_FORMAT::FMT_24_8_FLOAT:
+      //case latte::SQ_DATA_FORMAT::FMT_10_11_11:
+      //case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
+      //case latte::SQ_DATA_FORMAT::FMT_11_11_10:
+      case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
+         return gl::GL_R11F_G11F_B10F;
+      //case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
+      case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_RGBA8, gl::GL_RGBA8_SNORM, gl::GL_RGBA8UI, gl::GL_RGBA8I, gl::GL_SRGB8);
+      //case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
+      case latte::SQ_DATA_FORMAT::FMT_32_32:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            BADFMT, BADFMT, gl::GL_RG32UI, gl::GL_RG32I, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT:
+         return gl::GL_RG32F;
+      case latte::SQ_DATA_FORMAT::FMT_16_16_16_16:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_RGBA16, gl::GL_RGBA16_SNORM, gl::GL_RGBA16UI, gl::GL_RGBA16I, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT:
+         return gl::GL_RGBA16F;
+      case latte::SQ_DATA_FORMAT::FMT_32_32_32_32:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            BADFMT, BADFMT, gl::GL_RGBA32UI, gl::GL_RGBA32I, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
+         return gl::GL_RGBA32F;
+      //case latte::SQ_DATA_FORMAT::FMT_1:
+      //case latte::SQ_DATA_FORMAT::FMT_GB_GR:
+      //case latte::SQ_DATA_FORMAT::FMT_BG_RG:
+      //case latte::SQ_DATA_FORMAT::FMT_32_AS_8:
+      //case latte::SQ_DATA_FORMAT::FMT_32_AS_8_8:
+      //case latte::SQ_DATA_FORMAT::FMT_5_9_9_9_SHAREDEXP:
+      case latte::SQ_DATA_FORMAT::FMT_8_8_8:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_RGB8, gl::GL_RGB8_SNORM, gl::GL_RGB8UI, gl::GL_RGB8I, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_16_16_16:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_RGB16, gl::GL_RGB16_SNORM, gl::GL_RGB16UI, gl::GL_RGB16I, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_16_16_16_FLOAT:
+         return gl::GL_RGB16F;
+      case latte::SQ_DATA_FORMAT::FMT_32_32_32:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            BADFMT, BADFMT, gl::GL_RGB32UI, gl::GL_RGB32I, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT:
+         return gl::GL_RGB32F;
+      case latte::SQ_DATA_FORMAT::FMT_BC1:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, BADFMT, BADFMT, BADFMT, gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT);
+      case latte::SQ_DATA_FORMAT::FMT_BC2:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, BADFMT, BADFMT, BADFMT, gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT);
+      case latte::SQ_DATA_FORMAT::FMT_BC3:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, BADFMT, BADFMT, BADFMT, gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT);
+      case latte::SQ_DATA_FORMAT::FMT_BC4:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_COMPRESSED_RED_RGTC1, BADFMT, BADFMT, BADFMT, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_BC5:
+         return getStorageFormat(numFormat, formatComp, degamma,
+            gl::GL_COMPRESSED_RG_RGTC2, BADFMT, BADFMT, BADFMT, BADFMT);
+      //case latte::SQ_DATA_FORMAT::FMT_APC0:
+      //case latte::SQ_DATA_FORMAT::FMT_APC1:
+      //case latte::SQ_DATA_FORMAT::FMT_APC2:
+      //case latte::SQ_DATA_FORMAT::FMT_APC3:
+      //case latte::SQ_DATA_FORMAT::FMT_APC4:
+      //case latte::SQ_DATA_FORMAT::FMT_APC5:
+      //case latte::SQ_DATA_FORMAT::FMT_APC6:
+      //case latte::SQ_DATA_FORMAT::FMT_APC7:
+      //case latte::SQ_DATA_FORMAT::FMT_CTX1:
 
-      // GX2_ENUM_VALUE(UINT_A2_B10_G10_R10, 0x11b)
-      // GX2_ENUM_VALUE(UINT_X24_G8, 0x111)
-      // GX2_ENUM_VALUE(UINT_G8_X24, 0x11c)
-   case GX2SurfaceFormat::UINT_R8:
-      return gl::GL_R8UI;
-   case GX2SurfaceFormat::UINT_R8_G8:
-      return gl::GL_RG8UI;
-   case GX2SurfaceFormat::UINT_R8_G8_B8_A8:
-      return gl::GL_RGBA8UI;
-   case GX2SurfaceFormat::UINT_R16:
-      return gl::GL_R16UI;
-   case GX2SurfaceFormat::UINT_R16_G16:
-      return gl::GL_RG16UI;
-   case GX2SurfaceFormat::UINT_R16_G16_B16_A16:
-      return gl::GL_RGBA16UI;
-   case GX2SurfaceFormat::UINT_R32:
-      return gl::GL_R32UI;
-   case GX2SurfaceFormat::UINT_R32_G32:
-      return gl::GL_RG32UI;
-   case GX2SurfaceFormat::UINT_R32_G32_B32_A32:
-      return gl::GL_RGBA32UI;
-   case GX2SurfaceFormat::UINT_R10_G10_B10_A2:
-      return gl::GL_RGB10_A2UI;
+      // Depth Types
+      case latte::SQ_DATA_FORMAT::FMT_16:
+         return gl::GL_DEPTH_COMPONENT16;
+      case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
+         return gl::GL_DEPTH_COMPONENT32F;
+      case latte::SQ_DATA_FORMAT::FMT_8_24:
+         return gl::GL_DEPTH24_STENCIL8;
+      case latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT:
+         // TODO: Maybe find a better solution here?
+         return gl::GL_DEPTH24_STENCIL8;
+      case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
+         return gl::GL_DEPTH32F_STENCIL8;
 
-      // GX2_ENUM_VALUE(SNORM_R10_G10_B10_A2, 0x219)
-   case GX2SurfaceFormat::SNORM_R8:
-      return gl::GL_R8_SNORM;
-   case GX2SurfaceFormat::SNORM_R8_G8:
-      return gl::GL_RG8_SNORM;
-   case GX2SurfaceFormat::SNORM_R8_G8_B8_A8:
-      return gl::GL_RGBA8_SNORM;
-   case GX2SurfaceFormat::SNORM_R16:
-      return gl::GL_R16_SNORM;
-   case GX2SurfaceFormat::SNORM_R16_G16:
-      return gl::GL_RG16_SNORM;
-   case GX2SurfaceFormat::SNORM_R16_G16_B16_A16:
-      return gl::GL_RGBA16_SNORM;
-   case GX2SurfaceFormat::SNORM_BC4:
-      return gl::GL_COMPRESSED_SIGNED_RED_RGTC1;
-   case GX2SurfaceFormat::SNORM_BC5:
-      return gl::GL_COMPRESSED_SIGNED_RG_RGTC2;
-
-      // GX2_ENUM_VALUE(SINT_R10_G10_B10_A2, 0x319)
-   case GX2SurfaceFormat::SINT_R8:
-      return gl::GL_R8I;
-   case GX2SurfaceFormat::SINT_R8_G8:
-      return gl::GL_RG8I;
-   case GX2SurfaceFormat::SINT_R8_G8_B8_A8:
-      return gl::GL_RGBA8I;
-   case GX2SurfaceFormat::SINT_R16:
-      return gl::GL_R16I;
-   case GX2SurfaceFormat::SINT_R16_G16:
-      return gl::GL_RG16I;
-   case GX2SurfaceFormat::SINT_R16_G16_B16_A16:
-      return gl::GL_RGBA16I;
-   case GX2SurfaceFormat::SINT_R32:
-      return gl::GL_R32I;
-   case GX2SurfaceFormat::SINT_R32_G32:
-      return gl::GL_RG32I;
-   case GX2SurfaceFormat::SINT_R32_G32_B32_A32:
-      return gl::GL_RGBA32I;
-
-   case GX2SurfaceFormat::SRGB_R8_G8_B8_A8:
-      return gl::GL_SRGB8_ALPHA8;
-   case GX2SurfaceFormat::SRGB_BC1:
-      return gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
-   case GX2SurfaceFormat::SRGB_BC2:
-      return gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
-   case GX2SurfaceFormat::SRGB_BC3:
-      return gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
-
-      // GX2_ENUM_VALUE(FLOAT_D24_S8, 0x811)
-      // GX2_ENUM_VALUE(FLOAT_X8_X24, 0x81c)
-   case GX2SurfaceFormat::FLOAT_R32:
-      return gl::GL_DEPTH_COMPONENT32F;
-   case GX2SurfaceFormat::FLOAT_R32_G32:
-      return gl::GL_RG32F;
-   case GX2SurfaceFormat::FLOAT_R32_G32_B32_A32:
-      return gl::GL_RGBA32F;
-   case GX2SurfaceFormat::FLOAT_R16:
-      return gl::GL_R16F;
-   case GX2SurfaceFormat::FLOAT_R16_G16:
-      return gl::GL_RG16F;
-   case GX2SurfaceFormat::FLOAT_R16_G16_B16_A16:
-      return gl::GL_RGBA16F;
-   case GX2SurfaceFormat::FLOAT_R11_G11_B10:
-      return gl::GL_R11F_G11F_B10F;
-   default:
-      gLog->debug("getStorageFormat: Unimplemented texture storage format 0x{:X}", value);
-      return gl::GL_INVALID_ENUM;
+      default:
+         return gl::GL_INVALID_ENUM;
    }
 }
 
