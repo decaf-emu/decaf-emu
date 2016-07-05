@@ -79,12 +79,11 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
       formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
       degamma = 0;
       break;
-   case latte::DB_DEPTH_FORMAT::DEPTH_X8_24:
-   case latte::DB_DEPTH_FORMAT::DEPTH_X8_24_FLOAT:
-   case latte::DB_DEPTH_FORMAT::DEPTH_INVALID:
+   // case latte::DB_DEPTH_FORMAT::DEPTH_X8_24:
+   // case latte::DB_DEPTH_FORMAT::DEPTH_X8_24_FLOAT:
+   // case latte::DB_DEPTH_FORMAT::DEPTH_INVALID:
    default:
-      gLog->debug("Skipping depth buffer with unsupported format {}", dbFormat);
-      return nullptr;
+      throw std::logic_error(fmt::format("Depth buffer with unsupported format {}", dbFormat));
    }
 
    auto buffer = getSurfaceBuffer(baseAddress, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma);

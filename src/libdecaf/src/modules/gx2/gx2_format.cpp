@@ -264,7 +264,7 @@ GX2GetSurfaceDepthFormat(GX2SurfaceFormat format)
    case latte::FMT_X24_8_32_FLOAT:
       return latte::DEPTH_X24_8_32_FLOAT;
    default:
-      return latte::DEPTH_INVALID;
+      throw std::logic_error("Invalid GX2SurfaceFormat depth format");
    }
 }
 
@@ -339,7 +339,7 @@ GX2GetSurfaceColorFormat(GX2SurfaceFormat format)
    case latte::FMT_32_32_32_32_FLOAT:
       return latte::COLOR_32_32_32_32_FLOAT;
    default:
-      return latte::COLOR_INVALID;
+      throw std::logic_error("Invalid GX2SurfaceFormat color format");
    }
 }
 

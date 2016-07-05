@@ -371,8 +371,7 @@ bool GLDriver::checkActiveTextures()
             }
 
             if (textureDataType == gl::GL_INVALID_ENUM || textureFormat == gl::GL_INVALID_ENUM) {
-               gLog->debug("Skipping texture with unsupported format {}", surface.format.value());
-               continue;
+               throw std::logic_error(fmt::format("Texture with unsupported format {}", surface.format.value()));
             }
 
             switch (dim) {

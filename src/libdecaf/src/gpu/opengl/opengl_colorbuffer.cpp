@@ -76,12 +76,10 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
       formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
       degamma = 0;
       break;
-
-   case latte::CB_NUMBER_TYPE::NUMBER_SRGB:
-   case latte::CB_NUMBER_TYPE::NUMBER_FLOAT:
+   //case latte::CB_NUMBER_TYPE::NUMBER_SRGB:
+   //case latte::CB_NUMBER_TYPE::NUMBER_FLOAT:
    default:
-      gLog->debug("Skipping color buffer with unsupported number type {}", cbNumberType);
-      return nullptr;
+      throw std::logic_error(fmt::format("Color buffer with unsupported number type {}", cbNumberType));
    }
 
    auto buffer = getSurfaceBuffer(baseAddress, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma);
