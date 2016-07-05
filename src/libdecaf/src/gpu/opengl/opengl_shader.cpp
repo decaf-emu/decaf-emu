@@ -460,33 +460,35 @@ stridedMemcpy(const void *src,
 
 bool GLDriver::checkActiveAttribBuffers()
 {
+   std::array<AttributeBuffer *, 16> buffers;
+   buffers.fill(nullptr);
+
    if (!mActiveShader
     || !mActiveShader->fetch || !mActiveShader->fetch->attribs.size()
     || !mActiveShader->vertex || !mActiveShader->vertex->object) {
       return false;
    }
 
-   for (auto &attrib : mActiveShader->fetch->attribs) {
-      auto index = attrib.buffer;
-      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
-      auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
-      auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
-      auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + index * 7));
-
-      if (sq_vtx_constant_word6.TYPE() != latte::SQ_TEX_VTX_VALID_BUFFER) {
-         gLog->error("No valid buffer set for attrib resource {}", index);
-         return false;
-      }
+   for (auto i = 0u; i < buffers.size(); ++i) {
+      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + i * 7));
+      auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + i * 7));
+      auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + i * 7));
+      auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + i * 7));
 
       auto addr = sq_vtx_constant_word0.BASE_ADDRESS;
       auto size = sq_vtx_constant_word1.SIZE + 1;
       auto stride = sq_vtx_constant_word2.STRIDE();
-      auto &buffer = mAttribBuffers[addr];
+
+      if (addr == 0 || size == 0) {
+         continue;
+      }
 
       if (size % stride) {
          gLog->error("Error, size: {} is not multiple of stride: {}", size, stride);
          return false;
       }
+
+      auto &buffer = mAttribBuffers[addr];
 
       if (!buffer.object || buffer.size < size) {
          if (buffer.object) {
@@ -497,19 +499,38 @@ bool GLDriver::checkActiveAttribBuffers()
          gl::glCreateBuffers(1, &buffer.object);
          gl::glNamedBufferStorage(buffer.object, size, NULL, gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
          buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
-         buffer.size = size;
       }
 
-      stridedMemcpy(mem::translate<const void>(addr),
-                    buffer.mappedBuffer,
-                    buffer.size,
+      buffer.addr = addr;
+      buffer.size = size;
+      buffer.stride = stride;
+      buffers[i] = &buffer;
+   }
+
+   for (auto &attrib : mActiveShader->fetch->attribs) {
+      auto buffer = buffers[attrib.buffer];
+
+      if (!buffer || !buffer->object) {
+         throw std::logic_error("Something odd happened with attribute buffers");
+      }
+
+      stridedMemcpy(mem::translate<const void>(buffer->addr),
+                    buffer->mappedBuffer,
+                    buffer->size,
                     attrib.offset,
-                    stride,
+                    buffer->stride,
                     attrib.endianSwap,
                     attrib.format);
 
-      gl::glFlushMappedNamedBufferRange(buffer.object, 0, buffer.size);
-      gl::glBindVertexBuffer(attrib.buffer, buffer.object, 0, stride);
+   }
+
+   for (auto i = 0u; i < buffers.size(); i++) {
+      auto buffer = buffers[i];
+
+      if (buffer) {
+         gl::glBindVertexBuffer(i, buffer->object, 0, buffer->stride);
+         gl::glFlushMappedNamedBufferRange(buffer->object, 0, buffer->size);
+      }
    }
 
    return true;

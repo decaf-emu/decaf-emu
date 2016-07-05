@@ -155,6 +155,8 @@ struct AttributeBuffer
 {
    gl::GLuint object = 0;
    uint32_t size = 0;
+   uint32_t addr = 0;
+   uint32_t stride = 0;
    void *mappedBuffer = nullptr;
 };
 
