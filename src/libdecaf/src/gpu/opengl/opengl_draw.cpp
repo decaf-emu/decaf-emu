@@ -86,14 +86,26 @@ static void
 drawPrimitives2(gl::GLenum mode,
                 uint32_t count,
                 const IndexType *indices,
-                uint32_t offset)
+                uint32_t baseVertex,
+                uint32_t numInstances,
+                uint32_t baseInstance)
 {
-   if (!indices) {
-      gl::glDrawArrays(mode, offset, count);
-   } else if (std::is_same<IndexType, uint16_t>()) {
-      gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_SHORT, indices, offset);
-   } else if (std::is_same<IndexType, uint32_t>()) {
-      gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_INT, indices, offset);
+   if (numInstances == 1) {
+      if (!indices) {
+         gl::glDrawArrays(mode, baseVertex, count);
+      } else if (std::is_same<IndexType, uint16_t>()) {
+         gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_SHORT, indices, baseVertex);
+      } else if (std::is_same<IndexType, uint32_t>()) {
+         gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_INT, indices, baseVertex);
+      }
+   } else {
+      if (!indices) {
+         gl::glDrawArraysInstancedBaseInstance(mode, 0, count, numInstances, baseInstance);
+      } else if (std::is_same<IndexType, uint16_t>()) {
+         gl::glDrawElementsInstancedBaseInstance(mode, count, gl::GL_UNSIGNED_SHORT, indices, numInstances, baseInstance);
+      } else if (std::is_same<IndexType, uint32_t>()) {
+         gl::glDrawElementsInstancedBaseInstance(mode, count, gl::GL_UNSIGNED_INT, indices, numInstances, baseInstance);
+      }
    }
 }
 
@@ -101,7 +113,9 @@ template<typename IndexType>
 static void
 unpackQuadList(uint32_t count,
                const IndexType *src,
-               uint32_t offset)
+               uint32_t baseVertex,
+               uint32_t numInstances,
+               uint32_t baseInstance)
 {
    auto tris = (count / 4) * 6;
    auto unpacked = std::vector<IndexType>(tris);
@@ -141,29 +155,31 @@ unpackQuadList(uint32_t count,
       }
    }
 
-   drawPrimitives2(gl::GL_TRIANGLES, tris, unpacked.data(), offset);
+   drawPrimitives2(gl::GL_TRIANGLES, tris, unpacked.data(), baseVertex, numInstances, baseInstance);
 }
 
 static void
 drawPrimitives(latte::VGT_DI_PRIMITIVE_TYPE primType,
-               uint32_t offset,
+               uint32_t baseVertex,
                uint32_t count,
                const void *indices,
-               latte::VGT_INDEX indexFmt)
+               latte::VGT_INDEX indexFmt,
+               uint32_t numInstances,
+               uint32_t baseInstance)
 {
    if (primType == latte::VGT_DI_PT_QUADLIST) {
       if (indexFmt == latte::VGT_INDEX_16) {
-         unpackQuadList(count, reinterpret_cast<const uint16_t*>(indices), offset);
+         unpackQuadList(count, reinterpret_cast<const uint16_t*>(indices), baseVertex, numInstances, baseInstance);
       } else if (indexFmt == latte::VGT_INDEX_32) {
-         unpackQuadList(count, reinterpret_cast<const uint32_t*>(indices), offset);
+         unpackQuadList(count, reinterpret_cast<const uint32_t*>(indices), baseVertex, numInstances, baseInstance);
       }
    } else {
       auto mode = getPrimitiveMode(primType);
 
       if (indexFmt == latte::VGT_INDEX_16) {
-         drawPrimitives2(mode, count, reinterpret_cast<const uint16_t*>(indices), offset);
+         drawPrimitives2(mode, count, reinterpret_cast<const uint16_t*>(indices), baseVertex, numInstances, baseInstance);
       } else if (indexFmt == latte::VGT_INDEX_32) {
-         drawPrimitives2(mode, count, reinterpret_cast<const uint32_t*>(indices), offset);
+         drawPrimitives2(mode, count, reinterpret_cast<const uint32_t*>(indices), baseVertex, numInstances, baseInstance);
       }
    }
 }
@@ -177,12 +193,15 @@ GLDriver::drawIndexAuto(const pm4::DrawIndexAuto &data)
 
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
+   auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
 
    drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
                   sq_vtx_base_vtx_loc.OFFSET,
                   data.count,
                   nullptr,
-                  latte::VGT_INDEX_32);
+                  latte::VGT_INDEX_32,
+                  vgt_dma_num_instances.NUM_INSTANCES,
+                  0); // TODO: base instance
 }
 
 void
@@ -195,6 +214,7 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
    auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
+   auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
 
    // Swap and indexBytes are separate because you can have 32-bit swap,
    //   but 16-bit indices in some cases...  This is also why we pre-swap
@@ -215,7 +235,9 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
                      sq_vtx_base_vtx_loc.OFFSET,
                      data.count,
                      indices.data(),
-                     vgt_dma_index_type.INDEX_TYPE());
+                     vgt_dma_index_type.INDEX_TYPE(),
+                     vgt_dma_num_instances.NUM_INSTANCES,
+                     0); // TODO: Base instance
    } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_32_BIT) {
       auto *src = static_cast<uint32_t*>(data.addr.get());
       auto indices = std::vector<uint32_t>(data.count);
@@ -232,13 +254,17 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
                      sq_vtx_base_vtx_loc.OFFSET,
                      data.count,
                      indices.data(),
-                     vgt_dma_index_type.INDEX_TYPE());
+                     vgt_dma_index_type.INDEX_TYPE(),
+                     vgt_dma_num_instances.NUM_INSTANCES,
+                     0); // TODO: Base instance
    } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_NONE) {
       drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
                      sq_vtx_base_vtx_loc.OFFSET,
                      data.count,
                      data.addr,
-                     vgt_dma_index_type.INDEX_TYPE());
+                     vgt_dma_index_type.INDEX_TYPE(),
+                     vgt_dma_num_instances.NUM_INSTANCES,
+                     0); // TODO: Base instance
    } else {
       throw unimplemented_error(fmt::format("Unimplemented vgt_dma_index_type.SWAP_MODE {}", vgt_dma_index_type.SWAP_MODE()));
    }

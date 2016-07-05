@@ -159,6 +159,9 @@ bool GLDriver::checkActiveShader()
       auto &fetchShader = mFetchShaders[fsShaderKey];
 
       if (!fetchShader.object) {
+         auto aluDivisor0 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_0);
+         auto aluDivisor1 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_1);
+
          if (!parseFetchShader(fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
             gLog->error("Failed to parse fetch shader");
             return false;
@@ -175,6 +178,20 @@ bool GLDriver::checkActiveShader()
             gl::glEnableVertexArrayAttrib(fetchShader.object, attrib.location);
             gl::glVertexArrayAttribFormat(fetchShader.object, attrib.location, components, type, normalise, attrib.offset);
             gl::glVertexArrayAttribBinding(fetchShader.object, attrib.location, attrib.buffer);
+
+            if (attrib.type == latte::SQ_VTX_FETCH_TYPE::SQ_VTX_FETCH_INSTANCE_DATA) {
+               if (attrib.srcSelX == latte::SQ_SEL_W) {
+                  gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, 1);
+               } else if (attrib.srcSelX == latte::SQ_SEL_Y) {
+                  gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, aluDivisor0);
+               } else if (attrib.srcSelX == latte::SQ_SEL_Z) {
+                  gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, aluDivisor1);
+               } else {
+                  throw std::logic_error("Unexpected SRC_SEL_X for alu divisor");
+               }
+            } else {
+               gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, 0);
+            }
          }
       }
 
@@ -573,6 +590,8 @@ bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
             attrib.dstSel[1] = vf.word1.DST_SEL_Y();
             attrib.dstSel[2] = vf.word1.DST_SEL_Z();
             attrib.dstSel[3] = vf.word1.DST_SEL_W();
+            attrib.type = vf.word0.FETCH_TYPE();
+            attrib.srcSelX = vf.word0.SRC_SEL_X();
          }
          break;
       }

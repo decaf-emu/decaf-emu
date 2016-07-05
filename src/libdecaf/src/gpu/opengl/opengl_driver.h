@@ -63,6 +63,8 @@ struct FetchShader
       uint32_t offset;
       uint32_t location;
       uint32_t bytesPerElement;
+      latte::SQ_SEL srcSelX;
+      latte::SQ_VTX_FETCH_TYPE type;
       latte::SQ_DATA_FORMAT format;
       latte::SQ_SEL dstSel[4];
       latte::SQ_NUM_FORMAT numFormat;
