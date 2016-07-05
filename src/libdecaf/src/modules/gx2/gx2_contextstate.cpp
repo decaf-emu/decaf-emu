@@ -161,6 +161,11 @@ GX2SetContextState(GX2ContextState *state)
 {
    gActiveContext = state;
 
+   // Clear the existing state so our new context's shader display list
+   //  does not trample the values stored in the previous list.
+   pm4::write(pm4::DecafSetContextState{ nullptr });
+
+   // Run the context states shadow display list (does LOAD's)
    if (state) {
       if (GX2GetDisplayListWriteStatus()) {
          GX2CopyDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
@@ -169,6 +174,7 @@ GX2SetContextState(GX2ContextState *state)
       }
    }
 
+   // Set our new context state as active
    pm4::write(pm4::DecafSetContextState {
       state ? reinterpret_cast<void *>(&state->shadowState) : nullptr
    });
