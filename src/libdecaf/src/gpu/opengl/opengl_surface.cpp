@@ -50,6 +50,12 @@ getStorageFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
 {
    static const auto BADFMT = gl::GL_INVALID_ENUM;
 
+   // No format means that the GPU picks?  Maybe...
+   if (format == 0) {
+      return gl::GL_RGBA8;
+   }
+
+   // Pick the format
    switch (format) {
       // Normal Types
       case latte::SQ_DATA_FORMAT::FMT_8:
