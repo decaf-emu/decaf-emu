@@ -293,6 +293,7 @@ private:
    std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mPixelSamplers;
    std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mGeometrySamplers;
 
+   gl::GLuint mBlitFrameBuffers[2];
    FrameBuffer mFrameBuffer;
    Shader *mActiveShader = nullptr;
    SurfaceBuffer *mActiveDepthBuffer = nullptr;

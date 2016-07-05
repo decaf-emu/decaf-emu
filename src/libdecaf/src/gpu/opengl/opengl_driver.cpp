@@ -26,6 +26,9 @@ void GLDriver::initGL()
    memset(&mActiveColorBuffers[0], 0, sizeof(SurfaceBuffer *) * mActiveColorBuffers.size());
    std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 
+   // Create our blit framebuffer
+   gl::glCreateFramebuffers(2, mBlitFrameBuffers);
+
    // Create our default framebuffer
    gl::glCreateFramebuffers(1, &mFrameBuffer.object);
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer.object);
@@ -101,7 +104,13 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    auto copyWidth = std::min<gl::GLsizei>(pitch, target->width);
    auto copyHeight = std::min<gl::GLsizei>(height, target->height);
 
-   gl::glCopyImageSubData(buffer->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, target->object, gl::GL_TEXTURE_2D, 0, 0, 0, 0, copyWidth, copyHeight, 1);
+   gl::glNamedFramebufferTexture(mBlitFrameBuffers[0], gl::GL_COLOR_ATTACHMENT0, target->object, 0);
+   gl::glNamedFramebufferTexture(mBlitFrameBuffers[1], gl::GL_COLOR_ATTACHMENT0, buffer->object, 0);
+
+   gl::glBlitNamedFramebuffer(mBlitFrameBuffers[1], mBlitFrameBuffers[0],
+      0, 0, pitch, height,
+      0, 0, target->width, target->height,
+      gl::GL_COLOR_BUFFER_BIT, gl::GL_LINEAR);
 }
 
 void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
