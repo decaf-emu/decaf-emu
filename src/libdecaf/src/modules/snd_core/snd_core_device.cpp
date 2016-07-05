@@ -33,17 +33,6 @@ AXRegisterDeviceFinalMixCallback(AXDeviceType type, AXDeviceFinalMixCallback fun
 }
 
 AXResult
-AXSetDRCVSMode(AXDRCVSMode mode)
-{
-   if (mode >= AXDRCVSMode::Max) {
-      return AXResult::InvalidDRCVSMode;
-   }
-
-   // TODO: AXSetDRCVSMode
-   return AXResult::Success;
-}
-
-AXResult
 AXGetAuxCallback(AXDeviceType type, uint32_t, uint32_t, be_AXAuxCallback *callback, be_ptr<void> *userData)
 {
    // TODO: AXGetAuxCallback
