@@ -76,6 +76,29 @@ AXSetVoiceVe(AXVoice *voice, void *_unk)
 {
 }
 
+void
+AXSetVoiceOffsets(AXVoice *voice, AXVoiceOffsets *offsets)
+{
+   voice->offsets = *offsets;
+}
+
+void
+AXGetVoiceOffsets(AXVoice *voice, AXVoiceOffsets *offsets)
+{
+   // Trick the game into thinking the audio is progressing.
+
+   voice->offsets.currentOffset += 20;
+   if (voice->offsets.currentOffset > voice->offsets.endOffset) {
+      if (voice->offsets.loopingEnabled) {
+         voice->offsets.currentOffset -= (voice->offsets.endOffset - voice->offsets.loopOffset);
+      } else {
+         voice->offsets.currentOffset = voice->offsets.endOffset;
+      }
+   }
+
+   *offsets = voice->offsets;
+}
+
 BOOL
 AXIsVoiceRunning(AXVoice *voice)
 {
@@ -104,6 +127,8 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXFreeVoice);
    RegisterKernelFunction(AXSetVoiceVe);
    RegisterKernelFunction(AXIsVoiceRunning);
+   RegisterKernelFunction(AXSetVoiceOffsets);
+   RegisterKernelFunction(AXGetVoiceOffsets);
 }
 
 } // namespace snd_core

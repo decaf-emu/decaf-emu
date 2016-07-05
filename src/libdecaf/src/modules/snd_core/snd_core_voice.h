@@ -22,6 +22,27 @@ CHECK_OFFSET(AXVoiceLink, 0x0, next);
 CHECK_OFFSET(AXVoiceLink, 0x4, prev);
 CHECK_SIZE(AXVoiceLink, 0x8);
 
+struct AXVoiceOffsets
+{
+   UNKNOWN(0x02);
+
+   be_val<uint16_t> loopingEnabled;
+
+   be_val<uint32_t> loopOffset;
+
+   be_val<uint32_t> endOffset;
+
+   be_val<uint32_t> currentOffset;
+
+   be_ptr<void> data;
+};
+CHECK_OFFSET(AXVoiceOffsets, 0x2, loopingEnabled);
+CHECK_OFFSET(AXVoiceOffsets, 0x4, loopOffset);
+CHECK_OFFSET(AXVoiceOffsets, 0x8, endOffset);
+CHECK_OFFSET(AXVoiceOffsets, 0xc, currentOffset);
+CHECK_OFFSET(AXVoiceOffsets, 0x10, data);
+CHECK_SIZE(AXVoiceOffsets, 0x14);
+
 struct AXVoice
 {
    // The index of this voice out of the total voices
@@ -43,7 +64,10 @@ struct AXVoice
    // The user context to send to the callbacks
    be_ptr<void> userContext;
 
-   UNKNOWN(0x20);
+   UNKNOWN(0xc);
+
+   // The current offset data!
+   AXVoiceOffsets offsets;
 
    // An extended version of the callback above
    be_AXVoiceCallbackExFn callbackEx;
@@ -55,6 +79,7 @@ CHECK_OFFSET(AXVoice, 0x10, link);
 CHECK_OFFSET(AXVoice, 0x1c, priority);
 CHECK_OFFSET(AXVoice, 0x20, callback);
 CHECK_OFFSET(AXVoice, 0x24, userContext);
+CHECK_OFFSET(AXVoice, 0x34, offsets);
 CHECK_OFFSET(AXVoice, 0x48, callbackEx);
 CHECK_SIZE(AXVoice, 0x58);
 
