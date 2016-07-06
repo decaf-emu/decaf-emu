@@ -648,7 +648,7 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
    state.shader->samplerUsed.fill(false);
    initialise();
 
-   //try {
+   try {
       for (auto i = 0; i < binary.size(); i += sizeof(ControlFlowInst)) {
          auto cf = *reinterpret_cast<const ControlFlowInst *>(binary.data() + i);
          auto id = cf.word1.CF_INST();
@@ -677,10 +677,11 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
 
          state.cfPC++;
       }
-  // } catch (std::exception e) {
-  //    gLog->error("GLSL translate exception: {} ", e.what());
-  //    return false;
-   //}
+   } catch (std::exception e) {
+      auto assembly = disassemble(binary);
+      gLog->error("GLSL translate exception: {}\nDisassembly:\n{}", e.what(), assembly);
+      throw std::logic_error("Failed to decompile shader");
+   }
 
    insertFileHeader(state);
    insertCodeHeader(state);
