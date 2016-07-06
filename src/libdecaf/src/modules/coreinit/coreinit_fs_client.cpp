@@ -16,6 +16,7 @@ FSClient::FSClient()
 {
    // Let's just ensure there is never a file handle 0 just in case it's not a valid handle
    mOpenFiles.push_back(nullptr);
+   mOpenFolders.push_back(nullptr);
 }
 
 
