@@ -96,6 +96,12 @@ struct AXVoiceVeData;
 // TODO: Reverse AXVoiceAdpcmLoopData
 struct AXVoiceAdpcmLoopData;
 
+// TODO: Reverse AXVoiceAdpcm
+struct AXVoiceAdpcm;
+
+// TODO: Reverse AXVoiceSrc
+struct AXVoiceSrc;
+
 AXVoice *
 AXAcquireVoice(uint32_t priority,
                AXVoiceCallbackFn callback,
@@ -113,15 +119,23 @@ uint32_t
 AXGetMaxVoices();
 
 void
-AXSetVoiceVe(AXVoice *voice,
-             AXVoiceVeData *veData);
+AXGetVoiceOffsets(AXVoice *voice,
+                  AXVoiceOffsets *offsets);
 
 BOOL
 AXIsVoiceRunning(AXVoice *voice);
 
 void
+AXSetVoiceAdpcm(AXVoice *voice,
+                AXVoiceAdpcm *adpcm);
+
+void
 AXSetVoiceAdpcmLoop(AXVoice *voice,
                     AXVoiceAdpcmLoopData *loopData);
+
+void
+AXSetVoiceCurrentOffset(AXVoice *voice,
+                        uint32_t offset);
 
 AXResult
 AXSetVoiceDeviceMix(AXVoice *voice,
@@ -130,20 +144,40 @@ AXSetVoiceDeviceMix(AXVoice *voice,
                     AXVoiceDeviceMixData *mixData);
 
 void
-AXSetVoiceState(AXVoice *voice,
-                AXVoiceState state);
-
-AXVoiceSrcRatioResult
-AXSetVoiceSrcRatio(AXVoice *voice,
-                   float ratio);
+AXSetVoiceEndOffset(AXVoice *voice,
+                    uint32_t offset);
 
 void
 AXSetVoiceLoop(AXVoice *voice,
                AXVoiceLoop loop);
 
 void
-AXSetVoiceEndOffset(AXVoice *voice,
-                    uint32_t offset);
+AXSetVoiceOffsets(AXVoice *voice,
+                  AXVoiceOffsets *offsets);
+
+void
+AXSetVoiceSrc(AXVoice *voice,
+              AXVoiceSrc *src);
+
+AXVoiceSrcRatioResult
+AXSetVoiceSrcRatio(AXVoice *voice,
+                   float ratio);
+
+void
+AXSetVoiceSrcType(AXVoice *voice,
+                  AXVoiceSrcType type);
+
+void
+AXSetVoiceState(AXVoice *voice,
+                AXVoiceState state);
+
+void
+AXSetVoiceType(AXVoice *voice,
+               AXVoiceType type);
+
+void
+AXSetVoiceVe(AXVoice *voice,
+             AXVoiceVeData *veData);
 
 namespace internal
 {

@@ -83,19 +83,6 @@ AXGetMaxVoices()
 }
 
 void
-AXSetVoiceVe(AXVoice *voice,
-             AXVoiceVeData *veData)
-{
-}
-
-void
-AXSetVoiceOffsets(AXVoice *voice,
-                  AXVoiceOffsets *offsets)
-{
-   voice->offsets = *offsets;
-}
-
-void
 AXGetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets)
 {
@@ -120,9 +107,22 @@ AXIsVoiceRunning(AXVoice *voice)
 }
 
 void
+AXSetVoiceAdpcm(AXVoice *voice,
+                AXVoiceAdpcm *adpcm)
+{
+}
+
+void
 AXSetVoiceAdpcmLoop(AXVoice *voice,
                     AXVoiceAdpcmLoopData *loopData)
 {
+}
+
+void
+AXSetVoiceCurrentOffset(AXVoice *voice,
+                        uint32_t offset)
+{
+   voice->offsets.currentOffset = offset;
 }
 
 AXResult
@@ -135,6 +135,13 @@ AXSetVoiceDeviceMix(AXVoice *voice,
 }
 
 void
+AXSetVoiceEndOffset(AXVoice *voice,
+                    uint32_t offset)
+{
+   voice->offsets.endOffset = offset;
+}
+
+void
 AXSetVoiceLoop(AXVoice *voice,
                AXVoiceLoop loop)
 {
@@ -142,10 +149,16 @@ AXSetVoiceLoop(AXVoice *voice,
 }
 
 void
-AXSetVoiceState(AXVoice *voice,
-                AXVoiceState state)
+AXSetVoiceOffsets(AXVoice *voice,
+                  AXVoiceOffsets *offsets)
 {
-   voice->state = state;
+   voice->offsets = *offsets;
+}
+
+void
+AXSetVoiceSrc(AXVoice *voice,
+              AXVoiceSrc *src)
+{
 }
 
 AXVoiceSrcRatioResult
@@ -156,10 +169,28 @@ AXSetVoiceSrcRatio(AXVoice *voice,
 }
 
 void
-AXSetVoiceEndOffset(AXVoice *voice,
-                    uint32_t offset)
+AXSetVoiceSrcType(AXVoice *voice,
+                  AXVoiceSrcType type)
 {
-   voice->offsets.endOffset = offset;
+}
+
+void
+AXSetVoiceState(AXVoice *voice,
+                AXVoiceState state)
+{
+   voice->state = state;
+}
+
+void
+AXSetVoiceType(AXVoice *voice,
+               AXVoiceType type)
+{
+}
+
+void
+AXSetVoiceVe(AXVoice *voice,
+             AXVoiceVeData *veData)
+{
 }
 
 namespace internal
@@ -183,16 +214,21 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXAcquireVoiceEx);
    RegisterKernelFunction(AXFreeVoice);
    RegisterKernelFunction(AXGetMaxVoices);
-   RegisterKernelFunction(AXSetVoiceVe);
-   RegisterKernelFunction(AXIsVoiceRunning);
-   RegisterKernelFunction(AXSetVoiceOffsets);
    RegisterKernelFunction(AXGetVoiceOffsets);
+   RegisterKernelFunction(AXIsVoiceRunning);
+   RegisterKernelFunction(AXSetVoiceAdpcm);
    RegisterKernelFunction(AXSetVoiceAdpcmLoop);
+   RegisterKernelFunction(AXSetVoiceCurrentOffset);
    RegisterKernelFunction(AXSetVoiceDeviceMix);
-   RegisterKernelFunction(AXSetVoiceState);
-   RegisterKernelFunction(AXSetVoiceLoop);
-   RegisterKernelFunction(AXSetVoiceSrcRatio);
    RegisterKernelFunction(AXSetVoiceEndOffset);
+   RegisterKernelFunction(AXSetVoiceLoop);
+   RegisterKernelFunction(AXSetVoiceOffsets);
+   RegisterKernelFunction(AXSetVoiceSrc);
+   RegisterKernelFunction(AXSetVoiceSrcType);
+   RegisterKernelFunction(AXSetVoiceSrcRatio);
+   RegisterKernelFunction(AXSetVoiceState);
+   RegisterKernelFunction(AXSetVoiceType);
+   RegisterKernelFunction(AXSetVoiceVe);
 }
 
 } // namespace snd_core

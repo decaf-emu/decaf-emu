@@ -44,10 +44,16 @@ ENUM_BEG(AXVoiceLoop, uint16_t)
    ENUM_VALUE(Enabled,           1)
 ENUM_END(AXVoiceLoop)
 
+ENUM_BEG(AXVoiceSrcType, uint32_t)
+ENUM_END(AXVoiceSrcType)
+
 ENUM_BEG(AXVoiceState, uint32_t)
    ENUM_VALUE(Stopped,           0)
    ENUM_VALUE(Playing,           1)
 ENUM_END(AXVoiceState)
+
+ENUM_BEG(AXVoiceType, uint32_t)
+ENUM_END(AXVoiceType)
 
 ENUM_BEG(AXVoiceSrcRatioResult, int32_t)
    ENUM_VALUE(Success,                    0)
