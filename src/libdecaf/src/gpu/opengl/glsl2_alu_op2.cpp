@@ -9,7 +9,6 @@ FREXP_64
 MOVA
 MOVA_FLOOR
 ADD_64
-MOVA_INT
 NOP
 MUL_64
 FLT64_TO_FLT32
@@ -332,6 +331,27 @@ MOV(State &state, const ControlFlowInst &cf, const AluInst &alu)
 }
 
 static void
+MOVA_INT(State &state, const ControlFlowInst &cf, const AluInst &alu)
+{
+   // ar.x = dst = int(clamp(src0, -256, 256))
+
+   // TODO: Figure out how to handle these following cases
+   if (state.unit != SQ_CHAN_X) {
+      throw std::logic_error("Unexpected MOVA_INT with unit != x");
+   }
+
+   if (alu.op2.WRITE_MASK()) {
+      throw std::logic_error("Unexpected MOVA_INT with WRITE_MASK = true");
+   }
+
+   insertLineStart(state);
+   state.out << "AR.x = int(clamp(";
+   insertSource0(state, state.out, cf, alu);
+   state.out << ", -256, 256));";
+   insertLineEnd(state);
+}
+
+static void
 MOVA_FLOOR(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
    // ar.x = dst = int(clamp(floor(src0), -256, 256))
@@ -515,6 +535,7 @@ registerOP2Functions()
    registerInstruction(latte::SQ_OP2_INST_MIN_INT, MIN);
    registerInstruction(latte::SQ_OP2_INST_MIN_UINT, MIN);
    registerInstruction(latte::SQ_OP2_INST_MOV, MOV);
+   registerInstruction(latte::SQ_OP2_INST_MOVA_INT, MOVA_INT);
    registerInstruction(latte::SQ_OP2_INST_MOVA_FLOOR, MOVA_FLOOR);
    registerInstruction(latte::SQ_OP2_INST_MUL, MUL);
    registerInstruction(latte::SQ_OP2_INST_MUL_IEEE, MUL);
