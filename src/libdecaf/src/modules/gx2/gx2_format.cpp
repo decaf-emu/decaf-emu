@@ -218,7 +218,7 @@ GX2GetSurfaceFormatBits(GX2SurfaceFormat format)
    auto latteFormat = format & 0x3F;
    auto bpp = gSurfaceFormatData[latteFormat].bpp;
 
-   if (latteFormat >= latte::FMT_BC1 || latteFormat <= latte::FMT_BC5) {
+   if (latteFormat >= latte::FMT_BC1 && latteFormat <= latte::FMT_BC5) {
       bpp >>= 4;
    }
 
