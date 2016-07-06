@@ -1,6 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_debug.h"
 #include "coreinit_exit.h"
+#include "coreinit_internal_loader.h"
 #include "coreinit_thread.h"
 #include "libcpu/trace.h"
 #include "common/log.h"
@@ -171,6 +172,39 @@ coreinit__os_snprintf(char *buffer, uint32_t size, const char *fmt, ppctypes::Va
    return snprintf(buffer, size, "%s", str.c_str());
 }
 
+static uint32_t
+OSGetSymbolName(uint32_t address, char *buffer, int bufsize)
+{
+   uint32_t retval = 0;
+   bool found = false;
+
+   coreinit::internal::lockLoader();
+   const auto &modules = coreinit::internal::getLoadedModules();
+   for (auto &mod : modules) {
+      uint32_t codeBase = 0;
+      for (auto &sec : mod.second->sections) {
+         if (sec.name.compare(".text") == 0) {
+            codeBase = sec.start;
+            break;
+         }
+      }
+      for (auto &sym : mod.second->symbols) {
+         if (sym.second == address) {
+            strncpy(buffer, sym.first.c_str(), bufsize);
+            retval = codeBase;
+            found = true;
+            break;
+         }
+      }
+      if (found) {
+         break;
+      }
+   }
+   coreinit::internal::unlockLoader();
+
+   return retval;
+}
+
 void
 Module::registerDebugFunctions()
 {
@@ -182,6 +216,7 @@ Module::registerDebugFunctions()
    RegisterKernelFunction(COSWarn);
    RegisterKernelFunction(OSConsoleWrite);
    RegisterKernelFunctionName("__os_snprintf", coreinit__os_snprintf);
+   RegisterKernelFunction(OSGetSymbolName);
 }
 
 } // namespace coreinit
