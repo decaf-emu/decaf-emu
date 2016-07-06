@@ -60,6 +60,7 @@ private:
    static void registerFrameHeapFunctions();
    static void registerGhsFunctions();
    static void registerGhsTypeInfoFunctions();
+   static void registerImFunctions();
    static void registerInterruptFunctions();
    static void registerLockedCacheFunctions();
    static void registerMcpFunctions();

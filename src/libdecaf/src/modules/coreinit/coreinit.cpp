@@ -54,6 +54,7 @@ Module::RegisterFunctions()
    registerFrameHeapFunctions();
    registerGhsFunctions();
    registerGhsTypeInfoFunctions();
+   registerImFunctions();
    registerInterruptFunctions();
    registerLockedCacheFunctions();
    registerMcpFunctions();
