@@ -40,6 +40,7 @@ Module::RegisterFunctions()
    registerAllocatorFunctions();
    registerAtomic64Functions();
    registerCoreFunctions();
+   registerCoroutineFunctions();
    registerCacheFunctions();
    registerDebugFunctions();
    registerDeviceFunctions();

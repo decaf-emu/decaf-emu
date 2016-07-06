@@ -224,6 +224,7 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_alarm.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_coroutine.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_im.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_appio.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_atomic64.cpp" />
@@ -448,6 +449,7 @@
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_memory.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_atomic64.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_coroutine.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum_string.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_exit.h" />
