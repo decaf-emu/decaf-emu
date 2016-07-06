@@ -395,6 +395,9 @@ void
 sleepThreadNoLock(OSThreadQueue *queue)
 {
    auto thread = OSGetCurrentThread();
+   emuassert(thread->queue == nullptr);
+   emuassert(thread->state == OSThreadState::Running);
+
    thread->queue = queue;
    thread->state = OSThreadState::Waiting;
 
@@ -437,6 +440,8 @@ wakeupOneThreadNoLock(OSThread *thread)
       // This thread is already running or ready
       return;
    }
+
+   emuassert(thread->queue != nullptr);
 
    thread->state = OSThreadState::Ready;
    ThreadQueue::erase(thread->queue, thread);
