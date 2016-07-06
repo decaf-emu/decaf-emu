@@ -439,17 +439,19 @@ wakeupOneThreadNoLock(OSThread *thread)
    }
 
    thread->state = OSThreadState::Ready;
+   ThreadQueue::erase(thread->queue, thread);
+   thread->queue = nullptr;
    queueThreadNoLock(thread);
 }
 
 void
 wakeupThreadNoLock(OSThreadQueue *queue)
 {
-   for (auto thread = queue->head; thread; thread = thread->link.next) {
+   auto next = queue->head;
+   for (auto thread = next; next; thread = next) {
+      next = thread->link.next;
       wakeupOneThreadNoLock(thread);
    }
-
-   ThreadQueue::clear(queue);
 }
 
 void
