@@ -474,6 +474,7 @@ insertFileHeader(State &state)
 
    out
       << "#version 420 core\n"
+      << "#extension GL_ARB_texture_gather : enable\n"
       << "#define PUSH(stack, stackIndex, activeMask) stack[stackIndex++] = activeMask\n"
       << "#define POP(stack, stackIndex, activeMask) activeMask = stack[--stackIndex]\n"
       << "\n"

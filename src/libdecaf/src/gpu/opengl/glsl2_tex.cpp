@@ -164,6 +164,12 @@ sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureF
 }
 
 static void
+FETCH4(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+   sampleFunc(state, cf, inst, "textureGather");
+}
+
+static void
 SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    sampleFunc(state, cf, inst, "texture");
@@ -179,6 +185,7 @@ SAMPLE_LZ(State &state, const latte::ControlFlowInst &cf, const latte::TextureFe
 void
 registerTexFunctions()
 {
+   registerInstruction(SQ_TEX_INST_FETCH4, FETCH4);
    registerInstruction(SQ_TEX_INST_SAMPLE, SAMPLE);
    registerInstruction(SQ_TEX_INST_SAMPLE_LZ, SAMPLE_LZ);
 }
