@@ -54,6 +54,56 @@ namespace glsl2
 {
 
 static void
+insertArDestBegin(fmt::MemoryWriter &out,
+   const ControlFlowInst &cf,
+   const AluInst &inst,
+   SQ_CHAN unit)
+{
+   if (unit == SQ_CHAN_T) {
+      throw std::logic_error("Encountered AR instruction in invalid unit");
+   }
+
+   if (inst.word1.ENCODING() != SQ_ALU_OP2) {
+      throw std::logic_error("Unsupported non-op2 AR instruction");
+   }
+
+   if (inst.op2.OMOD() != SQ_ALU_OMOD_OFF) {
+      throw std::logic_error("Unsupport omod encountered for AR operation");
+   }
+
+   switch (unit) {
+   case SQ_CHAN_X:
+      out << "AR.x = ";
+      break;
+   case SQ_CHAN_Y:
+      out << "AR.y = ";
+      break;
+   case SQ_CHAN_Z:
+      out << "AR.z = ";
+      break;
+   case SQ_CHAN_W:
+      out << "AR.w = ";
+      break;
+   }
+
+   if (inst.op2.WRITE_MASK()) {
+      auto gpr = inst.word1.DST_GPR().get();
+      out << "R[" << gpr << "].";
+      insertChannel(out, inst.word1.DST_CHAN());
+      out << " = ";
+   }
+}
+
+static void
+insertArDestEnd(fmt::MemoryWriter &out,
+   const ControlFlowInst &cf,
+   const AluInst &inst)
+{
+   // Nothing to do here currently, might be needed if
+   //  we encounter any OMOD AR instructions.
+}
+
+static void
 unaryFunction(State &state,
                const ControlFlowInst &cf,
                const AluInst &alu,
@@ -334,20 +384,15 @@ static void
 MOVA_INT(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
    // ar.x = dst = int(clamp(src0, -256, 256))
-
-   // TODO: Figure out how to handle these following cases
-   if (state.unit != SQ_CHAN_X) {
-      throw std::logic_error("Unexpected MOVA_INT with unit != x");
-   }
-
-   if (alu.op2.WRITE_MASK()) {
-      throw std::logic_error("Unexpected MOVA_INT with WRITE_MASK = true");
-   }
-
    insertLineStart(state);
-   state.out << "AR.x = int(clamp(";
+   insertArDestBegin(state.out, cf, alu, state.unit);
+
+   state.out << "int(clamp(";
    insertSource0(state, state.out, cf, alu);
-   state.out << ", -256, 256));";
+   state.out << ", -256, 256))";
+
+   insertArDestEnd(state.out, cf, alu);
+   state.out << ';';
    insertLineEnd(state);
 }
 
@@ -355,20 +400,15 @@ static void
 MOVA_FLOOR(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
    // ar.x = dst = int(clamp(floor(src0), -256, 256))
-
-   // TODO: Figure out how to handle these following cases
-   if (state.unit != SQ_CHAN_X) {
-      throw std::logic_error("Unexpected MOVA_FLOOR with unit != x");
-   }
-
-   if (alu.op2.WRITE_MASK()) {
-      throw std::logic_error("Unexpected MOVA_FLOOR with WRITE_MASK = true");
-   }
-
    insertLineStart(state);
-   state.out << "AR.x = int(clamp(floor(";
+   insertArDestBegin(state.out, cf, alu, state.unit);
+
+   state.out << "int(clamp(floor(";
    insertSource0(state, state.out, cf, alu);
-   state.out << "), -256, 256));";
+   state.out << "), -256, 256))";
+
+   insertArDestEnd(state.out, cf, alu);
+   state.out << ';';
    insertLineEnd(state);
 }
 
