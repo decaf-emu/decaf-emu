@@ -98,7 +98,7 @@ uint32_t getThreadNia(coreinit::OSThread *thread)
    } else if (thread == coreThread[2]) {
       return debugger::getPausedCoreState(2)->nia;
    } else {
-      return mem::read<uint32_t>(thread->context.gpr[1]);
+      return mem::read<uint32_t>(thread->context.gpr[1] + 8);
    }
 }
 
