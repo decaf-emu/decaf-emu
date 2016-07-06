@@ -14,6 +14,11 @@ struct StackTrace
    uint16_t frames;
 };
 
+struct MySymbol : SYMBOL_INFO
+{
+   char NameExt[512];
+};
+
 StackTrace *
 captureStackTrace()
 {
@@ -28,21 +33,28 @@ freeStackTrace(StackTrace *trace)
    delete trace;
 }
 
+#pragma optimize("", off)
+
 void
 printStackTrace(StackTrace *trace)
 {
-   char printBuf[0x1024];
+   auto process = GetCurrentProcess();
+
+   static bool symInitialise = false;
+   if (!symInitialise) {
+      SymInitialize(process, NULL, TRUE);
+      symInitialise = true;
+   }
+
    // stack allocation neccessary according to MSDN
-   SYMBOL_INFO *symbol = new SYMBOL_INFO();
-   symbol->MaxNameLen = 255;
+   auto symbol = new MySymbol();
+   symbol->MaxNameLen = 256;
    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
-   auto process = GetCurrentProcess();
-   SymInitialize(process, NULL, TRUE);
-
+   char printBuf[0x1024];
    for (uint16_t i = 0; i < trace->frames; ++i) {
       SymFromAddr(process, (DWORD64)trace->data[i], 0, symbol);
-      sprintf_s(printBuf, "%i: %s - 0x%0I64x\n", trace->frames - i - 1, symbol->Name, symbol->Address);
+      sprintf_s(printBuf, "%i: %s - 0x%0I64x\n", trace->frames - i - 1, (const char*)symbol->Name, symbol->Address);
       OutputDebugStringA(printBuf);
    }
 
