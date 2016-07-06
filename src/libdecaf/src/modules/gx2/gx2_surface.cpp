@@ -236,7 +236,7 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
    // Update register values
    auto format = GX2GetSurfaceColorFormat(colorBuffer->surface.format);
    auto pitch = (colorBuffer->surface.pitch / latte::MicroTileWidth) - 1;
-   auto slice = ((colorBuffer->surface.pitch * colorBuffer->surface.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
+   auto slice = ((pitch + 1) * ((colorBuffer->surface.height + latte::MicroTileHeight - 1) / latte::MicroTileHeight)) - 1;
 
    cb_color_info = cb_color_info
       .FORMAT().set(format);
