@@ -455,6 +455,7 @@ void
 wakeupThreadNoLock(OSThreadQueue *queue)
 {
    auto next = queue->head;
+
    for (auto thread = next; next; thread = next) {
       next = thread->link.next;
       wakeupOneThreadNoLock(thread);

@@ -33,8 +33,6 @@ freeStackTrace(StackTrace *trace)
    delete trace;
 }
 
-#pragma optimize("", off)
-
 void
 printStackTrace(StackTrace *trace)
 {
