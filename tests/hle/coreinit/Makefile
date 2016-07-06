@@ -1,4 +1,4 @@
-TARGETS := alarm
+TARGETS := alarm coroutine
 
 GROUP := $(notdir $(CURDIR))
 
