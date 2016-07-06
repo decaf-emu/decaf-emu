@@ -185,6 +185,12 @@ WinMain(HINSTANCE hInstance,
    auto parser = getCommandLineParser();
    excmd::option_state options;
 
+   if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+      FILE *dumbFuck;
+      freopen_s(&dumbFuck, "CONOUT$", "w", stdout);
+      freopen_s(&dumbFuck, "CONOUT$", "w", stderr);
+   }
+
    try {
       options = parser.parse(lpCmdLine);
    } catch (excmd::exception ex) {
