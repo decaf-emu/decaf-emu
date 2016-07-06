@@ -43,7 +43,6 @@ public:
    {
       for (auto item = queue->head; item; ) {
          auto next = link(item).next;
-         item->queue = nullptr;
          link(item).next = nullptr;
          link(item).prev = nullptr;
          item = next;
