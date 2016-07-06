@@ -256,6 +256,8 @@ void checkRunningThreadNoLock(bool yielding)
       return;
    }
 
+   emuassert(cpu::this_core::interruptMask() == cpu::INTERRUPT_MASK);
+
    auto next = peekNextThreadNoLock(coreId);
 
    if (thread
