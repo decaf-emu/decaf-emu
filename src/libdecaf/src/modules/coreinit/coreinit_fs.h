@@ -47,7 +47,6 @@ FSGetDirSizeAsync
 FSGetEmulatedError
 FSGetEntryNum
 FSGetEntryNumAsync
-FSGetErrorCodeForViewer
 FSGetFSMessage
 FSGetFileBlockAddress
 FSGetFileBlockAddressAsync
