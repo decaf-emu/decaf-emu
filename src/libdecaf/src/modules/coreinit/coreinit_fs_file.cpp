@@ -41,10 +41,27 @@ FSOpenFileAsync(FSClient *client,
                 uint32_t flags,
                 FSAsyncData *asyncData)
 {
+   auto pathLength = strlen(pathStr);
+   auto modeLength = strlen(modeStr);
+
+   if (pathLength >= FSCmdBlock::MaxPathLength) {
+      return FSStatus::FatalError;
+   }
+
+   if (modeLength >= FSCmdBlock::MaxModeLength) {
+      return FSStatus::FatalError;
+   }
+
+   std::memcpy(block->path, pathStr, pathLength);
+   block->path[pathLength] = 0;
+
+   std::memcpy(block->mode, modeStr, modeLength);
+   block->mode[modeLength] = 0;
+
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto fs = kernel::getFileSystem();
-      auto path = coreinit::internal::translatePath(pathStr);
-      auto mode = parseOpenMode(modeStr);
+      auto path = coreinit::internal::translatePath(block->path);
+      auto mode = parseOpenMode(block->mode);
 
       if (!mode) {
          return FSStatus::AccessError;

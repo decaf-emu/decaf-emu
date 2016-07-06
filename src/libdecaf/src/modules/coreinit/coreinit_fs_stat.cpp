@@ -17,10 +17,19 @@ FSGetStatAsync(FSClient *client,
                uint32_t flags,
                FSAsyncData *asyncData)
 {
+   auto pathLength = strlen(path);
+
+   if (pathLength >= FSCmdBlock::MaxPathLength) {
+      return FSStatus::FatalError;
+   }
+
+   std::memcpy(block->path, path, pathLength);
+   block->path[pathLength] = 0;
+
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto entry = fs::FolderEntry {};
       auto fs = kernel::getFileSystem();
-      auto file = fs->findEntry(coreinit::internal::translatePath(path), entry);
+      auto file = fs->findEntry(coreinit::internal::translatePath(block->path), entry);
 
       if (!file) {
          return FSStatus::NotFound;

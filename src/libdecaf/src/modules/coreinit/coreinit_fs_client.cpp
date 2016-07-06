@@ -204,6 +204,7 @@ FSCancelCommand(FSClient *client,
                 FSCmdBlock *block)
 {
    // TODO: FSCancelCommand
+   gLog->error("Unsupported FSCancelCommand");
 }
 
 namespace internal

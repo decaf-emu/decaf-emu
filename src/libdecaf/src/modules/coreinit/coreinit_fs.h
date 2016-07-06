@@ -124,6 +124,9 @@ CHECK_SIZE(FSAsyncResult, 0x28);
 
 struct FSCmdBlock
 {
+   static const unsigned MaxPathLength = 0x280;
+   static const unsigned MaxModeLength = 0x10;
+
    // HACK: We store our own stuff into PPC memory...  This is
    //  especially bad as std::function is not really meant to be
    //  randomly memset...
@@ -132,7 +135,9 @@ struct FSCmdBlock
    std::function<FSStatus()> func;
    OSMessageQueue syncQueue;
    OSMessage syncQueueMsgs[1];
-   UNKNOWN(0xa08 - sizeof(std::function<FSStatus()>));
+   char path[MaxPathLength];
+   char mode[MaxModeLength];
+   UNKNOWN(0x778 - sizeof(std::function<FSStatus()>));
 };
 CHECK_SIZE(FSCmdBlock, 0xa80);
 

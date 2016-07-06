@@ -17,9 +17,18 @@ FSOpenDirAsync(FSClient *client,
                uint32_t flags,
                FSAsyncData *asyncData)
 {
+   auto pathLength = strlen(path);
+
+   if (pathLength >= FSCmdBlock::MaxPathLength) {
+      return FSStatus::FatalError;
+   }
+
+   std::memcpy(block->path, path, pathLength);
+   block->path[pathLength] = 0;
+
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto fs = kernel::getFileSystem();
-      auto dir = fs->openFolder(coreinit::internal::translatePath(path));
+      auto dir = fs->openFolder(coreinit::internal::translatePath(block->path));
 
       if (!dir) {
          return FSStatus::NotFound;
@@ -28,6 +37,7 @@ FSOpenDirAsync(FSClient *client,
       *handle = client->addOpenDirectory(dir);
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 
@@ -60,6 +70,7 @@ FSCloseDirAsync(FSClient *client,
       client->removeOpenDirectory(handle);
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 
@@ -81,15 +92,25 @@ FSMakeDirAsync(FSClient *client,
                uint32_t flags,
                FSAsyncData *asyncData)
 {
+   auto pathLength = strlen(path);
+
+   if (pathLength >= FSCmdBlock::MaxPathLength) {
+      return FSStatus::FatalError;
+   }
+
+   std::memcpy(block->path, path, pathLength);
+   block->path[pathLength] = 0;
+
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto fs = kernel::getFileSystem();
 
-      if (!fs->makeFolder(coreinit::internal::translatePath(path))) {
+      if (!fs->makeFolder(coreinit::internal::translatePath(block->path))) {
          return FSStatus::FatalError;
       }
 
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 
@@ -141,6 +162,7 @@ FSReadDirAsync(FSClient *client,
 
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 
@@ -173,6 +195,7 @@ FSRewindDirAsync(FSClient *client,
       directory->rewind();
       return FSStatus::OK;
    });
+
    return FSStatus::OK;
 }
 

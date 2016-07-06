@@ -36,8 +36,17 @@ FSChangeDirAsync(FSClient *client,
                  uint32_t flags,
                  FSAsyncData *asyncData)
 {
+   auto pathLength = strlen(path);
+
+   if (pathLength >= FSCmdBlock::MaxPathLength) {
+      return FSStatus::FatalError;
+   }
+
+   std::memcpy(block->path, path, pathLength);
+   block->path[pathLength] = 0;
+
    internal::queueFsWork(client, block, asyncData, [=]() {
-      gWorkingPath = coreinit::internal::translatePath(path);
+      gWorkingPath = coreinit::internal::translatePath(block->path);
       return FSStatus::OK;
    });
 
