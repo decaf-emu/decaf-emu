@@ -193,12 +193,6 @@ GetTransferableIdEx(be_val<uint64_t> *transferableId, uint32_t unk1, uint8_t slo
    return nn::Result::Success;
 }
 
-bool
-IsParentalControlCheckEnabled()
-{
-   return false;
-}
-
 nn::Result
 GetMii(FFLStoreData *data)
 {
@@ -214,6 +208,12 @@ GetMiiEx(FFLStoreData *data, uint8_t slot)
 
    gLog->warn("GetMiiEx(0x{:08X}, {})", mem::untranslate(data), static_cast<uint32_t>(slot));
    return nn::Result::Success;
+}
+
+bool
+IsParentalControlCheckEnabled()
+{
+   return false;
 }
 
 bool
@@ -238,6 +238,7 @@ Module::registerCoreFunctions()
    RegisterKernelFunctionName("GetSlotNo__Q2_2nn3actFv", nn::act::GetSlotNo);
    RegisterKernelFunctionName("GetMii__Q2_2nn3actFP12FFLStoreData", nn::act::GetMii);
    RegisterKernelFunctionName("GetMiiEx__Q2_2nn3actFP12FFLStoreDataUc", nn::act::GetMiiEx);
+   RegisterKernelFunctionName("IsParentalControlCheckEnabled__Q2_2nn3actFv", nn::act::IsParentalControlCheckEnabled);
    RegisterKernelFunctionName("IsNetworkAccount__Q2_2nn3actFv", nn::act::IsNetworkAccount);
    RegisterKernelFunctionName("IsNetworkAccountEx__Q2_2nn3actFUc", nn::act::IsNetworkAccountEx);
    RegisterKernelFunctionName("GetNumOfAccounts__Q2_2nn3actFv", nn::act::GetNumOfAccounts);
