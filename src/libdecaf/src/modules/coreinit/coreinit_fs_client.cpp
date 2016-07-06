@@ -180,6 +180,13 @@ FSGetVolumeState(FSClient *client)
 
 
 FSError
+FSGetErrorCodeForViewer(FSClient *client)
+{
+   return client->getLastError();
+}
+
+
+FSError
 FSGetLastErrorCodeForViewer(FSClient *client)
 {
    return client->getLastError();

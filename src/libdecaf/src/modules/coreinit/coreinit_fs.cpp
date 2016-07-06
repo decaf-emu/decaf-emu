@@ -216,6 +216,7 @@ Module::registerFileSystemFunctions()
    RegisterKernelFunction(FSSetCmdPriority);
    RegisterKernelFunction(FSSetStateChangeNotification);
    RegisterKernelFunction(FSGetVolumeState);
+   RegisterKernelFunction(FSGetErrorCodeForViewer);
    RegisterKernelFunction(FSGetLastErrorCodeForViewer);
    RegisterKernelFunction(FSGetAsyncResult);
 
