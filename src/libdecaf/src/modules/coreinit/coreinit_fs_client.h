@@ -78,6 +78,10 @@ FSSetStateChangeNotification(FSClient *client,
 FSAsyncResult*
 FSGetAsyncResult(OSMessage *ioMsg);
 
+void
+FSCancelCommand(FSClient *client,
+                FSCmdBlock *block);
+
 /** @} */
 
 namespace internal

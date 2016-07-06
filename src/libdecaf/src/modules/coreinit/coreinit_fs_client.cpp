@@ -198,6 +198,13 @@ FSGetAsyncResult(OSMessage *ioMsg)
    return static_cast<FSAsyncResult *>(ioMsg->message.get());
 }
 
+void
+FSCancelCommand(FSClient *client,
+                FSCmdBlock *block)
+{
+   // TODO: FSCancelCommand
+}
+
 namespace internal
 {
 

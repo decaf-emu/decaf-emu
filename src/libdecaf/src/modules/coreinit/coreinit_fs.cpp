@@ -209,6 +209,7 @@ Module::registerFileSystemFunctions()
    RegisterKernelFunction(FSShutdown);
    RegisterKernelFunction(FSAddClient);
    RegisterKernelFunction(FSAddClientEx);
+   RegisterKernelFunction(FSCancelCommand);
    RegisterKernelFunction(FSDelClient);
    RegisterKernelFunction(FSGetClientNum);
    RegisterKernelFunction(FSInitCmdBlock);
