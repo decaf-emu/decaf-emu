@@ -63,6 +63,12 @@ AXAcquireVoiceEx(uint32_t priority,
    return foundVoice;
 }
 
+BOOL
+AXCheckVoiceOffsets(AXVoiceOffsets *offsets)
+{
+   return TRUE;
+}
+
 void
 AXFreeVoice(AXVoice *voice)
 {
@@ -212,6 +218,7 @@ Module::registerVoiceFunctions()
 {
    RegisterKernelFunction(AXAcquireVoice);
    RegisterKernelFunction(AXAcquireVoiceEx);
+   RegisterKernelFunction(AXCheckVoiceOffsets);
    RegisterKernelFunction(AXFreeVoice);
    RegisterKernelFunction(AXGetMaxVoices);
    RegisterKernelFunction(AXGetVoiceOffsets);

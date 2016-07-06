@@ -112,6 +112,9 @@ AXAcquireVoiceEx(uint32_t priority,
                  AXVoiceCallbackExFn callback,
                  void *userContext);
 
+BOOL
+AXCheckVoiceOffsets(AXVoiceOffsets *offsets);
+
 void
 AXFreeVoice(AXVoice *voice);
 
