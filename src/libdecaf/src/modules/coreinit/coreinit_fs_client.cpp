@@ -180,8 +180,9 @@ FSGetVolumeState(FSClient *client)
 
 
 FSError
-FSGetErrorCodeForViewer(FSClient *client)
+FSGetErrorCodeForViewer(FSClient *client, FSCmdBlock *block)
 {
+   // TODO: Need to move error code into FSCmdBlock.
    return client->getLastError();
 }
 
