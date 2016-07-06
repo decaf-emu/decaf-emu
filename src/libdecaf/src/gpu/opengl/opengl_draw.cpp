@@ -322,7 +322,7 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    if (mActiveDepthBuffer) {
       gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, mActiveDepthBuffer->object, 0);
    } else {
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, 0, 0);
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, 0, 0);
    }
 }
 
