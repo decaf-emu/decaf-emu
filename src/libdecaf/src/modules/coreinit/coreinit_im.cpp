@@ -10,28 +10,32 @@ sAPDEnabled = TRUE;
 static BOOL
 sDimEnabled = TRUE;
 
-BOOL
+IOError
 IMDisableAPD()
 {
    sAPDEnabled = FALSE;
+   return IOError::OK;
 }
 
-BOOL
+IOError
 IMDisableDim()
 {
    sDimEnabled = FALSE;
+   return IOError::OK;
 }
 
-BOOL
+IOError
 IMEnableAPD()
 {
    sAPDEnabled = TRUE;
+   return IOError::OK;
 }
 
-BOOL
+IOError
 IMEnableDim()
 {
    sDimEnabled = TRUE;
+   return IOError::OK;
 }
 
 BOOL
