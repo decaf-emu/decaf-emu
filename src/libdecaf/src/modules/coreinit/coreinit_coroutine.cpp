@@ -1,6 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_coroutine.h"
 #include "coreinit_thread.h"
+#include "kernel/kernel_internal.h"
 
 namespace coreinit
 {
@@ -18,6 +19,7 @@ OSSwitchCoroutine(OSCoroutine *from, OSCoroutine *to)
    OSThread *thread = OSGetCurrentThread();
 
    // Save current coroutine state
+   kernel::saveContext(&thread->context);
    from->nia = thread->context.lr;
    from->cr = thread->context.cr;
    from->gpr5 = thread->context.gpr[5];
@@ -45,6 +47,7 @@ OSSwitchCoroutine(OSCoroutine *from, OSCoroutine *to)
    for (int i = 14; i < 32; i++) {
       thread->context.fpr[i] = to->fpr14_31[i-14];
    }
+   kernel::restoreContext(&thread->context);
 }
 
 void
