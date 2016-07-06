@@ -1,7 +1,7 @@
 #include <hle_test.h>
 #include <coreinit/coroutine.h>
 
-#define StackSize 16384
+#define StackSize 8192
 static uint8_t coStack[StackSize] __attribute__((aligned(8)));
 
 OSCoroutine coMain;
