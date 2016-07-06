@@ -801,6 +801,9 @@
     <ClCompile Include="..\src\libdecaf\src\modules\dmae\dmae_core.cpp">
       <Filter>Source Files\modules\dmae</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_im.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1510,6 +1513,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_enum.h">
       <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_im.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
