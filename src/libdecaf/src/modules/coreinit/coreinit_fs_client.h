@@ -69,7 +69,7 @@ FSVolumeState
 FSGetVolumeState(FSClient *client);
 
 FSError
-FSGetErrorCodeForViewer(FSClient *client);
+FSGetErrorCodeForViewer(FSClient *client, FSCmdBlock *block);
 
 FSError
 FSGetLastErrorCodeForViewer(FSClient *client);
