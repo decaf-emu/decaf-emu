@@ -128,7 +128,7 @@ OSPanic(const char *file, int line, const char *fmt, ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
-   gLog->error("OSPanic {}:{} {}", file, line, str);
+   gLog->error("[OSPanic] {}:{} {}", file, line, str);
    ghs_exit(-1);
 }
 
@@ -137,7 +137,7 @@ OSReport(const char *fmt, ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
-   gLog->debug("OSReport {}", str);
+   gLog->info("[OSReport] {}", str);
 }
 
 static void
@@ -145,7 +145,7 @@ OSVReport(const char *fmt, ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
-   gLog->debug("OSVReport {}", str);
+   gLog->info("[OSVReport] {}", str);
 }
 
 static void
@@ -153,14 +153,14 @@ COSWarn(uint32_t module, const char *fmt, ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
-   gLog->debug("COSWarn {} {}", module, str);
+   gLog->info("[COSWarn] {} {}", module, str);
 }
 
 static void
 OSConsoleWrite(const char *msg, uint32_t size)
 {
    auto str = std::string { msg, size };
-   gLog->debug("OSConsoleWrite {}", str);
+   gLog->info("[OSConsoleWrite] {}", str);
 }
 
 static int
