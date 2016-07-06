@@ -151,13 +151,8 @@ void ghsSetupExceptions()
    if (p__cpp_exception_init_ptr->getAddress()) {
       auto thread = getCurrentThread();
 
-      // Disable interrupt since we are calling into PPC code...
-      auto prevInterruptsEnabled = OSDisableInterrupts();
-
       // Invoke the exception initializer
       (*p__cpp_exception_init_ptr)(&thread->_ghs__eh_globals);
-
-      OSRestoreInterrupts(prevInterruptsEnabled);
    }
 }
 
