@@ -108,7 +108,7 @@ getBranchMetaBX(uint32_t address, espresso::Instruction instr, const cpu::CoreRe
    return meta;
 }
 
-static BranchMetaInfo 
+static BranchMetaInfo
 getBranchMeta(uint32_t address, espresso::Instruction instr, espresso::InstructionInfo *data, const cpu::CoreRegs *state)
 {
    if (data->id == espresso::InstructionID::b) {
@@ -137,8 +137,10 @@ static uint32_t calculateNextInstr(const cpu::CoreRegs *state, bool stepOver)
 {
    auto instr = mem::read<espresso::Instruction>(state->nia);
    auto data = espresso::decodeInstruction(instr);
+
    if (isBranchInstr(data)) {
       auto meta = getBranchMeta(state->nia, instr, data, state);
+
       if (meta.isCall && stepOver) {
          // This is a call and we are stepping over...
          return state->nia + 4;

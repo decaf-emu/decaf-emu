@@ -1,6 +1,6 @@
 include $(TEST_ROOT)/common/test_rpx.mk
 
-ifeq ($(OS),Windows_NT)
+ifeq ($(shell uname -o),Cygwin)
 COMMON_DIR := $(shell cygpath -w ${TEST_ROOT})/common
 else
 COMMON_DIR := $(TEST_ROOT)/common
