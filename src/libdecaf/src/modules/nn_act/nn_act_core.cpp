@@ -193,6 +193,12 @@ GetTransferableIdEx(be_val<uint64_t> *transferableId, uint32_t unk1, uint8_t slo
    return nn::Result::Success;
 }
 
+bool
+IsParentalControlCheckEnabled()
+{
+   return false;
+}
+
 nn::Result
 GetMii(FFLStoreData *data)
 {

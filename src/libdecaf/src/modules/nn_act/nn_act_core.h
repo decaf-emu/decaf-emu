@@ -89,6 +89,9 @@ GetTransferableIdEx(be_val<uint64_t> *transferableId,
                     uint32_t unk1,
                     uint8_t slot);
 
+bool
+IsParentalControlCheckEnabled();
+
 }  // namespace act
 
 }  // namespace nn
