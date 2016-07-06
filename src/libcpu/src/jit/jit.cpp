@@ -174,6 +174,7 @@ gen(JitBlock &block)
    for (lclCia = block.start; lclCia < block.end; lclCia += 4) {
       if (JIT_DEBUG) {
          a.mov(a.cia, lclCia);
+         a.mov(a.ppcnia, lclCia + 4);
       }
 
       auto instr = mem::read<espresso::Instruction>(lclCia);
