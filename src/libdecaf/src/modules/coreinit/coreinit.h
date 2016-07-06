@@ -47,6 +47,7 @@ private:
    static void registerAllocatorFunctions();
    static void registerAtomic64Functions();
    static void registerCoreFunctions();
+   static void registerCoroutineFunctions();
    static void registerCacheFunctions();
    static void registerDebugFunctions();
    static void registerDeviceFunctions();
