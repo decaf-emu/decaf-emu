@@ -18,3 +18,7 @@ config.json
 !CMakeLists.txt
 *.VC.db
 *.ini
+*.elf
+*.rpx
+*.o
+!tests/hle/bin/*.rpx
