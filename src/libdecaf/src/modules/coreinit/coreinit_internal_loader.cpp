@@ -67,7 +67,7 @@ using SectionList = std::vector<elf::XSection>;
 using AddressRange = std::pair<ppcaddr_t, ppcaddr_t>;
 
 static std::atomic<uint32_t>
-sLoaderLock{ 0 };
+sLoaderLock { 0 };
 
 static std::map<std::string, LoadedModule*>
 gLoadedModules;
@@ -106,7 +106,8 @@ unlockLoader()
    emuassert(oldCore == core);
 }
 
-void initialiseCodeHeap(ppcsize_t maxCodeSize)
+static void
+initialiseCodeHeap(ppcsize_t maxCodeSize)
 {
    // Get the MEM2 Region
    be_val<uint32_t> mem2start, mem2size;
@@ -119,32 +120,46 @@ void initialiseCodeHeap(ppcsize_t maxCodeSize)
    coreinit::internal::setMemBound(OSMemoryType::MEM2, mem2start + maxCodeSize, mem2size - maxCodeSize);
 }
 
-std::map<std::string, LoadedModule*> getLoadedModules()
+std::map<std::string, LoadedModule*>
+getLoadedModules()
 {
    return gLoadedModules;
 }
 
-LoadedModule *loadRPLNoLock(const std::string& name);
+static LoadedModule *
+loadRPLNoLock(const std::string& name);
 
 static ppcaddr_t
-getTrampAddress(LoadedModule *loadedMod, SequentialMemoryTracker &codeSeg, TrampolineMap &trampolines, void *target, const std::string& symbolName);
+getTrampAddress(LoadedModule *loadedMod,
+                SequentialMemoryTracker &codeSeg,
+                TrampolineMap &trampolines,
+                void *target,
+                const std::string& symbolName);
 
 static bool
-readFileInfo(BigEndianView &in, const SectionList &sections, elf::FileInfo &info);
+readFileInfo(BigEndianView &in,
+             const SectionList &sections,
+             elf::FileInfo &info);
 
 static const elf::XSection *
-findSection(const SectionList &sections, const char *shStrTab, const std::string &name);
+findSection(const SectionList &sections,
+            const char *shStrTab,
+            const std::string &name);
 
 static elf::Symbol
-getSymbol(BigEndianView &symSecView, uint32_t index);
+getSymbol(BigEndianView &symSecView,
+          uint32_t index);
 
 static uint32_t
-getSymbolAddress(const elf::Symbol &sym, const SectionList &sections);
+getSymbolAddress(const elf::Symbol &sym,
+                 const SectionList &sections);
 
 
 // Find and read the SHT_RPL_FILEINFO section
 static bool
-readFileInfo(BigEndianView &in, const SectionList &sections, elf::FileInfo &info)
+readFileInfo(BigEndianView &in,
+             const SectionList &sections,
+             elf::FileInfo &info)
 {
    std::vector<uint8_t> data;
 
@@ -167,7 +182,9 @@ readFileInfo(BigEndianView &in, const SectionList &sections, elf::FileInfo &info
 
 // Find a section with a matching name
 static const elf::XSection *
-findSection(const SectionList &sections, const char *shStrTab, const std::string &name)
+findSection(const SectionList &sections,
+            const char *shStrTab,
+            const std::string &name)
 {
    for (auto &section : sections) {
       auto sectionName = shStrTab + section.header.name;
@@ -183,7 +200,8 @@ findSection(const SectionList &sections, const char *shStrTab, const std::string
 
 // Get symbol at index
 static elf::Symbol
-getSymbol(BigEndianView &symSecView, uint32_t index)
+getSymbol(BigEndianView &symSecView,
+          uint32_t index)
 {
    elf::Symbol sym;
    symSecView.seek(index * sizeof(elf::Symbol));
@@ -194,7 +212,8 @@ getSymbol(BigEndianView &symSecView, uint32_t index)
 
 // Get address of symbol
 static uint32_t
-getSymbolAddress(const elf::Symbol &sym, const SectionList &sections)
+getSymbolAddress(const elf::Symbol &sym,
+                 const SectionList &sections)
 {
    auto &symSec = sections[sym.shndx];
    return (sym.value - symSec.header.addr) + symSec.virtAddress;
@@ -203,7 +222,11 @@ getSymbolAddress(const elf::Symbol &sym, const SectionList &sections)
 
 // Returns address of trampoline for target
 static ppcaddr_t
-getTrampAddress(LoadedModule *loadedMod, SequentialMemoryTracker &codeSeg, TrampolineMap &trampolines, void *target, const std::string& symbolName)
+getTrampAddress(LoadedModule *loadedMod,
+                SequentialMemoryTracker &codeSeg,
+                TrampolineMap &trampolines,
+                void *target,
+                const std::string& symbolName)
 {
    auto trampAddr = codeSeg.getCurrentAddr();
    auto targetAddr = mem::untranslate(target);
@@ -245,8 +268,9 @@ getTrampAddress(LoadedModule *loadedMod, SequentialMemoryTracker &codeSeg, Tramp
 }
 
 
-ppcaddr_t
-generateUnimplementedDataThunk(const std::string &module, const std::string& name)
+static ppcaddr_t
+generateUnimplementedDataThunk(const std::string &module,
+                               const std::string& name)
 {
    auto itr = gUnimplementedData.find(name);
 
@@ -265,8 +289,9 @@ generateUnimplementedDataThunk(const std::string &module, const std::string& nam
 }
 
 
-ppcaddr_t
-generateUnimplementedFunctionThunk(const std::string &module, const std::string &func)
+static ppcaddr_t
+generateUnimplementedFunctionThunk(const std::string &module,
+                                   const std::string &func)
 {
    auto itr = gUnimplementedFunctions.find(func);
 
@@ -294,8 +319,9 @@ generateUnimplementedFunctionThunk(const std::string &module, const std::string 
 }
 
 
-void
-processKernelTraceFilters(const std::string &module, std::vector<kernel::HleFunction *> &functions)
+static void
+processKernelTraceFilters(const std::string &module,
+                          std::vector<kernel::HleFunction *> &functions)
 {
    struct TraceFilter
    {
@@ -382,8 +408,10 @@ processKernelTraceFilters(const std::string &module, std::vector<kernel::HleFunc
 }
 
 
-//! Load a kernel module into virtual memory space by creating thunks
-LoadedModule *
+/**
+ * Load a kernel module into virtual memory space by creating thunks
+ */
+static LoadedModule *
 loadHleModule(const std::string &moduleName,
               const std::string &name,
               kernel::HleModule *module)
@@ -492,8 +520,13 @@ loadHleModule(const std::string &moduleName,
    return loadedMod;
 }
 
-bool
-processRelocations(LoadedModule *loadedMod, const SectionList &sections, BigEndianView &in, const char *shStrTab, SequentialMemoryTracker &codeSeg, AddressRange &trampSeg)
+static bool
+processRelocations(LoadedModule *loadedMod,
+                   const SectionList &sections,
+                   BigEndianView &in,
+                   const char *shStrTab,
+                   SequentialMemoryTracker &codeSeg,
+                   AddressRange &trampSeg)
 {
    auto trampolines = TrampolineMap{};
    auto buffer = std::vector<uint8_t>{};
@@ -604,6 +637,17 @@ processRelocations(LoadedModule *loadedMod, const SectionList &sections, BigEndi
             *ptr32 = byte_swap(ins.value);
             break;
          }
+         case elf::R_PPC_DTPREL32:
+         {
+            *ptr32 = byte_swap(symbol.value + rela.addend);
+            break;
+         }
+         case elf::R_PPC_DTPMOD32:
+         {
+            emuassert(loadedMod->tlsModuleIndex == 0);
+            *ptr32 = byte_swap(loadedMod->tlsModuleIndex);
+            break;
+         }
          default:
             gLog->error("Unknown relocation type {}", type);
          }
@@ -615,7 +659,8 @@ processRelocations(LoadedModule *loadedMod, const SectionList &sections, BigEndi
 }
 
 bool
-processImports(LoadedModule *loadedMod, SectionList &sections)
+processImports(LoadedModule *loadedMod,
+               SectionList &sections)
 {
    std::map<std::string, ppcaddr_t> symbolTable;
 
@@ -652,7 +697,7 @@ processImports(LoadedModule *loadedMod, SectionList &sections)
       }
 
       auto strTab = reinterpret_cast<const char*>(sections[section.header.link].memory);
-      auto symIn = BigEndianView{ section.memory, section.virtSize };
+      auto symIn = BigEndianView { section.memory, section.virtSize };
 
       while (!symIn.eof()) {
          elf::Symbol sym;
@@ -710,7 +755,8 @@ processImports(LoadedModule *loadedMod, SectionList &sections)
 }
 
 bool
-processSymbols(LoadedModule *loadedMod, SectionList &sections)
+processSymbols(LoadedModule *loadedMod,
+               SectionList &sections)
 {
    // Process symbols
    for (auto &section : sections) {
@@ -763,8 +809,9 @@ processSymbols(LoadedModule *loadedMod, SectionList &sections)
    return true;
 }
 
-bool
-processExports(LoadedModule *loadedMod, const SectionList &sections)
+static bool
+processExports(LoadedModule *loadedMod,
+               const SectionList &sections)
 {
    for (auto &section : sections) {
       if (section.header.type != elf::SHT_RPL_EXPORTS) {
@@ -790,7 +837,9 @@ processExports(LoadedModule *loadedMod, const SectionList &sections)
 
 
 LoadedModule *
-loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<uint8_t> &data)
+loadRPL(const std::string &moduleName,
+        const std::string &name,
+        const gsl::span<uint8_t> &data)
 {
    std::vector<uint8_t> buffer;
    auto in = BigEndianView{ data };
@@ -800,7 +849,7 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
    gLog->debug("Loading module {}", moduleName);
 
    // Read header
-   auto header = elf::Header{};
+   auto header = elf::Header {};
 
    if (!elf::readHeader(in, header)) {
       gLog->error("Failed elf::readHeader");
@@ -814,7 +863,7 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
    }
 
    // Read sections
-   auto sections = std::vector<elf::XSection>{};
+   auto sections = std::vector<elf::XSection> {};
 
    if (!elf::readSectionHeaders(in, header, sections)) {
       gLog->error("Failed elf::readSectionHeaders");
@@ -837,9 +886,9 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
    assert(loadSegAddr);
    assert(codeSegAddr);
 
-   auto codeSeg = SequentialMemoryTracker{ codeSegAddr, info.textSize };
-   auto dataSeg = SequentialMemoryTracker{ dataSegAddr, info.dataSize };
-   auto loadSeg = SequentialMemoryTracker{ loadSegAddr, info.loadSize };
+   auto codeSeg = SequentialMemoryTracker { codeSegAddr, info.textSize };
+   auto dataSeg = SequentialMemoryTracker { dataSegAddr, info.dataSize };
+   auto loadSeg = SequentialMemoryTracker { loadSegAddr, info.loadSize };
 
    // Allocate sections from our memory segments
    for (auto &section : sections) {
@@ -877,6 +926,7 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
 
    // Read strtab
    auto shStrTab = reinterpret_cast<const char*>(sections[header.shstrndx].memory);
+
    if (!shStrTab) {
       gLog->error("Section name table missing");
       return nullptr;
@@ -905,6 +955,29 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
    if (sdata2) {
       loadedMod->sda2Base = sdata2->virtAddress + 0x8000;
    }
+
+   // Calculate TLS base
+   auto thrdata = findSection(sections, shStrTab, ".thrdata");
+
+   if (thrdata) {
+      loadedMod->tlsBase = thrdata->virtAddress;
+
+      // Calculate TLS size
+      auto start = thrdata->virtAddress;
+      auto end = thrdata->virtAddress + thrdata->virtSize;
+
+      for (auto &section : sections) {
+         if (section.header.flags & elf::SHF_TLS) {
+            emuassert(section.virtAddress >= start);
+            end = std::max(end, section.virtAddress + section.virtSize);
+         }
+      }
+
+      loadedMod->tlsSize = end - start;
+   }
+
+   loadedMod->tlsAlignShift = info.tlsAlignShift;
+   loadedMod->tlsModuleIndex = info.tlsModuleIndex;
 
    // Process exports
    if (!processExports(loadedMod, sections)) {
@@ -981,7 +1054,10 @@ loadRPL(const std::string &moduleName, const std::string &name, const gsl::span<
    return loadedMod;
 }
 
-void normalizeModuleName(const std::string& name, std::string& moduleName, std::string& fileName)
+static void
+normalizeModuleName(const std::string &name,
+                    std::string &moduleName,
+                    std::string &fileName)
 {
    if (!ends_with(name, ".rpl") && !ends_with(name, ".rpx")) {
       moduleName = name;
@@ -992,7 +1068,8 @@ void normalizeModuleName(const std::string& name, std::string& moduleName, std::
    }
 }
 
-LoadedModule *loadRPLNoLock(const std::string& name)
+LoadedModule *
+loadRPLNoLock(const std::string &name)
 {
    LoadedModule *module = nullptr;
    std::string moduleName;
@@ -1040,7 +1117,8 @@ LoadedModule *loadRPLNoLock(const std::string& name)
    }
 }
 
-LoadedModule *loadRPL(const std::string& name)
+LoadedModule *
+loadRPL(const std::string& name)
 {
    // Use the scheduler lock to protect access to the loaders memory
    internal::lockLoader();
@@ -1049,7 +1127,9 @@ LoadedModule *loadRPL(const std::string& name)
    return res;
 }
 
-LoadedModule * loadRPX(ppcsize_t maxCodeSize, const std::string& name)
+LoadedModule *
+loadRPX(ppcsize_t maxCodeSize,
+        const std::string& name)
 {
    // Initialise the code-heap information
    initialiseCodeHeap(maxCodeSize);
@@ -1065,7 +1145,8 @@ LoadedModule * loadRPX(ppcsize_t maxCodeSize, const std::string& name)
    return gUserModule;
 }
 
-LoadedModule * findModule(const std::string& name)
+LoadedModule *
+findModule(const std::string& name)
 {
    std::string moduleName;
    std::string fileName;
@@ -1081,17 +1162,21 @@ LoadedModule * findModule(const std::string& name)
    return itr->second;
 }
 
-LoadedModule * getUserModule()
+LoadedModule *
+getUserModule()
 {
    return gUserModule;
 }
 
-std::string * findSymbolNameForAddress(ppcaddr_t address)
+std::string *
+findSymbolNameForAddress(ppcaddr_t address)
 {
    auto symIter = gGlobalSymbolLookup.find(address);
+
    if (symIter == gGlobalSymbolLookup.end()) {
       return nullptr;
    }
+
    return &symIter->second;
 }
 

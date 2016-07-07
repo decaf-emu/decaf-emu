@@ -56,6 +56,7 @@ enum SectionFlags : uint32_t // sh_flags
    SHF_WRITE = 0x1,
    SHF_ALLOC = 0x2,
    SHF_EXECINSTR = 0x4,
+   SHF_TLS = 0x04000000,
    SHF_DEFLATED = 0x08000000,
    SHF_MASKPROC = 0xF0000000,
 };

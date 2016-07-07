@@ -19,6 +19,12 @@ sMemAlloc;
 static wfunc_ptr<void, void *>
 sMemFree;
 
+static wfunc_ptr<int, int, int, be_ptr<void> *>
+sTLSAlloc;
+
+static wfunc_ptr<void, void *>
+sTLSFree;
+
 
 /**
  * Default implementation for sMemAlloc
@@ -38,6 +44,29 @@ dynloadDefaultAlloc(int size,
  */
 static void
 dynloadDefaultFree(void *addr)
+{
+   internal::freeToDefaultHeap(addr);
+}
+
+
+/**
+ * Default implementation for sTLSAlloc
+ */
+static int
+tlsDefaultAlloc(int size,
+                int alignment,
+                be_ptr<void> *outPtr)
+{
+   *outPtr = internal::allocFromDefaultHeapEx(size, alignment);
+   return 0;
+}
+
+
+/**
+ * Default implementation for sTLSFree
+ */
+static void
+tlsDefaultFree(void *addr)
 {
    internal::freeToDefaultHeap(addr);
 }
@@ -69,6 +98,36 @@ OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn,
 {
    *outAllocFn = static_cast<ppcaddr_t>(sMemAlloc);
    *outFreeFn = static_cast<ppcaddr_t>(sMemFree);
+   return 0;
+}
+
+
+/**
+ * Set the allocator to be used for allocating data sections for dynamically loaded libraries.
+ */
+int
+OSDynLoad_SetTLSAllocator(ppcaddr_t allocFn,
+                          ppcaddr_t freeFn)
+{
+   if (!allocFn || !freeFn) {
+      return 0xBAD10017;
+   }
+
+   sTLSAlloc = allocFn;
+   sTLSFree = freeFn;
+   return 0;
+}
+
+
+/**
+ * Return the allocators set by OSDynLoad_SetAllocator.
+ */
+int
+OSDynLoad_GetTLSAllocator(be_val<ppcaddr_t> *outAllocFn,
+                          be_val<ppcaddr_t> *outFreeFn)
+{
+   *outAllocFn = static_cast<ppcaddr_t>(sTLSAlloc);
+   *outFreeFn = static_cast<ppcaddr_t>(sTLSFree);
    return 0;
 }
 
@@ -146,6 +205,9 @@ Module::registerDynLoadFunctions()
 
    RegisterInternalFunction(dynloadDefaultAlloc, sMemAlloc);
    RegisterInternalFunction(dynloadDefaultFree, sMemFree);
+
+   RegisterInternalFunction(tlsDefaultAlloc, sTLSAlloc);
+   RegisterInternalFunction(tlsDefaultFree, sTLSFree);
 }
 
 namespace internal
@@ -174,6 +236,28 @@ void
 dynLoadMemFree(void *addr)
 {
    sMemFree(addr);
+}
+
+
+/**
+ * Wrapper func to call function pointer set by OSDynLoad_SetTLSAllocator
+ */
+int
+dynLoadTLSAlloc(int size,
+                int alignment,
+                be_ptr<void> *outPtr)
+{
+   return sTLSAlloc(size, alignment, outPtr);
+}
+
+
+/**
+ * Wrapper func to call function pointer set by OSDynLoad_SetTLSAllocator
+ */
+void
+dynLoadTLSFree(void *addr)
+{
+   sTLSFree(addr);
 }
 
 } // namespace internal

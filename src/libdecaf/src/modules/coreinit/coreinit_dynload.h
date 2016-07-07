@@ -27,9 +27,7 @@ OSDynLoad_GetLoaderHeapStatistics
 OSDynLoad_GetModuleName
 OSDynLoad_GetNumberOfRPLs
 OSDynLoad_GetRPLInfo
-OSDynLoad_GetTLSAllocator
 OSDynLoad_IsModuleLoaded
-OSDynLoad_SetTLSAllocator
 */
 
 int
@@ -41,10 +39,22 @@ OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn,
                        be_val<ppcaddr_t> *outFreeFn);
 
 int
-OSDynLoad_Acquire(char const *name, be_ptr<coreinit::internal::LoadedModuleHandleData> *outHandle);
+OSDynLoad_SetTLSAllocator(ppcaddr_t allocFn,
+                          ppcaddr_t freeFn);
 
 int
-OSDynLoad_FindExport(coreinit::internal::LoadedModuleHandleData *module, int isData, char const *name, be_val<ppcaddr_t> *outAddr);
+OSDynLoad_GetTLSAllocator(be_val<ppcaddr_t> *outAllocFn,
+                          be_val<ppcaddr_t> *outFreeFn);
+
+int
+OSDynLoad_Acquire(char const *name,
+                  be_ptr<coreinit::internal::LoadedModuleHandleData> *outHandle);
+
+int
+OSDynLoad_FindExport(coreinit::internal::LoadedModuleHandleData *module,
+                     int isData,
+                     char const *name,
+                     be_val<ppcaddr_t> *outAddr);
 
 void
 OSDynLoad_Release(coreinit::internal::LoadedModuleHandleData *handle);
@@ -61,6 +71,14 @@ dynLoadMemAlloc(int size,
 
 void
 dynLoadMemFree(void *addr);
+
+int
+dynLoadTLSAlloc(int size,
+                int alignment,
+                be_ptr<void> *outPtr);
+
+void
+dynLoadTLSFree(void *addr);
 
 } // namespace internal
 

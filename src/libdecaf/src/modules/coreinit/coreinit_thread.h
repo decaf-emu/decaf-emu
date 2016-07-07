@@ -162,6 +162,14 @@ CHECK_OFFSET(OSThreadSimpleQueue, 0x00, head);
 CHECK_OFFSET(OSThreadSimpleQueue, 0x04, tail);
 CHECK_SIZE(OSThreadSimpleQueue, 0x08);
 
+struct OSTLSSection
+{
+   be_ptr<void> data;
+   UNKNOWN(4);
+};
+CHECK_OFFSET(OSTLSSection, 0x00, data);
+CHECK_SIZE(OSTLSSection, 0x08);
+
 struct OSThread
 {
    static const uint32_t Tag = 0x74487244;
@@ -279,7 +287,17 @@ struct OSThread
    //! The number of times this thread has been awoken.
    be_val<uint64_t> wakeCount;
 
-   UNKNOWN(0x69c - 0x60c);
+   UNKNOWN(0x664 - 0x610);
+
+   //! Number of TLS sections
+   be_val<uint16_t> tlsSectionCount;
+
+   UNKNOWN(0x2);
+
+   //! TLS Sections
+   be_ptr<OSTLSSection> tlsSections;
+
+   UNKNOWN(0x69c - 0x66C);
 };
 CHECK_OFFSET(OSThread, 0x320, tag);
 CHECK_OFFSET(OSThread, 0x324, state);
@@ -318,7 +336,18 @@ CHECK_OFFSET(OSThread, 0x5e0, suspendResult);
 CHECK_OFFSET(OSThread, 0x5e4, suspendQueue);
 CHECK_OFFSET(OSThread, 0x600, coreTimeConsumedNs);
 CHECK_OFFSET(OSThread, 0x608, wakeCount);
+CHECK_OFFSET(OSThread, 0x664, tlsSectionCount);
+CHECK_OFFSET(OSThread, 0x668, tlsSections);
 CHECK_SIZE(OSThread, 0x69c);
+
+struct tls_index
+{
+   be_val<uint32_t> moduleIndex;
+   be_val<uint32_t> offset;
+};
+CHECK_OFFSET(tls_index, 0x00, moduleIndex);
+CHECK_OFFSET(tls_index, 0x04, offset);
+CHECK_SIZE(tls_index, 0x08);
 
 #pragma pack(pop)
 
@@ -457,6 +486,9 @@ OSWakeupThread(OSThreadQueue *queue);
 
 void
 OSYieldThread();
+
+void *
+tls_get_addr(tls_index *index);
 
 /** @} */
 

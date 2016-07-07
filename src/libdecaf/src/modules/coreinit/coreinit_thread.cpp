@@ -3,6 +3,7 @@
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
+#include "coreinit_dynload.h"
 #include "coreinit_memheap.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
@@ -285,6 +286,14 @@ void
 OSExitThread(int value)
 {
    auto thread = OSGetCurrentThread();
+
+   // Free tlsSection data
+   if (thread->tlsSections) {
+      internal::dynLoadTLSFree(thread->tlsSections);
+      thread->tlsSectionCount = 0;
+      thread->tlsSections = 0;
+   }
+
    internal::lockScheduler();
    thread->exitValue = value;
 
@@ -899,6 +908,44 @@ OSYieldThread()
 }
 
 
+/**
+ * Gets the TLS data for tls_index.
+ */
+void *
+tls_get_addr(tls_index *index)
+{
+   auto thread = OSGetCurrentThread();
+   auto module = internal::getUserModule();
+   emuassert(index->moduleIndex == module->tlsModuleIndex);
+
+   if (thread->tlsSectionCount <= index->moduleIndex) {
+      auto oldSections = thread->tlsSections;
+      auto oldCount = thread->tlsSectionCount;
+      thread->tlsSectionCount = index->moduleIndex + 1;
+
+      // Allocate and zero new tlsSections
+      internal::dynLoadTLSAlloc(thread->tlsSectionCount * sizeof(OSTLSSection), 4, reinterpret_cast<be_ptr<void> *>(&thread->tlsSections));
+      std::memset(&thread->tlsSections[oldCount], 0, sizeof(OSTLSSection) * (thread->tlsSectionCount - oldCount));
+
+      // Copy and free old tlsSections
+      if (oldSections) {
+         std::memcpy(thread->tlsSections, oldSections, oldCount * sizeof(OSTLSSection));
+         internal::dynLoadTLSFree(oldSections);
+      }
+   }
+
+   auto &section = thread->tlsSections[index->moduleIndex];
+
+   if (!section.data) {
+      // Allocate and copy TLS data
+      internal::dynLoadTLSAlloc(module->tlsSize, 1u << module->tlsAlignShift, &section.data);
+      std::memcpy(section.data, mem::translate<void>(module->tlsBase), module->tlsSize);
+   }
+
+   return mem::translate<void *>(section.data.getAddress() + index->offset);
+}
+
+
 void
 Module::initialiseThreadFunctions()
 {
@@ -948,6 +995,7 @@ Module::registerThreadFunctions()
    RegisterKernelFunction(OSTestThreadCancel);
    RegisterKernelFunction(OSWakeupThread);
    RegisterKernelFunction(OSYieldThread);
+   RegisterKernelFunctionName("__tls_get_addr", tls_get_addr);
 
    RegisterKernelFunctionName("internal_SleepAlarmHandler", SleepAlarmHandler);
 }

@@ -27,7 +27,8 @@ struct LoadedSection
 
 struct LoadedModule
 {
-   ppcaddr_t findExport(const std::string& name) const
+   ppcaddr_t
+   findExport(const std::string& name) const
    {
       auto itr = exports.find(name);
 
@@ -40,13 +41,14 @@ struct LoadedModule
 
    template<typename ReturnType, typename... Args>
    wfunc_ptr<ReturnType, Args...>
-      findFuncExport(const std::string& name) const
+   findFuncExport(const std::string& name) const
    {
       return wfunc_ptr<ReturnType, Args...>(findExport(name));
    }
 
    template<typename Type>
-   Type *findDataExport(const std::string& name) const
+   Type *
+   findDataExport(const std::string& name) const
    {
       return reinterpret_cast<Type *>(mem::translate(findExport(name)));
    }
@@ -57,23 +59,38 @@ struct LoadedModule
    ppcsize_t defaultStackSize = 0;
    ppcaddr_t sdaBase = 0;
    ppcaddr_t sda2Base = 0;
+   uint32_t tlsModuleIndex = 0;
+   ppcaddr_t tlsBase = 0;
+   ppcsize_t tlsAlignShift = 0;
+   ppcsize_t tlsSize = 0;
    std::vector<LoadedSection> sections;
    std::map<std::string, ppcaddr_t> exports;
    std::map<std::string, ppcaddr_t> symbols;
 };
 
-void lockLoader();
-void unlockLoader();
+void
+lockLoader();
 
-LoadedModule * loadRPX(ppcsize_t maxCodeSize, const std::string& name);
-LoadedModule * loadRPL(const std::string& name);
+void
+unlockLoader();
 
-LoadedModule * findModule(const std::string& name);
-LoadedModule * getUserModule();
+LoadedModule *
+loadRPX(ppcsize_t maxCodeSize, const std::string& name);
 
-std::string * findSymbolNameForAddress(ppcaddr_t address);
+LoadedModule *
+loadRPL(const std::string& name);
 
-std::map<std::string, LoadedModule*> getLoadedModules();
+LoadedModule *
+findModule(const std::string& name);
+
+LoadedModule *
+getUserModule();
+
+std::string *
+findSymbolNameForAddress(ppcaddr_t address);
+
+std::map<std::string, LoadedModule*>
+getLoadedModules();
 
 } // namespace internal
 
