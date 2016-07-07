@@ -274,9 +274,9 @@ void GLDriver::poll()
 
 void GLDriver::syncPoll(std::function<void(gl::GLuint, gl::GLuint)> swapFunc)
 {
-   if (!mRunning) {
+   if (mRunState == RunState::None) {
       initGL();
-      mRunning = true;
+      mRunState = RunState::Running;
    }
 
    mSwapFunc = swapFunc;
@@ -285,18 +285,21 @@ void GLDriver::syncPoll(std::function<void(gl::GLuint, gl::GLuint)> swapFunc)
 
 void GLDriver::run()
 {
-   mRunning = true;
+   if (mRunState != RunState::None) {
+      return;
+   }
+   mRunState = RunState::Running;
 
    initGL();
 
-   while (mRunning) {
+   while (mRunState == RunState::Running) {
       poll();
    }
 }
 
 void GLDriver::stop()
 {
-   mRunning = false;
+   mRunState = RunState::Stopped;
 
    // Wake the GPU thread
    gpu::queueUserBuffer(nullptr, 0);

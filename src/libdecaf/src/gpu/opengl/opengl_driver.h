@@ -271,7 +271,13 @@ private:
    }
 
 private:
-   volatile bool mRunning = false;
+   enum class RunState {
+      None,
+      Running,
+      Stopped
+   };
+
+   volatile RunState mRunState = RunState::None;
    std::thread mThread;
    std::function<void(unsigned int, unsigned int)> mSwapFunc;
 
