@@ -271,13 +271,12 @@ struct OSThread
    //! Queue of threads waiting for a thread to be suspended.
    OSThreadQueue suspendQueue;
 
-   UNKNOWN(8); // uint64_t
+   UNKNOWN(0xC);
 
-   // The total amount of core time consumed by this thread
-   // (Does not include time while Running)
+   //! The total amount of core time consumed by this thread (Does not include time while Running)
    be_val<uint64_t> coreTimeConsumedNs;
 
-   // The number of times this thread has been awoken.
+   //! The number of times this thread has been awoken.
    be_val<uint64_t> wakeCount;
 
    UNKNOWN(0x69c - 0x60c);
@@ -317,6 +316,8 @@ CHECK_OFFSET(OSThread, 0x5d8, requestFlag);
 CHECK_OFFSET(OSThread, 0x5dc, needSuspend);
 CHECK_OFFSET(OSThread, 0x5e0, suspendResult);
 CHECK_OFFSET(OSThread, 0x5e4, suspendQueue);
+CHECK_OFFSET(OSThread, 0x600, coreTimeConsumedNs);
+CHECK_OFFSET(OSThread, 0x608, wakeCount);
 CHECK_SIZE(OSThread, 0x69c);
 
 #pragma pack(pop)
