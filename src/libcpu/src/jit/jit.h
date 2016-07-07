@@ -16,5 +16,3 @@ bool hasInstruction(espresso::InstructionID instrId);
 
 }
 }
-
-void fallbacksPrint();

@@ -45,7 +45,6 @@ public:
 
       state = zbx;
       membase = zsi;
-      interruptAddr = asmjit::x86::r12;
       cia = zdi;
 
       xmm0 = asmjit::x86::xmm0;
@@ -79,6 +78,8 @@ public:
       ppcreserve = PPCTSReg(reserve);
       ppcreserveAddress = PPCTSReg(reserveAddress);
       ppcreserveData = PPCTSReg(reserveData);
+
+      ppcinterrupt = PPCTSReg(interrupt);
 #undef PPCTSReg
    }
 
@@ -95,7 +96,6 @@ public:
 
    asmjit::X86GpReg state;
    asmjit::X86GpReg membase;
-   asmjit::X86GpReg interruptAddr;
    asmjit::X86GpReg cia;
 
    asmjit::X86GpReg eax;
@@ -120,6 +120,8 @@ public:
    asmjit::X86Mem ppcgqr[8];
    asmjit::X86Mem ppcnia;
 
+   asmjit::X86Mem ppcinterrupt;
+
    asmjit::X86Mem ppcreserve;
    asmjit::X86Mem ppcreserveAddress;
    asmjit::X86Mem ppcreserveData;
@@ -132,7 +134,7 @@ T asmjit_cast(Z* base, size_t offset = 0)
 }
 
 using JitCode = void *;
-using JitCall = Core*(*)(Core*, uint32_t*, JitCode);
+using JitCall = Core*(*)(Core*, JitCode);
 using JitFinale = JitCall;
 
 using JumpLabelMap = std::map<uint32_t, asmjit::Label>;

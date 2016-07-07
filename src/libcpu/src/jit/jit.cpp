@@ -47,9 +47,8 @@ initStubs()
    a.push(asmjit::x86::r12);
    a.sub(a.zsp, 0x38);
    a.mov(a.zbx, a.zcx);
-   a.mov(asmjit::x86::r12, a.zdx);
    a.mov(a.zsi, static_cast<uint64_t>(mem::base()));
-   a.jmp(asmjit::x86::r8d);
+   a.jmp(a.zdx);
 
    a.bind(extroLabel);
    a.mov(a.ppcnia, a.eax);
@@ -274,7 +273,7 @@ get(uint32_t addr)
 Core *
 execute(Core *core, JitCode block)
 {
-   return gCallFn(core, reinterpret_cast<uint32_t*>(&core->interrupt), block);
+   return gCallFn(core, block);
 }
 
 void

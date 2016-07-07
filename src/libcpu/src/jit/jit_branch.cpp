@@ -34,7 +34,7 @@ static void
 jit_b_check_interrupt(PPCEmuAssembler& a)
 {
    auto noInterrupt = a.newLabel();
-   a.cmp(asmjit::X86Mem(a.interruptAddr, 0, 4), 0);
+   a.cmp(a.ppcinterrupt, 0);
    a.je(noInterrupt);
    a.call(asmjit::Ptr(jit_interrupt_stub));
    a.bind(noInterrupt);
