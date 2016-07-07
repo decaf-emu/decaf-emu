@@ -1,5 +1,6 @@
 #include "common/log.h"
 #include "common/bitutils.h"
+#include "common/emuassert.h"
 #include "common/fastregionmap.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
@@ -8,8 +9,9 @@
 #include "jit_insreg.h"
 #include "jit_vmemruntime.h"
 #include "mem.h"
-#include <vector>
 #include <cfenv>
+#include <map>
+#include <vector>
 
 namespace cpu
 {
@@ -32,14 +34,27 @@ JitFinale gFinaleFn;
 void
 registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr);
 
-void
+JitCode
+jit_continue(uint32_t addr, JitCode *jumpSource);
+
+static void
 initStubs()
 {
    PPCEmuAssembler a(sRuntime);
 
+   // Visual studio is annoying
+   if (JIT_DEBUG) {
+      for (auto i = 0; i < 12; ++i) {
+         a.nop();
+      }
+   }
+
    auto introLabel = a.newLabel();
    auto extroLabel = a.newLabel();
+   auto exitLabel = a.newLabel();
 
+   // This is invoked to set up the neccessary state for
+   //  the JIT block we want to execute.
    a.bind(introLabel);
    a.push(a.zbx);
    a.push(a.zdi);
@@ -50,9 +65,21 @@ initStubs()
    a.mov(a.zsi, static_cast<uint64_t>(mem::base()));
    a.jmp(a.zdx);
 
+   // This is the piece of code executed when we are finished
+   //  executing the block of code started above.
    a.bind(extroLabel);
+   a.cmp(a.ecx, CALLBACK_ADDR);
+   a.je(exitLabel);
+
+   // If we should continue generating, lets call the
+   //  generator instead to find our new address!
+   a.mov(a.zax, asmjit::Ptr(jit_continue));
+   a.call(a.zax);
+   a.jmp(a.zax);
+
+   // This is how we exit back to the caller
+   a.bind(exitLabel);
    a.mov(a.ppcnia, a.eax);
-   a.mov(a.zax, a.state);
    a.add(a.zsp, 0x38);
    a.pop(asmjit::x86::r12);
    a.pop(a.zsi);
@@ -134,30 +161,79 @@ clearCache()
 
 using JumpTargetList = std::vector<uint32_t>;
 
+void
+jit_b_direct(PPCEmuAssembler& a, ppcaddr_t addr)
+{
+   auto target = sJitBlocks.find(addr);
+   if (target) {
+      // We already know where this function is, let's just jump
+      //  directly to it rather than wasting time going through
+      //  the JIT dispatcher!
+      a.jmp(asmjit::Ptr(target));
+   } else {
+      // We have not JIT'd this section yet.  Let's allocate some
+      //  space for an aligned MOV instruction, then mark it as a
+      //  relocation so it can be filled by the 'linker' below.
+      auto relocLbl = a.newLabel();
+      a.bind(relocLbl);
+
+      // Save 29 bytes of memory so we have room to do set up the
+      //  call during relocation once we know where its going to
+      //  reside in the host jit memory section.
+      for (auto i = 0; i < 32; ++i) {
+         a.int3();
+      }
+      a.jmp(a.zax);
+
+      a.relocLabels.emplace_back(addr, relocLbl);
+   }
+}
+
 bool
 gen(JitBlock &block)
 {
    PPCEmuAssembler a(sRuntime);
+   a.relocLabels.reserve(10);
+
+   struct TargetLblPair {
+      uint32_t idx;
+      asmjit::Label label;
+   };
+   std::map<uint32_t, TargetLblPair> targetLbls;
+   for (uint32_t i = 0; i < block.targets.size(); ++i) {
+      targetLbls.emplace(block.targets[i].first, TargetLblPair{ i, a.newLabel() });
+   }
+
    auto codeStart = a.newLabel();
    uint32_t lclCia;
    a.bind(codeStart);
 
    // Visual studio disassembler sucks.  We need to write some NOPS!
-   for (auto i = 0; i < 8; ++i) {
-      a.nop();
+   if (JIT_DEBUG) {
+      for (auto i = 0; i < 12; ++i) {
+         a.nop();
+      }
    }
 
-   for (lclCia = block.start; lclCia < block.end; lclCia += 4) {
+   for (lclCia = block.start; lclCia < block.end; lclCia += 4)
+   {
+      auto targetIter = targetLbls.find(lclCia);
+      if (targetIter != targetLbls.end()) {
+         // This is a jump target, we should flush any register caches
+         //  and then also insert a label so we can find this location.
+         a.bind(targetIter->second.label);
+      }
+
       if (JIT_DEBUG) {
          a.mov(a.cia, lclCia);
          a.mov(a.ppcnia, lclCia + 4);
       }
 
-      a.genCia = lclCia;
-
       auto instr = mem::read<espresso::Instruction>(lclCia);
       auto data = espresso::decodeInstruction(instr);
       auto genSuccess = false;
+
+      a.genCia = lclCia;
 
       auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
       if (fptr) {
@@ -173,8 +249,7 @@ gen(JitBlock &block)
       }
    }
 
-   a.mov(a.eax, lclCia);
-   a.jmp(asmjit::Ptr(gFinaleFn));
+   jit_b_direct(a, lclCia);
 
    auto func = asmjit_cast<JitCode>(a.make());
 
@@ -183,15 +258,69 @@ gen(JitBlock &block)
       return false;
    }
 
+   // Write in the relocation data that jumps to the Finale, which can
+   //  later be overwritten atomically by the generator.
+   for (auto &reloc : a.relocLabels) {
+      // We use a trick here to save some bytes.  We write the addr
+      //  part of the info while relocating in spite of being able
+      //  to do it during initial generation, this allows us to move
+      //  it to before or after the aligned MOV which saves us some
+      //  bytes that would otherwise be wasted on NOP's.
+
+      auto targetAddr = asmjit::Ptr(gFinaleFn);
+
+      // Find our bytes of memory allocated above...
+      auto mem = asmjit_cast<uint8_t*>(func, a.getLabelOffset(reloc.second));
+
+      auto aligned_offset = align_up(mem + 15 + 2, 8) - mem;
+      auto aligned_mov_offset = aligned_offset - 2;
+      auto aligned_base_offset = reinterpret_cast<intptr_t>(mem + aligned_offset);
+
+      // Write `MOV ECX, addr`
+      mem[0] = 0xB9;
+      *reinterpret_cast<uint32_t*>(&mem[1]) = reloc.first;
+
+      // Write `MOV RDX, relmem`
+      mem[5] = 0x48;
+      mem[6] = 0xBA;
+      *reinterpret_cast<intptr_t*>(&mem[7]) = aligned_base_offset;
+
+      // Fill the gap from alignment with NOP
+      for (auto i = 15; i < aligned_offset; ++i) {
+         mem[i] = 0x90;
+      }
+
+      // Write `MOV RAX, target`
+      mem[aligned_mov_offset + 0] = 0x48;
+      mem[aligned_mov_offset + 1] = 0xB8;
+      auto atomicAddr = &mem[aligned_mov_offset + 2];
+      emuassert(align_up(atomicAddr, 8) == atomicAddr);
+      *reinterpret_cast<uint64_t*>(atomicAddr) = targetAddr;
+
+      // Fill the remaining space with NOP
+      for (auto i = aligned_mov_offset + 10; i < 32; ++i) {
+         mem[i] = 0x90;
+      }
+   }
+
+   // Calculate the starting address of the block
    auto baseAddr = asmjit_cast<JitCode>(func, a.getLabelOffset(codeStart));
    block.entry = baseAddr;
+
+   // Generate all the offset labels for these relocations
+   for (auto &target : targetLbls) {
+      if (a.isLabelBound(target.second.label)) {
+         block.targets[target.second.idx].second =
+            asmjit_cast<JitCode>(func, a.getLabelOffset(target.second.label));
+      }
+   }
+
    return true;
 }
 
 bool
 identBlock(JitBlock& block)
 {
-   JumpTargetList jumpTargets;
    auto fnStart = block.start;
    auto fnEnd = fnStart;
    auto lclCia = fnStart;
@@ -206,6 +335,8 @@ identBlock(JitBlock& block)
          gLog->warn("Bailing on JIT {:08x} ident due to failed decode at {:08x}", block.start, lclCia);
          break;
       }
+
+      // Targets should be added to block.targets if we know of any...
 
       switch (data->id) {
       case espresso::InstructionID::b:
@@ -233,10 +364,6 @@ identBlock(JitBlock& block)
    }
 
    block.end = fnEnd;
-
-   for (auto i : jumpTargets) {
-      block.targets[i] = nullptr;
-   }
 
    return true;
 }
@@ -270,6 +397,31 @@ get(uint32_t addr)
    return block.entry;
 }
 
+JitCode
+jit_continue(uint32_t nia, JitCode *jumpSource)
+{
+   // This would be strange...
+   emuassert(nia != CALLBACK_ADDR);
+
+   // Log the branch if branch tracing is enabled
+   if (gBranchTraceHandler) {
+      gBranchTraceHandler(nia);
+   }
+
+   // Locate or generate the next JIT section
+   JitCode jitFn = get(nia);
+
+   // We do not update the jumpSource if branch tracing is enabled,
+   //  this is because it would cause those branches to avoid calling
+   //  here ever again...
+   if (jumpSource && !gBranchTraceHandler) {
+      // Aligned writes on x64 are guarenteed to be atomic
+      *jumpSource = jitFn;
+   }
+
+   return jitFn;
+}
+
 Core *
 execute(Core *core, JitCode block)
 {
@@ -289,19 +441,8 @@ resume()
    // Just to help when debugging
    core->cia = 0xFFFFFFFD;
 
-   // Loop around executing blocks of JIT'd code
-   while (core->nia != cpu::CALLBACK_ADDR) {
-      JitCode jitFn = get(core->nia);
-      if (!jitFn) {
-         throw std::runtime_error("failed to generate JIT block to execute");
-      }
-
-      core = execute(core, jitFn);
-
-      if (gBranchTraceHandler) {
-         gBranchTraceHandler(core->nia);
-      }
-   }
+   JitCode jitFn = jit_continue(core->nia, nullptr);
+   execute(core, jitFn);
 }
 
 bool

@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <vector>
 #include <asmjit/asmjit.h>
 #include "../cpu.h"
 
@@ -93,6 +94,7 @@ public:
    }
 
    uint32_t genCia;
+   std::vector<std::pair<uint32_t, asmjit::Label>> relocLabels;
 
    asmjit::X86GpReg state;
    asmjit::X86GpReg membase;
@@ -154,7 +156,7 @@ struct JitBlock
    uint32_t end;
 
    JitCode entry;
-   std::map<uint32_t, JitCode> targets;
+   std::vector<std::pair<uint32_t, JitCode>> targets;
 };
 
 } // namespace jit

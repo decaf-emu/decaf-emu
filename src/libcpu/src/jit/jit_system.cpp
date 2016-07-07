@@ -167,7 +167,8 @@ kc(PPCEmuAssembler& a, Instruction instr)
    a.cmp(a.ppcnia, a.genCia + 4);
    a.je(niaUnchangedLbl);
 
-   a.mov(a.eax, a.ppcnia);
+   a.mov(a.ecx, a.ppcnia);
+   a.mov(a.zdx, 0);
    a.jmp(asmjit::Ptr(gFinaleFn));
 
    a.bind(niaUnchangedLbl);

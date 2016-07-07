@@ -40,6 +40,8 @@ jit_b_check_interrupt(PPCEmuAssembler& a)
    a.bind(noInterrupt);
 }
 
+void jit_b_direct(PPCEmuAssembler& a, ppcaddr_t addr);
+
 static bool
 b(PPCEmuAssembler& a, Instruction instr)
 {
@@ -55,8 +57,7 @@ b(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.ppclr, a.eax);
    }
 
-   a.mov(a.eax, nia);
-   a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
+   jit_b_direct(a, nia);
    return true;
 }
 
@@ -106,17 +107,18 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr)
    //   this if-block as we use a JMP instruction with
    //   early exit in the else block...
    if (flags & BcBranchCTR) {
-      a.mov(a.eax, a.ppcctr);
-      a.and_(a.eax, ~0x3);
+      a.mov(a.ecx, a.ppcctr);
+      a.and_(a.ecx, ~0x3);
+      a.mov(a.zdx, 0);
       a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    } else if (flags & BcBranchLR) {
-      a.mov(a.eax, a.ppclr);
-      a.and_(a.eax, ~0x3);
+      a.mov(a.ecx, a.ppclr);
+      a.and_(a.ecx, ~0x3);
+      a.mov(a.zdx, 0);
       a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    } else {
       uint32_t nia = a.genCia + sign_extend<16>(instr.bd << 2);
-      a.mov(a.eax, nia);
-      a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
+      jit_b_direct(a, nia);
    }
 
    a.bind(doCondFailLbl);
