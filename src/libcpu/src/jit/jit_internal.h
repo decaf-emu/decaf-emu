@@ -91,6 +91,8 @@ public:
       }
    }
 
+   uint32_t genCia;
+
    asmjit::X86GpReg state;
    asmjit::X86GpReg membase;
    asmjit::X86GpReg interruptAddr;

@@ -122,18 +122,7 @@ registerInstruction(espresso::InstructionID id, jitinstrfptr_t fptr)
 bool
 hasInstruction(espresso::InstructionID instrId)
 {
-   switch (instrId) {
-   case espresso::InstructionID::b:
-      return true;
-   case espresso::InstructionID::bc:
-      return true;
-   case espresso::InstructionID::bcctr:
-      return true;
-   case espresso::InstructionID::bclr:
-      return true;
-   default:
-      return getInstructionHandler(instrId) != nullptr;
-   }
+   return getInstructionHandler(instrId) != nullptr;
 }
 
 void
@@ -143,18 +132,6 @@ clearCache()
    initialiseRuntime();
    sJitBlocks.clear();
 }
-
-bool
-jit_b(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia);
-
-bool
-jit_bc(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia);
-
-bool
-jit_bcctr(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia);
-
-bool
-jit_bclr(PPCEmuAssembler& a, espresso::Instruction instr, uint32_t cia);
 
 using JumpTargetList = std::vector<uint32_t>;
 
@@ -177,24 +154,15 @@ gen(JitBlock &block)
          a.mov(a.ppcnia, lclCia + 4);
       }
 
+      a.genCia = lclCia;
+
       auto instr = mem::read<espresso::Instruction>(lclCia);
       auto data = espresso::decodeInstruction(instr);
       auto genSuccess = false;
 
-      if (data->id == espresso::InstructionID::b) {
-         genSuccess = jit_b(a, instr, lclCia);
-      } else if (data->id == espresso::InstructionID::bc) {
-         genSuccess = jit_bc(a, instr, lclCia);
-      } else if (data->id == espresso::InstructionID::bcctr) {
-         genSuccess = jit_bcctr(a, instr, lclCia);
-      } else if (data->id == espresso::InstructionID::bclr) {
-         genSuccess = jit_bclr(a, instr, lclCia);
-      } else {
-         auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
-
-         if (fptr) {
-            genSuccess = fptr(a, instr);
-         }
+      auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
+      if (fptr) {
+         genSuccess = fptr(a, instr);
       }
 
       if (!genSuccess) {

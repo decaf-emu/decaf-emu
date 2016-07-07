@@ -24,14 +24,14 @@ enum BcFlags
    BcBranchCTR = 1 << 3
 };
 
-void
+static void
 jit_interrupt_stub()
 {
    this_core::checkInterrupts();
 }
 
-void
-jit_b_check_interrupt(PPCEmuAssembler& a, uint32_t cia)
+static void
+jit_b_check_interrupt(PPCEmuAssembler& a)
 {
    auto noInterrupt = a.newLabel();
    a.cmp(asmjit::X86Mem(a.interruptAddr, 0, 4), 0);
@@ -40,18 +40,18 @@ jit_b_check_interrupt(PPCEmuAssembler& a, uint32_t cia)
    a.bind(noInterrupt);
 }
 
-bool
-jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
+static bool
+b(PPCEmuAssembler& a, Instruction instr)
 {
-   jit_b_check_interrupt(a, cia);
+   jit_b_check_interrupt(a);
 
    uint32_t nia = sign_extend<26>(instr.li << 2);
    if (!instr.aa) {
-      nia += cia;
+      nia += a.genCia;
    }
 
    if (instr.lk) {
-      a.mov(a.eax, cia + 4u);
+      a.mov(a.eax, a.genCia + 4u);
       a.mov(a.ppclr, a.eax);
    }
 
@@ -62,9 +62,9 @@ jit_b(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
 
 template<unsigned flags>
 static bool
-bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
+bcGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   jit_b_check_interrupt(a, cia);
+   jit_b_check_interrupt(a);
 
    uint32_t bo = instr.bo;
    auto doCondFailLbl = a.newLabel();
@@ -98,7 +98,7 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
    }
 
    if (instr.lk) {
-      a.mov(a.eax, cia + 4);
+      a.mov(a.eax, a.genCia + 4);
       a.mov(a.ppclr, a.eax);
    }
 
@@ -114,7 +114,7 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
       a.and_(a.eax, ~0x3);
       a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    } else {
-      uint32_t nia = cia + sign_extend<16>(instr.bd << 2);
+      uint32_t nia = a.genCia + sign_extend<16>(instr.bd << 2);
       a.mov(a.eax, nia);
       a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    }
@@ -124,28 +124,30 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
    return true;
 }
 
-bool
-jit_bc(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
+static bool
+bc(PPCEmuAssembler& a, Instruction instr)
 {
-   return bcGeneric<BcCheckCtr | BcCheckCond>(a, instr, cia);
+   return bcGeneric<BcCheckCtr | BcCheckCond>(a, instr);
 }
 
-bool
-jit_bcctr(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
+static bool
+bcctr(PPCEmuAssembler& a, Instruction instr)
 {
-   return bcGeneric<BcBranchCTR | BcCheckCond>(a, instr, cia);
+   return bcGeneric<BcBranchCTR | BcCheckCond>(a, instr);
 }
 
-bool
-jit_bclr(PPCEmuAssembler& a, Instruction instr, uint32_t cia)
+static bool
+bclr(PPCEmuAssembler& a, Instruction instr)
 {
-   return bcGeneric<BcBranchLR | BcCheckCtr | BcCheckCond>(a, instr, cia);
+   return bcGeneric<BcBranchLR | BcCheckCtr | BcCheckCond>(a, instr);
 }
 
 void registerBranchInstructions()
 {
-   // Branch instructions are handled directly
-   //   within the JIT generator...
+   RegisterInstruction(b);
+   RegisterInstruction(bc);
+   RegisterInstruction(bcctr);
+   RegisterInstruction(bclr);
 }
 
 } // namespace jit
