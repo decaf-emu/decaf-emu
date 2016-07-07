@@ -153,10 +153,25 @@ kc(PPCEmuAssembler& a, Instruction instr)
       return false;
    }
 
+   // Call the KC
    a.mov(a.zcx, asmjit::Ptr(kc->func));
    a.mov(a.zdx, asmjit::Ptr(kc->user_data));
    a.call(asmjit::Ptr(&kc_stub));
    a.mov(a.state, a.zax);
+
+   // Check if the KC adjusted nia.  If it has, we need to return
+   //  to the dispatcher.  Note that we assume the cache was already
+   //  cleared before this instruction since KC requires that anyways.
+   auto niaUnchangedLbl = a.newLabel();
+
+   a.cmp(a.ppcnia, a.genCia + 4);
+   a.je(niaUnchangedLbl);
+
+   a.mov(a.eax, a.ppcnia);
+   a.jmp(asmjit::Ptr(gFinaleFn));
+
+   a.bind(niaUnchangedLbl);
+
    return true;
 }
 
