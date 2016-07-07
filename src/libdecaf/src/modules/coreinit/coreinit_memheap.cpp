@@ -23,13 +23,13 @@ sDefaultMEMAllocFromDefaultHeapEx;
 static wfunc_ptr<void, void*>
 sDefaultMEMFreeToDefaultHeap;
 
-be_wfunc_ptr<void*, uint32_t>*
+be_wfunc_ptr<void*, uint32_t> *
 pMEMAllocFromDefaultHeap;
 
-be_wfunc_ptr<void*, uint32_t, int>*
+be_wfunc_ptr<void*, uint32_t, int> *
 pMEMAllocFromDefaultHeapEx;
 
-be_wfunc_ptr<void, void*>*
+be_wfunc_ptr<void, void*> *
 pMEMFreeToDefaultHeap;
 
 static std::array<CommonHeap *, MEMBaseHeapType::Max>
@@ -192,6 +192,27 @@ MEMSetBaseHeapHandle(MEMBaseHeapType type,
    }
 }
 
+static void *
+defaultAllocFromDefaultHeap(uint32_t size)
+{
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
+   return MEMAllocFromExpHeap(reinterpret_cast<ExpandedHeap*>(heap), size);
+}
+
+static void *
+defaultAllocFromDefaultHeapEx(uint32_t size, int32_t alignment)
+{
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
+   return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
+}
+
+static void
+defaultFreeToDefaultHeap(void *block)
+{
+   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
+   return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
+}
+
 // TODO: Move to coreinit::internal
 void
 CoreInitDefaultHeap()
@@ -259,9 +280,9 @@ Module::registerMembaseFunctions()
    RegisterKernelDataName("MEMAllocFromDefaultHeapEx", pMEMAllocFromDefaultHeapEx);
    RegisterKernelDataName("MEMFreeToDefaultHeap", pMEMFreeToDefaultHeap);
 
-   RegisterInternalFunction(internal::defaultAllocFromDefaultHeap, sDefaultMEMAllocFromDefaultHeap);
-   RegisterInternalFunction(internal::defaultAllocFromDefaultHeapEx, sDefaultMEMAllocFromDefaultHeapEx);
-   RegisterInternalFunction(internal::defaultFreeToDefaultHeap, sDefaultMEMFreeToDefaultHeap);
+   RegisterInternalFunction(defaultAllocFromDefaultHeap, sDefaultMEMAllocFromDefaultHeap);
+   RegisterInternalFunction(defaultAllocFromDefaultHeapEx, sDefaultMEMAllocFromDefaultHeapEx);
+   RegisterInternalFunction(defaultFreeToDefaultHeap, sDefaultMEMFreeToDefaultHeap);
 
    RegisterInternalData(sForegroundMemlist);
    RegisterInternalData(sMEM1Memlist);
@@ -312,24 +333,21 @@ sysStrDup(const std::string &src)
 }
 
 void *
-defaultAllocFromDefaultHeap(uint32_t size)
+allocFromDefaultHeap(uint32_t size)
 {
-   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   return MEMAllocFromExpHeap(reinterpret_cast<ExpandedHeap*>(heap), size);
+   return (*pMEMAllocFromDefaultHeap)(size);
 }
 
 void *
-defaultAllocFromDefaultHeapEx(uint32_t size, int32_t alignment)
+allocFromDefaultHeapEx(uint32_t size, int32_t alignment)
 {
-   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
+   return (*pMEMAllocFromDefaultHeapEx)(size, alignment);
 }
 
 void
-defaultFreeToDefaultHeap(void *block)
+freeToDefaultHeap(void *block)
 {
-   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
+   return (*pMEMFreeToDefaultHeap)(block);
 }
 
 } // namespace internal

@@ -45,13 +45,13 @@ gx2rFree(GX2RResourceFlags flags, void *buffer)
 void *
 gx2rDefaultAlloc(GX2RResourceFlags flags, uint32_t size, uint32_t align)
 {
-   return coreinit::internal::defaultAllocFromDefaultHeapEx(size, align);
+   return coreinit::internal::allocFromDefaultHeapEx(size, align);
 }
 
 void
 gx2rDefaultFree(GX2RResourceFlags flags, void *buffer)
 {
-   coreinit::internal::defaultFreeToDefaultHeap(buffer);
+   coreinit::internal::freeToDefaultHeap(buffer);
 }
 
 } // namespace internal

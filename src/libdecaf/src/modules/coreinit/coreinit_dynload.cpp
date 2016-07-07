@@ -13,7 +13,7 @@
 namespace coreinit
 {
 
-static wfunc_ptr<int, int, int, be_val<uint32_t>*>
+static wfunc_ptr<int, int, int, be_ptr<void> *>
 sMemAlloc;
 
 static wfunc_ptr<void, void *>
@@ -24,11 +24,11 @@ sMemFree;
  * Default implementation for sMemAlloc
  */
 static int
-dynloadDefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
+dynloadDefaultAlloc(int size,
+                    int alignment,
+                    be_ptr<void> *outPtr)
 {
-   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   auto memory = MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
-   *outPtr = mem::untranslate(memory);
+   *outPtr = internal::allocFromDefaultHeapEx(size, alignment);
    return 0;
 }
 
@@ -39,8 +39,7 @@ dynloadDefaultAlloc(int size, int alignment, be_val<uint32_t> *outPtr)
 static void
 dynloadDefaultFree(void *addr)
 {
-   auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), addr);
+   internal::freeToDefaultHeap(addr);
 }
 
 
@@ -48,7 +47,8 @@ dynloadDefaultFree(void *addr)
  * Set the allocator to be used for allocating data sections for dynamically loaded libraries.
  */
 int
-OSDynLoad_SetAllocator(ppcaddr_t allocFn, ppcaddr_t freeFn)
+OSDynLoad_SetAllocator(ppcaddr_t allocFn,
+                       ppcaddr_t freeFn)
 {
    if (!allocFn || !freeFn) {
       return 0xBAD10017;
@@ -64,7 +64,8 @@ OSDynLoad_SetAllocator(ppcaddr_t allocFn, ppcaddr_t freeFn)
  * Return the allocators set by OSDynLoad_SetAllocator.
  */
 int
-OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn, be_val<ppcaddr_t> *outFreeFn)
+OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn,
+                       be_val<ppcaddr_t> *outFreeFn)
 {
    *outAllocFn = static_cast<ppcaddr_t>(sMemAlloc);
    *outFreeFn = static_cast<ppcaddr_t>(sMemFree);
@@ -78,7 +79,8 @@ OSDynLoad_GetAllocator(be_val<ppcaddr_t> *outAllocFn, be_val<ppcaddr_t> *outFree
  * If the library is already loaded then increase ref count.
  */
 int
-OSDynLoad_Acquire(char const *name, be_ptr<coreinit::internal::LoadedModuleHandleData> *outHandle)
+OSDynLoad_Acquire(char const *name,
+                  be_ptr<coreinit::internal::LoadedModuleHandleData> *outHandle)
 {
    auto module = coreinit::internal::loadRPL(name);
 
@@ -97,7 +99,10 @@ OSDynLoad_Acquire(char const *name, be_ptr<coreinit::internal::LoadedModuleHandl
  * Find the export from a library handle.
  */
 int
-OSDynLoad_FindExport(coreinit::internal::LoadedModuleHandleData *handle, int isData, char const *name, be_val<ppcaddr_t> *outAddr)
+OSDynLoad_FindExport(coreinit::internal::LoadedModuleHandleData *handle,
+                     int isData,
+                     char const *name,
+                     be_val<ppcaddr_t> *outAddr)
 {
    auto module = handle->ptr;
    auto exportPtr = module->findExport(name);
@@ -150,11 +155,13 @@ namespace internal
  * Wrapper func to call function pointer set by OSDynLoad_SetAllocator
  */
 int
-dynLoadMemAlloc(int size, int alignment, void **outPtr)
+dynLoadMemAlloc(int size,
+                int alignment,
+                void **outPtr)
 {
-   auto value = coreinit::internal::sysAlloc<be_val<ppcaddr_t>>();
+   auto value = coreinit::internal::sysAlloc<be_ptr<void>>();
    auto result = sMemAlloc(size, alignment, value);
-   *outPtr = mem::translate(*value);
+   *outPtr = *value;
    coreinit::internal::sysFree(value);
    return result;
 }

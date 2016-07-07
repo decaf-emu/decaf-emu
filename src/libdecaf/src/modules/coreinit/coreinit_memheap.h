@@ -99,13 +99,13 @@ char *
 sysStrDup(const std::string &src);
 
 void *
-defaultAllocFromDefaultHeap(uint32_t size);
+allocFromDefaultHeap(uint32_t size);
 
 void *
-defaultAllocFromDefaultHeapEx(uint32_t size, int alignment);
+allocFromDefaultHeapEx(uint32_t size, int32_t alignment);
 
 void
-defaultFreeToDefaultHeap(void *block);
+freeToDefaultHeap(void *block);
 
 } // namespace internal
 

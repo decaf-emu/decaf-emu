@@ -55,7 +55,9 @@ namespace internal
 {
 
 int
-dynLoadMemAlloc(int size, int alignment, void **outPtr);
+dynLoadMemAlloc(int size,
+                int alignment,
+                void **outPtr);
 
 void
 dynLoadMemFree(void *addr);
