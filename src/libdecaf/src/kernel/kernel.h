@@ -32,6 +32,9 @@ setContext(coreinit::OSContext *next);
 void
 exitProcess(int code);
 
+bool
+hasExited();
+
 int
 getExitCode();
 

@@ -124,7 +124,7 @@ DecafSDL::run(const std::string &gamePath)
    // Start emulator
    decaf::start();
 
-   while (!shouldQuit) {
+   while (!shouldQuit && !decaf::hasExited()) {
       SDL_Event event;
 
       while (SDL_PollEvent(&event)) {

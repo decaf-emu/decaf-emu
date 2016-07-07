@@ -148,6 +148,12 @@ start()
    }
 }
 
+bool
+hasExited()
+{
+   return kernel::hasExited();
+}
+
 int
 waitForExit()
 {

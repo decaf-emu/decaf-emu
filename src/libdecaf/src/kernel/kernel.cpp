@@ -338,6 +338,12 @@ exitProcess(int code)
    setContext(nullptr);
 }
 
+bool
+hasExited()
+{
+   return !gRunning;
+}
+
 int
 getExitCode()
 {
