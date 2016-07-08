@@ -1,3 +1,4 @@
+#include "common/emuassert.h"
 #include "common/platform.h"
 #include "jit_vmemruntime.h"
 
@@ -70,8 +71,13 @@ namespace cpu
 namespace jit
 {
 
+RUNTIME_FUNCTION *
+sFunctionTable = nullptr;
+
 void registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr)
 {
+   emuassert(!sFunctionTable);
+
    // This function assumes the following prologue for the jit intro:
    //   PUSH RBX
    //   PUSH ZDI
@@ -113,6 +119,13 @@ void registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr)
    rfuncs[0].UnwindData = static_cast<DWORD>(reinterpret_cast<intptr_t>(unwindInfo) - rootAddress);
 
    RtlAddFunctionTable(rfuncs, 1, rootAddress);
+   sFunctionTable = rfuncs;
+}
+
+void unregisterUnwindTable()
+{
+   RtlDeleteFunctionTable(sFunctionTable);
+   sFunctionTable = nullptr;
 }
 
 } // namespace jit

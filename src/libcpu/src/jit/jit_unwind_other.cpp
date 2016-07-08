@@ -13,6 +13,10 @@ void registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr)
 {
 }
 
+void unregisterUnwindTable()
+{
+}
+
 } // namespace jit
 
 } // namespace cpu
