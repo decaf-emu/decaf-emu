@@ -74,6 +74,9 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
    case SPR::UGQR7:
       a.mov(a.eax, a.ppcgpr[7]);
       break;
+   case SPR::UPIR:
+      a.mov(a.eax, a.ppccoreid);
+      break;
    default:
       gLog->error("Invalid mfspr SPR {}", static_cast<uint32_t>(spr));
    }

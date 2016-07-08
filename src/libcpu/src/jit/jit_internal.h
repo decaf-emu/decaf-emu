@@ -70,7 +70,6 @@ public:
       ppclr = PPCTSReg(lr);
       ppcctr = PPCTSReg(ctr);
       ppcfpscr = PPCTSReg(fpscr);
-      ppcnia = PPCTSReg(nia);
 
       for (auto i = 0; i < 8; ++i) {
          ppcgqr[i] = PPCTSReg(gqr[i].value);
@@ -80,7 +79,10 @@ public:
       ppcreserveAddress = PPCTSReg(reserveAddress);
       ppcreserveData = PPCTSReg(reserveData);
 
+      ppcnia = PPCTSReg(nia);
+      ppccoreid = PPCTSReg(id);
       ppcinterrupt = PPCTSReg(interrupt);
+
 #undef PPCTSReg
    }
 
@@ -120,8 +122,9 @@ public:
    asmjit::X86Mem ppcctr;
    asmjit::X86Mem ppcfpscr;
    asmjit::X86Mem ppcgqr[8];
-   asmjit::X86Mem ppcnia;
 
+   asmjit::X86Mem ppcnia;
+   asmjit::X86Mem ppccoreid;
    asmjit::X86Mem ppcinterrupt;
 
    asmjit::X86Mem ppcreserve;
