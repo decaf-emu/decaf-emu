@@ -11,14 +11,44 @@ namespace jit
 {
 
 void
-updateFloatConditionRegister(PPCEmuAssembler& a, const asmjit::X86GpReg& tmp, const asmjit::X86GpReg& tmp2)
+updateFloatConditionRegister(PPCEmuAssembler& a)
 {
    //state->cr.cr1 = state->fpscr.cr1;
-   assert(0);
+   throw std::logic_error("Updating the float condition register is not supported.");
 }
 
+static void
+truncateToSingle(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+{
+   // TODO: Check if we can do this without the extra register...
+   auto tmp = a.allocXmmTmp();
+   a.cvtsd2ss(tmp, reg);
+   a.cvtss2sd(reg, tmp);
+}
+
+static void
+negateXmm(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+{
+   auto maskGp = a.allocGpTmp();
+   auto maskXmm = a.allocXmmTmp();
+   a.mov(maskGp, UINT64_C(0x8000000000000000));
+   a.movq(maskXmm, maskGp);
+   a.pxor(reg, maskXmm);
+}
+
+static void
+absXmm(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+{
+   auto maskGp = a.allocGpTmp();
+   auto maskXmm = a.allocXmmTmp();
+   a.mov(maskGp, UINT64_C(0x7FFFFFFFFFFFFFFF));
+   a.movq(maskXmm, maskGp);
+   a.pand(reg, maskXmm);
+}
+
+template <bool ShouldTruncate>
 static bool
-fadd(PPCEmuAssembler& a, Instruction instr)
+faddGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
       return jit_fallback(a, instr);
@@ -26,18 +56,34 @@ fadd(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   auto dst = a.allocRegister(a.fpr[instr.frD]);
+   auto srcA = a.loadRegister(a.fpr[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegister(a.fpr[instr.frB]));
+   a.movq(dst, srcA);
+   a.addsd(dst, tmpSrcB);
 
-   a.addsd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+   if (ShouldTruncate) {
+      truncateToSingle(a, dst);
+   }
 
    return true;
 }
 
 static bool
+fadd(PPCEmuAssembler& a, Instruction instr)
+{
+   return faddGeneric<false>(a, instr);
+}
+
+static bool
 fadds(PPCEmuAssembler& a, Instruction instr)
+{
+   return faddGeneric<true>(a, instr);
+}
+
+template <bool ShouldTruncate>
+static bool
+fdivGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
       return jit_fallback(a, instr);
@@ -45,15 +91,15 @@ fadds(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   auto dst = a.allocRegister(a.fpr[instr.frD]);
+   auto srcA = a.loadRegister(a.fpr[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegister(a.fpr[instr.frB]));
+   a.movq(dst, srcA);
+   a.divsd(dst, tmpSrcB);
 
-   a.addsd(a.xmm0, a.xmm1);
-
-   a.cvtsd2ss(a.xmm1, a.xmm0);
-   a.cvtss2sd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+   if (ShouldTruncate) {
+      truncateToSingle(a, dst);
+   }
 
    return true;
 }
@@ -61,24 +107,18 @@ fadds(PPCEmuAssembler& a, Instruction instr)
 static bool
 fdiv(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
-
-   a.divsd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fdivGeneric<false>(a, instr);
 }
 
 static bool
 fdivs(PPCEmuAssembler& a, Instruction instr)
+{
+   return fdivGeneric<true>(a, instr);
+}
+
+template <bool ShouldTruncate>
+static bool
+fmulGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
       return jit_fallback(a, instr);
@@ -86,15 +126,15 @@ fdivs(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   auto dst = a.allocRegister(a.fpr[instr.frD]);
+   auto srcA = a.loadRegister(a.fpr[instr.frA]);
+   auto tmpSrcC = a.allocXmmTmp(a.loadRegister(a.fpr[instr.frC]));
+   a.movq(dst, srcA);
+   a.mulsd(dst, tmpSrcC);
 
-   a.divsd(a.xmm0, a.xmm1);
-
-   a.cvtsd2ss(a.xmm1, a.xmm0);
-   a.cvtss2sd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+   if (ShouldTruncate) {
+      truncateToSingle(a, dst);
+   }
 
    return true;
 }
@@ -102,24 +142,18 @@ fdivs(PPCEmuAssembler& a, Instruction instr)
 static bool
 fmul(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
-
-   a.mulsd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fmulGeneric<false>(a, instr);
 }
 
 static bool
 fmuls(PPCEmuAssembler& a, Instruction instr)
+{
+   return fmulGeneric<true>(a, instr);
+}
+
+template <bool ShouldTruncate>
+static bool
+fsubGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
       return jit_fallback(a, instr);
@@ -127,15 +161,15 @@ fmuls(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
+   auto dst = a.allocRegister(a.fpr[instr.frD]);
+   auto srcA = a.loadRegister(a.fpr[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegister(a.fpr[instr.frB]));
+   a.movq(dst, srcA);
+   a.subsd(dst, tmpSrcB);
 
-   a.mulsd(a.xmm0, a.xmm1);
-
-   a.cvtsd2ss(a.xmm1, a.xmm0);
-   a.cvtss2sd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+   if (ShouldTruncate) {
+      truncateToSingle(a, dst);
+   }
 
    return true;
 }
@@ -143,24 +177,18 @@ fmuls(PPCEmuAssembler& a, Instruction instr)
 static bool
 fsub(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
-
-   a.subsd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fsubGeneric<false>(a, instr);
 }
 
 static bool
 fsubs(PPCEmuAssembler& a, Instruction instr)
+{
+   return fsubGeneric<true>(a, instr);
+}
+
+template <bool ShouldTruncate, bool ShouldNegate>
+static bool
+fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
       return jit_fallback(a, instr);
@@ -168,15 +196,25 @@ fsubs(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
+   auto dst = a.allocRegister(a.fpr[instr.frD]);
+   auto srcA = a.loadRegister(a.fpr[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegister(a.fpr[instr.frB]));
+   auto tmpSrcC = a.allocXmmTmp(a.loadRegister(a.fpr[instr.frC]));
+   a.movq(dst, srcA);
+   a.mulsd(dst, tmpSrcC);
+   a.addsd(dst, tmpSrcB);
 
-   a.subsd(a.xmm0, a.xmm1);
+   if (ShouldNegate) {
+      auto maskGp = a.allocGpTmp();
+      auto maskXmm = a.allocXmmTmp();
+      a.mov(maskGp, UINT64_C(0x8000000000000000));
+      a.movq(maskXmm, maskGp);
+      a.pxor(dst, maskXmm);
+   }
 
-   a.cvtsd2ss(a.xmm1, a.xmm0);
-   a.cvtss2sd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+   if (ShouldTruncate) {
+      truncateToSingle(a, dst);
+   }
 
    return true;
 }
@@ -184,25 +222,18 @@ fsubs(PPCEmuAssembler& a, Instruction instr)
 static bool
 fmadd(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
-   a.mulsd(a.xmm0, a.xmm1);
-
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
-   a.addsd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fmaddGeneric<false, false>(a, instr);
 }
 
 static bool
 fmadds(PPCEmuAssembler& a, Instruction instr)
+{
+   return fmaddGeneric<true, false>(a, instr);
+}
+
+template <bool ShouldTruncate, bool ShouldNegate>
+static bool
+fmsubGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
       return jit_fallback(a, instr);
@@ -210,17 +241,21 @@ fmadds(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
-   a.mulsd(a.xmm0, a.xmm1);
+   auto dst = a.allocRegister(a.fpr[instr.frD]);
+   auto srcA = a.loadRegister(a.fpr[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegister(a.fpr[instr.frB]));
+   auto tmpSrcC = a.allocXmmTmp(a.loadRegister(a.fpr[instr.frC]));
+   a.movq(dst, srcA);
+   a.mulsd(dst, tmpSrcC);
+   a.subsd(dst, tmpSrcB);
 
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
-   a.addsd(a.xmm0, a.xmm1);
+   if (ShouldNegate) {
+      negateXmm(a, dst);
+   }
 
-   a.cvtsd2ss(a.xmm1, a.xmm0);
-   a.cvtss2sd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+   if (ShouldTruncate) {
+      truncateToSingle(a, dst);
+   }
 
    return true;
 }
@@ -228,149 +263,37 @@ fmadds(PPCEmuAssembler& a, Instruction instr)
 static bool
 fmsub(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
-   a.mulsd(a.xmm0, a.xmm1);
-
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
-   a.subsd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fmsubGeneric<false, false>(a, instr);
 }
 
 static bool
 fmsubs(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
-   a.mulsd(a.xmm0, a.xmm1);
-
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
-   a.subsd(a.xmm0, a.xmm1);
-
-   a.cvtsd2ss(a.xmm1, a.xmm0);
-   a.cvtss2sd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fmsubGeneric<true, false>(a, instr);
 }
 
 static bool
 fnmadd(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
-   a.mulsd(a.xmm0, a.xmm1);
-
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
-   a.addsd(a.xmm0, a.xmm1);
-
-   a.mov(a.zax, UINT64_C(0x8000000000000000));
-   a.movq(a.xmm1, a.zax);
-   a.pxor(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fmaddGeneric<false, true>(a, instr);
 }
 
 static bool
 fnmadds(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
-   a.mulsd(a.xmm0, a.xmm1);
-
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
-   a.addsd(a.xmm0, a.xmm1);
-
-   a.mov(a.zax, UINT64_C(0x8000000000000000));
-   a.movq(a.xmm1, a.zax);
-   a.pxor(a.xmm0, a.xmm1);
-
-   a.cvtsd2ss(a.xmm1, a.xmm0);
-   a.cvtss2sd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fmaddGeneric<true, true>(a, instr);
 }
 
 static bool
 fnmsub(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
-   a.mulsd(a.xmm0, a.xmm1);
-
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
-   a.subsd(a.xmm0, a.xmm1);
-
-   a.mov(a.zax, UINT64_C(0x8000000000000000));
-   a.movq(a.xmm1, a.zax);
-   a.pxor(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fmsubGeneric<false, true>(a, instr);
 }
 
 static bool
 fnmsubs(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   a.movq(a.xmm0, a.ppcfpr[instr.frA]);
-   a.movq(a.xmm1, a.ppcfpr[instr.frC]);
-   a.mulsd(a.xmm0, a.xmm1);
-
-   a.movq(a.xmm1, a.ppcfpr[instr.frB]);
-   a.subsd(a.xmm0, a.xmm1);
-
-   a.mov(a.zax, UINT64_C(0x8000000000000000));
-   a.movq(a.xmm1, a.zax);
-   a.pxor(a.xmm0, a.xmm1);
-
-   a.cvtsd2ss(a.xmm1, a.xmm0);
-   a.cvtss2sd(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fmsubGeneric<true, true>(a, instr);
 }
 
 static bool
@@ -382,10 +305,33 @@ frsp(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   a.movq(a.xmm0, a.ppcfpr[instr.frB]);
-   a.cvtsd2ss(a.xmm1, a.xmm0);
-   a.cvtss2sd(a.xmm0, a.xmm1);
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+   auto dst = a.allocRegister(a.fpr[instr.frD]);
+   auto srcA = a.loadRegister(a.fpr[instr.frB]);
+   a.movq(dst, srcA);
+   truncateToSingle(a, dst);
+
+   return true;
+}
+
+template <bool ShouldNegate>
+static bool
+fabsGeneric(PPCEmuAssembler& a, Instruction instr)
+{
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
+   // FPSCR, FPRF supposed to be updated here...
+
+   auto dst = a.allocRegister(a.fpr[instr.frD]);
+   auto srcA = a.loadRegister(a.fpr[instr.frB]);
+   a.movq(dst, srcA);
+
+   absXmm(a, dst);
+
+   if (ShouldNegate) {
+      negateXmm(a, dst);
+   }
 
    return true;
 }
@@ -393,45 +339,13 @@ frsp(PPCEmuAssembler& a, Instruction instr)
 static bool
 fabs(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   a.movq(a.xmm0, a.ppcfpr[instr.frB]);
-
-   a.mov(a.zax, UINT64_C(0x7FFFFFFFFFFFFFFF));
-   a.movq(a.xmm1, a.zax);
-   a.pand(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fabsGeneric<false>(a, instr);
 }
 
 static bool
 fnabs(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   a.movq(a.xmm0, a.ppcfpr[instr.frB]);
-
-   a.mov(a.zax, UINT64_C(0x7FFFFFFFFFFFFFFF));
-   a.movq(a.xmm1, a.zax);
-   a.pand(a.xmm0, a.xmm1);
-
-   a.mov(a.zax, UINT64_C(0x8000000000000000));
-   a.movq(a.xmm1, a.zax);
-   a.pxor(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
-
-   return true;
+   return fabsGeneric<true>(a, instr);
 }
 
 static bool
@@ -443,8 +357,9 @@ fmr(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   a.movq(a.xmm0, a.ppcfpr[instr.frB]);
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+   auto dst = a.allocRegister(a.fpr[instr.frD]);
+   auto srcA = a.loadRegister(a.fpr[instr.frB]);
+   a.movq(dst, srcA);
 
    return true;
 }
@@ -458,13 +373,11 @@ fneg(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   a.movq(a.xmm0, a.ppcfpr[instr.frB]);
+   auto dst = a.allocRegister(a.fpr[instr.frD]);
+   auto srcA = a.loadRegister(a.fpr[instr.frB]);
+   a.movq(dst, srcA);
 
-   a.mov(a.zax, UINT64_C(0x8000000000000000));
-   a.movq(a.xmm1, a.zax);
-   a.pxor(a.xmm0, a.xmm1);
-
-   a.movq(a.ppcfpr[instr.frD], a.xmm0);
+   negateXmm(a, dst);
 
    return true;
 }

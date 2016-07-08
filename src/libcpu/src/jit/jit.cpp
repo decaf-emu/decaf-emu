@@ -21,6 +21,7 @@ namespace jit
 
 static const bool JIT_DEBUG = true;
 static const int JIT_MAX_INST = 3000;
+static const bool JIT_REGCACHE = true;
 
 static std::vector<jitinstrfptr_t>
 sInstructionMap;
@@ -59,15 +60,15 @@ initStubs()
    // This is invoked to set up the neccessary state for
    //  the JIT block we want to execute.
    a.bind(introLabel);
-   a.push(a.rbp);
-   a.push(a.zbx);
-   a.push(a.zdi);
-   a.push(a.zsi);
+   a.push(asmjit::x86::rbp);
+   a.push(asmjit::x86::rbx);
+   a.push(asmjit::x86::rdi);
+   a.push(asmjit::x86::rsi);
    a.push(asmjit::x86::r12);
    a.push(asmjit::x86::r13);
    a.push(asmjit::x86::r14);
    a.push(asmjit::x86::r15);
-   a.sub(a.zsp, 0x38);
+   a.sub(asmjit::x86::rsp, 0x38);
    a.mov(a.zbx, a.zcx);
    a.mov(a.zsi, static_cast<uint64_t>(mem::base()));
    a.jmp(a.zdx);
@@ -75,7 +76,7 @@ initStubs()
    // This is the piece of code executed when we are finished
    //  executing the block of code started above.
    a.bind(extroLabel);
-   a.cmp(a.ecx, CALLBACK_ADDR);
+   a.cmp(asmjit::x86::ecx, CALLBACK_ADDR);
    a.je(exitLabel);
 
    // If we should continue generating, lets call the
@@ -86,16 +87,16 @@ initStubs()
 
    // This is how we exit back to the caller
    a.bind(exitLabel);
-   a.mov(a.ppcnia, a.eax);
-   a.add(a.zsp, 0x38);
+   a.mov(a.niaMem, asmjit::x86::eax);
+   a.add(asmjit::x86::rsp, 0x38);
    a.pop(asmjit::x86::r15);
    a.pop(asmjit::x86::r14);
    a.pop(asmjit::x86::r13);
    a.pop(asmjit::x86::r12);
-   a.pop(a.zsi);
-   a.pop(a.zdi);
-   a.pop(a.zbx);
-   a.pop(a.zbp);
+   a.pop(asmjit::x86::rsi);
+   a.pop(asmjit::x86::rdi);
+   a.pop(asmjit::x86::rbx);
+   a.pop(asmjit::x86::rbp);
    a.ret();
 
    auto basePtr = a.make();
@@ -179,6 +180,8 @@ using JumpTargetList = std::vector<uint32_t>;
 void
 jit_b_direct(PPCEmuAssembler& a, ppcaddr_t addr)
 {
+   a.saveAll();
+
    auto target = sJitBlocks.find(addr);
    if (target) {
       // We already know where this function is, let's just jump
@@ -198,7 +201,7 @@ jit_b_direct(PPCEmuAssembler& a, ppcaddr_t addr)
       for (auto i = 0; i < 32; ++i) {
          a.int3();
       }
-      a.jmp(a.zax);
+      a.jmp(asmjit::x86::rax);
 
       a.relocLabels.emplace_back(addr, relocLbl);
    }
@@ -240,8 +243,7 @@ gen(JitBlock &block)
       }
 
       if (JIT_DEBUG) {
-         a.mov(a.cia, lclCia);
-         a.mov(a.ppcnia, lclCia + 4);
+         a.mov(a.niaMem, lclCia + 4);
       }
 
       auto instr = mem::read<espresso::Instruction>(lclCia);
@@ -257,6 +259,10 @@ gen(JitBlock &block)
 
       if (!genSuccess) {
          a.int3();
+      }
+
+      if (!JIT_REGCACHE) {
+         a.evictAll();
       }
 
       if (JIT_DEBUG) {

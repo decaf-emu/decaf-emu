@@ -29,79 +29,80 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
       return jit_fallback(a, instr);
    }
 
+   auto src = a.allocGpTmp().r32();
+
    if ((flags & LoadZeroRA) && instr.rA == 0) {
-      a.mov(a.ecx, 0u);
+      a.mov(src, 0);
    } else {
-      a.mov(a.ecx, a.ppcgpr[instr.rA]);
+      a.mov(src, a.loadRegister(a.gpr[instr.rA]));
    }
 
    if (flags & LoadIndexed) {
-      a.add(a.ecx, a.ppcgpr[instr.rB]);
+      a.add(src, a.loadRegister(a.gpr[instr.rB]));
    } else {
       auto x = sign_extend<16, int32_t>(instr.d);
       if (x != 0) {
-         a.add(a.ecx, x);
+         a.add(src, x);
       }
    }
 
-   a.mov(a.zdx, a.zcx);
-   a.add(a.zdx, a.membase);
+   auto data = a.allocGpTmp().r64();
 
-   if (sizeof(Type) == 1) {
-      a.mov(a.eax, 0);
-      a.mov(a.eax.r8(), asmjit::X86Mem(a.zdx, 0));
-   } else if (sizeof(Type) == 2) {
-      a.mov(a.eax, 0);
-      a.mov(a.eax.r16(), asmjit::X86Mem(a.zdx, 0));
-      if (!(flags & LoadByteReverse)) {
-         a.xchg(a.eax.r8Hi(), a.eax.r8Lo());
+   {
+      auto hostSrc = a.allocGpTmp().r64();
+      a.mov(hostSrc, src);
+      a.add(hostSrc, a.membaseReg);
+
+      if (sizeof(Type) == 1) {
+         a.mov(data, 0);
+         a.mov(data.r8(), asmjit::X86Mem(hostSrc, 0));
+      } else if (sizeof(Type) == 2) {
+         a.mov(data, 0);
+         a.mov(data.r16(), asmjit::X86Mem(hostSrc, 0));
+         if (!(flags & LoadByteReverse)) {
+            a.shl(data, 8);
+            a.bswap(data.r32());
+            a.shr(data, 8);
+         }
+      } else if (sizeof(Type) == 4) {
+         a.mov(data.r32(), asmjit::X86Mem(hostSrc, 0));
+         if (!(flags & LoadByteReverse)) {
+            a.bswap(data.r32());
+         }
+      } else if (sizeof(Type) == 8) {
+         a.mov(data, asmjit::X86Mem(hostSrc, 0));
+         if (!(flags & LoadByteReverse)) {
+            a.bswap(data);
+         }
+      } else {
+         throw std::logic_error("Unexpected type size");
       }
-   } else if (sizeof(Type) == 4) {
-      a.mov(a.eax, asmjit::X86Mem(a.zdx, 0));
-      if (!(flags & LoadByteReverse)) {
-         a.bswap(a.eax);
-      }
-   } else if (sizeof(Type) == 8) {
-      a.mov(a.zax, asmjit::X86Mem(a.zdx, 0));
-      if (!(flags & LoadByteReverse)) {
-         a.bswap(a.zax);
-      }
-   } else {
-      assert(0);
    }
 
    if (std::is_floating_point<Type>::value) {
       if (sizeof(Type) == 4) {
-         a.movq(a.xmm0, a.zax);
-         a.cvtss2sd(a.xmm1, a.xmm0);
-         a.movq(a.ppcfprps[instr.rD][0], a.xmm1);
+         auto tmp = a.allocXmmTmp();
+         auto dst = a.allocXmmRegister(a.fpr[instr.rD]);
+         a.movq(tmp, data);
+         a.cvtss2sd(dst, tmp);
       } else {
          assert(sizeof(Type) == 8);
-         a.mov(a.ppcfprps[instr.rD][0], a.zax);
+         auto dst = a.allocXmmRegister(a.fpr[instr.rD]);
+         a.movq(dst, data);
       }
    } else {
       if (flags & LoadSignExtend) {
-         assert(sizeof(Type) == 2);
-         a.movsx(a.eax, a.eax.r16());
+         emuassert(sizeof(Type) == 2);
+         a.movsx(data.r32(), data.r16());
       }
 
-      a.mov(a.ppcgpr[instr.rD], a.eax);
-   }
-
-   if (flags & LoadReserve) {
-      /*
-      a.mov(a.ppcreserve, 1u);
-      a.mov(a.ppcreserveAddress, a.ecx);
-      a.mov(a.zdx, a.ecx);
-      a.add(a.zdx, a.membase);
-      a.mov(a.eax, asmjit::X86Mem(a.zdx, 0));
-      a.bswap(a.eax);
-      a.mov(a.ppcreserveData, a.eax);
-      */
+      auto dst = a.allocGpRegister(a.gpr[instr.rD]);
+      a.mov(dst, data);
    }
 
    if (flags & LoadUpdate) {
-      a.mov(a.ppcgpr[instr.rA], a.ecx);
+      auto addrDst = a.allocRegister(a.gpr[instr.rA]);
+      a.mov(addrDst, src);
    }
 
    return true;
@@ -276,21 +277,23 @@ lmw(PPCEmuAssembler& a, Instruction instr)
 {
    auto o = sign_extend<16, int32_t>(instr.d);
 
+   auto src = a.allocGpTmp().r64();
+
    if (instr.rA) {
-      a.mov(a.ecx, a.ppcgpr[instr.rA]);
+      a.mov(src, a.loadRegister(a.gpr[instr.rA]));
       if (o != 0) {
-         a.add(a.ecx, o);
+         a.add(src, o);
       }
    } else {
-      a.mov(a.ecx, o);
+      a.mov(src, o);
    }
 
-   a.add(a.zcx, a.membase);
+   a.add(src, a.membaseReg);
 
    for (int r = instr.rD, d = 0; r <= 31; ++r, d += 4) {
-      a.mov(a.eax, asmjit::X86Mem(a.zcx, d));
-      a.bswap(a.eax);
-      a.mov(a.ppcgpr[r], a.eax);
+      auto dst = a.allocRegister(a.gpr[r]);
+      a.mov(dst, asmjit::X86Mem(src, d));
+      a.bswap(dst);
    }
 
    return true;
@@ -341,65 +344,45 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
       return jit_fallback(a, instr);
    }
 
+   auto dst = a.allocGpTmp().r32();
+
+   auto x = sign_extend<16, int32_t>(instr.d);
    if ((flags & StoreZeroRA) && instr.rA == 0) {
       if (flags & StoreIndexed) {
-         a.mov(a.ecx, a.ppcgpr[instr.rB]);
+         a.mov(dst, a.loadRegister(a.gpr[instr.rB]));
       } else {
-         a.mov(a.ecx, sign_extend<16, int32_t>(instr.d));
+         a.mov(dst, x);
       }
    } else {
-      a.mov(a.ecx, a.ppcgpr[instr.rA]);
+      a.mov(dst, a.loadRegister(a.gpr[instr.rA]));
 
       if (flags & StoreIndexed) {
-         a.add(a.ecx, a.ppcgpr[instr.rB]);
+         a.add(dst, a.loadRegister(a.gpr[instr.rB]));
       } else {
-         auto x = sign_extend<16, int32_t>(instr.d);
+
          if (x != 0) {
-            a.add(a.ecx, x);
+            a.add(dst, x);
          }
       }
    }
 
-   if (flags & StoreConditional) {
-      /*
-      state->cr.cr0 = state->xer.so ? ConditionRegisterFlag::SummaryOverflow : 0;
-
-      if (state->reserve) {
-      // Store is succesful, clear reserve bit and set CR0[EQ]
-      state->cr.cr0 |= ConditionRegisterFlag::Equal;
-      state->reserve = false;
-      } else {
-      // Reserve bit is not set, do not write.
-      return;
-      }
-      */
-   }
-
-   a.mov(a.zdx, a.zcx);
-   a.add(a.zdx, a.membase);
+   auto data = a.allocGpTmp().r64();
 
    if (flags & StoreFloatAsInteger) {
-      assert(sizeof(Type) == 4);
-      a.mov(a.eax, a.ppcfprps[instr.rS][0]);
+      emuassert(sizeof(Type) == 4);
+
+      a.mov(data.r32(), a.loadGpRegister(a.fpr[instr.rS]));
    } else if (std::is_floating_point<Type>::value) {
       if (sizeof(Type) == 4) {
-         a.movq(a.xmm0, a.ppcfprps[instr.rS][0]);
-         a.cvtsd2ss(a.xmm1, a.xmm0);
-         a.movq(a.eax, a.xmm1);
+         auto tmp = a.allocXmmTmp();
+         a.cvtsd2ss(tmp, a.loadXmmRegister(a.fpr[instr.rS]));
+         a.movq(data.r32(), tmp);
       } else {
-         assert(sizeof(Type) == 8);
-         a.mov(a.zax, a.ppcfpr[instr.rS]);
+         emuassert(sizeof(Type) == 8);
+         a.mov(data, a.loadGpRegister(a.fpr[instr.rS]));
       }
    } else {
-      if (sizeof(Type) == 1) {
-         a.mov(a.eax.r8(), a.ppcgpr[instr.rS]);
-      } else if (sizeof(Type) == 2) {
-         a.mov(a.eax.r16(), a.ppcgpr[instr.rS]);
-      } else if (sizeof(Type) == 4) {
-         a.mov(a.eax, a.ppcgpr[instr.rS]);
-      } else {
-         assert(0);
-      }
+      a.mov(data.r32(), a.loadRegister(a.gpr[instr.rS]));
    }
 
    if (!(flags & StoreByteReverse)) {
@@ -407,30 +390,40 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
          // Inverted reverse logic means we have
          //    to check for this but do nothing.
       } else if (sizeof(Type) == 2) {
-         a.xchg(a.eax.r8Hi(), a.eax.r8Lo());
+         a.shl(data, 8);
+         a.bswap(data.r32());
+         a.shr(data, 8);
       } else if (sizeof(Type) == 4) {
-         a.bswap(a.eax);
+         a.bswap(data.r32());
       } else if (sizeof(Type) == 8) {
-         a.bswap(a.zax);
+         a.bswap(data);
       } else {
-         assert(0);
+         throw std::logic_error("Unexpected type size");
       }
    }
 
-   if (sizeof(Type) == 1) {
-      a.mov(asmjit::X86Mem(a.zdx, 0), a.eax.r8());
-   } else if (sizeof(Type) == 2) {
-      a.mov(asmjit::X86Mem(a.zdx, 0), a.eax.r16());
-   } else if (sizeof(Type) == 4) {
-      a.mov(asmjit::X86Mem(a.zdx, 0), a.eax);
-   } else if (sizeof(Type) == 8) {
-      a.mov(asmjit::X86Mem(a.zdx, 0), a.zax);
-   } else {
-      assert(0);
+   {
+      auto hostDst = a.allocGpTmp().r64();
+      a.mov(hostDst, dst);
+      a.add(hostDst, a.membaseReg);
+
+      if (sizeof(Type) == 1) {
+         a.mov(asmjit::X86Mem(hostDst, 0), data.r8());
+      } else if (sizeof(Type) == 2) {
+         a.mov(asmjit::X86Mem(hostDst, 0), data.r16());
+      } else if (sizeof(Type) == 4) {
+         a.mov(asmjit::X86Mem(hostDst, 0), data.r32());
+      } else if (sizeof(Type) == 8) {
+         a.mov(asmjit::X86Mem(hostDst, 0), data);
+      } else {
+         throw std::logic_error("Unexpected type size");
+      }
    }
 
+
    if (flags & StoreUpdate) {
-      a.mov(a.ppcgpr[instr.rA], a.ecx);
+      auto addrDst = a.allocRegister(a.gpr[instr.rA]);
+      a.mov(addrDst, dst);
    }
 
    return true;
@@ -587,21 +580,24 @@ stmw(PPCEmuAssembler& a, Instruction instr)
 {
    auto o = sign_extend<16, int32_t>(instr.d);
 
+   auto dst = a.allocGpTmp().r64();
+
    if (instr.rA) {
-      a.mov(a.ecx, a.ppcgpr[instr.rA]);
+      a.mov(dst, a.loadRegister(a.gpr[instr.rA]));
       if (o != 0) {
-         a.add(a.ecx, o);
+         a.add(dst, o);
       }
    } else {
-      a.mov(a.ecx, o);
+      a.mov(dst, o);
    }
 
-   a.add(a.zcx, a.membase);
+   a.add(dst, a.membaseReg);
 
+   auto src = a.allocGpTmp().r32();
    for (int r = instr.rS, d = 0; r <= 31; ++r, d += 4) {
-      a.mov(a.eax, a.ppcgpr[r]);
-      a.bswap(a.eax);
-      a.mov(asmjit::X86Mem(a.zcx, d), a.eax);
+      a.mov(src, a.loadRegister(a.gpr[r]));
+      a.bswap(src);
+      a.mov(asmjit::X86Mem(dst, d), src);
    }
 
    return true;

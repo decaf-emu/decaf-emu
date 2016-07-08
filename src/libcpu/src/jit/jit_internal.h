@@ -1,8 +1,12 @@
 #pragma once
+#include "../cpu.h"
+#include "common/emuassert.h"
+#include <array>
+#include <asmjit/asmjit.h>
 #include <map>
 #include <vector>
-#include <asmjit/asmjit.h>
-#include "../cpu.h"
+
+#define offsetof2(s, m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 
 namespace cpu
 {
@@ -12,15 +16,15 @@ namespace jit
 
 /*
 Register Assignments:
-RAX . Scratch
-RCX . Scratch
-RDX . Scratch
-RDI . Scratch
-RSI . mem::base()
-RBX . Core*
-RBP .
-RSP . Emu Stack Pointer.
-R8-R15 . PPCGPR Storage
+RAX    . Scratch
+RCX    . Scratch
+RDX    . Scratch
+RDI    . Scratch
+RSI    . mem::base()
+RBX    . Core*
+RBP    . Scratch
+RSP    . Emu Stack Pointer.
+R8-R15 . Scratch
 */
 
 class PPCEmuAssembler : public asmjit::X86Assembler
@@ -33,57 +37,121 @@ private:
    } errHandler;
 
 public:
+   static const auto MaxGpRegSlots = 13;
+   static const auto MaxXmmRegSlots = 5;
+   static const auto MaxRegSlots = MaxGpRegSlots + MaxXmmRegSlots;
+
+   enum class RegType
+   {
+      None,
+      Gp,
+      Xmm
+   };
+
+   struct HostRegister {
+      HostRegister() { }
+
+      HostRegister(RegType type, uint32_t id)
+         : regType(type), regId(id) { }
+
+      // Information about the type of register this is
+      RegType regType = RegType::None;
+      uint32_t regId = 0;
+
+      // Is currently in use by a Variable
+      uint32_t useCount = 0;
+      uint32_t lruValue = 0;
+
+      // Information used for automatic eviction
+      bool loaded = false;
+      uint32_t size = 0;
+      uint32_t content = 0xFFFFFFFF;
+   };
+
+   struct PpcRef {
+      uint32_t offset;
+      uint32_t size;
+   };
+
+   struct PpcGpRef : public PpcRef { };
+   struct PpcXmmRef : public PpcRef { };
+
    PPCEmuAssembler(asmjit::Runtime* runtime) :
       asmjit::X86Assembler(runtime, asmjit::kArchX64)
    {
       setErrorHandler(&errHandler);
 
-      eax = zax.r32();
-      ecx = zcx.r32();
-      edx = zdx.r32();
-      r8d = asmjit::x86::r8d;
-      r9d = asmjit::x86::r9d;
+      stateReg = zbx;
+      membaseReg = zsi;
 
-      state = zbx;
-      membase = zsi;
-      cia = zdi;
+#define PPCMemRef(s, mm) s = asmjit::X86Mem(stateReg, (int32_t)offsetof2(Core, mm), sizeof(Core::mm))
 
-      xmm0 = asmjit::x86::xmm0;
-      xmm1 = asmjit::x86::xmm1;
-      xmm2 = asmjit::x86::xmm2;
-      xmm3 = asmjit::x86::xmm3;
+      PPCMemRef(lrMem, lr);
+      PPCMemRef(ctrMem, ctr);
 
-#define offsetof2(s, m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
-#define PPCTSReg(mm) asmjit::X86Mem(zbx, (int32_t)offsetof2(Core, mm), sizeof(Core::mm))
+      PPCMemRef(niaMem, nia);
+      PPCMemRef(coreIdMem, id);
+      PPCMemRef(interruptMem, interrupt);
+
+#undef PPCMemRef
+
+#define PPCRegRef(which, mm) which.offset = (uint32_t)offsetof2(Core, mm); which.size = sizeof(Core::mm);
+
       for (auto i = 0; i < 32; ++i) {
-         ppcgpr[i] = PPCTSReg(gpr[i]);
+         PPCRegRef(gpr[i], gpr[i]);
       }
 
       for (auto i = 0; i < 32; ++i) {
-         ppcfpr[i] = PPCTSReg(fpr[i]);
-         ppcfprps[i][0] = PPCTSReg(fpr[i].paired0);
-         ppcfprps[i][1] = PPCTSReg(fpr[i].paired1);
+         PPCRegRef(fpr[i], fpr[i].value);
+         PPCRegRef(fprps[i][0], fpr[i].paired0);
+         PPCRegRef(fprps[i][1], fpr[i].paired1);
       }
 
-      ppccr = PPCTSReg(cr);
-      ppcxer = PPCTSReg(xer.value);
-      ppclr = PPCTSReg(lr);
-      ppcctr = PPCTSReg(ctr);
-      ppcfpscr = PPCTSReg(fpscr);
+      PPCRegRef(cr, cr.value);
+      PPCRegRef(xer, xer.value);
+      PPCRegRef(fpscr, fpscr.value);
 
       for (auto i = 0; i < 8; ++i) {
-         ppcgqr[i] = PPCTSReg(gqr[i].value);
+         PPCRegRef(gqr[i], gqr[i].value);
       }
 
-      ppcreserve = PPCTSReg(reserve);
-      ppcreserveAddress = PPCTSReg(reserveAddress);
-      ppcreserveData = PPCTSReg(reserveData);
+      PPCRegRef(reserve, reserve);
+      PPCRegRef(reserveAddress, reserveAddress);
+      PPCRegRef(reserveData, reserveData);
 
-      ppcnia = PPCTSReg(nia);
-      ppccoreid = PPCTSReg(id);
-      ppcinterrupt = PPCTSReg(interrupt);
+#undef PPCRegRef
 
-#undef PPCTSReg
+      static_assert(std::tuple_size<decltype(mGpRegVals)>::value == 13,
+         "Gp register count mismatch");
+      mGpRegVals[0] = asmjit::x86::rax;
+      mGpRegVals[1] = asmjit::x86::rcx;
+      mGpRegVals[2] = asmjit::x86::rdx;
+      mGpRegVals[3] = asmjit::x86::rdi;
+      mGpRegVals[4] = asmjit::x86::rbp;
+      mGpRegVals[5] = asmjit::x86::r8;
+      mGpRegVals[6] = asmjit::x86::r9;
+      mGpRegVals[7] = asmjit::x86::r10;
+      mGpRegVals[8] = asmjit::x86::r11;
+      mGpRegVals[9] = asmjit::x86::r12;
+      mGpRegVals[10] = asmjit::x86::r13;
+      mGpRegVals[11] = asmjit::x86::r14;
+      mGpRegVals[12] = asmjit::x86::r15;
+
+      static_assert(std::tuple_size<decltype(mXmmRegVals)>::value == 5,
+         "Xmm register count mismatch");
+      mXmmRegVals[0] = asmjit::x86::xmm0;
+      mXmmRegVals[1] = asmjit::x86::xmm1;
+      mXmmRegVals[2] = asmjit::x86::xmm2;
+      mXmmRegVals[3] = asmjit::x86::xmm3;
+      mXmmRegVals[4] = asmjit::x86::xmm4;
+
+      uint32_t regIdx = 0;
+      for (auto i = 0; i < mGpRegVals.size(); ++i) {
+         mRegs[regIdx++] = HostRegister(RegType::Gp, i);
+      }
+      for (auto i = 0; i < mXmmRegVals.size(); ++i) {
+         mRegs[regIdx++] = HostRegister(RegType::Xmm, i);
+      }
    }
 
    void shiftTo(asmjit::X86GpReg reg, int s, int d)
@@ -98,38 +166,502 @@ public:
    uint32_t genCia;
    std::vector<std::pair<uint32_t, asmjit::Label>> relocLabels;
 
-   asmjit::X86GpReg state;
-   asmjit::X86GpReg membase;
-   asmjit::X86GpReg cia;
+   asmjit::X86GpReg stateReg;
+   asmjit::X86GpReg membaseReg;
 
-   asmjit::X86GpReg eax;
-   asmjit::X86GpReg ecx;
-   asmjit::X86GpReg edx;
-   asmjit::X86GpReg r8d;
-   asmjit::X86GpReg r9d;
+   asmjit::X86Mem lrMem;
+   asmjit::X86Mem ctrMem;
 
-   asmjit::X86XmmReg xmm0;
-   asmjit::X86XmmReg xmm1;
-   asmjit::X86XmmReg xmm2;
-   asmjit::X86XmmReg xmm3;
+   asmjit::X86Mem niaMem;
+   asmjit::X86Mem coreIdMem;
+   asmjit::X86Mem interruptMem;
 
-   asmjit::X86Mem ppcgpr[32];
-   asmjit::X86Mem ppcfpr[32];
-   asmjit::X86Mem ppcfprps[32][2];
-   asmjit::X86Mem ppccr;
-   asmjit::X86Mem ppcxer;
-   asmjit::X86Mem ppclr;
-   asmjit::X86Mem ppcctr;
-   asmjit::X86Mem ppcfpscr;
-   asmjit::X86Mem ppcgqr[8];
+   PpcGpRef gpr[32];
+   PpcXmmRef fpr[32];
+   PpcXmmRef fprps[32][2];
+   PpcGpRef cr;
+   PpcGpRef xer;
+   PpcGpRef fpscr;
+   PpcGpRef gqr[8];
+   PpcGpRef reserve;
+   PpcGpRef reserveAddress;
+   PpcGpRef reserveData;
 
-   asmjit::X86Mem ppcnia;
-   asmjit::X86Mem ppccoreid;
-   asmjit::X86Mem ppcinterrupt;
+   std::array<asmjit::X86GpReg, MaxGpRegSlots> mGpRegVals;
+   std::array<asmjit::X86XmmReg, MaxXmmRegSlots> mXmmRegVals;
 
-   asmjit::X86Mem ppcreserve;
-   asmjit::X86Mem ppcreserveAddress;
-   asmjit::X86Mem ppcreserveData;
+   std::array<HostRegister, MaxRegSlots> mRegs;
+
+   uint32_t mLruCounter = 0;
+
+   static bool
+   isSameRegister(const asmjit::X86Reg &a, const asmjit::X86Reg &b)
+   {
+      return a.getRegType() == b.getRegType() && a.getRegIndex() == b.getRegIndex();
+   }
+
+   bool isSameHostRegister(HostRegister *hreg, const asmjit::X86Reg& reg) {
+      if (hreg->regType == RegType::Gp) {
+         return isSameRegister(mGpRegVals[hreg->regId], reg);
+      } else if (hreg->regType == RegType::Xmm) {
+         return isSameRegister(mXmmRegVals[hreg->regId], reg);
+      } else if (hreg->regType == RegType::None) {
+         return false;
+      } else {
+         throw std::logic_error("Unexpected register type");
+      }
+   }
+
+   class Register {
+      friend PPCEmuAssembler;
+   public:
+      Register()
+         : mParent(nullptr), mReg(nullptr), mSize(0), mMarkLoadedOnUse(false)
+      {
+      }
+
+      Register(const Register &other) {
+         if (other.mReg) {
+            other.mReg->useCount++;
+         }
+
+         mParent = other.mParent;
+         mReg = other.mReg;
+         mSize = other.mSize;
+         mMarkLoadedOnUse = other.mMarkLoadedOnUse;
+      }
+
+      Register & operator=(const Register &other) {
+         invalidate();
+
+         if (other.mReg) {
+            other.mReg->useCount++;
+         }
+
+         mParent = other.mParent;
+         mReg = other.mReg;
+         mSize = other.mSize;
+         mMarkLoadedOnUse = other.mMarkLoadedOnUse;
+         return *this;
+      }
+
+      ~Register()
+      {
+         if (mReg) {
+            mParent->freeRegister(mReg);
+         }
+      }
+
+      void invalidate() {
+         if (mReg) {
+            mReg->useCount--;
+         }
+
+         mParent = nullptr;
+         mReg = nullptr;
+         mSize = 0;
+         mMarkLoadedOnUse = false;
+      }
+
+   private:
+      Register(PPCEmuAssembler *parent, HostRegister *varData, uint32_t size, bool loadOnUse)
+         : mParent(parent), mReg(varData), mSize(size), mMarkLoadedOnUse(loadOnUse)
+      {
+      }
+
+      void markUsed() const
+      {
+         emuassert(mReg);
+         mReg->lruValue = mParent->mLruCounter++;
+         if (mMarkLoadedOnUse) {
+            mReg->loaded = true;
+         }
+      }
+
+      PPCEmuAssembler *mParent;
+      HostRegister *mReg;
+      uint32_t mSize;
+      bool mMarkLoadedOnUse;
+
+   };
+
+   class GpRegister : public Register {
+      friend PPCEmuAssembler;
+   public:
+      GpRegister()
+         : Register() {}
+
+      GpRegister(const GpRegister &other)
+         : Register(other) { }
+
+      GpRegister & operator=(const GpRegister &other) {
+         Register::operator=(other);
+         return *this;
+      }
+
+      operator asmjit::X86GpReg() const {
+         emuassert(mReg->regType == RegType::Gp);
+         markUsed();
+         if (mSize == 1) {
+            return mParent->mGpRegVals[mReg->regId].r8();
+         } else if (mSize == 2) {
+            return mParent->mGpRegVals[mReg->regId].r16();
+         } else if (mSize == 4) {
+            return mParent->mGpRegVals[mReg->regId].r32();
+         } else if (mSize == 8) {
+            return mParent->mGpRegVals[mReg->regId].r64();
+         } else {
+            throw std::logic_error("Unexpected register size");
+         }
+      }
+
+      GpRegister r8() const {
+         mReg->useCount++;
+         return GpRegister(mParent, mReg, 1, mMarkLoadedOnUse);
+      }
+
+      GpRegister r16() const {
+         mReg->useCount++;
+         return GpRegister(mParent, mReg, 2, mMarkLoadedOnUse);
+      }
+
+      GpRegister r32() const {
+         mReg->useCount++;
+         return GpRegister(mParent, mReg, 4, mMarkLoadedOnUse);
+      }
+
+      GpRegister r64() const {
+         mReg->useCount++;
+         return GpRegister(mParent, mReg, 8, mMarkLoadedOnUse);
+      }
+
+   private:
+      GpRegister(PPCEmuAssembler *parent, HostRegister *reg, uint32_t size, bool loadOnUse)
+         : Register(parent, reg, size, loadOnUse) { }
+
+   };
+
+   class XmmRegister : public Register {
+      friend PPCEmuAssembler;
+   public:
+      XmmRegister()
+         : Register() {}
+
+      XmmRegister(const XmmRegister &other)
+         : Register(other) { }
+
+      XmmRegister & operator=(const XmmRegister &other) {
+         Register::operator=(other);
+         return *this;
+      }
+
+      operator asmjit::X86XmmReg() const {
+         emuassert(mReg->regType == RegType::Xmm);
+         emuassert(mSize == 8);
+         markUsed();
+         return mParent->mXmmRegVals[mReg->regId];
+      }
+
+   private:
+      XmmRegister(PPCEmuAssembler *parent, HostRegister *reg, uint32_t size, bool loadOnUse)
+         : Register(parent, reg, size, loadOnUse) { }
+
+   };
+
+   class RegLockout {
+      friend PPCEmuAssembler;
+   public:
+      bool isRegister(const asmjit::X86Reg &reg) const {
+         if (!mReg.mReg) {
+            return false;
+         }
+
+         return mReg.mParent->isSameHostRegister(mReg.mReg, reg);
+      }
+
+      void unlock() {
+         mReg = Register();
+      }
+
+   private:
+      RegLockout()
+         : mReg() { }
+
+      RegLockout(PPCEmuAssembler *parent, HostRegister *reg)
+         : mReg(parent, reg, 0, false) { }
+
+      Register mReg;
+   };
+
+   RegLockout lockRegister(const asmjit::X86GpReg& reg)
+   {
+      for (auto &hreg : mRegs) {
+         if (isSameHostRegister(&hreg, reg)) {
+            emuassert(hreg.useCount == 0);
+            if (hreg.content != 0xFFFFFFFF) {
+               evictOne(&hreg);
+            }
+            hreg.useCount++;
+            return RegLockout(this, &hreg);
+         }
+      }
+
+      // For debugging
+      throw std::logic_error("Attempted to lockout register which isn't used for JIT");
+
+      // We couldn't find the register, so there is probably no need
+      //  to preform lockout on it.  Why did you call me!
+      return RegLockout();
+   }
+
+   HostRegister * allocReg(RegType regType) {
+      uint32_t lruReg = 0xFFFFFFFF;
+      uint32_t lruValue = 0xFFFFFFFF;
+
+      // Pick a register from completely empty ones, track the
+      //  least-recently used register at the same time.
+      for (auto i = 0; i < mRegs.size(); ++i) {
+         auto &reg = mRegs[i];
+         if (reg.regType != regType) {
+            continue;
+         }
+         if (!reg.useCount) {
+            if (reg.content == 0xFFFFFFFF) {
+               reg.useCount++;
+               return &reg;
+            }
+
+            if (reg.lruValue < lruValue) {
+               lruReg = i;
+               lruValue = reg.lruValue;
+            }
+         }
+      }
+
+      // If we have an LRU register, lets evict it and use that one.
+      if (lruReg != 0xFFFFFFFF) {
+         auto &reg = mRegs[lruReg];
+         evictOne(&reg);
+         reg.useCount++;
+         return &reg;
+      }
+
+      throw std::logic_error("Failed to locate a free host register to allocate");
+   }
+
+   HostRegister * findReg(const PpcRef& which)
+   {
+      // Search for this PpcRef inside the GP registers
+      for (auto i = 0; i < mRegs.size(); ++i) {
+         auto &reg = mRegs[i];
+         if (reg.content == which.offset) {
+            emuassert(reg.size == which.size);
+            return &reg;
+         }
+      }
+      return nullptr;
+   }
+
+   void freeRegister(HostRegister *reg)
+   {
+      emuassert(reg->useCount > 0);
+      reg->useCount--;
+   }
+
+   GpRegister allocGpTmp()
+   {
+      return GpRegister(this, allocReg(RegType::Gp), 8, false);
+   }
+
+   XmmRegister allocXmmTmp()
+   {
+      return XmmRegister(this, allocReg(RegType::Xmm), 8, false);
+   }
+
+   GpRegister allocGpTmp(const GpRegister &source)
+   {
+      auto tmp = allocGpTmp();
+
+      if (source.mSize == 1) {
+         tmp = tmp.r8();
+         mov(tmp, source);
+      } else if (source.mSize == 2) {
+         tmp = tmp.r16();
+         mov(tmp, source);
+      } else if (source.mSize == 4) {
+         tmp = tmp.r32();
+         mov(tmp, source);
+      } else if (source.mSize == 8) {
+         tmp = tmp.r64();
+         mov(tmp, source);
+      } else {
+         std::logic_error("Unexpected register size");
+      }
+
+      return tmp;
+   }
+
+   XmmRegister allocXmmTmp(const XmmRegister &source)
+   {
+      auto tmp = allocXmmTmp();
+
+      if (source.mSize == 8) {
+         movq(tmp, source);
+      } else {
+         std::logic_error("Unexpected register size");
+      }
+
+      return tmp;
+   }
+
+   GpRegister _getGpRegister(const PpcRef &which, bool shouldLoad)
+   {
+      emuassert(which.size == 4 || which.size == 8);
+
+      auto reg = findReg(which);
+      if (reg && reg->regType != RegType::Gp) {
+         evictOne(reg);
+         reg = nullptr;
+      }
+      if (reg) {
+         emuassert(reg->size == which.size);
+         reg->useCount++;
+      } else {
+         reg = allocReg(RegType::Gp);
+         reg->content = which.offset;
+         reg->size = which.size;
+      }
+
+      if (shouldLoad && !reg->loaded) {
+         if (reg->size == 4) {
+            mov(mGpRegVals[reg->regId].r32(), asmjit::X86Mem(stateReg, which.offset, 4));
+         } else if (reg->size == 8) {
+            mov(mGpRegVals[reg->regId].r64(), asmjit::X86Mem(stateReg, which.offset, 8));
+         } else {
+            std::logic_error("Unexpected register size");
+         }
+         reg->loaded = true;
+      }
+
+      return GpRegister(this, reg, which.size, !shouldLoad);
+   }
+
+   XmmRegister _getXmmRegister(const PpcRef &which, bool shouldLoad)
+   {
+      emuassert(which.size == 8);
+
+      auto reg = findReg(which);
+      if (reg && reg->regType != RegType::Xmm) {
+         evictOne(reg);
+         reg = nullptr;
+      }
+      if (reg) {
+         emuassert(reg->size == which.size);
+         reg->useCount++;
+      } else {
+         reg = allocReg(RegType::Xmm);
+         reg->content = which.offset;
+         reg->size = which.size;
+      }
+
+      if (shouldLoad && !reg->loaded) {
+         if (reg->size == 8) {
+            movq(mXmmRegVals[reg->regId], asmjit::X86Mem(stateReg, which.offset, 8));
+         } else {
+            std::logic_error("Unexpected register size");
+         }
+         reg->loaded = true;
+      }
+
+      return XmmRegister(this, reg, which.size, !shouldLoad);
+   }
+
+
+
+   GpRegister allocGpRegister(const PpcRef &which) {
+      return _getGpRegister(which, false);
+   }
+
+   XmmRegister allocXmmRegister(const PpcRef &which) {
+      return _getXmmRegister(which, false);
+   }
+
+   GpRegister loadGpRegister(const PpcRef &which) {
+      return _getGpRegister(which, true);
+   }
+
+   XmmRegister loadXmmRegister(const PpcRef &which) {
+      return _getXmmRegister(which, true);
+   }
+
+   // Some helpers which automatically pick the correct type
+   GpRegister allocRegister(const PpcGpRef &which) {
+      return allocGpRegister(which);
+   }
+
+   XmmRegister allocRegister(const PpcXmmRef &which) {
+      return allocXmmRegister(which);
+   }
+
+   GpRegister loadRegister(const PpcGpRef &which) {
+      return loadGpRegister(which);
+   }
+
+   XmmRegister loadRegister(const PpcXmmRef &which) {
+      return loadXmmRegister(which);
+   }
+
+   void saveOne(HostRegister *reg)
+   {
+      emuassert(reg->useCount == 0);
+      emuassert(reg->content != 0xFFFFFFFF);
+
+      if (reg->regType == RegType::Gp) {
+         emuassert(reg->size == 4 || reg->size == 8);
+
+         if (reg->size == 4) {
+            mov(asmjit::X86Mem(stateReg, reg->content, 4), mGpRegVals[reg->regId].r32());
+         } else if (reg->size == 8) {
+            mov(asmjit::X86Mem(stateReg, reg->content, 8), mGpRegVals[reg->regId].r64());
+         } else {
+            throw std::logic_error("Unexpected register size");
+         }
+      } else if (reg->regType == RegType::Xmm) {
+         emuassert(reg->size == 8);
+
+         movq(asmjit::X86Mem(stateReg, reg->content, 8), mXmmRegVals[reg->regId]);
+      } else {
+         throw std::logic_error("Unexpected register type in evictOne");
+      }
+   }
+
+   void saveAll()
+   {
+      for (auto i = 0; i < mRegs.size(); ++i) {
+         if (mRegs[i].content != 0xFFFFFFFF) {
+            saveOne(&mRegs[i]);
+         }
+      }
+   }
+
+   void evictOne(HostRegister *reg)
+   {
+      saveOne(reg);
+
+      reg->content = 0xFFFFFFFF;
+      reg->size = 0;
+      reg->loaded = false;
+   }
+
+   void evictAll()
+   {
+      for (auto i = 0; i < mRegs.size(); ++i) {
+         if (mRegs[i].content != 0xFFFFFFFF) {
+            evictOne(&mRegs[i]);
+         }
+      }
+   }
+
 };
 
 template<typename T, typename Z>

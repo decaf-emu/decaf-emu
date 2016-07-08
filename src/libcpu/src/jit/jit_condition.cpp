@@ -10,44 +10,34 @@ namespace cpu
 namespace jit
 {
 
-void
-getTwoCRB(PPCEmuAssembler& a,
-          uint32_t bita, const asmjit::X86GpReg& da,
-          uint32_t bitb, const asmjit::X86GpReg& db)
+PPCEmuAssembler::GpRegister
+getCRB(PPCEmuAssembler& a,
+       uint32_t bit)
 {
-   auto shifta = 31 - bita;
-   auto shiftb = 31 - bitb;
+   auto shift = 31 - bit;
 
-   a.mov(da, a.ppccr);
-   a.mov(db, da);
+   auto out = a.allocGpTmp().r32();
+   auto ppccr = a.loadRegister(a.cr);
 
-   if (shifta > 0) {
-      a.shr(da, shifta);
-   }
+   a.mov(out, ppccr);
+   a.shr(out, shift);
+   a.and_(out, 1);
 
-   if (shiftb > 0) {
-      a.shr(db, shiftb);
-   }
-
-   a.and_(da, 1);
-   a.and_(db, 1);
+   return out;
 }
 
 void
 setCRB(PPCEmuAssembler& a,
        uint32_t bit,
-       const asmjit::X86GpReg& value,
-       const asmjit::X86GpReg& tmp,
-       const asmjit::X86GpReg& tmp2)
+       const PPCEmuAssembler::GpRegister& value)
 {
    auto shift = 31 - bit;
-   a.mov(tmp, a.ppccr);
-   a.and_(tmp, ~(1 << shift));
-   a.mov(tmp2, value);
-   a.and_(tmp2, 1);
-   a.shl(tmp2, shift);
-   a.or_(tmp, tmp2);
-   a.mov(a.ppccr, tmp);
+
+   auto ppccr = a.allocRegister(a.cr);
+   a.and_(ppccr, ~(1 << shift));
+   a.and_(value, 1);
+   a.shl(value, shift);
+   a.or_(ppccr, value);
 }
 
 // Compare
@@ -62,65 +52,74 @@ cmpGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    uint32_t crshift = (7 - instr.crfD) * 4;
 
+   // We allocate this up here so that any spill/alloc that
+   //  need to occur do not interfer with SETxx.
+   auto tmp = a.allocGpTmp().r32();
+
    // Load CRF
-   a.mov(a.edx, a.ppccr);
+   auto ppccr = a.loadRegister(a.cr);
 
    // Mask CRF
    uint32_t mask = 0xFFFFFFFF;
    mask &= ~(0xF << crshift);
-   a.and_(a.edx, mask);
+   a.and_(ppccr, mask);
 
    // Summary Overflow
-   a.mov(a.eax, a.ppcxer);
-   a.and_(a.eax, XERegisterBits::StickyOV);
-   a.shr(a.eax, XERegisterBits::StickyOVShift);
-   a.shl(a.eax, ConditionRegisterFlag::SummaryOverflowShift + crshift);
-   a.or_(a.edx, a.eax);
+   {
+      auto ppcxer = a.loadRegister(a.xer);
+      auto tmp = a.allocGpTmp().r32();
+      a.mov(tmp, ppcxer);
+      a.and_(tmp, XERegisterBits::StickyOV);
+      a.shr(tmp, XERegisterBits::StickyOVShift);
+      a.shl(tmp, ConditionRegisterFlag::SummaryOverflowShift + crshift);
+      a.or_(ppccr, tmp);
+   }
 
    // Perform Comparison
-   a.mov(a.eax, a.ppcgpr[instr.rA]);
+   auto src0 = a.loadRegister(a.gpr[instr.rA]);
 
+   PPCEmuAssembler::GpRegister src1;
    if (flags & CmpImmediate) {
+      src1 = a.allocGpTmp().r32();
       if (std::is_signed<Type>::value) {
-         a.mov(a.ecx, sign_extend<16>(instr.simm));
+         a.mov(src1, sign_extend<16>(instr.simm));
       } else {
-         a.mov(a.ecx, instr.uimm);
+         a.mov(src1, instr.uimm);
       }
    } else {
-      a.mov(a.ecx, a.ppcgpr[instr.rB]);
+      src1 = a.loadRegister(a.gpr[instr.rB]);
    }
 
-   a.cmp(a.eax, a.ecx);
-   a.mov(a.r8d, 0);
+   a.cmp(src0, src1);
 
+   auto isGreater = a.allocGpTmp().r32();
+   a.mov(isGreater, 0);
    if (std::is_unsigned<Type>::value) {
-      a.seta(a.r8d.r8());
+      a.seta(isGreater.r8());
    } else {
-      a.setg(a.r8d.r8());
+      a.setg(isGreater.r8());
    }
 
-   a.mov(a.r9d, 0);
-
+   auto isLesser = a.allocGpTmp().r32();
+   a.mov(isLesser, 0);
    if (std::is_unsigned<Type>::value) {
-      a.setb(a.r9d.r8());
+      a.setb(isLesser.r8());
    } else {
-      a.setl(a.r9d.r8());
+      a.setl(isLesser.r8());
    }
 
-   a.mov(a.ecx, 0);
-   a.sete(a.ecx.r8());
-   a.shl(a.ecx, crshift + ConditionRegisterFlag::ZeroShift);
-   a.or_(a.edx, a.ecx);
+   a.mov(tmp, 0);
+   a.sete(tmp.r8());
+   a.shl(tmp, crshift + ConditionRegisterFlag::ZeroShift);
+   a.or_(ppccr, tmp);
 
-   a.mov(a.ecx, a.r8d);
-   a.shl(a.ecx, crshift + ConditionRegisterFlag::PositiveShift);
-   a.or_(a.edx, a.ecx);
+   a.mov(tmp, isGreater);
+   a.shl(tmp, crshift + ConditionRegisterFlag::PositiveShift);
+   a.or_(ppccr, tmp);
 
-   a.mov(a.ecx, a.r9d);
-   a.shl(a.ecx, crshift + ConditionRegisterFlag::NegativeShift);
-   a.or_(a.edx, a.ecx);
-
-   a.mov(a.ppccr, a.edx);
+   a.mov(tmp, isLesser);
+   a.shl(tmp, crshift + ConditionRegisterFlag::NegativeShift);
+   a.or_(ppccr, tmp);
 
    return true;
 }
@@ -181,9 +180,10 @@ fcmpu(PPCEmuAssembler& a, Instruction instr)
 static bool
 crand(PPCEmuAssembler& a, Instruction instr)
 {
-   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
-   a.and_(a.eax, a.ecx);
-   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   auto crbA = getCRB(a, instr.crbA);
+   auto crbB = getCRB(a, instr.crbB);
+   a.and_(crbA, crbB);
+   setCRB(a, instr.crbD, crbA);
    return true;
 }
 
@@ -191,10 +191,11 @@ crand(PPCEmuAssembler& a, Instruction instr)
 static bool
 crandc(PPCEmuAssembler& a, Instruction instr)
 {
-   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
-   a.not_(a.ecx);
-   a.and_(a.eax, a.ecx);
-   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   auto crbA = getCRB(a, instr.crbA);
+   auto crbB = getCRB(a, instr.crbB);
+   a.not_(crbB);
+   a.and_(crbA, crbB);
+   setCRB(a, instr.crbD, crbA);
    return true;
 }
 
@@ -202,10 +203,11 @@ crandc(PPCEmuAssembler& a, Instruction instr)
 static bool
 creqv(PPCEmuAssembler& a, Instruction instr)
 {
-   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
-   a.xor_(a.eax, a.ecx);
-   a.not_(a.eax);
-   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   auto crbA = getCRB(a, instr.crbA);
+   auto crbB = getCRB(a, instr.crbB);
+   a.xor_(crbA, crbB);
+   a.not_(crbA);
+   setCRB(a, instr.crbD, crbA);
    return true;
 }
 
@@ -213,10 +215,11 @@ creqv(PPCEmuAssembler& a, Instruction instr)
 static bool
 crnand(PPCEmuAssembler& a, Instruction instr)
 {
-   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
-   a.and_(a.eax, a.ecx);
-   a.not_(a.eax);
-   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   auto crbA = getCRB(a, instr.crbA);
+   auto crbB = getCRB(a, instr.crbB);
+   a.and_(crbA, crbB);
+   a.not_(crbA);
+   setCRB(a, instr.crbD, crbA);
    return true;
 }
 
@@ -224,10 +227,11 @@ crnand(PPCEmuAssembler& a, Instruction instr)
 static bool
 crnor(PPCEmuAssembler& a, Instruction instr)
 {
-   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
-   a.or_(a.eax, a.ecx);
-   a.not_(a.eax);
-   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   auto crbA = getCRB(a, instr.crbA);
+   auto crbB = getCRB(a, instr.crbB);
+   a.or_(crbA, crbB);
+   a.not_(crbA);
+   setCRB(a, instr.crbD, crbA);
    return true;
 }
 
@@ -235,9 +239,10 @@ crnor(PPCEmuAssembler& a, Instruction instr)
 static bool
 cror(PPCEmuAssembler& a, Instruction instr)
 {
-   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
-   a.or_(a.eax, a.ecx);
-   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   auto crbA = getCRB(a, instr.crbA);
+   auto crbB = getCRB(a, instr.crbB);
+   a.or_(crbA, crbB);
+   setCRB(a, instr.crbD, crbA);
    return true;
 }
 
@@ -245,10 +250,11 @@ cror(PPCEmuAssembler& a, Instruction instr)
 static bool
 crorc(PPCEmuAssembler& a, Instruction instr)
 {
-   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
-   a.not_(a.ecx);
-   a.or_(a.eax, a.ecx);
-   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   auto crbA = getCRB(a, instr.crbA);
+   auto crbB = getCRB(a, instr.crbB);
+   a.not_(crbB);
+   a.or_(crbA, crbB);
+   setCRB(a, instr.crbD, crbA);
    return true;
 }
 
@@ -256,9 +262,10 @@ crorc(PPCEmuAssembler& a, Instruction instr)
 static bool
 crxor(PPCEmuAssembler& a, Instruction instr)
 {
-   getTwoCRB(a, instr.crbA, a.eax, instr.crbB, a.ecx);
-   a.xor_(a.eax, a.ecx);
-   setCRB(a, instr.crbD, a.eax, a.ecx, a.edx);
+   auto crbA = getCRB(a, instr.crbA);
+   auto crbB = getCRB(a, instr.crbB);
+   a.xor_(crbA, crbB);
+   setCRB(a, instr.crbD, crbA);
    return true;
 }
 
@@ -269,14 +276,15 @@ mcrf(PPCEmuAssembler& a, Instruction instr)
    uint32_t crshifts = (7 - instr.crfS) * 4;
    uint32_t crshiftd = (7 - instr.crfD) * 4;
 
-   a.mov(a.eax, a.ppccr);
-   a.mov(a.ecx, a.eax);
-   a.and_(a.ecx, ~(0xF << crshifts));
-   a.shr(a.ecx, crshifts);
-   a.shl(a.ecx, crshiftd);
-   a.and_(a.eax, ~(0xF << crshiftd));
-   a.or_(a.eax, a.ecx);
-   a.mov(a.ppccr, a.eax);
+   auto tmp = a.allocGpTmp().r32();
+   auto ppccr = a.loadRegister(a.cr);
+
+   a.mov(tmp, ppccr);
+   a.and_(tmp, ~(0xF << crshifts));
+   a.shr(tmp, crshifts);
+   a.shl(tmp, crshiftd);
+   a.and_(ppccr, ~(0xF << crshiftd));
+   a.or_(ppccr, tmp);
 
    return true;
 }
@@ -287,23 +295,22 @@ mcrxr(PPCEmuAssembler& a, Instruction instr)
 {
    uint32_t crshift = (7 - instr.crfD) * 4;
 
-   a.mov(a.eax, a.ppcxer);
-   a.mov(a.ecx, a.eax);
+   auto ppcxer = a.loadRegister(a.xer);
+   auto crxr = a.allocGpTmp().r32();
 
    // Grab CRXR
-   a.shr(a.ecx, XERegisterBits::XRShift);
-   a.and_(a.ecx, 0xF);
+   a.mov(crxr, ppcxer);
+   a.shr(crxr, XERegisterBits::XRShift);
+   a.and_(crxr, 0xF);
 
    // Clear XER CRXR
-   a.and_(a.eax, ~XERegisterBits::XR);
-   a.mov(a.ppcxer, a.eax);
+   a.and_(ppcxer, ~XERegisterBits::XR);
 
    // Set CRF
-   a.shl(a.ecx, crshift);
-   a.mov(a.eax, a.ppccr);
-   a.and_(a.eax, ~(0xF << crshift));
-   a.or_(a.eax, a.ecx);
-   a.mov(a.ppccr, a.eax);
+   auto ppccr = a.loadRegister(a.cr);
+   a.shl(crxr, crshift);
+   a.and_(ppccr, ~(0xF << crshift));
+   a.or_(ppccr, crxr);
 
    return true;
 }
@@ -313,8 +320,10 @@ mcrxr(PPCEmuAssembler& a, Instruction instr)
 static bool
 mfcr(PPCEmuAssembler& a, Instruction instr)
 {
-   a.mov(a.eax, a.ppccr);
-   a.mov(a.ppcgpr[instr.rD], a.eax);
+   auto ppccr = a.loadRegister(a.cr);
+   auto dst = a.allocRegister(a.gpr[instr.rD]);
+   a.mov(dst, ppccr);
+
    return true;
 }
 
@@ -330,12 +339,15 @@ mtcrf(PPCEmuAssembler& a, Instruction instr)
       }
    }
 
-   a.mov(a.eax, a.ppcgpr[instr.rS]);
-   a.and_(a.eax, mask);
-   a.mov(a.ecx, a.ppccr);
-   a.and_(a.ecx, ~mask);
-   a.or_(a.eax, a.ecx);
-   a.mov(a.ppccr, a.eax);
+   auto tmp = a.allocGpTmp().r32();
+   auto src = a.loadRegister(a.gpr[instr.rS]);
+   a.mov(tmp, src);
+   a.and_(tmp, mask);
+
+   auto ppccr = a.loadRegister(a.cr);
+   a.and_(ppccr, ~mask);
+   a.or_(ppccr, tmp);
+
    return true;
 }
 

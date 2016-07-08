@@ -23,14 +23,16 @@ bool jit_fallback(PPCEmuAssembler& a, espresso::Instruction instr)
       throw;
    }
 
+   a.evictAll();
+
    if (TRACK_FALLBACK_CALLS) {
-      a.mov(a.zax, asmjit::Ptr(reinterpret_cast<intptr_t>(&sFallbackCalls[static_cast<uint32_t>(data->id)])));
-      a.lock();
-      a.inc(asmjit::X86Mem(a.zax, 0));
+      auto fallbackAddr = reinterpret_cast<intptr_t>(&sFallbackCalls[static_cast<uint32_t>(data->id)]);
+      a.mov(asmjit::x86::rax, asmjit::Ptr(fallbackAddr));
+      a.lock().inc(asmjit::X86Mem(asmjit::x86::rax, 0));
    }
 
-   a.mov(a.zcx, a.state);
-   a.mov(a.edx, (uint32_t)instr);
+   a.mov(asmjit::x86::rcx, a.stateReg);
+   a.mov(asmjit::x86::rdx, (uint32_t)instr);
    a.call(asmjit::Ptr(fptr));
 
    return true;

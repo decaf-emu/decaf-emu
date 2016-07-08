@@ -19,23 +19,31 @@ template<unsigned flags = 0>
 static bool
 mergeGeneric(PPCEmuAssembler& a, Instruction instr)
 {
+   // We need to use a temporary here since frA/frB and frD may overlap
+   auto src0Tmp = a.allocXmmTmp();
+
    if (flags & MergeValue0) {
-      a.mov(a.zax, a.ppcfprps[instr.frA][1]);
+      a.movq(src0Tmp, a.loadRegister(a.fprps[instr.frA][1]));
    } else {
-      a.mov(a.zax, a.ppcfprps[instr.frA][0]);
+      a.movq(src0Tmp, a.loadRegister(a.fprps[instr.frA][0]));
    }
 
-   if (flags & MergeValue1) {
-      a.mov(a.zcx, a.ppcfprps[instr.frB][1]);
-   } else {
-      a.mov(a.zcx, a.ppcfprps[instr.frB][0]);
+   // Scope this to save us a register eviction
+   {
+      auto dst1 = a.allocRegister(a.fprps[instr.frD][1]);
+      if (flags & MergeValue1) {
+         a.movq(dst1, a.loadRegister(a.fprps[instr.frB][1]));
+      } else {
+         a.movq(dst1, a.loadRegister(a.fprps[instr.frB][0]));
+      }
    }
 
-   a.mov(a.ppcfprps[instr.frD][0], a.zax);
-   a.mov(a.ppcfprps[instr.frD][1], a.zcx);
+   auto dst0 = a.allocRegister(a.fprps[instr.frD][0]);
+   a.movq(dst0, src0Tmp);
 
+   // Update the condition register
    if (instr.rc) {
-      updateFloatConditionRegister(a, a.zax, a.zcx);
+      updateFloatConditionRegister(a);
    }
 
    return true;

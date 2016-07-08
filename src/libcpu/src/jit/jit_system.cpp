@@ -40,48 +40,49 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
 {
    auto spr = decodeSPR(instr);
 
+   auto dst = a.allocRegister(a.gpr[instr.rD]);
+
    switch (spr) {
    case SPR::XER:
-      a.mov(a.eax, a.ppcxer);
+      a.mov(dst, a.loadRegister(a.xer));
       break;
    case SPR::LR:
-      a.mov(a.eax, a.ppclr);
+      a.mov(dst, a.lrMem);
       break;
    case SPR::CTR:
-      a.mov(a.eax, a.ppcctr);
+      a.mov(dst, a.ctrMem);
       break;
    case SPR::UGQR0:
-      a.mov(a.eax, a.ppcgpr[0]);
+      a.mov(dst, a.loadRegister(a.gqr[0]));
       break;
    case SPR::UGQR1:
-      a.mov(a.eax, a.ppcgpr[1]);
+      a.mov(dst, a.loadRegister(a.gqr[1]));
       break;
    case SPR::UGQR2:
-      a.mov(a.eax, a.ppcgpr[2]);
+      a.mov(dst, a.loadRegister(a.gqr[2]));
       break;
    case SPR::UGQR3:
-      a.mov(a.eax, a.ppcgpr[3]);
+      a.mov(dst, a.loadRegister(a.gqr[3]));
       break;
    case SPR::UGQR4:
-      a.mov(a.eax, a.ppcgpr[4]);
+      a.mov(dst, a.loadRegister(a.gqr[4]));
       break;
    case SPR::UGQR5:
-      a.mov(a.eax, a.ppcgpr[5]);
+      a.mov(dst, a.loadRegister(a.gqr[5]));
       break;
    case SPR::UGQR6:
-      a.mov(a.eax, a.ppcgpr[6]);
+      a.mov(dst, a.loadRegister(a.gqr[6]));
       break;
    case SPR::UGQR7:
-      a.mov(a.eax, a.ppcgpr[7]);
+      a.mov(dst, a.loadRegister(a.gqr[7]));
       break;
    case SPR::UPIR:
-      a.mov(a.eax, a.ppccoreid);
+      a.mov(dst, a.coreIdMem);
       break;
    default:
       throw std::logic_error(fmt::format("Invalid mfspr SPR {}", static_cast<uint32_t>(spr)));
    }
 
-   a.mov(a.ppcgpr[instr.rD], a.eax);
    return true;
 }
 
@@ -89,43 +90,43 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
 static bool
 mtspr(PPCEmuAssembler& a, Instruction instr)
 {
-   a.mov(a.eax, a.ppcgpr[instr.rD]);
-
    auto spr = decodeSPR(instr);
+
+   auto src = a.loadRegister(a.gpr[instr.rD]);
 
    switch (spr) {
    case SPR::XER:
-      a.mov(a.ppcxer, a.eax);
+      a.mov(a.allocRegister(a.xer), src);
       break;
    case SPR::LR:
-      a.mov(a.ppclr, a.eax);
+      a.mov(a.lrMem, src);
       break;
    case SPR::CTR:
-      a.mov(a.ppcctr, a.eax);
+      a.mov(a.ctrMem, src);
       break;
    case SPR::UGQR0:
-      a.mov(a.ppcgqr[0], a.eax);
+      a.mov(a.allocRegister(a.gqr[0]), src);
       break;
    case SPR::UGQR1:
-      a.mov(a.ppcgqr[1], a.eax);
+      a.mov(a.allocRegister(a.gqr[1]), src);
       break;
    case SPR::UGQR2:
-      a.mov(a.ppcgqr[2], a.eax);
+      a.mov(a.allocRegister(a.gqr[2]), src);
       break;
    case SPR::UGQR3:
-      a.mov(a.ppcgqr[3], a.eax);
+      a.mov(a.allocRegister(a.gqr[3]), src);
       break;
    case SPR::UGQR4:
-      a.mov(a.ppcgqr[4], a.eax);
+      a.mov(a.allocRegister(a.gqr[4]), src);
       break;
    case SPR::UGQR5:
-      a.mov(a.ppcgqr[5], a.eax);
+      a.mov(a.allocRegister(a.gqr[5]), src);
       break;
    case SPR::UGQR6:
-      a.mov(a.ppcgqr[6], a.eax);
+      a.mov(a.allocRegister(a.gqr[6]), src);
       break;
    case SPR::UGQR7:
-      a.mov(a.ppcgqr[7], a.eax);
+      a.mov(a.allocRegister(a.gqr[7]), src);
       break;
    default:
       throw std::logic_error(fmt::format("Invalid mtspr SPR {}", static_cast<uint32_t>(spr)));
@@ -156,25 +157,28 @@ kc(PPCEmuAssembler& a, Instruction instr)
       return false;
    }
 
+   // Evict all stored register as a KC might read or modify them.
+   a.evictAll();
+
    // Save NIA back to memory in case KC reads/writes it
-   a.mov(a.ppcnia, a.genCia + 4);
+   a.mov(a.niaMem, a.genCia + 4);
 
    // Call the KC
-   a.mov(a.zcx, asmjit::Ptr(kc->func));
-   a.mov(a.zdx, asmjit::Ptr(kc->user_data));
+   a.mov(asmjit::x86::rcx, asmjit::Ptr(kc->func));
+   a.mov(asmjit::x86::rdx, asmjit::Ptr(kc->user_data));
    a.call(asmjit::Ptr(&kc_stub));
-   a.mov(a.state, a.zax);
+   a.mov(a.stateReg, asmjit::x86::rax);
 
    // Check if the KC adjusted nia.  If it has, we need to return
    //  to the dispatcher.  Note that we assume the cache was already
    //  cleared before this instruction since KC requires that anyways.
    auto niaUnchangedLbl = a.newLabel();
 
-   a.cmp(a.ppcnia, a.genCia + 4);
+   a.cmp(a.niaMem, a.genCia + 4);
    a.je(niaUnchangedLbl);
 
-   a.mov(a.ecx, a.ppcnia);
-   a.mov(a.zdx, 0);
+   a.mov(asmjit::x86::rcx, a.niaMem);
+   a.mov(asmjit::x86::rdx, 0);
    a.jmp(asmjit::Ptr(gFinaleFn));
 
    a.bind(niaUnchangedLbl);

@@ -33,13 +33,17 @@ jit_interrupt_stub()
 static void
 jit_b_check_interrupt(PPCEmuAssembler& a)
 {
+   // We need to evict everything in case we call back to the
+   //  interrupt handler which is C++ code...
+   a.evictAll();
+
    // Jump to interrupt handler if there is an interrupt
    auto noInterrupt = a.newLabel();
 
-   a.cmp(a.ppcinterrupt, 0);
+   a.cmp(a.interruptMem, 0);
    a.je(noInterrupt);
 
-   a.mov(a.ppcnia, a.genCia + 4);
+   a.mov(a.niaMem, a.genCia + 4);
    a.call(asmjit::Ptr(jit_interrupt_stub));
 
    a.bind(noInterrupt);
@@ -58,8 +62,9 @@ b(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (instr.lk) {
-      a.mov(a.eax, a.genCia + 4u);
-      a.mov(a.ppclr, a.eax);
+      auto tmp = a.allocGpTmp().r32();
+      a.mov(tmp, a.genCia + 4u);
+      a.mov(a.lrMem, tmp);
    }
 
    jit_b_direct(a, nia);
@@ -77,10 +82,11 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr)
 
    if (flags & BcCheckCtr) {
       if (!get_bit<NoCheckCtr>(bo)) {
-         a.dec(a.ppcctr);
+         a.dec(a.ctrMem);
 
-         a.mov(a.eax, a.ppcctr);
-         a.cmp(a.eax, 0);
+         auto tmp = a.allocGpTmp().r32();
+         a.mov(tmp, a.ctrMem);
+         a.cmp(tmp, 0);
          if (get_bit<CtrValue>(bo)) {
             a.jne(doCondFailLbl);
          } else {
@@ -91,9 +97,10 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr)
 
    if (flags & BcCheckCond) {
       if (!get_bit<NoCheckCond>(bo)) {
-         a.mov(a.eax, a.ppccr);
-         a.and_(a.eax, 1 << (31 - instr.bi));
-         a.cmp(a.eax, 0);
+         auto tmp = a.allocGpTmp().r32();
+         a.mov(tmp, a.loadRegister(a.cr));
+         a.and_(tmp, 1 << (31 - instr.bi));
+         a.cmp(tmp, 0);
 
          if (get_bit<CondValue>(bo)) {
             a.je(doCondFailLbl);
@@ -104,22 +111,27 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (instr.lk) {
-      a.mov(a.eax, a.genCia + 4);
-      a.mov(a.ppclr, a.eax);
+      auto tmp = a.allocGpTmp().r32();
+      a.mov(tmp, a.genCia + 4);
+      a.mov(a.lrMem, tmp);
    }
 
    // Make sure no JMP related instructions end up above
    //   this if-block as we use a JMP instruction with
    //   early exit in the else block...
    if (flags & BcBranchCTR) {
-      a.mov(a.ecx, a.ppcctr);
-      a.and_(a.ecx, ~0x3);
-      a.mov(a.zdx, 0);
+      a.saveAll();
+
+      a.mov(asmjit::x86::ecx, a.ctrMem);
+      a.and_(asmjit::x86::ecx, ~0x3);
+      a.mov(asmjit::x86::rdx, 0);
       a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    } else if (flags & BcBranchLR) {
-      a.mov(a.ecx, a.ppclr);
-      a.and_(a.ecx, ~0x3);
-      a.mov(a.zdx, 0);
+      a.saveAll();
+
+      a.mov(asmjit::x86::ecx, a.lrMem);
+      a.and_(asmjit::x86::ecx, ~0x3);
+      a.mov(asmjit::x86::rdx, 0);
       a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    } else {
       uint32_t nia = a.genCia + sign_extend<16>(instr.bd << 2);
