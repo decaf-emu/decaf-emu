@@ -91,7 +91,8 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
    //case latte::SQ_DATA_FORMAT::FMT_24_8:
    //case latte::SQ_DATA_FORMAT::FMT_24_8_FLOAT:
    //case latte::SQ_DATA_FORMAT::FMT_10_11_11:
-   //case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
+      return gl::GL_R11F_G11F_B10F;
    //case latte::SQ_DATA_FORMAT::FMT_11_11_10:
    case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
       return gl::GL_R11F_G11F_B10F;
