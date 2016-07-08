@@ -59,10 +59,14 @@ initStubs()
    // This is invoked to set up the neccessary state for
    //  the JIT block we want to execute.
    a.bind(introLabel);
+   a.push(a.rbp);
    a.push(a.zbx);
    a.push(a.zdi);
    a.push(a.zsi);
    a.push(asmjit::x86::r12);
+   a.push(asmjit::x86::r13);
+   a.push(asmjit::x86::r14);
+   a.push(asmjit::x86::r15);
    a.sub(a.zsp, 0x38);
    a.mov(a.zbx, a.zcx);
    a.mov(a.zsi, static_cast<uint64_t>(mem::base()));
@@ -84,10 +88,14 @@ initStubs()
    a.bind(exitLabel);
    a.mov(a.ppcnia, a.eax);
    a.add(a.zsp, 0x38);
+   a.pop(asmjit::x86::r15);
+   a.pop(asmjit::x86::r14);
+   a.pop(asmjit::x86::r13);
    a.pop(asmjit::x86::r12);
    a.pop(a.zsi);
    a.pop(a.zdi);
    a.pop(a.zbx);
+   a.pop(a.zbp);
    a.ret();
 
    auto basePtr = a.make();

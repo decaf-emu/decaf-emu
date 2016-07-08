@@ -85,7 +85,7 @@ void registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr)
    //   PUSH R12
    //   SUB RSP, 0x38
 
-   auto unwindCodeCount = 5;
+   auto unwindCodeCount = 9;
    auto unwindInfoSize = sizeof(UNWIND_INFO) + ((unwindCodeCount + 1) & ~0x1) - 1;
 
    UNWIND_INFO *unwindInfo = reinterpret_cast<UNWIND_INFO*>(runtime->allocate(unwindInfoSize, 8));
@@ -93,25 +93,37 @@ void registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr)
 
    unwindInfo->Version = 1;
    unwindInfo->Flags = 0;
-   unwindInfo->SizeOfProlog = 9;
+   unwindInfo->SizeOfProlog = 16;
    unwindInfo->CountOfCodes = unwindCodeCount;
    unwindInfo->FrameRegister = 0;
    unwindInfo->FrameOffset = 0;
-   unwindInfo->UnwindCode[0].CodeOffset = 9;
+   unwindInfo->UnwindCode[0].CodeOffset = 16;
    unwindInfo->UnwindCode[0].UnwindOp = UWOP_ALLOC_SMALL;
    unwindInfo->UnwindCode[0].OpInfo = 6;
-   unwindInfo->UnwindCode[1].CodeOffset = 5;
+   unwindInfo->UnwindCode[1].CodeOffset = 12;
    unwindInfo->UnwindCode[1].UnwindOp = UWOP_PUSH_NONVOL;
-   unwindInfo->UnwindCode[1].OpInfo = UWRC_R12;
-   unwindInfo->UnwindCode[2].CodeOffset = 3;
+   unwindInfo->UnwindCode[1].OpInfo = UWRC_R15;
+   unwindInfo->UnwindCode[2].CodeOffset = 10;
    unwindInfo->UnwindCode[2].UnwindOp = UWOP_PUSH_NONVOL;
-   unwindInfo->UnwindCode[2].OpInfo = UWRC_RSI;
-   unwindInfo->UnwindCode[3].CodeOffset = 2;
+   unwindInfo->UnwindCode[2].OpInfo = UWRC_R14;
+   unwindInfo->UnwindCode[3].CodeOffset = 8;
    unwindInfo->UnwindCode[3].UnwindOp = UWOP_PUSH_NONVOL;
-   unwindInfo->UnwindCode[3].OpInfo = UWRC_RDI;
-   unwindInfo->UnwindCode[4].CodeOffset = 1;
+   unwindInfo->UnwindCode[3].OpInfo = UWRC_R13;
+   unwindInfo->UnwindCode[4].CodeOffset = 6;
    unwindInfo->UnwindCode[4].UnwindOp = UWOP_PUSH_NONVOL;
-   unwindInfo->UnwindCode[4].OpInfo = UWRC_RBX;
+   unwindInfo->UnwindCode[4].OpInfo = UWRC_R12;
+   unwindInfo->UnwindCode[5].CodeOffset = 4;
+   unwindInfo->UnwindCode[5].UnwindOp = UWOP_PUSH_NONVOL;
+   unwindInfo->UnwindCode[5].OpInfo = UWRC_RSI;
+   unwindInfo->UnwindCode[6].CodeOffset = 3;
+   unwindInfo->UnwindCode[6].UnwindOp = UWOP_PUSH_NONVOL;
+   unwindInfo->UnwindCode[6].OpInfo = UWRC_RDI;
+   unwindInfo->UnwindCode[7].CodeOffset = 2;
+   unwindInfo->UnwindCode[7].UnwindOp = UWOP_PUSH_NONVOL;
+   unwindInfo->UnwindCode[7].OpInfo = UWRC_RBX;
+   unwindInfo->UnwindCode[8].CodeOffset = 1;
+   unwindInfo->UnwindCode[8].UnwindOp = UWOP_PUSH_NONVOL;
+   unwindInfo->UnwindCode[8].OpInfo = UWRC_RBP;
 
    auto rootAddress = runtime->getRootAddress();
    rfuncs[0].BeginAddress = static_cast<DWORD>(jitCallAddr - rootAddress);
