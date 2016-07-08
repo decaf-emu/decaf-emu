@@ -33,10 +33,15 @@ jit_interrupt_stub()
 static void
 jit_b_check_interrupt(PPCEmuAssembler& a)
 {
+   // Jump to interrupt handler if there is an interrupt
    auto noInterrupt = a.newLabel();
+
    a.cmp(a.ppcinterrupt, 0);
    a.je(noInterrupt);
+
+   a.mov(a.ppcnia, a.genCia + 4);
    a.call(asmjit::Ptr(jit_interrupt_stub));
+
    a.bind(noInterrupt);
 }
 

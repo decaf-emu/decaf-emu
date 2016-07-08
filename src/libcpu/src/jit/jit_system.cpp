@@ -156,6 +156,9 @@ kc(PPCEmuAssembler& a, Instruction instr)
       return false;
    }
 
+   // Save NIA back to memory in case KC reads/writes it
+   a.mov(a.ppcnia, a.genCia + 4);
+
    // Call the KC
    a.mov(a.zcx, asmjit::Ptr(kc->func));
    a.mov(a.zdx, asmjit::Ptr(kc->user_data));
