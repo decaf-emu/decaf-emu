@@ -95,6 +95,9 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
    //case latte::SQ_DATA_FORMAT::FMT_11_11_10:
    case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
       return gl::GL_R11F_G11F_B10F;
+   case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
+      return getStorageFormat(numFormat, formatComp, degamma,
+         gl::GL_RGB10_A2, BADFMT, gl::GL_RGB10_A2UI, BADFMT, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
       return getStorageFormat(numFormat, formatComp, degamma,
          gl::GL_RGBA8, gl::GL_RGBA8_SNORM, gl::GL_RGBA8UI, gl::GL_RGBA8I, gl::GL_SRGB8);
