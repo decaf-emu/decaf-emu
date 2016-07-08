@@ -17,9 +17,10 @@
 
 using namespace espresso;
 
-static const auto TEST_FPSCR = true;
+static const auto TEST_FPSCR = false;
 static const auto TEST_FPSCR_FR = false;
 static const auto TEST_FPSCR_UX = false;
+static const auto TEST_FMADDSUB = false;
 
 namespace hwtest
 {
@@ -161,6 +162,25 @@ bool runTests(const std::string &path)
 
       for (auto &test : testFile.tests) {
          bool failed = false;
+
+         if (!TEST_FMADDSUB) {
+            auto data = espresso::decodeInstruction(test.instr);
+            switch (data->id) {
+            case InstructionID::fmadd:
+            case InstructionID::fmadds:
+            case InstructionID::fmsub:
+            case InstructionID::fmsubs:
+            case InstructionID::fnmadd:
+            case InstructionID::fnmadds:
+            case InstructionID::fnmsub:
+            case InstructionID::fnmsubs:
+               failed = true;
+               break;
+            }
+            if (failed) {
+               continue;
+            }
+         }
 
          // Setup core state from test input
          cpu::CoreRegs *state = cpu::this_core::state();
