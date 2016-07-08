@@ -19,13 +19,29 @@ public:
       // Currently we do not clean up due to atomics
    }
 
-   // Note that there must be no readers to call this
+   // Note that there must be no readers or writers to call this
    void clear()
    {
       if (mData) {
-         delete[] mData;
+         for (auto i = 0u; i < 0x100; ++i) {
+            auto level1 = mData[i].load();
+
+            if (level1) {
+               for (auto j = 0u; j < 0x100; ++j) {
+                  auto level2 = level1[j].load();
+
+                  if (level2) {
+                     delete[] level2;
+                  }
+               }
+
+               delete[] level1;
+            }
+         }
+      } else {
+         mData = new std::atomic<std::atomic<std::atomic<Type>*>*>[0x100];
       }
-      mData = new std::atomic<std::atomic<std::atomic<Type>*>*>[0x100];
+
       memset(mData, 0, sizeof(void*) * 0x100);
    }
 
