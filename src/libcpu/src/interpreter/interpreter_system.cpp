@@ -146,6 +146,9 @@ mfspr(cpu::Core *state, Instruction instr)
    case SPR::UGQR7:
       value = state->gqr[7].value;
       break;
+   case SPR::UPIR:
+      value = cpu::this_core::id();
+      break;
    default:
       gLog->error("Invalid mfspr SPR {}", static_cast<uint32_t>(spr));
    }
