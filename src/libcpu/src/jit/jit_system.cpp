@@ -78,7 +78,7 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.eax, a.ppccoreid);
       break;
    default:
-      gLog->error("Invalid mfspr SPR {}", static_cast<uint32_t>(spr));
+      throw std::logic_error(fmt::format("Invalid mfspr SPR {}", static_cast<uint32_t>(spr)));
    }
 
    a.mov(a.ppcgpr[instr.rD], a.eax);
@@ -128,7 +128,7 @@ mtspr(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.ppcgqr[7], a.eax);
       break;
    default:
-      gLog->error("Invalid mtspr SPR {}", static_cast<uint32_t>(spr));
+      throw std::logic_error(fmt::format("Invalid mtspr SPR {}", static_cast<uint32_t>(spr)));
    }
 
    return true;
