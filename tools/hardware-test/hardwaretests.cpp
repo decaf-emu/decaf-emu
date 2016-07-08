@@ -179,8 +179,7 @@ bool runTests(const std::string &path)
 
          // Execute test
          mem::write(baseAddress, test.instr.value);
-         // TODO: Fix when enable jit hwtests again
-         // cpu::jit::clearCache();
+         cpu::jit::clearCache();
          cpu::this_core::executeSub();
 
          // Check XER (all bits)

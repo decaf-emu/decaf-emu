@@ -17,8 +17,7 @@ int main(int argc, char *argv[])
    mem::initialise();
    cpu::initialise();
 
-   // Force diasble JIT until we fix cpu::jit::clearCache
-   cpu::setJitMode(cpu::jit_mode::disabled);
+   cpu::setJitMode(cpu::jit_mode::enabled);
 
    // We need to run the tests on a core.
    cpu::setCoreEntrypointHandler(
