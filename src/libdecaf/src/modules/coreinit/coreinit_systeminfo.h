@@ -1,4 +1,5 @@
 #pragma once
+#include "coreinit_enum.h"
 #include "coreinit_time.h"
 #include "common/be_val.h"
 #include "common/structsize.h"
@@ -20,6 +21,9 @@ CHECK_OFFSET(OSSystemInfo, 0x8, baseTime);
 CHECK_SIZE(OSSystemInfo, 0x20);
 
 #pragma pack(pop)
+
+HardwareVersion
+bspGetHardwareVersion();
 
 OSSystemInfo *
 OSGetSystemInfo();
