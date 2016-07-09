@@ -9,6 +9,7 @@
 #include "common/teenyheap.h"
 #include "common/strutils.h"
 #include "virtual_ptr.h"
+#include "ppcutils/wfunc_call.h"
 #include <array>
 
 namespace coreinit
