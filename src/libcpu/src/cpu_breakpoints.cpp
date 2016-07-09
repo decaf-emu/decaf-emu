@@ -17,14 +17,15 @@ static inline void
 compareAndSwapBreakpoints(uint32_t *bpList, BreakpointListFn functor)
 {
    uint32_t *newBpList = nullptr;
+
    do {
       newBpList = functor(bpList);
+
       if (newBpList == bpList) {
          // No changes were made
          return;
       }
-
-   } while (!std::atomic_compare_exchange_weak(&gBreakpoints, &bpList, newBpList));
+   } while (!gBreakpoints.compare_exchange_strong(bpList, newBpList));
 }
 
 static inline bool
@@ -200,13 +201,13 @@ clearBreakpoints(uint32_t *bpList,
 bool
 hasBreakpoints()
 {
-   return std::atomic_load(&gBreakpoints) != nullptr;
+   return !!gBreakpoints.load(std::memory_order_acquire);
 }
 
 bool
 popBreakpoint(ppcaddr_t address)
 {
-   auto bpList = std::atomic_load(&gBreakpoints);
+   auto bpList = gBreakpoints.load(std::memory_order_acquire);
 
    if (bpList == nullptr) {
       // No breakpoints
@@ -242,7 +243,7 @@ popBreakpoint(ppcaddr_t address)
 bool
 clearBreakpoints(uint32_t flags_mask)
 {
-   auto bpList = std::atomic_load(&gBreakpoints);
+   auto bpList = gBreakpoints.load(std::memory_order_acquire);
    return clearBreakpoints(bpList, flags_mask);
 }
 
@@ -259,7 +260,7 @@ addBreakpoint(ppcaddr_t address,
       throw std::logic_error("You must specify at least a single flag for a breakpoint");
    }
 
-   auto bpList = std::atomic_load(&gBreakpoints);
+   auto bpList = gBreakpoints.load(std::memory_order_acquire);
    return addBreakpoint(bpList, address, flags);
 }
 
@@ -267,7 +268,7 @@ bool
 removeBreakpoint(ppcaddr_t address,
                  uint32_t flags)
 {
-   auto bpList = std::atomic_load(&gBreakpoints);
+   auto bpList = gBreakpoints.load(std::memory_order_acquire);
    return removeBreakpoint(bpList, address, flags);
 }
 
