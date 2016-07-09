@@ -105,7 +105,7 @@ printFieldValue(fmt::MemoryWriter &out, Instruction instr, TraceFieldType type, 
    } else if (type == StateField::CR) {
       auto valX = [&](int i) { return (value.u32v0 >> ((i) * 4)) & 0xF; };
       out.write("    CR = {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b}\n",
-         valX(0), valX(1), valX(2), valX(3), valX(4), valX(5), valX(6), valX(7));
+         valX(7), valX(6), valX(5), valX(4), valX(3), valX(2), valX(1), valX(0));
    } else if (type == StateField::XER) {
       out.write("    XER = {:08x}\n", value.u32v0);
    } else if (type == StateField::LR) {
