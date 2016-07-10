@@ -23,22 +23,22 @@ mergeGeneric(PPCEmuAssembler& a, Instruction instr)
    auto src0Tmp = a.allocXmmTmp();
 
    if (flags & MergeValue0) {
-      a.movq(src0Tmp, a.loadRegister(a.fprps[instr.frA][1]));
+      a.movq(src0Tmp, a.loadRegisterRead(a.fprps[instr.frA][1]));
    } else {
-      a.movq(src0Tmp, a.loadRegister(a.fprps[instr.frA][0]));
+      a.movq(src0Tmp, a.loadRegisterRead(a.fprps[instr.frA][0]));
    }
 
    // Scope this to save us a register eviction
    {
-      auto dst1 = a.allocRegister(a.fprps[instr.frD][1]);
+      auto dst1 = a.loadRegisterWrite(a.fprps[instr.frD][1]);
       if (flags & MergeValue1) {
-         a.movq(dst1, a.loadRegister(a.fprps[instr.frB][1]));
+         a.movq(dst1, a.loadRegisterRead(a.fprps[instr.frB][1]));
       } else {
-         a.movq(dst1, a.loadRegister(a.fprps[instr.frB][0]));
+         a.movq(dst1, a.loadRegisterRead(a.fprps[instr.frB][0]));
       }
    }
 
-   auto dst0 = a.allocRegister(a.fprps[instr.frD][0]);
+   auto dst0 = a.loadRegisterWrite(a.fprps[instr.frD][0]);
    a.movq(dst0, src0Tmp);
 
    // Update the condition register

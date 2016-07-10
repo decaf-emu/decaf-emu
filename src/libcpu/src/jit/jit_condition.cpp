@@ -17,9 +17,8 @@ getCRB(PPCEmuAssembler& a,
    auto shift = 31 - bit;
 
    auto out = a.allocGpTmp().r32();
-   auto ppccr = a.loadRegister(a.cr);
 
-   a.mov(out, ppccr);
+   a.mov(out, a.loadRegisterRead(a.cr));
    a.shr(out, shift);
    a.and_(out, 1);
 
@@ -33,7 +32,7 @@ setCRB(PPCEmuAssembler& a,
 {
    auto shift = 31 - bit;
 
-   auto ppccr = a.allocRegister(a.cr);
+   auto ppccr = a.loadRegisterReadWrite(a.cr);
    a.and_(ppccr, ~(1 << shift));
    a.and_(value, 1);
    a.shl(value, shift);
@@ -57,7 +56,7 @@ cmpGeneric(PPCEmuAssembler& a, Instruction instr)
    auto tmp = a.allocGpTmp().r32();
 
    // Load CRF
-   auto ppccr = a.loadRegister(a.cr);
+   auto ppccr = a.loadRegisterReadWrite(a.cr);
 
    // Mask CRF
    uint32_t mask = 0xFFFFFFFF;
@@ -66,7 +65,7 @@ cmpGeneric(PPCEmuAssembler& a, Instruction instr)
 
    // Summary Overflow
    {
-      auto ppcxer = a.loadRegister(a.xer);
+      auto ppcxer = a.loadRegisterRead(a.xer);
       auto tmp = a.allocGpTmp().r32();
       a.mov(tmp, ppcxer);
       a.and_(tmp, XERegisterBits::StickyOV);
@@ -76,7 +75,7 @@ cmpGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    // Perform Comparison
-   auto src0 = a.loadRegister(a.gpr[instr.rA]);
+   auto src0 = a.loadRegisterRead(a.gpr[instr.rA]);
 
    PPCEmuAssembler::GpRegister src1;
    if (flags & CmpImmediate) {
@@ -87,7 +86,7 @@ cmpGeneric(PPCEmuAssembler& a, Instruction instr)
          a.mov(src1, instr.uimm);
       }
    } else {
-      src1 = a.loadRegister(a.gpr[instr.rB]);
+      src1 = a.loadRegisterRead(a.gpr[instr.rB]);
    }
 
    a.cmp(src0, src1);
@@ -277,7 +276,7 @@ mcrf(PPCEmuAssembler& a, Instruction instr)
    uint32_t crshiftd = (7 - instr.crfD) * 4;
 
    auto tmp = a.allocGpTmp().r32();
-   auto ppccr = a.loadRegister(a.cr);
+   auto ppccr = a.loadRegisterReadWrite(a.cr);
 
    a.mov(tmp, ppccr);
    a.and_(tmp, ~(0xF << crshifts));
@@ -295,7 +294,7 @@ mcrxr(PPCEmuAssembler& a, Instruction instr)
 {
    uint32_t crshift = (7 - instr.crfD) * 4;
 
-   auto ppcxer = a.loadRegister(a.xer);
+   auto ppcxer = a.loadRegisterReadWrite(a.xer);
    auto crxr = a.allocGpTmp().r32();
 
    // Grab CRXR
@@ -307,7 +306,7 @@ mcrxr(PPCEmuAssembler& a, Instruction instr)
    a.and_(ppcxer, ~XERegisterBits::XR);
 
    // Set CRF
-   auto ppccr = a.loadRegister(a.cr);
+   auto ppccr = a.loadRegisterReadWrite(a.cr);
    a.shl(crxr, crshift);
    a.and_(ppccr, ~(0xF << crshift));
    a.or_(ppccr, crxr);
@@ -320,8 +319,8 @@ mcrxr(PPCEmuAssembler& a, Instruction instr)
 static bool
 mfcr(PPCEmuAssembler& a, Instruction instr)
 {
-   auto ppccr = a.loadRegister(a.cr);
-   auto dst = a.allocRegister(a.gpr[instr.rD]);
+   auto ppccr = a.loadRegisterRead(a.cr);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rD]);
    a.mov(dst, ppccr);
 
    return true;
@@ -340,11 +339,10 @@ mtcrf(PPCEmuAssembler& a, Instruction instr)
    }
 
    auto tmp = a.allocGpTmp().r32();
-   auto src = a.loadRegister(a.gpr[instr.rS]);
-   a.mov(tmp, src);
+   a.mov(tmp, a.loadRegisterRead(a.gpr[instr.rS]));
    a.and_(tmp, mask);
 
-   auto ppccr = a.loadRegister(a.cr);
+   auto ppccr = a.loadRegisterReadWrite(a.cr);
    a.and_(ppccr, ~mask);
    a.or_(ppccr, tmp);
 

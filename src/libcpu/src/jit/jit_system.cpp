@@ -40,11 +40,11 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
 {
    auto spr = decodeSPR(instr);
 
-   auto dst = a.allocRegister(a.gpr[instr.rD]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rD]);
 
    switch (spr) {
    case SPR::XER:
-      a.mov(dst, a.loadRegister(a.xer));
+      a.mov(dst, a.loadRegisterRead(a.xer));
       break;
    case SPR::LR:
       a.mov(dst, a.lrMem);
@@ -53,28 +53,28 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
       a.mov(dst, a.ctrMem);
       break;
    case SPR::UGQR0:
-      a.mov(dst, a.loadRegister(a.gqr[0]));
+      a.mov(dst, a.loadRegisterRead(a.gqr[0]));
       break;
    case SPR::UGQR1:
-      a.mov(dst, a.loadRegister(a.gqr[1]));
+      a.mov(dst, a.loadRegisterRead(a.gqr[1]));
       break;
    case SPR::UGQR2:
-      a.mov(dst, a.loadRegister(a.gqr[2]));
+      a.mov(dst, a.loadRegisterRead(a.gqr[2]));
       break;
    case SPR::UGQR3:
-      a.mov(dst, a.loadRegister(a.gqr[3]));
+      a.mov(dst, a.loadRegisterRead(a.gqr[3]));
       break;
    case SPR::UGQR4:
-      a.mov(dst, a.loadRegister(a.gqr[4]));
+      a.mov(dst, a.loadRegisterRead(a.gqr[4]));
       break;
    case SPR::UGQR5:
-      a.mov(dst, a.loadRegister(a.gqr[5]));
+      a.mov(dst, a.loadRegisterRead(a.gqr[5]));
       break;
    case SPR::UGQR6:
-      a.mov(dst, a.loadRegister(a.gqr[6]));
+      a.mov(dst, a.loadRegisterRead(a.gqr[6]));
       break;
    case SPR::UGQR7:
-      a.mov(dst, a.loadRegister(a.gqr[7]));
+      a.mov(dst, a.loadRegisterRead(a.gqr[7]));
       break;
    case SPR::UPIR:
       a.mov(dst, a.coreIdMem);
@@ -92,11 +92,11 @@ mtspr(PPCEmuAssembler& a, Instruction instr)
 {
    auto spr = decodeSPR(instr);
 
-   auto src = a.loadRegister(a.gpr[instr.rD]);
+   auto src = a.loadRegisterRead(a.gpr[instr.rD]);
 
    switch (spr) {
    case SPR::XER:
-      a.mov(a.allocRegister(a.xer), src);
+      a.mov(a.loadRegisterWrite(a.xer), src);
       break;
    case SPR::LR:
       a.mov(a.lrMem, src);
@@ -105,28 +105,28 @@ mtspr(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.ctrMem, src);
       break;
    case SPR::UGQR0:
-      a.mov(a.allocRegister(a.gqr[0]), src);
+      a.mov(a.loadRegisterWrite(a.gqr[0]), src);
       break;
    case SPR::UGQR1:
-      a.mov(a.allocRegister(a.gqr[1]), src);
+      a.mov(a.loadRegisterWrite(a.gqr[1]), src);
       break;
    case SPR::UGQR2:
-      a.mov(a.allocRegister(a.gqr[2]), src);
+      a.mov(a.loadRegisterWrite(a.gqr[2]), src);
       break;
    case SPR::UGQR3:
-      a.mov(a.allocRegister(a.gqr[3]), src);
+      a.mov(a.loadRegisterWrite(a.gqr[3]), src);
       break;
    case SPR::UGQR4:
-      a.mov(a.allocRegister(a.gqr[4]), src);
+      a.mov(a.loadRegisterWrite(a.gqr[4]), src);
       break;
    case SPR::UGQR5:
-      a.mov(a.allocRegister(a.gqr[5]), src);
+      a.mov(a.loadRegisterWrite(a.gqr[5]), src);
       break;
    case SPR::UGQR6:
-      a.mov(a.allocRegister(a.gqr[6]), src);
+      a.mov(a.loadRegisterWrite(a.gqr[6]), src);
       break;
    case SPR::UGQR7:
-      a.mov(a.allocRegister(a.gqr[7]), src);
+      a.mov(a.loadRegisterWrite(a.gqr[7]), src);
       break;
    default:
       decaf_abort(fmt::format("Invalid mtspr SPR {}", static_cast<uint32_t>(spr)));

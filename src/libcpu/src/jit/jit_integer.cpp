@@ -22,7 +22,7 @@ updateConditionRegister(PPCEmuAssembler& a,
    auto crtarget = 0;
    auto crshift = (7 - crtarget) * 4;
 
-   auto ppccr = a.loadRegister(a.cr);
+   auto ppccr = a.loadRegisterReadWrite(a.cr);
    auto tmp = a.allocGpTmp().r32();
    auto tmp2 = a.allocGpTmp().r32();
 
@@ -49,7 +49,7 @@ updateConditionRegister(PPCEmuAssembler& a,
    a.shl(tmp2, crshift + ConditionRegisterFlag::NegativeShift);
    a.or_(tmp, tmp2);
 
-   auto ppcxer = a.loadRegister(a.xer);
+   auto ppcxer = a.loadRegisterRead(a.xer);
    a.mov(tmp2, ppcxer);
    a.and_(tmp2, XERegisterBits::StickyOV);
    a.shiftTo(tmp2, XERegisterBits::StickyOVShift, crshift + ConditionRegisterFlag::SummaryOverflowShift);
@@ -100,7 +100,7 @@ addGeneric(PPCEmuAssembler& a, Instruction instr)
       }
    }
 
-   auto dst = a.allocRegister(a.gpr[instr.rD]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rD]);
 
    {
       auto src0 = a.allocGpTmp().r32();
@@ -108,7 +108,7 @@ addGeneric(PPCEmuAssembler& a, Instruction instr)
       if ((flags & AddZeroRA) && instr.rA == 0) {
          a.mov(src0, 0);
       } else {
-         a.mov(src0, a.loadRegister(a.gpr[instr.rA]));
+         a.mov(src0, a.loadRegisterRead(a.gpr[instr.rA]));
       }
 
       if (flags & AddSubtract) {
@@ -124,7 +124,7 @@ addGeneric(PPCEmuAssembler& a, Instruction instr)
       } else if (flags & AddToMinusOne) {
          a.mov(src1, -1);
       } else {
-         a.mov(src1, a.loadRegister(a.gpr[instr.rB]));
+         a.mov(src1, a.loadRegisterRead(a.gpr[instr.rB]));
       }
 
       if (flags & AddShifted) {
@@ -134,7 +134,7 @@ addGeneric(PPCEmuAssembler& a, Instruction instr)
       // Mark x64 CF based on PPC CF
       if (flags & AddExtended) {
          auto carry = a.allocGpTmp().r32();
-         a.mov(carry, a.loadRegister(a.xer));
+         a.mov(carry, a.loadRegisterRead(a.xer));
          a.and_(carry, XERegisterBits::Carry);
          a.add(carry, 0xffffffff);
 
@@ -183,7 +183,7 @@ addGeneric(PPCEmuAssembler& a, Instruction instr)
             mask &= ~XERegisterBits::Overflow;
          }
 
-         auto ppcxer = a.loadRegister(a.xer);
+         auto ppcxer = a.loadRegisterReadWrite(a.xer);
          a.and_(ppcxer, mask);
          a.or_(ppcxer, xerbits);
       }
@@ -266,16 +266,16 @@ andGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
 
    {
-      auto src0 = a.loadRegister(a.gpr[instr.rS]);
+      auto src0 = a.loadRegisterRead(a.gpr[instr.rS]);
       auto tmp = a.allocGpTmp().r32();
 
       if (flags & AndImmediate) {
          a.mov(tmp, instr.uimm);
       } else {
-         a.mov(tmp, a.loadRegister(a.gpr[instr.rB]));
+         a.mov(tmp, a.loadRegisterRead(a.gpr[instr.rB]));
       }
 
       if (flags & AndShifted) {
@@ -332,12 +332,12 @@ cntlzw(PPCEmuAssembler& a, Instruction instr)
 {
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
 
    {
       auto lblZero = a.newLabel();
 
-      auto src0 = a.loadRegister(a.gpr[instr.rS]);
+      auto src0 = a.loadRegisterRead(a.gpr[instr.rS]);
       auto tmp = a.allocGpTmp().r32();
       auto tmp2 = a.allocGpTmp().r32();
 
@@ -390,11 +390,11 @@ eqv(PPCEmuAssembler& a, Instruction instr)
 {
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
 
    {
-      auto tmp = a.allocGpTmp(a.loadRegister(a.gpr[instr.rS]));
-      auto src1 = a.loadRegister(a.gpr[instr.rB]);
+      auto tmp = a.allocGpTmp(a.loadRegisterRead(a.gpr[instr.rS]));
+      auto src1 = a.loadRegisterRead(a.gpr[instr.rB]);
 
       a.xor_(tmp, src1);
       a.not_(tmp);
@@ -415,8 +415,8 @@ extsb(PPCEmuAssembler& a, Instruction instr)
 {
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
-   auto src = a.loadRegister(a.gpr[instr.rS]);
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto src = a.loadRegisterRead(a.gpr[instr.rS]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
    a.movsx(dst, src.r8());
 
    if (instr.rc) {
@@ -432,8 +432,8 @@ extsh(PPCEmuAssembler& a, Instruction instr)
 {
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
-   auto src = a.loadRegister(a.gpr[instr.rS]);
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto src = a.loadRegisterRead(a.gpr[instr.rS]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
    a.movsx(dst, src.r16());
 
    if (instr.rc) {
@@ -461,9 +461,10 @@ mulGeneric(PPCEmuAssembler& a, Instruction instr)
    static_assert((flags & MulLow) || (flags & MulHigh), "Unexpected mulGeneric flags");
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
    auto edxLockout = a.lockRegister(asmjit::x86::rdx);
-   auto dst = a.loadRegister(a.gpr[instr.rD]);
 
-   a.mov(asmjit::x86::eax, a.loadRegister(a.gpr[instr.rA]));
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rD]);
+
+   a.mov(asmjit::x86::eax, a.loadRegisterRead(a.gpr[instr.rA]));
 
    if (flags & MulImmediate) {
       auto tmp = a.allocGpTmp().r32();
@@ -475,9 +476,9 @@ mulGeneric(PPCEmuAssembler& a, Instruction instr)
       }
    } else {
       if (flags & MulSigned) {
-         a.imul(a.loadRegister(a.gpr[instr.rB]));
+         a.imul(a.loadRegisterRead(a.gpr[instr.rB]));
       } else {
-         a.mul(a.loadRegister(a.gpr[instr.rB]));
+         a.mul(a.loadRegisterRead(a.gpr[instr.rB]));
       }
    }
 
@@ -528,11 +529,11 @@ nand(PPCEmuAssembler& a, Instruction instr)
 {
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
 
    {
-      auto tmp = a.allocGpTmp(a.loadRegister(a.gpr[instr.rS]));
-      auto src1 = a.loadRegister(a.gpr[instr.rB]);
+      auto tmp = a.allocGpTmp(a.loadRegisterRead(a.gpr[instr.rS]));
+      auto src1 = a.loadRegisterRead(a.gpr[instr.rB]);
 
       a.and_(tmp, src1);
       a.not_(tmp);
@@ -553,22 +554,22 @@ neg(PPCEmuAssembler& a, Instruction instr)
 {
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
-   auto dst = a.allocRegister(a.gpr[instr.rD]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rD]);
 
    if (!instr.oe) {
-      a.mov(dst, a.loadRegister(a.gpr[instr.rA]));
+      a.mov(dst, a.loadRegisterRead(a.gpr[instr.rA]));
       a.neg(dst);
    } else {
       auto tmp = a.allocGpTmp().r32();
 
-      a.mov(dst, a.loadRegister(a.gpr[instr.rA]));
+      a.mov(dst, a.loadRegisterRead(a.gpr[instr.rA]));
       a.neg(dst);
 
       a.mov(tmp, 0);
       a.seto(tmp.r8());
 
       // Reset overflow
-      auto ppcxer = a.loadRegister(a.xer);
+      auto ppcxer = a.loadRegisterReadWrite(a.xer);
       a.and_(ppcxer, ~XERegisterBits::Overflow);
 
       a.shiftTo(tmp, 0, XERegisterBits::Overflow);
@@ -590,11 +591,11 @@ nor(PPCEmuAssembler& a, Instruction instr)
 {
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
 
    {
-      auto tmp = a.allocGpTmp(a.loadRegister(a.gpr[instr.rS]));
-      auto src1 = a.loadRegister(a.gpr[instr.rB]);
+      auto tmp = a.allocGpTmp(a.loadRegisterRead(a.gpr[instr.rS]));
+      auto src1 = a.loadRegisterRead(a.gpr[instr.rB]);
 
       a.or_(tmp, src1);
       a.not_(tmp);
@@ -625,16 +626,16 @@ orGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
 
    {
-      auto src0 = a.loadRegister(a.gpr[instr.rS]);
+      auto src0 = a.loadRegisterRead(a.gpr[instr.rS]);
       auto tmp = a.allocGpTmp().r32();
 
       if (flags & OrImmediate) {
          a.mov(tmp, instr.uimm);
       } else {
-         a.mov(tmp, a.loadRegister(a.gpr[instr.rB]));
+         a.mov(tmp, a.loadRegisterRead(a.gpr[instr.rB]));
       }
 
       if (flags & OrShifted) {
@@ -701,17 +702,17 @@ rlwGeneric(PPCEmuAssembler& a, Instruction instr)
    // This is needed for the ROL instruction...
    auto ecxLockout = a.lockRegister(asmjit::x86::rcx);
 
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
 
    {
       auto tmp = a.allocGpTmp().r32();
 
-      a.mov(tmp, a.loadRegister(a.gpr[instr.rS]));
+      a.mov(tmp, a.loadRegisterRead(a.gpr[instr.rS]));
 
       if (flags & RlwImmediate) {
          a.rol(tmp, instr.sh);
       } else {
-         a.mov(asmjit::x86::ecx, a.loadRegister(a.gpr[instr.rB]));
+         a.mov(asmjit::x86::ecx, a.loadRegisterRead(a.gpr[instr.rB]));
          a.and_(asmjit::x86::ecx, 0x1f);
          a.rol(tmp, asmjit::x86::cl);
       }
@@ -723,7 +724,7 @@ rlwGeneric(PPCEmuAssembler& a, Instruction instr)
       } else if (flags & RlwInsert) {
          a.and_(tmp, m);
 
-         auto tmp2 = a.allocGpTmp(a.loadRegister(a.gpr[instr.rA]));
+         auto tmp2 = a.allocGpTmp(a.loadRegisterRead(a.gpr[instr.rA]));
          a.and_(tmp2, ~m);
          a.or_(tmp, tmp2);
       }
@@ -776,12 +777,12 @@ shiftLogical(PPCEmuAssembler& a, Instruction instr)
    // Needed for the register-based SHL instruction
    auto ecxLockout = a.lockRegister(asmjit::x86::rcx);
 
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
 
    {
       auto tmp = a.allocGpTmp().r64();
 
-      a.mov(tmp, a.loadRegister(a.gpr[instr.rS]));
+      a.mov(tmp, a.loadRegisterRead(a.gpr[instr.rS]));
 
       if (flags & ShiftImmediate) {
          if (flags & ShiftLeft) {
@@ -792,7 +793,7 @@ shiftLogical(PPCEmuAssembler& a, Instruction instr)
             throw;
          }
       } else {
-         a.mov(asmjit::x86::ecx, a.loadRegister(a.gpr[instr.rB]));
+         a.mov(asmjit::x86::ecx, a.loadRegisterRead(a.gpr[instr.rB]));
 
          if (flags & ShiftLeft) {
             a.shl(tmp, asmjit::x86::cl);
@@ -841,13 +842,13 @@ shiftArithmetic(PPCEmuAssembler& a, Instruction instr)
    // Needed for the register-based SHL instruction
    auto ecxLockout = a.lockRegister(asmjit::x86::rcx);
 
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
 
    {
       auto tmp = a.allocGpTmp().r64();
       auto tmp2 = a.allocGpTmp().r32();
 
-      a.movsxd(tmp, a.loadRegister(a.gpr[instr.rS]));
+      a.movsxd(tmp, a.loadRegisterRead(a.gpr[instr.rS]));
       a.mov(tmp2, tmp.r32());
 
       if (flags & ShiftImmediate) {
@@ -855,7 +856,7 @@ shiftArithmetic(PPCEmuAssembler& a, Instruction instr)
 
          a.shl(tmp2.r64(), 32 - instr.sh);
       } else {
-         a.mov(asmjit::x86::ecx, a.loadRegister(a.gpr[instr.rB]));
+         a.mov(asmjit::x86::ecx, a.loadRegisterRead(a.gpr[instr.rB]));
 
          a.sar(tmp.r64(), asmjit::x86::cl);
 
@@ -868,7 +869,7 @@ shiftArithmetic(PPCEmuAssembler& a, Instruction instr)
       a.setnz(tmp2.r8());
       a.shl(tmp2, XERegisterBits::CarryShift);
 
-      auto ppcxer = a.loadRegister(a.xer);
+      auto ppcxer = a.loadRegisterReadWrite(a.xer);
       a.and_(ppcxer, ~XERegisterBits::Carry);
       a.or_(ppcxer, tmp2);
 
@@ -945,17 +946,17 @@ xorGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
-   auto dst = a.allocRegister(a.gpr[instr.rA]);
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rA]);
 
    {
-      auto src0 = a.loadRegister(a.gpr[instr.rS]);
+      auto src0 = a.loadRegisterRead(a.gpr[instr.rS]);
 
       auto tmp = a.allocGpTmp().r32();
 
       if (flags & XorImmediate) {
          a.mov(tmp, instr.uimm);
       } else {
-         a.mov(tmp, a.loadRegister(a.gpr[instr.rB]));
+         a.mov(tmp, a.loadRegisterRead(a.gpr[instr.rB]));
       }
 
       if (flags & XorShifted) {

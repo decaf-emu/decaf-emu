@@ -36,11 +36,11 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
    if ((flags & LoadZeroRA) && instr.rA == 0) {
       a.mov(src, 0);
    } else {
-      a.mov(src, a.loadRegister(a.gpr[instr.rA]));
+      a.mov(src, a.loadRegisterRead(a.gpr[instr.rA]));
    }
 
    if (flags & LoadIndexed) {
-      a.add(src, a.loadRegister(a.gpr[instr.rB]));
+      a.add(src, a.loadRegisterRead(a.gpr[instr.rB]));
    } else {
       auto x = sign_extend<16, int32_t>(instr.d);
       if (x != 0) {
@@ -82,12 +82,12 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
    if (std::is_floating_point<Type>::value) {
       if (sizeof(Type) == 4) {
          auto tmp = a.allocXmmTmp();
-         auto dst = a.allocXmmRegister(a.fpr[instr.rD]);
+         auto dst = a.loadXmmRegisterWrite(a.fpr[instr.rD]);
          a.movq(tmp, data);
          a.cvtss2sd(dst, tmp);
       } else {
          decaf_check(sizeof(Type) == 8);
-         auto dst = a.allocXmmRegister(a.fpr[instr.rD]);
+         auto dst = a.loadXmmRegisterWrite(a.fpr[instr.rD]);
          a.movq(dst, data);
       }
    } else {
@@ -96,12 +96,12 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
          a.movsx(data.r32(), data.r16());
       }
 
-      auto dst = a.allocGpRegister(a.gpr[instr.rD]);
+      auto dst = a.loadGpRegisterWrite(a.gpr[instr.rD]);
       a.mov(dst, data);
    }
 
    if (flags & LoadUpdate) {
-      auto addrDst = a.allocRegister(a.gpr[instr.rA]);
+      auto addrDst = a.loadRegisterWrite(a.gpr[instr.rA]);
       a.mov(addrDst, src);
    }
 
@@ -280,7 +280,7 @@ lmw(PPCEmuAssembler& a, Instruction instr)
    auto src = a.allocGpTmp().r64();
 
    if (instr.rA) {
-      a.mov(src, a.loadRegister(a.gpr[instr.rA]));
+      a.mov(src, a.loadRegisterRead(a.gpr[instr.rA]));
       if (o != 0) {
          a.add(src, o);
       }
@@ -291,7 +291,7 @@ lmw(PPCEmuAssembler& a, Instruction instr)
    a.add(src, a.membaseReg);
 
    for (int r = instr.rD, d = 0; r <= 31; ++r, d += 4) {
-      auto dst = a.allocRegister(a.gpr[r]);
+      auto dst = a.loadRegisterWrite(a.gpr[r]);
       a.mov(dst, asmjit::X86Mem(src, d));
       a.bswap(dst);
    }
@@ -351,15 +351,15 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
 
    if ((flags & StoreZeroRA) && instr.rA == 0) {
       if (flags & StoreIndexed) {
-         a.mov(dst, a.loadRegister(a.gpr[instr.rB]));
+         a.mov(dst, a.loadRegisterRead(a.gpr[instr.rB]));
       } else {
          a.mov(dst, x);
       }
    } else {
-      a.mov(dst, a.loadRegister(a.gpr[instr.rA]));
+      a.mov(dst, a.loadRegisterRead(a.gpr[instr.rA]));
 
       if (flags & StoreIndexed) {
-         a.add(dst, a.loadRegister(a.gpr[instr.rB]));
+         a.add(dst, a.loadRegisterRead(a.gpr[instr.rB]));
       } else {
 
          if (x != 0) {
@@ -372,18 +372,18 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
 
    if (flags & StoreFloatAsInteger) {
       decaf_check(sizeof(Type) == 4);
-      a.mov(data.r32(), a.loadGpRegister(a.fpr[instr.rS]));
+      a.mov(data.r32(), a.loadGpRegisterRead(a.fpr[instr.rS]));
    } else if (std::is_floating_point<Type>::value) {
       if (sizeof(Type) == 4) {
          auto tmp = a.allocXmmTmp();
-         a.cvtsd2ss(tmp, a.loadXmmRegister(a.fpr[instr.rS]));
+         a.cvtsd2ss(tmp, a.loadXmmRegisterRead(a.fpr[instr.rS]));
          a.movq(data.r32(), tmp);
       } else {
          decaf_check(sizeof(Type) == 8);
-         a.mov(data, a.loadGpRegister(a.fpr[instr.rS]));
+         a.mov(data, a.loadGpRegisterRead(a.fpr[instr.rS]));
       }
    } else {
-      a.mov(data.r32(), a.loadRegister(a.gpr[instr.rS]));
+      a.mov(data.r32(), a.loadRegisterRead(a.gpr[instr.rS]));
    }
 
    if (!(flags & StoreByteReverse)) {
@@ -418,7 +418,7 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (flags & StoreUpdate) {
-      auto addrDst = a.allocRegister(a.gpr[instr.rA]);
+      auto addrDst = a.loadRegisterWrite(a.gpr[instr.rA]);
       a.mov(addrDst, dst);
    }
 
@@ -579,7 +579,7 @@ stmw(PPCEmuAssembler& a, Instruction instr)
    auto dst = a.allocGpTmp().r64();
 
    if (instr.rA) {
-      a.mov(dst, a.loadRegister(a.gpr[instr.rA]));
+      a.mov(dst, a.loadRegisterRead(a.gpr[instr.rA]));
       if (o != 0) {
          a.add(dst, o);
       }
@@ -591,7 +591,7 @@ stmw(PPCEmuAssembler& a, Instruction instr)
 
    auto src = a.allocGpTmp().r32();
    for (int r = instr.rS, d = 0; r <= 31; ++r, d += 4) {
-      a.mov(src, a.loadRegister(a.gpr[r]));
+      a.mov(src, a.loadRegisterRead(a.gpr[r]));
       a.bswap(src);
       a.mov(asmjit::X86Mem(dst, d), src);
    }

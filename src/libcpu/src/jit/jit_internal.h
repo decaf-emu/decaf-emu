@@ -65,6 +65,7 @@ public:
 
       // Information used for automatic eviction
       bool loaded = false;
+      bool written = false;
       uint32_t size = 0;
       uint32_t content = 0xFFFFFFFF;
    };
@@ -217,7 +218,7 @@ public:
       friend PPCEmuAssembler;
    public:
       Register()
-         : mParent(nullptr), mReg(nullptr), mSize(0), mMarkLoadedOnUse(false)
+         : mParent(nullptr), mReg(nullptr), mSize(0), mMarkWrittenOnUse(false)
       {
       }
 
@@ -229,7 +230,7 @@ public:
          mParent = other.mParent;
          mReg = other.mReg;
          mSize = other.mSize;
-         mMarkLoadedOnUse = other.mMarkLoadedOnUse;
+         mMarkWrittenOnUse = other.mMarkWrittenOnUse;
       }
 
       Register & operator=(const Register &other) {
@@ -242,7 +243,7 @@ public:
          mParent = other.mParent;
          mReg = other.mReg;
          mSize = other.mSize;
-         mMarkLoadedOnUse = other.mMarkLoadedOnUse;
+         mMarkWrittenOnUse = other.mMarkWrittenOnUse;
          return *this;
       }
 
@@ -261,12 +262,12 @@ public:
          mParent = nullptr;
          mReg = nullptr;
          mSize = 0;
-         mMarkLoadedOnUse = false;
+         mMarkWrittenOnUse = false;
       }
 
    private:
-      Register(PPCEmuAssembler *parent, HostRegister *varData, uint32_t size, bool loadOnUse)
-         : mParent(parent), mReg(varData), mSize(size), mMarkLoadedOnUse(loadOnUse)
+      Register(PPCEmuAssembler *parent, HostRegister *varData, uint32_t size, bool writtenOnUse)
+         : mParent(parent), mReg(varData), mSize(size), mMarkWrittenOnUse(writtenOnUse)
       {
       }
 
@@ -274,7 +275,8 @@ public:
       {
          decaf_check(mReg);
          mReg->lruValue = mParent->mLruCounter++;
-         if (mMarkLoadedOnUse) {
+         if (mMarkWrittenOnUse) {
+            mReg->written = true;
             mReg->loaded = true;
          }
       }
@@ -282,7 +284,7 @@ public:
       PPCEmuAssembler *mParent;
       HostRegister *mReg;
       uint32_t mSize;
-      bool mMarkLoadedOnUse;
+      bool mMarkWrittenOnUse;
 
    };
 
@@ -318,27 +320,27 @@ public:
 
       GpRegister r8() const {
          mReg->useCount++;
-         return GpRegister(mParent, mReg, 1, mMarkLoadedOnUse);
+         return GpRegister(mParent, mReg, 1, mMarkWrittenOnUse);
       }
 
       GpRegister r16() const {
          mReg->useCount++;
-         return GpRegister(mParent, mReg, 2, mMarkLoadedOnUse);
+         return GpRegister(mParent, mReg, 2, mMarkWrittenOnUse);
       }
 
       GpRegister r32() const {
          mReg->useCount++;
-         return GpRegister(mParent, mReg, 4, mMarkLoadedOnUse);
+         return GpRegister(mParent, mReg, 4, mMarkWrittenOnUse);
       }
 
       GpRegister r64() const {
          mReg->useCount++;
-         return GpRegister(mParent, mReg, 8, mMarkLoadedOnUse);
+         return GpRegister(mParent, mReg, 8, mMarkWrittenOnUse);
       }
 
    private:
-      GpRegister(PPCEmuAssembler *parent, HostRegister *reg, uint32_t size, bool loadOnUse)
-         : Register(parent, reg, size, loadOnUse) { }
+      GpRegister(PPCEmuAssembler *parent, HostRegister *reg, uint32_t size, bool writtenOnUse)
+         : Register(parent, reg, size, writtenOnUse) { }
 
    };
 
@@ -364,8 +366,8 @@ public:
       }
 
    private:
-      XmmRegister(PPCEmuAssembler *parent, HostRegister *reg, uint32_t size, bool loadOnUse)
-         : Register(parent, reg, size, loadOnUse) { }
+      XmmRegister(PPCEmuAssembler *parent, HostRegister *reg, uint32_t size, bool writtenOnUse)
+         : Register(parent, reg, size, writtenOnUse) { }
 
    };
 
@@ -515,7 +517,7 @@ public:
       return tmp;
    }
 
-   GpRegister _getGpRegister(const PpcRef &which, bool shouldLoad)
+   GpRegister _getGpRegister(const PpcRef &which, bool shouldLoad, bool writeOnUse)
    {
       decaf_check(which.size == 4 || which.size == 8);
 
@@ -544,10 +546,10 @@ public:
          reg->loaded = true;
       }
 
-      return GpRegister(this, reg, which.size, !shouldLoad);
+      return GpRegister(this, reg, which.size, writeOnUse);
    }
 
-   XmmRegister _getXmmRegister(const PpcRef &which, bool shouldLoad)
+   XmmRegister _getXmmRegister(const PpcRef &which, bool shouldLoad, bool writeOnUse)
    {
       decaf_check(which.size == 8);
 
@@ -574,42 +576,56 @@ public:
          reg->loaded = true;
       }
 
-      return XmmRegister(this, reg, which.size, !shouldLoad);
+      return XmmRegister(this, reg, which.size, writeOnUse);
    }
 
-
-
-   GpRegister allocGpRegister(const PpcRef &which) {
-      return _getGpRegister(which, false);
+   GpRegister loadGpRegisterWrite(const PpcRef &which) {
+      return _getGpRegister(which, false, true);
    }
 
-   XmmRegister allocXmmRegister(const PpcRef &which) {
-      return _getXmmRegister(which, false);
+   XmmRegister loadXmmRegisterWrite(const PpcRef &which) {
+      return _getXmmRegister(which, false, true);
    }
 
-   GpRegister loadGpRegister(const PpcRef &which) {
-      return _getGpRegister(which, true);
+   GpRegister loadGpRegisterRead(const PpcRef &which) {
+      return _getGpRegister(which, true, false);
    }
 
-   XmmRegister loadXmmRegister(const PpcRef &which) {
-      return _getXmmRegister(which, true);
+   XmmRegister loadXmmRegisterRead(const PpcRef &which) {
+      return _getXmmRegister(which, true, false);
+   }
+
+   GpRegister loadGpRegisterReadWrite(const PpcRef &which) {
+      return _getGpRegister(which, true, true);
+   }
+
+   XmmRegister loadXmmRegisterReadWrite(const PpcRef &which) {
+      return _getXmmRegister(which, true, true);
    }
 
    // Some helpers which automatically pick the correct type
-   GpRegister allocRegister(const PpcGpRef &which) {
-      return allocGpRegister(which);
+   GpRegister loadRegisterRead(const PpcGpRef &which) {
+      return loadGpRegisterRead(which);
    }
 
-   XmmRegister allocRegister(const PpcXmmRef &which) {
-      return allocXmmRegister(which);
+   XmmRegister loadRegisterRead(const PpcXmmRef &which) {
+      return loadXmmRegisterRead(which);
    }
 
-   GpRegister loadRegister(const PpcGpRef &which) {
-      return loadGpRegister(which);
+   GpRegister loadRegisterWrite(const PpcGpRef &which) {
+      return loadGpRegisterWrite(which);
    }
 
-   XmmRegister loadRegister(const PpcXmmRef &which) {
-      return loadXmmRegister(which);
+   XmmRegister loadRegisterWrite(const PpcXmmRef &which) {
+      return loadXmmRegisterWrite(which);
+   }
+
+   GpRegister loadRegisterReadWrite(const PpcGpRef &which) {
+      return loadGpRegisterReadWrite(which);
+   }
+
+   XmmRegister loadRegisterReadWrite(const PpcXmmRef &which) {
+      return loadXmmRegisterReadWrite(which);
    }
 
    void saveOne(HostRegister *reg)
@@ -617,22 +633,26 @@ public:
       decaf_check(reg->useCount == 0);
       decaf_check(reg->content != 0xFFFFFFFF);
 
-      if (reg->regType == RegType::Gp) {
-         decaf_check(reg->size == 4 || reg->size == 8);
+      if (reg->written) {
+         decaf_check(reg->loaded);
 
-         if (reg->size == 4) {
-            mov(asmjit::X86Mem(stateReg, reg->content, 4), mGpRegVals[reg->regId].r32());
-         } else if (reg->size == 8) {
-            mov(asmjit::X86Mem(stateReg, reg->content, 8), mGpRegVals[reg->regId].r64());
+         if (reg->regType == RegType::Gp) {
+            decaf_check(reg->size == 4 || reg->size == 8);
+
+            if (reg->size == 4) {
+               mov(asmjit::X86Mem(stateReg, reg->content, 4), mGpRegVals[reg->regId].r32());
+            } else if (reg->size == 8) {
+               mov(asmjit::X86Mem(stateReg, reg->content, 8), mGpRegVals[reg->regId].r64());
+            } else {
+               decaf_abort(fmt::format("Unexpected register size {}", reg->size));
+            }
+         } else if (reg->regType == RegType::Xmm) {
+            decaf_check(reg->size == 8);
+
+            movq(asmjit::X86Mem(stateReg, reg->content, 8), mXmmRegVals[reg->regId]);
          } else {
-            decaf_abort(fmt::format("Unexpected register size {}", reg->size));
+            decaf_abort(fmt::format("Unexpected register type {}", static_cast<int>(reg->regType)));
          }
-      } else if (reg->regType == RegType::Xmm) {
-         decaf_check(reg->size == 8);
-
-         movq(asmjit::X86Mem(stateReg, reg->content, 8), mXmmRegVals[reg->regId]);
-      } else {
-         decaf_abort(fmt::format("Unexpected register type {}", static_cast<int>(reg->regType)));
       }
    }
 
@@ -652,6 +672,7 @@ public:
       reg->content = 0xFFFFFFFF;
       reg->size = 0;
       reg->loaded = false;
+      reg->written = false;
    }
 
    void evictAll()

@@ -98,7 +98,7 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr)
    if (flags & BcCheckCond) {
       if (!get_bit<NoCheckCond>(bo)) {
          auto tmp = a.allocGpTmp().r32();
-         a.mov(tmp, a.loadRegister(a.cr));
+         a.mov(tmp, a.loadRegisterRead(a.cr));
          a.and_(tmp, 1 << (31 - instr.bi));
          a.cmp(tmp, 0);
 
