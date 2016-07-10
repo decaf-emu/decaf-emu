@@ -117,6 +117,7 @@ Module::RegisterFunctions()
 
    // GX2R Draw
    RegisterKernelFunction(GX2RSetAttributeBuffer);
+   RegisterKernelFunction(GX2RDrawIndexed);
 
    // GX2R Surface
    RegisterKernelFunction(GX2RCreateSurface);
