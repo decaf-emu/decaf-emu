@@ -7,8 +7,6 @@
 #include "common/log.h"
 #include "common/pow.h"
 
-#pragma optimize("", off)
-
 namespace gx2
 {
 
