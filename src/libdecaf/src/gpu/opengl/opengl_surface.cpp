@@ -97,7 +97,7 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
    case latte::FMT_2_10_10_10:
       return getFormat(gl::GL_RGB10_A2, BADFMT, gl::GL_RGB10_A2UI, BADFMT, BADFMT);
    case latte::FMT_8_8_8_8:
-      return getFormat(gl::GL_RGBA8, gl::GL_RGBA8_SNORM, gl::GL_RGBA8UI, gl::GL_RGBA8I, gl::GL_SRGB8);
+      return getFormat(gl::GL_RGBA8, gl::GL_RGBA8_SNORM, gl::GL_RGBA8UI, gl::GL_RGBA8I, gl::GL_SRGB8_ALPHA8);
    case latte::FMT_32_32:
       return getFormat(BADFMT, BADFMT, gl::GL_RG32UI, gl::GL_RG32I, BADFMT);
    case latte::FMT_32_32_FLOAT:
@@ -117,7 +117,7 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
    //case latte::FMT_32_AS_8_8:
    //case latte::FMT_5_9_9_9_SHAREDEXP:
    case latte::FMT_8_8_8:
-      return getFormat(gl::GL_RGB8, gl::GL_RGB8_SNORM, gl::GL_RGB8UI, gl::GL_RGB8I, BADFMT);
+      return getFormat(gl::GL_RGB8, gl::GL_RGB8_SNORM, gl::GL_RGB8UI, gl::GL_RGB8I, gl::GL_SRGB8);
    case latte::FMT_16_16_16:
       return getFormat(gl::GL_RGB16, gl::GL_RGB16_SNORM, gl::GL_RGB16UI, gl::GL_RGB16I, BADFMT);
    case latte::FMT_16_16_16_FLOAT:
