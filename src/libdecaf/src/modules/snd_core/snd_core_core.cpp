@@ -76,7 +76,7 @@ AXSetDefaultMixerSelect(uint32_t)
 AXResult
 AXSetAuxReturnVolume(uint32_t, uint32_t, uint32_t, uint16_t volume)
 {
-   // TODO: AXSetDefaultMixerSelect
+   // TODO: AXSetAuxReturnVolume
    return AXResult::Success;
 }
 

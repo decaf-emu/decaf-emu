@@ -47,9 +47,9 @@ OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous,
    auto success = FALSE;
    auto endTime = OSGetTime() + timeout;
 
-   bool waitCore0 = (coreMask & (1 << 0)) == 1;
-   bool waitCore1 = (coreMask & (1 << 1)) == 1;
-   bool waitCore2 = (coreMask & (1 << 2)) == 1;
+   auto waitCore0 = (coreMask & (1 << 0)) != 0;
+   auto waitCore1 = (coreMask & (1 << 1)) != 0;
+   auto waitCore2 = (coreMask & (1 << 2)) != 0;
 
    // Set our core flag
    rendezvous->core[core].store(1, std::memory_order_release);
@@ -58,9 +58,11 @@ OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous,
       if (waitCore0 && rendezvous->core[0].load(std::memory_order_acquire)) {
          waitCore0 = false;
       }
+
       if (waitCore1 && rendezvous->core[1].load(std::memory_order_acquire)) {
          waitCore1 = false;
       }
+
       if (waitCore2 && rendezvous->core[2].load(std::memory_order_acquire)) {
          waitCore2 = false;
       }
