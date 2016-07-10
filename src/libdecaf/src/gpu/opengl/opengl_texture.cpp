@@ -67,12 +67,6 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat, l
 static gl::GLenum
 getTextureFormat(latte::SQ_DATA_FORMAT format)
 {
-   /*
-   GL_RED, GL_RG, GL_RGB, GL_RGBA
-   GL_BGR, GL_BGRA
-   GL_DEPTH_COMPONENT, GL_STENCIL_INDEX
-   */
-
    switch (format) {
    case latte::FMT_8:
    case latte::FMT_16:
@@ -140,22 +134,7 @@ getTextureFormat(latte::SQ_DATA_FORMAT format)
 static gl::GLenum
 getTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
 {
-   /*
-   GL_FLOAT,
-   GL_BYTE, GL_UNSIGNED_BYTE,
-   GL_SHORT, GL_UNSIGNED_SHORT,
-   GL_INT, GL_UNSIGNED_INT,
-
-   GL_UNSIGNED_BYTE_3_3_2, GL_UNSIGNED_BYTE_2_3_3_REV,
-
-   GL_UNSIGNED_SHORT_5_6_5, GL_UNSIGNED_SHORT_4_4_4_4, GL_UNSIGNED_SHORT_5_5_5_1,
-   GL_UNSIGNED_SHORT_5_6_5_REV, GL_UNSIGNED_SHORT_4_4_4_4_REV, GL_UNSIGNED_SHORT_1_5_5_5_REV,
-
-   GL_UNSIGNED_INT_8_8_8_8, GL_UNSIGNED_INT_10_10_10_2,
-   GL_UNSIGNED_INT_8_8_8_8_REV, GL_UNSIGNED_INT_2_10_10_10_REV
-   */
-
-   bool isSigned = (formatComp == latte::SQ_FORMAT_COMP_SIGNED);
+   auto isSigned = (formatComp == latte::SQ_FORMAT_COMP_SIGNED);
 
    switch (format) {
    case latte::FMT_8:
@@ -203,6 +182,10 @@ getTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatCom
       return gl::GL_UNSIGNED_INT_10_10_10_2;
    case latte::FMT_2_10_10_10:
       return gl::GL_UNSIGNED_INT_2_10_10_10_REV;
+
+   case latte::FMT_11_11_10:
+   case latte::FMT_11_11_10_FLOAT:
+      return gl::GL_R11F_G11F_B10F;
 
    default:
       gLog->debug("getTextureDataType: Unimplemented texture format {}", format);
