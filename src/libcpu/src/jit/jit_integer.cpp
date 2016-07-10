@@ -619,9 +619,9 @@ neg(PPCEmuAssembler& a, Instruction instr)
       auto ppcxer = a.loadRegisterReadWrite(a.xer);
       a.and_(ppcxer, ~XERegisterBits::Overflow);
 
-      a.shiftTo(tmp, 0, XERegisterBits::Overflow);
+      a.shiftTo(tmp, 0, XERegisterBits::OverflowShift);
       a.or_(ppcxer, tmp);
-      a.shiftTo(tmp, XERegisterBits::Overflow, XERegisterBits::StickyOV);
+      a.shiftTo(tmp, XERegisterBits::OverflowShift, XERegisterBits::StickyOVShift);
       a.or_(ppcxer, tmp);
    }
 
