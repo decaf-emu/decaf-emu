@@ -755,21 +755,25 @@ getGLSLDataFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT num, latte:
 }
 
 static glsl2::SamplerType
-getSamplerType(latte::SQ_TEX_DIM dim, latte::SQ_NUM_FORMAT numFormat, latte::SQ_FORMAT_COMP formatComp)
+getSamplerType(latte::SQ_TEX_DIM dim,
+               latte::SQ_NUM_FORMAT numFormat,
+               latte::SQ_FORMAT_COMP formatComp,
+               bool hasShadow)
 {
    switch (dim) {
    case latte::SQ_TEX_DIM_1D:
-      return glsl2::SamplerType::Sampler1D;
+      return hasShadow ? glsl2::SamplerType::Sampler1DShadow : glsl2::SamplerType::Sampler1D;
    case latte::SQ_TEX_DIM_2D:
-      return glsl2::SamplerType::Sampler2D;
+      return hasShadow ? glsl2::SamplerType::Sampler2DShadow : glsl2::SamplerType::Sampler2D;
    case latte::SQ_TEX_DIM_3D:
+      decaf_check(!hasShadow);
       return glsl2::SamplerType::Sampler3D;
    case latte::SQ_TEX_DIM_CUBEMAP:
-      return glsl2::SamplerType::SamplerCube;
+      return hasShadow ? glsl2::SamplerType::SamplerCubeShadow : glsl2::SamplerType::SamplerCube;
    case latte::SQ_TEX_DIM_1D_ARRAY:
-      return glsl2::SamplerType::Sampler1DArray;
+      return hasShadow ? glsl2::SamplerType::Sampler1DArrayShadow : glsl2::SamplerType::Sampler1DArray;
    case latte::SQ_TEX_DIM_2D_ARRAY:
-      return glsl2::SamplerType::Sampler2DArray;
+      return hasShadow ? glsl2::SamplerType::Sampler2DArrayShadow : glsl2::SamplerType::Sampler2DArray;
    default:
       decaf_abort(fmt::format("Invalid sampler type {}", dim));
    }
@@ -788,10 +792,12 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_VS_TEX_RESOURCE_0 + i * 7));
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_VS_TEX_RESOURCE_0 + i * 7));
+      auto sq_tex_sampler_word0 = getRegister<latte::SQ_TEX_SAMPLER_WORD0_N>(latte::Register::SQ_TEX_SAMPLER_WORD0_0 + 4 * ((16 + i) * 3));
 
       shader.samplers[i] = getSamplerType(sq_tex_resource_word0.DIM(),
-                                           sq_tex_resource_word4.NUM_FORMAT_ALL(),
-                                           sq_tex_resource_word4.FORMAT_COMP_X());
+                                          sq_tex_resource_word4.NUM_FORMAT_ALL(),
+                                          sq_tex_resource_word4.FORMAT_COMP_X(),
+                                          sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION() != latte::SQ_TEX_DEPTH_COMPARE_NEVER);
    }
 
    if (sq_config.DX9_CONSTS()) {
@@ -904,10 +910,12 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
+      auto sq_tex_sampler_word0 = getRegister<latte::SQ_TEX_SAMPLER_WORD0_N>(latte::Register::SQ_TEX_SAMPLER_WORD0_0 + 4 * (i * 3));
 
       shader.samplers[i] = getSamplerType(sq_tex_resource_word0.DIM(),
-                                           sq_tex_resource_word4.NUM_FORMAT_ALL(),
-                                           sq_tex_resource_word4.FORMAT_COMP_X());
+                                          sq_tex_resource_word4.NUM_FORMAT_ALL(),
+                                          sq_tex_resource_word4.FORMAT_COMP_X(),
+                                          sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION() != latte::SQ_TEX_DEPTH_COMPARE_NEVER);
    }
 
    if (sq_config.DX9_CONSTS()) {

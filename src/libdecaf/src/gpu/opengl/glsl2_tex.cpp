@@ -65,6 +65,23 @@ getSelectChannel(SQ_SEL sel)
    }
 }
 
+static bool
+isShadowSampler(SamplerType type)
+{
+   switch (type) {
+   case SamplerType::Sampler1DShadow:
+   case SamplerType::Sampler2DShadow:
+   case SamplerType::SamplerCubeShadow:
+   case SamplerType::Sampler2DRectShadow:
+   case SamplerType::Sampler1DArrayShadow:
+   case SamplerType::Sampler2DArrayShadow:
+   case SamplerType::SamplerCubeArrayShadow:
+      return true;
+   default:
+      return false;
+   }
+}
+
 static unsigned
 getSamplerArgCount(SamplerType type)
 {
@@ -120,10 +137,10 @@ sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureF
    auto dstSelZ = inst.word1.DST_SEL_Z().get();
    auto dstSelW = inst.word1.DST_SEL_W().get();
 
-   auto srcSelX = inst.word2.SRC_SEL_X();
-   auto srcSelY = inst.word2.SRC_SEL_Y();
-   auto srcSelZ = inst.word2.SRC_SEL_Z();
-   auto srcSelW = inst.word2.SRC_SEL_W();
+   auto srcSelX = inst.word2.SRC_SEL_X().get();
+   auto srcSelY = inst.word2.SRC_SEL_Y().get();
+   auto srcSelZ = inst.word2.SRC_SEL_Z().get();
+   auto srcSelW = inst.word2.SRC_SEL_W().get();
 
    auto resourceID = inst.word0.RESOURCE_ID();
    auto samplerID = inst.word2.SAMPLER_ID();
@@ -149,6 +166,23 @@ sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureF
       state.out << "texTmp = " << func << "(sampler_" << samplerID << ", ";
 
       auto samplerElements = getSamplerArgCount(samplerType);
+
+      if (isShadowSampler(samplerType)) {
+         /* In r600 the .w channel holds the compare value whereas OpenGL
+          * shadow samplers just expect it to be the last texture coordinate
+          * so we must set the last channel to SQ_SEL_W
+          */
+         if (samplerElements == 2) {
+            srcSelY = SQ_SEL_W;
+         } else if (samplerElements == 3) {
+            srcSelZ = SQ_SEL_W;
+         } else if (samplerElements == 4) {
+            srcSelW = SQ_SEL_W;
+         } else {
+            decaf_abort(fmt::format("Unexpected samplerElements {} for shadow sampler", samplerElements));
+         }
+      }
+
       insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, samplerElements);
 
       state.out << extraArgs << ");";
@@ -187,6 +221,7 @@ registerTexFunctions()
 {
    registerInstruction(SQ_TEX_INST_FETCH4, FETCH4);
    registerInstruction(SQ_TEX_INST_SAMPLE, SAMPLE);
+   registerInstruction(SQ_TEX_INST_SAMPLE_C, SAMPLE);
    registerInstruction(SQ_TEX_INST_SAMPLE_LZ, SAMPLE_LZ);
 }
 
