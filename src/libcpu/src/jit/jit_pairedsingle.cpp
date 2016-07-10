@@ -19,6 +19,10 @@ template<unsigned flags = 0>
 static bool
 mergeGeneric(PPCEmuAssembler& a, Instruction instr)
 {
+   if (instr.rc) {
+      return jit_fallback(a, instr);
+   }
+
    // We need to use a temporary here since frA/frB and frD may overlap
    auto src0Tmp = a.allocXmmTmp();
 
@@ -40,11 +44,6 @@ mergeGeneric(PPCEmuAssembler& a, Instruction instr)
 
    auto dst0 = a.loadRegisterWrite(a.fprps[instr.frD][0]);
    a.movq(dst0, src0Tmp);
-
-   // Update the condition register
-   if (instr.rc) {
-      updateFloatConditionRegister(a);
-   }
 
    return true;
 }

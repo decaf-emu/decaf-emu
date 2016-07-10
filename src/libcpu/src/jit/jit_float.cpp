@@ -10,13 +10,6 @@ namespace cpu
 namespace jit
 {
 
-void
-updateFloatConditionRegister(PPCEmuAssembler& a)
-{
-   //state->cr.cr1 = state->fpscr.cr1;
-   decaf_abort("Updating the float condition register is not supported.");
-}
-
 static void
 truncateToSingle(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
