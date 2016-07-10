@@ -413,6 +413,11 @@ void registerFloatInstructions()
    RegisterInstruction(fnabs);
    RegisterInstruction(fmr);
    RegisterInstruction(fneg);
+   RegisterInstructionFallback(mffs);
+   RegisterInstructionFallback(mtfsb0);
+   RegisterInstructionFallback(mtfsb1);
+   RegisterInstructionFallback(mtfsf);
+   RegisterInstructionFallback(mtfsfi);
 }
 
 } // namespace jit
