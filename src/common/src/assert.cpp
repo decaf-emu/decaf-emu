@@ -12,29 +12,40 @@
 void
 assertFailed(const char *file,
              unsigned line,
+             const char *expression,
              const std::string &message)
 {
-   auto expr = fmt::format("Assertion failed:\n{}:{} {}", file, line, message);
+   fmt::MemoryWriter out;
+   out << "Assertion failed:\n";
+   out << "Expression: " << expression << "\n";
+   out << "File: " << file << "\n";
+   out << "Line: " << line << "\n";
 
-   if (gLog) {
-      gLog->critical("{}", expr);
+   if (!message.empty()) {
+      out << "Message: " << message << "\n";
    }
 
-   std::cerr << expr << std::endl;
+   if (gLog) {
+      gLog->critical("{}", out.str());
+   }
+
+   std::cerr << out.str() << std::endl;
 
 #ifdef PLATFORM_WINDOWS
    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
    auto wmsg = converter.from_bytes(message);
 
    if (IsDebuggerPresent()) {
-      auto str = std::wstring { L"Assertion failed:\n" };
-      str += wmsg;
-      str += '\n';
-      OutputDebugStringW(str.c_str());
+      OutputDebugStringW(converter.from_bytes(out.c_str()).c_str());
    } else {
-      std::cout << "_wassert" << std::endl;
-      auto wfile = converter.from_bytes(file);
-      _wassert(wmsg.c_str(), wfile.c_str(), line);
+      auto expr = converter.from_bytes(expression);
+
+      if (!wmsg.empty()) {
+         expr += L"\nMessage: ";
+         expr += wmsg;
+      }
+
+      _wassert(expr.c_str(), converter.from_bytes(file).c_str(), line);
    }
 #endif
 }
