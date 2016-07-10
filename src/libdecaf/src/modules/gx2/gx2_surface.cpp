@@ -235,18 +235,22 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
    auto cb_color_info = latte::CB_COLOR0_INFO::get(0);
    auto cb_color_size = latte::CB_COLOR0_SIZE::get(0);
 
-   // Update register values
+   // Update cb_color_info
    auto format = GX2GetSurfaceColorFormat(colorBuffer->surface.format);
+
    cb_color_info = cb_color_info
       .FORMAT().set(format);
 
-   if (colorBuffer->surface.pitch > 0 && colorBuffer->surface.height > 0) {
-      auto pitch = (colorBuffer->surface.pitch / latte::MicroTileWidth) - 1;
-      auto slice = ((colorBuffer->surface.pitch * colorBuffer->surface.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
-      cb_color_size = cb_color_size
-         .PITCH_TILE_MAX().set(pitch)
-         .SLICE_TILE_MAX().set(slice);
-   }
+   // Update cb_color_size
+   ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
+   internal::getSurfaceInfo(&colorBuffer->surface, 0, &output);
+
+   auto pitchTileMax = (output.pitch / latte::MicroTileWidth) - 1;
+   auto sliceTileMax = ((output.pitch * output.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
+
+   cb_color_size = cb_color_size
+      .PITCH_TILE_MAX().set(pitchTileMax)
+      .SLICE_TILE_MAX().set(sliceTileMax);
 
    // TODO: Set more regs!
 
@@ -262,17 +266,22 @@ GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
    auto db_depth_info = latte::DB_DEPTH_INFO::get(0);
    auto db_depth_size = latte::DB_DEPTH_SIZE::get(0);
 
-   // Update register values
+   // Update db_depth_info
    auto format = GX2GetSurfaceDepthFormat(depthBuffer->surface.format);
-   auto pitch = (depthBuffer->surface.pitch / latte::MicroTileWidth) - 1;
-   auto slice = ((depthBuffer->surface.pitch * depthBuffer->surface.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
 
    db_depth_info = db_depth_info
       .FORMAT().set(format);
 
+   // Update db_depth_size
+   ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
+   internal::getSurfaceInfo(&depthBuffer->surface, 0, &output);
+
+   auto pitchTileMax = (output.pitch / latte::MicroTileWidth) - 1;
+   auto sliceTileMax = ((output.pitch * output.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
+
    db_depth_size = db_depth_size
-      .PITCH_TILE_MAX().set(pitch)
-      .SLICE_TILE_MAX().set(slice);
+      .PITCH_TILE_MAX().set(pitchTileMax)
+      .SLICE_TILE_MAX().set(sliceTileMax);
 
    // TODO: Set more regs!
 
