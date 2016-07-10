@@ -2,6 +2,7 @@
 #include "gx2_aperture.h"
 #include "gx2_clear.h"
 #include "gx2_contextstate.h"
+#include "gx2_debug.h"
 #include "gx2_display.h"
 #include "gx2_displaylist.h"
 #include "gx2_draw.h"
@@ -80,6 +81,10 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2GetDisplayListWriteStatus);
    RegisterKernelFunction(GX2GetCurrentDisplayList);
    RegisterKernelFunction(GX2CopyDisplayList);
+
+   // Debug
+   //RegisterKernelFunction(GX2DebugTagUserString);
+   RegisterKernelFunction(GX2DebugTagUserStringVA);
 
    // Draw
    RegisterKernelFunction(GX2SetAttribBuffer);

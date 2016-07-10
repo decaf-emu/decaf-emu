@@ -1,3 +1,4 @@
+#include "gx2_debug.h"
 #include "common/align.h"
 #include "common/log.h"
 #include "common/platform_dir.h"
@@ -276,6 +277,33 @@ GX2DebugDumpShader(GX2VertexShader *shader)
    GX2DebugDumpShader("shader_vertex_" + GX2PointerAsString(shader),
                       out.str(),
                       shader);
+}
+
+void
+GX2DebugTagUserString(GX2DebugTagUserStringType tagType, const char* fmtString, ...)
+{
+	std::string debugString("GX2DebugTagUserString:\t" "Type: ");
+
+	debugString.append(GX2DebugTagUserStringTypes[tagType]);
+	debugString.push_back('\t');
+	debugString.append(fmtString);
+
+	va_list argptr;
+	va_start(argptr, fmtString);
+	gLog->debug(debugString.c_str(), argptr);
+	va_end(argptr);
+}
+
+void
+GX2DebugTagUserStringVA(GX2DebugTagUserStringType tagType, const char* fmtString, va_list args)
+{
+	std::string debugString("GX2DebugTagUserStringVA:\t" "Type: ");
+
+	debugString.append(GX2DebugTagUserStringTypes[tagType]);
+	debugString.push_back('\t');
+	debugString.append(fmtString);
+
+	gLog->debug(debugString.c_str(), args);
 }
 
 namespace internal
