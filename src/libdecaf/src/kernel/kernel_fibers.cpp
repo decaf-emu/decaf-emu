@@ -206,10 +206,11 @@ allocateFiber(coreinit::OSContext *context)
 }
 
 void
-reallocateContextFiber(coreinit::OSContext *context, void(*fn)(void*))
+reallocateContextFiber(coreinit::OSContext *context,
+                       platform::FiberEntryPoint entry)
 {
    auto oldFiber = context->fiber->handle;
-   auto newFiber = platform::createFiber(fn, nullptr);
+   auto newFiber = platform::createFiber(entry, nullptr);
    context->fiber->handle = newFiber;
    platform::swapToFiber(oldFiber, newFiber);
 }

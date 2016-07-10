@@ -72,6 +72,9 @@ sSystemHeap = nullptr;
 static int
 sExitCode = 0;
 
+static uint32_t
+sSegfaultAddress = 0;
+
 void
 setGameName(const std::string& name)
 {
@@ -110,8 +113,25 @@ cpuBranchTraceHandler(uint32_t target)
    gLog->debug("CPU branched to: {}", *symNamePtr);
 }
 
+static std::string
+coreStateToString(cpu::Core *core)
+{
+   fmt::MemoryWriter out;
+   out.write("nia: 0x{:08x}\n", core->nia);
+   out.write("lr: 0x{:08x}\n", core->lr);
+   out.write("cr: 0x{:08x}\n", core->cr.value);
+   out.write("ctr: 0x{:08x}\n", core->ctr);
+   out.write("xer: 0x{:08x}\n", core->xer.value);
+
+   for (auto i = 0u; i < 32; ++i) {
+      out.write("gpr[0]: 0x{:08x}\n", core->gpr[i]);
+   }
+
+   return out.str();
+}
+
 static void
-cpuSegfaultFiberEntryPoint(void*)
+cpuSegfaultFiberEntryPoint(void *addr)
 {
    // We may have been in the middle of a kernel function...
    if (coreinit::internal::isSchedulerLocked()) {
@@ -123,18 +143,28 @@ cpuSegfaultFiberEntryPoint(void*)
    cpu::this_core::state()->nia -= 4;
 
    // Alert the debugger if it cares.
-   coreinit::internal::pauseCoreTime(true);
-   debugger::handleDbgBreakInterrupt();
-   coreinit::internal::pauseCoreTime(false);
+   if (decaf::config::debugger::enabled) {
+      coreinit::internal::pauseCoreTime(true);
+      debugger::handleDbgBreakInterrupt();
+      coreinit::internal::pauseCoreTime(false);
 
-   // This will shut down the thread and reschedule.  This is required
-   //  since returning from the segfault handler is an error.
-   coreinit::OSExitThread(0);
+      // This will shut down the thread and reschedule.  This is required
+      //  since returning from the segfault handler is an error.
+      coreinit::OSExitThread(0);
+   }
+
+   auto core = cpu::this_core::state();
+   decaf_assert(core, "Uh oh? CPU Segfault Handler with invalid core");
+
+   gLog->critical("{}", coreStateToString(core));
+   decaf_abort(fmt::format("Invalid memory access for address {:08X} with nia 0x{:08X}\n", sSegfaultAddress, core->nia));
 }
 
 void
 cpuSegfaultHandler(uint32_t address)
 {
+   sSegfaultAddress = address;
+
    // A bit of trickery to get a stable stack and other
    //  host platform context after an exception occurs.
    auto thread = coreinit::internal::getCurrentThread();
