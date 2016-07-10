@@ -88,9 +88,9 @@ getStateFieldName(TraceFieldType type)
       return "FPSCR";
    } else if (type == StateField::CTR) {
       return "CTR";
+   } else {
+      decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
    }
-
-   decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
 }
 
 static void
@@ -112,9 +112,9 @@ printFieldValue(fmt::MemoryWriter &out, Instruction instr, TraceFieldType type, 
       out.write("    LR = {:08x}\n", value.u32v0);
    } else if (type == StateField::CTR) {
       out.write("    CTR = {:08x}\n", value.u32v0);
+   } else {
+      decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
    }
-
-   decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
 }
 
 static void
@@ -300,9 +300,9 @@ saveStateField(const cpu::CoreRegs *state, TraceFieldType type, TraceFieldValue 
       field.u32v0 = state->reserve ? 1 : 0;
       field.u32v1 = state->reserveAddress;
       field.u32v2 = state->reserveData;
+   } else {
+      decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
    }
-
-   decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
 }
 
 void
@@ -332,9 +332,9 @@ restoreStateField(cpu::CoreRegs *state, TraceFieldType type, const TraceFieldVal
       state->reserve = (field.u32v0 != 0);
       state->reserveAddress = field.u32v1;
       state->reserveData = field.u32v2;
+   } else {
+      decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
    }
-
-   decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
 }
 
 template<typename T>
