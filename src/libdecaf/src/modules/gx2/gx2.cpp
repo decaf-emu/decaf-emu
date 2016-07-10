@@ -20,6 +20,7 @@
 #include "gx2_texture.h"
 #include "gx2r_buffer.h"
 #include "gx2r_draw.h"
+#include "gx2r_mem.h"
 #include "gx2r_resource.h"
 #include "gx2r_surface.h"
 
@@ -110,6 +111,7 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2RCreateBuffer);
    RegisterKernelFunction(GX2RCreateBufferUserMemory);
    RegisterKernelFunction(GX2RDestroyBufferEx);
+   RegisterKernelFunction(GX2RInvalidateBuffer);
    RegisterKernelFunction(GX2RLockBufferEx);
    RegisterKernelFunction(GX2RUnlockBufferEx);
 
@@ -123,6 +125,9 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2RLockSurfaceEx);
    RegisterKernelFunction(GX2RUnlockSurfaceEx);
    RegisterKernelFunction(GX2RIsGX2RSurface);
+
+   // GX2R Mem
+   RegisterKernelFunction(GX2RInvalidateMemory);
 
    // Mem
    RegisterKernelFunction(GX2Invalidate);

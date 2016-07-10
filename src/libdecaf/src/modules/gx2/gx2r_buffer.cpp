@@ -1,4 +1,6 @@
+#include "gx2_mem.h"
 #include "gx2r_buffer.h"
+#include "gx2r_mem.h"
 #include "gx2r_resource.h"
 #include "common/align.h"
 #include "common/log.h"
@@ -38,7 +40,9 @@ GX2RCreateBuffer(GX2RBuffer *buffer)
 }
 
 BOOL
-GX2RCreateBufferUserMemory(GX2RBuffer *buffer, void *memory, uint32_t size)
+GX2RCreateBufferUserMemory(GX2RBuffer *buffer,
+                           void *memory,
+                           uint32_t size)
 {
    buffer->buffer = memory;
    buffer->flags = GX2RResourceFlags::UserMemory;
@@ -46,7 +50,8 @@ GX2RCreateBufferUserMemory(GX2RBuffer *buffer, void *memory, uint32_t size)
 }
 
 void
-GX2RDestroyBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags)
+GX2RDestroyBufferEx(GX2RBuffer *buffer,
+                    GX2RResourceFlags flags)
 {
    flags = buffer->flags | flags;
 
@@ -58,15 +63,26 @@ GX2RDestroyBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags)
    // TODO: Untrack GX2R resource
 }
 
+void
+GX2RInvalidateBuffer(GX2RBuffer *buffer,
+                     GX2RResourceFlags flags)
+{
+   GX2RInvalidateMemory(buffer->flags | flags,
+                        buffer->buffer,
+                        buffer->elemSize * buffer->elemCount);
+}
+
 void *
-GX2RLockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags)
+GX2RLockBufferEx(GX2RBuffer *buffer,
+                 GX2RResourceFlags flags)
 {
    buffer->flags |= GX2RResourceFlags::Locked;
    return buffer->buffer;
 }
 
 void
-GX2RUnlockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags)
+GX2RUnlockBufferEx(GX2RBuffer *buffer,
+                   GX2RResourceFlags flags)
 {
    buffer->flags &= ~GX2RResourceFlags::Locked;
 }

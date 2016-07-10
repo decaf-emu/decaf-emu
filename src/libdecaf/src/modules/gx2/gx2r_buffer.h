@@ -35,15 +35,24 @@ BOOL
 GX2RCreateBuffer(GX2RBuffer *buffer);
 
 BOOL
-GX2RCreateBufferUserMemory(GX2RBuffer *buffer, void *memory, uint32_t size);
+GX2RCreateBufferUserMemory(GX2RBuffer *buffer,
+                           void *memory,
+                           uint32_t size);
 
 void
-GX2RDestroyBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags);
+GX2RDestroyBufferEx(GX2RBuffer *buffer,
+                    GX2RResourceFlags flags);
+
+void
+GX2RInvalidateBuffer(GX2RBuffer *buffer,
+                     GX2RResourceFlags flags);
 
 void *
-GX2RLockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags);
+GX2RLockBufferEx(GX2RBuffer *buffer,
+                 GX2RResourceFlags flags);
 
 void
-GX2RUnlockBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags);
+GX2RUnlockBufferEx(GX2RBuffer *buffer,
+                   GX2RResourceFlags flags);
 
 } // namespace gx2

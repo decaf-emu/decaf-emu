@@ -6,6 +6,8 @@ namespace gx2
 {
 
 void
-GX2Invalidate(GX2InvalidateMode mode, void *buffer, uint32_t size);
+GX2Invalidate(GX2InvalidateMode mode,
+              void *buffer,
+              uint32_t size);
 
 } // namespace gx2
