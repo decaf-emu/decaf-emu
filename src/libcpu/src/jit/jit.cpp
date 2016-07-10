@@ -69,25 +69,27 @@ initStubs()
    a.push(asmjit::x86::r14);
    a.push(asmjit::x86::r15);
    a.sub(asmjit::x86::rsp, 0x38);
-   a.mov(a.zbx, a.zcx);
-   a.mov(a.zsi, static_cast<uint64_t>(mem::base()));
-   a.jmp(a.zdx);
+   a.mov(a.stateReg, asmjit::x86::rcx);
+   a.mov(a.membaseReg, static_cast<uint64_t>(mem::base()));
+   a.jmp(asmjit::x86::rdx);
 
    // This is the piece of code executed when we are finished
    //  executing the block of code started above.
    a.bind(extroLabel);
+
    a.cmp(asmjit::x86::ecx, CALLBACK_ADDR);
    a.je(exitLabel);
 
    // If we should continue generating, lets call the
    //  generator instead to find our new address!
-   a.mov(a.zax, asmjit::Ptr(jit_continue));
-   a.call(a.zax);
-   a.jmp(a.zax);
+   a.mov(asmjit::x86::rax, asmjit::Ptr(jit_continue));
+   a.call(asmjit::x86::rax);
+   a.jmp(asmjit::x86::rax);
 
    // This is how we exit back to the caller
    a.bind(exitLabel);
-   a.mov(a.niaMem, asmjit::x86::eax);
+   a.mov(a.niaMem, asmjit::x86::ecx);
+   a.mov(asmjit::x86::rax, a.stateReg);
    a.add(asmjit::x86::rsp, 0x38);
    a.pop(asmjit::x86::r15);
    a.pop(asmjit::x86::r14);
@@ -463,7 +465,10 @@ resume()
    core->cia = 0xFFFFFFFD;
 
    JitCode jitFn = jit_continue(core->nia, nullptr);
-   execute(core, jitFn);
+   core = execute(core, jitFn);
+
+   decaf_check(core == this_core::state());
+   decaf_check(core->nia == CALLBACK_ADDR);
 }
 
 bool
