@@ -159,17 +159,23 @@ addGeneric(PPCEmuAssembler& a, Instruction instr)
          a.mov(tmp, 0);
          a.seto(tmp.r8());
 
-         a.shl(xerbits, XERegisterBits::CarryShift);
-         a.shl(tmp, XERegisterBits::OverflowShift);
+         a.shiftTo(xerbits, 0, XERegisterBits::CarryShift);
+         a.shiftTo(tmp, 0, XERegisterBits::OverflowShift);
+         a.or_(xerbits, tmp);
+         a.shiftTo(tmp, XERegisterBits::OverflowShift, XERegisterBits::StickyOVShift);
          a.or_(xerbits, tmp);
       } else if (recordCarry) {
          a.mov(xerbits, 0);
          a.setc(xerbits.r8());
-         a.shl(xerbits, XERegisterBits::CarryShift);
+         a.shiftTo(xerbits, 0, XERegisterBits::CarryShift);
       } else if (recordOverflow) {
          a.mov(xerbits, 0);
          a.seto(xerbits.r8());
-         a.shl(xerbits, XERegisterBits::OverflowShift);
+         a.mov(tmp, xerbits);
+
+         a.shiftTo(xerbits, 0, XERegisterBits::OverflowShift);
+         a.shiftTo(tmp, 0, XERegisterBits::StickyOVShift);
+         a.or_(xerbits, tmp);
       }
 
       if (recordCarry || recordOverflow) {
