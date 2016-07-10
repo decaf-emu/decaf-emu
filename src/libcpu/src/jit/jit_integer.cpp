@@ -452,11 +452,12 @@ extsh(PPCEmuAssembler& a, Instruction instr)
 // Multiply
 enum MulFlags
 {
-   MulLow         = 1 << 0, // (uint32_t)d
-   MulHigh        = 1 << 1, // d >> 32
-   MulImmediate   = 1 << 2, // b = simm
-   MulCheckRecord = 1 << 3, // Check rc then update cr
-   MulSigned      = 1 << 4, // Is a signed multiply
+   MulLow = 1 << 0, // (uint32_t)d
+   MulHigh = 1 << 1, // d >> 32
+   MulImmediate = 1 << 2, // b = simm
+   MulCheckOverflow = 1 << 3, // Check oe then update xer
+   MulCheckRecord = 1 << 4, // Check rc then update cr
+   MulSigned = 1 << 5, // Is a signed multiply
 };
 
 // Multiply
@@ -465,33 +466,73 @@ static bool
 mulGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    static_assert((flags & MulLow) || (flags & MulHigh), "Unexpected mulGeneric flags");
+   static_assert(!(flags & MulCheckOverflow) || ((flags & MulSigned) && (flags & MulLow)),
+      "X64 cannot do overfloat on high bits, or on unsigned mul");
+
+   bool recordOverflow = (flags & MulCheckOverflow) && instr.oe;
+
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
    auto edxLockout = a.lockRegister(asmjit::x86::rdx);
 
    auto dst = a.loadRegisterWrite(a.gpr[instr.rD]);
 
-   a.mov(asmjit::x86::eax, a.loadRegisterRead(a.gpr[instr.rA]));
+   if (!recordOverflow) {
+      a.mov(asmjit::x86::eax, a.loadRegisterRead(a.gpr[instr.rA]));
 
-   if (flags & MulImmediate) {
-      auto tmp = a.allocGpTmp().r32();
-      a.mov(tmp, sign_extend<16>(instr.simm));
-      if (flags & MulSigned) {
-         a.imul(tmp);
+      if (flags & MulImmediate) {
+         a.mov(asmjit::x86::edx, sign_extend<16>(instr.simm));
+         if (flags & MulSigned) {
+            a.imul(asmjit::x86::edx);
+         } else {
+            a.mul(asmjit::x86::edx);
+         }
       } else {
-         a.mul(tmp);
+         auto src1 = a.loadRegisterRead(a.gpr[instr.rB]);
+         if (flags & MulSigned) {
+            a.imul(src1);
+         } else {
+            a.mul(src1);
+         }
+      }
+
+      if (flags & MulLow) {
+         a.mov(dst, asmjit::x86::eax);
+      } else if (flags & MulHigh) {
+         a.mov(dst, asmjit::x86::edx);
       }
    } else {
-      if (flags & MulSigned) {
-         a.imul(a.loadRegisterRead(a.gpr[instr.rB]));
-      } else {
-         a.mul(a.loadRegisterRead(a.gpr[instr.rB]));
-      }
-   }
+      // This logic assumes based on the static_assert above that we will only
+      //  be handling MulSigned and MulLow for any case of recordOverflow.
 
-   if (flags & MulLow) {
+      //a.int3();
+
+      a.movsxd(asmjit::x86::rax, a.loadRegisterRead(a.gpr[instr.rA]));
+
+      if (flags & MulImmediate) {
+         a.mov(asmjit::x86::rdx, sign_extend<16>(instr.simm));
+      } else {
+         auto src1 = a.loadRegisterRead(a.gpr[instr.rB]);
+         a.movsxd(asmjit::x86::rdx, src1);
+      }
+
+      a.imul(asmjit::x86::rdx);
+
       a.mov(dst, asmjit::x86::eax);
-   } else if (flags & MulHigh) {
-      a.mov(dst, asmjit::x86::edx);
+
+      a.movsxd(asmjit::x86::rdx, asmjit::x86::eax);
+      a.cmp(asmjit::x86::rax, asmjit::x86::rdx);
+
+      auto overflowReg = asmjit::x86::eax;
+      a.mov(overflowReg, 0);
+      a.setne(overflowReg.r8());
+
+      auto ppcxer = a.loadRegisterReadWrite(a.xer);
+      a.and_(ppcxer, ~XERegisterBits::Overflow);
+
+      a.shiftTo(overflowReg, 0, XERegisterBits::OverflowShift);
+      a.or_(ppcxer, overflowReg);
+      a.shiftTo(overflowReg, XERegisterBits::OverflowShift, XERegisterBits::StickyOVShift);
+      a.or_(ppcxer, overflowReg);
    }
 
    edxLockout.unlock();
@@ -526,7 +567,7 @@ mulli(PPCEmuAssembler& a, Instruction instr)
 static bool
 mullw(PPCEmuAssembler& a, Instruction instr)
 {
-   return mulGeneric<MulSigned | MulLow | MulCheckRecord>(a, instr);
+   return mulGeneric<MulSigned | MulLow | MulCheckRecord | MulCheckOverflow>(a, instr);
 }
 
 // NAND
