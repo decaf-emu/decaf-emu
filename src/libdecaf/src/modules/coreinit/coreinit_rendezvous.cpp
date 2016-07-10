@@ -13,8 +13,9 @@ namespace coreinit
 void
 OSInitRendezvous(OSRendezvous *rendezvous)
 {
-   std::fill(std::begin(rendezvous->core), std::end(rendezvous->core), 0);
-   std::fill(std::begin(rendezvous->__unk0), std::end(rendezvous->__unk0), 0);
+   rendezvous->core[0].store(0, std::memory_order_release);
+   rendezvous->core[1].store(0, std::memory_order_release);
+   rendezvous->core[2].store(0, std::memory_order_release);
 }
 
 
@@ -46,26 +47,33 @@ OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous,
    auto success = FALSE;
    auto endTime = OSGetTime() + timeout;
 
+   bool waitCore0 = (coreMask & (1 << 0)) == 1;
+   bool waitCore1 = (coreMask & (1 << 1)) == 1;
+   bool waitCore2 = (coreMask & (1 << 2)) == 1;
+
    // Set our core flag
    rendezvous->core[core].store(1, std::memory_order_release);
 
    do {
-      success = TRUE;
-
-      // Check all core flags
-      for (auto i = 0u; i < 3; ++i) {
-         if (coreMask & (1 << i)) {
-            if (!rendezvous->core[i].load(std::memory_order_acquire)) {
-               success = FALSE;
-            }
-         }
+      if (waitCore0 && rendezvous->core[0].load(std::memory_order_acquire)) {
+         waitCore0 = false;
+      }
+      if (waitCore1 && rendezvous->core[1].load(std::memory_order_acquire)) {
+         waitCore1 = false;
+      }
+      if (waitCore2 && rendezvous->core[2].load(std::memory_order_acquire)) {
+         waitCore2 = false;
       }
 
-      // Check for timeout
+      if (!waitCore0 && !waitCore1 && !waitCore2) {
+         success = TRUE;
+         break;
+      }
+
       if (timeout != -1 && OSGetTime() >= endTime) {
          break;
       }
-   } while (!success);
+   } while (true);
 
    return success;
 }
