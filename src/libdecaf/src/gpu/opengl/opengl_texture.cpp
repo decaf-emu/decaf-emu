@@ -126,8 +126,7 @@ getTextureFormat(latte::SQ_DATA_FORMAT format)
    // case latte::FMT_GB_GR:
    // case latte::FMT_BG_RG:
    default:
-      gLog->debug("getTextureFormat: Unimplemented texture type format {}", format);
-      return gl::GL_INVALID_ENUM;
+      decaf_abort(fmt::format("Unimplemented texture format {}", format));
    }
 }
 
@@ -183,13 +182,14 @@ getTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatCom
    case latte::FMT_2_10_10_10:
       return gl::GL_UNSIGNED_INT_2_10_10_10_REV;
 
+   case latte::FMT_10_11_11:
+   case latte::FMT_10_11_11_FLOAT:
    case latte::FMT_11_11_10:
    case latte::FMT_11_11_10_FLOAT:
       return gl::GL_R11F_G11F_B10F;
 
    default:
-      gLog->debug("getTextureDataType: Unimplemented texture format {}", format);
-      return gl::GL_INVALID_ENUM;
+      decaf_abort(fmt::format("Unimplemented texture format {}", format));
    }
 }
 
@@ -274,7 +274,7 @@ bool GLDriver::checkActiveTextures()
       auto height = sq_tex_resource_word1.TEX_HEIGHT() + 1;
       auto depth = sq_tex_resource_word1.TEX_DEPTH() + 1;
 
-      auto format = sq_tex_resource_word1.DATA_FORMAT();
+      auto format = sq_tex_resource_word1.DATA_FORMAT().get();
       auto tileMode = sq_tex_resource_word0.TILE_MODE().get();
       auto numFormat = sq_tex_resource_word4.NUM_FORMAT_ALL();
       auto formatComp = sq_tex_resource_word4.FORMAT_COMP_X();
