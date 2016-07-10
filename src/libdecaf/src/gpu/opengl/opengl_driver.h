@@ -28,25 +28,6 @@ static const auto MAX_UNIFORM_BLOCKS = 8u;
 static const auto MAX_UNIFORM_REGISTERS = 256u;
 static const auto MAX_SAMPLERS_PER_TYPE = 16u;
 
-class unimplemented_error : public std::exception
-{
-public:
-   unimplemented_error(const std::string &message) :
-      std::exception(),
-      mWhat(message)
-   {
-      gLog->critical(message);
-   }
-
-   virtual char const* what() const noexcept
-   {
-      return mWhat.c_str();
-   }
-
-private:
-   std::string mWhat;
-};
-
 enum class SamplerType
 {
    Invalid,

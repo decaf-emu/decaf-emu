@@ -1,5 +1,7 @@
 #include "gx2_draw.h"
+#include "gx2_enum_string.h"
 #include "gpu/pm4_writer.h"
+#include "common/decaf_assert.h"
 
 namespace gx2
 {
@@ -69,7 +71,7 @@ GX2DrawIndexedEx(GX2PrimitiveMode mode,
       swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_NONE;
       break;
    default:
-      gLog->error("GX2DrawIndexedEx: Unknown GX2IndexType {}", indexType);
+      decaf_abort(fmt::format("Invalid GX2IndexType {}", enumAsString(indexType)));
    }
 
    auto vgt_dma_index_type = latte::VGT_DMA_INDEX_TYPE::get(0)

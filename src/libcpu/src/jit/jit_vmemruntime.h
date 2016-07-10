@@ -1,9 +1,9 @@
+#include "common/align.h"
+#include "common/decaf_assert.h"
+#include "common/platform_memory.h"
 #include <asmjit/asmjit.h>
 #include <atomic>
 #include <mutex>
-#include <stdexcept>
-#include "common/align.h"
-#include "common/platform_memory.h"
 
 namespace cpu
 {
@@ -26,12 +26,10 @@ public:
          }
       }
 
-      if (!mRootAddress) {
-         throw std::logic_error("Failed to map memory for JIT");
-      }
+      decaf_assert(mRootAddress, "Failed to map memory for JIT");
 
       if (!platform::commitMemory(mRootAddress, initialSize, platform::ProtectFlags::ReadWriteExecute)) {
-         throw std::logic_error("Failed to commit memory for JIT");
+         decaf_abort("Failed to commit memory for JIT");
       }
 
       _sizeLimit = sizeLimit;

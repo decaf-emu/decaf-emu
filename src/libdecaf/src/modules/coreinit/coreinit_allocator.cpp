@@ -5,6 +5,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_unitheap.h"
 #include "ppcutils/wfunc_call.h"
+#include "common/decaf_assert.h"
 
 namespace coreinit
 {
@@ -42,7 +43,7 @@ static AllocatorFreeFn sAllocatorUnitHeapFree;
 void
 MEMInitAllocatorForDefaultHeap(Allocator *allocator)
 {
-   assert(sDefaultHeapFunctions);
+   decaf_check(sDefaultHeapFunctions);
    allocator->heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
    allocator->align = 0;
    allocator->funcs = sDefaultHeapFunctions;
@@ -57,7 +58,7 @@ MEMInitAllocatorForBlockHeap(Allocator *allocator,
                              BlockHeap *heap,
                              int alignment)
 {
-   assert(sBlockHeapFunctions);
+   decaf_check(sBlockHeapFunctions);
    allocator->heap = heap;
    allocator->align = alignment;
    allocator->funcs = sBlockHeapFunctions;
@@ -72,7 +73,7 @@ MEMInitAllocatorForExpHeap(Allocator *allocator,
                            ExpandedHeap *heap,
                            int alignment)
 {
-   assert(sExpHeapFunctions);
+   decaf_check(sExpHeapFunctions);
    allocator->heap = heap;
    allocator->align = alignment;
    allocator->funcs = sExpHeapFunctions;
@@ -87,7 +88,7 @@ MEMInitAllocatorForFrmHeap(Allocator *allocator,
                            FrameHeap *heap,
                            int alignment)
 {
-   assert(sFrameHeapFunctions);
+   decaf_check(sFrameHeapFunctions);
    allocator->heap = heap;
    allocator->align = alignment;
    allocator->funcs = sFrameHeapFunctions;
@@ -101,7 +102,7 @@ void
 MEMInitAllocatorForUnitHeap(Allocator *allocator,
                             UnitHeap *heap)
 {
-   assert(sUnitHeapFunctions);
+   decaf_check(sUnitHeapFunctions);
    allocator->heap = heap;
    allocator->align = 0;
    allocator->funcs = sUnitHeapFunctions;

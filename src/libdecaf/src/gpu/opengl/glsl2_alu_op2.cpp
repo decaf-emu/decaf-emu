@@ -55,20 +55,20 @@ namespace glsl2
 
 static void
 insertArDestBegin(fmt::MemoryWriter &out,
-   const ControlFlowInst &cf,
-   const AluInst &inst,
-   SQ_CHAN unit)
+                  const ControlFlowInst &cf,
+                  const AluInst &inst,
+                  SQ_CHAN unit)
 {
    if (unit == SQ_CHAN_T) {
-      throw std::logic_error("Encountered AR instruction in invalid unit");
+      throw translate_exception("Encountered AR instruction in invalid unit");
    }
 
    if (inst.word1.ENCODING() != SQ_ALU_OP2) {
-      throw std::logic_error("Unsupported non-op2 AR instruction");
+      throw translate_exception("Unsupported non-op2 AR instruction");
    }
 
    if (inst.op2.OMOD() != SQ_ALU_OMOD_OFF) {
-      throw std::logic_error("Unsupport omod encountered for AR operation");
+      throw translate_exception("Unsupport omod encountered for AR operation");
    }
 
    switch (unit) {
@@ -96,8 +96,8 @@ insertArDestBegin(fmt::MemoryWriter &out,
 
 static void
 insertArDestEnd(fmt::MemoryWriter &out,
-   const ControlFlowInst &cf,
-   const AluInst &inst)
+                const ControlFlowInst &cf,
+                const AluInst &inst)
 {
    // Nothing to do here currently, might be needed if
    //  we encounter any OMOD AR instructions.

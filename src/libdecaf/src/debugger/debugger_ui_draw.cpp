@@ -1,4 +1,4 @@
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "common/strutils.h"
 #include "debugger.h"
 #include "debugger_analysis.h"
@@ -83,7 +83,7 @@ void toggleBreakpoint(uint32_t address)
 
 uint32_t getThreadNia(coreinit::OSThread *thread)
 {
-   emuassert(sIsPaused);
+   decaf_check(sIsPaused);
 
    coreinit::OSThread *coreThread[3] = {
       coreinit::internal::getCoreRunningThread(0),
@@ -1491,7 +1491,7 @@ void openAddrInDisassemblyView(uint32_t addr)
 
 void setActiveThread(coreinit::OSThread *thread)
 {
-   emuassert(sIsPaused);
+   decaf_check(sIsPaused);
    sActiveThread = thread;
 
    if (sActiveThread == coreinit::internal::getCoreRunningThread(0)) {

@@ -1,4 +1,4 @@
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "common/log.h"
 #include "glsl2_translate.h"
 #include "glsl2_cf.h"
@@ -63,7 +63,7 @@ translateTEX(State &state, const ControlFlowInst &cf)
       if (itr != sInstructionMapTEX.end()) {
          itr->second(state, cf, tex);
       } else {
-         throw std::logic_error(fmt::format("Unimplemented TEX instruction {} {}", id, name));
+         throw translate_exception(fmt::format("Unimplemented TEX instruction {} {}", id, name));
       }
    }
 
@@ -74,7 +74,7 @@ translateTEX(State &state, const ControlFlowInst &cf)
 static void
 translateVTX(State &state, const ControlFlowInst &cf)
 {
-   throw std::logic_error("Unable to decode VTX instruction");
+   throw translate_exception("Unable to decode VTX instruction");
 }
 
 static void
@@ -89,7 +89,7 @@ translateNormal(State &state, const ControlFlowInst &cf)
    case SQ_CF_INST_TEX_ACK:
    case SQ_CF_INST_VTX_ACK:
    case SQ_CF_INST_VTX_TC_ACK:
-      throw std::logic_error(fmt::format("Unable to decode instruction {} {}", id, name));
+      throw translate_exception(fmt::format("Unable to decode instruction {} {}", id, name));
    }
 
    if (id == SQ_CF_INST_TEX) {
@@ -107,7 +107,7 @@ translateNormal(State &state, const ControlFlowInst &cf)
       if (itr != sInstructionMapCF.end()) {
          itr->second(state, cf);
       } else {
-         throw std::logic_error(fmt::format("Unimplemented CF instruction {} {}", id, name));
+         throw translate_exception(fmt::format("Unimplemented CF instruction {} {}", id, name));
       }
 
       state.out << '\n';
@@ -123,7 +123,7 @@ translateALUReduction(State &state, const ControlFlowInst &cf, AluGroup &group)
 
    // Ensure we have at least 4 instructions in this group
    if (group.instructions.size() < 4) {
-      throw std::logic_error(fmt::format("Expected at least 4 instructions in reduction group, found {}", group.instructions.size()));
+      throw translate_exception(fmt::format("Expected at least 4 instructions in reduction group, found {}", group.instructions.size()));
    }
 
    // Get all the instructions in this reduction group, sorted by unit
@@ -143,20 +143,20 @@ translateALUReduction(State &state, const ControlFlowInst &cf, AluGroup &group)
    for (auto i = 1u; i < reduction.size(); ++i) {
       if (reduction[0].word1.ENCODING() == SQ_ALU_OP2) {
          if (reduction[i].op2.ALU_INST() != reduction[0].op2.ALU_INST()) {
-            throw std::logic_error("Expected every instruction in reduction group to be the same.");
+            throw translate_exception("Expected every instruction in reduction group to be the same.");
          }
 
          if (reduction[i].op2.OMOD() != reduction[0].op2.OMOD()) {
-            throw std::logic_error("Expected every instruction in reduction group to have the same output modifier.");
+            throw translate_exception("Expected every instruction in reduction group to have the same output modifier.");
          }
       } else {
          if (reduction[i].op3.ALU_INST() != reduction[0].op3.ALU_INST()) {
-            throw std::logic_error("Expected every instruction in reduction group to be the same.");
+            throw translate_exception("Expected every instruction in reduction group to be the same.");
          }
       }
 
       if (reduction[i].word1.CLAMP() != reduction[0].word1.CLAMP()) {
-         throw std::logic_error("Expected every instruction in reduction group to have the same clamp value.");
+         throw translate_exception("Expected every instruction in reduction group to have the same clamp value.");
       }
    }
 
@@ -171,7 +171,7 @@ translateALUReduction(State &state, const ControlFlowInst &cf, AluGroup &group)
       if (itr != sInstructionMapOP2Reduction.end()) {
          func = itr->second;
       } else {
-         throw std::logic_error(fmt::format("Unimplemented ALU OP2 Reduction instruction {} {}", id, name));
+         throw translate_exception(fmt::format("Unimplemented ALU OP2 Reduction instruction {} {}", id, name));
       }
    } else {
       auto id = reduction[0].op3.ALU_INST();
@@ -181,7 +181,7 @@ translateALUReduction(State &state, const ControlFlowInst &cf, AluGroup &group)
       if (itr != sInstructionMapOP3Reduction.end()) {
          func = itr->second;
       } else {
-         throw std::logic_error(fmt::format("Unimplemented ALU OP3 Reduction instruction {} {}", id, name));
+         throw translate_exception(fmt::format("Unimplemented ALU OP3 Reduction instruction {} {}", id, name));
       }
    }
 
@@ -241,10 +241,10 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       state.out << '\n';
       break;
    case SQ_CF_INST_ALU_BREAK:
-      throw std::logic_error("Unimplemented SQ_CF_INST_ALU_BREAK");
+      throw translate_exception("Unimplemented SQ_CF_INST_ALU_BREAK");
       break;
    case SQ_CF_INST_ALU_CONTINUE:
-      throw std::logic_error("Unimplemented SQ_CF_INST_ALU_CONTINUE");
+      throw translate_exception("Unimplemented SQ_CF_INST_ALU_CONTINUE");
       break;
    }
 
@@ -286,7 +286,7 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
             if (itr != sInstructionMapOP2.end()) {
                func = itr->second;
             } else {
-               throw std::logic_error(fmt::format("Unimplemented ALU OP2 instruction {} {}", id, name));
+               throw translate_exception(fmt::format("Unimplemented ALU OP2 instruction {} {}", id, name));
             }
          } else {
             auto id = inst.op3.ALU_INST();
@@ -297,7 +297,7 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
             if (itr != sInstructionMapOP3.end()) {
                func = itr->second;
             } else {
-               throw std::logic_error(fmt::format("Unimplemented ALU OP3 instruction {} {}", id, name));
+               throw translate_exception(fmt::format("Unimplemented ALU OP3 instruction {} {}", id, name));
             }
          }
 
@@ -461,7 +461,7 @@ translateExport(State &state, const ControlFlowInst &cf)
    if (itr != sInstructionMapEXP.end()) {
       itr->second(state, cf);
    } else {
-      throw std::logic_error(fmt::format("Unimplemented EXP instruction {} {}", id, getInstructionName(id)));
+      throw translate_exception(fmt::format("Unimplemented EXP instruction {} {}", id, getInstructionName(id)));
    }
 
    state.out << '\n';
@@ -585,7 +585,7 @@ insertFileHeader(State &state)
          out << "samplerCubeArrayShadow";
          break;
       default:
-         throw std::logic_error(fmt::format("Unsupported sampler type: {}", static_cast<unsigned>(type)));
+         throw translate_exception(fmt::format("Unsupported sampler type: {}", static_cast<unsigned>(type)));
       }
 
       out << " sampler_" << id << ";\n";
@@ -666,7 +666,7 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
             translateControlFlowALU(state, cf);
             break;
          default:
-            throw std::logic_error("Invalid top level instruction type");
+            throw translate_exception("Invalid top level instruction type");
          }
 
          if (cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_NORMAL
@@ -678,10 +678,10 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
 
          state.cfPC++;
       }
-   } catch (std::exception e) {
+   } catch (translate_exception e) {
       auto assembly = disassemble(binary);
-      gLog->error("GLSL translate exception: {}\nDisassembly:\n{}", e.what(), assembly);
-      throw std::logic_error("Failed to decompile shader");
+      gLog->critical("GLSL translate exception: {}\nDisassembly:\n{}", e.what(), assembly);
+      decaf_abort(fmt::format("GLSL translate exception: {}", e.what()));
    }
 
    insertFileHeader(state);

@@ -1,3 +1,4 @@
+#include "common/decaf_assert.h"
 #include "coreinit.h"
 #include "coreinit_core.h"
 #include "coreinit_fs_client.h"
@@ -30,14 +31,15 @@ AppIoThreadEntry(uint32_t core_id, void *arg2)
 
    while (true) {
       OSReceiveMessage(queue, &msg, OSMessageFlags::Blocking);
+      auto type = static_cast<internal::AppIoEventType>(msg.args[2].value());
 
-      switch (static_cast<internal::AppIoEventType>(msg.args[2].value()))
+      switch (type)
       {
       case internal::AppIoEventType::FsAsyncCallback:
          internal::handleAsyncCallback(static_cast<FSAsyncResult *>(msg.message.get()));
          break;
       default:
-         throw std::logic_error("App IO thread received unrecognized event type");
+         decaf_abort(fmt::format("App IO thread received unrecognized event type {}", type));
       }
    }
 

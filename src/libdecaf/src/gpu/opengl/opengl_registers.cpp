@@ -1,4 +1,4 @@
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
 
@@ -24,7 +24,7 @@ void
 GLDriver::setRegister(latte::Register reg,
                       uint32_t value)
 {
-   emuassert((reg % 4) == 0);
+   decaf_check((reg % 4) == 0);
 
    // Save to my state
    mRegisters[reg / 4] = value;
@@ -299,7 +299,7 @@ getRefFunc(latte::REF_FUNC func)
    case latte::REF_ALWAYS:
       return gl::GL_ALWAYS;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented REF_FUNC {}", func));
+      decaf_abort(fmt::format("Unimplemented REF_FUNC {}", func));
    }
 }
 
@@ -346,7 +346,7 @@ getBlendFunc(latte::CB_BLEND_FUNC func)
    case latte::CB_BLEND_ONE_MINUS_CONSTANT_ALPHA:
       return gl::GL_ONE_MINUS_CONSTANT_ALPHA;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented CB_BLEND_FUNC {}", func));
+      decaf_abort(fmt::format("Unimplemented CB_BLEND_FUNC {}", func));
    }
 }
 
@@ -365,7 +365,7 @@ getBlendEquation(latte::CB_COMB_FUNC func)
    case latte::CB_COMB_DST_MINUS_SRC:
       return gl::GL_FUNC_REVERSE_SUBTRACT;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented CB_COMB_FUNC {}", func));
+      decaf_abort(fmt::format("Unimplemented CB_COMB_FUNC {}", func));
    }
 }
 
@@ -390,7 +390,7 @@ getStencilFunc(latte::DB_STENCIL_FUNC func)
    case latte::DB_STENCIL_DECR_WRAP:
       return gl::GL_DECR_WRAP;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented DB_STENCIL_FUNC {}", func));
+      decaf_abort(fmt::format("Unimplemented DB_STENCIL_FUNC {}", func));
    }
 }
 

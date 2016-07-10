@@ -1,4 +1,4 @@
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "snd_core.h"
 #include "snd_core_voice.h"
@@ -73,7 +73,7 @@ void
 AXFreeVoice(AXVoice *voice)
 {
    auto voiceIter = std::find(sAcquiredVoices.begin(), sAcquiredVoices.end(), voice);
-   emuassert(voiceIter != sAcquiredVoices.end());
+   decaf_check(voiceIter != sAcquiredVoices.end());
 
    // Erase this voice from the acquired list
    sAcquiredVoices.erase(voiceIter);

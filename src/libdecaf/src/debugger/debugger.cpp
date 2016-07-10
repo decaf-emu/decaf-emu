@@ -1,10 +1,10 @@
-#include "common/emuassert.h"
-#include "common/log.h"
 #include "decaf_config.h"
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
 #include "debugger/debugger_branchcalc.h"
 #include "modules/coreinit/coreinit_internal_loader.h"
+#include "common/decaf_assert.h"
+#include "common/log.h"
 #include <atomic>
 #include <condition_variable>
 
@@ -47,7 +47,7 @@ paused()
 cpu::Core *
 getPausedCoreState(uint32_t coreId)
 {
-   assert(paused());
+   decaf_check(paused());
    return sCorePauseState[coreId];
 }
 
@@ -63,7 +63,7 @@ void
 resumeAll()
 {
    auto oldState = sIsPaused.exchange(false);
-   emuassert(oldState);
+   decaf_check(oldState);
    for (auto i = 0; i < 3; ++i) {
       sCorePauseState[i] = nullptr;
    }
@@ -73,7 +73,7 @@ resumeAll()
 static void
 stepCore(uint32_t coreId, bool stepOver)
 {
-   emuassert(sIsPaused.load());
+   decaf_check(sIsPaused.load());
 
    const cpu::CoreRegs *state = sCorePauseState[coreId];
    uint32_t nextInstr = calculateNextInstr(state, stepOver);

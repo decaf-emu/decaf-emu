@@ -1,9 +1,10 @@
+#include "common/decaf_assert.h"
+#include "cpu.h"
 #include <atomic>
 #include <cstring>
 #include <functional>
 #include <memory>
 #include <vector>
-#include "cpu.h"
 
 namespace cpu
 {
@@ -253,11 +254,11 @@ addBreakpoint(ppcaddr_t address,
 {
    if (address == 0xFFFFFFFF) {
       // Cannot use this address as it is the terminator
-      throw std::logic_error("0xFFFFFFFF is not a valid address to set a breakpoint on");
+      decaf_abort("0xFFFFFFFF is not a valid address to set a breakpoint on");
    }
 
    if (!flags) {
-      throw std::logic_error("You must specify at least a single flag for a breakpoint");
+      decaf_abort("You must specify at least a single flag for a breakpoint");
    }
 
    auto bpList = gBreakpoints.load(std::memory_order_acquire);

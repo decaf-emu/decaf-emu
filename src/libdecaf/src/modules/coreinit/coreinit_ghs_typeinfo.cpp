@@ -53,7 +53,7 @@ makeTypeDescriptor(const std::string &name, std::initializer_list<ghs::BaseTypeD
 
    for (auto &entry : bases) {
       if (!entry.typeDescriptor) {
-         throw std::logic_error("Attempted to intialise type info before initialising a base class type info.");
+         decaf_abort("Attempted to intialise type info before initialising a base class type info.");
       }
 
       baseTypes[idx].flags = entry.flags;

@@ -2,7 +2,7 @@
 #include "gx2_aperture.h"
 #include "gx2_surface.h"
 #include "libcpu/mem.h"
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "common/teenyheap.h"
 
 namespace gx2
@@ -34,7 +34,7 @@ public:
             GX2EndianSwapMode endian)
    {
       // Find a free slot
-      auto id = mActiveApertures.size();
+      auto id = static_cast<uint32_t>(mActiveApertures.size());
 
       for (auto i = 0u; i < mActiveApertures.size(); ++i) {
          if (mActiveApertures[i].address == nullptr) {
@@ -77,14 +77,14 @@ public:
    void *
    getAddress(uint32_t id)
    {
-      emuassert(id >= 1 && id <= mActiveApertures.size());
+      decaf_check(id >= 1 && id <= mActiveApertures.size());
       return mActiveApertures[id - 1].address;
    }
 
    void
    free(uint32_t id)
    {
-      emuassert(id >= 1 && id <= mActiveApertures.size());
+      decaf_check(id >= 1 && id <= mActiveApertures.size());
       auto &aperture = mActiveApertures[id - 1];
 
       // Retile to original memory

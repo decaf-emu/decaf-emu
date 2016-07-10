@@ -146,12 +146,12 @@ wakeCurrentContext()
       restoreContext(context);
 
       // Pull NIA/CIA out of the stack and confirm no corruption
-      emuassert(mem::read<uint32_t>(core->gpr[1] + 0) == 0xDFDFDFDF);
-      emuassert(mem::read<uint32_t>(core->gpr[1] + 4) == 0xDFDFDFDF);
+      decaf_check(mem::read<uint32_t>(core->gpr[1] + 0) == 0xDFDFDFDF);
+      decaf_check(mem::read<uint32_t>(core->gpr[1] + 4) == 0xDFDFDFDF);
       core->nia = mem::read<uint32_t>(core->gpr[1] + 8);
       core->cia = mem::read<uint32_t>(core->gpr[1] + 12);
-      emuassert(mem::read<uint32_t>(core->gpr[1] + 16) == 0xDFDFDFDF);
-      emuassert(mem::read<uint32_t>(core->gpr[1] + 20) == 0xDFDFDFDF);
+      decaf_check(mem::read<uint32_t>(core->gpr[1] + 16) == 0xDFDFDFDF);
+      decaf_check(mem::read<uint32_t>(core->gpr[1] + 20) == 0xDFDFDFDF);
       core->gpr[1] += 8 + 8 + 8;
 
       // Some things to help us when debugging...
@@ -235,10 +235,10 @@ checkDeadContext()
 
       // Something broken if we are accidentally cleaning
       //  up currently active context...
-      emuassert(deadContext != sCurrentContext[coreId]);
+      decaf_check(deadContext != sCurrentContext[coreId]);
 
       // Something is broken if we have no fiber
-      emuassert(deadContext->fiber);
+      decaf_check(deadContext->fiber);
 
       // Destroy the fiber
       freeFiber(deadContext->fiber);
@@ -267,7 +267,7 @@ exitThreadNoLock()
    uint32_t coreId = cpu::this_core::id();
 
    // Make sure exitThread is not called multiple times
-   emuassert(!sDeadContext[coreId]);
+   decaf_check(!sDeadContext[coreId]);
 
    // Mark this fiber to be cleaned up
    sDeadContext[coreId] = sCurrentContext[coreId];

@@ -1,9 +1,12 @@
-#include <atomic>
-#include <map>
-#include <unordered_map>
 #include "coreinit_internal_loader.h"
+#include "common/align.h"
+#include "common/bigendianview.h"
+#include "common/decaf_assert.h"
+#include "common/teenyheap.h"
 #include "common/strutils.h"
 #include "decaf_config.h"
+#include "elf.h"
+#include "filesystem/filesystem.h"
 #include "kernel/kernel_hle.h"
 #include "kernel/kernel_hlemodule.h"
 #include "kernel/kernel_hlefunction.h"
@@ -12,11 +15,9 @@
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_dynload.h"
 #include "modules/coreinit/coreinit_scheduler.h"
-#include "filesystem/filesystem.h"
-#include "common/align.h"
-#include "common/bigendianview.h"
-#include "common/teenyheap.h"
-#include "elf.h"
+#include <atomic>
+#include <map>
+#include <unordered_map>
 
 class SequentialMemoryTracker
 {
@@ -41,10 +42,10 @@ public:
 
       // Double-check alignment
       auto ptrOut = mPtr + alignOffset;
-      assert(align_up(ptrOut, alignment) == ptrOut);
+      decaf_check(align_up(ptrOut, alignment) == ptrOut);
 
       // Make sure we have room
-      assert(mPtr + size <= mEnd);
+      decaf_check(mPtr + size <= mEnd);
 
       mPtr += size;
       return ptrOut;
@@ -103,7 +104,7 @@ unlockLoader()
 {
    auto core = 1 << cpu::this_core::id();
    auto oldCore = sLoaderLock.exchange(0, std::memory_order_release);
-   emuassert(oldCore == core);
+   decaf_check(oldCore == core);
 }
 
 static void
@@ -259,7 +260,7 @@ getTrampAddress(LoadedModule *loadedMod,
       *tramp = byte_swap(b.value);
    } else {
       // Need to implement 16-byte long-jumping here...
-      assert(0);
+      decaf_check(0);
    }
 
    loadedMod->symbols.emplace(symbolName + "#thunk", trampAddr);
@@ -280,7 +281,7 @@ generateUnimplementedDataThunk(const std::string &module,
 
    auto id = gsl::narrow_cast<uint32_t>(gUnimplementedData.size());
    auto fakeAddr = 0xFFF00000 | (id << 12);
-   assert(id <= 0xFF);
+   decaf_check(id <= 0xFF);
 
    gLog->info("Unimplemented data symbol {}::{} at {:08x}", module, name, fakeAddr);
 
@@ -343,8 +344,7 @@ processKernelTraceFilters(const std::string &module,
       } else if (filterText[0] == '-') {
          filter.enable = false;
       } else {
-         gLog->error("Invalid kernel_trace_filter {}", filterText);
-         throw std::logic_error("Invalid kernel trace filter");
+         decaf_abort(fmt::format("Invalid kernel trace filter {}", filterText));
       }
 
       // Find module::name
@@ -594,7 +594,7 @@ processRelocations(LoadedModule *loadedMod,
             auto data = espresso::decodeInstruction(ins);
 
             // Our REL24 trampolines only work for a branch instruction...
-            assert(data->id == espresso::InstructionID::b);
+            decaf_check(data->id == espresso::InstructionID::b);
 
             auto delta = static_cast<ptrdiff_t>(symAddr) - static_cast<ptrdiff_t>(reloAddr);
 
@@ -602,12 +602,12 @@ processRelocations(LoadedModule *loadedMod,
                auto trampAddr = getTrampAddress(loadedMod, codeSeg, trampolines, mem::translate(symAddr), symbolName);
 
                // Ensure valid trampoline delta
-               assert(trampAddr);
+               decaf_check(trampAddr);
                delta = static_cast<ptrdiff_t>(trampAddr) - static_cast<ptrdiff_t>(reloAddr);
                symAddr = trampAddr;
             }
 
-            assert(delta >= -0x01FFFFFC && delta <= 0x01FFFFFC);
+            decaf_check(delta >= -0x01FFFFFC && delta <= 0x01FFFFFC);
             *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03FFFFFC) | (gsl::narrow_cast<uint32_t>(delta & 0x03FFFFFC)));
             break;
          }
@@ -625,7 +625,7 @@ processRelocations(LoadedModule *loadedMod,
                // sdaBase
                offset = static_cast<ptrdiff_t>(symAddr) - static_cast<ptrdiff_t>(loadedMod->sdaBase);
             } else {
-               assert(0);
+               decaf_check(0);
             }
 
             if (offset < std::numeric_limits<int16_t>::min() || offset > std::numeric_limits<int16_t>::max()) {
@@ -644,7 +644,7 @@ processRelocations(LoadedModule *loadedMod,
          }
          case elf::R_PPC_DTPMOD32:
          {
-            emuassert(loadedMod->tlsModuleIndex == 0);
+            decaf_check(loadedMod->tlsModuleIndex == 0);
             *ptr32 = byte_swap(loadedMod->tlsModuleIndex);
             break;
          }
@@ -739,7 +739,7 @@ processImports(LoadedModule *loadedMod,
                }
             } else {
                if (type != elf::STT_FUNC && type != elf::STT_OBJECT) {
-                  assert(0);
+                  decaf_check(0);
                }
 
                symbolAddr = symbolTargetIter->second;
@@ -882,9 +882,9 @@ loadRPL(const std::string &moduleName,
       dataSegAddr = nullptr;
    }
 
-   assert(dataSegAddr);
-   assert(loadSegAddr);
-   assert(codeSegAddr);
+   decaf_check(dataSegAddr);
+   decaf_check(loadSegAddr);
+   decaf_check(codeSegAddr);
 
    auto codeSeg = SequentialMemoryTracker { codeSegAddr, info.textSize };
    auto dataSeg = SequentialMemoryTracker { dataSegAddr, info.dataSize };
@@ -968,7 +968,7 @@ loadRPL(const std::string &moduleName,
 
       for (auto &section : sections) {
          if (section.header.flags & elf::SHF_TLS) {
-            emuassert(section.virtAddress >= start);
+            decaf_check(section.virtAddress >= start);
             end = std::max(end, section.virtAddress + section.virtSize);
          }
       }

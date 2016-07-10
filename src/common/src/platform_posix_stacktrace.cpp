@@ -1,3 +1,4 @@
+#include "decaf_assert.h"
 #include "platform.h"
 #include "platform_stacktrace.h"
 
@@ -18,7 +19,7 @@ void freeStackTrace(StackTrace *)
 
 void printStackTrace(StackTrace *)
 {
-   throw std::logic_error("POSIX support for stack tracing is not implemented");
+   decaf_abort("POSIX support for stack tracing is not implemented");
 }
 
 } // namespace platform

@@ -1,6 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_semaphore.h"
 #include "coreinit_scheduler.h"
+#include "common/decaf_assert.h"
 
 namespace coreinit
 {
@@ -43,7 +44,7 @@ OSWaitSemaphore(OSSemaphore *semaphore)
 {
    int32_t previous;
    internal::lockScheduler();
-   assert(semaphore && semaphore->tag == OSSemaphore::Tag);
+   decaf_check(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    while (semaphore->count <= 0) {
       // Wait until we can decrease semaphore
@@ -71,7 +72,7 @@ OSTryWaitSemaphore(OSSemaphore *semaphore)
 {
    int32_t previous;
    internal::lockScheduler();
-   assert(semaphore && semaphore->tag == OSSemaphore::Tag);
+   decaf_check(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    // Try to decrease semaphore
    previous = semaphore->count;
@@ -95,7 +96,7 @@ OSSignalSemaphore(OSSemaphore *semaphore)
 {
    int32_t previous;
    internal::lockScheduler();
-   assert(semaphore && semaphore->tag == OSSemaphore::Tag);
+   decaf_check(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    // Increase semaphore
    previous =  semaphore->count++;
@@ -117,7 +118,7 @@ OSGetSemaphoreCount(OSSemaphore *semaphore)
 {
    int32_t count;
    internal::lockScheduler();
-   assert(semaphore && semaphore->tag == OSSemaphore::Tag);
+   decaf_check(semaphore && semaphore->tag == OSSemaphore::Tag);
 
    // Return count
    count = semaphore->count;

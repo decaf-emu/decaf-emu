@@ -1,7 +1,7 @@
-#include <cassert>
-#include <algorithm>
 #include "jit_insreg.h"
 #include "common/bitutils.h"
+#include "common/decaf_assert.h"
+#include <algorithm>
 
 namespace cpu
 {
@@ -24,6 +24,8 @@ template<typename Type, unsigned flags = 0>
 static bool
 loadGeneric(PPCEmuAssembler& a, Instruction instr)
 {
+   static_assert(sizeof(Type) == 1 || sizeof(Type) == 2 || sizeof(Type) == 4 || sizeof(Type) == 8, "Unexpected type size");
+
    if (flags & LoadReserve) {
       // Early out for if statement below.
       return jit_fallback(a, instr);
@@ -74,8 +76,6 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
          if (!(flags & LoadByteReverse)) {
             a.bswap(data);
          }
-      } else {
-         throw std::logic_error("Unexpected type size");
       }
    }
 
@@ -86,13 +86,13 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
          a.movq(tmp, data);
          a.cvtss2sd(dst, tmp);
       } else {
-         assert(sizeof(Type) == 8);
+         decaf_check(sizeof(Type) == 8);
          auto dst = a.allocXmmRegister(a.fpr[instr.rD]);
          a.movq(dst, data);
       }
    } else {
       if (flags & LoadSignExtend) {
-         emuassert(sizeof(Type) == 2);
+         decaf_check(sizeof(Type) == 2);
          a.movsx(data.r32(), data.r16());
       }
 
@@ -339,14 +339,16 @@ template<typename Type, unsigned flags = 0>
 static bool
 storeGeneric(PPCEmuAssembler& a, Instruction instr)
 {
+   static_assert(sizeof(Type) == 1 || sizeof(Type) == 2 || sizeof(Type) == 4 || sizeof(Type) == 8, "Unexpected type size");
+
    if (flags & StoreConditional) {
       // Early out for if statement below.
       return jit_fallback(a, instr);
    }
 
    auto dst = a.allocGpTmp().r32();
-
    auto x = sign_extend<16, int32_t>(instr.d);
+
    if ((flags & StoreZeroRA) && instr.rA == 0) {
       if (flags & StoreIndexed) {
          a.mov(dst, a.loadRegister(a.gpr[instr.rB]));
@@ -369,8 +371,7 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
    auto data = a.allocGpTmp().r64();
 
    if (flags & StoreFloatAsInteger) {
-      emuassert(sizeof(Type) == 4);
-
+      decaf_check(sizeof(Type) == 4);
       a.mov(data.r32(), a.loadGpRegister(a.fpr[instr.rS]));
    } else if (std::is_floating_point<Type>::value) {
       if (sizeof(Type) == 4) {
@@ -378,7 +379,7 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
          a.cvtsd2ss(tmp, a.loadXmmRegister(a.fpr[instr.rS]));
          a.movq(data.r32(), tmp);
       } else {
-         emuassert(sizeof(Type) == 8);
+         decaf_check(sizeof(Type) == 8);
          a.mov(data, a.loadGpRegister(a.fpr[instr.rS]));
       }
    } else {
@@ -397,8 +398,6 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
          a.bswap(data.r32());
       } else if (sizeof(Type) == 8) {
          a.bswap(data);
-      } else {
-         throw std::logic_error("Unexpected type size");
       }
    }
 
@@ -415,11 +414,8 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
          a.mov(asmjit::X86Mem(hostDst, 0), data.r32());
       } else if (sizeof(Type) == 8) {
          a.mov(asmjit::X86Mem(hostDst, 0), data);
-      } else {
-         throw std::logic_error("Unexpected type size");
       }
    }
-
 
    if (flags & StoreUpdate) {
       auto addrDst = a.allocRegister(a.gpr[instr.rA]);

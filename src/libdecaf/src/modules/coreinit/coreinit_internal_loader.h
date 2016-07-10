@@ -2,7 +2,7 @@
 #include <vector>
 #include <map>
 #include "common/types.h"
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "ppcutils/wfunc_ptr.h"
 
 namespace coreinit

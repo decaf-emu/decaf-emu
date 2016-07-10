@@ -1,5 +1,7 @@
 #pragma once
+#include <exception>
 #include <gsl.h>
+#include <stdexcept>
 #include <string>
 #include <spdlog/details/format.h>
 #include <vector>
@@ -7,6 +9,18 @@
 
 namespace glsl2
 {
+
+class translate_exception : public std::runtime_error
+{
+public:
+   translate_exception(const std::string &m) :
+      std::runtime_error(m)
+   {
+   }
+
+private:
+   std::string mMessage;
+};
 
 enum class SamplerType
 {

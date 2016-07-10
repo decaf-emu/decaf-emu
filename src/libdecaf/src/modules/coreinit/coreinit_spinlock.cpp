@@ -1,10 +1,11 @@
-#include <atomic>
 #include "coreinit.h"
 #include "coreinit_interrupts.h"
 #include "coreinit_spinlock.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
 #include "libcpu/mem.h"
+#include "common/decaf_assert.h"
+#include <atomic>
 
 namespace coreinit
 {
@@ -110,7 +111,7 @@ spinReleaseLock(OSSpinLock *spinlock)
       return true;
    }
 
-   gLog->error("Attempt to release spin lock which is not owned.");
+   decaf_abort("Attempt to release spin lock which is not owned.");
    return true;
 }
 

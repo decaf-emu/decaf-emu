@@ -1,4 +1,3 @@
-#include <algorithm>
 #include "coreinit.h"
 #include "coreinit_memory.h"
 #include "coreinit_memheap.h"
@@ -6,10 +5,12 @@
 #include "coreinit_frameheap.h"
 #include "coreinit_unitheap.h"
 #include "libcpu/mem.h"
-#include "common/teenyheap.h"
-#include "common/strutils.h"
 #include "virtual_ptr.h"
 #include "ppcutils/wfunc_call.h"
+#include "common/decaf_assert.h"
+#include "common/teenyheap.h"
+#include "common/strutils.h"
+#include <algorithm>
 #include <array>
 
 namespace coreinit
@@ -247,16 +248,18 @@ CoreFreeDefaultHeap()
 
          switch (heap->tag) {
          case MEMiHeapTag::ExpandedHeap:
-            MEMDestroyExpHeap(reinterpret_cast<ExpandedHeap*>(heap));
+            MEMDestroyExpHeap(reinterpret_cast<ExpandedHeap *>(heap));
             break;
          case MEMiHeapTag::FrameHeap:
-            MEMDestroyFrmHeap(reinterpret_cast<FrameHeap*>(heap));
+            MEMDestroyFrmHeap(reinterpret_cast<FrameHeap *>(heap));
             break;
          case MEMiHeapTag::UnitHeap:
+            MEMDestroyUnitHeap(reinterpret_cast<UnitHeap *>(heap));
+            break;
          case MEMiHeapTag::UserHeap:
          case MEMiHeapTag::BlockHeap:
          default:
-            assert(false);
+            decaf_abort(fmt::format("Invalid MEMiHeapTag {}", heap->tag));
          }
 
          sMemArenas[i] = nullptr;

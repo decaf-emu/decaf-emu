@@ -1,3 +1,4 @@
+#include "common/decaf_assert.h"
 #include "common/log.h"
 #include "common/strutils.h"
 #include "glsl2_translate.h"
@@ -187,7 +188,7 @@ bool GLDriver::checkActiveShader()
                } else if (attrib.srcSelX == latte::SQ_SEL_Z) {
                   gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, aluDivisor1);
                } else {
-                  throw std::logic_error("Unexpected SRC_SEL_X for alu divisor");
+                  decaf_abort(fmt::format("Unexpected SRC_SEL_X {} for alu divisor", attrib.srcSelX));
                }
             } else {
                gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, 0);
@@ -528,7 +529,7 @@ bool GLDriver::checkActiveAttribBuffers()
       auto buffer = buffers[attrib.buffer];
 
       if (!buffer || !buffer->object) {
-         throw std::logic_error("Something odd happened with attribute buffers");
+         decaf_abort("Something odd happened with attribute buffers");
       }
 
       stridedMemcpy(mem::translate<const void>(buffer->addr),
@@ -770,7 +771,7 @@ getSamplerType(latte::SQ_TEX_DIM dim, latte::SQ_NUM_FORMAT numFormat, latte::SQ_
    case latte::SQ_TEX_DIM_2D_ARRAY:
       return glsl2::SamplerType::Sampler2DArray;
    default:
-      throw std::logic_error(fmt::format("Invalid sampler type {}", dim));
+      decaf_abort(fmt::format("Invalid sampler type {}", dim));
    }
 }
 
@@ -878,8 +879,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          out << "vs_out_" << exp.id << " = exp_param_" << exp.id << ";\n";
          break;
       case latte::SQ_EXPORT_PIXEL:
-         throw std::logic_error("Unexpected pixel export in vertex shader.");
-         break;
+         decaf_abort("Unexpected pixel export in vertex shader.");
       }
    }
 
@@ -1050,10 +1050,10 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
          break;
       }
       case latte::SQ_EXPORT_POS:
-         throw std::logic_error("Unexpected position export in pixel shader.");
+         decaf_abort("Unexpected position export in pixel shader.");
          break;
       case latte::SQ_EXPORT_PARAM:
-         throw std::logic_error("Unexpected parameter export in pixel shader.");
+         decaf_abort("Unexpected parameter export in pixel shader.");
          break;
       }
    }

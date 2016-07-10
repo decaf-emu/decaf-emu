@@ -1,3 +1,4 @@
+#include "common/decaf_assert.h"
 #include "common/log.h"
 #include "common/platform_memory.h"
 #include "mem.h"
@@ -69,10 +70,7 @@ initialise()
       }
    }
 
-   if (!gMemoryBase) {
-      gLog->critical("Failed to find a valid memory base address");
-      throw std::runtime_error("Failed to find a valid memory base address");
-   }
+   decaf_assert(gMemoryBase, "Failed to find a valid memory base address");
 }
 
 // Return the base address of mapped memory

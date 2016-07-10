@@ -1,4 +1,4 @@
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "gx2_debug.h"
 #include "gx2_format.h"
 #include "gx2_texture.h"
@@ -152,8 +152,8 @@ setTexture(GX2Texture *texture, latte::SQ_RES_OFFSET offset, uint32_t unit)
    auto imageAddress = texture->surface.image.getAddress();
    auto mipAddress = texture->surface.mipmaps.getAddress();
 
-   emuassert(!(mipAddress & 0xff));
-   emuassert(!(imageAddress & 0xff));
+   decaf_check(!(mipAddress & 0xff));
+   decaf_check(!(imageAddress & 0xff));
 
    if (texture->surface.tileMode >= GX2TileMode::Tiled2DThin1 && texture->surface.tileMode != GX2TileMode::LinearSpecial) {
       if ((texture->surface.swizzle >> 16) & 0xFF) {

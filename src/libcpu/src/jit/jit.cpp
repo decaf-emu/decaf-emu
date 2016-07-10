@@ -1,6 +1,6 @@
 #include "common/log.h"
 #include "common/bitutils.h"
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "common/fastregionmap.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
@@ -315,7 +315,7 @@ gen(JitBlock &block)
       mem[aligned_mov_offset + 0] = 0x48;
       mem[aligned_mov_offset + 1] = 0xB8;
       auto atomicAddr = &mem[aligned_mov_offset + 2];
-      emuassert(align_up(atomicAddr, 8) == atomicAddr);
+      decaf_check(align_up(atomicAddr, 8) == atomicAddr);
       *reinterpret_cast<uint64_t*>(atomicAddr) = targetAddr;
 
       // Fill the remaining space with NOP
@@ -422,7 +422,7 @@ JitCode
 jit_continue(uint32_t nia, JitCode *jumpSource)
 {
    // This would be strange...
-   emuassert(nia != CALLBACK_ADDR);
+   decaf_check(nia != CALLBACK_ADDR);
 
    // Log the branch if branch tracing is enabled
    if (gBranchTraceHandler) {

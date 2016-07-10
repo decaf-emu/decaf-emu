@@ -3,6 +3,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
 #include "coreinit_internal_queue.h"
+#include "common/decaf_assert.h"
 
 namespace coreinit
 {
@@ -44,7 +45,7 @@ OSInitMutexEx(OSMutex *mutex, const char *name)
 static void
 lockMutexNoLock(OSMutex *mutex)
 {
-   assert(mutex && mutex->tag == OSMutex::Tag);
+   decaf_check(mutex && mutex->tag == OSMutex::Tag);
    auto thread = OSGetCurrentThread();
 
    while (mutex->owner && mutex->owner != thread) {
@@ -131,9 +132,9 @@ static void
 unlockMutexNoLock(OSMutex *mutex)
 {
    auto thread = OSGetCurrentThread();
-   assert(mutex && mutex->tag == OSMutex::Tag);
-   assert(mutex->owner == thread);
-   assert(mutex->count > 0);
+   decaf_check(mutex && mutex->tag == OSMutex::Tag);
+   decaf_check(mutex->owner == thread);
+   decaf_check(mutex->count > 0);
    mutex->count--;
 
    if (mutex->count == 0) {
@@ -208,9 +209,9 @@ OSWaitCond(OSCondition *condition, OSMutex *mutex)
 {
    auto thread = OSGetCurrentThread();
    internal::lockScheduler();
-   assert(mutex && mutex->tag == OSMutex::Tag);
-   assert(condition && condition->tag == OSCondition::Tag);
-   assert(mutex->owner == thread);
+   decaf_check(mutex && mutex->tag == OSMutex::Tag);
+   decaf_check(condition && condition->tag == OSCondition::Tag);
+   decaf_check(mutex->owner == thread);
 
    // Force an unlock
    auto mutexCount = mutex->count;
@@ -238,7 +239,7 @@ OSWaitCond(OSCondition *condition, OSMutex *mutex)
 void
 OSSignalCond(OSCondition *condition)
 {
-   assert(condition && condition->tag == OSCondition::Tag);
+   decaf_check(condition && condition->tag == OSCondition::Tag);
    OSWakeupThread(&condition->queue);
 }
 

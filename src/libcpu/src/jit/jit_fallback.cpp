@@ -1,11 +1,13 @@
-#include "common/debuglog.h"
+#include "common/decaf_assert.h"
 #include "jit_internal.h"
 #include "espresso/espresso_instructionset.h"
 #include "interpreter/interpreter_insreg.h"
 #include <cassert>
 #include <algorithm>
+#include <spdlog/details/format.h>
 
-static const bool TRACK_FALLBACK_CALLS = true;
+static const bool
+TRACK_FALLBACK_CALLS = true;
 
 namespace cpu
 {
@@ -18,10 +20,10 @@ static uint64_t sFallbackCalls[static_cast<size_t>(espresso::InstructionID::Inst
 bool jit_fallback(PPCEmuAssembler& a, espresso::Instruction instr)
 {
    auto data = espresso::decodeInstruction(instr);
+   decaf_assert(data, fmt::format("Failed to decode instruction {:08X}", instr.value));
+
    auto fptr = cpu::interpreter::getInstructionHandler(data->id);
-   if (!fptr) {
-      throw;
-   }
+   decaf_assert(fptr, fmt::format("Unimplemented instruction {}", static_cast<int>(data->id)));
 
    a.evictAll();
 
@@ -34,7 +36,6 @@ bool jit_fallback(PPCEmuAssembler& a, espresso::Instruction instr)
    a.mov(asmjit::x86::rcx, a.stateReg);
    a.mov(asmjit::x86::rdx, (uint32_t)instr);
    a.call(asmjit::Ptr(fptr));
-
    return true;
 }
 

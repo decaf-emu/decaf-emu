@@ -1,3 +1,4 @@
+#include "common/decaf_assert.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
 
@@ -77,7 +78,7 @@ getPrimitiveMode(latte::VGT_DI_PRIMITIVE_TYPE type)
    case latte::VGT_DI_PT_LINELOOP:
       return gl::GL_LINE_LOOP;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented VGT_PRIMITIVE_TYPE {}", type));
+      decaf_abort(fmt::format("Unimplemented VGT_PRIMITIVE_TYPE {}", type));
    }
 }
 
@@ -224,7 +225,7 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
       auto indices = std::vector<uint16_t>(data.count);
 
       if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_16) {
-         throw std::logic_error(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_16_BIT", vgt_dma_index_type.INDEX_TYPE()));
+         decaf_abort(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_16_BIT", vgt_dma_index_type.INDEX_TYPE()));
       }
 
       for (auto i = 0u; i < data.count; ++i) {
@@ -243,7 +244,7 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
       auto indices = std::vector<uint32_t>(data.count);
 
       if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_32) {
-         throw std::logic_error(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_32_BIT", vgt_dma_index_type.INDEX_TYPE()));
+         decaf_abort(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_32_BIT", vgt_dma_index_type.INDEX_TYPE()));
       }
 
       for (auto i = 0u; i < data.count; ++i) {
@@ -266,7 +267,7 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
                      vgt_dma_num_instances.NUM_INSTANCES,
                      0); // TODO: Base instance
    } else {
-      throw unimplemented_error(fmt::format("Unimplemented vgt_dma_index_type.SWAP_MODE {}", vgt_dma_index_type.SWAP_MODE()));
+      decaf_abort(fmt::format("Unimplemented vgt_dma_index_type.SWAP_MODE {}", vgt_dma_index_type.SWAP_MODE()));
    }
 }
 

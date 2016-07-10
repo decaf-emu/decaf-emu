@@ -1,5 +1,5 @@
 #pragma once
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 
 namespace coreinit
 {
@@ -67,11 +67,11 @@ public:
    static inline void
    append(QueueType *queue, ItemType *item)
    {
-      emuassert(link(item).next == nullptr);
-      emuassert(link(item).prev == nullptr);
+      decaf_check(link(item).next == nullptr);
+      decaf_check(link(item).prev == nullptr);
 
       if (!queue->tail) {
-         emuassert(!queue->head);
+         decaf_check(!queue->head);
 
          queue->head = item;
          queue->tail = item;
@@ -157,8 +157,8 @@ public:
    static void inline
    insert(QueueType *queue, ItemType *item)
    {
-      emuassert(link(item).next == nullptr);
-      emuassert(link(item).prev == nullptr);
+      decaf_check(link(item).next == nullptr);
+      decaf_check(link(item).prev == nullptr);
 
       if (!queue->head) {
          // Insert only item

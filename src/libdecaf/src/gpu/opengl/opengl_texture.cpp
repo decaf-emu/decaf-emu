@@ -1,3 +1,4 @@
+#include "common/decaf_assert.h"
 #include "common/log.h"
 #include "common/murmur3.h"
 #include "gpu/latte_enum_sq.h"
@@ -37,7 +38,7 @@ getTextureTarget(latte::SQ_TEX_DIM dim)
    case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
       return gl::GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented SQ_TEX_DIM {}", dim));
+      decaf_abort(fmt::format("Unimplemented SQ_TEX_DIM {}", dim));
    }
 }
 
@@ -239,7 +240,7 @@ getCompressedTextureDataType(latte::SQ_DATA_FORMAT format, uint32_t degamma)
    case latte::FMT_BC5:
       return degamma ? gl::GL_COMPRESSED_SIGNED_RG_RGTC2 : gl::GL_COMPRESSED_RG_RGTC2;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented compressed texture format {}", format));
+      decaf_abort(fmt::format("Unimplemented compressed texture format {}", format));
    }
 }
 
@@ -260,7 +261,7 @@ getTextureSwizzle(latte::SQ_SEL sel)
    case latte::SQ_SEL_1:
       return gl::GL_ONE;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented compressed texture swizzle {}", sel));
+      decaf_abort(fmt::format("Unimplemented compressed texture swizzle {}", sel));
    }
 }
 
@@ -371,7 +372,7 @@ bool GLDriver::checkActiveTextures()
             }
 
             if (textureDataType == gl::GL_INVALID_ENUM || textureFormat == gl::GL_INVALID_ENUM) {
-               throw std::logic_error(fmt::format("Texture with unsupported format {}", surface.format.value()));
+               decaf_abort(fmt::format("Texture with unsupported format {}", surface.format.value()));
             }
 
             switch (dim) {
@@ -459,7 +460,7 @@ getTextureWrap(latte::SQ_TEX_CLAMP clamp)
    case latte::SQ_TEX_CLAMP_HALF_BORDER:
    case latte::SQ_TEX_MIRROR_ONCE_HALF_BORDER:
    default:
-      throw unimplemented_error(fmt::format("Unimplemented texture wrap {}", clamp));
+      decaf_abort(fmt::format("Unimplemented texture wrap {}", clamp));
    }
 }
 
@@ -472,7 +473,7 @@ getTextureXYFilter(latte::SQ_TEX_XY_FILTER filter)
    case latte::SQ_TEX_XY_FILTER_BILINEAR:
       return gl::GL_LINEAR;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented texture xy filter {}", filter));
+      decaf_abort(fmt::format("Unimplemented texture xy filter {}", filter));
    }
 }
 
@@ -497,7 +498,7 @@ getTextureCompareFunction(latte::SQ_TEX_DEPTH_COMPARE func)
    case latte::SQ_TEX_DEPTH_COMPARE_ALWAYS:
       return gl::GL_ALWAYS;
    default:
-      throw unimplemented_error(fmt::format("Unimplemented texture compare function {}", func));
+      decaf_abort(fmt::format("Unimplemented texture compare function {}", func));
    }
 }
 

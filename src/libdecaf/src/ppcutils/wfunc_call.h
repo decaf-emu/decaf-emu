@@ -41,7 +41,7 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
    core->gpr[1] += 2 * 4;
 
    // Lets verify we did not corrupt the SP
-   emuassert(core->gpr[1] == origStackPtr);
+   decaf_check(core->gpr[1] == origStackPtr);
 
    // Return the result
    return ppctypes::getResult<ReturnType>(core);

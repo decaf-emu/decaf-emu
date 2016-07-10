@@ -1,7 +1,8 @@
 #pragma once
-#include <cassert>
 #include "common/byte_swap.h"
+#include "common/decaf_assert.h"
 #include "common/types.h"
+#include <cassert>
 
 namespace mem
 {
@@ -71,8 +72,8 @@ untranslate(const void *ptr)
 
    auto sptr = reinterpret_cast<size_t>(ptr);
    auto sbase = base();
-   assert(sptr > sbase);
-   assert(sptr <= sbase + 0xFFFFFFFF);
+   decaf_check(sptr > sbase);
+   decaf_check(sptr <= sbase + 0xFFFFFFFF);
    return static_cast<ppcaddr_t>(sptr - sbase);
 }
 

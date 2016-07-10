@@ -1,3 +1,4 @@
+#include "common/decaf_assert.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
 
@@ -83,7 +84,7 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
    // case latte::DB_DEPTH_FORMAT::DEPTH_X8_24_FLOAT:
    // case latte::DB_DEPTH_FORMAT::DEPTH_INVALID:
    default:
-      throw std::logic_error(fmt::format("Depth buffer with unsupported format {}", dbFormat));
+      decaf_abort(fmt::format("Depth buffer with unsupported format {}", dbFormat));
    }
 
    auto buffer = getSurfaceBuffer(baseAddress, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma);

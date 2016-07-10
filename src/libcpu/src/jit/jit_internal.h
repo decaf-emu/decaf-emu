@@ -1,9 +1,10 @@
 #pragma once
-#include "../cpu.h"
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
+#include "cpu.h"
 #include <array>
 #include <asmjit/asmjit.h>
 #include <map>
+#include <spdlog/details/format.h>
 #include <vector>
 
 #define offsetof2(s, m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
@@ -208,7 +209,7 @@ public:
       } else if (hreg->regType == RegType::None) {
          return false;
       } else {
-         throw std::logic_error("Unexpected register type");
+         decaf_abort(fmt::format("Unexpected register type {}", static_cast<int>(hreg->regType)));
       }
    }
 
@@ -271,7 +272,7 @@ public:
 
       void markUsed() const
       {
-         emuassert(mReg);
+         decaf_check(mReg);
          mReg->lruValue = mParent->mLruCounter++;
          if (mMarkLoadedOnUse) {
             mReg->loaded = true;
@@ -300,7 +301,7 @@ public:
       }
 
       operator asmjit::X86GpReg() const {
-         emuassert(mReg->regType == RegType::Gp);
+         decaf_check(mReg->regType == RegType::Gp);
          markUsed();
          if (mSize == 1) {
             return mParent->mGpRegVals[mReg->regId].r8();
@@ -311,7 +312,7 @@ public:
          } else if (mSize == 8) {
             return mParent->mGpRegVals[mReg->regId].r64();
          } else {
-            throw std::logic_error("Unexpected register size");
+            decaf_abort(fmt::format("Unexpected register size {}", mSize));
          }
       }
 
@@ -356,8 +357,8 @@ public:
       }
 
       operator asmjit::X86XmmReg() const {
-         emuassert(mReg->regType == RegType::Xmm);
-         emuassert(mSize == 8);
+         decaf_check(mReg->regType == RegType::Xmm);
+         decaf_check(mSize == 8);
          markUsed();
          return mParent->mXmmRegVals[mReg->regId];
       }
@@ -397,7 +398,7 @@ public:
    {
       for (auto &hreg : mRegs) {
          if (isSameHostRegister(&hreg, reg)) {
-            emuassert(hreg.useCount == 0);
+            decaf_check(hreg.useCount == 0);
             if (hreg.content != 0xFFFFFFFF) {
                evictOne(&hreg);
             }
@@ -407,7 +408,7 @@ public:
       }
 
       // For debugging
-      throw std::logic_error("Attempted to lockout register which isn't used for JIT");
+      decaf_abort("Attempted to lockout register which isn't used for JIT");
 
       // We couldn't find the register, so there is probably no need
       //  to preform lockout on it.  Why did you call me!
@@ -446,7 +447,7 @@ public:
          return &reg;
       }
 
-      throw std::logic_error("Failed to locate a free host register to allocate");
+      decaf_abort("Failed to locate a free host register to allocate");
    }
 
    HostRegister * findReg(const PpcRef& which)
@@ -455,7 +456,7 @@ public:
       for (auto i = 0; i < mRegs.size(); ++i) {
          auto &reg = mRegs[i];
          if (reg.content == which.offset) {
-            emuassert(reg.size == which.size);
+            decaf_check(reg.size == which.size);
             return &reg;
          }
       }
@@ -464,7 +465,7 @@ public:
 
    void freeRegister(HostRegister *reg)
    {
-      emuassert(reg->useCount > 0);
+      decaf_check(reg->useCount > 0);
       reg->useCount--;
    }
 
@@ -495,7 +496,7 @@ public:
          tmp = tmp.r64();
          mov(tmp, source);
       } else {
-         std::logic_error("Unexpected register size");
+         decaf_abort(fmt::format("Unexpected register size {}", source.mSize));
       }
 
       return tmp;
@@ -508,7 +509,7 @@ public:
       if (source.mSize == 8) {
          movq(tmp, source);
       } else {
-         std::logic_error("Unexpected register size");
+         decaf_abort(fmt::format("Unexpected register size {}", source.mSize));
       }
 
       return tmp;
@@ -516,7 +517,7 @@ public:
 
    GpRegister _getGpRegister(const PpcRef &which, bool shouldLoad)
    {
-      emuassert(which.size == 4 || which.size == 8);
+      decaf_check(which.size == 4 || which.size == 8);
 
       auto reg = findReg(which);
       if (reg && reg->regType != RegType::Gp) {
@@ -524,7 +525,7 @@ public:
          reg = nullptr;
       }
       if (reg) {
-         emuassert(reg->size == which.size);
+         decaf_check(reg->size == which.size);
          reg->useCount++;
       } else {
          reg = allocReg(RegType::Gp);
@@ -538,7 +539,7 @@ public:
          } else if (reg->size == 8) {
             mov(mGpRegVals[reg->regId].r64(), asmjit::X86Mem(stateReg, which.offset, 8));
          } else {
-            std::logic_error("Unexpected register size");
+            decaf_abort(fmt::format("Unexpected register size {}", reg->size));
          }
          reg->loaded = true;
       }
@@ -548,7 +549,7 @@ public:
 
    XmmRegister _getXmmRegister(const PpcRef &which, bool shouldLoad)
    {
-      emuassert(which.size == 8);
+      decaf_check(which.size == 8);
 
       auto reg = findReg(which);
       if (reg && reg->regType != RegType::Xmm) {
@@ -556,7 +557,7 @@ public:
          reg = nullptr;
       }
       if (reg) {
-         emuassert(reg->size == which.size);
+         decaf_check(reg->size == which.size);
          reg->useCount++;
       } else {
          reg = allocReg(RegType::Xmm);
@@ -568,7 +569,7 @@ public:
          if (reg->size == 8) {
             movq(mXmmRegVals[reg->regId], asmjit::X86Mem(stateReg, which.offset, 8));
          } else {
-            std::logic_error("Unexpected register size");
+            decaf_abort(fmt::format("Unexpected register size {}", reg->size));
          }
          reg->loaded = true;
       }
@@ -613,25 +614,25 @@ public:
 
    void saveOne(HostRegister *reg)
    {
-      emuassert(reg->useCount == 0);
-      emuassert(reg->content != 0xFFFFFFFF);
+      decaf_check(reg->useCount == 0);
+      decaf_check(reg->content != 0xFFFFFFFF);
 
       if (reg->regType == RegType::Gp) {
-         emuassert(reg->size == 4 || reg->size == 8);
+         decaf_check(reg->size == 4 || reg->size == 8);
 
          if (reg->size == 4) {
             mov(asmjit::X86Mem(stateReg, reg->content, 4), mGpRegVals[reg->regId].r32());
          } else if (reg->size == 8) {
             mov(asmjit::X86Mem(stateReg, reg->content, 8), mGpRegVals[reg->regId].r64());
          } else {
-            throw std::logic_error("Unexpected register size");
+            decaf_abort(fmt::format("Unexpected register size {}", reg->size));
          }
       } else if (reg->regType == RegType::Xmm) {
-         emuassert(reg->size == 8);
+         decaf_check(reg->size == 8);
 
          movq(asmjit::X86Mem(stateReg, reg->content, 8), mXmmRegVals[reg->regId]);
       } else {
-         throw std::logic_error("Unexpected register type in evictOne");
+         decaf_abort(fmt::format("Unexpected register type {}", static_cast<int>(reg->regType)));
       }
    }
 

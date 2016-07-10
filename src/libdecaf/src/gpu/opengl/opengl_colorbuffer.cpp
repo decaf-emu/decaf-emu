@@ -1,3 +1,4 @@
+#include "common/decaf_assert.h"
 #include "opengl_driver.h"
 #include "gpu/latte_enum_cb.h"
 #include "gpu/latte_enum_sq.h"
@@ -79,7 +80,7 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
    //case latte::CB_NUMBER_TYPE::NUMBER_SRGB:
    //case latte::CB_NUMBER_TYPE::NUMBER_FLOAT:
    default:
-      throw std::logic_error(fmt::format("Color buffer with unsupported number type {}", cbNumberType));
+      decaf_abort(fmt::format("Color buffer with unsupported number type {}", cbNumberType));
    }
 
    auto buffer = getSurfaceBuffer(baseAddress, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma);

@@ -1,8 +1,8 @@
-#include <cassert>
 #include <vector>
 #include <zlib.h>
 #include "elf.h"
 #include "common/bigendianview.h"
+#include "common/decaf_assert.h"
 #include "common/log.h"
 
 const unsigned elf::Header::Magic;
@@ -58,7 +58,7 @@ readHeader(BigEndianView &in, Header &header)
       return false;
    }
 
-   assert(header.shentsize == sizeof(SectionHeader));
+   decaf_check(header.shentsize == sizeof(SectionHeader));
    return true;
 }
 

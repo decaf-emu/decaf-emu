@@ -1,12 +1,13 @@
 #pragma once
-
 #include "common/bitutils.h"
+#include "common/decaf_assert.h"
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
 #include "libcpu/espresso/espresso_instructionset.h"
-#include <stdexcept>
+#include <spdlog/details/format.h>
 
-struct BranchMetaInfo {
+struct BranchMetaInfo
+{
    bool isVariable;
    uint32_t target;
    bool isConditional;
@@ -120,7 +121,7 @@ getBranchMeta(uint32_t address, espresso::Instruction instr, espresso::Instructi
    } else if (data->id == espresso::InstructionID::bclr) {
       return getBranchMetaBX<BcBranchLR | BcCheckCtr | BcCheckCond>(address, instr, state);
    } else {
-      throw std::logic_error("Instruction was not a branch");
+      decaf_abort(fmt::format("Instruction {} was not a branch", static_cast<int>(data->id)));
    }
 }
 

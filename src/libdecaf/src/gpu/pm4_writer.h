@@ -1,11 +1,12 @@
 #pragma once
-#include <gsl.h>
+#include "common/decaf_assert.h"
+#include "common/log.h"
 #include "pm4.h"
 #include "pm4_buffer.h"
 #include "pm4_format.h"
 #include "latte_registers.h"
 #include "virtual_ptr.h"
-#include "common/log.h"
+#include <gsl.h>
 
 namespace pm4
 {
@@ -32,14 +33,13 @@ public:
    {
       if (mBuffer) {
          auto size = mBuffer->curSize - mSaveSize;
+
          if (size < 2) {
-            // This really is an std::logic_error, but we can't throw from destructors.
-            gLog->warn("Encoded a pm4 type3 packet with size < 2.");
+            decaf_abort("Encoded a pm4 type3 packet with size < 2.");
          }
 
          // Update header
          auto header = *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mSaveSize]);
-
          header = header
             .size().set(size - 2);
 
@@ -136,7 +136,7 @@ private:
       auto saveSize = newBuffer->curSize;
 
       if ((newBuffer->curSize + size) > newBuffer->maxSize) {
-         throw std::logic_error("PM4 packet is wayy too big son");
+         decaf_abort("PM4 packet is wayy too big m8");
       }
 
       if (oldSize > mSaveSize) {

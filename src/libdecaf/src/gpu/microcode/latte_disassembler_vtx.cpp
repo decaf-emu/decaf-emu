@@ -1,4 +1,5 @@
 #include "latte_disassembler.h"
+#include "common/decaf_assert.h"
 
 namespace latte
 {
@@ -21,9 +22,9 @@ disassembleVtxClause(State &state, const latte::ControlFlowInst &parent)
       auto name = getInstructionName(id);
 
       if (id == SQ_TEX_INST_MEM) {
-         throw std::logic_error(fmt::format("Unexpected mem instruction in vertex fetch clause {} {}", id, name));
+         decaf_abort(fmt::format("Unexpected mem instruction in vertex fetch clause {} {}", id, name));
       } else if (id != SQ_TEX_INST_VTX_FETCH && id != SQ_TEX_INST_VTX_SEMANTIC && id != SQ_TEX_INST_GET_BUFFER_RESINFO) {
-         throw std::logic_error(fmt::format("Unexpected tex instruction in vertex fetch clause {} {}", id, name));
+         decaf_abort(fmt::format("Unexpected tex instruction in vertex fetch clause {} {}", id, name));
       }
 
       state.out

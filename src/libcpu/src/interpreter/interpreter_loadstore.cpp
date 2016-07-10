@@ -1,11 +1,13 @@
-#include "common/bitutils.h"
-#include "common/floatutils.h"
 #include "interpreter_float.h"
 #include "interpreter_insreg.h"
 #include "mem.h"
+#include "common/bitutils.h"
+#include "common/decaf_assert.h"
+#include "common/floatutils.h"
 #include <algorithm>
 #include <cmath>
 #include <mutex>
+#include <spdlog/details/format.h>
 
 using espresso::QuantizedDataType;
 using espresso::ConditionRegisterFlag;
@@ -723,7 +725,7 @@ dequantize(uint32_t ea, QuantizedDataType type, uint32_t scale)
       result = std::ldexp(static_cast<double>(mem::read<int16_t>(ea)), -exp);
       break;
    default:
-      assert(!"Unknown QuantizedDataType");
+      decaf_abort(fmt::format("Unknown QuantizedDataType {}", static_cast<int>(type)));
    }
 
    return result;
@@ -782,7 +784,7 @@ quantize(uint32_t ea, double value, QuantizedDataType type, uint32_t scale)
       }
       break;
    default:
-      assert(!"Unknown QuantizedDataType");
+      decaf_abort(fmt::format("Unknown QuantizedDataType {}", static_cast<int>(type)));
    }
 }
 

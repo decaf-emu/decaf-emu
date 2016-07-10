@@ -1,12 +1,13 @@
 #include "trace.h"
 #include "state.h"
 #include "statedbg.h"
-#include "common/log.h"
-#include "common/debuglog.h"
 #include "cpu.h"
 #include "espresso/espresso_disassembler.h"
 #include "espresso/espresso_instructionset.h"
 #include "espresso/espresso_spr.h"
+#include "common/log.h"
+#include "common/debuglog.h"
+#include "common/decaf_assert.h"
 
 using espresso::Instruction;
 using espresso::InstructionID;
@@ -87,10 +88,9 @@ getStateFieldName(TraceFieldType type)
       return "FPSCR";
    } else if (type == StateField::CTR) {
       return "CTR";
-   } else {
-      assert(0);
-      return "UNK";
    }
+
+   decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
 }
 
 static void
@@ -112,9 +112,9 @@ printFieldValue(fmt::MemoryWriter &out, Instruction instr, TraceFieldType type, 
       out.write("    LR = {:08x}\n", value.u32v0);
    } else if (type == StateField::CTR) {
       out.write("    CTR = {:08x}\n", value.u32v0);
-   } else {
-      assert(0);
    }
+
+   decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
 }
 
 static void
@@ -147,8 +147,8 @@ const Trace&
 getTrace(Tracer *tracer, int index)
 {
    auto tracerSize = tracer->numTraces;
-   assert(index >= 0);
-   assert(index < tracerSize);
+   decaf_check(index >= 0);
+   decaf_check(index < tracerSize);
    auto realIndex = (int)tracer->index - 1 - index;
    while (realIndex < 0) {
       realIndex += (int)tracerSize;
@@ -300,9 +300,9 @@ saveStateField(const cpu::CoreRegs *state, TraceFieldType type, TraceFieldValue 
       field.u32v0 = state->reserve ? 1 : 0;
       field.u32v1 = state->reserveAddress;
       field.u32v2 = state->reserveData;
-   } else {
-      assert(0);
    }
+
+   decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
 }
 
 void
@@ -332,9 +332,9 @@ restoreStateField(cpu::CoreRegs *state, TraceFieldType type, const TraceFieldVal
       state->reserve = (field.u32v0 != 0);
       state->reserveAddress = field.u32v1;
       state->reserveData = field.u32v2;
-   } else {
-      assert(0);
    }
+
+   decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
 }
 
 template<typename T>
@@ -500,8 +500,8 @@ tracePrint(cpu::Core *state, int start, int count)
    }
 
    auto end = start + count;
-   assert(start >= 0);
-   assert(end <= tracerSize);
+   decaf_check(start >= 0);
+   decaf_check(end <= tracerSize);
 
    fmt::MemoryWriter out;
    out.write("Trace - Print {} to {}\n", start, end);
@@ -524,8 +524,8 @@ traceReg(cpu::Core *state, int start, int regIdx)
    fmt::MemoryWriter out;
    out.write("Trace - Search {} to {} for write r{}\n", start, tracerSize, regIdx);
 
-   assert(start >= 0);
-   assert(start < tracerSize);
+   decaf_check(start >= 0);
+   decaf_check(start < tracerSize);
 
    for (auto i = start; i < tracerSize; ++i) {
       auto &trace = getTrace(tracer, i);

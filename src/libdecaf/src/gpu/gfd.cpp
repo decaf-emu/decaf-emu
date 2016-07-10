@@ -1,5 +1,6 @@
 #include "gfd.h"
 #include "common/binaryfile.h"
+#include "common/decaf_assert.h"
 #include "modules/gx2/gx2_texture.h"
 #include "modules/gx2/gx2_shaders.h"
 
@@ -109,7 +110,7 @@ uint32_t File::getIndex(BlockType::Type type)
    case BlockType::TextureHeader:
       return indices.texture++;
    default:
-      throw std::logic_error("Invalid getIndex BlockType");
+      decaf_abort(fmt::format("Invalid BlockType {}", static_cast<int>(type)));
    }
 }
 

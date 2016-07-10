@@ -15,6 +15,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\common\src\assert.cpp" />
     <ClCompile Include="..\src\common\src\murmur3.cpp" />
     <ClCompile Include="..\src\common\src\platform_posix_dir.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -73,7 +74,7 @@
     <ClInclude Include="..\src\common\bit_cast.h" />
     <ClInclude Include="..\src\common\byte_swap.h" />
     <ClInclude Include="..\src\common\debuglog.h" />
-    <ClInclude Include="..\src\common\emuassert.h" />
+    <ClInclude Include="..\src\common\decaf_assert.h" />
     <ClInclude Include="..\src\common\enum_end.h" />
     <ClInclude Include="..\src\common\enum_start.h" />
     <ClInclude Include="..\src\common\enum_string_declare.h" />
@@ -165,7 +166,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -184,7 +185,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -205,7 +206,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>DECAF_GLFW;DECAF_SDL;NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>

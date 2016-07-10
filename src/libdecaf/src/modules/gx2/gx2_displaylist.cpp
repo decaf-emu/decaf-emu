@@ -5,6 +5,7 @@
 #include "gpu/pm4_writer.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "common/align.h"
+#include "common/decaf_assert.h"
 #include <array>
 
 namespace gx2
@@ -49,11 +50,13 @@ GX2EndDisplayList(void *displayList)
    auto bytes = align_up(active.curSize * 4, 32);
 
    // Fill up the new space with padding
-   uint32_t alignedSize = bytes / 4;
+   auto alignedSize = bytes / 4;
+
    if (alignedSize > active.maxSize) {
-      throw std::logic_error("Display list buffer was not 32-byte aligned when trying to pad");
+      decaf_abort("Display list buffer was not 32-byte aligned when trying to pad");
    }
-   for (uint32_t i = active.curSize; i < alignedSize; ++i) {
+
+   for (auto i = active.curSize; i < alignedSize; ++i) {
       active.buffer[i] = byte_swap(0xBEEF2929);
    }
 

@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include "coreinit.h"
 #include "coreinit_ghs.h"
 #include "coreinit_interrupts.h"
@@ -6,8 +5,9 @@
 #include "coreinit_memheap.h"
 #include "coreinit_mutex.h"
 #include "coreinit_scheduler.h"
-#include "ppcutils/wfunc_call.h"
 #include "libcpu/trace.h"
+#include "ppcutils/wfunc_call.h"
+#include "common/decaf_assert.h"
 
 namespace coreinit
 {
@@ -113,7 +113,7 @@ void
 ghs_flock_file(uint32_t lockIx)
 {
    // TODO: ghs_flock_file
-   assert(lockIx <= GHS_FOPEN_MAX);
+   decaf_check(lockIx <= GHS_FOPEN_MAX);
    // Lock mutex for file lockIx
 }
 

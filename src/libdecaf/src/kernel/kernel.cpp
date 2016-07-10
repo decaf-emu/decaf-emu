@@ -168,7 +168,7 @@ cpuInterruptHandler(uint32_t interrupt_flags)
    // interrupt someone who disabled the scheduler, since that should never
    // happen and will cause bugs.
 
-   emuassert(coreinit::internal::isSchedulerEnabled());
+   decaf_check(coreinit::internal::isSchedulerEnabled());
 
    coreinit::OSContext savedContext;
    kernel::saveContext(&savedContext);

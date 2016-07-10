@@ -61,7 +61,7 @@ getSelectChannel(SQ_SEL sel)
    case SQ_SEL_W:
       return 'w';
    default:
-      throw std::logic_error("Unexpected SQ_SEL value");
+      throw translate_exception(fmt::format("Unexpected SQ_SEL {}", sel));
    }
 }
 
@@ -100,7 +100,7 @@ getSamplerArgCount(SamplerType type)
    case SamplerType::Sampler2DRectShadow:
    case SamplerType::SamplerCubeArrayShadow:
    default:
-      throw std::logic_error(fmt::format("Unsupported sampler type {}", static_cast<unsigned>(type)));
+      throw translate_exception(fmt::format("Unsupported sampler type {}", static_cast<unsigned>(type)));
    }
 }
 
@@ -135,7 +135,7 @@ sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureF
    }
 
    if (resourceID != samplerID) {
-      throw std::logic_error("Unsupported sample with RESOURCE_ID != SAMPLER_ID");
+      throw translate_exception("Unsupported sample with RESOURCE_ID != SAMPLER_ID");
    }
 
    auto dst = getExportRegister(inst.word1.DST_GPR(), inst.word1.DST_REL());

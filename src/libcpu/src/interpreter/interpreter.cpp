@@ -1,4 +1,4 @@
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "common/log.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
@@ -76,7 +76,7 @@ step_one(Core *core)
    if (!data) {
       gLog->error("Could not decode instruction at {:08x} = {:08x}", cia, instr.value);
    }
-   emuassert(data);
+   decaf_check(data);
 
    auto trace = traceInstructionStart(instr, data, core);
    auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
@@ -84,7 +84,7 @@ step_one(Core *core)
    if (!fptr) {
       gLog->error("Unimplemented interpreter instruction {}", data->name);
    }
-   emuassert(fptr);
+   decaf_check(fptr);
 
    fptr(core, instr);
 
@@ -94,7 +94,7 @@ step_one(Core *core)
       core = this_core::state();
    }
 
-   emuassert(core->cia == cia);
+   decaf_check(core->cia == cia);
    traceInstructionEnd(trace, instr, data, core);
 
    return core;

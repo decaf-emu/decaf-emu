@@ -1,8 +1,8 @@
-#include <algorithm>
-#include <cassert>
-#include "common/bitutils.h"
 #include "espresso_instructionset.h"
 #include "espresso_spr.h"
+#include "common/bitutils.h"
+#include "common/decaf_assert.h"
+#include <algorithm>
 
 namespace espresso
 {
@@ -19,8 +19,8 @@ struct TableEntry
    addInstruction(InstructionField field, uint32_t value, InstructionInfo *instr)
    {
       auto fieldMap = getFieldMap(field);
-      assert(fieldMap);
-      assert(value < fieldMap->children.size());
+      decaf_check(fieldMap);
+      decaf_check(value < fieldMap->children.size());
       fieldMap->children[value].instr = instr;
    }
 
@@ -40,8 +40,8 @@ struct TableEntry
    getEntry(InstructionField field, uint32_t value)
    {
       auto fieldMap = getFieldMap(field);
-      assert(fieldMap);
-      assert(value < fieldMap->children.size());
+      decaf_check(fieldMap);
+      decaf_check(value < fieldMap->children.size());
       return &fieldMap->children[value];
    }
 

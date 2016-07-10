@@ -1,8 +1,9 @@
 #pragma once
-#include <gsl.h>
+#include "common/decaf_assert.h"
 #include "pm4_buffer.h"
 #include "pm4_format.h"
 #include "virtual_ptr.h"
+#include <gsl.h>
 
 namespace pm4
 {
@@ -80,7 +81,7 @@ private:
    void checkSize(size_t size)
    {
       if (mPosition + size > mBuffer.size()) {
-         throw std::logic_error("Read past end of packet");
+         decaf_abort("Read past end of packet");
       }
    }
 

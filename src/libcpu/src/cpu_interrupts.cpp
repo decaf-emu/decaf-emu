@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "cpu_internal.h"
+#include "common/decaf_assert.h"
 #include <condition_variable>
 #include <atomic>
 
@@ -124,7 +125,7 @@ waitForInterrupt()
 
    while (true) {
       if (!(core->interrupt_mask & ~NONMASKABLE_INTERRUPTS)) {
-         throw std::logic_error("WFI thread found all maskable interrupts were disabled");
+         decaf_abort("WFI thread found all maskable interrupts were disabled");
       }
 
       auto mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;

@@ -1,4 +1,4 @@
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "common/platform.h"
 #include "jit_vmemruntime.h"
 
@@ -76,7 +76,7 @@ sFunctionTable = nullptr;
 
 void registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr)
 {
-   emuassert(!sFunctionTable);
+   decaf_check(!sFunctionTable);
 
    // This function assumes the following prologue for the jit intro:
    //   PUSH RBX

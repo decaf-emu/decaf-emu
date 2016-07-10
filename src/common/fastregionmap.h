@@ -1,6 +1,6 @@
 #pragma once
 #include <atomic>
-#include <stdexcept>
+#include "common/decaf_assert.h"
 
 static_assert(sizeof(std::atomic<void*>) == sizeof(void*), "This class assumes std::atomic has no overhead");
 
@@ -47,57 +47,62 @@ public:
 
    Type find(uint32_t location)
    {
-      uint32_t level1Index = (location & 0xFF000000) >> 24;
-      auto level1Data = mData[level1Index].load();
-      if (!level1Data) {
+      auto index1 = (location & 0xFF000000) >> 24;
+      auto index2 = (location & 0x00FF0000) >> 16;
+      auto index3 = (location & 0x0000FFFC) >> 2;
+      auto level1 = mData[index1].load();
+
+      if (!level1) {
          return nullptr;
       }
 
-      uint32_t level2Index = (location & 0x00FF0000) >> 16;
-      auto level2Data = level1Data[level2Index].load();
-      if (!level2Data) {
+      auto level2 = level1[index2].load();
+
+      if (!level2) {
          return nullptr;
       }
 
-      uint32_t level3Index = (location & 0x0000FFFC) >> 2;
-      return level2Data[level3Index].load();
+      return level2[index3].load();
    }
 
    void set(uint32_t location, Type data)
    {
       if (location & 0x3) {
-         throw std::logic_error("Location was not power-of-two.");
+         decaf_abort("Location was not power-of-two.");
       }
 
-      uint32_t level1Index = (location & 0xFF000000) >> 24;
-      auto level1Data = mData[level1Index].load();
-      if (!level1Data) {
+      auto index1 = (location & 0xFF000000) >> 24;
+      auto index2 = (location & 0x00FF0000) >> 16;
+      auto index3 = (location & 0x0000FFFC) >> 2;
+      auto level1 = mData[index1].load();
+
+      if (!level1) {
          auto newTable = new std::atomic<std::atomic<Type>*>[0x100];
-         memset(newTable, 0, sizeof(void*) * 0x100);
-         if (mData[level1Index].compare_exchange_strong(level1Data, newTable)) {
-            level1Data = newTable;
+         std::memset(newTable, 0, sizeof(void*) * 0x100);
+
+         if (mData[index1].compare_exchange_strong(level1, newTable)) {
+            level1 = newTable;
          } else {
-            // compare_exchange updates level1Data if we were preempted
+            // compare_exchange updates level1 if we were pre-empted
             delete[] newTable;
          }
       }
 
-      uint32_t level2Index = (location & 0x00FF0000) >> 16;
-      auto level2Data = level1Data[level2Index].load();
-      if (!level2Data) {
+      auto level2 = level1[index2].load();
+
+      if (!level2) {
          auto newTable = new std::atomic<Type>[0x4000];
-         memset(newTable, 0, sizeof(void*) * 0x4000);
+         std::memset(newTable, 0, sizeof(void*) * 0x4000);
 
-         if (level1Data[level2Index].compare_exchange_strong(level2Data, newTable)) {
-            level2Data = newTable;
+         if (level1[index2].compare_exchange_strong(level2, newTable)) {
+            level2 = newTable;
          } else {
-            // compare_exchange updates level2Data if we were preempted
+            // compare_exchange updates level2 if we were preempted
             delete[] newTable;
          }
       }
 
-      uint32_t level3Index = (location & 0x0000FFFC) >> 2;
-      level2Data[level3Index].store(data);
+      level2[index3].store(data);
    }
 
 private:

@@ -1,5 +1,6 @@
 #include "latte_disassembler.h"
 #include "common/bitutils.h"
+#include "common/decaf_assert.h"
 
 namespace latte
 {
@@ -17,9 +18,9 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
    auto name = getInstructionName(id);
 
    if (id == SQ_TEX_INST_VTX_FETCH || id == SQ_TEX_INST_VTX_SEMANTIC || id == SQ_TEX_INST_GET_BUFFER_RESINFO) {
-      throw std::logic_error(fmt::format("Unexpected vertex fetch instruction in texture fetch clause {} {}", id, name));
+      decaf_abort(fmt::format("Unexpected vertex fetch instruction in texture fetch clause {} {}", id, name));
    } else if (id == SQ_TEX_INST_MEM) {
-      throw std::logic_error(fmt::format("Unexpected mem instruction in texture fetch clause {} {}", id, name));
+      decaf_abort(fmt::format("Unexpected mem instruction in texture fetch clause {} {}", id, name));
    } else {
       out << fmt::pad(name, namePad, ' ') << ' ';
 

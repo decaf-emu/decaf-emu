@@ -1,4 +1,5 @@
 #pragma once
+#include "common/decaf_assert.h"
 #include <cstring>
 #include <exception>
 #include <fstream>
@@ -55,7 +56,7 @@ public:
       Type value;
 
       if (mPosition + sizeof(Type) > mData.size()) {
-         throw std::runtime_error("Read past end of data");
+         decaf_abort("Read past end of data");
       }
 
       std::memcpy(&value, &mData[mPosition], sizeof(Type));
@@ -68,7 +69,7 @@ public:
    read(Type &value)
    {
       if (mPosition + sizeof(Type) > mData.size()) {
-         throw std::runtime_error("Read past end of data");
+         decaf_abort("Read past end of data");
       }
 
       std::memcpy(&value, &mData[mPosition], sizeof(Type));
@@ -79,7 +80,7 @@ public:
    readView(std::size_t size)
    {
       if (mPosition + size > mData.size()) {
-         throw std::runtime_error("Read past end of data");
+         decaf_abort("Read past end of data");
       }
 
       auto view = gsl::as_span(mData.data() + mPosition, size);
@@ -91,7 +92,7 @@ public:
    read(uint8_t *buffer, std::size_t size)
    {
       if (mPosition + size > mData.size()) {
-         throw std::runtime_error("Read past end of data");
+         decaf_abort("Read past end of data");
       }
 
       std::memcpy(buffer, &mData[mPosition], size);

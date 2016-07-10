@@ -1,6 +1,6 @@
 #pragma once
 #include "align.h"
-#include <assert.h>
+#include "decaf_assert.h"
 #include <map>
 #include <vector>
 #include <mutex>
@@ -86,7 +86,7 @@ public:
       std::unique_lock<std::mutex> lock(mMutex);
       auto ucptr = static_cast<uint8_t*>(ptr);
       auto itr = mAllocatedBlocks.find(ucptr);
-      assert(itr != mAllocatedBlocks.end());
+      decaf_check(itr != mAllocatedBlocks.end());
 
       releaseBlock(itr->second);
       mAllocatedBlocks.erase(itr);

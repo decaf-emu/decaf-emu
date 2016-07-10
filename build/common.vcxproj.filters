@@ -66,6 +66,9 @@
     <ClCompile Include="..\src\common\src\platform_posix_stacktrace.cpp">
       <Filter>Source Files\posix</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\common\src\assert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\common\align.h">
@@ -105,9 +108,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\common\debuglog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\common\emuassert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\common\fastregionmap.h">
@@ -180,6 +180,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\common\enum_string_define.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\decaf_assert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,3 +1,4 @@
+#include "common/decaf_assert.h"
 #include "latte_instructions.h"
 #include "latte_disassembler.h"
 #include <gsl.h>
@@ -9,7 +10,8 @@ namespace latte
 namespace disassembler
 {
 
-static std::string SingleIndent = "  ";
+static const std::string
+SingleIndent = "  ";
 
 void
 increaseIndent(State &state)
@@ -23,7 +25,7 @@ decreaseIndent(State &state)
    if (state.indent.size() >= SingleIndent.size()) {
       state.indent.resize(state.indent.size() - SingleIndent.size());
    } else {
-      throw std::logic_error("Invalid decrease indent");
+      decaf_abort("Invalid decrease indent");
    }
 }
 
@@ -188,7 +190,7 @@ disassembleNormal(State &state, const ControlFlowInst &inst)
    case SQ_CF_INST_TEX_ACK:
    case SQ_CF_INST_VTX_ACK:
    case SQ_CF_INST_VTX_TC_ACK:
-      throw std::logic_error(fmt::format("Unable to decode instruction {} {}", id, name));
+      decaf_abort(fmt::format("Unable to decode instruction {} {}", id, name));
    }
 
    // Decode instruction clause
@@ -228,8 +230,9 @@ disassemble(const gsl::span<const uint8_t> &binary)
    for (auto i = 0; i < binary.size(); i += sizeof(ControlFlowInst)) {
       auto cf = *reinterpret_cast<const ControlFlowInst *>(binary.data() + i);
       auto id = cf.word1.CF_INST();
+      auto type = cf.word1.CF_INST_TYPE().get();
 
-      switch (cf.word1.CF_INST_TYPE().get()) {
+      switch (type) {
       case SQ_CF_INST_TYPE_NORMAL:
          disassembler::disassembleNormal(state, cf);
          break;
@@ -241,7 +244,7 @@ disassemble(const gsl::span<const uint8_t> &binary)
          disassembler::disassembleControlFlowALU(state, cf);
          break;
       default:
-         throw std::logic_error("Invalid top level instruction type");
+         decaf_abort(fmt::format("Invalid top level instruction type {}", type));
       }
 
       if (cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_NORMAL

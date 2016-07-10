@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_mcp.h"
+#include "common/decaf_assert.h"
 
 namespace coreinit
 {
@@ -16,7 +17,7 @@ MCP_Open()
 void
 MCP_Close(IOHandle handle)
 {
-   assert(handle == sMCPHandle);
+   decaf_check(handle == sMCPHandle);
 }
 
 IOError

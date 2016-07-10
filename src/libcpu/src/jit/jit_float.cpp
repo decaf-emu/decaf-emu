@@ -1,8 +1,8 @@
-#include <cassert>
-#include <cstdint>
 #include "jit_insreg.h"
 #include "jit_float.h"
 #include "common/bitutils.h"
+#include "common/decaf_assert.h"
+#include <cstdint>
 
 namespace cpu
 {
@@ -14,7 +14,7 @@ void
 updateFloatConditionRegister(PPCEmuAssembler& a)
 {
    //state->cr.cr1 = state->fpscr.cr1;
-   throw std::logic_error("Updating the float condition register is not supported.");
+   decaf_abort("Updating the float condition register is not supported.");
 }
 
 static void

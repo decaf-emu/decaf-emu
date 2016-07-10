@@ -64,9 +64,9 @@ insertSelectValue(fmt::MemoryWriter &out, const std::string &src, SQ_SEL sel)
    case SQ_SEL_MASK:
       // These should never show up since if it does, it means that need
       //  to actually do a condensing first and adjust the target swizzle.
-      throw std::logic_error("Unexpected SQ_SEL_MASK");
+      throw translate_exception("Unexpected SQ_SEL_MASK");
    default:
-      throw std::logic_error(fmt::format("Unexpected SQ_SEL value {}", sel));
+      throw translate_exception(fmt::format("Unexpected SQ_SEL value {}", sel));
    }
 
    return true;
@@ -205,7 +205,7 @@ EXP(State &state, const ControlFlowInst &cf)
       // It doesn't really ever make sense for exports to use masking, so lets make
       //  sure to crash in this instance.  If there is a valid use-case for this, we
       //  just need to switch back to using condenseSelections instead.
-      throw std::logic_error("Masking exports is non-sense");
+      throw translate_exception("Masking exports is non-sense");
    }
 
    registerExport(state, type, arrayBase);
@@ -222,7 +222,7 @@ EXP(State &state, const ControlFlowInst &cf)
       state.out << "exp_pixel_" << arrayBase;
       break;
    default:
-      throw std::logic_error(fmt::format("Unsupported export type {}", cf.exp.word0.TYPE()));
+      throw translate_exception(fmt::format("Unsupported export type {}", cf.exp.word0.TYPE()));
    }
 
    state.out << " = ";

@@ -1,7 +1,8 @@
+#include "common/bit_cast.h"
+#include "common/decaf_assert.h"
+#include "common/log.h"
 #include "latte_disassembler.h"
 #include "latte_decoders.h"
-#include "common/bit_cast.h"
-#include "common/log.h"
 
 namespace latte
 {
@@ -383,7 +384,7 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
          out << " SCL_221";
          break;
       default:
-         throw std::logic_error(fmt::format("Unexpected BANK_SWIZZLE {}", inst.word1.BANK_SWIZZLE()));
+         decaf_abort(fmt::format("Unexpected BANK_SWIZZLE {}", inst.word1.BANK_SWIZZLE()));
       }
    } else {
       switch (inst.word1.BANK_SWIZZLE()) {
@@ -406,7 +407,7 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
          out << " VEC_210";
          break;
       default:
-         throw std::logic_error(fmt::format("Unexpected BANK_SWIZZLE {}", inst.word1.BANK_SWIZZLE()));
+         decaf_abort(fmt::format("Unexpected BANK_SWIZZLE {}", inst.word1.BANK_SWIZZLE()));
       }
    }
 
@@ -420,7 +421,7 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
       out << " PRED_SEL_ONE";
       break;
    default:
-      throw std::logic_error(fmt::format("Unexpected PRED_SEL {}", inst.word0.PRED_SEL()));
+      decaf_abort(fmt::format("Unexpected PRED_SEL {}", inst.word0.PRED_SEL()));
    }
 
    if (inst.word1.ENCODING() == SQ_ALU_OP2) {
@@ -441,7 +442,7 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
             out << " KILL";
             break;
          default:
-            throw std::logic_error(fmt::format("Unexpected EXECUTE_MASK_OP {}", inst.op2.EXECUTE_MASK_OP()));
+            decaf_abort(fmt::format("Unexpected EXECUTE_MASK_OP {}", inst.op2.EXECUTE_MASK_OP()));
          }
       } else {
          switch (inst.op2.OMOD()) {
@@ -457,7 +458,7 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
             out << " OMOD_M4";
             break;
          default:
-            throw std::logic_error(fmt::format("Unexpected OMOD {}", inst.op2.OMOD()));
+            decaf_abort(fmt::format("Unexpected OMOD {}", inst.op2.OMOD()));
          }
       }
 

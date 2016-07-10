@@ -17,7 +17,7 @@ updateConditionRegister(PPCEmuAssembler& a,
                         const PPCEmuAssembler::GpRegister& value,
                         const PPCEmuAssembler::RegLockout& eaxLockout)
 {
-   emuassert(eaxLockout.isRegister(asmjit::x86::rax));
+   decaf_check(eaxLockout.isRegister(asmjit::x86::rax));
 
    auto crtarget = 0;
    auto crshift = (7 - crtarget) * 4;
@@ -458,9 +458,9 @@ template<unsigned flags>
 static bool
 mulGeneric(PPCEmuAssembler& a, Instruction instr)
 {
+   static_assert((flags & MulLow) || (flags & MulHigh), "Unexpected mulGeneric flags");
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
    auto edxLockout = a.lockRegister(asmjit::x86::rdx);
-
    auto dst = a.loadRegister(a.gpr[instr.rD]);
 
    a.mov(asmjit::x86::eax, a.loadRegister(a.gpr[instr.rA]));
@@ -485,8 +485,6 @@ mulGeneric(PPCEmuAssembler& a, Instruction instr)
       a.mov(dst, asmjit::x86::eax);
    } else if (flags & MulHigh) {
       a.mov(dst, asmjit::x86::edx);
-   } else {
-      throw std::logic_error("Unexpected mulGeneric flags");
    }
 
    edxLockout.unlock();

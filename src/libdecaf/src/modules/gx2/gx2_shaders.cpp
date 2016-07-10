@@ -1,6 +1,4 @@
-#include <cassert>
-#include <stdexcept>
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "gx2_debug.h"
 #include "gx2_shaders.h"
 #include "gpu/pm4_writer.h"
@@ -68,8 +66,8 @@ GX2SetVertexShader(GX2VertexShader *shader)
       shaderProgSize = shader->gx2rData.elemCount * shader->gx2rData.elemSize;
    }
 
-   emuassert(shaderProgAddr);
-   emuassert(shaderProgSize);
+   decaf_check(shaderProgAddr);
+   decaf_check(shaderProgSize);
 
    uint32_t shaderRegData[] = {
       shaderProgAddr >> 8,
@@ -150,8 +148,8 @@ GX2SetPixelShader(GX2PixelShader *shader)
       shaderProgSize = shader->gx2rData.elemCount * shader->gx2rData.elemSize;
    }
 
-   emuassert(shaderProgAddr);
-   emuassert(shaderProgSize);
+   decaf_check(shaderProgAddr);
+   decaf_check(shaderProgSize);
 
    uint32_t shaderRegData[] = {
       shaderProgAddr >> 8,
@@ -209,8 +207,8 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
       shaderProgSize = shader->gx2rData.elemCount * shader->gx2rData.elemSize;
    }
 
-   emuassert(shaderProgAddr);
-   emuassert(shaderProgSize);
+   decaf_check(shaderProgAddr);
+   decaf_check(shaderProgSize);
 
    uint32_t shaderRegData[] = {
       shaderProgAddr >> 8,
@@ -280,21 +278,21 @@ _GX2SetSampler(GX2Sampler *sampler, uint32_t id)
 void
 GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id)
 {
-   assert(id < 0x12);
+   decaf_check(id < 0x12);
    _GX2SetSampler(sampler, 0 + id);
 }
 
 void
 GX2SetVertexSampler(GX2Sampler *sampler, uint32_t id)
 {
-   assert(id < 0x12);
+   decaf_check(id < 0x12);
    _GX2SetSampler(sampler, 18 + id);
 }
 
 void
 GX2SetGeometrySampler(GX2Sampler *sampler, uint32_t id)
 {
-   assert(id < 0x12);
+   decaf_check(id < 0x12);
    _GX2SetSampler(sampler, 36 + id);
 }
 

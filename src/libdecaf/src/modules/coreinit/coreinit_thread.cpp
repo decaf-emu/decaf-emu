@@ -1,5 +1,3 @@
-#include <array>
-#include <limits>
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
@@ -10,9 +8,12 @@
 #include "coreinit_thread.h"
 #include "coreinit_internal_loader.h"
 #include "libcpu/mem.h"
-#include "usermodule.h"
 #include "libcpu/cpu.h"
 #include "ppcutils/stackobject.h"
+#include "usermodule.h"
+#include "common/decaf_assert.h"
+#include <array>
+#include <limits>
 
 namespace coreinit
 {
@@ -168,7 +169,7 @@ InitialiseThreadState(OSThread *thread,
    auto sdaBase = module ? module->sdaBase : 0u;
    auto sda2Base = module ? module->sda2Base : 0u;
 
-   assert(thread->context.fiber == nullptr);
+   decaf_check(thread->context.fiber == nullptr);
 
    // Setup context
    thread->context.gpr[0] = 0;
@@ -407,7 +408,7 @@ OSGetThreadPriority(OSThread *thread)
 uint32_t
 OSGetThreadSpecific(uint32_t id)
 {
-   emuassert(id >= 0 && id < 0x10);
+   decaf_check(id >= 0 && id < 0x10);
    return OSGetCurrentThread()->specific[id];
 }
 
@@ -470,12 +471,7 @@ OSJoinThread(OSThread *thread,
              be_val<int> *exitValue)
 {
    internal::lockScheduler();
-
-   if (!internal::isThreadActiveNoLock(thread)) {
-      emuassert(0);
-      internal::unlockScheduler();
-      return FALSE;
-   }
+   decaf_check(internal::isThreadActiveNoLock(thread));
 
    if (!(thread->attr & OSThreadAttributes::Detached)) {
       if (thread->state != OSThreadState::Moribund) {
@@ -716,7 +712,7 @@ BOOL
 OSSetThreadRunQuantum(OSThread *thread,
                       uint32_t quantum)
 {
-   throw std::logic_error("Run quantums are not supported");
+   decaf_abort("Unsupported call to OSSetThreadRunQuantum");
    return FALSE;
 }
 
@@ -916,7 +912,7 @@ tls_get_addr(tls_index *index)
 {
    auto thread = OSGetCurrentThread();
    auto module = internal::getUserModule();
-   emuassert(index->moduleIndex == module->tlsModuleIndex);
+   decaf_check(index->moduleIndex == module->tlsModuleIndex);
 
    if (thread->tlsSectionCount <= index->moduleIndex) {
       auto oldSections = thread->tlsSections;

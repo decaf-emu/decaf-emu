@@ -16,7 +16,7 @@
 #include "libcpu/trace.h"
 #include "ppcutils/wfunc_call.h"
 #include "ppcutils/stackobject.h"
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 
 namespace coreinit
 {
@@ -112,7 +112,7 @@ unlockScheduler()
 {
    auto core = 1 << cpu::this_core::id();
    auto oldCore = sSchedulerLock.exchange(0, std::memory_order_release);
-   emuassert(oldCore == core);
+   decaf_check(oldCore == core);
 }
 
 bool
@@ -125,7 +125,7 @@ isSchedulerEnabled()
 void
 enableScheduler()
 {
-   emuassert(!OSIsInterruptEnabled());
+   decaf_check(!OSIsInterruptEnabled());
    uint32_t coreId = cpu::this_core::id();
    sSchedulerEnabled[coreId] = true;
 }
@@ -133,7 +133,7 @@ enableScheduler()
 void
 disableScheduler()
 {
-   emuassert(!OSIsInterruptEnabled());
+   decaf_check(!OSIsInterruptEnabled());
    uint32_t coreId = cpu::this_core::id();
    sSchedulerEnabled[coreId] = false;
 }
@@ -141,7 +141,7 @@ disableScheduler()
 void
 markThreadActiveNoLock(OSThread *thread)
 {
-   emuassert(!ActiveQueue::contains(sActiveThreads, thread));
+   decaf_check(!ActiveQueue::contains(sActiveThreads, thread));
    ActiveQueue::append(sActiveThreads, thread);
    checkActiveThreadsNoLock();
 }
@@ -149,7 +149,7 @@ markThreadActiveNoLock(OSThread *thread)
 void
 markThreadInactiveNoLock(OSThread *thread)
 {
-   emuassert(ActiveQueue::contains(sActiveThreads, thread));
+   decaf_check(ActiveQueue::contains(sActiveThreads, thread));
    ActiveQueue::erase(sActiveThreads, thread);
    checkActiveThreadsNoLock();
 }
@@ -163,10 +163,10 @@ isThreadActiveNoLock(OSThread *thread)
 static void
 queueThreadNoLock(OSThread *thread)
 {
-   emuassert(isSchedulerLocked());
-   emuassert(!OSIsThreadSuspended(thread));
-   emuassert(thread->state == OSThreadState::Ready);
-   emuassert(thread->priority >= -1 && thread->priority <= 32);
+   decaf_check(isSchedulerLocked());
+   decaf_check(!OSIsThreadSuspended(thread));
+   decaf_check(thread->state == OSThreadState::Ready);
+   decaf_check(thread->priority >= -1 && thread->priority <= 32);
 
    // Schedule this thread on any cores which can run it!
    if (thread->attr & OSThreadAttributes::AffinityCPU0) {
@@ -207,13 +207,13 @@ setThreadAffinityNoLock(OSThread *thread, uint32_t affinity)
 static OSThread *
 peekNextThreadNoLock(uint32_t core)
 {
-   emuassert(isSchedulerLocked());
+   decaf_check(isSchedulerLocked());
    auto thread = sCoreRunQueue[core]->head;
 
    if (thread) {
-      emuassert(thread->state == OSThreadState::Ready);
-      emuassert(thread->suspendCounter == 0);
-      emuassert(thread->attr & (1 << core));
+      decaf_check(thread->state == OSThreadState::Ready);
+      decaf_check(thread->suspendCounter == 0);
+      decaf_check(thread->attr & (1 << core));
    }
 
    return thread;
@@ -222,8 +222,8 @@ peekNextThreadNoLock(uint32_t core)
 static void
 validateThread(OSThread *thread)
 {
-   emuassert(*thread->stackEnd == 0xDEADBABE);
-   emuassert((thread->attr & OSThreadAttributes::AffinityAny) != 0);
+   decaf_check(*thread->stackEnd == 0xDEADBABE);
+   decaf_check((thread->attr & OSThreadAttributes::AffinityAny) != 0);
 }
 
 int32_t
@@ -243,7 +243,7 @@ checkActiveThreadsNoLock()
 
 void checkRunningThreadNoLock(bool yielding)
 {
-   emuassert(isSchedulerLocked());
+   decaf_check(isSchedulerLocked());
    auto coreId = cpu::this_core::id();
    auto thread = sCurrentThread[coreId];
 
@@ -256,7 +256,7 @@ void checkRunningThreadNoLock(bool yielding)
       return;
    }
 
-   emuassert(cpu::this_core::interruptMask() == cpu::INTERRUPT_MASK);
+   decaf_check(cpu::this_core::interruptMask() == cpu::INTERRUPT_MASK);
 
    auto next = peekNextThreadNoLock(coreId);
 
@@ -397,8 +397,8 @@ void
 sleepThreadNoLock(OSThreadQueue *queue)
 {
    auto thread = OSGetCurrentThread();
-   emuassert(thread->queue == nullptr);
-   emuassert(thread->state == OSThreadState::Running);
+   decaf_check(thread->queue == nullptr);
+   decaf_check(thread->state == OSThreadState::Running);
 
    thread->queue = queue;
    thread->state = OSThreadState::Waiting;
@@ -443,7 +443,7 @@ wakeupOneThreadNoLock(OSThread *thread)
       return;
    }
 
-   emuassert(thread->queue != nullptr);
+   decaf_check(thread->queue != nullptr);
 
    thread->state = OSThreadState::Ready;
    ThreadQueue::erase(thread->queue, thread);
@@ -476,7 +476,7 @@ wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue, int32_t suspendResult)
 int32_t
 calculateThreadPriorityNoLock(OSThread *thread)
 {
-   emuassert(isSchedulerLocked());
+   decaf_check(isSchedulerLocked());
    auto priority = thread->basePriority;
 
    // If thread is holding a spinlock, it is always highest priority
@@ -501,7 +501,7 @@ calculateThreadPriorityNoLock(OSThread *thread)
 OSThread *
 setThreadActualPriorityNoLock(OSThread *thread, int32_t priority)
 {
-   emuassert(isSchedulerLocked());
+   decaf_check(isSchedulerLocked());
    thread->priority = priority;
 
    if (thread->state == OSThreadState::Ready) {

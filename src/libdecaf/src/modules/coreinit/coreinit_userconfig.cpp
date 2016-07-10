@@ -1,6 +1,8 @@
 #include "coreinit.h"
+#include "coreinit_enum_string.h"
 #include "coreinit_userconfig.h"
 #include "common/bitutils.h"
+#include "common/decaf_assert.h"
 
 namespace coreinit
 {
@@ -81,7 +83,7 @@ UCOpen()
 void
 UCClose(IOHandle handle)
 {
-   assert(handle == sUCHandle);
+   decaf_check(handle == sUCHandle);
 }
 
 IOError
@@ -158,7 +160,7 @@ addValue(const std::string &name, UCDataType type, uint32_t value)
       *reinterpret_cast<be_val<uint32_t> *>(entry.data.data()) = value;
       break;
    default:
-      throw std::logic_error("Invalid writeSetting type");
+      decaf_abort(fmt::format("Invalid user config type {}", enumAsString(type)));
    }
 
    sUserConfig.emplace_back(std::move(entry));

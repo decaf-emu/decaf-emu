@@ -1,6 +1,3 @@
-#include <cassert>
-#include <tuple>
-#include <vector>
 #include "gx2_cbpool.h"
 #include "gx2_event.h"
 #include "gx2_displaylist.h"
@@ -9,6 +6,9 @@
 #include "gpu/commandqueue.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "common/log.h"
+#include "common/decaf_assert.h"
+#include <tuple>
+#include <vector>
 
 struct CommandBufferPool
 {
@@ -65,7 +65,7 @@ void
 initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size, uint32_t itemSize)
 {
    auto core = coreinit::OSGetCoreId();
-   assert(gx2::internal::getMainCoreId() == core);
+   decaf_check(gx2::internal::getMainCoreId() == core);
 
    gCommandBufferPool.base = base;
    gCommandBufferPool.size = size;
@@ -82,7 +82,7 @@ flushCommandBuffer(pm4::Buffer *cb)
    if (!cb) {
       cb = gActiveBuffer[core];
    } else if (cb != gActiveBuffer[core]) {
-      throw std::logic_error("Attempting to flush non-active buffer");
+      decaf_abort("Attempting to flush non-active buffer");
    }
 
    if (!cb) {
@@ -100,7 +100,7 @@ flushCommandBuffer(pm4::Buffer *cb)
       std::tie(newList, newSize) = displayListOverrun(cb->buffer, cb->curSize * 4);
 
       if (!newList || !newSize) {
-         throw std::logic_error("Unable to handle display list overrun");
+         decaf_abort("Unable to handle display list overrun");
       }
 
       // Begin new display list, it will update gActiveBuffer

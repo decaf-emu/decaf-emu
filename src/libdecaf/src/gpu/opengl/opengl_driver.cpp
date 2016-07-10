@@ -1,3 +1,4 @@
+#include "common/decaf_assert.h"
 #include "common/log.h"
 #include "gpu/commandqueue.h"
 #include "gpu/latte_registers.h"
@@ -199,7 +200,7 @@ void GLDriver::memWrite(const pm4::MemWrite &data)
       value = byte_swap(static_cast<uint32_t>(value));
       break;
    case latte::CB_ENDIAN_8IN16:
-      throw std::logic_error("Unexpected MEM_WRITE endian swap");
+      decaf_abort(fmt::format("Unexpected MEM_WRITE endian swap {}", data.addrLo.ENDIAN_SWAP().get()));
    }
 
    if (data.addrHi.DATA32()) {
@@ -228,7 +229,7 @@ void GLDriver::handlePendingEOP()
       value = getGpuClock();
       break;
    default:
-      throw std::logic_error("Unexpected EOP event type");
+      decaf_abort(fmt::format("Unexpected EOP event type {}", mPendingEOP.eventInitiator.EVENT_TYPE()));
    }
 
    switch (mPendingEOP.addrLo.ENDIAN_SWAP()) {
@@ -239,7 +240,7 @@ void GLDriver::handlePendingEOP()
       value = byte_swap(static_cast<uint32_t>(value));
       break;
    case latte::CB_ENDIAN_8IN16:
-      throw std::logic_error("Unexpected EOP event endian swap");
+      decaf_abort(fmt::format("Unexpected EOP event endian swap {}", mPendingEOP.addrLo.ENDIAN_SWAP()));
    }
 
    switch (mPendingEOP.addrHi.DATA_SEL()) {

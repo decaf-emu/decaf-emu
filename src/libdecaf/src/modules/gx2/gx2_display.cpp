@@ -1,4 +1,6 @@
+#include "common/decaf_assert.h"
 #include "gx2_display.h"
+#include "gx2_enum_string.h"
 #include "gx2_format.h"
 #include "gpu/pm4_writer.h"
 
@@ -8,31 +10,45 @@ namespace gx2
 const static GX2TVScanMode
 sTvScanMode = GX2TVScanMode::P1080;
 
-static bool
-getTVSize(GX2TVRenderMode tvRenderMode, int *width_ret, int *height_ret)
+static std::pair<unsigned, unsigned>
+getTVSize(GX2TVRenderMode mode)
 {
-   switch (tvRenderMode) {
+   switch (mode) {
    case GX2TVRenderMode::Standard480p:
-      *width_ret = 640;
-      *height_ret = 480;
-      return true;
+      return { 640, 480 };
    case GX2TVRenderMode::Wide480p:
-      *width_ret = 704;
-      *height_ret = 480;
-      return true;
+      return { 704, 480 };
    case GX2TVRenderMode::Wide720p:
-      *width_ret = 1280;
-      *height_ret = 720;
-      return true;
+      return { 1280, 720 };
    case GX2TVRenderMode::Wide1080p:
-      *width_ret = 1920;
-      *height_ret = 1080;
-      return true;
+      return { 1920, 1080 };
+   default:
+      decaf_abort(fmt::format("Invalid GX2TVRenderMode {}", enumAsString(mode)));
    }
-
-   return false;
 }
 
+static unsigned
+getBpp(GX2SurfaceFormat format)
+{
+   auto bpp = GX2GetSurfaceFormatBytesPerElement(format);
+   decaf_assert(bpp > 0, fmt::format("Unexpected GX2SurfaceFormat {}", enumAsString(format)));
+   return bpp;
+}
+
+static unsigned
+getNumBuffers(GX2BufferingMode mode)
+{
+   switch (mode) {
+   case GX2BufferingMode::Single:
+      return 1;
+   case GX2BufferingMode::Double:
+      return 2;
+   case GX2BufferingMode::Triple:
+      return 3;
+   default:
+      decaf_abort(fmt::format("Invalid GX2BufferingMode {}", enumAsString(mode)));
+   }
+}
 
 void
 GX2SetTVEnable(BOOL enable)
@@ -51,21 +67,13 @@ GX2CalcTVSize(GX2TVRenderMode tvRenderMode,
               be_val<uint32_t> *size,
               be_val<uint32_t> *unkOut)
 {
-   int tvWidth, tvHeight;
-   if (!getTVSize(tvRenderMode, &tvWidth, &tvHeight)) {
-      throw std::invalid_argument("Unexpected GX2CalcTVSize tvRenderMode");
-   }
+   unsigned width, height;
+   std::tie(width, height) = getTVSize(tvRenderMode);
 
-   const int bytesPerPixel = GX2GetSurfaceFormatBytesPerElement(surfaceFormat);
-   if (!bytesPerPixel) {
-      throw std::invalid_argument("Unexpected GX2CalcTVSize surfaceFormat");
-   }
+   auto bytesPerPixel = getBpp(surfaceFormat);
+   auto numBuffers = getNumBuffers(bufferingMode);
 
-   // The values of GX2BufferingMode constants are conveniently equal to
-   // the number of buffers each constant specifies.
-   const int numBuffers = static_cast<int>(bufferingMode);
-
-   *size = tvWidth * tvHeight * bytesPerPixel * numBuffers;
+   *size = width * height * bytesPerPixel * numBuffers;
    *unkOut = 0;
 }
 
@@ -76,12 +84,8 @@ GX2CalcDRCSize(GX2DrcRenderMode drcRenderMode,
                be_val<uint32_t> *size,
                be_val<uint32_t> *unkOut)
 {
-   const int bytesPerPixel = GX2GetSurfaceFormatBytesPerElement(surfaceFormat);
-   if (!bytesPerPixel) {
-      throw std::invalid_argument("Unexpected GX2CalcDRCSize surfaceFormat");
-   }
-
-   const int numBuffers = static_cast<int>(bufferingMode);
+   auto bytesPerPixel = GX2GetSurfaceFormatBytesPerElement(surfaceFormat);
+   auto numBuffers = getNumBuffers(bufferingMode);
 
    *size = 864 * 480 * bytesPerPixel * numBuffers;
    *unkOut = 0;
@@ -94,17 +98,15 @@ GX2SetTVBuffer(void *buffer,
                GX2SurfaceFormat surfaceFormat,
                GX2BufferingMode bufferingMode)
 {
-   int tvWidth, tvHeight;
-   if (!getTVSize(tvRenderMode, &tvWidth, &tvHeight)) {
-      throw std::invalid_argument("Unexpected GX2SetTVBuffer tvRenderMode");
-   }
+   unsigned width, height;
+   std::tie(width, height) = getTVSize(tvRenderMode);
 
    // bufferingMode is conveniently equal to the number of buffers
    pm4::write(pm4::DecafSetBuffer {
       1,
       bufferingMode,
-      static_cast<uint32_t>(tvWidth),
-      static_cast<uint32_t>(tvHeight)
+      static_cast<uint32_t>(width),
+      static_cast<uint32_t>(height)
    });
 }
 
@@ -127,12 +129,14 @@ GX2SetDRCBuffer(void *buffer,
 }
 
 void
-GX2SetTVScale(uint32_t x, uint32_t y)
+GX2SetTVScale(uint32_t x,
+              uint32_t y)
 {
 }
 
 void
-GX2SetDRCScale(uint32_t x, uint32_t y)
+GX2SetDRCScale(uint32_t x,
+               uint32_t y)
 {
 }
 
@@ -161,7 +165,7 @@ GX2GetSystemTVAspectRatio()
    case GX2TVScanMode::P1080:
       return GX2AspectRatio::Widescreen;
    default:
-      throw std::logic_error("Unimplemented TV scan mode");
+      decaf_abort(fmt::format("Invalid GX2TVScanMode {}", enumAsString(sTvScanMode)));
    }
 }
 

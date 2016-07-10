@@ -4,6 +4,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_scheduler.h"
 #include "ppcutils/stackobject.h"
+#include "common/decaf_assert.h"
 
 namespace coreinit
 {
@@ -40,8 +41,8 @@ namespace internal
 
 void signalEventNoLock(OSEvent *event)
 {
-   assert(event);
-   assert(event->tag == OSEvent::Tag);
+   decaf_check(event);
+   decaf_check(event->tag == OSEvent::Tag);
 
    if (event->value != FALSE) {
       // Event has already been set
@@ -127,8 +128,8 @@ void
 OSSignalEventAll(OSEvent *event)
 {
    internal::lockScheduler();
-   assert(event);
-   assert(event->tag == OSEvent::Tag);
+   decaf_check(event);
+   decaf_check(event->tag == OSEvent::Tag);
 
    if (event->value != FALSE) {
       // Event has already been set
@@ -168,8 +169,8 @@ void
 OSResetEvent(OSEvent *event)
 {
    internal::lockScheduler();
-   assert(event);
-   assert(event->tag == OSEvent::Tag);
+   decaf_check(event);
+   decaf_check(event->tag == OSEvent::Tag);
 
    // Reset event
    event->value = FALSE;
@@ -191,8 +192,8 @@ void
 OSWaitEvent(OSEvent *event)
 {
    internal::lockScheduler();
-   assert(event);
-   assert(event->tag == OSEvent::Tag);
+   decaf_check(event);
+   decaf_check(event->tag == OSEvent::Tag);
 
    if (event->value) {
       // Event is already set

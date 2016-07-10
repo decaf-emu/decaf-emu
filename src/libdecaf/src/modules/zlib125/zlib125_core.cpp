@@ -1,10 +1,11 @@
-#include <zlib.h>
 #include "modules/coreinit/coreinit_memheap.h"
 #include "libcpu/mem.h"
-#include "virtual_ptr.h"
 #include "ppcutils/wfunc_ptr.h"
 #include "ppcutils/wfunc_call.h"
+#include "virtual_ptr.h"
 #include "zlib125.h"
+#include "common/decaf_assert.h"
+#include <zlib.h>
 
 namespace zlib125
 {
@@ -140,7 +141,7 @@ zlib125_deflateInit_(WZStream *wstrm,
                      const char *version,
                      int32_t stream_size)
 {
-   assert(sizeof(WZStream) == stream_size);
+   decaf_check(sizeof(WZStream) == stream_size);
 
    auto zstrm = getZStream(wstrm);
    auto result = deflateInit_(zstrm, level, version, sizeof(z_stream));
@@ -159,7 +160,7 @@ zlib125_deflateInit2_(WZStream *wstrm,
                       const char *version,
                       int32_t stream_size)
 {
-   assert(sizeof(WZStream) == stream_size);
+   decaf_check(sizeof(WZStream) == stream_size);
 
    auto zstrm = getZStream(wstrm);
    auto result = deflateInit2_(zstrm, level, method, windowBits, memLevel, strategy, version, sizeof(z_stream));
@@ -220,7 +221,7 @@ zlib125_inflateInit_(WZStream *wstrm,
                      const char *version,
                      int32_t stream_size)
 {
-   assert(sizeof(WZStream) == stream_size);
+   decaf_check(sizeof(WZStream) == stream_size);
 
    auto zstrm = getZStream(wstrm);
    auto result = inflateInit_(zstrm, version, sizeof(z_stream));
@@ -235,7 +236,7 @@ zlib125_inflateInit2_(WZStream *wstrm,
                       const char *version,
                       int32_t stream_size)
 {
-   assert(sizeof(WZStream) == stream_size);
+   decaf_check(sizeof(WZStream) == stream_size);
 
    auto zstrm = getZStream(wstrm);
    auto result = inflateInit2_(zstrm, windowBits, version, sizeof(z_stream));

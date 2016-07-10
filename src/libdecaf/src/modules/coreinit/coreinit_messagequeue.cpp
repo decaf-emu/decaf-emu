@@ -1,8 +1,9 @@
-#include <array>
 #include "coreinit.h"
 #include "coreinit_memheap.h"
 #include "coreinit_messagequeue.h"
 #include "coreinit_scheduler.h"
+#include "common/decaf_assert.h"
+#include <array>
 
 namespace coreinit
 {
@@ -64,8 +65,8 @@ OSSendMessage(OSMessageQueue *queue,
               OSMessageFlags flags)
 {
    internal::lockScheduler();
-   assert(queue && queue->tag == OSMessageQueue::Tag);
-   assert(message);
+   decaf_check(queue && queue->tag == OSMessageQueue::Tag);
+   decaf_check(message);
 
    if (!(flags & OSMessageFlags::Blocking) && queue->used == queue->size) {
       // Do not block waiting for space to insert message
@@ -109,8 +110,8 @@ OSJamMessage(OSMessageQueue *queue,
              OSMessageFlags flags)
 {
    internal::lockScheduler();
-   assert(queue && queue->tag == OSMessageQueue::Tag);
-   assert(message);
+   decaf_check(queue && queue->tag == OSMessageQueue::Tag);
+   decaf_check(message);
 
    if (!(flags & OSMessageFlags::Blocking) && queue->used == queue->size) {
       // Do not block waiting for space to insert message
@@ -159,8 +160,8 @@ OSReceiveMessage(OSMessageQueue *queue,
                  OSMessageFlags flags)
 {
    internal::lockScheduler();
-   assert(queue && queue->tag == OSMessageQueue::Tag);
-   assert(message);
+   decaf_check(queue && queue->tag == OSMessageQueue::Tag);
+   decaf_check(message);
 
    if (!(flags & OSMessageFlags::Blocking) && queue->used == 0) {
       // Do not block waiting for a message to arrive
@@ -174,7 +175,7 @@ OSReceiveMessage(OSMessageQueue *queue,
       internal::rescheduleSelfNoLock();
    }
 
-   emuassert(queue->used > 0);
+   decaf_check(queue->used > 0);
 
    // Copy into message array
    auto src = static_cast<OSMessage*>(queue->messages) + queue->first;
@@ -200,8 +201,8 @@ BOOL
 OSPeekMessage(OSMessageQueue *queue, OSMessage *message)
 {
    internal::lockScheduler();
-   assert(queue && queue->tag == OSMessageQueue::Tag);
-   assert(message);
+   decaf_check(queue && queue->tag == OSMessageQueue::Tag);
+   decaf_check(message);
 
    if (queue->used == 0) {
       internal::unlockScheduler();

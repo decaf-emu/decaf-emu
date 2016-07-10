@@ -34,7 +34,7 @@ insertIndexMode(fmt::MemoryWriter &out,
       out << "AL";
       break;
    default:
-      throw std::logic_error("Invalid SQ_INDEX_MODE");
+      throw translate_exception(fmt::format("Invalid SQ_INDEX_MODE {}", index));
    }
 }
 
@@ -56,7 +56,7 @@ insertChannel(fmt::MemoryWriter &out,
       out << 'w';
       break;
    default:
-      throw std::logic_error(fmt::format("Unexpected channel {}", channel));
+      throw translate_exception(fmt::format("Unexpected SQ_CHAN {}", channel));
    }
 }
 
@@ -254,7 +254,7 @@ insertSource(State &state,
          // No need for type conversion
          break;
       default:
-         throw std::logic_error("Unexpected ALU source sel");
+         throw translate_exception(fmt::format("Unexpected ALU source sel {}", sel));
       }
    }
 
@@ -296,9 +296,9 @@ insertSource(State &state,
       }
 
       if (mode == SQ_CF_KCACHE_LOCK_LOOP_INDEX) {
-         throw std::logic_error("Unimplemented kcache lock mode SQ_CF_KCACHE_LOCK_LOOP_INDEX");
+         throw translate_exception("Unimplemented kcache lock mode SQ_CF_KCACHE_LOCK_LOOP_INDEX");
       } else if (mode == SQ_CF_KCACHE_NOP) {
-         throw std::logic_error("Invalid kcache lock mode SQ_CF_KCACHE_NOP");
+         throw translate_exception("Invalid kcache lock mode SQ_CF_KCACHE_NOP");
       }
 
       out << "UB_" << bank << ".values[" << id;
@@ -392,8 +392,7 @@ insertSource(State &state,
       case SQ_ALU_SRC_PRIM_MASK_HI:
       case SQ_ALU_SRC_PRIM_MASK_LO:
       default:
-         throw std::logic_error(fmt::format("Unsupported ALU source sel {}", sel));
-         break;
+         throw translate_exception(fmt::format("Unsupported ALU source sel {}", sel));
       }
    }
 
@@ -403,7 +402,7 @@ insertSource(State &state,
        && (sel < SQ_ALU_SRC_CONST_FILE_FIRST || sel > SQ_ALU_SRC_CONST_FILE_LAST)
        && (sel < SQ_ALU_KCACHE_BANK0_FIRST || sel > SQ_ALU_KCACHE_BANK0_LAST)
        && (sel < SQ_ALU_KCACHE_BANK1_FIRST || sel > SQ_ALU_KCACHE_BANK1_LAST)) {
-         throw std::logic_error(fmt::format("Relative AluSource is only supported for registers and uniforms, sel: {}", sel));
+         throw translate_exception(fmt::format("Relative AluSource is only supported for registers and uniforms, sel: {}", sel));
       }
    }
 
@@ -522,7 +521,7 @@ insertDestEnd(fmt::MemoryWriter &out,
       out << ") / 2";
       break;
    default:
-      throw std::logic_error(fmt::format("Unexpected output modifier {}", omod));
+      throw translate_exception(fmt::format("Unexpected output modifier {}", omod));
    }
 
    if ((flags & SQ_ALU_FLAG_INT_OUT) || (flags & SQ_ALU_FLAG_UINT_OUT)) {

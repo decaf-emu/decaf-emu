@@ -1,6 +1,8 @@
-#include <stdexcept>
+#include "common/decaf_assert.h"
+#include "gx2_enum_string.h"
 #include "gx2_format.h"
 #include "gpu/latte_enum_sq.h"
+#include <spdlog/details/format.h>
 
 namespace gx2
 {
@@ -84,7 +86,7 @@ GX2SurfaceFormatData gSurfaceFormatData[] =
 size_t
 GX2GetAttribFormatBytes(GX2AttribFormat format)
 {
-   switch (format & 0x1f) {
+   switch (format & 0x1F) {
    case GX2AttribFormatType::TYPE_8:
    case GX2AttribFormatType::TYPE_4_4:
       return 1;
@@ -112,7 +114,7 @@ GX2GetAttribFormatBytes(GX2AttribFormat format)
    case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
       return 16;
    default:
-      throw std::logic_error("Invalid GX2AttribFormat format");
+      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", enumAsString(format)));
    }
 }
 
@@ -144,7 +146,7 @@ GX2GetAttribFormatSwapMode(GX2AttribFormat format)
    case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
       return GX2EndianSwapMode::Swap8In32;
    default:
-      throw std::logic_error("Invalid GX2AttribFormat format");
+      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", enumAsString(format)));
    }
 }
 
@@ -193,7 +195,7 @@ GX2GetAttribFormatDataFormat(GX2AttribFormat format)
    case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
       return latte::FMT_32_32_32_32_FLOAT;
    default:
-      throw std::logic_error("Invalid GX2AttribFormat format");
+      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", enumAsString(format)));
    }
 }
 
@@ -264,7 +266,7 @@ GX2GetSurfaceDepthFormat(GX2SurfaceFormat format)
    case latte::FMT_X24_8_32_FLOAT:
       return latte::DEPTH_X24_8_32_FLOAT;
    default:
-      throw std::logic_error("Invalid GX2SurfaceFormat depth format");
+      decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
    }
 }
 
@@ -339,7 +341,7 @@ GX2GetSurfaceColorFormat(GX2SurfaceFormat format)
    case latte::FMT_32_32_32_32_FLOAT:
       return latte::COLOR_32_32_32_32_FLOAT;
    default:
-      throw std::logic_error("Invalid GX2SurfaceFormat color format");
+      decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
    }
 }
 

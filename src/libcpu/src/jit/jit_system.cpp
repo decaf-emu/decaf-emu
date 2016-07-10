@@ -1,9 +1,9 @@
-#include <cassert>
-#include "../espresso/espresso_spr.h"
-#include "../cpu_internal.h"
-#include "jit_insreg.h"
+#include "common/decaf_assert.h"
 #include "common/bitutils.h"
 #include "common/log.h"
+#include "cpu_internal.h"
+#include "espresso/espresso_spr.h"
+#include "jit_insreg.h"
 
 using espresso::SPR;
 
@@ -80,7 +80,7 @@ mfspr(PPCEmuAssembler& a, Instruction instr)
       a.mov(dst, a.coreIdMem);
       break;
    default:
-      throw std::logic_error(fmt::format("Invalid mfspr SPR {}", static_cast<uint32_t>(spr)));
+      decaf_abort(fmt::format("Invalid mfspr SPR {}", static_cast<uint32_t>(spr)));
    }
 
    return true;
@@ -129,7 +129,7 @@ mtspr(PPCEmuAssembler& a, Instruction instr)
       a.mov(a.allocRegister(a.gqr[7]), src);
       break;
    default:
-      throw std::logic_error(fmt::format("Invalid mtspr SPR {}", static_cast<uint32_t>(spr)));
+      decaf_abort(fmt::format("Invalid mtspr SPR {}", static_cast<uint32_t>(spr)));
    }
 
    return true;
@@ -150,12 +150,7 @@ kc(PPCEmuAssembler& a, Instruction instr)
 {
    auto id = instr.kcn;
    auto kc = cpu::getKernelCall(id);
-
-   if (!kc) {
-      gLog->error("Encountered invalid Kernel Call ID {}", id);
-      a.int3();
-      return false;
-   }
+   decaf_assert(kc, fmt::format("Encountered invalid Kernel Call ID {}", id));
 
    // Evict all stored register as a KC might read or modify them.
    a.evictAll();

@@ -1,4 +1,4 @@
-#include "mem.h"
+#include "common/decaf_assert.h"
 #include "common/platform_thread.h"
 #include "common/platform_exception.h"
 #include "cpu.h"
@@ -6,6 +6,7 @@
 #include "espresso/espresso_instructionset.h"
 #include "interpreter/interpreter.h"
 #include "jit/jit.h"
+#include "mem.h"
 #include <atomic>
 #include <cfenv>
 #include <condition_variable>
@@ -57,7 +58,7 @@ void
 coreExceptionEntry()
 {
    gSegfaultHandler(sSegfaultAddr);
-   throw std::logic_error("The CPU segfault handler must never return.");
+   decaf_abort("The CPU segfault handler must never return.");
 }
 
 static platform::ExceptionResumeFunc

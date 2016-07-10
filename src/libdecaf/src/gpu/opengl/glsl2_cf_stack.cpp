@@ -59,13 +59,11 @@ condStart(State &state,
       state.out << "if (!activeMask) {";
       break;
    case SQ_CF_COND_BOOL:
-      throw std::logic_error("Unimplemented SQ_CF_COND_BOOL");
-      break;
+      throw translate_exception("Unimplemented SQ_CF_COND_BOOL");
    case SQ_CF_COND_NOT_BOOL:
-      throw std::logic_error("Unimplemented SQ_CF_COND_NOT_BOOL");
-      break;
+      throw translate_exception("Unimplemented SQ_CF_COND_NOT_BOOL");
    default:
-      throw std::logic_error(fmt::format("Unknown SQ_CF_COND {}", cond));
+      throw translate_exception(fmt::format("Unknown SQ_CF_COND {}", cond));
    }
 
    insertLineEnd(state);

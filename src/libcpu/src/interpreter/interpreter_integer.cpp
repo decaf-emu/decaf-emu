@@ -702,10 +702,7 @@ template<unsigned flags>
 static void
 shiftArithmetic(cpu::Core *state, Instruction instr)
 {
-   if (!(flags & ShiftRight)) {
-      throw;
-   }
-
+   static_assert(flags & ShiftRight, "Shift Arithmetic only supports ShiftRight");
    int32_t s, a, n, b;
 
    s = state->gpr[instr.rS];

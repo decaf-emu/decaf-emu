@@ -1,8 +1,11 @@
 #include "gx2_shaders.h"
 #include "gx2_enum.h"
+#include "gx2_enum_string.h"
 #include "gx2_format.h"
-#include "common/align.h"
 #include "gpu/microcode/latte_instructions.h"
+#include "common/align.h"
+#include "common/decaf_assert.h"
+#include <spdlog/details/format.h>
 
 namespace gx2
 {
@@ -100,7 +103,7 @@ GX2FetchInstsPerAttrib(GX2FetchShaderType type)
    case GX2FetchShaderType::QuadTessellation:
       return 4;
    default:
-      throw std::logic_error("Unexpected fetch shader type.");
+      decaf_abort(fmt::format("Invalid GX2FetchShaderType {}", enumAsString(type)));
    }
 }
 
@@ -115,7 +118,7 @@ GX2FSCalcNumFetchInsts(uint32_t attribs, GX2FetchShaderType type)
    case GX2FetchShaderType::QuadTessellation:
       return GX2FetchInstsPerAttrib(type) * (attribs - 2);
    default:
-      throw std::logic_error("Unexpected fetch shader type.");
+      decaf_abort(fmt::format("Invalid GX2FetchShaderType {}", enumAsString(type)));
    }
 }
 
@@ -216,11 +219,11 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
                      GX2TessellationMode tessMode)
 {
    if (type != GX2FetchShaderType::NoTessellation) {
-      throw std::logic_error("Unsupported fetch shader type.");
+      decaf_abort(fmt::format("Invalid GX2FetchShaderType {}", enumAsString(type)));
    }
 
    if (tessMode != GX2TessellationMode::Discrete) {
-      throw std::logic_error("Unsupported fetch shader tessellation mode.");
+      decaf_abort(fmt::format("Invalid GX2TessellationMode {}", enumAsString(tessMode)));
    }
 
    auto someTessVar1 = 128u;

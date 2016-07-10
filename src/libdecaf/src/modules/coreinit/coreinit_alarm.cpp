@@ -1,4 +1,3 @@
-#include <array>
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
@@ -11,7 +10,8 @@
 #include "coreinit_internal_idlock.h"
 #include "ppcutils/wfunc_call.h"
 #include "libcpu/cpu.h"
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
+#include <array>
 
 namespace coreinit
 {
@@ -285,8 +285,8 @@ OSWaitAlarm(OSAlarm *alarm)
    internal::lockScheduler();
    internal::acquireIdLock(sAlarmLock, alarm);
 
-   assert(alarm);
-   assert(alarm->tag == OSAlarm::Tag);
+   decaf_check(alarm);
+   decaf_check(alarm->tag == OSAlarm::Tag);
 
    if (alarm->state != OSAlarmState::Set) {
       internal::releaseIdLock(sAlarmLock, alarm);
@@ -464,7 +464,7 @@ handleAlarmInterrupt(OSContext *context)
 
       // Expire it if its past its nextFire time
       if (alarm->nextFire <= now) {
-         emuassert(alarm->state == OSAlarmState::Set);
+         decaf_check(alarm->state == OSAlarmState::Set);
 
          internal::AlarmQueue::erase(queue, alarm);
          alarm->alarmQueue = nullptr;

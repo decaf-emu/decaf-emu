@@ -1,11 +1,11 @@
-#include <cassert>
-#include "../cpu.h"
-#include "../cpu_internal.h"
-#include "../mem.h"
-#include "../espresso/espresso_spr.h"
+#include "cpu.h"
+#include "cpu_internal.h"
+#include "espresso/espresso_spr.h"
 #include "interpreter_insreg.h"
-#include "common/bitutils.h"
+#include "mem.h"
 #include "common/align.h"
+#include "common/bitutils.h"
+#include "common/decaf_assert.h"
 #include "common/log.h"
 
 using espresso::SPR;
@@ -198,7 +198,7 @@ mtspr(cpu::Core *state, Instruction instr)
       state->gqr[7].value = value;
       break;
    default:
-      gLog->error("Invalid mtspr SPR {}", static_cast<uint32_t>(spr));
+      decaf_abort(fmt::format("Invalid mtspr SPR {}", static_cast<uint32_t>(spr)));
    }
 }
 
@@ -217,7 +217,7 @@ mftb(cpu::Core *state, Instruction instr)
       value = state->tbu;
       break;
    default:
-      gLog->error("Invalid mftb TBR {}", static_cast<uint32_t>(tbr));
+      decaf_abort(fmt::format("Invalid mftb TBR {}", static_cast<uint32_t>(tbr)));
    }
 
    state->gpr[instr.rD] = value;
@@ -273,12 +273,7 @@ kc(cpu::Core *state, Instruction instr)
 {
    auto id = instr.kcn;
    auto kc = cpu::getKernelCall(id);
-
-   if (!kc) {
-      gLog->error("Encountered invalid Kernel Call ID {}", id);
-      assert(0);
-      return;
-   }
+   decaf_assert(kc, fmt::format("Encountered invalid Kernel Call ID {}", id));
 
    kc->func(state, kc->user_data);
 }

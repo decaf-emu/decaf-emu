@@ -1,4 +1,5 @@
 #pragma once
+#include "common/decaf_assert.h"
 #include "latte_instructions.h"
 #include <algorithm>
 #include <gsl.h>
@@ -106,10 +107,7 @@ struct AluGroupUnits
          unit = SQ_CHAN_T;
       }
 
-      if (units[unit]) {
-         throw std::logic_error(fmt::format("Clause instruction unit collision for unit {}", unit));
-      }
-
+      decaf_assert(!units[unit], fmt::format("Clause instruction unit collision for unit {}", unit));
       units[unit] = true;
       return unit;
    }

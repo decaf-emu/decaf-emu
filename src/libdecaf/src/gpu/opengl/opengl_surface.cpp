@@ -1,4 +1,4 @@
-#include "common/emuassert.h"
+#include "common/decaf_assert.h"
 #include "gpu/latte_enum_sq.h"
 #include "modules/gx2/gx2_addrlib.h"
 #include "modules/gx2/gx2_enum.h"
@@ -157,7 +157,7 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
       return gl::GL_DEPTH32F_STENCIL8;
 
    default:
-      throw std::logic_error("Invalid surface format");
+      decaf_abort(fmt::format("Invalid surface format {}", format));
    }
 }
 
@@ -172,12 +172,12 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
                            latte::SQ_FORMAT_COMP formatComp,
                            uint32_t degamma)
 {
-   emuassert(baseAddress);
-   emuassert(width);
-   emuassert(height);
-   emuassert(depth);
-   emuassert(width <= 8192);
-   emuassert(height <= 8192);
+   decaf_check(baseAddress);
+   decaf_check(width);
+   decaf_check(height);
+   decaf_check(depth);
+   decaf_check(width <= 8192);
+   decaf_check(height <= 8192);
 
    auto surfaceKey = static_cast<uint64_t>(baseAddress) << 32;
    surfaceKey ^= width ^ height ^ depth ^ dim;
@@ -195,7 +195,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma);
 
    if (storageFormat == gl::GL_INVALID_ENUM) {
-      throw std::logic_error(fmt::format("Texture with unsupported format {} {} {} {}", format, numFormat, formatComp, degamma));
+      decaf_abort(fmt::format("Texture with unsupported format {} {} {} {}", format, numFormat, formatComp, degamma));
    }
 
    // We need to keep track of the memory region every GPU resource uses
@@ -252,7 +252,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
       // case latte::SQ_TEX_DIM_2D_MSAA:
       // case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
       default:
-         throw std::logic_error(fmt::format("Unsupported texture dim: {}", dim));
+         decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
       }
    }
 
