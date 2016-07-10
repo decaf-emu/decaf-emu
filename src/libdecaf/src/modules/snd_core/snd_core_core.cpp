@@ -74,6 +74,13 @@ AXSetDefaultMixerSelect(uint32_t)
 }
 
 AXResult
+AXSetAuxReturnVolume(uint32_t, uint32_t, uint32_t, uint16_t volume)
+{
+   // TODO: AXSetDefaultMixerSelect
+   return AXResult::Success;
+}
+
+AXResult
 AXRegisterAppFrameCallback(AXFrameCallback callback)
 {
    for (auto i = 0; i < MaxFrameCallbacks; ++i) {
@@ -221,6 +228,7 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXInitProfile);
    RegisterKernelFunction(AXGetSwapProfile);
    RegisterKernelFunction(AXSetDefaultMixerSelect);
+   RegisterKernelFunction(AXSetAuxReturnVolume);
    RegisterKernelFunction(AXRegisterAppFrameCallback);
    RegisterKernelFunction(AXRegisterFrameCallback);
    RegisterKernelFunction(AXUserBegin);
