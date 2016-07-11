@@ -96,6 +96,14 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
          case 'o':
          case 'x':
          case 'X':
+         case 'c':
+            formatter = "%" + flags + width + precision + length + specifier;
+            if (length.compare("ll") == 0 && specifier != 'c') {
+               output.append(format_string(formatter.c_str(), args.next<uint64_t>()));
+            } else {
+               output.append(format_string(formatter.c_str(), args.next<uint32_t>()));
+            }
+            break;
          case 'g':
          case 'G':
          case 'f':
@@ -104,14 +112,30 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
          case 'E':
          case 'a':
          case 'A':
-         case 'c':
-         case 'p':
-         case 'n':
             formatter = "%" + flags + width + precision + length + specifier;
-            output.append(format_string(formatter.c_str(), args.next<uint32_t>()));
+            if (length.compare("L") == 0) {
+               output.append(format_string(formatter.c_str(), static_cast<long double>(args.next<double>())));
+            } else {
+               output.append(format_string(formatter.c_str(), args.next<double>()));
+            }
+            break;
+         case 'p':
+            formatter = "%" + flags + width + precision + length + specifier;
+            output.append(format_string(formatter.c_str(), bit_cast<void *, uintptr_t>(mem::untranslate(args.next<void *>()))));
             break;
          case 's':
-            output.append(args.next<const char*>());
+            output.append(args.next<const char *>());
+            break;
+         case 'n':
+            if (length.compare("hh") == 0) {
+               *(args.next<int8_t *>()) = output.size();
+            } else if (length.compare("h") == 0) {
+               *(args.next<be_val<int16_t> *>()) = output.size();
+            } else if (length.compare("ll") == 0) {
+               *(args.next<be_val<int64_t> *>()) = output.size();
+            } else {
+               *(args.next<be_val<int32_t> *>()) = output.size();
+            }
             break;
          default:
             gLog->error("Unimplemented format specifier: {}", specifier);
