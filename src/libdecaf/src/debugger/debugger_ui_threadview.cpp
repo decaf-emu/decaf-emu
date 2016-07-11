@@ -16,6 +16,9 @@ namespace ui
 namespace ThreadView
 {
 
+static const ImVec4 CurrentColor = HEXTOIMV4(0x000000, 1.0f);
+static const ImVec4 CurrentBgColor = HEXTOIMV4(0x00E676, 1.0f);
+
 struct ThreadInfo
 {
    coreinit::OSThread *thread;
@@ -110,7 +113,22 @@ draw()
 
    for (auto &thread : sThreadsCache) {
       // ID
-      ImGui::Text("%d", thread.id);
+      if (thread.thread == getActiveThread()) {
+         // Highlight the currently active thread
+         // TODO: Clean this up
+         auto idStr = fmt::format("{}", thread.id);
+         auto drawList = ImGui::GetWindowDrawList();
+         auto lineHeight = ImGui::GetTextLineHeight();
+         float glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
+         float idWidth = glyphWidth * idStr.length();
+         auto rootPos = ImGui::GetCursorScreenPos();
+         auto idMin = ImVec2(rootPos.x - 1, rootPos.y);
+         auto idMax = ImVec2(rootPos.x + idWidth + 2, rootPos.y + lineHeight + 1);
+         drawList->AddRectFilled(idMin, idMax, ImColor(CurrentBgColor), 2.0f);
+         ImGui::TextColored(CurrentColor, "%s", idStr.c_str());
+      } else {
+         ImGui::Text("%d", thread.id);
+      }
       ImGui::NextColumn();
 
       // Name
