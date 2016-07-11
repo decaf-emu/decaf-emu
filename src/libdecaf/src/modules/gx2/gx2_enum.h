@@ -162,6 +162,13 @@ ENUM_BEG(GX2ClearFlags, uint32_t)
    ENUM_VALUE(Stencil,              2)
 ENUM_END(GX2ClearFlags)
 
+ENUM_BEG(GX2DebugTagUserStringType, uint32_t)
+	ENUM_VALUE(Indent,				0)
+	ENUM_VALUE(Undent,				1)
+	ENUM_VALUE(Comment,				2)
+	ENUM_VALUE(Bookmark,			3)
+ENUM_END(GX2DebugTagUserStringType)
+
 ENUM_BEG(GX2DrcRenderMode, uint32_t)
    ENUM_VALUE(Disabled,             0)
    ENUM_VALUE(Single,               1)
