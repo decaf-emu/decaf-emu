@@ -396,7 +396,7 @@ insertSource(State &state,
       }
    }
 
-   // Do a santiy check, ensure that we only use relative indexing with registers
+   // Do a sanity check, ensure that we only use relative indexing with registers
    if (rel) {
       if ((sel < SQ_ALU_REGISTER_FIRST || sel > SQ_ALU_REGISTER_LAST)
        && (sel < SQ_ALU_SRC_CONST_FILE_FIRST || sel > SQ_ALU_SRC_CONST_FILE_LAST)
