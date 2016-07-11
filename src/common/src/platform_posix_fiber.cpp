@@ -8,6 +8,10 @@
 #include <signal.h>
 #include <ucontext.h>
 
+#ifdef DECAF_VALGRIND
+   #include <valgrind/valgrind.h>
+#endif
+
 namespace platform
 {
 
@@ -19,6 +23,9 @@ struct Fiber
    ucontext_t context;
    FiberEntryPoint entry = nullptr;
    void *entryParam = nullptr;
+#ifdef DECAF_VALGRIND
+   unsigned int valgrindStackId;
+#endif
    std::array<char, DefaultStackSize> stack;
 };
 
@@ -42,6 +49,10 @@ createFiber(FiberEntryPoint entry, void *entryParam)
    fiber->entry = entry;
    fiber->entryParam = entryParam;
 
+#ifdef DECAF_VALGRIND
+   fiber->valgrindStackId = VALGRIND_STACK_REGISTER(&fiber->stack[0], &fiber->stack[fiber->stack.size() - 1]);
+#endif
+
    getcontext(&fiber->context);
    fiber->context.uc_stack.ss_sp = &fiber->stack[0];
    fiber->context.uc_stack.ss_size = fiber->stack.size();
@@ -54,6 +65,10 @@ createFiber(FiberEntryPoint entry, void *entryParam)
 void
 destroyFiber(Fiber *fiber)
 {
+#ifdef DECAF_VALGRIND
+   VALGRIND_STACK_DEREGISTER(fiber->valgrindStackId);
+#endif
+
    delete fiber;
 }
 
