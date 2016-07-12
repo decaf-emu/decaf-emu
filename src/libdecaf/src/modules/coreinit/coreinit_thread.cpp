@@ -18,6 +18,9 @@
 namespace coreinit
 {
 
+const uint32_t
+OSThread::Tag;
+
 static std::array<OSThread *, CoreCount>
 sDefaultThreads;
 
@@ -230,6 +233,7 @@ OSCreateThread(OSThread *thread,
 
    // Setup OSThread
    memset(thread, 0, sizeof(OSThread));
+   thread->tag = OSThread::Tag;
    thread->userStackPointer = stack;
    thread->stackStart = stack;
    thread->stackEnd = reinterpret_cast<be_val<uint32_t>*>(reinterpret_cast<uint8_t*>(stack) - stackSize);
