@@ -62,7 +62,6 @@ sBreakpoints;
 
 void openAddrInMemoryView(uint32_t addr);
 void openAddrInDisassemblyView(uint32_t addr);
-void setActiveThread(coreinit::OSThread *thread);
 
 bool hasBreakpoint(uint32_t address)
 {
@@ -1006,7 +1005,7 @@ public:
 
          // Check if this is the current instruction
          // This should be simpler...  gActiveCoreIdx instead maybe?
-         if (sActiveThread && addr == getThreadNia(sActiveThread)) {
+         if (sIsPaused && sActiveThread && addr == getThreadNia(sActiveThread)) {
             // Render a green BG behind the address
             auto lineMinC = ImVec2(lineMin.x - 1, lineMin.y);
             auto lineMaxC = ImVec2(lineMin.x + (glyphWidth * 8) + 2, lineMax.y);
@@ -1185,6 +1184,11 @@ public:
    {
       mScroller.ScrollTo(addr);
       mSelectedAddr = addr;
+   }
+
+   bool isAddressSet()
+   {
+      return mSelectedAddr != -1;
    }
 
 private:
@@ -1491,7 +1495,6 @@ void openAddrInDisassemblyView(uint32_t addr)
 
 void setActiveThread(coreinit::OSThread *thread)
 {
-   decaf_check(sIsPaused);
    sActiveThread = thread;
 
    if (sActiveThread == coreinit::internal::getCoreRunningThread(0)) {
@@ -1504,7 +1507,7 @@ void setActiveThread(coreinit::OSThread *thread)
       sActiveCore = -1;
    }
 
-   if (sActiveThread) {
+   if (sIsPaused && sActiveThread) {
       openAddrInDisassemblyView(getThreadNia(sActiveThread));
    }
 }
@@ -1579,7 +1582,9 @@ void draw()
       if (firstActivation && userModule) {
          // Place the views somewhere sane to start
          sMemoryView.gotoAddress(userModule->entryPoint);
-         sDisassemblyView.gotoAddress(userModule->entryPoint);
+         if (!sDisassemblyView.isAddressSet()) {
+            sDisassemblyView.gotoAddress(userModule->entryPoint);
+         }
 
          // Automatically analyse the primary user module
          for (auto &sec : userModule->sections) {
