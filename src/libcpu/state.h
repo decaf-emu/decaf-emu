@@ -1,5 +1,6 @@
 #pragma once
 #include <atomic>
+#include <chrono>
 #include <thread>
 #include "espresso/espresso_registers.h"
 
@@ -7,6 +8,9 @@ struct Tracer;
 
 namespace cpu
 {
+
+static const uint32_t coreClockSpeed = 1243125000;
+static const uint32_t busClockSpeed = 800000000;
 
 struct CoreRegs
 {
@@ -25,9 +29,6 @@ struct CoreRegs
    espresso::pvr_t pvr;       // Processor Version Register
    espresso::msr_t msr;       // Machine State Register
    uint32_t sr[16];           // Segment Registers
-
-   uint32_t tbu;              // Time Base Upper
-   uint32_t tbl;              // Time Base Lower
 
    espresso::gqr_t gqr[8];    // Graphics Quantization Registers
 
@@ -48,6 +49,13 @@ struct Core : CoreRegs
    uint32_t interrupt_mask { 0xFFFFFFFF };
    std::atomic<uint32_t> interrupt { 0 };
    std::chrono::system_clock::time_point next_alarm;
+
+   inline uint64_t tb() {
+      using ppc_timer_duration = std::chrono::duration < uint64_t, std::ratio<1, busClockSpeed * 4>>;
+      auto now = std::chrono::high_resolution_clock::now();
+      auto ticks = std::chrono::duration_cast<ppc_timer_duration>(now.time_since_epoch());
+      return ticks.count();
+   }
 };
 
 } // namespace cpu

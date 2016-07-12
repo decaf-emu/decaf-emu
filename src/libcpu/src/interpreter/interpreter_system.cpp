@@ -211,10 +211,10 @@ mftb(cpu::Core *state, Instruction instr)
 
    switch (tbr) {
    case SPR::UTBL:
-      value = state->tbl;
+      value = static_cast<uint32_t>(state->tb() & 0xFFFFFFFF);
       break;
    case SPR::UTBU:
-      value = state->tbu;
+      value = static_cast<uint32_t>(state->tb()  >> 32);
       break;
    default:
       decaf_abort(fmt::format("Invalid mftb TBR {}", static_cast<uint32_t>(tbr)));
