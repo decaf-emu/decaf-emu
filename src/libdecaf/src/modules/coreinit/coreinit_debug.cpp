@@ -128,13 +128,13 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
             break;
          case 'n':
             if (length.compare("hh") == 0) {
-               *(args.next<int8_t *>()) = output.size();
+               *(args.next<int8_t *>()) = static_cast<int8_t>(output.size());
             } else if (length.compare("h") == 0) {
-               *(args.next<be_val<int16_t> *>()) = output.size();
+               *(args.next<be_val<int16_t> *>()) = static_cast<int16_t>(output.size());
             } else if (length.compare("ll") == 0) {
-               *(args.next<be_val<int64_t> *>()) = output.size();
+               *(args.next<be_val<int64_t> *>()) = static_cast<int64_t>(output.size());
             } else {
-               *(args.next<be_val<int32_t> *>()) = output.size();
+               *(args.next<be_val<int32_t> *>()) = static_cast<int32_t>(output.size());
             }
             break;
          default:
