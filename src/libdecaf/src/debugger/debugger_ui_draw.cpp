@@ -480,9 +480,13 @@ public:
 
          // Name
          if (sIsPaused) {
-            const char *threadName = "    ";
+            const char *threadName;
+            std::string nameBuf;
             if (thread.name.size() > 0) {
                threadName = thread.name.c_str();
+            } else {
+               nameBuf = fmt::format("(Unnamed Thread {})", thread.id);
+               threadName = nameBuf.c_str();
             }
             if (ImGui::Selectable(threadName)) {
                setActiveThread(thread.thread);
