@@ -279,9 +279,8 @@ mcrf(PPCEmuAssembler& a, Instruction instr)
    auto ppccr = a.loadRegisterReadWrite(a.cr);
 
    a.mov(tmp, ppccr);
-   a.and_(tmp, ~(0xF << crshifts));
-   a.shr(tmp, crshifts);
-   a.shl(tmp, crshiftd);
+   a.shiftTo(tmp, crshifts, crshiftd);
+   a.and_(tmp, 0xF << crshiftd);
    a.and_(ppccr, ~(0xF << crshiftd));
    a.or_(ppccr, tmp);
 
