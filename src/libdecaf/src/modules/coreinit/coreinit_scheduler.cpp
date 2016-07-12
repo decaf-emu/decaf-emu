@@ -577,7 +577,7 @@ GameThreadEntry(uint32_t argc, void *argv)
    auto appModule = internal::getUserModule();
 
    auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
-   auto start = OSThreadEntryPointFn(appModule->entryPoint);
+   auto start = internal::AppEntryPoint(appModule->entryPoint);
 
    debugger::handlePreLaunch();
 
@@ -595,6 +595,20 @@ GameThreadEntry(uint32_t argc, void *argv)
       MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, *mem1HeapPtr);
       MEMSetBaseHeapHandle(MEMBaseHeapType::FG, *fgHeapPtr);
       MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, *mem2HeapPtr);
+   }
+
+   auto loadedModules = internal::getLoadedModules();
+   for (auto i : loadedModules) {
+      auto loadedModule = i.second;
+      if (loadedModule == appModule) {
+         // The app entrypoint is called last, below.
+         continue;
+      }
+
+      if (loadedModule->entryPoint) {
+         auto moduleStart = internal::RplEntryPoint(loadedModule->entryPoint);
+         moduleStart(loadedModule->handle, internal::RplEntryReasonLoad);
+      }
    }
 
    start(argc, argv);

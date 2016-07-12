@@ -149,6 +149,12 @@ OSDynLoad_Acquire(char const *name,
       return 0xBAD10001;
    }
 
+   // Call the modules entryPoint if it has one
+   if (module->entryPoint) {
+      auto moduleStart = internal::RplEntryPoint(module->entryPoint);
+      moduleStart(module->handle, internal::RplEntryReasonLoad);
+   }
+
    *outHandle = module->handle;
    return 0;
 }

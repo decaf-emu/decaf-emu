@@ -11,6 +11,16 @@ namespace coreinit
 namespace internal
 {
 
+// int AppEntryPoint(uint32_t argc, const char *argv);
+using AppEntryPoint = wfunc_ptr<int, uint32_t, void*>;
+
+// int RplEntryPoint(void *moduleHandle, int reason);
+using RplEntryPoint = wfunc_ptr<int, void*, int>;
+
+// Reason codes for RPL entrypoint invocation
+static const int RplEntryReasonLoad = 1;
+static const int RplEntryReasonUnload = 2;
+
 struct LoadedModule;
 
 struct LoadedModuleHandleData
