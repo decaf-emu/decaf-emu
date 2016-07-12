@@ -12,6 +12,12 @@ struct OSContext;
 namespace kernel
 {
 
+namespace loader {
+
+struct LoadedModule;
+
+}
+
 struct Fiber;
 
 void
@@ -28,6 +34,9 @@ getSystemHeap();
 
 void
 setContext(coreinit::OSContext *next);
+
+loader::LoadedModule *
+getUserModule();
 
 void
 exitProcess(int code);

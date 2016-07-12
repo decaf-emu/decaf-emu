@@ -1,9 +1,10 @@
 #pragma once
 #include "align.h"
 #include "decaf_assert.h"
+#include <algorithm>
 #include <map>
-#include <vector>
 #include <mutex>
+#include <vector>
 
 class TeenyHeap
 {

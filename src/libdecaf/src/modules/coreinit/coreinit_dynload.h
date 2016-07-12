@@ -2,13 +2,21 @@
 #include "common/be_val.h"
 #include "virtual_ptr.h"
 
+namespace kernel
+{
+namespace loader
+{
+
+struct LoadedModuleHandleData;
+
+}
+}
+
 namespace coreinit
 {
 
-namespace internal
-{
-   struct LoadedModuleHandleData;
-}
+using ModuleHandle = kernel::loader::LoadedModuleHandleData*;
+using be_ModuleHandle = be_ptr<kernel::loader::LoadedModuleHandleData>;
 
 /**
  * \defgroup coreinit_dynload Dynamic Loading
@@ -48,16 +56,16 @@ OSDynLoad_GetTLSAllocator(be_val<ppcaddr_t> *outAllocFn,
 
 int
 OSDynLoad_Acquire(char const *name,
-                  be_ptr<coreinit::internal::LoadedModuleHandleData> *outHandle);
+                  be_ModuleHandle *outHandle);
 
 int
-OSDynLoad_FindExport(coreinit::internal::LoadedModuleHandleData *module,
+OSDynLoad_FindExport(ModuleHandle module,
                      int isData,
                      char const *name,
                      be_val<ppcaddr_t> *outAddr);
 
 void
-OSDynLoad_Release(coreinit::internal::LoadedModuleHandleData *handle);
+OSDynLoad_Release(ModuleHandle handle);
 
 /** @} */
 

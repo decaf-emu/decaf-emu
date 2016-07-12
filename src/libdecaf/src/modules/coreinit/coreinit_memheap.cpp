@@ -4,6 +4,7 @@
 #include "coreinit_expheap.h"
 #include "coreinit_frameheap.h"
 #include "coreinit_unitheap.h"
+#include "kernel/kernel_memory.h"
 #include "libcpu/mem.h"
 #include "virtual_ptr.h"
 #include "ppcutils/wfunc_call.h"
@@ -215,58 +216,6 @@ defaultFreeToDefaultHeap(void *block)
    return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
 }
 
-// TODO: Move to coreinit::internal
-void
-CoreInitDefaultHeap()
-{
-   be_val<uint32_t> addr, size;
-
-   // Create expanding heap for MEM2
-   OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
-   auto mem2 = MEMCreateExpHeap(make_virtual_ptr<ExpandedHeap>(addr), size);
-   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, reinterpret_cast<CommonHeap*>(mem2));
-
-   // Create frame heap for MEM1
-   OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
-   auto mem1 = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
-   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, reinterpret_cast<CommonHeap*>(mem1));
-
-   // Create frame heap for Foreground
-   OSGetForegroundBucketFreeArea(&addr, &size);
-   auto fg = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
-   MEMSetBaseHeapHandle(MEMBaseHeapType::FG, reinterpret_cast<CommonHeap*>(fg));
-}
-
-// TODO: Move to coreinit::internal
-void
-CoreFreeDefaultHeap()
-{
-   // Delete all base heaps
-   for (auto i = 0u; i < MEMBaseHeapType::Max; ++i) {
-      if (sMemArenas[i]) {
-         auto heap = reinterpret_cast<CommonHeap*>(sMemArenas[i]);
-
-         switch (heap->tag) {
-         case MEMiHeapTag::ExpandedHeap:
-            MEMDestroyExpHeap(reinterpret_cast<ExpandedHeap *>(heap));
-            break;
-         case MEMiHeapTag::FrameHeap:
-            MEMDestroyFrmHeap(reinterpret_cast<FrameHeap *>(heap));
-            break;
-         case MEMiHeapTag::UnitHeap:
-            MEMDestroyUnitHeap(reinterpret_cast<UnitHeap *>(heap));
-            break;
-         case MEMiHeapTag::UserHeap:
-         case MEMiHeapTag::BlockHeap:
-         default:
-            decaf_abort(fmt::format("Invalid MEMiHeapTag {}", heap->tag));
-         }
-
-         sMemArenas[i] = nullptr;
-      }
-   }
-}
-
 void
 Module::registerMembaseFunctions()
 {
@@ -302,7 +251,7 @@ Module::initialiseMembase()
    MEMInitList(sMEM1Memlist, offsetof(CommonHeap, link));
    MEMInitList(sMEM2Memlist, offsetof(CommonHeap, link));
 
-   CoreInitDefaultHeap();
+   internal::initialiseDefaultHeaps();
 
    // TODO: getAddress should not be neccessary here...
    *pMEMAllocFromDefaultHeap = sDefaultMEMAllocFromDefaultHeap.getAddress();
@@ -312,6 +261,26 @@ Module::initialiseMembase()
 
 namespace internal
 {
+
+void initialiseDefaultHeaps()
+{
+   be_val<uint32_t> addr, size;
+
+   // Create expanding heap for MEM2
+   OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
+   auto mem2 = MEMCreateExpHeap(make_virtual_ptr<ExpandedHeap>(addr), size);
+   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, reinterpret_cast<CommonHeap*>(mem2));
+
+   // Create frame heap for MEM1
+   OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
+   auto mem1 = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
+   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, reinterpret_cast<CommonHeap*>(mem1));
+
+   // Create frame heap for Foreground
+   OSGetForegroundBucketFreeArea(&addr, &size);
+   auto fg = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
+   MEMSetBaseHeapHandle(MEMBaseHeapType::FG, reinterpret_cast<CommonHeap*>(fg));
+}
 
 void *
 sysAlloc(size_t size, int alignment)

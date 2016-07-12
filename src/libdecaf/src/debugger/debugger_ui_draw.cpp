@@ -6,10 +6,10 @@
 #include "debugger_ui.h"
 #include "decaf.h"
 #include "kernel/kernel_hlefunction.h"
+#include "kernel/kernel_loader.h"
 #include "libcpu/espresso/espresso_disassembler.h"
 #include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/coreinit/coreinit_internal_loader.h"
 #include "modules/coreinit/coreinit_enum_string.h"
 #include <cinttypes>
 #include <functional>
@@ -287,15 +287,15 @@ public:
 
       mSegments.clear();
       mSegments.push_back(Segment { "SystemData", mem::SystemBase, mem::SystemEnd });
-      mSegments.push_back(Segment { "Application", mem::ApplicationBase, mem::ApplicationEnd });
+      mSegments.push_back(Segment { "Application", mem::MEM2Base, mem::MEM2End });
       mSegments.push_back(Segment { "Apertures", mem::AperturesBase, mem::AperturesEnd });
       mSegments.push_back(Segment { "Foreground", mem::ForegroundBase, mem::ForegroundEnd });
       mSegments.push_back(Segment { "MEM1", mem::MEM1Base, mem::MEM1End });
       mSegments.push_back(Segment { "LockedCache", mem::LockedCacheBase, mem::LockedCacheEnd });
       mSegments.push_back(Segment { "SharedData", mem::SharedDataBase, mem::SharedDataEnd });
 
-      coreinit::internal::lockLoader();
-      const auto &modules = coreinit::internal::getLoadedModules();
+      kernel::loader::lockLoader();
+      const auto &modules = kernel::loader::getLoadedModules();
 
       for (auto &mod : modules) {
          for (auto &sec : mod.second->sections) {
@@ -306,7 +306,7 @@ public:
             });
          }
       }
-      coreinit::internal::unlockLoader();
+      kernel::loader::unlockLoader();
 
       ImGui::Columns(3, "memLis", false);
       ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.0f);
@@ -1574,7 +1574,7 @@ void draw()
    auto wantsStepInto = false;
 
    if (debugViewsVisible) {
-      auto userModule = coreinit::internal::getUserModule();
+      auto userModule = kernel::getUserModule();
 
       if (firstActivation && userModule) {
          // Place the views somewhere sane to start

@@ -6,7 +6,6 @@ namespace coreinit
 
 Module::~Module()
 {
-   CoreFreeDefaultHeap();
 }
 
 void

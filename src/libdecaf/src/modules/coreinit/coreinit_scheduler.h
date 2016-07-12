@@ -11,6 +11,9 @@ struct OSThreadQueue;
 namespace internal
 {
 
+void
+startDefaultCoreThreads();
+
 OSThread *
 getCoreRunningThread(uint32_t coreId);
 

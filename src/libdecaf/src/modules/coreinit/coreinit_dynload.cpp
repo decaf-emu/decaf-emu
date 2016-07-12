@@ -1,14 +1,14 @@
 #include <algorithm>
+#include "common/be_val.h"
 #include "coreinit.h"
 #include "coreinit_dynload.h"
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
+#include "kernel/kernel_loader.h"
 #include "libcpu/mem.h"
-#include "coreinit_internal_loader.h"
-#include "common/be_val.h"
-#include "virtual_ptr.h"
 #include "ppcutils/wfunc_ptr.h"
 #include "ppcutils/wfunc_call.h"
+#include "virtual_ptr.h"
 
 namespace coreinit
 {
@@ -139,9 +139,9 @@ OSDynLoad_GetTLSAllocator(be_val<ppcaddr_t> *outAllocFn,
  */
 int
 OSDynLoad_Acquire(char const *name,
-                  be_ptr<coreinit::internal::LoadedModuleHandleData> *outHandle)
+                  be_ModuleHandle *outHandle)
 {
-   auto module = coreinit::internal::loadRPL(name);
+   auto module = kernel::loader::loadRPL(name);
 
    if (!module) {
       gLog->debug("OSDynLoad_Acquire {} failed", name);
@@ -151,8 +151,8 @@ OSDynLoad_Acquire(char const *name,
 
    // Call the modules entryPoint if it has one
    if (module->entryPoint) {
-      auto moduleStart = internal::RplEntryPoint(module->entryPoint);
-      moduleStart(module->handle, internal::RplEntryReasonLoad);
+      auto moduleStart = kernel::loader::RplEntryPoint(module->entryPoint);
+      moduleStart(module->handle, kernel::loader::RplEntryReasonLoad);
    }
 
    *outHandle = module->handle;
@@ -164,7 +164,7 @@ OSDynLoad_Acquire(char const *name,
  * Find the export from a library handle.
  */
 int
-OSDynLoad_FindExport(coreinit::internal::LoadedModuleHandleData *handle,
+OSDynLoad_FindExport(ModuleHandle handle,
                      int isData,
                      char const *name,
                      be_val<ppcaddr_t> *outAddr)
@@ -190,7 +190,7 @@ OSDynLoad_FindExport(coreinit::internal::LoadedModuleHandleData *handle,
  * The library is unloaded if ref count hits 0.
  */
 void
-OSDynLoad_Release(coreinit::internal::LoadedModuleHandleData *handle)
+OSDynLoad_Release(ModuleHandle handle)
 {
    // TODO: Unload library when ref count hits 0
 }

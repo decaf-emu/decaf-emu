@@ -1,4 +1,4 @@
-#include "coreinit_internal_loader.h"
+#include "kernel_loader.h"
 #include "common/align.h"
 #include "common/bigendianview.h"
 #include "common/decaf_assert.h"
@@ -7,10 +7,11 @@
 #include "decaf_config.h"
 #include "elf.h"
 #include "filesystem/filesystem.h"
-#include "kernel/kernel_hle.h"
-#include "kernel/kernel_hlemodule.h"
-#include "kernel/kernel_hlefunction.h"
-#include "kernel/kernel_filesystem.h"
+#include "kernel_filesystem.h"
+#include "kernel_hle.h"
+#include "kernel_hlemodule.h"
+#include "kernel_hlefunction.h"
+#include "kernel_memory.h"
 #include "modules/coreinit/coreinit_memory.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_dynload.h"
@@ -28,13 +29,13 @@ public:
    }
 
    ppcaddr_t
-   getCurrentAddr() const
+      getCurrentAddr() const
    {
       return mem::untranslate(mPtr);
    }
 
    void *
-   get(size_t size, uint32_t alignment = 4)
+      get(size_t size, uint32_t alignment = 4)
    {
       // Ensure section alignment
       auto alignOffset = align_up(mPtr, alignment) - mPtr;
@@ -57,10 +58,10 @@ protected:
    uint8_t *mPtr;
 };
 
-namespace coreinit
+namespace kernel
 {
 
-namespace internal
+namespace loader
 {
 
 using TrampolineMap = std::map<ppcaddr_t, ppcaddr_t>;
@@ -68,25 +69,19 @@ using SectionList = std::vector<elf::XSection>;
 using AddressRange = std::pair<ppcaddr_t, ppcaddr_t>;
 
 static std::atomic<uint32_t>
-sLoaderLock { 0 };
+   sLoaderLock{ 0 };
 
 static std::map<std::string, LoadedModule*>
-gLoadedModules;
-
-static LoadedModule *
-gUserModule;
-
-static TeenyHeap*
-gCodeHeap;
+   gLoadedModules;
 
 std::unordered_map<ppcaddr_t, std::string>
-gGlobalSymbolLookup;
+   gGlobalSymbolLookup;
 
 static std::map<std::string, ppcaddr_t>
-gUnimplementedFunctions;
+   gUnimplementedFunctions;
 
 static std::map<std::string, int>
-gUnimplementedData;
+   gUnimplementedData;
 
 void
 lockLoader()
@@ -105,20 +100,6 @@ unlockLoader()
    auto core = 1 << cpu::this_core::id();
    auto oldCore = sLoaderLock.exchange(0, std::memory_order_release);
    decaf_check(oldCore == core);
-}
-
-static void
-initialiseCodeHeap(ppcsize_t maxCodeSize)
-{
-   // Get the MEM2 Region
-   be_val<uint32_t> mem2start, mem2size;
-   coreinit::OSGetMemBound(OSMemoryType::MEM2, &mem2start, &mem2size);
-
-   // Steal some space for code heap
-   gCodeHeap = new TeenyHeap(mem::translate(mem2start), maxCodeSize);
-
-   // Update MEM2 to ignore the code heap region
-   coreinit::internal::setMemBound(OSMemoryType::MEM2, mem2start + maxCodeSize, mem2size - maxCodeSize);
 }
 
 std::map<std::string, LoadedModule*>
@@ -349,8 +330,8 @@ processKernelTraceFilters(const std::string &module,
 
       // Find module::name
       auto nameSeparator = filterText.find("::");
-      auto functionName = gsl::span<const char> {};
-      auto moduleName = gsl::span<const char> {};
+      auto functionName = gsl::span<const char>{};
+      auto moduleName = gsl::span<const char>{};
       auto moduleWildcard = false;
 
       if (nameSeparator != std::string::npos) {
@@ -409,8 +390,8 @@ processKernelTraceFilters(const std::string &module,
 
 
 /**
- * Load a kernel module into virtual memory space by creating thunks
- */
+* Load a kernel module into virtual memory space by creating thunks
+*/
 static LoadedModule *
 loadHleModule(const std::string &moduleName,
               const std::string &name,
@@ -441,7 +422,7 @@ loadHleModule(const std::string &moduleName,
    processKernelTraceFilters(moduleName, funcSymbols);
 
    // Create module
-   auto loadedMod = new LoadedModule {};
+   auto loadedMod = new LoadedModule{};
    gLoadedModules.emplace(moduleName, loadedMod);
    loadedMod->name = name;
    loadedMod->handle = coreinit::internal::sysAlloc<LoadedModuleHandleData>();
@@ -488,7 +469,7 @@ loadHleModule(const std::string &moduleName,
       auto dataRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(dataSize, 4));
       auto start = mem::untranslate(dataRegion);
       auto end = start + codeSize;
-      loadedMod->sections.emplace_back(LoadedSection { ".data", start, end });
+      loadedMod->sections.emplace_back(LoadedSection{ ".data", start, end });
 
       for (auto &data : dataSymbols) {
          // Allocate the same for this export
@@ -697,7 +678,7 @@ processImports(LoadedModule *loadedMod,
       }
 
       auto strTab = reinterpret_cast<const char*>(sections[section.header.link].memory);
-      auto symIn = BigEndianView { section.memory, section.virtSize };
+      auto symIn = BigEndianView{ section.memory, section.virtSize };
 
       while (!symIn.eof()) {
          elf::Symbol sym;
@@ -849,7 +830,7 @@ loadRPL(const std::string &moduleName,
    gLog->debug("Loading module {}", moduleName);
 
    // Read header
-   auto header = elf::Header {};
+   auto header = elf::Header{};
 
    if (!elf::readHeader(in, header)) {
       gLog->error("Failed elf::readHeader");
@@ -863,7 +844,7 @@ loadRPL(const std::string &moduleName,
    }
 
    // Read sections
-   auto sections = std::vector<elf::XSection> {};
+   auto sections = std::vector<elf::XSection>{};
 
    if (!elf::readSectionHeaders(in, header, sections)) {
       gLog->error("Failed elf::readSectionHeaders");
@@ -875,7 +856,7 @@ loadRPL(const std::string &moduleName,
    elf::FileInfo info;
 
    readFileInfo(in, sections, info);
-   codeSegAddr = gCodeHeap->alloc(info.textSize, info.textAlign);
+   codeSegAddr = getCodeHeap()->alloc(info.textSize, info.textAlign);
    loadSegAddr = coreinit::internal::sysAlloc(info.loadSize, info.loadAlign);
 
    if (coreinit::internal::dynLoadMemAlloc(info.dataSize, info.dataAlign, &dataSegAddr) != 0) {
@@ -886,9 +867,9 @@ loadRPL(const std::string &moduleName,
    decaf_check(loadSegAddr);
    decaf_check(codeSegAddr);
 
-   auto codeSeg = SequentialMemoryTracker { codeSegAddr, info.textSize };
-   auto dataSeg = SequentialMemoryTracker { dataSegAddr, info.dataSize };
-   auto loadSeg = SequentialMemoryTracker { loadSegAddr, info.loadSize };
+   auto codeSeg = SequentialMemoryTracker{ codeSegAddr, info.textSize };
+   auto dataSeg = SequentialMemoryTracker{ dataSegAddr, info.dataSize };
+   auto loadSeg = SequentialMemoryTracker{ loadSegAddr, info.loadSize };
 
    // Allocate sections from our memory segments
    for (auto &section : sections) {
@@ -1056,8 +1037,8 @@ loadRPL(const std::string &moduleName,
 
 static void
 normalizeModuleName(const std::string &name,
-                    std::string &moduleName,
-                    std::string &fileName)
+      std::string &moduleName,
+      std::string &fileName)
 {
    if (!ends_with(name, ".rpl") && !ends_with(name, ".rpx")) {
       moduleName = name;
@@ -1121,28 +1102,10 @@ LoadedModule *
 loadRPL(const std::string& name)
 {
    // Use the scheduler lock to protect access to the loaders memory
-   internal::lockLoader();
+   lockLoader();
    auto res = loadRPLNoLock(name);
-   internal::unlockLoader();
+   unlockLoader();
    return res;
-}
-
-LoadedModule *
-loadRPX(ppcsize_t maxCodeSize,
-        const std::string& name)
-{
-   // Initialise the code-heap information
-   initialiseCodeHeap(maxCodeSize);
-
-   // Force-load coreinit which is a default system-loaded library
-   // Note that this needs to be here as its DefaultHeapInit method
-   // makes assumptions about the MEM bounds which are changed by the
-   // initialiseCodeHeap call above.
-   loadRPL("coreinit");
-
-   // Load the RPX as a normal module
-   gUserModule = loadRPL(name);
-   return gUserModule;
 }
 
 LoadedModule *
@@ -1162,12 +1125,6 @@ findModule(const std::string& name)
    return itr->second;
 }
 
-LoadedModule *
-getUserModule()
-{
-   return gUserModule;
-}
-
 std::string *
 findSymbolNameForAddress(ppcaddr_t address)
 {
@@ -1180,6 +1137,6 @@ findSymbolNameForAddress(ppcaddr_t address)
    return &symIter->second;
 }
 
-} // namespace internal
+} // namespace loader
 
-} // namespace coreinit
+} // namespace kernel

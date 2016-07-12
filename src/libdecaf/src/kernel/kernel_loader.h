@@ -5,10 +5,10 @@
 #include "common/decaf_assert.h"
 #include "ppcutils/wfunc_ptr.h"
 
-namespace coreinit
+namespace kernel
 {
 
-namespace internal
+namespace loader
 {
 
 // int AppEntryPoint(uint32_t argc, const char *argv);
@@ -38,7 +38,7 @@ struct LoadedSection
 struct LoadedModule
 {
    ppcaddr_t
-   findExport(const std::string& name) const
+      findExport(const std::string& name) const
    {
       auto itr = exports.find(name);
 
@@ -51,14 +51,14 @@ struct LoadedModule
 
    template<typename ReturnType, typename... Args>
    wfunc_ptr<ReturnType, Args...>
-   findFuncExport(const std::string& name) const
+      findFuncExport(const std::string& name) const
    {
       return wfunc_ptr<ReturnType, Args...>(findExport(name));
    }
 
    template<typename Type>
    Type *
-   findDataExport(const std::string& name) const
+      findDataExport(const std::string& name) const
    {
       return reinterpret_cast<Type *>(mem::translate(findExport(name)));
    }
@@ -85,16 +85,10 @@ void
 unlockLoader();
 
 LoadedModule *
-loadRPX(ppcsize_t maxCodeSize, const std::string& name);
-
-LoadedModule *
 loadRPL(const std::string& name);
 
 LoadedModule *
 findModule(const std::string& name);
-
-LoadedModule *
-getUserModule();
 
 std::string *
 findSymbolNameForAddress(ppcaddr_t address);
@@ -102,6 +96,6 @@ findSymbolNameForAddress(ppcaddr_t address);
 std::map<std::string, LoadedModule*>
 getLoadedModules();
 
-} // namespace internal
+} // namespace loader
 
-} // namespace coreinit
+} // namespace kernel

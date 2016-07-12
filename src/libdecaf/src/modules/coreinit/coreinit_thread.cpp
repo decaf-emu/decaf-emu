@@ -6,7 +6,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
 #include "coreinit_thread.h"
-#include "coreinit_internal_loader.h"
+#include "kernel/kernel_loader.h"
 #include "libcpu/mem.h"
 #include "libcpu/cpu.h"
 #include "ppcutils/stackobject.h"
@@ -168,7 +168,7 @@ InitialiseThreadState(OSThread *thread,
                       uint32_t argc,
                       void *argv)
 {
-   auto module = internal::getUserModule();
+   auto module = kernel::getUserModule();
    auto sdaBase = module ? module->sdaBase : 0u;
    auto sda2Base = module ? module->sda2Base : 0u;
 
@@ -915,7 +915,7 @@ void *
 tls_get_addr(tls_index *index)
 {
    auto thread = OSGetCurrentThread();
-   auto module = internal::getUserModule();
+   auto module = kernel::getUserModule();
    decaf_check(index->moduleIndex == module->tlsModuleIndex);
 
    if (thread->tlsSectionCount <= index->moduleIndex) {

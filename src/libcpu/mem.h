@@ -13,9 +13,9 @@ enum AddressSpace : ppcaddr_t
    SystemEnd         = 0x02000000,
    SystemSize        = SystemEnd - SystemBase,
 
-   ApplicationBase   = 0x02000000,
-   ApplicationEnd    = 0x42000000,
-   ApplicationSize   = ApplicationEnd - ApplicationBase,
+   MEM2Base          = 0x02000000,
+   MEM2End           = 0x42000000,
+   MEM2Size          = MEM2End - MEM2Base,
 
    AperturesBase     = 0xB0000000,
    AperturesEnd      = 0xC0000000,

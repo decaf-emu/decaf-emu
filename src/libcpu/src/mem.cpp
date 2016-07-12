@@ -18,7 +18,7 @@ static std::vector<Mapping>
 gMemoryMap =
 {
    { "SystemData",   SystemBase,       SystemEnd,        0 },
-   { "Application",  ApplicationBase,  ApplicationEnd,   0 },
+   { "MEM2",         MEM2Base,         MEM2End,          0 },
    { "Apertures",    AperturesBase,    AperturesEnd,     0 },
    { "Foreground",   ForegroundBase,   ForegroundEnd,    0 },
    { "MEM1",         MEM1Base,         MEM1End,          0 },

@@ -2,7 +2,7 @@
 #include "debugger_branchcalc.h"
 #include "libcpu/espresso/espresso_instructionset.h"
 #include "libcpu/mem.h"
-#include "modules/coreinit/coreinit_internal_loader.h"
+#include "kernel/kernel_loader.h"
 #include <map>
 #include <spdlog/formatter.h>
 #include <unordered_map>
@@ -155,8 +155,8 @@ void analyse(uint32_t start, uint32_t end)
    // Scan through all our symbols and mark them as functions.
    // We do this first as they will not receive names if they are
    //  detected by the analysis pass due to its naming system.
-   coreinit::internal::lockLoader();
-   const auto &modules = coreinit::internal::getLoadedModules();
+   kernel::loader::lockLoader();
+   const auto &modules = kernel::loader::getLoadedModules();
    for (auto &mod : modules) {
       uint32_t codeRangeStart = 0x00000000;
       uint32_t codeRangeEnd = 0x00000000;
@@ -173,7 +173,7 @@ void analyse(uint32_t start, uint32_t end)
          }
       }
    }
-   coreinit::internal::unlockLoader();
+   kernel::loader::unlockLoader();
 
    for (uint32_t addr = start; addr < end; addr += 4) {
       auto instr = mem::read<espresso::Instruction>(addr);

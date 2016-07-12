@@ -1,10 +1,11 @@
 #include "decaf_config.h"
-#include "libcpu/cpu.h"
-#include "libcpu/mem.h"
 #include "debugger/debugger_branchcalc.h"
-#include "modules/coreinit/coreinit_internal_loader.h"
 #include "common/decaf_assert.h"
 #include "common/log.h"
+#include "kernel/kernel.h"
+#include "kernel/kernel_loader.h"
+#include "libcpu/cpu.h"
+#include "libcpu/mem.h"
 #include <atomic>
 #include <condition_variable>
 
@@ -107,7 +108,7 @@ handlePreLaunch()
       return;
    }
 
-   auto appModule = coreinit::internal::getUserModule();
+   auto appModule = kernel::getUserModule();
    auto userPreinit = appModule->findExport("__preinit_user");
 
    if (userPreinit) {

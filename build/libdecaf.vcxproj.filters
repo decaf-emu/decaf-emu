@@ -708,12 +708,6 @@
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_hle.cpp">
       <Filter>Source Files\kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_loader.cpp">
-      <Filter>Source Files\modules\coreinit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\elf.cpp">
-      <Filter>Header Files\modules\coreinit</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_filesystem.cpp">
       <Filter>Source Files\kernel</Filter>
     </ClCompile>
@@ -806,6 +800,15 @@
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\modules\gx2\gx2r_mem.cpp">
       <Filter>Source Files\modules\gx2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_loader.cpp">
+      <Filter>Source Files\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\kernel\elf.cpp">
+      <Filter>Source Files\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_memory.cpp">
+      <Filter>Source Files\kernel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1439,12 +1442,6 @@
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hledata.h">
       <Filter>Header Files\kernel</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_loader.h">
-      <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\elf.h">
-      <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_filesystem.h">
       <Filter>Header Files\kernel</Filter>
     </ClInclude>
@@ -1522,6 +1519,15 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2r_mem.h">
       <Filter>Header Files\modules\gx2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_loader.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\elf.h">
+      <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_memory.h">
+      <Filter>Header Files\kernel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

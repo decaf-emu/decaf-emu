@@ -73,14 +73,11 @@ MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap);
 
 /** @} */
 
-void
-CoreFreeDefaultHeap();
-
-void
-CoreInitDefaultHeap();
-
 namespace internal
 {
+
+void
+initialiseDefaultHeaps();
 
 void *
 sysAlloc(size_t size, int alignment = 4);

@@ -1,6 +1,8 @@
 #include "kernel.h"
-#include "kernel_internal.h"
 #include "kernel_hle.h"
+#include "kernel_internal.h"
+#include "kernel_loader.h"
+#include "kernel_memory.h"
 #include "kernel_filesystem.h"
 #include <pugixml.hpp>
 #include <excmd.h>
@@ -18,7 +20,6 @@
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_interrupts.h"
 #include "modules/coreinit/coreinit_internal_appio.h"
-#include "modules/coreinit/coreinit_internal_loader.h"
 #include "modules/gx2/gx2_event.h"
 #include "libcpu/mem.h"
 #include "ppcutils/wfunc_call.h"
@@ -69,6 +70,9 @@ gGameName;
 static TeenyHeap *
 sSystemHeap = nullptr;
 
+static loader::LoadedModule *
+sUserModule;
+
 static int
 sExitCode = 0;
 
@@ -105,7 +109,7 @@ getSystemHeap()
 static void
 cpuBranchTraceHandler(uint32_t target)
 {
-   auto symNamePtr = coreinit::internal::findSymbolNameForAddress(target);
+   auto symNamePtr = loader::findSymbolNameForAddress(target);
    if (!symNamePtr) {
       return;
    }
@@ -322,41 +326,44 @@ launchGame()
       gLog->warn("Could not open /vol/code/app.xml, using default values");
    }
 
-   using namespace coreinit;
+   // Set up the code heap to load stuff to
+   initialiseCodeHeap(maxCodeSize);
+
+   // Load the application-level kernel binding
+   auto coreinitModule = loader::loadRPL("coreinit");
+
+   if (!coreinitModule) {
+      gLog->error("Could not load system coreinit library");
+      return false;
+   }
 
    // Load the application
-   auto appModule = internal::loadRPX(maxCodeSize, rpx);
+   auto appModule = loader::loadRPL(rpx);
 
    if (!appModule) {
       gLog->error("Could not load {}", rpx);
       return false;
    }
 
+   sUserModule = appModule;
+
    gLog->debug("Succesfully loaded {}", rpx);
 
-   internal::startAlarmCallbackThreads();
-   internal::startAppIoThreads();
 
-   // Create default threads
-   for (auto i = 0u; i < CoreCount; ++i) {
-      auto thread = coreinit::internal::sysAlloc<OSThread>();
-      auto stackSize = appModule->defaultStackSize;
-      auto stack = reinterpret_cast<uint8_t*>(coreinit::internal::sysAlloc(stackSize, 8));
-      auto name = coreinit::internal::sysStrDup(fmt::format("Default Thread {}", i));
+   coreinit::internal::startAlarmCallbackThreads();
+   coreinit::internal::startAppIoThreads();
+   coreinit::internal::startDefaultCoreThreads();
 
-      OSCreateThread(thread, 0u, 0, nullptr,
-         reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, 16,
-         static_cast<OSThreadAttributes>(1 << i));
-      internal::setDefaultThread(i, thread);
-      OSSetThreadName(thread, name);
-   }
-
-   // Run thread 1
-   auto coreinitModule = internal::findModule("coreinit");
    auto gameThreadEntry = coreinitModule->findFuncExport<uint32_t, uint32_t, void*>("GameThreadEntry");
-   OSRunThread(OSGetDefaultThread(1), gameThreadEntry, 0, nullptr);
+   coreinit::OSRunThread(coreinit::OSGetDefaultThread(1), gameThreadEntry, 0, nullptr);
 
    return true;
+}
+
+loader::LoadedModule *
+getUserModule()
+{
+   return sUserModule;
 }
 
 void

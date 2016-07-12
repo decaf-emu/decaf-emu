@@ -207,10 +207,13 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_viewport.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\pm4.cpp" />
     <ClCompile Include="..\src\libdecaf\src\input\input.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\kernel\elf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_fibers.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_filesystem.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_hle.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_loader.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_memory.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_alarm.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.cpp" />
@@ -238,7 +241,6 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs_typeinfo.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_idlock.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_loader.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_interrupts.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_lockedcache.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_mcp.cpp" />
@@ -258,7 +260,6 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_time.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_unitheap.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_userconfig.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\elf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\dmae\dmae.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\dmae\dmae_core.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\erreula\erreula.cpp" />
@@ -425,6 +426,7 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_writer.h" />
     <ClInclude Include="..\src\libdecaf\src\input\input.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\elf.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_filesystem.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hle.h" />
@@ -433,6 +435,8 @@
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hlefunction.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hlemodule.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_internal.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_loader.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_memory.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_atomic64.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_enum.h" />
@@ -447,13 +451,11 @@
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_im.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_appio.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_idlock.h" />
-    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_loader.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_interrupts.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_lockedcache.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_rendezvous.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_unitheap.h" />
-    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\elf.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\dmae\dmae.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2r_buffer.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\gx2\gx2r_draw.h" />

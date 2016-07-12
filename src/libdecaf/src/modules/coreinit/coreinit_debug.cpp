@@ -1,8 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_debug.h"
 #include "coreinit_exit.h"
-#include "coreinit_internal_loader.h"
 #include "coreinit_thread.h"
+#include "kernel/kernel_loader.h"
 #include "libcpu/trace.h"
 #include "common/log.h"
 #include "common/make_array.h"
@@ -202,8 +202,8 @@ OSGetSymbolName(uint32_t address, char *buffer, int bufsize)
    uint32_t retval = 0;
    bool found = false;
 
-   coreinit::internal::lockLoader();
-   const auto &modules = coreinit::internal::getLoadedModules();
+   kernel::loader::lockLoader();
+   const auto &modules = kernel::loader::getLoadedModules();
    for (auto &mod : modules) {
       uint32_t codeBase = 0;
       for (auto &sec : mod.second->sections) {
@@ -224,7 +224,7 @@ OSGetSymbolName(uint32_t address, char *buffer, int bufsize)
          break;
       }
    }
-   coreinit::internal::unlockLoader();
+   kernel::loader::unlockLoader();
 
    return retval;
 }

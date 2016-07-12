@@ -10,9 +10,9 @@
 #include "coreinit_mutex.h"
 #include "coreinit_thread.h"
 #include "coreinit_internal_queue.h"
-#include "coreinit_internal_loader.h"
 #include "debugger/debugger.h"
 #include "kernel/kernel.h"
+#include "kernel/kernel_loader.h"
 #include "libcpu/trace.h"
 #include "ppcutils/wfunc_call.h"
 #include "ppcutils/stackobject.h"
@@ -569,15 +569,33 @@ promoteThreadPriorityNoLock(OSThread *thread, int32_t priority)
    }
 }
 
+void startDefaultCoreThreads()
+{
+   auto appModule = kernel::getUserModule();
+   auto stackSize = appModule->defaultStackSize;
+
+   for (auto i = 0u; i < coreinit::CoreCount; ++i) {
+      auto thread = coreinit::internal::sysAlloc<coreinit::OSThread>();
+      auto stack = reinterpret_cast<uint8_t*>(coreinit::internal::sysAlloc(stackSize, 8));
+      auto name = coreinit::internal::sysStrDup(fmt::format("Default Thread {}", i));
+
+      coreinit::OSCreateThread(thread, 0u, 0, nullptr,
+         reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, 16,
+         static_cast<coreinit::OSThreadAttributes>(1 << i));
+      coreinit::internal::setDefaultThread(i, thread);
+      coreinit::OSSetThreadName(thread, name);
+   }
+}
+
 } // namespace internal
 
 void
 GameThreadEntry(uint32_t argc, void *argv)
 {
-   auto appModule = internal::getUserModule();
+   auto appModule = kernel::getUserModule();
 
    auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
-   auto start = internal::AppEntryPoint(appModule->entryPoint);
+   auto start = kernel::loader::AppEntryPoint(appModule->entryPoint);
 
    debugger::handlePreLaunch();
 
@@ -597,7 +615,7 @@ GameThreadEntry(uint32_t argc, void *argv)
       MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, *mem2HeapPtr);
    }
 
-   auto loadedModules = internal::getLoadedModules();
+   auto loadedModules = kernel::loader::getLoadedModules();
    for (auto i : loadedModules) {
       auto loadedModule = i.second;
       if (loadedModule == appModule) {
@@ -606,8 +624,8 @@ GameThreadEntry(uint32_t argc, void *argv)
       }
 
       if (loadedModule->entryPoint) {
-         auto moduleStart = internal::RplEntryPoint(loadedModule->entryPoint);
-         moduleStart(loadedModule->handle, internal::RplEntryReasonLoad);
+         auto moduleStart = kernel::loader::RplEntryPoint(loadedModule->entryPoint);
+         moduleStart(loadedModule->handle, kernel::loader::RplEntryReasonLoad);
       }
    }
 
