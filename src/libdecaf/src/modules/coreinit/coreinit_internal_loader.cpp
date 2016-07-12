@@ -1022,7 +1022,7 @@ loadRPL(const std::string &moduleName,
 
    // Create sections list
    for (auto &section : sections) {
-      if (section.virtSize) {
+      if (section.header.type == elf::SHT_PROGBITS || section.header.type == elf::SHT_NOBITS) {
          auto sectionName = shStrTab + section.header.name;
          auto start = section.virtAddress;
          auto end = section.virtAddress + section.virtSize;
