@@ -42,6 +42,8 @@ static const ImVec4 DisasmNiaBgColor = HEXTOIMV4(0x00E676, 1.0f);
 static const ImVec4 DisasmBpColor = HEXTOIMV4(0x000000, 1.0f);
 static const ImVec4 DisasmBpBgColor = HEXTOIMV4(0xF44336, 1.0f);
 static const ImVec4 RegsChangedColor = HEXTOIMV4(0xF44336, 1.0f);
+static const ImVec4 ThreadsCurrentColor = HEXTOIMV4(0x000000, 1.0f);
+static const ImVec4 ThreadsCurrentBgColor = HEXTOIMV4(0x00E676, 1.0f);
 
 // We store this locally so that we do not end up with isRunning
 //  switching whilst we are in the midst of drawing the UI.
@@ -62,7 +64,6 @@ sBreakpoints;
 
 void openAddrInMemoryView(uint32_t addr);
 void openAddrInDisassemblyView(uint32_t addr);
-void setActiveThread(coreinit::OSThread *thread);
 
 bool hasBreakpoint(uint32_t address)
 {
@@ -458,14 +459,34 @@ public:
 
       for (auto &thread : mThreads) {
          // ID
-         ImGui::Text("%d", thread.id);
+         if (thread.thread == sActiveThread) {
+            // Draw a green background under the current thread's ID
+            auto drawList = ImGui::GetWindowDrawList();
+            auto wndWidth = ImGui::GetWindowContentRegionWidth();
+            auto lineHeight = ImGui::GetTextLineHeight();
+            float glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
+            auto rootPos = ImGui::GetCursorScreenPos();
+            auto lineMin = ImVec2(rootPos.x, rootPos.y);
+            auto lineMax = ImVec2(rootPos.x + wndWidth, rootPos.y + lineHeight);
+            auto idMin = ImVec2(lineMin.x - 1, lineMin.y);
+            auto idMax = ImVec2(lineMin.x + (glyphWidth * 2) + 2, lineMax.y);
+            drawList->AddRectFilled(idMin, idMax, ImColor(ThreadsCurrentBgColor), 2.0f);
+            // Use a custom text color to make it easier to read
+            ImGui::TextColored(ThreadsCurrentColor, "%d", thread.id);
+         } else {
+            ImGui::Text("%d", thread.id);
+         }
          ImGui::NextColumn();
 
          // Name
          if (sIsPaused) {
-            const char *threadName = "    ";
+            const char *threadName;
+            std::string nameBuf;
             if (thread.name.size() > 0) {
                threadName = thread.name.c_str();
+            } else {
+               nameBuf = fmt::format("(Unnamed Thread {})", thread.id);
+               threadName = nameBuf.c_str();
             }
             if (ImGui::Selectable(threadName)) {
                setActiveThread(thread.thread);
@@ -840,7 +861,7 @@ public:
          }
       }
 
-      // We use this 'hack' to get the true with without line-advance offsets.
+      // We use this 'hack' to get the true width without line-advance offsets.
       auto lineHeight = ImGui::GetTextLineHeight();
       float glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
 
@@ -1006,7 +1027,7 @@ public:
 
          // Check if this is the current instruction
          // This should be simpler...  gActiveCoreIdx instead maybe?
-         if (sActiveThread && addr == getThreadNia(sActiveThread)) {
+         if (sIsPaused && sActiveThread && addr == getThreadNia(sActiveThread)) {
             // Render a green BG behind the address
             auto lineMinC = ImVec2(lineMin.x - 1, lineMin.y);
             auto lineMaxC = ImVec2(lineMin.x + (glyphWidth * 8) + 2, lineMax.y);
@@ -1185,6 +1206,11 @@ public:
    {
       mScroller.ScrollTo(addr);
       mSelectedAddr = addr;
+   }
+
+   bool isAddressSet()
+   {
+      return mSelectedAddr != -1;
    }
 
 private:
@@ -1491,7 +1517,6 @@ void openAddrInDisassemblyView(uint32_t addr)
 
 void setActiveThread(coreinit::OSThread *thread)
 {
-   decaf_check(sIsPaused);
    sActiveThread = thread;
 
    if (sActiveThread == coreinit::internal::getCoreRunningThread(0)) {
@@ -1504,7 +1529,7 @@ void setActiveThread(coreinit::OSThread *thread)
       sActiveCore = -1;
    }
 
-   if (sActiveThread) {
+   if (sIsPaused && sActiveThread) {
       openAddrInDisassemblyView(getThreadNia(sActiveThread));
    }
 }
@@ -1579,7 +1604,9 @@ void draw()
       if (firstActivation && userModule) {
          // Place the views somewhere sane to start
          sMemoryView.gotoAddress(userModule->entryPoint);
-         sDisassemblyView.gotoAddress(userModule->entryPoint);
+         if (!sDisassemblyView.isAddressSet()) {
+            sDisassemblyView.gotoAddress(userModule->entryPoint);
+         }
 
          // Automatically analyse the primary user module
          for (auto &sec : userModule->sections) {

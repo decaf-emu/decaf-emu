@@ -1,5 +1,6 @@
 #pragma once
 #include "decaf_input.h"
+#include "modules/coreinit/coreinit_thread.h"
 
 namespace debugger
 {
@@ -41,6 +42,9 @@ updateInput();
 
 void
 draw();
+
+void
+setActiveThread(coreinit::OSThread *thread);
 
 } // namespace ui
 

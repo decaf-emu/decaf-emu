@@ -138,7 +138,7 @@ cpuSegfaultFiberEntryPoint(void *addr)
       coreinit::internal::unlockScheduler();
    }
 
-   // Move back an instruction so we can re-exucute the failed instruction
+   // Move back an instruction so we can re-execute the failed instruction
    //  and so that the debugger shows the right stop point.
    cpu::this_core::state()->nia -= 4;
 
