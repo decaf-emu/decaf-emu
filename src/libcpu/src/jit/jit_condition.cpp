@@ -365,6 +365,7 @@ void registerConditionInstructions()
    RegisterInstruction(crorc);
    RegisterInstruction(crxor);
    RegisterInstruction(mcrf);
+   RegisterInstructionFallback(mcrfs);
    RegisterInstruction(mcrxr);
    RegisterInstruction(mfcr);
    RegisterInstruction(mtcrf);
