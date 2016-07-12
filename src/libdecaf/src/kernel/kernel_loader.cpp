@@ -422,7 +422,7 @@ loadHleModule(const std::string &moduleName,
    processKernelTraceFilters(moduleName, funcSymbols);
 
    // Create module
-   auto loadedMod = new LoadedModule{};
+   auto loadedMod = new LoadedModule {};
    gLoadedModules.emplace(moduleName, loadedMod);
    loadedMod->name = name;
    loadedMod->handle = coreinit::internal::sysAlloc<LoadedModuleHandleData>();
@@ -433,11 +433,11 @@ loadHleModule(const std::string &moduleName,
       auto codeRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(codeSize, 4));
       auto start = mem::untranslate(codeRegion);
       auto end = start + codeSize;
-      loadedMod->sections.emplace_back(LoadedSection{ ".text", LoadedSectionType::Code, start, end });
+      loadedMod->sections.emplace_back(LoadedSection { ".text", LoadedSectionType::Code, start, end });
 
       for (auto &func : funcSymbols) {
          // Allocate some space for the thunk
-         auto thunk = reinterpret_cast<uint32_t*>(codeRegion);
+         auto thunk = reinterpret_cast<uint32_t *>(codeRegion);
          auto addr = mem::untranslate(thunk);
          codeRegion += 8;
 
@@ -459,17 +459,17 @@ loadHleModule(const std::string &moduleName,
 
          // Map host memory pointer to PPC region
          if (func->hostPtr) {
-            *reinterpret_cast<ppcaddr_t*>(func->hostPtr) = addr;
+            *reinterpret_cast<ppcaddr_t *>(func->hostPtr) = addr;
          }
       }
    }
 
    // Load data section
    if (dataSize > 0) {
-      auto dataRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(dataSize, 4));
+      auto dataRegion = static_cast<uint8_t *>(coreinit::internal::sysAlloc(dataSize, 4));
       auto start = mem::untranslate(dataRegion);
       auto end = start + codeSize;
-      loadedMod->sections.emplace_back(LoadedSection{ ".data", LoadedSectionType::Data, start, end });
+      loadedMod->sections.emplace_back(LoadedSection { ".data", LoadedSectionType::Data, start, end });
 
       for (auto &data : dataSymbols) {
          // Allocate the same for this export
@@ -486,7 +486,7 @@ loadHleModule(const std::string &moduleName,
          // Map host memory pointer to PPC region
          if (data->hostPtr) {
             for (uint32_t off = 0, i = 0; off < data->size; off += data->itemSize, i++) {
-               reinterpret_cast<void**>(data->hostPtr)[i] = thunk + off;
+               reinterpret_cast<void **>(data->hostPtr)[i] = thunk + off;
             }
          }
       }
@@ -1016,15 +1016,17 @@ loadRPL(const std::string &moduleName,
          auto start = section.virtAddress;
          auto end = section.virtAddress + section.virtSize;
          auto type = LoadedSectionType::Data;
+
          if (section.header.flags & elf::SHF_EXECINSTR) {
             type = LoadedSectionType::Code;
          }
-         loadedMod->sections.emplace_back(LoadedSection{ sectionName, type, start, end });
+
+         loadedMod->sections.emplace_back(LoadedSection { sectionName, type, start, end });
       }
    }
 
    if (trampSeg.second > trampSeg.first) {
-      loadedMod->sections.emplace_back(LoadedSection{ "loader_thunks", LoadedSectionType::Code, trampSeg.first, trampSeg.second });
+      loadedMod->sections.emplace_back(LoadedSection { "loader_thunks", LoadedSectionType::Code, trampSeg.first, trampSeg.second });
    }
 
    // Add the modules entry point as an symbol called 'start'
@@ -1171,6 +1173,7 @@ findNearestSymbolNameForAddress(ppcaddr_t address)
    }
 
    auto delta = address - symIter->first;
+
    if (delta == 0) {
       return symIter->second;
    } else {

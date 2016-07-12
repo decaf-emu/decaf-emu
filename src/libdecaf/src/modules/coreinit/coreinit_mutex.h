@@ -89,7 +89,8 @@ void
 OSInitMutex(OSMutex *mutex);
 
 void
-OSInitMutexEx(OSMutex *mutex, const char *name);
+OSInitMutexEx(OSMutex *mutex,
+              const char *name);
 
 void
 OSLockMutex(OSMutex *mutex);
@@ -104,10 +105,12 @@ void
 OSInitCond(OSCondition *condition);
 
 void
-OSInitCondEx(OSCondition *condition, const char *name);
+OSInitCondEx(OSCondition *condition,
+             const char *name);
 
 void
-OSWaitCond(OSCondition *condition, OSMutex *mutex);
+OSWaitCond(OSCondition *condition,
+           OSMutex *mutex);
 
 void
 OSSignalCond(OSCondition *condition);

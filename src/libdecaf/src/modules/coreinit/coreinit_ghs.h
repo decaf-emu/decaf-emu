@@ -8,8 +8,11 @@
 namespace coreinit
 {
 
-static const uint32_t GHS_FOPEN_MAX = 0x14;
-static const uint32_t GHS_FLOCK_MAX = 0x64;
+static const uint32_t
+GHS_FOPEN_MAX = 0x14;
+
+static const uint32_t
+GHS_FLOCK_MAX = 0x64;
 
 extern be_wfunc_ptr<void>*
 p__atexit_cleanup;

@@ -14,16 +14,20 @@ struct IdLock
 };
 
 void
-acquireIdLock(IdLock &lock, uint32_t id);
+acquireIdLock(IdLock &lock,
+              uint32_t id);
 
 void
-releaseIdLock(IdLock &lock, uint32_t id);
+releaseIdLock(IdLock &lock,
+              uint32_t id);
 
 void
-acquireIdLock(IdLock &lock, void *owner);
+acquireIdLock(IdLock &lock,
+              void *owner);
 
 void
-releaseIdLock(IdLock &lock, void *owner);
+releaseIdLock(IdLock &lock,
+              void *owner);
 
 void
 acquireIdLock(IdLock &lock);

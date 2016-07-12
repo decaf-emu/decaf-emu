@@ -7,18 +7,27 @@ namespace coreinit
 {
 
 void *
-OSBlockMove(void *dst, const void *src, ppcsize_t size, BOOL flush);
+OSBlockMove(void *dst,
+            const void *src,
+            ppcsize_t size,
+            BOOL flush);
 
 void *
-OSBlockSet(void *dst, uint8_t val, ppcsize_t size);
+OSBlockSet(void *dst,
+           uint8_t val,
+           ppcsize_t size);
 
 BOOL
-OSGetForegroundBucket(be_val<uint32_t> *addr, be_val<uint32_t> *size);
+OSGetForegroundBucket(be_val<uint32_t> *addr,
+                      be_val<uint32_t> *size);
 
 BOOL
-OSGetForegroundBucketFreeArea(be_val<uint32_t> *addr, be_val<uint32_t> *size);
+OSGetForegroundBucketFreeArea(be_val<uint32_t> *addr,
+                              be_val<uint32_t> *size);
 
 int
-OSGetMemBound(OSMemoryType type, be_val<uint32_t> *addr, be_val<uint32_t> *size);
+OSGetMemBound(OSMemoryType type,
+              be_val<uint32_t> *addr,
+              be_val<uint32_t> *size);
 
 } // namespace coreinit

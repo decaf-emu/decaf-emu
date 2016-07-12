@@ -53,7 +53,8 @@ OSTick
 OSGetSystemTick();
 
 void
-OSTicksToCalendarTime(OSTime time, OSCalendarTime *calendarTime);
+OSTicksToCalendarTime(OSTime time,
+                      OSCalendarTime *calendarTime);
 
 OSTime
 OSCalendarTimeToTicks(OSCalendarTime *calendarTime);

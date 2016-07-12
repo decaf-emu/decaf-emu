@@ -42,28 +42,37 @@ CHECK_SIZE(MemoryList, 0xc);
 #pragma pack(pop)
 
 void
-MEMInitList(MemoryList *list, uint16_t offsetToMemoryLink);
+MEMInitList(MemoryList *list,
+            uint16_t offsetToMemoryLink);
 
 void
-MEMAppendListObject(MemoryList *list, void *object);
+MEMAppendListObject(MemoryList *list,
+                    void *object);
 
 void
-MEMPrependListObject(MemoryList *list, void *object);
+MEMPrependListObject(MemoryList *list,
+                     void *object);
 
 void
-MEMInsertListObject(MemoryList *list, void *before, void *object);
+MEMInsertListObject(MemoryList *list,
+                    void *before,
+                    void *object);
 
 void
-MEMRemoveListObject(MemoryList *list, void *object);
+MEMRemoveListObject(MemoryList *list,
+                    void *object);
 
 void *
-MEMGetNextListObject(MemoryList *list, void *object);
+MEMGetNextListObject(MemoryList *list,
+                     void *object);
 
 void *
-MEMGetPrevListObject(MemoryList *list, void *object);
+MEMGetPrevListObject(MemoryList *list,
+                     void *object);
 
 void *
-MEMGetNthListObject(MemoryList *list, uint16_t n);
+MEMGetNthListObject(MemoryList *list,
+                    uint16_t n);
 
 /** @} */
 

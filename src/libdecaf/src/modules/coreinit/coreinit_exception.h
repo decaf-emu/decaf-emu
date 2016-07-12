@@ -16,10 +16,13 @@ namespace coreinit
 using OSExceptionCallback = wfunc_ptr<BOOL, OSContext*>;
 
 OSExceptionCallback
-OSSetExceptionCallback(OSExceptionType exceptionType, OSExceptionCallback callback);
+OSSetExceptionCallback(OSExceptionType exceptionType,
+                       OSExceptionCallback callback);
 
 OSExceptionCallback
-OSSetExceptionCallbackEx(uint32_t unk1, OSExceptionType exceptionType, OSExceptionCallback callback);
+OSSetExceptionCallbackEx(uint32_t unk1,
+                         OSExceptionType exceptionType,
+                         OSExceptionCallback callback);
 
 /** @} */
 

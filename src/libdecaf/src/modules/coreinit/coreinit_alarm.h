@@ -138,7 +138,8 @@ void
 OSCreateAlarm(OSAlarm *alarm);
 
 void
-OSCreateAlarmEx(OSAlarm *alarm, const char *name);
+OSCreateAlarmEx(OSAlarm *alarm,
+                const char *name);
 
 void *
 OSGetAlarmUserData(OSAlarm *alarm);
@@ -147,19 +148,27 @@ void
 OSInitAlarmQueue(OSAlarmQueue *queue);
 
 void
-OSInitAlarmQueueEx(OSAlarmQueue *queue, const char *name);
+OSInitAlarmQueueEx(OSAlarmQueue *queue,
+                   const char *name);
 
 BOOL
-OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback);
+OSSetAlarm(OSAlarm *alarm,
+           OSTime time,
+          AlarmCallback callback);
 
 BOOL
-OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback callback);
+OSSetPeriodicAlarm(OSAlarm *alarm,
+                   OSTime start,
+                   OSTime interval,
+                   AlarmCallback callback);
 
 void
-OSSetAlarmTag(OSAlarm *alarm, uint32_t alarmTag);
+OSSetAlarmTag(OSAlarm *alarm,
+              uint32_t alarmTag);
 
 void
-OSSetAlarmUserData(OSAlarm *alarm, void *data);
+OSSetAlarmUserData(OSAlarm *alarm,
+                   void *data);
 
 BOOL
 OSWaitAlarm(OSAlarm *alarm);
@@ -173,7 +182,10 @@ void
 startAlarmCallbackThreads();
 
 BOOL
-setAlarmInternal(OSAlarm *alarm, OSTime time, AlarmCallback callback, void *userData);
+setAlarmInternal(OSAlarm *alarm,
+                 OSTime time,
+                 AlarmCallback callback,
+                 void *userData);
 
 bool
 cancelAlarm(OSAlarm *alarm);

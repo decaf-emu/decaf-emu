@@ -76,6 +76,7 @@ ghs_flock_create(be_val<uint32_t> *lock)
          return;
       }
    }
+
    *lock = -1;
    gLog->warn("ghs_flock_create ran out of locks!");
 }
@@ -111,7 +112,7 @@ ghs_funlock_file(uint32_t lock)
 be_val<uint32_t>*
 ghs_flock_ptr(void *file)
 {
-   size_t index = static_cast<size_t>(reinterpret_cast<_ghs_iobuf*>(file) - p_iob[0]);
+   auto index = static_cast<size_t>(reinterpret_cast<_ghs_iobuf*>(file) - p_iob[0]);
 
    if (index > *p__gh_FOPEN_MAX) {
       index = *p__gh_FOPEN_MAX;
@@ -170,27 +171,27 @@ ghs_get_eh_store_globals_tdeh()
 
 void ghs_mtx_init(void *mtx)
 {
-   be_ptr<OSMutex> *pmutex = static_cast<be_ptr<OSMutex>*>(mtx);
+   auto pmutex = static_cast<be_ptr<OSMutex>*>(mtx);
    *pmutex = static_cast<OSMutex*>((*pMEMAllocFromDefaultHeapEx)(sizeof(OSMutex), 8));
    OSInitMutex(*pmutex);
 }
 
 void ghs_mtx_dst(void *mtx)
 {
-   be_ptr<OSMutex> *pmutex = static_cast<be_ptr<OSMutex>*>(mtx);
+   auto pmutex = static_cast<be_ptr<OSMutex>*>(mtx);
    (*pMEMFreeToDefaultHeap)(*pmutex);
    *pmutex = nullptr;
 }
 
 void ghs_mtx_lock(void *mtx)
 {
-   be_ptr<OSMutex> *pmutex = static_cast<be_ptr<OSMutex>*>(mtx);
+   auto pmutex = static_cast<be_ptr<OSMutex>*>(mtx);
    OSLockMutex(*pmutex);
 }
 
 void ghs_mtx_unlock(void *mtx)
 {
-   be_ptr<OSMutex> *pmutex = static_cast<be_ptr<OSMutex>*>(mtx);
+   auto pmutex = static_cast<be_ptr<OSMutex>*>(mtx);
    OSUnlockMutex(*pmutex);
 }
 

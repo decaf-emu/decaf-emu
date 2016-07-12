@@ -87,7 +87,8 @@ CHECK_SIZE(OSFastCondition, 0x1c);
 #pragma pack(pop)
 
 void
-OSFastMutex_Init(OSFastMutex *mutex, const char *name);
+OSFastMutex_Init(OSFastMutex *mutex,
+                 const char *name);
 
 void
 OSFastMutex_Lock(OSFastMutex *mutex);
@@ -99,10 +100,12 @@ BOOL
 OSFastMutex_TryLock(OSFastMutex *mutex);
 
 void
-OSFastCond_Init(OSFastCondition *condition, const char *name);
+OSFastCond_Init(OSFastCondition *condition,
+                const char *name);
 
 void
-OSFastCond_Wait(OSFastCondition *condition, OSFastMutex *mutex);
+OSFastCond_Wait(OSFastCondition *condition,
+                OSFastMutex *mutex);
 
 void
 OSFastCond_Signal(OSFastCondition *condition);

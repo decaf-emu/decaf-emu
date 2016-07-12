@@ -36,9 +36,11 @@ FSGetStatAsync(FSClient *client,
       }
 
       std::memset(stat, 0, sizeof(FSStat));
+
       if (entry.type == fs::FolderEntry::Type::Folder) {
          stat->flags &= FSStat::Flags::Directory;
       }
+
       stat->size = gsl::narrow_cast<uint32_t>(entry.size);
       return FSStatus::OK;
    });

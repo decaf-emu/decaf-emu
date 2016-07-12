@@ -17,7 +17,7 @@ void *
 LCAlloc(uint32_t size);
 
 void
-LCDealloc(void * addr);
+LCDealloc(void *addr);
 
 uint32_t
 LCGetMaxSize();
@@ -41,10 +41,14 @@ uint32_t
 LCGetDMAQueueLength();
 
 void
-LCLoadDMABlocks(void *dst, const void *src, uint32_t size);
+LCLoadDMABlocks(void *dst,
+                const void *src,
+                uint32_t size);
 
 void
-LCStoreDMABlocks(void *dst, const void *src, uint32_t size);
+LCStoreDMABlocks(void *dst,
+                 const void *src,
+                 uint32_t size);
 
 void
 LCWaitDMAQueue(uint32_t queueLength);

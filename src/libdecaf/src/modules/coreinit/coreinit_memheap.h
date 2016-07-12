@@ -51,7 +51,10 @@ extern be_wfunc_ptr<void, void*>*
 pMEMFreeToDefaultHeap;
 
 void
-MEMiInitHeapHead(CommonHeap *heap, MEMiHeapTag tag, uint32_t dataStart, uint32_t dataEnd);
+MEMiInitHeapHead(CommonHeap *heap,
+                 MEMiHeapTag tag,
+                 uint32_t dataStart,
+                 uint32_t dataEnd);
 
 void
 MEMiFinaliseHeap(CommonHeap *heap);
@@ -69,7 +72,8 @@ CommonHeap *
 MEMGetBaseHeapHandle(MEMBaseHeapType type);
 
 CommonHeap *
-MEMSetBaseHeapHandle(MEMBaseHeapType type, CommonHeap *heap);
+MEMSetBaseHeapHandle(MEMBaseHeapType type,
+                     CommonHeap *heap);
 
 /** @} */
 
@@ -80,7 +84,8 @@ void
 initialiseDefaultHeaps();
 
 void *
-sysAlloc(size_t size, int alignment = 4);
+sysAlloc(size_t size,
+         int alignment = 4);
 
 void
 sysFree(void *addr);
@@ -99,7 +104,8 @@ void *
 allocFromDefaultHeap(uint32_t size);
 
 void *
-allocFromDefaultHeapEx(uint32_t size, int32_t alignment);
+allocFromDefaultHeapEx(uint32_t size,
+                       int32_t alignment);
 
 void
 freeToDefaultHeap(void *block);

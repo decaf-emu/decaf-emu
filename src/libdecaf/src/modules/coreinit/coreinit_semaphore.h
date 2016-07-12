@@ -44,10 +44,13 @@ CHECK_SIZE(OSSemaphore, 0x20);
 #pragma pack(pop)
 
 void
-OSInitSemaphore(OSSemaphore *semaphore, int32_t count);
+OSInitSemaphore(OSSemaphore *semaphore,
+                int32_t count);
 
 void
-OSInitSemaphoreEx(OSSemaphore *semaphore, int32_t count, char *name);
+OSInitSemaphoreEx(OSSemaphore *semaphore,
+                  int32_t count,
+                  char *name);
 
 int32_t
 OSWaitSemaphore(OSSemaphore *semaphore);

@@ -37,7 +37,8 @@ void
 MCP_Close(IOHandle handle);
 
 IOError
-MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings);
+MCP_GetSysProdSettings(IOHandle handle,
+                       MCPSysProdSettings *settings);
 
 /** @} */
 

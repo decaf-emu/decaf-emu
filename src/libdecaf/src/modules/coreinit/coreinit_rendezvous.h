@@ -30,10 +30,13 @@ void
 OSInitRendezvous(OSRendezvous *rendezvous);
 
 BOOL
-OSWaitRendezvous(OSRendezvous *rendezvous, uint32_t coreMask);
+OSWaitRendezvous(OSRendezvous *rendezvous,
+                 uint32_t coreMask);
 
 BOOL
-OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous, uint32_t coreMask, OSTime timeout);
+OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous,
+                            uint32_t coreMask,
+                            OSTime timeout);
 
 /** @} */
 

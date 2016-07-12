@@ -48,7 +48,8 @@ ghs::TypeDescriptor *
 makeTypeDescriptor(const std::string &name);
 
 ghs::TypeDescriptor *
-makeTypeDescriptor(const std::string &name, std::initializer_list<ghs::BaseTypeDescriptor> bases);
+makeTypeDescriptor(const std::string &name,
+                   std::initializer_list<ghs::BaseTypeDescriptor> bases);
 
 ghs::VirtualTableEntry *
 makeVirtualTable(std::initializer_list<ghs::VirtualTableEntry> entries);

@@ -53,10 +53,14 @@ CHECK_SIZE(OSEvent, 0x24);
 #pragma pack(pop)
 
 void
-OSInitEvent(OSEvent *event, bool value, OSEventMode mode);
+OSInitEvent(OSEvent *event,
+            bool value,
+            OSEventMode mode);
 
 void
-OSInitEventEx(OSEvent *event, bool value, OSEventMode mode, char *name);
+OSInitEventEx(OSEvent *event,
+              bool value,
+              OSEventMode mode, char *name);
 
 void
 OSSignalEvent(OSEvent *event);
@@ -71,7 +75,8 @@ void
 OSResetEvent(OSEvent *event);
 
 BOOL
-OSWaitEventWithTimeout(OSEvent *event, OSTime timeout);
+OSWaitEventWithTimeout(OSEvent *event,
+                       OSTime timeout);
 
 /** @} */
 
