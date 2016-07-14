@@ -106,6 +106,13 @@ uint32_t getThreadStack(coreinit::OSThread *thread)
 }
 
 void
+setActiveCore(int id)
+{
+   decaf_check(!sActiveThread);
+   sActiveCore = id;
+}
+
+void
 setActiveThread(coreinit::OSThread *thread)
 {
    decaf_check(sIsPaused);
