@@ -464,6 +464,8 @@ resume()
    // Just to help when debugging
    core->cia = 0xFFFFFFFD;
 
+   decaf_check(core->nia != CALLBACK_ADDR);
+
    JitCode jitFn = jit_continue(core->nia, nullptr);
    core = execute(core, jitFn);
 

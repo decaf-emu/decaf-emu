@@ -191,6 +191,7 @@ resume()
    // in the appropriate places in the instruction stream.
    if (hasBreakpoints()) {
       interpreter::resume();
+      return;
    }
 
    // Use appropriate jit mode
