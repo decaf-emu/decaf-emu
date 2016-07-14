@@ -69,19 +69,19 @@ using SectionList = std::vector<elf::XSection>;
 using AddressRange = std::pair<ppcaddr_t, ppcaddr_t>;
 
 static std::atomic<uint32_t>
-   sLoaderLock{ 0 };
+sLoaderLock{ 0 };
 
 static std::map<std::string, LoadedModule*>
-   gLoadedModules;
+gLoadedModules;
 
 std::unordered_map<ppcaddr_t, std::string>
-   gGlobalSymbolLookup;
+gGlobalSymbolLookup;
 
 static std::map<std::string, ppcaddr_t>
-   gUnimplementedFunctions;
+gUnimplementedFunctions;
 
 static std::map<std::string, int>
-   gUnimplementedData;
+gUnimplementedData;
 
 void
 lockLoader()
@@ -832,6 +832,7 @@ loadRPL(const std::string &moduleName,
    std::vector<uint8_t> buffer;
    auto in = BigEndianView{ data };
    auto loadedMod = new LoadedModule();
+   loadedMod->name = name;
    gLoadedModules.emplace(moduleName, loadedMod);
 
    gLog->debug("Loading module {}", moduleName);
@@ -1027,18 +1028,17 @@ loadRPL(const std::string &moduleName,
 
    // Free the load segment
    coreinit::internal::sysFree(loadSegAddr);
-   //mCodeHeap->free(loadSegAddr);
 
    // Add all the modules symbols to the Global Symbol Map
    for (auto &i : loadedMod->symbols) {
       gGlobalSymbolLookup.emplace(i.second, fmt::format("{}:{}", loadedMod->name, i.first));
    }
 
-   loadedMod->name = name;
    loadedMod->defaultStackSize = info.stackSize;
    loadedMod->entryPoint = entryPoint;
    loadedMod->handle = coreinit::internal::sysAlloc<LoadedModuleHandleData>();
    loadedMod->handle->ptr = loadedMod;
+
    return loadedMod;
 }
 
