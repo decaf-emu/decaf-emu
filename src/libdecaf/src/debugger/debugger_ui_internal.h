@@ -26,6 +26,9 @@ coreinit::OSThread *
 getActiveThread();
 
 void
+setActiveCore(int id);
+
+void
 setActiveThread(coreinit::OSThread *thread);
 
 cpu::CoreRegs *

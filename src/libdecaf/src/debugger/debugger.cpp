@@ -1,5 +1,6 @@
 #include "decaf_config.h"
 #include "debugger/debugger_branchcalc.h"
+#include "debugger/debugger_ui_internal.h"
 #include "common/decaf_assert.h"
 #include "common/log.h"
 #include "kernel/kernel.h"
@@ -29,9 +30,6 @@ sIsPaused;
 
 static cpu::Core *
 sCorePauseState[3];
-
-static uint32_t
-sPauseInitiatorCoreId;
 
 bool
 enabled()
@@ -138,12 +136,17 @@ handleDbgBreakInterrupt()
    // Store our core state before we flip isPaused
    sCorePauseState[coreId] = cpu::this_core::state();
 
-   // Check to see if we were the last core to join on the fun
+   // Check where we stand in the overall order of things
    auto coreBit = 1 << coreId;
    auto isPausing = sIsPausing.fetch_or(coreBit);
 
+   // If this is the core that triggered the interrupt, select it for debugging
+   if (isPausing == 0) {
+      ui::setActiveCore(coreId);
+   }
+
+   // If this is the last core to join, we're now fully paused
    if ((isPausing | coreBit) == (1 | 2 | 4)) {
-      // This was the last core to join.
       sIsPaused.store(true);
       sIsPausing.store(0);
       sIsResuming.store(0);
