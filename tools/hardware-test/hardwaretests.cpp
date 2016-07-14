@@ -136,7 +136,7 @@ compareFPSCR(fpscr_t input, fpscr_t expected, fpscr_t result)
 bool runTests(const std::string &path)
 {
    uint32_t testsFailed = 0, testsPassed = 0;
-   uint32_t baseAddress = mem::ApplicationBase;
+   uint32_t baseAddress = mem::MEM2Base;
 
    Instruction bclr = encodeInstruction(InstructionID::bclr);
    bclr.bo = 0x1f;

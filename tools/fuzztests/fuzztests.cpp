@@ -24,7 +24,7 @@ struct InstructionFuzzData {
    std::vector<InstructionField> allFields;
 };
 
-static const uint32_t instructionBase = mem::ApplicationBase;
+static const uint32_t instructionBase = mem::MEM2Base;
 static const uint32_t dataBase = instructionBase + 0x01000000;
 std::vector<InstructionFuzzData> instructionFuzzData;
 
