@@ -28,9 +28,17 @@ struct LoadedModuleHandleData
    LoadedModule *ptr;
 };
 
+enum class LoadedSectionType
+{
+   Unknown,
+   Code,
+   Data
+};
+
 struct LoadedSection
 {
    std::string name;
+   LoadedSectionType type;
    ppcaddr_t start;
    ppcaddr_t end;
 };

@@ -433,7 +433,7 @@ loadHleModule(const std::string &moduleName,
       auto codeRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(codeSize, 4));
       auto start = mem::untranslate(codeRegion);
       auto end = start + codeSize;
-      loadedMod->sections.emplace_back(LoadedSection{ ".text", start, end });
+      loadedMod->sections.emplace_back(LoadedSection{ ".text", LoadedSectionType::Code, start, end });
 
       for (auto &func : funcSymbols) {
          // Allocate some space for the thunk
@@ -469,7 +469,7 @@ loadHleModule(const std::string &moduleName,
       auto dataRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(dataSize, 4));
       auto start = mem::untranslate(dataRegion);
       auto end = start + codeSize;
-      loadedMod->sections.emplace_back(LoadedSection{ ".data", start, end });
+      loadedMod->sections.emplace_back(LoadedSection{ ".data", LoadedSectionType::Data, start, end });
 
       for (auto &data : dataSymbols) {
          // Allocate the same for this export
@@ -1015,12 +1015,16 @@ loadRPL(const std::string &moduleName,
          auto sectionName = shStrTab + section.header.name;
          auto start = section.virtAddress;
          auto end = section.virtAddress + section.virtSize;
-         loadedMod->sections.emplace_back(LoadedSection{ sectionName, start, end });
+         auto type = LoadedSectionType::Data;
+         if (section.header.flags & elf::SHF_EXECINSTR) {
+            type = LoadedSectionType::Code;
+         }
+         loadedMod->sections.emplace_back(LoadedSection{ sectionName, type, start, end });
       }
    }
 
    if (trampSeg.second > trampSeg.first) {
-      loadedMod->sections.emplace_back(LoadedSection{ "loader_thunks", trampSeg.first, trampSeg.second });
+      loadedMod->sections.emplace_back(LoadedSection{ "loader_thunks", LoadedSectionType::Code, trampSeg.first, trampSeg.second });
    }
 
    // Add the modules entry point as an symbol called 'start'
