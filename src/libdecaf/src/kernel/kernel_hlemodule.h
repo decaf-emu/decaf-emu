@@ -108,6 +108,12 @@ protected:
       registerExportedSymbol(name, kernel::makeData(&data));
    }
 
+   template <typename Type, size_t N>
+   static void RegisterKernelDataName(const std::string &name, std::array<Type*, N> &data)
+   {
+      registerExportedSymbol(name, kernel::makeData(&data[0], N));
+   }
+
    template<typename HostType, typename ReturnType, typename... Args>
    static void RegisterInternalFunctionName(const std::string &name, ReturnType(*fn)(Args...))
    {
