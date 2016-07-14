@@ -435,8 +435,14 @@ MEMAdjustExpHeap(ExpandedHeap *heap)
    }
 
    // Erase the last free block
-   heap->size -= lastFree->size;
-   eraseBlock(heap->freeBlockList, lastFree);
+   auto originalHeapSize = heap->size;
+   heap->size = align_up(heap->size - lastFree->size, 8);
+   if (heap->size + lastFree->size != originalHeapSize) {
+      heap->size += static_cast<uint32_t>(align_up(sizeof(ExpandedHeapBlock), 8));
+      lastFree->size -= originalHeapSize - heap->size;
+   } else {
+      eraseBlock(heap->freeBlockList, lastFree);
+   }
 
    return heap->size;
 }
