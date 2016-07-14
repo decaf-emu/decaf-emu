@@ -828,6 +828,9 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_regview.cpp">
       <Filter>Source Files\debugger</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_stackview.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_threadview.cpp">
       <Filter>Source Files\debugger</Filter>
     </ClCompile>

@@ -34,6 +34,9 @@ getThreadCoreRegs(coreinit::OSThread *thread);
 uint32_t
 getThreadNia(coreinit::OSThread *thread);
 
+uint32_t
+getThreadStack(coreinit::OSThread *thread);
+
 namespace InfoView {
 void draw();
 }
@@ -67,6 +70,12 @@ void draw();
 
 namespace RegView {
 extern bool gIsVisible;
+void draw();
+}
+
+namespace StackView {
+extern bool gIsVisible;
+void displayAddress(uint32_t address);
 void draw();
 }
 

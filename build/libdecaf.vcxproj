@@ -167,6 +167,7 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_opengl.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_regview.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_segview.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_stackview.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_statsview.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_threadview.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf.cpp" />

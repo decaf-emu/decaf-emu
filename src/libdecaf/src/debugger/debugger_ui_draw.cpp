@@ -93,6 +93,18 @@ getThreadNia(coreinit::OSThread *thread)
    return mem::read<uint32_t>(thread->context.gpr[1] + 8);
 }
 
+uint32_t getThreadStack(coreinit::OSThread *thread)
+{
+   decaf_check(sIsPaused);
+   auto coreRegs = getThreadCoreRegs(thread);
+
+   if (coreRegs) {
+      return coreRegs->gpr[1];
+   }
+
+   return thread->context.gpr[1];
+}
+
 void
 setActiveThread(coreinit::OSThread *thread)
 {
@@ -111,6 +123,7 @@ setActiveThread(coreinit::OSThread *thread)
 
    if (sActiveThread) {
       DisasmView::displayAddress(getThreadNia(sActiveThread));
+      StackView::displayAddress(getThreadStack(sActiveThread));
    }
 }
 
@@ -265,6 +278,10 @@ draw()
             RegView::gIsVisible = !RegView::gIsVisible;
          }
 
+         if (ImGui::MenuItem("Stack", "CTRL+E", StackView::gIsVisible, true)) {
+            StackView::gIsVisible = !StackView::gIsVisible;
+         }
+
          if (ImGui::MenuItem("Stats", "CTRL+Q", StatsView::gIsVisible, true)) {
             StatsView::gIsVisible = !StatsView::gIsVisible;
          }
@@ -292,6 +309,10 @@ draw()
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::R), false)) {
          RegView::gIsVisible = !RegView::gIsVisible;
+      }
+
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::E), false)) {
+         StackView::gIsVisible = !StackView::gIsVisible;
       }
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::Q), false)) {
@@ -338,6 +359,7 @@ draw()
       MemView::draw();
       DisasmView::draw();
       RegView::draw();
+      StackView::draw();
       StatsView::draw();
    }
 }
