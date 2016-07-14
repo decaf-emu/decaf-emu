@@ -810,6 +810,27 @@
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_memory.cpp">
       <Filter>Source Files\kernel</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_statsview.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_infoview.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_disasmview.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_memview.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_segview.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_regview.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_threadview.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1528,6 +1549,12 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_memory.h">
       <Filter>Header Files\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\debugger\imgui_addrscroll.h">
+      <Filter>Header Files\debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\debugger\debugger_ui_internal.h">
+      <Filter>Header Files\debugger</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
