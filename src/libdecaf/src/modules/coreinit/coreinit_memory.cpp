@@ -38,6 +38,10 @@ coreinit_memcpy(void *dst, const void *src, ppcsize_t size)
 static void *
 coreinit_memset(void *dst, int val, ppcsize_t size)
 {
+   if (val < 0 || val > 0xFF) {
+      gLog->warn("Application called memset with non-uint8_t value");
+   }
+
    std::memset(dst, val, size);
    return dst;
 }
