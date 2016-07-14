@@ -33,26 +33,49 @@ static void
 CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &group)
 {
    // The CUBE instruction requires a particular format:
-   // CUBE R[out], R[in].zzxy, R[in].yxzz
-   for (auto i = 0u; i < group.size(); ++i) {
-      if (group[i].word0.SRC0_SEL() != group[i].word0.SRC1_SEL()
-       || group[i].word0.SRC0_REL() != group[i].word0.SRC1_REL()) {
-         throw translate_exception(fmt::format("Invalid CUBE syntax: register mismatch in element {}", i));
-      }
-      if (group[i].op2.SRC0_ABS() || group[i].op2.SRC1_ABS()
-       || group[i].word0.SRC0_NEG() || group[i].word0.SRC1_NEG()) {
-         throw translate_exception(fmt::format("Invalid CUBE syntax: ABS/NEG used in element {}", i));
-      }
+   //    CUBE R[out], R[in].zzxy, R[in].yxzz
+   // Each of the x/y/z inputs can come from anywhere (register, PV/PS,
+   // constant) as long as the same value is used for all instances of that
+   // input, so we have to detect what this particular instruction is using.
+   const AluInst &xInsn = group[2];
+   const latte::SQ_ALU_SRC xSel = xInsn.word0.SRC0_SEL();
+   const latte::SQ_REL xRel = xInsn.word0.SRC0_REL();
+   const latte::SQ_CHAN xChan = xInsn.word0.SRC0_CHAN();
+   const AluInst &yInsn = group[3];
+   const latte::SQ_ALU_SRC ySel = yInsn.word0.SRC0_SEL();
+   const latte::SQ_REL yRel = yInsn.word0.SRC0_REL();
+   const latte::SQ_CHAN yChan = yInsn.word0.SRC0_CHAN();
+   const AluInst &zInsn = group[0];
+   const latte::SQ_ALU_SRC zSel = zInsn.word0.SRC0_SEL();
+   const latte::SQ_REL zRel = zInsn.word0.SRC0_REL();
+   const latte::SQ_CHAN zChan = zInsn.word0.SRC0_CHAN();
+
+   // Verify that the instruction is in fact using the expected syntax.
+   if ((xSel == ySel && xRel == yRel && xChan == yChan)
+    || (xSel == zSel && xRel == zRel && xChan == zChan)
+    || (ySel == zSel && yRel == zRel && yChan == zChan)) {
+      throw translate_exception("Invalid CUBE syntax: X/Y/Z elements are not distinct");
    }
-   if (group[0].word0.SRC0_CHAN() != SQ_CHAN_Z
-    || group[1].word0.SRC0_CHAN() != SQ_CHAN_Z
-    || group[2].word0.SRC0_CHAN() != SQ_CHAN_X
-    || group[3].word0.SRC0_CHAN() != SQ_CHAN_Y
-    || group[0].word0.SRC1_CHAN() != SQ_CHAN_Y
-    || group[1].word0.SRC1_CHAN() != SQ_CHAN_X
-    || group[2].word0.SRC1_CHAN() != SQ_CHAN_Z
-    || group[3].word0.SRC1_CHAN() != SQ_CHAN_Z) {
-      throw translate_exception("Invalid CUBE syntax: incorrect swizzling");
+   if (group[1].word0.SRC0_SEL() != zSel
+    || group[1].word0.SRC0_REL() != zRel
+    || group[1].word0.SRC0_CHAN() != zChan
+    || group[0].word0.SRC1_SEL() != ySel
+    || group[0].word0.SRC1_REL() != yRel
+    || group[0].word0.SRC1_CHAN() != yChan
+    || group[1].word0.SRC1_SEL() != xSel
+    || group[1].word0.SRC1_REL() != xRel
+    || group[1].word0.SRC1_CHAN() != xChan
+    || group[2].word0.SRC1_SEL() != zSel
+    || group[2].word0.SRC1_REL() != zRel
+    || group[2].word0.SRC1_CHAN() != zChan
+    || group[3].word0.SRC1_SEL() != zSel
+    || group[3].word0.SRC1_REL() != zRel
+    || group[3].word0.SRC1_CHAN() != zChan) {
+      fmt::MemoryWriter xSource, ySource, zSource;
+      insertSource0(state, xSource, cf, xInsn);
+      insertSource0(state, ySource, cf, yInsn);
+      insertSource0(state, zSource, cf, zInsn);
+      throw translate_exception(fmt::format("Invalid CUBE syntax: inconsistent operands (detected x={}, y={}, z={})", xSource.str(), ySource.str(), zSource.str()));
    }
 
    // Concise pseudocode:
@@ -65,10 +88,6 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
    //    }
    // Note that CUBE reverses the order of the texture coordinates in the
    // output: out.yx = face.st
-
-   const AluInst &xInsn = group[2];
-   const AluInst &yInsn = group[3];
-   const AluInst &zInsn = group[0];
 
    insertLineStart(state);
    state.out << "if (abs(";
