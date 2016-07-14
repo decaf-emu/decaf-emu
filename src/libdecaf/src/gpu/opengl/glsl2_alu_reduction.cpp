@@ -216,6 +216,24 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
    insertLineStart(state);
    state.out << "}";
    insertLineEnd(state);
+
+   // If any instructions write to a register, copy appropriately from PVo
+   char srcMaskBuf[5], dstMaskBuf[5];
+   int maskPos = 0;
+   for (auto i = 0u; i < group.size(); ++i) {
+      if (group[i].op2.WRITE_MASK()) {
+         srcMaskBuf[maskPos] = "xyzw"[i];
+         dstMaskBuf[maskPos] = "xyzw"[group[i].word1.DST_CHAN()];
+         maskPos++;
+      }
+   }
+   if (maskPos > 0) {
+      srcMaskBuf[maskPos] = '\0';
+      dstMaskBuf[maskPos] = '\0';
+      insertLineStart(state);
+      state.out << "R[" << group[0].word1.DST_GPR().get() << "]." << dstMaskBuf << " = PVo." << srcMaskBuf << ";";
+      insertLineEnd(state);
+   }
 }
 
 static void

@@ -1,7 +1,6 @@
 #include "common/decaf_assert.h"
 #include "common/log.h"
 #include "glsl2_translate.h"
-#include "glsl2_alu.h"
 #include "glsl2_cf.h"
 #include "gpu/microcode/latte_instructions.h"
 #include "gpu/microcode/latte_decoders.h"
@@ -223,6 +222,7 @@ isReductionInstruction(const AluInst &inst)
 static void
 translateControlFlowALU(State &state, const ControlFlowInst &cf)
 {
+   uint32_t lastGroup = -1;
    auto id = cf.alu.word1.CF_INST();
    auto name = getInstructionName(cf.alu.word1.CF_INST());
    auto addr = cf.alu.word0.ADDR();
@@ -256,7 +256,6 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       auto didReduction = false;
       auto updatePreviousVector = false;
       auto updatePreviousScalar = false;
-      std::vector<std::string> destWrites;
       state.literals = group.literals;
 
       for (auto j = 0u; j < group.instructions.size(); ++j) {
@@ -264,59 +263,8 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
          auto unit = units.addInstructionUnit(inst);
          auto func = TranslateFuncALU { nullptr };
          auto flags = SQ_ALU_FLAG_NONE;
-         auto writeMask = true;
          const char *name = nullptr;
          state.unit = unit;
-
-         // Read the writeMask
-         if (inst.word1.ENCODING() == SQ_ALU_OP2) {
-            if (inst.op2.ALU_INST() == latte::SQ_OP2_INST_MOVA_INT
-             || inst.op2.ALU_INST() == latte::SQ_OP2_INST_MOVA_FLOOR) {
-               // These don't write through PV.
-               writeMask = false;
-            } else {
-               writeMask = inst.op2.WRITE_MASK();
-            }
-         }
-
-         // Add the output register to destWrites
-         if (writeMask) {
-            fmt::MemoryWriter writeBuf;
-            auto gpr = inst.word1.DST_GPR().get();
-            auto writeUnit = inst.word1.DST_CHAN().get();
-
-            writeBuf << "R[" << gpr << "].";
-
-            // Special case: DOT4 instructions always write to X.
-            if (inst.word1.ENCODING() == SQ_ALU_OP2
-                && (inst.op2.ALU_INST() == latte::SQ_OP2_INST_DOT4
-                 || inst.op2.ALU_INST() == latte::SQ_OP2_INST_DOT4_IEEE)) {
-               writeUnit = SQ_CHAN_X;
-            }
-
-            insertChannel(writeBuf, writeUnit);
-            writeBuf << " = ";
-
-            switch (unit) {
-            case SQ_CHAN_X:
-               writeBuf << "PVo.x;";
-               break;
-            case SQ_CHAN_Y:
-               writeBuf << "PVo.y;";
-               break;
-            case SQ_CHAN_Z:
-               writeBuf << "PVo.z;";
-               break;
-            case SQ_CHAN_W:
-               writeBuf << "PVo.w;";
-               break;
-            case SQ_CHAN_T:
-               writeBuf << "PSo;";
-               break;
-            }
-
-            destWrites.push_back(writeBuf.str());
-         }
 
          // Process all reduction instructions once as a group
          if (isReductionInstruction(inst)) {
@@ -367,12 +315,6 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
          if (func) {
             func(state, cf, inst);
          }
-      }
-
-      for (auto &writeStmt : destWrites) {
-         insertLineStart(state);
-         state.out << writeStmt;
-         insertLineEnd(state);
       }
 
       if (updatePreviousVector) {

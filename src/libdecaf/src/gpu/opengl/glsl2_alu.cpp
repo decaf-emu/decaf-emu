@@ -467,6 +467,13 @@ insertDestBegin(fmt::MemoryWriter &out,
       flags = getInstructionFlags(inst.op3.ALU_INST());
    }
 
+   if (writeMask) {
+      auto gpr = inst.word1.DST_GPR().get();
+      out << "R[" << gpr << "].";
+      insertChannel(out, inst.word1.DST_CHAN());
+      out << " = ";
+   }
+
    if (flags & SQ_ALU_FLAG_INT_OUT) {
       out << "intBitsToFloat(";
    } else if (flags & SQ_ALU_FLAG_UINT_OUT) {
