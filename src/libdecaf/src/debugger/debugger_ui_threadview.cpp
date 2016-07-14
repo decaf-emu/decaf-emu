@@ -4,6 +4,7 @@
 #include "modules/coreinit/coreinit_thread.h"
 #include <cinttypes>
 #include <imgui.h>
+#include <spdlog/spdlog.h>
 #include <vector>
 
 namespace debugger
@@ -112,11 +113,11 @@ draw()
 
       // Name
       if (isPaused()) {
-         const char *threadName = "    ";
-         if (thread.name.size() > 0) {
-            threadName = thread.name.c_str();
+         std::string threadName = thread.name;
+         if (thread.name.size() == 0) {
+            threadName = fmt::format("(Unnamed Thread {})", thread.id);
          }
-         if (ImGui::Selectable(threadName)) {
+         if (ImGui::Selectable(threadName.c_str())) {
             setActiveThread(thread.thread);
          }
       } else {
