@@ -30,7 +30,7 @@ conditionalMove(State &state,
 {
    // dst = (src0 op 0) ? src1 : src2
    insertLineStart(state);
-   insertDestBegin(state.out, cf, alu, state.unit);
+   insertDestBegin(state, cf, alu, state.unit);
 
    state.out << "(";
    insertSource0(state, state.out, cf, alu);
@@ -39,7 +39,7 @@ conditionalMove(State &state,
    state.out << " : ";
    insertSource2(state, state.out, cf, alu);
 
-   insertDestEnd(state.out, cf, alu);
+   insertDestEnd(state, cf, alu);
    state.out << ';';
    insertLineEnd(state);
 }
@@ -52,7 +52,7 @@ multiplyAdd(State &state,
 {
    // dst = (src0 * src1 + src2) modifier
    insertLineStart(state);
-   insertDestBegin(state.out, cf, alu, state.unit);
+   insertDestBegin(state, cf, alu, state.unit);
 
    if (modifier) {
       state.out << "(";
@@ -68,7 +68,7 @@ multiplyAdd(State &state,
       state.out << ")" << modifier;
    }
 
-   insertDestEnd(state.out, cf, alu);
+   insertDestEnd(state, cf, alu);
    state.out << ';';
    insertLineEnd(state);
 }

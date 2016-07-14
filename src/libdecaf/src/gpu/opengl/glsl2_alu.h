@@ -71,13 +71,13 @@ insertPreviousValueUpdate(fmt::MemoryWriter &out,
                           latte::SQ_CHAN unit);
 
 void
-insertDestBegin(fmt::MemoryWriter &out,
+insertDestBegin(State &state,
                 const latte::ControlFlowInst &cf,
                 const latte::AluInst &inst,
                 latte::SQ_CHAN unit);
 
 void
-insertDestEnd(fmt::MemoryWriter &out,
+insertDestEnd(State &state,
               const latte::ControlFlowInst &cf,
               const latte::AluInst &inst);
 

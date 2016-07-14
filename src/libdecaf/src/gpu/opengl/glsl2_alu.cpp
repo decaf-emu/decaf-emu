@@ -448,7 +448,7 @@ insertPreviousValueUpdate(fmt::MemoryWriter &out,
 }
 
 void
-insertDestBegin(fmt::MemoryWriter &out,
+insertDestBegin(State &state,
                 const ControlFlowInst &cf,
                 const AluInst &inst,
                 SQ_CHAN unit)
@@ -457,7 +457,7 @@ insertDestBegin(fmt::MemoryWriter &out,
    auto omod = SQ_ALU_OMOD_OFF;
    auto writeMask = true;
 
-   insertPreviousValueUpdate(out, unit);
+   insertPreviousValueUpdate(state.out, unit);
 
    if (inst.word1.ENCODING() == SQ_ALU_OP2) {
       writeMask = inst.op2.WRITE_MASK();
@@ -468,29 +468,54 @@ insertDestBegin(fmt::MemoryWriter &out,
    }
 
    if (writeMask) {
+      fmt::MemoryWriter postWrite;
+
       auto gpr = inst.word1.DST_GPR().get();
-      out << "R[" << gpr << "].";
-      insertChannel(out, inst.word1.DST_CHAN());
-      out << " = ";
+      postWrite << "R[" << gpr << "].";
+      insertChannel(postWrite, inst.word1.DST_CHAN());
+
+      postWrite << " = ";
+
+      switch (unit) {
+      case SQ_CHAN_X:
+         postWrite << "PVo.x";
+         break;
+      case SQ_CHAN_Y:
+         postWrite << "PVo.y";
+         break;
+      case SQ_CHAN_Z:
+         postWrite << "PVo.z";
+         break;
+      case SQ_CHAN_W:
+         postWrite << "PVo.w";
+         break;
+      case SQ_CHAN_T:
+         postWrite << "PSo";
+         break;
+      }
+
+      postWrite << ";";
+
+      state.postGroupWrites.push_back(postWrite.str());
    }
 
    if (flags & SQ_ALU_FLAG_INT_OUT) {
-      out << "intBitsToFloat(";
+      state.out << "intBitsToFloat(";
    } else if (flags & SQ_ALU_FLAG_UINT_OUT) {
-      out << "uintBitsToFloat(";
+      state.out << "uintBitsToFloat(";
    }
 
    if (omod != SQ_ALU_OMOD_OFF) {
-      out << '(';
+      state.out << '(';
    }
 
    if (inst.word1.CLAMP()) {
-      out << "clamp(";
+      state.out << "clamp(";
    }
 }
 
 void
-insertDestEnd(fmt::MemoryWriter &out,
+insertDestEnd(State &state,
               const ControlFlowInst &cf,
               const AluInst &inst)
 {
@@ -505,27 +530,27 @@ insertDestEnd(fmt::MemoryWriter &out,
    }
 
    if (inst.word1.CLAMP()) {
-      out << ", 0, 1)";
+      state.out << ", 0, 1)";
    }
 
    switch (omod) {
    case SQ_ALU_OMOD_OFF:
       break;
    case SQ_ALU_OMOD_M2:
-      out << ") * 2";
+      state.out << ") * 2";
       break;
    case SQ_ALU_OMOD_M4:
-      out << ") * 4";
+      state.out << ") * 4";
       break;
    case SQ_ALU_OMOD_D2:
-      out << ") / 2";
+      state.out << ") / 2";
       break;
    default:
       throw translate_exception(fmt::format("Unexpected output modifier {}", omod));
    }
 
    if ((flags & SQ_ALU_FLAG_INT_OUT) || (flags & SQ_ALU_FLAG_UINT_OUT)) {
-      out << ")";
+      state.out << ")";
    }
 }
 
@@ -555,7 +580,7 @@ updatePredicate(State &state, const ControlFlowInst &cf, const AluInst &inst, co
    }
 
    insertLineStart(state);
-   insertDestBegin(state.out, cf, inst, state.unit);
+   insertDestBegin(state, cf, inst, state.unit);
 
    if (updatePredicate) {
       state.out << "predicateRegister";
@@ -571,7 +596,7 @@ updatePredicate(State &state, const ControlFlowInst &cf, const AluInst &inst, co
       state.out << " ? 1.0f : 0.0f";
    }
 
-   insertDestEnd(state.out, cf, inst);
+   insertDestEnd(state, cf, inst);
    state.out << ';';
    insertLineEnd(state);
 }

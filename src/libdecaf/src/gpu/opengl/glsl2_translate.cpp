@@ -317,6 +317,17 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
          }
       }
 
+      insertLineStart(state);
+      state.out.write("// {:02} --", state.groupPC);
+      insertLineEnd(state);
+
+      for (auto &write : state.postGroupWrites) {
+         insertLineStart(state);
+         state.out << write;
+         insertLineEnd(state);
+      }
+      state.postGroupWrites.clear();
+
       if (updatePreviousVector) {
          insertLineStart(state);
          state.out << "PV = PVo;";

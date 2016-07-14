@@ -248,7 +248,7 @@ DOT4(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       if (group[i].op2.WRITE_MASK()) {
          hasWriteMask = true;
          writeUnit = i;
-         insertDestBegin(state.out, cf, group[i], SQ_CHAN_X);
+         insertDestBegin(state, cf, group[i], SQ_CHAN_X);
          break;
       }
    }
@@ -265,7 +265,7 @@ DOT4(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
    state.out << ")";
 
    if (hasWriteMask) {
-      insertDestEnd(state.out, cf, group[writeUnit]);
+      insertDestEnd(state, cf, group[writeUnit]);
    }
 
    state.out << ';';

@@ -54,7 +54,7 @@ namespace glsl2
 {
 
 static void
-insertArDestBegin(fmt::MemoryWriter &out,
+insertArDestBegin(State &state,
                   const ControlFlowInst &cf,
                   const AluInst &inst,
                   SQ_CHAN unit)
@@ -71,31 +71,40 @@ insertArDestBegin(fmt::MemoryWriter &out,
       throw translate_exception("Unsupport omod encountered for AR operation");
    }
 
+   std::string arDest;
    switch (unit) {
    case SQ_CHAN_X:
-      out << "AR.x = ";
+      arDest = "AR.x";
       break;
    case SQ_CHAN_Y:
-      out << "AR.y = ";
+      arDest = "AR.y";
       break;
    case SQ_CHAN_Z:
-      out << "AR.z = ";
+      arDest = "AR.z";
       break;
    case SQ_CHAN_W:
-      out << "AR.w = ";
+      arDest = "AR.w";
       break;
    }
 
+   decaf_check(!arDest.empty());
+
+   state.out << arDest << " = ";
+
    if (inst.op2.WRITE_MASK()) {
+      fmt::MemoryWriter postWrite;
+
       auto gpr = inst.word1.DST_GPR().get();
-      out << "R[" << gpr << "].";
-      insertChannel(out, inst.word1.DST_CHAN());
-      out << " = ";
+      postWrite << "R[" << gpr << "].";
+      insertChannel(postWrite, inst.word1.DST_CHAN());
+      postWrite << " = " << arDest << ";";
+
+      state.postGroupWrites.push_back(postWrite.str());
    }
 }
 
 static void
-insertArDestEnd(fmt::MemoryWriter &out,
+insertArDestEnd(State &state,
                 const ControlFlowInst &cf,
                 const AluInst &inst)
 {
@@ -111,13 +120,13 @@ unaryFunction(State &state,
 {
    // dst = func(src0)
    insertLineStart(state);
-   insertDestBegin(state.out, cf, alu, state.unit);
+   insertDestBegin(state, cf, alu, state.unit);
 
    state.out << func << "(";
    insertSource0(state, state.out, cf, alu);
    state.out << ")";
 
-   insertDestEnd(state.out, cf, alu);
+   insertDestEnd(state, cf, alu);
    state.out << ';';
    insertLineEnd(state);
 }
@@ -130,7 +139,7 @@ binaryFunction(State &state,
 {
    // dst = func(src0, src1)
    insertLineStart(state);
-   insertDestBegin(state.out, cf, alu, state.unit);
+   insertDestBegin(state, cf, alu, state.unit);
 
    state.out << func << "(";
    insertSource0(state, state.out, cf, alu);
@@ -138,7 +147,7 @@ binaryFunction(State &state,
    insertSource1(state, state.out, cf, alu);
    state.out << ")";
 
-   insertDestEnd(state.out, cf, alu);
+   insertDestEnd(state, cf, alu);
    state.out << ';';
    insertLineEnd(state);
 }
@@ -151,13 +160,13 @@ binaryOperator(State &state,
 {
    // dst = src0 op src1
    insertLineStart(state);
-   insertDestBegin(state.out, cf, alu, state.unit);
+   insertDestBegin(state, cf, alu, state.unit);
 
    insertSource0(state, state.out, cf, alu);
    state.out << op;
    insertSource1(state, state.out, cf, alu);
 
-   insertDestEnd(state.out, cf, alu);
+   insertDestEnd(state, cf, alu);
    state.out << ';';
    insertLineEnd(state);
 }
@@ -186,7 +195,7 @@ binaryCompareSet(State &state,
    auto flags = getInstructionFlags(alu.op2.ALU_INST());
 
    insertLineStart(state);
-   insertDestBegin(state.out, cf, alu, state.unit);
+   insertDestBegin(state, cf, alu, state.unit);
 
    state.out << "(";
    insertSource0(state, state.out, cf, alu);
@@ -200,7 +209,7 @@ binaryCompareSet(State &state,
       state.out << "1.0f : 0.0f";
    }
 
-   insertDestEnd(state.out, cf, alu);
+   insertDestEnd(state, cf, alu);
    state.out << ';';
    insertLineEnd(state);
 }
@@ -234,7 +243,7 @@ binaryCompareKill(State &state,
 
    increaseIndent(state);
    insertLineStart(state);
-   insertDestBegin(state.out, cf, alu, state.unit);
+   insertDestBegin(state, cf, alu, state.unit);
 
    if ((flags & SQ_ALU_FLAG_INT_OUT) || (flags & SQ_ALU_FLAG_UINT_OUT)) {
       state.out << "0";
@@ -242,7 +251,7 @@ binaryCompareKill(State &state,
       state.out << "0.0f";
    }
 
-   insertDestEnd(state.out, cf, alu);
+   insertDestEnd(state, cf, alu);
    state.out << ';';
    insertLineEnd(state);
    decreaseIndent(state);
@@ -371,11 +380,11 @@ MOV(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
    // dst = src0
    insertLineStart(state);
-   insertDestBegin(state.out, cf, alu, state.unit);
+   insertDestBegin(state, cf, alu, state.unit);
 
    insertSource0(state, state.out, cf, alu);
 
-   insertDestEnd(state.out, cf, alu);
+   insertDestEnd(state, cf, alu);
    state.out << ';';
    insertLineEnd(state);
 }
@@ -385,13 +394,13 @@ MOVA_INT(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
    // ar.x = dst = int(clamp(src0, -256, 256))
    insertLineStart(state);
-   insertArDestBegin(state.out, cf, alu, state.unit);
+   insertArDestBegin(state, cf, alu, state.unit);
 
    state.out << "int(clamp(";
    insertSource0(state, state.out, cf, alu);
    state.out << ", -256, 256))";
 
-   insertArDestEnd(state.out, cf, alu);
+   insertArDestEnd(state, cf, alu);
    state.out << ';';
    insertLineEnd(state);
 }
@@ -401,13 +410,13 @@ MOVA_FLOOR(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
    // ar.x = dst = int(clamp(floor(src0), -256, 256))
    insertLineStart(state);
-   insertArDestBegin(state.out, cf, alu, state.unit);
+   insertArDestBegin(state, cf, alu, state.unit);
 
    state.out << "int(clamp(floor(";
    insertSource0(state, state.out, cf, alu);
    state.out << "), -256, 256))";
 
-   insertArDestEnd(state.out, cf, alu);
+   insertArDestEnd(state, cf, alu);
    state.out << ';';
    insertLineEnd(state);
 }

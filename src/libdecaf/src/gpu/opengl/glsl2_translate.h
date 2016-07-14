@@ -89,6 +89,7 @@ struct State
    std::string indent;
    latte::SQ_CHAN unit;
    gsl::span<const uint32_t> literals;
+   std::vector<std::string> postGroupWrites;
 };
 
 bool
