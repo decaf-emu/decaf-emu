@@ -62,6 +62,9 @@ getActiveThread()
 cpu::CoreRegs *
 getThreadCoreRegs(coreinit::OSThread *thread)
 {
+   if (!sIsPaused) {
+      return nullptr;
+   }
    if (thread == coreinit::internal::getCoreRunningThread(0)) {
       return debugger::getPausedCoreState(0);
    } else if (thread == coreinit::internal::getCoreRunningThread(1)) {
