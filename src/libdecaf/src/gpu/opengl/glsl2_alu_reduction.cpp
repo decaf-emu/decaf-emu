@@ -33,26 +33,36 @@ static void
 CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &group)
 {
    // The CUBE instruction requires a particular format:
-   // CUBE R[out], R[in].zzxy, R[in].yxzz
+   //    CUBE R[out], R[in].zzxy, R[in].yxzz
+   // x/y/z can be anything as long as they're distinct, and some shaders
+   // have them in different elements presumably due to optimization, so
+   // we need to detect what this particular instruction is using before
+   // we verify the syntax.
+   const latte::SQ_CHAN xChan = group[2].word0.SRC0_CHAN();
+   const latte::SQ_CHAN yChan = group[3].word0.SRC0_CHAN();
+   const latte::SQ_CHAN zChan = group[0].word0.SRC0_CHAN();
+   if (xChan == yChan || xChan == zChan || yChan == zChan) {
+      throw translate_exception("Invalid CUBE syntax: X/Y/Z elements are not distinct");
+   }
    for (auto i = 0u; i < group.size(); ++i) {
       if (group[i].word0.SRC0_SEL() != group[i].word0.SRC1_SEL()
        || group[i].word0.SRC0_REL() != group[i].word0.SRC1_REL()) {
          throw translate_exception(fmt::format("Invalid CUBE syntax: register mismatch in element {}", i));
       }
+      // ABS/NEG might actually work as long as the flags are consistent
+      // for all uses of that channel in the instruction, but let's wait
+      // to see a real-world example before we deal with that.
       if (group[i].op2.SRC0_ABS() || group[i].op2.SRC1_ABS()
        || group[i].word0.SRC0_NEG() || group[i].word0.SRC1_NEG()) {
          throw translate_exception(fmt::format("Invalid CUBE syntax: ABS/NEG used in element {}", i));
       }
    }
-   if (group[0].word0.SRC0_CHAN() != SQ_CHAN_Z
-    || group[1].word0.SRC0_CHAN() != SQ_CHAN_Z
-    || group[2].word0.SRC0_CHAN() != SQ_CHAN_X
-    || group[3].word0.SRC0_CHAN() != SQ_CHAN_Y
-    || group[0].word0.SRC1_CHAN() != SQ_CHAN_Y
-    || group[1].word0.SRC1_CHAN() != SQ_CHAN_X
-    || group[2].word0.SRC1_CHAN() != SQ_CHAN_Z
-    || group[3].word0.SRC1_CHAN() != SQ_CHAN_Z) {
-      throw translate_exception("Invalid CUBE syntax: incorrect swizzling");
+   if (group[1].word0.SRC0_CHAN() != zChan
+    || group[0].word0.SRC1_CHAN() != yChan
+    || group[1].word0.SRC1_CHAN() != xChan
+    || group[2].word0.SRC1_CHAN() != zChan
+    || group[3].word0.SRC1_CHAN() != zChan) {
+      throw translate_exception(fmt::format("Invalid CUBE syntax: incorrect swizzling (detected x/y/z in channels {}/{}/{})", xChan, yChan, zChan));
    }
 
    // Concise pseudocode:
