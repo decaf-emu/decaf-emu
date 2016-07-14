@@ -71,6 +71,17 @@ struct LoadedModule
       return reinterpret_cast<Type *>(mem::translate(findExport(name)));
    }
 
+   LoadedSection *
+   findAddressSection(ppcaddr_t address)
+   {
+      for (auto &sec : sections) {
+         if (address >= sec.start && address < sec.end) {
+            return &sec;
+         }
+      }
+      return nullptr;
+   }
+
    std::string name;
    LoadedModuleHandleData *handle = nullptr;
    ppcaddr_t entryPoint = 0;

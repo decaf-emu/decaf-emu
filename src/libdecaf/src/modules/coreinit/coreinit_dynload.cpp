@@ -170,15 +170,30 @@ OSDynLoad_FindExport(ModuleHandle handle,
                      be_val<ppcaddr_t> *outAddr)
 {
    auto module = handle->ptr;
-   auto exportPtr = module->findExport(name);
+   auto exportAddr = module->findExport(name);
 
-   if (!exportPtr) {
+   if (!exportAddr) {
       gLog->debug("OSDynLoad_FindExport export {} not found", name);
       *outAddr = 0;
       return 0xBAD10001;
    }
 
-   *outAddr = exportPtr;
+   auto exportSec = module->findAddressSection(exportAddr);
+   if (isData) {
+      if (exportSec->type != kernel::loader::LoadedSectionType::Data) {
+         gLog->debug("OSDynLoad_FindExport export {} wrong type", name);
+         *outAddr = 0;
+         return 0xBAD10001;
+      }
+   } else {
+      if (exportSec->type != kernel::loader::LoadedSectionType::Code) {
+         gLog->debug("OSDynLoad_FindExport export {} wrong type", name);
+         *outAddr = 0;
+         return 0xBAD10001;
+      }
+   }
+
+   *outAddr = exportAddr;
    return 0;
 }
 
