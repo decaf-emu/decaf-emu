@@ -35,6 +35,12 @@ p__cpp_exception_cleanup_ptr;
 be_val<uint16_t>*
 p__gh_FOPEN_MAX;
 
+static be_ptr<char>*
+p_environEmpty;
+
+static be_ptr<be_ptr<char>>*
+p_environ;
+
 static std::array<_ghs_iobuf*, GHS_FOPEN_MAX>
 p_iob;
 
@@ -227,11 +233,13 @@ Module::registerGhsFunctions()
    RegisterKernelDataName("__gh_FOPEN_MAX", p__gh_FOPEN_MAX);
    RegisterKernelDataName("_iob", p_iob);
    RegisterKernelDataName("_iob_lock", p_iob_lock);
+   RegisterKernelDataName("environ", p_environ);
 
    RegisterInternalDataName("__gh_errno", p__gh_errno);
    RegisterInternalData(ghsSpinLock);
    RegisterInternalData(p_iob_mutexes);
    RegisterInternalData(p_iob_mutex_used);
+   RegisterInternalData(p_environEmpty);
 }
 
 void
@@ -239,6 +247,9 @@ Module::initialiseGHS()
 {
    *p__gh_errno = 0;
    *p__gh_FOPEN_MAX = GHS_FOPEN_MAX;
+
+   *p_environEmpty = nullptr;
+   *p_environ = p_environEmpty;
 
    OSInitSpinLock(ghsSpinLock);
 
