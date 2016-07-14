@@ -7,9 +7,13 @@
 #include "common/log.h"
 #include "common/make_array.h"
 #include "common/strutils.h"
+#include <sstream>
 
 namespace coreinit
 {
+
+static std::stringstream
+sOSConsoleWriteBuffer;
 
 BOOL
 OSIsDebuggerPresent()
@@ -186,6 +190,16 @@ OSConsoleWrite(const char *msg, uint32_t size)
 {
    auto str = std::string { msg, size };
    gLog->info("[OSConsoleWrite] {}", str);
+
+   for (uint32_t i = 0; i < size; ++i) {
+      if (msg[i] == '\n') {
+         gLog->info("[CONSOLE OUTPUT] {}", sOSConsoleWriteBuffer.str());
+         sOSConsoleWriteBuffer.clear();
+         continue;
+      }
+
+      sOSConsoleWriteBuffer.put(msg[i]);
+   }
 }
 
 static int
