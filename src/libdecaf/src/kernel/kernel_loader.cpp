@@ -74,7 +74,7 @@ sLoaderLock{ 0 };
 static std::map<std::string, LoadedModule*>
 gLoadedModules;
 
-std::unordered_map<ppcaddr_t, std::string>
+static std::map<ppcaddr_t, std::string, std::greater<ppcaddr_t>>
 gGlobalSymbolLookup;
 
 static std::map<std::string, ppcaddr_t>
@@ -1136,6 +1136,19 @@ findModule(const std::string& name)
    return itr->second;
 }
 
+LoadedSection *
+findSectionForAddress(ppcaddr_t address)
+{
+   for (auto &mod : gLoadedModules) {
+      for (auto &sec : mod.second->sections) {
+         if (address >= sec.start && address < sec.end) {
+            return &sec;
+         }
+      }
+   }
+   return nullptr;
+}
+
 std::string *
 findSymbolNameForAddress(ppcaddr_t address)
 {
@@ -1146,6 +1159,23 @@ findSymbolNameForAddress(ppcaddr_t address)
    }
 
    return &symIter->second;
+}
+
+std::string
+findNearestSymbolNameForAddress(ppcaddr_t address)
+{
+   auto symIter = gGlobalSymbolLookup.lower_bound(address);
+
+   if (symIter == gGlobalSymbolLookup.end()) {
+      return "?";
+   }
+
+   auto delta = address - symIter->first;
+   if (delta == 0) {
+      return symIter->second;
+   } else {
+      return fmt::format("{} + 0x{:x}", symIter->second, delta);
+   }
 }
 
 } // namespace loader

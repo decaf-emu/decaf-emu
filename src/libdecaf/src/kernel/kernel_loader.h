@@ -98,8 +98,14 @@ loadRPL(const std::string& name);
 LoadedModule *
 findModule(const std::string& name);
 
+LoadedSection *
+findSectionForAddress(ppcaddr_t address);
+
 std::string *
 findSymbolNameForAddress(ppcaddr_t address);
+
+std::string
+findNearestSymbolNameForAddress(ppcaddr_t address);
 
 std::map<std::string, LoadedModule*>
 getLoadedModules();
