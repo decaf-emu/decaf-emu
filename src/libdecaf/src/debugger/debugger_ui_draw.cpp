@@ -22,9 +22,6 @@ sIsPaused = false;
 static uint64_t
 sResumeCount = 0;
 
-static uint32_t
-sActiveCore = 1;
-
 static coreinit::OSThread *
 sActiveThread = nullptr;
 
@@ -62,6 +59,19 @@ getActiveThread()
    return sActiveThread;
 }
 
+uint32_t
+getThreadCoreId(coreinit::OSThread *thread)
+{
+   if (thread == coreinit::internal::getCoreRunningThread(0)) {
+      return 0;
+   } else if (thread == coreinit::internal::getCoreRunningThread(1)) {
+      return 1;
+   } else if (thread == coreinit::internal::getCoreRunningThread(2)) {
+      return 2;
+   }
+   return -1;
+}
+
 cpu::CoreRegs *
 getThreadCoreRegs(coreinit::OSThread *thread)
 {
@@ -69,12 +79,9 @@ getThreadCoreRegs(coreinit::OSThread *thread)
       return nullptr;
    }
 
-   if (thread == coreinit::internal::getCoreRunningThread(0)) {
-      return debugger::getPausedCoreState(0);
-   } else if (thread == coreinit::internal::getCoreRunningThread(1)) {
-      return debugger::getPausedCoreState(1);
-   } else if (thread == coreinit::internal::getCoreRunningThread(2)) {
-      return debugger::getPausedCoreState(2);
+   auto threadCoreId = getThreadCoreId(thread);
+   if (threadCoreId != -1) {
+      return debugger::getPausedCoreState(threadCoreId);
    }
 
    return nullptr;
@@ -111,16 +118,6 @@ setActiveThread(coreinit::OSThread *thread)
    decaf_check(sIsPaused);
    sActiveThread = thread;
 
-   if (sActiveThread == coreinit::internal::getCoreRunningThread(0)) {
-      sActiveCore = 0;
-   } else if (sActiveThread == coreinit::internal::getCoreRunningThread(1)) {
-      sActiveCore = 1;
-   } else if (sActiveThread == coreinit::internal::getCoreRunningThread(2)) {
-      sActiveCore = 2;
-   } else {
-      sActiveCore = -1;
-   }
-
    if (sActiveThread) {
       DisasmView::displayAddress(getThreadNia(sActiveThread));
       StackView::displayAddress(getThreadStack(sActiveThread));
@@ -130,30 +127,29 @@ setActiveThread(coreinit::OSThread *thread)
 void
 handleGamePaused()
 {
-   if (!sActiveThread && sActiveCore != -1) {
-      // Lets first try to find the thread running on our core.
-      sActiveThread = coreinit::internal::getCoreRunningThread(sActiveCore);
-   }
+   // Lets start by trying to use the breakpoint core
+   uint32_t pausedCore = getPauseInitiatorCoreId();
+   auto pauseActiveThread = coreinit::internal::getCoreRunningThread(pausedCore);
 
-   if (!sActiveThread) {
+   if (!pauseActiveThread) {
       // Now lets just try to find any running thread.
-      sActiveThread = coreinit::internal::getCoreRunningThread(0);
+      pauseActiveThread = coreinit::internal::getCoreRunningThread(1);
 
-      if (!sActiveThread) {
-         sActiveThread = coreinit::internal::getCoreRunningThread(1);
+      if (!pauseActiveThread) {
+         pauseActiveThread = coreinit::internal::getCoreRunningThread(0);
 
-         if (!sActiveThread) {
-            sActiveThread = coreinit::internal::getCoreRunningThread(2);
+         if (!pauseActiveThread) {
+            pauseActiveThread = coreinit::internal::getCoreRunningThread(2);
          }
       }
    }
 
-   if (!sActiveThread) {
+   if (!pauseActiveThread) {
       // Gezus... Pick the first one...
-      sActiveThread = coreinit::internal::getFirstActiveThread();
+      pauseActiveThread = coreinit::internal::getFirstActiveThread();
    }
 
-   setActiveThread(sActiveThread);
+   setActiveThread(pauseActiveThread);
 }
 
 void
@@ -232,11 +228,11 @@ draw()
             wantsResume = true;
          }
 
-         if (ImGui::MenuItem("Step Over", "F10", false, sIsPaused && sActiveCore != -1)) {
+         if (ImGui::MenuItem("Step Over", "F10", false, sIsPaused && getThreadCoreId(sActiveThread) != -1)) {
             wantsStepOver = true;
          }
 
-         if (ImGui::MenuItem("Step Into", "F11", false, sIsPaused && sActiveCore != -1)) {
+         if (ImGui::MenuItem("Step Into", "F11", false, sIsPaused && getThreadCoreId(sActiveThread) != -1)) {
             wantsStepInto = true;
          }
 
@@ -341,14 +337,16 @@ draw()
          handleGameResumed();
       }
 
-      if (wantsStepOver && sIsPaused && sActiveCore != -1) {
-         debugger::stepCoreOver(sActiveCore);
+      auto activeThreadCoreId = getThreadCoreId(sActiveThread);
+
+      if (wantsStepOver && sIsPaused && activeThreadCoreId != -1) {
+         debugger::stepCoreOver(activeThreadCoreId);
          sIsPaused = false;
          handleGameResumed();
       }
 
-      if (wantsStepInto && sIsPaused && sActiveCore != -1) {
-         debugger::stepCoreInto(sActiveCore);
+      if (wantsStepInto && sIsPaused && activeThreadCoreId != -1) {
+         debugger::stepCoreInto(activeThreadCoreId);
          sIsPaused = false;
          handleGameResumed();
       }

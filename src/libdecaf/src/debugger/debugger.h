@@ -14,6 +14,9 @@ paused();
 cpu::Core *
 getPausedCoreState(uint32_t coreId);
 
+uint32_t
+getPauseInitiatorCoreId();
+
 void
 pauseAll();
 

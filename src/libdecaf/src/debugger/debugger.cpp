@@ -52,6 +52,14 @@ getPausedCoreState(uint32_t coreId)
    return sCorePauseState[coreId];
 }
 
+uint32_t
+getPauseInitiatorCoreId()
+{
+   decaf_check(paused());
+   decaf_check(sPauseInitiatorCoreId < 3);
+   return sPauseInitiatorCoreId;
+}
+
 void
 pauseAll()
 {
@@ -130,17 +138,22 @@ handleDbgBreakInterrupt()
    std::unique_lock<std::mutex> lock(sMutex);
    auto coreId = cpu::this_core::id();
 
-   // If we hit a breakpoint, we should signal all cores to stop
-   for (auto i = 0; i < 3; ++i) {
-      cpu::interrupt(i, cpu::DBGBREAK_INTERRUPT);
-   }
-
    // Store our core state before we flip isPaused
    sCorePauseState[coreId] = cpu::this_core::state();
 
    // Check to see if we were the last core to join on the fun
    auto coreBit = 1 << coreId;
    auto isPausing = sIsPausing.fetch_or(coreBit);
+
+   if (isPausing == 0) {
+      // This is the first core to hit a breakpoint
+      sPauseInitiatorCoreId = coreId;
+
+      // Signal the rest of the cores to stop
+      for (auto i = 0; i < 3; ++i) {
+         cpu::interrupt(i, cpu::DBGBREAK_INTERRUPT);
+      }
+   }
 
    if ((isPausing | coreBit) == (1 | 2 | 4)) {
       // This was the last core to join.
