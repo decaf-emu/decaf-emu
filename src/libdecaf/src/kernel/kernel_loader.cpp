@@ -546,11 +546,12 @@ processRelocations(LoadedModule *loadedMod,
          auto symAddr = getSymbolAddress(symbol, sections);
 
          if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
-            symAddr = mem::read<uint32_t>(symAddr);
+            decaf_check(symAddr);
 
-            if (symAddr == 0) {
-               symAddr = generateUnimplementedDataThunk(symbolSection.name, symbolName);
-            }
+            auto importedSymAddr = mem::read<uint32_t>(symAddr);
+            decaf_check(importedSymAddr);
+
+            symAddr = importedSymAddr;
          }
 
          symAddr += rela.addend;
@@ -720,16 +721,19 @@ processImports(LoadedModule *loadedMod,
             if (symbolTargetIter == symbolTable.end()) {
                if (type == elf::STT_FUNC) {
                   symbolAddr = generateUnimplementedFunctionThunk(impsec.name, name);
+               } else if (type == elf::STT_OBJECT) {
+                  symbolAddr = generateUnimplementedDataThunk(impsec.name, name);
+               } else {
+                  decaf_abort("Unexpected import symbol type");
                }
             } else {
-               if (type != elf::STT_FUNC && type != elf::STT_OBJECT) {
-                  decaf_check(0);
-               }
+               decaf_check(type == elf::STT_FUNC || type == elf::STT_OBJECT);
 
                symbolAddr = symbolTargetIter->second;
             }
 
             // Write the symbol address into .fimport or .dimport
+            decaf_check(symbolAddr);
             mem::write(virtAddress, symbolAddr);
          }
       }
