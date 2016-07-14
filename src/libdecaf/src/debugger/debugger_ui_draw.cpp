@@ -806,13 +806,15 @@ public:
          // Check if the user tapped Enter, if so, jump to the branch target!
          if (ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::Enter))) {
             uint32_t selectedAddr = static_cast<uint32_t>(mSelectedAddr);
-            auto instr = mem::read<espresso::Instruction>(selectedAddr);
-            auto data = espresso::decodeInstruction(instr);
+            if (mem::valid(selectedAddr)) {
+               auto instr = mem::read<espresso::Instruction>(selectedAddr);
+               auto data = espresso::decodeInstruction(instr);
 
-            if (isBranchInstr(data)) {
-               auto meta = getBranchMeta(selectedAddr, instr, data, activeCoreRegs);
-               if (!meta.isVariable || activeCoreRegs) {
-                  mSelectedAddr = meta.target;
+               if (isBranchInstr(data)) {
+                  auto meta = getBranchMeta(selectedAddr, instr, data, activeCoreRegs);
+                  if (!meta.isVariable || activeCoreRegs) {
+                     mSelectedAddr = meta.target;
+                  }
                }
             }
          }
