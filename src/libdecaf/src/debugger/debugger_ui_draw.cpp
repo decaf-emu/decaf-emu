@@ -178,16 +178,18 @@ void draw()
       auto userModule = kernel::getUserModule();
 
       if (firstActivation && userModule) {
-         // Place the views somewhere sane to start
-         MemView::displayAddress(userModule->entryPoint);
-         DisasmView::displayAddress(userModule->entryPoint);
-
          // Automatically analyse the primary user module
          for (auto &sec : userModule->sections) {
             if (sec.name.compare(".text") == 0) {
                analysis::analyse(sec.start, sec.end);
                break;
             }
+         }
+
+         // Place the views somewhere sane to start in case pausing did not place it somewhere
+         if (!sIsPaused) {
+            MemView::displayAddress(userModule->entryPoint);
+            DisasmView::displayAddress(userModule->entryPoint);
          }
 
          firstActivation = false;
