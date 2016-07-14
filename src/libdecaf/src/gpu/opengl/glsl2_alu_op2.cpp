@@ -579,6 +579,7 @@ registerOP2Functions()
    registerInstruction(latte::SQ_OP2_INST_MOVA_FLOOR, MOVA_FLOOR);
    registerInstruction(latte::SQ_OP2_INST_MUL, MUL);
    registerInstruction(latte::SQ_OP2_INST_MUL_IEEE, MUL);
+   registerInstruction(latte::SQ_OP2_INST_MULLO_INT, MUL);
    registerInstruction(latte::SQ_OP2_INST_NOT_INT, NOT);
    registerInstruction(latte::SQ_OP2_INST_NOP, NOP);
    registerInstruction(latte::SQ_OP2_INST_OR_INT, OR);
