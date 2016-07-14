@@ -258,32 +258,32 @@ draw()
       }
 
       if (ImGui::BeginMenu("Windows")) {
-         if (ImGui::MenuItem("Memory Map", "CTRL+S", SegView::gIsVisible, true)) {
-            SegView::gIsVisible = !SegView::gIsVisible;
+         if (ImGui::MenuItem("Memory Map", "CTRL+S", decaf::config::debugger::show_seg_view, true)) {
+            decaf::config::debugger::show_seg_view = !decaf::config::debugger::show_seg_view;
          }
 
-         if (ImGui::MenuItem("Threads", "CTRL+T", ThreadView::gIsVisible, true)) {
-            ThreadView::gIsVisible = !ThreadView::gIsVisible;
+         if (ImGui::MenuItem("Threads", "CTRL+T", decaf::config::debugger::show_thread_view, true)) {
+            decaf::config::debugger::show_thread_view = !decaf::config::debugger::show_thread_view;
          }
 
-         if (ImGui::MenuItem("Memory", "CTRL+M", MemView::gIsVisible, true)) {
-            MemView::gIsVisible  = !MemView::gIsVisible;
+         if (ImGui::MenuItem("Memory", "CTRL+M", decaf::config::debugger::show_mem_view, true)) {
+            decaf::config::debugger::show_mem_view = !decaf::config::debugger::show_mem_view;
          }
 
-         if (ImGui::MenuItem("Disassembly", "CTRL+I", DisasmView::gIsVisible, true)) {
-            DisasmView::gIsVisible = !DisasmView::gIsVisible;
+         if (ImGui::MenuItem("Disassembly", "CTRL+I", decaf::config::debugger::show_disasm_view, true)) {
+            decaf::config::debugger::show_disasm_view = !decaf::config::debugger::show_disasm_view;
          }
 
-         if (ImGui::MenuItem("Registers", "CTRL+R", RegView::gIsVisible, true)) {
-            RegView::gIsVisible = !RegView::gIsVisible;
+         if (ImGui::MenuItem("Registers", "CTRL+R", decaf::config::debugger::show_reg_view, true)) {
+            decaf::config::debugger::show_reg_view = !decaf::config::debugger::show_reg_view;
          }
 
-         if (ImGui::MenuItem("Stack", "CTRL+E", StackView::gIsVisible, true)) {
-            StackView::gIsVisible = !StackView::gIsVisible;
+         if (ImGui::MenuItem("Stack", "CTRL+E", decaf::config::debugger::show_stack_view, true)) {
+            decaf::config::debugger::show_stack_view = !decaf::config::debugger::show_stack_view;
          }
 
-         if (ImGui::MenuItem("Stats", "CTRL+Q", StatsView::gIsVisible, true)) {
-            StatsView::gIsVisible = !StatsView::gIsVisible;
+         if (ImGui::MenuItem("Stats", "CTRL+Q", decaf::config::debugger::show_stats_view, true)) {
+            decaf::config::debugger::show_stats_view = !decaf::config::debugger::show_stats_view;
          }
 
          ImGui::EndMenu();
@@ -292,31 +292,31 @@ draw()
       ImGui::EndMainMenuBar();
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::S), false)) {
-         SegView::gIsVisible = !SegView::gIsVisible;
+         decaf::config::debugger::show_seg_view = !decaf::config::debugger::show_seg_view;
       }
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::T), false)) {
-         ThreadView::gIsVisible = !ThreadView::gIsVisible;
+         decaf::config::debugger::show_thread_view = !decaf::config::debugger::show_thread_view;
       }
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::M), false)) {
-         MemView::gIsVisible = !MemView::gIsVisible;
+         decaf::config::debugger::show_mem_view = !decaf::config::debugger::show_mem_view;
       }
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::I), false)) {
-         DisasmView::gIsVisible = !DisasmView::gIsVisible;
+         decaf::config::debugger::show_disasm_view = !decaf::config::debugger::show_disasm_view;
       }
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::R), false)) {
-         RegView::gIsVisible = !RegView::gIsVisible;
+         decaf::config::debugger::show_reg_view = !decaf::config::debugger::show_reg_view;
       }
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::E), false)) {
-         StackView::gIsVisible = !StackView::gIsVisible;
+         decaf::config::debugger::show_stack_view = !decaf::config::debugger::show_stack_view;
       }
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::Q), false)) {
-         StatsView::gIsVisible = !StatsView::gIsVisible;
+         decaf::config::debugger::show_stats_view = !decaf::config::debugger::show_stats_view;
       }
 
       if (sIsPaused && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F5), false)) {

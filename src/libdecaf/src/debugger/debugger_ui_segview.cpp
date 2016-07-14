@@ -1,4 +1,5 @@
 #include "debugger_ui_internal.h"
+#include "decaf_config.h"
 #include "kernel/kernel_loader.h"
 #include <imgui.h>
 #include <spdlog/spdlog.h>
@@ -20,9 +21,6 @@ struct Segment
    uint32_t end;
    std::vector<Segment> items;
 };
-
-bool
-gIsVisible = true;
 
 static std::vector<Segment>
 sSegmentsCache;
@@ -67,13 +65,13 @@ drawSegments(const std::vector<Segment> &segments, std::string tabs)
 void
 draw()
 {
-   if (!gIsVisible) {
+   if (!decaf::config::debugger::show_seg_view) {
       return;
    }
 
    ImGui::SetNextWindowSize(ImVec2 { 550.0f, 300.0f }, ImGuiSetCond_FirstUseEver);
 
-   if (!ImGui::Begin("Memory Segments", &gIsVisible)) {
+   if (!ImGui::Begin("Memory Segments", &decaf::config::debugger::show_seg_view)) {
       ImGui::End();
       return;
    }

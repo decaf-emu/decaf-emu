@@ -1,4 +1,5 @@
 #include "debugger_ui_internal.h"
+#include "decaf_config.h"
 #include "imgui_addrscroll.h"
 #include <imgui.h>
 #include <sstream>
@@ -11,9 +12,6 @@ namespace ui
 
 namespace MemView
 {
-
-bool
-gIsVisible = true;
 
 static bool
 sActivateFocus = false;
@@ -51,13 +49,13 @@ displayAddress(uint32_t address)
 {
    gotoAddress(address);
    sActivateFocus = true;
-   gIsVisible = true;
+   decaf::config::debugger::show_mem_view = true;
 }
 
 void
 draw()
 {
-   if (!gIsVisible) {
+   if (!decaf::config::debugger::show_mem_view) {
       return;
    }
 
@@ -66,7 +64,7 @@ draw()
       sActivateFocus = false;
    }
 
-   if (!ImGui::Begin("Memory", &gIsVisible)) {
+   if (!ImGui::Begin("Memory", &decaf::config::debugger::show_mem_view)) {
       ImGui::End();
       return;
    }

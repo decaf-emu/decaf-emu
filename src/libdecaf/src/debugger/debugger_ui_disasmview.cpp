@@ -1,6 +1,7 @@
 #include "debugger_analysis.h"
 #include "debugger_branchcalc.h"
 #include "debugger_ui_internal.h"
+#include "decaf_config.h"
 #include "decaf_input.h"
 #include "imgui_addrscroll.h"
 #include "libcpu/state.h"
@@ -31,9 +32,6 @@ static const ImVec4 NiaColor = HEXTOIMV4(0x000000, 1.0f);
 static const ImVec4 NiaBgColor = HEXTOIMV4(0x00E676, 1.0f);
 static const ImVec4 BpColor = HEXTOIMV4(0x000000, 1.0f);
 static const ImVec4 BpBgColor = HEXTOIMV4(0xF44336, 1.0f);
-
-bool
-gIsVisible = true;
 
 static bool
 sActivateFocus = false;
@@ -76,13 +74,13 @@ displayAddress(uint32_t address)
 {
    gotoAddress(address);
    sActivateFocus = true;
-   gIsVisible = true;
+   decaf::config::debugger::show_disasm_view = true;
 }
 
 void
 draw()
 {
-   if (!gIsVisible) {
+   if (!decaf::config::debugger::show_disasm_view) {
       return;
    }
 
@@ -92,7 +90,7 @@ draw()
    }
 
    std::string windowKey = "Disassembly";
-   if (!ImGui::Begin(windowKey.c_str(), &gIsVisible)) {
+   if (!ImGui::Begin(windowKey.c_str(), &decaf::config::debugger::show_disasm_view)) {
       ImGui::End();
       return;
    }
