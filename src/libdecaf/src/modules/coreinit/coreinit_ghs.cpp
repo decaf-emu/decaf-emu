@@ -94,6 +94,13 @@ ghs_flock_file(uint32_t lock)
    OSLockMutex(p_iob_mutexes[lock]);
 }
 
+BOOL
+ghs_ftrylock_file(uint32_t lock)
+{
+   decaf_check(lock <= GHS_FOPEN_MAX);
+   return OSTryLockMutex(p_iob_mutexes[lock]);
+}
+
 void
 ghs_funlock_file(uint32_t lock)
 {
@@ -219,6 +226,7 @@ Module::registerGhsFunctions()
    RegisterKernelFunctionName("__ghs_flock_create", ghs_flock_create);
    RegisterKernelFunctionName("__ghs_flock_destroy", ghs_flock_destroy);
    RegisterKernelFunctionName("__ghs_flock_file", ghs_flock_file);
+   RegisterKernelFunctionName("__ghs_ftrylock_file", ghs_ftrylock_file);
    RegisterKernelFunctionName("__ghs_funlock_file", ghs_funlock_file);
 
    RegisterKernelFunctionName("__ghs_mtx_init", ghs_mtx_init);
