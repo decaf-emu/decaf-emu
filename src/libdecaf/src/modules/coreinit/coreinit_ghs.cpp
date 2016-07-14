@@ -8,6 +8,8 @@
 #include "libcpu/trace.h"
 #include "ppcutils/wfunc_call.h"
 #include "common/decaf_assert.h"
+#include "common/log.h"
+#include <array>
 
 namespace coreinit
 {
@@ -33,9 +35,17 @@ p__cpp_exception_cleanup_ptr;
 be_val<uint16_t>*
 p__gh_FOPEN_MAX;
 
-__ghs_iob* p_iob;
+static std::array<_ghs_iobuf*, GHS_FOPEN_MAX>
+p_iob;
 
-__ghs_iob_lock* p_iob_lock;
+static std::array<be_val<uint32_t>*, GHS_FOPEN_MAX + 1>
+p_iob_lock;
+
+static std::array<OSMutex*, GHS_FLOCK_MAX>
+p_iob_mutexes;
+
+static std::array<bool*, GHS_FLOCK_MAX>
+p_iob_mutex_used;
 
 BOOL
 ghsLock()
@@ -49,16 +59,52 @@ ghsUnlock()
    return OSReleaseSpinLock(ghsSpinLock);
 }
 
-be_ptr<void>*
+void
+ghs_flock_create(be_val<uint32_t> *lock)
+{
+   for (auto i = 0; i < GHS_FLOCK_MAX; ++i) {
+      if (!*p_iob_mutex_used[i]) {
+         *lock = i;
+         OSInitMutex(p_iob_mutexes[i]);
+         *p_iob_mutex_used[i] = true;
+         return;
+      }
+   }
+   *lock = -1;
+   gLog->warn("ghs_flock_create ran out of locks!");
+}
+
+void
+ghs_flock_destroy(uint32_t lock)
+{
+   decaf_check(lock < GHS_FLOCK_MAX);
+   *p_iob_mutex_used[lock] = false;
+}
+
+void
+ghs_flock_file(uint32_t lock)
+{
+   decaf_check(lock <= GHS_FOPEN_MAX);
+   OSLockMutex(p_iob_mutexes[lock]);
+}
+
+void
+ghs_funlock_file(uint32_t lock)
+{
+   decaf_check(lock <= GHS_FOPEN_MAX);
+   OSUnlockMutex(p_iob_mutexes[lock]);
+}
+
+be_val<uint32_t>*
 ghs_flock_ptr(void *file)
 {
-   unsigned int index = (unsigned int)(((_ghs_iobuf*)file) - (_ghs_iobuf*)p_iob);
+   size_t index = static_cast<size_t>(reinterpret_cast<_ghs_iobuf*>(file) - p_iob[0]);
 
    if (index > *p__gh_FOPEN_MAX) {
       index = *p__gh_FOPEN_MAX;
    }
 
-   return &(*p_iob_lock)[index];
+   return p_iob_lock[index];
 }
 
 be_val<uint32_t>*
@@ -107,14 +153,6 @@ void *
 ghs_get_eh_store_globals_tdeh()
 {
    return &OSGetCurrentThread()->_ghs__eh_store_globals_tdeh;
-}
-
-void
-ghs_flock_file(uint32_t lockIx)
-{
-   // TODO: ghs_flock_file
-   decaf_check(lockIx <= GHS_FOPEN_MAX);
-   // Lock mutex for file lockIx
 }
 
 void ghs_mtx_init(void *mtx)
@@ -172,7 +210,11 @@ Module::registerGhsFunctions()
    RegisterKernelFunctionName("__get_eh_store_globals", ghs_get_eh_store_globals);
    RegisterKernelFunctionName("__get_eh_store_globals_tdeh", ghs_get_eh_store_globals_tdeh);
    RegisterKernelFunctionName("__ghs_flock_ptr", ghs_flock_ptr);
+   RegisterKernelFunctionName("__ghs_flock_create", ghs_flock_create);
+   RegisterKernelFunctionName("__ghs_flock_destroy", ghs_flock_destroy);
    RegisterKernelFunctionName("__ghs_flock_file", ghs_flock_file);
+   RegisterKernelFunctionName("__ghs_funlock_file", ghs_funlock_file);
+
    RegisterKernelFunctionName("__ghs_mtx_init", ghs_mtx_init);
    RegisterKernelFunctionName("__ghs_mtx_dst", ghs_mtx_dst);
    RegisterKernelFunctionName("__ghs_mtx_lock", ghs_mtx_lock);
@@ -188,6 +230,8 @@ Module::registerGhsFunctions()
 
    RegisterInternalDataName("__gh_errno", p__gh_errno);
    RegisterInternalData(ghsSpinLock);
+   RegisterInternalData(p_iob_mutexes);
+   RegisterInternalData(p_iob_mutex_used);
 }
 
 void
@@ -197,6 +241,21 @@ Module::initialiseGHS()
    *p__gh_FOPEN_MAX = GHS_FOPEN_MAX;
 
    OSInitSpinLock(ghsSpinLock);
+
+   // This is actually meant to be during _crt_startup
+   p_iob[0]->info = static_cast<_ghs_iobuf_bits>(p_iob[0]->info)
+      .readable().set(true)
+      .channel().set(0);
+   p_iob[1]->info = static_cast<_ghs_iobuf_bits>(p_iob[1]->info)
+      .writable().set(true)
+      .channel().set(1);
+   p_iob[2]->info = static_cast<_ghs_iobuf_bits>(p_iob[2]->info)
+      .writable().set(true)
+      .channel().set(2);
+
+   ghs_flock_create(p_iob_lock[0]);
+   ghs_flock_create(p_iob_lock[1]);
+   ghs_flock_create(p_iob_lock[2]);
 }
 
 } // namespace coreinit

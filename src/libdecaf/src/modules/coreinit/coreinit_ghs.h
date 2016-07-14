@@ -1,12 +1,15 @@
 #pragma once
 #include "common/be_val.h"
+#include "common/bitfield.h"
+#include "common/structsize.h"
 #include "virtual_ptr.h"
 #include "ppcutils/wfunc_ptr.h"
 
 namespace coreinit
 {
 
-#define GHS_FOPEN_MAX 0x14
+static const uint32_t GHS_FOPEN_MAX = 0x14;
+static const uint32_t GHS_FLOCK_MAX = 0x64;
 
 extern be_wfunc_ptr<void>*
 p__atexit_cleanup;
@@ -23,37 +26,25 @@ p___cpp_exception_cleanup_ptr;
 extern be_val<uint16_t>*
 p__gh_FOPEN_MAX;
 
+BITFIELD(_ghs_iobuf_bits, uint32_t)
+   BITFIELD_ENTRY(0, 1, bool, readwrite);
+   BITFIELD_ENTRY(1, 1, bool, writable);
+   BITFIELD_ENTRY(2, 1, bool, readable);
+   BITFIELD_ENTRY(18, 14, uint32_t, channel);
+BITFIELD_END
+
 struct _ghs_iobuf
 {
-   uint32_t unk1;
-   uint32_t unk2;
-   uint32_t unk3;
-   uint32_t unk4;
+   be_ptr<uint8_t> next_ptr;
+   be_ptr<uint8_t> base_ptr;
+   be_val<int32_t> bytes_left;
+   be_val<_ghs_iobuf_bits> info;
 };
-
-typedef _ghs_iobuf __ghs_iob[GHS_FOPEN_MAX];
-extern __ghs_iob* p_iob;
-
-typedef be_ptr<void> __ghs_iob_lock[GHS_FOPEN_MAX + 1];
-extern __ghs_iob_lock* p_iob_lock;
-
-BOOL
-ghsLock();
-
-BOOL
-ghsUnlock();
-
-void
-ghs_set_errno(uint32_t err);
-
-uint32_t
-ghs_get_errno();
-
-be_ptr<void>*
-ghs_flock_ptr(void *file);
-
-void
-ghs_flock_file(uint32_t lockIx);
+CHECK_OFFSET(_ghs_iobuf, 0x0, next_ptr);
+CHECK_OFFSET(_ghs_iobuf, 0x4, base_ptr);
+CHECK_OFFSET(_ghs_iobuf, 0x8, bytes_left);
+CHECK_OFFSET(_ghs_iobuf, 0xc, info);
+CHECK_SIZE(_ghs_iobuf, 0x10);
 
 namespace internal
 {
