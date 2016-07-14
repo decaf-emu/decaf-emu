@@ -544,7 +544,6 @@ processRelocations(LoadedModule *loadedMod,
          auto symbolName = reinterpret_cast<const char*>(symStrTab.memory) + symbol.name;
 
          auto symAddr = getSymbolAddress(symbol, sections);
-         symAddr += rela.addend;
 
          if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
             symAddr = mem::read<uint32_t>(symAddr);
@@ -553,6 +552,8 @@ processRelocations(LoadedModule *loadedMod,
                symAddr = generateUnimplementedDataThunk(symbolSection.name, symbolName);
             }
          }
+
+         symAddr += rela.addend;
 
          auto ptr8 = mem::translate(reloAddr);
          auto ptr16 = reinterpret_cast<uint16_t*>(ptr8);
