@@ -570,14 +570,14 @@ int32_t
 OSResumeThread(OSThread *thread)
 {
    internal::lockScheduler();
-   auto old = internal::resumeThreadNoLock(thread, 1);
+   auto oldSuspendCounter = internal::resumeThreadNoLock(thread, 1);
 
-   if (thread->suspendCounter == 0) {
+   if (oldSuspendCounter - 1 == 0) {
       internal::rescheduleAllCoreNoLock();
    }
 
    internal::unlockScheduler();
-   return old;
+   return oldSuspendCounter;
 }
 
 
