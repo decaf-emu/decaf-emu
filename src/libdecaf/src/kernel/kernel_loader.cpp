@@ -797,6 +797,24 @@ processSymbols(LoadedModule *loadedMod,
    return true;
 }
 
+static ppcaddr_t
+calculateRelocatedAddress(ppcaddr_t address, const SectionList &sections)
+{
+   for (auto &section : sections) {
+      if (section.header.addr <= address && section.header.addr + section.virtSize > address) {
+         if (section.virtAddress >= section.header.addr) {
+            address += section.virtAddress - section.header.addr;
+         } else {
+            address -= section.header.addr - section.virtAddress;
+         }
+
+         return address;
+      }
+   }
+
+   decaf_abort("Cannot relocate addresses which don't exist in any section");
+}
+
 static bool
 processExports(LoadedModule *loadedMod,
                const SectionList &sections)
@@ -815,6 +833,8 @@ processExports(LoadedModule *loadedMod,
          auto exportsAddr = byte_swap(*secData++);
          auto exportNameOff = byte_swap(*secData++);
          auto exportsName = secNames + exportNameOff;
+
+         exportsAddr = calculateRelocatedAddress(exportsAddr, sections);
 
          loadedMod->exports.emplace(exportsName, exportsAddr);
       }
@@ -995,19 +1015,7 @@ loadRPL(const std::string &moduleName,
    }
 
    // Relocate entry point
-   auto entryPoint = header.entry;
-
-   for (auto &section : sections) {
-      if (section.header.addr <= entryPoint && section.header.addr + section.virtSize > entryPoint) {
-         if (section.virtAddress >= section.header.addr) {
-            entryPoint += section.virtAddress - section.header.addr;
-         } else {
-            entryPoint -= section.header.addr - section.virtAddress;
-         }
-
-         break;
-      }
-   }
+   auto entryPoint = calculateRelocatedAddress(header.entry, sections);
 
    // Create sections list
    for (auto &section : sections) {
