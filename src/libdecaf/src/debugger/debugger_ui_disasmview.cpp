@@ -47,6 +47,23 @@ sSelectedAddr = -1;
 static char
 sAddressInput[32] = { 0 };
 
+enum class BranchGlyph
+{
+   None,
+   StartDown,
+   StartUp,
+   EndDown,
+   EndUp,
+   Middle,
+   EndBoth,
+};
+
+struct VisInstrInfo
+{
+   BranchGlyph branchGlyph;
+   ImVec4 branchColor;
+};
+
 static void
 gotoAddress(uint32_t address)
 {
@@ -95,13 +112,15 @@ draw()
 
       // Check if the user tapped Enter, if so, jump to the branch target!
       if (ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::Enter))) {
-         uint32_t selectedAddr = static_cast<uint32_t>(sSelectedAddr);
+         auto selectedAddr = static_cast<uint32_t>(sSelectedAddr);
+
          if (mem::valid(selectedAddr)) {
             auto instr = mem::read<espresso::Instruction>(selectedAddr);
             auto data = espresso::decodeInstruction(instr);
 
             if (isBranchInstr(data)) {
                auto meta = getBranchMeta(selectedAddr, instr, data, activeCoreRegs);
+
                if (!meta.isVariable || activeCoreRegs) {
                   sSelectedAddr = meta.target;
                }
@@ -134,41 +153,28 @@ draw()
 
    // We use this 'hack' to get the true with without line-advance offsets.
    auto lineHeight = ImGui::GetTextLineHeight();
-   float glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
+   auto glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
 
    // We precalcalculate
-   float addrAdvance = glyphWidth * 10.0f;
-   float dataAdvance = glyphWidth * 9.0f;
-   float funcLineAdvance = glyphWidth * 1.0f;
-   float jmpArrowAdvance = glyphWidth * 1.0f;
-   float jmpLineAdvance = glyphWidth * 1.0f;
-   float instrAdvance = glyphWidth * 28.0f;
+   auto addrAdvance = glyphWidth * 10.0f;
+   auto dataAdvance = glyphWidth * 9.0f;
+   auto funcLineAdvance = glyphWidth * 1.0f;
+   auto jmpArrowAdvance = glyphWidth * 1.0f;
+   auto jmpLineAdvance = glyphWidth * 1.0f;
+   auto instrAdvance = glyphWidth * 28.0f;
 
    // We grab some stuff to do some custom rendering...
    auto drawList = ImGui::GetWindowDrawList();
    auto wndWidth = ImGui::GetWindowContentRegionWidth();
 
    // Lets precalculate some stuff we need for the currently visible instructions
-   enum class BranchGlyph : uint32_t {
-      None,
-      StartDown,
-      StartUp,
-      EndDown,
-      EndUp,
-      Middle,
-      EndBoth,
-   };
-   struct VisInstrInfo {
-      BranchGlyph branchGlyph;
-      ImVec4 branchColor;
-   };
    std::map<uint32_t, VisInstrInfo> visInstrInfo;
-
    sScroller.Begin(4, ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
 
    // Find the upper and lower bounds of the visible area
-   uint32_t visFirstAddr = sScroller.Reset();
-   uint32_t visLastAddr = visFirstAddr;
+   auto visFirstAddr = sScroller.Reset();
+   auto visLastAddr = visFirstAddr;
+
    for (auto addr = visFirstAddr; sScroller.HasMore(); addr = sScroller.Advance()) {
       visLastAddr = addr;
    }
@@ -180,11 +186,14 @@ draw()
 
       auto visLoopFirst = std::max(first, visFirstAddr);
       auto visLoopLast = std::min(last, visLastAddr);
+
       if (visLoopFirst > visLastAddr || visLoopLast < visFirstAddr) {
          return;
       }
-      for (uint32_t addr = visLoopFirst; ; addr += 4) {
+
+      for (auto addr = visLoopFirst; ; addr += 4) {
          fn(addr, visInstrInfo[addr]);
+
          if (addr == visLoopLast) {
             break;
          }
@@ -192,7 +201,7 @@ draw()
    };
 
    if (sSelectedAddr != -1) {
-      uint32_t selectedAddr = static_cast<uint32_t>(sSelectedAddr);
+      auto selectedAddr = static_cast<uint32_t>(sSelectedAddr);
       auto instr = mem::read<espresso::Instruction>(selectedAddr);
       auto data = espresso::decodeInstruction(instr);
       auto info = analysis::get(selectedAddr);
@@ -200,55 +209,63 @@ draw()
       bool isVisBranchSource = false;
       if (data && isBranchInstr(data)) {
          auto meta = getBranchMeta(selectedAddr, instr, data, activeCoreRegs);
+
          if (!meta.isCall && (!meta.isVariable || activeCoreRegs)) {
-            ForEachVisInstr(selectedAddr, meta.target, [&](uint32_t addr, VisInstrInfo &vii) {
-               if (addr == selectedAddr) {
-                  if (meta.target < selectedAddr) {
-                     vii.branchGlyph = BranchGlyph::StartUp;
+            ForEachVisInstr(selectedAddr, meta.target,
+               [&](uint32_t addr, VisInstrInfo &vii)
+               {
+                  if (addr == selectedAddr) {
+                     if (meta.target < selectedAddr) {
+                        vii.branchGlyph = BranchGlyph::StartUp;
+                     } else {
+                        vii.branchGlyph = BranchGlyph::StartDown;
+                     }
+                  } else if (addr == meta.target) {
+                     if (meta.target < selectedAddr) {
+                        vii.branchGlyph = BranchGlyph::EndUp;
+                     } else {
+                        vii.branchGlyph = BranchGlyph::EndDown;
+                     }
                   } else {
-                     vii.branchGlyph = BranchGlyph::StartDown;
+                     vii.branchGlyph = BranchGlyph::Middle;
                   }
-               } else if (addr == meta.target) {
-                  if (meta.target < selectedAddr) {
-                     vii.branchGlyph = BranchGlyph::EndUp;
+
+                  if (activeCoreRegs && meta.conditionSatisfied) {
+                     vii.branchColor = FuncFollowColor;;
+                  } else if (activeCoreRegs && !meta.conditionSatisfied) {
+                     vii.branchColor = FuncSkipColor;
                   } else {
-                     vii.branchGlyph = BranchGlyph::EndDown;
+                     vii.branchColor = FuncLinkColor;
                   }
-               } else {
-                  vii.branchGlyph = BranchGlyph::Middle;
-               }
-               if (activeCoreRegs && meta.conditionSatisfied) {
-                  vii.branchColor = FuncFollowColor;;
-               } else if (activeCoreRegs && !meta.conditionSatisfied) {
-                  vii.branchColor = FuncSkipColor;
-               } else {
-                  vii.branchColor = FuncLinkColor;
-               }
-            });
+               });
+
             isVisBranchSource = true;
          }
       }
+
       if (!isVisBranchSource) {
          if (info.instr) {
             auto &visInfo = visInstrInfo[selectedAddr];
-
-            uint32_t selectedMinSource = selectedAddr;
-            uint32_t selectedMaxSource = selectedAddr;
+            auto selectedMinSource = selectedAddr;
+            auto selectedMaxSource = selectedAddr;
 
             for (auto sourceAddr : info.instr->sourceBranches) {
                if (sourceAddr > selectedMaxSource) {
                   selectedMaxSource = sourceAddr;
                }
+
                if (sourceAddr < selectedMinSource) {
                   selectedMinSource = sourceAddr;
                }
 
                auto &sourceVisInfo = visInstrInfo[sourceAddr];
+
                if (sourceAddr > selectedAddr) {
                   sourceVisInfo.branchGlyph = BranchGlyph::StartUp;
                } else {
                   sourceVisInfo.branchGlyph = BranchGlyph::StartDown;
                }
+
                sourceVisInfo.branchColor = FuncLinkColor;
             }
 
@@ -261,12 +278,13 @@ draw()
             }
 
             if (selectedMinSource != selectedMaxSource) {
-               ForEachVisInstr(selectedMinSource, selectedMaxSource, [&](uint32_t addr, VisInstrInfo &vii) {
-                  if (vii.branchGlyph == BranchGlyph::None) {
-                     vii.branchGlyph = BranchGlyph::Middle;
-                     vii.branchColor = FuncLinkColor;
-                  }
-               });
+               ForEachVisInstr(selectedMinSource, selectedMaxSource,
+                  [&](uint32_t addr, VisInstrInfo &vii) {
+                     if (vii.branchGlyph == BranchGlyph::None) {
+                        vii.branchGlyph = BranchGlyph::Middle;
+                        vii.branchColor = FuncLinkColor;
+                     }
+                  });
             }
 
             visInfo.branchColor = FuncLinkColor;
@@ -320,9 +338,11 @@ draw()
          // Render the address for this line in normal color
          ImGui::Text("%08X:", addr);
       }
+
       if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
          toggleBreakpoint(addr);
       }
+
       linePos.x += addrAdvance;
 
       // Stop drawing if this is invalid memory
@@ -344,10 +364,12 @@ draw()
          mem::read<unsigned char>(addr + 1),
          mem::read<unsigned char>(addr + 2),
          mem::read<unsigned char>(addr + 3));
+
       linePos.x += dataAdvance;
 
       if (info.func) {
          ImGui::SetCursorPos(linePos);
+
          if (addr == info.func->start) {
             ImGui::TextColored(FuncColor, u8"\u250f");
          } else if (info.func->end == 0xFFFFFFFF) {
@@ -362,6 +384,7 @@ draw()
             ImGui::TextColored(FuncColor, u8"\u2503");
          }
       }
+
       linePos.x += funcLineAdvance;
 
       // This renders an arrow representing the direction of any branch statement
@@ -376,6 +399,7 @@ draw()
             }
          }
       }
+
       linePos.x += jmpArrowAdvance;
 
       // This renders the brackets which display jump source/destinations
@@ -383,6 +407,7 @@ draw()
       if (visInfo) {
          auto selectedGlyph = visInfo->branchGlyph;
          auto selectedColor = visInfo->branchColor;
+
          if (selectedGlyph != BranchGlyph::None) {
             // This drawing is a bit of a hack to be honest, but it looks nicer...
             ImGui::SetCursorPos(ImVec2(linePos.x - glyphWidth*0.25f, linePos.y));
@@ -405,10 +430,12 @@ draw()
             }
          }
       }
-      linePos.x += jmpLineAdvance;
 
+      linePos.x += jmpLineAdvance;
       ImGui::SetCursorPos(linePos);
+
       espresso::Disassembly dis;
+
       if (espresso::disassemble(instr, dis, addr)) {
          // TODO: Better integration with the disassembler,
          //  as well as providing per-arg highlighting?
@@ -423,12 +450,15 @@ draw()
       } else {
          ImGui::Text("??");
       }
+
       linePos.x += instrAdvance;
 
       std::string lineInfo;
+
       if (info.func && addr == info.func->start && info.func->name.size() > 0) {
          lineInfo = info.func->name;
       }
+
       if (data && isBranchInstr(data)) {
          auto meta = getBranchMeta(addr, instr, data, nullptr);
          if (!meta.isVariable) {
@@ -441,12 +471,14 @@ draw()
             }
          }
       }
+
       if (info.instr && info.instr->comments.size() > 0) {
          if (lineInfo.size() > 0) {
             lineInfo += " - ";
          }
          lineInfo += info.instr->comments;
       }
+
       if (lineInfo.size() > 0) {
          ImGui::SetCursorPos(linePos);
          ImGui::Text("; %s", lineInfo.c_str());
@@ -461,15 +493,17 @@ draw()
    ImGui::Text("Go To Address: ");
    ImGui::SameLine();
    ImGui::PushItemWidth(70);
+
    if (ImGui::InputText("##addr", sAddressInput, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
       std::istringstream is(sAddressInput);
       uint32_t goto_addr;
+
       if ((is >> std::hex >> goto_addr)) {
          gotoAddress(goto_addr);
       }
    }
-   ImGui::PopItemWidth();
 
+   ImGui::PopItemWidth();
    ImGui::End();
 }
 

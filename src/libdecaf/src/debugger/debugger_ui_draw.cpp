@@ -31,18 +31,21 @@ sActiveThread = nullptr;
 static std::map<uint32_t, bool>
 sBreakpoints;
 
-bool isPaused()
+bool
+isPaused()
 {
    return sIsPaused;
 }
 
-bool hasBreakpoint(uint32_t address)
+bool
+hasBreakpoint(uint32_t address)
 {
    auto bpIter = sBreakpoints.find(address);
    return bpIter != sBreakpoints.end() && bpIter->second;
 }
 
-void toggleBreakpoint(uint32_t address)
+void
+toggleBreakpoint(uint32_t address)
 {
    if (sBreakpoints[address]) {
       cpu::removeBreakpoint(address, cpu::USER_BPFLAG);
@@ -65,6 +68,7 @@ getThreadCoreRegs(coreinit::OSThread *thread)
    if (!sIsPaused) {
       return nullptr;
    }
+
    if (thread == coreinit::internal::getCoreRunningThread(0)) {
       return debugger::getPausedCoreState(0);
    } else if (thread == coreinit::internal::getCoreRunningThread(1)) {
@@ -72,14 +76,16 @@ getThreadCoreRegs(coreinit::OSThread *thread)
    } else if (thread == coreinit::internal::getCoreRunningThread(2)) {
       return debugger::getPausedCoreState(2);
    }
+
    return nullptr;
 }
 
-uint32_t getThreadNia(coreinit::OSThread *thread)
+uint32_t
+getThreadNia(coreinit::OSThread *thread)
 {
    decaf_check(sIsPaused);
-
    auto coreRegs = getThreadCoreRegs(thread);
+
    if (coreRegs) {
       return coreRegs->nia;
    }
@@ -87,7 +93,8 @@ uint32_t getThreadNia(coreinit::OSThread *thread)
    return mem::read<uint32_t>(thread->context.gpr[1] + 8);
 }
 
-void setActiveThread(coreinit::OSThread *thread)
+void
+setActiveThread(coreinit::OSThread *thread)
 {
    decaf_check(sIsPaused);
    sActiveThread = thread;
@@ -107,7 +114,8 @@ void setActiveThread(coreinit::OSThread *thread)
    }
 }
 
-void handleGamePaused()
+void
+handleGamePaused()
 {
    if (!sActiveThread && sActiveCore != -1) {
       // Lets first try to find the thread running on our core.
@@ -135,7 +143,8 @@ void handleGamePaused()
    setActiveThread(sActiveThread);
 }
 
-void handleGameResumed()
+void
+handleGameResumed()
 {
    sResumeCount++;
    sActiveThread = nullptr;
@@ -147,7 +156,8 @@ getResumeCount()
    return sResumeCount;
 }
 
-void draw()
+void
+draw()
 {
    static auto firstActivation = true;
    static auto debugViewsVisible = false;

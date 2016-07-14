@@ -141,6 +141,7 @@ handleDbgBreakInterrupt()
    // Check to see if we were the last core to join on the fun
    auto coreBit = 1 << coreId;
    auto isPausing = sIsPausing.fetch_or(coreBit);
+
    if ((isPausing | coreBit) == (1 | 2 | 4)) {
       // This was the last core to join.
       sIsPaused.store(true);

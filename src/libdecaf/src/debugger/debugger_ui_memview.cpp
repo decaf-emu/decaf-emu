@@ -66,24 +66,23 @@ draw()
       sActivateFocus = false;
    }
 
-   std::string windowKey = "Memory";
-   if (!ImGui::Begin(windowKey.c_str(), &gIsVisible)) {
+   if (!ImGui::Begin("Memory", &gIsVisible)) {
       ImGui::End();
       return;
    }
 
    // We use this 'hack' to get the true with without line-advance offsets.
-   float glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
-   float cellWidth = glyphWidth * 3;
+   auto glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
+   auto cellWidth = glyphWidth * 3.0f;
 
    // We precalcalculate these so we can reverse engineer our column
    //  count and line render locations.
-   float addrAdvance = glyphWidth * 10.0f;
-   float cellAdvance = glyphWidth * 2.5f;
-   float gapAdvance = glyphWidth * 1.0f;
-   float charAdvance = glyphWidth * 1.0f;
+   auto addrAdvance = glyphWidth * 10.0f;
+   auto cellAdvance = glyphWidth * 2.5f;
+   auto gapAdvance = glyphWidth * 1.0f;
+   auto charAdvance = glyphWidth * 1.0f;
    auto wndDynRegionSize = ImGui::GetWindowContentRegionWidth() - addrAdvance - gapAdvance;
-   int64_t numColumns = static_cast<int64_t>(wndDynRegionSize / (cellAdvance + charAdvance));
+   auto numColumns = static_cast<int64_t>(wndDynRegionSize / (cellAdvance + charAdvance));
 
    // Impose a limit on the number of columns in case the window
    //  does not yet have a size.
@@ -126,9 +125,9 @@ draw()
       }
    }
 
-   int64_t editAddress = sEditAddress;
-
+   auto editAddress = sEditAddress;
    sScroller.Begin(numColumns, ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+
    for (auto addr = sScroller.Reset(); sScroller.HasMore(); addr = sScroller.Advance()) {
       auto linePos = ImGui::GetCursorPos();
 
@@ -168,21 +167,29 @@ draw()
                ImGuiInputTextFlags_NoHorizontalScroll |
                ImGuiInputTextFlags_AlwaysInsertMode |
                ImGuiInputTextFlags_CallbackAlways;
-            if (ImGui::InputText("##data", sDataInput, 32, flags, [](auto data) {
-               auto cursorPosPtr = static_cast<int*>(data->UserData);
-               if (!data->HasSelection())
-                  *cursorPosPtr = data->CursorPos;
-               return 0;
-            }, &cursorPos)) {
+
+            auto getCursorPos =
+               [](auto data) {
+                  auto cursorPosPtr = static_cast<int*>(data->UserData);
+
+                  if (!data->HasSelection()) {
+                     *cursorPosPtr = data->CursorPos;
+                  }
+
+                  return 0;
+               };
+
+            if (ImGui::InputText("##data", sDataInput, 32, flags, getCursorPos, &cursorPos)) {
                sEditAddress += 1;
             } else if (!newlyFocused && !ImGui::IsItemActive()) {
                sEditAddress = -1;
             }
+
             if (cursorPos >= 2) {
                sEditAddress += 1;
             }
-            ImGui::PopItemWidth();
 
+            ImGui::PopItemWidth();
             ImGui::PopID();
 
             if (sEditAddress != sLastEditAddress) {
@@ -190,15 +197,17 @@ draw()
                //  the memory itself.
                std::istringstream is(sDataInput);
                int data;
+
                if (is >> std::hex >> data) {
                   mem::write(addr + i, static_cast<unsigned char>(data));
                }
             }
-
          } else {
             ImGui::SetCursorPos(linePos);
+
             if (sScroller.IsValidOffset(i) && mem::valid(addr + i)) {
                ImGui::Text("%02X ", mem::read<unsigned char>(addr + i));
+
                if (sEditingEnabled && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0)) {
                   sEditAddress = addr + i;
                }
@@ -214,7 +223,7 @@ draw()
       linePos.x += gapAdvance;
 
       // Draw all of the ASCII characters
-      for (uint32_t i = 0; i < numColumns; ++i) {
+      for (auto i = 0u; i < numColumns; ++i) {
          if (sScroller.IsValidOffset(i) && mem::valid(addr + i)) {
             ImGui::SetCursorPos(linePos);
             unsigned char c = mem::read<unsigned char>(addr + i);
@@ -223,10 +232,9 @@ draw()
 
          linePos.x += charAdvance;
       }
-
    }
-   sScroller.End();
 
+   sScroller.End();
    ImGui::Separator();
 
    // Render the bottom bar for the window
@@ -234,13 +242,16 @@ draw()
    ImGui::Text("Go To Address: ");
    ImGui::SameLine();
    ImGui::PushItemWidth(70);
+
    if (ImGui::InputText("##addr", sAddressInput, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
       std::istringstream is(sAddressInput);
       uint32_t goto_addr;
+
       if ((is >> std::hex >> goto_addr)) {
          gotoAddress(goto_addr);
       }
    }
+
    ImGui::PopItemWidth();
    ImGui::SameLine();
    ImGui::Text("Showing %d Columns", static_cast<int>(numColumns));

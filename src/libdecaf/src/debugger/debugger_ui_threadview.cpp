@@ -43,6 +43,7 @@ draw()
    }
 
    ImGui::SetNextWindowSize(ImVec2(600, 300), ImGuiSetCond_FirstUseEver);
+
    if (!ImGui::Begin("Threads", &gIsVisible)) {
       ImGui::End();
       return;
@@ -77,6 +78,7 @@ draw()
       }
 
       tinfo.coreTimeNs = thread->coreTimeConsumedNs;
+
       if (tinfo.coreId != -1) {
          tinfo.coreTimeNs += coreinit::internal::getCoreThreadRunningTime(0);
       }
@@ -113,16 +115,19 @@ draw()
 
       // Name
       if (isPaused()) {
-         std::string threadName = thread.name;
+         auto threadName = thread.name;
+
          if (thread.name.size() == 0) {
             threadName = fmt::format("(Unnamed Thread {})", thread.id);
          }
+
          if (ImGui::Selectable(threadName.c_str())) {
             setActiveThread(thread.thread);
          }
       } else {
          ImGui::Text("%s", thread.name.c_str());
       }
+
       ImGui::NextColumn();
 
       // NIA
@@ -131,6 +136,7 @@ draw()
       } else {
          ImGui::Text("        ");
       }
+
       ImGui::NextColumn();
 
       // Thread State
@@ -143,9 +149,11 @@ draw()
 
       // Affinity
       std::string coreAff;
+
       if (thread.affinity & coreinit::OSThreadAttributes::AffinityCPU0) {
          coreAff += "0";
       }
+
       if (thread.affinity & coreinit::OSThreadAttributes::AffinityCPU1) {
          if (coreAff.size() != 0) {
             coreAff += "|1";
@@ -153,6 +161,7 @@ draw()
             coreAff += "1";
          }
       }
+
       if (thread.affinity & coreinit::OSThreadAttributes::AffinityCPU2) {
          if (coreAff.size() != 0) {
             coreAff += "|2";
@@ -160,6 +169,7 @@ draw()
             coreAff += "2";
          }
       }
+
       ImGui::Text("%s", coreAff.c_str());
       ImGui::NextColumn();
 
@@ -167,14 +177,15 @@ draw()
       if (thread.coreId != -1) {
          ImGui::Text("%d", thread.coreId);
       }
+
       ImGui::NextColumn();
 
       // Core Time
       ImGui::Text("%" PRIu64, thread.coreTimeNs / 1000);
       ImGui::NextColumn();
    }
-   ImGui::Columns(1);
 
+   ImGui::Columns(1);
    ImGui::End();
 }
 

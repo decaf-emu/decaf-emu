@@ -36,6 +36,7 @@ draw()
    }
 
    ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiSetCond_FirstUseEver);
+
    if (!ImGui::Begin("Registers", &gIsVisible)) {
       ImGui::End();
       return;
@@ -56,6 +57,7 @@ draw()
 
    if (activeThread) {
       auto coreRegs = getThreadCoreRegs(activeThread);
+
       if (coreRegs) {
          sCurrentRegs = *coreRegs;
       } else {
@@ -94,35 +96,39 @@ draw()
    ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.50f);
    ImGui::SetColumnOffset(3, ImGui::GetWindowWidth() * 0.65f);
 
-   auto DrawRegCol = [](const std::string& name, const std::string& value, bool hasChanged) {
-      ImGui::Text("%s", name.c_str());
-      ImGui::NextColumn();
-      if (isPaused()) {
-         if (!hasChanged) {
-            ImGui::Text("%s", value.c_str());
-         } else {
-            ImGui::TextColored(ChangedColor, "%s", value.c_str());
+   auto drawRegCol =
+      [](const std::string& name, const std::string& value, bool hasChanged) {
+         ImGui::Text("%s", name.c_str());
+
+         ImGui::NextColumn();
+         if (isPaused()) {
+            if (!hasChanged) {
+               ImGui::Text("%s", value.c_str());
+            } else {
+               ImGui::TextColored(ChangedColor, "%s", value.c_str());
+            }
          }
-      }
-      ImGui::NextColumn();
-   };
+
+         ImGui::NextColumn();
+      };
 
    for (auto i = 0, j = 16; i < 16; i++, j++) {
-      DrawRegCol(fmt::format("r{}", i),
+      drawRegCol(fmt::format("r{}", i),
          fmt::format("{:08x}", sCurrentRegs.gpr[i]),
          sCurrentRegs.gpr[i] != sPreviousRegs.gpr[i]);
 
-      DrawRegCol(fmt::format("r{}", j),
+      drawRegCol(fmt::format("r{}", j),
          fmt::format("{:08x}", sCurrentRegs.gpr[j]),
          sCurrentRegs.gpr[j] != sPreviousRegs.gpr[j]);
    }
 
    ImGui::Separator();
 
-   DrawRegCol("LR",
+   drawRegCol("LR",
       fmt::format("{:08x}", sCurrentRegs.lr),
       sCurrentRegs.lr != sPreviousRegs.lr);
-   DrawRegCol("CTR",
+
+   drawRegCol("CTR",
       fmt::format("{:08x}", sCurrentRegs.ctr),
       sCurrentRegs.ctr != sPreviousRegs.ctr);
 
@@ -133,26 +139,29 @@ draw()
    ImGui::NextColumn();
    ImGui::Text("O Z + -"); ImGui::NextColumn();
 
-   auto DrawCrfCol = [](uint32_t crfNum, uint32_t val, bool hasChanged) {
-      ImGui::Text("crf%d", crfNum);
-      ImGui::NextColumn();
-      if (isPaused()) {
-         if (!hasChanged) {
-            ImGui::Text("%c %c %c %c",
-               (val & espresso::ConditionRegisterFlag::SummaryOverflow) ? 'X' : '_',
-               (val & espresso::ConditionRegisterFlag::Zero) ? 'X' : '_',
-               (val & espresso::ConditionRegisterFlag::Positive) ? 'X' : '_',
-               (val & espresso::ConditionRegisterFlag::Negative) ? 'X' : '_');
-         } else {
-            ImGui::TextColored(ChangedColor, "%c %c %c %c",
-               (val & espresso::ConditionRegisterFlag::SummaryOverflow) ? 'X' : '_',
-               (val & espresso::ConditionRegisterFlag::Zero) ? 'X' : '_',
-               (val & espresso::ConditionRegisterFlag::Positive) ? 'X' : '_',
-               (val & espresso::ConditionRegisterFlag::Negative) ? 'X' : '_');
+   auto drawCrfCol =
+      [](uint32_t crfNum, uint32_t val, bool hasChanged) {
+         ImGui::Text("crf%d", crfNum);
+         ImGui::NextColumn();
+
+         if (isPaused()) {
+            if (!hasChanged) {
+               ImGui::Text("%c %c %c %c",
+                  (val & espresso::ConditionRegisterFlag::SummaryOverflow) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Zero) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Positive) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Negative) ? 'X' : '_');
+            } else {
+               ImGui::TextColored(ChangedColor, "%c %c %c %c",
+                  (val & espresso::ConditionRegisterFlag::SummaryOverflow) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Zero) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Positive) ? 'X' : '_',
+                  (val & espresso::ConditionRegisterFlag::Negative) ? 'X' : '_');
+            }
          }
-      }
-      ImGui::NextColumn();
-   };
+
+         ImGui::NextColumn();
+      };
 
    for (auto i = 0, j = 4; i < 4; i++, j++) {
       auto iVal = (sCurrentRegs.cr.value >> ((7 - i) * 4)) & 0xF;
@@ -160,8 +169,8 @@ draw()
       auto iPrevVal = (sPreviousRegs.cr.value >> ((7 - i) * 4)) & 0xF;
       auto jPrevVal = (sPreviousRegs.cr.value >> ((7 - j) * 4)) & 0xF;
 
-      DrawCrfCol(i, iVal, iVal != iPrevVal);
-      DrawCrfCol(j, jVal, jVal != jPrevVal);
+      drawCrfCol(i, iVal, iVal != iPrevVal);
+      drawCrfCol(j, jVal, jVal != jPrevVal);
    }
 
 

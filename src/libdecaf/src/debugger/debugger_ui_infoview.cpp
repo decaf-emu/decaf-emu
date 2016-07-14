@@ -11,8 +11,11 @@ namespace ui
 namespace InfoView
 {
 
-static const ImVec4 PausedTextColor = HEXTOIMV4(0xEF5350, 1.0f);
-static const ImVec4 RunningTextColor = HEXTOIMV4(0x8BC34A, 1.0f);
+static const ImVec4
+PausedTextColor = HEXTOIMV4(0xEF5350, 1.0f);
+
+static const ImVec4
+RunningTextColor = HEXTOIMV4(0x8BC34A, 1.0f);
 
 void
 draw()
@@ -26,8 +29,8 @@ draw()
       | ImGuiWindowFlags_NoSavedSettings
       | ImGuiWindowFlags_NoInputs;
 
-   ImGui::SetNextWindowPos(ImVec2(8.0f, 25.0f));
-   ImGui::SetNextWindowSize(ImVec2(180.0f, 45.0f));
+   ImGui::SetNextWindowPos(ImVec2 { 8.0f, 25.0f });
+   ImGui::SetNextWindowSize(ImVec2 { 180.0f, 45.0f });
    ImGui::Begin("Info", nullptr, ImgGuiNoBorder);
 
    float fps = decaf::getGraphicsDriver()->getAverageFPS();
@@ -35,6 +38,7 @@ draw()
 
    ImGui::Text("Status: ");
    ImGui::SameLine();
+
    if (debugger::ui::isPaused()) {
       ImGui::TextColored(PausedTextColor, "Paused");
    } else {

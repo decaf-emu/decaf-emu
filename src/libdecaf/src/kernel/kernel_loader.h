@@ -18,8 +18,11 @@ using AppEntryPoint = wfunc_ptr<int, uint32_t, void*>;
 using RplEntryPoint = wfunc_ptr<int, void*, int>;
 
 // Reason codes for RPL entrypoint invocation
-static const int RplEntryReasonLoad = 1;
-static const int RplEntryReasonUnload = 2;
+static const int
+RplEntryReasonLoad = 1;
+
+static const int
+RplEntryReasonUnload = 2;
 
 struct LoadedModule;
 
@@ -46,7 +49,7 @@ struct LoadedSection
 struct LoadedModule
 {
    ppcaddr_t
-      findExport(const std::string& name) const
+   findExport(const std::string& name) const
    {
       auto itr = exports.find(name);
 
@@ -59,14 +62,14 @@ struct LoadedModule
 
    template<typename ReturnType, typename... Args>
    wfunc_ptr<ReturnType, Args...>
-      findFuncExport(const std::string& name) const
+   findFuncExport(const std::string& name) const
    {
       return wfunc_ptr<ReturnType, Args...>(findExport(name));
    }
 
    template<typename Type>
    Type *
-      findDataExport(const std::string& name) const
+   findDataExport(const std::string& name) const
    {
       return reinterpret_cast<Type *>(mem::translate(findExport(name)));
    }
@@ -79,6 +82,7 @@ struct LoadedModule
             return &sec;
          }
       }
+
       return nullptr;
    }
 

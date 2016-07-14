@@ -48,6 +48,7 @@ draw()
    }
 
    ImGui::SetNextWindowSize(ImVec2(600, 300), ImGuiSetCond_FirstUseEver);
+
    if (!ImGui::Begin("Stats", &gIsVisible)) {
       ImGui::End();
       return;
@@ -70,27 +71,35 @@ draw()
       ImGui::NextColumn();
 
       uint64_t *fallbackStats = cpu::getJitFallbackStats();
+
       if (sFirstSeen == std::chrono::time_point<std::chrono::system_clock>::max()) {
          sFirstSeen = std::chrono::system_clock::now();
+
          for (size_t i = 0; i < InstrCount; ++i) {
             sFirstSeenValues[i] = fallbackStats[i];
          }
       }
+
       sJitFallbackStats.clear();
+
       for (size_t i = 0; i < InstrCount; ++i) {
          sJitFallbackStats.emplace_back(i, fallbackStats[i]);
       }
+
       std::sort(sJitFallbackStats.begin(), sJitFallbackStats.end(),
          [](const std::pair<size_t, uint64_t> &a, const std::pair<size_t, uint64_t> &b) {
-         return b.second < a.second;
-      });
-      auto timeDelta = std::chrono::system_clock::now() - sFirstSeen;
+            return b.second < a.second;
+         });
+
       using seconds_duration = std::chrono::duration<float, std::chrono::seconds::period>;
+      auto timeDelta = std::chrono::system_clock::now() - sFirstSeen;
       auto secondsDelta = std::chrono::duration_cast<seconds_duration>(timeDelta).count();
-      for (size_t i = 0; i < sJitFallbackStats.size(); ++i) {
+
+      for (auto i = 0u; i < sJitFallbackStats.size(); ++i) {
          auto instrIdx = sJitFallbackStats[i].first;
          auto instrId = static_cast<espresso::InstructionID>(instrIdx);
          auto info = espresso::findInstructionInfo(instrId);
+
          if (!info) {
             continue;
          }
@@ -110,7 +119,6 @@ draw()
    }
 
    ImGui::Columns(1);
-
    ImGui::End();
 }
 

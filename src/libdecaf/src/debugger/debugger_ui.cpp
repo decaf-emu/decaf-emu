@@ -30,7 +30,7 @@ sMousePosX = 0.0f, sMousePosY = 0.0f;
 void
 initialise()
 {
-   ImGuiIO& io = ImGui::GetIO();
+   auto &io = ImGui::GetIO();
 
    io.GetClipboardTextFn = []() {
       return sGetClipboardText ? sGetClipboardText() : "";
@@ -63,6 +63,7 @@ initialise()
    io.KeyMap[ImGuiKey_Z] = static_cast<int>(KeyboardKey::Z);
 
    io.Fonts->AddFontDefault();
+
    static const ImWchar icons_ranges[] = { 0x2500, 0x25ff, 0 };
    ImFontConfig config;
    config.MergeMode = true;
@@ -106,7 +107,7 @@ injectScrollInput(float xoffset, float yoffset)
 void
 injectKeyInput(KeyboardKey key, KeyboardAction action)
 {
-   ImGuiIO& io = ImGui::GetIO();
+   auto &io = ImGui::GetIO();
    auto idx = static_cast<int>(key);
 
    if (action == KeyboardAction::Press) {
@@ -137,7 +138,7 @@ injectKeyInput(KeyboardKey key, KeyboardAction action)
 void
 injectTextInput(const char *text)
 {
-   ImGuiIO &io = ImGui::GetIO();
+   auto &io = ImGui::GetIO();
    io.AddInputCharactersUTF8(text);
 }
 
@@ -152,12 +153,10 @@ setClipboardTextCallbacks(ClipboardTextGetCallback getter,
 void
 updateInput()
 {
-   ImGuiIO& io = ImGui::GetIO();
-
+   auto &io = ImGui::GetIO();
    io.MousePos = ImVec2(sMousePosX, sMousePosY);
 
-   for (int i = 0; i < 3; i++)
-   {
+   for (int i = 0; i < 3; i++) {
       io.MouseDown[i] = sMouseClicked[i] || sMousePressed[i];
       sMouseClicked[i] = false;
    }

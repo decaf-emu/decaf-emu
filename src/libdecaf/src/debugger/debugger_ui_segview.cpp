@@ -27,7 +27,8 @@ gIsVisible = true;
 static std::vector<Segment>
 sSegmentsCache;
 
-static void addSegmentItem(std::vector<Segment> &segments, const Segment &item)
+static void
+addSegmentItem(std::vector<Segment> &segments, const Segment &item)
 {
    for (auto &seg : segments) {
       if (item.start >= seg.start && item.start < seg.end) {
@@ -39,7 +40,8 @@ static void addSegmentItem(std::vector<Segment> &segments, const Segment &item)
    segments.push_back(item);
 }
 
-static void drawSegments(const std::vector<Segment> &segments, std::string tabs)
+static void
+drawSegments(const std::vector<Segment> &segments, std::string tabs)
 {
    for (auto &seg : segments) {
       ImGui::Selectable(fmt::format("{}{}", tabs, seg.name).c_str()); ImGui::NextColumn();
@@ -69,33 +71,35 @@ draw()
       return;
    }
 
-   ImGui::SetNextWindowSize(ImVec2(550, 300), ImGuiSetCond_FirstUseEver);
+   ImGui::SetNextWindowSize(ImVec2 { 550.0f, 300.0f }, ImGuiSetCond_FirstUseEver);
+
    if (!ImGui::Begin("Memory Segments", &gIsVisible)) {
       ImGui::End();
       return;
    }
 
    sSegmentsCache.clear();
-   sSegmentsCache.push_back(Segment{ "System", mem::SystemBase, mem::SystemEnd });
-   sSegmentsCache.push_back(Segment{ "MEM2", mem::MEM2Base, mem::MEM2End });
-   sSegmentsCache.push_back(Segment{ "Apertures", mem::AperturesBase, mem::AperturesEnd });
-   sSegmentsCache.push_back(Segment{ "Foreground", mem::ForegroundBase, mem::ForegroundEnd });
-   sSegmentsCache.push_back(Segment{ "MEM1", mem::MEM1Base, mem::MEM1End });
-   sSegmentsCache.push_back(Segment{ "LockedCache", mem::LockedCacheBase, mem::LockedCacheEnd });
-   sSegmentsCache.push_back(Segment{ "SharedData", mem::SharedDataBase, mem::SharedDataEnd });
+   sSegmentsCache.push_back(Segment { "System", mem::SystemBase, mem::SystemEnd });
+   sSegmentsCache.push_back(Segment { "MEM2", mem::MEM2Base, mem::MEM2End });
+   sSegmentsCache.push_back(Segment { "Apertures", mem::AperturesBase, mem::AperturesEnd });
+   sSegmentsCache.push_back(Segment { "Foreground", mem::ForegroundBase, mem::ForegroundEnd });
+   sSegmentsCache.push_back(Segment { "MEM1", mem::MEM1Base, mem::MEM1End });
+   sSegmentsCache.push_back(Segment { "LockedCache", mem::LockedCacheBase, mem::LockedCacheEnd });
+   sSegmentsCache.push_back(Segment { "SharedData", mem::SharedDataBase, mem::SharedDataEnd });
 
    kernel::loader::lockLoader();
    const auto &modules = kernel::loader::getLoadedModules();
 
    for (auto &mod : modules) {
       for (auto &sec : mod.second->sections) {
-         addSegmentItem(sSegmentsCache, Segment{
+         addSegmentItem(sSegmentsCache, Segment {
             fmt::format("{}:{}", mod.second->name, sec.name),
             sec.start,
             sec.end
          });
       }
    }
+
    kernel::loader::unlockLoader();
 
    ImGui::Columns(3, "memList", false);

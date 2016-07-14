@@ -202,13 +202,18 @@ void
 handleFsDoneInterrupt();
 
 FSAsyncData *
-prepareSyncOp(FSClient *client, FSCmdBlock *block);
+prepareSyncOp(FSClient *client,
+              FSCmdBlock *block);
 
 FSStatus
-resolveSyncOp(FSClient *client, FSCmdBlock *block);
+resolveSyncOp(FSClient *client,
+              FSCmdBlock *block);
 
 void
-queueFsWork(FSClient *client, FSCmdBlock *block, FSAsyncData *asyncData, std::function<FSStatus()> func);
+queueFsWork(FSClient *client,
+            FSCmdBlock *block,
+            FSAsyncData *asyncData,
+            std::function<FSStatus()> func);
 
 bool
 cancelFsWork(FSCmdBlock *cmd);

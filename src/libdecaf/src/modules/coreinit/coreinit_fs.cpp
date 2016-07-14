@@ -167,11 +167,14 @@ resolveSyncOp(FSClient *client,
 {
    OSMessage ioMsg;
    OSReceiveMessage(&block->syncQueue, &ioMsg, OSMessageFlags::Blocking);
+
    auto result = FSGetAsyncResult(&ioMsg);
+
    if (result->status == FSStatus::FatalError) {
       gLog->critical("An FS operation has failed with FatalError.");
       OSExitThread(-1);
    }
+
    return result->status;
 }
 

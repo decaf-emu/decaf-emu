@@ -32,9 +32,9 @@ getFunction(uint32_t address)
 InstrInfo
 get(uint32_t address)
 {
-   InstrInfo info = { 0 };
-
+   auto info = InstrInfo { 0 };
    auto instrIter = sInstrData.find(address);
+
    if (instrIter != sInstrData.end()) {
       info.instr = &instrIter->second;
    }
@@ -42,6 +42,7 @@ get(uint32_t address)
    if (sFuncData.size() > 0) {
       auto funcIter = sFuncData.lower_bound(address);
       auto &func = funcIter->second;
+
       if (address >= func.start && address < func.end) {
          // The function needs to have an end, or be the first two instructions
          //  since we apply some special display logic to the first two instructions
@@ -55,15 +56,18 @@ get(uint32_t address)
    return info;
 }
 
-uint32_t findFunctionEnd(uint32_t start)
+uint32_t
+findFunctionEnd(uint32_t start)
 {
-   static const uint32_t MaxScannedBytes = 0x400;
-   uint32_t fnStart = start;
-   uint32_t fnMax = start;
-   uint32_t fnEnd = 0xFFFFFFFF;
-   for (uint32_t addr = start; addr < start + MaxScannedBytes; addr += 4) {
+   static const uint32_t MaxScannedBytes = 0x400u;
+   auto fnStart = start;
+   auto fnMax = start;
+   auto fnEnd = uint32_t { 0xFFFFFFFFu };
+
+   for (auto addr = start; addr < start + MaxScannedBytes; addr += 4) {
       auto instr = mem::read<espresso::Instruction>(addr);
       auto data = espresso::decodeInstruction(instr);
+
       if (!data) {
          // If we can't decode this instruction, then we gone done fucked up
          break;
@@ -75,6 +79,7 @@ uint32_t findFunctionEnd(uint32_t start)
 
       if (isBranchInstr(data)) {
          auto meta = getBranchMeta(addr, instr, data, nullptr);
+
          // Ignore call instructions
          if (!meta.isCall) {
             if (meta.isVariable) {
@@ -106,18 +111,20 @@ uint32_t findFunctionEnd(uint32_t start)
                }
             }
          }
-
       }
    }
 
    return fnEnd;
 }
 
-void markAsFunction(uint32_t address, const std::string &name)
+void
+markAsFunction(uint32_t address,
+               const std::string &name)
 {
    // We use get instead of searching the sFuncData directly
    //  because we can't set a function in the middle of a function
    auto info = get(address);
+
    if (!info.func) {
       FuncData func;
       func.start = address;
@@ -127,14 +134,17 @@ void markAsFunction(uint32_t address, const std::string &name)
    }
 }
 
-void markAsFunction(uint32_t address)
+void
+markAsFunction(uint32_t address)
 {
    markAsFunction(address, fmt::format("sub_{:08x}", address));
 }
 
-void toggleAsFunction(uint32_t address)
+void
+toggleAsFunction(uint32_t address)
 {
    auto fIter = sFuncData.find(address);
+
    if (fIter != sFuncData.end()) {
       sFuncData.erase(fIter);
    } else {
@@ -142,19 +152,23 @@ void toggleAsFunction(uint32_t address)
    }
 }
 
-void analyse(uint32_t start, uint32_t end)
+void
+analyse(uint32_t start,
+        uint32_t end)
 {
-   uint32_t testStart = 0x025B81F4;
-   uint32_t testEnd = 0x25B8374 + 4;
+   auto testStart = 0x025B81F4u;
+   auto testEnd = 0x25B8374u + 4;
 
    // Scan through all our symbols and mark them as functions.
    // We do this first as they will not receive names if they are
    //  detected by the analysis pass due to its naming system.
    kernel::loader::lockLoader();
    const auto &modules = kernel::loader::getLoadedModules();
+
    for (auto &mod : modules) {
-      uint32_t codeRangeStart = 0x00000000;
-      uint32_t codeRangeEnd = 0x00000000;
+      auto codeRangeStart = 0u;
+      auto codeRangeEnd = 0u;
+
       for (auto &sec : mod.second->sections) {
          if (sec.name.compare(".text") == 0) {
             codeRangeStart = sec.start;
@@ -162,23 +176,27 @@ void analyse(uint32_t start, uint32_t end)
             break;
          }
       }
+
       for (auto &sym : mod.second->symbols) {
          if (sym.second >= codeRangeStart && sym.second < codeRangeEnd) {
             markAsFunction(sym.second, sym.first);
          }
       }
    }
+
    kernel::loader::unlockLoader();
 
-   for (uint32_t addr = start; addr < end; addr += 4) {
+   for (auto addr = start; addr < end; addr += 4) {
       auto instr = mem::read<espresso::Instruction>(addr);
       auto data = espresso::decodeInstruction(instr);
+
       if (!data) {
          continue;
       }
 
       if (isBranchInstr(data)) {
          auto meta = getBranchMeta(addr, instr, data, nullptr);
+
          if (!meta.isCall && !meta.isVariable) {
             sInstrData[meta.target].sourceBranches.push_back(addr);
          }
