@@ -375,6 +375,8 @@ rescheduleAllCoreNoLock()
 int32_t
 resumeThreadNoLock(OSThread *thread, int32_t counter)
 {
+   decaf_check(isThreadActiveNoLock(thread));
+
    auto old = thread->suspendCounter;
    thread->suspendCounter -= counter;
 
