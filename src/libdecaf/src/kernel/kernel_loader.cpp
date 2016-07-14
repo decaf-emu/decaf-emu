@@ -485,7 +485,9 @@ loadHleModule(const std::string &moduleName,
 
          // Map host memory pointer to PPC region
          if (data->hostPtr) {
-            *reinterpret_cast<void**>(data->hostPtr) = thunk;
+            for (uint32_t off = 0, i = 0; off < data->size; off += data->itemSize, i++) {
+               reinterpret_cast<void**>(data->hostPtr)[i] = thunk + off;
+            }
          }
       }
    }
