@@ -234,10 +234,12 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
    auto cb_color_size = latte::CB_COLOR0_SIZE::get(0);
 
    // Update cb_color_info
-   auto format = GX2GetSurfaceColorFormat(colorBuffer->surface.format);
+   auto format = internal::getSurfaceFormatColorFormat(colorBuffer->surface.format);
+   auto numberType = internal::getSurfaceFormatColorNumberType(colorBuffer->surface.format);
 
    cb_color_info = cb_color_info
-      .FORMAT().set(format);
+      .FORMAT().set(format)
+      .NUMBER_TYPE().set(numberType);
 
    // Update cb_color_size
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;

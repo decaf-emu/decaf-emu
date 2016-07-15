@@ -270,8 +270,17 @@ GX2GetSurfaceDepthFormat(GX2SurfaceFormat format)
    }
 }
 
+namespace internal
+{
+
+GX2SurfaceFormatType
+getSurfaceFormatType(GX2SurfaceFormat format)
+{
+   return static_cast<GX2SurfaceFormatType>(format >> 8);
+}
+
 latte::CB_FORMAT
-GX2GetSurfaceColorFormat(GX2SurfaceFormat format)
+getSurfaceFormatColorFormat(GX2SurfaceFormat format)
 {
    switch (format & 0x3F) {
    case latte::FMT_8:
@@ -344,5 +353,28 @@ GX2GetSurfaceColorFormat(GX2SurfaceFormat format)
       decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
    }
 }
+
+latte::CB_NUMBER_TYPE
+getSurfaceFormatColorNumberType(GX2SurfaceFormat format)
+{
+   switch (internal::getSurfaceFormatType(format)) {
+   case GX2SurfaceFormatType::UNORM:
+      return latte::NUMBER_UNORM;
+   case GX2SurfaceFormatType::UINT:
+      return latte::NUMBER_UINT;
+   case GX2SurfaceFormatType::SNORM:
+      return latte::NUMBER_SNORM;
+   case GX2SurfaceFormatType::SINT:
+      return latte::NUMBER_SINT;
+   case GX2SurfaceFormatType::SRGB:
+      return latte::NUMBER_SRGB;
+   case GX2SurfaceFormatType::FLOAT:
+      return latte::NUMBER_FLOAT;
+   default:
+      decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
+   }
+}
+
+} // namespace internal
 
 } // namespace gx2

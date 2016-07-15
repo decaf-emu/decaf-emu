@@ -39,7 +39,18 @@ GX2GetSurfaceUse(GX2SurfaceFormat format);
 latte::DB_DEPTH_FORMAT
 GX2GetSurfaceDepthFormat(GX2SurfaceFormat format);
 
+namespace internal
+{
+
+GX2SurfaceFormatType
+getSurfaceFormatType(GX2SurfaceFormat format);
+
 latte::CB_FORMAT
-GX2GetSurfaceColorFormat(GX2SurfaceFormat format);
+getSurfaceFormatColorFormat(GX2SurfaceFormat format);
+
+latte::CB_NUMBER_TYPE
+getSurfaceFormatColorNumberType(GX2SurfaceFormat format);
+
+} // namespace internal
 
 } // namespace gx2
