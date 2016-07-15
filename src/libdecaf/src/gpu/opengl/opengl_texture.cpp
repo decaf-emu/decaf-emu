@@ -189,7 +189,7 @@ getTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatCom
    case latte::FMT_10_11_11_FLOAT:
    case latte::FMT_11_11_10:
    case latte::FMT_11_11_10_FLOAT:
-      return gl::GL_R11F_G11F_B10F;
+      return gl::GL_UNSIGNED_INT_10F_11F_11F_REV;
 
    default:
       decaf_abort(fmt::format("Unimplemented texture format {}", format));
