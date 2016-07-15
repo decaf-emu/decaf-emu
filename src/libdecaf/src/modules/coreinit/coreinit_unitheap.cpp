@@ -1,74 +1,69 @@
 #include "coreinit.h"
 #include "coreinit_unitheap.h"
 #include "common/align.h"
+#include "common/decaf_assert.h"
 #include "common/log.h"
 
 namespace coreinit
 {
-
-#pragma pack(push, 1)
-
-struct UnitBlock
-{
-   virtual_ptr<UnitBlock> next;
-};
-
-struct UnitHeap : MEMHeapHeader
-{
-   virtual_ptr<UnitBlock> freeBlockList;
-   uint32_t blockSize;
-};
-
-#pragma pack(pop)
-
 
 /**
  * Initialise a unit heap.
  *
  * Adds it to the list of active heaps.
  */
-UnitHeap *
-MEMCreateUnitHeapEx(UnitHeap *heap,
+MEMUnitHeap *
+MEMCreateUnitHeapEx(MEMUnitHeap *heap,
                     uint32_t size,
                     uint32_t blockSize,
                     int32_t alignment,
-                    uint16_t flags)
+                    uint32_t flags)
 {
-   // Adjust block size
-   auto adjBlockSize = static_cast<uint32_t>(align_up(blockSize + sizeof(UnitBlock), alignment));
+   decaf_check(heap);
+   auto start = align_up(mem::untranslate(heap), 4);
+   auto end = align_down(mem::untranslate(heap) + size, 4);
 
-   // Calculate blocks
-   auto base = mem::untranslate(heap);
-   auto firstBlock = static_cast<uint32_t>(align_up(base + sizeof(UnitHeap) + sizeof(UnitBlock), alignment) - sizeof(UnitBlock));
-   auto blockCount = (size - (firstBlock - base)) / adjBlockSize;
+   if (start >= end) {
+      return nullptr;
+   }
 
-   // Setup unit heap
-   heap->blockSize = blockSize;
+   auto firstBlock = align_up<uint32_t>(start + sizeof(MEMUnitHeap), alignment);
+
+   if (firstBlock >= end) {
+      return nullptr;
+   }
+
+   auto alignedBlockSize = align_up(blockSize, alignment);
+   auto blockCount = (end - firstBlock) / alignedBlockSize;
 
    if (blockCount == 0) {
-      heap->freeBlockList = nullptr;
-   } else {
-      heap->freeBlockList = make_virtual_ptr<UnitBlock>(firstBlock);
+      return nullptr;
    }
 
-   // Register heap
-   internal::registerHeap(heap,
+   heap->freeBlocks = mem::translate<MEMUnitHeapFreeBlock>(firstBlock);
+   heap->blockSize = alignedBlockSize;
+
+   // Register Heap
+   internal::registerHeap(&heap->header,
                           MEMHeapTag::UnitHeap,
                           firstBlock,
-                          firstBlock + adjBlockSize * blockCount,
+                          firstBlock + alignedBlockSize * blockCount,
                           flags);
 
-   // Setup free block list
-   for (auto i = 0u; i < blockCount; ++i) {
-      auto block = make_virtual_ptr<UnitBlock>(firstBlock + adjBlockSize * i);
+   // Setup free block linked list
+   MEMUnitHeapFreeBlock *prev = nullptr;
 
-      if (blockCount == (i + 1)) {
-         block->next = nullptr;
-      } else {
-         block->next = make_virtual_ptr<UnitBlock>(firstBlock + adjBlockSize * (i + 1));
+   for (auto i = 0u; i < blockCount; ++i) {
+      auto block = mem::translate<MEMUnitHeapFreeBlock>(firstBlock + alignedBlockSize * i);
+
+      if (prev) {
+         prev->next = block;
       }
+
+      prev = block;
    }
 
+   prev->next = nullptr;
    return heap;
 }
 
@@ -79,9 +74,10 @@ MEMCreateUnitHeapEx(UnitHeap *heap,
  * Remove it from the list of active heaps.
  */
 void *
-MEMDestroyUnitHeap(UnitHeap *heap)
+MEMDestroyUnitHeap(MEMUnitHeap *heap)
 {
-   internal::unregisterHeap(heap);
+   decaf_check(heap);
+   internal::unregisterHeap(&heap->header);
    return heap;
 }
 
@@ -90,15 +86,30 @@ MEMDestroyUnitHeap(UnitHeap *heap)
  * Allocate a memory block from a unit heap
  */
 void *
-MEMAllocFromUnitHeap(UnitHeap *heap)
+MEMAllocFromUnitHeap(MEMUnitHeap *heap)
 {
-   ScopedSpinLock lock(&heap->lock);
-   auto freeBlock = heap->freeBlockList;
-   void *block = nullptr;
+   decaf_check(heap);
+   decaf_check(heap->header.tag == MEMHeapTag::UnitHeap);
 
-   if (freeBlock) {
-      heap->freeBlockList = freeBlock->next;
-      block = make_virtual_ptr<void>(freeBlock.getAddress() + sizeof(UnitBlock));
+   if (heap->header.flags & MEMHeapFlags::UseLock) {
+      OSUninterruptibleSpinLock_Acquire(&heap->header.lock);
+   }
+
+   auto block = heap->freeBlocks;
+
+   if (block) {
+      heap->freeBlocks = block->next;
+   }
+
+   if (heap->header.flags & MEMHeapFlags::UseLock) {
+      OSUninterruptibleSpinLock_Release(&heap->header.lock);
+   }
+
+   if (heap->header.flags & MEMHeapFlags::ZeroAllocated) {
+      std::memset(block, 0, heap->blockSize);
+   } else if (heap->header.flags & MEMHeapFlags::DebugMode) {
+      auto value = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
+      std::memset(block, value, heap->blockSize);
    }
 
    return block;
@@ -109,13 +120,32 @@ MEMAllocFromUnitHeap(UnitHeap *heap)
  * Free a memory block in a unit heap
  */
 void
-MEMFreeToUnitHeap(UnitHeap *heap, void *block)
+MEMFreeToUnitHeap(MEMUnitHeap *heap,
+                  void *block)
 {
-   ScopedSpinLock lock(&heap->lock);
-   auto blockAddr = mem::untranslate(block);
-   auto unitBlock = make_virtual_ptr<UnitBlock>(blockAddr - sizeof(UnitBlock));
-   unitBlock->next = heap->freeBlockList;
-   heap->freeBlockList = unitBlock;
+   decaf_check(heap);
+   decaf_check(heap->header.tag == MEMHeapTag::UnitHeap);
+
+   if (!block) {
+      return;
+   }
+
+   if (heap->header.flags & MEMHeapFlags::DebugMode) {
+      auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
+      std::memset(block, value, heap->blockSize);
+   }
+
+   if (heap->header.flags & MEMHeapFlags::UseLock) {
+      OSUninterruptibleSpinLock_Acquire(&heap->header.lock);
+   }
+
+   auto freeBlock = reinterpret_cast<MEMUnitHeapFreeBlock *>(block);
+   freeBlock->next = heap->freeBlocks;
+   heap->freeBlocks = freeBlock;
+
+   if (heap->header.flags & MEMHeapFlags::UseLock) {
+      OSUninterruptibleSpinLock_Release(&heap->header.lock);
+   }
 }
 
 
@@ -123,13 +153,23 @@ MEMFreeToUnitHeap(UnitHeap *heap, void *block)
  * Count the number of free blocks in a unit heap.
  */
 uint32_t
-MEMCountFreeBlockForUnitHeap(UnitHeap *heap)
+MEMCountFreeBlockForUnitHeap(MEMUnitHeap *heap)
 {
-   ScopedSpinLock lock(&heap->lock);
+   decaf_check(heap);
+   decaf_check(heap->header.tag == MEMHeapTag::UnitHeap);
+
+   if (heap->header.flags & MEMHeapFlags::UseLock) {
+      OSUninterruptibleSpinLock_Acquire(&heap->header.lock);
+   }
+
    auto count = 0u;
 
-   for (auto block = heap->freeBlockList; block; block = block->next) {
+   for (auto block = heap->freeBlocks; block; block = block->next) {
       count++;
+   }
+
+   if (heap->header.flags & MEMHeapFlags::UseLock) {
+      OSUninterruptibleSpinLock_Release(&heap->header.lock);
    }
 
    return count;
@@ -144,10 +184,10 @@ MEMCalcHeapSizeForUnitHeap(uint32_t blockSize,
                            uint32_t blockCount,
                            int alignment)
 {
-   auto adjBlockSize = static_cast<uint32_t>(align_up(blockSize + sizeof(UnitBlock), alignment));
-   auto firstBlock = static_cast<uint32_t>(align_up(sizeof(UnitHeap) + sizeof(UnitBlock), alignment) - sizeof(UnitBlock));
-
-   return firstBlock + (adjBlockSize * blockCount);
+   auto alignedBlockSize = align_up(blockSize, alignment);
+   auto totalBlockSize = alignedBlockSize * blockCount;
+   auto headerSize = alignment - 4 + static_cast<uint32_t>(sizeof(MEMUnitHeap));
+   return headerSize + totalBlockSize;
 }
 
 namespace internal
@@ -157,11 +197,11 @@ namespace internal
  * Print debug information about the unit heap.
  */
 void
-dumpUnitHeap(UnitHeap *heap)
+dumpUnitHeap(MEMUnitHeap *heap)
 {
    auto freeBlocks = MEMCountFreeBlockForUnitHeap(heap);
    auto freeSize = heap->blockSize * freeBlocks;
-   auto totalSize = heap->dataEnd - heap->dataStart;
+   auto totalSize = heap->header.dataEnd - heap->header.dataStart;
    auto usedSize = totalSize - freeSize;
    auto percent = static_cast<float>(usedSize) / static_cast<float>(totalSize);
 

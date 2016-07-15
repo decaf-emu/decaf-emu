@@ -15,27 +15,47 @@ namespace coreinit
  * @{
  */
 
-struct UnitHeap;
+#pragma pack(push, 1)
 
-UnitHeap *
-MEMCreateUnitHeapEx(UnitHeap *heap,
+struct MEMUnitHeapFreeBlock
+{
+   be_ptr<MEMUnitHeapFreeBlock> next;
+};
+CHECK_OFFSET(MEMUnitHeapFreeBlock, 0x00, next);
+CHECK_SIZE(MEMUnitHeapFreeBlock, 0x04);
+
+struct MEMUnitHeap
+{
+   MEMHeapHeader header;
+   be_ptr<MEMUnitHeapFreeBlock> freeBlocks;
+   be_val<uint32_t> blockSize;
+};
+CHECK_OFFSET(MEMUnitHeap, 0x00, header);
+CHECK_OFFSET(MEMUnitHeap, 0x40, freeBlocks);
+CHECK_OFFSET(MEMUnitHeap, 0x44, blockSize);
+CHECK_SIZE(MEMUnitHeap, 0x48);
+
+#pragma pack(pop)
+
+MEMUnitHeap *
+MEMCreateUnitHeapEx(MEMUnitHeap *heap,
                     uint32_t size,
                     uint32_t blockSize,
                     int32_t alignment,
-                    uint16_t flags);
+                    uint32_t flags);
 
 void *
-MEMDestroyUnitHeap(UnitHeap *heap);
+MEMDestroyUnitHeap(MEMUnitHeap *heap);
 
 void *
-MEMAllocFromUnitHeap(UnitHeap *heap);
+MEMAllocFromUnitHeap(MEMUnitHeap *heap);
 
 void
-MEMFreeToUnitHeap(UnitHeap *heap,
+MEMFreeToUnitHeap(MEMUnitHeap *heap,
                   void *block);
 
 uint32_t
-MEMCountFreeBlockForUnitHeap(UnitHeap *heap);
+MEMCountFreeBlockForUnitHeap(MEMUnitHeap *heap);
 
 uint32_t
 MEMCalcHeapSizeForUnitHeap(uint32_t blockSize,
@@ -46,7 +66,7 @@ namespace internal
 {
 
 void
-dumpUnitHeap(UnitHeap *heap);
+dumpUnitHeap(MEMUnitHeap *heap);
 
 } // namespace internal
 

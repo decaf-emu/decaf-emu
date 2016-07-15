@@ -28,8 +28,8 @@ struct MEMHeapHeader
    be_val<uint32_t> dataEnd;
    OSSpinLock lock;
    be_val<uint32_t> flags;
+   UNKNOWN(0x0C);
 };
-
 CHECK_OFFSET(MEMHeapHeader, 0x0, tag);
 CHECK_OFFSET(MEMHeapHeader, 0x4, link);
 CHECK_OFFSET(MEMHeapHeader, 0xc, list);
@@ -37,7 +37,7 @@ CHECK_OFFSET(MEMHeapHeader, 0x18, dataStart);
 CHECK_OFFSET(MEMHeapHeader, 0x1c, dataEnd);
 CHECK_OFFSET(MEMHeapHeader, 0x20, lock);
 CHECK_OFFSET(MEMHeapHeader, 0x30, flags);
-CHECK_SIZE(MEMHeapHeader, 0x34);
+CHECK_SIZE(MEMHeapHeader, 0x40);
 
 #pragma pack(pop)
 

@@ -203,16 +203,16 @@ allocatorFrmHeapFree(Allocator *allocator,
 
 static void *
 allocatorUnitHeapAlloc(Allocator *allocator,
-                           uint32_t size)
+                       uint32_t size)
 {
-   return MEMAllocFromUnitHeap(reinterpret_cast<UnitHeap *>(allocator->heap.get()));
+   return MEMAllocFromUnitHeap(reinterpret_cast<MEMUnitHeap *>(allocator->heap.get()));
 }
 
 static void
 allocatorUnitHeapFree(Allocator *allocator,
-                          void *block)
+                      void *block)
 {
-   MEMFreeToUnitHeap(reinterpret_cast<UnitHeap *>(allocator->heap.get()),
+   MEMFreeToUnitHeap(reinterpret_cast<MEMUnitHeap *>(allocator->heap.get()),
                      block);
 }
 

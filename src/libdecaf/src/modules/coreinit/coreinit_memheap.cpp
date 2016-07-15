@@ -119,10 +119,10 @@ MEMDumpHeap(MEMHeapHeader *heap)
 {
    switch (heap->tag) {
    case MEMHeapTag::ExpandedHeap:
-      internal::dumpExpandedHeap(reinterpret_cast<ExpandedHeap*>(heap));
+      internal::dumpExpandedHeap(reinterpret_cast<ExpandedHeap *>(heap));
       break;
    case MEMHeapTag::UnitHeap:
-      internal::dumpUnitHeap(reinterpret_cast<UnitHeap*>(heap));
+      internal::dumpUnitHeap(reinterpret_cast<MEMUnitHeap *>(heap));
       break;
    case MEMHeapTag::FrameHeap:
    case MEMHeapTag::UserHeap:
