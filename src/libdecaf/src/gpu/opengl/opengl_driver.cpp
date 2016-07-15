@@ -33,6 +33,10 @@ void GLDriver::initGL()
    // Create our default framebuffer
    gl::glGenFramebuffers(1, &mFrameBuffer);
    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer);
+
+   // Create framebuffers for color-clear and depth-clear operations
+   gl::glCreateFramebuffers(1, &mColorClearFrameBuffer);
+   gl::glCreateFramebuffers(1, &mDepthClearFrameBuffer);
 }
 
 void GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
