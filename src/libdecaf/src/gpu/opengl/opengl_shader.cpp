@@ -175,26 +175,33 @@ bool GLDriver::checkActiveShader()
          gl::glCreateVertexArrays(1, &fetchShader.object);
 
          for (auto &attrib : fetchShader.attribs) {
-            auto normalise = attrib.numFormat == latte::SQ_NUM_FORMAT_NORM ? gl::GL_TRUE : gl::GL_FALSE;
-            auto type = getAttributeFormat(attrib.format, attrib.formatComp);
-            auto components = getAttributeComponents(attrib.format);
+            auto resourceId = attrib.buffer + latte::SQ_VS_RESOURCE_BASE;
+            if (resourceId >= latte::SQ_VS_ATTRIB_RESOURCE_0 && resourceId < latte::SQ_VS_ATTRIB_RESOURCE_0 + 0x10) {
+               auto attribBufferId = resourceId - latte::SQ_VS_ATTRIB_RESOURCE_0;
 
-            gl::glEnableVertexArrayAttrib(fetchShader.object, attrib.location);
-            gl::glVertexArrayAttribFormat(fetchShader.object, attrib.location, components, type, normalise, attrib.offset);
-            gl::glVertexArrayAttribBinding(fetchShader.object, attrib.location, attrib.buffer);
+               auto normalise = attrib.numFormat == latte::SQ_NUM_FORMAT_NORM ? gl::GL_TRUE : gl::GL_FALSE;
+               auto type = getAttributeFormat(attrib.format, attrib.formatComp);
+               auto components = getAttributeComponents(attrib.format);
 
-            if (attrib.type == latte::SQ_VTX_FETCH_TYPE::SQ_VTX_FETCH_INSTANCE_DATA) {
-               if (attrib.srcSelX == latte::SQ_SEL_W) {
-                  gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, 1);
-               } else if (attrib.srcSelX == latte::SQ_SEL_Y) {
-                  gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, aluDivisor0);
-               } else if (attrib.srcSelX == latte::SQ_SEL_Z) {
-                  gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, aluDivisor1);
+               gl::glEnableVertexArrayAttrib(fetchShader.object, attrib.location);
+               gl::glVertexArrayAttribFormat(fetchShader.object, attrib.location, components, type, normalise, attrib.offset);
+               gl::glVertexArrayAttribBinding(fetchShader.object, attrib.location, attribBufferId);
+
+               if (attrib.type == latte::SQ_VTX_FETCH_TYPE::SQ_VTX_FETCH_INSTANCE_DATA) {
+                  if (attrib.srcSelX == latte::SQ_SEL_W) {
+                     gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, 1);
+                  } else if (attrib.srcSelX == latte::SQ_SEL_Y) {
+                     gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, aluDivisor0);
+                  } else if (attrib.srcSelX == latte::SQ_SEL_Z) {
+                     gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, aluDivisor1);
+                  } else {
+                     decaf_abort(fmt::format("Unexpected SRC_SEL_X {} for alu divisor", attrib.srcSelX));
+                  }
                } else {
-                  decaf_abort(fmt::format("Unexpected SRC_SEL_X {} for alu divisor", attrib.srcSelX));
+                  gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, 0);
                }
             } else {
-               gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, 0);
+               decaf_abort("We do not yet support binding of non-attribute buffers");
             }
          }
       }
@@ -324,7 +331,7 @@ bool GLDriver::checkActiveUniforms()
    } else {
       if (mActiveShader->vertex && mActiveShader->vertex->object) {
          for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
-            auto resourceOffset = latte::SQ_VS_BUF_RESOURCE_0 + i * 7;
+            auto resourceOffset = (latte::SQ_VS_BUF_RESOURCE_0 + i) * 7;
             auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
             auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
             auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * resourceOffset);
@@ -356,7 +363,7 @@ bool GLDriver::checkActiveUniforms()
 
       if (mActiveShader->pixel && mActiveShader->pixel->object) {
          for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
-            auto resourceOffset = latte::SQ_PS_BUF_RESOURCE_0 + i * 7;
+            auto resourceOffset = (latte::SQ_PS_BUF_RESOURCE_0 + i) * 7;
             auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
             auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
             auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * resourceOffset);
@@ -497,10 +504,11 @@ bool GLDriver::checkActiveAttribBuffers()
    }
 
    for (auto i = 0u; i < buffers.size(); ++i) {
-      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + i * 7));
-      auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + i * 7));
-      auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + i * 7));
-      auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * (latte::SQ_VS_ATTRIB_RESOURCE_0 + i * 7));
+      auto resourceOffset = (latte::SQ_VS_ATTRIB_RESOURCE_0 + i) * 7;
+      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
+      auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
+      auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * resourceOffset);
+      auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
 
       auto addr = sq_vtx_constant_word0.BASE_ADDRESS;
       auto size = sq_vtx_constant_word1.SIZE + 1;
@@ -535,20 +543,25 @@ bool GLDriver::checkActiveAttribBuffers()
    }
 
    for (auto &attrib : mActiveShader->fetch->attribs) {
-      auto buffer = buffers[attrib.buffer];
+      auto resourceId = attrib.buffer + latte::SQ_VS_RESOURCE_BASE;
+      if (resourceId >= latte::SQ_VS_ATTRIB_RESOURCE_0 && resourceId < latte::SQ_VS_ATTRIB_RESOURCE_0 + 0x10) {
+         auto attribBufferId = resourceId - latte::SQ_VS_ATTRIB_RESOURCE_0;
+         auto buffer = buffers[attribBufferId];
 
-      if (!buffer || !buffer->object) {
-         decaf_abort("Something odd happened with attribute buffers");
+         if (!buffer || !buffer->object) {
+            decaf_abort("Something odd happened with attribute buffers");
+         }
+
+         stridedMemcpy(mem::translate<const void>(buffer->addr),
+            buffer->mappedBuffer,
+            buffer->size,
+            attrib.offset,
+            buffer->stride,
+            attrib.endianSwap,
+            attrib.format);
+      } else {
+         decaf_abort("We do not yet support binding of non-attribute buffers");
       }
-
-      stridedMemcpy(mem::translate<const void>(buffer->addr),
-                    buffer->mappedBuffer,
-                    buffer->size,
-                    attrib.offset,
-                    buffer->stride,
-                    attrib.endianSwap,
-                    attrib.format);
-
    }
 
    for (auto i = 0u; i < buffers.size(); i++) {
@@ -799,8 +812,9 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    shader.type = glsl2::Shader::VertexShader;
 
    for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
-      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_VS_TEX_RESOURCE_0 + i * 7));
-      auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_VS_TEX_RESOURCE_0 + i * 7));
+      auto resourceOffset = (latte::SQ_VS_TEX_RESOURCE_0 + i) * 7;
+      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
+      auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * resourceOffset);
       auto sq_tex_sampler_word0 = getRegister<latte::SQ_TEX_SAMPLER_WORD0_N>(latte::Register::SQ_TEX_SAMPLER_WORD0_0 + 4 * ((16 + i) * 3));
 
       shader.samplers[i] = getSamplerType(sq_tex_resource_word0.DIM(),
@@ -917,8 +931,9 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
 
    // Gather Samplers
    for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
-      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
-      auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * (latte::SQ_PS_TEX_RESOURCE_0 + i * 7));
+      auto resourceOffset = (latte::SQ_PS_TEX_RESOURCE_0 + i) * 7;
+      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
+      auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_TEX_RESOURCE_WORD4_0 + 4 * resourceOffset);
       auto sq_tex_sampler_word0 = getRegister<latte::SQ_TEX_SAMPLER_WORD0_N>(latte::Register::SQ_TEX_SAMPLER_WORD0_0 + 4 * (i * 3));
 
       shader.samplers[i] = getSamplerType(sq_tex_resource_word0.DIM(),

@@ -14,7 +14,7 @@ GX2SetAttribBuffer(uint32_t index,
 {
    pm4::SetVtxResource res;
    memset(&res, 0, sizeof(pm4::SetVtxResource));
-   res.id = (index * 7) + latte::SQ_VS_ATTRIB_RESOURCE_0;
+   res.id = (latte::SQ_VS_ATTRIB_RESOURCE_0 + index) * 7;
    res.baseAddress = buffer;
 
    res.word1.SIZE = size - 1;

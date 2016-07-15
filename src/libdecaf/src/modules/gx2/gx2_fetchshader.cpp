@@ -275,7 +275,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          // Semantic vertex fetch
          vfetch.word0 = vfetch.word0
             .VTX_INST().set(latte::SQ_VTX_INST_SEMANTIC)
-            .BUFFER_ID().set(attrib.buffer);
+            .BUFFER_ID().set(latte::SQ_VS_ATTRIB_RESOURCE_0 + attrib.buffer - latte::SQ_VS_RESOURCE_BASE);
 
          vfetch.word2 = vfetch.word2
             .OFFSET().set(attribs[i].offset);

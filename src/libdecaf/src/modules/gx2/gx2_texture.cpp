@@ -166,7 +166,7 @@ setTexture(GX2Texture *texture, latte::SQ_RES_OFFSET offset, uint32_t unit)
    auto word3 = latte::SQ_TEX_RESOURCE_WORD3_N::get(mipAddress >> 8);
 
    pm4::write(pm4::SetTexResource {
-      (unit * 7) + offset,
+      (offset + unit) * 7,
       texture->regs.word0,
       texture->regs.word1,
       word2,
