@@ -150,6 +150,9 @@ getTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatCom
 
    case latte::FMT_16_FLOAT:
    case latte::FMT_16_16_FLOAT:
+   case latte::FMT_16_16_16_FLOAT:
+   case latte::FMT_16_16_16_16_FLOAT:
+      return gl::GL_HALF_FLOAT;
 
    case latte::FMT_32:
    case latte::FMT_32_32:
