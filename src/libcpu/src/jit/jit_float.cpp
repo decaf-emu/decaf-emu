@@ -78,6 +78,7 @@ faddGeneric(PPCEmuAssembler& a, Instruction instr)
       truncateToSingleSd(a, dst);
    }
 
+   a.movddup(dst, dst);
    return true;
 }
 
@@ -113,6 +114,7 @@ fdivGeneric(PPCEmuAssembler& a, Instruction instr)
       truncateToSingleSd(a, dst);
    }
 
+   a.movddup(dst, dst);
    return true;
 }
 
@@ -155,6 +157,7 @@ fmulGeneric(PPCEmuAssembler& a, Instruction instr)
       truncateToSingleSd(a, dst);
    }
 
+   a.movddup(dst, dst);
    return true;
 }
 
@@ -190,6 +193,7 @@ fsubGeneric(PPCEmuAssembler& a, Instruction instr)
       truncateToSingleSd(a, dst);
    }
 
+   a.movddup(dst, dst);
    return true;
 }
 
@@ -231,6 +235,7 @@ fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
       truncateToSingleSd(a, dst);
    }
 
+   a.movddup(dst, dst);
    return true;
 }
 
@@ -272,6 +277,7 @@ fmsubGeneric(PPCEmuAssembler& a, Instruction instr)
       truncateToSingleSd(a, dst);
    }
 
+   a.movddup(dst, dst);
    return true;
 }
 
@@ -326,6 +332,7 @@ frsp(PPCEmuAssembler& a, Instruction instr)
 
    truncateToSingleSd(a, dst);
 
+   a.movddup(dst, dst);
    return true;
 }
 
@@ -349,6 +356,7 @@ fabsGeneric(PPCEmuAssembler& a, Instruction instr)
       negateXmmSd(a, dst);
    }
 
+   a.movddup(dst, dst);
    return true;
 }
 
@@ -395,6 +403,7 @@ fneg(PPCEmuAssembler& a, Instruction instr)
 
    negateXmmSd(a, dst);
 
+   a.movddup(dst, dst);
    return true;
 }
 
