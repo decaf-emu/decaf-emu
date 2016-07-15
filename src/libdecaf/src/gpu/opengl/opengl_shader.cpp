@@ -575,7 +575,7 @@ bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
       case latte::SQ_CF_INST_VTX_TC:
       {
          auto vfPtr = reinterpret_cast<latte::VertexFetchInst *>(program + cf.word0.ADDR);
-         auto count = (cf.word1.COUNT_3() << 3) | cf.word1.COUNT();
+         auto count = ((cf.word1.COUNT_3() << 3) | cf.word1.COUNT()) + 1;
 
          for (auto j = 0u; j < count; ++j) {
             auto &vf = vfPtr[j];

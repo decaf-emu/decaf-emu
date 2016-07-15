@@ -425,8 +425,8 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          std::memset(&inst, 0, sizeof(inst));
          inst.word0.ADDR = static_cast<uint32_t>((fetchOffset + sizeof(latte::VertexFetchInst) * i * FetchesPerControlFlow) / 8);
          inst.word1 = inst.word1
-            .COUNT().set(fetches & 0x7)
-            .COUNT_3().set((fetches >> 3) & 0x1)
+            .COUNT().set((fetches - 1) & 0x7)
+            .COUNT_3().set(((fetches - 1) >> 3) & 0x1)
             .CF_INST().set(latte::SQ_CF_INST_VTX_TC)
             .BARRIER().set(barrier ? 1 : 0);
          *(cfPtr++) = inst;
