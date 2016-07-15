@@ -75,6 +75,10 @@ OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous,
       if (timeout != -1 && OSGetTime() >= endTime) {
          break;
       }
+
+      // We must manually check for interrupts here, as we are busy-looping.
+      //  Note that this is only safe as no locks are held during the wait.
+      cpu::this_core::checkInterrupts();
    } while (true);
 
    return success;

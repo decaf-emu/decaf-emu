@@ -113,6 +113,9 @@ void
 executeSub();
 
 void
+checkInterrupts();
+
+void
 waitForInterrupt();
 
 uint32_t

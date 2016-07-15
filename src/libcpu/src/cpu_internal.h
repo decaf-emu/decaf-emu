@@ -42,9 +42,6 @@ namespace this_core
 {
 
 void
-checkInterrupts();
-
-void
 updateRoundingMode();
 
 } // namespace this_core
