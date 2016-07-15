@@ -523,7 +523,7 @@ stridedMemcpy(const void *src,
       stridedMemcpy2<uint32_t, 4>(src, dst, size, offset, stride, swap);
       break;
    default:
-      gLog->error(fmt::format("Unimplemented stride memcpy format {}", format));
+      decaf_abort(fmt::format("Unimplemented stride memcpy format {}", format));
    }
 }
 
