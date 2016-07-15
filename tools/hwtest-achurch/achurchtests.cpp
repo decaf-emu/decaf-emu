@@ -16,7 +16,9 @@ runTests()
    //   TEST_BA = 1
    //   TEST_SC = 0
    //   TEST_TRAP = 0
-   //   TEST_PAIRED_SINGLE = 0
+   //   TEST_PAIRED_SINGLE = 1
+   // powerpc-eabi-as ppc750cl.S -o ppc750cl.o
+   // powerpc-eabi-ld ppc750cl.o -o ppc750cl --oformat=binary
    std::ifstream file("tests/cpu/achurch.bin", std::ifstream::in | std::ifstream::binary);
 
    // Calculate the total size of the file
