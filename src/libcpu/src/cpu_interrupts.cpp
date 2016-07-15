@@ -101,14 +101,6 @@ checkInterrupts()
 
    // Check if we hit any breakpoints
    if (popBreakpoint(core->nia)) {
-      // Need to interrupt all the other cores
-      for (auto i = 0; i < 3; ++i) {
-         if (i != core->id) {
-            interrupt(i, DBGBREAK_INTERRUPT);
-         }
-      }
-
-      // Our core we can just add it to the local interrupt list
       flags |= DBGBREAK_INTERRUPT;
    }
 
