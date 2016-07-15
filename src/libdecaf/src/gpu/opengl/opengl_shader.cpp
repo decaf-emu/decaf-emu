@@ -522,6 +522,10 @@ stridedMemcpy(const void *src,
    case latte::FMT_32_32_32_32_FLOAT:
       stridedMemcpy2<uint32_t, 4>(src, dst, size, offset, stride, swap);
       break;
+   case latte::FMT_10_10_10_2:
+   case latte::FMT_2_10_10_10:
+      stridedMemcpy2<uint32_t, 1>(src, dst, size, offset, stride, swap);
+      break;
    default:
       decaf_abort(fmt::format("Unimplemented stride memcpy format {}", format));
    }
