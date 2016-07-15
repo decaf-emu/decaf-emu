@@ -19,7 +19,7 @@ struct ExpandedHeapBlock
    virtual_ptr<ExpandedHeapBlock> prev;
 };
 
-struct ExpandedHeap : CommonHeap
+struct ExpandedHeap : MEMHeapHeader
 {
    uint32_t size;
    uint32_t bottom;
@@ -134,7 +134,8 @@ getTail(virtual_ptr<ExpandedHeapBlock> block)
  * Initialise an expanded heap.
  */
 ExpandedHeap *
-MEMCreateExpHeap(ExpandedHeap *heap, uint32_t size)
+MEMCreateExpHeap(ExpandedHeap *heap,
+                 uint32_t size)
 {
    return MEMCreateExpHeapEx(heap, size, 0);
 }
@@ -146,7 +147,9 @@ MEMCreateExpHeap(ExpandedHeap *heap, uint32_t size)
  * Adds it to the list of active heaps.
  */
 ExpandedHeap *
-MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
+MEMCreateExpHeapEx(ExpandedHeap *heap,
+                   uint32_t size,
+                   uint32_t flags)
 {
    // Setup state
    auto base = mem::untranslate(heap);
@@ -162,8 +165,13 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
    heap->freeBlockList->next = nullptr;
    heap->freeBlockList->prev = nullptr;
 
-   // Setup common header
-   MEMiInitHeapHead(heap, MEMiHeapTag::ExpandedHeap, heap->freeBlockList->addr, heap->freeBlockList->addr + heap->freeBlockList->size);
+   // Register heap
+   internal::registerHeap(heap,
+                          MEMHeapTag::ExpandedHeap,
+                          heap->freeBlockList->addr,
+                          heap->freeBlockList->addr + heap->freeBlockList->size,
+                          flags);
+
    return heap;
 }
 
@@ -176,27 +184,8 @@ MEMCreateExpHeapEx(ExpandedHeap *heap, uint32_t size, uint16_t flags)
 ExpandedHeap *
 MEMDestroyExpHeap(ExpandedHeap *heap)
 {
-   MEMiFinaliseHeap(heap);
+   internal::unregisterHeap(heap);
    return heap;
-}
-
-
-/**
- * Print debug information about the expanded heap.
- */
-void
-MEMiDumpExpHeap(ExpandedHeap *heap)
-{
-   gLog->debug("MEMiDumpExpHeap({:8x})", mem::untranslate(heap));
-   gLog->debug("Status Address Size Group");
-
-   for (auto block = heap->freeBlockList; block; block = block->next) {
-      gLog->debug("FREE {:8x} {:8x} {:d}", block->addr, block->size, block->group);
-   }
-
-   for (auto block = heap->usedBlockList; block; block = block->next) {
-      gLog->debug("USED {:8x} {:8x} {:d}", block->addr, block->size, block->group);
-   }
 }
 
 
@@ -290,7 +279,7 @@ MEMAllocFromExpHeapEx(ExpandedHeap *heap, uint32_t size, int alignment)
 
    if (!freeBlock) {
       gLog->error("MEMAllocFromExpHeapEx failed, no free block found for size {:08x} ({:08x}+{:x}+{:x})", size, originalSize, sizeof(ExpandedHeapBlock), alignment);
-      MEMiDumpExpHeap(heap);
+      internal::dumpExpandedHeap(heap);
       return nullptr;
    }
 
@@ -639,6 +628,30 @@ MEMGetAllocDirForMBlockExpHeap(uint8_t *addr)
 }
 
 
+namespace internal
+{
+
+/**
+ * Print debug information about the expanded heap.
+ */
+void
+dumpExpandedHeap(ExpandedHeap *heap)
+{
+   gLog->debug("MEMExpHeap(0x{:8x})", mem::untranslate(heap));
+   gLog->debug("Status Address   Size       Group");
+
+   for (auto block = heap->freeBlockList; block; block = block->next) {
+      gLog->debug("FREE  0x{:8x} 0x{:8x} {:d}", block->addr, block->size, block->group);
+   }
+
+   for (auto block = heap->usedBlockList; block; block = block->next) {
+      gLog->debug("USED  0x{:8x} 0x{:8x} {:d}", block->addr, block->size, block->group);
+   }
+}
+
+} // namespace internal
+
+
 void
 Module::registerExpHeapFunctions()
 {
@@ -660,7 +673,6 @@ Module::registerExpHeapFunctions()
    RegisterKernelFunction(MEMGetSizeForMBlockExpHeap);
    RegisterKernelFunction(MEMGetGroupIDForMBlockExpHeap);
    RegisterKernelFunction(MEMGetAllocDirForMBlockExpHeap);
-   RegisterKernelFunction(MEMiDumpExpHeap);
 }
 
 } // namespace coreinit

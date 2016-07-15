@@ -21,7 +21,7 @@ MEMCreateFrmHeap(FrameHeap *heap,
 FrameHeap *
 MEMCreateFrmHeapEx(FrameHeap *heap,
                    uint32_t size,
-                   uint16_t flags);
+                   uint32_t flags);
 
 void *
 MEMDestroyFrmHeap(FrameHeap *heap);

@@ -4,14 +4,14 @@
 namespace coreinit
 {
 
-static MemoryLink *
-getLink(MemoryList *list, void *object)
+static MEMListLink *
+getLink(MEMList *list, void *object)
 {
-   return reinterpret_cast<MemoryLink*>(reinterpret_cast<uint8_t*>(object) + list->offsetToMemoryLink);
+   return reinterpret_cast<MEMListLink*>(reinterpret_cast<uint8_t*>(object) + list->offsetToMEMListLink);
 }
 
 void
-setFirstObject(MemoryList *list, void *object)
+setFirstObject(MEMList *list, void *object)
 {
    auto link = getLink(list, object);
    list->head = object;
@@ -22,16 +22,16 @@ setFirstObject(MemoryList *list, void *object)
 }
 
 void
-MEMInitList(MemoryList *list, uint16_t offsetToMemoryLink)
+MEMInitList(MEMList *list, uint16_t offsetToMEMListLink)
 {
    list->head = nullptr;
    list->tail = nullptr;
    list->count = 0;
-   list->offsetToMemoryLink = offsetToMemoryLink;
+   list->offsetToMEMListLink = offsetToMEMListLink;
 }
 
 void
-MEMAppendListObject(MemoryList *list, void *object)
+MEMAppendListObject(MEMList *list, void *object)
 {
    if (!list->tail) {
       setFirstObject(list, object);
@@ -48,7 +48,7 @@ MEMAppendListObject(MemoryList *list, void *object)
 }
 
 void
-MEMPrependListObject(MemoryList *list, void *object)
+MEMPrependListObject(MEMList *list, void *object)
 {
    if (!list->head) {
       setFirstObject(list, object);
@@ -65,7 +65,7 @@ MEMPrependListObject(MemoryList *list, void *object)
 }
 
 void
-MEMInsertListObject(MemoryList *list, void *before, void *object)
+MEMInsertListObject(MEMList *list, void *before, void *object)
 {
    if (!before) {
       // Insert at end
@@ -89,7 +89,7 @@ MEMInsertListObject(MemoryList *list, void *before, void *object)
 }
 
 void
-MEMRemoveListObject(MemoryList *list, void *object)
+MEMRemoveListObject(MEMList *list, void *object)
 {
    void *head = nullptr;
 
@@ -137,7 +137,7 @@ MEMRemoveListObject(MemoryList *list, void *object)
 }
 
 void *
-MEMGetNextListObject(MemoryList *list, void *object)
+MEMGetNextListObject(MEMList *list, void *object)
 {
    if (!object) {
       return list->head;
@@ -147,7 +147,7 @@ MEMGetNextListObject(MemoryList *list, void *object)
 }
 
 void *
-MEMGetPrevListObject(MemoryList *list, void *object)
+MEMGetPrevListObject(MEMList *list, void *object)
 {
    if (!object) {
       return list->tail;
@@ -157,7 +157,7 @@ MEMGetPrevListObject(MemoryList *list, void *object)
 }
 
 void *
-MEMGetNthListObject(MemoryList *list, uint16_t n)
+MEMGetNthListObject(MEMList *list, uint16_t n)
 {
    void *head = nullptr;
 

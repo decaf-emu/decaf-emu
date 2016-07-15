@@ -35,20 +35,20 @@ pMEMAllocFromDefaultHeapEx;
 be_wfunc_ptr<void, void*> *
 pMEMFreeToDefaultHeap;
 
-static std::array<CommonHeap *, MEMBaseHeapType::Max>
+static std::array<MEMHeapHeader *, MEMBaseHeapType::Max>
 sMemArenas;
 
-static MemoryList *
+static MEMList *
 sForegroundMemlist = nullptr;
 
-static MemoryList *
+static MEMList *
 sMEM1Memlist = nullptr;
 
-static MemoryList *
+static MEMList *
 sMEM2Memlist = nullptr;
 
-static MemoryList *
-findListContainingHeap(CommonHeap *heap)
+static MEMList *
+findListContainingHeap(MEMHeapHeader *heap)
 {
    be_val<uint32_t> start, size, end;
    OSGetForegroundBucket(&start, &size);
@@ -68,7 +68,7 @@ findListContainingHeap(CommonHeap *heap)
    }
 }
 
-static MemoryList *
+static MEMList *
 findListContainingBlock(void *block)
 {
    be_val<uint32_t> start, size, end;
@@ -90,14 +90,14 @@ findListContainingBlock(void *block)
    }
 }
 
-static CommonHeap *
-findHeapContainingBlock(MemoryList *list,
+static MEMHeapHeader *
+findHeapContainingBlock(MEMList *list,
                         void *block)
 {
-   CommonHeap *heap = nullptr;
+   MEMHeapHeader *heap = nullptr;
    uint32_t addr = mem::untranslate(block);
 
-   while ((heap = reinterpret_cast<CommonHeap*>(MEMGetNextListObject(list, heap)))) {
+   while ((heap = reinterpret_cast<MEMHeapHeader*>(MEMGetNextListObject(list, heap)))) {
       if (addr >= heap->dataStart && addr < heap->dataEnd) {
          auto child = findHeapContainingBlock(&heap->list, block);
          return child ? child : heap;
@@ -108,49 +108,23 @@ findHeapContainingBlock(MemoryList *list,
 }
 
 void
-MEMiInitHeapHead(CommonHeap *heap,
-                 MEMiHeapTag tag,
-                 uint32_t dataStart,
-                 uint32_t dataEnd)
-{
-   heap->tag = tag;
-   MEMInitList(&heap->list, offsetof(CommonHeap, link));
-   heap->dataStart = dataStart;
-   heap->dataEnd = dataEnd;
-   OSInitSpinLock(&heap->lock);
-   heap->flags = 0;
-
-   if (auto list = findListContainingHeap(heap)) {
-      MEMAppendListObject(list, heap);
-   }
-}
-
-void
-MEMiFinaliseHeap(CommonHeap *heap)
-{
-   if (auto list = findListContainingHeap(heap)) {
-      MEMRemoveListObject(list, heap);
-   }
-}
-
-void
-MEMDumpHeap(CommonHeap *heap)
+MEMDumpHeap(MEMHeapHeader *heap)
 {
    switch (heap->tag) {
-   case MEMiHeapTag::ExpandedHeap:
-      MEMiDumpExpHeap(reinterpret_cast<ExpandedHeap*>(heap));
+   case MEMHeapTag::ExpandedHeap:
+      internal::dumpExpandedHeap(reinterpret_cast<ExpandedHeap*>(heap));
       break;
-   case MEMiHeapTag::UnitHeap:
+   case MEMHeapTag::UnitHeap:
       MEMiDumpUnitHeap(reinterpret_cast<UnitHeap*>(heap));
       break;
-   case MEMiHeapTag::FrameHeap:
-   case MEMiHeapTag::UserHeap:
-   case MEMiHeapTag::BlockHeap:
+   case MEMHeapTag::FrameHeap:
+   case MEMHeapTag::UserHeap:
+   case MEMHeapTag::BlockHeap:
       gLog->info("Unimplemented MEMDumpHeap type");
    }
 }
 
-CommonHeap *
+MEMHeapHeader *
 MEMFindContainHeap(void *block)
 {
    if (auto list = findListContainingBlock(block)) {
@@ -161,7 +135,7 @@ MEMFindContainHeap(void *block)
 }
 
 MEMBaseHeapType
-MEMGetArena(CommonHeap *heap)
+MEMGetArena(MEMHeapHeader *heap)
 {
    for (auto i = 0u; i < sMemArenas.size(); ++i) {
       if (sMemArenas[i] == heap) {
@@ -172,7 +146,7 @@ MEMGetArena(CommonHeap *heap)
    return MEMBaseHeapType::Invalid;
 }
 
-CommonHeap *
+MEMHeapHeader *
 MEMGetBaseHeapHandle(MEMBaseHeapType type)
 {
    if (type < sMemArenas.size()) {
@@ -182,9 +156,9 @@ MEMGetBaseHeapHandle(MEMBaseHeapType type)
    }
 }
 
-CommonHeap *
+MEMHeapHeader *
 MEMSetBaseHeapHandle(MEMBaseHeapType type,
-                     CommonHeap *heap)
+                     MEMHeapHeader *heap)
 {
    if (type < sMemArenas.size()) {
       auto previous = sMemArenas[type];
@@ -224,8 +198,6 @@ Module::registerMembaseFunctions()
    RegisterKernelFunction(MEMGetBaseHeapHandle);
    RegisterKernelFunction(MEMSetBaseHeapHandle);
    RegisterKernelFunction(MEMGetArena);
-   RegisterKernelFunction(MEMiInitHeapHead);
-   RegisterKernelFunction(MEMiFinaliseHeap);
    RegisterKernelFunction(MEMFindContainHeap);
    RegisterKernelFunction(MEMDumpHeap);
 
@@ -247,9 +219,9 @@ Module::initialiseMembase()
 {
    sMemArenas.fill(nullptr);
 
-   MEMInitList(sForegroundMemlist, offsetof(CommonHeap, link));
-   MEMInitList(sMEM1Memlist, offsetof(CommonHeap, link));
-   MEMInitList(sMEM2Memlist, offsetof(CommonHeap, link));
+   MEMInitList(sForegroundMemlist, offsetof(MEMHeapHeader, link));
+   MEMInitList(sMEM1Memlist, offsetof(MEMHeapHeader, link));
+   MEMInitList(sMEM2Memlist, offsetof(MEMHeapHeader, link));
 
    internal::initialiseDefaultHeaps();
 
@@ -269,17 +241,47 @@ void initialiseDefaultHeaps()
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
    auto mem2 = MEMCreateExpHeap(make_virtual_ptr<ExpandedHeap>(addr), size);
-   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, reinterpret_cast<CommonHeap*>(mem2));
+   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, reinterpret_cast<MEMHeapHeader*>(mem2));
 
    // Create frame heap for MEM1
    OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
    auto mem1 = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
-   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, reinterpret_cast<CommonHeap*>(mem1));
+   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, reinterpret_cast<MEMHeapHeader*>(mem1));
 
    // Create frame heap for Foreground
    OSGetForegroundBucketFreeArea(&addr, &size);
    auto fg = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
-   MEMSetBaseHeapHandle(MEMBaseHeapType::FG, reinterpret_cast<CommonHeap*>(fg));
+   MEMSetBaseHeapHandle(MEMBaseHeapType::FG, reinterpret_cast<MEMHeapHeader*>(fg));
+}
+
+
+void
+registerHeap(MEMHeapHeader *heap,
+             MEMHeapTag tag,
+             uint32_t dataStart,
+             uint32_t dataEnd,
+             uint32_t flags)
+{
+   // Setup heap header
+   heap->tag = tag;
+   heap->dataStart = dataStart;
+   heap->dataEnd = dataEnd;
+   heap->flags = flags;
+   MEMInitList(&heap->list, offsetof(MEMHeapHeader, link));
+   OSInitSpinLock(&heap->lock);
+
+   // Add to heap list
+   if (auto list = findListContainingHeap(heap)) {
+      MEMAppendListObject(list, heap);
+   }
+}
+
+void
+unregisterHeap(MEMHeapHeader *heap)
+{
+   if (auto list = findListContainingHeap(heap)) {
+      MEMRemoveListObject(list, heap);
+   }
 }
 
 void *

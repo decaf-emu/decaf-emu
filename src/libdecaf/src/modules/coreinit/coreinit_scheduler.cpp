@@ -596,15 +596,15 @@ GameThreadEntry(uint32_t argc, void *argv)
 {
    auto appModule = kernel::getUserModule();
 
-   auto userPreinit = appModule->findFuncExport<void, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*, be_ptr<CommonHeap>*>("__preinit_user");
+   auto userPreinit = appModule->findFuncExport<void, be_ptr<MEMHeapHeader>*, be_ptr<MEMHeapHeader>*, be_ptr<MEMHeapHeader>*>("__preinit_user");
    auto start = kernel::loader::AppEntryPoint(appModule->entryPoint);
 
    debugger::handlePreLaunch();
 
    if (userPreinit) {
-      ppcutils::StackObject<be_ptr<CommonHeap>> mem1HeapPtr;
-      ppcutils::StackObject<be_ptr<CommonHeap>> fgHeapPtr;
-      ppcutils::StackObject<be_ptr<CommonHeap>> mem2HeapPtr;
+      ppcutils::StackObject<be_ptr<MEMHeapHeader>> mem1HeapPtr;
+      ppcutils::StackObject<be_ptr<MEMHeapHeader>> fgHeapPtr;
+      ppcutils::StackObject<be_ptr<MEMHeapHeader>> mem2HeapPtr;
 
       *mem1HeapPtr = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM1);
       *fgHeapPtr = MEMGetBaseHeapHandle(MEMBaseHeapType::FG);

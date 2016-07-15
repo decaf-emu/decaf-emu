@@ -19,7 +19,7 @@ struct FrameHeapState
    virtual_ptr<FrameHeapState> previous;
 };
 
-struct FrameHeap : CommonHeap
+struct FrameHeap : MEMHeapHeader
 {
    uint32_t top;
    uint32_t bottom;
@@ -36,7 +36,7 @@ MEMCreateFrmHeap(FrameHeap *heap, uint32_t size)
 }
 
 FrameHeap *
-MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags)
+MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint32_t flags)
 {
    // Allocate memory
    auto base = mem::untranslate(heap);
@@ -51,15 +51,20 @@ MEMCreateFrmHeapEx(FrameHeap *heap, uint32_t size, uint16_t flags)
    heap->state->bottom = heap->bottom;
    heap->state->previous = nullptr;
 
-   // Setup common header
-   MEMiInitHeapHead(heap, MEMiHeapTag::FrameHeap, heap->bottom, heap->top);
+   // Register heap
+   internal::registerHeap(heap,
+                          MEMHeapTag::FrameHeap,
+                          heap->bottom,
+                          heap->top,
+                          flags);
+
    return heap;
 }
 
 void *
 MEMDestroyFrmHeap(FrameHeap *heap)
 {
-   MEMiFinaliseHeap(heap);
+   internal::unregisterHeap(heap);
    return heap;
 }
 

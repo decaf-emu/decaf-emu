@@ -21,13 +21,10 @@ MEMCreateExpHeap(ExpandedHeap *heap,
 ExpandedHeap *
 MEMCreateExpHeapEx(ExpandedHeap *heap,
                    uint32_t size,
-                   uint16_t flags);
+                   uint32_t flags);
 
 ExpandedHeap *
 MEMDestroyExpHeap(ExpandedHeap *heap);
-
-void
-MEMiDumpExpHeap(ExpandedHeap *heap);
 
 void *
 MEMAllocFromExpHeap(ExpandedHeap *heap,
@@ -82,6 +79,14 @@ MEMGetGroupIDForMBlockExpHeap(uint8_t *addr);
 
 MEMExpHeapDirection
 MEMGetAllocDirForMBlockExpHeap(uint8_t *addr);
+
+namespace internal
+{
+
+void
+dumpExpandedHeap(ExpandedHeap *heap);
+
+} // namespace internal
 
 /** @} */
 

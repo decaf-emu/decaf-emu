@@ -13,7 +13,7 @@ struct UnitBlock
    virtual_ptr<UnitBlock> next;
 };
 
-struct UnitHeap : CommonHeap
+struct UnitHeap : MEMHeapHeader
 {
    virtual_ptr<UnitBlock> freeBlockList;
    uint32_t blockSize;
@@ -51,7 +51,12 @@ MEMCreateUnitHeapEx(UnitHeap *heap,
       heap->freeBlockList = make_virtual_ptr<UnitBlock>(firstBlock);
    }
 
-   MEMiInitHeapHead(heap, MEMiHeapTag::UnitHeap, firstBlock, firstBlock + adjBlockSize * blockCount);
+   // Register heap
+   internal::registerHeap(heap,
+                          MEMHeapTag::UnitHeap,
+                          firstBlock,
+                          firstBlock + adjBlockSize * blockCount,
+                          flags);
 
    // Setup free block list
    for (auto i = 0u; i < blockCount; ++i) {
@@ -76,7 +81,7 @@ MEMCreateUnitHeapEx(UnitHeap *heap,
 void *
 MEMDestroyUnitHeap(UnitHeap *heap)
 {
-   MEMiFinaliseHeap(heap);
+   internal::unregisterHeap(heap);
    return heap;
 }
 

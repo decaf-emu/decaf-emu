@@ -19,25 +19,25 @@ static const uint32_t MEM_MAX_HEAP_TABLE = 0x20;
 
 #pragma pack(push, 1)
 
-struct CommonHeap
+struct MEMHeapHeader
 {
-   be_val<MEMiHeapTag> tag;
-   MemoryLink link;
-   MemoryList list;
+   be_val<MEMHeapTag> tag;
+   MEMListLink link;
+   MEMList list;
    be_val<uint32_t> dataStart;
    be_val<uint32_t> dataEnd;
    OSSpinLock lock;
    be_val<uint32_t> flags;
 };
 
-CHECK_OFFSET(CommonHeap, 0x0, tag);
-CHECK_OFFSET(CommonHeap, 0x4, link);
-CHECK_OFFSET(CommonHeap, 0xc, list);
-CHECK_OFFSET(CommonHeap, 0x18, dataStart);
-CHECK_OFFSET(CommonHeap, 0x1c, dataEnd);
-CHECK_OFFSET(CommonHeap, 0x20, lock);
-CHECK_OFFSET(CommonHeap, 0x30, flags);
-CHECK_SIZE(CommonHeap, 0x34);
+CHECK_OFFSET(MEMHeapHeader, 0x0, tag);
+CHECK_OFFSET(MEMHeapHeader, 0x4, link);
+CHECK_OFFSET(MEMHeapHeader, 0xc, list);
+CHECK_OFFSET(MEMHeapHeader, 0x18, dataStart);
+CHECK_OFFSET(MEMHeapHeader, 0x1c, dataEnd);
+CHECK_OFFSET(MEMHeapHeader, 0x20, lock);
+CHECK_OFFSET(MEMHeapHeader, 0x30, flags);
+CHECK_SIZE(MEMHeapHeader, 0x34);
 
 #pragma pack(pop)
 
@@ -51,29 +51,20 @@ extern be_wfunc_ptr<void, void*>*
 pMEMFreeToDefaultHeap;
 
 void
-MEMiInitHeapHead(CommonHeap *heap,
-                 MEMiHeapTag tag,
-                 uint32_t dataStart,
-                 uint32_t dataEnd);
+MEMDumpHeap(MEMHeapHeader *heap);
 
-void
-MEMiFinaliseHeap(CommonHeap *heap);
-
-void
-MEMDumpHeap(CommonHeap *heap);
-
-CommonHeap *
+MEMHeapHeader *
 MEMFindContainHeap(void *block);
 
 MEMBaseHeapType
-MEMGetArena(CommonHeap *heap);
+MEMGetArena(MEMHeapHeader *heap);
 
-CommonHeap *
+MEMHeapHeader *
 MEMGetBaseHeapHandle(MEMBaseHeapType type);
 
-CommonHeap *
+MEMHeapHeader *
 MEMSetBaseHeapHandle(MEMBaseHeapType type,
-                     CommonHeap *heap);
+                     MEMHeapHeader *heap);
 
 /** @} */
 
@@ -82,6 +73,16 @@ namespace internal
 
 void
 initialiseDefaultHeaps();
+
+void
+registerHeap(MEMHeapHeader *heap,
+             MEMHeapTag tag,
+             uint32_t dataStart,
+             uint32_t dataEnd,
+             uint32_t flags);
+
+void
+unregisterHeap(MEMHeapHeader *heap);
 
 void *
 sysAlloc(size_t size,

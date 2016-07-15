@@ -16,62 +16,62 @@ namespace coreinit
 
 #pragma pack(push, 1)
 
-struct MemoryLink
+struct MEMListLink
 {
    be_ptr<void> prev;
    be_ptr<void> next;
 };
 
-CHECK_OFFSET(MemoryLink, 0x0, prev);
-CHECK_OFFSET(MemoryLink, 0x4, next);
-CHECK_SIZE(MemoryLink, 0x8);
+CHECK_OFFSET(MEMListLink, 0x0, prev);
+CHECK_OFFSET(MEMListLink, 0x4, next);
+CHECK_SIZE(MEMListLink, 0x8);
 
-struct MemoryList
+struct MEMList
 {
    be_ptr<void> head;
    be_ptr<void> tail;
    be_val<uint16_t> count;
-   be_val<uint16_t> offsetToMemoryLink;
+   be_val<uint16_t> offsetToMEMListLink;
 };
-CHECK_OFFSET(MemoryList, 0x0, head);
-CHECK_OFFSET(MemoryList, 0x4, tail);
-CHECK_OFFSET(MemoryList, 0x8, count);
-CHECK_OFFSET(MemoryList, 0xa, offsetToMemoryLink);
-CHECK_SIZE(MemoryList, 0xc);
+CHECK_OFFSET(MEMList, 0x0, head);
+CHECK_OFFSET(MEMList, 0x4, tail);
+CHECK_OFFSET(MEMList, 0x8, count);
+CHECK_OFFSET(MEMList, 0xa, offsetToMEMListLink);
+CHECK_SIZE(MEMList, 0xc);
 
 #pragma pack(pop)
 
 void
-MEMInitList(MemoryList *list,
-            uint16_t offsetToMemoryLink);
+MEMInitList(MEMList *list,
+            uint16_t offsetToMEMListLink);
 
 void
-MEMAppendListObject(MemoryList *list,
+MEMAppendListObject(MEMList *list,
                     void *object);
 
 void
-MEMPrependListObject(MemoryList *list,
+MEMPrependListObject(MEMList *list,
                      void *object);
 
 void
-MEMInsertListObject(MemoryList *list,
+MEMInsertListObject(MEMList *list,
                     void *before,
                     void *object);
 
 void
-MEMRemoveListObject(MemoryList *list,
+MEMRemoveListObject(MEMList *list,
                     void *object);
 
 void *
-MEMGetNextListObject(MemoryList *list,
+MEMGetNextListObject(MEMList *list,
                      void *object);
 
 void *
-MEMGetPrevListObject(MemoryList *list,
+MEMGetPrevListObject(MEMList *list,
                      void *object);
 
 void *
-MEMGetNthListObject(MemoryList *list,
+MEMGetNthListObject(MEMList *list,
                     uint16_t n);
 
 /** @} */
