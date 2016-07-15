@@ -19,7 +19,6 @@ KEEP_GRADIENTS
 SET_GRADIENTS_H
 SET_GRADIENTS_V
 PASS
-SET_CUBEMAP_INDEX
 SAMPLE_LB
 SAMPLE_G
 SAMPLE_G_L
@@ -224,6 +223,13 @@ FETCH4(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetch
 }
 
 static void
+SET_CUBEMAP_INDEX(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+   // TODO: It is possible that we are supposed to somehow force
+   //  a specific face to be used in spite of the coordinates.
+}
+
+static void
 SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    sampleFunc(state, cf, inst, "texture");
@@ -247,6 +253,7 @@ void
 registerTexFunctions()
 {
    registerInstruction(SQ_TEX_INST_FETCH4, FETCH4);
+   registerInstruction(SQ_TEX_INST_SET_CUBEMAP_INDEX, SET_CUBEMAP_INDEX);
    registerInstruction(SQ_TEX_INST_SAMPLE, SAMPLE);
    registerInstruction(SQ_TEX_INST_SAMPLE_C, SAMPLE);
    registerInstruction(SQ_TEX_INST_SAMPLE_L, SAMPLE_L);
