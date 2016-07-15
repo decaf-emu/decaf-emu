@@ -27,6 +27,13 @@ sync(PPCEmuAssembler& a, Instruction instr)
    return true;
 }
 
+// Instruction Cache Block Invalidate
+static bool
+icbi(PPCEmuAssembler& a, Instruction instr)
+{
+   return true;
+}
+
 // Instruction Synchronise
 static bool
 isync(PPCEmuAssembler& a, Instruction instr)
@@ -192,6 +199,7 @@ registerSystemInstructions()
    RegisterInstructionFallback(dcbz);
    RegisterInstructionFallback(dcbz_l);
    RegisterInstruction(eieio);
+   RegisterInstruction(icbi);
    RegisterInstruction(isync);
    RegisterInstruction(sync);
    RegisterInstruction(mfspr);
