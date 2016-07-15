@@ -66,6 +66,13 @@ MEMHeapHeader *
 MEMSetBaseHeapHandle(MEMBaseHeapType type,
                      MEMHeapHeader *heap);
 
+uint32_t
+MEMGetFillValForHeap(MEMHeapFillType type);
+
+void
+MEMSetFillValForHeap(MEMHeapFillType type,
+                     uint32_t value);
+
 /** @} */
 
 namespace internal

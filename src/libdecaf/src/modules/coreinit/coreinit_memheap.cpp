@@ -47,6 +47,13 @@ sMEM1Memlist = nullptr;
 static MEMList *
 sMEM2Memlist = nullptr;
 
+static std::array<uint32_t, MEMHeapFillType::Max>
+sHeapFillVals = {
+   0xC3C3C3C3,
+   0xF3F3F3F3,
+   0xD3D3D3D3,
+};
+
 static MEMList *
 findListContainingHeap(MEMHeapHeader *heap)
 {
@@ -169,6 +176,19 @@ MEMSetBaseHeapHandle(MEMBaseHeapType type,
    }
 }
 
+uint32_t
+MEMGetFillValForHeap(MEMHeapFillType type)
+{
+   return sHeapFillVals[type];
+}
+
+void
+MEMSetFillValForHeap(MEMHeapFillType type,
+                     uint32_t value)
+{
+   sHeapFillVals[type] = value;
+}
+
 static void *
 defaultAllocFromDefaultHeap(uint32_t size)
 {
@@ -200,6 +220,8 @@ Module::registerMembaseFunctions()
    RegisterKernelFunction(MEMGetArena);
    RegisterKernelFunction(MEMFindContainHeap);
    RegisterKernelFunction(MEMDumpHeap);
+   RegisterKernelFunction(MEMGetFillValForHeap);
+   RegisterKernelFunction(MEMSetFillValForHeap);
 
    RegisterKernelDataName("MEMAllocFromDefaultHeap", pMEMAllocFromDefaultHeap);
    RegisterKernelDataName("MEMAllocFromDefaultHeapEx", pMEMAllocFromDefaultHeapEx);
