@@ -281,6 +281,8 @@ private:
 
    gl::GLuint mBlitFrameBuffers[2];
    gl::GLuint mFrameBuffer;
+   gl::GLuint mColorClearFrameBuffer;
+   gl::GLuint mDepthClearFrameBuffer;
    Shader *mActiveShader = nullptr;
    SurfaceBuffer *mActiveDepthBuffer = nullptr;
    std::array<SurfaceBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;

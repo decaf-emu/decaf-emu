@@ -286,19 +286,17 @@ GLDriver::decafClearColor(const pm4::DecafClearColor &data)
    auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
 
    // Bind color buffer
-   gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, buffer->object, 0);
+   gl::glNamedFramebufferTexture(mColorClearFrameBuffer, gl::GL_COLOR_ATTACHMENT0, buffer->object, 0);
+   gl::GLenum status = gl::glCheckNamedFramebufferStatus(mColorClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
+   if (status != gl::GL_FRAMEBUFFER_COMPLETE) {
+      gLog->warn("Skipping clear with invalid color buffer.");
+      return;
+   }
 
    // Clear color buffer
    gl::glDisable(gl::GL_SCISSOR_TEST);
-   gl::glClearBufferfv(gl::GL_COLOR, 0, colors);
+   gl::glClearNamedFramebufferfv(mColorClearFrameBuffer, gl::GL_COLOR, 0, colors);
    gl::glEnable(gl::GL_SCISSOR_TEST);
-
-   // Restore original color buffer
-   if (mActiveColorBuffers[0]) {
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, mActiveColorBuffers[0]->object, 0);
-   } else {
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0, 0, 0);
-   }
 }
 
 void
@@ -312,19 +310,17 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    auto buffer = getDepthBuffer(db_depth_base, data.db_depth_size, data.db_depth_info);
 
    // Bind depth buffer
-   gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, buffer->object, 0);
+   gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_ATTACHMENT, buffer->object, 0);
+   gl::GLenum status = gl::glCheckNamedFramebufferStatus(mColorClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
+   if (status != gl::GL_FRAMEBUFFER_COMPLETE) {
+      gLog->warn("Skipping clear with invalid depth buffer.");
+      return;
+   }
 
    // Clear depth buffer
    gl::glDisable(gl::GL_SCISSOR_TEST);
-   gl::glClearBufferfi(gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR());
+   gl::glClearNamedFramebufferfi(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR());
    gl::glEnable(gl::GL_SCISSOR_TEST);
-
-   // Restore original depth buffer
-   if (mActiveDepthBuffer) {
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, mActiveDepthBuffer->object, 0);
-   } else {
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, 0, 0);
-   }
 }
 
 } // namespace opengl
