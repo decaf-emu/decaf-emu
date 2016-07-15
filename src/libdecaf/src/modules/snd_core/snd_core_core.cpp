@@ -214,8 +214,7 @@ initEvents()
    sFrameAlarm = coreinit::internal::sysAlloc<OSAlarm>();
    auto ticks = static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) / 333;
    OSCreateAlarm(sFrameAlarm);
-   //TODO: Enable this to start AX frame callbacks
-   //OSSetPeriodicAlarm(sFrameAlarm, OSGetTime(), ticks, sFrameAlarmHandler);
+   OSSetPeriodicAlarm(sFrameAlarm, OSGetTime(), ticks, sFrameAlarmHandler);
 }
 
 }
