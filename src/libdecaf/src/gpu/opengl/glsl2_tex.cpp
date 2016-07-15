@@ -20,7 +20,6 @@ SET_GRADIENTS_H
 SET_GRADIENTS_V
 PASS
 SET_CUBEMAP_INDEX
-SAMPLE_L
 SAMPLE_LB
 SAMPLE_G
 SAMPLE_G_L
@@ -231,6 +230,13 @@ SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetch
 }
 
 static void
+SAMPLE_L(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+   // Sample with LOD srcW
+   sampleFunc(state, cf, inst, "textureLod", latte::SQ_SEL_W);
+}
+
+static void
 SAMPLE_LZ(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // Sample with LOD Zero
@@ -243,6 +249,7 @@ registerTexFunctions()
    registerInstruction(SQ_TEX_INST_FETCH4, FETCH4);
    registerInstruction(SQ_TEX_INST_SAMPLE, SAMPLE);
    registerInstruction(SQ_TEX_INST_SAMPLE_C, SAMPLE);
+   registerInstruction(SQ_TEX_INST_SAMPLE_L, SAMPLE_L);
    registerInstruction(SQ_TEX_INST_SAMPLE_LZ, SAMPLE_LZ);
 }
 
