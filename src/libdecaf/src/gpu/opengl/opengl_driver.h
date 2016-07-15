@@ -71,6 +71,7 @@ struct FetchShader : public Resource
 
    gl::GLuint object = 0;
    std::vector<Attrib> attribs;
+   std::string disassembly;
 };
 
 struct VertexShader : public Resource

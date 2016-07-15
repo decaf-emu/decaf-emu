@@ -166,6 +166,8 @@ bool GLDriver::checkActiveShader()
          fetchShader.cpuMemStart = fsPgmAddress;
          fetchShader.cpuMemEnd = fsPgmAddress + fsPgmSize;
 
+         fetchShader.disassembly = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
+
          if (!parseFetchShader(fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
             gLog->error("Failed to parse fetch shader");
             return false;
