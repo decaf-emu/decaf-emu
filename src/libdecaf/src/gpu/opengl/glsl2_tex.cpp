@@ -169,11 +169,11 @@ sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureF
           * so we must set the last channel to SQ_SEL_W
           */
          if (samplerElements == 2) {
-            srcSelY = SQ_SEL_W;
+            srcSelY = srcSelW;
          } else if (samplerElements == 3) {
-            srcSelZ = SQ_SEL_W;
+            srcSelZ = srcSelW;
          } else if (samplerElements == 4) {
-            srcSelW = SQ_SEL_W;
+            // The value will already be in place
          } else {
             decaf_abort(fmt::format("Unexpected samplerElements {} for shadow sampler", samplerElements));
          }
