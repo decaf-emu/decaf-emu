@@ -74,7 +74,7 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
       break;
    case latte::NUMBER_SINT:
       numFormat = latte::SQ_NUM_FORMAT_INT;
-      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      formatComp = latte::SQ_FORMAT_COMP_SIGNED;
       degamma = 0;
       break;
    //case latte::NUMBER_SRGB:
