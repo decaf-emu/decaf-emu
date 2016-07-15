@@ -71,6 +71,11 @@ void
 disassembleExpInstruction(fmt::MemoryWriter &out,
                           const ControlFlowInst &inst);
 
+void
+disassembleVtxInstruction(fmt::MemoryWriter &out,
+                          const latte::ControlFlowInst &parent,
+                          const VertexFetchInst &tex,
+                          int namePad);
 
 void
 disassembleTexInstruction(fmt::MemoryWriter &out,

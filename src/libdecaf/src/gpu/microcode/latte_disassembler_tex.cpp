@@ -137,13 +137,22 @@ disassembleTEXClause(State &state, const ControlFlowInst &inst)
 
    for (auto i = 0u; i < count; ++i) {
       const auto &tex = clause[i];
+      auto id = tex.word0.TEX_INST();
+
       state.out
          << '\n'
          << state.indent
          << fmt::pad(state.groupPC, 3, ' ')
          << "    ";
 
-      disassembleTexInstruction(state.out, inst, tex, 15);
+      if (id == SQ_TEX_INST_VTX_FETCH || id == SQ_TEX_INST_VTX_SEMANTIC) {
+         // Someone at AMD must have been having a laugh when they designed this...
+         auto vtx = *reinterpret_cast<const VertexFetchInst *>(&tex);
+         disassembleVtxInstruction(state.out, inst, vtx, 15);
+      } else {
+         disassembleTexInstruction(state.out, inst, tex, 15);
+      }
+
       state.out << "\n";
       state.groupPC++;
    }
