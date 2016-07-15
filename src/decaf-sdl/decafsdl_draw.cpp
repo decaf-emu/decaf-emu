@@ -99,6 +99,14 @@ void DecafSDL::initialiseDraw()
    gl::glEnableVertexArrayAttrib(mVertArray, fs_texCoord);
    gl::glVertexArrayAttribFormat(mVertArray, fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 2 * sizeof(gl::GLfloat));
    gl::glVertexArrayAttribBinding(mVertArray, fs_texCoord, 0);
+
+   // Create texture sampler
+   gl::glGenSamplers(1, &mSampler);
+
+   gl::glSamplerParameteri(mSampler, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP));
+   gl::glSamplerParameteri(mSampler, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP));
+   gl::glSamplerParameteri(mSampler, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_LINEAR));
+   gl::glSamplerParameteri(mSampler, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_LINEAR));
 }
 
 void DecafSDL::drawScanBuffer(gl::GLuint object)
@@ -109,7 +117,7 @@ void DecafSDL::drawScanBuffer(gl::GLuint object)
    gl::glBindProgramPipeline(mPipeline);
 
    // Draw screen quad
-   gl::glBindSampler(0, 0);
+   gl::glBindSampler(0, mSampler);
    gl::glBindTextureUnit(0, object);
 
    gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);

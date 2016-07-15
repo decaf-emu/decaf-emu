@@ -89,4 +89,5 @@ private:
    gl::GLuint mPipeline;
    gl::GLuint mVertArray;
    gl::GLuint mVertBuffer;
+   gl::GLuint mSampler;
 };
