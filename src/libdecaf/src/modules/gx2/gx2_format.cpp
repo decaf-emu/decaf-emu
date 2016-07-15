@@ -83,23 +83,17 @@ GX2SurfaceFormatData gSurfaceFormatData[] =
    { 0, 0, 0, 0 },
 };
 
-
-/**
- * Returns the number of __BYTES__ for a GX2AttribFormat.
- *
- * Please do not be confused, I know it is named Bits, blame Nintendo.
- */
 uint32_t
 GX2GetAttribFormatBits(GX2AttribFormat format)
 {
    switch (format & 0x1F) {
    case GX2AttribFormatType::TYPE_8:
    case GX2AttribFormatType::TYPE_4_4:
-      return 1;
+      return 8;
    case GX2AttribFormatType::TYPE_16:
    case GX2AttribFormatType::TYPE_16_FLOAT:
    case GX2AttribFormatType::TYPE_8_8:
-      return 2;
+      return 16;
    case GX2AttribFormatType::TYPE_32:
    case GX2AttribFormatType::TYPE_32_FLOAT:
    case GX2AttribFormatType::TYPE_16_16:
@@ -107,29 +101,23 @@ GX2GetAttribFormatBits(GX2AttribFormat format)
    case GX2AttribFormatType::TYPE_10_11_11_FLOAT:
    case GX2AttribFormatType::TYPE_8_8_8_8:
    case GX2AttribFormatType::TYPE_10_10_10_2:
-      return 4;
+      return 32;
    case GX2AttribFormatType::TYPE_32_32:
    case GX2AttribFormatType::TYPE_32_32_FLOAT:
    case GX2AttribFormatType::TYPE_16_16_16_16:
    case GX2AttribFormatType::TYPE_16_16_16_16_FLOAT:
-      return 8;
+      return 64;
    case GX2AttribFormatType::TYPE_32_32_32:
    case GX2AttribFormatType::TYPE_32_32_32_FLOAT:
-      return 12;
+      return 96;
    case GX2AttribFormatType::TYPE_32_32_32_32:
    case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
-      return 16;
+      return 128;
    default:
       decaf_abort(fmt::format("Invalid GX2AttribFormat {}", enumAsString(format)));
    }
 }
 
-
-/**
- * Returns the number of bits for a GX2SurfaceFormat.
- *
- * Yes this one does actually return number of bits.
- */
 uint32_t
 GX2GetSurfaceFormatBits(GX2SurfaceFormat format)
 {
@@ -157,7 +145,7 @@ namespace internal
 uint32_t
 getAttribFormatBytes(GX2AttribFormat format)
 {
-   return GX2GetAttribFormatBits(format);
+   return GX2GetAttribFormatBits(format) / 8;
 }
 
 latte::SQ_DATA_FORMAT
