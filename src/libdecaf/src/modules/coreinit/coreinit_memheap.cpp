@@ -122,7 +122,7 @@ MEMDumpHeap(MEMHeapHeader *heap)
       internal::dumpExpandedHeap(reinterpret_cast<ExpandedHeap*>(heap));
       break;
    case MEMHeapTag::UnitHeap:
-      MEMiDumpUnitHeap(reinterpret_cast<UnitHeap*>(heap));
+      internal::dumpUnitHeap(reinterpret_cast<UnitHeap*>(heap));
       break;
    case MEMHeapTag::FrameHeap:
    case MEMHeapTag::UserHeap:

@@ -34,9 +34,6 @@ void
 MEMFreeToUnitHeap(UnitHeap *heap,
                   void *block);
 
-void
-MEMiDumpUnitHeap(UnitHeap *heap);
-
 uint32_t
 MEMCountFreeBlockForUnitHeap(UnitHeap *heap);
 
@@ -44,6 +41,14 @@ uint32_t
 MEMCalcHeapSizeForUnitHeap(uint32_t blockSize,
                            uint32_t count,
                            int alignment);
+
+namespace internal
+{
+
+void
+dumpUnitHeap(UnitHeap *heap);
+
+} // namespace internal
 
 /** @} */
 

@@ -120,23 +120,6 @@ MEMFreeToUnitHeap(UnitHeap *heap, void *block)
 
 
 /**
- * Print debug information about the unit heap.
- */
-void
-MEMiDumpUnitHeap(UnitHeap *heap)
-{
-   auto freeBlocks = MEMCountFreeBlockForUnitHeap(heap);
-   auto freeSize = heap->blockSize * freeBlocks;
-   auto totalSize = heap->dataEnd - heap->dataStart;
-   auto usedSize = totalSize - freeSize;
-   auto percent = static_cast<float>(usedSize) / static_cast<float>(totalSize);
-
-   gLog->debug("MEMiDumpUnitHeap({:8x})", mem::untranslate(heap));
-   gLog->debug("{} out of {} bytes ({}%) used", usedSize, totalSize, percent);
-}
-
-
-/**
  * Count the number of free blocks in a unit heap.
  */
 uint32_t
@@ -167,6 +150,26 @@ MEMCalcHeapSizeForUnitHeap(uint32_t blockSize,
    return firstBlock + (adjBlockSize * blockCount);
 }
 
+namespace internal
+{
+
+/**
+ * Print debug information about the unit heap.
+ */
+void
+dumpUnitHeap(UnitHeap *heap)
+{
+   auto freeBlocks = MEMCountFreeBlockForUnitHeap(heap);
+   auto freeSize = heap->blockSize * freeBlocks;
+   auto totalSize = heap->dataEnd - heap->dataStart;
+   auto usedSize = totalSize - freeSize;
+   auto percent = static_cast<float>(usedSize) / static_cast<float>(totalSize);
+
+   gLog->debug("MEMUnitHeap(0x{:8x})", mem::untranslate(heap));
+   gLog->debug("{} out of {} bytes ({}%) used", usedSize, totalSize, percent);
+}
+
+} // namespace internal
 
 void
 Module::registerUnitHeapFunctions()
@@ -175,7 +178,6 @@ Module::registerUnitHeapFunctions()
    RegisterKernelFunction(MEMDestroyUnitHeap);
    RegisterKernelFunction(MEMAllocFromUnitHeap);
    RegisterKernelFunction(MEMFreeToUnitHeap);
-   RegisterKernelFunction(MEMiDumpUnitHeap);
    RegisterKernelFunction(MEMCountFreeBlockForUnitHeap);
    RegisterKernelFunction(MEMCalcHeapSizeForUnitHeap);
 }
