@@ -69,7 +69,7 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
    //case latte::FMT_4_4:
    //case latte::FMT_3_3_2:
    case latte::FMT_16_FLOAT:
-      return getFormat(gl::GL_R16, gl::GL_R16_SNORM, gl::GL_R16UI, gl::GL_R16I, BADFMT);
+      return gl::GL_R16F;
    case latte::FMT_8_8:
       return getFormat(gl::GL_RG8, gl::GL_RG8_SNORM, gl::GL_RG8UI, gl::GL_RG8I, BADFMT);
    case latte::FMT_5_6_5:
