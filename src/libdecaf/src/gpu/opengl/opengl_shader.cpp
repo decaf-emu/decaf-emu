@@ -1,10 +1,13 @@
 #include "common/decaf_assert.h"
 #include "common/log.h"
+#include "common/platform_dir.h"
 #include "common/strutils.h"
+#include "decaf_config.h"
 #include "glsl2_translate.h"
 #include "gpu/latte_registers.h"
 #include "gpu/microcode/latte_disassembler.h"
 #include "opengl_driver.h"
+#include <fstream>
 #include <glbinding/gl/gl.h>
 #include <spdlog/spdlog.h>
 
@@ -13,6 +16,31 @@ namespace gpu
 
 namespace opengl
 {
+
+static void
+dumpShader(const std::string &type, ppcaddr_t data, uint32_t size, bool isSubroutine = false)
+{
+   if (!decaf::config::gx2::dump_shaders) {
+      return;
+   }
+
+   std::string filePath = fmt::format("dump/gpu_{}_{:08x}.txt", type, data);
+
+   if (platform::fileExists(filePath)) {
+      return;
+   }
+
+   platform::createDirectory("dump");
+
+   // Write text of shader to shader_pixel_X.txt
+   auto file = std::ofstream{ filePath, std::ofstream::out };
+
+   // Disassemble
+   auto output = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(data), size), isSubroutine);
+
+   file
+      << output << std::endl;
+}
 
 static gl::GLenum
 getAttributeFormat(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
@@ -166,6 +194,7 @@ bool GLDriver::checkActiveShader()
          fetchShader.cpuMemStart = fsPgmAddress;
          fetchShader.cpuMemEnd = fsPgmAddress + fsPgmSize;
 
+         dumpShader("fetch", vsPgmAddress, vsPgmSize, true);
          fetchShader.disassembly = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
 
          if (!parseFetchShader(fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
@@ -215,6 +244,8 @@ bool GLDriver::checkActiveShader()
          vertexShader.cpuMemStart = vsPgmAddress;
          vertexShader.cpuMemEnd = vsPgmAddress + vsPgmSize;
 
+         dumpShader("vertex", vsPgmAddress, vsPgmSize);
+
          if (!compileVertexShader(vertexShader, fetchShader, make_virtual_ptr<uint8_t>(vsPgmAddress), vsPgmSize)) {
             gLog->error("Failed to recompile vertex shader");
             return false;
@@ -254,6 +285,8 @@ bool GLDriver::checkActiveShader()
       if (!pixelShader.object) {
          pixelShader.cpuMemStart = psPgmAddress;
          pixelShader.cpuMemEnd = psPgmAddress + psPgmSize;
+
+         dumpShader("pixel", psPgmAddress, psPgmSize);
 
          if (!compilePixelShader(pixelShader, make_virtual_ptr<uint8_t>(psPgmAddress), psPgmSize)) {
             gLog->error("Failed to recompile pixel shader");
