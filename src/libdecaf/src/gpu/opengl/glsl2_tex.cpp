@@ -126,7 +126,7 @@ registerSamplerID(State &state, unsigned id)
 }
 
 static void
-sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst, const std::string &func, const std::string &extraArgs = "")
+sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst, const std::string &func, latte::SQ_SEL extraArg = latte::SQ_SEL_MASK)
 {
    auto dstSelX = inst.word1.DST_SEL_X().get();
    auto dstSelY = inst.word1.DST_SEL_Y().get();
@@ -181,7 +181,32 @@ sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureF
 
       insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, samplerElements);
 
-      state.out << extraArgs << ");";
+      switch (extraArg) {
+      case latte::SQ_SEL_X:
+         state.out << ", ";
+         insertSelectValue(state.out, src, srcSelX);
+         break;
+      case latte::SQ_SEL_Y:
+         state.out << ", ";
+         insertSelectValue(state.out, src, srcSelY);
+         break;
+      case latte::SQ_SEL_Z:
+         state.out << ", ";
+         insertSelectValue(state.out, src, srcSelZ);
+         break;
+      case latte::SQ_SEL_W:
+         state.out << ", ";
+         insertSelectValue(state.out, src, srcSelW);
+         break;
+      case latte::SQ_SEL_0:
+         state.out << ", 0";
+         break;
+      case latte::SQ_SEL_1:
+         state.out << ", 1";
+         break;
+      }
+
+      state.out << ");";
       insertLineEnd(state);
 
       insertLineStart(state);
@@ -209,7 +234,7 @@ static void
 SAMPLE_LZ(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // Sample with LOD Zero
-   sampleFunc(state, cf, inst, "textureLod", ", 0");
+   sampleFunc(state, cf, inst, "textureLod", latte::SQ_SEL_0);
 }
 
 void

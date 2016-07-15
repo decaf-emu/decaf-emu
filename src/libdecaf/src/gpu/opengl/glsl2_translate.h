@@ -172,6 +172,9 @@ std::string
 getExportRegister(uint32_t gpr, latte::SQ_REL rel);
 
 bool
+insertSelectValue(fmt::MemoryWriter &out, const std::string &src, latte::SQ_SEL sel);
+
+bool
 insertSelectVector(fmt::MemoryWriter &out, const std::string &src, latte::SQ_SEL selX, latte::SQ_SEL selY, latte::SQ_SEL selZ, latte::SQ_SEL selW, unsigned numSels);
 
 std::string

@@ -39,7 +39,7 @@ getExportRegister(uint32_t gpr, SQ_REL rel)
    return out.str();
 }
 
-static bool
+bool
 insertSelectValue(fmt::MemoryWriter &out, const std::string &src, SQ_SEL sel)
 {
    switch (sel) {
