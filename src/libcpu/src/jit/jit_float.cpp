@@ -20,6 +20,25 @@ truncateToSingleSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 }
 
 static void
+truncateTo24BitSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+{
+   auto maskGp = a.allocGpTmp();
+   auto maskXmm = a.allocXmmTmp();
+   auto tmp = a.allocXmmTmp();
+   a.movq(tmp, reg);
+
+   a.mov(maskGp, UINT64_C(0x8000000));
+   a.movq(maskXmm, maskGp);
+   a.pand(tmp, maskXmm);
+
+   a.mov(maskGp, UINT64_C(0xFFFFFFFFF8000000));
+   a.movq(maskXmm, maskGp);
+   a.pand(reg, maskXmm);
+
+   a.paddq(reg, tmp);
+}
+
+static void
 negateXmmSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
    auto maskGp = a.allocGpTmp();
@@ -122,6 +141,13 @@ fmulGeneric(PPCEmuAssembler& a, Instruction instr)
    auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
    auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
    auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frC]));
+
+   if (ShouldTruncate) {
+      // PPC has this wierd behaviour with fmuls where it truncates the
+      //  RHS operator to 24-bits of mantissa before multiplying...
+      truncateTo24BitSd(a, tmpSrcC);
+   }
+
    a.movq(dst, srcA);
    a.mulsd(dst, tmpSrcC);
 
