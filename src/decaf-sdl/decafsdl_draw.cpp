@@ -1,4 +1,5 @@
 #include "clilog.h"
+#include "common/decaf_assert.h"
 #include "decafsdl.h"
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
@@ -130,26 +131,26 @@ void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
    static const auto TvWidth = 1280.0f;
    static const auto TvHeight = 720.0f;
 
-   static const auto DrcRatio = 1.0f - (DrcHeight / TvHeight);
+   static const auto DrcRatio = DrcHeight / (TvHeight + DrcHeight);
    static const auto OverallScale = 1.0f;
-   static const auto ScreenSeperation = 5.0f;
+   static const auto ScreenSeparation = 5.0f;
 
    int windowWidth, windowHeight;
    SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
 
-   auto tvWidth = windowWidth * (1.0f - DrcRatio) * OverallScale;
-   auto tvHeight = TvHeight * (tvWidth / TvWidth);
-   auto drcWidth = windowWidth * (DrcRatio)* OverallScale;
-   auto drcHeight = DrcHeight * (drcWidth / DrcWidth);
+   auto tvHeight = (windowHeight - ScreenSeparation) * (1.0f - DrcRatio) * OverallScale;
+   auto tvWidth = TvWidth * (tvHeight / TvHeight);
+   auto drcHeight = (windowHeight - ScreenSeparation) * DrcRatio * OverallScale;
+   auto drcWidth = DrcWidth * (drcHeight / DrcHeight);
    auto totalWidth = std::max(tvWidth, drcWidth);
-   auto totalHeight = tvHeight + drcHeight + ScreenSeperation;
+   auto totalHeight = tvHeight + drcHeight + ScreenSeparation;
    auto baseLeft = (windowWidth / 2) - (totalWidth / 2);
    auto baseBottom = -(windowHeight / 2) + (totalHeight / 2);
 
    auto tvLeft = 0.0f;
    auto tvBottom = windowHeight - tvHeight;
    auto drcLeft = (tvWidth / 2) - (drcWidth / 2);
-   auto drcBottom = windowHeight - tvHeight - drcHeight - ScreenSeperation;
+   auto drcBottom = windowHeight - tvHeight - drcHeight - ScreenSeparation;
 
    tv[0] = baseLeft + tvLeft;
    tv[1] = baseBottom + tvBottom;
@@ -160,6 +161,17 @@ void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
    drc[1] = baseBottom + drcBottom;
    drc[2] = drcWidth;
    drc[3] = drcHeight;
+
+   if (OverallScale <= 1.0f) {
+      decaf_check(roundf(tv[0]) >= 0);
+      decaf_check(roundf(tv[1]) >= 0);
+      decaf_check(roundf(tv[0] + tv[2]) <= windowWidth);
+      decaf_check(roundf(tv[1] + tv[3]) <= windowHeight);
+      decaf_check(roundf(drc[0]) >= 0);
+      decaf_check(roundf(drc[1]) >= 0);
+      decaf_check(roundf(drc[0] + drc[2]) <= windowWidth);
+      decaf_check(roundf(drc[1] + drc[3]) <= windowHeight);
+   }
 }
 
 void DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
