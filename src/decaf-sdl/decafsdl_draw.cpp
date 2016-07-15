@@ -144,8 +144,8 @@ void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
    auto drcWidth = DrcWidth * (drcHeight / DrcHeight);
    auto totalWidth = std::max(tvWidth, drcWidth);
    auto totalHeight = tvHeight + drcHeight + ScreenSeparation;
-   auto baseLeft = (windowWidth / 2) - (totalWidth / 2);
-   auto baseBottom = -(windowHeight / 2) + (totalHeight / 2);
+   auto baseLeft = floor((windowWidth / 2) - (totalWidth / 2));
+   auto baseBottom = floor(-(windowHeight / 2) + (totalHeight / 2));
 
    auto tvLeft = 0.0f;
    auto tvBottom = windowHeight - tvHeight;
