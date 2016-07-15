@@ -12,11 +12,15 @@ namespace opengl
 
 bool GLDriver::checkActiveColorBuffer()
 {
-   for (auto i = 0u; i < mActiveColorBuffers.size(); ++i) {
+   auto cb_target_mask = getRegister<latte::CB_TARGET_MASK>(latte::Register::CB_TARGET_MASK);
+   auto cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
+   auto mask = cb_target_mask.value & cb_shader_mask.value;
+
+   for (auto i = 0u; i < mActiveColorBuffers.size(); ++i, mask >>= 4) {
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
       auto &active = mActiveColorBuffers[i];
 
-      if (!cb_color_base.BASE_256B) {
+      if (!cb_color_base.BASE_256B || !(mask & 0xF)) {
          if (active) {
             // Unbind color buffer i
             gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, 0, 0);
