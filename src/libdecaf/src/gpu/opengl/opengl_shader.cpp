@@ -163,6 +163,9 @@ bool GLDriver::checkActiveShader()
          auto aluDivisor0 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_0);
          auto aluDivisor1 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_1);
 
+         fetchShader.cpuMemStart = fsPgmAddress;
+         fetchShader.cpuMemEnd = fsPgmAddress + fsPgmSize;
+
          if (!parseFetchShader(fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
             gLog->error("Failed to parse fetch shader");
             return false;
@@ -200,6 +203,9 @@ bool GLDriver::checkActiveShader()
       auto &vertexShader = mVertexShaders[vsShaderKey];
 
       if (!vertexShader.object) {
+         vertexShader.cpuMemStart = vsPgmAddress;
+         vertexShader.cpuMemEnd = vsPgmAddress + vsPgmSize;
+
          if (!compileVertexShader(vertexShader, fetchShader, make_virtual_ptr<uint8_t>(vsPgmAddress), vsPgmSize)) {
             gLog->error("Failed to recompile vertex shader");
             return false;
@@ -237,6 +243,9 @@ bool GLDriver::checkActiveShader()
       auto &pixelShader = mPixelShaders[psShaderKey];
 
       if (!pixelShader.object) {
+         pixelShader.cpuMemStart = psPgmAddress;
+         pixelShader.cpuMemEnd = psPgmAddress + psPgmSize;
+
          if (!compilePixelShader(pixelShader, make_virtual_ptr<uint8_t>(psPgmAddress), psPgmSize)) {
             gLog->error("Failed to recompile pixel shader");
             return false;

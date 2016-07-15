@@ -36,7 +36,23 @@ enum class SamplerType
    Sampler2DArray,
 };
 
-struct FetchShader
+enum class SurfaceUseState : uint32_t
+{
+   None,
+   CpuWritten,
+   GpuWritten
+};
+
+struct Resource
+{
+   //! The start of the CPU memory region this occupies
+   uint32_t cpuMemStart;
+
+   //! The end of the CPU memory region this occupies
+   uint32_t cpuMemEnd;
+};
+
+struct FetchShader : public Resource
 {
    struct Attrib
    {
@@ -55,26 +71,23 @@ struct FetchShader
 
    gl::GLuint object = 0;
    std::vector<Attrib> attribs;
-   latte::SQ_PGM_START_FS pgm_start_fs;
 };
 
-struct VertexShader
+struct VertexShader : public Resource
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
    std::array<gl::GLuint, MAX_ATTRIB_COUNT> attribLocations;
-   latte::SQ_PGM_START_VS pgm_start_vs;
    std::string code;
    std::string disassembly;
 };
 
-struct PixelShader
+struct PixelShader : public Resource
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
    gl::GLuint uniformAlphaRef = 0;
    std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
-   latte::SQ_PGM_START_PS pgm_start_ps;
    latte::SX_ALPHA_TEST_CONTROL sx_alpha_test_control;
    std::string code;
    std::string disassembly;
@@ -91,22 +104,6 @@ struct Shader
    uint64_t fetchKey;
    uint64_t vertexKey;
    uint64_t pixelKey;
-};
-
-enum class SurfaceUseState : uint32_t
-{
-   None,
-   CpuWritten,
-   GpuWritten
-};
-
-struct Resource
-{
-   //! The start of the CPU memory region this occupies
-   uint32_t cpuMemStart;
-
-   //! The end of the CPU memory region this occupies
-   uint32_t cpuMemEnd;
 };
 
 struct SurfaceBuffer : Resource
