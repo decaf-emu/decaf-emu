@@ -54,7 +54,7 @@ union cr_t
 };
 
 // Floating-Point Registers
-union fpr_t
+union alignas(16) fpr_t
 {
    struct
    {

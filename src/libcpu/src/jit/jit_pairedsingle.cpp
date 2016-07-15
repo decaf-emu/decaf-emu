@@ -24,26 +24,22 @@ mergeGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    // We need to use a temporary here since frA/frB and frD may overlap
-   auto src0Tmp = a.allocXmmTmp();
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
+
+   uint8_t shflFlags = 0;
 
    if (flags & MergeValue0) {
-      a.movq(src0Tmp, a.loadRegisterRead(a.fprps[instr.frA][1]));
-   } else {
-      a.movq(src0Tmp, a.loadRegisterRead(a.fprps[instr.frA][0]));
+      shflFlags |= (1 << 0);
    }
 
-   // Scope this to save us a register eviction
-   {
-      auto dst1 = a.loadRegisterWrite(a.fprps[instr.frD][1]);
-      if (flags & MergeValue1) {
-         a.movq(dst1, a.loadRegisterRead(a.fprps[instr.frB][1]));
-      } else {
-         a.movq(dst1, a.loadRegisterRead(a.fprps[instr.frB][0]));
-      }
+   if (flags & MergeValue1) {
+      shflFlags |= (1 << 1);
    }
 
-   auto dst0 = a.loadRegisterWrite(a.fprps[instr.frD][0]);
-   a.movq(dst0, src0Tmp);
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   a.movapd(dst, srcA);
+   a.shufpd(dst, tmpSrcB, shflFlags);
 
    return true;
 }

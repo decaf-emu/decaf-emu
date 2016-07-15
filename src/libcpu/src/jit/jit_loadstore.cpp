@@ -82,12 +82,12 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
    if (std::is_floating_point<Type>::value) {
       if (sizeof(Type) == 4) {
          auto tmp = a.allocXmmTmp();
-         auto dst = a.loadXmmRegisterWrite(a.fpr[instr.rD]);
+         auto dst = a.loadXmmRegisterReadWrite(a.fprps[instr.rD]);
          a.movq(tmp, data);
          a.cvtss2sd(dst, tmp);
       } else {
          decaf_check(sizeof(Type) == 8);
-         auto dst = a.loadXmmRegisterWrite(a.fpr[instr.rD]);
+         auto dst = a.loadXmmRegisterReadWrite(a.fprps[instr.rD]);
          a.movq(dst, data);
       }
    } else {
@@ -372,15 +372,15 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
 
    if (flags & StoreFloatAsInteger) {
       decaf_check(sizeof(Type) == 4);
-      a.mov(data.r32(), a.loadGpRegisterRead(a.fpr[instr.rS]));
+      a.movd(data.r32(), a.loadRegisterRead(a.fprps[instr.rS]));
    } else if (std::is_floating_point<Type>::value) {
       if (sizeof(Type) == 4) {
          auto tmp = a.allocXmmTmp();
-         a.cvtsd2ss(tmp, a.loadXmmRegisterRead(a.fpr[instr.rS]));
-         a.movq(data.r32(), tmp);
+         a.cvtsd2ss(tmp, a.loadRegisterRead(a.fprps[instr.rS]));
+         a.movd(data.r32(), tmp);
       } else {
          decaf_check(sizeof(Type) == 8);
-         a.mov(data, a.loadGpRegisterRead(a.fpr[instr.rS]));
+         a.movq(data, a.loadRegisterRead(a.fprps[instr.rS]));
       }
    } else {
       a.mov(data.r32(), a.loadRegisterRead(a.gpr[instr.rS]));

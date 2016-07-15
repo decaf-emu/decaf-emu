@@ -11,7 +11,7 @@ namespace jit
 {
 
 static void
-truncateToSingle(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+truncateToSingleSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
    // TODO: Check if we can do this without the extra register...
    auto tmp = a.allocXmmTmp();
@@ -20,7 +20,7 @@ truncateToSingle(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 }
 
 static void
-negateXmm(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+negateXmmSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
    auto maskGp = a.allocGpTmp();
    auto maskXmm = a.allocXmmTmp();
@@ -30,7 +30,7 @@ negateXmm(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 }
 
 static void
-absXmm(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+absXmmSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
    auto maskGp = a.allocGpTmp();
    auto maskXmm = a.allocXmmTmp();
@@ -49,14 +49,14 @@ faddGeneric(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fpr[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fpr[instr.frA]);
-   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fpr[instr.frB]));
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
    a.movq(dst, srcA);
    a.addsd(dst, tmpSrcB);
 
    if (ShouldTruncate) {
-      truncateToSingle(a, dst);
+      truncateToSingleSd(a, dst);
    }
 
    return true;
@@ -84,14 +84,14 @@ fdivGeneric(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fpr[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fpr[instr.frA]);
-   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fpr[instr.frB]));
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
    a.movq(dst, srcA);
    a.divsd(dst, tmpSrcB);
 
    if (ShouldTruncate) {
-      truncateToSingle(a, dst);
+      truncateToSingleSd(a, dst);
    }
 
    return true;
@@ -119,14 +119,14 @@ fmulGeneric(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fpr[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fpr[instr.frA]);
-   auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fpr[instr.frC]));
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
+   auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frC]));
    a.movq(dst, srcA);
    a.mulsd(dst, tmpSrcC);
 
    if (ShouldTruncate) {
-      truncateToSingle(a, dst);
+      truncateToSingleSd(a, dst);
    }
 
    return true;
@@ -154,14 +154,14 @@ fsubGeneric(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fpr[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fpr[instr.frA]);
-   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fpr[instr.frB]));
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
    a.movq(dst, srcA);
    a.subsd(dst, tmpSrcB);
 
    if (ShouldTruncate) {
-      truncateToSingle(a, dst);
+      truncateToSingleSd(a, dst);
    }
 
    return true;
@@ -189,24 +189,20 @@ fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fpr[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fpr[instr.frA]);
-   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fpr[instr.frB]));
-   auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fpr[instr.frC]));
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
+   auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frC]));
    a.movq(dst, srcA);
    a.mulsd(dst, tmpSrcC);
    a.addsd(dst, tmpSrcB);
 
    if (ShouldNegate) {
-      auto maskGp = a.allocGpTmp();
-      auto maskXmm = a.allocXmmTmp();
-      a.mov(maskGp, UINT64_C(0x8000000000000000));
-      a.movq(maskXmm, maskGp);
-      a.pxor(dst, maskXmm);
+      negateXmmSd(a, dst);
    }
 
    if (ShouldTruncate) {
-      truncateToSingle(a, dst);
+      truncateToSingleSd(a, dst);
    }
 
    return true;
@@ -234,20 +230,20 @@ fmsubGeneric(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fpr[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fpr[instr.frA]);
-   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fpr[instr.frB]));
-   auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fpr[instr.frC]));
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
+   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
+   auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frC]));
    a.movq(dst, srcA);
    a.mulsd(dst, tmpSrcC);
    a.subsd(dst, tmpSrcB);
 
    if (ShouldNegate) {
-      negateXmm(a, dst);
+      negateXmmSd(a, dst);
    }
 
    if (ShouldTruncate) {
-      truncateToSingle(a, dst);
+      truncateToSingleSd(a, dst);
    }
 
    return true;
@@ -298,10 +294,11 @@ frsp(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fpr[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fpr[instr.frB]);
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
    a.movq(dst, srcA);
-   truncateToSingle(a, dst);
+
+   truncateToSingleSd(a, dst);
 
    return true;
 }
@@ -316,14 +313,14 @@ fabsGeneric(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fpr[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fpr[instr.frB]);
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
    a.movq(dst, srcA);
 
-   absXmm(a, dst);
+   absXmmSd(a, dst);
 
    if (ShouldNegate) {
-      negateXmm(a, dst);
+      negateXmmSd(a, dst);
    }
 
    return true;
@@ -350,8 +347,8 @@ fmr(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fpr[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fpr[instr.frB]);
+   auto dst = a.loadRegisterReadWrite(a.fprps[instr.frD]);
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
    a.movq(dst, srcA);
 
    return true;
@@ -366,11 +363,11 @@ fneg(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fpr[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fpr[instr.frB]);
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
    a.movq(dst, srcA);
 
-   negateXmm(a, dst);
+   negateXmmSd(a, dst);
 
    return true;
 }

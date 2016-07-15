@@ -104,9 +104,7 @@ public:
       }
 
       for (auto i = 0; i < 32; ++i) {
-         PPCRegRef(fpr[i], fpr[i].value);
-         PPCRegRef(fprps[i][0], fpr[i].paired0);
-         PPCRegRef(fprps[i][1], fpr[i].paired1);
+         PPCRegRef(fprps[i], fpr[i]);
       }
 
       PPCRegRef(cr, cr.value);
@@ -179,8 +177,7 @@ public:
    asmjit::X86Mem interruptMem;
 
    PpcGpRef gpr[32];
-   PpcXmmRef fpr[32];
-   PpcXmmRef fprps[32][2];
+   PpcXmmRef fprps[32];
    PpcGpRef cr;
    PpcGpRef xer;
    PpcGpRef fpscr;
@@ -360,7 +357,7 @@ public:
 
       operator asmjit::X86XmmReg() const {
          decaf_check(mReg->regType == RegType::Xmm);
-         decaf_check(mSize == 8);
+         decaf_check(mSize == 16);
          markUsed();
          return mParent->mXmmRegVals[mReg->regId];
       }
@@ -478,7 +475,7 @@ public:
 
    XmmRegister allocXmmTmp()
    {
-      return XmmRegister(this, allocReg(RegType::Xmm), 8, false);
+      return XmmRegister(this, allocReg(RegType::Xmm), 16, false);
    }
 
    GpRegister allocGpTmp(const GpRegister &source)
@@ -508,8 +505,8 @@ public:
    {
       auto tmp = allocXmmTmp();
 
-      if (source.mSize == 8) {
-         movq(tmp, source);
+      if (source.mSize == 16) {
+         movapd(tmp, source);
       } else {
          decaf_abort(fmt::format("Unexpected register size {}", source.mSize));
       }
@@ -551,7 +548,7 @@ public:
 
    XmmRegister _getXmmRegister(const PpcRef &which, bool shouldLoad, bool writeOnUse)
    {
-      decaf_check(which.size == 8);
+      decaf_check(which.size == 16);
 
       auto reg = findReg(which);
       if (reg && reg->regType != RegType::Xmm) {
@@ -568,8 +565,8 @@ public:
       }
 
       if (shouldLoad && !reg->loaded) {
-         if (reg->size == 8) {
-            movq(mXmmRegVals[reg->regId], asmjit::X86Mem(stateReg, which.offset, 8));
+         if (reg->size == 16) {
+            movapd(mXmmRegVals[reg->regId], asmjit::X86Mem(stateReg, which.offset, 16));
          } else {
             decaf_abort(fmt::format("Unexpected register size {}", reg->size));
          }
@@ -647,9 +644,9 @@ public:
                decaf_abort(fmt::format("Unexpected register size {}", reg->size));
             }
          } else if (reg->regType == RegType::Xmm) {
-            decaf_check(reg->size == 8);
+            decaf_check(reg->size == 16);
 
-            movq(asmjit::X86Mem(stateReg, reg->content, 8), mXmmRegVals[reg->regId]);
+            movapd(asmjit::X86Mem(stateReg, reg->content, 16), mXmmRegVals[reg->regId]);
          } else {
             decaf_abort(fmt::format("Unexpected register type {}", static_cast<int>(reg->regType)));
          }
