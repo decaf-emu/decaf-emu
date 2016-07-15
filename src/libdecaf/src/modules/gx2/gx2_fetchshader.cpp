@@ -331,10 +331,10 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
             .MEGA_FETCH().set(1);
 
          vfetch.word0 = vfetch.word0
-            .MEGA_FETCH_COUNT().set(static_cast<uint32_t>(GX2GetAttribFormatBytes(attrib.format) - 1));
+            .MEGA_FETCH_COUNT().set(internal::getAttribFormatBytes(attrib.format) - 1);
 
          // Setup format
-         auto dataFormat = GX2GetAttribFormatDataFormat(attrib.format);
+         auto dataFormat = internal::getAttribFormatDataFormat(attrib.format);
          auto numFormat = latte::SQ_NUM_FORMAT_NORM;
          auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
 
@@ -353,10 +353,10 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
             .NUM_FORMAT_ALL().set(numFormat)
             .FORMAT_COMP_ALL().set(formatComp);
 
-         auto swapMode = static_cast<latte::SQ_ENDIAN>(attribs[i].endianSwap & 3);
+         auto swapMode = internal::getSwapModeEndian(attribs[i].endianSwap & 3);
 
          if (attribs[i].endianSwap == latte::SQ_ENDIAN_AUTO) {
-            swapMode = static_cast<latte::SQ_ENDIAN>(GX2GetAttribFormatSwapMode(attribs[i].format));
+            swapMode = internal::getAttribFormatEndian(attribs[i].format);
          }
 
          vfetch.word2 = vfetch.word2

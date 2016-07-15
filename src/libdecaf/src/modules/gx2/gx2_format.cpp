@@ -83,8 +83,14 @@ GX2SurfaceFormatData gSurfaceFormatData[] =
    { 0, 0, 0, 0 },
 };
 
-size_t
-GX2GetAttribFormatBytes(GX2AttribFormat format)
+
+/**
+ * Returns the number of __BYTES__ for a GX2AttribFormat.
+ *
+ * Please do not be confused, I know it is named Bits, blame Nintendo.
+ */
+uint32_t
+GX2GetAttribFormatBits(GX2AttribFormat format)
 {
    switch (format & 0x1F) {
    case GX2AttribFormatType::TYPE_8:
@@ -118,40 +124,44 @@ GX2GetAttribFormatBytes(GX2AttribFormat format)
    }
 }
 
-GX2EndianSwapMode
-GX2GetAttribFormatSwapMode(GX2AttribFormat format)
+
+/**
+ * Returns the number of bits for a GX2SurfaceFormat.
+ *
+ * Yes this one does actually return number of bits.
+ */
+uint32_t
+GX2GetSurfaceFormatBits(GX2SurfaceFormat format)
 {
-   switch (format & 0x1F) {
-   case GX2AttribFormatType::TYPE_8:
-   case GX2AttribFormatType::TYPE_4_4:
-   case GX2AttribFormatType::TYPE_8_8:
-   case GX2AttribFormatType::TYPE_8_8_8_8:
-      return GX2EndianSwapMode::None;
-   case GX2AttribFormatType::TYPE_16:
-   case GX2AttribFormatType::TYPE_16_FLOAT:
-   case GX2AttribFormatType::TYPE_16_16:
-   case GX2AttribFormatType::TYPE_16_16_FLOAT:
-   case GX2AttribFormatType::TYPE_16_16_16_16:
-   case GX2AttribFormatType::TYPE_16_16_16_16_FLOAT:
-      return GX2EndianSwapMode::Swap8In16;
-   case GX2AttribFormatType::TYPE_32:
-   case GX2AttribFormatType::TYPE_32_FLOAT:
-   case GX2AttribFormatType::TYPE_10_11_11_FLOAT:
-   case GX2AttribFormatType::TYPE_10_10_10_2:
-   case GX2AttribFormatType::TYPE_32_32:
-   case GX2AttribFormatType::TYPE_32_32_FLOAT:
-   case GX2AttribFormatType::TYPE_32_32_32:
-   case GX2AttribFormatType::TYPE_32_32_32_FLOAT:
-   case GX2AttribFormatType::TYPE_32_32_32_32:
-   case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
-      return GX2EndianSwapMode::Swap8In32;
-   default:
-      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", enumAsString(format)));
+   auto latteFormat = format & 0x3F;
+   auto bpp = gSurfaceFormatData[latteFormat].bpp;
+
+   if (latteFormat >= latte::FMT_BC1 && latteFormat <= latte::FMT_BC5) {
+      bpp >>= 4;
    }
+
+   return bpp;
+}
+
+
+uint32_t
+GX2GetSurfaceFormatBitsPerElement(GX2SurfaceFormat format)
+{
+   return gSurfaceFormatData[format & 0x3F].bpp;
+}
+
+
+namespace internal
+{
+
+uint32_t
+getAttribFormatBytes(GX2AttribFormat format)
+{
+   return GX2GetAttribFormatBits(format);
 }
 
 latte::SQ_DATA_FORMAT
-GX2GetAttribFormatDataFormat(GX2AttribFormat format)
+getAttribFormatDataFormat(GX2AttribFormat format)
 {
    switch (format & 0x1F) {
    case GX2AttribFormatType::TYPE_8:
@@ -199,60 +209,76 @@ GX2GetAttribFormatDataFormat(GX2AttribFormat format)
    }
 }
 
-std::pair<size_t, size_t>
-GX2GetSurfaceBlockSize(GX2SurfaceFormat format)
+GX2EndianSwapMode
+getAttribFormatSwapMode(GX2AttribFormat format)
 {
-   switch (format & 0x3F) {
-   case latte::FMT_BC1:
-   case latte::FMT_BC2:
-   case latte::FMT_BC3:
-   case latte::FMT_BC4:
-   case latte::FMT_BC5:
-      return { 4, 4 };
+   switch (format & 0x1F) {
+   case GX2AttribFormatType::TYPE_8:
+   case GX2AttribFormatType::TYPE_4_4:
+   case GX2AttribFormatType::TYPE_8_8:
+   case GX2AttribFormatType::TYPE_8_8_8_8:
+      return GX2EndianSwapMode::None;
+   case GX2AttribFormatType::TYPE_16:
+   case GX2AttribFormatType::TYPE_16_FLOAT:
+   case GX2AttribFormatType::TYPE_16_16:
+   case GX2AttribFormatType::TYPE_16_16_FLOAT:
+   case GX2AttribFormatType::TYPE_16_16_16_16:
+   case GX2AttribFormatType::TYPE_16_16_16_16_FLOAT:
+      return GX2EndianSwapMode::Swap8In16;
+   case GX2AttribFormatType::TYPE_32:
+   case GX2AttribFormatType::TYPE_32_FLOAT:
+   case GX2AttribFormatType::TYPE_10_11_11_FLOAT:
+   case GX2AttribFormatType::TYPE_10_10_10_2:
+   case GX2AttribFormatType::TYPE_32_32:
+   case GX2AttribFormatType::TYPE_32_32_FLOAT:
+   case GX2AttribFormatType::TYPE_32_32_32:
+   case GX2AttribFormatType::TYPE_32_32_32_FLOAT:
+   case GX2AttribFormatType::TYPE_32_32_32_32:
+   case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
+      return GX2EndianSwapMode::Swap8In32;
    default:
-      return { 1, 1 };
+      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", enumAsString(format)));
    }
 }
 
-uint32_t
-GX2GetSurfaceFormatBits(GX2SurfaceFormat format)
+latte::SQ_ENDIAN
+getAttribFormatEndian(GX2AttribFormat format)
 {
-   auto latteFormat = format & 0x3F;
-   auto bpp = gSurfaceFormatData[latteFormat].bpp;
-
-   if (latteFormat >= latte::FMT_BC1 && latteFormat <= latte::FMT_BC5) {
-      bpp >>= 4;
-   }
-
-   return bpp;
+   return getSwapModeEndian(getAttribFormatSwapMode(format));
 }
 
 uint32_t
-GX2GetSurfaceFormatBitsPerElement(GX2SurfaceFormat format)
-{
-   return gSurfaceFormatData[format & 0x3F].bpp;
-}
-
-uint32_t
-GX2GetSurfaceFormatBytesPerElement(GX2SurfaceFormat format)
+getSurfaceFormatBytesPerElement(GX2SurfaceFormat format)
 {
    return gSurfaceFormatData[format & 0x3F].bpp / 8;
 }
 
 GX2SurfaceUse
-GX2GetSurfaceUse(GX2SurfaceFormat format)
+getSurfaceUse(GX2SurfaceFormat format)
 {
    return static_cast<GX2SurfaceUse>(gSurfaceFormatData[format & 0x3F].use);
 }
 
 GX2EndianSwapMode
-GX2GetSurfaceSwap(GX2SurfaceFormat format)
+getSurfaceFormatSwapMode(GX2SurfaceFormat format)
 {
    return static_cast<GX2EndianSwapMode>(gSurfaceFormatData[format & 0x3F].endian);
 }
 
+latte::SQ_ENDIAN
+getSurfaceFormatEndian(GX2SurfaceFormat format)
+{
+   return getSwapModeEndian(getSurfaceFormatSwapMode(format));
+}
+
+GX2SurfaceFormatType
+getSurfaceFormatType(GX2SurfaceFormat format)
+{
+   return static_cast<GX2SurfaceFormatType>(format >> 8);
+}
+
 latte::DB_DEPTH_FORMAT
-GX2GetSurfaceDepthFormat(GX2SurfaceFormat format)
+getSurfaceFormatDepthFormat(GX2SurfaceFormat format)
 {
    switch (format & 0x3F) {
    case latte::FMT_16:
@@ -268,15 +294,6 @@ GX2GetSurfaceDepthFormat(GX2SurfaceFormat format)
    default:
       decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
    }
-}
-
-namespace internal
-{
-
-GX2SurfaceFormatType
-getSurfaceFormatType(GX2SurfaceFormat format)
-{
-   return static_cast<GX2SurfaceFormatType>(format >> 8);
 }
 
 latte::CB_FORMAT
@@ -372,6 +389,23 @@ getSurfaceFormatColorNumberType(GX2SurfaceFormat format)
       return latte::NUMBER_FLOAT;
    default:
       decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
+   }
+}
+
+latte::SQ_ENDIAN
+getSwapModeEndian(GX2EndianSwapMode mode)
+{
+   switch (mode) {
+   case GX2EndianSwapMode::None:
+      return latte::SQ_ENDIAN_NONE;
+   case GX2EndianSwapMode::Swap8In16:
+      return latte::SQ_ENDIAN_8IN16;
+   case GX2EndianSwapMode::Swap8In32:
+      return latte::SQ_ENDIAN_8IN32;
+   case GX2EndianSwapMode::Default:
+      return latte::SQ_ENDIAN_AUTO;
+   default:
+      decaf_abort(fmt::format("Invalid GX2EndianSwapMode {}", enumAsString(mode)));
    }
 }
 

@@ -99,6 +99,7 @@ Module::RegisterFunctions()
    RegisterKernelFunctionName("internal_VsyncAlarmHandler", gx2::internal::vsyncAlarmHandler);
 
    // Format
+   RegisterKernelFunction(GX2GetAttribFormatBits);
    RegisterKernelFunction(GX2GetSurfaceFormatBits);
    RegisterKernelFunction(GX2GetSurfaceFormatBitsPerElement);
 

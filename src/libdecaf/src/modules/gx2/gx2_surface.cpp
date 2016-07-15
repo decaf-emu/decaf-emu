@@ -267,7 +267,7 @@ GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
    auto db_depth_size = latte::DB_DEPTH_SIZE::get(0);
 
    // Update db_depth_info
-   auto format = GX2GetSurfaceDepthFormat(depthBuffer->surface.format);
+   auto format = internal::getSurfaceFormatDepthFormat(depthBuffer->surface.format);
 
    db_depth_info = db_depth_info
       .FORMAT().set(format);

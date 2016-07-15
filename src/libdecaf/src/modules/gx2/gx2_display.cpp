@@ -30,7 +30,7 @@ getTVSize(GX2TVRenderMode mode)
 static unsigned
 getBpp(GX2SurfaceFormat format)
 {
-   auto bpp = GX2GetSurfaceFormatBytesPerElement(format);
+   auto bpp = internal::getSurfaceFormatBytesPerElement(format);
    decaf_assert(bpp > 0, fmt::format("Unexpected GX2SurfaceFormat {}", enumAsString(format)));
    return bpp;
 }
@@ -84,7 +84,7 @@ GX2CalcDRCSize(GX2DrcRenderMode drcRenderMode,
                be_val<uint32_t> *size,
                be_val<uint32_t> *unkOut)
 {
-   auto bytesPerPixel = GX2GetSurfaceFormatBytesPerElement(surfaceFormat);
+   auto bytesPerPixel = internal::getSurfaceFormatBytesPerElement(surfaceFormat);
    auto numBuffers = getNumBuffers(bufferingMode);
 
    *size = 864 * 480 * bytesPerPixel * numBuffers;

@@ -98,7 +98,7 @@ GX2InitTextureRegs(GX2Texture *texture)
       forceDegamma = true;
    }
 
-   auto endian = static_cast<latte::SQ_ENDIAN>(GX2GetSurfaceSwap(texture->surface.format));
+   auto endian = internal::getSurfaceFormatEndian(texture->surface.format);
    auto dstSelX = static_cast<latte::SQ_SEL>((texture->compMap >> 24) & 0x7);
    auto dstSelY = static_cast<latte::SQ_SEL>((texture->compMap >> 16) & 0x7);
    auto dstSelZ = static_cast<latte::SQ_SEL>((texture->compMap >> 8) & 0x7);
