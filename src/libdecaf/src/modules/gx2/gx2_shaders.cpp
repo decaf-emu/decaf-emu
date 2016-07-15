@@ -37,6 +37,8 @@ GX2SetFetchShader(GX2FetchShader *shader)
       shader->divisors[1],
    };
    pm4::write(pm4::SetContextRegs { latte::Register::VGT_INSTANCE_STEP_RATE_0, gsl::as_span(vgt_instance_step_rates) });
+
+   GX2DebugDumpShader(shader);
 }
 
 void
