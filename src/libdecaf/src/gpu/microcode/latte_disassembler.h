@@ -7,7 +7,7 @@ namespace latte
 {
 
 std::string
-disassemble(const gsl::span<const uint8_t> &binary);
+disassemble(const gsl::span<const uint8_t> &binary, bool isSubroutine = false);
 
 namespace disassembler
 {

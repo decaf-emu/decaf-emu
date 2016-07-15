@@ -220,7 +220,7 @@ disassembleNormal(State &state, const ControlFlowInst &inst)
 } // namespace disassembler
 
 std::string
-disassemble(const gsl::span<const uint8_t> &binary)
+disassemble(const gsl::span<const uint8_t> &binary, bool isSubroutine)
 {
    disassembler::State state;
    state.binary = binary;
@@ -245,6 +245,10 @@ disassemble(const gsl::span<const uint8_t> &binary)
          break;
       default:
          decaf_abort(fmt::format("Invalid top level instruction type {}", type));
+      }
+
+      if (cf.word1.CF_INST() == SQ_CF_INST_RETURN && isSubroutine) {
+         break;
       }
 
       if (cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_NORMAL
