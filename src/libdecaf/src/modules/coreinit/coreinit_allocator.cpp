@@ -3,7 +3,7 @@
 #include "coreinit_expheap.h"
 #include "coreinit_frameheap.h"
 #include "coreinit_memheap.h"
-#include "coreinit_unitheap.h"
+#include "coreinit_memunitheap.h"
 #include "ppcutils/wfunc_call.h"
 #include "common/decaf_assert.h"
 

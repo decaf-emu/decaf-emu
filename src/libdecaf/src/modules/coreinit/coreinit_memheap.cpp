@@ -3,7 +3,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
 #include "coreinit_frameheap.h"
-#include "coreinit_unitheap.h"
+#include "coreinit_memunitheap.h"
 #include "kernel/kernel_memory.h"
 #include "libcpu/mem.h"
 #include "virtual_ptr.h"
