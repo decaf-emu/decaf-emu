@@ -13,10 +13,8 @@ namespace jit
 static void
 truncateToSingleSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
-   // TODO: Check if we can do this without the extra register...
-   auto tmp = a.allocXmmTmp();
-   a.cvtsd2ss(tmp, reg);
-   a.cvtss2sd(reg, tmp);
+   a.cvtsd2ss(reg, reg);
+   a.cvtss2sd(reg, reg);
 }
 
 static void
