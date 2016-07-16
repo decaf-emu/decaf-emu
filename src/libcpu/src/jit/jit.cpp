@@ -26,11 +26,20 @@ static const bool JIT_REGCACHE = true;
 static std::vector<jitinstrfptr_t>
 sInstructionMap;
 
-static VMemRuntime* sRuntime;
-static FastRegionMap<JitCode> sJitBlocks;
+static VMemRuntime*
+sRuntime;
 
-JitCall gCallFn;
-JitFinale gFinaleFn;
+static FastRegionMap<JitCode>
+sJitBlocks;
+
+static uint8_t
+sBaseRelocCode[16];
+
+JitCall
+gCallFn;
+
+JitFinale
+gFinaleFn;
 
 void
 registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr);
@@ -104,6 +113,18 @@ initStubs()
    auto basePtr = a.make();
    gCallFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(introLabel));
    gFinaleFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(extroLabel));
+
+   asmjit::StaticRuntime rr(sBaseRelocCode, 32);
+   asmjit::X86Assembler ra(&rr, asmjit::kArchX64);
+   ra.mov(asmjit::x86::ecx, asmjit::imm_u(0x12345678));
+   decaf_check(ra.getOffset() == 5);
+   ra.mov(asmjit::x86::rdx, asmjit::imm_u(0x123456789abcdef0));
+   decaf_check(ra.getOffset() == 15);
+   for (auto i = 15; i < 32; ++i) {
+      ra.nop();
+   }
+   ra.make();
+   decaf_check(ra.getOffset() == 32);
 }
 
 void
@@ -197,7 +218,7 @@ jit_b_direct(PPCEmuAssembler& a, ppcaddr_t addr)
       auto relocLbl = a.newLabel();
       a.bind(relocLbl);
 
-      // Save 29 bytes of memory so we have room to do set up the
+      // Save 32 bytes of memory so we have room to do set up the
       //  call during relocation once we know where its going to
       //  reside in the host jit memory section.
       for (auto i = 0; i < 32; ++i) {
@@ -299,19 +320,14 @@ gen(JitBlock &block)
       auto aligned_mov_offset = aligned_offset - 2;
       auto aligned_base_offset = reinterpret_cast<intptr_t>(mem + aligned_offset);
 
-      // Write `MOV ECX, addr`
-      mem[0] = 0xB9;
+      // Copy the pregenerated relocation code bytes
+      memcpy(mem, sBaseRelocCode, 32);
+
+      // Write addr of `MOV finaleNiaArgReg, addr`
       *reinterpret_cast<uint32_t*>(&mem[1]) = reloc.first;
 
-      // Write `MOV RDX, relmem`
-      mem[5] = 0x48;
-      mem[6] = 0xBA;
+      // Write relmem of `MOV finaleJmpSrcArgReg, relmem`
       *reinterpret_cast<intptr_t*>(&mem[7]) = aligned_base_offset;
-
-      // Fill the gap from alignment with NOP
-      for (auto i = 15; i < aligned_offset; ++i) {
-         mem[i] = 0x90;
-      }
 
       // Write `MOV RAX, target`
       mem[aligned_mov_offset + 0] = 0x48;
@@ -319,11 +335,6 @@ gen(JitBlock &block)
       auto atomicAddr = &mem[aligned_mov_offset + 2];
       decaf_check(align_up(atomicAddr, 8) == atomicAddr);
       *reinterpret_cast<uint64_t*>(atomicAddr) = targetAddr;
-
-      // Fill the remaining space with NOP
-      for (auto i = aligned_mov_offset + 10; i < 32; ++i) {
-         mem[i] = 0x90;
-      }
    }
 
    // Calculate the starting address of the block
