@@ -83,9 +83,16 @@ public:
    {
       setErrorHandler(&errHandler);
 
+      // This holds the platform specific, calling convention arg registers
+#ifdef PLATFORM_WINDOWS
       // Windows x64 Calling Convention
       sysArgReg[0] = asmjit::x86::rcx;
       sysArgReg[1] = asmjit::x86::rdx;
+#else
+      // System-V x64 Calling Convention
+      sysArgReg[0] = asmjit::x86::rdi;
+      sysArgReg[1] = asmjit::x86::rsi;
+#endif
 
       // Some convenient aliases to make the code more easy to grok.
       finaleNiaArgReg = sysArgReg[0].r32();
