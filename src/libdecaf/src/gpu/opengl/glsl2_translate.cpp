@@ -245,12 +245,6 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       insertPush(state);
       state.out << '\n';
       break;
-   case SQ_CF_INST_ALU_BREAK:
-      throw translate_exception("Unimplemented SQ_CF_INST_ALU_BREAK");
-      break;
-   case SQ_CF_INST_ALU_CONTINUE:
-      throw translate_exception("Unimplemented SQ_CF_INST_ALU_CONTINUE");
-      break;
    }
 
    condStart(state, latte::SQ_CF_COND_ACTIVE);
@@ -348,29 +342,32 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       slot = group.getNextSlot(slot);
       state.groupPC++;
 
-      if (slot < count) {
-         state.out << '\n';
-      }
+      state.out << '\n';
    }
 
    condEnd(state);
 
    switch (id) {
    case SQ_CF_INST_ALU_POP_AFTER:
-      state.out << '\n';
       insertPop(state, 1);
       break;
    case SQ_CF_INST_ALU_POP2_AFTER:
-      state.out << '\n';
       insertPop(state, 2);
       break;
    case SQ_CF_INST_ALU_ELSE_AFTER:
-      state.out << '\n';
       insertElse(state);
       break;
+   case SQ_CF_INST_ALU_BREAK:
+      insertLineStart(state);
+      state.out << "if (predicateRegister) break;";
+      insertLineEnd(state);
+      break;
+   case SQ_CF_INST_ALU_CONTINUE:
+      insertLineStart(state);
+      state.out << "if (predicateRegister) continue;";
+      insertLineEnd(state);
+      break;
    }
-
-   state.out << '\n';
 }
 
 static void

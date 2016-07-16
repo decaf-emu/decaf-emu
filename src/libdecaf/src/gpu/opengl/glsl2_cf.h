@@ -16,8 +16,16 @@ void
 insertElse(State &state);
 
 void
+insertCond(State &state,
+           latte::SQ_CF_COND cond);
+
+void
 condStart(State &state,
-          latte::SQ_CF_COND cond);
+          latte::SQ_CF_COND cond,
+          bool invert = false);
+
+void
+condElse(State &state);
 
 void
 condEnd(State &state);

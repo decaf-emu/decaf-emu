@@ -54,8 +54,14 @@ disassembleCondition(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 static void
 disassembleLoop(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 {
+   disassembleCondition(out, inst);
+
    switch (inst.word1.CF_INST()) {
    case SQ_CF_INST_LOOP_START:
+      if (!inst.word1.COND()) {
+         out << " CF_CONST(" << inst.word1.CF_CONST() << ")";
+      }
+      // fall through
    case SQ_CF_INST_LOOP_START_DX10:
    case SQ_CF_INST_LOOP_START_NO_AL:
       out << " FAIL_JUMP_ADDR(" << inst.word0.ADDR << ")";
