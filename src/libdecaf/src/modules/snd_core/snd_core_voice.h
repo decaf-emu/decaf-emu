@@ -121,6 +121,13 @@ AXFreeVoice(AXVoice *voice);
 uint32_t
 AXGetMaxVoices();
 
+uint32_t
+AXGetVoiceCurrentOffsetEx(AXVoice *voice,
+                          const void *samples);
+
+uint32_t
+AXGetVoiceLoopCount(AXVoice *voice);
+
 void
 AXGetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets);
@@ -157,6 +164,15 @@ AXSetVoiceLoop(AXVoice *voice,
 void
 AXSetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets);
+
+void
+AXSetVoicePriority(AXVoice *voice,
+                   uint32_t priority);
+
+void
+AXSetVoiceRmtIIRCoefs(AXVoice *voice,
+                      uint16_t filter,
+                      ppctypes::VarList &args);
 
 void
 AXSetVoiceSrc(AXVoice *voice,

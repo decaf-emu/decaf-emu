@@ -2,10 +2,16 @@
 #include "modules/coreinit/coreinit_memheap.h"
 #include "snd_core.h"
 #include "snd_core_voice.h"
+#include <array>
 #include <queue>
 
 namespace snd_core
 {
+
+struct AXVoiceExtras
+{
+   uint32_t loopCount;
+};
 
 static const auto
 MaxVoices = 96u;
@@ -15,6 +21,9 @@ sAcquiredVoices;
 
 static std::queue<AXVoice*>
 sAvailVoiceStack;
+
+static std::array<AXVoiceExtras, MaxVoices>
+sVoiceExtras;
 
 AXVoice *
 AXAcquireVoice(uint32_t priority,
@@ -56,6 +65,8 @@ AXAcquireVoiceEx(uint32_t priority,
    foundVoice->callbackEx = callback;
    foundVoice->userContext = userContext;
 
+   sVoiceExtras[foundVoice->index].loopCount = 0;
+
    // Save this to the acquired voice list so that it can be
    //  forcefully freed if a higher priority voice is needed.
    sAcquiredVoices.push_back(foundVoice);
@@ -88,6 +99,21 @@ AXGetMaxVoices()
    return MaxVoices;
 }
 
+uint32_t
+AXGetVoiceCurrentOffsetEx(AXVoice *voice,
+                          const void *samples)
+{
+   AXVoiceOffsets offsets;
+   AXGetVoiceOffsets(voice, &offsets);
+   return offsets.currentOffset;
+}
+
+uint32_t
+AXGetVoiceLoopCount(AXVoice *voice)
+{
+   return sVoiceExtras[voice->index].loopCount;
+}
+
 void
 AXGetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets)
@@ -98,6 +124,7 @@ AXGetVoiceOffsets(AXVoice *voice,
    if (voice->offsets.currentOffset > voice->offsets.endOffset) {
       if (voice->offsets.loopingEnabled) {
          voice->offsets.currentOffset -= (voice->offsets.endOffset - voice->offsets.loopOffset);
+         sVoiceExtras[voice->index].loopCount++;
       } else {
          voice->offsets.currentOffset = voice->offsets.endOffset;
       }
@@ -162,6 +189,20 @@ AXSetVoiceOffsets(AXVoice *voice,
 }
 
 void
+AXSetVoicePriority(AXVoice *voice,
+                   uint32_t priority)
+{
+   voice->priority = priority;
+}
+
+void
+AXSetVoiceRmtIIRCoefs(AXVoice *voice,
+                      uint16_t filter,
+                      ppctypes::VarList &args)
+{
+}
+
+void
 AXSetVoiceSrc(AXVoice *voice,
               AXVoiceSrc *src)
 {
@@ -221,6 +262,8 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXCheckVoiceOffsets);
    RegisterKernelFunction(AXFreeVoice);
    RegisterKernelFunction(AXGetMaxVoices);
+   RegisterKernelFunction(AXGetVoiceCurrentOffsetEx);
+   RegisterKernelFunction(AXGetVoiceLoopCount);
    RegisterKernelFunction(AXGetVoiceOffsets);
    RegisterKernelFunction(AXIsVoiceRunning);
    RegisterKernelFunction(AXSetVoiceAdpcm);
@@ -230,6 +273,8 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXSetVoiceEndOffset);
    RegisterKernelFunction(AXSetVoiceLoop);
    RegisterKernelFunction(AXSetVoiceOffsets);
+   RegisterKernelFunction(AXSetVoicePriority);
+   RegisterKernelFunction(AXSetVoiceRmtIIRCoefs);
    RegisterKernelFunction(AXSetVoiceSrc);
    RegisterKernelFunction(AXSetVoiceSrcType);
    RegisterKernelFunction(AXSetVoiceSrcRatio);
