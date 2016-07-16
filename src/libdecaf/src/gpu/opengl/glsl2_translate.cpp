@@ -57,7 +57,12 @@ translateTEX(State &state, const ControlFlowInst &cf)
 
       insertLineStart(state);
       state.out.write("// {:02} ", state.groupPC);
-      latte::disassembler::disassembleTexInstruction(state.out, cf, tex);
+      if (id == SQ_TEX_INST_VTX_FETCH || id == SQ_TEX_INST_VTX_SEMANTIC) {
+         auto vtx = *reinterpret_cast<const VertexFetchInst *>(&tex);
+         latte::disassembler::disassembleVtxInstruction(state.out, cf, vtx);
+      } else {
+         latte::disassembler::disassembleTexInstruction(state.out, cf, tex);
+      }
       insertLineEnd(state);
 
       if (itr != sInstructionMapTEX.end()) {
