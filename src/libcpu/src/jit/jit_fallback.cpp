@@ -33,8 +33,13 @@ bool jit_fallback(PPCEmuAssembler& a, espresso::Instruction instr)
       a.lock().inc(asmjit::X86Mem(asmjit::x86::rax, 0));
    }
 
+#ifdef PLATFORM_WINDOWS
    a.mov(asmjit::x86::rcx, a.stateReg);
    a.mov(asmjit::x86::rdx, (uint32_t)instr);
+#else
+   a.mov(asmjit::x86::rdi, a.stateReg);
+   a.mov(asmjit::x86::rsi, (uint32_t)instr);
+#endif
    a.call(asmjit::Ptr(fptr));
    return true;
 }

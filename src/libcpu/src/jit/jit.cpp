@@ -69,9 +69,14 @@ initStubs()
    a.push(asmjit::x86::r14);
    a.push(asmjit::x86::r15);
    a.sub(asmjit::x86::rsp, 0x38);
-   a.mov(a.stateReg, asmjit::x86::rcx);
    a.mov(a.membaseReg, static_cast<uint64_t>(mem::base()));
+#ifdef PLATFORM_WINDOWS
+   a.mov(a.stateReg, asmjit::x86::rcx);
    a.jmp(asmjit::x86::rdx);
+#else
+   a.mov(a.stateReg, asmjit::x86::rdi);
+   a.jmp(asmjit::x86::rsi);
+#endif
 
    // This is the piece of code executed when we are finished
    //  executing the block of code started above.
