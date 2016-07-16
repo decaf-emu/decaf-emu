@@ -55,7 +55,7 @@ getCommandLineParser()
    auto sys_options = parser.add_option_group("System Options")
       .add_option("config",
                   description { "Specify path to configuration file." },
-                  value<std::string> {});
+                  value<std::string> {})
       .add_option("sys-path",
                   description { "Where to locate any external system files." },
                   value<std::string> {})
