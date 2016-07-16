@@ -45,27 +45,54 @@ insertElse(State &state)
    insertLineEnd(state);
 }
 
-void
-condStart(State &state,
-          SQ_CF_COND cond)
-{
-   insertLineStart(state);
 
+void
+insertCond(State &state,
+           latte::SQ_CF_COND cond)
+{
    switch (cond) {
    case SQ_CF_COND_ACTIVE:
-      state.out << "if (activeMask) {";
+      state.out << "activeMask";
       break;
    case SQ_CF_COND_FALSE:
-      state.out << "if (!activeMask) {";
+      state.out << "false";
       break;
    case SQ_CF_COND_BOOL:
       throw translate_exception("Unimplemented SQ_CF_COND_BOOL");
    case SQ_CF_COND_NOT_BOOL:
       throw translate_exception("Unimplemented SQ_CF_COND_NOT_BOOL");
    default:
-      throw translate_exception(fmt::format("Unknown SQ_CF_COND {}", cond));
+      throw translate_exception(fmt::format("Invalid SQ_CF_COND {}", cond));
    }
+}
 
+void
+condStart(State &state,
+          SQ_CF_COND cond,
+          bool invert)
+{
+   insertLineStart(state);
+
+   state.out << "if (";
+   if (invert) {
+      state.out << "!(";
+   }
+   insertCond(state, cond);
+   if (invert) {
+      state.out << ")";
+   }
+   state.out << ") {";
+
+   insertLineEnd(state);
+   increaseIndent(state);
+}
+
+void
+condElse(State &state)
+{
+   decreaseIndent(state);
+   insertLineStart(state);
+   state.out << "} else {";
    insertLineEnd(state);
    increaseIndent(state);
 }
