@@ -515,7 +515,8 @@ insertFileHeader(State &state)
    }
 
    if (state.shader->uniformBlocksEnabled) {
-      for (auto id = 0u; id < 8; ++id) {
+      // GX2 actually supports 16, but GL does not :(
+      for (auto id = 0u; id < 14; ++id) {
          out << "layout (binding = ";
 
          if (state.shader->type == Shader::VertexShader) {
