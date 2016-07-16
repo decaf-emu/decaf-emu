@@ -166,8 +166,8 @@ kc(PPCEmuAssembler& a, Instruction instr)
    a.mov(a.niaMem, a.genCia + 4);
 
    // Call the KC
-   a.mov(asmjit::x86::rcx, asmjit::Ptr(kc->func));
-   a.mov(asmjit::x86::rdx, asmjit::Ptr(kc->user_data));
+   a.mov(a.sysArgReg[0], asmjit::Ptr(kc->func));
+   a.mov(a.sysArgReg[1], asmjit::Ptr(kc->user_data));
    a.call(asmjit::Ptr(&kc_stub));
    a.mov(a.stateReg, asmjit::x86::rax);
 
@@ -179,8 +179,8 @@ kc(PPCEmuAssembler& a, Instruction instr)
    a.cmp(a.niaMem, a.genCia + 4);
    a.je(niaUnchangedLbl);
 
-   a.mov(asmjit::x86::ecx, a.niaMem);
-   a.mov(asmjit::x86::rdx, 0);
+   a.mov(a.finaleNiaArgReg, a.niaMem);
+   a.mov(a.finaleJmpSrcArgReg, 0);
    a.jmp(asmjit::Ptr(gFinaleFn));
 
    a.bind(niaUnchangedLbl);

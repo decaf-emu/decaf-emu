@@ -83,6 +83,14 @@ public:
    {
       setErrorHandler(&errHandler);
 
+      // Windows x64 Calling Convention
+      sysArgReg[0] = asmjit::x86::rcx;
+      sysArgReg[1] = asmjit::x86::rdx;
+
+      // Some convenient aliases to make the code more easy to grok.
+      finaleNiaArgReg = sysArgReg[0].r32();
+      finaleJmpSrcArgReg = sysArgReg[1];
+
       // These registers must NOT collide with the calling conventions
       //  of any of our platforms, and must be callee-preserved
       stateReg = asmjit::x86::rbx;
@@ -167,6 +175,10 @@ public:
 
    uint32_t genCia;
    std::vector<std::pair<uint32_t, asmjit::Label>> relocLabels;
+
+   asmjit::X86GpReg sysArgReg[2];
+   asmjit::X86GpReg finaleNiaArgReg;
+   asmjit::X86GpReg finaleJmpSrcArgReg;
 
    asmjit::X86GpReg stateReg;
    asmjit::X86GpReg membaseReg;

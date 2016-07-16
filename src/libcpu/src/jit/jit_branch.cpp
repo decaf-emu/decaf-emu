@@ -122,16 +122,16 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr)
    if (flags & BcBranchCTR) {
       a.saveAll();
 
-      a.mov(asmjit::x86::ecx, a.ctrMem);
-      a.and_(asmjit::x86::ecx, ~0x3);
-      a.mov(asmjit::x86::rdx, 0);
+      a.mov(a.finaleNiaArgReg, a.ctrMem);
+      a.and_(a.finaleNiaArgReg, ~0x3);
+      a.mov(a.finaleJmpSrcArgReg, 0);
       a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    } else if (flags & BcBranchLR) {
       a.saveAll();
 
-      a.mov(asmjit::x86::ecx, a.lrMem);
-      a.and_(asmjit::x86::ecx, ~0x3);
-      a.mov(asmjit::x86::rdx, 0);
+      a.mov(a.finaleNiaArgReg, a.lrMem);
+      a.and_(a.finaleNiaArgReg, ~0x3);
+      a.mov(a.finaleJmpSrcArgReg, 0);
       a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    } else {
       uint32_t nia = a.genCia + sign_extend<16>(instr.bd << 2);

@@ -78,15 +78,15 @@ initStubs()
    a.push(asmjit::x86::r14);
    a.push(asmjit::x86::r15);
    a.sub(asmjit::x86::rsp, 0x38);
-   a.mov(a.stateReg, asmjit::x86::rcx);
+   a.mov(a.stateReg, a.sysArgReg[0]);
    a.mov(a.membaseReg, static_cast<uint64_t>(mem::base()));
-   a.jmp(asmjit::x86::rdx);
+   a.jmp(a.sysArgReg[1]);
 
    // This is the piece of code executed when we are finished
    //  executing the block of code started above.
    a.bind(extroLabel);
 
-   a.cmp(asmjit::x86::ecx, CALLBACK_ADDR);
+   a.cmp(a.finaleNiaArgReg, CALLBACK_ADDR);
    a.je(exitLabel);
 
    // If we should continue generating, lets call the
@@ -97,7 +97,7 @@ initStubs()
 
    // This is how we exit back to the caller
    a.bind(exitLabel);
-   a.mov(a.niaMem, asmjit::x86::ecx);
+   a.mov(a.niaMem, a.finaleNiaArgReg);
    a.mov(asmjit::x86::rax, a.stateReg);
    a.add(asmjit::x86::rsp, 0x38);
    a.pop(asmjit::x86::r15);
@@ -116,9 +116,9 @@ initStubs()
 
    asmjit::StaticRuntime rr(sBaseRelocCode, 32);
    asmjit::X86Assembler ra(&rr, asmjit::kArchX64);
-   ra.mov(asmjit::x86::ecx, asmjit::imm_u(0x12345678));
+   ra.mov(a.finaleNiaArgReg, asmjit::imm_u(0x12345678));
    decaf_check(ra.getOffset() == 5);
-   ra.mov(asmjit::x86::rdx, asmjit::imm_u(0x123456789abcdef0));
+   ra.mov(a.finaleJmpSrcArgReg, asmjit::imm_u(0x123456789abcdef0));
    decaf_check(ra.getOffset() == 15);
    for (auto i = 15; i < 32; ++i) {
       ra.nop();
