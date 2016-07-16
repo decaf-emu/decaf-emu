@@ -378,24 +378,25 @@ bool GLDriver::checkActiveTextures()
                      untiledImage.data());
                }
                break;
+            case latte::SQ_TEX_DIM_CUBEMAP:
+               decaf_check(surface.depth == 6);
             case latte::SQ_TEX_DIM_2D_ARRAY:
                if (compressed) {
                   gl::glCompressedTextureSubImage3D(buffer->object, 0,
                      0, 0, 0,
-                     width, height, depth,
+                     width, height, surface.depth,
                      textureDataType,
                      gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
                } else {
                   gl::glTextureSubImage3D(buffer->object, 0,
                      0, 0, 0,
-                     width, height, depth,
+                     width, height, surface.depth,
                      textureFormat, textureDataType,
                      untiledImage.data());
                }
                break;
             case latte::SQ_TEX_DIM_1D:
             case latte::SQ_TEX_DIM_3D:
-            case latte::SQ_TEX_DIM_CUBEMAP:
             case latte::SQ_TEX_DIM_1D_ARRAY:
             case latte::SQ_TEX_DIM_2D_MSAA:
             case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
