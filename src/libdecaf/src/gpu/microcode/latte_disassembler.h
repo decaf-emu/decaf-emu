@@ -75,7 +75,7 @@ void
 disassembleVtxInstruction(fmt::MemoryWriter &out,
                           const latte::ControlFlowInst &parent,
                           const VertexFetchInst &tex,
-                          int namePad);
+                          int namePad = 0);
 
 void
 disassembleTexInstruction(fmt::MemoryWriter &out,
