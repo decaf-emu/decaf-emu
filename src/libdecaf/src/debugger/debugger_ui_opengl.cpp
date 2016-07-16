@@ -2,7 +2,9 @@
 #include <glbinding/Binding.h>
 #include <gsl.h>
 #include <imgui.h>
+#include "common/platform_dir.h"
 #include "debugger/debugger_ui.h"
+#include "decaf.h"
 #include "decaf_debugger.h"
 
 namespace decaf
@@ -30,6 +32,9 @@ struct DebugDrawData
 static DebugDrawData
 sDebugDrawData;
 
+static std::string
+sConfigPath;
+
 void
 initialise()
 {
@@ -41,6 +46,9 @@ initialiseUiGL()
 {
    auto &data = sDebugDrawData;
    ImGuiIO& io = ImGui::GetIO();
+
+   sConfigPath = makeConfigPath("imgui.ini");
+   io.IniFilename = sConfigPath.c_str();
 
    const gl::GLchar *vertex_shader =
       "#version 330\n"

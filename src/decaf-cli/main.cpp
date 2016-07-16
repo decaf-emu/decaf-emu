@@ -94,7 +94,8 @@ start(excmd::parser &parser,
    }
 
    // First thing, load the config!
-   config::load("cli_config.json");
+   decaf::createConfigDirectory();
+   config::load(decaf::makeConfigPath("cli_config.json"));
 
    // Allow command line options to override config
    if (options.has("jit-debug")) {
