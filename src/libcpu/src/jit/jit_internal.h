@@ -83,8 +83,10 @@ public:
    {
       setErrorHandler(&errHandler);
 
-      stateReg = zbx;
-      membaseReg = zsi;
+      // These registers must NOT collide with the calling conventions
+      //  of any of our platforms, and must be callee-preserved
+      stateReg = asmjit::x86::rbx;
+      membaseReg = asmjit::x86::rbp;
 
 #define PPCMemRef(s, mm) s = asmjit::X86Mem(stateReg, (int32_t)offsetof2(Core, mm), sizeof(Core::mm))
 
@@ -127,7 +129,7 @@ public:
       mGpRegVals[1] = asmjit::x86::rcx;
       mGpRegVals[2] = asmjit::x86::rdx;
       mGpRegVals[3] = asmjit::x86::rdi;
-      mGpRegVals[4] = asmjit::x86::rbp;
+      mGpRegVals[4] = asmjit::x86::rsi;
       mGpRegVals[5] = asmjit::x86::r8;
       mGpRegVals[6] = asmjit::x86::r9;
       mGpRegVals[7] = asmjit::x86::r10;
