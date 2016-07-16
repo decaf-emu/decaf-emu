@@ -22,35 +22,46 @@ getCommandLineParser()
    using excmd::value;
 
    parser.global_options()
-      .add_option("v,version", description { "Show version." })
-      .add_option("h,help", description { "Show help." });
+      .add_option("v,version",
+                  description { "Show version." })
+      .add_option("h,help",
+                  description { "Show help." });
 
    parser.add_command("help")
-      .add_argument("help-command", optional {}, value<std::string> {});
-
-   auto config_options = parser.add_option_group("Configuration Options")
-      .add_option("config", description { "Specify path to configuration file." },
-                  value<std::string> {});
+      .add_argument("help-command",
+                    optional {},
+                    value<std::string> {});
 
    auto jit_options = parser.add_option_group("JIT Options")
-      .add_option("jit", description { "Enables the JIT engine." })
-      .add_option("jit-debug", description { "Verify JIT implementation against interpreter." });
+      .add_option("jit",
+                  description { "Enables the JIT engine." })
+      .add_option("jit-debug",
+                  description { "Verify JIT implementation against interpreter." });
 
    auto log_options = parser.add_option_group("Log Options")
-      .add_option("log-file", description { "Redirect log output to file." })
-      .add_option("log-async", description { "Enable asynchronous logging." })
-      .add_option("log-no-stdout", description { "Disable logging to stdout." })
-      .add_option("log-level", description { "Only display logs with severity equal to or greater than this level." },
+      .add_option("log-file",
+                  description { "Redirect log output to file." })
+      .add_option("log-async",
+                  description { "Enable asynchronous logging." })
+      .add_option("log-no-stdout",
+                  description { "Disable logging to stdout." })
+      .add_option("log-level",
+                  description { "Only display logs with severity equal to or greater than this level." },
                   default_value<std::string> { "trace" },
                   allowed<std::string> { {
-                     "trace", "debug", "info", "notice", "warning", "error", "critical", "alert", "emerg", "off"
+                     "trace", "debug", "info", "notice", "warning",
+                     "error", "critical", "alert", "emerg", "off"
                   } });
 
    auto sys_options = parser.add_option_group("System Options")
-      .add_option("sys-path", description { "Where to locate any external system files." }, value<std::string> {});
+      .add_option("config",
+                  description { "Specify path to configuration file." },
+                  value<std::string> {})
+      .add_option("sys-path",
+                  description { "Where to locate any external system files." },
+                  value<std::string> {});
 
    parser.add_command("play")
-      .add_option_group(config_options)
       .add_option_group(jit_options)
       .add_option_group(log_options)
       .add_option_group(sys_options)
@@ -169,6 +180,8 @@ start(excmd::parser &parser,
    gCliLog = std::make_shared<spdlog::logger>("decaf-cli", begin(sinks), end(sinks));
    gCliLog->set_level(logLevel);
    gCliLog->set_pattern("[%l] %v");
+   gCliLog->info("Loaded config from {}", configPath);
+   gCliLog->info("Game path {}", gamePath);
 
    DecafSDL sdl;
 
