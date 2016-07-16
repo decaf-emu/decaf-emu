@@ -166,8 +166,13 @@ kc(PPCEmuAssembler& a, Instruction instr)
    a.mov(a.niaMem, a.genCia + 4);
 
    // Call the KC
+#ifdef PLATFORM_WINDOWS
    a.mov(asmjit::x86::rcx, asmjit::Ptr(kc->func));
    a.mov(asmjit::x86::rdx, asmjit::Ptr(kc->user_data));
+#else
+   a.mov(asmjit::x86::rdi, asmjit::Ptr(kc->func));
+   a.mov(asmjit::x86::rsi, asmjit::Ptr(kc->user_data));
+#endif
    a.call(asmjit::Ptr(&kc_stub));
    a.mov(a.stateReg, asmjit::x86::rax);
 
