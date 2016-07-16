@@ -1,5 +1,6 @@
 #pragma once
 #include "filesystem_path.h"
+#include "common/platform.h"
 
 namespace fs
 {
