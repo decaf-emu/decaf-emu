@@ -50,6 +50,18 @@ public:
    }
 };
 
+std::string
+makeConfigPath(const std::string &filename)
+{
+   return fmt::format("{}/decaf/{}", platform::getConfigDirectory(), filename.c_str());
+}
+
+bool
+createConfigDirectory()
+{
+   return platform::createParentDirectories(makeConfigPath("."));
+}
+
 void
 initialiseLogging(std::vector<spdlog::sink_ptr> &sinks,
                   spdlog::level::level_enum level)

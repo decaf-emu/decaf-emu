@@ -11,6 +11,12 @@
 namespace decaf
 {
 
+std::string
+makeConfigPath(const std::string &filename);
+
+bool
+createConfigDirectory();
+
 void
 initialiseLogging(std::vector<spdlog::sink_ptr> &sinks,
                   spdlog::level::level_enum level);

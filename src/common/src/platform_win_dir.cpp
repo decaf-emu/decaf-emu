@@ -3,16 +3,44 @@
 
 #ifdef PLATFORM_WINDOWS
 #include <direct.h>
+#include <errno.h>
 #include <io.h>
 #include <sys/stat.h>
 
 namespace platform
 {
 
+static bool
+isDriveName(const std::string &path)
+{
+   return path.length() == 2
+      && ((path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[0] <= 'z'))
+      && path[1] == ':';
+}
+
 bool
 createDirectory(const std::string &path)
 {
-   return _mkdir(path.c_str()) == 0;
+   if (!createParentDirectories(path)) {
+      return false;
+   }
+
+   return _mkdir(path.c_str()) == 0
+      || (errno == EEXIST && isDirectory(path));
+}
+
+bool
+createParentDirectories(const std::string &path)
+{
+   auto slashPos = path.find_last_of("/\\");
+   if (slashPos == std::string::npos
+       || (slashPos == 2 && isDriveName(path.substr(0, 2)))
+       || (path.find_first_not_of("/\\") == 2  // "\\server\path" syntax
+           && path.find_first_of("/\\", 2) == slashPos)) {
+      return true;
+   }
+
+   return createDirectory(path.substr(0, slashPos));
 }
 
 bool
@@ -45,6 +73,13 @@ isDirectory(const std::string &path)
    }
 
    return !!(info.st_mode & _S_IFDIR);
+}
+
+std::string
+getConfigDirectory()
+{
+   // TODO: probably SHGetKnownFolderPath(FOLDERID_LocalAppData)?
+   return ".";
 }
 
 } // namespace platform
