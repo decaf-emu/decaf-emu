@@ -157,11 +157,19 @@ sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureF
 
    if (numDstSels > 0) {
       insertLineStart(state);
-      state.out << "texTmp = " << func << "(sampler_" << samplerID << ", ";
 
+      auto samplerIsShadow = isShadowSampler(samplerType);
       auto samplerElements = getSamplerArgCount(samplerType);
 
-      if (isShadowSampler(samplerType)) {
+      if (!samplerIsShadow) {
+         state.out << "texTmp";
+      } else {
+         state.out << "texTmp.x";
+      }
+
+      state.out << " = " << func << "(sampler_" << samplerID << ", ";
+
+      if (samplerIsShadow) {
          /* In r600 the .w channel holds the compare value whereas OpenGL
           * shadow samplers just expect it to be the last texture coordinate
           * so we must set the last channel to SQ_SEL_W
