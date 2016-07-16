@@ -197,7 +197,7 @@ void
 Module::initialiseLockedCache()
 {
    auto base = reinterpret_cast<uint8_t *>(mem::translate(mem::LockedCacheBase));
-   sDMAEnabled.fill(false);
+   sDMAEnabled.fill(true);
 
    for (auto i = 0u; i < CoreCount; ++i) {
       sLockedCache[i] = new TeenyHeap(base + (sLockedCacheSize * i), sLockedCacheSize);
