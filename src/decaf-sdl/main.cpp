@@ -28,6 +28,10 @@ getCommandLineParser()
    parser.add_command("help")
       .add_argument("help-command", optional {}, value<std::string> {});
 
+   auto config_options = parser.add_option_group("Configuration Options")
+      .add_option("config", description { "Specify path to configuration file." },
+                  value<std::string> {});
+
    auto jit_options = parser.add_option_group("JIT Options")
       .add_option("jit", description { "Enables the JIT engine." })
       .add_option("jit-debug", description { "Verify JIT implementation against interpreter." });
@@ -46,6 +50,7 @@ getCommandLineParser()
       .add_option("sys-path", description { "Where to locate any external system files." }, value<std::string> {});
 
    parser.add_command("play")
+      .add_option_group(config_options)
       .add_option_group(jit_options)
       .add_option_group(log_options)
       .add_option_group(sys_options)
@@ -93,8 +98,14 @@ start(excmd::parser &parser,
    }
 
    // First thing, load the config!
-   decaf::createConfigDirectory();
-   config::load(decaf::makeConfigPath("config.json"));
+   std::string configPath;
+   if (options.has("config")) {
+      configPath = options.get<std::string>("config");
+   } else {
+      decaf::createConfigDirectory();
+      configPath = decaf::makeConfigPath("config.json");
+   }
+   config::load(configPath);
 
    // Allow command line options to override config
    if (options.has("jit-debug")) {
