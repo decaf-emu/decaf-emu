@@ -25,7 +25,7 @@ bool dump_shaders = false;
 namespace jit
 {
 
-bool enabled = false;
+bool enabled = true;
 bool debug = false;
 
 } // namespace jit
@@ -35,7 +35,10 @@ namespace log
 
 bool kernel_trace = false;
 bool branch_trace = false;
-std::vector<std::string> kernel_trace_filters = {
+
+std::vector<std::string> kernel_trace_filters =
+{
+   "+*",
    "-coreinit::__ghsLock",
    "-coreinit::__ghsUnlock",
    "-coreinit::__gh_errno_ptr",
@@ -51,7 +54,7 @@ std::vector<std::string> kernel_trace_filters = {
 namespace system
 {
 
-std::string system_path = "/undefined";
+std::string system_path = "/undefined_system_path";
 
 } // namespace system
 
