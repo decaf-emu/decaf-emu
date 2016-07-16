@@ -53,7 +53,10 @@ public:
 std::string
 makeConfigPath(const std::string &filename)
 {
-   return fmt::format("{}/decaf/{}", platform::getConfigDirectory(), filename.c_str());
+   return fs::HostPath { platform::getConfigDirectory() }
+      .join("decaf")
+      .join(filename)
+      .path();
 }
 
 bool
