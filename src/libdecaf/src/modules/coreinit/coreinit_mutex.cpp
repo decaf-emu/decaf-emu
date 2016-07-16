@@ -217,7 +217,7 @@ OSWaitCond(OSCondition *condition, OSMutex *mutex)
    auto mutexCount = mutex->count;
    mutex->count = 1;
    unlockMutexNoLock(mutex);
-   internal::rescheduleAllCoreNoLock();
+   internal::rescheduleOtherCoreNoLock();
 
    // Sleep on the condition
    internal::sleepThreadNoLock(&condition->queue);
