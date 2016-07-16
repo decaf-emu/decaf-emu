@@ -2,10 +2,13 @@
 #include "platform_dir.h"
 
 #ifdef PLATFORM_WINDOWS
+#include <codecvt>
 #include <direct.h>
 #include <errno.h>
 #include <io.h>
+#include <locale>
 #include <sys/stat.h>
+#include <ShlObj.h>
 
 namespace platform
 {
@@ -78,8 +81,16 @@ isDirectory(const std::string &path)
 std::string
 getConfigDirectory()
 {
-   // TODO: probably SHGetKnownFolderPath(FOLDERID_LocalAppData)?
-   return ".";
+   PWSTR path;
+   auto result = std::string { "." };
+
+   if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &path))) {
+      std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+      result = converter.to_bytes(path);
+      CoTaskMemFree(path);
+   }
+
+   return result;
 }
 
 } // namespace platform
