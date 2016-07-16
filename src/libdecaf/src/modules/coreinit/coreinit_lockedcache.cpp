@@ -150,10 +150,6 @@ LCGetDMAQueueLength()
 void
 LCLoadDMABlocks(void *dst, const void *src, uint32_t size)
 {
-   if (!LCIsDMAEnabled()) {
-      return;
-   }
-
    if (size == 0) {
       size = 128;
    }
@@ -170,10 +166,6 @@ LCLoadDMABlocks(void *dst, const void *src, uint32_t size)
 void
 LCStoreDMABlocks(void *dst, const void *src, uint32_t size)
 {
-   if (!LCIsDMAEnabled()) {
-      return;
-   }
-
    if (size == 0) {
       size = 128;
    }
