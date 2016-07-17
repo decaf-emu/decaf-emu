@@ -16,9 +16,16 @@ namespace coreinit
 
 struct MEMFrameHeapState
 {
+   //! Tag used to identify the state for MEMFreeByStateToFrmHeap.
    be_val<uint32_t> tag;
+
+   //! Saved head address for frame heap.
    be_val<ppcaddr_t> head;
+
+   //! Saved tail address for frame heap.
    be_val<ppcaddr_t> tail;
+
+   //! Pointer to the previous recorded frame heap state.
    be_ptr<MEMFrameHeapState> previous;
 };
 CHECK_OFFSET(MEMFrameHeapState, 0x00, tag);
@@ -30,8 +37,14 @@ CHECK_SIZE(MEMFrameHeapState, 0x10);
 struct MEMFrameHeap
 {
    MEMHeapHeader header;
+
+   //! Current address of the head of the frame heap.
    be_val<ppcaddr_t> head;
+
+   //! Current address of the tail of the frame heap.
    be_val<ppcaddr_t> tail;
+
+   //! Pointer to the previous recorded frame heap state.
    be_ptr<MEMFrameHeapState> previousState;
 };
 CHECK_OFFSET(MEMFrameHeap, 0x00, header);

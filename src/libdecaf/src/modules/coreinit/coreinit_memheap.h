@@ -21,13 +21,27 @@ static const uint32_t MEM_MAX_HEAP_TABLE = 0x20;
 
 struct MEMHeapHeader
 {
+   //! Tag indicating which type of heap this is
    be_val<MEMHeapTag> tag;
+
+   //! Link for list this heap is in
    MEMListLink link;
+
+   //! List of all child heaps in this heap
    MEMList list;
+
+   //! Start address of allocatable memory
    be_val<uint32_t> dataStart;
+
+   //! End address of allocatable memory
    be_val<uint32_t> dataEnd;
+
+   //! Lock used when MEM_HEAP_FLAG_USE_LOCK is set.
    OSSpinLock lock;
+
+   //! Flags set during heap creation.
    be_val<uint32_t> flags;
+
    UNKNOWN(0x0C);
 };
 CHECK_OFFSET(MEMHeapHeader, 0x00, tag);
