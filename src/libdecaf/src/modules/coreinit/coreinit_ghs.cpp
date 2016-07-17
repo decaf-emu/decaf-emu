@@ -5,6 +5,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_mutex.h"
 #include "coreinit_scheduler.h"
+#include "kernel/kernel_loader.h"
 #include "libcpu/trace.h"
 #include "ppcutils/wfunc_call.h"
 #include "common/decaf_assert.h"
@@ -52,6 +53,9 @@ p_iob_mutexes;
 
 static std::array<bool*, GHS_FLOCK_MAX>
 p_iob_mutex_used;
+
+static wfunc_ptr<void>
+sSyscallFunc;
 
 BOOL
 ghsLock()
@@ -195,6 +199,11 @@ void ghs_mtx_unlock(void *mtx)
    OSUnlockMutex(*pmutex);
 }
 
+void syscall()
+{
+   decaf_abort("Decaf does not currently support ghs syscalls");
+}
+
 namespace internal
 {
 
@@ -244,6 +253,7 @@ Module::registerGhsFunctions()
    RegisterKernelDataName("_iob_lock", p_iob_lock);
    RegisterKernelDataName("environ", p_environ);
 
+   RegisterInternalFunction(syscall, sSyscallFunc);
    RegisterInternalDataName("__gh_errno", p__gh_errno);
    RegisterInternalData(ghsSpinLock);
    RegisterInternalData(p_iob_mutexes);
@@ -276,6 +286,8 @@ Module::initialiseGHS()
    ghs_flock_create(p_iob_lock[0]);
    ghs_flock_create(p_iob_lock[1]);
    ghs_flock_create(p_iob_lock[2]);
+
+   kernel::loader::setSyscallAddress(sSyscallFunc);
 }
 
 } // namespace coreinit

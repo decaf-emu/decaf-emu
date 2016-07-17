@@ -83,6 +83,9 @@ gUnimplementedFunctions;
 static std::map<std::string, int>
 gUnimplementedData;
 
+static ppcaddr_t
+sSyscallAddress = 0;
+
 void
 lockLoader()
 {
@@ -1025,6 +1028,21 @@ loadRPL(const std::string &moduleName,
       return nullptr;
    }
 
+   // Process dot syscall
+   for (auto &section : sections) {
+      auto sectionName = shStrTab + section.header.name;
+      if (strcmp(sectionName, ".syscall") == 0) {
+         decaf_check(sSyscallAddress);
+
+         // Write a branch to the syscall location
+         auto b = espresso::encodeInstruction(espresso::InstructionID::b);
+         b.li = sSyscallAddress >> 2;
+         b.lk = 0;
+         b.aa = 1;
+         mem::write(section.virtAddress, b.value);
+      }
+   }
+
    // Relocate entry point
    auto entryPoint = calculateRelocatedAddress(header.entry, sections);
 
@@ -1138,6 +1156,12 @@ loadRPL(const std::string& name)
    auto res = loadRPLNoLock(name);
    unlockLoader();
    return res;
+}
+
+void
+setSyscallAddress(ppcaddr_t address)
+{
+   sSyscallAddress = address;
 }
 
 LoadedModule *

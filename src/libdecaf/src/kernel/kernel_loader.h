@@ -110,6 +110,9 @@ unlockLoader();
 LoadedModule *
 loadRPL(const std::string& name);
 
+void
+setSyscallAddress(ppcaddr_t address);
+
 LoadedModule *
 findModule(const std::string& name);
 
