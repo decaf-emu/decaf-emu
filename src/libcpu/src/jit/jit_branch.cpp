@@ -24,10 +24,11 @@ enum BcFlags
    BcBranchCTR = 1 << 3
 };
 
-static void
+static Core*
 jit_interrupt_stub()
 {
    this_core::checkInterrupts();
+   return this_core::state();
 }
 
 static void
@@ -45,6 +46,7 @@ jit_b_check_interrupt(PPCEmuAssembler& a)
 
    a.mov(a.niaMem, a.genCia + 4);
    a.call(asmjit::Ptr(jit_interrupt_stub));
+   a.mov(a.stateReg, asmjit::x86::rax);
 
    a.bind(noInterrupt);
 }
