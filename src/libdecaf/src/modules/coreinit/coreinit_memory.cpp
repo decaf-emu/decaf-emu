@@ -14,14 +14,21 @@ namespace internal
 void initialiseVallocMemory();
 }
 
-static const uint32_t VALLOC_PHYS_MEM_START = 0x80000000;
-static const uint32_t VALLOC_PHYS_MEM_SIZE = 0x01000000;
+static const uint32_t
+VALLOC_PHYS_MEM_START = 0x80000000u;
 
-static const uint32_t VALLOC_VIRT_MEM_START = 0x88000000;
-static const uint32_t VALLOC_VIRT_MEM_SIZE = 0x01000000;
+static const uint32_t
+VALLOC_PHYS_MEM_SIZE = 0x01000000u;
+
+static const uint32_t
+VALLOC_VIRT_MEM_START = 0x88000000u;
+
+static const uint32_t
+VALLOC_VIRT_MEM_SIZE = 0x01000000u;
 
 // TODO: This should not be a constant here, but be in libcpu::mem
-static const uint32_t SYSTEM_PAGE_SIZE = 0x00001000;
+static const uint32_t
+SYSTEM_PAGE_SIZE = 0x00001000;
 
 // Our virtual allocation system behaves as though our allocatable physical
 //  region is within the 0x80000000-0x81000000 address range.  Additionally,
@@ -102,7 +109,7 @@ OSGetMemBound(OSMemoryType type, be_val<uint32_t> *addr, be_val<uint32_t> *size)
 
    *addr = memAddr;
    *size = memSize;
-return 0;
+   return 0;
 }
 
 BOOL
@@ -143,7 +150,7 @@ OSMemoryBarrier()
 
 void
 OSGetAvailPhysAddrRange(be_val<ppcaddr_t> *start,
-   be_val<uint32_t> *size)
+                        be_val<uint32_t> *size)
 {
    internal::initialiseVallocMemory();
 
@@ -153,8 +160,8 @@ OSGetAvailPhysAddrRange(be_val<ppcaddr_t> *start,
 
 ppcaddr_t
 OSAllocVirtAddr(ppcaddr_t address,
-   uint32_t size,
-   uint32_t alignment)
+                uint32_t size,
+                uint32_t alignment)
 {
    internal::initialiseVallocMemory();
 
@@ -169,14 +176,13 @@ OSAllocVirtAddr(ppcaddr_t address,
       alignment = 4;
    }
 
-   void *res = sVallocVirtualMemHeap->alloc(size, alignment);
-
+   auto res = sVallocVirtualMemHeap->alloc(size, alignment);
    return mem::untranslate(res);
 }
 
 BOOL
 OSFreeVirtAddr(ppcaddr_t address,
-   uint32_t size)
+               uint32_t size)
 {
    internal::initialiseVallocMemory();
 
@@ -189,9 +195,9 @@ OSFreeVirtAddr(ppcaddr_t address,
 
 BOOL
 OSMapMemory(ppcaddr_t virtAddress,
-   ppcaddr_t physAddress,
-   uint32_t size,
-   MEMProtectMode mode)
+            ppcaddr_t physAddress,
+            uint32_t size,
+            MEMProtectMode mode)
 {
    decaf_check(virtAddress);
    decaf_check(physAddress);
@@ -211,6 +217,7 @@ OSMapMemory(ppcaddr_t virtAddress,
          decaf_abort("OSMapMemory virtual region overlapped, failing the call");
          return FALSE;
       }
+
       if (!(alloc.physAddress >= physAddress + size || alloc.physAddress + alloc.size <= physAddress)) {
          gLog->warn("OSMapMemory physical region overlapped, failing the call");
          return FALSE;
@@ -230,7 +237,7 @@ OSMapMemory(ppcaddr_t virtAddress,
    }
 
    // Store the allocation
-   auto alloc = VallocAllocation{ virtAddress, physAddress, size };
+   auto alloc = VallocAllocation { virtAddress, physAddress, size };
    sVallocAllocs.emplace_back(alloc);
 
    return TRUE;
@@ -244,6 +251,7 @@ OSUnmapMemory(ppcaddr_t virtAddress,
 
    // Find the relevant allocation record
    auto foundAlloc = sVallocAllocs.end();
+
    for (auto i = sVallocAllocs.begin(); i != sVallocAllocs.end(); ++i) {
       if (virtAddress >= i->virtAddress && virtAddress < i->virtAddress + i->size) {
          foundAlloc = i;
@@ -299,24 +307,24 @@ Module::registerMemoryFunctions()
 namespace internal
 {
 
-   void
-   initialiseVallocMemory()
-   {
-      if (sPhysDataStore) {
-         return;
-      }
-
-      sPhysDataStore = new uint8_t[VALLOC_PHYS_MEM_SIZE];
-      memset(sPhysDataStore, 0, VALLOC_PHYS_MEM_SIZE);
-
-      sVallocVirtualMemHeap =
-         new TeenyHeap(mem::translate(VALLOC_VIRT_MEM_START), VALLOC_VIRT_MEM_SIZE);
-
-      platform::commitMemory(
-         mem::base() + VALLOC_VIRT_MEM_START,
-         VALLOC_VIRT_MEM_SIZE,
-         platform::ProtectFlags::NoAccess);
+void
+initialiseVallocMemory()
+{
+   if (sPhysDataStore) {
+      return;
    }
+
+   sPhysDataStore = new uint8_t[VALLOC_PHYS_MEM_SIZE];
+   memset(sPhysDataStore, 0, VALLOC_PHYS_MEM_SIZE);
+
+   sVallocVirtualMemHeap =
+      new TeenyHeap(mem::translate(VALLOC_VIRT_MEM_START), VALLOC_VIRT_MEM_SIZE);
+
+   platform::commitMemory(
+      mem::base() + VALLOC_VIRT_MEM_START,
+      VALLOC_VIRT_MEM_SIZE,
+      platform::ProtectFlags::NoAccess);
+}
 
 } // namespace internal
 

@@ -1031,6 +1031,7 @@ loadRPL(const std::string &moduleName,
    // Process dot syscall
    for (auto &section : sections) {
       auto sectionName = shStrTab + section.header.name;
+
       if (strcmp(sectionName, ".syscall") == 0) {
          decaf_check(sSyscallAddress);
 
