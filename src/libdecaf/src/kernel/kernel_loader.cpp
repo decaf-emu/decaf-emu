@@ -585,14 +585,15 @@ processRelocations(LoadedModule *loadedMod,
 
             if (delta < -0x01FFFFFC || delta > 0x01FFFFFC) {
                auto trampAddr = getTrampAddress(loadedMod, codeSeg, trampolines, mem::translate(symAddr), symbolName);
+               decaf_check(trampAddr);
 
                // Ensure valid trampoline delta
-               decaf_check(trampAddr);
                delta = static_cast<ptrdiff_t>(trampAddr) - static_cast<ptrdiff_t>(reloAddr);
+               decaf_check(delta >= -0x01FFFFFC && delta <= 0x01FFFFFC);
+
                symAddr = trampAddr;
             }
 
-            decaf_check(delta >= -0x01FFFFFC && delta <= 0x01FFFFFC);
             *ptr32 = byte_swap((byte_swap(*ptr32) & ~0x03FFFFFC) | (gsl::narrow_cast<uint32_t>(delta & 0x03FFFFFC)));
             break;
          }
