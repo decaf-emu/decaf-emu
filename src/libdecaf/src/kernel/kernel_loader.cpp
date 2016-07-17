@@ -545,6 +545,11 @@ processRelocations(LoadedModule *loadedMod,
 
          auto symAddr = getSymbolAddress(symbol, sections);
 
+         // Some games relocate stuff to $UNDEF first, then to their proper location :S
+         if (!symbolSection.virtSize) {
+            continue;
+         }
+
          if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
             decaf_check(symAddr);
 
