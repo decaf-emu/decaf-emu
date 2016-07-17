@@ -61,6 +61,11 @@ step_one(Core *core)
 {
    this_core::checkInterrupts();
 
+   // The interrupt call above may have switched what core we are on,
+   //  we need to pick up the new core, who knows why we even pass
+   //  the core into this function really...
+   core = this_core::state();
+
    // This is volatile because otherwise we appear to encounter
    //  some kind of compiler optimization error, where the value
    //  in cia is not correctly persisted.
