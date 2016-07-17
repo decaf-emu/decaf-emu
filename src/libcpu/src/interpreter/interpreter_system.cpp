@@ -278,6 +278,13 @@ kc(cpu::Core *state, Instruction instr)
    kc->func(state, kc->user_data);
 }
 
+// Trap Word (Debug Interrupt?)
+static void
+tw(cpu::Core *state, Instruction instr)
+{
+   decaf_abort("Game used TW instruction. It's probably panicking.");
+}
+
 void
 cpu::interpreter::registerSystemInstructions()
 {
@@ -302,4 +309,5 @@ cpu::interpreter::registerSystemInstructions()
    RegisterInstruction(mtsr);
    RegisterInstruction(mtsrin);
    RegisterInstruction(kc);
+   RegisterInstruction(tw);
 }

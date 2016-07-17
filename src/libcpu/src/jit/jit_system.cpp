@@ -212,6 +212,7 @@ registerSystemInstructions()
    RegisterInstructionFallback(mtsr);
    RegisterInstructionFallback(mtsrin);
    RegisterInstruction(kc);
+   RegisterInstructionFallback(tw);
 }
 
 } // namespace jit
