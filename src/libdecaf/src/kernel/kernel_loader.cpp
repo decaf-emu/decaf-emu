@@ -884,16 +884,21 @@ loadRPL(const std::string &moduleName,
    elf::FileInfo info;
 
    readFileInfo(in, sections, info);
+
+   // Allocate all our memory chunks which will be used
    codeSegAddr = getCodeHeap()->alloc(info.textSize, info.textAlign);
-   loadSegAddr = coreinit::internal::sysAlloc(info.loadSize, info.loadAlign);
 
    if (coreinit::internal::dynLoadMemAlloc(info.dataSize, info.dataAlign, &dataSegAddr) != 0) {
       dataSegAddr = nullptr;
    }
 
+   if (coreinit::internal::dynLoadMemAlloc(info.loadSize, info.loadAlign, &loadSegAddr) != 0) {
+      loadSegAddr = nullptr;
+   }
+
+   decaf_check(codeSegAddr);
    decaf_check(dataSegAddr);
    decaf_check(loadSegAddr);
-   decaf_check(codeSegAddr);
 
    auto codeSeg = SequentialMemoryTracker{ codeSegAddr, info.textSize };
    auto dataSeg = SequentialMemoryTracker{ dataSegAddr, info.dataSize };
@@ -1041,7 +1046,7 @@ loadRPL(const std::string &moduleName,
    loadedMod->symbols.emplace("__start", entryPoint);
 
    // Free the load segment
-   coreinit::internal::sysFree(loadSegAddr);
+   coreinit::internal::dynLoadMemFree(loadSegAddr);
 
    // Add all the modules symbols to the Global Symbol Map
    for (auto &i : loadedMod->symbols) {
