@@ -30,4 +30,27 @@ OSGetMemBound(OSMemoryType type,
               be_val<uint32_t> *addr,
               be_val<uint32_t> *size);
 
+void
+OSGetAvailPhysAddrRange(be_val<ppcaddr_t> *start,
+                        be_val<uint32_t> *size);
+
+ppcaddr_t
+OSAllocVirtAddr(ppcaddr_t address,
+                uint32_t size,
+                uint32_t alignment);
+
+BOOL
+OSFreeVirtAddr(ppcaddr_t address,
+               uint32_t size);
+
+BOOL
+OSMapMemory(ppcaddr_t virtAddress,
+            ppcaddr_t physAddress,
+            uint32_t size,
+            MEMProtectMode mode);
+
+BOOL
+OSUnmapMemory(ppcaddr_t virtAddress,
+              uint32_t size);
+
 } // namespace coreinit

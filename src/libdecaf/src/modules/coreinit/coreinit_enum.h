@@ -254,6 +254,11 @@ ENUM_BEG(MEMHeapFlags, uint32_t)
    ENUM_VALUE(UseLock,              1 << 2)
 ENUM_END(MEMHeapFlags)
 
+ENUM_BEG(MEMProtectMode, uint32_t)
+   ENUM_VALUE(ReadOnly,             1 << 0)
+   ENUM_VALUE(ReadWrite,            1 << 1)
+ENUM_END(MEMProtectMode)
+
 ENUM_BEG(MPTaskQueueState, uint32_t)
    ENUM_VALUE(Initialised,          1 << 0)
    ENUM_VALUE(Ready,                1 << 1)
