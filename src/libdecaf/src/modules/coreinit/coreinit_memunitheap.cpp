@@ -13,26 +13,30 @@ namespace coreinit
  * Adds it to the list of active heaps.
  */
 MEMUnitHeap *
-MEMCreateUnitHeapEx(MEMUnitHeap *heap,
+MEMCreateUnitHeapEx(ppcaddr_t base,
                     uint32_t size,
                     uint32_t blockSize,
                     int32_t alignment,
                     uint32_t flags)
 {
-   decaf_check(heap);
-   auto start = align_up(mem::untranslate(heap), 4);
-   auto end = align_down(mem::untranslate(heap) + size, 4);
+   decaf_check(base);
+
+   // Align start and end to 4 byte boundary
+   auto start = align_up(base, 4);
+   auto end = align_down(base + size, 4);
 
    if (start >= end) {
       return nullptr;
    }
 
+   // Get first block aligned start
    auto firstBlock = align_up<uint32_t>(start + sizeof(MEMUnitHeap), alignment);
 
    if (firstBlock >= end) {
       return nullptr;
    }
 
+   // Caluclate aligned block size and count
    auto alignedBlockSize = align_up(blockSize, alignment);
    auto blockCount = (end - firstBlock) / alignedBlockSize;
 
@@ -40,15 +44,10 @@ MEMCreateUnitHeapEx(MEMUnitHeap *heap,
       return nullptr;
    }
 
+   // Setup the MEMUnitHeap
+   auto heap = mem::translate<MEMUnitHeap>(start);
    heap->freeBlocks = mem::translate<MEMUnitHeapFreeBlock>(firstBlock);
    heap->blockSize = alignedBlockSize;
-
-   // Register Heap
-   internal::registerHeap(&heap->header,
-                          MEMHeapTag::UnitHeap,
-                          firstBlock,
-                          firstBlock + alignedBlockSize * blockCount,
-                          flags);
 
    // Setup free block linked list
    MEMUnitHeapFreeBlock *prev = nullptr;
@@ -64,6 +63,14 @@ MEMCreateUnitHeapEx(MEMUnitHeap *heap,
    }
 
    prev->next = nullptr;
+
+   // Register Heap
+   internal::registerHeap(&heap->header,
+                          MEMHeapTag::UnitHeap,
+                          firstBlock,
+                          firstBlock + alignedBlockSize * blockCount,
+                          flags);
+
    return heap;
 }
 
@@ -77,6 +84,7 @@ void *
 MEMDestroyUnitHeap(MEMUnitHeap *heap)
 {
    decaf_check(heap);
+   decaf_check(heap->header.tag == MEMHeapTag::UnitHeap);
    internal::unregisterHeap(&heap->header);
    return heap;
 }

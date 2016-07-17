@@ -2,7 +2,7 @@
 #include "coreinit_memory.h"
 #include "coreinit_memheap.h"
 #include "coreinit_expheap.h"
-#include "coreinit_frameheap.h"
+#include "coreinit_memframeheap.h"
 #include "coreinit_memunitheap.h"
 #include "kernel/kernel_memory.h"
 #include "libcpu/mem.h"
@@ -267,13 +267,13 @@ void initialiseDefaultHeaps()
 
    // Create frame heap for MEM1
    OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
-   auto mem1 = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
-   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, reinterpret_cast<MEMHeapHeader*>(mem1));
+   auto mem1 = MEMCreateFrmHeapEx(addr, size, 4);
+   MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, &mem1->header);
 
    // Create frame heap for Foreground
    OSGetForegroundBucketFreeArea(&addr, &size);
-   auto fg = MEMCreateFrmHeap(make_virtual_ptr<FrameHeap>(addr), size);
-   MEMSetBaseHeapHandle(MEMBaseHeapType::FG, reinterpret_cast<MEMHeapHeader*>(fg));
+   auto fg = MEMCreateFrmHeapEx(addr, size, 4);
+   MEMSetBaseHeapHandle(MEMBaseHeapType::FG, &fg->header);
 }
 
 

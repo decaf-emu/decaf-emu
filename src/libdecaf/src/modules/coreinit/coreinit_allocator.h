@@ -7,11 +7,11 @@
 namespace coreinit
 {
 
-struct Allocator;
-struct BlockHeap;
+struct MEMAllocator;
+struct MEMBlockHeap;
 struct ExpandedHeap;
-struct FrameHeap;
-struct UnitHeap;
+struct MEMFrameHeap;
+struct MEMUnitHeap;
 
 /**
  * \defgroup coreinit_allocator Allocator
@@ -19,61 +19,61 @@ struct UnitHeap;
  * @{
  */
 
-using AllocatorAllocFn = wfunc_ptr<void *, Allocator *, uint32_t>;
-using be_AllocatorAllocFn = be_wfunc_ptr<void *, Allocator *, uint32_t>;
+using MEMAllocatorAllocFn = wfunc_ptr<void *, MEMAllocator *, uint32_t>;
+using be_MEMAllocatorAllocFn = be_wfunc_ptr<void *, MEMAllocator *, uint32_t>;
 
-using AllocatorFreeFn = wfunc_ptr<void, Allocator *, void *>;
-using be_AllocatorFreeFn = be_wfunc_ptr<void, Allocator *, void *>;
+using MEMAllocatorFreeFn = wfunc_ptr<void, MEMAllocator *, void *>;
+using be_MEMAllocatorFreeFn = be_wfunc_ptr<void, MEMAllocator *, void *>;
 
-struct AllocatorFunctions
+struct MEMAllocatorFunctions
 {
-   be_AllocatorAllocFn alloc;
-   be_AllocatorFreeFn free;
+   be_MEMAllocatorAllocFn alloc;
+   be_MEMAllocatorFreeFn free;
 };
-CHECK_OFFSET(AllocatorFunctions, 0x0, alloc);
-CHECK_OFFSET(AllocatorFunctions, 0x4, free);
-CHECK_SIZE(AllocatorFunctions, 0x8);
+CHECK_OFFSET(MEMAllocatorFunctions, 0x0, alloc);
+CHECK_OFFSET(MEMAllocatorFunctions, 0x4, free);
+CHECK_SIZE(MEMAllocatorFunctions, 0x8);
 
-struct Allocator
+struct MEMAllocator
 {
-   be_ptr<AllocatorFunctions> funcs;
+   be_ptr<MEMAllocatorFunctions> funcs;
    be_ptr<void> heap;
    be_val<uint32_t> align;
    UNKNOWN(4);
 };
-CHECK_OFFSET(Allocator, 0x0, funcs);
-CHECK_OFFSET(Allocator, 0x4, heap);
-CHECK_OFFSET(Allocator, 0x8, align);
-CHECK_SIZE(Allocator, 0x10);
+CHECK_OFFSET(MEMAllocator, 0x0, funcs);
+CHECK_OFFSET(MEMAllocator, 0x4, heap);
+CHECK_OFFSET(MEMAllocator, 0x8, align);
+CHECK_SIZE(MEMAllocator, 0x10);
 
 void
-MEMInitAllocatorForDefaultHeap(Allocator *allocator);
+MEMInitAllocatorForDefaultHeap(MEMAllocator *allocator);
 
 void
-MEMInitAllocatorForBlockHeap(Allocator *allocator,
-                             BlockHeap *heap,
+MEMInitAllocatorForBlockHeap(MEMAllocator *allocator,
+                             MEMBlockHeap *heap,
                              int alignment);
 
 void
-MEMInitAllocatorForExpHeap(Allocator *allocator,
+MEMInitAllocatorForExpHeap(MEMAllocator *allocator,
                            ExpandedHeap *heap,
                            int alignment);
 
 void
-MEMInitAllocatorForFrmHeap(Allocator *allocator,
-                           FrameHeap *heap,
+MEMInitAllocatorForFrmHeap(MEMAllocator *allocator,
+                           MEMFrameHeap *heap,
                            int alignment);
 
 void
-MEMInitAllocatorForUnitHeap(Allocator *allocator,
-                            UnitHeap *heap);
+MEMInitAllocatorForUnitHeap(MEMAllocator *allocator,
+                            MEMUnitHeap *heap);
 
 void *
-MEMAllocFromAllocator(Allocator *allocator,
+MEMAllocFromAllocator(MEMAllocator *allocator,
                       uint32_t size);
 
 void
-MEMFreeToAllocator(Allocator *allocator,
+MEMFreeToAllocator(MEMAllocator *allocator,
                    void *block);
 
 /** @} */

@@ -240,9 +240,6 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_expheap.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_frameheap.cpp">
-      <Filter>Source Files\modules\coreinit</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_dynload.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
@@ -837,6 +834,9 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memunitheap.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memframeheap.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -870,9 +870,6 @@
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_expheap.h">
-      <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_frameheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_dynload.h">
@@ -1563,6 +1560,9 @@
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memunitheap.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memframeheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>

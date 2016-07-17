@@ -1,8 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_allocator.h"
 #include "coreinit_expheap.h"
-#include "coreinit_frameheap.h"
 #include "coreinit_memheap.h"
+#include "coreinit_memframeheap.h"
 #include "coreinit_memunitheap.h"
 #include "ppcutils/wfunc_call.h"
 #include "common/decaf_assert.h"
@@ -10,38 +10,42 @@
 namespace coreinit
 {
 
-static AllocatorFunctions *
+static MEMAllocatorFunctions *
 sDefaultHeapFunctions = nullptr;
 
-static AllocatorFunctions *
+static MEMAllocatorFunctions *
 sBlockHeapFunctions = nullptr;
 
-static AllocatorFunctions *
+static MEMAllocatorFunctions *
 sExpHeapFunctions = nullptr;
 
-static AllocatorFunctions *
+static MEMAllocatorFunctions *
 sFrameHeapFunctions = nullptr;
 
-static AllocatorFunctions *
+static MEMAllocatorFunctions *
 sUnitHeapFunctions = nullptr;
 
-static AllocatorAllocFn sAllocatorDefaultHeapAlloc;
-static AllocatorFreeFn sAllocatorDefaultHeapFree;
-static AllocatorAllocFn sAllocatorBlockHeapAlloc;
-static AllocatorFreeFn sAllocatorBlockHeapFree;
-static AllocatorAllocFn sAllocatorExpHeapAlloc;
-static AllocatorFreeFn sAllocatorExpHeapFree;
-static AllocatorAllocFn sAllocatorFrmHeapAlloc;
-static AllocatorFreeFn sAllocatorFrmHeapFree;
-static AllocatorAllocFn sAllocatorUnitHeapAlloc;
-static AllocatorFreeFn sAllocatorUnitHeapFree;
+static MEMAllocatorAllocFn sAllocatorDefaultHeapAlloc;
+static MEMAllocatorFreeFn sAllocatorDefaultHeapFree;
+
+static MEMAllocatorAllocFn sAllocatorBlockHeapAlloc;
+static MEMAllocatorFreeFn sAllocatorBlockHeapFree;
+
+static MEMAllocatorAllocFn sAllocatorExpHeapAlloc;
+static MEMAllocatorFreeFn sAllocatorExpHeapFree;
+
+static MEMAllocatorAllocFn sAllocatorFrmHeapAlloc;
+static MEMAllocatorFreeFn sAllocatorFrmHeapFree;
+
+static MEMAllocatorAllocFn sAllocatorUnitHeapAlloc;
+static MEMAllocatorFreeFn sAllocatorUnitHeapFree;
 
 
 /**
  * Initialise an Allocator struct for the default heap.
  */
 void
-MEMInitAllocatorForDefaultHeap(Allocator *allocator)
+MEMInitAllocatorForDefaultHeap(MEMAllocator *allocator)
 {
    decaf_check(sDefaultHeapFunctions);
    allocator->heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
@@ -54,8 +58,8 @@ MEMInitAllocatorForDefaultHeap(Allocator *allocator)
  * Initialise an Allocator struct for a block heap.
  */
 void
-MEMInitAllocatorForBlockHeap(Allocator *allocator,
-                             BlockHeap *heap,
+MEMInitAllocatorForBlockHeap(MEMAllocator *allocator,
+                             MEMBlockHeap *heap,
                              int alignment)
 {
    decaf_check(sBlockHeapFunctions);
@@ -69,7 +73,7 @@ MEMInitAllocatorForBlockHeap(Allocator *allocator,
  * Initialise an Allocator struct for an expanded heap.
  */
 void
-MEMInitAllocatorForExpHeap(Allocator *allocator,
+MEMInitAllocatorForExpHeap(MEMAllocator *allocator,
                            ExpandedHeap *heap,
                            int alignment)
 {
@@ -84,8 +88,8 @@ MEMInitAllocatorForExpHeap(Allocator *allocator,
  * Initialise an Allocator struct for a frame heap.
  */
 void
-MEMInitAllocatorForFrmHeap(Allocator *allocator,
-                           FrameHeap *heap,
+MEMInitAllocatorForFrmHeap(MEMAllocator *allocator,
+                           MEMFrameHeap *heap,
                            int alignment)
 {
    decaf_check(sFrameHeapFunctions);
@@ -99,8 +103,8 @@ MEMInitAllocatorForFrmHeap(Allocator *allocator,
  * Initialise an Allocator struct for a unit heap.
  */
 void
-MEMInitAllocatorForUnitHeap(Allocator *allocator,
-                            UnitHeap *heap)
+MEMInitAllocatorForUnitHeap(MEMAllocator *allocator,
+                            MEMUnitHeap *heap)
 {
    decaf_check(sUnitHeapFunctions);
    allocator->heap = heap;
@@ -115,7 +119,7 @@ MEMInitAllocatorForUnitHeap(Allocator *allocator,
  * \return Returns pointer to new allocated memory.
  */
 void *
-MEMAllocFromAllocator(Allocator *allocator,
+MEMAllocFromAllocator(MEMAllocator *allocator,
                       uint32_t size)
 {
    return allocator->funcs->alloc(allocator, size);
@@ -126,7 +130,7 @@ MEMAllocFromAllocator(Allocator *allocator,
  * Free memory from an Allocator.
  */
 void
-MEMFreeToAllocator(Allocator *allocator,
+MEMFreeToAllocator(MEMAllocator *allocator,
                    void *block)
 {
    allocator->funcs->free(allocator, block);
@@ -134,21 +138,21 @@ MEMFreeToAllocator(Allocator *allocator,
 
 
 static void *
-allocatorDefaultHeapAlloc(Allocator *allocator,
+allocatorDefaultHeapAlloc(MEMAllocator *allocator,
                           uint32_t size)
 {
    return (*pMEMAllocFromDefaultHeap)(size);
 }
 
 static void
-allocatorDefaultHeapFree(Allocator *allocator,
+allocatorDefaultHeapFree(MEMAllocator *allocator,
                          void *block)
 {
    (*pMEMFreeToDefaultHeap)(block);
 }
 
 static void *
-allocatorBlockHeapAlloc(Allocator *allocator,
+allocatorBlockHeapAlloc(MEMAllocator *allocator,
                         uint32_t size)
 {
    // TODO: Call MEMAllocFromBlockHeap
@@ -156,14 +160,14 @@ allocatorBlockHeapAlloc(Allocator *allocator,
 }
 
 static void
-allocatorBlockHeapFree(Allocator *allocator,
+allocatorBlockHeapFree(MEMAllocator *allocator,
                        void *block)
 {
    // TODO: Call MEMFreeToBlockHeap
 }
 
 static void *
-allocatorExpHeapAlloc(Allocator *allocator,
+allocatorExpHeapAlloc(MEMAllocator *allocator,
                       uint32_t size)
 {
    return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap *>(allocator->heap.get()),
@@ -172,7 +176,7 @@ allocatorExpHeapAlloc(Allocator *allocator,
 }
 
 static void
-allocatorExpHeapFree(Allocator *allocator,
+allocatorExpHeapFree(MEMAllocator *allocator,
                      void *block)
 {
    MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap *>(allocator->heap.get()),
@@ -180,16 +184,16 @@ allocatorExpHeapFree(Allocator *allocator,
 }
 
 static void *
-allocatorFrmHeapAlloc(Allocator *allocator,
+allocatorFrmHeapAlloc(MEMAllocator *allocator,
                       uint32_t size)
 {
-   return MEMAllocFromFrmHeapEx(reinterpret_cast<FrameHeap *>(allocator->heap.get()),
+   return MEMAllocFromFrmHeapEx(reinterpret_cast<MEMFrameHeap *>(allocator->heap.get()),
                                 size,
                                 allocator->align);
 }
 
 static void
-allocatorFrmHeapFree(Allocator *allocator,
+allocatorFrmHeapFree(MEMAllocator *allocator,
                      void *block)
 {
    /* Woooowwww I sure hope no one uses frame heap in an allocator...
@@ -202,14 +206,14 @@ allocatorFrmHeapFree(Allocator *allocator,
 }
 
 static void *
-allocatorUnitHeapAlloc(Allocator *allocator,
+allocatorUnitHeapAlloc(MEMAllocator *allocator,
                        uint32_t size)
 {
    return MEMAllocFromUnitHeap(reinterpret_cast<MEMUnitHeap *>(allocator->heap.get()));
 }
 
 static void
-allocatorUnitHeapFree(Allocator *allocator,
+allocatorUnitHeapFree(MEMAllocator *allocator,
                       void *block)
 {
    MEMFreeToUnitHeap(reinterpret_cast<MEMUnitHeap *>(allocator->heap.get()),
