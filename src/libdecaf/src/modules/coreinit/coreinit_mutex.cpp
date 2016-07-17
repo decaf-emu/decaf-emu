@@ -45,7 +45,7 @@ OSInitMutexEx(OSMutex *mutex, const char *name)
 static void
 lockMutexNoLock(OSMutex *mutex)
 {
-   decaf_check(mutex && mutex->tag == OSMutex::Tag);
+   decaf_check(mutex->tag == OSMutex::Tag || mutex->tag == 0);
    auto thread = OSGetCurrentThread();
 
    while (mutex->owner && mutex->owner != thread) {
@@ -132,7 +132,7 @@ static void
 unlockMutexNoLock(OSMutex *mutex)
 {
    auto thread = OSGetCurrentThread();
-   decaf_check(mutex && mutex->tag == OSMutex::Tag);
+   decaf_check(mutex->tag == OSMutex::Tag || mutex->tag == 0);
    decaf_check(mutex->owner == thread);
    decaf_check(mutex->count > 0);
    mutex->count--;
