@@ -865,7 +865,8 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    for (auto &attrib : fetch.attribs) {
       semanticAttribs[attrib.location] = &attrib;
 
-      out << "in "
+      out << "layout(location = " << attrib.location << ")";
+      out << " in "
          << getGLSLDataFormat(attrib.format, attrib.numFormat, attrib.formatComp)
          << " fs_out_" << attrib.location << ";\n";
    }
