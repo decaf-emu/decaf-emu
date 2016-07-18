@@ -63,7 +63,7 @@ getCommandLineParser()
                   default_value<std::string> { "US" },
                   allowed<std::string> { {
                      "EUR", "JAP", "US"
-                  } });
+                  } })
       .add_option("sys-path",
                   description { "Where to locate any external system files." },
                   value<std::string> {})
