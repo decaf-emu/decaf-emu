@@ -314,12 +314,12 @@ void checkRunningThreadNoLock(bool yielding)
    }
 
    // Update thread core time tracking stuff
+   auto now = std::chrono::high_resolution_clock::now();
    if (thread) {
-      auto now = std::chrono::high_resolution_clock::now();
       auto diff = now - sLastSwitchTime[coreId];
       thread->coreTimeConsumedNs += diff.count();
-      sLastSwitchTime[coreId] = now;
    }
+   sLastSwitchTime[coreId] = now;
    if (next) {
       next->wakeCount++;
    }
