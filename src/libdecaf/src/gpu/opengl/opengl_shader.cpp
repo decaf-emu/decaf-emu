@@ -1066,12 +1066,25 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
       decaf_check(semanticId != 0xff);
 
       auto vsOutputLoc = vertex.outputMap[semanticId];
+      out << "R[" << i << "] = ";
 
-      if (vsOutputLoc == 0xff) {
-        continue;
+      if (vsOutputLoc != 0xff) {
+          out << "vs_out_" << semanticId;
+      } else {
+         if (spi_ps_input_cntl.DEFAULT_VAL() == 0) {
+            out << "vec4(0, 0, 0, 0)";
+         } else if (spi_ps_input_cntl.DEFAULT_VAL() == 1) {
+            out << "vec4(0, 0, 0, 1)";
+         } else if (spi_ps_input_cntl.DEFAULT_VAL() == 2) {
+            out << "vec4(1, 1, 1, 0)";
+         } else if (spi_ps_input_cntl.DEFAULT_VAL() == 3) {
+            out << "vec4(1, 1, 1, 1)";
+         } else {
+            decaf_abort("Invalid PS input DEFAULT_VAL");
+         }
       }
 
-      out << "R[" << i << "] = vs_out_" << semanticId << ";\n";
+      out << ";\n";
    }
 
    out << '\n' << shader.codeBody << '\n';
