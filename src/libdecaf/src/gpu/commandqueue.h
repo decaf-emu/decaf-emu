@@ -10,6 +10,9 @@ namespace gpu
 {
 
 void
+queueSysBuffer(void *buf, uint32_t dwords);
+
+void
 queueUserBuffer(void *buf, uint32_t bytes);
 
 void
