@@ -79,6 +79,9 @@ sExitCode = 0;
 static uint32_t
 sSegfaultAddress = 0;
 
+static coreinit::OSContext
+sInterruptContext[3];
+
 void
 setGameName(const std::string& name)
 {
@@ -175,6 +178,18 @@ cpuSegfaultHandler(uint32_t address)
    reallocateContextFiber(&thread->context, cpuSegfaultFiberEntryPoint);
 }
 
+static void
+initCoreInterruptContext()
+{
+   auto coreId = cpu::this_core::id();
+   auto &context = sInterruptContext[coreId];
+
+   auto stack = kernel::getSystemHeap()->alloc(1024);
+
+   memset(&context, 0, sizeof(coreinit::OSContext));
+   context.gpr[1] = mem::untranslate(stack) + 1024 - 4;
+}
+
 void
 cpuInterruptHandler(uint32_t interrupt_flags)
 {
@@ -206,6 +221,7 @@ cpuInterruptHandler(uint32_t interrupt_flags)
 
    coreinit::OSContext savedContext;
    kernel::saveContext(&savedContext);
+   kernel::restoreContext(&sInterruptContext[cpu::this_core::id()]);
 
    auto originalInterruptState = coreinit::OSDisableInterrupts();
    coreinit::internal::disableScheduler();
@@ -246,6 +262,9 @@ cpuEntrypoint()
    // Make a fibre, we need to be cautious not to allocate here
    //  as this fibre can be arbitrarily destroyed.
    initCoreFiber();
+
+   // Set up an interrupt context to use with this core
+   initCoreInterruptContext();
 
    if (cpu::this_core::id() == 1) {
       // Run the setup on core 1, which will also run the loader
