@@ -284,6 +284,7 @@ ENUM_BEG(SCILanguage, uint32_t)
 ENUM_END(SCILanguage)
 
 ENUM_BEG(SCIRegion, uint8_t)
+   ENUM_VALUE(JAP,                  0x01)
    ENUM_VALUE(US,                   0x02)
    ENUM_VALUE(EUR,                  0x04)
 ENUM_END(SCIRegion)

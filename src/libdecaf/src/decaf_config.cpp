@@ -1,4 +1,5 @@
 #include "decaf_config.h"
+#include "modules/coreinit/coreinit_enum.h"
 
 namespace decaf
 {
@@ -54,6 +55,7 @@ std::vector<std::string> kernel_trace_filters =
 namespace system
 {
 
+int region = static_cast<int>(coreinit::SCIRegion::US);
 std::string system_path = "/undefined_system_path";
 double time_scale = 1.0;
 
