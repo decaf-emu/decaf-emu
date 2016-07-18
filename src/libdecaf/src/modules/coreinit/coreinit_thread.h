@@ -61,7 +61,8 @@ struct OSContext
    // srr0 and srr1 would usually be here, however because these are used
    //  for operating system things and we are HLE, it should be safe to
    //  override them with our internal HLE linkup.
-   kernel::Fiber *fiber;
+   be_val<uint32_t> nia;
+   be_val<uint32_t> cia;
 
    UNKNOWN(0x14);
    be_val<uint32_t> fpscr;
@@ -77,8 +78,11 @@ struct OSContext
    UNKNOWN(4);
    be_val<uint32_t> pmc1;
    be_val<uint32_t> pmc2;
-   be_val<uint32_t> pmc3;
-   be_val<uint32_t> pmc4;
+
+   // pmc3 and pmc4 would usually be here, however because these are used
+   //  for operating system things, it should be safe to use them.
+   kernel::Fiber *fiber;
+
    be_val<uint32_t> mmcr0;
    be_val<uint32_t> mmcr1;
 };
@@ -101,8 +105,8 @@ CHECK_OFFSET(OSContext, 0x2f8, starttime);
 CHECK_OFFSET(OSContext, 0x300, error);
 CHECK_OFFSET(OSContext, 0x308, pmc1);
 CHECK_OFFSET(OSContext, 0x30c, pmc2);
-CHECK_OFFSET(OSContext, 0x310, pmc3);
-CHECK_OFFSET(OSContext, 0x314, pmc4);
+//CHECK_OFFSET(OSContext, 0x310, pmc3);
+//CHECK_OFFSET(OSContext, 0x314, pmc4);
 CHECK_OFFSET(OSContext, 0x318, mmcr0);
 CHECK_OFFSET(OSContext, 0x31c, mmcr1);
 CHECK_SIZE(OSContext, 0x320);

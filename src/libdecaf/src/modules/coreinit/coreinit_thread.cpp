@@ -182,16 +182,9 @@ InitialiseThreadState(OSThread *thread,
    thread->context.gpr[4] = mem::untranslate(argv);
    thread->context.gpr[13] = sdaBase;
 
-   // Store our function on the stack, including some stack
-   //  verification bytes.  Note that this must match the
-   //  kernel::wakeCurrentThread method precisely.
-   thread->context.gpr[1] -= 8 + 8 + 8;
-   mem::write<uint32_t>(thread->context.gpr[1] + 0, 0xDFDFDFDF);
-   mem::write<uint32_t>(thread->context.gpr[1] + 4, 0xDFDFDFDF);
-   mem::write<uint32_t>(thread->context.gpr[1] + 8, entry);
-   mem::write<uint32_t>(thread->context.gpr[1] + 12, 0xFFFFFFFE);
-   mem::write<uint32_t>(thread->context.gpr[1] + 16, 0xDFDFDFDF);
-   mem::write<uint32_t>(thread->context.gpr[1] + 20, 0xDFDFDFDF);
+   // Setup context Decaf special stuff
+   thread->context.nia = entry;
+   thread->context.cia = 0xFFFFFFFF;
 
    // Setup thread
    thread->entryPoint = entry;

@@ -97,7 +97,7 @@ getThreadNia(coreinit::OSThread *thread)
       return coreRegs->nia;
    }
 
-   return mem::read<uint32_t>(thread->context.gpr[1] + 8);
+   return thread->context.nia;
 }
 
 uint32_t getThreadStack(coreinit::OSThread *thread)

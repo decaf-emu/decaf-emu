@@ -106,17 +106,10 @@ sleepCurrentContext()
    auto context = sCurrentContext[core->id];
 
    if (context) {
-      // Save NIA/CIA to the stack
-      core->gpr[1] -= 8 + 8 + 8;
-      mem::write<uint32_t>(core->gpr[1] + 0, 0xDFDFDFDF);
-      mem::write<uint32_t>(core->gpr[1] + 4, 0xDFDFDFDF);
-      mem::write<uint32_t>(core->gpr[1] + 8, core->nia);
-      mem::write<uint32_t>(core->gpr[1] + 12, core->cia);
-      mem::write<uint32_t>(core->gpr[1] + 16, 0xDFDFDFDF);
-      mem::write<uint32_t>(core->gpr[1] + 20, 0xDFDFDFDF);
-
       // Save all our registers to the context
       saveContext(context);
+      context->nia = core->nia;
+      context->cia = core->cia;
    } else {
       // We save the idle context's register information as well
       //  mainly so that it doesn't complain about core state loss.
@@ -144,15 +137,8 @@ wakeCurrentContext()
    if (context) {
       // Restore our context from the OSContext
       restoreContext(context);
-
-      // Pull NIA/CIA out of the stack and confirm no corruption
-      decaf_check(mem::read<uint32_t>(core->gpr[1] + 0) == 0xDFDFDFDF);
-      decaf_check(mem::read<uint32_t>(core->gpr[1] + 4) == 0xDFDFDFDF);
-      core->nia = mem::read<uint32_t>(core->gpr[1] + 8);
-      core->cia = mem::read<uint32_t>(core->gpr[1] + 12);
-      decaf_check(mem::read<uint32_t>(core->gpr[1] + 16) == 0xDFDFDFDF);
-      decaf_check(mem::read<uint32_t>(core->gpr[1] + 20) == 0xDFDFDFDF);
-      core->gpr[1] += 8 + 8 + 8;
+      core->nia = context->nia;
+      core->cia = context->cia;
 
       // Some things to help us when debugging...
       cpu::this_core::setTracer(context->fiber->tracer);
