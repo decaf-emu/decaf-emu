@@ -59,6 +59,9 @@ getCommandLineParser()
       .add_option("sys-path",
                   description { "Where to locate any external system files." },
                   value<std::string> {})
+      .add_option("time-scale",
+                  description { "Time scale factor for emulated clock." },
+                  default_value<double> { 1.0 })
       .add_option("timeout_ms",
                   description { "How long to execute the game for before quitting." },
                   value<uint32_t> {});
@@ -149,6 +152,10 @@ start(excmd::parser &parser,
 
    if (options.has("sys-path")) {
       decaf::config::system::system_path = options.get<std::string>("sys-path");
+   }
+
+   if (options.has("time-scale")) {
+      decaf::config::system::time_scale = options.get<double>("time-scale");
    }
 
    if (options.has("timeout_ms")) {
