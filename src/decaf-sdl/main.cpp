@@ -1,7 +1,9 @@
 #include "clilog.h"
+#include "common/decaf_assert.h"
 #include "config.h"
 #include "decafsdl.h"
 #include "libdecaf/decaf.h"
+#include "libdecaf/src/modules/coreinit/coreinit_enum.h"
 #include <pugixml.hpp>
 #include <excmd.h>
 #include <iostream>
@@ -59,7 +61,13 @@ getCommandLineParser()
                   value<std::string> {})
       .add_option("sys-path",
                   description { "Where to locate any external system files." },
-                  value<std::string> {});
+                  value<std::string> {})
+      .add_option("region",
+                  description { "Set the system region." },
+                  default_value<std::string> { "US" },
+                  allowed<std::string> { {
+                        "EUR", "JAP", "US"
+                  } });
 
    parser.add_command("play")
       .add_option_group(jit_options)

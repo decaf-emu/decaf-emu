@@ -1,6 +1,8 @@
+#include "common/decaf_assert.h"
 #include "config.h"
 #include "decafcli.h"
 #include "libdecaf/decaf.h"
+#include "libdecaf/src/modules/coreinit/coreinit_enum.h"
 #include <pugixml.hpp>
 #include <excmd.h>
 #include <iostream>
@@ -59,6 +61,12 @@ getCommandLineParser()
       .add_option("sys-path",
                   description { "Where to locate any external system files." },
                   value<std::string> {})
+      .add_option("region",
+                  description { "Set the system region." },
+                  default_value<std::string> { "US" },
+                  allowed<std::string> { {
+                        "EUR", "JAP", "US"
+                  } })
       .add_option("timeout_ms",
                   description { "How long to execute the game for before quitting." },
                   value<uint32_t> {});

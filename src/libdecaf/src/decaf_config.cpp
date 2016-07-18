@@ -1,4 +1,5 @@
 #include "decaf_config.h"
+#include "modules/coreinit/coreinit_enum.h"
 
 namespace decaf
 {
@@ -55,6 +56,7 @@ namespace system
 {
 
 std::string system_path = "/undefined_system_path";
+int region = static_cast<int>(coreinit::SCIRegion::US);
 
 } // namespace system
 
