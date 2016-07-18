@@ -55,6 +55,7 @@ namespace system
 {
 
 std::string system_path = "/undefined_system_path";
+double time_scale = 1.0;
 
 } // namespace system
 

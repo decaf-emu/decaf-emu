@@ -61,6 +61,9 @@ namespace system
 //! Path to system files
 extern std::string system_path;
 
+//! Time scale factor for emulated clock
+extern double time_scale;
+
 } // namespace system
 
 } // namespace config

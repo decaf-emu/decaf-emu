@@ -2,6 +2,7 @@
 #include "coreinit_time.h"
 #include "coreinit_systeminfo.h"
 #include "common/platform_time.h"
+#include "decaf_config.h"
 
 namespace coreinit
 {
@@ -18,7 +19,7 @@ OSGetTime()
 {
    auto now = std::chrono::system_clock::now();
    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now - sEpochTime);
-   return ns.count();
+   return static_cast<OSTime>(static_cast<double>(ns.count()) * decaf::config::system::time_scale);
 }
 
 
