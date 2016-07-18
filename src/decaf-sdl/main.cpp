@@ -154,6 +154,19 @@ start(excmd::parser &parser,
       config::log::level = options.get<std::string>("log-level");
    }
 
+   if (options.has("region")) {
+      const std::string region = options.get<std::string>("region");
+      if (region.compare("JAP") == 0) {
+         decaf::config::system::region = coreinit::SCIRegion::JAP;
+      } else if (region.compare("US") == 0) {
+         decaf::config::system::region = coreinit::SCIRegion::US;
+      } else if (region.compare("EUR") == 0) {
+         decaf::config::system::region = coreinit::SCIRegion::EUR;
+      } else {
+         decaf_abort(fmt::format("Invalid region {}", region));
+      }
+   }
+
    if (options.has("sys-path")) {
       decaf::config::system::system_path = options.get<std::string>("sys-path");
    }
