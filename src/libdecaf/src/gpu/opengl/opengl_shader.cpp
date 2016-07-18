@@ -17,6 +17,10 @@ namespace gpu
 namespace opengl
 {
 
+// TODO: This is really some kind of 'nsight compat mode'...  Maybe
+//  it should even be a configurable option (related to force_sync).
+static const auto NO_PERSISTENT_MAP = false;
+
 static void
 dumpShader(const std::string &type, ppcaddr_t data, uint32_t size, bool isSubroutine = false)
 {
@@ -572,6 +576,9 @@ bool GLDriver::checkActiveAttribBuffers()
 
          gl::glCreateBuffers(1, &buffer.object);
          gl::glNamedBufferStorage(buffer.object, size, NULL, gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+      }
+
+      if (!buffer.mappedBuffer) {
          buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
       }
 
@@ -607,8 +614,14 @@ bool GLDriver::checkActiveAttribBuffers()
       auto buffer = buffers[i];
 
       if (buffer) {
-         gl::glBindVertexBuffer(i, buffer->object, 0, buffer->stride);
          gl::glFlushMappedNamedBufferRange(buffer->object, 0, buffer->size);
+
+         if (NO_PERSISTENT_MAP) {
+            gl::glUnmapNamedBuffer(buffer->object);
+            buffer->mappedBuffer = nullptr;
+         }
+
+         gl::glBindVertexBuffer(i, buffer->object, 0, buffer->stride);
       }
    }
 
