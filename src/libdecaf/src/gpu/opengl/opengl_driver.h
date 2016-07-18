@@ -79,6 +79,7 @@ struct VertexShader : public Resource
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
    std::array<gl::GLuint, MAX_ATTRIB_COUNT> attribLocations;
+   std::array<uint8_t, 256> outputMap;
    std::string code;
    std::string disassembly;
 };
@@ -238,7 +239,7 @@ private:
 
    bool parseFetchShader(FetchShader &shader, void *buffer, size_t size);
    bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size);
-   bool compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t size);
+   bool compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint8_t *buffer, size_t size);
 
    void runCommandBuffer(uint32_t *buffer, uint32_t size);
 

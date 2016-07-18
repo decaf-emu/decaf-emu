@@ -292,7 +292,7 @@ bool GLDriver::checkActiveShader()
 
          dumpShader("pixel", psPgmAddress, psPgmSize);
 
-         if (!compilePixelShader(pixelShader, make_virtual_ptr<uint8_t>(psPgmAddress), psPgmSize)) {
+         if (!compilePixelShader(pixelShader, vertexShader, make_virtual_ptr<uint8_t>(psPgmAddress), psPgmSize)) {
             gLog->error("Failed to recompile pixel shader");
             return false;
          }
@@ -872,8 +872,33 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    out << '\n';
 
    // Vertex Shader Exports
+   decaf_check(!spi_vs_out_config.VS_PER_COMPONENT());
+   vertex.outputMap.fill(0xff);
+
    for (auto i = 0u; i <= spi_vs_out_config.VS_EXPORT_COUNT(); i++) {
-      out << "out vec4 vs_out_" << i << ";\n";
+      auto regId = i / 4;
+      auto spi_vs_out_id = getRegister<latte::SPI_VS_OUT_ID_N>(latte::Register::SPI_VS_OUT_ID_0 + 4 * regId);
+
+      auto semanticNum = i % 4;
+      uint8_t semanticId = 0xff;
+
+      if (semanticNum == 0) {
+         semanticId = spi_vs_out_id.SEMANTIC_0();
+      } else if (semanticNum == 1) {
+         semanticId = spi_vs_out_id.SEMANTIC_1();
+      } else if (semanticNum == 2) {
+         semanticId = spi_vs_out_id.SEMANTIC_2();
+      } else if (semanticNum == 3) {
+         semanticId = spi_vs_out_id.SEMANTIC_3();
+      }
+
+      if (semanticId != 0xff) {
+         decaf_check(vertex.outputMap[semanticId] == 0xff);
+         vertex.outputMap[semanticId] = i;
+
+         out << "layout(location = " << i << ")";
+         out << " out vec4 vs_out_" << semanticId << ";\n";
+      }
    }
    out << '\n';
 
@@ -925,10 +950,32 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       case latte::SQ_EXPORT_POS:
          out << "gl_Position = exp_position_" << exp.id << ";\n";
          break;
-      case latte::SQ_EXPORT_PARAM:
-         // TODO: Use vs_out semantics?
-         out << "vs_out_" << exp.id << " = exp_param_" << exp.id << ";\n";
-         break;
+      case latte::SQ_EXPORT_PARAM: {
+         decaf_check(!spi_vs_out_config.VS_PER_COMPONENT());
+
+         auto regId = exp.id / 4;
+         auto spi_vs_out_id = getRegister<latte::SPI_VS_OUT_ID_N>(latte::Register::SPI_VS_OUT_ID_0 + 4 * regId);
+
+         auto semanticNum = exp.id % 4;
+         uint8_t semanticId = 0xff;
+
+         if (semanticNum == 0) {
+            semanticId = spi_vs_out_id.SEMANTIC_0();
+         } else if (semanticNum == 1) {
+            semanticId = spi_vs_out_id.SEMANTIC_1();
+         } else if (semanticNum == 2) {
+            semanticId = spi_vs_out_id.SEMANTIC_2();
+         } else if (semanticNum == 3) {
+            semanticId = spi_vs_out_id.SEMANTIC_3();
+         }
+
+         if (semanticId != 0xff) {
+            out << "vs_out_" << semanticId << " = exp_param_" << exp.id << ";\n";
+         } else {
+            // This just helps when debugging to understand why it is missing...
+            out << "// vs_out_none = exp_param_" << exp.id << ";\n";
+         }
+      } break;
       case latte::SQ_EXPORT_PIXEL:
          decaf_abort("Unexpected pixel export in vertex shader.");
       }
@@ -940,7 +987,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    return true;
 }
 
-bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t size)
+bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint8_t *buffer, size_t size)
 {
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
    auto spi_ps_in_control_0 = getRegister<latte::SPI_PS_IN_CONTROL_0>(latte::Register::SPI_PS_IN_CONTROL_0);
@@ -979,12 +1026,19 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    // Pixel Shader Inputs
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
       auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
+      auto semanticId = spi_ps_input_cntl.SEMANTIC();
+      decaf_check(semanticId != 0xff);
+
+      auto vsOutputLoc = vertex.outputMap[semanticId];
+      decaf_check(vsOutputLoc != 0xff);
+
+      out << "layout(location = " << vsOutputLoc << ")";
 
       if (spi_ps_input_cntl.FLAT_SHADE()) {
-         out << "flat ";
+         out << " flat";
       }
 
-      out << "in vec4 vs_out_" << spi_ps_input_cntl.SEMANTIC() << ";\n";
+      out << " in vec4 vs_out_" << semanticId << ";\n";
    }
    out << '\n';
 
@@ -1008,13 +1062,16 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, uint8_t *buffer, size_t si
    // Assign vertex shader output to our GPR
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
       auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
-      auto id = spi_ps_input_cntl.SEMANTIC();
+      uint8_t semanticId = spi_ps_input_cntl.SEMANTIC();
+      decaf_check(semanticId != 0xff);
 
-      if (id == 0xff) {
-         continue;
+      auto vsOutputLoc = vertex.outputMap[semanticId];
+
+      if (vsOutputLoc == 0xff) {
+        continue;
       }
 
-      out << "R[" << i << "] = vs_out_" << id << ";\n";
+      out << "R[" << i << "] = vs_out_" << semanticId << ";\n";
    }
 
    out << '\n' << shader.codeBody << '\n';
