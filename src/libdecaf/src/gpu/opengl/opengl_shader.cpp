@@ -1023,6 +1023,13 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    out << shader.fileHeader;
    out << "uniform float uAlphaRef;\n";
 
+   if (spi_ps_in_control_0.POSITION_ENA()) {
+      if (!spi_ps_in_control_0.POSITION_CENTROID()) {
+         out << "layout(pixel_center_integer) ";
+      }
+      out << "in vec4 gl_FragCoord;\n";
+   }
+
    // Pixel Shader Inputs
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
       auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
@@ -1085,6 +1092,10 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
       }
 
       out << ";\n";
+   }
+
+   if (spi_ps_in_control_0.POSITION_ENA()) {
+      out << "R[" << spi_ps_in_control_0.POSITION_ADDR() << "] = gl_FragCoord;";
    }
 
    out << '\n' << shader.codeBody << '\n';
