@@ -59,72 +59,55 @@ getSelectChannel(SQ_SEL sel)
    }
 }
 
-static bool
-isShadowSampler(SamplerType type)
-{
-   switch (type) {
-   case SamplerType::Sampler1DShadow:
-   case SamplerType::Sampler2DShadow:
-   case SamplerType::SamplerCubeShadow:
-   case SamplerType::Sampler2DRectShadow:
-   case SamplerType::Sampler1DArrayShadow:
-   case SamplerType::Sampler2DArrayShadow:
-   case SamplerType::SamplerCubeArrayShadow:
-      return true;
-   default:
-      return false;
-   }
-}
-
 static unsigned
-getSamplerArgCount(SamplerType type)
+getSamplerArgCount(latte::SQ_TEX_DIM type, bool isShadowOp)
 {
    switch (type) {
-   case SamplerType::Sampler1D:
-      return 1;
-   case SamplerType::Sampler2D:
-      return 2;
-   case SamplerType::Sampler3D:
+   case latte::SQ_TEX_DIM_1D:
+      return 1 + (isShadowOp ? 1 : 0);
+   case latte::SQ_TEX_DIM_2D:
+      return 2 + (isShadowOp ? 1 : 0);
+   case latte::SQ_TEX_DIM_3D:
+      decaf_assert(!isShadowOp, "Shadow3D samplers have special semantics we don't yet support");
       return 3;
-   case SamplerType::Sampler1DArray:
-      return 1 + 1;
-   case SamplerType::Sampler2DArray:
-      return 2 + 1;
-   case SamplerType::Sampler1DShadow:
-      return 1 + 1;
-   case SamplerType::Sampler2DShadow:
-      return 2 + 1;
-   case SamplerType::Sampler1DArrayShadow:
-      return 1 + 1 + 1;
-   case SamplerType::Sampler2DArrayShadow:
-      return 2 + 1 + 1;
-   case SamplerType::SamplerCube:
-      return 3;
-   case SamplerType::SamplerCubeArray:
-      return 3 + 1;
-   case SamplerType::SamplerCubeShadow:
-      return 3 + 1;
-   case SamplerType::Sampler2DRect:
-   case SamplerType::SamplerBuffer:
-   case SamplerType::Sampler2DMS:
-   case SamplerType::Sampler2DMSArray:
-   case SamplerType::Sampler2DRectShadow:
-   case SamplerType::SamplerCubeArrayShadow:
+   case latte::SQ_TEX_DIM_1D_ARRAY:
+      return 1 + 1 + (isShadowOp ? 1 : 0);
+   case latte::SQ_TEX_DIM_2D_ARRAY:
+      return 2 + 1 + (isShadowOp ? 1 : 0);
+   case latte::SQ_TEX_DIM_CUBEMAP:
+      return 3 + (isShadowOp ? 1 : 0);
+   case latte::SQ_TEX_DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
    default:
       throw translate_exception(fmt::format("Unsupported sampler type {}", static_cast<unsigned>(type)));
    }
 }
 
-static void
-registerSamplerID(State &state, unsigned id)
+static SamplerUsage
+registerSamplerID(State &state, unsigned id, bool isShadowOp)
 {
-   if (state.shader) {
-      state.shader->samplerUsed[id] = true;
+   decaf_check(state.shader);
+
+   auto &usage = state.shader->samplerUsage[id];
+
+   if (!isShadowOp) {
+      decaf_check(usage == SamplerUsage::Invalid || usage == SamplerUsage::Texture);
+      usage = SamplerUsage::Texture;
+   } else {
+      decaf_check(usage == SamplerUsage::Invalid || usage == SamplerUsage::Shadow);
+      usage = SamplerUsage::Shadow;
    }
+
+   return usage;
 }
 
 static void
-sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst, const std::string &func, latte::SQ_SEL extraArg = latte::SQ_SEL_MASK)
+sampleFunc(State &state,
+           const latte::ControlFlowInst &cf,
+           const latte::TextureFetchInst &inst,
+           const std::string &func,
+           bool isShadowOp = false,
+           latte::SQ_SEL extraArg = latte::SQ_SEL_MASK)
 {
    auto dstSelX = inst.word1.DST_SEL_X().get();
    auto dstSelY = inst.word1.DST_SEL_Y().get();
@@ -138,12 +121,9 @@ sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureF
 
    auto resourceID = inst.word0.RESOURCE_ID();
    auto samplerID = inst.word2.SAMPLER_ID();
-   auto samplerType = glsl2::SamplerType::Sampler2D;
-   registerSamplerID(state, samplerID);
 
-   if (state.shader) {
-      samplerType = state.shader->samplers[samplerID];
-   }
+   auto samplerDim = state.shader->samplerDim[samplerID];
+   auto samplerUsage = registerSamplerID(state, samplerID, isShadowOp);
 
    if (resourceID != samplerID) {
       throw translate_exception("Unsupported sample with RESOURCE_ID != SAMPLER_ID");
@@ -158,10 +138,9 @@ sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureF
    if (numDstSels > 0) {
       insertLineStart(state);
 
-      auto samplerIsShadow = isShadowSampler(samplerType);
-      auto samplerElements = getSamplerArgCount(samplerType);
+      auto samplerElements = getSamplerArgCount(samplerDim, isShadowOp);
 
-      if (!samplerIsShadow) {
+      if (!isShadowOp) {
          state.out << "texTmp";
       } else {
          state.out << "texTmp.x";
@@ -169,7 +148,7 @@ sampleFunc(State &state, const latte::ControlFlowInst &cf, const latte::TextureF
 
       state.out << " = " << func << "(sampler_" << samplerID << ", ";
 
-      if (samplerIsShadow) {
+      if (isShadowOp) {
          /* In r600 the .w channel holds the compare value whereas OpenGL
           * shadow samplers just expect it to be the last texture coordinate
           * so we must set the last channel to SQ_SEL_W
@@ -244,17 +223,23 @@ SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetch
 }
 
 static void
+SAMPLE_C(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+   sampleFunc(state, cf, inst, "texture", true);
+}
+
+static void
 SAMPLE_L(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // Sample with LOD srcW
-   sampleFunc(state, cf, inst, "textureLod", latte::SQ_SEL_W);
+   sampleFunc(state, cf, inst, "textureLod", false, latte::SQ_SEL_W);
 }
 
 static void
 SAMPLE_LZ(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // Sample with LOD Zero
-   sampleFunc(state, cf, inst, "textureLod", latte::SQ_SEL_0);
+   sampleFunc(state, cf, inst, "textureLod", false, latte::SQ_SEL_0);
 }
 
 void
@@ -263,7 +248,7 @@ registerTexFunctions()
    registerInstruction(SQ_TEX_INST_FETCH4, FETCH4);
    registerInstruction(SQ_TEX_INST_SET_CUBEMAP_INDEX, SET_CUBEMAP_INDEX);
    registerInstruction(SQ_TEX_INST_SAMPLE, SAMPLE);
-   registerInstruction(SQ_TEX_INST_SAMPLE_C, SAMPLE);
+   registerInstruction(SQ_TEX_INST_SAMPLE_C, SAMPLE_C);
    registerInstruction(SQ_TEX_INST_SAMPLE_L, SAMPLE_L);
    registerInstruction(SQ_TEX_INST_SAMPLE_LZ, SAMPLE_LZ);
 }

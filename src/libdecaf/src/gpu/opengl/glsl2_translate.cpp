@@ -537,72 +537,77 @@ insertFileHeader(State &state)
    }
 
    // Samplers
-   for (auto id = 0u; id < state.shader->samplers.size(); ++id) {
-      auto type = state.shader->samplers[id];
+   for (auto id = 0u; id < state.shader->samplerDim.size(); ++id) {
+      auto dim = state.shader->samplerDim[id];
+      auto usage = state.shader->samplerUsage[id];
 
-      if (!state.shader->samplerUsed[id]) {
+      // If the sampler was never used, we don't need to record it
+      if (usage == SamplerUsage::Invalid) {
          continue;
       }
 
       out << "layout (binding = " << id << ") uniform ";
 
-      switch (type) {
-      case SamplerType::Sampler1D:
-         out << "sampler1D";
-         break;
-      case SamplerType::Sampler2D:
-         out << "sampler2D";
-         break;
-      case SamplerType::Sampler3D:
-         out << "sampler3D";
-         break;
-      case SamplerType::SamplerCube:
-         out << "samplerCube";
-         break;
-      case SamplerType::Sampler2DRect:
-         out << "sampler2DRect";
-         break;
-      case SamplerType::Sampler1DArray:
-         out << "sampler1DArray";
-         break;
-      case SamplerType::Sampler2DArray:
-         out << "sampler2DArray";
-         break;
-      case SamplerType::SamplerCubeArray:
-         out << "samplerCubeArray";
-         break;
-      case SamplerType::SamplerBuffer:
-         out << "samplerBuffer";
-         break;
-      case SamplerType::Sampler2DMS:
-         out << "sampler2DMS";
-         break;
-      case SamplerType::Sampler2DMSArray:
-         out << "sampler2DMSArray";
-         break;
-      case SamplerType::Sampler1DShadow:
-         out << "sampler1DShadow";
-         break;
-      case SamplerType::Sampler2DShadow:
-         out << "sampler2DShadow";
-         break;
-      case SamplerType::SamplerCubeShadow:
-         out << "samplerCubeShadow";
-         break;
-      case SamplerType::Sampler2DRectShadow:
-         out << "sampler2DRectShadow";
-         break;
-      case SamplerType::Sampler1DArrayShadow:
-         out << "sampler1DArrayShadow";
-         break;
-      case SamplerType::Sampler2DArrayShadow:
-         out << "sampler2DArrayShadow";
-         break;
-      case SamplerType::SamplerCubeArrayShadow:
-         out << "samplerCubeArrayShadow";
-         break;
-      default:
-         throw translate_exception(fmt::format("Unsupported sampler type: {}", static_cast<unsigned>(type)));
+      if (usage == SamplerUsage::Texture) {
+         switch (dim) {
+         case latte::SQ_TEX_DIM_1D:
+            out << "sampler1D";
+            break;
+         case latte::SQ_TEX_DIM_2D:
+            out << "sampler2D";
+            break;
+         case latte::SQ_TEX_DIM_3D:
+            out << "sampler3D";
+            break;
+         case latte::SQ_TEX_DIM_CUBEMAP:
+            out << "samplerCube";
+            break;
+         case latte::SQ_TEX_DIM_1D_ARRAY:
+            out << "sampler1DArray";
+            break;
+         case latte::SQ_TEX_DIM_2D_ARRAY:
+            out << "sampler2DArray";
+            break;
+         case latte::SQ_TEX_DIM_2D_MSAA:
+            out << "sampler2DMS";
+            break;
+         case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+            out << "sampler2DMSArray";
+            break;
+         default:
+            throw translate_exception(fmt::format("Unsupported texture sampler dim: {}", static_cast<unsigned>(dim)));
+         }
+      } else if (usage == SamplerUsage::Shadow) {
+         switch (dim) {
+         case latte::SQ_TEX_DIM_1D:
+            out << "sampler1DShadow";
+            break;
+         case latte::SQ_TEX_DIM_2D:
+            out << "sampler2DShadow";
+            break;
+         case latte::SQ_TEX_DIM_3D:
+            out << "sampler3DShadow";
+            break;
+         case latte::SQ_TEX_DIM_CUBEMAP:
+            out << "samplerCubeShadow";
+            break;
+         case latte::SQ_TEX_DIM_1D_ARRAY:
+            out << "sampler1DArrayShadow";
+            break;
+         case latte::SQ_TEX_DIM_2D_ARRAY:
+            out << "sampler2DArrayShadow";
+            break;
+         case latte::SQ_TEX_DIM_2D_MSAA:
+            out << "sampler2DMSShadow";
+            break;
+         case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+            out << "sampler2DMSArrayShadow";
+            break;
+         default:
+            throw translate_exception(fmt::format("Unsupported shadow sampler dim: {}", static_cast<unsigned>(dim)));
+         }
+      } else {
+         throw translate_exception(fmt::format("Unsupported sampler usage: {}", static_cast<unsigned>(usage)));
       }
 
       out << " sampler_" << id << ";\n";
@@ -663,7 +668,7 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
    State state;
    state.binary = binary;
    state.shader = &shader;
-   state.shader->samplerUsed.fill(false);
+   state.shader->samplerUsage.fill(SamplerUsage::Invalid);
    initialise();
 
    try {

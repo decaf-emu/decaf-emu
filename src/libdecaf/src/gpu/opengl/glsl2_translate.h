@@ -22,29 +22,12 @@ private:
    std::string mMessage;
 };
 
-enum class SamplerType
+enum class SamplerUsage
 {
    Invalid,
 
-   Sampler1D,
-   Sampler2D,
-   Sampler3D,
-   SamplerCube,
-   Sampler2DRect,
-   Sampler1DArray,
-   Sampler2DArray,
-   SamplerCubeArray,
-   SamplerBuffer,
-   Sampler2DMS,
-   Sampler2DMSArray,
-
-   Sampler1DShadow,
-   Sampler2DShadow,
-   SamplerCubeShadow,
-   Sampler2DRectShadow,
-   Sampler1DArrayShadow,
-   Sampler2DArrayShadow,
-   SamplerCubeArrayShadow,
+   Texture,
+   Shadow
 };
 
 struct Export
@@ -65,7 +48,7 @@ struct Shader
 
    // Input
    Type type = Invalid;
-   std::array<SamplerType, 16> samplers;
+   std::array<latte::SQ_TEX_DIM, 16> samplerDim;
    bool uniformRegistersEnabled = false;
    bool uniformBlocksEnabled = false;
 
@@ -74,7 +57,7 @@ struct Shader
    std::string codeHeader;
    std::string codeBody;
    std::vector<Export> exports;
-   std::array<bool, 16> samplerUsed;
+   std::array<SamplerUsage, 16> samplerUsage;
 };
 
 struct State
