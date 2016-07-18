@@ -112,9 +112,9 @@ fsThreadEntry()
 {
    std::unique_lock<std::mutex> lock(sFsQueueMutex);
 
-   while (sFsThreadRunning.load())
+   while (true)
    {
-      while (!sFsQueue.empty()) {
+      if (!sFsQueue.empty()) {
          auto item = sFsQueue.top();
          sFsQueue.pop();
          lock.unlock();
@@ -126,7 +126,17 @@ fsThreadEntry()
          cpu::interrupt(sFsCoreId, cpu::FS_DONE_INTERRUPT);
       }
 
-      sFsQueueCond.wait(lock);
+      // This check needs to be here due to us unlocking the thread
+      //  to run the fs function.  This gives a window for the shutdown
+      //  notification to be missed.
+      if (!sFsThreadRunning.load()) {
+         break;
+      }
+
+      // Wait if we don't have any items to process
+      if (sFsQueue.empty()) {
+         sFsQueueCond.wait(lock);
+      }
    }
 }
 
@@ -141,10 +151,12 @@ startFsThread()
 void
 shutdownFsThread()
 {
+   std::unique_lock<std::mutex> lock(sFsQueueMutex);
    if (sFsThreadRunning.exchange(false)) {
       sFsQueueCond.notify_all();
+      lock.unlock();
+
       sFsThread.join();
-      sFsThreadRunning.store(false);
    }
 }
 
