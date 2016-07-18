@@ -58,6 +58,9 @@ extern std::vector<std::string> kernel_trace_filters;
 namespace system
 {
 
+//! Emulated system region
+extern int region;
+
 //! Path to system files
 extern std::string system_path;
 

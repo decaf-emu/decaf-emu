@@ -1,6 +1,8 @@
+#include "common/decaf_assert.h"
 #include "config.h"
 #include "decafcli.h"
 #include "libdecaf/decaf.h"
+#include "libdecaf/src/modules/coreinit/coreinit_enum.h"
 #include <pugixml.hpp>
 #include <excmd.h>
 #include <iostream>
@@ -56,6 +58,12 @@ getCommandLineParser()
       .add_option("config",
                   description { "Specify path to configuration file." },
                   value<std::string> {})
+      .add_option("region",
+                  description { "Set the system region." },
+                  default_value<std::string> { "US" },
+                  allowed<std::string> { {
+                     "EUR", "JAP", "US"
+                  } });
       .add_option("sys-path",
                   description { "Where to locate any external system files." },
                   value<std::string> {})
