@@ -20,14 +20,15 @@ moveGeneric(cpu::Core *state, Instruction instr)
    uint32_t b0, b1, d0, d1;
    const bool ps0_nan = is_signalling_nan(state->fpr[instr.frB].paired0);
    const bool ps1_nan = is_signalling_nan(state->fpr[instr.frB].paired1);
-   if (!ps0_nan) {
-      // We have to round this if it has excess precision, so we can't just
+   if (ps0_nan) {
+      b0 = truncate_double_bits(state->fpr[instr.frB].idw);
+   } else {
+      // We have to round ps0 if it has excess precision, so we can't just
       // chop off the trailing bits.
       b0 = bit_cast<uint32_t>(static_cast<float>(state->fpr[instr.frB].paired0));
-   } else {
-      b0 = truncate_double_bits(state->fpr[instr.frB].idw);
    }
-   b1 = truncate_double_bits(state->fpr[instr.frB].idw_paired1);
+   // ps1 is always truncated, whether NaN or not.
+   b1 = bit_cast<uint32_t>(truncate_double(state->fpr[instr.frB].paired1));
 
    switch (mode) {
    case MoveDirect:
