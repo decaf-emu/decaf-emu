@@ -68,7 +68,14 @@ struct CerealDebugger
    {
       using namespace decaf::config::debugger;
       ar(CEREAL_NVP(enabled),
-         CEREAL_NVP(break_on_entry));
+         CEREAL_NVP(break_on_entry),
+         CEREAL_NVP(show_seg_view),
+         CEREAL_NVP(show_thread_view),
+         CEREAL_NVP(show_mem_view),
+         CEREAL_NVP(show_disasm_view),
+         CEREAL_NVP(show_reg_view),
+         CEREAL_NVP(show_stack_view),
+         CEREAL_NVP(show_stats_view));
    }
 };
 

@@ -1,4 +1,5 @@
 #include "debugger_ui_internal.h"
+#include "decaf_config.h"
 #include "imgui_addrscroll.h"
 #include "kernel/kernel_loader.h"
 #include <imgui.h>
@@ -35,9 +36,6 @@ struct StackFrame
    uint32_t end;
 };
 
-bool
-gIsVisible = true;
-
 static bool
 sActivateFocus = false;
 
@@ -65,7 +63,7 @@ displayAddress(uint32_t address)
 {
    gotoAddress(address);
    sActivateFocus = true;
-   gIsVisible = true;
+   decaf::config::debugger::show_stack_view = true;
 }
 
 static void
@@ -121,7 +119,7 @@ getStackGlyph(uint32_t addr)
 void
 draw()
 {
-   if (!gIsVisible) {
+   if (!decaf::config::debugger::show_stack_view) {
       return;
    }
 
@@ -131,7 +129,7 @@ draw()
    }
 
    std::string windowKey = "Stack";
-   if (!ImGui::Begin(windowKey.c_str(), &gIsVisible)) {
+   if (!ImGui::Begin(windowKey.c_str(), &decaf::config::debugger::show_stack_view)) {
       ImGui::End();
       return;
    }

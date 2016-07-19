@@ -1,4 +1,5 @@
 #include "debugger_ui_internal.h"
+#include "decaf_config.h"
 #include "modules/coreinit/coreinit_enum_string.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_thread.h"
@@ -32,22 +33,19 @@ struct ThreadInfo
    uint32_t affinity;
 };
 
-bool
-gIsVisible = true;
-
 static std::vector<ThreadInfo>
 sThreadsCache;
 
 void
 draw()
 {
-   if (!gIsVisible) {
+   if (!decaf::config::debugger::show_thread_view) {
       return;
    }
 
    ImGui::SetNextWindowSize(ImVec2(600, 300), ImGuiSetCond_FirstUseEver);
 
-   if (!ImGui::Begin("Threads", &gIsVisible)) {
+   if (!ImGui::Begin("Threads", &decaf::config::debugger::show_thread_view)) {
       ImGui::End();
       return;
    }

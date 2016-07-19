@@ -1,4 +1,5 @@
 #include "debugger_ui_internal.h"
+#include "decaf_config.h"
 #include "libcpu/cpu.h"
 #include "libcpu/espresso/espresso_instructionid.h"
 #include "libcpu/espresso/espresso_instructionset.h"
@@ -20,9 +21,6 @@ namespace StatsView
 static const size_t
 InstrCount = static_cast<size_t>(espresso::InstructionID::InstructionCount);
 
-bool
-gIsVisible = true;
-
 static bool
 sActivateFocus = false;
 
@@ -38,7 +36,7 @@ sFirstSeenValues[InstrCount] = { 0 };
 void
 draw()
 {
-   if (!gIsVisible) {
+   if (!decaf::config::debugger::show_stats_view) {
       return;
    }
 
@@ -49,7 +47,7 @@ draw()
 
    ImGui::SetNextWindowSize(ImVec2(600, 300), ImGuiSetCond_FirstUseEver);
 
-   if (!ImGui::Begin("Stats", &gIsVisible)) {
+   if (!ImGui::Begin("Stats", &decaf::config::debugger::show_stats_view)) {
       ImGui::End();
       return;
    }

@@ -12,6 +12,13 @@ namespace debugger
 
 bool enabled = true;
 bool break_on_entry = false;
+bool show_seg_view = true;
+bool show_thread_view = true;
+bool show_mem_view = true;
+bool show_disasm_view = true;
+bool show_reg_view = true;
+bool show_stack_view = true;
+bool show_stats_view = true;
 
 } // namespace debugger
 

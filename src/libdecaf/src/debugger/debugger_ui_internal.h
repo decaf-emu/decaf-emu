@@ -42,39 +42,32 @@ void draw();
 }
 
 namespace StatsView {
-extern bool gIsVisible;
 void draw();
 }
 
 namespace DisasmView {
-extern bool gIsVisible;
 void displayAddress(uint32_t address);
 void draw();
 }
 
 namespace SegView {
-extern bool gIsVisible;
 void draw();
 }
 
 namespace ThreadView {
-extern bool gIsVisible;
 void draw();
 }
 
 namespace MemView {
-extern bool gIsVisible;
 void displayAddress(uint32_t address);
 void draw();
 }
 
 namespace RegView {
-extern bool gIsVisible;
 void draw();
 }
 
 namespace StackView {
-extern bool gIsVisible;
 void displayAddress(uint32_t address);
 void draw();
 }

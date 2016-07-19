@@ -1,4 +1,5 @@
 #include "debugger_ui_internal.h"
+#include "decaf_config.h"
 #include <imgui.h>
 #include <spdlog/spdlog.h>
 
@@ -12,9 +13,6 @@ namespace RegView
 {
 
 static const ImVec4 ChangedColor = HEXTOIMV4(0xF44336, 1.0f);
-
-bool
-gIsVisible = true;
 
 cpu::CoreRegs
 sCurrentRegs;
@@ -31,13 +29,13 @@ sLastActiveThread = nullptr;
 void
 draw()
 {
-   if (!gIsVisible) {
+   if (!decaf::config::debugger::show_reg_view) {
       return;
    }
 
    ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiSetCond_FirstUseEver);
 
-   if (!ImGui::Begin("Registers", &gIsVisible)) {
+   if (!ImGui::Begin("Registers", &decaf::config::debugger::show_reg_view)) {
       ImGui::End();
       return;
    }
