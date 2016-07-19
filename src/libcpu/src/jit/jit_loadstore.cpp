@@ -85,6 +85,7 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
          auto dst = a.loadXmmRegisterReadWrite(a.fprps[instr.rD]);
          a.movq(tmp, data);
          a.cvtss2sd(dst, tmp);
+         a.movddup(dst, dst);  // Copy to ps1 as well
       } else {
          decaf_check(sizeof(Type) == 8);
          auto dst = a.loadXmmRegisterReadWrite(a.fprps[instr.rD]);
