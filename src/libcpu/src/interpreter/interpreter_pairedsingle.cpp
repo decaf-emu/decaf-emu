@@ -538,7 +538,7 @@ ps_res(cpu::Core *state, Instruction instr)
       } else if (vxsnan0) {
          d0 = make_nan<float>();
       } else {
-         d0 = 1.0f / static_cast<float>(b0);
+         d0 = ppc_estimate_reciprocal(static_cast<double>(static_cast<float>(b0)));
       }
       updateFPRF(state, d0);
    }
@@ -550,7 +550,7 @@ ps_res(cpu::Core *state, Instruction instr)
       } else if (vxsnan1) {
          d1 = make_nan<float>();
       } else {
-         d1 = 1.0f / static_cast<float>(b1);
+         d1 = ppc_estimate_reciprocal(static_cast<double>(static_cast<float>(b1)));
       }
    }
 
@@ -559,7 +559,12 @@ ps_res(cpu::Core *state, Instruction instr)
       state->fpr[instr.frD].paired1 = extend_float(d1);
    }
 
+   // ps_res never sets FPSCR[XX], so avoid setting it here.
+   const int xx = state->fpscr.xx;
    updateFPSCR(state, oldFPSCR);
+   if (!xx) {
+      state->fpscr.xx = 0;
+   }
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
