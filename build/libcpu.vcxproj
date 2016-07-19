@@ -44,6 +44,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\libcpu\src\jit\jit_unwind_win.cpp" />
+    <ClCompile Include="..\src\libcpu\src\jit\jit_verify.cpp" />
     <ClCompile Include="..\src\libcpu\src\mem.cpp" />
     <ClCompile Include="..\src\libcpu\src\trace.cpp" />
   </ItemGroup>
@@ -65,6 +66,7 @@
     <ClInclude Include="..\src\libcpu\src\jit\jit_float.h" />
     <ClInclude Include="..\src\libcpu\src\jit\jit_insreg.h" />
     <ClInclude Include="..\src\libcpu\src\jit\jit_internal.h" />
+    <ClInclude Include="..\src\libcpu\src\jit\jit_verify.h" />
     <ClInclude Include="..\src\libcpu\src\jit\jit_vmemruntime.h" />
     <ClInclude Include="..\src\libcpu\src\statedbg.h" />
     <ClInclude Include="..\src\libcpu\src\utils.h" />

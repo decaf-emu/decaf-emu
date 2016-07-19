@@ -36,7 +36,7 @@ getCommandLineParser()
    auto jit_options = parser.add_option_group("JIT Options")
       .add_option("jit",
                   description { "Enables the JIT engine." })
-      .add_option("jit-debug",
+      .add_option("jit-verify",
                   description { "Verify JIT implementation against interpreter." });
 
    auto log_options = parser.add_option_group("Log Options")
@@ -134,8 +134,8 @@ start(excmd::parser &parser,
    config::load(configPath);
 
    // Allow command line options to override config
-   if (options.has("jit-debug")) {
-      decaf::config::jit::debug = true;
+   if (options.has("jit-verify")) {
+      decaf::config::jit::verify = true;
    }
 
    if (options.has("jit")) {
