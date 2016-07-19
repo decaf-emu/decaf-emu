@@ -20,6 +20,9 @@ gInterruptHandler;
 extern BranchTraceHandler
 gBranchTraceHandler;
 
+extern jit_mode
+gJitMode;
+
 extern std::condition_variable
 gTimerCondition;
 

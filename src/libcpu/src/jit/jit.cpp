@@ -1,12 +1,15 @@
 #include "common/log.h"
+#include "common/align.h"
 #include "common/bitutils.h"
 #include "common/decaf_assert.h"
 #include "common/fastregionmap.h"
+#include "cpu.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
 #include "jit.h"
 #include "jit_internal.h"
 #include "jit_insreg.h"
+#include "jit_verify.h"
 #include "jit_vmemruntime.h"
 #include "mem.h"
 #include <cfenv>
@@ -34,6 +37,12 @@ sJitBlocks;
 
 static uint8_t
 sBaseRelocCode[16];
+
+static void *
+gVerifyPreWrapper;
+
+static void *
+gVerifyPostWrapper;
 
 JitCall
 gCallFn;
@@ -65,19 +74,39 @@ initStubs()
    auto introLabel = a.newLabel();
    auto extroLabel = a.newLabel();
    auto exitLabel = a.newLabel();
+   auto verifyPreLabel = a.newLabel();
+   auto verifyPostLabel = a.newLabel();
 
    // This is invoked to set up the neccessary state for
    //  the JIT block we want to execute.
    a.bind(introLabel);
    a.push(asmjit::x86::rbp);
    a.push(asmjit::x86::rbx);
-   a.push(asmjit::x86::rdi);
+#ifdef PLATFORM_WINDOWS
+   a.push(asmjit::x86::rdi);  // RSI/RDI are callee-saved in Windows x64 ABI
    a.push(asmjit::x86::rsi);
+#endif
    a.push(asmjit::x86::r12);
    a.push(asmjit::x86::r13);
    a.push(asmjit::x86::r14);
    a.push(asmjit::x86::r15);
-   a.sub(asmjit::x86::rsp, 0x38);
+   if (gJitMode == jit_mode::verify) {
+      // Leave space for the verification buffer on the stack:
+      //  RSP+0 = Windows argument shadow space (reserved on all platforms for simplicity)
+      //  RSP+32 = size of this stack area (for reference on return)
+      //  RSP+36 = PPC instruction being verified
+      //  RSP+40 = verification buffer
+      uint32_t stackSpace = 40 + static_cast<uint32_t>(sizeof(VerifyBuffer));
+      // Preserve 16-byte stack alignment -- note that RSP comes in unaligned from the CALL instruction
+      stackSpace = align_up(stackSpace, 8);
+      if ((stackSpace & 15) == 0) {
+         stackSpace += 8;
+      }
+      a.sub(asmjit::x86::rsp, stackSpace);
+      a.mov(asmjit::X86Mem(asmjit::x86::rsp, 32, 4), stackSpace);
+   } else {
+      a.sub(asmjit::x86::rsp, 0x28);  // Windows shadow space + stack alignment
+   }
    a.mov(a.stateReg, a.sysArgReg[0]);
    a.mov(a.membaseReg, static_cast<uint64_t>(mem::base()));
    a.jmp(a.sysArgReg[1]);
@@ -99,20 +128,105 @@ initStubs()
    a.bind(exitLabel);
    a.mov(a.niaMem, a.finaleNiaArgReg);
    a.mov(asmjit::x86::rax, a.stateReg);
-   a.add(asmjit::x86::rsp, 0x38);
+   if (gJitMode == jit_mode::verify) {
+      a.mov(asmjit::x86::ecx, asmjit::X86Mem(asmjit::x86::rsp, 32, 4));
+      a.add(asmjit::x86::rsp, asmjit::x86::rcx);
+   } else {
+      a.add(asmjit::x86::rsp, 0x28);
+   }
    a.pop(asmjit::x86::r15);
    a.pop(asmjit::x86::r14);
    a.pop(asmjit::x86::r13);
    a.pop(asmjit::x86::r12);
+#ifdef PLATFORM_WINDOWS
    a.pop(asmjit::x86::rsi);
    a.pop(asmjit::x86::rdi);
+#endif
    a.pop(asmjit::x86::rbx);
    a.pop(asmjit::x86::rbp);
    a.ret();
 
+   if (gJitMode == jit_mode::verify) {
+      auto verifyLabel = a.newLabel();
+      // This wraps the instruction verification setup to minimize the
+      //  number of instructions inserted into the translated code stream.
+      //  We manually save and restore volatile registers so the process of
+      //  verification doesn't change the generated code.  Note that the
+      //  odd push count here (including RAX from the appropriate entry
+      //  point) is correct -- there's also a return address on the stack
+      //  from the CALL from translated code.
+      a.bind(verifyLabel);
+      a.push(asmjit::x86::rcx);
+      a.push(asmjit::x86::rdx);
+#ifndef PLATFORM_WINDOWS
+      a.push(asmjit::x86::rsi);  // RSI/RDI are caller-saved in SysV AMD64 ABI
+      a.push(asmjit::x86::rdi);
+#endif
+      a.push(asmjit::x86::r8);
+      a.push(asmjit::x86::r9);
+      a.push(asmjit::x86::r10);
+      a.push(asmjit::x86::r11);
+      a.sub(asmjit::x86::rsp, 160);  // Space for XMM0-7 + Windows shadow space
+      a.movdqa(asmjit::X86Mem(asmjit::x86::rsp, 144, 16), asmjit::x86::xmm7);
+      a.movdqa(asmjit::X86Mem(asmjit::x86::rsp, 128, 16), asmjit::x86::xmm6);
+      a.movdqa(asmjit::X86Mem(asmjit::x86::rsp, 112, 16), asmjit::x86::xmm5);
+      a.movdqa(asmjit::X86Mem(asmjit::x86::rsp, 96, 16), asmjit::x86::xmm4);
+      a.movdqa(asmjit::X86Mem(asmjit::x86::rsp, 80, 16), asmjit::x86::xmm3);
+      a.movdqa(asmjit::X86Mem(asmjit::x86::rsp, 64, 16), asmjit::x86::xmm2);
+      a.movdqa(asmjit::X86Mem(asmjit::x86::rsp, 48, 16), asmjit::x86::xmm1);
+      a.movdqa(asmjit::X86Mem(asmjit::x86::rsp, 32, 16), asmjit::x86::xmm0);
+      // Don't forget to take into account the CALL and pushes we just did
+      //  when generating these stack references!
+      a.mov(asmjit::x86::ecx, asmjit::X86Mem(asmjit::x86::rsp, 36+240, 4));
+      a.mov(a.sysArgReg[2], asmjit::x86::rcx);
+      a.mov(a.sysArgReg[0], a.stateReg);
+      a.lea(a.sysArgReg[1], asmjit::X86Mem(asmjit::x86::rsp, 40+240));
+      a.call(asmjit::x86::rax);
+      a.movdqa(asmjit::x86::xmm0, asmjit::X86Mem(asmjit::x86::rsp, 32, 16));
+      a.movdqa(asmjit::x86::xmm1, asmjit::X86Mem(asmjit::x86::rsp, 48, 16));
+      a.movdqa(asmjit::x86::xmm2, asmjit::X86Mem(asmjit::x86::rsp, 64, 16));
+      a.movdqa(asmjit::x86::xmm3, asmjit::X86Mem(asmjit::x86::rsp, 80, 16));
+      a.movdqa(asmjit::x86::xmm4, asmjit::X86Mem(asmjit::x86::rsp, 96, 16));
+      a.movdqa(asmjit::x86::xmm5, asmjit::X86Mem(asmjit::x86::rsp, 112, 16));
+      a.movdqa(asmjit::x86::xmm6, asmjit::X86Mem(asmjit::x86::rsp, 128, 16));
+      a.movdqa(asmjit::x86::xmm7, asmjit::X86Mem(asmjit::x86::rsp, 144, 16));
+      a.add(asmjit::x86::rsp, 160);
+      a.pop(asmjit::x86::r11);
+      a.pop(asmjit::x86::r10);
+      a.pop(asmjit::x86::r9);
+      a.pop(asmjit::x86::r8);
+#ifndef PLATFORM_WINDOWS
+      a.pop(asmjit::x86::rdi);
+      a.pop(asmjit::x86::rsi);
+#endif
+      a.pop(asmjit::x86::rdx);
+      a.pop(asmjit::x86::rcx);
+      a.pop(asmjit::x86::rax);
+      a.ret();
+
+      // Call target for pre-instruction verification setup
+      a.bind(verifyPreLabel);
+      a.push(asmjit::x86::rax);
+      a.mov(asmjit::x86::rax, asmjit::Ptr(verifyPre));
+      a.jmp(verifyLabel);
+
+      // Call target for post-instruction verification
+      a.bind(verifyPostLabel);
+      a.push(asmjit::x86::rax);
+      a.mov(asmjit::x86::rax, asmjit::Ptr(verifyPost));
+      a.jmp(verifyLabel);
+   }
+
    auto basePtr = a.make();
    gCallFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(introLabel));
    gFinaleFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(extroLabel));
+   if (gJitMode == jit_mode::verify) {
+      gVerifyPreWrapper = asmjit_cast<void *>(basePtr, a.getLabelOffset(verifyPreLabel));
+      gVerifyPostWrapper = asmjit_cast<void *>(basePtr, a.getLabelOffset(verifyPostLabel));
+   } else {
+      gVerifyPreWrapper = nullptr;
+      gVerifyPostWrapper = nullptr;
+   }
 
    asmjit::StaticRuntime rr(sBaseRelocCode, 32);
    asmjit::X86Assembler ra(&rr, asmjit::kArchX64);
@@ -265,15 +379,24 @@ gen(JitBlock &block)
          a.bind(targetIter->second.label);
       }
 
-      if (JIT_DEBUG) {
-         a.mov(a.niaMem, lclCia + 4);
-      }
-
       auto instr = mem::read<espresso::Instruction>(lclCia);
       auto data = espresso::decodeInstruction(instr);
       auto genSuccess = false;
 
       a.genCia = lclCia;
+
+      // Don't attempt to verify non-repeatable instructions
+      bool canVerify = (data->id != espresso::InstructionID::kc
+                        && data->id != espresso::InstructionID::lwarx
+                        && data->id != espresso::InstructionID::stwcx);
+      if (gJitMode == jit_mode::verify && canVerify) {
+         a.mov(a.ciaMem, lclCia);
+         insertVerifyCall(a, instr, gVerifyPreWrapper);
+      }
+
+      if (JIT_DEBUG) {
+         a.mov(a.niaMem, lclCia + 4);
+      }
 
       auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
       if (fptr) {
@@ -286,6 +409,10 @@ gen(JitBlock &block)
 
       if (!JIT_REGCACHE) {
          a.evictAll();
+      }
+
+      if (gJitMode == jit_mode::verify && canVerify) {
+         insertVerifyCall(a, instr, gVerifyPostWrapper);
       }
 
       if (JIT_DEBUG) {
