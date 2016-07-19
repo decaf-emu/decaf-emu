@@ -11,14 +11,14 @@ namespace jit
 {
 
 static void
-truncateToSingleSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+roundToSingleSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
    a.cvtsd2ss(reg, reg);
    a.cvtss2sd(reg, reg);
 }
 
 static void
-truncateTo24BitSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+roundTo24BitSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
    auto maskGp = a.allocGpTmp();
    auto maskXmm = a.allocXmmTmp();
@@ -73,7 +73,7 @@ faddGeneric(PPCEmuAssembler& a, Instruction instr)
    a.addsd(dst, tmpSrcB);
 
    if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
+      roundToSingleSd(a, dst);
    }
 
    a.movddup(dst, dst);
@@ -109,7 +109,7 @@ fdivGeneric(PPCEmuAssembler& a, Instruction instr)
    a.divsd(dst, tmpSrcB);
 
    if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
+      roundToSingleSd(a, dst);
    }
 
    a.movddup(dst, dst);
@@ -145,14 +145,14 @@ fmulGeneric(PPCEmuAssembler& a, Instruction instr)
    if (ShouldTruncate) {
       // PPC has this wierd behaviour with fmuls where it truncates the
       //  RHS operator to 24-bits of mantissa before multiplying...
-      truncateTo24BitSd(a, tmpSrcC);
+      roundTo24BitSd(a, tmpSrcC);
    }
 
    a.movq(dst, srcA);
    a.mulsd(dst, tmpSrcC);
 
    if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
+      roundToSingleSd(a, dst);
    }
 
    a.movddup(dst, dst);
@@ -188,7 +188,7 @@ fsubGeneric(PPCEmuAssembler& a, Instruction instr)
    a.subsd(dst, tmpSrcB);
 
    if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
+      roundToSingleSd(a, dst);
    }
 
    a.movddup(dst, dst);
@@ -233,7 +233,7 @@ fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
+      roundToSingleSd(a, dst);
    }
 
    a.movddup(dst, dst);
@@ -278,7 +278,7 @@ fmsubGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
+      roundToSingleSd(a, dst);
    }
 
    a.movddup(dst, dst);
@@ -334,7 +334,7 @@ frsp(PPCEmuAssembler& a, Instruction instr)
    auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
    a.movq(dst, srcA);
 
-   truncateToSingleSd(a, dst);
+   roundToSingleSd(a, dst);
 
    a.movddup(dst, dst);
    return true;
