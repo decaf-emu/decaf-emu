@@ -27,7 +27,7 @@ namespace jit
 {
 
 bool enabled = true;
-bool debug = false;
+bool verify = false;
 
 } // namespace jit
 
