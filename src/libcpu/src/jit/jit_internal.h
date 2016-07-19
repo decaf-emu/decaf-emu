@@ -21,9 +21,9 @@ RAX    . Scratch
 RCX    . Scratch
 RDX    . Scratch
 RDI    . Scratch
-RSI    . mem::base()
+RSI    . Scratch
 RBX    . Core*
-RBP    . Scratch
+RBP    . mem::base()
 RSP    . Emu Stack Pointer.
 R8-R15 . Scratch
 */
