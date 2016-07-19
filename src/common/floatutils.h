@@ -215,8 +215,11 @@ inline float
 truncate_double(double v)
 {
    const FloatBitsDouble bits = get_float_bits(v);
-   if (bits.exponent <= 896) {
+   if (bits.exponent <= 873) {
       return bit_cast<float>(static_cast<uint32_t>(bits.sign)<<31);
+   } else if (bits.exponent <= 896) {
+      uint32_t mantissa = static_cast<uint32_t>(1<<23 | bits.mantissa>>29);
+      return bit_cast<float>(static_cast<uint32_t>(bits.sign)<<31 | (mantissa >> (897 - bits.exponent)));
    } else if (bits.exponent >= 1151 && bits.exponent != 2047) {
       return bit_cast<float>(static_cast<uint32_t>(bits.sign)<<31 | 0x7F800000);
    } else {
