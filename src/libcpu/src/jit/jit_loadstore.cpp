@@ -88,8 +88,13 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
          a.movddup(dst, dst);  // Copy to ps1 as well
       } else {
          decaf_check(sizeof(Type) == 8);
-         auto dst = a.loadXmmRegisterReadWrite(a.fprps[instr.rD]);
+         // lfd doesn't modify the ps1 slot (modulo certain data hazards we
+         //  don't attempt to emulate; see the interpreter implementation
+         //  for details), so we need to preserve the high double here.
+         auto tmpDst = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frD]));
+         auto dst = a.loadXmmRegisterWrite(a.fprps[instr.rD]);
          a.movq(dst, data);
+         a.shufpd(dst, tmpDst, 0x2);
       }
    } else {
       if (flags & LoadSignExtend) {
