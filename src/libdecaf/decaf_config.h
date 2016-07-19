@@ -36,8 +36,8 @@ namespace jit
 //! Enable usage of jit
 extern bool enabled;
 
-//! Use JIT in debug mode where it compares execution to interpreter
-extern bool debug;
+//! Use JIT in verification mode where it compares execution to interpreter
+extern bool verify;
 
 } // namespace jit
 

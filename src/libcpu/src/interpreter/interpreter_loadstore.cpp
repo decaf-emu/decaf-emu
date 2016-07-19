@@ -666,7 +666,7 @@ stswGeneric(cpu::Core *state, Instruction instr)
 
    ea = instr.rA ? state->gpr[instr.rA] : 0;
 
-   if (flags & LswIndexed) {
+   if (flags & StswIndexed) {
       ea += state->gpr[instr.rB];
       n = state->xer.byteCount;
    } else {

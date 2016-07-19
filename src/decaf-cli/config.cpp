@@ -57,7 +57,7 @@ struct CerealJit
    {
       using namespace decaf::config::jit;
       ar(CEREAL_NVP(enabled),
-         CEREAL_NVP(debug));
+         CEREAL_NVP(verify));
    }
 };
 

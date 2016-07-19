@@ -2,6 +2,7 @@
 #include "jit_float.h"
 #include "common/bitutils.h"
 #include "common/decaf_assert.h"
+#include "common/log.h"
 #include <cstdint>
 
 namespace cpu
@@ -10,15 +11,40 @@ namespace cpu
 namespace jit
 {
 
+static bool
+hostHasFMA3()
+{
+   static bool checked = false;
+   static bool hasFMA3;
+
+   if (!checked) {
+      checked = true;
+#ifdef PLATFORM_WINDOWS
+      int cpuInfo[4];
+      __cpuid(cpuInfo, 1);
+      hasFMA3 = ((cpuInfo[2] & (1 << 12)) != 0);
+#else
+      uint32_t ecx;
+      __asm__("cpuid" : "=c" (ecx) : "a" (1) : "rax", "rbx", "rdx");
+      hasFMA3 = ((ecx & (1 << 12)) != 0);
+#endif
+      if (!hasFMA3) {
+         gLog->warn("FMA3 instructions not available; fused multiply-add results will be inaccurate");
+      }
+   }
+
+   return hasFMA3;
+}
+
 static void
-truncateToSingleSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+roundToSingleSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
    a.cvtsd2ss(reg, reg);
    a.cvtss2sd(reg, reg);
 }
 
 static void
-truncateTo24BitSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+roundTo24BitSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
    auto maskGp = a.allocGpTmp();
    auto maskXmm = a.allocXmmTmp();
@@ -56,9 +82,15 @@ absXmmSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
    a.pand(reg, maskXmm);
 }
 
-template <bool ShouldTruncate>
+enum FPArithOperator {
+    FPAdd,
+    FPSub,
+    FPMul,
+    FPDiv,
+};
+template <FPArithOperator op, bool ShouldTruncate>
 static bool
-faddGeneric(PPCEmuAssembler& a, Instruction instr)
+fpArithGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
       return jit_fallback(a, instr);
@@ -66,148 +98,99 @@ faddGeneric(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
-   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
-   a.movq(dst, srcA);
-   a.addsd(dst, tmpSrcB);
+   auto tmpSrcA = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frA]));
 
-   if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
+   switch (op) {
+   case FPAdd: {
+      auto srcB = a.loadRegisterRead(a.fprps[instr.frB]);
+      a.addsd(tmpSrcA, srcB);
+      break;
+   }
+   case FPSub: {
+      auto srcB = a.loadRegisterRead(a.fprps[instr.frB]);
+      a.subsd(tmpSrcA, srcB);
+      break;
+   }
+   case FPMul: {
+      auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frC]));
+      if (ShouldTruncate) {
+         // PPC has this weird behaviour with fmuls where it truncates the
+         //  RHS operator to 24-bits of mantissa before multiplying...
+         roundTo24BitSd(a, tmpSrcC);
+      }
+      a.mulsd(tmpSrcA, tmpSrcC);
+      break;
+   }
+   case FPDiv: {
+      auto srcB = a.loadRegisterRead(a.fprps[instr.frB]);
+      a.divsd(tmpSrcA, srcB);
+      break;
+   }
    }
 
-   a.movddup(dst, dst);
+   if (ShouldTruncate) {
+      roundToSingleSd(a, tmpSrcA);
+      auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+      a.movddup(dst, tmpSrcA);
+   } else {
+      auto tmpDst = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frD]));
+      auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+      a.movapd(dst, tmpSrcA);
+      a.shufpd(dst, tmpDst, 0x2);
+   }
+
    return true;
 }
 
 static bool
 fadd(PPCEmuAssembler& a, Instruction instr)
 {
-   return faddGeneric<false>(a, instr);
+   return fpArithGeneric<FPAdd, false>(a, instr);
 }
 
 static bool
 fadds(PPCEmuAssembler& a, Instruction instr)
 {
-   return faddGeneric<true>(a, instr);
-}
-
-template <bool ShouldTruncate>
-static bool
-fdivGeneric(PPCEmuAssembler& a, Instruction instr)
-{
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
-   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
-   a.movq(dst, srcA);
-   a.divsd(dst, tmpSrcB);
-
-   if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
-   }
-
-   a.movddup(dst, dst);
-   return true;
-}
-
-static bool
-fdiv(PPCEmuAssembler& a, Instruction instr)
-{
-   return fdivGeneric<false>(a, instr);
-}
-
-static bool
-fdivs(PPCEmuAssembler& a, Instruction instr)
-{
-   return fdivGeneric<true>(a, instr);
-}
-
-template <bool ShouldTruncate>
-static bool
-fmulGeneric(PPCEmuAssembler& a, Instruction instr)
-{
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
-   auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frC]));
-
-   if (ShouldTruncate) {
-      // PPC has this wierd behaviour with fmuls where it truncates the
-      //  RHS operator to 24-bits of mantissa before multiplying...
-      truncateTo24BitSd(a, tmpSrcC);
-   }
-
-   a.movq(dst, srcA);
-   a.mulsd(dst, tmpSrcC);
-
-   if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
-   }
-
-   a.movddup(dst, dst);
-   return true;
-}
-
-static bool
-fmul(PPCEmuAssembler& a, Instruction instr)
-{
-   return fmulGeneric<false>(a, instr);
-}
-
-static bool
-fmuls(PPCEmuAssembler& a, Instruction instr)
-{
-   return fmulGeneric<true>(a, instr);
-}
-
-template <bool ShouldTruncate>
-static bool
-fsubGeneric(PPCEmuAssembler& a, Instruction instr)
-{
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
-   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
-   a.movq(dst, srcA);
-   a.subsd(dst, tmpSrcB);
-
-   if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
-   }
-
-   a.movddup(dst, dst);
-   return true;
+   return fpArithGeneric<FPAdd, true>(a, instr);
 }
 
 static bool
 fsub(PPCEmuAssembler& a, Instruction instr)
 {
-   return fsubGeneric<false>(a, instr);
+   return fpArithGeneric<FPSub, false>(a, instr);
 }
 
 static bool
 fsubs(PPCEmuAssembler& a, Instruction instr)
 {
-   return fsubGeneric<true>(a, instr);
+   return fpArithGeneric<FPSub, true>(a, instr);
 }
 
-template <bool ShouldTruncate, bool ShouldNegate>
+static bool
+fmul(PPCEmuAssembler& a, Instruction instr)
+{
+   return fpArithGeneric<FPMul, false>(a, instr);
+}
+
+static bool
+fmuls(PPCEmuAssembler& a, Instruction instr)
+{
+   return fpArithGeneric<FPMul, true>(a, instr);
+}
+
+static bool
+fdiv(PPCEmuAssembler& a, Instruction instr)
+{
+   return fpArithGeneric<FPDiv, false>(a, instr);
+}
+
+static bool
+fdivs(PPCEmuAssembler& a, Instruction instr)
+{
+   return fpArithGeneric<FPDiv, true>(a, instr);
+}
+
+template <bool ShouldTruncate, bool ShouldSubtract, bool ShouldNegate>
 static bool
 fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
 {
@@ -217,108 +200,99 @@ fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
 
    // FPSCR, FPRF supposed to be updated here...
 
-   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-
+   auto result = a.allocXmmTmp();
    {
+      auto srcC = a.loadRegisterRead(a.fprps[instr.frC]);
+      // Do the rounding first so we don't run out of host registers
+      if (ShouldTruncate) {
+         auto tmpSrcC = a.allocXmmTmp(srcC);
+         roundTo24BitSd(a, tmpSrcC);
+         srcC = tmpSrcC;
+      }
       auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
-      auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
-      auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frC]));
-      a.movq(dst, srcA);
-      a.mulsd(dst, tmpSrcC);
-      a.addsd(dst, tmpSrcB);
+      auto srcB = a.loadRegisterRead(a.fprps[instr.frB]);
+
+      a.movq(result, srcA);
+      if (hostHasFMA3()) {
+         if (ShouldSubtract) {
+            a.vfmsub132sd(result, srcB, srcC);
+         } else {
+            a.vfmadd132sd(result, srcB, srcC);
+         }
+      } else {  // no FMA3
+         a.mulsd(result, srcC);
+         if (ShouldSubtract) {
+            a.subsd(result, srcB);
+         } else {
+            a.addsd(result, srcB);
+         }
+      }
    }
 
    if (ShouldNegate) {
-      negateXmmSd(a, dst);
+      negateXmmSd(a, result);
    }
 
    if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
+      roundToSingleSd(a, result);
+      auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+      a.movddup(dst, result);
+   } else {
+      auto tmpDst = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frD]));
+      auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+      a.movapd(dst, result);
+      a.shufpd(dst, tmpDst, 0x2);
    }
 
-   a.movddup(dst, dst);
    return true;
 }
 
 static bool
 fmadd(PPCEmuAssembler& a, Instruction instr)
 {
-   return fmaddGeneric<false, false>(a, instr);
+   return fmaddGeneric<false, false, false>(a, instr);
 }
 
 static bool
 fmadds(PPCEmuAssembler& a, Instruction instr)
 {
-   return fmaddGeneric<true, false>(a, instr);
-}
-
-template <bool ShouldTruncate, bool ShouldNegate>
-static bool
-fmsubGeneric(PPCEmuAssembler& a, Instruction instr)
-{
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-
-   {
-      auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
-      auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
-      auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frC]));
-      a.movq(dst, srcA);
-      a.mulsd(dst, tmpSrcC);
-      a.subsd(dst, tmpSrcB);
-   }
-
-   if (ShouldNegate) {
-      negateXmmSd(a, dst);
-   }
-
-   if (ShouldTruncate) {
-      truncateToSingleSd(a, dst);
-   }
-
-   a.movddup(dst, dst);
-   return true;
+   return fmaddGeneric<true, false, false>(a, instr);
 }
 
 static bool
 fmsub(PPCEmuAssembler& a, Instruction instr)
 {
-   return fmsubGeneric<false, false>(a, instr);
+   return fmaddGeneric<false, true, false>(a, instr);
 }
 
 static bool
 fmsubs(PPCEmuAssembler& a, Instruction instr)
 {
-   return fmsubGeneric<true, false>(a, instr);
+   return fmaddGeneric<true, true, false>(a, instr);
 }
 
 static bool
 fnmadd(PPCEmuAssembler& a, Instruction instr)
 {
-   return fmaddGeneric<false, true>(a, instr);
+   return fmaddGeneric<false, false, true>(a, instr);
 }
 
 static bool
 fnmadds(PPCEmuAssembler& a, Instruction instr)
 {
-   return fmaddGeneric<true, true>(a, instr);
+   return fmaddGeneric<true, false, true>(a, instr);
 }
 
 static bool
 fnmsub(PPCEmuAssembler& a, Instruction instr)
 {
-   return fmsubGeneric<false, true>(a, instr);
+   return fmaddGeneric<false, true, true>(a, instr);
 }
 
 static bool
 fnmsubs(PPCEmuAssembler& a, Instruction instr)
 {
-   return fmsubGeneric<true, true>(a, instr);
+   return fmaddGeneric<true, true, true>(a, instr);
 }
 
 static bool
@@ -334,81 +308,62 @@ frsp(PPCEmuAssembler& a, Instruction instr)
    auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
    a.movq(dst, srcA);
 
-   truncateToSingleSd(a, dst);
+   roundToSingleSd(a, dst);
 
    a.movddup(dst, dst);
    return true;
 }
 
-template <bool ShouldNegate>
+template <bool ShouldAbs, bool ShouldNegate>
 static bool
-fabsGeneric(PPCEmuAssembler& a, Instruction instr)
+fmrGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
       return jit_fallback(a, instr);
    }
 
-   // FPSCR, FPRF supposed to be updated here...
+   auto tmpSrc = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
 
-   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
-   a.movq(dst, srcA);
-
-   absXmmSd(a, dst);
-
-   if (ShouldNegate) {
-      negateXmmSd(a, dst);
+   if (ShouldAbs) {
+      absXmmSd(a, tmpSrc);
    }
 
-   a.movddup(dst, dst);
+   if (ShouldNegate) {
+      negateXmmSd(a, tmpSrc);
+   }
+
+   // We need to preserve the second double (ps1) of frD, but shufpd only
+   //  allows preserving the first double, so we need a temporary.
+   auto tmpDst = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frD]));
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+   a.movapd(dst, tmpSrc);
+   a.shufpd(dst, tmpDst, 0x2);
+
    return true;
 }
 
 static bool
 fabs(PPCEmuAssembler& a, Instruction instr)
 {
-   return fabsGeneric<false>(a, instr);
+   return fmrGeneric<true, false>(a, instr);
 }
 
 static bool
 fnabs(PPCEmuAssembler& a, Instruction instr)
 {
-   return fabsGeneric<true>(a, instr);
+   return fmrGeneric<true, true>(a, instr);
 }
 
 static bool
 fmr(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   auto dst = a.loadRegisterReadWrite(a.fprps[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
-   a.movq(dst, srcA);
-
-   return true;
+   return fmrGeneric<false, false>(a, instr);
 }
 
 static bool
 fneg(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
-   a.movq(dst, srcA);
-
-   negateXmmSd(a, dst);
-
-   a.movddup(dst, dst);
-   return true;
+   return fmrGeneric<false, true>(a, instr);
 }
 
 void registerFloatInstructions()

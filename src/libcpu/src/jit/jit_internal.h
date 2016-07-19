@@ -21,9 +21,9 @@ RAX    . Scratch
 RCX    . Scratch
 RDX    . Scratch
 RDI    . Scratch
-RSI    . mem::base()
+RSI    . Scratch
 RBX    . Core*
-RBP    . Scratch
+RBP    . mem::base()
 RSP    . Emu Stack Pointer.
 R8-R15 . Scratch
 */
@@ -88,10 +88,12 @@ public:
       // Windows x64 Calling Convention
       sysArgReg[0] = asmjit::x86::rcx;
       sysArgReg[1] = asmjit::x86::rdx;
+      sysArgReg[2] = asmjit::x86::r8;
 #else
       // System-V x64 Calling Convention
       sysArgReg[0] = asmjit::x86::rdi;
       sysArgReg[1] = asmjit::x86::rsi;
+      sysArgReg[2] = asmjit::x86::rdx;
 #endif
 
       // Some convenient aliases to make the code more easy to grok.
@@ -108,6 +110,7 @@ public:
       PPCMemRef(lrMem, lr);
       PPCMemRef(ctrMem, ctr);
 
+      PPCMemRef(ciaMem, cia);
       PPCMemRef(niaMem, nia);
       PPCMemRef(coreIdMem, id);
       PPCMemRef(interruptMem, interrupt);
@@ -183,7 +186,7 @@ public:
    uint32_t genCia;
    std::vector<std::pair<uint32_t, asmjit::Label>> relocLabels;
 
-   asmjit::X86GpReg sysArgReg[2];
+   asmjit::X86GpReg sysArgReg[3];
    asmjit::X86GpReg finaleNiaArgReg;
    asmjit::X86GpReg finaleJmpSrcArgReg;
 
@@ -193,6 +196,7 @@ public:
    asmjit::X86Mem lrMem;
    asmjit::X86Mem ctrMem;
 
+   asmjit::X86Mem ciaMem;
    asmjit::X86Mem niaMem;
    asmjit::X86Mem coreIdMem;
    asmjit::X86Mem interruptMem;

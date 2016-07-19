@@ -8,6 +8,32 @@ namespace cpu
 namespace jit
 {
 
+static void
+roundToSingleSd(PPCEmuAssembler& a,
+                const PPCEmuAssembler::XmmRegister& dst,
+                const PPCEmuAssembler::XmmRegister& src)
+{
+   a.cvtsd2ss(dst, src);
+   a.cvtss2sd(dst, dst);
+}
+
+static void
+truncateToSingleSd(PPCEmuAssembler& a,
+                   const PPCEmuAssembler::XmmRegister& dst,
+                   const PPCEmuAssembler::XmmRegister& src)
+{
+   auto maskGp = a.allocGpTmp();
+   a.mov(maskGp, UINT64_C(0xFFFFFFFFE0000000));
+   if (&dst == &src) {
+      auto tmp = a.allocXmmTmp();
+      a.movq(tmp, maskGp);
+      a.pand(dst, tmp);
+   } else {
+      a.movq(dst, maskGp);
+      a.pand(dst, src);
+   }
+}
+
 // Merge registers
 enum MergeFlags
 {
@@ -23,23 +49,30 @@ mergeGeneric(PPCEmuAssembler& a, Instruction instr)
       return jit_fallback(a, instr);
    }
 
-   // We need to use a temporary here since frA/frB and frD may overlap
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
-   auto tmpSrcB = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
-
-   uint8_t shflFlags = 0;
-
-   if (flags & MergeValue0) {
-      shflFlags |= (1 << 0);
-   }
-
-   if (flags & MergeValue1) {
-      shflFlags |= (1 << 1);
+   auto tmpSrcA = a.allocXmmTmp();
+   auto tmpSrcB = a.allocXmmTmp();
+   {
+      auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
+      auto srcB = a.loadRegisterRead(a.fprps[instr.frB]);
+      if (flags & MergeValue0) {
+         a.movapd(tmpSrcA, srcA);
+         a.shufpd(tmpSrcA, tmpSrcA, 1);
+         roundToSingleSd(a, tmpSrcA, tmpSrcA);
+      } else {
+         roundToSingleSd(a, tmpSrcA, srcA);
+      }
+      if (flags & MergeValue1) {
+         a.movapd(tmpSrcB, srcB);
+         a.shufpd(tmpSrcB, tmpSrcB, 1);
+         truncateToSingleSd(a, tmpSrcB, tmpSrcB);
+      } else {
+         truncateToSingleSd(a, tmpSrcB, srcB);
+      }
    }
 
    auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-   a.movapd(dst, srcA);
-   a.shufpd(dst, tmpSrcB, shflFlags);
+   a.movapd(dst, tmpSrcA);
+   a.shufpd(dst, tmpSrcB, 0);
 
    return true;
 }
