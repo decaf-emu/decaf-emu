@@ -37,14 +37,14 @@ hostHasFMA3()
 }
 
 static void
-truncateToSingleSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+roundToSingleSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
    a.cvtsd2ss(reg, reg);
    a.cvtss2sd(reg, reg);
 }
 
 static void
-truncateTo24BitSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+roundTo24BitSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 {
    auto maskGp = a.allocGpTmp();
    auto maskXmm = a.allocXmmTmp();
@@ -116,7 +116,7 @@ fpArithGeneric(PPCEmuAssembler& a, Instruction instr)
       if (ShouldTruncate) {
          // PPC has this weird behaviour with fmuls where it truncates the
          //  RHS operator to 24-bits of mantissa before multiplying...
-         truncateTo24BitSd(a, tmpSrcC);
+         roundTo24BitSd(a, tmpSrcC);
       }
       a.mulsd(tmpSrcA, tmpSrcC);
       break;
@@ -129,7 +129,7 @@ fpArithGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (ShouldTruncate) {
-      truncateToSingleSd(a, tmpSrcA);
+      roundToSingleSd(a, tmpSrcA);
       auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
       a.movddup(dst, tmpSrcA);
    } else {
@@ -206,7 +206,7 @@ fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
       // Do the rounding first so we don't run out of host registers
       if (ShouldTruncate) {
          auto tmpSrcC = a.allocXmmTmp(srcC);
-         truncateTo24BitSd(a, tmpSrcC);
+         roundTo24BitSd(a, tmpSrcC);
          srcC = tmpSrcC;
       }
       auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
@@ -234,7 +234,7 @@ fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
    }
 
    if (ShouldTruncate) {
-      truncateToSingleSd(a, result);
+      roundToSingleSd(a, result);
       auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
       a.movddup(dst, result);
    } else {
@@ -308,7 +308,7 @@ frsp(PPCEmuAssembler& a, Instruction instr)
    auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
    a.movq(dst, srcA);
 
-   truncateToSingleSd(a, dst);
+   roundToSingleSd(a, dst);
 
    a.movddup(dst, dst);
    return true;
