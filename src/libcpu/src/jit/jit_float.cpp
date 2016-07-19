@@ -340,75 +340,52 @@ frsp(PPCEmuAssembler& a, Instruction instr)
    return true;
 }
 
-template <bool ShouldNegate>
+template <bool ShouldAbs, bool ShouldNegate>
 static bool
-fabsGeneric(PPCEmuAssembler& a, Instruction instr)
+fmrGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    if (instr.rc) {
       return jit_fallback(a, instr);
    }
 
-   // FPSCR, FPRF supposed to be updated here...
+   auto tmpSrc = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frB]));
 
-   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
-   a.movq(dst, srcA);
-
-   absXmmSd(a, dst);
-
-   if (ShouldNegate) {
-      negateXmmSd(a, dst);
+   if (ShouldAbs) {
+      absXmmSd(a, tmpSrc);
    }
 
-   a.movddup(dst, dst);
+   if (ShouldNegate) {
+      negateXmmSd(a, tmpSrc);
+   }
+
+   auto dst = a.loadRegisterReadWrite(a.fprps[instr.frD]);
+   a.movsd(dst, tmpSrc);
+
    return true;
 }
 
 static bool
 fabs(PPCEmuAssembler& a, Instruction instr)
 {
-   return fabsGeneric<false>(a, instr);
+   return fmrGeneric<true, false>(a, instr);
 }
 
 static bool
 fnabs(PPCEmuAssembler& a, Instruction instr)
 {
-   return fabsGeneric<true>(a, instr);
+   return fmrGeneric<true, true>(a, instr);
 }
 
 static bool
 fmr(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   auto dst = a.loadRegisterReadWrite(a.fprps[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
-   a.movq(dst, srcA);
-
-   return true;
+   return fmrGeneric<false, false>(a, instr);
 }
 
 static bool
 fneg(PPCEmuAssembler& a, Instruction instr)
 {
-   if (instr.rc) {
-      return jit_fallback(a, instr);
-   }
-
-   // FPSCR, FPRF supposed to be updated here...
-
-   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
-   auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
-   a.movq(dst, srcA);
-
-   negateXmmSd(a, dst);
-
-   a.movddup(dst, dst);
-   return true;
+   return fmrGeneric<false, true>(a, instr);
 }
 
 void registerFloatInstructions()
