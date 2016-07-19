@@ -1,6 +1,9 @@
 #pragma once
 #include "../state.h"
 
+double
+ppc_estimate_reciprocal(double v);
+
 void
 updateFEX_VX(cpu::Core *state);
 
