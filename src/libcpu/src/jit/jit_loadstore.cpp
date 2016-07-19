@@ -88,8 +88,10 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
          a.movddup(dst, dst);  // Copy to ps1 as well
       } else {
          decaf_check(sizeof(Type) == 8);
+         auto tmpData = a.allocXmmTmp();
          auto dst = a.loadXmmRegisterReadWrite(a.fprps[instr.rD]);
-         a.movq(dst, data);
+         a.movq(tmpData, data);
+         a.movsd(dst, tmpData);
       }
    } else {
       if (flags & LoadSignExtend) {
