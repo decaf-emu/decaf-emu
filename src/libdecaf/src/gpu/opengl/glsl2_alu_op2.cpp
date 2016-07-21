@@ -282,7 +282,17 @@ CEIL(State &state, const ControlFlowInst &cf, const AluInst &alu)
 static void
 COS(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
-   unaryFunction(state, cf, alu, "cos");
+   // dst = cos(src0 / 0.1591549367)
+   insertLineStart(state);
+   insertDestBegin(state, cf, alu, state.unit);
+
+   state.out << "cos(";
+   insertSource0(state, state.out, cf, alu);
+   state.out << " / 0.1591549367)";
+
+   insertDestEnd(state, cf, alu);
+   state.out << ';';
+   insertLineEnd(state);
 }
 
 static void
@@ -513,7 +523,17 @@ SETGT(State &state, const ControlFlowInst &cf, const AluInst &alu)
 static void
 SIN(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
-   unaryFunction(state, cf, alu, "sin");
+   // dst = sin(src0 / 0.1591549367)
+   insertLineStart(state);
+   insertDestBegin(state, cf, alu, state.unit);
+
+   state.out << "sin(";
+   insertSource0(state, state.out, cf, alu);
+   state.out << " / 0.1591549367)";
+
+   insertDestEnd(state, cf, alu);
+   state.out << ';';
+   insertLineEnd(state);
 }
 
 static void
