@@ -973,7 +973,8 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    }
 
    out << "}\n";
-   out << "/*\n" << vertex.disassembly << "\n*/\n";
+   out << "/* VERTEX SHADER DISASSEMBLY\n" << vertex.disassembly << "\n*/\n";
+   out << "/* FETCH SHADER DISASSEMBLY\n" << fetch.disassembly << "\n*/\n";
    vertex.code = out.str();
    return true;
 }
@@ -1185,7 +1186,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
 
    out << "}\n";
 
-   out << "/*\n" << pixel.disassembly << "\n*/\n";
+   out << "/* PIXEL SHADER DISASSEMBLY\n" << pixel.disassembly << "\n*/\n";
 
    pixel.code = out.str();
    return true;
