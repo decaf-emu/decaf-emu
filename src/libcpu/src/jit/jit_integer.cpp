@@ -467,7 +467,7 @@ mulGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    static_assert((flags & MulLow) || (flags & MulHigh), "Unexpected mulGeneric flags");
    static_assert(!(flags & MulCheckOverflow) || ((flags & MulSigned) && (flags & MulLow)),
-      "X64 cannot do overfloat on high bits, or on unsigned mul");
+      "X64 cannot do overflow on high bits, or on unsigned mul");
 
    bool recordOverflow = (flags & MulCheckOverflow) && instr.oe;
 
@@ -503,8 +503,6 @@ mulGeneric(PPCEmuAssembler& a, Instruction instr)
    } else {
       // This logic assumes based on the static_assert above that we will only
       //  be handling MulSigned and MulLow for any case of recordOverflow.
-
-      //a.int3();
 
       a.movsxd(asmjit::x86::rax, a.loadRegisterRead(a.gpr[instr.rA]));
 
