@@ -5,7 +5,7 @@
 
 using namespace decaf::input;
 
-class DecafSDL : public decaf::InputDriver
+class DecafSDL : public decaf::InputDriver, public decaf::EventListener
 {
    static const auto WindowWidth = 1420;
    static const auto WindowHeight = 768;
@@ -75,6 +75,10 @@ private:
 
    virtual float
    getAxisValue(wpad::Channel channel, wpad::ProAxis axis) override;
+
+   // Events
+   virtual void
+   onGameLoaded(const decaf::GameInfo &info) override;
 
 private:
    std::thread mGraphicsThread;

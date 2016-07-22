@@ -88,6 +88,7 @@ DecafSDL::run(const std::string &gamePath)
 
    // Set input provider
    decaf::setInputDriver(this);
+   decaf::addEventListener(this);
 
    decaf::setClipboardTextCallbacks(
       []() -> const char * {
@@ -192,5 +193,36 @@ DecafSDL::run(const std::string &gamePath)
       mGraphicsDriver->stop();
       mGraphicsThread.join();
    }
+
    return true;
+}
+
+void
+DecafSDL::onGameLoaded(const decaf::GameInfo &info)
+{
+   auto name = info.meta.shortnames[decaf::Language::English];
+
+   // If we do not have English short name, pick first non-empty short name
+   if (name.empty()) {
+      for (auto itr : info.meta.shortnames) {
+         if (itr.empty()) {
+            name = itr;
+            break;
+         }
+      }
+   }
+
+   // Try product code
+   if (name.empty()) {
+      name = info.meta.product_code;
+   }
+
+   // Finally use RPX name
+   if (name.empty()) {
+      name = info.cos.argstr;
+   }
+
+   // Update window title
+   auto title = fmt::format("Decaf - {}", name);
+   SDL_SetWindowTitle(mWindow, title.c_str());
 }
