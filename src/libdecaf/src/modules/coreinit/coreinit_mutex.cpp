@@ -45,7 +45,14 @@ OSInitMutexEx(OSMutex *mutex, const char *name)
 static void
 lockMutexNoLock(OSMutex *mutex)
 {
-   decaf_check(mutex->tag == OSMutex::Tag || mutex->tag == 0);
+   // The following check is disabled as not calling InitMutex does
+   //  not break behaviour, and some games do not properly initialise
+   //  their mutexes before using them.
+   // HACK: This might be a hack around some broken behaviour elsewhere
+   //  inside of decaf, it's hard to tell...  Let's assume not for now.
+   //decaf_check(mutex->tag == OSMutex::Tag);
+   mutex->tag = OSMutex::Tag;
+
    auto thread = OSGetCurrentThread();
 
    while (mutex->owner && mutex->owner != thread) {
@@ -132,7 +139,7 @@ static void
 unlockMutexNoLock(OSMutex *mutex)
 {
    auto thread = OSGetCurrentThread();
-   decaf_check(mutex->tag == OSMutex::Tag || mutex->tag == 0);
+   decaf_check(mutex->tag == OSMutex::Tag);
    decaf_check(mutex->owner == thread);
    decaf_check(mutex->count > 0);
    mutex->count--;
