@@ -178,6 +178,13 @@ zlib125_deflateBound(WZStream *wstrm,
 }
 
 static int
+zlib125_deflateReset(WZStream *wstrm)
+{
+   auto zstrm = getZStream(wstrm);
+   return deflateReset(zstrm);
+}
+
+static int
 zlib125_deflateEnd(WZStream *wstrm)
 {
    auto zstrm = getZStream(wstrm);
@@ -243,6 +250,20 @@ zlib125_inflateInit2_(WZStream *wstrm,
 
    wstrm->msg = nullptr;
    return result;
+}
+
+static int
+zlib125_inflateReset(WZStream *wstrm)
+{
+   auto zstrm = getZStream(wstrm);
+   return inflateReset(zstrm);
+}
+
+static int
+zlib125_inflateReset2(WZStream *wstrm, int32_t windowBits)
+{
+   auto zstrm = getZStream(wstrm);
+   return inflateReset2(zstrm, windowBits);
 }
 
 static int
@@ -316,10 +337,13 @@ Module::registerCoreFunctions()
    RegisterKernelFunctionName("deflateInit_", zlib125_deflateInit_);
    RegisterKernelFunctionName("deflateInit2_", zlib125_deflateInit2_);
    RegisterKernelFunctionName("deflateBound", zlib125_deflateBound);
+   RegisterKernelFunctionName("deflateReset", zlib125_deflateReset);
    RegisterKernelFunctionName("deflateEnd", zlib125_deflateEnd);
    RegisterKernelFunctionName("inflate", zlib125_inflate);
    RegisterKernelFunctionName("inflateInit_", zlib125_inflateInit_);
    RegisterKernelFunctionName("inflateInit2_", zlib125_inflateInit2_);
+   RegisterKernelFunctionName("inflateReset", zlib125_inflateReset);
+   RegisterKernelFunctionName("inflateReset2", zlib125_inflateReset2);
    RegisterKernelFunctionName("inflateEnd", zlib125_inflateEnd);
    RegisterKernelFunctionName("compress", zlib125_compress);
    RegisterKernelFunctionName("compressBound", zlib125_compressBound);
