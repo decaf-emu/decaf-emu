@@ -560,7 +560,10 @@ bool GLDriver::checkActiveAttribBuffers()
 
       if (!buffer.object || buffer.size < size) {
          if (buffer.object) {
-            gl::glUnmapNamedBuffer(buffer.object);
+            if (buffer.mappedBuffer) {
+               gl::glUnmapNamedBuffer(buffer.object);
+            }
+
             gl::glDeleteBuffers(1, &buffer.object);
          }
 
@@ -569,7 +572,11 @@ bool GLDriver::checkActiveAttribBuffers()
       }
 
       if (!buffer.mappedBuffer) {
-         buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+         if (!NO_PERSISTENT_MAP) {
+            buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+         } else {
+            buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_WRITE_BIT);
+         }
       }
 
       buffer.addr = addr;
@@ -604,9 +611,9 @@ bool GLDriver::checkActiveAttribBuffers()
       auto buffer = buffers[i];
 
       if (buffer) {
-         gl::glFlushMappedNamedBufferRange(buffer->object, 0, buffer->size);
-
-         if (NO_PERSISTENT_MAP) {
+         if (!NO_PERSISTENT_MAP) {
+            gl::glFlushMappedNamedBufferRange(buffer->object, 0, buffer->size);
+         } else {
             gl::glUnmapNamedBuffer(buffer->object);
             buffer->mappedBuffer = nullptr;
          }
