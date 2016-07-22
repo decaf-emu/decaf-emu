@@ -21,6 +21,11 @@ namespace opengl
 //  it should even be a configurable option (related to force_sync).
 static const auto NO_PERSISTENT_MAP = false;
 
+// This represents the number of bytes of padding to attach to the end
+//  of an attribute buffer.  This is neccessary for cases where the game
+//  fetches past the edge of a buffer, but does not use it.
+static const auto BUFFER_PADDING = 16;
+
 static void
 dumpShader(const std::string &type, ppcaddr_t data, uint32_t size, bool isSubroutine = false)
 {
@@ -583,14 +588,14 @@ bool GLDriver::checkActiveAttribBuffers()
          }
 
          gl::glCreateBuffers(1, &buffer.object);
-         gl::glNamedBufferStorage(buffer.object, size, NULL, gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+         gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
       }
 
       if (!buffer.mappedBuffer) {
          if (!NO_PERSISTENT_MAP) {
-            buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+            buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size + BUFFER_PADDING, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
          } else {
-            buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size, gl::GL_MAP_WRITE_BIT);
+            buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size + BUFFER_PADDING, gl::GL_MAP_WRITE_BIT);
          }
       }
 
