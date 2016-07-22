@@ -24,7 +24,7 @@ void
 initialise();
 
 void
-setGameName(const std::string& name);
+setExecutableFilename(const std::string& name);
 
 void
 exitThreadNoLock();

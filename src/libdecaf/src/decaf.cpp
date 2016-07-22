@@ -105,38 +105,47 @@ initialise(const std::string &gamePath)
 
    // Setup filesystem
    auto filesystem = new fs::FileSystem();
+
+   // Find a valid application to run
    auto path = fs::HostPath { gamePath };
+   auto volPath = fs::HostPath { };
+   auto rpxPath = fs::HostPath { };
 
    if (platform::isDirectory(path.path())) {
-      // See if we can find path/cos.xml
-      filesystem->mountHostFolder("/vol", path);
-      auto fh = filesystem->openFile("/vol/code/cos.xml", fs::File::Read);
-
-      if (fh) {
-         fh->close();
-         delete fh;
-      } else {
-         // Try path/data
-         filesystem->deleteFolder("/vol");
-         filesystem->mountHostFolder("/vol", path.join("data"));
+      if (platform::isFile(path.join("code").join("cos.xml").path())) {
+         // Found path/code/cos.xml
+         volPath = path.path();
+      } else if (platform::isFile(path.join("data").join("code").join("cos.xml").path())) {
+         // Found path/data/code/cos.xml
+         volPath = path.join("data").path();
       }
    } else if (platform::isFile(path.path())) {
-      // Load game file, currently only .rpx is supported
-      // TODO: Support .WUD .WUX
-      if (path.extension().compare("rpx") == 0) {
-         filesystem->mountHostFile("/vol/code/" + path.filename(), path);
-      } else {
-         gLog->error("Only loading files with .rpx extension is currently supported {}", path.path());
-         return false;
+      auto parent1 = fs::HostPath { path.parentPath() };
+      auto parent2 = fs::HostPath { parent1.parentPath() };
+
+      if (platform::isFile(parent2.join("code").join("cos.xml").path())) {
+         // Found file/../code/cos.xml
+         volPath = parent2.path();
+      } else if (path.extension().compare("rpx") == 0) {
+         // Found file.rpx
+         rpxPath = path.path();
       }
+   }
+
+   if (!volPath.path().empty()) {
+      gLog->debug("Mount {} to /vol", volPath.path());
+      filesystem->mountHostFolder("/vol", volPath.path());
+   } else if (!rpxPath.path().empty()) {
+      gLog->debug("Mount {} to /vol/code/{}", rpxPath.path(), rpxPath.filename());
+      filesystem->mountHostFile("/vol/code/" + rpxPath.filename(), rpxPath.path());
+      kernel::setExecutableFilename(rpxPath.filename());
    } else {
-      gLog->error("Could not find file or directory {}", path.path());
+      gLog->error("Could not find valid application at {}", path.path());
       return false;
    }
 
    // Setup kernel
    kernel::setFileSystem(filesystem);
-   kernel::setGameName(path.filename());
 
    // Mount system path
    auto systemPath = fs::HostPath { decaf::config::system::system_path };

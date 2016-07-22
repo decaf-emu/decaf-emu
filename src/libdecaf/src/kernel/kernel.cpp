@@ -13,6 +13,7 @@
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_alarm.h"
 #include "modules/coreinit/coreinit_core.h"
+#include "modules/coreinit/coreinit_enum.h"
 #include "modules/coreinit/coreinit_fs.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_scheduler.h"
@@ -62,10 +63,10 @@ static bool
 launchGame();
 
 static bool
-gRunning = true;
+sRunning = true;
 
 static std::string
-gGameName;
+sExecutableName;
 
 static TeenyHeap *
 sSystemHeap = nullptr;
@@ -83,9 +84,9 @@ static coreinit::OSContext
 sInterruptContext[3];
 
 void
-setGameName(const std::string& name)
+setExecutableFilename(const std::string& name)
 {
-   gGameName = name;
+   sExecutableName = name;
 }
 
 void
@@ -283,7 +284,7 @@ cpuEntrypoint()
 
    // Run the scheduler loop, this is what will
    //   execute when there is nothing else to do.
-   while (gRunning) {
+   while (sRunning) {
       cpu::this_core::waitForInterrupt();
    }
 }
@@ -293,7 +294,7 @@ launchGame()
 {
    // Read cos.xml if found
    auto maxCodeSize = 0x0E000000u;
-   auto rpx = gGameName;
+   auto rpx = sExecutableName;
    auto fs = getFileSystem();
 
    if (auto fh = fs->openFile("/vol/code/cos.xml", fs::File::Read)) {
@@ -389,7 +390,7 @@ void
 exitProcess(int code)
 {
    sExitCode = code;
-   gRunning = false;
+   sRunning = false;
    cpu::halt();
    setContext(nullptr);
 }
@@ -397,7 +398,7 @@ exitProcess(int code)
 bool
 hasExited()
 {
-   return !gRunning;
+   return !sRunning;
 }
 
 int
