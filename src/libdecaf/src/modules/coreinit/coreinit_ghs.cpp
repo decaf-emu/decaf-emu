@@ -5,6 +5,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_mutex.h"
 #include "coreinit_scheduler.h"
+#include "coreinit_time.h"
 #include "kernel/kernel_loader.h"
 #include "libcpu/trace.h"
 #include "ppcutils/wfunc_call.h"
@@ -199,16 +200,19 @@ void ghs_mtx_unlock(void *mtx)
    OSUnlockMutex(*pmutex);
 }
 
-int32_t syscall(uint32_t id)
+static int32_t
+syscall_time()
+{
+   auto t = internal::toTimepoint(OSGetTime());
+   return t.time_since_epoch() / std::chrono::seconds(1);
+}
+
+static int32_t
+syscall(uint32_t id)
 {
    switch (id) {
-   case 0xe: {
-      decaf_abort("Unsupported ghs time() syscall");
-      // naive implementation, need to use OSGetTime
-      //  time_t t;
-      //  time(&t);
-      //  return static_cast<int32_t>(t);
-   } break;
+   case 0xe:
+      return syscall_time();
    default:
       decaf_abort(fmt::format("Unsupported ghs syscalls {:x}", id));
    }
