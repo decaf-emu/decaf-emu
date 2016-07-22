@@ -24,7 +24,7 @@ namespace opengl
 
 static const auto MAX_ATTRIB_COUNT = 16u;
 static const auto MAX_COLOR_BUFFER_COUNT = 8u;
-static const auto MAX_UNIFORM_BLOCKS = 8u;
+static const auto MAX_UNIFORM_BLOCKS = 14u;
 static const auto MAX_UNIFORM_REGISTERS = 256u;
 static const auto MAX_SAMPLERS_PER_TYPE = 16u;
 
