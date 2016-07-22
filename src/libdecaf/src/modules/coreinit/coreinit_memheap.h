@@ -1,4 +1,5 @@
 #pragma once
+#include "common/bitfield.h"
 #include "common/types.h"
 #include "coreinit_enum.h"
 #include "coreinit_memlist.h"
@@ -17,6 +18,10 @@ namespace coreinit
 
 static const uint32_t MEM_MAX_HEAP_TABLE = 0x20;
 
+BITFIELD(MEMHeapAttribs, uint32_t)
+BITFIELD_ENTRY(0, 8, uint8_t, flags);
+BITFIELD_END
+
 #pragma pack(push, 1)
 
 struct MEMHeapHeader
@@ -31,16 +36,16 @@ struct MEMHeapHeader
    MEMList list;
 
    //! Start address of allocatable memory
-   be_val<uint32_t> dataStart;
+   be_ptr<uint8_t> dataStart;
 
    //! End address of allocatable memory
-   be_val<uint32_t> dataEnd;
+   be_ptr<uint8_t> dataEnd;
 
    //! Lock used when MEM_HEAP_FLAG_USE_LOCK is set.
    OSSpinLock lock;
 
    //! Flags set during heap creation.
-   be_val<uint32_t> flags;
+   be_val<MEMHeapAttribs> attribs;
 
    UNKNOWN(0x0C);
 };
@@ -50,7 +55,7 @@ CHECK_OFFSET(MEMHeapHeader, 0x0C, list);
 CHECK_OFFSET(MEMHeapHeader, 0x18, dataStart);
 CHECK_OFFSET(MEMHeapHeader, 0x1C, dataEnd);
 CHECK_OFFSET(MEMHeapHeader, 0x20, lock);
-CHECK_OFFSET(MEMHeapHeader, 0x30, flags);
+CHECK_OFFSET(MEMHeapHeader, 0x30, attribs);
 CHECK_SIZE(MEMHeapHeader, 0x40);
 
 #pragma pack(pop)
@@ -92,14 +97,37 @@ MEMSetFillValForHeap(MEMHeapFillType type,
 namespace internal
 {
 
+class HeapLock
+{
+public:
+   HeapLock(MEMHeapHeader *header) {
+      auto attribs = static_cast<MEMHeapAttribs>(header->attribs);
+      if (attribs.flags() & MEMHeapFlags::UseLock) {
+         OSUninterruptibleSpinLock_Acquire(&header->lock);
+         mHeap = header;
+      } else {
+         mHeap = nullptr;
+      }
+   }
+
+   ~HeapLock() {
+      if (mHeap) {
+         OSUninterruptibleSpinLock_Release(&mHeap->lock);
+      }
+   }
+
+private:
+   MEMHeapHeader *mHeap;
+};
+
 void
 initialiseDefaultHeaps();
 
 void
 registerHeap(MEMHeapHeader *heap,
              MEMHeapTag tag,
-             uint32_t dataStart,
-             uint32_t dataEnd,
+             uint8_t *dataStart,
+             uint8_t *dataEnd,
              uint32_t flags);
 
 void

@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_memory.h"
 #include "coreinit_memheap.h"
-#include "coreinit_expheap.h"
+#include "coreinit_memexpheap.h"
 #include "coreinit_memframeheap.h"
 #include "coreinit_memunitheap.h"
 #include "kernel/kernel_memory.h"
@@ -47,6 +47,9 @@ sMEM1Memlist = nullptr;
 static MEMList *
 sMEM2Memlist = nullptr;
 
+static OSSpinLock *
+sMemLock;
+
 static std::array<uint32_t, MEMHeapFillType::Max>
 sHeapFillVals = {
    0xC3C3C3C3,
@@ -61,13 +64,13 @@ findListContainingHeap(MEMHeapHeader *heap)
    OSGetForegroundBucket(&start, &size);
    end = start + size;
 
-   if (heap->dataStart >= start && heap->dataEnd <= end) {
+   if (heap->dataStart >= mem::translate(start) && heap->dataEnd <= mem::translate(end)) {
       return sForegroundMemlist;
    } else {
       OSGetMemBound(OSMemoryType::MEM1, &start, &size);
       end = start + size;
 
-      if (heap->dataStart >= start && heap->dataEnd <= end) {
+      if (heap->dataStart >= mem::translate(start) && heap->dataEnd <= mem::translate(end)) {
          return sMEM1Memlist;
       } else {
          return sMEM2Memlist;
@@ -102,10 +105,9 @@ findHeapContainingBlock(MEMList *list,
                         void *block)
 {
    MEMHeapHeader *heap = nullptr;
-   uint32_t addr = mem::untranslate(block);
 
    while ((heap = reinterpret_cast<MEMHeapHeader*>(MEMGetNextListObject(list, heap)))) {
-      if (addr >= heap->dataStart && addr < heap->dataEnd) {
+      if (block >= heap->dataStart && block < heap->dataEnd) {
          auto child = findHeapContainingBlock(&heap->list, block);
          return child ? child : heap;
       }
@@ -119,7 +121,7 @@ MEMDumpHeap(MEMHeapHeader *heap)
 {
    switch (heap->tag) {
    case MEMHeapTag::ExpandedHeap:
-      internal::dumpExpandedHeap(reinterpret_cast<ExpandedHeap *>(heap));
+      internal::dumpExpandedHeap(reinterpret_cast<MEMExpHeap *>(heap));
       break;
    case MEMHeapTag::UnitHeap:
       internal::dumpUnitHeap(reinterpret_cast<MEMUnitHeap *>(heap));
@@ -193,21 +195,21 @@ static void *
 defaultAllocFromDefaultHeap(uint32_t size)
 {
    auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   return MEMAllocFromExpHeap(reinterpret_cast<ExpandedHeap*>(heap), size);
+   return MEMAllocFromExpHeapEx(reinterpret_cast<MEMExpHeap*>(heap), size, 4);
 }
 
 static void *
 defaultAllocFromDefaultHeapEx(uint32_t size, int32_t alignment)
 {
    auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap*>(heap), size, alignment);
+   return MEMAllocFromExpHeapEx(reinterpret_cast<MEMExpHeap*>(heap), size, alignment);
 }
 
 static void
 defaultFreeToDefaultHeap(void *block)
 {
    auto heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   return MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap*>(heap), block);
+   return MEMFreeToExpHeap(reinterpret_cast<MEMExpHeap*>(heap), block);
 }
 
 void
@@ -234,6 +236,7 @@ Module::registerMembaseFunctions()
    RegisterInternalData(sForegroundMemlist);
    RegisterInternalData(sMEM1Memlist);
    RegisterInternalData(sMEM2Memlist);
+   RegisterInternalData(sMemLock);
 }
 
 void
@@ -244,6 +247,8 @@ Module::initialiseMembase()
    MEMInitList(sForegroundMemlist, offsetof(MEMHeapHeader, link));
    MEMInitList(sMEM1Memlist, offsetof(MEMHeapHeader, link));
    MEMInitList(sMEM2Memlist, offsetof(MEMHeapHeader, link));
+
+   OSInitSpinLock(sMemLock);
 
    internal::initialiseDefaultHeaps();
 
@@ -262,17 +267,17 @@ void initialiseDefaultHeaps()
 
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
-   auto mem2 = MEMCreateExpHeap(make_virtual_ptr<ExpandedHeap>(addr), size);
+   auto mem2 = MEMCreateExpHeapEx(make_virtual_ptr<MEMExpHeap>(addr), size, MEMHeapFlags::UseLock);
    MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, reinterpret_cast<MEMHeapHeader*>(mem2));
 
    // Create frame heap for MEM1
    OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
-   auto mem1 = MEMCreateFrmHeapEx(addr, size, 4);
+   auto mem1 = MEMCreateFrmHeapEx(make_virtual_ptr<MEMFrameHeap>(addr), size, 0);
    MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, &mem1->header);
 
    // Create frame heap for Foreground
    OSGetForegroundBucketFreeArea(&addr, &size);
-   auto fg = MEMCreateFrmHeapEx(addr, size, 4);
+   auto fg = MEMCreateFrmHeapEx(make_virtual_ptr<MEMFrameHeap>(addr), size, 0);
    MEMSetBaseHeapHandle(MEMBaseHeapType::FG, &fg->header);
 }
 
@@ -280,30 +285,45 @@ void initialiseDefaultHeaps()
 void
 registerHeap(MEMHeapHeader *heap,
              MEMHeapTag tag,
-             uint32_t dataStart,
-             uint32_t dataEnd,
+             uint8_t *dataStart,
+             uint8_t *dataEnd,
              uint32_t flags)
 {
    // Setup heap header
    heap->tag = tag;
    heap->dataStart = dataStart;
    heap->dataEnd = dataEnd;
-   heap->flags = flags;
+   heap->attribs = MEMHeapAttribs::get(0).flags().set(flags);
+
+   if (flags & MEMHeapFlags::DebugMode) {
+      auto fillVal = MEMGetFillValForHeap(MEMHeapFillType::Unused);
+      memset(dataStart, fillVal, dataEnd - dataStart);
+   }
+
    MEMInitList(&heap->list, offsetof(MEMHeapHeader, link));
+
    OSInitSpinLock(&heap->lock);
 
    // Add to heap list
+   OSUninterruptibleSpinLock_Acquire(sMemLock);
+
    if (auto list = findListContainingHeap(heap)) {
       MEMAppendListObject(list, heap);
    }
+
+   OSUninterruptibleSpinLock_Release(sMemLock);
 }
 
 void
 unregisterHeap(MEMHeapHeader *heap)
 {
+   OSUninterruptibleSpinLock_Acquire(sMemLock);
+
    if (auto list = findListContainingHeap(heap)) {
       MEMRemoveListObject(list, heap);
    }
+
+   OSUninterruptibleSpinLock_Release(sMemLock);
 }
 
 void *

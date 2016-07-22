@@ -224,8 +224,8 @@ ENUM_BEG(MEMExpHeapMode, uint32_t)
 ENUM_END(MEMExpHeapMode)
 
 ENUM_BEG(MEMExpHeapDirection, uint32_t)
-   ENUM_VALUE(FromTop,              0)
-   ENUM_VALUE(FromBottom,           1)
+   ENUM_VALUE(FromStart,            0)
+   ENUM_VALUE(FromEnd,              1)
 ENUM_END(MEMExpHeapDirection)
 
 ENUM_BEG(MEMFrameHeapFreeMode, uint32_t)

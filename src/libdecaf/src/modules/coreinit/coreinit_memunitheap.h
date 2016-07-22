@@ -38,7 +38,7 @@ CHECK_SIZE(MEMUnitHeap, 0x48);
 #pragma pack(pop)
 
 MEMUnitHeap *
-MEMCreateUnitHeapEx(ppcaddr_t base,
+MEMCreateUnitHeapEx(void *base,
                     uint32_t size,
                     uint32_t blockSize,
                     int32_t alignment,

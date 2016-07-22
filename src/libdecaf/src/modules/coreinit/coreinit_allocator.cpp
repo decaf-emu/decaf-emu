@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_allocator.h"
-#include "coreinit_expheap.h"
+#include "coreinit_memexpheap.h"
 #include "coreinit_memheap.h"
 #include "coreinit_memframeheap.h"
 #include "coreinit_memunitheap.h"
@@ -170,7 +170,7 @@ static void *
 allocatorExpHeapAlloc(MEMAllocator *allocator,
                       uint32_t size)
 {
-   return MEMAllocFromExpHeapEx(reinterpret_cast<ExpandedHeap *>(allocator->heap.get()),
+   return MEMAllocFromExpHeapEx(reinterpret_cast<MEMExpHeap *>(allocator->heap.get()),
                                 size,
                                 allocator->align);
 }
@@ -179,7 +179,7 @@ static void
 allocatorExpHeapFree(MEMAllocator *allocator,
                      void *block)
 {
-   MEMFreeToExpHeap(reinterpret_cast<ExpandedHeap *>(allocator->heap.get()),
+   MEMFreeToExpHeap(reinterpret_cast<MEMExpHeap *>(allocator->heap.get()),
                     block);
 }
 

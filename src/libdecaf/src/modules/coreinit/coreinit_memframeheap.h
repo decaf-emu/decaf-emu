@@ -20,10 +20,10 @@ struct MEMFrameHeapState
    be_val<uint32_t> tag;
 
    //! Saved head address for frame heap.
-   be_val<ppcaddr_t> head;
+   be_ptr<uint8_t> head;
 
    //! Saved tail address for frame heap.
-   be_val<ppcaddr_t> tail;
+   be_ptr<uint8_t> tail;
 
    //! Pointer to the previous recorded frame heap state.
    be_ptr<MEMFrameHeapState> previous;
@@ -39,10 +39,10 @@ struct MEMFrameHeap
    MEMHeapHeader header;
 
    //! Current address of the head of the frame heap.
-   be_val<ppcaddr_t> head;
+   be_ptr<uint8_t> head;
 
    //! Current address of the tail of the frame heap.
-   be_val<ppcaddr_t> tail;
+   be_ptr<uint8_t> tail;
 
    //! Pointer to the previous recorded frame heap state.
    be_ptr<MEMFrameHeapState> previousState;
@@ -56,7 +56,7 @@ CHECK_SIZE(MEMFrameHeap, 0x4C);
 #pragma pack(pop)
 
 MEMFrameHeap *
-MEMCreateFrmHeapEx(ppcaddr_t base,
+MEMCreateFrmHeapEx(void *base,
                    uint32_t size,
                    uint32_t flags);
 
@@ -85,7 +85,7 @@ MEMAdjustFrmHeap(MEMFrameHeap *heap);
 
 uint32_t
 MEMResizeForMBlockFrmHeap(MEMFrameHeap *heap,
-                          uint32_t addr,
+                          void *address,
                           uint32_t size);
 
 uint32_t

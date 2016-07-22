@@ -238,7 +238,7 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_event.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_exception.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_exit.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_expheap.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memexpheap.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fastmutex.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memframeheap.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs.cpp" />
@@ -591,7 +591,7 @@
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_debug.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_dynload.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_event.h" />
-    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_expheap.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memexpheap.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memframeheap.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_ghs.h" />

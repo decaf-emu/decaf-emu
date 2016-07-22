@@ -10,15 +10,17 @@ namespace coreinit
 {
 
 MEMFrameHeap *
-MEMCreateFrmHeapEx(ppcaddr_t base,
+MEMCreateFrmHeapEx(void *base,
                    uint32_t size,
                    uint32_t flags)
 {
    decaf_check(base);
 
+   auto baseMem = reinterpret_cast<uint8_t *>(base);
+
    // Align start and end to 4 byte boundary
-   auto start = align_up(base, 4);
-   auto end = align_down(start + size, 4);
+   auto start = align_up(baseMem, 4);
+   auto end = align_down(baseMem + size, 4);
 
    if (start >= end) {
       return nullptr;
@@ -29,7 +31,7 @@ MEMCreateFrmHeapEx(ppcaddr_t base,
    }
 
    // Setup the frame heap
-   auto heap = mem::translate<MEMFrameHeap>(start);
+   auto heap = reinterpret_cast<MEMFrameHeap *>(start);
 
    internal::registerHeap(&heap->header,
                           MEMHeapTag::FrameHeap,
@@ -65,44 +67,42 @@ MEMAllocFromFrmHeapEx(MEMFrameHeap *heap,
       size = 1;
    }
 
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Acquire(&heap->header.lock);
-   }
-
    void *block = nullptr;
 
-   if (alignment < 0) {
-      // Allocate from bottom
-      auto tail = align_down<ppcaddr_t>(heap->tail - size, -alignment);
+   {
+      internal::HeapLock lock(&heap->header);
 
-      if (tail < heap->head) {
-         // Not enough space!
-         return nullptr;
+      if (alignment < 0) {
+         // Allocate from bottom
+         auto tail = align_down(heap->tail.get() - size, -alignment);
+
+         if (tail < heap->head) {
+            // Not enough space!
+            return nullptr;
+         }
+
+         heap->tail = tail;
+         block = tail;
+      } else {
+         // Allocate from head
+         auto addr = align_up(heap->head.get(), alignment);
+         auto head = addr + size;
+
+         if (head > heap->tail) {
+            // Not enough space!
+            return nullptr;
+         }
+
+         heap->head = head;
+         block = addr;
       }
-
-      heap->tail = tail;
-      block = mem::translate(tail);
-   } else {
-      // Allocate from head
-      auto addr = align_up<ppcaddr_t>(heap->head, alignment);
-      auto head = addr + size;
-
-      if (head > heap->tail) {
-         // Not enough space!
-         return nullptr;
-      }
-
-      heap->head = head;
-      block = mem::translate(addr);
    }
 
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Release(&heap->header.lock);
-   }
+   auto heapAttribs = heap->header.attribs.value();
 
-   if (heap->header.flags & MEMHeapFlags::ZeroAllocated) {
+   if (heapAttribs.flags() & MEMHeapFlags::ZeroAllocated) {
       std::memset(block, 0, size);
-   } else if (heap->header.flags & MEMHeapFlags::DebugMode) {
+   } else if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
       auto value = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
       std::memset(block, value, size);
    }
@@ -118,14 +118,14 @@ MEMFreeToFrmHeap(MEMFrameHeap *heap,
    decaf_check(heap);
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
 
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Acquire(&heap->header.lock);
-   }
+   auto heapAttribs = heap->header.attribs.value();
+
+   internal::HeapLock lock(&heap->header);
 
    if (mode & MEMFrameHeapFreeMode::Head) {
-      if (heap->header.flags & MEMHeapFlags::DebugMode) {
+      if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
-         std::memset(mem::translate(heap->header.dataStart), value, heap->head - heap->header.dataStart);
+         std::memset(heap->header.dataStart, value, heap->head.get() - heap->header.dataStart);
       }
 
       heap->head = heap->header.dataStart;
@@ -133,17 +133,13 @@ MEMFreeToFrmHeap(MEMFrameHeap *heap,
    }
 
    if (mode & MEMFrameHeapFreeMode::Tail) {
-      if (heap->header.flags & MEMHeapFlags::DebugMode) {
+      if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
-         std::memset(mem::translate(heap->tail), value, heap->header.dataEnd - heap->tail);
+         std::memset(heap->tail, value, heap->header.dataEnd.get() - heap->tail);
       }
 
       heap->tail = heap->header.dataEnd;
       heap->previousState = nullptr;
-   }
-
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Release(&heap->header.lock);
    }
 }
 
@@ -155,9 +151,9 @@ MEMRecordStateForFrmHeap(MEMFrameHeap *heap,
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
    auto result = FALSE;
 
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Acquire(&heap->header.lock);
-   }
+   auto heapAttribs = heap->header.attribs.value();
+
+   internal::HeapLock lock(&heap->header);
 
    auto state = reinterpret_cast<MEMFrameHeapState *>(MEMAllocFromFrmHeapEx(heap, sizeof(MEMFrameHeapState), 4));
 
@@ -171,10 +167,6 @@ MEMRecordStateForFrmHeap(MEMFrameHeap *heap,
       result = TRUE;
    }
 
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Release(&heap->header.lock);
-   }
-
    return result;
 }
 
@@ -186,9 +178,9 @@ MEMFreeByStateToFrmHeap(MEMFrameHeap *heap,
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
    auto result = FALSE;
 
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Acquire(&heap->header.lock);
-   }
+   auto heapAttribs = heap->header.attribs.value();
+
+   internal::HeapLock lock(&heap->header);
 
    // Find the state to reset to
    auto state = heap->previousState;
@@ -205,20 +197,16 @@ MEMFreeByStateToFrmHeap(MEMFrameHeap *heap,
 
    // Reset to state
    if (state) {
-      if (heap->header.flags & MEMHeapFlags::DebugMode) {
+      if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
-         std::memset(mem::translate(state->head), value, heap->head - state->head);
-         std::memset(mem::translate(heap->tail), value, state->tail - heap->tail);
+         std::memset(state->head, value, heap->head.get() - state->head);
+         std::memset(heap->tail, value, state->tail.get() - heap->tail);
       }
 
       heap->head = state->head;
       heap->tail = state->tail;
       heap->previousState = state->previous;
       result = TRUE;
-   }
-
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Release(&heap->header.lock);
    }
 
    return result;
@@ -231,19 +219,15 @@ MEMAdjustFrmHeap(MEMFrameHeap *heap)
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
    uint32_t result = 0;
 
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Acquire(&heap->header.lock);
-   }
+   internal::HeapLock lock(&heap->header);
 
    // We can only adjust the heap if we have no tail allocated memory
    if (heap->tail == heap->header.dataEnd) {
       heap->header.dataEnd = heap->head;
       heap->tail = heap->head;
-      result = heap->header.dataEnd - mem::untranslate(heap);
-   }
 
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Release(&heap->header.lock);
+      auto heapMemStart = reinterpret_cast<uint8_t *>(heap);
+      result = static_cast<uint32_t>(heap->header.dataEnd.get() - heapMemStart);
    }
 
    return result;
@@ -251,26 +235,27 @@ MEMAdjustFrmHeap(MEMFrameHeap *heap)
 
 uint32_t
 MEMResizeForMBlockFrmHeap(MEMFrameHeap *heap,
-                          uint32_t addr,
+                          void *address,
                           uint32_t size)
 {
    decaf_check(heap);
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
    uint32_t result = 0;
 
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Acquire(&heap->header.lock);
-   }
+   auto heapAttribs = static_cast<MEMHeapAttribs>(heap->header.attribs);
 
-   decaf_check(addr > heap->head);
-   decaf_check(addr < heap->tail);
-   decaf_check(heap->previousState == nullptr || heap->previousState.getAddress() < addr);
+   internal::HeapLock lock(&heap->header);
+
+   decaf_check(address > heap->head);
+   decaf_check(address < heap->tail);
+   decaf_check(heap->previousState == nullptr || heap->previousState < address);
 
    if (size == 0) {
       size = 1;
    }
 
-   auto end = align_up(addr + size, 4);
+   auto addrMem = reinterpret_cast<uint8_t *>(address);
+   auto end = align_up(addrMem + size, 4);
 
    if (end > heap->tail) {
       // Not enough free space
@@ -280,28 +265,24 @@ MEMResizeForMBlockFrmHeap(MEMFrameHeap *heap,
       result = size;
    } else if (end < heap->head) {
       // Decrease size
-      if (heap->header.flags & MEMHeapFlags::DebugMode) {
+      if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
-         std::memset(mem::translate(end), value, heap->head - addr);
+         std::memset(end, value, heap->head.get() - addrMem);
       }
 
       heap->head = end;
       result = size;
    } else if (end > heap->head) {
       // Increase size
-      if (heap->header.flags & MEMHeapFlags::ZeroAllocated) {
-         std::memset(mem::translate(heap->head), 0, addr - heap->head);
-      } else if (heap->header.flags & MEMHeapFlags::DebugMode) {
+      if (heapAttribs.flags() & MEMHeapFlags::ZeroAllocated) {
+         std::memset(heap->head, 0, addrMem - heap->head);
+      } else if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
-         std::memset(mem::translate(heap->head), value, addr - heap->head);
+         std::memset(heap->head, value, addrMem - heap->head);
       }
 
       heap->head = end;
       result = size;
-   }
-
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Release(&heap->header.lock);
    }
 
    return result;
@@ -315,18 +296,12 @@ MEMGetAllocatableSizeForFrmHeapEx(MEMFrameHeap *heap,
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
    uint32_t result = 0;
 
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Acquire(&heap->header.lock);
-   }
+   internal::HeapLock lock(&heap->header);
 
-   auto alignedHead =  align_up<ppcaddr_t>(heap->head, alignment);
+   auto alignedHead =  align_up(heap->head.get(), alignment);
 
    if (alignedHead < heap->tail) {
-      result = heap->tail - alignedHead;
-   }
-
-   if (heap->header.flags & MEMHeapFlags::UseLock) {
-      OSUninterruptibleSpinLock_Release(&heap->header.lock);
+      result = static_cast<uint32_t>(heap->tail.get() - alignedHead);
    }
 
    return result;
