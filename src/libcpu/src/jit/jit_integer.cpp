@@ -602,14 +602,15 @@ neg(PPCEmuAssembler& a, Instruction instr)
    auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
    auto dst = a.loadRegisterWrite(a.gpr[instr.rD]);
+   auto src = a.loadRegisterRead(a.gpr[instr.rA]);
 
    if (!instr.oe) {
-      a.mov(dst, a.loadRegisterRead(a.gpr[instr.rA]));
+      a.mov(dst, src);
       a.neg(dst);
    } else {
       auto tmp = a.allocGpTmp().r32();
 
-      a.mov(dst, a.loadRegisterRead(a.gpr[instr.rA]));
+      a.mov(dst, src);
       a.neg(dst);
 
       a.mov(tmp, 0);
