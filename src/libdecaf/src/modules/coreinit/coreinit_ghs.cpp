@@ -54,7 +54,7 @@ p_iob_mutexes;
 static std::array<bool*, GHS_FLOCK_MAX>
 p_iob_mutex_used;
 
-static wfunc_ptr<void>
+static wfunc_ptr<int32_t, uint32_t>
 sSyscallFunc;
 
 BOOL
@@ -199,9 +199,19 @@ void ghs_mtx_unlock(void *mtx)
    OSUnlockMutex(*pmutex);
 }
 
-void syscall()
+int32_t syscall(uint32_t id)
 {
-   decaf_abort("Decaf does not currently support ghs syscalls");
+   switch (id) {
+   case 0xe: {
+      decaf_abort("Unsupported ghs time() syscall");
+      // naive implementation, need to use OSGetTime
+      //  time_t t;
+      //  time(&t);
+      //  return static_cast<int32_t>(t);
+   } break;
+   default:
+      decaf_abort(fmt::format("Unsupported ghs syscalls {:x}", id));
+   }
 }
 
 namespace internal
