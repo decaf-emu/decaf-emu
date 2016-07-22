@@ -155,11 +155,12 @@ start(excmd::parser &parser,
    }
 
    if (options.has("region")) {
-      const std::string region = options.get<std::string>("region");
+      auto region = options.get<std::string>("region");
+
       if (region.compare("JAP") == 0) {
          decaf::config::system::region = coreinit::SCIRegion::JAP;
-      } else if (region.compare("US") == 0) {
-         decaf::config::system::region = coreinit::SCIRegion::US;
+      } else if (region.compare("USA") == 0) {
+         decaf::config::system::region = coreinit::SCIRegion::USA;
       } else if (region.compare("EUR") == 0) {
          decaf::config::system::region = coreinit::SCIRegion::EUR;
       } else {
