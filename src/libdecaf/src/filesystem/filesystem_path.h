@@ -70,6 +70,7 @@ public:
 
    GenericPath(const std::string &src)
    {
+      static const char ParentSeparator[4] = { Separator, '.', '.', 0 };
       mPath = src;
 
       // Normalise path separators
@@ -78,13 +79,13 @@ public:
       }
 
       // Simplify parent .. operator (hello/../world -> world)
-      for (auto pos = mPath.find("/..", 0); pos != std::string::npos; ) {
+      for (auto pos = mPath.find(ParentSeparator, 0); pos != std::string::npos; ) {
          auto parentEnd = pos;
 
          if (parentEnd == 0) {
             // A valid path will never start with /.. but we will contract it to / anyway...
             mPath.erase(pos + 1, 3);
-            pos = mPath.find("/..", pos + 1);
+            pos = mPath.find(ParentSeparator, pos + 1);
             continue;
          }
 
@@ -103,9 +104,9 @@ public:
                parentStart -= 1;
             }
 
-            pos = mPath.find("/..", parentStart);
+            pos = mPath.find(ParentSeparator, parentStart);
          } else {
-            pos = mPath.find("/..", pos + 3);
+            pos = mPath.find(ParentSeparator, pos + 3);
          }
       }
 
