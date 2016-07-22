@@ -47,11 +47,14 @@ lockMutexNoLock(OSMutex *mutex)
 {
    // The following check is disabled as not calling InitMutex does
    //  not break behaviour, and some games do not properly initialise
-   //  their mutexes before using them.
+   //  their mutexes before using them.  We manually call OSInitMutex
+   //  to avoid triggering any of our own assertions later on...
    // HACK: This might be a hack around some broken behaviour elsewhere
    //  inside of decaf, it's hard to tell...  Let's assume not for now.
    //decaf_check(mutex->tag == OSMutex::Tag);
-   mutex->tag = OSMutex::Tag;
+   if (mutex->tag != OSMutex::Tag) {
+      OSInitMutex(mutex);
+   }
 
    auto thread = OSGetCurrentThread();
 
