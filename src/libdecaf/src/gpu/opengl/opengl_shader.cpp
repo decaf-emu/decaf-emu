@@ -370,22 +370,17 @@ bool GLDriver::checkActiveUniforms()
    } else {
       if (mActiveShader->vertex && mActiveShader->vertex->object) {
          for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
-            auto resourceOffset = (latte::SQ_VS_BUF_RESOURCE_0 + i) * 7;
-            auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
-            auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
-            auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * resourceOffset);
-            auto sq_vtx_constant_word3 = getRegister<latte::SQ_VTX_CONSTANT_WORD3_N>(latte::Register::SQ_VTX_CONSTANT_WORD3_0 + 4 * resourceOffset);
-            auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
+            auto sq_alu_const_cache_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + 4 * i);
+            auto sq_alu_const_buffer_size_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + 4 * i);
 
-            if (!sq_vtx_constant_word0.BASE_ADDRESS) {
+            if (!sq_alu_const_buffer_size_vs) {
                continue;
             }
 
-            auto block = make_virtual_ptr<float>(sq_vtx_constant_word0.BASE_ADDRESS);
-            auto size = sq_vtx_constant_word1.SIZE + 1;
-            auto values = size / 4;
+            auto block = make_virtual_ptr<float>(sq_alu_const_cache_vs << 8);
+            auto size = sq_alu_const_buffer_size_vs << 8;
 
-            auto &ubo = mUniformBuffers[sq_vtx_constant_word0.BASE_ADDRESS];
+            auto &ubo = mUniformBuffers[sq_alu_const_cache_vs];
 
             if (!ubo.object) {
                gl::glGenBuffers(1, &ubo.object);
@@ -402,22 +397,17 @@ bool GLDriver::checkActiveUniforms()
 
       if (mActiveShader->pixel && mActiveShader->pixel->object) {
          for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
-            auto resourceOffset = (latte::SQ_PS_BUF_RESOURCE_0 + i) * 7;
-            auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
-            auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
-            auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * resourceOffset);
-            auto sq_vtx_constant_word3 = getRegister<latte::SQ_VTX_CONSTANT_WORD3_N>(latte::Register::SQ_VTX_CONSTANT_WORD3_0 + 4 * resourceOffset);
-            auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
+            auto sq_alu_const_cache_ps = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + 4 * i);
+            auto sq_alu_const_buffer_size_ps = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + 4 * i);
 
-            if (!sq_vtx_constant_word0.BASE_ADDRESS) {
+            if (!sq_alu_const_buffer_size_ps) {
                continue;
             }
 
-            auto block = make_virtual_ptr<float>(sq_vtx_constant_word0.BASE_ADDRESS);
-            auto size = sq_vtx_constant_word1.SIZE + 1;
-            auto values = size / 4;
+            auto block = make_virtual_ptr<float>(sq_alu_const_cache_ps << 8);
+            auto size = sq_alu_const_buffer_size_ps << 8;
 
-            auto &ubo = mUniformBuffers[sq_vtx_constant_word0.BASE_ADDRESS];
+            auto &ubo = mUniformBuffers[sq_alu_const_cache_ps];
 
             if (!ubo.object) {
                gl::glGenBuffers(1, &ubo.object);
