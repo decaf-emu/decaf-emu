@@ -247,7 +247,7 @@ getTrampAddress(LoadedModule *loadedMod,
       decaf_check(0);
    }
 
-   loadedMod->symbols.emplace(symbolName + "#thunk", trampAddr);
+   loadedMod->symbols.emplace(symbolName + "#thunk", Symbol{ trampAddr, SymbolType::Function });
    trampolines.emplace(targetAddr, trampAddr);
    return trampAddr;
 }
@@ -455,7 +455,7 @@ loadHleModule(const std::string &moduleName,
          *(thunk + 1) = byte_swap(bclr.value);
 
          // Add to symbols list
-         loadedMod->symbols.emplace(func->name, addr);
+         loadedMod->symbols.emplace(func->name, Symbol{ addr, SymbolType::Function });
 
          // Save the PPC ptr for internal lookups
          func->ppcPtr = thunk;
@@ -481,7 +481,7 @@ loadHleModule(const std::string &moduleName,
          dataRegion += data->size;
 
          // Add to exports list
-         loadedMod->symbols.emplace(data->name, addr);
+         loadedMod->symbols.emplace(data->name, Symbol{ addr, SymbolType::Data });
 
          // Save the PPC ptr for internal lookups
          data->ppcPtr = thunk;
@@ -797,9 +797,16 @@ processSymbols(LoadedModule *loadedMod,
             continue;
          }
 
+         auto symType = SymbolType::Unknown;
+         if (type == elf::STT_OBJECT) {
+            symType = SymbolType::Data;
+         } else if (type == elf::STT_FUNC) {
+            symType = SymbolType::Function;
+         }
+
          auto baseAddress = symsec.virtAddress;
          auto virtAddress = baseAddress + offset;
-         loadedMod->symbols.emplace(name, virtAddress);
+         loadedMod->symbols.emplace(name, Symbol{ virtAddress, symType });
       }
    }
 
@@ -1068,14 +1075,20 @@ loadRPL(const std::string &moduleName,
    }
 
    // Add the modules entry point as an symbol called 'start'
-   loadedMod->symbols.emplace("__start", entryPoint);
+   loadedMod->symbols.emplace("__start", Symbol{ entryPoint, SymbolType::Function });
 
    // Free the load segment
    coreinit::internal::dynLoadMemFree(loadSegAddr);
 
    // Add all the modules symbols to the Global Symbol Map
    for (auto &i : loadedMod->symbols) {
-      gGlobalSymbolLookup.emplace(i.second, fmt::format("{}:{}", loadedMod->name, i.first));
+      // TODO: Modify symbol lookup functions to support picking the type of
+      //  symbol you want so that we can have our global symbol lookup table
+      //  include information about which symbol, and relatedly, display data
+      //  symbol names in the debugger.
+      if (i.second.type == SymbolType::Function) {
+         gGlobalSymbolLookup.emplace(i.second.address, fmt::format("{}:{}", loadedMod->name, i.first));
+      }
    }
 
    loadedMod->defaultStackSize = info.stackSize;

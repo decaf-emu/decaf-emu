@@ -178,8 +178,10 @@ analyse(uint32_t start,
       }
 
       for (auto &sym : mod.second->symbols) {
-         if (sym.second >= codeRangeStart && sym.second < codeRangeEnd) {
-            markAsFunction(sym.second, sym.first);
+         if (sym.second.type == kernel::loader::SymbolType::Function) {
+            if (sym.second.address >= codeRangeStart && sym.second.address < codeRangeEnd) {
+               markAsFunction(sym.second.address, sym.first);
+            }
          }
       }
    }

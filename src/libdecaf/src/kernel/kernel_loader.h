@@ -46,6 +46,19 @@ struct LoadedSection
    ppcaddr_t end;
 };
 
+enum class SymbolType
+{
+   Unknown,
+   Data,
+   Function
+};
+
+struct Symbol
+{
+   ppcaddr_t address;
+   SymbolType type;
+};
+
 struct LoadedModule
 {
    ppcaddr_t
@@ -98,7 +111,7 @@ struct LoadedModule
    ppcsize_t tlsSize = 0;
    std::vector<LoadedSection> sections;
    std::map<std::string, ppcaddr_t> exports;
-   std::map<std::string, ppcaddr_t> symbols;
+   std::map<std::string, Symbol> symbols;
 };
 
 void

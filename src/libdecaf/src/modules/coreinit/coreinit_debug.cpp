@@ -227,7 +227,7 @@ OSGetSymbolName(uint32_t address, char *buffer, int bufsize)
          }
       }
       for (auto &sym : mod.second->symbols) {
-         if (sym.second == address) {
+         if (sym.second.address == address) {
             strncpy(buffer, sym.first.c_str(), bufsize);
             retval = codeBase;
             found = true;
