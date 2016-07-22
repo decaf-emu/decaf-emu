@@ -172,6 +172,7 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_threadview.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf_config.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf_eventlistener.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf_game.cpp" />
     <ClCompile Include="..\src\libdecaf\src\emulog.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp">
@@ -378,6 +379,7 @@
     <ClInclude Include="..\src\libdecaf\decaf.h" />
     <ClInclude Include="..\src\libdecaf\decaf_config.h" />
     <ClInclude Include="..\src\libdecaf\decaf_debugger.h" />
+    <ClInclude Include="..\src\libdecaf\decaf_eventlistener.h" />
     <ClInclude Include="..\src\libdecaf\decaf_graphics.h" />
     <ClInclude Include="..\src\libdecaf\decaf_input.h" />
     <ClInclude Include="..\src\libdecaf\decaf_nullgraphicsdriver.h" />
@@ -388,6 +390,7 @@
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger_ui.h" />
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger_ui_internal.h" />
     <ClInclude Include="..\src\libdecaf\src\debugger\imgui_addrscroll.h" />
+    <ClInclude Include="..\src\libdecaf\src\decaf_events.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_file.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_filehandle.h" />

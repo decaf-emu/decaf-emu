@@ -5,6 +5,7 @@
 #include <glbinding/gl/gl.h>
 #include "decaf_config.h"
 #include "decaf_debugger.h"
+#include "decaf_eventlistener.h"
 #include "decaf_graphics.h"
 #include "decaf_input.h"
 

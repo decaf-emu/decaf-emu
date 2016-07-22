@@ -4,9 +4,8 @@
 #include "kernel_loader.h"
 #include "kernel_memory.h"
 #include "kernel_filesystem.h"
-#include <pugixml.hpp>
-#include <excmd.h>
 #include "debugger/debugger.h"
+#include "decaf_events.h"
 #include "filesystem/filesystem.h"
 #include "common/platform_fiber.h"
 #include "common/platform_thread.h"
@@ -26,6 +25,8 @@
 #include "ppcutils/wfunc_call.h"
 #include "common/decaf_assert.h"
 #include "common/teenyheap.h"
+#include <pugixml.hpp>
+#include <excmd.h>
 
 namespace coreinit
 {
@@ -334,6 +335,8 @@ launchGame()
    coreinit::internal::startAlarmCallbackThreads();
    coreinit::internal::startAppIoThreads();
    coreinit::internal::startDefaultCoreThreads();
+
+   decaf::event::onGameLoaded(sGameInfo);
 
    auto gameThreadEntry = coreinitModule->findFuncExport<uint32_t, uint32_t, void*>("GameThreadEntry");
    coreinit::OSRunThread(coreinit::OSGetDefaultThread(1), gameThreadEntry, 0, nullptr);
