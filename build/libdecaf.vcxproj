@@ -172,6 +172,7 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_threadview.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf_config.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf_game.cpp" />
     <ClCompile Include="..\src\libdecaf\src\emulog.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -219,6 +220,7 @@
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_fibers.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_filesystem.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_gameinfo.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_hle.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_loader.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_memory.cpp" />
@@ -372,6 +374,7 @@
     <ClCompile Include="..\src\libdecaf\src\modules\zlib125\zlib125_core.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\decaf_game.h" />
     <ClInclude Include="..\src\libdecaf\decaf.h" />
     <ClInclude Include="..\src\libdecaf\decaf_config.h" />
     <ClInclude Include="..\src\libdecaf\decaf_debugger.h" />
@@ -440,6 +443,7 @@
     <ClInclude Include="..\src\libdecaf\src\kernel\elf.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_filesystem.h" />
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_gameinfo.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hle.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hledata.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_hlesymbol.h" />

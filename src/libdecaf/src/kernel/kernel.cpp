@@ -24,6 +24,7 @@
 #include "modules/gx2/gx2_event.h"
 #include "libcpu/mem.h"
 #include "ppcutils/wfunc_call.h"
+#include "common/decaf_assert.h"
 #include "common/teenyheap.h"
 
 namespace coreinit
@@ -37,14 +38,12 @@ namespace kernel
 
 namespace functions
 {
-
 void
 kcTraceHandler(const std::string& str)
 {
    traceLogSyscall(str);
    gLog->debug(str);
 }
-
 }
 
 static void
@@ -82,6 +81,9 @@ sSegfaultAddress = 0;
 
 static coreinit::OSContext
 sInterruptContext[3];
+
+static decaf::GameInfo
+sGameInfo;
 
 void
 setExecutableFilename(const std::string& name)
@@ -292,62 +294,23 @@ cpuEntrypoint()
 bool
 launchGame()
 {
-   // Read cos.xml if found
-   auto maxCodeSize = 0x0E000000u;
-   auto rpx = sExecutableName;
-   auto fs = getFileSystem();
-
-   if (auto fh = fs->openFile("/vol/code/cos.xml", fs::File::Read)) {
-      auto size = fh->size();
-      auto buffer = std::vector<uint8_t>(size);
-      fh->read(buffer.data(), size, 1);
-      fh->close();
-
-      // Parse cos.xml
-      pugi::xml_document doc;
-      auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
-
-      if (!parseResult) {
-         gLog->error("Error parsing /vol/code/cos.xml");
-         return false;
-      }
-
-      auto app = doc.child("app");
-      rpx = std::string{ app.child("argstr").child_value() };
-      maxCodeSize = std::stoul(app.child("max_codesize").child_value(), 0, 16);
-   } else {
-      gLog->warn("Could not open /vol/code/cos.xml, using default values");
+   if (!loadGameInfo(sGameInfo)) {
+      gLog->warn("Could not load game info.");
    }
 
-   if (auto fh = fs->openFile("/vol/code/app.xml", fs::File::Read)) {
-      auto size = fh->size();
-      auto buffer = std::vector<uint8_t>(size);
-      fh->read(buffer.data(), size, 1);
-      fh->close();
+   auto rpx = sGameInfo.cos.argstr;
 
-      // Parse app.xml
-      pugi::xml_document doc;
-      auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
-
-      if (!parseResult) {
-         gLog->error("Error parsing /vol/code/app.xml");
-         return false;
-      }
-
-      // Set os_version and title_id
-      auto app = doc.child("app");
-      auto os_version = std::stoull(app.child("os_version").child_value(), 0, 16);
-      auto title_id = std::stoull(app.child("title_id").child_value(), 0, 16);
-
-      coreinit::internal::setSystemID(os_version);
-      coreinit::internal::setTitleID(title_id);
+   if (rpx.empty()) {
+      rpx = sExecutableName;
    }
-   else {
-      gLog->warn("Could not open /vol/code/app.xml, using default values");
+
+   if (rpx.empty()) {
+      gLog->error("Could not find game executable to load.");
+      return false;
    }
 
    // Set up the code heap to load stuff to
-   initialiseCodeHeap(maxCodeSize);
+   initialiseCodeHeap(sGameInfo.cos.max_codesize);
 
    // Load the application-level kernel binding
    auto coreinitModule = loader::loadRPL("coreinit");
@@ -365,10 +328,8 @@ launchGame()
       return false;
    }
 
-   sUserModule = appModule;
-
    gLog->debug("Succesfully loaded {}", rpx);
-
+   sUserModule = appModule;
 
    coreinit::internal::startAlarmCallbackThreads();
    coreinit::internal::startAppIoThreads();
@@ -405,6 +366,12 @@ int
 getExitCode()
 {
    return sExitCode;
+}
+
+const decaf::GameInfo &
+getGameInfo()
+{
+   return sGameInfo;
 }
 
 } // namespace kernel

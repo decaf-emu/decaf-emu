@@ -4,6 +4,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_time.h"
 #include "common/platform_time.h"
+#include "kernel/kernel.h"
 
 namespace coreinit
 {
@@ -16,12 +17,6 @@ sScreenCapturePermission = TRUE;
 
 static BOOL
 sEnableHomeButtonMenu = TRUE;
-
-static uint64_t
-sTitleID = 0;
-
-static uint64_t
-sSystemID = 0x000500101000400Aull;
 
 HardwareVersion
 bspGetHardwareVersion()
@@ -78,13 +73,13 @@ OSBlockThreadsOnExit()
 uint64_t
 OSGetTitleID()
 {
-   return sTitleID;
+   return kernel::getGameInfo().app.title_id;
 }
 
 uint64_t
 OSGetOSID()
 {
-   return sSystemID;
+   return kernel::getGameInfo().app.os_version;
 }
 
 void
@@ -118,22 +113,5 @@ Module::registerSystemInfoFunctions()
 
    RegisterInternalData(sSystemInfo);
 }
-
-namespace internal
-{
-
-void
-setTitleID(uint64_t id)
-{
-   sTitleID = id;
-}
-
-void
-setSystemID(uint64_t id)
-{
-   sSystemID = id;
-}
-
-} // namespace internal
 
 } // namespace coreinit

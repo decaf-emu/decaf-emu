@@ -1,6 +1,7 @@
 #pragma once
 #include "libcpu/cpu.h"
 #include "common/platform_fiber.h"
+#include "kernel_gameinfo.h"
 
 class TeenyHeap;
 
@@ -12,10 +13,9 @@ struct OSContext;
 namespace kernel
 {
 
-namespace loader {
-
+namespace loader
+{
 struct LoadedModule;
-
 }
 
 struct Fiber;
@@ -46,5 +46,8 @@ hasExited();
 
 int
 getExitCode();
+
+const decaf::GameInfo &
+getGameInfo();
 
 } // namespace kernel

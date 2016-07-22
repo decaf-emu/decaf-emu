@@ -56,15 +56,4 @@ OSGetTitleID();
 uint64_t
 OSGetOSID();
 
-namespace internal
-{
-
-void
-setTitleID(uint64_t id);
-
-void
-setSystemID(uint64_t id);
-
-} // namespace internal
-
 } // namespace coreinit

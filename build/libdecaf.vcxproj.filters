@@ -837,6 +837,12 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memexpheap.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\decaf_game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\kernel\kernel_gameinfo.cpp">
+      <Filter>Source Files\kernel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1564,6 +1570,12 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memexpheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\decaf_game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\kernel\kernel_gameinfo.h">
+      <Filter>Header Files\kernel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
