@@ -7,13 +7,11 @@
 #include <pugixml.hpp>
 #include <vector>
 
-#pragma optimize("", off)
-
 namespace kernel
 {
 
 static uint64_t
-xmlReadUnsigned64(pugi::xml_node &node)
+xmlReadUnsigned64(const pugi::xml_node &node)
 {
    auto type = std::string { node.attribute("type").as_string() };
    auto length = node.attribute("length").as_uint();
@@ -30,7 +28,7 @@ xmlReadUnsigned64(pugi::xml_node &node)
 }
 
 static unsigned
-xmlReadUnsigned(pugi::xml_node &node)
+xmlReadUnsigned(const pugi::xml_node &node)
 {
    auto type = std::string { node.attribute("type").as_string() };
    auto length = node.attribute("length").as_uint();
@@ -47,7 +45,7 @@ xmlReadUnsigned(pugi::xml_node &node)
 }
 
 static std::string
-xmlReadString(pugi::xml_node &node)
+xmlReadString(const pugi::xml_node &node)
 {
    return node.child_value();
 }
