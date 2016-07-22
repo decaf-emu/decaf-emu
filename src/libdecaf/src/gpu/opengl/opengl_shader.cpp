@@ -576,6 +576,7 @@ bool GLDriver::checkActiveAttribBuffers()
          if (buffer.object) {
             if (buffer.mappedBuffer) {
                gl::glUnmapNamedBuffer(buffer.object);
+               buffer.mappedBuffer = nullptr;
             }
 
             gl::glDeleteBuffers(1, &buffer.object);
