@@ -36,15 +36,35 @@ hostHasFMA3()
    return hasFMA3;
 }
 
-static void
-truncateToSingleSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+void
+roundToSingleSd(PPCEmuAssembler& a,
+                const PPCEmuAssembler::XmmRegister& dst,
+                const PPCEmuAssembler::XmmRegister& src)
 {
-   a.cvtsd2ss(reg, reg);
-   a.cvtss2sd(reg, reg);
+   a.cvtsd2ss(dst, src);
+   a.cvtss2sd(dst, dst);
+}
+
+void
+truncateToSingleSd(PPCEmuAssembler& a,
+                   const PPCEmuAssembler::XmmRegister& dst,
+                   const PPCEmuAssembler::XmmRegister& src)
+{
+   auto maskGp = a.allocGpTmp();
+   a.mov(maskGp, UINT64_C(0xFFFFFFFFE0000000));
+   if (&dst == &src) {
+      auto tmp = a.allocXmmTmp();
+      a.movq(tmp, maskGp);
+      a.pand(dst, tmp);
+   } else {
+      a.movq(dst, maskGp);
+      a.pand(dst, src);
+   }
 }
 
 static void
-truncateTo24BitSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+roundTo24BitSd(PPCEmuAssembler& a,
+               const PPCEmuAssembler::XmmRegister& reg)
 {
    auto maskGp = a.allocGpTmp();
    auto maskXmm = a.allocXmmTmp();
@@ -63,7 +83,8 @@ truncateTo24BitSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 }
 
 static void
-negateXmmSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+negateXmmSd(PPCEmuAssembler& a,
+            const PPCEmuAssembler::XmmRegister& reg)
 {
    auto maskGp = a.allocGpTmp();
    auto maskXmm = a.allocXmmTmp();
@@ -73,7 +94,8 @@ negateXmmSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
 }
 
 static void
-absXmmSd(PPCEmuAssembler& a, const PPCEmuAssembler::XmmRegister& reg)
+absXmmSd(PPCEmuAssembler& a,
+         const PPCEmuAssembler::XmmRegister& reg)
 {
    auto maskGp = a.allocGpTmp();
    auto maskXmm = a.allocXmmTmp();
@@ -88,7 +110,7 @@ enum FPArithOperator {
     FPMul,
     FPDiv,
 };
-template <FPArithOperator op, bool ShouldTruncate>
+template <FPArithOperator op, bool ShouldRound>
 static bool
 fpArithGeneric(PPCEmuAssembler& a, Instruction instr)
 {
@@ -113,10 +135,10 @@ fpArithGeneric(PPCEmuAssembler& a, Instruction instr)
    }
    case FPMul: {
       auto tmpSrcC = a.allocXmmTmp(a.loadRegisterRead(a.fprps[instr.frC]));
-      if (ShouldTruncate) {
+      if (ShouldRound) {
          // PPC has this weird behaviour with fmuls where it truncates the
          //  RHS operator to 24-bits of mantissa before multiplying...
-         truncateTo24BitSd(a, tmpSrcC);
+         roundTo24BitSd(a, tmpSrcC);
       }
       a.mulsd(tmpSrcA, tmpSrcC);
       break;
@@ -128,8 +150,8 @@ fpArithGeneric(PPCEmuAssembler& a, Instruction instr)
    }
    }
 
-   if (ShouldTruncate) {
-      truncateToSingleSd(a, tmpSrcA);
+   if (ShouldRound) {
+      roundToSingleSd(a, tmpSrcA, tmpSrcA);
       auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
       a.movddup(dst, tmpSrcA);
    } else {
@@ -188,7 +210,7 @@ fdivs(PPCEmuAssembler& a, Instruction instr)
    return fpArithGeneric<FPDiv, true>(a, instr);
 }
 
-template <bool ShouldTruncate, bool ShouldSubtract, bool ShouldNegate>
+template <bool ShouldRound, bool ShouldSubtract, bool ShouldNegate>
 static bool
 fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
 {
@@ -202,9 +224,9 @@ fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
    {
       auto srcC = a.loadRegisterRead(a.fprps[instr.frC]);
       // Do the rounding first so we don't run out of host registers
-      if (ShouldTruncate) {
+      if (ShouldRound) {
          auto tmpSrcC = a.allocXmmTmp(srcC);
-         truncateTo24BitSd(a, tmpSrcC);
+         roundTo24BitSd(a, tmpSrcC);
          srcC = tmpSrcC;
       }
       auto srcA = a.loadRegisterRead(a.fprps[instr.frA]);
@@ -231,8 +253,8 @@ fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
       negateXmmSd(a, result);
    }
 
-   if (ShouldTruncate) {
-      truncateToSingleSd(a, result);
+   if (ShouldRound) {
+      roundToSingleSd(a, result, result);
       auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
       a.movddup(dst, result);
    } else {
@@ -304,7 +326,7 @@ frsp(PPCEmuAssembler& a, Instruction instr)
    auto srcA = a.loadRegisterRead(a.fprps[instr.frB]);
    a.movq(dst, srcA);
 
-   truncateToSingleSd(a, dst);
+   roundToSingleSd(a, dst, dst);
 
    a.movddup(dst, dst);
    return true;

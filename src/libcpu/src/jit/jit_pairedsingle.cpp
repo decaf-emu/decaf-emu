@@ -8,32 +8,6 @@ namespace cpu
 namespace jit
 {
 
-static void
-roundToSingleSd(PPCEmuAssembler& a,
-                const PPCEmuAssembler::XmmRegister& dst,
-                const PPCEmuAssembler::XmmRegister& src)
-{
-   a.cvtsd2ss(dst, src);
-   a.cvtss2sd(dst, dst);
-}
-
-static void
-truncateToSingleSd(PPCEmuAssembler& a,
-                   const PPCEmuAssembler::XmmRegister& dst,
-                   const PPCEmuAssembler::XmmRegister& src)
-{
-   auto maskGp = a.allocGpTmp();
-   a.mov(maskGp, UINT64_C(0xFFFFFFFFE0000000));
-   if (&dst == &src) {
-      auto tmp = a.allocXmmTmp();
-      a.movq(tmp, maskGp);
-      a.pand(dst, tmp);
-   } else {
-      a.movq(dst, maskGp);
-      a.pand(dst, src);
-   }
-}
-
 // Merge registers
 enum MergeFlags
 {
