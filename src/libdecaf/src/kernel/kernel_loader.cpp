@@ -2,6 +2,7 @@
 #include "common/align.h"
 #include "common/bigendianview.h"
 #include "common/decaf_assert.h"
+#include "common/platform_memory.h"
 #include "common/teenyheap.h"
 #include "common/strutils.h"
 #include "decaf_config.h"
@@ -85,6 +86,39 @@ gUnimplementedData;
 
 static ppcaddr_t
 sSyscallAddress = 0;
+
+static TeenyHeap *
+sLoaderHeap = nullptr;
+
+static uint32_t
+sLoaderHeapRefs = 0;
+
+static void *
+loaderAlloc(uint32_t size, uint32_t alignment)
+{
+   sLoaderHeapRefs++;
+   if (!sLoaderHeap) {
+      if (!platform::commitMemory(mem::base() + mem::LoaderBase, mem::LoaderSize)) {
+         decaf_abort("Failed to allocate loader temporary memory");
+      }
+
+      sLoaderHeap = new TeenyHeap(mem::translate(mem::LoaderBase), mem::LoaderSize);
+   }
+
+   return sLoaderHeap->alloc(size, alignment);
+}
+
+static void
+loaderFree(void *mem)
+{
+   sLoaderHeapRefs--;
+   if (sLoaderHeapRefs == 0) {
+      delete sLoaderHeap;
+      sLoaderHeap = nullptr;
+
+      platform::uncommitMemory(mem::base() + mem::LoaderBase, mem::LoaderSize);
+   }
+}
 
 void
 lockLoader()
@@ -908,9 +942,7 @@ loadRPL(const std::string &moduleName,
       dataSegAddr = nullptr;
    }
 
-   if (coreinit::internal::dynLoadMemAlloc(info.loadSize, info.loadAlign, &loadSegAddr) != 0) {
-      loadSegAddr = nullptr;
-   }
+   loadSegAddr = loaderAlloc(info.loadSize, info.loadAlign);
 
    decaf_check(codeSegAddr);
    decaf_check(dataSegAddr);
@@ -1078,7 +1110,7 @@ loadRPL(const std::string &moduleName,
    loadedMod->symbols.emplace("__start", Symbol{ entryPoint, SymbolType::Function });
 
    // Free the load segment
-   coreinit::internal::dynLoadMemFree(loadSegAddr);
+   loaderFree(loadSegAddr);
 
    // Add all the modules symbols to the Global Symbol Map
    for (auto &i : loadedMod->symbols) {

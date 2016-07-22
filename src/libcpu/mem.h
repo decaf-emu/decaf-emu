@@ -36,6 +36,15 @@ enum AddressSpace : ppcaddr_t
    SharedDataBase    = 0xF8000000,
    SharedDataEnd     = 0xFB000000,
    SharedDataSize    = SharedDataEnd - SharedDataBase,
+
+   // This is decaf specific, we need to have a region large
+   //  enough to load all of an applications symbols, which is
+   //  potentially quite large (over 0x02000000 bytes).  We
+   //  use this region, but keep in mind it is only allocated
+   //  while the loader is actually running...
+   LoaderBase        = 0xE6000000,
+   LoaderEnd         = 0xEA000000,
+   LoaderSize        = LoaderEnd - LoaderBase,
 };
 
 void
