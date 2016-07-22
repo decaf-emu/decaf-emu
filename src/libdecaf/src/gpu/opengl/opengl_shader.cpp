@@ -209,6 +209,9 @@ bool GLDriver::checkActiveShader()
          // Setup attrib format
          gl::glCreateVertexArrays(1, &fetchShader.object);
 
+         std::array<bool, MAX_ATTRIB_COUNT> bufferUsed = { false };
+         std::array<uint32_t, MAX_ATTRIB_COUNT> bufferDivisor = { 0 };
+
          for (auto &attrib : fetchShader.attribs) {
             auto resourceId = attrib.buffer + latte::SQ_VS_RESOURCE_BASE;
             if (resourceId >= latte::SQ_VS_ATTRIB_RESOURCE_0 && resourceId < latte::SQ_VS_ATTRIB_RESOURCE_0 + 0x10) {
@@ -217,6 +220,7 @@ bool GLDriver::checkActiveShader()
                auto normalise = attrib.numFormat == latte::SQ_NUM_FORMAT_NORM ? gl::GL_TRUE : gl::GL_FALSE;
                auto type = getAttributeFormat(attrib.format, attrib.formatComp);
                auto components = getAttributeComponents(attrib.format);
+               uint32_t divisor = 0;
 
                gl::glEnableVertexArrayAttrib(fetchShader.object, attrib.location);
                gl::glVertexArrayAttribFormat(fetchShader.object, attrib.location, components, type, normalise, attrib.offset);
@@ -224,19 +228,29 @@ bool GLDriver::checkActiveShader()
 
                if (attrib.type == latte::SQ_VTX_FETCH_TYPE::SQ_VTX_FETCH_INSTANCE_DATA) {
                   if (attrib.srcSelX == latte::SQ_SEL_W) {
-                     gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, 1);
+                     divisor = 1;
                   } else if (attrib.srcSelX == latte::SQ_SEL_Y) {
-                     gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, aluDivisor0);
+                     divisor = aluDivisor0;
                   } else if (attrib.srcSelX == latte::SQ_SEL_Z) {
-                     gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, aluDivisor1);
+                     divisor = aluDivisor1;
                   } else {
                      decaf_abort(fmt::format("Unexpected SRC_SEL_X {} for alu divisor", attrib.srcSelX));
                   }
-               } else {
-                  gl::glVertexArrayBindingDivisor(fetchShader.object, attrib.location, 0);
                }
+
+               decaf_assert(!bufferUsed[attribBufferId] || bufferDivisor[attribBufferId] == divisor,
+                  "Multiple attributes conflict on buffer divisor mode");
+
+               bufferUsed[attribBufferId] = true;
+               bufferDivisor[attribBufferId] = divisor;
             } else {
                decaf_abort("We do not yet support binding of non-attribute buffers");
+            }
+         }
+
+         for (auto bufferId = 0; bufferId < MAX_ATTRIB_COUNT; ++bufferId) {
+            if (bufferUsed[bufferId]) {
+               gl::glVertexArrayBindingDivisor(fetchShader.object, bufferId, bufferDivisor[bufferId]);
             }
          }
       }
