@@ -344,6 +344,8 @@ GX2SetPixelUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 void
 GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
+   decaf_check((mem::untranslate(data) & 0x000000FF) == 0);
+
    pm4::SetVtxResource res;
    memset(&res, 0, sizeof(pm4::SetVtxResource));
    res.id = (latte::SQ_VS_BUF_RESOURCE_0 + location) * 7;
@@ -376,6 +378,8 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 void
 GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
+   decaf_check((mem::untranslate(data) & 0x000000FF) == 0);
+
    pm4::SetVtxResource res;
    memset(&res, 0, sizeof(pm4::SetVtxResource));
    res.id = (latte::SQ_PS_BUF_RESOURCE_0 + location) * 7;
@@ -407,6 +411,8 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 void
 GX2SetGeometryUniformBlock(uint32_t location, uint32_t size, const void *data)
 {
+   decaf_check((mem::untranslate(data) & 0x000000FF) == 0);
+
    pm4::SetVtxResource res;
    memset(&res, 0, sizeof(pm4::SetVtxResource));
    res.id = (latte::SQ_GS_BUF_RESOURCE_0 + location) * 7;
