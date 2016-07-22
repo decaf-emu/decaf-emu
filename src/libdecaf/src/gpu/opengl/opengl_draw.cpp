@@ -125,34 +125,34 @@ unpackQuadList(uint32_t count,
    // Unpack quad indices into triangle indices
    if (src) {
       for (auto i = 0u; i < count / 4; ++i) {
-         auto index_tl = *src++;
-         auto index_tr = *src++;
-         auto index_br = *src++;
-         auto index_bl = *src++;
+         auto index_0 = *src++;
+         auto index_1 = *src++;
+         auto index_2 = *src++;
+         auto index_3 = *src++;
 
-         *(dst++) = index_tl;
-         *(dst++) = index_tr;
-         *(dst++) = index_bl;
+         *(dst++) = index_0;
+         *(dst++) = index_1;
+         *(dst++) = index_2;
 
-         *(dst++) = index_bl;
-         *(dst++) = index_tr;
-         *(dst++) = index_br;
+         *(dst++) = index_0;
+         *(dst++) = index_2;
+         *(dst++) = index_3;
       }
    } else {
-      auto index_tl = 0u;
-      auto index_tr = 1u;
-      auto index_br = 2u;
-      auto index_bl = 3u;
+      auto index_0 = 0u;
+      auto index_1 = 1u;
+      auto index_2 = 2u;
+      auto index_3 = 3u;
 
       for (auto i = 0u; i < count / 4; ++i) {
          auto index = i * 4;
-         *(dst++) = index_tl + index;
-         *(dst++) = index_tr + index;
-         *(dst++) = index_bl + index;
+         *(dst++) = index_0 + index;
+         *(dst++) = index_1 + index;
+         *(dst++) = index_2 + index;
 
-         *(dst++) = index_bl + index;
-         *(dst++) = index_tr + index;
-         *(dst++) = index_br + index;
+         *(dst++) = index_0 + index;
+         *(dst++) = index_2 + index;
+         *(dst++) = index_3 + index;
       }
    }
 
