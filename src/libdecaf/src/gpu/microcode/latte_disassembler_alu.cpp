@@ -12,6 +12,7 @@ namespace disassembler
 
 static void
 disassembleKcache(fmt::MemoryWriter &out,
+                  uint32_t id,
                   SQ_CF_KCACHE_MODE mode,
                   uint32_t bank,
                   uint32_t addr)
@@ -21,21 +22,30 @@ disassembleKcache(fmt::MemoryWriter &out,
       break;
    case SQ_CF_KCACHE_LOCK_1:
       out
+         << " KCACHE" << id << "("
+         << "cb" << bank << ", "
          << (16 * addr)
          << " to "
-         << (16 * addr + 15);
+         << (16 * addr + 15)
+         << ")";
       break;
    case SQ_CF_KCACHE_LOCK_2:
       out
+         << " KCACHE" << id << "("
+         << "cb" << bank << ", "
          << (16 * addr)
          << " to "
-         << (16 * addr + 31);
+         << (16 * addr + 31)
+         << ")";
       break;
    case SQ_CF_KCACHE_LOCK_LOOP_INDEX:
       out
+         << " KCACHE" << id << "("
+         << "cb" << bank << ", "
          << "AL+" << (16 * addr)
          << " to "
-         << "AL+" << (16 * addr + 31);
+         << "AL+" << (16 * addr + 31)
+         << ")";
       break;
    }
 }
@@ -62,30 +72,12 @@ disassembleAluSource(fmt::MemoryWriter &out,
       out << "|";
    }
 
-   if (sel >= SQ_ALU_KCACHE_BANK0_FIRST && sel <= SQ_ALU_KCACHE_BANK1_LAST) {
-      auto mode = parent.alu.word0.KCACHE_MODE0().get();
-      auto bank = parent.alu.word0.KCACHE_BANK0().get();
-      auto addr = parent.alu.word1.KCACHE_ADDR0().get();
-
-      if (sel >= SQ_ALU_KCACHE_BANK1_FIRST && sel <= SQ_ALU_KCACHE_BANK1_LAST) {
-         mode = parent.alu.word1.KCACHE_MODE1();
-         bank = parent.alu.word0.KCACHE_BANK1();
-         addr = parent.alu.word1.KCACHE_ADDR1();
-      }
-
-      auto id = addr * 16 + (sel - SQ_ALU_KCACHE_BANK0_FIRST);
-
-      switch (mode) {
-      case SQ_CF_KCACHE_LOCK_1:
-      case SQ_CF_KCACHE_LOCK_2:
-         out << "KC[" << bank << "][" << id << "]";
-         break;
-      case SQ_CF_KCACHE_LOCK_LOOP_INDEX:
-         out << "KC[" << bank << "][AL + " << id << "]";
-         break;
-      default:
-         out << "KC_UNKNOWN_MODE";
-      }
+   if (sel >= SQ_ALU_KCACHE_BANK0_FIRST && sel <= SQ_ALU_KCACHE_BANK0_LAST) {
+      auto id = sel - SQ_ALU_KCACHE_BANK0_FIRST;
+      out << "KCACHE0[" << id << "]";
+   } else if (sel >= SQ_ALU_KCACHE_BANK1_FIRST && sel <= SQ_ALU_KCACHE_BANK1_LAST) {
+      auto id = sel - SQ_ALU_KCACHE_BANK1_FIRST;
+      out << "KCACHE1[" << id << "]";
    } else if (sel >= SQ_ALU_REGISTER_FIRST && sel <= SQ_ALU_REGISTER_LAST) {
       out << "R" << (sel - SQ_ALU_REGISTER_FIRST);
    } else if (sel >= SQ_ALU_SRC_CONST_FILE_FIRST && sel <= SQ_ALU_SRC_CONST_FILE_LAST) {
@@ -530,8 +522,8 @@ disassembleCfALUInstruction(fmt::MemoryWriter &out,
       out << " WHOLE_QUAD";
    }
 
-   disassembleKcache(out, inst.alu.word0.KCACHE_MODE0(), inst.alu.word0.KCACHE_BANK0(), inst.alu.word1.KCACHE_ADDR0());
-   disassembleKcache(out, inst.alu.word1.KCACHE_MODE1(), inst.alu.word0.KCACHE_BANK1(), inst.alu.word1.KCACHE_ADDR1());
+   disassembleKcache(out, 0, inst.alu.word0.KCACHE_MODE0(), inst.alu.word0.KCACHE_BANK0(), inst.alu.word1.KCACHE_ADDR0());
+   disassembleKcache(out, 1, inst.alu.word1.KCACHE_MODE1(), inst.alu.word0.KCACHE_BANK1(), inst.alu.word1.KCACHE_ADDR1());
 }
 
 void
