@@ -11,13 +11,17 @@ namespace coreinit
 
 struct OSSystemInfo
 {
-   be_val<uint32_t> clockSpeed;
-   UNKNOWN(0x4);
+   be_val<uint32_t> busSpeed;
+   be_val<uint32_t> coreSpeed;
    be_val<OSTime> baseTime;
-   UNKNOWN(0x10);
+   be_val<uint32_t> _unkX[3];
+   be_val<uint32_t> _unkY;
 };
-CHECK_OFFSET(OSSystemInfo, 0x0, clockSpeed);
+CHECK_OFFSET(OSSystemInfo, 0x0, busSpeed);
+CHECK_OFFSET(OSSystemInfo, 0x4, coreSpeed);
 CHECK_OFFSET(OSSystemInfo, 0x8, baseTime);
+CHECK_OFFSET(OSSystemInfo, 0x10, _unkX);
+CHECK_OFFSET(OSSystemInfo, 0x1c, _unkY);
 CHECK_SIZE(OSSystemInfo, 0x20);
 
 #pragma pack(pop)

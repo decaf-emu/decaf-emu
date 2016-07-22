@@ -9,6 +9,7 @@
 #include "mem.h"
 #include <atomic>
 #include <cfenv>
+#include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <vector>
@@ -18,6 +19,9 @@ namespace cpu
 
 std::atomic_bool
 gRunning;
+
+std::chrono::time_point<std::chrono::steady_clock>
+sStartupTime;
 
 EntrypointHandler
 gCoreEntryPointHandler;
@@ -46,6 +50,8 @@ initialise()
    espresso::initialiseInstructionSet();
    cpu::interpreter::initialise();
    cpu::jit::initialise();
+
+   sStartupTime = std::chrono::steady_clock::now();
 }
 
 void
@@ -171,6 +177,14 @@ void
 setBranchTraceHandler(BranchTraceHandler handler)
 {
    gBranchTraceHandler = handler;
+}
+
+uint64_t
+Core::tb()
+{
+   auto now = std::chrono::steady_clock::now();
+   auto ticks = std::chrono::duration_cast<TimerDuration>(now - sStartupTime);
+   return ticks.count();
 }
 
 namespace this_core

@@ -64,6 +64,9 @@ OSCalendarTimeToTicks(OSCalendarTime *calendarTime);
 namespace internal
 {
 
+OSTime
+getBaseTime();
+
 std::chrono::time_point<std::chrono::system_clock>
 toTimepoint(OSTime time);
 

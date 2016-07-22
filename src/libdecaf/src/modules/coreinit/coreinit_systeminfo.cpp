@@ -90,15 +90,13 @@ OSGetOSID()
 void
 Module::initialiseSystemInformation()
 {
-   sSystemInfo = coreinit::internal::sysAlloc<OSSystemInfo>();
-
-   // Clockspeed is 4 * 1 second in ticks
-   auto oneSecond = std::chrono::seconds(1);
-   auto oneSecondNS = std::chrono::duration_cast<std::chrono::nanoseconds>(oneSecond);
-   sSystemInfo->clockSpeed = oneSecondNS.count() * 4;
-
-   // Set startup time
-   sSystemInfo->baseTime = OSGetTime();
+   sSystemInfo->busSpeed = cpu::busClockSpeed;
+   sSystemInfo->coreSpeed = cpu::coreClockSpeed;
+   sSystemInfo->baseTime = internal::getBaseTime();
+   sSystemInfo->_unkX[0] = 0x80000;
+   sSystemInfo->_unkX[1] = 0x200000;
+   sSystemInfo->_unkX[2] = 0x80000;
+   sSystemInfo->_unkY = 5;
 
    sScreenCapturePermission = TRUE;
    sEnableHomeButtonMenu = TRUE;
@@ -117,6 +115,8 @@ Module::registerSystemInfoFunctions()
    RegisterKernelFunction(OSBlockThreadsOnExit);
    RegisterKernelFunction(OSGetTitleID);
    RegisterKernelFunction(OSGetOSID);
+
+   RegisterInternalData(sSystemInfo);
 }
 
 namespace internal

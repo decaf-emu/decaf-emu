@@ -3,6 +3,7 @@
 #include "coreinit_systeminfo.h"
 #include "common/platform_time.h"
 #include "decaf_config.h"
+#include "libcpu/cpu.h"
 
 namespace coreinit
 {
@@ -10,6 +11,25 @@ namespace coreinit
 static std::chrono::time_point<std::chrono::system_clock>
 sEpochTime;
 
+static std::chrono::time_point<std::chrono::system_clock>
+sBaseClock;
+
+static cpu::TimerDuration
+sBaseTicks;
+
+
+static uint64_t
+scaledTimebase()
+{
+   if (decaf::config::system::time_scale == 1.0) {
+      return cpu::this_core::state()->tb();
+   } else {
+      // This might introduce timeBase inaccuracies, which is why we only
+      //  do it when it is not set to 1.0.
+      auto tbDbl = static_cast<double>(cpu::this_core::state()->tb());
+      return static_cast<uint64_t>(tbDbl * decaf::config::system::time_scale);
+   }
+}
 
 /**
  * Time since epoch
@@ -17,9 +37,7 @@ sEpochTime;
 OSTime
 OSGetTime()
 {
-   auto now = std::chrono::system_clock::now();
-   auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now - sEpochTime);
-   return static_cast<OSTime>(static_cast<double>(ns.count()) * decaf::config::system::time_scale);
+   return OSGetSystemTime() + sBaseTicks.count();
 }
 
 
@@ -29,7 +47,7 @@ OSGetTime()
 OSTime
 OSGetSystemTime()
 {
-   return OSGetTime() - OSGetSystemInfo()->baseTime;
+   return scaledTimebase();
 }
 
 
@@ -39,7 +57,7 @@ OSGetSystemTime()
 OSTick
 OSGetTick()
 {
-   return OSGetTime() & 0xFFFFFFFF;
+   return OSGetSystemTick() + static_cast<OSTick>(sBaseTicks.count());
 }
 
 
@@ -49,7 +67,7 @@ OSGetTick()
 OSTick
 OSGetSystemTick()
 {
-   return OSGetSystemTime() & 0xFFFFFFFF;
+   return static_cast<uint32_t>(scaledTimebase());
 }
 
 
@@ -103,9 +121,14 @@ Module::initialiseClock()
    tm.tm_hour = 0;
    tm.tm_mday = 1;
    tm.tm_mon = 1;
-   tm.tm_year = 100;
+   tm.tm_year = 2000 - 1900;
    tm.tm_isdst = -1;
    sEpochTime = std::chrono::system_clock::from_time_t(platform::make_gm_time(tm));
+
+   sBaseClock = std::chrono::system_clock::now();
+   auto ticksSinceEpoch = std::chrono::duration_cast<cpu::TimerDuration>(sBaseClock - sEpochTime);
+   auto ticksSinceStart = cpu::TimerDuration(cpu::this_core::state()->tb());
+   sBaseTicks = ticksSinceEpoch - ticksSinceStart;
 }
 
 void
@@ -122,17 +145,26 @@ Module::registerTimeFunctions()
 namespace internal
 {
 
+OSTime
+getBaseTime()
+{
+   return sBaseTicks.count();
+}
+
 std::chrono::time_point<std::chrono::system_clock>
 toTimepoint(OSTime time)
 {
-   auto chrono = sEpochTime + std::chrono::nanoseconds(time);
-   return std::chrono::time_point_cast<std::chrono::system_clock::duration>(chrono);
+   auto ticksSinceBaseTime = cpu::TimerDuration(time) - sBaseTicks;
+   auto clocksSinceBaseTime = std::chrono::duration_cast<std::chrono::system_clock::duration>(ticksSinceBaseTime);
+   return sBaseClock + clocksSinceBaseTime;
 }
 
 OSTime
 toOSTime(std::chrono::time_point<std::chrono::system_clock> chrono)
 {
-   return std::chrono::duration_cast<std::chrono::nanoseconds>(chrono - sEpochTime).count();
+   auto clocksSinceBaseTime = chrono - sBaseClock;
+   auto ticksSinceBaseTime = std::chrono::duration_cast<cpu::TimerDuration>(clocksSinceBaseTime);
+   return (sBaseTicks + ticksSinceBaseTime).count();
 }
 
 } // namespace internal

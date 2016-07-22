@@ -10,7 +10,10 @@ namespace cpu
 {
 
 static const uint32_t coreClockSpeed = 1243125000;
-static const uint32_t busClockSpeed = 800000000;
+static const uint32_t busClockSpeed = 248625000;
+static const uint32_t timerClockSpeed = busClockSpeed / 4;
+
+using TimerDuration = std::chrono::duration < uint64_t, std::ratio<1, timerClockSpeed>>;
 
 struct CoreRegs
 {
@@ -50,12 +53,7 @@ struct Core : CoreRegs
    std::atomic<uint32_t> interrupt { 0 };
    std::chrono::system_clock::time_point next_alarm;
 
-   inline uint64_t tb() {
-      using ppc_timer_duration = std::chrono::duration < uint64_t, std::ratio<1, busClockSpeed * 4>>;
-      auto now = std::chrono::high_resolution_clock::now();
-      auto ticks = std::chrono::duration_cast<ppc_timer_duration>(now.time_since_epoch());
-      return ticks.count();
-   }
+   uint64_t tb();
 };
 
 } // namespace cpu

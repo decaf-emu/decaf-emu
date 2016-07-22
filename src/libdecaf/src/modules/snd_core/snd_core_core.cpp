@@ -212,7 +212,7 @@ initEvents()
    startFrameAlarmThread();
 
    sFrameAlarm = coreinit::internal::sysAlloc<OSAlarm>();
-   auto ticks = static_cast<OSTime>(OSGetSystemInfo()->clockSpeed / 4) / 333;
+   auto ticks = static_cast<OSTime>(OSGetSystemInfo()->busSpeed / 4) / 333;
    OSCreateAlarm(sFrameAlarm);
    OSSetPeriodicAlarm(sFrameAlarm, OSGetTime(), ticks, sFrameAlarmHandler);
 }
