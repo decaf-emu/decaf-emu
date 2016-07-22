@@ -204,7 +204,8 @@ static int32_t
 syscall_time()
 {
    auto t = internal::toTimepoint(OSGetTime());
-   return t.time_since_epoch() / std::chrono::seconds(1);
+   auto time = t.time_since_epoch() / std::chrono::seconds(1);
+   return static_cast<int32_t>(time);
 }
 
 static int32_t

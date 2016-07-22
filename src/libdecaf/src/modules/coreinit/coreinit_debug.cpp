@@ -153,7 +153,10 @@ formatString(const char *fmt, ppctypes::VarList &args, std::string &output)
 }
 
 static void
-OSPanic(const char *file, int line, const char *fmt, ppctypes::VarList &args)
+OSPanic(const char *file,
+        int line,
+        const char *fmt,
+        ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
@@ -162,7 +165,8 @@ OSPanic(const char *file, int line, const char *fmt, ppctypes::VarList &args)
 }
 
 static void
-OSReport(const char *fmt, ppctypes::VarList &args)
+OSReport(const char *fmt,
+         ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
@@ -170,7 +174,8 @@ OSReport(const char *fmt, ppctypes::VarList &args)
 }
 
 static void
-OSVReport(const char *fmt, ppctypes::VarList &args)
+OSVReport(const char *fmt,
+          ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
@@ -178,7 +183,9 @@ OSVReport(const char *fmt, ppctypes::VarList &args)
 }
 
 static void
-COSWarn(uint32_t module, const char *fmt, ppctypes::VarList &args)
+COSWarn(uint32_t module,
+        const char *fmt,
+        ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
@@ -186,7 +193,8 @@ COSWarn(uint32_t module, const char *fmt, ppctypes::VarList &args)
 }
 
 static void
-OSConsoleWrite(const char *msg, uint32_t size)
+OSConsoleWrite(const char *msg,
+               uint32_t size)
 {
    auto str = std::string { msg, size };
    gLog->info("[OSConsoleWrite] {}", str);
@@ -203,7 +211,10 @@ OSConsoleWrite(const char *msg, uint32_t size)
 }
 
 static int
-coreinit__os_snprintf(char *buffer, uint32_t size, const char *fmt, ppctypes::VarList &args)
+coreinit__os_snprintf(char *buffer,
+                      uint32_t size,
+                      const char *fmt,
+                      ppctypes::VarList &args)
 {
    std::string str;
    formatString(fmt, args, str);
@@ -211,21 +222,26 @@ coreinit__os_snprintf(char *buffer, uint32_t size, const char *fmt, ppctypes::Va
 }
 
 static uint32_t
-OSGetSymbolName(uint32_t address, char *buffer, int bufsize)
+OSGetSymbolName(uint32_t address,
+                char *buffer,
+                int bufsize)
 {
-   uint32_t retval = 0;
-   bool found = false;
+   auto retval = 0u;
+   auto found = false;
 
    kernel::loader::lockLoader();
    const auto &modules = kernel::loader::getLoadedModules();
+
    for (auto &mod : modules) {
-      uint32_t codeBase = 0;
+      auto codeBase = 0u;
+
       for (auto &sec : mod.second->sections) {
          if (sec.name.compare(".text") == 0) {
             codeBase = sec.start;
             break;
          }
       }
+
       for (auto &sym : mod.second->symbols) {
          if (sym.second.address == address) {
             strncpy(buffer, sym.first.c_str(), bufsize);
@@ -234,12 +250,13 @@ OSGetSymbolName(uint32_t address, char *buffer, int bufsize)
             break;
          }
       }
+
       if (found) {
          break;
       }
    }
-   kernel::loader::unlockLoader();
 
+   kernel::loader::unlockLoader();
    return retval;
 }
 

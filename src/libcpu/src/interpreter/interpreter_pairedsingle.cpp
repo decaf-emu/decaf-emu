@@ -530,7 +530,8 @@ ps_res(cpu::Core *state, Instruction instr)
    state->fpscr.zx |= zx0 || zx1;
 
    float d0, d1;
-   bool write = true;
+   auto write = true;
+
    if ((vxsnan0 && state->fpscr.ve) || (zx0 && state->fpscr.ze)) {
       write = false;
    } else {
@@ -539,10 +540,11 @@ ps_res(cpu::Core *state, Instruction instr)
       } else if (vxsnan0) {
          d0 = make_nan<float>();
       } else {
-         d0 = ppc_estimate_reciprocal(static_cast<double>(static_cast<float>(b0)));
+         d0 = static_cast<float>(ppc_estimate_reciprocal(static_cast<double>(static_cast<float>(b0))));
       }
       updateFPRF(state, d0);
    }
+
    if ((vxsnan1 && state->fpscr.ve) || (zx1 && state->fpscr.ze)) {
       write = false;
    } else {
@@ -551,7 +553,7 @@ ps_res(cpu::Core *state, Instruction instr)
       } else if (vxsnan1) {
          d1 = make_nan<float>();
       } else {
-         d1 = ppc_estimate_reciprocal(static_cast<double>(static_cast<float>(b1)));
+         d1 = static_cast<float>(ppc_estimate_reciprocal(static_cast<double>(static_cast<float>(b1))));
       }
    }
 
