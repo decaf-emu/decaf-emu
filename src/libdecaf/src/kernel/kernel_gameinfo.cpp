@@ -272,7 +272,7 @@ loadGameInfo(decaf::GameInfo &info)
 
    if (!loadMetaXML("/vol/meta/meta.xml", info.meta)) {
       info.meta.version = 1u;
-      info.meta.product_code = "WUP-P-FUCK";
+      info.meta.product_code = { };
       info.meta.os_version = info.app.os_version;
       info.meta.title_version = 1u;
       info.meta.title_id = info.app.title_id;
