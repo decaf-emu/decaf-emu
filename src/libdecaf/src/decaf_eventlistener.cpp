@@ -1,4 +1,5 @@
 #include "decaf_eventlistener.h"
+#include <algorithm>
 #include <vector>
 
 namespace decaf
