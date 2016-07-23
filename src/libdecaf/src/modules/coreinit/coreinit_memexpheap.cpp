@@ -8,6 +8,12 @@
 namespace coreinit
 {
 
+static const auto
+FreeTag = 0x4654; // 'FR'
+
+static const auto
+UsedTag = 0x5544; // 'UD'
+
 static uint8_t *
 getBlockMemStart(MEMExpHeapBlock *block)
 {
@@ -31,7 +37,7 @@ static MEMExpHeapBlock *
 getUsedMemBlock(void * mem)
 {
    auto block = reinterpret_cast<MEMExpHeapBlock *>(mem) - 1;
-   decaf_check(block->tag == 0x5544);
+   decaf_check(block->tag == UsedTag);
    return block;
 }
 
@@ -161,16 +167,14 @@ createUsedBlockFromFreeBlock(MEMExpHeap *heap,
    if (expHeapAttribs.reuseAlignSpace() || dir == MEMExpHeapDirection::FromEnd) {
       // If the user wants to reuse the alignment space, or we allocated from the bottom,
       //  we should try to release the top space back to the heap free list.
-
       if (topSpaceRemain > sizeof(MEMExpHeapBlock) + 4) {
          // We have enough room to put some of the memory back to the free list
-
          freeBlock = reinterpret_cast<MEMExpHeapBlock *>(freeMemStart);
          freeBlock->attribs = MEMExpHeapBlockAttribs::get(0);
          freeBlock->blockSize = topSpaceRemain - sizeof(MEMExpHeapBlock);
          freeBlock->next = nullptr;
          freeBlock->prev = nullptr;
-         freeBlock->tag = 0x4652;
+         freeBlock->tag = FreeTag;
 
          insertBlock(&heap->freeList, freeBlockPrev, freeBlock);
          topSpaceRemain = 0;
@@ -180,16 +184,14 @@ createUsedBlockFromFreeBlock(MEMExpHeap *heap,
    if (expHeapAttribs.reuseAlignSpace() || dir == MEMExpHeapDirection::FromStart) {
       // If the user wants to reuse the alignment space, or we allocated from the top,
       //  we should try to release the bottom space back to the heap free list.
-
       if (bottomSpaceRemain > sizeof(MEMExpHeapBlock) + 4) {
          // We have enough room to put some of the memory back to the free list
-
          freeBlock = reinterpret_cast<MEMExpHeapBlock *>(freeMemEnd - bottomSpaceRemain);
          freeBlock->attribs = MEMExpHeapBlockAttribs::get(0);
          freeBlock->blockSize = bottomSpaceRemain - sizeof(MEMExpHeapBlock);
          freeBlock->next = nullptr;
          freeBlock->prev = nullptr;
-         freeBlock->tag = 0x4652;
+         freeBlock->tag = FreeTag;
 
          insertBlock(&heap->freeList, freeBlockPrev, freeBlock);
          bottomSpaceRemain = 0;
@@ -203,7 +205,7 @@ createUsedBlockFromFreeBlock(MEMExpHeap *heap,
    alignedBlock->blockSize = size + bottomSpaceRemain;
    alignedBlock->prev = nullptr;
    alignedBlock->next = nullptr;
-   alignedBlock->tag = 0x5544;
+   alignedBlock->tag = UsedTag;
 
    insertBlock(&heap->usedList, nullptr, alignedBlock);
 
@@ -270,7 +272,7 @@ releaseMemory(MEMExpHeap *heap,
       freeBlock->blockSize = (memEnd - memStart) - sizeof(MEMExpHeapBlock);
       freeBlock->next = nullptr;
       freeBlock->prev = nullptr;
-      freeBlock->tag = 0x4652;
+      freeBlock->tag = FreeTag;
 
       insertBlock(&heap->freeList, prevBlock, freeBlock);
    }
@@ -326,7 +328,7 @@ MEMCreateExpHeapEx(void *base,
    firstBlock->blockSize = (alignedEnd - dataStart) - sizeof(MEMExpHeapBlock);
    firstBlock->next = nullptr;
    firstBlock->prev = nullptr;
-   firstBlock->tag = 0x4652;
+   firstBlock->tag = FreeTag;
 
    heap->freeList.head = firstBlock;
    heap->freeList.tail = firstBlock;
