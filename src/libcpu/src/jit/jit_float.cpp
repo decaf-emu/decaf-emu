@@ -24,8 +24,10 @@ hostHasFMA3()
       __cpuid(cpuInfo, 1);
       hasFMA3 = ((cpuInfo[2] & (1 << 12)) != 0);
 #else
-      uint32_t ecx;
-      __asm__("cpuid" : "=c" (ecx) : "a" (1) : "rax", "rbx", "rdx");
+      // We don't need the value in EAX, but we have to declare it as an
+      // output since GCC complains if it's a clobber.
+      uint32_t eax, ecx;
+      __asm__("cpuid" : "=a" (eax), "=c" (ecx) : "0" (1) : "rbx", "rdx");
       hasFMA3 = ((ecx & (1 << 12)) != 0);
 #endif
       if (!hasFMA3) {
