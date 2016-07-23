@@ -6,6 +6,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_interrupts.h"
 #include "coreinit_event.h"
+#include "coreinit_memexpheap.h"
 #include "coreinit_memheap.h"
 #include "coreinit_mutex.h"
 #include "coreinit_thread.h"
@@ -594,6 +595,11 @@ void startDefaultCoreThreads()
 void
 GameThreadEntry(uint32_t argc, void *argv)
 {
+   // Allocate some memory as if there were system libraries which were loaded...
+   auto mem2Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
+   MEMAllocFromExpHeapEx(reinterpret_cast<MEMExpHeap*>(mem2Heap), 0x01000000, 4);
+
+   // Start up the game!
    auto appModule = kernel::getUserModule();
 
    auto userPreinit = appModule->findFuncExport<void, be_ptr<MEMHeapHeader>*, be_ptr<MEMHeapHeader>*, be_ptr<MEMHeapHeader>*>("__preinit_user");
