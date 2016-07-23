@@ -207,7 +207,8 @@ cpuInterruptHandler(uint32_t interrupt_flags)
       coreinit::internal::pauseCoreTime(false);
    }
 
-   if (!(interrupt_flags & ~cpu::NONMASKABLE_INTERRUPTS)) {
+   auto unsafeInterrupts = cpu::NONMASKABLE_INTERRUPTS | cpu::DBGBREAK_INTERRUPT;
+   if (!(interrupt_flags & ~unsafeInterrupts)) {
       // Due to the fact that non-maskable interrupts are not able to be disabled
       // it is possible the application has the scheduler lock or something, so we
       // need to stop processing here or else bad things could happen.
