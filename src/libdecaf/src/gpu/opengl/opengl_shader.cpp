@@ -1127,7 +1127,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
       switch (exp.type) {
       case latte::SQ_EXPORT_PIXEL:
       {
-         auto mask = cb_shader_mask.value >> (4 * exp.id);
+         auto mask = (cb_shader_mask.value >> (4 * exp.id)) & 0x0F;
 
          if (!mask) {
             gLog->warn("Export is masked by cb_shader_mask");
