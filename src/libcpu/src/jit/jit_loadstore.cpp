@@ -19,7 +19,7 @@ enum LoadFlags
    LoadIndexed = 1 << 1, // Use rB instead of d
    LoadSignExtend = 1 << 2, // Sign extend
    LoadByteReverse = 1 << 3, // Swap bytes
-   LoadReserve = 1 << 4, // lwarx harware reserve
+   LoadReserve = 1 << 4, // lwarx hardware reserve
    LoadZeroRA = 1 << 5, // Use 0 instead of r0
 };
 
@@ -343,7 +343,7 @@ enum StoreFlags
    StoreUpdate = 1 << 0, // Save EA in rA
    StoreIndexed = 1 << 1, // Use rB instead of d
    StoreByteReverse = 1 << 2, // Swap Bytes
-   StoreConditional = 1 << 3, // lward/stwcx Conditional
+   StoreConditional = 1 << 3, // lwarx/stwcx Conditional
    StoreZeroRA = 1 << 4, // Use 0 instead of r0
    StoreFloatAsInteger = 1 << 5, // stfiwx
 };

@@ -28,6 +28,15 @@ static const bool JIT_DEBUG = true;
 static const int JIT_MAX_INST = 3000;
 static const bool JIT_REGCACHE = true;
 
+// Insert NOPs at the beginning of a generated block of code.
+//  The Visual Studio disassembler can get confused without these.
+static const bool JIT_INITIAL_NOPS =
+#ifdef _MSC_VER
+   true;
+#else
+   false;
+#endif
+
 static std::vector<jitinstrfptr_t>
 sInstructionMap;
 
@@ -66,8 +75,7 @@ initStubs()
 {
    PPCEmuAssembler a(sRuntime);
 
-   // Visual studio is annoying
-   if (JIT_DEBUG) {
+   if (JIT_DEBUG && JIT_INITIAL_NOPS) {
       for (auto i = 0; i < 12; ++i) {
          a.nop();
       }
@@ -365,8 +373,7 @@ gen(JitBlock &block)
    uint32_t lclCia;
    a.bind(codeStart);
 
-   // Visual studio disassembler sucks.  We need to write some NOPS!
-   if (JIT_DEBUG) {
+   if (JIT_DEBUG && JIT_INITIAL_NOPS) {
       for (auto i = 0; i < 12; ++i) {
          a.nop();
       }
