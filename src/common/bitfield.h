@@ -17,8 +17,8 @@ struct BitfieldField
 
    inline BitfieldType set(ValueType value)
    {
-      decaf_assert(value >= MinValue, fmt::format("{} >= {}", value, MinValue));
-      decaf_assert(value <= MaxValue, fmt::format("{} <= {}", value, MaxValue));
+      decaf_assert(value >= MinValue, fmt::format("{} >= {}", value, static_cast<unsigned>(MinValue)));
+      decaf_assert(value <= MaxValue, fmt::format("{} <= {}", value, static_cast<unsigned>(MaxValue)));
       parent.value &= ~Mask;
       parent.value |= static_cast<typename BitfieldType::StorageType>(value) << (Position);
       return parent;
