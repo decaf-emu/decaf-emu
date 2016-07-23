@@ -285,6 +285,7 @@ bool GLDriver::checkActiveShader()
          if (!isLinked) {
             auto log = getProgramLog(vertexShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
             gLog->error("OpenGL failed to compile vertex shader:\n{}", log);
+            gLog->error("Fetch Disassembly:\n{}\n", fetchShader.disassembly);
             gLog->error("Shader Disassembly:\n{}\n", vertexShader.disassembly);
             gLog->error("Shader Code:\n{}\n", vertexShader.code);
             return false;
