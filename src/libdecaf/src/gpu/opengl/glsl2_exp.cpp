@@ -89,8 +89,8 @@ insertSelectVector(fmt::MemoryWriter &out, const std::string &src, SQ_SEL selX, 
       }
 
       if (isTrivialSwizzle) {
-
          out << src << ".";
+
          for (auto i = 0u; i < numSels; ++i) {
             switch (sels[i]) {
             case SQ_SEL_X:
@@ -190,10 +190,10 @@ EXP(State &state, const ControlFlowInst &cf)
    auto type = cf.exp.word0.TYPE();
    auto arrayBase = cf.exp.word0.ARRAY_BASE();
 
-   auto selX = cf.exp.swiz.SRC_SEL_X();
-   auto selY = cf.exp.swiz.SRC_SEL_Y();
-   auto selZ = cf.exp.swiz.SRC_SEL_Z();
-   auto selW = cf.exp.swiz.SRC_SEL_W();
+   auto selX = cf.exp.swiz.SRC_SEL_X().get();
+   auto selY = cf.exp.swiz.SRC_SEL_Y().get();
+   auto selZ = cf.exp.swiz.SRC_SEL_Z().get();
+   auto selW = cf.exp.swiz.SRC_SEL_W().get();
    auto src = getExportRegister(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL());
 
    if (selX == SQ_SEL_MASK && selY == SQ_SEL_MASK && selZ == SQ_SEL_MASK && selW == SQ_SEL_MASK) {
@@ -201,12 +201,8 @@ EXP(State &state, const ControlFlowInst &cf)
       return;
    }
 
-   if (selX == SQ_SEL_MASK || selY == SQ_SEL_MASK || selZ == SQ_SEL_MASK || selW == SQ_SEL_MASK) {
-      // It doesn't really ever make sense for exports to use masking, so lets make
-      //  sure to crash in this instance.  If there is a valid use-case for this, we
-      //  just need to switch back to using condenseSelections instead.
-      throw translate_exception("Masking exports is non-sense");
-   }
+   auto numSrcSels = 4u;
+   auto srcSelMask = condenseSelections(selX, selY, selZ, selW, numSrcSels);
 
    registerExport(state, type, arrayBase);
    insertLineStart(state);
@@ -225,8 +221,8 @@ EXP(State &state, const ControlFlowInst &cf)
       throw translate_exception(fmt::format("Unsupported export type {}", cf.exp.word0.TYPE()));
    }
 
-   state.out << " = ";
-   insertSelectVector(state.out, src, selX, selY, selZ, selW, 4);
+   state.out << "." << srcSelMask << " = ";
+   insertSelectVector(state.out, src, selX, selY, selZ, selW, numSrcSels);
    state.out << ";";
 
    insertLineEnd(state);
