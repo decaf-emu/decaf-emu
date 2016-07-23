@@ -8,6 +8,8 @@
 #include <cassert>
 #include <codecvt>
 #include <Windows.h>
+
+#pragma comment(lib, "dbghelp.lib")
 #endif
 
 void
