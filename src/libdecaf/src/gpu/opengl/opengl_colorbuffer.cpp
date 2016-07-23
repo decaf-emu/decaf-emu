@@ -86,7 +86,11 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
       formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
       degamma = 0;
       break;
-   //case latte::NUMBER_SRGB:
+   case latte::NUMBER_SRGB:
+      numFormat = latte::SQ_NUM_FORMAT_NORM;
+      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      degamma = 1;
+      break;
    default:
       decaf_abort(fmt::format("Color buffer with unsupported number type {}", cbNumberType));
    }
