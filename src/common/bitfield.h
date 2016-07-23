@@ -1,5 +1,6 @@
 #pragma once
 #include "decaf_assert.h"
+#include <spdlog/details/format.h>
 #include <type_traits>
 
 template<typename BitfieldType, typename ValueType, unsigned Position, unsigned Bits>
@@ -16,8 +17,8 @@ struct BitfieldField
 
    inline BitfieldType set(ValueType value)
    {
-      decaf_check(value >= MinValue);
-      decaf_check(value <= MaxValue);
+      decaf_assert(value >= MinValue, fmt::format("{} >= {}", value, MinValue));
+      decaf_assert(value <= MaxValue, fmt::format("{} <= {}", value, MaxValue));
       parent.value &= ~Mask;
       parent.value |= static_cast<typename BitfieldType::StorageType>(value) << (Position);
       return parent;
