@@ -30,9 +30,10 @@ insertIndexMode(fmt::MemoryWriter &out,
    case SQ_INDEX_AR_W:
       out << "AR.w";
       break;
+   /* TODO: We need to implement AL yet, let's throw an error for now.
    case SQ_INDEX_LOOP:
       out << "AL";
-      break;
+      break;*/
    default:
       throw translate_exception(fmt::format("Invalid SQ_INDEX_MODE {}", index));
    }
@@ -572,10 +573,12 @@ updatePredicate(State &state, const ControlFlowInst &cf, const AluInst &inst, co
       state.out << "activeMask = ";
 
       if (updatePredicate) {
-         state.out << "predicateRegister;";
+         state.out << "predicateRegister";
       } else {
-         state.out << "(" << condition << ");";
+         state.out << "(" << condition << ")";
       }
+
+      state.out << " ? Active : InactiveBranch;";
       insertLineEnd(state);
    }
 
@@ -585,7 +588,7 @@ updatePredicate(State &state, const ControlFlowInst &cf, const AluInst &inst, co
    if (updatePredicate) {
       state.out << "predicateRegister";
    } else if (updateExecuteMask) {
-      state.out << "activeMask";
+      state.out << "(activeMask == Active)";
    } else {
       state.out << "(" << condition << ")";
    }

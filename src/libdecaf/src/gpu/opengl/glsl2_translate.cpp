@@ -359,12 +359,32 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       break;
    case SQ_CF_INST_ALU_BREAK:
       insertLineStart(state);
-      state.out << "if (predicateRegister) break;";
+      state.out << "if (predicateRegister) {";
+      insertLineEnd(state);
+
+      increaseIndent(state);
+      insertLineStart(state);
+      state.out << "activeMask = InactiveBreak;";
+      insertLineEnd(state);
+      decreaseIndent(state);
+
+      insertLineStart(state);
+      state.out << "}";
       insertLineEnd(state);
       break;
    case SQ_CF_INST_ALU_CONTINUE:
       insertLineStart(state);
-      state.out << "if (predicateRegister) continue;";
+      state.out << "if (predicateRegister) {";
+      insertLineEnd(state);
+
+      increaseIndent(state);
+      insertLineStart(state);
+      state.out << "activeMask = InactiveContinue;";
+      insertLineEnd(state);
+      decreaseIndent(state);
+
+      insertLineStart(state);
+      state.out << "}";
       insertLineEnd(state);
       break;
    }
@@ -490,11 +510,15 @@ insertFileHeader(State &state)
       << "#extension GL_ARB_texture_gather : enable\n"
       << "#define PUSH(stack, stackIndex, activeMask) stack[stackIndex++] = activeMask\n"
       << "#define POP(stack, stackIndex, activeMask) activeMask = stack[--stackIndex]\n"
+      << "#define Active 0\n"
+      << "#define InactiveBranch 1\n"
+      << "#define InactiveBreak 2\n"
+      << "#define InactiveContinue 3\n"
       << "\n"
-      << "bool activeMask;\n"
+      << "int activeMask;\n"
       << "bool predicateRegister;\n"
       << "int stackIndex;\n"
-      << "bool stack[16];\n"
+      << "int stack[16];\n"
       << "\n";
 
    if (!state.shader) {
@@ -651,7 +675,7 @@ insertCodeHeader(State &state)
 
    out
       << "\n"
-      << "activeMask = true;\n"
+      << "activeMask = Active;\n"
       << "stackIndex = 0;\n";
 
    if (state.shader && state.shader->type == Shader::VertexShader) {
@@ -703,12 +727,18 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
       decaf_abort(fmt::format("GLSL translate exception: {}", e.what()));
    }
 
+   decaf_check(state.loopStack.size() == 0);
    insertFileHeader(state);
    insertCodeHeader(state);
 
    shader.codeBody = state.out.str();
    shader.fileHeader = state.outFileHeader.str();
    shader.codeHeader = state.outCodeHeader.str();
+
+   if (state.printMyCode) {
+      gLog->debug("File Header:\n{}\nCode Header:\n{}\nCode Body:\n{}", shader.fileHeader, shader.codeHeader, shader.codeBody);
+   }
+
    return true;
 }
 

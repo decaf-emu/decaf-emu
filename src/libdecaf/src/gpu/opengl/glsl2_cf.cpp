@@ -61,28 +61,70 @@ KILL(State &state, const ControlFlowInst &cf)
 static void
 LOOP_END(State &state, const ControlFlowInst &cf)
 {
+   // TODO: LOOP_END has different behaviour depending on which LOOP_START
+   // instruction started the loop, currently we only handle LOOP_START_DX10
+   auto &loopState = state.loopStack.top();
+   auto loopIndex = state.loopStack.size() - 1;
+
+   // Sanity check to ensure we are at the cfPC
+   decaf_check(state.cfPC == loopState.endPC);
+   decaf_check((cf.word0.ADDR - 1) == loopState.startPC);
+
+   state.loopStack.pop();
+
+   // If breakMask is set, lets break from the while
+   insertLineStart(state);
+   state.out << "if (activeMask == InactiveBreak) {";
+   insertLineEnd(state);
+
+   increaseIndent(state);
+   insertLineStart(state);
+   state.out << "break;";
+   insertLineEnd(state);
+   decreaseIndent(state);
+
+   insertLineStart(state);
+   state.out << "}";
+   insertLineEnd(state);
+
+   // If ContinueMask is set, lets break from the while
+   insertLineStart(state);
+   state.out << "if (activeMask == InactiveContinue) {";
+   insertLineEnd(state);
+
+   increaseIndent(state);
+   insertLineStart(state);
+   state.out << "activeMask = Active;";
+   insertLineEnd(state);
+   decreaseIndent(state);
+
+   insertLineStart(state);
+   state.out << "}";
+   insertLineEnd(state);
+
+   // Check the while condition but without checking loop masks
    decreaseIndent(state);
    insertLineStart(state);
    state.out << "} while (";
-   // TODO: decrement and test AL for LOOP_START loops only
    insertCond(state, cf.word1.COND());
    state.out << ");";
    insertLineEnd(state);
-   insertPop(state);
 
+   insertPop(state);
    condEnd(state);
 }
 
 static void
 LOOP_START_DX10(State &state, const ControlFlowInst &cf)
 {
-   condStart(state, cf.word1.COND(), true);
+   LoopState loop;
+   loop.startPC = state.cfPC;
+   loop.endPC = cf.word0.ADDR - 1;
+   state.loopStack.emplace(loop);
 
-   insertPop(state, cf.word1.POP_COUNT());
-
-   condElse(state);
-
+   condStart(state, cf.word1.COND());
    insertPush(state);
+
    insertLineStart(state);
    state.out << "do {";
    insertLineEnd(state);

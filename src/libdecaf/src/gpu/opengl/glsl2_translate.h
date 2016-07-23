@@ -1,6 +1,7 @@
 #pragma once
 #include <exception>
 #include <gsl.h>
+#include <stack>
 #include <stdexcept>
 #include <string>
 #include <spdlog/details/format.h>
@@ -60,6 +61,12 @@ struct Shader
    std::array<SamplerUsage, 16> samplerUsage;
 };
 
+struct LoopState
+{
+   uint32_t startPC;
+   uint32_t endPC;
+};
+
 struct State
 {
    Shader *shader = nullptr;
@@ -73,6 +80,8 @@ struct State
    latte::SQ_CHAN unit;
    gsl::span<const uint32_t> literals;
    std::vector<std::string> postGroupWrites;
+   std::stack<LoopState> loopStack;
+   bool printMyCode = false;
 };
 
 bool

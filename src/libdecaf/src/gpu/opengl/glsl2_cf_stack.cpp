@@ -31,12 +31,12 @@ void
 insertElse(State &state)
 {
    insertLineStart(state);
-   state.out << "if (stack[stackIndex - 1]) {";
+   state.out << "if (stack[stackIndex - 1] == Active) {";
    insertLineEnd(state);
 
    increaseIndent(state);
    insertLineStart(state);
-   state.out << "activeMask = !activeMask;";
+   state.out << "activeMask = (activeMask == Active) ? InactiveBranch : Active;";
    insertLineEnd(state);
    decreaseIndent(state);
 
@@ -52,7 +52,7 @@ insertCond(State &state,
 {
    switch (cond) {
    case SQ_CF_COND_ACTIVE:
-      state.out << "activeMask";
+      state.out << "activeMask == Active";
       break;
    case SQ_CF_COND_FALSE:
       state.out << "false";
@@ -68,19 +68,12 @@ insertCond(State &state,
 
 void
 condStart(State &state,
-          SQ_CF_COND cond,
-          bool invert)
+          SQ_CF_COND cond)
 {
    insertLineStart(state);
 
    state.out << "if (";
-   if (invert) {
-      state.out << "!(";
-   }
    insertCond(state, cond);
-   if (invert) {
-      state.out << ")";
-   }
    state.out << ") {";
 
    insertLineEnd(state);
