@@ -1051,6 +1051,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    }
 
    // Pixel Shader Inputs
+   std::array<bool, 256> semanticUsed = { false };
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
       auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
       auto semanticId = spi_ps_input_cntl.SEMANTIC();
@@ -1058,6 +1059,12 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
 
       auto vsOutputLoc = vertex.outputMap[semanticId];
       decaf_check(vsOutputLoc != 0xff);
+
+      if (semanticUsed[semanticId]) {
+         continue;
+      } else {
+         semanticUsed[semanticId] = true;
+      }
 
       out << "layout(location = " << vsOutputLoc << ")";
 
