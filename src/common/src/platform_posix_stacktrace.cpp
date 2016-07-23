@@ -17,6 +17,12 @@ void freeStackTrace(StackTrace *)
 {
 }
 
+std::string
+formatStackTrace(StackTrace *trace)
+{
+   return { };
+}
+
 void printStackTrace(StackTrace *)
 {
    decaf_abort("POSIX support for stack tracing is not implemented");

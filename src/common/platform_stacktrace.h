@@ -12,6 +12,9 @@ captureStackTrace();
 void
 freeStackTrace(StackTrace *trace);
 
+std::string
+formatStackTrace(StackTrace *trace);
+
 void
 printStackTrace(StackTrace *trace);
 

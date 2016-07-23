@@ -1,6 +1,7 @@
 #include "decaf_assert.h"
 #include "log.h"
 #include "platform.h"
+#include "platform_stacktrace.h"
 #include <iostream>
 
 #ifdef PLATFORM_WINDOWS
@@ -15,6 +16,10 @@ assertFailed(const char *file,
              const char *expression,
              const std::string &message)
 {
+   auto stackTrace = platform::captureStackTrace();
+   auto trace = platform::formatStackTrace(stackTrace);
+   platform::freeStackTrace(stackTrace);
+
    fmt::MemoryWriter out;
    out << "Assertion failed:\n";
    out << "Expression: " << expression << "\n";
@@ -23,6 +28,10 @@ assertFailed(const char *file,
 
    if (!message.empty()) {
       out << "Message: " << message << "\n";
+   }
+
+   if (trace.size()) {
+      out << "Stacktrace:\n" << trace << "\n";
    }
 
    if (gLog) {
