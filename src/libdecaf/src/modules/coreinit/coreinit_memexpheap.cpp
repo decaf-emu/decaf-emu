@@ -50,6 +50,7 @@ listContainsBlock(MEMExpHeapBlockList *list,
          return true;
       }
    }
+
    return false;
 }
 
@@ -91,11 +92,13 @@ removeBlock(MEMExpHeapBlockList *list,
    } else {
       list->head = block->next;
    }
+
    if (block->next) {
       block->next->prev = block->prev;
    } else {
       list->tail = block->prev;
    }
+
    block->prev = nullptr;
    block->next = nullptr;
 }
@@ -109,17 +112,21 @@ getAlignedBlockSize(MEMExpHeapBlock *block,
       auto dataStart = reinterpret_cast<uint8_t *>(block) + sizeof(MEMExpHeapBlock);
       auto dataEnd = dataStart + block->blockSize;
       auto alignedDataStart = align_up(dataStart, alignment);
+
       if (alignedDataStart >= dataEnd) {
          return 0;
       }
+
       return static_cast<uint32_t>(dataEnd - alignedDataStart);
    } else if (dir == MEMExpHeapDirection::FromEnd) {
       auto dataStart = reinterpret_cast<uint8_t *>(block) + sizeof(MEMExpHeapBlock);
       auto dataEnd = dataStart + block->blockSize;
       auto alignedDataEnd = align_down(dataEnd, alignment);
+
       if (alignedDataEnd <= dataStart) {
          return 0;
       }
+
       return static_cast<uint32_t>(alignedDataEnd - dataStart);
    } else {
       decaf_abort("Unexpected ExpHeap direction");
@@ -146,7 +153,8 @@ createUsedBlockFromFreeBlock(MEMExpHeap *heap,
    removeBlock(&heap->freeList, freeBlock);
 
    // Find where we are going to start
-   uint8_t * alignedDataStart = nullptr;
+   uint8_t *alignedDataStart = nullptr;
+
    if (dir == MEMExpHeapDirection::FromStart) {
       alignedDataStart = align_up(freeMemStart + sizeof(MEMExpHeapBlock), alignment);
    } else if (dir == MEMExpHeapDirection::FromEnd) {
@@ -209,9 +217,9 @@ createUsedBlockFromFreeBlock(MEMExpHeap *heap,
 
    insertBlock(&heap->usedList, nullptr, alignedBlock);
 
-   if (heapAttribs.flags() & MEMHeapFlags::ZeroAllocated) {
+   if (heapAttribs.zeroAllocated()) {
       memset(alignedDataStart, 0, size);
-   } else if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+   } else if (heapAttribs.debugMode()) {
       auto fillVal = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
       memset(alignedDataStart, fillVal, size);
    }
@@ -225,11 +233,10 @@ releaseMemory(MEMExpHeap *heap,
               uint8_t *memEnd)
 {
    decaf_check(memEnd - memStart >= sizeof(MEMExpHeapBlock) + 4);
-
    auto heapAttribs = heap->header.attribs.value();
 
    // Fill the released memory with debug data if needed
-   if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+   if (heapAttribs.debugMode()) {
       auto fillVal = MEMGetFillValForHeap(MEMHeapFillType::Freed);
       memset(memStart, fillVal, memEnd - memStart);
    }
@@ -248,10 +255,10 @@ releaseMemory(MEMExpHeap *heap,
    }
 
    MEMExpHeapBlock *freeBlock = nullptr;
+
    if (prevBlock) {
       // If there is a previous block, we need to check if we
       //  should just steal that block rather than making one.
-
       auto prevMemEnd = getBlockMemEnd(prevBlock);
 
       if (memStart == prevMemEnd) {
@@ -266,7 +273,6 @@ releaseMemory(MEMExpHeap *heap,
    if (!freeBlock) {
       // We did not steal the previous block to free into,
       //  we need to allocate our own here.
-
       freeBlock = reinterpret_cast<MEMExpHeapBlock *>(memStart);
       freeBlock->attribs = MEMExpHeapBlockAttribs::get(0);
       freeBlock->blockSize = (memEnd - memStart) - sizeof(MEMExpHeapBlock);
@@ -280,12 +286,11 @@ releaseMemory(MEMExpHeap *heap,
    if (nextBlock) {
       // If there is a next block, we need to possibly merge it down
       //  into this one.
-
       auto nextBlockStart = getBlockMemStart(nextBlock);
+
       if (nextBlockStart == memEnd) {
          // The next block needs to be merged into the freeBlock, as they
          //  are directly adjacent to each other in memory.
-
          auto nextBlockEnd = getBlockMemEnd(nextBlock);
          freeBlock->blockSize += nextBlockEnd - nextBlockStart;
 
@@ -315,10 +320,10 @@ MEMCreateExpHeapEx(void *base,
 
    // Register Heap
    internal::registerHeap(&heap->header,
-      MEMHeapTag::ExpandedHeap,
-      alignedStart + sizeof(MEMExpHeap),
-      alignedEnd,
-      flags);
+                          MEMHeapTag::ExpandedHeap,
+                          alignedStart + sizeof(MEMExpHeap),
+                          alignedEnd,
+                          flags);
 
    // Create an initial block of the data
    auto dataStart = alignedStart + sizeof(MEMExpHeap);
@@ -356,7 +361,6 @@ MEMAllocFromExpHeapEx(MEMExpHeap *heap,
                       int32_t alignment)
 {
    decaf_check(heap->header.tag == MEMHeapTag::ExpandedHeap);
-
    auto expHeapFlags = heap->attribs.value();
 
    if (size == 0) {
@@ -366,13 +370,12 @@ MEMAllocFromExpHeapEx(MEMExpHeap *heap,
    decaf_check(alignment != 0);
 
    internal::HeapLock lock(&heap->header);
-
    MEMExpHeapBlock *newBlock = nullptr;
 
    size = align_up(size, 4);
+
    if (alignment > 0) {
       decaf_check((alignment & 0x3) == 0);
-
       MEMExpHeapBlock *foundBlock = nullptr;
       uint32_t bestAlignedSize = 0xFFFFFFFF;
 
@@ -397,11 +400,10 @@ MEMAllocFromExpHeapEx(MEMExpHeap *heap,
       }
    } else {
       alignment = -alignment;
-
       decaf_check((alignment & 0x3) == 0);
 
       MEMExpHeapBlock *foundBlock = nullptr;
-      uint32_t bestAlignedSize = 0xFFFFFFFF;
+      auto bestAlignedSize = 0xFFFFFFFFu;
 
       for (auto block = heap->freeList.head; block; block = block->next) {
          auto alignedSize = getAlignedBlockSize(block, alignment, MEMExpHeapDirection::FromEnd);
@@ -483,13 +485,14 @@ uint32_t
 MEMAdjustExpHeap(MEMExpHeap *heap)
 {
    internal::HeapLock lock(&heap->header);
-
    auto lastUsedBlock = heap->usedList.tail;
+
    if (!lastUsedBlock) {
       return 0;
    }
 
    auto blockData = reinterpret_cast<uint8_t*>(lastUsedBlock.get()) + sizeof(MEMExpHeapBlock);
+
    if (blockData + lastUsedBlock->blockSize != heap->header.dataEnd) {
       // This block is not for the end of the heap
       return 0;
@@ -516,7 +519,6 @@ MEMResizeForMBlockExpHeap(MEMExpHeap *heap,
                           uint32_t size)
 {
    internal::HeapLock lock(&heap->header);
-
    size = align_up(size, 4);
 
    auto heapAttribs = heap->header.attribs.value();
@@ -568,9 +570,9 @@ MEMResizeForMBlockExpHeap(MEMExpHeap *heap,
       freeMemSize -= newAllocSize;
       block->blockSize = size;
 
-      if (heapAttribs.flags() & MEMHeapFlags::ZeroAllocated) {
+      if (heapAttribs.zeroAllocated()) {
          memset(freeBlockMemStart, 0, newAllocSize);
-      } else if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+      } else if (heapAttribs.debugMode()) {
          auto fillVal = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
          memset(freeBlockMemStart, fillVal, newAllocSize);
       }
@@ -592,8 +594,7 @@ uint32_t
 MEMGetTotalFreeSizeForExpHeap(MEMExpHeap *heap)
 {
    internal::HeapLock lock(&heap->header);
-
-   uint32_t freeSize = 0;
+   auto freeSize = 0u;
 
    for (auto block = heap->freeList.head; block; block = block->next) {
       freeSize += block->blockSize;
@@ -607,8 +608,7 @@ MEMGetAllocatableSizeForExpHeapEx(MEMExpHeap *heap,
                                   int32_t alignment)
 {
    internal::HeapLock lock(&heap->header);
-
-   uint32_t largestFree = 0;
+   auto largestFree = 0u;
 
    if (alignment > 0) {
       decaf_check((alignment & 0x3) == 0);
@@ -642,8 +642,7 @@ MEMSetGroupIDForExpHeap(MEMExpHeap *heap,
                         uint16_t id)
 {
    internal::HeapLock lock(&heap->header);
-
-   uint16_t originalGroupId = heap->groupId;
+   auto originalGroupId = heap->groupId;
    heap->groupId = id;
    return originalGroupId;
 }
@@ -652,7 +651,6 @@ uint16_t
 MEMGetGroupIDForExpHeap(MEMExpHeap *heap)
 {
    internal::HeapLock lock(&heap->header);
-
    return heap->groupId;
 }
 
@@ -677,7 +675,6 @@ MEMGetAllocDirForMBlockExpHeap(uint8_t *addr)
    return block->attribs.value().allocDir();
 }
 
-
 namespace internal
 {
 
@@ -691,18 +688,20 @@ dumpExpandedHeap(MEMExpHeap *heap)
 
    for (auto block = heap->freeList.head; block; block = block->next) {
       auto attribs = static_cast<MEMExpHeapBlockAttribs>(block->attribs);
+
       gLog->debug("FREE  0x{:8x} 0x{:8x} {:d}",
-         mem::untranslate(block),
-         static_cast<uint32_t>(block->blockSize),
-         attribs.groupId().get());
+                  mem::untranslate(block),
+                  static_cast<uint32_t>(block->blockSize),
+                  attribs.groupId().get());
    }
 
    for (auto block = heap->usedList.head; block; block = block->next) {
       auto attribs = static_cast<MEMExpHeapBlockAttribs>(block->attribs);
+
       gLog->debug("USED  0x{:8x} 0x{:8x} {:d}",
-         mem::untranslate(block),
-         static_cast<uint32_t>(block->blockSize),
-         attribs.groupId().get());
+                  mem::untranslate(block),
+                  static_cast<uint32_t>(block->blockSize),
+                  attribs.groupId().get());
    }
 }
 

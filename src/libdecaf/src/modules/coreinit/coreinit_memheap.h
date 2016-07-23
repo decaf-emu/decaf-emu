@@ -16,13 +16,13 @@ namespace coreinit
  * @{
  */
 
-static const uint32_t MEM_MAX_HEAP_TABLE = 0x20;
+#pragma pack(push, 1)
 
 BITFIELD(MEMHeapAttribs, uint32_t)
-BITFIELD_ENTRY(0, 8, uint8_t, flags);
+   BITFIELD_ENTRY(0, 1, bool, zeroAllocated);
+   BITFIELD_ENTRY(1, 1, bool, debugMode);
+   BITFIELD_ENTRY(2, 1, bool, useLock);
 BITFIELD_END
-
-#pragma pack(push, 1)
 
 struct MEMHeapHeader
 {
@@ -100,9 +100,11 @@ namespace internal
 class HeapLock
 {
 public:
-   HeapLock(MEMHeapHeader *header) {
-      auto attribs = static_cast<MEMHeapAttribs>(header->attribs);
-      if (attribs.flags() & MEMHeapFlags::UseLock) {
+   HeapLock(MEMHeapHeader *header)
+   {
+      auto attribs = header->attribs.value();
+
+      if (attribs.useLock()) {
          OSUninterruptibleSpinLock_Acquire(&header->lock);
          mHeap = header;
       } else {
@@ -110,11 +112,22 @@ public:
       }
    }
 
-   ~HeapLock() {
+   ~HeapLock()
+   {
       if (mHeap) {
          OSUninterruptibleSpinLock_Release(&mHeap->lock);
+         mHeap = nullptr;
       }
    }
+
+   void unlock()
+   {
+      if (mHeap) {
+         OSUninterruptibleSpinLock_Release(&mHeap->lock);
+         mHeap = nullptr;
+      }
+   }
+
 
 private:
    MEMHeapHeader *mHeap;

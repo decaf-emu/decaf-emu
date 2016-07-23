@@ -265,9 +265,12 @@ void initialiseDefaultHeaps()
 {
    be_val<uint32_t> addr, size;
 
+   auto mem2Attribs = MEMHeapAttribs::get(0)
+      .useLock().set(true);
+
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
-   auto mem2 = MEMCreateExpHeapEx(make_virtual_ptr<MEMExpHeap>(addr), size, MEMHeapFlags::UseLock);
+   auto mem2 = MEMCreateExpHeapEx(make_virtual_ptr<MEMExpHeap>(addr), size, mem2Attribs.value);
    MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, reinterpret_cast<MEMHeapHeader*>(mem2));
 
    // Create frame heap for MEM1
@@ -293,9 +296,9 @@ registerHeap(MEMHeapHeader *heap,
    heap->tag = tag;
    heap->dataStart = dataStart;
    heap->dataEnd = dataEnd;
-   heap->attribs = MEMHeapAttribs::get(0).flags().set(flags);
+   heap->attribs = MEMHeapAttribs::get(flags);
 
-   if (flags & MEMHeapFlags::DebugMode) {
+   if (heap->attribs.value().debugMode()) {
       auto fillVal = MEMGetFillValForHeap(MEMHeapFillType::Unused);
       memset(dataStart, fillVal, dataEnd - dataStart);
    }

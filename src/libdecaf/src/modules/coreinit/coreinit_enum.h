@@ -248,12 +248,6 @@ ENUM_BEG(MEMHeapFillType, uint32_t)
    ENUM_VALUE(Max,                  0x3)
 ENUM_END(MEMHeapFillType)
 
-ENUM_BEG(MEMHeapFlags, uint32_t)
-   ENUM_VALUE(ZeroAllocated,        1 << 0)
-   ENUM_VALUE(DebugMode,            1 << 1)
-   ENUM_VALUE(UseLock,              1 << 2)
-ENUM_END(MEMHeapFlags)
-
 ENUM_BEG(MEMProtectMode, uint32_t)
    ENUM_VALUE(ReadOnly,             1 << 0)
    ENUM_VALUE(ReadWrite,            1 << 1)

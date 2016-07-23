@@ -15,7 +15,6 @@ MEMCreateFrmHeapEx(void *base,
                    uint32_t flags)
 {
    decaf_check(base);
-
    auto baseMem = reinterpret_cast<uint8_t *>(base);
 
    // Align start and end to 4 byte boundary
@@ -67,42 +66,40 @@ MEMAllocFromFrmHeapEx(MEMFrameHeap *heap,
       size = 1;
    }
 
+   internal::HeapLock lock(&heap->header);
+   auto heapAttribs = heap->header.attribs.value();
    void *block = nullptr;
 
-   {
-      internal::HeapLock lock(&heap->header);
+   if (alignment < 0) {
+      // Allocate from bottom
+      auto tail = align_down(heap->tail.get() - size, -alignment);
 
-      if (alignment < 0) {
-         // Allocate from bottom
-         auto tail = align_down(heap->tail.get() - size, -alignment);
-
-         if (tail < heap->head) {
-            // Not enough space!
-            return nullptr;
-         }
-
-         heap->tail = tail;
-         block = tail;
-      } else {
-         // Allocate from head
-         auto addr = align_up(heap->head.get(), alignment);
-         auto head = addr + size;
-
-         if (head > heap->tail) {
-            // Not enough space!
-            return nullptr;
-         }
-
-         heap->head = head;
-         block = addr;
+      if (tail < heap->head) {
+         // Not enough space!
+         return nullptr;
       }
+
+      heap->tail = tail;
+      block = tail;
+   } else {
+      // Allocate from head
+      auto addr = align_up(heap->head.get(), alignment);
+      auto head = addr + size;
+
+      if (head > heap->tail) {
+         // Not enough space!
+         return nullptr;
+      }
+
+      heap->head = head;
+      block = addr;
    }
 
-   auto heapAttribs = heap->header.attribs.value();
+   lock.unlock();
 
-   if (heapAttribs.flags() & MEMHeapFlags::ZeroAllocated) {
+   if (heapAttribs.zeroAllocated()) {
       std::memset(block, 0, size);
-   } else if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+   } else if (heapAttribs.debugMode()) {
       auto value = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
       std::memset(block, value, size);
    }
@@ -118,12 +115,11 @@ MEMFreeToFrmHeap(MEMFrameHeap *heap,
    decaf_check(heap);
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
 
+   internal::HeapLock lock(&heap->header);
    auto heapAttribs = heap->header.attribs.value();
 
-   internal::HeapLock lock(&heap->header);
-
    if (mode & MEMFrameHeapFreeMode::Head) {
-      if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+      if (heapAttribs.debugMode()) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
          std::memset(heap->header.dataStart, value, heap->head.get() - heap->header.dataStart);
       }
@@ -133,7 +129,7 @@ MEMFreeToFrmHeap(MEMFrameHeap *heap,
    }
 
    if (mode & MEMFrameHeapFreeMode::Tail) {
-      if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+      if (heapAttribs.debugMode()) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
          std::memset(heap->tail, value, heap->header.dataEnd.get() - heap->tail);
       }
@@ -149,13 +145,11 @@ MEMRecordStateForFrmHeap(MEMFrameHeap *heap,
 {
    decaf_check(heap);
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
-   auto result = FALSE;
-
-   auto heapAttribs = heap->header.attribs.value();
 
    internal::HeapLock lock(&heap->header);
-
+   auto heapAttribs = heap->header.attribs.value();
    auto state = reinterpret_cast<MEMFrameHeapState *>(MEMAllocFromFrmHeapEx(heap, sizeof(MEMFrameHeapState), 4));
+   auto result = FALSE;
 
    if (state) {
       state->tag = tag;
@@ -176,11 +170,10 @@ MEMFreeByStateToFrmHeap(MEMFrameHeap *heap,
 {
    decaf_check(heap);
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
-   auto result = FALSE;
-
-   auto heapAttribs = heap->header.attribs.value();
 
    internal::HeapLock lock(&heap->header);
+   auto result = FALSE;
+   auto heapAttribs = heap->header.attribs.value();
 
    // Find the state to reset to
    auto state = heap->previousState;
@@ -197,7 +190,7 @@ MEMFreeByStateToFrmHeap(MEMFrameHeap *heap,
 
    // Reset to state
    if (state) {
-      if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+      if (heapAttribs.debugMode()) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
          std::memset(state->head, value, heap->head.get() - state->head);
          std::memset(heap->tail, value, state->tail.get() - heap->tail);
@@ -217,9 +210,9 @@ MEMAdjustFrmHeap(MEMFrameHeap *heap)
 {
    decaf_check(heap);
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
-   uint32_t result = 0;
 
    internal::HeapLock lock(&heap->header);
+   auto result = 0u;
 
    // We can only adjust the heap if we have no tail allocated memory
    if (heap->tail == heap->header.dataEnd) {
@@ -240,11 +233,10 @@ MEMResizeForMBlockFrmHeap(MEMFrameHeap *heap,
 {
    decaf_check(heap);
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
-   uint32_t result = 0;
-
-   auto heapAttribs = static_cast<MEMHeapAttribs>(heap->header.attribs);
 
    internal::HeapLock lock(&heap->header);
+   auto heapAttribs = static_cast<MEMHeapAttribs>(heap->header.attribs);
+   auto result = 0u;
 
    decaf_check(address > heap->head);
    decaf_check(address < heap->tail);
@@ -265,7 +257,7 @@ MEMResizeForMBlockFrmHeap(MEMFrameHeap *heap,
       result = size;
    } else if (end < heap->head) {
       // Decrease size
-      if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+      if (heapAttribs.debugMode()) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
          std::memset(end, value, heap->head.get() - addrMem);
       }
@@ -274,9 +266,9 @@ MEMResizeForMBlockFrmHeap(MEMFrameHeap *heap,
       result = size;
    } else if (end > heap->head) {
       // Increase size
-      if (heapAttribs.flags() & MEMHeapFlags::ZeroAllocated) {
+      if (heapAttribs.zeroAllocated()) {
          std::memset(heap->head, 0, addrMem - heap->head);
-      } else if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+      } else if (heapAttribs.debugMode()) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
          std::memset(heap->head, value, addrMem - heap->head);
       }
@@ -294,11 +286,10 @@ MEMGetAllocatableSizeForFrmHeapEx(MEMFrameHeap *heap,
 {
    decaf_check(heap);
    decaf_check(heap->header.tag == MEMHeapTag::FrameHeap);
-   uint32_t result = 0;
 
    internal::HeapLock lock(&heap->header);
-
-   auto alignedHead =  align_up(heap->head.get(), alignment);
+   auto alignedHead = align_up(heap->head.get(), alignment);
+   auto result = 0u;
 
    if (alignedHead < heap->tail) {
       result = static_cast<uint32_t>(heap->tail.get() - alignedHead);

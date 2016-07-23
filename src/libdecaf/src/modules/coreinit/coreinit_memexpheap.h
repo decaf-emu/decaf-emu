@@ -14,14 +14,14 @@ namespace coreinit
  */
 
 BITFIELD(MEMExpHeapAttribs, uint16_t)
-BITFIELD_ENTRY(0, 1, MEMExpHeapMode, allocMode);
-BITFIELD_ENTRY(1, 1, bool, reuseAlignSpace);
+   BITFIELD_ENTRY(0, 1, MEMExpHeapMode, allocMode);
+   BITFIELD_ENTRY(1, 1, bool, reuseAlignSpace);
 BITFIELD_END
 
 BITFIELD(MEMExpHeapBlockAttribs, uint32_t)
-BITFIELD_ENTRY(0, 8, uint8_t, groupId);
-BITFIELD_ENTRY(8, 23, uint32_t, alignment);
-BITFIELD_ENTRY(31, 1, MEMExpHeapDirection, allocDir);
+   BITFIELD_ENTRY(0, 8, uint8_t, groupId);
+   BITFIELD_ENTRY(8, 23, uint32_t, alignment);
+   BITFIELD_ENTRY(31, 1, MEMExpHeapDirection, allocDir);
 BITFIELD_END
 
 #pragma pack(push, 1)

@@ -21,7 +21,7 @@ MEMCreateUnitHeapEx(void *base,
 {
    decaf_check(base);
 
-   auto baseMem = reinterpret_cast<uint8_t*>(base);
+   auto baseMem = reinterpret_cast<uint8_t *>(base);
 
    // Align start and end to 4 byte boundary
    auto start = align_up(baseMem, 4);
@@ -50,10 +50,10 @@ MEMCreateUnitHeapEx(void *base,
 
    // Register Heap
    internal::registerHeap(&heap->header,
-      MEMHeapTag::UnitHeap,
-      dataStart,
-      dataStart + alignedBlockSize * blockCount,
-      flags);
+                          MEMHeapTag::UnitHeap,
+                          dataStart,
+                          dataStart + alignedBlockSize * blockCount,
+                          flags);
 
    // Setup the MEMUnitHeap
    auto firstBlock = reinterpret_cast<MEMUnitHeapFreeBlock*>(dataStart);
@@ -74,7 +74,6 @@ MEMCreateUnitHeapEx(void *base,
    }
 
    prev->next = nullptr;
-
    return heap;
 }
 
@@ -103,23 +102,22 @@ MEMAllocFromUnitHeap(MEMUnitHeap *heap)
    decaf_check(heap);
    decaf_check(heap->header.tag == MEMHeapTag::UnitHeap);
 
+   internal::HeapLock lock(&heap->header);
    MEMUnitHeapFreeBlock *block = nullptr;
 
-   {
-      internal::HeapLock lock(&heap->header);
+   block = heap->freeBlocks;
 
-      block = heap->freeBlocks;
-
-      if (block) {
-         heap->freeBlocks = block->next;
-      }
+   if (block) {
+      heap->freeBlocks = block->next;
    }
 
-   auto heapAttribs = static_cast<MEMHeapAttribs>(heap->header.attribs);
+   lock.unlock();
 
-   if (heapAttribs.flags() & MEMHeapFlags::ZeroAllocated) {
+   auto heapAttribs = heap->header.attribs.value();
+
+   if (heapAttribs.zeroAllocated()) {
       std::memset(block, 0, heap->blockSize);
-   } else if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+   } else if (heapAttribs.debugMode()) {
       auto value = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
       std::memset(block, value, heap->blockSize);
    }
@@ -142,15 +140,12 @@ MEMFreeToUnitHeap(MEMUnitHeap *heap,
       return;
    }
 
-   auto heapAttribs = static_cast<MEMHeapAttribs>(heap->header.attribs);
-
-   if (heapAttribs.flags() & MEMHeapFlags::DebugMode) {
+   if (heap->header.attribs.value().debugMode()) {
       auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
       std::memset(block, value, heap->blockSize);
    }
 
    internal::HeapLock lock(&heap->header);
-
    auto freeBlock = reinterpret_cast<MEMUnitHeapFreeBlock *>(block);
    freeBlock->next = heap->freeBlocks;
    heap->freeBlocks = freeBlock;
@@ -167,7 +162,6 @@ MEMCountFreeBlockForUnitHeap(MEMUnitHeap *heap)
    decaf_check(heap->header.tag == MEMHeapTag::UnitHeap);
 
    internal::HeapLock lock(&heap->header);
-
    auto count = 0u;
 
    for (auto block = heap->freeBlocks; block; block = block->next) {
@@ -189,6 +183,7 @@ MEMCalcHeapSizeForUnitHeap(uint32_t blockSize,
    auto alignedBlockSize = align_up(blockSize, alignment);
    auto totalBlockSize = alignedBlockSize * blockCount;
    auto headerSize = alignment - 4 + static_cast<uint32_t>(sizeof(MEMUnitHeap));
+
    return headerSize + totalBlockSize;
 }
 
