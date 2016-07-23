@@ -11,6 +11,7 @@ endif
 
 include $(WUT_ROOT)/rules/rpl.mk
 
+LIBS     := -lcoreinit
 CFLAGS   += -O2 -Wall -std=c11
 CXXFLAGS += -O2 -Wall
 
