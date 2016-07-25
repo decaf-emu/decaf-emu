@@ -27,8 +27,13 @@ ENUM_BEG(Buttons, uint32_t)
 ENUM_END(Buttons)
 
 ENUM_BEG(TouchPadValidity, uint16_t)
+   //! Both X and Y touchpad positions are accurate
    ENUM_VALUE(Valid,       0)
+
+   //! X position is inaccurate
    ENUM_VALUE(InvalidX,    1 << 0)
+
+   //! Y position is inaccurate
    ENUM_VALUE(InvalidY,    1 << 1)
 ENUM_END(TouchPadValidity)
 

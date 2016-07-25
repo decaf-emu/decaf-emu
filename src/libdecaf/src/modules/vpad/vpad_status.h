@@ -8,18 +8,24 @@
 namespace vpad
 {
 
-struct VPADTouchPadStatus
+/**
+ * \defgroup vpad_status VPAD Controller Status
+ * \ingroup vpad
+ * @{
+ */
+
+struct VPADTouchData
 {
    be_val<uint16_t> x;
    be_val<uint16_t> y;
    be_val<uint16_t> touched;
    be_val<TouchPadValidity> validity;
 };
-CHECK_OFFSET(VPADTouchPadStatus, 0x00, x);
-CHECK_OFFSET(VPADTouchPadStatus, 0x02, y);
-CHECK_OFFSET(VPADTouchPadStatus, 0x04, touched);
-CHECK_OFFSET(VPADTouchPadStatus, 0x06, validity);
-CHECK_SIZE(VPADTouchPadStatus, 8);
+CHECK_OFFSET(VPADTouchData, 0x00, x);
+CHECK_OFFSET(VPADTouchData, 0x02, y);
+CHECK_OFFSET(VPADTouchData, 0x04, touched);
+CHECK_OFFSET(VPADTouchData, 0x06, validity);
+CHECK_SIZE(VPADTouchData, 0x08);
 
 struct VPADAccStatus
 {
@@ -46,23 +52,55 @@ CHECK_SIZE(VPADGyroStatus, 0x18);
 
 struct VPADStatus
 {
+   //! Indicates what buttons are held down
    be_val<Buttons> hold;
+
+   //! Indicates what buttons have been pressed since last sample
    be_val<Buttons> trigger;
+
+   //! Indicates what buttons have been released since last sample
    be_val<Buttons> release;
+
+   //! Position of left analog stick
    be_vec2<float> leftStick;
+
+   //! Position of right analog stick
    be_vec2<float> rightStick;
+
+   //! Status of DRC accelorometer
    VPADAccStatus accelorometer;
+
+   //! Status of DRC gyro
    VPADGyroStatus gyro;
+
    UNKNOWN(0x02);
-   VPADTouchPadStatus tpNormal;
-   VPADTouchPadStatus tpFiltered1;
-   VPADTouchPadStatus tpFiltered2;
+
+   //! Current touch position on DRC
+   VPADTouchData tpNormal;
+
+   //! Filtered touch position, first level of smoothing
+   VPADTouchData tpFiltered1;
+
+   //! Filtered touch position, second level of smoothing
+   VPADTouchData tpFiltered2;
+
    UNKNOWN(0x28);
+
+   //! Status of DRC magnetometer
    be_vec3<float> mag;
+
+   //! Current volume set by the slide control
    be_val<uint8_t> slideVolume;
+
+   //! Battery level of controller
    be_val<uint8_t> battery;
+
+   //! Status of DRC microphone
    be_val<uint8_t> micStatus;
+
+   //! Unknown volume related value
    be_val<uint8_t> slideVolumeEx;
+
    UNKNOWN(0x07);
 };
 CHECK_OFFSET(VPADStatus, 0x00, hold);
@@ -82,19 +120,6 @@ CHECK_OFFSET(VPADStatus, 0xA2, micStatus);
 CHECK_OFFSET(VPADStatus, 0xA3, slideVolumeEx);
 CHECK_SIZE(VPADStatus, 0xAC);
 
-struct VPADTouchData
-{
-   be_val<uint16_t> x;
-   be_val<uint16_t> y;
-   be_val<uint16_t> down;
-   be_val<uint16_t> unk1;
-};
-CHECK_OFFSET(VPADTouchData, 0x00, x);
-CHECK_OFFSET(VPADTouchData, 0x02, y);
-CHECK_OFFSET(VPADTouchData, 0x04, down);
-CHECK_OFFSET(VPADTouchData, 0x06, unk1);
-CHECK_SIZE(VPADTouchData, 0x8);
-
 int32_t
 VPADRead(uint32_t chan,
          VPADStatus *buffers,
@@ -105,5 +130,7 @@ void
 VPADGetTPCalibratedPoint(uint32_t chan,
                          VPADTouchData *calibratedData,
                          VPADTouchData *uncalibratedData);
+
+/** @} */
 
 } // namespace vpad
