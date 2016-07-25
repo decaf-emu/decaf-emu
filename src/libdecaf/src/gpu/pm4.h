@@ -166,6 +166,21 @@ struct DecafDebugMarker
    }
 };
 
+struct DecafOSScreenFlip
+{
+   static const auto Opcode = type3::DECAF_OSSCREEN_FLIP;
+
+   uint32_t screen;
+   virtual_ptr<void> buffer;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(screen);
+      se(buffer);
+   }
+};
+
 struct DrawIndexAuto
 {
    static const auto Opcode = type3::DRAW_INDEX_AUTO;

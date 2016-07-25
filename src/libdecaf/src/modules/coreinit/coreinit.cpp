@@ -65,6 +65,7 @@ Module::RegisterFunctions()
    registerMutexFunctions();
    registerRendezvousFunctions();
    registerSchedulerFunctions();
+   registerScreenFunctions();
    registerSemaphoreFunctions();
    registerSharedFunctions();
    registerSpinLockFunctions();

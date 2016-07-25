@@ -181,6 +181,7 @@ private:
    void decafSetContextState(const pm4::DecafSetContextState &data);
    void decafInvalidate(const pm4::DecafInvalidate &data);
    void decafDebugMarker(const pm4::DecafDebugMarker &data);
+   void decafOSScreenFlip(const pm4::DecafOSScreenFlip &data);
    void drawIndexAuto(const pm4::DrawIndexAuto &data);
    void drawIndex2(const pm4::DrawIndex2 &data);
    void indexType(const pm4::IndexType &data);

@@ -72,6 +72,7 @@ private:
    static void registerMutexFunctions();
    static void registerRendezvousFunctions();
    static void registerSchedulerFunctions();
+   static void registerScreenFunctions();
    static void registerSemaphoreFunctions();
    static void registerSharedFunctions();
    static void registerSpinLockFunctions();

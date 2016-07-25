@@ -166,6 +166,26 @@ void GLDriver::decafDebugMarker(const pm4::DecafDebugMarker &data)
    gLog->trace("GPU Debug Marker: {} {}", data.key.data(), data.id);
 }
 
+void GLDriver::decafOSScreenFlip(const pm4::DecafOSScreenFlip &data)
+{
+   auto texture = 0u;
+   auto width = 0u;
+   auto height = 0u;
+
+   if (data.screen == 0) {
+      texture = mTvScanBuffers.object;
+      width = mTvScanBuffers.width;
+      height = mTvScanBuffers.height;
+   } else {
+      texture = mDrcScanBuffers.object;
+      width = mDrcScanBuffers.width;
+      height = mDrcScanBuffers.height;
+   }
+
+   gl::glTextureSubImage2D(texture, 0, 0, 0, width, height, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, data.buffer);
+   decafSwapBuffers(pm4::DecafSwapBuffers {});
+}
+
 void GLDriver::getSwapBuffers(unsigned int *tv, unsigned int *drc)
 {
    *tv = mTvScanBuffers.object;
