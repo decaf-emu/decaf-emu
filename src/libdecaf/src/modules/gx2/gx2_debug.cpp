@@ -99,7 +99,7 @@ GX2DebugDumpTexture(const GX2Texture *texture)
 
 template<typename ShaderType>
 static void
-GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader)
+GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader, bool isSubroutine = false)
 {
    std::string output;
 
@@ -123,7 +123,7 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderT
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
 
    // Disassemble
-   output = latte::disassemble(gsl::as_span(shader->data.get(), shader->size));
+   output = latte::disassemble(gsl::as_span(shader->data.get(), shader->size), isSubroutine);
 
    file
       << info << std::endl
@@ -228,7 +228,8 @@ GX2DebugDumpShader(GX2FetchShader *shader)
 
    GX2DebugDumpShader("shader_fetch_" + GX2PointerAsString(shader),
                       out.str(),
-                      shader);
+                      shader,
+                      true);
 }
 
 void
