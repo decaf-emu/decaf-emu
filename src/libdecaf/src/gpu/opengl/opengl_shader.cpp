@@ -203,7 +203,7 @@ bool GLDriver::checkActiveShader()
          fetchShader.cpuMemStart = fsPgmAddress;
          fetchShader.cpuMemEnd = fsPgmAddress + fsPgmSize;
 
-         dumpShader("fetch", vsPgmAddress, vsPgmSize, true);
+         dumpShader("fetch", fsPgmAddress, fsPgmSize, true);
          fetchShader.disassembly = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
 
          if (!parseFetchShader(fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
