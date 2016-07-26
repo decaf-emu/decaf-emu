@@ -121,6 +121,16 @@ struct CerealJit
    }
 };
 
+struct CerealSound
+{
+   template <class Archive>
+   void serialize(Archive &ar)
+   {
+      using namespace decaf::config::sound;
+      ar(CEREAL_NVP(dump_sounds));
+   }
+};
+
 struct CerealSystem
 {
    template <class Archive>
@@ -191,6 +201,7 @@ bool load(const std::string &path)
             cereal::make_nvp("input", CerealInput {}),
             cereal::make_nvp("jit", CerealJit {}),
             cereal::make_nvp("log", CerealLog {}),
+            cereal::make_nvp("sound", CerealSound {}),
             cereal::make_nvp("system", CerealSystem {}));
    } catch (std::exception e) {
       // Can't use gLog because it is NULL here.
@@ -211,6 +222,7 @@ void save(const std::string &path)
           cereal::make_nvp("input", CerealInput {}),
           cereal::make_nvp("jit", CerealJit {}),
           cereal::make_nvp("log", CerealLog {}),
+          cereal::make_nvp("sound", CerealSound {}),
           cereal::make_nvp("system", CerealSystem {}));
 }
 

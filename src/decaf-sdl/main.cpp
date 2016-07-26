@@ -65,6 +65,8 @@ getCommandLineParser()
                   allowed<std::string> { {
                      "EUR", "JAP", "US"
                   } })
+      .add_option("sound",
+                  description { "Enable sound output." })
       .add_option("sys-path",
                   description { "Where to locate any external system files." },
                   value<std::string> {})
@@ -215,6 +217,11 @@ start(excmd::parser &parser,
    DecafSDL sdl;
 
    if (!sdl.createWindow()) {
+      gCliLog->error("Failed to start game");
+      return -1;
+   }
+
+   if (options.has("sound") && !sdl.initSound()) {
       gCliLog->error("Failed to start game");
       return -1;
    }

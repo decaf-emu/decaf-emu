@@ -52,6 +52,13 @@ std::vector<std::string> kernel_trace_filters =
 
 } // namespace log
 
+namespace sound
+{
+
+bool dump_sounds = false;
+
+} // namespace sound
+
 namespace system
 {
 

@@ -9,8 +9,6 @@ class Module : public kernel::HleModuleImpl<Module>
 public:
    virtual void initialise() override;
 
-   void initialiseCore();
-
 public:
    static void RegisterFunctions();
 
@@ -20,6 +18,8 @@ private:
    static void registerDeviceFunctions();
    static void registerVoiceFunctions();
    static void registerVSFunctions();
+
+   void initialiseCore();
 };
 
 } // namespace snd_core

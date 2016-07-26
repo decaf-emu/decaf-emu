@@ -1,6 +1,7 @@
 #include "snd_core.h"
 #include "snd_core_core.h"
 #include "snd_core_voice.h"
+#include "decaf_sound.h"
 #include "modules/coreinit/coreinit_alarm.h"
 #include "modules/coreinit/coreinit_interrupts.h"
 #include "modules/coreinit/coreinit_memheap.h"
@@ -18,6 +19,12 @@ static const size_t MaxFrameCallbacks = 64;
 
 static BOOL
 gAXInit = FALSE;
+
+static int
+sOutputRate;
+
+static int
+sOutputChannels;
 
 static coreinit::OSThreadEntryPointFn
 sFrameCallbackThreadEntryPoint;
@@ -40,11 +47,28 @@ sFrameCallbacks[MaxFrameCallbacks];
 static std::atomic<int32_t>
 sProtectLock = { 0 };
 
+static std::array<int32_t, 6*144>  // Enough for 6 channels of 3ms at 48kHz
+sMixBuffer;
+
+static std::array<int16_t, 6*144>
+sOutputBuffer;
+
 void
 AXInit()
 {
+   sOutputRate = 32000;
+   sOutputChannels = 2;  // TODO: surround support
    internal::initVoices();
    internal::initEvents();
+
+   decaf::SoundDriver *driver = decaf::getSoundDriver();
+   if (driver) {
+      if (!driver->start(sOutputRate, sOutputChannels)) {
+         gLog->error("Sound driver failed to start, disabling sound output");
+         decaf::setSoundDriver(nullptr);
+      }
+   }
+
    gAXInit = TRUE;
 }
 
@@ -158,6 +182,8 @@ AXRmtAdvancePtr(int32_t)
 uint32_t
 FrameCallbackThreadEntry(uint32_t core_id, void *arg2)
 {
+   int numSamples = sOutputRate * 3 / 1000;
+
    while (true) {
       coreinit::internal::lockScheduler();
       coreinit::internal::sleepThreadNoLock(sFrameCallbackThreadQueue);
@@ -169,7 +195,21 @@ FrameCallbackThreadEntry(uint32_t core_id, void *arg2)
             sFrameCallbacks[i]();
          }
       }
+
+      decaf_check(static_cast<size_t>(numSamples * sOutputChannels) <= sMixBuffer.size());
+      internal::mixOutput(&sMixBuffer[0], numSamples, sOutputChannels);
+
+      // TODO: FinalMixCallback
+
+      decaf::SoundDriver *driver = decaf::getSoundDriver();
+      if (driver) {
+         for (int i = 0; i < numSamples * sOutputChannels; ++i) {
+            sOutputBuffer[i] = static_cast<int16_t>(std::min(std::max(sMixBuffer[i], -32768), 32767));
+         }
+         driver->output(&sOutputBuffer[0], numSamples);
+      }
    }
+
    return 0;
 }
 
@@ -212,12 +252,19 @@ initEvents()
    startFrameAlarmThread();
 
    sFrameAlarm = coreinit::internal::sysAlloc<OSAlarm>();
-   auto ticks = static_cast<OSTime>(OSGetSystemInfo()->busSpeed / 4) / 333;
+   auto ticks = static_cast<OSTime>(OSGetSystemInfo()->busSpeed / 4) * 3 / 1000;
    OSCreateAlarm(sFrameAlarm);
    OSSetPeriodicAlarm(sFrameAlarm, OSGetTime(), ticks, sFrameAlarmHandler);
 }
 
+
+int
+getOutputRate()
+{
+   return sOutputRate;
 }
+
+} // namespace internal
 
 void
 Module::registerCoreFunctions()

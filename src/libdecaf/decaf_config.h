@@ -55,6 +55,14 @@ extern std::vector<std::string> kernel_trace_filters;
 
 } // namespace log
 
+namespace sound
+{
+
+//! Dump all sounds to file
+extern bool dump_sounds;
+
+} // namespace sound
+
 namespace system
 {
 

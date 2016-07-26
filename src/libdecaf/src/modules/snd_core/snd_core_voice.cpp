@@ -1,17 +1,16 @@
 #include "common/decaf_assert.h"
+#include "common/platform_dir.h"
+#include "decaf_config.h"
+#include "decaf_sound.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "snd_core.h"
 #include "snd_core_voice.h"
 #include <array>
+#include <fstream>
 #include <queue>
 
 namespace snd_core
 {
-
-struct AXVoiceExtras
-{
-   uint32_t loopCount;
-};
 
 static const auto
 MaxVoices = 96u;
@@ -22,8 +21,22 @@ sAcquiredVoices;
 static std::queue<AXVoice*>
 sAvailVoiceStack;
 
-static std::array<AXVoiceExtras, MaxVoices>
+static std::array<internal::AXVoiceExtras, MaxVoices>
 sVoiceExtras;
+
+static void
+createDumpDirectory()
+{
+   platform::createDirectory("dump");
+}
+
+static std::string
+pointerAsString(const void *pointer)
+{
+   fmt::MemoryWriter format;
+   format.write("{:08X}", mem::untranslate(pointer));
+   return format.str();
+}
 
 AXVoice *
 AXAcquireVoice(uint32_t priority,
@@ -65,7 +78,18 @@ AXAcquireVoiceEx(uint32_t priority,
    foundVoice->callbackEx = callback;
    foundVoice->userContext = userContext;
 
-   sVoiceExtras[foundVoice->index].loopCount = 0;
+   auto extras = internal::getVoiceExtras(foundVoice->index);
+   for (auto i = 0; i < 6; ++i) {
+      extras->tvVolume[i] = 0;
+   }
+   for (auto i = 0; i < 4; ++i) {
+      extras->drcVolume[i] = 0;
+      extras->controllerVolume[i] = 0;
+   }
+   extras->offsetFrac = 0;
+   extras->loopCount = 0;
+   extras->adpcmPrevSample[0] = 0;
+   extras->adpcmPrevSample[1] = 0;
 
    // Save this to the acquired voice list so that it can be
    //  forcefully freed if a higher priority voice is needed.
@@ -118,15 +142,17 @@ void
 AXGetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets)
 {
-   // Trick the game into thinking the audio is progressing.
-   voice->offsets.currentOffset += 20;
+   if (!decaf::getSoundDriver()) {
+      // Trick the game into thinking the audio is progressing.
+      voice->offsets.currentOffset += 20;
 
-   if (voice->offsets.currentOffset > voice->offsets.endOffset) {
-      if (voice->offsets.loopingEnabled) {
-         voice->offsets.currentOffset -= (voice->offsets.endOffset - voice->offsets.loopOffset);
-         sVoiceExtras[voice->index].loopCount++;
-      } else {
-         voice->offsets.currentOffset = voice->offsets.endOffset;
+      if (voice->offsets.currentOffset > voice->offsets.endOffset) {
+         if (voice->offsets.loopingEnabled) {
+            voice->offsets.currentOffset -= (voice->offsets.endOffset - voice->offsets.loopOffset);
+            internal::getVoiceExtras(voice->index)->loopCount++;
+         } else {
+            voice->offsets.currentOffset = voice->offsets.endOffset;
+         }
       }
    }
 
@@ -143,12 +169,34 @@ void
 AXSetVoiceAdpcm(AXVoice *voice,
                 AXVoiceAdpcm *adpcm)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+   for (auto i = 0; i < 16; ++i) {
+      extras->adpcmCoeff[i] = adpcm->coefficients[i];
+   }
+   extras->adpcmPredScale = static_cast<uint8_t>(adpcm->predScale);
+   extras->adpcmPrevSample[0] = adpcm->prevSample[0];
+   extras->adpcmPrevSample[1] = adpcm->prevSample[1];
+
+   if (decaf::config::sound::dump_sounds) {
+      auto filename = "sound_" + pointerAsString(voice->offsets.data.get());
+
+      if (!platform::fileExists("dump/" + filename + ".adpcm")) {
+         createDumpDirectory();
+
+         auto file = std::ofstream { "dump/" + filename + ".adpcm", std::ofstream::out };
+         file.write(reinterpret_cast<char*>(adpcm), sizeof(*adpcm));
+      }
+   }
 }
 
 void
 AXSetVoiceAdpcmLoop(AXVoice *voice,
                     AXVoiceAdpcmLoopData *loopData)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+   extras->adpcmLoopPredScale = static_cast<uint8_t>(loopData->predScale);
+   extras->adpcmLoopPrevSample[0] = loopData->prevSample[0];
+   extras->adpcmLoopPrevSample[1] = loopData->prevSample[1];
 }
 
 void
@@ -164,6 +212,26 @@ AXSetVoiceDeviceMix(AXVoice *voice,
                     uint32_t id,
                     AXVoiceDeviceMixData *mixData)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+
+   switch (type) {
+   case AXDeviceType::TV:
+      for (auto i = 0; i < 6; ++i) {
+         extras->tvVolume[i] = mixData[i].volume;
+      }
+      break;
+   case AXDeviceType::DRC:
+      for (auto i = 0; i < 4; ++i) {
+         extras->drcVolume[i] = mixData[i].volume;
+      }
+      break;
+   case AXDeviceType::Controller:
+      if (id < 4) {
+         extras->controllerVolume[id] = mixData[id].volume;
+      }
+      break;
+   }
+
    return AXResult::Success;
 }
 
@@ -186,6 +254,55 @@ AXSetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets)
 {
    voice->offsets = *offsets;
+
+   bool knownType = false;
+   switch (offsets->dataType) {  // Let compiler warn us if we forget any types
+   case AXVoiceFormat::ADPCM:
+   case AXVoiceFormat::LPCM16:
+   case AXVoiceFormat::LPCM8:
+      knownType = true;
+      break;
+   }
+   if (!knownType) {
+      gLog->warn("AXSetVoiceOffsets: Unsupported data type {}", offsets->dataType.value());
+   }
+
+   if (decaf::config::sound::dump_sounds) {
+      auto filename = "sound_" + pointerAsString(offsets->data.get());
+
+      if (!platform::fileExists("dump/" + filename + ".txt")) {
+         createDumpDirectory();
+
+         auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
+         auto format = fmt::MemoryWriter {};
+         format
+            << "offsets.dataType = " << static_cast<int>(offsets->dataType) << '\n'
+            << "offsets.loopingEnabled = " << offsets->loopingEnabled << '\n'
+            << "offsets.loopOffset = " << offsets->loopOffset << '\n'
+            << "offsets.endOffset = " << offsets->endOffset << '\n'
+            << "offsets.currentOffset = " << offsets->currentOffset << '\n'
+            << "offsets.data = " << pointerAsString(offsets->data.get()) << '\n';
+         file << format.str();
+      }
+
+      if (!platform::fileExists("dump/" + filename + ".bin")) {
+         uint32_t bitsPerSample = 8;
+         switch (offsets->dataType) {
+         case AXVoiceFormat::ADPCM:
+            bitsPerSample = 4;
+            break;
+         case AXVoiceFormat::LPCM8:
+            bitsPerSample = 8;
+            break;
+         case AXVoiceFormat::LPCM16:
+            bitsPerSample = 16;
+            break;
+         }
+         uint32_t streamBytes = (offsets->endOffset + 1) * bitsPerSample / 8;
+         auto file = std::ofstream { "dump/" + filename + ".bin", std::ofstream::out };
+         file.write(reinterpret_cast<char*>(offsets->data.get()), streamBytes);
+      }
+   }
 }
 
 void
@@ -206,12 +323,20 @@ void
 AXSetVoiceSrc(AXVoice *voice,
               AXVoiceSrc *src)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+   extras->playbackRatio = static_cast<uint32_t>(src->ratioInt) << 16 | src->ratioFrac;
 }
 
 AXVoiceSrcRatioResult
 AXSetVoiceSrcRatio(AXVoice *voice,
                    float ratio)
 {
+   if (ratio < 0.0f) {
+      return AXVoiceSrcRatioResult::RatioLessThanZero;
+   }
+
+   auto extras = internal::getVoiceExtras(voice->index);
+   extras->playbackRatio = static_cast<uint32_t>(ratio * (1 << 16));
    return AXVoiceSrcRatioResult::Success;
 }
 
@@ -243,13 +368,27 @@ AXSetVoiceVe(AXVoice *voice,
 namespace internal
 {
 
-void initVoices()
+void
+initVoices()
 {
    for (auto i = 0; i < MaxVoices; ++i) {
       auto newVoice = coreinit::internal::sysAlloc<AXVoice>();
       newVoice->index = i;
       sAvailVoiceStack.push(newVoice);
    }
+}
+
+const std::vector<AXVoice*>
+getAcquiredVoices()
+{
+   return sAcquiredVoices;
+}
+
+AXVoiceExtras *
+getVoiceExtras(int index)
+{
+   decaf_check(index >= 0 && index < MaxVoices);
+   return &sVoiceExtras[index];
 }
 
 } // namespace internal
