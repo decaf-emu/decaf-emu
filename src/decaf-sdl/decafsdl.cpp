@@ -23,7 +23,7 @@ DecafSDL::~DecafSDL()
 bool
 DecafSDL::createWindow()
 {
-   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) != 0) {
+   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
       gCliLog->error("Failed to initialize SDL: {}", SDL_GetError());
       return false;
    }
@@ -78,6 +78,19 @@ DecafSDL::createWindow()
 }
 
 bool
+DecafSDL::initSound()
+{
+   if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+      gCliLog->error("Failed to initialize SDL audio: {}", SDL_GetError());
+      return false;
+   }
+
+   mSoundDriver = new DecafSDLSound;
+
+   return true;
+}
+
+bool
 DecafSDL::run(const std::string &gamePath)
 {
    auto shouldQuit = false;
@@ -89,6 +102,9 @@ DecafSDL::run(const std::string &gamePath)
    // Set input provider
    decaf::setInputDriver(this);
    decaf::addEventListener(this);
+
+   // Set sound driver
+   decaf::setSoundDriver(mSoundDriver);
 
    decaf::setClipboardTextCallbacks(
       []() -> const char * {

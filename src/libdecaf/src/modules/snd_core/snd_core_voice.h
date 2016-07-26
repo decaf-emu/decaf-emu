@@ -27,13 +27,14 @@ CHECK_SIZE(AXVoiceLink, 0x8);
 
 struct AXVoiceOffsets
 {
-   UNKNOWN(0x02);
+   be_val<AXVoiceFormat> dataType;
    be_val<AXVoiceLoop> loopingEnabled;
    be_val<uint32_t> loopOffset;
    be_val<uint32_t> endOffset;
    be_val<uint32_t> currentOffset;
    be_ptr<void> data;
 };
+CHECK_OFFSET(AXVoiceOffsets, 0x0, dataType);
 CHECK_OFFSET(AXVoiceOffsets, 0x2, loopingEnabled);
 CHECK_OFFSET(AXVoiceOffsets, 0x4, loopOffset);
 CHECK_OFFSET(AXVoiceOffsets, 0x8, endOffset);
@@ -87,20 +88,50 @@ CHECK_OFFSET(AXVoice, 0x34, offsets);
 CHECK_OFFSET(AXVoice, 0x48, callbackEx);
 CHECK_SIZE(AXVoice, 0x58);
 
-// TODO: Reverse AXVoiceDeviceMixData
-struct AXVoiceDeviceMixData;
+struct AXVoiceDeviceMixData
+{
+   be_val<uint16_t> volume;
+
+   UNKNOWN(0xE);  // int16_t followed by 3 * {uint16_t, int16_t}
+};
+CHECK_OFFSET(AXVoiceDeviceMixData, 0x0, volume);
+CHECK_SIZE(AXVoiceDeviceMixData, 0x10);
 
 // TODO: Reverse AXVoiceVeData
 struct AXVoiceVeData;
 
-// TODO: Reverse AXVoiceAdpcmLoopData
-struct AXVoiceAdpcmLoopData;
+struct AXVoiceAdpcmLoopData
+{
+   be_val<uint16_t> predScale;
+   be_val<int16_t> prevSample[2];
+};
+CHECK_OFFSET(AXVoiceAdpcmLoopData, 0x0, predScale);
+CHECK_OFFSET(AXVoiceAdpcmLoopData, 0x2, prevSample);
+CHECK_SIZE(AXVoiceAdpcmLoopData, 0x6);
 
-// TODO: Reverse AXVoiceAdpcm
-struct AXVoiceAdpcm;
+struct AXVoiceAdpcm
+{
+   be_val<int16_t> coefficients[16];
+   be_val<uint16_t> gain;
+   be_val<uint16_t> predScale;
+   be_val<int16_t> prevSample[2];
+};
+CHECK_OFFSET(AXVoiceAdpcm, 0x0, coefficients);
+CHECK_OFFSET(AXVoiceAdpcm, 0x20, gain);
+CHECK_OFFSET(AXVoiceAdpcm, 0x22, predScale);
+CHECK_OFFSET(AXVoiceAdpcm, 0x24, prevSample);
+CHECK_SIZE(AXVoiceAdpcm, 0x28);
 
-// TODO: Reverse AXVoiceSrc
-struct AXVoiceSrc;
+// Note: "Src" = "sample rate converter", not "source"
+struct AXVoiceSrc
+{
+    // Playback rate as a 16.16 fixed-point ratio
+    be_val<uint16_t> ratioInt;
+    be_val<uint16_t> ratioFrac;
+    // Used by the resampler
+    be_val<uint16_t> currentOffsetFrac;
+    be_val<int16_t> lastSample[4];
+};
 
 AXVoice *
 AXAcquireVoice(uint32_t priority,
@@ -201,7 +232,47 @@ AXSetVoiceVe(AXVoice *voice,
 namespace internal
 {
 
-void initVoices();
+struct AXVoiceExtras
+{
+   // Volume on each of 6 surround channels for TV output
+   uint16_t tvVolume[6];
+   // Volume on each of 4 channels for DRC output (2 stereo channels + ???)
+   uint16_t drcVolume[4];
+   // Volume for each of 4 controller speakers
+   uint16_t controllerVolume[4];
+
+   // Playback rate ratio (number of output samples per input sample)
+   //  in 16.16 fixed point
+   uint32_t playbackRatio;
+   // Current fractional offset (as 16.16 fixed point)
+   int32_t offsetFrac;
+   // Sample index of next sample to read
+   uint32_t readPosition;
+   // Current sample value (at index readPosition-1)
+   int16_t currentSample;
+   // Previous sample value (for interpolated resampling)
+   int16_t prevSample;
+
+   // Number of loops so far
+   uint32_t loopCount;
+
+   // ADPCM decoding data
+   int16_t adpcmCoeff[16];
+   uint8_t adpcmPredScale;
+   int16_t adpcmPrevSample[2];
+   // ADPCM data for loop start point
+   uint8_t adpcmLoopPredScale;
+   int16_t adpcmLoopPrevSample[2];
+};
+
+void
+initVoices();
+
+const std::vector<AXVoice*>
+getAcquiredVoices();
+
+AXVoiceExtras *
+getVoiceExtras(int index);
 
 } // namespace internal
 

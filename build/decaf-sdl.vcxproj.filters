@@ -30,6 +30,9 @@
     <ClCompile Include="..\src\decaf-sdl\decafsdl_input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\decaf-sdl\decafsdl_sound.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\decaf-sdl\config.h">
@@ -39,6 +42,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\decaf-sdl\decafsdl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\decaf-sdl\decafsdl_sound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

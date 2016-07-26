@@ -1,4 +1,5 @@
 #pragma once
+#include "decafsdl_sound.h"
 #include "libdecaf/decaf.h"
 #include <SDL.h>
 #include <glbinding/gl/gl.h>
@@ -15,6 +16,9 @@ public:
 
    bool
    createWindow();
+
+   bool
+   initSound();
 
    bool
    run(const std::string &gamePath);
@@ -83,6 +87,8 @@ private:
 private:
    std::thread mGraphicsThread;
    decaf::OpenGLDriver *mGraphicsDriver = nullptr;
+
+   DecafSDLSound *mSoundDriver = nullptr;
 
    SDL_Window *mWindow = nullptr;
    SDL_GLContext mContext = nullptr;

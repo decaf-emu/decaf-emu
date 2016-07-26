@@ -44,7 +44,11 @@ AXRmtAdvancePtr(int32_t);
 namespace internal
 {
 
-void initEvents();
+void
+initEvents();
+
+int
+getOutputRate();
 
 } // namespace internal
 

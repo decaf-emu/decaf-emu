@@ -56,4 +56,12 @@ AXSetDeviceVolume(AXDeviceType type,
                   uint32_t id,
                   uint16_t volume);
 
+namespace internal
+{
+
+void
+mixOutput(int32_t *buffer, int numSamples, int numChannels);
+
+} // namespace internal
+
 } // namespace snd_core

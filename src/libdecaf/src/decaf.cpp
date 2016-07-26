@@ -3,6 +3,7 @@
 #include "decaf_config.h"
 #include "decaf_graphics.h"
 #include "decaf_input.h"
+#include "decaf_sound.h"
 #include "debugger/debugger.h"
 #include "debugger/debugger_ui.h"
 #include "filesystem/filesystem.h"
@@ -218,6 +219,15 @@ shutdown()
    }
 
    setGraphicsDriver(nullptr);
+
+   // Stop sound driver
+   auto soundDriver = getSoundDriver();
+
+   if (soundDriver) {
+      soundDriver->stop();
+   }
+
+   setSoundDriver(nullptr);
 }
 
 void

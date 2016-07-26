@@ -10,7 +10,9 @@ ENUM_BEG(AXDeviceMode, uint32_t)
 ENUM_END(AXDeviceMode)
 
 ENUM_BEG(AXDeviceType, uint32_t)
-   // Unknown
+   ENUM_VALUE(TV,                0)
+   ENUM_VALUE(DRC,               1)
+   ENUM_VALUE(Controller,        2)  // Classic Controller, Wiimote etc.
 ENUM_END(AXDeviceType)
 
 ENUM_BEG(AXDRCOutput, uint32_t)
@@ -38,6 +40,12 @@ ENUM_BEG(AXResult, int32_t)
    ENUM_VALUE(InvalidDeviceType, -1)
    ENUM_VALUE(InvalidDRCVSMode,  -13)
 ENUM_END(AXResult)
+
+ENUM_BEG(AXVoiceFormat, uint16_t)
+   ENUM_VALUE(ADPCM,             0x00)
+   ENUM_VALUE(LPCM16,            0x0A)
+   ENUM_VALUE(LPCM8,             0x19)
+ENUM_END(AXVoiceFormat)
 
 ENUM_BEG(AXVoiceLoop, uint16_t)
    ENUM_VALUE(Disabled,          0)
