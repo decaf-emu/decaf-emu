@@ -157,9 +157,9 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
    case latte::FMT_BC3:
       return getFormat(gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, BADFMT, BADFMT, BADFMT, gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT);
    case latte::FMT_BC4:
-      return getFormat(gl::GL_COMPRESSED_RED_RGTC1, BADFMT, BADFMT, BADFMT, BADFMT);
+      return getFormat(gl::GL_COMPRESSED_RED_RGTC1, gl::GL_COMPRESSED_SIGNED_RED_RGTC1, BADFMT, BADFMT, BADFMT);
    case latte::FMT_BC5:
-      return getFormat(gl::GL_COMPRESSED_RG_RGTC2, BADFMT, BADFMT, BADFMT, BADFMT);
+      return getFormat(gl::GL_COMPRESSED_RG_RGTC2, gl::GL_COMPRESSED_SIGNED_RG_RGTC2, BADFMT, BADFMT, BADFMT);
    //case latte::FMT_APC0:
    //case latte::FMT_APC1:
    //case latte::FMT_APC2:
