@@ -285,7 +285,7 @@ bool GLDriver::checkActiveTextures()
       auto degamma = sq_tex_resource_word4.FORCE_DEGAMMA();
       auto dim = sq_tex_resource_word0.DIM().get();
 
-      auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma);
+      auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma, false);
 
       if (buffer->dirtyAsTexture) {
          auto swizzle = sq_tex_resource_word2.SWIZZLE() << 8;

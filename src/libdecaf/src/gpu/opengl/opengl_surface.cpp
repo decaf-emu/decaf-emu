@@ -62,7 +62,8 @@ static gl::GLenum
 getStorageFormat(latte::SQ_DATA_FORMAT format,
                  latte::SQ_NUM_FORMAT numFormat,
                  latte::SQ_FORMAT_COMP formatComp,
-                 uint32_t degamma)
+                 uint32_t degamma,
+                 bool isDepthBuffer)
 {
    static const auto BADFMT = gl::GL_INVALID_ENUM;
    auto getFormat =
@@ -79,6 +80,12 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
       return getFormat(gl::GL_R8, gl::GL_R8_SNORM, gl::GL_R8UI, gl::GL_R8I, gl::GL_SRGB8);
    //case latte::FMT_4_4:
    //case latte::FMT_3_3_2:
+   case latte::FMT_16:
+      if (isDepthBuffer) {
+         return gl::GL_DEPTH_COMPONENT16;
+      } else {
+         return getFormat(gl::GL_R16, gl::GL_R16_SNORM, gl::GL_R16UI, gl::GL_R16I, BADFMT);
+      }
    case latte::FMT_16_FLOAT:
       return getFormatF(gl::GL_R16F);
    case latte::FMT_8_8:
@@ -92,6 +99,12 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
    //case latte::FMT_5_5_5_1:
    case latte::FMT_32:
       return getFormat(BADFMT, BADFMT, gl::GL_R32UI, gl::GL_R32I, BADFMT);
+   case latte::FMT_32_FLOAT:
+      if (isDepthBuffer) {
+         return gl::GL_DEPTH_COMPONENT32F;
+      }
+
+      return getFormatF(gl::GL_R32F);
    case latte::FMT_16_16:
       return getFormat(gl::GL_RG16, gl::GL_RG16_SNORM, gl::GL_RG16UI, gl::GL_RG16I, BADFMT);
    case latte::FMT_16_16_FLOAT:
@@ -158,14 +171,11 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
    //case latte::FMT_CTX1:
 
    // Depth Types
-   // TODO: Implement assertions for validating the NUMBER_TYPE.
-   case latte::FMT_16:
-      return gl::GL_DEPTH_COMPONENT16;
-   case latte::FMT_32_FLOAT:
-      return gl::GL_DEPTH_COMPONENT32F;
    case latte::FMT_8_24:
+      decaf_check(isDepthBuffer);
       return gl::GL_DEPTH24_STENCIL8;
    case latte::FMT_X24_8_32_FLOAT:
+      decaf_check(isDepthBuffer);
       return gl::GL_DEPTH32F_STENCIL8;
 
    default:
@@ -182,7 +192,8 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
                            latte::SQ_DATA_FORMAT format,
                            latte::SQ_NUM_FORMAT numFormat,
                            latte::SQ_FORMAT_COMP formatComp,
-                           uint32_t degamma)
+                           uint32_t degamma,
+                           bool isDepthBuffer)
 {
    decaf_check(baseAddress);
    decaf_check(width);
@@ -204,7 +215,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    auto insertRes = mSurfaces.emplace(surfaceKey, SurfaceBuffer{});
    auto buffer = &insertRes.first->second;
 
-   auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma);
+   auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma, isDepthBuffer);
 
    if (storageFormat == gl::GL_INVALID_ENUM) {
       decaf_abort(fmt::format("Texture with unsupported format {} {} {} {}", format, numFormat, formatComp, degamma));

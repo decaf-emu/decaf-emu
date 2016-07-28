@@ -214,7 +214,7 @@ private:
    SurfaceBuffer *
    getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t height, uint32_t depth,
                     latte::SQ_TEX_DIM dim, latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat,
-                    latte::SQ_FORMAT_COMP formatComp, uint32_t degamma);
+                    latte::SQ_FORMAT_COMP formatComp, uint32_t degamma, bool isDepthBuffer);
 
    SurfaceBuffer *
    getColorBuffer(latte::CB_COLORN_BASE base,
