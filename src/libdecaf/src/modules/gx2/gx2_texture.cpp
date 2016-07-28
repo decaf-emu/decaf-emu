@@ -55,6 +55,8 @@ GX2InitTextureRegs(GX2Texture *texture)
       pitch *= 4;
    }
 
+   pitch = std::max<uint32_t>(pitch, 8u);
+
    word0 = word0
       .DIM().set(static_cast<latte::SQ_TEX_DIM>(texture->surface.dim & 0x7))
       .TILE_MODE().set(static_cast<latte::SQ_TILE_MODE>(texture->surface.tileMode.value()))

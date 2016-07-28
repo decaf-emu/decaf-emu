@@ -136,13 +136,18 @@ void
 GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface);
 
 void
-GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer, be_val<uint32_t> *outSize, be_val<uint32_t> *outAlignment);
+GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer,
+                          be_val<uint32_t> *outSize,
+                          be_val<uint32_t> *outAlignment);
 
 void
-GX2CalcColorBufferAuxInfo(GX2Surface *surface, be_val<uint32_t> *outSize, be_val<uint32_t> *outAlignment);
+GX2CalcColorBufferAuxInfo(GX2Surface *surface,
+                          be_val<uint32_t> *outSize,
+                          be_val<uint32_t> *outAlignment);
 
 void
-GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget target);
+GX2SetColorBuffer(GX2ColorBuffer *colorBuffer,
+                  GX2RenderTarget target);
 
 void
 GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer);
