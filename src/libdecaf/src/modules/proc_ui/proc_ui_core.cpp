@@ -29,22 +29,25 @@ ProcUIInitEx(ProcUISaveCallbackEx saveCallbackEx, void *arg)
    gSaveCallbackExArg = arg;
 }
 
-uint32_t
-ProcUIProcessMessages(BOOL unk1)
+ProcUIStatus
+ProcUIProcessMessages(BOOL block)
 {
    // TODO: ProcUIProcessMessages
-   return 0;
+   return ProcUIStatus::InForeground;
 }
 
-uint32_t
-ProcUISubProcessMessages(BOOL unk1)
+ProcUIStatus
+ProcUISubProcessMessages(BOOL block)
 {
    // TODO: ProcUISubProcessMessages
-   return 0;
+   return ProcUIStatus::InForeground;
 }
 
 void
-ProcUIRegisterCallback(ProcUICallbackType::Type type, ProcUICallback callback, void *param, uint32_t unk)
+ProcUIRegisterCallback(ProcUICallbackType type,
+                       ProcUICallback callback,
+                       void *param,
+                       uint32_t unk)
 {
    // TODO: ProcUIRegisterCallback
 }

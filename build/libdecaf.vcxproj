@@ -547,6 +547,7 @@
     <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_socket_lib.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_ssl.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\padscore\padscore_kpad_status.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\proc_ui\proc_ui_enum.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_ai.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_core.h" />
