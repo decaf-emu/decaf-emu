@@ -56,13 +56,16 @@ sOutputBuffer;
 void
 AXInit()
 {
+   if (AXIsInit()) {
+      return;
+   }
+
    sOutputRate = 32000;
    sOutputChannels = 2;  // TODO: surround support
    internal::initVoices();
    internal::initEvents();
 
-   decaf::SoundDriver *driver = decaf::getSoundDriver();
-   if (driver) {
+   if (auto driver = decaf::getSoundDriver()) {
       if (!driver->start(sOutputRate, sOutputChannels)) {
          gLog->error("Sound driver failed to start, disabling sound output");
          decaf::setSoundDriver(nullptr);
