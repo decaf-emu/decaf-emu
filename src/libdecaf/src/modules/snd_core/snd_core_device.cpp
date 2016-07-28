@@ -89,8 +89,8 @@ readNextSample(AXVoice *voice,
          voice->offsets.currentOffset = voice->offsets.loopOffset;
          if (voice->offsets.dataType == AXVoiceFormat::ADPCM) {
             extras->adpcmPredScale = extras->adpcmLoopPredScale;
-            extras->adpcmPrevSample[0] = extras->adpcmPrevSample[0];
-            extras->adpcmPrevSample[1] = extras->adpcmPrevSample[1];
+            extras->adpcmPrevSample[0] = extras->adpcmLoopPrevSample[0];
+            extras->adpcmPrevSample[1] = extras->adpcmLoopPrevSample[1];
          }
          extras->loopCount++;
       } else {
