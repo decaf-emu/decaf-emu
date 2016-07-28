@@ -145,12 +145,16 @@ OSScreenPutFontEx(OSScreenID id,
                   uint32_t column,
                   const char *msg)
 {
-   auto x = row * sScreenFontWidth;
-   auto y = column * sScreenFontHeight;
+   static const auto offsetX = 50;
+   static const auto offsetY = 32;
+   static const auto adjustX = 12;
+   static const auto adjustY = 24;
+   auto x = offsetX + row * adjustX;
+   auto y = offsetY + column * adjustY;
 
    while (msg && *msg) {
       putChar(id, x, y, *msg);
-      x += sScreenFontWidth;
+      x += adjustX;
       msg++;
    }
 }
