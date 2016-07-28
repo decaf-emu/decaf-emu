@@ -26,25 +26,35 @@ nextSampleAdpcm(AXVoice *voice,
    auto sampleIndex = voice->offsets.currentOffset++;
    auto coeffIndex = (extras->adpcmPredScale >> 4) & 7;
    auto scale = extras->adpcmPredScale & 0xF;
-   auto coeff0 = extras->adpcmCoeff[coeffIndex*2];
-   auto coeff1 = extras->adpcmCoeff[coeffIndex*2 + 1];
+   auto yn1 = extras->adpcmPrevSample[0];
+   auto yn2 = extras->adpcmPrevSample[1];
+   auto coeff1 = extras->adpcmCoeff[coeffIndex * 2];
+   auto coeff2 = extras->adpcmCoeff[coeffIndex * 2 + 1];
 
    // Extract the 4-bit signed sample from the appropriate byte
    int sampleData = data[sampleIndex / 2];
+
    if (sampleIndex % 2 == 0) {
       sampleData &= 0xF;
    } else {
       sampleData >>= 4;
    }
+
    if (sampleData >= 8) {
       sampleData -= 16;
    }
 
-   // Compute the output PCM sample value, clamp, and return
-   int32_t prediction = ((extras->adpcmPrevSample[0] * coeff0)
-                         + (extras->adpcmPrevSample[1] * coeff1)) >> 11;
-   int32_t sample = prediction + (sampleData << scale);
-   return std::min(std::max(sample, -32768), 32767);
+   // Calculate sample
+   auto xn = sampleData << scale;
+   auto sample = ((xn << 11) + 0x400 + coeff1 * yn1 + coeff2 * yn2) >> 11;
+
+   // Clamp to output range
+   sample = std::min(std::max(sample, -32768), 32767);
+
+   // Update prev sample
+   extras->adpcmPrevSample[0] = sample;
+   extras->adpcmPrevSample[1] = extras->adpcmPrevSample[0];
+   return sample;
 }
 
 static int32_t
@@ -125,8 +135,10 @@ mixOutput(int32_t *buffer, int numSamples, int numChannels)
                break;
             }
          }
+
          auto weight = extras->offsetFrac + 0x10000;
          int32_t sample;
+
          if (weight == 0) {
             sample = extras->currentSample;
          } else {
@@ -137,6 +149,7 @@ mixOutput(int32_t *buffer, int numSamples, int numChannels)
 
          // TODO: figure out the "full volume" value
          const auto fullVolume = 0x8000;
+
          for (auto ch = 0; ch < numChannels; ++ch) {
             buffer[numChannels*i+ch] += sample * extras->tvVolume[ch] / fullVolume;
          }
