@@ -70,7 +70,7 @@ public:
       apertureSurface.swizzle &= 0xFFFF00FF;
       GX2CalcSurfaceSizeAndAlignment(&apertureSurface);
 
-      gx2::internal::copySurface(surface, level, depth, &apertureSurface, level, depth, aperture.address, nullptr);
+      gx2::internal::copySurface(surface, level, depth, &apertureSurface, level, depth, aperture.address, aperture.address);
       return id + 1;
    }
 
@@ -89,7 +89,7 @@ public:
 
       // Retile to original memory
       auto apertureSurface = GX2Surface { *aperture.surface };
-      apertureSurface.mipmaps = nullptr;
+      apertureSurface.mipmaps = aperture.address;
       apertureSurface.image = aperture.address;
       apertureSurface.tileMode = GX2TileMode::LinearSpecial;
       apertureSurface.swizzle &= 0xFFFF00FF;
@@ -97,7 +97,7 @@ public:
 
       auto level = aperture.level;
       auto depth = aperture.depth;
-      gx2::internal::copySurface(&apertureSurface, level, depth, aperture.surface, level, depth, aperture.surface->image, nullptr);
+      gx2::internal::copySurface(&apertureSurface, level, depth, aperture.surface, level, depth, aperture.surface->image, aperture.surface->mipmaps);
 
       mHeap->free(aperture.address);
       aperture.address = nullptr;
