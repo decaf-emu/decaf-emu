@@ -287,7 +287,10 @@ GLDriver::decafClearColor(const pm4::DecafClearColor &data)
 
    // Bind color buffer
    gl::glNamedFramebufferTexture(mColorClearFrameBuffer, gl::GL_COLOR_ATTACHMENT0, buffer->object, 0);
-   gl::GLenum status = gl::glCheckNamedFramebufferStatus(mColorClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
+
+   // Check color frame buffer is complete
+   auto status = gl::glCheckNamedFramebufferStatus(mColorClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
+
    if (status != gl::GL_FRAMEBUFFER_COMPLETE) {
       gLog->warn("Skipping clear with invalid color buffer.");
       return;
@@ -311,7 +314,10 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
 
    // Bind depth buffer
    gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_ATTACHMENT, buffer->object, 0);
-   gl::GLenum status = gl::glCheckNamedFramebufferStatus(mColorClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
+
+   // Check depth frame buffer is complete
+   auto status = gl::glCheckNamedFramebufferStatus(mDepthClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
+
    if (status != gl::GL_FRAMEBUFFER_COMPLETE) {
       gLog->warn("Skipping clear with invalid depth buffer.");
       return;
