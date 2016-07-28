@@ -243,6 +243,29 @@ AXSetVoiceEndOffset(AXVoice *voice,
 }
 
 void
+AXSetVoiceEndOffsetEx(AXVoice *voice,
+                      uint32_t offset,
+                      const void *samples)
+{
+   AXSetVoiceEndOffset(voice, offset);
+}
+
+void
+AXSetVoiceLoopOffset(AXVoice *voice,
+                     uint32_t offset)
+{
+   voice->offsets.loopOffset = offset;
+}
+
+void
+AXSetVoiceLoopOffsetEx(AXVoice *voice,
+                       uint32_t offset,
+                       const void *samples)
+{
+   AXSetVoiceLoopOffset(voice, offset);
+}
+
+void
 AXSetVoiceLoop(AXVoice *voice,
                AXVoiceLoop loop)
 {
@@ -410,6 +433,9 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXSetVoiceCurrentOffset);
    RegisterKernelFunction(AXSetVoiceDeviceMix);
    RegisterKernelFunction(AXSetVoiceEndOffset);
+   RegisterKernelFunction(AXSetVoiceEndOffsetEx);
+   RegisterKernelFunction(AXSetVoiceLoopOffset);
+   RegisterKernelFunction(AXSetVoiceLoopOffsetEx);
    RegisterKernelFunction(AXSetVoiceLoop);
    RegisterKernelFunction(AXSetVoiceOffsets);
    RegisterKernelFunction(AXSetVoicePriority);

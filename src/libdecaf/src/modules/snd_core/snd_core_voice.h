@@ -189,6 +189,20 @@ AXSetVoiceEndOffset(AXVoice *voice,
                     uint32_t offset);
 
 void
+AXSetVoiceEndOffsetEx(AXVoice *voice,
+                      uint32_t offset,
+                      const void *samples);
+
+void
+AXSetVoiceLoopOffset(AXVoice *voice,
+                     uint32_t offset);
+
+void
+AXSetVoiceLoopOffsetEx(AXVoice *voice,
+                       uint32_t offset,
+                       const void *samples);
+
+void
 AXSetVoiceLoop(AXVoice *voice,
                AXVoiceLoop loop);
 
