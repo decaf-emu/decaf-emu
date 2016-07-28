@@ -20,9 +20,10 @@ bool GLDriver::checkReadyDraw()
       return false;
    }
 
-   gl::GLenum fbStatus = gl::glCheckFramebufferStatus(gl::GL_FRAMEBUFFER);
+   auto fbStatus = gl::glCheckFramebufferStatus(gl::GL_FRAMEBUFFER);
+
    if (fbStatus != gl::GL_FRAMEBUFFER_COMPLETE) {
-      gLog->warn("Draw attempted with an incomplete framebuffer.");
+      gLog->warn("Draw attempted with an incomplete framebuffer, status {}.", fbStatus);
       return false;
    }
 
@@ -292,7 +293,7 @@ GLDriver::decafClearColor(const pm4::DecafClearColor &data)
    auto status = gl::glCheckNamedFramebufferStatus(mColorClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
 
    if (status != gl::GL_FRAMEBUFFER_COMPLETE) {
-      gLog->warn("Skipping clear with invalid color buffer.");
+      gLog->warn("Skipping clear with invalid color buffer, status {}.", status);
       return;
    }
 
@@ -319,7 +320,7 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    auto status = gl::glCheckNamedFramebufferStatus(mDepthClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
 
    if (status != gl::GL_FRAMEBUFFER_COMPLETE) {
-      gLog->warn("Skipping clear with invalid depth buffer.");
+      gLog->warn("Skipping clear with invalid depth buffer, status {}.", status);
       return;
    }
 
