@@ -94,6 +94,7 @@ using TranslateFuncEXP = void(*)(State &state, const latte::ControlFlowInst &cf)
 using TranslateFuncALU = void(*)(State &state, const latte::ControlFlowInst &cf, const latte::AluInst &inst);
 using TranslateFuncALUReduction = void(*)(State &state, const latte::ControlFlowInst &cf, const std::array<latte::AluInst, 4> &group);
 using TranslateFuncTEX = void(*)(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst);
+using TranslateFuncVTX = void(*)(State &state, const latte::ControlFlowInst &cf, const latte::VertexFetchInst &inst);
 
 void
 registerInstruction(latte::SQ_CF_INST id,
@@ -106,6 +107,10 @@ registerInstruction(latte::SQ_CF_EXP_INST id,
 void
 registerInstruction(latte::SQ_TEX_INST id,
                     TranslateFuncTEX func);
+
+void
+registerInstruction(latte::SQ_VTX_INST id,
+                    TranslateFuncVTX func);
 
 void
 registerInstruction(latte::SQ_OP2_INST id,

@@ -37,12 +37,16 @@ sInstructionMapOP3Reduction;
 static std::map<latte::SQ_TEX_INST, TranslateFuncTEX>
 sInstructionMapTEX;
 
+static std::map<latte::SQ_VTX_INST, TranslateFuncVTX>
+sInstructionMapVTX;
+
 static void
 translateTEX(State &state, const ControlFlowInst &cf)
 {
    auto addr = cf.word0.ADDR;
    auto count = (cf.word1.COUNT() + 1) | (cf.word1.COUNT_3() << 3);
-   auto clause = reinterpret_cast<const TextureFetchInst *>(state.binary.data() + 8 * addr);
+   auto clauseTex = reinterpret_cast<const TextureFetchInst *>(state.binary.data() + 8 * addr);
+   auto clauseVtx = reinterpret_cast<const VertexFetchInst *>(state.binary.data() + 8 * addr);
 
    insertLineStart(state);
    state.out.write("// {:02} ", state.cfPC);
@@ -52,25 +56,40 @@ translateTEX(State &state, const ControlFlowInst &cf)
    condStart(state, cf.word1.COND());
 
    for (auto i = 0u; i < count; ++i) {
-      const auto &tex = clause[i];
+      const auto &tex = clauseTex[i];
+      const auto &vtx = clauseVtx[i];
       auto id = tex.word0.TEX_INST();
       auto name = getInstructionName(id);
-      auto itr = sInstructionMapTEX.find(id);
 
+      // Print disassembly
       insertLineStart(state);
       state.out.write("// {:02} ", state.groupPC);
+
       if (id == SQ_TEX_INST_VTX_FETCH || id == SQ_TEX_INST_VTX_SEMANTIC) {
-         auto vtx = *reinterpret_cast<const VertexFetchInst *>(&tex);
          latte::disassembler::disassembleVtxInstruction(state.out, cf, vtx);
       } else {
          latte::disassembler::disassembleTexInstruction(state.out, cf, tex);
       }
+
       insertLineEnd(state);
 
-      if (itr != sInstructionMapTEX.end()) {
-         itr->second(state, cf, tex);
+      // Translate instruction
+      if (id == SQ_TEX_INST_VTX_FETCH || id == SQ_TEX_INST_VTX_SEMANTIC) {
+         auto itr = sInstructionMapVTX.find(vtx.word0.VTX_INST());
+
+         if (itr != sInstructionMapVTX.end()) {
+            itr->second(state, cf, vtx);
+         } else {
+            throw translate_exception(fmt::format("Unimplemented VTX instruction {} {}", id, name));
+         }
       } else {
-         throw translate_exception(fmt::format("Unimplemented TEX instruction {} {}", id, name));
+         auto itr = sInstructionMapTEX.find(id);
+
+         if (itr != sInstructionMapTEX.end()) {
+            itr->second(state, cf, tex);
+         } else {
+            throw translate_exception(fmt::format("Unimplemented TEX instruction {} {}", id, name));
+         }
       }
    }
 
@@ -428,6 +447,12 @@ void
 registerInstruction(SQ_TEX_INST id, TranslateFuncTEX func)
 {
    sInstructionMapTEX[id] = func;
+}
+
+void
+registerInstruction(SQ_VTX_INST id, TranslateFuncVTX func)
+{
+   sInstructionMapVTX[id] = func;
 }
 
 void
