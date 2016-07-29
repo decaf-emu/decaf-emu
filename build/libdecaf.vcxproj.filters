@@ -1604,6 +1604,12 @@
     <ClInclude Include="..\src\libdecaf\src\modules\proc_ui\proc_ui_enum.h">
       <Filter>Header Files\modules\proc_ui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_constants.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_constants.h">
+      <Filter>Header Files\gpu\opengl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\libdecaf\src\gpu\microcode\latte_instructions_def.inl">

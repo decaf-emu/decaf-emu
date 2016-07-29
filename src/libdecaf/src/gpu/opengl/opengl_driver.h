@@ -2,6 +2,7 @@
 #include "common/platform.h"
 #include "common/log.h"
 #include "gpu/pm4.h"
+#include "gpu/latte_constants.h"
 #include "gpu/latte_contextstate.h"
 #include "libdecaf/decaf_graphics.h"
 #include <chrono>
@@ -21,12 +22,6 @@ namespace gpu
 
 namespace opengl
 {
-
-static const auto MAX_ATTRIB_COUNT = 16u;
-static const auto MAX_COLOR_BUFFER_COUNT = 8u;
-static const auto MAX_UNIFORM_BLOCKS = 14u;
-static const auto MAX_UNIFORM_REGISTERS = 256u;
-static const auto MAX_SAMPLERS_PER_TYPE = 16u;
 
 enum class SamplerType
 {
@@ -78,8 +73,9 @@ struct VertexShader : public Resource
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
-   std::array<gl::GLuint, MAX_ATTRIB_COUNT> attribLocations;
+   std::array<gl::GLuint, latte::MaxAttributes> attribLocations;
    std::array<uint8_t, 256> outputMap;
+   std::array<bool, 16> usedUniformBlocks;
    std::string code;
    std::string disassembly;
 };
@@ -89,8 +85,9 @@ struct PixelShader : public Resource
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
    gl::GLuint uniformAlphaRef = 0;
-   std::array<SamplerType, MAX_SAMPLERS_PER_TYPE> samplerTypes;
+   std::array<SamplerType, latte::MaxSamplers> samplerTypes;
    latte::SX_ALPHA_TEST_CONTROL sx_alpha_test_control;
+   std::array<bool, 16> usedUniformBlocks;
    std::string code;
    std::string disassembly;
 };
@@ -275,9 +272,9 @@ private:
    std::unordered_map<uint32_t, AttributeBuffer> mAttribBuffers;
    std::unordered_map<uint32_t, UniformBuffer> mUniformBuffers;
 
-   std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mVertexSamplers;
-   std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mPixelSamplers;
-   std::array<Sampler, MAX_SAMPLERS_PER_TYPE> mGeometrySamplers;
+   std::array<Sampler, latte::MaxSamplers> mVertexSamplers;
+   std::array<Sampler, latte::MaxSamplers> mPixelSamplers;
+   std::array<Sampler, latte::MaxSamplers> mGeometrySamplers;
 
    gl::GLuint mBlitFrameBuffers[2];
    gl::GLuint mFrameBuffer;
@@ -285,7 +282,7 @@ private:
    gl::GLuint mDepthClearFrameBuffer;
    Shader *mActiveShader = nullptr;
    SurfaceBuffer *mActiveDepthBuffer = nullptr;
-   std::array<SurfaceBuffer *, MAX_COLOR_BUFFER_COUNT> mActiveColorBuffers;
+   std::array<SurfaceBuffer *, latte::MaxRenderTargets> mActiveColorBuffers;
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
 

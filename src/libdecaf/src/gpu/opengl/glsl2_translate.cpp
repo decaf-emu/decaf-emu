@@ -2,9 +2,11 @@
 #include "common/log.h"
 #include "glsl2_translate.h"
 #include "glsl2_cf.h"
-#include "gpu/microcode/latte_instructions.h"
+#include "gpu/latte_constants.h"
 #include "gpu/microcode/latte_decoders.h"
 #include "gpu/microcode/latte_disassembler.h"
+#include "gpu/microcode/latte_instructions.h"
+#include "gpu/opengl/opengl_constants.h"
 #include <map>
 
 using namespace latte;
@@ -536,24 +538,34 @@ insertFileHeader(State &state)
    }
 
    if (state.shader->uniformBlocksEnabled) {
-      // GX2 actually supports 16, but GL does not :(
-      for (auto id = 0u; id < 14; ++id) {
+      auto elements = latte::MaxUniformBlockSize / (4 * 4);
+
+      // If OpenGL supports less, we have to use that
+      if (gpu::opengl::MaxUniformBlockSize < latte::MaxUniformBlockSize) {
+         elements = gpu::opengl::MaxUniformBlockSize / (4 * 4);
+      }
+
+      for (auto i = 0u; i < state.shader->usedUniformBlocks.size(); ++i) {
+         if (!state.shader->usedUniformBlocks[i]) {
+            continue;
+         }
+
          out << "layout (binding = ";
 
          if (state.shader->type == Shader::VertexShader) {
-            out << id;
+            out << i;
          } else {
-            out << (16 + id);
+            out << (16 + i);
          }
 
          out
             << ") uniform "
             << "UniformBlock_"
-            << id
+            << i
             << " {\n"
-            << "   vec4 values[];\n"
+            << "   vec4 values[" << elements << "];\n"
             << "} UB_"
-            << id << ";\n";
+            << i << ";\n";
       }
    }
 
@@ -689,6 +701,7 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
    State state;
    state.binary = binary;
    state.shader = &shader;
+   state.shader->usedUniformBlocks.fill(false);
    state.shader->samplerUsage.fill(SamplerUsage::Invalid);
    initialise();
 

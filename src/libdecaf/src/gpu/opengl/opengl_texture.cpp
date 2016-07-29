@@ -253,11 +253,10 @@ getTextureSwizzle(latte::SQ_SEL sel)
 
 bool GLDriver::checkActiveTextures()
 {
-   static const auto MAX_PS_TEXTURES = 16;
    std::vector<uint8_t> untiledImage, untiledMipmap;
    gx2::GX2Surface surface;
 
-   for (auto i = 0; i < MAX_PS_TEXTURES; ++i) {
+   for (auto i = 0; i < latte::MaxTextures; ++i) {
       auto resourceOffset = (latte::SQ_PS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
       auto sq_tex_resource_word1 = getRegister<latte::SQ_TEX_RESOURCE_WORD1_N>(latte::Register::SQ_TEX_RESOURCE_WORD1_0 + 4 * resourceOffset);
@@ -494,7 +493,7 @@ bool GLDriver::checkActiveSamplers()
 {
    // TODO: Vertex Samplers, Geometry Samplers
    // Pixel samplers id 0...16
-   for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
+   for (auto i = 0; i < latte::MaxSamplers; ++i) {
       auto sq_tex_sampler_word0 = getRegister<latte::SQ_TEX_SAMPLER_WORD0_N>(latte::Register::SQ_TEX_SAMPLER_WORD0_0 + 4 * (i * 3));
       auto sq_tex_sampler_word1 = getRegister<latte::SQ_TEX_SAMPLER_WORD1_N>(latte::Register::SQ_TEX_SAMPLER_WORD1_0 + 4 * (i * 3));
       auto sq_tex_sampler_word2 = getRegister<latte::SQ_TEX_SAMPLER_WORD2_N>(latte::Register::SQ_TEX_SAMPLER_WORD2_0 + 4 * (i * 3));

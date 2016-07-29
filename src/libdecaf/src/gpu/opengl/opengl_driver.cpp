@@ -6,6 +6,7 @@
 #include "modules/coreinit/coreinit_time.h"
 #include "modules/gx2/gx2_event.h"
 #include "modules/gx2/gx2_enum.h"
+#include "opengl_constants.h"
 #include "opengl_driver.h"
 #include <fstream>
 #include <glbinding/gl/gl.h>
@@ -17,6 +18,9 @@ namespace gpu
 
 namespace opengl
 {
+
+size_t
+MaxUniformBlockSize = 0;
 
 void GLDriver::initGL()
 {
@@ -37,11 +41,15 @@ void GLDriver::initGL()
    // Create framebuffers for color-clear and depth-clear operations
    gl::glCreateFramebuffers(1, &mColorClearFrameBuffer);
    gl::glCreateFramebuffers(1, &mDepthClearFrameBuffer);
+
+   gl::GLint value;
+   gl::glGetIntegerv(gl::GL_MAX_UNIFORM_BLOCK_SIZE, &value);
+   MaxUniformBlockSize = value;
 }
 
 void GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
 {
-   ScanBufferChain *chain = data.isTv ? &mTvScanBuffers : &mDrcScanBuffers;
+   auto chain = data.isTv ? &mTvScanBuffers : &mDrcScanBuffers;
 
    // Destroy any old chain
    if (chain->object) {
@@ -66,12 +74,14 @@ void GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
    // Initialize the pixels to a more useful color
 #define rf_to_ru(x) (static_cast<uint32_t>(x * 256) & 0xFF)
 #define rgbaf_to_rgbau(r,g,b,a) (rf_to_ru(r) | (rf_to_ru(g) << 8) | (rf_to_ru(b) << 16) | (rf_to_ru(a) << 24))
-   uint32_t pixelCount = data.width * data.height;
-   uint32_t *tmpClearBuf = new uint32_t[pixelCount];
-   uint32_t clearColor = rgbaf_to_rgbau(0.7f, 0.3f, 0.3f, 1.0f);
-   for (uint32_t i = 0; i < pixelCount; ++i) {
+   auto pixelCount = data.width * data.height;
+   auto tmpClearBuf = new uint32_t[pixelCount];
+   auto clearColor = rgbaf_to_rgbau(0.7f, 0.3f, 0.3f, 1.0f);
+
+   for (auto i = 0u; i < pixelCount; ++i) {
       tmpClearBuf[i] = clearColor;
    }
+
    gl::glTextureSubImage2D(chain->object, 0, 0, 0, data.width, data.height, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, tmpClearBuf);
    delete[] tmpClearBuf;
 }
@@ -108,9 +118,9 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
 
    gl::glDisable(gl::GL_SCISSOR_TEST);
    gl::glBlitNamedFramebuffer(mBlitFrameBuffers[1], mBlitFrameBuffers[0],
-      0, 0, pitch, height,
-      0, 0, target->width, target->height,
-      gl::GL_COLOR_BUFFER_BIT, gl::GL_LINEAR);
+                              0, 0, pitch, height,
+                              0, 0, target->width, target->height,
+                              gl::GL_COLOR_BUFFER_BIT, gl::GL_LINEAR);
    gl::glEnable(gl::GL_SCISSOR_TEST);
 }
 

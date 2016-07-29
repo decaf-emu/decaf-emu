@@ -6,6 +6,7 @@
 #include "glsl2_translate.h"
 #include "gpu/latte_registers.h"
 #include "gpu/microcode/latte_disassembler.h"
+#include "opengl_constants.h"
 #include "opengl_driver.h"
 #include <fstream>
 #include <glbinding/gl/gl.h>
@@ -214,8 +215,8 @@ bool GLDriver::checkActiveShader()
          // Setup attrib format
          gl::glCreateVertexArrays(1, &fetchShader.object);
 
-         std::array<bool, MAX_ATTRIB_COUNT> bufferUsed = { false };
-         std::array<uint32_t, MAX_ATTRIB_COUNT> bufferDivisor = { 0 };
+         auto bufferUsed = std::array<bool, latte::MaxAttributes> { false };
+         auto bufferDivisor = std::array<uint32_t, latte::MaxAttributes> { 0 };
 
          for (auto &attrib : fetchShader.attribs) {
             auto resourceId = attrib.buffer + latte::SQ_VS_RESOURCE_BASE;
@@ -253,7 +254,7 @@ bool GLDriver::checkActiveShader()
             }
          }
 
-         for (auto bufferId = 0; bufferId < MAX_ATTRIB_COUNT; ++bufferId) {
+         for (auto bufferId = 0; bufferId < latte::MaxAttributes; ++bufferId) {
             if (bufferUsed[bufferId]) {
                gl::glVertexArrayBindingDivisor(fetchShader.object, bufferId, bufferDivisor[bufferId]);
             }
@@ -380,20 +381,22 @@ bool GLDriver::checkActiveUniforms()
       // Upload uniform registers
       if (mActiveShader->vertex && mActiveShader->vertex->object) {
          auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_256 / 4]);
-         gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, MAX_UNIFORM_REGISTERS, values);
+         gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, latte::MaxUniformRegisters, values);
       }
 
       if (mActiveShader->pixel && mActiveShader->pixel->object) {
          auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_0 / 4]);
-         gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, MAX_UNIFORM_REGISTERS, values);
+         gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, latte::MaxUniformRegisters, values);
       }
    } else {
       if (mActiveShader->vertex && mActiveShader->vertex->object) {
-         for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
+         for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
             auto sq_alu_const_cache_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + 4 * i);
             auto sq_alu_const_buffer_size_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + 4 * i);
+            auto used = mActiveShader->vertex->usedUniformBlocks[i];
 
-            if (!sq_alu_const_buffer_size_vs) {
+            if (!used || !sq_alu_const_buffer_size_vs) {
+               gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, 0);
                continue;
             }
 
@@ -406,6 +409,10 @@ bool GLDriver::checkActiveUniforms()
                gl::glGenBuffers(1, &ubo.object);
             }
 
+            // Check that we can fit the uniform block into OpenGL buffers
+            decaf_assert(size <= gpu::opengl::MaxUniformBlockSize,
+                         fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, MaxUniformBlockSize));
+
             // Upload block
             gl::glBindBuffer(gl::GL_UNIFORM_BUFFER, ubo.object);
             gl::glBufferData(gl::GL_UNIFORM_BUFFER, size, block, gl::GL_DYNAMIC_DRAW);
@@ -416,11 +423,13 @@ bool GLDriver::checkActiveUniforms()
       }
 
       if (mActiveShader->pixel && mActiveShader->pixel->object) {
-         for (auto i = 0u; i < MAX_UNIFORM_BLOCKS; ++i) {
+         for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
             auto sq_alu_const_cache_ps = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + 4 * i);
             auto sq_alu_const_buffer_size_ps = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + 4 * i);
+            auto used = mActiveShader->pixel->usedUniformBlocks[i];
 
-            if (!sq_alu_const_buffer_size_ps) {
+            if (!used || !sq_alu_const_buffer_size_ps) {
+               gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, 0);
                continue;
             }
 
@@ -432,6 +441,10 @@ bool GLDriver::checkActiveUniforms()
             if (!ubo.object) {
                gl::glGenBuffers(1, &ubo.object);
             }
+
+            // Check that we can fit the uniform block into OpenGL buffers
+            decaf_assert(size <= gpu::opengl::MaxUniformBlockSize,
+                         fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, MaxUniformBlockSize));
 
             // Upload block
             gl::glBindBuffer(gl::GL_UNIFORM_BUFFER, ubo.object);
@@ -489,7 +502,7 @@ stridedMemcpy(const void *src,
               latte::SQ_ENDIAN endian,
               latte::SQ_DATA_FORMAT format)
 {
-   bool swap = (endian != latte::SQ_ENDIAN_NONE);
+   auto swap = (endian != latte::SQ_ENDIAN_NONE);
 
    switch (format) {
    case latte::FMT_8:
@@ -547,7 +560,7 @@ stridedMemcpy(const void *src,
 
 bool GLDriver::checkActiveAttribBuffers()
 {
-   std::array<AttributeBuffer *, 16> buffers;
+   std::array<AttributeBuffer *, latte::MaxAttributes> buffers;
    buffers.fill(nullptr);
 
    if (!mActiveShader
@@ -617,12 +630,12 @@ bool GLDriver::checkActiveAttribBuffers()
          }
 
          stridedMemcpy(mem::translate<const void>(buffer->addr),
-            buffer->mappedBuffer,
-            buffer->size,
-            attrib.offset,
-            buffer->stride,
-            attrib.endianSwap,
-            attrib.format);
+                       buffer->mappedBuffer,
+                       buffer->size,
+                       attrib.offset,
+                       buffer->stride,
+                       attrib.endianSwap,
+                       attrib.format);
       } else {
          decaf_abort("We do not yet support binding of non-attribute buffers");
       }
@@ -856,7 +869,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    glsl2::Shader shader;
    shader.type = glsl2::Shader::VertexShader;
 
-   for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
+   for (auto i = 0; i < latte::MaxSamplers; ++i) {
       auto resourceOffset = (latte::SQ_VS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
 
@@ -875,6 +888,8 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       gLog->error("Failed to decode vertex shader\n{}", vertex.disassembly);
       return false;
    }
+
+   vertex.usedUniformBlocks = shader.usedUniformBlocks;
 
    fmt::MemoryWriter out;
    out << shader.fileHeader;
@@ -1019,7 +1034,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    shader.type = glsl2::Shader::PixelShader;
 
    // Gather Samplers
-   for (auto i = 0; i < MAX_SAMPLERS_PER_TYPE; ++i) {
+   for (auto i = 0; i < latte::MaxSamplers; ++i) {
       auto resourceOffset = (latte::SQ_PS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
 
@@ -1035,9 +1050,11 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    pixel.disassembly = latte::disassemble(gsl::as_span(buffer, size));
 
    if (!glsl2::translate(shader, gsl::as_span(buffer, size))) {
-      gLog->error("Failed to decode vertex shader\n{}", pixel.disassembly);
+      gLog->error("Failed to decode pixel shader\n{}", pixel.disassembly);
       return false;
    }
+
+   pixel.usedUniformBlocks = shader.usedUniformBlocks;
 
    fmt::MemoryWriter out;
    out << shader.fileHeader;

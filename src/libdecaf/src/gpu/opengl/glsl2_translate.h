@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <exception>
 #include <gsl.h>
 #include <stack>
@@ -59,6 +60,7 @@ struct Shader
    std::string codeBody;
    std::vector<Export> exports;
    std::array<SamplerUsage, 16> samplerUsage;
+   std::array<bool, 16> usedUniformBlocks;
 };
 
 struct LoopState

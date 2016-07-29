@@ -304,6 +304,10 @@ insertSource(State &state,
 
       out << "UB_" << bank << ".values[" << id;
 
+      if (state.shader) {
+         state.shader->usedUniformBlocks[bank] = true;
+      }
+
       if (rel) {
          out << " + ";
          insertIndexMode(out, inst.word0.INDEX_MODE());

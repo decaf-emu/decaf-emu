@@ -415,6 +415,7 @@
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_folder.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\commandqueue.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\gfd.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_constants.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_contextstate.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_cb.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_common.h" />
@@ -438,6 +439,7 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_cf.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_translate.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_constants.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_buffer.h" />
