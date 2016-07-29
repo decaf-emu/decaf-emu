@@ -362,45 +362,71 @@ bool GLDriver::checkActiveTextures()
             }
 
             switch (dim) {
+            case latte::SQ_TEX_DIM_1D:
+               if (compressed) {
+                  gl::glCompressedTextureSubImage1D(buffer->object,
+                                                    0, /* level */
+                                                    0, /* xoffset */
+                                                    width,
+                                                    textureDataType,
+                                                    gsl::narrow_cast<gl::GLsizei>(size),
+                                                    untiledImage.data());
+               } else {
+                  gl::glTextureSubImage1D(buffer->object,
+                                          0, /* level */
+                                          0, /* xoffset */
+                                          width,
+                                          textureFormat,
+                                          textureDataType,
+                                          untiledImage.data());
+               }
+               break;
             case latte::SQ_TEX_DIM_2D:
                if (compressed) {
-                  gl::glCompressedTextureSubImage2D(buffer->object, 0,
-                     0, 0,
-                     width, height,
-                     textureDataType,
-                     gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
+                  gl::glCompressedTextureSubImage2D(buffer->object,
+                                                    0, /* level */
+                                                    0, 0, /* xoffset, yoffset */
+                                                    width,
+                                                    height,
+                                                    textureDataType,
+                                                    gsl::narrow_cast<gl::GLsizei>(size),
+                                                    untiledImage.data());
                } else {
-                  gl::glTextureSubImage2D(buffer->object, 0,
-                     0, 0,
-                     width, height,
-                     textureFormat, textureDataType,
-                     untiledImage.data());
+                  gl::glTextureSubImage2D(buffer->object,
+                                          0, /* level */
+                                          0, 0, /* xoffset, yoffset */
+                                          width, height,
+                                          textureFormat,
+                                          textureDataType,
+                                          untiledImage.data());
                }
                break;
             case latte::SQ_TEX_DIM_CUBEMAP:
                decaf_check(surface.depth == 6);
             case latte::SQ_TEX_DIM_2D_ARRAY:
                if (compressed) {
-                  gl::glCompressedTextureSubImage3D(buffer->object, 0,
-                     0, 0, 0,
-                     width, height, surface.depth,
-                     textureDataType,
-                     gsl::narrow_cast<gl::GLsizei>(size), untiledImage.data());
+                  gl::glCompressedTextureSubImage3D(buffer->object,
+                                                    0, /* level */
+                                                    0, 0, 0, /* xoffset, yoffset, zoffset */
+                                                    width, height, surface.depth,
+                                                    textureDataType,
+                                                    gsl::narrow_cast<gl::GLsizei>(size),
+                                                    untiledImage.data());
                } else {
-                  gl::glTextureSubImage3D(buffer->object, 0,
-                     0, 0, 0,
-                     width, height, surface.depth,
-                     textureFormat, textureDataType,
-                     untiledImage.data());
+                  gl::glTextureSubImage3D(buffer->object,
+                                          0, /* level */
+                                          0, 0, 0, /* xoffset, yoffset, zoffset */
+                                          width, height, surface.depth,
+                                          textureFormat,
+                                          textureDataType,
+                                          untiledImage.data());
                }
                break;
-            case latte::SQ_TEX_DIM_1D:
             case latte::SQ_TEX_DIM_3D:
             case latte::SQ_TEX_DIM_1D_ARRAY:
             case latte::SQ_TEX_DIM_2D_MSAA:
             case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
-               gLog->error("Unsupported texture dim: {}", sq_tex_resource_word0.DIM().get());
-               continue;
+               decaf_abort(fmt::format("Unsupported texture dim: {}", sq_tex_resource_word0.DIM().get()));
             }
          }
 
