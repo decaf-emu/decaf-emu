@@ -422,10 +422,7 @@ bool GLDriver::checkActiveTextures()
                                           untiledImage.data());
                }
                break;
-            case latte::SQ_TEX_DIM_3D:
-            case latte::SQ_TEX_DIM_1D_ARRAY:
-            case latte::SQ_TEX_DIM_2D_MSAA:
-            case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+            default:
                decaf_abort(fmt::format("Unsupported texture dim: {}", sq_tex_resource_word0.DIM().get()));
             }
          }
@@ -568,6 +565,7 @@ bool GLDriver::checkActiveSamplers()
          colors = { 1.0f, 1.0f, 1.0f, 0.0f };
          break;
       case latte::SQ_TEX_BORDER_COLOR_REGISTER:
+      {
          auto td_ps_sampler_border_red = getRegister<latte::TD_PS_SAMPLER_BORDERN_RED>(latte::Register::TD_PS_SAMPLER_BORDER0_RED + 4 * (i * 4));
          auto td_ps_sampler_border_green = getRegister<latte::TD_PS_SAMPLER_BORDERN_GREEN>(latte::Register::TD_PS_SAMPLER_BORDER0_GREEN + 4 * (i * 4));
          auto td_ps_sampler_border_blue = getRegister<latte::TD_PS_SAMPLER_BORDERN_BLUE>(latte::Register::TD_PS_SAMPLER_BORDER0_BLUE + 4 * (i * 4));
@@ -581,6 +579,7 @@ bool GLDriver::checkActiveSamplers()
          };
 
          break;
+      }
       default:
          decaf_abort(fmt::format("Unsupported border_color_type = {}", border_color_type));
       }

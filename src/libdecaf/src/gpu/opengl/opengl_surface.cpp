@@ -242,6 +242,11 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
 
    if (!buffer->object) {
       switch (dim) {
+      case latte::SQ_TEX_DIM_1D:
+         gl::glCreateTextures(gl::GL_TEXTURE_1D, 1, &buffer->object);
+         gl::glTextureStorage1D(buffer->object, 1, storageFormat, width);
+         buffer->cpuMemEnd = baseAddress + (width * bytesPerPixel);
+         break;
       case latte::SQ_TEX_DIM_2D:
          gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &buffer->object);
          gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
@@ -257,11 +262,6 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
          gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
          buffer->cpuMemEnd = baseAddress + (width * height * bytesPerPixel);
          break;
-      case latte::SQ_TEX_DIM_1D:
-         gl::glCreateTextures(gl::GL_TEXTURE_1D, 1, &buffer->object);
-         gl::glTextureStorage1D(buffer->object, 1, storageFormat, width);
-         buffer->cpuMemEnd = baseAddress + (width * bytesPerPixel);
-         break;
       case latte::SQ_TEX_DIM_3D:
          gl::glCreateTextures(gl::GL_TEXTURE_3D, 1, &buffer->object);
          gl::glTextureStorage3D(buffer->object, 1, storageFormat, width, height, depth);
@@ -272,8 +272,6 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
          gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
          buffer->cpuMemEnd = baseAddress + (width * height * bytesPerPixel);
          break;
-      // case latte::SQ_TEX_DIM_2D_MSAA:
-      // case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
       default:
          decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
       }
