@@ -554,7 +554,7 @@ bool GLDriver::checkActiveSamplers()
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<gl::GLint>(xy_mag_filter));
 
       // Setup border color
-      auto border_color_type = sq_tex_sampler_word0.BORDER_COLOR_TYPE();
+      auto border_color_type = sq_tex_sampler_word0.BORDER_COLOR_TYPE().get();
       std::array<float, 4> colors;
 
       switch (border_color_type) {
@@ -579,7 +579,10 @@ bool GLDriver::checkActiveSamplers()
             td_ps_sampler_border_blue.BORDER_BLUE,
             td_ps_sampler_border_alpha.BORDER_ALPHA,
          };
+
          break;
+      default:
+         decaf_abort(fmt::format("Unsupported border_color_type = {}", border_color_type));
       }
 
       gl::glSamplerParameterfv(sampler.object, gl::GL_TEXTURE_BORDER_COLOR, &colors[0]);
