@@ -169,10 +169,8 @@ static elf::Symbol
 getSymbol(BigEndianView &symSecView,
           uint32_t index);
 
-static uint32_t
-getSymbolAddress(const elf::Symbol &sym,
-                 const SectionList &sections);
-
+static ppcaddr_t
+calculateRelocatedAddress(ppcaddr_t address, const SectionList &sections);
 
 // Find and read the SHT_RPL_FILEINFO section
 static bool
@@ -226,16 +224,6 @@ getSymbol(BigEndianView &symSecView,
    symSecView.seek(index * sizeof(elf::Symbol));
    elf::readSymbol(symSecView, sym);
    return sym;
-}
-
-
-// Get address of symbol
-static uint32_t
-getSymbolAddress(const elf::Symbol &sym,
-                 const SectionList &sections)
-{
-   auto &symSec = sections[sym.shndx];
-   return (sym.value - symSec.header.addr) + symSec.virtAddress;
 }
 
 
@@ -580,23 +568,26 @@ processRelocations(LoadedModule *loadedMod,
          auto &symbolSection = sections[symbol.shndx];
          auto symbolName = reinterpret_cast<const char*>(symStrTab.memory) + symbol.name;
 
-         auto symAddr = getSymbolAddress(symbol, sections);
-
          // Some games relocate stuff to $UNDEF first, then to their proper location :S
          if (!symbolSection.virtSize) {
             continue;
          }
 
+         // Get symbol address
+         auto symAddr = symbol.value;
+
          if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
             decaf_check(symAddr);
 
-            auto importedSymAddr = mem::read<uint32_t>(symAddr);
-            decaf_check(importedSymAddr);
-
-            symAddr = importedSymAddr;
+            // Relocate first, read value from import table, then add addend
+            symAddr = calculateRelocatedAddress(symAddr, sections);
+            symAddr = mem::read<uint32_t>(symAddr);
+            symAddr += rela.addend;
+         } else {
+            // Add addend and then relocate
+            symAddr += rela.addend;
+            symAddr = calculateRelocatedAddress(symAddr, sections);
          }
-
-         symAddr += rela.addend;
 
          auto ptr8 = mem::translate(reloAddr);
          auto ptr16 = reinterpret_cast<uint16_t*>(ptr8);
