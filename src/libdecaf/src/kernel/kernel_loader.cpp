@@ -574,20 +574,16 @@ processRelocations(LoadedModule *loadedMod,
          }
 
          // Get symbol address
-         auto symAddr = symbol.value;
+         auto symAddr = calculateRelocatedAddress(symbol.value, sections);
 
          if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
             decaf_check(symAddr);
-
-            // Relocate first, read value from import table, then add addend
-            symAddr = calculateRelocatedAddress(symAddr, sections);
-            symAddr = mem::read<uint32_t>(symAddr);
-            symAddr += rela.addend;
-         } else {
-            // Add addend and then relocate
-            symAddr += rela.addend;
-            symAddr = calculateRelocatedAddress(symAddr, sections);
+            auto importedSymAddr = mem::read<uint32_t>(symAddr);
+            decaf_check(importedSymAddr);
+            symAddr = importedSymAddr;
          }
+
+         symAddr += rela.addend;
 
          auto ptr8 = mem::translate(reloAddr);
          auto ptr16 = reinterpret_cast<uint16_t*>(ptr8);
