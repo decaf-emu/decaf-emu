@@ -1,4 +1,5 @@
 #include "coreinit.h"
+#include "coreinit_enum.h"
 #include "coreinit_ghs.h"
 #include "coreinit_interrupts.h"
 #include "coreinit_spinlock.h"
@@ -212,7 +213,7 @@ static int32_t
 syscall(uint32_t id)
 {
    switch (id) {
-   case 0xe:
+   case GHSSyscallID::time:
       return syscall_time();
    default:
       decaf_abort(fmt::format("Unsupported ghs syscalls {:x}", id));
