@@ -914,6 +914,15 @@ int main(int argc, char **argv)
    return result;
 }
 
+namespace gpu
+{
+namespace opengl
+{
+size_t
+MaxUniformBlockSize = 0;
+}
+}
+
 namespace pm4
 {
 Buffer *
