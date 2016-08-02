@@ -276,19 +276,11 @@ void
 AXSetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets)
 {
-   voice->offsets = *offsets;
+   decaf_check(offsets->dataType == AXVoiceFormat::ADPCM ||
+      offsets->dataType == AXVoiceFormat::LPCM16 ||
+      offsets->dataType == AXVoiceFormat::LPCM8);
 
-   bool knownType = false;
-   switch (offsets->dataType) {  // Let compiler warn us if we forget any types
-   case AXVoiceFormat::ADPCM:
-   case AXVoiceFormat::LPCM16:
-   case AXVoiceFormat::LPCM8:
-      knownType = true;
-      break;
-   }
-   if (!knownType) {
-      gLog->warn("AXSetVoiceOffsets: Unsupported data type {}", offsets->dataType.value());
-   }
+   voice->offsets = *offsets;
 
    if (decaf::config::sound::dump_sounds) {
       auto filename = "sound_" + pointerAsString(offsets->data.get());
