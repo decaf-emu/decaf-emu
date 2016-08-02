@@ -50,12 +50,17 @@ struct AXVoice
    //! Current play state of this voice
    be_val<AXVoiceState> state;
 
-   UNKNOWN(0x8);
+   //! Current volume of this voice
+   be_val<uint32_t> volume;
+
+   //! The renderer to use for this voice
+   be_val<AXRenderer> renderer;
 
    //! this is a link used in the stack, we do this in host-memory currently
    AXVoiceLink link;
 
-   UNKNOWN(0x4);
+   //! A link to the next callback to invoke
+   be_ptr<AXVoice> cbNext;
 
    //! The priority of this voice used for force-acquiring a voice
    be_val<uint32_t> priority;
@@ -74,31 +79,51 @@ struct AXVoice
    //! An extended version of the callback above
    be_AXVoiceCallbackExFn callbackEx;
 
-   UNKNOWN(0xC);
+   //! The reason for the callback being invoked
+   be_val<uint32_t> callbackReason;
 
-   // float at 0x50
-   // float at 0x54
+   be_val<float> unk0;
+   be_val<float> unk1;
 };
 CHECK_OFFSET(AXVoice, 0x0, index);
+CHECK_OFFSET(AXVoice, 0x4, state);
+CHECK_OFFSET(AXVoice, 0x8, volume);
+CHECK_OFFSET(AXVoice, 0xc, renderer);
 CHECK_OFFSET(AXVoice, 0x10, link);
+CHECK_OFFSET(AXVoice, 0x18, cbNext);
 CHECK_OFFSET(AXVoice, 0x1c, priority);
 CHECK_OFFSET(AXVoice, 0x20, callback);
 CHECK_OFFSET(AXVoice, 0x24, userContext);
 CHECK_OFFSET(AXVoice, 0x34, offsets);
 CHECK_OFFSET(AXVoice, 0x48, callbackEx);
+CHECK_OFFSET(AXVoice, 0x4c, callbackReason);
+CHECK_OFFSET(AXVoice, 0x50, unk0);
+CHECK_OFFSET(AXVoice, 0x54, unk1);
 CHECK_SIZE(AXVoice, 0x58);
+
+struct AXVoiceDeviceBusMixData
+{
+   be_val<uint16_t> volume;
+   be_val<int16_t> delta;
+};
+CHECK_OFFSET(AXVoiceDeviceBusMixData, 0x0, volume);
+CHECK_SIZE(AXVoiceDeviceBusMixData, 0x4);
 
 struct AXVoiceDeviceMixData
 {
-   be_val<uint16_t> volume;
-
-   UNKNOWN(0xE);  // int16_t followed by 3 * {uint16_t, int16_t}
+   AXVoiceDeviceBusMixData bus[4];
 };
-CHECK_OFFSET(AXVoiceDeviceMixData, 0x0, volume);
+CHECK_OFFSET(AXVoiceDeviceMixData, 0x0, bus);
 CHECK_SIZE(AXVoiceDeviceMixData, 0x10);
 
-// TODO: Reverse AXVoiceVeData
-struct AXVoiceVeData;
+struct AXVoiceVeData
+{
+   be_val<uint16_t> volume;
+   be_val<int16_t> delta;
+};
+CHECK_OFFSET(AXVoiceVeData, 0x0, volume);
+CHECK_OFFSET(AXVoiceVeData, 0x2, delta);
+CHECK_SIZE(AXVoiceVeData, 0x4);
 
 struct AXVoiceAdpcmLoopData
 {

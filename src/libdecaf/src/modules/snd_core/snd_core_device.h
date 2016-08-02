@@ -49,7 +49,7 @@ AXSetDeviceCompressor(AXDeviceType type,
 
 AXResult
 AXSetDeviceUpsampleStage(AXDeviceType type,
-                         uint32_t);
+                         BOOL postFinalMix);
 
 AXResult
 AXSetDeviceVolume(AXDeviceType type,

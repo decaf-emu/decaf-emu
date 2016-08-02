@@ -52,6 +52,12 @@ ENUM_BEG(AXVoiceLoop, uint16_t)
    ENUM_VALUE(Enabled,           1)
 ENUM_END(AXVoiceLoop)
 
+ENUM_BEG(AXRenderer, uint32_t)
+ENUM_VALUE(DSP, 0)
+ENUM_VALUE(CPU, 1)
+ENUM_VALUE(Auto, 2)
+ENUM_END(AXRenderer)
+
 ENUM_BEG(AXVoiceSrcType, uint32_t)
 ENUM_END(AXVoiceSrcType)
 

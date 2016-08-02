@@ -217,17 +217,17 @@ AXSetVoiceDeviceMix(AXVoice *voice,
    switch (type) {
    case AXDeviceType::TV:
       for (auto i = 0; i < 6; ++i) {
-         extras->tvVolume[i] = mixData[i].volume;
+         extras->tvVolume[i] = mixData[i].bus[0].volume;
       }
       break;
    case AXDeviceType::DRC:
       for (auto i = 0; i < 4; ++i) {
-         extras->drcVolume[i] = mixData[i].volume;
+         extras->drcVolume[i] = mixData[i].bus[0].volume;
       }
       break;
    case AXDeviceType::Controller:
       if (id < 4) {
-         extras->controllerVolume[id] = mixData[id].volume;
+         extras->controllerVolume[id] = mixData[0].bus[0].volume;
       }
       break;
    }
