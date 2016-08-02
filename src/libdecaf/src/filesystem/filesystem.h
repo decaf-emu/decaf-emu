@@ -48,6 +48,36 @@ public:
       return reinterpret_cast<File *>(node);
    }
 
+   bool deleteChild(Path path)
+   {
+      auto parent = findNode(path.parentPath());
+
+      if (!parent || parent->type != Node::FolderNode) {
+         return false;
+      }
+
+      auto folder = reinterpret_cast<Folder *>(parent);
+      auto node = folder->findChild(path.filename());
+
+      if (!node) {
+         return false;
+      }
+
+      return folder->deleteChild(node);
+   }
+
+   bool deleteFile(Path path)
+   {
+      auto parent = findNode(path.parentPath());
+
+      if (!parent || parent->type != Node::FolderNode) {
+         return false;
+      }
+
+      auto folder = reinterpret_cast<Folder *>(parent);
+      return folder->deleteFile(path.filename());
+   }
+
    bool deleteFolder(Path path)
    {
       auto parent = findNode(path.parentPath());
