@@ -32,6 +32,9 @@ uint32_t
 GX2RGetBufferAllocationSize(GX2RBuffer *buffer);
 
 BOOL
+GX2RBufferExists(GX2RBuffer *buffer);
+
+BOOL
 GX2RCreateBuffer(GX2RBuffer *buffer);
 
 BOOL

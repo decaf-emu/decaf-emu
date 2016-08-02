@@ -110,6 +110,7 @@ Module::RegisterFunctions()
    // GX2R Buffer
    RegisterKernelFunction(GX2RGetBufferAlignment);
    RegisterKernelFunction(GX2RGetBufferAllocationSize);
+   RegisterKernelFunction(GX2RBufferExists);
    RegisterKernelFunction(GX2RCreateBuffer);
    RegisterKernelFunction(GX2RCreateBufferUserMemory);
    RegisterKernelFunction(GX2RDestroyBufferEx);

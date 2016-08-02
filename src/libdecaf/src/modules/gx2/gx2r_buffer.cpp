@@ -21,11 +21,15 @@ GX2RGetBufferAllocationSize(GX2RBuffer *buffer)
 }
 
 BOOL
+GX2RBufferExists(GX2RBuffer *buffer)
+{
+   return buffer->buffer ? TRUE : FALSE;
+}
+
+BOOL
 GX2RCreateBuffer(GX2RBuffer *buffer)
 {
-   if (buffer->buffer) {
-      gLog->error("GX2RCreateBuffer buffer should be nullptr");
-   }
+   decaf_check(!buffer->buffer);
 
    auto align = GX2RGetBufferAlignment(buffer->flags);
    auto size = GX2RGetBufferAllocationSize(buffer);
