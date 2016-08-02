@@ -16,7 +16,7 @@ static int32_t
 nextSampleAdpcm(AXVoice *voice,
                 AXVoiceExtras *extras)
 {
-   auto data = reinterpret_cast<uint8_t *>(voice->offsets.data.get());
+   auto data = reinterpret_cast<const uint8_t *>(voice->offsets.data.get());
 
    if (voice->offsets.currentOffset % 16 == 0) {
       extras->adpcmPredScale = data[voice->offsets.currentOffset / 2];
@@ -61,7 +61,7 @@ static int32_t
 nextSampleLpcm16(AXVoice *voice,
                   AXVoiceExtras *extras)
 {
-   auto data = reinterpret_cast<be_val<int16_t> *>(voice->offsets.data.get());
+   auto data = reinterpret_cast<const be_val<int16_t> *>(voice->offsets.data.get());
    return data[voice->offsets.currentOffset++];
 }
 
@@ -69,7 +69,7 @@ static int32_t
 nextSampleLpcm8(AXVoice *voice,
                 AXVoiceExtras *extras)
 {
-   auto data = reinterpret_cast<uint8_t *>(voice->offsets.data.get());
+   auto data = reinterpret_cast<const uint8_t *>(voice->offsets.data.get());
    return (data[voice->offsets.currentOffset++] - 128) << 8;
 }
 

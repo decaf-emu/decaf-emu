@@ -32,7 +32,7 @@ struct AXVoiceOffsets
    be_val<uint32_t> loopOffset;
    be_val<uint32_t> endOffset;
    be_val<uint32_t> currentOffset;
-   be_ptr<void> data;
+   be_ptr<const void> data;
 };
 CHECK_OFFSET(AXVoiceOffsets, 0x0, dataType);
 CHECK_OFFSET(AXVoiceOffsets, 0x2, loopingEnabled);

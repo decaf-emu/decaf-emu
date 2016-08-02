@@ -315,7 +315,7 @@ AXSetVoiceOffsets(AXVoice *voice,
          }
          uint32_t streamBytes = (offsets->endOffset + 1) * bitsPerSample / 8;
          auto file = std::ofstream { "dump/" + filename + ".bin", std::ofstream::out };
-         file.write(reinterpret_cast<char*>(offsets->data.get()), streamBytes);
+         file.write(reinterpret_cast<const char*>(offsets->data.get()), streamBytes);
       }
    }
 }
