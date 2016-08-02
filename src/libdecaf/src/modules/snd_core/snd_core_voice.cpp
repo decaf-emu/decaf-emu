@@ -263,6 +263,7 @@ AXSetVoiceLoopOffsetEx(AXVoice *voice,
                        const void *samples)
 {
    AXSetVoiceLoopOffset(voice, offset);
+   voice->offsets.data = samples;
 }
 
 void
