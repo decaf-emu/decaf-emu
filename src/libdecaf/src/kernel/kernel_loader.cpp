@@ -574,16 +574,20 @@ processRelocations(LoadedModule *loadedMod,
          }
 
          // Get symbol address
-         auto symAddr = calculateRelocatedAddress(symbol.value, sections);
+         auto symAddr = 0u;
 
-         if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
-            decaf_check(symAddr);
-            auto importedSymAddr = mem::read<uint32_t>(symAddr);
-            decaf_check(importedSymAddr);
-            symAddr = importedSymAddr;
+         if (type != elf::R_PPC_DTPREL32 && type != elf::R_PPC_DTPMOD32) {
+            symAddr = calculateRelocatedAddress(symbol.value, sections);
+
+            if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
+               decaf_check(symAddr);
+               auto importedSymAddr = mem::read<uint32_t>(symAddr);
+               decaf_check(importedSymAddr);
+               symAddr = importedSymAddr;
+            }
+
+            symAddr += rela.addend;
          }
-
-         symAddr += rela.addend;
 
          auto ptr8 = mem::translate(reloAddr);
          auto ptr16 = reinterpret_cast<uint16_t*>(ptr8);
