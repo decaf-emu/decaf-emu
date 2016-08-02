@@ -248,6 +248,7 @@ AXSetVoiceEndOffsetEx(AXVoice *voice,
                       const void *samples)
 {
    AXSetVoiceEndOffset(voice, offset);
+   voice->offsets.data = samples;
 }
 
 void
