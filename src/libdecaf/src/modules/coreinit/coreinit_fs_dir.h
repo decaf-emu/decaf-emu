@@ -77,6 +77,47 @@ FSRewindDirAsync(FSClient *client,
                  uint32_t flags,
                  FSAsyncData *asyncData);
 
+FSStatus
+FSRemoveAsync(FSClient *client,
+              FSCmdBlock *block,
+              const char *path,
+              uint32_t flags,
+              FSAsyncData *asyncData);
+
+FSStatus
+FSRemove(FSClient *client,
+         FSCmdBlock *block,
+         const char *path,
+         uint32_t flags);
+
+FSStatus
+FSGetFreeSpaceSizeAsync(FSClient *client,
+                        FSCmdBlock *block,
+                        const char *path,
+                        uint64_t *freeSpace,
+                        uint32_t flags,
+                        FSAsyncData *asyncData);
+
+FSStatus
+FSGetFreeSpaceSize(FSClient *client,
+                   FSCmdBlock *block,
+                   const char *path,
+                   uint64_t *freeSpace,
+                   uint32_t flags);
+
+FSStatus
+FSFlushQuotaAsync(FSClient *client,
+                  FSCmdBlock *block,
+                  const char *path,
+                  uint32_t flags,
+                  FSAsyncData *asyncData);
+
+FSStatus
+FSFlushQuota(FSClient *client,
+             FSCmdBlock *block,
+             const char *path,
+             uint32_t flags);
+
 /** @} */
 
 } // namespace coreinit

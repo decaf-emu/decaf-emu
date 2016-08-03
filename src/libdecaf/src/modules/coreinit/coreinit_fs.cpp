@@ -283,6 +283,12 @@ Module::registerFileSystemFunctions()
    RegisterKernelFunction(FSReadDirAsync);
    RegisterKernelFunction(FSRewindDir);
    RegisterKernelFunction(FSRewindDirAsync);
+   RegisterKernelFunction(FSRemoveAsync);
+   RegisterKernelFunction(FSRemove);
+   RegisterKernelFunction(FSGetFreeSpaceSizeAsync);
+   RegisterKernelFunction(FSGetFreeSpaceSize);
+   RegisterKernelFunction(FSFlushQuotaAsync);
+   RegisterKernelFunction(FSFlushQuota);
 }
 
 } // namespace coreinit

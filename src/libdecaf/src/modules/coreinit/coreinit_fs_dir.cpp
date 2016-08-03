@@ -210,4 +210,83 @@ FSRewindDir(FSClient *client,
    return internal::resolveSyncOp(client, block);
 }
 
+FSStatus
+FSRemoveAsync(FSClient *client,
+              FSCmdBlock *block,
+              const char *path,
+              uint32_t flags,
+              FSAsyncData *asyncData)
+{
+   internal::queueFsWork(client, block, asyncData, [=]() {
+      // TODO: Implement removal of files and directories
+      return FSStatus::OK;
+   });
+
+   return FSStatus::OK;
+}
+
+FSStatus
+FSRemove(FSClient *client,
+         FSCmdBlock *block,
+         const char *path,
+         uint32_t flags)
+{
+   auto asyncData = internal::prepareSyncOp(client, block);
+   FSRemoveAsync(client, block, path, flags, asyncData);
+   return internal::resolveSyncOp(client, block);
+}
+
+FSStatus
+FSGetFreeSpaceSizeAsync(FSClient *client,
+                        FSCmdBlock *block,
+                        const char *path,
+                        uint64_t *freeSpace,
+                        uint32_t flags,
+                        FSAsyncData *asyncData)
+{
+   internal::queueFsWork(client, block, asyncData, [=]() {
+      *freeSpace = 0x00FFFFFF;
+      return FSStatus::OK;
+   });
+
+   return FSStatus::OK;
+}
+
+FSStatus
+FSGetFreeSpaceSize(FSClient *client,
+                   FSCmdBlock *block,
+                   const char *path,
+                   uint64_t *freeSpace,
+                   uint32_t flags)
+{
+   auto asyncData = internal::prepareSyncOp(client, block);
+   FSGetFreeSpaceSizeAsync(client, block, path, freeSpace, flags, asyncData);
+   return internal::resolveSyncOp(client, block);
+}
+
+FSStatus
+FSFlushQuotaAsync(FSClient *client,
+                  FSCmdBlock *block,
+                  const char *path,
+                  uint32_t flags,
+                  FSAsyncData *asyncData)
+{
+   internal::queueFsWork(client, block, asyncData, [=]() {
+      return FSStatus::OK;
+   });
+
+   return FSStatus::OK;
+}
+
+FSStatus
+FSFlushQuota(FSClient *client,
+             FSCmdBlock *block,
+             const char *path,
+             uint32_t flags)
+{
+   auto asyncData = internal::prepareSyncOp(client, block);
+   FSFlushQuotaAsync(client, block, path, flags, asyncData);
+   return internal::resolveSyncOp(client, block);
+}
+
 } // namespace coreinit
