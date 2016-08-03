@@ -38,6 +38,10 @@ void
 DCTouchRange(void *addr,
              uint32_t size);
 
+BOOL
+OSIsAddressRangeDCValid(void *addr,
+                        uint32_t size);
+
 void
 OSCoherencyBarrier();
 

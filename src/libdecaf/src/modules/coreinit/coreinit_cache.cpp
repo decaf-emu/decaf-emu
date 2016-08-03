@@ -82,6 +82,12 @@ DCTouchRange(void *addr, uint32_t size)
    // TODO: DCTouchRange
 }
 
+BOOL
+OSIsAddressRangeDCValid(void *addr,
+                        uint32_t size)
+{
+   return TRUE;
+}
 
 void
 OSCoherencyBarrier()
@@ -100,6 +106,7 @@ Module::registerCacheFunctions()
    RegisterKernelFunction(DCStoreRangeNoSync);
    RegisterKernelFunction(DCZeroRange);
    RegisterKernelFunction(DCTouchRange);
+   RegisterKernelFunction(OSIsAddressRangeDCValid);
    RegisterKernelFunction(OSCoherencyBarrier);
 }
 
