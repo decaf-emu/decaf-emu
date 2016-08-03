@@ -73,7 +73,10 @@ MEMCreateUnitHeapEx(void *base,
       prev = block;
    }
 
-   prev->next = nullptr;
+   if (prev) {
+      prev->next = nullptr;
+   }
+
    return heap;
 }
 
@@ -113,13 +116,15 @@ MEMAllocFromUnitHeap(MEMUnitHeap *heap)
 
    lock.unlock();
 
-   auto heapAttribs = heap->header.attribs.value();
+   if (block) {
+      auto heapAttribs = heap->header.attribs.value();
 
-   if (heapAttribs.zeroAllocated()) {
-      std::memset(block, 0, heap->blockSize);
-   } else if (heapAttribs.debugMode()) {
-      auto value = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
-      std::memset(block, value, heap->blockSize);
+      if (heapAttribs.zeroAllocated()) {
+         std::memset(block, 0, heap->blockSize);
+      } else if (heapAttribs.debugMode()) {
+         auto value = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
+         std::memset(block, value, heap->blockSize);
+      }
    }
 
    return block;
