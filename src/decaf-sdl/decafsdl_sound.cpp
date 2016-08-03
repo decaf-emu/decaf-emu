@@ -4,10 +4,11 @@
 #include <SDL.h>
 
 bool
-DecafSDLSound::start(int outputRate, int numChannels)
+DecafSDLSound::start(unsigned outputRate,
+                     unsigned numChannels)
 {
    mNumChannelsIn = numChannels;
-   mNumChannelsOut = std::min(numChannels, 2);  // TODO: support surround output
+   mNumChannelsOut = std::min(numChannels, 2u);  // TODO: support surround output
    mOutputFrameLen = 1024;  // TODO: make this configurable (latency control)
 
    // Set up the ring buffer with enough space for 3 output frames of audio
@@ -18,8 +19,8 @@ DecafSDLSound::start(int outputRate, int numChannels)
    SDL_AudioSpec audiospec;
    audiospec.format = AUDIO_S16LSB;
    audiospec.freq = outputRate;
-   audiospec.channels = mNumChannelsOut;
-   audiospec.samples = mOutputFrameLen;
+   audiospec.channels = static_cast<Uint8>(mNumChannelsOut);
+   audiospec.samples = static_cast<Uint16>(mOutputFrameLen);
    audiospec.callback = sdlCallback;
    audiospec.userdata = this;
 
@@ -33,13 +34,14 @@ DecafSDLSound::start(int outputRate, int numChannels)
 }
 
 void
-DecafSDLSound::output(int16_t *samples, int numSamples)
+DecafSDLSound::output(int16_t *samples, unsigned numSamples)
 {
    // Discard channels from the input if necessary.
    if (mNumChannelsIn != mNumChannelsOut) {
       decaf_check(mNumChannelsOut < mNumChannelsIn);
-      for (int sample = 1; sample < numSamples; ++sample) {
-         for (int channel = 0; channel < mNumChannelsOut; channel++) {
+
+      for (auto sample = 1u; sample < numSamples; ++sample) {
+         for (auto channel = 0u; channel < mNumChannelsOut; channel++) {
             samples[sample * mNumChannelsOut + channel] = samples[sample * mNumChannelsIn + channel];
          }
       }
@@ -47,15 +49,18 @@ DecafSDLSound::output(int16_t *samples, int numSamples)
 
    // Copy to the output buffer, ignoring the possibility of overrun
    //  (which should never happen anyway).
-   int numSamplesOut = numSamples * mNumChannelsOut;
+   auto numSamplesOut = static_cast<size_t>(numSamples * mNumChannelsOut);
+
    while (mBufferWritePos + numSamplesOut >= mOutputBuffer.size()) {
-      size_t samplesToCopy = mOutputBuffer.size() - mBufferWritePos;
-      memcpy(&mOutputBuffer[mBufferWritePos], samples, samplesToCopy * 2);
+      auto samplesToCopy = mOutputBuffer.size() - mBufferWritePos;
+      std::memcpy(&mOutputBuffer[mBufferWritePos], samples, samplesToCopy * 2);
+
       mBufferWritePos = 0;
       samples += samplesToCopy;
       numSamplesOut -= samplesToCopy;
    }
-   memcpy(&mOutputBuffer[mBufferWritePos], samples, numSamplesOut * 2);
+
+   std::memcpy(&mOutputBuffer[mBufferWritePos], samples, numSamplesOut * 2);
    mBufferWritePos += numSamplesOut;
 }
 
@@ -72,16 +77,16 @@ DecafSDLSound::sdlCallback(void *instance_, Uint8 *stream_, int size)
    int16_t *stream = reinterpret_cast<int16_t *>(stream_);
    decaf_check(size >= 0);
    decaf_check(size % (2 * instance->mNumChannelsOut) == 0);
-   size_t numSamples = static_cast<size_t>(size) / 2;
+   auto numSamples = static_cast<size_t>(size) / 2;
+   auto samplesAvail = (instance->mBufferWritePos + instance->mOutputBuffer.size() - instance->mBufferReadPos) % instance->mOutputBuffer.size();
 
-   int samplesAvail = (instance->mBufferWritePos + instance->mOutputBuffer.size() - instance->mBufferReadPos) % instance->mOutputBuffer.size();
    if (samplesAvail < numSamples) {
       // Rather than outputting the partial frame, output a full frame of
       //  silence to give audio generation a chance to catch up.
-      memset(stream, 0, size);
+      std::memset(stream, 0, size);
    } else {
       decaf_check(instance->mBufferReadPos + numSamples <= instance->mOutputBuffer.size());
-      memcpy(stream, &instance->mOutputBuffer[instance->mBufferReadPos], size);
+      std::memcpy(stream, &instance->mOutputBuffer[instance->mBufferReadPos], size);
       instance->mBufferReadPos = (instance->mBufferReadPos + numSamples) % instance->mOutputBuffer.size();
    }
 }

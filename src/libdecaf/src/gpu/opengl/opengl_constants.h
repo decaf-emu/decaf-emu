@@ -6,7 +6,7 @@ namespace gpu
 namespace opengl
 {
 
-extern size_t
+extern unsigned
 MaxUniformBlockSize;
 
 } // namespace opengl

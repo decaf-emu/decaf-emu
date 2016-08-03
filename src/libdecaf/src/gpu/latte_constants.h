@@ -3,25 +3,25 @@
 namespace latte
 {
 
-static const auto
+static const unsigned
 MaxAttributes = 16u;
 
-static const auto
+static const unsigned
 MaxRenderTargets = 8u;
 
-static const auto
+static const unsigned
 MaxSamplers = 16u;
 
-static const auto
+static const unsigned
 MaxTextures = 16u;
 
-static const auto
+static const unsigned
 MaxUniformRegisters = 256u;
 
-static const auto
+static const unsigned
 MaxUniformBlocks = 16u;
 
-static const auto
+static const unsigned
 MaxUniformBlockSize = 65536u;
 
 } // namespace latte

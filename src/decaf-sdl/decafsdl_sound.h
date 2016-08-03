@@ -11,18 +11,20 @@ public:
    }
 
    virtual bool
-   start(int outputRate, int numChannels);
+   start(unsigned outputRate,
+         unsigned numChannels);
 
    virtual void
-   output(int16_t *samples, int numSamples);
+   output(int16_t *samples,
+          unsigned numSamples);
 
    virtual void
    stop();
 
 private:
-   int mNumChannelsIn;  // Number of channels of data we receive in output()
-   int mNumChannelsOut; // Number of channels we send to the audio device
-   int mOutputFrameLen; // Number of samples (per channel) in an output frame
+   unsigned mNumChannelsIn;  // Number of channels of data we receive in output()
+   unsigned mNumChannelsOut; // Number of channels we send to the audio device
+   unsigned mOutputFrameLen; // Number of samples (per channel) in an output frame
 
    // Output buffer (ring buffer): written by output(), read by SDL callback
    std::vector<int16_t> mOutputBuffer;

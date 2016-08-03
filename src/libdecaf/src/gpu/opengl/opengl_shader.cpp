@@ -168,7 +168,7 @@ bool GLDriver::checkActiveShader()
    auto fsShaderKey = static_cast<uint64_t>(fsPgmAddress) << 32;
    auto vsShaderKey = static_cast<uint64_t>(vsPgmAddress) << 32;
    auto psShaderKey = static_cast<uint64_t>(psPgmAddress) << 32;
-   psShaderKey ^= alphaTestFunc << 28;
+   psShaderKey ^= static_cast<uint64_t>(alphaTestFunc) << 28;
    psShaderKey ^= cb_shader_mask.value & 0xFF;
 
    if (mActiveShader

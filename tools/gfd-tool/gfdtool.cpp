@@ -918,7 +918,7 @@ namespace gpu
 {
 namespace opengl
 {
-size_t
+unsigned
 MaxUniformBlockSize = 0;
 }
 }
