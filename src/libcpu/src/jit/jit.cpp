@@ -33,7 +33,7 @@ static FastRegionMap<JitCode>
 sJitBlocks;
 
 static uint8_t
-sBaseRelocCode[16];
+sBaseRelocCode[32];
 
 JitCall
 gCallFn;
