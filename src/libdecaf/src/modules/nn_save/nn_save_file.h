@@ -12,6 +12,7 @@ using coreinit::FSClient;
 using coreinit::FSCmdBlock;
 using coreinit::FSFileHandle;
 using coreinit::FSStatus;
+using coreinit::FSStat;
 
 FSStatus
 SAVEOpenFile(FSClient *client,
@@ -31,6 +32,38 @@ SAVEOpenFileAsync(FSClient *client,
                   be_val<FSFileHandle> *handle,
                   uint32_t flags,
                   FSAsyncData *asyncData);
+
+FSStatus
+SAVERemoveAsync(FSClient *client,
+                FSCmdBlock *block,
+                uint8_t account,
+                const char *path,
+                uint32_t flags,
+                FSAsyncData *asyncData);
+
+FSStatus
+SAVERemove(FSClient *client,
+           FSCmdBlock *block,
+           uint8_t account,
+           const char *path,
+           uint32_t flags);
+
+FSStatus
+SAVEGetStatAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 uint8_t account,
+                 const char *path,
+                 FSStat *stat,
+                 uint32_t flags,
+                 FSAsyncData *asyncData);
+
+FSStatus
+SAVEGetStat(FSClient *client,
+            FSCmdBlock *block,
+            uint8_t account,
+            const char *path,
+            FSStat *stat,
+            uint32_t flags);
 
 } // namespace save
 

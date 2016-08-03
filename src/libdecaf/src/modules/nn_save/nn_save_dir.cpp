@@ -124,6 +124,50 @@ SAVEOpenDirAsync(FSClient *client,
    return FSOpenDirAsync(client, block, fsPath.path().c_str(), handle, flags, asyncData);
 }
 
+FSStatus
+SAVEGetFreeSpaceSizeAsync(FSClient *client,
+                          FSCmdBlock *block,
+                          uint8_t account,
+                          uint64_t *freeSpace,
+                          uint32_t flags,
+                          FSAsyncData *asyncData)
+{
+   auto fsPath = internal::getSavePath(account, "");
+   return FSGetFreeSpaceSizeAsync(client, block, fsPath.path().c_str(), freeSpace, flags, asyncData);
+}
+
+FSStatus
+SAVEGetFreeSpaceSize(FSClient *client,
+                     FSCmdBlock *block,
+                     uint8_t account,
+                     uint64_t *freeSpace,
+                     uint32_t flags)
+{
+   auto fsPath = internal::getSavePath(account, "");
+   return FSGetFreeSpaceSize(client, block, fsPath.path().c_str(), freeSpace, flags);
+}
+
+FSStatus
+SAVEFlushQuotaAsync(FSClient *client,
+                    FSCmdBlock *block,
+                    uint8_t account,
+                    uint32_t flags,
+                    FSAsyncData *asyncData)
+{
+   auto fsPath = internal::getSavePath(account, "");
+   return FSFlushQuotaAsync(client, block, fsPath.path().c_str(), flags, asyncData);
+}
+
+FSStatus
+SAVEFlushQuota(FSClient *client,
+               FSCmdBlock *block,
+               uint8_t account,
+               uint32_t flags)
+{
+   auto fsPath = internal::getSavePath(account, "");
+   return FSFlushQuota(client, block, fsPath.path().c_str(), flags);
+}
+
 void
 Module::registerDirFunctions()
 {
@@ -134,6 +178,10 @@ Module::registerDirFunctions()
    RegisterKernelFunction(SAVEMakeDirAsync);
    RegisterKernelFunction(SAVEOpenDir);
    RegisterKernelFunction(SAVEOpenDirAsync);
+   RegisterKernelFunction(SAVEGetFreeSpaceSizeAsync);
+   RegisterKernelFunction(SAVEGetFreeSpaceSize);
+   RegisterKernelFunction(SAVEFlushQuotaAsync);
+   RegisterKernelFunction(SAVEFlushQuota);
 }
 
 namespace internal

@@ -63,6 +63,34 @@ SAVEOpenDirAsync(FSClient *client,
                  uint32_t flags,
                  FSAsyncData *asyncData);
 
+FSStatus
+SAVEGetFreeSpaceSizeAsync(FSClient *client,
+                          FSCmdBlock *block,
+                          uint8_t account,
+                          uint64_t *freeSpace,
+                          uint32_t flags,
+                          FSAsyncData *asyncData);
+
+FSStatus
+SAVEGetFreeSpaceSize(FSClient *client,
+                     FSCmdBlock *block,
+                     uint8_t account,
+                     uint64_t *freeSpace,
+                     uint32_t flags);
+
+FSStatus
+SAVEFlushQuotaAsync(FSClient *client,
+                    FSCmdBlock *block,
+                    uint8_t account,
+                    uint32_t flags,
+                    FSAsyncData *asyncData);
+
+FSStatus
+SAVEFlushQuota(FSClient *client,
+               FSCmdBlock *block,
+               uint8_t account,
+               uint32_t flags);
+
 namespace internal
 {
 
