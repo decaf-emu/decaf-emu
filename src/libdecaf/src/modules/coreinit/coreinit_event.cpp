@@ -152,6 +152,8 @@ OSSignalEventAll(OSEvent *event)
             if (internal::cancelAlarm(thread->waitEventTimeoutAlarm)) {
                internal::wakeupOneThreadNoLock(thread);
             }
+         } else {
+            internal::wakeupOneThreadNoLock(thread);
          }
       }
 
