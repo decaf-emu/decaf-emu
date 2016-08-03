@@ -9,6 +9,8 @@
 #include "jit_insreg.h"
 #include "jit_vmemruntime.h"
 #include "mem.h"
+#include <algorithm>
+#include <array>
 #include <cfenv>
 #include <map>
 #include <vector>
@@ -32,8 +34,8 @@ sRuntime;
 static FastRegionMap<JitCode>
 sJitBlocks;
 
-static uint8_t
-sBaseRelocCode[32];
+static std::array<uint8_t, 32>
+sBaseRelocCode;
 
 JitCall
 gCallFn;
@@ -114,7 +116,7 @@ initStubs()
    gCallFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(introLabel));
    gFinaleFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(extroLabel));
 
-   asmjit::StaticRuntime rr(sBaseRelocCode, 32);
+   asmjit::StaticRuntime rr(sBaseRelocCode.data(), sBaseRelocCode.size());
    asmjit::X86Assembler ra(&rr, asmjit::kArchX64);
    ra.mov(a.finaleNiaArgReg, asmjit::imm_u(0x12345678));
    decaf_check(ra.getOffset() == 5);
@@ -321,7 +323,7 @@ gen(JitBlock &block)
       auto aligned_base_offset = reinterpret_cast<intptr_t>(mem + aligned_offset);
 
       // Copy the pregenerated relocation code bytes
-      memcpy(mem, sBaseRelocCode, 32);
+      std::copy(sBaseRelocCode.begin(), sBaseRelocCode.end(), mem);
 
       // Write addr of `MOV finaleNiaArgReg, addr`
       *reinterpret_cast<uint32_t*>(&mem[1]) = reloc.first;
