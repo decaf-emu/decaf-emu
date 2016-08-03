@@ -225,7 +225,6 @@ AXSetDeviceCompressor(AXDeviceType type, uint32_t)
 AXResult
 AXSetDeviceUpsampleStage(AXDeviceType type, BOOL postFinalMix)
 {
-   decaf_check(postFinalMix != 0);
    return AXResult::Success;
 }
 
