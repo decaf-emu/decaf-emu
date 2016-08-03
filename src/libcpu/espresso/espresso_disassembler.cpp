@@ -366,7 +366,7 @@ checkBranchConditionAlias(Instruction instr, Disassembly &dis)
       name = "beq";
    } else if (bo == 4 && bi == 0) {
       name = "bge";
-   } else if (bo == 12 && bi == 3) {
+   } else if (bo == 12 && bi == 1) {
       name = "bgt";
    } else if (bo == 4 && bi == 2) {
       name = "bne";
