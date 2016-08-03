@@ -217,8 +217,22 @@ FSRemoveAsync(FSClient *client,
               uint32_t flags,
               FSAsyncData *asyncData)
 {
+   auto pathLength = strlen(path);
+
+   if (pathLength >= FSCmdBlock::MaxPathLength) {
+      return FSStatus::FatalError;
+   }
+
+   std::memcpy(block->path, path, pathLength);
+   block->path[pathLength] = 0;
+
    internal::queueFsWork(client, block, asyncData, [=]() {
-      // TODO: Implement removal of files and directories
+      auto fs = kernel::getFileSystem();
+
+      if (!fs->deleteChild(block->path)) {
+         return FSStatus::NotFound;
+      }
+
       return FSStatus::OK;
    });
 
