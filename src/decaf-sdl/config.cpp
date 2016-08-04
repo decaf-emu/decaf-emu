@@ -137,7 +137,8 @@ struct CerealSystem
    void serialize(Archive &ar)
    {
       using namespace decaf::config::system;
-      ar(CEREAL_NVP(system_path));
+      ar(CEREAL_NVP(region),
+         CEREAL_NVP(system_path));
    }
 };
 
