@@ -43,6 +43,9 @@ set(IMGUI_LIBRARIES imgui)
 set(CEREAL_DIR "libraries/cereal")
 include_directories("${CEREAL_DIR}/include")
 
+set(FIXEDPOINT_DIR "libraries/fixed_point")
+include_directories("${FIXEDPOINT_DIR}/include")
+
 set(ASMJIT_DIR "libraries/asmjit")
 include_directories("${ASMJIT_DIR}/src")
 externalproject_add(asmjit
