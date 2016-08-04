@@ -9,7 +9,6 @@ VTX_FETCH
 VTX_SEMANTIC
 MEM
 LD
-GET_TEXTURE_INFO
 GET_SAMPLE_INFO
 GET_COMP_TEX_LOD
 GET_GRADIENTS_H
@@ -210,6 +209,70 @@ FETCH4(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetch
 }
 
 static void
+GET_TEXTURE_INFO(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+   auto dstSelX = inst.word1.DST_SEL_X();
+   auto dstSelY = inst.word1.DST_SEL_Y();
+   auto dstSelZ = inst.word1.DST_SEL_Z();
+   auto dstSelW = inst.word1.DST_SEL_W();
+
+   auto srcSelX = inst.word2.SRC_SEL_X();
+   auto srcSelY = inst.word2.SRC_SEL_Y();
+   auto srcSelZ = inst.word2.SRC_SEL_Z();
+   auto srcSelW = inst.word2.SRC_SEL_W();
+
+   auto resourceID = inst.word0.RESOURCE_ID();
+   // SAMPLER_ID is a don't care in this instruction, but we ensure that
+   //  textures and samplers use the same IDs, so we can safely use
+   //  RESOURCE_ID as the sampler ID.
+   auto samplerID = resourceID;
+
+   auto samplerDim = state.shader->samplerDim[samplerID];
+
+   auto dst = getExportRegister(inst.word1.DST_GPR(), inst.word1.DST_REL());
+   auto src = getExportRegister(inst.word0.SRC_GPR(), inst.word0.SRC_REL());
+   // TODO: Which source component is used to select the LoD?  Xenoblade has:
+   //  GET_TEXTURE_INFO R6.xy__, R4.xx0x, t4, s0 (with R4.x = 0)
+   auto srcSelLod = srcSelX;
+
+   // GET_TEXTURE_INFO returns {width, height, depth, mipmap count}, but GLSL
+   //  has separate functions for W/H/D and mipmap count, so we need to split
+   //  this up into two operations.
+
+   auto numDstSels = 3u;
+   SQ_SEL dummy = SQ_SEL_MASK;
+   auto dstSelMask = condenseSelections(dstSelX, dstSelY, dstSelZ, dummy, numDstSels);
+
+   if (numDstSels > 0) {
+      auto samplerElements = getSamplerArgCount(samplerDim, false);
+
+      insertLineStart(state);
+      state.out << "texTmp.xyz = intBitsToFloat(ivec3(textureSize(sampler_" << samplerID << ", floatBitsToInt(";
+      insertSelectValue(state.out, src, srcSelLod);
+      state.out << "))";
+      for (auto i = samplerElements; i < 3; ++i) {
+         state.out << ", 1";
+      }
+      state.out << "));";
+      insertLineEnd(state);
+
+      insertLineStart(state);
+      state.out << dst << "." << dstSelMask;
+      state.out << " = ";
+      insertSelectVector(state.out, "texTmp", dstSelX, dstSelY, dstSelZ, SQ_SEL::SQ_SEL_MASK, numDstSels);
+      state.out << ";";
+      insertLineEnd(state);
+   }
+
+   if (dstSelW != SQ_SEL::SQ_SEL_MASK) {
+      insertLineStart(state);
+      insertSelectValue(state.out, dst, dstSelW);
+      state.out << " = intBitsToFloat(textureQueryLevels(sampler_" << samplerID << "));";
+      insertLineEnd(state);
+   }
+}
+
+static void
 SET_CUBEMAP_INDEX(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // TODO: It is possible that we are supposed to somehow force
@@ -246,6 +309,7 @@ void
 registerTexFunctions()
 {
    registerInstruction(SQ_TEX_INST_FETCH4, FETCH4);
+   registerInstruction(SQ_TEX_INST_GET_TEXTURE_INFO, GET_TEXTURE_INFO);
    registerInstruction(SQ_TEX_INST_SET_CUBEMAP_INDEX, SET_CUBEMAP_INDEX);
    registerInstruction(SQ_TEX_INST_SAMPLE, SAMPLE);
    registerInstruction(SQ_TEX_INST_SAMPLE_C, SAMPLE_C);
