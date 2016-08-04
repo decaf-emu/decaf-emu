@@ -192,9 +192,8 @@ bool load(const std::string &path)
       return false;
    }
 
-   cereal::JSONInputArchive input(file);
-
    try {
+      cereal::JSONInputArchive input(file);
       input(cereal::make_nvp("debugger", CerealDebugger {}),
             cereal::make_nvp("gpu", CerealGPU{}),
             cereal::make_nvp("gx2", CerealGX2 {}),
