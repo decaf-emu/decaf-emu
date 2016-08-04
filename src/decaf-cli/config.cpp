@@ -93,9 +93,8 @@ bool load(const std::string &path)
       return false;
    }
 
-   cereal::JSONInputArchive input(file);
-
    try {
+      cereal::JSONInputArchive input(file);
       input(cereal::make_nvp("jit", CerealJit {}),
             cereal::make_nvp("log", CerealLog {}),
             cereal::make_nvp("sound", CerealSound {}),
