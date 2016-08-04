@@ -26,7 +26,15 @@ class LogFormatter : public spdlog::formatter
 public:
    void format(spdlog::details::log_msg& msg) override
    {
-      msg.formatted << '[';
+      auto tm_time = spdlog::details::os::localtime(spdlog::log_clock::to_time_t(msg.time));
+      auto duration = msg.time.time_since_epoch();
+      auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() % 1000000;
+
+      msg.formatted << '[' << fmt::pad(static_cast<unsigned int>(tm_time.tm_min), 2, '0') << ':'
+         << fmt::pad(static_cast<unsigned int>(tm_time.tm_sec), 2, '0') << '.'
+         << fmt::pad(static_cast<unsigned int>(micros), 6, '0');
+
+      msg.formatted << ' ';
 
       msg.formatted << spdlog::level::to_str(msg.level);
 
