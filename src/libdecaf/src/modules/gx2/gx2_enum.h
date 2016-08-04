@@ -244,6 +244,13 @@ ENUM_BEG(GX2PolygonMode, uint32_t)
    ENUM_VALUE(Triangle,             2)
 ENUM_END(GX2PolygonMode)
 
+ENUM_BEG(GX2QueryType, uint32_t)
+   ENUM_VALUE(OcclusionQuery,       0)
+   ENUM_VALUE(StreamOutStats,       1)
+   ENUM_VALUE(OcclusionQueryGpuMem, 2)
+   ENUM_VALUE(StreamOutStatsGpuMem, 3)
+ENUM_END(GX2QueryType)
+
 ENUM_BEG(GX2RenderTarget, uint32_t)
    ENUM_VALUE(Target0,              0)
    ENUM_VALUE(Target1,              1)

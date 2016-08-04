@@ -28,6 +28,13 @@ enum DB_STENCIL_FUNC : uint32_t
    DB_STENCIL_DECR_WRAP    = 7,
 };
 
+enum DB_Z_EXPORT : uint32_t
+{
+   DB_EXPORT_ANY_Z            = 0,
+   DB_EXPORT_LESS_THAN_Z      = 1,
+   DB_EXPORT_GREATER_THAN_Z   = 2,
+};
+
 enum DB_Z_ORDER
 {
    DB_LATE_Z               = 0,

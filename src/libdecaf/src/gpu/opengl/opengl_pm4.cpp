@@ -185,8 +185,14 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
    case pm4::type3::MEM_WRITE:
       memWrite(pm4::read<pm4::MemWrite>(reader));
       break;
+   case pm4::type3::EVENT_WRITE:
+      eventWrite(pm4::read<pm4::EventWrite>(reader));
+      break;
    case pm4::type3::EVENT_WRITE_EOP:
       eventWriteEOP(pm4::read<pm4::EventWriteEOP>(reader));
+      break;
+   case pm4::type3::PFP_SYNC_ME:
+      pfpSyncMe(pm4::read<pm4::PfpSyncMe>(reader));
       break;
    default:
       gLog->debug("Unhandled pm4 packet type 3 opcode {}", header.opcode());

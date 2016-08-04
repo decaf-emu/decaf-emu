@@ -143,6 +143,8 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2Invalidate);
 
    // Query
+   RegisterKernelFunction(GX2QueryBegin);
+   RegisterKernelFunction(GX2QueryEnd);
    RegisterKernelFunction(GX2SampleTopGPUCycle);
    RegisterKernelFunction(GX2SampleBottomGPUCycle);
    RegisterKernelFunction(GX2GPUTimeToCPUTime);

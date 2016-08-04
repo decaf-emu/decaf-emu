@@ -185,8 +185,10 @@ private:
    void indirectBufferCall(const pm4::IndirectBufferCall &data);
    void numInstances(const pm4::NumInstances &data);
    void memWrite(const pm4::MemWrite &data);
+   void eventWrite(const pm4::EventWrite &data);
    void eventWriteEOP(const pm4::EventWriteEOP &data);
    void handlePendingEOP();
+   void pfpSyncMe(const pm4::PfpSyncMe &data);
 
    void setAluConsts(const pm4::SetAluConsts &data);
    void setConfigRegs(const pm4::SetConfigRegs &data);
@@ -285,6 +287,9 @@ private:
    std::array<SurfaceBuffer *, latte::MaxRenderTargets> mActiveColorBuffers;
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
+
+   gl::GLuint mOccQuery = 0;
+   uint32_t mLastOccQueryAddress = 0;
 
    latte::ContextState *mContextState = nullptr;
 
