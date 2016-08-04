@@ -143,19 +143,19 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\common;$(SolutionDir)\src\common\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\gsl-lite\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\common;$(SolutionDir)\src\common\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\fixed_point\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\common;$(SolutionDir)\src\common\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\gsl-lite\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\common;$(SolutionDir)\src\common\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\fixed_point\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
-    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\common;$(SolutionDir)\src\common\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\gsl-lite\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\build;$(SolutionDir)\src;$(SolutionDir)\src\common;$(SolutionDir)\src\common\src;$(SolutionDir)\libraries\spdlog\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\fixed_point\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>

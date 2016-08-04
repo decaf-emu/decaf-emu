@@ -1,21 +1,8 @@
 #pragma once
-#include "types.h"
+#include <sg14/fixed_point.h>
 
-template<size_t IntegerBits, size_t FractionalBits>
-class Fixed
-{
-public:
-   // TODO: Stuff.
+typedef sg14::make_fixed<8, 8, int16_t> fixed88_t;
+typedef sg14::make_ufixed<8, 8, uint16_t> ufixed88_t;
 
-private:
-   union
-   {
-      uint32_t mValue;
-
-      struct
-      {
-         uint32_t mInteger : IntegerBits;
-         uint32_t mFraction : FractionalBits;
-      };
-   };
-};
+typedef sg14::make_fixed<16, 16, int32_t> fixed1616_t;
+typedef sg14::make_ufixed<16, 16, uint32_t> ufixed1616_t;
