@@ -19,11 +19,11 @@ GX2InitSampler(GX2Sampler *sampler,
    auto word0 = sampler->regs.word0.value();
 
    word0 = word0
-      .CLAMP_X().set(static_cast<latte::SQ_TEX_CLAMP>(clampMode))
-      .CLAMP_Y().set(static_cast<latte::SQ_TEX_CLAMP>(clampMode))
-      .CLAMP_Z().set(static_cast<latte::SQ_TEX_CLAMP>(clampMode))
-      .XY_MAG_FILTER().set(static_cast<latte::SQ_TEX_XY_FILTER>(minMagFilterMode))
-      .XY_MIN_FILTER().set(static_cast<latte::SQ_TEX_XY_FILTER>(minMagFilterMode));
+      .CLAMP_X(static_cast<latte::SQ_TEX_CLAMP>(clampMode))
+      .CLAMP_Y(static_cast<latte::SQ_TEX_CLAMP>(clampMode))
+      .CLAMP_Z(static_cast<latte::SQ_TEX_CLAMP>(clampMode))
+      .XY_MAG_FILTER(static_cast<latte::SQ_TEX_XY_FILTER>(minMagFilterMode))
+      .XY_MIN_FILTER(static_cast<latte::SQ_TEX_XY_FILTER>(minMagFilterMode));
 
    sampler->regs.word0 = word0;
 }
@@ -35,7 +35,7 @@ GX2InitSamplerBorderType(GX2Sampler *sampler,
    auto word0 = sampler->regs.word0.value();
 
    word0 = word0
-      .BORDER_COLOR_TYPE().set(static_cast<latte::SQ_TEX_BORDER_COLOR>(borderType));
+      .BORDER_COLOR_TYPE(static_cast<latte::SQ_TEX_BORDER_COLOR>(borderType));
 
    sampler->regs.word0 = word0;
 }
@@ -49,9 +49,9 @@ GX2InitSamplerClamping(GX2Sampler *sampler,
    auto word0 = sampler->regs.word0.value();
 
    word0 = word0
-      .CLAMP_X().set(static_cast<latte::SQ_TEX_CLAMP>(clampX))
-      .CLAMP_Y().set(static_cast<latte::SQ_TEX_CLAMP>(clampY))
-      .CLAMP_Z().set(static_cast<latte::SQ_TEX_CLAMP>(clampZ));
+      .CLAMP_X(static_cast<latte::SQ_TEX_CLAMP>(clampX))
+      .CLAMP_Y(static_cast<latte::SQ_TEX_CLAMP>(clampY))
+      .CLAMP_Z(static_cast<latte::SQ_TEX_CLAMP>(clampZ));
 
    sampler->regs.word0 = word0;
 }
@@ -63,7 +63,7 @@ GX2InitSamplerDepthCompare(GX2Sampler *sampler,
    auto word0 = sampler->regs.word0.value();
 
    word0 = word0
-      .DEPTH_COMPARE_FUNCTION().set(static_cast<latte::SQ_TEX_DEPTH_COMPARE>(depthCompare));
+      .DEPTH_COMPARE_FUNCTION(static_cast<latte::SQ_TEX_DEPTH_COMPARE>(depthCompare));
 
    sampler->regs.word0 = word0;
 }
@@ -77,9 +77,9 @@ GX2InitSamplerFilterAdjust(GX2Sampler *sampler,
    auto word2 = sampler->regs.word2.value();
 
    word2 = word2
-      .HIGH_PRECISION_FILTER().set(!!highPrecision)
-      .PERF_MIP().set(perfMip)
-      .PERF_Z().set(perfZ);
+      .HIGH_PRECISION_FILTER(!!highPrecision)
+      .PERF_MIP(perfMip)
+      .PERF_Z(perfZ);
 
    sampler->regs.word2 = word2;
 }
@@ -93,9 +93,9 @@ GX2InitSamplerLOD(GX2Sampler *sampler,
    auto word1 = sampler->regs.word1.value();
 
    word1 = word1
-      .MIN_LOD().set(floatToFixedPoint(lodMin, 10, 0.0f, 16.0f))
-      .MAX_LOD().set(floatToFixedPoint(lodMax, 10, 0.0f, 16.0f))
-      .LOD_BIAS().set(floatToFixedPoint(lodBias, 12, -32.0f, 32.0f));
+      .MIN_LOD(floatToFixedPoint(lodMin, 10, 0.0f, 16.0f))
+      .MAX_LOD(floatToFixedPoint(lodMax, 10, 0.0f, 16.0f))
+      .LOD_BIAS(floatToFixedPoint(lodBias, 12, -32.0f, 32.0f));
 
    sampler->regs.word1 = word1;
 }
@@ -109,10 +109,10 @@ GX2InitSamplerLODAdjust(GX2Sampler *sampler,
    auto word2 = sampler->regs.word2.value();
 
    word2 = word2
-      .ANISO_BIAS().set(floatToFixedPoint(anisoBias, 6, 0.0f, 2.0f));
+      .ANISO_BIAS(floatToFixedPoint(anisoBias, 6, 0.0f, 2.0f));
 
    word0 = word0
-      .LOD_USES_MINOR_AXIS().set(!!lodUsesMinorAxis);
+      .LOD_USES_MINOR_AXIS(!!lodUsesMinorAxis);
 
    sampler->regs.word0 = word0;
    sampler->regs.word2 = word2;
@@ -125,7 +125,7 @@ GX2InitSamplerRoundingMode(GX2Sampler *sampler,
    auto word2 = sampler->regs.word2.value();
 
    word2 = word2
-      .TRUNCATE_COORD().set(static_cast<latte::SQ_TEX_ROUNDING_MODE>(roundingMode));
+      .TRUNCATE_COORD(static_cast<latte::SQ_TEX_ROUNDING_MODE>(roundingMode));
 
    sampler->regs.word2 = word2;
 }
@@ -139,9 +139,9 @@ GX2InitSamplerXYFilter(GX2Sampler *sampler,
    auto word0 = sampler->regs.word0.value();
 
    word0 = word0
-      .XY_MAG_FILTER().set(static_cast<latte::SQ_TEX_XY_FILTER>(filterMag))
-      .XY_MIN_FILTER().set(static_cast<latte::SQ_TEX_XY_FILTER>(filterMin))
-      .MAX_ANISO_RATIO().set(static_cast<latte::SQ_TEX_ANISO>(maxAniso));
+      .XY_MAG_FILTER(static_cast<latte::SQ_TEX_XY_FILTER>(filterMag))
+      .XY_MIN_FILTER(static_cast<latte::SQ_TEX_XY_FILTER>(filterMin))
+      .MAX_ANISO_RATIO(static_cast<latte::SQ_TEX_ANISO>(maxAniso));
 
    sampler->regs.word0 = word0;
 }
@@ -154,8 +154,8 @@ GX2InitSamplerZMFilter(GX2Sampler *sampler,
    auto word0 = sampler->regs.word0.value();
 
    word0 = word0
-      .Z_FILTER().set(static_cast<latte::SQ_TEX_Z_FILTER>(filterZ))
-      .MIP_FILTER().set(static_cast<latte::SQ_TEX_Z_FILTER>(filterMip));
+      .Z_FILTER(static_cast<latte::SQ_TEX_Z_FILTER>(filterZ))
+      .MIP_FILTER(static_cast<latte::SQ_TEX_Z_FILTER>(filterMip));
 
    sampler->regs.word0 = word0;
 }

@@ -1,5 +1,6 @@
 #include "opengl_driver.h"
 #include "gpu/pm4_reader.h"
+#pragma optimize("", off)
 
 namespace gpu
 {
@@ -67,7 +68,7 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
       }
       case pm4::Header::Type1:
       default:
-         gLog->error("Invalid packet header type {}, header = 0x{:08X}", header.type().get(), header.value);
+         gLog->error("Invalid packet header type {}, header = 0x{:08X}", header.type(), header.value);
          pos = buffer_size;
          break;
       }
@@ -188,7 +189,7 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
       eventWriteEOP(pm4::read<pm4::EventWriteEOP>(reader));
       break;
    default:
-      gLog->debug("Unhandled pm4 packet type 3 opcode {}", header.opcode().get());
+      gLog->debug("Unhandled pm4 packet type 3 opcode {}", header.opcode());
    }
 }
 

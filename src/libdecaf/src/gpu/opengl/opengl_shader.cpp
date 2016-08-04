@@ -159,7 +159,7 @@ bool GLDriver::checkActiveShader()
    auto fsPgmSize = pgm_size_fs.PGM_SIZE << 3;
    auto vsPgmSize = pgm_size_vs.PGM_SIZE << 3;
    auto psPgmSize = pgm_size_ps.PGM_SIZE << 3;
-   auto alphaTestFunc = sx_alpha_test_control.ALPHA_FUNC().get();
+   auto alphaTestFunc = sx_alpha_test_control.ALPHA_FUNC();
 
    if (!sx_alpha_test_control.ALPHA_TEST_ENABLE() || sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
       alphaTestFunc = latte::REF_ALWAYS;

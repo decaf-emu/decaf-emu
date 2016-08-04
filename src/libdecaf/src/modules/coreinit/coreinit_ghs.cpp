@@ -290,14 +290,14 @@ Module::initialiseGHS()
 
    // This is actually meant to be during _crt_startup
    p_iob[0]->info = static_cast<_ghs_iobuf_bits>(p_iob[0]->info)
-      .readable().set(true)
-      .channel().set(0);
+      .readable(true)
+      .channel(0);
    p_iob[1]->info = static_cast<_ghs_iobuf_bits>(p_iob[1]->info)
-      .writable().set(true)
-      .channel().set(1);
+      .writable(true)
+      .channel(1);
    p_iob[2]->info = static_cast<_ghs_iobuf_bits>(p_iob[2]->info)
-      .writable().set(true)
-      .channel().set(2);
+      .writable(true)
+      .channel(2);
 
    ghs_flock_create(p_iob_lock[0]);
    ghs_flock_create(p_iob_lock[1]);

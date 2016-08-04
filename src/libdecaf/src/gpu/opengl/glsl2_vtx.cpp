@@ -17,7 +17,7 @@ static void
 VTX_FETCH(State &state, const ControlFlowInst &cf, const VertexFetchInst &inst)
 {
    //  FETCH R4.xyzw, R0.y, b131 NO_INDEX_OFFSET FMT_FROM_FETCH_CONSTANT MEGA(16) OFFSET(0)
-   auto id = inst.word0.BUFFER_ID().get() + SQ_VS_RESOURCE_BASE;
+   auto id = inst.word0.BUFFER_ID() + SQ_VS_RESOURCE_BASE;
 
    // For now we only support reading from vertex buffers (uniform blocks)
    decaf_assert(id >= SQ_VS_BUF_RESOURCE_0 && id < SQ_VS_GSOUT_RESOURCE, fmt::format("Unsupported VTX_FETCH buffer id {}", id));
@@ -28,10 +28,10 @@ VTX_FETCH(State &state, const ControlFlowInst &cf, const VertexFetchInst &inst)
    decaf_check(inst.word2.OFFSET() == 0);
    decaf_check(inst.word2.MEGA_FETCH() && (inst.word0.MEGA_FETCH_COUNT() + 1) == 16);
 
-   auto dstSelX = inst.word1.DST_SEL_X().get();
-   auto dstSelY = inst.word1.DST_SEL_Y().get();
-   auto dstSelZ = inst.word1.DST_SEL_Z().get();
-   auto dstSelW = inst.word1.DST_SEL_W().get();
+   auto dstSelX = inst.word1.DST_SEL_X();
+   auto dstSelY = inst.word1.DST_SEL_Y();
+   auto dstSelZ = inst.word1.DST_SEL_Z();
+   auto dstSelW = inst.word1.DST_SEL_W();
 
    auto numDstSels = 4u;
    auto dstSelMask = condenseSelections(dstSelX, dstSelY, dstSelZ, dstSelW, numDstSels);

@@ -68,7 +68,7 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
       << ", s" << tex.word2.SAMPLER_ID();
 
    if (tex.word1.LOD_BIAS()) {
-      out << " LOD(" << sign_extend<7>(tex.word1.LOD_BIAS().get()) << ")";
+      out << " LOD(" << sign_extend<7>(tex.word1.LOD_BIAS()) << ")";
    }
 
    if (tex.word0.FETCH_WHOLE_QUAD()) {
@@ -111,17 +111,17 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
    }
 
    if (tex.word2.OFFSET_X()) {
-      auto offset = sign_extend<5>(tex.word2.OFFSET_X().get());
+      auto offset = sign_extend<5>(tex.word2.OFFSET_X());
       out << " OFFSETX(" << offset << ")";
    }
 
    if (tex.word2.OFFSET_Y()) {
-      auto offset = sign_extend<5>(tex.word2.OFFSET_Y().get());
+      auto offset = sign_extend<5>(tex.word2.OFFSET_Y());
       out << " OFFSETY(" << offset << ")";
    }
 
    if (tex.word2.OFFSET_Z()) {
-      auto offset = sign_extend<5>(tex.word2.OFFSET_Z().get());
+      auto offset = sign_extend<5>(tex.word2.OFFSET_Z());
       out << " OFFSETZ(" << offset << ")";
    }
 }

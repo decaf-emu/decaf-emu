@@ -277,12 +277,12 @@ bool GLDriver::checkActiveTextures()
       auto height = sq_tex_resource_word1.TEX_HEIGHT() + 1;
       auto depth = sq_tex_resource_word1.TEX_DEPTH() + 1;
 
-      auto format = sq_tex_resource_word1.DATA_FORMAT().get();
-      auto tileMode = sq_tex_resource_word0.TILE_MODE().get();
+      auto format = sq_tex_resource_word1.DATA_FORMAT();
+      auto tileMode = sq_tex_resource_word0.TILE_MODE();
       auto numFormat = sq_tex_resource_word4.NUM_FORMAT_ALL();
       auto formatComp = sq_tex_resource_word4.FORMAT_COMP_X();
       auto degamma = sq_tex_resource_word4.FORCE_DEGAMMA();
-      auto dim = sq_tex_resource_word0.DIM().get();
+      auto dim = sq_tex_resource_word0.DIM();
 
       auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma, false);
 
@@ -442,7 +442,7 @@ bool GLDriver::checkActiveTextures()
                }
                break;
             default:
-               decaf_abort(fmt::format("Unsupported texture dim: {}", sq_tex_resource_word0.DIM().get()));
+               decaf_abort(fmt::format("Unsupported texture dim: {}", sq_tex_resource_word0.DIM()));
             }
          }
 
@@ -570,7 +570,7 @@ bool GLDriver::checkActiveSamplers()
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<gl::GLint>(xy_mag_filter));
 
       // Setup border color
-      auto border_color_type = sq_tex_sampler_word0.BORDER_COLOR_TYPE().get();
+      auto border_color_type = sq_tex_sampler_word0.BORDER_COLOR_TYPE();
       std::array<float, 4> colors;
 
       switch (border_color_type) {

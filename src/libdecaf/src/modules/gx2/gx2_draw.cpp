@@ -20,10 +20,10 @@ GX2SetAttribBuffer(uint32_t index,
    res.word1.SIZE = size - 1;
 
    res.word2 = res.word2
-      .STRIDE().set(stride);
+      .STRIDE(stride);
 
    res.word6 = res.word6
-      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
 
    pm4::write(res);
 }
@@ -75,8 +75,8 @@ GX2DrawIndexedEx(GX2PrimitiveMode mode,
    }
 
    auto vgt_dma_index_type = latte::VGT_DMA_INDEX_TYPE::get(0)
-      .INDEX_TYPE().set(index_type)
-      .SWAP_MODE().set(swap_mode);
+      .INDEX_TYPE(index_type)
+      .SWAP_MODE(swap_mode);
 
    auto vgt_draw_initiator = latte::VGT_DRAW_INITIATOR::get(0);
 

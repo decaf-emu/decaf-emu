@@ -222,7 +222,7 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       if (group[i].op2.WRITE_MASK()) {
          fmt::MemoryWriter postWrite;
 
-         auto gpr = group[i].word1.DST_GPR().get();
+         auto gpr = group[i].word1.DST_GPR();
          postWrite << "R[" << gpr << "].";
          insertChannel(postWrite, group[i].word1.DST_CHAN());
          postWrite << " = PVo.";

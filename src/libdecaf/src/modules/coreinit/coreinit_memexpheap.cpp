@@ -208,8 +208,8 @@ createUsedBlockFromFreeBlock(MEMExpHeap *heap,
 
    // Update the structure with the new allocation
    alignedBlock->attribs = MEMExpHeapBlockAttribs::get(0)
-      .alignment().set(static_cast<uint32_t>(topSpaceRemain))
-      .allocDir().set(dir);
+      .alignment(static_cast<uint32_t>(topSpaceRemain))
+      .allocDir(dir);
    alignedBlock->blockSize = size + bottomSpaceRemain;
    alignedBlock->prev = nullptr;
    alignedBlock->next = nullptr;
@@ -468,7 +468,7 @@ MEMSetAllocModeForExpHeap(MEMExpHeap *heap,
    internal::HeapLock lock(&heap->header);
 
    auto expHeapAttribs = heap->attribs.value();
-   heap->attribs = expHeapAttribs.allocMode().set(mode);
+   heap->attribs = expHeapAttribs.allocMode(mode);
    return expHeapAttribs.allocMode();
 }
 
@@ -692,7 +692,7 @@ dumpExpandedHeap(MEMExpHeap *heap)
       gLog->debug("FREE  0x{:8x} 0x{:8x} {:d}",
                   mem::untranslate(block),
                   static_cast<uint32_t>(block->blockSize),
-                  attribs.groupId().get());
+                  attribs.groupId());
    }
 
    for (auto block = heap->usedList.head; block; block = block->next) {
@@ -701,7 +701,7 @@ dumpExpandedHeap(MEMExpHeap *heap)
       gLog->debug("USED  0x{:8x} 0x{:8x} {:d}",
                   mem::untranslate(block),
                   static_cast<uint32_t>(block->blockSize),
-                  attribs.groupId().get());
+                  attribs.groupId());
    }
 }
 

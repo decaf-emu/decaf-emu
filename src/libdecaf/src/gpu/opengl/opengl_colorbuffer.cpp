@@ -53,7 +53,7 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
    auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
    auto cbNumberType = cb_color_info.NUMBER_TYPE();
-   auto cbFormat = cb_color_info.FORMAT().get();
+   auto cbFormat = cb_color_info.FORMAT();
    auto format = static_cast<latte::SQ_DATA_FORMAT>(cbFormat);
 
    auto numFormat = latte::SQ_NUM_FORMAT_NORM;

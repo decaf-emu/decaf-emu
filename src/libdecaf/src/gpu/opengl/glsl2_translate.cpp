@@ -735,7 +735,7 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
          auto cf = *reinterpret_cast<const ControlFlowInst *>(binary.data() + i);
          auto id = cf.word1.CF_INST();
 
-         switch (cf.word1.CF_INST_TYPE().get()) {
+         switch (cf.word1.CF_INST_TYPE()) {
          case SQ_CF_INST_TYPE_NORMAL:
             translateNormal(state, cf);
             break;

@@ -266,7 +266,7 @@ void initialiseDefaultHeaps()
    be_val<uint32_t> addr, size;
 
    auto mem2Attribs = MEMHeapAttribs::get(0)
-      .useLock().set(true);
+      .useLock(true);
 
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);

@@ -238,8 +238,8 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
    auto numberType = internal::getSurfaceFormatColorNumberType(colorBuffer->surface.format);
 
    cb_color_info = cb_color_info
-      .FORMAT().set(format)
-      .NUMBER_TYPE().set(numberType);
+      .FORMAT(format)
+      .NUMBER_TYPE(numberType);
 
    // Update cb_color_size
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
@@ -249,8 +249,8 @@ GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
    auto sliceTileMax = ((output.pitch * output.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
 
    cb_color_size = cb_color_size
-      .PITCH_TILE_MAX().set(pitchTileMax)
-      .SLICE_TILE_MAX().set(sliceTileMax);
+      .PITCH_TILE_MAX(pitchTileMax)
+      .SLICE_TILE_MAX(sliceTileMax);
 
    // TODO: Set more regs!
 
@@ -270,7 +270,7 @@ GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
    auto format = internal::getSurfaceFormatDepthFormat(depthBuffer->surface.format);
 
    db_depth_info = db_depth_info
-      .FORMAT().set(format);
+      .FORMAT(format);
 
    // Update db_depth_size
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
@@ -280,8 +280,8 @@ GX2InitDepthBufferRegs(GX2DepthBuffer *depthBuffer)
    auto sliceTileMax = ((output.pitch * output.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
 
    db_depth_size = db_depth_size
-      .PITCH_TILE_MAX().set(pitchTileMax)
-      .SLICE_TILE_MAX().set(sliceTileMax);
+      .PITCH_TILE_MAX(pitchTileMax)
+      .SLICE_TILE_MAX(sliceTileMax);
 
    // TODO: Set more regs!
 
@@ -298,7 +298,7 @@ GX2InitDepthBufferHiZEnable(GX2DepthBuffer *depthBuffer,
    auto db_depth_info = depthBuffer->regs.db_depth_info.value();
 
    db_depth_info = db_depth_info
-      .TILE_SURFACE_ENABLE().set(!!enable);
+      .TILE_SURFACE_ENABLE(!!enable);
 
    depthBuffer->regs.db_depth_info = db_depth_info;
 }

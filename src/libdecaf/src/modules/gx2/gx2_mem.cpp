@@ -22,9 +22,9 @@ GX2Invalidate(GX2InvalidateMode mode,
    //  the system packet path rather than the normal one.
    auto packet = new be_val<uint32_t>[4];
    packet[0] = pm4::type3::Header::get(0)
-      .type().set(pm4::Header::Type3)
-      .opcode().set(pm4::DecafInvalidate::Opcode)
-      .size().set(4 - 2)
+      .type(pm4::Header::Type3)
+      .opcode(pm4::DecafInvalidate::Opcode)
+      .size(4 - 2)
       .value;
    packet[1] = mode;
    packet[2] = memStart;

@@ -475,7 +475,7 @@ insertDestBegin(State &state,
    if (writeMask) {
       fmt::MemoryWriter postWrite;
 
-      auto gpr = inst.word1.DST_GPR().get();
+      auto gpr = inst.word1.DST_GPR();
       postWrite << "R[" << gpr << "].";
       insertChannel(postWrite, inst.word1.DST_CHAN());
 

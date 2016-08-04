@@ -39,7 +39,7 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
    auto baseAddress = (db_depth_base.BASE_256B << 8) & 0xFFFFF800;
    auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX();
    auto slice_tile_max = db_depth_size.SLICE_TILE_MAX();
-   auto dbFormat = db_depth_info.FORMAT().get();
+   auto dbFormat = db_depth_info.FORMAT();
 
    auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * latte::MicroTileWidth);
    auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);

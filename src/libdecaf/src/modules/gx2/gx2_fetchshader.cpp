@@ -274,11 +274,11 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
       } else {
          // Semantic vertex fetch
          vfetch.word0 = vfetch.word0
-            .VTX_INST().set(latte::SQ_VTX_INST_SEMANTIC)
-            .BUFFER_ID().set(latte::SQ_VS_ATTRIB_RESOURCE_0 + attrib.buffer - latte::SQ_VS_RESOURCE_BASE);
+            .VTX_INST(latte::SQ_VTX_INST_SEMANTIC)
+            .BUFFER_ID(latte::SQ_VS_ATTRIB_RESOURCE_0 + attrib.buffer - latte::SQ_VS_RESOURCE_BASE);
 
          vfetch.word2 = vfetch.word2
-            .OFFSET().set(attribs[i].offset);
+            .OFFSET(attribs[i].offset);
 
          if (attrib.type) {
             auto selX = latte::SQ_SEL_X;
@@ -308,30 +308,30 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
             }
 
             vfetch.word0 = vfetch.word0
-               .FETCH_TYPE().set(fetchType)
-               .SRC_SEL_X().set(selX);
+               .FETCH_TYPE(fetchType)
+               .SRC_SEL_X(selX);
          } else {
             vfetch.word0 = vfetch.word0
-               .SRC_GPR().set(indexMap[0].gpr)
-               .SRC_SEL_X().set(static_cast<latte::SQ_SEL>(indexMap[0].chan));
+               .SRC_GPR(indexMap[0].gpr)
+               .SRC_SEL_X(static_cast<latte::SQ_SEL>(indexMap[0].chan));
          }
 
          // Setup dest
          vfetch.gpr = vfetch.gpr
-            .DST_GPR().set(attrib.location);
+            .DST_GPR(attrib.location);
 
          vfetch.word1 = vfetch.word1
-            .DST_SEL_W().set(static_cast<latte::SQ_SEL>(attrib.mask & 0x7))
-            .DST_SEL_Z().set(static_cast<latte::SQ_SEL>((attrib.mask >> 8) & 0x7))
-            .DST_SEL_Y().set(static_cast<latte::SQ_SEL>((attrib.mask >> 16) & 0x7))
-            .DST_SEL_X().set(static_cast<latte::SQ_SEL>((attrib.mask >> 24) & 0x7));
+            .DST_SEL_W(static_cast<latte::SQ_SEL>(attrib.mask & 0x7))
+            .DST_SEL_Z(static_cast<latte::SQ_SEL>((attrib.mask >> 8) & 0x7))
+            .DST_SEL_Y(static_cast<latte::SQ_SEL>((attrib.mask >> 16) & 0x7))
+            .DST_SEL_X(static_cast<latte::SQ_SEL>((attrib.mask >> 24) & 0x7));
 
          // Setup mega fetch
          vfetch.word2 = vfetch.word2
-            .MEGA_FETCH().set(1);
+            .MEGA_FETCH(1);
 
          vfetch.word0 = vfetch.word0
-            .MEGA_FETCH_COUNT().set(internal::getAttribFormatBytes(attrib.format) - 1);
+            .MEGA_FETCH_COUNT(internal::getAttribFormatBytes(attrib.format) - 1);
 
          // Setup format
          auto dataFormat = internal::getAttribFormatDataFormat(attrib.format);
@@ -349,9 +349,9 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          }
 
          vfetch.word1 = vfetch.word1
-            .DATA_FORMAT().set(dataFormat)
-            .NUM_FORMAT_ALL().set(numFormat)
-            .FORMAT_COMP_ALL().set(formatComp);
+            .DATA_FORMAT(dataFormat)
+            .NUM_FORMAT_ALL(numFormat)
+            .FORMAT_COMP_ALL(formatComp);
 
          auto swapMode = internal::getSwapModeEndian(attribs[i].endianSwap & 3);
 
@@ -360,7 +360,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          }
 
          vfetch.word2 = vfetch.word2
-            .ENDIAN_SWAP().set(swapMode);
+            .ENDIAN_SWAP(swapMode);
 
          // Append to program
          *(fetchPtr++) = vfetch;
@@ -374,11 +374,11 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 
                // Update src/dst
                vfetch2.word0 = vfetch2.word0
-                  .SRC_GPR().set(indexMap[j].gpr)
-                  .SRC_SEL_X().set(static_cast<latte::SQ_SEL>(indexMap[j].chan));
+                  .SRC_GPR(indexMap[j].gpr)
+                  .SRC_SEL_X(static_cast<latte::SQ_SEL>(indexMap[j].chan));
 
                vfetch2.gpr = vfetch2.gpr
-                  .DST_GPR().set(j + attrib.location);
+                  .DST_GPR(j + attrib.location);
 
                // Append to program
                *(fetchPtr++) = vfetch;
@@ -425,10 +425,10 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          std::memset(&inst, 0, sizeof(inst));
          inst.word0.ADDR = static_cast<uint32_t>((fetchOffset + sizeof(latte::VertexFetchInst) * i * FetchesPerControlFlow) / 8);
          inst.word1 = inst.word1
-            .COUNT().set((fetches - 1) & 0x7)
-            .COUNT_3().set(((fetches - 1) >> 3) & 0x1)
-            .CF_INST().set(latte::SQ_CF_INST_VTX_TC)
-            .BARRIER().set(barrier ? 1 : 0);
+            .COUNT((fetches - 1) & 0x7)
+            .COUNT_3(((fetches - 1) >> 3) & 0x1)
+            .CF_INST(latte::SQ_CF_INST_VTX_TC)
+            .BARRIER(barrier ? 1 : 0);
          *(cfPtr++) = inst;
       }
    }
@@ -442,14 +442,14 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
    latte::ControlFlowInst eop;
    std::memset(&eop, 0, sizeof(eop));
    eop.word1 = eop.word1
-      .BARRIER().set(1)
-      .CF_INST().set(latte::SQ_CF_INST_RETURN);
+      .BARRIER(1)
+      .CF_INST(latte::SQ_CF_INST_RETURN);
    *(cfPtr++) = eop;
 
    // Set sq_pgm_resources_fs
    auto sq_pgm_resources_fs = fetchShader->regs.sq_pgm_resources_fs.value();
    sq_pgm_resources_fs = sq_pgm_resources_fs
-      .NUM_GPRS().set(numGPRs);
+      .NUM_GPRS(numGPRs);
    fetchShader->regs.sq_pgm_resources_fs = sq_pgm_resources_fs;
 }
 

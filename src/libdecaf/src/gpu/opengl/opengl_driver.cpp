@@ -234,7 +234,7 @@ void GLDriver::memWrite(const pm4::MemWrite &data)
       value = byte_swap(static_cast<uint32_t>(value));
       break;
    case latte::CB_ENDIAN_8IN16:
-      decaf_abort(fmt::format("Unexpected MEM_WRITE endian swap {}", data.addrLo.ENDIAN_SWAP().get()));
+      decaf_abort(fmt::format("Unexpected MEM_WRITE endian swap {}", data.addrLo.ENDIAN_SWAP()));
    }
 
    if (data.addrHi.DATA32()) {

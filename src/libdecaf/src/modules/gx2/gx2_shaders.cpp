@@ -177,7 +177,7 @@ GX2SetPixelShader(GX2PixelShader *shader)
    }
 
    db_shader_control = db_shader_control
-      .DUAL_EXPORT_ENABLE().set(1);
+      .DUAL_EXPORT_ENABLE(1);
 
    pm4::write(pm4::SetContextReg { latte::Register::CB_SHADER_MASK, cb_shader_mask.value });
    pm4::write(pm4::SetContextReg { latte::Register::CB_SHADER_CONTROL, cb_shader_control.value });
@@ -354,15 +354,15 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
    res.word1.SIZE = size - 1;
 
    res.word2 = res.word2
-      .STRIDE().set(16)
-      .DATA_FORMAT().set(latte::FMT_32_32_32_32)
-      .FORMAT_COMP_ALL().set(latte::SQ_FORMAT_COMP_SIGNED);
+      .STRIDE(16)
+      .DATA_FORMAT(latte::FMT_32_32_32_32)
+      .FORMAT_COMP_ALL(latte::SQ_FORMAT_COMP_SIGNED);
 
    res.word3 = res.word3
-      .MEM_REQUEST_SIZE().set(1);
+      .MEM_REQUEST_SIZE(1);
 
    res.word6 = res.word6
-      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
 
    pm4::write(res);
 
@@ -387,15 +387,15 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
    res.word1.SIZE = size - 1;
 
    res.word2 = res.word2
-      .STRIDE().set(16)
-      .DATA_FORMAT().set(latte::FMT_32_32_32_32)
-      .FORMAT_COMP_ALL().set(latte::SQ_FORMAT_COMP_SIGNED);
+      .STRIDE(16)
+      .DATA_FORMAT(latte::FMT_32_32_32_32)
+      .FORMAT_COMP_ALL(latte::SQ_FORMAT_COMP_SIGNED);
 
    res.word3 = res.word3
-      .MEM_REQUEST_SIZE().set(1);
+      .MEM_REQUEST_SIZE(1);
 
    res.word6 = res.word6
-      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
 
    pm4::write(res);
 
@@ -420,15 +420,15 @@ GX2SetGeometryUniformBlock(uint32_t location, uint32_t size, const void *data)
    res.word1.SIZE = size - 1;
 
    res.word2 = res.word2
-      .STRIDE().set(16)
-      .DATA_FORMAT().set(latte::FMT_32_32_32_32)
-      .FORMAT_COMP_ALL().set(latte::SQ_FORMAT_COMP_SIGNED);
+      .STRIDE(16)
+      .DATA_FORMAT(latte::FMT_32_32_32_32)
+      .FORMAT_COMP_ALL(latte::SQ_FORMAT_COMP_SIGNED);
 
    res.word3 = res.word3
-      .MEM_REQUEST_SIZE().set(1);
+      .MEM_REQUEST_SIZE(1);
 
    res.word6 = res.word6
-      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
 
    pm4::write(res);
 
@@ -459,13 +459,13 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
 
       if (mode == GX2ShaderMode::ComputeShader) {
          vgt_gs_mode = vgt_gs_mode
-            .MODE().set(latte::GS_SCENARIO_G)
-            .COMPUTE_MODE().set(1)
-            .FAST_COMPUTE_MODE().set(1)
-            .PARTIAL_THD_AT_EOI().set(1);
+            .MODE(latte::GS_SCENARIO_G)
+            .COMPUTE_MODE(1)
+            .FAST_COMPUTE_MODE(1)
+            .PARTIAL_THD_AT_EOI(1);
       } else {
          vgt_gs_mode = vgt_gs_mode
-            .MODE().set(latte::GS_OFF);
+            .MODE(latte::GS_OFF);
       }
 
       pm4::write(pm4::SetContextReg { latte::Register::VGT_GS_MODE, vgt_gs_mode.value });
@@ -473,77 +473,77 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
 
    if (mode == GX2ShaderMode::ComputeShader) {
       sq_config = sq_config
-         .ALU_INST_PREFER_VECTOR().set(1)
-         .PS_PRIO().set(0)
-         .VS_PRIO().set(1)
-         .GS_PRIO().set(2)
-         .ES_PRIO().set(3);
+         .ALU_INST_PREFER_VECTOR(1)
+         .PS_PRIO(0)
+         .VS_PRIO(1)
+         .GS_PRIO(2)
+         .ES_PRIO(3);
    } else {
       sq_config = sq_config
-         .PS_PRIO().set(3)
-         .VS_PRIO().set(2)
-         .GS_PRIO().set(1)
-         .ES_PRIO().set(0);
+         .PS_PRIO(3)
+         .VS_PRIO(2)
+         .GS_PRIO(1)
+         .ES_PRIO(0);
    }
 
    if (mode == GX2ShaderMode::UniformRegister) {
       sq_config = sq_config
-         .DX9_CONSTS().set(1);
+         .DX9_CONSTS(1);
    }
 
    if (mode == GX2ShaderMode::GeometryShader) {
       sq_gpr_resource_mgmt_1 = sq_gpr_resource_mgmt_1
-         .NUM_PS_GPRS().set(numPsGpr)
-         .NUM_VS_GPRS().set(64)
-         .NUM_CLAUSE_TEMP_GPRS().set(4);
+         .NUM_PS_GPRS(numPsGpr)
+         .NUM_VS_GPRS(64)
+         .NUM_CLAUSE_TEMP_GPRS(4);
 
       sq_gpr_resource_mgmt_2 = sq_gpr_resource_mgmt_2
-         .NUM_ES_GPRS().set(numVsGpr)
-         .NUM_GS_GPRS().set(numGsGpr);
+         .NUM_ES_GPRS(numVsGpr)
+         .NUM_GS_GPRS(numGsGpr);
 
       sq_stack_resource_mgmt_1 = sq_stack_resource_mgmt_1
-         .NUM_PS_STACK_ENTRIES().set(numPsStackEntries);
+         .NUM_PS_STACK_ENTRIES(numPsStackEntries);
 
       sq_stack_resource_mgmt_2
-         .NUM_ES_STACK_ENTRIES().set(numVsStackEntries);
+         .NUM_ES_STACK_ENTRIES(numVsStackEntries);
 
       sq_stack_resource_mgmt_2
-         .NUM_GS_STACK_ENTRIES().set(numGsStackEntries);
+         .NUM_GS_STACK_ENTRIES(numGsStackEntries);
 
       sq_thread_resource_mgmt = sq_thread_resource_mgmt
-         .NUM_PS_THREADS().set(124)
-         .NUM_VS_THREADS().set(32)
-         .NUM_GS_THREADS().set(8)
-         .NUM_ES_THREADS().set(28);
+         .NUM_PS_THREADS(124)
+         .NUM_VS_THREADS(32)
+         .NUM_GS_THREADS(8)
+         .NUM_ES_THREADS(28);
    } else if (mode == GX2ShaderMode::ComputeShader) {
       sq_gpr_resource_mgmt_1 = sq_gpr_resource_mgmt_1
-         .NUM_CLAUSE_TEMP_GPRS().set(4);
+         .NUM_CLAUSE_TEMP_GPRS(4);
 
       sq_gpr_resource_mgmt_2 = sq_gpr_resource_mgmt_2
-         .NUM_ES_GPRS().set(248);
+         .NUM_ES_GPRS(248);
 
       sq_stack_resource_mgmt_2 = sq_stack_resource_mgmt_2
-         .NUM_ES_STACK_ENTRIES().set(256);
+         .NUM_ES_STACK_ENTRIES(256);
 
       sq_thread_resource_mgmt = sq_thread_resource_mgmt
-         .NUM_PS_THREADS().set(1)
-         .NUM_VS_THREADS().set(1)
-         .NUM_GS_THREADS().set(1)
-         .NUM_ES_THREADS().set(189);
+         .NUM_PS_THREADS(1)
+         .NUM_VS_THREADS(1)
+         .NUM_GS_THREADS(1)
+         .NUM_ES_THREADS(189);
    } else {
       sq_gpr_resource_mgmt_1 = sq_gpr_resource_mgmt_1
-         .NUM_PS_GPRS().set(numPsGpr)
-         .NUM_VS_GPRS().set(numVsGpr);
+         .NUM_PS_GPRS(numPsGpr)
+         .NUM_VS_GPRS(numVsGpr);
 
       sq_stack_resource_mgmt_1 = sq_stack_resource_mgmt_1
-         .NUM_PS_STACK_ENTRIES().set(numPsStackEntries)
-         .NUM_VS_STACK_ENTRIES().set(numVsStackEntries);
+         .NUM_PS_STACK_ENTRIES(numPsStackEntries)
+         .NUM_VS_STACK_ENTRIES(numVsStackEntries);
 
       sq_thread_resource_mgmt = sq_thread_resource_mgmt
-         .NUM_PS_THREADS().set(136)
-         .NUM_VS_THREADS().set(48)
-         .NUM_GS_THREADS().set(4)
-         .NUM_ES_THREADS().set(4);
+         .NUM_PS_THREADS(136)
+         .NUM_VS_THREADS(48)
+         .NUM_GS_THREADS(4)
+         .NUM_ES_THREADS(4);
    }
 
    uint32_t regData[] = {
@@ -573,7 +573,7 @@ GX2SetStreamOutEnable(BOOL enable)
    auto vgt_strmout_en = latte::VGT_STRMOUT_EN::get(0);
 
    vgt_strmout_en = vgt_strmout_en
-      .STREAMOUT().set(!!enable);
+      .STREAMOUT(!!enable);
 
    pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_EN, vgt_strmout_en.value });
 }
@@ -591,15 +591,15 @@ GX2SetGeometryShaderInputRingBuffer(void *buffer, uint32_t size)
    res.word1.SIZE = size - 1;
 
    res.word2 = res.word2
-      .STRIDE().set(4)
-      .CLAMP_X().set(latte::SQ_VTX_CLAMP_NAN)
-      .DATA_FORMAT().set(latte::FMT_32_32_32_32_FLOAT);
+      .STRIDE(4)
+      .CLAMP_X(latte::SQ_VTX_CLAMP_NAN)
+      .DATA_FORMAT(latte::FMT_32_32_32_32_FLOAT);
 
    res.word3 = res.word3
-      .UNCACHED().set(1);
+      .UNCACHED(1);
 
    res.word6 = res.word6
-      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
 
    pm4::write(res);
 }
@@ -617,15 +617,15 @@ GX2SetGeometryShaderOutputRingBuffer(void *buffer, uint32_t size)
    res.word1.SIZE = size - 1;
 
    res.word2 = res.word2
-      .STRIDE().set(4)
-      .CLAMP_X().set(latte::SQ_VTX_CLAMP_NAN)
-      .DATA_FORMAT().set(latte::FMT_32_32_32_32_FLOAT);
+      .STRIDE(4)
+      .CLAMP_X(latte::SQ_VTX_CLAMP_NAN)
+      .DATA_FORMAT(latte::FMT_32_32_32_32_FLOAT);
 
    res.word3 = res.word3
-      .UNCACHED().set(1);
+      .UNCACHED(1);
 
    res.word6 = res.word6
-      .TYPE().set(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
 
    pm4::write(res);
 }

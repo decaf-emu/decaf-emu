@@ -58,11 +58,11 @@ GX2InitTextureRegs(GX2Texture *texture)
    pitch = std::max<uint32_t>(pitch, 8u);
 
    word0 = word0
-      .DIM().set(static_cast<latte::SQ_TEX_DIM>(texture->surface.dim & 0x7))
-      .TILE_MODE().set(static_cast<latte::SQ_TILE_MODE>(texture->surface.tileMode.value()))
-      .TILE_TYPE().set(tileType)
-      .PITCH().set((pitch / 8) - 1)
-      .TEX_WIDTH().set(texture->surface.width - 1);
+      .DIM(static_cast<latte::SQ_TEX_DIM>(texture->surface.dim & 0x7))
+      .TILE_MODE(static_cast<latte::SQ_TILE_MODE>(texture->surface.tileMode.value()))
+      .TILE_TYPE(tileType)
+      .PITCH((pitch / 8) - 1)
+      .TEX_WIDTH(texture->surface.width - 1);
 
    // Word 1
    auto depth = 0u;
@@ -77,9 +77,9 @@ GX2InitTextureRegs(GX2Texture *texture)
    }
 
    word1 = word1
-      .TEX_HEIGHT().set(texture->surface.height - 1)
-      .TEX_DEPTH().set(depth)
-      .DATA_FORMAT().set(format);
+      .TEX_HEIGHT(texture->surface.height - 1)
+      .TEX_DEPTH(depth)
+      .DATA_FORMAT(format);
 
    // Word 4
    auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
@@ -107,19 +107,19 @@ GX2InitTextureRegs(GX2Texture *texture)
    auto dstSelW = static_cast<latte::SQ_SEL>(texture->compMap & 0x7);
 
    word4 = word4
-      .FORMAT_COMP_X().set(formatComp)
-      .FORMAT_COMP_Y().set(formatComp)
-      .FORMAT_COMP_Z().set(formatComp)
-      .FORMAT_COMP_W().set(formatComp)
-      .NUM_FORMAT_ALL().set(numFormat)
-      .FORCE_DEGAMMA().set(forceDegamma)
-      .ENDIAN_SWAP().set(endian)
-      .REQUEST_SIZE().set(2)
-      .DST_SEL_X().set(dstSelX)
-      .DST_SEL_Y().set(dstSelY)
-      .DST_SEL_Z().set(dstSelZ)
-      .DST_SEL_W().set(dstSelW)
-      .BASE_LEVEL().set(texture->viewFirstMip);
+      .FORMAT_COMP_X(formatComp)
+      .FORMAT_COMP_Y(formatComp)
+      .FORMAT_COMP_Z(formatComp)
+      .FORMAT_COMP_W(formatComp)
+      .NUM_FORMAT_ALL(numFormat)
+      .FORCE_DEGAMMA(forceDegamma)
+      .ENDIAN_SWAP(endian)
+      .REQUEST_SIZE(2)
+      .DST_SEL_X(dstSelX)
+      .DST_SEL_Y(dstSelY)
+      .DST_SEL_Z(dstSelZ)
+      .DST_SEL_W(dstSelW)
+      .BASE_LEVEL(texture->viewFirstMip);
 
    // Word 5
    auto yuvConv = 0u;
@@ -129,16 +129,16 @@ GX2InitTextureRegs(GX2Texture *texture)
    }
 
    word5 = word5
-      .LAST_LEVEL().set(texture->viewFirstMip + texture->viewNumMips - 1)
-      .BASE_ARRAY().set(texture->viewFirstSlice)
-      .LAST_ARRAY().set(texture->viewFirstSlice + texture->viewNumSlices - 1)
-      .YUV_CONV().set(yuvConv);
+      .LAST_LEVEL(texture->viewFirstMip + texture->viewNumMips - 1)
+      .BASE_ARRAY(texture->viewFirstSlice)
+      .LAST_ARRAY(texture->viewFirstSlice + texture->viewNumSlices - 1)
+      .YUV_CONV(yuvConv);
 
    // Word 6
    word6 = word6
-      .MAX_ANISO_RATIO().set(4)
-      .PERF_MODULATION().set(7)
-      .TYPE().set(latte::SQ_TEX_VTX_VALID_TEXTURE);
+      .MAX_ANISO_RATIO(4)
+      .PERF_MODULATION(7)
+      .TYPE(latte::SQ_TEX_VTX_VALID_TEXTURE);
 
    // Update big endian register in texture
    texture->regs.word0 = word0;

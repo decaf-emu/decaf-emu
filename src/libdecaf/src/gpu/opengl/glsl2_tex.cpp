@@ -109,15 +109,15 @@ sampleFunc(State &state,
            bool isShadowOp = false,
            latte::SQ_SEL extraArg = latte::SQ_SEL_MASK)
 {
-   auto dstSelX = inst.word1.DST_SEL_X().get();
-   auto dstSelY = inst.word1.DST_SEL_Y().get();
-   auto dstSelZ = inst.word1.DST_SEL_Z().get();
-   auto dstSelW = inst.word1.DST_SEL_W().get();
+   auto dstSelX = inst.word1.DST_SEL_X();
+   auto dstSelY = inst.word1.DST_SEL_Y();
+   auto dstSelZ = inst.word1.DST_SEL_Z();
+   auto dstSelW = inst.word1.DST_SEL_W();
 
-   auto srcSelX = inst.word2.SRC_SEL_X().get();
-   auto srcSelY = inst.word2.SRC_SEL_Y().get();
-   auto srcSelZ = inst.word2.SRC_SEL_Z().get();
-   auto srcSelW = inst.word2.SRC_SEL_W().get();
+   auto srcSelX = inst.word2.SRC_SEL_X();
+   auto srcSelY = inst.word2.SRC_SEL_Y();
+   auto srcSelZ = inst.word2.SRC_SEL_Z();
+   auto srcSelW = inst.word2.SRC_SEL_W();
 
    auto resourceID = inst.word0.RESOURCE_ID();
    auto samplerID = inst.word2.SAMPLER_ID();

@@ -190,10 +190,10 @@ EXP(State &state, const ControlFlowInst &cf)
    auto type = cf.exp.word0.TYPE();
    auto arrayBase = cf.exp.word0.ARRAY_BASE();
 
-   auto selX = cf.exp.swiz.SRC_SEL_X().get();
-   auto selY = cf.exp.swiz.SRC_SEL_Y().get();
-   auto selZ = cf.exp.swiz.SRC_SEL_Z().get();
-   auto selW = cf.exp.swiz.SRC_SEL_W().get();
+   auto selX = cf.exp.swiz.SRC_SEL_X();
+   auto selY = cf.exp.swiz.SRC_SEL_Y();
+   auto selZ = cf.exp.swiz.SRC_SEL_Z();
+   auto selW = cf.exp.swiz.SRC_SEL_W();
    auto src = getExportRegister(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL());
 
    if (selX == SQ_SEL_MASK && selY == SQ_SEL_MASK && selZ == SQ_SEL_MASK && selW == SQ_SEL_MASK) {

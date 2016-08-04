@@ -94,7 +94,7 @@ insertArDestBegin(State &state,
    if (inst.op2.WRITE_MASK()) {
       fmt::MemoryWriter postWrite;
 
-      auto gpr = inst.word1.DST_GPR().get();
+      auto gpr = inst.word1.DST_GPR();
       postWrite << "R[" << gpr << "].";
       insertChannel(postWrite, inst.word1.DST_CHAN());
       postWrite << " = " << arDest << ";";

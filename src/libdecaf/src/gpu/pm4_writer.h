@@ -22,8 +22,8 @@ public:
          mSaveSize = mBuffer->curSize;
 
          auto header = type3::Header::get(0)
-            .type().set(Header::Type3)
-            .opcode().set(op);
+            .type(Header::Type3)
+            .opcode(op);
 
          *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mBuffer->curSize++]) = header;
       }
@@ -41,7 +41,7 @@ public:
          // Update header
          auto header = *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mSaveSize]);
          header = header
-            .size().set(size - 2);
+            .size(size - 2);
 
          *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mSaveSize]) = header;
 
