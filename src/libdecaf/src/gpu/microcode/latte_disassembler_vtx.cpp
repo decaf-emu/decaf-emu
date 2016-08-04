@@ -30,7 +30,7 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
    auto dstSelW = vtx.word1.DST_SEL_W();
 
    if (dstSelX != latte::SQ_SEL_MASK || dstSelY != latte::SQ_SEL_MASK || dstSelZ != latte::SQ_SEL_MASK || dstSelW != latte::SQ_SEL_MASK) {
-      if (id == SQ_TEX_INST_VTX_SEMANTIC) {
+      if (id == SQ_VTX_INST_SEMANTIC) {
          out << "SEM[" << vtx.sem.SEMANTIC_ID() << "]";
       } else {
          out << "R" << vtx.gpr.DST_GPR();
