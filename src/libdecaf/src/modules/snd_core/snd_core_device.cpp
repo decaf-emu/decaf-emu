@@ -154,7 +154,7 @@ mixOutput(int32_t *buffer, int numSamples, int numChannels)
             buffer[numChannels*i+ch] += sample * extras->tvVolume[ch] / fullVolume;
          }
 
-         extras->offsetFrac += extras->playbackRatio;
+         extras->offsetFrac += extras->src.ratio.value().data();
       }
    }
 }

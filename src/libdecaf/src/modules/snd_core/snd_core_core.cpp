@@ -161,6 +161,24 @@ BOOL AXUserIsProtected()
    return sProtectLock.load() > 0;
 }
 
+uint32_t
+AXGetInputSamplesPerFrame()
+{
+   if (sOutputRate == 32000) {
+      return 96;
+   } else if (sOutputRate == 48000) {
+      return 144;
+   } else {
+      decaf_abort("Unexpected output rate");
+   }
+}
+
+uint32_t
+AXGetInputSamplesPerSec()
+{
+   return (AXGetInputSamplesPerFrame() / 3) * 1000;
+}
+
 int32_t
 AXRmtGetSamplesLeft()
 {
@@ -285,6 +303,8 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXVoiceBegin);
    RegisterKernelFunction(AXVoiceEnd);
    RegisterKernelFunction(AXUserIsProtected);
+   RegisterKernelFunction(AXGetInputSamplesPerFrame);
+   RegisterKernelFunction(AXGetInputSamplesPerSec);
    RegisterKernelFunction(AXRmtGetSamples);
    RegisterKernelFunction(AXRmtGetSamplesLeft);
    RegisterKernelFunction(AXRmtAdvancePtr);

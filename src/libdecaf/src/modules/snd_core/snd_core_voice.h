@@ -1,5 +1,6 @@
 #pragma once
 #include "common/be_val.h"
+#include "common/fixed.h"
 #include "common/structsize.h"
 #include "common/types.h"
 #include "snd_core_device.h"
@@ -13,6 +14,8 @@ using be_AXVoiceCallbackFn = be_wfunc_ptr<void*>;
 
 using AXVoiceCallbackExFn = wfunc_ptr<void*, uint32_t, uint32_t>;
 using be_AXVoiceCallbackExFn = be_wfunc_ptr<void*, uint32_t, uint32_t>;
+
+#pragma pack(push, 1)
 
 struct AXVoice;
 
@@ -71,7 +74,10 @@ struct AXVoice
    //! The user context to send to the callbacks
    be_ptr<void> userContext;
 
-   UNKNOWN(0xc);
+   //! A bitfield representing different things needing to be synced.
+   be_val<uint32_t> syncBits;
+
+   UNKNOWN(0x8);
 
    //! The current offset data!
    AXVoiceOffsets offsets;
@@ -94,6 +100,7 @@ CHECK_OFFSET(AXVoice, 0x18, cbNext);
 CHECK_OFFSET(AXVoice, 0x1c, priority);
 CHECK_OFFSET(AXVoice, 0x20, callback);
 CHECK_OFFSET(AXVoice, 0x24, userContext);
+CHECK_OFFSET(AXVoice, 0x28, syncBits);
 CHECK_OFFSET(AXVoice, 0x34, offsets);
 CHECK_OFFSET(AXVoice, 0x48, callbackEx);
 CHECK_OFFSET(AXVoice, 0x4c, callbackReason);
@@ -150,13 +157,19 @@ CHECK_SIZE(AXVoiceAdpcm, 0x28);
 // Note: "Src" = "sample rate converter", not "source"
 struct AXVoiceSrc
 {
-    // Playback rate as a 16.16 fixed-point ratio
-    be_val<uint16_t> ratioInt;
-    be_val<uint16_t> ratioFrac;
-    // Used by the resampler
-    be_val<uint16_t> currentOffsetFrac;
-    be_val<int16_t> lastSample[4];
+   // Playback rate
+   be_val<ufixed1616_t> ratio;
+
+   // Used by the resampler
+   be_val<ufixed016_t> currentOffsetFrac;
+   be_val<int16_t> lastSample[4];
 };
+CHECK_OFFSET(AXVoiceSrc, 0x0, ratio);
+CHECK_OFFSET(AXVoiceSrc, 0x4, currentOffsetFrac);
+CHECK_OFFSET(AXVoiceSrc, 0x6, lastSample);
+CHECK_SIZE(AXVoiceSrc, 0xe);
+
+#pragma pack(pop)
 
 AXVoice *
 AXAcquireVoice(uint32_t priority,
@@ -218,6 +231,10 @@ AXSetVoiceEndOffsetEx(AXVoice *voice,
                       uint32_t offset,
                       const void *samples);
 
+AXResult
+AXSetVoiceInitialTimeDelay(AXVoice *voice,
+                           uint16_t delay);
+
 void
 AXSetVoiceLoopOffset(AXVoice *voice,
                      uint32_t offset);
@@ -268,10 +285,60 @@ void
 AXSetVoiceVe(AXVoice *voice,
              AXVoiceVeData *veData);
 
+void
+AXSetVoiceVeDelta(AXVoice *voice,
+                  int16_t delta);
+
 namespace internal
 {
 
-struct AXVoiceExtras
+struct AXCafeVoiceExtras
+{
+   UNKNOWN(0x8);
+
+   uint16_t srcMode;
+   uint16_t srcModeUnk;
+
+   UNKNOWN(0x2);
+
+   uint16_t type;
+
+   UNKNOWN(0x15a);
+
+   uint16_t state;
+
+   uint16_t itdOn;
+
+   UNKNOWN(0x2);
+
+   uint16_t itdDelay;
+
+   UNKNOWN(0x8);
+
+   AXVoiceVeData ve;
+
+   UNKNOWN(0x3a);
+
+   AXVoiceSrc src;
+
+   UNKNOWN(0xea);
+
+   uint32_t syncBits;
+
+   UNKNOWN(0xc);
+};
+CHECK_OFFSET(AXCafeVoiceExtras, 0x8, srcMode);
+CHECK_OFFSET(AXCafeVoiceExtras, 0xa, srcModeUnk);
+CHECK_OFFSET(AXCafeVoiceExtras, 0xe, type);
+CHECK_OFFSET(AXCafeVoiceExtras, 0x16a, state);
+CHECK_OFFSET(AXCafeVoiceExtras, 0x16c, itdOn);
+CHECK_OFFSET(AXCafeVoiceExtras, 0x170, itdDelay);
+CHECK_OFFSET(AXCafeVoiceExtras, 0x17a, ve);
+CHECK_OFFSET(AXCafeVoiceExtras, 0x1b8, src);
+CHECK_OFFSET(AXCafeVoiceExtras, 0x2b0, syncBits);
+CHECK_SIZE(AXCafeVoiceExtras, 0x2c0);
+
+struct AXVoiceExtras : AXCafeVoiceExtras
 {
    // Volume on each of 6 surround channels for TV output
    uint16_t tvVolume[6];
@@ -280,9 +347,6 @@ struct AXVoiceExtras
    // Volume for each of 4 controller speakers
    uint16_t controllerVolume[4];
 
-   // Playback rate ratio (number of output samples per input sample)
-   //  in 16.16 fixed point
-   uint32_t playbackRatio;
    // Current fractional offset (as 16.16 fixed point)
    int32_t offsetFrac;
    // Sample index of next sample to read

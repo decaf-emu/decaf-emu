@@ -4,6 +4,7 @@
 #include "decaf_sound.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "snd_core.h"
+#include "snd_core_core.h"
 #include "snd_core_voice.h"
 #include <array>
 #include <fstream>
@@ -87,6 +88,8 @@ AXAcquireVoiceEx(uint32_t priority,
       extras->controllerVolume[i] = 0;
    }
    extras->offsetFrac = 0;
+   extras->src.ratio = 1.0;
+   extras->src.currentOffsetFrac = 0;
    extras->loopCount = 0;
    extras->adpcmPrevSample[0] = 0;
    extras->adpcmPrevSample[1] = 0;
@@ -162,7 +165,8 @@ AXGetVoiceOffsets(AXVoice *voice,
 BOOL
 AXIsVoiceRunning(AXVoice *voice)
 {
-   return FALSE;
+   auto extras = internal::getVoiceExtras(voice->index);
+   return (extras->state != AXVoiceState::Stopped) ? 1 : 0;
 }
 
 void
@@ -249,6 +253,27 @@ AXSetVoiceEndOffsetEx(AXVoice *voice,
 {
    AXSetVoiceEndOffset(voice, offset);
    voice->offsets.data = samples;
+}
+
+AXResult
+AXSetVoiceInitialTimeDelay(AXVoice *voice,
+                           uint16_t delay)
+{
+   if (AXIsVoiceRunning(voice)) {
+      return AXResult::VoiceIsRunning;
+   }
+
+   if (delay > AXGetInputSamplesPerFrame()) {
+      return AXResult::DelayTooBig;
+   }
+
+   auto extras = internal::getVoiceExtras(voice->index);
+   extras->itdOn = 1;
+   extras->itdDelay = delay;
+   extras->syncBits |= internal::AXVoiceSyncBits::Itd;
+   voice->syncBits |= internal::AXVoiceSyncBits::Itd;
+
+   return AXResult::Success;
 }
 
 void
@@ -341,7 +366,8 @@ AXSetVoiceSrc(AXVoice *voice,
               AXVoiceSrc *src)
 {
    auto extras = internal::getVoiceExtras(voice->index);
-   extras->playbackRatio = static_cast<uint32_t>(src->ratioInt) << 16 | src->ratioFrac;
+   extras->src = *src;
+   voice->syncBits |= internal::AXVoiceSyncBits::Src;
 }
 
 AXVoiceSrcRatioResult
@@ -353,7 +379,9 @@ AXSetVoiceSrcRatio(AXVoice *voice,
    }
 
    auto extras = internal::getVoiceExtras(voice->index);
-   extras->playbackRatio = static_cast<uint32_t>(ratio * (1 << 16));
+   extras->src.ratio = ratio;
+   voice->syncBits |= internal::AXVoiceSyncBits::SrcRatio;
+
    return AXVoiceSrcRatioResult::Success;
 }
 
@@ -361,25 +389,63 @@ void
 AXSetVoiceSrcType(AXVoice *voice,
                   AXVoiceSrcType type)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+
+   if (type == AXVoiceSrcType::None) {
+      extras->srcMode = 2;
+   } else if (type == AXVoiceSrcType::Linear) {
+      extras->srcMode = 1;
+   } else if (type == AXVoiceSrcType::Unk0) {
+      extras->srcMode = 0;
+      extras->srcModeUnk = 0;
+   } else if (type == AXVoiceSrcType::Unk1) {
+      extras->srcMode = 0;
+      extras->srcModeUnk = 1;
+   } else if (type == AXVoiceSrcType::Unk2) {
+      extras->srcMode = 0;
+      extras->srcModeUnk = 2;
+   }
+
+   voice->syncBits |= internal::AXVoiceSyncBits::SrcType;
 }
 
 void
 AXSetVoiceState(AXVoice *voice,
                 AXVoiceState state)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+   extras->state = state;
    voice->state = state;
+   voice->syncBits |= internal::AXVoiceSyncBits::State;
 }
 
 void
 AXSetVoiceType(AXVoice *voice,
                AXVoiceType type)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+   extras->type = type;
+   voice->syncBits |= internal::AXVoiceSyncBits::Type;
 }
 
 void
 AXSetVoiceVe(AXVoice *voice,
              AXVoiceVeData *veData)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+   extras->ve = *veData;
+   voice->syncBits |= internal::AXVoiceSyncBits::Ve;
+}
+
+void
+AXSetVoiceVeDelta(AXVoice *voice,
+                  int16_t delta)
+{
+   auto extras = internal::getVoiceExtras(voice->index);
+   if (extras->ve.delta != delta) {
+      extras->ve.delta = delta;
+      voice->syncBits |= internal::AXVoiceSyncBits::VeDelta;
+   }
 }
 
 namespace internal
@@ -428,6 +494,7 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXSetVoiceDeviceMix);
    RegisterKernelFunction(AXSetVoiceEndOffset);
    RegisterKernelFunction(AXSetVoiceEndOffsetEx);
+   RegisterKernelFunction(AXSetVoiceInitialTimeDelay);
    RegisterKernelFunction(AXSetVoiceLoopOffset);
    RegisterKernelFunction(AXSetVoiceLoopOffsetEx);
    RegisterKernelFunction(AXSetVoiceLoop);
@@ -440,6 +507,7 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXSetVoiceState);
    RegisterKernelFunction(AXSetVoiceType);
    RegisterKernelFunction(AXSetVoiceVe);
+   RegisterKernelFunction(AXSetVoiceVeDelta);
 }
 
 } // namespace snd_core
