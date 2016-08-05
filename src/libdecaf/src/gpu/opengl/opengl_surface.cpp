@@ -372,7 +372,12 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
 
    // numBits could theoretically be >= 2^32, so uint64_t to avoid overflow
    auto numBits = static_cast<uint64_t>(numPixels) * bitsPerPixel;
-   decaf_check(numBits % 8 == 0);
+   // Some (buggy?) apps try to give us 1x1 compressed textures...
+   if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5 && (width == 1 || height == 1)) {
+      gLog->debug("Got compressed texture with invalid size {}x{}", width, height);
+   } else {
+      decaf_check(numBits % 8 == 0);
+   }
    decaf_check(numBits / 8 < UINT64_C(1) << 32);
    buffer->cpuMemEnd = baseAddress + static_cast<uint32_t>(numBits / 8);
 
