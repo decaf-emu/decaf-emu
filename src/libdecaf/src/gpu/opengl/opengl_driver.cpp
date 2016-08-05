@@ -29,7 +29,6 @@ void GLDriver::initGL()
    mActiveShader = nullptr;
    mActiveDepthBuffer = nullptr;
    memset(&mActiveColorBuffers[0], 0, sizeof(SurfaceBuffer *) * mActiveColorBuffers.size());
-   std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 
    // Create our blit framebuffer
    gl::glCreateFramebuffers(2, mBlitFrameBuffers);

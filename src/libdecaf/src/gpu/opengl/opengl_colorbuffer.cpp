@@ -18,9 +18,24 @@ bool GLDriver::checkActiveColorBuffer()
 
    for (auto i = 0u; i < mActiveColorBuffers.size(); ++i, mask >>= 4) {
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
+      auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
+      auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
       auto &active = mActiveColorBuffers[i];
+      auto thisMask = mask & 0xF;
 
-      if (!cb_color_base.BASE_256B || !(mask & 0xF)) {
+      if (cb_color_base.value == mColorBufferCache[i].base
+       && cb_color_size.value == mColorBufferCache[i].size
+       && cb_color_info.value == mColorBufferCache[i].info
+       && thisMask == mColorBufferCache[i].mask) {
+         continue;
+      }
+
+      mColorBufferCache[i].base = cb_color_base.value;
+      mColorBufferCache[i].size = cb_color_size.value;
+      mColorBufferCache[i].info = cb_color_info.value;
+      mColorBufferCache[i].mask = thisMask;
+
+      if (!cb_color_base.BASE_256B || !thisMask) {
          if (active) {
             // Unbind color buffer i
             gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, 0, 0);
@@ -30,8 +45,6 @@ bool GLDriver::checkActiveColorBuffer()
          continue;
       } else {
          // Bind color buffer i
-         auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
-         auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
          active = getColorBuffer(cb_color_base, cb_color_size, cb_color_info);
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, active->object, 0);
       }

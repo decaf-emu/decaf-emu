@@ -149,6 +149,41 @@ struct UniformBuffer
    gl::GLuint object = 0;
 };
 
+struct ColorBufferCache
+{
+   uint32_t base = 0;
+   uint32_t size = 0;
+   uint32_t info = 0;
+   uint32_t mask = 0;
+};
+
+struct DepthBufferCache
+{
+   uint32_t base = 0;
+   uint32_t size = 0;
+   uint32_t info = 0;
+};
+
+struct TextureCache
+{
+   uint32_t baseAddress = 0;
+   uint32_t word0 = 0;
+   uint32_t word1 = 0;
+   uint32_t word2 = 0;
+   uint32_t word3 = 0;
+   uint32_t word4 = 0;
+   uint32_t word5 = 0;
+   uint32_t word6 = 0;
+};
+
+struct SamplerCache
+{
+   uint32_t word0 = 0;
+   uint32_t word1 = 0;
+   uint32_t word2 = 0;
+   bool depthCompare = false;  // TODO: might be unnecessary; see TODO note in checkActiveSamplers()
+};
+
 using GLContext = uint64_t;
 
 class GLDriver : public decaf::OpenGLDriver
@@ -289,6 +324,11 @@ private:
    latte::ContextState *mContextState = nullptr;
 
    pm4::EventWriteEOP mPendingEOP;
+
+   std::array<ColorBufferCache, latte::MaxRenderTargets> mColorBufferCache;
+   DepthBufferCache mDepthBufferCache;
+   std::array<TextureCache, latte::MaxTextures> mPixelTextureCache;
+   std::array<SamplerCache, latte::MaxSamplers> mPixelSamplerCache;
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;
