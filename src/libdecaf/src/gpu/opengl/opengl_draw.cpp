@@ -188,14 +188,17 @@ GLDriver::drawPrimitives(uint32_t count,
          gl::glCreateQueries(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, 1, &mFeedbackQuery);
          decaf_check(mFeedbackQuery);
       }
+
       gl::glBeginQuery(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, mFeedbackQuery);
 
       auto baseMode = mode;
+
       if (mode == gl::GL_TRIANGLE_STRIP || mode == gl::GL_TRIANGLE_FAN) {
          baseMode = gl::GL_TRIANGLES;
       } else if (mode == gl::GL_LINE_STRIP || mode == gl::GL_LINE_LOOP) {
          baseMode = gl::GL_LINES;
       }
+
       gl::glBeginTransformFeedback(baseMode);
    }
 
@@ -340,9 +343,8 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
 {
    auto db_depth_clear = getRegister<latte::DB_DEPTH_CLEAR>(latte::Register::DB_DEPTH_CLEAR);
    auto db_stencil_clear = getRegister<latte::DB_STENCIL_CLEAR>(latte::Register::DB_STENCIL_CLEAR);
-
    auto dbFormat = data.db_depth_info.FORMAT();
-   bool hasStencil = (dbFormat == latte::DEPTH_8_24
+   auto hasStencil = (dbFormat == latte::DEPTH_8_24
                    || dbFormat == latte::DEPTH_8_24_FLOAT
                    || dbFormat == latte::DEPTH_X24_8_32_FLOAT);
 
@@ -368,11 +370,13 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
 
    // Clear depth buffer
    gl::glDisable(gl::GL_SCISSOR_TEST);
+
    if (hasStencil) {
       gl::glClearNamedFramebufferfi(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR());
    } else {
       gl::glClearNamedFramebufferfv(mDepthClearFrameBuffer, gl::GL_DEPTH, 0, &db_depth_clear.DEPTH_CLEAR);
    }
+
    gl::glEnable(gl::GL_SCISSOR_TEST);
 }
 
@@ -390,8 +394,9 @@ GLDriver::streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data)
    if (data.control.STORE_BUFFER_FILLED_SIZE()) {
       copyFeedbackBuffer(bufferIndex);
 
-      decaf_assert(data.dstHi == 0, fmt::format("Store target out of 32-bit range for feedback buffer {}", bufferIndex));
       auto addr = data.dstLo;
+      decaf_assert(data.dstHi == 0, fmt::format("Store target out of 32-bit range for feedback buffer {}", bufferIndex));
+
       if (addr != 0) {
          auto offsetPtr = mem::translate<uint32_t>(addr);
          *offsetPtr = byte_swap(mFeedbackCurrentOffset[bufferIndex] >> 2);
@@ -409,13 +414,13 @@ GLDriver::streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data)
       mFeedbackBaseOffset[bufferIndex] = mFeedbackCurrentOffset[bufferIndex];
       break;
    case pm4::STRMOUT_OFFSET_FROM_MEM:
+   {
       decaf_assert(data.srcHi == 0, fmt::format("Load target out of 32-bit range for feedback buffer {}", bufferIndex));
-      {
-         auto offsetPtr = mem::translate<uint32_t>(data.srcLo);
-         decaf_assert(offsetPtr, fmt::format("Invalid load address for feedback buffer {}", bufferIndex));
-         mFeedbackBaseOffset[bufferIndex] = byte_swap(*offsetPtr) << 2;
-      }
+      auto offsetPtr = mem::translate<uint32_t>(data.srcLo);
+      decaf_assert(offsetPtr, fmt::format("Invalid load address for feedback buffer {}", bufferIndex));
+      mFeedbackBaseOffset[bufferIndex] = byte_swap(*offsetPtr) << 2;
       break;
+   }
    case pm4::STRMOUT_OFFSET_NONE:
       break;  // No change.
    }

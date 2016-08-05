@@ -635,6 +635,7 @@ bool GLDriver::checkActiveAttribBuffers()
 
    for (auto &attrib : mActiveShader->fetch->attribs) {
       auto resourceId = attrib.buffer + latte::SQ_VS_RESOURCE_BASE;
+
       if (resourceId >= latte::SQ_VS_ATTRIB_RESOURCE_0 && resourceId < latte::SQ_VS_ATTRIB_RESOURCE_0 + 0x10) {
          auto attribBufferId = resourceId - latte::SQ_VS_ATTRIB_RESOURCE_0;
          auto buffer = buffers[attribBufferId];
@@ -732,12 +733,14 @@ bool GLDriver::checkActiveFeedbackBuffers()
 
       auto addr = vgt_strmout_buffer_base << 8;
       auto &buffer = mFeedbackBuffers[addr];
+
       if (!buffer.object) {
          gLog->error("Attempt to use undefined feedback buffer {}", index);
          return false;
       }
 
       auto offset = mFeedbackBaseOffset[index];
+
       if (offset >= buffer.size) {
          gLog->error("Attempt to bind feedback buffer {} at offset {} >= size {}", index, offset, buffer.size);
          return false;
@@ -759,11 +762,12 @@ void GLDriver::copyFeedbackBuffer(unsigned index)
 
    auto copyOffset = mFeedbackBaseOffset[index];
    auto copySize = mFeedbackCurrentOffset[index] - copyOffset;
+
    if (copySize == 0) {
       return;
    }
 
-   void *mappedBuffer = gl::glMapNamedBufferRange(buffer.object, copyOffset, copySize, gl::GL_MAP_READ_BIT);
+   auto mappedBuffer = gl::glMapNamedBufferRange(buffer.object, copyOffset, copySize, gl::GL_MAP_READ_BIT);
    decaf_check(mappedBuffer);
 
    memcpy(static_cast<char *>(mappedBuffer) + copyOffset,

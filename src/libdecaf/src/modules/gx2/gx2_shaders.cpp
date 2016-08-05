@@ -267,7 +267,8 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
 }
 
 void
-_GX2SetSampler(GX2Sampler *sampler, uint32_t id)
+_GX2SetSampler(GX2Sampler *sampler,
+               uint32_t id)
 {
    pm4::write(pm4::SetSamplerAttrib {
       id * 3,
@@ -278,28 +279,33 @@ _GX2SetSampler(GX2Sampler *sampler, uint32_t id)
 }
 
 void
-GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id)
+GX2SetPixelSampler(GX2Sampler *sampler,
+                   uint32_t id)
 {
    decaf_check(id < 0x12);
    _GX2SetSampler(sampler, 0 + id);
 }
 
 void
-GX2SetVertexSampler(GX2Sampler *sampler, uint32_t id)
+GX2SetVertexSampler(GX2Sampler *sampler,
+                    uint32_t id)
 {
    decaf_check(id < 0x12);
    _GX2SetSampler(sampler, 18 + id);
 }
 
 void
-GX2SetGeometrySampler(GX2Sampler *sampler, uint32_t id)
+GX2SetGeometrySampler(GX2Sampler *sampler,
+                      uint32_t id)
 {
    decaf_check(id < 0x12);
    _GX2SetSampler(sampler, 36 + id);
 }
 
 void
-GX2SetVertexUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
+GX2SetVertexUniformReg(uint32_t offset,
+                       uint32_t count,
+                       be_val<uint32_t> *data)
 {
    auto loop = offset >> 16;
    if (loop) {
@@ -320,7 +326,9 @@ GX2SetVertexUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 }
 
 void
-GX2SetPixelUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
+GX2SetPixelUniformReg(uint32_t offset,
+                      uint32_t count,
+                      be_val<uint32_t> *data)
 {
    auto loop = offset >> 16;
 
@@ -342,7 +350,9 @@ GX2SetPixelUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data)
 }
 
 void
-GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
+GX2SetVertexUniformBlock(uint32_t location,
+                         uint32_t size,
+                         const void *data)
 {
    decaf_check((mem::untranslate(data) & 0x000000FF) == 0);
 
@@ -376,7 +386,9 @@ GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data)
 }
 
 void
-GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
+GX2SetPixelUniformBlock(uint32_t location,
+                        uint32_t size,
+                        const void *data)
 {
    decaf_check((mem::untranslate(data) & 0x000000FF) == 0);
 
@@ -409,7 +421,9 @@ GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data)
 }
 
 void
-GX2SetGeometryUniformBlock(uint32_t location, uint32_t size, const void *data)
+GX2SetGeometryUniformBlock(uint32_t location,
+                           uint32_t size,
+                           const void *data)
 {
    decaf_check((mem::untranslate(data) & 0x000000FF) == 0);
 
@@ -606,11 +620,11 @@ GX2SetStreamOutContext(uint32_t index,
                        GX2StreamOutContextMode mode)
 {
    decaf_check(index <= 3);
+   auto srcLo = 0u;
 
    auto control = pm4::SBU_CONTROL::get(0)
       .STORE_BUFFER_FILLED_SIZE(false)
       .SELECT_BUFFER(index);
-   auto srcLo = 0u;
 
    switch (mode) {
    case GX2StreamOutContextMode::Append:
@@ -638,18 +652,19 @@ GX2SaveStreamOutContext(uint32_t index,
                         GX2OutputStream *stream)
 {
    decaf_check(index <= 3);
+   auto dstLo = stream->context.getAddress();
 
    auto control = pm4::SBU_CONTROL::get(0)
       .STORE_BUFFER_FILLED_SIZE(true)
       .OFFSET_SOURCE(pm4::STRMOUT_OFFSET_NONE)
       .SELECT_BUFFER(index);
-   auto dstLo = stream->context.getAddress();
 
    pm4::write(pm4::StreamOutBufferUpdate { control, dstLo, 0, 0, 0 });
 }
 
 void
-GX2SetGeometryShaderInputRingBuffer(void *buffer, uint32_t size)
+GX2SetGeometryShaderInputRingBuffer(void *buffer,
+                                    uint32_t size)
 {
    pm4::write(pm4::SetConfigReg { latte::Register::SQ_ESGS_RING_BASE, mem::untranslate(buffer) >> 8 });
    pm4::write(pm4::SetConfigReg { latte::Register::SQ_ESGS_RING_SIZE, size >> 8 });
@@ -675,7 +690,8 @@ GX2SetGeometryShaderInputRingBuffer(void *buffer, uint32_t size)
 }
 
 void
-GX2SetGeometryShaderOutputRingBuffer(void *buffer, uint32_t size)
+GX2SetGeometryShaderOutputRingBuffer(void *buffer,
+                                     uint32_t size)
 {
    pm4::write(pm4::SetConfigReg { latte::Register::SQ_GSVS_RING_BASE, mem::untranslate(buffer) >> 8 });
    pm4::write(pm4::SetConfigReg { latte::Register::SQ_GSVS_RING_SIZE, size >> 8 });

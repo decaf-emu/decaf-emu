@@ -400,28 +400,41 @@ void
 GX2SetGeometryShader(GX2GeometryShader *shader);
 
 void
-GX2SetVertexSampler(GX2Sampler *sampler, uint32_t id);
+GX2SetVertexSampler(GX2Sampler *sampler,
+                    uint32_t id);
 
 void
-GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id);
+GX2SetPixelSampler(GX2Sampler *sampler,
+                   uint32_t id);
 
 void
-GX2SetGeometrySampler(GX2Sampler *sampler, uint32_t id);
+GX2SetGeometrySampler(GX2Sampler *sampler,
+                      uint32_t id);
 
 void
-GX2SetVertexUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data);
+GX2SetVertexUniformReg(uint32_t offset,
+                       uint32_t count,
+                       be_val<uint32_t> *data);
 
 void
-GX2SetPixelUniformReg(uint32_t offset, uint32_t count, be_val<uint32_t> *data);
+GX2SetPixelUniformReg(uint32_t offset,
+                      uint32_t count,
+                      be_val<uint32_t> *data);
 
 void
-GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data);
+GX2SetVertexUniformBlock(uint32_t location,
+                         uint32_t size,
+                         const void *data);
 
 void
-GX2SetPixelUniformBlock(uint32_t location, uint32_t size, const void *data);
+GX2SetPixelUniformBlock(uint32_t location,
+                        uint32_t size,
+                        const void *data);
 
 void
-GX2SetGeometryUniformBlock(uint32_t location, uint32_t size, const void *data);
+GX2SetGeometryUniformBlock(uint32_t location,
+                           uint32_t size,
+                           const void *data);
 
 void
 GX2SetShaderModeEx(GX2ShaderMode mode,
@@ -446,10 +459,12 @@ GX2SaveStreamOutContext(uint32_t index,
                         GX2OutputStream *stream);
 
 void
-GX2SetGeometryShaderInputRingBuffer(void *buffer, uint32_t size);
+GX2SetGeometryShaderInputRingBuffer(void *buffer,
+                                    uint32_t size);
 
 void
-GX2SetGeometryShaderOutputRingBuffer(void *buffer, uint32_t size);
+GX2SetGeometryShaderOutputRingBuffer(void *buffer,
+                                     uint32_t size);
 
 uint32_t
 GX2GetPixelShaderGPRs(GX2PixelShader *shader);
