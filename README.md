@@ -7,24 +7,39 @@ You can find us at #wiiu-emu on freenode.
 
 ## Requirements
 - Windows with Visual Studio 2015 Update 3
-- Linux with a modern C++14 friendly compiler (gcc, clang)
+- Linux with a modern C++14 friendly compiler
 - 64 bit
-- OpenGL 4.5 (using direct state access, available on older OpenGL versions as an extension).
+- OpenGL 4.5
 
 ## Compatibility
 - None
 
 ## Building
 
+This project makes use of submodules, please ensure you have cloned them properly using:
+- `git submodule update --init`
+
 There are two decaf targets:
 - decaf-sdl - Default emulator target using SDL for window creation and input.
 - decaf-cli - Command line only which will run games with no graphics or inputs, useful for test .rpx files.
 
 ### Windows with VS2015 Update 3
-- Open decaf.sln
+- Open decaf.sln and build.
+- cmake is not supported for windows.
 - `ReleaseDebug` is recommended for development, `Debug` runs too slow and `Release` takes a long to compile due to LTCG and does not have full debug info.
 
 ### Linux
-- The cmake builds will depend on your system's zlib, sdl2 - rather than using submodules for everything like on Windows.
+- The cmake builds will depend on your system's zlib, sdl2 and optionally valgrind - this is different to Windows where we use submodules for every dependency.
+- You can enable building with valgrind with -DDECAF_VALGRIND=ON
 - Requires a modern gcc or clang which supports C++11/14 features
 - `cmake ../decaf-emu && make`
+
+## Running
+
+`./decaf-emu play <path to game>`
+
+It is recommend to run the emulator from the root git directory so that it is able to access `resources/fonts/*`
+
+Configuration files can be found at:
+- Windows - `%APPDATA%\decaf`
+- Linux - `~/.config/decaf`
