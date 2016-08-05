@@ -26,6 +26,9 @@ void GLDriver::initGL()
 {
    // Clear active state
    mRegisters.fill(0);
+   for (auto i = 0u; i < mRegisters.size(); ++i) {
+      applyRegister(static_cast<latte::Register>(i*4));
+   }
    mActiveShader = nullptr;
    mActiveDepthBuffer = nullptr;
    memset(&mActiveColorBuffers[0], 0, sizeof(SurfaceBuffer *) * mActiveColorBuffers.size());

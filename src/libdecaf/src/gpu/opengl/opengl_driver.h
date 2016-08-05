@@ -288,6 +288,7 @@ private:
    void copyFeedbackBuffer(unsigned index);
 
    void setRegister(latte::Register reg, uint32_t value);
+   void applyRegister(latte::Register reg);
 
    bool parseFetchShader(FetchShader &shader, void *buffer, size_t size);
    bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size);
