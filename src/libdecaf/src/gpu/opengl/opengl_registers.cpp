@@ -26,6 +26,8 @@ GLDriver::setRegister(latte::Register reg,
 {
    decaf_check((reg % 4) == 0);
 
+   auto isChanged = (value != mRegisters[reg / 4]);
+
    // Save to my state
    mRegisters[reg / 4] = value;
 
@@ -34,17 +36,27 @@ GLDriver::setRegister(latte::Register reg,
       mContextState->setRegister(reg, value);
    }
 
-   // For the following registers, we apply their state changes
-   // directly to the OpenGL context...
-   switch (reg) {
-   case latte::Register::SQ_VTX_SEMANTIC_CLEAR:
+   // Writing SQ_VTX_SEMANTIC_CLEAR has side effects, so process those
+   if (reg == latte::Register::SQ_VTX_SEMANTIC_CLEAR) {
       for (auto i = 0u; i < 32; ++i) {
          if (value & (1 << i)) {
             setRegister(static_cast<latte::Register>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4), 0xffffffff);
          }
       }
-      break;
+   }
 
+   // Apply changes directly to OpenGL state if appropriate
+   if (isChanged) {
+      applyRegister(reg);
+   }
+}
+
+void
+GLDriver::applyRegister(latte::Register reg)
+{
+   auto value = mRegisters[reg / 4];
+
+   switch (reg) {
    case latte::Register::CB_BLEND0_CONTROL:
    case latte::Register::CB_BLEND1_CONTROL:
    case latte::Register::CB_BLEND2_CONTROL:
