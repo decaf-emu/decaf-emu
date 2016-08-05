@@ -36,7 +36,7 @@ There are two decaf targets:
 
 ## Running
 
-`./decaf-emu play <path to game>`
+`./decaf-sdl play <path to game>`
 
 It is recommend to run the emulator from the root git directory so that it is able to access `resources/fonts/*`
 
