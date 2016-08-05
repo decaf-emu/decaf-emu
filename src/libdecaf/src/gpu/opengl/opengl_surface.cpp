@@ -183,6 +183,101 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
    }
 }
 
+static int getStorageFormatBits(gl::GLenum format)
+{
+   switch (format) {
+   case gl::GL_COMPRESSED_RED_RGTC1:
+   case gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+   case gl::GL_COMPRESSED_SIGNED_RED_RGTC1:
+   case gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
+      return 4;
+
+   case gl::GL_COMPRESSED_RG_RGTC2:
+   case gl::GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+   case gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+   case gl::GL_COMPRESSED_SIGNED_RG_RGTC2:
+   case gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT:
+   case gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT:
+   case gl::GL_R8:
+   case gl::GL_R8_SNORM:
+   case gl::GL_R8I:
+   case gl::GL_R8UI:
+      return 8;
+
+   case gl::GL_DEPTH_COMPONENT16:
+   case gl::GL_R16:
+   case gl::GL_R16_SNORM:
+   case gl::GL_R16F:
+   case gl::GL_R16I:
+   case gl::GL_R16UI:
+   case gl::GL_RG8:
+   case gl::GL_RG8_SNORM:
+   case gl::GL_RG8I:
+   case gl::GL_RG8UI:
+   case gl::GL_RGB565:
+   case gl::GL_RGBA4:
+      return 16;
+
+   case gl::GL_RGB8:
+   case gl::GL_RGB8_SNORM:
+   case gl::GL_RGB8I:
+   case gl::GL_RGB8UI:
+   case gl::GL_SRGB8:
+      return 24;
+
+   case gl::GL_DEPTH_COMPONENT32F:
+   case gl::GL_DEPTH24_STENCIL8:
+   case gl::GL_R11F_G11F_B10F:
+   case gl::GL_R32F:
+   case gl::GL_R32I:
+   case gl::GL_R32UI:
+   case gl::GL_RG16:
+   case gl::GL_RG16_SNORM:
+   case gl::GL_RG16F:
+   case gl::GL_RG16I:
+   case gl::GL_RG16UI:
+   case gl::GL_RGB10_A2:
+   case gl::GL_RGB10_A2UI:
+   case gl::GL_RGBA8:
+   case gl::GL_RGBA8_SNORM:
+   case gl::GL_RGBA8I:
+   case gl::GL_RGBA8UI:
+   case gl::GL_SRGB8_ALPHA8:
+      return 32;
+
+   case gl::GL_RGB16:
+   case gl::GL_RGB16_SNORM:
+   case gl::GL_RGB16F:
+   case gl::GL_RGB16I:
+   case gl::GL_RGB16UI:
+      return 48;
+
+   case gl::GL_DEPTH32F_STENCIL8:
+   case gl::GL_RG32F:
+   case gl::GL_RG32I:
+   case gl::GL_RG32UI:
+   case gl::GL_RGBA16:
+   case gl::GL_RGBA16_SNORM:
+   case gl::GL_RGBA16F:
+   case gl::GL_RGBA16I:
+   case gl::GL_RGBA16UI:
+      return 64;
+
+   case gl::GL_RGB32F:
+   case gl::GL_RGB32I:
+   case gl::GL_RGB32UI:
+      return 96;
+
+   case gl::GL_RGBA32F:
+   case gl::GL_RGBA32I:
+   case gl::GL_RGBA32UI:
+      return 128;
+
+   default:
+      decaf_abort(fmt::format("Invalid GL storage format {}", format));
+   }
+}
+
 SurfaceBuffer *
 GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
                            uint32_t width,
@@ -224,7 +319,6 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    // We need to keep track of the memory region every GPU resource uses
    //  so that we are able to invalidate them as needed.
    buffer->cpuMemStart = baseAddress;
-   buffer->cpuMemEnd = baseAddress;
 
    // Lets track some other useful information
    buffer->dbgInfo.width = width;
@@ -236,46 +330,51 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    buffer->dbgInfo.formatComp = formatComp;
    buffer->dbgInfo.degamma = degamma;
 
-   // TODO: Calculate the true size of the texture instead of cheating
-   //  and assuming the texture is 32 bits per pixel.
-   auto bytesPerPixel = 4;
+   auto bitsPerPixel = getStorageFormatBits(storageFormat);
+   uint32_t numPixels;
 
    if (!buffer->object) {
       switch (dim) {
       case latte::SQ_TEX_DIM_1D:
          gl::glCreateTextures(gl::GL_TEXTURE_1D, 1, &buffer->object);
          gl::glTextureStorage1D(buffer->object, 1, storageFormat, width);
-         buffer->cpuMemEnd = baseAddress + (width * bytesPerPixel);
+         numPixels = width;
          break;
       case latte::SQ_TEX_DIM_2D:
          gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &buffer->object);
          gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
-         buffer->cpuMemEnd = baseAddress + (width * height * bytesPerPixel);
+         numPixels = width * height;
          break;
       case latte::SQ_TEX_DIM_2D_ARRAY:
          gl::glCreateTextures(gl::GL_TEXTURE_2D_ARRAY, 1, &buffer->object);
          gl::glTextureStorage3D(buffer->object, 1, storageFormat, width, height, depth);
-         buffer->cpuMemEnd = baseAddress + (width * height * depth * bytesPerPixel);
+         numPixels = width * height * depth;
          break;
       case latte::SQ_TEX_DIM_CUBEMAP:
          gl::glCreateTextures(gl::GL_TEXTURE_CUBE_MAP, 1, &buffer->object);
          gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
-         buffer->cpuMemEnd = baseAddress + (width * height * bytesPerPixel);
+         numPixels = width * height * 6;
          break;
       case latte::SQ_TEX_DIM_3D:
          gl::glCreateTextures(gl::GL_TEXTURE_3D, 1, &buffer->object);
          gl::glTextureStorage3D(buffer->object, 1, storageFormat, width, height, depth);
-         buffer->cpuMemEnd = baseAddress + (width * height * depth * bytesPerPixel);
+         numPixels = width * height * depth;
          break;
       case latte::SQ_TEX_DIM_1D_ARRAY:
          gl::glCreateTextures(gl::GL_TEXTURE_1D_ARRAY, 1, &buffer->object);
          gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
-         buffer->cpuMemEnd = baseAddress + (width * height * bytesPerPixel);
+         numPixels = width * height;
          break;
       default:
          decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
       }
    }
+
+   // numBits could theoretically be >= 2^32, so uint64_t to avoid overflow
+   auto numBits = static_cast<uint64_t>(numPixels) * bitsPerPixel;
+   decaf_check(numBits % 8 == 0);
+   decaf_check(numBits / 8 < UINT64_C(1) << 32);
+   buffer->cpuMemEnd = baseAddress + static_cast<uint32_t>(numBits / 8);
 
    return buffer;
 }
