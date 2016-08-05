@@ -309,12 +309,22 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    auto db_depth_clear = getRegister<latte::DB_DEPTH_CLEAR>(latte::Register::DB_DEPTH_CLEAR);
    auto db_stencil_clear = getRegister<latte::DB_STENCIL_CLEAR>(latte::Register::DB_STENCIL_CLEAR);
 
+   auto dbFormat = data.db_depth_info.FORMAT();
+   bool hasStencil = (dbFormat == latte::DEPTH_8_24
+                   || dbFormat == latte::DEPTH_8_24_FLOAT
+                   || dbFormat == latte::DEPTH_X24_8_32_FLOAT);
+
    // Find our depthbuffer to clear
    auto db_depth_base = bit_cast<latte::DB_DEPTH_BASE>(data.bufferAddr);
    auto buffer = getDepthBuffer(db_depth_base, data.db_depth_size, data.db_depth_info);
 
    // Bind depth buffer
-   gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_ATTACHMENT, buffer->object, 0);
+   if (hasStencil) {
+      gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL_ATTACHMENT, buffer->object, 0);
+   } else {
+      gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_STENCIL_ATTACHMENT, 0, 0);
+      gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_ATTACHMENT, buffer->object, 0);
+   }
 
    // Check depth frame buffer is complete
    auto status = gl::glCheckNamedFramebufferStatus(mDepthClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
@@ -326,7 +336,11 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
 
    // Clear depth buffer
    gl::glDisable(gl::GL_SCISSOR_TEST);
-   gl::glClearNamedFramebufferfi(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR());
+   if (hasStencil) {
+      gl::glClearNamedFramebufferfi(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR());
+   } else {
+      gl::glClearNamedFramebufferfv(mDepthClearFrameBuffer, gl::GL_DEPTH, 0, &db_depth_clear.DEPTH_CLEAR);
+   }
    gl::glEnable(gl::GL_SCISSOR_TEST);
 }
 
