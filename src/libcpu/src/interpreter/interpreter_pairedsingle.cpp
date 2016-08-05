@@ -3,6 +3,7 @@
 #include "interpreter_insreg.h"
 #include "interpreter_float.h"
 #include "common/floatutils.h"
+#include "common/platform_compiler.h"
 
 // Register move / sign bit manipulation
 enum MoveMode
@@ -262,7 +263,7 @@ ps_div(cpu::Core *state, Instruction instr)
 
 template<int slot>
 static void
-psSumGeneric(cpu::Core *state, Instruction instr)
+psSumGeneric(cpu::Core *state, Instruction instr) CLANG_FPU_BUG_WORKAROUND
 {
    const uint32_t oldFPSCR = state->fpscr.value;
    float d;
