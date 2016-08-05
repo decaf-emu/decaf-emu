@@ -718,6 +718,54 @@ struct EventWriteEOP
    }
 };
 
+struct StreamOutBaseUpdate
+{
+   static const auto Opcode = type3::STRMOUT_BASE_UPDATE;
+   uint32_t index;
+   uint32_t addr;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(index);
+      se(addr);
+   }
+};
+
+enum STRMOUT_OFFSET_SOURCE : uint32_t
+{
+   STRMOUT_OFFSET_FROM_PACKET           = 0,
+   STRMOUT_OFFSET_FROM_VGT_FILLED_SIZE  = 1,
+   STRMOUT_OFFSET_FROM_MEM              = 2,
+   STRMOUT_OFFSET_NONE                  = 3,
+};
+
+BITFIELD(SBU_CONTROL, uint32_t)
+   BITFIELD_ENTRY(0, 1, bool, STORE_BUFFER_FILLED_SIZE);
+   BITFIELD_ENTRY(1, 2, STRMOUT_OFFSET_SOURCE, OFFSET_SOURCE);
+   BITFIELD_ENTRY(8, 2, uint8_t, SELECT_BUFFER);
+BITFIELD_END
+
+struct StreamOutBufferUpdate
+{
+   static const auto Opcode = type3::STRMOUT_BUFFER_UPDATE;
+   SBU_CONTROL control;
+   uint32_t dstLo;  // Store target for STORE_BUFFER_FILLED_SIZE
+   uint32_t dstHi;
+   uint32_t srcLo;  // Offset for STRMOUT_OFFSET_FROM_PACKET;
+   uint32_t srcHi;  //   address of offset for STRMOUT_OFFSET_FROM_MEM
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(control.value);
+      se(dstLo);
+      se(dstHi);
+      se(srcLo);
+      se(srcHi);
+   }
+};
+
 }
 
 #pragma pack(pop)

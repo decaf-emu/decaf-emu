@@ -36,10 +36,12 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    auto name = getInstructionName(id);
    out << name;
 
-   if (id == SQ_CF_INST_EXP || id == SQ_CF_INST_EXP_DONE) {
-      auto arrayBase = inst.exp.word0.ARRAY_BASE();
+   auto type = inst.exp.word0.TYPE();
+   auto arrayBase = inst.exp.word0.ARRAY_BASE();
 
-      switch (inst.exp.word0.TYPE()) {
+   if (id == SQ_CF_INST_EXP || id == SQ_CF_INST_EXP_DONE) {
+
+      switch (type) {
       case SQ_EXPORT_PIXEL:
          out << " PIXEL" << arrayBase;
          break;
@@ -49,16 +51,47 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
       case SQ_EXPORT_PARAM:
          out << " PARAM" << arrayBase;
          break;
+      default:
+         out << " INVALID" << arrayBase;
+         break;
       }
 
-      out << ", ";
+   } else if (id >= SQ_CF_INST_MEM_STREAM0 && id <= SQ_CF_INST_MEM_STREAM3
+              && (type == SQ_EXPORT_READ || type == SQ_EXPORT_READ_IND)) {
 
-      if (inst.exp.word0.RW_REL() == SQ_RELATIVE) {
-         out << "R[AL + " << inst.exp.word0.RW_GPR() << "]";
+      out << " INVALID_READ";
+
+   } else {
+
+      if (type == SQ_EXPORT_WRITE || type == SQ_EXPORT_WRITE_IND) {
+         out << " WRITE(";
       } else {
-         out << "R" << inst.exp.word0.RW_GPR();
+         out << " READ(";
       }
 
+      if (id == SQ_CF_INST_MEM_SCRATCH || id == SQ_CF_INST_MEM_REDUCTION) {
+         out << (arrayBase * 16);
+      } else {
+         out << (arrayBase * 4);
+      }
+
+      if (type == SQ_EXPORT_WRITE_IND || type == SQ_EXPORT_READ_IND) {
+         out << " + R" << inst.exp.word0.INDEX_GPR();
+      }
+
+      out << ")";
+
+   }
+
+   out << ", ";
+
+   if (inst.exp.word0.RW_REL() == SQ_RELATIVE) {
+      out << "R[AL + " << inst.exp.word0.RW_GPR() << "]";
+   } else {
+      out << "R" << inst.exp.word0.RW_GPR();
+   }
+
+   if (id == SQ_CF_INST_EXP || id == SQ_CF_INST_EXP_DONE) {
       out
          << '.'
          << disassembleDestMask(inst.exp.swiz.SRC_SEL_X())
@@ -66,8 +99,18 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
          << disassembleDestMask(inst.exp.swiz.SRC_SEL_Z())
          << disassembleDestMask(inst.exp.swiz.SRC_SEL_W());
    } else {
-      // TODO: Disassemble export MEM_*
-      out << " MEM_UNKNOWN_FORMAT";
+      out
+         << '.'
+         << (inst.exp.buf.COMP_MASK() & (1 << 0) ? 'x' : '_')
+         << (inst.exp.buf.COMP_MASK() & (1 << 1) ? 'y' : '_')
+         << (inst.exp.buf.COMP_MASK() & (1 << 2) ? 'z' : '_')
+         << (inst.exp.buf.COMP_MASK() & (1 << 3) ? 'w' : '_');
+
+      out << " ARRAY_SIZE(" << inst.exp.buf.ARRAY_SIZE() << ")";
+   }
+
+   if (inst.exp.word0.ELEM_SIZE()) {
+      out << " ELEM_SIZE(" << inst.exp.word0.ELEM_SIZE() << ")";
    }
 
    if (inst.exp.word1.BURST_COUNT()) {

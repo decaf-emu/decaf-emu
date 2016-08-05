@@ -165,8 +165,8 @@ enum SQ_EXPORT_TYPE : uint32_t
    SQ_EXPORT_PARAM                  = 2,
    SQ_EXPORT_WRITE                  = 0,
    SQ_EXPORT_WRITE_IND              = 1,
-   SQ_EXPORT_WRITE_ACK              = 2,
-   SQ_EXPORT_WRITE_IND_ACK          = 3,
+   SQ_EXPORT_READ                   = 2,
+   SQ_EXPORT_READ_IND               = 3,
 };
 
 enum SQ_CF_KCACHE_MODE : uint32_t

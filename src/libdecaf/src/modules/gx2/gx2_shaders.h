@@ -344,6 +344,28 @@ CHECK_OFFSET(GX2AttribStream, 0x18, mask);
 CHECK_OFFSET(GX2AttribStream, 0x1c, endianSwap);
 CHECK_SIZE(GX2AttribStream, 0x20);
 
+struct GX2StreamContext
+{
+   be_val<uint32_t> currentOffset;
+   // Total size unknown (but <= 256)
+};
+CHECK_OFFSET(GX2StreamContext, 0x00, currentOffset);
+
+struct GX2OutputStream
+{
+   be_val<uint32_t> size;
+   be_ptr<uint8_t> buffer;
+   be_val<uint32_t> stride;
+   GX2RBuffer gx2rData;
+   be_ptr<GX2StreamContext> context;
+};
+CHECK_OFFSET(GX2OutputStream, 0x00, size);
+CHECK_OFFSET(GX2OutputStream, 0x04, buffer);
+CHECK_OFFSET(GX2OutputStream, 0x08, stride);
+CHECK_OFFSET(GX2OutputStream, 0x0C, gx2rData);
+CHECK_OFFSET(GX2OutputStream, 0x1C, context);
+CHECK_SIZE(GX2OutputStream, 0x20);
+
 #pragma pack(pop)
 
 uint32_t
@@ -408,7 +430,20 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
                    uint32_t numPsGpr, uint32_t numPsStackEntries);
 
 void
+GX2SetStreamOutBuffer(uint32_t index,
+                      GX2OutputStream *stream);
+
+void
 GX2SetStreamOutEnable(BOOL enable);
+
+void
+GX2SetStreamOutContext(uint32_t index,
+                       GX2OutputStream *stream,
+                       GX2StreamOutContextMode mode);
+
+void
+GX2SaveStreamOutContext(uint32_t index,
+                        GX2OutputStream *stream);
 
 void
 GX2SetGeometryShaderInputRingBuffer(void *buffer, uint32_t size);

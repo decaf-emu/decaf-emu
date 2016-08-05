@@ -568,6 +568,28 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
 }
 
 void
+GX2SetStreamOutBuffer(uint32_t index,
+                      GX2OutputStream *stream)
+{
+   decaf_check(index <= 3);
+   decaf_check(stream->buffer.getAddress() % 256 == 0);
+   decaf_check(stream->stride % 4 == 0);
+   decaf_check(stream->size % 4 == 0);
+
+   auto addr = stream->buffer.getAddress();
+   auto size = stream->size;
+
+   if (!addr) {
+      addr = stream->gx2rData.buffer.getAddress();
+      size = stream->gx2rData.elemCount * stream->gx2rData.elemSize;
+   }
+
+   pm4::write(pm4::SetContextReg { static_cast<latte::Register>(latte::Register::VGT_STRMOUT_BUFFER_SIZE_0 + 16 * index), size >> 2 });
+   pm4::write(pm4::SetContextReg { static_cast<latte::Register>(latte::Register::VGT_STRMOUT_BUFFER_BASE_0 + 16 * index), addr >> 8 });
+   pm4::write(pm4::StreamOutBaseUpdate { index, addr >> 8 });
+}
+
+void
 GX2SetStreamOutEnable(BOOL enable)
 {
    auto vgt_strmout_en = latte::VGT_STRMOUT_EN::get(0);
@@ -576,6 +598,54 @@ GX2SetStreamOutEnable(BOOL enable)
       .STREAMOUT(!!enable);
 
    pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_EN, vgt_strmout_en.value });
+}
+
+void
+GX2SetStreamOutContext(uint32_t index,
+                       GX2OutputStream *stream,
+                       GX2StreamOutContextMode mode)
+{
+   decaf_check(index <= 3);
+
+   auto control = pm4::SBU_CONTROL::get(0)
+      .STORE_BUFFER_FILLED_SIZE(false)
+      .SELECT_BUFFER(index);
+   auto srcLo = 0u;
+
+   switch (mode) {
+   case GX2StreamOutContextMode::Append:
+      control = control
+         .OFFSET_SOURCE(pm4::STRMOUT_OFFSET_FROM_MEM);
+      srcLo = stream->context.getAddress();
+      break;
+   case GX2StreamOutContextMode::FromStart:
+      control = control
+         .OFFSET_SOURCE(pm4::STRMOUT_OFFSET_FROM_PACKET);
+      srcLo = 0u;
+      break;
+   case GX2StreamOutContextMode::FromOffset:
+      control = control
+         .OFFSET_SOURCE(pm4::STRMOUT_OFFSET_FROM_PACKET);
+      srcLo = 0u;  // TODO: where does the offset come from?
+      break;
+   }
+
+   pm4::write(pm4::StreamOutBufferUpdate { control, 0, 0, srcLo, 0 });
+}
+
+void
+GX2SaveStreamOutContext(uint32_t index,
+                        GX2OutputStream *stream)
+{
+   decaf_check(index <= 3);
+
+   auto control = pm4::SBU_CONTROL::get(0)
+      .STORE_BUFFER_FILLED_SIZE(true)
+      .OFFSET_SOURCE(pm4::STRMOUT_OFFSET_NONE)
+      .SELECT_BUFFER(index);
+   auto dstLo = stream->context.getAddress();
+
+   pm4::write(pm4::StreamOutBufferUpdate { control, dstLo, 0, 0, 0 });
 }
 
 void

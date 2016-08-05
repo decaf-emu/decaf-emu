@@ -38,6 +38,13 @@ struct Export
    unsigned id;
 };
 
+struct Feedback
+{
+   unsigned streamIndex;
+   unsigned offset;
+   unsigned size;  // Number of components (1-4)
+};
+
 struct Shader
 {
    enum Type
@@ -59,8 +66,10 @@ struct Shader
    std::string codeHeader;
    std::string codeBody;
    std::vector<Export> exports;
+   std::vector<Feedback> feedbacks;
    std::array<SamplerUsage, 16> samplerUsage;
    std::array<bool, 16> usedUniformBlocks;
+   std::array<bool, 4> usedFeedbackBuffers;
 };
 
 struct LoopState
