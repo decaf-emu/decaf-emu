@@ -291,6 +291,12 @@ ENUM_BEG(GX2ScanTarget, uint32_t)
    ENUM_VALUE(DRC,                  4)
 ENUM_END(GX2ScanTarget)
 
+ENUM_BEG(GX2StreamOutContextMode, uint32_t)
+   ENUM_VALUE(Append,               0)
+   ENUM_VALUE(FromStart,            1)
+   ENUM_VALUE(FromOffset,           2)
+ENUM_END(GX2StreamOutContextMode)
+
 ENUM_BEG(GX2SurfaceDim, uint32_t)
    ENUM_VALUE(Texture1D,            0)
    ENUM_VALUE(Texture2D,            1)

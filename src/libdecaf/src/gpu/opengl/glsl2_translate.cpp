@@ -533,7 +533,7 @@ insertFileHeader(State &state)
    auto &out = state.outFileHeader;
 
    out
-      << "#version 420 core\n"
+      << "#version 450 core\n"
       << "#extension GL_ARB_texture_gather : enable\n"
       << "#define PUSH(stack, stackIndex, activeMask) stack[stackIndex++] = activeMask\n"
       << "#define POP(stack, stackIndex, activeMask) activeMask = stack[--stackIndex]\n"
@@ -676,6 +676,21 @@ insertFileHeader(State &state)
          << "out gl_PerVertex {\n"
          << "   vec4 gl_Position;\n"
          << "};\n";
+
+      for (auto &xfb : state.shader->feedbacks) {
+         out
+            << "layout(xfb_buffer = " << xfb.streamIndex
+            << ", xfb_offset = " << xfb.offset
+            << ") out ";
+
+         if (xfb.size == 1) {
+            out << "float";
+         } else {
+            out << "vec" << xfb.size;
+         }
+
+         out << " feedback_" << xfb.streamIndex << "_" << xfb.offset << ";\n";
+      }
    }
 }
 
@@ -727,6 +742,7 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
    state.binary = binary;
    state.shader = &shader;
    state.shader->usedUniformBlocks.fill(false);
+   state.shader->usedFeedbackBuffers.fill(false);
    state.shader->samplerUsage.fill(SamplerUsage::Invalid);
    initialise();
 

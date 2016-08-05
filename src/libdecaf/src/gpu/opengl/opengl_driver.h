@@ -76,6 +76,7 @@ struct VertexShader : public Resource
    std::array<gl::GLuint, latte::MaxAttributes> attribLocations;
    std::array<uint8_t, 256> outputMap;
    std::array<bool, 16> usedUniformBlocks;
+   std::array<bool, 4> usedFeedbackBuffers;
    std::string code;
    std::string disassembly;
 };
@@ -99,7 +100,7 @@ struct Shader
    gl::GLuint object = 0;
    FetchShader *fetch;
    VertexShader *vertex;
-   PixelShader *pixel;
+   PixelShader *pixel;  // Null indicates a transform-feedback shader
    uint64_t fetchKey;
    uint64_t vertexKey;
    uint64_t pixelKey;
@@ -137,6 +138,13 @@ struct AttributeBuffer
    uint32_t addr = 0;
    uint32_t stride = 0;
    void *mappedBuffer = nullptr;
+};
+
+struct FeedbackBuffer
+{
+   gl::GLuint object = 0;
+   uint32_t size = 0;
+   uint32_t addr = 0;
 };
 
 struct Sampler
@@ -184,6 +192,11 @@ struct SamplerCache
    bool depthCompare = false;  // TODO: might be unnecessary; see TODO note in checkActiveSamplers()
 };
 
+struct FeedbackBufferCache
+{
+   bool enable = false;
+};
+
 using GLContext = uint64_t;
 
 class GLDriver : public decaf::OpenGLDriver
@@ -222,6 +235,8 @@ private:
    void memWrite(const pm4::MemWrite &data);
    void eventWriteEOP(const pm4::EventWriteEOP &data);
    void handlePendingEOP();
+   void streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data);
+   void streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data);
 
    void setAluConsts(const pm4::SetAluConsts &data);
    void setConfigRegs(const pm4::SetConfigRegs &data);
@@ -262,11 +277,15 @@ private:
    bool checkActiveAttribBuffers();
    bool checkActiveColorBuffer();
    bool checkActiveDepthBuffer();
+   bool checkActiveFeedbackBuffers();
    bool checkActiveSamplers();
    bool checkActiveShader();
    bool checkActiveTextures();
    bool checkActiveUniforms();
    bool checkViewport();
+
+   void createFeedbackBuffer(unsigned index);
+   void copyFeedbackBuffer(unsigned index);
 
    void setRegister(latte::Register reg, uint32_t value);
 
@@ -282,6 +301,10 @@ private:
       static_assert(sizeof(Type) == 4, "Register storage must be a uint32_t");
       return *reinterpret_cast<Type *>(&mRegisters[id / 4]);
    }
+
+   void drawPrimitives(uint32_t count,
+                       const void *indices,
+                       latte::VGT_INDEX indexFmt);
 
 private:
    enum class RunState {
@@ -306,6 +329,7 @@ private:
    std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;
    std::unordered_map<uint32_t, AttributeBuffer> mAttribBuffers;
    std::unordered_map<uint32_t, UniformBuffer> mUniformBuffers;
+   std::unordered_map<uint32_t, FeedbackBuffer> mFeedbackBuffers;
 
    std::array<Sampler, latte::MaxSamplers> mVertexSamplers;
    std::array<Sampler, latte::MaxSamplers> mPixelSamplers;
@@ -321,6 +345,10 @@ private:
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
 
+   gl::GLuint mFeedbackQuery = 0;
+   uint32_t mFeedbackBaseOffset[4];
+   uint32_t mFeedbackCurrentOffset[4];
+
    latte::ContextState *mContextState = nullptr;
 
    pm4::EventWriteEOP mPendingEOP;
@@ -329,6 +357,7 @@ private:
    DepthBufferCache mDepthBufferCache;
    std::array<TextureCache, latte::MaxTextures> mPixelTextureCache;
    std::array<SamplerCache, latte::MaxSamplers> mPixelSamplerCache;
+   std::array<FeedbackBufferCache, 4> mFeedbackBufferCache;
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;

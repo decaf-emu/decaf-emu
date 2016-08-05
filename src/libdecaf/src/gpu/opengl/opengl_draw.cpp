@@ -42,6 +42,11 @@ bool GLDriver::checkReadyDraw()
       return false;
    }
 
+   if (!checkActiveFeedbackBuffers()) {
+      gLog->warn("Skipping draw with invalid feedback buffers.");
+      return false;
+   }
+
    if (!checkActiveTextures()) {
       gLog->warn("Skipping draw with invalid textures.");
       return false;
@@ -71,6 +76,7 @@ getPrimitiveMode(latte::VGT_DI_PRIMITIVE_TYPE type)
    case latte::VGT_DI_PT_LINESTRIP:
       return gl::GL_LINE_STRIP;
    case latte::VGT_DI_PT_TRILIST:
+   case latte::VGT_DI_PT_QUADLIST:  // Quads are rendered as triangles
       return gl::GL_TRIANGLES;
    case latte::VGT_DI_PT_TRIFAN:
       return gl::GL_TRIANGLE_FAN;
@@ -160,15 +166,39 @@ unpackQuadList(uint32_t count,
    drawPrimitives2(gl::GL_TRIANGLES, tris, unpacked.data(), baseVertex, numInstances, baseInstance);
 }
 
-static void
-drawPrimitives(latte::VGT_DI_PRIMITIVE_TYPE primType,
-               uint32_t baseVertex,
-               uint32_t count,
-               const void *indices,
-               latte::VGT_INDEX indexFmt,
-               uint32_t numInstances,
-               uint32_t baseInstance)
+void
+GLDriver::drawPrimitives(uint32_t count,
+                         const void *indices,
+                         latte::VGT_INDEX indexFmt)
 {
+   auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
+   auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
+   auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
+   auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
+
+   auto primType = vgt_primitive_type.PRIM_TYPE();
+   auto baseVertex = sq_vtx_base_vtx_loc.OFFSET;
+   auto numInstances = vgt_dma_num_instances.NUM_INSTANCES;
+   auto baseInstance = 0;
+
+   auto mode = getPrimitiveMode(primType);
+
+   if (vgt_strmout_en.STREAMOUT()) {
+      if (!mFeedbackQuery) {
+         gl::glCreateQueries(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, 1, &mFeedbackQuery);
+         decaf_check(mFeedbackQuery);
+      }
+      gl::glBeginQuery(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, mFeedbackQuery);
+
+      auto baseMode = mode;
+      if (mode == gl::GL_TRIANGLE_STRIP || mode == gl::GL_TRIANGLE_FAN) {
+         baseMode = gl::GL_TRIANGLES;
+      } else if (mode == gl::GL_LINE_STRIP || mode == gl::GL_LINE_LOOP) {
+         baseMode = gl::GL_LINES;
+      }
+      gl::glBeginTransformFeedback(baseMode);
+   }
+
    if (primType == latte::VGT_DI_PT_QUADLIST) {
       if (indexFmt == latte::VGT_INDEX_16) {
          unpackQuadList(count, reinterpret_cast<const uint16_t*>(indices), baseVertex, numInstances, baseInstance);
@@ -176,12 +206,33 @@ drawPrimitives(latte::VGT_DI_PRIMITIVE_TYPE primType,
          unpackQuadList(count, reinterpret_cast<const uint32_t*>(indices), baseVertex, numInstances, baseInstance);
       }
    } else {
-      auto mode = getPrimitiveMode(primType);
-
       if (indexFmt == latte::VGT_INDEX_16) {
          drawPrimitives2(mode, count, reinterpret_cast<const uint16_t*>(indices), baseVertex, numInstances, baseInstance);
       } else if (indexFmt == latte::VGT_INDEX_32) {
          drawPrimitives2(mode, count, reinterpret_cast<const uint32_t*>(indices), baseVertex, numInstances, baseInstance);
+      }
+   }
+
+   if (vgt_strmout_en.STREAMOUT()) {
+      gl::glEndTransformFeedback();
+      gl::glEndQuery(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+
+      auto vgt_strmout_buffer_en = getRegister<latte::VGT_STRMOUT_BUFFER_EN>(latte::Register::VGT_STRMOUT_BUFFER_EN);
+
+      // TODO: Does the TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN query return
+      //  a primitive count or a vertex count?  The name and the GL spec
+      //  suggest the former, but the API reference explicitly states the
+      //  latter ("increment the counter once for every _vertex_").
+      //  Assuming for now that the API reference is correct on account of
+      //  its being more explicit.
+      gl::GLuint numVertices = 0;
+      glGetQueryObjectuiv(mFeedbackQuery, gl::GL_QUERY_RESULT, &numVertices);
+
+      for (auto i = 0u; i < 4; ++i) {
+         if (vgt_strmout_buffer_en.value & (1 << i)) {
+            auto stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
+            mFeedbackCurrentOffset[i] += numVertices * stride;
+         }
       }
    }
 }
@@ -193,17 +244,9 @@ GLDriver::drawIndexAuto(const pm4::DrawIndexAuto &data)
       return;
    }
 
-   auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
-   auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
-   auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
-
-   drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
-                  sq_vtx_base_vtx_loc.OFFSET,
-                  data.count,
+   drawPrimitives(data.count,
                   nullptr,
-                  latte::VGT_INDEX_32,
-                  vgt_dma_num_instances.NUM_INSTANCES,
-                  0); // TODO: base instance
+                  latte::VGT_INDEX_32);
 }
 
 void
@@ -217,6 +260,7 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
    auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
    auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
+   auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
 
    // Swap and indexBytes are separate because you can have 32-bit swap,
    //   but 16-bit indices in some cases...  This is also why we pre-swap
@@ -233,13 +277,9 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
          indices[i] = byte_swap(src[i]);
       }
 
-      drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
-                     sq_vtx_base_vtx_loc.OFFSET,
-                     data.count,
+      drawPrimitives(data.count,
                      indices.data(),
-                     vgt_dma_index_type.INDEX_TYPE(),
-                     vgt_dma_num_instances.NUM_INSTANCES,
-                     0); // TODO: Base instance
+                     vgt_dma_index_type.INDEX_TYPE());
    } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_32_BIT) {
       auto *src = static_cast<uint32_t*>(data.addr.get());
       auto indices = std::vector<uint32_t>(data.count);
@@ -252,21 +292,13 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
          indices[i] = byte_swap(src[i]);
       }
 
-      drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
-                     sq_vtx_base_vtx_loc.OFFSET,
-                     data.count,
+      drawPrimitives(data.count,
                      indices.data(),
-                     vgt_dma_index_type.INDEX_TYPE(),
-                     vgt_dma_num_instances.NUM_INSTANCES,
-                     0); // TODO: Base instance
+                     vgt_dma_index_type.INDEX_TYPE());
    } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_NONE) {
-      drawPrimitives(vgt_primitive_type.PRIM_TYPE(),
-                     sq_vtx_base_vtx_loc.OFFSET,
-                     data.count,
+      drawPrimitives(data.count,
                      data.addr,
-                     vgt_dma_index_type.INDEX_TYPE(),
-                     vgt_dma_num_instances.NUM_INSTANCES,
-                     0); // TODO: Base instance
+                     vgt_dma_index_type.INDEX_TYPE());
    } else {
       decaf_abort(fmt::format("Unimplemented vgt_dma_index_type.SWAP_MODE {}", vgt_dma_index_type.SWAP_MODE()));
    }
@@ -342,6 +374,51 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
       gl::glClearNamedFramebufferfv(mDepthClearFrameBuffer, gl::GL_DEPTH, 0, &db_depth_clear.DEPTH_CLEAR);
    }
    gl::glEnable(gl::GL_SCISSOR_TEST);
+}
+
+void
+GLDriver::streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data)
+{
+   // Nothing to do for now
+}
+
+void
+GLDriver::streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data)
+{
+   auto bufferIndex = data.control.SELECT_BUFFER();
+
+   if (data.control.STORE_BUFFER_FILLED_SIZE()) {
+      copyFeedbackBuffer(bufferIndex);
+
+      decaf_assert(data.dstHi == 0, fmt::format("Store target out of 32-bit range for feedback buffer {}", bufferIndex));
+      auto addr = data.dstLo;
+      if (addr != 0) {
+         auto offsetPtr = mem::translate<uint32_t>(addr);
+         *offsetPtr = byte_swap(mFeedbackCurrentOffset[bufferIndex] >> 2);
+      }
+   }
+
+   createFeedbackBuffer(bufferIndex);
+
+   switch (data.control.OFFSET_SOURCE()) {
+   case pm4::STRMOUT_OFFSET_FROM_PACKET:
+      decaf_assert(data.srcHi == 0, fmt::format("Offset out of 32-bit range for feedback buffer {}", bufferIndex));
+      mFeedbackBaseOffset[bufferIndex] = data.srcLo << 2;
+      break;
+   case pm4::STRMOUT_OFFSET_FROM_VGT_FILLED_SIZE:
+      mFeedbackBaseOffset[bufferIndex] = mFeedbackCurrentOffset[bufferIndex];
+      break;
+   case pm4::STRMOUT_OFFSET_FROM_MEM:
+      decaf_assert(data.srcHi == 0, fmt::format("Load target out of 32-bit range for feedback buffer {}", bufferIndex));
+      {
+         auto offsetPtr = mem::translate<uint32_t>(data.srcLo);
+         decaf_assert(offsetPtr, fmt::format("Invalid load address for feedback buffer {}", bufferIndex));
+         mFeedbackBaseOffset[bufferIndex] = byte_swap(*offsetPtr) << 2;
+      }
+      break;
+   case pm4::STRMOUT_OFFSET_NONE:
+      break;  // No change.
+   }
 }
 
 } // namespace opengl

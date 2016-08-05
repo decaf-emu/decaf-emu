@@ -6,10 +6,6 @@ using namespace latte;
 
 /*
 Unimplemented:
-MEM_STREAM0
-MEM_STREAM1
-MEM_STREAM2
-MEM_STREAM3
 MEM_SCRATCH
 MEM_REDUCTION
 MEM_RING
@@ -167,6 +163,20 @@ condenseSelections(SQ_SEL &selX, SQ_SEL &selY, SQ_SEL &selZ, SQ_SEL &selW, unsig
    return value;
 }
 
+bool
+insertMaskVector(fmt::MemoryWriter &out, const std::string &src, unsigned mask)
+{
+   SQ_SEL selX = mask & (1 << 0) ? SQ_SEL_X : SQ_SEL_MASK;
+   SQ_SEL selY = mask & (1 << 1) ? SQ_SEL_Y : SQ_SEL_MASK;
+   SQ_SEL selZ = mask & (1 << 2) ? SQ_SEL_Z : SQ_SEL_MASK;
+   SQ_SEL selW = mask & (1 << 3) ? SQ_SEL_W : SQ_SEL_MASK;
+
+   auto numSels = 4u;
+   condenseSelections(selX, selY, selZ, selW, numSels);
+
+   return insertSelectVector(out, src, selX, selY, selZ, selW, numSels);
+}
+
 static void
 registerExport(State &state, SQ_EXPORT_TYPE type, unsigned arrayBase)
 {
@@ -181,6 +191,23 @@ registerExport(State &state, SQ_EXPORT_TYPE type, unsigned arrayBase)
 
    if (state.shader) {
       state.shader->exports.push_back(exp);
+   }
+}
+
+static void
+registerFeedback(State &state,
+                 unsigned streamIndex,
+                 unsigned offset,
+                 unsigned size)
+{
+   if (state.shader) {
+      Feedback xfb;
+      xfb.streamIndex = streamIndex;
+      xfb.offset = offset;
+      xfb.size = size;
+      state.shader->feedbacks.push_back(xfb);
+
+      state.shader->usedFeedbackBuffers[streamIndex] = true;
    }
 }
 
@@ -218,11 +245,45 @@ EXP(State &state, const ControlFlowInst &cf)
       state.out << "exp_pixel_" << arrayBase;
       break;
    default:
-      throw translate_exception(fmt::format("Unsupported export type {}", cf.exp.word0.TYPE()));
+      throw translate_exception(fmt::format("Unsupported export type {}", type));
    }
 
    state.out << "." << srcSelMask << " = ";
    insertSelectVector(state.out, src, selX, selY, selZ, selW, numSrcSels);
+   state.out << ";";
+
+   insertLineEnd(state);
+}
+
+static void
+MEM_STREAM(State &state, const ControlFlowInst &cf)
+{
+   auto streamIndex = cf.exp.word1.CF_INST() - latte::SQ_CF_INST_MEM_STREAM0;
+   auto type = cf.exp.word0.TYPE();
+   auto offset = cf.exp.word0.ARRAY_BASE() * 4;
+   auto valueSize = cf.exp.buf.ARRAY_SIZE() + 1;
+
+   auto src = getExportRegister(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL());
+
+   switch (type) {
+   case SQ_EXPORT_WRITE:
+      break;
+   case SQ_EXPORT_WRITE_IND:
+      throw translate_exception(fmt::format("Unsupported EXPORT_WRITE_IND in MEM_STREAM{}", streamIndex));
+   default:
+      throw translate_exception(fmt::format("Invalid export type {} for MEM_STREAM{}", type, streamIndex));
+   }
+
+   if (valueSize > 4) {
+      throw translate_exception(fmt::format("Unsupported value size {} in MEM_STREAM{}", valueSize, streamIndex));
+   }
+
+   registerFeedback(state, streamIndex, offset, valueSize);
+
+   insertLineStart(state);
+
+   state.out << "feedback_" << streamIndex << "_" << offset << " = ";
+   insertMaskVector(state.out, src, cf.exp.buf.COMP_MASK());
    state.out << ";";
 
    insertLineEnd(state);
@@ -233,6 +294,10 @@ registerExpFunctions()
 {
    registerInstruction(latte::SQ_CF_INST_EXP, EXP);
    registerInstruction(latte::SQ_CF_INST_EXP_DONE, EXP);
+   registerInstruction(latte::SQ_CF_INST_MEM_STREAM0, MEM_STREAM);
+   registerInstruction(latte::SQ_CF_INST_MEM_STREAM1, MEM_STREAM);
+   registerInstruction(latte::SQ_CF_INST_MEM_STREAM2, MEM_STREAM);
+   registerInstruction(latte::SQ_CF_INST_MEM_STREAM3, MEM_STREAM);
 }
 
 } // namespace glsl2
