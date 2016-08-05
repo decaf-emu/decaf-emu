@@ -626,7 +626,7 @@ GX2SetStreamOutContext(uint32_t index,
    case GX2StreamOutContextMode::FromOffset:
       control = control
          .OFFSET_SOURCE(pm4::STRMOUT_OFFSET_FROM_PACKET);
-      srcLo = 0u;  // TODO: where does the offset come from?
+      srcLo = mem::untranslate(stream);
       break;
    }
 
