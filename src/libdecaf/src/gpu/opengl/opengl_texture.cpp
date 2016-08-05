@@ -284,7 +284,7 @@ bool GLDriver::checkActiveTextures()
       auto degamma = sq_tex_resource_word4.FORCE_DEGAMMA();
       auto dim = sq_tex_resource_word0.DIM();
 
-      auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma, false);
+      auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma, sq_tex_resource_word0.TILE_TYPE());
 
       if (buffer->dirtyAsTexture) {
          auto swizzle = sq_tex_resource_word2.SWIZZLE() << 8;
@@ -606,6 +606,11 @@ bool GLDriver::checkActiveSamplers()
       gl::glSamplerParameterfv(sampler.object, gl::GL_TEXTURE_BORDER_COLOR, &colors[0]);
 
       // Depth compare
+      // TODO: is there a sampler bit that indicates this, maybe word2.TYPE?
+      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + latte::SQ_PS_TEX_RESOURCE_0 + 4 * (i * 7));
+      auto mode = sq_tex_resource_word0.TILE_TYPE() ? gl::GL_COMPARE_REF_TO_TEXTURE : gl::GL_NONE;
+      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_MODE, static_cast<gl::GLint>(mode));
+
       auto depth_compare_function = getTextureCompareFunction(sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION());
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_FUNC, static_cast<gl::GLint>(depth_compare_function));
 
