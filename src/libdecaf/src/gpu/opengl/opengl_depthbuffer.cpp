@@ -11,7 +11,19 @@ namespace opengl
 bool GLDriver::checkActiveDepthBuffer()
 {
    auto db_depth_base = getRegister<latte::DB_DEPTH_BASE>(latte::Register::DB_DEPTH_BASE);
+   auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
+   auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
    auto &active = mActiveDepthBuffer;
+
+   if (db_depth_base.value == mDepthBufferCache.base
+    && db_depth_size.value == mDepthBufferCache.size
+    && db_depth_info.value == mDepthBufferCache.info) {
+      return true;
+   }
+
+   mDepthBufferCache.base = db_depth_base.value;
+   mDepthBufferCache.size = db_depth_size.value;
+   mDepthBufferCache.info = db_depth_info.value;
 
    if (!db_depth_base.BASE_256B) {
       if (active) {
@@ -25,8 +37,6 @@ bool GLDriver::checkActiveDepthBuffer()
    }
 
    // Bind depth buffer
-   auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
-   auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
    active = getDepthBuffer(db_depth_base, db_depth_size, db_depth_info);
    auto dbFormat = db_depth_info.FORMAT();
    if (dbFormat == latte::DEPTH_8_24

@@ -271,6 +271,26 @@ bool GLDriver::checkActiveTextures()
          continue;
       }
 
+      if (baseAddress == mPixelTextureCache[i].baseAddress
+       && sq_tex_resource_word0.value == mPixelTextureCache[i].word0
+       && sq_tex_resource_word1.value == mPixelTextureCache[i].word1
+       && sq_tex_resource_word2.value == mPixelTextureCache[i].word2
+       && sq_tex_resource_word3.value == mPixelTextureCache[i].word3
+       && sq_tex_resource_word4.value == mPixelTextureCache[i].word4
+       && sq_tex_resource_word5.value == mPixelTextureCache[i].word5
+       && sq_tex_resource_word6.value == mPixelTextureCache[i].word6) {
+         continue;  // No change in sampler state
+      }
+
+      mPixelTextureCache[i].baseAddress = baseAddress;
+      mPixelTextureCache[i].word0 = sq_tex_resource_word0.value;
+      mPixelTextureCache[i].word1 = sq_tex_resource_word1.value;
+      mPixelTextureCache[i].word2 = sq_tex_resource_word2.value;
+      mPixelTextureCache[i].word3 = sq_tex_resource_word3.value;
+      mPixelTextureCache[i].word4 = sq_tex_resource_word4.value;
+      mPixelTextureCache[i].word5 = sq_tex_resource_word5.value;
+      mPixelTextureCache[i].word6 = sq_tex_resource_word6.value;
+
       // Decode resource registers
       auto pitch = (sq_tex_resource_word0.PITCH() + 1) * 8;
       auto width = sq_tex_resource_word0.TEX_WIDTH() + 1;
@@ -540,6 +560,22 @@ bool GLDriver::checkActiveSamplers()
       auto sq_tex_sampler_word1 = getRegister<latte::SQ_TEX_SAMPLER_WORD1_N>(latte::Register::SQ_TEX_SAMPLER_WORD1_0 + 4 * (i * 3));
       auto sq_tex_sampler_word2 = getRegister<latte::SQ_TEX_SAMPLER_WORD2_N>(latte::Register::SQ_TEX_SAMPLER_WORD2_0 + 4 * (i * 3));
 
+      // TODO: is there a sampler bit that indicates this, maybe word2.TYPE?
+      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + latte::SQ_PS_TEX_RESOURCE_0 + 4 * (i * 7));
+      auto depthCompare = sq_tex_resource_word0.TILE_TYPE();
+
+      if (sq_tex_sampler_word0.value == mPixelSamplerCache[i].word0
+       && sq_tex_sampler_word1.value == mPixelSamplerCache[i].word1
+       && sq_tex_sampler_word2.value == mPixelSamplerCache[i].word2
+       && depthCompare == mPixelSamplerCache[i].depthCompare) {
+         continue;  // No change in sampler state
+      }
+
+      mPixelSamplerCache[i].word0 = sq_tex_sampler_word0.value;
+      mPixelSamplerCache[i].word1 = sq_tex_sampler_word1.value;
+      mPixelSamplerCache[i].word2 = sq_tex_sampler_word2.value;
+      mPixelSamplerCache[i].depthCompare = depthCompare;
+
       if (sq_tex_sampler_word0.value == 0
        && sq_tex_sampler_word1.value == 0
        && sq_tex_sampler_word2.value == 0) {
@@ -606,9 +642,7 @@ bool GLDriver::checkActiveSamplers()
       gl::glSamplerParameterfv(sampler.object, gl::GL_TEXTURE_BORDER_COLOR, &colors[0]);
 
       // Depth compare
-      // TODO: is there a sampler bit that indicates this, maybe word2.TYPE?
-      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + latte::SQ_PS_TEX_RESOURCE_0 + 4 * (i * 7));
-      auto mode = sq_tex_resource_word0.TILE_TYPE() ? gl::GL_COMPARE_REF_TO_TEXTURE : gl::GL_NONE;
+      auto mode = depthCompare ? gl::GL_COMPARE_REF_TO_TEXTURE : gl::GL_NONE;
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_MODE, static_cast<gl::GLint>(mode));
 
       auto depth_compare_function = getTextureCompareFunction(sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION());
