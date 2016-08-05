@@ -17,6 +17,7 @@ bool GLDriver::checkActiveDepthBuffer()
       if (active) {
          // Unbind depth buffer
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, 0, 0);
+         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, 0, 0);
          active = nullptr;
       }
 
@@ -27,7 +28,19 @@ bool GLDriver::checkActiveDepthBuffer()
    auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
    auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
    active = getDepthBuffer(db_depth_base, db_depth_size, db_depth_info);
-   gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, active->object, 0);
+   auto dbFormat = db_depth_info.FORMAT();
+   if (dbFormat == latte::DEPTH_8_24
+    || dbFormat == latte::DEPTH_8_24_FLOAT
+    || dbFormat == latte::DEPTH_X24_8_32_FLOAT) {
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_STENCIL_ATTACHMENT, active->object, 0);
+   } else {
+      // Unbind the stencil attachment first so the framebuffer doesn't get
+      //  into an inconsistent state, even temporarily (to avoid unnecessary
+      //  warnings from apitrace).
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, 0, 0);
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, active->object, 0);
+   }
+
    return true;
 }
 
