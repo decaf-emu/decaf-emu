@@ -428,6 +428,7 @@ enum Value : uint32_t
    PA_CL_GB_HORZ_DISC_ADJ           = 0x28C18,
    PA_SC_AA_MASK                    = 0x28C48,
    VGT_VERTEX_REUSE_BLOCK_CNTL      = 0x28C58,
+   DB_RENDER_CONTROL                = 0x28D0C,
    DB_HTILE_SURFACE                 = 0x28D24,
    DB_PRELOAD_CONTROL               = 0x28D30,
    DB_PREFETCH_LIMIT                = 0x28D34,
