@@ -126,52 +126,75 @@ void DecafSDL::drawScanBuffer(gl::GLuint object)
 
 void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
 {
-   static const auto DrcWidth = 854.0f;
-   static const auto DrcHeight = 480.0f;
-   static const auto TvWidth = 1280.0f;
-   static const auto TvHeight = 720.0f;
+   static const int DrcWidth = 854;
+   static const int DrcHeight = 480;
+   static const int TvWidth = 1280;
+   static const int TvHeight = 720;
 
-   static const auto DrcRatio = DrcHeight / (TvHeight + DrcHeight);
-   static const auto OverallScale = 1.0f;
-   static const auto ScreenSeparation = 5.0f;
+   static const int ScreenSeparation = 5;
+   static const int OuterBorder = 0;
 
    int windowWidth, windowHeight;
    SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
 
-   auto tvHeight = (windowHeight - ScreenSeparation) * (1.0f - DrcRatio) * OverallScale;
-   auto tvWidth = TvWidth * (tvHeight / TvHeight);
-   auto drcHeight = (windowHeight - ScreenSeparation) * DrcRatio * OverallScale;
-   auto drcWidth = DrcWidth * (drcHeight / DrcHeight);
-   auto totalWidth = std::max(tvWidth, drcWidth);
-   auto totalHeight = tvHeight + drcHeight + ScreenSeparation;
-   auto baseLeft = floor((windowWidth / 2) - (totalWidth / 2));
-   auto baseBottom = floor(-(windowHeight / 2) + (totalHeight / 2));
+   int nativeHeight = DrcHeight + TvHeight + ScreenSeparation + 2 * OuterBorder;
+   int nativeWidth = std::max(DrcWidth, TvWidth) + 2 * OuterBorder;
 
-   auto tvLeft = 0.0f;
-   auto tvBottom = windowHeight - tvHeight;
-   auto drcLeft = (tvWidth / 2) - (drcWidth / 2);
-   auto drcBottom = windowHeight - tvHeight - drcHeight - ScreenSeparation;
+   int tvLeft, tvBottom, tvTop, tvRight;
+   int drcLeft, drcBottom, drcTop, drcRight;
 
-   tv[0] = baseLeft + tvLeft;
-   tv[1] = baseBottom + tvBottom;
-   tv[2] = tvWidth;
-   tv[3] = tvHeight;
+   if (windowWidth * nativeHeight >= windowHeight * nativeWidth)
+   {
+      // align to height
+      int drcBorder = (windowWidth * nativeHeight - windowHeight * DrcWidth + nativeHeight) / nativeHeight / 2;
+      int tvBorder = (windowWidth * nativeHeight - windowHeight * TvWidth + nativeHeight) / nativeHeight / 2;
 
-   drc[0] = baseLeft + drcLeft;
-   drc[1] = baseBottom + drcBottom;
-   drc[2] = drcWidth;
-   drc[3] = drcHeight;
+      drcBottom = OuterBorder;
+      drcTop = OuterBorder + (DrcHeight * windowHeight + nativeHeight / 2) / nativeHeight;
+      drcLeft = drcBorder;
+      drcRight = windowWidth - drcBorder;
 
-   if (OverallScale <= 1.0f) {
-      decaf_check(roundf(tv[0]) >= 0);
-      decaf_check(roundf(tv[1]) >= 0);
-      decaf_check(roundf(tv[0] + tv[2]) <= windowWidth);
-      decaf_check(roundf(tv[1] + tv[3]) <= windowHeight);
-      decaf_check(roundf(drc[0]) >= 0);
-      decaf_check(roundf(drc[1]) >= 0);
-      decaf_check(roundf(drc[0] + drc[2]) <= windowWidth);
-      decaf_check(roundf(drc[1] + drc[3]) <= windowHeight);
+      tvBottom = windowHeight - OuterBorder - (TvHeight * windowHeight + nativeHeight / 2) / nativeHeight;
+      tvTop = windowHeight - OuterBorder;
+      tvLeft = tvBorder;
+      tvRight = windowWidth - tvBorder;
    }
+   else
+   {
+      // align to width
+      int heightBorder = (windowHeight * nativeWidth - windowWidth * (DrcHeight + TvHeight + ScreenSeparation) + nativeWidth) / nativeWidth / 2;
+      int drcBorder = (windowWidth - DrcWidth * windowWidth / nativeWidth + 1) / 2;
+      int tvBorder = (windowWidth - TvWidth * windowWidth / nativeWidth + 1) / 2;
+
+      drcBottom = heightBorder;
+      drcTop = heightBorder + (DrcHeight * windowWidth + nativeWidth / 2) / nativeWidth;
+      drcLeft = drcBorder;
+      drcRight = windowWidth - drcBorder;
+
+      tvTop = windowHeight - heightBorder;
+      tvBottom = windowHeight - heightBorder - (TvHeight * windowWidth + nativeWidth / 2) / nativeWidth;
+      tvLeft = tvBorder;
+      tvRight = windowWidth - tvBorder;
+   }
+
+   tv[0] = tvLeft;
+   tv[1] = tvBottom;
+   tv[2] = tvRight - tvLeft;
+   tv[3] = tvTop - tvBottom;
+
+   drc[0] = drcLeft;
+   drc[1] = drcBottom;
+   drc[2] = drcRight - drcLeft;
+   drc[3] = drcTop - drcBottom;
+
+   decaf_check(tv[0] >= 0);
+   decaf_check(tv[1] >= 0);
+   decaf_check(tv[0] + tv[2] <= windowWidth);
+   decaf_check(tv[1] + tv[3] <= windowHeight);
+   decaf_check(drc[0] >= 0);
+   decaf_check(drc[1] >= 0);
+   decaf_check(drc[0] + drc[2] <= windowWidth);
+   decaf_check(drc[1] + drc[3] <= windowHeight);
 }
 
 void DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
