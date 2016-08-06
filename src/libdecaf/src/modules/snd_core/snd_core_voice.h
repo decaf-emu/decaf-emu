@@ -292,6 +292,25 @@ AXSetVoiceVeDelta(AXVoice *voice,
 namespace internal
 {
 
+#pragma pack(push, 1)
+
+struct AXCafeVoiceData
+{
+   be_val<uint16_t> loopFlag;
+   be_val<uint16_t> format;
+   be_val<uint16_t> memPageNumber;
+   be_val<uint32_t> loopOffsetAbs;
+   be_val<uint32_t> endOffsetAbs;
+   be_val<uint32_t> currentOffsetAbs;
+};
+CHECK_OFFSET(AXCafeVoiceData, 0x0, loopFlag);
+CHECK_OFFSET(AXCafeVoiceData, 0x2, format);
+CHECK_OFFSET(AXCafeVoiceData, 0x4, memPageNumber);
+CHECK_OFFSET(AXCafeVoiceData, 0x6, loopOffsetAbs);
+CHECK_OFFSET(AXCafeVoiceData, 0xa, endOffsetAbs);
+CHECK_OFFSET(AXCafeVoiceData, 0xe, currentOffsetAbs);
+CHECK_SIZE(AXCafeVoiceData, 0x12);
+
 struct AXCafeVoiceExtras
 {
    UNKNOWN(0x8);
@@ -317,7 +336,9 @@ struct AXCafeVoiceExtras
 
    AXVoiceVeData ve;
 
-   UNKNOWN(0x3a);
+   AXCafeVoiceData data;
+
+   UNKNOWN(0x28);
 
    AXVoiceSrc src;
 
@@ -334,6 +355,7 @@ CHECK_OFFSET(AXCafeVoiceExtras, 0x16a, state);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x16c, itdOn);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x170, itdDelay);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x17a, ve);
+CHECK_OFFSET(AXCafeVoiceExtras, 0x17e, data);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x1b8, src);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x2b0, syncBits);
 CHECK_SIZE(AXCafeVoiceExtras, 0x2c0);
@@ -367,6 +389,8 @@ struct AXVoiceExtras : AXCafeVoiceExtras
    uint8_t adpcmLoopPredScale;
    int16_t adpcmLoopPrevSample[2];
 };
+
+#pragma pack(pop)
 
 void
 initVoices();
