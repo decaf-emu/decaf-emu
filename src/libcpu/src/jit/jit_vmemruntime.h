@@ -82,7 +82,7 @@ public:
       return reinterpret_cast<void*>(alignedAddress);
    }
 
-   ASMJIT_API virtual asmjit::Error add(void** dst, asmjit::Assembler* assembler) noexcept
+   ASMJIT_API asmjit::Error add(void** dst, asmjit::Assembler* assembler) noexcept override
    {
       size_t codeSize = assembler->getCodeSize();
       if (codeSize == 0) {
@@ -111,7 +111,7 @@ public:
       return asmjit::kErrorOk;
    }
 
-   ASMJIT_API virtual asmjit::Error release(void* p) noexcept
+   ASMJIT_API asmjit::Error release(void* p) noexcept override
    {
       // We do not release memory
       return asmjit::kErrorOk;
