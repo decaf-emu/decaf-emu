@@ -1,6 +1,5 @@
 #include "opengl_driver.h"
 #include "gpu/pm4_reader.h"
-#pragma optimize("", off)
 
 namespace gpu
 {
