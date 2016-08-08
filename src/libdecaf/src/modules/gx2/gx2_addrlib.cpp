@@ -1,9 +1,12 @@
 #include <cstdlib>
 #include <cstring>
+#include "gpu/gpu_addrlibopt.h"
 #include "gx2_addrlib.h"
 #include "gx2_surface.h"
 #include "gx2_format.h"
 #include "common/align.h"
+
+static const bool USE_ADDRLIBOPT = true;
 
 namespace gx2
 {
@@ -207,8 +210,6 @@ copySurface(GX2Surface *surfaceSrc,
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT dstInfoOutput;
    ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT srcAddrInput;
    ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT dstAddrInput;
-   ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT srcAddrOutput;
-   ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT dstAddrOutput;
    ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT srcSwizzleInput;
    ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT srcSwizzleOutput;
    ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT dstSwizzleInput;
@@ -218,10 +219,7 @@ copySurface(GX2Surface *surfaceSrc,
 
    // Initialise addrlib input/output structures
    std::memset(&srcAddrInput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT));
-   std::memset(&srcAddrOutput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT));
-
    std::memset(&dstAddrInput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT));
-   std::memset(&dstAddrOutput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT));
 
    std::memset(&srcSwizzleInput, 0, sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT));
    std::memset(&srcSwizzleOutput, 0, sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT));
@@ -230,10 +228,7 @@ copySurface(GX2Surface *surfaceSrc,
    std::memset(&dstSwizzleOutput, 0, sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT));
 
    srcAddrInput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT);
-   srcAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
-
    dstAddrInput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT);
-   dstAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
 
    srcSwizzleInput.size = sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT);
    srcSwizzleOutput.size = sizeof(ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT);
@@ -325,33 +320,59 @@ copySurface(GX2Surface *surfaceSrc,
       dstBasePtr += surfaceDst->mipLevelOffset[dstLevel - 1];
    }
 
-   for (auto y = 0u; y < dstHeight; ++y) {
-      for (auto x = 0u; x < dstWidth; ++x) {
-         srcAddrInput.x = srcWidth * x / dstWidth;
-         srcAddrInput.y = srcHeight * y / dstHeight;
+   // LinearSpecial is a special mode available through GX2 which forces that the
+   //  tiling mode be linear (possibly unaligned).  Because this also signals the
+   //  surface info calculation to pick its own tiling, we need to handle this
+   //  specially here...  Note that while ADDR_TM_LINEAR_GENERAL is a valid AMD
+   //  specified mode, it is not actually normally supported by the R600 hardware
+   //  which is the reason for LinearSpecial (which forces SW handling in GX2).
 
-         if (surfaceSrc->tileMode == GX2TileMode::LinearAligned || surfaceSrc->tileMode == GX2TileMode::LinearSpecial) {
-            srcAddrOutput.addr = (bpp / 8) * (x + srcHeight * srcInfoOutput.pitch * srcDepth + srcInfoOutput.pitch * y);
-         } else {
-            AddrComputeSurfaceAddrFromCoord(handle, &srcAddrInput, &srcAddrOutput);
-         }
-
-         dstAddrInput.x = x;
-         dstAddrInput.y = y;
-
-         if (surfaceDst->tileMode == GX2TileMode::LinearAligned || surfaceDst->tileMode == GX2TileMode::LinearSpecial) {
-            dstAddrOutput.addr = (bpp / 8) * (x + dstHeight * dstInfoOutput.pitch * dstDepth + dstInfoOutput.pitch * y);
-         } else {
-            AddrComputeSurfaceAddrFromCoord(handle, &dstAddrInput, &dstAddrOutput);
-         }
-
-         auto src = &srcBasePtr[srcAddrOutput.addr];
-         auto dst = &dstBasePtr[dstAddrOutput.addr];
-         std::memcpy(dst, src, bpp / 8);
-      }
+   if (surfaceSrc->tileMode == GX2TileMode::LinearSpecial) {
+      srcAddrInput.tileMode = AddrTileMode::ADDR_TM_LINEAR_GENERAL;
    }
 
-   return true;
+   if (surfaceDst->tileMode == GX2TileMode::LinearSpecial) {
+      dstAddrInput.tileMode = AddrTileMode::ADDR_TM_LINEAR_GENERAL;
+   }
+
+   if (USE_ADDRLIBOPT) {
+      decaf_check(srcAddrInput.isDepth == dstAddrInput.isDepth);
+      decaf_check(srcAddrInput.numSamples == dstAddrInput.numSamples);
+      auto isDepth = dstAddrInput.isDepth;
+      auto numSamples = dstAddrInput.numSamples;
+
+      return gpu::addrlibopt::copySurfacePixels(
+         dstBasePtr, dstWidth, dstHeight, dstAddrInput,
+         srcBasePtr, srcWidth, srcHeight, srcAddrInput,
+         bpp, isDepth, numSamples);
+   } else {
+      ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT srcAddrOutput;
+      ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT dstAddrOutput;
+
+      std::memset(&srcAddrOutput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT));
+      std::memset(&dstAddrOutput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT));
+
+      srcAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
+      dstAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
+
+      for (auto y = 0u; y < dstHeight; ++y) {
+         for (auto x = 0u; x < dstWidth; ++x) {
+            srcAddrInput.x = srcWidth * x / dstWidth;
+            srcAddrInput.y = srcHeight * y / dstHeight;
+            AddrComputeSurfaceAddrFromCoord(handle, &srcAddrInput, &srcAddrOutput);
+
+            dstAddrInput.x = x;
+            dstAddrInput.y = y;
+            AddrComputeSurfaceAddrFromCoord(handle, &dstAddrInput, &dstAddrOutput);
+
+            auto src = &srcBasePtr[srcAddrOutput.addr];
+            auto dst = &dstBasePtr[dstAddrOutput.addr];
+            std::memcpy(dst, src, bpp / 8);
+         }
+      }
+
+      return true;
+   }
 }
 
 bool
