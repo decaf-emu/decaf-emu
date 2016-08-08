@@ -26,10 +26,10 @@ getSurfaceInfo(GX2Surface *surface,
 bool
 copySurface(GX2Surface *surfaceSrc,
             uint32_t srcLevel,
-            uint32_t srcDepth,
+            uint32_t srcSlice,
             GX2Surface *surfaceDst,
             uint32_t dstLevel,
-            uint32_t dstDepth,
+            uint32_t dstSlice,
             uint8_t *dstImage = nullptr,
             uint8_t *dstMipmap = nullptr);
 

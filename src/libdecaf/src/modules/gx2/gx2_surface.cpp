@@ -327,10 +327,10 @@ GX2GetSurfaceMipPitch(GX2Surface *surface, uint32_t level)
 void
 GX2CopySurface(GX2Surface *src,
                uint32_t srcLevel,
-               uint32_t srcDepth,
+               uint32_t srcSlice,
                GX2Surface *dst,
                uint32_t dstLevel,
-               uint32_t dstDepth)
+               uint32_t dstSlice)
 {
    if (src->format == GX2SurfaceFormat::INVALID || src->width == 0 || src->height == 0) {
       return;
@@ -340,8 +340,8 @@ GX2CopySurface(GX2Surface *src,
       return;
    }
 
-   gx2::internal::copySurface(src, srcLevel, srcDepth,
-                              dst, dstLevel, dstDepth);
+   gx2::internal::copySurface(src, srcLevel, srcSlice,
+                              dst, dstLevel, dstSlice);
 }
 
 } // namespace gx2

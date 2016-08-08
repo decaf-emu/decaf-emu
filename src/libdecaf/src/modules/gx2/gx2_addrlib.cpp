@@ -196,10 +196,10 @@ getSurfaceInfo(GX2Surface *surface,
 bool
 copySurface(GX2Surface *surfaceSrc,
             uint32_t srcLevel,
-            uint32_t srcDepth,
+            uint32_t srcSlice,
             GX2Surface *surfaceDst,
             uint32_t dstLevel,
-            uint32_t dstDepth,
+            uint32_t dstSlice,
             uint8_t *dstImage,
             uint8_t *dstMipmap)
 {
@@ -244,7 +244,7 @@ copySurface(GX2Surface *surfaceSrc,
    // Setup src
    auto bpp = GX2GetSurfaceFormatBitsPerElement(surfaceSrc->format);
    getSurfaceInfo(surfaceSrc, srcLevel, &srcInfoOutput);
-   srcAddrInput.slice = srcDepth;
+   srcAddrInput.slice = srcSlice;
    srcAddrInput.sample = 0;
    srcAddrInput.bpp = bpp;
    srcAddrInput.pitch = srcInfoOutput.pitch;
@@ -266,7 +266,7 @@ copySurface(GX2Surface *surfaceSrc,
 
    // Setup dst
    getSurfaceInfo(surfaceDst, srcLevel, &dstInfoOutput);
-   dstAddrInput.slice = srcDepth;
+   dstAddrInput.slice = srcSlice;
    dstAddrInput.sample = 0;
    dstAddrInput.bpp = bpp;
    dstAddrInput.pitch = dstInfoOutput.pitch;

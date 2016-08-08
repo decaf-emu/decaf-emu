@@ -16,7 +16,7 @@ class ApertureManager
    {
       GX2Surface *surface;
       uint32_t level;
-      uint32_t depth;
+      uint32_t slice;
       uint8_t *address;
       uint32_t size;
    };
@@ -30,7 +30,7 @@ public:
    uint32_t
    allocate(GX2Surface *surface,
             uint32_t level,
-            uint32_t depth,
+            uint32_t slice,
             GX2EndianSwapMode endian)
    {
       // Find a free slot
@@ -60,7 +60,7 @@ public:
       aperture.size = output.sliceSize;
       aperture.surface = surface;
       aperture.level = level;
-      aperture.depth = depth;
+      aperture.slice = slice;
 
       // Untile existing to memory
       auto apertureSurface = GX2Surface { *surface };
@@ -70,7 +70,7 @@ public:
       apertureSurface.swizzle &= 0xFFFF00FF;
       GX2CalcSurfaceSizeAndAlignment(&apertureSurface);
 
-      gx2::internal::copySurface(surface, level, depth, &apertureSurface, level, depth, aperture.address, aperture.address);
+      gx2::internal::copySurface(surface, level, slice, &apertureSurface, level, slice, aperture.address, aperture.address);
       return id + 1;
    }
 
@@ -96,8 +96,8 @@ public:
       GX2CalcSurfaceSizeAndAlignment(&apertureSurface);
 
       auto level = aperture.level;
-      auto depth = aperture.depth;
-      gx2::internal::copySurface(&apertureSurface, level, depth, aperture.surface, level, depth, aperture.surface->image, aperture.surface->mipmaps);
+      auto slice = aperture.slice;
+      gx2::internal::copySurface(&apertureSurface, level, slice, aperture.surface, level, slice, aperture.surface->image, aperture.surface->mipmaps);
 
       mHeap->free(aperture.address);
       aperture.address = nullptr;

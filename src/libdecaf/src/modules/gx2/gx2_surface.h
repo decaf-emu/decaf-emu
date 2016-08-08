@@ -174,9 +174,9 @@ GX2GetSurfaceMipPitch(GX2Surface *surface, uint32_t level);
 void
 GX2CopySurface(GX2Surface *src,
                uint32_t srcLevel,
-               uint32_t srcDepth,
+               uint32_t srcSlice,
                GX2Surface *dst,
                uint32_t dstLevel,
-               uint32_t dstDepth);
+               uint32_t dstSlice);
 
 } // namespace gx2
