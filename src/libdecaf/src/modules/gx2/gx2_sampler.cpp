@@ -113,6 +113,8 @@ GX2InitSamplerLODAdjust(GX2Sampler *sampler,
    auto word0 = sampler->regs.word0.value();
    auto word2 = sampler->regs.word2.value();
 
+   anisoBias = std::min(std::max(anisoBias, 0.0f), 2.0f);
+
    word2 = word2
       .ANISO_BIAS(ufixed_1_5_t { anisoBias });
 
