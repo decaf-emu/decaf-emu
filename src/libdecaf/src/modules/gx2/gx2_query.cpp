@@ -30,7 +30,7 @@ GX2SampleBottomGPUCycle(be_val<uint64_t> *result)
    *result = -1;
 
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS);
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE_BOTTOM_OF_PIPE_TS);
 
    auto addrLo = pm4::EW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(result) >> 2)
@@ -107,7 +107,7 @@ void beginOcclusionQuery(GX2QueryData *data, bool gpuMemoryWrite)
 
    // EVENT_WRITE
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE::ZPASS_DONE)
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE_ZPASS_DONE)
       .EVENT_INDEX(latte::VGT_EVENT_INDEX_ZPASS_DONE);
 
    auto addrLo = pm4::EW_ADDR_LO::get(0)
@@ -122,7 +122,7 @@ void endOcclusionQuery(GX2QueryData *data, bool gpuMemoryWrite)
 {
    // EVENT_WRITE
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE::ZPASS_DONE)
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE_ZPASS_DONE)
       .EVENT_INDEX(latte::VGT_EVENT_INDEX_ZPASS_DONE);
 
    auto addrLo = pm4::EW_ADDR_LO::get(0)
@@ -179,7 +179,7 @@ void beginStreamOutStatsQuery(GX2QueryData *data, bool gpuMemoryWrite)
 
    // EVENT_WRITE
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE::SAMPLE_STREAMOUTSTATS)
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE_SAMPLE_STREAMOUTSTATS)
       .EVENT_INDEX(latte::VGT_EVENT_INDEX_SAMPLE_STREAMOUTSTAT);
 
    auto addrLo = pm4::EW_ADDR_LO::get(0)
@@ -203,7 +203,7 @@ void endStreamOutStatsQuery(GX2QueryData *data, bool gpuMemoryWrite)
 
    // EVENT_WRITE
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE::SAMPLE_STREAMOUTSTATS)
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE_SAMPLE_STREAMOUTSTATS)
       .EVENT_INDEX(latte::VGT_EVENT_INDEX_SAMPLE_STREAMOUTSTAT);
 
    auto addrLo = pm4::EW_ADDR_LO::get(0)

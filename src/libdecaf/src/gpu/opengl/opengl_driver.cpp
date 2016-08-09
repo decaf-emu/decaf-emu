@@ -22,7 +22,8 @@ namespace opengl
 unsigned
 MaxUniformBlockSize = 0;
 
-void GLDriver::initGL()
+void
+GLDriver::initGL()
 {
    // Clear active state
    mRegisters.fill(0);
@@ -49,7 +50,8 @@ void GLDriver::initGL()
    MaxUniformBlockSize = value;
 }
 
-void GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
+void
+GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
 {
    auto chain = data.isTv ? &mTvScanBuffers : &mDrcScanBuffers;
 
@@ -94,7 +96,8 @@ enum
    SCANTARGET_DRC = 4,
 };
 
-void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
+void
+GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
 {
    auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
    auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
@@ -126,7 +129,8 @@ void GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    gl::glEnable(gl::GL_SCISSOR_TEST);
 }
 
-void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
+void
+GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 {
    static const auto weight = 0.9;
 
@@ -154,12 +158,14 @@ void GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
    }
 }
 
-void GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
+void
+GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
 {
    mContextState = reinterpret_cast<latte::ContextState *>(data.context.get());
 }
 
-void GLDriver::decafInvalidate(const pm4::DecafInvalidate &data)
+void
+GLDriver::decafInvalidate(const pm4::DecafInvalidate &data)
 {
    auto start = data.memStart;
    auto end = data.memEnd;
@@ -173,12 +179,14 @@ void GLDriver::decafInvalidate(const pm4::DecafInvalidate &data)
    }
 }
 
-void GLDriver::decafDebugMarker(const pm4::DecafDebugMarker &data)
+void
+GLDriver::decafDebugMarker(const pm4::DecafDebugMarker &data)
 {
    gLog->trace("GPU Debug Marker: {} {}", data.key.data(), data.id);
 }
 
-void GLDriver::decafOSScreenFlip(const pm4::DecafOSScreenFlip &data)
+void
+GLDriver::decafOSScreenFlip(const pm4::DecafOSScreenFlip &data)
 {
    auto texture = 0u;
    auto width = 0u;
@@ -198,27 +206,32 @@ void GLDriver::decafOSScreenFlip(const pm4::DecafOSScreenFlip &data)
    decafSwapBuffers(pm4::DecafSwapBuffers {});
 }
 
-void GLDriver::getSwapBuffers(unsigned int *tv, unsigned int *drc)
+void
+GLDriver::getSwapBuffers(unsigned int *tv,
+                         unsigned int *drc)
 {
    *tv = mTvScanBuffers.object;
    *drc = mDrcScanBuffers.object;
 }
 
-float GLDriver::getAverageFPS()
+float
+GLDriver::getAverageFPS()
 {
    // TODO: This is not thread safe...
    static const auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds{ 1 }).count();
    return static_cast<float>(second / mAverageFrameTime.count());
 }
 
-uint64_t GLDriver::getGpuClock()
+uint64_t
+GLDriver::getGpuClock()
 {
    return coreinit::OSGetTime();
 }
 
-void GLDriver::memWrite(const pm4::MemWrite &data)
+void
+GLDriver::memWrite(const pm4::MemWrite &data)
 {
-   uint64_t value;
+   auto value = uint64_t { 0 };
    auto addr = mem::translate(data.addrLo.ADDR_LO() << 2);
 
    if (data.addrHi.CNTR_SEL() == pm4::MW_WRITE_CLOCK) {
@@ -248,7 +261,8 @@ void GLDriver::memWrite(const pm4::MemWrite &data)
    }
 }
 
-void GLDriver::eventWrite(const pm4::EventWrite &data)
+void
+GLDriver::eventWrite(const pm4::EventWrite &data)
 {
    auto type = data.eventInitiator.EVENT_TYPE();
    auto addr = data.addrLo.ADDR_LO() << 2;
@@ -258,7 +272,7 @@ void GLDriver::eventWrite(const pm4::EventWrite &data)
    decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
 
    switch (type) {
-   case latte::VGT_EVENT_TYPE::ZPASS_DONE:
+   case latte::VGT_EVENT_TYPE_ZPASS_DONE:
       // This seems to be an instantaneous counter fetch, but OpenGL doesn't
       //  expose the raw counter, so we detect GX2QueryBegin/End by the
       //  write address and translate this to a SAMPLES_PASSED query.
@@ -312,12 +326,14 @@ void GLDriver::eventWrite(const pm4::EventWrite &data)
    }
 }
 
-void GLDriver::eventWriteEOP(const pm4::EventWriteEOP &data)
+void
+GLDriver::eventWriteEOP(const pm4::EventWriteEOP &data)
 {
    mPendingEOP = data;
 }
 
-void GLDriver::handlePendingEOP()
+void
+GLDriver::handlePendingEOP()
 {
    if (!mPendingEOP.eventInitiator.EVENT_TYPE()) {
       return;
@@ -330,7 +346,7 @@ void GLDriver::handlePendingEOP()
    decaf_assert(mPendingEOP.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
 
    switch (mPendingEOP.eventInitiator.EVENT_TYPE()) {
-   case latte::BOTTOM_OF_PIPE_TS:
+   case latte::VGT_EVENT_TYPE_BOTTOM_OF_PIPE_TS:
       value = getGpuClock();
       break;
    default:
@@ -365,12 +381,14 @@ void GLDriver::handlePendingEOP()
    std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 }
 
-void GLDriver::pfpSyncMe(const pm4::PfpSyncMe &data)
+void
+GLDriver::pfpSyncMe(const pm4::PfpSyncMe &data)
 {
    // TODO: do we need to do anything?
 }
 
-void GLDriver::poll()
+void
+GLDriver::poll()
 {
    auto buffer = gpu::unqueueCommandBuffer();
 
@@ -388,7 +406,8 @@ void GLDriver::poll()
    gpu::retireCommandBuffer(buffer);
 }
 
-void GLDriver::syncPoll(std::function<void(gl::GLuint, gl::GLuint)> swapFunc)
+void
+GLDriver::syncPoll(std::function<void(gl::GLuint, gl::GLuint)> swapFunc)
 {
    if (mRunState == RunState::None) {
       initGL();
@@ -399,13 +418,14 @@ void GLDriver::syncPoll(std::function<void(gl::GLuint, gl::GLuint)> swapFunc)
    poll();
 }
 
-void GLDriver::run()
+void
+GLDriver::run()
 {
    if (mRunState != RunState::None) {
       return;
    }
-   mRunState = RunState::Running;
 
+   mRunState = RunState::Running;
    initGL();
 
    while (mRunState == RunState::Running) {
@@ -413,7 +433,8 @@ void GLDriver::run()
    }
 }
 
-void GLDriver::stop()
+void
+GLDriver::stop()
 {
    mRunState = RunState::Stopped;
 
