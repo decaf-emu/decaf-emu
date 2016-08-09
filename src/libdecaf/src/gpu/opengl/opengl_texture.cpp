@@ -303,8 +303,9 @@ bool GLDriver::checkActiveTextures()
       auto formatComp = sq_tex_resource_word4.FORMAT_COMP_X();
       auto degamma = sq_tex_resource_word4.FORCE_DEGAMMA();
       auto dim = sq_tex_resource_word0.DIM();
+      auto isDepthBuffer = !!sq_tex_resource_word0.TILE_TYPE();
 
-      auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma, sq_tex_resource_word0.TILE_TYPE());
+      auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
 
       if (buffer->dirtyAsTexture) {
          auto swizzle = sq_tex_resource_word2.SWIZZLE() << 8;
@@ -562,7 +563,7 @@ bool GLDriver::checkActiveSamplers()
 
       // TODO: is there a sampler bit that indicates this, maybe word2.TYPE?
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + latte::SQ_PS_TEX_RESOURCE_0 + 4 * (i * 7));
-      auto depthCompare = sq_tex_resource_word0.TILE_TYPE();
+      auto depthCompare = !!sq_tex_resource_word0.TILE_TYPE();
 
       if (sq_tex_sampler_word0.value == mPixelSamplerCache[i].word0
        && sq_tex_sampler_word1.value == mPixelSamplerCache[i].word1
