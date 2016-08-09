@@ -2,6 +2,7 @@
 #include "gx2_aperture.h"
 #include "gx2_clear.h"
 #include "gx2_contextstate.h"
+#include "gx2_debug.h"
 #include "gx2_display.h"
 #include "gx2_displaylist.h"
 #include "gx2_draw.h"
@@ -58,6 +59,10 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2GetContextStateDisplayList);
    RegisterKernelFunction(GX2SetContextState);
    RegisterKernelFunction(GX2SetDefaultState);
+
+   // Debug
+   RegisterKernelFunction(GX2DebugTagUserString);
+   RegisterKernelFunction(GX2DebugTagUserStringVA);
 
    // Display
    RegisterKernelFunction(GX2SetTVEnable);

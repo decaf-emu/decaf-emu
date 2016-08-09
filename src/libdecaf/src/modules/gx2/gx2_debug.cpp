@@ -1,19 +1,61 @@
-#include "common/align.h"
-#include "common/log.h"
-#include "common/platform_dir.h"
 #include "decaf_config.h"
+#include "gpu/commandqueue.h"
 #include "gpu/gfd.h"
 #include "gpu/microcode/latte_disassembler.h"
 #include "gpu/pm4_writer.h"
+#include "gx2.h"
+#include "gx2_debug.h"
 #include "gx2_enum_string.h"
 #include "gx2_shaders.h"
 #include "gx2_texture.h"
 #include "libcpu/mem.h"
+#include "modules/coreinit/coreinit_sprintf.h"
+#include "ppcutils/va_list.h"
 #include <fstream>
 #include <spdlog/spdlog.h>
+#include "common/align.h"
+#include "common/log.h"
+#include "common/platform_dir.h"
 
 namespace gx2
 {
+
+void
+GX2DebugTagUserString(uint32_t unk,
+                      const char *fmt,
+                      ppctypes::VarArgs)
+{
+   auto list = ppctypes::make_va_list(2, 0);
+   GX2DebugTagUserStringVA(unk, fmt, list);
+   ppctypes::free_va_list(list);
+}
+
+void
+GX2DebugTagUserStringVA(uint32_t unk,
+                        const char *fmt,
+                        ppctypes::va_list *list)
+{
+   char buffer[0x404];
+   std::memset(buffer, 0, 0x404);
+
+   if (fmt) {
+      coreinit::internal::formatStringV(buffer, 0x3FF, fmt, list);
+   }
+
+   // Convert string to words!
+   auto length = static_cast<uint32_t>(strlen(buffer));
+   auto words = align_up(length + 1, 4) / 4;
+
+   std::vector<uint32_t> strWords;
+   strWords.resize(words, 0);
+   std::memcpy(strWords.data(), buffer, length);
+
+   // Write NOP packet
+   pm4::write(pm4::Nop {
+      unk,
+      gsl::as_span(strWords)
+   });
+}
 
 namespace internal
 {

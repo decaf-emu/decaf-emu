@@ -199,6 +199,9 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
    case pm4::type3::STRMOUT_BUFFER_UPDATE:
       streamOutBufferUpdate(pm4::read<pm4::StreamOutBufferUpdate>(reader));
       break;
+   case pm4::type3::NOP:
+      nopPacket(pm4::read<pm4::Nop>(reader));
+      break;
    default:
       gLog->debug("Unhandled pm4 packet type 3 opcode {}", header.opcode());
    }
@@ -305,6 +308,31 @@ void GLDriver::loadSamplers(const pm4::LoadSampler &data)
 void GLDriver::loadResources(const pm4::LoadResource &data)
 {
    loadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
+}
+
+void GLDriver::nopPacket(const pm4::Nop &data)
+{
+   auto str = std::string { };
+
+   if (data.strWords.size()) {
+      for (auto i = 0u; i < data.strWords.size(); ++i) {
+         auto word = data.strWords[i];
+
+         for (auto c = 0u; c < 4; ++c) {
+            auto chr = static_cast<char>((word >> (c * 8)) & 0xFF);
+
+            if (!chr) {
+               break;
+            }
+
+            str.push_back(chr);
+         }
+      }
+   }
+
+   if (false) {
+      gLog->debug("NOP unk: {} str: {}", data.unk, str);
+   }
 }
 
 } // namespace opengl

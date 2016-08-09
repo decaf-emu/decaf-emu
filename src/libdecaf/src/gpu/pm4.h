@@ -794,6 +794,21 @@ struct StreamOutBufferUpdate
    }
 };
 
+struct Nop
+{
+   static const auto Opcode = type3::NOP;
+
+   uint32_t unk;
+   gsl::span<uint32_t> strWords;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(unk);
+      se(strWords);
+   }
+};
+
 }
 
 #pragma pack(pop)

@@ -240,6 +240,7 @@ private:
    void pfpSyncMe(const pm4::PfpSyncMe &data);
    void streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data);
    void streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data);
+   void nopPacket(const pm4::Nop &data);
 
    void setAluConsts(const pm4::SetAluConsts &data);
    void setConfigRegs(const pm4::SetConfigRegs &data);
