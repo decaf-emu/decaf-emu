@@ -1,5 +1,7 @@
 #pragma once
+#include "bitutils.h"
 #include "decaf_assert.h"
+#include "fixed.h"
 #include <spdlog/details/format.h>
 #include <type_traits>
 
@@ -41,6 +43,33 @@ struct BitfieldHelper<BitfieldType, bool, Position, Bits>
       bitfield.value &= ~Mask;
       bitfield.value |= (static_cast<typename BitfieldType::StorageType>(value ? 1 : 0)) << (Position);
       return bitfield;
+   }
+};
+
+// Specialise for fixed_point
+template<typename BitfieldType, unsigned Position, unsigned Bits, class Rep, int Exponent>
+struct BitfieldHelper<BitfieldType, sg14::fixed_point<Rep, Exponent>, Position, Bits>
+{
+   using FixedType = sg14::fixed_point<Rep, Exponent>;
+   using ValueBitfield = BitfieldHelper<BitfieldType, Rep, Position, Bits>;
+
+   static FixedType get(BitfieldType bitfield)
+   {
+      auto value = ValueBitfield::get(bitfield);
+
+      // fixed_point internal format expects sign extended value
+      if (std::is_signed<Rep>::value) {
+         value = sign_extend<Bits, Rep>(value);
+      }
+
+      return FixedType::from_data(value);
+   }
+
+   static inline BitfieldType set(BitfieldType bitfield, FixedType fixedValue)
+   {
+      // fixed_point internal format is sign extended so we must & off the extra bits
+      auto value = fixedValue.data() & static_cast<Rep>(((1ull << Bits) - 1));
+      return ValueBitfield::set(bitfield, value);
    }
 };
 
