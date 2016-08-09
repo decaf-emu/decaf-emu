@@ -13,6 +13,81 @@ namespace cpu
 namespace jit
 {
 
+// Instruction Cache Block Invalidate
+static bool
+icbi(PPCEmuAssembler& a, Instruction instr)
+{
+   return true;
+}
+
+// Data Cache Block Flush
+static bool
+dcbf(PPCEmuAssembler& a, Instruction instr)
+{
+   return true;
+}
+
+// Data Cache Block Invalidate
+static bool
+dcbi(PPCEmuAssembler& a, Instruction instr)
+{
+   return true;
+}
+
+// Data Cache Block Store
+static bool
+dcbst(PPCEmuAssembler& a, Instruction instr)
+{
+   return true;
+}
+
+// Data Cache Block Touch
+static bool
+dcbt(PPCEmuAssembler& a, Instruction instr)
+{
+   return true;
+}
+
+// Data Cache Block Touch for Store
+static bool
+dcbtst(PPCEmuAssembler& a, Instruction instr)
+{
+   return true;
+}
+
+// Data Cache Block Zero
+static bool
+dcbz(PPCEmuAssembler& a, Instruction instr)
+{
+   auto src = a.allocGpTmp().r32();
+
+   if (instr.rA == 0) {
+      a.mov(src, 0);
+   } else {
+      a.mov(src, a.loadRegisterRead(a.gpr[instr.rA]));
+   }
+
+   a.add(src, a.loadRegisterRead(a.gpr[instr.rB]));
+
+   // Align down
+   a.and_(src, ~static_cast<uint32_t>(31));
+
+   // Write 32 bytes of zero's there
+   a.mov(asmjit::X86Mem(a.membaseReg, src, 0, 0, 8), 0);
+   a.mov(asmjit::X86Mem(a.membaseReg, src, 0, 8, 8), 0);
+   a.mov(asmjit::X86Mem(a.membaseReg, src, 0, 16, 8), 0);
+   a.mov(asmjit::X86Mem(a.membaseReg, src, 0, 24, 8), 0);
+
+   return true;
+}
+
+// Data Cache Block Zero Locked
+static bool
+dcbz_l(PPCEmuAssembler& a, Instruction instr)
+{
+   return dcbz(a, instr);
+}
+
 // Enforce In-Order Execution of I/O
 static bool
 eieio(PPCEmuAssembler& a, Instruction instr)
@@ -23,13 +98,6 @@ eieio(PPCEmuAssembler& a, Instruction instr)
 // Synchronise
 static bool
 sync(PPCEmuAssembler& a, Instruction instr)
-{
-   return true;
-}
-
-// Instruction Cache Block Invalidate
-static bool
-icbi(PPCEmuAssembler& a, Instruction instr)
 {
    return true;
 }
@@ -191,13 +259,13 @@ kc(PPCEmuAssembler& a, Instruction instr)
 void
 registerSystemInstructions()
 {
-   RegisterInstructionFallback(dcbf);
-   RegisterInstructionFallback(dcbi);
-   RegisterInstructionFallback(dcbst);
-   RegisterInstructionFallback(dcbt);
-   RegisterInstructionFallback(dcbtst);
-   RegisterInstructionFallback(dcbz);
-   RegisterInstructionFallback(dcbz_l);
+   RegisterInstruction(dcbf);
+   RegisterInstruction(dcbi);
+   RegisterInstruction(dcbst);
+   RegisterInstruction(dcbt);
+   RegisterInstruction(dcbtst);
+   RegisterInstruction(dcbz);
+   RegisterInstruction(dcbz_l);
    RegisterInstruction(eieio);
    RegisterInstruction(icbi);
    RegisterInstruction(isync);
