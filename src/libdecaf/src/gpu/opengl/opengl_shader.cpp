@@ -255,7 +255,12 @@ bool GLDriver::checkActiveShader()
                uint32_t divisor = 0;
 
                gl::glEnableVertexArrayAttrib(fetchShader.object, attrib.location);
-               gl::glVertexArrayAttribFormat(fetchShader.object, attrib.location, components, type, normalise, attrib.offset);
+               if (attrib.numFormat == latte::SQ_NUM_FORMAT_INT) {
+                  decaf_assert(type != gl::GL_FLOAT && type != gl::GL_HALF_FLOAT, "Fetch shader tried to read float data as int");
+                  gl::glVertexArrayAttribIFormat(fetchShader.object, attrib.location, components, type, attrib.offset);
+               } else {
+                  gl::glVertexArrayAttribFormat(fetchShader.object, attrib.location, components, type, normalise, attrib.offset);
+               }
                gl::glVertexArrayAttribBinding(fetchShader.object, attrib.location, attribBufferId);
 
                if (attrib.type == latte::SQ_VTX_FETCH_TYPE::SQ_VTX_FETCH_INSTANCE_DATA) {
@@ -1004,6 +1009,27 @@ getGLSLDataFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT num, latte:
    return "vec4";
 }
 
+static std::string
+getFSOutName(const FetchShader::Attrib *attrib)
+{
+   fmt::MemoryWriter out;
+
+   if (attrib->numFormat == latte::SQ_NUM_FORMAT_INT) {
+      if (attrib->formatComp == latte::SQ_FORMAT_COMP_UNSIGNED) {
+         out << 'u';
+      }
+      out << "intBitsToFloat(";
+   }
+
+   out << "fs_out_" << attrib->location;
+
+   if (attrib->numFormat == latte::SQ_NUM_FORMAT_INT) {
+      out << ")";
+   }
+
+   return out.str();
+}
+
 bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size)
 {
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
@@ -1134,20 +1160,21 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
       out << "R[" << (i + 1) << "] = ";
 
+      auto name = getFSOutName(attrib);
       auto channels = getDataFormatChannels(attrib->format);
 
       switch (channels) {
       case 1:
-         out << "vec4(fs_out_" << attrib->location << ", 0.0, 0.0, 1.0);\n";
+         out << "vec4(" << name << ", 0.0, 0.0, 1.0);\n";
          break;
       case 2:
-         out << "vec4(fs_out_" << attrib->location << ", 0.0, 1.0);\n";
+         out << "vec4(" << name << ", 0.0, 1.0);\n";
          break;
       case 3:
-         out << "vec4(fs_out_" << attrib->location << ", 1.0);\n";
+         out << "vec4(" << name << ", 1.0);\n";
          break;
       case 4:
-         out << "fs_out_" << attrib->location << ";\n";
+         out << name << ";\n";
          break;
       }
    }
