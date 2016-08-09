@@ -270,6 +270,12 @@
     <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\functions-patches.cpp">
       <Filter>Source Files\gl</Filter>
     </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\boolean.cpp">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\Meta_FunctionStringsByVersion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libraries\glbinding\source\glbinding\source\Binding_pch.h">
@@ -288,9 +294,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\libraries\glbinding\source\glbinding\source\RingBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\libraries\glbinding\source\glbinding\source\RingBuffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

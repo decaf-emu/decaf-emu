@@ -272,6 +272,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\libraries\glbinding\source\glbinding\source\FunctionCall.cpp" />
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\boolean.cpp" />
     <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\functions-patches.cpp" />
     <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\functions_0.cpp" />
     <ClCompile Include="..\libraries\glbinding\source\glbinding\source\gl\functions_a.cpp">
@@ -530,6 +531,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\libraries\glbinding\source\glbinding\source\Meta_FunctionStringsByVersion.cpp" />
     <ClCompile Include="..\libraries\glbinding\source\glbinding\source\Meta_getStringByBitfield.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">NotUsing</PrecompiledHeader>
@@ -588,7 +590,6 @@
     <ClInclude Include="..\libraries\glbinding\source\glbinding\source\logging_private.h" />
     <ClInclude Include="..\libraries\glbinding\source\glbinding\source\Meta_Maps.h" />
     <ClInclude Include="..\libraries\glbinding\source\glbinding\source\RingBuffer.h" />
-    <ClInclude Include="..\libraries\glbinding\source\glbinding\source\RingBuffer.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{32C7C2BD-0D47-48C7-9887-468850923599}</ProjectGuid>

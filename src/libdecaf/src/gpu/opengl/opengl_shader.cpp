@@ -202,13 +202,13 @@ bool GLDriver::checkActiveShader()
    auto shaderKey = ShaderKey { fsShaderKey, vsShaderKey, psShaderKey };
    auto &shader = mShaders[shaderKey];
 
-   auto getProgramLog = [](auto program, auto getFn, auto getInfoFn) {
+   auto getProgramLog = [](auto program) {
       gl::GLint logLength = 0;
       std::string logMessage;
-      getFn(program, gl::GL_INFO_LOG_LENGTH, &logLength);
+      gl::glGetProgramiv(program, gl::GL_INFO_LOG_LENGTH, &logLength);
 
       logMessage.resize(logLength);
-      getInfoFn(program, logLength, &logLength, &logMessage[0]);
+      gl::glGetProgramInfoLog(program, logLength, &logLength, &logMessage[0]);
       return logMessage;
    };
 
@@ -309,7 +309,7 @@ bool GLDriver::checkActiveShader()
          gl::glGetProgramiv(vertexShader.object, gl::GL_LINK_STATUS, &isLinked);
 
          if (!isLinked) {
-            auto log = getProgramLog(vertexShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
+            auto log = getProgramLog(vertexShader.object);
             gLog->error("OpenGL failed to compile vertex shader:\n{}", log);
             gLog->error("Fetch Disassembly:\n{}\n", fetchShader.disassembly);
             gLog->error("Shader Disassembly:\n{}\n", vertexShader.disassembly);
@@ -366,7 +366,7 @@ bool GLDriver::checkActiveShader()
             gl::glGetProgramiv(pixelShader.object, gl::GL_LINK_STATUS, &isLinked);
 
             if (!isLinked) {
-               auto log = getProgramLog(pixelShader.object, gl::glGetProgramiv, gl::glGetProgramInfoLog);
+               auto log = getProgramLog(pixelShader.object);
                gLog->error("OpenGL failed to compile pixel shader:\n{}", log);
                gLog->error("Shader Disassembly:\n{}\n", pixelShader.disassembly);
                gLog->error("Shader Code:\n{}\n", pixelShader.code);
