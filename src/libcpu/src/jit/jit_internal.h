@@ -133,8 +133,6 @@ public:
       }
 
       PPCRegRef(reserve, reserve);
-      PPCRegRef(reserveAddress, reserveAddress);
-      PPCRegRef(reserveData, reserveData);
 
 #undef PPCRegRef
 
@@ -204,8 +202,6 @@ public:
    PpcGpRef fpscr;
    PpcGpRef gqr[8];
    PpcGpRef reserve;
-   PpcGpRef reserveAddress;
-   PpcGpRef reserveData;
 
    std::array<asmjit::X86GpReg, MaxGpRegSlots> mGpRegVals;
    std::array<asmjit::X86XmmReg, MaxXmmRegSlots> mXmmRegVals;

@@ -5,30 +5,13 @@
 #include "common/decaf_assert.h"
 #include "common/floatutils.h"
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <mutex>
 #include <spdlog/fmt/fmt.h>
 
 using espresso::QuantizedDataType;
 using espresso::ConditionRegisterFlag;
-
-static std::mutex
-gAtomicityLock;
-
-template<bool>
-struct AtomicityLock {
-   AtomicityLock()
-   {
-   }
-};
-
-template<>
-struct AtomicityLock<true> : std::unique_lock<std::mutex> {
-   AtomicityLock()
-      : std::unique_lock<std::mutex>(gAtomicityLock)
-   {
-   }
-};
 
 // Load
 enum LoadFlags
@@ -103,22 +86,20 @@ loadGeneric(cpu::Core *state, Instruction instr)
       ea += sign_extend<16, int32_t>(instr.d);
    }
 
-   { // + restricted lock scope
-      AtomicityLock<(flags & LoadReserve) != 0> lock;
+   Type memd = mem::readNoSwap<Type>(ea);
 
-      Type memd = mem::readNoSwap<Type>(ea);
-      if (flags & LoadByteReverse) {
-         d = memd;
-      } else {
-         d = byte_swap(memd);
-      }
+   if (flags & LoadByteReverse) {
+      d = memd;
+   } else {
+      d = byte_swap(memd);
+   }
 
-      if (flags & LoadReserve) {
-         state->reserve = true;
-         state->reserveAddress = ea;
-         state->reserveData = *reinterpret_cast<uint32_t*>(&memd);
-      }
-   }  // - restricted lock scope
+   if (flags & LoadReserve) {
+      static_assert(!(flags & LoadReserve) || sizeof(Type) == 4, "Reserved reads are only valid on 32-bit values");
+
+      auto reserveData = *reinterpret_cast<uint32_t*>(&memd);
+      state->reserve = (static_cast<uint64_t>(ea) << 32) | reserveData;
+   }
 
    if (std::is_floating_point<Type>::value) {
       state->fpr[instr.rD].value = static_cast<double>(d);
@@ -426,6 +407,50 @@ storeFloat(cpu::Core *state, Instruction instr)
    }
 }
 
+template<bool IsReserved>
+struct ReservedWrite { };
+
+template<>
+struct ReservedWrite<true> {
+   template<typename Type>
+   static inline bool write(cpu::Core *state, uint32_t ea, Type s)
+   {
+      static_assert(sizeof(Type) == 4, "Reserved writes are only valid on 32-bit values");
+      static_assert(sizeof(std::atomic<Type>) == sizeof(Type), "Non-locking reserve relies on zero-overhead atomics");
+      auto atomicPtr = reinterpret_cast<std::atomic<Type>*>(mem::translate(ea));
+
+      state->cr.cr0 = state->xer.so ? ConditionRegisterFlag::SummaryOverflow : 0;
+
+      auto reserveAddr = static_cast<uint32_t>(state->reserve >> 32);
+      auto reserveData = static_cast<uint32_t>(state->reserve & 0xffffffff);
+      state->reserve = 0xffffffffffffffff;
+
+      if (reserveAddr != ea) {
+         // The reservation address did not match the write address
+         return false;
+      }
+
+      if (!atomicPtr->compare_exchange_strong(reserveData, s)) {
+         // The data has been modified since it was reserved.
+         return false;
+      }
+
+      // Store was succesful, set CR0[EQ]
+      state->cr.cr0 |= ConditionRegisterFlag::Equal;
+      return true;
+   }
+};
+
+template<>
+struct ReservedWrite<false> {
+   template<typename Type>
+   static inline bool write(cpu::Core *state, uint32_t ea, Type s)
+   {
+      mem::writeNoSwap(ea, s);
+      return true;
+   }
+};
+
 template<typename Type, unsigned flags = 0>
 static void
 storeGeneric(cpu::Core *state, Instruction instr)
@@ -453,35 +478,13 @@ storeGeneric(cpu::Core *state, Instruction instr)
       s = static_cast<Type>(state->gpr[instr.rS]);
    }
 
-   { // + restricted lock scope
-      AtomicityLock<(flags & StoreConditional) != 0> lock;
+   if (!(flags & StoreByteReverse)) {
+      s = byte_swap(s);
+   }
 
-      if (flags & StoreConditional) {
-         state->cr.cr0 = state->xer.so ? ConditionRegisterFlag::SummaryOverflow : 0;
-
-         if (state->reserve) {
-            state->reserve = false;
-
-            if (mem::readNoSwap<uint32_t>(state->reserveAddress) == state->reserveData) {
-               // Store is succesful, clear reserve bit and set CR0[EQ]
-               state->cr.cr0 |= ConditionRegisterFlag::Equal;
-            } else {
-               // Reservation has been written by another core
-               return;
-            }
-         } else {
-            // Reserve bit is not set, do not write.
-            return;
-         }
-      }
-
-      if (flags & StoreByteReverse) {
-         // Write already does byte_swap, so we writeNoSwap for byte reverse
-         mem::writeNoSwap<Type>(ea, s);
-      } else {
-         mem::write<Type>(ea, s);
-      }
-   } // - restricted lock scope
+   if (!ReservedWrite<(flags & StoreConditional) != 0>::write(state, ea, s)) {
+      return;
+   }
 
    if (flags & StoreUpdate) {
       state->gpr[instr.rA] = ea;

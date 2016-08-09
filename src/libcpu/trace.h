@@ -33,7 +33,6 @@ enum Field : uint8_t
    LR,
    CTR,
    FPSCR,
-   ReserveAddress,
    Max,
 };
 }

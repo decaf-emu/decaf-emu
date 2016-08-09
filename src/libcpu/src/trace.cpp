@@ -263,7 +263,7 @@ getFieldStateField(Instruction instr, InstructionField field)
    case InstructionField::FPSCR:
       return StateField::FPSCR;
    case InstructionField::RSRV:
-      return StateField::ReserveAddress;
+      // TODO: Handle this?
    default:
       break;
    }
@@ -296,10 +296,6 @@ saveStateField(const cpu::CoreRegs *state, TraceFieldType type, TraceFieldValue 
       field.u32v0 = state->ctr;
    } else if (type == StateField::FPSCR) {
       field.u32v0 = state->fpscr.value;
-   } else if (type == StateField::ReserveAddress) {
-      field.u32v0 = state->reserve ? 1 : 0;
-      field.u32v1 = state->reserveAddress;
-      field.u32v2 = state->reserveData;
    } else {
       decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
    }
@@ -328,10 +324,6 @@ restoreStateField(cpu::CoreRegs *state, TraceFieldType type, const TraceFieldVal
       state->ctr = field.u32v0;
    } else if (type == StateField::FPSCR) {
       state->fpscr.value = field.u32v0;
-   } else if (type == StateField::ReserveAddress) {
-      state->reserve = (field.u32v0 != 0);
-      state->reserveAddress = field.u32v1;
-      state->reserveData = field.u32v2;
    } else {
       decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
    }

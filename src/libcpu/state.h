@@ -35,10 +35,6 @@ struct CoreRegs
 
    espresso::gqr_t gqr[8];    // Graphics Quantization Registers
 
-                              // Reserve data for lwarx / stwcx.
-   bool reserve;
-   uint32_t reserveAddress;
-   uint32_t reserveData;
 };
 
 struct Core : CoreRegs
@@ -51,6 +47,7 @@ struct Core : CoreRegs
    std::thread thread;
    uint32_t interrupt_mask { 0xFFFFFFFF };
    std::atomic<uint32_t> interrupt { 0 };
+   uint64_t reserve { 0xFFFFFFFFFFFFFFFF };
    std::chrono::system_clock::time_point next_alarm;
 
    uint64_t tb();

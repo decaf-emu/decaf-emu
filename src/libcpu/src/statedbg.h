@@ -43,9 +43,6 @@ inline bool dbgStateCmp(cpu::Core* state, cpu::Core* estate, std::vector<std::st
    for (auto i = 0; i < 8; ++i) {
       CHECKONEI(gqr[i].value, "GQR", i);
    }
-   CHECKONE(reserve, "reserve");
-   CHECKONE(reserveAddress, "reserveAddress");
-   CHECKONE(reserveData, "reserveData");
 #undef CHECKONEI
 #undef CHECKONE
 
