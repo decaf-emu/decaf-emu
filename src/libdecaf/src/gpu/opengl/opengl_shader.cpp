@@ -794,9 +794,12 @@ void GLDriver::copyFeedbackBuffer(unsigned index)
    auto mappedBuffer = gl::glMapNamedBufferRange(buffer.object, copyOffset, copySize, gl::GL_MAP_READ_BIT);
    decaf_check(mappedBuffer);
 
-   memcpy(static_cast<char *>(mappedBuffer) + copyOffset,
-          mem::translate<char>(buffer.addr) + copyOffset,
+   memcpy(mem::translate<char>(buffer.addr) + copyOffset,
+          static_cast<char *>(mappedBuffer),
           copySize);
+
+   // TODO: detect cases where a feedback buffer is also a vertex attribute
+   //  buffer and skip the buffer upload in that case
 
    gl::glUnmapNamedBuffer(buffer.object);
 }
