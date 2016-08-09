@@ -49,7 +49,7 @@ struct va_list
       typename std::enable_if<std::is_pointer<Type>::value, Type>::type
       next()
       {
-         return mem::translate<std::remove_pointer<Type>::type>(nextGpr32());
+         return mem::translate<typename std::remove_pointer<Type>::type>(nextGpr32());
       }
 
       template<typename Type>
