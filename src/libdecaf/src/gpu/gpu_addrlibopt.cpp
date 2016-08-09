@@ -1,6 +1,7 @@
 #include "common/decaf_assert.h"
 #include "gpu_addrlibopt.h"
 #include <algorithm>
+#include <cstring>
 
 namespace gpu
 {
@@ -596,7 +597,8 @@ ComputeSurfaceAddrFromCoordMacroTiled(uint32_t x,
    uint64_t macroTileOffset = macroTileBytes * (macroTileIndexX + macroTilesPerRow * macroTileIndexY);
 
    // Do bank swapping if needed
-   bank = DispatchGetSwappedBank<IsBankSwappedTileMode<TileMode>()>::call<Bpp, TileMode, numSurfSamples>(bank, pitch, macroTileIndexX);
+   using BankSwapStruct = DispatchGetSwappedBank<IsBankSwappedTileMode<TileMode>()>;
+   bank = BankSwapStruct::template call<Bpp, TileMode, numSurfSamples>(bank, pitch, macroTileIndexX);
 
    // Calculate final offset
    uint64_t total_offset = elemOffset + ((macroTileOffset + sliceOffset) >> (numBankBits + numPipeBits));
@@ -698,7 +700,8 @@ static void
 AddrComputeSurfaceAddrFromCoord(const ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT *pIn,
                                 ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT *pOut)
 {
-   DispatchAddrComputeSurfaceAddrFromCoord<TileModeTiling[TileMode]>::call<NumSamples, IsDepth, Bpp, TileMode>(pIn, pOut);
+   using TileModeStruct = DispatchAddrComputeSurfaceAddrFromCoord<TileModeTiling[TileMode]>;
+   TileModeStruct::template call<NumSamples, IsDepth, Bpp, TileMode>(pIn, pOut);
 }
 
 typedef void(*AddrFromCoordFunc)(const ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT *pIn,
