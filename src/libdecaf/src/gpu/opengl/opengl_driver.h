@@ -233,8 +233,10 @@ private:
    void indirectBufferCall(const pm4::IndirectBufferCall &data);
    void numInstances(const pm4::NumInstances &data);
    void memWrite(const pm4::MemWrite &data);
+   void eventWrite(const pm4::EventWrite &data);
    void eventWriteEOP(const pm4::EventWriteEOP &data);
    void handlePendingEOP();
+   void pfpSyncMe(const pm4::PfpSyncMe &data);
    void streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data);
    void streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data);
 
@@ -349,6 +351,9 @@ private:
    gl::GLuint mFeedbackQuery = 0;
    uint32_t mFeedbackBaseOffset[4];
    uint32_t mFeedbackCurrentOffset[4];
+
+   gl::GLuint mOccQuery = 0;
+   uint32_t mLastOccQueryAddress = 0;
 
    latte::ContextState *mContextState = nullptr;
 

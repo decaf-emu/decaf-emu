@@ -672,7 +672,7 @@ struct MemWrite
    }
 };
 
-BITFIELD(EW_EOP_ADDR_LO, uint32_t)
+BITFIELD(EW_ADDR_LO, uint32_t)
    BITFIELD_ENTRY(0, 2, latte::CB_ENDIAN, ENDIAN_SWAP);
    BITFIELD_ENTRY(2, 30, uint32_t, ADDR_LO);
 BITFIELD_END
@@ -692,18 +692,34 @@ enum EW_INT_SEL : uint32_t
    EW_INT_WRITE_CONFIRM = 2,
 };
 
-BITFIELD(EW_EOP_ADDR_HI, uint32_t)
+BITFIELD(EW_ADDR_HI, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, ADDR_HI);
    BITFIELD_ENTRY(24, 2, EW_INT_SEL, INT_SEL);
    BITFIELD_ENTRY(29, 3, EW_DATA_SEL, DATA_SEL);
 BITFIELD_END
 
+struct EventWrite
+{
+   static const auto Opcode = type3::EVENT_WRITE;
+   latte::VGT_EVENT_INITIATOR eventInitiator;
+   EW_ADDR_LO addrLo;
+   EW_ADDR_HI addrHi;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(eventInitiator.value);
+      se(addrLo.value);
+      se(addrHi.value);
+   }
+};
+
 struct EventWriteEOP
 {
    static const auto Opcode = type3::EVENT_WRITE_EOP;
    latte::VGT_EVENT_INITIATOR eventInitiator;
-   EW_EOP_ADDR_LO addrLo;
-   EW_EOP_ADDR_HI addrHi;
+   EW_ADDR_LO addrLo;
+   EW_ADDR_HI addrHi;
    uint32_t dataLo;
    uint32_t dataHi;
 
@@ -715,6 +731,18 @@ struct EventWriteEOP
       se(addrHi.value);
       se(dataLo);
       se(dataHi);
+   }
+};
+
+struct PfpSyncMe
+{
+   static const auto Opcode = type3::PFP_SYNC_ME;
+   uint32_t dummy;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(dummy);
    }
 };
 

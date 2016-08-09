@@ -229,6 +229,8 @@ void GLDriver::memWrite(const pm4::MemWrite &data)
 
    switch (data.addrLo.ENDIAN_SWAP())
    {
+   case latte::CB_ENDIAN_NONE:
+      break;
    case latte::CB_ENDIAN_8IN64:
       value = byte_swap(value);
       break;
@@ -246,6 +248,70 @@ void GLDriver::memWrite(const pm4::MemWrite &data)
    }
 }
 
+void GLDriver::eventWrite(const pm4::EventWrite &data)
+{
+   auto type = data.eventInitiator.EVENT_TYPE();
+   auto addr = data.addrLo.ADDR_LO() << 2;
+   auto ptr = mem::translate(addr);
+   auto value = uint64_t { 0 };
+
+   decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
+
+   switch (type) {
+   case latte::VGT_EVENT_TYPE::ZPASS_DONE:
+      // This seems to be an instantaneous counter fetch, but OpenGL doesn't
+      //  expose the raw counter, so we detect GX2QueryBegin/End by the
+      //  write address and translate this to a SAMPLES_PASSED query.
+      if (addr == mLastOccQueryAddress + 8) {
+         mLastOccQueryAddress = 0;
+
+         decaf_check(mOccQuery);
+         gl::glEndQuery(gl::GL_SAMPLES_PASSED);
+         gl::glGetQueryObjectui64v(mOccQuery, gl::GL_QUERY_RESULT, &value);
+      } else {
+         decaf_check(!mLastOccQueryAddress);
+         mLastOccQueryAddress = addr;
+
+         if (!mOccQuery) {
+            gl::glGenQueries(1, &mOccQuery);
+            decaf_check(mOccQuery);
+         }
+
+         gl::glBeginQuery(gl::GL_SAMPLES_PASSED, mOccQuery);
+      }
+      break;
+   default:
+      decaf_abort(fmt::format("Unexpected event type {}", type));
+   }
+
+   switch (data.addrLo.ENDIAN_SWAP())
+   {
+   case latte::CB_ENDIAN_NONE:
+      break;
+   case latte::CB_ENDIAN_8IN64:
+      value = byte_swap(value);
+      break;
+   case latte::CB_ENDIAN_8IN32:
+      value = byte_swap(static_cast<uint32_t>(value));
+      break;
+   case latte::CB_ENDIAN_8IN16:
+      decaf_abort("Unexpected EVENT_WRITE endian swap 8IN16");
+   }
+
+   switch (data.addrHi.DATA_SEL()) {
+   case pm4::EW_DATA_DISCARD:
+      break;
+   case pm4::EW_DATA_32:
+      *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
+      break;
+   case pm4::EW_DATA_64:
+      *reinterpret_cast<uint64_t *>(ptr) = value;
+      break;
+   case pm4::EW_DATA_CLOCK:
+      decaf_abort("Unexpected EW_DATA_CLOCK in EVENT_WRITE");
+   }
+}
+
 void GLDriver::eventWriteEOP(const pm4::EventWriteEOP &data)
 {
    mPendingEOP = data;
@@ -257,8 +323,11 @@ void GLDriver::handlePendingEOP()
       return;
    }
 
-   uint64_t value = 0;
-   auto addr = mem::translate(mPendingEOP.addrLo.ADDR_LO() << 2);
+   auto value = uint64_t { 0 };
+   auto addr = mPendingEOP.addrLo.ADDR_LO() << 2;
+   auto ptr = mem::translate(addr);
+
+   decaf_assert(mPendingEOP.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
 
    switch (mPendingEOP.eventInitiator.EVENT_TYPE()) {
    case latte::BOTTOM_OF_PIPE_TS:
@@ -269,6 +338,8 @@ void GLDriver::handlePendingEOP()
    }
 
    switch (mPendingEOP.addrLo.ENDIAN_SWAP()) {
+   case latte::CB_ENDIAN_NONE:
+      break;
    case latte::CB_ENDIAN_8IN64:
       value = byte_swap(value);
       break;
@@ -280,15 +351,23 @@ void GLDriver::handlePendingEOP()
    }
 
    switch (mPendingEOP.addrHi.DATA_SEL()) {
+   case pm4::EW_DATA_DISCARD:
+      break;
    case pm4::EW_DATA_32:
-      *reinterpret_cast<uint32_t *>(addr) = static_cast<uint32_t>(value);
+      *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
       break;
    case pm4::EW_DATA_64:
-      *reinterpret_cast<uint64_t *>(addr) = value;
+   case pm4::EW_DATA_CLOCK:
+      *reinterpret_cast<uint64_t *>(ptr) = value;
       break;
    }
 
    std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
+}
+
+void GLDriver::pfpSyncMe(const pm4::PfpSyncMe &data)
+{
+   // TODO: do we need to do anything?
 }
 
 void GLDriver::poll()

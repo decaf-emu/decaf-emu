@@ -117,6 +117,16 @@ enum VGT_EVENT_TYPE : uint32_t
    FLUSH_AND_INV_CB_META            = 46,
 };
 
+enum VGT_EVENT_INDEX : uint32_t
+{
+   VGT_EVENT_INDEX_GENERIC                = 0,
+   VGT_EVENT_INDEX_ZPASS_DONE             = 1,
+   VGT_EVENT_INDEX_SAMPLE_PIPELINESTAT    = 2,
+   VGT_EVENT_INDEX_SAMPLE_STREAMOUTSTAT   = 3,
+   VGT_EVENT_INDEX_PARTIAL_FLUSH          = 4,
+   VGT_EVENT_INDEX_CACHE_FLUSH            = 7,
+};
+
 enum VGT_GS_OUT_PRIMITIVE_TYPE : uint32_t
 {
    VGT_GS_OUT_PT_POINTLIST          = 0,
