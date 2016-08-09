@@ -113,6 +113,7 @@ getSurfaceInfo(GX2Surface *surface,
       break;
    }
 
+   std::memset(output, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT));
    output->size = sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT);
 
    if (surface->tileMode == GX2TileMode::LinearSpecial) {
