@@ -515,16 +515,26 @@ stridedMemcpy2(const void *srcBuffer,
                size_t stride,
                bool endian)
 {
+   static_assert(N > 0, "N must be greater than 0");
+   static_assert(N <= 4, "N must be less or equal to 4");
+
    auto src = reinterpret_cast<const uint8_t *>(srcBuffer) + offset;
    auto end = reinterpret_cast<const uint8_t *>(srcBuffer) + size;
    auto dst = reinterpret_cast<uint8_t *>(dstBuffer) + offset;
 
-   if (endian) {
+   if (sizeof(Type) > 1 && endian) {
       while (src < end) {
          auto srcPtr = reinterpret_cast<const Type *>(src);
          auto dstPtr = reinterpret_cast<Type *>(dst);
 
-         for (auto i = 0u; i < N; ++i) {
+         *dstPtr++ = byte_swap(*srcPtr++);
+         if (N >= 2) {
+            *dstPtr++ = byte_swap(*srcPtr++);
+         }
+         if (N >= 3) {
+            *dstPtr++ = byte_swap(*srcPtr++);
+         }
+         if (N >= 4) {
             *dstPtr++ = byte_swap(*srcPtr++);
          }
 
