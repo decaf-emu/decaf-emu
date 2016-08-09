@@ -5,6 +5,7 @@
 #include "modules/gx2/gx2_surface.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
+#include <glbinding/Meta.h>
 
 namespace gpu
 {
@@ -274,7 +275,7 @@ static int getStorageFormatBits(gl::GLenum format)
       return 128;
 
    default:
-      decaf_abort(fmt::format("Invalid GL storage format {}", format));
+      decaf_abort(fmt::format("Invalid GL storage format {}", glbinding::Meta::getString(format)));
    }
 }
 

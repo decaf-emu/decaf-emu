@@ -5,7 +5,7 @@
 #include "gpu/microcode/latte_instructions.h"
 #include "common/align.h"
 #include "common/decaf_assert.h"
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 
 namespace gx2
 {

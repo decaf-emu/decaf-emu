@@ -4,7 +4,7 @@
 #include "interpreter/interpreter_insreg.h"
 #include <cassert>
 #include <algorithm>
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 
 static const bool
 TRACK_FALLBACK_CALLS = true;

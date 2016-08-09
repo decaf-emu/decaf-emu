@@ -1,6 +1,7 @@
 #include "common/decaf_assert.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
+#include <glbinding/Meta.h>
 
 namespace gpu
 {
@@ -23,7 +24,7 @@ bool GLDriver::checkReadyDraw()
    auto fbStatus = gl::glCheckFramebufferStatus(gl::GL_FRAMEBUFFER);
 
    if (fbStatus != gl::GL_FRAMEBUFFER_COMPLETE) {
-      gLog->warn("Draw attempted with an incomplete framebuffer, status {}.", fbStatus);
+      gLog->warn("Draw attempted with an incomplete framebuffer, status {}.", glbinding::Meta::getString(fbStatus));
       return false;
    }
 
@@ -328,7 +329,7 @@ GLDriver::decafClearColor(const pm4::DecafClearColor &data)
    auto status = gl::glCheckNamedFramebufferStatus(mColorClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
 
    if (status != gl::GL_FRAMEBUFFER_COMPLETE) {
-      gLog->warn("Skipping clear with invalid color buffer, status {}.", status);
+      gLog->warn("Skipping clear with invalid color buffer, status {}.", glbinding::Meta::getString(status));
       return;
    }
 
@@ -364,7 +365,7 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    auto status = gl::glCheckNamedFramebufferStatus(mDepthClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
 
    if (status != gl::GL_FRAMEBUFFER_COMPLETE) {
-      gLog->warn("Skipping clear with invalid depth buffer, status {}.", status);
+      gLog->warn("Skipping clear with invalid depth buffer, status {}.", glbinding::Meta::getString(status));
       return;
    }
 

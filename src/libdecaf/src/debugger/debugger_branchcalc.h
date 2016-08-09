@@ -4,7 +4,7 @@
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
 #include "libcpu/espresso/espresso_instructionset.h"
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 
 struct BranchMetaInfo
 {

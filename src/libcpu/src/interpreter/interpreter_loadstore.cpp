@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <mutex>
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 
 using espresso::QuantizedDataType;
 using espresso::ConditionRegisterFlag;

@@ -5,7 +5,7 @@
 #include <stack>
 #include <stdexcept>
 #include <string>
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 #include <vector>
 #include "gpu/microcode/latte_instructions.h"
 

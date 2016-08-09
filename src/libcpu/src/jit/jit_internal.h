@@ -4,7 +4,7 @@
 #include <array>
 #include <asmjit/asmjit.h>
 #include <map>
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 #include <vector>
 
 #define offsetof2(s, m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))

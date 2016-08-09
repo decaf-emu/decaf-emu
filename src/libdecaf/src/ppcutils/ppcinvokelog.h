@@ -3,7 +3,7 @@
 #include <string>
 #include "common/strutils.h"
 #include "virtual_ptr.h"
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 
 namespace ppctypes
 {

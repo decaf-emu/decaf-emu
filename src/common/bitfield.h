@@ -2,7 +2,7 @@
 #include "bitutils.h"
 #include "decaf_assert.h"
 #include "fixed.h"
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 #include <type_traits>
 
 template<typename BitfieldType, typename ValueType, unsigned Position, unsigned Bits>

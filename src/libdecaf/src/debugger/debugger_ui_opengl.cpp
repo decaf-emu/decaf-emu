@@ -1,11 +1,11 @@
-#include <glbinding/gl/gl.h>
-#include <glbinding/Binding.h>
-#include <gsl.h>
-#include <imgui.h>
 #include "common/platform_dir.h"
 #include "debugger/debugger_ui.h"
 #include "decaf.h"
 #include "decaf_debugger.h"
+#include <imgui.h>
+#include <gsl.h>
+#include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
 
 namespace decaf
 {

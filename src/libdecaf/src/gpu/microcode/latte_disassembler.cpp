@@ -2,7 +2,7 @@
 #include "latte_instructions.h"
 #include "latte_disassembler.h"
 #include <gsl.h>
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 
 namespace latte
 {

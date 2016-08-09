@@ -3,7 +3,7 @@
 #include "latte_instructions.h"
 #include <algorithm>
 #include <gsl.h>
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 #include <stdexcept>
 
 namespace latte

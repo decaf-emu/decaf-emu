@@ -1,6 +1,6 @@
 #include "platform.h"
 #include "platform_stacktrace.h"
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 
 #ifdef PLATFORM_WINDOWS
 #include <Windows.h>

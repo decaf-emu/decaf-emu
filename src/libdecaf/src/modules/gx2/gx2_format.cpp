@@ -2,7 +2,7 @@
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
 #include "gpu/latte_enum_sq.h"
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 
 namespace gx2
 {

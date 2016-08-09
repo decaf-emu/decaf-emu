@@ -1,6 +1,6 @@
 #pragma once
 #include "latte_instructions.h"
-#include <spdlog/details/format.h>
+#include <spdlog/fmt/fmt.h>
 #include <gsl.h>
 
 namespace latte
