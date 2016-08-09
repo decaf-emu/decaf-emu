@@ -21,6 +21,19 @@ public:
       mQueueCV.notify_all();
    }
 
+   pm4::Buffer *dequeueBuffer()
+   {
+      std::unique_lock<std::mutex> lock{ mQueueMutex };
+
+      if (!mQueue.size()) {
+         return nullptr;
+      }
+
+      auto next = mQueue.front();
+      mQueue.pop();
+      return next;
+   }
+
    pm4::Buffer *waitForBuffer()
    {
       std::unique_lock<std::mutex> lock { mQueueMutex };
@@ -83,6 +96,12 @@ unqueueCommandBuffer()
    return gQueue.waitForBuffer();
 }
 
+
+pm4::Buffer *
+tryUnqueueCommandBuffer()
+{
+   return gQueue.dequeueBuffer();
+}
 
 void
 retireCommandBuffer(pm4::Buffer *buf)

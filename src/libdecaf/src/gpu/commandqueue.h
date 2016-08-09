@@ -24,4 +24,7 @@ retireCommandBuffer(pm4::Buffer *buf);
 pm4::Buffer *
 unqueueCommandBuffer();
 
+pm4::Buffer *
+tryUnqueueCommandBuffer();
+
 } // namespace gpu
