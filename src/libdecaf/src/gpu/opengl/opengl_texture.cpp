@@ -644,9 +644,9 @@ bool GLDriver::checkActiveSamplers()
 
       // Depth compare
       auto mode = depthCompare ? gl::GL_COMPARE_REF_TO_TEXTURE : gl::GL_NONE;
-      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_MODE, static_cast<gl::GLint>(mode));
-
       auto depth_compare_function = getTextureCompareFunction(sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION());
+
+      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_MODE, static_cast<gl::GLint>(mode));
       gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_FUNC, static_cast<gl::GLint>(depth_compare_function));
 
       // Setup texture LOD
@@ -654,7 +654,9 @@ bool GLDriver::checkActiveSamplers()
       auto max_lod = sq_tex_sampler_word1.MAX_LOD();
       auto lod_bias = sq_tex_sampler_word1.LOD_BIAS();
 
-      // TODO: GL_TEXTURE_MIN_LOD, GL_TEXTURE_MAX_LOD, GL_TEXTURE_LOD_BIAS
+      gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_MIN_LOD, static_cast<float>(min_lod));
+      gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_MAX_LOD, static_cast<float>(max_lod));
+      gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_LOD_BIAS, static_cast<float>(lod_bias));
 
       // Bind sampler
       gl::glBindSampler(i, sampler.object);
