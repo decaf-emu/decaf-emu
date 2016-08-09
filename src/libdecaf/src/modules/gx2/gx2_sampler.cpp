@@ -1,6 +1,7 @@
 #include "gx2.h"
 #include "gx2_sampler.h"
 #include "gpu/pm4_writer.h"
+#include <algorithm>
 
 namespace gx2
 {
@@ -92,10 +93,14 @@ GX2InitSamplerLOD(GX2Sampler *sampler,
 {
    auto word1 = sampler->regs.word1.value();
 
+   lodMin = std::min(std::max(lodMin, 0.0f), 16.0f);
+   lodMax = std::min(std::max(lodMax, 0.0f), 16.0f);
+   lodBias = std::min(std::max(lodBias, -32.0f), 32.0f);
+
    word1 = word1
-      .MIN_LOD(floatToFixedPoint(lodMin, 10, 0.0f, 16.0f))
-      .MAX_LOD(floatToFixedPoint(lodMax, 10, 0.0f, 16.0f))
-      .LOD_BIAS(floatToFixedPoint(lodBias, 12, -32.0f, 32.0f));
+      .MIN_LOD(ufixed_4_6_t { lodMin })
+      .MAX_LOD(ufixed_4_6_t { lodMax })
+      .LOD_BIAS(sfixed_6_6_t { lodBias });
 
    sampler->regs.word1 = word1;
 }
@@ -109,7 +114,7 @@ GX2InitSamplerLODAdjust(GX2Sampler *sampler,
    auto word2 = sampler->regs.word2.value();
 
    word2 = word2
-      .ANISO_BIAS(floatToFixedPoint(anisoBias, 6, 0.0f, 2.0f));
+      .ANISO_BIAS(ufixed_1_5_t { anisoBias });
 
    word0 = word0
       .LOD_USES_MINOR_AXIS(!!lodUsesMinorAxis);

@@ -1,6 +1,7 @@
 #pragma once
 #include "common/types.h"
 #include "common/bitfield.h"
+#include "common/fixed.h"
 #include "latte_enum_sq.h"
 
 namespace latte
@@ -359,9 +360,9 @@ BITFIELD(SQ_TEX_SAMPLER_WORD0_N, uint32_t)
 BITFIELD_END
 
 BITFIELD(SQ_TEX_SAMPLER_WORD1_N, uint32_t)
-   BITFIELD_ENTRY(0, 10, uint32_t, MIN_LOD);
-   BITFIELD_ENTRY(10, 10, uint32_t, MAX_LOD);
-   BITFIELD_ENTRY(20, 12, uint32_t, LOD_BIAS);
+   BITFIELD_ENTRY(0, 10, ufixed_4_6_t, MIN_LOD);
+   BITFIELD_ENTRY(10, 10, ufixed_4_6_t, MAX_LOD);
+   BITFIELD_ENTRY(20, 12, sfixed_6_6_t, LOD_BIAS);
 BITFIELD_END
 
 BITFIELD(SQ_TEX_SAMPLER_WORD2_N, uint32_t)
@@ -371,7 +372,7 @@ BITFIELD(SQ_TEX_SAMPLER_WORD2_N, uint32_t)
    BITFIELD_ENTRY(14, 1, bool, HIGH_PRECISION_FILTER);
    BITFIELD_ENTRY(15, 3, uint32_t, PERF_MIP);
    BITFIELD_ENTRY(18, 2, uint32_t, PERF_Z);
-   BITFIELD_ENTRY(20, 6, uint32_t, ANISO_BIAS);
+   BITFIELD_ENTRY(20, 6, ufixed_1_5_t, ANISO_BIAS);
    BITFIELD_ENTRY(26, 1, bool, FETCH_4);
    BITFIELD_ENTRY(27, 1, bool, SAMPLE_IS_PCF);
    BITFIELD_ENTRY(28, 1, SQ_TEX_ROUNDING_MODE, TRUNCATE_COORD);
