@@ -136,6 +136,15 @@ DecafSDL::run(const std::string &gamePath)
             initialiseContext();
             mGraphicsDriver->run();
          } };
+   } else {
+      // Set the swap interval to 0 so that we don't slow
+      //  down the GPU system when presenting...  The game should
+      //  throttle our swapping automatically anyways.
+      SDL_GL_SetSwapInterval(0);
+
+      // Switch to the thread context, we automatically switch
+      //  back when presenting a frame.
+      SDL_GL_MakeCurrent(mWindow, mThreadContext);
    }
 
    // Start emulator
@@ -185,19 +194,11 @@ DecafSDL::run(const std::string &gamePath)
          mGraphicsDriver->getSwapBuffers(&tvBuffer, &drcBuffer);
          drawScanBuffers(tvBuffer, drcBuffer);
       } else {
-         SDL_GL_MakeCurrent(mWindow, mThreadContext);
-
-         // Set the swap interval to 0 so that we don't slow
-         //  down the GPU system when presenting...  The game should
-         //  throttle our swapping automatically anyways.
-         SDL_GL_SetSwapInterval(0);
-
          mGraphicsDriver->syncPoll([&](unsigned int tvBuffer, unsigned int drcBuffer) {
             SDL_GL_MakeCurrent(mWindow, mContext);
             drawScanBuffers(tvBuffer, drcBuffer);
             SDL_GL_MakeCurrent(mWindow, mThreadContext);
          });
-         SDL_GL_MakeCurrent(mWindow, mContext);
       }
    }
 
