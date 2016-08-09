@@ -143,8 +143,7 @@ void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
    int tvLeft, tvBottom, tvTop, tvRight;
    int drcLeft, drcBottom, drcTop, drcRight;
 
-   if (windowWidth * nativeHeight >= windowHeight * nativeWidth)
-   {
+   if (windowWidth * nativeHeight >= windowHeight * nativeWidth) {
       // align to height
       int drcBorder = (windowWidth * nativeHeight - windowHeight * DrcWidth + nativeHeight) / nativeHeight / 2;
       int tvBorder = (windowWidth * nativeHeight - windowHeight * TvWidth + nativeHeight) / nativeHeight / 2;
@@ -158,9 +157,7 @@ void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
       tvTop = windowHeight - OuterBorder;
       tvLeft = tvBorder;
       tvRight = windowWidth - tvBorder;
-   }
-   else
-   {
+   } else {
       // align to width
       int heightBorder = (windowHeight * nativeWidth - windowWidth * (DrcHeight + TvHeight + ScreenSeparation) + nativeWidth) / nativeWidth / 2;
       int drcBorder = (windowWidth - DrcWidth * windowWidth / nativeWidth + 1) / 2;
@@ -177,15 +174,15 @@ void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
       tvRight = windowWidth - tvBorder;
    }
 
-   tv[0] = tvLeft;
-   tv[1] = tvBottom;
-   tv[2] = tvRight - tvLeft;
-   tv[3] = tvTop - tvBottom;
+   tv[0] = static_cast<float>(tvLeft);
+   tv[1] = static_cast<float>(tvBottom);
+   tv[2] = static_cast<float>(tvRight - tvLeft);
+   tv[3] = static_cast<float>(tvTop - tvBottom);
 
-   drc[0] = drcLeft;
-   drc[1] = drcBottom;
-   drc[2] = drcRight - drcLeft;
-   drc[3] = drcTop - drcBottom;
+   drc[0] = static_cast<float>(drcLeft);
+   drc[1] = static_cast<float>(drcBottom);
+   drc[2] = static_cast<float>(drcRight - drcLeft);
+   drc[3] = static_cast<float>(drcTop - drcBottom);
 
    decaf_check(tv[0] >= 0);
    decaf_check(tv[1] >= 0);
