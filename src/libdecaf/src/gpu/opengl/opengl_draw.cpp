@@ -234,7 +234,8 @@ GLDriver::drawPrimitives(uint32_t count,
 
       for (auto i = 0u; i < 4; ++i) {
          if (vgt_strmout_buffer_en.value & (1 << i)) {
-            auto stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
+            auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
+            auto stride = vgt_strmout_vtx_stride * 4;
             mFeedbackCurrentOffset[i] += numVertices * stride;
          }
       }
