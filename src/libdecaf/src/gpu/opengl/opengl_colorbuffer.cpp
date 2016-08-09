@@ -14,7 +14,21 @@ bool GLDriver::checkActiveColorBuffer()
 {
    auto cb_target_mask = getRegister<latte::CB_TARGET_MASK>(latte::Register::CB_TARGET_MASK);
    auto cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
+   auto cb_color_control = getRegister<latte::CB_COLOR_CONTROL>(latte::Register::CB_COLOR_CONTROL);
+
    auto mask = cb_target_mask.value & cb_shader_mask.value;
+
+   auto special_op = cb_color_control.SPECIAL_OP();
+   switch (special_op) {
+   case latte::CB_SPECIAL_NORMAL:
+      break;
+   case latte::CB_SPECIAL_DISABLE:
+      mask = 0;
+      break;
+   default:
+      decaf_abort(fmt::format("Draw call with unhandled CB_SPECIAL_OP {}", special_op));
+      break;
+   }
 
    for (auto i = 0u; i < mActiveColorBuffers.size(); ++i, mask >>= 4) {
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
