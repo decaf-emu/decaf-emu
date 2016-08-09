@@ -84,7 +84,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\fixed_point\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
@@ -93,14 +93,14 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\fixed_point\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\obj\$(Configuration)\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\tools;$(SolutionDir)\src;$(SolutionDir)\src\libdecaf\src;$(SolutionDir)\libraries\addrlib\include;$(SolutionDir)\libraries\excmd\src;$(SolutionDir)\libraries\fixed_point\include;$(SolutionDir)\libraries\gsl-lite\include;$(SolutionDir)\libraries\spdlog\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\obj\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
