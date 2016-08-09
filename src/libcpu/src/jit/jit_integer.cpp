@@ -374,8 +374,66 @@ template<typename Type>
 static bool
 divGeneric(PPCEmuAssembler& a, Instruction instr)
 {
-   // Need to fallback due to overflow at the moment.
-   return jit_fallback(a, instr);
+   auto eaxLockout = a.lockRegister(asmjit::x86::rax);
+   auto edxLockout = a.lockRegister(asmjit::x86::rdx);
+
+   auto dst = a.loadRegisterWrite(a.gpr[instr.rD]);
+   auto srcA = a.loadRegisterRead(a.gpr[instr.rA]);
+   auto srcB = a.loadRegisterRead(a.gpr[instr.rB]);
+
+   auto ppcxer = a.loadRegisterReadWrite(a.xer);
+
+   auto overflowLbl = a.newLabel();
+   auto endLbl = a.newLabel();
+
+   a.test(srcB, srcB);
+   a.jz(overflowLbl);
+
+   if (std::is_signed<Type>::value) {
+      auto noOverflowLbl = a.newLabel();
+      a.cmp(srcA, 0x80000000);
+      a.jne(noOverflowLbl);
+      a.cmp(srcB, 0xffffffff);
+      a.je(overflowLbl);
+      a.bind(noOverflowLbl);
+
+      a.xor_(asmjit::x86::edx, asmjit::x86::edx);
+      a.mov(asmjit::x86::eax, srcA);
+      a.idiv(srcB);
+   } else {
+      a.xor_(asmjit::x86::edx, asmjit::x86::edx);
+      a.mov(asmjit::x86::eax, srcA);
+      a.div(srcB);
+   }
+
+   // Move the result to the destination register
+   a.mov(dst, asmjit::x86::eax);
+
+   // Clear the Overflow flag
+   a.and_(ppcxer, ~XERegisterBits::Overflow);
+
+   a.jmp(endLbl);
+   a.bind(overflowLbl);
+
+   if (!std::is_signed<Type>::value) {
+      // If unsigned division, overflow makes dst 0
+      a.mov(dst, 0);
+   } else {
+      // If signed divison, overflow is 0/-1 depending on sign of srcB
+      a.mov(dst, srcA);
+      a.sar(dst, 31);
+   }
+
+   // Set Overflow bits
+   a.or_(ppcxer, XERegisterBits::StickyOV | XERegisterBits::Overflow);
+
+   a.bind(endLbl);
+
+   if (instr.rc) {
+      updateConditionRegister(a, dst, eaxLockout);
+   }
+
+   return true;
 }
 
 static bool
