@@ -184,7 +184,7 @@ formatStringV(char *buffer,
       buffer[str.length()] = 0;
    }
 
-   return str.length();
+   return static_cast<int>(str.length());
 }
 
 } // namespace internal
