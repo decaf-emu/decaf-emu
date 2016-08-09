@@ -76,6 +76,7 @@ private:
    static void registerSemaphoreFunctions();
    static void registerSharedFunctions();
    static void registerSpinLockFunctions();
+   static void registerSprintfFunctions();
    static void registerSystemInfoFunctions();
    static void registerTaskQueueFunctions();
    static void registerThreadFunctions();

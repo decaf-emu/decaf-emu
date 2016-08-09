@@ -7,6 +7,7 @@
 #include "common/type_list.h"
 #include "libcpu/cpu.h"
 #include "libcpu/trace.h"
+#include "va_list.h"
 
 namespace ppctypes
 {
@@ -17,24 +18,6 @@ struct _argumentsState
    cpu::Core *thread;
    size_t r;
    size_t f;
-};
-
-class VarList
-{
-public:
-   VarList(_argumentsState& state) :
-      mState(state)
-   {
-   }
-
-   template<typename Type>
-   Type next()
-   {
-      return getArgument<Type>(mState.thread, mState.r, mState.f);
-   }
-
-protected:
-   _argumentsState& mState;
 };
 
 // Apply arguments
@@ -92,15 +75,13 @@ invoke2(LogFunc logFn, _argumentsState& state, FnReturnType func(FnArgs...), typ
 // Static function process variable arguments
 template<typename FnReturnType, typename... FnArgs, typename... Args>
 inline void
-invoke2(LogFunc logFn, _argumentsState& state, FnReturnType func(FnArgs...), type_list<VarList&>, Args... values)
+invoke2(LogFunc logFn, _argumentsState& state, FnReturnType func(FnArgs...), type_list<VarArgs>, Args... values)
 {
-   VarList vargs(state);
-
    if (logFn != nullptr) {
       logArgumentVargs(state.log);
    }
 
-   invoke2(logFn, state, func, type_list<>{}, values..., vargs);
+   invoke2(logFn, state, func, type_list<>{}, values..., VarArgs {});
 }
 
 // Call a static function with return value
@@ -163,15 +144,13 @@ invokeMemberFn2(LogFunc logFn, _argumentsState& state, FnReturnType(ObjectType::
 // Member function process variable arguments
 template<typename ObjectType, typename FnReturnType, typename... FnArgs, typename... Args>
 inline void
-invokeMemberFn2(LogFunc logFn, _argumentsState& state, FnReturnType (ObjectType::*func)(FnArgs...), type_list<VarList&>, Args... values)
+invokeMemberFn2(LogFunc logFn, _argumentsState& state, FnReturnType (ObjectType::*func)(FnArgs...), type_list<VarArgs>, Args... values)
 {
-   VarList vargs(state);
-
    if (logFn != nullptr) {
       logArgumentVargs(state.log);
    }
 
-   invokeMemberFn2(logFn, state, func, type_list<>{}, values..., vargs);
+   invokeMemberFn2(logFn, state, func, type_list<>{}, values..., VarArgs { });
 }
 
 // Call member function with return value

@@ -69,6 +69,7 @@ Module::RegisterFunctions()
    registerSemaphoreFunctions();
    registerSharedFunctions();
    registerSpinLockFunctions();
+   registerSprintfFunctions();
    registerSystemInfoFunctions();
    registerTaskQueueFunctions();
    registerThreadFunctions();

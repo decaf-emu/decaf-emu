@@ -858,6 +858,9 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_addrlibopt.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_sprintf.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1621,6 +1624,12 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\gpu\gpu_addrlibopt.h">
       <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\ppcutils\va_list.h">
+      <Filter>Header Files\ppcutils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_sprintf.h">
+      <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

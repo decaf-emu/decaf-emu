@@ -357,7 +357,7 @@ AXSetVoicePriority(AXVoice *voice,
 void
 AXSetVoiceRmtIIRCoefs(AXVoice *voice,
                       uint16_t filter,
-                      ppctypes::VarList &args)
+                      ppctypes::VarArgs)
 {
 }
 

@@ -5,6 +5,13 @@
 
 ENUM_NAMESPACE_BEG(coreinit)
 
+ENUM_BEG(COSReportLevel, uint32_t)
+   ENUM_VALUE(Error,             0)
+   ENUM_VALUE(Warn,              1)
+   ENUM_VALUE(Info,              2)
+   ENUM_VALUE(Verbose,           3)
+ENUM_END(COSReportLevel)
+
 ENUM_BEG(HardwareVersion, uint32_t)
    ENUM_VALUE(UNKNOWN,                       0x00000000)
 
