@@ -313,7 +313,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma, isDepthBuffer);
 
    if (storageFormat == gl::GL_INVALID_ENUM) {
-      decaf_abort(fmt::format("Texture with unsupported format {} {} {} {}", format, numFormat, formatComp, degamma));
+      decaf_abort(fmt::format("Surface with unsupported format {} {} {} {}", format, numFormat, formatComp, degamma));
    }
 
    // We need to keep track of the memory region every GPU resource uses
