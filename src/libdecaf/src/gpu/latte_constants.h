@@ -13,6 +13,9 @@ static const unsigned
 MaxSamplers = 16u;
 
 static const unsigned
+MaxStreamOutBuffers = 4u;
+
+static const unsigned
 MaxTextures = 16u;
 
 static const unsigned

@@ -7,6 +7,7 @@
 #include <string>
 #include <spdlog/fmt/fmt.h>
 #include <vector>
+#include "gpu/latte_constants.h"
 #include "gpu/microcode/latte_instructions.h"
 
 namespace glsl2
@@ -66,10 +67,9 @@ struct Shader
    std::string codeHeader;
    std::string codeBody;
    std::vector<Export> exports;
-   std::vector<Feedback> feedbacks;
-   std::array<SamplerUsage, 16> samplerUsage;
-   std::array<bool, 16> usedUniformBlocks;
-   std::array<bool, 4> usedFeedbackBuffers;
+   std::array<std::vector<Feedback>, latte::MaxStreamOutBuffers> feedbacks;
+   std::array<SamplerUsage, latte::MaxSamplers> samplerUsage;
+   std::array<bool, latte::MaxUniformBlocks> usedUniformBlocks;
 };
 
 struct LoopState
