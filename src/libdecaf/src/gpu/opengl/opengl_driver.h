@@ -349,8 +349,8 @@ private:
    ScanBufferChain mDrcScanBuffers;
 
    gl::GLuint mFeedbackQuery = 0;
-   uint32_t mFeedbackBaseOffset[4];
-   uint32_t mFeedbackCurrentOffset[4];
+   uint32_t mFeedbackBaseOffset[latte::MaxStreamOutBuffers];
+   uint32_t mFeedbackCurrentOffset[latte::MaxStreamOutBuffers];
 
    gl::GLuint mOccQuery = 0;
    uint32_t mLastOccQueryAddress = 0;
@@ -363,7 +363,7 @@ private:
    DepthBufferCache mDepthBufferCache;
    std::array<TextureCache, latte::MaxTextures> mPixelTextureCache;
    std::array<SamplerCache, latte::MaxSamplers> mPixelSamplerCache;
-   std::array<FeedbackBufferCache, 4> mFeedbackBufferCache;
+   std::array<FeedbackBufferCache, latte::MaxStreamOutBuffers> mFeedbackBufferCache;
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;

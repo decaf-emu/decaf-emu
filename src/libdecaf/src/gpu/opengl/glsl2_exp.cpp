@@ -205,9 +205,7 @@ registerFeedback(State &state,
       xfb.streamIndex = streamIndex;
       xfb.offset = offset;
       xfb.size = size;
-      state.shader->feedbacks.push_back(xfb);
-
-      state.shader->usedFeedbackBuffers[streamIndex] = true;
+      state.shader->feedbacks[streamIndex].push_back(xfb);
    }
 }
 

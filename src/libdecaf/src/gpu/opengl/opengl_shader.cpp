@@ -186,7 +186,13 @@ bool GLDriver::checkActiveShader()
 
    auto fsShaderKey = static_cast<uint64_t>(fsPgmAddress) << 32;
    auto vsShaderKey = static_cast<uint64_t>(vsPgmAddress) << 32;
-   vsShaderKey ^= vgt_strmout_en.STREAMOUT() ? 1 : 0;
+   if (vgt_strmout_en.STREAMOUT()) {
+      vsShaderKey ^= 1;
+      for (auto i = 0u; i < latte::MaxStreamOutBuffers; ++i) {
+         auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
+         vsShaderKey ^= vgt_strmout_vtx_stride << (1 + 7 * i);
+      }
+   }
    auto psShaderKey = static_cast<uint64_t>(psPgmAddress) << 32;
    psShaderKey ^= static_cast<uint64_t>(alphaTestFunc) << 28;
    psShaderKey ^= cb_shader_mask.value & 0xFF;
@@ -737,7 +743,7 @@ bool GLDriver::checkActiveFeedbackBuffers()
       return true;
    }
 
-   for (auto index = 0u; index < 4; ++index) {
+   for (auto index = 0u; index < latte::MaxStreamOutBuffers; ++index) {
       if (!(vgt_strmout_buffer_en.value & (1 << index))) {
          if (mFeedbackBufferCache[index].enable) {
             mFeedbackBufferCache[index].enable = false;
@@ -749,10 +755,6 @@ bool GLDriver::checkActiveFeedbackBuffers()
       mFeedbackBufferCache[index].enable = true;
 
       auto vgt_strmout_buffer_base = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_BASE_0 + 16 * index);
-      auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * index);
-
-      mFeedbackBufferCache[index].enable = true;
-
       auto addr = vgt_strmout_buffer_base << 8;
       auto &buffer = mFeedbackBuffers[addr];
 
@@ -792,9 +794,12 @@ void GLDriver::copyFeedbackBuffer(unsigned index)
    auto mappedBuffer = gl::glMapNamedBufferRange(buffer.object, copyOffset, copySize, gl::GL_MAP_READ_BIT);
    decaf_check(mappedBuffer);
 
-   memcpy(static_cast<char *>(mappedBuffer) + copyOffset,
-          mem::translate<char>(buffer.addr) + copyOffset,
+   memcpy(mem::translate<char>(buffer.addr) + copyOffset,
+          static_cast<char *>(mappedBuffer),
           copySize);
+
+   // TODO: detect cases where a feedback buffer is also a vertex attribute
+   //  buffer and skip the buffer upload in that case
 
    gl::glUnmapNamedBuffer(buffer.object);
 }
@@ -1030,7 +1035,6 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    }
 
    vertex.usedUniformBlocks = shader.usedUniformBlocks;
-   vertex.usedFeedbackBuffers = shader.usedFeedbackBuffers;
 
    fmt::MemoryWriter out;
    out << shader.fileHeader;
@@ -1073,6 +1077,36 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
          out << "layout(location = " << i << ")";
          out << " out vec4 vs_out_" << semanticId << ";\n";
+      }
+   }
+   out << '\n';
+
+   // Transform feedback outputs
+   for (auto buffer = 0u; buffer < latte::MaxStreamOutBuffers; ++buffer) {
+      vertex.usedFeedbackBuffers[buffer] = !shader.feedbacks[buffer].empty();
+
+      if (vertex.usedFeedbackBuffers[buffer]) {
+         auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * buffer);
+         auto stride = vgt_strmout_vtx_stride * 4;
+
+         out
+            << "layout(xfb_buffer = " << buffer
+            << ", xfb_stride = " << stride
+            << ") out block {\n";
+
+         for (auto &xfb : shader.feedbacks[buffer]) {
+            out << "   layout(xfb_offset = " << xfb.offset << ") out ";
+
+            if (xfb.size == 1) {
+               out << "float";
+            } else {
+               out << "vec" << xfb.size;
+            }
+
+            out << " feedback_" << xfb.streamIndex << "_" << xfb.offset << ";\n";
+         }
+
+         out << "};\n";
       }
    }
    out << '\n';
