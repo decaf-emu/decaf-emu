@@ -3,6 +3,9 @@
 #include "common/decaf_assert.h"
 #include <algorithm>
 
+using espresso::XERegisterBits;
+using espresso::ConditionRegisterFlag;
+
 namespace cpu
 {
 
@@ -25,11 +28,6 @@ static bool
 loadGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    static_assert(sizeof(Type) == 1 || sizeof(Type) == 2 || sizeof(Type) == 4 || sizeof(Type) == 8, "Unexpected type size");
-
-   if (flags & LoadReserve) {
-      // Early out for if statement below.
-      return jit_fallback(a, instr);
-   }
 
    auto src = a.allocGpTmp().r32();
 
@@ -61,21 +59,33 @@ loadGeneric(PPCEmuAssembler& a, Instruction instr)
       } else if (sizeof(Type) == 2) {
          a.mov(data, 0);
          a.mov(data.r16(), asmjit::X86Mem(hostSrc, 0));
-         if (!(flags & LoadByteReverse)) {
-            a.shl(data, 8);
-            a.bswap(data.r32());
-            a.shr(data, 8);
-         }
       } else if (sizeof(Type) == 4) {
          a.mov(data.r32(), asmjit::X86Mem(hostSrc, 0));
-         if (!(flags & LoadByteReverse)) {
-            a.bswap(data.r32());
-         }
       } else if (sizeof(Type) == 8) {
          a.mov(data, asmjit::X86Mem(hostSrc, 0));
-         if (!(flags & LoadByteReverse)) {
-            a.bswap(data);
-         }
+      }
+   }
+
+   if (flags & LoadReserve) {
+      static_assert(!(flags & LoadReserve) || sizeof(Type) == 4, "Reserved reads are only valid on 32-bit values");
+
+      auto ppcreserve = a.loadRegisterWrite(a.reserve);
+      a.mov(ppcreserve, src);
+      a.shl(ppcreserve, 32);
+      a.or_(ppcreserve, data);
+   }
+
+   if (!(flags & LoadByteReverse)) {
+      if (sizeof(Type) == 1) {
+         // No need to byte-swap 1 byte
+      } else if (sizeof(Type) == 2) {
+         a.shl(data, 8);
+         a.bswap(data.r32());
+         a.shr(data, 8);
+      } else if (sizeof(Type) == 4) {
+         a.bswap(data.r32());
+      } else if (sizeof(Type) == 8) {
+         a.bswap(data);
       }
    }
 
@@ -344,10 +354,7 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
 {
    static_assert(sizeof(Type) == 1 || sizeof(Type) == 2 || sizeof(Type) == 4 || sizeof(Type) == 8, "Unexpected type size");
 
-   if (flags & StoreConditional) {
-      // Early out for if statement below.
-      return jit_fallback(a, instr);
-   }
+   auto eaxLockout = a.lockRegister(asmjit::x86::rax);
 
    auto dst = a.allocGpTmp().r32();
    auto x = sign_extend<16, int32_t>(instr.d);
@@ -404,19 +411,57 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
       }
    }
 
+   auto failedWriteLbl = a.newLabel();
+
    {
       auto hostDst = a.allocGpTmp().r64();
       a.mov(hostDst, dst);
       a.add(hostDst, a.membaseReg);
 
-      if (sizeof(Type) == 1) {
-         a.mov(asmjit::X86Mem(hostDst, 0), data.r8());
-      } else if (sizeof(Type) == 2) {
-         a.mov(asmjit::X86Mem(hostDst, 0), data.r16());
-      } else if (sizeof(Type) == 4) {
-         a.mov(asmjit::X86Mem(hostDst, 0), data.r32());
-      } else if (sizeof(Type) == 8) {
-         a.mov(asmjit::X86Mem(hostDst, 0), data);
+      if (flags & StoreConditional) {
+         static_assert(!(flags & StoreConditional) || sizeof(Type) == 4, "Reserved writes are only valid on 32-bit values");
+
+         constexpr uint32_t crId = 0;
+         constexpr uint32_t crshift = (7 - crId) * 4;
+         constexpr uint32_t crmask = ~(0xF << crshift);
+
+         auto ppccr = a.loadRegisterReadWrite(a.cr);
+
+         {
+            // clear cr0, but update summary overflow
+            auto ppcxer = a.loadRegisterRead(a.xer);
+            auto tmp = a.allocGpTmp().r32();
+            a.mov(tmp, ppcxer);
+            a.and_(tmp, XERegisterBits::StickyOV);
+            a.shr(tmp, XERegisterBits::StickyOVShift);
+            a.shl(tmp, ConditionRegisterFlag::SummaryOverflowShift + crshift);
+            a.and_(ppccr, crmask);
+            a.or_(ppccr, tmp);
+         }
+
+         auto ppcreserve = a.loadRegisterReadWrite(a.reserve);
+
+         a.mov(asmjit::x86::eax, ppcreserve.r32());
+         a.shr(ppcreserve, 32);
+
+         a.cmp(dst, ppcreserve);
+         a.mov(ppcreserve, 0xffffffffffffffff);
+         a.jne(failedWriteLbl);
+
+         a.lock().cmpxchg(asmjit::X86Mem(hostDst, 0), data.r32());
+         a.jne(failedWriteLbl);
+
+         a.or_(ppccr, ConditionRegisterFlag::Equal << crshift);
+      } else {
+         if (sizeof(Type) == 1) {
+            a.mov(asmjit::X86Mem(hostDst, 0), data.r8());
+         } else if (sizeof(Type) == 2) {
+            a.mov(asmjit::X86Mem(hostDst, 0), data.r16());
+         } else if (sizeof(Type) == 4) {
+            a.mov(asmjit::X86Mem(hostDst, 0), data.r32());
+         } else if (sizeof(Type) == 8) {
+            a.mov(asmjit::X86Mem(hostDst, 0), data);
+         }
       }
    }
 
@@ -424,6 +469,8 @@ storeGeneric(PPCEmuAssembler& a, Instruction instr)
       auto addrDst = a.loadRegisterWrite(a.gpr[instr.rA]);
       a.mov(addrDst, dst);
    }
+
+   a.bind(failedWriteLbl);
 
    return true;
 }
