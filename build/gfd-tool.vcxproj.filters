@@ -81,5 +81,8 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_alu.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_addrlibopt.cpp">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

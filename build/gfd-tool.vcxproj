@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\libdecaf\src\gpu\gfd.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_addrlibopt.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_alu.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_export.cpp" />
