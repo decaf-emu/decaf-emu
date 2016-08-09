@@ -212,6 +212,31 @@ fdivs(PPCEmuAssembler& a, Instruction instr)
    return fpArithGeneric<FPDiv, true>(a, instr);
 }
 
+static bool
+fsel(PPCEmuAssembler& a, Instruction instr)
+{
+   auto dst = a.loadRegisterWrite(a.fprps[instr.frD]);
+
+   auto srcB = a.loadRegisterRead(a.fprps[instr.frB]);
+   auto srcC = a.loadRegisterRead(a.fprps[instr.frC]);
+
+   auto tmp = a.allocXmmTmp();
+   a.pxor(tmp, tmp);
+
+   constexpr auto NLE_US = 6;
+   a.cmpsd(tmp, a.loadRegisterRead(a.fprps[instr.frA]), NLE_US);
+
+   auto tmp2 = a.allocXmmTmp();
+   a.movapd(tmp2, tmp);
+   a.pand(tmp, srcB);
+   a.pandn(tmp2, srcC);
+   a.por(tmp2, tmp);
+
+   a.movsd(dst, tmp2);
+
+   return true;
+}
+
 template <bool ShouldRound, bool ShouldSubtract, bool ShouldNegate>
 static bool
 fmaddGeneric(PPCEmuAssembler& a, Instruction instr)
@@ -397,7 +422,7 @@ void registerFloatInstructions()
    RegisterInstruction(fsubs);
    RegisterInstructionFallback(fres);
    RegisterInstructionFallback(frsqrte);
-   RegisterInstructionFallback(fsel);
+   RegisterInstruction(fsel);
    RegisterInstruction(fmadd);
    RegisterInstruction(fmadds);
    RegisterInstruction(fmsub);
