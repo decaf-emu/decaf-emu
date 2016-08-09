@@ -397,7 +397,8 @@ divGeneric(PPCEmuAssembler& a, Instruction instr)
       a.je(overflowLbl);
       a.bind(noOverflowLbl);
 
-      a.xor_(asmjit::x86::edx, asmjit::x86::edx);
+      a.mov(asmjit::x86::edx, srcA);
+      a.sar(asmjit::x86::edx, 31);
       a.mov(asmjit::x86::eax, srcA);
       a.idiv(srcB);
    } else {
