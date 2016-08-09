@@ -28,7 +28,7 @@ static const auto NO_PERSISTENT_MAP = false;
 static const auto BUFFER_PADDING = 16;
 
 static void
-dumpShader(const std::string &type, ppcaddr_t data, uint32_t size, bool isSubroutine = false)
+dumpRawShader(const std::string &type, ppcaddr_t data, uint32_t size, bool isSubroutine = false)
 {
    if (!decaf::config::gx2::dump_shaders) {
       return;
@@ -42,14 +42,32 @@ dumpShader(const std::string &type, ppcaddr_t data, uint32_t size, bool isSubrou
 
    platform::createDirectory("dump");
 
-   // Write text of shader to shader_pixel_X.txt
    auto file = std::ofstream{ filePath, std::ofstream::out };
 
    // Disassemble
    auto output = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(data), size), isSubroutine);
 
-   file
-      << output << std::endl;
+   file << output << std::endl;
+}
+
+static void
+dumpTranslatedShader(const std::string &type, ppcaddr_t data, const std::string &shaderSource)
+{
+   if (!decaf::config::gx2::dump_shaders) {
+      return;
+   }
+
+   std::string filePath = fmt::format("dump/gpu_{}_{:08x}.glsl", type, data);
+
+   if (platform::fileExists(filePath)) {
+      return;
+   }
+
+   platform::createDirectory("dump");
+
+   auto file = std::ofstream{ filePath, std::ofstream::out };
+
+   file << shaderSource << std::endl;
 }
 
 static gl::GLenum
@@ -206,7 +224,7 @@ bool GLDriver::checkActiveShader()
          fetchShader.cpuMemStart = fsPgmAddress;
          fetchShader.cpuMemEnd = fsPgmAddress + fsPgmSize;
 
-         dumpShader("fetch", fsPgmAddress, fsPgmSize, true);
+         dumpRawShader("fetch", fsPgmAddress, fsPgmSize, true);
          fetchShader.disassembly = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
 
          if (!parseFetchShader(fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
@@ -273,12 +291,14 @@ bool GLDriver::checkActiveShader()
          vertexShader.cpuMemStart = vsPgmAddress;
          vertexShader.cpuMemEnd = vsPgmAddress + vsPgmSize;
 
-         dumpShader("vertex", vsPgmAddress, vsPgmSize);
+         dumpRawShader("vertex", vsPgmAddress, vsPgmSize);
 
          if (!compileVertexShader(vertexShader, fetchShader, make_virtual_ptr<uint8_t>(vsPgmAddress), vsPgmSize)) {
             gLog->error("Failed to recompile vertex shader");
             return false;
          }
+
+         dumpTranslatedShader("vertex", vsPgmAddress, vertexShader.code);
 
          // Create OpenGL Shader
          const gl::GLchar *code[] = { vertexShader.code.c_str() };
@@ -328,12 +348,14 @@ bool GLDriver::checkActiveShader()
             pixelShader.cpuMemStart = psPgmAddress;
             pixelShader.cpuMemEnd = psPgmAddress + psPgmSize;
 
-            dumpShader("pixel", psPgmAddress, psPgmSize);
+            dumpRawShader("pixel", psPgmAddress, psPgmSize);
 
             if (!compilePixelShader(pixelShader, vertexShader, make_virtual_ptr<uint8_t>(psPgmAddress), psPgmSize)) {
                gLog->error("Failed to recompile pixel shader");
                return false;
             }
+
+            dumpTranslatedShader("pixel", psPgmAddress, pixelShader.code);
 
             // Create OpenGL Shader
             const gl::GLchar *code[] = { pixelShader.code.c_str() };
