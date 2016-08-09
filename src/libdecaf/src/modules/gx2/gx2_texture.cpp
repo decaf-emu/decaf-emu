@@ -178,7 +178,7 @@ setTexture(GX2Texture *texture, latte::SQ_RES_OFFSET offset, uint32_t unit)
       texture->regs.word6,
    });
 
-   GX2DebugDumpTexture(texture);
+   internal::debugDumpTexture(texture);
 }
 
 void

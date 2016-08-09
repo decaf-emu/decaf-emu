@@ -15,6 +15,9 @@
 namespace gx2
 {
 
+namespace internal
+{
+
 static void
 createDumpDirectory()
 {
@@ -22,7 +25,7 @@ createDumpDirectory()
 }
 
 static std::string
-GX2PointerAsString(const void *pointer)
+pointerAsString(const void *pointer)
 {
    fmt::MemoryWriter format;
    format.write("{:08X}", mem::untranslate(pointer));
@@ -30,7 +33,7 @@ GX2PointerAsString(const void *pointer)
 }
 
 static void
-GX2DebugDumpData(const std::string &filename, const void *data, size_t size)
+debugDumpData(const std::string &filename, const void *data, size_t size)
 {
    auto file = std::ofstream { filename, std::ofstream::out | std::ofstream::binary };
    file.write(static_cast<const char *>(data), size);
@@ -38,13 +41,13 @@ GX2DebugDumpData(const std::string &filename, const void *data, size_t size)
 }
 
 static void
-GX2DebugDumpData(std::ofstream &file, const void *data, size_t size)
+debugDumpData(std::ofstream &file, const void *data, size_t size)
 {
    file.write(reinterpret_cast<const char *>(data), size);
 }
 
 void
-GX2DebugDumpTexture(const GX2Texture *texture)
+debugDumpTexture(const GX2Texture *texture)
 {
    if (!decaf::config::gx2::dump_textures) {
       return;
@@ -53,7 +56,7 @@ GX2DebugDumpTexture(const GX2Texture *texture)
    createDumpDirectory();
 
    // Write text dump of GX2Texture structure to texture_X.txt
-   auto filename = "texture_" + GX2PointerAsString(texture);
+   auto filename = "texture_" + pointerAsString(texture);
 
    if (platform::fileExists("dump/" + filename + ".txt")) {
       return;
@@ -73,9 +76,9 @@ GX2DebugDumpTexture(const GX2Texture *texture)
       << "surface.use = " << gx2::enumAsString(texture->surface.use) << '\n'
       << "surface.resourceFlags = " << texture->surface.resourceFlags << '\n'
       << "surface.imageSize = " << texture->surface.imageSize << '\n'
-      << "surface.image = " << GX2PointerAsString(texture->surface.image) << '\n'
+      << "surface.image = " << pointerAsString(texture->surface.image) << '\n'
       << "surface.mipmapSize = " << texture->surface.mipmapSize << '\n'
-      << "surface.mipmaps = " << GX2PointerAsString(texture->surface.mipmaps) << '\n'
+      << "surface.mipmaps = " << pointerAsString(texture->surface.mipmaps) << '\n'
       << "surface.tileMode = " << gx2::enumAsString(texture->surface.tileMode) << '\n'
       << "surface.swizzle = " << texture->surface.swizzle << '\n'
       << "surface.alignment = " << texture->surface.alignment << '\n'
@@ -99,7 +102,7 @@ GX2DebugDumpTexture(const GX2Texture *texture)
 
 template<typename ShaderType>
 static void
-GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader, bool isSubroutine = false)
+debugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader, bool isSubroutine = false)
 {
    std::string output;
 
@@ -112,7 +115,7 @@ GX2DebugDumpShader(const std::string &filename, const std::string &info, ShaderT
 
    gLog->debug("Dumping shader {}", filename);
 
-   GX2DebugDumpData("dump/" + filename + ".bin", shader->data, shader->size);
+   debugDumpData("dump/" + filename + ".bin", shader->data, shader->size);
 
    // Write GSH file
    gfd::File gsh;
@@ -216,7 +219,7 @@ formatSamplerVars(fmt::MemoryWriter &out, uint32_t count, GX2SamplerVar *vars)
 }
 
 void
-GX2DebugDumpShader(GX2FetchShader *shader)
+debugDumpShader(GX2FetchShader *shader)
 {
    if (!decaf::config::gx2::dump_shaders) {
       return;
@@ -226,14 +229,14 @@ GX2DebugDumpShader(GX2FetchShader *shader)
    out << "GX2FetchShader:\n"
       << "  size: " << shader->size << "\n";
 
-   GX2DebugDumpShader("shader_fetch_" + GX2PointerAsString(shader),
+   debugDumpShader("shader_fetch_" + pointerAsString(shader),
                       out.str(),
                       shader,
                       true);
 }
 
 void
-GX2DebugDumpShader(GX2PixelShader *shader)
+debugDumpShader(GX2PixelShader *shader)
 {
    if (!decaf::config::gx2::dump_shaders) {
       return;
@@ -250,13 +253,13 @@ GX2DebugDumpShader(GX2PixelShader *shader)
    formatLoopVars(out, shader->loopVarCount, shader->loopVars);
    formatSamplerVars(out, shader->samplerVarCount, shader->samplerVars);
 
-   GX2DebugDumpShader("shader_pixel_" + GX2PointerAsString(shader),
+   debugDumpShader("shader_pixel_" + pointerAsString(shader),
                       out.str(),
                       shader);
 }
 
 void
-GX2DebugDumpShader(GX2VertexShader *shader)
+debugDumpShader(GX2VertexShader *shader)
 {
    if (!decaf::config::gx2::dump_shaders) {
       return;
@@ -274,13 +277,10 @@ GX2DebugDumpShader(GX2VertexShader *shader)
    formatSamplerVars(out, shader->samplerVarCount, shader->samplerVars);
    formatAttribVars(out, shader->attribVarCount, shader->attribVars);
 
-   GX2DebugDumpShader("shader_vertex_" + GX2PointerAsString(shader),
+   debugDumpShader("shader_vertex_" + pointerAsString(shader),
                       out.str(),
                       shader);
 }
-
-namespace internal
-{
 
 void writeDebugMarker(const char *key, uint32_t id)
 {

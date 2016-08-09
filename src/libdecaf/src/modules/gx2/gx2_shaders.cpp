@@ -38,7 +38,7 @@ GX2SetFetchShader(GX2FetchShader *shader)
    };
    pm4::write(pm4::SetContextRegs { latte::Register::VGT_INSTANCE_STEP_RATE_0, gsl::as_span(vgt_instance_step_rates) });
 
-   GX2DebugDumpShader(shader);
+   internal::debugDumpShader(shader);
 }
 
 void
@@ -124,7 +124,7 @@ GX2SetVertexShader(GX2VertexShader *shader)
       pm4::write(pm4::SetLoopConst { id, shader->loopVars[i].value });
    }
 
-   GX2DebugDumpShader(shader);
+   internal::debugDumpShader(shader);
 }
 
 void
@@ -189,7 +189,7 @@ GX2SetPixelShader(GX2PixelShader *shader)
       pm4::write(pm4::SetLoopConst { id, shader->loopVars[i].value });
    }
 
-   GX2DebugDumpShader(shader);
+   internal::debugDumpShader(shader);
 }
 
 void
