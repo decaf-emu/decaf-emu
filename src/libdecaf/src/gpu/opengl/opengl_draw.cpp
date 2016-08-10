@@ -335,8 +335,12 @@ GLDriver::decafClearColor(const pm4::DecafClearColor &data)
    }
 
    // Clear color buffer
+   glColorMaski(0, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE);
+   mColorBufferCache[0].mask = 0xF; // Recheck mask on next color buffer update
    gl::glDisable(gl::GL_SCISSOR_TEST);
+
    gl::glClearNamedFramebufferfv(mColorClearFrameBuffer, gl::GL_COLOR, 0, colors);
+
    gl::glEnable(gl::GL_SCISSOR_TEST);
 }
 
@@ -371,6 +375,10 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    }
 
    // Clear depth buffer
+   auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
+   if (!db_depth_control.Z_WRITE_ENABLE()) {
+      gl::glDepthMask(gl::GL_TRUE);
+   }
    gl::glDisable(gl::GL_SCISSOR_TEST);
 
    if (hasStencil) {
@@ -380,6 +388,9 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    }
 
    gl::glEnable(gl::GL_SCISSOR_TEST);
+   if (!db_depth_control.Z_WRITE_ENABLE()) {
+      gl::glDepthMask(gl::GL_FALSE);
+   }
 }
 
 void
