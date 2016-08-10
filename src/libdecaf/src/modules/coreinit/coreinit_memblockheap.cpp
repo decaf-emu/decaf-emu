@@ -7,8 +7,6 @@
 #include "common/structsize.h"
 #include <array>
 
-#pragma optimize("", off)
-
 namespace coreinit
 {
 
