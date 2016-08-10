@@ -132,13 +132,13 @@ struct ScanBufferChain
    uint32_t height;
 };
 
-struct AttributeBuffer
+struct AttributeBuffer : public Resource
 {
    gl::GLuint object = 0;
-   uint32_t size = 0;
-   uint32_t addr = 0;
-   uint32_t stride = 0;
+   uint32_t allocatedSize = 0;
    void *mappedBuffer = nullptr;
+   bool dirtyAsBuffer = true;
+   uint64_t cpuMemHash[2] = { 0 };
 };
 
 struct FeedbackBuffer

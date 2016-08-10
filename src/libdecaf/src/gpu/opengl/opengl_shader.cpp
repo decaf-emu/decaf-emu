@@ -71,47 +71,61 @@ dumpTranslatedShader(const std::string &type, ppcaddr_t data, const std::string 
    file << shaderSource << std::endl;
 }
 
-static gl::GLenum
-getAttributeFormat(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
+static std::string
+getDataFormatName(latte::SQ_DATA_FORMAT format)
 {
-   bool isSigned = (formatComp == latte::SQ_FORMAT_COMP_SIGNED);
-
    switch (format) {
    case latte::FMT_8:
-   case latte::FMT_8_8:
-   case latte::FMT_8_8_8:
-   case latte::FMT_8_8_8_8:
-      return isSigned ? gl::GL_BYTE : gl::GL_UNSIGNED_BYTE;
+      return "FMT_8";
    case latte::FMT_16:
-   case latte::FMT_16_16:
-   case latte::FMT_16_16_16:
-   case latte::FMT_16_16_16_16:
-      return isSigned ? gl::GL_SHORT : gl::GL_UNSIGNED_SHORT;
+      return "FMT_16";
    case latte::FMT_16_FLOAT:
-   case latte::FMT_16_16_FLOAT:
-   case latte::FMT_16_16_16_FLOAT:
-   case latte::FMT_16_16_16_16_FLOAT:
-      return gl::GL_HALF_FLOAT;
+      return "FMT_16_FLOAT";
    case latte::FMT_32:
-   case latte::FMT_32_32:
-   case latte::FMT_32_32_32:
-   case latte::FMT_32_32_32_32:
-      return isSigned ? gl::GL_INT : gl::GL_UNSIGNED_INT;
+      return "FMT_32";
    case latte::FMT_32_FLOAT:
+      return "FMT_32_FLOAT";
+   case latte::FMT_8_8:
+      return "FMT_8_8";
+   case latte::FMT_16_16:
+      return "FMT_16_16";
+   case latte::FMT_16_16_FLOAT:
+      return "FMT_16_16_FLOAT";
+   case latte::FMT_32_32:
+      return "FMT_32_32";
    case latte::FMT_32_32_FLOAT:
+      return "FMT_32_32_FLOAT";
+   case latte::FMT_8_8_8:
+      return "FMT_8_8_8";
+   case latte::FMT_16_16_16:
+      return "FMT_16_16_16";
+   case latte::FMT_16_16_16_FLOAT:
+      return "FMT_16_16_16_FLOAT";
+   case latte::FMT_32_32_32:
+      return "FMT_32_32_32";
    case latte::FMT_32_32_32_FLOAT:
+      return "FMT_32_32_32_FLOAT";
+   case latte::FMT_8_8_8_8:
+      return "FMT_8_8_8_8";
+   case latte::FMT_16_16_16_16:
+      return "FMT_16_16_16_16";
+   case latte::FMT_16_16_16_16_FLOAT:
+      return "FMT_16_16_16_16_FLOAT";
+   case latte::FMT_32_32_32_32:
+      return "FMT_32_32_32_32";
    case latte::FMT_32_32_32_32_FLOAT:
-      return gl::GL_FLOAT;
+      return "FMT_32_32_32_32_FLOAT";
    case latte::FMT_2_10_10_10:
-      return gl::GL_UNSIGNED_INT_2_10_10_10_REV;
+      return "FMT_2_10_10_10";
+   case latte::FMT_10_10_10_2:
+      return "FMT_10_10_10_2";
    default:
-      gLog->error(fmt::format("Unsupported attribute format: {}", format));
-      return gl::GL_BYTE;
+      decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
    }
 }
 
 static gl::GLint
-getAttributeComponents(latte::SQ_DATA_FORMAT format)
+getDataFormatComponents(latte::SQ_DATA_FORMAT format)
 {
    switch (format) {
    case latte::FMT_8:
@@ -133,6 +147,7 @@ getAttributeComponents(latte::SQ_DATA_FORMAT format)
    case latte::FMT_32_32_32_FLOAT:
       return 3;
    case latte::FMT_2_10_10_10:
+   case latte::FMT_10_10_10_2:
    case latte::FMT_8_8_8_8:
    case latte::FMT_16_16_16_16:
    case latte::FMT_16_16_16_16_FLOAT:
@@ -140,8 +155,96 @@ getAttributeComponents(latte::SQ_DATA_FORMAT format)
    case latte::FMT_32_32_32_32_FLOAT:
       return 4;
    default:
-      gLog->error(fmt::format("Unimplemented attribute format: {}", format));
-      return 1;
+      decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
+   }
+}
+
+static gl::GLint
+getDataFormatComponentBits(latte::SQ_DATA_FORMAT format)
+{
+   switch (format) {
+   case latte::FMT_8:
+   case latte::FMT_8_8:
+   case latte::FMT_8_8_8:
+   case latte::FMT_8_8_8_8:
+      return 8;
+   case latte::FMT_16:
+   case latte::FMT_16_FLOAT:
+   case latte::FMT_16_16:
+   case latte::FMT_16_16_FLOAT:
+   case latte::FMT_16_16_16:
+   case latte::FMT_16_16_16_FLOAT:
+   case latte::FMT_16_16_16_16:
+   case latte::FMT_16_16_16_16_FLOAT:
+      return 16;
+   case latte::FMT_32:
+   case latte::FMT_32_FLOAT:
+   case latte::FMT_32_32:
+   case latte::FMT_32_32_FLOAT:
+   case latte::FMT_32_32_32:
+   case latte::FMT_32_32_32_FLOAT:
+   case latte::FMT_32_32_32_32:
+   case latte::FMT_32_32_32_32_FLOAT:
+      return 32;
+   default:
+      decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
+   }
+}
+
+static bool
+getDataFormatIsFloat(latte::SQ_DATA_FORMAT format)
+{
+   switch (format) {
+
+   case latte::FMT_16_FLOAT:
+   case latte::FMT_32_FLOAT:
+   case latte::FMT_16_16_FLOAT:
+   case latte::FMT_32_32_FLOAT:
+   case latte::FMT_16_16_16_FLOAT:
+   case latte::FMT_32_32_32_FLOAT:
+   case latte::FMT_16_16_16_16_FLOAT:
+   case latte::FMT_32_32_32_32_FLOAT:
+      return true;
+   case latte::FMT_8:
+   case latte::FMT_16:
+   case latte::FMT_32:
+   case latte::FMT_8_8:
+   case latte::FMT_16_16:
+   case latte::FMT_32_32:
+   case latte::FMT_8_8_8:
+   case latte::FMT_16_16_16:
+   case latte::FMT_32_32_32:
+   case latte::FMT_2_10_10_10:
+   case latte::FMT_10_10_10_2:
+   case latte::FMT_8_8_8_8:
+   case latte::FMT_16_16_16_16:
+   case latte::FMT_32_32_32_32:
+      return false;
+   default:
+      decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
+   }
+}
+
+static gl::GLenum
+getDataFormatGlType(latte::SQ_DATA_FORMAT format)
+{
+   // Some Special Cases
+   switch (format) {
+   case latte::FMT_10_10_10_2:
+   case latte::FMT_2_10_10_10:
+      return gl::GL_UNSIGNED_INT;
+   }
+
+   uint32_t bitCount = getDataFormatComponentBits(format);
+   switch (bitCount) {
+   case 8:
+      return gl::GL_UNSIGNED_BYTE;
+   case 16:
+      return gl::GL_UNSIGNED_SHORT;
+   case 32:
+      return gl::GL_UNSIGNED_INT;
+   default:
+      decaf_abort(fmt::format("Unimplemented attribute bit count: {} for {}", bitCount, format));
    }
 }
 
@@ -250,18 +353,12 @@ bool GLDriver::checkActiveShader()
             if (resourceId >= latte::SQ_VS_ATTRIB_RESOURCE_0 && resourceId < latte::SQ_VS_ATTRIB_RESOURCE_0 + 0x10) {
                auto attribBufferId = resourceId - latte::SQ_VS_ATTRIB_RESOURCE_0;
 
-               auto normalise = attrib.numFormat == latte::SQ_NUM_FORMAT_NORM ? gl::GL_TRUE : gl::GL_FALSE;
-               auto type = getAttributeFormat(attrib.format, attrib.formatComp);
-               auto components = getAttributeComponents(attrib.format);
+               auto type = getDataFormatGlType(attrib.format);
+               auto components = getDataFormatComponents(attrib.format);
                uint32_t divisor = 0;
 
                gl::glEnableVertexArrayAttrib(fetchShader.object, attrib.location);
-               if (attrib.numFormat == latte::SQ_NUM_FORMAT_INT) {
-                  decaf_assert(type != gl::GL_FLOAT && type != gl::GL_HALF_FLOAT, "Fetch shader tried to read float data as int");
-                  gl::glVertexArrayAttribIFormat(fetchShader.object, attrib.location, components, type, attrib.offset);
-               } else {
-                  gl::glVertexArrayAttribFormat(fetchShader.object, attrib.location, components, type, normalise, attrib.offset);
-               }
+               gl::glVertexArrayAttribIFormat(fetchShader.object, attrib.location, components, type, attrib.offset);
                gl::glVertexArrayAttribBinding(fetchShader.object, attrib.location, attribBufferId);
 
                if (attrib.type == latte::SQ_VTX_FETCH_TYPE::SQ_VTX_FETCH_INSTANCE_DATA) {
@@ -654,16 +751,13 @@ stridedMemcpy(const void *src,
 
 bool GLDriver::checkActiveAttribBuffers()
 {
-   std::array<AttributeBuffer *, latte::MaxAttributes> buffers;
-   buffers.fill(nullptr);
-
    if (!mActiveShader
     || !mActiveShader->fetch || !mActiveShader->fetch->attribs.size()
     || !mActiveShader->vertex || !mActiveShader->vertex->object) {
       return false;
    }
 
-   for (auto i = 0u; i < buffers.size(); ++i) {
+   for (auto i = 0u; i < latte::MaxAttributes; ++i) {
       auto resourceOffset = (latte::SQ_VS_ATTRIB_RESOURCE_0 + i) * 7;
       auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
       auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
@@ -678,14 +772,9 @@ bool GLDriver::checkActiveAttribBuffers()
          continue;
       }
 
-      if (size % stride) {
-         gLog->error("Error, size: {} is not multiple of stride: {}", size, stride);
-         return false;
-      }
-
       auto &buffer = mAttribBuffers[addr];
 
-      if (!buffer.object || buffer.size < size) {
+      if (!buffer.object || buffer.allocatedSize < size) {
          if (buffer.object) {
             if (buffer.mappedBuffer) {
                gl::glUnmapNamedBuffer(buffer.object);
@@ -696,59 +785,40 @@ bool GLDriver::checkActiveAttribBuffers()
          }
 
          gl::glCreateBuffers(1, &buffer.object);
-         gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+         gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_CLIENT_STORAGE_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+         buffer.allocatedSize = size;
       }
 
-      if (!buffer.mappedBuffer) {
-         if (!NO_PERSISTENT_MAP) {
-            buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size + BUFFER_PADDING, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
-         } else {
-            buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size + BUFFER_PADDING, gl::GL_MAP_WRITE_BIT);
+      auto ppcBuffer = mem::translate<const void>(addr);
+
+      if (buffer.dirtyAsBuffer) {
+         // Calculate a new memory CRC
+         uint64_t newHash[2] = { 0 };
+         MurmurHash3_x64_128(ppcBuffer, size, 0, newHash);
+
+         if (newHash[0] != buffer.cpuMemHash[0] || newHash[1] != buffer.cpuMemHash[1]) {
+            buffer.cpuMemHash[0] = newHash[0];
+            buffer.cpuMemHash[1] = newHash[1];
+            buffer.cpuMemStart = addr;
+            buffer.cpuMemEnd = buffer.cpuMemStart + size;
+
+            // Upload data
+            if (!NO_PERSISTENT_MAP) {
+               if (!buffer.mappedBuffer) {
+                  buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size + BUFFER_PADDING, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+               }
+
+               memcpy(buffer.mappedBuffer, ppcBuffer, size);
+               gl::glFlushMappedNamedBufferRange(buffer.object, 0, size);
+            } else {
+               gl::glNamedBufferSubData(buffer.object, 0, size, ppcBuffer);
+            }
+
+            buffer.dirtyAsBuffer = false;
          }
       }
 
-      buffer.addr = addr;
-      buffer.size = size;
-      buffer.stride = stride;
-      buffers[i] = &buffer;
-   }
-
-   for (auto &attrib : mActiveShader->fetch->attribs) {
-      auto resourceId = attrib.buffer + latte::SQ_VS_RESOURCE_BASE;
-
-      if (resourceId >= latte::SQ_VS_ATTRIB_RESOURCE_0 && resourceId < latte::SQ_VS_ATTRIB_RESOURCE_0 + 0x10) {
-         auto attribBufferId = resourceId - latte::SQ_VS_ATTRIB_RESOURCE_0;
-         auto buffer = buffers[attribBufferId];
-
-         if (!buffer || !buffer->object) {
-            decaf_abort("Something odd happened with attribute buffers");
-         }
-
-         stridedMemcpy(mem::translate<const void>(buffer->addr),
-                       buffer->mappedBuffer,
-                       buffer->size,
-                       attrib.offset,
-                       buffer->stride,
-                       attrib.endianSwap,
-                       attrib.format);
-      } else {
-         decaf_abort("We do not yet support binding of non-attribute buffers");
-      }
-   }
-
-   for (auto i = 0u; i < buffers.size(); i++) {
-      auto buffer = buffers[i];
-
-      if (buffer) {
-         if (!NO_PERSISTENT_MAP) {
-            gl::glFlushMappedNamedBufferRange(buffer->object, 0, buffer->size);
-         } else {
-            gl::glUnmapNamedBuffer(buffer->object);
-            buffer->mappedBuffer = nullptr;
-         }
-
-         gl::glBindVertexBuffer(i, buffer->object, 0, buffer->stride);
-      }
+      gl::glBindVertexBuffer(i, buffer.object, 0, stride);
    }
 
    return true;
@@ -913,168 +983,29 @@ bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
    return false;
 }
 
-static size_t
-getDataFormatChannels(latte::SQ_DATA_FORMAT format)
+static const char *
+getGLSLDataInFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT num, latte::SQ_FORMAT_COMP comp)
 {
    switch (format) {
-   case latte::FMT_8:
-      return 1;
-   case latte::FMT_4_4:
-      return 2;
-   case latte::FMT_3_3_2:
-      return 3;
-   case latte::FMT_16:
-      return 1;
-   case latte::FMT_16_FLOAT:
-      return 1;
-   case latte::FMT_8_8:
-      return 2;
-   case latte::FMT_5_6_5:
-      return 3;
-   case latte::FMT_6_5_5:
-      return 3;
-   case latte::FMT_1_5_5_5:
-      return 4;
-   case latte::FMT_4_4_4_4:
-      return 4;
-   case latte::FMT_5_5_5_1:
-      return 4;
-   case latte::FMT_32:
-      return 1;
-   case latte::FMT_32_FLOAT:
-      return 1;
-   case latte::FMT_16_16:
-      return 2;
-   case latte::FMT_16_16_FLOAT:
-      return 2;
-   case latte::FMT_8_24:
-      return 2;
-   case latte::FMT_8_24_FLOAT:
-      return 2;
-   case latte::FMT_24_8:
-      return 2;
-   case latte::FMT_24_8_FLOAT:
-      return 2;
-   case latte::FMT_10_11_11:
-      return 3;
-   case latte::FMT_10_11_11_FLOAT:
-      return 3;
-   case latte::FMT_11_11_10:
-      return 3;
-   case latte::FMT_11_11_10_FLOAT:
-      return 3;
-   case latte::FMT_2_10_10_10:
-      return 4;
-   case latte::FMT_8_8_8_8:
-      return 4;
-   case latte::FMT_10_10_10_2:
-      return 4;
-   case latte::FMT_X24_8_32_FLOAT:
-      return 3;
-   case latte::FMT_32_32:
-      return 2;
-   case latte::FMT_32_32_FLOAT:
-      return 2;
-   case latte::FMT_16_16_16_16:
-      return 4;
-   case latte::FMT_16_16_16_16_FLOAT:
-      return 4;
-   case latte::FMT_32_32_32_32:
-      return 4;
-   case latte::FMT_32_32_32_32_FLOAT:
-      return 4;
-   case latte::FMT_1:
-      return 1;
-   case latte::FMT_GB_GR:
-      return 2;
-   case latte::FMT_BG_RG:
-      return 2;
-   case latte::FMT_32_AS_8:
-      return 1;
-   case latte::FMT_32_AS_8_8:
-      return 1;
-   case latte::FMT_5_9_9_9_SHAREDEXP:
-      return 4;
-   case latte::FMT_8_8_8:
-      return 3;
-   case latte::FMT_16_16_16:
-      return 3;
-   case latte::FMT_16_16_16_FLOAT:
-      return 3;
-   case latte::FMT_32_32_32:
-      return 3;
-   case latte::FMT_32_32_32_FLOAT:
-      return 3;
+   case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
+   case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
+      return "uint";
+   }
+
+   auto channels = getDataFormatComponents(format);
+
+   switch (channels) {
+   case 1:
+      return "uint";
+   case 2:
+      return "uvec2";
+   case 3:
+      return "uvec3";
+   case 4:
+      return "uvec4";
    default:
-      return 4;
+      decaf_abort(fmt::format("Unimplemented attribute channel count: {} for {}", channels, format));
    }
-}
-
-static const char *
-getGLSLDataFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT num, latte::SQ_FORMAT_COMP comp)
-{
-   auto channels = getDataFormatChannels(format);
-
-   if (num == latte::SQ_NUM_FORMAT_INT) {
-      if (comp == latte::SQ_FORMAT_COMP_SIGNED) {
-         switch (channels) {
-         case 1:
-            return "int";
-         case 2:
-            return "ivec2";
-         case 3:
-            return "ivec3";
-         case 4:
-            return "ivec4";
-         }
-      } else {
-         switch (channels) {
-         case 1:
-            return "uint";
-         case 2:
-            return "uvec2";
-         case 3:
-            return "uvec3";
-         case 4:
-            return "uvec4";
-         }
-      }
-   } else {
-      switch (channels) {
-      case 1:
-         return "float";
-      case 2:
-         return "vec2";
-      case 3:
-         return "vec3";
-      case 4:
-         return "vec4";
-      }
-   }
-
-   gLog->error("Unsupported GLSL data format, format={}, num={}, comp={}", format, num, comp);
-   return "vec4";
-}
-
-static std::string
-getFSOutName(const FetchShader::Attrib *attrib)
-{
-   fmt::MemoryWriter out;
-
-   if (attrib->numFormat == latte::SQ_NUM_FORMAT_INT) {
-      if (attrib->formatComp == latte::SQ_FORMAT_COMP_UNSIGNED) {
-         out << 'u';
-      }
-      out << "intBitsToFloat(";
-   }
-
-   out << "fs_out_" << attrib->location;
-
-   if (attrib->numFormat == latte::SQ_NUM_FORMAT_INT) {
-      out << ")";
-   }
-
-   return out.str();
 }
 
 bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size)
@@ -1112,13 +1043,45 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    fmt::MemoryWriter out;
    out << shader.fileHeader;
 
+   out << "#define bswap16(v) (((v & 0xFF00FF00) >> 8) | ((v & 0x00FF00FF) << 8))\n";
+   out << "#define bswap32(v) (((v & 0xFF000000) >> 24) | ((v & 0x00FF0000) >> 8) | ((v & 0x0000FF00) << 8) | ((v & 0x000000FF) << 24))\n";
+   out << "#define signext2(v) ((v ^ 0x2) - 0x2)\n";
+   out << "#define signext8(v) ((v ^ 0x80) - 0x80)\n";
+   out << "#define signext10(v) ((v ^ 0x200) - 0x200)\n";
+   out << "#define signext16(v) ((v ^ 0x8000) - 0x8000)\n";
+
    // Vertex Shader Inputs
    for (auto &attrib : fetch.attribs) {
       semanticAttribs[attrib.location] = &attrib;
 
+      out << "//";
+      out << " " << getDataFormatName(attrib.format);
+      if (attrib.formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+         out << " SIGNED";
+      } else {
+         out << " UNSIGNED";
+      }
+      if (attrib.numFormat == latte::SQ_NUM_FORMAT_INT) {
+         out << " INT";
+      } else if (attrib.numFormat == latte::SQ_NUM_FORMAT_NORM) {
+         out << " NORM";
+      } else if (attrib.numFormat == latte::SQ_NUM_FORMAT_SCALED) {
+         out << " SCALED";
+      }
+      if (attrib.endianSwap == latte::SQ_ENDIAN_NONE) {
+         out << " SWAP_NONE";
+      } else if (attrib.endianSwap == latte::SQ_ENDIAN_8IN32) {
+         out << " SWAP_8IN32";
+      } else if (attrib.endianSwap == latte::SQ_ENDIAN_8IN16) {
+         out << " SWAP_8IN16";
+      } else if (attrib.endianSwap == latte::SQ_ENDIAN_AUTO) {
+         out << " SWAP_AUTO";
+      }
+      out << "\n";
+
       out << "layout(location = " << attrib.location << ")";
       out << " in "
-         << getGLSLDataFormat(attrib.format, attrib.numFormat, attrib.formatComp)
+          << getGLSLDataInFormat(attrib.format, attrib.numFormat, attrib.formatComp)
          << " fs_out_" << attrib.location << ";\n";
    }
    out << '\n';
@@ -1205,10 +1168,187 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          continue;
       }
 
-      out << "R[" << (i + 1) << "] = ";
 
-      auto name = getFSOutName(attrib);
-      auto channels = getDataFormatChannels(attrib->format);
+      fmt::MemoryWriter nameWriter;
+      nameWriter << "fs_out_" << attrib->location;
+      auto name = nameWriter.str();
+      auto channels = getDataFormatComponents(attrib->format);
+      auto isFloat = getDataFormatIsFloat(attrib->format);
+
+      std::string chanVal[4];
+      uint32_t chanBitCount[4];
+
+      if (attrib->format == latte::FMT_10_10_10_2) {
+         decaf_check(channels == 4);
+
+         auto val = name;
+
+         if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
+            val = "bswap32(" + val + ")";
+         } else if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
+            decaf_abort("Unexpected 8IN16 swap for 10_10_10_2");
+         } else if (attrib->endianSwap == latte::SQ_ENDIAN_NONE) {
+            // Nothing to do
+         } else {
+            decaf_abort("Unexpected endian swap mode");
+         }
+
+         chanVal[0] = std::string("((") + val + std::string(" >> 22) & 0x3ff)");
+         chanVal[1] = std::string("((") + val + std::string(" >> 12) & 0x3ff)");
+         chanVal[2] = std::string("((") + val + std::string(" >> 2) & 0x3ff)");
+         chanVal[3] = std::string("((") + val + std::string(" >> 0) & 0x3)");
+
+         if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+            chanVal[0] = "int(signext10(" + chanVal[0] + "))";
+            chanVal[1] = "int(signext10(" + chanVal[1] + "))";
+            chanVal[2] = "int(signext10(" + chanVal[2] + "))";
+            chanVal[3] = "int(" + chanVal[3] + ")";
+         } else {
+            // Good to go!
+         }
+
+         chanBitCount[0] = 10;
+         chanBitCount[1] = 10;
+         chanBitCount[2] = 10;
+         chanBitCount[3] = 2;
+      } else if (attrib->format == latte::FMT_2_10_10_10) {
+         decaf_check(channels == 4);
+
+         auto val = name;
+
+         if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
+            val = "bswap32(" + val + ")";
+         } else if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
+            decaf_abort("Unexpected 8IN16 swap for 2_10_10_10");
+         } else if (attrib->endianSwap == latte::SQ_ENDIAN_NONE) {
+            // Nothing to do
+         } else {
+            decaf_abort("Unexpected endian swap mode");
+         }
+
+         chanVal[0] = std::string("((") + val + std::string(" >> 30) & 0x3)");
+         chanVal[1] = std::string("((") + val + std::string(" >> 20) & 0x3ff)");
+         chanVal[2] = std::string("((") + val + std::string(" >> 10) & 0x3ff)");
+         chanVal[3] = std::string("((") + val + std::string(" >> 0) & 0x3ff)");
+
+         if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+            chanVal[0] + "int(" + chanVal[0] + ")";
+            chanVal[1] + "int(signext10(" + chanVal[1] + "))";
+            chanVal[2] + "int(signext10(" + chanVal[2] + "))";
+            chanVal[3] + "int(signext10(" + chanVal[3] + "))";
+         } else {
+            // Good to go!
+         }
+
+         chanBitCount[0] = 2;
+         chanBitCount[1] = 10;
+         chanBitCount[2] = 10;
+         chanBitCount[3] = 10;
+      } else {
+         auto compBits = getDataFormatComponentBits(attrib->format);
+
+         for (auto i = 0; i < channels; ++i) {
+            auto &val = chanVal[i];
+            val = name;
+
+            if (channels > 1) {
+               if (i == 0) {
+                  val += ".x";
+               } else if (i == 1) {
+                  val += ".y";
+               } else if (i == 2) {
+                  val += ".z";
+               } else {
+                  val += ".w";
+               }
+            }
+
+            if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
+               decaf_check(compBits == 32);
+               val = "bswap32(" + val + ")";
+            } else if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
+               decaf_check(compBits == 16);
+               val = "bswap16(" + val + ")";
+            } else if (attrib->endianSwap == latte::SQ_ENDIAN_NONE) {
+               // Nothing to do
+            } else {
+               decaf_abort("Unexpected endian swap mode");
+            }
+
+            if (isFloat) {
+               if (compBits == 32) {
+                  val = "uintBitsToFloat(" + val + ")";
+               } else if (compBits == 16) {
+                  val = "unpackHalf2x16(" + val + ").x";
+               } else {
+                  decaf_abort("Unexpected float component bit count");
+               }
+            } else {
+               if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+                  if (compBits == 8) {
+                     val = "int(signext8(" + val + "))";
+                  } else if (compBits == 16) {
+                     val = "int(signext16(" + val + "))";
+                  } else if (compBits == 32) {
+                     val = "int(" + val + ")";
+                  } else {
+                     decaf_abort("Unexpected signed component bit count");
+                  }
+               } else {
+                  // Already the right format!
+               }
+            }
+
+            chanBitCount[i] = compBits;
+         }
+      }
+
+      for (auto i = 0; i < channels; ++i) {
+         if (attrib->numFormat == latte::SQ_NUM_FORMAT_NORM) {
+            uint32_t valMax = (1ul << chanBitCount[i]) - 1;
+
+            if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+               chanVal[i] = fmt::format("clamp(float({}) / {}.0, -1.0, 1.0)", chanVal[i], valMax / 2);
+            } else {
+               chanVal[i] = fmt::format("float({}) / {}.0", chanVal[i], valMax);
+            }
+         } else if (attrib->numFormat == latte::SQ_NUM_FORMAT_INT) {
+            if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+               chanVal[i] = "intBitsToFloat(int(" + chanVal[i] + "))";
+            } else {
+               chanVal[i] = "uintBitsToFloat(uint(" + chanVal[i] + "))";
+            }
+         } else if (attrib->numFormat == latte::SQ_NUM_FORMAT_SCALED) {
+            chanVal[i] = "float(" + chanVal[i] + ")";
+         } else {
+            decaf_abort("Unexpected attribute number format");
+         }
+      }
+
+      if (channels == 1) {
+         out << "float _" << name << " = " << chanVal[0] << ";\n";
+      } else if (channels == 2) {
+         out << "vec2 _" << name << " = vec2(\n";
+         out << "   " << chanVal[0] << ",\n";
+         out << "   " << chanVal[1] << ");\n";
+      } else if (channels == 3) {
+         out << "vec3 _" << name << " = vec3(\n";
+         out << "   " << chanVal[0] << ",\n";
+         out << "   " << chanVal[1] << ",\n";
+         out << "   " << chanVal[2] << ");\n";
+      } else if (channels == 4) {
+         out << "vec4 _" << name << " = vec4(\n";
+         out << "   " << chanVal[0] << ",\n";
+         out << "   " << chanVal[1] << ",\n";
+         out << "   " << chanVal[2] << ",\n";
+         out << "   " << chanVal[3] << ");\n";
+      } else {
+         decaf_abort("Unexpected format channel count");
+      }
+      name = "_" + name;
+
+      // Write the register assignment
+      out << "R[" << (i + 1) << "] = ";
 
       switch (channels) {
       case 1:
