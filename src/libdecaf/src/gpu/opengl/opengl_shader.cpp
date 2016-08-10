@@ -1,5 +1,6 @@
 #include "common/decaf_assert.h"
 #include "common/log.h"
+#include "common/murmur3.h"
 #include "common/platform_dir.h"
 #include "common/strutils.h"
 #include "decaf_config.h"
@@ -450,22 +451,42 @@ bool GLDriver::checkActiveUniforms()
             auto block = make_virtual_ptr<float>(sq_alu_const_cache_vs << 8);
             auto size = sq_alu_const_buffer_size_vs << 8;
 
-            auto &ubo = mUniformBuffers[sq_alu_const_cache_vs];
-
-            if (!ubo.object) {
-               gl::glGenBuffers(1, &ubo.object);
-            }
-
             // Check that we can fit the uniform block into OpenGL buffers
             decaf_assert(size <= gpu::opengl::MaxUniformBlockSize,
-                         fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, MaxUniformBlockSize));
+               fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, MaxUniformBlockSize));
 
-            // Upload block
-            gl::glBindBuffer(gl::GL_UNIFORM_BUFFER, ubo.object);
-            gl::glBufferData(gl::GL_UNIFORM_BUFFER, size, block, gl::GL_DYNAMIC_DRAW);
+            auto &buffer = mUniformBuffers[sq_alu_const_cache_vs];
+
+            if (!buffer.object || buffer.allocatedSize < size) {
+               if (buffer.object) {
+                  gl::glDeleteBuffers(1, &buffer.object);
+               }
+
+               gl::glCreateBuffers(1, &buffer.object);
+               gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_DYNAMIC_STORAGE_BIT);
+               buffer.allocatedSize = size;
+               buffer.dirtyAsBuffer = true;
+            }
+
+            if (buffer.dirtyAsBuffer) {
+               // Calculate a new memory CRC
+               uint64_t newHash[2] = { 0 };
+               MurmurHash3_x64_128(block, size, 0, newHash);
+
+               if (newHash[0] != buffer.cpuMemHash[0] || newHash[1] != buffer.cpuMemHash[1]) {
+                  buffer.cpuMemHash[0] = newHash[0];
+                  buffer.cpuMemHash[1] = newHash[1];
+                  buffer.cpuMemStart = block.getAddress();
+                  buffer.cpuMemEnd = buffer.cpuMemStart + size;
+
+                  // Upload block
+                  gl::glNamedBufferSubData(buffer.object, 0, size, block);
+                  buffer.dirtyAsBuffer = false;
+               }
+            }
 
             // Bind block
-            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, ubo.object);
+            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, buffer.object);
          }
       }
 
@@ -483,22 +504,38 @@ bool GLDriver::checkActiveUniforms()
             auto block = make_virtual_ptr<float>(sq_alu_const_cache_ps << 8);
             auto size = sq_alu_const_buffer_size_ps << 8;
 
-            auto &ubo = mUniformBuffers[sq_alu_const_cache_ps];
+            auto &buffer = mUniformBuffers[sq_alu_const_cache_ps];
 
-            if (!ubo.object) {
-               gl::glGenBuffers(1, &ubo.object);
+            if (!buffer.object || buffer.allocatedSize < size) {
+               if (buffer.object) {
+                  gl::glDeleteBuffers(1, &buffer.object);
+               }
+
+               gl::glCreateBuffers(1, &buffer.object);
+               gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_DYNAMIC_STORAGE_BIT);
+               buffer.allocatedSize = size;
+               buffer.dirtyAsBuffer = true;
             }
 
-            // Check that we can fit the uniform block into OpenGL buffers
-            decaf_assert(size <= gpu::opengl::MaxUniformBlockSize,
-                         fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, MaxUniformBlockSize));
+            if (buffer.dirtyAsBuffer) {
+               // Calculate a new memory CRC
+               uint64_t newHash[2] = { 0 };
+               MurmurHash3_x64_128(block, size, 0, newHash);
 
-            // Upload block
-            gl::glBindBuffer(gl::GL_UNIFORM_BUFFER, ubo.object);
-            gl::glBufferData(gl::GL_UNIFORM_BUFFER, size, block, gl::GL_DYNAMIC_DRAW);
+               if (newHash[0] != buffer.cpuMemHash[0] || newHash[1] != buffer.cpuMemHash[1]) {
+                  buffer.cpuMemHash[0] = newHash[0];
+                  buffer.cpuMemHash[1] = newHash[1];
+                  buffer.cpuMemStart = block.getAddress();
+                  buffer.cpuMemEnd = buffer.cpuMemStart + size;
+
+                  // Upload block
+                  gl::glNamedBufferSubData(buffer.object, 0, size, block);
+                  buffer.dirtyAsBuffer = false;
+               }
+            }
 
             // Bind block
-            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, ubo.object);
+            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, buffer.object);
          }
       }
    }

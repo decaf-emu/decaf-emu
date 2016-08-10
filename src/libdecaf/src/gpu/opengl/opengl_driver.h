@@ -153,9 +153,12 @@ struct Sampler
    gl::GLuint object = 0;
 };
 
-struct UniformBuffer
+struct UniformBuffer : public Resource
 {
    gl::GLuint object = 0;
+   uint32_t allocatedSize = 0;
+   bool dirtyAsBuffer = true;
+   uint64_t cpuMemHash[2] = { 0 };
 };
 
 struct ColorBufferCache

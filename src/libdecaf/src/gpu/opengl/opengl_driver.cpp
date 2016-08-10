@@ -177,6 +177,14 @@ GLDriver::decafInvalidate(const pm4::DecafInvalidate &data)
 
       surf.second.dirtyAsTexture = true;
    }
+
+   for (auto &buffer : mUniformBuffers) {
+      if (buffer.second.cpuMemStart >= end || buffer.second.cpuMemEnd < start) {
+         continue;
+      }
+
+      buffer.second.dirtyAsBuffer = true;
+   }
 }
 
 void
