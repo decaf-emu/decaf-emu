@@ -46,6 +46,7 @@ private:
    static void registerAppIoFunctions();
    static void registerAllocatorFunctions();
    static void registerAtomic64Functions();
+   static void registerBlockHeapFunctions();
    static void registerCoreFunctions();
    static void registerCoroutineFunctions();
    static void registerCacheFunctions();

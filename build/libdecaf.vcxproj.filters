@@ -861,6 +861,9 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_sprintf.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memblockheap.cpp">
+      <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1629,6 +1632,9 @@
       <Filter>Header Files\ppcutils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_sprintf.h">
+      <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memblockheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
   </ItemGroup>

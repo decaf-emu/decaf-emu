@@ -243,6 +243,7 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_event.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_exception.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_exit.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memblockheap.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memexpheap.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_fastmutex.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memframeheap.cpp" />
@@ -484,6 +485,7 @@
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_screen.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_screen_font.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_sprintf.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memblockheap.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_taskqueue.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_rendezvous.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memunitheap.h" />

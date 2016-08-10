@@ -39,6 +39,7 @@ Module::RegisterFunctions()
    registerAppIoFunctions();
    registerAllocatorFunctions();
    registerAtomic64Functions();
+   registerBlockHeapFunctions();
    registerCoreFunctions();
    registerCoroutineFunctions();
    registerCacheFunctions();
