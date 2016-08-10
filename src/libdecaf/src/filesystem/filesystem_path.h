@@ -114,8 +114,14 @@ public:
       for (auto pos = mPath.find_first_of(PathSeparator, 0); pos != std::string::npos; ) {
          auto end = mPath.find_first_not_of(PathSeparator, pos);
 
-         if (end != std::string::npos && end != pos + 1) {
-            mPath.erase(pos, end - pos - 1);
+         if (end != pos + 1) {
+            if (end != std::string::npos) {
+               // Erase up to next non / character
+               mPath.erase(pos, end - pos - 1);
+            } else if (pos != mPath.size() - 1) {
+               // Erase trailing multiple /
+               mPath.erase(pos + 1);
+            }
          }
 
          pos = mPath.find_first_of(PathSeparator, end);
