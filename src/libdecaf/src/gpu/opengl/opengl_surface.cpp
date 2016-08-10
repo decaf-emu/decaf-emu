@@ -1,3 +1,4 @@
+#include "common/align.h"
 #include "common/decaf_assert.h"
 #include "gpu/latte_enum_sq.h"
 #include "modules/gx2/gx2_addrlib.h"
@@ -299,7 +300,10 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    decaf_check(height <= 8192);
 
    auto surfaceKey = static_cast<uint64_t>(baseAddress) << 32;
-   surfaceKey ^= width ^ height ^ depth ^ dim;
+   // Note: align_up on width and height is needed to ensure that strangely
+   //  sized framebuffers can be properly reused as textures (for example,
+   //  a 384x320 framebuffer getting drawn as a 384x310 texture)
+   surfaceKey ^= align_up(width, 16) ^ align_up(height, 16) ^ depth ^ dim;
    surfaceKey ^= format ^ numFormat ^ formatComp ^ degamma;
 
    auto bufferIter = mSurfaces.find(surfaceKey);
