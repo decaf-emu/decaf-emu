@@ -131,7 +131,7 @@ getTextureFormat(latte::SQ_DATA_FORMAT format)
 }
 
 static gl::GLenum
-getTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp)
+getTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp, uint32_t degamma)
 {
    auto isSigned = (formatComp == latte::SQ_FORMAT_COMP_SIGNED);
 
@@ -212,19 +212,26 @@ isCompressedFormat(latte::SQ_DATA_FORMAT format)
 }
 
 static gl::GLenum
-getCompressedTextureDataType(latte::SQ_DATA_FORMAT format, uint32_t degamma)
+getCompressedTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatComp, uint32_t degamma)
 {
+   auto isSigned = formatComp == latte::SQ_FORMAT_COMP_SIGNED;
+
    switch (format) {
    case latte::FMT_BC1:
+      decaf_check(!isSigned);
       return degamma ? gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT : gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
    case latte::FMT_BC2:
+      decaf_check(!isSigned);
       return degamma ? gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT : gl::GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
    case latte::FMT_BC3:
+      decaf_check(!isSigned);
       return degamma ? gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT : gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
    case latte::FMT_BC4:
-      return degamma ? gl::GL_COMPRESSED_SIGNED_RED_RGTC1 : gl::GL_COMPRESSED_RED_RGTC1;
+      decaf_check(!degamma);
+      return isSigned ? gl::GL_COMPRESSED_SIGNED_RED_RGTC1 : gl::GL_COMPRESSED_RED_RGTC1;
    case latte::FMT_BC5:
-      return degamma ? gl::GL_COMPRESSED_SIGNED_RG_RGTC2 : gl::GL_COMPRESSED_RG_RGTC2;
+      decaf_check(!degamma);
+      return isSigned ? gl::GL_COMPRESSED_SIGNED_RG_RGTC2 : gl::GL_COMPRESSED_RG_RGTC2;
    default:
       decaf_abort(fmt::format("Unimplemented compressed texture format {}", format));
    }
@@ -373,9 +380,9 @@ bool GLDriver::checkActiveTextures()
             auto size = untiledImage.size();
 
             if (compressed) {
-               textureDataType = getCompressedTextureDataType(format, degamma);
+               textureDataType = getCompressedTextureDataType(format, formatComp, degamma);
             } else {
-               textureDataType = getTextureDataType(format, formatComp);
+               textureDataType = getTextureDataType(format, formatComp, degamma);
             }
 
             if (textureDataType == gl::GL_INVALID_ENUM || textureFormat == gl::GL_INVALID_ENUM) {
