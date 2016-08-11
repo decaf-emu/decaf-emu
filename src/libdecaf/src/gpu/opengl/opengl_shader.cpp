@@ -1178,7 +1178,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       std::string chanVal[4];
       uint32_t chanBitCount[4];
 
-      if (attrib->format == latte::FMT_10_10_10_2) {
+      if (attrib->format == latte::FMT_10_10_10_2 || attrib->format == latte::FMT_2_10_10_10) {
          decaf_check(channels == 4);
 
          auto val = name;
@@ -1193,10 +1193,19 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
             decaf_abort("Unexpected endian swap mode");
          }
 
-         chanVal[0] = std::string("((") + val + std::string(" >> 22) & 0x3ff)");
-         chanVal[1] = std::string("((") + val + std::string(" >> 12) & 0x3ff)");
-         chanVal[2] = std::string("((") + val + std::string(" >> 2) & 0x3ff)");
-         chanVal[3] = std::string("((") + val + std::string(" >> 0) & 0x3)");
+         if (attrib->format == latte::FMT_10_10_10_2) {
+            chanVal[0] = std::string("((") + val + std::string(" >> 22) & 0x3ff)");
+            chanVal[1] = std::string("((") + val + std::string(" >> 12) & 0x3ff)");
+            chanVal[2] = std::string("((") + val + std::string(" >> 2) & 0x3ff)");
+            chanVal[3] = std::string("((") + val + std::string(" >> 0) & 0x3)");
+         } else if (attrib->format == latte::FMT_2_10_10_10) {
+            chanVal[3] = std::string("((") + val + std::string(" >> 30) & 0x3)");
+            chanVal[2] = std::string("((") + val + std::string(" >> 20) & 0x3ff)");
+            chanVal[1] = std::string("((") + val + std::string(" >> 10) & 0x3ff)");
+            chanVal[0] = std::string("((") + val + std::string(" >> 0) & 0x3ff)");
+         } else {
+            decaf_abort("Unexpected format");
+         }
 
          if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
             chanVal[0] = "int(signext10(" + chanVal[0] + "))";
@@ -1211,39 +1220,6 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          chanBitCount[1] = 10;
          chanBitCount[2] = 10;
          chanBitCount[3] = 2;
-      } else if (attrib->format == latte::FMT_2_10_10_10) {
-         decaf_check(channels == 4);
-
-         auto val = name;
-
-         if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
-            val = "bswap32(" + val + ")";
-         } else if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
-            decaf_abort("Unexpected 8IN16 swap for 2_10_10_10");
-         } else if (attrib->endianSwap == latte::SQ_ENDIAN_NONE) {
-            // Nothing to do
-         } else {
-            decaf_abort("Unexpected endian swap mode");
-         }
-
-         chanVal[0] = std::string("((") + val + std::string(" >> 30) & 0x3)");
-         chanVal[1] = std::string("((") + val + std::string(" >> 20) & 0x3ff)");
-         chanVal[2] = std::string("((") + val + std::string(" >> 10) & 0x3ff)");
-         chanVal[3] = std::string("((") + val + std::string(" >> 0) & 0x3ff)");
-
-         if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
-            chanVal[0] + "int(" + chanVal[0] + ")";
-            chanVal[1] + "int(signext10(" + chanVal[1] + "))";
-            chanVal[2] + "int(signext10(" + chanVal[2] + "))";
-            chanVal[3] + "int(signext10(" + chanVal[3] + "))";
-         } else {
-            // Good to go!
-         }
-
-         chanBitCount[0] = 2;
-         chanBitCount[1] = 10;
-         chanBitCount[2] = 10;
-         chanBitCount[3] = 10;
       } else {
          auto compBits = getDataFormatComponentBits(attrib->format);
 
