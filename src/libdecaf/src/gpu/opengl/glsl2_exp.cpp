@@ -219,7 +219,6 @@ EXP(State &state, const ControlFlowInst &cf)
    auto selY = cf.exp.swiz.SRC_SEL_Y();
    auto selZ = cf.exp.swiz.SRC_SEL_Z();
    auto selW = cf.exp.swiz.SRC_SEL_W();
-   auto src = getExportRegister(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL());
 
    if (selX == SQ_SEL_MASK && selY == SQ_SEL_MASK && selZ == SQ_SEL_MASK && selW == SQ_SEL_MASK) {
       gLog->warn("Unusual shader with a fully masked export");
@@ -229,28 +228,33 @@ EXP(State &state, const ControlFlowInst &cf)
    auto numSrcSels = 4u;
    auto srcSelMask = condenseSelections(selX, selY, selZ, selW, numSrcSels);
 
-   registerExport(state, type, arrayBase);
-   insertLineStart(state);
+   for (auto i = 0u; i <= cf.exp.word1.BURST_COUNT(); ++i) {
+      auto outIndex = arrayBase + i;
+      auto src = getExportRegister(cf.exp.word0.RW_GPR() + i, cf.exp.word0.RW_REL());
 
-   switch (type) {
-   case SQ_EXPORT_POS:
-      state.out << "exp_position_" << (arrayBase - 60);
-      break;
-   case SQ_EXPORT_PARAM:
-      state.out << "exp_param_" << arrayBase;
-      break;
-   case SQ_EXPORT_PIXEL:
-      state.out << "exp_pixel_" << arrayBase;
-      break;
-   default:
-      throw translate_exception(fmt::format("Unsupported export type {}", type));
+      registerExport(state, type, outIndex);
+      insertLineStart(state);
+
+      switch (type) {
+      case SQ_EXPORT_POS:
+         state.out << "exp_position_" << (outIndex - 60);
+         break;
+      case SQ_EXPORT_PARAM:
+         state.out << "exp_param_" << outIndex;
+         break;
+      case SQ_EXPORT_PIXEL:
+         state.out << "exp_pixel_" << outIndex;
+         break;
+      default:
+         throw translate_exception(fmt::format("Unsupported export type {}", type));
+      }
+
+      state.out << "." << srcSelMask << " = ";
+      insertSelectVector(state.out, src, selX, selY, selZ, selW, numSrcSels);
+      state.out << ";";
+
+      insertLineEnd(state);
    }
-
-   state.out << "." << srcSelMask << " = ";
-   insertSelectVector(state.out, src, selX, selY, selZ, selW, numSrcSels);
-   state.out << ";";
-
-   insertLineEnd(state);
 }
 
 static void
