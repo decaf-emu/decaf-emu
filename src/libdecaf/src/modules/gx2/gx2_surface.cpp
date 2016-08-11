@@ -344,4 +344,10 @@ GX2CopySurface(GX2Surface *src,
                               dst, dstLevel, dstSlice);
 }
 
+void
+GX2ExpandDepthBuffer(GX2DepthBuffer *buffer)
+{
+   // We do not implement HiZ, so no need to do anything here
+}
+
 } // namespace gx2

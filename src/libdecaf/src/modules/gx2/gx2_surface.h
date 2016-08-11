@@ -179,4 +179,7 @@ GX2CopySurface(GX2Surface *src,
                uint32_t dstLevel,
                uint32_t dstSlice);
 
+void
+GX2ExpandDepthBuffer(GX2DepthBuffer *buffer);
+
 } // namespace gx2
