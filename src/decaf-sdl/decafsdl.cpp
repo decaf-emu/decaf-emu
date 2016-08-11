@@ -145,6 +145,9 @@ DecafSDL::run(const std::string &gamePath)
       // Switch to the thread context, we automatically switch
       //  back when presenting a frame.
       SDL_GL_MakeCurrent(mWindow, mThreadContext);
+
+      // Initialise the context
+      initialiseContext();
    }
 
    // Start emulator
