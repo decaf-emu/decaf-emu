@@ -1437,14 +1437,13 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
       auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
       auto semanticId = spi_ps_input_cntl.SEMANTIC();
-      if (semanticId >= 0x80) {
-         // Negative semantic IDs mean something special?  Maybe that the parameter
-         //  was optimized out as not being needed by this pixel shader?
-         continue;
-      }
+      decaf_check(semanticId != 0xff);
 
       auto vsOutputLoc = vertex.outputMap[semanticId];
-      decaf_check(vsOutputLoc != 0xff);
+      if (semanticId == 0xff) {
+         // Missing semantic means we need to apply the default values instead...
+         continue;
+      }
 
       if (semanticUsed[semanticId]) {
          continue;
