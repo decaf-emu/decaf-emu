@@ -123,7 +123,7 @@ GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
 
    gl::glDisable(gl::GL_SCISSOR_TEST);
    gl::glBlitNamedFramebuffer(mBlitFrameBuffers[1], mBlitFrameBuffers[0],
-                              0, 0, pitch, height,
+                              0, 0, target->width, target->height,
                               0, 0, target->width, target->height,
                               gl::GL_COLOR_BUFFER_BIT, gl::GL_LINEAR);
    gl::glEnable(gl::GL_SCISSOR_TEST);
