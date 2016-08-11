@@ -312,7 +312,7 @@ bool GLDriver::checkActiveTextures()
       auto dim = sq_tex_resource_word0.DIM();
       auto isDepthBuffer = !!sq_tex_resource_word0.TILE_TYPE();
 
-      auto buffer = getSurfaceBuffer(baseAddress, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
+      auto buffer = getSurfaceBuffer(baseAddress, pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
 
       if (buffer->dirtyAsTexture) {
          auto swizzle = sq_tex_resource_word2.SWIZZLE() << 8;
@@ -493,6 +493,26 @@ bool GLDriver::checkActiveTextures()
 
       gl::glTextureParameteriv(buffer->object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
       gl::glBindTextureUnit(i, buffer->object);
+
+      // Store texture coordinate scale factors for shaders
+      mTexCoordScale[i * 4 + 0] = static_cast<float>(width) / static_cast<float>(buffer->width);
+      mTexCoordScale[i * 4 + 1] = static_cast<float>(height) / static_cast<float>(buffer->height);
+      mTexCoordScale[i * 4 + 2] = static_cast<float>(depth) / static_cast<float>(buffer->depth);
+   }
+
+   // Send texture scale array to shaders
+   if (mActiveShader->vertex->uniformTexScale != -1) {
+      gl::glProgramUniform4fv(mActiveShader->vertex->object,
+                              mActiveShader->vertex->uniformTexScale,
+                              latte::MaxTextures,
+                              &mTexCoordScale[0]);
+   }
+
+   if (mActiveShader->pixel && mActiveShader->pixel->uniformTexScale != -1) {
+      gl::glProgramUniform4fv(mActiveShader->pixel->object,
+                              mActiveShader->pixel->uniformTexScale,
+                              latte::MaxTextures,
+                              &mTexCoordScale[0]);
    }
 
    return true;

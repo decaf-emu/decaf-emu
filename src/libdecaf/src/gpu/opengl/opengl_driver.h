@@ -74,6 +74,7 @@ struct VertexShader : public Resource
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
+   gl::GLuint uniformTexScale = 0;
    std::array<gl::GLuint, latte::MaxAttributes> attribLocations;
    std::array<uint8_t, 256> outputMap;
    std::array<bool, 16> usedUniformBlocks;
@@ -87,6 +88,7 @@ struct PixelShader : public Resource
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
    gl::GLuint uniformAlphaRef = 0;
+   gl::GLuint uniformTexScale = 0;
    std::array<SamplerType, latte::MaxSamplers> samplerTypes;
    latte::SX_ALPHA_TEST_CONTROL sx_alpha_test_control;
    std::array<bool, 16> usedUniformBlocks;
@@ -110,12 +112,13 @@ struct Shader
 struct SurfaceBuffer : Resource
 {
    gl::GLuint object = 0;
+   uint32_t width = 0;
+   uint32_t height = 0;
+   uint32_t depth = 0;
    SurfaceUseState state = SurfaceUseState::None;
    bool dirtyAsTexture = true;
    uint64_t cpuMemHash[2] = { 0 };
    struct {
-      uint32_t width = 0;
-      uint32_t height = 0;
       uint32_t depth = 0;
       latte::SQ_TEX_DIM dim;
       latte::SQ_DATA_FORMAT format;
@@ -266,9 +269,16 @@ private:
                       const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
 
    SurfaceBuffer *
-   getSurfaceBuffer(ppcaddr_t baseAddress, uint32_t width, uint32_t height, uint32_t depth,
-                    latte::SQ_TEX_DIM dim, latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT numFormat,
-                    latte::SQ_FORMAT_COMP formatComp, uint32_t degamma, bool isDepthBuffer);
+   getSurfaceBuffer(ppcaddr_t baseAddress,
+                    uint32_t pitch,
+                    uint32_t width,
+                    uint32_t height,
+                    uint32_t depth,
+                    latte::SQ_TEX_DIM dim,
+                    latte::SQ_DATA_FORMAT format,
+                    latte::SQ_NUM_FORMAT numFormat,
+                    latte::SQ_FORMAT_COMP formatComp,
+                    uint32_t degamma, bool isDepthBuffer);
 
    SurfaceBuffer *
    getColorBuffer(latte::CB_COLORN_BASE base,
@@ -342,6 +352,8 @@ private:
    std::array<Sampler, latte::MaxSamplers> mVertexSamplers;
    std::array<Sampler, latte::MaxSamplers> mPixelSamplers;
    std::array<Sampler, latte::MaxSamplers> mGeometrySamplers;
+
+   std::array<float, latte::MaxTextures * 4> mTexCoordScale;
 
    gl::GLuint mBlitFrameBuffers[2];
    gl::GLuint mFrameBuffer;

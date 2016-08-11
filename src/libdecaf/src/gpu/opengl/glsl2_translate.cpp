@@ -595,6 +595,8 @@ insertFileHeader(State &state)
    }
 
    // Samplers
+   bool hasSamplers = false;
+
    for (auto id = 0u; id < state.shader->samplerDim.size(); ++id) {
       auto dim = state.shader->samplerDim[id];
       auto usage = state.shader->samplerUsage[id];
@@ -603,6 +605,8 @@ insertFileHeader(State &state)
       if (usage == SamplerUsage::Invalid) {
          continue;
       }
+
+      hasSamplers = true;
 
       out << "layout (binding = " << id << ") uniform ";
 
@@ -669,6 +673,10 @@ insertFileHeader(State &state)
       }
 
       out << " sampler_" << id << ";\n";
+   }
+
+   if (hasSamplers) {
+      out << "uniform vec4 texScale[" << latte::MaxTextures << "];\n";
    }
 
    if (state.shader->type == Shader::VertexShader) {

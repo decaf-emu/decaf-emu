@@ -110,7 +110,7 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
       decaf_abort(fmt::format("Depth buffer with unsupported format {}", dbFormat));
    }
 
-   auto buffer = getSurfaceBuffer(baseAddress, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, true);
+   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, true);
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));

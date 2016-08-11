@@ -31,6 +31,7 @@ GLDriver::initGL()
       applyRegister(static_cast<latte::Register>(i*4));
    }
    mActiveShader = nullptr;
+   mTexCoordScale.fill(1.0f);
    mActiveDepthBuffer = nullptr;
    memset(&mActiveColorBuffers[0], 0, sizeof(SurfaceBuffer *) * mActiveColorBuffers.size());
 
