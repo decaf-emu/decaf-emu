@@ -8,7 +8,6 @@ namespace pm4
 
 struct Buffer
 {
-   bool sysBuffer = false;
    bool userBuffer = false;
    bool displayList = false;
    coreinit::OSTime submitTime = 0;

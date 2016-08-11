@@ -134,23 +134,6 @@ struct DecafSetBuffer
    }
 };
 
-struct DecafInvalidate
-{
-   static const auto Opcode = type3::DECAF_INVALIDATE;
-
-   uint32_t mode;
-   uint32_t memStart;
-   uint32_t memEnd;
-
-   template<typename Serialiser>
-   void serialise(Serialiser &se)
-   {
-      se(mode);
-      se(memStart);
-      se(memEnd);
-   }
-};
-
 struct DecafDebugMarker
 {
    static const auto Opcode = type3::DECAF_DEBUGMARKER;

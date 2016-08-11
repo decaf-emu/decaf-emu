@@ -34,6 +34,16 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          break;
       }
 
+      if (mMutexWaiters.load() > 0) {
+         mMutex.unlock();
+
+         while (mMutexWaiters.load() > 0) {
+            std::this_thread::sleep_for(std::chrono::microseconds(1));
+         }
+
+         mMutex.lock();
+      }
+
       switch (header.type()) {
       case pm4::Header::Type3:
       {
@@ -111,9 +121,6 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
       break;
    case pm4::type3::DECAF_SET_BUFFER:
       decafSetBuffer(pm4::read<pm4::DecafSetBuffer>(reader));
-      break;
-   case pm4::type3::DECAF_INVALIDATE:
-      decafInvalidate(pm4::read<pm4::DecafInvalidate>(reader));
       break;
    case pm4::type3::DECAF_DEBUGMARKER:
       decafDebugMarker(pm4::read<pm4::DecafDebugMarker>(reader));
