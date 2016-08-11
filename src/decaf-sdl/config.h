@@ -9,6 +9,8 @@ namespace gpu
 
 extern bool force_sync;
 
+extern bool debug;
+
 } // namespace gpu
 
 namespace log

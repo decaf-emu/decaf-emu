@@ -1,8 +1,94 @@
 #include "clilog.h"
+#include "config.h"
 #include "common/decaf_assert.h"
 #include "decafsdl.h"
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
+
+std::string
+getGlDebugSource(gl::GLenum source) {
+   switch (source) {
+   case gl::GL_DEBUG_SOURCE_API:
+      return "API";
+   case gl::GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+      return "WINSYS";
+   case gl::GL_DEBUG_SOURCE_SHADER_COMPILER:
+      return "COMPILER";
+   case gl::GL_DEBUG_SOURCE_THIRD_PARTY:
+      return "EXTERNAL";
+   case gl::GL_DEBUG_SOURCE_APPLICATION:
+      return "APP";
+   case gl::GL_DEBUG_SOURCE_OTHER:
+      return "OTHER";
+   default:
+      return glbinding::Meta::getString(source);
+   }
+}
+
+std::string
+getGlDebugType(gl::GLenum severity) {
+   switch (severity) {
+   case gl::GL_DEBUG_TYPE_ERROR:
+      return "ERROR";
+   case gl::GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+      return "DEPRECATED_BEHAVIOR";
+   case gl::GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+      return "UNDEFINED_BEHAVIOR";
+   case gl::GL_DEBUG_TYPE_PORTABILITY:
+      return "PORTABILITY";
+   case gl::GL_DEBUG_TYPE_PERFORMANCE:
+      return "PERFORMANCE";
+   case gl::GL_DEBUG_TYPE_MARKER:
+      return "MARKER";
+   case gl::GL_DEBUG_TYPE_PUSH_GROUP:
+      return "PUSH_GROUP";
+   case gl::GL_DEBUG_TYPE_POP_GROUP:
+      return "POP_GROUP";
+   case gl::GL_DEBUG_TYPE_OTHER:
+      return "OTHER";
+   default:
+      return glbinding::Meta::getString(severity);
+   }
+}
+
+std::string
+getGlDebugSeverity(gl::GLenum severity) {
+   switch (severity) {
+   case gl::GL_DEBUG_SEVERITY_HIGH:
+      return "HIGH";
+   case gl::GL_DEBUG_SEVERITY_MEDIUM:
+      return "MED";
+   case gl::GL_DEBUG_SEVERITY_LOW:
+      return "LOW";
+   case gl::GL_DEBUG_SEVERITY_NOTIFICATION:
+      return "NOTIF";
+   default:
+      return glbinding::Meta::getString(severity);
+   }
+}
+
+void
+gl_log_callback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity,
+                gl::GLsizei length, const gl::GLchar* message, const void *userParam)
+{
+   auto outputStr = fmt::format("GL Message ({}, {}, {}, {}) {}", id,
+      getGlDebugSource(source),
+      getGlDebugType(type),
+      getGlDebugSeverity(severity),
+      message);
+
+   if (severity == gl::GL_DEBUG_SEVERITY_HIGH) {
+      gCliLog->warn(outputStr);
+   } else if (severity == gl::GL_DEBUG_SEVERITY_MEDIUM) {
+      gCliLog->debug(outputStr);
+   } else if (severity == gl::GL_DEBUG_SEVERITY_LOW) {
+      gCliLog->trace(outputStr);
+   } else if (severity == gl::GL_DEBUG_SEVERITY_NOTIFICATION) {
+      gCliLog->info(outputStr);
+   } else {
+      gCliLog->info(outputStr);
+   }
+}
 
 void DecafSDL::initialiseContext()
 {
@@ -30,6 +116,12 @@ void DecafSDL::initialiseContext()
          gCliLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), writer.str());
       }
    });
+
+   if (config::gpu::debug) {
+      gl::glDebugMessageCallback(&gl_log_callback, nullptr);
+      gl::glEnable(gl::GL_DEBUG_OUTPUT);
+      gl::glEnable(gl::GL_DEBUG_OUTPUT_SYNCHRONOUS);
+   }
 }
 
 void DecafSDL::initialiseDraw()

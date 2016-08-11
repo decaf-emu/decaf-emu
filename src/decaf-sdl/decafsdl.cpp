@@ -43,6 +43,11 @@ DecafSDL::createWindow()
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
+   // Enable debug context
+   if (config::gpu::debug) {
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+   }
+
    // Create TV window
    mWindow = SDL_CreateWindow("Decaf",
                               SDL_WINDOWPOS_UNDEFINED,
