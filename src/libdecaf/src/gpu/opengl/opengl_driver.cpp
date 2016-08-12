@@ -273,30 +273,31 @@ GLDriver::surfaceSync(const pm4::SurfaceSync &data)
    auto memStart = data.addr << 8;
    auto memEnd = memStart + (data.size << 8);
 
-   // TODO: Maybe check what to invalidate from data.cp_coher_cntl
-
    for (auto &surf : mSurfaces) {
       if (surf.second.cpuMemStart >= memEnd || surf.second.cpuMemEnd < memStart) {
          continue;
       }
 
-      surf.second.dirtyAsTexture = true;
+      if (data.cp_coher_cntl.TC_ACTION_ENA()) {
+         surf.second.dirtyAsTexture = true;
+      }
    }
 
-   for (auto &buffer : mAttribBuffers) {
-      if (buffer.second.cpuMemStart >= memEnd || buffer.second.cpuMemEnd < memStart) {
+   for (auto &buffer : mDataBuffers) {
+      DataBuffer *dataBuffer = &buffer.second;
+
+      if (dataBuffer->cpuMemStart >= memEnd || dataBuffer->cpuMemEnd < memStart) {
          continue;
       }
 
-      buffer.second.dirtyAsBuffer = true;
-   }
+      auto offset = std::max(memStart, dataBuffer->cpuMemStart) - dataBuffer->cpuMemStart;
+      auto size = (std::min(memEnd, dataBuffer->cpuMemEnd) - dataBuffer->cpuMemStart) - offset;
 
-   for (auto &buffer : mUniformBuffers) {
-      if (buffer.second.cpuMemStart >= memEnd || buffer.second.cpuMemEnd < memStart) {
-         continue;
+      if (data.cp_coher_cntl.SX_ACTION_ENA() && dataBuffer->isOutput) {
+         downloadDataBuffer(dataBuffer, offset, size);
+      } else if ((data.cp_coher_cntl.TC_ACTION_ENA() || data.cp_coher_cntl.SH_ACTION_ENA()) && dataBuffer->isInput) {
+         uploadDataBuffer(dataBuffer, offset, size);
       }
-
-      buffer.second.dirtyAsBuffer = true;
    }
 }
 

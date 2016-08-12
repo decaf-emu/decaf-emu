@@ -125,7 +125,7 @@ struct SurfaceBuffer : Resource
    HostSurface *master = nullptr;
    SurfaceUseState state = SurfaceUseState::None;
    bool dirtyAsTexture = true;
-   uint64_t cpuMemHash[2] = { 0 };
+   uint64_t cpuMemHash[2] = { 0, 0 };
    struct {
       latte::SQ_TEX_DIM dim;
       latte::SQ_DATA_FORMAT format;
@@ -142,33 +142,20 @@ struct ScanBufferChain
    uint32_t height;
 };
 
-struct AttributeBuffer : public Resource
+struct DataBuffer : public Resource
 {
    gl::GLuint object = 0;
    uint32_t allocatedSize = 0;
    void *mappedBuffer = nullptr;
-   bool dirtyAsBuffer = true;
-   uint64_t cpuMemHash[2] = { 0 };
-};
-
-struct FeedbackBuffer
-{
-   gl::GLuint object = 0;
-   uint32_t size = 0;
-   uint32_t addr = 0;
+   bool isInput = false;  // Uniform or attribute buffers
+   bool isOutput = false;  // Transform feedback buffers
+   bool dirtyMap = false;
+   uint64_t cpuMemHash[2] = { 0, 0 };
 };
 
 struct Sampler
 {
    gl::GLuint object = 0;
-};
-
-struct UniformBuffer : public Resource
-{
-   gl::GLuint object = 0;
-   uint32_t allocatedSize = 0;
-   bool dirtyAsBuffer = true;
-   uint64_t cpuMemHash[2] = { 0 };
 };
 
 struct ColorBufferCache
@@ -316,8 +303,20 @@ private:
    bool checkActiveUniforms();
    bool checkViewport();
 
-   void createFeedbackBuffer(unsigned index);
-   void copyFeedbackBuffer(unsigned index);
+   void
+   configureDataBuffer(DataBuffer *buffer,
+                       uint32_t address,
+                       uint32_t size,
+                       bool isInput,
+                       bool isOutput);
+   void
+   uploadDataBuffer(DataBuffer *buffer,
+                    uint32_t offset,
+                    uint32_t size);
+   void
+   downloadDataBuffer(DataBuffer *buffer,
+                      uint32_t offset,
+                      uint32_t size);
 
    void setRegister(latte::Register reg, uint32_t value);
    void applyRegister(latte::Register reg);
@@ -361,9 +360,7 @@ private:
    std::unordered_map<uint64_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
    std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;
-   std::unordered_map<uint32_t, AttributeBuffer> mAttribBuffers;
-   std::unordered_map<uint32_t, UniformBuffer> mUniformBuffers;
-   std::unordered_map<uint32_t, FeedbackBuffer> mFeedbackBuffers;
+   std::unordered_map<uint32_t, DataBuffer> mDataBuffers;
 
    std::array<Sampler, latte::MaxSamplers> mVertexSamplers;
    std::array<Sampler, latte::MaxSamplers> mPixelSamplers;
