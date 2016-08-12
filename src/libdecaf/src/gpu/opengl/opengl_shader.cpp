@@ -5,6 +5,7 @@
 #include "common/strutils.h"
 #include "decaf_config.h"
 #include "glsl2_translate.h"
+#include "gpu/gpu_utilities.h"
 #include "gpu/latte_registers.h"
 #include "gpu/microcode/latte_disassembler.h"
 #include "opengl_constants.h"
@@ -69,160 +70,6 @@ dumpTranslatedShader(const std::string &type, ppcaddr_t data, const std::string 
    auto file = std::ofstream{ filePath, std::ofstream::out };
 
    file << shaderSource << std::endl;
-}
-
-static std::string
-getDataFormatName(latte::SQ_DATA_FORMAT format)
-{
-   switch (format) {
-   case latte::FMT_8:
-      return "FMT_8";
-   case latte::FMT_16:
-      return "FMT_16";
-   case latte::FMT_16_FLOAT:
-      return "FMT_16_FLOAT";
-   case latte::FMT_32:
-      return "FMT_32";
-   case latte::FMT_32_FLOAT:
-      return "FMT_32_FLOAT";
-   case latte::FMT_8_8:
-      return "FMT_8_8";
-   case latte::FMT_16_16:
-      return "FMT_16_16";
-   case latte::FMT_16_16_FLOAT:
-      return "FMT_16_16_FLOAT";
-   case latte::FMT_32_32:
-      return "FMT_32_32";
-   case latte::FMT_32_32_FLOAT:
-      return "FMT_32_32_FLOAT";
-   case latte::FMT_8_8_8:
-      return "FMT_8_8_8";
-   case latte::FMT_16_16_16:
-      return "FMT_16_16_16";
-   case latte::FMT_16_16_16_FLOAT:
-      return "FMT_16_16_16_FLOAT";
-   case latte::FMT_32_32_32:
-      return "FMT_32_32_32";
-   case latte::FMT_32_32_32_FLOAT:
-      return "FMT_32_32_32_FLOAT";
-   case latte::FMT_8_8_8_8:
-      return "FMT_8_8_8_8";
-   case latte::FMT_16_16_16_16:
-      return "FMT_16_16_16_16";
-   case latte::FMT_16_16_16_16_FLOAT:
-      return "FMT_16_16_16_16_FLOAT";
-   case latte::FMT_32_32_32_32:
-      return "FMT_32_32_32_32";
-   case latte::FMT_32_32_32_32_FLOAT:
-      return "FMT_32_32_32_32_FLOAT";
-   case latte::FMT_2_10_10_10:
-      return "FMT_2_10_10_10";
-   case latte::FMT_10_10_10_2:
-      return "FMT_10_10_10_2";
-   default:
-      decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
-   }
-}
-
-static gl::GLint
-getDataFormatComponents(latte::SQ_DATA_FORMAT format)
-{
-   switch (format) {
-   case latte::FMT_8:
-   case latte::FMT_16:
-   case latte::FMT_16_FLOAT:
-   case latte::FMT_32:
-   case latte::FMT_32_FLOAT:
-      return 1;
-   case latte::FMT_8_8:
-   case latte::FMT_16_16:
-   case latte::FMT_16_16_FLOAT:
-   case latte::FMT_32_32:
-   case latte::FMT_32_32_FLOAT:
-      return 2;
-   case latte::FMT_8_8_8:
-   case latte::FMT_16_16_16:
-   case latte::FMT_16_16_16_FLOAT:
-   case latte::FMT_32_32_32:
-   case latte::FMT_32_32_32_FLOAT:
-      return 3;
-   case latte::FMT_2_10_10_10:
-   case latte::FMT_10_10_10_2:
-   case latte::FMT_8_8_8_8:
-   case latte::FMT_16_16_16_16:
-   case latte::FMT_16_16_16_16_FLOAT:
-   case latte::FMT_32_32_32_32:
-   case latte::FMT_32_32_32_32_FLOAT:
-      return 4;
-   default:
-      decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
-   }
-}
-
-static gl::GLint
-getDataFormatComponentBits(latte::SQ_DATA_FORMAT format)
-{
-   switch (format) {
-   case latte::FMT_8:
-   case latte::FMT_8_8:
-   case latte::FMT_8_8_8:
-   case latte::FMT_8_8_8_8:
-      return 8;
-   case latte::FMT_16:
-   case latte::FMT_16_FLOAT:
-   case latte::FMT_16_16:
-   case latte::FMT_16_16_FLOAT:
-   case latte::FMT_16_16_16:
-   case latte::FMT_16_16_16_FLOAT:
-   case latte::FMT_16_16_16_16:
-   case latte::FMT_16_16_16_16_FLOAT:
-      return 16;
-   case latte::FMT_32:
-   case latte::FMT_32_FLOAT:
-   case latte::FMT_32_32:
-   case latte::FMT_32_32_FLOAT:
-   case latte::FMT_32_32_32:
-   case latte::FMT_32_32_32_FLOAT:
-   case latte::FMT_32_32_32_32:
-   case latte::FMT_32_32_32_32_FLOAT:
-      return 32;
-   default:
-      decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
-   }
-}
-
-static bool
-getDataFormatIsFloat(latte::SQ_DATA_FORMAT format)
-{
-   switch (format) {
-
-   case latte::FMT_16_FLOAT:
-   case latte::FMT_32_FLOAT:
-   case latte::FMT_16_16_FLOAT:
-   case latte::FMT_32_32_FLOAT:
-   case latte::FMT_16_16_16_FLOAT:
-   case latte::FMT_32_32_32_FLOAT:
-   case latte::FMT_16_16_16_16_FLOAT:
-   case latte::FMT_32_32_32_32_FLOAT:
-      return true;
-   case latte::FMT_8:
-   case latte::FMT_16:
-   case latte::FMT_32:
-   case latte::FMT_8_8:
-   case latte::FMT_16_16:
-   case latte::FMT_32_32:
-   case latte::FMT_8_8_8:
-   case latte::FMT_16_16_16:
-   case latte::FMT_32_32_32:
-   case latte::FMT_2_10_10_10:
-   case latte::FMT_10_10_10_2:
-   case latte::FMT_8_8_8_8:
-   case latte::FMT_16_16_16_16:
-   case latte::FMT_32_32_32_32:
-      return false;
-   default:
-      decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
-   }
 }
 
 static gl::GLenum
@@ -486,7 +333,6 @@ bool GLDriver::checkActiveShader()
             // Get uniform locations
             pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "PR");
             pixelShader.uniformAlphaRef = gl::glGetUniformLocation(pixelShader.object, "uAlphaRef");
-            pixelShader.uniformTexScale = gl::glGetUniformLocation(pixelShader.object, "texScale");
             pixelShader.sx_alpha_test_control = sx_alpha_test_control;
          }
 

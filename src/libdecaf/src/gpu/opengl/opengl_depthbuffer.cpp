@@ -42,13 +42,13 @@ bool GLDriver::checkActiveDepthBuffer()
    if (dbFormat == latte::DEPTH_8_24
     || dbFormat == latte::DEPTH_8_24_FLOAT
     || dbFormat == latte::DEPTH_X24_8_32_FLOAT) {
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_STENCIL_ATTACHMENT, active->object, 0);
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_STENCIL_ATTACHMENT, active->active->object, 0);
    } else {
       // Unbind the stencil attachment first so the framebuffer doesn't get
       //  into an inconsistent state, even temporarily (to avoid unnecessary
       //  warnings from apitrace).
       gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, 0, 0);
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, active->object, 0);
+      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, active->active->object, 0);
    }
 
    return true;
@@ -111,10 +111,10 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
    }
 
    auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, true);
-   gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-   gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-   gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-   gl::glTextureParameteri(buffer->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+   gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
+   gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
+   gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
+   gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
 
    buffer->dirtyAsTexture = false;
    buffer->state = SurfaceUseState::GpuWritten;

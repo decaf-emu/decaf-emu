@@ -31,7 +31,6 @@ GLDriver::initGL()
       applyRegister(static_cast<latte::Register>(i*4));
    }
    mActiveShader = nullptr;
-   mTexCoordScale.fill(1.0f);
    mActiveDepthBuffer = nullptr;
    memset(&mActiveColorBuffers[0], 0, sizeof(SurfaceBuffer *) * mActiveColorBuffers.size());
 
@@ -120,7 +119,7 @@ GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
    auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
    gl::glNamedFramebufferTexture(mBlitFrameBuffers[0], gl::GL_COLOR_ATTACHMENT0, target->object, 0);
-   gl::glNamedFramebufferTexture(mBlitFrameBuffers[1], gl::GL_COLOR_ATTACHMENT0, buffer->object, 0);
+   gl::glNamedFramebufferTexture(mBlitFrameBuffers[1], gl::GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
 
    gl::glDisable(gl::GL_SCISSOR_TEST);
    gl::glBlitNamedFramebuffer(mBlitFrameBuffers[1], mBlitFrameBuffers[0],

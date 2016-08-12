@@ -192,6 +192,7 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\gfd.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_addrlibopt.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_tiling.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_utilities.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_alu.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_export.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_tex.cpp" />
@@ -422,6 +423,7 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\gfd.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\gpu_addrlibopt.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\gpu_tiling.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\gpu_utilities.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_constants.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_contextstate.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_cb.h" />

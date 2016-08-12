@@ -2,6 +2,7 @@
 #include "common/log.h"
 #include "common/murmur3.h"
 #include "gpu/gpu_tiling.h"
+#include "gpu/gpu_utilities.h"
 #include "gpu/latte_enum_sq.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
@@ -169,82 +170,6 @@ getTextureDataType(latte::SQ_DATA_FORMAT format, latte::SQ_FORMAT_COMP formatCom
 
    default:
       decaf_abort(fmt::format("Unimplemented texture format {}", format));
-   }
-}
-
-static uint32_t
-getDataFormatBitsPerElement(latte::SQ_DATA_FORMAT format)
-{
-   switch (format) {
-   case latte::FMT_8:
-   case latte::FMT_3_3_2:
-      return 8;
-
-   case latte::FMT_8_8:
-   case latte::FMT_16:
-   case latte::FMT_16_FLOAT:
-   case latte::FMT_5_6_5:
-   case latte::FMT_5_5_5_1:
-   case latte::FMT_1_5_5_5:
-   case latte::FMT_4_4_4_4:
-      return 16;
-
-   case latte::FMT_8_8_8:
-      return 24;
-
-   case latte::FMT_8_8_8_8:
-   case latte::FMT_16_16:
-   case latte::FMT_16_16_FLOAT:
-   case latte::FMT_32:
-   case latte::FMT_32_FLOAT:
-   case latte::FMT_10_10_10_2:
-   case latte::FMT_2_10_10_10:
-   case latte::FMT_10_11_11:
-   case latte::FMT_10_11_11_FLOAT:
-   case latte::FMT_11_11_10:
-   case latte::FMT_11_11_10_FLOAT:
-      return 32;
-
-   case latte::FMT_16_16_16:
-   case latte::FMT_16_16_16_FLOAT:
-      return 48;
-
-   case latte::FMT_16_16_16_16:
-   case latte::FMT_16_16_16_16_FLOAT:
-   case latte::FMT_32_32:
-   case latte::FMT_32_32_FLOAT:
-   case latte::FMT_BC1:
-   case latte::FMT_BC4:
-      return 64;
-
-   case latte::FMT_32_32_32:
-   case latte::FMT_32_32_32_FLOAT:
-      return 96;
-
-   case latte::FMT_32_32_32_32:
-   case latte::FMT_32_32_32_32_FLOAT:
-   case latte::FMT_BC2:
-   case latte::FMT_BC3:
-   case latte::FMT_BC5:
-      return 128;
-
-   default:
-      decaf_abort(fmt::format("Unimplemented data format {}", format));
-   }
-}
-
-static bool
-isCompressedFormat(latte::SQ_DATA_FORMAT format)
-{
-   switch (format) {
-   case latte::FMT_BC1:
-   case latte::FMT_BC2:
-   case latte::FMT_BC3:
-   case latte::FMT_BC4:
-   case latte::FMT_BC5:
-      return true;
-   default:
-      return false;
    }
 }
 
@@ -416,7 +341,7 @@ bool GLDriver::checkActiveTextures()
             );
 
             // Create texture
-            auto compressed = isCompressedFormat(format);
+            auto compressed = getDataFormatIsCompressed(format);
             auto target = getTextureTarget(dim);
             auto textureDataType = gl::GL_INVALID_ENUM;
             auto textureFormat = getTextureFormat(format);
@@ -435,7 +360,7 @@ bool GLDriver::checkActiveTextures()
             switch (dim) {
             case latte::SQ_TEX_DIM_1D:
                if (compressed) {
-                  gl::glCompressedTextureSubImage1D(buffer->object,
+                  gl::glCompressedTextureSubImage1D(buffer->active->object,
                                                     0, /* level */
                                                     0, /* xoffset */
                                                     width,
@@ -443,7 +368,7 @@ bool GLDriver::checkActiveTextures()
                                                     gsl::narrow_cast<gl::GLsizei>(size),
                                                     untiledImage.data());
                } else {
-                  gl::glTextureSubImage1D(buffer->object,
+                  gl::glTextureSubImage1D(buffer->active->object,
                                           0, /* level */
                                           0, /* xoffset */
                                           width,
@@ -454,7 +379,7 @@ bool GLDriver::checkActiveTextures()
                break;
             case latte::SQ_TEX_DIM_2D:
                if (compressed) {
-                  gl::glCompressedTextureSubImage2D(buffer->object,
+                  gl::glCompressedTextureSubImage2D(buffer->active->object,
                                                     0, /* level */
                                                     0, 0, /* xoffset, yoffset */
                                                     width,
@@ -463,7 +388,7 @@ bool GLDriver::checkActiveTextures()
                                                     gsl::narrow_cast<gl::GLsizei>(size),
                                                     untiledImage.data());
                } else {
-                  gl::glTextureSubImage2D(buffer->object,
+                  gl::glTextureSubImage2D(buffer->active->object,
                                           0, /* level */
                                           0, 0, /* xoffset, yoffset */
                                           width, height,
@@ -474,7 +399,7 @@ bool GLDriver::checkActiveTextures()
                break;
             case latte::SQ_TEX_DIM_3D:
                if (compressed) {
-                  gl::glCompressedTextureSubImage3D(buffer->object,
+                  gl::glCompressedTextureSubImage3D(buffer->active->object,
                                                     0, /* level */
                                                     0, 0, 0, /* xoffset, yoffset, zoffset */
                                                     width, height, depth,
@@ -482,7 +407,7 @@ bool GLDriver::checkActiveTextures()
                                                     gsl::narrow_cast<gl::GLsizei>(size),
                                                     untiledImage.data());
                } else {
-                  gl::glTextureSubImage3D(buffer->object,
+                  gl::glTextureSubImage3D(buffer->active->object,
                                           0, /* level */
                                           0, 0, 0, /* xoffset, yoffset, zoffset */
                                           width, height, depth,
@@ -495,7 +420,7 @@ bool GLDriver::checkActiveTextures()
                decaf_check(uploadDepth == 6);
             case latte::SQ_TEX_DIM_2D_ARRAY:
                if (compressed) {
-                  gl::glCompressedTextureSubImage3D(buffer->object,
+                  gl::glCompressedTextureSubImage3D(buffer->active->object,
                                                     0, /* level */
                                                     0, 0, 0, /* xoffset, yoffset, zoffset */
                                                     width, height, uploadDepth,
@@ -503,7 +428,7 @@ bool GLDriver::checkActiveTextures()
                                                     gsl::narrow_cast<gl::GLsizei>(size),
                                                     untiledImage.data());
                } else {
-                  gl::glTextureSubImage3D(buffer->object,
+                  gl::glTextureSubImage3D(buffer->active->object,
                                           0, /* level */
                                           0, 0, 0, /* xoffset, yoffset, zoffset */
                                           width, height, uploadDepth,
@@ -534,28 +459,8 @@ bool GLDriver::checkActiveTextures()
          static_cast<gl::GLint>(dst_sel_w),
       };
 
-      gl::glTextureParameteriv(buffer->object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
-      gl::glBindTextureUnit(i, buffer->object);
-
-      // Store texture coordinate scale factors for shaders
-      mTexCoordScale[i * 4 + 0] = static_cast<float>(width) / static_cast<float>(buffer->width);
-      mTexCoordScale[i * 4 + 1] = static_cast<float>(height) / static_cast<float>(buffer->height);
-      mTexCoordScale[i * 4 + 2] = static_cast<float>(depth) / static_cast<float>(buffer->depth);
-   }
-
-   // Send texture scale array to shaders
-   if (mActiveShader->vertex->uniformTexScale != -1) {
-      gl::glProgramUniform4fv(mActiveShader->vertex->object,
-                              mActiveShader->vertex->uniformTexScale,
-                              latte::MaxTextures,
-                              &mTexCoordScale[0]);
-   }
-
-   if (mActiveShader->pixel && mActiveShader->pixel->uniformTexScale != -1) {
-      gl::glProgramUniform4fv(mActiveShader->pixel->object,
-                              mActiveShader->pixel->uniformTexScale,
-                              latte::MaxTextures,
-                              &mTexCoordScale[0]);
+      gl::glTextureParameteriv(buffer->active->object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
+      gl::glBindTextureUnit(i, buffer->active->object);
    }
 
    return true;

@@ -165,19 +165,6 @@ sampleFunc(State &state,
 
       insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, samplerElements);
 
-      // TODO: Possible performance bottleneck; this could be improved by
-      //  skipping the multiply for textures whose guest and host size are
-      //  equal, though that requires including the equality test as part of
-      //  the shader key.
-      state.out << " * ";
-      insertSelectVector(state.out,
-                         fmt::format("texScale[{}]", resourceID),
-                         latte::SQ_SEL_X,
-                         latte::SQ_SEL_Y,
-                         latte::SQ_SEL_Z,
-                         latte::SQ_SEL_W,
-                         samplerElements);
-
       switch (extraArg) {
       case latte::SQ_SEL_X:
          state.out << ", ";

@@ -1,4 +1,5 @@
 #include "common/decaf_assert.h"
+#include "gpu/gpu_utilities.h"
 #include "gpu/latte_enum_sq.h"
 #include "modules/gx2/gx2_addrlib.h"
 #include "modules/gx2/gx2_enum.h"
@@ -184,99 +185,134 @@ getStorageFormat(latte::SQ_DATA_FORMAT format,
    }
 }
 
-static int getStorageFormatBits(gl::GLenum format)
+static gl::GLenum
+getGlTarget(latte::SQ_TEX_DIM dim)
 {
-   switch (format) {
-   case gl::GL_COMPRESSED_RED_RGTC1:
-   case gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-   case gl::GL_COMPRESSED_SIGNED_RED_RGTC1:
-   case gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
-      return 4;
-
-   case gl::GL_COMPRESSED_RG_RGTC2:
-   case gl::GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-   case gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-   case gl::GL_COMPRESSED_SIGNED_RG_RGTC2:
-   case gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT:
-   case gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT:
-   case gl::GL_R8:
-   case gl::GL_R8_SNORM:
-   case gl::GL_R8I:
-   case gl::GL_R8UI:
-      return 8;
-
-   case gl::GL_DEPTH_COMPONENT16:
-   case gl::GL_R16:
-   case gl::GL_R16_SNORM:
-   case gl::GL_R16F:
-   case gl::GL_R16I:
-   case gl::GL_R16UI:
-   case gl::GL_RG8:
-   case gl::GL_RG8_SNORM:
-   case gl::GL_RG8I:
-   case gl::GL_RG8UI:
-   case gl::GL_RGB565:
-   case gl::GL_RGBA4:
-      return 16;
-
-   case gl::GL_RGB8:
-   case gl::GL_RGB8_SNORM:
-   case gl::GL_RGB8I:
-   case gl::GL_RGB8UI:
-   case gl::GL_SRGB8:
-      return 24;
-
-   case gl::GL_DEPTH_COMPONENT32F:
-   case gl::GL_DEPTH24_STENCIL8:
-   case gl::GL_R11F_G11F_B10F:
-   case gl::GL_R32F:
-   case gl::GL_R32I:
-   case gl::GL_R32UI:
-   case gl::GL_RG16:
-   case gl::GL_RG16_SNORM:
-   case gl::GL_RG16F:
-   case gl::GL_RG16I:
-   case gl::GL_RG16UI:
-   case gl::GL_RGB10_A2:
-   case gl::GL_RGB10_A2UI:
-   case gl::GL_RGBA8:
-   case gl::GL_RGBA8_SNORM:
-   case gl::GL_RGBA8I:
-   case gl::GL_RGBA8UI:
-   case gl::GL_SRGB8_ALPHA8:
-      return 32;
-
-   case gl::GL_RGB16:
-   case gl::GL_RGB16_SNORM:
-   case gl::GL_RGB16F:
-   case gl::GL_RGB16I:
-   case gl::GL_RGB16UI:
-      return 48;
-
-   case gl::GL_DEPTH32F_STENCIL8:
-   case gl::GL_RG32F:
-   case gl::GL_RG32I:
-   case gl::GL_RG32UI:
-   case gl::GL_RGBA16:
-   case gl::GL_RGBA16_SNORM:
-   case gl::GL_RGBA16F:
-   case gl::GL_RGBA16I:
-   case gl::GL_RGBA16UI:
-      return 64;
-
-   case gl::GL_RGB32F:
-   case gl::GL_RGB32I:
-   case gl::GL_RGB32UI:
-      return 96;
-
-   case gl::GL_RGBA32F:
-   case gl::GL_RGBA32I:
-   case gl::GL_RGBA32UI:
-      return 128;
-
+   switch (dim) {
+   case latte::SQ_TEX_DIM_1D:
+      return gl::GL_TEXTURE_1D;
+   case latte::SQ_TEX_DIM_2D:
+      return gl::GL_TEXTURE_2D;
+   case latte::SQ_TEX_DIM_2D_ARRAY:
+      return gl::GL_TEXTURE_2D_ARRAY;
+   case latte::SQ_TEX_DIM_CUBEMAP:
+      return gl::GL_TEXTURE_CUBE_MAP;
+   case latte::SQ_TEX_DIM_3D:
+      return gl::GL_TEXTURE_3D;
+   case latte::SQ_TEX_DIM_1D_ARRAY:
+      return gl::GL_TEXTURE_1D_ARRAY;
    default:
-      decaf_abort(fmt::format("Invalid GL storage format {}", glbinding::Meta::getString(format)));
+      decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
    }
+}
+
+static HostSurface*
+createHostSurface(uint32_t pitch,
+                  uint32_t width,
+                  uint32_t height,
+                  uint32_t depth,
+                  latte::SQ_TEX_DIM dim,
+                  latte::SQ_DATA_FORMAT format,
+                  latte::SQ_NUM_FORMAT numFormat,
+                  latte::SQ_FORMAT_COMP formatComp,
+                  uint32_t degamma,
+                  bool isDepthBuffer)
+{
+   auto newSurface = new HostSurface();
+
+   auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma, isDepthBuffer);
+
+   if (storageFormat == gl::GL_INVALID_ENUM) {
+      decaf_abort(fmt::format("Surface with unsupported format {} {} {} {}", format, numFormat, formatComp, degamma));
+   }
+
+   auto target = getGlTarget(dim);
+   gl::glCreateTextures(target, 1, &newSurface->object);
+
+   switch (dim) {
+   case latte::SQ_TEX_DIM_1D:
+      gl::glTextureStorage1D(newSurface->object, 1, storageFormat, width);
+      break;
+   case latte::SQ_TEX_DIM_2D:
+      gl::glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
+      break;
+   case latte::SQ_TEX_DIM_2D_ARRAY:
+      gl::glTextureStorage3D(newSurface->object, 1, storageFormat, width, height, depth);
+      break;
+   case latte::SQ_TEX_DIM_CUBEMAP:
+      gl::glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
+      break;
+   case latte::SQ_TEX_DIM_3D:
+      gl::glTextureStorage3D(newSurface->object, 1, storageFormat, width, height, depth);
+      break;
+   case latte::SQ_TEX_DIM_1D_ARRAY:
+      gl::glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
+      break;
+   default:
+      decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
+   }
+
+   newSurface->width = width;
+   newSurface->height = height;
+   newSurface->depth = depth;
+   newSurface->next = nullptr;
+   return newSurface;
+}
+
+static void
+copyHostSurface(HostSurface* dest,
+                HostSurface *source,
+                latte::SQ_TEX_DIM dim)
+{
+   auto copyWidth = std::min(dest->width, source->width);
+   auto copyHeight = std::min(dest->height, source->height);
+   auto copyDepth = std::min(dest->depth, source->depth);
+   auto target = getGlTarget(dim);
+
+   gl::glCopyImageSubData(
+      source->object, target, 0, 0, 0, 0,
+      dest->object, target, 0, 0, 0, 0,
+      copyWidth, copyHeight, copyDepth);
+}
+
+static uint32_t
+getSurfaceBytes(uint32_t pitch,
+                uint32_t height,
+                uint32_t depth,
+                latte::SQ_TEX_DIM dim,
+                latte::SQ_DATA_FORMAT format)
+{
+   uint32_t numPixels = 0;
+
+   switch (dim) {
+   case latte::SQ_TEX_DIM_1D:
+      numPixels = pitch;
+      break;
+   case latte::SQ_TEX_DIM_2D:
+      numPixels = pitch * height;
+      break;
+   case latte::SQ_TEX_DIM_2D_ARRAY:
+      numPixels = pitch * height * depth;
+      break;
+   case latte::SQ_TEX_DIM_CUBEMAP:
+      numPixels = pitch * height * 6;
+      break;
+   case latte::SQ_TEX_DIM_3D:
+      numPixels = pitch * height * depth;
+      break;
+   case latte::SQ_TEX_DIM_1D_ARRAY:
+      numPixels = pitch * height;
+      break;
+   default:
+      decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
+   }
+
+   if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5) {
+      numPixels /= 4 * 4;
+   }
+
+   auto bitsPerPixel = getDataFormatBitsPerElement(format);
+   return numPixels * bitsPerPixel;
 }
 
 SurfaceBuffer *
@@ -299,141 +335,144 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    decaf_check(width <= 8192);
    decaf_check(height <= 8192);
 
+   // The size key is selected based on which level the dims
+   //  are compatible across.  Note that at some point, we may
+   //  need to make format not be part of the key as well...
    auto surfaceKey = static_cast<uint64_t>(baseAddress) << 32;
-   surfaceKey ^= pitch ^ depth<<16 ^ dim<<19;
-   surfaceKey ^= format<<22 ^ numFormat<<28 ^ formatComp<<30 ^ degamma<<31;
-
-   auto bufferIter = mSurfaces.find(surfaceKey);
-   SurfaceBuffer *buffer;
-   gl::GLuint oldSurface = 0;
-   uint32_t oldWidth = 0;
-   uint32_t oldHeight = 0;
-   uint32_t oldDepth = 0;
-
-   if (bufferIter != mSurfaces.end()) {
-      buffer = &bufferIter->second;
-
-      // We need to check the requested size because if the surface is a
-      //  strangely-sized (non-tile-aligned) intermediate render buffer,
-      //  we'll see different sizes for the surface as a colorbuffer and
-      //  as a texture, and we need to make sure both of those go to the
-      //  same OpenGL surface.
-      if (width <= buffer->width && height <= buffer->height) {
-         return &bufferIter->second;
-      }
-
-      // The size has increased, so we need to recreate the surface and
-      //  copy the pixel data over
-      oldSurface = buffer->object;
-      oldWidth = buffer->width;
-      oldHeight = buffer->height;
-      oldDepth = buffer->depth;
-
-      gLog->info("Expanding surface 0x{:X} from {}x{}x{} to {}x{}x{}",
-                 baseAddress, oldWidth, oldHeight, oldDepth, width, height, depth);
-
-      // Recreate the surface with the new size
-      buffer->object = 0;
-   } else {
-      auto insertRes = mSurfaces.emplace(surfaceKey, SurfaceBuffer{});
-      buffer = &insertRes.first->second;
-   }
-
-   auto storageFormat = getStorageFormat(format, numFormat, formatComp, degamma, isDepthBuffer);
-
-   if (storageFormat == gl::GL_INVALID_ENUM) {
-      decaf_abort(fmt::format("Surface with unsupported format {} {} {} {}", format, numFormat, formatComp, degamma));
-   }
-
-   // We need to keep track of the memory region every GPU resource uses
-   //  so that we are able to invalidate them as needed.
-   buffer->cpuMemStart = baseAddress;
-
-   // Remember what size we created this surface with (see above)
-   buffer->width = width;
-   buffer->height = height;
-   buffer->depth = depth;
-
-   // Let's track some other useful information
-   buffer->dbgInfo.dim = dim;
-   buffer->dbgInfo.format = format;
-   buffer->dbgInfo.numFormat = numFormat;
-   buffer->dbgInfo.formatComp = formatComp;
-   buffer->dbgInfo.degamma = degamma;
-
-   auto bitsPerPixel = getStorageFormatBits(storageFormat);
-   uint32_t numPixels;
-   gl::GLenum target;
+   surfaceKey ^= format << 22 ^ numFormat << 28 ^ formatComp << 30 ^ degamma << 31;
 
    switch (dim) {
    case latte::SQ_TEX_DIM_1D:
-      numPixels = width;
-      target = gl::GL_TEXTURE_1D;
       break;
    case latte::SQ_TEX_DIM_2D:
-      numPixels = width * height;
-      target = gl::GL_TEXTURE_2D;
+   case latte::SQ_TEX_DIM_1D_ARRAY:
+      surfaceKey ^= pitch;
       break;
    case latte::SQ_TEX_DIM_2D_ARRAY:
-      numPixels = width * height * depth;
-      target = gl::GL_TEXTURE_2D_ARRAY;
-      break;
    case latte::SQ_TEX_DIM_CUBEMAP:
-      numPixels = width * height * 6;
-      target = gl::GL_TEXTURE_CUBE_MAP;
-      break;
    case latte::SQ_TEX_DIM_3D:
-      numPixels = width * height * depth;
-      target = gl::GL_TEXTURE_3D;
-      break;
-   case latte::SQ_TEX_DIM_1D_ARRAY:
-      numPixels = width * height;
-      target = gl::GL_TEXTURE_1D_ARRAY;
+      surfaceKey ^= pitch ^ height<<16;
       break;
    default:
       decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
    }
 
-   gl::glCreateTextures(target, 1, &buffer->object);
+   auto &buffer = mSurfaces[surfaceKey];
 
-   switch (target) {
-   case gl::GL_TEXTURE_1D:
-      gl::glTextureStorage1D(buffer->object, 1, storageFormat, width);
-      break;
-   case gl::GL_TEXTURE_1D_ARRAY:
-   case gl::GL_TEXTURE_2D:
-   case gl::GL_TEXTURE_CUBE_MAP:
-      gl::glTextureStorage2D(buffer->object, 1, storageFormat, width, height);
-      break;
-   case gl::GL_TEXTURE_2D_ARRAY:
-   case gl::GL_TEXTURE_3D:
-      gl::glTextureStorage3D(buffer->object, 1, storageFormat, width, height, depth);
-      break;
-   default:
-      decaf_abort(fmt::format("impossible target {}", static_cast<unsigned>(target)));
+   if (buffer.active &&
+      buffer.active->width == width &&
+      buffer.active->height == height &&
+      buffer.active->depth == depth)
+   {
+      return &buffer;
    }
 
-   // numBits could theoretically be >= 2^32, so uint64_t to avoid overflow
-   auto numBits = static_cast<uint64_t>(numPixels) * bitsPerPixel;
-   // Some (buggy?) apps try to give us 1x1 compressed textures...
-   if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5 && (width == 1 || height == 1)) {
-      gLog->debug("Got compressed texture with invalid size {}x{}", width, height);
-   } else {
-      decaf_check(numBits % 8 == 0);
-   }
-   decaf_check(numBits / 8 < UINT64_C(1) << 32);
-   buffer->cpuMemEnd = baseAddress + static_cast<uint32_t>(numBits / 8);
+   if (!buffer.master) {
+      // We are the first user of this surface, lets quickly set it up and
+      //  allocate a host surface to use
 
-   // If we're resizing an existing surface, copy the pixel data and destroy
-   //  the old OpenGL surface
-   if (oldSurface) {
-      glCopyImageSubData(oldSurface, target, 0, 0, 0, 0,
-                         buffer->object, target, 0, 0, 0, 0,
-                         width, height, depth);
-      gl::glDeleteTextures(1, &oldSurface);
+      // Let's track some other useful information
+      buffer.dbgInfo.dim = dim;
+      buffer.dbgInfo.format = format;
+      buffer.dbgInfo.numFormat = numFormat;
+      buffer.dbgInfo.formatComp = formatComp;
+      buffer.dbgInfo.degamma = degamma;
+
+      // The memory bounds
+      buffer.cpuMemStart = baseAddress;
+      buffer.cpuMemEnd = baseAddress + getSurfaceBytes(pitch, height, depth, dim, format);
+
+      auto newSurf = createHostSurface(pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
+      buffer.active = newSurf;
+      buffer.master = newSurf;
+      return &buffer;
    }
 
-   return buffer;
+   HostSurface *foundSurface = nullptr;
+   HostSurface *newMaster = nullptr;
+   HostSurface *newSurface = nullptr;
+
+   if (!foundSurface) {
+      // First lets check to see if we already have a surface created
+
+      for (auto surf = buffer.master; surf != nullptr; surf = surf->next) {
+         if (surf->width == width && surf->height == height && surf->depth == depth) {
+            foundSurface = surf;
+            break;
+         }
+      }
+   }
+
+   if (!foundSurface) {
+      // Lets check if we need to build a new master surface
+
+      auto masterWidth = width;
+      auto masterHeight = height;
+      auto masterDepth = depth;
+      if (buffer.master) {
+         masterWidth = std::max(masterWidth, buffer.master->width);
+         masterHeight = std::max(masterHeight, buffer.master->height);
+         masterDepth = std::max(masterDepth, buffer.master->depth);
+      }
+
+      if (!buffer.master || buffer.master->width < masterWidth || buffer.master->height < masterHeight || buffer.master->depth < masterDepth) {
+         newMaster = createHostSurface(pitch, masterWidth, masterHeight, masterDepth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
+
+         // Check if the new master we just made matches our size perfectly.
+         if (width == masterWidth && height == masterHeight && depth == masterDepth) {
+            foundSurface = newMaster;
+         }
+      }
+   }
+
+   if (!foundSurface) {
+      // Lets finally just build our perfect surface...
+      foundSurface = createHostSurface(pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
+      newSurface = foundSurface;
+   }
+
+   // If the active surface is not the master surface, we first need
+   //  to copy that surface up to the master
+   if (buffer.active != buffer.master) {
+      copyHostSurface(buffer.master, buffer.active, dim);
+      buffer.active = buffer.master;
+   }
+
+   // If we allocated a new master, we need to copy the old master to
+   //  the new one.  Note that this can cause a HostSurface which only
+   //  was acting as a surface to be orphaned for later GC.
+   if (newMaster) {
+      copyHostSurface(newMaster, buffer.active, dim);
+      buffer.active = newMaster;
+   }
+
+   // Check to see if we have finally became the active surface, if we
+   //   have not, we need to copy one last time... Lolcopies
+   if (buffer.active != foundSurface) {
+      copyHostSurface(foundSurface, buffer.active, dim);
+      buffer.active = foundSurface;
+   }
+
+   // If we have a new master surface, we need to put it at the top
+   //  of the list (so its actually in the .master slot...)
+   if (newMaster) {
+      newSurface->next = buffer.master;
+      buffer.master = newSurface;
+   }
+
+   // Other surfaces are just inserted after the master surface.
+   if (newSurface) {
+      newSurface->next = buffer.master->next;
+      buffer.master->next = newSurface;
+   }
+
+   // Update the memory bounds to reflect this usage of the texture data
+   auto newMemEnd = buffer.cpuMemStart + getSurfaceBytes(pitch, height, depth, dim, format);
+   if (newMemEnd > buffer.cpuMemEnd) {
+      buffer.cpuMemEnd = newMemEnd;
+   }
+
+   return &buffer;
 }
 
 } // namespace opengl

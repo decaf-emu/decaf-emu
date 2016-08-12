@@ -867,6 +867,9 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_tiling.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_utilities.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1644,6 +1647,9 @@
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\gpu\gpu_tiling.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\gpu_utilities.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
   </ItemGroup>

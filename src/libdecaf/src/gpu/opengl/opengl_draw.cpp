@@ -324,7 +324,7 @@ GLDriver::decafClearColor(const pm4::DecafClearColor &data)
    auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
 
    // Bind color buffer
-   gl::glNamedFramebufferTexture(mColorClearFrameBuffer, gl::GL_COLOR_ATTACHMENT0, buffer->object, 0);
+   gl::glNamedFramebufferTexture(mColorClearFrameBuffer, gl::GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
 
    // Check color frame buffer is complete
    auto status = gl::glCheckNamedFramebufferStatus(mColorClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
@@ -360,10 +360,10 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
 
    // Bind depth buffer
    if (hasStencil) {
-      gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL_ATTACHMENT, buffer->object, 0);
+      gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL_ATTACHMENT, buffer->active->object, 0);
    } else {
       gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_STENCIL_ATTACHMENT, 0, 0);
-      gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_ATTACHMENT, buffer->object, 0);
+      gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_ATTACHMENT, buffer->active->object, 0);
    }
 
    // Check depth frame buffer is complete
