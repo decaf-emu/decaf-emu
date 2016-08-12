@@ -21,7 +21,7 @@ namespace opengl
 
 // TODO: This is really some kind of 'nsight compat mode'...  Maybe
 //  it should even be a configurable option (related to force_sync).
-static const auto NO_PERSISTENT_MAP = false;
+static const auto USE_PERSISTENT_MAP = true;
 
 // This represents the number of bytes of padding to attach to the end
 //  of an attribute buffer.  This is neccessary for cases where the game
@@ -787,7 +787,12 @@ bool GLDriver::checkActiveAttribBuffers()
          }
 
          gl::glCreateBuffers(1, &buffer.object);
-         gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_CLIENT_STORAGE_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+         if (USE_PERSISTENT_MAP) {
+            gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_CLIENT_STORAGE_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
+         } else {
+            gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_CLIENT_STORAGE_BIT | gl::GL_DYNAMIC_STORAGE_BIT);
+         }
+
          buffer.allocatedSize = size;
       }
 
@@ -805,7 +810,7 @@ bool GLDriver::checkActiveAttribBuffers()
             buffer.cpuMemEnd = buffer.cpuMemStart + size;
 
             // Upload data
-            if (!NO_PERSISTENT_MAP) {
+            if (USE_PERSISTENT_MAP) {
                if (!buffer.mappedBuffer) {
                   buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size + BUFFER_PADDING, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
                }
