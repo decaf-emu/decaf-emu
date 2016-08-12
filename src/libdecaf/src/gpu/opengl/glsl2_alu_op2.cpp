@@ -114,16 +114,28 @@ insertArDestEnd(State &state,
 
 static void
 unaryFunction(State &state,
-               const ControlFlowInst &cf,
-               const AluInst &alu,
-               const std::string &func)
+              const ControlFlowInst &cf,
+              const AluInst &alu,
+              const std::string &func,
+              const std::string &extraFunc = "")
 {
    // dst = func(src0)
+   // dst = func(extraFunc(src0))
    insertLineStart(state);
    insertDestBegin(state, cf, alu, state.unit);
 
    state.out << func << "(";
+
+   if (!extraFunc.empty()) {
+      state.out << extraFunc << "(";
+   }
+
    insertSource0(state, state.out, cf, alu);
+
+   if (!extraFunc.empty()) {
+      state.out << ")";
+   }
+
    state.out << ")";
 
    insertDestEnd(state, cf, alu);
@@ -346,7 +358,7 @@ LSHR(State &state, const ControlFlowInst &cf, const AluInst &alu)
 static void
 LOG(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
-   unaryFunction(state, cf, alu, "log2");
+   unaryFunction(state, cf, alu, "log2", "abs");
 }
 
 static void
