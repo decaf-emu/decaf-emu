@@ -235,7 +235,13 @@ void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
    int tvLeft, tvBottom, tvTop, tvRight;
    int drcLeft, drcBottom, drcTop, drcRight;
 
-   if (windowWidth * nativeHeight >= windowHeight * nativeWidth) {
+   if (decaf::config::display::mode == decaf::config::display::DisplayMode::WindowedFull || decaf::config::display::mode == decaf::config::display::DisplayMode::Fullscreen) {
+       drcBottom = tvBottom = 0;
+       drcTop = tvTop = windowHeight;
+       drcLeft = tvLeft = 0;
+       drcRight = tvRight = windowWidth;
+   }
+   else if (windowWidth * nativeHeight >= windowHeight * nativeWidth) {
       // align to height
       int drcBorder = (windowWidth * nativeHeight - windowHeight * DrcWidth + nativeHeight) / nativeHeight / 2;
       int tvBorder = (windowWidth * nativeHeight - windowHeight * TvWidth + nativeHeight) / nativeHeight / 2;
@@ -310,7 +316,7 @@ void DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
    }
 
    // Draw DRC display
-   if (drcBuffer != 0) {
+   if (decaf::config::display::mode == decaf::config::display::DisplayMode::WindowedSplit && drcBuffer != 0) {
       gl::glViewportArrayv(0, 1, drcViewport);
       drawScanBuffer(drcBuffer);
    }

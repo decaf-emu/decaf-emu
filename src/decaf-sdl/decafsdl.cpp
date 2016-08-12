@@ -60,6 +60,10 @@ DecafSDL::createWindow()
       return false;
    }
 
+   if (decaf::config::display::mode == decaf::config::display::DisplayMode::Fullscreen) {
+       SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN);
+   }
+
    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
    // Create OpenGL context
