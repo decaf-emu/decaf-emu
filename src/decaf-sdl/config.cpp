@@ -185,9 +185,11 @@ struct CerealInput
    }
 };
 
-bool load(const std::string &path)
+bool
+load(const std::string &path,
+          std::string &error)
 {
-   std::ifstream file(path, std::ios::binary);
+   std::ifstream file { path, std::ios::binary };
 
    if (!file.is_open()) {
       // Create a default config file
@@ -196,7 +198,7 @@ bool load(const std::string &path)
    }
 
    try {
-      cereal::JSONInputArchive input(file);
+      cereal::JSONInputArchive input { file };
       input(cereal::make_nvp("debugger", CerealDebugger {}),
             cereal::make_nvp("gpu", CerealGPU{}),
             cereal::make_nvp("gx2", CerealGX2 {}),
@@ -206,18 +208,18 @@ bool load(const std::string &path)
             cereal::make_nvp("sound", CerealSound {}),
             cereal::make_nvp("system", CerealSystem {}));
    } catch (std::exception e) {
-      // Can't use gLog because it is NULL here.
-      std::cout << "Failed to parse config.json: " << e.what() << std::endl;
-      std::cout << "Try deleting your config.json to allow a new correct one to be generated (with default settings)." << std::endl;
+      error = e.what();
+      return false;
    }
 
    return true;
 }
 
-void save(const std::string &path)
+void
+save(const std::string &path)
 {
-   std::ofstream file(path, std::ios::binary);
-   cereal::JSONOutputArchive output(file);
+   std::ofstream file { path, std::ios::binary };
+   cereal::JSONOutputArchive output { file };
    output(cereal::make_nvp("debugger", CerealDebugger {}),
           cereal::make_nvp("gpu", CerealGPU{}),
           cereal::make_nvp("gx2", CerealGX2 {}),

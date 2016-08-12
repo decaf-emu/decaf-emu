@@ -122,14 +122,16 @@ start(excmd::parser &parser,
    }
 
    // First thing, load the config!
-   std::string configPath;
+   std::string configPath, configError;
+
    if (options.has("config")) {
       configPath = options.get<std::string>("config");
    } else {
       decaf::createConfigDirectory();
       configPath = decaf::makeConfigPath("config.json");
    }
-   config::load(configPath);
+
+   auto configLoaded = config::load(configPath, configError);
 
    // Allow command line options to override config
    if (options.has("jit-debug")) {
@@ -211,8 +213,15 @@ start(excmd::parser &parser,
    gCliLog = std::make_shared<spdlog::logger>("decaf-cli", begin(sinks), end(sinks));
    gCliLog->set_level(logLevel);
    gCliLog->set_pattern("[%l] %v");
-   gCliLog->info("Loaded config from {}", configPath);
    gCliLog->info("Game path {}", gamePath);
+
+   if (!configLoaded) {
+      gCliLog->info("Loaded config from {}", configPath);
+   } else {
+      gCliLog->error("Failed to parse config {}:", configPath);
+      gCliLog->error("{}", configError);
+      gCliLog->error("Try deleting config.json to automatically generate a new one with default settings.");
+   }
 
    DecafSDL sdl;
 

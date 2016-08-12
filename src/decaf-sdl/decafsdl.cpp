@@ -78,7 +78,6 @@ DecafSDL::createWindow()
    }
 
    SDL_GL_MakeCurrent(mWindow, mContext);
-
    return true;
 }
 
@@ -91,7 +90,6 @@ DecafSDL::initSound()
    }
 
    mSoundDriver = new DecafSDLSound;
-
    return true;
 }
 

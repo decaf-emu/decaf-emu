@@ -57,7 +57,11 @@ extern int right_stick_y;
 
 } // namespace input
 
-bool load(const std::string &path);
-void save(const std::string &path);
+bool
+load(const std::string &path,
+     std::string &error);
+
+void
+save(const std::string &path);
 
 } // namespace config
