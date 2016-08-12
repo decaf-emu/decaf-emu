@@ -19,6 +19,9 @@ namespace ui
 static bool
 sIsPaused = false;
 
+static auto
+sDebugViewsVisible = false;
+
 static uint64_t
 sResumeCount = 0;
 
@@ -165,11 +168,16 @@ getResumeCount()
    return sResumeCount;
 }
 
+bool
+isVisible()
+{
+   return sDebugViewsVisible;
+}
+
 void
 draw()
 {
    static auto firstActivation = true;
-   static auto debugViewsVisible = false;
 
    if (!debugger::enabled()) {
       return;
@@ -183,11 +191,11 @@ draw()
       handleGamePaused();
 
       // Force the debugger to pop up
-      debugViewsVisible = true;
+      sDebugViewsVisible = true;
    }
 
    if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::D), false)) {
-      debugViewsVisible = !debugViewsVisible;
+      sDebugViewsVisible = !sDebugViewsVisible;
    }
 
    // This is a stupid hack to avoid code duplation everywhere her...
@@ -196,7 +204,7 @@ draw()
    auto wantsStepOver = false;
    auto wantsStepInto = false;
 
-   if (debugViewsVisible) {
+   if (sDebugViewsVisible) {
       auto userModule = kernel::getUserModule();
 
       if (firstActivation && userModule) {

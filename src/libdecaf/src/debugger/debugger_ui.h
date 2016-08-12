@@ -36,6 +36,9 @@ setClipboardTextCallbacks(ClipboardTextGetCallback getter,
 void
 initialise();
 
+bool
+isVisible();
+
 void
 updateInput();
 

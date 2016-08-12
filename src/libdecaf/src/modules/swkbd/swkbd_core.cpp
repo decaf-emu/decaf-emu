@@ -1,5 +1,7 @@
 #include "swkbd.h"
 #include "swkbd_core.h"
+#include <codecvt>
+#include <locale>
 
 namespace nn
 {
@@ -7,9 +9,32 @@ namespace nn
 namespace swkbd
 {
 
+static State::State
+sInputFormState = State::Hidden;
+
+static State::State
+sKeyboardState = State::Hidden;
+
+static bool
+sOkButtonPressed = false;
+
+static bool
+sCancelButtonPressed = false;
+
+static std::string
+sInputBuffer;
+
+static uint8_t *
+sWorkMemory = nullptr;
+
 bool
 AppearInputForm(const AppearArg *arg)
 {
+   sInputFormState = State::Visible;
+   sKeyboardState = State::Visible;
+   sOkButtonPressed = false;
+   sCancelButtonPressed = false;
+   sInputBuffer.clear();
    return true;
 }
 
@@ -17,6 +42,10 @@ AppearInputForm(const AppearArg *arg)
 bool
 AppearKeyboard(const KeyboardArg *arg)
 {
+   sKeyboardState = State::Visible;
+   sOkButtonPressed = false;
+   sCancelButtonPressed = false;
+   sInputBuffer.clear();
    return true;
 }
 
@@ -46,8 +75,12 @@ ConfirmUnfixAll()
 
 
 void
-Create(unsigned char *, RegionType::Region region, unsigned int, FSClient *fsclient)
+Create(unsigned char *workMemory,
+       RegionType::Region region,
+       unsigned int,
+       FSClient *fsclient)
 {
+   sWorkMemory = workMemory;
 }
 
 
@@ -89,10 +122,15 @@ GetDrawStringInfo(DrawStringInfo *info)
 }
 
 
-const char_t *
+const wchar_t *
 GetInputFormString()
 {
-   return nullptr;
+   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+   auto wide = converter.from_bytes(sInputBuffer);
+   auto result = reinterpret_cast<wchar_t *>(sWorkMemory);
+   std::memcpy(result, wide.data(), wide.size() * 2);
+   result[wide.size()] = 0;
+   return result;
 }
 
 
@@ -105,14 +143,14 @@ GetKeyboardCondition(KeyboardCondition *condition)
 State::State
 GetStateInputForm()
 {
-   return State::WaitOut;
+   return sInputFormState;
 }
 
 
 State::State
 GetStateKeyboard()
 {
-   return State::WaitOut;
+   return sKeyboardState;
 }
 
 
@@ -125,7 +163,7 @@ InactivateSelectCursor()
 bool
 InitLearnDic(void *dictionary)
 {
-   return false;
+   return true;
 }
 
 
@@ -137,16 +175,16 @@ IsCoveredWithSubWindow()
 
 
 bool
-IsDecideCancelButton(bool *)
+IsDecideCancelButton(bool *v)
 {
-   return false;
+   return sCancelButtonPressed;
 }
 
 
 bool
-IsDecideOkButton(bool *)
+IsDecideOkButton(bool *v)
 {
-   return false;
+   return sOkButtonPressed;
 }
 
 
@@ -277,6 +315,40 @@ Module::registerCoreFunctions()
    RegisterKernelFunctionName("SwkbdSetUserSoundObj__3RplFPQ3_2nn5swkbd9ISoundObj", nn::swkbd::SetUserSoundObj);
    RegisterKernelFunctionName("SwkbdSetVersion__3RplFi", nn::swkbd::SetVersion);
 }
+
+namespace internal
+{
+
+void
+injectTextInput(const char *input)
+{
+   if (sKeyboardState == State::Visible) {
+      sInputBuffer += input;
+   }
+}
+
+void
+injectKeyInput(decaf::input::KeyboardKey key,
+               decaf::input::KeyboardAction action)
+{
+   if (sKeyboardState != State::Visible) {
+      return;
+   }
+
+   if (action == decaf::input::KeyboardAction::Release) {
+      if (key == decaf::input::KeyboardKey::Enter) {
+         sOkButtonPressed = true;
+         sInputFormState = State::Hidden;
+         sKeyboardState = State::Hidden;
+      } else if (key == decaf::input::KeyboardKey::Escape) {
+         sCancelButtonPressed = true;
+         sInputFormState = State::Hidden;
+         sKeyboardState = State::Hidden;
+      }
+   }
+}
+
+} // namespace internal
 
 } // namespace swkbd
 

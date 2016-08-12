@@ -1,5 +1,6 @@
 #pragma once
 #include "common/structsize.h"
+#include "decaf_input.h"
 
 struct FSClient;
 
@@ -39,10 +40,10 @@ namespace State
 {
 enum State
 {
-   WaitOut = 0,
-   In = 1,
-   WaitIn = 2,
-   Out = 3,
+   Hidden = 0,
+   FadeIn = 1,
+   Visible = 2,
+   FadeOut = 3,
    Max = 4,
 };
 }
@@ -66,7 +67,10 @@ void
 ConfirmUnfixAll();
 
 void
-Create(unsigned char *, RegionType::Region region, unsigned int, FSClient *fsclient);
+Create(unsigned char *,
+       RegionType::Region region,
+       unsigned int,
+       FSClient *fsclient);
 
 void
 Destroy();
@@ -86,7 +90,7 @@ DrawTV();
 void
 GetDrawStringInfo(DrawStringInfo *info);
 
-const char_t *
+const wchar_t *
 GetInputFormString();
 
 void
@@ -154,6 +158,18 @@ SetUserSoundObj(ISoundObj *obj);
 
 void
 SetVersion(int32_t version);
+
+namespace internal
+{
+
+void
+injectTextInput(const char *input);
+
+void
+injectKeyInput(decaf::input::KeyboardKey key,
+               decaf::input::KeyboardAction action);
+
+} // namespace internal
 
 } // namespace swkbd
 

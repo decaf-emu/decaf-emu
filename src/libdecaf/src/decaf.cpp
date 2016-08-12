@@ -15,6 +15,7 @@
 #include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_fs.h"
 #include "modules/coreinit/coreinit_scheduler.h"
+#include "modules/swkbd/swkbd_core.h"
 #include <condition_variable>
 #include <mutex>
 
@@ -263,13 +264,21 @@ void
 injectKeyInput(input::KeyboardKey key,
                input::KeyboardAction action)
 {
-   ::debugger::ui::injectKeyInput(key, action);
+   if (::debugger::ui::isVisible()) {
+      ::debugger::ui::injectKeyInput(key, action);
+   } else {
+      nn::swkbd::internal::injectKeyInput(key, action);
+   }
 }
 
 void
 injectTextInput(const char *text)
 {
-   ::debugger::ui::injectTextInput(text);
+   if (::debugger::ui::isVisible()) {
+      ::debugger::ui::injectTextInput(text);
+   } else {
+      nn::swkbd::internal::injectTextInput(text);
+   }
 }
 
 void
