@@ -8,6 +8,21 @@ namespace decaf
 namespace config
 {
 
+namespace display
+{
+
+enum class DisplayMode
+{
+    WindowedSplit,
+    WindowedFull,
+    Fullscreen
+};
+
+//! Current window display mode
+extern DisplayMode mode;
+
+}
+
 namespace debugger
 {
 

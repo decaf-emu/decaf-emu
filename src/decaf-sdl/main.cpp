@@ -59,6 +59,12 @@ getCommandLineParser()
       .add_option("config",
                   description { "Specify path to configuration file." },
                   value<std::string> {})
+      .add_option("display-mode",
+                  description{ "Set the window display mode." },
+                  default_value<std::string> { "windowed-split" },
+                  allowed<std::string> { {
+                     "windowed-split", "windowed-full", "fullscreen"
+                  } })
       .add_option("region",
                   description { "Set the system region." },
                   default_value<std::string> { "US" },
@@ -154,6 +160,23 @@ start(excmd::parser &parser,
 
    if (options.has("log-level")) {
       config::log::level = options.get<std::string>("log-level");
+   }
+
+   if (options.has("display-mode")) {
+       auto mode = options.get<std::string>("display-mode");
+
+       if (mode.compare("windowed-split") == 0) {
+           decaf::config::display::mode = decaf::config::display::DisplayMode::WindowedSplit;
+       }
+       else if (mode.compare("windowed-full") == 0) {
+           decaf::config::display::mode = decaf::config::display::DisplayMode::WindowedFull;
+       }
+       else if (mode.compare("fullscreen") == 0) {
+           decaf::config::display::mode = decaf::config::display::DisplayMode::Fullscreen;
+       }
+       else {
+           decaf_abort(fmt::format("Invalid display mode {}", mode));
+       }
    }
 
    if (options.has("region")) {

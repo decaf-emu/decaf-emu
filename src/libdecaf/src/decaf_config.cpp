@@ -7,6 +7,13 @@ namespace decaf
 namespace config
 {
 
+namespace display
+{
+
+DisplayMode mode = DisplayMode::WindowedSplit;
+
+}
+
 namespace debugger
 {
 
