@@ -640,6 +640,9 @@ bool GLDriver::checkActiveAttribBuffers()
          }
 
          buffer.allocatedSize = size;
+
+         buffer.cpuMemStart = addr;
+         buffer.cpuMemEnd = buffer.cpuMemStart + size;
       }
 
       auto ppcBuffer = mem::translate<const void>(addr);
@@ -652,8 +655,6 @@ bool GLDriver::checkActiveAttribBuffers()
          if (newHash[0] != buffer.cpuMemHash[0] || newHash[1] != buffer.cpuMemHash[1]) {
             buffer.cpuMemHash[0] = newHash[0];
             buffer.cpuMemHash[1] = newHash[1];
-            buffer.cpuMemStart = addr;
-            buffer.cpuMemEnd = buffer.cpuMemStart + size;
 
             // Upload data
             if (USE_PERSISTENT_MAP) {
