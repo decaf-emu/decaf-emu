@@ -206,6 +206,10 @@ bool GLDriver::checkActiveShader()
 
          // Setup attrib format
          gl::glCreateVertexArrays(1, &fetchShader.object);
+         if (decaf::config::gpu::debug) {
+            std::string label = fmt::format("fetch shader @ 0x{:08X}", fsPgmAddress);
+            gl::glObjectLabel(gl::GL_VERTEX_ARRAY, fetchShader.object, -1, label.c_str());
+         }
 
          auto bufferUsed = std::array<bool, latte::MaxAttributes> { false };
          auto bufferDivisor = std::array<uint32_t, latte::MaxAttributes> { 0 };
@@ -274,6 +278,10 @@ bool GLDriver::checkActiveShader()
          // Create OpenGL Shader
          const gl::GLchar *code[] = { vertexShader.code.c_str() };
          vertexShader.object = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
+         if (decaf::config::gpu::debug) {
+            std::string label = fmt::format("vertex shader @ 0x{:08X}", vsPgmAddress);
+            gl::glObjectLabel(gl::GL_PROGRAM, vertexShader.object, -1, label.c_str());
+         }
 
          // Check if shader compiled & linked properly
          gl::GLint isLinked = 0;
@@ -330,6 +338,10 @@ bool GLDriver::checkActiveShader()
             // Create OpenGL Shader
             const gl::GLchar *code[] = { pixelShader.code.c_str() };
             pixelShader.object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
+            if (decaf::config::gpu::debug) {
+               std::string label = fmt::format("pixel shader @ 0x{:08X}", psPgmAddress);
+               gl::glObjectLabel(gl::GL_PROGRAM, pixelShader.object, -1, label.c_str());
+            }
 
             // Check if shader compiled & linked properly
             gl::GLint isLinked = 0;
@@ -356,6 +368,15 @@ bool GLDriver::checkActiveShader()
 
       // Create pipeline
       gl::glCreateProgramPipelines(1, &shader.object);
+      if (decaf::config::gpu::debug) {
+         std::string label;
+         if (shader.pixel) {
+            label = fmt::format("shader set: fs = 0x{:08X}, vs = 0x{:08X}, ps = 0x{:08X}", fsPgmAddress, vsPgmAddress, psPgmAddress);
+         } else {
+            label = fmt::format("shader set: fs = 0x{:08X}, vs = 0x{:08X}, ps = none", fsPgmAddress, vsPgmAddress);
+         }
+         gl::glObjectLabel(gl::GL_PROGRAM_PIPELINE, shader.object, -1, label.c_str());
+      }
       gl::glUseProgramStages(shader.object, gl::GL_VERTEX_SHADER_BIT, shader.vertex->object);
       gl::glUseProgramStages(shader.object, gl::GL_FRAGMENT_SHADER_BIT, shader.pixel ? shader.pixel->object : 0);
    }
@@ -589,6 +610,16 @@ GLDriver::configureDataBuffer(DataBuffer *buffer,
    buffer->isOutput |= isOutput;
 
    gl::glCreateBuffers(1, &buffer->object);
+   if (decaf::config::gpu::debug) {
+      const char *type;
+      if (buffer->isInput) {
+         type = buffer->isOutput ? "input/output" : "input-only";
+      } else {
+         type = "output-only";
+      }
+      std::string label = fmt::format("{} buffer @ 0x{:08X}", type, address);
+      gl::glObjectLabel(gl::GL_BUFFER, buffer->object, -1, label.c_str());
+   }
 
    gl::BufferStorageMask usage = static_cast<gl::BufferStorageMask>(0);
    if (buffer->isInput) {

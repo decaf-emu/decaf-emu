@@ -19,6 +19,14 @@ extern bool break_on_entry;
 
 } // namespace debugger
 
+namespace gpu
+{
+
+//! Enable OpenGL debugging
+extern bool debug;
+
+}
+
 namespace gx2
 {
 

@@ -1,5 +1,6 @@
 #include "common/decaf_assert.h"
 #include "common/log.h"
+#include "decaf_config.h"
 #include "gpu/commandqueue.h"
 #include "gpu/latte_registers.h"
 #include "gpu/pm4_buffer.h"
@@ -36,6 +37,10 @@ GLDriver::initGL()
 
    // Create our blit framebuffer
    gl::glCreateFramebuffers(2, mBlitFrameBuffers);
+   if (decaf::config::gpu::debug) {
+      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mBlitFrameBuffers[0], -1, "blit target");
+      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mBlitFrameBuffers[1], -1, "blit source");
+   }
 
    // Create our default framebuffer
    gl::glGenFramebuffers(1, &mFrameBuffer);
@@ -44,6 +49,10 @@ GLDriver::initGL()
    // Create framebuffers for color-clear and depth-clear operations
    gl::glCreateFramebuffers(1, &mColorClearFrameBuffer);
    gl::glCreateFramebuffers(1, &mDepthClearFrameBuffer);
+   if (decaf::config::gpu::debug) {
+      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mColorClearFrameBuffer, -1, "color clear");
+      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mDepthClearFrameBuffer, -1, "depth clear");
+   }
 
    gl::GLint value;
    gl::glGetIntegerv(gl::GL_MAX_UNIFORM_BLOCK_SIZE, &value);
@@ -74,6 +83,10 @@ GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
    gl::glTextureStorage2D(chain->object, 1, gl::GL_RGBA8, data.width, data.height);
    chain->width = data.width;
    chain->height = data.height;
+   if (decaf::config::gpu::debug) {
+      const char *label = data.isTv ? "TV framebuffer" : "DRC framebuffer";
+      gl::glObjectLabel(gl::GL_TEXTURE, chain->object, -1, label);
+   }
 
    // Initialize the pixels to a more useful color
 #define rf_to_ru(x) (static_cast<uint32_t>(x * 256) & 0xFF)
