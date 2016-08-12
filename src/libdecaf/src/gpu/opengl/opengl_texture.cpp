@@ -352,7 +352,7 @@ bool GLDriver::checkActiveTextures()
          GX2CalcSurfaceSizeAndAlignment(&surface);
 
          // Align address
-         baseAddress &= ~(surface.alignment - 1);
+         baseAddress &= ~(0x800 - 1);
 
          surface.image = make_virtual_ptr<uint8_t>(baseAddress);
          surface.mipmaps = nullptr;
