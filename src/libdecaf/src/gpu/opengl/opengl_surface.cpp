@@ -456,8 +456,8 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    // If we have a new master surface, we need to put it at the top
    //  of the list (so its actually in the .master slot...)
    if (newMaster) {
-      newSurface->next = buffer.master;
-      buffer.master = newSurface;
+      newMaster->next = buffer.master;
+      buffer.master = newMaster;
    }
 
    // Other surfaces are just inserted after the master surface.
