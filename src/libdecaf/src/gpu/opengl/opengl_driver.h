@@ -233,8 +233,6 @@ public:
 private:
    void initGL();
    void executeBuffer(pm4::Buffer *buffer);
-   void executeTasks();
-   void queueGpuTask(std::function<void()> task, bool shouldBlock = false);
 
    uint64_t getGpuClock();
 
@@ -342,7 +340,8 @@ private:
                        latte::VGT_INDEX indexFmt);
 
 private:
-   enum class RunState {
+   enum class RunState
+   {
       None,
       Running,
       Stopped
@@ -351,14 +350,6 @@ private:
    volatile RunState mRunState = RunState::None;
    std::thread mThread;
    SwapFunction mSwapFunc;
-   std::mutex mMutex;
-   std::atomic<uint32_t> mMutexWaiters;
-
-   std::queue<GpuTask> mTaskQueue;
-   uint64_t mTaskIdCounter = 1;
-   uint64_t mRetiredTaskId = 0;
-   std::mutex mTaskMutex;
-   std::condition_variable mTaskCond;
 
    std::array<uint32_t, 0x10000> mRegisters;
 
