@@ -352,7 +352,14 @@ bool GLDriver::checkActiveTextures()
          GX2CalcSurfaceSizeAndAlignment(&surface);
 
          // Align address
-         baseAddress &= ~(surface.alignment - 1);
+         auto alignment = 0x100;
+
+         if (surface.tileMode >= gx2::GX2TileMode::Tiled2DThin1 && surface.tileMode <= gx2::GX2TileMode::Tiled3BThick) {
+            // Swizzle bits are only used for 2D/2B/3D/3B formats
+            alignment = 0x800;
+         }
+
+         baseAddress &= ~(alignment - 1);
 
          surface.image = make_virtual_ptr<uint8_t>(baseAddress);
          surface.mipmaps = nullptr;
