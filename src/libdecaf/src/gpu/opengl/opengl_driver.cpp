@@ -166,6 +166,37 @@ GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
 }
 
 void
+GLDriver::decafInvalidate(const pm4::DecafInvalidate &data)
+{
+   auto start = data.memStart;
+   auto end = data.memEnd;
+
+   for (auto &surf : mSurfaces) {
+      if (surf.second.cpuMemStart >= end || surf.second.cpuMemEnd < start) {
+         continue;
+      }
+
+      surf.second.dirtyAsTexture = true;
+   }
+
+   for (auto &buffer : mAttribBuffers) {
+      if (buffer.second.cpuMemStart >= end || buffer.second.cpuMemEnd < start) {
+         continue;
+      }
+
+      buffer.second.dirtyAsBuffer = true;
+   }
+
+   for (auto &buffer : mUniformBuffers) {
+      if (buffer.second.cpuMemStart >= end || buffer.second.cpuMemEnd < start) {
+         continue;
+      }
+
+      buffer.second.dirtyAsBuffer = true;
+   }
+}
+
+void
 GLDriver::decafDebugMarker(const pm4::DecafDebugMarker &data)
 {
    gLog->trace("GPU Debug Marker: {} {}", data.key.data(), data.id);
@@ -190,55 +221,6 @@ GLDriver::decafOSScreenFlip(const pm4::DecafOSScreenFlip &data)
 
    gl::glTextureSubImage2D(texture, 0, 0, 0, width, height, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, data.buffer);
    decafSwapBuffers(pm4::DecafSwapBuffers {});
-}
-
-void
-GLDriver::invalidateMemory(uint32_t mode, ppcaddr_t memStart, ppcaddr_t memEnd)
-{
-   bool needsGpuInvalidate = false;
-   bool needsGpuBlock = false;
-
-   {
-      mMutexWaiters.fetch_add(1);
-      std::unique_lock<std::mutex> lock(mMutex);
-      mMutexWaiters.fetch_sub(1);
-
-      for (auto &surf : mSurfaces) {
-         if (surf.second.cpuMemStart >= memEnd || surf.second.cpuMemEnd < memStart) {
-            continue;
-         }
-
-         surf.second.dirtyAsTexture = true;
-         needsGpuInvalidate = true;
-      }
-
-      for (auto &buffer : mAttribBuffers) {
-         if (buffer.second.cpuMemStart >= memEnd || buffer.second.cpuMemEnd < memStart) {
-            continue;
-         }
-
-         buffer.second.dirtyAsBuffer = true;
-         needsGpuInvalidate = true;
-      }
-
-      for (auto &buffer : mUniformBuffers) {
-         if (buffer.second.cpuMemStart >= memEnd || buffer.second.cpuMemEnd < memStart) {
-            continue;
-         }
-
-         buffer.second.dirtyAsBuffer = true;
-         needsGpuInvalidate = true;
-      }
-   }
-
-   if (needsGpuInvalidate) {
-      queueGpuTask([]() {
-
-         // We can perform stuff here on the GPU thread.  It may be worthwhile to
-         //  make this its own function on GLDriver rather than a lambda.
-
-      }, needsGpuBlock);
-   }
 }
 
 void
@@ -422,63 +404,9 @@ GLDriver::pfpSyncMe(const pm4::PfpSyncMe &data)
    // TODO: do we need to do anything?
 }
 
-// This funciton must always be called from the GPU thread with
-//  mMutex already locked
-void
-GLDriver::executeTasks()
-{
-   while (mTaskQueue.size() > 0) {
-      auto task = mTaskQueue.front();
-      mTaskQueue.pop();
-
-      task.func();
-
-      {
-         std::unique_lock<std::mutex> taskLock(mTaskMutex);
-         decaf_check(task.id > mRetiredTaskId);
-         mRetiredTaskId = task.id;
-         mTaskCond.notify_all();
-      }
-   }
-}
-
-// This function must never be called from the GPU thread
-void
-GLDriver::queueGpuTask(std::function<void()> taskFunc, bool shouldBlock)
-{
-   static const uint32_t nopPacket = byte_swap(
-      pm4::type2::Header::get(0).type(pm4::Header::Type2).value);
-
-   // Grab lock from the running GPU stuff
-   mMutexWaiters.fetch_add(1);
-   std::unique_lock<std::mutex> lock(mMutex);
-   mMutexWaiters.fetch_sub(1);
-
-   // Push our task to the queue
-   uint64_t taskId = mTaskIdCounter++;
-   mTaskQueue.push(GpuTask{ taskId, taskFunc });
-
-   // We need to dispatch a dummy PM4 buffer, just in case GPU is idle
-   gpu::queueUserBuffer(&nopPacket, 4);
-
-   // We don't need to hold the GPU lock anymore
-   lock.unlock();
-
-   if (shouldBlock) {
-      std::unique_lock<std::mutex> taskLock(mTaskMutex);
-      while (mRetiredTaskId < taskId) {
-         mTaskCond.wait(taskLock);
-      }
-   }
-}
-
 void
 GLDriver::executeBuffer(pm4::Buffer *buffer)
 {
-   // Lock the data for now, note that runCommandBuffer has code
-   //  which will temporarily unlock the mutex sometimes!
-   std::unique_lock<std::mutex> lock(mMutex);
-
    // Execute command buffer
    runCommandBuffer(buffer->buffer, buffer->curSize);
 
@@ -498,7 +426,6 @@ GLDriver::syncPoll(std::function<void(gl::GLuint, gl::GLuint)> swapFunc)
    }
 
    mSwapFunc = swapFunc;
-
    auto buffer = gpu::tryUnqueueCommandBuffer();
    if (buffer) {
       executeBuffer(buffer);

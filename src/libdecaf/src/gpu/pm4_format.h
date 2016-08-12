@@ -17,7 +17,7 @@ enum IT_OPCODE : uint32_t
    DECAF_CLEAR_DEPTH_STENCIL  = 0x04,
    DECAF_SET_CONTEXT_STATE    = 0x05,
    DECAF_SET_BUFFER           = 0x06,
-   // 0x07 is currently unused
+   DECAF_INVALIDATE           = 0x07,
    DECAF_DEBUGMARKER          = 0x08,
    DECAF_OSSCREEN_FLIP        = 0x09,
 
