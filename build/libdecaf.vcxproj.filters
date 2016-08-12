@@ -864,6 +864,9 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memblockheap.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_tiling.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1638,6 +1641,9 @@
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_cp.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\gpu_tiling.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
   </ItemGroup>

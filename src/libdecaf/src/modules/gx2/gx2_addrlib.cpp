@@ -1,74 +1,16 @@
 #include <cstdlib>
 #include <cstring>
-#include "gpu/gpu_addrlibopt.h"
+#include "gpu/gpu_tiling.h"
 #include "gx2_addrlib.h"
 #include "gx2_surface.h"
 #include "gx2_format.h"
 #include "common/align.h"
-
-static const bool USE_ADDRLIBOPT = true;
 
 namespace gx2
 {
 
 namespace internal
 {
-
-static ADDR_HANDLE
-gAddrLibHandle = nullptr;
-
-static void *
-allocSysMem(const ADDR_ALLOCSYSMEM_INPUT *pInput)
-{
-   return std::malloc(pInput->sizeInBytes);
-}
-
-static ADDR_E_RETURNCODE
-freeSysMem(const ADDR_FREESYSMEM_INPUT *pInput)
-{
-   std::free(pInput->pVirtAddr);
-   return ADDR_OK;
-}
-
-bool
-initAddrLib()
-{
-   ADDR_CREATE_INPUT input;
-   ADDR_CREATE_OUTPUT output;
-   std::memset(&input, 0, sizeof(input));
-   std::memset(&output, 0, sizeof(output));
-
-   input.size = sizeof(ADDR_CREATE_INPUT);
-   output.size = sizeof(ADDR_CREATE_OUTPUT);
-
-   input.chipEngine = CIASICIDGFXENGINE_R600;
-   input.chipFamily = 0x51;
-   input.chipRevision = 71;
-   input.createFlags.fillSizeFields = 1;
-   input.regValue.gbAddrConfig = 0x44902;
-
-   input.callbacks.allocSysMem = &allocSysMem;
-   input.callbacks.freeSysMem = &freeSysMem;
-
-   auto result = AddrCreate(&input, &output);
-
-   if (result != ADDR_OK) {
-      return false;
-   }
-
-   gAddrLibHandle = output.hLib;
-   return true;
-}
-
-ADDR_HANDLE
-getAddrLibHandle()
-{
-   if (!gAddrLibHandle) {
-      initAddrLib();
-   }
-
-   return gAddrLibHandle;
-}
 
 bool
 getSurfaceInfo(GX2Surface *surface,
@@ -190,7 +132,7 @@ getSurfaceInfo(GX2Surface *surface,
       }
 
       input.flags.inputBaseMap = (level == 0);
-      result = AddrComputeSurfaceInfo(getAddrLibHandle(), &input, output);
+      result = AddrComputeSurfaceInfo(gpu::getAddrLibHandle(), &input, output);
    }
 
    return (result == ADDR_OK);
@@ -215,7 +157,7 @@ copySurface(GX2Surface *surfaceSrc,
    ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT dstSwizzleInput;
    ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT dstSwizzleOutput;
 
-   auto handle = getAddrLibHandle();
+   auto handle = gpu::getAddrLibHandle();
 
    // Initialise addrlib input/output structures
    std::memset(&srcAddrInput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT));
@@ -335,75 +277,9 @@ copySurface(GX2Surface *surfaceSrc,
       dstAddrInput.tileMode = AddrTileMode::ADDR_TM_LINEAR_GENERAL;
    }
 
-   if (USE_ADDRLIBOPT) {
-      decaf_check(srcAddrInput.isDepth == dstAddrInput.isDepth);
-      decaf_check(srcAddrInput.numSamples == dstAddrInput.numSamples);
-      auto isDepth = dstAddrInput.isDepth;
-      auto numSamples = dstAddrInput.numSamples;
-
-      return gpu::addrlibopt::copySurfacePixels(
-         dstBasePtr, dstWidth, dstHeight, dstAddrInput,
-         srcBasePtr, srcWidth, srcHeight, srcAddrInput,
-         bpp, isDepth, numSamples);
-   } else {
-      ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT srcAddrOutput;
-      ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT dstAddrOutput;
-
-      std::memset(&srcAddrOutput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT));
-      std::memset(&dstAddrOutput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT));
-
-      srcAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
-      dstAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
-
-      for (auto y = 0u; y < dstHeight; ++y) {
-         for (auto x = 0u; x < dstWidth; ++x) {
-            srcAddrInput.x = srcWidth * x / dstWidth;
-            srcAddrInput.y = srcHeight * y / dstHeight;
-            AddrComputeSurfaceAddrFromCoord(handle, &srcAddrInput, &srcAddrOutput);
-
-            dstAddrInput.x = x;
-            dstAddrInput.y = y;
-            AddrComputeSurfaceAddrFromCoord(handle, &dstAddrInput, &dstAddrOutput);
-
-            auto src = &srcBasePtr[srcAddrOutput.addr];
-            auto dst = &dstBasePtr[dstAddrOutput.addr];
-            std::memcpy(dst, src, bpp / 8);
-         }
-      }
-
-      return true;
-   }
-}
-
-bool
-convertTiling(GX2Surface *surface,
-              std::vector<uint8_t> &image,
-              std::vector<uint8_t> &mipmap)
-{
-   GX2Surface outSurface(*surface);
-   outSurface.mipmaps = nullptr;
-   outSurface.image = nullptr;
-   outSurface.tileMode = GX2TileMode::LinearSpecial;
-   outSurface.swizzle &= 0xFFFF00FF;
-
-   GX2CalcSurfaceSizeAndAlignment(&outSurface);
-
-   mipmap.resize(outSurface.mipmapSize);
-   image.resize(outSurface.imageSize);
-
-   for (auto level = 0u; level < surface->mipLevels; ++level) {
-      auto levelDepth = surface->depth;
-
-      if (surface->dim == GX2SurfaceDim::Texture3D) {
-         levelDepth = std::max<uint32_t>(1u, levelDepth >> level);
-      }
-
-      for (auto depth = 0u; depth < levelDepth; ++depth) {
-         copySurface(surface, level, depth, &outSurface, level, depth, image.data(), mipmap.data());
-      }
-   }
-
-   return true;
+   return gpu::copySurfacePixels(
+      dstBasePtr, dstWidth, dstHeight, dstAddrInput,
+      srcBasePtr, srcWidth, srcHeight, srcAddrInput);
 }
 
 uint32_t
@@ -427,7 +303,7 @@ getSurfaceSliceSwizzle(GX2TileMode tileMode,
       input.slice = slice;
       input.baseAddr = 0;
 
-      auto handle = gx2::internal::getAddrLibHandle();
+      auto handle = gpu::getAddrLibHandle();
       AddrComputeSliceSwizzle(handle, &input, &output);
       tileSwizzle = output.tileSwizzle;
    }

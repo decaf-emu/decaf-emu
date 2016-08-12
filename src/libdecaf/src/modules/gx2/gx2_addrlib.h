@@ -2,6 +2,7 @@
 #include <addrlib/addrinterface.h>
 #include <cstdint>
 #include <vector>
+#include "gpu/latte_enum_sq.h"
 #include "gx2_enum.h"
 
 namespace gx2
@@ -11,12 +12,6 @@ struct GX2Surface;
 
 namespace internal
 {
-
-bool
-initAddrLib();
-
-ADDR_HANDLE
-getAddrLibHandle();
 
 bool
 getSurfaceInfo(GX2Surface *surface,
@@ -32,11 +27,6 @@ copySurface(GX2Surface *surfaceSrc,
             uint32_t dstSlice,
             uint8_t *dstImage = nullptr,
             uint8_t *dstMipmap = nullptr);
-
-bool
-convertTiling(GX2Surface *surface,
-              std::vector<uint8_t> &image,
-              std::vector<uint8_t> &mipmap);
 
 uint32_t
 getSurfaceSliceSwizzle(GX2TileMode tileMode,

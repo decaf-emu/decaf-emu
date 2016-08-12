@@ -2,6 +2,7 @@
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
 #include "gx2_surface.h"
+#include "gpu/gpu_tiling.h"
 #include "gpu/pm4_writer.h"
 #include "common/align.h"
 #include "common/log.h"
@@ -141,7 +142,7 @@ GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer,
    input.numSlices = depthBuffer->surface.depth;
    input.blockWidth = ADDR_HTILE_BLOCKSIZE_8;
    input.blockHeight = ADDR_HTILE_BLOCKSIZE_8;
-   AddrComputeHtileInfo(gx2::internal::getAddrLibHandle(), &input, &output);
+   AddrComputeHtileInfo(gpu::getAddrLibHandle(), &input, &output);
 
    depthBuffer->hiZSize = gsl::narrow_cast<uint32_t>(output.htileBytes);
 
