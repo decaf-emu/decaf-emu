@@ -648,6 +648,12 @@ bool GLDriver::checkActiveAttribBuffers()
       auto ppcBuffer = mem::translate<const void>(addr);
 
       if (buffer.dirtyAsBuffer) {
+         // We need to upload the whole buffer, even if this draw is smaller.  Otherwise
+         //  when there is an invalidation, then a small draw, then a big draw, the big
+         //  draw will see the buffer as being consistent already (from the first draw),
+         //  but the first draw will not have actually uploaded all the data.
+         size = buffer.allocatedSize;
+
          // Calculate a new memory CRC
          uint64_t newHash[2] = { 0 };
          MurmurHash3_x64_128(ppcBuffer, size, 0, newHash);
