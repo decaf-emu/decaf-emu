@@ -1,5 +1,6 @@
 #include "gx2r_resource.h"
 #include "gx2r_surface.h"
+#include "gx2r_mem.h"
 #include "gx2_surface.h"
 
 namespace gx2
@@ -47,7 +48,8 @@ GX2RCreateSurfaceUserMemory(GX2Surface *surface,
 }
 
 void
-GX2RDestroySurfaceEx(GX2Surface *surface, GX2RResourceFlags flags)
+GX2RDestroySurfaceEx(GX2Surface *surface,
+                     GX2RResourceFlags flags)
 {
    if (!surface || !surface->image)
       return;
@@ -63,16 +65,37 @@ GX2RDestroySurfaceEx(GX2Surface *surface, GX2RResourceFlags flags)
 }
 
 void *
-GX2RLockSurfaceEx(GX2Surface *surface, int32_t level, GX2RResourceFlags flags)
+GX2RLockSurfaceEx(GX2Surface *surface,
+                  int32_t level,
+                  GX2RResourceFlags flags)
 {
-   surface->resourceFlags |= GX2RResourceFlags::Locked;
+   // Allow flags in bits 19 to 23
+   flags = static_cast<GX2RResourceFlags>(flags & 0xF80000);
+
+   // Update buffer flags
+   surface->resourceFlags |= flags | GX2RResourceFlags::Locked;
+
+   // Return buffer image
    return surface->image;
 }
 
 void
-GX2RUnlockSurfaceEx(GX2Surface *surface, int32_t level, GX2RResourceFlags flags)
+GX2RUnlockSurfaceEx(GX2Surface *surface,
+                    int32_t level,
+                    GX2RResourceFlags flags)
 {
-   surface->resourceFlags &= ~GX2RResourceFlags::Locked;
+   // Allow flags in bits 19 to 23
+   flags = static_cast<GX2RResourceFlags>(flags & 0xF80000);
+
+   // Invalidate the GPU surface only if it was not read only locked
+   if (!(surface->resourceFlags & GX2RResourceFlags::LockedReadOnly)) {
+      GX2RInvalidateMemory(surface->resourceFlags | flags,
+                           surface->image,
+                           surface->imageSize);
+   }
+
+   // Update buffer flags
+   surface->resourceFlags &= ~GX2RResourceFlags::LockedReadOnly & ~GX2RResourceFlags::Locked;
 }
 
 BOOL

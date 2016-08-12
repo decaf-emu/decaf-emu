@@ -80,7 +80,13 @@ void *
 GX2RLockBufferEx(GX2RBuffer *buffer,
                  GX2RResourceFlags flags)
 {
-   buffer->flags |= GX2RResourceFlags::Locked;
+   // Allow flags in bits 19 to 23
+   flags = static_cast<GX2RResourceFlags>(flags & 0xF80000);
+
+   // Update buffer flags
+   buffer->flags |= flags | GX2RResourceFlags::Locked;
+
+   // Return buffer pointer
    return buffer->buffer;
 }
 
@@ -88,7 +94,16 @@ void
 GX2RUnlockBufferEx(GX2RBuffer *buffer,
                    GX2RResourceFlags flags)
 {
-   buffer->flags &= ~GX2RResourceFlags::Locked;
+   // Allow flags in bits 19 to 23
+   flags = static_cast<GX2RResourceFlags>(flags & 0xF80000);
+
+   // Invalidate the GPU buffer only if it was not read only locked
+   if (!(buffer->flags & GX2RResourceFlags::LockedReadOnly)) {
+      GX2RInvalidateBuffer(buffer, flags);
+   }
+
+   // Update buffer flags
+   buffer->flags &= ~GX2RResourceFlags::LockedReadOnly & ~GX2RResourceFlags::Locked;
 }
 
 } // namespace gx2
