@@ -60,6 +60,10 @@ DecafSDL::createWindow()
       return false;
    }
 
+   if (config::display::mode == config::display::Fullscreen) {
+       SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN);
+   }
+
    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
    // Create OpenGL context
@@ -183,6 +187,10 @@ DecafSDL::run(const std::string &gamePath)
             decaf::injectKeyInput(translateKeyCode(event.key.keysym), decaf::input::KeyboardAction::Press);
             break;
          case SDL_KEYUP:
+            if (event.key.keysym.sym == SDLK_TAB) {
+               mToggleDRC = !mToggleDRC;
+            }
+
             decaf::injectKeyInput(translateKeyCode(event.key.keysym), decaf::input::KeyboardAction::Release);
             break;
          case SDL_TEXTINPUT:

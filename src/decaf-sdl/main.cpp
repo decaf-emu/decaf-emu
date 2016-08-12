@@ -59,6 +59,19 @@ getCommandLineParser()
       .add_option("config",
                   description { "Specify path to configuration file." },
                   value<std::string> {})
+      .add_option("display-layout",
+                  description { "Set the window display layout." },
+                  default_value<std::string> { "split" },
+                  allowed<std::string> {
+                  {
+                     "split", "toggle"
+                  } })
+      .add_option("display-mode",
+                  description{ "Set the window display mode." },
+                  default_value<std::string> { "windowed" },
+                  allowed<std::string> { {
+                     "windowed", "fullscreen"
+                  } })
       .add_option("region",
                   description { "Set the system region." },
                   default_value<std::string> { "US" },
@@ -156,6 +169,30 @@ start(excmd::parser &parser,
 
    if (options.has("log-level")) {
       config::log::level = options.get<std::string>("log-level");
+   }
+
+   if (options.has("display-mode")) {
+       auto mode = options.get<std::string>("display-mode");
+
+       if (mode.compare("windowed") == 0) {
+           config::display::mode = config::display::Windowed;
+       } else if (mode.compare("fullscreen") == 0) {
+          config::display::mode = config::display::Fullscreen;
+       } else {
+           decaf_abort(fmt::format("Invalid display mode {}", mode));
+       }
+   }
+
+   if (options.has("display-layout")) {
+      auto layout = options.get<std::string>("display-layout");
+
+      if (layout.compare("split") == 0) {
+         config::display::layout = config::display::Split;
+      } else if (layout.compare("toggle") == 0) {
+         config::display::layout = config::display::Toggle;
+      } else {
+         decaf_abort(fmt::format("Invalid display layout {}", layout));
+      }
    }
 
    if (options.has("region")) {

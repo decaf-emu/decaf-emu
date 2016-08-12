@@ -10,13 +10,21 @@
 namespace config
 {
 
+namespace display
+{
+
+DisplayMode mode = DisplayMode::Windowed;
+DisplayLayout layout = DisplayLayout::Split;
+
+} // namespace display
+
 namespace gpu
 {
 
 bool force_sync = false;
 bool debug = false;
 
-}
+} // namespace gpu
 
 namespace log
 {
@@ -26,7 +34,7 @@ bool to_file = true;
 bool to_stdout = false;
 std::string level = "debug";
 
-}
+} // namespace log
 
 namespace input
 {

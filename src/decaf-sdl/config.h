@@ -4,6 +4,26 @@
 namespace config
 {
 
+namespace display
+{
+
+enum DisplayMode
+{
+   Windowed,
+   Fullscreen
+};
+
+enum DisplayLayout
+{
+   Split,
+   Toggle
+};
+
+extern DisplayMode mode;
+extern DisplayLayout layout;
+
+} // namespace display
+
 namespace gpu
 {
 
@@ -21,7 +41,7 @@ extern bool to_file;
 extern bool to_stdout;
 extern std::string level;
 
-}
+} // namespace log
 
 namespace input
 {

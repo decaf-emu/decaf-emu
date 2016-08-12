@@ -100,4 +100,6 @@ private:
    gl::GLuint mVertArray;
    gl::GLuint mVertBuffer;
    gl::GLuint mSampler;
+
+   bool mToggleDRC = false;
 };

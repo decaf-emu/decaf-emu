@@ -5,8 +5,9 @@
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
 
-std::string
-getGlDebugSource(gl::GLenum source) {
+static std::string
+getGlDebugSource(gl::GLenum source)
+{
    switch (source) {
    case gl::GL_DEBUG_SOURCE_API:
       return "API";
@@ -25,8 +26,9 @@ getGlDebugSource(gl::GLenum source) {
    }
 }
 
-std::string
-getGlDebugType(gl::GLenum severity) {
+static std::string
+getGlDebugType(gl::GLenum severity)
+{
    switch (severity) {
    case gl::GL_DEBUG_TYPE_ERROR:
       return "ERROR";
@@ -51,8 +53,9 @@ getGlDebugType(gl::GLenum severity) {
    }
 }
 
-std::string
-getGlDebugSeverity(gl::GLenum severity) {
+static std::string
+getGlDebugSeverity(gl::GLenum severity)
+{
    switch (severity) {
    case gl::GL_DEBUG_SEVERITY_HIGH:
       return "HIGH";
@@ -67,9 +70,9 @@ getGlDebugSeverity(gl::GLenum severity) {
    }
 }
 
-void
-gl_log_callback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity,
-                gl::GLsizei length, const gl::GLchar* message, const void *userParam)
+static void GL_APIENTRY
+debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity,
+                     gl::GLsizei length, const gl::GLchar* message, const void *userParam)
 {
    auto outputStr = fmt::format("GL Message ({}, {}, {}, {}) {}", id,
       getGlDebugSource(source),
@@ -90,7 +93,8 @@ gl_log_callback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum se
    }
 }
 
-void DecafSDL::initialiseContext()
+void
+DecafSDL::initialiseContext()
 {
    glbinding::Binding::initialize();
    glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
@@ -118,13 +122,14 @@ void DecafSDL::initialiseContext()
    });
 
    if (config::gpu::debug) {
-      gl::glDebugMessageCallback(&gl_log_callback, nullptr);
+      gl::glDebugMessageCallback(&debugMessageCallback, nullptr);
       gl::glEnable(gl::GL_DEBUG_OUTPUT);
       gl::glEnable(gl::GL_DEBUG_OUTPUT_SYNCHRONOUS);
    }
 }
 
-void DecafSDL::initialiseDraw()
+void
+DecafSDL::initialiseDraw()
 {
    static auto vertexCode = R"(
       #version 420 core
@@ -202,7 +207,8 @@ void DecafSDL::initialiseDraw()
    gl::glSamplerParameteri(mSampler, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_LINEAR));
 }
 
-void DecafSDL::drawScanBuffer(gl::GLuint object)
+void
+DecafSDL::drawScanBuffer(gl::GLuint object)
 {
    // Setup screen draw shader
    gl::glBindVertexArray(mVertArray);
@@ -216,27 +222,41 @@ void DecafSDL::drawScanBuffer(gl::GLuint object)
    gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
 }
 
-void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
+void
+DecafSDL::calculateScreenViewports(float (&tv)[4],
+                                   float (&drc)[4])
 {
-   static const int DrcWidth = 854;
-   static const int DrcHeight = 480;
-   static const int TvWidth = 1280;
-   static const int TvHeight = 720;
+   int TvWidth = 1280;
+   int TvHeight = 720;
 
-   static const int ScreenSeparation = 5;
-   static const int OuterBorder = 0;
+   int DrcWidth = 854;
+   int DrcHeight = 480;
+
+   int OuterBorder = 0;
+   int ScreenSeparation = 5;
 
    int windowWidth, windowHeight;
-   SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
-
-   int nativeHeight = DrcHeight + TvHeight + ScreenSeparation + 2 * OuterBorder;
-   int nativeWidth = std::max(DrcWidth, TvWidth) + 2 * OuterBorder;
-
+   int nativeHeight, nativeWidth;
    int tvLeft, tvBottom, tvTop, tvRight;
    int drcLeft, drcBottom, drcTop, drcRight;
 
+   SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
+
+   if (config::display::layout == config::display::Toggle) {
+      // For toggle mode only one screen is visible at a time, so we calculate the
+      // screen position as if only the TV exists here
+      nativeHeight = TvHeight;
+      nativeWidth = TvWidth;
+      DrcWidth = 0;
+      DrcHeight = 0;
+      ScreenSeparation = 0;
+   } else {
+      nativeHeight = DrcHeight + TvHeight + ScreenSeparation + 2 * OuterBorder;
+      nativeWidth = std::max(DrcWidth, TvWidth) + 2 * OuterBorder;
+   }
+
    if (windowWidth * nativeHeight >= windowHeight * nativeWidth) {
-      // align to height
+      // Align to height
       int drcBorder = (windowWidth * nativeHeight - windowHeight * DrcWidth + nativeHeight) / nativeHeight / 2;
       int tvBorder = (windowWidth * nativeHeight - windowHeight * TvWidth + nativeHeight) / nativeHeight / 2;
 
@@ -250,7 +270,7 @@ void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
       tvLeft = tvBorder;
       tvRight = windowWidth - tvBorder;
    } else {
-      // align to width
+      // Align to width
       int heightBorder = (windowHeight * nativeWidth - windowWidth * (DrcHeight + TvHeight + ScreenSeparation) + nativeWidth) / nativeWidth / 2;
       int drcBorder = (windowWidth - DrcWidth * windowWidth / nativeWidth + 1) / 2;
       int tvBorder = (windowWidth - TvWidth * windowWidth / nativeWidth + 1) / 2;
@@ -264,6 +284,14 @@ void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
       tvBottom = windowHeight - heightBorder - (TvHeight * windowWidth + nativeWidth / 2) / nativeWidth;
       tvLeft = tvBorder;
       tvRight = windowWidth - tvBorder;
+   }
+
+   if (config::display::layout == config::display::Toggle) {
+      // Copy TV size to DRC size
+      drcLeft = tvLeft;
+      drcRight = tvRight;
+      drcTop = tvTop;
+      drcBottom = tvBottom;
    }
 
    tv[0] = static_cast<float>(tvLeft);
@@ -286,7 +314,8 @@ void DecafSDL::calculateScreenViewports(float (&tv)[4], float (&drc)[4])
    decaf_check(drc[1] + drc[3] <= windowHeight);
 }
 
-void DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
+void
+DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
 {
    float tvViewport[4], drcViewport[4];
    calculateScreenViewports(tvViewport, drcViewport);
@@ -303,14 +332,22 @@ void DecafSDL::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
    gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 
-   // Draw TV display
-   if (tvBuffer != 0) {
+   // Draw displays
+   auto drawTV = (tvBuffer != 0);
+   auto drawDRC = (drcBuffer != 0);
+
+   if (config::display::layout == config::display::Toggle) {
+      // In toggle mode we show only one of TV or DRC at any time
+      drawTV = !mToggleDRC;
+      drawDRC = mToggleDRC;
+   }
+
+   if (drawTV) {
       gl::glViewportArrayv(0, 1, tvViewport);
       drawScanBuffer(tvBuffer);
    }
 
-   // Draw DRC display
-   if (drcBuffer != 0) {
+   if (drawDRC) {
       gl::glViewportArrayv(0, 1, drcViewport);
       drawScanBuffer(drcBuffer);
    }
