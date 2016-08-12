@@ -346,7 +346,16 @@ LSHR(State &state, const ControlFlowInst &cf, const AluInst &alu)
 static void
 LOG(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
-   unaryFunction(state, cf, alu, "log2");
+   insertLineStart(state);
+   insertDestBegin(state, cf, alu, state.unit);
+
+   state.out << "log2(abs(";
+   insertSource0(state, state.out, cf, alu);
+   state.out << "))";
+
+   insertDestEnd(state, cf, alu);
+   state.out << ';';
+   insertLineEnd(state);
 }
 
 static void
