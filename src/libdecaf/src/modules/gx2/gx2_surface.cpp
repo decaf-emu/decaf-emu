@@ -341,8 +341,81 @@ GX2CopySurface(GX2Surface *src,
       return;
    }
 
-   gx2::internal::copySurface(src, srcLevel, srcSlice,
-                              dst, dstLevel, dstSlice);
+   if (src->tileMode == GX2TileMode::LinearSpecial ||
+      dst->tileMode == GX2TileMode::LinearSpecial)
+   {
+      // LinearSpecial surfaces cause the copy to occur on the CPU.  This code
+      //  assumes that if the texture was previously written by the GPU, that it
+      //  has since been invalidated into CPU memory.
+      gx2::internal::copySurface(src, srcLevel, srcSlice,
+         dst, dstLevel, dstSlice);
+      return;
+   }
+
+   auto dstFormatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   auto dstNumFormat = latte::SQ_NUM_FORMAT_NORM;
+   auto dstForceDegamma = false;
+
+   if (dst->format & GX2AttribFormatFlags::SIGNED) {
+      dstFormatComp = latte::SQ_FORMAT_COMP_SIGNED;
+   }
+
+   if (dst->format & GX2AttribFormatFlags::SCALED) {
+      dstNumFormat = latte::SQ_NUM_FORMAT_SCALED;
+   } else if (dst->format & GX2AttribFormatFlags::INTEGER) {
+      dstNumFormat = latte::SQ_NUM_FORMAT_INT;
+   }
+
+   if (dst->format & GX2AttribFormatFlags::DEGAMMA) {
+      dstForceDegamma = true;
+   }
+
+   auto srcFormatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   auto srcNumFormat = latte::SQ_NUM_FORMAT_NORM;
+   auto srcForceDegamma = false;
+
+   if (src->format & GX2AttribFormatFlags::SIGNED) {
+      srcFormatComp = latte::SQ_FORMAT_COMP_SIGNED;
+   }
+
+   if (src->format & GX2AttribFormatFlags::SCALED) {
+      srcNumFormat = latte::SQ_NUM_FORMAT_SCALED;
+   } else if (src->format & GX2AttribFormatFlags::INTEGER) {
+      srcNumFormat = latte::SQ_NUM_FORMAT_INT;
+   }
+
+   if (src->format & GX2AttribFormatFlags::DEGAMMA) {
+      srcForceDegamma = true;
+   }
+
+   pm4::write(pm4::DecafCopySurface{
+      dst->image.getAddress(),
+      dst->mipmaps.getAddress(),
+      dstLevel,
+      dstSlice,
+      dst->pitch,
+      dst->width,
+      dst->height,
+      dst->depth,
+      static_cast<latte::SQ_TEX_DIM>(dst->dim.value()),
+      static_cast<latte::SQ_DATA_FORMAT>(dst->format & 0x3f),
+      dstNumFormat,
+      dstFormatComp,
+      dstForceDegamma ? 1u : 0u,
+      src->image.getAddress(),
+      src->mipmaps.getAddress(),
+      srcLevel,
+      srcSlice,
+      src->pitch,
+      src->width,
+      src->height,
+      src->depth,
+      static_cast<latte::SQ_TEX_DIM>(src->dim.value()),
+      static_cast<latte::SQ_DATA_FORMAT>(src->format & 0x3f),
+      srcNumFormat,
+      srcFormatComp,
+      srcForceDegamma ? 1u : 0u,
+   });
 }
 
 void

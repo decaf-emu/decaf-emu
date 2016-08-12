@@ -191,6 +191,82 @@ GLDriver::decafOSScreenFlip(const pm4::DecafOSScreenFlip &data)
    decafSwapBuffers(pm4::DecafSwapBuffers {});
 }
 
+// TODO: Move all these GL things into a common place!
+static gl::GLenum
+getTextureTarget(latte::SQ_TEX_DIM dim)
+{
+   switch (dim)
+   {
+   case latte::SQ_TEX_DIM_1D:
+      return gl::GL_TEXTURE_1D;
+   case latte::SQ_TEX_DIM_2D:
+      return gl::GL_TEXTURE_2D;
+   case latte::SQ_TEX_DIM_3D:
+      return gl::GL_TEXTURE_3D;
+   case latte::SQ_TEX_DIM_CUBEMAP:
+      return gl::GL_TEXTURE_CUBE_MAP;
+   case latte::SQ_TEX_DIM_1D_ARRAY:
+      return gl::GL_TEXTURE_1D_ARRAY;
+   case latte::SQ_TEX_DIM_2D_ARRAY:
+      return gl::GL_TEXTURE_2D_ARRAY;
+   case latte::SQ_TEX_DIM_2D_MSAA:
+      return gl::GL_TEXTURE_2D_MULTISAMPLE;
+   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+      return gl::GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+   default:
+      decaf_abort(fmt::format("Unimplemented SQ_TEX_DIM {}", dim));
+   }
+}
+
+void
+GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
+{
+   decaf_check(data.dstPitch == data.srcPitch);
+   decaf_check(data.dstWidth == data.srcWidth);
+   decaf_check(data.dstHeight == data.srcHeight);
+   decaf_check(data.dstDepth == data.srcDepth);
+   decaf_check(data.dstDim == data.srcDim);
+
+   auto dstBuffer = getSurfaceBuffer(
+      data.dstImage,
+      data.dstPitch,
+      data.dstWidth,
+      data.dstHeight,
+      data.dstDepth,
+      data.dstDim,
+      data.dstFormat,
+      data.dstNumFormat,
+      data.dstFormatComp,
+      data.dstDegamma,
+      false);
+
+   auto srcBuffer = getSurfaceBuffer(
+      data.dstImage,
+      data.dstPitch,
+      data.dstWidth,
+      data.dstHeight,
+      data.dstDepth,
+      data.dstDim,
+      data.dstFormat,
+      data.dstNumFormat,
+      data.dstFormatComp,
+      data.dstDegamma,
+      false);
+
+   gl::glCopyImageSubData(
+      srcBuffer->active->object,
+      getTextureTarget(data.dstDim),
+      data.srcLevel,
+      0, 0, data.srcSlice,
+      dstBuffer->active->object,
+      getTextureTarget(data.srcDim),
+      data.dstLevel,
+      0, 0, data.dstSlice,
+      data.dstWidth,
+      data.dstHeight,
+      data.dstDepth);
+}
+
 void
 GLDriver::surfaceSync(const pm4::SurfaceSync &data)
 {

@@ -32,6 +32,16 @@ public:
       return *this;
    }
 
+   // Read one uint32_t sized datatype
+   template <typename Type>
+   PacketReader &operator()(Type &value)
+   {
+      static_assert(sizeof(Type) == sizeof(uint32_t), "Invalid type size");
+      checkSize(1);
+      value = bit_cast<Type>(mBuffer[mPosition++]);
+      return *this;
+   }
+
    // Read one word as a virtual_ptr
    template<typename Type>
    PacketReader &operator()(virtual_ptr<Type> &value)
