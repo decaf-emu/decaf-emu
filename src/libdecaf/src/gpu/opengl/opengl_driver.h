@@ -225,8 +225,6 @@ public:
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
    virtual void syncPoll(std::function<void(unsigned int, unsigned int)> swapFunc) override;
 
-   virtual void invalidateMemory(uint32_t mode, ppcaddr_t memStart, ppcaddr_t memEnd) override;
-
 private:
    void initGL();
    void executeBuffer(pm4::Buffer *buffer);
@@ -251,13 +249,14 @@ private:
    void indirectBufferCall(const pm4::IndirectBufferCall &data);
    void numInstances(const pm4::NumInstances &data);
    void memWrite(const pm4::MemWrite &data);
+   void nopPacket(const pm4::Nop &data);
    void eventWrite(const pm4::EventWrite &data);
    void eventWriteEOP(const pm4::EventWriteEOP &data);
    void handlePendingEOP();
    void pfpSyncMe(const pm4::PfpSyncMe &data);
    void streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data);
    void streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data);
-   void nopPacket(const pm4::Nop &data);
+   void surfaceSync(const pm4::SurfaceSync &data);
 
    void setAluConsts(const pm4::SetAluConsts &data);
    void setConfigRegs(const pm4::SetConfigRegs &data);

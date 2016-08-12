@@ -1637,6 +1637,9 @@
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_memblockheap.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_cp.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\libdecaf\src\gpu\microcode\latte_instructions_def.inl">

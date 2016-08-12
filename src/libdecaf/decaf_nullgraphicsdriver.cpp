@@ -40,10 +40,6 @@ NullGraphicsDriver::getAverageFPS()
    return 0.0f;
 }
 
-void NullGraphicsDriver::invalidateMemory(uint32_t mode, ppcaddr_t memStart, ppcaddr_t memEnd)
-{
-}
-
 OpenGLDriver *
 createGLDriver()
 {

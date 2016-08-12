@@ -792,6 +792,25 @@ struct Nop
    }
 };
 
+struct SurfaceSync
+{
+   static const auto Opcode = type3::SURFACE_SYNC;
+
+   latte::CP_COHER_CNTL cp_coher_cntl;
+   uint32_t size;
+   uint32_t addr;
+   uint32_t pollInterval;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(cp_coher_cntl.value);
+      se(size);
+      se(addr);
+      se(pollInterval);
+   }
+};
+
 }
 
 #pragma pack(pop)

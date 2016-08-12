@@ -211,6 +211,9 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
    case pm4::type3::NOP:
       nopPacket(pm4::read<pm4::Nop>(reader));
       break;
+   case pm4::type3::SURFACE_SYNC:
+      surfaceSync(pm4::read<pm4::SurfaceSync>(reader));
+      break;
    default:
       gLog->debug("Unhandled pm4 packet type 3 opcode {}", header.opcode());
    }

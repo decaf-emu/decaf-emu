@@ -1,6 +1,7 @@
 #pragma once
 #include "common/types.h"
 #include "latte_registers_cb.h"
+#include "latte_registers_cp.h"
 #include "latte_registers_db.h"
 #include "latte_registers_pa.h"
 #include "latte_registers_spi.h"

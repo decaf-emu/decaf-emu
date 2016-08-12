@@ -193,51 +193,35 @@ GLDriver::decafOSScreenFlip(const pm4::DecafOSScreenFlip &data)
 }
 
 void
-GLDriver::invalidateMemory(uint32_t mode, ppcaddr_t memStart, ppcaddr_t memEnd)
+GLDriver::surfaceSync(const pm4::SurfaceSync &data)
 {
-   bool needsGpuInvalidate = false;
-   bool needsGpuBlock = false;
+   auto memStart = data.addr << 8;
+   auto memEnd = memStart + (data.size << 8);
 
-   {
-      mMutexWaiters.fetch_add(1);
-      std::unique_lock<std::mutex> lock(mMutex);
-      mMutexWaiters.fetch_sub(1);
+   // TODO: Maybe check what to invalidate from data.cp_coher_cntl
 
-      for (auto &surf : mSurfaces) {
-         if (surf.second.cpuMemStart >= memEnd || surf.second.cpuMemEnd < memStart) {
-            continue;
-         }
-
-         surf.second.dirtyAsTexture = true;
-         needsGpuInvalidate = true;
+   for (auto &surf : mSurfaces) {
+      if (surf.second.cpuMemStart >= memEnd || surf.second.cpuMemEnd < memStart) {
+         continue;
       }
 
-      for (auto &buffer : mAttribBuffers) {
-         if (buffer.second.cpuMemStart >= memEnd || buffer.second.cpuMemEnd < memStart) {
-            continue;
-         }
-
-         buffer.second.dirtyAsBuffer = true;
-         needsGpuInvalidate = true;
-      }
-
-      for (auto &buffer : mUniformBuffers) {
-         if (buffer.second.cpuMemStart >= memEnd || buffer.second.cpuMemEnd < memStart) {
-            continue;
-         }
-
-         buffer.second.dirtyAsBuffer = true;
-         needsGpuInvalidate = true;
-      }
+      surf.second.dirtyAsTexture = true;
    }
 
-   if (needsGpuInvalidate) {
-      queueGpuTask([]() {
+   for (auto &buffer : mAttribBuffers) {
+      if (buffer.second.cpuMemStart >= memEnd || buffer.second.cpuMemEnd < memStart) {
+         continue;
+      }
 
-         // We can perform stuff here on the GPU thread.  It may be worthwhile to
-         //  make this its own function on GLDriver rather than a lambda.
+      buffer.second.dirtyAsBuffer = true;
+   }
 
-      }, needsGpuBlock);
+   for (auto &buffer : mUniformBuffers) {
+      if (buffer.second.cpuMemStart >= memEnd || buffer.second.cpuMemEnd < memStart) {
+         continue;
+      }
+
+      buffer.second.dirtyAsBuffer = true;
    }
 }
 
