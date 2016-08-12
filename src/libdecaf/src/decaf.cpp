@@ -264,9 +264,9 @@ void
 injectKeyInput(input::KeyboardKey key,
                input::KeyboardAction action)
 {
-   if (::debugger::ui::isVisible()) {
-      ::debugger::ui::injectKeyInput(key, action);
-   } else {
+   ::debugger::ui::injectKeyInput(key, action);
+
+   if (!::debugger::ui::isVisible()) {
       nn::swkbd::internal::injectKeyInput(key, action);
    }
 }
@@ -274,9 +274,9 @@ injectKeyInput(input::KeyboardKey key,
 void
 injectTextInput(const char *text)
 {
-   if (::debugger::ui::isVisible()) {
-      ::debugger::ui::injectTextInput(text);
-   } else {
+   ::debugger::ui::injectTextInput(text);
+
+   if (!::debugger::ui::isVisible()) {
       nn::swkbd::internal::injectTextInput(text);
    }
 }
