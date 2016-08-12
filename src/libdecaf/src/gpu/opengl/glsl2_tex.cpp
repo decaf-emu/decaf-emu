@@ -105,6 +105,7 @@ sampleFunc(State &state,
            const latte::ControlFlowInst &cf,
            const latte::TextureFetchInst &inst,
            const std::string &func,
+           const std::string &offsetFunc,
            bool isShadowOp = false,
            latte::SQ_SEL extraArg = latte::SQ_SEL_MASK)
 {
@@ -117,6 +118,10 @@ sampleFunc(State &state,
    auto srcSelY = inst.word2.SRC_SEL_Y();
    auto srcSelZ = inst.word2.SRC_SEL_Z();
    auto srcSelW = inst.word2.SRC_SEL_W();
+
+   int32_t offsetX = sign_extend<5>(inst.word2.OFFSET_X());
+   int32_t offsetY = sign_extend<5>(inst.word2.OFFSET_Y());
+   int32_t offsetZ = sign_extend<5>(inst.word2.OFFSET_Z());
 
    auto resourceID = inst.word0.RESOURCE_ID();
    auto samplerID = inst.word2.SAMPLER_ID();
@@ -145,7 +150,19 @@ sampleFunc(State &state,
          state.out << "texTmp.x";
       }
 
-      state.out << " = " << func << "(sampler_" << samplerID << ", ";
+      state.out << " = ";
+
+      bool writeOffsets = false;
+      if (offsetX != 0 || offsetY != 0 || offsetZ != 0) {
+         decaf_check(offsetFunc.size());
+         state.out << offsetFunc;
+         writeOffsets = true;
+      } else {
+         decaf_check(func.size());
+         state.out << func;
+      }
+
+      state.out << "(sampler_" << samplerID << ", ";
 
       if (isShadowOp) {
          /* In r600 the .w channel holds the compare value whereas OpenGL
@@ -190,6 +207,27 @@ sampleFunc(State &state,
          break;
       }
 
+      if (writeOffsets) {
+         switch (samplerDim) {
+         case latte::SQ_TEX_DIM_1D:
+         case latte::SQ_TEX_DIM_1D_ARRAY:
+            state.out << ", " << offsetX;
+            break;
+         case latte::SQ_TEX_DIM_2D:
+         case latte::SQ_TEX_DIM_2D_ARRAY:
+            state.out << ", ivec2(" << offsetX << ", " << offsetY << ")";
+            break;
+         case latte::SQ_TEX_DIM_3D:
+            state.out << ", ivec3(" << offsetX << ", " << offsetY << ", " << offsetZ << ")";
+            break;
+         case latte::SQ_TEX_DIM_CUBEMAP:
+         case latte::SQ_TEX_DIM_2D_MSAA:
+         case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+         default:
+            throw translate_exception(fmt::format("Unsupported sampler dim {}", static_cast<unsigned>(samplerDim)));
+         }
+      }
+
       state.out << ");";
       insertLineEnd(state);
 
@@ -205,7 +243,7 @@ sampleFunc(State &state,
 static void
 FETCH4(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
-   sampleFunc(state, cf, inst, "textureGather");
+   sampleFunc(state, cf, inst, "textureGather", "textureGatherOffset");
 }
 
 static void
@@ -282,27 +320,27 @@ SET_CUBEMAP_INDEX(State &state, const latte::ControlFlowInst &cf, const latte::T
 static void
 SAMPLE(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
-   sampleFunc(state, cf, inst, "texture");
+   sampleFunc(state, cf, inst, "texture", "textureOffset");
 }
 
 static void
 SAMPLE_C(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
-   sampleFunc(state, cf, inst, "texture", true);
+   sampleFunc(state, cf, inst, "texture", "textureOffset", true);
 }
 
 static void
 SAMPLE_L(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // Sample with LOD srcW
-   sampleFunc(state, cf, inst, "textureLod", false, latte::SQ_SEL_W);
+   sampleFunc(state, cf, inst, "textureLod", "textureLodOffset", false, latte::SQ_SEL_W);
 }
 
 static void
 SAMPLE_LZ(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // Sample with LOD Zero
-   sampleFunc(state, cf, inst, "textureLod", false, latte::SQ_SEL_0);
+   sampleFunc(state, cf, inst, "textureLod", "textureLodOffset", false, latte::SQ_SEL_0);
 }
 
 void
