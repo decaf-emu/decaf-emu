@@ -30,6 +30,8 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
       auto header = *reinterpret_cast<pm4::Header *>(&buffer[pos]);
       auto size = 0u;
 
+      executeTasks();
+
       if (buffer[pos] == 0) {
          break;
       }
