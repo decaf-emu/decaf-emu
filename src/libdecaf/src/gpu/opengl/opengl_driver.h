@@ -228,7 +228,7 @@ public:
    virtual void stop() override;
    virtual float getAverageFPS() override;
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
-   virtual void syncPoll(std::function<void(unsigned int, unsigned int)> swapFunc) override;
+   virtual void syncPoll(const SwapFunction &swapFunc) override;
 
 private:
    void initGL();
@@ -350,9 +350,9 @@ private:
 
    volatile RunState mRunState = RunState::None;
    std::thread mThread;
+   SwapFunction mSwapFunc;
    std::mutex mMutex;
    std::atomic<uint32_t> mMutexWaiters;
-   std::function<void(unsigned int, unsigned int)> mSwapFunc;
 
    std::queue<GpuTask> mTaskQueue;
    uint64_t mTaskIdCounter = 1;

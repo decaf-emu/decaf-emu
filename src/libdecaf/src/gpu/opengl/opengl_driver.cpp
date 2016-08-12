@@ -549,7 +549,7 @@ GLDriver::executeBuffer(pm4::Buffer *buffer)
 }
 
 void
-GLDriver::syncPoll(std::function<void(gl::GLuint, gl::GLuint)> swapFunc)
+GLDriver::syncPoll(const SwapFunction &swapFunc)
 {
    if (mRunState == RunState::None) {
       initGL();
@@ -558,8 +558,7 @@ GLDriver::syncPoll(std::function<void(gl::GLuint, gl::GLuint)> swapFunc)
 
    mSwapFunc = swapFunc;
 
-   auto buffer = gpu::tryUnqueueCommandBuffer();
-   if (buffer) {
+   if (auto buffer = gpu::tryUnqueueCommandBuffer()) {
       executeBuffer(buffer);
    }
 }
