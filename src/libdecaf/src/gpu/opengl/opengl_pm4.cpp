@@ -34,16 +34,6 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          break;
       }
 
-      if (mMutexWaiters.load() > 0) {
-         mMutex.unlock();
-
-         while (mMutexWaiters.load() > 0) {
-            std::this_thread::sleep_for(std::chrono::microseconds(1));
-         }
-
-         mMutex.lock();
-      }
-
       switch (header.type()) {
       case pm4::Header::Type3:
       {

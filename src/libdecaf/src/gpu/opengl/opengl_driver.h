@@ -344,13 +344,11 @@ private:
 
    volatile RunState mRunState = RunState::None;
    std::thread mThread;
-   std::mutex mMutex;
-   std::atomic<uint32_t> mMutexWaiters;
    std::function<void(unsigned int, unsigned int)> mSwapFunc;
 
-   std::queue<GpuTask> mTaskQueue;
-   uint64_t mTaskIdCounter = 1;
-   uint64_t mRetiredTaskId = 0;
+   std::queue<GpuTask> mTaskQueue;  // Protected by mTaskMutex
+   uint64_t mTaskIdCounter = 1;     // Only used by queueGpuTask()
+   uint64_t mRetiredTaskId = 0;     // Protected by mTaskMutex
    std::mutex mTaskMutex;
    std::condition_variable mTaskCond;
 
