@@ -31,6 +31,8 @@ bool GLDriver::checkActiveColorBuffer()
       break;
    }
 
+   bool changedDrawBuffers = false;
+
    for (auto i = 0u; i < mActiveColorBuffers.size(); ++i, mask >>= 4) {
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
       auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
@@ -55,14 +57,31 @@ bool GLDriver::checkActiveColorBuffer()
             // Unbind color buffer i
             gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, 0, 0);
             active = nullptr;
+
+            mDrawBuffers[i] = gl::GL_NONE;
+            changedDrawBuffers = true;
+         }
+      } else {
+         if (!active) {
+            mDrawBuffers[i] = gl::GL_COLOR_ATTACHMENT0 + i;
+            changedDrawBuffers = true;
          }
 
-         continue;
-      } else {
          // Bind color buffer i
          active = getColorBuffer(cb_color_base, cb_color_size, cb_color_info);
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, active->active->object, 0);
+
+         // Apply channel mask
+         gl::glColorMaski(i,
+                          static_cast<gl::GLboolean>(!!(thisMask & (1 << 0))),
+                          static_cast<gl::GLboolean>(!!(thisMask & (1 << 1))),
+                          static_cast<gl::GLboolean>(!!(thisMask & (1 << 2))),
+                          static_cast<gl::GLboolean>(!!(thisMask & (1 << 3))));
       }
+   }
+
+   if (changedDrawBuffers) {
+      glDrawBuffers(mDrawBuffers.size(), &mDrawBuffers[0]);
    }
 
    return true;

@@ -386,6 +386,7 @@ private:
    Shader *mActiveShader = nullptr;
    SurfaceBuffer *mActiveDepthBuffer = nullptr;
    std::array<SurfaceBuffer *, latte::MaxRenderTargets> mActiveColorBuffers;
+   std::array<gl::GLenum, latte::MaxRenderTargets> mDrawBuffers;
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
 
