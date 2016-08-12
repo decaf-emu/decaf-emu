@@ -1083,7 +1083,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       } else {
          auto compBits = getDataFormatComponentBits(attrib->format);
 
-         for (auto i = 0; i < channels; ++i) {
+         for (auto i = 0u; i < channels; ++i) {
             auto &val = chanVal[i];
             val = name;
 
@@ -1139,7 +1139,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          }
       }
 
-      for (auto i = 0; i < channels; ++i) {
+      for (auto i = 0u; i < channels; ++i) {
          if (attrib->numFormat == latte::SQ_NUM_FORMAT_NORM) {
             uint32_t valMax = (1ul << chanBitCount[i]) - 1;
 
