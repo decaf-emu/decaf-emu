@@ -145,20 +145,6 @@ void
 AXGetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets)
 {
-   if (!decaf::getSoundDriver()) {
-      // Trick the game into thinking the audio is progressing.
-      voice->offsets.currentOffset += 20;
-
-      if (voice->offsets.currentOffset > voice->offsets.endOffset) {
-         if (voice->offsets.loopingEnabled) {
-            voice->offsets.currentOffset -= (voice->offsets.endOffset - voice->offsets.loopOffset);
-            internal::getVoiceExtras(voice->index)->loopCount++;
-         } else {
-            voice->offsets.currentOffset = voice->offsets.endOffset;
-         }
-      }
-   }
-
    *offsets = voice->offsets;
 }
 

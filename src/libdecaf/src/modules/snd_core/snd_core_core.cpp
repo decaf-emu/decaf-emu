@@ -222,11 +222,13 @@ FrameCallbackThreadEntry(uint32_t core_id, void *arg2)
 
       // TODO: FinalMixCallback
 
-      decaf::SoundDriver *driver = decaf::getSoundDriver();
+      auto driver = decaf::getSoundDriver();
+
       if (driver) {
          for (int i = 0; i < numSamples * sOutputChannels; ++i) {
             sOutputBuffer[i] = static_cast<int16_t>(std::min(std::max(sMixBuffer[i], -32768), 32767));
          }
+
          driver->output(&sOutputBuffer[0], numSamples);
       }
    }
