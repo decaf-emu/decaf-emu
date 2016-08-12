@@ -50,6 +50,16 @@ getInvalidateMode(GX2RResourceFlags flags)
       mode |= GX2InvalidateMode::CPU;
    }
 
+   if (flags & GX2RResourceFlags::DisableCpuInvalidate) {
+      // Clear only the CPU bit
+      mode &= ~GX2InvalidateMode::CPU;
+   }
+
+   if (flags & GX2RResourceFlags::DisableGpuInvalidate) {
+      // Clear every bit except CPU
+      mode &= GX2InvalidateMode::CPU;
+   }
+
    return static_cast<GX2InvalidateMode>(mode);
 }
 
