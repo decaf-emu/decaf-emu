@@ -57,13 +57,25 @@ static CommandQueue
 gQueue;
 
 void
-queueUserBuffer(const void *buffer, uint32_t bytes)
+queueSysBuffer(void *buffer, uint32_t dwords)
+{
+   //TODO: Please no allocate
+   auto buf = new pm4::Buffer{};
+   buf->curSize = dwords;
+   buf->maxSize = dwords;
+   buf->buffer = reinterpret_cast<uint32_t *>(buffer);
+   buf->sysBuffer = true;
+   gQueue.appendBuffer(buf);
+}
+
+void
+queueUserBuffer(void *buffer, uint32_t bytes)
 {
    // TODO: Please no allocate
    auto buf = new pm4::Buffer {};
    buf->curSize = bytes / 4;
    buf->maxSize = bytes / 4;
-   buf->buffer = reinterpret_cast<uint32_t *>(const_cast<void*>(buffer));
+   buf->buffer = reinterpret_cast<uint32_t *>(buffer);
    buf->userBuffer = true;
    queueCommandBuffer(buf);
 }
@@ -94,6 +106,12 @@ tryUnqueueCommandBuffer()
 void
 retireCommandBuffer(pm4::Buffer *buf)
 {
+   if (buf->sysBuffer) {
+      delete[] buf->buffer;
+      delete buf;
+      return;
+   }
+
    gx2::internal::setRetiredTimestamp(buf->submitTime);
 
    if (buf->userBuffer) {

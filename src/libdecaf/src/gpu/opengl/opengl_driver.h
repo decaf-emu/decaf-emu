@@ -6,11 +6,9 @@
 #include "gpu/latte_contextstate.h"
 #include "gpu/pm4_buffer.h"
 #include "libdecaf/decaf_graphics.h"
-#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <exception>
-#include <functional>
 #include <glbinding/gl/types.h>
 #include <gsl.h>
 #include <map>
@@ -18,7 +16,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <queue>
+#include <chrono>
 
 namespace gpu
 {
@@ -206,12 +204,6 @@ struct FeedbackBufferCache
    bool enable = false;
 };
 
-struct GpuTask
-{
-   uint64_t id;
-   std::function<void()> func;
-};
-
 using GLContext = uint64_t;
 
 class GLDriver : public decaf::OpenGLDriver
@@ -225,13 +217,9 @@ public:
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
    virtual void syncPoll(std::function<void(unsigned int, unsigned int)> swapFunc) override;
 
-   virtual void invalidateMemory(uint32_t mode, ppcaddr_t memStart, ppcaddr_t memEnd) override;
-
 private:
    void initGL();
    void executeBuffer(pm4::Buffer *buffer);
-   void executeTasks();
-   void queueGpuTask(std::function<void()> task, bool shouldBlock = false);
 
    uint64_t getGpuClock();
 
@@ -243,6 +231,7 @@ private:
    void decafClearColor(const pm4::DecafClearColor &data);
    void decafClearDepthStencil(const pm4::DecafClearDepthStencil &data);
    void decafSetContextState(const pm4::DecafSetContextState &data);
+   void decafInvalidate(const pm4::DecafInvalidate &data);
    void decafDebugMarker(const pm4::DecafDebugMarker &data);
    void decafOSScreenFlip(const pm4::DecafOSScreenFlip &data);
    void drawIndexAuto(const pm4::DrawIndexAuto &data);
@@ -344,15 +333,7 @@ private:
 
    volatile RunState mRunState = RunState::None;
    std::thread mThread;
-   std::mutex mMutex;
-   std::atomic<uint32_t> mMutexWaiters;
    std::function<void(unsigned int, unsigned int)> mSwapFunc;
-
-   std::queue<GpuTask> mTaskQueue;
-   uint64_t mTaskIdCounter = 1;
-   uint64_t mRetiredTaskId = 0;
-   std::mutex mTaskMutex;
-   std::condition_variable mTaskCond;
 
    std::array<uint32_t, 0x10000> mRegisters;
 
