@@ -312,7 +312,7 @@ getSurfaceBytes(uint32_t pitch,
    }
 
    auto bitsPerPixel = getDataFormatBitsPerElement(format);
-   return numPixels * bitsPerPixel;
+   return numPixels * bitsPerPixel / 8;
 }
 
 SurfaceBuffer *
