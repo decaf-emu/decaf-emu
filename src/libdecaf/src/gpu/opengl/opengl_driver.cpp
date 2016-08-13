@@ -314,7 +314,7 @@ GLDriver::surfaceSync(const pm4::SurfaceSync &data)
 
       if (dataBuffer->isOutput && shaderExport) {
          downloadDataBuffer(dataBuffer, offset, size);
-      } else if (dataBuffer->isInput && shader) {
+      } else if (dataBuffer->isInput && (shader || surfaces)) {
          uploadDataBuffer(dataBuffer, offset, size);
       }
    }
