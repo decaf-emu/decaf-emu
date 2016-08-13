@@ -146,8 +146,10 @@ initialise(const std::string &gamePath)
       gLog->debug("Mount {} to /vol", volPath.path());
       filesystem->mountHostFolder("/vol", volPath.path());
    } else if (!rpxPath.path().empty()) {
-      gLog->debug("Mount {} to /vol/code/{}", rpxPath.path(), rpxPath.filename());
-      filesystem->mountHostFile("/vol/code/" + rpxPath.filename(), rpxPath.path());
+      auto volCodePath = rpxPath.parentPath();
+
+      gLog->debug("Mount {} to /vol/code", volCodePath);
+      filesystem->mountHostFolder("/vol/code", volCodePath);
 
       if (!decaf::config::system::content_path.empty()) {
          gLog->debug("Mount {} to /vol/content", decaf::config::system::content_path);
