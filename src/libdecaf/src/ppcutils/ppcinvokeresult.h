@@ -1,8 +1,6 @@
 #pragma once
 #include "ppctypeconv.h"
 
-// TODO: Find out how floats are returned
-
 namespace ppctypes
 {
 
@@ -34,6 +32,34 @@ struct result_converter_t<PpcType::DWORD, Type>
    static inline Type get(cpu::Core *state)
    {
       return ppctype_converter_t<Type>::from_ppc(state->gpr[3], state->gpr[4]);
+   }
+};
+
+template<typename Type>
+struct result_converter_t<PpcType::FLOAT, Type>
+{
+   static inline void set(cpu::Core *state, Type v)
+   {
+      ppctype_converter_t<Type>::to_ppc(v, state->fpr[1]);
+   }
+
+   static inline Type get(cpu::Core *state)
+   {
+      return ppctype_converter_t<Type>::from_ppc(state->fpr[1]);
+   }
+};
+
+template<typename Type>
+struct result_converter_t<PpcType::DOUBLE, Type>
+{
+   static inline void set(cpu::Core *state, Type v)
+   {
+      ppctype_converter_t<Type>::to_ppc(v, state->fpr[1]);
+   }
+
+   static inline Type get(cpu::Core *state)
+   {
+      return ppctype_converter_t<Type>::from_ppc(state->fpr[1]);
    }
 };
 
