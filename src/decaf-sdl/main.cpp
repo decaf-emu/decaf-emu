@@ -247,13 +247,17 @@ start(excmd::parser &parser,
    decaf::initialiseLogging(sinks, logLevel);
 
    // Initialise decaf-cli logger
-   gCliLog = std::make_shared<spdlog::logger>("decaf-cli", begin(sinks), end(sinks));
+   std::vector<spdlog::sink_ptr> cliSinks;
+   cliSinks.push_back(spdlog::sinks::stdout_sink_st::instance());
+   gCliLog = std::make_shared<spdlog::logger>("decaf-cli", begin(cliSinks), end(cliSinks));
    gCliLog->set_level(logLevel);
    gCliLog->set_pattern("[%l] %v");
    gCliLog->info("Game path {}", gamePath);
 
-   if (!configLoaded) {
+   if (configLoaded) {
       gCliLog->info("Loaded config from {}", configPath);
+   } else if (configError.empty()) {
+      gCliLog->error("Created new config at {}", configPath);
    } else {
       gCliLog->error("Failed to parse config {}:", configPath);
       gCliLog->error("{}", configError);

@@ -1,6 +1,6 @@
-#include "clilog.h"
 #include "config.h"
 #include "common/decaf_assert.h"
+#include "common/log.h"
 #include "decafsdl.h"
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
@@ -81,15 +81,15 @@ debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLen
       message);
 
    if (severity == gl::GL_DEBUG_SEVERITY_HIGH) {
-      gCliLog->warn(outputStr);
+      gLog->warn(outputStr);
    } else if (severity == gl::GL_DEBUG_SEVERITY_MEDIUM) {
-      gCliLog->debug(outputStr);
+      gLog->debug(outputStr);
    } else if (severity == gl::GL_DEBUG_SEVERITY_LOW) {
-      gCliLog->trace(outputStr);
+      gLog->trace(outputStr);
    } else if (severity == gl::GL_DEBUG_SEVERITY_NOTIFICATION) {
-      gCliLog->info(outputStr);
+      gLog->info(outputStr);
    } else {
-      gCliLog->info(outputStr);
+      gLog->info(outputStr);
    }
 }
 
@@ -117,7 +117,7 @@ DecafSDL::initialiseContext()
             writer << " -> " << call.returnValue->asString();
          }
 
-         gCliLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), writer.str());
+         gLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), writer.str());
       }
    });
 
