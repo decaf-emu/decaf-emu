@@ -267,12 +267,37 @@ GLDriver::surfaceSync(const pm4::SurfaceSync &data)
    auto memStart = data.addr << 8;
    auto memEnd = memStart + (data.size << 8);
 
-   for (auto &surf : mSurfaces) {
-      if (surf.second.cpuMemStart >= memEnd || surf.second.cpuMemEnd < memStart) {
-         continue;
-      }
+   auto all = data.cp_coher_cntl.FULL_CACHE_ENA();
+   auto surfaces = all;
+   auto shader = all;
+   auto shaderExport = all;
 
-      if (data.cp_coher_cntl.TC_ACTION_ENA()) {
+   if (data.cp_coher_cntl.TC_ACTION_ENA()) {
+      surfaces = true;
+   }
+
+   if (data.cp_coher_cntl.CB_ACTION_ENA()) {
+      surfaces = true;
+   }
+
+   if (data.cp_coher_cntl.DB_ACTION_ENA()) {
+      surfaces = true;
+   }
+
+   if (data.cp_coher_cntl.SH_ACTION_ENA()) {
+      shader = true;
+   }
+
+   if (data.cp_coher_cntl.SX_ACTION_ENA()) {
+      shaderExport = true;
+   }
+
+   if (surfaces) {
+      for (auto &surf : mSurfaces) {
+         if (surf.second.cpuMemStart >= memEnd || surf.second.cpuMemEnd < memStart) {
+            continue;
+         }
+
          surf.second.dirtyAsTexture = true;
       }
    }
@@ -287,9 +312,9 @@ GLDriver::surfaceSync(const pm4::SurfaceSync &data)
       auto offset = std::max(memStart, dataBuffer->cpuMemStart) - dataBuffer->cpuMemStart;
       auto size = (std::min(memEnd, dataBuffer->cpuMemEnd) - dataBuffer->cpuMemStart) - offset;
 
-      if (data.cp_coher_cntl.SX_ACTION_ENA() && dataBuffer->isOutput) {
+      if (dataBuffer->isOutput && shaderExport) {
          downloadDataBuffer(dataBuffer, offset, size);
-      } else if ((data.cp_coher_cntl.TC_ACTION_ENA() || data.cp_coher_cntl.SH_ACTION_ENA()) && dataBuffer->isInput) {
+      } else if (dataBuffer->isInput && shader) {
          uploadDataBuffer(dataBuffer, offset, size);
       }
    }
