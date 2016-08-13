@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_allocator.h"
+#include "coreinit_memblockheap.h"
 #include "coreinit_memexpheap.h"
 #include "coreinit_memheap.h"
 #include "coreinit_memframeheap.h"
@@ -155,15 +156,17 @@ static void *
 allocatorBlockHeapAlloc(MEMAllocator *allocator,
                         uint32_t size)
 {
-   // TODO: Call MEMAllocFromBlockHeap
-   return nullptr;
+   return MEMAllocFromBlockHeapEx(reinterpret_cast<MEMBlockHeap *>(allocator->heap.get()),
+                                  size,
+                                  allocator->align);
 }
 
 static void
 allocatorBlockHeapFree(MEMAllocator *allocator,
                        void *block)
 {
-   // TODO: Call MEMFreeToBlockHeap
+   MEMFreeToBlockHeap(reinterpret_cast<MEMBlockHeap *>(allocator->heap.get()),
+                      block);
 }
 
 static void *
