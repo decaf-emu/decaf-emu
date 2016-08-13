@@ -23,7 +23,7 @@ UploadedDataBase::UploadedDataBase() :
    mCommonDataLength(0)
 {
    mPostID[0] = 0;
-   mVirtualTable = nullptr; // TODO
+   mVirtualTable = UploadedDataBase::VirtualTable;
 }
 
 UploadedDataBase::~UploadedDataBase()
