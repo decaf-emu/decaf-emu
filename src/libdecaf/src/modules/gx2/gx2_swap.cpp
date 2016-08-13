@@ -28,6 +28,8 @@ GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget scanTarget)
       scanTarget,
       addr256,
       aaAddr256,
+      buffer->surface.width,
+      buffer->surface.height,
       buffer->regs.cb_color_size,
       buffer->regs.cb_color_info,
       buffer->regs.cb_color_view,

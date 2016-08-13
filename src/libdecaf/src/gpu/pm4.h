@@ -43,6 +43,8 @@ struct DecafCopyColorToScan
    uint32_t scanTarget;
    uint32_t bufferAddr;
    uint32_t aaBufferAddr;
+   uint32_t width;
+   uint32_t height;
    latte::CB_COLORN_SIZE cb_color_size;
    latte::CB_COLORN_INFO cb_color_info;
    latte::CB_COLORN_VIEW cb_color_view;
@@ -54,6 +56,8 @@ struct DecafCopyColorToScan
       se(scanTarget);
       se(bufferAddr);
       se(aaBufferAddr);
+      se(width);
+      se(height);
       se(cb_color_size.value);
       se(cb_color_info.value);
       se(cb_color_view.value);

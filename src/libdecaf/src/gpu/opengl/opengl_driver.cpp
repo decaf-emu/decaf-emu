@@ -112,18 +112,12 @@ GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
       return;
    }
 
-   auto pitch_tile_max = data.cb_color_size.PITCH_TILE_MAX();
-   auto slice_tile_max = data.cb_color_size.SLICE_TILE_MAX();
-
-   auto pitch = gsl::narrow_cast<gl::GLsizei>((pitch_tile_max + 1) * latte::MicroTileWidth);
-   auto height = gsl::narrow_cast<gl::GLsizei>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
-
    gl::glNamedFramebufferTexture(mBlitFrameBuffers[0], gl::GL_COLOR_ATTACHMENT0, target->object, 0);
    gl::glNamedFramebufferTexture(mBlitFrameBuffers[1], gl::GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
 
    gl::glDisable(gl::GL_SCISSOR_TEST);
    gl::glBlitNamedFramebuffer(mBlitFrameBuffers[1], mBlitFrameBuffers[0],
-                              0, 0, target->width, target->height,
+                              0, 0, data.width, data.height,
                               0, 0, target->width, target->height,
                               gl::GL_COLOR_BUFFER_BIT, gl::GL_LINEAR);
    gl::glEnable(gl::GL_SCISSOR_TEST);
