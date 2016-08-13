@@ -22,6 +22,18 @@ OSIsDebuggerInitialized()
    return FALSE;
 }
 
+int
+ENVGetEnvironmentVariable(const char *key,
+                          char *buffer,
+                          uint32_t length)
+{
+   if (buffer) {
+      *buffer = 0;
+   }
+
+   return 0;
+}
+
 static void
 COSVReport(uint32_t module,
            COSReportLevel level,
@@ -183,6 +195,7 @@ Module::registerDebugFunctions()
 {
    RegisterKernelFunction(OSIsDebuggerPresent);
    RegisterKernelFunction(OSIsDebuggerInitialized);
+   RegisterKernelFunction(ENVGetEnvironmentVariable);
    RegisterKernelFunction(COSVReport);
    RegisterKernelFunction(COSError);
    RegisterKernelFunction(COSWarn);
