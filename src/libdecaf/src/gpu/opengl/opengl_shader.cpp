@@ -621,8 +621,12 @@ GLDriver::configureDataBuffer(DataBuffer *buffer,
    //  uniform buffers.  This has to be done after mapping, since if we're
    //  using maps, we can't update the buffer via glBufferSubData (because
    //  we didn't specify GL_DYNAMIC_STORAGE_BIT).
-   if (!oldObject && isInput) {
-      uploadDataBuffer(buffer, 0, size);
+   if (isInput) {
+      if (!oldObject) {
+         uploadDataBuffer(buffer, 0, size);
+      } else if (size > oldSize) {
+         uploadDataBuffer(buffer, oldSize, size - oldSize);
+      }
    }
 }
 
