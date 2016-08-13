@@ -49,7 +49,7 @@ GX2RCreateBufferUserMemory(GX2RBuffer *buffer,
                            uint32_t size)
 {
    buffer->buffer = memory;
-   buffer->flags = GX2RResourceFlags::UserMemory;
+   buffer->flags |= GX2RResourceFlags::UserMemory;
    return TRUE;
 }
 
