@@ -38,7 +38,7 @@ COSError(uint32_t module,
          const char *fmt,
          ppctypes::VarArgs)
 {
-   auto list = ppctypes::make_va_list(1, 0);
+   auto list = ppctypes::make_va_list(2, 0);
    COSVReport(module, COSReportLevel::Error, fmt, list);
    ppctypes::free_va_list(list);
 }
@@ -48,7 +48,7 @@ COSWarn(uint32_t module,
         const char *fmt,
         ppctypes::VarArgs)
 {
-   auto list = ppctypes::make_va_list(1, 0);
+   auto list = ppctypes::make_va_list(2, 0);
    COSVReport(module, COSReportLevel::Warn, fmt, list);
    ppctypes::free_va_list(list);
 }
@@ -58,7 +58,7 @@ COSInfo(uint32_t module,
         const char *fmt,
         ppctypes::VarArgs)
 {
-   auto list = ppctypes::make_va_list(1, 0);
+   auto list = ppctypes::make_va_list(2, 0);
    COSVReport(module, COSReportLevel::Info, fmt, list);
    ppctypes::free_va_list(list);
 }
@@ -68,7 +68,7 @@ COSVerbose(uint32_t module,
            const char *fmt,
            ppctypes::VarArgs)
 {
-   auto list = ppctypes::make_va_list(1, 0);
+   auto list = ppctypes::make_va_list(2, 0);
    COSVReport(module, COSReportLevel::Verbose, fmt, list);
    ppctypes::free_va_list(list);
 }
@@ -122,7 +122,7 @@ OSPanic(const char *file,
         const char *fmt,
         ppctypes::VarArgs)
 {
-   auto list = ppctypes::make_va_list(1, 0);
+   auto list = ppctypes::make_va_list(3, 0);
    auto str = std::string {};
    internal::formatStringV(fmt, list, str);
    ppctypes::free_va_list(list);
