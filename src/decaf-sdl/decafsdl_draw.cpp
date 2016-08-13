@@ -74,6 +74,12 @@ static void GL_APIENTRY
 debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity,
                      gl::GLsizei length, const gl::GLchar* message, const void *userParam)
 {
+   for (auto filterID : decaf::config::gpu::debug_filters) {
+      if (filterID == id) {
+         return;
+      }
+   }
+
    auto outputStr = fmt::format("GL Message ({}, {}, {}, {}) {}", id,
       getGlDebugSource(source),
       getGlDebugType(type),

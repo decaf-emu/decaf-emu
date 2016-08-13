@@ -19,6 +19,7 @@ namespace gpu
 {
 
 bool debug = false;
+std::vector<unsigned> debug_filters = {};
 
 } // namespace gpu
 

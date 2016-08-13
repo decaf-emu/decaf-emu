@@ -1,4 +1,5 @@
 #pragma once
+#include <set>
 #include <string>
 #include <vector>
 
@@ -24,6 +25,10 @@ namespace gpu
 
 //! Enable OpenGL debugging
 extern bool debug;
+
+//! OpenGL debug message IDs to filter out
+// TODO: should really be a std::set, but cereal doesn't support those...
+extern std::vector<unsigned> debug_filters;
 
 }
 
@@ -58,7 +63,7 @@ extern bool kernel_trace;
 //! Enable logging of every branch which targets a known symbol
 extern bool branch_trace;
 
-//! RegEx filters for kernel trace function name matching
+//! Wildcard filters for kernel trace function name matching
 extern std::vector<std::string> kernel_trace_filters;
 
 } // namespace log
