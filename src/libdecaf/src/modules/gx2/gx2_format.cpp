@@ -131,13 +131,23 @@ GX2GetSurfaceFormatBits(GX2SurfaceFormat format)
    return bpp;
 }
 
-
 uint32_t
 GX2GetSurfaceFormatBitsPerElement(GX2SurfaceFormat format)
 {
    return gSurfaceFormatData[format & 0x3F].bpp;
 }
 
+BOOL
+GX2SurfaceIsCompressed(GX2SurfaceFormat format)
+{
+   auto latteFormat = format & 0x3F;
+
+   if (latteFormat >= latte::FMT_BC1 && latteFormat <= latte::FMT_BC5) {
+      return TRUE;
+   }
+
+   return FALSE;
+}
 
 namespace internal
 {

@@ -108,6 +108,7 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2GetAttribFormatBits);
    RegisterKernelFunction(GX2GetSurfaceFormatBits);
    RegisterKernelFunction(GX2GetSurfaceFormatBitsPerElement);
+   RegisterKernelFunction(GX2SurfaceIsCompressed);
 
    // GX2R Resource
    RegisterGX2RResourceFunctions();

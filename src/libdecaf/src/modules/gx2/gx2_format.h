@@ -18,6 +18,9 @@ GX2GetSurfaceFormatBits(GX2SurfaceFormat format);
 uint32_t
 GX2GetSurfaceFormatBitsPerElement(GX2SurfaceFormat format);
 
+BOOL
+GX2SurfaceIsCompressed(GX2SurfaceFormat format);
+
 namespace internal
 {
 
