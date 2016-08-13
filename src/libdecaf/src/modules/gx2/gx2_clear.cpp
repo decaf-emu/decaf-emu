@@ -43,9 +43,9 @@ DecafClearDepthStencil(GX2DepthBuffer *depthBuffer,
 
    pm4::write(pm4::DecafClearDepthStencil {
       clearFlags,
-      depthBuffer->surface.image.getAddress(),
+      depthBuffer->surface.image.getAddress() >> 8,
       depthBuffer->regs.db_depth_info,
-      depthBuffer->hiZPtr.getAddress(),
+      depthBuffer->hiZPtr.getAddress() >> 8,
       depthBuffer->regs.db_depth_size,
       depthBuffer->regs.db_depth_view,
    });
