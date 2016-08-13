@@ -175,14 +175,8 @@ struct DepthBufferCache
 
 struct TextureCache
 {
-   uint32_t baseAddress = 0;
-   uint32_t word0 = 0;
-   uint32_t word1 = 0;
-   uint32_t word2 = 0;
-   uint32_t word3 = 0;
+   uint32_t surfaceObject = 0;
    uint32_t word4 = 0;
-   uint32_t word5 = 0;
-   uint32_t word6 = 0;
 };
 
 struct SamplerCache

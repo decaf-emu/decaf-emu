@@ -239,26 +239,6 @@ bool GLDriver::checkActiveTextures()
          continue;
       }
 
-      if (baseAddress == mPixelTextureCache[i].baseAddress
-       && sq_tex_resource_word0.value == mPixelTextureCache[i].word0
-       && sq_tex_resource_word1.value == mPixelTextureCache[i].word1
-       && sq_tex_resource_word2.value == mPixelTextureCache[i].word2
-       && sq_tex_resource_word3.value == mPixelTextureCache[i].word3
-       && sq_tex_resource_word4.value == mPixelTextureCache[i].word4
-       && sq_tex_resource_word5.value == mPixelTextureCache[i].word5
-       && sq_tex_resource_word6.value == mPixelTextureCache[i].word6) {
-         continue;  // No change in sampler state
-      }
-
-      mPixelTextureCache[i].baseAddress = baseAddress;
-      mPixelTextureCache[i].word0 = sq_tex_resource_word0.value;
-      mPixelTextureCache[i].word1 = sq_tex_resource_word1.value;
-      mPixelTextureCache[i].word2 = sq_tex_resource_word2.value;
-      mPixelTextureCache[i].word3 = sq_tex_resource_word3.value;
-      mPixelTextureCache[i].word4 = sq_tex_resource_word4.value;
-      mPixelTextureCache[i].word5 = sq_tex_resource_word5.value;
-      mPixelTextureCache[i].word6 = sq_tex_resource_word6.value;
-
       // Decode resource registers
       auto pitch = (sq_tex_resource_word0.PITCH() + 1) * 8;
       auto width = sq_tex_resource_word0.TEX_WIDTH() + 1;
@@ -446,21 +426,27 @@ bool GLDriver::checkActiveTextures()
          buffer->state = SurfaceUseState::CpuWritten;
       }
 
-      // Setup texture swizzle
-      auto dst_sel_x = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_X());
-      auto dst_sel_y = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Y());
-      auto dst_sel_z = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Z());
-      auto dst_sel_w = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_W());
+      if (buffer->active->object != mPixelTextureCache[i].surfaceObject
+       || sq_tex_resource_word4.value != mPixelTextureCache[i].word4) {
+         mPixelTextureCache[i].surfaceObject = buffer->active->object;
+         mPixelTextureCache[i].word4 = sq_tex_resource_word4.value;
 
-      gl::GLint textureSwizzle[] = {
-         static_cast<gl::GLint>(dst_sel_x),
-         static_cast<gl::GLint>(dst_sel_y),
-         static_cast<gl::GLint>(dst_sel_z),
-         static_cast<gl::GLint>(dst_sel_w),
-      };
+         // Setup texture swizzle
+         auto dst_sel_x = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_X());
+         auto dst_sel_y = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Y());
+         auto dst_sel_z = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Z());
+         auto dst_sel_w = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_W());
 
-      gl::glTextureParameteriv(buffer->active->object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
-      gl::glBindTextureUnit(i, buffer->active->object);
+         gl::GLint textureSwizzle[] = {
+            static_cast<gl::GLint>(dst_sel_x),
+            static_cast<gl::GLint>(dst_sel_y),
+            static_cast<gl::GLint>(dst_sel_z),
+            static_cast<gl::GLint>(dst_sel_w),
+         };
+
+         gl::glTextureParameteriv(buffer->active->object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
+         gl::glBindTextureUnit(i, buffer->active->object);
+      }
    }
 
    return true;
