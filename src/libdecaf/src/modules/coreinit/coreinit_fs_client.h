@@ -85,6 +85,13 @@ void
 FSCancelCommand(FSClient *client,
                 FSCmdBlock *block);
 
+void
+FSSetUserData(FSCmdBlock *block,
+              void *userData);
+
+void *
+FSGetUserData(FSCmdBlock *block);
+
 /** @} */
 
 namespace internal

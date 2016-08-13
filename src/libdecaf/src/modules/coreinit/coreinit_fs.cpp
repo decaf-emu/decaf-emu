@@ -238,6 +238,8 @@ Module::registerFileSystemFunctions()
    RegisterKernelFunction(FSGetErrorCodeForViewer);
    RegisterKernelFunction(FSGetLastErrorCodeForViewer);
    RegisterKernelFunction(FSGetAsyncResult);
+   RegisterKernelFunction(FSGetUserData);
+   RegisterKernelFunction(FSSetUserData);
 
    // coreinit_fs_path
    RegisterKernelFunction(FSGetCwd);

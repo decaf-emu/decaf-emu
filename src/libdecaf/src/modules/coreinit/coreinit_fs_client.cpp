@@ -215,6 +215,19 @@ FSCancelCommand(FSClient *client,
    gLog->error("Unsupported FSCancelCommand");
 }
 
+void
+FSSetUserData(FSCmdBlock *block,
+              void *userData)
+{
+   block->userData = userData;
+}
+
+void *
+FSGetUserData(FSCmdBlock *block)
+{
+   return block->userData;
+}
+
 namespace internal
 {
 

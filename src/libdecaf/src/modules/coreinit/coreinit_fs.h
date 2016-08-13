@@ -136,7 +136,8 @@ struct FSCmdBlock
    OSMessage syncQueueMsgs[1];
    char path[MaxPathLength];
    char mode[MaxModeLength];
-   UNKNOWN(0x778 - sizeof(std::function<FSStatus()>));
+   be_ptr<void> userData;
+   UNKNOWN(0x774 - sizeof(std::function<FSStatus()>));
 };
 CHECK_SIZE(FSCmdBlock, 0xa80);
 
