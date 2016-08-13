@@ -210,9 +210,9 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
    pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_SIZE, gsl::as_span(values1) });
 
    uint32_t values2[] = {
-      depthBuffer->surface.image.getAddress(),
+      depthBuffer->surface.image.getAddress() >> 8,
       db_depth_info.value,
-      depthBuffer->hiZPtr.getAddress(),
+      depthBuffer->hiZPtr.getAddress() >> 8,
    };
    pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_BASE, gsl::as_span(values2) });
 
