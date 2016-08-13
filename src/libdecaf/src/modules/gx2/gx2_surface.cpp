@@ -209,10 +209,27 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
    };
    pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_SIZE, gsl::as_span(values1) });
 
+   auto addr = depthBuffer->surface.image.getAddress();
+   auto addrHiZ = depthBuffer->hiZPtr.getAddress();
+
+   if (depthBuffer->viewMip) {
+      addr = depthBuffer->surface.mipmaps.getAddress();
+
+      if (depthBuffer->viewMip > 1) {
+         addr += depthBuffer->surface.mipLevelOffset[depthBuffer->viewMip - 1];
+      }
+   }
+
+   if (depthBuffer->surface.tileMode >= GX2TileMode::Tiled2DThin1 && depthBuffer->surface.tileMode != GX2TileMode::LinearSpecial) {
+      if (depthBuffer->viewMip < ((depthBuffer->surface.swizzle >> 16) & 0xFF)) {
+         addr ^= depthBuffer->surface.swizzle & 0xFFFF;
+      }
+   }
+
    uint32_t values2[] = {
-      depthBuffer->surface.image.getAddress() >> 8,
+      addr >> 8,
       db_depth_info.value,
-      depthBuffer->hiZPtr.getAddress() >> 8,
+      addrHiZ >> 8,
    };
    pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_BASE, gsl::as_span(values2) });
 
