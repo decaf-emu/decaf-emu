@@ -56,7 +56,7 @@ MEMCreateUnitHeapEx(void *base,
                           flags);
 
    // Setup the MEMUnitHeap
-   auto firstBlock = reinterpret_cast<MEMUnitHeapFreeBlock*>(dataStart);
+   auto firstBlock = reinterpret_cast<MEMUnitHeapFreeBlock *>(dataStart);
    heap->freeBlocks = firstBlock;
    heap->blockSize = alignedBlockSize;
 
@@ -64,7 +64,7 @@ MEMCreateUnitHeapEx(void *base,
    MEMUnitHeapFreeBlock *prev = nullptr;
 
    for (auto i = 0u; i < blockCount; ++i) {
-      auto block = firstBlock + alignedBlockSize * i;
+      auto block = reinterpret_cast<MEMUnitHeapFreeBlock *>(dataStart + alignedBlockSize * i);
 
       if (prev) {
          prev->next = block;
