@@ -603,7 +603,7 @@ GameThreadEntry(uint32_t argc, void *argv)
    auto appModule = kernel::getUserModule();
 
    auto userPreinit = appModule->findFuncExport<void, be_ptr<MEMHeapHeader>*, be_ptr<MEMHeapHeader>*, be_ptr<MEMHeapHeader>*>("__preinit_user");
-   auto start = kernel::loader::AppEntryPoint(appModule->entryPoint);
+   auto startFn = kernel::loader::AppEntryPoint(appModule->entryPoint);
 
    debugger::handlePreLaunch();
 
@@ -637,7 +637,18 @@ GameThreadEntry(uint32_t argc, void *argv)
       }
    }
 
-   start(argc, argv);
+   auto result = startFn(argc, argv);
+
+   // Try call coreinit::exit with return code
+   auto coreinitModule = kernel::loader::findModule("coreinit");
+
+   if (coreinitModule) {
+      auto exitFn = coreinitModule->findFuncExport<void, int>("exit");
+
+      if (exitFn) {
+         exitFn(result);
+      }
+   }
 }
 
 void
