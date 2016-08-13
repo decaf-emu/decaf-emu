@@ -83,6 +83,9 @@ getCommandLineParser()
       .add_option("sys-path",
                   description { "Where to locate any external system files." },
                   value<std::string> {})
+      .add_option("content-path",
+                  description { "Sets which path to mount to /vol/content, only set for standalone rpx files." },
+                  value<std::string> {})
       .add_option("time-scale",
                   description { "Time scale factor for emulated clock." },
                   default_value<double> { 1.0 });
@@ -211,6 +214,10 @@ start(excmd::parser &parser,
 
    if (options.has("sys-path")) {
       decaf::config::system::system_path = options.get<std::string>("sys-path");
+   }
+
+   if (options.has("content-path")) {
+      decaf::config::system::content_path = options.get<std::string>("content-path");
    }
 
    if (options.has("time-scale")) {

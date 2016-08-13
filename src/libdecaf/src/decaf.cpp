@@ -148,6 +148,12 @@ initialise(const std::string &gamePath)
    } else if (!rpxPath.path().empty()) {
       gLog->debug("Mount {} to /vol/code/{}", rpxPath.path(), rpxPath.filename());
       filesystem->mountHostFile("/vol/code/" + rpxPath.filename(), rpxPath.path());
+
+      if (!decaf::config::system::content_path.empty()) {
+         gLog->debug("Mount {} to /vol/content", decaf::config::system::content_path);
+         filesystem->mountHostFolder("/vol/content", decaf::config::system::content_path);
+      }
+
       kernel::setExecutableFilename(rpxPath.filename());
    } else {
       gLog->error("Could not find valid application at {}", path.path());

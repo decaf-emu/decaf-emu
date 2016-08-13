@@ -72,6 +72,9 @@ extern int region;
 //! Path to system files
 extern std::string system_path;
 
+//! Path to /vol/content for standalone .rpx applications
+extern std::string content_path;
+
 //! Time scale factor for emulated clock
 extern double time_scale;
 
