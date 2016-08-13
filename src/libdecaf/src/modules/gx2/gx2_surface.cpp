@@ -167,26 +167,41 @@ void
 GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget target)
 {
    using latte::Register;
-   uint32_t addr256, aaAddr256;
    auto reg = [](unsigned id) { return static_cast<Register>(id); };
    auto cb_color_info = colorBuffer->regs.cb_color_info.value();
    auto cb_color_mask = colorBuffer->regs.cb_color_mask.value();
    auto cb_color_size = colorBuffer->regs.cb_color_size.value();
    auto cb_color_view = colorBuffer->regs.cb_color_view.value();
 
-   addr256 = colorBuffer->surface.image.getAddress() >> 8;
-   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_BASE + target * 4), addr256 });
+   auto addr = colorBuffer->surface.image.getAddress();
+   auto addrTile = 0u;
+   auto addrFrag = 0u;
+
+   if (colorBuffer->viewMip) {
+      addr = colorBuffer->surface.mipmaps.getAddress();
+
+      if (colorBuffer->viewMip > 1) {
+         addr += colorBuffer->surface.mipLevelOffset[colorBuffer->viewMip - 1];
+      }
+   }
+
+   if (colorBuffer->surface.tileMode >= GX2TileMode::Tiled2DThin1 && colorBuffer->surface.tileMode != GX2TileMode::LinearSpecial) {
+      if (colorBuffer->viewMip < ((colorBuffer->surface.swizzle >> 16) & 0xFF)) {
+         addr ^= colorBuffer->surface.swizzle & 0xFFFF;
+      }
+   }
+
+   if (colorBuffer->surface.aa) {
+      addrFrag = colorBuffer->aaBuffer.getAddress();
+      addrTile = addrFrag + colorBuffer->regs.cmask_offset;
+   }
+
+   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_BASE + target * 4), addr >> 8 });
    pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_SIZE + target * 4), cb_color_size.value });
    pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_INFO + target * 4), cb_color_info.value });
 
-   if (colorBuffer->surface.aa != 0) {
-      aaAddr256 = colorBuffer->aaBuffer.getAddress() >> 8;
-   } else {
-      aaAddr256 = 0;
-   }
-
-   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_TILE + target * 4), aaAddr256 });
-   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_FRAG + target * 4), aaAddr256 });
+   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_TILE + target * 4), addrTile >> 8 });
+   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_FRAG + target * 4), addrFrag >> 8 });
 
    pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_VIEW + target * 4), cb_color_view.value });
    pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_MASK + target * 4), cb_color_mask.value });
