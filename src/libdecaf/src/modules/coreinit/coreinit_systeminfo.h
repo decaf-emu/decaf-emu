@@ -26,8 +26,8 @@ CHECK_SIZE(OSSystemInfo, 0x20);
 
 #pragma pack(pop)
 
-HardwareVersion
-bspGetHardwareVersion();
+int
+bspGetHardwareVersion(be_val<HardwareVersion> *version);
 
 OSSystemInfo *
 OSGetSystemInfo();

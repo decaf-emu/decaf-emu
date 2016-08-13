@@ -18,10 +18,11 @@ sScreenCapturePermission = TRUE;
 static BOOL
 sEnableHomeButtonMenu = TRUE;
 
-HardwareVersion
-bspGetHardwareVersion()
+int
+bspGetHardwareVersion(be_val<HardwareVersion> *version)
 {
-   return HardwareVersion::LATTE_B1X_CAFE;
+   *version = HardwareVersion::LATTE_B1X_CAFE;
+   return 0;
 }
 
 OSSystemInfo *
