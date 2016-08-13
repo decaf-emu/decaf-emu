@@ -393,42 +393,16 @@ bool GLDriver::checkActiveUniforms()
                continue;
             }
 
-            auto block = make_virtual_ptr<float>(sq_alu_const_cache_vs << 8);
+            auto addr = sq_alu_const_cache_vs << 8;
             auto size = sq_alu_const_buffer_size_vs << 8;
 
             // Check that we can fit the uniform block into OpenGL buffers
             decaf_assert(size <= gpu::opengl::MaxUniformBlockSize,
                fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, MaxUniformBlockSize));
 
-            auto &buffer = mUniformBuffers[sq_alu_const_cache_vs];
+            auto &buffer = mDataBuffers[addr];
 
-            if (!buffer.object || buffer.allocatedSize < size) {
-               if (buffer.object) {
-                  gl::glDeleteBuffers(1, &buffer.object);
-               }
-
-               gl::glCreateBuffers(1, &buffer.object);
-               gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_DYNAMIC_STORAGE_BIT);
-               buffer.allocatedSize = size;
-               buffer.dirtyAsBuffer = true;
-            }
-
-            if (buffer.dirtyAsBuffer) {
-               // Calculate a new memory CRC
-               uint64_t newHash[2] = { 0 };
-               MurmurHash3_x64_128(block, size, 0, newHash);
-
-               if (newHash[0] != buffer.cpuMemHash[0] || newHash[1] != buffer.cpuMemHash[1]) {
-                  buffer.cpuMemHash[0] = newHash[0];
-                  buffer.cpuMemHash[1] = newHash[1];
-                  buffer.cpuMemStart = block.getAddress();
-                  buffer.cpuMemEnd = buffer.cpuMemStart + size;
-
-                  // Upload block
-                  gl::glNamedBufferSubData(buffer.object, 0, size, block);
-                  buffer.dirtyAsBuffer = false;
-               }
-            }
+            configureDataBuffer(&buffer, addr, size, true, false);
 
             // Bind block
             gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, buffer.object);
@@ -446,38 +420,12 @@ bool GLDriver::checkActiveUniforms()
                continue;
             }
 
-            auto block = make_virtual_ptr<float>(sq_alu_const_cache_ps << 8);
+            auto addr = sq_alu_const_cache_ps << 8;
             auto size = sq_alu_const_buffer_size_ps << 8;
 
-            auto &buffer = mUniformBuffers[sq_alu_const_cache_ps];
+            auto &buffer = mDataBuffers[addr];
 
-            if (!buffer.object || buffer.allocatedSize < size) {
-               if (buffer.object) {
-                  gl::glDeleteBuffers(1, &buffer.object);
-               }
-
-               gl::glCreateBuffers(1, &buffer.object);
-               gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_DYNAMIC_STORAGE_BIT);
-               buffer.allocatedSize = size;
-               buffer.dirtyAsBuffer = true;
-            }
-
-            if (buffer.dirtyAsBuffer) {
-               // Calculate a new memory CRC
-               uint64_t newHash[2] = { 0 };
-               MurmurHash3_x64_128(block, size, 0, newHash);
-
-               if (newHash[0] != buffer.cpuMemHash[0] || newHash[1] != buffer.cpuMemHash[1]) {
-                  buffer.cpuMemHash[0] = newHash[0];
-                  buffer.cpuMemHash[1] = newHash[1];
-                  buffer.cpuMemStart = block.getAddress();
-                  buffer.cpuMemEnd = buffer.cpuMemStart + size;
-
-                  // Upload block
-                  gl::glNamedBufferSubData(buffer.object, 0, size, block);
-                  buffer.dirtyAsBuffer = false;
-               }
-            }
+            configureDataBuffer(&buffer, addr, size, true, false);
 
             // Bind block
             gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, buffer.object);
@@ -597,13 +545,152 @@ stridedMemcpy(const void *src,
    }
 }
 
-bool GLDriver::checkActiveAttribBuffers()
+void
+GLDriver::configureDataBuffer(DataBuffer *buffer,
+                              uint32_t address,
+                              uint32_t size,
+                              bool isInput,
+                              bool isOutput)
+{
+   decaf_check(buffer);
+   decaf_check(size);
+   decaf_check(isInput || isOutput);
+
+   if (buffer->object
+    && buffer->allocatedSize >= size
+    && !(isInput && !buffer->isInput)
+    && !(isOutput && !buffer->isOutput)) {
+      return;  // No changes needed
+   }
+
+   auto oldObject = buffer->object;
+   auto oldSize = buffer->allocatedSize;
+   auto oldMappedBuffer = buffer->mappedBuffer;
+
+   buffer->cpuMemStart = address;
+   buffer->cpuMemEnd = address + size;
+   buffer->allocatedSize = size;
+   buffer->mappedBuffer = nullptr;
+   buffer->isInput |= isInput;
+   buffer->isOutput |= isOutput;
+
+   gl::glCreateBuffers(1, &buffer->object);
+
+   gl::BufferStorageMask usage = static_cast<gl::BufferStorageMask>(0);
+   if (buffer->isInput) {
+      if (USE_PERSISTENT_MAP) {
+         usage |= gl::GL_MAP_WRITE_BIT;
+      } else {
+         usage |= gl::GL_DYNAMIC_STORAGE_BIT;
+      }
+   }
+   if (buffer->isOutput) {
+      if (USE_PERSISTENT_MAP) {
+         usage |= gl::GL_MAP_READ_BIT;
+         if (!buffer->isInput) {
+            usage |= gl::GL_CLIENT_STORAGE_BIT;
+         }
+      }
+   }
+   if (USE_PERSISTENT_MAP) {
+      usage |= gl::GL_MAP_PERSISTENT_BIT;
+   }
+   gl::glNamedBufferStorage(buffer->object, size + BUFFER_PADDING, nullptr, usage);
+
+   if (oldObject) {
+      if (oldMappedBuffer) {
+         gl::glUnmapNamedBuffer(oldObject);
+         buffer->mappedBuffer = nullptr;
+      }
+      gl::glCopyNamedBufferSubData(oldObject, buffer->object, 0, 0, std::min(oldSize, size));
+      gl::glDeleteBuffers(1, &oldObject);
+   }
+
+   if (USE_PERSISTENT_MAP) {
+      gl::BufferAccessMask access = gl::GL_MAP_PERSISTENT_BIT;
+      if (buffer->isInput) {
+         access |= gl::GL_MAP_WRITE_BIT | gl::GL_MAP_FLUSH_EXPLICIT_BIT;
+      }
+      if (buffer->isOutput) {
+         access |= gl::GL_MAP_READ_BIT;
+      }
+      buffer->mappedBuffer = gl::glMapNamedBufferRange(buffer->object, 0, size + BUFFER_PADDING, access);
+   }
+
+   // Unconditionally upload the initial data store for attribute and
+   //  uniform buffers.  This has to be done after mapping, since if we're
+   //  using maps, we can't update the buffer via glBufferSubData (because
+   //  we didn't specify GL_DYNAMIC_STORAGE_BIT).
+   if (!oldObject && isInput) {
+      uploadDataBuffer(buffer, 0, size);
+   }
+}
+
+void
+GLDriver::downloadDataBuffer(DataBuffer *buffer,
+                             uint32_t offset,
+                             uint32_t size)
+{
+   if (buffer->mappedBuffer) {
+      memcpy(mem::translate<char>(buffer->cpuMemStart) + offset,
+             static_cast<char *>(buffer->mappedBuffer) + offset,
+             size);
+   } else {
+      gl::glGetNamedBufferSubData(buffer->object, offset, size,
+                                  mem::translate<char>(buffer->cpuMemStart) + offset);
+   }
+}
+
+void
+GLDriver::uploadDataBuffer(DataBuffer *buffer,
+                           uint32_t offset,
+                           uint32_t size)
+{
+   // Avoid uploading the data if it hasn't changed.
+   uint64_t newHash[2] = { 0, 0 };
+   MurmurHash3_x64_128(mem::translate(buffer->cpuMemStart), buffer->allocatedSize, 0, newHash);
+
+   if (newHash[0] != buffer->cpuMemHash[0] || newHash[1] != buffer->cpuMemHash[1]) {
+      buffer->cpuMemHash[0] = newHash[0];
+      buffer->cpuMemHash[1] = newHash[1];
+
+      // We currently can't detect where the change occurred, so upload
+      //  the entire buffer.  If we don't do this, the following sequence
+      //  will result in incorrect GPU-side data:
+      //     1) Client modifies two disjoint regions A and B of the buffer.
+      //     2) Client calls GX2Invalidate() on region A.
+      //     3) We detect that the hash has changed and upload region A.
+      //     4) Client calls GX2Invalidate() on region B.
+      //     5) We detect that the hash is unchanged and don't upload
+      //         region B.
+      //  Now region B has incorrect data on the host GPU.
+      // TODO: Find a better way to allow partial updates.
+      offset = 0;
+      size = buffer->allocatedSize;
+
+      if (buffer->mappedBuffer) {
+         memcpy(static_cast<char *>(buffer->mappedBuffer) + offset,
+                mem::translate<char>(buffer->cpuMemStart) + offset,
+                size);
+         gl::glFlushMappedNamedBufferRange(buffer->object, offset, size);
+         buffer->dirtyMap = true;
+      } else {
+         gl::glNamedBufferSubData(buffer->object, offset, size,
+                                  mem::translate<char>(buffer->cpuMemStart) + offset);
+      }
+   }
+}
+
+bool
+GLDriver::checkActiveAttribBuffers()
 {
    if (!mActiveShader
     || !mActiveShader->fetch || !mActiveShader->fetch->attribs.size()
     || !mActiveShader->vertex || !mActiveShader->vertex->object) {
       return false;
    }
+
+   bool needMemoryBarrier = false;
 
    for (auto i = 0u; i < latte::MaxAttributes; ++i) {
       auto resourceOffset = (latte::SQ_VS_ATTRIB_RESOURCE_0 + i) * 7;
@@ -620,103 +707,25 @@ bool GLDriver::checkActiveAttribBuffers()
          continue;
       }
 
-      auto &buffer = mAttribBuffers[addr];
+      auto &buffer = mDataBuffers[addr];
 
-      if (!buffer.object || buffer.allocatedSize < size) {
-         if (buffer.object) {
-            if (buffer.mappedBuffer) {
-               gl::glUnmapNamedBuffer(buffer.object);
-               buffer.mappedBuffer = nullptr;
-            }
+      configureDataBuffer(&buffer, addr, size, true, false);
 
-            gl::glDeleteBuffers(1, &buffer.object);
-         }
-
-         gl::glCreateBuffers(1, &buffer.object);
-         if (USE_PERSISTENT_MAP) {
-            gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_CLIENT_STORAGE_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
-         } else {
-            gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_CLIENT_STORAGE_BIT | gl::GL_DYNAMIC_STORAGE_BIT);
-         }
-
-         buffer.allocatedSize = size;
-
-         buffer.cpuMemStart = addr;
-         buffer.cpuMemEnd = buffer.cpuMemStart + size;
-      }
-
-      auto ppcBuffer = mem::translate<const void>(addr);
-
-      if (buffer.dirtyAsBuffer) {
-         // We need to upload the whole buffer, even if this draw is smaller.  Otherwise
-         //  when there is an invalidation, then a small draw, then a big draw, the big
-         //  draw will see the buffer as being consistent already (from the first draw),
-         //  but the first draw will not have actually uploaded all the data.
-         size = buffer.allocatedSize;
-
-         // Calculate a new memory CRC
-         uint64_t newHash[2] = { 0 };
-         MurmurHash3_x64_128(ppcBuffer, size, 0, newHash);
-
-         if (newHash[0] != buffer.cpuMemHash[0] || newHash[1] != buffer.cpuMemHash[1]) {
-            buffer.cpuMemHash[0] = newHash[0];
-            buffer.cpuMemHash[1] = newHash[1];
-
-            // Upload data
-            if (USE_PERSISTENT_MAP) {
-               if (!buffer.mappedBuffer) {
-                  buffer.mappedBuffer = gl::glMapNamedBufferRange(buffer.object, 0, size + BUFFER_PADDING, gl::GL_MAP_FLUSH_EXPLICIT_BIT | gl::GL_MAP_WRITE_BIT | gl::GL_MAP_PERSISTENT_BIT);
-               }
-
-               memcpy(buffer.mappedBuffer, ppcBuffer, size);
-               gl::glFlushMappedNamedBufferRange(buffer.object, 0, size);
-            } else {
-               gl::glNamedBufferSubData(buffer.object, 0, size, ppcBuffer);
-            }
-
-            buffer.dirtyAsBuffer = false;
-         }
-      }
+      needMemoryBarrier |= buffer.dirtyMap;
+      buffer.dirtyMap = false;
 
       gl::glBindVertexBuffer(i, buffer.object, 0, stride);
+   }
+
+   if (needMemoryBarrier) {
+      gl::glMemoryBarrier(gl::GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
    }
 
    return true;
 }
 
-void GLDriver::createFeedbackBuffer(unsigned index)
-{
-   decaf_check(index <= 3);
-
-   auto vgt_strmout_buffer_base = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_BASE_0 + 16 * index);
-   auto vgt_strmout_buffer_size = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_SIZE_0 + 16 * index);
-
-   auto addr = vgt_strmout_buffer_base << 8;
-   auto size = vgt_strmout_buffer_size << 2;
-
-   if (addr == 0 || size == 0) {
-      gLog->error("Attempt to bind undefined feedback buffer {}", index);
-      return;
-   }
-
-   auto &buffer = mFeedbackBuffers[addr];
-
-   if (!buffer.object || buffer.size < size) {
-      if (buffer.object) {
-         gl::glDeleteBuffers(1, &buffer.object);
-      }
-
-      gl::glCreateBuffers(1, &buffer.object);
-      // Explicitly hint feedback buffers to client storage, since we'll be
-      //  reading from them via the CPU.
-      gl::glNamedBufferStorage(buffer.object, size + BUFFER_PADDING, NULL, gl::GL_MAP_READ_BIT | gl::GL_CLIENT_STORAGE_BIT);
-   }
-
-   buffer.addr = addr;
-   buffer.size = size;
-}
-
-bool GLDriver::checkActiveFeedbackBuffers()
+bool
+GLDriver::checkActiveFeedbackBuffers()
 {
    auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
    auto vgt_strmout_buffer_en = getRegister<latte::VGT_STRMOUT_BUFFER_EN>(latte::Register::VGT_STRMOUT_BUFFER_EN);
@@ -738,52 +747,25 @@ bool GLDriver::checkActiveFeedbackBuffers()
 
       auto vgt_strmout_buffer_base = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_BASE_0 + 16 * index);
       auto addr = vgt_strmout_buffer_base << 8;
-      auto &buffer = mFeedbackBuffers[addr];
+      auto &buffer = mDataBuffers[addr];
 
-      if (!buffer.object) {
-         gLog->error("Attempt to use undefined feedback buffer {}", index);
+      if (!buffer.object || !buffer.isOutput) {
+         gLog->error("Attempt to use unconfigured feedback buffer {}", index);
          return false;
       }
 
       auto offset = mFeedbackBaseOffset[index];
 
-      if (offset >= buffer.size) {
-         gLog->error("Attempt to bind feedback buffer {} at offset {} >= size {}", index, offset, buffer.size);
+      if (offset >= buffer.allocatedSize) {
+         gLog->error("Attempt to bind feedback buffer {} at offset {} >= size {}", index, offset, buffer.allocatedSize);
          return false;
       }
 
-      gl::glBindBufferRange(gl::GL_TRANSFORM_FEEDBACK_BUFFER, index, buffer.object, offset, buffer.size - offset);
+      gl::glBindBufferRange(gl::GL_TRANSFORM_FEEDBACK_BUFFER, index, buffer.object, offset, buffer.allocatedSize - offset);
       mFeedbackCurrentOffset[index] = offset;
    }
 
    return true;
-}
-
-void GLDriver::copyFeedbackBuffer(unsigned index)
-{
-   auto vgt_strmout_buffer_base = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_BASE_0 + 16 * index);
-   auto addr = vgt_strmout_buffer_base << 8;
-   auto &buffer = mFeedbackBuffers[addr];
-   decaf_check(buffer.object);
-
-   auto copyOffset = mFeedbackBaseOffset[index];
-   auto copySize = mFeedbackCurrentOffset[index] - copyOffset;
-
-   if (copySize == 0) {
-      return;
-   }
-
-   auto mappedBuffer = gl::glMapNamedBufferRange(buffer.object, copyOffset, copySize, gl::GL_MAP_READ_BIT);
-   decaf_check(mappedBuffer);
-
-   memcpy(mem::translate<char>(buffer.addr) + copyOffset,
-          static_cast<char *>(mappedBuffer),
-          copySize);
-
-   // TODO: detect cases where a feedback buffer is also a vertex attribute
-   //  buffer and skip the buffer upload in that case
-
-   gl::glUnmapNamedBuffer(buffer.object);
 }
 
 bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)

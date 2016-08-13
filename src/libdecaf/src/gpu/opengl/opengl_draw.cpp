@@ -405,8 +405,6 @@ GLDriver::streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data)
    auto bufferIndex = data.control.SELECT_BUFFER();
 
    if (data.control.STORE_BUFFER_FILLED_SIZE()) {
-      copyFeedbackBuffer(bufferIndex);
-
       auto addr = data.dstLo;
       decaf_assert(data.dstHi == 0, fmt::format("Store target out of 32-bit range for feedback buffer {}", bufferIndex));
 
@@ -416,7 +414,14 @@ GLDriver::streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data)
       }
    }
 
-   createFeedbackBuffer(bufferIndex);
+   auto vgt_strmout_buffer_base = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_BASE_0 + 16 * bufferIndex);
+   auto vgt_strmout_buffer_size = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_SIZE_0 + 16 * bufferIndex);
+
+   auto addr = vgt_strmout_buffer_base << 8;
+   auto size = vgt_strmout_buffer_size << 2;
+   decaf_assert(addr != 0 && size != 0, fmt::format("Attempt to bind undefined feedback buffer {}", bufferIndex));
+
+   configureDataBuffer(&mDataBuffers[addr], addr, size, false, true);
 
    switch (data.control.OFFSET_SOURCE()) {
    case pm4::STRMOUT_OFFSET_FROM_PACKET:
