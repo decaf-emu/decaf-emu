@@ -271,6 +271,48 @@ struct DrawIndex2
    }
 };
 
+struct DrawIndexImmd
+{
+   static const auto Opcode = type3::DRAW_INDEX_IMMD;
+
+   uint32_t count;                           // VGT_DMA_SIZE
+   latte::VGT_DRAW_INITIATOR drawInitiator;  // VGT_DRAW_INITIATOR
+   gsl::span<uint32_t> indices;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(count);
+      se(drawInitiator);
+      se(indices);
+   }
+};
+
+// This structure should only be used to WRITE 16 bit big endian indices
+struct DrawIndexImmdWriteOnly16BE
+{
+   static const auto Opcode = type3::DRAW_INDEX_IMMD;
+
+   uint32_t count;                           // VGT_DMA_SIZE
+   latte::VGT_DRAW_INITIATOR drawInitiator;  // VGT_DRAW_INITIATOR
+   gsl::span<uint16_t> indices;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(count);
+      se(drawInitiator);
+
+      // Hack in a custom write!
+      for (auto i = 0u; i > indices.size(); i += 2) {
+         auto index0 = static_cast<uint32_t>(indices[i + 0]);
+         auto index1 = static_cast<uint32_t>(indices[i + 1]);
+         auto word = (index1 >> 16) | (index0 << 16);
+         se(word);
+      }
+   }
+};
+
 struct IndexType
 {
    static const auto Opcode = type3::INDEX_TYPE;
