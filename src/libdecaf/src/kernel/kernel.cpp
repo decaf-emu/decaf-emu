@@ -135,7 +135,7 @@ coreStateToString(cpu::Core *core)
    out.write("xer: 0x{:08x}\n", core->xer.value);
 
    for (auto i = 0u; i < 32; ++i) {
-      out.write("gpr[0]: 0x{:08x}\n", core->gpr[i]);
+      out.write("gpr[{}]: 0x{:08x}\n", i, core->gpr[i]);
    }
 
    return out.str();
