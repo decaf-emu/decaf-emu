@@ -132,7 +132,7 @@ void
 GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1)
 {
    // Create our internal shadow display list
-   memset(&state->shadowState, 0, sizeof(state->shadowState));
+   memset(state, 0, sizeof(GX2ContextState));
    GX2BeginDisplayList(state->shadowDisplayList, GX2ContextState::MaxDisplayListSize * 4);
    _GX2LoadState(state);
    state->shadowDisplayListSize = GX2EndDisplayList(state->shadowDisplayList);
