@@ -447,12 +447,10 @@ bool GLDriver::checkActiveUniforms()
             decaf_assert(size <= gpu::opengl::MaxUniformBlockSize,
                fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, MaxUniformBlockSize));
 
-            auto &buffer = mDataBuffers[addr];
-
-            configureDataBuffer(&buffer, addr, size, true, false);
+            auto buffer = getDataBuffer(addr, size, true, false);
 
             // Bind block
-            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, buffer.object);
+            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, buffer->object);
          }
       }
 
@@ -470,12 +468,10 @@ bool GLDriver::checkActiveUniforms()
             auto addr = sq_alu_const_cache_ps << 8;
             auto size = sq_alu_const_buffer_size_ps << 8;
 
-            auto &buffer = mDataBuffers[addr];
-
-            configureDataBuffer(&buffer, addr, size, true, false);
+            auto buffer = getDataBuffer(addr, size, true, false);
 
             // Bind block
-            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, buffer.object);
+            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, buffer->object);
          }
       }
    }
@@ -592,22 +588,26 @@ stridedMemcpy(const void *src,
    }
 }
 
-void
-GLDriver::configureDataBuffer(DataBuffer *buffer,
-                              uint32_t address,
-                              uint32_t size,
-                              bool isInput,
-                              bool isOutput)
+DataBuffer *
+GLDriver::getDataBuffer(uint32_t address,
+                        uint32_t size,
+                        bool isInput,
+                        bool isOutput)
 {
-   decaf_check(buffer);
    decaf_check(size);
    decaf_check(isInput || isOutput);
+
+   DataBuffer *buffer;
+   {
+      std::unique_lock<std::mutex> lock(mResourceMutex);
+      buffer = &mDataBuffers[address];
+   }
 
    if (buffer->object
     && buffer->allocatedSize >= size
     && !(isInput && !buffer->isInput)
     && !(isOutput && !buffer->isOutput)) {
-      return;  // No changes needed
+      return buffer;  // No changes needed
    }
 
    auto oldObject = buffer->object;
@@ -685,6 +685,8 @@ GLDriver::configureDataBuffer(DataBuffer *buffer,
          uploadDataBuffer(buffer, oldSize, size - oldSize);
       }
    }
+
+   return buffer;
 }
 
 void
@@ -768,14 +770,12 @@ GLDriver::checkActiveAttribBuffers()
          continue;
       }
 
-      auto &buffer = mDataBuffers[addr];
+      auto buffer = getDataBuffer(addr, size, true, false);
 
-      configureDataBuffer(&buffer, addr, size, true, false);
+      needMemoryBarrier |= buffer->dirtyMap;
+      buffer->dirtyMap = false;
 
-      needMemoryBarrier |= buffer.dirtyMap;
-      buffer.dirtyMap = false;
-
-      gl::glBindVertexBuffer(i, buffer.object, 0, stride);
+      gl::glBindVertexBuffer(i, buffer->object, 0, stride);
    }
 
    if (needMemoryBarrier) {

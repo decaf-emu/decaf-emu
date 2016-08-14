@@ -135,7 +135,8 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
 
    auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, true, tileMode, true, discardData);
 
-   buffer->dirtyAsTexture = false;
+   buffer->dirtyMemory = false;
+   buffer->needUpload = false;
    buffer->state = SurfaceUseState::GpuWritten;
    return buffer;
 }
