@@ -300,7 +300,7 @@ GLDriver::surfaceSync(const pm4::SurfaceSync &data)
 
    auto all = data.cp_coher_cntl.FULL_CACHE_ENA();
    auto surfaces = all;
-   auto shader = all;
+   auto shaders = all;
    auto shaderExport = all;
 
    if (data.cp_coher_cntl.TC_ACTION_ENA()) {
@@ -316,7 +316,7 @@ GLDriver::surfaceSync(const pm4::SurfaceSync &data)
    }
 
    if (data.cp_coher_cntl.SH_ACTION_ENA()) {
-      shader = true;
+      shaders = true;
    }
 
    if (data.cp_coher_cntl.SX_ACTION_ENA()) {
@@ -326,32 +326,52 @@ GLDriver::surfaceSync(const pm4::SurfaceSync &data)
    if (surfaces) {
       for (auto &i : mSurfaces) {
          SurfaceBuffer *surface = &i.second;
-
-         if (surface->cpuMemStart >= memEnd || surface->cpuMemEnd < memStart) {
-            continue;
+         if (surface->cpuMemStart < memEnd && surface->cpuMemEnd > memStart) {
+            surface->needUpload |= surface->dirtyMemory;
+            surface->dirtyMemory = false;
          }
+      }
+   }
 
-         surface->needUpload |= surface->dirtyMemory;
-         surface->dirtyMemory = false;
+   if (shaders) {
+      for (auto &i : mFetchShaders) {
+         Shader *shader = i.second;
+         if (shader->cpuMemStart < memEnd && shader->cpuMemEnd > memStart) {
+            shader->needRebuild |= shader->dirtyMemory;
+            shader->dirtyMemory = false;
+         }
+      }
+
+      for (auto &i : mVertexShaders) {
+         Shader *shader = i.second;
+         if (shader->cpuMemStart < memEnd && shader->cpuMemEnd > memStart) {
+            shader->needRebuild |= shader->dirtyMemory;
+            shader->dirtyMemory = false;
+         }
+      }
+
+      for (auto &i : mPixelShaders) {
+         Shader *shader = i.second;
+         if (shader->cpuMemStart < memEnd && shader->cpuMemEnd > memStart) {
+            shader->needRebuild |= shader->dirtyMemory;
+            shader->dirtyMemory = false;
+         }
       }
    }
 
    for (auto &i : mDataBuffers) {
       DataBuffer *buffer = &i.second;
+      if (buffer->cpuMemStart < memEnd && buffer->cpuMemEnd > memStart) {
+         auto offset = std::max(memStart, buffer->cpuMemStart) - buffer->cpuMemStart;
+         auto size = (std::min(memEnd, buffer->cpuMemEnd) - buffer->cpuMemStart) - offset;
 
-      if (buffer->cpuMemStart >= memEnd || buffer->cpuMemEnd < memStart) {
-         continue;
-      }
-
-      auto offset = std::max(memStart, buffer->cpuMemStart) - buffer->cpuMemStart;
-      auto size = (std::min(memEnd, buffer->cpuMemEnd) - buffer->cpuMemStart) - offset;
-
-      if (buffer->isOutput && shaderExport) {
-         downloadDataBuffer(buffer, offset, size);
-         buffer->dirtyMemory = false;
-      } else if (buffer->isInput && buffer->dirtyMemory && (shader || surfaces)) {
-         uploadDataBuffer(buffer, offset, size);
-         buffer->dirtyMemory = false;
+         if (buffer->isOutput && shaderExport) {
+            downloadDataBuffer(buffer, offset, size);
+            buffer->dirtyMemory = false;
+         } else if (buffer->isInput && buffer->dirtyMemory && (shaders || surfaces)) {
+            uploadDataBuffer(buffer, offset, size);
+            buffer->dirtyMemory = false;
+         }
       }
    }
 }
@@ -549,24 +569,39 @@ GLDriver::handleDCFlush(uint32_t addr, uint32_t size)
    auto memStart = addr;
    auto memEnd = memStart + size;
 
-   for (auto &i : mSurfaces) {
-      SurfaceBuffer *surface = &i.second;
-
-      if (surface->cpuMemStart >= memEnd || surface->cpuMemEnd < memStart) {
-         continue;
+   for (auto &i : mFetchShaders) {
+      Resource *resource = i.second;
+      if (resource && resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
+         resource->dirtyMemory = true;
       }
+   }
 
-      surface->dirtyMemory = true;
+   for (auto &i : mVertexShaders) {
+      Resource *resource = i.second;
+      if (resource && resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
+         resource->dirtyMemory = true;
+      }
+   }
+
+   for (auto &i : mPixelShaders) {
+      Resource *resource = i.second;
+      if (resource && resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
+         resource->dirtyMemory = true;
+      }
+   }
+
+   for (auto &i : mSurfaces) {
+      Resource *resource = &i.second;
+      if (resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
+         resource->dirtyMemory = true;
+      }
    }
 
    for (auto &i : mDataBuffers) {
-      DataBuffer *buffer = &i.second;
-
-      if (buffer->cpuMemStart >= memEnd || buffer->cpuMemEnd < memStart) {
-         continue;
+      Resource *resource = &i.second;
+      if (resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
+         resource->dirtyMemory = true;
       }
-
-      buffer->dirtyMemory = true;
    }
 }
 

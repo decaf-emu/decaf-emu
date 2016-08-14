@@ -38,9 +38,24 @@ struct Resource
 
    //! The end of the CPU memory region this occupies
    uint32_t cpuMemEnd;
+
+   //! Hash of the memory contents, for detecting changes
+   uint64_t cpuMemHash[2] = { 0, 0 };
+
+   //! True if a DCFlush has been received for the memory region
+   bool dirtyMemory = true;
 };
 
-struct FetchShader : public Resource
+struct Shader : public Resource
+{
+   //! True if the shader needs to be rebuilt due to dirtyMemory
+   bool needRebuild = false;
+
+   //! Number of references from ShaderPipelines (used for garbage collection)
+   unsigned refCount = 0;
+};
+
+struct FetchShader : public Shader
 {
    struct Attrib
    {
@@ -62,7 +77,7 @@ struct FetchShader : public Resource
    std::string disassembly;
 };
 
-struct VertexShader : public Resource
+struct VertexShader : public Shader
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
@@ -76,7 +91,7 @@ struct VertexShader : public Resource
    std::string disassembly;
 };
 
-struct PixelShader : public Resource
+struct PixelShader : public Shader
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
@@ -88,14 +103,14 @@ struct PixelShader : public Resource
    std::string disassembly;
 };
 
-using ShaderKey = std::tuple<uint64_t, uint64_t, uint64_t>;
+using ShaderPipelineKey = std::tuple<uint64_t, uint64_t, uint64_t>;
 
-struct Shader
+struct ShaderPipeline
 {
    gl::GLuint object = 0;
-   FetchShader *fetch;
-   VertexShader *vertex;
-   PixelShader *pixel;  // Null if rasterization is disabled
+   FetchShader *fetch = nullptr;
+   VertexShader *vertex = nullptr;
+   PixelShader *pixel = nullptr;  // Null if rasterization is disabled
    uint64_t fetchKey;
    uint64_t vertexKey;
    uint64_t pixelKey;
@@ -121,9 +136,7 @@ struct SurfaceBuffer : public Resource
    HostSurface *active = nullptr;
    HostSurface *master = nullptr;
    SurfaceUseState state = SurfaceUseState::None;
-   bool dirtyMemory = true;
    bool needUpload = true;
-   uint64_t cpuMemHash[2] = { 0, 0 };
    struct {
       latte::SQ_TEX_DIM dim;
       latte::SQ_DATA_FORMAT format;
@@ -148,8 +161,6 @@ struct DataBuffer : public Resource
    bool isInput = false;  // Uniform or attribute buffers
    bool isOutput = false;  // Transform feedback buffers
    bool dirtyMap = false;  // True if we need to glFlushMappedBufferRange
-   bool dirtyMemory = true;
-   uint64_t cpuMemHash[2] = { 0, 0 };
 };
 
 struct Sampler
@@ -381,15 +392,13 @@ private:
    bool mViewportDirty = false;
    bool mScissorDirty = false;
 
-   std::unordered_map<uint64_t, FetchShader> mFetchShaders;
-   std::unordered_map<uint64_t, VertexShader> mVertexShaders;
-   std::unordered_map<uint64_t, PixelShader> mPixelShaders;
-   std::map<ShaderKey, Shader> mShaders;
-
-   // Protects surface and data buffer lists; used by handleDCFlush() to
-   //  safely set dirty flags
+   // Protects resource lists; used by handleDCFlush() to safely set dirty flags
    std::mutex mResourceMutex;
 
+   std::unordered_map<uint64_t, FetchShader *> mFetchShaders;  // Protected by mResourceMutex
+   std::unordered_map<uint64_t, VertexShader *> mVertexShaders;  // Protected by mResourceMutex
+   std::unordered_map<uint64_t, PixelShader *> mPixelShaders;  // Protected by mResourceMutex
+   std::map<ShaderPipelineKey, ShaderPipeline> mShaderPipelines;  // Not touched by handleDCFlush()
    std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;  // Protected by mResourceMutex
    std::unordered_map<uint32_t, DataBuffer> mDataBuffers;  // Protected by mResourceMutex
 
@@ -401,7 +410,7 @@ private:
    gl::GLuint mFrameBuffer;
    gl::GLuint mColorClearFrameBuffer;
    gl::GLuint mDepthClearFrameBuffer;
-   Shader *mActiveShader = nullptr;
+   ShaderPipeline *mActiveShader = nullptr;
    std::array<gl::GLenum, latte::MaxRenderTargets> mDrawBuffers;
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;

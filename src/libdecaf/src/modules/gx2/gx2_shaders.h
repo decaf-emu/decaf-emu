@@ -32,7 +32,7 @@ struct GX2FetchShader
 CHECK_OFFSET(GX2FetchShader, 0x0, type);
 CHECK_OFFSET(GX2FetchShader, 0x4, regs.sq_pgm_resources_fs);
 CHECK_OFFSET(GX2FetchShader, 0x8, size);
-CHECK_OFFSET(GX2FetchShader, 0xc, data);
+CHECK_OFFSET(GX2FetchShader, 0xC, data);
 CHECK_OFFSET(GX2FetchShader, 0x10, attribCount);
 CHECK_OFFSET(GX2FetchShader, 0x14, numDivisors);
 CHECK_OFFSET(GX2FetchShader, 0x18, divisors);
@@ -168,19 +168,19 @@ CHECK_OFFSET(GX2VertexShader, 0xCC, regs.vgt_hos_reuse_depth);
 CHECK_OFFSET(GX2VertexShader, 0xD0, size);
 CHECK_OFFSET(GX2VertexShader, 0xD4, data);
 CHECK_OFFSET(GX2VertexShader, 0xD8, mode);
-CHECK_OFFSET(GX2VertexShader, 0xDc, uniformBlockCount);
+CHECK_OFFSET(GX2VertexShader, 0xDC, uniformBlockCount);
 CHECK_OFFSET(GX2VertexShader, 0xE0, uniformBlocks);
 CHECK_OFFSET(GX2VertexShader, 0xE4, uniformVarCount);
 CHECK_OFFSET(GX2VertexShader, 0xE8, uniformVars);
-CHECK_OFFSET(GX2VertexShader, 0xEc, initialValueCount);
+CHECK_OFFSET(GX2VertexShader, 0xEC, initialValueCount);
 CHECK_OFFSET(GX2VertexShader, 0xF0, initialValues);
 CHECK_OFFSET(GX2VertexShader, 0xF4, loopVarCount);
 CHECK_OFFSET(GX2VertexShader, 0xF8, loopVars);
-CHECK_OFFSET(GX2VertexShader, 0xFc, samplerVarCount);
+CHECK_OFFSET(GX2VertexShader, 0xFC, samplerVarCount);
 CHECK_OFFSET(GX2VertexShader, 0x100, samplerVars);
 CHECK_OFFSET(GX2VertexShader, 0x104, attribVarCount);
 CHECK_OFFSET(GX2VertexShader, 0x108, attribVars);
-CHECK_OFFSET(GX2VertexShader, 0x10c, ringItemsize);
+CHECK_OFFSET(GX2VertexShader, 0x10C, ringItemsize);
 CHECK_OFFSET(GX2VertexShader, 0x110, hasStreamOut);
 CHECK_OFFSET(GX2VertexShader, 0x114, streamOutStride);
 CHECK_OFFSET(GX2VertexShader, 0x124, gx2rData);
@@ -339,11 +339,11 @@ struct GX2AttribStream
 CHECK_OFFSET(GX2AttribStream, 0x0, location);
 CHECK_OFFSET(GX2AttribStream, 0x4, buffer);
 CHECK_OFFSET(GX2AttribStream, 0x8, offset);
-CHECK_OFFSET(GX2AttribStream, 0xc, format);
+CHECK_OFFSET(GX2AttribStream, 0xC, format);
 CHECK_OFFSET(GX2AttribStream, 0x10, type);
 CHECK_OFFSET(GX2AttribStream, 0x14, aluDivisor);
 CHECK_OFFSET(GX2AttribStream, 0x18, mask);
-CHECK_OFFSET(GX2AttribStream, 0x1c, endianSwap);
+CHECK_OFFSET(GX2AttribStream, 0x1C, endianSwap);
 CHECK_SIZE(GX2AttribStream, 0x20);
 
 struct GX2StreamContext
