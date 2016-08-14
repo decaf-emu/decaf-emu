@@ -124,6 +124,7 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2RInvalidateBuffer);
    RegisterKernelFunction(GX2RLockBufferEx);
    RegisterKernelFunction(GX2RUnlockBufferEx);
+   RegisterKernelFunction(GX2RSetStreamOutBuffer);
 
    // GX2R Display List
    RegisterKernelFunction(GX2RBeginDisplayListEx);

@@ -10,6 +10,8 @@ namespace gx2
 
 #pragma pack(push, 1)
 
+struct GX2OutputStream;
+
 struct GX2RBuffer
 {
    be_val<GX2RResourceFlags> flags;
@@ -57,5 +59,9 @@ GX2RLockBufferEx(GX2RBuffer *buffer,
 void
 GX2RUnlockBufferEx(GX2RBuffer *buffer,
                    GX2RResourceFlags flags);
+
+void
+GX2RSetStreamOutBuffer(uint32_t index,
+                       GX2OutputStream *stream);
 
 } // namespace gx2

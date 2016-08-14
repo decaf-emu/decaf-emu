@@ -1,4 +1,5 @@
 #include "gx2_mem.h"
+#include "gx2_shaders.h"
 #include "gx2r_buffer.h"
 #include "gx2r_mem.h"
 #include "gx2r_resource.h"
@@ -104,6 +105,13 @@ GX2RUnlockBufferEx(GX2RBuffer *buffer,
 
    // Update buffer flags
    buffer->flags &= ~GX2RResourceFlags::LockedReadOnly & ~GX2RResourceFlags::Locked;
+}
+
+void
+GX2RSetStreamOutBuffer(uint32_t index,
+                       GX2OutputStream *stream)
+{
+   GX2SetStreamOutBuffer(index, stream);
 }
 
 } // namespace gx2
