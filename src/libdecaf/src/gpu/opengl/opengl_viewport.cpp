@@ -10,6 +10,21 @@ namespace opengl
 bool
 GLDriver::checkViewport()
 {
+   if (mActiveShader->vertex->isScreenSpace) {
+      auto pa_cl_vport_xscale = getRegister<latte::PA_CL_VPORT_XSCALE_N>(latte::Register::PA_CL_VPORT_XSCALE_0);
+      auto pa_cl_vport_xoffset = getRegister<latte::PA_CL_VPORT_XOFFSET_N>(latte::Register::PA_CL_VPORT_XOFFSET_0);
+      auto pa_cl_vport_yscale = getRegister<latte::PA_CL_VPORT_YSCALE_N>(latte::Register::PA_CL_VPORT_YSCALE_0);
+      auto pa_cl_vport_yoffset = getRegister<latte::PA_CL_VPORT_YOFFSET_N>(latte::Register::PA_CL_VPORT_YOFFSET_0);
+
+      gl::glProgramUniform4f(
+         mActiveShader->vertex->object,
+         mActiveShader->vertex->uniformViewport,
+         static_cast<float>(pa_cl_vport_xoffset.VPORT_XOFFSET),
+         static_cast<float>(pa_cl_vport_yoffset.VPORT_YOFFSET),
+         1.0f / static_cast<float>(pa_cl_vport_xscale.VPORT_XSCALE),
+         1.0f / static_cast<float>(pa_cl_vport_yscale.VPORT_YSCALE));
+   }
+
    if (mViewportDirty) {
       auto pa_cl_vport_xscale = getRegister<latte::PA_CL_VPORT_XSCALE_N>(latte::Register::PA_CL_VPORT_XSCALE_0);
       auto pa_cl_vport_xoffset = getRegister<latte::PA_CL_VPORT_XOFFSET_N>(latte::Register::PA_CL_VPORT_XOFFSET_0);

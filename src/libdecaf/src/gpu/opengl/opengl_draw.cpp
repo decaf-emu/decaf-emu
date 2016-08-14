@@ -78,6 +78,7 @@ getPrimitiveMode(latte::VGT_DI_PRIMITIVE_TYPE type)
       return gl::GL_LINE_STRIP;
    case latte::VGT_DI_PT_TRILIST:
    case latte::VGT_DI_PT_QUADLIST:  // Quads are rendered as triangles
+   case latte::VGT_DI_PT_RECTLIST:  // Rects are rendered as triangles
       return gl::GL_TRIANGLES;
    case latte::VGT_DI_PT_TRIFAN:
       return gl::GL_TRIANGLE_FAN;
@@ -118,9 +119,9 @@ drawPrimitives2(gl::GLenum mode,
    }
 }
 
-template<typename IndexType>
+template<bool IsRects, typename IndexType>
 static void
-unpackQuadList(uint32_t count,
+unpackQuadRectList(uint32_t count,
                const IndexType *src,
                uint32_t baseVertex,
                uint32_t numInstances,
@@ -142,9 +143,16 @@ unpackQuadList(uint32_t count,
          *(dst++) = index_1;
          *(dst++) = index_2;
 
-         *(dst++) = index_0;
-         *(dst++) = index_2;
-         *(dst++) = index_3;
+         if (!IsRects) {
+            *(dst++) = index_0;
+            *(dst++) = index_2;
+            *(dst++) = index_3;
+         } else {
+            // Rectangles use a different winding order apparently...
+            *(dst++) = index_2;
+            *(dst++) = index_1;
+            *(dst++) = index_3;
+         }
       }
    } else {
       auto index_0 = 0u;
@@ -158,9 +166,16 @@ unpackQuadList(uint32_t count,
          *(dst++) = index_1 + index;
          *(dst++) = index_2 + index;
 
-         *(dst++) = index_0 + index;
-         *(dst++) = index_2 + index;
-         *(dst++) = index_3 + index;
+         if (!IsRects) {
+            *(dst++) = index_0 + index;
+            *(dst++) = index_2 + index;
+            *(dst++) = index_3 + index;
+         } else {
+            // Rectangles use a different winding order apparently...
+            *(dst++) = index_2 + index;
+            *(dst++) = index_1 + index;
+            *(dst++) = index_3 + index;
+         }
       }
    }
 
@@ -205,9 +220,15 @@ GLDriver::drawPrimitives(uint32_t count,
 
    if (primType == latte::VGT_DI_PT_QUADLIST) {
       if (indexFmt == latte::VGT_INDEX_16) {
-         unpackQuadList(count, reinterpret_cast<const uint16_t*>(indices), baseVertex, numInstances, baseInstance);
+         unpackQuadRectList<false>(count, reinterpret_cast<const uint16_t*>(indices), baseVertex, numInstances, baseInstance);
       } else if (indexFmt == latte::VGT_INDEX_32) {
-         unpackQuadList(count, reinterpret_cast<const uint32_t*>(indices), baseVertex, numInstances, baseInstance);
+         unpackQuadRectList<false>(count, reinterpret_cast<const uint32_t*>(indices), baseVertex, numInstances, baseInstance);
+      }
+   } else if (primType == latte::VGT_DI_PT_RECTLIST) {
+      if (indexFmt == latte::VGT_INDEX_16) {
+         unpackQuadRectList<true>(count, reinterpret_cast<const uint16_t*>(indices), baseVertex, numInstances, baseInstance);
+      } else if (indexFmt == latte::VGT_INDEX_32) {
+         unpackQuadRectList<true>(count, reinterpret_cast<const uint32_t*>(indices), baseVertex, numInstances, baseInstance);
       }
    } else {
       if (indexFmt == latte::VGT_INDEX_16) {

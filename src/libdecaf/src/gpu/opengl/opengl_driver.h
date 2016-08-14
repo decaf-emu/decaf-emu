@@ -76,7 +76,8 @@ struct VertexShader : public Resource
 {
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
-   gl::GLuint uniformTexScale = 0;
+   gl::GLuint uniformViewport = 0;
+   bool isScreenSpace = false;
    std::array<gl::GLuint, latte::MaxAttributes> attribLocations;
    std::array<uint8_t, 256> outputMap;
    std::array<bool, 16> usedUniformBlocks;
@@ -316,7 +317,7 @@ private:
    void applyRegister(latte::Register reg);
 
    bool parseFetchShader(FetchShader &shader, void *buffer, size_t size);
-   bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size);
+   bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size, bool isScreenSpace);
    bool compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint8_t *buffer, size_t size);
 
    void runCommandBuffer(uint32_t *buffer, uint32_t size);

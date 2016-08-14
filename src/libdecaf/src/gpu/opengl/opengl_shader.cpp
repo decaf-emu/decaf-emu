@@ -107,6 +107,8 @@ bool GLDriver::checkActiveShader()
    auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
    auto sx_alpha_ref = getRegister<latte::SX_ALPHA_REF>(latte::Register::SX_ALPHA_REF);
    auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
+   auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
+   bool isScreenSpace = (vgt_primitive_type.PRIM_TYPE() == latte::VGT_DI_PT_RECTLIST);
 
    if (!pgm_start_fs.PGM_START) {
       gLog->error("Fetch shader was not set");
@@ -137,6 +139,7 @@ bool GLDriver::checkActiveShader()
 
    auto fsShaderKey = static_cast<uint64_t>(fsPgmAddress) << 32;
    auto vsShaderKey = static_cast<uint64_t>(vsPgmAddress) << 32;
+   vsShaderKey ^= (isScreenSpace ? 1 : 0) << 31;
    if (vgt_strmout_en.STREAMOUT()) {
       vsShaderKey ^= 1;
       for (auto i = 0u; i < latte::MaxStreamOutBuffers; ++i) {
@@ -249,7 +252,7 @@ bool GLDriver::checkActiveShader()
 
          dumpRawShader("vertex", vsPgmAddress, vsPgmSize);
 
-         if (!compileVertexShader(vertexShader, fetchShader, make_virtual_ptr<uint8_t>(vsPgmAddress), vsPgmSize)) {
+         if (!compileVertexShader(vertexShader, fetchShader, make_virtual_ptr<uint8_t>(vsPgmAddress), vsPgmSize, isScreenSpace)) {
             gLog->error("Failed to recompile vertex shader");
             return false;
          }
@@ -275,7 +278,7 @@ bool GLDriver::checkActiveShader()
 
          // Get uniform locations
          vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VR");
-         vertexShader.uniformTexScale = gl::glGetUniformLocation(vertexShader.object, "texScale");
+         vertexShader.uniformViewport = gl::glGetUniformLocation(vertexShader.object, "uViewport");
 
          // Get attribute locations
          vertexShader.attribLocations.fill(0);
@@ -854,7 +857,7 @@ getGLSLDataInFormat(latte::SQ_DATA_FORMAT format, latte::SQ_NUM_FORMAT num, latt
    }
 }
 
-bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size)
+bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size, bool isScreenSpace)
 {
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
    auto spi_vs_out_config = getRegister<latte::SPI_VS_OUT_CONFIG>(latte::Register::SPI_VS_OUT_CONFIG);
@@ -992,6 +995,11 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       }
    }
    out << '\n';
+
+   if (isScreenSpace) {
+      vertex.isScreenSpace = true;
+      out << "uniform vec4 uViewport;\n";
+   }
 
    out
       << "void main()\n"
@@ -1193,7 +1201,11 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    for (auto &exp : shader.exports) {
       switch (exp.type) {
       case latte::SQ_EXPORT_POS:
-         out << "gl_Position = exp_position_" << exp.id << ";\n";
+         if (!isScreenSpace) {
+            out << "gl_Position = exp_position_" << exp.id << ";\n";
+         } else {
+            out << "gl_Position = (exp_position_" << exp.id << " - vec4(uViewport.xy, 0.0, 0.0)) * vec4(uViewport.zw, 1.0, 1.0);\n";
+         }
          break;
       case latte::SQ_EXPORT_PARAM: {
          decaf_check(!spi_vs_out_config.VS_PER_COMPONENT());
