@@ -10,10 +10,4 @@ getBuffer(uint32_t size)
    return gx2::internal::getCommandBuffer(size);
 }
 
-Buffer *
-flushBuffer(Buffer *buffer)
-{
-   return gx2::internal::flushCommandBuffer(buffer);
-}
-
 } // namespace pm4

@@ -21,7 +21,6 @@ GX2Init(be_val<uint32_t> *attributes)
 {
    virtual_ptr<uint32_t> cbPoolBase = nullptr;
    uint32_t cbPoolSize = 0x400000;
-   uint32_t cbPoolItemSize = 0x100;
    virtual_ptr<char *> argv = nullptr;
    uint32_t argc = 0;
 
@@ -63,7 +62,7 @@ GX2Init(be_val<uint32_t> *attributes)
    gx2::internal::initEvents();
 
    // Initialise command buffer pools
-   gx2::internal::initCommandBufferPool(cbPoolBase, cbPoolSize, cbPoolItemSize);
+   gx2::internal::initCommandBufferPool(cbPoolBase, cbPoolSize / 4);
 
    // Setup default gx2 state
    GX2SetDefaultState();
@@ -81,7 +80,7 @@ GX2Flush()
       gLog->error("GX2Flush called from within a display list");
    }
 
-   gx2::internal::flushCommandBuffer(nullptr);
+   gx2::internal::flushCommandBuffer(0x100);
 }
 
 namespace internal

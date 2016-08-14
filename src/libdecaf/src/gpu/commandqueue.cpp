@@ -1,6 +1,7 @@
 #include "commandqueue.h"
 #include "gpu/pm4_buffer.h"
 #include "modules/gx2/gx2_event.h"
+#include "modules/gx2/gx2_cbpool.h"
 #include "modules/coreinit/coreinit_time.h"
 #include <condition_variable>
 #include <queue>
@@ -57,17 +58,10 @@ static CommandQueue
 gQueue;
 
 void
-queueUserBuffer(const void *buffer, uint32_t bytes)
+awaken()
 {
-   // TODO: Please no allocate
-   auto buf = new pm4::Buffer {};
-   buf->curSize = bytes / 4;
-   buf->maxSize = bytes / 4;
-   buf->buffer = reinterpret_cast<uint32_t *>(const_cast<void*>(buffer));
-   buf->userBuffer = true;
-   queueCommandBuffer(buf);
+   gQueue.appendBuffer(nullptr);
 }
-
 
 void
 queueCommandBuffer(pm4::Buffer *buf)
@@ -95,10 +89,7 @@ void
 retireCommandBuffer(pm4::Buffer *buf)
 {
    gx2::internal::setRetiredTimestamp(buf->submitTime);
-
-   if (buf->userBuffer) {
-      delete buf;
-   }
+   gx2::internal::freeCommandBuffer(buf);
 }
 
 } // namespace gpu

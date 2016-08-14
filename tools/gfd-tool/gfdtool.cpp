@@ -925,15 +925,11 @@ MaxUniformBlockSize = 0;
 
 namespace pm4
 {
+
 Buffer *
 getBuffer(uint32_t size)
 {
    return nullptr;
 }
 
-Buffer *
-flushBuffer(Buffer *buffer)
-{
-   return nullptr;
-}
 } // namespace pm4

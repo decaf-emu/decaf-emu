@@ -551,7 +551,7 @@ GLDriver::stop()
    mRunState = RunState::Stopped;
 
    // Wake the GPU thread
-   gpu::queueUserBuffer(nullptr, 0);
+   gpu::awaken();
 }
 
 } // namespace opengl

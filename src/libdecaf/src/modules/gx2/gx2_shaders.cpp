@@ -317,7 +317,7 @@ GX2SetVertexUniformReg(uint32_t offset,
    auto id = static_cast<latte::Register>(latte::Register::SQ_ALU_CONSTANT0_256 + 4 * alu);
 
    // Custom write packet so we can endian swap data
-   pm4::PacketWriter writer { pm4::SetAluConsts::Opcode };
+   pm4::PacketWriter writer(pm4::SetAluConsts::Opcode, 1 + count);
    writer.REG_OFFSET(id, latte::Register::AluConstRegisterBase);
 
    for (auto i = 0u; i < count; ++i) {
@@ -341,7 +341,7 @@ GX2SetPixelUniformReg(uint32_t offset,
    auto id = static_cast<latte::Register>(latte::Register::SQ_ALU_CONSTANT0_0 + 4 * alu);
 
    // Custom write packet so we can endian swap data
-   pm4::PacketWriter writer { pm4::SetAluConsts::Opcode };
+   pm4::PacketWriter writer(pm4::SetAluConsts::Opcode, 1 + count);
    writer.REG_OFFSET(id, latte::Register::AluConstRegisterBase);
 
    for (auto i = 0u; i < count; ++i) {

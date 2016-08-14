@@ -2,24 +2,26 @@
 #include "common/types.h"
 #include "modules/coreinit/coreinit_time.h"
 #include "virtual_ptr.h"
+#include <atomic>
 
 namespace pm4
 {
 
 struct Buffer
 {
-   bool userBuffer = false;
    bool displayList = false;
    coreinit::OSTime submitTime = 0;
    uint32_t *buffer = nullptr;
    uint32_t curSize = 0;
    uint32_t maxSize = 0;
+
+   std::atomic<Buffer *> next;
 };
 
 Buffer *
 getBuffer(uint32_t size);
 
 Buffer *
-flushBuffer(Buffer *buffer);
+flushBuffer(Buffer *buffer, uint32_t newSize);
 
 } // namespace pm4

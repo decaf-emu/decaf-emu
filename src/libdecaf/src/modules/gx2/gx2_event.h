@@ -71,7 +71,7 @@ vsyncAlarmHandler(coreinit::OSAlarm *alarm,
                   coreinit::OSContext *context);
 
 std::pair<void *, uint32_t>
-displayListOverrun(void *list, uint32_t size);
+displayListOverrun(void *list, uint32_t size, uint32_t neededSize);
 
 void
 setLastSubmittedTimestamp(coreinit::OSTime timestamp);

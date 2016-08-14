@@ -10,7 +10,7 @@ namespace gpu
 {
 
 void
-queueUserBuffer(const void *buf, uint32_t bytes);
+awaken();
 
 void
 queueCommandBuffer(pm4::Buffer *buf);

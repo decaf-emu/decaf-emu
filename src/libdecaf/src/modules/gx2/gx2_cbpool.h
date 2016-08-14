@@ -14,16 +14,31 @@ namespace internal
 {
 
 void
-initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size, uint32_t itemSize);
+initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size);
 
 pm4::Buffer *
-flushCommandBuffer(pm4::Buffer *cb);
+flushCommandBuffer(uint32_t neededSize);
+
+void
+freeCommandBuffer(pm4::Buffer *cb);
 
 pm4::Buffer *
 getCommandBuffer(uint32_t size);
 
 void
-setUserCommandBuffer(pm4::Buffer *userBuffer);
+padCommandBuffer(pm4::Buffer *buffer);
+
+void
+queueDisplayList(uint32_t *buffer, uint32_t size);
+
+bool
+getUserCommandBuffer(uint32_t **buffer, uint32_t *maxSize);
+
+void
+beginUserCommandBuffer(uint32_t *buffer, uint32_t size);
+
+uint32_t
+endUserCommandBuffer(uint32_t *buffer);
 
 } // namespace internal
 

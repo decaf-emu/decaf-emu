@@ -240,18 +240,16 @@ vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
  * Will call the display list overrun callback to allocate a new command buffer.
  */
 std::pair<void *, uint32_t>
-displayListOverrun(void *list, uint32_t size)
+displayListOverrun(void *list, uint32_t size, uint32_t neededSize)
 {
    auto callback = sEventCallbacks[GX2EventType::DisplayListOverrun];
-   void *newList = nullptr;
-   uint32_t newSize = 0u;
 
    if (callback.func && callback.data) {
       auto data = reinterpret_cast<GX2DisplayListOverrunData *>(callback.data);
       data->oldList = list;
       data->oldSize = size;
       data->newList = nullptr;
-      data->newSize = 0;
+      data->newSize = neededSize;
 
       // Call the user's function, it should set newList and newSize
       callback.func(GX2EventType::DisplayListOverrun, callback.data);
