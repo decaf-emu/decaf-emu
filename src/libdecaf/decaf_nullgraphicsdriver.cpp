@@ -40,6 +40,11 @@ NullGraphicsDriver::getAverageFPS()
    return 0.0f;
 }
 
+void
+NullGraphicsDriver::handleDCFlush(uint32_t addr, uint32_t size)
+{
+}
+
 OpenGLDriver *
 createGLDriver()
 {

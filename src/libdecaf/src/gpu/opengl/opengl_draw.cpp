@@ -459,7 +459,9 @@ GLDriver::streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data)
    auto size = vgt_strmout_buffer_size << 2;
    decaf_assert(addr != 0 && size != 0, fmt::format("Attempt to bind undefined feedback buffer {}", bufferIndex));
 
-   configureDataBuffer(&mDataBuffers[addr], addr, size, false, true);
+   // Create the data buffer (we don't need to manipulate it here, but
+   //  make sure it's configured as an output buffer)
+   getDataBuffer(addr, size, false, true);
 
    switch (data.control.OFFSET_SOURCE()) {
    case pm4::STRMOUT_OFFSET_FROM_PACKET:

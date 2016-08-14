@@ -733,7 +733,9 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
       decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
    }
 
+   std::unique_lock<std::mutex> lock(mResourceMutex);
    auto &buffer = mSurfaces[surfaceKey];
+   lock.unlock();
 
    if (buffer.active &&
       buffer.active->width == width &&
@@ -742,9 +744,9 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
       buffer.active->degamma == degamma &&
       buffer.active->isDepthBuffer == isDepthBuffer)
    {
-      if (!forWrite && buffer.dirtyAsTexture) {
+      if (!forWrite && buffer.needUpload) {
          uploadSurface(&buffer, baseAddress, swizzle, pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer, tileMode);
-         buffer.dirtyAsTexture = false;
+         buffer.needUpload = false;
       }
 
       return &buffer;
@@ -771,7 +773,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
 
       if (!forWrite) {
          uploadSurface(&buffer, baseAddress, swizzle, pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer, tileMode);
-         buffer.dirtyAsTexture = false;
+         buffer.needUpload = false;
       }
 
       return &buffer;
@@ -871,9 +873,9 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
       buffer.cpuMemEnd = newMemEnd;
    }
 
-   if (!forWrite && buffer.dirtyAsTexture) {
+   if (!forWrite && buffer.needUpload) {
       uploadSurface(&buffer, baseAddress, swizzle, pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer, tileMode);
-      buffer.dirtyAsTexture = false;
+      buffer.needUpload = false;
    }
 
    return &buffer;

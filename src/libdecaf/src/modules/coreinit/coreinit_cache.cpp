@@ -1,6 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_cache.h"
 #include "common/align.h"
+#include "decaf_graphics.h"
 
 namespace coreinit
 {
@@ -23,6 +24,9 @@ void
 DCFlushRange(void *addr, uint32_t size)
 {
    // TODO: DCFlushRange
+
+   // Also signal the memory store to the GPU.
+   decaf::getGraphicsDriver()->handleDCFlush(mem::untranslate(addr), size);
 }
 
 
@@ -33,6 +37,9 @@ void
 DCStoreRange(void *addr, uint32_t size)
 {
    // TODO: DCStoreRange
+
+   // Also signal the memory store to the GPU.
+   decaf::getGraphicsDriver()->handleDCFlush(mem::untranslate(addr), size);
 }
 
 

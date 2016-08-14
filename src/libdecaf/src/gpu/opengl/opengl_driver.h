@@ -7,11 +7,9 @@
 #include "gpu/latte_contextstate.h"
 #include "gpu/pm4_buffer.h"
 #include "libdecaf/decaf_graphics.h"
-#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <exception>
-#include <functional>
 #include <glbinding/gl/types.h>
 #include <gsl.h>
 #include <map>
@@ -19,7 +17,6 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <queue>
 
 namespace gpu
 {
@@ -119,12 +116,13 @@ struct HostSurface
    HostSurface *next = nullptr;
 };
 
-struct SurfaceBuffer : Resource
+struct SurfaceBuffer : public Resource
 {
    HostSurface *active = nullptr;
    HostSurface *master = nullptr;
    SurfaceUseState state = SurfaceUseState::None;
-   bool dirtyAsTexture = true;
+   bool dirtyMemory = true;
+   bool needUpload = true;
    uint64_t cpuMemHash[2] = { 0, 0 };
    struct {
       latte::SQ_TEX_DIM dim;
@@ -149,7 +147,8 @@ struct DataBuffer : public Resource
    void *mappedBuffer = nullptr;
    bool isInput = false;  // Uniform or attribute buffers
    bool isOutput = false;  // Transform feedback buffers
-   bool dirtyMap = false;
+   bool dirtyMap = false;  // True if we need to glFlushMappedBufferRange
+   bool dirtyMemory = true;
    uint64_t cpuMemHash[2] = { 0, 0 };
 };
 
@@ -190,12 +189,6 @@ struct FeedbackBufferCache
    bool enable = false;
 };
 
-struct GpuTask
-{
-   uint64_t id;
-   std::function<void()> func;
-};
-
 using GLContext = uint64_t;
 
 class GLDriver : public decaf::OpenGLDriver
@@ -206,6 +199,7 @@ public:
    virtual void run() override;
    virtual void stop() override;
    virtual float getAverageFPS() override;
+   virtual void handleDCFlush(uint32_t addr, uint32_t size) override;
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
    virtual void syncPoll(const SwapFunction &swapFunc) override;
 
@@ -325,12 +319,11 @@ private:
    bool checkActiveUniforms();
    bool checkViewport();
 
-   void
-   configureDataBuffer(DataBuffer *buffer,
-                       uint32_t address,
-                       uint32_t size,
-                       bool isInput,
-                       bool isOutput);
+   DataBuffer *
+   getDataBuffer(uint32_t address,
+                 uint32_t size,
+                 bool isInput,
+                 bool isOutput);
    void
    uploadDataBuffer(DataBuffer *buffer,
                     uint32_t offset,
@@ -386,8 +379,13 @@ private:
    std::unordered_map<uint64_t, VertexShader> mVertexShaders;
    std::unordered_map<uint64_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
-   std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;
-   std::unordered_map<uint32_t, DataBuffer> mDataBuffers;
+
+   // Protects surface and data buffer lists; used by handleDCFlush() to
+   //  safely set dirty flags
+   std::mutex mResourceMutex;
+
+   std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;  // Protected by mResourceMutex
+   std::unordered_map<uint32_t, DataBuffer> mDataBuffers;  // Protected by mResourceMutex
 
    std::array<Sampler, latte::MaxSamplers> mVertexSamplers;
    std::array<Sampler, latte::MaxSamplers> mPixelSamplers;
