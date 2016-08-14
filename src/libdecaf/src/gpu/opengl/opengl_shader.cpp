@@ -689,7 +689,7 @@ bool
 GLDriver::checkActiveAttribBuffers()
 {
    if (!mActiveShader
-    || !mActiveShader->fetch || !mActiveShader->fetch->attribs.size()
+    || !mActiveShader->fetch || !mActiveShader->fetch->object
     || !mActiveShader->vertex || !mActiveShader->vertex->object) {
       return false;
    }
