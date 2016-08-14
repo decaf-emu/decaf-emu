@@ -105,7 +105,7 @@ struct Shader
    gl::GLuint object = 0;
    FetchShader *fetch;
    VertexShader *vertex;
-   PixelShader *pixel;  // Null indicates a transform-feedback shader
+   PixelShader *pixel;  // Null if rasterization is disabled
    uint64_t fetchKey;
    uint64_t vertexKey;
    uint64_t pixelKey;
