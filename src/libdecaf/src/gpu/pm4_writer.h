@@ -11,65 +11,108 @@
 namespace pm4
 {
 
+class PacketSizer
+{
+public:
+   PacketSizer()
+      : mPayloadSize(0)
+   {
+   }
+
+   // Read one uint32_t sized datatype
+   template <typename Type>
+   PacketSizer &operator()(Type value)
+   {
+      static_assert(sizeof(Type) == sizeof(uint32_t), "Invalid type size");
+      mPayloadSize++;
+      return *this;
+   }
+
+   // Write a virtual ptr as one word
+   template<typename Type>
+   PacketSizer &operator()(virtual_ptr<Type> value)
+   {
+      mPayloadSize++;
+      return *this;
+   }
+
+   // Write a list of words
+   template<typename Type>
+   PacketSizer &operator()(const gsl::span<Type> &values)
+   {
+      auto size = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
+      mPayloadSize += size;
+      return *this;
+   }
+
+   // Write one word as a REG_OFFSET
+   PacketSizer &REG_OFFSET(latte::Register value, latte::Register base)
+   {
+      mPayloadSize++;
+      return *this;
+   }
+
+   // Write one word as a CONST_OFFSET
+   PacketSizer &CONST_OFFSET(uint32_t value)
+   {
+      mPayloadSize++;
+      return *this;
+   }
+
+   // Write one word as a size (N - 1)
+   template<typename Type>
+   PacketSizer &size(Type value)
+   {
+      mPayloadSize++;
+      return *this;
+   }
+
+   uint32_t getSize() const
+   {
+      return mPayloadSize;
+   }
+
+protected:
+   uint32_t mPayloadSize;
+
+};
+
+#pragma optimize("", off)
+
 class PacketWriter
 {
 public:
-   PacketWriter(type3::IT_OPCODE op)
+   PacketWriter(type3::IT_OPCODE op, uint32_t payloadSize)
    {
-      mBuffer = pm4::getBuffer(1);
+      mBuffer = pm4::getBuffer(payloadSize + 1);
 
-      if (mBuffer) {
-         mSaveSize = mBuffer->curSize;
+      mTotalSize = payloadSize + 1;
+      mSaveSize = mBuffer->curSize;
 
-         auto header = type3::Header::get(0)
-            .type(Header::Type3)
-            .opcode(op);
+      auto header = type3::Header::get(0)
+         .type(Header::Type3)
+         .opcode(op)
+         .size(mTotalSize - 2);
 
-         *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mBuffer->curSize++]) = header;
-      }
+      mBuffer->buffer[mBuffer->curSize++] = byte_swap(header.value);
    }
 
    ~PacketWriter()
    {
-      if (mBuffer) {
-         auto size = mBuffer->curSize - mSaveSize;
-
-         if (size < 2) {
-            decaf_abort("Encoded a pm4 type3 packet with size < 2.");
-         }
-
-         // Update header
-         auto header = *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mSaveSize]);
-         header = header
-            .size(size - 2);
-
-         *reinterpret_cast<type3::Header *>(&mBuffer->buffer[mSaveSize]) = header;
-
-         // Swap to big endian
-         for (auto i = mSaveSize; i < mBuffer->curSize; ++i) {
-            mBuffer->buffer[i] = byte_swap(mBuffer->buffer[i]);
-         }
-      }
-   }
-
-   bool valid()
-   {
-      return !!mBuffer;
+      decaf_check(mBuffer->curSize - mSaveSize == mTotalSize);
    }
 
    // Write one word
    PacketWriter &operator()(uint32_t value)
    {
-      checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = value;
+      mBuffer->buffer[mBuffer->curSize++] = byte_swap(value);
       return *this;
    }
 
    // Write one float
    PacketWriter &operator()(float value)
    {
-      checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = bit_cast<uint32_t>(value);
+      mBuffer->buffer[mBuffer->curSize++] = byte_swap(bit_cast<uint32_t>(value));
       return *this;
    }
 
@@ -78,8 +121,7 @@ public:
    PacketWriter &operator()(Type value)
    {
       static_assert(sizeof(Type) == sizeof(uint32_t), "Invalid type size");
-      checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = bit_cast<uint32_t>(value);
+      mBuffer->buffer[mBuffer->curSize++] = byte_swap(bit_cast<uint32_t>(value));
       return *this;
    }
 
@@ -87,8 +129,7 @@ public:
    template<typename Type>
    PacketWriter &operator()(virtual_ptr<Type> value)
    {
-      checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = value.getAddress();
+      mBuffer->buffer[mBuffer->curSize++] = byte_swap(value.getAddress());
       return *this;
    }
 
@@ -97,8 +138,11 @@ public:
    PacketWriter &operator()(const gsl::span<Type> &values)
    {
       auto size = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
-      checkSize(size);
       memcpy(&mBuffer->buffer[mBuffer->curSize], values.data(), size * sizeof(uint32_t));
+      // We do the byte_swap here separately as Type may not be uint32_t sized
+      for (uint32_t i = 0; i < size; ++i) {
+         mBuffer->buffer[mBuffer->curSize + i] = byte_swap(mBuffer->buffer[mBuffer->curSize + i]);
+      }
       mBuffer->curSize += size;
       return *this;
    }
@@ -107,16 +151,14 @@ public:
    PacketWriter &REG_OFFSET(latte::Register value, latte::Register base)
    {
       auto offset = static_cast<uint32_t>(value) - static_cast<uint32_t>(base);
-      checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = offset / 4;
+      mBuffer->buffer[mBuffer->curSize++] = byte_swap(offset / 4);
       return *this;
    }
 
    // Write one word as a CONST_OFFSET
    PacketWriter &CONST_OFFSET(uint32_t value)
    {
-      checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = value;
+      mBuffer->buffer[mBuffer->curSize++] = byte_swap(value);
       return *this;
    }
 
@@ -124,54 +166,29 @@ public:
    template<typename Type>
    PacketWriter &size(Type value)
    {
-      checkSize(1);
-      mBuffer->buffer[mBuffer->curSize++] = static_cast<uint32_t>(value) - 1;
+      mBuffer->buffer[mBuffer->curSize++] = byte_swap(static_cast<uint32_t>(value) - 1);
       return *this;
    }
 
 private:
-   void checkSize(uint32_t size)
-   {
-      if (mBuffer->curSize + size <= mBuffer->maxSize) {
-         return;
-      }
-
-      // Reset old buffer
-      auto oldBuffer = mBuffer;
-      auto oldSize = oldBuffer->curSize;
-      oldBuffer->curSize = mSaveSize;
-
-      // Copy to new buffer
-      auto newBuffer = pm4::flushBuffer(oldBuffer);
-      auto saveSize = newBuffer->curSize;
-
-      if ((newBuffer->curSize + size) > newBuffer->maxSize) {
-         decaf_abort("PM4 packet is wayy too big m8");
-      }
-
-      if (oldSize > mSaveSize) {
-         memcpy(&newBuffer->buffer[newBuffer->curSize], &oldBuffer->buffer[mSaveSize], 4 * (oldSize - mSaveSize));
-         newBuffer->curSize += oldSize - mSaveSize;
-      }
-
-      mBuffer = newBuffer;
-      mSaveSize = saveSize;
-   }
-
-private:
    pm4::Buffer *mBuffer;
+   uint32_t mTotalSize;
    uint32_t mSaveSize;
+
 };
 
 template<typename Type>
 void write(const Type &value)
 {
-   PacketWriter writer { Type::Opcode };
+   auto &ncValue = const_cast<Type&>(value);
 
-   if (writer.valid()) {
-      // Don't judge me
-      const_cast<Type &>(value).serialise(writer);
-   }
+   // Calculate the total size this object will be
+   PacketSizer sizer;
+   ncValue.serialise(sizer);
+
+   // Serialize the packet to the active command buffer
+   PacketWriter writer(Type::Opcode, sizer.getSize());
+   ncValue.serialise(writer);
 }
 
 } // namespace pm4
