@@ -231,6 +231,7 @@ private:
    void decafCopySurface(const pm4::DecafCopySurface &data);
    void drawIndexAuto(const pm4::DrawIndexAuto &data);
    void drawIndex2(const pm4::DrawIndex2 &data);
+   void drawIndexImmd(const pm4::DrawIndexImmd &data);
    void indexType(const pm4::IndexType &data);
    void indirectBufferCall(const pm4::IndirectBufferCall &data);
    void numInstances(const pm4::NumInstances &data);
@@ -332,6 +333,10 @@ private:
    void drawPrimitives(uint32_t count,
                        const void *indices,
                        latte::VGT_INDEX indexFmt);
+
+   void
+   drawPrimitivesIndexed(const void *indices,
+                         uint32_t count);
 
 private:
    enum class RunState

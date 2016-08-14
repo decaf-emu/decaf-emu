@@ -127,6 +127,9 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
    case pm4::type3::DRAW_INDEX_2:
       drawIndex2(pm4::read<pm4::DrawIndex2>(reader));
       break;
+   case pm4::type3::DRAW_INDEX_IMMD:
+      drawIndexImmd(pm4::read<pm4::DrawIndexImmd>(reader));
+      break;
    case pm4::type3::INDEX_TYPE:
       indexType(pm4::read<pm4::IndexType>(reader));
       break;

@@ -264,19 +264,8 @@ GLDriver::drawPrimitives(uint32_t count,
 }
 
 void
-GLDriver::drawIndexAuto(const pm4::DrawIndexAuto &data)
-{
-   if (!checkReadyDraw()) {
-      return;
-   }
-
-   drawPrimitives(data.count,
-                  nullptr,
-                  latte::VGT_INDEX_32);
-}
-
-void
-GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
+GLDriver::drawPrimitivesIndexed(const void *buffer,
+                                uint32_t count)
 {
    if (!checkReadyDraw()) {
       return;
@@ -292,42 +281,66 @@ GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
    //   but 16-bit indices in some cases...  This is also why we pre-swap
    //   the data before intercepting QUAD and POLYGON draws.
    if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_16_BIT) {
-      auto *src = static_cast<uint16_t*>(data.addr.get());
-      auto indices = std::vector<uint16_t>(data.count);
+      auto *src = reinterpret_cast<const uint16_t *>(buffer);
+      auto indices = std::vector<uint16_t>(count);
 
       if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_16) {
          decaf_abort(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_16_BIT", vgt_dma_index_type.INDEX_TYPE()));
       }
 
-      for (auto i = 0u; i < data.count; ++i) {
+      for (auto i = 0u; i < count; ++i) {
          indices[i] = byte_swap(src[i]);
       }
 
-      drawPrimitives(data.count,
+      drawPrimitives(count,
                      indices.data(),
                      vgt_dma_index_type.INDEX_TYPE());
    } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_32_BIT) {
-      auto *src = static_cast<uint32_t*>(data.addr.get());
-      auto indices = std::vector<uint32_t>(data.count);
+      auto *src = reinterpret_cast<const uint32_t *>(buffer);
+      auto indices = std::vector<uint32_t>(count);
 
       if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_32) {
          decaf_abort(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_32_BIT", vgt_dma_index_type.INDEX_TYPE()));
       }
 
-      for (auto i = 0u; i < data.count; ++i) {
+      for (auto i = 0u; i < count; ++i) {
          indices[i] = byte_swap(src[i]);
       }
 
-      drawPrimitives(data.count,
+      drawPrimitives(count,
                      indices.data(),
                      vgt_dma_index_type.INDEX_TYPE());
    } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_NONE) {
-      drawPrimitives(data.count,
-                     data.addr,
+      drawPrimitives(count,
+                     buffer,
                      vgt_dma_index_type.INDEX_TYPE());
    } else {
       decaf_abort(fmt::format("Unimplemented vgt_dma_index_type.SWAP_MODE {}", vgt_dma_index_type.SWAP_MODE()));
    }
+}
+
+void
+GLDriver::drawIndexAuto(const pm4::DrawIndexAuto &data)
+{
+   if (!checkReadyDraw()) {
+      return;
+   }
+
+   drawPrimitives(data.count,
+                  nullptr,
+                  latte::VGT_INDEX_32);
+}
+
+void
+GLDriver::drawIndex2(const pm4::DrawIndex2 &data)
+{
+   drawPrimitivesIndexed(data.addr, data.count);
+}
+
+void
+GLDriver::drawIndexImmd(const pm4::DrawIndexImmd &data)
+{
+   drawPrimitivesIndexed(data.indices.data(), data.count);
 }
 
 void
