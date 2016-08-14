@@ -77,8 +77,6 @@ protected:
 
 };
 
-#pragma optimize("", off)
-
 class PacketWriter
 {
 public:
