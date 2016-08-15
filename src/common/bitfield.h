@@ -1,4 +1,5 @@
 #pragma once
+#include "bit_cast.h"
 #include "bitutils.h"
 #include "decaf_assert.h"
 #include "fixed.h"
@@ -8,21 +9,32 @@
 template<typename BitfieldType, typename ValueType, unsigned Position, unsigned Bits>
 struct BitfieldHelper
 {
-   static const auto MinValue = static_cast<ValueType>(0);
-   static const auto MaxValue = static_cast<ValueType>((1ull << (Bits)) - 1);
-   static const auto Mask = (static_cast<typename BitfieldType::StorageType>((1ull << (Bits)) - 1)) << (Position);
+   using UnsignedValueType = typename std::make_unsigned<ValueType>::type;
+   static const auto RelativeMask = static_cast<UnsignedValueType>((1ull << (Bits)) - 1);
+   static const auto AbsoluteMask = static_cast<typename BitfieldType::StorageType>(RelativeMask) << (Position);
 
-   static constexpr ValueType get(BitfieldType bitfield)
+   static inline ValueType get(BitfieldType bitfield)
    {
-      return static_cast<ValueType>((bitfield.value & Mask) >> (Position));
+      auto value = static_cast<UnsignedValueType>((bitfield.value & AbsoluteMask) >> (Position));
+
+      if (std::is_signed<ValueType>::value) {
+         value = sign_extend<Bits>(value);
+      }
+
+      return bit_cast<ValueType>(value);
    }
 
    static inline BitfieldType set(BitfieldType bitfield, ValueType value)
    {
-      decaf_assert(value >= MinValue, fmt::format("{} >= {}", value, static_cast<unsigned>(MinValue)));
-      decaf_assert(value <= MaxValue, fmt::format("{} <= {}", value, static_cast<unsigned>(MaxValue)));
-      bitfield.value &= ~Mask;
-      bitfield.value |= static_cast<typename BitfieldType::StorageType>(value) << (Position);
+      auto uValue = bit_cast<UnsignedValueType>(value);
+
+      if (std::is_signed<ValueType>::value) {
+         uValue &= RelativeMask;
+      }
+
+      decaf_assert(uValue <= RelativeMask, fmt::format("{} <= {}", uValue, RelativeMask));
+      bitfield.value &= ~AbsoluteMask;
+      bitfield.value |= static_cast<typename BitfieldType::StorageType>(uValue) << (Position);
       return bitfield;
    }
 };
@@ -31,16 +43,16 @@ struct BitfieldHelper
 template<typename BitfieldType, unsigned Position, unsigned Bits>
 struct BitfieldHelper<BitfieldType, bool, Position, Bits>
 {
-   static const auto Mask = (static_cast<typename BitfieldType::StorageType>((1ull << (Bits)) - 1)) << (Position);
+   static const auto AbsoluteMask = (static_cast<typename BitfieldType::StorageType>((1ull << (Bits)) - 1)) << (Position);
 
    static constexpr bool get(BitfieldType bitfield)
    {
-      return !!((bitfield.value & Mask) >> (Position));
+      return !!(bitfield.value & AbsoluteMask);
    }
 
    static inline BitfieldType set(BitfieldType bitfield, bool value)
    {
-      bitfield.value &= ~Mask;
+      bitfield.value &= ~AbsoluteMask;
       bitfield.value |= (static_cast<typename BitfieldType::StorageType>(value ? 1 : 0)) << (Position);
       return bitfield;
    }
@@ -55,21 +67,12 @@ struct BitfieldHelper<BitfieldType, sg14::fixed_point<Rep, Exponent>, Position, 
 
    static FixedType get(BitfieldType bitfield)
    {
-      auto value = ValueBitfield::get(bitfield);
-
-      // fixed_point internal format expects sign extended value
-      if (std::is_signed<Rep>::value) {
-         value = sign_extend<Bits, Rep>(value);
-      }
-
-      return FixedType::from_data(value);
+      return FixedType::from_data(ValueBitfield::get(bitfield));
    }
 
    static inline BitfieldType set(BitfieldType bitfield, FixedType fixedValue)
    {
-      // fixed_point internal format is sign extended so we must & off the extra bits
-      auto value = fixedValue.data() & static_cast<Rep>(((1ull << Bits) - 1));
-      return ValueBitfield::set(bitfield, value);
+      return ValueBitfield::set(bitfield, fixedValue.data());
    }
 };
 
