@@ -143,6 +143,7 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2RLockSurfaceEx);
    RegisterKernelFunction(GX2RUnlockSurfaceEx);
    RegisterKernelFunction(GX2RIsGX2RSurface);
+   RegisterKernelFunction(GX2RInvalidateSurface);
 
    // GX2R Mem
    RegisterKernelFunction(GX2RInvalidateMemory);

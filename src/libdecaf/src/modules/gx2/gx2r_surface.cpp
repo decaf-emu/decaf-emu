@@ -6,6 +6,42 @@
 namespace gx2
 {
 
+namespace internal
+{
+
+static void
+getSurfaceData(GX2Surface *surface,
+               int32_t level,
+               uint32_t *addr,
+               uint32_t *size)
+{
+   if (level == 0) {
+      *addr = surface->image.getAddress();
+      *size = surface->imageSize;
+   } else if (level == -1) {
+      *addr = surface->mipmaps.getAddress();
+      *size = surface->mipmapSize;
+   } else {
+      auto curLevelOffset = 0u;
+      auto nextLevelOffset = 0u;
+
+      if (level > 1) {
+         curLevelOffset = surface->mipLevelOffset[level - 1];
+      }
+
+      if (level + 1 >= surface->mipLevels) {
+         nextLevelOffset = surface->mipmapSize;
+      } else {
+         nextLevelOffset = surface->mipLevelOffset[level];
+      }
+
+      *addr = surface->mipmaps.getAddress() + curLevelOffset;
+      *size = nextLevelOffset - curLevelOffset;
+   }
+}
+
+} // namespace internal
+
 bool
 GX2RCreateSurface(GX2Surface *surface,
                   GX2RResourceFlags flags)
@@ -76,7 +112,9 @@ GX2RLockSurfaceEx(GX2Surface *surface,
    surface->resourceFlags |= flags | GX2RResourceFlags::Locked;
 
    // Return buffer image
-   return surface->image;
+   uint32_t addr, size;
+   internal::getSurfaceData(surface, level, &addr, &size);
+   return mem::translate(addr);
 }
 
 void
@@ -89,9 +127,7 @@ GX2RUnlockSurfaceEx(GX2Surface *surface,
 
    // Invalidate the GPU surface only if it was not read only locked
    if (!(surface->resourceFlags & GX2RResourceFlags::LockedReadOnly)) {
-      GX2RInvalidateMemory(surface->resourceFlags | flags,
-                           surface->image,
-                           surface->imageSize);
+      GX2RInvalidateSurface(surface, level, flags);
    }
 
    // Update buffer flags
@@ -102,6 +138,24 @@ BOOL
 GX2RIsGX2RSurface(GX2RResourceFlags flags)
 {
    return (flags & (GX2RResourceFlags::UsageCpuReadWrite | GX2RResourceFlags::UsageGpuReadWrite)) ? TRUE : FALSE;
+}
+
+void
+GX2RInvalidateSurface(GX2Surface *surface,
+                      int32_t level,
+                      GX2RResourceFlags flags)
+{
+   // Allow flags in bits 19 to 23
+   flags = static_cast<GX2RResourceFlags>(flags & 0xF80000);
+
+   // Get surface addr & size
+   uint32_t addr, size;
+   internal::getSurfaceData(surface, level, &addr, &size);
+
+   // Invalidate!
+   GX2RInvalidateMemory(surface->resourceFlags | flags,
+                        mem::translate(addr),
+                        size);
 }
 
 } // namespace gx2

@@ -34,4 +34,9 @@ GX2RUnlockSurfaceEx(GX2Surface *surface,
 BOOL
 GX2RIsGX2RSurface(GX2RResourceFlags flags);
 
+void
+GX2RInvalidateSurface(GX2Surface *surface,
+                      int32_t level,
+                      GX2RResourceFlags flags);
+
 } // namespace gx2
