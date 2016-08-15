@@ -249,7 +249,7 @@ Module::registerCoreFunctions()
    RegisterKernelFunctionName("GetParentalControlSlotNo__Q2_2nn3actFv", nn::act::GetParentalControlSlotNo);
    RegisterKernelFunctionName("GetParentalControlSlotNoEx__Q2_2nn3actFPUcUc", nn::act::GetParentalControlSlotNoEx);
    RegisterKernelFunctionName("GetPersistentId__Q2_2nn3actFv", nn::act::GetPersistentId);
-   RegisterKernelFunctionName("GetPersistentIdEx__Q2_2nn3actFv", nn::act::GetPersistentIdEx);
+   RegisterKernelFunctionName("GetPersistentIdEx__Q2_2nn3actFUc", nn::act::GetPersistentIdEx);
    RegisterKernelFunctionName("GetPrincipalId__Q2_2nn3actFv", nn::act::GetPrincipalId);
    RegisterKernelFunctionName("GetPrincipalIdEx__Q2_2nn3actFPUiUc", nn::act::GetPrincipalIdEx);
    RegisterKernelFunctionName("GetSimpleAddressId__Q2_2nn3actFv", nn::act::GetSimpleAddressId);
