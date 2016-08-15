@@ -61,9 +61,12 @@ DMAECopyMem(void *dst, void *src, uint32_t numDwords, DMAEEndianSwapMode endian)
 coreinit::OSTime
 DMAEFillMem(void *dst, uint32_t value, uint32_t numDwords)
 {
+   // Note that rather than using be_val here, we simply byte-swap
+   //  the incoming word before we enter the loop to write it out.
+   auto dstValue = byte_swap(value);
    auto dstDwords = reinterpret_cast<uint32_t*>(dst);
    for (uint32_t i = 0; i < numDwords; ++i) {
-      dstDwords[i] = value;
+      dstDwords[i] = dstValue;
    }
 
    sLastTimeStamp = coreinit::OSGetTime();
