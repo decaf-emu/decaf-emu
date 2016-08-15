@@ -24,7 +24,6 @@ private:
    void initialiseAlarm();
    void initialiseAppIo();
    void initialiseAllocatorFunctions();
-   void initialiseDynLoad();
    void initialiseEvent();
    void initialiseExceptions();
    void initialiseGHS();

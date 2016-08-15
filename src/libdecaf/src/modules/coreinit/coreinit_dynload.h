@@ -32,7 +32,6 @@ OSDynLoad_AddNotifyCallback
 OSDynLoad_DelNotifyCallback
 OSDynLoad_FindTag
 OSDynLoad_GetLoaderHeapStatistics
-OSDynLoad_GetModuleName
 OSDynLoad_GetNumberOfRPLs
 OSDynLoad_GetRPLInfo
 OSDynLoad_IsModuleLoaded
@@ -66,6 +65,11 @@ OSDynLoad_FindExport(ModuleHandle module,
 
 void
 OSDynLoad_Release(ModuleHandle handle);
+
+int
+OSDynLoad_GetModuleName(ModuleHandle handle,
+                        char *buffer,
+                        uint32_t size);
 
 /** @} */
 

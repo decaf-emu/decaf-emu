@@ -237,9 +237,27 @@ OSDynLoad_Release(ModuleHandle handle)
    // TODO: Unload library when ref count hits 0
 }
 
-void
-Module::initialiseDynLoad()
+
+/**
+ * Get the name of a module from it's handle.
+ */
+int
+OSDynLoad_GetModuleName(ModuleHandle handle,
+                        char *buffer,
+                        uint32_t size)
 {
+   kernel::loader::LoadedModule *module = nullptr;
+
+   if (mem::untranslate(handle) == -1) {
+      module = kernel::getUserModule();
+   } else {
+      module = handle->ptr;
+   }
+
+   auto length = std::min<size_t>(size - 1, module->name.size());
+   strncpy(buffer, module->name.data(), length);
+   buffer[length] = 0;
+   return 0;
 }
 
 void
@@ -250,6 +268,7 @@ Module::registerDynLoadFunctions()
    RegisterKernelFunction(OSDynLoad_Release);
    RegisterKernelFunction(OSDynLoad_SetAllocator);
    RegisterKernelFunction(OSDynLoad_GetAllocator);
+   RegisterKernelFunction(OSDynLoad_GetModuleName);
 
    RegisterInternalFunction(dynloadDefaultAlloc, sMemAlloc);
    RegisterInternalFunction(dynloadDefaultFree, sMemFree);

@@ -17,7 +17,6 @@ Module::initialise()
    initialiseAlarm();
    initialiseAppIo();
    initialiseAllocatorFunctions();
-   initialiseDynLoad();
    initialiseEvent();
    initialiseExceptions();
    initialiseGHS();
