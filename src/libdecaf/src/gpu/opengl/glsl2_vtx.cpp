@@ -39,8 +39,6 @@ VTX_FETCH(State &state, const ControlFlowInst &cf, const VertexFetchInst &inst)
    if (numDstSels > 0) {
       auto dst = getExportRegister(inst.gpr.DST_GPR(), inst.gpr.DST_REL());
       auto src = getExportRegister(inst.word0.SRC_GPR(), inst.word0.SRC_REL());
-      inst.word0.SRC_SEL_X();
-
       auto blockID = id - SQ_VS_BUF_RESOURCE_0;
 
       if (state.shader) {
