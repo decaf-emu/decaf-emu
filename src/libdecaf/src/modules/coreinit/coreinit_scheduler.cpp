@@ -616,6 +616,7 @@ GameThreadEntry(uint32_t argc, void *argv)
       *fgHeapPtr = MEMGetBaseHeapHandle(MEMBaseHeapType::FG);
       *mem2HeapPtr = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
 
+      gLog->info("Executing application user pre-init");
       userPreinit(mem1HeapPtr, fgHeapPtr, mem2HeapPtr);
 
       MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, *mem1HeapPtr);
@@ -633,10 +634,13 @@ GameThreadEntry(uint32_t argc, void *argv)
 
       if (loadedModule->entryPoint) {
          auto moduleStart = kernel::loader::RplEntryPoint(loadedModule->entryPoint);
+
+         gLog->info("Executing module {} rpl_entry", loadedModule->name);
          moduleStart(loadedModule->handle, kernel::loader::RplEntryReasonLoad);
       }
    }
 
+   gLog->info("Executing application start");
    auto result = startFn(argc, argv);
 
    // Try call coreinit::exit with return code

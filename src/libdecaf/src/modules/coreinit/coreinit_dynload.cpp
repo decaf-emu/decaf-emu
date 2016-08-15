@@ -151,6 +151,7 @@ OSDynLoad_Acquire(char const *name,
 
    // Call the modules entryPoint if it has one
    if (module->entryPoint) {
+      gLog->info("Executing module {} rpl_entry", module->name);
       auto moduleStart = kernel::loader::RplEntryPoint(module->entryPoint);
       moduleStart(module->handle, kernel::loader::RplEntryReasonLoad);
    }
