@@ -32,7 +32,7 @@ struct BitfieldHelper
          uValue &= RelativeMask;
       }
 
-      decaf_assert(uValue <= RelativeMask, fmt::format("{} <= {}", uValue, RelativeMask));
+      decaf_assert(uValue <= RelativeMask, fmt::format("{} <= {}", uValue, static_cast<unsigned>(RelativeMask)));
       bitfield.value &= ~AbsoluteMask;
       bitfield.value |= static_cast<typename BitfieldType::StorageType>(uValue) << (Position);
       return bitfield;
