@@ -375,9 +375,11 @@ MEMAllocFromExpHeapEx(MEMExpHeap *heap,
    size = align_up(size, 4);
 
    if (alignment > 0) {
-      decaf_check((alignment & 0x3) == 0);
       MEMExpHeapBlock *foundBlock = nullptr;
       uint32_t bestAlignedSize = 0xFFFFFFFF;
+
+      alignment = std::max(4, alignment);
+      decaf_check((alignment & 0x3) == 0);
 
       for (auto block = heap->freeList.head; block; block = block->next) {
          auto alignedSize = getAlignedBlockSize(block, alignment, MEMExpHeapDirection::FromStart);
@@ -399,7 +401,7 @@ MEMAllocFromExpHeapEx(MEMExpHeap *heap,
          newBlock = createUsedBlockFromFreeBlock(heap, foundBlock, size, alignment, MEMExpHeapDirection::FromStart);
       }
    } else {
-      alignment = -alignment;
+      alignment = std::max(4, -alignment);
       decaf_check((alignment & 0x3) == 0);
 
       MEMExpHeapBlock *foundBlock = nullptr;
