@@ -264,4 +264,32 @@ GX2QueryGetOcclusionResult(GX2QueryData *data,
    *result = *(reinterpret_cast<uint64_t *>(data) + 1);
 }
 
+void
+GX2QueryBeginConditionalRender(GX2QueryType type,
+                               GX2QueryData *data,
+                               BOOL hint,
+                               BOOL predicate)
+{
+   auto addr = mem::untranslate(data);
+   auto addrLo = 0u;
+   auto op = pm4::SP_PRED_OP_PRIMCOUNT;
+
+   if (type == 2) {
+      op = pm4::SP_PRED_OP_ZPASS;
+   }
+
+   auto set_pred = pm4::SET_PRED::get(0)
+      .PRED_OP(op)
+      .HINT(!!hint)
+      .PREDICATE(!!predicate);
+
+   pm4::write(pm4::SetPredication { addrLo, set_pred });
+}
+
+void
+GX2QueryEndConditionalRender()
+{
+   pm4::write(pm4::SetPredication { 0, pm4::SET_PRED::get(0) });
+}
+
 } // namespace gx2

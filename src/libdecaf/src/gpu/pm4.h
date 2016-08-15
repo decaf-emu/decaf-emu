@@ -923,6 +923,36 @@ struct SurfaceSync
    }
 };
 
+enum SP_PRED_OP
+{
+   SP_PRED_OP_CLEAR = 0,
+   SP_PRED_OP_ZPASS = 1,
+   SP_PRED_OP_PRIMCOUNT = 2,
+};
+
+BITFIELD(SET_PRED, uint32_t)
+   BITFIELD_ENTRY(0, 8, uint8_t, ADDR_HI);
+   BITFIELD_ENTRY(8, 1, bool, PREDICATE);
+   BITFIELD_ENTRY(12, 1, bool, HINT);
+   BITFIELD_ENTRY(16, 3, SP_PRED_OP, PRED_OP);
+   BITFIELD_ENTRY(31, 1, bool, CONTINUE);
+BITFIELD_END
+
+struct SetPredication
+{
+   static const auto Opcode = type3::SET_PREDICATION;
+
+   uint32_t addrLo;
+   SET_PRED set_pred;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(addrLo);
+      se(set_pred.value);
+   }
+};
+
 }
 
 #pragma pack(pop)

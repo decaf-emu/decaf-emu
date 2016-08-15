@@ -40,4 +40,12 @@ void
 GX2QueryGetOcclusionResult(GX2QueryData *data,
                            be_val<uint64_t> *result);
 
+void
+GX2QueryBeginConditionalRender(GX2QueryType type,
+                               GX2QueryData *data,
+                               BOOL hint,
+                               BOOL predicate);
+void
+GX2QueryEndConditionalRender();
+
 } // namespace gx2
