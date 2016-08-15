@@ -32,6 +32,9 @@ GetConnectStatus(Status *status);
 nn::Result
 GetLastErrorCode(uint32_t *error);
 
+nn::Result
+GetStatus(nn::ac::Status *status);
+
 }  // namespace ac
 
 }  // namespace nn
