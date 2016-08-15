@@ -36,4 +36,8 @@ void
 GX2QueryEnd(GX2QueryType type,
             GX2QueryData *data);
 
+void
+GX2QueryGetOcclusionResult(GX2QueryData *data,
+                           be_val<uint64_t> *result);
+
 } // namespace gx2

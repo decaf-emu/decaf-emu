@@ -71,6 +71,7 @@ void beginOcclusionQuery(GX2QueryData *data, bool gpuMemoryWrite)
    if (gpuMemoryWrite) {
       coreinit::DCInvalidateRange(data, sizeof(GX2QueryData));
 
+      // Zero GX2QueryData from GPU
       for (auto i = 0u; i < 8; ++i) {
          auto addr = mem::untranslate(data) + 8 * i;
 
@@ -94,7 +95,7 @@ void beginOcclusionQuery(GX2QueryData *data, bool gpuMemoryWrite)
       std::memset(data, 0, sizeof(GX2QueryData));
 
       auto dataWords = reinterpret_cast<uint32_t *>(data);
-      dataWords[magicNumber + 0] = 0x4F435055;
+      dataWords[magicNumber + 0] = 0x4F435055; // "OCPU"
       dataWords[magicNumber + 1] = 0;
       GX2Invalidate(GX2InvalidateMode::StreamOutBuffer, dataWords, sizeof(GX2QueryData));
    }
@@ -151,6 +152,7 @@ void beginStreamOutStatsQuery(GX2QueryData *data, bool gpuMemoryWrite)
    if (gpuMemoryWrite) {
       coreinit::DCInvalidateRange(data, sizeof(GX2QueryData));
 
+      // Zero data first
       for (auto i = 0u; i < 4; ++i) {
          auto addr = mem::untranslate(data) + 8 * i;
 
@@ -170,7 +172,7 @@ void beginStreamOutStatsQuery(GX2QueryData *data, bool gpuMemoryWrite)
       std::memset(data, 0, sizeof(GX2QueryData));
 
       auto dataWords = reinterpret_cast<uint32_t *>(data);
-      dataWords[magicNumber + 0] = 0x53435055;
+      dataWords[magicNumber + 0] = 0x53435055; // "SCPU"
       dataWords[magicNumber + 1] = 0;
       GX2Invalidate(GX2InvalidateMode::StreamOutBuffer, dataWords, sizeof(GX2QueryData));
 
@@ -253,6 +255,13 @@ GX2QueryEnd(GX2QueryType type,
       endStreamOutStatsQuery(data, true);
       break;
    }
+}
+
+void
+GX2QueryGetOcclusionResult(GX2QueryData *data,
+                           be_val<uint64_t> *result)
+{
+   *result = *(reinterpret_cast<uint64_t *>(data) + 1);
 }
 
 } // namespace gx2
