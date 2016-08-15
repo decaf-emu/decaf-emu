@@ -33,6 +33,15 @@ struct AccessViolationException : Exception
    uint64_t address;
 };
 
+struct InvalidInstructionException : Exception
+{
+   InvalidInstructionException() :
+      Exception(Exception::InvalidInstruction)
+   {
+   }
+
+};
+
 typedef void (*ExceptionResumeFunc)();
 using ExceptionHandler = std::function<ExceptionResumeFunc(Exception *exception)>;
 
