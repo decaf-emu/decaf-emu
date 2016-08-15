@@ -292,10 +292,11 @@ bool GLDriver::checkActiveShader()
       shader.vertex = &vertexShader;
       shader.vertexKey = vsShaderKey;
 
-      if (vgt_strmout_en.STREAMOUT()) {
+      auto pa_cl_clip_cntl = getRegister<latte::PA_CL_CLIP_CNTL>(latte::Register::PA_CL_CLIP_CNTL);
 
-         // Transform feedback enabled; no pixel shader used
-         // TODO: this should probably follow the rasterizer disable setting
+      if (pa_cl_clip_cntl.RASTERISER_DISABLE()) {
+
+         // Rasterization disabled; no pixel shader used
          shader.pixel = nullptr;
          shader.pixelKey = 0;
 
