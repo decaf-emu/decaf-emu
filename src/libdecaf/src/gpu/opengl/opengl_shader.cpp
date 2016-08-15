@@ -107,6 +107,7 @@ bool GLDriver::checkActiveShader()
    auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
    auto sx_alpha_ref = getRegister<latte::SX_ALPHA_REF>(latte::Register::SX_ALPHA_REF);
    auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
+   auto pa_cl_clip_cntl = getRegister<latte::PA_CL_CLIP_CNTL>(latte::Register::PA_CL_CLIP_CNTL);
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
    bool isScreenSpace = (vgt_primitive_type.PRIM_TYPE() == latte::VGT_DI_PT_RECTLIST);
 
@@ -147,9 +148,14 @@ bool GLDriver::checkActiveShader()
          vsShaderKey ^= vgt_strmout_vtx_stride << (1 + 7 * i);
       }
    }
-   auto psShaderKey = static_cast<uint64_t>(psPgmAddress) << 32;
-   psShaderKey ^= static_cast<uint64_t>(alphaTestFunc) << 28;
-   psShaderKey ^= cb_shader_mask.value & 0xFF;
+   uint64_t psShaderKey;
+   if (pa_cl_clip_cntl.RASTERISER_DISABLE()) {
+      psShaderKey = 0;
+   } else {
+      psShaderKey = static_cast<uint64_t>(psPgmAddress) << 32;
+      psShaderKey ^= static_cast<uint64_t>(alphaTestFunc) << 28;
+      psShaderKey ^= cb_shader_mask.value & 0xFF;
+   }
 
    if (mActiveShader
     && mActiveShader->fetch && mActiveShader->fetchKey == fsShaderKey
@@ -292,13 +298,10 @@ bool GLDriver::checkActiveShader()
       shader.vertex = &vertexShader;
       shader.vertexKey = vsShaderKey;
 
-      auto pa_cl_clip_cntl = getRegister<latte::PA_CL_CLIP_CNTL>(latte::Register::PA_CL_CLIP_CNTL);
-
       if (pa_cl_clip_cntl.RASTERISER_DISABLE()) {
 
          // Rasterization disabled; no pixel shader used
          shader.pixel = nullptr;
-         shader.pixelKey = 0;
 
       } else {
 
@@ -341,8 +344,9 @@ bool GLDriver::checkActiveShader()
          }
 
          shader.pixel = &pixelShader;
-         shader.pixelKey = psShaderKey;
       }
+
+      shader.pixelKey = psShaderKey;
 
       // Create pipeline
       gl::glCreateProgramPipelines(1, &shader.object);
