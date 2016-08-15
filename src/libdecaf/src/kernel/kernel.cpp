@@ -47,6 +47,12 @@ kcTraceHandler(const std::string& str)
 }
 }
 
+enum class FaultReason : uint32_t {
+   Unknown,
+   Segfault,
+   IllInst
+};
+
 static void
 cpuEntrypoint();
 
@@ -55,6 +61,9 @@ cpuInterruptHandler(uint32_t interrupt_flags);
 
 static void
 cpuSegfaultHandler(uint32_t address);
+
+static void
+cpuIllInstHandler();
 
 static void
 cpuBranchTraceHandler(uint32_t target);
@@ -77,6 +86,9 @@ sUserModule;
 static int
 sExitCode = 0;
 
+static FaultReason
+sFaultReason = FaultReason::Unknown;
+
 static uint32_t
 sSegfaultAddress = 0;
 
@@ -98,6 +110,7 @@ initialise()
    initialiseHleMmodules();
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);
    cpu::setSegfaultHandler(&cpuSegfaultHandler);
+   cpu::setIllInstHandler(&cpuIllInstHandler);
    cpu::setInterruptHandler(&cpuInterruptHandler);
 
    if (decaf::config::log::branch_trace) {
@@ -142,7 +155,7 @@ coreStateToString(cpu::Core *core)
 }
 
 static void
-cpuSegfaultFiberEntryPoint(void *addr)
+cpuFaultFiberEntryPoint(void *addr)
 {
    // We may have been in the middle of a kernel function...
    if (coreinit::internal::isSchedulerLocked()) {
@@ -165,21 +178,43 @@ cpuSegfaultFiberEntryPoint(void *addr)
    }
 
    auto core = cpu::this_core::state();
-   decaf_assert(core, "Uh oh? CPU Segfault Handler with invalid core");
+   decaf_assert(core, "Uh oh? CPU fault Handler with invalid core");
 
    gLog->critical("{}", coreStateToString(core));
-   decaf_abort(fmt::format("Invalid memory access for address {:08X} with nia 0x{:08X}\n", sSegfaultAddress, core->nia));
+
+   if (sFaultReason == FaultReason::Segfault) {
+      decaf_abort(fmt::format("Invalid memory access for address {:08X} with nia 0x{:08X}\n",
+         sSegfaultAddress, core->nia));
+   } else if (sFaultReason == FaultReason::IllInst) {
+      decaf_abort(fmt::format("Invalid instruction at nia 0x{:08X}\n",
+         core->nia));
+   } else {
+      decaf_abort(fmt::format("Unexpected fault occured, fault reason was {} at 0x{:08X}\n",
+         static_cast<uint32_t>(sFaultReason), core->nia));
+   }
 }
 
-void
+static void
 cpuSegfaultHandler(uint32_t address)
 {
+   sFaultReason = FaultReason::Segfault;
    sSegfaultAddress = address;
 
    // A bit of trickery to get a stable stack and other
    //  host platform context after an exception occurs.
    auto thread = coreinit::internal::getCurrentThread();
-   reallocateContextFiber(&thread->context, cpuSegfaultFiberEntryPoint);
+   reallocateContextFiber(&thread->context, cpuFaultFiberEntryPoint);
+}
+
+static void
+cpuIllInstHandler()
+{
+   sFaultReason = FaultReason::IllInst;
+
+   // A bit of trickery to get a stable stack and other
+   //  host platform context after an exception occurs.
+   auto thread = coreinit::internal::getCurrentThread();
+   reallocateContextFiber(&thread->context, cpuFaultFiberEntryPoint);
 }
 
 static void

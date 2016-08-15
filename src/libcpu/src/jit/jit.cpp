@@ -273,17 +273,22 @@ gen(JitBlock &block)
 
       auto instr = mem::read<espresso::Instruction>(lclCia);
       auto data = espresso::decodeInstruction(instr);
-      auto genSuccess = false;
 
-      a.genCia = lclCia;
+      if (!data) {
+         a.ud2();
+      } else {
+         auto genSuccess = false;
 
-      auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
-      if (fptr) {
-         genSuccess = fptr(a, instr);
-      }
+         a.genCia = lclCia;
 
-      if (!genSuccess) {
-         a.int3();
+         auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
+         if (fptr) {
+            genSuccess = fptr(a, instr);
+         }
+
+         if (!genSuccess) {
+            a.int3();
+         }
       }
 
       if (!JIT_REGCACHE) {
@@ -367,7 +372,7 @@ identBlock(JitBlock& block)
 
       if (!data) {
          // Looks like we found a tail call function??
-         fnEnd = lclCia;
+         fnEnd = lclCia + 4;
          gLog->warn("Bailing on JIT {:08x} ident due to failed decode at {:08x}", block.start, lclCia);
          break;
       }

@@ -29,6 +29,9 @@ gCoreEntryPointHandler;
 SegfaultHandler
 gSegfaultHandler;
 
+IllInstHandler
+gIllInstHandler;
+
 BranchTraceHandler
 gBranchTraceHandler;
 
@@ -60,16 +63,28 @@ setJitMode(jit_mode mode)
    gJitMode = mode;
 }
 
-void
-coreExceptionEntry()
+static void
+coreSegfaultEntry()
 {
    gSegfaultHandler(sSegfaultAddr);
    decaf_abort("The CPU segfault handler must never return.");
 }
 
+static void
+coreIllInstEntry()
+{
+   gIllInstHandler();
+   decaf_abort("The CPU illegal instruction handler must never return.");
+}
+
 static platform::ExceptionResumeFunc
 exceptionHandler(platform::Exception *exception)
 {
+   // Handle illegal instructions!
+   if (exception->type == platform::Exception::InvalidInstruction) {
+      return coreIllInstEntry;
+   }
+
    // Only handle AccessViolation exceptions
    if (exception->type != platform::Exception::AccessViolation) {
       return platform::UnhandledException;
@@ -91,7 +106,7 @@ exceptionHandler(platform::Exception *exception)
    }
 
    sSegfaultAddr = static_cast<uint32_t>(address - memBase);
-   return coreExceptionEntry;
+   return coreSegfaultEntry;
 }
 
 void
@@ -171,6 +186,12 @@ void
 setSegfaultHandler(SegfaultHandler handler)
 {
    gSegfaultHandler = handler;
+}
+
+void
+setIllInstHandler(IllInstHandler handler)
+{
+   gIllInstHandler = handler;
 }
 
 void
