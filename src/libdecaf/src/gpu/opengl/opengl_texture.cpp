@@ -49,6 +49,13 @@ bool GLDriver::checkActiveTextures()
       auto baseAddress = sq_tex_resource_word2.BASE_ADDRESS() << 8;
 
       if (!baseAddress) {
+         // In debug mode, explicitly unbind the unit so tools like apitrace
+         //  don't show lots of unused textures
+         if (decaf::config::gpu::debug && mPixelTextureCache[i].surfaceObject != 0) {
+            gl::glBindTextureUnit(i, 0);
+            mPixelTextureCache[i].surfaceObject = 0;
+         }
+
          continue;
       }
 
@@ -96,6 +103,13 @@ bool GLDriver::checkActiveTextures()
          };
 
          gl::glTextureParameteriv(buffer->active->object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
+
+         // In debug mode, first unbind the unit to remove any textures of
+         //  different types (again, to reduce clutter in apitrace etc.)
+         if (decaf::config::gpu::debug) {
+            gl::glBindTextureUnit(i, 0);
+         }
+
          gl::glBindTextureUnit(i, buffer->active->object);
       }
    }
