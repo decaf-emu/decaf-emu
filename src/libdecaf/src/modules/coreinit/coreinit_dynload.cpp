@@ -163,6 +163,9 @@ OSDynLoad_Acquire(char const *name,
 
 /**
  * Find the export from a library handle.
+ *
+ * Note that for TLS there will be a symbol, but no section,
+ * and for normal data / code there with be a section but no symbol.
  */
 int
 OSDynLoad_FindExport(ModuleHandle handle,
@@ -171,31 +174,54 @@ OSDynLoad_FindExport(ModuleHandle handle,
                      be_val<ppcaddr_t> *outAddr)
 {
    auto module = handle->ptr;
-   auto exportAddr = module->findExport(name);
+   auto addr = module->findExport(name);
 
-   if (!exportAddr) {
+   *outAddr = addr;
+
+   if (!addr) {
       gLog->debug("OSDynLoad_FindExport export {} not found", name);
-      *outAddr = 0;
       return 0xBAD10001;
    }
 
-   auto exportSec = module->findAddressSection(exportAddr);
-   if (isData) {
-      if (exportSec->type != kernel::loader::LoadedSectionType::Data) {
-         gLog->debug("OSDynLoad_FindExport export {} wrong type", name);
-         *outAddr = 0;
-         return 0xBAD10001;
+   // Let's first try to verify the export type based off the section it is in
+   auto section = module->findAddressSection(addr);
+
+   if (section) {
+      if (isData) {
+         if (section->type != kernel::loader::LoadedSectionType::Data) {
+            gLog->debug("OSDynLoad_FindExport export {} expected data, found function", name);
+            return 0xBAD10001;
+         }
+      } else {
+         if (section->type != kernel::loader::LoadedSectionType::Code) {
+            gLog->debug("OSDynLoad_FindExport export {} expected function, found data", name);
+            return 0xBAD10001;
+         }
       }
-   } else {
-      if (exportSec->type != kernel::loader::LoadedSectionType::Code) {
-         gLog->debug("OSDynLoad_FindExport export {} wrong type", name);
-         *outAddr = 0;
-         return 0xBAD10001;
-      }
+
+      return 0;
    }
 
-   *outAddr = exportAddr;
-   return 0;
+   // Now let's try to verify it based off it's symbol
+   auto symbol = module->findSymbol(addr);
+
+   if (symbol) {
+      if (symbol->type == kernel::loader::SymbolType::TLS) {
+         return 0xBAD10033;
+      } else if (isData && symbol->type != kernel::loader::SymbolType::Data) {
+         gLog->debug("OSDynLoad_FindExport export {} expected data, found function", name);
+         return 0xBAD10001;
+      } else if (!isData && symbol->type != kernel::loader::SymbolType::Function) {
+         gLog->debug("OSDynLoad_FindExport export {} expected function, found data", name);
+         return 0xBAD10001;
+      }
+
+      return 0;
+   }
+
+   // Couldn't find a section or a symbol for the export, this should never happen...!
+   decaf_abort(fmt::format("OSDynLoad_FindExport could not find symbol or section for export address 0x{:08X}", addr));
+   return 0xBAD10001;
 }
 
 

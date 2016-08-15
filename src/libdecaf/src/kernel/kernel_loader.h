@@ -50,7 +50,8 @@ enum class SymbolType
 {
    Unknown,
    Data,
-   Function
+   Function,
+   TLS
 };
 
 struct Symbol
@@ -71,6 +72,18 @@ struct LoadedModule
       }
 
       return itr->second;
+   }
+
+   Symbol *
+   findSymbol(ppcaddr_t address)
+   {
+      for (auto &sym : symbols) {
+         if (sym.second.address == address) {
+            return &sym.second;
+         }
+      }
+
+      return nullptr;
    }
 
    template<typename ReturnType, typename... Args>
@@ -105,7 +118,7 @@ struct LoadedModule
    ppcsize_t defaultStackSize = 0;
    ppcaddr_t sdaBase = 0;
    ppcaddr_t sda2Base = 0;
-   uint32_t tlsModuleIndex = 0;
+   uint32_t tlsModuleIndex = -1;
    ppcaddr_t tlsBase = 0;
    ppcsize_t tlsAlignShift = 0;
    ppcsize_t tlsSize = 0;

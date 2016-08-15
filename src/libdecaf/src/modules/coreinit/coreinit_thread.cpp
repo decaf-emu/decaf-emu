@@ -913,8 +913,8 @@ void *
 tls_get_addr(tls_index *index)
 {
    auto thread = OSGetCurrentThread();
-   auto module = kernel::getUserModule();
-   decaf_check(index->moduleIndex == module->tlsModuleIndex);
+   auto module = kernel::getTLSModule(index->moduleIndex);
+   decaf_check(module);
 
    if (thread->tlsSectionCount <= index->moduleIndex) {
       auto oldSections = thread->tlsSections;

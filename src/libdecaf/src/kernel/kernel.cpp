@@ -392,6 +392,20 @@ getUserModule()
    return sUserModule;
 }
 
+loader::LoadedModule *
+getTLSModule(uint32_t index)
+{
+   auto modules = loader::getLoadedModules();
+
+   for (auto &module : modules) {
+      if (module.second->tlsModuleIndex == index) {
+         return module.second;
+      }
+   }
+
+   return nullptr;
+}
+
 void
 exitProcess(int code)
 {

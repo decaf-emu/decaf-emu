@@ -38,6 +38,9 @@ setContext(coreinit::OSContext *next);
 loader::LoadedModule *
 getUserModule();
 
+loader::LoadedModule *
+getTLSModule(uint32_t index);
+
 void
 exitProcess(int code);
 

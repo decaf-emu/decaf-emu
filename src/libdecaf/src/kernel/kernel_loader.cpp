@@ -93,6 +93,9 @@ sLoaderHeap = nullptr;
 static uint32_t
 sLoaderHeapRefs = 0;
 
+static uint32_t
+sModuleIndex = 0u;
+
 static void *
 loaderAlloc(uint32_t size, uint32_t alignment)
 {
@@ -415,8 +418,8 @@ processKernelTraceFilters(const std::string &module,
 
 
 /**
-* Load a kernel module into virtual memory space by creating thunks
-*/
+ * Load a kernel module into virtual memory space by creating thunks
+ */
 static LoadedModule *
 loadHleModule(const std::string &moduleName,
               const std::string &name,
@@ -574,16 +577,20 @@ processRelocations(LoadedModule *loadedMod,
          }
 
          // Get symbol address
-         auto symAddr = 0u;
+         auto symAddr = symbol.value + rela.addend;
 
-         if (type != elf::R_PPC_DTPREL32 && type != elf::R_PPC_DTPMOD32) {
+         // Calculate relocated symbol address except for TLS which are NOT rpl imports
+         if (symbolSection.header.type == elf::SHT_RPL_IMPORTS ||
+             (type != elf::R_PPC_DTPREL32 && type != elf::R_PPC_DTPMOD32)) {
             symAddr = calculateRelocatedAddress(symbol.value, sections);
 
             if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
                decaf_check(symAddr);
-               auto importedSymAddr = mem::read<uint32_t>(symAddr);
-               decaf_check(importedSymAddr);
-               symAddr = importedSymAddr;
+               symAddr = mem::read<uint32_t>(symAddr);
+            }
+
+            if (type != elf::R_PPC_DTPREL32 && type != elf::R_PPC_DTPMOD32) {
+               decaf_check(symAddr);
             }
 
             symAddr += rela.addend;
@@ -658,13 +665,20 @@ processRelocations(LoadedModule *loadedMod,
          }
          case elf::R_PPC_DTPREL32:
          {
-            *ptr32 = byte_swap(symbol.value + rela.addend);
+            *ptr32 = byte_swap(symAddr);
             break;
          }
          case elf::R_PPC_DTPMOD32:
          {
-            decaf_check(loadedMod->tlsModuleIndex == 0);
-            *ptr32 = byte_swap(loadedMod->tlsModuleIndex);
+            auto moduleIndex = loadedMod->tlsModuleIndex;
+
+            // If this is an import, we must find the correct module index
+            if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
+               auto module = loadRPLNoLock(symbolSection.name);
+               moduleIndex = module->tlsModuleIndex;
+            }
+
+            *ptr32 = byte_swap(moduleIndex);
             break;
          }
          default:
@@ -690,7 +704,7 @@ processImports(LoadedModule *loadedMod,
       }
 
       // Load library
-      auto libraryName = reinterpret_cast<const char*>(section.memory + 8);
+      auto libraryName = reinterpret_cast<const char *>(section.memory + 8);
       auto linkedModule = loadRPLNoLock(libraryName);
 
       // Zero the whole section after we have used the name
@@ -750,7 +764,7 @@ processImports(LoadedModule *loadedMod,
 
          if (impsec.header.type == elf::SHT_RPL_IMPORTS) {
             auto symbolTargetIter = symbolTable.find(name);
-            ppcaddr_t symbolAddr = 0u;
+            auto symbolAddr = 0u;
 
             if (symbolTargetIter == symbolTable.end()) {
                if (type == elf::STT_FUNC) {
@@ -761,13 +775,12 @@ processImports(LoadedModule *loadedMod,
                   decaf_abort("Unexpected import symbol type");
                }
             } else {
-               decaf_check(type == elf::STT_FUNC || type == elf::STT_OBJECT);
-
+               decaf_check(type == elf::STT_FUNC || type == elf::STT_OBJECT || type == elf::STT_TLS);
                symbolAddr = symbolTargetIter->second;
             }
 
             // Write the symbol address into .fimport or .dimport
-            decaf_check(symbolAddr);
+            decaf_check(type == elf::STT_TLS || symbolAddr);
             mem::write(virtAddress, symbolAddr);
          }
       }
@@ -817,12 +830,14 @@ processSymbols(LoadedModule *loadedMod,
          // Calculate relocated address
          auto &symsec = sections[sym.shndx];
          auto offset = sym.value - symsec.header.addr;
+
          if (!symsec.virtSize) {
             // Ignore symbols in unused sections...
             continue;
          }
 
          auto symType = SymbolType::Unknown;
+
          if (type == elf::STT_OBJECT) {
             symType = SymbolType::Data;
          } else if (type == elf::STT_FUNC) {
@@ -831,7 +846,14 @@ processSymbols(LoadedModule *loadedMod,
 
          auto baseAddress = symsec.virtAddress;
          auto virtAddress = baseAddress + offset;
-         loadedMod->symbols.emplace(name, Symbol{ virtAddress, symType });
+
+         if (type == elf::STT_TLS) {
+            // TLS symbols should not be relocated, use the original sym.value
+            symType = SymbolType::TLS;
+            virtAddress = sym.value;
+         }
+
+         loadedMod->symbols.emplace(name, Symbol { virtAddress, symType });
       }
    }
 
@@ -865,19 +887,23 @@ processExports(LoadedModule *loadedMod,
          continue;
       }
 
-      auto secData = reinterpret_cast<uint32_t*>(section.memory);
-      auto secNames = reinterpret_cast<const char*>(section.memory);
+      auto secData = reinterpret_cast<uint32_t *>(section.memory);
+      auto strTab = reinterpret_cast<const char *>(section.memory);
       auto numExports = byte_swap(*secData++);
       auto exportsCrc = byte_swap(*secData++);
 
       for (auto i = 0u; i < numExports; ++i) {
-         auto exportsAddr = byte_swap(*secData++);
-         auto exportNameOff = byte_swap(*secData++);
-         auto exportsName = secNames + exportNameOff;
+         auto addr = byte_swap(*secData++);
+         auto nameOffset = byte_swap(*secData++);
 
-         exportsAddr = calculateRelocatedAddress(exportsAddr, sections);
+         if (nameOffset & 0x80000000) {
+            // TLS exports have the high bit set
+            nameOffset = nameOffset & ~0x80000000;
+         } else {
+            addr = calculateRelocatedAddress(addr, sections);
+         }
 
-         loadedMod->exports.emplace(exportsName, exportsAddr);
+         loadedMod->exports.emplace(strTab + nameOffset, addr);
       }
    }
 
@@ -1029,8 +1055,10 @@ loadRPL(const std::string &moduleName,
       loadedMod->tlsSize = end - start;
    }
 
+   // Apparently info.tlsModuleIndex is always zero... so let's create our own!
+   decaf_check(info.tlsModuleIndex == 0);
+   loadedMod->tlsModuleIndex = sModuleIndex++;
    loadedMod->tlsAlignShift = info.tlsAlignShift;
-   loadedMod->tlsModuleIndex = info.tlsModuleIndex;
 
    // Process exports
    if (!processExports(loadedMod, sections)) {
