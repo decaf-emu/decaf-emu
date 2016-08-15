@@ -5,13 +5,26 @@
 namespace snd_core
 {
 
-// TODO: Reverse AXProfile
+#pragma pack(push, 1)
+
 struct AXProfile;
+
+struct AXInitParams
+{
+   be_val<AXInitRenderer> renderer;
+   UNKNOWN(4);
+   be_val<AXInitPipeline> pipeline;
+};
+
+#pragma pack(pop)
 
 using AXFrameCallback = wfunc_ptr<void>;
 
 void
 AXInit();
+
+void
+AXInitWithParams(AXInitParams *params);
 
 BOOL
 AXIsInit();

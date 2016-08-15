@@ -56,11 +56,30 @@ sOutputBuffer;
 void
 AXInit()
 {
+   AXInitParams params;
+   params.renderer = AXInitRenderer::Out32khz;
+   params.pipeline = AXInitPipeline::Single;
+   AXInitWithParams(&params);
+}
+
+void
+AXInitWithParams(AXInitParams *params)
+{
    if (AXIsInit()) {
       return;
    }
 
-   sOutputRate = 32000;
+   switch (params->renderer) {
+   case AXInitRenderer::Out32khz:
+      sOutputRate = 32000;
+      break;
+   case AXInitRenderer::Out48khz:
+      sOutputRate = 48000;
+      break;
+   default:
+      decaf_abort(fmt::format("Unimplemented AXInitRenderer {}", params->renderer));
+   }
+
    sOutputChannels = 2;  // TODO: surround support
    internal::initVoices();
    internal::initEvents();
@@ -169,7 +188,7 @@ AXGetInputSamplesPerFrame()
    } else if (sOutputRate == 48000) {
       return 144;
    } else {
-      decaf_abort("Unexpected output rate");
+      decaf_abort(fmt::format("Unexpected output rate {}", sOutputRate));
    }
 }
 
@@ -293,6 +312,7 @@ void
 Module::registerCoreFunctions()
 {
    RegisterKernelFunction(AXInit);
+   RegisterKernelFunction(AXInitWithParams);
    RegisterKernelFunction(AXIsInit);
    RegisterKernelFunction(AXInitProfile);
    RegisterKernelFunction(AXGetSwapProfile);
