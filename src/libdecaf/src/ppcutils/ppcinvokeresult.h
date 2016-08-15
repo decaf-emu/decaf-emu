@@ -40,12 +40,12 @@ struct result_converter_t<PpcType::FLOAT, Type>
 {
    static inline void set(cpu::Core *state, Type v)
    {
-      ppctype_converter_t<Type>::to_ppc(v, state->fpr[1]);
+      ppctype_converter_t<Type>::to_ppc(v, state->fpr[1].value);
    }
 
    static inline Type get(cpu::Core *state)
    {
-      return ppctype_converter_t<Type>::from_ppc(state->fpr[1]);
+      return ppctype_converter_t<Type>::from_ppc(state->fpr[1].value);
    }
 };
 
@@ -54,12 +54,12 @@ struct result_converter_t<PpcType::DOUBLE, Type>
 {
    static inline void set(cpu::Core *state, Type v)
    {
-      ppctype_converter_t<Type>::to_ppc(v, state->fpr[1]);
+      ppctype_converter_t<Type>::to_ppc(v, state->fpr[1].value);
    }
 
    static inline Type get(cpu::Core *state)
    {
-      return ppctype_converter_t<Type>::from_ppc(state->fpr[1]);
+      return ppctype_converter_t<Type>::from_ppc(state->fpr[1].value);
    }
 };
 
