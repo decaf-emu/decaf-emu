@@ -195,11 +195,15 @@ OSWaitEvent(OSEvent *event)
 {
    internal::lockScheduler();
    decaf_check(event);
-   decaf_check(event->tag == OSEvent::Tag);
 
+   // HACK: Naughty Bayonetta not initialising event before using it.
+   // decaf_check(event->tag == OSEvent::Tag);
+   if (event->tag != OSEvent::Tag) {
+      OSInitEvent(event, false, OSEventMode::ManualReset);
+   }
+
+   // Check if the event is already set
    if (event->value) {
-      // Event is already set
-
       if (event->mode == OSEventMode::AutoReset) {
          // Reset event
          event->value = FALSE;
