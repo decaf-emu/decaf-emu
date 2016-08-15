@@ -115,11 +115,19 @@ OSWriteRegister32Ex(OSDeviceID device,
          sInputDevice.controllerError = OSInputDevice::ControllerError::get(value);
          break;
       default:
-         gLog->warn("OSWriteRegister - Unimplemented device {} register {} = 0x{:08X}", enumAsString(device), enumAsString(reg), value);
+         gLog->warn("OSWriteRegister32 - Unimplemented device {} register {} = 0x{:08X}", enumAsString(device), enumAsString(reg), value);
       }
    } else {
-      gLog->warn("OSWriteRegister - Unimplemented device {} register {} = 0x{:08X}", enumAsString(device), id, value);
+      gLog->warn("OSWriteRegister32 - Unimplemented device {} register {} = 0x{:08X}", enumAsString(device), id, value);
    }
+}
+
+void
+OSWriteRegister16(OSDeviceID device,
+                  uint32_t id,
+                  uint16_t value)
+{
+   gLog->warn("OSWriteRegister16 - Unimplemented device {} register {} = 0x{:08X}", enumAsString(device), id, value);
 }
 
 void
@@ -127,6 +135,7 @@ Module::registerDeviceFunctions()
 {
    RegisterKernelFunction(OSDriver_Register);
    RegisterKernelFunction(OSReadRegister16);
+   RegisterKernelFunction(OSWriteRegister16);
    RegisterKernelFunction(OSEnforceInorderIO);
    RegisterKernelFunctionName("__OSReadRegister32Ex", OSReadRegister32Ex);
    RegisterKernelFunctionName("__OSWriteRegister32Ex", OSWriteRegister32Ex);

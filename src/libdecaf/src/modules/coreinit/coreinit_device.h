@@ -83,6 +83,11 @@ uint16_t
 OSReadRegister16(OSDeviceID device,
                  uint32_t id);
 
+void
+OSWriteRegister16(OSDeviceID device,
+                  uint32_t id,
+                  uint16_t value);
+
 uint32_t
 OSReadRegister32Ex(OSDeviceID device,
                    uint32_t id);
