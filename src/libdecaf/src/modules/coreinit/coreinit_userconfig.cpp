@@ -204,6 +204,9 @@ Module::initialiseUserConfig()
    addValue("caffeine.drcled_enable",     UCDataType::Uint8,   0);
    addValue("caffeine.push_capabilty",    UCDataType::Uint16,  0);
    addBlob ("caffeine.invisible_titles",  invisible_titles);
+
+   addGroup("parent");
+   addValue("parent.enable",              UCDataType::Uint8,   0);
 }
 
 void
