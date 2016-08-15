@@ -541,7 +541,10 @@ GLDriver::run()
 
    while (mRunState == RunState::Running) {
       auto buffer = gpu::unqueueCommandBuffer();
-      executeBuffer(buffer);
+
+      if (buffer) {
+         executeBuffer(buffer);
+      }
    }
 }
 
