@@ -118,7 +118,7 @@ draw()
             auto instr = mem::read<espresso::Instruction>(selectedAddr);
             auto data = espresso::decodeInstruction(instr);
 
-            if (isBranchInstr(data)) {
+            if (data && isBranchInstr(data)) {
                auto meta = getBranchMeta(selectedAddr, instr, data, activeCoreRegs);
 
                if (!meta.isVariable || activeCoreRegs) {
