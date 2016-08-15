@@ -424,14 +424,14 @@ void
 updateCpuAlarmNoALock()
 {
    auto queue = sAlarmQueue[cpu::this_core::id()];
-   auto next = std::chrono::time_point<std::chrono::system_clock>::max();
+   auto next = std::chrono::steady_clock::time_point::max();
 
    for (OSAlarm *alarm = queue->head; alarm; ) {
       auto nextAlarm = alarm->link.next;
 
       // Update next if its not past yet
       if (alarm->state == OSAlarmState::Set && alarm->nextFire) {
-         auto nextFire = internal::toTimepoint(alarm->nextFire);
+         auto nextFire = cpu::tbToTimePoint(alarm->nextFire - internal::getBaseTime());
 
          if (nextFire < next) {
             next = nextFire;

@@ -48,7 +48,7 @@ struct Core : CoreRegs
    uint32_t interrupt_mask { 0xFFFFFFFF };
    std::atomic<uint32_t> interrupt { 0 };
    uint64_t reserve { 0xFFFFFFFFFFFFFFFF };
-   std::chrono::system_clock::time_point next_alarm;
+   std::chrono::steady_clock::time_point next_alarm;
 
    uint64_t tb();
 };

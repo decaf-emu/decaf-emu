@@ -74,6 +74,9 @@ join();
 void
 halt();
 
+std::chrono::steady_clock::time_point
+tbToTimePoint(uint64_t ticks);
+
 using Tracer = ::Tracer;
 
 Tracer *
@@ -128,7 +131,7 @@ void
 clearInterrupt(uint32_t flags);
 
 void
-setNextAlarm(std::chrono::time_point<std::chrono::system_clock> alarm_time);
+setNextAlarm(std::chrono::steady_clock::time_point alarm_time);
 
 cpu::Core *
 state();

@@ -122,7 +122,7 @@ start()
       auto &core = gCore[i];
       core.id = i;
       core.thread = std::thread(coreEntryPoint, &core);
-      core.next_alarm = std::chrono::time_point<std::chrono::system_clock>::max();
+      core.next_alarm = std::chrono::steady_clock::time_point::max();
 
       static const std::string coreNames[] = { "Core #0", "Core #1", "Core #2" };
       platform::setThreadName(&core.thread, coreNames[core.id]);
@@ -177,6 +177,14 @@ void
 setBranchTraceHandler(BranchTraceHandler handler)
 {
    gBranchTraceHandler = handler;
+}
+
+std::chrono::steady_clock::time_point
+tbToTimePoint(uint64_t ticks)
+{
+   auto cpuTicks = TimerDuration(ticks);
+   auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(cpuTicks);
+   return sStartupTime + nanos;
 }
 
 uint64_t

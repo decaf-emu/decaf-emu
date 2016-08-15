@@ -44,15 +44,15 @@ timerEntryPoint()
 {
    while (gRunning.load()) {
       std::unique_lock<std::mutex> lock{ gTimerMutex };
-      auto now = std::chrono::system_clock::now();
-      auto next = std::chrono::time_point<std::chrono::system_clock>::max();
+      auto now = std::chrono::steady_clock::now();
+      auto next = std::chrono::steady_clock::time_point::max();
       bool timedWait = false;
 
       for (auto i = 0; i < 3; ++i) {
          auto core = &gCore[i];
 
          if (core->next_alarm <= now) {
-            core->next_alarm = std::chrono::time_point<std::chrono::system_clock>::max();
+            core->next_alarm = std::chrono::steady_clock::time_point::max();
             cpu::interrupt(i, ALARM_INTERRUPT);
          } else if (core->next_alarm < next) {
             next = core->next_alarm;
@@ -134,7 +134,7 @@ waitForInterrupt()
 }
 
 void
-setNextAlarm(std::chrono::time_point<std::chrono::system_clock> time)
+setNextAlarm(std::chrono::steady_clock::time_point time)
 {
    auto core = this_core::state();
    std::unique_lock<std::mutex> lock { gTimerMutex };
