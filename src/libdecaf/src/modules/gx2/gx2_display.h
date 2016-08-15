@@ -57,4 +57,7 @@ GX2GetSystemDRCMode();
 GX2AspectRatio
 GX2GetSystemTVAspectRatio();
 
+BOOL
+GX2IsVideoOutReady();
+
 } // namespace gx2

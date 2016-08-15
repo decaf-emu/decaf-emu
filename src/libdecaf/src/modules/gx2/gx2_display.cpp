@@ -169,4 +169,10 @@ GX2GetSystemTVAspectRatio()
    }
 }
 
+BOOL
+GX2IsVideoOutReady()
+{
+   return TRUE;
+}
+
 } // namespace gx2
