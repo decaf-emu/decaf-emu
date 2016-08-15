@@ -1005,7 +1005,7 @@ setDefaultThread(uint32_t core,
 
 bool threadSortFunc(OSThread *lhs, OSThread *rhs)
 {
-   return lhs->priority < rhs->priority;
+   return lhs->priority <= rhs->priority;
 }
 
 } // namespace internal
