@@ -47,7 +47,26 @@ kcstub(cpu::Core *state, void *data)
       return;
    }
 
+   // Grab our core pointer
+   auto core = cpu::this_core::state();
+
+   // Save our original stack pointer for the backchain
+   auto backchainSp = core->gpr[1];
+
+   // Allocate callee backchain and lr space.
+   core->gpr[1] -= 2 * 4;
+
+   // Write the backchain pointer
+   mem::write(core->gpr[1], backchainSp);
+
+   // Call our target
    func->call(state);
+
+   // Grab the most recent core state as it may have changed.
+   core = cpu::this_core::state();
+
+   // Release callee backchain and lr space.
+   core->gpr[1] += 2 * 4;
 }
 
 void

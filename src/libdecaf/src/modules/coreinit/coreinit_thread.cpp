@@ -176,11 +176,16 @@ InitialiseThreadState(OSThread *thread,
 
    // Setup context
    thread->context.gpr[0] = 0;
-   thread->context.gpr[1] = thread->stackStart.getAddress() - 4;
+   thread->context.gpr[1] = thread->stackStart.getAddress() - 8;
    thread->context.gpr[2] = sda2Base;
    thread->context.gpr[3] = argc;
    thread->context.gpr[4] = mem::untranslate(argv);
    thread->context.gpr[13] = sdaBase;
+
+   // Clear the backchain to 0
+   auto stackPtr = mem::translate<uint32_t>(thread->context.gpr[1]);
+   stackPtr[0] = 0;
+   stackPtr[1] = 0;
 
    // Setup context Decaf special stuff
    thread->context.nia = entry;

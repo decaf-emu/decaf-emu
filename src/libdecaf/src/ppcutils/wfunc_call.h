@@ -16,8 +16,12 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
    // For debugging, lets grab a copy of the SP
    auto origStackPtr = core->gpr[1];
 
-   // Allocate callee backchain and lr space.
-   core->gpr[1] -= 2 * 4;
+   // Write LR to the previous backchain address
+   auto backchain = mem::read<uint32_t>(origStackPtr);
+   if (backchain) {
+      // This might be the very first call on a core...
+      mem::write(backchain + 4, core->lr);
+   }
 
    // Save state
    auto cia = core->cia;
@@ -36,9 +40,6 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
    // Restore state
    core->cia = cia;
    core->nia = nia;
-
-   // Restore callee args stack space
-   core->gpr[1] += 2 * 4;
 
    // Lets verify we did not corrupt the SP
    decaf_check(core->gpr[1] == origStackPtr);

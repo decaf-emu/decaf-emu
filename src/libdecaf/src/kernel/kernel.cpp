@@ -306,7 +306,14 @@ cpuEntrypoint()
    // Set up an interrupt context to use with this core
    initCoreInterruptContext();
 
+   // We set up a dummy stack on each core to help us invoke needed stuff
+   auto rootStack = static_cast<uint8_t*>(coreinit::internal::sysAlloc(256, 4));
+   auto core = cpu::this_core::state();
+   core->gpr[1] = mem::untranslate(rootStack + 256 - 4);
+
    if (cpu::this_core::id() == 1) {
+      auto core = cpu::this_core::state();
+
       // Run the setup on core 1, which will also run the loader
       launchGame();
 
@@ -317,7 +324,6 @@ cpuEntrypoint()
    // Set up the default expected state for the nia/cia of idle threads.
    //  This must be kept in sync with reschedule which sets them to this
    //  for debugging purposes.
-   auto core = cpu::this_core::state();
    core->nia = 0xFFFFFFFF;
    core->cia = 0xFFFFFFFF;
 
