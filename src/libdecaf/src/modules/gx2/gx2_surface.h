@@ -165,11 +165,21 @@ GX2InitDepthBufferHiZEnable(GX2DepthBuffer *depthBuffer,
 uint32_t
 GX2GetSurfaceSwizzle(GX2Surface *surface);
 
+uint32_t
+GX2GetSurfaceSwizzleOffset(GX2Surface *surface,
+                           uint32_t level);
+
 void
-GX2SetSurfaceSwizzle(GX2Surface *surface, uint32_t swizzle);
+GX2SetSurfaceSwizzle(GX2Surface *surface,
+                     uint32_t swizzle);
 
 uint32_t
-GX2GetSurfaceMipPitch(GX2Surface *surface, uint32_t level);
+GX2GetSurfaceMipPitch(GX2Surface *surface,
+                      uint32_t level);
+
+uint32_t
+GX2GetSurfaceMipSliceSize(GX2Surface *surface,
+                          uint32_t level);
 
 void
 GX2CopySurface(GX2Surface *src,

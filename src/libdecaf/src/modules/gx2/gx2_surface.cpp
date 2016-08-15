@@ -342,19 +342,45 @@ GX2GetSurfaceSwizzle(GX2Surface *surface)
    return (surface->swizzle >> 8) & 0xff;
 }
 
+uint32_t
+GX2GetSurfaceSwizzleOffset(GX2Surface *surface,
+                           uint32_t level)
+{
+   if (surface->tileMode < GX2TileMode::Tiled2DThin1 || surface->tileMode == GX2TileMode::LinearSpecial) {
+      return 0;
+   }
+
+   if (level < ((surface->swizzle >> 16) & 0xFF)) {
+      return 0;
+   }
+
+   return surface->swizzle & 0xFFFF;
+}
+
 void
-GX2SetSurfaceSwizzle(GX2Surface *surface, uint32_t swizzle)
+GX2SetSurfaceSwizzle(GX2Surface *surface,
+                     uint32_t swizzle)
 {
    surface->swizzle &= 0xFFFF00FF;
    surface->swizzle |= swizzle << 8;
 }
 
 uint32_t
-GX2GetSurfaceMipPitch(GX2Surface *surface, uint32_t level)
+GX2GetSurfaceMipPitch(GX2Surface *surface,
+                      uint32_t level)
 {
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT info;
    internal::getSurfaceInfo(surface, level, &info);
    return info.pitch;
+}
+
+uint32_t
+GX2GetSurfaceMipSliceSize(GX2Surface *surface,
+                          uint32_t level)
+{
+   ADDR_COMPUTE_SURFACE_INFO_OUTPUT info;
+   internal::getSurfaceInfo(surface, level, &info);
+   return internal::calcSliceSize(surface, &info);
 }
 
 void

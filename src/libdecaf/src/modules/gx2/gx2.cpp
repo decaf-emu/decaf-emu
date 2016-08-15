@@ -296,8 +296,10 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2InitDepthBufferRegs);
    RegisterKernelFunction(GX2InitDepthBufferHiZEnable);
    RegisterKernelFunction(GX2GetSurfaceSwizzle);
+   RegisterKernelFunction(GX2GetSurfaceSwizzleOffset);
    RegisterKernelFunction(GX2SetSurfaceSwizzle);
    RegisterKernelFunction(GX2GetSurfaceMipPitch);
+   RegisterKernelFunction(GX2GetSurfaceMipSliceSize);
    RegisterKernelFunction(GX2CopySurface);
    RegisterKernelFunction(GX2ExpandDepthBuffer);
 
