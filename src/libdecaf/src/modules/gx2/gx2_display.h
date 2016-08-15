@@ -4,9 +4,12 @@
 #include "modules/gx2/gx2_surface.h"
 #include "common/types.h"
 #include "common/be_val.h"
+#include "ppcutils/wfunc_ptr.h"
 
 namespace gx2
 {
+
+using GX2DRCConnectCallbackFunction = wfunc_ptr<void, uint32_t, BOOL>;
 
 void
 GX2SetTVEnable(BOOL enable);
@@ -59,5 +62,9 @@ GX2GetSystemTVAspectRatio();
 
 BOOL
 GX2IsVideoOutReady();
+
+GX2DRCConnectCallbackFunction
+GX2SetDRCConnectCallback(uint32_t id,
+                         GX2DRCConnectCallbackFunction callback);
 
 } // namespace gx2

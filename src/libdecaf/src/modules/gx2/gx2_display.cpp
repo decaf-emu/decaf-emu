@@ -3,12 +3,16 @@
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
 #include "gpu/pm4_writer.h"
+#include "ppcutils/wfunc_call.h"
 
 namespace gx2
 {
 
 const static GX2TVScanMode
 sTvScanMode = GX2TVScanMode::P1080;
+
+static GX2DRCConnectCallbackFunction
+sDRCConnectCallbackFunction = nullptr;
 
 static std::pair<unsigned, unsigned>
 getTVSize(GX2TVRenderMode mode)
@@ -173,6 +177,20 @@ BOOL
 GX2IsVideoOutReady()
 {
    return TRUE;
+}
+
+GX2DRCConnectCallbackFunction
+GX2SetDRCConnectCallback(uint32_t id,
+                         GX2DRCConnectCallbackFunction callback)
+{
+   auto old = sDRCConnectCallbackFunction;
+   sDRCConnectCallbackFunction = callback;
+
+   if (callback) {
+      callback(id, TRUE);
+   }
+
+   return old;
 }
 
 } // namespace gx2

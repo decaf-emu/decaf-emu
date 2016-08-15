@@ -76,6 +76,8 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2GetSystemTVScanMode);
    RegisterKernelFunction(GX2GetSystemDRCMode);
    RegisterKernelFunction(GX2GetSystemTVAspectRatio);
+   RegisterKernelFunction(GX2IsVideoOutReady);
+   RegisterKernelFunction(GX2SetDRCConnectCallback);
 
    // Display List
    RegisterKernelFunction(GX2BeginDisplayListEx);
