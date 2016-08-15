@@ -178,6 +178,22 @@ MEMSetBaseHeapHandle(MEMBaseHeapType type,
    }
 }
 
+MEMHeapHeader *
+MEMCreateUserHeapHandle(MEMHeapHeader *heap,
+                        uint32_t size)
+{
+   auto dataStart = reinterpret_cast<uint8_t *>(heap) + sizeof(MEMHeapHeader);
+   auto dataEnd = dataStart + size;
+
+   internal::registerHeap(heap,
+                          coreinit::MEMHeapTag::UserHeap,
+                          dataStart,
+                          dataEnd,
+                          0);
+
+   return heap;
+}
+
 uint32_t
 MEMGetFillValForHeap(MEMHeapFillType type)
 {
@@ -219,6 +235,7 @@ Module::registerMembaseFunctions()
 
    RegisterKernelFunction(MEMGetBaseHeapHandle);
    RegisterKernelFunction(MEMSetBaseHeapHandle);
+   RegisterKernelFunction(MEMCreateUserHeapHandle);
    RegisterKernelFunction(MEMGetArena);
    RegisterKernelFunction(MEMFindContainHeap);
    RegisterKernelFunction(MEMDumpHeap);

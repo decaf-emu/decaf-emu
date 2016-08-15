@@ -85,6 +85,10 @@ MEMHeapHeader *
 MEMSetBaseHeapHandle(MEMBaseHeapType type,
                      MEMHeapHeader *heap);
 
+MEMHeapHeader *
+MEMCreateUserHeapHandle(MEMHeapHeader *heap,
+                        uint32_t size);
+
 uint32_t
 MEMGetFillValForHeap(MEMHeapFillType type);
 
