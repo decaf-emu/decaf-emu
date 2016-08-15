@@ -485,28 +485,28 @@ uint32_t
 MEMAdjustExpHeap(MEMExpHeap *heap)
 {
    internal::HeapLock lock(&heap->header);
-   auto lastUsedBlock = heap->usedList.tail;
+   auto lastFreeBlock = heap->freeList.tail;
 
-   if (!lastUsedBlock) {
+   if (!lastFreeBlock) {
       return 0;
    }
 
-   auto blockData = reinterpret_cast<uint8_t*>(lastUsedBlock.get()) + sizeof(MEMExpHeapBlock);
+   auto blockData = reinterpret_cast<uint8_t*>(lastFreeBlock.get()) + sizeof(MEMExpHeapBlock);
 
-   if (blockData + lastUsedBlock->blockSize != heap->header.dataEnd) {
+   if (blockData + lastFreeBlock->blockSize != heap->header.dataEnd) {
       // This block is not for the end of the heap
       return 0;
    }
 
    // Remove the block from the free list
-   decaf_check(!lastUsedBlock->next);
+   decaf_check(!lastFreeBlock->next);
 
-   if (lastUsedBlock->prev) {
-      lastUsedBlock->prev->next = nullptr;
+   if (lastFreeBlock->prev) {
+      lastFreeBlock->prev->next = nullptr;
    }
 
    // Move the heaps end pointer to the true start point of this block
-   heap->header.dataEnd = getBlockMemStart(lastUsedBlock);
+   heap->header.dataEnd = getBlockMemStart(lastFreeBlock);
 
    auto heapMemStart = reinterpret_cast<uint8_t*>(heap);
    auto heapMemEnd = reinterpret_cast<uint8_t*>(heap->header.dataEnd.get());
