@@ -228,6 +228,13 @@ FSGetUserData(FSCmdBlock *block)
    return block->userData;
 }
 
+FSCmdBlock *
+FSGetCurrentCmdBlock(FSClient *client)
+{
+   // TODO: Not sure how this is meant to work atomically.
+   return nullptr;
+}
+
 namespace internal
 {
 

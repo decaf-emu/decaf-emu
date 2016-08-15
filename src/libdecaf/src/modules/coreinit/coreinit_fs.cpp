@@ -56,6 +56,12 @@ FSSetCmdPriority(FSCmdBlock *block,
    return FSStatus::OK;
 }
 
+FSPriority
+FSGetCmdPriority(FSCmdBlock *block)
+{
+   return block->priority;
+}
+
 namespace internal
 {
 
@@ -233,6 +239,7 @@ Module::registerFileSystemFunctions()
    RegisterKernelFunction(FSGetClientNum);
    RegisterKernelFunction(FSInitCmdBlock);
    RegisterKernelFunction(FSSetCmdPriority);
+   RegisterKernelFunction(FSGetCmdPriority);
    RegisterKernelFunction(FSSetStateChangeNotification);
    RegisterKernelFunction(FSGetVolumeState);
    RegisterKernelFunction(FSGetErrorCodeForViewer);
@@ -240,6 +247,7 @@ Module::registerFileSystemFunctions()
    RegisterKernelFunction(FSGetAsyncResult);
    RegisterKernelFunction(FSGetUserData);
    RegisterKernelFunction(FSSetUserData);
+   RegisterKernelFunction(FSGetCurrentCmdBlock);
 
    // coreinit_fs_path
    RegisterKernelFunction(FSGetCwd);

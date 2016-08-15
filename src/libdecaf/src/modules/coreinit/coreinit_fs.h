@@ -188,6 +188,9 @@ FSStatus
 FSSetCmdPriority(FSCmdBlock *block,
                  FSPriority priority);
 
+FSPriority
+FSGetCmdPriority(FSCmdBlock *block);
+
 /** @} */
 
 namespace internal

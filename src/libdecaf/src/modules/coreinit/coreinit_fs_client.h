@@ -92,6 +92,9 @@ FSSetUserData(FSCmdBlock *block,
 void *
 FSGetUserData(FSCmdBlock *block);
 
+FSCmdBlock *
+FSGetCurrentCmdBlock(FSClient *client);
+
 /** @} */
 
 namespace internal
