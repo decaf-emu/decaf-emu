@@ -25,4 +25,16 @@ VPADControlMotor(uint32_t chan,
 void
 VPADStopMotor(uint32_t chan);
 
+float
+VPADIsEnableGyroAccRevise(uint32_t chan);
+
+float
+VPADIsEnableGyroZeroPlay(uint32_t chan);
+
+float
+VPADIsEnableGyroZeroDrift(uint32_t chan);
+
+float
+VPADIsEnableGyroDirRevise(uint32_t chan);
+
 } // namespace vpad
