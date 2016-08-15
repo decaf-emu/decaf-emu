@@ -15,6 +15,7 @@ public:
    static void RegisterFunctions();
 
 private:
+   static void registerEndianFunctions();
    static void registerSocketLibFunctions();
    static void registerSSLFunctions();
 };

@@ -870,6 +870,9 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_utilities.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_endian.cpp">
+      <Filter>Source Files\modules\nsysnet</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1651,6 +1654,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\gpu\gpu_utilities.h">
       <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_endian.h">
+      <Filter>Header Files\modules\nsysnet</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

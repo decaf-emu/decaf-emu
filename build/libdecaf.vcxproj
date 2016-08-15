@@ -358,6 +358,7 @@
     <ClCompile Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_core.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_dir.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_endian.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_socket_lib.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_ssl.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\padscore\padscore.cpp" />
@@ -559,6 +560,7 @@
     <ClInclude Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_core.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_temp\nn_temp_dir.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_endian.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_socket_lib.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_ssl.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\padscore\padscore_kpad_status.h" />

@@ -15,6 +15,7 @@ Module::initialise()
 void
 Module::RegisterFunctions()
 {
+   registerEndianFunctions();
    registerSocketLibFunctions();
    registerSSLFunctions();
 }
