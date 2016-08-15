@@ -56,6 +56,14 @@ IMIsDimEnabled()
    return sDimEnabled;
 }
 
+IOError
+IMGetTimeBeforeAPD(be_val<uint32_t> *seconds)
+{
+   // Let's just put it to 1 hour
+   *seconds = 60 * 60;
+   return IOError::OK;
+}
+
 void
 Module::registerImFunctions()
 {
@@ -66,6 +74,7 @@ Module::registerImFunctions()
    RegisterKernelFunction(IMIsAPDEnabled);
    RegisterKernelFunction(IMIsAPDEnabledBySysSettings);
    RegisterKernelFunction(IMIsDimEnabled);
+   RegisterKernelFunction(IMGetTimeBeforeAPD);
 }
 
 } // namespace coreinit

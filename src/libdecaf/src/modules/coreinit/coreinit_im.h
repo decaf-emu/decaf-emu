@@ -26,4 +26,7 @@ IMIsAPDEnabledBySysSettings();
 BOOL
 IMIsDimEnabled();
 
+IOError
+IMGetTimeBeforeAPD(be_val<uint32_t> *seconds);
+
 } // namespace coreinit
