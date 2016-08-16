@@ -17,29 +17,53 @@ namespace platform
 {
 
 static std::vector<ExceptionHandler>
-gExceptionHandlers;
+sExceptionHandlers;
 
 static struct sigaction
-gOldSegvHandler;
+sSegvHandler;
 
 static struct sigaction
-gSegvHandler;
+sSystemSegvHandler;
+
+static struct sigaction
+sIllHandler;
+
+static struct sigaction
+sSystemIllHandler;
 
 static void
-segvHandler(int unused_signum, siginfo_t *info, void *context)
+dispatchException(Exception *exception,
+                  void *context,
+                  int signum,
+                  const struct sigaction *ourHandler,
+                  const struct sigaction *sysHandler)
 {
-   auto exception = AccessViolationException { reinterpret_cast<uint64_t>(info->si_addr) };
+   // Reset to the original signal handler in case an exception handler
+   //  generates a signal of its own
+   sigaction(signum, sysHandler, nullptr);
 
-   for (auto &handler : gExceptionHandlers) {
-      auto func = handler(&exception);
+   static bool sInSignal = false;
+
+   // Avoid recursive signal handling (in case an exception handler looking
+   //  at a SIGILL causes a SIGSEGV, for example)
+   if (sInSignal) {
+      return;
+   }
+
+   sInSignal = true;
+
+   for (auto &handler : sExceptionHandlers) {
+      auto func = handler(exception);
 
       if (func == UnhandledException) {
          // Exception unhandled, try another handler
          continue;
       }
 
-      // Reinstall the handler since SA_RESETHAND will have cleared it.
-      sigaction(SIGSEGV, &gSegvHandler, nullptr);
+      sInSignal = false;
+
+      // Reinstall our signal handler
+      sigaction(signum, ourHandler, nullptr);
 
       if (func == HandledException) {
          // Exception handled, resume execution
@@ -52,31 +76,54 @@ segvHandler(int unused_signum, siginfo_t *info, void *context)
       }
    }
 
-   sigaction(SIGSEGV, &gOldSegvHandler, nullptr);
+   // No exception handlers, found, so re-run the failing instruction to
+   //  call the original signal handler
+   return;
+}
+
+static void
+segvHandler(int signum, siginfo_t *info, void *context)
+{
+   auto exception = AccessViolationException { reinterpret_cast<uint64_t>(info->si_addr) };
+   dispatchException(&exception, context, signum, &sSegvHandler, &sSystemSegvHandler);
+}
+
+static void
+illHandler(int signum, siginfo_t *info, void *context)
+{
+   auto exception = InvalidInstructionException { };
+   dispatchException(&exception, context, signum, &sIllHandler, &sSystemIllHandler);
 }
 
 bool
 installExceptionHandler(ExceptionHandler handler)
 {
-   static bool addedHandler = false;
+   static bool addedHandlers = false;
 
-   if (!addedHandler) {
-      gSegvHandler.sa_sigaction = segvHandler;
-      sigemptyset(&gSegvHandler.sa_mask);
+   if (!addedHandlers) {
+      sigemptyset(&sSegvHandler.sa_mask);
 
       // Set SA_RESETHAND so that a SEGV in the handler will terminate the
       // program rather than going into an infinite loop.
-      gSegvHandler.sa_flags = SA_SIGINFO | SA_RESETHAND;
+      sSegvHandler.sa_flags = SA_SIGINFO | SA_RESETHAND;
 
-      if (sigaction(SIGSEGV, &gSegvHandler, &gOldSegvHandler) != 0) {
-         gLog->error("sigaction() failed: {}", strerror(errno));
+      sSegvHandler.sa_sigaction = segvHandler;
+      if (sigaction(SIGSEGV, &sSegvHandler, &sSystemSegvHandler) != 0) {
+         gLog->error("sigaction(SIGSEGV) failed: {}", strerror(errno));
          return false;
       }
 
-      addedHandler = true;
+      sIllHandler = sSegvHandler;
+      sIllHandler.sa_sigaction = illHandler;
+      if (sigaction(SIGILL, &sIllHandler, &sSystemIllHandler) != 0) {
+         gLog->error("sigaction(SIGILL) failed: {}", strerror(errno));
+         return false;
+      }
+
+      addedHandlers = true;
    }
 
-   gExceptionHandlers.push_back(handler);
+   sExceptionHandlers.push_back(handler);
    return true;
 }
 
