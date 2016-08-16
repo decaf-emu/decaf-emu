@@ -235,16 +235,16 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
       false);
 
    auto srcBuffer = getSurfaceBuffer(
-      data.dstImage,
-      data.dstPitch,
-      data.dstWidth,
-      data.dstHeight,
-      data.dstDepth,
-      data.dstDim,
-      data.dstFormat,
-      data.dstNumFormat,
-      data.dstFormatComp,
-      data.dstDegamma,
+      data.srcImage,
+      data.srcPitch,
+      data.srcWidth,
+      data.srcHeight,
+      data.srcDepth,
+      data.srcDim,
+      data.srcFormat,
+      data.srcNumFormat,
+      data.srcFormatComp,
+      data.srcDegamma,
       false);
 
    gl::glCopyImageSubData(
