@@ -153,6 +153,14 @@ GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 }
 
 void
+GLDriver::decafSetSwapInterval(const pm4::DecafSetSwapInterval &data)
+{
+   decaf_assert(data.interval <= 10, fmt::format("Bizarre swap interval {}", data.interval));
+
+   mSwapInterval = data.interval;
+}
+
+void
 GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
 {
    mContextState = reinterpret_cast<latte::ContextState *>(data.context.get());

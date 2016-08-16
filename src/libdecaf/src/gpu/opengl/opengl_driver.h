@@ -229,6 +229,7 @@ private:
    void decafDebugMarker(const pm4::DecafDebugMarker &data);
    void decafOSScreenFlip(const pm4::DecafOSScreenFlip &data);
    void decafCopySurface(const pm4::DecafCopySurface &data);
+   void decafSetSwapInterval(const pm4::DecafSetSwapInterval &data);
    void drawIndexAuto(const pm4::DrawIndexAuto &data);
    void drawIndex2(const pm4::DrawIndex2 &data);
    void drawIndexImmd(const pm4::DrawIndexImmd &data);
@@ -348,6 +349,7 @@ private:
 
    volatile RunState mRunState = RunState::None;
    std::thread mThread;
+   unsigned mSwapInterval = 1;
    SwapFunction mSwapFunc;
 
    std::array<uint32_t, 0x10000> mRegisters;
