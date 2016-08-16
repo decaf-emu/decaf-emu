@@ -154,40 +154,46 @@ OSConsoleWrite(const char *msg,
 static uint32_t
 OSGetSymbolName(uint32_t address,
                 char *buffer,
-                int bufsize)
+                uint32_t bufsize)
 {
-   auto retval = 0u;
-   auto found = false;
+   const char *foundModule = nullptr;
+   const char *foundSymbol = nullptr;
+   uint32_t foundAddress;
 
    kernel::loader::lockLoader();
    const auto &modules = kernel::loader::getLoadedModules();
 
-   for (auto &mod : modules) {
-      auto codeBase = 0u;
+   for (auto &i : modules) {
+      auto mod = i.second;
+      auto sec = mod->findAddressSection(address);
 
-      for (auto &sec : mod.second->sections) {
-         if (sec.name.compare(".text") == 0) {
-            codeBase = sec.start;
-            break;
+      if (sec) {
+         const char *closestSym = nullptr;
+         auto closestAddr = sec->start;
+         for (auto &sym : mod->symbols) {
+            if (sym.second.address >= closestAddr && sym.second.address <= address) {
+               closestSym = sym.first.c_str();
+               closestAddr = sym.second.address;
+            }
          }
-      }
-
-      for (auto &sym : mod.second->symbols) {
-         if (sym.second.address == address) {
-            strncpy(buffer, sym.first.c_str(), bufsize);
-            retval = codeBase;
-            found = true;
-            break;
+         if (closestSym) {
+            foundModule = mod->name.c_str();
+            foundSymbol = closestSym;
+            foundAddress = closestAddr;
          }
-      }
-
-      if (found) {
          break;
       }
    }
 
    kernel::loader::unlockLoader();
-   return retval;
+
+   if (foundSymbol) {
+      snprintf(buffer, bufsize, "%s|%s", foundModule, foundSymbol);
+      return foundAddress;
+   } else {
+      snprintf(buffer, bufsize, "<unknown>");
+      return address;
+   }
 }
 
 void
