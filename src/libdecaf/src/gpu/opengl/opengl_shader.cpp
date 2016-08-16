@@ -982,7 +982,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          out
             << "layout(xfb_buffer = " << buffer
             << ", xfb_stride = " << stride
-            << ") out block {\n";
+            << ") out feedback_block" << buffer << " {\n";
 
          for (auto &xfb : shader.feedbacks[buffer]) {
             out << "   layout(xfb_offset = " << xfb.offset << ") out ";
