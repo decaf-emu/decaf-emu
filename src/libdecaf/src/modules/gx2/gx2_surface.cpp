@@ -12,16 +12,24 @@ namespace gx2
 {
 
 static uint32_t
+calcNumLevelsForSize(uint32_t size)
+{
+   return 32 - clz(size);
+}
+
+static uint32_t
 calcNumLevels(GX2Surface *surface)
 {
    if (surface->mipLevels <= 1) {
       return 1;
    }
 
-   auto levels = std::max(Log2<uint32_t>(surface->width), Log2<uint32_t>(surface->height));
+   auto levels = std::max(
+      calcNumLevelsForSize(surface->width),
+      calcNumLevelsForSize(surface->height));
 
    if (surface->dim == GX2SurfaceDim::Texture3D) {
-      levels = std::max(levels, Log2<uint32_t>(surface->depth));
+      levels = std::max(levels, calcNumLevelsForSize(surface->depth));
    }
 
    return levels;

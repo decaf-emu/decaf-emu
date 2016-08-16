@@ -169,6 +169,21 @@ sign_extend(Type src)
    }
 }
 
+#ifdef PLATFORM_WINDOWS
+inline int
+clz(uint32_t bits)
+{
+   unsigned long a;
+   if (!_BitScanReverse(&a, bits)) {
+      return 32;
+   } else {
+      return 31 - a;
+   }
+}
+#else
+#define clz __builtin_clz
+#endif
+
 inline bool
 bit_scan_reverse(unsigned long *out_position, uint32_t bits)
 {
