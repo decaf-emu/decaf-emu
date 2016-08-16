@@ -99,10 +99,10 @@ initialise(const std::string &gamePath)
 
    // Set JIT mode
    if (decaf::config::jit::enabled) {
-      if (!decaf::config::jit::debug) {
-         cpu::setJitMode(cpu::jit_mode::enabled);
+      if (decaf::config::jit::verify) {
+         cpu::setJitMode(cpu::jit_mode::verify);
       } else {
-         cpu::setJitMode(cpu::jit_mode::debug);
+         cpu::setJitMode(cpu::jit_mode::enabled);
       }
    } else {
       cpu::setJitMode(cpu::jit_mode::disabled);

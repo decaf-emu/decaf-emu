@@ -238,7 +238,7 @@ resume()
    }
 
    // Use appropriate jit mode
-   if (gJitMode == jit_mode::enabled) {
+   if (gJitMode != jit_mode::disabled) {
       jit::resume();
    } else {
       interpreter::resume();

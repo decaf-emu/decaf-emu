@@ -25,9 +25,9 @@ const uint32_t SYSTEM_BPFLAG = 1 << 0;
 const uint32_t USER_BPFLAG = 1 << 1;
 
 enum class jit_mode {
-   enabled,
    disabled,
-   debug
+   enabled,
+   verify
 };
 
 static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
