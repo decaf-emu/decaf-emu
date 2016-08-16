@@ -21,12 +21,14 @@ class OpenGLDriver : public GraphicsDriver
 {
 public:
    using SwapFunction = std::function<void(unsigned int, unsigned int)>;
+   using SetSwapIntervalFunction = std::function<void(int)>;
 
    virtual ~OpenGLDriver()
    {
    }
 
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) = 0;
+   virtual void setSwapIntervalHandler(const SetSwapIntervalFunction &handler) = 0;
    virtual void syncPoll(const SwapFunction &swapFunc) = 0;
 };
 

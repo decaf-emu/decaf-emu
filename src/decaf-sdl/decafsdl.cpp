@@ -144,10 +144,19 @@ DecafSDL::run(const std::string &gamePath)
             mGraphicsDriver->run();
          } };
    } else {
-      // Set the swap interval to 0 so that we don't slow
-      //  down the GPU system when presenting...  The game should
-      //  throttle our swapping automatically anyways.
-      SDL_GL_SetSwapInterval(0);
+      // If the host frame rate is reasonably close to 60fps, use host vsync
+      //  when the game requests it; otherwise disable host vsync (GLDriver
+      //  will take care of timing in any case)
+      SDL_DisplayMode mode;
+      if (SDL_GetWindowDisplayMode(mWindow, &mode) == 0
+       && mode.refresh_rate >= 59
+       && mode.refresh_rate <= 61) {
+         mGraphicsDriver->setSwapIntervalHandler([](int interval) {
+            SDL_GL_SetSwapInterval(interval);
+         });
+      } else {
+         SDL_GL_SetSwapInterval(0);
+      }
 
       // Switch to the thread context, we automatically switch
       //  back when presenting a frame.

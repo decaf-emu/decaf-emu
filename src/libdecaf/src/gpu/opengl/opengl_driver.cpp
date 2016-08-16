@@ -139,7 +139,16 @@ GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 
    gx2::internal::onFlip();
 
-   auto now = std::chrono::system_clock::now();
+   time_point_system_clock now = std::chrono::system_clock::now();
+
+   // Make sure not to render faster than the native rate (59.94 fps)
+   //  in case the host GPU doesn't honor vsync.
+   auto frameTime = std::chrono::duration<double>(1.001 / 60);
+   auto nextFrameTime = mLastSwap + frameTime * mSwapInterval;
+   if (now < nextFrameTime) {
+      std::this_thread::sleep_until(nextFrameTime);
+      now = nextFrameTime;
+   }
 
    if (mLastSwap.time_since_epoch().count()) {
       mAverageFrameTime = weight * mAverageFrameTime + (1.0 - weight) * (now - mLastSwap);
@@ -158,6 +167,10 @@ GLDriver::decafSetSwapInterval(const pm4::DecafSetSwapInterval &data)
    decaf_assert(data.interval <= 10, fmt::format("Bizarre swap interval {}", data.interval));
 
    mSwapInterval = data.interval;
+
+   if (mSetSwapIntervalFunc) {
+      mSetSwapIntervalFunc(mSwapInterval);
+   }
 }
 
 void
@@ -520,6 +533,12 @@ GLDriver::executeBuffer(pm4::Buffer *buffer)
 
    // Release command buffer
    gpu::retireCommandBuffer(buffer);
+}
+
+void
+GLDriver::setSwapIntervalHandler(const SetSwapIntervalFunction &handler)
+{
+   mSetSwapIntervalFunc = handler;
 }
 
 void

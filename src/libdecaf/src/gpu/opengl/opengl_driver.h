@@ -209,7 +209,9 @@ public:
    virtual void run() override;
    virtual void stop() override;
    virtual float getAverageFPS() override;
+
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
+   virtual void setSwapIntervalHandler(const SetSwapIntervalFunction &handler) override;
    virtual void syncPoll(const SwapFunction &swapFunc) override;
 
 private:
@@ -349,6 +351,7 @@ private:
 
    volatile RunState mRunState = RunState::None;
    std::thread mThread;
+   SetSwapIntervalFunction mSetSwapIntervalFunc;
    unsigned mSwapInterval = 1;
    SwapFunction mSwapFunc;
 
@@ -397,7 +400,8 @@ private:
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;
-   std::chrono::time_point<std::chrono::system_clock> mLastSwap;
+   using time_point_system_clock = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>>;
+   time_point_system_clock mLastSwap;
    duration_system_clock mAverageFrameTime;
 
 #ifdef PLATFORM_WINDOWS
