@@ -112,30 +112,38 @@ bcGeneric(PPCEmuAssembler& a, Instruction instr)
       }
    }
 
-   if (instr.lk) {
-      auto tmp = a.allocGpTmp().r32();
-      a.mov(tmp, a.genCia + 4);
-      a.mov(a.lrMem, tmp);
-   }
-
    // Make sure no JMP related instructions end up above
    //   this if-block as we use a JMP instruction with
    //   early exit in the else block...
-   if (flags & BcBranchCTR) {
+   if (flags & (BcBranchCTR | BcBranchLR)) {
       a.saveAll();
 
-      a.mov(a.finaleNiaArgReg, a.ctrMem);
-      a.and_(a.finaleNiaArgReg, ~0x3);
-      a.mov(a.finaleJmpSrcArgReg, 0);
-      a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
-   } else if (flags & BcBranchLR) {
-      a.saveAll();
+      if (flags & BcBranchCTR) {
+         a.mov(a.finaleNiaArgReg, a.ctrMem);
+      } else if (flags & BcBranchLR) {
+         a.mov(a.finaleNiaArgReg, a.lrMem);
+      } else {
+         decaf_abort("Unexpected branching flags");
+      }
 
-      a.mov(a.finaleNiaArgReg, a.lrMem);
+      // This is here because we need to record LR before we update
+      //  LR in the case of a bclrl instruction...
+      if (instr.lk) {
+         auto tmp = a.finaleJmpSrcArgReg.r32();
+         a.mov(tmp, a.genCia + 4);
+         a.mov(a.lrMem, tmp);
+      }
+
       a.and_(a.finaleNiaArgReg, ~0x3);
       a.mov(a.finaleJmpSrcArgReg, 0);
       a.jmp(asmjit::Ptr(cpu::jit::gFinaleFn));
    } else {
+      if (instr.lk) {
+         auto tmp = a.allocGpTmp().r32();
+         a.mov(tmp, a.genCia + 4);
+         a.mov(a.lrMem, tmp);
+      }
+
       uint32_t nia = a.genCia + sign_extend<16>(instr.bd << 2);
       jit_b_direct(a, nia);
    }
