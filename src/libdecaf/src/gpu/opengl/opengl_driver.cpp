@@ -215,7 +215,7 @@ getTextureTarget(latte::SQ_TEX_DIM dim)
 void
 GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
 {
-   decaf_check(data.dstPitch == data.srcPitch);
+   decaf_check(data.dstPitch <= data.srcPitch);
    decaf_check(data.dstWidth == data.srcWidth);
    decaf_check(data.dstHeight == data.srcHeight);
    decaf_check(data.dstDepth == data.srcDepth);
