@@ -12,23 +12,6 @@ namespace opengl
 
 bool GLDriver::checkReadyDraw()
 {
-   if (!checkActiveColorBuffer()) {
-      gLog->warn("Skipping draw with invalid color buffer.");
-      return false;
-   }
-
-   if (!checkActiveDepthBuffer()) {
-      gLog->warn("Skipping draw with invalid depth buffer.");
-      return false;
-   }
-
-   auto fbStatus = gl::glCheckFramebufferStatus(gl::GL_FRAMEBUFFER);
-
-   if (fbStatus != gl::GL_FRAMEBUFFER_COMPLETE) {
-      gLog->warn("Draw attempted with an incomplete framebuffer, status {}.", glbinding::Meta::getString(fbStatus));
-      return false;
-   }
-
    if (!checkActiveShader()) {
       gLog->warn("Skipping draw with invalid shader.");
       return false;
@@ -56,6 +39,22 @@ bool GLDriver::checkReadyDraw()
 
    if (!checkActiveSamplers()) {
       gLog->warn("Skipping draw with invalid samplers.");
+      return false;
+   }
+   if (!checkActiveColorBuffer()) {
+      gLog->warn("Skipping draw with invalid color buffer.");
+      return false;
+   }
+
+   if (!checkActiveDepthBuffer()) {
+      gLog->warn("Skipping draw with invalid depth buffer.");
+      return false;
+   }
+
+   auto fbStatus = gl::glCheckFramebufferStatus(gl::GL_FRAMEBUFFER);
+
+   if (fbStatus != gl::GL_FRAMEBUFFER_COMPLETE) {
+      gLog->warn("Draw attempted with an incomplete framebuffer, status {}.", glbinding::Meta::getString(fbStatus));
       return false;
    }
 
