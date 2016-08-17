@@ -2,6 +2,7 @@
 #include "gx2_enum.h"
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
+#include "gx2_mem.h"
 #include "gpu/microcode/latte_instructions.h"
 #include "common/align.h"
 #include "common/decaf_assert.h"
@@ -451,6 +452,8 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
    sq_pgm_resources_fs = sq_pgm_resources_fs
       .NUM_GPRS(numGPRs);
    fetchShader->regs.sq_pgm_resources_fs = sq_pgm_resources_fs;
+
+   GX2Invalidate(GX2InvalidateMode::CPU, fetchShader->data, fetchShader->size);
 }
 
 } // namespace gx2
