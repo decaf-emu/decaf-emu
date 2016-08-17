@@ -118,6 +118,7 @@ struct HostSurface
    uint32_t height = 0;
    uint32_t depth = 0;
    uint32_t degamma = false;
+   bool isDepthBuffer = false;
    HostSurface *next = nullptr;
 };
 
