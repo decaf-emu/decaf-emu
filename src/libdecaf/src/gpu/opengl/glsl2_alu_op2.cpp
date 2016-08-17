@@ -310,7 +310,7 @@ COS(State &state, const ControlFlowInst &cf, const AluInst &alu)
 static void
 EXP(State &state, const ControlFlowInst &cf, const AluInst &alu)
 {
-   unaryFunction(state, cf, alu, "exp");
+   unaryFunction(state, cf, alu, "exp2");
 }
 
 static void
