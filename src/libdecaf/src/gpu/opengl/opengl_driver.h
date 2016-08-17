@@ -1,6 +1,7 @@
 #pragma once
 #include "common/platform.h"
 #include "common/log.h"
+#include "glsl2_translate.h"
 #include "gpu/pm4.h"
 #include "gpu/latte_constants.h"
 #include "gpu/latte_contextstate.h"
@@ -25,14 +26,6 @@ namespace gpu
 
 namespace opengl
 {
-
-enum class SamplerType
-{
-   Invalid,
-   Sampler1D,
-   Sampler2D,
-   Sampler2DArray,
-};
 
 enum class SurfaceUseState : uint32_t
 {
@@ -91,8 +84,8 @@ struct PixelShader : public Resource
    gl::GLuint object = 0;
    gl::GLuint uniformRegisters = 0;
    gl::GLuint uniformAlphaRef = 0;
-   std::array<SamplerType, latte::MaxSamplers> samplerTypes;
    latte::SX_ALPHA_TEST_CONTROL sx_alpha_test_control;
+   std::array<glsl2::SamplerUsage, latte::MaxSamplers> samplerUsage;
    std::array<bool, 16> usedUniformBlocks;
    std::string code;
    std::string disassembly;

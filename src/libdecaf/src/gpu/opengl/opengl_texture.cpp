@@ -38,6 +38,19 @@ getTextureSwizzle(latte::SQ_SEL sel)
 bool GLDriver::checkActiveTextures()
 {
    for (auto i = 0; i < latte::MaxTextures; ++i) {
+      if (!mActiveShader
+       || !mActiveShader->pixel
+       || mActiveShader->pixel->samplerUsage[i] == glsl2::SamplerUsage::Invalid) {
+         // In debug mode, explicitly unbind the unit so tools like apitrace
+         //  don't show lots of unused textures
+         if (decaf::config::gpu::debug && mPixelTextureCache[i].surfaceObject != 0) {
+            gl::glBindTextureUnit(i, 0);
+            mPixelTextureCache[i].surfaceObject = 0;
+         }
+
+         continue;
+      }
+
       auto resourceOffset = (latte::SQ_PS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
       auto sq_tex_resource_word1 = getRegister<latte::SQ_TEX_RESOURCE_WORD1_N>(latte::Register::SQ_TEX_RESOURCE_WORD1_0 + 4 * resourceOffset);
@@ -48,16 +61,7 @@ bool GLDriver::checkActiveTextures()
       auto sq_tex_resource_word6 = getRegister<latte::SQ_TEX_RESOURCE_WORD6_N>(latte::Register::SQ_TEX_RESOURCE_WORD6_0 + 4 * resourceOffset);
       auto baseAddress = sq_tex_resource_word2.BASE_ADDRESS() << 8;
 
-      if (!baseAddress) {
-         // In debug mode, explicitly unbind the unit so tools like apitrace
-         //  don't show lots of unused textures
-         if (decaf::config::gpu::debug && mPixelTextureCache[i].surfaceObject != 0) {
-            gl::glBindTextureUnit(i, 0);
-            mPixelTextureCache[i].surfaceObject = 0;
-         }
-
-         continue;
-      }
+      decaf_assert(baseAddress != 0, fmt::format("Shader tried to read from texture {} which is not defined", i));
 
       // Decode resource registers
       auto pitch = (sq_tex_resource_word0.PITCH() + 1) * 8;

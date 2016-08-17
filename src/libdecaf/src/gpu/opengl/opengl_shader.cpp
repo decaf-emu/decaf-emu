@@ -1326,6 +1326,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
       return false;
    }
 
+   pixel.samplerUsage = shader.samplerUsage;
    pixel.usedUniformBlocks = shader.usedUniformBlocks;
 
    fmt::MemoryWriter out;
