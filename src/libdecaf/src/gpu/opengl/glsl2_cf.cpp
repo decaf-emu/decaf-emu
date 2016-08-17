@@ -37,6 +37,13 @@ CALL_FS(State &state, const ControlFlowInst &cf)
 static void
 ELSE(State &state, const ControlFlowInst &cf)
 {
+   // It's fine for a JUMP to skip an ELSE block entirely (that's just a
+   //  nesting if block) -- what we don't want to see is a JUMP that enters
+   //  into an ELSE block.
+   if (!state.jumpStack.empty() && state.jumpStack.top().toPC < cf.word0.ADDR) {
+      throw translate_exception(fmt::format("JUMP target {} enters ELSE block at {}-{}", state.jumpStack.top().toPC, state.cfPC, cf.word0.ADDR));
+   }
+
    insertElse(state);
 }
 
@@ -48,6 +55,28 @@ END_PROGRAM(State &state, const ControlFlowInst &cf)
 static void
 JUMP(State &state, const ControlFlowInst &cf)
 {
+   if (cf.word0.ADDR <= state.cfPC) {
+      throw translate_exception(fmt::format("JUMP at {} jumps backward", state.cfPC));
+   }
+
+   if (!state.jumpStack.empty() && cf.word0.ADDR > state.jumpStack.top().toPC) {
+      throw translate_exception(fmt::format("JUMP at {} breaks nesting", state.cfPC));
+   }
+
+   insertLineStart(state);
+   state.out << "if (activeMask != Active) {";
+   insertLineEnd(state);
+   increaseIndent(state);
+
+   insertPop(state, cf.word1.POP_COUNT());
+
+   decreaseIndent(state);
+   insertLineStart(state);
+   state.out << "} else {";
+   insertLineEnd(state);
+   increaseIndent(state);
+
+   state.jumpStack.emplace(JumpState { state.cfPC, cf.word0.ADDR });
 }
 
 static void
@@ -69,6 +98,10 @@ LOOP_END(State &state, const ControlFlowInst &cf)
    // Sanity check to ensure we are at the cfPC
    decaf_check(state.cfPC == loopState.endPC);
    decaf_check((cf.word0.ADDR - 1) == loopState.startPC);
+
+   if (!state.jumpStack.empty() && state.jumpStack.top().fromPC > loopState.startPC) {
+      throw translate_exception(fmt::format("JUMP from {} to {} crosses LOOP_END at {}", state.jumpStack.top().fromPC, state.jumpStack.top().toPC, state.cfPC));
+   }
 
    state.loopStack.pop();
 

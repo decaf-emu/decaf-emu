@@ -78,6 +78,12 @@ struct LoopState
    uint32_t endPC;
 };
 
+struct JumpState
+{
+   uint32_t fromPC;
+   uint32_t toPC;
+};
+
 struct State
 {
    Shader *shader = nullptr;
@@ -92,6 +98,7 @@ struct State
    gsl::span<const uint32_t> literals;
    std::vector<std::string> postGroupWrites;
    std::stack<LoopState> loopStack;
+   std::stack<JumpState> jumpStack;
    bool printMyCode = false;
 };
 

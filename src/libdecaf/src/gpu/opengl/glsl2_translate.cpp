@@ -732,6 +732,15 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
 
    try {
       for (auto i = 0; i < binary.size(); i += sizeof(ControlFlowInst)) {
+         while (!state.jumpStack.empty() && state.cfPC == state.jumpStack.top().toPC) {
+            decreaseIndent(state);
+            insertLineStart(state);
+            state.out << '}';
+            insertLineEnd(state);
+
+            state.jumpStack.pop();
+         }
+
          auto cf = *reinterpret_cast<const ControlFlowInst *>(binary.data() + i);
          auto id = cf.word1.CF_INST();
 
