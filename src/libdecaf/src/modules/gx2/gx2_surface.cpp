@@ -468,6 +468,7 @@ GX2CopySurface(GX2Surface *src,
       dstNumFormat,
       dstFormatComp,
       dstForceDegamma ? 1u : 0u,
+      static_cast<latte::SQ_TILE_MODE>(dst->tileMode.value()),
       src->image.getAddress(),
       src->mipmaps.getAddress(),
       srcLevel,
@@ -481,6 +482,7 @@ GX2CopySurface(GX2Surface *src,
       srcNumFormat,
       srcFormatComp,
       srcForceDegamma ? 1u : 0u,
+      static_cast<latte::SQ_TILE_MODE>(src->tileMode.value())
    });
 }
 

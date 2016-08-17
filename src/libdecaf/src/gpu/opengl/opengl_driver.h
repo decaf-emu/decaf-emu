@@ -265,6 +265,22 @@ private:
                       uint32_t *src,
                       const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
 
+   void
+   uploadSurface(SurfaceBuffer *surface,
+                 ppcaddr_t baseAddress,
+                 uint32_t swizzle,
+                 uint32_t pitch,
+                 uint32_t width,
+                 uint32_t height,
+                 uint32_t depth,
+                 latte::SQ_TEX_DIM dim,
+                 latte::SQ_DATA_FORMAT format,
+                 latte::SQ_NUM_FORMAT numFormat,
+                 latte::SQ_FORMAT_COMP formatComp,
+                 uint32_t degamma,
+                 bool isDepthBuffer,
+                 latte::SQ_TILE_MODE tileMode);
+
    SurfaceBuffer *
    getSurfaceBuffer(ppcaddr_t baseAddress,
                     uint32_t pitch,
@@ -276,7 +292,9 @@ private:
                     latte::SQ_NUM_FORMAT numFormat,
                     latte::SQ_FORMAT_COMP formatComp,
                     uint32_t degamma,
-                    bool isDepthBuffer);
+                    bool isDepthBuffer,
+                    latte::SQ_TILE_MODE tileMode,
+                    bool forWrite);
 
    SurfaceBuffer *
    getColorBuffer(latte::CB_COLORN_BASE base,

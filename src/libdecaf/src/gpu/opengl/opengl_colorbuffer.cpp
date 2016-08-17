@@ -1,5 +1,6 @@
 #include "common/decaf_assert.h"
 #include "opengl_driver.h"
+#include "gpu/gpu_utilities.h"
 #include "gpu/latte_enum_cb.h"
 #include "gpu/latte_enum_sq.h"
 #include <glbinding/gl/gl.h>
@@ -122,7 +123,9 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
       decaf_abort(fmt::format("Color buffer with unsupported number type {}", cbNumberType));
    }
 
-   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, false);
+   auto tileMode = getArrayModeTileMode(cb_color_info.ARRAY_MODE());
+
+   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, false, tileMode, true);
    gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));

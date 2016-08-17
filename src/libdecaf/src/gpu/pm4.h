@@ -185,6 +185,7 @@ struct DecafCopySurface
    latte::SQ_NUM_FORMAT dstNumFormat;
    latte::SQ_FORMAT_COMP dstFormatComp;
    uint32_t dstDegamma;
+   latte::SQ_TILE_MODE dstTileMode;
 
    uint32_t srcImage;
    uint32_t srcMipmaps;
@@ -199,7 +200,7 @@ struct DecafCopySurface
    latte::SQ_NUM_FORMAT srcNumFormat;
    latte::SQ_FORMAT_COMP srcFormatComp;
    uint32_t srcDegamma;
-
+   latte::SQ_TILE_MODE srcTileMode;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -217,6 +218,7 @@ struct DecafCopySurface
       se(dstNumFormat);
       se(dstFormatComp);
       se(dstDegamma);
+      se(dstTileMode);
 
       se(srcImage);
       se(srcMipmaps);
@@ -231,6 +233,7 @@ struct DecafCopySurface
       se(srcNumFormat);
       se(srcFormatComp);
       se(srcDegamma);
+      se(srcTileMode);
    }
 };
 

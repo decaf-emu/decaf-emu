@@ -233,3 +233,18 @@ getDataFormatIsFloat(latte::SQ_DATA_FORMAT format)
       decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
    }
 }
+
+latte::SQ_TILE_MODE
+getArrayModeTileMode(latte::CB_ARRAY_MODE mode)
+{
+   switch (mode) {
+   case latte::ARRAY_LINEAR_GENERAL:
+      return latte::SQ_TILE_MODE_DEFAULT;
+   case latte::ARRAY_LINEAR_ALIGNED:
+      return latte::SQ_TILE_MODE_LINEAR_ALIGNED;
+   case latte::ARRAY_2D_TILED_THIN1:
+      return latte::SQ_TILE_MODE_TILED_2D_THIN1;
+   default:
+      decaf_abort(fmt::format("Unimplemented  surface array mode: {}", mode));
+   }
+}

@@ -232,7 +232,9 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
       data.dstNumFormat,
       data.dstFormatComp,
       data.dstDegamma,
-      false);
+      false,
+      data.dstTileMode,
+      true);
 
    auto srcBuffer = getSurfaceBuffer(
       data.srcImage,
@@ -245,6 +247,8 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
       data.srcNumFormat,
       data.srcFormatComp,
       data.srcDegamma,
+      false,
+      data.srcTileMode,
       false);
 
    gl::glCopyImageSubData(
@@ -259,6 +263,8 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
       data.dstWidth,
       data.dstHeight,
       data.dstDepth);
+
+   dstBuffer->dirtyAsTexture = false;
 }
 
 void

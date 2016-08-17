@@ -1,5 +1,6 @@
 #pragma once
 #include "latte_enum_sq.h"
+#include "latte_enum_common.h"
 
 uint32_t
 getDataFormatBitsPerElement(latte::SQ_DATA_FORMAT format);
@@ -18,3 +19,6 @@ getDataFormatComponentBits(latte::SQ_DATA_FORMAT format);
 
 bool
 getDataFormatIsFloat(latte::SQ_DATA_FORMAT format);
+
+latte::SQ_TILE_MODE
+getArrayModeTileMode(latte::CB_ARRAY_MODE mode);
