@@ -418,9 +418,13 @@ GX2CopySurface(GX2Surface *src,
       return;
    }
 
+   auto dstDim = static_cast<latte::SQ_TEX_DIM>(dst->dim.value());
+   auto dstFormat = static_cast<latte::SQ_DATA_FORMAT>(dst->format & 0x3f);
+   auto dstTileMode = static_cast<latte::SQ_TILE_MODE>(dst->tileMode.value());
    auto dstFormatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
    auto dstNumFormat = latte::SQ_NUM_FORMAT_NORM;
    auto dstForceDegamma = false;
+   auto dstPitch = dst->pitch;
 
    if (dst->format & GX2AttribFormatFlags::SIGNED) {
       dstFormatComp = latte::SQ_FORMAT_COMP_SIGNED;
@@ -436,9 +440,17 @@ GX2CopySurface(GX2Surface *src,
       dstForceDegamma = true;
    }
 
+   if (dstFormat >= latte::FMT_BC1 && dstFormat <= latte::FMT_BC5) {
+      dstPitch *= 4;
+   }
+
+   auto srcDim = static_cast<latte::SQ_TEX_DIM>(src->dim.value());
+   auto srcFormat = static_cast<latte::SQ_DATA_FORMAT>(src->format & 0x3f);
+   auto srcTileMode = static_cast<latte::SQ_TILE_MODE>(src->tileMode.value());
    auto srcFormatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
    auto srcNumFormat = latte::SQ_NUM_FORMAT_NORM;
    auto srcForceDegamma = false;
+   auto srcPitch = src->pitch;
 
    if (src->format & GX2AttribFormatFlags::SIGNED) {
       srcFormatComp = latte::SQ_FORMAT_COMP_SIGNED;
@@ -454,35 +466,39 @@ GX2CopySurface(GX2Surface *src,
       srcForceDegamma = true;
    }
 
+   if (srcFormat >= latte::FMT_BC1 && srcFormat <= latte::FMT_BC5) {
+      srcPitch *= 4;
+   }
+
    pm4::write(pm4::DecafCopySurface{
       dst->image.getAddress(),
       dst->mipmaps.getAddress(),
       dstLevel,
       dstSlice,
-      dst->pitch,
+      dstPitch,
       dst->width,
       dst->height,
       dst->depth,
-      static_cast<latte::SQ_TEX_DIM>(dst->dim.value()),
-      static_cast<latte::SQ_DATA_FORMAT>(dst->format & 0x3f),
+      dstDim,
+      dstFormat,
       dstNumFormat,
       dstFormatComp,
       dstForceDegamma ? 1u : 0u,
-      static_cast<latte::SQ_TILE_MODE>(dst->tileMode.value()),
+      dstTileMode,
       src->image.getAddress(),
       src->mipmaps.getAddress(),
       srcLevel,
       srcSlice,
-      src->pitch,
+      srcPitch,
       src->width,
       src->height,
       src->depth,
-      static_cast<latte::SQ_TEX_DIM>(src->dim.value()),
-      static_cast<latte::SQ_DATA_FORMAT>(src->format & 0x3f),
+      srcDim,
+      srcFormat,
       srcNumFormat,
       srcFormatComp,
       srcForceDegamma ? 1u : 0u,
-      static_cast<latte::SQ_TILE_MODE>(src->tileMode.value())
+      srcTileMode
    });
 }
 
