@@ -1427,82 +1427,84 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    for (auto &exp : shader.exports) {
       switch (exp.type) {
       case latte::SQ_EXPORT_PIXEL:
-      {
-         auto mask = (cb_shader_mask.value >> (4 * exp.id)) & 0x0F;
-
-         if (!mask) {
-            gLog->warn("Export is masked by cb_shader_mask");
+         if (exp.id == 61) {
+            out << "gl_FragDepth = exp_pixel_" << exp.id << ".x;\n";
          } else {
-            std::string strMask;
+            auto mask = (cb_shader_mask.value >> (4 * exp.id)) & 0x0F;
 
-            if (mask & (1 << 0)) {
-               strMask.push_back('x');
-            }
+            if (!mask) {
+               gLog->warn("Export is masked by cb_shader_mask");
+            } else {
+               std::string strMask;
 
-            if (mask & (1 << 1)) {
-               strMask.push_back('y');
-            }
-
-            if (mask & (1 << 2)) {
-               strMask.push_back('z');
-            }
-
-            if (mask & (1 << 3)) {
-               strMask.push_back('w');
-            }
-
-            if (sx_alpha_test_control.ALPHA_TEST_ENABLE() && !sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
-               out << "// Alpha Test ";
-
-               switch (sx_alpha_test_control.ALPHA_FUNC()) {
-               case latte::REF_NEVER:
-                  out << "REF_NEVER\n";
-                  out << "discard;\n";
-                  break;
-               case latte::REF_LESS:
-                  out << "REF_LESS\n";
-                  out << "if (!(exp_pixel_" << exp.id << ".w < uAlphaRef)) {\n";
-                  out << "   discard;\n}\n";
-                  break;
-               case latte::REF_EQUAL:
-                  out << "REF_EQUAL\n";
-                  out << "if (!(exp_pixel_" << exp.id << ".w == uAlphaRef)) {\n";
-                  out << "   discard;\n}\n";
-                  break;
-               case latte::REF_LEQUAL:
-                  out << "REF_LEQUAL\n";
-                  out << "if (!(exp_pixel_" << exp.id << ".w <= uAlphaRef)) {\n";
-                  out << "   discard;\n}\n";
-                  break;
-               case latte::REF_GREATER:
-                  out << "REF_GREATER\n";
-                  out << "if (!(exp_pixel_" << exp.id << ".w > uAlphaRef)) {\n";
-                  out << "   discard;\n}\n";
-                  break;
-               case latte::REF_NOTEQUAL:
-                  out << "REF_NOTEQUAL\n";
-                  out << "if (!(exp_pixel_" << exp.id << ".w != uAlphaRef)) {\n";
-                  out << "   discard;\n}\n";
-                  break;
-               case latte::REF_GEQUAL:
-                  out << "REF_GEQUAL\n";
-                  out << "if (!(exp_pixel_" << exp.id << ".w >= uAlphaRef)) {\n";
-                  out << "   discard;\n}\n";
-                  break;
-               case latte::REF_ALWAYS:
-                  out << "REF_ALWAYS\n";
-                  break;
+               if (mask & (1 << 0)) {
+                  strMask.push_back('x');
                }
+
+               if (mask & (1 << 1)) {
+                  strMask.push_back('y');
+               }
+
+               if (mask & (1 << 2)) {
+                  strMask.push_back('z');
+               }
+
+               if (mask & (1 << 3)) {
+                  strMask.push_back('w');
+               }
+
+               if (sx_alpha_test_control.ALPHA_TEST_ENABLE() && !sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
+                  out << "// Alpha Test ";
+
+                  switch (sx_alpha_test_control.ALPHA_FUNC()) {
+                  case latte::REF_NEVER:
+                     out << "REF_NEVER\n";
+                     out << "discard;\n";
+                     break;
+                  case latte::REF_LESS:
+                     out << "REF_LESS\n";
+                     out << "if (!(exp_pixel_" << exp.id << ".w < uAlphaRef)) {\n";
+                     out << "   discard;\n}\n";
+                     break;
+                  case latte::REF_EQUAL:
+                     out << "REF_EQUAL\n";
+                     out << "if (!(exp_pixel_" << exp.id << ".w == uAlphaRef)) {\n";
+                     out << "   discard;\n}\n";
+                     break;
+                  case latte::REF_LEQUAL:
+                     out << "REF_LEQUAL\n";
+                     out << "if (!(exp_pixel_" << exp.id << ".w <= uAlphaRef)) {\n";
+                     out << "   discard;\n}\n";
+                     break;
+                  case latte::REF_GREATER:
+                     out << "REF_GREATER\n";
+                     out << "if (!(exp_pixel_" << exp.id << ".w > uAlphaRef)) {\n";
+                     out << "   discard;\n}\n";
+                     break;
+                  case latte::REF_NOTEQUAL:
+                     out << "REF_NOTEQUAL\n";
+                     out << "if (!(exp_pixel_" << exp.id << ".w != uAlphaRef)) {\n";
+                     out << "   discard;\n}\n";
+                     break;
+                  case latte::REF_GEQUAL:
+                     out << "REF_GEQUAL\n";
+                     out << "if (!(exp_pixel_" << exp.id << ".w >= uAlphaRef)) {\n";
+                     out << "   discard;\n}\n";
+                     break;
+                  case latte::REF_ALWAYS:
+                     out << "REF_ALWAYS\n";
+                     break;
+                  }
+               }
+
+               out
+                  << "ps_out_" << exp.id << "." << strMask
+                  << " = exp_pixel_" << exp.id << "." << strMask;
+
+               out << ";\n";
             }
-
-            out
-               << "ps_out_" << exp.id << "." << strMask
-               << " = exp_pixel_" << exp.id << "." << strMask;
-
-            out << ";\n";
          }
          break;
-      }
       case latte::SQ_EXPORT_POS:
          decaf_abort("Unexpected position export in pixel shader.");
          break;
