@@ -419,6 +419,7 @@ createHostSurface(uint32_t pitch,
    newSurface->width = width;
    newSurface->height = height;
    newSurface->depth = depth;
+   newSurface->degamma = degamma;
    newSurface->next = nullptr;
    return newSurface;
 }
@@ -715,7 +716,8 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    if (buffer.active &&
       buffer.active->width == width &&
       buffer.active->height == height &&
-      buffer.active->depth == depth)
+      buffer.active->depth == depth &&
+      buffer.active->degamma == degamma)
    {
       if (!forWrite && buffer.dirtyAsTexture) {
          uploadSurface(&buffer, baseAddress, swizzle, pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer, tileMode);
@@ -760,7 +762,10 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
       // First lets check to see if we already have a surface created
 
       for (auto surf = buffer.master; surf != nullptr; surf = surf->next) {
-         if (surf->width == width && surf->height == height && surf->depth == depth) {
+         if (surf->width == width &&
+            surf->height == height &&
+            surf->depth == depth &&
+            surf->degamma == degamma) {
             foundSurface = surf;
             break;
          }
