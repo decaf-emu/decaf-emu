@@ -29,6 +29,12 @@ static const auto USE_PERSISTENT_MAP = true;
 //  fetches past the edge of a buffer, but does not use it.
 static const auto BUFFER_PADDING = 16;
 
+// Enable workaround for NVIDIA GLSL compiler bug which incorrectly fails
+//  on "layout(xfb_buffer = A, xfb_stride = B)" syntax when some buffers
+//  have different strides than others.
+static const auto NVIDIA_GLSL_WORKAROUND = true;
+
+
 static void
 dumpRawShader(const std::string &type, ppcaddr_t data, uint32_t size, bool isSubroutine = false)
 {
@@ -979,10 +985,17 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * buffer);
          auto stride = vgt_strmout_vtx_stride * 4;
 
-         out
-            << "layout(xfb_buffer = " << buffer
-            << ", xfb_stride = " << stride
-            << ") out feedback_block" << buffer << " {\n";
+         if (NVIDIA_GLSL_WORKAROUND) {
+            out
+               << "layout(xfb_buffer = " << buffer << ") out;\n"
+               << "layout(xfb_stride = " << stride
+               << ") out feedback_block" << buffer << " {\n";
+         } else {
+            out
+               << "layout(xfb_buffer = " << buffer
+               << ", xfb_stride = " << stride
+               << ") out feedback_block" << buffer << " {\n";
+         }
 
          for (auto &xfb : shader.feedbacks[buffer]) {
             out << "   layout(xfb_offset = " << xfb.offset << ") out ";
