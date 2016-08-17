@@ -33,45 +33,32 @@ bool GLDriver::checkActiveColorBuffer()
 
    bool changedDrawBuffers = false;
 
-   for (auto i = 0u; i < mActiveColorBuffers.size(); ++i, mask >>= 4) {
+   for (auto i = 0u; i < mColorBufferCache.size(); ++i, mask >>= 4) {
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
       auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
       auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
-      auto &active = mActiveColorBuffers[i];
       auto thisMask = mask & 0xF;
 
-      if (cb_color_base.value == mColorBufferCache[i].base
-       && cb_color_size.value == mColorBufferCache[i].size
-       && cb_color_info.value == mColorBufferCache[i].info
-       && thisMask == mColorBufferCache[i].mask) {
-         continue;
+      SurfaceBuffer *surface;
+      if (cb_color_base.BASE_256B && thisMask) {
+         surface = getColorBuffer(cb_color_base, cb_color_size, cb_color_info, false);
+      } else {
+         surface = nullptr;
+      }
+      gl::GLuint surfaceObject = surface ? surface->active->object : 0;
+
+      if (surfaceObject != mColorBufferCache[i].object) {
+         mColorBufferCache[i].object = surfaceObject;
+
+         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, surfaceObject, 0);
+
+         mDrawBuffers[i] = surfaceObject ? gl::GL_COLOR_ATTACHMENT0 + i : gl::GL_NONE;
+         changedDrawBuffers = true;
       }
 
-      mColorBufferCache[i].base = cb_color_base.value;
-      mColorBufferCache[i].size = cb_color_size.value;
-      mColorBufferCache[i].info = cb_color_info.value;
-      mColorBufferCache[i].mask = thisMask;
+      if (surfaceObject && thisMask != mColorBufferCache[i].mask) {
+         mColorBufferCache[i].mask = thisMask;
 
-      if (!cb_color_base.BASE_256B || !thisMask) {
-         if (active) {
-            // Unbind color buffer i
-            gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, 0, 0);
-            active = nullptr;
-
-            mDrawBuffers[i] = gl::GL_NONE;
-            changedDrawBuffers = true;
-         }
-      } else {
-         if (!active) {
-            mDrawBuffers[i] = gl::GL_COLOR_ATTACHMENT0 + i;
-            changedDrawBuffers = true;
-         }
-
-         // Bind color buffer i
-         active = getColorBuffer(cb_color_base, cb_color_size, cb_color_info, false);
-         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, active->active->object, 0);
-
-         // Apply channel mask
          gl::glColorMaski(i,
                           static_cast<gl::GLboolean>(!!(thisMask & (1 << 0))),
                           static_cast<gl::GLboolean>(!!(thisMask & (1 << 1))),

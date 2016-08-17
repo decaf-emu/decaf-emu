@@ -16,42 +16,34 @@ bool GLDriver::checkActiveDepthBuffer()
    auto db_depth_base = getRegister<latte::DB_DEPTH_BASE>(latte::Register::DB_DEPTH_BASE);
    auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
    auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
-   auto &active = mActiveDepthBuffer;
 
-   if (db_depth_base.value == mDepthBufferCache.base
-    && db_depth_size.value == mDepthBufferCache.size
-    && db_depth_info.value == mDepthBufferCache.info) {
-      return true;
-   }
-
-   mDepthBufferCache.base = db_depth_base.value;
-   mDepthBufferCache.size = db_depth_size.value;
-   mDepthBufferCache.info = db_depth_info.value;
-
-   if (!db_depth_base.BASE_256B) {
-      if (active) {
-         // Unbind depth buffer
-         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, 0, 0);
-         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, 0, 0);
-         active = nullptr;
-      }
-
-      return true;
-   }
-
-   // Bind depth buffer
-   active = getDepthBuffer(db_depth_base, db_depth_size, db_depth_info, false);
-   auto dbFormat = db_depth_info.FORMAT();
-   if (dbFormat == latte::DEPTH_8_24
-    || dbFormat == latte::DEPTH_8_24_FLOAT
-    || dbFormat == latte::DEPTH_X24_8_32_FLOAT) {
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_STENCIL_ATTACHMENT, active->active->object, 0);
+   SurfaceBuffer *surface;
+   if (db_depth_base.BASE_256B) {
+      surface = getDepthBuffer(db_depth_base, db_depth_size, db_depth_info, false);
    } else {
-      // Unbind the stencil attachment first so the framebuffer doesn't get
-      //  into an inconsistent state, even temporarily (to avoid unnecessary
-      //  warnings from apitrace).
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, 0, 0);
-      gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, active->active->object, 0);
+      surface = nullptr;
+   }
+   gl::GLuint surfaceObject = surface ? surface->active->object : 0;
+
+   if (surfaceObject != mDepthBufferCache.object) {
+      mDepthBufferCache.object = surfaceObject;
+
+      if (surfaceObject) {
+         auto dbFormat = db_depth_info.FORMAT();
+         if (dbFormat == latte::DEPTH_8_24
+          || dbFormat == latte::DEPTH_8_24_FLOAT
+          || dbFormat == latte::DEPTH_X24_8_32_FLOAT) {
+            gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_STENCIL_ATTACHMENT, surfaceObject, 0);
+         } else {
+            // Unbind the stencil attachment first so the framebuffer
+            //  doesn't get into an inconsistent state, even temporarily
+            //  (to avoid unnecessary warnings from apitrace).
+            gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, 0, 0);
+            gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, surfaceObject, 0);
+         }
+      } else {
+         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_STENCIL_ATTACHMENT, 0, 0);
+      }
    }
 
    return true;

@@ -156,17 +156,13 @@ struct Sampler
 
 struct ColorBufferCache
 {
-   uint32_t base = 0;
-   uint32_t size = 0;
-   uint32_t info = 0;
+   gl::GLuint object = 0;
    uint32_t mask = 0;
 };
 
 struct DepthBufferCache
 {
-   uint32_t base = 0;
-   uint32_t size = 0;
-   uint32_t info = 0;
+   gl::GLuint object = 0;
 };
 
 struct TextureCache
@@ -387,8 +383,6 @@ private:
    gl::GLuint mColorClearFrameBuffer;
    gl::GLuint mDepthClearFrameBuffer;
    Shader *mActiveShader = nullptr;
-   SurfaceBuffer *mActiveDepthBuffer = nullptr;
-   std::array<SurfaceBuffer *, latte::MaxRenderTargets> mActiveColorBuffers;
    std::array<gl::GLenum, latte::MaxRenderTargets> mDrawBuffers;
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;

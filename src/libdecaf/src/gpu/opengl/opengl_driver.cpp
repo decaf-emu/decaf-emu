@@ -32,8 +32,6 @@ GLDriver::initGL()
       applyRegister(static_cast<latte::Register>(i*4));
    }
    mActiveShader = nullptr;
-   mActiveDepthBuffer = nullptr;
-   memset(&mActiveColorBuffers[0], 0, sizeof(SurfaceBuffer *) * mActiveColorBuffers.size());
    mDrawBuffers.fill(gl::GL_NONE);
 
    // Create our blit framebuffer
