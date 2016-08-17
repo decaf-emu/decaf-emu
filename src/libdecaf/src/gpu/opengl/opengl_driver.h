@@ -289,17 +289,20 @@ private:
                     uint32_t degamma,
                     bool isDepthBuffer,
                     latte::SQ_TILE_MODE tileMode,
-                    bool forWrite);
+                    bool forWrite,
+                    bool discardData);
 
    SurfaceBuffer *
    getColorBuffer(latte::CB_COLORN_BASE base,
                   latte::CB_COLORN_SIZE size,
-                  latte::CB_COLORN_INFO info);
+                  latte::CB_COLORN_INFO info,
+                  bool discardData);
 
    SurfaceBuffer *
    getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
                   latte::DB_DEPTH_SIZE db_depth_size,
-                  latte::DB_DEPTH_INFO db_depth_info);
+                  latte::DB_DEPTH_INFO db_depth_info,
+                  bool discardData);
 
    bool checkReadyDraw();
    bool checkActiveAttribBuffers();

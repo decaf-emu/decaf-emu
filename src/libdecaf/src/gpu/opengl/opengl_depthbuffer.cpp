@@ -40,7 +40,7 @@ bool GLDriver::checkActiveDepthBuffer()
    }
 
    // Bind depth buffer
-   active = getDepthBuffer(db_depth_base, db_depth_size, db_depth_info);
+   active = getDepthBuffer(db_depth_base, db_depth_size, db_depth_info, false);
    auto dbFormat = db_depth_info.FORMAT();
    if (dbFormat == latte::DEPTH_8_24
     || dbFormat == latte::DEPTH_8_24_FLOAT
@@ -60,7 +60,8 @@ bool GLDriver::checkActiveDepthBuffer()
 SurfaceBuffer *
 GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
                          latte::DB_DEPTH_SIZE db_depth_size,
-                         latte::DB_DEPTH_INFO db_depth_info)
+                         latte::DB_DEPTH_INFO db_depth_info,
+                         bool discardData)
 {
    auto baseAddress = (db_depth_base.BASE_256B << 8) & 0xFFFFF800;
    auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX();
@@ -115,7 +116,7 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
 
    auto tileMode = getArrayModeTileMode(db_depth_info.ARRAY_MODE());
 
-   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, true, tileMode, true);
+   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, true, tileMode, true, discardData);
    gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));

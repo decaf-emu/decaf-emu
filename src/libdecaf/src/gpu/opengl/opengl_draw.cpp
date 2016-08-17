@@ -359,7 +359,7 @@ GLDriver::decafClearColor(const pm4::DecafClearColor &data)
 
    // Find our colorbuffer to clear
    auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
-   auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
+   auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info, true);
 
    // Bind color buffer
    gl::glNamedFramebufferTexture(mColorClearFrameBuffer, gl::GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
@@ -394,7 +394,7 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
 
    // Find our depthbuffer to clear
    auto db_depth_base = bit_cast<latte::DB_DEPTH_BASE>(data.bufferAddr);
-   auto buffer = getDepthBuffer(db_depth_base, data.db_depth_size, data.db_depth_info);
+   auto buffer = getDepthBuffer(db_depth_base, data.db_depth_size, data.db_depth_info, true);
 
    // Bind depth buffer
    if (hasStencil) {

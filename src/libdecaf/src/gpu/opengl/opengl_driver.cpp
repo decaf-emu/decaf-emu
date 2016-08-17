@@ -114,7 +114,7 @@ void
 GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
 {
    auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
-   auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info);
+   auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info, false);
    ScanBufferChain *target = nullptr;
 
    if (data.scanTarget == SCANTARGET_TV) {
@@ -248,6 +248,7 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
       data.dstDegamma,
       false,
       data.dstTileMode,
+      true,
       true);
 
    auto srcBuffer = getSurfaceBuffer(
@@ -263,6 +264,7 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
       data.srcDegamma,
       false,
       data.srcTileMode,
+      false,
       false);
 
    gl::glCopyImageSubData(

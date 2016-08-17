@@ -86,7 +86,7 @@ bool GLDriver::checkActiveTextures()
       decaf_check((baseAddress & 0x7FF) == swizzle);
 
       // Get the surface
-      auto buffer = getSurfaceBuffer(baseAddress, pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer, tileMode, false);
+      auto buffer = getSurfaceBuffer(baseAddress, pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer, tileMode, false, false);
 
       if (buffer->active->object != mPixelTextureCache[i].surfaceObject
        || sq_tex_resource_word4.value != mPixelTextureCache[i].word4) {

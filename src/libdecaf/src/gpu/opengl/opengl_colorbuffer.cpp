@@ -68,7 +68,7 @@ bool GLDriver::checkActiveColorBuffer()
          }
 
          // Bind color buffer i
-         active = getColorBuffer(cb_color_base, cb_color_size, cb_color_info);
+         active = getColorBuffer(cb_color_base, cb_color_size, cb_color_info, false);
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, active->active->object, 0);
 
          // Apply channel mask
@@ -90,7 +90,8 @@ bool GLDriver::checkActiveColorBuffer()
 SurfaceBuffer *
 GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
                          latte::CB_COLORN_SIZE cb_color_size,
-                         latte::CB_COLORN_INFO cb_color_info)
+                         latte::CB_COLORN_INFO cb_color_info,
+                         bool discardData)
 {
    auto baseAddress = (cb_color_base.BASE_256B << 8) & 0xFFFFF800;
    auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX();
@@ -144,7 +145,7 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
 
    auto tileMode = getArrayModeTileMode(cb_color_info.ARRAY_MODE());
 
-   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, false, tileMode, true);
+   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, false, tileMode, true, discardData);
    gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
    gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));

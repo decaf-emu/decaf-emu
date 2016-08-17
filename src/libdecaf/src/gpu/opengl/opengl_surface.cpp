@@ -678,7 +678,8 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
                            uint32_t degamma,
                            bool isDepthBuffer,
                            latte::SQ_TILE_MODE tileMode,
-                           bool forWrite)
+                           bool forWrite,
+                           bool discardData)
 {
    decaf_check(baseAddress);
    decaf_check(width);
@@ -686,6 +687,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    decaf_check(depth);
    decaf_check(width <= 8192);
    decaf_check(height <= 8192);
+   decaf_check(!(!forWrite && discardData));  // Nonsensical combination
 
    // Grab the swizzle from this...
    uint32_t swizzle = baseAddress & 0xFFF;
@@ -813,7 +815,9 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    // If the active surface is not the master surface, we first need
    //  to copy that surface up to the master
    if (buffer.active != buffer.master) {
-      copyHostSurface(buffer.master, buffer.active, dim);
+      if (!discardData) {
+         copyHostSurface(buffer.master, buffer.active, dim);
+      }
       buffer.active = buffer.master;
    }
 
@@ -821,14 +825,18 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    //  the new one.  Note that this can cause a HostSurface which only
    //  was acting as a surface to be orphaned for later GC.
    if (newMaster) {
-      copyHostSurface(newMaster, buffer.active, dim);
+      if (!discardData) {
+         copyHostSurface(newMaster, buffer.active, dim);
+      }
       buffer.active = newMaster;
    }
 
    // Check to see if we have finally became the active surface, if we
    //   have not, we need to copy one last time... Lolcopies
    if (buffer.active != foundSurface) {
-      copyHostSurface(foundSurface, buffer.active, dim);
+      if (!discardData) {
+         copyHostSurface(foundSurface, buffer.active, dim);
+      }
       buffer.active = foundSurface;
    }
 
