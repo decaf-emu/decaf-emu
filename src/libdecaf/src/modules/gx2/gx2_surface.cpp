@@ -78,7 +78,7 @@ GX2CalcSurfaceSizeAndAlignment(GX2Surface *surface)
          auto pad = 0u;
 
          if (lastTileMode >= GX2TileMode::Tiled2DThin1 && lastTileMode != GX2TileMode::LinearSpecial) {
-            if (output.tileMode < ADDR_TM_2D_TILED_THIN1 || output.tileMode == ADDR_TM_LINEAR_SPECIAL) {
+            if (output.tileMode < ADDR_TM_2D_TILED_THIN1) {
                surface->swizzle = (level << 16) | (surface->swizzle & 0xFF00FFFF);
                lastTileMode = static_cast<GX2TileMode>(output.tileMode);
 
