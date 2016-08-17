@@ -8,7 +8,7 @@ namespace gx2
 {
 
 static uint32_t
-gSwapInterval { 1 };
+sSwapInterval = 1;
 
 void
 GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget scanTarget)
@@ -63,13 +63,20 @@ GX2GetLastFrameGamma(GX2ScanTarget scanTarget, be_val<float> *gamma)
 uint32_t
 GX2GetSwapInterval()
 {
-   return gSwapInterval;
+   return sSwapInterval;
 }
 
 void
 GX2SetSwapInterval(uint32_t interval)
 {
-   gSwapInterval = interval;
+   if (interval != sSwapInterval) {
+      if (interval == 0) {
+         gLog->warn("Swap interval set to 0!\n");
+      }
+
+      sSwapInterval = interval;
+      pm4::write(pm4::DecafSetSwapInterval { interval });
+   }
 }
 
 } // namespace gx2

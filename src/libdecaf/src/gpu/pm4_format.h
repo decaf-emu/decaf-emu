@@ -20,6 +20,7 @@ enum IT_OPCODE : uint32_t
    DECAF_COPY_SURFACE         = 0x07,
    DECAF_DEBUGMARKER          = 0x08,
    DECAF_OSSCREEN_FLIP        = 0x09,
+   DECAF_SET_SWAP_INTERVAL    = 0x0A,
 
    NOP                        = 0x10,
    INDIRECT_BUFFER_END        = 0x17,

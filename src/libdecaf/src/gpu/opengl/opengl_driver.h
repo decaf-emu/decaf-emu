@@ -200,7 +200,9 @@ public:
    virtual void run() override;
    virtual void stop() override;
    virtual float getAverageFPS() override;
+
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
+   virtual void setSwapIntervalHandler(const SetSwapIntervalFunction &handler) override;
    virtual void syncPoll(const SwapFunction &swapFunc) override;
 
 private:
@@ -220,6 +222,7 @@ private:
    void decafDebugMarker(const pm4::DecafDebugMarker &data);
    void decafOSScreenFlip(const pm4::DecafOSScreenFlip &data);
    void decafCopySurface(const pm4::DecafCopySurface &data);
+   void decafSetSwapInterval(const pm4::DecafSetSwapInterval &data);
    void drawIndexAuto(const pm4::DrawIndexAuto &data);
    void drawIndex2(const pm4::DrawIndex2 &data);
    void drawIndexImmd(const pm4::DrawIndexImmd &data);
@@ -360,6 +363,8 @@ private:
 
    volatile RunState mRunState = RunState::None;
    std::thread mThread;
+   SetSwapIntervalFunction mSetSwapIntervalFunc;
+   unsigned mSwapInterval = 1;
    SwapFunction mSwapFunc;
 
    std::array<uint32_t, 0x10000> mRegisters;
@@ -406,7 +411,8 @@ private:
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;
-   std::chrono::time_point<std::chrono::system_clock> mLastSwap;
+   using time_point_system_clock = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>>;
+   time_point_system_clock mLastSwap;
    duration_system_clock mAverageFrameTime;
 
 #ifdef PLATFORM_WINDOWS
