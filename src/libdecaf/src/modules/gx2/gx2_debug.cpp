@@ -269,6 +269,7 @@ debugDumpShader(GX2FetchShader *shader)
 
    fmt::MemoryWriter out;
    out << "GX2FetchShader:\n"
+      << "  address: " << fmt::format("0x{:X}", shader->data.getAddress()) << "\n"
       << "  size: " << shader->size << "\n";
 
    debugDumpShader("shader_fetch_" + pointerAsString(shader),
@@ -286,6 +287,7 @@ debugDumpShader(GX2PixelShader *shader)
 
    fmt::MemoryWriter out;
    out << "GX2PixelShader:\n"
+      << "  address: " << fmt::format("0x{:X}", shader->data.getAddress()) << "\n"
       << "  size: " << shader->size << "\n"
       << "  mode: " << gx2::enumAsString(shader->mode) << "\n";
 
@@ -309,6 +311,7 @@ debugDumpShader(GX2VertexShader *shader)
 
    fmt::MemoryWriter out;
    out << "GX2VertexShader:\n"
+      << "  address: " << fmt::format("0x{:X}", shader->data.getAddress()) << "\n"
       << "  size: " << shader->size << "\n"
       << "  mode: " << gx2::enumAsString(shader->mode) << "\n";
 
