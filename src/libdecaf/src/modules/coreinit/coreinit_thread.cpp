@@ -250,10 +250,10 @@ OSCreateThread(OSThread *thread,
    internal::markThreadActiveNoLock(thread);
    internal::unlockScheduler();
 
-   gLog->debug("Thread Created: ptr {:08x}, id {:x}, basePriority {}, attr {:08x}, stackStart {:08x}, stackEnd {:08x}",
+   gLog->debug("Thread Created: ptr {:08x}, id {:x}, basePriority {}, attr {:08x}, entry {:08x}, stackStart {:08x}, stackEnd {:08x}",
       mem::untranslate(thread), static_cast<uint16_t>(thread->id),
       static_cast<int32_t>(thread->basePriority), static_cast<uint32_t>(thread->attr),
-      thread->stackStart.getAddress(), thread->stackEnd.getAddress());
+      entry, thread->stackStart.getAddress(), thread->stackEnd.getAddress());
 
    return TRUE;
 }
