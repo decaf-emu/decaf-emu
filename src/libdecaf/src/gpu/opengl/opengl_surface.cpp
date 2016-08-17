@@ -682,7 +682,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    uint32_t swizzle = baseAddress & 0xFFF;
 
    // Align the base address according to the GPU logic
-   if (tileMode >= latte::SQ_TILE_MODE_TILED_2D_THIN1) {
+   if (tileMode >= latte::SQ_TILE_MODE_TILED_2D_THIN1 && tileMode != latte::SQ_TILE_MODE_LINEAR_SPECIAL) {
       baseAddress &= ~(0x800 - 1);
    } else {
       baseAddress &= ~(0x100 - 1);
