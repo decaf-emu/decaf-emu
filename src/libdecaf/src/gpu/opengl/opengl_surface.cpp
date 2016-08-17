@@ -1,5 +1,6 @@
 #include "common/decaf_assert.h"
 #include "common/murmur3.h"
+#include "decaf_config.h"
 #include "gpu/gpu_tiling.h"
 #include "gpu/gpu_utilities.h"
 #include "gpu/latte_enum_sq.h"
@@ -371,7 +372,8 @@ getGlTarget(latte::SQ_TEX_DIM dim)
 }
 
 static HostSurface*
-createHostSurface(uint32_t pitch,
+createHostSurface(ppcaddr_t baseAddress,
+                  uint32_t pitch,
                   uint32_t width,
                   uint32_t height,
                   uint32_t depth,
@@ -392,6 +394,11 @@ createHostSurface(uint32_t pitch,
 
    auto target = getGlTarget(dim);
    gl::glCreateTextures(target, 1, &newSurface->object);
+
+   if (decaf::config::gpu::debug) {
+      std::string label = fmt::format("surface @ 0x{:08X}", baseAddress);
+      gl::glObjectLabel(gl::GL_TEXTURE, newSurface->object, -1, label.c_str());
+   }
 
    switch (dim) {
    case latte::SQ_TEX_DIM_1D:
@@ -744,7 +751,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
       buffer.cpuMemStart = baseAddress;
       buffer.cpuMemEnd = baseAddress + getSurfaceBytes(pitch, height, depth, dim, format);
 
-      auto newSurf = createHostSurface(pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
+      auto newSurf = createHostSurface(baseAddress, pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
       buffer.active = newSurf;
       buffer.master = newSurf;
 
@@ -788,7 +795,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
       }
 
       if (!buffer.master || buffer.master->width < masterWidth || buffer.master->height < masterHeight || buffer.master->depth < masterDepth) {
-         newMaster = createHostSurface(pitch, masterWidth, masterHeight, masterDepth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
+         newMaster = createHostSurface(baseAddress, pitch, masterWidth, masterHeight, masterDepth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
 
          // Check if the new master we just made matches our size perfectly.
          if (width == masterWidth && height == masterHeight && depth == masterDepth) {
@@ -799,7 +806,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
 
    if (!foundSurface) {
       // Lets finally just build our perfect surface...
-      foundSurface = createHostSurface(pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
+      foundSurface = createHostSurface(baseAddress, pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
       newSurface = foundSurface;
    }
 

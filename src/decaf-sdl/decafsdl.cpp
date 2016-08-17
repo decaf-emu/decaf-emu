@@ -44,7 +44,7 @@ DecafSDL::createWindow()
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
    // Enable debug context
-   if (config::gpu::debug) {
+   if (decaf::config::gpu::debug) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
    }
 

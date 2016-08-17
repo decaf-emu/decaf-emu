@@ -22,7 +22,6 @@ namespace gpu
 {
 
 bool force_sync = false;
-bool debug = false;
 
 } // namespace gpu
 
@@ -87,6 +86,7 @@ struct CerealGPU
    void serialize(Archive &ar)
    {
       using namespace gpu;
+      using namespace decaf::config::gpu;
       ar(CEREAL_NVP(force_sync),
          CEREAL_NVP(debug));
    }

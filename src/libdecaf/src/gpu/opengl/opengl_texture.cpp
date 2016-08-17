@@ -1,6 +1,7 @@
 #include "common/decaf_assert.h"
 #include "common/log.h"
 #include "common/murmur3.h"
+#include "decaf_config.h"
 #include "gpu/latte_enum_sq.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
@@ -199,6 +200,10 @@ bool GLDriver::checkActiveSamplers()
 
       if (!sampler.object) {
          gl::glCreateSamplers(1, &sampler.object);
+         if (decaf::config::gpu::debug) {
+            std::string label = fmt::format("pixel sampler {}", i);
+            gl::glObjectLabel(gl::GL_SAMPLER, sampler.object, -1, label.c_str());
+         }
       }
 
       // Texture clamp

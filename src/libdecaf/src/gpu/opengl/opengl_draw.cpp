@@ -1,4 +1,5 @@
 #include "common/decaf_assert.h"
+#include "decaf_config.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
 #include <glbinding/Meta.h>
@@ -202,6 +203,9 @@ GLDriver::drawPrimitives(uint32_t count,
    if (vgt_strmout_en.STREAMOUT()) {
       if (!mFeedbackQuery) {
          gl::glCreateQueries(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, 1, &mFeedbackQuery);
+         if (decaf::config::gpu::debug) {
+            gl::glObjectLabel(gl::GL_QUERY, mFeedbackQuery, -1, "transform feedback query");
+         }
          decaf_check(mFeedbackQuery);
       }
 

@@ -121,7 +121,7 @@ DecafSDL::initialiseContext()
       }
    });
 
-   if (config::gpu::debug) {
+   if (decaf::config::gpu::debug) {
       gl::glDebugMessageCallback(&debugMessageCallback, nullptr);
       gl::glEnable(gl::GL_DEBUG_OUTPUT);
       gl::glEnable(gl::GL_DEBUG_OUTPUT_SYNCHRONOUS);

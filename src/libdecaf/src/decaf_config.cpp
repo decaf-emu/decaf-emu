@@ -15,6 +15,13 @@ bool break_on_entry = false;
 
 } // namespace debugger
 
+namespace gpu
+{
+
+bool debug = false;
+
+} // namespace gpu
+
 namespace gx2
 {
 
