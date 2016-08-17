@@ -173,10 +173,10 @@ struct TextureCache
 
 struct SamplerCache
 {
+   glsl2::SamplerUsage usage;
    uint32_t word0 = 0;
    uint32_t word1 = 0;
    uint32_t word2 = 0;
-   bool depthCompare = false;  // TODO: might be unnecessary; see TODO note in checkActiveSamplers()
 };
 
 struct FeedbackBufferCache
