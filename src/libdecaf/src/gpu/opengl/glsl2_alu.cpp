@@ -510,12 +510,12 @@ insertDestBegin(State &state,
       state.out << "uintBitsToFloat(";
    }
 
-   if (omod != SQ_ALU_OMOD_OFF) {
-      state.out << '(';
-   }
-
    if (inst.word1.CLAMP()) {
       state.out << "clamp(";
+   }
+
+   if (omod != SQ_ALU_OMOD_OFF) {
+      state.out << '(';
    }
 }
 
@@ -534,10 +534,6 @@ insertDestEnd(State &state,
       flags = getInstructionFlags(inst.op3.ALU_INST());
    }
 
-   if (inst.word1.CLAMP()) {
-      state.out << ", 0, 1)";
-   }
-
    switch (omod) {
    case SQ_ALU_OMOD_OFF:
       break;
@@ -552,6 +548,10 @@ insertDestEnd(State &state,
       break;
    default:
       throw translate_exception(fmt::format("Unexpected output modifier {}", omod));
+   }
+
+   if (inst.word1.CLAMP()) {
+      state.out << ", 0, 1)";
    }
 
    if ((flags & SQ_ALU_FLAG_INT_OUT) || (flags & SQ_ALU_FLAG_UINT_OUT)) {
