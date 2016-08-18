@@ -23,7 +23,7 @@ DecafSDL::~DecafSDL()
 bool
 DecafSDL::createWindow()
 {
-   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
+   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0) {
       gCliLog->error("Failed to initialize SDL: {}", SDL_GetError());
       return false;
    }
@@ -109,6 +109,7 @@ DecafSDL::run(const std::string &gamePath)
    // Set input provider
    decaf::setInputDriver(this);
    decaf::addEventListener(this);
+   openInputDevices();
 
    // Set sound driver
    decaf::setSoundDriver(mSoundDriver);
@@ -161,6 +162,10 @@ DecafSDL::run(const std::string &gamePath)
    decaf::start();
 
    while (!shouldQuit && !decaf::hasExited()) {
+      if (mVpad0Controller) {
+         SDL_GameControllerUpdate();
+      }
+
       SDL_Event event;
 
       while (SDL_PollEvent(&event)) {

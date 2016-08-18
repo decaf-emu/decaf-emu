@@ -1,3 +1,5 @@
+#include "clilog.h"
+#include "common/decaf_assert.h"
 #include "config.h"
 #include "libdecaf/decaf_config.h"
 #include <climits>
@@ -25,6 +27,51 @@ bool force_sync = false;
 
 } // namespace gpu
 
+namespace input
+{
+
+std::vector<InputDevice> devices;
+
+namespace vpad0
+{
+
+ControllerType type = Keyboard;
+std::string name = "";
+
+} // namespace vpad0
+
+std::string
+controllerTypeToString(ControllerType type)
+{
+   switch (type) {
+   case None:
+      return "none";
+   case Keyboard:
+      return "keyboard";
+   case Joystick:
+      return "joystick";
+   }
+
+   decaf_abort(fmt::format("Invalid controller type {}", type));
+}
+
+ControllerType
+controllerTypeFromString(const std::string &typeStr)
+{
+   if (typeStr.compare("keyboard") == 0) {
+      return Keyboard;
+   } else if (typeStr.compare("joystick") == 0) {
+      return Joystick;
+   } else {
+      if (typeStr.compare("none") != 0) {
+         gCliLog->error("Invalid input type: {}", typeStr);
+      }
+      return None;
+   }
+}
+
+} // namespace input
+
 namespace log
 {
 
@@ -34,40 +81,6 @@ bool to_stdout = false;
 std::string level = "debug";
 
 } // namespace log
-
-namespace input
-{
-
-namespace vpad0
-{
-
-std::string name = "keyboard";
-int button_up = SDL_SCANCODE_UP;
-int button_down = SDL_SCANCODE_DOWN;
-int button_left = SDL_SCANCODE_LEFT;
-int button_right = SDL_SCANCODE_RIGHT;
-int button_a = SDL_SCANCODE_X;
-int button_b = SDL_SCANCODE_Z;
-int button_x = SDL_SCANCODE_S;
-int button_y = SDL_SCANCODE_A;
-int button_trigger_r = SDL_SCANCODE_E;
-int button_trigger_l = SDL_SCANCODE_W;
-int button_trigger_zr = SDL_SCANCODE_R;
-int button_trigger_zl = SDL_SCANCODE_Q;
-int button_stick_l = SDL_SCANCODE_D;
-int button_stick_r = SDL_SCANCODE_C;
-int button_plus = SDL_SCANCODE_1;
-int button_minus = SDL_SCANCODE_2;
-int button_home = SDL_SCANCODE_3;
-int button_sync = SDL_SCANCODE_4;
-int left_stick_x = -1;
-int left_stick_y = -1;
-int right_stick_x = -1;
-int right_stick_y = -1;
-
-} // namespace vpad0
-
-} // namespace input
 
 struct CerealDebugger
 {
@@ -101,6 +114,40 @@ struct CerealGX2
       using namespace decaf::config::gx2;
       ar(CEREAL_NVP(dump_textures),
          CEREAL_NVP(dump_shaders));
+   }
+};
+
+struct CerealInputVpad0
+{
+   template <class Archive>
+   void save(Archive &ar) const
+   {
+      using namespace config::input::vpad0;
+      ar(cereal::make_nvp("type", input::controllerTypeToString(type)),
+         CEREAL_NVP(name));
+   }
+
+   template <class Archive>
+   void load(Archive &ar)
+   {
+      using namespace config::input::vpad0;
+
+      std::string typeStr;
+      ar(typeStr,
+         CEREAL_NVP(name));
+
+      type = input::controllerTypeFromString(typeStr);
+   }
+};
+
+struct CerealInput
+{
+   template <class Archive>
+   void serialize(Archive &ar)
+   {
+      using namespace config::input;
+      ar(CEREAL_NVP(devices),
+         cereal::make_nvp("vpad0", CerealInputVpad0 {}));
    }
 };
 
@@ -153,46 +200,79 @@ struct CerealSystem
    }
 };
 
-struct CerealVpad0
+void
+initialize()
 {
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace input::vpad0;
-      ar(CEREAL_NVP(name),
-         CEREAL_NVP(button_up),
-         CEREAL_NVP(button_down),
-         CEREAL_NVP(button_left),
-         CEREAL_NVP(button_right),
-         CEREAL_NVP(button_a),
-         CEREAL_NVP(button_b),
-         CEREAL_NVP(button_x),
-         CEREAL_NVP(button_y),
-         CEREAL_NVP(button_trigger_r),
-         CEREAL_NVP(button_trigger_l),
-         CEREAL_NVP(button_trigger_zr),
-         CEREAL_NVP(button_trigger_zl),
-         CEREAL_NVP(button_stick_l),
-         CEREAL_NVP(button_stick_r),
-         CEREAL_NVP(button_plus),
-         CEREAL_NVP(button_minus),
-         CEREAL_NVP(button_home),
-         CEREAL_NVP(button_sync),
-         CEREAL_NVP(left_stick_x),
-         CEREAL_NVP(left_stick_y),
-         CEREAL_NVP(right_stick_x),
-         CEREAL_NVP(right_stick_y));
-   }
-};
+   input::devices.clear();
 
-struct CerealInput
-{
-   template <class Archive>
-   void serialize(Archive &ar)
    {
-      ar(cereal::make_nvp("vpad0", CerealVpad0 {}));
+      input::InputDevice device;
+
+      device.type = input::Keyboard;
+      device.button_up = SDL_SCANCODE_UP;
+      device.button_down = SDL_SCANCODE_DOWN;
+      device.button_left = SDL_SCANCODE_LEFT;
+      device.button_right = SDL_SCANCODE_RIGHT;
+      device.button_a = SDL_SCANCODE_X;
+      device.button_b = SDL_SCANCODE_Z;
+      device.button_x = SDL_SCANCODE_S;
+      device.button_y = SDL_SCANCODE_A;
+      device.button_trigger_r = SDL_SCANCODE_E;
+      device.button_trigger_l = SDL_SCANCODE_W;
+      device.button_trigger_zr = SDL_SCANCODE_R;
+      device.button_trigger_zl = SDL_SCANCODE_Q;
+      device.button_stick_l = SDL_SCANCODE_KP_0;
+      device.button_stick_r = SDL_SCANCODE_KP_ENTER;
+      device.button_plus = SDL_SCANCODE_1;
+      device.button_minus = SDL_SCANCODE_2;
+      device.button_home = SDL_SCANCODE_3;
+      device.button_sync = SDL_SCANCODE_4;
+      device.keyboard.left_stick_up = SDL_SCANCODE_KP_8;
+      device.keyboard.left_stick_down = SDL_SCANCODE_KP_2;
+      device.keyboard.left_stick_left = SDL_SCANCODE_KP_4;
+      device.keyboard.left_stick_right = SDL_SCANCODE_KP_6;
+      device.keyboard.right_stick_up = -1;
+      device.keyboard.right_stick_down = -1;
+      device.keyboard.right_stick_left = -1;
+      device.keyboard.right_stick_right = -1;
+
+      input::devices.push_back(device);
    }
-};
+
+   {
+      input::InputDevice device;
+
+      device.type = input::Joystick;
+      device.button_up = -2;
+      device.button_down = -2;
+      device.button_left = -2;
+      device.button_right = -2;
+      device.button_a = -2;
+      device.button_b = -2;
+      device.button_x = -2;
+      device.button_y = -2;
+      device.button_trigger_r = -2;
+      device.button_trigger_l = -2;
+      device.button_trigger_zr = -2;
+      device.button_trigger_zl = -2;
+      device.button_stick_l = -2;
+      device.button_stick_r = -2;
+      device.button_plus = -2;
+      device.button_minus = -2;
+      device.button_home = -2;
+      device.button_sync = -2;
+      device.joystick.left_stick_x = -2;
+      device.joystick.left_stick_x_invert = false;
+      device.joystick.left_stick_y = -2;
+      device.joystick.left_stick_y_invert = false;
+      device.joystick.right_stick_x = -2;
+      device.joystick.right_stick_x_invert = false;
+      device.joystick.right_stick_y = -2;
+      device.joystick.right_stick_y_invert = false;
+
+      input::devices.push_back(device);
+   }
+}
 
 bool
 load(const std::string &path,
