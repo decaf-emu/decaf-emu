@@ -255,10 +255,12 @@ GLDriver::applyRegister(latte::Register reg)
          gl::glDisable(gl::GL_RASTERIZER_DISCARD);
       }
 
+      decaf_assert(pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE() == pa_cl_clip_cntl.ZCLIP_FAR_DISABLE(),
+                   fmt::format("Inconsistent near/far depth clamp setting"));
       if (pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE()) {
-         gl::glDisable(gl::GL_DEPTH_CLAMP);
-      } else {
          gl::glEnable(gl::GL_DEPTH_CLAMP);
+      } else {
+         gl::glDisable(gl::GL_DEPTH_CLAMP);
       }
 
       if (pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {
