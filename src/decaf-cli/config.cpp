@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libdecaf/decaf_config.h"
 #include <climits>
-#include <cereal/archives/json.hpp>
 #include <fstream>
+#include <common/cerealjsonoptionalinput.h>
 
 namespace config
 {
@@ -95,7 +95,7 @@ bool load(const std::string &path)
    }
 
    try {
-      cereal::JSONInputArchive input(file);
+      cereal::JSONOptionalInputArchive input(file);
       input(cereal::make_nvp("jit", CerealJit {}),
             cereal::make_nvp("log", CerealLog {}),
             cereal::make_nvp("sound", CerealSound {}),

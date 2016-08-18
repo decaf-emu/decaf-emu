@@ -3,7 +3,7 @@
 #include <climits>
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
-#include <cereal/archives/json.hpp>
+#include <common/cerealjsonoptionalinput.h>
 #include <fstream>
 #include <SDL_keycode.h>
 
@@ -196,7 +196,7 @@ struct CerealInput
 
 bool
 load(const std::string &path,
-          std::string &error)
+     std::string &error)
 {
    std::ifstream file { path, std::ios::binary };
 
@@ -207,7 +207,7 @@ load(const std::string &path,
    }
 
    try {
-      cereal::JSONInputArchive input { file };
+      cereal::JSONOptionalInputArchive input { file };
       input(cereal::make_nvp("debugger", CerealDebugger {}),
             cereal::make_nvp("gpu", CerealGPU{}),
             cereal::make_nvp("gx2", CerealGX2 {}),
