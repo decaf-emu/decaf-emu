@@ -144,6 +144,13 @@ bool GLDriver::checkActiveShader()
       alphaTestFunc = latte::REF_ALWAYS;
    }
 
+   // We don't currently handle offsets, so panic if any are nonzero
+   decaf_check(getRegister<uint32_t>(latte::Register::SQ_PGM_CF_OFFSET_PS) == 0);
+   decaf_check(getRegister<uint32_t>(latte::Register::SQ_PGM_CF_OFFSET_VS) == 0);
+   decaf_check(getRegister<uint32_t>(latte::Register::SQ_PGM_CF_OFFSET_GS) == 0);
+   decaf_check(getRegister<uint32_t>(latte::Register::SQ_PGM_CF_OFFSET_ES) == 0);
+   decaf_check(getRegister<uint32_t>(latte::Register::SQ_PGM_CF_OFFSET_FS) == 0);
+
    auto fsShaderKey = static_cast<uint64_t>(fsPgmAddress) << 32;
    auto vsShaderKey = static_cast<uint64_t>(vsPgmAddress) << 32;
    vsShaderKey ^= (isScreenSpace ? 1 : 0) << 31;
