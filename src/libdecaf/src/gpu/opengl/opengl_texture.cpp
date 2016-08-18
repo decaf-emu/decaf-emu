@@ -99,14 +99,7 @@ bool GLDriver::checkActiveTextures()
          auto dst_sel_z = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_Z());
          auto dst_sel_w = getTextureSwizzle(sq_tex_resource_word4.DST_SEL_W());
 
-         gl::GLint textureSwizzle[] = {
-            static_cast<gl::GLint>(dst_sel_x),
-            static_cast<gl::GLint>(dst_sel_y),
-            static_cast<gl::GLint>(dst_sel_z),
-            static_cast<gl::GLint>(dst_sel_w),
-         };
-
-         gl::glTextureParameteriv(buffer->active->object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
+         setSurfaceSwizzle(buffer, dst_sel_x, dst_sel_y, dst_sel_z, dst_sel_w);
 
          // In debug mode, first unbind the unit to remove any textures of
          //  different types (again, to reduce clutter in apitrace etc.)

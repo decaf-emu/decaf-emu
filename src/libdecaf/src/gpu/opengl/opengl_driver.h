@@ -112,6 +112,10 @@ struct HostSurface
    uint32_t depth = 0;
    uint32_t degamma = false;
    bool isDepthBuffer = false;
+   gl::GLenum swizzleR;
+   gl::GLenum swizzleG;
+   gl::GLenum swizzleB;
+   gl::GLenum swizzleA;
    HostSurface *next = nullptr;
 };
 
@@ -288,6 +292,13 @@ private:
                     latte::SQ_TILE_MODE tileMode,
                     bool forWrite,
                     bool discardData);
+
+   void
+   setSurfaceSwizzle(SurfaceBuffer *surface,
+                     gl::GLenum swizzleR,
+                     gl::GLenum swizzleG,
+                     gl::GLenum swizzleB,
+                     gl::GLenum swizzleA);
 
    SurfaceBuffer *
    getColorBuffer(latte::CB_COLORN_BASE base,

@@ -428,6 +428,10 @@ createHostSurface(ppcaddr_t baseAddress,
    newSurface->depth = depth;
    newSurface->degamma = degamma;
    newSurface->isDepthBuffer = isDepthBuffer;
+   newSurface->swizzleR = gl::GL_RED;
+   newSurface->swizzleG = gl::GL_GREEN;
+   newSurface->swizzleB = gl::GL_BLUE;
+   newSurface->swizzleA = gl::GL_ALPHA;
    newSurface->next = nullptr;
    return newSurface;
 }
@@ -865,6 +869,36 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    }
 
    return &buffer;
+}
+
+void
+GLDriver::setSurfaceSwizzle(SurfaceBuffer *surface,
+                            gl::GLenum swizzleR,
+                            gl::GLenum swizzleG,
+                            gl::GLenum swizzleB,
+                            gl::GLenum swizzleA)
+{
+   HostSurface *host = surface->active;
+   decaf_check(host);
+
+   if (swizzleR != host->swizzleR
+    || swizzleG != host->swizzleG
+    || swizzleB != host->swizzleB
+    || swizzleA != host->swizzleA) {
+      host->swizzleR = swizzleR;
+      host->swizzleG = swizzleG;
+      host->swizzleB = swizzleB;
+      host->swizzleA = swizzleA;
+
+      gl::GLint textureSwizzle[] = {
+         static_cast<gl::GLint>(swizzleR),
+         static_cast<gl::GLint>(swizzleG),
+         static_cast<gl::GLint>(swizzleB),
+         static_cast<gl::GLint>(swizzleA),
+      };
+
+      gl::glTextureParameteriv(host->object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
+   }
 }
 
 } // namespace opengl
