@@ -262,9 +262,9 @@ GLDriver::applyRegister(latte::Register reg)
       }
 
       if (pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {
-         gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_NEGATIVE_ONE_TO_ONE);
-      } else {
          gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_ZERO_TO_ONE);
+      } else {
+         gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_NEGATIVE_ONE_TO_ONE);
       }
    } break;
 
