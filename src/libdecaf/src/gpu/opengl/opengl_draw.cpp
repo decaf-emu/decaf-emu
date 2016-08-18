@@ -41,6 +41,7 @@ bool GLDriver::checkReadyDraw()
       gLog->warn("Skipping draw with invalid samplers.");
       return false;
    }
+
    if (!checkActiveColorBuffer()) {
       gLog->warn("Skipping draw with invalid color buffer.");
       return false;

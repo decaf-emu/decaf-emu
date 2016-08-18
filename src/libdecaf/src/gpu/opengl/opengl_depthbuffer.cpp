@@ -109,10 +109,6 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
    auto tileMode = getArrayModeTileMode(db_depth_info.ARRAY_MODE());
 
    auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, true, tileMode, true, discardData);
-   gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-   gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-   gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-   gl::glTextureParameteri(buffer->active->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
 
    buffer->dirtyAsTexture = false;
    buffer->state = SurfaceUseState::GpuWritten;
