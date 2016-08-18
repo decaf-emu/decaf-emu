@@ -97,25 +97,6 @@ GLDriver::applyRegister(latte::Register reg)
       }
    } break;
 
-   case latte::Register::CB_TARGET_MASK:
-   {
-      auto cb_target_mask = latte::CB_TARGET_MASK::get(value);
-      auto mask = cb_target_mask.value;
-
-      for (auto i = 0; i < 8; ++i, mask >>= 4) {
-         auto red    = mask & (1 << 0);
-         auto green  = mask & (1 << 1);
-         auto blue   = mask & (1 << 2);
-         auto alpha  = mask & (1 << 3);
-
-         gl::glColorMaski(i,
-                          red ? gl::GL_TRUE : gl::GL_FALSE,
-                          green ? gl::GL_TRUE : gl::GL_FALSE,
-                          blue ? gl::GL_TRUE : gl::GL_FALSE,
-                          alpha ? gl::GL_TRUE : gl::GL_FALSE);
-      }
-   } break;
-
    case latte::Register::DB_STENCILREFMASK_BF:
    {
       auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
