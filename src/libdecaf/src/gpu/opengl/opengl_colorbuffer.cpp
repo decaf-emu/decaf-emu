@@ -16,6 +16,7 @@ bool GLDriver::checkActiveColorBuffer()
    auto cb_target_mask = getRegister<latte::CB_TARGET_MASK>(latte::Register::CB_TARGET_MASK);
    auto cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
    auto cb_color_control = getRegister<latte::CB_COLOR_CONTROL>(latte::Register::CB_COLOR_CONTROL);
+   auto cb_shader_control = getRegister<latte::CB_SHADER_CONTROL>(latte::Register::CB_SHADER_CONTROL);
 
    auto mask = cb_target_mask.value & cb_shader_mask.value;
 
@@ -40,7 +41,8 @@ bool GLDriver::checkActiveColorBuffer()
       auto thisMask = mask & 0xF;
 
       SurfaceBuffer *surface;
-      if (cb_color_base.BASE_256B && thisMask) {
+      if (cb_shader_control.value & (1 << i)) {
+         decaf_assert(cb_color_base.BASE_256B, fmt::format("Attempt to bind undefined color buffer {}", i));
          surface = getColorBuffer(cb_color_base, cb_color_size, cb_color_info, false);
       } else {
          surface = nullptr;

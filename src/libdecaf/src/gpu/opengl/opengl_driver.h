@@ -167,6 +167,8 @@ struct ColorBufferCache
 struct DepthBufferCache
 {
    gl::GLuint object = 0;
+   bool depthBound = false;
+   bool stencilBound = false;
 };
 
 struct TextureCache
