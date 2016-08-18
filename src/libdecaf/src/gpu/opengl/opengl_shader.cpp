@@ -110,6 +110,7 @@ bool GLDriver::checkActiveShader()
    auto pgm_size_vs = getRegister<latte::SQ_PGM_SIZE_VS>(latte::Register::SQ_PGM_SIZE_VS);
    auto pgm_size_ps = getRegister<latte::SQ_PGM_SIZE_PS>(latte::Register::SQ_PGM_SIZE_PS);
    auto cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
+   auto db_shader_control = getRegister<latte::DB_SHADER_CONTROL>(latte::Register::DB_SHADER_CONTROL);
    auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
    auto sx_alpha_ref = getRegister<latte::SX_ALPHA_REF>(latte::Register::SX_ALPHA_REF);
    auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
@@ -138,6 +139,8 @@ bool GLDriver::checkActiveShader()
    auto fsPgmSize = pgm_size_fs.PGM_SIZE << 3;
    auto vsPgmSize = pgm_size_vs.PGM_SIZE << 3;
    auto psPgmSize = pgm_size_ps.PGM_SIZE << 3;
+   auto z_order = db_shader_control.Z_ORDER();
+   auto early_z = (z_order == latte::DB_EARLY_Z_THEN_LATE_Z || z_order == latte::DB_EARLY_Z_THEN_RE_Z);
    auto alphaTestFunc = sx_alpha_test_control.ALPHA_FUNC();
 
    if (!sx_alpha_test_control.ALPHA_TEST_ENABLE() || sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
@@ -167,6 +170,8 @@ bool GLDriver::checkActiveShader()
    } else {
       psShaderKey = static_cast<uint64_t>(psPgmAddress) << 32;
       psShaderKey ^= static_cast<uint64_t>(alphaTestFunc) << 28;
+      psShaderKey ^= static_cast<uint64_t>(early_z) << 27;
+      psShaderKey ^= static_cast<uint64_t>(db_shader_control.Z_EXPORT_ENABLE()) << 26;
       psShaderKey ^= cb_shader_mask.value & 0xFF;
    }
 
@@ -1307,7 +1312,10 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    auto spi_ps_in_control_0 = getRegister<latte::SPI_PS_IN_CONTROL_0>(latte::Register::SPI_PS_IN_CONTROL_0);
    auto spi_ps_in_control_1 = getRegister<latte::SPI_PS_IN_CONTROL_1>(latte::Register::SPI_PS_IN_CONTROL_1);
    auto cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
+   auto db_shader_control = getRegister<latte::DB_SHADER_CONTROL>(latte::Register::DB_SHADER_CONTROL);
    auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
+
+   decaf_assert(!db_shader_control.STENCIL_REF_EXPORT_ENABLE(), "Stencil exports not implemented");
 
    glsl2::Shader shader;
    shader.type = glsl2::Shader::PixelShader;
@@ -1339,6 +1347,21 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    fmt::MemoryWriter out;
    out << shader.fileHeader;
    out << "uniform float uAlphaRef;\n";
+
+   auto z_order = db_shader_control.Z_ORDER();
+   auto early_z = (z_order == latte::DB_EARLY_Z_THEN_LATE_Z || z_order == latte::DB_EARLY_Z_THEN_RE_Z);
+   if (early_z) {
+      for (auto &exp : shader.exports) {
+         if (exp.type == latte::SQ_EXPORT_PIXEL && exp.id == 61) {
+            gLog->warn("Ignoring early-Z because shader writes gl_FragDepth");
+            early_z = false;
+            break;
+         }
+      }
+      if (early_z) {
+         out << "layout(early_fragment_tests) in;\n";
+      }
+   }
 
    if (spi_ps_in_control_0.POSITION_ENA()) {
       if (!spi_ps_in_control_0.POSITION_CENTROID()) {
@@ -1435,7 +1458,11 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
       switch (exp.type) {
       case latte::SQ_EXPORT_PIXEL:
          if (exp.id == 61) {
-            out << "gl_FragDepth = exp_pixel_" << exp.id << ".x;\n";
+            if (!db_shader_control.Z_EXPORT_ENABLE()) {
+               gLog->warn("Depth export is masked by db_shader_control");
+            } else {
+               out << "gl_FragDepth = exp_pixel_" << exp.id << ".x;\n";
+            }
          } else {
             auto mask = (cb_shader_mask.value >> (4 * exp.id)) & 0x0F;
 
