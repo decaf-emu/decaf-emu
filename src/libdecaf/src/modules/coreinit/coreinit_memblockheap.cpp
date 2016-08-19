@@ -332,7 +332,13 @@ MEMAllocFromBlockHeapEx(MEMBlockHeap *heap,
       }
    }
 
-   if (allocInsideBlock(heap, block, alignedStart, size)) {
+   if (!block) {
+      gLog->warn("MEMAllocFromBlockHeapEx: Could not find free block size: 0x{:X} align: 0x{:X}, allocatable: 0x{:X} free: 0x{:X}",
+                 size,
+                 align,
+                 MEMGetAllocatableSizeForBlockHeapEx(heap, align),
+                 MEMGetTotalFreeSizeForBlockHeap(heap));
+   } else if (allocInsideBlock(heap, block, alignedStart, size)) {
       result = alignedStart;
    }
 
@@ -477,7 +483,6 @@ MEMGetTrackingLeftInBlockHeap(MEMBlockHeap *heap)
 
    return heap->numFreeBlocks;
 }
-
 
 /**
  * Return total free size in the heap.
