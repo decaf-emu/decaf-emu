@@ -146,6 +146,10 @@ getGlDataType(latte::SQ_DATA_FORMAT format,
    case latte::FMT_11_11_10_FLOAT:
       return gl::GL_UNSIGNED_INT_10F_11F_11F_REV;
 
+   case latte::FMT_24_8:
+   case latte::FMT_8_24:
+      return gl::GL_UNSIGNED_INT_24_8;
+
    default:
       decaf_abort(fmt::format("Unimplemented texture format {}", format));
    }
@@ -339,8 +343,12 @@ getGlStorageFormat(latte::SQ_DATA_FORMAT format,
 
    // Depth Types
    case latte::FMT_8_24:
-      decaf_check(isDepthBuffer);
-      return gl::GL_DEPTH24_STENCIL8;
+   case latte::FMT_24_8:
+      if (isDepthBuffer) {
+         return gl::GL_DEPTH24_STENCIL8;
+      }
+
+      return getFormat(gl::GL_DEPTH24_STENCIL8, BADFMT, gl::GL_UNSIGNED_INT_24_8, BADFMT, BADFMT);
    case latte::FMT_X24_8_32_FLOAT:
       decaf_check(isDepthBuffer);
       return gl::GL_DEPTH32F_STENCIL8;
