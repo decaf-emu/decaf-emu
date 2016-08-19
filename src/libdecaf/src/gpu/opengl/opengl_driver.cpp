@@ -273,6 +273,13 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
       false,
       false);
 
+   auto copyWidth = data.srcWidth;
+   auto copyHeight = data.srcHeight;
+   auto copyDepth = data.srcDepth;
+   if (data.srcDim == latte::SQ_TEX_DIM_CUBEMAP) {
+      copyDepth *= 6;
+   }
+
    gl::glCopyImageSubData(
       srcBuffer->active->object,
       getTextureTarget(data.dstDim),
@@ -282,9 +289,9 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
       getTextureTarget(data.srcDim),
       data.dstLevel,
       0, 0, data.dstSlice,
-      data.dstWidth,
-      data.dstHeight,
-      data.dstDepth);
+      copyWidth,
+      copyHeight,
+      copyDepth);
 
    dstBuffer->dirtyAsTexture = false;
 }

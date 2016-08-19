@@ -425,6 +425,7 @@ GX2CopySurface(GX2Surface *src,
    auto dstNumFormat = latte::SQ_NUM_FORMAT_NORM;
    auto dstForceDegamma = false;
    auto dstPitch = dst->pitch;
+   auto dstDepth = dst->depth;
 
    if (dst->format & GX2AttribFormatFlags::SIGNED) {
       dstFormatComp = latte::SQ_FORMAT_COMP_SIGNED;
@@ -444,6 +445,10 @@ GX2CopySurface(GX2Surface *src,
       dstPitch *= 4;
    }
 
+   if (dstDim == latte::SQ_TEX_DIM_CUBEMAP) {
+      dstDepth /= 6;
+   }
+
    auto srcDim = static_cast<latte::SQ_TEX_DIM>(src->dim.value());
    auto srcFormat = static_cast<latte::SQ_DATA_FORMAT>(src->format & 0x3f);
    auto srcTileMode = static_cast<latte::SQ_TILE_MODE>(src->tileMode.value());
@@ -451,6 +456,7 @@ GX2CopySurface(GX2Surface *src,
    auto srcNumFormat = latte::SQ_NUM_FORMAT_NORM;
    auto srcForceDegamma = false;
    auto srcPitch = src->pitch;
+   auto srcDepth = src->depth;
 
    if (src->format & GX2AttribFormatFlags::SIGNED) {
       srcFormatComp = latte::SQ_FORMAT_COMP_SIGNED;
@@ -470,6 +476,10 @@ GX2CopySurface(GX2Surface *src,
       srcPitch *= 4;
    }
 
+   if (srcDim == latte::SQ_TEX_DIM_CUBEMAP) {
+      srcDepth /= 6;
+   }
+
    pm4::write(pm4::DecafCopySurface{
       dst->image.getAddress(),
       dst->mipmaps.getAddress(),
@@ -478,7 +488,7 @@ GX2CopySurface(GX2Surface *src,
       dstPitch,
       dst->width,
       dst->height,
-      dst->depth,
+      dstDepth,
       dstDim,
       dstFormat,
       dstNumFormat,
@@ -492,7 +502,7 @@ GX2CopySurface(GX2Surface *src,
       srcPitch,
       src->width,
       src->height,
-      src->depth,
+      srcDepth,
       srcDim,
       srcFormat,
       srcNumFormat,
