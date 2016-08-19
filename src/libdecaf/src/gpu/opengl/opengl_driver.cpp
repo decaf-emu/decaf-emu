@@ -34,6 +34,9 @@ GLDriver::initGL()
    mActiveShader = nullptr;
    mDrawBuffers.fill(gl::GL_NONE);
 
+   // Primitive restart appears to always be enabled on the GX2
+   gl::glEnable(gl::GL_PRIMITIVE_RESTART);
+
    // Create our blit framebuffer
    gl::glCreateFramebuffers(2, mBlitFrameBuffers);
    if (decaf::config::gpu::debug) {
