@@ -114,6 +114,7 @@ struct AXVoiceDeviceBusMixData
    be_val<int16_t> delta;
 };
 CHECK_OFFSET(AXVoiceDeviceBusMixData, 0x0, volume);
+CHECK_OFFSET(AXVoiceDeviceBusMixData, 0x2, delta);
 CHECK_SIZE(AXVoiceDeviceBusMixData, 0x4);
 
 struct AXVoiceDeviceMixData
