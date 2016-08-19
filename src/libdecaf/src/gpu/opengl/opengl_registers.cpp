@@ -253,7 +253,13 @@ GLDriver::applyRegister(latte::Register reg)
 
    case latte::Register::VGT_MULTI_PRIM_IB_RESET_EN:
    {
-      gl::glEnable(gl::GL_PRIMITIVE_RESTART);
+      auto vgt_multi_prim_ib_reset_en = *reinterpret_cast<latte::VGT_MULTI_PRIM_IB_RESET_EN*>(&value);
+
+      if (vgt_multi_prim_ib_reset_en.RESET_EN()) {
+         gl::glEnable(gl::GL_PRIMITIVE_RESTART);
+      } else {
+         gl::glDisable(gl::GL_PRIMITIVE_RESTART);
+      }
    } break;
 
    case latte::Register::VGT_MULTI_PRIM_IB_RESET_INDX:
