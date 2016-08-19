@@ -140,11 +140,14 @@ BITFIELD(SQ_VTX_CONSTANT_WORD6_N, uint32_t)
 BITFIELD_END
 
 // Vertex fetch base location
-union SQ_VTX_BASE_VTX_LOC
-{
-   uint32_t value;
-   uint32_t OFFSET;
-};
+BITFIELD(SQ_VTX_BASE_VTX_LOC, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, OFFSET);
+BITFIELD_END
+
+// Vertex fetch instance offset
+BITFIELD(SQ_VTX_START_INST_LOC, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, OFFSET);
+BITFIELD_END
 
 // Resource requirements to run the GS program
 BITFIELD(SQ_PGM_RESOURCES_GS, uint32_t)

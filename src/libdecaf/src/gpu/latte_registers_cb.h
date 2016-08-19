@@ -53,6 +53,26 @@ union CB_BLEND_ALPHA
    float BLEND_ALPHA;
 };
 
+// This register controls color keying, which masks individual pixel writes based on comparing the
+// source(pre - ROP) color and / or the dest(frame buffer) color to comparison values, after masking both by CLRCMP_MSK
+BITFIELD(CB_CLRCMP_CONTROL, uint32_t)
+   BITFIELD_ENTRY(0, 3, CB_CLRCMP_DRAW, CLRCMP_FCN_SRC);
+   BITFIELD_ENTRY(8, 3, CB_CLRCMP_DRAW, CLRCMP_FCN_DST);
+   BITFIELD_ENTRY(24, 2, CB_CLRCMP_SEL, CLRCMP_FCN_SEL);
+BITFIELD_END
+
+BITFIELD(CB_CLRCMP_SRC, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, CLRCMP_SRC);
+BITFIELD_END
+
+BITFIELD(CB_CLRCMP_DST, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, CLRCMP_DST);
+BITFIELD_END
+
+BITFIELD(CB_CLRCMP_MSK, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, CLRCMP_MSK);
+BITFIELD_END
+
 union CB_COLORN_BASE
 {
    uint32_t value;

@@ -140,4 +140,12 @@ enum VGT_INDEX : uint32_t
    VGT_INDEX_32                     = 1,
 };
 
+enum VGT_OUTPUT_PATH_SELECT : uint32_t
+{
+   VGT_OUTPATH_VTX_REUSE            = 0,
+   VGT_OUTPATH_TESS_EN              = 1,
+   VGT_OUTPATH_PASSTHRU             = 2,
+   VGT_OUTPATH_GS_BLOCK             = 3,
+};
+
 } // namespace latte

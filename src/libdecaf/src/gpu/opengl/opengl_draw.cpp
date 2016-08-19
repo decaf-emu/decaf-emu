@@ -194,8 +194,8 @@ GLDriver::drawPrimitives(uint32_t count,
    auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
 
    auto primType = vgt_primitive_type.PRIM_TYPE();
-   auto baseVertex = sq_vtx_base_vtx_loc.OFFSET;
-   auto numInstances = vgt_dma_num_instances.NUM_INSTANCES;
+   auto baseVertex = sq_vtx_base_vtx_loc.OFFSET();
+   auto numInstances = vgt_dma_num_instances.NUM_INSTANCES();
    auto baseInstance = 0;
 
    auto mode = getPrimitiveMode(primType);

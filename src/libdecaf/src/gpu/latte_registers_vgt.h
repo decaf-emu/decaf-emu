@@ -34,25 +34,24 @@ BITFIELD(VGT_DMA_INDEX_TYPE, uint32_t)
 BITFIELD_END
 
 // VGT DMA Maximum Size
-union VGT_DMA_MAX_SIZE
-{
-   uint32_t value;
-   uint32_t MAX_SIZE;
-};
+BITFIELD(VGT_DMA_MAX_SIZE, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, MAX_SIZE);
+BITFIELD_END
 
 // VGT DMA Number of Instances
-union VGT_DMA_NUM_INSTANCES
-{
-   uint32_t value;
-   uint32_t NUM_INSTANCES;
-};
+BITFIELD(VGT_DMA_NUM_INSTANCES, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, NUM_INSTANCES);
+BITFIELD_END
 
 // VGT DMA Size
-union VGT_DMA_SIZE
-{
-   uint32_t value;
-   uint32_t NUM_INDICES;
-};
+BITFIELD(VGT_DMA_SIZE, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, NUM_INDICES);
+BITFIELD_END
+
+// Maximum ES vertices per GS thread
+BITFIELD(VGT_ES_PER_GS, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, ES_PER_GS);
+BITFIELD_END
 
 // Event Initiator
 BITFIELD(VGT_EVENT_INITIATOR, uint32_t)
@@ -80,6 +79,21 @@ BITFIELD(VGT_GS_OUT_PRIM_TYPE, uint32_t)
    BITFIELD_ENTRY(0, 6, VGT_GS_OUT_PRIMITIVE_TYPE, PRIM_TYPE);
 BITFIELD_END
 
+// Maximum GS prims per ES thread
+BITFIELD(VGT_GS_PER_ES, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, GS_PER_ES);
+BITFIELD_END
+
+// Maximum GS prims per VS thread
+BITFIELD(VGT_GS_PER_VS, uint32_t)
+   BITFIELD_ENTRY(0, 4, uint8_t, GS_PER_VS);
+BITFIELD_END
+
+// Reuseability for GS path, it is nothing to do with number of good simd
+BITFIELD(VGT_GS_VERTEX_REUSE, uint32_t)
+   BITFIELD_ENTRY(0, 5, uint8_t, VERT_REUSE);
+BITFIELD_END
+
 BITFIELD(VGT_HOS_REUSE_DEPTH, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, REUSE_DEPTH);
 BITFIELD_END
@@ -100,6 +114,21 @@ union VGT_HOS_MIN_TESS_LEVEL
    float MIN_TESS;
 };
 
+// For components that are that are specified to be indices (see the VGT_GROUP_VECT_0_FMT_CNTL register), this register is the offset value.
+BITFIELD(VGT_INDX_OFFSET, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, INDX_OFFSET);
+BITFIELD_END
+
+// For components that are that are specified to be indices (see the VGT_GROUP_VECT_0_FMT_CNTL register), this register is the maximum clamp value.
+BITFIELD(VGT_MAX_VTX_INDX, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, MAX_INDX);
+BITFIELD_END
+
+// For components that are that are specified to be indices (see the VGT_GROUP_VECT_0_FMT_CNTL register), this register is the minimum clamp value.
+BITFIELD(VGT_MIN_VTX_INDX, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, MIN_INDX);
+BITFIELD_END
+
 // This register enabling reseting of prim based on reset index
 BITFIELD(VGT_MULTI_PRIM_IB_RESET_EN, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, RESET_EN);
@@ -119,6 +148,16 @@ union VGT_NUM_INDICES
    uint32_t NUM_INDICES;
 };
 
+// This register controls, within a process vector, when the previous process vector is de-allocated.
+BITFIELD(VGT_OUT_DEALLOC_CNTL, uint32_t)
+   BITFIELD_ENTRY(0, 7, uint32_t, DEALLOC_DIST);
+BITFIELD_END
+
+// This register selects which backend path will be used by the VGT block.
+BITFIELD(VGT_OUTPUT_PATH_CNTL, uint32_t)
+   BITFIELD_ENTRY(0, 2, VGT_OUTPUT_PATH_SELECT, PATH_SELECT);
+BITFIELD_END
+
 // Primitive ID generation is enabled
 BITFIELD(VGT_PRIMITIVEID_EN, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, PRIMITIVEID_EN);
@@ -127,6 +166,11 @@ BITFIELD_END
 // VGT Primitive Type
 BITFIELD(VGT_PRIMITIVE_TYPE, uint32_t)
    BITFIELD_ENTRY(0, 6, VGT_DI_PRIMITIVE_TYPE, PRIM_TYPE);
+BITFIELD_END
+
+// VGT reuse is off. This will expand strip primitives to list primitives
+BITFIELD(VGT_REUSE_OFF, uint32_t)
+   BITFIELD_ENTRY(0, 1, bool, REUSE_OFF);
 BITFIELD_END
 
 // This register enables streaming out
@@ -142,9 +186,19 @@ BITFIELD(VGT_STRMOUT_BUFFER_EN, uint32_t)
    BITFIELD_ENTRY(3, 1, bool, BUFFER_3_EN);
 BITFIELD_END
 
+// Draw opaque offset.
+BITFIELD(VGT_STRMOUT_DRAW_OPAQUE_OFFSET, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, OFFSET);
+BITFIELD_END
+
 // This register controls the behavior of the Vertex Reuse block at the backend of the VGT.
 BITFIELD(VGT_VERTEX_REUSE_BLOCK_CNTL, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, VTX_REUSE_DEPTH);
+BITFIELD_END
+
+// Auto-index generation is on.
+BITFIELD(VGT_VTX_CNT_EN, uint32_t)
+   BITFIELD_ENTRY(0, 1, bool, VTX_CNT_EN);
 BITFIELD_END
 
 } // namespace latte

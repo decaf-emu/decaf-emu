@@ -1658,6 +1658,9 @@
     <ClInclude Include="..\src\libdecaf\src\modules\nsysnet\nsysnet_endian.h">
       <Filter>Header Files\modules\nsysnet</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_ta.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\libdecaf\src\gpu\microcode\latte_instructions_def.inl">

@@ -1189,13 +1189,16 @@ GX2SetViewportReg(GX2ViewportReg *reg)
 }
 
 void
-GX2SetRasterizerClipControl(BOOL rasteriser, BOOL zclipEnable)
+GX2SetRasterizerClipControl(BOOL rasteriser,
+                            BOOL zclipEnable)
 {
    GX2SetRasterizerClipControlEx(rasteriser, zclipEnable, FALSE);
 }
 
 void
-GX2SetRasterizerClipControlEx(BOOL rasteriser, BOOL zclipEnable, BOOL halfZ)
+GX2SetRasterizerClipControlEx(BOOL rasteriser,
+                              BOOL zclipEnable,
+                              BOOL halfZ)
 {
    auto pa_cl_clip_cntl = latte::PA_CL_CLIP_CNTL::get(0);
 
@@ -1209,7 +1212,9 @@ GX2SetRasterizerClipControlEx(BOOL rasteriser, BOOL zclipEnable, BOOL halfZ)
 }
 
 void
-GX2SetRasterizerClipControlHalfZ(BOOL rasteriser, BOOL zclipEnable, BOOL halfZ)
+GX2SetRasterizerClipControlHalfZ(BOOL rasteriser,
+                                 BOOL zclipEnable,
+                                 BOOL halfZ)
 {
    GX2SetRasterizerClipControlEx(rasteriser, zclipEnable, halfZ);
 }

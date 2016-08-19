@@ -44,4 +44,12 @@ GX2SetContextState(GX2ContextState *state);
 void
 GX2SetDefaultState();
 
+namespace internal
+{
+
+void
+initRegisters();
+
+} // namespace internal
+
 } // namespace gx2

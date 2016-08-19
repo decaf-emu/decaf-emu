@@ -59,12 +59,13 @@ GX2Init(be_val<uint32_t> *attributes)
    }
 
    // Init event handler stuff (vsync, flips, etc)
-   gx2::internal::initEvents();
+   internal::initEvents();
 
    // Initialise command buffer pools
-   gx2::internal::initCommandBufferPool(cbPoolBase, cbPoolSize / 4);
+   internal::initCommandBufferPool(cbPoolBase, cbPoolSize / 4);
 
    // Setup default gx2 state
+   internal::initRegisters();
    GX2SetDefaultState();
 }
 

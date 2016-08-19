@@ -430,6 +430,21 @@ struct SetContextRegs
    }
 };
 
+struct SetAllContextsReg
+{
+   static const auto Opcode = type3::SET_ALL_CONTEXTS;
+
+   latte::Register id;
+   uint32_t value;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.REG_OFFSET(id, latte::Register::ContextRegisterBase);
+      se(value);
+   }
+};
+
 struct SetControlConstant
 {
    static const auto Opcode = type3::SET_CTL_CONST;

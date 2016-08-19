@@ -16,6 +16,13 @@ enum DB_DEPTH_FORMAT : uint32_t
    DEPTH_X24_8_32_FLOAT    = 7,
 };
 
+enum DB_FORCE : uint32_t
+{
+   DB_FORCE_OFF        = 0,
+   DB_FORCE_ENABLE     = 1,
+   DB_FORCE_DISABLE    = 2,
+};
+
 enum DB_STENCIL_FUNC : uint32_t
 {
    DB_STENCIL_KEEP         = 0,

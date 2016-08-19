@@ -29,13 +29,28 @@ enum CB_BLEND_FUNC : uint32_t
    CB_BLEND_ONE_MINUS_CONSTANT_ALPHA   = 20,
 };
 
+enum CB_CLRCMP_DRAW : uint32_t
+{
+   CB_CLRCMP_DRAW_ALWAYS      = 0,
+   CB_CLRCMP_DRAW_NEVER       = 1,
+   CB_CLRCMP_DRAW_ON_NEQ      = 4,
+   CB_CLRCMP_DRAW_ON_EQ       = 5,
+};
+
+enum CB_CLRCMP_SEL : uint32_t
+{
+   CB_CLRCMP_SEL_DST          = 0,
+   CB_CLRCMP_SEL_SRC          = 1,
+   CB_CLRCMP_SEL_AND          = 2,
+};
+
 enum CB_COMB_FUNC : uint32_t
 {
-   CB_COMB_DST_PLUS_SRC = 0,
-   CB_COMB_SRC_MINUS_DST = 1,
-   CB_COMB_MIN_DST_SRC = 2,
-   CB_COMB_MAX_DST_SRC = 3,
-   CB_COMB_DST_MINUS_SRC = 4,
+   CB_COMB_DST_PLUS_SRC       = 0,
+   CB_COMB_SRC_MINUS_DST      = 1,
+   CB_COMB_MIN_DST_SRC        = 2,
+   CB_COMB_MAX_DST_SRC        = 3,
+   CB_COMB_DST_MINUS_SRC      = 4,
 };
 
 enum CB_ENDIAN : uint32_t
