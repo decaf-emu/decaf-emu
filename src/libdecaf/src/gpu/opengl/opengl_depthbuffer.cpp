@@ -37,11 +37,11 @@ bool GLDriver::checkActiveDepthBuffer()
    }
    gl::GLuint surfaceObject = surface ? surface->active->object : 0;
 
-   if (stencil_enable) {
-      decaf_assert(format == latte::DEPTH_8_24
-                   || format == latte::DEPTH_8_24_FLOAT
-                   || format == latte::DEPTH_X24_8_32_FLOAT,
-                   fmt::format("Attempt to bind stencil buffer 0x{:X} with depth-only format {}", db_depth_base.BASE_256B << 8, format));
+   if (format != latte::DEPTH_8_24
+      && format != latte::DEPTH_8_24_FLOAT
+      && format != latte::DEPTH_X24_8_32_FLOAT) {
+      // You cannot bind a stencil buffer if the framebuffer does not support it.
+      stencil_enable = false;
    }
 
    if (surfaceObject != mDepthBufferCache.object
