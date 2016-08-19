@@ -1189,28 +1189,29 @@ GX2SetViewportReg(GX2ViewportReg *reg)
 }
 
 void
-GX2SetRasterizerClipControl(BOOL rasteriser, BOOL zclipNear)
+GX2SetRasterizerClipControl(BOOL rasteriser, BOOL zclipEnable)
 {
-   GX2SetRasterizerClipControlEx(rasteriser, zclipNear, FALSE);
+   GX2SetRasterizerClipControlEx(rasteriser, zclipEnable, FALSE);
 }
 
 void
-GX2SetRasterizerClipControlEx(BOOL rasteriser, BOOL zclipNear, BOOL halfZ)
+GX2SetRasterizerClipControlEx(BOOL rasteriser, BOOL zclipEnable, BOOL halfZ)
 {
    auto pa_cl_clip_cntl = latte::PA_CL_CLIP_CNTL::get(0);
 
    pa_cl_clip_cntl = pa_cl_clip_cntl
       .RASTERISER_DISABLE(!rasteriser)
-      .ZCLIP_NEAR_DISABLE(!zclipNear)
+      .ZCLIP_NEAR_DISABLE(!zclipEnable)
+      .ZCLIP_FAR_DISABLE(!zclipEnable)
       .DX_CLIP_SPACE_DEF(!!halfZ);
 
    pm4::write(pm4::SetContextReg { latte::Register::PA_CL_CLIP_CNTL, pa_cl_clip_cntl.value });
 }
 
 void
-GX2SetRasterizerClipControlHalfZ(BOOL rasteriser, BOOL zclipNear, BOOL halfZ)
+GX2SetRasterizerClipControlHalfZ(BOOL rasteriser, BOOL zclipEnable, BOOL halfZ)
 {
-   GX2SetRasterizerClipControlEx(rasteriser, zclipNear, halfZ);
+   GX2SetRasterizerClipControlEx(rasteriser, zclipEnable, halfZ);
 }
 
 } // namespace gx2
