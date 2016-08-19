@@ -42,8 +42,11 @@ bool GLDriver::checkActiveColorBuffer()
 
       SurfaceBuffer *surface;
       if (cb_shader_control.value & (1 << i)) {
-         decaf_assert(cb_color_base.BASE_256B, fmt::format("Attempt to bind undefined color buffer {}", i));
-         surface = getColorBuffer(cb_color_base, cb_color_size, cb_color_info, false);
+         if (cb_color_base.BASE_256B) {
+            surface = getColorBuffer(cb_color_base, cb_color_size, cb_color_info, false);
+         } else {
+            surface = nullptr;
+         }
       } else {
          surface = nullptr;
       }
