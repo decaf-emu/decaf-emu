@@ -31,8 +31,6 @@ bool GLDriver::checkActiveDepthBuffer()
    if (db_depth_base.BASE_256B) {
       surface = getDepthBuffer(db_depth_base, db_depth_size, db_depth_info, false);
    } else {
-      decaf_assert(!z_enable, "Attempt to bind undefined depth buffer");
-      decaf_assert(!stencil_enable, "Attempt to bind undefined stencil buffer");
       surface = nullptr;
    }
    gl::GLuint surfaceObject = surface ? surface->active->object : 0;
