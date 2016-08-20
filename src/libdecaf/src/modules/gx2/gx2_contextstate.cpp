@@ -178,8 +178,8 @@ GX2SetupContextStateEx(GX2ContextState *state,
    std::memset(state, 0, sizeof(GX2ContextState));
    state->profileMode = (flags & GX2ContextStateFlags::ProfileMode) ? TRUE : FALSE;
 
-   // Clear load state
-   clearLoadState();
+   // Load state
+   loadState(state);
 
    // Initialise default state
    internal::initRegisters();
