@@ -72,6 +72,8 @@ getCommandLineParser()
                   allowed<std::string> { {
                      "windowed", "fullscreen"
                   } })
+      .add_option("display-stretch",
+                  description { "Enable display stretching, aspect ratio will not be maintained." })
       .add_option("region",
                   description { "Set the system region." },
                   default_value<std::string> { "US" },
@@ -196,6 +198,10 @@ start(excmd::parser &parser,
       } else {
          decaf_abort(fmt::format("Invalid display layout {}", layout));
       }
+   }
+
+   if (options.has("display-stretch")) {
+       config::display::stretch = true;
    }
 
    if (options.has("region")) {

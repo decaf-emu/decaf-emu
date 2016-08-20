@@ -21,6 +21,7 @@ enum DisplayLayout
 
 extern DisplayMode mode;
 extern DisplayLayout layout;
+extern bool stretch;
 
 } // namespace display
 
