@@ -4,7 +4,8 @@
 
 #include <SDL.h>
 
-void setWindowIcon(SDL_Window *window)
+void
+setWindowIcon(SDL_Window *window)
 {
 }
 
