@@ -380,7 +380,7 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       break;
    case SQ_CF_INST_ALU_BREAK:
       insertLineStart(state);
-      state.out << "if (predicateRegister) {";
+      state.out << "if (!predicateRegister) {";
       insertLineEnd(state);
 
       increaseIndent(state);
@@ -395,7 +395,7 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       break;
    case SQ_CF_INST_ALU_CONTINUE:
       insertLineStart(state);
-      state.out << "if (predicateRegister) {";
+      state.out << "if (!predicateRegister) {";
       insertLineEnd(state);
 
       increaseIndent(state);
