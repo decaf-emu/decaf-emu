@@ -8,6 +8,7 @@ build/*.txt
 *.user
 *.suo
 *.sdf
+*.aps
 *.opensdf
 *.opendb
 *.ipch

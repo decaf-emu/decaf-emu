@@ -18,7 +18,11 @@
     <ClCompile Include="..\src\decaf-sdl\config.cpp" />
     <ClCompile Include="..\src\decaf-sdl\decafsdl_draw.cpp" />
     <ClCompile Include="..\src\decaf-sdl\decafsdl_input.cpp" />
+    <ClCompile Include="..\src\decaf-sdl\decafsdl_posix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\decaf-sdl\decafsdl_sound.cpp" />
+    <ClCompile Include="..\src\decaf-sdl\decafsdl_win.cpp" />
     <ClCompile Include="..\src\decaf-sdl\main.cpp" />
     <ClCompile Include="..\src\decaf-sdl\decafsdl.cpp" />
   </ItemGroup>
@@ -27,6 +31,13 @@
     <ClInclude Include="..\src\decaf-sdl\decafsdl.h" />
     <ClInclude Include="..\src\decaf-sdl\clilog.h" />
     <ClInclude Include="..\src\decaf-sdl\decafsdl_sound.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="decaf-sdl.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\resources\decaf.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E10BC5AA-C1A4-4B17-943D-9C1B4BCD52A9}</ProjectGuid>

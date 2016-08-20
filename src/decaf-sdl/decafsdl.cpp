@@ -2,6 +2,8 @@
 #include "config.h"
 #include "decafsdl.h"
 
+void setWindowIcon(SDL_Window *window);
+
 DecafSDL::~DecafSDL()
 {
    if (mContext) {
@@ -59,6 +61,8 @@ DecafSDL::createWindow()
       gCliLog->error("Failed to create TV window: {}", SDL_GetError());
       return false;
    }
+
+   setWindowIcon(mWindow);
 
    if (config::display::mode == config::display::Fullscreen) {
        SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN);
