@@ -121,52 +121,42 @@ EmptyRange[] =
    { 0, 0 },
 };
 
+static auto
+EmptyRangeSpan = gsl::as_span(EmptyRange);
+
 static void
-clearLoadState()
+loadState(GX2ContextState *state, bool skipLoad)
 {
    internal::enableStateShadowing();
 
-   pm4::write(pm4::LoadConfigReg { nullptr, gsl::as_span(EmptyRange) });
-   pm4::write(pm4::LoadContextReg { nullptr, gsl::as_span(EmptyRange) });
-   pm4::write(pm4::LoadAluConst { nullptr, gsl::as_span(EmptyRange) });
-   pm4::write(pm4::LoadLoopConst { nullptr, gsl::as_span(EmptyRange) });
-   pm4::write(pm4::LoadResource { nullptr, gsl::as_span(EmptyRange) });
-   pm4::write(pm4::LoadSampler { nullptr, gsl::as_span(EmptyRange) });
-}
-
-static void
-loadState(GX2ContextState *state)
-{
-   internal::enableStateShadowing();
-
-   pm4::write(pm4::LoadConfigReg {
+   pm4::write(pm4::LoadConfigReg{
       state->shadowState.config,
-      gsl::as_span(ConfigRegisterRange)
+      skipLoad ? EmptyRangeSpan : gsl::as_span(ConfigRegisterRange)
    });
 
-   pm4::write(pm4::LoadContextReg {
+   pm4::write(pm4::LoadContextReg{
       state->shadowState.context,
-      gsl::as_span(ContextRegisterRange)
+      skipLoad ? EmptyRangeSpan : gsl::as_span(ContextRegisterRange)
    });
 
    pm4::write(pm4::LoadAluConst {
       state->shadowState.alu,
-      gsl::as_span(AluConstRange)
+      skipLoad ? EmptyRangeSpan : gsl::as_span(AluConstRange)
    });
 
    pm4::write(pm4::LoadLoopConst {
       state->shadowState.loop,
-      gsl::as_span(LoopConstRange)
+      skipLoad ? EmptyRangeSpan : gsl::as_span(LoopConstRange)
    });
 
    pm4::write(pm4::LoadResource {
       state->shadowState.resource,
-      gsl::as_span(ResourceRange)
+      skipLoad ? EmptyRangeSpan : gsl::as_span(ResourceRange)
    });
 
    pm4::write(pm4::LoadSampler {
       state->shadowState.sampler,
-      gsl::as_span(SamplerRange)
+      skipLoad ? EmptyRangeSpan : gsl::as_span(SamplerRange)
    });
 }
 
@@ -178,8 +168,8 @@ GX2SetupContextStateEx(GX2ContextState *state,
    std::memset(state, 0, sizeof(GX2ContextState));
    state->profileMode = (flags & GX2ContextStateFlags::ProfileMode) ? TRUE : FALSE;
 
-   // Load state
-   loadState(state);
+   // Clear load state
+   loadState(state, true);
 
    // Initialise default state
    internal::initRegisters();
@@ -188,7 +178,7 @@ GX2SetupContextStateEx(GX2ContextState *state,
    // Setup shadow display list
    if (!(flags & GX2ContextStateFlags::NoShadowDisplayList)) {
       GX2BeginDisplayList(state->shadowDisplayList, GX2ContextState::MaxDisplayListSize * 4);
-      loadState(state);
+      loadState(state, false);
       state->shadowDisplayListSize = GX2EndDisplayList(state->shadowDisplayList);
    }
 }
@@ -212,7 +202,7 @@ GX2SetContextState(GX2ContextState *state)
 {
    if (state) {
       if (!state->shadowDisplayListSize) {
-         loadState(state);
+         loadState(state, false);
       } else {
          GX2CallDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
       }
