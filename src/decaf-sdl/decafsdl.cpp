@@ -65,7 +65,7 @@ DecafSDL::createWindow()
    setWindowIcon(mWindow);
 
    if (config::display::mode == config::display::Fullscreen) {
-       SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN);
+       SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
    }
 
    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
