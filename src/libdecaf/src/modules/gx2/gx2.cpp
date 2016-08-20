@@ -54,7 +54,6 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2SetClearDepthStencil);
 
    // Context State
-   RegisterKernelFunction(GX2SetupContextState);
    RegisterKernelFunction(GX2SetupContextStateEx);
    RegisterKernelFunction(GX2GetContextStateDisplayList);
    RegisterKernelFunction(GX2SetContextState);

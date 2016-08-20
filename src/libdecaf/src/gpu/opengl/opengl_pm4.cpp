@@ -106,9 +106,6 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
    case pm4::type3::DECAF_CLEAR_DEPTH_STENCIL:
       decafClearDepthStencil(pm4::read<pm4::DecafClearDepthStencil>(reader));
       break;
-   case pm4::type3::DECAF_SET_CONTEXT_STATE:
-      decafSetContextState(pm4::read<pm4::DecafSetContextState>(reader));
-      break;
    case pm4::type3::DECAF_SET_BUFFER:
       decafSetBuffer(pm4::read<pm4::DecafSetBuffer>(reader));
       break;
@@ -218,6 +215,17 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
 
 void GLDriver::setAluConsts(const pm4::SetAluConsts &data)
 {
+   if (mShadowState.SHADOW_ENABLE.ENABLE_ALU_CONST() && mShadowState.ALU_CONST_BASE) {
+      decaf_check(data.id >= latte::Register::AluConstRegisterBase);
+      decaf_check(data.id < latte::Register::AluConstRegisterEnd);
+      auto offset = (data.id - latte::Register::AluConstRegisterBase) / 4;
+      auto base = &mShadowState.ALU_CONST_BASE[offset];
+
+      for (auto i = 0u; i < data.values.size(); ++i) {
+         base[i] = data.values[i];
+      }
+   }
+
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
@@ -225,6 +233,17 @@ void GLDriver::setAluConsts(const pm4::SetAluConsts &data)
 
 void GLDriver::setConfigRegs(const pm4::SetConfigRegs &data)
 {
+   if (mShadowState.SHADOW_ENABLE.ENABLE_CONFIG_REG() && mShadowState.CONFIG_REG_BASE) {
+      decaf_check(data.id >= latte::Register::ConfigRegisterBase);
+      decaf_check(data.id < latte::Register::ConfigRegisterEnd);
+      auto offset = (data.id - latte::Register::ConfigRegisterBase) / 4;
+      auto base = &mShadowState.CONFIG_REG_BASE[offset];
+
+      for (auto i = 0u; i < data.values.size(); ++i) {
+         base[i] = data.values[i];
+      }
+   }
+
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
@@ -232,6 +251,17 @@ void GLDriver::setConfigRegs(const pm4::SetConfigRegs &data)
 
 void GLDriver::setContextRegs(const pm4::SetContextRegs &data)
 {
+   if (mShadowState.SHADOW_ENABLE.ENABLE_CONTEXT_REG() && mShadowState.CONTEXT_REG_BASE) {
+      decaf_check(data.id >= latte::Register::ContextRegisterBase);
+      decaf_check(data.id < latte::Register::ContextRegisterEnd);
+      auto offset = (data.id - latte::Register::ContextRegisterBase) / 4;
+      auto base = &mShadowState.CONTEXT_REG_BASE[offset];
+
+      for (auto i = 0u; i < data.values.size(); ++i) {
+         base[i] = data.values[i];
+      }
+   }
+
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
@@ -239,6 +269,17 @@ void GLDriver::setContextRegs(const pm4::SetContextRegs &data)
 
 void GLDriver::setControlConstants(const pm4::SetControlConstants &data)
 {
+   if (mShadowState.SHADOW_ENABLE.ENABLE_CTL_CONST() && mShadowState.CTL_CONST_BASE) {
+      decaf_check(data.id >= latte::Register::ControlRegisterBase);
+      decaf_check(data.id < latte::Register::ControlRegisterEnd);
+      auto offset = (data.id - latte::Register::ControlRegisterBase) / 4;
+      auto base = &mShadowState.CTL_CONST_BASE[offset];
+
+      for (auto i = 0u; i < data.values.size(); ++i) {
+         base[i] = data.values[i];
+      }
+   }
+
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
@@ -246,6 +287,17 @@ void GLDriver::setControlConstants(const pm4::SetControlConstants &data)
 
 void GLDriver::setLoopConsts(const pm4::SetLoopConsts &data)
 {
+   if (mShadowState.SHADOW_ENABLE.ENABLE_LOOP_CONST() && mShadowState.LOOP_CONST_BASE) {
+      decaf_check(data.id >= latte::Register::LoopConstRegisterBase);
+      decaf_check(data.id < latte::Register::LoopConstRegisterEnd);
+      auto offset = (data.id - latte::Register::LoopConstRegisterBase) / 4;
+      auto base = &mShadowState.LOOP_CONST_BASE[offset];
+
+      for (auto i = 0u; i < data.values.size(); ++i) {
+         base[i] = data.values[i];
+      }
+   }
+
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
@@ -253,6 +305,17 @@ void GLDriver::setLoopConsts(const pm4::SetLoopConsts &data)
 
 void GLDriver::setSamplers(const pm4::SetSamplers &data)
 {
+   if (mShadowState.SHADOW_ENABLE.ENABLE_SAMPLER() && mShadowState.SAMPLER_CONST_BASE) {
+      decaf_check(data.id >= latte::Register::SamplerRegisterBase);
+      decaf_check(data.id < latte::Register::SamplerRegisterEnd);
+      auto offset = (data.id - latte::Register::SamplerRegisterBase) / 4;
+      auto base = &mShadowState.SAMPLER_CONST_BASE[offset];
+
+      for (auto i = 0u; i < data.values.size(); ++i) {
+         base[i] = data.values[i];
+      }
+   }
+
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
    }
@@ -262,12 +325,22 @@ void GLDriver::setResources(const pm4::SetResources &data)
 {
    auto id = latte::Register::ResourceRegisterBase + (4 * data.id);
 
+   if (mShadowState.SHADOW_ENABLE.ENABLE_RESOURCE() && mShadowState.RESOURCE_CONST_BASE) {
+      auto base = &mShadowState.RESOURCE_CONST_BASE[data.id];
+
+      for (auto i = 0u; i < data.values.size(); ++i) {
+         base[i] = data.values[i];
+      }
+   }
+
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register>(id + i * 4), data.values[i]);
    }
 }
 
-void GLDriver::loadRegisters(latte::Register base, uint32_t *src, const gsl::span<std::pair<uint32_t, uint32_t>> &registers)
+void GLDriver::loadRegisters(latte::Register base,
+                             be_val<uint32_t> *src,
+                             const gsl::span<std::pair<uint32_t, uint32_t>> &registers)
 {
    for (auto &range : registers) {
       auto start = range.first;
@@ -281,42 +354,66 @@ void GLDriver::loadRegisters(latte::Register base, uint32_t *src, const gsl::spa
 
 void GLDriver::loadAluConsts(const pm4::LoadAluConst &data)
 {
-   loadRegisters(latte::Register::AluConstRegisterBase, data.addr, data.values);
+   if (mShadowState.LOAD_ENABLE.ENABLE_ALU_CONST()) {
+      mShadowState.ALU_CONST_BASE = data.addr;
+      loadRegisters(latte::Register::AluConstRegisterBase, data.addr, data.values);
+   }
 }
 
 void GLDriver::loadBoolConsts(const pm4::LoadBoolConst &data)
 {
-   loadRegisters(latte::Register::BoolConstRegisterBase, data.addr, data.values);
+   if (mShadowState.LOAD_ENABLE.ENABLE_BOOL_CONST()) {
+      mShadowState.BOOL_CONST_BASE = data.addr;
+      loadRegisters(latte::Register::BoolConstRegisterBase, data.addr, data.values);
+   }
 }
 
 void GLDriver::loadConfigRegs(const pm4::LoadConfigReg &data)
 {
-   loadRegisters(latte::Register::ConfigRegisterBase, data.addr, data.values);
+   if (mShadowState.LOAD_ENABLE.ENABLE_CONFIG_REG()) {
+      mShadowState.CONFIG_REG_BASE = data.addr;
+      loadRegisters(latte::Register::ConfigRegisterBase, data.addr, data.values);
+   }
 }
 
 void GLDriver::loadContextRegs(const pm4::LoadContextReg &data)
 {
-   loadRegisters(latte::Register::ContextRegisterBase, data.addr, data.values);
+   if (mShadowState.LOAD_ENABLE.ENABLE_CONTEXT_REG()) {
+      mShadowState.CONTEXT_REG_BASE = data.addr;
+      loadRegisters(latte::Register::ContextRegisterBase, data.addr, data.values);
+   }
 }
 
 void GLDriver::loadControlConstants(const pm4::LoadControlConst &data)
 {
-   loadRegisters(latte::Register::ControlRegisterBase, data.addr, data.values);
+   if (mShadowState.LOAD_ENABLE.ENABLE_CTL_CONST()) {
+      mShadowState.CTL_CONST_BASE = data.addr;
+      loadRegisters(latte::Register::ControlRegisterBase, data.addr, data.values);
+   }
 }
 
 void GLDriver::loadLoopConsts(const pm4::LoadLoopConst &data)
 {
-   loadRegisters(latte::Register::LoopConstRegisterBase, data.addr, data.values);
+   if (mShadowState.LOAD_ENABLE.ENABLE_LOOP_CONST()) {
+      mShadowState.LOOP_CONST_BASE = data.addr;
+      loadRegisters(latte::Register::LoopConstRegisterBase, data.addr, data.values);
+   }
 }
 
 void GLDriver::loadSamplers(const pm4::LoadSampler &data)
 {
-   loadRegisters(latte::Register::SamplerRegisterBase, data.addr, data.values);
+   if (mShadowState.LOAD_ENABLE.ENABLE_SAMPLER()) {
+      mShadowState.SAMPLER_CONST_BASE = data.addr;
+      loadRegisters(latte::Register::SamplerRegisterBase, data.addr, data.values);
+   }
 }
 
 void GLDriver::loadResources(const pm4::LoadResource &data)
 {
-   loadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
+   if (mShadowState.LOAD_ENABLE.ENABLE_RESOURCE()) {
+      mShadowState.RESOURCE_CONST_BASE = data.addr;
+      loadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
+   }
 }
 
 void GLDriver::nopPacket(const pm4::Nop &data)

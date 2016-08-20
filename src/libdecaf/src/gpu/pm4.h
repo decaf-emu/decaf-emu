@@ -36,19 +36,6 @@ struct DecafSetSwapInterval
    }
 };
 
-struct DecafSetContextState
-{
-   static const auto Opcode = type3::DECAF_SET_CONTEXT_STATE;
-
-   virtual_ptr<void> context;
-
-   template<typename Serialiser>
-   void serialise(Serialiser &se)
-   {
-      se(context);
-   }
-};
-
 struct DecafCopyColorToScan
 {
    static const auto Opcode = type3::DECAF_COPY_COLOR_TO_SCAN;
@@ -629,7 +616,7 @@ struct IndirectBufferCall
 struct LoadConfigReg
 {
    static const auto Opcode = type3::LOAD_CONFIG_REG;
-   virtual_ptr<uint32_t> addr;
+   virtual_ptr<be_val<uint32_t>> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -646,7 +633,7 @@ struct LoadConfigReg
 struct LoadContextReg
 {
    static const auto Opcode = type3::LOAD_CONTEXT_REG;
-   virtual_ptr<uint32_t> addr;
+   virtual_ptr<be_val<uint32_t>> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -663,7 +650,7 @@ struct LoadContextReg
 struct LoadAluConst
 {
    static const auto Opcode = type3::LOAD_ALU_CONST;
-   virtual_ptr<uint32_t> addr;
+   virtual_ptr<be_val<uint32_t>> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -680,7 +667,7 @@ struct LoadAluConst
 struct LoadBoolConst
 {
    static const auto Opcode = type3::LOAD_BOOL_CONST;
-   virtual_ptr<uint32_t> addr;
+   virtual_ptr<be_val<uint32_t>> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -697,7 +684,7 @@ struct LoadBoolConst
 struct LoadLoopConst
 {
    static const auto Opcode = type3::LOAD_LOOP_CONST;
-   virtual_ptr<uint32_t> addr;
+   virtual_ptr<be_val<uint32_t>> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -714,7 +701,7 @@ struct LoadLoopConst
 struct LoadResource
 {
    static const auto Opcode = type3::LOAD_RESOURCE;
-   virtual_ptr<uint32_t> addr;
+   virtual_ptr<be_val<uint32_t>> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -731,7 +718,7 @@ struct LoadResource
 struct LoadSampler
 {
    static const auto Opcode = type3::LOAD_SAMPLER;
-   virtual_ptr<uint32_t> addr;
+   virtual_ptr<be_val<uint32_t>> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -748,7 +735,7 @@ struct LoadSampler
 struct LoadControlConst
 {
    static const auto Opcode = type3::LOAD_CTL_CONST;
-   virtual_ptr<uint32_t> addr;
+   virtual_ptr<be_val<uint32_t>> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -981,6 +968,21 @@ struct SetPredication
    {
       se(addrLo);
       se(set_pred.value);
+   }
+};
+
+struct ContextControl
+{
+   static const auto Opcode = type3::CONTEXT_CTL;
+
+   latte::CONTEXT_CONTROL_ENABLE LOAD_CONTROL;
+   latte::CONTEXT_CONTROL_ENABLE SHADOW_ENABLE;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(LOAD_CONTROL.value);
+      se(SHADOW_ENABLE.value);
    }
 };
 

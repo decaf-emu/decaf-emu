@@ -157,6 +157,11 @@ ENUM_BEG(GX2Component, uint32_t)
    ENUM_VALUE(One,                  5)
 ENUM_END(GX2Component)
 
+ENUM_BEG(GX2ContextStateFlags, uint32_t)
+   ENUM_VALUE(ProfileMode,          1 << 0)
+   ENUM_VALUE(NoShadowDisplayList,  1 << 1)
+ENUM_END(GX2ContextStateFlags)
+
 ENUM_BEG(GX2ClearFlags, uint32_t)
    ENUM_VALUE(Depth,                1)
    ENUM_VALUE(Stencil,              2)

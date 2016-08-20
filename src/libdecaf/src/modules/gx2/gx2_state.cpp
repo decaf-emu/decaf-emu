@@ -9,6 +9,7 @@
 #include "common/log.h"
 #include "virtual_ptr.h"
 #include "ppcutils/wfunc_call.h"
+#include "gpu/pm4_writer.h"
 
 namespace gx2
 {
@@ -65,8 +66,10 @@ GX2Init(be_val<uint32_t> *attributes)
    internal::initCommandBufferPool(cbPoolBase, cbPoolSize / 4);
 
    // Setup default gx2 state
+   internal::disableStateShadowing();
    internal::initRegisters();
    GX2SetDefaultState();
+   GX2Flush();
 }
 
 void
@@ -87,12 +90,60 @@ GX2Flush()
 namespace internal
 {
 
-bool isInitialised()
+void
+enableStateShadowing()
+{
+   auto LOAD_CONTROL = latte::CONTEXT_CONTROL_ENABLE::get(0)
+      .ENABLE_CONFIG_REG(true)
+      .ENABLE_CONTEXT_REG(true)
+      .ENABLE_ALU_CONST(true)
+      .ENABLE_BOOL_CONST(true)
+      .ENABLE_LOOP_CONST(true)
+      .ENABLE_RESOURCE(true)
+      .ENABLE_SAMPLER(true)
+      .ENABLE_CTL_CONST(true)
+      .ENABLE_ORDINAL(true);
+
+   auto SHADOW_ENABLE = latte::CONTEXT_CONTROL_ENABLE::get(0)
+      .ENABLE_CONFIG_REG(true)
+      .ENABLE_CONTEXT_REG(true)
+      .ENABLE_ALU_CONST(true)
+      .ENABLE_BOOL_CONST(true)
+      .ENABLE_LOOP_CONST(true)
+      .ENABLE_RESOURCE(true)
+      .ENABLE_SAMPLER(true)
+      .ENABLE_CTL_CONST(true)
+      .ENABLE_ORDINAL(true);
+
+   pm4::write(pm4::ContextControl {
+      LOAD_CONTROL,
+      SHADOW_ENABLE
+   });
+}
+
+void
+disableStateShadowing()
+{
+   auto LOAD_CONTROL = latte::CONTEXT_CONTROL_ENABLE::get(0)
+      .ENABLE_ORDINAL(true);
+
+   auto SHADOW_ENABLE = latte::CONTEXT_CONTROL_ENABLE::get(0)
+      .ENABLE_ORDINAL(true);
+
+   pm4::write(pm4::ContextControl {
+      LOAD_CONTROL,
+      SHADOW_ENABLE
+   });
+}
+
+bool
+isInitialised()
 {
    return gMainCoreId != 0xFF;
 }
 
-uint32_t getMainCoreId()
+uint32_t
+getMainCoreId()
 {
    return gMainCoreId;
 }

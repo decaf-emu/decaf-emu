@@ -173,12 +173,6 @@ GLDriver::decafSetSwapInterval(const pm4::DecafSetSwapInterval &data)
 }
 
 void
-GLDriver::decafSetContextState(const pm4::DecafSetContextState &data)
-{
-   mContextState = reinterpret_cast<latte::ContextState *>(data.context.get());
-}
-
-void
 GLDriver::decafDebugMarker(const pm4::DecafDebugMarker &data)
 {
    gLog->trace("GPU Debug Marker: {} {}", data.key.data(), data.id);
