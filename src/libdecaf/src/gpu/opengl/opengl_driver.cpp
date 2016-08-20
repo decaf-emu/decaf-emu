@@ -433,7 +433,10 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
          gl::glEndQuery(gl::GL_SAMPLES_PASSED);
          gl::glGetQueryObjectui64v(mOccQuery, gl::GL_QUERY_RESULT, &value);
       } else {
-         decaf_check(!mLastOccQueryAddress);
+         if (mLastOccQueryAddress) {
+            gLog->warn("Program started a new occlusion query (at 0x{:X}) while one was already in progress (at 0x{:X})", mLastOccQueryAddress, addr);
+            gl::glEndQuery(gl::GL_SAMPLES_PASSED);
+         }
          mLastOccQueryAddress = addr;
 
          if (!mOccQuery) {
