@@ -241,6 +241,7 @@ private:
    void streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data);
    void streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data);
    void surfaceSync(const pm4::SurfaceSync &data);
+   void contextControl(const pm4::ContextControl &data);
 
    void setAluConsts(const pm4::SetAluConsts &data);
    void setConfigRegs(const pm4::SetConfigRegs &data);

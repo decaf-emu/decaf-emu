@@ -208,9 +208,18 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
    case pm4::type3::SURFACE_SYNC:
       surfaceSync(pm4::read<pm4::SurfaceSync>(reader));
       break;
+   case pm4::type3::CONTEXT_CTL:
+      contextControl(pm4::read<pm4::ContextControl>(reader));
+      break;
    default:
       gLog->debug("Unhandled pm4 packet type 3 opcode {}", header.opcode());
    }
+}
+
+void GLDriver::contextControl(const pm4::ContextControl &data)
+{
+   mShadowState.LOAD_CONTROL = data.LOAD_CONTROL;
+   mShadowState.SHADOW_ENABLE = data.SHADOW_ENABLE;
 }
 
 void GLDriver::setAluConsts(const pm4::SetAluConsts &data)
@@ -354,7 +363,7 @@ void GLDriver::loadRegisters(latte::Register base,
 
 void GLDriver::loadAluConsts(const pm4::LoadAluConst &data)
 {
-   if (mShadowState.LOAD_ENABLE.ENABLE_ALU_CONST()) {
+   if (mShadowState.LOAD_CONTROL.ENABLE_ALU_CONST()) {
       mShadowState.ALU_CONST_BASE = data.addr;
       loadRegisters(latte::Register::AluConstRegisterBase, data.addr, data.values);
    }
@@ -362,7 +371,7 @@ void GLDriver::loadAluConsts(const pm4::LoadAluConst &data)
 
 void GLDriver::loadBoolConsts(const pm4::LoadBoolConst &data)
 {
-   if (mShadowState.LOAD_ENABLE.ENABLE_BOOL_CONST()) {
+   if (mShadowState.LOAD_CONTROL.ENABLE_BOOL_CONST()) {
       mShadowState.BOOL_CONST_BASE = data.addr;
       loadRegisters(latte::Register::BoolConstRegisterBase, data.addr, data.values);
    }
@@ -370,7 +379,7 @@ void GLDriver::loadBoolConsts(const pm4::LoadBoolConst &data)
 
 void GLDriver::loadConfigRegs(const pm4::LoadConfigReg &data)
 {
-   if (mShadowState.LOAD_ENABLE.ENABLE_CONFIG_REG()) {
+   if (mShadowState.LOAD_CONTROL.ENABLE_CONFIG_REG()) {
       mShadowState.CONFIG_REG_BASE = data.addr;
       loadRegisters(latte::Register::ConfigRegisterBase, data.addr, data.values);
    }
@@ -378,7 +387,7 @@ void GLDriver::loadConfigRegs(const pm4::LoadConfigReg &data)
 
 void GLDriver::loadContextRegs(const pm4::LoadContextReg &data)
 {
-   if (mShadowState.LOAD_ENABLE.ENABLE_CONTEXT_REG()) {
+   if (mShadowState.LOAD_CONTROL.ENABLE_CONTEXT_REG()) {
       mShadowState.CONTEXT_REG_BASE = data.addr;
       loadRegisters(latte::Register::ContextRegisterBase, data.addr, data.values);
    }
@@ -386,7 +395,7 @@ void GLDriver::loadContextRegs(const pm4::LoadContextReg &data)
 
 void GLDriver::loadControlConstants(const pm4::LoadControlConst &data)
 {
-   if (mShadowState.LOAD_ENABLE.ENABLE_CTL_CONST()) {
+   if (mShadowState.LOAD_CONTROL.ENABLE_CTL_CONST()) {
       mShadowState.CTL_CONST_BASE = data.addr;
       loadRegisters(latte::Register::ControlRegisterBase, data.addr, data.values);
    }
@@ -394,7 +403,7 @@ void GLDriver::loadControlConstants(const pm4::LoadControlConst &data)
 
 void GLDriver::loadLoopConsts(const pm4::LoadLoopConst &data)
 {
-   if (mShadowState.LOAD_ENABLE.ENABLE_LOOP_CONST()) {
+   if (mShadowState.LOAD_CONTROL.ENABLE_LOOP_CONST()) {
       mShadowState.LOOP_CONST_BASE = data.addr;
       loadRegisters(latte::Register::LoopConstRegisterBase, data.addr, data.values);
    }
@@ -402,7 +411,7 @@ void GLDriver::loadLoopConsts(const pm4::LoadLoopConst &data)
 
 void GLDriver::loadSamplers(const pm4::LoadSampler &data)
 {
-   if (mShadowState.LOAD_ENABLE.ENABLE_SAMPLER()) {
+   if (mShadowState.LOAD_CONTROL.ENABLE_SAMPLER()) {
       mShadowState.SAMPLER_CONST_BASE = data.addr;
       loadRegisters(latte::Register::SamplerRegisterBase, data.addr, data.values);
    }
@@ -410,7 +419,7 @@ void GLDriver::loadSamplers(const pm4::LoadSampler &data)
 
 void GLDriver::loadResources(const pm4::LoadResource &data)
 {
-   if (mShadowState.LOAD_ENABLE.ENABLE_RESOURCE()) {
+   if (mShadowState.LOAD_CONTROL.ENABLE_RESOURCE()) {
       mShadowState.RESOURCE_CONST_BASE = data.addr;
       loadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
    }
