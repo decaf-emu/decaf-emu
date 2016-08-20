@@ -15,6 +15,7 @@ namespace display
 
 DisplayMode mode = DisplayMode::Windowed;
 DisplayLayout layout = DisplayLayout::Split;
+bool stretch = false;
 
 } // namespace display
 

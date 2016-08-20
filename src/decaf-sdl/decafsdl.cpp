@@ -61,7 +61,7 @@ DecafSDL::createWindow()
    }
 
    if (config::display::mode == config::display::Fullscreen) {
-       SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN);
+       SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
    }
 
    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
@@ -189,6 +189,10 @@ DecafSDL::run(const std::string &gamePath)
          case SDL_KEYUP:
             if (event.key.keysym.sym == SDLK_TAB) {
                mToggleDRC = !mToggleDRC;
+            }
+
+            if (event.key.keysym.sym == SDLK_ESCAPE) {
+                shouldQuit = true;
             }
 
             decaf::injectKeyInput(translateKeyCode(event.key.keysym), decaf::input::KeyboardAction::Release);

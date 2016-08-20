@@ -78,6 +78,8 @@ getCommandLineParser()
                   allowed<std::string> { {
                      "EUR", "JAP", "US"
                   } })
+      .add_option("stretch",
+                  description{ "Enable stretching." })
       .add_option("sound",
                   description { "Enable sound output." })
       .add_option("sys-path",
@@ -196,6 +198,10 @@ start(excmd::parser &parser,
       } else {
          decaf_abort(fmt::format("Invalid display layout {}", layout));
       }
+   }
+
+   if (options.has("stretch")) {
+       config::display::stretch = true;
    }
 
    if (options.has("region")) {
