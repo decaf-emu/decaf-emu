@@ -1,66 +1,292 @@
-#include "decafsdl.h"
+#include "clilog.h"
+#include "common/decaf_assert.h"
 #include "config.h"
+#include "decafsdl.h"
 
 static int
-getButtonMapping(vpad::Channel channel, vpad::Core button)
+getKeyboardButtonMapping(const config::input::InputDevice *device,
+                         vpad::Channel channel,
+                         vpad::Core button)
 {
+   decaf_check(device);
+
    switch (button) {
    case vpad::Core::Up:
-      return config::input::vpad0::button_up;
+      return device->button_up;
    case vpad::Core::Down:
-      return config::input::vpad0::button_down;
+      return device->button_down;
    case vpad::Core::Left:
-      return config::input::vpad0::button_left;
+      return device->button_left;
    case vpad::Core::Right:
-      return config::input::vpad0::button_right;
+      return device->button_right;
    case vpad::Core::A:
-      return config::input::vpad0::button_a;
+      return device->button_a;
    case vpad::Core::B:
-      return config::input::vpad0::button_b;
+      return device->button_b;
    case vpad::Core::X:
-      return config::input::vpad0::button_x;
+      return device->button_x;
    case vpad::Core::Y:
-      return config::input::vpad0::button_y;
+      return device->button_y;
    case vpad::Core::TriggerR:
-      return config::input::vpad0::button_trigger_r;
+      return device->button_trigger_r;
    case vpad::Core::TriggerL:
-      return config::input::vpad0::button_trigger_l;
+      return device->button_trigger_l;
    case vpad::Core::TriggerZR:
-      return config::input::vpad0::button_trigger_zr;
+      return device->button_trigger_zr;
    case vpad::Core::TriggerZL:
-      return config::input::vpad0::button_trigger_zl;
+      return device->button_trigger_zl;
    case vpad::Core::LeftStick:
-      return config::input::vpad0::button_stick_l;
+      return device->button_stick_l;
    case vpad::Core::RightStick:
-      return config::input::vpad0::button_stick_r;
+      return device->button_stick_r;
    case vpad::Core::Plus:
-      return config::input::vpad0::button_plus;
+      return device->button_plus;
    case vpad::Core::Minus:
-      return config::input::vpad0::button_minus;
+      return device->button_minus;
    case vpad::Core::Home:
-      return config::input::vpad0::button_home;
+      return device->button_home;
    case vpad::Core::Sync:
-      return config::input::vpad0::button_sync;
+      return device->button_sync;
    }
 
    return -1;
 }
 
 static int
-getAxisMapping(vpad::Channel channel, vpad::CoreAxis axis)
+getKeyboardAxisMapping(const config::input::InputDevice *device,
+                       vpad::Channel channel,
+                       vpad::CoreAxis axis,
+                       bool leftOrDown)
 {
+   decaf_check(device);
+
    switch (axis) {
    case vpad::CoreAxis::LeftStickX:
-      return config::input::vpad0::left_stick_x;
+      return leftOrDown ? device->keyboard.left_stick_left : device->keyboard.left_stick_right;
    case vpad::CoreAxis::LeftStickY:
-      return config::input::vpad0::left_stick_y;
+      return leftOrDown ? device->keyboard.left_stick_down : device->keyboard.left_stick_up;
    case vpad::CoreAxis::RightStickX:
-      return config::input::vpad0::right_stick_x;
+      return leftOrDown ? device->keyboard.right_stick_left : device->keyboard.right_stick_right;
    case vpad::CoreAxis::RightStickY:
-      return config::input::vpad0::right_stick_y;
+      return leftOrDown ? device->keyboard.right_stick_down : device->keyboard.right_stick_up;
    }
 
    return -1;
+}
+
+static bool
+getJoystickButtonState(const config::input::InputDevice *device,
+                       SDL_GameController *controller,
+                       vpad::Channel channel, 
+                       vpad::Core button)
+{
+   decaf_check(device);
+   decaf_check(controller);
+
+   SDL_Joystick *joystick = SDL_GameControllerGetJoystick(controller);
+   decaf_check(joystick);
+
+   int index = -1;
+   SDL_GameControllerButton name = SDL_CONTROLLER_BUTTON_INVALID;
+   // SDL has no concept of ZR/ZL "buttons" (only axes) so we have to
+   //  kludge around...
+   SDL_GameControllerAxis axisName = SDL_CONTROLLER_AXIS_INVALID;
+
+   switch (button) {
+   case vpad::Core::Up:
+      index = device->button_up;
+      name = SDL_CONTROLLER_BUTTON_DPAD_UP;
+      break;
+   case vpad::Core::Down:
+      index = device->button_down;
+      name = SDL_CONTROLLER_BUTTON_DPAD_UP;
+      break;
+   case vpad::Core::Left:
+      index = device->button_left;
+      name = SDL_CONTROLLER_BUTTON_DPAD_UP;
+      break;
+   case vpad::Core::Right:
+      index = device->button_right;
+      name = SDL_CONTROLLER_BUTTON_DPAD_UP;
+      break;
+   case vpad::Core::A:
+      index = device->button_a;
+      name = SDL_CONTROLLER_BUTTON_B;  // SDL uses stupid Microsoft mapping :P
+      break;
+   case vpad::Core::B:
+      index = device->button_b;
+      name = SDL_CONTROLLER_BUTTON_A;
+      break;
+   case vpad::Core::X:
+      index = device->button_x;
+      name = SDL_CONTROLLER_BUTTON_Y;
+      break;
+   case vpad::Core::Y:
+      index = device->button_y;
+      name = SDL_CONTROLLER_BUTTON_X;
+      break;
+   case vpad::Core::TriggerR:
+      index = device->button_trigger_r;
+      name = SDL_CONTROLLER_BUTTON_DPAD_UP;
+      break;
+   case vpad::Core::TriggerL:
+      index = device->button_trigger_l;
+      name = SDL_CONTROLLER_BUTTON_DPAD_UP;
+      break;
+   case vpad::Core::TriggerZR:
+      index = device->button_trigger_zr;
+      axisName = SDL_CONTROLLER_AXIS_TRIGGERRIGHT;
+      break;
+   case vpad::Core::TriggerZL:
+      index = device->button_trigger_zl;
+      axisName = SDL_CONTROLLER_AXIS_TRIGGERLEFT;
+      break;
+   case vpad::Core::LeftStick:
+      index = device->button_stick_l;
+      name = SDL_CONTROLLER_BUTTON_LEFTSTICK;
+      break;
+   case vpad::Core::RightStick:
+      index = device->button_stick_r;
+      name = SDL_CONTROLLER_BUTTON_RIGHTSTICK;
+      break;
+   case vpad::Core::Plus:
+      index = device->button_plus;
+      name = SDL_CONTROLLER_BUTTON_START;
+      break;
+   case vpad::Core::Minus:
+      index = device->button_minus;
+      name = SDL_CONTROLLER_BUTTON_BACK;
+      break;
+   case vpad::Core::Home:
+      index = device->button_home;
+      name = SDL_CONTROLLER_BUTTON_GUIDE;
+      break;
+   case vpad::Core::Sync:
+      index = device->button_sync;
+      break;
+   }
+
+   if (index >= 0) {
+      return SDL_JoystickGetButton(joystick, index);
+   } else if (index == -2) {
+      if (name != SDL_CONTROLLER_BUTTON_INVALID) {
+         return SDL_GameControllerGetButton(controller, name);
+      } else if (axisName != SDL_CONTROLLER_AXIS_INVALID) {  // ZL/ZR kludge
+         int value = SDL_GameControllerGetAxis(controller, axisName);
+         return value >= 16384;
+      }
+   }
+
+   return false;
+}
+
+static int
+getJoystickAxisState(const config::input::InputDevice *device,
+                     SDL_GameController *controller,
+                     vpad::Channel channel,
+                     vpad::CoreAxis axis)
+{
+   decaf_check(device);
+   decaf_check(controller);
+
+   SDL_Joystick *joystick = SDL_GameControllerGetJoystick(controller);
+   decaf_check(joystick);
+
+   int index = -1;
+   SDL_GameControllerAxis name = SDL_CONTROLLER_AXIS_INVALID;
+   bool invert = false;
+
+   switch (axis) {
+   case vpad::CoreAxis::LeftStickX:
+      index = device->joystick.left_stick_x;
+      name = SDL_CONTROLLER_AXIS_LEFTX;
+      invert = device->joystick.left_stick_x_invert;
+      break;
+   case vpad::CoreAxis::LeftStickY:
+      index = device->joystick.left_stick_y;
+      name = SDL_CONTROLLER_AXIS_LEFTY;
+      invert = device->joystick.left_stick_y_invert;
+      break;
+   case vpad::CoreAxis::RightStickX:
+      index = device->joystick.right_stick_x;
+      name = SDL_CONTROLLER_AXIS_RIGHTX;
+      invert = device->joystick.right_stick_x_invert;
+      break;
+   case vpad::CoreAxis::RightStickY:
+      index = device->joystick.right_stick_y;
+      name = SDL_CONTROLLER_AXIS_RIGHTY;
+      invert = device->joystick.right_stick_y_invert;
+      break;
+   }
+
+   int value = 0;
+   if (index >= 0) {
+      value = SDL_JoystickGetAxis(joystick, index);
+   } else if (index == -2) {
+      if (name != SDL_CONTROLLER_AXIS_INVALID) {
+         value = SDL_GameControllerGetAxis(controller, name);
+      }
+   }
+
+   if (invert) {
+      value = -value;
+   }
+
+   return value;
+}
+
+void
+DecafSDL::openInputDevices()
+{
+   mVpad0Config = nullptr;
+   mVpad0Controller = nullptr;
+
+   for (const auto &device : config::input::devices) {
+      if (device.type != config::input::vpad0::type) {
+         continue;
+      }
+
+      if (!config::input::vpad0::name.empty()
+       && config::input::vpad0::name.compare(device.name) != 0) {
+         continue;
+      }
+
+      if (device.type == config::input::Joystick) {
+         int numJoysticks = SDL_NumJoysticks();
+
+         for (int i = 0; i < numJoysticks; ++i) {
+            if (!SDL_IsGameController(i)) {
+               continue;
+            }
+
+            SDL_GameController *controller = SDL_GameControllerOpen(i);
+            if (!controller) {
+               gCliLog->error("Failed to open game controller {}: {}", i, SDL_GetError());
+               continue;
+            }
+
+            if (!device.name.empty()
+             && device.name.compare(SDL_GameControllerName(controller)) != 0) {
+               SDL_GameControllerClose(controller);
+               continue;
+            }
+
+            mVpad0Controller = controller;
+            break;
+         }
+
+         if (!mVpad0Controller) {
+            continue;
+         }
+      }
+
+      mVpad0Config = &device;
+      break;
+   }
+
+   if (!mVpad0Config) {
+      gCliLog->warn("No input device found for gamepad (VPAD0)");
+   }
 }
 
 decaf::input::MouseButton
@@ -147,12 +373,34 @@ DecafSDL::getControllerType(vpad::Channel channel)
 ButtonStatus
 DecafSDL::getButtonStatus(vpad::Channel channel, vpad::Core button)
 {
-   int numKeys = 0;
-   auto scancode = getButtonMapping(channel, button);
-   auto state = SDL_GetKeyboardState(&numKeys);
+   if (!mVpad0Config) {
+      return ButtonStatus::ButtonReleased;
+   }
 
-   if (scancode >= 0 && scancode < numKeys && state[scancode]) {
-      return ButtonStatus::ButtonPressed;
+   switch (mVpad0Config->type) {
+   case config::input::None:
+      break;
+
+   case config::input::Keyboard:
+   {
+      int numKeys = 0;
+      auto scancode = getKeyboardButtonMapping(mVpad0Config, channel, button);
+      auto state = SDL_GetKeyboardState(&numKeys);
+
+      if (scancode >= 0 && scancode < numKeys && state[scancode]) {
+         return ButtonStatus::ButtonPressed;
+      }
+
+      break;
+   }
+
+   case config::input::Joystick:
+      if (mVpad0Controller && SDL_GameControllerGetAttached(mVpad0Controller)) {
+         if (getJoystickButtonState(mVpad0Config, mVpad0Controller, channel, button)) {
+            return ButtonStatus::ButtonPressed;
+         }
+      }
+      break;
    }
 
    return ButtonStatus::ButtonReleased;
@@ -161,6 +409,45 @@ DecafSDL::getButtonStatus(vpad::Channel channel, vpad::Core button)
 float
 DecafSDL::getAxisValue(vpad::Channel channel, vpad::CoreAxis axis)
 {
+   if (!mVpad0Config) {
+      return 0.0f;
+   }
+
+   switch (mVpad0Config->type) {
+   case config::input::None:
+      break;
+
+   case config::input::Keyboard:
+   {
+      int numKeys = 0;
+      auto scancodeMinus = getKeyboardAxisMapping(mVpad0Config, channel, axis, true);
+      auto scancodePlus = getKeyboardAxisMapping(mVpad0Config, channel, axis, false);
+      auto state = SDL_GetKeyboardState(&numKeys);
+
+      float result = 0.0f;
+      if (scancodeMinus >= 0 && scancodeMinus < numKeys && state[scancodeMinus]) {
+         result -= 1.0f;
+      }
+      if (scancodePlus >= 0 && scancodePlus < numKeys && state[scancodePlus]) {
+         result += 1.0f;
+      }
+
+      return result;
+   }
+
+   case config::input::Joystick:
+      if (mVpad0Controller && SDL_GameControllerGetAttached(mVpad0Controller)) {
+         int value = getJoystickAxisState(mVpad0Config, mVpad0Controller, channel, axis);
+         if (value < 0) {
+            return value / 32768.0f;
+         } else {
+            return value / 32767.0f;
+         }
+      }
+
+      break;
+   }
+
    return 0.0f;
 }
 
