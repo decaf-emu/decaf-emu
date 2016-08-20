@@ -264,7 +264,7 @@ DecafSDL::calculateScreenViewports(float (&tv)[4],
    if (windowWidth * nativeHeight >= windowHeight * nativeWidth) {
       // Align to height
       int drcBorder = (windowWidth * nativeHeight - windowHeight * DrcWidth + nativeHeight) / nativeHeight / 2;
-      int tvBorder = (windowWidth * nativeHeight - windowHeight * TvWidth + nativeHeight) / nativeHeight / 2;
+      int tvBorder = config::display::stretch ? 0 : (windowWidth * nativeHeight - windowHeight * TvWidth + nativeHeight) / nativeHeight / 2;
 
       drcBottom = OuterBorder;
       drcTop = OuterBorder + (DrcHeight * windowHeight + nativeHeight / 2) / nativeHeight;
