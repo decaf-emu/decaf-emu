@@ -56,6 +56,8 @@ KILL(State &state, const ControlFlowInst &cf)
    insertLineStart(state);
    state.out << "discard;";
    insertLineEnd(state);
+
+   state.shader->usesDiscard = true;
 }
 
 static void
