@@ -195,6 +195,10 @@ DecafSDL::run(const std::string &gamePath)
                mToggleDRC = !mToggleDRC;
             }
 
+            if (event.key.keysym.sym == SDLK_ESCAPE) {
+                shouldQuit = true;
+            }
+
             decaf::injectKeyInput(translateKeyCode(event.key.keysym), decaf::input::KeyboardAction::Release);
             break;
          case SDL_TEXTINPUT:
