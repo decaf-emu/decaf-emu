@@ -70,6 +70,7 @@ struct Shader
    std::array<std::vector<Feedback>, latte::MaxStreamOutBuffers> feedbacks;
    std::array<SamplerUsage, latte::MaxSamplers> samplerUsage;
    std::array<bool, latte::MaxUniformBlocks> usedUniformBlocks;
+   bool usesDiscard = false;
 };
 
 struct LoopState

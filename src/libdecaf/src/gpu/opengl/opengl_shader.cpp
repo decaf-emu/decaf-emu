@@ -1351,11 +1351,17 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    auto z_order = db_shader_control.Z_ORDER();
    auto early_z = (z_order == latte::DB_EARLY_Z_THEN_LATE_Z || z_order == latte::DB_EARLY_Z_THEN_RE_Z);
    if (early_z) {
-      for (auto &exp : shader.exports) {
-         if (exp.type == latte::SQ_EXPORT_PIXEL && exp.id == 61) {
-            gLog->warn("Ignoring early-Z because shader writes gl_FragDepth");
-            early_z = false;
-            break;
+      if (db_shader_control.KILL_ENABLE()) {
+         gLog->debug("Ignoring early-z because shader discard is enabled");
+         early_z = false;
+      } else {
+         decaf_assert(!shader.usesDiscard, "Shader uses discard but KILL_ENABLE is not set");
+         for (auto &exp : shader.exports) {
+            if (exp.type == latte::SQ_EXPORT_PIXEL && exp.id == 61) {
+               gLog->debug("Ignoring early-Z because shader writes gl_FragDepth");
+               early_z = false;
+               break;
+            }
          }
       }
       if (early_z) {

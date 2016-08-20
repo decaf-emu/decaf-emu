@@ -271,6 +271,8 @@ binaryCompareKill(State &state,
    insertLineStart(state);
    state.out << '}';
    insertLineEnd(state);
+
+   state.shader->usesDiscard = true;
 }
 
 static void
