@@ -291,6 +291,7 @@ struct GX2GeometryShader
    be_array<uint32_t, 4> streamOutStride;
 
    GX2RBuffer gx2rData;
+   GX2RBuffer gx2rVertexShaderData;
 };
 CHECK_OFFSET(GX2GeometryShader, 0x00, regs.sq_pgm_resources_gs);
 CHECK_OFFSET(GX2GeometryShader, 0x04, regs.vgt_gs_out_prim_type);
@@ -321,7 +322,8 @@ CHECK_OFFSET(GX2GeometryShader, 0x88, ringItemSize);
 CHECK_OFFSET(GX2GeometryShader, 0x8C, hasStreamOut);
 CHECK_OFFSET(GX2GeometryShader, 0x90, streamOutStride);
 CHECK_OFFSET(GX2GeometryShader, 0xA0, gx2rData);
-CHECK_SIZE(GX2GeometryShader, 0xB0);
+CHECK_OFFSET(GX2GeometryShader, 0xB0, gx2rVertexShaderData);
+CHECK_SIZE(GX2GeometryShader, 0xC0);
 
 struct GX2AttribStream
 {

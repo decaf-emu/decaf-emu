@@ -240,9 +240,19 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
    auto spi_vs_out_config = shader->regs.spi_vs_out_config.value();
    auto pa_cl_vs_out_cntl = shader->regs.pa_cl_vs_out_cntl.value();
 
+   uint32_t vertexShaderProgAddr = shader->vertexShaderData.getAddress();
+   uint32_t vertexShaderProgSize = shader->vertexShaderSize;
+   if (!vertexShaderProgAddr) {
+      vertexShaderProgAddr = shader->gx2rVertexShaderData.buffer.getAddress();
+      vertexShaderProgSize = shader->gx2rVertexShaderData.elemCount * shader->gx2rVertexShaderData.elemSize;
+   }
+
+   decaf_check(vertexShaderProgAddr);
+   decaf_check(vertexShaderProgSize);
+
    uint32_t vertexShaderRegData[] = {
-      shader->vertexShaderData.getAddress() >> 8,
-      shader->vertexShaderSize >> 3,
+      vertexShaderProgAddr >> 8,
+      vertexShaderProgSize >> 3,
       0,
       0,
       sq_pgm_resources_vs.value,
