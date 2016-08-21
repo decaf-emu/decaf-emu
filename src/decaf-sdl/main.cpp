@@ -34,6 +34,14 @@ getCommandLineParser()
                     optional {},
                     value<std::string> {});
 
+   auto input_options = parser.add_option_group("input Options")
+      .add_option("gamepad-type",
+                  description { "Select the input type for the emulated GamePad." },
+                  default_value<std::string> { "keyboard" },
+                  allowed<std::string> { {
+                     "none", "keyboard", "joystick"
+                  } });
+
    auto jit_options = parser.add_option_group("JIT Options")
       .add_option("jit",
                   description { "Enables the JIT engine." })
@@ -93,6 +101,7 @@ getCommandLineParser()
                   default_value<double> { 1.0 });
 
    parser.add_command("play")
+      .add_option_group(input_options)
       .add_option_group(jit_options)
       .add_option_group(log_options)
       .add_option_group(sys_options)
@@ -149,9 +158,24 @@ start(excmd::parser &parser,
       configPath = decaf::makeConfigPath("config.json");
    }
 
+   config::initialize();
    auto configLoaded = config::load(configPath, configError);
 
    // Allow command line options to override config
+   if (options.has("gamepad-type")) {
+       auto type = options.get<std::string>("gamepad-type");
+
+       if (type.compare("none") == 0) {
+           config::input::vpad0::type = config::input::None;
+       } else if (type.compare("keyboard") == 0) {
+           config::input::vpad0::type = config::input::Keyboard;
+       } else if (type.compare("joystick") == 0) {
+           config::input::vpad0::type = config::input::Joystick;
+       } else {
+           decaf_abort(fmt::format("Invalid input type {}", type));
+       }
+   }
+
    if (options.has("jit-verify")) {
       decaf::config::jit::verify = true;
    }
