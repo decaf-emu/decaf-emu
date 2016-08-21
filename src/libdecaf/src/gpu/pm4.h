@@ -790,25 +790,8 @@ BITFIELD(EW_ADDR_LO, uint32_t)
    BITFIELD_ENTRY(2, 30, uint32_t, ADDR_LO);
 BITFIELD_END
 
-enum EW_DATA_SEL : uint32_t
-{
-   EW_DATA_DISCARD      = 0,
-   EW_DATA_32           = 1,
-   EW_DATA_64           = 2,
-   EW_DATA_CLOCK        = 3,
-};
-
-enum EW_INT_SEL : uint32_t
-{
-   EW_INT_NONE          = 0,
-   EW_INT_ONLY          = 1,
-   EW_INT_WRITE_CONFIRM = 2,
-};
-
 BITFIELD(EW_ADDR_HI, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, ADDR_HI);
-   BITFIELD_ENTRY(24, 2, EW_INT_SEL, INT_SEL);
-   BITFIELD_ENTRY(29, 3, EW_DATA_SEL, DATA_SEL);
 BITFIELD_END
 
 struct EventWrite
@@ -827,12 +810,33 @@ struct EventWrite
    }
 };
 
+enum EWP_DATA_SEL : uint32_t
+{
+   EWP_DATA_DISCARD      = 0,
+   EWP_DATA_32           = 1,
+   EWP_DATA_64           = 2,
+   EWP_DATA_CLOCK        = 3,
+};
+
+enum EWP_INT_SEL : uint32_t
+{
+   EWP_INT_NONE          = 0,
+   EWP_INT_ONLY          = 1,
+   EWP_INT_WRITE_CONFIRM = 2,
+};
+
+BITFIELD(EWP_ADDR_HI, uint32_t)
+   BITFIELD_ENTRY(0, 8, uint32_t, ADDR_HI);
+   BITFIELD_ENTRY(24, 2, EWP_INT_SEL, INT_SEL);
+   BITFIELD_ENTRY(29, 3, EWP_DATA_SEL, DATA_SEL);
+BITFIELD_END
+
 struct EventWriteEOP
 {
    static const auto Opcode = type3::EVENT_WRITE_EOP;
    latte::VGT_EVENT_INITIATOR eventInitiator;
    EW_ADDR_LO addrLo;
-   EW_ADDR_HI addrHi;
+   EWP_ADDR_HI addrHi;
    uint32_t dataLo;
    uint32_t dataHi;
 
