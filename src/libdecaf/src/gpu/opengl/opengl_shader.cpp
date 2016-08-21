@@ -785,50 +785,6 @@ GLDriver::checkActiveAttribBuffers()
    return true;
 }
 
-bool
-GLDriver::checkActiveFeedbackBuffers()
-{
-   auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
-   auto vgt_strmout_buffer_en = getRegister<latte::VGT_STRMOUT_BUFFER_EN>(latte::Register::VGT_STRMOUT_BUFFER_EN);
-
-   if (!vgt_strmout_en.STREAMOUT()) {
-      return true;
-   }
-
-   for (auto index = 0u; index < latte::MaxStreamOutBuffers; ++index) {
-      if (!(vgt_strmout_buffer_en.value & (1 << index))) {
-         if (mFeedbackBufferCache[index].enable) {
-            mFeedbackBufferCache[index].enable = false;
-            gl::glBindBufferBase(gl::GL_TRANSFORM_FEEDBACK_BUFFER, index, 0);
-         }
-         continue;
-      }
-
-      mFeedbackBufferCache[index].enable = true;
-
-      auto vgt_strmout_buffer_base = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_BASE_0 + 16 * index);
-      auto addr = vgt_strmout_buffer_base << 8;
-      auto &buffer = mDataBuffers[addr];
-
-      if (!buffer.object || !buffer.isOutput) {
-         gLog->error("Attempt to use unconfigured feedback buffer {}", index);
-         return false;
-      }
-
-      auto offset = mFeedbackBaseOffset[index];
-
-      if (offset >= buffer.allocatedSize) {
-         gLog->error("Attempt to bind feedback buffer {} at offset {} >= size {}", index, offset, buffer.allocatedSize);
-         return false;
-      }
-
-      gl::glBindBufferRange(gl::GL_TRANSFORM_FEEDBACK_BUFFER, index, buffer.object, offset, buffer.allocatedSize - offset);
-      mFeedbackCurrentOffset[index] = offset;
-   }
-
-   return true;
-}
-
 bool GLDriver::parseFetchShader(FetchShader &shader, void *buffer, size_t size)
 {
    auto program = reinterpret_cast<latte::ControlFlowInst *>(buffer);

@@ -216,6 +216,7 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_pm4.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_registers.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_shader.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_streamout.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_surface.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_texture.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_viewport.cpp" />

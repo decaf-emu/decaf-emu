@@ -157,6 +157,14 @@ struct Sampler
    gl::GLuint object = 0;
 };
 
+struct FeedbackBufferState
+{
+   bool bound = false;
+   gl::GLuint object;
+   uint32_t baseOffset;
+   uint32_t currentOffset;
+};
+
 struct ColorBufferCache
 {
    gl::GLuint object = 0;
@@ -182,11 +190,6 @@ struct SamplerCache
    uint32_t word0 = 0;
    uint32_t word1 = 0;
    uint32_t word2 = 0;
-};
-
-struct FeedbackBufferCache
-{
-   bool enable = false;
 };
 
 using GLContext = uint64_t;
@@ -333,6 +336,9 @@ private:
                       uint32_t offset,
                       uint32_t size);
 
+   void beginTransformFeedback(gl::GLenum primitive);
+   void endTransformFeedback();
+
    void setRegister(latte::Register reg, uint32_t value);
    void applyRegister(latte::Register reg);
 
@@ -401,8 +407,9 @@ private:
    ScanBufferChain mDrcScanBuffers;
 
    gl::GLuint mFeedbackQuery = 0;
-   uint32_t mFeedbackBaseOffset[latte::MaxStreamOutBuffers];
-   uint32_t mFeedbackCurrentOffset[latte::MaxStreamOutBuffers];
+   bool mFeedbackActive = false;
+   gl::GLenum mFeedbackPrimitive;
+   std::array<FeedbackBufferState, latte::MaxStreamOutBuffers> mFeedbackBufferState;
 
    gl::GLuint mOccQuery = 0;
    uint32_t mLastOccQueryAddress = 0;
@@ -415,7 +422,6 @@ private:
    DepthBufferCache mDepthBufferCache;
    std::array<TextureCache, latte::MaxTextures> mPixelTextureCache;
    std::array<SamplerCache, latte::MaxSamplers> mPixelSamplerCache;
-   std::array<FeedbackBufferCache, latte::MaxStreamOutBuffers> mFeedbackBufferCache;
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;
