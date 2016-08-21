@@ -70,6 +70,9 @@ GLDriver::beginTransformFeedback(gl::GLenum primitive)
 {
    decaf_check(!mFeedbackActive);
 
+   // Must be a base primitive type (not strip/fan/etc.)
+   decaf_check(primitive == gl::GL_POINTS || primitive == gl::GL_LINES || primitive == gl::GL_TRIANGLES);
+
    // Start a transform feedback counter query so we can properly return the
    //  buffer offsets when requested
    if (!mFeedbackQuery) {
@@ -101,13 +104,27 @@ GLDriver::endTransformFeedback()
 
    auto vgt_strmout_buffer_en = getRegister<latte::VGT_STRMOUT_BUFFER_EN>(latte::Register::VGT_STRMOUT_BUFFER_EN);
 
-   // TODO: Does the TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN query return a
-   //  primitive count or a vertex count?  The name and the GL spec suggest
-   //  the former, but the API reference explicitly states the latter
-   //  ("increment the counter once for every _vertex_").  Assume for now
-   //  that the API reference is correct on account of its being more explicit.
-   gl::GLuint numVertices = 0;
-   glGetQueryObjectuiv(mFeedbackQuery, gl::GL_QUERY_RESULT, &numVertices);
+   // The OpenGL specification and API reference differ on whether the
+   //  TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN query returns a primitive count
+   //  or a vertex count, but actual experiments (using an NVIDIA GPU)
+   //  indicate that it's a primitive count, so we treat it as such.
+   gl::GLuint numPrimitives = 0;
+   glGetQueryObjectuiv(mFeedbackQuery, gl::GL_QUERY_RESULT, &numPrimitives);
+
+   int numVertices;
+   switch (mFeedbackPrimitive) {
+   case gl::GL_POINTS:
+      numVertices = numPrimitives;
+      break;
+   case gl::GL_LINES:
+      numVertices = numPrimitives * 2;
+      break;
+   case gl::GL_TRIANGLES:
+      numVertices = numPrimitives * 3;
+      break;
+   default:
+      decaf_abort(fmt::format("Impossible mFeedbackPrimitive 0x{:04X}", static_cast<int>(mFeedbackPrimitive)));
+   }
 
    for (auto i = 0u; i < 4; ++i) {
       if (vgt_strmout_buffer_en.value & (1 << i)) {
