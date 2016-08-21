@@ -201,16 +201,6 @@ GLDriver::drawPrimitives(uint32_t count,
    auto mode = getPrimitiveMode(primType);
 
    if (vgt_strmout_en.STREAMOUT()) {
-      if (!mFeedbackQuery) {
-         gl::glCreateQueries(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, 1, &mFeedbackQuery);
-         if (decaf::config::gpu::debug) {
-            gl::glObjectLabel(gl::GL_QUERY, mFeedbackQuery, -1, "transform feedback query");
-         }
-         decaf_check(mFeedbackQuery);
-      }
-
-      gl::glBeginQuery(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, mFeedbackQuery);
-
       auto baseMode = mode;
 
       if (mode == gl::GL_TRIANGLE_STRIP || mode == gl::GL_TRIANGLE_FAN) {
@@ -219,7 +209,15 @@ GLDriver::drawPrimitives(uint32_t count,
          baseMode = gl::GL_LINES;
       }
 
-      gl::glBeginTransformFeedback(baseMode);
+      if (!mFeedbackActive || mFeedbackPrimitive != baseMode) {
+         if (mFeedbackActive) {
+            gLog->warn("Primitive type changed during transform feedback");
+            endTransformFeedback();
+         }
+         beginTransformFeedback(baseMode);
+      } else {
+         gl::glResumeTransformFeedback();
+      }
    }
 
    if (primType == latte::VGT_DI_PT_QUADLIST) {
@@ -243,27 +241,7 @@ GLDriver::drawPrimitives(uint32_t count,
    }
 
    if (vgt_strmout_en.STREAMOUT()) {
-      gl::glEndTransformFeedback();
-      gl::glEndQuery(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
-
-      auto vgt_strmout_buffer_en = getRegister<latte::VGT_STRMOUT_BUFFER_EN>(latte::Register::VGT_STRMOUT_BUFFER_EN);
-
-      // TODO: Does the TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN query return
-      //  a primitive count or a vertex count?  The name and the GL spec
-      //  suggest the former, but the API reference explicitly states the
-      //  latter ("increment the counter once for every _vertex_").
-      //  Assuming for now that the API reference is correct on account of
-      //  its being more explicit.
-      gl::GLuint numVertices = 0;
-      glGetQueryObjectuiv(mFeedbackQuery, gl::GL_QUERY_RESULT, &numVertices);
-
-      for (auto i = 0u; i < 4; ++i) {
-         if (vgt_strmout_buffer_en.value & (1 << i)) {
-            auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
-            auto stride = vgt_strmout_vtx_stride * 4;
-            mFeedbackCurrentOffset[i] += numVertices * stride;
-         }
-      }
+      gl::glPauseTransformFeedback();
    }
 }
 
@@ -428,59 +406,6 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    gl::glEnable(gl::GL_SCISSOR_TEST);
    if (!db_depth_control.Z_WRITE_ENABLE()) {
       gl::glDepthMask(gl::GL_FALSE);
-   }
-}
-
-void
-GLDriver::streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data)
-{
-   // Nothing to do for now
-}
-
-void
-GLDriver::streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data)
-{
-   auto bufferIndex = data.control.SELECT_BUFFER();
-
-   if (data.control.STORE_BUFFER_FILLED_SIZE()) {
-      auto addr = data.dstLo;
-      decaf_assert(data.dstHi == 0, fmt::format("Store target out of 32-bit range for feedback buffer {}", bufferIndex));
-
-      if (addr != 0) {
-         auto offsetPtr = mem::translate<uint32_t>(addr);
-         *offsetPtr = byte_swap(mFeedbackCurrentOffset[bufferIndex] >> 2);
-      }
-   }
-
-   auto vgt_strmout_buffer_base = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_BASE_0 + 16 * bufferIndex);
-   auto vgt_strmout_buffer_size = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_SIZE_0 + 16 * bufferIndex);
-
-   auto addr = vgt_strmout_buffer_base << 8;
-   auto size = vgt_strmout_buffer_size << 2;
-   decaf_assert(addr != 0 && size != 0, fmt::format("Attempt to bind undefined feedback buffer {}", bufferIndex));
-
-   // Create the data buffer (we don't need to manipulate it here, but
-   //  make sure it's configured as an output buffer)
-   getDataBuffer(addr, size, false, true);
-
-   switch (data.control.OFFSET_SOURCE()) {
-   case pm4::STRMOUT_OFFSET_FROM_PACKET:
-      decaf_assert(data.srcHi == 0, fmt::format("Offset out of 32-bit range for feedback buffer {}", bufferIndex));
-      mFeedbackBaseOffset[bufferIndex] = data.srcLo << 2;
-      break;
-   case pm4::STRMOUT_OFFSET_FROM_VGT_FILLED_SIZE:
-      mFeedbackBaseOffset[bufferIndex] = mFeedbackCurrentOffset[bufferIndex];
-      break;
-   case pm4::STRMOUT_OFFSET_FROM_MEM:
-   {
-      decaf_assert(data.srcHi == 0, fmt::format("Load target out of 32-bit range for feedback buffer {}", bufferIndex));
-      auto offsetPtr = mem::translate<uint32_t>(data.srcLo);
-      decaf_assert(offsetPtr, fmt::format("Invalid load address for feedback buffer {}", bufferIndex));
-      mFeedbackBaseOffset[bufferIndex] = byte_swap(*offsetPtr) << 2;
-      break;
-   }
-   case pm4::STRMOUT_OFFSET_NONE:
-      break;  // No change.
    }
 }
 
