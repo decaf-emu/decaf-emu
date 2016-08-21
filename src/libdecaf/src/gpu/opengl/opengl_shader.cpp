@@ -621,6 +621,13 @@ GLDriver::getDataBuffer(uint32_t address,
    buffer->isInput |= isInput;
    buffer->isOutput |= isOutput;
 
+   // Never map output (transform feedback) buffers, because the only way
+   //  to safely read data from them is by first calling glFinish().  With
+   //  a non-mapped buffer, when we call glGet[Named]BufferSubData(), the
+   //  driver can potentially wait just until that buffer is up to date
+   //  without having to block on all other commands.
+   auto shouldMap = USE_PERSISTENT_MAP && !buffer->isOutput;
+
    gl::glCreateBuffers(1, &buffer->object);
    if (decaf::config::gpu::debug) {
       const char *type;
@@ -635,21 +642,16 @@ GLDriver::getDataBuffer(uint32_t address,
 
    gl::BufferStorageMask usage = static_cast<gl::BufferStorageMask>(0);
    if (buffer->isInput) {
-      if (USE_PERSISTENT_MAP) {
+      if (shouldMap) {
          usage |= gl::GL_MAP_WRITE_BIT;
       } else {
          usage |= gl::GL_DYNAMIC_STORAGE_BIT;
       }
    }
    if (buffer->isOutput) {
-      if (USE_PERSISTENT_MAP) {
-         usage |= gl::GL_MAP_READ_BIT;
-         if (!buffer->isInput) {
-            usage |= gl::GL_CLIENT_STORAGE_BIT;
-         }
-      }
+      usage |= gl::GL_CLIENT_STORAGE_BIT;
    }
-   if (USE_PERSISTENT_MAP) {
+   if (shouldMap) {
       usage |= gl::GL_MAP_PERSISTENT_BIT;
    }
    gl::glNamedBufferStorage(buffer->object, size + BUFFER_PADDING, nullptr, usage);
@@ -663,7 +665,7 @@ GLDriver::getDataBuffer(uint32_t address,
       gl::glDeleteBuffers(1, &oldObject);
    }
 
-   if (USE_PERSISTENT_MAP) {
+   if (shouldMap) {
       gl::BufferAccessMask access = gl::GL_MAP_PERSISTENT_BIT;
       if (buffer->isInput) {
          access |= gl::GL_MAP_WRITE_BIT | gl::GL_MAP_FLUSH_EXPLICIT_BIT;
@@ -695,6 +697,10 @@ GLDriver::downloadDataBuffer(DataBuffer *buffer,
                              uint32_t size)
 {
    if (buffer->mappedBuffer) {
+      // We only map input-only buffers (see getDataBuffer()), so there's
+      //  no need for a memory barrier here.
+      decaf_check(!buffer->isOutput);
+
       memcpy(mem::translate<char>(buffer->cpuMemStart) + offset,
              static_cast<char *>(buffer->mappedBuffer) + offset,
              size);
