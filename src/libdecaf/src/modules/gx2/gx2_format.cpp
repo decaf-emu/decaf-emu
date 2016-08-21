@@ -290,7 +290,7 @@ getSurfaceFormatDepthFormat(GX2SurfaceFormat format)
    case latte::FMT_X24_8_32_FLOAT:
       return latte::DEPTH_X24_8_32_FLOAT;
    default:
-      decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
+      return latte::DEPTH_INVALID;
    }
 }
 
