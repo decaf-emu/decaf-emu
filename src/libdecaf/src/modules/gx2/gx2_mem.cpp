@@ -13,6 +13,10 @@ GX2Invalidate(GX2InvalidateMode mode,
               void *buffer,
               uint32_t size)
 {
+   if (!mode) {
+      return;
+   }
+
    auto addr = mem::untranslate(buffer);
 
    if (size != -1) {
