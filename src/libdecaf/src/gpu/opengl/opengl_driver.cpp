@@ -441,8 +441,7 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
       decaf_abort(fmt::format("Unexpected event type {}", type));
    }
 
-   switch (data.addrLo.ENDIAN_SWAP())
-   {
+   switch (data.addrLo.ENDIAN_SWAP()) {
    case latte::CB_ENDIAN_NONE:
       break;
    case latte::CB_ENDIAN_8IN64:
@@ -455,18 +454,7 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
       decaf_abort("Unexpected EVENT_WRITE endian swap 8IN16");
    }
 
-   switch (data.addrHi.DATA_SEL()) {
-   case pm4::EW_DATA_DISCARD:
-      break;
-   case pm4::EW_DATA_32:
-      *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
-      break;
-   case pm4::EW_DATA_64:
-      *reinterpret_cast<uint64_t *>(ptr) = value;
-      break;
-   case pm4::EW_DATA_CLOCK:
-      decaf_abort("Unexpected EW_DATA_CLOCK in EVENT_WRITE");
-   }
+   *reinterpret_cast<uint64_t *>(ptr) = value;
 }
 
 void
@@ -506,17 +494,17 @@ GLDriver::handlePendingEOP()
       value = byte_swap(static_cast<uint32_t>(value));
       break;
    case latte::CB_ENDIAN_8IN16:
-      decaf_abort(fmt::format("Unexpected EOP event endian swap {}", mPendingEOP.addrLo.ENDIAN_SWAP()));
+      decaf_abort("Unexpected EVENT_WRITE_EOP endian swap 8IN16");
    }
 
    switch (mPendingEOP.addrHi.DATA_SEL()) {
-   case pm4::EW_DATA_DISCARD:
+   case pm4::EWP_DATA_DISCARD:
       break;
-   case pm4::EW_DATA_32:
+   case pm4::EWP_DATA_32:
       *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
       break;
-   case pm4::EW_DATA_64:
-   case pm4::EW_DATA_CLOCK:
+   case pm4::EWP_DATA_64:
+   case pm4::EWP_DATA_CLOCK:
       *reinterpret_cast<uint64_t *>(ptr) = value;
       break;
    }
