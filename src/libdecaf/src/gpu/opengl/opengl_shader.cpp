@@ -1010,13 +1010,16 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          semanticId = spi_vs_out_id.SEMANTIC_3();
       }
 
-      if (semanticId != 0xff) {
-         decaf_check(vertex.outputMap[semanticId] == 0xff);
-         vertex.outputMap[semanticId] = i;
-
-         out << "layout(location = " << i << ")";
-         out << " out vec4 vs_out_" << semanticId << ";\n";
+      if (semanticId == 0xff) {
+         // Stop looping when we hit the end marker
+         break;
       }
+
+      decaf_check(vertex.outputMap[semanticId] == 0xff);
+      vertex.outputMap[semanticId] = i;
+
+      out << "layout(location = " << i << ")";
+      out << " out vec4 vs_out_" << semanticId << ";\n";
    }
    out << '\n';
 
