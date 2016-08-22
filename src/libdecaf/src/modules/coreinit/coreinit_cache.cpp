@@ -73,9 +73,8 @@ DCStoreRangeNoSync(void *addr, uint32_t size)
 void
 DCZeroRange(void *addr, uint32_t size)
 {
-   // TODO: DCZeroRange check align direction is correct!
-   size = align_down(size, 32);
-   addr = align_up(addr, 32);
+   addr = align_down(addr, 32);
+   size = align_up(size, 32);
    memset(addr, 0, size);
 }
 
