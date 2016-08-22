@@ -24,6 +24,7 @@
 #include "gx2r_displaylist.h"
 #include "gx2r_mem.h"
 #include "gx2r_resource.h"
+#include "gx2r_shaders.h"
 #include "gx2r_surface.h"
 
 namespace gx2
@@ -54,7 +55,6 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2SetClearDepthStencil);
 
    // Context State
-   RegisterKernelFunction(GX2SetupContextState);
    RegisterKernelFunction(GX2SetupContextStateEx);
    RegisterKernelFunction(GX2GetContextStateDisplayList);
    RegisterKernelFunction(GX2SetContextState);
@@ -137,6 +137,11 @@ Module::RegisterFunctions()
    // GX2R Draw
    RegisterKernelFunction(GX2RSetAttributeBuffer);
    RegisterKernelFunction(GX2RDrawIndexed);
+
+   // GX2R Shaders
+   RegisterKernelFunction(GX2RSetVertexUniformBlock);
+   RegisterKernelFunction(GX2RSetPixelUniformBlock);
+   RegisterKernelFunction(GX2RSetGeometryUniformBlock);
 
    // GX2R Surface
    RegisterKernelFunction(GX2RCreateSurface);

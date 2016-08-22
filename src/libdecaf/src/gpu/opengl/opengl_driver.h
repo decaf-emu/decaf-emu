@@ -222,7 +222,6 @@ private:
    void decafSwapBuffers(const pm4::DecafSwapBuffers &data);
    void decafClearColor(const pm4::DecafClearColor &data);
    void decafClearDepthStencil(const pm4::DecafClearDepthStencil &data);
-   void decafSetContextState(const pm4::DecafSetContextState &data);
    void decafDebugMarker(const pm4::DecafDebugMarker &data);
    void decafOSScreenFlip(const pm4::DecafOSScreenFlip &data);
    void decafCopySurface(const pm4::DecafCopySurface &data);
@@ -242,6 +241,7 @@ private:
    void streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data);
    void streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data);
    void surfaceSync(const pm4::SurfaceSync &data);
+   void contextControl(const pm4::ContextControl &data);
 
    void setAluConsts(const pm4::SetAluConsts &data);
    void setConfigRegs(const pm4::SetConfigRegs &data);
@@ -260,7 +260,7 @@ private:
    void loadSamplers(const pm4::LoadSampler &data);
    void loadResources(const pm4::LoadResource &data);
    void loadRegisters(latte::Register base,
-                      uint32_t *src,
+                      be_val<uint32_t> *src,
                       const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
 
    void
@@ -409,7 +409,7 @@ private:
    gl::GLuint mOccQuery = 0;
    uint32_t mLastOccQueryAddress = 0;
 
-   latte::ContextState *mContextState = nullptr;
+   latte::ShadowState mShadowState;
 
    pm4::EventWriteEOP mPendingEOP;
 

@@ -2,6 +2,8 @@
 #include "config.h"
 #include "decafsdl.h"
 
+void setWindowIcon(SDL_Window *window);
+
 DecafSDL::~DecafSDL()
 {
    if (mContext) {
@@ -23,7 +25,7 @@ DecafSDL::~DecafSDL()
 bool
 DecafSDL::createWindow()
 {
-   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
+   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0) {
       gCliLog->error("Failed to initialize SDL: {}", SDL_GetError());
       return false;
    }
@@ -60,8 +62,10 @@ DecafSDL::createWindow()
       return false;
    }
 
+   setWindowIcon(mWindow);
+
    if (config::display::mode == config::display::Fullscreen) {
-       SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN);
+       SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
    }
 
    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
@@ -109,6 +113,7 @@ DecafSDL::run(const std::string &gamePath)
    // Set input provider
    decaf::setInputDriver(this);
    decaf::addEventListener(this);
+   openInputDevices();
 
    // Set sound driver
    decaf::setSoundDriver(mSoundDriver);
@@ -161,6 +166,10 @@ DecafSDL::run(const std::string &gamePath)
    decaf::start();
 
    while (!shouldQuit && !decaf::hasExited()) {
+      if (mVpad0Controller) {
+         SDL_GameControllerUpdate();
+      }
+
       SDL_Event event;
 
       while (SDL_PollEvent(&event)) {
@@ -189,6 +198,10 @@ DecafSDL::run(const std::string &gamePath)
          case SDL_KEYUP:
             if (event.key.keysym.sym == SDLK_TAB) {
                mToggleDRC = !mToggleDRC;
+            }
+
+            if (event.key.keysym.sym == SDLK_ESCAPE) {
+                shouldQuit = true;
             }
 
             decaf::injectKeyInput(translateKeyCode(event.key.keysym), decaf::input::KeyboardAction::Release);

@@ -36,8 +36,8 @@ GX2SampleBottomGPUCycle(be_val<uint64_t> *result)
       .ADDR_LO(mem::untranslate(result) >> 2)
       .ENDIAN_SWAP(latte::CB_ENDIAN_8IN64);
 
-   auto addrHi = pm4::EW_ADDR_HI::get(0)
-      .DATA_SEL(pm4::EW_DATA_CLOCK);
+   auto addrHi = pm4::EWP_ADDR_HI::get(0)
+      .DATA_SEL(pm4::EWP_DATA_CLOCK);
 
    pm4::write(pm4::EventWriteEOP { eventInitiator, addrLo, addrHi, 0, 0 });
 }

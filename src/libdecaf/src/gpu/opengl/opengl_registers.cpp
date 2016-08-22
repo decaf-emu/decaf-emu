@@ -25,16 +25,10 @@ GLDriver::setRegister(latte::Register reg,
                       uint32_t value)
 {
    decaf_check((reg % 4) == 0);
-
    auto isChanged = (value != mRegisters[reg / 4]);
 
-   // Save to my state
+   // Save to local registers
    mRegisters[reg / 4] = value;
-
-   // Save to shadowed context state
-   if (mContextState) {
-      mContextState->setRegister(reg, value);
-   }
 
    // Writing SQ_VTX_SEMANTIC_CLEAR has side effects, so process those
    if (reg == latte::Register::SQ_VTX_SEMANTIC_CLEAR) {

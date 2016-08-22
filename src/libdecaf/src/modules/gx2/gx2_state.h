@@ -30,6 +30,12 @@ GX2Flush();
 namespace internal
 {
 
+void
+enableStateShadowing();
+
+void
+disableStateShadowing();
+
 bool
 isInitialised();
 

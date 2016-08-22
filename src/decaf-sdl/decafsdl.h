@@ -6,6 +6,18 @@
 
 using namespace decaf::input;
 
+namespace config
+{
+
+namespace input
+{
+
+struct InputDevice;
+
+} // namespace input
+
+} // namespace config
+
 class DecafSDL : public decaf::InputDriver, public decaf::EventListener
 {
    static const auto WindowWidth = 1420;
@@ -38,6 +50,9 @@ private:
 
    void
    drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer);
+
+   void
+   openInputDevices();
 
    decaf::input::KeyboardKey
    translateKeyCode(SDL_Keysym sym);
@@ -93,6 +108,9 @@ private:
    SDL_Window *mWindow = nullptr;
    SDL_GLContext mContext = nullptr;
    SDL_GLContext mThreadContext = nullptr;
+
+   const config::input::InputDevice *mVpad0Config = nullptr;
+   SDL_GameController *mVpad0Controller = nullptr;
 
    gl::GLuint mVertexProgram;
    gl::GLuint mPixelProgram;

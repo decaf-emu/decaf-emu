@@ -15,7 +15,6 @@ enum IT_OPCODE : uint32_t
    DECAF_SWAP_BUFFERS         = 0x02,
    DECAF_CLEAR_COLOR          = 0x03,
    DECAF_CLEAR_DEPTH_STENCIL  = 0x04,
-   DECAF_SET_CONTEXT_STATE    = 0x05,
    DECAF_SET_BUFFER           = 0x06,
    DECAF_COPY_SURFACE         = 0x07,
    DECAF_DEBUGMARKER          = 0x08,

@@ -4,16 +4,15 @@
 #include "gx2_draw.h"
 #include "gx2_registers.h"
 #include "gx2_shaders.h"
+#include "gx2_state.h"
 #include "gx2_tessellation.h"
 #include <utility>
 
 namespace gx2
 {
 
-static GX2ContextState *
-gActiveContext = nullptr;
-
-static std::pair<uint32_t, uint32_t> ConfigRegisterRange[] =
+static std::pair<uint32_t, uint32_t>
+ConfigRegisterRange[] =
 {
    { 0x300, 6 },
    { 0x900, 0x48 },
@@ -32,7 +31,8 @@ static std::pair<uint32_t, uint32_t> ConfigRegisterRange[] =
    { 0x404, 2 },
 };
 
-static std::pair<uint32_t, uint32_t> ContextRegisterRange[] =
+static std::pair<uint32_t, uint32_t>
+ContextRegisterRange[] =
 {
    { 0, 2 },
    { 3, 3 },
@@ -81,17 +81,20 @@ static std::pair<uint32_t, uint32_t> ContextRegisterRange[] =
    { 0x284, 0xC },
 };
 
-static std::pair<uint32_t, uint32_t> AluConstRange[] =
+static std::pair<uint32_t, uint32_t>
+AluConstRange[] =
 {
    { 0, 0x800 },
 };
 
-static std::pair<uint32_t, uint32_t> LoopConstRange[] =
+static std::pair<uint32_t, uint32_t>
+LoopConstRange[] =
 {
    { 0, 0x60 },
 };
 
-static std::pair<uint32_t, uint32_t> ResourceRange[] =
+static std::pair<uint32_t, uint32_t>
+ResourceRange[] =
 {
    { 0, 0x70 },
    { 0x380, 0x70 },
@@ -104,49 +107,86 @@ static std::pair<uint32_t, uint32_t> ResourceRange[] =
    { 0xD89, 7 },
 };
 
-static std::pair<uint32_t, uint32_t> SamplerRange[] =
+static std::pair<uint32_t, uint32_t>
+SamplerRange[] =
 {
    { 0, 0x36 },
    { 0x36, 0x36 },
    { 0x6C, 0x36 },
 };
 
-void
-GX2SetupContextState(GX2ContextState *state)
+static std::pair<uint32_t, uint32_t>
+EmptyRange[] =
 {
-   GX2SetupContextStateEx(state, TRUE);
-}
+   { 0, 0 },
+};
+
+static auto
+EmptyRangeSpan = gsl::as_span(EmptyRange);
 
 static void
-loadState(GX2ContextState *state)
+loadState(GX2ContextState *state, bool skipLoad)
 {
-   pm4::write(pm4::LoadConfigReg { state->shadowState.config, gsl::as_span(ConfigRegisterRange) });
-   pm4::write(pm4::LoadContextReg { state->shadowState.context, gsl::as_span(ContextRegisterRange) });
-   pm4::write(pm4::LoadAluConst { state->shadowState.alu, gsl::as_span(AluConstRange) });
-   pm4::write(pm4::LoadLoopConst { state->shadowState.loop, gsl::as_span(LoopConstRange) });
-   pm4::write(pm4::LoadResource { state->shadowState.resource, gsl::as_span(ResourceRange) });
-   pm4::write(pm4::LoadSampler { state->shadowState.sampler, gsl::as_span(SamplerRange) });
+   internal::enableStateShadowing();
+
+   pm4::write(pm4::LoadConfigReg{
+      state->shadowState.config,
+      skipLoad ? EmptyRangeSpan : gsl::as_span(ConfigRegisterRange)
+   });
+
+   pm4::write(pm4::LoadContextReg{
+      state->shadowState.context,
+      skipLoad ? EmptyRangeSpan : gsl::as_span(ContextRegisterRange)
+   });
+
+   pm4::write(pm4::LoadAluConst {
+      state->shadowState.alu,
+      skipLoad ? EmptyRangeSpan : gsl::as_span(AluConstRange)
+   });
+
+   pm4::write(pm4::LoadLoopConst {
+      state->shadowState.loop,
+      skipLoad ? EmptyRangeSpan : gsl::as_span(LoopConstRange)
+   });
+
+   pm4::write(pm4::LoadResource {
+      state->shadowState.resource,
+      skipLoad ? EmptyRangeSpan : gsl::as_span(ResourceRange)
+   });
+
+   pm4::write(pm4::LoadSampler {
+      state->shadowState.sampler,
+      skipLoad ? EmptyRangeSpan : gsl::as_span(SamplerRange)
+   });
 }
 
 void
-GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1)
+GX2SetupContextStateEx(GX2ContextState *state,
+                       GX2ContextStateFlags flags)
 {
    // Create our internal shadow display list
-   memset(state, 0, sizeof(GX2ContextState));
-   GX2BeginDisplayList(state->shadowDisplayList, GX2ContextState::MaxDisplayListSize * 4);
-   loadState(state);
-   state->shadowDisplayListSize = GX2EndDisplayList(state->shadowDisplayList);
+   std::memset(state, 0, sizeof(GX2ContextState));
+   state->profileMode = (flags & GX2ContextStateFlags::ProfileMode) ? TRUE : FALSE;
 
-   // Set to active state
-   GX2SetContextState(state);
+   // Clear load state
+   loadState(state, true);
 
    // Initialise default state
    internal::initRegisters();
    GX2SetDefaultState();
+
+   // Setup shadow display list
+   if (!(flags & GX2ContextStateFlags::NoShadowDisplayList)) {
+      GX2BeginDisplayList(state->shadowDisplayList, GX2ContextState::MaxDisplayListSize * 4);
+      loadState(state, false);
+      state->shadowDisplayListSize = GX2EndDisplayList(state->shadowDisplayList);
+   }
 }
 
 void
-GX2GetContextStateDisplayList(GX2ContextState *state, be_ptr<void> *outDisplayList, be_val<uint32_t> *outSize)
+GX2GetContextStateDisplayList(GX2ContextState *state,
+                              be_ptr<void> *outDisplayList,
+                              be_val<uint32_t> *outSize)
 {
    if (outDisplayList) {
       *outDisplayList = state->shadowDisplayList;
@@ -160,25 +200,15 @@ GX2GetContextStateDisplayList(GX2ContextState *state, be_ptr<void> *outDisplayLi
 void
 GX2SetContextState(GX2ContextState *state)
 {
-   gActiveContext = state;
-
-   // Clear the existing state so our new context's shader display list
-   //  does not trample the values stored in the previous list.
-   pm4::write(pm4::DecafSetContextState { nullptr });
-
-   // Run the context states shadow display list (does LOAD's)
    if (state) {
-      if (GX2GetDisplayListWriteStatus()) {
-         GX2CopyDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
+      if (!state->shadowDisplayListSize) {
+         loadState(state, false);
       } else {
          GX2CallDisplayList(state->shadowDisplayList, state->shadowDisplayListSize);
       }
+   } else {
+      internal::disableStateShadowing();
    }
-
-   // Set our new context state as active
-   pm4::write(pm4::DecafSetContextState {
-      state ? reinterpret_cast<void *>(&state->shadowState) : nullptr
-   });
 }
 
 void
