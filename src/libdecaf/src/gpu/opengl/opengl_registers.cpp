@@ -174,10 +174,10 @@ GLDriver::applyRegister(latte::Register reg)
       auto cb_blend_blue = getRegister<latte::CB_BLEND_BLUE>(latte::Register::CB_BLEND_BLUE);
       auto cb_blend_alpha = getRegister<latte::CB_BLEND_ALPHA>(latte::Register::CB_BLEND_ALPHA);
 
-      gl::glBlendColor(cb_blend_red.BLEND_RED / 255.0f,
-                       cb_blend_green.BLEND_GREEN / 255.0f,
-                       cb_blend_blue.BLEND_BLUE / 255.0f,
-                       cb_blend_alpha.BLEND_ALPHA / 255.0f);
+      gl::glBlendColor(cb_blend_red.BLEND_RED,
+                       cb_blend_green.BLEND_GREEN,
+                       cb_blend_blue.BLEND_BLUE,
+                       cb_blend_alpha.BLEND_ALPHA);
    } break;
 
    case latte::Register::PA_CL_VPORT_XSCALE_0:
