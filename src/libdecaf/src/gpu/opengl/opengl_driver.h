@@ -10,7 +10,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <exception>
-#include <glbinding/gl/types.h>
+#include <glbinding/gl/gl.h>
 #include <gsl.h>
 #include <map>
 #include <mutex>
@@ -46,6 +46,12 @@ struct Resource
    bool dirtyMemory = true;
 };
 
+struct AttribBufferCache
+{
+   gl::GLuint object = 0;
+   uint32_t stride = 0;
+};
+
 struct Shader : public Resource
 {
    //! True if the shader needs to be rebuilt due to dirtyMemory
@@ -74,6 +80,7 @@ struct FetchShader : public Shader
 
    gl::GLuint object = 0;
    std::vector<Attrib> attribs;
+   std::array<AttribBufferCache, latte::MaxAttributes> mAttribBufferCache;
    std::string disassembly;
 };
 
@@ -191,18 +198,65 @@ struct DepthBufferCache
    bool stencilBound = false;
 };
 
+struct UniformBlockCache
+{
+   gl::GLuint vsObject = 0;
+   gl::GLuint psObject = 0;
+};
+
 struct TextureCache
 {
-   uint32_t surfaceObject = 0;
+   gl::GLuint surfaceObject = 0;
    uint32_t word4 = 0;
 };
 
 struct SamplerCache
 {
    glsl2::SamplerUsage usage;
-   uint32_t word0 = 0;
-   uint32_t word1 = 0;
-   uint32_t word2 = 0;
+
+   gl::GLenum wrapS = gl::GL_REPEAT;
+   gl::GLenum wrapT = gl::GL_REPEAT;
+   gl::GLenum wrapR = gl::GL_REPEAT;
+
+   gl::GLenum minFilter = gl::GL_NEAREST_MIPMAP_LINEAR;
+   gl::GLenum magFilter = gl::GL_LINEAR;
+
+   latte::SQ_TEX_BORDER_COLOR borderColorType = latte::SQ_TEX_BORDER_COLOR_TRANS_BLACK;
+   std::array<float, 4> borderColorValue;
+
+   gl::GLenum depthCompareMode = gl::GL_NONE;
+   gl::GLenum depthCompareFunc = gl::GL_LEQUAL;
+
+   ufixed_4_6_t minLod;
+   ufixed_4_6_t maxLod;
+   sfixed_6_6_t lodBias;
+};
+
+struct GLStateCache
+{
+   std::array<bool, latte::MaxRenderTargets> blendEnable;
+
+   bool cullFaceEnable = false;
+   gl::GLenum cullFace = gl::GL_BACK;
+   gl::GLenum frontFace = gl::GL_CCW;
+
+   bool depthEnable = false;
+   bool depthWrite = true;
+   gl::GLenum depthFunc = gl::GL_LESS;
+
+   bool stencilEnable = false;
+   uint32_t stencilState = 0;
+   uint8_t frontStencilRef = 0;
+   uint8_t frontStencilMask = 255;
+   uint8_t backStencilRef = 0;
+   uint8_t backStencilMask = 255;
+
+   bool rasterizerDiscard = false;
+   bool depthClamp = false;  // See note in initGL()
+   bool halfZClipSpace = false;
+
+   bool primRestartEnable = false;  // See note in initGL()
+   gl::GLuint primRestartIndex;
 };
 
 using GLContext = uint64_t;
@@ -394,6 +448,7 @@ private:
    std::array<uint32_t, 0x10000> mRegisters;
 
    bool mViewportDirty = false;
+   bool mDepthRangeDirty = false;
    bool mScissorDirty = false;
 
    // Protects resource lists; used by handleDCFlush() to safely set dirty flags
@@ -429,8 +484,10 @@ private:
 
    latte::ShadowState mShadowState;
 
+   GLStateCache mGLStateCache;
    std::array<ColorBufferCache, latte::MaxRenderTargets> mColorBufferCache;
    DepthBufferCache mDepthBufferCache;
+   std::array<UniformBlockCache, latte::MaxUniformBlocks> mUniformBlockCache;
    std::array<TextureCache, latte::MaxTextures> mPixelTextureCache;
    std::array<SamplerCache, latte::MaxSamplers> mPixelSamplerCache;
 

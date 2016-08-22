@@ -194,20 +194,9 @@ bool GLDriver::checkActiveSamplers()
       auto sq_tex_sampler_word1 = getRegister<latte::SQ_TEX_SAMPLER_WORD1_N>(latte::Register::SQ_TEX_SAMPLER_WORD1_0 + 4 * (i * 3));
       auto sq_tex_sampler_word2 = getRegister<latte::SQ_TEX_SAMPLER_WORD2_N>(latte::Register::SQ_TEX_SAMPLER_WORD2_0 + 4 * (i * 3));
 
-      if (usage == mPixelSamplerCache[i].usage
-       && sq_tex_sampler_word0.value == mPixelSamplerCache[i].word0
-       && sq_tex_sampler_word1.value == mPixelSamplerCache[i].word1
-       && sq_tex_sampler_word2.value == mPixelSamplerCache[i].word2) {
-         continue;  // No change in sampler state
-      }
-
-      mPixelSamplerCache[i].usage = usage;
-      mPixelSamplerCache[i].word0 = sq_tex_sampler_word0.value;
-      mPixelSamplerCache[i].word1 = sq_tex_sampler_word1.value;
-      mPixelSamplerCache[i].word2 = sq_tex_sampler_word2.value;
-
       auto &sampler = mPixelSamplers[i];
 
+      // Create sampler object if this is the first time we're using it
       if (!sampler.object) {
          gl::glCreateSamplers(1, &sampler.object);
          if (decaf::config::gpu::debug) {
@@ -216,76 +205,138 @@ bool GLDriver::checkActiveSamplers()
          }
       }
 
+      // Bind sampler if necessary
+      if (mPixelSamplerCache[i].usage != usage) {
+         if (mPixelSamplerCache[i].usage == glsl2::SamplerUsage::Invalid) {
+            gl::glBindSampler(i, sampler.object);
+         }
+
+         mPixelSamplerCache[i].usage = usage;
+      }
+
       // Texture clamp
       auto clamp_x = getTextureWrap(sq_tex_sampler_word0.CLAMP_X());
       auto clamp_y = getTextureWrap(sq_tex_sampler_word0.CLAMP_Y());
       auto clamp_z = getTextureWrap(sq_tex_sampler_word0.CLAMP_Z());
 
-      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_S, static_cast<gl::GLint>(clamp_x));
-      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_T, static_cast<gl::GLint>(clamp_y));
-      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_R, static_cast<gl::GLint>(clamp_z));
+      if (mPixelSamplerCache[i].wrapS != clamp_x) {
+         mPixelSamplerCache[i].wrapS = clamp_x;
+         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_S, static_cast<gl::GLint>(clamp_x));
+      }
+
+      if (mPixelSamplerCache[i].wrapT != clamp_y) {
+         mPixelSamplerCache[i].wrapT = clamp_y;
+         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_T, static_cast<gl::GLint>(clamp_y));
+      }
+
+      if (mPixelSamplerCache[i].wrapR != clamp_z) {
+         mPixelSamplerCache[i].wrapR = clamp_z;
+         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_R, static_cast<gl::GLint>(clamp_z));
+      }
 
       // Texture filter
       auto xy_min_filter = getTextureXYFilter(sq_tex_sampler_word0.XY_MIN_FILTER());
       auto xy_mag_filter = getTextureXYFilter(sq_tex_sampler_word0.XY_MAG_FILTER());
 
-      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MIN_FILTER, static_cast<gl::GLint>(xy_min_filter));
-      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<gl::GLint>(xy_mag_filter));
+      if (mPixelSamplerCache[i].minFilter != xy_min_filter) {
+         mPixelSamplerCache[i].minFilter = xy_min_filter;
+         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MIN_FILTER, static_cast<gl::GLint>(xy_min_filter));
+      }
+
+      if (mPixelSamplerCache[i].magFilter != xy_mag_filter) {
+         mPixelSamplerCache[i].magFilter = xy_mag_filter;
+         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<gl::GLint>(xy_mag_filter));
+      }
 
       // Setup border color
       auto border_color_type = sq_tex_sampler_word0.BORDER_COLOR_TYPE();
-      std::array<float, 4> colors;
 
-      switch (border_color_type) {
-      case latte::SQ_TEX_BORDER_COLOR_TRANS_BLACK:
-         colors = { 0.0f, 0.0f, 0.0f, 0.0f };
-         break;
-      case latte::SQ_TEX_BORDER_COLOR_OPAQUE_BLACK:
-         colors = { 0.0f, 0.0f, 0.0f, 1.0f };
-         break;
-      case latte::SQ_TEX_BORDER_COLOR_OPAQUE_WHITE:
-         colors = { 1.0f, 1.0f, 1.0f, 0.0f };
-         break;
-      case latte::SQ_TEX_BORDER_COLOR_REGISTER:
-      {
-         auto td_ps_sampler_border_red = getRegister<latte::TD_PS_SAMPLER_BORDERN_RED>(latte::Register::TD_PS_SAMPLER_BORDER0_RED + 4 * (i * 4));
-         auto td_ps_sampler_border_green = getRegister<latte::TD_PS_SAMPLER_BORDERN_GREEN>(latte::Register::TD_PS_SAMPLER_BORDER0_GREEN + 4 * (i * 4));
-         auto td_ps_sampler_border_blue = getRegister<latte::TD_PS_SAMPLER_BORDERN_BLUE>(latte::Register::TD_PS_SAMPLER_BORDER0_BLUE + 4 * (i * 4));
-         auto td_ps_sampler_border_alpha = getRegister<latte::TD_PS_SAMPLER_BORDERN_ALPHA>(latte::Register::TD_PS_SAMPLER_BORDER0_ALPHA + 4 * (i * 4));
+      // Skip the color array setup as well as the GL call if we know we
+      //  don't need it (we have to check in any case for the REGISTER type)
+      if (mPixelSamplerCache[i].borderColorType != border_color_type
+       || border_color_type == latte::SQ_TEX_BORDER_COLOR_REGISTER) {
+         std::array<float, 4> colors;
 
-         colors = {
-            td_ps_sampler_border_red.BORDER_RED,
-            td_ps_sampler_border_green.BORDER_GREEN,
-            td_ps_sampler_border_blue.BORDER_BLUE,
-            td_ps_sampler_border_alpha.BORDER_ALPHA,
-         };
+         switch (border_color_type) {
+         case latte::SQ_TEX_BORDER_COLOR_TRANS_BLACK:
+            colors = { 0.0f, 0.0f, 0.0f, 0.0f };
+            break;
+         case latte::SQ_TEX_BORDER_COLOR_OPAQUE_BLACK:
+            colors = { 0.0f, 0.0f, 0.0f, 1.0f };
+            break;
+         case latte::SQ_TEX_BORDER_COLOR_OPAQUE_WHITE:
+            colors = { 1.0f, 1.0f, 1.0f, 0.0f };
+            break;
+         case latte::SQ_TEX_BORDER_COLOR_REGISTER:
+         {
+            auto td_ps_sampler_border_red = getRegister<latte::TD_PS_SAMPLER_BORDERN_RED>(latte::Register::TD_PS_SAMPLER_BORDER0_RED + 4 * (i * 4));
+            auto td_ps_sampler_border_green = getRegister<latte::TD_PS_SAMPLER_BORDERN_GREEN>(latte::Register::TD_PS_SAMPLER_BORDER0_GREEN + 4 * (i * 4));
+            auto td_ps_sampler_border_blue = getRegister<latte::TD_PS_SAMPLER_BORDERN_BLUE>(latte::Register::TD_PS_SAMPLER_BORDER0_BLUE + 4 * (i * 4));
+            auto td_ps_sampler_border_alpha = getRegister<latte::TD_PS_SAMPLER_BORDERN_ALPHA>(latte::Register::TD_PS_SAMPLER_BORDER0_ALPHA + 4 * (i * 4));
 
-         break;
+            colors = {
+               td_ps_sampler_border_red.BORDER_RED,
+               td_ps_sampler_border_green.BORDER_GREEN,
+               td_ps_sampler_border_blue.BORDER_BLUE,
+               td_ps_sampler_border_alpha.BORDER_ALPHA,
+            };
+
+            break;
+         }
+         default:
+            decaf_abort(fmt::format("Impossible border_color_type = {}", border_color_type));
+         }
+
+         if (mPixelSamplerCache[i].borderColorType != border_color_type
+             || (border_color_type == latte::SQ_TEX_BORDER_COLOR_REGISTER
+                 && (mPixelSamplerCache[i].borderColorValue[0] != colors[0]
+                  || mPixelSamplerCache[i].borderColorValue[1] != colors[1]
+                  || mPixelSamplerCache[i].borderColorValue[2] != colors[2]
+                  || mPixelSamplerCache[i].borderColorValue[3] != colors[3]))) {
+            mPixelSamplerCache[i].borderColorType = border_color_type;
+            mPixelSamplerCache[i].borderColorValue = colors;
+
+            gl::glSamplerParameterfv(sampler.object, gl::GL_TEXTURE_BORDER_COLOR, &colors[0]);
+         }
       }
-      default:
-         decaf_abort(fmt::format("Unsupported border_color_type = {}", border_color_type));
-      }
 
-      gl::glSamplerParameterfv(sampler.object, gl::GL_TEXTURE_BORDER_COLOR, &colors[0]);
 
       // Depth compare
       auto mode = usage == glsl2::SamplerUsage::Shadow ? gl::GL_COMPARE_REF_TO_TEXTURE : gl::GL_NONE;
-      auto depth_compare_function = getTextureCompareFunction(sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION());
 
-      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_MODE, static_cast<gl::GLint>(mode));
-      gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_FUNC, static_cast<gl::GLint>(depth_compare_function));
+      if (mPixelSamplerCache[i].depthCompareMode != mode) {
+         mPixelSamplerCache[i].depthCompareMode = mode;
+         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_MODE, static_cast<gl::GLint>(mode));
+      }
+
+      if (mode != gl::GL_NONE) {
+         auto depth_compare_function = getTextureCompareFunction(sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION());
+
+         if (mPixelSamplerCache[i].depthCompareFunc != depth_compare_function) {
+            mPixelSamplerCache[i].depthCompareFunc = depth_compare_function;
+            gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_FUNC, static_cast<gl::GLint>(depth_compare_function));
+         }
+      }
 
       // Setup texture LOD
       auto min_lod = sq_tex_sampler_word1.MIN_LOD();
       auto max_lod = sq_tex_sampler_word1.MAX_LOD();
       auto lod_bias = sq_tex_sampler_word1.LOD_BIAS();
 
-      gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_MIN_LOD, static_cast<float>(min_lod));
-      gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_MAX_LOD, static_cast<float>(max_lod));
-      gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_LOD_BIAS, static_cast<float>(lod_bias));
+      if (mPixelSamplerCache[i].minLod != min_lod) {
+         mPixelSamplerCache[i].minLod = min_lod;
+         gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_MIN_LOD, static_cast<float>(min_lod));
+      }
 
-      // Bind sampler
-      gl::glBindSampler(i, sampler.object);
+      if (mPixelSamplerCache[i].maxLod != max_lod) {
+         mPixelSamplerCache[i].maxLod = max_lod;
+         gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_MAX_LOD, static_cast<float>(max_lod));
+      }
+
+      if (mPixelSamplerCache[i].lodBias != lod_bias) {
+         mPixelSamplerCache[i].lodBias = lod_bias;
+         gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_LOD_BIAS, static_cast<float>(lod_bias));
+      }
    }
 
    return true;
