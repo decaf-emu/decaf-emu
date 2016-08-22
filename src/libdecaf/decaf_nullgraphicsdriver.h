@@ -12,8 +12,8 @@ public:
    virtual void run() override;
    virtual void stop() override;
    virtual float getAverageFPS() override;
-   virtual void notifyCpuFlush(void *addr, uint32_t size) override;
-   virtual void notifyGpuFlush(void *addr, uint32_t size) override;
+   virtual void notifyCpuFlush(void *ptr, uint32_t size) override;
+   virtual void notifyGpuFlush(void *ptr, uint32_t size) override;
 
 private:
    bool mRunning = false;

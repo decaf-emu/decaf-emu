@@ -34,6 +34,8 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          break;
       }
 
+      runRemoteThreadTasks();
+
       switch (header.type()) {
       case pm4::Header::Type3:
       {
