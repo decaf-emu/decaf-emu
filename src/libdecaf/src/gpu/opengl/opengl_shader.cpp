@@ -1354,8 +1354,11 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    auto z_order = db_shader_control.Z_ORDER();
    auto early_z = (z_order == latte::DB_EARLY_Z_THEN_LATE_Z || z_order == latte::DB_EARLY_Z_THEN_RE_Z);
    if (early_z) {
-      if (db_shader_control.KILL_ENABLE()) {
-         gLog->debug("Ignoring early-z because shader discard is enabled");
+      if (sx_alpha_test_control.ALPHA_TEST_ENABLE() && !sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
+         gLog->debug("Ignoring early-Z because alpha test is enabled");
+         early_z = false;
+      } else if (db_shader_control.KILL_ENABLE()) {
+         gLog->debug("Ignoring early-Z because shader discard is enabled");
          early_z = false;
       } else {
          decaf_assert(!shader.usesDiscard, "Shader uses discard but KILL_ENABLE is not set");
