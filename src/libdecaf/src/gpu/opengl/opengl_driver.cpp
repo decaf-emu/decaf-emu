@@ -460,31 +460,25 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
 void
 GLDriver::eventWriteEOP(const pm4::EventWriteEOP &data)
 {
-   mPendingEOP = data;
-}
-
-void
-GLDriver::handlePendingEOP()
-{
-   if (!mPendingEOP.eventInitiator.EVENT_TYPE()) {
+   if (!data.eventInitiator.EVENT_TYPE()) {
       return;
    }
 
    auto value = uint64_t { 0 };
-   auto addr = mPendingEOP.addrLo.ADDR_LO() << 2;
+   auto addr = data.addrLo.ADDR_LO() << 2;
    auto ptr = mem::translate(addr);
 
-   decaf_assert(mPendingEOP.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
+   decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
 
-   switch (mPendingEOP.eventInitiator.EVENT_TYPE()) {
+   switch (data.eventInitiator.EVENT_TYPE()) {
    case latte::VGT_EVENT_TYPE_BOTTOM_OF_PIPE_TS:
       value = getGpuClock();
       break;
    default:
-      decaf_abort(fmt::format("Unexpected EOP event type {}", mPendingEOP.eventInitiator.EVENT_TYPE()));
+      decaf_abort(fmt::format("Unexpected EOP event type {}", data.eventInitiator.EVENT_TYPE()));
    }
 
-   switch (mPendingEOP.addrLo.ENDIAN_SWAP()) {
+   switch (data.addrLo.ENDIAN_SWAP()) {
    case latte::CB_ENDIAN_NONE:
       break;
    case latte::CB_ENDIAN_8IN64:
@@ -497,7 +491,7 @@ GLDriver::handlePendingEOP()
       decaf_abort("Unexpected EVENT_WRITE_EOP endian swap 8IN16");
    }
 
-   switch (mPendingEOP.addrHi.DATA_SEL()) {
+   switch (data.addrHi.DATA_SEL()) {
    case pm4::EWP_DATA_DISCARD:
       break;
    case pm4::EWP_DATA_32:
@@ -508,8 +502,6 @@ GLDriver::handlePendingEOP()
       *reinterpret_cast<uint64_t *>(ptr) = value;
       break;
    }
-
-   std::memset(&mPendingEOP, 0, sizeof(pm4::EventWriteEOP));
 }
 
 void
@@ -523,9 +515,6 @@ GLDriver::executeBuffer(pm4::Buffer *buffer)
 {
    // Execute command buffer
    runCommandBuffer(buffer->buffer, buffer->curSize);
-
-   // Handle end-of-pipeline events
-   handlePendingEOP();
 
    // Release command buffer
    gpu::retireCommandBuffer(buffer);
