@@ -946,8 +946,8 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    fmt::MemoryWriter out;
    out << shader.fileHeader;
 
-   out << "#define bswap16(v) (((v & 0xFF00FF00) >> 8) | ((v & 0x00FF00FF) << 8))\n";
-   out << "#define bswap32(v) (((v & 0xFF000000) >> 24) | ((v & 0x00FF0000) >> 8) | ((v & 0x0000FF00) << 8) | ((v & 0x000000FF) << 24))\n";
+   out << "#define bswap16(v) (packUnorm4x8(unpackUnorm4x8(v).yxwz))\n";
+   out << "#define bswap32(v) (packUnorm4x8(unpackUnorm4x8(v).wzyx))\n";
    out << "#define signext2(v) ((v ^ 0x2) - 0x2)\n";
    out << "#define signext8(v) ((v ^ 0x80) - 0x80)\n";
    out << "#define signext10(v) ((v ^ 0x200) - 0x200)\n";
