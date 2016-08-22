@@ -22,4 +22,15 @@ GX2AllocateTilingApertureEx(GX2Surface *surface,
 void
 GX2FreeTilingAperture(GX2ApertureHandle handle);
 
+namespace internal
+{
+
+bool
+lookupAperture(uint32_t address,
+               uint32_t *apertureBase_ret,  // may be null
+               uint32_t *apertureSize_ret,  // may be null
+               uint32_t *physBase_ret);     // may be null
+
+} // namespace internal
+
 } // namespace gx2

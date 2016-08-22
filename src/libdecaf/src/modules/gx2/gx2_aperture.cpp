@@ -4,6 +4,7 @@
 #include "libcpu/mem.h"
 #include "common/decaf_assert.h"
 #include "common/teenyheap.h"
+#include <mutex>
 
 namespace gx2
 {
@@ -33,6 +34,8 @@ public:
             uint32_t slice,
             GX2EndianSwapMode endian)
    {
+      std::unique_lock<std::mutex> lock(mMutex);
+
       // Find a free slot
       auto id = static_cast<uint32_t>(mActiveApertures.size());
 
@@ -77,6 +80,8 @@ public:
    void *
    getAddress(uint32_t id)
    {
+      std::unique_lock<std::mutex> lock(mMutex);
+
       decaf_check(id >= 1 && id <= mActiveApertures.size());
       return mActiveApertures[id - 1].address;
    }
@@ -84,6 +89,8 @@ public:
    void
    free(uint32_t id)
    {
+      std::unique_lock<std::mutex> lock(mMutex);
+
       decaf_check(id >= 1 && id <= mActiveApertures.size());
       auto &aperture = mActiveApertures[id - 1];
 
@@ -104,6 +111,42 @@ public:
       aperture.size = 0;
    }
 
+   bool
+   lookupAperture(uint32_t address,
+                  uint32_t *apertureBase,
+                  uint32_t *apertureSize,
+                  uint32_t *physBase)
+   {
+      std::unique_lock<std::mutex> lock(mMutex);
+
+      for (auto &aperture : mActiveApertures) {
+         if (!aperture.address) {
+            continue;
+         }
+
+         auto start = mem::untranslate(aperture.address);
+         auto end = start + aperture.size;
+
+         if (address >= start && address < end) {
+            if (apertureBase) {
+               *apertureBase = start;
+            }
+
+            if (apertureSize) {
+               *apertureSize = aperture.size;
+            }
+
+            if (physBase) {
+               *physBase = aperture.surface->image.getAddress();
+            }
+
+            return true;
+         }
+      }
+
+      return false;
+   }
+
 private:
    void initialise()
    {
@@ -111,6 +154,7 @@ private:
    }
 
 private:
+   std::mutex mMutex;
    TeenyHeap *mHeap = nullptr;
    std::array<ActiveAperture, MaxApertures> mActiveApertures;
 };
@@ -147,5 +191,22 @@ GX2FreeTilingAperture(GX2ApertureHandle handle)
 {
    sApertureManager.free(handle);
 }
+
+namespace internal
+{
+
+bool
+lookupAperture(uint32_t address,
+               uint32_t *apertureBase,
+               uint32_t *apertureSize,
+               uint32_t *physBase)
+{
+   return sApertureManager.lookupAperture(address,
+                                          apertureBase,
+                                          apertureSize,
+                                          physBase);
+}
+
+} // namespace internal
 
 } // namespace gx2
