@@ -246,7 +246,6 @@ private:
    void nopPacket(const pm4::Nop &data);
    void eventWrite(const pm4::EventWrite &data);
    void eventWriteEOP(const pm4::EventWriteEOP &data);
-   void handlePendingEOP();
    void pfpSyncMe(const pm4::PfpSyncMe &data);
    void streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data);
    void streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data);
@@ -429,8 +428,6 @@ private:
    uint32_t mLastOccQueryAddress = 0;
 
    latte::ShadowState mShadowState;
-
-   pm4::EventWriteEOP mPendingEOP;
 
    std::array<ColorBufferCache, latte::MaxRenderTargets> mColorBufferCache;
    DepthBufferCache mDepthBufferCache;
