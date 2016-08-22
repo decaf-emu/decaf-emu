@@ -224,10 +224,11 @@ void GLDriver::contextControl(const pm4::ContextControl &data)
 
 void GLDriver::setAluConsts(const pm4::SetAluConsts &data)
 {
+   decaf_check(data.id >= latte::Register::AluConstRegisterBase);
+   decaf_check(data.id < latte::Register::AluConstRegisterEnd);
+   auto offset = (data.id - latte::Register::AluConstRegisterBase) / 4;
+
    if (mShadowState.SHADOW_ENABLE.ENABLE_ALU_CONST() && mShadowState.ALU_CONST_BASE) {
-      decaf_check(data.id >= latte::Register::AluConstRegisterBase);
-      decaf_check(data.id < latte::Register::AluConstRegisterEnd);
-      auto offset = (data.id - latte::Register::AluConstRegisterBase) / 4;
       auto base = &mShadowState.ALU_CONST_BASE[offset];
 
       for (auto i = 0u; i < data.values.size(); ++i) {
@@ -237,6 +238,12 @@ void GLDriver::setAluConsts(const pm4::SetAluConsts &data)
 
    for (auto i = 0u; i < data.values.size(); ++i) {
       setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
+   }
+
+   auto firstUniform = offset / 4;
+   auto lastUniform = (offset + data.values.size() - 1) / 4;
+   for (auto i = firstUniform / 16; i <= lastUniform / 16; ++i) {
+      mLastUniformUpdate[i] = mUniformUpdateGen;
    }
 }
 
