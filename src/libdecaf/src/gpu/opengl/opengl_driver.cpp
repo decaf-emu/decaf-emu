@@ -33,6 +33,7 @@ GLDriver::initGL()
    }
    mActiveShader = nullptr;
    mDrawBuffers.fill(gl::GL_NONE);
+   mLastUniformUpdate.fill(0);
 
    // Create our blit framebuffer
    gl::glCreateFramebuffers(2, mBlitFrameBuffers);

@@ -72,6 +72,7 @@ struct VertexShader : public Resource
    std::array<uint8_t, 256> outputMap;
    std::array<bool, 16> usedUniformBlocks;
    std::array<bool, 4> usedFeedbackBuffers;
+   uint32_t lastUniformUpdate = 0;
    std::string code;
    std::string disassembly;
 };
@@ -84,6 +85,7 @@ struct PixelShader : public Resource
    latte::SX_ALPHA_TEST_CONTROL sx_alpha_test_control;
    std::array<glsl2::SamplerUsage, latte::MaxSamplers> samplerUsage;
    std::array<bool, 16> usedUniformBlocks;
+   uint32_t lastUniformUpdate = 0;
    std::string code;
    std::string disassembly;
 };
@@ -342,6 +344,9 @@ private:
    void setRegister(latte::Register reg, uint32_t value);
    void applyRegister(latte::Register reg);
 
+   int countModifiedUniforms(latte::Register firstReg,
+                             uint32_t lastUniformUpdate);
+
    bool parseFetchShader(FetchShader &shader, void *buffer, size_t size);
    bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size, bool isScreenSpace);
    bool compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint8_t *buffer, size_t size);
@@ -422,6 +427,10 @@ private:
    DepthBufferCache mDepthBufferCache;
    std::array<TextureCache, latte::MaxTextures> mPixelTextureCache;
    std::array<SamplerCache, latte::MaxSamplers> mPixelSamplerCache;
+
+   // Used to detect changes to uniform registers; see countModifiedUniforms()
+   uint32_t mUniformUpdateGen = 0;
+   std::array<uint32_t, (2 * latte::MaxUniformRegisters) / 16> mLastUniformUpdate;
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;

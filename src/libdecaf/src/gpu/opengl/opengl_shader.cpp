@@ -409,6 +409,32 @@ bool GLDriver::checkActiveShader()
    return true;
 }
 
+int
+GLDriver::countModifiedUniforms(latte::Register firstReg,
+                                uint32_t lastUniformUpdate)
+{
+   auto firstUniform = (firstReg - latte::Register::AluConstRegisterBase) / (4 * 4);
+   decaf_check(firstUniform == 0 || firstUniform == 256);
+
+   // We track uniforms in groups of 16 vectors, as a balance between the
+   //  cost of uploading many unchanged uniforms and the cost of checking
+   //  many individual uniforms for changes.
+   auto offset = firstUniform / 16;
+
+   for (auto i = 16u; i > 0; --i) {
+      // lastUniformUpdate is set to the newly incremented uniform update
+      //  generation at the time of the last upload, so any uniforms whose
+      //  update generation is at least that value need to be uploaded.
+      //  Need to be careful with this comparison in case of wraparound!
+      uint32_t diff = mLastUniformUpdate[offset + (i-1)] - lastUniformUpdate;
+      if (diff <= 0x7FFFFFFF) {  // i.e. signed(diff) >= 0
+         return i * 16;
+      }
+   }
+
+   return 0;
+}
+
 bool GLDriver::checkActiveUniforms()
 {
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
@@ -420,13 +446,25 @@ bool GLDriver::checkActiveUniforms()
    if (sq_config.DX9_CONSTS()) {
       // Upload uniform registers
       if (mActiveShader->vertex && mActiveShader->vertex->object) {
-         auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_256 / 4]);
-         gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, latte::MaxUniformRegisters, values);
+         auto uploadCount = countModifiedUniforms(latte::Register::SQ_ALU_CONSTANT0_256, mActiveShader->vertex->lastUniformUpdate);
+
+         if (uploadCount > 0) {
+            auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_256 / 4]);
+            gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, uploadCount, values);
+
+            mActiveShader->vertex->lastUniformUpdate = ++mUniformUpdateGen;
+         }
       }
 
       if (mActiveShader->pixel && mActiveShader->pixel->object) {
-         auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_0 / 4]);
-         gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, latte::MaxUniformRegisters, values);
+         auto uploadCount = countModifiedUniforms(latte::Register::SQ_ALU_CONSTANT0_0, mActiveShader->pixel->lastUniformUpdate);
+
+         if (uploadCount > 0) {
+            auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_0 / 4]);
+            gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, uploadCount, values);
+
+            mActiveShader->pixel->lastUniformUpdate = ++mUniformUpdateGen;
+         }
       }
    } else {
       if (mActiveShader->vertex && mActiveShader->vertex->object) {
