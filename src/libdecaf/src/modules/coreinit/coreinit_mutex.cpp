@@ -138,7 +138,11 @@ OSTryLockMutex(OSMutex *mutex)
 }
 
 
-static void
+/**
+ * Unlocks a mutex and returns whether it was fully unlocked or simply
+ * decremented.  This is relevant for OSUnlockMutex reschduling.
+ */
+static bool
 unlockMutexNoLock(OSMutex *mutex)
 {
    auto thread = OSGetCurrentThread();
@@ -160,7 +164,11 @@ unlockMutexNoLock(OSMutex *mutex)
 
       // Wakeup any threads trying to lock this mutex
       internal::wakeupThreadNoLock(&mutex->queue);
+
+      return true;
    }
+
+   return false;
 }
 
 
@@ -177,9 +185,10 @@ void
 OSUnlockMutex(OSMutex *mutex)
 {
    internal::lockScheduler();
-   unlockMutexNoLock(mutex);
-   internal::testThreadCancelNoLock();
-   internal::rescheduleAllCoreNoLock();
+   if (unlockMutexNoLock(mutex)) {
+      internal::testThreadCancelNoLock();
+      internal::rescheduleAllCoreNoLock();
+   }
    internal::unlockScheduler();
 }
 
