@@ -1,10 +1,11 @@
-#include <array>
+#include "common/teenyheap.h"
 #include "coreinit.h"
 #include "coreinit_core.h"
 #include "coreinit_lockedcache.h"
 #include "coreinit_thread.h"
+#include "decaf_graphics.h"
 #include "libcpu/mem.h"
-#include "common/teenyheap.h"
+#include <array>
 
 namespace coreinit
 {
@@ -171,6 +172,9 @@ LCStoreDMABlocks(void *dst, const void *src, uint32_t size)
    }
 
    std::memcpy(dst, src, size * 32);
+
+   // Also signal the memory store to the GPU, as with DCFlushRange().
+   decaf::getGraphicsDriver()->handleDCFlush(mem::untranslate(dst), size);
 }
 
 
