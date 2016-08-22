@@ -485,6 +485,7 @@ private:
    latte::ShadowState mShadowState;
 
    GLStateCache mGLStateCache;
+   bool mFramebufferChanged = false;
    std::array<ColorBufferCache, latte::MaxRenderTargets> mColorBufferCache;
    DepthBufferCache mDepthBufferCache;
    std::array<UniformBlockCache, latte::MaxUniformBlocks> mUniformBlockCache;
