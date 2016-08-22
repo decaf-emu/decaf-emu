@@ -38,6 +38,7 @@ extern bool async;
 extern bool to_file;
 extern bool to_stdout;
 extern std::string level;
+extern std::string directory;
 
 } // namespace log
 

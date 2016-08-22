@@ -43,6 +43,9 @@ getCommandLineParser()
    auto log_options = parser.add_option_group("Log Options")
       .add_option("log-file",
                   description { "Redirect log output to file." })
+	  .add_option("log-dir",
+		          description{ "Directory where log file will be written." },
+		          value<std::string> {})
       .add_option("log-async",
                   description { "Enable asynchronous logging." })
       .add_option("log-no-stdout",
@@ -166,6 +169,11 @@ start(excmd::parser &parser,
       config::log::to_file = true;
    }
 
+   // option to specify directory for log file
+   if (options.has("log-dir")) {
+	   config::log::directory = options.get<std::string>("log-dir");
+   }
+
    if (options.has("log-async")) {
       config::log::async = true;
    }
@@ -225,7 +233,7 @@ start(excmd::parser &parser,
    }
 
    auto gamePath = options.get<std::string>("game directory");
-   auto logFile = getPathBasename(gamePath);
+   auto logFile = config::log::directory + "/" + getPathBasename(gamePath);
    auto logLevel = spdlog::level::info;
    std::vector<spdlog::sink_ptr> sinks;
 
