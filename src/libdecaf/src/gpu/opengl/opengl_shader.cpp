@@ -447,12 +447,10 @@ bool GLDriver::checkActiveUniforms()
             decaf_assert(size <= gpu::opengl::MaxUniformBlockSize,
                fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, MaxUniformBlockSize));
 
-            auto &buffer = mDataBuffers[addr];
-
-            configureDataBuffer(&buffer, addr, size, true, false);
+            auto buffer = getDataBuffer(addr, size, true, false);
 
             // Bind block
-            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, buffer.object);
+            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, buffer->object);
          }
       }
 
@@ -470,12 +468,10 @@ bool GLDriver::checkActiveUniforms()
             auto addr = sq_alu_const_cache_ps << 8;
             auto size = sq_alu_const_buffer_size_ps << 8;
 
-            auto &buffer = mDataBuffers[addr];
-
-            configureDataBuffer(&buffer, addr, size, true, false);
+            auto buffer = getDataBuffer(addr, size, true, false);
 
             // Bind block
-            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, buffer.object);
+            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, buffer->object);
          }
       }
    }
@@ -592,22 +588,26 @@ stridedMemcpy(const void *src,
    }
 }
 
-void
-GLDriver::configureDataBuffer(DataBuffer *buffer,
-                              uint32_t address,
-                              uint32_t size,
-                              bool isInput,
-                              bool isOutput)
+DataBuffer *
+GLDriver::getDataBuffer(uint32_t address,
+                        uint32_t size,
+                        bool isInput,
+                        bool isOutput)
 {
-   decaf_check(buffer);
    decaf_check(size);
    decaf_check(isInput || isOutput);
+
+   DataBuffer *buffer;
+   {
+      std::unique_lock<std::mutex> lock(mResourceMutex);
+      buffer = &mDataBuffers[address];
+   }
 
    if (buffer->object
     && buffer->allocatedSize >= size
     && !(isInput && !buffer->isInput)
     && !(isOutput && !buffer->isOutput)) {
-      return;  // No changes needed
+      return buffer;  // No changes needed
    }
 
    auto oldObject = buffer->object;
@@ -620,6 +620,13 @@ GLDriver::configureDataBuffer(DataBuffer *buffer,
    buffer->mappedBuffer = nullptr;
    buffer->isInput |= isInput;
    buffer->isOutput |= isOutput;
+
+   // Never map output (transform feedback) buffers, because the only way
+   //  to safely read data from them is by first calling glFinish().  With
+   //  a non-mapped buffer, when we call glGet[Named]BufferSubData(), the
+   //  driver can potentially wait just until that buffer is up to date
+   //  without having to block on all other commands.
+   auto shouldMap = USE_PERSISTENT_MAP && !buffer->isOutput;
 
    gl::glCreateBuffers(1, &buffer->object);
    if (decaf::config::gpu::debug) {
@@ -635,21 +642,16 @@ GLDriver::configureDataBuffer(DataBuffer *buffer,
 
    gl::BufferStorageMask usage = static_cast<gl::BufferStorageMask>(0);
    if (buffer->isInput) {
-      if (USE_PERSISTENT_MAP) {
+      if (shouldMap) {
          usage |= gl::GL_MAP_WRITE_BIT;
       } else {
          usage |= gl::GL_DYNAMIC_STORAGE_BIT;
       }
    }
    if (buffer->isOutput) {
-      if (USE_PERSISTENT_MAP) {
-         usage |= gl::GL_MAP_READ_BIT;
-         if (!buffer->isInput) {
-            usage |= gl::GL_CLIENT_STORAGE_BIT;
-         }
-      }
+      usage |= gl::GL_CLIENT_STORAGE_BIT;
    }
-   if (USE_PERSISTENT_MAP) {
+   if (shouldMap) {
       usage |= gl::GL_MAP_PERSISTENT_BIT;
    }
    gl::glNamedBufferStorage(buffer->object, size + BUFFER_PADDING, nullptr, usage);
@@ -663,7 +665,7 @@ GLDriver::configureDataBuffer(DataBuffer *buffer,
       gl::glDeleteBuffers(1, &oldObject);
    }
 
-   if (USE_PERSISTENT_MAP) {
+   if (shouldMap) {
       gl::BufferAccessMask access = gl::GL_MAP_PERSISTENT_BIT;
       if (buffer->isInput) {
          access |= gl::GL_MAP_WRITE_BIT | gl::GL_MAP_FLUSH_EXPLICIT_BIT;
@@ -685,6 +687,8 @@ GLDriver::configureDataBuffer(DataBuffer *buffer,
          uploadDataBuffer(buffer, oldSize, size - oldSize);
       }
    }
+
+   return buffer;
 }
 
 void
@@ -693,6 +697,10 @@ GLDriver::downloadDataBuffer(DataBuffer *buffer,
                              uint32_t size)
 {
    if (buffer->mappedBuffer) {
+      // We only map input-only buffers (see getDataBuffer()), so there's
+      //  no need for a memory barrier here.
+      decaf_check(!buffer->isOutput);
+
       memcpy(mem::translate<char>(buffer->cpuMemStart) + offset,
              static_cast<char *>(buffer->mappedBuffer) + offset,
              size);
@@ -768,62 +776,16 @@ GLDriver::checkActiveAttribBuffers()
          continue;
       }
 
-      auto &buffer = mDataBuffers[addr];
+      auto buffer = getDataBuffer(addr, size, true, false);
 
-      configureDataBuffer(&buffer, addr, size, true, false);
+      needMemoryBarrier |= buffer->dirtyMap;
+      buffer->dirtyMap = false;
 
-      needMemoryBarrier |= buffer.dirtyMap;
-      buffer.dirtyMap = false;
-
-      gl::glBindVertexBuffer(i, buffer.object, 0, stride);
+      gl::glBindVertexBuffer(i, buffer->object, 0, stride);
    }
 
    if (needMemoryBarrier) {
       gl::glMemoryBarrier(gl::GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
-   }
-
-   return true;
-}
-
-bool
-GLDriver::checkActiveFeedbackBuffers()
-{
-   auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
-   auto vgt_strmout_buffer_en = getRegister<latte::VGT_STRMOUT_BUFFER_EN>(latte::Register::VGT_STRMOUT_BUFFER_EN);
-
-   if (!vgt_strmout_en.STREAMOUT()) {
-      return true;
-   }
-
-   for (auto index = 0u; index < latte::MaxStreamOutBuffers; ++index) {
-      if (!(vgt_strmout_buffer_en.value & (1 << index))) {
-         if (mFeedbackBufferCache[index].enable) {
-            mFeedbackBufferCache[index].enable = false;
-            gl::glBindBufferBase(gl::GL_TRANSFORM_FEEDBACK_BUFFER, index, 0);
-         }
-         continue;
-      }
-
-      mFeedbackBufferCache[index].enable = true;
-
-      auto vgt_strmout_buffer_base = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_BASE_0 + 16 * index);
-      auto addr = vgt_strmout_buffer_base << 8;
-      auto &buffer = mDataBuffers[addr];
-
-      if (!buffer.object || !buffer.isOutput) {
-         gLog->error("Attempt to use unconfigured feedback buffer {}", index);
-         return false;
-      }
-
-      auto offset = mFeedbackBaseOffset[index];
-
-      if (offset >= buffer.allocatedSize) {
-         gLog->error("Attempt to bind feedback buffer {} at offset {} >= size {}", index, offset, buffer.allocatedSize);
-         return false;
-      }
-
-      gl::glBindBufferRange(gl::GL_TRANSFORM_FEEDBACK_BUFFER, index, buffer.object, offset, buffer.allocatedSize - offset);
-      mFeedbackCurrentOffset[index] = offset;
    }
 
    return true;

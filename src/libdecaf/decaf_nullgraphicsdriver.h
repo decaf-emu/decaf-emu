@@ -12,6 +12,7 @@ public:
    virtual void run() override;
    virtual void stop() override;
    virtual float getAverageFPS() override;
+   virtual void handleDCFlush(uint32_t addr, uint32_t size) override;
 
 private:
    bool mRunning = false;

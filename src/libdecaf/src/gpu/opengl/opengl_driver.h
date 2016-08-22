@@ -7,11 +7,9 @@
 #include "gpu/latte_contextstate.h"
 #include "gpu/pm4_buffer.h"
 #include "libdecaf/decaf_graphics.h"
-#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <exception>
-#include <functional>
 #include <glbinding/gl/types.h>
 #include <gsl.h>
 #include <map>
@@ -19,7 +17,6 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <queue>
 
 namespace gpu
 {
@@ -119,12 +116,13 @@ struct HostSurface
    HostSurface *next = nullptr;
 };
 
-struct SurfaceBuffer : Resource
+struct SurfaceBuffer : public Resource
 {
    HostSurface *active = nullptr;
    HostSurface *master = nullptr;
    SurfaceUseState state = SurfaceUseState::None;
-   bool dirtyAsTexture = true;
+   bool dirtyMemory = true;
+   bool needUpload = true;
    uint64_t cpuMemHash[2] = { 0, 0 };
    struct {
       latte::SQ_TEX_DIM dim;
@@ -149,13 +147,22 @@ struct DataBuffer : public Resource
    void *mappedBuffer = nullptr;
    bool isInput = false;  // Uniform or attribute buffers
    bool isOutput = false;  // Transform feedback buffers
-   bool dirtyMap = false;
+   bool dirtyMap = false;  // True if we need to glFlushMappedBufferRange
+   bool dirtyMemory = true;
    uint64_t cpuMemHash[2] = { 0, 0 };
 };
 
 struct Sampler
 {
    gl::GLuint object = 0;
+};
+
+struct FeedbackBufferState
+{
+   bool bound = false;
+   gl::GLuint object;
+   uint32_t baseOffset;
+   uint32_t currentOffset;
 };
 
 struct ColorBufferCache
@@ -185,17 +192,6 @@ struct SamplerCache
    uint32_t word2 = 0;
 };
 
-struct FeedbackBufferCache
-{
-   bool enable = false;
-};
-
-struct GpuTask
-{
-   uint64_t id;
-   std::function<void()> func;
-};
-
 using GLContext = uint64_t;
 
 class GLDriver : public decaf::OpenGLDriver
@@ -206,6 +202,7 @@ public:
    virtual void run() override;
    virtual void stop() override;
    virtual float getAverageFPS() override;
+   virtual void handleDCFlush(uint32_t addr, uint32_t size) override;
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
    virtual void syncPoll(const SwapFunction &swapFunc) override;
 
@@ -325,12 +322,11 @@ private:
    bool checkActiveUniforms();
    bool checkViewport();
 
-   void
-   configureDataBuffer(DataBuffer *buffer,
-                       uint32_t address,
-                       uint32_t size,
-                       bool isInput,
-                       bool isOutput);
+   DataBuffer *
+   getDataBuffer(uint32_t address,
+                 uint32_t size,
+                 bool isInput,
+                 bool isOutput);
    void
    uploadDataBuffer(DataBuffer *buffer,
                     uint32_t offset,
@@ -339,6 +335,9 @@ private:
    downloadDataBuffer(DataBuffer *buffer,
                       uint32_t offset,
                       uint32_t size);
+
+   void beginTransformFeedback(gl::GLenum primitive);
+   void endTransformFeedback();
 
    void setRegister(latte::Register reg, uint32_t value);
    void applyRegister(latte::Register reg);
@@ -386,8 +385,13 @@ private:
    std::unordered_map<uint64_t, VertexShader> mVertexShaders;
    std::unordered_map<uint64_t, PixelShader> mPixelShaders;
    std::map<ShaderKey, Shader> mShaders;
-   std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;
-   std::unordered_map<uint32_t, DataBuffer> mDataBuffers;
+
+   // Protects surface and data buffer lists; used by handleDCFlush() to
+   //  safely set dirty flags
+   std::mutex mResourceMutex;
+
+   std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;  // Protected by mResourceMutex
+   std::unordered_map<uint32_t, DataBuffer> mDataBuffers;  // Protected by mResourceMutex
 
    std::array<Sampler, latte::MaxSamplers> mVertexSamplers;
    std::array<Sampler, latte::MaxSamplers> mPixelSamplers;
@@ -403,8 +407,9 @@ private:
    ScanBufferChain mDrcScanBuffers;
 
    gl::GLuint mFeedbackQuery = 0;
-   uint32_t mFeedbackBaseOffset[latte::MaxStreamOutBuffers];
-   uint32_t mFeedbackCurrentOffset[latte::MaxStreamOutBuffers];
+   bool mFeedbackActive = false;
+   gl::GLenum mFeedbackPrimitive;
+   std::array<FeedbackBufferState, latte::MaxStreamOutBuffers> mFeedbackBufferState;
 
    gl::GLuint mOccQuery = 0;
    uint32_t mLastOccQueryAddress = 0;
@@ -417,7 +422,6 @@ private:
    DepthBufferCache mDepthBufferCache;
    std::array<TextureCache, latte::MaxTextures> mPixelTextureCache;
    std::array<SamplerCache, latte::MaxSamplers> mPixelSamplerCache;
-   std::array<FeedbackBufferCache, latte::MaxStreamOutBuffers> mFeedbackBufferCache;
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;

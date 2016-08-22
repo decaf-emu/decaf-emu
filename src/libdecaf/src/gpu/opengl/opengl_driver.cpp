@@ -287,12 +287,14 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
       copyHeight,
       copyDepth);
 
-   dstBuffer->dirtyAsTexture = false;
+   dstBuffer->needUpload = false;
 }
 
 void
 GLDriver::surfaceSync(const pm4::SurfaceSync &data)
 {
+   std::unique_lock<std::mutex> lock(mResourceMutex);
+
    auto memStart = data.addr << 8;
    auto memEnd = memStart + (data.size << 8);
 
@@ -322,29 +324,34 @@ GLDriver::surfaceSync(const pm4::SurfaceSync &data)
    }
 
    if (surfaces) {
-      for (auto &surf : mSurfaces) {
-         if (surf.second.cpuMemStart >= memEnd || surf.second.cpuMemEnd < memStart) {
+      for (auto &i : mSurfaces) {
+         SurfaceBuffer *surface = &i.second;
+
+         if (surface->cpuMemStart >= memEnd || surface->cpuMemEnd < memStart) {
             continue;
          }
 
-         surf.second.dirtyAsTexture = true;
+         surface->needUpload |= surface->dirtyMemory;
+         surface->dirtyMemory = false;
       }
    }
 
-   for (auto &buffer : mDataBuffers) {
-      DataBuffer *dataBuffer = &buffer.second;
+   for (auto &i : mDataBuffers) {
+      DataBuffer *buffer = &i.second;
 
-      if (dataBuffer->cpuMemStart >= memEnd || dataBuffer->cpuMemEnd < memStart) {
+      if (buffer->cpuMemStart >= memEnd || buffer->cpuMemEnd < memStart) {
          continue;
       }
 
-      auto offset = std::max(memStart, dataBuffer->cpuMemStart) - dataBuffer->cpuMemStart;
-      auto size = (std::min(memEnd, dataBuffer->cpuMemEnd) - dataBuffer->cpuMemStart) - offset;
+      auto offset = std::max(memStart, buffer->cpuMemStart) - buffer->cpuMemStart;
+      auto size = (std::min(memEnd, buffer->cpuMemEnd) - buffer->cpuMemStart) - offset;
 
-      if (dataBuffer->isOutput && shaderExport) {
-         downloadDataBuffer(dataBuffer, offset, size);
-      } else if (dataBuffer->isInput && (shader || surfaces)) {
-         uploadDataBuffer(dataBuffer, offset, size);
+      if (buffer->isOutput && shaderExport) {
+         downloadDataBuffer(buffer, offset, size);
+         buffer->dirtyMemory = false;
+      } else if (buffer->isInput && buffer->dirtyMemory && (shader || surfaces)) {
+         uploadDataBuffer(buffer, offset, size);
+         buffer->dirtyMemory = false;
       }
    }
 }
@@ -426,7 +433,10 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
          gl::glEndQuery(gl::GL_SAMPLES_PASSED);
          gl::glGetQueryObjectui64v(mOccQuery, gl::GL_QUERY_RESULT, &value);
       } else {
-         decaf_check(!mLastOccQueryAddress);
+         if (mLastOccQueryAddress) {
+            gLog->warn("Program started a new occlusion query (at 0x{:X}) while one was already in progress (at 0x{:X})", mLastOccQueryAddress, addr);
+            gl::glEndQuery(gl::GL_SAMPLES_PASSED);
+         }
          mLastOccQueryAddress = addr;
 
          if (!mOccQuery) {
@@ -529,6 +539,35 @@ GLDriver::executeBuffer(pm4::Buffer *buffer)
 
    // Release command buffer
    gpu::retireCommandBuffer(buffer);
+}
+
+void
+GLDriver::handleDCFlush(uint32_t addr, uint32_t size)
+{
+   std::unique_lock<std::mutex> lock(mResourceMutex);
+
+   auto memStart = addr;
+   auto memEnd = memStart + size;
+
+   for (auto &i : mSurfaces) {
+      SurfaceBuffer *surface = &i.second;
+
+      if (surface->cpuMemStart >= memEnd || surface->cpuMemEnd < memStart) {
+         continue;
+      }
+
+      surface->dirtyMemory = true;
+   }
+
+   for (auto &i : mDataBuffers) {
+      DataBuffer *buffer = &i.second;
+
+      if (buffer->cpuMemStart >= memEnd || buffer->cpuMemEnd < memStart) {
+         continue;
+      }
+
+      buffer->dirtyMemory = true;
+   }
 }
 
 void
