@@ -30,10 +30,6 @@ GLDriver::checkViewport()
       auto pa_cl_vport_xoffset = getRegister<latte::PA_CL_VPORT_XOFFSET_N>(latte::Register::PA_CL_VPORT_XOFFSET_0);
       auto pa_cl_vport_yscale = getRegister<latte::PA_CL_VPORT_YSCALE_N>(latte::Register::PA_CL_VPORT_YSCALE_0);
       auto pa_cl_vport_yoffset = getRegister<latte::PA_CL_VPORT_YOFFSET_N>(latte::Register::PA_CL_VPORT_YOFFSET_0);
-      auto pa_cl_vport_zscale = getRegister<latte::PA_CL_VPORT_ZSCALE_N>(latte::Register::PA_CL_VPORT_ZSCALE_0);
-      auto pa_cl_vport_zoffset = getRegister<latte::PA_CL_VPORT_ZOFFSET_N>(latte::Register::PA_CL_VPORT_ZOFFSET_0);
-      auto pa_sc_vport_zmin = getRegister<latte::PA_SC_VPORT_ZMIN_N>(latte::Register::PA_SC_VPORT_ZMIN_0);
-      auto pa_sc_vport_zmax = getRegister<latte::PA_SC_VPORT_ZMAX_N>(latte::Register::PA_SC_VPORT_ZMAX_0);
 
       auto width = pa_cl_vport_xscale.VPORT_XSCALE * 2.0f;
       auto height = pa_cl_vport_yscale.VPORT_YSCALE * 2.0f;
@@ -45,6 +41,14 @@ GLDriver::checkViewport()
                      gsl::narrow_cast<gl::GLint>(y),
                      gsl::narrow_cast<gl::GLint>(width),
                      gsl::narrow_cast<gl::GLint>(height));
+      mViewportDirty = false;
+   }
+
+   if (mDepthRangeDirty) {
+      auto pa_cl_vport_zscale = getRegister<latte::PA_CL_VPORT_ZSCALE_N>(latte::Register::PA_CL_VPORT_ZSCALE_0);
+      auto pa_cl_vport_zoffset = getRegister<latte::PA_CL_VPORT_ZOFFSET_N>(latte::Register::PA_CL_VPORT_ZOFFSET_0);
+      auto pa_sc_vport_zmin = getRegister<latte::PA_SC_VPORT_ZMIN_N>(latte::Register::PA_SC_VPORT_ZMIN_0);
+      auto pa_sc_vport_zmax = getRegister<latte::PA_SC_VPORT_ZMAX_N>(latte::Register::PA_SC_VPORT_ZMAX_0);
 
       float nearZ, farZ;
 
@@ -57,7 +61,7 @@ GLDriver::checkViewport()
       }
 
       gl::glDepthRangef(nearZ, farZ);
-      mViewportDirty = false;
+      mDepthRangeDirty = false;
    }
 
    if (mScissorDirty) {
@@ -69,7 +73,6 @@ GLDriver::checkViewport()
       auto width = pa_sc_generic_scissor_br.BR_X() - x;
       auto height = pa_sc_generic_scissor_br.BR_Y() - y;
 
-      gl::glEnable(gl::GL_SCISSOR_TEST);
       gl::glScissor(x, y, width, height);
       mScissorDirty = false;
    }

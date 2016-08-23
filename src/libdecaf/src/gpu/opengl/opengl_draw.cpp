@@ -52,11 +52,15 @@ bool GLDriver::checkReadyDraw()
       return false;
    }
 
-   auto fbStatus = gl::glCheckFramebufferStatus(gl::GL_FRAMEBUFFER);
+   if (mFramebufferChanged) {
+      auto fbStatus = gl::glCheckFramebufferStatus(gl::GL_FRAMEBUFFER);
 
-   if (fbStatus != gl::GL_FRAMEBUFFER_COMPLETE) {
-      gLog->warn("Draw attempted with an incomplete framebuffer, status {}.", glbinding::Meta::getString(fbStatus));
-      return false;
+      if (fbStatus != gl::GL_FRAMEBUFFER_COMPLETE) {
+         gLog->warn("Draw attempted with an incomplete framebuffer, status {}.", glbinding::Meta::getString(fbStatus));
+         return false;
+      }
+
+      mFramebufferChanged = false;
    }
 
    if (!checkViewport()) {

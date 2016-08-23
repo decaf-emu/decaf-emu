@@ -33,7 +33,19 @@ GLDriver::initGL()
    }
    mActiveShader = nullptr;
    mDrawBuffers.fill(gl::GL_NONE);
+   mGLStateCache.blendEnable.fill(false);
    mLastUniformUpdate.fill(0);
+
+   // We always use the scissor test
+   gl::glEnable(gl::GL_SCISSOR_TEST);
+
+   // We always use GL_UPPER_LEFT coordinates
+   gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_NEGATIVE_ONE_TO_ONE);
+
+   // The GL spec doesn't say whether these default to enabled or disabled.
+   //  They're probably disabled, but let's play it safe.
+   gl::glDisable(gl::GL_DEPTH_CLAMP);
+   gl::glDisable(gl::GL_PRIMITIVE_RESTART);
 
    // Create our blit framebuffer
    gl::glCreateFramebuffers(2, mBlitFrameBuffers);

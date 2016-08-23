@@ -569,23 +569,28 @@ bool GLDriver::checkActiveUniforms()
             auto sq_alu_const_cache_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + 4 * i);
             auto sq_alu_const_buffer_size_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + 4 * i);
             auto used = mActiveShader->vertex->usedUniformBlocks[i];
+            gl::GLuint bufferObject;
 
             if (!used || !sq_alu_const_buffer_size_vs) {
-               gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, 0);
-               continue;
+               bufferObject = 0;
+            } else {
+               auto addr = sq_alu_const_cache_vs << 8;
+               auto size = sq_alu_const_buffer_size_vs << 8;
+
+               // Check that we can fit the uniform block into OpenGL buffers
+               decaf_assert(size <= gpu::opengl::MaxUniformBlockSize,
+                  fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, MaxUniformBlockSize));
+
+               auto buffer = getDataBuffer(addr, size, true, false);
+
+               bufferObject = buffer->object;
             }
 
-            auto addr = sq_alu_const_cache_vs << 8;
-            auto size = sq_alu_const_buffer_size_vs << 8;
-
-            // Check that we can fit the uniform block into OpenGL buffers
-            decaf_assert(size <= gpu::opengl::MaxUniformBlockSize,
-               fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, MaxUniformBlockSize));
-
-            auto buffer = getDataBuffer(addr, size, true, false);
-
-            // Bind block
-            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, buffer->object);
+            // Bind (or unbind) block
+            if (mUniformBlockCache[i].vsObject != bufferObject) {
+               mUniformBlockCache[i].vsObject = bufferObject;
+               gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, bufferObject);
+            }
          }
       }
 
@@ -594,19 +599,24 @@ bool GLDriver::checkActiveUniforms()
             auto sq_alu_const_cache_ps = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + 4 * i);
             auto sq_alu_const_buffer_size_ps = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + 4 * i);
             auto used = mActiveShader->pixel->usedUniformBlocks[i];
+            gl::GLuint bufferObject;
 
             if (!used || !sq_alu_const_buffer_size_ps) {
-               gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, 0);
-               continue;
+               bufferObject = 0;
+            } else {
+               auto addr = sq_alu_const_cache_ps << 8;
+               auto size = sq_alu_const_buffer_size_ps << 8;
+
+               auto buffer = getDataBuffer(addr, size, true, false);
+
+               bufferObject = buffer->object;
             }
 
-            auto addr = sq_alu_const_cache_ps << 8;
-            auto size = sq_alu_const_buffer_size_ps << 8;
-
-            auto buffer = getDataBuffer(addr, size, true, false);
-
-            // Bind block
-            gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, buffer->object);
+            // Bind (or unbind) block
+            if (mUniformBlockCache[i].psObject != bufferObject) {
+               mUniformBlockCache[i].psObject = bufferObject;
+               gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, bufferObject);
+            }
          }
       }
    }
@@ -906,17 +916,25 @@ GLDriver::checkActiveAttribBuffers()
       auto addr = sq_vtx_constant_word0.BASE_ADDRESS;
       auto size = sq_vtx_constant_word1.SIZE + 1;
       auto stride = sq_vtx_constant_word2.STRIDE();
+      gl::GLuint bufferObject;
 
       if (addr == 0 || size == 0) {
-         continue;
+         bufferObject = 0;
+         stride = 0;
+      } else {
+         auto buffer = getDataBuffer(addr, size, true, false);
+         bufferObject = buffer->object;
+
+         needMemoryBarrier |= buffer->dirtyMap;
+         buffer->dirtyMap = false;
       }
 
-      auto buffer = getDataBuffer(addr, size, true, false);
-
-      needMemoryBarrier |= buffer->dirtyMap;
-      buffer->dirtyMap = false;
-
-      gl::glBindVertexBuffer(i, buffer->object, 0, stride);
+      if (mActiveShader->fetch->mAttribBufferCache[i].object != bufferObject
+       || mActiveShader->fetch->mAttribBufferCache[i].stride != stride) {
+         mActiveShader->fetch->mAttribBufferCache[i].object = bufferObject;
+         mActiveShader->fetch->mAttribBufferCache[i].stride = stride;
+         gl::glBindVertexBuffer(i, bufferObject, 0, stride);
+      }
    }
 
    if (needMemoryBarrier) {

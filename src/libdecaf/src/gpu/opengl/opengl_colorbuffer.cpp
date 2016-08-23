@@ -32,7 +32,7 @@ bool GLDriver::checkActiveColorBuffer()
       break;
    }
 
-   bool changedDrawBuffers = false;
+   bool drawBuffersChanged = false;
 
    for (auto i = 0u; i < mColorBufferCache.size(); ++i, mask >>= 4) {
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
@@ -56,9 +56,10 @@ bool GLDriver::checkActiveColorBuffer()
          mColorBufferCache[i].object = surfaceObject;
 
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, surfaceObject, 0);
+         mFramebufferChanged = true;
 
          mDrawBuffers[i] = surfaceObject ? gl::GL_COLOR_ATTACHMENT0 + i : gl::GL_NONE;
-         changedDrawBuffers = true;
+         drawBuffersChanged = true;
       }
 
       if (surfaceObject && thisMask != mColorBufferCache[i].mask) {
@@ -72,7 +73,7 @@ bool GLDriver::checkActiveColorBuffer()
       }
    }
 
-   if (changedDrawBuffers) {
+   if (drawBuffersChanged) {
       glDrawBuffers(mDrawBuffers.size(), &mDrawBuffers[0]);
    }
 

@@ -66,6 +66,8 @@ bool GLDriver::checkActiveDepthBuffer()
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, surfaceObject, 0);
       }
 
+      mFramebufferChanged = true;
+
       mDepthBufferCache.object = surfaceObject;
       mDepthBufferCache.depthBound = z_enable;
       mDepthBufferCache.stencilBound = stencil_enable;
