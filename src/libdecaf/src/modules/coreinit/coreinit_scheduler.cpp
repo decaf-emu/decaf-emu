@@ -126,7 +126,6 @@ isSchedulerEnabled()
 void
 enableScheduler()
 {
-   decaf_check(!OSIsInterruptEnabled());
    uint32_t coreId = cpu::this_core::id();
    sSchedulerEnabled[coreId] = true;
 }
@@ -134,7 +133,6 @@ enableScheduler()
 void
 disableScheduler()
 {
-   decaf_check(!OSIsInterruptEnabled());
    uint32_t coreId = cpu::this_core::id();
    sSchedulerEnabled[coreId] = false;
 }
