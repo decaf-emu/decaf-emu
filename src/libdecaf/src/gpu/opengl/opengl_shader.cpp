@@ -101,6 +101,65 @@ getDataFormatGlType(latte::SQ_DATA_FORMAT format)
    }
 }
 
+static void
+deleteShaderObject(FetchShader *shader)
+{
+   gl::glDeleteVertexArrays(1, &shader->object);
+}
+
+static void
+deleteShaderObject(VertexShader *shader)
+{
+   gl::glDeleteProgram(shader->object);
+}
+
+static void
+deleteShaderObject(PixelShader *shader)
+{
+   gl::glDeleteProgram(shader->object);
+}
+
+// Must be called with mResourceMutex locked; returns whether the shader
+//  was invalidated
+template <typename ShaderPtrType> static bool
+invalidateShaderIfChanged_locked(ShaderPtrType &shader,
+                                 uint64_t shaderKey,
+                                 std::unordered_map<uint64_t, ShaderPtrType> &shaders)
+{
+   if (!shader || !shader->needRebuild) {
+      return false;
+   }
+
+   // Check whether the shader has actually changed; we want to avoid
+   //  recompiling shaders if possible, since that's very slow.
+   //  Note that we don't save this, which means we have to compute it
+   //  twice if we end up recreating the shader, but that cost is tiny
+   //  compared to the time it takes to actually create the shader.
+   uint64_t newHash[2] = { 0, 0 };
+   MurmurHash3_x64_128(mem::translate(shader->cpuMemStart), shader->cpuMemEnd - shader->cpuMemStart, 0, newHash);
+   if (newHash[0] == shader->cpuMemHash[0] && newHash[1] == shader->cpuMemHash[1]) {
+      shader->needRebuild = false;
+      return false;
+   }
+
+   // The shader contents have changed, so delete the existing object
+   deleteShaderObject(shader);
+   shader->object = 0;
+
+   shader->refCount--;
+   if (shader->refCount == 0) {
+      delete shader;
+   }
+   shader = nullptr;
+
+   // Also clear out the table entry (but leave it allocated since we're
+   //  about to reuse it).  Do this last in case shader is referencing the
+   //  entry itself.
+   shaders[shaderKey] = nullptr;
+
+   return true;
+}
+
 bool GLDriver::checkActiveShader()
 {
    auto pgm_start_fs = getRegister<latte::SQ_PGM_START_FS>(latte::Register::SQ_PGM_START_FS);
@@ -158,7 +217,7 @@ bool GLDriver::checkActiveShader()
    auto vsShaderKey = static_cast<uint64_t>(vsPgmAddress) << 32;
    vsShaderKey ^= (isScreenSpace ? 1 : 0) << 31;
    if (vgt_strmout_en.STREAMOUT()) {
-      vsShaderKey ^= 1;
+      vsShaderKey |= 1;
       for (auto i = 0u; i < latte::MaxStreamOutBuffers; ++i) {
          auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
          vsShaderKey ^= vgt_strmout_vtx_stride << (1 + 7 * i);
@@ -169,22 +228,34 @@ bool GLDriver::checkActiveShader()
       psShaderKey = 0;
    } else {
       psShaderKey = static_cast<uint64_t>(psPgmAddress) << 32;
-      psShaderKey ^= static_cast<uint64_t>(alphaTestFunc) << 28;
-      psShaderKey ^= static_cast<uint64_t>(early_z) << 27;
-      psShaderKey ^= static_cast<uint64_t>(db_shader_control.Z_EXPORT_ENABLE()) << 26;
-      psShaderKey ^= cb_shader_mask.value & 0xFF;
+      psShaderKey |= static_cast<uint64_t>(alphaTestFunc) << 28;
+      psShaderKey |= static_cast<uint64_t>(early_z) << 27;
+      psShaderKey |= static_cast<uint64_t>(db_shader_control.Z_EXPORT_ENABLE()) << 26;
+      psShaderKey |= cb_shader_mask.value & 0xFF;
    }
 
    if (mActiveShader
-    && mActiveShader->fetch && mActiveShader->fetchKey == fsShaderKey
-    && mActiveShader->vertex && mActiveShader->vertexKey == vsShaderKey
-    && mActiveShader->pixel && mActiveShader->pixelKey == psShaderKey) {
+    && mActiveShader->fetch && !mActiveShader->fetch->needRebuild && mActiveShader->fetchKey == fsShaderKey
+    && mActiveShader->vertex && !mActiveShader->vertex->needRebuild && mActiveShader->vertexKey == vsShaderKey
+    && (!mActiveShader->pixel || !mActiveShader->pixel->needRebuild) && mActiveShader->pixelKey == psShaderKey) {
       // We already have the current shader bound, nothing special to do.
       return true;
    }
 
-   auto shaderKey = ShaderKey { fsShaderKey, vsShaderKey, psShaderKey };
-   auto &shader = mShaders[shaderKey];
+   auto shaderKey = ShaderPipelineKey { fsShaderKey, vsShaderKey, psShaderKey };
+   auto &pipeline = mShaderPipelines[shaderKey];
+
+   // If the pipeline already exists, check whether any of its component
+   //  shaders need to be rebuilt
+   if (pipeline.object) {
+      std::unique_lock<std::mutex> mResourceMutex;
+      if (invalidateShaderIfChanged_locked(pipeline.fetch, fsShaderKey, mFetchShaders)
+       || invalidateShaderIfChanged_locked(pipeline.vertex, vsShaderKey, mVertexShaders)
+       || invalidateShaderIfChanged_locked(pipeline.pixel, psShaderKey, mPixelShaders)) {
+         gl::glDeleteProgramPipelines(1, &pipeline.object);
+         pipeline.object = 0;
+      }
+   }
 
    auto getProgramLog = [](auto program) {
       gl::GLint logLength = 0;
@@ -197,36 +268,45 @@ bool GLDriver::checkActiveShader()
    };
 
    // Generate shader if needed
-   if (!shader.object) {
+   if (!pipeline.object) {
+      std::unique_lock<std::mutex> mResourceMutex;
+
       // Parse fetch shader if needed
       auto &fetchShader = mFetchShaders[fsShaderKey];
+      invalidateShaderIfChanged_locked(fetchShader, fsShaderKey, mFetchShaders);
 
-      if (!fetchShader.object) {
+      if (!fetchShader) {
+         fetchShader = new FetchShader;
+
          auto aluDivisor0 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_0);
          auto aluDivisor1 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_1);
 
-         fetchShader.cpuMemStart = fsPgmAddress;
-         fetchShader.cpuMemEnd = fsPgmAddress + fsPgmSize;
+         fetchShader->cpuMemStart = fsPgmAddress;
+         fetchShader->cpuMemEnd = fsPgmAddress + fsPgmSize;
+         MurmurHash3_x64_128(mem::translate(fetchShader->cpuMemStart),
+                             fetchShader->cpuMemEnd - fetchShader->cpuMemStart,
+                             0, fetchShader->cpuMemHash);
+         fetchShader->dirtyMemory = false;
 
          dumpRawShader("fetch", fsPgmAddress, fsPgmSize, true);
-         fetchShader.disassembly = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
+         fetchShader->disassembly = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
 
-         if (!parseFetchShader(fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
+         if (!parseFetchShader(*fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
             gLog->error("Failed to parse fetch shader");
             return false;
          }
 
          // Setup attrib format
-         gl::glCreateVertexArrays(1, &fetchShader.object);
+         gl::glCreateVertexArrays(1, &fetchShader->object);
          if (decaf::config::gpu::debug) {
             std::string label = fmt::format("fetch shader @ 0x{:08X}", fsPgmAddress);
-            gl::glObjectLabel(gl::GL_VERTEX_ARRAY, fetchShader.object, -1, label.c_str());
+            gl::glObjectLabel(gl::GL_VERTEX_ARRAY, fetchShader->object, -1, label.c_str());
          }
 
          auto bufferUsed = std::array<bool, latte::MaxAttributes> { false };
          auto bufferDivisor = std::array<uint32_t, latte::MaxAttributes> { 0 };
 
-         for (auto &attrib : fetchShader.attribs) {
+         for (auto &attrib : fetchShader->attribs) {
             auto resourceId = attrib.buffer + latte::SQ_VS_RESOURCE_BASE;
             if (resourceId >= latte::SQ_VS_ATTRIB_RESOURCE_0 && resourceId < latte::SQ_VS_ATTRIB_RESOURCE_0 + 0x10) {
                auto attribBufferId = resourceId - latte::SQ_VS_ATTRIB_RESOURCE_0;
@@ -235,9 +315,9 @@ bool GLDriver::checkActiveShader()
                auto components = getDataFormatComponents(attrib.format);
                uint32_t divisor = 0;
 
-               gl::glEnableVertexArrayAttrib(fetchShader.object, attrib.location);
-               gl::glVertexArrayAttribIFormat(fetchShader.object, attrib.location, components, type, attrib.offset);
-               gl::glVertexArrayAttribBinding(fetchShader.object, attrib.location, attribBufferId);
+               gl::glEnableVertexArrayAttrib(fetchShader->object, attrib.location);
+               gl::glVertexArrayAttribIFormat(fetchShader->object, attrib.location, components, type, attrib.offset);
+               gl::glVertexArrayAttribBinding(fetchShader->object, attrib.location, attribBufferId);
 
                if (attrib.type == latte::SQ_VTX_FETCH_TYPE::SQ_VTX_FETCH_INSTANCE_DATA) {
                   if (attrib.srcSelX == latte::SQ_SEL_W) {
@@ -263,138 +343,155 @@ bool GLDriver::checkActiveShader()
 
          for (auto bufferId = 0; bufferId < latte::MaxAttributes; ++bufferId) {
             if (bufferUsed[bufferId]) {
-               gl::glVertexArrayBindingDivisor(fetchShader.object, bufferId, bufferDivisor[bufferId]);
+               gl::glVertexArrayBindingDivisor(fetchShader->object, bufferId, bufferDivisor[bufferId]);
             }
          }
       }
 
-      shader.fetch = &fetchShader;
-      shader.fetchKey = fsShaderKey;
+      pipeline.fetch = fetchShader;
+      pipeline.fetch->refCount++;
+      pipeline.fetchKey = fsShaderKey;
 
       // Compile vertex shader if needed
       auto &vertexShader = mVertexShaders[vsShaderKey];
+      invalidateShaderIfChanged_locked(vertexShader, vsShaderKey, mVertexShaders);
 
-      if (!vertexShader.object) {
-         vertexShader.cpuMemStart = vsPgmAddress;
-         vertexShader.cpuMemEnd = vsPgmAddress + vsPgmSize;
+      if (!vertexShader) {
+         vertexShader = new VertexShader;
+
+         vertexShader->cpuMemStart = vsPgmAddress;
+         vertexShader->cpuMemEnd = vsPgmAddress + vsPgmSize;
+         MurmurHash3_x64_128(mem::translate(vertexShader->cpuMemStart),
+                             vertexShader->cpuMemEnd - vertexShader->cpuMemStart,
+                             0, vertexShader->cpuMemHash);
+         vertexShader->dirtyMemory = false;
 
          dumpRawShader("vertex", vsPgmAddress, vsPgmSize);
 
-         if (!compileVertexShader(vertexShader, fetchShader, make_virtual_ptr<uint8_t>(vsPgmAddress), vsPgmSize, isScreenSpace)) {
+         if (!compileVertexShader(*vertexShader, *fetchShader, make_virtual_ptr<uint8_t>(vsPgmAddress), vsPgmSize, isScreenSpace)) {
             gLog->error("Failed to recompile vertex shader");
             return false;
          }
 
-         dumpTranslatedShader("vertex", vsPgmAddress, vertexShader.code);
+         dumpTranslatedShader("vertex", vsPgmAddress, vertexShader->code);
 
          // Create OpenGL Shader
-         const gl::GLchar *code[] = { vertexShader.code.c_str() };
-         vertexShader.object = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
+         const gl::GLchar *code[] = { vertexShader->code.c_str() };
+         vertexShader->object = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
          if (decaf::config::gpu::debug) {
             std::string label = fmt::format("vertex shader @ 0x{:08X}", vsPgmAddress);
-            gl::glObjectLabel(gl::GL_PROGRAM, vertexShader.object, -1, label.c_str());
+            gl::glObjectLabel(gl::GL_PROGRAM, vertexShader->object, -1, label.c_str());
          }
 
          // Check if shader compiled & linked properly
          gl::GLint isLinked = 0;
-         gl::glGetProgramiv(vertexShader.object, gl::GL_LINK_STATUS, &isLinked);
+         gl::glGetProgramiv(vertexShader->object, gl::GL_LINK_STATUS, &isLinked);
 
          if (!isLinked) {
-            auto log = getProgramLog(vertexShader.object);
+            auto log = getProgramLog(vertexShader->object);
             gLog->error("OpenGL failed to compile vertex shader:\n{}", log);
-            gLog->error("Fetch Disassembly:\n{}\n", fetchShader.disassembly);
-            gLog->error("Shader Disassembly:\n{}\n", vertexShader.disassembly);
-            gLog->error("Shader Code:\n{}\n", vertexShader.code);
+            gLog->error("Fetch Disassembly:\n{}\n", fetchShader->disassembly);
+            gLog->error("Shader Disassembly:\n{}\n", vertexShader->disassembly);
+            gLog->error("Shader Code:\n{}\n", vertexShader->code);
             return false;
          }
 
          // Get uniform locations
-         vertexShader.uniformRegisters = gl::glGetUniformLocation(vertexShader.object, "VR");
-         vertexShader.uniformViewport = gl::glGetUniformLocation(vertexShader.object, "uViewport");
+         vertexShader->uniformRegisters = gl::glGetUniformLocation(vertexShader->object, "VR");
+         vertexShader->uniformViewport = gl::glGetUniformLocation(vertexShader->object, "uViewport");
 
          // Get attribute locations
-         vertexShader.attribLocations.fill(0);
+         vertexShader->attribLocations.fill(0);
 
-         for (auto &attrib : fetchShader.attribs) {
+         for (auto &attrib : fetchShader->attribs) {
             auto name = fmt::format("fs_out_{}", attrib.location);
-            vertexShader.attribLocations[attrib.location] = gl::glGetAttribLocation(vertexShader.object, name.c_str());
+            vertexShader->attribLocations[attrib.location] = gl::glGetAttribLocation(vertexShader->object, name.c_str());
          }
       }
 
-      shader.vertex = &vertexShader;
-      shader.vertexKey = vsShaderKey;
+      pipeline.vertex = vertexShader;
+      pipeline.vertex->refCount++;
+      pipeline.vertexKey = vsShaderKey;
 
       if (pa_cl_clip_cntl.RASTERISER_DISABLE()) {
 
          // Rasterization disabled; no pixel shader used
-         shader.pixel = nullptr;
+         pipeline.pixel = nullptr;
 
       } else {
 
          // Transform feedback disabled; compile pixel shader if needed
          auto &pixelShader = mPixelShaders[psShaderKey];
+         invalidateShaderIfChanged_locked(pixelShader, psShaderKey, mPixelShaders);
 
-         if (!pixelShader.object) {
-            pixelShader.cpuMemStart = psPgmAddress;
-            pixelShader.cpuMemEnd = psPgmAddress + psPgmSize;
+         if (!pixelShader) {
+            pixelShader = new PixelShader;
+
+            pixelShader->cpuMemStart = psPgmAddress;
+            pixelShader->cpuMemEnd = psPgmAddress + psPgmSize;
+            MurmurHash3_x64_128(mem::translate(pixelShader->cpuMemStart),
+                                pixelShader->cpuMemEnd - pixelShader->cpuMemStart,
+                                0, pixelShader->cpuMemHash);
+            pixelShader->dirtyMemory = false;
 
             dumpRawShader("pixel", psPgmAddress, psPgmSize);
 
-            if (!compilePixelShader(pixelShader, vertexShader, make_virtual_ptr<uint8_t>(psPgmAddress), psPgmSize)) {
+            if (!compilePixelShader(*pixelShader, *vertexShader, make_virtual_ptr<uint8_t>(psPgmAddress), psPgmSize)) {
                gLog->error("Failed to recompile pixel shader");
                return false;
             }
 
-            dumpTranslatedShader("pixel", psPgmAddress, pixelShader.code);
+            dumpTranslatedShader("pixel", psPgmAddress, pixelShader->code);
 
             // Create OpenGL Shader
-            const gl::GLchar *code[] = { pixelShader.code.c_str() };
-            pixelShader.object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
+            const gl::GLchar *code[] = { pixelShader->code.c_str() };
+            pixelShader->object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
             if (decaf::config::gpu::debug) {
                std::string label = fmt::format("pixel shader @ 0x{:08X}", psPgmAddress);
-               gl::glObjectLabel(gl::GL_PROGRAM, pixelShader.object, -1, label.c_str());
+               gl::glObjectLabel(gl::GL_PROGRAM, pixelShader->object, -1, label.c_str());
             }
 
             // Check if shader compiled & linked properly
             gl::GLint isLinked = 0;
-            gl::glGetProgramiv(pixelShader.object, gl::GL_LINK_STATUS, &isLinked);
+            gl::glGetProgramiv(pixelShader->object, gl::GL_LINK_STATUS, &isLinked);
 
             if (!isLinked) {
-               auto log = getProgramLog(pixelShader.object);
+               auto log = getProgramLog(pixelShader->object);
                gLog->error("OpenGL failed to compile pixel shader:\n{}", log);
-               gLog->error("Shader Disassembly:\n{}\n", pixelShader.disassembly);
-               gLog->error("Shader Code:\n{}\n", pixelShader.code);
+               gLog->error("Shader Disassembly:\n{}\n", pixelShader->disassembly);
+               gLog->error("Shader Code:\n{}\n", pixelShader->code);
                return false;
             }
 
             // Get uniform locations
-            pixelShader.uniformRegisters = gl::glGetUniformLocation(pixelShader.object, "PR");
-            pixelShader.uniformAlphaRef = gl::glGetUniformLocation(pixelShader.object, "uAlphaRef");
-            pixelShader.sx_alpha_test_control = sx_alpha_test_control;
+            pixelShader->uniformRegisters = gl::glGetUniformLocation(pixelShader->object, "PR");
+            pixelShader->uniformAlphaRef = gl::glGetUniformLocation(pixelShader->object, "uAlphaRef");
+            pixelShader->sx_alpha_test_control = sx_alpha_test_control;
          }
 
-         shader.pixel = &pixelShader;
+         pipeline.pixel = pixelShader;
+         pipeline.pixel->refCount++;
       }
 
-      shader.pixelKey = psShaderKey;
+      pipeline.pixelKey = psShaderKey;
 
       // Create pipeline
-      gl::glCreateProgramPipelines(1, &shader.object);
+      gl::glCreateProgramPipelines(1, &pipeline.object);
       if (decaf::config::gpu::debug) {
          std::string label;
-         if (shader.pixel) {
+         if (pipeline.pixel) {
             label = fmt::format("shader set: fs = 0x{:08X}, vs = 0x{:08X}, ps = 0x{:08X}", fsPgmAddress, vsPgmAddress, psPgmAddress);
          } else {
             label = fmt::format("shader set: fs = 0x{:08X}, vs = 0x{:08X}, ps = none", fsPgmAddress, vsPgmAddress);
          }
-         gl::glObjectLabel(gl::GL_PROGRAM_PIPELINE, shader.object, -1, label.c_str());
+         gl::glObjectLabel(gl::GL_PROGRAM_PIPELINE, pipeline.object, -1, label.c_str());
       }
-      gl::glUseProgramStages(shader.object, gl::GL_VERTEX_SHADER_BIT, shader.vertex->object);
-      gl::glUseProgramStages(shader.object, gl::GL_FRAGMENT_SHADER_BIT, shader.pixel ? shader.pixel->object : 0);
+      gl::glUseProgramStages(pipeline.object, gl::GL_VERTEX_SHADER_BIT, pipeline.vertex->object);
+      gl::glUseProgramStages(pipeline.object, gl::GL_FRAGMENT_SHADER_BIT, pipeline.pixel ? pipeline.pixel->object : 0);
    }
 
    // Set active shader
-   mActiveShader = &shader;
+   mActiveShader = &pipeline;
 
    // Set alpha reference
    if (mActiveShader->pixel && alphaTestFunc != latte::REF_ALWAYS && alphaTestFunc != latte::REF_NEVER) {
@@ -402,10 +499,10 @@ bool GLDriver::checkActiveShader()
    }
 
    // Bind fetch shader
-   gl::glBindVertexArray(shader.fetch->object);
+   gl::glBindVertexArray(pipeline.fetch->object);
 
    // Bind vertex + pixel shader
-   gl::glBindProgramPipeline(shader.object);
+   gl::glBindProgramPipeline(pipeline.object);
    return true;
 }
 
