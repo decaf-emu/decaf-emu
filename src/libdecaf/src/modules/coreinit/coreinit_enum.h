@@ -140,6 +140,23 @@ ENUM_BEG(OSThreadAttributes, uint8_t)
    ENUM_VALUE(StackUsage,           1 << 5)
 ENUM_END(OSThreadAttributes)
 
+ENUM_BEG(OSThreadCancelState, uint32_t)
+   //! Thread cancel is enabled
+   ENUM_VALUE(Enabled,              0)
+
+   //! Thread cancel is disabled by OSSetThreadCancelState
+   ENUM_VALUE(Disabled,             1 << 0)
+
+   //! Thread cancel is disabled because the thread owns a mutex
+   ENUM_VALUE(DisabledByMutex,      1 << 16)
+
+   //! Thread cancel is disabled because the thread owns a spinlock
+   ENUM_VALUE(DisabledBySpinlock,   1 << 17)
+
+   //! Thread cancel is disabled because the thread owns a fast mutex
+   ENUM_VALUE(DisabledByFastMutex,  1 << 19)
+ENUM_END(OSThreadCancelState)
+
 ENUM_BEG(OSThreadRequest, uint32_t)
    ENUM_VALUE(None,                 0)
    ENUM_VALUE(Suspend,              1)

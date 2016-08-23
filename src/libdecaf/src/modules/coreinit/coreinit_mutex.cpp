@@ -83,8 +83,7 @@ lockMutexNoLock(OSMutex *mutex)
    mutex->count++;
 
    MutexQueue::append(&thread->mutexQueue, mutex);
-
-   thread->cancelState |= 0x10000;
+   thread->cancelState |= OSThreadCancelState::DisabledByMutex;
 }
 
 
@@ -142,8 +141,7 @@ OSTryLockMutex(OSMutex *mutex)
    mutex->count++;
 
    MutexQueue::append(&thread->mutexQueue, mutex);
-
-   thread->cancelState |= 0x10000;
+   thread->cancelState |= OSThreadCancelState::DisabledByMutex;
 
    internal::unlockScheduler();
    return TRUE;
@@ -192,7 +190,7 @@ OSUnlockMutex(OSMutex *mutex)
 
    // Clear the cancelState flag if we don't have any more mutexes locked
    if (!thread->mutexQueue.head) {
-      thread->cancelState &= ~0x10000;
+      thread->cancelState &= ~OSThreadCancelState::DisabledByMutex;
    }
 
    // Wakeup any threads trying to lock this mutex

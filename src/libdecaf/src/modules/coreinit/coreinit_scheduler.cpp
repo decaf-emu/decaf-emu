@@ -438,7 +438,7 @@ testThreadCancelNoLock()
 {
    auto thread = OSGetCurrentThread();
 
-   if (thread->cancelState == 0) {
+   if (thread->cancelState == OSThreadCancelState::Enabled) {
       if (thread->requestFlag == OSThreadRequest::Suspend) {
          suspendThreadNoLock(thread);
          rescheduleAllCoreNoLock();

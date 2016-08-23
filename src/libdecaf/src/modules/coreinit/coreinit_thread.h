@@ -268,8 +268,8 @@ struct OSThread
    //! Called just after a thread is terminated, set with OSSetThreadDeallocator
    be_OSThreadDeallocatorFn deallocator;
 
-   //! If TRUE then a thread can be cancelled or suspended, set with OSSetThreadCancelState
-   be_val<uint32_t> cancelState;
+   //! Current thread cancel state, controls whether the thread is allowed to cancel or not
+   be_val<OSThreadCancelState> cancelState;
 
    //! Current thread request, used for cancelleing and suspending the thread.
    be_val<OSThreadRequest> requestFlag;
@@ -326,32 +326,32 @@ CHECK_OFFSET(OSThread, 0x340, coreRunQueue2);
 CHECK_OFFSET(OSThread, 0x344, coreRunQueueLink0);
 CHECK_OFFSET(OSThread, 0x34C, coreRunQueueLink1);
 CHECK_OFFSET(OSThread, 0x354, coreRunQueueLink2);
-CHECK_OFFSET(OSThread, 0x35c, queue);
+CHECK_OFFSET(OSThread, 0x35C, queue);
 CHECK_OFFSET(OSThread, 0x360, link);
 CHECK_OFFSET(OSThread, 0x368, joinQueue);
 CHECK_OFFSET(OSThread, 0x378, mutex);
-CHECK_OFFSET(OSThread, 0x37c, mutexQueue);
-CHECK_OFFSET(OSThread, 0x38c, activeLink);
+CHECK_OFFSET(OSThread, 0x37C, mutexQueue);
+CHECK_OFFSET(OSThread, 0x38C, activeLink);
 CHECK_OFFSET(OSThread, 0x394, stackStart);
 CHECK_OFFSET(OSThread, 0x398, stackEnd);
-CHECK_OFFSET(OSThread, 0x39c, entryPoint);
+CHECK_OFFSET(OSThread, 0x39C, entryPoint);
 CHECK_OFFSET(OSThread, 0x578, alarmCancelled);
-CHECK_OFFSET(OSThread, 0x57c, specific);
-CHECK_OFFSET(OSThread, 0x5c0, name);
-CHECK_OFFSET(OSThread, 0x5c4, waitEventTimeoutAlarm);
-CHECK_OFFSET(OSThread, 0x5c8, userStackPointer);
-CHECK_OFFSET(OSThread, 0x5cc, cleanupCallback);
-CHECK_OFFSET(OSThread, 0x5d0, deallocator);
-CHECK_OFFSET(OSThread, 0x5d4, cancelState);
-CHECK_OFFSET(OSThread, 0x5d8, requestFlag);
-CHECK_OFFSET(OSThread, 0x5dc, needSuspend);
-CHECK_OFFSET(OSThread, 0x5e0, suspendResult);
-CHECK_OFFSET(OSThread, 0x5e4, suspendQueue);
+CHECK_OFFSET(OSThread, 0x57C, specific);
+CHECK_OFFSET(OSThread, 0x5C0, name);
+CHECK_OFFSET(OSThread, 0x5C4, waitEventTimeoutAlarm);
+CHECK_OFFSET(OSThread, 0x5C8, userStackPointer);
+CHECK_OFFSET(OSThread, 0x5CC, cleanupCallback);
+CHECK_OFFSET(OSThread, 0x5D0, deallocator);
+CHECK_OFFSET(OSThread, 0x5D4, cancelState);
+CHECK_OFFSET(OSThread, 0x5D8, requestFlag);
+CHECK_OFFSET(OSThread, 0x5DC, needSuspend);
+CHECK_OFFSET(OSThread, 0x5E0, suspendResult);
+CHECK_OFFSET(OSThread, 0x5E4, suspendQueue);
 CHECK_OFFSET(OSThread, 0x600, coreTimeConsumedNs);
 CHECK_OFFSET(OSThread, 0x608, wakeCount);
 CHECK_OFFSET(OSThread, 0x664, tlsSectionCount);
 CHECK_OFFSET(OSThread, 0x668, tlsSections);
-CHECK_OFFSET(OSThread, 0x66c, fastMutex);
+CHECK_OFFSET(OSThread, 0x66C, fastMutex);
 CHECK_OFFSET(OSThread, 0x670, contendedFastMutexes);
 CHECK_OFFSET(OSThread, 0x678, fastMutexQueue);
 CHECK_SIZE(OSThread, 0x69c);

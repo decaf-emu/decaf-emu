@@ -85,7 +85,7 @@ fastMutexHardLock(OSFastMutex *mutex)
 
       mutex->count = 1;
 
-      thread->cancelState |= 0x80000;
+      thread->cancelState |= OSThreadCancelState::DisabledByFastMutex;
 
       break;
    }
@@ -100,7 +100,7 @@ OSFastMutex_Lock(OSFastMutex *mutex)
    auto thread = OSGetCurrentThread();
 
    while (true) {
-      if (thread->cancelState == 0 && thread->requestFlag != 0) {
+      if (thread->cancelState == OSThreadCancelState::Enabled && thread->requestFlag != OSThreadRequest::None) {
          internal::lockScheduler();
          internal::testThreadCancelNoLock();
          internal::unlockScheduler();
@@ -122,7 +122,7 @@ OSFastMutex_Lock(OSFastMutex *mutex)
             continue;
          }
 
-         thread->cancelState |= 0x80000;
+         thread->cancelState |= OSThreadCancelState::DisabledByFastMutex;
 
          FastMutexQueue::append(&thread->fastMutexQueue, mutex);
 
@@ -164,7 +164,7 @@ fastMutexHardUnlock(OSFastMutex *mutex)
 
    // Free the cancel state if we arn't holding any more locks
    if (!thread->fastMutexQueue.head) {
-      thread->cancelState &= ~0x80000;
+      thread->cancelState &= ~OSThreadCancelState::DisabledByFastMutex;
    }
 
    // Wake up anyone who is hard-lock waiting on the mutex
@@ -216,11 +216,11 @@ OSFastMutex_Unlock(OSFastMutex *mutex)
 
    // Clear the cancel state if we dont hold any more mutexes
    if (!thread->fastMutexQueue.head) {
-      thread->cancelState &= ~0x80000;
+      thread->cancelState &= ~OSThreadCancelState::DisabledByFastMutex;
    }
 
    // Lock the scheduler and consider cancelling
-   if (!thread->cancelState) {
+   if (thread->cancelState == OSThreadCancelState::Enabled) {
       internal::lockScheduler();
       internal::testThreadCancelNoLock();
       internal::unlockScheduler();
@@ -233,7 +233,7 @@ OSFastMutex_TryLock(OSFastMutex *mutex)
    auto thread = OSGetCurrentThread();
 
    while (true) {
-      if (thread->cancelState == 0 && thread->requestFlag != 0) {
+      if (thread->cancelState == OSThreadCancelState::Enabled && thread->requestFlag != OSThreadRequest::None) {
          internal::lockScheduler();
          internal::testThreadCancelNoLock();
          internal::unlockScheduler();
@@ -254,7 +254,7 @@ OSFastMutex_TryLock(OSFastMutex *mutex)
             continue;
          }
 
-         thread->cancelState |= 0x80000;
+         thread->cancelState |= OSThreadCancelState::DisabledByFastMutex;
 
          FastMutexQueue::append(&thread->fastMutexQueue, mutex);
 

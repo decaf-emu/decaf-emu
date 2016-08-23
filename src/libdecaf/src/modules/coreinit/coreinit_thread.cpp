@@ -88,7 +88,7 @@ OSCancelThread(OSThread *thread)
    }
 
    if (thread->suspendCounter != 0) {
-      if (thread->cancelState == 0) {
+      if (thread->cancelState == OSThreadCancelState::Enabled) {
          internal::resumeThreadNoLock(thread, thread->suspendCounter);
          reschedule = true;
       }
@@ -309,7 +309,7 @@ OSExitThread(int value)
 
    // Call any thread cleanup callbacks
    if (thread->cleanupCallback) {
-      thread->cancelState |= 1;
+      thread->cancelState |= OSThreadCancelState::Disabled;
       thread->cleanupCallback(thread, thread->stackEnd.get());
    }
 
@@ -637,17 +637,24 @@ OSSetThreadAffinity(OSThread *thread,
 
 /**
  * Set a thread's cancellation state.
- *
- * If the state is TRUE then the thread can be suspended or cancelled when
- * OSTestThreadCancel is called.
  */
 BOOL
-OSSetThreadCancelState(BOOL state)
+OSSetThreadCancelState(BOOL cancelEnabled)
 {
    auto thread = OSGetCurrentThread();
-   auto old = thread->cancelState;
-   thread->cancelState = state;
-   return old;
+   auto oldCancelEnabled = TRUE;
+
+   if (thread->cancelState & OSThreadCancelState::Disabled) {
+      oldCancelEnabled = FALSE;
+   }
+
+   if (cancelEnabled) {
+      thread->cancelState &= ~OSThreadCancelState::Disabled;
+   } else {
+      thread->cancelState |= OSThreadCancelState::Disabled;
+   }
+
+   return oldCancelEnabled;
 }
 
 
@@ -823,7 +830,7 @@ uint32_t
 OSSuspendThread(OSThread *thread)
 {
    internal::lockScheduler();
-   int32_t result;
+   int32_t result = -1;
 
    if (thread->state == OSThreadState::Moribund || thread->state == OSThreadState::None) {
       internal::unlockScheduler();
@@ -838,15 +845,12 @@ OSSuspendThread(OSThread *thread)
    auto curThread = OSGetCurrentThread();
 
    if (curThread == thread) {
-      if (thread->cancelState) {
-         internal::unlockScheduler();
-         return -1;
+      if (thread->cancelState != OSThreadCancelState::Enabled) {
+         thread->needSuspend++;
+         result = thread->suspendCounter;
+         internal::suspendThreadNoLock(thread);
+         internal::rescheduleAllCoreNoLock();
       }
-
-      thread->needSuspend++;
-      result = thread->suspendCounter;
-      internal::suspendThreadNoLock(thread);
-      internal::rescheduleAllCoreNoLock();
    } else {
       if (thread->suspendCounter != 0) {
          result = thread->suspendCounter++;
