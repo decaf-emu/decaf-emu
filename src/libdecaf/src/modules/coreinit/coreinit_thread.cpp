@@ -2,6 +2,8 @@
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
 #include "coreinit_dynload.h"
+#include "coreinit_ghs.h"
+#include "coreinit_interrupts.h"
 #include "coreinit_memheap.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
@@ -10,6 +12,7 @@
 #include "libcpu/mem.h"
 #include "libcpu/cpu.h"
 #include "ppcutils/stackobject.h"
+#include "ppcutils/wfunc_call.h"
 #include "usermodule.h"
 #include "common/decaf_assert.h"
 #include <array>
@@ -290,38 +293,32 @@ OSExitThread(int value)
 {
    auto thread = OSGetCurrentThread();
 
-   // Free tlsSection data
+   // Call any thread cleanup callbacks
+   if (thread->cleanupCallback) {
+      thread->cancelState |= 1;
+      thread->cleanupCallback(thread, thread->stackEnd.get());
+   }
+
+   // Cleanup the GHS exceptions we previously created
+   internal::ghsCleanupExceptions();
+
+   // Free any TLS data which was allocated to this thread
    if (thread->tlsSections) {
       internal::dynLoadTLSFree(thread->tlsSections);
       thread->tlsSectionCount = 0;
       thread->tlsSections = 0;
    }
 
+   // Disable interrupts and lock the scheduler
+   auto oldInterrupts = OSDisableInterrupts();
    internal::lockScheduler();
-   thread->exitValue = value;
 
-   if (thread->attr & OSThreadAttributes::Detached) {
-      internal::markThreadInactiveNoLock(thread);
+   // Actually proccess the thread exit
+   internal::exitThreadNoLock(value);
 
-      thread->state = OSThreadState::None;
-   } else {
-      thread->state = OSThreadState::Moribund;
-   }
-
-   // We must reschedule all cores if there was anyone waiting on joinQueue or suspendQueue
-   auto rescheduleAll = thread->joinQueue.head || thread->suspendQueue.head;
-   internal::wakeupThreadNoLock(&thread->joinQueue);
-   internal::wakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
-
-   kernel::exitThreadNoLock();
-
-   if (rescheduleAll) {
-      internal::rescheduleAllCoreNoLock();
-   } else {
-      internal::rescheduleSelfNoLock();
-   }
-
-   // We do not need to unlockScheduler as OSExitThread never returns.
+   // We should never reach here.  The scheduler handles unlocking
+   //  itself and restoring the interrupt state.
+   decaf_abort("exitThreadNoLock returned");
 }
 
 
@@ -1000,6 +997,46 @@ Module::registerThreadFunctions()
 
 namespace internal
 {
+
+void
+exitThreadNoLock(int value)
+{
+   auto thread = OSGetCurrentThread();
+
+   decaf_check(thread->state == OSThreadState::Running);
+   decaf_check(internal::isThreadActiveNoLock(thread));
+
+   // Clear the context associated with this thread
+
+   if (thread->attr & OSThreadAttributes::Detached) {
+      thread->exitValue = value;
+      thread->state = OSThreadState::Moribund;
+   } else {
+      internal::markThreadInactiveNoLock(thread);
+
+      // TODO: coreinit.rpl sets the ID to -0x8000 or something here...
+
+      thread->state = OSThreadState::None;
+
+      // TODO: The thread should be put on some kind of queue for
+      //  deallocation...  For now lets just ensure its not used.
+      decaf_check(!thread->deallocator);
+   }
+
+   internal::disableScheduler();
+   // unlockAllMutexes
+   // unlockAllFastMutexes
+   internal::wakeupThreadNoLock(&thread->joinQueue);
+   internal::wakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
+   internal::rescheduleAllCoreNoLock();
+   internal::enableScheduler();
+
+   kernel::exitThreadNoLock();
+   internal::rescheduleSelfNoLock();
+
+   // We do not need to unlockScheduler as OSExitThread never returns.
+   decaf_abort("Exited thread was rcheduled...");
+}
 
 void
 setDefaultThread(uint32_t core,

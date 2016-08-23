@@ -49,6 +49,9 @@ namespace internal
 void
 ghsInitExceptions();
 
+void
+ghsCleanupExceptions();
+
 } // namespace internal
 
 } // namespace coreinit

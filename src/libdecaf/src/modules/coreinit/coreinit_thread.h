@@ -500,6 +500,9 @@ namespace internal
 {
 
 void
+exitThreadNoLock(int value);
+
+void
 setDefaultThread(uint32_t core,
                  OSThread *thread);
 
