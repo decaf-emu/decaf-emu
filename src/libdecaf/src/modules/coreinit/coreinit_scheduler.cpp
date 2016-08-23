@@ -257,8 +257,6 @@ void checkRunningThreadNoLock(bool yielding)
       return;
    }
 
-   decaf_check(cpu::this_core::interruptMask() == cpu::INTERRUPT_MASK);
-
    auto next = peekNextThreadNoLock(coreId);
 
    if (thread
@@ -325,12 +323,18 @@ void checkRunningThreadNoLock(bool yielding)
       next->wakeCount++;
    }
 
+   // Make sure interrupts are enabled
+   BOOL prevState = coreinit::OSEnableInterrupts();
+
    // Switch thread
    sCurrentThread[coreId] = next;
 
    internal::unlockScheduler();
    kernel::setContext(&next->context);
    internal::lockScheduler();
+
+   // Restore interrupts to whatever state they were in
+   coreinit::OSRestoreInterrupts(prevState);
 
    if (thread) {
       checkActiveThreadsNoLock();
