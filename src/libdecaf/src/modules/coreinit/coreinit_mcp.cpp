@@ -2,6 +2,7 @@
 #include "coreinit_mcp.h"
 #include "common/decaf_assert.h"
 #include "decaf_config.h"
+#include "kernel/kernel.h"
 
 namespace coreinit
 {
@@ -28,8 +29,8 @@ MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings)
       return IOError::Generic;
    }
 
-   memset(settings, 0, sizeof(MCPSysProdSettings));
-   settings->gameRegion = static_cast<SCIRegion>(decaf::config::system::region);
+   std::memset(settings, 0, sizeof(MCPSysProdSettings));
+   settings->gameRegion = static_cast<SCIRegion>(kernel::getGameInfo().meta.region);
    settings->platformRegion = static_cast<SCIRegion>(decaf::config::system::region);
    return IOError::OK;
 }
