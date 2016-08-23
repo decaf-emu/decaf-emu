@@ -71,7 +71,8 @@ spinTryLock(OSSpinLock *spinlock)
 }
 
 static bool
-spinTryLockWithTimeout(OSSpinLock *spinlock, OSTime duration)
+spinTryLockWithTimeout(OSSpinLock *spinlock,
+                       OSTime durationTicks)
 {
    auto thread = OSGetCurrentThread();
    auto owner = mem::untranslate(thread);
@@ -82,7 +83,7 @@ spinTryLockWithTimeout(OSSpinLock *spinlock, OSTime duration)
    }
 
    auto expected = be_val<uint32_t> { 0 };
-   auto timeout = OSGetSystemTime() + duration;
+   auto timeout = OSGetSystemTime() + durationTicks;
 
    while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
       if (OSGetSystemTime() >= timeout) {
@@ -138,10 +139,12 @@ OSTryAcquireSpinLock(OSSpinLock *spinlock)
 }
 
 BOOL
-OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock, OSTime timeout)
+OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock,
+                                OSTime timeoutNS)
 {
+   auto timeoutTicks = internal::nanosToTicks(timeoutNS);
    OSTestThreadCancel();
-   return spinTryLockWithTimeout(spinlock, timeout) ? TRUE : FALSE;
+   return spinTryLockWithTimeout(spinlock, timeoutTicks) ? TRUE : FALSE;
 }
 
 BOOL
@@ -201,9 +204,12 @@ OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock)
  * \return Returns TRUE if the lock was acquired.
  */
 BOOL
-OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock, OSTime timeout)
+OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock,
+                                                OSTime timeoutNS)
 {
-   if (!spinTryLockWithTimeout(spinlock, timeout)) {
+   auto timeoutTicks = internal::nanosToTicks(timeoutNS);
+
+   if (!spinTryLockWithTimeout(spinlock, timeoutTicks)) {
       return FALSE;
    }
 

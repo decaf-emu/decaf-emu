@@ -41,11 +41,11 @@ OSWaitRendezvous(OSRendezvous *rendezvous,
 BOOL
 OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous,
                             uint32_t coreMask,
-                            OSTime timeout)
+                            OSTime timeoutNS)
 {
    auto core = OSGetCoreId();
    auto success = FALSE;
-   auto endTime = OSGetTime() + timeout;
+   auto endTime = OSGetTime() + internal::nanosToTicks(timeoutNS);
 
    auto waitCore0 = (coreMask & (1 << 0)) != 0;
    auto waitCore1 = (coreMask & (1 << 1)) != 0;
@@ -72,7 +72,7 @@ OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous,
          break;
       }
 
-      if (timeout != -1 && OSGetTime() >= endTime) {
+      if (timeoutNS != -1 && OSGetTime() >= endTime) {
          break;
       }
 

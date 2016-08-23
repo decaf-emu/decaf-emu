@@ -36,7 +36,7 @@ OSWaitRendezvous(OSRendezvous *rendezvous,
 BOOL
 OSWaitRendezvousWithTimeout(OSRendezvous *rendezvous,
                             uint32_t coreMask,
-                            OSTime timeout);
+                            OSTime timeoutNS);
 
 /** @} */
 

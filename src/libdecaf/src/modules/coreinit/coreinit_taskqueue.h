@@ -152,7 +152,7 @@ MPWaitTaskQ(MPTaskQueue *queue,
 BOOL
 MPWaitTaskQWithTimeout(MPTaskQueue *queue,
                        MPTaskQueueState wmask,
-                       OSTime timeout);
+                       OSTime timeoutNS);
 
 BOOL
 MPPrintTaskQStats(MPTaskQueue *queue,

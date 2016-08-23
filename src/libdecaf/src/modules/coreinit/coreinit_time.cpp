@@ -145,8 +145,12 @@ Module::registerTimeFunctions()
 namespace internal
 {
 
-OSTime nanosToTicks(OSTime nanoseconds) {
-   return ((((uint64_t)(nanoseconds)) * ((uint64_t)(OSGetSystemInfo()->busSpeed / 4) / 31250)) / 32000);
+OSTime
+nanosToTicks(OSTime nanoseconds)
+{
+   // Division is done in two parts to try to maintain accuracy, 31250 * 32000 = 1*10^9
+   auto timerSpeed = static_cast<uint64_t>(OSGetSystemInfo()->busSpeed / 4);
+   return (static_cast<uint64_t>(nanoseconds) * (timerSpeed / 31250)) / 32000;
 }
 
 OSTime

@@ -77,7 +77,7 @@ OSResetEvent(OSEvent *event);
 
 BOOL
 OSWaitEventWithTimeout(OSEvent *event,
-                       OSTime timeout);
+                       OSTime timeoutNS);
 
 /** @} */
 

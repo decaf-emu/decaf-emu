@@ -274,10 +274,10 @@ MPWaitTaskQ(MPTaskQueue *queue,
 BOOL
 MPWaitTaskQWithTimeout(MPTaskQueue *queue,
                        MPTaskQueueState mask,
-                       OSTime timeout)
+                       OSTime timeoutNS)
 {
    auto start = OSGetTime();
-   auto end = start + timeout;
+   auto end = start + internal::nanosToTicks(timeoutNS);
 
    while ((queue->state & mask) == 0) {
       if (OSGetTime() >= end) {

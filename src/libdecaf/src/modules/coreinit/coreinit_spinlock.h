@@ -47,7 +47,7 @@ OSTryAcquireSpinLock(OSSpinLock *spinlock);
 
 BOOL
 OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock,
-                                OSTime timeout);
+                                OSTime timeoutNS);
 
 BOOL
 OSReleaseSpinLock(OSSpinLock *spinlock);
@@ -60,7 +60,7 @@ OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock);
 
 BOOL
 OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock,
-                                                OSTime timeout);
+                                                OSTime timeoutNS);
 
 BOOL
 OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock);
