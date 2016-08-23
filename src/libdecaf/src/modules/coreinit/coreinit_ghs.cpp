@@ -223,7 +223,7 @@ syscall(uint32_t id)
 namespace internal
 {
 
-void ghsSetupExceptions()
+void ghsInitExceptions()
 {
    if (p__cpp_exception_init_ptr->getAddress()) {
       auto thread = getCurrentThread();

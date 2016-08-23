@@ -171,7 +171,7 @@ fiberEntryPoint(void*)
    // Entrypoint is actually supposed to be adjusted to the __crt_init
    //  when you call OSCreateThread rather than having it called always
    //  but it doesn't hurt to have this set up on default threads.
-   coreinit::internal::ghsSetupExceptions();
+   coreinit::internal::ghsInitExceptions();
 
    coreinit::OSExitThread(entryPoint(argc, argv));
 }

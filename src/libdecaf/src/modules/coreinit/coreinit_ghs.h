@@ -20,12 +20,6 @@ p__atexit_cleanup;
 extern be_wfunc_ptr<void>*
 p__stdio_cleanup;
 
-extern be_wfunc_ptr<void, be_ptr<void>*>*
-p___cpp_exception_init_ptr;
-
-extern be_wfunc_ptr<void, be_ptr<void>*>*
-p___cpp_exception_cleanup_ptr;
-
 extern be_val<uint16_t>*
 p__gh_FOPEN_MAX;
 
@@ -52,7 +46,8 @@ CHECK_SIZE(_ghs_iobuf, 0x10);
 namespace internal
 {
 
-void ghsSetupExceptions();
+void
+ghsInitExceptions();
 
 } // namespace internal
 
