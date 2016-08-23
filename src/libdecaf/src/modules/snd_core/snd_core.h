@@ -16,6 +16,7 @@ private:
    static void registerAiFunctions();
    static void registerCoreFunctions();
    static void registerDeviceFunctions();
+   static void registerMixFunctions();
    static void registerVoiceFunctions();
    static void registerVSFunctions();
 
