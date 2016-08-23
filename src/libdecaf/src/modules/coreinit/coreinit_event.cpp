@@ -18,7 +18,9 @@ OSEvent::Tag;
  * Initialises an event structure.
  */
 void
-OSInitEvent(OSEvent *event, bool value, OSEventMode mode)
+OSInitEvent(OSEvent *event,
+            BOOL value,
+            OSEventMode mode)
 {
    OSInitEventEx(event, value, mode, nullptr);
 }
@@ -28,8 +30,12 @@ OSInitEvent(OSEvent *event, bool value, OSEventMode mode)
  * Initialises an event structure.
  */
 void
-OSInitEventEx(OSEvent *event, bool value, OSEventMode mode, char *name)
+OSInitEventEx(OSEvent *event,
+              BOOL value,
+              OSEventMode mode,
+              char *name)
 {
+   decaf_check(event);
    event->tag = OSEvent::Tag;
    event->mode = mode;
    event->value = value;
@@ -43,72 +49,75 @@ OSInitEventEx(OSEvent *event, bool value, OSEventMode mode, char *name)
  *
  * This will set the events signal value to true.
  *
- * In auto reset mode if at least one thread is in the queue it will:
- * - Reset the value back to FALSE
- * - Wake up the first thread in the waiting queue
+ * In auto reset mode:
+ * - Will wake up the first thread possible to wake
+ * - If a thread is woken, the event value is reset to FALSE
  *
  * In manual reset mode:
- * - Wake up all threads in the waiting queue
+ * - Wakes up all possible threads in the waiting queue
  * - The event value remains TRUE until the user calls OSResetEvent
  */
 void
 OSSignalEvent(OSEvent *event)
 {
    internal::lockScheduler();
-
+   decaf_check(event);
    decaf_check(event->tag == OSEvent::Tag);
 
-   if (event->value != FALSE) {
+   if (event->value) {
       // Event has already been set
       internal::unlockScheduler();
       return;
    }
 
+   // Set the event
+   event->value = TRUE;
+
    if (event->mode == OSEventMode::AutoReset) {
-      // Find the first thread that we are able to wake
-      OSThread *foundThread = nullptr;
-      for (auto thread = event->queue.head; thread; thread = thread->link.next) {
-         // If the thread had a timeout, lets try to cancel it.  If we cannot cancel it,
-         //  we just proceed to the next item in the list.
+      if (!internal::ThreadQueue::empty(&event->queue)) {
+         OSThread *wakeThread = nullptr;
+
+         // Find the first thread that we can wake
+         for (auto thread = event->queue.head; thread; thread = thread->link.next) {
+            decaf_check(thread->queue == &event->queue);
+
+            if (thread->waitEventTimeoutAlarm) {
+               if (!internal::cancelAlarm(thread->waitEventTimeoutAlarm)) {
+                  // If we could not cancel the alarm, do not wake this thread
+                  continue;
+               }
+            }
+
+            wakeThread = thread;
+            break;
+         }
+
+         if (wakeThread) {
+            // Reset the event
+            event->value = FALSE;
+            internal::wakeupOneThreadNoLock(wakeThread);
+         }
+
+         internal::rescheduleAllCoreNoLock();
+      }
+   } else {
+      // Wake all possible threads
+      for (auto thread = event->queue.head; thread; ) {
+         decaf_check(thread->queue == &event->queue);
+
+         // Save thread->link.next as it will be reset by wakeupOneThreadNoLock
+         auto next = thread->link.next;
+
          if (thread->waitEventTimeoutAlarm) {
             if (!internal::cancelAlarm(thread->waitEventTimeoutAlarm)) {
+               // If we could not cancel the alarm, do not wake this thread
+               thread = next;
                continue;
             }
          }
 
-         foundThread = thread;
-         break;
-      }
-
-      if (!foundThread) {
-         // Either there was no threads pending, or the pending threads all had
-         //  timed out, so we just signal and leave.
-         event->value = TRUE;
-         internal::unlockScheduler();
-         return;
-      }
-
-      // Wake the thread we found
-      internal::wakeupOneThreadNoLock(foundThread);
-      internal::rescheduleAllCoreNoLock();
-   } else {
-      event->value = TRUE;
-
-      // Cancel any pending timeout alarms
-      for (auto thread = event->queue.head; thread; ) {
-         auto nextThread = thread->link.next;
-
-         decaf_check(thread->queue == &event->queue);
-
-         if (thread->waitEventTimeoutAlarm) {
-            if (internal::cancelAlarm(thread->waitEventTimeoutAlarm)) {
-               internal::wakeupOneThreadNoLock(thread);
-            }
-         } else {
-            internal::wakeupOneThreadNoLock(thread);
-         }
-
-         thread = nextThread;
+         internal::wakeupOneThreadNoLock(thread);
+         thread = next;
       }
 
       internal::rescheduleAllCoreNoLock();
@@ -119,42 +128,55 @@ OSSignalEvent(OSEvent *event)
 
 
 /**
- * Signal the event and wakeup all waiting threads regardless of mode
+ * Signal the event and wakeup all waiting threads.
  *
- * This differs to OSSignalEvent only for auto reset mode where it
- * will wake up all threads instead of just one.
+ * In manual reset mode:
+ * - Wakes up all possible threads in the waiting queue
+ * - The event value will always be set to TRUE.
  *
- * If there is at least one thread woken up and the alarm is in
- * auto reset mode then the event value is reset to FALSE.
+ * In auto reset mode:
+ * - Wakes up all possible threads in the waiting queue
+ * - The event value will only be set to TRUE if no threads are woken.
  */
 void
 OSSignalEventAll(OSEvent *event)
 {
    internal::lockScheduler();
-
+   decaf_check(event);
    decaf_check(event->tag == OSEvent::Tag);
 
-   if (event->value != FALSE) {
+   if (event->value) {
       // Event has already been set
       internal::unlockScheduler();
       return;
    }
 
-   // Set event
-   if (event->mode != OSEventMode::AutoReset) {
+   // Manual reset always sets the event value to TRUE
+   if (event->mode == OSEventMode::ManualReset) {
       event->value = TRUE;
    }
 
    if (!internal::ThreadQueue::empty(&event->queue)) {
-      // Cancel any pending timeout alarms
+      auto threadsWoken = 0u;
+
+      // Wake any waiting threads
       for (auto thread = event->queue.head; thread; thread = thread->link.next) {
+         decaf_check(thread->queue == &event->queue);
+
          if (thread->waitEventTimeoutAlarm) {
-            if (internal::cancelAlarm(thread->waitEventTimeoutAlarm)) {
-               internal::wakeupOneThreadNoLock(thread);
+            if (!internal::cancelAlarm(thread->waitEventTimeoutAlarm)) {
+               // If we could not cancel the alarm, do not wake this thread
+               continue;
             }
-         } else {
-            internal::wakeupOneThreadNoLock(thread);
          }
+
+         internal::wakeupOneThreadNoLock(thread);
+         threadsWoken++;
+      }
+
+      // Auto reset will only set the event value if no threads were woken
+      if (event->mode == OSEventMode::AutoReset && threadsWoken == 0) {
+         event->value = TRUE;
       }
 
       internal::rescheduleAllCoreNoLock();
@@ -171,7 +193,7 @@ void
 OSResetEvent(OSEvent *event)
 {
    internal::lockScheduler();
-
+   decaf_check(event);
    decaf_check(event->tag == OSEvent::Tag);
 
    // Reset event
@@ -184,16 +206,18 @@ OSResetEvent(OSEvent *event)
 /**
  * Wait for the event value to become TRUE.
  *
- * If the event value is already TRUE then this will return immediately,
- * and will set the event value to FALSE if the event is in auto reset mode.
+ * If the event value is already TRUE:
+ * - Returns immediately, no wait is performed.
+ * - Sets event value to FALSE if in AutoReset mode.
  *
- * If the event value is FALSE then the thread will sleep until the event
- * is signalled by another thread.
+ * If the event value is FALSE:
+ * - The current thread will go to sleep until the event is signalled by another thread.
  */
 void
 OSWaitEvent(OSEvent *event)
 {
    internal::lockScheduler();
+   decaf_check(event);
 
    // HACK: Naughty Bayonetta not initialising event before using it.
    // decaf_check(event->tag == OSEvent::Tag);
@@ -250,7 +274,8 @@ EventAlarmHandler(OSAlarm *alarm, OSContext *context)
  * Returns TRUE if the event was signalled, FALSE if wait timed out.
  */
 BOOL
-OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
+OSWaitEventWithTimeout(OSEvent *event,
+                       OSTime timeoutNS)
 {
    ppcutils::StackObject<EventAlarmData> data;
    ppcutils::StackObject<OSAlarm> alarm;
@@ -268,8 +293,6 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
       return TRUE;
    }
 
-   auto waitTimeTicks = internal::nanosToTicks(timeout);
-
    // Setup some alarm data for callback
    auto thread = OSGetCurrentThread();
    data->event = event;
@@ -277,8 +300,9 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
    data->timeout = FALSE;
 
    // Create an alarm to trigger timeout
+   auto timeoutTicks = internal::nanosToTicks(timeoutNS);
    OSCreateAlarm(alarm);
-   internal::setAlarmInternal(alarm, waitTimeTicks, sEventAlarmHandler, data);
+   internal::setAlarmInternal(alarm, timeoutTicks, sEventAlarmHandler, data);
 
    // Set waitEventTimeoutAlarm so we can cancel it when event is signalled
    thread->waitEventTimeoutAlarm = alarm;
@@ -290,13 +314,14 @@ OSWaitEventWithTimeout(OSEvent *event, OSTime timeout)
    // Clear waitEventTimeoutAlarm
    thread->waitEventTimeoutAlarm = nullptr;
 
-   BOOL result = FALSE;
+   auto result = FALSE;
 
-   // Reset the event if its in auto-reset mode
    if (event->value) {
       if (event->mode == OSEventMode::AutoReset) {
+         // Reset the event if its in auto-reset mode
          event->value = FALSE;
       }
+
       result = TRUE;
    } else if (!data->timeout) {
       result = TRUE;

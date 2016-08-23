@@ -45,7 +45,7 @@ struct OSEvent
 };
 CHECK_OFFSET(OSEvent, 0x0, tag);
 CHECK_OFFSET(OSEvent, 0x4, name);
-CHECK_OFFSET(OSEvent, 0xc, value);
+CHECK_OFFSET(OSEvent, 0xC, value);
 CHECK_OFFSET(OSEvent, 0x10, queue);
 CHECK_OFFSET(OSEvent, 0x20, mode);
 CHECK_SIZE(OSEvent, 0x24);
@@ -54,13 +54,14 @@ CHECK_SIZE(OSEvent, 0x24);
 
 void
 OSInitEvent(OSEvent *event,
-            bool value,
+            BOOL value,
             OSEventMode mode);
 
 void
 OSInitEventEx(OSEvent *event,
-              bool value,
-              OSEventMode mode, char *name);
+              BOOL value,
+              OSEventMode mode,
+              char *name);
 
 void
 OSSignalEvent(OSEvent *event);
