@@ -83,10 +83,10 @@ fastMutexHardLock(OSFastMutex *mutex)
       decaf_check(!(lockValue & 1));
       decaf_check(mutex->count == 0);
 
-      mutex->count = 1;
-
+      // Set thread as owner
       thread->cancelState |= OSThreadCancelState::DisabledByFastMutex;
-
+      FastMutexQueue::append(&thread->fastMutexQueue, mutex);
+      mutex->count = 1;
       break;
    }
 
