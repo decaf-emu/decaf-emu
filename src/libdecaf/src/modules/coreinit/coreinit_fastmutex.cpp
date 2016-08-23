@@ -16,8 +16,10 @@ const uint32_t
 OSFastCondition::Tag;
 
 void
-OSFastMutex_Init(OSFastMutex *mutex, const char *name)
+OSFastMutex_Init(OSFastMutex *mutex,
+                 const char *name)
 {
+   decaf_check(mutex);
    mutex->tag = OSFastMutex::Tag;
    mutex->name = name;
    mutex->isContended = 0;
@@ -31,8 +33,6 @@ OSFastMutex_Init(OSFastMutex *mutex, const char *name)
 static void
 fastMutexHardLock(OSFastMutex *mutex)
 {
-   decaf_check(mutex->tag == OSFastMutex::Tag);
-
    auto thread = OSGetCurrentThread();
    decaf_check(thread->state == OSThreadState::Running);
 
@@ -40,8 +40,10 @@ fastMutexHardLock(OSFastMutex *mutex)
    internal::testThreadCancelNoLock();
 
    auto lockValue = mutex->lock.load();
+
    while (true) {
-      if (lockValue != 0) {
+      if (lockValue) {
+         // Check if waiter bit is set, if not we must try set it
          if (!(lockValue & 1)) {
             if (!mutex->lock.compare_exchange_weak(lockValue, lockValue | 1)) {
                continue;
@@ -49,7 +51,6 @@ fastMutexHardLock(OSFastMutex *mutex)
          }
 
          // We now have set the waiter bit and we were not the owner
-
          auto ownerThread = mem::translate<OSThread>(lockValue & ~1);
 
          if (!mutex->isContended) {
@@ -71,11 +72,13 @@ fastMutexHardLock(OSFastMutex *mutex)
          thread->fastMutex = nullptr;
 
          lockValue = mutex->lock.load();
+
          if (lockValue != 0) {
             continue;
          }
       }
 
+      // Try to lock the FastMutex
       if (!mutex->lock.compare_exchange_weak(lockValue, mem::untranslate(thread))) {
          continue;
       }
@@ -96,7 +99,8 @@ fastMutexHardLock(OSFastMutex *mutex)
 void
 OSFastMutex_Lock(OSFastMutex *mutex)
 {
-   // Grab the current thread
+   decaf_check(mutex);
+   decaf_check(mutex->tag == OSFastMutex::Tag);
    auto thread = OSGetCurrentThread();
 
    while (true) {
@@ -108,26 +112,30 @@ OSFastMutex_Lock(OSFastMutex *mutex)
       }
 
       auto lockValue = mutex->lock.load();
+
       if (lockValue) {
          auto lockThread = mem::translate<OSThread>(lockValue & ~1);
+
          if (lockThread == thread) {
+            // We already own this FastMutex, increase recursion count
             mutex->count++;
-            return;
+            break;
          } else {
+            // Another thread owns this FastMutex, now we must take the slow path!
             fastMutexHardLock(mutex);
-            return;
+            break;
          }
       } else {
+         // Attempt to lock the thread
          if (!mutex->lock.compare_exchange_weak(lockValue, mem::untranslate(thread))) {
             continue;
          }
 
+         // Set thread as owner
          thread->cancelState |= OSThreadCancelState::DisabledByFastMutex;
-
          FastMutexQueue::append(&thread->fastMutexQueue, mutex);
-
          mutex->count = 1;
-         return;
+         break;
       }
    }
 }
@@ -182,22 +190,27 @@ fastMutexHardUnlock(OSFastMutex *mutex)
 void
 OSFastMutex_Unlock(OSFastMutex *mutex)
 {
+   decaf_check(mutex);
+   decaf_check(mutex->tag == OSFastMutex::Tag);
+   decaf_check(mutex->count > 0);
+
    auto thread = OSGetCurrentThread();
-
    auto lockValue = mutex->lock.load();
-   mutex->count--;
-
    auto lockThread = mem::translate<OSThread>(lockValue & ~1);
    decaf_check(lockThread == thread);
 
+   // Reduce mutex count
+   mutex->count--;
+
    if (mutex->count != 0) {
+      // If count is not 0, then we have not unlocked!
       return;
    }
 
    // Remove ourselves from the queue
    FastMutexQueue::erase(&thread->fastMutexQueue, mutex);
-
    lockValue = mutex->lock.load();
+
    while (true) {
       // If someone contended on their lock, we need to hardUnlock
       if (lockValue & 1) {
@@ -241,23 +254,27 @@ OSFastMutex_TryLock(OSFastMutex *mutex)
       }
 
       auto lockValue = mutex->lock.load();
+
       if (lockValue) {
          auto lockThread = mem::translate<OSThread>(lockValue & ~1);
+
          if (lockThread == thread) {
+            // We already own this FastMutex, increase recursion count
             mutex->count++;
             return TRUE;
          } else {
+            // Another thread owns this FastMutex, we have failed!
             return FALSE;
          }
       } else {
+         // Try to lock the FastMutex
          if (!mutex->lock.compare_exchange_weak(lockValue, mem::untranslate(thread))) {
             continue;
          }
 
+         // Set thread as owner
          thread->cancelState |= OSThreadCancelState::DisabledByFastMutex;
-
          FastMutexQueue::append(&thread->fastMutexQueue, mutex);
-
          mutex->count = 1;
          return TRUE;
       }
@@ -265,8 +282,10 @@ OSFastMutex_TryLock(OSFastMutex *mutex)
 }
 
 void
-OSFastCond_Init(OSFastCondition *condition, const char *name)
+OSFastCond_Init(OSFastCondition *condition,
+                const char *name)
 {
+   decaf_check(condition);
    condition->tag = OSFastCondition::Tag;
    condition->name = name;
    condition->unk = 0;
@@ -274,29 +293,31 @@ OSFastCond_Init(OSFastCondition *condition, const char *name)
 }
 
 void
-OSFastCond_Wait(OSFastCondition *condition, OSFastMutex *mutex)
+OSFastCond_Wait(OSFastCondition *condition,
+                OSFastMutex *mutex)
 {
+   decaf_check(condition);
    decaf_check(condition->tag == OSFastCondition::Tag);
-
+   decaf_check(mutex);
+   decaf_check(mutex->tag == OSFastMutex::Tag);
    internal::lockScheduler();
 
    auto thread = OSGetCurrentThread();
-
    auto lockValue = mutex->lock.load();
    auto lockThread = mem::translate<OSThread>(lockValue & ~1);
+   decaf_check(lockValue & 1);
    decaf_check(lockThread == thread);
 
    if (!mutex->isContended) {
       ContendedQueue::erase(&thread->contendedFastMutexes, mutex);
-      mutex->isContended = 0;
    }
 
    if (thread->priority > thread->basePriority) {
       thread->priority = internal::calculateThreadPriorityNoLock(thread);
    }
 
+   // Save the recursion count, then force an unlock of the mutex
    auto mutexCount = mutex->count;
-
    internal::disableScheduler();
    internal::wakeupThreadNoLock(&mutex->queue);
    mutex->count = 0;
@@ -304,11 +325,14 @@ OSFastCond_Wait(OSFastCondition *condition, OSFastMutex *mutex)
    internal::rescheduleAllCoreNoLock();
    internal::enableScheduler();
 
+   // Sleep the current thread on the condition queue, wait to be signalled
    internal::sleepThreadNoLock(&condition->queue);
    internal::rescheduleSelfNoLock();
 
+   // We must release the scheduler lock before trying to do a FastMutex lock
    internal::unlockScheduler();
 
+   // Acquire the mutex, and restore the recursion count
    OSFastMutex_Lock(mutex);
    mutex->count = mutexCount;
 }
@@ -316,8 +340,8 @@ OSFastCond_Wait(OSFastCondition *condition, OSFastMutex *mutex)
 void
 OSFastCond_Signal(OSFastCondition *condition)
 {
+   decaf_check(condition);
    decaf_check(condition->tag == OSFastCondition::Tag);
-
    OSWakeupThread(&condition->queue);
 }
 

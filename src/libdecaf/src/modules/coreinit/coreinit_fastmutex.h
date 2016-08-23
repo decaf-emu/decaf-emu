@@ -64,9 +64,9 @@ struct OSFastMutex
 CHECK_OFFSET(OSFastMutex, 0x00, tag);
 CHECK_OFFSET(OSFastMutex, 0x04, name);
 CHECK_OFFSET(OSFastMutex, 0x08, isContended);
-CHECK_OFFSET(OSFastMutex, 0x0c, queue);
+CHECK_OFFSET(OSFastMutex, 0x0C, queue);
 CHECK_OFFSET(OSFastMutex, 0x14, link);
-CHECK_OFFSET(OSFastMutex, 0x1c, lock);
+CHECK_OFFSET(OSFastMutex, 0x1C, lock);
 CHECK_OFFSET(OSFastMutex, 0x20, count);
 CHECK_OFFSET(OSFastMutex, 0x24, contendedLink);
 CHECK_SIZE(OSFastMutex, 0x2c);
@@ -89,7 +89,7 @@ struct OSFastCondition
 };
 CHECK_OFFSET(OSFastCondition, 0x00, tag);
 CHECK_OFFSET(OSFastCondition, 0x04, name);
-CHECK_OFFSET(OSFastCondition, 0x0c, queue);
+CHECK_OFFSET(OSFastCondition, 0x0C, queue);
 CHECK_SIZE(OSFastCondition, 0x1c);
 
 #pragma pack(pop)
