@@ -39,18 +39,15 @@ bool GLDriver::checkActiveColorBuffer()
       auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
       auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
       auto thisMask = mask & 0xF;
+      SurfaceBuffer *surface = nullptr;
 
-      SurfaceBuffer *surface;
       if (cb_shader_control.value & (1 << i)) {
          if (cb_color_base.BASE_256B) {
             surface = getColorBuffer(cb_color_base, cb_color_size, cb_color_info, false);
-         } else {
-            surface = nullptr;
          }
-      } else {
-         surface = nullptr;
       }
-      gl::GLuint surfaceObject = surface ? surface->active->object : 0;
+
+      auto surfaceObject = surface ? surface->active->object : 0;
 
       if (surfaceObject != mColorBufferCache[i].object) {
          mColorBufferCache[i].object = surfaceObject;
@@ -77,7 +74,7 @@ bool GLDriver::checkActiveColorBuffer()
    }
 
    if (drawBuffersChanged) {
-      glDrawBuffers(mDrawBuffers.size(), &mDrawBuffers[0]);
+      gl::glDrawBuffers(static_cast<gl::GLsizei>(mDrawBuffers.size()), &mDrawBuffers[0]);
    }
 
    return true;
