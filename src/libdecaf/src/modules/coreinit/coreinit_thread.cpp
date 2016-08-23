@@ -1008,9 +1008,6 @@ exitThreadNoLock(int value)
    // Clear the context associated with this thread
 
    if (thread->attr & OSThreadAttributes::Detached) {
-      thread->exitValue = value;
-      thread->state = OSThreadState::Moribund;
-   } else {
       internal::markThreadInactiveNoLock(thread);
 
       // TODO: coreinit.rpl sets the ID to -0x8000 or something here...
@@ -1020,6 +1017,9 @@ exitThreadNoLock(int value)
       // TODO: The thread should be put on some kind of queue for
       //  deallocation...  For now lets just ensure its not used.
       decaf_check(!thread->deallocator);
+   } else {
+      thread->exitValue = value;
+      thread->state = OSThreadState::Moribund;
    }
 
    internal::disableScheduler();
