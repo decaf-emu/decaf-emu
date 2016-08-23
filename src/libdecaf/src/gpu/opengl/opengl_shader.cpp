@@ -1145,34 +1145,57 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          chanBitCount[2] = 10;
          chanBitCount[3] = 2;
       } else {
+         static const char * ChannelSelNorm[] = { "x" ,"y", "z", "w" };
+
          auto compBits = getDataFormatComponentBits(attrib->format);
 
          for (auto i = 0u; i < channels; ++i) {
             auto &val = chanVal[i];
             val = name;
 
-            if (channels > 1) {
-               if (i == 0) {
-                  val += ".x";
-               } else if (i == 1) {
-                  val += ".y";
-               } else if (i == 2) {
-                  val += ".z";
-               } else {
-                  val += ".w";
-               }
-            }
+            if (attrib->endianSwap == latte::SQ_ENDIAN_NONE) {
+               // Nothing to do except select the appropriate component.
 
-            if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
-               decaf_check(compBits == 32);
-               val = "bswap32(" + val + ")";
-            } else if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
-               decaf_check(compBits == 16);
-               val = "bswap16(" + val + ")";
-            } else if (attrib->endianSwap == latte::SQ_ENDIAN_NONE) {
-               // Nothing to do
+               if (channels > 1) {
+                  val = val + "." + ChannelSelNorm[i];
+               }
             } else {
-               decaf_abort("Unexpected endian swap mode");
+               if (compBits == 32) {
+                  if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
+                     if (channels > 1) {
+                        val = val + "." + ChannelSelNorm[i];
+                     }
+
+                     val = "bswap32(" + val + ")";
+                  } else {
+                     decaf_abort("Unexpected endian swap mode for 32-bit components");
+                  }
+               } else if (compBits == 16) {
+                  if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
+                     if (channels > 1) {
+                        val = val + "." + ChannelSelNorm[i];
+                     }
+
+                     val = "bswap16(" + val + ")";
+                  } else {
+                     decaf_abort("Unexpected endian swap mode for 16-bit components");
+                  }
+               } else if (compBits == 8) {
+                  static const char * ChannelSel8In16[] = { "y", "x", "w", "z" };
+                  static const char * ChannelSel8In32[] = { "w", "z", "y", "x" };
+
+                  if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
+                     decaf_check(channels == 2 || channels == 4);
+                     val = val + "." + ChannelSel8In16[i];
+                  } else if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
+                     decaf_check(channels == 4);
+                     val = val + "." + ChannelSel8In32[i];
+                  } else {
+                     decaf_abort("Unexpected endian swap mode for 8-bit components");
+                  }
+               } else {
+                  decaf_abort("Unexpected component bit count with swapping");
+               }
             }
 
             if (isFloat) {
