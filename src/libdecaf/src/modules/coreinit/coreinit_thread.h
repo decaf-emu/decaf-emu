@@ -301,7 +301,16 @@ struct OSThread
    //! TLS Sections
    be_ptr<OSTLSSection> tlsSections;
 
-   UNKNOWN(0x69c - 0x66C);
+   //! The fast mutex we are currently waiting for
+   be_ptr<OSFastMutex> fastMutex;
+
+   //! The fast mutexes we are currently contended on
+   OSFastMutexQueue contendedFastMutexes;
+
+   //! The fast mutexes we currently own locks on
+   OSFastMutexQueue fastMutexQueue;
+
+   UNKNOWN(0x69c - 0x680);
 };
 CHECK_OFFSET(OSThread, 0x320, tag);
 CHECK_OFFSET(OSThread, 0x324, state);
@@ -342,6 +351,9 @@ CHECK_OFFSET(OSThread, 0x600, coreTimeConsumedNs);
 CHECK_OFFSET(OSThread, 0x608, wakeCount);
 CHECK_OFFSET(OSThread, 0x664, tlsSectionCount);
 CHECK_OFFSET(OSThread, 0x668, tlsSections);
+CHECK_OFFSET(OSThread, 0x66c, fastMutex);
+CHECK_OFFSET(OSThread, 0x670, contendedFastMutexes);
+CHECK_OFFSET(OSThread, 0x678, fastMutexQueue);
 CHECK_SIZE(OSThread, 0x69c);
 
 struct tls_index

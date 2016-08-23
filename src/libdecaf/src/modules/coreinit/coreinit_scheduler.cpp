@@ -414,6 +414,16 @@ sleepThreadNoLock(OSThreadQueue *queue)
 }
 
 void
+sleepThreadNoLock(OSThreadSimpleQueue *queue)
+{
+   // This is super-strange, it is used by OSFastMutex, and after a few
+   //  comparisons, I'm 99% sure they just cast...  I cast it here instead
+   //  of inside OSFastMutex so that its closer to the use above to help
+   //  ensure nobody mistakenly breaks it...
+   sleepThreadNoLock(reinterpret_cast<OSThreadQueue*>(queue));
+}
+
+void
 suspendThreadNoLock(OSThread *thread)
 {
    thread->requestFlag = OSThreadRequest::None;
@@ -467,6 +477,13 @@ wakeupThreadNoLock(OSThreadQueue *queue)
       next = thread->link.next;
       wakeupOneThreadNoLock(thread);
    }
+}
+
+void
+wakeupThreadNoLock(OSThreadSimpleQueue *queue)
+{
+   // See sleepThreadNoLock(OSSimpleQueue*) for more details on this hack.
+   wakeupThreadNoLock(reinterpret_cast<OSThreadQueue*>(queue));
 }
 
 void

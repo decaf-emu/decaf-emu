@@ -30,6 +30,9 @@ CHECK_OFFSET(OSFastMutexLink, 0x00, next);
 CHECK_OFFSET(OSFastMutexLink, 0x04, prev);
 CHECK_SIZE(OSFastMutexLink, 0x08);
 
+static_assert(sizeof(std::atomic<be_val<uint32_t>>) == sizeof(be_val<uint32_t>),
+   "We rely on non-atomic class-templated atomics");
+
 struct OSFastMutex
 {
    static const uint32_t Tag = 0x664D7458;
@@ -40,7 +43,8 @@ struct OSFastMutex
    //! Name set by OSFastMutex_Init.
    be_ptr<const char> name;
 
-   UNKNOWN(4);
+   //! Is this thread in the queue
+   uint32_t isContended;
 
    //! Queue of threads waiting for this mutex to unlock.
    OSThreadSimpleQueue queue;
@@ -48,20 +52,23 @@ struct OSFastMutex
    //! Link used inside OSThread's fast mutex queue.
    OSFastMutexLink link;
 
-   //! Current owner of mutex.
-   std::atomic<uint32_t> owner;
+   //! Lock bits for the mutex, owner thread and some bits
+   std::atomic<be_val<uint32_t>> lock;
 
    //! Current recursion lock count of mutex.
    be_val<int32_t> count;
 
-   UNKNOWN(8);
+   //! Link used for contended mutexes
+   OSFastMutexLink contendedLink;
 };
 CHECK_OFFSET(OSFastMutex, 0x00, tag);
 CHECK_OFFSET(OSFastMutex, 0x04, name);
+CHECK_OFFSET(OSFastMutex, 0x08, isContended);
 CHECK_OFFSET(OSFastMutex, 0x0c, queue);
 CHECK_OFFSET(OSFastMutex, 0x14, link);
-CHECK_OFFSET(OSFastMutex, 0x1c, owner);
+CHECK_OFFSET(OSFastMutex, 0x1c, lock);
 CHECK_OFFSET(OSFastMutex, 0x20, count);
+CHECK_OFFSET(OSFastMutex, 0x24, contendedLink);
 CHECK_SIZE(OSFastMutex, 0x2c);
 
 struct OSFastCondition
@@ -74,7 +81,8 @@ struct OSFastCondition
    //! Name set by OSFastCond_Init.
    be_ptr<const char> name;
 
-   UNKNOWN(4);
+   //! Unknown data
+   be_val<uint32_t> unk;
 
    //! Queue of threads waiting for this condition to signal.
    OSThreadQueue queue;
@@ -111,5 +119,13 @@ void
 OSFastCond_Signal(OSFastCondition *condition);
 
 /** @} */
+
+namespace internal
+{
+
+void
+unlockAllFastMutexNoLock(OSThread *thread);
+
+} // namespace internal
 
 } // namespace coreinit

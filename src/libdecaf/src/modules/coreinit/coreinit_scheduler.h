@@ -86,6 +86,9 @@ void
 sleepThreadNoLock(OSThreadQueue *queue);
 
 void
+sleepThreadNoLock(OSThreadSimpleQueue *queue);
+
+void
 suspendThreadNoLock(OSThread *thread);
 
 void
@@ -96,6 +99,9 @@ wakeupOneThreadNoLock(OSThread *thread);
 
 void
 wakeupThreadNoLock(OSThreadQueue *queue);
+
+void
+wakeupThreadNoLock(OSThreadSimpleQueue *queue);
 
 void
 wakeupThreadWaitForSuspensionNoLock(OSThreadQueue *queue,
