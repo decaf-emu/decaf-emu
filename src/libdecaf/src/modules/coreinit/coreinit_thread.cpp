@@ -104,7 +104,9 @@ OSCancelThread(OSThread *thread)
    internal::unlockScheduler();
 
    if (OSGetCurrentThread() == thread) {
-      OSExitThread(-1);
+      if (thread->cancelState == OSThreadCancelState::Enabled) {
+         OSExitThread(-1);
+      }
    }
 }
 
