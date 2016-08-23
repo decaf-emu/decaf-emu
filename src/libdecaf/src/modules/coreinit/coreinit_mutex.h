@@ -117,4 +117,12 @@ OSSignalCond(OSCondition *condition);
 
 /** @} */
 
+namespace internal
+{
+
+void
+unlockAllMutexNoLock(OSThread *thread);
+
+} // namespace internal
+
 } // namespace coreinit

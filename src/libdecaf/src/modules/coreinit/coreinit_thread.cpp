@@ -5,6 +5,7 @@
 #include "coreinit_ghs.h"
 #include "coreinit_interrupts.h"
 #include "coreinit_memheap.h"
+#include "coreinit_mutex.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
 #include "coreinit_thread.h"
@@ -1071,8 +1072,8 @@ exitThreadNoLock(int value)
    }
 
    internal::disableScheduler();
-   // unlockAllMutexes
-   // unlockAllFastMutexes
+   internal::unlockAllMutexNoLock(thread);
+   // TODO: unlockAllFastMutexes
    internal::wakeupThreadNoLock(&thread->joinQueue);
    internal::wakeupThreadWaitForSuspensionNoLock(&thread->suspendQueue, -1);
    internal::rescheduleAllCoreNoLock();

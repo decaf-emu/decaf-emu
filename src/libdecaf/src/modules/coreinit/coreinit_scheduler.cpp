@@ -434,7 +434,9 @@ testThreadCancelNoLock()
       if (thread->requestFlag == OSThreadRequest::Suspend) {
          suspendThreadNoLock(thread);
          rescheduleAllCoreNoLock();
-      } else if (thread->requestFlag == OSThreadRequest::Cancel) {
+      }
+
+      if (thread->requestFlag == OSThreadRequest::Cancel) {
          unlockScheduler();
          OSExitThread(-1);
       }

@@ -57,8 +57,15 @@ lockMutexNoLock(OSMutex *mutex)
    }
 
    auto thread = OSGetCurrentThread();
+   decaf_check(thread->state == OSThreadState::Running);
 
-   while (mutex->owner && mutex->owner != thread) {
+   while (mutex->owner) {
+      if (mutex->owner == thread) {
+         mutex->count++;
+         return;
+      }
+
+      // Mark this thread as waiting on the mutex
       thread->mutex = mutex;
 
       // Promote mutex owner priority
@@ -68,16 +75,16 @@ lockMutexNoLock(OSMutex *mutex)
       internal::sleepThreadNoLock(&mutex->queue);
       internal::rescheduleSelfNoLock();
 
+      // We are no longer waiting on the mutex
       thread->mutex = nullptr;
-   }
-
-   if (mutex->owner != thread) {
-      // Add to mutex queue
-      MutexQueue::append(&thread->mutexQueue, mutex);
    }
 
    mutex->owner = thread;
    mutex->count++;
+
+   MutexQueue::append(&thread->mutexQueue, mutex);
+
+   thread->cancelState |= 0x10000;
 }
 
 
@@ -115,60 +122,31 @@ OSLockMutex(OSMutex *mutex)
 BOOL
 OSTryLockMutex(OSMutex *mutex)
 {
-   auto thread = OSGetCurrentThread();
    internal::lockScheduler();
+
+   auto thread = OSGetCurrentThread();
+   decaf_check(thread->state == OSThreadState::Running);
+
    internal::testThreadCancelNoLock();
 
-   if (mutex->owner && mutex->owner != thread) {
-      // Someone else owns this mutex
+   if (mutex->owner == thread) {
+      mutex->count++;
+      internal::unlockScheduler();
+      return TRUE;
+   } else if (mutex->owner) {
       internal::unlockScheduler();
       return FALSE;
    }
 
-   if (mutex->owner != thread) {
-      // Add to mutex queue
-      MutexQueue::append(&thread->mutexQueue, mutex);
-   }
-
    mutex->owner = thread;
    mutex->count++;
+
+   MutexQueue::append(&thread->mutexQueue, mutex);
+
+   thread->cancelState |= 0x10000;
+
    internal::unlockScheduler();
-
    return TRUE;
-}
-
-
-/**
- * Unlocks a mutex and returns whether it was fully unlocked or simply
- * decremented.  This is relevant for OSUnlockMutex reschduling.
- */
-static bool
-unlockMutexNoLock(OSMutex *mutex)
-{
-   auto thread = OSGetCurrentThread();
-   decaf_check(mutex->tag == OSMutex::Tag);
-   decaf_check(mutex->owner == thread);
-   decaf_check(mutex->count > 0);
-   mutex->count--;
-
-   if (mutex->count == 0) {
-      mutex->owner = nullptr;
-
-      // If we have a promoted priority, reset it.
-      if (thread->priority < thread->basePriority) {
-         thread->priority = internal::calculateThreadPriorityNoLock(thread);
-      }
-
-      // Remove mutex from thread's mutex queue
-      MutexQueue::erase(&thread->mutexQueue, mutex);
-
-      // Wakeup any threads trying to lock this mutex
-      internal::wakeupThreadNoLock(&mutex->queue);
-
-      return true;
-   }
-
-   return false;
 }
 
 
@@ -185,10 +163,48 @@ void
 OSUnlockMutex(OSMutex *mutex)
 {
    internal::lockScheduler();
-   if (unlockMutexNoLock(mutex)) {
-      internal::testThreadCancelNoLock();
-      internal::rescheduleAllCoreNoLock();
+
+   decaf_check(mutex->tag == OSMutex::Tag);
+
+   auto thread = OSGetCurrentThread();
+   decaf_check(thread->state == OSThreadState::Running);
+   decaf_check(mutex->owner == thread);
+
+   // Decrement the mutexes lock count
+   mutex->count--;
+
+   // If we still own the mutex, lets just leave now
+   if (mutex->count > 0) {
+      internal::unlockScheduler();
+      return;
    }
+
+   // Remove mutex from thread's mutex queue
+   MutexQueue::erase(&thread->mutexQueue, mutex);
+
+   // Clear the mutex owner
+   mutex->owner = nullptr;
+
+   // If we have a promoted priority, reset it.
+   if (thread->priority < thread->basePriority) {
+      thread->priority = internal::calculateThreadPriorityNoLock(thread);
+   }
+
+   // Clear the cancelState flag if we don't have any more mutexes locked
+   if (!thread->mutexQueue.head) {
+      thread->cancelState &= ~0x10000;
+   }
+
+   // Wakeup any threads trying to lock this mutex
+   internal::wakeupThreadNoLock(&mutex->queue);
+
+   // Check if we are meant to cancel now
+   internal::testThreadCancelNoLock();
+
+   // Reschedule everyone
+   internal::rescheduleAllCoreNoLock();
+
+   // Unlock our scheduler and continue
    internal::unlockScheduler();
 }
 
@@ -226,23 +242,38 @@ OSInitCondEx(OSCondition *condition, const char *name)
 void
 OSWaitCond(OSCondition *condition, OSMutex *mutex)
 {
-   auto thread = OSGetCurrentThread();
    internal::lockScheduler();
-   decaf_check(mutex && mutex->tag == OSMutex::Tag);
-   decaf_check(condition && condition->tag == OSCondition::Tag);
+
+   decaf_check(condition->tag == OSCondition::Tag);
+
+   auto thread = OSGetCurrentThread();
+   decaf_check(thread->state == OSThreadState::Running);
    decaf_check(mutex->owner == thread);
 
-   // Force an unlock
+   // Save the count and then unlock the mutex
    auto mutexCount = mutex->count;
-   mutex->count = 1;
-   unlockMutexNoLock(mutex);
-   internal::rescheduleOtherCoreNoLock();
+   mutex->count = 0;
+   mutex->owner = nullptr;
+
+   // Remove mutex from thread's mutex queue
+   MutexQueue::erase(&thread->mutexQueue, mutex);
+
+   // If we have a promoted priority, reset it.
+   if (thread->priority < thread->basePriority) {
+      thread->priority = internal::calculateThreadPriorityNoLock(thread);
+   }
+
+   // Wake anyone waiting on the mutex
+   internal::disableScheduler();
+   internal::wakeupThreadNoLock(&mutex->queue);
+   internal::rescheduleAllCoreNoLock();
+   internal::enableScheduler();
 
    // Sleep on the condition
    internal::sleepThreadNoLock(&condition->queue);
    internal::rescheduleSelfNoLock();
 
-   // Restore lock
+   // Relock the mutex
    lockMutexNoLock(mutex);
    mutex->count = mutexCount;
 
@@ -258,7 +289,7 @@ OSWaitCond(OSCondition *condition, OSMutex *mutex)
 void
 OSSignalCond(OSCondition *condition)
 {
-   decaf_check(condition && condition->tag == OSCondition::Tag);
+   decaf_check(condition->tag == OSCondition::Tag);
    OSWakeupThread(&condition->queue);
 }
 
@@ -276,5 +307,26 @@ Module::registerMutexFunctions()
    RegisterKernelFunction(OSWaitCond);
    RegisterKernelFunction(OSSignalCond);
 }
+
+namespace internal
+{
+
+void
+unlockAllMutexNoLock(OSThread *thread)
+{
+   while (OSMutex *mutex = thread->mutexQueue.head) {
+      // Remove this mutex from our queue
+      MutexQueue::erase(&thread->mutexQueue, mutex);
+
+      // Release this mutex
+      mutex->count = 0;
+      mutex->owner = nullptr;
+
+      // Wakeup any threads trying to lock this mutex
+      internal::wakeupThreadNoLock(&mutex->queue);
+   }
+}
+
+} // namespace internal
 
 } // namespace coreinit
