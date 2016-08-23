@@ -26,6 +26,7 @@ OSInitSemaphore(OSSemaphore *semaphore, int32_t count)
 void
 OSInitSemaphoreEx(OSSemaphore *semaphore, int32_t count, char *name)
 {
+   decaf_check(semaphore);
    semaphore->tag = OSSemaphore::Tag;
    semaphore->name = name;
    semaphore->count = count;
@@ -43,17 +44,18 @@ int32_t
 OSWaitSemaphore(OSSemaphore *semaphore)
 {
    internal::lockScheduler();
-
+   decaf_check(semaphore);
    decaf_check(semaphore->tag == OSSemaphore::Tag);
 
-   int32_t previous = semaphore->count;
-   while (previous <= 0) {
-      // Wait until we can decrease semaphore
+   // Wait until we can decrease semaphore
+   while (semaphore->count <= 0) {
       internal::sleepThreadNoLock(&semaphore->queue);
       internal::rescheduleSelfNoLock();
-      previous = semaphore->count;
    }
 
+   auto previous = semaphore->count;
+
+   // Decrease semaphore
    semaphore->count--;
 
    internal::unlockScheduler();
@@ -74,12 +76,12 @@ int32_t
 OSTryWaitSemaphore(OSSemaphore *semaphore)
 {
    internal::lockScheduler();
-
+   decaf_check(semaphore);
    decaf_check(semaphore->tag == OSSemaphore::Tag);
 
-   // Try to decrease semaphore
-   int32_t previous = semaphore->count;
+   auto previous = semaphore->count;
 
+   // Try to decrease semaphore
    if (semaphore->count > 0) {
       semaphore->count--;
    }
@@ -98,11 +100,12 @@ int32_t
 OSSignalSemaphore(OSSemaphore *semaphore)
 {
    internal::lockScheduler();
-
+   decaf_check(semaphore);
    decaf_check(semaphore->tag == OSSemaphore::Tag);
 
+   auto previous = semaphore->count;
+
    // Increase semaphore
-   int32_t previous =  semaphore->count;
    semaphore->count++;
 
    // Wakeup any waiting threads
@@ -121,15 +124,16 @@ int32_t
 OSGetSemaphoreCount(OSSemaphore *semaphore)
 {
    internal::lockScheduler();
-
+   decaf_check(semaphore);
    decaf_check(semaphore->tag == OSSemaphore::Tag);
 
    // Return count
-   int32_t count = semaphore->count;
+   auto count = semaphore->count;
 
    internal::unlockScheduler();
    return count;
 }
+
 
 void
 Module::registerSemaphoreFunctions()
