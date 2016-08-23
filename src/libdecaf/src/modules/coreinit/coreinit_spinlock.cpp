@@ -39,7 +39,7 @@ spinAcquireLock(OSSpinLock *spinlock)
       return false;
    }
 
-   uint32_t expected = 0;
+   auto expected = be_val<uint32_t> { 0 };
 
    while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
       expected = 0;
@@ -60,7 +60,7 @@ spinTryLock(OSSpinLock *spinlock)
       return true;
    }
 
-   uint32_t expected = 0;
+   auto expected = be_val<uint32_t> { 0 };
 
    if (spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
       increaseSpinLockCount(thread);
@@ -81,7 +81,7 @@ spinTryLockWithTimeout(OSSpinLock *spinlock, OSTime duration)
       return true;
    }
 
-   uint32_t expected = 0;
+   auto expected = be_val<uint32_t> { 0 };
    auto timeout = OSGetSystemTime() + duration;
 
    while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {

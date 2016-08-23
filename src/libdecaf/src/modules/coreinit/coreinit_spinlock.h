@@ -18,7 +18,7 @@ namespace coreinit
 struct OSSpinLock
 {
    //! Address of OSThread* for owner of this lock.
-   std::atomic<uint32_t> owner;
+   std::atomic<be_val<uint32_t>> owner;
 
    UNKNOWN(0x4);
 
