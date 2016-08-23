@@ -501,10 +501,9 @@ OSJoinThread(OSThread *thread,
    internal::markThreadInactiveNoLock(thread);
    thread->state = OSThreadState::None;
 
-   if (thread->deallocator) {
-      // TODO: The thread should be put on some
-      //  kind of queue for deallocation...
-   }
+   // TODO: The thread should be put on some kind of queue for
+   //  deallocation...  For now lets just ensure its not used.
+   decaf_check(!thread->deallocator);
 
    internal::unlockScheduler();
    return TRUE;
