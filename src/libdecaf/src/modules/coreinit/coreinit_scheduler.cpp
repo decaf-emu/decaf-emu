@@ -6,6 +6,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_interrupts.h"
 #include "coreinit_event.h"
+#include "coreinit_fastmutex.h"
 #include "coreinit_memexpheap.h"
 #include "coreinit_memheap.h"
 #include "coreinit_mutex.h"
@@ -518,7 +519,16 @@ calculateThreadPriorityNoLock(OSThread *thread)
       }
    }
 
-   // TODO: Owned Fast Mutex queue
+   // For all fast mutex we own, boost our priority over anyone waiting to own our fast mutex
+   for (auto fastMutex = thread->fastMutexQueue.head; fastMutex; fastMutex = fastMutex->link.next) {
+      // We only need to check the head of mutex thread queue as it is in priority order
+      auto other = fastMutex->queue.head;
+
+      if (other && other->priority < priority) {
+         priority = other->priority;
+      }
+   }
+
    return priority;
 }
 
