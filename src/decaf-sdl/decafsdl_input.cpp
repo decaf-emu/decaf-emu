@@ -167,10 +167,10 @@ getJoystickButtonState(const config::input::InputDevice *device,
    }
 
    if (index >= 0) {
-      return SDL_JoystickGetButton(joystick, index);
+      return !!SDL_JoystickGetButton(joystick, index);
    } else if (index == -2) {
       if (name != SDL_CONTROLLER_BUTTON_INVALID) {
-         return SDL_GameControllerGetButton(controller, name);
+         return !!SDL_GameControllerGetButton(controller, name);
       } else if (axisName != SDL_CONTROLLER_AXIS_INVALID) {  // ZL/ZR kludge
          int value = SDL_GameControllerGetAxis(controller, axisName);
          return value >= 16384;
