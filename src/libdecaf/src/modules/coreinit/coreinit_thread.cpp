@@ -33,6 +33,18 @@ sThreadId = 1;
 static AlarmCallback
 sSleepAlarmHandler = nullptr;
 
+static OSThreadEntryPointFn
+sDeallocatorThreadEntryPoint;
+
+static std::array<OSThread *, CoreCount>
+sDeallocatorThread;
+
+static std::array<OSThreadQueue *, CoreCount>
+sDeallocatorThreadQueue;
+
+static std::array<OSThreadQueue *, CoreCount>
+sDeallocationQueue;
+
 void
 __OSClearThreadStack32(OSThread *thread,
                        uint32_t value)
@@ -947,6 +959,37 @@ Module::initialiseThreadFunctions()
    sDefaultThreads.fill(nullptr);
 }
 
+uint32_t
+DeallocatorThreadEntry(uint32_t coreId, void *arg2)
+{
+   auto &waitQueue = sDeallocatorThreadQueue[coreId];
+   auto &queue = sDeallocationQueue[coreId];
+
+   auto oldInterrupts = OSDisableInterrupts();
+
+   while (true) {
+      auto thread = internal::ThreadQueue::popFront(queue);
+
+      if (!thread) {
+         internal::lockScheduler();
+         internal::sleepThreadNoLock(waitQueue);
+         internal::rescheduleSelfNoLock();
+         internal::unlockScheduler();
+         continue;
+      }
+
+      if (thread->deallocator) {
+         OSRestoreInterrupts(oldInterrupts);
+
+         thread->deallocator(thread, thread->stackEnd);
+
+         oldInterrupts = OSDisableInterrupts();
+      }
+   }
+
+   OSRestoreInterrupts(oldInterrupts);
+}
+
 void
 Module::registerThreadFunctions()
 {
@@ -992,6 +1035,11 @@ Module::registerThreadFunctions()
    RegisterKernelFunctionName("__tls_get_addr", tls_get_addr);
 
    RegisterKernelFunctionName("internal_SleepAlarmHandler", SleepAlarmHandler);
+
+   RegisterInternalFunction(DeallocatorThreadEntry, sDeallocatorThreadEntryPoint);
+   RegisterInternalData(sDeallocatorThreadQueue);
+   RegisterInternalData(sDeallocationQueue);
+   RegisterInternalData(sDeallocatorThread);
 }
 
 namespace internal
@@ -1014,9 +1062,9 @@ exitThreadNoLock(int value)
 
       thread->state = OSThreadState::None;
 
-      // TODO: The thread should be put on some kind of queue for
-      //  deallocation...  For now lets just ensure its not used.
-      decaf_check(!thread->deallocator);
+      if (thread->deallocator) {
+         queueThreadDeallocation(thread);
+      }
    } else {
       thread->exitValue = value;
       thread->state = OSThreadState::Moribund;
@@ -1035,6 +1083,34 @@ exitThreadNoLock(int value)
 
    // We do not need to unlockScheduler as OSExitThread never returns.
    decaf_abort("Exited thread was rcheduled...");
+}
+
+void
+queueThreadDeallocation(OSThread *thread)
+{
+   auto coreId = cpu::this_core::id();
+   ThreadQueue::insert(sDeallocationQueue[coreId], thread);
+   wakeupThreadNoLock(sDeallocatorThreadQueue[coreId]);
+}
+
+void
+startDeallocatorThreads()
+{
+   for (auto i = 0; i < CoreCount; ++i) {
+      OSInitThreadQueue(sDeallocatorThreadQueue[i]);
+      OSInitThreadQueue(sDeallocationQueue[i]);
+
+      auto &thread = sDeallocatorThread[i];
+      auto stackSize = 16 * 1024;
+      auto stack = reinterpret_cast<uint8_t*>(coreinit::internal::sysAlloc(stackSize, 8));
+      auto name = coreinit::internal::sysStrDup(fmt::format("Thread Deallocator Thread {}", i));
+
+      OSCreateThread(thread, sDeallocatorThreadEntryPoint, i, nullptr,
+         reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, -1,
+         static_cast<OSThreadAttributes>(1 << i));
+      OSSetThreadName(thread, name);
+      OSResumeThread(thread);
+   }
 }
 
 void

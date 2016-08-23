@@ -377,6 +377,7 @@ launchGame()
    coreinit::internal::startAlarmCallbackThreads();
    coreinit::internal::startAppIoThreads();
    coreinit::internal::startDefaultCoreThreads();
+   coreinit::internal::startDeallocatorThreads();
 
    decaf::event::onGameLoaded(sGameInfo);
 

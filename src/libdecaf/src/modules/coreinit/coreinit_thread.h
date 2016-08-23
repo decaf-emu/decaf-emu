@@ -500,6 +500,12 @@ namespace internal
 {
 
 void
+queueThreadDeallocation(OSThread *thread);
+
+void
+startDeallocatorThreads();
+
+void
 exitThreadNoLock(int value);
 
 void
