@@ -51,11 +51,13 @@ public:
    alloc(size_t size, size_t alignment = 4)
    {
       std::unique_lock<std::mutex> lock(mMutex);
-      auto adjSize = size + alignment - 1;
+      auto adjSize = size;
       auto block = mFreeBlocks.begin();
 
       for (block = mFreeBlocks.begin(); block != mFreeBlocks.end(); ++block) {
-         if (block->size >= adjSize) {
+         auto alignedDiff = align_up(block->start, alignment) - block->start;
+         if (block->size - alignedDiff >= adjSize) {
+            adjSize += alignedDiff;
             break;
          }
       }
