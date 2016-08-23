@@ -31,8 +31,10 @@ OSInitMutex(OSMutex *mutex)
  * Initialise a mutex structure with a name.
  */
 void
-OSInitMutexEx(OSMutex *mutex, const char *name)
+OSInitMutexEx(OSMutex *mutex,
+              const char *name)
 {
+   decaf_check(mutex);
    mutex->tag = OSMutex::Tag;
    mutex->name = name;
    mutex->owner = nullptr;
@@ -45,17 +47,6 @@ OSInitMutexEx(OSMutex *mutex, const char *name)
 static void
 lockMutexNoLock(OSMutex *mutex)
 {
-   // The following check is disabled as not calling InitMutex does
-   //  not break behaviour, and some games do not properly initialise
-   //  their mutexes before using them.  We manually call OSInitMutex
-   //  to avoid triggering any of our own assertions later on...
-   // HACK: This might be a hack around some broken behaviour elsewhere
-   //  inside of decaf, it's hard to tell...  Let's assume not for now.
-   //decaf_check(mutex->tag == OSMutex::Tag);
-   if (mutex->tag != OSMutex::Tag) {
-      OSInitMutex(mutex);
-   }
-
    auto thread = OSGetCurrentThread();
    decaf_check(thread->state == OSThreadState::Running);
 
@@ -79,9 +70,9 @@ lockMutexNoLock(OSMutex *mutex)
       thread->mutex = nullptr;
    }
 
-   mutex->owner = thread;
+   // Set current thread to owner of mutex
    mutex->count++;
-
+   mutex->owner = thread;
    MutexQueue::append(&thread->mutexQueue, mutex);
    thread->cancelState |= OSThreadCancelState::DisabledByMutex;
 }
@@ -101,6 +92,14 @@ void
 OSLockMutex(OSMutex *mutex)
 {
    internal::lockScheduler();
+   decaf_check(mutex);
+
+   // HACK: Naughty games not initialising mutex before using it.
+   //decaf_check(mutex->tag == OSMutex::Tag);
+   if (mutex->tag != OSMutex::Tag) {
+      OSInitMutex(mutex);
+   }
+
    internal::testThreadCancelNoLock();
    lockMutexNoLock(mutex);
    internal::unlockScheduler();
@@ -122,6 +121,7 @@ BOOL
 OSTryLockMutex(OSMutex *mutex)
 {
    internal::lockScheduler();
+   decaf_check(mutex);
 
    auto thread = OSGetCurrentThread();
    decaf_check(thread->state == OSThreadState::Running);
@@ -137,9 +137,9 @@ OSTryLockMutex(OSMutex *mutex)
       return FALSE;
    }
 
-   mutex->owner = thread;
+   // Set thread to owner of mutex
    mutex->count++;
-
+   mutex->owner = thread;
    MutexQueue::append(&thread->mutexQueue, mutex);
    thread->cancelState |= OSThreadCancelState::DisabledByMutex;
 
@@ -161,7 +161,7 @@ void
 OSUnlockMutex(OSMutex *mutex)
 {
    internal::lockScheduler();
-
+   decaf_check(mutex);
    decaf_check(mutex->tag == OSMutex::Tag);
 
    auto thread = OSGetCurrentThread();
@@ -223,6 +223,7 @@ OSInitCond(OSCondition *condition)
 void
 OSInitCondEx(OSCondition *condition, const char *name)
 {
+   decaf_check(condition);
    condition->tag = OSCondition::Tag;
    condition->name = name;
    OSInitThreadQueueEx(&condition->queue, condition);
@@ -238,11 +239,14 @@ OSInitCondEx(OSCondition *condition, const char *name)
  * Similar to <a href="http://en.cppreference.com/w/cpp/thread/condition_variable/wait">std::condition_variable::wait</a>.
  */
 void
-OSWaitCond(OSCondition *condition, OSMutex *mutex)
+OSWaitCond(OSCondition *condition,
+           OSMutex *mutex)
 {
    internal::lockScheduler();
-
+   decaf_check(condition);
    decaf_check(condition->tag == OSCondition::Tag);
+   decaf_check(mutex);
+   decaf_check(mutex->tag == OSMutex::Tag);
 
    auto thread = OSGetCurrentThread();
    decaf_check(thread->state == OSThreadState::Running);
@@ -287,6 +291,7 @@ OSWaitCond(OSCondition *condition, OSMutex *mutex)
 void
 OSSignalCond(OSCondition *condition)
 {
+   decaf_check(condition);
    decaf_check(condition->tag == OSCondition::Tag);
    OSWakeupThread(&condition->queue);
 }
@@ -312,7 +317,7 @@ namespace internal
 void
 unlockAllMutexNoLock(OSThread *thread)
 {
-   while (OSMutex *mutex = thread->mutexQueue.head) {
+   while (auto mutex = thread->mutexQueue.head) {
       // Remove this mutex from our queue
       MutexQueue::erase(&thread->mutexQueue, mutex);
 
