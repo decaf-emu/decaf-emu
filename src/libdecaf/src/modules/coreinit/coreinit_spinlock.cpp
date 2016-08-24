@@ -171,6 +171,11 @@ OSUninterruptibleSpinLock_Acquire(OSSpinLock *spinlock)
       spinlock->restoreInterruptState = OSDisableInterrupts();
    }
 
+   // Update thread's cancel state
+   if (auto thread = OSGetCurrentThread()) {
+      thread->cancelState |= OSThreadCancelState::DisabledBySpinlock;
+   }
+
    return TRUE;
 }
 
@@ -191,6 +196,12 @@ OSUninterruptibleSpinLock_TryAcquire(OSSpinLock *spinlock)
    }
 
    spinlock->restoreInterruptState = OSDisableInterrupts();
+
+   // Update thread's cancel state
+   if (auto thread = OSGetCurrentThread()) {
+      thread->cancelState |= OSThreadCancelState::DisabledBySpinlock;
+   }
+
    return TRUE;
 }
 
@@ -214,6 +225,12 @@ OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock,
    }
 
    spinlock->restoreInterruptState = OSDisableInterrupts();
+
+   // Update thread's cancel state
+   if (auto thread = OSGetCurrentThread()) {
+      thread->cancelState |= OSThreadCancelState::DisabledBySpinlock;
+   }
+
    return TRUE;
 }
 
@@ -231,6 +248,11 @@ OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock)
 {
    if (spinReleaseLock(spinlock)) {
       OSRestoreInterrupts(spinlock->restoreInterruptState);
+   }
+
+   // Update thread's cancel state
+   if (auto thread = OSGetCurrentThread()) {
+      thread->cancelState &= ~OSThreadCancelState::DisabledBySpinlock;
    }
 
    return TRUE;

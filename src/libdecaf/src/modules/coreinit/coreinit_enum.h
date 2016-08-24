@@ -150,7 +150,7 @@ ENUM_BEG(OSThreadCancelState, uint32_t)
    //! Thread cancel is disabled because the thread owns a mutex
    ENUM_VALUE(DisabledByMutex,      1 << 16)
 
-   //! Thread cancel is disabled because the thread owns a spinlock
+   //! Thread cancel is disabled because the thread owns an uninterruptible spinlock
    ENUM_VALUE(DisabledBySpinlock,   1 << 17)
 
    //! Thread cancel is disabled because the thread owns a fast mutex
