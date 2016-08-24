@@ -375,6 +375,8 @@ MPSetTaskUserData(MPTask *task, void *userData)
 /**
  * Run N tasks from queue.
  *
+ * \param tasks Number of tasks to dequeue and run at once
+ *
  * Does not remove tasks from queue.
  * Can be run from multiple threads at once.
  *
@@ -398,7 +400,6 @@ MPRunTasksFromTaskQ(MPTaskQueue *queue,
       available = queue->queueSize - queue->queueIndex;
       count = std::min(available, tasks);
       first = queue->queueIndex;
-      tasks -= count;
 
       queue->tasksReady -= count;
       queue->tasksRunning += count;
