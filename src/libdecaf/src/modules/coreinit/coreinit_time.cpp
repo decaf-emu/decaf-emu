@@ -145,6 +145,10 @@ Module::registerTimeFunctions()
 namespace internal
 {
 
+OSTime nanosToTicks(OSTime nanoseconds) {
+   return ((((uint64_t)(nanoseconds)) * ((uint64_t)(OSGetSystemInfo()->busSpeed / 4) / 31250)) / 32000);
+}
+
 OSTime
 getBaseTime()
 {

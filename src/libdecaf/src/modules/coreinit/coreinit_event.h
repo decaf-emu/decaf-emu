@@ -80,11 +80,4 @@ OSWaitEventWithTimeout(OSEvent *event,
 
 /** @} */
 
-namespace internal
-{
-
-void signalEventNoLock(OSEvent *event);
-
-}
-
 } // namespace coreinit

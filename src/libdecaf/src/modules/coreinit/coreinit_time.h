@@ -65,6 +65,9 @@ namespace internal
 {
 
 OSTime
+nanosToTicks(OSTime nanoseconds);
+
+OSTime
 getBaseTime();
 
 std::chrono::time_point<std::chrono::system_clock>
