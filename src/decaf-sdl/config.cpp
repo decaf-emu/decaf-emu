@@ -81,6 +81,7 @@ bool async = false;
 bool to_file = true;
 bool to_stdout = false;
 std::string level = "debug";
+std::string directory = ".";
 
 } // namespace log
 
