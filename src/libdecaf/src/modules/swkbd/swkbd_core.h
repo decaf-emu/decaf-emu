@@ -90,7 +90,7 @@ DrawTV();
 void
 GetDrawStringInfo(DrawStringInfo *info);
 
-const wchar_t *
+const be_val<uint16_t> *
 GetInputFormString();
 
 void
