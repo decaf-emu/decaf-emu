@@ -42,17 +42,20 @@ OSInitSemaphoreEx(OSSemaphore *semaphore, int32_t count, char *name)
 int32_t
 OSWaitSemaphore(OSSemaphore *semaphore)
 {
-   int32_t previous;
    internal::lockScheduler();
-   decaf_check(semaphore && semaphore->tag == OSSemaphore::Tag);
 
-   while (semaphore->count <= 0) {
+   decaf_check(semaphore->tag == OSSemaphore::Tag);
+
+   int32_t previous = semaphore->count;
+   while (previous <= 0) {
       // Wait until we can decrease semaphore
       internal::sleepThreadNoLock(&semaphore->queue);
       internal::rescheduleSelfNoLock();
+      previous = semaphore->count;
    }
 
-   previous = semaphore->count--;
+   semaphore->count--;
+
    internal::unlockScheduler();
    return previous;
 }
@@ -70,12 +73,12 @@ OSWaitSemaphore(OSSemaphore *semaphore)
 int32_t
 OSTryWaitSemaphore(OSSemaphore *semaphore)
 {
-   int32_t previous;
    internal::lockScheduler();
-   decaf_check(semaphore && semaphore->tag == OSSemaphore::Tag);
+
+   decaf_check(semaphore->tag == OSSemaphore::Tag);
 
    // Try to decrease semaphore
-   previous = semaphore->count;
+   int32_t previous = semaphore->count;
 
    if (semaphore->count > 0) {
       semaphore->count--;
@@ -94,12 +97,13 @@ OSTryWaitSemaphore(OSSemaphore *semaphore)
 int32_t
 OSSignalSemaphore(OSSemaphore *semaphore)
 {
-   int32_t previous;
    internal::lockScheduler();
-   decaf_check(semaphore && semaphore->tag == OSSemaphore::Tag);
+
+   decaf_check(semaphore->tag == OSSemaphore::Tag);
 
    // Increase semaphore
-   previous =  semaphore->count++;
+   int32_t previous =  semaphore->count;
+   semaphore->count++;
 
    // Wakeup any waiting threads
    internal::wakeupThreadNoLock(&semaphore->queue);
@@ -116,12 +120,12 @@ OSSignalSemaphore(OSSemaphore *semaphore)
 int32_t
 OSGetSemaphoreCount(OSSemaphore *semaphore)
 {
-   int32_t count;
    internal::lockScheduler();
-   decaf_check(semaphore && semaphore->tag == OSSemaphore::Tag);
+
+   decaf_check(semaphore->tag == OSSemaphore::Tag);
 
    // Return count
-   count = semaphore->count;
+   int32_t count = semaphore->count;
 
    internal::unlockScheduler();
    return count;
