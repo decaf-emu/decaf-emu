@@ -138,11 +138,11 @@ CHECK_SIZE(OSFastMutexQueue, 0x08);
 
 struct OSThreadLink
 {
-   be_ptr<OSThread> prev;
    be_ptr<OSThread> next;
+   be_ptr<OSThread> prev;
 };
-CHECK_OFFSET(OSThreadLink, 0x00, prev);
-CHECK_OFFSET(OSThreadLink, 0x04, next);
+CHECK_OFFSET(OSThreadLink, 0x00, next);
+CHECK_OFFSET(OSThreadLink, 0x04, prev);
 CHECK_SIZE(OSThreadLink, 0x8);
 
 struct OSThreadQueue
