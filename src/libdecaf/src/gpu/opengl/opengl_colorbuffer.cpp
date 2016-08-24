@@ -58,8 +58,11 @@ bool GLDriver::checkActiveColorBuffer()
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, surfaceObject, 0);
          mFramebufferChanged = true;
 
-         mDrawBuffers[i] = surfaceObject ? gl::GL_COLOR_ATTACHMENT0 + i : gl::GL_NONE;
-         drawBuffersChanged = true;
+         auto drawBuffer = surfaceObject ? gl::GL_COLOR_ATTACHMENT0 + i : gl::GL_NONE;
+         if (mDrawBuffers[i] != drawBuffer) {
+            mDrawBuffers[i] = drawBuffer;
+            drawBuffersChanged = true;
+         }
       }
 
       if (surfaceObject && thisMask != mColorBufferCache[i].mask) {
