@@ -122,13 +122,15 @@ GetDrawStringInfo(DrawStringInfo *info)
 }
 
 
-const wchar_t *
+const be_val<uint16_t> *
 GetInputFormString()
 {
    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
    auto wide = converter.from_bytes(sInputBuffer);
-   auto result = reinterpret_cast<wchar_t *>(sWorkMemory);
-   std::memcpy(result, wide.data(), wide.size() * 2);
+   auto result = reinterpret_cast<be_val<uint16_t> *>(sWorkMemory);
+   for (auto i = 0; i < wide.size(); ++i) {
+      result[i] = static_cast<uint16_t>(wide[i]);
+   }
    result[wide.size()] = 0;
    return result;
 }
