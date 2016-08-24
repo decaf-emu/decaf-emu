@@ -1489,7 +1489,10 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
       out << "R[" << spi_ps_in_control_0.POSITION_ADDR() << "] = gl_FragCoord;";
    }
 
-   decaf_check(!spi_ps_in_control_0.PARAM_GEN());
+   decaf_assert(!spi_ps_in_control_0.PARAM_GEN(),
+                fmt::format("Unsupported spi_ps_in_control_0.PARAM_GEN {}, PARAM_GEN_ADDR {}",
+                            spi_ps_in_control_0.PARAM_GEN(),
+                            spi_ps_in_control_0.PARAM_GEN_ADDR()));
    decaf_check(!spi_ps_in_control_1.GEN_INDEX_PIX());
    decaf_check(!spi_ps_in_control_1.FIXED_PT_POSITION_ENA());
 
