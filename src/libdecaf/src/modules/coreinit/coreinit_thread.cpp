@@ -285,16 +285,25 @@ void
 OSDetachThread(OSThread *thread)
 {
    internal::lockScheduler();
+   decaf_check(thread);
+   decaf_check(internal::isThreadActiveNoLock(thread));
 
-   if (!(thread->attr & OSThreadAttributes::Detached)) {
-      if (thread->state == OSThreadState::Moribund) {
-         // Thread has already ended, remove it from the active list
-         internal::markThreadInactiveNoLock(thread);
+   thread->attr |= OSThreadAttributes::Detached;
+
+   if (thread->state == OSThreadState::Moribund) {
+      // Thread has already ended so we can remove it from the active list
+      internal::markThreadInactiveNoLock(thread);
+
+      if (thread->deallocator) {
+         internal::queueThreadDeallocation(thread);
       }
 
-      thread->attr |= OSThreadAttributes::Detached;
+      thread->state = OSThreadState::None;
+      // TODO: thread->id = 0x8000;
    }
 
+   internal::wakeupThreadNoLock(&thread->joinQueue);
+   internal::rescheduleAllCoreNoLock();
    internal::unlockScheduler();
 }
 
