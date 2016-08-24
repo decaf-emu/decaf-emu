@@ -262,11 +262,14 @@ OSCreateThread(OSThread *thread,
    *thread->stackEnd = 0xDEADBABE;
 
    // Setup thread state
-   InitialiseThreadState(thread, entry, argc, argv);
-
    internal::lockScheduler();
+   InitialiseThreadState(thread, entry, argc, argv);
    thread->id = sThreadId++;
-   internal::markThreadActiveNoLock(thread);
+
+   if (entry) {
+      internal::markThreadActiveNoLock(thread);
+   }
+
    internal::unlockScheduler();
 
    gLog->debug("Thread Created: ptr {:08x}, id {:x}, basePriority {}, attr {:08x}, entry {:08x}, stackStart {:08x}, stackEnd {:08x}",
@@ -614,8 +617,14 @@ OSRunThread(OSThread *thread,
    BOOL result = FALSE;
    internal::lockScheduler();
 
+
    if (OSIsThreadTerminated(thread)) {
+      if (thread->state == OSThreadState::Moribund) {
+         internal::markThreadInactiveNoLock(thread);
+      }
+
       InitialiseThreadState(thread, entry, argc, argv);
+      internal::markThreadActiveNoLock(thread);
       internal::resumeThreadNoLock(thread, 1);
       internal::rescheduleAllCoreNoLock();
       result = TRUE;
@@ -1074,10 +1083,8 @@ exitThreadNoLock(int value)
 
    if (thread->attr & OSThreadAttributes::Detached) {
       internal::markThreadInactiveNoLock(thread);
-
-      // TODO: coreinit.rpl sets the ID to -0x8000 or something here...
-
       thread->state = OSThreadState::None;
+      // TODO: thread->id = 0x8000;
 
       if (thread->deallocator) {
          queueThreadDeallocation(thread);
