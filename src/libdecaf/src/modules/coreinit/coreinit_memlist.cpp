@@ -108,7 +108,11 @@ MEMRemoveListObject(MEMList *list, void *object)
    if (list->head == object) {
       // Remove from head
       list->head = MEMGetNextListObject(list, list->head);
-      getLink(list, list->tail)->prev = nullptr;
+
+      if (list->head) {
+         getLink(list, list->head)->prev = nullptr;
+      }
+
       list->count--;
       return;
    }
@@ -116,7 +120,11 @@ MEMRemoveListObject(MEMList *list, void *object)
    if (list->tail == object) {
       // Remove from tail
       list->tail = MEMGetPrevListObject(list, list->tail);
-      getLink(list, list->tail)->next = nullptr;
+
+      if (list->tail) {
+         getLink(list, list->tail)->next = nullptr;
+      }
+
       list->count--;
       return;
    }
