@@ -156,7 +156,8 @@ OSCreateAlarm(OSAlarm *alarm)
  * Initialise an alarm structure.
  */
 void
-OSCreateAlarmEx(OSAlarm *alarm, const char *name)
+OSCreateAlarmEx(OSAlarm *alarm,
+                const char *name)
 {
    // Holding the alarm here is neccessary since its valid to call
    // Create on an already active alarm, as long as its not set.
@@ -195,7 +196,8 @@ OSInitAlarmQueue(OSAlarmQueue *queue)
  * Initialise an alarm queue structure with a name
  */
 void
-OSInitAlarmQueueEx(OSAlarmQueue *queue, const char *name)
+OSInitAlarmQueueEx(OSAlarmQueue *queue,
+                   const char *name)
 {
    memset(queue, 0, sizeof(OSAlarmQueue));
    queue->tag = OSAlarmQueue::Tag;
@@ -207,7 +209,9 @@ OSInitAlarmQueueEx(OSAlarmQueue *queue, const char *name)
  * Set a one shot alarm to perform a callback after an amount of time.
  */
 BOOL
-OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback)
+OSSetAlarm(OSAlarm *alarm,
+           OSTime time,
+           AlarmCallback callback)
 {
    return OSSetPeriodicAlarm(alarm, OSGetTime() + time, 0, callback);
 }
@@ -217,7 +221,10 @@ OSSetAlarm(OSAlarm *alarm, OSTime time, AlarmCallback callback)
  * Set a repeated alarm to execute a callback every interval from start.
  */
 BOOL
-OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback callback)
+OSSetPeriodicAlarm(OSAlarm *alarm,
+                   OSTime start,
+                   OSTime interval,
+                   AlarmCallback callback)
 {
    internal::acquireIdLock(sAlarmLock, alarm);
 
@@ -254,7 +261,8 @@ OSSetPeriodicAlarm(OSAlarm *alarm, OSTime start, OSTime interval, AlarmCallback 
  * Set an alarm tag which is used in OSCancelAlarms for bulk cancellation.
  */
 void
-OSSetAlarmTag(OSAlarm *alarm, uint32_t group)
+OSSetAlarmTag(OSAlarm *alarm,
+              uint32_t group)
 {
    internal::acquireIdLock(sAlarmLock, alarm);
    alarm->group = group;
@@ -266,7 +274,8 @@ OSSetAlarmTag(OSAlarm *alarm, uint32_t group)
  * Set alarm user data which is returned by OSGetAlarmUserData.
  */
 void
-OSSetAlarmUserData(OSAlarm *alarm, void *data)
+OSSetAlarmUserData(OSAlarm *alarm,
+                   void *data)
 {
    internal::acquireIdLock(sAlarmLock, alarm);
    alarm->userData = data;
@@ -311,7 +320,8 @@ OSWaitAlarm(OSAlarm *alarm)
 }
 
 uint32_t
-AlarmCallbackThreadEntry(uint32_t core_id, void *arg2)
+AlarmCallbackThreadEntry(uint32_t core_id,
+                         void *arg2)
 {
    auto queue = sAlarmQueue[core_id];
    auto cbQueue = sAlarmCallbackQueue[core_id];
