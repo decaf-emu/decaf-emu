@@ -153,28 +153,25 @@ GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 {
    static const auto weight = 0.9;
 
-   // We do not need to actually call swap as our driver does this
-   //  automatically with the vsync.  We do however need to make sure
-   //  that we've finished all our OpenGL commands before we continue,
-   //  otherwise, we may overwrite a buffer used on this frame.
-   gl::glFinish();
+   injectFence([=]() {
 
-   // TODO: We should have a render chain of 2 buffers so that we don't render stuff
-   //  until the game actually asked us to.
+      // TODO: We should have a render chain of 2 buffers so that we don't render stuff
+      //  until the game actually asked us to.
 
-   gx2::internal::onFlip();
+      gx2::internal::onFlip();
 
-   auto now = std::chrono::system_clock::now();
+      auto now = std::chrono::system_clock::now();
 
-   if (mLastSwap.time_since_epoch().count()) {
-      mAverageFrameTime = weight * mAverageFrameTime + (1.0 - weight) * (now - mLastSwap);
-   }
+      if (mLastSwap.time_since_epoch().count()) {
+         mAverageFrameTime = weight * mAverageFrameTime + (1.0 - weight) * (now - mLastSwap);
+      }
 
-   mLastSwap = now;
+      mLastSwap = now;
 
-   if (mSwapFunc) {
-      mSwapFunc(mTvScanBuffers.object, mDrcScanBuffers.object);
-   }
+      if (mSwapFunc) {
+         mSwapFunc(mTvScanBuffers.object, mDrcScanBuffers.object);
+      }
+   });
 }
 
 void
@@ -414,90 +411,94 @@ GLDriver::getGpuClock()
 void
 GLDriver::memWrite(const pm4::MemWrite &data)
 {
-   auto value = uint64_t { 0 };
-   auto addr = mem::translate(data.addrLo.ADDR_LO() << 2);
+   injectFence([=]() {
+      auto value = uint64_t{ 0 };
+      auto addr = mem::translate(data.addrLo.ADDR_LO() << 2);
 
-   if (data.addrHi.CNTR_SEL() == pm4::MW_WRITE_CLOCK) {
-      value = getGpuClock();
-   } else {
-      value = static_cast<uint64_t>(data.dataLo) | static_cast<uint64_t>(data.dataHi) << 32;
-   }
+      if (data.addrHi.CNTR_SEL() == pm4::MW_WRITE_CLOCK) {
+         value = getGpuClock();
+      } else {
+         value = static_cast<uint64_t>(data.dataLo) | static_cast<uint64_t>(data.dataHi) << 32;
+      }
 
-   switch (data.addrLo.ENDIAN_SWAP())
-   {
-   case latte::CB_ENDIAN_NONE:
-      break;
-   case latte::CB_ENDIAN_8IN64:
-      value = byte_swap(value);
-      break;
-   case latte::CB_ENDIAN_8IN32:
-      value = byte_swap(static_cast<uint32_t>(value));
-      break;
-   case latte::CB_ENDIAN_8IN16:
-      decaf_abort(fmt::format("Unexpected MEM_WRITE endian swap {}", data.addrLo.ENDIAN_SWAP()));
-   }
+      switch (data.addrLo.ENDIAN_SWAP())
+      {
+      case latte::CB_ENDIAN_NONE:
+         break;
+      case latte::CB_ENDIAN_8IN64:
+         value = byte_swap(value);
+         break;
+      case latte::CB_ENDIAN_8IN32:
+         value = byte_swap(static_cast<uint32_t>(value));
+         break;
+      case latte::CB_ENDIAN_8IN16:
+         decaf_abort(fmt::format("Unexpected MEM_WRITE endian swap {}", data.addrLo.ENDIAN_SWAP()));
+      }
 
-   if (data.addrHi.DATA32()) {
-      *reinterpret_cast<uint32_t *>(addr) = static_cast<uint32_t>(value);
-   } else {
-      *reinterpret_cast<uint64_t *>(addr) = value;
-   }
+      if (data.addrHi.DATA32()) {
+         *reinterpret_cast<uint32_t *>(addr) = static_cast<uint32_t>(value);
+      } else {
+         *reinterpret_cast<uint64_t *>(addr) = value;
+      }
+   });
 }
 
 void
 GLDriver::eventWrite(const pm4::EventWrite &data)
 {
-   auto type = data.eventInitiator.EVENT_TYPE();
-   auto addr = data.addrLo.ADDR_LO() << 2;
-   auto ptr = mem::translate(addr);
-   auto value = uint64_t { 0 };
+   injectFence([=]() {
+      auto type = data.eventInitiator.EVENT_TYPE();
+      auto addr = data.addrLo.ADDR_LO() << 2;
+      auto ptr = mem::translate(addr);
+      auto value = uint64_t{ 0 };
 
-   decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
+      decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
 
-   switch (type) {
-   case latte::VGT_EVENT_TYPE_ZPASS_DONE:
-      // This seems to be an instantaneous counter fetch, but OpenGL doesn't
-      //  expose the raw counter, so we detect GX2QueryBegin/End by the
-      //  write address and translate this to a SAMPLES_PASSED query.
-      if (addr == mLastOccQueryAddress + 8) {
-         mLastOccQueryAddress = 0;
+      switch (type) {
+      case latte::VGT_EVENT_TYPE_ZPASS_DONE:
+         // This seems to be an instantaneous counter fetch, but OpenGL doesn't
+         //  expose the raw counter, so we detect GX2QueryBegin/End by the
+         //  write address and translate this to a SAMPLES_PASSED query.
+         if (addr == mLastOccQueryAddress + 8) {
+            mLastOccQueryAddress = 0;
 
-         decaf_check(mOccQuery);
-         gl::glEndQuery(gl::GL_SAMPLES_PASSED);
-         gl::glGetQueryObjectui64v(mOccQuery, gl::GL_QUERY_RESULT, &value);
-      } else {
-         if (mLastOccQueryAddress) {
-            gLog->warn("Program started a new occlusion query (at 0x{:X}) while one was already in progress (at 0x{:X})", mLastOccQueryAddress, addr);
-            gl::glEndQuery(gl::GL_SAMPLES_PASSED);
-         }
-         mLastOccQueryAddress = addr;
-
-         if (!mOccQuery) {
-            gl::glGenQueries(1, &mOccQuery);
             decaf_check(mOccQuery);
+            gl::glEndQuery(gl::GL_SAMPLES_PASSED);
+            gl::glGetQueryObjectui64v(mOccQuery, gl::GL_QUERY_RESULT, &value);
+         } else {
+            if (mLastOccQueryAddress) {
+               gLog->warn("Program started a new occlusion query (at 0x{:X}) while one was already in progress (at 0x{:X})", mLastOccQueryAddress, addr);
+               gl::glEndQuery(gl::GL_SAMPLES_PASSED);
+            }
+            mLastOccQueryAddress = addr;
+
+            if (!mOccQuery) {
+               gl::glGenQueries(1, &mOccQuery);
+               decaf_check(mOccQuery);
+            }
+
+            gl::glBeginQuery(gl::GL_SAMPLES_PASSED, mOccQuery);
          }
-
-         gl::glBeginQuery(gl::GL_SAMPLES_PASSED, mOccQuery);
+         break;
+      default:
+         decaf_abort(fmt::format("Unexpected event type {}", type));
       }
-      break;
-   default:
-      decaf_abort(fmt::format("Unexpected event type {}", type));
-   }
 
-   switch (data.addrLo.ENDIAN_SWAP()) {
-   case latte::CB_ENDIAN_NONE:
-      break;
-   case latte::CB_ENDIAN_8IN64:
-      value = byte_swap(value);
-      break;
-   case latte::CB_ENDIAN_8IN32:
-      value = byte_swap(static_cast<uint32_t>(value));
-      break;
-   case latte::CB_ENDIAN_8IN16:
-      decaf_abort("Unexpected EVENT_WRITE endian swap 8IN16");
-   }
+      switch (data.addrLo.ENDIAN_SWAP()) {
+      case latte::CB_ENDIAN_NONE:
+         break;
+      case latte::CB_ENDIAN_8IN64:
+         value = byte_swap(value);
+         break;
+      case latte::CB_ENDIAN_8IN32:
+         value = byte_swap(static_cast<uint32_t>(value));
+         break;
+      case latte::CB_ENDIAN_8IN16:
+         decaf_abort("Unexpected EVENT_WRITE endian swap 8IN16");
+      }
 
-   *reinterpret_cast<uint64_t *>(ptr) = value;
+      *reinterpret_cast<uint64_t *>(ptr) = value;
+   });
 }
 
 void
@@ -507,44 +508,46 @@ GLDriver::eventWriteEOP(const pm4::EventWriteEOP &data)
       return;
    }
 
-   auto value = uint64_t { 0 };
-   auto addr = data.addrLo.ADDR_LO() << 2;
-   auto ptr = mem::translate(addr);
+   injectFence([=]() {
+      auto value = uint64_t{ 0 };
+      auto addr = data.addrLo.ADDR_LO() << 2;
+      auto ptr = mem::translate(addr);
 
-   decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
+      decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
 
-   switch (data.eventInitiator.EVENT_TYPE()) {
-   case latte::VGT_EVENT_TYPE_BOTTOM_OF_PIPE_TS:
-      value = getGpuClock();
-      break;
-   default:
-      decaf_abort(fmt::format("Unexpected EOP event type {}", data.eventInitiator.EVENT_TYPE()));
-   }
+      switch (data.eventInitiator.EVENT_TYPE()) {
+      case latte::VGT_EVENT_TYPE_BOTTOM_OF_PIPE_TS:
+         value = getGpuClock();
+         break;
+      default:
+         decaf_abort(fmt::format("Unexpected EOP event type {}", data.eventInitiator.EVENT_TYPE()));
+      }
 
-   switch (data.addrLo.ENDIAN_SWAP()) {
-   case latte::CB_ENDIAN_NONE:
-      break;
-   case latte::CB_ENDIAN_8IN64:
-      value = byte_swap(value);
-      break;
-   case latte::CB_ENDIAN_8IN32:
-      value = byte_swap(static_cast<uint32_t>(value));
-      break;
-   case latte::CB_ENDIAN_8IN16:
-      decaf_abort("Unexpected EVENT_WRITE_EOP endian swap 8IN16");
-   }
+      switch (data.addrLo.ENDIAN_SWAP()) {
+      case latte::CB_ENDIAN_NONE:
+         break;
+      case latte::CB_ENDIAN_8IN64:
+         value = byte_swap(value);
+         break;
+      case latte::CB_ENDIAN_8IN32:
+         value = byte_swap(static_cast<uint32_t>(value));
+         break;
+      case latte::CB_ENDIAN_8IN16:
+         decaf_abort("Unexpected EVENT_WRITE_EOP endian swap 8IN16");
+      }
 
-   switch (data.addrHi.DATA_SEL()) {
-   case pm4::EWP_DATA_DISCARD:
-      break;
-   case pm4::EWP_DATA_32:
-      *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
-      break;
-   case pm4::EWP_DATA_64:
-   case pm4::EWP_DATA_CLOCK:
-      *reinterpret_cast<uint64_t *>(ptr) = value;
-      break;
-   }
+      switch (data.addrHi.DATA_SEL()) {
+      case pm4::EWP_DATA_DISCARD:
+         break;
+      case pm4::EWP_DATA_32:
+         *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
+         break;
+      case pm4::EWP_DATA_64:
+      case pm4::EWP_DATA_CLOCK:
+         *reinterpret_cast<uint64_t *>(ptr) = value;
+         break;
+      }
+   });
 }
 
 void
@@ -554,13 +557,57 @@ GLDriver::pfpSyncMe(const pm4::PfpSyncMe &data)
 }
 
 void
+GLDriver::injectFence(std::function<void()> func)
+{
+   gl::GLsync object = gl::glFenceSync(gl::GL_SYNC_GPU_COMMANDS_COMPLETE, gl::GL_NONE_BIT);
+
+   SyncWait wait;
+   wait.type = SyncWaitType::Fence;
+   wait.fence = object;
+   wait.func = func;
+   mSyncWaits.emplace(wait);
+}
+
+void
+GLDriver::checkSyncObjects()
+{
+   while (true) {
+      if (!mSyncWaits.size()) {
+         break;
+      }
+
+      auto &wait = mSyncWaits.front();
+      if (wait.type == SyncWaitType::Fence) {
+         gl::GLenum value;
+         gl::glGetSynciv(wait.fence, gl::GL_SYNC_STATUS, 4, nullptr, reinterpret_cast<gl::GLint*>(&value));
+         if (value == gl::GL_UNSIGNALED) {
+            break;
+         }
+
+         wait.func();
+
+         glDeleteSync(wait.fence);
+      } else {
+         decaf_abort("GPU thread encountered unknown sync type");
+      }
+
+      mSyncWaits.pop();
+   }
+}
+
+void
 GLDriver::executeBuffer(pm4::Buffer *buffer)
 {
    // Execute command buffer
    runCommandBuffer(buffer->buffer, buffer->curSize);
 
    // Release command buffer
-   gpu::retireCommandBuffer(buffer);
+   injectFence([=]() {
+      gpu::retireCommandBuffer(buffer);
+   });
+
+   // Flush the OpenGL command stream
+   gl::glFlush();
 }
 
 void
@@ -619,6 +666,8 @@ GLDriver::syncPoll(const SwapFunction &swapFunc)
 
    if (auto buffer = gpu::tryUnqueueCommandBuffer()) {
       executeBuffer(buffer);
+   } else {
+      checkSyncObjects();
    }
 }
 
@@ -633,10 +682,17 @@ GLDriver::run()
    initGL();
 
    while (mRunState == RunState::Running) {
-      auto buffer = gpu::unqueueCommandBuffer();
+      pm4::Buffer *buffer;
+      if (mSyncWaits.size() == 0) {
+         buffer = gpu::unqueueCommandBuffer();
+      } else {
+         buffer = gpu::tryUnqueueCommandBuffer();
+      }
 
       if (buffer) {
          executeBuffer(buffer);
+      } else {
+         checkSyncObjects();
       }
    }
 }

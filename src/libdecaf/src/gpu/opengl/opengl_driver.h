@@ -14,6 +14,7 @@
 #include <gsl.h>
 #include <map>
 #include <mutex>
+#include <queue>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -183,6 +184,21 @@ struct FeedbackBufferState
    gl::GLuint object;
    uint32_t baseOffset;
    uint32_t currentOffset;
+};
+
+enum class SyncWaitType : uint32_t
+{
+   Fence,
+   Query
+};
+
+struct SyncWait
+{
+   SyncWaitType type;
+   union {
+      gl::GLsync fence;
+   };
+   std::function<void()> func;
 };
 
 struct ColorBufferCache
@@ -415,6 +431,9 @@ private:
    bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size, bool isScreenSpace);
    bool compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint8_t *buffer, size_t size);
 
+   void injectFence(std::function<void()> func);
+   void checkSyncObjects();
+
    void runCommandBuffer(uint32_t *buffer, uint32_t size);
 
    template<typename Type>
@@ -473,6 +492,8 @@ private:
    std::array<gl::GLenum, latte::MaxRenderTargets> mDrawBuffers;
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
+
+   std::queue<SyncWait> mSyncWaits;
 
    gl::GLuint mFeedbackQuery = 0;
    bool mFeedbackActive = false;
