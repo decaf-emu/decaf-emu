@@ -269,10 +269,9 @@ Module::initialiseMembase()
 
    internal::initialiseDefaultHeaps();
 
-   // TODO: getAddress should not be neccessary here...
-   *pMEMAllocFromDefaultHeap = sDefaultMEMAllocFromDefaultHeap.getAddress();
-   *pMEMAllocFromDefaultHeapEx = sDefaultMEMAllocFromDefaultHeapEx.getAddress();
-   *pMEMFreeToDefaultHeap = sDefaultMEMFreeToDefaultHeap.getAddress();
+   *pMEMAllocFromDefaultHeap = sDefaultMEMAllocFromDefaultHeap;
+   *pMEMAllocFromDefaultHeapEx = sDefaultMEMAllocFromDefaultHeapEx;
+   *pMEMFreeToDefaultHeap = sDefaultMEMFreeToDefaultHeap;
 }
 
 namespace internal
