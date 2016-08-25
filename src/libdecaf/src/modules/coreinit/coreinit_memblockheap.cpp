@@ -323,7 +323,7 @@ MEMAllocFromBlockHeapEx(MEMBlockHeap *heap,
       // Find last free block with enough size
       for (block = heap->lastBlock; block; block = block->prev) {
          if (block->isFree) {
-            auto alignedStart = align_down(block->end.get() - size, -align);
+            alignedStart = align_down(block->end.get() - size, -align);
 
             if (alignedStart >= block->start) {
                break;
