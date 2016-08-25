@@ -865,7 +865,7 @@ OSSuspendThread(OSThread *thread)
    auto curThread = OSGetCurrentThread();
 
    if (curThread == thread) {
-      if (thread->cancelState != OSThreadCancelState::Enabled) {
+      if (thread->cancelState == OSThreadCancelState::Enabled) {
          thread->needSuspend++;
          result = thread->suspendCounter;
          internal::suspendThreadNoLock(thread);
