@@ -29,6 +29,9 @@ sSwapCount { 0 };
 static std::atomic<uint32_t>
 sFlipCount { 0 };
 
+static std::atomic<uint32_t>
+sFramesReady { 0 };
+
 static std::atomic<int64_t>
 sLastSubmittedTimestamp { 0 };
 
@@ -224,8 +227,17 @@ initEvents()
 void
 vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
-   sLastVsync.store(OSGetSystemTime(), std::memory_order_release);
+   auto vsyncTime = OSGetSystemTime();
+
+   if (sFramesReady > sFlipCount) {
+      sFlipCount++;
+      sLastFlip.store(vsyncTime, std::memory_order_release);
+      OSWakeupThread(sFlipThreadQueue);
+   }
+
+   sLastVsync.store(vsyncTime, std::memory_order_release);
    OSWakeupThread(sVsyncThreadQueue);
+
    auto callback = sEventCallbacks[GX2EventType::Vsync];
 
    if (callback.func) {
@@ -308,7 +320,6 @@ onSwap()
 void
 handleGpuFlipInterrupt()
 {
-   OSWakeupThread(sFlipThreadQueue);
 }
 
 
@@ -318,8 +329,7 @@ handleGpuFlipInterrupt()
 void
 onFlip()
 {
-   sFlipCount++;
-   sLastFlip.store(OSGetSystemTime(), std::memory_order_release);
+   sFramesReady++;
    cpu::interrupt(gx2::internal::getMainCoreId(), cpu::GPU_FLIP_INTERRUPT);
 }
 
