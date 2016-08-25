@@ -1,4 +1,4 @@
-TARGETS := alarm coroutine memory
+TARGETS := alarm coroutine memory thread
 
 GROUP := $(notdir $(CURDIR))
 
