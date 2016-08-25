@@ -88,6 +88,10 @@ OSTicksToCalendarTime(OSTime time,
    calendarTime->tm_mday = tm.tm_mday;
    calendarTime->tm_mon = tm.tm_mon;
    calendarTime->tm_year = tm.tm_year + 1900; // posix tm_year is year - 1900
+   calendarTime->tm_wday = tm.tm_wday;
+   calendarTime->tm_yday = tm.tm_yday;
+
+   // TODO: OSTicksToCalendarTime tm_usec, tm_msec
 }
 
 
@@ -105,6 +109,10 @@ OSCalendarTimeToTicks(OSCalendarTime *calendarTime)
    tm.tm_mday = calendarTime->tm_mday;
    tm.tm_mon = calendarTime->tm_mon;
    tm.tm_year = calendarTime->tm_year - 1900;
+   tm.tm_wday = calendarTime->tm_wday;
+   tm.tm_yday = calendarTime->tm_yday;
+
+   // TODO: OSCalendarTimeToTicks tm_usec, tm_msec
 
    auto system_time = platform::make_gm_time(tm);
    auto chrono = std::chrono::system_clock::from_time_t(system_time);
