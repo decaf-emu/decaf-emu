@@ -34,7 +34,8 @@ nn::Result
 GetMii(FFLStoreData *data);
 
 nn::Result
-GetMiiEx(FFLStoreData *data, uint8_t slot);
+GetMiiEx(FFLStoreData *data,
+         uint8_t slot);
 
 bool
 IsNetworkAccount();

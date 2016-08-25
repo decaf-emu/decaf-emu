@@ -1,6 +1,7 @@
 #include "nn_act.h"
 #include "nn_act_core.h"
 #include "nn_act_result.h"
+#include <algorithm>
 
 static const uint8_t
 InvalidSlot = 0;
@@ -13,6 +14,9 @@ SystemSlot = 255;
 
 static const uint8_t
 DeviceHash[] = { 0x2C, 0x10, 0xC1, 0x67, 0xEB, 0xC6 };
+
+static const uint8_t
+SystemId[] = { 0xBA, 0xAD, 0xF0, 0x0D, 0xDE, 0xAD, 0xBA, 0xBE };
 
 struct Account
 {
@@ -239,30 +243,64 @@ GetTransferableIdEx(be_val<uint64_t> *transferableId,
 nn::Result
 GetMii(FFLStoreData *data)
 {
-   return GetMiiEx(data, GetSlotNo());
+   return GetMiiEx(data, CurrentUserSlot);
+}
+
+// This is taken from http://wiibrew.org/wiki/Mii_Data
+static uint16_t
+calculateMiiCRC(const uint8_t *bytes, uint32_t length)
+{
+   uint32_t crc = 0x0000;
+
+   for (auto byteIndex = 0u; byteIndex < length; byteIndex++) {
+      for (auto bitIndex = 7; bitIndex >= 0; bitIndex--) {
+         crc = (((crc << 1) | ((bytes[byteIndex] >> bitIndex) & 0x1)) ^
+            (((crc & 0x8000) != 0) ? 0x1021 : 0));
+      }
+   }
+
+   for (auto counter = 16; counter > 0u; counter--) {
+      crc = ((crc << 1) ^ (((crc & 0x8000) != 0) ? 0x1021 : 0));
+   }
+
+   return static_cast<uint16_t>(crc & 0xFFFF);
 }
 
 nn::Result
-GetMiiEx(FFLStoreData *data, uint8_t slot)
+GetMiiEx(FFLStoreData *data,
+         uint8_t slot)
 {
    if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
       return nn::act::AccountNotFound;
    }
 
-   // TODO: Make FFLStoreData into a well-defined structure and fill it
-   //  out manually rather than using pre-generated data from Mii Maker.
-   static const uint8_t templateMiiData[96] =
-   {
-      0x03, 0x01, 0x00, 0x30, 0xE0, 0xA3, 0x79, 0x64, 0x20, 0x84, 0xE0, 0xF0, 0x91, 0xE2, 0x60, 0x6D,
-      0x2C, 0x10, 0xC1, 0x67, 0xEB, 0xC6, 0x00, 0x00, 0xB8, 0x63, 0x4D, 0x00, 0x61, 0x00, 0x78, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x73, 0x17,
-      0x00, 0x90, 0x3E, 0x01, 0x11, 0x68, 0x25, 0x1A, 0x29, 0x13, 0x27, 0x16, 0x81, 0x0E, 0x0F, 0x68,
-      0x0C, 0x00, 0x00, 0x29, 0x82, 0x59, 0x48, 0x50, 0x4D, 0x00, 0x61, 0x00, 0x78, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE8, 0x0F,
-   };
-   std::memcpy(data, templateMiiData, sizeof(FFLStoreData));
-   std::memcpy(data->deviceHash, DeviceHash, 6);
+   // Set our Mii Data!
+   std::memset(data, 0, sizeof(FFLStoreData));
+   std::copy(std::begin(DeviceHash), std::end(DeviceHash), std::begin(data->deviceHash));
+   std::copy(std::begin(SystemId), std::end(SystemId), std::begin(data->systemId));
+   data->miiId = 0x10000000;
 
+   // Unknown values, but game will assert if not set
+   data->importantUnk1 = 0x6D60E291;
+   data->importantUnk2 = 0x16271329;
+
+   // Mii Name
+   data->name[0] = 'd';
+   data->name[1] = 'e';
+   data->name[2] = 'c';
+   data->name[3] = 'a';
+   data->name[4] = 'f';
+   data->name[5] = 'M';
+
+   // Creator's Name
+   data->creator[0] = 'd';
+   data->creator[1] = 'e';
+   data->creator[2] = 'c';
+   data->creator[3] = 'a';
+   data->creator[4] = 'f';
+   data->creator[5] = 'C';
+
+   data->crc = calculateMiiCRC(reinterpret_cast<uint8_t *>(data), sizeof(FFLStoreData) - 2);
    return nn::Result::Success;
 }
 
