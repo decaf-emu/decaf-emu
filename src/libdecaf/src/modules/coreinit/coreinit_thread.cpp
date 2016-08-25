@@ -487,33 +487,28 @@ OSIsThreadTerminated(OSThread *thread)
 /**
  * Wait until thread is terminated.
  *
- * If the target thread is detached, returns FALSE.
- *
  * \param thread Thread to wait for
  * \param exitValue Pointer to store thread exit value in.
- * \returns Returns TRUE if thread has terminated, FALSE if thread is detached.
+ * \returns Returns TRUE if thread has terminated, FALSE otherwise.
  */
 BOOL
 OSJoinThread(OSThread *thread,
              be_val<int> *exitValue)
 {
    internal::lockScheduler();
+   decaf_check(thread);
    decaf_check(internal::isThreadActiveNoLock(thread));
 
-   if (!(thread->attr & OSThreadAttributes::Detached)) {
-      if (thread->state != OSThreadState::Moribund) {
-         if (thread->joinQueue.head) {
-            internal::unlockScheduler();
-            return FALSE;
-         }
+   // If the thread has not ended, let's wait for it
+   //  note only one thread is allowed in the join queue
+   if (thread->state != OSThreadState::Moribund && !thread->joinQueue.head) {
+      internal::sleepThreadNoLock(&thread->joinQueue);
+      internal::rescheduleSelfNoLock();
 
-         internal::sleepThreadNoLock(&thread->joinQueue);
-         internal::rescheduleSelfNoLock();
-
-         if (!internal::isThreadActiveNoLock(thread)) {
-            internal::unlockScheduler();
-            return FALSE;
-         }
+      if (!internal::isThreadActiveNoLock(thread)) {
+         // This would only happen for detached threads.
+         internal::unlockScheduler();
+         return FALSE;
       }
    }
 
@@ -529,9 +524,10 @@ OSJoinThread(OSThread *thread,
    internal::markThreadInactiveNoLock(thread);
    thread->state = OSThreadState::None;
 
-   // TODO: The thread should be put on some kind of queue for
-   //  deallocation...  For now lets just ensure its not used.
-   decaf_check(!thread->deallocator);
+   if (thread->deallocator) {
+      internal::queueThreadDeallocation(thread);
+      internal::rescheduleSelfNoLock();
+   }
 
    internal::unlockScheduler();
    return TRUE;
