@@ -65,6 +65,14 @@ SAVEGetStat(FSClient *client,
             FSStat *stat,
             uint32_t flags);
 
+SaveStatus
+SAVEChangeGroupAndOthersMode(FSClient *client,
+                             FSCmdBlock *block,
+                             uint8_t account,
+                             const char *path,
+                             uint32_t mode,
+                             uint32_t flags);
+
 } // namespace save
 
 } // namespace nn

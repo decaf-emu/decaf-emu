@@ -86,6 +86,18 @@ SAVEGetStat(FSClient *client,
    return FSGetStat(client, block, fsPath.path().c_str(), stat, flags);
 }
 
+SaveStatus
+SAVEChangeGroupAndOthersMode(FSClient *client,
+                             FSCmdBlock *block,
+                             uint8_t account,
+                             const char *path,
+                             uint32_t mode,
+                             uint32_t flags)
+{
+   // TODO: SAVEChangeGroupAndOthersMode
+   return SaveStatus::OK;
+}
+
 void
 Module::registerFileFunctions()
 {
@@ -95,6 +107,7 @@ Module::registerFileFunctions()
    RegisterKernelFunction(SAVERemove);
    RegisterKernelFunction(SAVEGetStatAsync);
    RegisterKernelFunction(SAVEGetStat);
+   RegisterKernelFunction(SAVEChangeGroupAndOthersMode);
 }
 
 } // namespace save
