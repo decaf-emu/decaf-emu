@@ -291,9 +291,12 @@ start(excmd::parser &parser,
    decaf::initialiseLogging(sinks, logLevel);
 
    // Initialise decaf-cli logger
-   std::vector<spdlog::sink_ptr> cliSinks;
-   cliSinks.push_back(spdlog::sinks::stdout_sink_st::instance());
-   gCliLog = std::make_shared<spdlog::logger>("decaf-cli", begin(cliSinks), end(cliSinks));
+   if (!config::log::to_stdout) {
+      // Always do client log to stdout
+      sinks.push_back(spdlog::sinks::stdout_sink_st::instance());
+   }
+
+   gCliLog = std::make_shared<spdlog::logger>("decaf-cli", begin(sinks), end(sinks));
    gCliLog->set_level(logLevel);
    gCliLog->set_pattern("[%l] %v");
    gCliLog->info("Game path {}", gamePath);
