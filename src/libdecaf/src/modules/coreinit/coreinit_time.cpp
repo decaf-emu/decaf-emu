@@ -90,6 +90,8 @@ OSTicksToCalendarTime(OSTime time,
    calendarTime->tm_year = tm.tm_year + 1900; // posix tm_year is year - 1900
    calendarTime->tm_wday = tm.tm_wday;
    calendarTime->tm_yday = tm.tm_yday;
+   calendarTime->tm_msec = 0;
+   calendarTime->tm_usec = 0;
 
    // TODO: OSTicksToCalendarTime tm_usec, tm_msec
 }
