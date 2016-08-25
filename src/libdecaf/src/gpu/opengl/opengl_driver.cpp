@@ -446,44 +446,13 @@ GLDriver::memWrite(const pm4::MemWrite &data)
 void
 GLDriver::eventWrite(const pm4::EventWrite &data)
 {
-   injectFence([=]() {
-      auto type = data.eventInitiator.EVENT_TYPE();
-      auto addr = data.addrLo.ADDR_LO() << 2;
-      auto ptr = mem::translate(addr);
-      auto value = uint64_t{ 0 };
+   auto type = data.eventInitiator.EVENT_TYPE();
+   auto addr = data.addrLo.ADDR_LO() << 2;
+   auto ptr = mem::translate(addr);
 
-      decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
+   decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
 
-      switch (type) {
-      case latte::VGT_EVENT_TYPE_ZPASS_DONE:
-         // This seems to be an instantaneous counter fetch, but OpenGL doesn't
-         //  expose the raw counter, so we detect GX2QueryBegin/End by the
-         //  write address and translate this to a SAMPLES_PASSED query.
-         if (addr == mLastOccQueryAddress + 8) {
-            mLastOccQueryAddress = 0;
-
-            decaf_check(mOccQuery);
-            gl::glEndQuery(gl::GL_SAMPLES_PASSED);
-            gl::glGetQueryObjectui64v(mOccQuery, gl::GL_QUERY_RESULT, &value);
-         } else {
-            if (mLastOccQueryAddress) {
-               gLog->warn("Program started a new occlusion query (at 0x{:X}) while one was already in progress (at 0x{:X})", mLastOccQueryAddress, addr);
-               gl::glEndQuery(gl::GL_SAMPLES_PASSED);
-            }
-            mLastOccQueryAddress = addr;
-
-            if (!mOccQuery) {
-               gl::glGenQueries(1, &mOccQuery);
-               decaf_check(mOccQuery);
-            }
-
-            gl::glBeginQuery(gl::GL_SAMPLES_PASSED, mOccQuery);
-         }
-         break;
-      default:
-         decaf_abort(fmt::format("Unexpected event type {}", type));
-      }
-
+   auto writeData = [=](uint64_t value) {
       switch (data.addrLo.ENDIAN_SWAP()) {
       case latte::CB_ENDIAN_NONE:
          break;
@@ -498,7 +467,37 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
       }
 
       *reinterpret_cast<uint64_t *>(ptr) = value;
-   });
+   };
+
+   switch (type) {
+   case latte::VGT_EVENT_TYPE_ZPASS_DONE: {
+      if (!mOccQuery) {
+         injectFence([=]() {
+            writeData(mTotalSamplesPassed);
+         });
+      } else {
+         gl::glEndQuery(gl::GL_SAMPLES_PASSED);
+
+         auto originalQuery = mOccQuery;
+
+         SyncWait wait;
+         wait.type = SyncWaitType::Query;
+         wait.query = originalQuery;
+         wait.func = [=]() {
+            auto value = uint64_t{ 0 };
+            gl::glGetQueryObjectui64v(originalQuery, gl::GL_QUERY_RESULT, &value);
+            mTotalSamplesPassed += value;
+            writeData(mTotalSamplesPassed);
+         };
+         mSyncWaits.emplace(wait);
+      }
+
+      gl::glGenQueries(1, &mOccQuery);
+      gl::glBeginQuery(gl::GL_SAMPLES_PASSED, mOccQuery);
+   } break;
+   default:
+      decaf_abort(fmt::format("Unexpected event type {}", type));
+   }
 }
 
 void
@@ -587,6 +586,16 @@ GLDriver::checkSyncObjects()
          wait.func();
 
          glDeleteSync(wait.fence);
+      } else if (wait.type == SyncWaitType::Query) {
+         gl::GLboolean value;
+         gl::glGetQueryObjectuiv(wait.query, gl::GL_QUERY_RESULT_AVAILABLE, reinterpret_cast<gl::GLuint*>(&value));
+         if (value == gl::GL_FALSE) {
+            break;
+         }
+
+         wait.func();
+
+         gl::glDeleteQueries(1, &wait.query);
       } else {
          decaf_abort("GPU thread encountered unknown sync type");
       }

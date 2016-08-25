@@ -197,6 +197,7 @@ struct SyncWait
    SyncWaitType type;
    union {
       gl::GLsync fence;
+      gl::GLuint query;
    };
    std::function<void()> func;
 };
@@ -501,7 +502,7 @@ private:
    std::array<FeedbackBufferState, latte::MaxStreamOutBuffers> mFeedbackBufferState;
 
    gl::GLuint mOccQuery = 0;
-   uint32_t mLastOccQueryAddress = 0;
+   uint64_t mTotalSamplesPassed = 0;
 
    latte::ShadowState mShadowState;
 
