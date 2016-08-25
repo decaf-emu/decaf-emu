@@ -1,7 +1,7 @@
 #include "gx2_cbpool.h"
 #include "gx2_displaylist.h"
 #include "gx2_state.h"
-#include "gpu/commandqueue.h"
+#include "gpu/gpu_commandqueue.h"
 #include "gpu/pm4_writer.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "common/align.h"

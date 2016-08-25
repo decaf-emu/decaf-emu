@@ -1,5 +1,5 @@
 #include "decaf_config.h"
-#include "gpu/commandqueue.h"
+#include "gpu/gpu_commandqueue.h"
 #include "gpu/gfd.h"
 #include "gpu/microcode/latte_disassembler.h"
 #include "gpu/pm4_writer.h"

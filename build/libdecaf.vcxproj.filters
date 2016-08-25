@@ -468,9 +468,6 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_shader.cpp">
       <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\commandqueue.cpp">
-      <Filter>Source Files\gpu</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_texture.cpp">
       <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
@@ -879,6 +876,15 @@
     <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_mix.cpp">
       <Filter>Source Files\modules\snd_core</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_streamout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_flush.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_commandqueue.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1201,9 +1207,6 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.h">
       <Filter>Header Files\gpu\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\gpu\commandqueue.h">
-      <Filter>Header Files\gpu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_sx.h">
       <Filter>Header Files\gpu</Filter>
@@ -1672,6 +1675,12 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_mix.h">
       <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\gpu_commandqueue.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\gpu_flush.h">
+      <Filter>Header Files\gpu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

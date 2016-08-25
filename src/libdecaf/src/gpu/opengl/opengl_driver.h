@@ -285,8 +285,12 @@ public:
 
    virtual void run() override;
    virtual void stop() override;
+
    virtual float getAverageFPS() override;
-   virtual void handleDCFlush(uint32_t addr, uint32_t size) override;
+
+   virtual void notifyCpuFlush(void *ptr, uint32_t size) override;
+   virtual void notifyGpuFlush(void *ptr, uint32_t size) override;
+
    virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
    virtual void syncPoll(const SwapFunction &swapFunc) override;
 
@@ -471,13 +475,13 @@ private:
    bool mDepthRangeDirty = false;
    bool mScissorDirty = false;
 
-   // Protects resource lists; used by handleDCFlush() to safely set dirty flags
+   // Protects resource lists; used by notifyCpuFlush() to safely set dirty flags
    std::mutex mResourceMutex;
 
    std::unordered_map<uint64_t, FetchShader *> mFetchShaders;  // Protected by mResourceMutex
    std::unordered_map<uint64_t, VertexShader *> mVertexShaders;  // Protected by mResourceMutex
    std::unordered_map<uint64_t, PixelShader *> mPixelShaders;  // Protected by mResourceMutex
-   std::map<ShaderPipelineKey, ShaderPipeline> mShaderPipelines;  // Not touched by handleDCFlush()
+   std::map<ShaderPipelineKey, ShaderPipeline> mShaderPipelines;  // Not touched by notifyCpuFlush()
    std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;  // Protected by mResourceMutex
    std::unordered_map<uint32_t, DataBuffer> mDataBuffers;  // Protected by mResourceMutex
 

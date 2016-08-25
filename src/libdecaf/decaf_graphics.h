@@ -16,7 +16,8 @@ public:
    virtual void stop() = 0;
    virtual float getAverageFPS() = 0;
 
-   virtual void handleDCFlush(uint32_t addr, uint32_t size) = 0;  // May be called from any thread!
+   virtual void notifyCpuFlush(void *ptr, uint32_t size) = 0;  // May be called from any thread!
+   virtual void notifyGpuFlush(void *ptr, uint32_t size) = 0;  // May be called from any thread!
 };
 
 class OpenGLDriver : public GraphicsDriver

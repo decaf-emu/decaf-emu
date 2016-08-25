@@ -1,7 +1,7 @@
 #include "common/decaf_assert.h"
 #include "common/log.h"
 #include "decaf_config.h"
-#include "gpu/commandqueue.h"
+#include "gpu/gpu_commandqueue.h"
 #include "gpu/latte_registers.h"
 #include "gpu/pm4_buffer.h"
 #include "modules/coreinit/coreinit_time.h"
@@ -620,47 +620,58 @@ GLDriver::executeBuffer(pm4::Buffer *buffer)
 }
 
 void
-GLDriver::handleDCFlush(uint32_t addr, uint32_t size)
+GLDriver::notifyCpuFlush(void *ptr,
+                         uint32_t size)
 {
    std::unique_lock<std::mutex> lock(mResourceMutex);
-
-   auto memStart = addr;
+   auto memStart = mem::untranslate(ptr);
    auto memEnd = memStart + size;
 
    for (auto &i : mFetchShaders) {
-      Resource *resource = i.second;
+      auto resource = i.second;
+
       if (resource && resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
          resource->dirtyMemory = true;
       }
    }
 
    for (auto &i : mVertexShaders) {
-      Resource *resource = i.second;
+      auto resource = i.second;
+
       if (resource && resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
          resource->dirtyMemory = true;
       }
    }
 
    for (auto &i : mPixelShaders) {
-      Resource *resource = i.second;
+      auto resource = i.second;
+
       if (resource && resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
          resource->dirtyMemory = true;
       }
    }
 
    for (auto &i : mSurfaces) {
-      Resource *resource = &i.second;
+      auto resource = &i.second;
+
       if (resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
          resource->dirtyMemory = true;
       }
    }
 
    for (auto &i : mDataBuffers) {
-      Resource *resource = &i.second;
+      auto resource = &i.second;
+
       if (resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
          resource->dirtyMemory = true;
       }
    }
+}
+
+void
+GLDriver::notifyGpuFlush(void *ptr,
+                         uint32_t size)
+{
 }
 
 void

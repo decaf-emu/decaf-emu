@@ -1,10 +1,10 @@
-#include "common/teenyheap.h"
 #include "coreinit.h"
 #include "coreinit_core.h"
 #include "coreinit_lockedcache.h"
 #include "coreinit_thread.h"
-#include "decaf_graphics.h"
+#include "gpu/gpu_flush.h"
 #include "libcpu/mem.h"
+#include "common/teenyheap.h"
 #include <array>
 
 namespace coreinit
@@ -149,7 +149,9 @@ LCGetDMAQueueLength()
  * We fake this by performing the load immediately.
  */
 void
-LCLoadDMABlocks(void *dst, const void *src, uint32_t size)
+LCLoadDMABlocks(void *dst,
+                const void *src,
+                uint32_t size)
 {
    if (size == 0) {
       size = 128;
@@ -165,7 +167,9 @@ LCLoadDMABlocks(void *dst, const void *src, uint32_t size)
  * We fake this by performing the store immediately.
  */
 void
-LCStoreDMABlocks(void *dst, const void *src, uint32_t size)
+LCStoreDMABlocks(void *dst,
+                 const void *src,
+                 uint32_t size)
 {
    if (size == 0) {
       size = 128;
@@ -174,7 +178,7 @@ LCStoreDMABlocks(void *dst, const void *src, uint32_t size)
    std::memcpy(dst, src, size * 32);
 
    // Also signal the memory store to the GPU, as with DCFlushRange().
-   decaf::getGraphicsDriver()->handleDCFlush(mem::untranslate(dst), size);
+   gpu::notifyCpuFlush(dst, size);
 }
 
 

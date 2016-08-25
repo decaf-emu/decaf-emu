@@ -1,6 +1,6 @@
 #include "decaf_nullgraphicsdriver.h"
 #include "gpu/opengl/opengl_driver.h"
-#include "gpu/commandqueue.h"
+#include "gpu/gpu_commandqueue.h"
 
 namespace decaf
 {
@@ -41,7 +41,14 @@ NullGraphicsDriver::getAverageFPS()
 }
 
 void
-NullGraphicsDriver::handleDCFlush(uint32_t addr, uint32_t size)
+NullGraphicsDriver::notifyCpuFlush(void *ptr,
+                                   uint32_t size)
+{
+}
+
+void
+NullGraphicsDriver::notifyGpuFlush(void *ptr,
+                                   uint32_t size)
 {
 }
 
