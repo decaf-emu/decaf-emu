@@ -877,7 +877,7 @@
       <Filter>Source Files\modules\snd_core</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_streamout.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_flush.cpp">
       <Filter>Source Files\gpu</Filter>
