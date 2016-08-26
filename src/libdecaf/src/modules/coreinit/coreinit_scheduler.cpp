@@ -157,6 +157,10 @@ markThreadInactiveNoLock(OSThread *thread)
 bool
 isThreadActiveNoLock(OSThread *thread)
 {
+   if (thread->state == OSThreadState::None) {
+      return false;
+   }
+
    return ActiveQueue::contains(sActiveThreads, thread);
 }
 
