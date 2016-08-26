@@ -51,11 +51,6 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
    const latte::SQ_CHAN zChan = zInsn.word0.SRC0_CHAN();
 
    // Verify that the instruction is in fact using the expected syntax.
-   if ((xSel == ySel && xRel == yRel && xChan == yChan)
-    || (xSel == zSel && xRel == zRel && xChan == zChan)
-    || (ySel == zSel && yRel == zRel && yChan == zChan)) {
-      throw translate_exception("Invalid CUBE syntax: X/Y/Z elements are not distinct");
-   }
    if (group[1].word0.SRC0_SEL() != zSel
     || group[1].word0.SRC0_REL() != zRel
     || group[1].word0.SRC0_CHAN() != zChan
