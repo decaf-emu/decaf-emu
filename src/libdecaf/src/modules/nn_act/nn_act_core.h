@@ -15,7 +15,7 @@ using UUID = std::array<uint8_t, 16>;
 nn::Result
 Initialize();
 
-void
+nn::Result
 Finalize();
 
 uint8_t
