@@ -795,6 +795,15 @@ GLDriver::checkActiveAttribBuffers()
       return false;
    }
 
+   for (auto i = 0; i < mActiveShader->fetch->attribs.size(); ++i) {
+      auto &attrib = mActiveShader->fetch->attribs[i];
+      auto resourceOffset = (latte::SQ_VS_RESOURCE_BASE + attrib.buffer) * 7;
+      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
+      if (!sq_vtx_constant_word0.BASE_ADDRESS) {
+         return false;
+      }
+   }
+
    bool needMemoryBarrier = false;
 
    for (auto i = 0u; i < latte::MaxAttributes; ++i) {
