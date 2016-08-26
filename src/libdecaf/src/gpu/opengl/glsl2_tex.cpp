@@ -319,9 +319,15 @@ GET_TEXTURE_INFO(State &state, const latte::ControlFlowInst &cf, const latte::Te
       auto samplerElements = getSamplerArgCount(samplerDim, false);
 
       insertLineStart(state);
-      state.out << "texTmp.xyz = intBitsToFloat(ivec3(textureSize(sampler_" << samplerID << ", floatBitsToInt(";
-      insertSelectValue(state.out, src, srcSelLod);
-      state.out << "))";
+      state.out << "texTmp.xyz = intBitsToFloat(ivec3(textureSize(sampler_" << samplerID;
+
+      if (!getSamplerIsMsaa(samplerDim)) {
+         state.out << ", floatBitsToInt(";
+         insertSelectValue(state.out, src, srcSelLod);
+         state.out << ")";
+      }
+
+      state.out << ")";
       for (auto i = samplerElements; i < 3; ++i) {
          state.out << ", 1";
       }
