@@ -30,12 +30,19 @@ IsInitialized()
    return gInitialised;
 }
 
+nn::Result
+EnableResumeDaemons()
+{
+   return nn::Result::Success;
+}
+
 void
 Module::registerInitFunctions()
 {
    RegisterKernelFunctionName("Initialize__Q2_2nn3ndmFv", nn::ndm::Initialize);
    RegisterKernelFunctionName("Finalize__Q2_2nn3ndmFv", nn::ndm::Finalize);
    RegisterKernelFunctionName("IsInitialized__Q2_2nn3ndmFv", nn::ndm::IsInitialized);
+   RegisterKernelFunctionName("EnableResumeDaemons__Q2_2nn3ndmFv", nn::ndm::EnableResumeDaemons);
 }
 
 }  // namespace ndm
