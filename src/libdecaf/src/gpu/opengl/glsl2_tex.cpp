@@ -266,6 +266,7 @@ GET_TEXTURE_INFO(State &state, const latte::ControlFlowInst &cf, const latte::Te
    auto samplerID = resourceID;
 
    auto samplerDim = state.shader->samplerDim[samplerID];
+   registerSamplerID(state, samplerID, false);
 
    auto dst = getExportRegister(inst.word1.DST_GPR(), inst.word1.DST_REL());
    auto src = getExportRegister(inst.word0.SRC_GPR(), inst.word0.SRC_REL());
