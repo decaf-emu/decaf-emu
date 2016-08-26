@@ -82,6 +82,25 @@ getSamplerArgCount(latte::SQ_TEX_DIM type, bool isShadowOp)
    }
 }
 
+static bool
+getSamplerIsMsaa(latte::SQ_TEX_DIM type)
+{
+   switch (type) {
+   case latte::SQ_TEX_DIM_1D:
+   case latte::SQ_TEX_DIM_2D:
+   case latte::SQ_TEX_DIM_3D:
+   case latte::SQ_TEX_DIM_1D_ARRAY:
+   case latte::SQ_TEX_DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM_CUBEMAP:
+      return false;
+   case latte::SQ_TEX_DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+      return true;
+   default:
+      throw translate_exception(fmt::format("Unsupported sampler type {}", static_cast<unsigned>(type)));
+   }
+}
+
 static SamplerUsage
 registerSamplerID(State &state, unsigned id, bool isShadowOp)
 {
@@ -107,7 +126,8 @@ sampleFunc(State &state,
            const std::string &func,
            const std::string &offsetFunc,
            bool isShadowOp = false,
-           latte::SQ_SEL extraArg = latte::SQ_SEL_MASK)
+           latte::SQ_SEL extraArg = latte::SQ_SEL_MASK,
+           bool asInts = false)
 {
    auto dstSelX = inst.word1.DST_SEL_X();
    auto dstSelY = inst.word1.DST_SEL_Y();
@@ -180,7 +200,15 @@ sampleFunc(State &state,
          }
       }
 
+      if (asInts) {
+         state.out << "floatBitsToInt(";
+      }
+
       insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, samplerElements);
+
+      if (asInts) {
+         state.out << ")";
+      }
 
       switch (extraArg) {
       case latte::SQ_SEL_X:
@@ -226,6 +254,11 @@ sampleFunc(State &state,
          default:
             throw translate_exception(fmt::format("Unsupported sampler dim {}", static_cast<unsigned>(samplerDim)));
          }
+      }
+
+      if (getSamplerIsMsaa(samplerDim)) {
+         // Write the sample number if this is an MSAA sampler
+         state.out << ", 0";
       }
 
       state.out << ");";
@@ -344,6 +377,13 @@ SAMPLE_LZ(State &state, const latte::ControlFlowInst &cf, const latte::TextureFe
    sampleFunc(state, cf, inst, "textureLod", "textureLodOffset", false, latte::SQ_SEL_0);
 }
 
+static void
+LD(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+   // Texel Fetch
+   sampleFunc(state, cf, inst, "texelFetch", "texelFetchOffset", false, latte::SQ_SEL_MASK, true);
+}
+
 void
 registerTexFunctions()
 {
@@ -354,6 +394,7 @@ registerTexFunctions()
    registerInstruction(SQ_TEX_INST_SAMPLE_C, SAMPLE_C);
    registerInstruction(SQ_TEX_INST_SAMPLE_L, SAMPLE_L);
    registerInstruction(SQ_TEX_INST_SAMPLE_LZ, SAMPLE_LZ);
+   registerInstruction(SQ_TEX_INST_LD, LD);
 }
 
 } // namespace glsl2
