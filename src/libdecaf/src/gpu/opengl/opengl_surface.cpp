@@ -721,10 +721,12 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    case latte::SQ_TEX_DIM_1D:
       break;
    case latte::SQ_TEX_DIM_2D:
+   case latte::SQ_TEX_DIM_2D_MSAA:
    case latte::SQ_TEX_DIM_1D_ARRAY:
       surfaceKey ^= pitch;
       break;
    case latte::SQ_TEX_DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
    case latte::SQ_TEX_DIM_CUBEMAP:
    case latte::SQ_TEX_DIM_3D:
       surfaceKey ^= pitch ^ height<<16;

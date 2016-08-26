@@ -65,6 +65,7 @@ getSamplerArgCount(latte::SQ_TEX_DIM type, bool isShadowOp)
    case latte::SQ_TEX_DIM_1D:
       return 1 + (isShadowOp ? 1 : 0);
    case latte::SQ_TEX_DIM_2D:
+   case latte::SQ_TEX_DIM_2D_MSAA:
       return 2 + (isShadowOp ? 1 : 0);
    case latte::SQ_TEX_DIM_3D:
       decaf_assert(!isShadowOp, "Shadow3D samplers have special semantics we don't yet support");
@@ -72,11 +73,10 @@ getSamplerArgCount(latte::SQ_TEX_DIM type, bool isShadowOp)
    case latte::SQ_TEX_DIM_1D_ARRAY:
       return 1 + 1 + (isShadowOp ? 1 : 0);
    case latte::SQ_TEX_DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
       return 2 + 1 + (isShadowOp ? 1 : 0);
    case latte::SQ_TEX_DIM_CUBEMAP:
       return 3 + (isShadowOp ? 1 : 0);
-   case latte::SQ_TEX_DIM_2D_MSAA:
-   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
    default:
       throw translate_exception(fmt::format("Unsupported sampler type {}", static_cast<unsigned>(type)));
    }
@@ -215,14 +215,14 @@ sampleFunc(State &state,
             break;
          case latte::SQ_TEX_DIM_2D:
          case latte::SQ_TEX_DIM_2D_ARRAY:
+         case latte::SQ_TEX_DIM_2D_MSAA:
+         case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
             state.out << ", ivec2(" << offsetX << ", " << offsetY << ")";
             break;
          case latte::SQ_TEX_DIM_3D:
             state.out << ", ivec3(" << offsetX << ", " << offsetY << ", " << offsetZ << ")";
             break;
          case latte::SQ_TEX_DIM_CUBEMAP:
-         case latte::SQ_TEX_DIM_2D_MSAA:
-         case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
          default:
             throw translate_exception(fmt::format("Unsupported sampler dim {}", static_cast<unsigned>(samplerDim)));
          }
