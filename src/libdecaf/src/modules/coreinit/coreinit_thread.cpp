@@ -288,8 +288,11 @@ void
 OSDetachThread(OSThread *thread)
 {
    internal::lockScheduler();
-   decaf_check(thread);
-   decaf_check(internal::isThreadActiveNoLock(thread));
+
+   // HACK: Unfortunately this check is not valid in all games.  One Piece performs
+   //  OSJoinThread on a thread, and then subsequently calls OSDetachThread on it
+   //  for whetever reason.  Coreinit doesnt check this, so we can't do this check.
+   //decaf_check(internal::isThreadActiveNoLock(thread));
 
    thread->attr |= OSThreadAttributes::Detached;
 
