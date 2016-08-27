@@ -13,21 +13,20 @@ GX2ClearColor(GX2ColorBuffer *colorBuffer,
               float blue,
               float alpha)
 {
-   uint32_t addr256, aaAddr256;
-   addr256 = colorBuffer->surface.image.getAddress() >> 8;
+   auto cb_color_frag = latte::CB_COLOR0_FRAG::get(0);
+   auto cb_color_base = latte::CB_COLOR0_BASE::get(0)
+      .BASE_256B(colorBuffer->surface.image.getAddress() >> 8);
 
    if (colorBuffer->surface.aa != 0) {
-      aaAddr256 = colorBuffer->aaBuffer.getAddress() >> 8;
-   } else {
-      aaAddr256 = 0;
+      cb_color_frag = cb_color_frag.BASE_256B(colorBuffer->aaBuffer.getAddress() >> 8);
    }
 
    GX2InitColorBufferRegs(colorBuffer);
 
    pm4::write(pm4::DecafClearColor {
       red, green, blue, alpha,
-      addr256,
-      aaAddr256,
+      cb_color_base,
+      cb_color_frag,
       colorBuffer->regs.cb_color_size,
       colorBuffer->regs.cb_color_info,
       colorBuffer->regs.cb_color_view,
@@ -39,13 +38,19 @@ void
 DecafClearDepthStencil(GX2DepthBuffer *depthBuffer,
                        GX2ClearFlags clearFlags)
 {
+   auto db_depth_base = latte::DB_DEPTH_BASE::get(0)
+      .BASE_256B(depthBuffer->surface.image.getAddress() >> 8);
+
+   auto db_depth_htile_data_base = latte::DB_DEPTH_HTILE_DATA_BASE::get(0)
+      .BASE_256B(depthBuffer->hiZPtr.getAddress() >> 8);
+
    GX2InitDepthBufferRegs(depthBuffer);
 
    pm4::write(pm4::DecafClearDepthStencil {
       clearFlags,
-      depthBuffer->surface.image.getAddress() >> 8,
+      db_depth_base,
+      db_depth_htile_data_base,
       depthBuffer->regs.db_depth_info,
-      depthBuffer->hiZPtr.getAddress() >> 8,
       depthBuffer->regs.db_depth_size,
       depthBuffer->regs.db_depth_view,
    });

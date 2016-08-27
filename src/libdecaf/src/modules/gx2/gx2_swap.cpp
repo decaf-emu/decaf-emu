@@ -11,23 +11,23 @@ static uint32_t
 sSwapInterval = 1;
 
 void
-GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget scanTarget)
+GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer,
+                               GX2ScanTarget scanTarget)
 {
-   uint32_t addr256, aaAddr256;
-   addr256 = buffer->surface.image.getAddress() >> 8;
+   auto cb_color_frag = latte::CB_COLOR0_FRAG::get(0);
+   auto cb_color_base = latte::CB_COLOR0_BASE::get(0)
+      .BASE_256B(buffer->surface.image.getAddress() >> 8);
 
    if (buffer->surface.aa != 0) {
-      aaAddr256 = buffer->aaBuffer.getAddress() >> 8;
-   } else {
-      aaAddr256 = 0;
+      cb_color_frag = cb_color_frag.BASE_256B(buffer->aaBuffer.getAddress() >> 8);
    }
 
    GX2InitColorBufferRegs(buffer);
 
    pm4::write(pm4::DecafCopyColorToScan {
       scanTarget,
-      addr256,
-      aaAddr256,
+      cb_color_base,
+      cb_color_frag,
       buffer->surface.width,
       buffer->surface.height,
       buffer->regs.cb_color_size,
@@ -49,13 +49,15 @@ GX2SwapScanBuffers()
 }
 
 BOOL
-GX2GetLastFrame(GX2ScanTarget scanTarget, GX2Texture *texture)
+GX2GetLastFrame(GX2ScanTarget scanTarget,
+                GX2Texture *texture)
 {
    return FALSE;
 }
 
 BOOL
-GX2GetLastFrameGamma(GX2ScanTarget scanTarget, be_val<float> *gamma)
+GX2GetLastFrameGamma(GX2ScanTarget scanTarget,
+                     be_val<float> *gamma)
 {
    return FALSE;
 }

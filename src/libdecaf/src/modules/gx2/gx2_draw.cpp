@@ -17,7 +17,8 @@ GX2SetAttribBuffer(uint32_t index,
    res.id = (latte::SQ_VS_ATTRIB_RESOURCE_0 + index) * 7;
    res.baseAddress = buffer;
 
-   res.word1.SIZE = size - 1;
+   res.word1 = res.word1
+      .SIZE(size - 1);
 
    res.word2 = res.word2
       .STRIDE(stride);

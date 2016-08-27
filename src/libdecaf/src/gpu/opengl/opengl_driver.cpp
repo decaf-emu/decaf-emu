@@ -124,8 +124,7 @@ enum
 void
 GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
 {
-   auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
-   auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info, false);
+   auto buffer = getColorBuffer(data.cb_color_base, data.cb_color_size, data.cb_color_info, false);
    ScanBufferChain *target = nullptr;
 
    if (data.scanTarget == SCANTARGET_TV) {

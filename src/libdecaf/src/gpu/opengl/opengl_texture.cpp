@@ -193,14 +193,14 @@ bool GLDriver::checkActiveSamplers()
       auto sq_tex_sampler_word0 = getRegister<latte::SQ_TEX_SAMPLER_WORD0_N>(latte::Register::SQ_TEX_SAMPLER_WORD0_0 + 4 * (i * 3));
       auto sq_tex_sampler_word1 = getRegister<latte::SQ_TEX_SAMPLER_WORD1_N>(latte::Register::SQ_TEX_SAMPLER_WORD1_0 + 4 * (i * 3));
       auto sq_tex_sampler_word2 = getRegister<latte::SQ_TEX_SAMPLER_WORD2_N>(latte::Register::SQ_TEX_SAMPLER_WORD2_0 + 4 * (i * 3));
-
       auto &sampler = mPixelSamplers[i];
 
       // Create sampler object if this is the first time we're using it
       if (!sampler.object) {
          gl::glCreateSamplers(1, &sampler.object);
+
          if (decaf::config::gpu::debug) {
-            std::string label = fmt::format("pixel sampler {}", i);
+            auto label = fmt::format("pixel sampler {}", i);
             gl::glObjectLabel(gl::GL_SAMPLER, sampler.object, -1, label.c_str());
          }
       }

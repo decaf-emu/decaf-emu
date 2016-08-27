@@ -164,7 +164,9 @@ GX2CalcDepthBufferHiZInfo(GX2DepthBuffer *depthBuffer,
 }
 
 void
-GX2CalcColorBufferAuxInfo(GX2Surface *surface, be_val<uint32_t> *outSize, be_val<uint32_t> *outAlignment)
+GX2CalcColorBufferAuxInfo(GX2Surface *surface,
+                          be_val<uint32_t> *outSize,
+                          be_val<uint32_t> *outAlignment)
 {
    gLog->warn("Application called GX2CalcColorBufferAuxInfo");
    *outSize = 2048;
@@ -172,7 +174,8 @@ GX2CalcColorBufferAuxInfo(GX2Surface *surface, be_val<uint32_t> *outSize, be_val
 }
 
 void
-GX2SetColorBuffer(GX2ColorBuffer *colorBuffer, GX2RenderTarget target)
+GX2SetColorBuffer(GX2ColorBuffer *colorBuffer,
+                  GX2RenderTarget target)
 {
    using latte::Register;
    auto reg = [](unsigned id) { return static_cast<Register>(id); };

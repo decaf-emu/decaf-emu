@@ -18,8 +18,8 @@ bool GLDriver::checkActiveDepthBuffer()
    auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
    auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
    auto format = db_depth_info.FORMAT();
-   bool z_enable = db_depth_control.Z_ENABLE();
-   bool stencil_enable = db_depth_control.STENCIL_ENABLE();
+   auto z_enable = db_depth_control.Z_ENABLE();
+   auto stencil_enable = db_depth_control.STENCIL_ENABLE();
 
    // We unbind the depth buffer whenever depth testing is disabled so a
    //  size mismatch with color buffers doesn't clip render operations, but
@@ -28,12 +28,14 @@ bool GLDriver::checkActiveDepthBuffer()
    //  testing is enabled, we still have to bind the buffer to the stencil
    //  attachment.
    SurfaceBuffer *surface;
-   if (db_depth_base.BASE_256B) {
+
+   if (db_depth_base.BASE_256B()) {
       surface = getDepthBuffer(db_depth_base, db_depth_size, db_depth_info, false);
    } else {
       surface = nullptr;
    }
-   gl::GLuint surfaceObject = surface ? surface->active->object : 0;
+
+   auto surfaceObject = surface ? surface->active->object : 0;
 
    if (format != latte::DEPTH_8_24
       && format != latte::DEPTH_8_24_FLOAT
@@ -45,7 +47,6 @@ bool GLDriver::checkActiveDepthBuffer()
    if (surfaceObject != mDepthBufferCache.object
     || z_enable != mDepthBufferCache.depthBound
     || stencil_enable != mDepthBufferCache.stencilBound) {
-
       if (z_enable && stencil_enable) {
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_STENCIL_ATTACHMENT, surfaceObject, 0);
       } else if (!z_enable && !stencil_enable) {
@@ -54,15 +55,19 @@ bool GLDriver::checkActiveDepthBuffer()
          }
       } else if (z_enable) {
          decaf_check(!stencil_enable);
+
          if (mDepthBufferCache.stencilBound) {
             gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, 0, 0);
          }
+
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, surfaceObject, 0);
       } else {
          decaf_check(!z_enable && stencil_enable);
+
          if (mDepthBufferCache.depthBound) {
             gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, 0, 0);
          }
+
          gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, surfaceObject, 0);
       }
 
@@ -82,7 +87,7 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
                          latte::DB_DEPTH_INFO db_depth_info,
                          bool discardData)
 {
-   auto baseAddress = (db_depth_base.BASE_256B << 8) & 0xFFFFF800;
+   auto baseAddress = (db_depth_base.BASE_256B() << 8) & 0xFFFFF800;
    auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX();
    auto slice_tile_max = db_depth_size.SLICE_TILE_MAX();
    auto dbFormat = db_depth_info.FORMAT();

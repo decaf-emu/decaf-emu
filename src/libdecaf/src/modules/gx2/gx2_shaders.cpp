@@ -371,7 +371,8 @@ GX2SetVertexUniformBlock(uint32_t location,
    res.id = (latte::SQ_VS_BUF_RESOURCE_0 + location) * 7;
    res.baseAddress = data;
 
-   res.word1.SIZE = size - 1;
+   res.word1 = res.word1
+      .SIZE(size - 1);
 
    res.word2 = res.word2
       .STRIDE(16)
@@ -406,7 +407,9 @@ GX2SetPixelUniformBlock(uint32_t location,
    memset(&res, 0, sizeof(pm4::SetVtxResource));
    res.id = (latte::SQ_PS_BUF_RESOURCE_0 + location) * 7;
    res.baseAddress = data;
-   res.word1.SIZE = size - 1;
+
+   res.word1 = res.word1
+      .SIZE(size - 1);
 
    res.word2 = res.word2
       .STRIDE(16)
@@ -438,10 +441,12 @@ GX2SetGeometryUniformBlock(uint32_t location,
    decaf_check((mem::untranslate(data) & 0x000000FF) == 0);
 
    pm4::SetVtxResource res;
-   memset(&res, 0, sizeof(pm4::SetVtxResource));
    res.id = (latte::SQ_GS_BUF_RESOURCE_0 + location) * 7;
+   memset(&res, 0, sizeof(pm4::SetVtxResource));
    res.baseAddress = data;
-   res.word1.SIZE = size - 1;
+
+   res.word1 = res.word1
+      .SIZE(size - 1);
 
    res.word2 = res.word2
       .STRIDE(16)
@@ -683,7 +688,9 @@ GX2SetGeometryShaderInputRingBuffer(void *buffer,
    memset(&res, 0, sizeof(pm4::SetVtxResource));
    res.id = latte::SQ_GS_GSIN_RESOURCE * 7;
    res.baseAddress = buffer;
-   res.word1.SIZE = size - 1;
+
+   res.word1 = res.word1
+      .SIZE(size - 1);
 
    res.word2 = res.word2
       .STRIDE(4)
@@ -710,7 +717,9 @@ GX2SetGeometryShaderOutputRingBuffer(void *buffer,
    memset(&res, 0, sizeof(pm4::SetVtxResource));
    res.id = latte::SQ_VS_GSOUT_RESOURCE * 7;
    res.baseAddress = buffer;
-   res.word1.SIZE = size - 1;
+
+   res.word1 = res.word1
+      .SIZE(size - 1);
 
    res.word2 = res.word2
       .STRIDE(4)

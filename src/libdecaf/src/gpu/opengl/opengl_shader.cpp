@@ -177,27 +177,27 @@ bool GLDriver::checkActiveShader()
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
    bool isScreenSpace = (vgt_primitive_type.PRIM_TYPE() == latte::VGT_DI_PT_RECTLIST);
 
-   if (!pgm_start_fs.PGM_START) {
+   if (!pgm_start_fs.PGM_START()) {
       gLog->error("Fetch shader was not set");
       return false;
    }
 
-   if (!pgm_start_vs.PGM_START) {
+   if (!pgm_start_vs.PGM_START()) {
       gLog->error("Vertex shader was not set");
       return false;
    }
 
-   if (!vgt_strmout_en.STREAMOUT() && !pgm_start_ps.PGM_START) {
+   if (!vgt_strmout_en.STREAMOUT() && !pgm_start_ps.PGM_START()) {
       gLog->error("Pixel shader was not set (and transform feedback was not enabled)");
       return false;
    }
 
-   auto fsPgmAddress = pgm_start_fs.PGM_START << 8;
-   auto vsPgmAddress = pgm_start_vs.PGM_START << 8;
-   auto psPgmAddress = pgm_start_ps.PGM_START << 8;
-   auto fsPgmSize = pgm_size_fs.PGM_SIZE << 3;
-   auto vsPgmSize = pgm_size_vs.PGM_SIZE << 3;
-   auto psPgmSize = pgm_size_ps.PGM_SIZE << 3;
+   auto fsPgmAddress = pgm_start_fs.PGM_START() << 8;
+   auto vsPgmAddress = pgm_start_vs.PGM_START() << 8;
+   auto psPgmAddress = pgm_start_ps.PGM_START() << 8;
+   auto fsPgmSize = pgm_size_fs.PGM_SIZE() << 3;
+   auto vsPgmSize = pgm_size_vs.PGM_SIZE() << 3;
+   auto psPgmSize = pgm_size_ps.PGM_SIZE() << 3;
    auto z_order = db_shader_control.Z_ORDER();
    auto early_z = (z_order == latte::DB_EARLY_Z_THEN_LATE_Z || z_order == latte::DB_EARLY_Z_THEN_RE_Z);
    auto alphaTestFunc = sx_alpha_test_control.ALPHA_FUNC();
@@ -213,17 +213,25 @@ bool GLDriver::checkActiveShader()
    decaf_check(getRegister<uint32_t>(latte::Register::SQ_PGM_CF_OFFSET_ES) == 0);
    decaf_check(getRegister<uint32_t>(latte::Register::SQ_PGM_CF_OFFSET_FS) == 0);
 
+   // Make FS key
    auto fsShaderKey = static_cast<uint64_t>(fsPgmAddress) << 32;
+
+   // Make VS key
    auto vsShaderKey = static_cast<uint64_t>(vsPgmAddress) << 32;
    vsShaderKey ^= (isScreenSpace ? 1 : 0) << 31;
+
    if (vgt_strmout_en.STREAMOUT()) {
       vsShaderKey |= 1;
+
       for (auto i = 0u; i < latte::MaxStreamOutBuffers; ++i) {
          auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
          vsShaderKey ^= vgt_strmout_vtx_stride << (1 + 7 * i);
       }
    }
+
+   // Make PS key
    uint64_t psShaderKey;
+
    if (pa_cl_clip_cntl.RASTERISER_DISABLE()) {
       psShaderKey = 0;
    } else {
@@ -249,6 +257,7 @@ bool GLDriver::checkActiveShader()
    //  shaders need to be rebuilt
    if (pipeline.object) {
       std::unique_lock<std::mutex> mResourceMutex;
+
       if (invalidateShaderIfChanged_locked(pipeline.fetch, fsShaderKey, mFetchShaders)
        || invalidateShaderIfChanged_locked(pipeline.vertex, vsShaderKey, mVertexShaders)
        || invalidateShaderIfChanged_locked(pipeline.pixel, psShaderKey, mPixelShaders)) {
@@ -276,11 +285,10 @@ bool GLDriver::checkActiveShader()
       invalidateShaderIfChanged_locked(fetchShader, fsShaderKey, mFetchShaders);
 
       if (!fetchShader) {
-         fetchShader = new FetchShader;
-
          auto aluDivisor0 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_0);
          auto aluDivisor1 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_1);
 
+         fetchShader = new FetchShader {};
          fetchShader->cpuMemStart = fsPgmAddress;
          fetchShader->cpuMemEnd = fsPgmAddress + fsPgmSize;
          MurmurHash3_x64_128(mem::translate(fetchShader->cpuMemStart),
@@ -308,12 +316,12 @@ bool GLDriver::checkActiveShader()
 
          for (auto &attrib : fetchShader->attribs) {
             auto resourceId = attrib.buffer + latte::SQ_VS_RESOURCE_BASE;
+
             if (resourceId >= latte::SQ_VS_ATTRIB_RESOURCE_0 && resourceId < latte::SQ_VS_ATTRIB_RESOURCE_0 + 0x10) {
                auto attribBufferId = resourceId - latte::SQ_VS_ATTRIB_RESOURCE_0;
-
                auto type = getDataFormatGlType(attrib.format);
                auto components = getDataFormatComponents(attrib.format);
-               uint32_t divisor = 0;
+               auto divisor = 0u;
 
                gl::glEnableVertexArrayAttrib(fetchShader->object, attrib.location);
                gl::glVertexArrayAttribIFormat(fetchShader->object, attrib.location, components, type, attrib.offset);
@@ -446,6 +454,7 @@ bool GLDriver::checkActiveShader()
             // Create OpenGL Shader
             const gl::GLchar *code[] = { pixelShader->code.c_str() };
             pixelShader->object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
+
             if (decaf::config::gpu::debug) {
                std::string label = fmt::format("pixel shader @ 0x{:08X}", psPgmAddress);
                gl::glObjectLabel(gl::GL_PROGRAM, pixelShader->object, -1, label.c_str());
@@ -479,13 +488,16 @@ bool GLDriver::checkActiveShader()
       gl::glCreateProgramPipelines(1, &pipeline.object);
       if (decaf::config::gpu::debug) {
          std::string label;
+
          if (pipeline.pixel) {
             label = fmt::format("shader set: fs = 0x{:08X}, vs = 0x{:08X}, ps = 0x{:08X}", fsPgmAddress, vsPgmAddress, psPgmAddress);
          } else {
             label = fmt::format("shader set: fs = 0x{:08X}, vs = 0x{:08X}, ps = none", fsPgmAddress, vsPgmAddress);
          }
+
          gl::glObjectLabel(gl::GL_PROGRAM_PIPELINE, pipeline.object, -1, label.c_str());
       }
+
       gl::glUseProgramStages(pipeline.object, gl::GL_VERTEX_SHADER_BIT, pipeline.vertex->object);
       gl::glUseProgramStages(pipeline.object, gl::GL_FRAGMENT_SHADER_BIT, pipeline.pixel ? pipeline.pixel->object : 0);
    }
@@ -523,7 +535,8 @@ GLDriver::countModifiedUniforms(latte::Register firstReg,
       //  generation at the time of the last upload, so any uniforms whose
       //  update generation is at least that value need to be uploaded.
       //  Need to be careful with this comparison in case of wraparound!
-      uint32_t diff = mLastUniformUpdate[offset + (i-1)] - lastUniformUpdate;
+      auto diff = mLastUniformUpdate[offset + (i-1)] - lastUniformUpdate;
+
       if (diff <= 0x7FFFFFFF) {  // i.e. signed(diff) >= 0
          return i * 16;
       }
@@ -569,7 +582,7 @@ bool GLDriver::checkActiveUniforms()
             auto sq_alu_const_cache_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + 4 * i);
             auto sq_alu_const_buffer_size_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + 4 * i);
             auto used = mActiveShader->vertex->usedUniformBlocks[i];
-            gl::GLuint bufferObject;
+            auto bufferObject = gl::GLuint { 0 };
 
             if (!used || !sq_alu_const_buffer_size_vs) {
                bufferObject = 0;
@@ -599,7 +612,7 @@ bool GLDriver::checkActiveUniforms()
             auto sq_alu_const_cache_ps = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + 4 * i);
             auto sq_alu_const_buffer_size_ps = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + 4 * i);
             auto used = mActiveShader->pixel->usedUniformBlocks[i];
-            gl::GLuint bufferObject;
+            auto bufferObject = gl::GLuint { 0 };
 
             if (!used || !sq_alu_const_buffer_size_ps) {
                bufferObject = 0;
@@ -663,20 +676,21 @@ GLDriver::getDataBuffer(uint32_t address,
    //  driver can potentially wait just until that buffer is up to date
    //  without having to block on all other commands.
    auto shouldMap = USE_PERSISTENT_MAP && !buffer->isOutput;
-
    gl::glCreateBuffers(1, &buffer->object);
+
    if (decaf::config::gpu::debug) {
-      const char *type;
+      const char *type = "output-only";
+
       if (buffer->isInput) {
          type = buffer->isOutput ? "input/output" : "input-only";
-      } else {
-         type = "output-only";
       }
-      std::string label = fmt::format("{} buffer @ 0x{:08X}", type, address);
+
+      auto label = fmt::format("{} buffer @ 0x{:08X}", type, address);
       gl::glObjectLabel(gl::GL_BUFFER, buffer->object, -1, label.c_str());
    }
 
-   gl::BufferStorageMask usage = static_cast<gl::BufferStorageMask>(0);
+   auto usage = gl::BufferStorageMask::GL_NONE_BIT;
+
    if (buffer->isInput) {
       if (shouldMap) {
          usage |= gl::GL_MAP_WRITE_BIT;
@@ -684,12 +698,15 @@ GLDriver::getDataBuffer(uint32_t address,
          usage |= gl::GL_DYNAMIC_STORAGE_BIT;
       }
    }
+
    if (buffer->isOutput) {
       usage |= gl::GL_CLIENT_STORAGE_BIT;
    }
+
    if (shouldMap) {
       usage |= gl::GL_MAP_PERSISTENT_BIT;
    }
+
    gl::glNamedBufferStorage(buffer->object, size + BUFFER_PADDING, nullptr, usage);
 
    if (oldObject) {
@@ -697,18 +714,22 @@ GLDriver::getDataBuffer(uint32_t address,
          gl::glUnmapNamedBuffer(oldObject);
          buffer->mappedBuffer = nullptr;
       }
+
       gl::glCopyNamedBufferSubData(oldObject, buffer->object, 0, 0, std::min(oldSize, size));
       gl::glDeleteBuffers(1, &oldObject);
    }
 
    if (shouldMap) {
-      gl::BufferAccessMask access = gl::GL_MAP_PERSISTENT_BIT;
+      auto access = gl::GL_MAP_PERSISTENT_BIT;
+
       if (buffer->isInput) {
          access |= gl::GL_MAP_WRITE_BIT | gl::GL_MAP_FLUSH_EXPLICIT_BIT;
       }
+
       if (buffer->isOutput) {
          access |= gl::GL_MAP_READ_BIT;
       }
+
       buffer->mappedBuffer = gl::glMapNamedBufferRange(buffer->object, 0, size + BUFFER_PADDING, access);
    }
 
@@ -795,7 +816,7 @@ GLDriver::checkActiveAttribBuffers()
       return false;
    }
 
-   bool needMemoryBarrier = false;
+   auto needMemoryBarrier = false;
 
    for (auto i = 0u; i < latte::MaxAttributes; ++i) {
       auto resourceOffset = (latte::SQ_VS_ATTRIB_RESOURCE_0 + i) * 7;
@@ -804,10 +825,10 @@ GLDriver::checkActiveAttribBuffers()
       auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * resourceOffset);
       auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
 
-      auto addr = sq_vtx_constant_word0.BASE_ADDRESS;
-      auto size = sq_vtx_constant_word1.SIZE + 1;
+      auto addr = sq_vtx_constant_word0.BASE_ADDRESS();
+      auto size = sq_vtx_constant_word1.SIZE() + 1;
       auto stride = sq_vtx_constant_word2.STRIDE();
-      gl::GLuint bufferObject;
+      auto bufferObject = gl::GLuint { 0 };
 
       if (addr == 0 || size == 0) {
          bufferObject = 0;
@@ -939,8 +960,8 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 {
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
    auto spi_vs_out_config = getRegister<latte::SPI_VS_OUT_CONFIG>(latte::Register::SPI_VS_OUT_CONFIG);
-   FetchShader::Attrib *semanticAttribs[32];
-   std::memset(semanticAttribs, 0, sizeof(FetchShader::Attrib *) * 32);
+   std::array<FetchShader::Attrib *, 32> semanticAttribs;
+   semanticAttribs.fill(nullptr);
 
    glsl2::Shader shader;
    shader.type = glsl2::Shader::VertexShader;

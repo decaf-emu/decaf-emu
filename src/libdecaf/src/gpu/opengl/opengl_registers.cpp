@@ -245,21 +245,21 @@ GLDriver::applyRegister(latte::Register reg)
    case latte::Register::PA_SU_SC_MODE_CNTL:
    {
       auto pa_su_sc_mode_cntl = latte::PA_SU_SC_MODE_CNTL::get(value);
+      auto cullFace = gl::GL_NONE;
 
-      gl::GLenum cullFace;
       if (pa_su_sc_mode_cntl.CULL_FRONT() && pa_su_sc_mode_cntl.CULL_BACK()) {
          cullFace = gl::GL_FRONT_AND_BACK;
       } else if (pa_su_sc_mode_cntl.CULL_FRONT()) {
          cullFace = gl::GL_FRONT;
       } else if (pa_su_sc_mode_cntl.CULL_BACK()) {
          cullFace = gl::GL_BACK;
-      } else {
-         cullFace = gl::GL_NONE;
       }
 
       auto cullFaceEnable = (cullFace != gl::GL_NONE);
+
       if (mGLStateCache.cullFaceEnable != cullFaceEnable) {
          mGLStateCache.cullFaceEnable = cullFaceEnable;
+
          if (cullFaceEnable) {
             gl::glEnable(gl::GL_CULL_FACE);
          } else {
@@ -273,6 +273,7 @@ GLDriver::applyRegister(latte::Register reg)
       }
 
       auto frontFace = (pa_su_sc_mode_cntl.FACE() == latte::FACE_CW ? gl::GL_CW : gl::GL_CCW);
+
       if (mGLStateCache.frontFace != frontFace) {
          mGLStateCache.frontFace = frontFace;
          gl::glFrontFace(frontFace);
@@ -294,8 +295,10 @@ GLDriver::applyRegister(latte::Register reg)
 
       decaf_assert(pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE() == pa_cl_clip_cntl.ZCLIP_FAR_DISABLE(),
                    fmt::format("Inconsistent near/far depth clamp setting"));
+
       if (mGLStateCache.depthClamp != !pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE()) {
          mGLStateCache.depthClamp = !pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE();
+
          if (pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE()) {
             gl::glEnable(gl::GL_DEPTH_CLAMP);
          } else {
@@ -305,6 +308,7 @@ GLDriver::applyRegister(latte::Register reg)
 
       if (mGLStateCache.halfZClipSpace != pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {
          mGLStateCache.halfZClipSpace = pa_cl_clip_cntl.DX_CLIP_SPACE_DEF();
+
          if (pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {
             gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_ZERO_TO_ONE);
          } else {
@@ -319,6 +323,7 @@ GLDriver::applyRegister(latte::Register reg)
 
       if (mGLStateCache.primRestartEnable != vgt_multi_prim_ib_reset_en.RESET_EN()) {
          mGLStateCache.primRestartEnable = vgt_multi_prim_ib_reset_en.RESET_EN();
+
          if (vgt_multi_prim_ib_reset_en.RESET_EN()) {
             gl::glEnable(gl::GL_PRIMITIVE_RESTART);
          } else {

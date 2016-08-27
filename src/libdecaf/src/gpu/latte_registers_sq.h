@@ -107,17 +107,13 @@ BITFIELD(SQ_THREAD_RESOURCE_MGMT, uint32_t)
    BITFIELD_ENTRY(24, 8, uint32_t, NUM_ES_THREADS);
 BITFIELD_END
 
-union SQ_VTX_CONSTANT_WORD0_N
-{
-   uint32_t value;
-   uint32_t BASE_ADDRESS;
-};
+BITFIELD(SQ_VTX_CONSTANT_WORD0_N, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, BASE_ADDRESS);
+BITFIELD_END
 
-union SQ_VTX_CONSTANT_WORD1_N
-{
-   uint32_t value;
-   uint32_t SIZE;
-};
+BITFIELD(SQ_VTX_CONSTANT_WORD1_N, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, SIZE);
+BITFIELD_END
 
 BITFIELD(SQ_VTX_CONSTANT_WORD2_N, uint32_t)
    BITFIELD_ENTRY(0, 8, uint32_t, BASE_ADDRESS_HI);
@@ -197,46 +193,44 @@ BITFIELD(SQ_PGM_RESOURCES_FS, uint32_t)
 BITFIELD_END
 
 // Memory address of the (256-byte aligned) first CF instruction of the shader code for the fetch shader(FS)
-union SQ_PGM_START_FS
-{
-   uint32_t value;
-   uint32_t PGM_START;
-};
+BITFIELD(SQ_PGM_START_FS, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, PGM_START);
+BITFIELD_END
 
 // Size >> 3
-union SQ_PGM_SIZE_FS
-{
-   uint32_t value;
-   uint32_t PGM_SIZE;
-};
+BITFIELD(SQ_PGM_SIZE_FS, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, PGM_SIZE);
+BITFIELD_END
+
+// Memory address of the (256-byte aligned) first CF instruction of the shader code for the geometry shader(GS)
+BITFIELD(SQ_PGM_START_GS, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, PGM_START);
+BITFIELD_END
+
+// Size >> 3
+BITFIELD(SQ_PGM_SIZE_GS, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, PGM_SIZE);
+BITFIELD_END
 
 // Memory address of the (256-byte aligned) first CF instruction of the shader code for the fetch shader(VS)
-union SQ_PGM_START_VS
-{
-   uint32_t value;
-   uint32_t PGM_START;
-};
+BITFIELD(SQ_PGM_START_VS, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, PGM_START);
+BITFIELD_END
 
 // Size >> 3
-union SQ_PGM_SIZE_VS
-{
-   uint32_t value;
-   uint32_t PGM_SIZE;
-};
+BITFIELD(SQ_PGM_SIZE_VS, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, PGM_SIZE);
+BITFIELD_END
 
 // Memory address of the (256-byte aligned) first CF instruction of the shader code for the fetch shader(PS)
-union SQ_PGM_START_PS
-{
-   uint32_t value;
-   uint32_t PGM_START;
-};
+BITFIELD(SQ_PGM_START_PS, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, PGM_START);
+BITFIELD_END
 
 // Size >> 3
-union SQ_PGM_SIZE_PS
-{
-   uint32_t value;
-   uint32_t PGM_SIZE;
-};
+BITFIELD(SQ_PGM_SIZE_PS, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, PGM_SIZE);
+BITFIELD_END
 
 // Defines the exports from the Pixel Shader Program.
 BITFIELD(SQ_PGM_EXPORTS_PS, uint32_t)

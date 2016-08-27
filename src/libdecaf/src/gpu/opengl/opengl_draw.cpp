@@ -349,8 +349,7 @@ GLDriver::decafClearColor(const pm4::DecafClearColor &data)
    };
 
    // Find our colorbuffer to clear
-   auto cb_color_base = bit_cast<latte::CB_COLORN_BASE>(data.bufferAddr);
-   auto buffer = getColorBuffer(cb_color_base, data.cb_color_size, data.cb_color_info, true);
+   auto buffer = getColorBuffer(data.cb_color_base, data.cb_color_size, data.cb_color_info, true);
 
    // Bind color buffer
    gl::glNamedFramebufferTexture(mColorClearFrameBuffer, gl::GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
@@ -384,8 +383,7 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
                    || dbFormat == latte::DEPTH_X24_8_32_FLOAT);
 
    // Find our depthbuffer to clear
-   auto db_depth_base = bit_cast<latte::DB_DEPTH_BASE>(data.bufferAddr);
-   auto buffer = getDepthBuffer(db_depth_base, data.db_depth_size, data.db_depth_info, true);
+   auto buffer = getDepthBuffer(data.db_depth_base, data.db_depth_size, data.db_depth_info, true);
 
    // Bind depth buffer
    if (hasStencil) {
@@ -405,9 +403,11 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
 
    // Clear depth buffer
    auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
+
    if (!db_depth_control.Z_WRITE_ENABLE()) {
       gl::glDepthMask(gl::GL_TRUE);
    }
+
    gl::glDisable(gl::GL_SCISSOR_TEST);
 
    if (hasStencil) {
@@ -417,6 +417,7 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    }
 
    gl::glEnable(gl::GL_SCISSOR_TEST);
+
    if (!db_depth_control.Z_WRITE_ENABLE()) {
       gl::glDepthMask(gl::GL_FALSE);
    }
