@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "latte_enum_sq.h"
 #include "latte_enum_common.h"
 
