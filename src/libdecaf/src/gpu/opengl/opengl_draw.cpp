@@ -52,6 +52,15 @@ bool GLDriver::checkReadyDraw()
       return false;
    }
 
+   if (!checkAttribBuffersBound()) {
+      static bool hasWarned = false;
+      if (!hasWarned) {
+         gLog->warn("The application is performing draws with unbound attribute buffers.");
+         hasWarned = true;
+      }
+      return false;
+   }
+
    if (mFramebufferChanged) {
       auto fbStatus = gl::glCheckFramebufferStatus(gl::GL_FRAMEBUFFER);
 

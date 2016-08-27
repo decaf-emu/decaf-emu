@@ -407,6 +407,7 @@ private:
    bool checkActiveShader();
    bool checkActiveTextures();
    bool checkActiveUniforms();
+   bool checkAttribBuffersBound();
    bool checkViewport();
 
    DataBuffer *

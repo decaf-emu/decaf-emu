@@ -795,15 +795,6 @@ GLDriver::checkActiveAttribBuffers()
       return false;
    }
 
-   for (auto i = 0; i < mActiveShader->fetch->attribs.size(); ++i) {
-      auto &attrib = mActiveShader->fetch->attribs[i];
-      auto resourceOffset = (latte::SQ_VS_RESOURCE_BASE + attrib.buffer) * 7;
-      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
-      if (!sq_vtx_constant_word0.BASE_ADDRESS) {
-         return false;
-      }
-   }
-
    bool needMemoryBarrier = false;
 
    for (auto i = 0u; i < latte::MaxAttributes; ++i) {
@@ -839,6 +830,24 @@ GLDriver::checkActiveAttribBuffers()
 
    if (needMemoryBarrier) {
       gl::glMemoryBarrier(gl::GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+   }
+
+   return true;
+}
+
+bool
+GLDriver::checkAttribBuffersBound()
+{
+   // We assume that checkActiveAttribBuffers has already failed the
+   //  draw if there is something wrong at a higher level.
+
+   for (auto i = 0; i < mActiveShader->fetch->attribs.size(); ++i) {
+      auto &attrib = mActiveShader->fetch->attribs[i];
+      auto resourceOffset = (latte::SQ_VS_RESOURCE_BASE + attrib.buffer) * 7;
+      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
+      if (!sq_vtx_constant_word0.BASE_ADDRESS) {
+         return false;
+      }
    }
 
    return true;
