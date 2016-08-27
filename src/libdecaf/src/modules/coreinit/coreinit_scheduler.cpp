@@ -667,10 +667,12 @@ GameThreadEntry(uint32_t argc, void *argv)
          continue;
       }
 
-      if (loadedModule->entryPoint) {
-         auto moduleStart = kernel::loader::RplEntryPoint(loadedModule->entryPoint);
-
+      if (loadedModule->entryPoint && !loadedModule->entryCalled) {
          gLog->info("Executing module {} rpl_entry", loadedModule->name);
+
+         loadedModule->entryCalled = true;
+
+         auto moduleStart = kernel::loader::RplEntryPoint(loadedModule->entryPoint);
          moduleStart(loadedModule->handle, kernel::loader::RplEntryReasonLoad);
       }
    }

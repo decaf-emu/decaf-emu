@@ -122,6 +122,7 @@ struct LoadedModule
    ppcaddr_t tlsBase = 0;
    ppcsize_t tlsAlignShift = 0;
    ppcsize_t tlsSize = 0;
+   bool entryCalled = false;
    std::vector<LoadedSection> sections;
    std::map<std::string, ppcaddr_t> exports;
    std::map<std::string, Symbol> symbols;
