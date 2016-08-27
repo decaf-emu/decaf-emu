@@ -21,7 +21,4 @@ struct Buffer
 Buffer *
 getBuffer(uint32_t size);
 
-Buffer *
-flushBuffer(Buffer *buffer, uint32_t newSize);
-
 } // namespace pm4
