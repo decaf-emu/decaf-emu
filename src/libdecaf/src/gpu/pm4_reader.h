@@ -1,13 +1,19 @@
 #pragma once
-#include "common/decaf_assert.h"
 #include "pm4_buffer.h"
 #include "pm4_format.h"
 #include "virtual_ptr.h"
+#include <common/decaf_assert.h>
 #include <gsl.h>
 
 namespace pm4
 {
 
+/**
+ * Note: packet reader assumes the buffer has already been byte swapped to
+ * little endian before reading. This is because it returns pointers to the
+ * buffer, and we have to be able to return swapped memory. We cannot do an
+ * in place swap because that could modify the game's memory.
+ */
 class PacketReader
 {
 public:

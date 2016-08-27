@@ -1,4 +1,4 @@
-#include "gpu/pm4.h"
+#include "gpu/pm4_packets.h"
 #include "gpu/pm4_writer.h"
 #include "gx2_registers.h"
 

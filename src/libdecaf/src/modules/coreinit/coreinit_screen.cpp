@@ -4,7 +4,7 @@
 #include "common/decaf_assert.h"
 #include "common/log.h"
 #include "gpu/gpu_commandqueue.h"
-#include "gpu/pm4.h"
+#include "gpu/pm4_packets.h"
 #include "gpu/pm4_writer.h"
 #include "modules/gx2/gx2_display.h"
 #include "modules/gx2/gx2_event.h"

@@ -2,10 +2,10 @@
 #include "common/log.h"
 #include "common/platform.h"
 #include "glsl2_translate.h"
-#include "gpu/pm4.h"
 #include "gpu/latte_constants.h"
 #include "gpu/latte_contextstate.h"
 #include "gpu/pm4_buffer.h"
+#include "gpu/pm4_packets.h"
 #include "libdecaf/decaf_graphics.h"
 #include <chrono>
 #include <condition_variable>

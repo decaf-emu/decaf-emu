@@ -1,11 +1,11 @@
 #pragma once
-#include "common/decaf_assert.h"
-#include "common/log.h"
-#include "pm4.h"
 #include "pm4_buffer.h"
 #include "pm4_format.h"
+#include "pm4_packets.h"
 #include "latte_registers.h"
 #include "virtual_ptr.h"
+#include <common/decaf_assert.h>
+#include <common/log.h>
 #include <gsl.h>
 
 namespace pm4
@@ -74,7 +74,6 @@ public:
 
 protected:
    uint32_t mPayloadSize;
-
 };
 
 class PacketWriter
@@ -136,11 +135,13 @@ public:
    PacketWriter &operator()(const gsl::span<Type> &values)
    {
       auto size = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
-      memcpy(&mBuffer->buffer[mBuffer->curSize], values.data(), size * sizeof(uint32_t));
+      std::memcpy(&mBuffer->buffer[mBuffer->curSize], values.data(), size * sizeof(uint32_t));
+
       // We do the byte_swap here separately as Type may not be uint32_t sized
-      for (uint32_t i = 0; i < size; ++i) {
+      for (auto i = 0u; i < size; ++i) {
          mBuffer->buffer[mBuffer->curSize + i] = byte_swap(mBuffer->buffer[mBuffer->curSize + i]);
       }
+
       mBuffer->curSize += size;
       return *this;
    }
@@ -172,7 +173,6 @@ private:
    pm4::Buffer *mBuffer;
    uint32_t mTotalSize;
    uint32_t mSaveSize;
-
 };
 
 template<typename Type>

@@ -1,4 +1,5 @@
-#include "gpu/pm4.h"
+#include "gpu/pm4_packets.h"
+#include "gpu/pm4_writer.h"
 #include "gx2_cbpool.h"
 #include "gx2_contextstate.h"
 #include "gx2_displaylist.h"
@@ -9,7 +10,6 @@
 #include "common/log.h"
 #include "virtual_ptr.h"
 #include "ppcutils/wfunc_call.h"
-#include "gpu/pm4_writer.h"
 
 namespace gx2
 {

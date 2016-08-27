@@ -458,7 +458,7 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_translate.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_constants.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.h" />
-    <ClInclude Include="..\src\libdecaf\src\gpu\pm4.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_packets.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_buffer.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_format.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_reader.h" />
