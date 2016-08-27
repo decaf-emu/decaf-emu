@@ -42,11 +42,8 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          auto header3 = pm4::type3::Header::get(header.value);
          size = header3.size() + 1;
 
-         if (pos + size > buffer_size) {
-            gLog->error("Invalid packet type3 size: {}", size);
-         } else {
-            handlePacketType3(header3, gsl::as_span(&buffer[pos + 1], size));
-         }
+         decaf_check(pos + size <= buffer_size);
+         handlePacketType3(header3, gsl::as_span(&buffer[pos + 1], size));
          break;
       }
       case pm4::Header::Type0:
@@ -54,12 +51,8 @@ GLDriver::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          auto header0 = pm4::type0::Header::get(header.value);
          size = header0.count() + 1;
 
-         if (pos + size > buffer_size) {
-            gLog->error("Invalid packet type0 size: {}", size);
-         } else {
-            handlePacketType0(header0, gsl::as_span(&buffer[pos + 1], size));
-         }
-
+         decaf_check(pos + size <= buffer_size);
+         handlePacketType0(header0, gsl::as_span(&buffer[pos + 1], size));
          break;
       }
       case pm4::Header::Type2:
@@ -244,6 +237,7 @@ void GLDriver::setAluConsts(const pm4::SetAluConsts &data)
 
    auto firstUniform = offset / 4;
    auto lastUniform = (offset + data.values.size() - 1) / 4;
+
    for (auto i = firstUniform / 16; i <= lastUniform / 16; ++i) {
       mLastUniformUpdate[i] = mUniformUpdateGen;
    }
