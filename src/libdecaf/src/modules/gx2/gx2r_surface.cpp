@@ -22,6 +22,7 @@ getSurfaceData(GX2Surface *surface,
       *addr = surface->mipmaps.getAddress();
       *size = surface->mipmapSize;
    } else {
+      decaf_check(level > 0);
       auto curLevelOffset = 0u;
       auto nextLevelOffset = 0u;
 
@@ -29,7 +30,7 @@ getSurfaceData(GX2Surface *surface,
          curLevelOffset = surface->mipLevelOffset[level - 1];
       }
 
-      if (level + 1 >= surface->mipLevels) {
+      if (static_cast<uint32_t>(level + 1) >= surface->mipLevels) {
          nextLevelOffset = surface->mipmapSize;
       } else {
          nextLevelOffset = surface->mipLevelOffset[level];
