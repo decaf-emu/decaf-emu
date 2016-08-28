@@ -885,6 +885,12 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_commandqueue.cpp">
       <Filter>Source Files\gpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\pm4_capture.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\decaf_pm4replay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1679,8 +1685,14 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\gpu_flush.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_capture.h">
+      <Filter>Header Files\gpu</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_packets.h">
       <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\decaf_pm4replay.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

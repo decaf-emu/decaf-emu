@@ -1,5 +1,6 @@
 #include "gpu_commandqueue.h"
 #include "pm4_buffer.h"
+#include "pm4_capture.h"
 #include "modules/gx2/gx2_event.h"
 #include "modules/gx2/gx2_cbpool.h"
 #include "modules/coreinit/coreinit_time.h"
@@ -66,6 +67,7 @@ awaken()
 void
 queueCommandBuffer(pm4::Buffer *buf)
 {
+   captureCommandBuffer(buf);
    buf->submitTime = coreinit::OSGetTime();
    gx2::internal::setLastSubmittedTimestamp(buf->submitTime);
    gQueue.appendBuffer(buf);

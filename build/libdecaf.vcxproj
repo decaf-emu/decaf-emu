@@ -157,6 +157,7 @@
     <ClCompile Include="..\src\libdecaf\decaf_nullgraphicsdriver.cpp" />
     <ClCompile Include="..\src\libdecaf\decaf_input.cpp" />
     <ClCompile Include="..\src\libdecaf\decaf_nullinputdriver.cpp" />
+    <ClCompile Include="..\src\libdecaf\decaf_pm4replay.cpp" />
     <ClCompile Include="..\src\libdecaf\decaf_sound.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_analysis.cpp" />
@@ -222,6 +223,7 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_texture.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_viewport.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\pm4.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\pm4_capture.cpp" />
     <ClCompile Include="..\src\libdecaf\src\input\input.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\elf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel.cpp" />
@@ -397,6 +399,7 @@
     <ClInclude Include="..\src\libdecaf\decaf_input.h" />
     <ClInclude Include="..\src\libdecaf\decaf_nullgraphicsdriver.h" />
     <ClInclude Include="..\src\libdecaf\decaf_nullinputdriver.h" />
+    <ClInclude Include="..\src\libdecaf\decaf_pm4replay.h" />
     <ClInclude Include="..\src\libdecaf\decaf_sound.h" />
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger.h" />
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger_analysis.h" />
@@ -460,6 +463,7 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_packets.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_buffer.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_capture.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_format.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_reader.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers.h" />

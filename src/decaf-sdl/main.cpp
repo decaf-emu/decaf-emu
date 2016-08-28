@@ -34,7 +34,15 @@ getCommandLineParser()
                     optional {},
                     value<std::string> {});
 
-   auto input_options = parser.add_option_group("input Options")
+   auto gpu_options = parser.add_option_group("GPU Options")
+      .add_option("gpu-record",
+                  description { "Record a gpu pm4 trace." })
+      .add_option("gpu-debug",
+                  description { "Enable extra gpu debug info." })
+      .add_option("gpu-force-sync",
+                  description { "Force rendering to sync with gpu flips." });
+
+   auto input_options = parser.add_option_group("Input Options")
       .add_option("gamepad-type",
                   description { "Select the input type for the emulated GamePad." },
                   default_value<std::string> { "keyboard" },
@@ -104,6 +112,7 @@ getCommandLineParser()
                   default_value<double> { 1.0 });
 
    parser.add_command("play")
+      .add_option_group(gpu_options)
       .add_option_group(input_options)
       .add_option_group(jit_options)
       .add_option_group(log_options)
@@ -185,6 +194,18 @@ start(excmd::parser &parser,
 
    if (options.has("jit")) {
       decaf::config::jit::enabled = true;
+   }
+
+   if (options.has("gpu-debug")) {
+      decaf::config::gpu::debug = true;
+   }
+
+   if (options.has("gpu-force-sync")) {
+      config::gpu::force_sync = true;
+   }
+
+   if (options.has("gpu-record")) {
+      decaf::config::gpu::record_trace = true;
    }
 
    if (options.has("log-no-stdout")) {

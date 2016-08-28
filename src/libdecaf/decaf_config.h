@@ -30,7 +30,10 @@ extern bool debug;
 // TODO: should really be a std::set, but cereal doesn't support those...
 extern std::vector<unsigned> debug_filters;
 
-}
+//! Enable PM4 tracing
+extern bool record_trace;
+
+} // namespace gpu
 
 namespace gx2
 {

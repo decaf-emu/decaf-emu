@@ -1,3 +1,5 @@
+#include "decaf_config.h"
+#include "gpu/pm4_capture.h"
 #include "gpu/pm4_packets.h"
 #include "gpu/pm4_writer.h"
 #include "gx2_cbpool.h"
@@ -7,9 +9,10 @@
 #include "gx2_state.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"
-#include "common/log.h"
-#include "virtual_ptr.h"
 #include "ppcutils/wfunc_call.h"
+#include "virtual_ptr.h"
+#include <common/log.h>
+#include <common/platform_dir.h>
 
 namespace gx2
 {
@@ -21,17 +24,31 @@ void
 GX2Init(be_val<uint32_t> *attributes)
 {
    virtual_ptr<uint32_t> cbPoolBase = nullptr;
-   uint32_t cbPoolSize = 0x400000;
    virtual_ptr<char *> argv = nullptr;
-   uint32_t argc = 0;
+   auto cbPoolSize = 0x400000u;
+   auto argc = 0u;
+
+   if (decaf::config::gpu::record_trace) {
+      for (auto i = 0u; i < 256u; ++i) {
+         auto filename = fmt::format("trace{}.pm4", i);
+
+         if (platform::fileExists(filename)) {
+            continue;
+         }
+
+         gLog->info("Recording pm4 trace as {}", filename);
+         pm4::captureStart(filename);
+         break;
+      }
+   }
 
    // Set main gx2 core
    gMainCoreId = coreinit::OSGetCoreId();
 
    // Parse attributes
    while (attributes && *attributes != GX2InitAttrib::End) {
-      uint32_t id = *(attributes++);
-      uint32_t value = *(attributes++);
+      auto id = *(attributes++);
+      auto value = *(attributes++);
 
       switch (id) {
       case GX2InitAttrib::CommandBufferPoolBase:
