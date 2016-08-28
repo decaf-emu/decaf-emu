@@ -153,6 +153,10 @@ LCLoadDMABlocks(void *dst,
                 const void *src,
                 uint32_t size)
 {
+   // Signal the GPU to update the source range if necessary, as with
+   //  DCInvalidateRange().
+   gpu::notifyGpuFlush(const_cast<void *>(src), size);
+
    if (size == 0) {
       size = 128;
    }

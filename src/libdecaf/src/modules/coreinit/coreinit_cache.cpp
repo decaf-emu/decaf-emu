@@ -14,6 +14,9 @@ void
 DCInvalidateRange(void *addr, uint32_t size)
 {
    // TODO: DCInvalidateRange
+
+   // Also signal the GPU to update the memory range.
+   gpu::notifyGpuFlush(addr, size);
 }
 
 

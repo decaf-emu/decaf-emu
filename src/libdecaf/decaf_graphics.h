@@ -16,8 +16,12 @@ public:
    virtual void stop() = 0;
    virtual float getAverageFPS() = 0;
 
-   virtual void notifyCpuFlush(void *ptr, uint32_t size) = 0;  // May be called from any thread!
-   virtual void notifyGpuFlush(void *ptr, uint32_t size) = 0;  // May be called from any thread!
+   // Called for stores to emulated physical RAM, such as via DCFlushRange().
+   //  May be called from any CPU core!
+   virtual void notifyCpuFlush(void *ptr, uint32_t size) = 0;
+   // Called when the emulated CPU is about to read from emulated physical RAM,
+   //  such as after DCInvalidateRange().  May be called from any CPU core!
+   virtual void notifyGpuFlush(void *ptr, uint32_t size) = 0;
 };
 
 class OpenGLDriver : public GraphicsDriver

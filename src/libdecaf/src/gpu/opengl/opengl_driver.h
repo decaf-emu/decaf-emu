@@ -1,6 +1,6 @@
 #pragma once
-#include "common/platform.h"
 #include "common/log.h"
+#include "common/platform.h"
 #include "glsl2_translate.h"
 #include "gpu/pm4.h"
 #include "gpu/latte_constants.h"
@@ -12,6 +12,7 @@
 #include <exception>
 #include <glbinding/gl/gl.h>
 #include <gsl.h>
+#include <list>
 #include <map>
 #include <mutex>
 #include <queue>
@@ -276,6 +277,16 @@ struct GLStateCache
    gl::GLuint primRestartIndex;
 };
 
+struct RemoteThreadTask
+{
+   std::function<void()> func;
+   std::condition_variable completionCV;
+
+   RemoteThreadTask(std::function<void()> func) : func(func)
+   {
+   }
+};
+
 using GLContext = uint64_t;
 
 class GLDriver : public decaf::OpenGLDriver
@@ -442,6 +453,9 @@ private:
 
    void runCommandBuffer(uint32_t *buffer, uint32_t size);
 
+   void runOnGLThread(std::function<void()> func);
+   void runRemoteThreadTasks();
+
    template<typename Type>
    Type getRegister(uint32_t id)
    {
@@ -527,6 +541,9 @@ private:
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;
    std::chrono::time_point<std::chrono::system_clock> mLastSwap;
    duration_system_clock mAverageFrameTime;
+
+   std::mutex mTaskListMutex;  // Protects mTaskList
+   std::list<RemoteThreadTask> mTaskList;
 
 #ifdef PLATFORM_WINDOWS
    uint64_t mDeviceContext = 0;

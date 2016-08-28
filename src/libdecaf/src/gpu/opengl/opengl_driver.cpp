@@ -375,10 +375,7 @@ GLDriver::surfaceSync(const pm4::SurfaceSync &data)
          auto offset = std::max(memStart, buffer->cpuMemStart) - buffer->cpuMemStart;
          auto size = (std::min(memEnd, buffer->cpuMemEnd) - buffer->cpuMemStart) - offset;
 
-         if (buffer->isOutput && shaderExport) {
-            downloadDataBuffer(buffer, offset, size);
-            buffer->dirtyMemory = false;
-         } else if (buffer->isInput && buffer->dirtyMemory && (shaders || surfaces)) {
+         if (buffer->isInput && buffer->dirtyMemory && (shaders || surfaces)) {
             uploadDataBuffer(buffer, offset, size);
             buffer->dirtyMemory = false;
          }
@@ -620,6 +617,42 @@ GLDriver::executeBuffer(pm4::Buffer *buffer)
 }
 
 void
+GLDriver::runOnGLThread(std::function<void()> func)
+{
+   std::unique_lock<std::mutex> lock(mTaskListMutex);
+
+   mTaskList.emplace_back(func);
+   auto taskIterator = mTaskList.end();
+   --taskIterator;
+
+   // Submit a dummy command buffer in case the GPU is idle
+   // (TODO: use a separate wakeup signal shared between command buffers
+   //  and tasks instead of waiting on the command buffer queue directly)
+   static const uint32_t nopPacket = byte_swap(
+      pm4::type2::Header::get(0).type(pm4::Header::Type2).value);
+   pm4::Buffer nopBuffer;
+   nopBuffer.buffer = const_cast<uint32_t *>(&nopPacket);
+   nopBuffer.curSize = sizeof(nopPacket);
+   nopBuffer.maxSize = sizeof(nopPacket);
+   gpu::queueCommandBuffer(&nopBuffer);
+
+   taskIterator->completionCV.wait(lock);
+
+   mTaskList.erase(taskIterator);
+}
+
+void
+GLDriver::runRemoteThreadTasks()
+{
+   std::unique_lock<std::mutex> lock(mTaskListMutex);
+
+   for (auto &i : mTaskList) {
+      i.func();
+      i.completionCV.notify_all();
+   }
+}
+
+void
 GLDriver::notifyCpuFlush(void *ptr,
                          uint32_t size)
 {
@@ -672,6 +705,24 @@ void
 GLDriver::notifyGpuFlush(void *ptr,
                          uint32_t size)
 {
+   std::unique_lock<std::mutex> lock(mResourceMutex);
+
+   auto memStart = mem::untranslate(ptr);
+   auto memEnd = memStart + size;
+
+   for (auto &i : mDataBuffers) {
+      DataBuffer *buffer = &i.second;
+      if (buffer->isOutput && buffer->cpuMemStart < memEnd && buffer->cpuMemEnd > memStart) {
+         auto offset = std::max(memStart, buffer->cpuMemStart) - buffer->cpuMemStart;
+         auto size = (std::min(memEnd, buffer->cpuMemEnd) - buffer->cpuMemStart) - offset;
+
+         runOnGLThread([=](){
+            downloadDataBuffer(buffer, offset, size);
+         });
+
+         buffer->dirtyMemory = false;
+      }
+   }
 }
 
 void
