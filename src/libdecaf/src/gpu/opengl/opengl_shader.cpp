@@ -866,7 +866,8 @@ GLDriver::checkAttribBuffersBound()
       auto &attrib = mActiveShader->fetch->attribs[i];
       auto resourceOffset = (latte::SQ_VS_RESOURCE_BASE + attrib.buffer) * 7;
       auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
-      if (!sq_vtx_constant_word0.BASE_ADDRESS) {
+
+      if (!sq_vtx_constant_word0.BASE_ADDRESS()) {
          return false;
       }
    }
