@@ -38,8 +38,10 @@ bool GLDriver::checkActiveDepthBuffer()
    auto surfaceObject = surface ? surface->active->object : 0;
 
    if (format != latte::DEPTH_8_24
-      && format != latte::DEPTH_8_24_FLOAT
-      && format != latte::DEPTH_X24_8_32_FLOAT) {
+    && format != latte::DEPTH_8_24_FLOAT
+    && format != latte::DEPTH_X8_24
+    && format != latte::DEPTH_X8_24_FLOAT
+    && format != latte::DEPTH_X24_8_32_FLOAT) {
       // You cannot bind a stencil buffer if the framebuffer does not support it.
       stencil_enable = false;
    }
