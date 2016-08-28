@@ -734,11 +734,12 @@ GLDriver::syncPoll(const SwapFunction &swapFunc)
 
    mSwapFunc = swapFunc;
 
-   if (auto buffer = gpu::tryUnqueueCommandBuffer()) {
+   while (auto buffer = gpu::tryUnqueueCommandBuffer()) {
       executeBuffer(buffer);
-   } else {
       checkSyncObjects();
    }
+
+   checkSyncObjects();
 }
 
 void
