@@ -14,7 +14,8 @@ namespace internal
 {
 
 void
-initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size);
+initCommandBufferPool(virtual_ptr<uint32_t> base,
+                      uint32_t size);
 
 pm4::Buffer *
 flushCommandBuffer(uint32_t neededSize);
@@ -29,13 +30,16 @@ void
 padCommandBuffer(pm4::Buffer *buffer);
 
 void
-queueDisplayList(uint32_t *buffer, uint32_t size);
+queueDisplayList(uint32_t *buffer,
+                 uint32_t size);
 
 bool
-getUserCommandBuffer(uint32_t **buffer, uint32_t *maxSize);
+getUserCommandBuffer(uint32_t **buffer,
+                     uint32_t *maxSize);
 
 void
-beginUserCommandBuffer(uint32_t *buffer, uint32_t size);
+beginUserCommandBuffer(uint32_t *buffer,
+                       uint32_t size);
 
 uint32_t
 endUserCommandBuffer(uint32_t *buffer);

@@ -34,7 +34,7 @@ setInterruptHandler(InterruptHandler handler)
 void
 interrupt(int core_idx, uint32_t flags)
 {
-   std::unique_lock<std::mutex> lock{ gInterruptMutex };
+   std::unique_lock<std::mutex> lock { gInterruptMutex };
    gCore[core_idx].interrupt.fetch_or(flags);
    gInterruptCondition.notify_all();
 }

@@ -129,12 +129,12 @@ loadState(GX2ContextState *state, bool skipLoad)
 {
    internal::enableStateShadowing();
 
-   pm4::write(pm4::LoadConfigReg{
+   pm4::write(pm4::LoadConfigReg {
       state->shadowState.config,
       skipLoad ? EmptyRangeSpan : gsl::as_span(ConfigRegisterRange)
    });
 
-   pm4::write(pm4::LoadContextReg{
+   pm4::write(pm4::LoadContextReg {
       state->shadowState.context,
       skipLoad ? EmptyRangeSpan : gsl::as_span(ContextRegisterRange)
    });

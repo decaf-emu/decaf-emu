@@ -832,6 +832,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
       if (!discardData) {
          copyHostSurface(buffer.master, buffer.active, dim);
       }
+
       buffer.active = buffer.master;
    }
 

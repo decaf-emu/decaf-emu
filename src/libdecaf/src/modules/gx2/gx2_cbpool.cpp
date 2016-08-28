@@ -51,7 +51,8 @@ static pm4::Buffer *
 allocateCommandBuffer(uint32_t size);
 
 void
-initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size)
+initCommandBufferPool(virtual_ptr<uint32_t> base,
+                      uint32_t size)
 {
    auto core = coreinit::OSGetCoreId();
    decaf_check(gx2::internal::getMainCoreId() == core);
@@ -65,7 +66,8 @@ initCommandBufferPool(virtual_ptr<uint32_t> base, uint32_t size)
 }
 
 static uint32_t *
-allocateFromPool(uint32_t wantedSize, uint32_t &allocatedSize)
+allocateFromPool(uint32_t wantedSize,
+                 uint32_t &allocatedSize)
 {
    std::unique_lock<std::mutex> lock(sBufferPoolMutex);
 
@@ -111,14 +113,17 @@ allocateFromPool(uint32_t wantedSize, uint32_t &allocatedSize)
    }
 
    allocatedSize = std::min(0x20000u, availableSize);
-   uint32_t *allocatedBuffer = sBufferPoolHeadPtr;
+
+   auto allocatedBuffer = sBufferPoolHeadPtr;
    sBufferPoolHeadPtr += allocatedSize;
 
    return allocatedBuffer;
 }
 
 static void
-returnToPool(uint32_t *buffer, uint32_t usedSize, uint32_t originalSize)
+returnToPool(uint32_t *buffer,
+             uint32_t usedSize,
+             uint32_t originalSize)
 {
    std::unique_lock<std::mutex> lock(sBufferPoolMutex);
 
@@ -133,7 +138,8 @@ returnToPool(uint32_t *buffer, uint32_t usedSize, uint32_t originalSize)
 }
 
 static void
-freeToPool(uint32_t *buffer, uint32_t size)
+freeToPool(uint32_t *buffer,
+           uint32_t size)
 {
    std::unique_lock<std::mutex> lock(sBufferPoolMutex);
 
@@ -157,6 +163,7 @@ allocateBufferObj()
 {
    while (true) {
       auto buffer = sBufferItemPool.load(std::memory_order_relaxed);
+
       if (buffer == nullptr) {
          break;
       }
@@ -201,6 +208,7 @@ allocateCommandBuffer(uint32_t size)
    // Lets try to get ourselves a buffer from the pool
    uint32_t *allocatedBuffer = nullptr;
    uint32_t allocatedSize = 0;
+
    while (!allocatedBuffer) {
       allocatedBuffer = allocateFromPool(size, allocatedSize);
 
@@ -337,7 +345,8 @@ padCommandBuffer(pm4::Buffer *buffer)
 }
 
 void
-queueDisplayList(uint32_t *buffer, uint32_t size)
+queueDisplayList(uint32_t *buffer,
+                 uint32_t size)
 {
    // Set up our buffer object
    auto cb = allocateBufferObj();
@@ -352,7 +361,8 @@ queueDisplayList(uint32_t *buffer, uint32_t size)
 }
 
 bool
-getUserCommandBuffer(uint32_t **buffer, uint32_t *maxSize)
+getUserCommandBuffer(uint32_t **buffer,
+                     uint32_t *maxSize)
 {
    auto core = coreinit::OSGetCoreId();
    auto &cb = sActiveBuffer[core];
@@ -374,7 +384,8 @@ getUserCommandBuffer(uint32_t **buffer, uint32_t *maxSize)
 }
 
 void
-beginUserCommandBuffer(uint32_t *buffer, uint32_t size)
+beginUserCommandBuffer(uint32_t *buffer,
+                       uint32_t size)
 {
    auto core = coreinit::OSGetCoreId();
 

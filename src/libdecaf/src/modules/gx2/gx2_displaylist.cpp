@@ -12,13 +12,16 @@ namespace gx2
 {
 
 void
-GX2BeginDisplayList(void *displayList, uint32_t bytes)
+GX2BeginDisplayList(void *displayList,
+                    uint32_t bytes)
 {
    GX2BeginDisplayListEx(displayList, bytes, TRUE);
 }
 
 void
-GX2BeginDisplayListEx(void *displayList, uint32_t bytes, BOOL unk1)
+GX2BeginDisplayListEx(void *displayList,
+                      uint32_t bytes,
+                      BOOL unk1)
 {
    internal::beginUserCommandBuffer(reinterpret_cast<uint32_t *>(displayList), bytes / 4);
 }
@@ -36,7 +39,8 @@ GX2GetDisplayListWriteStatus()
 }
 
 BOOL
-GX2GetCurrentDisplayList(be_ptr<void> *outDisplayList, be_val<uint32_t> *outSize)
+GX2GetCurrentDisplayList(be_ptr<void> *outDisplayList,
+                         be_val<uint32_t> *outSize)
 {
    uint32_t *displayList = nullptr;
    uint32_t size = 0;
@@ -57,20 +61,23 @@ GX2GetCurrentDisplayList(be_ptr<void> *outDisplayList, be_val<uint32_t> *outSize
 }
 
 void
-GX2DirectCallDisplayList(void *displayList, uint32_t bytes)
+GX2DirectCallDisplayList(void *displayList,
+                         uint32_t bytes)
 {
    GX2Flush();
    internal::queueDisplayList(reinterpret_cast<uint32_t*>(displayList), bytes / 4);
 }
 
 void
-GX2CallDisplayList(void *displayList, uint32_t bytes)
+GX2CallDisplayList(void *displayList,
+                   uint32_t bytes)
 {
    pm4::write(pm4::IndirectBufferCall { displayList, bytes / 4 });
 }
 
 void
-GX2CopyDisplayList(void *displayList, uint32_t bytes)
+GX2CopyDisplayList(void *displayList,
+                   uint32_t bytes)
 {
    // Copy the display list to the current command buffer
    auto words = bytes / 4;
