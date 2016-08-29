@@ -95,7 +95,7 @@ MPStopTaskQ(MPTaskQueue *queue)
 {
    OSUninterruptibleSpinLock_Acquire(&queue->lock);
 
-   if (queue->state == MPTaskQueueState::Ready) {
+   if (queue->state != MPTaskQueueState::Ready) {
       OSUninterruptibleSpinLock_Release(&queue->lock);
       return FALSE;
    }
