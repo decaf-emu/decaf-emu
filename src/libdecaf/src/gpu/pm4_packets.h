@@ -291,8 +291,8 @@ struct DrawIndexImmd
    }
 };
 
-// This structure should only be used to WRITE 16 bit big endian indices
-struct DrawIndexImmdWriteOnly16BE
+// This structure should only be used to WRITE 16 bit little endian indices
+struct DrawIndexImmdWriteOnly16LE
 {
    static const auto Opcode = type3::DRAW_INDEX_IMMD;
 
@@ -307,10 +307,15 @@ struct DrawIndexImmdWriteOnly16BE
       se(drawInitiator);
 
       // Hack in a custom write!
-      for (auto i = 0u; i > indices.size(); i += 2) {
+      for (auto i = 0u; i < indices.size(); i += 2) {
          auto index0 = static_cast<uint32_t>(indices[i + 0]);
-         auto index1 = static_cast<uint32_t>(indices[i + 1]);
-         auto word = (index1 >> 16) | (index0 << 16);
+         auto index1 = uint32_t { 0 };
+
+         if (i + 1 < indices.size()) {
+            index1 = indices[i + 1];
+         }
+
+         auto word = static_cast<uint32_t>(index1 | (index0 << 16));
          se(word);
       }
    }

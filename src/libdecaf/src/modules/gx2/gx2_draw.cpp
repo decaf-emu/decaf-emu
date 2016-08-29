@@ -144,11 +144,11 @@ GX2DrawIndexedImmediateEx(GX2PrimitiveMode mode,
       decaf_abort(fmt::format("Invalid index_type {}", index_type));
    }
 
-   if (indexType == GX2IndexType::U16) {
-      pm4::write(pm4::DrawIndexImmdWriteOnly16BE {
+   if (indexType == GX2IndexType::U16_LE) {
+      pm4::write(pm4::DrawIndexImmdWriteOnly16LE {
          count,
          vgt_draw_initiator,
-         gsl::as_span(reinterpret_cast<uint16_t *>(indices), numWords)
+         gsl::as_span(reinterpret_cast<uint16_t *>(indices), count)
       });
    } else {
       pm4::write(pm4::DrawIndexImmd {
