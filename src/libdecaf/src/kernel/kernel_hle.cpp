@@ -10,6 +10,7 @@
 #include "modules/gx2/gx2.h"
 #include "modules/mic/mic.h"
 #include "modules/nn_ac/nn_ac.h"
+#include "modules/nn_aoc/nn_aoc.h"
 #include "modules/nn_acp/nn_acp.h"
 #include "modules/nn_act/nn_act.h"
 #include "modules/nn_boss/nn_boss.h"
@@ -135,6 +136,7 @@ initialiseHleMmodules()
    gx2::Module::RegisterFunctions();
    mic::Module::RegisterFunctions();
    nn::ac::Module::RegisterFunctions();
+   nn::aoc::Module::RegisterFunctions();
    nn::acp::Module::RegisterFunctions();
    nn::act::Module::RegisterFunctions();
    nn::boss::Module::RegisterFunctions();
@@ -159,6 +161,7 @@ initialiseHleMmodules()
    registerHleModule("gx2.rpl", new gx2::Module{});
    registerHleModule("mic.rpl", new mic::Module{});
    registerHleModule("nn_ac.rpl", new nn::ac::Module{});
+   registerHleModule("nn_aoc.rpl", new nn::aoc::Module {});
    registerHleModule("nn_acp.rpl", new nn::acp::Module{});
    registerHleModule("nn_act.rpl", new nn::act::Module{});
    registerHleModule("nn_boss.rpl", new nn::boss::Module{});
