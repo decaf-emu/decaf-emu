@@ -180,6 +180,7 @@ struct DecafCopySurface
    uint32_t dstWidth;
    uint32_t dstHeight;
    uint32_t dstDepth;
+   uint32_t dstSamples;
    latte::SQ_TEX_DIM dstDim;
    latte::SQ_DATA_FORMAT dstFormat;
    latte::SQ_NUM_FORMAT dstNumFormat;
@@ -195,6 +196,7 @@ struct DecafCopySurface
    uint32_t srcWidth;
    uint32_t srcHeight;
    uint32_t srcDepth;
+   uint32_t srcSamples;
    latte::SQ_TEX_DIM srcDim;
    latte::SQ_DATA_FORMAT srcFormat;
    latte::SQ_NUM_FORMAT srcNumFormat;
@@ -213,6 +215,7 @@ struct DecafCopySurface
       se(dstWidth);
       se(dstHeight);
       se(dstDepth);
+      se(dstSamples);
       se(dstDim);
       se(dstFormat);
       se(dstNumFormat);
@@ -228,6 +231,7 @@ struct DecafCopySurface
       se(srcWidth);
       se(srcHeight);
       se(srcDepth);
+      se(srcSamples);
       se(srcDim);
       se(srcFormat);
       se(srcNumFormat);

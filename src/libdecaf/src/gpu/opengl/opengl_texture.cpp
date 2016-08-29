@@ -77,6 +77,11 @@ bool GLDriver::checkActiveTextures()
       auto dim = sq_tex_resource_word0.DIM();
       auto swizzle = sq_tex_resource_word2.SWIZZLE() << 8;
       auto isDepthBuffer = !!sq_tex_resource_word0.TILE_TYPE();
+      auto samples = 0u;
+
+      if (dim == latte::SQ_TEX_DIM_2D_MSAA || dim == latte::SQ_TEX_DIM_2D_ARRAY_MSAA) {
+         samples = 1 << sq_tex_resource_word5.LAST_LEVEL();
+      }
 
       // Check to make sure the incoming swizzle makes sense...  If this assertion ever
       //  fails to hold, it indicates that the pipe bank swizzle bit might be being used
@@ -86,7 +91,7 @@ bool GLDriver::checkActiveTextures()
       decaf_check((baseAddress & 0x7FF) == swizzle);
 
       // Get the surface
-      auto buffer = getSurfaceBuffer(baseAddress, pitch, width, height, depth, dim, format, numFormat, formatComp, degamma, isDepthBuffer, tileMode, false, false);
+      auto buffer = getSurfaceBuffer(baseAddress, pitch, width, height, depth, samples, dim, format, numFormat, formatComp, degamma, isDepthBuffer, tileMode, false, false);
 
       if (buffer->active->object != mPixelTextureCache[i].surfaceObject
        || sq_tex_resource_word4.value != mPixelTextureCache[i].word4) {

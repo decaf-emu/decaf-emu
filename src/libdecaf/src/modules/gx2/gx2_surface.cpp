@@ -429,6 +429,7 @@ GX2CopySurface(GX2Surface *src,
    auto dstForceDegamma = false;
    auto dstPitch = dst->pitch;
    auto dstDepth = dst->depth;
+   auto dstSamples = 0u;
 
    if (dst->format & GX2AttribFormatFlags::SIGNED) {
       dstFormatComp = latte::SQ_FORMAT_COMP_SIGNED;
@@ -452,6 +453,14 @@ GX2CopySurface(GX2Surface *src,
       dstDepth /= 6;
    }
 
+   if (dst->aa == GX2AAMode::Mode2X) {
+      dstSamples = 2;
+   } else if (dst->aa == GX2AAMode::Mode4X) {
+      dstSamples = 4;
+   } else if (dst->aa == GX2AAMode::Mode8X) {
+      dstSamples = 8;
+   }
+
    auto srcDim = static_cast<latte::SQ_TEX_DIM>(src->dim.value());
    auto srcFormat = static_cast<latte::SQ_DATA_FORMAT>(src->format & 0x3f);
    auto srcTileMode = static_cast<latte::SQ_TILE_MODE>(src->tileMode.value());
@@ -460,6 +469,7 @@ GX2CopySurface(GX2Surface *src,
    auto srcForceDegamma = false;
    auto srcPitch = src->pitch;
    auto srcDepth = src->depth;
+   auto srcSamples = 0u;
 
    if (src->format & GX2AttribFormatFlags::SIGNED) {
       srcFormatComp = latte::SQ_FORMAT_COMP_SIGNED;
@@ -483,6 +493,14 @@ GX2CopySurface(GX2Surface *src,
       srcDepth /= 6;
    }
 
+   if (src->aa == GX2AAMode::Mode2X) {
+      srcSamples = 2;
+   } else if (src->aa == GX2AAMode::Mode4X) {
+      srcSamples = 4;
+   } else if (src->aa == GX2AAMode::Mode8X) {
+      srcSamples = 8;
+   }
+
    pm4::write(pm4::DecafCopySurface{
       dst->image.getAddress(),
       dst->mipmaps.getAddress(),
@@ -492,6 +510,7 @@ GX2CopySurface(GX2Surface *src,
       dst->width,
       dst->height,
       dstDepth,
+      dstSamples,
       dstDim,
       dstFormat,
       dstNumFormat,
@@ -506,6 +525,7 @@ GX2CopySurface(GX2Surface *src,
       src->width,
       src->height,
       srcDepth,
+      srcSamples,
       srcDim,
       srcFormat,
       srcNumFormat,
