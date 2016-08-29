@@ -20,13 +20,24 @@ AOC_Finalize()
 }
 
 uint32_t
-AOC_CalculateWorkBufferSize(uint32_t unk)
+AOC_CalculateWorkBufferSize(uint32_t maxTitles)
 {
-   if (unk > 256) {
-      unk = 256;
+   if (maxTitles > 256) {
+      maxTitles = 256;
    }
 
-   return (unk * 0x61) + 0x80;
+   return (maxTitles * 0x61) + 0x80;
+}
+
+AOCResult
+AOC_ListTitle(be_val<uint32_t> *titleCount,
+              AOCTitle *titles,
+              uint32_t maxTitles,
+              void *workBuffer,
+              uint32_t workBufferSize)
+{
+   *titleCount = 0;
+   return AOCResult::Success;
 }
 
 void
@@ -35,6 +46,7 @@ Module::registerCoreFunctions()
    RegisterKernelFunctionName("AOC_Initialize", AOC_Initialize);
    RegisterKernelFunctionName("AOC_Finalize", AOC_Finalize);
    RegisterKernelFunctionName("AOC_CalculateWorkBufferSize", AOC_CalculateWorkBufferSize);
+   RegisterKernelFunctionName("AOC_ListTitle", AOC_ListTitle);
 }
 
 } // namespace aoc
