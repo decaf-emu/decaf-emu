@@ -65,6 +65,10 @@ void
 WPADEnableURCC(BOOL enable);
 
 WPADError::Value
-WPADProbe(WPADChan::Chan chan, be_val<WPADControllerType::Value> *type);
+WPADProbe(WPADChan::Chan chan,
+          be_val<WPADControllerType::Value> *type);
+
+uint32_t
+WPADGetBatteryLevel(WPADChan::Chan chan);
 
 } // namespace padscore

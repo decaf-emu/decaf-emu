@@ -26,10 +26,18 @@ WPADEnableURCC(BOOL enable)
 }
 
 WPADError::Value
-WPADProbe(WPADChan::Chan chan, be_val<WPADControllerType::Value> *type)
+WPADProbe(WPADChan::Chan chan,
+          be_val<WPADControllerType::Value> *type)
 {
    *type = WPADControllerType::NoController;
    return WPADError::NoController;
+}
+
+uint32_t
+WPADGetBatteryLevel(WPADChan::Chan chan)
+{
+   // Battery level is 0 - 4
+   return 4;
 }
 
 void
@@ -39,6 +47,7 @@ Module::registerWPADFunctions()
    RegisterKernelFunction(WPADGetStatus);
    RegisterKernelFunction(WPADEnableURCC);
    RegisterKernelFunction(WPADProbe);
+   RegisterKernelFunction(WPADGetBatteryLevel);
 }
 
 } // namespace padscore
