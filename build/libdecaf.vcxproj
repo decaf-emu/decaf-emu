@@ -558,6 +558,7 @@
     <ClInclude Include="..\src\libdecaf\src\modules\nn_ndm\nn_ndm.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_ndm\nn_ndm_init.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_detection.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_enum.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_result.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_nfp\nn_nfp_settings.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_olv\nn_olv.h" />
