@@ -134,6 +134,22 @@ GX2InitTextureRegs(GX2Texture *texture)
       .LAST_ARRAY(texture->viewFirstSlice + texture->viewNumSlices - 1)
       .YUV_CONV(yuvConv);
 
+   // For MSAA textures, we overwrite the LAST_LEVEL field
+   if (texture->surface.aa) {
+      decaf_check(texture->surface.dim == GX2SurfaceDim::Texture2DMSAA || texture->surface.dim == GX2SurfaceDim::Texture2DMSAAArray);
+
+      if (texture->surface.aa == GX2AAMode::Mode2X) {
+         word5 = word5
+            .LAST_LEVEL(1);
+      } else if (texture->surface.aa == GX2AAMode::Mode4X) {
+         word5 = word5
+            .LAST_LEVEL(2);
+      } else if (texture->surface.aa == GX2AAMode::Mode8X) {
+         word5 = word5
+            .LAST_LEVEL(3);
+      }
+   }
+
    // Word 6
    word6 = word6
       .MAX_ANISO_RATIO(4)
@@ -149,7 +165,9 @@ GX2InitTextureRegs(GX2Texture *texture)
 }
 
 static void
-setTexture(GX2Texture *texture, latte::SQ_RES_OFFSET offset, uint32_t unit)
+setTexture(GX2Texture *texture,
+           latte::SQ_RES_OFFSET offset,
+           uint32_t unit)
 {
    auto imageAddress = texture->surface.image.getAddress();
    auto mipAddress = texture->surface.mipmaps.getAddress();
@@ -182,19 +200,22 @@ setTexture(GX2Texture *texture, latte::SQ_RES_OFFSET offset, uint32_t unit)
 }
 
 void
-GX2SetPixelTexture(GX2Texture *texture, uint32_t unit)
+GX2SetPixelTexture(GX2Texture *texture,
+                   uint32_t unit)
 {
    setTexture(texture, latte::SQ_PS_TEX_RESOURCE_0, unit);
 }
 
 void
-GX2SetVertexTexture(GX2Texture *texture, uint32_t unit)
+GX2SetVertexTexture(GX2Texture *texture,
+                    uint32_t unit)
 {
    setTexture(texture, latte::SQ_VS_TEX_RESOURCE_0, unit);
 }
 
 void
-GX2SetGeometryTexture(GX2Texture *texture, uint32_t unit)
+GX2SetGeometryTexture(GX2Texture *texture,
+                      uint32_t unit)
 {
    setTexture(texture, latte::SQ_GS_TEX_RESOURCE_0, unit);
 }
