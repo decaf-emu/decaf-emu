@@ -64,6 +64,14 @@ IMGetTimeBeforeAPD(be_val<uint32_t> *seconds)
    return IOError::OK;
 }
 
+IOError
+IMGetTimeBeforeDimming(be_val<uint32_t> *seconds)
+{
+   // Let's just put it to 30 minutes
+   *seconds = 30 * 60;
+   return IOError::OK;
+}
+
 void
 Module::registerImFunctions()
 {
@@ -75,6 +83,7 @@ Module::registerImFunctions()
    RegisterKernelFunction(IMIsAPDEnabledBySysSettings);
    RegisterKernelFunction(IMIsDimEnabled);
    RegisterKernelFunction(IMGetTimeBeforeAPD);
+   RegisterKernelFunction(IMGetTimeBeforeDimming);
 }
 
 } // namespace coreinit
