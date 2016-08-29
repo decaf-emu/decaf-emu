@@ -233,6 +233,8 @@
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_hle.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_loader.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_memory.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\camera\camera.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\camera\camera_core.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_alarm.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.cpp" />
@@ -483,6 +485,8 @@
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_internal.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_loader.h" />
     <ClInclude Include="..\src\libdecaf\src\kernel\kernel_memory.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\camera\camera.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\camera\camera_core.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_allocator.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_atomic64.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_coroutine.h" />

@@ -1,10 +1,7 @@
 #include "kernel_hle.h"
 #include "kernel_internal.h"
+#include "modules/camera/camera.h"
 #include "modules/coreinit/coreinit.h"
-#include "modules/coreinit/coreinit_core.h"
-#include "modules/coreinit/coreinit_memheap.h"
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/coreinit/coreinit_systeminfo.h"
 #include "modules/dmae/dmae.h"
 #include "modules/erreula/erreula.h"
 #include "modules/gx2/gx2.h"
@@ -130,6 +127,7 @@ registerHleModuleAlias(const std::string &module, const std::string &alias)
 void
 initialiseHleMmodules()
 {
+   camera::Module::RegisterFunctions();
    coreinit::Module::RegisterFunctions();
    dmae::Module::RegisterFunctions();
    nn::erreula::Module::RegisterFunctions();
@@ -155,6 +153,7 @@ initialiseHleMmodules()
    vpad::Module::RegisterFunctions();
    zlib125::Module::RegisterFunctions();
 
+   registerHleModule("camera.rpl", new camera::Module {});
    registerHleModule("coreinit.rpl", new coreinit::Module{});
    registerHleModule("dmae.rpl", new dmae::Module{});
    registerHleModule("erreula.rpl", new nn::erreula::Module{});
