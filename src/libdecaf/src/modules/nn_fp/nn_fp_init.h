@@ -17,6 +17,9 @@ Finalize();
 bool
 IsInitialized();
 
+bool
+IsOnline();
+
 }  // namespace fp
 
 }  // namespace nn
