@@ -34,7 +34,7 @@ spinAcquireLock(OSSpinLock *spinlock)
    auto thread = OSGetCurrentThread();
    auto owner = mem::untranslate(thread);
 
-   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
+   if (spinlock->owner.load(std::memory_order_acquire) == owner) {
       ++spinlock->recursion;
       return false;
    }
@@ -55,7 +55,7 @@ spinTryLock(OSSpinLock *spinlock)
    auto thread = OSGetCurrentThread();
    auto owner = mem::untranslate(thread);
 
-   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
+   if (spinlock->owner.load(std::memory_order_acquire) == owner) {
       ++spinlock->recursion;
       return true;
    }
@@ -77,7 +77,7 @@ spinTryLockWithTimeout(OSSpinLock *spinlock,
    auto thread = OSGetCurrentThread();
    auto owner = mem::untranslate(thread);
 
-   if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
+   if (spinlock->owner.load(std::memory_order_acquire) == owner) {
       ++spinlock->recursion;
       return true;
    }
@@ -106,7 +106,7 @@ spinReleaseLock(OSSpinLock *spinlock)
    if (spinlock->recursion > 0u) {
       --spinlock->recursion;
       return false;
-   } else if (spinlock->owner.load(std::memory_order_relaxed) == owner) {
+   } else if (spinlock->owner.load(std::memory_order_acquire) == owner) {
       spinlock->owner = 0u;
       decreaseSpinLockCount(thread);
       return true;

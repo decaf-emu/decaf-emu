@@ -162,15 +162,15 @@ static pm4::Buffer *
 allocateBufferObj()
 {
    while (true) {
-      auto buffer = sBufferItemPool.load(std::memory_order_relaxed);
+      auto buffer = sBufferItemPool.load(std::memory_order_acquire);
 
       if (buffer == nullptr) {
          break;
       }
 
-      auto next = buffer->next.load(std::memory_order_relaxed);
+      auto next = buffer->next.load(std::memory_order_acquire);
 
-      if (sBufferItemPool.compare_exchange_weak(buffer, next, std::memory_order_relaxed)) {
+      if (sBufferItemPool.compare_exchange_weak(buffer, next, std::memory_order_release, std::memory_order_relaxed)) {
          return buffer;
       }
    }
@@ -181,12 +181,12 @@ allocateBufferObj()
 static void
 freeBufferObj(pm4::Buffer *cb)
 {
-   auto top = sBufferItemPool.load(std::memory_order_relaxed);
+   auto top = sBufferItemPool.load(std::memory_order_acquire);
 
    while (true) {
-      cb->next.store(top, std::memory_order_relaxed);
+      cb->next.store(top, std::memory_order_release);
 
-      if (sBufferItemPool.compare_exchange_weak(top, cb, std::memory_order_relaxed)) {
+      if (sBufferItemPool.compare_exchange_weak(top, cb, std::memory_order_release, std::memory_order_relaxed)) {
          return;
       }
    }
