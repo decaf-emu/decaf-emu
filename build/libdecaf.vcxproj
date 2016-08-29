@@ -329,6 +329,8 @@
     <ClCompile Include="..\src\libdecaf\src\modules\nn_act\nn_act_core.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\nn_ac\nn_ac.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\nn_ac\nn_ac_core.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_aoc\nn_aoc.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_aoc\nn_aoc_core.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_init.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_nettasksetting.cpp" />
@@ -537,6 +539,9 @@
     <ClInclude Include="..\src\libdecaf\src\modules\nn_acp\nn_acp_title.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_act\nn_act_result.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_ac\nn_ac_result.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_aoc\nn_aoc.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_aoc\nn_aoc_core.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_aoc\nn_aoc_enum.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_init.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\nn_boss\nn_boss_nettasksetting.h" />

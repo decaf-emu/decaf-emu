@@ -208,6 +208,12 @@
     <Filter Include="Header Files\modules\dmae">
       <UniqueIdentifier>{186d1ad5-6eb6-42b7-8707-cb2c370ee42c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\nn_aoc">
+      <UniqueIdentifier>{6c86710f-c0d7-4841-8106-3dc363a554fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\nn_aoc">
+      <UniqueIdentifier>{c173d3bc-adf7-4a85-bbe0-94e69ca110dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit.cpp">
@@ -890,6 +896,12 @@
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\decaf_pm4replay.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_aoc\nn_aoc.cpp">
+      <Filter>Source Files\modules\nn_aoc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\nn_aoc\nn_aoc_core.cpp">
+      <Filter>Source Files\modules\nn_aoc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1693,6 +1705,15 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\decaf_pm4replay.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_aoc\nn_aoc.h">
+      <Filter>Header Files\modules\nn_aoc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_aoc\nn_aoc_enum.h">
+      <Filter>Header Files\modules\nn_aoc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\nn_aoc\nn_aoc_core.h">
+      <Filter>Header Files\modules\nn_aoc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
