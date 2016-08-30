@@ -32,7 +32,7 @@ struct DeviceData
 static DeviceData
 gTvDevice;
 
-static DeviceData
+static std::array<DeviceData, 2>
 gDrcDevice;
 
 static std::array<DeviceData, 4>
@@ -50,8 +50,8 @@ getDevice(AXDeviceType type,
       decaf_check(deviceId == 0);
       return &gTvDevice;
    case AXDeviceType::DRC:
-      decaf_check(deviceId == 0);
-      return &gDrcDevice;
+      decaf_check(deviceId < gDrcDevice.size());
+      return &gDrcDevice[deviceId];
    case AXDeviceType::RMT:
       decaf_check(deviceId < gRmtDevices.size());
       return &gRmtDevices[deviceId];
@@ -222,7 +222,7 @@ AXGetDeviceMode(AXDeviceType type,
       *mode = gTvDevice.mode;
       break;
    case AXDeviceType::DRC:
-      *mode = gDrcDevice.mode;
+      *mode = gDrcDevice[0].mode;
       break;
    case AXDeviceType::RMT:
       *mode = gRmtDevices[0].mode;
@@ -243,7 +243,8 @@ AXSetDeviceMode(AXDeviceType type,
       gTvDevice.mode = mode;
       break;
    case AXDeviceType::DRC:
-      gDrcDevice.mode = mode;
+      gDrcDevice[0].mode = mode;
+      gDrcDevice[1].mode = mode;
       break;
    case AXDeviceType::RMT:
       gRmtDevices[0].mode = mode;
@@ -271,7 +272,7 @@ AXGetDeviceFinalMixCallback(AXDeviceType type,
       *func= gTvDevice.finalMixCallback;
       break;
    case AXDeviceType::DRC:
-      *func = gDrcDevice.finalMixCallback;
+      *func = gDrcDevice[0].finalMixCallback;
       break;
    case AXDeviceType::RMT:
       *func = gRmtDevices[0].finalMixCallback;
@@ -292,7 +293,8 @@ AXRegisterDeviceFinalMixCallback(AXDeviceType type,
       gTvDevice.finalMixCallback = func;
       break;
    case AXDeviceType::DRC:
-      gDrcDevice.finalMixCallback = func;
+      gDrcDevice[0].finalMixCallback = func;
+      gDrcDevice[1].finalMixCallback = func;
       break;
    case AXDeviceType::RMT:
       gRmtDevices[0].finalMixCallback = func;
@@ -374,7 +376,8 @@ AXSetDeviceCompressor(AXDeviceType type,
       gTvDevice.compressor = !!compressor;
       break;
    case AXDeviceType::DRC:
-      gDrcDevice.compressor = !!compressor;
+      gDrcDevice[0].compressor = !!compressor;
+      gDrcDevice[1].compressor = !!compressor;
       break;
    case AXDeviceType::RMT:
       gRmtDevices[0].compressor = !!compressor;
@@ -402,7 +405,7 @@ AXGetDeviceUpsampleStage(AXDeviceType type,
       *upsampleAfterFinalMixCallback = gTvDevice.upsampleAfterFinalMix ? TRUE : FALSE;
       break;
    case AXDeviceType::DRC:
-      *upsampleAfterFinalMixCallback = gDrcDevice.upsampleAfterFinalMix ? TRUE : FALSE;
+      *upsampleAfterFinalMixCallback = gDrcDevice[0].upsampleAfterFinalMix ? TRUE : FALSE;
       break;
    case AXDeviceType::RMT:
       *upsampleAfterFinalMixCallback = gRmtDevices[0].upsampleAfterFinalMix ? TRUE : FALSE;
@@ -423,7 +426,8 @@ AXSetDeviceUpsampleStage(AXDeviceType type,
       gTvDevice.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
       break;
    case AXDeviceType::DRC:
-      gDrcDevice.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      gDrcDevice[0].upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      gDrcDevice[1].upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
       break;
    case AXDeviceType::RMT:
       gRmtDevices[0].upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
