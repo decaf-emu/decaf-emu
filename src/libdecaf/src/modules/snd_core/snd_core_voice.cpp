@@ -215,7 +215,7 @@ AXSetVoiceDeviceMix(AXVoice *voice,
          extras->drcVolume[i] = mixData[i].bus[0].volume;
       }
       break;
-   case AXDeviceType::Controller:
+   case AXDeviceType::RMT:
       if (id < 4) {
          extras->controllerVolume[id] = mixData[0].bus[0].volume;
       }

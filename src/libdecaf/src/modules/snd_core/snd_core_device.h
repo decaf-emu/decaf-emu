@@ -17,6 +17,10 @@ AXGetDeviceMode(AXDeviceType type,
                 be_val<AXDeviceMode> *mode);
 
 AXResult
+AXSetDeviceMode(AXDeviceType type,
+                AXDeviceMode mode);
+
+AXResult
 AXGetDeviceFinalMixCallback(AXDeviceType type,
                             be_AXDeviceFinalMixCallback *func);
 
@@ -26,35 +30,56 @@ AXRegisterDeviceFinalMixCallback(AXDeviceType type,
 
 AXResult
 AXGetAuxCallback(AXDeviceType type,
-                 uint32_t,
-                 uint32_t,
+                 uint32_t deviceId,
+                 AXAuxId auxId,
                  be_AXAuxCallback *callback,
                  be_ptr<void> *userData);
 
 AXResult
 AXRegisterAuxCallback(AXDeviceType type,
-                      uint32_t,
-                      uint32_t,
+                      uint32_t deviceId,
+                      AXAuxId auxId,
                       AXAuxCallback callback,
                       void *userData);
 
 AXResult
 AXSetDeviceLinearUpsampler(AXDeviceType type,
-                           uint32_t,
-                           uint32_t);
+                           uint32_t deviceId,
+                           BOOL linear);
 
 AXResult
 AXSetDeviceCompressor(AXDeviceType type,
-                      uint32_t);
+                      BOOL compressor);
+
+AXResult
+AXGetDeviceUpsampleStage(AXDeviceType type,
+                         BOOL *upsampleAfterFinalMixCallback);
 
 AXResult
 AXSetDeviceUpsampleStage(AXDeviceType type,
-                         BOOL postFinalMix);
+                         BOOL upsampleAfterFinalMixCallback);
+
+AXResult
+AXGetDeviceVolume(AXDeviceType type,
+                  uint32_t deviceId,
+                  be_val<uint16_t> *volume);
 
 AXResult
 AXSetDeviceVolume(AXDeviceType type,
-                  uint32_t id,
+                  uint32_t deviceId,
                   uint16_t volume);
+
+AXResult
+AXGetAuxReturnVolume(AXDeviceType type,
+                     uint32_t deviceId,
+                     AXAuxId auxId,
+                     be_val<uint16_t> *volume);
+
+AXResult
+AXSetAuxReturnVolume(AXDeviceType type,
+                     uint32_t deviceId,
+                     AXAuxId auxId,
+                     uint16_t volume);
 
 namespace internal
 {

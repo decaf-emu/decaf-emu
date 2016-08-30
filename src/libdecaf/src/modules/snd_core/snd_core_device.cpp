@@ -2,15 +2,63 @@
 #include "snd_core_device.h"
 #include "snd_core_voice.h"
 #include "decaf_sound.h"
+#include <array>
+#include <common/fixed.h>
 
 namespace snd_core
 {
 
-static AXDeviceFinalMixCallback
-gDeviceFinalMixCallback;
+static const ufixed_1_15_t
+DefaultVolume = ufixed_1_15_t::from_data(0x8000);
+
+struct AuxData
+{
+   AXAuxCallback callback = nullptr;
+   void *userData = nullptr;
+   ufixed_1_15_t returnVolume = DefaultVolume;
+};
+
+struct DeviceData
+{
+   AXDeviceFinalMixCallback finalMixCallback = nullptr;
+   std::array<AuxData, AXAuxId::Max> aux;
+   bool linearUpsample = false;
+   bool compressor = false;
+   bool upsampleAfterFinalMix = false;
+   ufixed_1_15_t volume = DefaultVolume;
+   AXDeviceMode mode;
+};
+
+static DeviceData
+gTvDevice;
+
+static DeviceData
+gDrcDevice;
+
+static std::array<DeviceData, 4>
+gRmtDevices;
 
 namespace internal
 {
+
+static DeviceData *
+getDevice(AXDeviceType type,
+          uint32_t deviceId)
+{
+   switch (type) {
+   case AXDeviceType::TV:
+      decaf_check(deviceId == 0);
+      return &gTvDevice;
+   case AXDeviceType::DRC:
+      decaf_check(deviceId == 0);
+      return &gDrcDevice;
+   case AXDeviceType::RMT:
+      decaf_check(deviceId < gRmtDevices.size());
+      return &gRmtDevices[deviceId];
+   default:
+      return nullptr;
+   }
+}
 
 static int32_t
 nextSampleAdpcm(AXVoice *voice,
@@ -59,7 +107,7 @@ nextSampleAdpcm(AXVoice *voice,
 
 static int32_t
 nextSampleLpcm16(AXVoice *voice,
-                  AXVoiceExtras *extras)
+                 AXVoiceExtras *extras)
 {
    auto data = reinterpret_cast<const be_val<int16_t> *>(voice->offsets.data.get());
    return data[voice->offsets.currentOffset++];
@@ -162,75 +210,299 @@ mixOutput(int32_t *buffer, int numSamples, int numChannels)
 } // namespace internal
 
 AXResult
-AXGetDeviceMode(AXDeviceType type, be_val<AXDeviceMode>* mode)
+AXGetDeviceMode(AXDeviceType type,
+                be_val<AXDeviceMode> *mode)
 {
-   // TODO: AXGetDeviceMode
-   *mode = static_cast<AXDeviceMode>(0);
-   return AXResult::Success;
-}
+   if (!mode) {
+      return AXResult::Success;
+   }
 
-AXResult
-AXGetDeviceFinalMixCallback(AXDeviceType type, be_AXDeviceFinalMixCallback *func)
-{
-   if (func != nullptr) {
-      *func = gDeviceFinalMixCallback;
+   switch (type) {
+   case AXDeviceType::TV:
+      *mode = gTvDevice.mode;
+      break;
+   case AXDeviceType::DRC:
+      *mode = gDrcDevice.mode;
+      break;
+   case AXDeviceType::RMT:
+      *mode = gRmtDevices[0].mode;
+      break;
+   default:
+      return AXResult::InvalidDeviceType;
    }
 
    return AXResult::Success;
 }
 
 AXResult
-AXRegisterDeviceFinalMixCallback(AXDeviceType type, AXDeviceFinalMixCallback func)
+AXSetDeviceMode(AXDeviceType type,
+                AXDeviceMode mode)
 {
-   gDeviceFinalMixCallback = func;
+   switch (type) {
+   case AXDeviceType::TV:
+      gTvDevice.mode = mode;
+      break;
+   case AXDeviceType::DRC:
+      gDrcDevice.mode = mode;
+      break;
+   case AXDeviceType::RMT:
+      gRmtDevices[0].mode = mode;
+      gRmtDevices[1].mode = mode;
+      gRmtDevices[2].mode = mode;
+      gRmtDevices[3].mode = mode;
+      break;
+   default:
+      return AXResult::InvalidDeviceType;
+   }
+
    return AXResult::Success;
 }
 
 AXResult
-AXGetAuxCallback(AXDeviceType type, uint32_t, uint32_t, be_AXAuxCallback *callback, be_ptr<void> *userData)
+AXGetDeviceFinalMixCallback(AXDeviceType type,
+                            be_AXDeviceFinalMixCallback *func)
 {
-   // TODO: AXGetAuxCallback
+   if (!func) {
+      return AXResult::Success;
+   }
+
+   switch (type) {
+   case AXDeviceType::TV:
+      *func= gTvDevice.finalMixCallback;
+      break;
+   case AXDeviceType::DRC:
+      *func = gDrcDevice.finalMixCallback;
+      break;
+   case AXDeviceType::RMT:
+      *func = gRmtDevices[0].finalMixCallback;
+      break;
+   default:
+      return AXResult::InvalidDeviceType;
+   }
+
+   return AXResult::Success;
+}
+
+AXResult
+AXRegisterDeviceFinalMixCallback(AXDeviceType type,
+                                 AXDeviceFinalMixCallback func)
+{
+   switch (type) {
+   case AXDeviceType::TV:
+      gTvDevice.finalMixCallback = func;
+      break;
+   case AXDeviceType::DRC:
+      gDrcDevice.finalMixCallback = func;
+      break;
+   case AXDeviceType::RMT:
+      gRmtDevices[0].finalMixCallback = func;
+      gRmtDevices[1].finalMixCallback = func;
+      gRmtDevices[2].finalMixCallback = func;
+      gRmtDevices[3].finalMixCallback = func;
+      break;
+   default:
+      return AXResult::InvalidDeviceType;
+   }
+
+   return AXResult::Success;
+}
+
+AXResult
+AXGetAuxCallback(AXDeviceType type,
+                 uint32_t deviceId,
+                 AXAuxId auxId,
+                 be_AXAuxCallback *callback,
+                 be_ptr<void> *userData)
+{
+   auto device = internal::getDevice(type, deviceId);
+
+   if (!device) {
+      return AXResult::InvalidDeviceType;
+   }
+
    if (callback) {
-      *callback = nullptr;
+      *callback = device->aux[auxId].callback;
    }
 
    if (userData) {
-      *userData = nullptr;
+      *userData = device->aux[auxId].userData;
    }
 
    return AXResult::Success;
 }
 
 AXResult
-AXRegisterAuxCallback(AXDeviceType type, uint32_t, uint32_t, AXAuxCallback callback, void *userData)
+AXRegisterAuxCallback(AXDeviceType type,
+                      uint32_t deviceId,
+                      AXAuxId auxId,
+                      AXAuxCallback callback,
+                      void *userData)
 {
-   // TODO: AXRegisterAuxCallback
+   auto device = internal::getDevice(type, deviceId);
+
+   if (!device) {
+      return AXResult::InvalidDeviceType;
+   }
+
+   device->aux[auxId].callback = callback;
+   device->aux[auxId].userData = userData;
+
    return AXResult::Success;
 }
 
 AXResult
-AXSetDeviceLinearUpsampler(AXDeviceType type, uint32_t, uint32_t)
+AXSetDeviceLinearUpsampler(AXDeviceType type,
+                           uint32_t deviceId,
+                           BOOL linear)
 {
-   // TODO: AXSetDeviceLinearUpsampler
+   auto device = internal::getDevice(type, deviceId);
+
+   if (!device) {
+      return AXResult::InvalidDeviceType;
+   }
+
+   device->linearUpsample = !!linear;
    return AXResult::Success;
 }
 
 AXResult
-AXSetDeviceCompressor(AXDeviceType type, uint32_t)
+AXSetDeviceCompressor(AXDeviceType type,
+                      BOOL compressor)
 {
-   // TODO: AXSetDeviceCompressor
+   switch (type) {
+   case AXDeviceType::TV:
+      gTvDevice.compressor = !!compressor;
+      break;
+   case AXDeviceType::DRC:
+      gDrcDevice.compressor = !!compressor;
+      break;
+   case AXDeviceType::RMT:
+      gRmtDevices[0].compressor = !!compressor;
+      gRmtDevices[1].compressor = !!compressor;
+      gRmtDevices[2].compressor = !!compressor;
+      gRmtDevices[3].compressor = !!compressor;
+      break;
+   default:
+      return AXResult::InvalidDeviceType;
+   }
+
    return AXResult::Success;
 }
 
 AXResult
-AXSetDeviceUpsampleStage(AXDeviceType type, BOOL postFinalMix)
+AXGetDeviceUpsampleStage(AXDeviceType type,
+                         BOOL *upsampleAfterFinalMixCallback)
 {
+   if (!upsampleAfterFinalMixCallback) {
+      return AXResult::Success;
+   }
+
+   switch (type) {
+   case AXDeviceType::TV:
+      *upsampleAfterFinalMixCallback = gTvDevice.upsampleAfterFinalMix ? TRUE : FALSE;
+      break;
+   case AXDeviceType::DRC:
+      *upsampleAfterFinalMixCallback = gDrcDevice.upsampleAfterFinalMix ? TRUE : FALSE;
+      break;
+   case AXDeviceType::RMT:
+      *upsampleAfterFinalMixCallback = gRmtDevices[0].upsampleAfterFinalMix ? TRUE : FALSE;
+      break;
+   default:
+      return AXResult::InvalidDeviceType;
+   }
+
    return AXResult::Success;
 }
 
 AXResult
-AXSetDeviceVolume(AXDeviceType type, uint32_t id, uint16_t volume)
+AXSetDeviceUpsampleStage(AXDeviceType type,
+                         BOOL upsampleAfterFinalMixCallback)
 {
+   switch (type) {
+   case AXDeviceType::TV:
+      gTvDevice.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      break;
+   case AXDeviceType::DRC:
+      gDrcDevice.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      break;
+   case AXDeviceType::RMT:
+      gRmtDevices[0].upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      gRmtDevices[1].upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      gRmtDevices[2].upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      gRmtDevices[3].upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      break;
+   default:
+      return AXResult::InvalidDeviceType;
+   }
+
+   return AXResult::Success;
+}
+
+AXResult
+AXGetDeviceVolume(AXDeviceType type,
+                  uint32_t deviceId,
+                  be_val<uint16_t> *volume)
+{
+   auto device = internal::getDevice(type, deviceId);
+
+   if (!device) {
+      return AXResult::InvalidDeviceType;
+   }
+
+   if (volume) {
+      *volume = device->volume.data();
+   }
+
+   return AXResult::Success;
+}
+
+AXResult
+AXSetDeviceVolume(AXDeviceType type,
+                  uint32_t deviceId,
+                  uint16_t volume)
+{
+   auto device = internal::getDevice(type, deviceId);
+
+   if (!device) {
+      return AXResult::InvalidDeviceType;
+   }
+
+   device->volume = ufixed_1_15_t::from_data(volume);
+   return AXResult::Success;
+}
+
+AXResult
+AXGetAuxReturnVolume(AXDeviceType type,
+                     uint32_t deviceId,
+                     AXAuxId auxId,
+                     be_val<uint16_t> *volume)
+{
+   auto device = internal::getDevice(type, deviceId);
+
+   if (!device) {
+      return AXResult::InvalidDeviceType;
+   }
+
+   if (volume) {
+      *volume = device->aux[auxId].returnVolume.data();
+   }
+
+   return AXResult::Success;
+}
+
+AXResult
+AXSetAuxReturnVolume(AXDeviceType type,
+                     uint32_t deviceId,
+                     AXAuxId auxId,
+                     uint16_t volume)
+{
+   auto device = internal::getDevice(type, deviceId);
+
+   if (!device) {
+      return AXResult::InvalidDeviceType;
+   }
+
+   device->aux[auxId].returnVolume = ufixed_1_15_t::from_data(volume);
    return AXResult::Success;
 }
 
@@ -238,14 +510,19 @@ void
 Module::registerDeviceFunctions()
 {
    RegisterKernelFunction(AXGetDeviceMode);
+   RegisterKernelFunction(AXSetDeviceMode);
    RegisterKernelFunction(AXGetDeviceFinalMixCallback);
    RegisterKernelFunction(AXRegisterDeviceFinalMixCallback);
    RegisterKernelFunction(AXGetAuxCallback);
    RegisterKernelFunction(AXRegisterAuxCallback);
    RegisterKernelFunction(AXSetDeviceLinearUpsampler);
    RegisterKernelFunction(AXSetDeviceCompressor);
+   RegisterKernelFunction(AXGetDeviceUpsampleStage);
    RegisterKernelFunction(AXSetDeviceUpsampleStage);
+   RegisterKernelFunction(AXGetDeviceVolume);
    RegisterKernelFunction(AXSetDeviceVolume);
+   RegisterKernelFunction(AXGetAuxReturnVolume);
+   RegisterKernelFunction(AXSetAuxReturnVolume);
 }
 
 } // namespace snd_core

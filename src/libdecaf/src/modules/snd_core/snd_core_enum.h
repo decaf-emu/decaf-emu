@@ -5,6 +5,13 @@
 
 ENUM_NAMESPACE_BEG(snd_core)
 
+ENUM_BEG(AXAuxId, uint32_t)
+   ENUM_VALUE(A,                 0)
+   ENUM_VALUE(B,                 1)
+   ENUM_VALUE(C,                 2)
+   ENUM_VALUE(Max,               3)
+ENUM_END(AXAuxId)
+
 ENUM_BEG(AXDeviceMode, uint32_t)
    // Unknown
 ENUM_END(AXDeviceMode)
@@ -12,7 +19,8 @@ ENUM_END(AXDeviceMode)
 ENUM_BEG(AXDeviceType, uint32_t)
    ENUM_VALUE(TV,                0)
    ENUM_VALUE(DRC,               1)
-   ENUM_VALUE(Controller,        2)  // Classic Controller, Wiimote etc.
+   ENUM_VALUE(RMT,               2)  // Classic Controller, Wiimote etc.
+   ENUM_VALUE(Max,               3)
 ENUM_END(AXDeviceType)
 
 ENUM_BEG(AXDRCOutput, uint32_t)
