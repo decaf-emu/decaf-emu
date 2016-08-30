@@ -2,6 +2,10 @@
 #include "coreinit_device.h"
 #include "coreinit_enum_string.h"
 #include "common/bitfield.h"
+#include "modules/vpad/vpad_status.h"
+
+static bool
+sEnableVPADDevice = false;
 
 namespace coreinit
 {
@@ -42,6 +46,50 @@ OSReadRegister32Ex(OSDeviceID device,
    if (device == OSDeviceID::Input) {
       auto reg = static_cast<OSDeviceInputRegisters>(id);
 
+      auto status0 = OSInputDevice::ControllerStatus0::get(0)
+         .stickLX(128)
+         .stickLY(128)
+         .error(false);
+
+      auto status1 = OSInputDevice::ControllerStatus1::get(0)
+         .stickRX(128)
+         .stickRY(128);
+
+      if (sEnableVPADDevice) {
+         if (reg == OSDeviceInputRegisters::Controller0Status0
+          || reg == OSDeviceInputRegisters::Controller0Status1) {
+            vpad::VPADStatus status;
+
+            if (vpad::VPADRead(0, &status, 1, nullptr) == 1) {
+               // VPAD sticks are -1.0f to 1.0f, whereas these sticks are 0 - 256
+               auto convertStickValue = [](float value) {
+                  return static_cast<uint8_t>(((value + 1.0f) / 2.0f) * 256.0f);
+               };
+
+               status0 = status0
+                  .btnA(!!(status.hold & vpad::Buttons::A))
+                  .btnB(!!(status.hold & vpad::Buttons::B))
+                  .btnX(!!(status.hold & vpad::Buttons::X))
+                  .btnY(!!(status.hold & vpad::Buttons::Y))
+                  .btnPlus(!!(status.hold & vpad::Buttons::Plus))
+                  .btnLeft(!!(status.hold & vpad::Buttons::Left))
+                  .btnRight(!!(status.hold & vpad::Buttons::Right))
+                  .btnDown(!!(status.hold & vpad::Buttons::Down))
+                  .btnUp(!!(status.hold & vpad::Buttons::Up))
+                  .btnTriggerL(!!(status.hold & vpad::Buttons::L))
+                  .btnTriggerR(!!(status.hold & vpad::Buttons::R))
+                  .btnTriggerZ(!!(status.hold & vpad::Buttons::ZR))
+                  .stickLX(convertStickValue(status.leftStick.x))
+                  .stickLY(convertStickValue(status.leftStick.y))
+                  .error(false);
+
+               status1 = status1
+                  .stickRX(convertStickValue(status.rightStick.x))
+                  .stickRY(convertStickValue(status.rightStick.y));
+            }
+         }
+      }
+
       switch (reg) {
       case OSDeviceInputRegisters::DeviceStatus:
          return sInputDevice.deviceStatus.value;
@@ -61,19 +109,12 @@ OSReadRegister32Ex(OSDeviceID device,
       case OSDeviceInputRegisters::Controller1Status0:
       case OSDeviceInputRegisters::Controller2Status0:
       case OSDeviceInputRegisters::Controller3Status0:
-         return OSInputDevice::ControllerStatus0::get(0)
-            .error(false)
-            .stickLX(-0x80)
-            .stickLY(-0x80)
-            .value;
+         return status0.value;
       case OSDeviceInputRegisters::Controller0Status1:
       case OSDeviceInputRegisters::Controller1Status1:
       case OSDeviceInputRegisters::Controller2Status1:
       case OSDeviceInputRegisters::Controller3Status1:
-         return OSInputDevice::ControllerStatus1::get(0)
-            .stickRX(-0x80)
-            .stickRY(-0x80)
-            .value;
+         return status1.value;
       default:
          gLog->warn("OSReadRegister - Unimplemented device {} register {}", enumAsString(device), enumAsString(reg));
          return 0;

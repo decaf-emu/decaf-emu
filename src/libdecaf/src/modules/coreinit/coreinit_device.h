@@ -38,8 +38,8 @@ struct OSInputDevice
    BITFIELD_END
 
    BITFIELD(ControllerStatus0, uint32_t)
-      BITFIELD_ENTRY(0, 8, int8_t, stickLY);
-      BITFIELD_ENTRY(8, 8, int8_t, stickLX);
+      BITFIELD_ENTRY(0, 8, uint8_t, stickLY);
+      BITFIELD_ENTRY(8, 8, uint8_t, stickLX);
       BITFIELD_ENTRY(16, 1, bool, btnLeft);
       BITFIELD_ENTRY(17, 1, bool, btnRight);
       BITFIELD_ENTRY(18, 1, bool, btnDown);
@@ -51,7 +51,7 @@ struct OSInputDevice
       BITFIELD_ENTRY(24, 1, bool, btnB);
       BITFIELD_ENTRY(25, 1, bool, btnX);
       BITFIELD_ENTRY(26, 1, bool, btnY);
-      BITFIELD_ENTRY(27, 1, bool, btnStart);
+      BITFIELD_ENTRY(27, 1, bool, btnPlus);
       // 28, 39 is included in the &0x3FFF bitmask for buttons, but dunno what buttons they are
       // 30 : unk
       BITFIELD_ENTRY(31, 1, bool, error);
@@ -60,8 +60,8 @@ struct OSInputDevice
    BITFIELD(ControllerStatus1, uint32_t)
       BITFIELD_ENTRY(0, 8, uint8_t, analogB);
       BITFIELD_ENTRY(8, 8, uint8_t, analogA);
-      BITFIELD_ENTRY(16, 8, int8_t, stickRY);
-      BITFIELD_ENTRY(24, 8, int8_t, stickRX);
+      BITFIELD_ENTRY(16, 8, uint8_t, stickRY);
+      BITFIELD_ENTRY(24, 8, uint8_t, stickRX);
    BITFIELD_END
 
    struct ControllerRegisters
