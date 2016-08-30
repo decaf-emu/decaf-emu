@@ -2,6 +2,7 @@
 #include "gx2_aperture.h"
 #include "gx2_clear.h"
 #include "gx2_contextstate.h"
+#include "gx2_counter.h"
 #include "gx2_debug.h"
 #include "gx2_display.h"
 #include "gx2_displaylist.h"
@@ -59,6 +60,11 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2GetContextStateDisplayList);
    RegisterKernelFunction(GX2SetContextState);
    RegisterKernelFunction(GX2SetDefaultState);
+
+   // Counter
+   RegisterKernelFunction(GX2InitCounterInfo);
+   RegisterKernelFunction(GX2ResetCounterInfo);
+   RegisterKernelFunction(GX2GetCounterResult);
 
    // Debug
    RegisterKernelFunction(GX2DebugTagUserString);
