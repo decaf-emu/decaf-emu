@@ -42,6 +42,9 @@ isInitialised();
 uint32_t
 getMainCoreId();
 
+void
+setMainCore();
+
 } // namespace internal
 
 } // namespace gx2

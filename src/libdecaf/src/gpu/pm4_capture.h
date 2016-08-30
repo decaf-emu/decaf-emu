@@ -7,20 +7,25 @@ namespace pm4
 
 struct Buffer;
 
-void
-captureStart(const std::string &path);
-
-void
-capturePause();
-
-void
-captureResume();
-
-void
-captureStop();
+enum class CaptureState
+{
+   Disabled,
+   WaitStartNextFrame,
+   Enabled,
+   WaitEndNextFrame,
+};
 
 bool
-captureEnabled();
+captureStartAtNextSwap();
+
+void
+captureStopAtNextSwap();
+
+CaptureState
+captureState();
+
+void
+captureSwap();
 
 void
 captureCommandBuffer(pm4::Buffer *buffer);
@@ -32,5 +37,9 @@ captureCpuFlush(void *buffer,
 void
 captureGpuFlush(void *buffer,
                 uint32_t size);
+
+void
+captureSyncGpuRegisters(const uint32_t *registers,
+                        uint32_t size);
 
 } // namespace pm4

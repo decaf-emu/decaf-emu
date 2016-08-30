@@ -20,7 +20,6 @@ namespace gpu
 
 bool debug = false;
 std::vector<unsigned> debug_filters = {};
-bool record_trace = false;
 
 } // namespace gpu
 

@@ -292,23 +292,36 @@ using GLContext = uint64_t;
 class GLDriver : public decaf::OpenGLDriver
 {
 public:
+   GLDriver();
    virtual ~GLDriver() = default;
 
-   virtual void run() override;
-   virtual void stop() override;
+   virtual void
+   run() override;
 
-   virtual float getAverageFPS() override;
+   virtual void
+   stop() override;
 
-   virtual void notifyCpuFlush(void *ptr, uint32_t size) override;
-   virtual void notifyGpuFlush(void *ptr, uint32_t size) override;
+   virtual float
+   getAverageFPS() override;
 
-   virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) override;
-   virtual void syncPoll(const SwapFunction &swapFunc) override;
+   virtual void
+   notifyCpuFlush(void *ptr,
+                  uint32_t size) override;
+
+   virtual void
+   notifyGpuFlush(void *ptr,
+                  uint32_t size) override;
+
+   virtual void
+   getSwapBuffers(unsigned int *tv,
+                  unsigned int *drc) override;
+
+   virtual void
+   syncPoll(const SwapFunction &swapFunc) override;
 
 private:
    void initGL();
    void executeBuffer(pm4::Buffer *buffer);
-
    uint64_t getGpuClock();
 
    void handlePacketType0(pm4::type0::Header header, const gsl::span<uint32_t> &data);
@@ -316,6 +329,7 @@ private:
    void decafSetBuffer(const pm4::DecafSetBuffer &data);
    void decafCopyColorToScan(const pm4::DecafCopyColorToScan &data);
    void decafSwapBuffers(const pm4::DecafSwapBuffers &data);
+   void decafCapSyncRegisters(const pm4::DecafCapSyncRegisters &data);
    void decafClearColor(const pm4::DecafClearColor &data);
    void decafClearDepthStencil(const pm4::DecafClearDepthStencil &data);
    void decafDebugMarker(const pm4::DecafDebugMarker &data);
@@ -437,26 +451,64 @@ private:
                       uint32_t offset,
                       uint32_t size);
 
-   void beginTransformFeedback(gl::GLenum primitive);
-   void endTransformFeedback();
+   void
+   beginTransformFeedback(gl::GLenum primitive);
 
-   void setRegister(latte::Register reg, uint32_t value);
-   void applyRegister(latte::Register reg);
+   void
+   endTransformFeedback();
 
-   int countModifiedUniforms(latte::Register firstReg,
-                             uint32_t lastUniformUpdate);
+   void
+   setRegister(latte::Register reg, uint32_t value);
 
-   bool parseFetchShader(FetchShader &shader, void *buffer, size_t size);
-   bool compileVertexShader(VertexShader &vertex, FetchShader &fetch, uint8_t *buffer, size_t size, bool isScreenSpace);
-   bool compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint8_t *buffer, size_t size);
+   void
+   applyRegister(latte::Register reg);
 
-   void injectFence(std::function<void()> func);
-   void checkSyncObjects();
+   int
+   countModifiedUniforms(latte::Register firstReg,
+                         uint32_t lastUniformUpdate);
 
-   void runCommandBuffer(uint32_t *buffer, uint32_t size);
+   bool
+   parseFetchShader(FetchShader &shader,
+                    void *buffer,
+                    size_t size);
 
-   void runOnGLThread(std::function<void()> func);
-   void runRemoteThreadTasks();
+   bool
+   compileVertexShader(VertexShader &vertex,
+                       FetchShader &fetch,
+                       uint8_t *buffer,
+                       size_t size,
+                       bool isScreenSpace);
+
+   bool
+   compilePixelShader(PixelShader &pixel,
+                      VertexShader &vertex,
+                      uint8_t *buffer,
+                      size_t size);
+
+   void
+   injectFence(std::function<void()> func);
+
+   void
+   checkSyncObjects();
+
+   void
+   runCommandBuffer(uint32_t *buffer,
+                    uint32_t size);
+
+   void
+   runOnGLThread(std::function<void()> func);
+
+   void
+   runRemoteThreadTasks();
+
+   void
+   drawPrimitives(uint32_t count,
+                  const void *indices,
+                  latte::VGT_INDEX indexFmt);
+
+   void
+   drawPrimitivesIndexed(const void *indices,
+                         uint32_t count);
 
    template<typename Type>
    Type getRegister(uint32_t id)
@@ -464,14 +516,6 @@ private:
       static_assert(sizeof(Type) == 4, "Register storage must be a uint32_t");
       return *reinterpret_cast<Type *>(&mRegisters[id / 4]);
    }
-
-   void drawPrimitives(uint32_t count,
-                       const void *indices,
-                       latte::VGT_INDEX indexFmt);
-
-   void
-   drawPrimitivesIndexed(const void *indices,
-                         uint32_t count);
 
 private:
    enum class RunState
@@ -485,8 +529,6 @@ private:
    std::thread mThread;
    unsigned mSwapInterval = 1;
    SwapFunction mSwapFunc;
-
-   std::array<uint32_t, 0x10000> mRegisters;
 
    bool mViewportDirty = false;
    bool mDepthRangeDirty = false;
@@ -551,6 +593,8 @@ private:
    uint64_t mDeviceContext = 0;
    uint64_t mOpenGLContext = 0;
 #endif
+
+   std::array<uint32_t, 0x10000> mRegisters;
 };
 
 } // namespace opengl

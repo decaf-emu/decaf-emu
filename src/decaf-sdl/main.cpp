@@ -204,10 +204,6 @@ start(excmd::parser &parser,
       config::gpu::force_sync = true;
    }
 
-   if (options.has("gpu-record")) {
-      decaf::config::gpu::record_trace = true;
-   }
-
    if (options.has("log-no-stdout")) {
       config::log::to_stdout = true;
    }

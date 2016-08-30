@@ -14,6 +14,12 @@ sTvScanMode = GX2TVScanMode::P1080;
 static GX2DRCConnectCallbackFunction
 sDRCConnectCallbackFunction = nullptr;
 
+static internal::ScreenBufferInfo
+sTvBuffer;
+
+static internal::ScreenBufferInfo
+sDrcBuffer;
+
 static std::pair<unsigned, unsigned>
 getTVSize(GX2TVRenderMode mode)
 {
@@ -105,6 +111,14 @@ GX2SetTVBuffer(void *buffer,
    unsigned width, height;
    std::tie(width, height) = getTVSize(tvRenderMode);
 
+   sTvBuffer.buffer = buffer;
+   sTvBuffer.size = size;
+   sTvBuffer.tvRenderMode = tvRenderMode;
+   sTvBuffer.surfaceFormat = surfaceFormat;
+   sTvBuffer.bufferingMode = bufferingMode;
+   sTvBuffer.width = width;
+   sTvBuffer.height = height;
+
    // bufferingMode is conveniently equal to the number of buffers
    pm4::write(pm4::DecafSetBuffer {
       1,
@@ -121,14 +135,22 @@ GX2SetDRCBuffer(void *buffer,
                 GX2SurfaceFormat surfaceFormat,
                 GX2BufferingMode bufferingMode)
 {
-   int drcWidth = 854, drcHeight = 480;
+   int width = 854, height = 480;
+
+   sDrcBuffer.buffer = buffer;
+   sDrcBuffer.size = size;
+   sDrcBuffer.drcRenderMode = drcRenderMode;
+   sDrcBuffer.surfaceFormat = surfaceFormat;
+   sDrcBuffer.bufferingMode = bufferingMode;
+   sDrcBuffer.width = width;
+   sDrcBuffer.height = height;
 
    // bufferingMode is conveniently equal to the number of buffers
    pm4::write(pm4::DecafSetBuffer {
       0,
       bufferingMode,
-      static_cast<uint32_t>(drcWidth),
-      static_cast<uint32_t>(drcHeight)
+      static_cast<uint32_t>(width),
+      static_cast<uint32_t>(height)
    });
 }
 
@@ -192,5 +214,22 @@ GX2SetDRCConnectCallback(uint32_t id,
 
    return old;
 }
+
+namespace internal
+{
+
+ScreenBufferInfo *
+getTvBufferInfo()
+{
+   return &sTvBuffer;
+}
+
+ScreenBufferInfo *
+getDrcBufferInfo()
+{
+   return &sDrcBuffer;
+}
+
+} // namespace internal
 
 } // namespace gx2

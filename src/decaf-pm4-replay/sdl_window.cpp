@@ -2,17 +2,31 @@
 #include "clilog.h"
 #include <array>
 #include <fstream>
+#include <common/teenyheap.h>
 #include <libdecaf/decaf.h>
 #include <libdecaf/decaf_nullinputdriver.h>
 #include <libdecaf/decaf_pm4replay.h>
+#include <libdecaf/src/gpu/latte_registers.h>
 #include <libdecaf/src/gpu/pm4_format.h>
 #include <libdecaf/src/gpu/pm4_packets.h>
 #include <libdecaf/src/gpu/pm4_reader.h>
+#include <libdecaf/src/gpu/pm4_writer.h>
+#include <libdecaf/src/modules/gx2/gx2_cbpool.h>
+#include <libdecaf/src/modules/gx2/gx2_state.h>
 #include <libcpu/mem.h>
+
+static TeenyHeap *
+gSystemHeap = nullptr;
 
 class PM4Parser
 {
 public:
+   PM4Parser(decaf::GraphicsDriver *driver) :
+      mGraphicsDriver(driver)
+   {
+      mRegisterStorage = reinterpret_cast<uint32_t *>(gSystemHeap->alloc(0x10000 * 4, 0x100));
+   }
+
    bool open(const std::string &path)
    {
       mFile.open(path, std::ifstream::binary);
@@ -70,6 +84,30 @@ public:
             mBuffers.push_back(commandBuffer);
             break;
          }
+         case decaf::pm4::CapturePacket::RegisterSnapshot:
+         {
+            decaf_check((packet.size % 4) == 0);
+            auto numRegisters = packet.size / 4;
+            mFile.read(reinterpret_cast<char *>(mRegisterStorage), packet.size);
+
+            // Swap it into big endian, so we can write LOAD_ commands
+            for (auto i = 0u; i < numRegisters; ++i) {
+               mRegisterStorage[i] = byte_swap(mRegisterStorage[i]);
+            }
+
+            handleRegisterSnapshot(reinterpret_cast<be_val<uint32_t> *>(mRegisterStorage), numRegisters);
+            gx2::internal::flushCommandBuffer(0x100);
+            break;
+         }
+         case decaf::pm4::CapturePacket::SetBuffer:
+         {
+            decaf::pm4::CaptureSetBuffer setBuffer;
+            mFile.read(reinterpret_cast<char *>(&setBuffer), sizeof(decaf::pm4::CaptureSetBuffer));
+
+            handleSetBuffer(setBuffer);
+            gx2::internal::flushCommandBuffer(0x100);
+            break;
+         }
          case decaf::pm4::CapturePacket::MemoryLoad:
          {
             decaf::pm4::CaptureMemoryLoad load;
@@ -102,6 +140,105 @@ private:
    {
       decaf::pm4::injectCommandBuffer(buffer, size);
       return scanCommandBuffer(buffer, size / 4);
+   }
+
+   void handleSetBuffer(decaf::pm4::CaptureSetBuffer &setBuffer)
+   {
+      auto isTv = (setBuffer.type == decaf::pm4::CaptureSetBuffer::TvBuffer) ? 1u : 0u;
+
+      pm4::write(pm4::DecafSetBuffer {
+         isTv,
+         setBuffer.bufferingMode,
+         setBuffer.width,
+         setBuffer.height
+      });
+   }
+
+   void handleRegisterSnapshot(be_val<uint32_t> *registers, uint32_t count)
+   {
+      // Enable loading of registers
+      auto LOAD_CONTROL = latte::CONTEXT_CONTROL_ENABLE::get(0)
+         .ENABLE_CONFIG_REG(true)
+         .ENABLE_CONTEXT_REG(true)
+         .ENABLE_ALU_CONST(true)
+         .ENABLE_BOOL_CONST(true)
+         .ENABLE_LOOP_CONST(true)
+         .ENABLE_RESOURCE(true)
+         .ENABLE_SAMPLER(true)
+         .ENABLE_CTL_CONST(true)
+         .ENABLE_ORDINAL(true);
+
+      auto SHADOW_ENABLE = latte::CONTEXT_CONTROL_ENABLE::get(0);
+
+      pm4::write(pm4::ContextControl {
+         LOAD_CONTROL,
+         SHADOW_ENABLE
+      });
+
+      // Write all the register load packets!
+      static std::pair<uint32_t, uint32_t>
+      LoadConfigRange[] = { { 0, (latte::Register::ConfigRegisterEnd - latte::Register::ConfigRegisterBase) / 4 }, };
+
+      pm4::write(pm4::LoadConfigReg {
+         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ConfigRegisterBase / 4]),
+         LoadConfigRange
+      });
+
+      static std::pair<uint32_t, uint32_t>
+      LoadContextRange[] = { { 0, (latte::Register::ContextRegisterEnd - latte::Register::ContextRegisterBase) / 4 }, };
+
+      pm4::write(pm4::LoadContextReg {
+         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ContextRegisterBase / 4]),
+         LoadContextRange
+      });
+
+      static std::pair<uint32_t, uint32_t>
+      LoadAluConstRange[] = { { 0, (latte::Register::AluConstRegisterEnd - latte::Register::AluConstRegisterBase) / 4 }, };
+
+      pm4::write(pm4::LoadAluConst {
+         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::AluConstRegisterBase / 4]),
+         LoadAluConstRange
+      });
+
+      static std::pair<uint32_t, uint32_t>
+      LoadResourceRange[] = { { 0, (latte::Register::ResourceRegisterEnd - latte::Register::ResourceRegisterBase) / 4 }, };
+
+      pm4::write(pm4::LoadResource {
+         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ResourceRegisterBase / 4]),
+         LoadResourceRange
+      });
+
+      static std::pair<uint32_t, uint32_t>
+      LoadSamplerRange[] = { { 0, (latte::Register::SamplerRegisterEnd - latte::Register::SamplerRegisterBase) / 4 }, };
+
+      pm4::write(pm4::LoadSampler {
+         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::SamplerRegisterBase / 4]),
+         LoadSamplerRange
+      });
+
+      static std::pair<uint32_t, uint32_t>
+      LoadControlRange[] = { { 0, (latte::Register::ControlRegisterEnd - latte::Register::ControlRegisterBase) / 4 }, };
+
+      pm4::write(pm4::LoadControlConst {
+         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ControlRegisterBase / 4]),
+         LoadControlRange
+      });
+
+      static std::pair<uint32_t, uint32_t>
+      LoadLoopRange[] = { { 0, (latte::Register::LoopConstRegisterEnd - latte::Register::LoopConstRegisterBase) / 4 }, };
+
+      pm4::write(pm4::LoadLoopConst {
+         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::LoopConstRegisterBase / 4]),
+         LoadLoopRange
+      });
+
+      static std::pair<uint32_t, uint32_t>
+      LoadBoolRange[] = { { 0, (latte::Register::BoolConstRegisterEnd - latte::Register::BoolConstRegisterBase) / 4 }, };
+
+      pm4::write(pm4::LoadLoopConst {
+         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::BoolConstRegisterBase / 4]),
+         LoadBoolRange
+      });
    }
 
    void handleMemoryLoad(decaf::pm4::CaptureMemoryLoad &load, std::vector<char> &data)
@@ -180,8 +317,10 @@ private:
    }
 
 private:
+   decaf::GraphicsDriver *mGraphicsDriver = nullptr;
    std::ifstream mFile;
    std::vector<uint8_t *> mBuffers;
+   uint32_t *mRegisterStorage = nullptr;
 };
 
 SDLWindow::~SDLWindow()
@@ -282,10 +421,17 @@ SDLWindow::run(const std::string &tracePath)
    initialiseContext();
 
    // Setup decaf shit
-   mem::initialise();
+   gSystemHeap = new TeenyHeap(mem::translate(mem::SystemBase), mem::SystemSize);
+
+   // Setup pm4 command buffer pool
+   auto cbPoolSize = 0x2000;
+   auto cbPoolBase = gSystemHeap->alloc(cbPoolSize, 0x100);
+
+   gx2::internal::setMainCore();
+   gx2::internal::initCommandBufferPool(reinterpret_cast<uint32_t *>(cbPoolBase), cbPoolSize / 4);
 
    // Run the loop!
-   PM4Parser parser;
+   PM4Parser parser { mGraphicsDriver };
 
    if (!parser.open(tracePath)) {
       return false;
@@ -315,13 +461,20 @@ SDLWindow::run(const std::string &tracePath)
 
       if (parser.eof() || !parser.readFrame()) {
          shouldQuit = true;
+         break;
       }
 
-      mGraphicsDriver->syncPoll([&](unsigned int tvBuffer, unsigned int drcBuffer) {
-         SDL_GL_MakeCurrent(mWindow, mWindowContext);
-         drawScanBuffers(tvBuffer, drcBuffer);
-         SDL_GL_MakeCurrent(mWindow, mGpuContext);
-      });
+      // Parser has read a frame, so lets spam syncPoll until the GPU has spat out a frame for us
+      auto noDraw = true;
+
+      while (noDraw) {
+         mGraphicsDriver->syncPoll([&](unsigned int tvBuffer, unsigned int drcBuffer) {
+            SDL_GL_MakeCurrent(mWindow, mWindowContext);
+            drawScanBuffers(tvBuffer, drcBuffer);
+            SDL_GL_MakeCurrent(mWindow, mGpuContext);
+            noDraw = false;
+         });
+      }
    }
 
    return true;

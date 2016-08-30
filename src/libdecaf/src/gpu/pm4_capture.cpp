@@ -1,14 +1,18 @@
 #include "decaf_pm4replay.h"
 #include "gpu_utilities.h"
 #include "latte_constants.h"
+#include "modules/gx2/gx2_display.h"
+#include "modules/gx2/gx2_event.h"
 #include "pm4_buffer.h"
 #include "pm4_capture.h"
 #include "pm4_format.h"
 #include "pm4_packets.h"
 #include "pm4_reader.h"
+#include "pm4_writer.h"
 #include <array>
 #include <common/byte_swap.h>
 #include <common/log.h>
+#include <common/platform_dir.h>
 #include <common/murmur3.h>
 #include <fstream>
 #include <gsl.h>
@@ -37,10 +41,14 @@
  *   off the end, there is probably a bug with surface size calculation.
  */
 
-
 using decaf::pm4::CaptureMagic;
 using decaf::pm4::CapturePacket;
 using decaf::pm4::CaptureMemoryLoad;
+using decaf::pm4::CaptureSetBuffer;
+
+// TODO: This shit correctly
+static bool
+HashAllMemory = true;
 
 namespace pm4
 {
@@ -55,9 +63,15 @@ class Recorder
    };
 
 public:
-   bool
-   open(const std::string &path)
+   Recorder()
    {
+      mRegisters.fill(0);
+   }
+
+   bool
+   requestStart(const std::string &path)
+   {
+      decaf_check(mState == CaptureState::Disabled);
       std::unique_lock<std::mutex> lock { mMutex };
       mOut.open(path, std::fstream::binary);
 
@@ -65,44 +79,46 @@ public:
          return false;
       }
 
+      // Write magic header
       mOut.write(CaptureMagic.data(), CaptureMagic.size());
-      mRegisters.fill(0);
+
+      // Set intial state
       mRecordedMemory.clear();
-      mEnabled = true;
+      mState = CaptureState::WaitStartNextFrame;
+
       return true;
    }
 
-   bool
-   enabled() const
+   void
+   requestStop()
    {
-      return mEnabled;
+      decaf_check(mState == CaptureState::Enabled);
+      std::unique_lock<std::mutex> lock { mMutex };
+      mState = CaptureState::WaitEndNextFrame;
+   }
+
+   CaptureState
+   state() const
+   {
+      return mState;
    }
 
    void
-   pause()
+   swap()
    {
       std::unique_lock<std::mutex> lock { mMutex };
-      mEnabled = false;
-   }
 
-   void
-   resume()
-   {
-      std::unique_lock<std::mutex> lock { mMutex };
-      mEnabled = true;
-   }
-
-   void
-   stop()
-   {
-      std::unique_lock<std::mutex> lock { mMutex };
-      mEnabled = false;
-      mOut.close();
+      if (mState == CaptureState::WaitStartNextFrame) {
+         start();
+      } else if (mState == CaptureState::WaitEndNextFrame) {
+         stop();
+      }
    }
 
    void
    commandBuffer(pm4::Buffer *buffer)
    {
+      decaf_check(mState == CaptureState::Enabled);
       std::unique_lock<std::mutex> lock { mMutex };
       auto size = buffer->curSize * 4;
       scanCommandBuffer(buffer->buffer, buffer->curSize);
@@ -118,24 +134,101 @@ public:
    cpuFlush(void *buffer,
             uint32_t size)
    {
+      decaf_check(mState == CaptureState::Enabled);
       std::unique_lock<std::mutex> lock { mMutex };
       auto addr = mem::untranslate(buffer);
-
-      if (!trackMemory(addr, size)) {
-         // Seeing as this is a flush, we need to write the memory load regardless
-         // of whether we have already written the memory before
-         writeMemoryLoad(buffer, size);
-      }
+      trackMemory(addr, size);
    }
 
    void
    gpuFlush(void *buffer,
             uint32_t size)
    {
+      decaf_check(mState == CaptureState::Enabled);
       // Not sure if we need to do something here...
    }
 
+   void
+   syncRegisters(const uint32_t *registers,
+                 uint32_t size)
+   {
+      decaf_check(mState == CaptureState::WaitStartNextFrame);
+      decaf_check(size == mRegisters.size());
+      std::memcpy(mRegisters.data(), registers, size * sizeof(uint32_t));
+   }
+
 private:
+   void
+   start()
+   {
+      decaf_check(mState == CaptureState::Disabled || mState == CaptureState::WaitStartNextFrame);
+      mState = CaptureState::Enabled;
+      writeRegisterSnapshot();
+      writeDisplayInfo();
+   }
+
+   void
+   stop()
+   {
+      decaf_check(mState == CaptureState::Enabled || mState == CaptureState::WaitEndNextFrame);
+      mOut.close();
+      mState = CaptureState::Disabled;
+   }
+
+   void
+   writeRegisterSnapshot()
+   {
+      CapturePacket packet;
+      packet.type = CapturePacket::RegisterSnapshot;
+      packet.size = static_cast<uint32_t>(mRegisters.size() * sizeof(uint32_t));
+      writePacket(packet);
+      writeData(mRegisters.data(), packet.size);
+   }
+
+   void
+   writeDisplayInfo()
+   {
+      auto tvInfo = gx2::internal::getTvBufferInfo();
+
+      if (tvInfo->buffer) {
+         CapturePacket packet;
+         packet.type = CapturePacket::SetBuffer;
+         packet.size = sizeof(CaptureSetBuffer);
+         writePacket(packet);
+
+         CaptureSetBuffer setBuffer;
+         setBuffer.type = CaptureSetBuffer::TvBuffer;
+         setBuffer.address = mem::untranslate(tvInfo->buffer);
+         setBuffer.size = tvInfo->size;
+         setBuffer.renderMode = tvInfo->tvRenderMode;
+         setBuffer.surfaceFormat = tvInfo->surfaceFormat;
+         setBuffer.bufferingMode = tvInfo->bufferingMode;
+         setBuffer.width = tvInfo->width;
+         setBuffer.height = tvInfo->height;
+         writeData(&setBuffer, packet.size);
+      }
+
+      auto drcInfo = gx2::internal::getDrcBufferInfo();
+
+      if (drcInfo->buffer) {
+         CapturePacket packet;
+         packet.type = CapturePacket::SetBuffer;
+         packet.size = sizeof(CaptureSetBuffer);
+         writePacket(packet);
+
+         CaptureSetBuffer setBuffer;
+         setBuffer.type = CaptureSetBuffer::DrcBuffer;
+         setBuffer.address = mem::untranslate(drcInfo->buffer);
+         setBuffer.size = drcInfo->size;
+         setBuffer.renderMode = drcInfo->drcRenderMode;
+         setBuffer.surfaceFormat = drcInfo->surfaceFormat;
+         setBuffer.bufferingMode = drcInfo->bufferingMode;
+         setBuffer.width = drcInfo->width;
+         setBuffer.height = drcInfo->height;
+         writeData(&setBuffer, packet.size);
+      }
+   }
+
    void
    writePacket(CapturePacket &packet)
    {
@@ -378,7 +471,7 @@ private:
    void
    trackActiveTextures()
    {
-      for (auto i = 0; i < latte::MaxTextures; ++i) {
+      for (auto i = 0u; i < latte::MaxTextures; ++i) {
          auto resourceOffset = (latte::SQ_PS_TEX_RESOURCE_0 + i) * 7;
          auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
          auto sq_tex_resource_word1 = getRegister<latte::SQ_TEX_RESOURCE_WORD1_N>(latte::Register::SQ_TEX_RESOURCE_WORD1_0 + 4 * resourceOffset);
@@ -746,7 +839,7 @@ private:
    }
 
 private:
-   bool mEnabled = false;
+   CaptureState mState = CaptureState::Disabled;
    std::mutex mMutex;
    std::ofstream mOut;
    std::vector<RecordedMemory> mRecordedMemory;
@@ -756,41 +849,60 @@ private:
 static Recorder
 gRecorder;
 
-void
-captureStart(const std::string &path)
-{
-   decaf_check(!gRecorder.enabled());
-   gRecorder.open(path);
-}
-
-void
-captureStop()
-{
-   gRecorder.stop();
-}
-
-void
-capturePause()
-{
-   gRecorder.pause();
-}
-
-void
-captureResume()
-{
-   gRecorder.resume();
-}
-
 bool
-captureEnabled()
+captureStartAtNextSwap()
 {
-   return gRecorder.enabled();
+   decaf_check(gRecorder.state() == CaptureState::Disabled);
+   auto filename = std::string {};
+
+   // Find an unused filename!
+   for (auto i = 0u; i < 256u; ++i) {
+      filename = fmt::format("trace{}.pm4", i);
+
+      if (platform::fileExists(filename)) {
+         continue;
+      }
+
+      break;
+   }
+
+   if (filename.empty()) {
+      return false;
+   }
+
+   gLog->info("Starting pm4 trace as {}", filename);
+   return gRecorder.requestStart(filename);
+}
+
+void
+captureStopAtNextSwap()
+{
+   gRecorder.requestStop();
+}
+
+CaptureState
+captureState()
+{
+   return gRecorder.state();
+}
+
+void
+captureSwap()
+{
+   if (pm4::captureState() == pm4::CaptureState::WaitStartNextFrame) {
+      pm4::write(pm4::DecafCapSyncRegisters {});
+   }
+
+   if (captureState() != CaptureState::Disabled) {
+      gx2::GX2DrawDone();
+      gRecorder.swap();
+   }
 }
 
 void
 captureCommandBuffer(pm4::Buffer *buffer)
 {
-   if (captureEnabled()) {
+   if (captureState() == CaptureState::Enabled) {
       gRecorder.commandBuffer(buffer);
    }
 }
@@ -799,7 +911,7 @@ void
 captureCpuFlush(void *buffer,
                 uint32_t size)
 {
-   if (captureEnabled()) {
+   if (captureState() == CaptureState::Enabled) {
       gRecorder.cpuFlush(buffer, size);
    }
 }
@@ -808,9 +920,16 @@ void
 captureGpuFlush(void *buffer,
                 uint32_t size)
 {
-   if (captureEnabled()) {
+   if (captureState() == CaptureState::Enabled) {
       gRecorder.gpuFlush(buffer, size);
    }
+}
+
+void
+captureSyncGpuRegisters(const uint32_t *registers,
+                        uint32_t size)
+{
+   gRecorder.syncRegisters(registers, size);
 }
 
 } // namespace pm4

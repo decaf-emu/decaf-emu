@@ -95,6 +95,9 @@ GLDriver::handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t>
    case pm4::type3::DECAF_SWAP_BUFFERS:
       decafSwapBuffers(pm4::read<pm4::DecafSwapBuffers>(reader));
       break;
+   case pm4::type3::DECAF_CAP_SYNC_REGISTERS:
+      decafCapSyncRegisters(pm4::read<pm4::DecafCapSyncRegisters>(reader));
+      break;
    case pm4::type3::DECAF_CLEAR_COLOR:
       decafClearColor(pm4::read<pm4::DecafClearColor>(reader));
       break;

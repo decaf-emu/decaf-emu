@@ -36,6 +36,19 @@ struct DecafSetSwapInterval
    }
 };
 
+struct DecafCapSyncRegisters
+{
+   static const auto Opcode = type3::DECAF_CAP_SYNC_REGISTERS;
+
+   uint32_t dummy;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(dummy);
+   }
+};
+
 struct DecafCopyColorToScan
 {
    static const auto Opcode = type3::DECAF_COPY_COLOR_TO_SCAN;

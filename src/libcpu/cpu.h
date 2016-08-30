@@ -32,7 +32,7 @@ enum class jit_mode {
 
 static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 
-using EntrypointHandler = void(*)();
+using EntrypointHandler = std::function<void()>;
 using InterruptHandler = void (*)(uint32_t interrupt_flags);
 using SegfaultHandler = void(*)(uint32_t address);
 using IllInstHandler = void(*)();

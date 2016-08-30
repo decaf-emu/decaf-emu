@@ -14,7 +14,7 @@ namespace internal
 {
 
 void
-initCommandBufferPool(virtual_ptr<uint32_t> base,
+initCommandBufferPool(uint32_t *base,
                       uint32_t size);
 
 pm4::Buffer *

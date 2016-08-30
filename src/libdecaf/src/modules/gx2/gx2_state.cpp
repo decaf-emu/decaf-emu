@@ -23,24 +23,10 @@ gMainCoreId = 0xFF;
 void
 GX2Init(be_val<uint32_t> *attributes)
 {
-   virtual_ptr<uint32_t> cbPoolBase = nullptr;
+   uint32_t *cbPoolBase = nullptr;
    virtual_ptr<char *> argv = nullptr;
    auto cbPoolSize = 0x400000u;
    auto argc = 0u;
-
-   if (decaf::config::gpu::record_trace) {
-      for (auto i = 0u; i < 256u; ++i) {
-         auto filename = fmt::format("trace{}.pm4", i);
-
-         if (platform::fileExists(filename)) {
-            continue;
-         }
-
-         gLog->info("Recording pm4 trace as {}", filename);
-         pm4::captureStart(filename);
-         break;
-      }
-   }
 
    // Set main gx2 core
    gMainCoreId = coreinit::OSGetCoreId();
@@ -52,7 +38,7 @@ GX2Init(be_val<uint32_t> *attributes)
 
       switch (id) {
       case GX2InitAttrib::CommandBufferPoolBase:
-         cbPoolBase = make_virtual_ptr<uint32_t>(value);
+         cbPoolBase = mem::translate<uint32_t>(value);
          break;
       case GX2InitAttrib::CommandBufferPoolSize:
          cbPoolSize = value;
@@ -73,7 +59,7 @@ GX2Init(be_val<uint32_t> *attributes)
 
    // Allocate command buffer pool
    if (!cbPoolBase) {
-      cbPoolBase = reinterpret_cast<uint32_t*>((*coreinit::pMEMAllocFromDefaultHeapEx)(cbPoolSize, 0x100));
+      cbPoolBase = reinterpret_cast<uint32_t *>((*coreinit::pMEMAllocFromDefaultHeapEx)(cbPoolSize, 0x100));
    }
 
    // Init event handler stuff (vsync, flips, etc)
@@ -163,6 +149,12 @@ uint32_t
 getMainCoreId()
 {
    return gMainCoreId;
+}
+
+void
+setMainCore()
+{
+   gMainCoreId = coreinit::OSGetCoreId();
 }
 
 } // namespace internal

@@ -3,6 +3,7 @@
 #include "debugger_ui.h"
 #include "debugger_ui_internal.h"
 #include "decaf_config.h"
+#include "gpu/pm4_capture.h"
 #include "kernel/kernel_loader.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include <imgui.h>
@@ -248,6 +249,36 @@ draw()
 
          if (ImGui::MenuItem("Kernel Trace Enabled", nullptr, decaf::config::log::kernel_trace, true)) {
             decaf::config::log::kernel_trace = !decaf::config::log::kernel_trace;
+         }
+
+         auto pm4Enable = false;
+         auto pm4Status = false;
+
+         switch (pm4::captureState()) {
+         case pm4::CaptureState::Disabled:
+            pm4Status = false;
+            pm4Enable = true;
+            break;
+         case pm4::CaptureState::Enabled:
+            pm4Status = true;
+            pm4Enable = true;
+            break;
+         case pm4::CaptureState::WaitEndNextFrame:
+            pm4Status = false;
+            pm4Enable = false;
+            break;
+         case pm4::CaptureState::WaitStartNextFrame:
+            pm4Status = true;
+            pm4Enable = false;
+            break;
+         }
+
+         if (ImGui::MenuItem("PM4 Trace Enabled", nullptr, pm4Status, pm4Enable)) {
+            if (!pm4Status) {
+               pm4::captureStartAtNextSwap();
+            } else {
+               pm4::captureStopAtNextSwap();
+            }
          }
 
          if (ImGui::MenuItem("GX2 Texture Dump Enabled", nullptr, decaf::config::gx2::dump_textures, true)) {

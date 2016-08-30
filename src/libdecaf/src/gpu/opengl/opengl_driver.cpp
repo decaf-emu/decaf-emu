@@ -4,6 +4,7 @@
 #include "gpu/gpu_commandqueue.h"
 #include "gpu/latte_registers.h"
 #include "gpu/pm4_buffer.h"
+#include "gpu/pm4_capture.h"
 #include "modules/coreinit/coreinit_time.h"
 #include "modules/gx2/gx2_event.h"
 #include "modules/gx2/gx2_enum.h"
@@ -23,14 +24,17 @@ namespace opengl
 unsigned
 MaxUniformBlockSize = 0;
 
+GLDriver::GLDriver()
+{
+   mRegisters.fill(0);
+}
+
 void
 GLDriver::initGL()
 {
-   // Clear active state
-   mRegisters.fill(0);
-
+   // Apply all registers
    for (auto i = 0u; i < mRegisters.size(); ++i) {
-      applyRegister(static_cast<latte::Register>(i*4));
+      applyRegister(static_cast<latte::Register>(i * 4));
    }
 
    mActiveShader = nullptr;
@@ -176,6 +180,12 @@ GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
          mSwapFunc(mTvScanBuffers.object, mDrcScanBuffers.object);
       }
    });
+}
+
+void
+GLDriver::decafCapSyncRegisters(const pm4::DecafCapSyncRegisters &data)
+{
+   pm4::captureSyncGpuRegisters(mRegisters.data(), mRegisters.size());
 }
 
 void
@@ -565,7 +575,7 @@ GLDriver::pfpSyncMe(const pm4::PfpSyncMe &data)
 void
 GLDriver::injectFence(std::function<void()> func)
 {
-   gl::GLsync object = gl::glFenceSync(gl::GL_SYNC_GPU_COMMANDS_COMPLETE, gl::GL_NONE_BIT);
+   auto object = gl::glFenceSync(gl::GL_SYNC_GPU_COMMANDS_COMPLETE, gl::GL_NONE_BIT);
 
    SyncWait wait;
    wait.type = SyncWaitType::Fence;
@@ -636,17 +646,7 @@ GLDriver::runOnGLThread(std::function<void()> func)
    auto taskIterator = mTaskList.end();
    --taskIterator;
 
-   // Submit a dummy command buffer in case the GPU is idle
-   // (TODO: use a separate wakeup signal shared between command buffers
-   //  and tasks instead of waiting on the command buffer queue directly)
-   static const uint32_t nopPacket = byte_swap(
-      pm4::type2::Header::get(0).type(pm4::Header::Type2).value);
-   pm4::Buffer nopBuffer;
-   nopBuffer.buffer = const_cast<uint32_t *>(&nopPacket);
-   nopBuffer.curSize = sizeof(nopPacket);
-   nopBuffer.maxSize = sizeof(nopPacket);
-   gpu::queueCommandBuffer(&nopBuffer);
-
+   gpu::awaken();
    taskIterator->completionCV.wait(lock);
 
    mTaskList.erase(taskIterator);

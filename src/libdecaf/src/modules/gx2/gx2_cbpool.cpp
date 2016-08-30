@@ -51,7 +51,7 @@ static pm4::Buffer *
 allocateCommandBuffer(uint32_t size);
 
 void
-initCommandBufferPool(virtual_ptr<uint32_t> base,
+initCommandBufferPool(uint32_t *base,
                       uint32_t size)
 {
    auto core = coreinit::OSGetCoreId();
@@ -321,7 +321,6 @@ getCommandBuffer(uint32_t size)
 {
    auto core = coreinit::OSGetCoreId();
    auto &cb = sActiveBuffer[core];
-
    decaf_check(cb);
 
    if (cb->curSize + size > cb->maxSize) {

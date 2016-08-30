@@ -3,6 +3,8 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <libdecaf/decaf.h>
+#include <libcpu/cpu.h>
+#include <libcpu/mem.h>
 
 std::shared_ptr<spdlog::logger>
 gCliLog;
@@ -75,13 +77,28 @@ start(excmd::parser &parser,
    decaf::initialiseLogging(sinks, spdlog::level::debug);
 
    // Let's go boyssssss
-   SDLWindow window;
+   int result = -1;
 
-   if (!window.createWindow()) {
-      return -1;
-   }
+   // We need to run the trace on a core.
+   mem::initialise();
 
-   return window.run(traceFile) ? 0 : -1;
+   cpu::setCoreEntrypointHandler(
+      [&]() {
+         if (cpu::this_core::id() == 1) {
+            SDLWindow window;
+
+            if (!window.createWindow()) {
+               result = -1;
+            } else {
+               result = window.run(traceFile);
+            }
+         }
+      });
+
+   cpu::start();
+   cpu::join();
+
+   return result;
 }
 
 int main(int argc, char **argv)

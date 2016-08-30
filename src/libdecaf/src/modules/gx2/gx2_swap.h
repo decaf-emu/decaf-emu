@@ -11,16 +11,19 @@ struct GX2ColorBuffer;
 struct GX2Texture;
 
 void
-GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer, GX2ScanTarget scanTarget);
+GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer,
+                               GX2ScanTarget scanTarget);
 
 void
 GX2SwapScanBuffers();
 
 BOOL
-GX2GetLastFrame(GX2ScanTarget scanTarget, GX2Texture *texture);
+GX2GetLastFrame(GX2ScanTarget scanTarget,
+                GX2Texture *texture);
 
 BOOL
-GX2GetLastFrameGamma(GX2ScanTarget scanTarget, be_val<float> *gamma);
+GX2GetLastFrameGamma(GX2ScanTarget scanTarget,
+                     be_val<float> *gamma);
 
 uint32_t
 GX2GetSwapInterval();

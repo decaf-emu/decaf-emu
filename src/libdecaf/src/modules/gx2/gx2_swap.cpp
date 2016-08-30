@@ -2,6 +2,7 @@
 #include "gx2_event.h"
 #include "gx2_surface.h"
 #include "gx2_swap.h"
+#include "gpu/pm4_capture.h"
 #include "gpu/pm4_writer.h"
 
 namespace gx2
@@ -46,6 +47,15 @@ GX2SwapScanBuffers()
 
    gx2::internal::onSwap();
    pm4::write(pm4::DecafSwapBuffers { });
+
+   if (pm4::captureState() == pm4::CaptureState::WaitStartNextFrame) {
+      pm4::write(pm4::DecafCapSyncRegisters {});
+      GX2DrawDone();
+      pm4::captureSwap();
+   } else if(pm4::captureState() == pm4::CaptureState::WaitEndNextFrame) {
+      GX2DrawDone();
+      pm4::captureSwap();
+   }
 }
 
 BOOL

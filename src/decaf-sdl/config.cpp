@@ -105,8 +105,7 @@ struct CerealGPU
       using namespace decaf::config::gpu;
       ar(CEREAL_NVP(debug),
          CEREAL_NVP(debug_filters),
-         CEREAL_NVP(force_sync),
-         CEREAL_NVP(record_trace));
+         CEREAL_NVP(force_sync));
    }
 };
 

@@ -67,4 +67,29 @@ GX2DRCConnectCallbackFunction
 GX2SetDRCConnectCallback(uint32_t id,
                          GX2DRCConnectCallbackFunction callback);
 
+namespace internal
+{
+
+struct ScreenBufferInfo
+{
+   void *buffer = nullptr;
+   uint32_t size;
+   GX2DrcRenderMode drcRenderMode;
+   GX2TVRenderMode tvRenderMode;
+   GX2SurfaceFormat surfaceFormat;
+   GX2BufferingMode bufferingMode;
+   unsigned width;
+   unsigned height;
+};
+
+//! Returns data set by GX2SetTVBuffer
+ScreenBufferInfo *
+getTvBufferInfo();
+
+//! Returns data set by GX2SetDRCBuffer
+ScreenBufferInfo *
+getDrcBufferInfo();
+
+} // namespace internal
+
 } // namespace gx2
