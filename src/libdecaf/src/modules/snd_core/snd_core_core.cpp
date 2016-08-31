@@ -85,7 +85,7 @@ AXInitWithParams(AXInitParams *params)
    internal::initEvents();
 
    if (auto driver = decaf::getSoundDriver()) {
-      if (!driver->start(sOutputRate, sOutputChannels)) {
+      if (!driver->start(48000, sOutputChannels)) {
          gLog->error("Sound driver failed to start, disabling sound output");
          decaf::setSoundDriver(nullptr);
       }
@@ -215,7 +215,8 @@ AXRmtAdvancePtr(int32_t)
 uint32_t
 FrameCallbackThreadEntry(uint32_t core_id, void *arg2)
 {
-   int numSamples = sOutputRate * 3 / 1000;
+   static const int NumOutputSamples = 48000 * 3 / 1000;
+   int numInputSamples = sOutputRate * 3 / 1000;
 
    while (true) {
       coreinit::internal::lockScheduler();
@@ -229,19 +230,17 @@ FrameCallbackThreadEntry(uint32_t core_id, void *arg2)
          }
       }
 
-      decaf_check(static_cast<size_t>(numSamples * sOutputChannels) <= sMixBuffer.size());
-      internal::mixOutput(&sMixBuffer[0], numSamples, sOutputChannels);
-
-      // TODO: FinalMixCallback
+      decaf_check(static_cast<size_t>(NumOutputSamples * sOutputChannels) <= sMixBuffer.size());
+      internal::mixOutput(&sMixBuffer[0], numInputSamples, sOutputChannels);
 
       auto driver = decaf::getSoundDriver();
 
       if (driver) {
-         for (int i = 0; i < numSamples * sOutputChannels; ++i) {
+         for (int i = 0; i < NumOutputSamples * sOutputChannels; ++i) {
             sOutputBuffer[i] = static_cast<int16_t>(std::min(std::max(sMixBuffer[i], -32768), 32767));
          }
 
-         driver->output(&sOutputBuffer[0], numSamples);
+         driver->output(&sOutputBuffer[0], NumOutputSamples);
       }
    }
 

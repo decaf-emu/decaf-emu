@@ -590,6 +590,7 @@
     <ClInclude Include="..\src\libdecaf\src\modules\proc_ui\proc_ui_enum.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_ai.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_constants.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_core.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_device.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_enum.h" />

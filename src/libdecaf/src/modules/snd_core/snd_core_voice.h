@@ -3,11 +3,14 @@
 #include "common/fixed.h"
 #include "common/structsize.h"
 #include "common/types.h"
+#include "snd_core_constants.h"
 #include "snd_core_device.h"
 #include "snd_core_enum.h"
 
 namespace snd_core
 {
+
+using Pcm16Sample = sg14::make_fixed<15, 0, int16_t>;
 
 using AXVoiceCallbackFn = wfunc_ptr<void*>;
 using be_AXVoiceCallbackFn = be_wfunc_ptr<void*>;
@@ -321,7 +324,7 @@ struct AXCafeVoiceExtras
 
    UNKNOWN(0x2);
 
-   uint16_t type;
+   AXVoiceType type;
 
    UNKNOWN(0x15a);
 
@@ -339,11 +342,13 @@ struct AXCafeVoiceExtras
 
    AXCafeVoiceData data;
 
-   UNKNOWN(0x28);
+   AXVoiceAdpcm adpcm;
 
    AXVoiceSrc src;
 
-   UNKNOWN(0xea);
+   AXVoiceAdpcmLoopData adpcmLoop;
+
+   UNKNOWN(0xe4);
 
    uint32_t syncBits;
 
@@ -357,38 +362,36 @@ CHECK_OFFSET(AXCafeVoiceExtras, 0x16c, itdOn);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x170, itdDelay);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x17a, ve);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x17e, data);
+CHECK_OFFSET(AXCafeVoiceExtras, 0x190, adpcm);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x1b8, src);
+CHECK_OFFSET(AXCafeVoiceExtras, 0x1c6, adpcmLoop);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x2b0, syncBits);
 CHECK_SIZE(AXCafeVoiceExtras, 0x2c0);
 
 struct AXVoiceExtras : AXCafeVoiceExtras
 {
-   // Volume on each of 6 surround channels for TV output
-   uint16_t tvVolume[6];
-   // Volume on each of 4 channels for DRC output (2 stereo channels + ???)
-   uint16_t drcVolume[4];
-   // Volume for each of 4 controller speakers
-   uint16_t controllerVolume[4];
+   struct MixVolume
+   {
+      ufixed_1_15_t volume;
+      ufixed_1_15_t delta;
+   };
 
-   // Current fractional offset (as 16.16 fixed point)
-   int32_t offsetFrac;
-   // Sample index of next sample to read
-   uint32_t readPosition;
-   // Current sample value (at index readPosition-1)
-   int16_t currentSample;
-   // Previous sample value (for interpolated resampling)
-   int16_t prevSample;
+   // Volume on each of 6 surround channels for TV output
+   MixVolume tvVolume[AXNumTvDevices][AXNumTvChannels][AXNumTvBus];
+
+   // Volume on each of 4 channels for DRC output (2 stereo channels + ???)
+   MixVolume drcVolume[AXNumDrcDevices][AXNumDrcChannels][AXNumDrcBus];
+
+   // Volume for each of 4 controller speakers
+   MixVolume rmtVolume[AXNumRmtDevices][AXNumRmtChannels][AXNumRmtBus];
 
    // Number of loops so far
    uint32_t loopCount;
 
-   // ADPCM decoding data
-   int16_t adpcmCoeff[16];
-   uint8_t adpcmPredScale;
-   int16_t adpcmPrevSample[2];
-   // ADPCM data for loop start point
-   uint8_t adpcmLoopPredScale;
-   int16_t adpcmLoopPrevSample[2];
+   // Used during decoding
+   uint32_t numSamples;
+   Pcm16Sample samples[144];
+
 };
 
 #pragma pack(pop)

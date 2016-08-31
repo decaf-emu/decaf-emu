@@ -7,10 +7,38 @@
 namespace snd_core
 {
 
-using AXDeviceFinalMixCallback = wfunc_ptr<void>;
-using be_AXDeviceFinalMixCallback = be_wfunc_ptr<void>;
-using AXAuxCallback = wfunc_ptr<void>;
-using be_AXAuxCallback = wfunc_ptr<void>;
+#pragma pack(push, 1)
+
+struct AXAuxCallbackData
+{
+   be_val<uint32_t> channels;
+   be_val<uint32_t> samples;
+};
+CHECK_OFFSET(AXAuxCallbackData, 0x0, channels);
+CHECK_OFFSET(AXAuxCallbackData, 0x4, samples);
+CHECK_SIZE(AXAuxCallbackData, 0x8);
+
+struct AXDeviceFinalMixData
+{
+   be_ptr<be_ptr<be_val<int32_t>>> data;
+   be_val<uint16_t> channels;
+   be_val<uint16_t> samples;
+   be_val<uint16_t> unk1;
+   be_val<uint16_t> channelsOut;
+};
+CHECK_OFFSET(AXDeviceFinalMixData, 0x0, data);
+CHECK_OFFSET(AXDeviceFinalMixData, 0x4, channels);
+CHECK_OFFSET(AXDeviceFinalMixData, 0x6, samples);
+CHECK_OFFSET(AXDeviceFinalMixData, 0x8, unk1);
+CHECK_OFFSET(AXDeviceFinalMixData, 0xa, channelsOut);
+CHECK_SIZE(AXDeviceFinalMixData, 0xc);
+
+#pragma pack(pop)
+
+using AXDeviceFinalMixCallback = wfunc_ptr<void, AXDeviceFinalMixData*>;
+using be_AXDeviceFinalMixCallback = be_wfunc_ptr<void, AXDeviceFinalMixData*>;
+using AXAuxCallback = wfunc_ptr<void, be_ptr<be_val<int32_t>>*, void *, AXAuxCallbackData *>;
+using be_AXAuxCallback = wfunc_ptr<void, be_ptr<be_val<int32_t>>*, void *, AXAuxCallbackData *>;
 
 AXResult
 AXGetDeviceMode(AXDeviceType type,
@@ -85,7 +113,9 @@ namespace internal
 {
 
 void
-mixOutput(int32_t *buffer, int numSamples, int numChannels);
+mixOutput(int32_t *buffer,
+          int numSamples,
+          int numChannels);
 
 } // namespace internal
 

@@ -80,19 +80,8 @@ AXAcquireVoiceEx(uint32_t priority,
    foundVoice->userContext = userContext;
 
    auto extras = internal::getVoiceExtras(foundVoice->index);
-   for (auto i = 0; i < 6; ++i) {
-      extras->tvVolume[i] = 0;
-   }
-   for (auto i = 0; i < 4; ++i) {
-      extras->drcVolume[i] = 0;
-      extras->controllerVolume[i] = 0;
-   }
-   extras->offsetFrac = 0;
+   std::memset(extras, 0, sizeof(internal::AXVoiceExtras));
    extras->src.ratio = 1.0;
-   extras->src.currentOffsetFrac = 0;
-   extras->loopCount = 0;
-   extras->adpcmPrevSample[0] = 0;
-   extras->adpcmPrevSample[1] = 0;
 
    // Save this to the acquired voice list so that it can be
    //  forcefully freed if a higher priority voice is needed.
@@ -160,23 +149,8 @@ AXSetVoiceAdpcm(AXVoice *voice,
                 AXVoiceAdpcm *adpcm)
 {
    auto extras = internal::getVoiceExtras(voice->index);
-   for (auto i = 0; i < 16; ++i) {
-      extras->adpcmCoeff[i] = adpcm->coefficients[i];
-   }
-   extras->adpcmPredScale = static_cast<uint8_t>(adpcm->predScale);
-   extras->adpcmPrevSample[0] = adpcm->prevSample[0];
-   extras->adpcmPrevSample[1] = adpcm->prevSample[1];
-
-   if (decaf::config::sound::dump_sounds) {
-      auto filename = "sound_" + pointerAsString(voice->offsets.data.get());
-
-      if (!platform::fileExists("dump/" + filename + ".adpcm")) {
-         createDumpDirectory();
-
-         auto file = std::ofstream { "dump/" + filename + ".adpcm", std::ofstream::out };
-         file.write(reinterpret_cast<char*>(adpcm), sizeof(*adpcm));
-      }
-   }
+   extras->adpcm = *adpcm;
+   extras->syncBits |= internal::AXVoiceSyncBits::Adpcm;
 }
 
 void
@@ -184,9 +158,8 @@ AXSetVoiceAdpcmLoop(AXVoice *voice,
                     AXVoiceAdpcmLoopData *loopData)
 {
    auto extras = internal::getVoiceExtras(voice->index);
-   extras->adpcmLoopPredScale = static_cast<uint8_t>(loopData->predScale);
-   extras->adpcmLoopPrevSample[0] = loopData->prevSample[0];
-   extras->adpcmLoopPrevSample[1] = loopData->prevSample[1];
+   extras->adpcmLoop = *loopData;
+   extras->syncBits |= internal::AXVoiceSyncBits::AdpcmLoop;
 }
 
 void
@@ -199,26 +172,44 @@ AXSetVoiceCurrentOffset(AXVoice *voice,
 AXResult
 AXSetVoiceDeviceMix(AXVoice *voice,
                     AXDeviceType type,
-                    uint32_t id,
+                    uint32_t deviceId,
                     AXVoiceDeviceMixData *mixData)
 {
    auto extras = internal::getVoiceExtras(voice->index);
 
    switch (type) {
    case AXDeviceType::TV:
-      for (auto i = 0; i < 6; ++i) {
-         extras->tvVolume[i] = mixData[i].bus[0].volume;
+      decaf_check(deviceId < AXNumTvDevices);
+
+      for (auto c = 0; c < AXNumTvChannels; ++c) {
+         for (auto b = 0; b < AXNumTvBus; ++b) {
+            extras->tvVolume[deviceId][c][b].volume = ufixed_1_15_t::from_data(mixData[c].bus[b].volume);
+            extras->tvVolume[deviceId][c][b].delta = ufixed_1_15_t::from_data(mixData[c].bus[b].delta);
+         }
       }
+
       break;
    case AXDeviceType::DRC:
-      for (auto i = 0; i < 4; ++i) {
-         extras->drcVolume[i] = mixData[i].bus[0].volume;
+      decaf_check(deviceId < AXNumDrcDevices);
+
+      for (auto c = 0; c < AXNumDrcChannels; ++c) {
+         for (auto b = 0; b < AXNumDrcBus; ++b) {
+            extras->drcVolume[deviceId][c][b].volume = ufixed_1_15_t::from_data(mixData[c].bus[b].volume);
+            extras->drcVolume[deviceId][c][b].delta = ufixed_1_15_t::from_data(mixData[c].bus[b].delta);
+         }
       }
+
       break;
    case AXDeviceType::RMT:
-      if (id < 4) {
-         extras->controllerVolume[id] = mixData[0].bus[0].volume;
+      decaf_check(deviceId < AXNumRmtDevices);
+
+      for (auto c = 0; c < AXNumRmtChannels; ++c) {
+         for (auto b = 0; b < AXNumRmtBus; ++b) {
+            extras->rmtVolume[deviceId][c][b].volume = ufixed_1_15_t::from_data(mixData[c].bus[b].volume);
+            extras->rmtVolume[deviceId][c][b].delta = ufixed_1_15_t::from_data(mixData[c].bus[b].delta);
+         }
       }
+
       break;
    }
 
