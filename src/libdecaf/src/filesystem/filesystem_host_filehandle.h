@@ -1,8 +1,9 @@
 #pragma once
 #include "common/decaf_assert.h"
-#include <fstream>
 #include "filesystem_file.h"
 #include "filesystem_filehandle.h"
+#include <fstream>
+#include <cstring>
 
 namespace fs
 {
