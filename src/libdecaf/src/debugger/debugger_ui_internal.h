@@ -79,6 +79,11 @@ void displayAddress(uint32_t address);
 void draw();
 }
 
+namespace VoicesView {
+extern bool gIsVisible;
+void draw();
+}
+
 } // namespace ui
 
 } // namespace debugger

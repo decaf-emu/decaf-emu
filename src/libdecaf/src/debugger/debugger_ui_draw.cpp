@@ -321,6 +321,10 @@ draw()
             StatsView::gIsVisible = !StatsView::gIsVisible;
          }
 
+         if (ImGui::MenuItem("Voices", "CTRL+P", VoicesView::gIsVisible, true)) {
+            VoicesView::gIsVisible = !VoicesView::gIsVisible;
+         }
+
          ImGui::EndMenu();
       }
 
@@ -352,6 +356,10 @@ draw()
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::Q), false)) {
          StatsView::gIsVisible = !StatsView::gIsVisible;
+      }
+
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::P), false)) {
+         VoicesView::gIsVisible = !VoicesView::gIsVisible;
       }
 
       if (sIsPaused && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F5), false)) {
@@ -398,6 +406,7 @@ draw()
       RegView::draw();
       StackView::draw();
       StatsView::draw();
+      VoicesView::draw();
    }
 }
 

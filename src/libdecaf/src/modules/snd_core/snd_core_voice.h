@@ -3,9 +3,11 @@
 #include "common/fixed.h"
 #include "common/structsize.h"
 #include "common/types.h"
+#include "ppcutils/va_list.h"
 #include "snd_core_constants.h"
 #include "snd_core_device.h"
 #include "snd_core_enum.h"
+#include <vector>
 
 namespace snd_core
 {
