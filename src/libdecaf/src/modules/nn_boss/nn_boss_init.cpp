@@ -30,12 +30,19 @@ IsInitialized()
    return gInitialised;
 }
 
+int
+GetBossState()
+{
+   return 1;
+}
+
 void
 Module::registerInitFunctions()
 {
    RegisterKernelFunctionName("Initialize__Q2_2nn4bossFv", nn::boss::Initialize);
    RegisterKernelFunctionName("Finalize__Q2_2nn4bossFv", nn::boss::Finalize);
    RegisterKernelFunctionName("IsInitialized__Q2_2nn4bossFv", nn::boss::IsInitialized);
+   RegisterKernelFunctionName("GetBossState__Q2_2nn4bossFv", nn::boss::GetBossState);
 }
 
 }  // namespace boss
