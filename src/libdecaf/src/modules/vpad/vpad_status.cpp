@@ -121,11 +121,18 @@ VPADGetTPCalibratedPoint(uint32_t chan,
    std::memcpy(calibratedData, uncalibratedData, sizeof(VPADTouchData));
 }
 
+bool
+VPADBASEGetHeadphoneStatus(uint32_t chan)
+{
+   return false;
+}
+
 void
 Module::registerStatusFunctions()
 {
    RegisterKernelFunction(VPADRead);
    RegisterKernelFunction(VPADGetTPCalibratedPoint);
+   RegisterKernelFunction(VPADBASEGetHeadphoneStatus);
 }
 
 } // namespace vpad

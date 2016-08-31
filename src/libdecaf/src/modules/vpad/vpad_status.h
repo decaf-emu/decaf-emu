@@ -131,6 +131,9 @@ VPADGetTPCalibratedPoint(uint32_t chan,
                          VPADTouchData *calibratedData,
                          VPADTouchData *uncalibratedData);
 
+bool
+VPADBASEGetHeadphoneStatus(uint32_t chan);
+
 /** @} */
 
 } // namespace vpad
