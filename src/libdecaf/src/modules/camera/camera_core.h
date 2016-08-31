@@ -47,6 +47,15 @@ CAMInit(uint32_t id,
         CAMInitInfo *info,
         be_val<CAMError> *error);
 
+void
+CAMExit(CAMHandle handle);
+
+int32_t
+CAMOpen(CAMHandle handle);
+
+int32_t
+CAMClose(CAMHandle handle);
+
 int32_t
 CAMGetMemReq(CAMMemoryInfo *info);
 

@@ -13,6 +13,23 @@ CAMInit(uint32_t id,
    return id;
 }
 
+void
+CAMExit(CAMHandle handle)
+{
+}
+
+int32_t
+CAMOpen(CAMHandle handle)
+{
+   return CAMError::OK;
+}
+
+int32_t
+CAMClose(CAMHandle handle)
+{
+   return CAMError::OK;
+}
+
 int32_t
 CAMGetMemReq(CAMMemoryInfo *info)
 {
@@ -29,6 +46,9 @@ void
 Module::registerCoreFunctions()
 {
    RegisterKernelFunction(CAMInit);
+   RegisterKernelFunction(CAMExit);
+   RegisterKernelFunction(CAMOpen);
+   RegisterKernelFunction(CAMClose);
    RegisterKernelFunction(CAMGetMemReq);
 }
 
