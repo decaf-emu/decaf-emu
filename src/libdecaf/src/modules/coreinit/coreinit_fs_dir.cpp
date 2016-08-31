@@ -28,11 +28,11 @@ FSOpenDirAsync(FSClient *client,
 
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto fs = kernel::getFileSystem();
-      auto path = internal::translatePath(client, block->path);
-      auto dir = fs->openFolder(path);
+      auto realPath = internal::translatePath(client, block->path);
+      auto dir = fs->openFolder(realPath);
 
       if (!dir) {
-         gLog->debug("Could not open directory '{}'", path.path());
+         gLog->debug("Could not open directory '{}'", realPath.path());
          return FSStatus::NotFound;
       }
 

@@ -1,3 +1,6 @@
+# Can't use -Werror=shadow because of excmd
+set(CMAKE_CXX_FLAGS "-Wshadow ${CMAKE_CXX_FLAGS}")
+
 include_directories(".")
 
 file(GLOB_RECURSE SOURCE_FILES *.cpp)

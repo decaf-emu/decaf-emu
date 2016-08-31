@@ -550,7 +550,7 @@ processRelocations(LoadedModule *loadedMod,
       }
 
       elf::readSectionData(in, section.header, buffer);
-      auto in = BigEndianView{ gsl::as_span(buffer) };
+      auto secIn = BigEndianView{ gsl::as_span(buffer) };
 
       auto &symSec = sections[section.header.link];
       auto &targetSec = sections[section.header.info];
@@ -560,9 +560,9 @@ processRelocations(LoadedModule *loadedMod,
       auto targetBaseAddr = targetSec.header.addr;
       auto targetVirtAddr = targetSec.virtAddress;
 
-      while (!in.eof()) {
+      while (!secIn.eof()) {
          elf::Rela rela;
-         elf::readRelocationAddend(in, rela);
+         elf::readRelocationAddend(secIn, rela);
 
          auto index = rela.info >> 8;
          auto type = rela.info & 0xff;

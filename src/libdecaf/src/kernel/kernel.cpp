@@ -27,7 +27,6 @@
 #include "common/decaf_assert.h"
 #include "common/teenyheap.h"
 #include <pugixml.hpp>
-#include <excmd.h>
 
 namespace coreinit
 {

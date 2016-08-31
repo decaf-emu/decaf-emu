@@ -282,7 +282,7 @@ struct RemoteThreadTask
    std::function<void()> func;
    std::condition_variable completionCV;
 
-   RemoteThreadTask(std::function<void()> func) : func(func)
+   RemoteThreadTask(std::function<void()> func_) : func(func_)
    {
    }
 };

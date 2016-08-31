@@ -35,14 +35,14 @@ addBreakpoint(uint32_t* bpList, ppcaddr_t address, uint32_t flags)
    std::vector<uint32_t> newBpListVec;
    bool bp_changed = true;
 
-   compareAndSwapBreakpoints(bpList, [&](auto bpList) {
+   compareAndSwapBreakpoints(bpList, [&](auto oldList) {
       // Reset from any last iteration attempt
       newBpListVec.clear();
       bp_changed = true;
 
       // Copy all the existing BPs till the terminator
-      if (bpList) {
-         for (uint32_t *bpListIter = bpList; *bpListIter != 0xFFFFFFFF; ) {
+      if (oldList) {
+         for (uint32_t *bpListIter = oldList; *bpListIter != 0xFFFFFFFF; ) {
             auto bp_address = *bpListIter++;
             auto bp_flags = *bpListIter++;
 
@@ -51,7 +51,7 @@ addBreakpoint(uint32_t* bpList, ppcaddr_t address, uint32_t flags)
                // If it already has all the flags, we don't need to change anything
                if ((bp_flags & flags) == flags) {
                   bp_changed = false;
-                  return bpList;
+                  return oldList;
                }
 
                // Flags are additive
@@ -88,10 +88,10 @@ removeBreakpoint(uint32_t *bpList,
    std::vector<uint32_t> newBpListVec;
    bool bp_matched = false;
 
-   compareAndSwapBreakpoints(bpList, [&](auto bpList) {
+   compareAndSwapBreakpoints(bpList, [&](auto oldList) {
       // If there is no existing list, we have nothing to do
-      if (!bpList) {
-         return bpList;
+      if (!oldList) {
+         return oldList;
       }
 
       // Reset from any last iteration attempt
@@ -99,14 +99,14 @@ removeBreakpoint(uint32_t *bpList,
       bp_matched = false;
 
       // Copy all the data which has the system flag, otherwise ignore it
-      for (uint32_t *bpListIter = bpList; *bpListIter != 0xFFFFFFFF; ) {
+      for (uint32_t *bpListIter = oldList; *bpListIter != 0xFFFFFFFF; ) {
          auto bp_address = *bpListIter++;
          auto bp_flags = *bpListIter++;
 
          if (bp_address == address) {
             // If it has none of the flags, we have no changes to make
             if ((bp_flags & flags) == 0) {
-               return bpList;
+               return oldList;
             }
 
             // If it has every flag, switch the return value
@@ -149,10 +149,10 @@ clearBreakpoints(uint32_t *bpList,
    std::vector<uint32_t> newBpListVec;
    bool bps_changed = false;
 
-   compareAndSwapBreakpoints(bpList, [&](auto bpList) {
+   compareAndSwapBreakpoints(bpList, [&](auto oldList) {
       // If there is no existing list, we have nothing to do
-      if (!bpList) {
-         return bpList;
+      if (!oldList) {
+         return oldList;
       }
 
       // Reset from any last iteration attempt
@@ -160,7 +160,7 @@ clearBreakpoints(uint32_t *bpList,
       newBpListVec.clear();
 
       // Copy all the data which has the system flag, otherwise ignore it
-      for (uint32_t *bpListIter = bpList; *bpListIter != 0xFFFFFFFF; ) {
+      for (uint32_t *bpListIter = oldList; *bpListIter != 0xFFFFFFFF; ) {
          auto bp_address = *bpListIter++;
          auto bp_flags = *bpListIter++;
 
@@ -179,7 +179,7 @@ clearBreakpoints(uint32_t *bpList,
 
       // If we have no changes, dont update
       if (!bps_changed) {
-         return bpList;
+         return oldList;
       }
 
       // If we have no breakpoints, just return no list

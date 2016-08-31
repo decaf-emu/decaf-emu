@@ -40,8 +40,8 @@ public:
    template<typename Type>
    PacketSizer &operator()(const gsl::span<Type> &values)
    {
-      auto size = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
-      mPayloadSize += size;
+      auto dataSize = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
+      mPayloadSize += dataSize;
       return *this;
    }
 
@@ -134,15 +134,15 @@ public:
    template<typename Type>
    PacketWriter &operator()(const gsl::span<Type> &values)
    {
-      auto size = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
-      std::memcpy(&mBuffer->buffer[mBuffer->curSize], values.data(), size * sizeof(uint32_t));
+      auto dataSize = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
+      std::memcpy(&mBuffer->buffer[mBuffer->curSize], values.data(), dataSize * sizeof(uint32_t));
 
       // We do the byte_swap here separately as Type may not be uint32_t sized
-      for (auto i = 0u; i < size; ++i) {
+      for (auto i = 0u; i < dataSize; ++i) {
          mBuffer->buffer[mBuffer->curSize + i] = byte_swap(mBuffer->buffer[mBuffer->curSize + i]);
       }
 
-      mBuffer->curSize += size;
+      mBuffer->curSize += dataSize;
       return *this;
    }
 

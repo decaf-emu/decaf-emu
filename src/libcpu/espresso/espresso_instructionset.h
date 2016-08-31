@@ -25,15 +25,15 @@ struct InstructionOpcode
    {
    }
 
-   InstructionOpcode(InstructionField field, uint32_t value) :
-      field(field),
-      value(value)
+   InstructionOpcode(InstructionField field_, uint32_t value_) :
+      field(field_),
+      value(value_)
    {
    }
 
-   InstructionOpcode(InstructionField field, InstructionField field2) :
-      field(field),
-      field2(field2)
+   InstructionOpcode(InstructionField field_, InstructionField field2_) :
+      field(field_),
+      field2(field2_)
    {
    }
 

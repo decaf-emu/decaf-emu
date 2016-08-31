@@ -10,7 +10,7 @@ union Instruction
    {
    }
 
-   constexpr Instruction(uint32_t value) : value(value)
+   constexpr Instruction(uint32_t value_) : value(value_)
    {
    }
 

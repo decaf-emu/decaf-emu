@@ -14,8 +14,8 @@ struct Exception
       InvalidInstruction = 2,
    };
 
-   Exception(Type type) :
-      type(type)
+   Exception(Type type_) :
+      type(type_)
    {
    }
 
@@ -24,9 +24,9 @@ struct Exception
 
 struct AccessViolationException : Exception
 {
-   AccessViolationException(uint64_t address) :
+   AccessViolationException(uint64_t address_) :
       Exception(Exception::AccessViolation),
-      address(address)
+      address(address_)
    {
    }
 

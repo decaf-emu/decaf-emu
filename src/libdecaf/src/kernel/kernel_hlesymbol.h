@@ -18,8 +18,8 @@ struct HleSymbol
    {
    }
 
-   HleSymbol(Type type) :
-      type(type), ppcPtr(nullptr), hostPtr(nullptr)
+   HleSymbol(Type type_) :
+      type(type_), ppcPtr(nullptr), hostPtr(nullptr)
    {
    }
 

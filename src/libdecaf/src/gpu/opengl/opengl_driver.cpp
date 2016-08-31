@@ -724,11 +724,11 @@ GLDriver::notifyGpuFlush(void *ptr,
    for (auto &i : mDataBuffers) {
       DataBuffer *buffer = &i.second;
       if (buffer->isOutput && buffer->cpuMemStart < memEnd && buffer->cpuMemEnd > memStart) {
-         auto offset = std::max(memStart, buffer->cpuMemStart) - buffer->cpuMemStart;
-         auto size = (std::min(memEnd, buffer->cpuMemEnd) - buffer->cpuMemStart) - offset;
+         auto copyOffset = std::max(memStart, buffer->cpuMemStart) - buffer->cpuMemStart;
+         auto copySize = (std::min(memEnd, buffer->cpuMemEnd) - buffer->cpuMemStart) - copyOffset;
 
          runOnGLThread([=](){
-            downloadDataBuffer(buffer, offset, size);
+            downloadDataBuffer(buffer, copyOffset, copySize);
          });
 
          buffer->dirtyMemory = false;

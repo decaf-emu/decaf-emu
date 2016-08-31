@@ -61,15 +61,15 @@ union Result
    {
    }
 
-   Result(uint32_t code) :
-      code(code)
+   Result(uint32_t code_) :
+      code(code_)
    {
    }
 
-   Result(int32_t module, int32_t level, int32_t description) :
-      description(description),
-      module(module),
-      level(level)
+   Result(int32_t module_, int32_t level_, int32_t description_) :
+      description(description_),
+      module(module_),
+      level(level_)
    {
    }
 
