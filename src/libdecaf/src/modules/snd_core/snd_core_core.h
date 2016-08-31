@@ -40,8 +40,14 @@ AXGetSwapProfile(AXProfile *profile,
 AXResult
 AXSetDefaultMixerSelect(uint32_t);
 
+AXFrameCallback
+AXRegisterFrameCallback(AXFrameCallback callback);
+
 AXResult
 AXRegisterAppFrameCallback(AXFrameCallback callback);
+
+AXResult
+AXDeregisterAppFrameCallback(AXFrameCallback callback);
 
 uint32_t
 AXGetInputSamplesPerFrame();

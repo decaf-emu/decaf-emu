@@ -42,7 +42,10 @@ static coreinit::OSThreadQueue *
 sFrameCallbackThreadQueue;
 
 static AXFrameCallback
-sFrameCallbacks[MaxFrameCallbacks];
+sFrameCallback = nullptr;
+
+static AXFrameCallback
+sAppFrameCallbacks[MaxFrameCallbacks] = { nullptr };
 
 static std::atomic<int32_t>
 sProtectLock = { 0 };
@@ -122,21 +125,43 @@ AXSetDefaultMixerSelect(uint32_t)
 AXResult
 AXRegisterAppFrameCallback(AXFrameCallback callback)
 {
+   if (!callback) {
+      return AXResult::CallbackInvalid;
+   }
+
    for (auto i = 0; i < MaxFrameCallbacks; ++i) {
-      if (!sFrameCallbacks[i]) {
-         sFrameCallbacks[i] = callback;
+      if (!sAppFrameCallbacks[i]) {
+         sAppFrameCallbacks[i] = callback;
          return AXResult::Success;
       }
    }
-   // TODO: Return the appropriate error here
-   return AXResult::Success;
+
+   return AXResult::TooManyCallbacks;
 }
 
 AXResult
+AXDeregisterAppFrameCallback(AXFrameCallback callback)
+{
+   if (!callback) {
+      return AXResult::CallbackInvalid;
+   }
+
+   for (auto i = 0; i < MaxFrameCallbacks; ++i) {
+      if (sAppFrameCallbacks[i] == callback) {
+         sAppFrameCallbacks[i] = nullptr;
+         return AXResult::Success;
+      }
+   }
+
+   return AXResult::CallbackNotFound;
+}
+
+AXFrameCallback
 AXRegisterFrameCallback(AXFrameCallback callback)
 {
-   // TODO: Maybe this is meant to be separate?
-   return AXRegisterAppFrameCallback(callback);
+   auto oldCallback = sFrameCallback;
+   sFrameCallback = callback;
+   return oldCallback;
 }
 
 int32_t
@@ -224,9 +249,12 @@ FrameCallbackThreadEntry(uint32_t core_id, void *arg2)
       coreinit::internal::rescheduleSelfNoLock();
       coreinit::internal::unlockScheduler();
 
+      if (sFrameCallback) {
+         sFrameCallback();
+      }
       for (auto i = 0; i < MaxFrameCallbacks; ++i) {
-         if (sFrameCallbacks[i]) {
-            sFrameCallbacks[i]();
+         if (sAppFrameCallbacks[i]) {
+            sAppFrameCallbacks[i]();
          }
       }
 
@@ -279,8 +307,9 @@ initEvents()
 {
    using namespace coreinit;
 
+   sFrameCallback = nullptr;
    for (auto i = 0; i < MaxFrameCallbacks; ++i) {
-      sFrameCallbacks[i] = nullptr;
+      sAppFrameCallbacks[i] = nullptr;
    }
 
    startFrameAlarmThread();
@@ -311,6 +340,7 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXSetDefaultMixerSelect);
    RegisterKernelFunction(AXRegisterAppFrameCallback);
    RegisterKernelFunction(AXRegisterFrameCallback);
+   RegisterKernelFunctionName("AXRegisterCallback", AXRegisterFrameCallback);
    RegisterKernelFunction(AXUserBegin);
    RegisterKernelFunction(AXUserEnd);
    RegisterKernelFunction(AXVoiceBegin);
