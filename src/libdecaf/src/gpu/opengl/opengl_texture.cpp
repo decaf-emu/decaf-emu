@@ -61,7 +61,13 @@ bool GLDriver::checkActiveTextures()
       auto sq_tex_resource_word6 = getRegister<latte::SQ_TEX_RESOURCE_WORD6_N>(latte::Register::SQ_TEX_RESOURCE_WORD6_0 + 4 * resourceOffset);
       auto baseAddress = sq_tex_resource_word2.BASE_ADDRESS() << 8;
 
-      decaf_assert(baseAddress != 0, fmt::format("Shader tried to read from texture {} which is not defined", i));
+      if (!baseAddress) {
+         if (mPixelTextureCache[i].surfaceObject != 0) {
+            gl::glBindTextureUnit(i, 0);
+            mPixelTextureCache[i].surfaceObject = 0;
+         }
+         continue;
+      }
 
       // Decode resource registers
       auto pitch = (sq_tex_resource_word0.PITCH() + 1) * 8;
