@@ -17,10 +17,11 @@ struct CapturePacket
 {
    enum Type : uint32_t
    {
-      CommandBuffer = 1,
-      MemoryLoad = 2,
-      RegisterSnapshot = 3,
-      SetBuffer = 4,
+      Invalid,
+      CommandBuffer,
+      MemoryLoad,
+      RegisterSnapshot,
+      SetBuffer,
    };
 
    Type type;
@@ -29,6 +30,24 @@ struct CapturePacket
 
 struct CaptureMemoryLoad
 {
+   enum MemoryType : uint32_t
+   {
+      Unknown,
+      CpuFlush,
+      SurfaceSync,
+      ShadowState,
+      CommandBuffer,
+      AttributeBuffer,
+      UniformBuffer,
+      IndexBuffer,
+      Surface,
+      FetchShader,
+      VertexShader,
+      PixelShader,
+      GeometryShader,
+   };
+
+   MemoryType type;
    uint32_t address;
 };
 
@@ -36,8 +55,9 @@ struct CaptureSetBuffer
 {
    enum Type : uint32_t
    {
-      TvBuffer = 1,
-      DrcBuffer = 2,
+      Invalid,
+      TvBuffer,
+      DrcBuffer,
    };
 
    Type type;

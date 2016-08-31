@@ -137,7 +137,7 @@ public:
       decaf_check(mState == CaptureState::Enabled);
       std::unique_lock<std::mutex> lock { mMutex };
       auto addr = mem::untranslate(buffer);
-      trackMemory(addr, size);
+      trackMemory(CaptureMemoryLoad::CpuFlush, addr, size);
    }
 
    void
@@ -242,10 +242,12 @@ private:
    }
 
    void
-   writeMemoryLoad(void *buffer,
+   writeMemoryLoad(CaptureMemoryLoad::MemoryType type,
+                   void *buffer,
                    uint32_t size)
    {
       CaptureMemoryLoad load;
+      load.type = type;
       load.address = mem::untranslate(buffer);
 
       CapturePacket packet;
@@ -378,7 +380,7 @@ private:
       auto size = getSurfaceBytes(pitch, height, depth, dim, format);
 
       // Track that badboy
-      trackMemory(baseAddress, size);
+      trackMemory(CaptureMemoryLoad::Surface, baseAddress, size);
    }
 
    void
@@ -400,7 +402,7 @@ private:
       auto tileMode = getArrayModeTileMode(cb_color_info.ARRAY_MODE());
 
       // Disabled for now, because it's a pointless upload
-      //trackSurface(addr, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, tileMode);
+      // trackSurface(addr, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, tileMode);
    }
 
    void
@@ -430,19 +432,19 @@ private:
    {
       auto pgm_start_fs = getRegister<latte::SQ_PGM_START_FS>(latte::Register::SQ_PGM_START_FS);
       auto pgm_size_fs = getRegister<latte::SQ_PGM_SIZE_FS>(latte::Register::SQ_PGM_SIZE_FS);
-      trackMemory(pgm_start_fs.PGM_START() << 8, pgm_size_fs.PGM_SIZE() << 3);
+      trackMemory(CaptureMemoryLoad::FetchShader, pgm_start_fs.PGM_START() << 8, pgm_size_fs.PGM_SIZE() << 3);
 
       auto pgm_start_vs = getRegister<latte::SQ_PGM_START_VS>(latte::Register::SQ_PGM_START_VS);
       auto pgm_size_vs = getRegister<latte::SQ_PGM_SIZE_VS>(latte::Register::SQ_PGM_SIZE_VS);
-      trackMemory(pgm_start_vs.PGM_START() << 8, pgm_size_vs.PGM_SIZE() << 3);
+      trackMemory(CaptureMemoryLoad::VertexShader, pgm_start_vs.PGM_START() << 8, pgm_size_vs.PGM_SIZE() << 3);
 
       auto pgm_start_ps = getRegister<latte::SQ_PGM_START_PS>(latte::Register::SQ_PGM_START_PS);
       auto pgm_size_ps = getRegister<latte::SQ_PGM_SIZE_PS>(latte::Register::SQ_PGM_SIZE_PS);
-      trackMemory(pgm_start_ps.PGM_START() << 8, pgm_size_ps.PGM_SIZE() << 3);
+      trackMemory(CaptureMemoryLoad::PixelShader, pgm_start_ps.PGM_START() << 8, pgm_size_ps.PGM_SIZE() << 3);
 
       auto pgm_start_gs = getRegister<latte::SQ_PGM_START_GS>(latte::Register::SQ_PGM_START_GS);
       auto pgm_size_gs = getRegister<latte::SQ_PGM_SIZE_GS>(latte::Register::SQ_PGM_SIZE_GS);
-      trackMemory(pgm_start_gs.PGM_START() << 8, pgm_size_gs.PGM_SIZE() << 3);
+      trackMemory(CaptureMemoryLoad::GeometryShader, pgm_start_gs.PGM_START() << 8, pgm_size_gs.PGM_SIZE() << 3);
    }
 
    void
@@ -453,7 +455,7 @@ private:
          auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
          auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
 
-         trackMemory(sq_vtx_constant_word0.BASE_ADDRESS(), sq_vtx_constant_word1.SIZE() + 1);
+         trackMemory(CaptureMemoryLoad::AttributeBuffer, sq_vtx_constant_word0.BASE_ADDRESS(), sq_vtx_constant_word1.SIZE() + 1);
       }
    }
 
@@ -464,7 +466,7 @@ private:
          auto sq_alu_const_cache_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + 4 * i);
          auto sq_alu_const_buffer_size_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + 4 * i);
 
-         trackMemory(sq_alu_const_cache_vs << 8, sq_alu_const_buffer_size_vs << 8);
+         trackMemory(CaptureMemoryLoad::UniformBuffer, sq_alu_const_cache_vs << 8, sq_alu_const_buffer_size_vs << 8);
       }
    }
 
@@ -614,7 +616,7 @@ private:
             indexByteSize = 2u;
          }
 
-         trackMemory(data.addr.getAddress(), data.count * indexByteSize);
+         trackMemory(CaptureMemoryLoad::IndexBuffer, data.addr.getAddress(), data.count * indexByteSize);
          trackReadyDraw();
          break;
       }
@@ -708,21 +710,21 @@ private:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::ConfigRegisterBase, data.addr, data.values);
-         trackMemory(data.addr.getAddress(), 0xB00 * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0xB00 * 4);
          break;
       }
       case pm4::type3::LOAD_CONTEXT_REG:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::ContextRegisterBase, data.addr, data.values);
-         trackMemory(data.addr.getAddress(), 0x400 * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0x400 * 4);
          break;
       }
       case pm4::type3::LOAD_ALU_CONST:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::AluConstRegisterBase, data.addr, data.values);
-         trackMemory(data.addr.getAddress(), 0x800 * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0x800 * 4);
          break;
       }
       case pm4::type3::LOAD_BOOL_CONST:
@@ -736,21 +738,21 @@ private:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::LoopConstRegisterBase, data.addr, data.values);
-         trackMemory(data.addr.getAddress(), 0x60 * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0x60 * 4);
          break;
       }
       case pm4::type3::LOAD_RESOURCE:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
-         trackMemory(data.addr.getAddress(), 0xD9E * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0xD9E * 4);
          break;
       }
       case pm4::type3::LOAD_SAMPLER:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::SamplerRegisterBase, data.addr, data.values);
-         trackMemory(data.addr.getAddress(), 0xA2 * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0xA2 * 4);
          break;
       }
       case pm4::type3::LOAD_CTL_CONST:
@@ -763,7 +765,7 @@ private:
       case pm4::type3::INDIRECT_BUFFER_PRIV:
       {
          auto data = pm4::read<pm4::IndirectBufferCall>(reader);
-         trackMemory(data.addr.getAddress(), data.size * 4u);
+         trackMemory(CaptureMemoryLoad::CommandBuffer, data.addr.getAddress(), data.size * 4u);
          scanCommandBuffer(reinterpret_cast<uint32_t *>(data.addr.get()), data.size);
          break;
       }
@@ -784,7 +786,7 @@ private:
       case pm4::type3::SURFACE_SYNC:
       {
          auto data = pm4::read<pm4::SurfaceSync>(reader);
-         trackMemory(data.addr << 8, data.size << 8);
+         trackMemory(CaptureMemoryLoad::SurfaceSync, data.addr << 8, data.size << 8);
          break;
       }
       case pm4::type3::CONTEXT_CTL:
@@ -796,7 +798,8 @@ private:
 
    // Returns true if the memory was written into pm4 stream
    bool
-   trackMemory(uint32_t addr,
+   trackMemory(CaptureMemoryLoad::MemoryType type,
+               uint32_t addr,
                uint32_t size)
    {
       auto trackStart = addr;
@@ -834,7 +837,7 @@ private:
          mRecordedMemory.emplace_back(RecordedMemory { trackStart, trackEnd, hash[0], hash[1] });
       }
 
-      writeMemoryLoad(mem::translate(addr), size);
+      writeMemoryLoad(type, mem::translate(addr), size);
       return true;
    }
 
