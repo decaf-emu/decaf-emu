@@ -48,14 +48,7 @@ GX2SwapScanBuffers()
    gx2::internal::onSwap();
    pm4::write(pm4::DecafSwapBuffers { });
 
-   if (pm4::captureState() == pm4::CaptureState::WaitStartNextFrame) {
-      pm4::write(pm4::DecafCapSyncRegisters {});
-      GX2DrawDone();
-      pm4::captureSwap();
-   } else if(pm4::captureState() == pm4::CaptureState::WaitEndNextFrame) {
-      GX2DrawDone();
-      pm4::captureSwap();
-   }
+   pm4::captureSwap();
 }
 
 BOOL
