@@ -1,4 +1,5 @@
 #pragma once
+#include "common/decaf_assert.h"
 #include <fstream>
 #include "filesystem_file.h"
 #include "filesystem_filehandle.h"
@@ -10,39 +11,45 @@ struct HostFileHandle : public FileHandle
 {
    HostFileHandle(const std::string &path, File::OpenMode mode)
    {
-      std::ios_base::openmode iosMode = std::fstream::binary;
+      char openModeStr[6] = "";
 
       if (mode & File::Read) {
-         iosMode |= std::fstream::in;
+         strcat(openModeStr, "r");
       }
 
       if (mode & File::Write) {
-         iosMode |= std::fstream::out;
+         strcat(openModeStr, "w");
       }
 
       if (mode & File::Append) {
-         iosMode |= std::fstream::app;
+         strcat(openModeStr, "a");
       }
 
-      mHandle.open(path, iosMode);
+      strcat(openModeStr, "b");
+
+      if (mode & File::Update) {
+         strcat(openModeStr, "+");
+      }
+
+      mHandle = fopen(path.c_str(), openModeStr);
    }
 
    virtual ~HostFileHandle() override = default;
 
    virtual bool open() override
    {
-      return mHandle.is_open();
+      return mHandle != NULL;
    }
 
    virtual void close() override
    {
-      mHandle.close();
+      fclose(mHandle);
+      mHandle = NULL;
    }
 
    virtual bool flush() override
    {
-      mHandle.flush();
-      return true;
+      return fflush(mHandle) == 0;
    }
 
    virtual size_t truncate() override
@@ -53,65 +60,53 @@ struct HostFileHandle : public FileHandle
 
    virtual bool seek(size_t position) override
    {
-      mHandle.seekg(position);
-      mHandle.seekp(position);
-      return true;
+      return fseek(mHandle, position, SEEK_SET) == 0;
    }
 
    virtual bool eof() override
    {
-      return mHandle.eof();
+      return feof(mHandle) != 0;
    }
 
    virtual size_t tell() override
    {
-      return static_cast<size_t>(mHandle.tellg());
+      return ftell(mHandle);
    }
 
    virtual size_t size() override
    {
-      auto pos = mHandle.tellg();
-      mHandle.seekg(0, mHandle.end);
-      auto result = static_cast<size_t>(mHandle.tellg());
-      mHandle.seekg(pos);
-      return result;
+      auto pos = tell();
+      fseek(mHandle, 0, SEEK_END);
+      auto size = tell();
+      seek(pos);
+      return size;
    }
 
    virtual size_t read(uint8_t *data, size_t size, size_t count) override
    {
-      auto bytes = size * count;
-      mHandle.read(reinterpret_cast<char *>(data), bytes);
-      bytes = mHandle.gcount();
-      return bytes / size;
+      return fread(data, size, count, mHandle);
    }
 
    virtual size_t read(uint8_t *data, size_t size, size_t count, size_t position) override
    {
-      auto previous = tell();
       seek(position);
-      auto result = read(data, size, count);
-      seek(previous);
-      return result;
+      return read(data, size, count);
    }
 
    virtual size_t write(uint8_t *data, size_t size, size_t count) override
    {
-      auto bytes = size * count;
-      mHandle.write(reinterpret_cast<const char *>(data), bytes);
-      return count;
+      return fwrite(data, size, count, mHandle);
    }
 
    virtual size_t write(uint8_t *data, size_t size, size_t count, size_t position) override
    {
-      auto previous = tell();
       seek(position);
-      auto result = write(data, size, count);
-      seek(previous);
-      return result;
+      return write(data, size, count);
    }
 
 private:
-   std::fstream mHandle;
+   FILE *mHandle;
+
 };
 
 } // namespace fs
