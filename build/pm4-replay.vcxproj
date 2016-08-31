@@ -15,13 +15,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\decaf-pm4-replay\main.cpp" />
-    <ClCompile Include="..\src\decaf-pm4-replay\sdl_window.cpp" />
-    <ClCompile Include="..\src\decaf-pm4-replay\sdl_window_draw.cpp" />
+    <ClInclude Include="..\tools\pm4-replay\clilog.h" />
+    <ClInclude Include="..\tools\pm4-replay\sdl_window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\decaf-pm4-replay\clilog.h" />
-    <ClInclude Include="..\src\decaf-pm4-replay\sdl_window.h" />
+    <ClCompile Include="..\tools\pm4-replay\main.cpp" />
+    <ClCompile Include="..\tools\pm4-replay\sdl_window.cpp" />
+    <ClCompile Include="..\tools\pm4-replay\sdl_window_draw.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E10BC5AA-C1A4-4B17-943D-9E1F4A0D52A1}</ProjectGuid>

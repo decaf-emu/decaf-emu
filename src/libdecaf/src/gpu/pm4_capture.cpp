@@ -37,8 +37,8 @@
  * - We should probably use some cheap compression algorithm such as snappy to save
  *   even more space.
  *
- * - We seem to not upload the full data for a texture, bytes seem to be missing chopped
- *   off the end, there is probably a bug with surface size calculation.
+ * - There seems to be a big with surface size calculations and this can lead to properly
+ *   fucking up the memory tracking and playback with missing ends of textures.
  */
 
 using decaf::pm4::CaptureMagic;
