@@ -133,9 +133,14 @@ formatStringV(const char *fmt,
             formatter = "%" + flags + width + precision + length + specifier;
             output.append(format_string(formatter.c_str(), bit_cast<void *, uintptr_t>(mem::untranslate(args.next<void *>()))));
             break;
-         case 's':
-            output.append(args.next<const char *>());
-            break;
+         case 's': {
+            auto s = args.next<const char *>();
+            if (s) {
+               output.append(s);
+            } else {
+               output.append("<NULL>");
+            }
+         } break;
          case 'n':
             if (length.compare("hh") == 0) {
                *(args.next<int8_t *>()) = static_cast<int8_t>(output.size());
