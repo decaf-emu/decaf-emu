@@ -46,9 +46,11 @@ using decaf::pm4::CapturePacket;
 using decaf::pm4::CaptureMemoryLoad;
 using decaf::pm4::CaptureSetBuffer;
 
-// TODO: This shit correctly
-static bool
-HashAllMemory = true;
+static const auto
+HashAllMemory = false;
+
+static const auto
+HashShadowState = true;
 
 namespace pm4
 {
@@ -806,12 +808,15 @@ private:
       auto trackEnd = trackStart + size;
       auto addNewEntry = true;
       uint64_t hash[2] = { 0, 0 };
+      auto useHash = HashAllMemory || (HashShadowState && type == CaptureMemoryLoad::ShadowState);
 
       if (addr == 0 || size == 0) {
          return false;
       }
 
-      MurmurHash3_x64_128(mem::translate(addr), size, 0, hash);
+      if (useHash) {
+         MurmurHash3_x64_128(mem::translate(addr), size, 0, hash);
+      }
 
       for (auto &mem : mRecordedMemory) {
          if (trackStart < mem.start || trackStart > mem.end) {
@@ -819,14 +824,20 @@ private:
             continue;
          }
 
-         if (trackEnd > mem.end) {
-            // Starts in this block, but goes past the end, so adjust the block size
-            mem.end = trackEnd;
-         } else if (hash[0] == mem.hash[0] && hash[1] == mem.hash[1]) {
-            // Memory matches, does not need to be written to pm4 trace
-            return false;
+         if (trackEnd <= mem.end) {
+            // Current memory is completely contained within an already tracked block
+            if (useHash) {
+               // If hash is enabled, then we do not write if hash matches
+               if (hash[0] == mem.hash[0] && hash[1] == mem.hash[1]) {
+                  return false;
+               }
+            } else if (type != CaptureMemoryLoad::CpuFlush) {
+               // If hash is disabled, and this is NOT a flush, then do not write memory
+               return false;
+            }
          }
 
+         mem.end = trackEnd;
          mem.hash[0] = hash[0];
          mem.hash[1] = hash[1];
          addNewEntry = false;
