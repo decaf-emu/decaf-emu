@@ -43,6 +43,10 @@ FSChangeDirAsync(FSClient *client,
    }
 
    std::memcpy(block->path, path, pathLength);
+   if (block->path[pathLength - 1] != '/') {
+      block->path[pathLength] = '/';
+      pathLength++;
+   }
    block->path[pathLength] = 0;
 
    internal::queueFsWork(client, block, asyncData, [=]() {
