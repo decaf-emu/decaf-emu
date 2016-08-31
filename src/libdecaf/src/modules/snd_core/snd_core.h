@@ -19,6 +19,7 @@ private:
    static void registerMixFunctions();
    static void registerVoiceFunctions();
    static void registerVSFunctions();
+   static void registerFXFunctions();
 
    void initialiseCore();
 };

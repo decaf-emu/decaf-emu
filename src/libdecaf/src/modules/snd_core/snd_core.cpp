@@ -18,6 +18,7 @@ Module::RegisterFunctions()
    registerMixFunctions();
    registerVoiceFunctions();
    registerVSFunctions();
+   registerFXFunctions();
 }
 
 } // namespace snd_core

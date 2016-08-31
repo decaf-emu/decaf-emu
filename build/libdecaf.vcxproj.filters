@@ -921,6 +921,9 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_voicesview.cpp">
       <Filter>Source Files\debugger</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_fx.cpp">
+      <Filter>Source Files\modules\snd_core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1746,6 +1749,9 @@
       <Filter>Header Files\modules\gx2</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_constants.h">
+      <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_fx.h">
       <Filter>Header Files\modules\snd_core</Filter>
     </ClInclude>
   </ItemGroup>
