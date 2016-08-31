@@ -29,7 +29,9 @@ WPADError::Value
 WPADProbe(WPADChan::Chan chan,
           be_val<WPADControllerType::Value> *type)
 {
-   *type = WPADControllerType::NoController;
+   if (type) {
+      *type = WPADControllerType::NoController;
+   }
    return WPADError::NoController;
 }
 
