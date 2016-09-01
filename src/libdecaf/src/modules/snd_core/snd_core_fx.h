@@ -6,6 +6,11 @@
 namespace snd_core
 {
 
+using AXFXAllocFuncPtr = wfunc_ptr<void *, uint32_t>;
+using AXFXFreeFuncPtr = wfunc_ptr<void, void *>;
+using be_AXFXAllocFuncPtr = be_wfunc_ptr<void *, uint32_t>;
+using be_AXFXFreeFuncPtr = be_wfunc_ptr<void, void *>;
+
 struct AXFXBuffers
 {
    int32_t *left;
@@ -17,6 +22,14 @@ struct AXFXChorus;
 struct AXFXDelay;
 struct AXFXReverbHi;
 struct AXFXReverbStd;
+
+void
+AXFXSetHooks(AXFXAllocFuncPtr allocFn,
+             AXFXFreeFuncPtr freeFn);
+
+void
+AXFXGetHooks(be_AXFXAllocFuncPtr *allocFn,
+             be_AXFXFreeFuncPtr *freeFn);
 
 int32_t
 AXFXChorusExpGetMemSize(AXFXChorus *chorus);

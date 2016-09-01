@@ -4,6 +4,28 @@
 namespace snd_core
 {
 
+static AXFXAllocFuncPtr
+sAXFXMemAlloc = nullptr;
+
+static AXFXFreeFuncPtr
+sAXFXMemFree = nullptr;
+
+void
+AXFXSetHooks(AXFXAllocFuncPtr allocFn,
+             AXFXFreeFuncPtr freeFn)
+{
+   sAXFXMemAlloc = allocFn;
+   sAXFXMemFree = freeFn;
+}
+
+void
+AXFXGetHooks(be_AXFXAllocFuncPtr *allocFn,
+             be_AXFXFreeFuncPtr *freeFn)
+{
+   *allocFn = sAXFXMemAlloc;
+   *freeFn = sAXFXMemFree;
+}
+
 int32_t
 AXFXChorusExpGetMemSize(AXFXChorus *chorus)
 {
@@ -63,6 +85,8 @@ AXFXReverbStdExpCallback(AXFXBuffers *buffers, AXFXReverbStd *data)
 void
 Module::registerFXFunctions()
 {
+   RegisterKernelFunction(AXFXSetHooks);
+   RegisterKernelFunction(AXFXGetHooks);
    RegisterKernelFunction(AXFXChorusExpGetMemSize);
    RegisterKernelFunction(AXFXDelayExpGetMemSize);
    RegisterKernelFunction(AXFXReverbHiExpGetMemSize);
