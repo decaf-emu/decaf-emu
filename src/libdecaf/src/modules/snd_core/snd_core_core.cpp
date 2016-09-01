@@ -240,6 +240,12 @@ AXRmtAdvancePtr(int32_t)
    return 0;
 }
 
+void
+AXPrepareEfxData(void *buffer, uint32_t size)
+{
+   // Nothing to do here, we have implicit cache coherency
+}
+
 uint32_t
 FrameCallbackThreadEntry(uint32_t core_id, void *arg2)
 {
@@ -354,6 +360,7 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXRmtGetSamples);
    RegisterKernelFunction(AXRmtGetSamplesLeft);
    RegisterKernelFunction(AXRmtAdvancePtr);
+   RegisterKernelFunction(AXPrepareEfxData);
    RegisterKernelFunctionName("internal_FrameAlarmHandler", snd_core::internal::frameAlarmHandler);
    RegisterInternalFunction(FrameCallbackThreadEntry, sFrameCallbackThreadEntryPoint);
    RegisterInternalData(sFrameCallbackThreadQueue);

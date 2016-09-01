@@ -66,6 +66,9 @@ AXRmtGetSamples(int32_t,
 int32_t
 AXRmtAdvancePtr(int32_t);
 
+void
+AXPrepareEfxData(void *buffer, uint32_t size);
+
 namespace internal
 {
 
