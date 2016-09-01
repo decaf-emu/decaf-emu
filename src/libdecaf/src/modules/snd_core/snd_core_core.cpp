@@ -130,6 +130,12 @@ AXRegisterAppFrameCallback(AXFrameCallback callback)
    }
 
    for (auto i = 0; i < MaxFrameCallbacks; ++i) {
+      if (sAppFrameCallbacks[i] == callback) {
+         decaf_abort("Application double-registered app frame callback");
+      }
+   }
+
+   for (auto i = 0; i < MaxFrameCallbacks; ++i) {
       if (!sAppFrameCallbacks[i]) {
          sAppFrameCallbacks[i] = callback;
          return AXResult::Success;
