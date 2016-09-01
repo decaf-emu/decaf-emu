@@ -348,6 +348,7 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXGetSwapProfile);
    RegisterKernelFunction(AXSetDefaultMixerSelect);
    RegisterKernelFunction(AXRegisterAppFrameCallback);
+   RegisterKernelFunction(AXDeregisterAppFrameCallback);
    RegisterKernelFunction(AXRegisterFrameCallback);
    RegisterKernelFunctionName("AXRegisterCallback", AXRegisterFrameCallback);
    RegisterKernelFunction(AXUserBegin);
