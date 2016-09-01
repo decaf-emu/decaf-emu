@@ -42,6 +42,12 @@ WPADGetBatteryLevel(WPADChan::Chan chan)
    return 4;
 }
 
+int8_t
+WPADGetSpeakerVolume()
+{
+   return 0;
+}
+
 void
 Module::registerWPADFunctions()
 {
@@ -50,6 +56,7 @@ Module::registerWPADFunctions()
    RegisterKernelFunction(WPADEnableURCC);
    RegisterKernelFunction(WPADProbe);
    RegisterKernelFunction(WPADGetBatteryLevel);
+   RegisterKernelFunction(WPADGetSpeakerVolume);
 }
 
 } // namespace padscore

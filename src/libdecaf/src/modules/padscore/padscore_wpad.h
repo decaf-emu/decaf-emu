@@ -71,4 +71,7 @@ WPADProbe(WPADChan::Chan chan,
 uint32_t
 WPADGetBatteryLevel(WPADChan::Chan chan);
 
+int8_t
+WPADGetSpeakerVolume();
+
 } // namespace padscore
