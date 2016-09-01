@@ -3,7 +3,6 @@
 #include "filesystem_file.h"
 #include "filesystem_filehandle.h"
 #include <fstream>
-#include <cstring>
 
 namespace fs
 {
@@ -13,24 +12,27 @@ struct HostFileHandle : public FileHandle
    HostFileHandle(const std::string &path, File::OpenMode mode)
    {
       char openModeStr[6] = "";
+      char *openModeStrPtr = openModeStr;
 
       if (mode & File::Read) {
-         strcat(openModeStr, "r");
+         *openModeStrPtr++ = 'r';
       }
 
       if (mode & File::Write) {
-         strcat(openModeStr, "w");
+         *openModeStrPtr++ = 'w';
       }
 
       if (mode & File::Append) {
-         strcat(openModeStr, "a");
+         *openModeStrPtr++ = 'a';
       }
 
-      strcat(openModeStr, "b");
+      *openModeStrPtr++ = 'b';
 
       if (mode & File::Update) {
-         strcat(openModeStr, "+");
+         *openModeStrPtr++ = '+';
       }
+
+      *openModeStrPtr++ = '\0';
 
       mHandle = fopen(path.c_str(), openModeStr);
    }
