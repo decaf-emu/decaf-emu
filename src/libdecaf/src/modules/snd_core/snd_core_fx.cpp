@@ -37,12 +37,40 @@ AXFXReverbStdExpGetMemSize(AXFXReverbStd *chorus)
 }
 
 void
+AXFXChorusExpCallback(AXFXBuffers *buffers, AXFXChorus *data)
+{
+   decaf_warn_stub();
+}
+
+void
+AXFXDelayExpCallback(AXFXBuffers *buffers, AXFXDelay *data)
+{
+   decaf_warn_stub();
+}
+
+void
+AXFXReverbHiExpCallback(AXFXBuffers *buffers, AXFXReverbHi *data)
+{
+   decaf_warn_stub();
+}
+
+void
+AXFXReverbStdExpCallback(AXFXBuffers *buffers, AXFXReverbStd *data)
+{
+   decaf_warn_stub();
+}
+
+void
 Module::registerFXFunctions()
 {
    RegisterKernelFunction(AXFXChorusExpGetMemSize);
    RegisterKernelFunction(AXFXDelayExpGetMemSize);
    RegisterKernelFunction(AXFXReverbHiExpGetMemSize);
    RegisterKernelFunction(AXFXReverbStdExpGetMemSize);
+   RegisterKernelFunction(AXFXChorusExpCallback);
+   RegisterKernelFunction(AXFXDelayExpCallback);
+   RegisterKernelFunction(AXFXReverbHiExpCallback);
+   RegisterKernelFunction(AXFXReverbStdExpCallback);
 }
 
 } // namespace snd_core

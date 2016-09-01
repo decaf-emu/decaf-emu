@@ -6,6 +6,13 @@
 namespace snd_core
 {
 
+struct AXFXBuffers
+{
+   int32_t *left;
+   int32_t *right;
+   int32_t *surround;
+};
+
 struct AXFXChorus;
 struct AXFXDelay;
 struct AXFXReverbHi;
@@ -22,5 +29,17 @@ AXFXReverbHiExpGetMemSize(AXFXReverbHi *chorus);
 
 int32_t
 AXFXReverbStdExpGetMemSize(AXFXReverbStd *chorus);
+
+void
+AXFXChorusExpCallback(AXFXBuffers *buffers, AXFXChorus *data);
+
+void
+AXFXDelayExpCallback(AXFXBuffers *buffers, AXFXDelay *data);
+
+void
+AXFXReverbHiExpCallback(AXFXBuffers *buffers, AXFXReverbHi *data);
+
+void
+AXFXReverbStdExpCallback(AXFXBuffers *buffers, AXFXReverbStd *data);
 
 } // namespace snd_core
