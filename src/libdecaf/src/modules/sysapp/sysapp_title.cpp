@@ -9,8 +9,7 @@ SYSGetSystemApplicationTitleId()
 {
    decaf_warn_stub();
 
-   // TODO: Find real value
-   return 0xFFFFFFFF10101010ull;
+   return 0x000500101000400Aull;
 }
 
 void
