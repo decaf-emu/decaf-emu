@@ -173,11 +173,14 @@ fiberEntryPoint(void*)
    //  but it doesn't hurt to have this set up on default threads.
    coreinit::internal::ghsInitExceptions();
 
-   gLog->info("Thread starting, entrypoint is 0x{:08X}", entryPoint.getAddress());
+   auto thread = coreinit::internal::getCurrentThread();
+   gLog->info("Thread Starting: ptr {:08X}, id {:x} entry {:08X}",
+      mem::untranslate(thread), thread->id, entryPoint.getAddress());
 
    auto exitValue = entryPoint(argc, argv);
 
-   gLog->info("Thread exiting, exit value is {}", exitValue);
+   gLog->info("Thread Exiting: ptr {:08X}, id {:x}, exitValue {}",
+      mem::untranslate(thread), thread->id, exitValue);
 
    coreinit::OSExitThread(exitValue);
 }

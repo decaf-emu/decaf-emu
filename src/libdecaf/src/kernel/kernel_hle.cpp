@@ -41,7 +41,7 @@ kcstub(cpu::Core *state, void *data)
    auto func = static_cast<HleFunction *>(data);
 
    if (!func->valid) {
-      gLog->info("Unimplemented kernel function {}::{} called from 0x{:08X}", func->module, func->name, state->lr);
+      gLog->warn("Unimplemented kernel function {}::{} called from 0x{:08X}", func->module, func->name, state->lr);
       return;
    }
 
