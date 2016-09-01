@@ -340,7 +340,7 @@ launchGame()
    if (!loadGameInfo(sGameInfo)) {
       gLog->warn("Could not load game info.");
    } else {
-      gLog->info("Loaded game info: '{}' - {} v{}", sGameInfo.meta.shortnames[decaf::Language::English], sGameInfo.meta.product_code, sGameInfo.meta.version);
+      gLog->info("Loaded game info: '{}' - {} v{}", sGameInfo.meta.shortnames[decaf::Language::English], sGameInfo.meta.product_code, sGameInfo.meta.title_version);
    }
 
    auto rpx = sGameInfo.cos.argstr;
