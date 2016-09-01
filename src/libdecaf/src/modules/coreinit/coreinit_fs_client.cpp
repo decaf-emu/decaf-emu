@@ -14,6 +14,8 @@ sClients;
 
 FSClient::FSClient()
 {
+   mWorkingPath = "/";
+
    // Let's just ensure there is never a file handle 0 just in case it's not a valid handle
    mOpenFiles.push_back(nullptr);
    mOpenFolders.push_back(nullptr);
@@ -135,6 +137,17 @@ FSClient::getLastError()
    return mLastError;
 }
 
+void
+FSClient::setWorkingPath(fs::Path path)
+{
+   mWorkingPath = path;
+}
+
+fs::Path
+FSClient::getWorkingPath()
+{
+   return mWorkingPath;
+}
 
 FSStatus
 FSAddClient(FSClient *client,

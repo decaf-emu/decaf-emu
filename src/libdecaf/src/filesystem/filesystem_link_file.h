@@ -7,18 +7,31 @@ namespace fs
 class FileLink : public File
 {
 public:
-   FileLink(File *file, const std::string &name) :
-      File(name),
+   FileLink(File *file,
+            const std::string &name) :
+      File(DeviceType::LinkDevice, Permissions::ReadWrite, name),
       mLink(file)
    {
-      Node::isLink = true;
    }
 
    virtual ~FileLink() override = default;
 
-   virtual FileHandle *open(OpenMode mode)  final override
+   File *getLink()
+   {
+      return mLink;
+   }
+
+   virtual FileHandle *
+   open(OpenMode mode)  final override
    {
       return mLink->open(mode);
+   }
+
+   virtual void
+   setPermissions(Permissions permissions,
+                  PermissionFlags flags)
+   {
+      mLink->setPermissions(permissions, flags);
    }
 
 private:

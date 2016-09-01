@@ -29,7 +29,7 @@ FSGetStatAsync(FSClient *client,
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto entry = fs::FolderEntry {};
       auto fs = kernel::getFileSystem();
-      auto file = fs->findEntry(coreinit::internal::translatePath(block->path), entry);
+      auto file = fs->findEntry(internal::translatePath(client, block->path), entry);
 
       if (!file) {
          return FSStatus::NotFound;

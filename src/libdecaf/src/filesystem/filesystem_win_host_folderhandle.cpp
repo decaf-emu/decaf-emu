@@ -1,7 +1,8 @@
 #include "filesystem_host_folderhandle.h"
-#include "common/platform.h"
+#include <common/platform.h>
 
 #ifdef PLATFORM_WINDOWS
+#include <common/platform_winapi_string.h>
 #include <Windows.h>
 
 namespace fs
@@ -9,29 +10,27 @@ namespace fs
 
 struct WindowsData
 {
-   WIN32_FIND_DATAA data;
+   WIN32_FIND_DATAW data;
    HANDLE handle = INVALID_HANDLE_VALUE;
 };
 
 bool HostFolderHandle::open()
 {
    auto data = reinterpret_cast<WindowsData *>(mFindData);
+   auto hostPath = mPath.join("*");
+   auto winPath = platform::toWinApiString(hostPath.path());
 
    if (!data) {
       data = new WindowsData();
       mFindData = data;
    }
 
-   data->handle = FindFirstFileA(mPath.join("*").path().c_str(), &data->data);
+   data->handle = FindFirstFileW(winPath.c_str(), &data->data);
 
    if (data->handle == INVALID_HANDLE_VALUE) {
       delete data;
       mFindData = nullptr;
       return false;
-   }
-
-   if (mVirtualHandle) {
-      mVirtualHandle->open();
    }
 
    return true;
@@ -46,25 +45,16 @@ void HostFolderHandle::close()
       delete data;
       mFindData = nullptr;
    }
-
-   if (mVirtualHandle) {
-      mVirtualHandle->close();
-   }
 }
 
 bool HostFolderHandle::read(FolderEntry &entry)
 {
-   // Read virtual entries first
-   if (mVirtualHandle->read(entry)) {
-      return true;
-   }
-
    if (!mFindData) {
       return false;
    }
 
    auto data = reinterpret_cast<WindowsData *>(mFindData);
-   entry.name = data->data.cFileName;
+   entry.name = platform::fromWinApiString(data->data.cFileName);
    entry.size = data->data.nFileSizeLow;
    entry.size |= (static_cast<size_t>(data->data.nFileSizeHigh) << 32);
 
@@ -74,7 +64,7 @@ bool HostFolderHandle::read(FolderEntry &entry)
       entry.type = FolderEntry::File;
    }
 
-   if (!FindNextFileA(data->handle, &data->data)) {
+   if (!FindNextFileW(data->handle, &data->data)) {
       close();
    }
 

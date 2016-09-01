@@ -171,8 +171,8 @@ start(excmd::parser &parser,
       }
    }
 
-   if (options.has("sys-path")) {
-      decaf::config::system::system_path = options.get<std::string>("sys-path");
+   if (options.has("mlc-path")) {
+      decaf::config::system::mlc_path = options.get<std::string>("mlc-path");
    }
 
    if (options.has("time-scale")) {

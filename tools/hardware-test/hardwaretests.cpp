@@ -145,7 +145,7 @@ bool runTests(const std::string &path)
    fs::FileSystem filesystem;
    fs::FolderEntry entry;
    fs::HostPath base = path;
-   filesystem.mountHostFolder("/tests", base);
+   filesystem.mountHostFolder("/tests", base, fs::Permissions::Read);
    auto folder = filesystem.openFolder("/tests");
 
    while (folder->read(entry)) {

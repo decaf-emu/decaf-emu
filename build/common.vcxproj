@@ -94,6 +94,7 @@
     <ClInclude Include="..\src\common\platform_stacktrace.h" />
     <ClInclude Include="..\src\common\platform_thread.h" />
     <ClInclude Include="..\src\common\platform_time.h" />
+    <ClInclude Include="..\src\common\platform_winapi_string.h" />
     <ClInclude Include="..\src\common\pow.h" />
     <ClInclude Include="..\src\common\structsize.h" />
     <ClInclude Include="..\src\common\strutils.h" />

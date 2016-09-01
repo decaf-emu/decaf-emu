@@ -20,6 +20,7 @@
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_interrupts.h"
 #include "modules/coreinit/coreinit_internal_appio.h"
+#include "modules/nn_save/nn_save_dir.h"
 #include "modules/gx2/gx2_event.h"
 #include "libcpu/mem.h"
 #include "ppcutils/wfunc_call.h"
@@ -376,13 +377,38 @@ launchGame()
    gLog->debug("Succesfully loaded {}", rpx);
    sUserModule = appModule;
 
+   // Setup title path
+   auto fileSystem = getFileSystem();
+
+   // Temporarily set mlc/sys to write so we can create the title folder
+   auto sysPath = "/vol/storage_mlc01/sys";
+   fileSystem->setPermissions("/vol/storage_mlc01/sys", fs::Permissions::ReadWrite, fs::PermissionFlags::None);
+
+   // Create title folder
+   auto titleID = sGameInfo.app.title_id;
+   auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
+   auto titleHi = static_cast<uint32_t>(titleID >> 32);
+   auto titlePath = fmt::format("/vol/storage_mlc01/sys/title/{:08x}/{:08x}", titleHi, titleLo);
+   auto titleFolder = fileSystem->makeFolder(titlePath);
+
+   // Restore mlc/sys to Read only
+   fileSystem->setPermissions("/vol/storage_mlc01/sys", fs::Permissions::Read, fs::PermissionFlags::Recursive);
+
+   // Set title folder to ReadWrite
+   if (titleFolder) {
+      titleFolder->setPermissions(fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+   }
+
+   // Setup coreinit threads
    coreinit::internal::startAlarmCallbackThreads();
    coreinit::internal::startAppIoThreads();
    coreinit::internal::startDefaultCoreThreads();
    coreinit::internal::startDeallocatorThreads();
 
+   // Notify frontend that game has loaded
    decaf::event::onGameLoaded(sGameInfo);
 
+   // Start the entry thread!
    auto gameThreadEntry = coreinitModule->findFuncExport<uint32_t, uint32_t, void*>("GameThreadEntry");
    coreinit::OSRunThread(coreinit::OSGetDefaultThread(1), gameThreadEntry, 0, nullptr);
 

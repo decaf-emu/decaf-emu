@@ -1,9 +1,9 @@
 #pragma once
-#include <vector>
 #include "filesystem_folder.h"
 #include "filesystem_node.h"
-#include "filesystem_virtual_file.h"
 #include "filesystem_virtual_folderhandle.h"
+#include <algorithm>
+#include <vector>
 
 namespace fs
 {
@@ -11,8 +11,9 @@ namespace fs
 class VirtualFolder : public Folder
 {
 public:
-   VirtualFolder(const std::string &name) :
-      Folder(name)
+   VirtualFolder(Permissions permissions,
+                 const std::string &name) :
+      Folder(DeviceType::VirtualDevice, permissions, name)
    {
    }
 
@@ -23,63 +24,15 @@ public:
       }
    }
 
-   virtual Node *addFolder(const std::string &name) override
-   {
-      auto node = findChild(name);
-
-      if (!node) {
-         node = new VirtualFolder(name);
-         addChild(node);
-      }
-
-      return node;
-   }
-
-   virtual Node *addFile(const std::string &name) override
-   {
-      auto node = findChild(name);
-
-      if (!node) {
-         node = new VirtualFile(name);
-         addChild(node);
-      }
-
-      return node;
-   }
-
-   virtual Node *addChild(Node *node) override
+   Node *
+   addChild(Node *node)
    {
       mChildren.push_back(node);
       return node;
    }
 
-   virtual bool deleteFile(const std::string &name) override
-   {
-      auto node = findChild(name);
-
-      if (!node || node->type != Node::FileNode) {
-         return false;
-      }
-
-      mChildren.erase(std::remove(mChildren.begin(), mChildren.end(), node), mChildren.end());
-      delete node;
-      return true;
-   }
-
-   virtual bool deleteFolder(const std::string &name) override
-   {
-      auto node = findChild(name);
-
-      if (!node || node->type != Node::FolderNode) {
-         return false;
-      }
-
-      mChildren.erase(std::remove(mChildren.begin(), mChildren.end(), node), mChildren.end());
-      delete node;
-      return true;
-   }
-
-   virtual bool deleteChild(Node *node) override
+   bool
+   deleteChild(Node *node)
    {
       auto itr = std::remove(mChildren.begin(), mChildren.end(), node);
 
@@ -92,10 +45,49 @@ public:
       return true;
    }
 
-   virtual Node *findChild(const std::string &name) override
+   virtual Node *
+   addFolder(const std::string &name) override
+   {
+      if (!checkPermission(Permissions::Write)) {
+         return nullptr;
+      }
+
+      auto node = findChild(name);
+
+      if (!node) {
+         node = new VirtualFolder { mPermissions, name };
+         addChild(node);
+      }
+
+      return node;
+   }
+
+   virtual FileHandle *
+   openFile(const std::string &name,
+            File::OpenMode mode)
+   {
+      return nullptr;
+   }
+
+   virtual bool
+   remove(const std::string &name) override
+   {
+      auto node = findChild(name);
+
+      if (!node) {
+         return false;
+      }
+
+      mChildren.erase(std::remove(mChildren.begin(), mChildren.end(), node), mChildren.end());
+      delete node;
+      return true;
+   }
+
+   virtual Node *
+   findChild(const std::string &name) override
    {
       for (auto node : mChildren) {
-         if (node->name.compare(name) == 0) {
+         if (node->name().compare(name) == 0) {
             return node;
          }
       }
@@ -103,9 +95,14 @@ public:
       return nullptr;
    }
 
-   virtual FolderHandle *open() override
+   virtual FolderHandle *
+   openDirectory() override
    {
-      auto handle = new VirtualFolderHandle(mChildren.begin(), mChildren.end());
+      if (!checkPermission(Permissions::Read)) {
+         return nullptr;
+      }
+
+      auto handle = new VirtualFolderHandle { mChildren.begin(), mChildren.end() };
 
       if (!handle->open()) {
          delete handle;
@@ -113,6 +110,19 @@ public:
       }
 
       return handle;
+   }
+
+   virtual void
+   setPermissions(Permissions permissions,
+                  PermissionFlags flags) override
+   {
+      mPermissions = permissions;
+
+      if (flags & PermissionFlags::Recursive) {
+         for (auto node : mChildren) {
+            node->setPermissions(permissions, flags);
+         }
+      }
    }
 
 private:

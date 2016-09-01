@@ -82,8 +82,8 @@ namespace system
 //! Emulated system region
 extern int region;
 
-//! Path to system files
-extern std::string system_path;
+//! Path to /vol/storage_mlc01 files
+extern std::string mlc_path;
 
 //! Path to /vol/content for standalone .rpx applications
 extern std::string content_path;

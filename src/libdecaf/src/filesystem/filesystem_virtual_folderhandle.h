@@ -11,7 +11,8 @@ struct VirtualFolderHandle : public FolderHandle
    using iterator = std::vector<Node *>::const_iterator;
 
 public:
-   VirtualFolderHandle(const iterator &begin, const iterator &end) :
+   VirtualFolderHandle(const iterator &begin,
+                       const iterator &end) :
       mBegin(begin),
       mEnd(end),
       mIterator(mBegin)
@@ -20,30 +21,33 @@ public:
 
    virtual ~VirtualFolderHandle() override = default;
 
-   virtual bool open() override
+   virtual bool
+   open() override
    {
       mIterator = mBegin;
       return true;
    }
 
-   virtual void close() override
+   virtual void
+   close() override
    {
       mIterator = mEnd;
    }
 
-   virtual bool read(FolderEntry &entry) override
+   virtual bool
+   read(FolderEntry &entry) override
    {
       if (mIterator == mEnd) {
          return false;
       }
 
       auto node = *mIterator;
-      entry.name = node->name;
-      entry.size = node->size;
+      entry.name = node->name();
+      entry.size = node->size();
 
-      if (node->type == Node::FileNode) {
+      if (node->type() == Node::FileNode) {
          entry.type = FolderEntry::File;
-      } else if (node->type == Node::FolderNode) {
+      } else if (node->type() == Node::FolderNode) {
          entry.type = FolderEntry::Folder;
       } else {
          entry.type = FolderEntry::Unknown;
@@ -53,7 +57,8 @@ public:
       return true;
    }
 
-   virtual bool rewind() override
+   virtual bool
+   rewind() override
    {
       mIterator = mBegin;
       return true;

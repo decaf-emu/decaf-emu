@@ -7,6 +7,7 @@
 #include "filesystem_link_folder.h"
 #include "filesystem_path.h"
 #include "filesystem_virtual_folder.h"
+#include <common/log.h>
 
 namespace fs
 {
@@ -15,7 +16,7 @@ class FileSystem
 {
 public:
    FileSystem() :
-      mRoot("/")
+      mRoot(Permissions::ReadWrite, "/")
    {
    }
 
@@ -23,71 +24,23 @@ public:
    {
       auto node = createPath(path);
 
-      if (!node || node->type != Node::FolderNode) {
+      if (!node || node->type() != Node::FolderNode) {
          return nullptr;
       }
 
       return reinterpret_cast<Folder *>(node);
    }
 
-   File *makeFile(Path path)
-   {
-      auto parent = createPath(path.parentPath());
-
-      if (!parent || parent->type != Node::FolderNode) {
-         return nullptr;
-      }
-
-      auto folder = reinterpret_cast<Folder *>(parent);
-      auto node = folder->addFile(path.filename());
-
-      if (!node || node->type != Node::FileNode) {
-         return nullptr;
-      }
-
-      return reinterpret_cast<File *>(node);
-   }
-
-   bool deleteChild(Path path)
+   bool remove(Path path)
    {
       auto parent = findNode(path.parentPath());
 
-      if (!parent || parent->type != Node::FolderNode) {
+      if (!parent || parent->type() != Node::FolderNode) {
          return false;
       }
 
       auto folder = reinterpret_cast<Folder *>(parent);
-      auto node = folder->findChild(path.filename());
-
-      if (!node) {
-         return false;
-      }
-
-      return folder->deleteChild(node);
-   }
-
-   bool deleteFile(Path path)
-   {
-      auto parent = findNode(path.parentPath());
-
-      if (!parent || parent->type != Node::FolderNode) {
-         return false;
-      }
-
-      auto folder = reinterpret_cast<Folder *>(parent);
-      return folder->deleteFile(path.filename());
-   }
-
-   bool deleteFolder(Path path)
-   {
-      auto parent = findNode(path.parentPath());
-
-      if (!parent || parent->type != Node::FolderNode) {
-         return false;
-      }
-
-      auto folder = reinterpret_cast<Folder *>(parent);
-      return folder->deleteFolder(path.filename());
+      return folder->remove(path.filename());
    }
 
    Node *makeLink(Path dst, Path src)
@@ -112,17 +65,17 @@ public:
       // Create parent path
       auto parent = createPath(dst.parentPath());
 
-      if (!parent || parent->type != Node::FolderNode) {
+      if (!parent || parent->type() != Node::FolderNode || parent->deviceType() != Node::VirtualDevice) {
          return nullptr;
       }
 
-      auto folder = reinterpret_cast<Folder *>(parent);
+      auto folder = reinterpret_cast<VirtualFolder *>(parent);
 
       // Create link
-      if (srcNode->type == Node::FolderNode) {
-         dstNode = new FolderLink(reinterpret_cast<Folder *>(srcNode), dst.filename());
-      } else if (srcNode->type == Node::FileNode) {
-         dstNode = new FileLink(reinterpret_cast<File *>(srcNode), dst.filename());
+      if (srcNode->type() == Node::FolderNode) {
+         dstNode = new FolderLink { reinterpret_cast<Folder *>(srcNode), dst.filename() };
+      } else if (srcNode->type() == Node::FileNode) {
+         dstNode = new FileLink { reinterpret_cast<File *>(srcNode), dst.filename() };
       }
 
       if (dstNode) {
@@ -132,52 +85,54 @@ public:
       return dstNode;
    }
 
-   bool mountHostFolder(Path dst, HostPath src)
+   bool mountHostFolder(Path dst, HostPath src, Permissions permissions)
    {
       auto parent = createPath(dst.parentPath());
 
-      if (!parent || parent->type != Node::FolderNode) {
+      if (!parent || parent->type() != Node::FolderNode || parent->deviceType() != Node::VirtualDevice) {
          return false;
       }
 
-      auto folder = reinterpret_cast<Folder *>(parent);
-      return !!folder->addChild(new HostFolder(src, dst.filename()));
+      gLog->debug("Mount {} to {}", src.path(), dst.path());
+      auto folder = reinterpret_cast<VirtualFolder *>(parent);
+      auto name = dst.filename();
+      return !!folder->addChild(new HostFolder { src, name, permissions });
    }
 
-   bool mountHostFile(Path dst, HostPath src)
+   bool mountHostFile(Path dst, HostPath src, Permissions permissions)
    {
       auto parent = createPath(dst.parentPath());
 
-      if (!parent || parent->type != Node::FolderNode) {
+      if (!parent || parent->type() != Node::FolderNode || parent->deviceType() != Node::VirtualDevice) {
          return false;
       }
 
-      auto folder = reinterpret_cast<Folder *>(parent);
-      return !!folder->addChild(new HostFile(src, dst.filename()));
+      auto folder = reinterpret_cast<VirtualFolder *>(parent);
+      return !!folder->addChild(new HostFile { src, dst.filename(), permissions });
    }
 
    FileHandle *openFile(Path path, File::OpenMode mode)
    {
-      auto node = findNode(path);
+      auto node = findNode(path.parentPath());
 
-      if (!node || node->type != Node::FileNode) {
+      if (!node || node->type() != Node::FolderNode) {
          return nullptr;
       }
 
-      auto file = reinterpret_cast<File *>(node);
-      return file->open(mode);
+      auto file = reinterpret_cast<Folder *>(node);
+      return file->openFile(path.filename(), mode);
    }
 
    FolderHandle *openFolder(Path path)
    {
       auto node = findNode(path);
 
-      if (!node || node->type != Node::FolderNode) {
+      if (!node || node->type() != Node::FolderNode) {
          return nullptr;
       }
 
       auto folder = reinterpret_cast<Folder *>(node);
-      return folder->open();
+      return folder->openDirectory();
    }
 
    bool findEntry(Path path, FolderEntry &entry)
@@ -188,12 +143,12 @@ public:
          return false;
       }
 
-      entry.name = node->name;
-      entry.size = node->size;
+      entry.name = node->name();
+      entry.size = node->size();
 
-      if (node->type == Node::FileNode) {
+      if (node->type() == Node::FileNode) {
          entry.type = FolderEntry::File;
-      } else if (node->type == Node::FolderNode) {
+      } else if (node->type() == Node::FolderNode) {
          entry.type = FolderEntry::Folder;
       } else {
          entry.type = FolderEntry::Unknown;
@@ -202,13 +157,38 @@ public:
       return true;
    }
 
+   bool setPermissions(Path path, Permissions permissions, PermissionFlags flags)
+   {
+      auto node = findNode(path);
+
+      if (!node) {
+         return false;
+      }
+
+      node->setPermissions(permissions, flags);
+      return true;
+   }
+
 protected:
+   Node *followLink(Node *node)
+   {
+      if (node && node->deviceType() == Node::LinkDevice) {
+         if (node->type() == Node::FileNode) {
+            return reinterpret_cast<FileLink *>(node)->getLink();
+         } else if (node->type() == Node::FolderNode) {
+            return reinterpret_cast<FolderLink *>(node)->getLink();
+         }
+      }
+
+      return node;
+   }
+
    Node *findNode(const Path &path)
    {
       auto node = reinterpret_cast<Node *>(&mRoot);
 
       for (auto dir : path) {
-         if (!node || node->type != Node::FolderNode) {
+         if (!node || node->type() != Node::FolderNode) {
             return nullptr;
          }
 
@@ -221,7 +201,7 @@ protected:
          node = folder->findChild(dir);
       }
 
-      return node;
+      return followLink(node);
    }
 
    Node *createPath(const Path &path)
@@ -229,7 +209,7 @@ protected:
       auto node = reinterpret_cast<Node *>(&mRoot);
 
       for (auto dir : path) {
-         if (!node || node->type != Node::FolderNode) {
+         if (!node || node->type() != Node::FolderNode) {
             return nullptr;
          }
 

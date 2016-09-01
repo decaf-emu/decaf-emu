@@ -10,8 +10,10 @@ namespace fs
 class HostFile : public File
 {
 public:
-   HostFile(const HostPath &path, const std::string &name) :
-      File(name),
+   HostFile(const HostPath &path,
+            const std::string &name,
+            Permissions permissions) :
+      File(DeviceType::HostDevice, permissions, name),
       mPath(path)
    {
 
@@ -19,8 +21,13 @@ public:
 
    virtual ~HostFile() override = default;
 
-   virtual class FileHandle *open(OpenMode mode) override
+   virtual FileHandle *
+   open(OpenMode mode) override
    {
+      if (!checkOpenPermissions(mode)) {
+         return nullptr;
+      }
+
       auto handle = new HostFileHandle(mPath.path(), mode);
 
       if (!handle->open()) {

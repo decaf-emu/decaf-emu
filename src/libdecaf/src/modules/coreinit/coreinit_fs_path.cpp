@@ -6,10 +6,6 @@
 namespace coreinit
 {
 
-static fs::Path
-gWorkingPath = "/";
-
-
 FSStatus
 FSGetCwd(FSClient *client,
          FSCmdBlock *block,
@@ -17,7 +13,7 @@ FSGetCwd(FSClient *client,
          uint32_t bufferSize,
          uint32_t flags)
 {
-   auto &path = gWorkingPath.path();
+   auto &path = client->getWorkingPath().path();
    auto size = path.size();
 
    if (size >= bufferSize) {
@@ -50,7 +46,7 @@ FSChangeDirAsync(FSClient *client,
    block->path[pathLength] = 0;
 
    internal::queueFsWork(client, block, asyncData, [=]() {
-      gWorkingPath = coreinit::internal::translatePath(block->path);
+      client->setWorkingPath(internal::translatePath(client, block->path));
       return FSStatus::OK;
    });
 
@@ -72,12 +68,13 @@ namespace internal
 {
 
 fs::Path
-translatePath(const char *path)
+translatePath(FSClient *client,
+              const char *path)
 {
    if (path[0] == '/') {
       return path;
    } else {
-      return gWorkingPath.join(path);
+      return client->getWorkingPath().join(path);
    }
 }
 

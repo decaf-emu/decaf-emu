@@ -8,9 +8,8 @@ namespace fs
 class HostFolderHandle : public FolderHandle
 {
 public:
-   HostFolderHandle(const HostPath &path, FolderHandle *virtualHandle) :
+   HostFolderHandle(const HostPath &path) :
       mPath(path),
-      mVirtualHandle(virtualHandle),
       mFindData(nullptr)
    {
    }
@@ -18,18 +17,22 @@ public:
    virtual ~HostFolderHandle() override
    {
       close();
-      delete mVirtualHandle;
    }
 
-   virtual bool open() override;
-   virtual void close() override;
+   virtual bool
+   open() override;
 
-   virtual bool read(FolderEntry &entry) override;
-   virtual bool rewind() override;
+   virtual void
+   close() override;
+
+   virtual bool
+   read(FolderEntry &entry) override;
+
+   virtual bool
+   rewind() override;
 
 private:
    HostPath mPath;
-   FolderHandle *mVirtualHandle;
    void *mFindData;
 };
 

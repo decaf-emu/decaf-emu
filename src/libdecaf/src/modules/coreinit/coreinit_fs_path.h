@@ -34,7 +34,8 @@ namespace internal
 {
 
 fs::Path
-translatePath(const char *path);
+translatePath(FSClient *client,
+              const char *path);
 
 } // namespace internal
 

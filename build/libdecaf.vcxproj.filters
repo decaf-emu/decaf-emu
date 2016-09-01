@@ -924,6 +924,9 @@
     <ClCompile Include="..\src\libdecaf\src\modules\snd_core\snd_core_fx.cpp">
       <Filter>Source Files\modules\snd_core</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_filehandle.cpp">
+      <Filter>Source Files\filesystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1289,9 +1292,6 @@
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_folder.h">
       <Filter>Header Files\filesystem</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_file.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_host_filehandle.h">
       <Filter>Header Files\filesystem</Filter>
     </ClInclude>
@@ -1369,12 +1369,6 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_fs_dir.h">
       <Filter>Header Files\modules\coreinit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_filehandle.h">
-      <Filter>Header Files\filesystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_filedata.h">
-      <Filter>Header Files\filesystem</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_link_folder.h">
       <Filter>Header Files\filesystem</Filter>
@@ -1753,6 +1747,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\snd_core\snd_core_fx.h">
       <Filter>Header Files\modules\snd_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_permissions.h">
+      <Filter>Header Files\filesystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

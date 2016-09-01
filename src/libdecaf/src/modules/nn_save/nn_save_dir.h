@@ -98,7 +98,8 @@ fs::Path
 getSaveDirectory(uint32_t account);
 
 fs::Path
-getSavePath(uint32_t account, const char *path);
+getSavePath(uint32_t account,
+            const char *path);
 
 } // namespace internal
 

@@ -2,11 +2,11 @@
 #include "log.h"
 #include "platform.h"
 #include "platform_stacktrace.h"
+#include "platform_winapi_string.h"
 #include <iostream>
 
 #ifdef PLATFORM_WINDOWS
 #include <cassert>
-#include <codecvt>
 #include <Windows.h>
 #endif
 
@@ -41,20 +41,18 @@ assertFailed(const char *file,
    std::cerr << out.str() << std::endl;
 
 #ifdef PLATFORM_WINDOWS
-   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-   auto wmsg = converter.from_bytes(message);
-
    if (IsDebuggerPresent()) {
-      OutputDebugStringW(converter.from_bytes(out.c_str()).c_str());
+      OutputDebugStringW(platform::toWinApiString(out.c_str()).c_str());
    } else {
-      auto expr = converter.from_bytes(expression);
+      auto wmsg = platform::toWinApiString(message);
+      auto expr = platform::toWinApiString(expression);
 
       if (!wmsg.empty()) {
          expr += L"\nMessage: ";
          expr += wmsg;
       }
 
-      _wassert(expr.c_str(), converter.from_bytes(file).c_str(), line);
+      _wassert(expr.c_str(), platform::toWinApiString(file).c_str(), line);
    }
 #endif
 }

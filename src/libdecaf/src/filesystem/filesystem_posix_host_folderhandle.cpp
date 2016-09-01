@@ -32,10 +32,6 @@ bool HostFolderHandle::open()
       return false;
    }
 
-   if (mVirtualHandle) {
-      mVirtualHandle->open();
-   }
-
    return true;
 }
 
@@ -48,19 +44,10 @@ void HostFolderHandle::close()
       delete data;
       mFindData = nullptr;
    }
-
-   if (mVirtualHandle) {
-      mVirtualHandle->close();
-   }
 }
 
 bool HostFolderHandle::read(FolderEntry &entry)
 {
-   // Read virtual entries first
-   if (mVirtualHandle->read(entry)) {
-      return true;
-   }
-
    if (!mFindData) {
       return false;
    }
@@ -104,11 +91,6 @@ bool HostFolderHandle::rewind()
    }
 
    rewinddir(data->handle);
-
-   if (mVirtualHandle) {
-      mVirtualHandle->rewind();
-   }
-
    return true;
 }
 

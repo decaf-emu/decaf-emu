@@ -2,6 +2,7 @@ games
 docs
 obj
 build/obj
+build/GeneratedFiles
 build/texture_*
 build/shader_*
 build/*.txt
@@ -23,3 +24,4 @@ config.json
 *.rpx
 *.o
 !tests/hle/bin/*.rpx
+mlc/

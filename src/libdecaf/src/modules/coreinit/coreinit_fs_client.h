@@ -40,11 +40,18 @@ public:
    FSError
    getLastError();
 
+   void
+   setWorkingPath(fs::Path path);
+
+   fs::Path
+   getWorkingPath();
+
 private:
    FSError mLastError;
    std::mutex mMutex;
    std::vector<fs::FileHandle *> mOpenFiles;
    std::vector<fs::FolderHandle *> mOpenFolders;
+   fs::Path mWorkingPath;
 };
 
 static_assert(sizeof(FSClient) < 0x1700, "FSClient must be less than 0x1700 bytes");

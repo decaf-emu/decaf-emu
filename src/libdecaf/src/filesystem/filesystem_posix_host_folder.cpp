@@ -9,28 +9,79 @@ namespace fs
 {
 
 Node *
-HostFolder::findChild(const std::string &name)
+HostFolder::addFolder(const std::string &name)
 {
-   struct stat data;
-   auto child = mVirtual.findChild(name);
+   auto hostPath = mPath.join(name);
+   auto child = findChild(name);
 
    if (child) {
-      return child;
-   }
+      if (child->type() == NodeType::FolderNode) {
+         return child;
+      }
 
-   auto hostPath = mPath.join(name);
-
-   if (stat(hostPath.path().c_str(), &data)) {
       return nullptr;
    }
 
-   if (S_ISDIR(data.st_mode)) {
-      child = addChild(new HostFolder(hostPath, name));
-   } else {
-      child = addChild(new HostFile(hostPath, name));
+   if (!checkPermission(Permissions::Write)) {
+      return nullptr;
    }
 
-   child->size = data.st_size;
+   if (mkdir(hostPath.path().c_str(), 0755)) {
+      return nullptr;
+   }
+
+   return registerFolder(hostPath, name);
+}
+
+bool
+HostFolder::remove(const std::string &name)
+{
+   auto hostPath = mPath.join(name);
+   auto child = findChild(name);
+
+   if (!child) {
+      // File / Directory does not exist, nothing to do
+      return true;
+   }
+
+   if (!checkPermission(Permissions::Write)) {
+      return false;
+   }
+
+   if (remove(hostPath.path().c_str())) {
+      return false;
+   }
+
+   mVirtual.deleteChild(child);
+   return true;
+}
+
+Node *
+HostFolder::findChild(const std::string &name)
+{
+   struct stat data;
+   auto hostPath = mPath.join(name);
+
+   if (stat(hostPath.path().c_str(), &data)) {
+      // File was not found
+      if (auto child = mVirtual.findChild(name)) {
+         // Delete the virtual child because file does not exist anymore
+         mVirtual.deleteChild(child);
+      }
+
+      return nullptr;
+   }
+
+   // Setup node
+   Node *child = nullptr;
+
+   if (S_ISDIR(data.st_mode)) {
+      child = registerFolder(hostPath, name);
+   } else {
+      child = registerFile(hostPath, name);
+   }
+
+   child->setSize(data.st_size);
    return child;
 }
 

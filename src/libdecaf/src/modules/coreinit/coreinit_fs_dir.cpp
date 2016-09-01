@@ -28,9 +28,11 @@ FSOpenDirAsync(FSClient *client,
 
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto fs = kernel::getFileSystem();
-      auto dir = fs->openFolder(coreinit::internal::translatePath(block->path));
+      auto path = internal::translatePath(client, block->path);
+      auto dir = fs->openFolder(path);
 
       if (!dir) {
+         gLog->debug("Could not open directory '{}'", path.path());
          return FSStatus::NotFound;
       }
 
@@ -104,7 +106,7 @@ FSMakeDirAsync(FSClient *client,
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto fs = kernel::getFileSystem();
 
-      if (!fs->makeFolder(coreinit::internal::translatePath(block->path))) {
+      if (!fs->makeFolder(internal::translatePath(client, block->path))) {
          return FSStatus::FatalError;
       }
 
@@ -229,7 +231,7 @@ FSRemoveAsync(FSClient *client,
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto fs = kernel::getFileSystem();
 
-      if (!fs->deleteChild(block->path)) {
+      if (!fs->remove(block->path)) {
          return FSStatus::NotFound;
       }
 

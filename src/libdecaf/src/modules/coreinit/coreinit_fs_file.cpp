@@ -60,7 +60,7 @@ FSOpenFileAsync(FSClient *client,
 
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto fs = kernel::getFileSystem();
-      auto path = coreinit::internal::translatePath(block->path);
+      auto path = internal::translatePath(client, block->path);
       auto mode = parseOpenMode(block->mode);
 
       if (!mode) {
@@ -69,17 +69,9 @@ FSOpenFileAsync(FSClient *client,
 
       auto fh = fs->openFile(path, mode);
 
-      // Try to create the file if not exists in Write or Append mode
-      if (!fh && ((mode & fs::File::Write) || (mode & fs::File::Append))) {
-         auto file = fs->makeFile(path);
-
-         if (file) {
-            fh = file->open(mode);
-         }
-      }
-
       // File not found
       if (!fh) {
+         gLog->debug("Could not open file '{}'", path.path());
          return FSStatus::NotFound;
       }
 
@@ -194,8 +186,8 @@ FSReadFileWithPosAsync(FSClient *client,
          return FSStatus::FatalError;
       }
 
-      auto read = file->read(buffer, size, count, position);
-      return static_cast<FSStatus>(read);
+      file->seek(position);
+      return static_cast<FSStatus>(file->read(buffer, size, count));
    });
 
    return FSStatus::OK;
@@ -276,8 +268,8 @@ FSWriteFileWithPosAsync(FSClient *client,
          return FSStatus::FatalError;
       }
 
-      auto wrote = file->write(buffer, size, count, position);
-      return static_cast<FSStatus>(wrote);
+      file->seek(position);
+      return static_cast<FSStatus>(file->write(buffer, size, count));
    });
 
    return FSStatus::OK;

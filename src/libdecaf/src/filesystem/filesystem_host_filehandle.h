@@ -1,115 +1,57 @@
 #pragma once
-#include "common/decaf_assert.h"
 #include "filesystem_file.h"
 #include "filesystem_filehandle.h"
-#include <fstream>
+#include <cstdio>
 
 namespace fs
 {
 
 struct HostFileHandle : public FileHandle
 {
-   HostFileHandle(const std::string &path, File::OpenMode mode)
+   HostFileHandle(const std::string &path, File::OpenMode mode);
+
+   virtual ~HostFileHandle() override
    {
-      char openModeStr[6] = "";
-      char *openModeStrPtr = openModeStr;
-
-      if (mode & File::Read) {
-         *openModeStrPtr++ = 'r';
-      }
-
-      if (mode & File::Write) {
-         *openModeStrPtr++ = 'w';
-      }
-
-      if (mode & File::Append) {
-         *openModeStrPtr++ = 'a';
-      }
-
-      *openModeStrPtr++ = 'b';
-
-      if (mode & File::Update) {
-         *openModeStrPtr++ = '+';
-      }
-
-      *openModeStrPtr++ = '\0';
-
-      mHandle = fopen(path.c_str(), openModeStr);
+      close();
    }
 
-   virtual ~HostFileHandle() override = default;
+   virtual bool
+   open() override;
 
-   virtual bool open() override
-   {
-      return mHandle != NULL;
-   }
+   virtual void
+   close() override;
 
-   virtual void close() override
-   {
-      fclose(mHandle);
-      mHandle = NULL;
-   }
+   virtual bool
+   eof() override;
 
-   virtual bool flush() override
-   {
-      return fflush(mHandle) == 0;
-   }
+   virtual bool
+   flush() override;
 
-   virtual size_t truncate() override
-   {
-      // TODO: Implement truncate
-      return 0;
-   }
+   virtual bool
+   seek(size_t position) override;
 
-   virtual bool seek(size_t position) override
-   {
-      return fseek(mHandle, position, SEEK_SET) == 0;
-   }
+   virtual size_t
+   size() override;
 
-   virtual bool eof() override
-   {
-      return feof(mHandle) != 0;
-   }
+   virtual size_t
+   tell() override;
 
-   virtual size_t tell() override
-   {
-      return ftell(mHandle);
-   }
+   virtual size_t
+   truncate() override;
 
-   virtual size_t size() override
-   {
-      auto pos = tell();
-      fseek(mHandle, 0, SEEK_END);
-      auto size = tell();
-      seek(pos);
-      return size;
-   }
+   virtual size_t
+   read(uint8_t *data,
+        size_t size,
+        size_t count) override;
 
-   virtual size_t read(uint8_t *data, size_t size, size_t count) override
-   {
-      return fread(data, size, count, mHandle);
-   }
-
-   virtual size_t read(uint8_t *data, size_t size, size_t count, size_t position) override
-   {
-      seek(position);
-      return read(data, size, count);
-   }
-
-   virtual size_t write(uint8_t *data, size_t size, size_t count) override
-   {
-      return fwrite(data, size, count, mHandle);
-   }
-
-   virtual size_t write(uint8_t *data, size_t size, size_t count, size_t position) override
-   {
-      seek(position);
-      return write(data, size, count);
-   }
+   virtual size_t
+   write(const uint8_t *data,
+         size_t size,
+         size_t count) override;
 
 private:
-   FILE *mHandle;
-
+   FILE *mHandle = nullptr;
+   File::OpenMode mMode;
 };
 
 } // namespace fs

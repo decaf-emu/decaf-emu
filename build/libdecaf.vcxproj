@@ -188,6 +188,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_filehandle.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folder.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folderhandle.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_commandqueue.cpp" />
@@ -429,9 +430,7 @@
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_link_folder.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_node.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_path.h" />
-    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_file.h" />
-    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_filedata.h" />
-    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_filehandle.h" />
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_permissions.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_folderhandle.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_folder.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\gpu_commandqueue.h" />

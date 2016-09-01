@@ -79,7 +79,7 @@ struct CerealSystem
       using namespace system;
       using namespace decaf::config::system;
       ar(CEREAL_NVP(region),
-         CEREAL_NVP(system_path),
+         CEREAL_NVP(mlc_path),
          CEREAL_NVP(timeout_ms));
    }
 };

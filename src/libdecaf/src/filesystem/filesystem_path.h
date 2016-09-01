@@ -68,6 +68,12 @@ public:
    {
    }
 
+   template<char OtherSeperator>
+   GenericPath(const GenericPath<OtherSeperator> &src) :
+      GenericPath(src.path())
+   {
+   }
+
    GenericPath(const std::string &src)
    {
       static const char ParentSeparator[4] = { Separator, '.', '.', 0 };
@@ -128,17 +134,27 @@ public:
       }
    }
 
-   GenericPath join(const GenericPath &other) const
+   GenericPath
+   join(const GenericPath &other) const
    {
       return { mPath + PathSeparator + other.mPath };
    }
 
-   const std::string &path() const
+   template<char OtherSeparator>
+   GenericPath
+   join(const GenericPath<OtherSeparator> &other) const
+   {
+      return { mPath + PathSeparator + other.path() };
+   }
+
+   const std::string &
+   path() const
    {
       return mPath;
    }
 
-   std::string filename() const
+   std::string
+   filename() const
    {
       auto pos = mPath.find_last_of(PathSeparator);
 
@@ -149,7 +165,8 @@ public:
       }
    }
 
-   std::string extension() const
+   std::string
+   extension() const
    {
       auto fn = filename();
       auto pos = fn.find_last_of(ExtensionSeparator);
@@ -161,7 +178,8 @@ public:
       }
    }
 
-   std::string parentPath() const
+   std::string
+   parentPath() const
    {
       auto pos = mPath.find_last_of(PathSeparator);
 
@@ -174,12 +192,32 @@ public:
       }
    }
 
-   Iterator begin() const
+   bool
+   isRelativePath() const
+   {
+      if (!mPath.size()) {
+         return false;
+      }
+
+      if (PathSeparator == '/' && mPath.size() > 0 && mPath[0] == '/') {
+         return false;
+      }
+
+      if (PathSeparator == '\\' && mPath.size() > 2 && mPath[1] == ':' && mPath[2] == '\\') {
+         return false;
+      }
+
+      return true;
+   }
+
+   Iterator
+   begin() const
    {
       return Iterator { *this, 0 };
    }
 
-   Iterator end() const
+   Iterator
+   end() const
    {
       return Iterator { *this, std::string::npos };
    }

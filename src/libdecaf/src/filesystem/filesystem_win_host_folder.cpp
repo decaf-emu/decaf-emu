@@ -1,39 +1,103 @@
 #include "filesystem_host_folder.h"
-#include "common/platform.h"
+#include <common/platform.h>
 
 #ifdef PLATFORM_WINDOWS
+#include <common/platform_winapi_string.h>
 #include <Windows.h>
+#include <direct.h>
 
 namespace fs
 {
 
 Node *
-HostFolder::findChild(const std::string &name)
+HostFolder::addFolder(const std::string &name)
 {
-   auto child = mVirtual.findChild(name);
+   auto hostPath = mPath.join(name);
+   auto winPath = platform::toWinApiString(hostPath.path());
+   auto child = findChild(name);
 
    if (child) {
-      return child;
-   }
+      if (child->type() == NodeType::FolderNode) {
+         return child;
+      }
 
-   WIN32_FIND_DATAA data;
-   auto hostPath = mPath.join(name);
-   auto handle = FindFirstFileA(hostPath.path().c_str(), &data);
-
-   if (handle == INVALID_HANDLE_VALUE) {
-      // File not found!
       return nullptr;
    }
 
-   // File/Directory found, create matching virtual entry
-   if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-      child = addChild(new HostFolder(hostPath, name));
-   } else {
-      child = addChild(new HostFile(hostPath, name));
+   if (!checkPermission(Permissions::Write)) {
+      return nullptr;
    }
 
-   child->size = data.nFileSizeLow;
-   child->size |= (static_cast<size_t>(data.nFileSizeHigh) << 32);
+   if (_wmkdir(winPath.c_str())) {
+      return nullptr;
+   }
+
+   return registerFolder(hostPath, name);
+}
+
+bool
+HostFolder::remove(const std::string &name)
+{
+   auto hostPath = mPath.join(name);
+   auto winPath = platform::toWinApiString(hostPath.path());
+   auto child = findChild(name);
+
+   if (!child) {
+      // File / Directory does not exist, nothing to do
+      return true;
+   }
+
+   if (!checkPermission(Permissions::Write)) {
+      return false;
+   }
+
+   auto removed = false;
+
+   if (child->type() == NodeType::FileNode) {
+      removed = !!DeleteFileW(winPath.c_str());
+   } else if (child->type() == NodeType::FolderNode) {
+      removed = !!RemoveDirectoryW(winPath.c_str());
+   }
+
+   if (removed) {
+      mVirtual.deleteChild(child);
+   }
+
+   return removed;
+}
+
+Node *
+HostFolder::findChild(const std::string &name)
+{
+   WIN32_FIND_DATAW data;
+   auto hostPath = mPath.join(name);
+   auto winPath = platform::toWinApiString(hostPath.path());
+
+   // Find the file!
+   auto handle = FindFirstFileW(winPath.c_str(), &data);
+
+   if (handle == INVALID_HANDLE_VALUE) {
+      // File was not found
+      if (auto child = mVirtual.findChild(name)) {
+         // Delete the virtual child because file does not exist anymore
+         mVirtual.deleteChild(child);
+      }
+
+      return nullptr;
+   }
+
+   // Setup node
+   Node *child = nullptr;
+
+   if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+      child = registerFolder(hostPath, name);
+   } else {
+      child = registerFile(hostPath, name);
+   }
+
+   auto size = size_t { data.nFileSizeLow };
+   size |= (static_cast<size_t>(data.nFileSizeHigh) << 32);
+   child->setSize(size);
 
    FindClose(handle);
    return child;

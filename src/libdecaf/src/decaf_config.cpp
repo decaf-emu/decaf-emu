@@ -71,7 +71,7 @@ namespace system
 {
 
 int region = static_cast<int>(coreinit::SCIRegion::USA);
-std::string system_path = "/undefined_system_path";
+std::string mlc_path = "mlc";
 std::string content_path = {};
 double time_scale = 1.0;
 

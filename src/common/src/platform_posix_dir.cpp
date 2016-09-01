@@ -26,6 +26,7 @@ bool
 createParentDirectories(const std::string &path)
 {
    auto slashPos = path.rfind('/');
+
    if (slashPos == std::string::npos || slashPos == 0) {
       return true;
    }

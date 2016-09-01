@@ -143,17 +143,15 @@ initialise(const std::string &gamePath)
    }
 
    if (!volPath.path().empty()) {
-      gLog->debug("Mount {} to /vol", volPath.path());
-      filesystem->mountHostFolder("/vol", volPath.path());
+      filesystem->mountHostFolder("/vol/code", volPath.join("code"), fs::Permissions::Read);
+      filesystem->mountHostFolder("/vol/content", volPath.join("content"), fs::Permissions::Read);
+      filesystem->mountHostFolder("/vol/meta", volPath.join("meta"), fs::Permissions::Read);
    } else if (!rpxPath.path().empty()) {
       auto volCodePath = rpxPath.parentPath();
-
-      gLog->debug("Mount {} to /vol/code", volCodePath);
-      filesystem->mountHostFolder("/vol/code", volCodePath);
+      filesystem->mountHostFolder("/vol/code", volCodePath, fs::Permissions::Read);
 
       if (!decaf::config::system::content_path.empty()) {
-         gLog->debug("Mount {} to /vol/content", decaf::config::system::content_path);
-         filesystem->mountHostFolder("/vol/content", decaf::config::system::content_path);
+         filesystem->mountHostFolder("/vol/content", decaf::config::system::content_path, fs::Permissions::Read);
       }
 
       kernel::setExecutableFilename(rpxPath.filename());
@@ -165,9 +163,12 @@ initialise(const std::string &gamePath)
    // Setup kernel
    kernel::setFileSystem(filesystem);
 
-   // Mount system path
-   auto systemPath = fs::HostPath { decaf::config::system::system_path };
-   filesystem->mountHostFolder("/vol/storage_mlc01", systemPath.join("mlc"));
+   // Ensure mlc_path exists
+   platform::createDirectory(decaf::config::system::mlc_path);
+
+   // Mount mlc
+   auto mlcPath = fs::HostPath { decaf::config::system::mlc_path };
+   filesystem->mountHostFolder("/vol/storage_mlc01", mlcPath, fs::Permissions::Read);
 
    // Startup the filesystem thread
    coreinit::internal::startFsThread();

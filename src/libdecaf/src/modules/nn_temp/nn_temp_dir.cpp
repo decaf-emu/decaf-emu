@@ -40,7 +40,7 @@ TEMPShutdownTempDir(TempDirID id)
 {
    auto fs = kernel::getFileSystem();
 
-   if (!fs->deleteFolder(internal::getTempDir(id))) {
+   if (!fs->remove(internal::getTempDir(id))) {
       return TempStatus::FatalError;
    }
 

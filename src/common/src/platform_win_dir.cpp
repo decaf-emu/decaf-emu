@@ -1,8 +1,8 @@
 #include "platform.h"
 #include "platform_dir.h"
+#include "platform_winapi_string.h"
 
 #ifdef PLATFORM_WINDOWS
-#include <codecvt>
 #include <direct.h>
 #include <errno.h>
 #include <io.h>
@@ -28,7 +28,9 @@ createDirectory(const std::string &path)
       return false;
    }
 
-   return _mkdir(path.c_str()) == 0
+   auto winPath = platform::toWinApiString(path);
+
+   return _wmkdir(winPath.c_str()) == 0
       || (errno == EEXIST && isDirectory(path));
 }
 
@@ -36,6 +38,7 @@ bool
 createParentDirectories(const std::string &path)
 {
    auto slashPos = path.find_last_of("/\\");
+
    if (slashPos == std::string::npos
        || (slashPos == 2 && isDriveName(path.substr(0, 2)))
        || (path.find_first_not_of("/\\") == 2  // "\\server\path" syntax
@@ -49,16 +52,17 @@ createParentDirectories(const std::string &path)
 bool
 fileExists(const std::string &path)
 {
-   return _access_s(path.c_str(), 0) == 0;
+   auto winPath = platform::toWinApiString(path);
+   return _waccess_s(winPath.c_str(), 0) == 0;
 }
 
 bool
 isFile(const std::string &path)
 {
-   struct _stat info;
-   auto result = _stat(path.c_str(), &info);
+   auto winPath = platform::toWinApiString(path);
+   struct _stat64 info;
 
-   if (result != 0) {
+   if (_wstat64(winPath.c_str(), &info)) {
       return false;
    }
 
@@ -68,10 +72,10 @@ isFile(const std::string &path)
 bool
 isDirectory(const std::string &path)
 {
-   struct _stat info;
-   auto result = _stat(path.c_str(), &info);
+   auto winPath = platform::toWinApiString(path);
+   struct _stat64 info;
 
-   if (result != 0) {
+   if (_wstat64(winPath.c_str(), &info)) {
       return false;
    }
 
@@ -85,8 +89,7 @@ getConfigDirectory()
    auto result = std::string { "." };
 
    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &path))) {
-      std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-      result = converter.to_bytes(path);
+      result = platform::fromWinApiString(path);
       CoTaskMemFree(path);
    }
 

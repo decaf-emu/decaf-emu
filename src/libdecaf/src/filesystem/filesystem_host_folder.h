@@ -11,70 +11,71 @@ namespace fs
 class HostFolder : public Folder
 {
 public:
-   HostFolder(const HostPath &path, const std::string &name) :
-      Folder(name),
+   HostFolder(const HostPath &path, const std::string &name, Permissions permissions) :
+      Folder(DeviceType::HostDevice, permissions, name),
       mPath(path),
-      mVirtual(name)
+      mVirtual(permissions, name)
    {
    }
 
    virtual ~HostFolder() override = default;
 
-   virtual Node *addFolder(const std::string &name) override
-   {
-      auto node = findChild(name);
+   virtual Node *
+   addFolder(const std::string &name) override;
 
-      if (!node) {
-         node = new VirtualFolder(name);
-         // TODO: Maybe create host folder
-         addChild(node);
+   virtual bool
+   remove(const std::string &name) override;
+
+   virtual Node *
+   findChild(const std::string &name) override;
+
+   virtual FileHandle *
+   openFile(const std::string &name,
+            File::OpenMode mode) override
+   {
+      auto hostPath = mPath.join(name);
+      auto child = findChild(name);
+
+      if (!child && checkPermission(Permissions::Write)) {
+         if ((mode & File::Write) || (mode & File::Append)) {
+            // Create file in Write or Append mode
+            child = registerFile(hostPath, name);
+         }
       }
 
-      return node;
-   }
-
-   virtual Node *addFile(const std::string &name) override
-   {
-      auto node = findChild(name);
-
-      if (!node) {
-         node = new VirtualFile(name);
-         // TODO: Maybe create host file
-         addChild(node);
+      if (!child) {
+         return nullptr;
       }
 
-      return node;
+      // Ensure we have read permissions
+      if (!checkPermission(Permissions::Read)) {
+         return nullptr;
+      }
+
+      // Ensure this is a file node
+      if (child->type() != NodeType::FileNode) {
+         return nullptr;
+      }
+
+      return reinterpret_cast<File *>(child)->open(mode);
    }
 
-   virtual Node *addChild(Node *node) override
+   virtual void
+   setPermissions(Permissions permissions,
+                  PermissionFlags flags)
    {
-      mVirtual.addChild(node);
-      return node;
+      mPermissions = permissions;
+      mVirtual.setPermissions(permissions, flags);
    }
 
-   virtual bool deleteFile(const std::string &name) override
+   virtual FolderHandle *
+   openDirectory() override
    {
-      // TODO: Maybe delete host file
-      return mVirtual.deleteFile(name);
-   }
+      if (!checkPermission(Permissions::Read)) {
+         return nullptr;
+      }
 
-   virtual bool deleteFolder(const std::string &name) override
-   {
-      // TODO: Maybe delete host folder
-      return mVirtual.deleteFolder(name);
-   }
-
-   virtual bool deleteChild(Node *node) override
-   {
-      // TODO: Maybe delete host file/folder
-      return mVirtual.deleteChild(node);
-   }
-
-   virtual Node *findChild(const std::string &name) override;
-
-   virtual FolderHandle *open() override
-   {
-      auto handle = new HostFolderHandle(mPath, mVirtual.open());
+      auto handle = new HostFolderHandle { mPath };
 
       if (!handle->open()) {
          delete handle;
@@ -82,6 +83,45 @@ public:
       }
 
       return handle;
+   }
+
+private:
+   Node *
+   registerFile(const HostPath &path,
+                const std::string &name)
+   {
+      auto child = mVirtual.findChild(name);
+
+      if (child && child->type() != NodeType::FileNode) {
+         mVirtual.deleteChild(child);
+         child = nullptr;
+      }
+
+      if (!child) {
+         child = new HostFile { path, name, mPermissions };
+         mVirtual.addChild(child);
+      }
+
+      return child;
+   }
+
+   Node *
+   registerFolder(const HostPath &path,
+                  const std::string &name)
+   {
+      auto child = mVirtual.findChild(name);
+
+      if (child && child->type() != NodeType::FolderNode) {
+         mVirtual.deleteChild(child);
+         child = nullptr;
+      }
+
+      if (!child) {
+         child = new HostFolder { path, name, mPermissions };
+         mVirtual.addChild(child);
+      }
+
+      return child;
    }
 
 private:
