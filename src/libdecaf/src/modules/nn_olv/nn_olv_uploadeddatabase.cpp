@@ -22,17 +22,22 @@ UploadedDataBase::UploadedDataBase() :
    mCommonDataUnknown(0),
    mCommonDataLength(0)
 {
+   decaf_warn_stub();
+
    mPostID[0] = 0;
    mVirtualTable = UploadedDataBase::VirtualTable;
 }
 
 UploadedDataBase::~UploadedDataBase()
 {
+   decaf_warn_stub();
 }
 
 uint32_t
 UploadedDataBase::GetAppDataSize()
 {
+   decaf_warn_stub();
+
    if (!TestFlags(HasAppData)) {
       return 0;
    }
@@ -43,6 +48,8 @@ UploadedDataBase::GetAppDataSize()
 nn::Result
 UploadedDataBase::GetAppData(uint8_t *buffer, be_val<uint32_t> *size, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    if (!TestFlags(HasAppData)) {
       return NoData;
    }
@@ -68,6 +75,8 @@ UploadedDataBase::GetAppData(uint8_t *buffer, be_val<uint32_t> *size, uint32_t b
 nn::Result
 UploadedDataBase::GetBodyText(char16_t *buffer, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    if (!TestFlags(HasBodyText)) {
       return NoData;
    }
@@ -93,6 +102,8 @@ UploadedDataBase::GetBodyText(char16_t *buffer, uint32_t bufferSize)
 nn::Result
 UploadedDataBase::GetBodyMemo(uint8_t *buffer, be_val<uint32_t> *size, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    if (!TestFlags(HasBodyMemo)) {
       return NoData;
    }
@@ -118,6 +129,8 @@ UploadedDataBase::GetBodyMemo(uint8_t *buffer, be_val<uint32_t> *size, uint32_t 
 nn::Result
 UploadedDataBase::GetCommonData(uint32_t *unk, uint8_t *buffer, be_val<uint32_t> *size, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    if (!mCommonDataLength) {
       return NoData;
    }
@@ -147,18 +160,24 @@ UploadedDataBase::GetCommonData(uint32_t *unk, uint8_t *buffer, be_val<uint32_t>
 int32_t
 UploadedDataBase::GetFeeling()
 {
+   decaf_warn_stub();
+
    return mFeeling;
 }
 
 const char *
 UploadedDataBase::GetPostId()
 {
+   decaf_warn_stub();
+
    return mPostID;
 }
 
 bool
 UploadedDataBase::TestFlags(uint32_t flag)
 {
+   decaf_warn_stub();
+
    return !!(mFlags & flag);
 }
 

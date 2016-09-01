@@ -10,6 +10,8 @@ namespace nfp
 nn::Result
 GetAmiiboSettingsArgs(AmiiboSettingsArgs *args)
 {
+   decaf_warn_stub();
+
    std::memset(args, 0, sizeof(AmiiboSettingsArgs));
    return nn::Result::Success;
 }

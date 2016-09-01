@@ -7,6 +7,7 @@ namespace snd_core
 void
 MIXUpdateSettings()
 {
+   decaf_warn_stub();
 }
 
 void

@@ -15,11 +15,14 @@ NetTaskSetting::TypeInfo = nullptr;
 
 NetTaskSetting::NetTaskSetting()
 {
+   decaf_warn_stub();
+
    mVirtualTable = NetTaskSetting::VirtualTable;
 }
 
 NetTaskSetting::~NetTaskSetting()
 {
+   decaf_warn_stub();
 }
 
 void Module::registerNetTaskSettingFunctions()

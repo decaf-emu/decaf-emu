@@ -10,18 +10,24 @@ namespace aoc
 AOCResult
 AOC_Initialize()
 {
+   decaf_warn_stub();
+
    return AOCResult::Success;
 }
 
 AOCResult
 AOC_Finalize()
 {
+   decaf_warn_stub();
+
    return AOCResult::Success;
 }
 
 uint32_t
 AOC_CalculateWorkBufferSize(uint32_t maxTitles)
 {
+   decaf_warn_stub();
+
    if (maxTitles > 256) {
       maxTitles = 256;
    }
@@ -36,6 +42,8 @@ AOC_ListTitle(be_val<uint32_t> *titleCount,
               void *workBuffer,
               uint32_t workBufferSize)
 {
+   decaf_warn_stub();
+
    *titleCount = 0;
    return AOCResult::Success;
 }

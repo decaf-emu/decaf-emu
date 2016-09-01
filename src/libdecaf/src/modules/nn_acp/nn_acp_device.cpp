@@ -10,6 +10,8 @@ namespace acp
 nn::Result
 ACPCheckApplicationDeviceEmulation(be_val<BOOL> *isEmulated)
 {
+   decaf_warn_stub();
+
    // -0x1F4 is error code
    *isEmulated = FALSE;
    return nn::Result::Success;

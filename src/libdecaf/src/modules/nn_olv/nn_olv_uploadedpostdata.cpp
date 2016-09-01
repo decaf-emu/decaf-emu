@@ -15,51 +15,67 @@ UploadedPostData::TypeInfo = nullptr;
 
 UploadedPostData::UploadedPostData()
 {
+   decaf_warn_stub();
 }
 
 UploadedPostData::~UploadedPostData()
 {
+   decaf_warn_stub();
 }
 
 uint32_t
 UploadedPostData::GetAppDataSize()
 {
+   decaf_warn_stub();
+
    return UploadedDataBase::GetAppDataSize();
 }
 
 nn::Result
 UploadedPostData::GetAppData(uint8_t *buffer, be_val<uint32_t> *size, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    return UploadedDataBase::GetAppData(buffer, size, bufferSize);
 }
 
 nn::Result
 UploadedPostData::GetBodyText(char16_t *buffer, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    return UploadedDataBase::GetBodyText(buffer, bufferSize);
 }
 
 nn::Result
 UploadedPostData::GetBodyMemo(uint8_t *buffer, be_val<uint32_t> *size, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    return UploadedDataBase::GetBodyMemo(buffer, size, bufferSize);
 }
 
 int32_t
 UploadedPostData::GetFeeling()
 {
+   decaf_warn_stub();
+
    return UploadedDataBase::GetFeeling();
 }
 
 const char *
 UploadedPostData::GetPostId()
 {
+   decaf_warn_stub();
+
    return UploadedDataBase::GetPostId();
 }
 
 bool
 UploadedPostData::TestFlags(uint32_t flag)
 {
+   decaf_warn_stub();
+
    return UploadedDataBase::TestFlags(flag);
 }
 

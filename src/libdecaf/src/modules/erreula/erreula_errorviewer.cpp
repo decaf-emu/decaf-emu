@@ -10,125 +10,158 @@ namespace erreula
 void
 ErrEulaAppearError(nn::erreula::AppearArg *args)
 {
+   decaf_warn_stub();
 }
 
 void
 ErrEulaCalc(nn::erreula::ControllerInfo *info)
 {
+   decaf_warn_stub();
 }
 
 void
 ErrEulaCreate(uint8_t *unk1, nn::erreula::RegionType region, nn::erreula::LangType language, FSClient *fsClient)
 {
+   decaf_warn_stub();
 }
 
 void
 ErrEulaDestroy()
 {
+   decaf_warn_stub();
 }
 
 void
 ErrEulaDisappearError()
 {
+   decaf_warn_stub();
 }
 
 void
 ErrEulaDrawDRC()
 {
+   decaf_warn_stub();
 }
 
 void
 ErrEulaDrawTV()
 {
+   decaf_warn_stub();
 }
 
 ErrorViewerState
 ErrEulaGetStateErrorViewer()
 {
+   decaf_warn_stub();
+
    return ErrorViewerState::None;
 }
 
 BOOL
 ErrEulaIsDecideSelectButtonError()
 {
+   decaf_warn_stub();
+
    return FALSE;
 }
 
 BOOL
 ErrEulaIsDecideSelectLeftButtonError()
 {
+   decaf_warn_stub();
+
    return FALSE;
 }
 
 BOOL
 ErrEulaIsDecideSelectRightButtonError()
 {
+   decaf_warn_stub();
+
    return FALSE;
 }
 
 void
 ErrEulaSetControllerRemo(nn::erreula::ControllerType type)
 {
+   decaf_warn_stub();
 }
 
 void
 ErrEulaAppearHomeNixSign(nn::erreula::HomeNixSignArg *arg)
 {
+   decaf_warn_stub();
 }
 
 BOOL
 ErrEulaIsAppearHomeNixSign()
 {
+   decaf_warn_stub();
+
    return FALSE;
 }
 
 void
 ErrEulaDisappearHomeNixSign()
 {
+   decaf_warn_stub();
 }
 
 void
 ErrEulaChangeLang(nn::erreula::LangType language)
 {
+   decaf_warn_stub();
 }
 
 BOOL
 ErrEulaIsSelectCursorActive()
 {
+   decaf_warn_stub();
+
    return FALSE;
 }
 
 nn::erreula::ResultType
 ErrEulaGetResultType()
 {
+   decaf_warn_stub();
+
    return static_cast<nn::erreula::ResultType>(1);
 }
 
 uint32_t
 ErrEulaGetResultCode()
 {
+   decaf_warn_stub();
+
    return 0;
 }
 
 uint32_t
 ErrEulaGetSelectButtonNumError()
 {
+   decaf_warn_stub();
+
    return 0;
 }
 
 void
 ErrEulaSetVersion(int version)
 {
+   decaf_warn_stub();
 }
 
 void
 ErrEulaPlayAppearSE(bool value)
 {
+   decaf_warn_stub();
 }
 
 bool
 ErrEulaJump(char const *, unsigned int)
 {
+   decaf_warn_stub();
+
    return false;
 }
 

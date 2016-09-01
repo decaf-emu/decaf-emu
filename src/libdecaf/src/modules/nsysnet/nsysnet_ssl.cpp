@@ -7,12 +7,16 @@ namespace nsysnet
 int
 NSSLInit()
 {
+   decaf_warn_stub();
+
    return 0;
 }
 
 int
 NSSLFinish()
 {
+   decaf_warn_stub();
+
    return 0;
 }
 

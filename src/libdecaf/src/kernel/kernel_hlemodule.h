@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <map>
+#include "common/log.h"
 #include "kernel_hlesymbol.h"
 #include "kernel_hlefunction.h"
 #include "kernel_hledata.h"
@@ -172,3 +173,18 @@ private:
 };
 
 } // namespace kernel
+
+#ifdef _MSC_VER
+#define PRETTY_FUNCTION_NAME __FUNCSIG__
+#else
+#define PRETTY_FUNCTION_NAME __PRETTY_FUNCTION__
+#endif
+
+#define decaf_warn_stub() \
+   { \
+      static bool warned = false; \
+      if (!warned) { \
+         gLog->warn("Application invoked stubbed function `{}`", PRETTY_FUNCTION_NAME); \
+         warned = true; \
+      } \
+   }

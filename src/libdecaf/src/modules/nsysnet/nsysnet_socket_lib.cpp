@@ -7,12 +7,16 @@ namespace nsysnet
 int
 socket_lib_init()
 {
+   decaf_warn_stub();
+
    return 0;
 }
 
 int
 socket_lib_finish()
 {
+   decaf_warn_stub();
+
    return 0;
 }
 

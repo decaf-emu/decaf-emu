@@ -13,6 +13,8 @@ sState = State::Uninitialised;
 nn::Result
 Initialize()
 {
+   decaf_warn_stub();
+
    sState = State::Initialised;
    return nn::Result::Success;
 }
@@ -20,6 +22,8 @@ Initialize()
 nn::Result
 Finalize()
 {
+   decaf_warn_stub();
+
    sState = State::Uninitialised;
    return nn::Result::Success;
 }
@@ -27,12 +31,16 @@ Finalize()
 State
 GetNfpState()
 {
+   decaf_warn_stub();
+
    return sState;
 }
 
 nn::Result
 StartDetection()
 {
+   decaf_warn_stub();
+
    sState = State::Detecting;
    return nn::Result::Success;
 }
@@ -40,6 +48,8 @@ StartDetection()
 nn::Result
 StopDetection()
 {
+   decaf_warn_stub();
+
    sState = State::Initialised;
    return nn::Result::Success;
 }

@@ -219,21 +219,24 @@ AXGetInputSamplesPerSec()
 int32_t
 AXRmtGetSamplesLeft()
 {
-   // TODO: AXRmtGetSamplesLeft
+   decaf_warn_stub();
+
    return 0;
 }
 
 int32_t
 AXRmtGetSamples(int32_t, be_val<uint8_t> *buffer, int32_t samples)
 {
-   // TODO: AXRmtGetSamples
+   decaf_warn_stub();
+
    return 0;
 }
 
 int32_t
 AXRmtAdvancePtr(int32_t)
 {
-   // TODO: AXRmtAdvancePtr
+   decaf_warn_stub();
+
    return 0;
 }
 

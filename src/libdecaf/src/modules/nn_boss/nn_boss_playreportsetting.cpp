@@ -16,6 +16,8 @@ PlayReportSetting::TypeInfo = nullptr;
 
 PlayReportSetting::PlayReportSetting()
 {
+   decaf_warn_stub();
+
    mVirtualTable = PlayReportSetting::VirtualTable;
 
    mPlayReportUnk1 = 0;
@@ -26,28 +28,36 @@ PlayReportSetting::PlayReportSetting()
 
 PlayReportSetting::~PlayReportSetting()
 {
+   decaf_warn_stub();
 }
 
 nn::Result
 PlayReportSetting::RegisterPreprocess(uint32_t, nn::boss::TitleID *id, const char *)
 {
+   decaf_warn_stub();
+
    return nn::boss::Success;
 }
 
 void
 PlayReportSetting::Initialize(void *, uint32_t)
 {
+   decaf_warn_stub();
 }
 
 bool
 PlayReportSetting::Set(const char *key, uint32_t value)
 {
+   decaf_warn_stub();
+
    return true;
 }
 
 bool
 PlayReportSetting::Set(uint32_t key, uint32_t value)
 {
+   decaf_warn_stub();
+
    return true;
 }
 

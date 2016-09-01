@@ -9,6 +9,8 @@ namespace olv
 
 DownloadedTopicData::DownloadedTopicData()
 {
+   decaf_warn_stub();
+
    mUnk1 = 0;
    mCommunityId = 0;
 }
@@ -16,12 +18,16 @@ DownloadedTopicData::DownloadedTopicData()
 uint32_t
 DownloadedTopicData::GetCommunityId()
 {
+   decaf_warn_stub();
+
    return mCommunityId;
 }
 
 uint32_t
 DownloadedTopicData::GetUserCount()
 {
+   decaf_warn_stub();
+
    return 0;
 }
 

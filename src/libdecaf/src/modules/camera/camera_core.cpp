@@ -9,6 +9,8 @@ CAMInit(uint32_t id,
         CAMInitInfo *info,
         be_val<CAMError> *error)
 {
+   decaf_warn_stub();
+
    *error = CAMError::OK;
    return id;
 }
@@ -16,23 +18,30 @@ CAMInit(uint32_t id,
 void
 CAMExit(CAMHandle handle)
 {
+   decaf_warn_stub();
 }
 
 int32_t
 CAMOpen(CAMHandle handle)
 {
+   decaf_warn_stub();
+
    return CAMError::OK;
 }
 
 int32_t
 CAMClose(CAMHandle handle)
 {
+   decaf_warn_stub();
+
    return CAMError::OK;
 }
 
 int32_t
 CAMGetMemReq(CAMMemoryInfo *info)
 {
+   decaf_warn_stub();
+
    if (!info) {
       return -1;
    }

@@ -9,22 +9,30 @@ namespace boss
 
 TaskID::TaskID()
 {
+   decaf_warn_stub();
+
    std::memset(mTaskID, 0, 8);
 }
 
 TaskID::TaskID(const char *id)
 {
+   decaf_warn_stub();
+
    std::strncpy(mTaskID, id, 8);
 }
 
 TaskID::TaskID(TaskID *other)
 {
+   decaf_warn_stub();
+
    std::memcpy(mTaskID, other->mTaskID, 8);
 }
 
 TaskID *
 TaskID::operator =(const char *id)
 {
+   decaf_warn_stub();
+
    std::strncpy(mTaskID, id, 8);
    return this;
 }
@@ -32,29 +40,39 @@ TaskID::operator =(const char *id)
 bool
 TaskID::operator ==(const char *id)
 {
+   decaf_warn_stub();
+
    return std::strncmp(mTaskID, id, 8) == 0;
 }
 
 bool
 TaskID::operator ==(TaskID *other)
 {
+   decaf_warn_stub();
+
    return std::strncmp(mTaskID, other->mTaskID, 8) == 0;
 }
 
 bool
 TaskID::operator !=(const char *id)
 {
+   decaf_warn_stub();
+
    return std::strncmp(mTaskID, id, 8) != 0;
 }
 
 bool
 TaskID::operator !=(TaskID *other)
 {
+   decaf_warn_stub();
+
    return std::strncmp(mTaskID, other->mTaskID, 8) != 0;
 }
 
 TaskID::operator const char *()
 {
+   decaf_warn_stub();
+
    return mTaskID;
 }
 

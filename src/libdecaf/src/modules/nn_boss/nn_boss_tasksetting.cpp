@@ -16,16 +16,21 @@ TaskSetting::TypeInfo = nullptr;
 
 TaskSetting::TaskSetting()
 {
+   decaf_warn_stub();
+
    mVirtualTable = TaskSetting::VirtualTable;
    InitializeSetting();
 }
 
 TaskSetting::~TaskSetting()
 {
+   decaf_warn_stub();
 }
 
 void TaskSetting::InitializeSetting()
 {
+   decaf_warn_stub();
+
    std::memset(mTaskSettingData, 0, 0x1000);
 
    // TODO: TaskSetting::InitializeSetting
@@ -41,6 +46,8 @@ void TaskSetting::InitializeSetting()
 void
 TaskSetting::SetRunPermissionInParentalControlRestriction(bool value)
 {
+   decaf_warn_stub();
+
    // TODO: TaskSetting::SetRunPermissionInParentalControlRestriction
    if (value) {
       // 0x2C uint8_t |= 0x02
@@ -52,12 +59,15 @@ TaskSetting::SetRunPermissionInParentalControlRestriction(bool value)
 nn::Result
 TaskSetting::RegisterPreprocess(uint32_t, nn::boss::TitleID *id, const char *)
 {
+   decaf_warn_stub();
+
    return nn::boss::Success;
 }
 
 void
 TaskSetting::RegisterPostprocess(uint32_t, nn::boss::TitleID *id, const char *, nn::Result *)
 {
+   decaf_warn_stub();
 }
 
 void Module::registerTaskSettingFunctions()

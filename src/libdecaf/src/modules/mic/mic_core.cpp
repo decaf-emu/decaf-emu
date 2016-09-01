@@ -7,6 +7,8 @@ namespace mic
 MICHandle
 MICInit(uint32_t type, void *, void *, be_val<int32_t> *result)
 {
+   decaf_warn_stub();
+
    *result = -8;
    return -1;
 }
@@ -14,12 +16,16 @@ MICInit(uint32_t type, void *, void *, be_val<int32_t> *result)
 int
 MICOpen(MICHandle handle)
 {
+   decaf_warn_stub();
+
    return -8;
 }
 
 int
 MICGetStatus(MICHandle handle, void *statusOut)
 {
+   decaf_warn_stub();
+
    return -2;
 }
 

@@ -13,6 +13,8 @@ GetFriendList(void *list,
               uint32_t index,
               uint32_t listSize)
 {
+   decaf_warn_stub();
+
    *length = 0;
    return nn::Result::Success;
 }

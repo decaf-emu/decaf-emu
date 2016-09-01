@@ -11,29 +11,38 @@ namespace ac
 nn::Result
 Initialize()
 {
+   decaf_warn_stub();
+
    return nn::Result::Success;
 }
 
 void
 Finalize()
 {
+   decaf_warn_stub();
 }
 
 nn::Result
 Connect()
 {
+   decaf_warn_stub();
+
    return ac::ConnectFailed;
 }
 
 nn::Result
 ConnectAsync()
 {
+   decaf_warn_stub();
+
    return nn::Result::Success;
 }
 
 nn::Result
 IsApplicationConnected(bool *connected)
 {
+   decaf_warn_stub();
+
    *connected = false;
    return nn::Result::Success;
 }
@@ -41,6 +50,8 @@ IsApplicationConnected(bool *connected)
 nn::Result
 GetConnectStatus(Status *status)
 {
+   decaf_warn_stub();
+
    *status = Status::Error;
    return nn::Result::Success;
 }
@@ -48,6 +59,8 @@ GetConnectStatus(Status *status)
 nn::Result
 GetLastErrorCode(uint32_t *error)
 {
+   decaf_warn_stub();
+
    *error = 123;
    return nn::Result::Success;
 }
@@ -55,6 +68,8 @@ GetLastErrorCode(uint32_t *error)
 nn::Result
 GetStatus(nn::ac::Status *status)
 {
+   decaf_warn_stub();
+
    return GetConnectStatus(status);
 }
 

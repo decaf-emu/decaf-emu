@@ -13,6 +13,8 @@ gInitialised = false;
 nn::Result
 Initialize(InitializeParam *initParam)
 {
+   decaf_warn_stub();
+
    gInitialised = true;
    return nn::Result::Success;
 }
@@ -20,6 +22,8 @@ Initialize(InitializeParam *initParam)
 nn::Result
 Initialize(MainAppParam *mainAppParam, InitializeParam *initParam)
 {
+   decaf_warn_stub();
+
    gInitialised = true;
    return nn::Result::Success;
 }
@@ -27,6 +31,8 @@ Initialize(MainAppParam *mainAppParam, InitializeParam *initParam)
 nn::Result
 Finalize()
 {
+   decaf_warn_stub();
+
    gInitialised = false;
    return nn::Result::Success;
 }
@@ -34,6 +40,8 @@ Finalize()
 bool
 IsInitialized()
 {
+   decaf_warn_stub();
+
    return gInitialised;
 }
 

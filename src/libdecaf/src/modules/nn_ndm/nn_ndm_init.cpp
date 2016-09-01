@@ -13,6 +13,8 @@ gInitialised = false;
 nn::Result
 Initialize()
 {
+   decaf_warn_stub();
+
    gInitialised = true;
    return nn::Result::Success;
 }
@@ -20,6 +22,8 @@ Initialize()
 nn::Result
 Finalize()
 {
+   decaf_warn_stub();
+
    gInitialised = false;
    return nn::Result::Success;
 }
@@ -27,12 +31,16 @@ Finalize()
 bool
 IsInitialized()
 {
+   decaf_warn_stub();
+
    return gInitialised;
 }
 
 nn::Result
 EnableResumeDaemons()
 {
+   decaf_warn_stub();
+
    return nn::Result::Success;
 }
 

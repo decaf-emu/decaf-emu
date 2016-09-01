@@ -16,33 +16,44 @@ Task::TypeInfo = nullptr;
 
 Task::Task()
 {
+   decaf_warn_stub();
 }
 
 Task::Task(const char *taskID)
 {
+   decaf_warn_stub();
+
    Initialize(taskID);
 }
 
 Task::Task(const char *taskID,
            uint32_t accountID)
 {
+   decaf_warn_stub();
+
    Initialize(taskID, accountID);
 }
 
 Task::Task(uint8_t slot,
            const char *taskID)
 {
+   decaf_warn_stub();
+
    Initialize(slot, taskID);
 }
 
 Task::~Task()
 {
+   decaf_warn_stub();
+
    Finalize();
 }
 
 nn::Result
 Task::Initialize(const char *taskID)
 {
+   decaf_warn_stub();
+
    return Initialize(taskID, 0);
 }
 
@@ -50,6 +61,8 @@ nn::Result
 Task::Initialize(const char *taskID,
                  uint32_t accountID)
 {
+   decaf_warn_stub();
+
    mAccountID = accountID;
    mTaskID = taskID;
    return nn::Result::Success;
@@ -59,35 +72,46 @@ nn::Result
 Task::Initialize(uint8_t slot,
                  const char *taskID)
 {
+   decaf_warn_stub();
+
    return Initialize(taskID, nn::act::GetPersistentIdEx(slot));
 }
 
 void
 Task::Finalize()
 {
+   decaf_warn_stub();
 }
 
 bool
 Task::IsRegistered()
 {
+   decaf_warn_stub();
+
    return false;
 }
 
 uint32_t
 Task::GetAccountID()
 {
+   decaf_warn_stub();
+
    return mAccountID;
 }
 
 void
 Task::GetTaskID(TaskID *id)
 {
+   decaf_warn_stub();
+
    *id = mTaskID;
 }
 
 void
 Task::GetTitleID(TitleID *id)
 {
+   decaf_warn_stub();
+
    *id = mTitleID;
 }
 

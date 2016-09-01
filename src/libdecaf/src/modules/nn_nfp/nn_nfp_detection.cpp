@@ -10,6 +10,8 @@ namespace nfp
 nn::Result
 SetActivateEvent(uint32_t)
 {
+   decaf_warn_stub();
+
    // TODO: nn::nfp::SetActivateEvent
    return nn::Result::Success;
 }
@@ -17,6 +19,8 @@ SetActivateEvent(uint32_t)
 nn::Result
 SetDeactivateEvent(uint32_t)
 {
+   decaf_warn_stub();
+
    // TODO: nn::nfp::SetDeactivateEvent
    return nn::Result::Success;
 }

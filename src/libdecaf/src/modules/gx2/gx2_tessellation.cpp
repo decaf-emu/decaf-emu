@@ -1,3 +1,4 @@
+#include "gx2.h"
 #include "gx2_tessellation.h"
 #include "gpu/pm4_writer.h"
 
@@ -9,6 +10,8 @@ GX2SetTessellation(GX2TessellationMode tessellationMode,
                    GX2PrimitiveMode primitiveMode,
                    GX2IndexType indexType)
 {
+   decaf_warn_stub();
+
    // TODO: Set registers 0xA285, 0xA289, 0xA28A, 0xA28B, 0xA28C, 0xA28E, 0xA28D, 0xA28F
 }
 

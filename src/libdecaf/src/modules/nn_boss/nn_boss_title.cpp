@@ -24,15 +24,19 @@ Title::Title(uint32_t account, TitleID *title) :
    mAccountID(account),
    mTitleID(title)
 {
+   decaf_warn_stub();
 }
 
 Title::~Title()
 {
+   decaf_warn_stub();
 }
 
 nn::Result
 Title::ChangeAccount(uint8_t slot)
 {
+   decaf_warn_stub();
+
    if (slot == 0) {
       mAccountID = 0;
    } else {

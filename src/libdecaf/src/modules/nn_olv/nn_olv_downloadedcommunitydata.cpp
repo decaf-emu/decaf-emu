@@ -16,11 +16,14 @@ DownloadedCommunityData::DownloadedCommunityData() :
    mAppDataLength(0),
    mIconDataLength(0)
 {
+   decaf_warn_stub();
 }
 
 uint32_t
 DownloadedCommunityData::GetAppDataSize()
 {
+   decaf_warn_stub();
+
    if (!TestFlags(HasAppData)) {
       return 0;
    }
@@ -31,6 +34,8 @@ DownloadedCommunityData::GetAppDataSize()
 nn::Result
 DownloadedCommunityData::GetAppData(uint8_t *buffer, be_val<uint32_t> *size, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    if (!TestFlags(HasAppData)) {
       return NoData;
    }
@@ -56,12 +61,16 @@ DownloadedCommunityData::GetAppData(uint8_t *buffer, be_val<uint32_t> *size, uin
 uint32_t
 DownloadedCommunityData::GetCommunityId()
 {
+   decaf_warn_stub();
+
    return mCommunityId;
 }
 
 nn::Result
 DownloadedCommunityData::GetDescriptionText(char16_t *buffer, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    if (!TestFlags(HasDescriptionText)) {
       return NoData;
    }
@@ -87,6 +96,8 @@ DownloadedCommunityData::GetDescriptionText(char16_t *buffer, uint32_t bufferSiz
 nn::Result
 DownloadedCommunityData::GetIconData(uint8_t *buffer, be_val<uint32_t> *size, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    if (!TestFlags(HasIconData)) {
       return NoData;
    }
@@ -112,6 +123,8 @@ DownloadedCommunityData::GetIconData(uint8_t *buffer, be_val<uint32_t> *size, ui
 nn::Result
 DownloadedCommunityData::GetOwnerMiiData(FFLStoreData *data)
 {
+   decaf_warn_stub();
+
    if (!TestFlags(HasOwnerMiiData)) {
       return NoData;
    }
@@ -127,6 +140,8 @@ DownloadedCommunityData::GetOwnerMiiData(FFLStoreData *data)
 char16_t *
 DownloadedCommunityData::GetOwnerMiiNickname()
 {
+   decaf_warn_stub();
+
    if (!mOwnerMiiNickname[0]) {
       return nullptr;
    }
@@ -137,12 +152,16 @@ DownloadedCommunityData::GetOwnerMiiNickname()
 uint32_t
 DownloadedCommunityData::GetOwnerPid()
 {
+   decaf_warn_stub();
+
    return mOwnerPid;
 }
 
 nn::Result
 DownloadedCommunityData::GetTitleText(char16_t *buffer, uint32_t bufferSize)
 {
+   decaf_warn_stub();
+
    if (!TestFlags(HasTitleText)) {
       return NoData;
    }
@@ -168,6 +187,8 @@ DownloadedCommunityData::GetTitleText(char16_t *buffer, uint32_t bufferSize)
 bool
 DownloadedCommunityData::TestFlags(uint32_t flags)
 {
+   decaf_warn_stub();
+
    return !!(mFlags & flags);
 }
 

@@ -16,6 +16,8 @@ RawUlTaskSetting::TypeInfo = nullptr;
 
 RawUlTaskSetting::RawUlTaskSetting()
 {
+   decaf_warn_stub();
+
    mVirtualTable = RawUlTaskSetting::VirtualTable;
 
    mRawUlUnk1 = 0;
@@ -26,17 +28,21 @@ RawUlTaskSetting::RawUlTaskSetting()
 
 RawUlTaskSetting::~RawUlTaskSetting()
 {
+   decaf_warn_stub();
 }
 
 nn::Result
 RawUlTaskSetting::RegisterPreprocess(uint32_t, nn::boss::TitleID *id, const char *)
 {
+   decaf_warn_stub();
+
    return nn::boss::Success;
 }
 
 void
 RawUlTaskSetting::RegisterPostprocess(uint32_t, nn::boss::TitleID *id, const char *, nn::Result *)
 {
+   decaf_warn_stub();
 }
 
 void Module::registerRawUlTaskSettingFunctions()
