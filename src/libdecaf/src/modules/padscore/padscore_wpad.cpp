@@ -49,6 +49,12 @@ WPADGetSpeakerVolume()
 }
 
 void
+WPADControlMotor(WPADChan::Chan chan,
+                 BOOL enabled)
+{
+}
+
+void
 Module::registerWPADFunctions()
 {
    RegisterKernelFunction(WPADInit);
@@ -57,6 +63,7 @@ Module::registerWPADFunctions()
    RegisterKernelFunction(WPADProbe);
    RegisterKernelFunction(WPADGetBatteryLevel);
    RegisterKernelFunction(WPADGetSpeakerVolume);
+   RegisterKernelFunction(WPADControlMotor);
 }
 
 } // namespace padscore

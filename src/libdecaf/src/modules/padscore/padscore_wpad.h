@@ -74,4 +74,8 @@ WPADGetBatteryLevel(WPADChan::Chan chan);
 int8_t
 WPADGetSpeakerVolume();
 
+void
+WPADControlMotor(WPADChan::Chan chan,
+                 BOOL enabled);
+
 } // namespace padscore
