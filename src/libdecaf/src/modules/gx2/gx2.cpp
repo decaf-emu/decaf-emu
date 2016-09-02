@@ -94,6 +94,7 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2GetDisplayListWriteStatus);
    RegisterKernelFunction(GX2GetCurrentDisplayList);
    RegisterKernelFunction(GX2CopyDisplayList);
+   RegisterKernelFunction(GX2PatchDisplayList);
 
    // Draw
    RegisterKernelFunction(GX2SetAttribBuffer);

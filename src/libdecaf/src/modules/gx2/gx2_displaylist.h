@@ -1,7 +1,8 @@
 #pragma once
+#include "gx2_enum.h"
+#include "virtual_ptr.h"
 #include "common/types.h"
 #include "common/be_val.h"
-#include "virtual_ptr.h"
 
 namespace gx2
 {
@@ -38,5 +39,11 @@ GX2GetCurrentDisplayList(be_ptr<void> *outDisplayList,
 void
 GX2CopyDisplayList(void *displayList,
                    uint32_t bytes);
+
+void
+GX2PatchDisplayList(void *displayList,
+                    GX2PatchShaderType type,
+                    uint32_t byteOffset,
+                    void *shader);
 
 } // namespace gx2
