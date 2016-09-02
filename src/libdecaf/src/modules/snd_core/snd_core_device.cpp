@@ -327,24 +327,23 @@ decodeVoiceSamples(int numSamples)
 static Pcm16Sample gTvSamples[AXNumTvDevices][AXNumTvChannels][144];
 
 void
-invokeTvAuxCallback(uint32_t device, uint32_t auxId, uint32_t numSamples, Pcm16Sample samples[AXNumTvChannels][144])
+invokeAuxCallback(AuxData &aux, uint32_t numChannels, uint32_t numSamples, Pcm16Sample samples[6][144])
 {
-   if (gTvDevices[device].aux[auxId].callback) {
+   if (aux.callback) {
       auto auxCbData = &sCallbackData->auxCallbackData;
       auxCbData->samples = numSamples;
-      auxCbData->channels = AXNumTvChannels;
+      auxCbData->channels = numChannels;
 
-      for (auto ch = 0u; ch < AXNumTvChannels; ++ch) {
+      for (auto ch = 0u; ch < numChannels; ++ch) {
          for (auto i = 0u; i < numSamples; ++i) {
             sCallbackData->samples[ch][i] = static_cast<int32_t>(samples[ch][i]);
          }
          sCallbackData->samplePtrs[ch] = &sCallbackData->samples[ch][0];
       }
 
-      gTvDevices[device].aux[auxId].callback(
-         sCallbackData->samplePtrs, gTvDevices[device].aux[auxId].userData, auxCbData);
+      aux.callback(sCallbackData->samplePtrs, aux.userData, auxCbData);
 
-      for (auto ch = 0u; ch < AXNumTvChannels; ++ch) {
+      for (auto ch = 0u; ch < numChannels; ++ch) {
          for (auto i = 0u; i < numSamples; ++i) {
             samples[ch][i] = Pcm16Sample::from_data(sCallbackData->samples[ch][i]);
          }
@@ -353,16 +352,16 @@ invokeTvAuxCallback(uint32_t device, uint32_t auxId, uint32_t numSamples, Pcm16S
 }
 
 void
-invokeTvFinalMixCallback(uint32_t device, uint32_t numSamples, Pcm16Sample samples[AXNumTvChannels][144])
+invokeFinalMixCallback(DeviceData &device, uint32_t numChannels, uint32_t numSamples, Pcm16Sample samples[6][144])
 {
-   if (gTvDevices[device].finalMixCallback) {
+   if (device.finalMixCallback) {
       auto mixCbData = &sCallbackData->finalMixCallbackData;
-      mixCbData->channels = 6;
+      mixCbData->channels = numChannels;
       mixCbData->samples = numSamples;
       mixCbData->unk1 = 1;
       mixCbData->channelsOut = mixCbData->channels;
 
-      for (auto ch = 0u; ch < AXNumTvChannels; ++ch) {
+      for (auto ch = 0u; ch < numChannels; ++ch) {
          for (auto i = 0u; i < numSamples; ++i) {
             sCallbackData->samples[ch][i] = static_cast<int32_t>(samples[ch][i]);
          }
@@ -370,9 +369,9 @@ invokeTvFinalMixCallback(uint32_t device, uint32_t numSamples, Pcm16Sample sampl
       }
       mixCbData->data = sCallbackData->samplePtrs;
 
-      gTvDevices[device].finalMixCallback(mixCbData);
+      device.finalMixCallback(mixCbData);
 
-      for (auto ch = 0u; ch < AXNumTvChannels; ++ch) {
+      for (auto ch = 0u; ch < numChannels; ++ch) {
          for (auto i = 0u; i < numSamples; ++i) {
             samples[ch][i] = Pcm16Sample::from_data(sCallbackData->samples[ch][i]);
          }
@@ -380,15 +379,54 @@ invokeTvFinalMixCallback(uint32_t device, uint32_t numSamples, Pcm16Sample sampl
    }
 }
 
-void
-mixTvBus(uint32_t numSamples)
+AXVoiceExtras::MixVolume &
+getVoiceMixVolume(AXVoiceExtras *extras, AXDeviceType type, uint32_t device, uint32_t channel, uint32_t bus)
 {
+   if (type == AXDeviceType::TV) {
+      decaf_check(device < AXNumTvDevices);
+      return extras->tvVolume[device][bus][channel];
+   } else if (type == AXDeviceType::DRC) {
+      decaf_check(device < AXNumDrcDevices);
+      return extras->drcVolume[device][bus][channel];
+   } else if (type == AXDeviceType::RMT) {
+      decaf_check(device < AXNumRmtDevices);
+      return extras->rmtVolume[device][bus][channel];
+   } else {
+      decaf_abort("Unexpected device type");
+   }
+}
+
+uint32_t
+getDeviceNumBuses(AXDeviceType type)
+{
+   decaf_check(type < AXDeviceType::Max);
+   static const uint32_t busses[] = { 4, 4, 1 };
+   return busses[type];
+}
+
+uint32_t
+getDeviceNumChannels(AXDeviceType type)
+{
+   decaf_check(type < AXDeviceType::Max);
+   static const uint32_t channels[] = {6, 4, 1};
+   return channels[type];
+}
+
+void
+mixDevice(AXDeviceType type, uint32_t deviceId, uint32_t numSamples)
+{
+   auto device = getDevice(type, deviceId);
+   auto numBus = getDeviceNumBuses(type);
+   auto numChannels = getDeviceNumChannels(type);
+
+   decaf_check(numBus <= 4);
+   decaf_check(numChannels <= 6);
    decaf_check(numSamples == 96 || numSamples == 144);
 
-   Pcm16Sample busSamples[AXNumTvDevices][AXNumTvBus][AXNumTvChannels][144];
+   Pcm16Sample busSamples[4][6][144];
    const auto voices = getAcquiredVoices();
 
-   memset(busSamples, 0, sizeof(Pcm16Sample) * AXNumTvDevices * AXNumTvBus * AXNumTvChannels * 144);
+   memset(busSamples, 0, sizeof(Pcm16Sample) * 4 * 6 * 144);
 
    for (auto voice : voices) {
       auto extras = getVoiceExtras(voice->index);
@@ -399,52 +437,42 @@ mixTvBus(uint32_t numSamples)
 
       decaf_check(extras->numSamples == numSamples);
 
-      for (auto device = 0u; device < AXNumTvDevices; ++device) {
-         for (auto bus = 0u; bus < AXNumTvBus; ++bus) {
-            for (auto channel = 0u; channel < AXNumTvChannels; ++channel) {
-               auto &volume = extras->tvVolume[device][channel][bus];
-               auto &out = busSamples[device][bus][channel];
+      for (auto bus = 0u; bus < numBus; ++bus) {
+         for (auto channel = 0u; channel < numChannels; ++channel) {
+            auto &volume = getVoiceMixVolume(extras, type, deviceId, channel, bus);
+            auto &out = busSamples[bus][channel];
 
-               for (auto i = 0u; i < numSamples; ++i) {
-                  out[i] += extras->samples[i] * volume.volume;
-               }
-
-               volume.volume += volume.delta;
+            for (auto i = 0u; i < numSamples; ++i) {
+               out[i] += extras->samples[i] * volume.volume;
             }
+
+            volume.volume += volume.delta;
          }
       }
    }
 
-   for (auto device = 0u; device < AXNumTvDevices; ++device) {
-      for (auto bus = 1u; bus < AXNumTvBus; ++bus) {
-         invokeTvAuxCallback(device, bus - 1, numSamples, busSamples[device][bus]);
-      }
+   for (auto bus = 1u; bus < numBus; ++bus) {
+      invokeAuxCallback(device->aux[bus - 1], numChannels, numSamples, busSamples[bus]);
    }
 
+   auto &mainBus = busSamples[0];
+
    // Downmix all aux busses to main bus
-   for (auto device = 0u; device < AXNumTvDevices; ++device) {
-      for (auto bus = 1u; bus < AXNumTvBus; ++bus) {
-         auto returnVolume = gTvDevices[device].aux[bus].returnVolume;
+   for (auto bus = 1u; bus < numBus; ++bus) {
+      auto returnVolume = device->aux[bus].returnVolume;
+      auto subBus = busSamples[bus];
 
-         for (auto channel = 0u; channel < AXNumTvChannels; ++channel) {
-            auto mainBus = busSamples[device][0][channel];
-            auto subBus = busSamples[device][bus][channel];
-
-            for (auto i = 0u; i < numSamples; ++i) {
-               mainBus[i] += subBus[i] * returnVolume;
-            }
+      for (auto channel = 0u; channel < numChannels; ++channel) {
+         for (auto i = 0u; i < numSamples; ++i) {
+            mainBus[channel][i] += subBus[channel][i] * returnVolume;
          }
       }
    }
 
    // Apply overall device volume
-   for (auto device = 0u; device < AXNumTvDevices; ++device) {
-      for (auto channel = 0u; channel < AXNumTvChannels; ++channel) {
-         auto &mainBus = busSamples[device][0][channel];
-
-         for (auto i = 0u; i < numSamples; ++i) {
-            mainBus[i] = mainBus[i] * gTvDevices[0].volume;
-         }
+   for (auto channel = 0u; channel < numChannels; ++channel) {
+      for (auto i = 0u; i < numSamples; ++i) {
+         mainBus[channel][i] = mainBus[channel][i] * device->volume;
       }
    }
 
@@ -466,34 +494,38 @@ mixTvBus(uint32_t numSamples)
    };
 
    // Perform upsampling and final mix callback invokation
-   for (auto device = 0u; device < AXNumTvDevices; ++device) {
-      if (gTvDevices[device].upsampleAfterFinalMix) {
-         invokeTvFinalMixCallback(device, numSamples, busSamples[device][0]);
+   if (device->upsampleAfterFinalMix) {
+      invokeFinalMixCallback(*device, numChannels, numSamples, mainBus);
 
-         if (numSamples != NumOutputSamples) {
-            for (auto channel = 0u; channel < AXNumTvChannels; ++channel) {
-               upsample32to48(busSamples[device][0][channel]);
-            }
+      if (numSamples != NumOutputSamples) {
+         for (auto channel = 0u; channel < numChannels; ++channel) {
+            upsample32to48(mainBus[channel]);
          }
-      } else {
-         if (numSamples != NumOutputSamples) {
-            for (auto channel = 0u; channel < AXNumTvChannels; ++channel) {
-               upsample32to48(busSamples[device][0][channel]);
-            }
-         }
-
-         invokeTvFinalMixCallback(device, NumOutputSamples, busSamples[device][0]);
       }
+   } else {
+      if (numSamples != NumOutputSamples) {
+         for (auto channel = 0u; channel < numChannels; ++channel) {
+            upsample32to48(mainBus[channel]);
+         }
+      }
+
+      invokeFinalMixCallback(*device, numChannels, numSamples, mainBus);
    }
 
    // TODO: Apply compressor
 
    // TODO: Channel upmix/downmix, but I think we should let the audio driver (aka SDL) handle that
 
-   for (auto device = 0u; device < AXNumTvDevices; ++device) {
-      memcpy(&gTvSamples[device][0][0], &busSamples[device][0][0][0], sizeof(Pcm16Sample) * AXNumTvChannels * NumOutputSamples);
+   if (type == AXDeviceType::TV) {
+      // Copy the generated data out for later pickup
+      memcpy(&gTvSamples[deviceId][0][0], &mainBus[0][0], sizeof(Pcm16Sample) * numChannels * NumOutputSamples);
+   } else if (type == AXDeviceType::DRC) {
+      // We currently just discard the generated DRC audio
+   } else if (type == AXDeviceType::RMT) {
+      // We also discard generated RMT audio
+   } else {
+      decaf_abort("Unexpected device type during copy-out");
    }
-
 }
 
 void
@@ -501,13 +533,25 @@ mixOutput(int32_t *buffer, int numSamples, int numChannels)
 {
    static const int NumOutputSamples = 48000 * 3 / 1000;
 
+   // Decode audio samples from the source voices
    decodeVoiceSamples(numSamples);
-   mixTvBus(numSamples);
 
-   // TODO: Mix DRC
+   // Mix all the TV devices
+   for (auto deviceId = 0; deviceId < AXNumTvDevices; ++deviceId) {
+      mixDevice(AXDeviceType::TV, deviceId, numSamples);
+   }
 
-   // TODO: Mix RMT
+   // Mix all the DRC devices
+   for (auto deviceId = 0; deviceId < AXNumDrcDevices; ++deviceId) {
+      mixDevice(AXDeviceType::DRC, deviceId, numSamples);
+   }
 
+   // Mix all the RMT devices
+   for (auto deviceId = 0; deviceId < AXNumRmtDevices; ++deviceId) {
+      mixDevice(AXDeviceType::RMT, deviceId, numSamples);
+   }
+
+   // Send off the TV device 0 data to be played on host
    for (auto i = 0; i < NumOutputSamples; ++i) {
       for (auto ch = 0; ch < numChannels; ++ch) {
          buffer[numChannels * i + ch] = gTvSamples[0][ch][i].data();
