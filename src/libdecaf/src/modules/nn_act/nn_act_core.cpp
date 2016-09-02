@@ -295,6 +295,25 @@ GetMiiEx(FFLStoreData *data,
    return nn::Result::Success;
 }
 
+nn::Result
+GetMiiName(char16_t *name)
+{
+   return GetMiiNameEx(name, CurrentUserSlot);
+}
+
+nn::Result
+GetMiiNameEx(char16_t *name,
+             uint8_t slot)
+{
+   if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
+      return nn::act::AccountNotFound;
+   }
+
+   auto miiName = u"decafM";
+   std::memcpy(name, miiName, 7 * sizeof(char16_t));
+   return nn::Result::Success;
+}
+
 bool
 IsParentalControlCheckEnabled()
 {
@@ -336,6 +355,8 @@ Module::registerCoreFunctions()
    RegisterKernelFunctionName("GetSlotNo__Q2_2nn3actFv", nn::act::GetSlotNo);
    RegisterKernelFunctionName("GetMii__Q2_2nn3actFP12FFLStoreData", nn::act::GetMii);
    RegisterKernelFunctionName("GetMiiEx__Q2_2nn3actFP12FFLStoreDataUc", nn::act::GetMiiEx);
+   RegisterKernelFunctionName("GetMiiName__Q2_2nn3actFPw", nn::act::GetMiiName);
+   RegisterKernelFunctionName("GetMiiNameEx__Q2_2nn3actFPwUc", nn::act::GetMiiNameEx);
    RegisterKernelFunctionName("IsParentalControlCheckEnabled__Q2_2nn3actFv", nn::act::IsParentalControlCheckEnabled);
    RegisterKernelFunctionName("IsNetworkAccount__Q2_2nn3actFv", nn::act::IsNetworkAccount);
    RegisterKernelFunctionName("IsNetworkAccountEx__Q2_2nn3actFUc", nn::act::IsNetworkAccountEx);
