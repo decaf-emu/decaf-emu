@@ -3,6 +3,7 @@
 #include "filesystem/filesystem.h"
 #include "modules/coreinit/coreinit_fs_dir.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
+#include "modules/nn_act/nn_act_core.h"
 #include "kernel/kernel_filesystem.h"
 
 namespace nn
@@ -132,7 +133,7 @@ SAVEGetFreeSpaceSizeAsync(FSClient *client,
                           uint32_t flags,
                           FSAsyncData *asyncData)
 {
-   auto fsPath = internal::getSavePath(account, "");
+   auto fsPath = internal::getSaveDirectory(account);
    return FSGetFreeSpaceSizeAsync(client, block, fsPath.path().c_str(), freeSpace, flags, asyncData);
 }
 
@@ -143,7 +144,7 @@ SAVEGetFreeSpaceSize(FSClient *client,
                      uint64_t *freeSpace,
                      uint32_t flags)
 {
-   auto fsPath = internal::getSavePath(account, "");
+   auto fsPath = internal::getSaveDirectory(account);
    return FSGetFreeSpaceSize(client, block, fsPath.path().c_str(), freeSpace, flags);
 }
 
@@ -154,7 +155,7 @@ SAVEFlushQuotaAsync(FSClient *client,
                     uint32_t flags,
                     FSAsyncData *asyncData)
 {
-   auto fsPath = internal::getSavePath(account, "");
+   auto fsPath = internal::getSaveDirectory(account);
    return FSFlushQuotaAsync(client, block, fsPath.path().c_str(), flags, asyncData);
 }
 
@@ -164,7 +165,7 @@ SAVEFlushQuota(FSClient *client,
                uint8_t account,
                uint32_t flags)
 {
-   auto fsPath = internal::getSavePath(account, "");
+   auto fsPath = internal::getSaveDirectory(account);
    return FSFlushQuota(client, block, fsPath.path().c_str(), flags);
 }
 
@@ -190,13 +191,21 @@ namespace internal
 fs::Path
 getSaveDirectory(uint32_t account)
 {
-  return fmt::format("/vol/save/{}", account);
+   if (account == nn::act::CurrentUserSlot) {
+      account = nn::act::GetSlotNo();
+   }
+
+   return fmt::format("/vol/save/{}", account);
 }
 
 fs::Path
 getSavePath(uint32_t account,
             const char *path)
 {
+   if (account == nn::act::CurrentUserSlot) {
+      account = nn::act::GetSlotNo();
+   }
+
    return fmt::format("/vol/save/{}/{}", account, path);
 }
 

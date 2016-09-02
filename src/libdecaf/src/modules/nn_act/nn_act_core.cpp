@@ -4,15 +4,6 @@
 #include <algorithm>
 
 static const uint8_t
-InvalidSlot = 0;
-
-static const uint8_t
-CurrentUserSlot = 254;
-
-static const uint8_t
-SystemSlot = 255;
-
-static const uint8_t
 DeviceHash[] = { 0x2C, 0x10, 0xC1, 0x67, 0xEB, 0xC6 };
 
 static const uint8_t
@@ -33,7 +24,7 @@ static Account
 sUserAccount = { 1, 1, 1, 1, 1, 1, 1 };
 
 static Account
-sSystemAccount = { SystemSlot, 0, 0, 0, 0, 0, 0 };
+sSystemAccount = { nn::act::SystemSlot, 0, 0, 0, 0, 0, 0 };
 
 namespace nn
 {

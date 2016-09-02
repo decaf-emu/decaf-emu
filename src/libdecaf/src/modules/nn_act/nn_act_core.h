@@ -12,6 +12,15 @@ namespace act
 
 using UUID = std::array<uint8_t, 16>;
 
+static const uint8_t
+InvalidSlot = 0;
+
+static const uint8_t
+CurrentUserSlot = 254;
+
+static const uint8_t
+SystemSlot = 255;
+
 nn::Result
 Initialize();
 
