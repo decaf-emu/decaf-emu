@@ -55,7 +55,7 @@ public:
 
    virtual void
    setPermissions(Permissions permissions,
-                  PermissionFlags flags)
+                  PermissionFlags flags) override
    {
       mLink->setPermissions(permissions, flags);
    }

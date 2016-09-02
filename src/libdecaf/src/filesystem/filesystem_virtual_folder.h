@@ -64,7 +64,7 @@ public:
 
    virtual FileHandle *
    openFile(const std::string &name,
-            File::OpenMode mode)
+            File::OpenMode mode) override
    {
       return nullptr;
    }
