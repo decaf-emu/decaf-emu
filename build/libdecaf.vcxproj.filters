@@ -927,6 +927,9 @@
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_filehandle.cpp">
       <Filter>Source Files\filesystem</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_filehandle.cpp">
+      <Filter>Source Files\filesystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">

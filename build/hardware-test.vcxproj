@@ -18,8 +18,10 @@
     <ClInclude Include="..\tools\hardware-test\hardwaretests.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_filehandle.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folderhandle.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_filehandle.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folder.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folderhandle.cpp" />
     <ClCompile Include="..\tools\hardware-test\hardwaretests.cpp" />

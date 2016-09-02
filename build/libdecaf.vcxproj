@@ -178,6 +178,7 @@
     <ClCompile Include="..\src\libdecaf\src\decaf_eventlistener.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf_game.cpp" />
     <ClCompile Include="..\src\libdecaf\src\emulog.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_filehandle.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">true</ExcludedFromBuild>

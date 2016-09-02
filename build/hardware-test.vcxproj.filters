@@ -41,5 +41,11 @@
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folderhandle.cpp">
       <Filter>Source Files\filesystem-PROJECTIFYTHIS</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_filehandle.cpp">
+      <Filter>Source Files\filesystem-PROJECTIFYTHIS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_filehandle.cpp">
+      <Filter>Source Files\filesystem-PROJECTIFYTHIS</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
