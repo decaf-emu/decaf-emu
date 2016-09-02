@@ -380,9 +380,8 @@ launchGame()
    // Setup title path
    auto fileSystem = getFileSystem();
 
-   // Temporarily set mlc/sys to write so we can create the title folder
-   auto sysPath = "/vol/storage_mlc01/sys";
-   fileSystem->setPermissions("/vol/storage_mlc01/sys", fs::Permissions::ReadWrite, fs::PermissionFlags::None);
+   // Temporarily set mlc to write so we can create folders
+   fileSystem->setPermissions("/vol/storage_mlc01", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
 
    // Create title folder
    auto titleID = sGameInfo.app.title_id;
@@ -391,16 +390,14 @@ launchGame()
    auto titlePath = fmt::format("/vol/storage_mlc01/sys/title/{:08x}/{:08x}", titleHi, titleLo);
    auto titleFolder = fileSystem->makeFolder(titlePath);
 
-   // Restore mlc/sys to Read only
-   fileSystem->setPermissions("/vol/storage_mlc01/sys", fs::Permissions::Read, fs::PermissionFlags::Recursive);
-
-   // Set title folder to ReadWrite
-   if (titleFolder) {
-      titleFolder->setPermissions(fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
-   }
-
    // Create Mii database folder
    fileSystem->makeFolder("/vol/storage_mlc01/usr/save/00050010/1004a100/user/common/db");
+
+   // Restore mlc to Read only
+   fileSystem->setPermissions("/vol/storage_mlc01", fs::Permissions::Read, fs::PermissionFlags::Recursive);
+
+   // Set title folder to ReadWrite
+   fileSystem->setPermissions(titlePath, fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
 
    // Set mlc/usr to ReadWrite
    fileSystem->setPermissions("/vol/storage_mlc01/usr", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
