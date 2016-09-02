@@ -148,14 +148,16 @@ struct AudioDecoder
       } else {
          offsets.currentOffsetAbs += 1;
 
-         // Read next header if were there
-         if ((offsets.currentOffsetAbs & 0xf) < 2) {
-            decaf_check((offsets.currentOffsetAbs & 0xf) == 0);
+         if (offsets.format == AXVoiceFormat::ADPCM) {
+            // Read next header if were there
+            if ((offsets.currentOffsetAbs & 0xf) < 2) {
+               decaf_check((offsets.currentOffsetAbs & 0xf) == 0);
 
-            auto data = getMemPageAddress<uint8_t>(offsets.memPageNumber);
+               auto data = getMemPageAddress<uint8_t>(offsets.memPageNumber);
 
-            adpcm.predScale = data[offsets.currentOffsetAbs / 2];
-            offsets.currentOffsetAbs += 2;
+               adpcm.predScale = data[offsets.currentOffsetAbs / 2];
+               offsets.currentOffsetAbs += 2;
+            }
          }
       }
 
