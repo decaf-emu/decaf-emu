@@ -35,10 +35,11 @@ draw()
       return;
    }
 
-   ImGui::Columns(7, "voicesList", false);
+   ImGui::Columns(8, "voicesList", false);
 
    ImGui::Text("ID"); ImGui::NextColumn();
    ImGui::Text("State"); ImGui::NextColumn();
+   ImGui::Text("Type"); ImGui::NextColumn();
    ImGui::Text("Base Addr"); ImGui::NextColumn();
    ImGui::Text("Current Off"); ImGui::NextColumn();
    ImGui::Text("End Off"); ImGui::NextColumn();
@@ -56,6 +57,17 @@ draw()
          ImGui::Text("Playing");
       } else {
          ImGui::Text("Stopped");
+      }
+      ImGui::NextColumn();
+
+      if (voice->offsets.dataType == snd_core::AXVoiceFormat::ADPCM) {
+         ImGui::Text("ADPCM");
+      } else if (voice->offsets.dataType == snd_core::AXVoiceFormat::LPCM16) {
+         ImGui::Text("LPCM16");
+      } else if (voice->offsets.dataType == snd_core::AXVoiceFormat::LPCM8) {
+         ImGui::Text("LPCM8");
+      } else {
+         ImGui::Text("Unknown");
       }
       ImGui::NextColumn();
 
