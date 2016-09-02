@@ -62,7 +62,7 @@ public:
 
    virtual void
    setPermissions(Permissions permissions,
-                  PermissionFlags flags)
+                  PermissionFlags flags) override
    {
       mPermissions = permissions;
       mVirtual.setPermissions(permissions, flags);
