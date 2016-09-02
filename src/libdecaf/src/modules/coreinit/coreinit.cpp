@@ -63,6 +63,7 @@ Module::RegisterFunctions()
    registerMemlistFunctions();
    registerMessageQueueFunctions();
    registerMutexFunctions();
+   registerOverlayArenaFunctions();
    registerRendezvousFunctions();
    registerSchedulerFunctions();
    registerScreenFunctions();

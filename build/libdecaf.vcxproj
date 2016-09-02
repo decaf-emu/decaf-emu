@@ -274,6 +274,7 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memlist.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_memory.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_messagequeue.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_overlayarena.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_screen.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_sprintf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_taskqueue.cpp" />
@@ -507,6 +508,7 @@
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_idlock.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_interrupts.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_lockedcache.h" />
+    <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_overlay.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_screen.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_screen_font.h" />
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_sprintf.h" />
