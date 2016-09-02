@@ -82,11 +82,42 @@ GX2DrawIndexedEx(GX2PrimitiveMode mode,
    auto vgt_draw_initiator = latte::VGT_DRAW_INITIATOR::get(0)
       .SOURCE_SELECT(latte::VGT_DI_SRC_SEL_DMA);
 
+   if (mode & 0x80) {
+      vgt_draw_initiator = vgt_draw_initiator
+         .MAJOR_MODE(latte::VGT_DI_MAJOR_MODE1);
+   }
+
    pm4::write(pm4::SetControlConstant { latte::Register::SQ_VTX_BASE_VTX_LOC, offset });
    pm4::write(pm4::SetConfigReg { latte::Register::VGT_PRIMITIVE_TYPE, mode });
    pm4::write(pm4::IndexType { vgt_dma_index_type });
    pm4::write(pm4::NumInstances { numInstances });
    pm4::write(pm4::DrawIndex2 { static_cast<uint32_t>(-1), indices, count, vgt_draw_initiator });
+}
+
+void
+GX2DrawIndexedEx2(GX2PrimitiveMode mode,
+                  uint32_t count,
+                  GX2IndexType indexType,
+                  void *indices,
+                  uint32_t offset,
+                  uint32_t numInstances,
+                  uint32_t baseInstance)
+{
+   pm4::write(pm4::SetControlConstant {
+      latte::Register::SQ_VTX_START_INST_LOC,
+      latte::SQ_VTX_START_INST_LOC::get(0)
+         .OFFSET(baseInstance)
+         .value
+   });
+
+   GX2DrawIndexedEx(mode, count, indexType, indices, offset, numInstances);
+
+   pm4::write(pm4::SetControlConstant {
+      latte::Register::SQ_VTX_START_INST_LOC,
+      latte::SQ_VTX_START_INST_LOC::get(0)
+         .OFFSET(0)
+         .value
+   });
 }
 
 void

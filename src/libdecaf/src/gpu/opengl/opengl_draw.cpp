@@ -202,14 +202,15 @@ GLDriver::drawPrimitives(uint32_t count,
                          latte::VGT_INDEX indexFmt)
 {
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
-   auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
    auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
    auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
+   auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
+   auto sq_vtx_start_inst_loc = getRegister<latte::SQ_VTX_START_INST_LOC>(latte::Register::SQ_VTX_START_INST_LOC);
 
    auto primType = vgt_primitive_type.PRIM_TYPE();
    auto baseVertex = sq_vtx_base_vtx_loc.OFFSET();
    auto numInstances = vgt_dma_num_instances.NUM_INSTANCES();
-   auto baseInstance = 0;
+   auto baseInstance = sq_vtx_start_inst_loc.OFFSET();
 
    auto mode = getPrimitiveMode(primType);
 
@@ -266,11 +267,7 @@ GLDriver::drawPrimitivesIndexed(const void *buffer,
       return;
    }
 
-   auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
-   auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
    auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
-   auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
-   auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
 
    // Swap and indexBytes are separate because you can have 32-bit swap,
    //   but 16-bit indices in some cases...  This is also why we pre-swap
