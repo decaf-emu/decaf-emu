@@ -120,7 +120,7 @@ AXGetVoiceCurrentOffsetEx(AXVoice *voice,
                           const void *samples)
 {
    AXVoiceOffsets offsets;
-   AXGetVoiceOffsets(voice, &offsets);
+   AXGetVoiceOffsetsEx(voice, &offsets, samples);
    return offsets.currentOffset;
 }
 
@@ -131,10 +131,39 @@ AXGetVoiceLoopCount(AXVoice *voice)
 }
 
 void
+AXGetVoiceOffsetsEx(AXVoice *voice,
+                    AXVoiceOffsets *offsets,
+                    const void *samples)
+{
+   voice->offsets.data = samples;
+   AXGetVoiceOffsets(voice, offsets);
+   voice->offsets = *offsets;
+}
+
+void
 AXGetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+
    *offsets = voice->offsets;
+
+   auto baseAddress = extras->data.memPageNumber << 29;
+   if (extras->data.format == AXVoiceFormat::ADPCM) {
+      offsets->loopOffset = baseAddress + (extras->data.loopOffsetAbs << 1);
+      offsets->endOffset = baseAddress + (extras->data.endOffsetAbs << 1);
+      offsets->currentOffset = baseAddress + (extras->data.currentOffsetAbs << 1);
+   } else if (extras->data.format == AXVoiceFormat::LPCM16) {
+      offsets->loopOffset = baseAddress + (extras->data.loopOffsetAbs >> 1);
+      offsets->endOffset = baseAddress + (extras->data.endOffsetAbs >> 1);
+      offsets->currentOffset = baseAddress + (extras->data.currentOffsetAbs >> 1);
+   } else if (extras->data.format == AXVoiceFormat::LPCM8) {
+      offsets->loopOffset = baseAddress + extras->data.loopOffsetAbs;
+      offsets->endOffset = baseAddress + extras->data.endOffsetAbs;
+      offsets->currentOffset = baseAddress + extras->data.currentOffsetAbs;
+   } else {
+      decaf_abort(fmt::format("Unexpected voice data format {}", extras->data.format))
+   }
 }
 
 BOOL
@@ -166,8 +195,36 @@ void
 AXSetVoiceCurrentOffset(AXVoice *voice,
                         uint32_t offset)
 {
-   voice->offsets.currentOffset = offset;
+   auto extras = internal::getVoiceExtras(voice->index);
+
+   auto baseAddress = voice->offsets.data.getAddress() & 0x1FFFFFFF;
+
+   if (extras->data.format == AXVoiceFormat::ADPCM) {
+      extras->data.currentOffsetAbs = (baseAddress << 1) + offset;
+   } else if (extras->data.format == AXVoiceFormat::LPCM16) {
+      extras->data.currentOffsetAbs = (baseAddress >> 1) + offset;
+   } else if (extras->data.format == AXVoiceFormat::LPCM8) {
+      extras->data.currentOffsetAbs = baseAddress + offset;
+   } else {
+      decaf_abort(fmt::format("Unexpected voice data type {}", extras->data.format));
+   }
+
+   extras->syncBits |= internal::AXVoiceSyncBits::CurrentOffset;
 }
+
+void
+AXSetVoiceCurrentOffsetEx(AXVoice *voice,
+                          uint32_t offset,
+                          const void *samples)
+{
+   voice->offsets.data = samples;
+
+   AXVoiceOffsets offsets;
+   AXGetVoiceOffsets(voice, &offsets);
+
+   AXSetVoiceCurrentOffset(voice, offset);
+}
+
 
 AXResult
 AXSetVoiceDeviceMix(AXVoice *voice,
@@ -220,7 +277,23 @@ void
 AXSetVoiceEndOffset(AXVoice *voice,
                     uint32_t offset)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+
    voice->offsets.endOffset = offset;
+
+   auto baseAddress = voice->offsets.data.getAddress() & 0x1FFFFFFF;
+
+   if (extras->data.format == AXVoiceFormat::ADPCM) {
+      extras->data.endOffsetAbs = (baseAddress << 1) + offset;
+   } else if (extras->data.format == AXVoiceFormat::LPCM16) {
+      extras->data.endOffsetAbs = (baseAddress >> 1) + offset;
+   } else if (extras->data.format == AXVoiceFormat::LPCM8) {
+      extras->data.endOffsetAbs = baseAddress + offset;
+   } else {
+      decaf_abort(fmt::format("Unexpected voice data type {}", extras->data.format));
+   }
+
+   extras->syncBits |= internal::AXVoiceSyncBits::EndOffset;
 }
 
 void
@@ -228,8 +301,12 @@ AXSetVoiceEndOffsetEx(AXVoice *voice,
                       uint32_t offset,
                       const void *samples)
 {
-   AXSetVoiceEndOffset(voice, offset);
    voice->offsets.data = samples;
+
+   AXVoiceOffsets offsets;
+   AXGetVoiceOffsets(voice, &offsets);
+
+   AXSetVoiceEndOffset(voice, offset);
 }
 
 AXResult
@@ -257,7 +334,23 @@ void
 AXSetVoiceLoopOffset(AXVoice *voice,
                      uint32_t offset)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+
    voice->offsets.loopOffset = offset;
+
+   auto baseAddress = voice->offsets.data.getAddress() & 0x1FFFFFFF;
+
+   if (extras->data.format == AXVoiceFormat::ADPCM) {
+      extras->data.loopOffsetAbs = (baseAddress << 1) + offset;
+   } else if (extras->data.format == AXVoiceFormat::LPCM16) {
+      extras->data.loopOffsetAbs = (baseAddress >> 1) + offset;
+   } else if (extras->data.format == AXVoiceFormat::LPCM8) {
+      extras->data.loopOffsetAbs = baseAddress + offset;
+   } else {
+      decaf_abort(fmt::format("Unexpected voice data type {}", extras->data.format));
+   }
+
+   extras->syncBits |= internal::AXVoiceSyncBits::LoopOffset;
 }
 
 void
@@ -265,63 +358,69 @@ AXSetVoiceLoopOffsetEx(AXVoice *voice,
                        uint32_t offset,
                        const void *samples)
 {
-   AXSetVoiceLoopOffset(voice, offset);
    voice->offsets.data = samples;
+
+   AXVoiceOffsets offsets;
+   AXGetVoiceOffsets(voice, &offsets);
+
+   AXSetVoiceLoopOffset(voice, offset);
 }
 
 void
 AXSetVoiceLoop(AXVoice *voice,
                AXVoiceLoop loop)
 {
+   auto extras = internal::getVoiceExtras(voice->index);
+
    voice->offsets.loopingEnabled = loop;
+
+   extras->data.loopFlag = loop;
+   extras->syncBits |= internal::AXVoiceSyncBits::Loop;
 }
 
 void
 AXSetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets)
 {
-   decaf_check(offsets->dataType == AXVoiceFormat::ADPCM ||
-      offsets->dataType == AXVoiceFormat::LPCM16 ||
-      offsets->dataType == AXVoiceFormat::LPCM8);
+   decaf_check(offsets->data);
 
    voice->offsets = *offsets;
 
-   if (decaf::config::sound::dump_sounds) {
-      auto filename = "sound_" + pointerAsString(offsets->data.get());
+   internal::AXCafeVoiceData absOffsets;
 
-      if (!platform::fileExists("dump/" + filename + ".txt")) {
-         createDumpDirectory();
+   absOffsets.format = offsets->dataType;
+   absOffsets.loopFlag = offsets->loopingEnabled;
+   auto samples = offsets->data.getAddress();
 
-         auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
-         auto format = fmt::MemoryWriter {};
-         format
-            << "offsets.dataType = " << static_cast<int>(offsets->dataType) << '\n'
-            << "offsets.loopingEnabled = " << offsets->loopingEnabled << '\n'
-            << "offsets.loopOffset = " << offsets->loopOffset << '\n'
-            << "offsets.endOffset = " << offsets->endOffset << '\n'
-            << "offsets.currentOffset = " << offsets->currentOffset << '\n'
-            << "offsets.data = " << pointerAsString(offsets->data.get()) << '\n';
-         file << format.str();
-      }
-
-      if (!platform::fileExists("dump/" + filename + ".bin")) {
-         uint32_t bitsPerSample = 8;
-         switch (offsets->dataType) {
-         case AXVoiceFormat::ADPCM:
-            bitsPerSample = 4;
-            break;
-         case AXVoiceFormat::LPCM8:
-            bitsPerSample = 8;
-            break;
-         case AXVoiceFormat::LPCM16:
-            bitsPerSample = 16;
-            break;
-         }
-         uint32_t streamBytes = (offsets->endOffset + 1) * bitsPerSample / 8;
-         auto file = std::ofstream { "dump/" + filename + ".bin", std::ofstream::out };
-         file.write(reinterpret_cast<const char*>(offsets->data.get()), streamBytes);
-      }
+   if (offsets->dataType == AXVoiceFormat::ADPCM) {
+      absOffsets.loopOffsetAbs = ((samples << 1) + offsets->loopOffset) & 0x3fffffff;
+      absOffsets.endOffsetAbs = ((samples << 1) + offsets->endOffset) & 0x3fffffff;
+      absOffsets.currentOffsetAbs = ((samples << 1) + offsets->currentOffset) & 0x3fffffff;
+      absOffsets.memPageNumber = (samples + (offsets->currentOffset >> 1)) >> 29;
+   } else if (offsets->dataType == AXVoiceFormat::LPCM16) {
+      absOffsets.loopOffsetAbs = ((samples >> 1) + offsets->loopOffset) & 0x0fffffff;
+      absOffsets.endOffsetAbs = ((samples >> 1) + offsets->endOffset) & 0x0fffffff;
+      absOffsets.currentOffsetAbs = ((samples >> 1) + offsets->currentOffset) & 0x0fffffff;
+      absOffsets.memPageNumber = (samples + (offsets->currentOffset << 1)) >> 29;
+   } else if (offsets->dataType == AXVoiceFormat::LPCM8) {
+      absOffsets.loopOffsetAbs = (samples + offsets->loopOffset) & 0x1fffffff;
+      absOffsets.endOffsetAbs = (samples + offsets->endOffset) & 0x1fffffff;
+      absOffsets.currentOffsetAbs = (samples + offsets->currentOffset) & 0x1fffffff;
+      absOffsets.memPageNumber = (samples + offsets->currentOffset) >> 29;
+   } else {
+      decaf_abort(fmt::format("Unexpected voice data type {}", offsets->dataType));
    }
+
+   internal::setVoiceAddresses(voice, &absOffsets);
+}
+
+void
+AXSetVoiceOffsetsEx(AXVoice *voice,
+                    AXVoiceOffsets *offsets,
+                    void *samples)
+{
+   auto adjOffsets = *offsets;
+   AXSetVoiceOffsets(voice, &adjOffsets);
 }
 
 void
@@ -336,6 +435,7 @@ AXSetVoiceRmtIIRCoefs(AXVoice *voice,
                       uint16_t filter,
                       ppctypes::VarArgs)
 {
+   decaf_warn_stub();
 }
 
 void
@@ -391,9 +491,11 @@ AXSetVoiceState(AXVoice *voice,
                 AXVoiceState state)
 {
    auto extras = internal::getVoiceExtras(voice->index);
-   extras->state = state;
-   voice->state = state;
-   voice->syncBits |= internal::AXVoiceSyncBits::State;
+   if (voice->state != state) {
+      extras->state = state;
+      voice->state = state;
+      voice->syncBits |= internal::AXVoiceSyncBits::State;
+   }
 }
 
 void
@@ -438,6 +540,38 @@ initVoices()
    }
 }
 
+void
+setVoiceAddresses(AXVoice *voice,
+                  AXCafeVoiceData *offsets)
+{
+   auto extras = internal::getVoiceExtras(voice->index);
+
+   extras->data = *offsets;
+
+   if (offsets->format == AXVoiceFormat::ADPCM) {
+      decaf_check((offsets->loopOffsetAbs & 0xF) >= 2);
+      decaf_check((offsets->endOffsetAbs & 0xF) >= 2);
+      decaf_check((offsets->currentOffsetAbs & 0xF) >= 2);
+   } else if (offsets->format == AXVoiceFormat::LPCM8) {
+      memset(&extras->adpcm, 0, sizeof(AXVoiceAdpcm));
+      extras->adpcm.gain = 0x100;
+      voice->syncBits |= internal::AXVoiceSyncBits::Adpcm;
+   } else if (offsets->format == AXVoiceFormat::LPCM16) {
+      memset(&extras->adpcm, 0, sizeof(AXVoiceAdpcm));
+      extras->adpcm.gain = 0x800;
+      voice->syncBits |= internal::AXVoiceSyncBits::Adpcm;
+   } else {
+      decaf_abort(fmt::format("Unexpected audio data format {}", offsets->format));
+   }
+
+   voice->syncBits &= ~(
+      internal::AXVoiceSyncBits::Loop |
+      internal::AXVoiceSyncBits::LoopOffset |
+      internal::AXVoiceSyncBits::EndOffset |
+      internal::AXVoiceSyncBits::CurrentOffset);
+   voice->syncBits |= internal::AXVoiceSyncBits::Addr;
+}
+
 const std::vector<AXVoice*>
 getAcquiredVoices()
 {
@@ -476,6 +610,7 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXSetVoiceLoopOffsetEx);
    RegisterKernelFunction(AXSetVoiceLoop);
    RegisterKernelFunction(AXSetVoiceOffsets);
+   RegisterKernelFunction(AXSetVoiceOffsetsEx);
    RegisterKernelFunction(AXSetVoicePriority);
    RegisterKernelFunction(AXSetVoiceRmtIIRCoefs);
    RegisterKernelFunction(AXSetVoiceSrc);

@@ -79,23 +79,33 @@ getDevice(AXDeviceType type,
    }
 }
 
+template<typename Type>
+static Type*
+getMemPageAddress(uint32_t memPageNumber)
+{
+   // We have to do this this way due to the way that mem::translate handles
+   //  nullptr's.  In the case of AX here, our memPageNumber can be 0, causing
+   //  mem::translate to return 0, which is not what we want.
+   return reinterpret_cast<Type*>(mem::base() + (memPageNumber << 29));
+}
+
 struct AudioDecoder
 {
    // Basic information
-   AXVoiceOffsets offsets;
+   internal::AXCafeVoiceData offsets;
    AXVoiceType type;
    uint32_t loopCount;
    AXVoiceAdpcm adpcm;
    AXVoiceAdpcmLoopData adpcmLoop;
    bool isEof;
 
-   void fromVoice(AXVoice *voice, AXVoiceExtras *extras)
+   void fromVoice(AXVoiceExtras *extras)
    {
-      offsets = voice->offsets;
+      offsets = extras->data;
       type = extras->type;
       loopCount = extras->loopCount;
 
-      if (offsets.dataType == AXVoiceFormat::ADPCM) {
+      if (offsets.format == AXVoiceFormat::ADPCM) {
          adpcm = extras->adpcm;
          adpcmLoop = extras->adpcmLoop;
       }
@@ -103,12 +113,12 @@ struct AudioDecoder
       isEof = false;
    }
 
-   void toVoice(AXVoice *voice, AXVoiceExtras *extras)
+   void toVoice(AXVoiceExtras *extras)
    {
-      voice->offsets = offsets;
+      extras->data = offsets;
       extras->loopCount = loopCount;
 
-      if (offsets.dataType == AXVoiceFormat::ADPCM) {
+      if (offsets.format == AXVoiceFormat::ADPCM) {
          extras->adpcm = adpcm;
       }
    }
@@ -120,11 +130,11 @@ struct AudioDecoder
       adpcm.prevSample[1] = adpcm.prevSample[0];
       adpcm.prevSample[0] = sample.data();
 
-      if (offsets.currentOffset == offsets.endOffset) {
-         if (offsets.loopingEnabled) {
-            offsets.currentOffset = offsets.loopOffset;
+      if (offsets.currentOffsetAbs == offsets.endOffsetAbs) {
+         if (offsets.loopFlag) {
+            offsets.currentOffsetAbs = offsets.loopOffsetAbs;
 
-            if (offsets.dataType == AXVoiceFormat::ADPCM && type != AXVoiceType::Streaming) {
+            if (offsets.format == AXVoiceFormat::ADPCM && type != AXVoiceType::Streaming) {
                adpcm.predScale = adpcmLoop.predScale;
                adpcm.prevSample[0] = adpcmLoop.prevSample[0];
                adpcm.prevSample[1] = adpcmLoop.prevSample[1];
@@ -136,14 +146,16 @@ struct AudioDecoder
 
          loopCount++;
       } else {
-         offsets.currentOffset += 1;
+         offsets.currentOffsetAbs += 1;
 
          // Read next header if were there
-         if (offsets.currentOffset % 16 == 0) {
-            auto data = reinterpret_cast<const uint8_t *>(offsets.data.get());
+         if ((offsets.currentOffsetAbs & 0xf) < 2) {
+            decaf_check((offsets.currentOffsetAbs & 0xf) == 0);
 
-            adpcm.predScale = data[offsets.currentOffset / 2];
-            offsets.currentOffset += 2;
+            auto data = getMemPageAddress<uint8_t>(offsets.memPageNumber);
+
+            adpcm.predScale = data[offsets.currentOffsetAbs / 2];
+            offsets.currentOffsetAbs += 2;
          }
       }
 
@@ -159,13 +171,12 @@ struct AudioDecoder
    {
       decaf_check(!isEof);
 
-      auto sampleIndex = offsets.currentOffset;
+      auto sampleIndex = offsets.currentOffsetAbs;
 
-      if (offsets.dataType == AXVoiceFormat::ADPCM) {
-         decaf_check(offsets.currentOffset % 16 != 0 &&
-            offsets.currentOffset % 16 != 1);
+      if (offsets.format == AXVoiceFormat::ADPCM) {
+         decaf_check((sampleIndex & 0xf) >= 2);
 
-         auto data = reinterpret_cast<const uint8_t *>(offsets.data.get());
+         auto data = getMemPageAddress<uint8_t>(offsets.memPageNumber);
 
          auto coeffIndex = (adpcm.predScale.value() >> 4) & 7;
          auto scale = adpcm.predScale.value() & 0xF;
@@ -196,11 +207,11 @@ struct AudioDecoder
 
          // Write to the output
          return Pcm16Sample::from_data(clampedSample);
-      } else if (offsets.dataType == AXVoiceFormat::LPCM16) {
-         auto data = reinterpret_cast<const be_val<int16_t> *>(offsets.data.get());
+      } else if (offsets.format == AXVoiceFormat::LPCM16) {
+         auto data = getMemPageAddress<be_val<int16_t>>(offsets.memPageNumber);
          return Pcm16Sample::from_data(data[sampleIndex]);
-      } else if (offsets.dataType == AXVoiceFormat::LPCM8) {
-         auto data = reinterpret_cast<const be_val<int8_t> *>(offsets.data.get());
+      } else if (offsets.format == AXVoiceFormat::LPCM8) {
+         auto data = getMemPageAddress<uint8_t>(offsets.memPageNumber);
          return Pcm16Sample::from_data(data[sampleIndex] << 8);
       } else {
          decaf_abort("Unexpected AXVoice data format");
@@ -220,7 +231,7 @@ sampleVoice(AXVoice *voice, Pcm16Sample *samples, int numSamples)
    auto offsetFrac = ufixed1616_t(extras->src.currentOffsetFrac.value());
 
    AudioDecoder decoder;
-   decoder.fromVoice(voice, extras);
+   decoder.fromVoice(extras);
 
    for (auto i = 0; i < numSamples; ++i) {
       // Read in the current sample
@@ -282,7 +293,7 @@ sampleVoice(AXVoice *voice, Pcm16Sample *samples, int numSamples)
       voice->state = AXVoiceState::Stopped;
    }
 
-   decoder.toVoice(voice, extras);
+   decoder.toVoice(extras);
 
    extras->src.currentOffsetFrac = ufixed1616_t(offsetFrac);
 }

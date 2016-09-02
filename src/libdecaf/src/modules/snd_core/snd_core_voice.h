@@ -204,6 +204,11 @@ uint32_t
 AXGetVoiceLoopCount(AXVoice *voice);
 
 void
+AXGetVoiceOffsetsEx(AXVoice *voice,
+                    AXVoiceOffsets *offsets,
+                    const void *samples);
+
+void
 AXGetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets);
 
@@ -221,6 +226,11 @@ AXSetVoiceAdpcmLoop(AXVoice *voice,
 void
 AXSetVoiceCurrentOffset(AXVoice *voice,
                         uint32_t offset);
+
+void
+AXSetVoiceCurrentOffsetEx(AXVoice *voice,
+                          uint32_t offset,
+                          const void *samples);
 
 AXResult
 AXSetVoiceDeviceMix(AXVoice *voice,
@@ -257,6 +267,11 @@ AXSetVoiceLoop(AXVoice *voice,
 void
 AXSetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets);
+
+void
+AXSetVoiceOffsetsEx(AXVoice *voice,
+                    AXVoiceOffsets *offsets,
+                    void *samples);
 
 void
 AXSetVoicePriority(AXVoice *voice,
@@ -400,6 +415,10 @@ struct AXVoiceExtras : AXCafeVoiceExtras
 
 void
 initVoices();
+
+void
+setVoiceAddresses(AXVoice *voice,
+                  AXCafeVoiceData *offsets);
 
 const std::vector<AXVoice*>
 getAcquiredVoices();
