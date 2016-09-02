@@ -81,6 +81,7 @@ draw()
    sSegmentsCache.clear();
    sSegmentsCache.push_back(Segment { "System", mem::SystemBase, mem::SystemEnd });
    sSegmentsCache.push_back(Segment { "MEM2", mem::MEM2Base, mem::MEM2End });
+   sSegmentsCache.push_back(Segment { "OverlayArena", mem::OverlayArenaBase, mem::OverlayArenaEnd });
    sSegmentsCache.push_back(Segment { "Apertures", mem::AperturesBase, mem::AperturesEnd });
    sSegmentsCache.push_back(Segment { "Foreground", mem::ForegroundBase, mem::ForegroundEnd });
    sSegmentsCache.push_back(Segment { "MEM1", mem::MEM1Base, mem::MEM1End });

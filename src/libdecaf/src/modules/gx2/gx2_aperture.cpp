@@ -25,7 +25,10 @@ class ApertureManager
 public:
    ~ApertureManager()
    {
-      delete mHeap;
+      if (mHeap) {
+         delete mHeap;
+         mem::uncommit(mem::AperturesBase, mem::AperturesSize);
+      }
    }
 
    uint32_t
@@ -150,6 +153,10 @@ public:
 private:
    void initialise()
    {
+      if (!mem::commit(mem::AperturesBase, mem::AperturesSize)) {
+         decaf_abort("Failed to commit aperture memory region");
+      }
+
       mHeap = new TeenyHeap { mem::translate(mem::AperturesBase), mem::AperturesSize };
    }
 

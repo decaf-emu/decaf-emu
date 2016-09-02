@@ -17,8 +17,14 @@ enum AddressSpace : ppcaddr_t
    MEM2End           = 0x42000000,
    MEM2Size          = MEM2End - MEM2Base,
 
-   AperturesBase     = 0xB0000000,
-   AperturesEnd      = 0xC0000000,
+   // Overlay Arena must be manually committed before use
+   OverlayArenaBase  = 0xA0000000,
+   OverlayArenaEnd   = 0xBC000000,
+   OverlayArenaSize  = OverlayArenaEnd - OverlayArenaBase,
+
+   // Apertures must be manually committed before use
+   AperturesBase     = 0xC0000000,
+   AperturesEnd      = 0xE0000000,
    AperturesSize     = AperturesEnd - AperturesBase,
 
    ForegroundBase    = 0xE0000000,
@@ -37,11 +43,7 @@ enum AddressSpace : ppcaddr_t
    SharedDataEnd     = 0xFB000000,
    SharedDataSize    = SharedDataEnd - SharedDataBase,
 
-   // This is decaf specific, we need to have a region large
-   //  enough to load all of an applications symbols, which is
-   //  potentially quite large (over 0x02000000 bytes).  We
-   //  use this region, but keep in mind it is only allocated
-   //  while the loader is actually running...
+   // Loader must be manually committed before use
    LoaderBase        = 0xE6000000,
    LoaderEnd         = 0xEA000000,
    LoaderSize        = LoaderEnd - LoaderBase,
@@ -57,7 +59,10 @@ bool
 valid(ppcaddr_t address);
 
 bool
-protect(ppcaddr_t address, size_t size);
+commit(ppcaddr_t address, ppcaddr_t size);
+
+bool
+uncommit(ppcaddr_t address, ppcaddr_t size);
 
 // Translate WiiU virtual address to host address
 template<typename Type = uint8_t>

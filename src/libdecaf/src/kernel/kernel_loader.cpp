@@ -2,7 +2,6 @@
 #include "common/align.h"
 #include "common/bigendianview.h"
 #include "common/decaf_assert.h"
-#include "common/platform_memory.h"
 #include "common/teenyheap.h"
 #include "common/strutils.h"
 #include "decaf_config.h"
@@ -13,6 +12,7 @@
 #include "kernel_hlemodule.h"
 #include "kernel_hlefunction.h"
 #include "kernel_memory.h"
+#include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_memory.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_dynload.h"
@@ -100,8 +100,9 @@ static void *
 loaderAlloc(uint32_t size, uint32_t alignment)
 {
    sLoaderHeapRefs++;
+
    if (!sLoaderHeap) {
-      if (!platform::commitMemory(mem::base() + mem::LoaderBase, mem::LoaderSize)) {
+      if (!mem::commit(mem::LoaderBase, mem::LoaderSize)) {
          decaf_abort("Failed to allocate loader temporary memory");
       }
 
@@ -115,11 +116,11 @@ static void
 loaderFree(void *mem)
 {
    sLoaderHeapRefs--;
+
    if (sLoaderHeapRefs == 0) {
       delete sLoaderHeap;
       sLoaderHeap = nullptr;
-
-      platform::uncommitMemory(mem::base() + mem::LoaderBase, mem::LoaderSize);
+      mem::uncommit(mem::LoaderBase, mem::LoaderSize);
    }
 }
 
