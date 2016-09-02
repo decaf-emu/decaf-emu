@@ -73,6 +73,10 @@ union Result
    {
    }
 
+   inline operator uint32_t() const {
+      return code;
+   }
+
    struct
    {
       int32_t description : 20;

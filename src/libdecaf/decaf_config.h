@@ -60,6 +60,9 @@ namespace log
 //! Enable logging for all HLE function calls
 extern bool kernel_trace;
 
+//! Enable logging for all HLE function call results
+extern bool kernel_trace_res;
+
 //! Enable logging of every branch which targets a known symbol
 extern bool branch_trace;
 

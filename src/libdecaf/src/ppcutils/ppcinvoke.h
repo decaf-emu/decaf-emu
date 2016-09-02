@@ -61,7 +61,7 @@ using LogFunc = void (*)(const std::string &);
 // Static function process normal arguments
 template<typename FnReturnType, typename... FnArgs, typename Head, typename... Tail, typename... Args>
 inline void
-invoke2(LogFunc logFn, _argumentsState& state, FnReturnType func(FnArgs...), type_list<Head, Tail...>, Args... values)
+invoke2(LogFunc logFn, LogFunc logResFn, _argumentsState& state, FnReturnType func(FnArgs...), type_list<Head, Tail...>, Args... values)
 {
    auto value = getArgument<Head>(state.thread, state.r, state.f);
 
@@ -69,31 +69,36 @@ invoke2(LogFunc logFn, _argumentsState& state, FnReturnType func(FnArgs...), typ
       logArgument(state.log, value);
    }
 
-   invoke2(logFn, state, func, type_list<Tail...>{}, values..., value);
+   invoke2(logFn, logResFn, state, func, type_list<Tail...>{}, values..., value);
 }
 
 // Static function process variable arguments
 template<typename FnReturnType, typename... FnArgs, typename... Args>
 inline void
-invoke2(LogFunc logFn, _argumentsState& state, FnReturnType func(FnArgs...), type_list<VarArgs>, Args... values)
+invoke2(LogFunc logFn, LogFunc logResFn, _argumentsState& state, FnReturnType func(FnArgs...), type_list<VarArgs>, Args... values)
 {
    if (logFn != nullptr) {
       logArgumentVargs(state.log);
    }
 
-   invoke2(logFn, state, func, type_list<>{}, values..., VarArgs {});
+   invoke2(logFn, logResFn, state, func, type_list<>{}, values..., VarArgs {});
 }
 
 // Call a static function with return value
 template<typename FnReturnType, typename... FnArgs, typename... Args>
 inline void
-invoke2(LogFunc logFn, _argumentsState& state, FnReturnType func(FnArgs...), type_list<>, Args... args)
+invoke2(LogFunc logFn, LogFunc logResFn, _argumentsState& state, FnReturnType func(FnArgs...), type_list<>, Args... args)
 {
    if (logFn != nullptr) {
       logFn(logCallEnd(state.log));
    }
 
    auto result = func(args...);
+
+   if (logResFn != nullptr) {
+      logResFn(logCallResult(result));
+   }
+
    state.thread = cpu::this_core::state();
    setResult<FnReturnType>(state.thread, result);
 }
@@ -101,19 +106,23 @@ invoke2(LogFunc logFn, _argumentsState& state, FnReturnType func(FnArgs...), typ
 // Call a void static function
 template<typename... FnArgs, typename... Args>
 inline void
-invoke2(LogFunc logFn, _argumentsState& state, void func(FnArgs...), type_list<>, Args... args)
+invoke2(LogFunc logFn, LogFunc logResFn, _argumentsState& state, void func(FnArgs...), type_list<>, Args... args)
 {
    if (logFn != nullptr) {
       logFn(logCallEnd(state.log));
    }
 
    func(args...);
+
+   if (logResFn) {
+      logResFn(logCallResult());
+   }
 }
 
 // Call a static function from PPC
 template<typename ReturnType, typename... Args>
 inline void
-invoke(LogFunc logFn, cpu::Core *state, ReturnType (*func)(Args...), const std::string &name = "")
+invoke(LogFunc logFn, LogFunc logResFn, cpu::Core *state, ReturnType (*func)(Args...), const std::string &name = "")
 {
    _argumentsState argstate;
    argstate.thread = state;
@@ -124,13 +133,13 @@ invoke(LogFunc logFn, cpu::Core *state, ReturnType (*func)(Args...), const std::
       logCall(argstate.log, state->lr, name);
    }
 
-   invoke2(logFn, argstate, func, type_list<Args...> {});
+   invoke2(logFn, logResFn, argstate, func, type_list<Args...> {});
 }
 
 // Member function process normal arguments
 template<typename ObjectType, typename FnReturnType, typename... FnArgs, typename Head, typename... Tail, typename... Args>
 inline void
-invokeMemberFn2(LogFunc logFn, _argumentsState& state, FnReturnType(ObjectType::*func)(FnArgs...), type_list<Head, Tail...>, Args... values)
+invokeMemberFn2(LogFunc logFn, LogFunc logResFn, _argumentsState& state, FnReturnType(ObjectType::*func)(FnArgs...), type_list<Head, Tail...>, Args... values)
 {
    auto value = getArgument<Head>(state.thread, state.r, state.f);
 
@@ -138,25 +147,25 @@ invokeMemberFn2(LogFunc logFn, _argumentsState& state, FnReturnType(ObjectType::
       logArgument(state.log, value);
    }
 
-   invokeMemberFn2(logFn, state, func, type_list<Tail...>{}, values..., value);
+   invokeMemberFn2(logFn, logResFn, state, func, type_list<Tail...>{}, values..., value);
 }
 
 // Member function process variable arguments
 template<typename ObjectType, typename FnReturnType, typename... FnArgs, typename... Args>
 inline void
-invokeMemberFn2(LogFunc logFn, _argumentsState& state, FnReturnType (ObjectType::*func)(FnArgs...), type_list<VarArgs>, Args... values)
+invokeMemberFn2(LogFunc logFn, LogFunc logResFn, _argumentsState& state, FnReturnType (ObjectType::*func)(FnArgs...), type_list<VarArgs>, Args... values)
 {
    if (logFn != nullptr) {
       logArgumentVargs(state.log);
    }
 
-   invokeMemberFn2(logFn, state, func, type_list<>{}, values..., VarArgs { });
+   invokeMemberFn2(logFn, logResFn, state, func, type_list<>{}, values..., VarArgs { });
 }
 
 // Call member function with return value
 template<typename ObjectType, typename FnReturnType, typename... FnArgs, typename... Args>
 inline void
-invokeMemberFn2(LogFunc logFn, _argumentsState& state, FnReturnType (ObjectType::*func)(FnArgs...), type_list<>, Args... args)
+invokeMemberFn2(LogFunc logFn, LogFunc logResFn, _argumentsState& state, FnReturnType (ObjectType::*func)(FnArgs...), type_list<>, Args... args)
 {
    if (logFn != nullptr) {
       logFn(logCallEnd(state.log));
@@ -164,6 +173,11 @@ invokeMemberFn2(LogFunc logFn, _argumentsState& state, FnReturnType (ObjectType:
 
    auto object = reinterpret_cast<ObjectType *>(mem::translate(state.thread->gpr[3]));
    auto result = (object->*func)(args...);
+
+   if (logResFn) {
+      logResFn(logCallResult(result));
+   }
+
    state.thread = cpu::this_core::state();
    setResult<FnReturnType>(state.thread, result);
 }
@@ -171,7 +185,7 @@ invokeMemberFn2(LogFunc logFn, _argumentsState& state, FnReturnType (ObjectType:
 // Call void member function
 template<typename ObjectType, typename... FnArgs, typename... Args>
 inline void
-invokeMemberFn2(LogFunc logFn, _argumentsState& state, void (ObjectType::*func)(FnArgs...), type_list<>, Args... args)
+invokeMemberFn2(LogFunc logFn, LogFunc logResFn, _argumentsState& state, void (ObjectType::*func)(FnArgs...), type_list<>, Args... args)
 {
    if (logFn != nullptr) {
       logFn(logCallEnd(state.log));
@@ -179,12 +193,16 @@ invokeMemberFn2(LogFunc logFn, _argumentsState& state, void (ObjectType::*func)(
 
    auto object = reinterpret_cast<ObjectType *>(mem::translate(state.thread->gpr[3]));
    (object->*func)(args...);
+
+   if (logResFn) {
+      logResFn(logCallResult());
+   }
 }
 
 // Call a member function from PPC
 template<typename ObjectType, typename ReturnType, typename... Args>
 inline void
-invokeMemberFn(LogFunc logFn, cpu::Core *state, ReturnType (ObjectType::*func)(Args...), const std::string &name = "")
+invokeMemberFn(LogFunc logFn, LogFunc logResFn, cpu::Core *state, ReturnType (ObjectType::*func)(Args...), const std::string &name = "")
 {
    // Start arguments from r4, as r3=this
    _argumentsState argstate;
@@ -196,7 +214,7 @@ invokeMemberFn(LogFunc logFn, cpu::Core *state, ReturnType (ObjectType::*func)(A
       logCall(argstate.log, state->lr, name);
    }
 
-   invokeMemberFn2(logFn, argstate, func, type_list<Args...> {});
+   invokeMemberFn2(logFn, logResFn, argstate, func, type_list<Args...> {});
 }
 
 } // namespace ppctypes

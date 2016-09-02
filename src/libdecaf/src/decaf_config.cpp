@@ -43,6 +43,7 @@ namespace log
 {
 
 bool kernel_trace = false;
+bool kernel_trace_res = false;
 bool branch_trace = false;
 
 std::vector<std::string> kernel_trace_filters =

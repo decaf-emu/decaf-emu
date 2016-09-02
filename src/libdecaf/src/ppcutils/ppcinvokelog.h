@@ -133,4 +133,20 @@ logArgument(LogState &state, Type value)
    logArgument(state, static_cast<int>(value));
 }
 
+template <typename Type>
+inline std::string
+logCallResult(Type &value)
+{
+   LogState state;
+   state.out << " = ";
+   logArgument(state, value);
+   return state.out.str();
+}
+
+inline std::string
+logCallResult()
+{
+   return " = void";
+}
+
 } // namespace ppctypes
