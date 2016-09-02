@@ -1,4 +1,5 @@
 #include "snd_core.h"
+#include "snd_core_device.h"
 #include "snd_core_fx.h"
 
 namespace snd_core
@@ -27,7 +28,23 @@ AXFXGetHooks(be_AXFXAllocFuncPtr *allocFn,
 }
 
 int32_t
+AXFXChorusGetMemSize(AXFXChorus *chorus)
+{
+   decaf_warn_stub();
+
+   return 32;
+}
+
+int32_t
 AXFXChorusExpGetMemSize(AXFXChorus *chorus)
+{
+   decaf_warn_stub();
+
+   return 32;
+}
+
+int32_t
+AXFXDelayGetMemSize(AXFXDelay *chorus)
 {
    decaf_warn_stub();
 
@@ -43,7 +60,23 @@ AXFXDelayExpGetMemSize(AXFXDelay *chorus)
 }
 
 int32_t
+AXFXReverbHiGetMemSize(AXFXReverbHi *chorus)
+{
+   decaf_warn_stub();
+
+   return 32;
+}
+
+int32_t
 AXFXReverbHiExpGetMemSize(AXFXReverbHi *chorus)
+{
+   decaf_warn_stub();
+
+   return 32;
+}
+
+int32_t
+AXFXReverbStdGetMemSize(AXFXReverbStd *chorus)
 {
    decaf_warn_stub();
 
@@ -59,7 +92,23 @@ AXFXReverbStdExpGetMemSize(AXFXReverbStd *chorus)
 }
 
 void
+AXFXChorusCallback(AXFXBuffers *buffers,
+                   AXFXChorus *data,
+                   AXAuxCallbackData *auxData)
+{
+   decaf_warn_stub();
+}
+
+void
 AXFXChorusExpCallback(AXFXBuffers *buffers, AXFXChorus *data)
+{
+   decaf_warn_stub();
+}
+
+void
+AXFXDelayCallback(AXFXBuffers *buffers,
+                  AXFXDelay *data,
+                  AXAuxCallbackData *auxData)
 {
    decaf_warn_stub();
 }
@@ -71,7 +120,23 @@ AXFXDelayExpCallback(AXFXBuffers *buffers, AXFXDelay *data)
 }
 
 void
+AXFXReverbHiCallback(AXFXBuffers *buffers,
+                     AXFXReverbHi *data,
+                     AXAuxCallbackData *auxData)
+{
+   decaf_warn_stub();
+}
+
+void
 AXFXReverbHiExpCallback(AXFXBuffers *buffers, AXFXReverbHi *data)
+{
+   decaf_warn_stub();
+}
+
+void
+AXFXReverbStdCallback(AXFXBuffers *buffers,
+                      AXFXReverbStd *data,
+                      AXAuxCallbackData *auxData)
 {
    decaf_warn_stub();
 }
@@ -87,13 +152,21 @@ Module::registerFXFunctions()
 {
    RegisterKernelFunction(AXFXSetHooks);
    RegisterKernelFunction(AXFXGetHooks);
+   RegisterKernelFunction(AXFXChorusGetMemSize);
    RegisterKernelFunction(AXFXChorusExpGetMemSize);
+   RegisterKernelFunction(AXFXDelayGetMemSize);
    RegisterKernelFunction(AXFXDelayExpGetMemSize);
+   RegisterKernelFunction(AXFXReverbHiGetMemSize);
    RegisterKernelFunction(AXFXReverbHiExpGetMemSize);
+   RegisterKernelFunction(AXFXReverbStdGetMemSize);
    RegisterKernelFunction(AXFXReverbStdExpGetMemSize);
+   RegisterKernelFunction(AXFXChorusCallback);
    RegisterKernelFunction(AXFXChorusExpCallback);
+   RegisterKernelFunction(AXFXDelayCallback);
    RegisterKernelFunction(AXFXDelayExpCallback);
+   RegisterKernelFunction(AXFXReverbHiCallback);
    RegisterKernelFunction(AXFXReverbHiExpCallback);
+   RegisterKernelFunction(AXFXReverbStdCallback);
    RegisterKernelFunction(AXFXReverbStdExpCallback);
 }
 
