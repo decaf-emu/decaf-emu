@@ -18,6 +18,13 @@ GX2DrawEx(GX2PrimitiveMode mode,
           uint32_t numInstances);
 
 void
+GX2DrawEx2(GX2PrimitiveMode mode,
+           uint32_t count,
+           uint32_t offset,
+           uint32_t numInstances,
+           uint32_t baseInstance);
+
+void
 GX2DrawIndexedEx(GX2PrimitiveMode mode,
                  uint32_t count,
                  GX2IndexType indexType,

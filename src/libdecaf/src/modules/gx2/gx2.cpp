@@ -98,6 +98,7 @@ Module::RegisterFunctions()
    // Draw
    RegisterKernelFunction(GX2SetAttribBuffer);
    RegisterKernelFunction(GX2DrawEx);
+   RegisterKernelFunction(GX2DrawEx2);
    RegisterKernelFunction(GX2DrawIndexedEx);
    RegisterKernelFunction(GX2DrawIndexedEx2);
    RegisterKernelFunction(GX2DrawIndexedImmediateEx);

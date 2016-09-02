@@ -44,6 +44,30 @@ GX2DrawEx(GX2PrimitiveMode mode,
 }
 
 void
+GX2DrawEx2(GX2PrimitiveMode mode,
+           uint32_t count,
+           uint32_t offset,
+           uint32_t numInstances,
+           uint32_t baseInstance)
+{
+   pm4::write(pm4::SetControlConstant {
+      latte::Register::SQ_VTX_START_INST_LOC,
+      latte::SQ_VTX_START_INST_LOC::get(0)
+         .OFFSET(baseInstance)
+         .value
+   });
+
+   GX2DrawEx(mode, count, offset, numInstances);
+
+   pm4::write(pm4::SetControlConstant {
+      latte::Register::SQ_VTX_START_INST_LOC,
+      latte::SQ_VTX_START_INST_LOC::get(0)
+         .OFFSET(0)
+         .value
+   });
+}
+
+void
 GX2DrawIndexedEx(GX2PrimitiveMode mode,
                  uint32_t count,
                  GX2IndexType indexType,
