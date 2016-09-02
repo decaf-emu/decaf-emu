@@ -399,6 +399,9 @@ launchGame()
       titleFolder->setPermissions(fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
    }
 
+   // Create Mii database folder
+   fileSystem->makeFolder("/vol/storage_mlc01/usr/save/00050010/1004a100/user/common/db");
+
    // Set mlc/usr to ReadWrite
    fileSystem->setPermissions("/vol/storage_mlc01/usr", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
 
