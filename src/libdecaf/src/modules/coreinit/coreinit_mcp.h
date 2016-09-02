@@ -25,7 +25,7 @@ struct MCPSysProdSettings
    UNKNOWN(0x3A);
 };
 CHECK_OFFSET(MCPSysProdSettings, 0x03, platformRegion);
-CHECK_OFFSET(MCPSysProdSettings, 0x0b, gameRegion);
+CHECK_OFFSET(MCPSysProdSettings, 0x0B, gameRegion);
 CHECK_SIZE(MCPSysProdSettings, 0x46);
 
 #pragma pack(pop)
