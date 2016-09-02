@@ -111,16 +111,13 @@ FSClient::removeOpenFile(FSFileHandle handle)
 {
    std::lock_guard<std::mutex> lock(mMutex);
 
-   if (handle > mOpenFiles.size()) {
-      return;
-   } else {
-      if (mOpenFiles[handle]) {
-         mOpenFiles[handle]->close();
-      }
+   decaf_check(handle < mOpenFiles.size());
+   decaf_check(mOpenFiles[handle]);
 
-      delete mOpenFiles[handle];
-      mOpenFiles[handle] = nullptr;
-   }
+   mOpenFiles[handle]->close();
+
+   delete mOpenFiles[handle];
+   mOpenFiles[handle] = nullptr;
 }
 
 
