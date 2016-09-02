@@ -399,6 +399,9 @@ launchGame()
       titleFolder->setPermissions(fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
    }
 
+   // Set mlc/usr to ReadWrite
+   fileSystem->setPermissions("/vol/storage_mlc01/usr", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+
    // Setup coreinit threads
    coreinit::internal::startAlarmCallbackThreads();
    coreinit::internal::startAppIoThreads();
