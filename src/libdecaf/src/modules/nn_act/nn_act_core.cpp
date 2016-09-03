@@ -296,13 +296,13 @@ GetMiiEx(FFLStoreData *data,
 }
 
 nn::Result
-GetMiiName(char16_t *name)
+GetMiiName(be_val<char16_t> *name)
 {
    return GetMiiNameEx(name, CurrentUserSlot);
 }
 
 nn::Result
-GetMiiNameEx(char16_t *name,
+GetMiiNameEx(be_val<char16_t> *name,
              uint8_t slot)
 {
    if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
@@ -310,7 +310,10 @@ GetMiiNameEx(char16_t *name,
    }
 
    auto miiName = u"decafM";
-   std::memcpy(name, miiName, 7 * sizeof(char16_t));
+   size_t i = 0;
+   do {
+      name[i] = miiName[i];
+   } while (miiName[i++] != 0);
    return nn::Result::Success;
 }
 

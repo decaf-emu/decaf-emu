@@ -47,10 +47,10 @@ GetMiiEx(FFLStoreData *data,
          uint8_t slot);
 
 nn::Result
-GetMiiName(char16_t *name);
+GetMiiName(be_val<char16_t> *name);
 
 nn::Result
-GetMiiNameEx(char16_t *name,
+GetMiiNameEx(be_val<char16_t> *name,
              uint8_t slot);
 
 bool
