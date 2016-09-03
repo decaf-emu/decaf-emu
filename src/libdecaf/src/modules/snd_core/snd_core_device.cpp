@@ -384,13 +384,19 @@ getVoiceMixVolume(AXVoiceExtras *extras, AXDeviceType type, uint32_t device, uin
 {
    if (type == AXDeviceType::TV) {
       decaf_check(device < AXNumTvDevices);
-      return extras->tvVolume[device][bus][channel];
+      decaf_check(channel < AXNumTvChannels);
+      decaf_check(bus < AXNumTvBus);
+      return extras->tvVolume[device][channel][bus];
    } else if (type == AXDeviceType::DRC) {
       decaf_check(device < AXNumDrcDevices);
-      return extras->drcVolume[device][bus][channel];
+      decaf_check(channel < AXNumDrcChannels);
+      decaf_check(bus < AXNumDrcBus);
+      return extras->drcVolume[device][channel][bus];
    } else if (type == AXDeviceType::RMT) {
       decaf_check(device < AXNumRmtDevices);
-      return extras->rmtVolume[device][bus][channel];
+      decaf_check(channel < AXNumRmtChannels);
+      decaf_check(bus < AXNumRmtBus);
+      return extras->rmtVolume[device][channel][bus];
    } else {
       decaf_abort("Unexpected device type");
    }
