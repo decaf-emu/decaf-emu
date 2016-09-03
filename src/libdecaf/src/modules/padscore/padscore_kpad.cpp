@@ -27,18 +27,21 @@ void
 KPADSetMplsWorkarea(char *buffer)
 {
    // sizeof(buffer) = KPADGetMplsWorkSize()
+   decaf_warn_stub();
 }
 
 // Enable "Direct Pointing Device"
 void
 KPADEnableDPD(uint32_t channel)
 {
+   decaf_warn_stub();
 }
 
 // Disable "Direct Pointing Device"
 void
 KPADDisableDPD(uint32_t channel)
 {
+   decaf_warn_stub();
 }
 
 void

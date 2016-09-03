@@ -78,4 +78,10 @@ void
 WPADControlMotor(WPADChan::Chan chan,
                  BOOL enabled);
 
+void
+WPADDisconnect(WPADChan::Chan chan);
+
+void
+WPADEnableWiiRemote(BOOL enable);
+
 } // namespace padscore
