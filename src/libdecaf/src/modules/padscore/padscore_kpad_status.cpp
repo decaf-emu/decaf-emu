@@ -15,6 +15,8 @@ KPADRead(uint32_t chan,
    be_val<int32_t> error = 0;
    auto result = KPADReadEx(chan, buffers, count, &error);
 
+   decaf_warn_stub();
+
    if (error != 0) {
       return error;
    } else {
@@ -26,19 +28,17 @@ KPADRead(uint32_t chan,
  * \return Returns number of KPADStatus buffers filled
  */
 int32_t
-KPADReadEx(uint32_t chan, KPADStatus *buffers, uint32_t count, be_val<int32_t> *error)
+KPADReadEx(uint32_t chan,
+           KPADStatus *buffers,
+           uint32_t count,
+           be_val<int32_t> *error)
 {
-   if (count == 0) {
-      return 0;
-   }
-
-   // Clear error
    if (error) {
-      *error = 0;
+      // No controller connected
+      *error = -2;
    }
 
-   std::memset(&buffers[0], 0, sizeof(KPADStatus));
-   return 1;
+   return 0;
 }
 
 void
