@@ -153,19 +153,25 @@ AXGetVoiceOffsets(AXVoice *voice,
 
    *offsets = voice->offsets;
 
-   auto baseAddress = extras->data.memPageNumber << 29;
+   auto pageAddress = extras->data.memPageNumber << 29;
+   auto baseAddress = offsets->data.getAddress();
    if (extras->data.format == AXVoiceFormat::ADPCM) {
-      offsets->loopOffset = baseAddress + (extras->data.loopOffsetAbs << 1);
-      offsets->endOffset = baseAddress + (extras->data.endOffsetAbs << 1);
-      offsets->currentOffset = baseAddress + (extras->data.currentOffsetAbs << 1);
+      // We cheat an use our 64-bitness to avoid more complicated math requirements here
+      auto pageAddressSamples = static_cast<uint64_t>(pageAddress) << 1;
+      auto baseAddressSamples = static_cast<uint64_t>(baseAddress) << 1;
+      offsets->loopOffset = static_cast<uint32_t>(pageAddressSamples + static_cast<uint64_t>(extras->data.loopOffsetAbs) - baseAddressSamples);
+      offsets->endOffset = static_cast<uint32_t>(pageAddressSamples + static_cast<uint64_t>(extras->data.endOffsetAbs) - baseAddressSamples);
+      offsets->currentOffset = static_cast<uint32_t>(pageAddressSamples + static_cast<uint64_t>(extras->data.currentOffsetAbs) - baseAddressSamples);
    } else if (extras->data.format == AXVoiceFormat::LPCM16) {
-      offsets->loopOffset = baseAddress + (extras->data.loopOffsetAbs >> 1);
-      offsets->endOffset = baseAddress + (extras->data.endOffsetAbs >> 1);
-      offsets->currentOffset = baseAddress + (extras->data.currentOffsetAbs >> 1);
+      auto pageAddressSamples = pageAddress >> 1;
+      auto baseAddressSamples = baseAddress >> 1;
+      offsets->loopOffset = pageAddressSamples + extras->data.loopOffsetAbs - baseAddressSamples;
+      offsets->endOffset = pageAddressSamples + extras->data.endOffsetAbs - baseAddressSamples;
+      offsets->currentOffset = pageAddressSamples + extras->data.currentOffsetAbs - baseAddressSamples;
    } else if (extras->data.format == AXVoiceFormat::LPCM8) {
-      offsets->loopOffset = baseAddress + extras->data.loopOffsetAbs;
-      offsets->endOffset = baseAddress + extras->data.endOffsetAbs;
-      offsets->currentOffset = baseAddress + extras->data.currentOffsetAbs;
+      offsets->loopOffset = pageAddress + extras->data.loopOffsetAbs - baseAddress;
+      offsets->endOffset = pageAddress + extras->data.endOffsetAbs - baseAddress;
+      offsets->currentOffset = pageAddress + extras->data.currentOffsetAbs - baseAddress;
    } else {
       decaf_abort(fmt::format("Unexpected voice data format {}", extras->data.format))
    }
