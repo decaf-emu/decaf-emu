@@ -23,13 +23,13 @@ struct AXDeviceFinalMixData
    be_ptr<be_ptr<be_val<int32_t>>> data;
    be_val<uint16_t> channels;
    be_val<uint16_t> samples;
-   be_val<uint16_t> unk1;
+   be_val<uint16_t> numDevices;
    be_val<uint16_t> channelsOut;
 };
 CHECK_OFFSET(AXDeviceFinalMixData, 0x0, data);
 CHECK_OFFSET(AXDeviceFinalMixData, 0x4, channels);
 CHECK_OFFSET(AXDeviceFinalMixData, 0x6, samples);
-CHECK_OFFSET(AXDeviceFinalMixData, 0x8, unk1);
+CHECK_OFFSET(AXDeviceFinalMixData, 0x8, numDevices);
 CHECK_OFFSET(AXDeviceFinalMixData, 0xa, channelsOut);
 CHECK_SIZE(AXDeviceFinalMixData, 0xc);
 

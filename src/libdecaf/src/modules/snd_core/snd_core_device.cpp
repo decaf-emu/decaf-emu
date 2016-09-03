@@ -14,8 +14,8 @@ namespace snd_core
 
 struct PpcCallbackData
 {
-   be_ptr<be_val<int32_t>> samplePtrs[6];
-   be_val<int32_t> samples[6][144];
+   be_ptr<be_val<int32_t>> samplePtrs[8];
+   be_val<int32_t> samples[8][144];
 
    AXAuxCallbackData auxCallbackData;
    AXDeviceFinalMixData finalMixCallbackData;
@@ -39,22 +39,27 @@ struct AuxData
 
 struct DeviceData
 {
-   AXDeviceFinalMixCallback finalMixCallback = nullptr;
    std::array<AuxData, AXAuxId::Max> aux;
    bool linearUpsample = false;
-   bool compressor = false;
-   bool upsampleAfterFinalMix = false;
    ufixed_1_15_t volume = DefaultVolume;
+};
+
+struct DeviceTypeData
+{
+   std::array<DeviceData, 4> devices;
+   bool compressor = false;
+   AXDeviceFinalMixCallback finalMixCallback = nullptr;
+   bool upsampleAfterFinalMix = false;
    AXDeviceMode mode;
 };
 
-static std::array<DeviceData, AXNumTvDevices>
+static DeviceTypeData
 gTvDevices;
 
-static std::array<DeviceData, AXNumDrcDevices>
+static DeviceTypeData
 gDrcDevices;
 
-static std::array<DeviceData, AXNumRmtDevices>
+static DeviceTypeData
 gRmtDevices;
 
 namespace internal
@@ -66,14 +71,14 @@ getDevice(AXDeviceType type,
 {
    switch (type) {
    case AXDeviceType::TV:
-      decaf_check(deviceId < gTvDevices.size());
-      return &gTvDevices[deviceId];
+      decaf_check(deviceId < AXNumTvDevices);
+      return &gTvDevices.devices[deviceId];
    case AXDeviceType::DRC:
-      decaf_check(deviceId < gDrcDevices.size());
-      return &gDrcDevices[deviceId];
+      decaf_check(deviceId < AXNumDrcDevices);
+      return &gDrcDevices.devices[deviceId];
    case AXDeviceType::RMT:
-      decaf_check(deviceId < gRmtDevices.size());
-      return &gRmtDevices[deviceId];
+      decaf_check(deviceId < AXNumRmtDevices);
+      return &gRmtDevices.devices[deviceId];
    default:
       return nullptr;
    }
@@ -324,9 +329,9 @@ decodeVoiceSamples(int numSamples)
    // TODO: Apply Low Pass Filter
 }
 
-static Pcm16Sample gTvSamples[AXNumTvDevices][AXNumTvChannels][144];
+static Pcm16Sample gTvSamples[AXNumTvDevices][AXNumTvChannels][NumOutputSamples];
 
-void
+static void
 invokeAuxCallback(AuxData &aux, uint32_t numChannels, uint32_t numSamples, Pcm16Sample samples[6][144])
 {
    if (aux.callback) {
@@ -351,29 +356,38 @@ invokeAuxCallback(AuxData &aux, uint32_t numChannels, uint32_t numSamples, Pcm16
    }
 }
 
-void
-invokeFinalMixCallback(DeviceData &device, uint32_t numChannels, uint32_t numSamples, Pcm16Sample samples[6][144])
+static void
+invokeFinalMixCallback(DeviceTypeData &device, uint32_t numDevices, uint32_t numChannels, uint32_t numSamples, Pcm16Sample samples[4][6][144])
 {
    if (device.finalMixCallback) {
       auto mixCbData = &sCallbackData->finalMixCallbackData;
       mixCbData->channels = numChannels;
       mixCbData->samples = numSamples;
-      mixCbData->unk1 = 1;
+      mixCbData->numDevices = numDevices;
       mixCbData->channelsOut = mixCbData->channels;
 
-      for (auto ch = 0u; ch < numChannels; ++ch) {
-         for (auto i = 0u; i < numSamples; ++i) {
-            sCallbackData->samples[ch][i] = static_cast<int32_t>(samples[ch][i]);
+      for (auto dev = 0u; dev < numDevices; ++dev) {
+         for (auto ch = 0u; ch < numChannels; ++ch) {
+            auto axChanId = (dev * numChannels) + ch;
+
+            for (auto i = 0u; i < numSamples; ++i) {
+               sCallbackData->samples[axChanId][i] = static_cast<int32_t>(samples[dev][ch][i]);
+            }
+
+            sCallbackData->samplePtrs[axChanId] = &sCallbackData->samples[axChanId][0];
          }
-         sCallbackData->samplePtrs[ch] = &sCallbackData->samples[ch][0];
       }
       mixCbData->data = sCallbackData->samplePtrs;
 
       device.finalMixCallback(mixCbData);
 
-      for (auto ch = 0u; ch < numChannels; ++ch) {
-         for (auto i = 0u; i < numSamples; ++i) {
-            samples[ch][i] = Pcm16Sample::from_data(sCallbackData->samples[ch][i]);
+      for (auto dev = 0u; dev < numDevices; ++dev) {
+         for (auto ch = 0u; ch < numChannels; ++ch) {
+            auto axChanId = (dev * numChannels) + ch;
+
+            for (auto i = 0u; i < numSamples; ++i) {
+               samples[dev][ch][i] = Pcm16Sample::from_data(sCallbackData->samples[axChanId][i]);
+            }
          }
       }
    }
@@ -402,37 +416,66 @@ getVoiceMixVolume(AXVoiceExtras *extras, AXDeviceType type, uint32_t device, uin
    }
 }
 
-uint32_t
+static DeviceTypeData *
+getDeviceGroup(AXDeviceType type)
+{
+   switch (type) {
+   case AXDeviceType::TV:
+      return &gTvDevices;
+   case AXDeviceType::DRC:
+      return &gDrcDevices;
+   case AXDeviceType::RMT:
+      return &gRmtDevices;
+   default:
+      decaf_abort("Unexpected device type");
+   }
+}
+
+static uint32_t
+getDeviceNumDevices(AXDeviceType type)
+{
+   decaf_check(type < AXDeviceType::Max);
+   static const uint32_t devices[] = { AXNumTvDevices, AXNumDrcDevices, AXNumRmtDevices };
+   return devices[type];
+}
+
+static uint32_t
 getDeviceNumBuses(AXDeviceType type)
 {
    decaf_check(type < AXDeviceType::Max);
-   static const uint32_t busses[] = { 4, 4, 1 };
+   static const uint32_t busses[] = { AXNumTvBus, AXNumDrcBus, AXNumRmtBus };
    return busses[type];
 }
 
-uint32_t
+static uint32_t
 getDeviceNumChannels(AXDeviceType type)
 {
    decaf_check(type < AXDeviceType::Max);
-   static const uint32_t channels[] = {6, 4, 1};
+   static const uint32_t channels[] = { AXNumTvChannels, AXNumDrcChannels, AXNumRmtChannels };
    return channels[type];
 }
 
-void
-mixDevice(AXDeviceType type, uint32_t deviceId, uint32_t numSamples)
+static void
+mixDevice(AXDeviceType type, uint32_t numSamples)
 {
-   auto device = getDevice(type, deviceId);
+   static const auto AXMaxDevices = 4;
+   static const auto AXMaxBuses = 4;
+   static const auto AXMaxChannels = 6;
+
+   auto devices = getDeviceGroup(type);
+   auto numDevices = getDeviceNumDevices(type);
    auto numBus = getDeviceNumBuses(type);
    auto numChannels = getDeviceNumChannels(type);
 
-   decaf_check(numBus <= 4);
-   decaf_check(numChannels <= 6);
+   decaf_check(numDevices <= AXMaxDevices);
+   decaf_check(numBus <= AXMaxBuses);
+   decaf_check(numChannels <= AXMaxChannels);
    decaf_check(numSamples == 96 || numSamples == 144);
 
-   Pcm16Sample busSamples[4][6][144];
+   Pcm16Sample busSamples[AXMaxBuses][AXMaxDevices][AXMaxChannels][NumOutputSamples];
    const auto voices = getAcquiredVoices();
 
-   memset(busSamples, 0, sizeof(Pcm16Sample) * 4 * 6 * 144);
+   memset(busSamples, 0, sizeof(Pcm16Sample) * AXMaxBuses * AXMaxDevices * AXMaxChannels * NumOutputSamples);
 
    for (auto voice : voices) {
       auto extras = getVoiceExtras(voice->index);
@@ -443,42 +486,56 @@ mixDevice(AXDeviceType type, uint32_t deviceId, uint32_t numSamples)
 
       decaf_check(extras->numSamples == numSamples);
 
-      for (auto bus = 0u; bus < numBus; ++bus) {
-         for (auto channel = 0u; channel < numChannels; ++channel) {
-            auto &volume = getVoiceMixVolume(extras, type, deviceId, channel, bus);
-            auto &out = busSamples[bus][channel];
+      for (auto deviceId = 0u; deviceId < numDevices; ++deviceId) {
+         for (auto bus = 0u; bus < numBus; ++bus) {
+            for (auto channel = 0u; channel < numChannels; ++channel) {
+               auto &volume = getVoiceMixVolume(extras, type, deviceId, channel, bus);
+               auto &out = busSamples[bus][deviceId][channel];
 
-            for (auto i = 0u; i < numSamples; ++i) {
-               out[i] += extras->samples[i] * volume.volume;
+               for (auto i = 0u; i < numSamples; ++i) {
+                  out[i] += extras->samples[i] * volume.volume;
+               }
+
+               volume.volume += volume.delta;
             }
-
-            volume.volume += volume.delta;
          }
       }
    }
 
-   for (auto bus = 1u; bus < numBus; ++bus) {
-      invokeAuxCallback(device->aux[bus - 1], numChannels, numSamples, busSamples[bus]);
+   for (auto deviceId = 0u; deviceId < numDevices; ++deviceId) {
+      auto &device = devices->devices[deviceId];
+
+      for (auto bus = 1u; bus < numBus; ++bus) {
+         invokeAuxCallback(device.aux[bus - 1], numChannels, numSamples, busSamples[bus][deviceId]);
+      }
    }
 
    auto &mainBus = busSamples[0];
 
    // Downmix all aux busses to main bus
-   for (auto bus = 1u; bus < numBus; ++bus) {
-      auto returnVolume = device->aux[bus].returnVolume;
-      auto subBus = busSamples[bus];
+   for (auto deviceId = 0u; deviceId < numDevices; ++deviceId) {
+      auto &device = devices->devices[deviceId];
 
-      for (auto channel = 0u; channel < numChannels; ++channel) {
-         for (auto i = 0u; i < numSamples; ++i) {
-            mainBus[channel][i] += subBus[channel][i] * returnVolume;
+      for (auto bus = 1u; bus < numBus; ++bus) {
+         auto returnVolume = device.aux[bus].returnVolume;
+         auto subBus = busSamples[bus];
+
+         for (auto channel = 0u; channel < numChannels; ++channel) {
+            for (auto i = 0u; i < numSamples; ++i) {
+               mainBus[deviceId][channel][i] += subBus[deviceId][channel][i] * returnVolume;
+            }
          }
       }
    }
 
    // Apply overall device volume
-   for (auto channel = 0u; channel < numChannels; ++channel) {
-      for (auto i = 0u; i < numSamples; ++i) {
-         mainBus[channel][i] = mainBus[channel][i] * device->volume;
+   for (auto deviceId = 0u; deviceId < numDevices; ++deviceId) {
+      auto &device = devices->devices[deviceId];
+
+      for (auto channel = 0u; channel < numChannels; ++channel) {
+         for (auto i = 0u; i < numSamples; ++i) {
+            mainBus[deviceId][channel][i] = mainBus[deviceId][channel][i] * device.volume;
+         }
       }
    }
 
@@ -500,22 +557,26 @@ mixDevice(AXDeviceType type, uint32_t deviceId, uint32_t numSamples)
    };
 
    // Perform upsampling and final mix callback invokation
-   if (device->upsampleAfterFinalMix) {
-      invokeFinalMixCallback(*device, numChannels, numSamples, mainBus);
+   if (devices->upsampleAfterFinalMix) {
+      invokeFinalMixCallback(*devices, numDevices, numChannels, numSamples, mainBus);
 
       if (numSamples != NumOutputSamples) {
-         for (auto channel = 0u; channel < numChannels; ++channel) {
-            upsample32to48(mainBus[channel]);
+         for (auto deviceId = 0u; deviceId < numDevices; ++deviceId) {
+            for (auto channel = 0u; channel < numChannels; ++channel) {
+               upsample32to48(mainBus[deviceId][channel]);
+            }
          }
       }
    } else {
       if (numSamples != NumOutputSamples) {
-         for (auto channel = 0u; channel < numChannels; ++channel) {
-            upsample32to48(mainBus[channel]);
+         for (auto deviceId = 0u; deviceId < numDevices; ++deviceId) {
+            for (auto channel = 0u; channel < numChannels; ++channel) {
+               upsample32to48(mainBus[deviceId][channel]);
+            }
          }
       }
 
-      invokeFinalMixCallback(*device, numChannels, numSamples, mainBus);
+      invokeFinalMixCallback(*devices, numDevices, numChannels, numSamples, mainBus);
    }
 
    // TODO: Apply compressor
@@ -524,7 +585,7 @@ mixDevice(AXDeviceType type, uint32_t deviceId, uint32_t numSamples)
 
    if (type == AXDeviceType::TV) {
       // Copy the generated data out for later pickup
-      memcpy(&gTvSamples[deviceId][0][0], &mainBus[0][0], sizeof(Pcm16Sample) * numChannels * NumOutputSamples);
+      memcpy(gTvSamples, mainBus, sizeof(Pcm16Sample) * numDevices * numChannels * NumOutputSamples);
    } else if (type == AXDeviceType::DRC) {
       // We currently just discard the generated DRC audio
    } else if (type == AXDeviceType::RMT) {
@@ -542,20 +603,10 @@ mixOutput(int32_t *buffer, int numSamples, int numChannels)
    // Decode audio samples from the source voices
    decodeVoiceSamples(numSamples);
 
-   // Mix all the TV devices
-   for (auto deviceId = 0; deviceId < AXNumTvDevices; ++deviceId) {
-      mixDevice(AXDeviceType::TV, deviceId, numSamples);
-   }
-
-   // Mix all the DRC devices
-   for (auto deviceId = 0; deviceId < AXNumDrcDevices; ++deviceId) {
-      mixDevice(AXDeviceType::DRC, deviceId, numSamples);
-   }
-
-   // Mix all the RMT devices
-   for (auto deviceId = 0; deviceId < AXNumRmtDevices; ++deviceId) {
-      mixDevice(AXDeviceType::RMT, deviceId, numSamples);
-   }
+   // Mix all the devices
+   mixDevice(AXDeviceType::TV, numSamples);
+   mixDevice(AXDeviceType::DRC, numSamples);
+   mixDevice(AXDeviceType::RMT, numSamples);
 
    // Send off the TV device 0 data to be played on host
    for (auto i = 0; i < NumOutputSamples; ++i) {
@@ -577,13 +628,13 @@ AXGetDeviceMode(AXDeviceType type,
 
    switch (type) {
    case AXDeviceType::TV:
-      *mode = gTvDevices[0].mode;
+      *mode = gTvDevices.mode;
       break;
    case AXDeviceType::DRC:
-      *mode = gDrcDevices[0].mode;
+      *mode = gDrcDevices.mode;
       break;
    case AXDeviceType::RMT:
-      *mode = gRmtDevices[0].mode;
+      *mode = gRmtDevices.mode;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -596,21 +647,17 @@ AXResult
 AXSetDeviceMode(AXDeviceType type,
                 AXDeviceMode mode)
 {
+   auto devices = internal::getDeviceGroup(type);
+
    switch (type) {
    case AXDeviceType::TV:
-      for (auto &device : gTvDevices) {
-         device.mode = mode;
-      }
+      devices->mode = mode;
       break;
    case AXDeviceType::DRC:
-      for (auto &device : gDrcDevices) {
-         device.mode = mode;
-      }
+      devices->mode = mode;
       break;
    case AXDeviceType::RMT:
-      for (auto &device : gRmtDevices) {
-         device.mode = mode;
-      }
+      devices->mode = mode;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -627,15 +674,17 @@ AXGetDeviceFinalMixCallback(AXDeviceType type,
       return AXResult::Success;
    }
 
+   auto devices = internal::getDeviceGroup(type);
+
    switch (type) {
    case AXDeviceType::TV:
-      *func= gTvDevices[0].finalMixCallback;
+      *func= devices->finalMixCallback;
       break;
    case AXDeviceType::DRC:
-      *func = gDrcDevices[0].finalMixCallback;
+      *func = devices->finalMixCallback;
       break;
    case AXDeviceType::RMT:
-      *func = gRmtDevices[0].finalMixCallback;
+      *func = devices->finalMixCallback;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -648,21 +697,17 @@ AXResult
 AXRegisterDeviceFinalMixCallback(AXDeviceType type,
                                  AXDeviceFinalMixCallback func)
 {
+   auto devices = internal::getDeviceGroup(type);
+
    switch (type) {
    case AXDeviceType::TV:
-      for (auto &device : gTvDevices) {
-         device.finalMixCallback = func;
-      }
+      devices->finalMixCallback = func;
       break;
    case AXDeviceType::DRC:
-      for (auto &device : gDrcDevices) {
-         device.finalMixCallback = func;
-      }
+      devices->finalMixCallback = func;
       break;
    case AXDeviceType::RMT:
-      for (auto &device : gRmtDevices) {
-         device.finalMixCallback = func;
-      }
+      devices->finalMixCallback = func;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -735,19 +780,13 @@ AXSetDeviceCompressor(AXDeviceType type,
 {
    switch (type) {
    case AXDeviceType::TV:
-      for (auto &device : gTvDevices) {
-         device.compressor = !!compressor;
-      }
+      gTvDevices.compressor = !!compressor;
       break;
    case AXDeviceType::DRC:
-      for (auto &device : gDrcDevices) {
-         device.compressor = !!compressor;
-      }
+      gDrcDevices.compressor = !!compressor;
       break;
    case AXDeviceType::RMT:
-      for (auto &device : gRmtDevices) {
-         device.compressor = !!compressor;
-      }
+      gRmtDevices.compressor = !!compressor;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -766,13 +805,13 @@ AXGetDeviceUpsampleStage(AXDeviceType type,
 
    switch (type) {
    case AXDeviceType::TV:
-      *upsampleAfterFinalMixCallback = gTvDevices[0].upsampleAfterFinalMix ? TRUE : FALSE;
+      *upsampleAfterFinalMixCallback = gTvDevices.upsampleAfterFinalMix ? TRUE : FALSE;
       break;
    case AXDeviceType::DRC:
-      *upsampleAfterFinalMixCallback = gDrcDevices[0].upsampleAfterFinalMix ? TRUE : FALSE;
+      *upsampleAfterFinalMixCallback = gDrcDevices.upsampleAfterFinalMix ? TRUE : FALSE;
       break;
    case AXDeviceType::RMT:
-      *upsampleAfterFinalMixCallback = gRmtDevices[0].upsampleAfterFinalMix ? TRUE : FALSE;
+      *upsampleAfterFinalMixCallback = gRmtDevices.upsampleAfterFinalMix ? TRUE : FALSE;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -787,19 +826,13 @@ AXSetDeviceUpsampleStage(AXDeviceType type,
 {
    switch (type) {
    case AXDeviceType::TV:
-      for (auto &device : gTvDevices) {
-         device.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
-      }
+      gTvDevices.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
       break;
    case AXDeviceType::DRC:
-      for (auto &device : gDrcDevices) {
-         device.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
-      }
+      gTvDevices.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
       break;
    case AXDeviceType::RMT:
-      for (auto &device : gRmtDevices) {
-         device.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
-      }
+      gTvDevices.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
       break;
    default:
       return AXResult::InvalidDeviceType;
