@@ -74,6 +74,11 @@ AXAcquireVoiceEx(uint32_t priority,
    AXVoice *foundVoice = sAvailVoiceStack.front();
    sAvailVoiceStack.pop();
 
+   // Reset the voice
+   auto voiceIndex = foundVoice->index;
+   memset(foundVoice, 0, sizeof(AXVoice));
+   foundVoice->index = voiceIndex;
+
    // Configure the voice with stuff we know about
    foundVoice->priority = priority;
    foundVoice->callbackEx = callback;
