@@ -312,9 +312,8 @@ cpuEntrypoint()
    auto core = cpu::this_core::state();
    core->gpr[1] = mem::untranslate(rootStack + 256 - 4);
 
+   // Maybe launch the game
    if (cpu::this_core::id() == 1) {
-      auto core = cpu::this_core::state();
-
       // Run the setup on core 1, which will also run the loader
       launchGame();
 
@@ -401,6 +400,13 @@ launchGame()
 
    // Set mlc/usr to ReadWrite
    fileSystem->setPermissions("/vol/storage_mlc01/usr", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+
+   // We need to set some default stuff up...
+   auto core = cpu::this_core::state();
+   core->gqr[2].value = 0x40004;
+   core->gqr[3].value = 0x50005;
+   core->gqr[4].value = 0x60006;
+   core->gqr[5].value = 0x70007;
 
    // Setup coreinit threads
    coreinit::internal::startAlarmCallbackThreads();

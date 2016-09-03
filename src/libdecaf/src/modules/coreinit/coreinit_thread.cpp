@@ -200,6 +200,11 @@ InitialiseThreadState(OSThread *thread,
    thread->context.gpr[3] = argc;
    thread->context.gpr[4] = mem::untranslate(argv);
    thread->context.gpr[13] = sdaBase;
+   thread->context.fpscr = 4;
+   thread->context.gqr[2] = 0x40004;
+   thread->context.gqr[3] = 0x50005;
+   thread->context.gqr[4] = 0x60006;
+   thread->context.gqr[5] = 0x70007;
 
    // Clear the backchain to 0
    auto stackPtr = mem::translate<uint32_t>(thread->context.gpr[1]);
