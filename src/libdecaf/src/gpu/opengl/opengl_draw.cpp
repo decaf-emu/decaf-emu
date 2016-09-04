@@ -408,9 +408,10 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    gl::glDisable(gl::GL_SCISSOR_TEST);
 
    if (hasStencil) {
-      gl::glClearNamedFramebufferfi(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR, db_stencil_clear.CLEAR());
+      gl::glClearNamedFramebufferfi(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR(), db_stencil_clear.CLEAR());
    } else {
-      gl::glClearNamedFramebufferfv(mDepthClearFrameBuffer, gl::GL_DEPTH, 0, &db_depth_clear.DEPTH_CLEAR);
+      auto depth_clear = db_depth_clear.DEPTH_CLEAR();
+      gl::glClearNamedFramebufferfv(mDepthClearFrameBuffer, gl::GL_DEPTH, 0, &depth_clear);
    }
 
    gl::glEnable(gl::GL_SCISSOR_TEST);

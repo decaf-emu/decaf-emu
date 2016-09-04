@@ -13,8 +13,8 @@ GX2ClearColor(GX2ColorBuffer *colorBuffer,
               float blue,
               float alpha)
 {
-   auto cb_color_frag = latte::CB_COLOR0_FRAG::get(0);
-   auto cb_color_base = latte::CB_COLOR0_BASE::get(0)
+   auto cb_color_frag = latte::CB_COLORN_FRAG::get(0);
+   auto cb_color_base = latte::CB_COLORN_BASE::get(0)
       .BASE_256B(colorBuffer->surface.image.getAddress() >> 8);
 
    if (colorBuffer->surface.aa != 0) {

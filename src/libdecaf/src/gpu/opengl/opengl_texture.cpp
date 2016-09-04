@@ -286,10 +286,10 @@ bool GLDriver::checkActiveSamplers()
             auto td_ps_sampler_border_alpha = getRegister<latte::TD_PS_SAMPLER_BORDERN_ALPHA>(latte::Register::TD_PS_SAMPLER_BORDER0_ALPHA + 4 * (i * 4));
 
             colors = {
-               td_ps_sampler_border_red.BORDER_RED,
-               td_ps_sampler_border_green.BORDER_GREEN,
-               td_ps_sampler_border_blue.BORDER_BLUE,
-               td_ps_sampler_border_alpha.BORDER_ALPHA,
+               td_ps_sampler_border_red.BORDER_RED(),
+               td_ps_sampler_border_green.BORDER_GREEN(),
+               td_ps_sampler_border_blue.BORDER_BLUE(),
+               td_ps_sampler_border_alpha.BORDER_ALPHA(),
             };
 
             break;

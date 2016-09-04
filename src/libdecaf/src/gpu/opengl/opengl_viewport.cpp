@@ -19,10 +19,10 @@ GLDriver::checkViewport()
       gl::glProgramUniform4f(
          mActiveShader->vertex->object,
          mActiveShader->vertex->uniformViewport,
-         static_cast<float>(pa_cl_vport_xoffset.VPORT_XOFFSET),
-         static_cast<float>(pa_cl_vport_yoffset.VPORT_YOFFSET),
-         1.0f / static_cast<float>(pa_cl_vport_xscale.VPORT_XSCALE),
-         1.0f / static_cast<float>(pa_cl_vport_yscale.VPORT_YSCALE));
+         pa_cl_vport_xoffset.VPORT_XOFFSET(),
+         pa_cl_vport_yoffset.VPORT_YOFFSET(),
+         1.0f / pa_cl_vport_xscale.VPORT_XSCALE(),
+         1.0f / pa_cl_vport_yscale.VPORT_YSCALE());
    }
 
    if (mViewportDirty) {
@@ -31,11 +31,11 @@ GLDriver::checkViewport()
       auto pa_cl_vport_yscale = getRegister<latte::PA_CL_VPORT_YSCALE_N>(latte::Register::PA_CL_VPORT_YSCALE_0);
       auto pa_cl_vport_yoffset = getRegister<latte::PA_CL_VPORT_YOFFSET_N>(latte::Register::PA_CL_VPORT_YOFFSET_0);
 
-      auto width = pa_cl_vport_xscale.VPORT_XSCALE * 2.0f;
-      auto height = pa_cl_vport_yscale.VPORT_YSCALE * 2.0f;
+      auto width = pa_cl_vport_xscale.VPORT_XSCALE() * 2.0f;
+      auto height = pa_cl_vport_yscale.VPORT_YSCALE() * 2.0f;
 
-      auto x = pa_cl_vport_xoffset.VPORT_XOFFSET - pa_cl_vport_xscale.VPORT_XSCALE;
-      auto y = pa_cl_vport_yoffset.VPORT_YOFFSET - pa_cl_vport_yscale.VPORT_YSCALE;
+      auto x = pa_cl_vport_xoffset.VPORT_XOFFSET() - pa_cl_vport_xscale.VPORT_XSCALE();
+      auto y = pa_cl_vport_yoffset.VPORT_YOFFSET() - pa_cl_vport_yscale.VPORT_YSCALE();
 
       gl::glViewport(gsl::narrow_cast<gl::GLint>(x),
                      gsl::narrow_cast<gl::GLint>(y),
@@ -52,12 +52,12 @@ GLDriver::checkViewport()
 
       float nearZ, farZ;
 
-      if (pa_cl_vport_zscale.VPORT_ZSCALE > 0.0f) {
-         nearZ = pa_sc_vport_zmin.VPORT_ZMIN;
-         farZ = pa_sc_vport_zmax.VPORT_ZMAX;
+      if (pa_cl_vport_zscale.VPORT_ZSCALE() > 0.0f) {
+         nearZ = pa_sc_vport_zmin.VPORT_ZMIN();
+         farZ = pa_sc_vport_zmax.VPORT_ZMAX();
       } else {
-         farZ = pa_sc_vport_zmin.VPORT_ZMIN;
-         nearZ = pa_sc_vport_zmax.VPORT_ZMAX;
+         farZ = pa_sc_vport_zmin.VPORT_ZMIN();
+         nearZ = pa_sc_vport_zmax.VPORT_ZMAX();
       }
 
       gl::glDepthRangef(nearZ, farZ);

@@ -386,9 +386,9 @@ private:
    }
 
    void
-   trackColorBuffer(latte::CB_COLOR0_BASE cb_color_base,
-                    latte::CB_COLOR0_SIZE cb_color_size,
-                    latte::CB_COLOR0_INFO cb_color_info)
+   trackColorBuffer(latte::CB_COLORN_BASE cb_color_base,
+                    latte::CB_COLORN_SIZE cb_color_size,
+                    latte::CB_COLORN_INFO cb_color_info)
    {
       auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX();
       auto slice_tile_max = cb_color_size.SLICE_TILE_MAX();

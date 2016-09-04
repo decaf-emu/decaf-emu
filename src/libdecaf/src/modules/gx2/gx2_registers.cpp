@@ -82,7 +82,8 @@ GX2InitAlphaTestReg(GX2AlphaTestReg *reg,
       .ALPHA_TEST_ENABLE(!!alphaTest)
       .ALPHA_FUNC(static_cast<latte::REF_FUNC>(func));
 
-   sx_alpha_ref.ALPHA_REF = ref;
+   sx_alpha_ref = sx_alpha_ref
+      .ALPHA_REF(ref);
 
    reg->sx_alpha_ref = sx_alpha_ref;
    reg->sx_alpha_test_control = sx_alpha_test_control;
@@ -99,7 +100,7 @@ GX2GetAlphaTestReg(const GX2AlphaTestReg *reg,
 
    *alphaTest = sx_alpha_test_control.ALPHA_TEST_ENABLE();
    *func = static_cast<GX2CompareFunction>(sx_alpha_test_control.ALPHA_FUNC());
-   *ref = sx_alpha_ref.ALPHA_REF;
+   *ref = sx_alpha_ref.ALPHA_REF();
 }
 
 void
@@ -845,11 +846,16 @@ GX2InitPolygonOffsetReg(GX2PolygonOffsetReg *reg,
    auto pa_su_poly_offset_back_scale = reg->pa_su_poly_offset_back_scale.value();
    auto pa_su_poly_offset_clamp = reg->pa_su_poly_offset_clamp.value();
 
-   pa_su_poly_offset_front_offset.OFFSET = frontOffset;
-   pa_su_poly_offset_front_scale.SCALE = frontScale * 16.0f;
-   pa_su_poly_offset_back_offset.OFFSET = backOffset;
-   pa_su_poly_offset_back_scale.SCALE = backScale * 16.0f;
-   pa_su_poly_offset_clamp.CLAMP = clamp;
+   pa_su_poly_offset_front_offset = pa_su_poly_offset_front_offset
+      .OFFSET(frontOffset);
+   pa_su_poly_offset_front_scale = pa_su_poly_offset_front_scale
+      .SCALE(frontScale * 16.0f);
+   pa_su_poly_offset_back_offset = pa_su_poly_offset_back_offset
+      .OFFSET(backOffset);
+   pa_su_poly_offset_back_scale = pa_su_poly_offset_back_scale
+      .SCALE(backScale * 16.0f);
+   pa_su_poly_offset_clamp = pa_su_poly_offset_clamp
+      .CLAMP(clamp);
 
    reg->pa_su_poly_offset_front_offset = pa_su_poly_offset_front_offset;
    reg->pa_su_poly_offset_front_scale = pa_su_poly_offset_front_scale;
@@ -872,11 +878,11 @@ GX2GetPolygonOffsetReg(GX2PolygonOffsetReg *reg,
    auto pa_su_poly_offset_back_scale = reg->pa_su_poly_offset_back_scale.value();
    auto pa_su_poly_offset_clamp = reg->pa_su_poly_offset_clamp.value();
 
-   *frontOffset = pa_su_poly_offset_front_offset.OFFSET;
-   *frontScale = pa_su_poly_offset_front_scale.SCALE / 16.0f;
-   *backOffset = pa_su_poly_offset_back_offset.OFFSET;
-   *backScale = pa_su_poly_offset_back_scale.SCALE / 16.0f;
-   *clamp = pa_su_poly_offset_clamp.CLAMP;
+   *frontOffset = pa_su_poly_offset_front_offset.OFFSET();
+   *frontScale = pa_su_poly_offset_front_scale.SCALE() / 16.0f;
+   *backOffset = pa_su_poly_offset_back_offset.OFFSET();
+   *backScale = pa_su_poly_offset_back_scale.SCALE() / 16.0f;
+   *clamp = pa_su_poly_offset_clamp.CLAMP();
 }
 
 void
@@ -1078,20 +1084,32 @@ GX2InitViewportReg(GX2ViewportReg *reg,
    auto pa_sc_vport_zmin = reg->pa_sc_vport_zmin.value();
    auto pa_sc_vport_zmax = reg->pa_sc_vport_zmax.value();
 
-   pa_cl_vport_xscale.VPORT_XSCALE = width * 0.5f;
-   pa_cl_vport_xoffset.VPORT_XOFFSET = x + (width * 0.5f);
-   pa_cl_vport_yscale.VPORT_YSCALE = height * 0.5f;
-   pa_cl_vport_yoffset.VPORT_YOFFSET = y + (height * 0.5f);
-   pa_cl_vport_zscale.VPORT_ZSCALE = (farZ - nearZ) * 0.5f;
-   pa_cl_vport_zoffset.VPORT_ZOFFSET = (farZ + nearZ) * 0.5f;
+   pa_cl_vport_xscale = pa_cl_vport_xscale
+      .VPORT_XSCALE(width * 0.5f);
+   pa_cl_vport_xoffset = pa_cl_vport_xoffset
+      .VPORT_XOFFSET(x + (width * 0.5f));
+   pa_cl_vport_yscale = pa_cl_vport_yscale
+      .VPORT_YSCALE(height * 0.5f);
+   pa_cl_vport_yoffset = pa_cl_vport_yoffset
+      .VPORT_YOFFSET(y + (height * 0.5f));
+   pa_cl_vport_zscale = pa_cl_vport_zscale
+      .VPORT_ZSCALE((farZ - nearZ) * 0.5f);
+   pa_cl_vport_zoffset = pa_cl_vport_zoffset
+      .VPORT_ZOFFSET((farZ + nearZ) * 0.5f);
 
-   pa_cl_gb_vert_clip_adj.DATA_REGISTER = 1.0f;
-   pa_cl_gb_vert_disc_adj.DATA_REGISTER = 1.0f;
-   pa_cl_gb_horz_clip_adj.DATA_REGISTER = 1.0f;
-   pa_cl_gb_horz_disc_adj.DATA_REGISTER = 1.0f;
+   pa_cl_gb_vert_clip_adj = pa_cl_gb_vert_clip_adj
+      .DATA_REGISTER(1.0f);
+   pa_cl_gb_vert_disc_adj = pa_cl_gb_vert_disc_adj
+      .DATA_REGISTER(1.0f);
+   pa_cl_gb_horz_clip_adj = pa_cl_gb_horz_clip_adj
+      .DATA_REGISTER(1.0f);
+   pa_cl_gb_horz_disc_adj = pa_cl_gb_horz_disc_adj
+      .DATA_REGISTER(1.0f);
 
-   pa_sc_vport_zmin.VPORT_ZMIN = std::min(nearZ, farZ);
-   pa_sc_vport_zmax.VPORT_ZMAX = std::max(nearZ, farZ);
+   pa_sc_vport_zmin = pa_sc_vport_zmin
+      .VPORT_ZMIN(std::min(nearZ, farZ));
+   pa_sc_vport_zmax = pa_sc_vport_zmax
+      .VPORT_ZMAX(std::max(nearZ, farZ));
 
    reg->pa_cl_vport_xscale = pa_cl_vport_xscale;
    reg->pa_cl_vport_xoffset = pa_cl_vport_xoffset;
@@ -1133,18 +1151,18 @@ GX2GetViewportReg(GX2ViewportReg *reg,
    auto pa_sc_vport_zmin = reg->pa_sc_vport_zmin.value();
    auto pa_sc_vport_zmax = reg->pa_sc_vport_zmax.value();
 
-   *x = pa_cl_vport_xoffset.VPORT_XOFFSET - pa_cl_vport_xscale.VPORT_XSCALE;
-   *y = pa_cl_vport_yoffset.VPORT_YOFFSET - pa_cl_vport_yscale.VPORT_YSCALE;
+   *x = pa_cl_vport_xoffset.VPORT_XOFFSET() - pa_cl_vport_xscale.VPORT_XSCALE();
+   *y = pa_cl_vport_yoffset.VPORT_YOFFSET() - pa_cl_vport_yscale.VPORT_YSCALE();
 
-   *width = 2.0f * pa_cl_vport_xscale.VPORT_XSCALE;
-   *height = 2.0f * pa_cl_vport_yscale.VPORT_YSCALE;
+   *width = 2.0f * pa_cl_vport_xscale.VPORT_XSCALE();
+   *height = 2.0f * pa_cl_vport_yscale.VPORT_YSCALE();
 
-   if (pa_cl_vport_zscale.VPORT_ZSCALE > 0.0f) {
-      *nearZ = pa_sc_vport_zmin.VPORT_ZMIN;
-      *farZ = pa_sc_vport_zmax.VPORT_ZMAX;
+   if (pa_cl_vport_zscale.VPORT_ZSCALE() > 0.0f) {
+      *nearZ = pa_sc_vport_zmin.VPORT_ZMIN();
+      *farZ = pa_sc_vport_zmax.VPORT_ZMAX();
    } else {
-      *farZ = pa_sc_vport_zmin.VPORT_ZMIN;
-      *nearZ = pa_sc_vport_zmax.VPORT_ZMAX;
+      *farZ = pa_sc_vport_zmin.VPORT_ZMIN();
+      *nearZ = pa_sc_vport_zmax.VPORT_ZMAX();
    }
 }
 

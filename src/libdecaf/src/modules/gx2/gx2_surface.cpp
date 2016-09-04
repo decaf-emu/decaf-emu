@@ -274,8 +274,8 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
 void
 GX2InitColorBufferRegs(GX2ColorBuffer *colorBuffer)
 {
-   auto cb_color_info = latte::CB_COLOR0_INFO::get(0);
-   auto cb_color_size = latte::CB_COLOR0_SIZE::get(0);
+   auto cb_color_info = latte::CB_COLORN_INFO::get(0);
+   auto cb_color_size = latte::CB_COLORN_SIZE::get(0);
 
    // Update cb_color_info
    auto format = internal::getSurfaceFormatColorFormat(colorBuffer->surface.format);

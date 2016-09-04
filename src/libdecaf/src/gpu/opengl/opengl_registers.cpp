@@ -217,10 +217,10 @@ GLDriver::applyRegister(latte::Register reg)
       auto cb_blend_blue = getRegister<latte::CB_BLEND_BLUE>(latte::Register::CB_BLEND_BLUE);
       auto cb_blend_alpha = getRegister<latte::CB_BLEND_ALPHA>(latte::Register::CB_BLEND_ALPHA);
 
-      gl::glBlendColor(cb_blend_red.BLEND_RED,
-                       cb_blend_green.BLEND_GREEN,
-                       cb_blend_blue.BLEND_BLUE,
-                       cb_blend_alpha.BLEND_ALPHA);
+      gl::glBlendColor(cb_blend_red.BLEND_RED(),
+                       cb_blend_green.BLEND_GREEN(),
+                       cb_blend_blue.BLEND_BLUE(),
+                       cb_blend_alpha.BLEND_ALPHA());
    } break;
 
    case latte::Register::PA_CL_VPORT_XSCALE_0:
@@ -336,9 +336,9 @@ GLDriver::applyRegister(latte::Register reg)
    {
       auto vgt_multi_prim_ib_reset_indx = *reinterpret_cast<latte::VGT_MULTI_PRIM_IB_RESET_INDX*>(&value);
 
-      if (mGLStateCache.primRestartIndex != vgt_multi_prim_ib_reset_indx.RESET_INDX) {
-         mGLStateCache.primRestartIndex = vgt_multi_prim_ib_reset_indx.RESET_INDX;
-         gl::glPrimitiveRestartIndex(vgt_multi_prim_ib_reset_indx.RESET_INDX);
+      if (mGLStateCache.primRestartIndex != vgt_multi_prim_ib_reset_indx.RESET_INDX()) {
+         mGLStateCache.primRestartIndex = vgt_multi_prim_ib_reset_indx.RESET_INDX();
+         gl::glPrimitiveRestartIndex(vgt_multi_prim_ib_reset_indx.RESET_INDX());
       }
    } break;
 

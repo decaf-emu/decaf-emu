@@ -507,7 +507,7 @@ bool GLDriver::checkActiveShader()
 
    // Set alpha reference
    if (mActiveShader->pixel && alphaTestFunc != latte::REF_ALWAYS && alphaTestFunc != latte::REF_NEVER) {
-      gl::glProgramUniform1f(mActiveShader->pixel->object, mActiveShader->pixel->uniformAlphaRef, sx_alpha_ref.ALPHA_REF);
+      gl::glProgramUniform1f(mActiveShader->pixel->object, mActiveShader->pixel->uniformAlphaRef, sx_alpha_ref.ALPHA_REF());
    }
 
    // Bind fetch shader
@@ -1454,7 +1454,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    // Pixel Shader Inputs
    std::array<bool, 256> semanticUsed = { false };
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
-      auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
+      auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_N>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
       auto semanticId = spi_ps_input_cntl.SEMANTIC();
       decaf_check(semanticId != 0xff);
 
@@ -1499,7 +1499,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
 
    // Assign vertex shader output to our GPR
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
-      auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_0>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
+      auto spi_ps_input_cntl = getRegister<latte::SPI_PS_INPUT_CNTL_N>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
       uint8_t semanticId = spi_ps_input_cntl.SEMANTIC();
       decaf_check(semanticId != 0xff);
 
