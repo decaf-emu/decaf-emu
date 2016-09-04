@@ -414,7 +414,13 @@ endUserCommandBuffer(uint32_t *buffer)
    decaf_check(cb);
 
    decaf_check(cb->displayList);
-   decaf_check(buffer == cb->buffer);
+
+   if (buffer != cb->buffer) {
+      // HACK: FAST Racing Neo shows this behaviour, gx2.rpl seems to not really care about what pointer
+      // you pass into GX2EndDisplayList, so it's possible this is perfectly valid behaviour and the error
+      // an application one, and not one caused by us.
+      gLog->warn("Display list passed to GX2EndDisplayList did not match one passed to GX2BeginDisplayList");
+   }
 
    // Pad and get its size
    padCommandBuffer(cb);
