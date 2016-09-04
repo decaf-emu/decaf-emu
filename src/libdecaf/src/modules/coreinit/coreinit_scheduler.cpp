@@ -44,6 +44,9 @@ sLastSwitchTime[3];
 static std::chrono::time_point<std::chrono::high_resolution_clock>
 sCorePauseTime[3];
 
+static std::array<be_ptr<MEMHeapHeader> *, 3>
+sMemoryHeapPointers = { nullptr, nullptr, nullptr };
+
 namespace internal
 {
 
@@ -642,21 +645,20 @@ GameThreadEntry(uint32_t argc, void *argv)
 
    debugger::handlePreLaunch();
 
+   // We cannot use stack for these pointers because apparently games can store
+   // them and reference it later (see Yoshi's Wooly World).
+   auto &heapPtrs = sMemoryHeapPointers;
+   *sMemoryHeapPointers[0] = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM1);
+   *sMemoryHeapPointers[1] = MEMGetBaseHeapHandle(MEMBaseHeapType::FG);
+   *sMemoryHeapPointers[2] = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
+
    if (userPreinit) {
-      ppcutils::StackObject<be_ptr<MEMHeapHeader>> mem1HeapPtr;
-      ppcutils::StackObject<be_ptr<MEMHeapHeader>> fgHeapPtr;
-      ppcutils::StackObject<be_ptr<MEMHeapHeader>> mem2HeapPtr;
-
-      *mem1HeapPtr = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM1);
-      *fgHeapPtr = MEMGetBaseHeapHandle(MEMBaseHeapType::FG);
-      *mem2HeapPtr = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-
       gLog->info("Executing application user pre-init");
-      userPreinit(mem1HeapPtr, fgHeapPtr, mem2HeapPtr);
+      userPreinit(sMemoryHeapPointers[0], sMemoryHeapPointers[1], sMemoryHeapPointers[2]);
 
-      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, *mem1HeapPtr);
-      MEMSetBaseHeapHandle(MEMBaseHeapType::FG, *fgHeapPtr);
-      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, *mem2HeapPtr);
+      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, *sMemoryHeapPointers[0]);
+      MEMSetBaseHeapHandle(MEMBaseHeapType::FG, *sMemoryHeapPointers[1]);
+      MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, *sMemoryHeapPointers[2]);
    }
 
    auto loadedModules = kernel::loader::getLoadedModules();
@@ -696,6 +698,7 @@ void
 Module::registerSchedulerFunctions()
 {
    RegisterKernelFunction(GameThreadEntry);
+   RegisterInternalData(sMemoryHeapPointers);
 }
 
 void

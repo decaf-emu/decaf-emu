@@ -136,7 +136,7 @@ protected:
    }
 
    template <typename Type, size_t N>
-   static void RegisterInternalDataName(const std::string &name, std::array<Type*, N> &data)
+   static void RegisterInternalDataName(const std::string &name, std::array<Type *, N> &data)
    {
       registerSymbol(name, kernel::makeData(&data[0], N));
    }
