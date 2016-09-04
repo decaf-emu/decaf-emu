@@ -16,12 +16,12 @@ struct TableEntry
    };
 
    void
-   addInstruction(InstructionField field, uint32_t value, InstructionInfo *instr)
+   addInstruction(InstructionField field, uint32_t value, InstructionInfo *instrInfo)
    {
       auto fieldMap = getFieldMap(field);
       decaf_check(fieldMap);
       decaf_check(value < fieldMap->children.size());
-      fieldMap->children[value].instr = instr;
+      fieldMap->children[value].instr = instrInfo;
    }
 
    void

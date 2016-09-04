@@ -67,8 +67,8 @@ OSUninterruptibleSpinLock_Release(OSSpinLock *spinlock);
 
 struct ScopedSpinLock
 {
-   ScopedSpinLock(OSSpinLock *lock) :
-      lock(lock)
+   ScopedSpinLock(OSSpinLock *lock_) :
+      lock(lock_)
    {
       OSUninterruptibleSpinLock_Acquire(lock);
    }

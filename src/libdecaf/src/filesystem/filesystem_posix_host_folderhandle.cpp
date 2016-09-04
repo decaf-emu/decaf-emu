@@ -65,10 +65,10 @@ bool HostFolderHandle::read(FolderEntry &entry)
    if (item->d_type == DT_DIR) {
       entry.type = FolderEntry::Folder;
    } else {
-      struct stat data;
+      struct stat st;
 
-      if (stat(mPath.join(entry.name).path().c_str(), &data) == 0) {
-         entry.size = data.st_size;
+      if (stat(mPath.join(entry.name).path().c_str(), &st) == 0) {
+         entry.size = st.st_size;
       }
 
       entry.type = FolderEntry::File;

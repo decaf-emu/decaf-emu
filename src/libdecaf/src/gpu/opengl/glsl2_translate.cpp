@@ -283,7 +283,6 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
          auto unit = units.addInstructionUnit(inst);
          auto func = TranslateFuncALU { nullptr };
          auto flags = SQ_ALU_FLAG_NONE;
-         const char *name = nullptr;
          state.unit = unit;
 
          // Process all reduction instructions once as a group
@@ -298,26 +297,24 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
          }
 
          if (inst.word1.ENCODING() == SQ_ALU_OP2) {
-            auto id = inst.op2.ALU_INST();
-            auto itr = sInstructionMapOP2.find(id);
-            flags = getInstructionFlags(id);
-            name = getInstructionName(id);
+            auto instId = inst.op2.ALU_INST();
+            auto itr = sInstructionMapOP2.find(instId);
+            flags = getInstructionFlags(instId);
 
             if (itr != sInstructionMapOP2.end()) {
                func = itr->second;
             } else {
-               throw translate_exception(fmt::format("Unimplemented ALU OP2 instruction {} {}", id, name));
+               throw translate_exception(fmt::format("Unimplemented ALU OP2 instruction {} {}", instId, getInstructionName(instId)));
             }
          } else {
-            auto id = inst.op3.ALU_INST();
-            auto itr = sInstructionMapOP3.find(id);
-            flags = getInstructionFlags(id);
-            name = getInstructionName(id);
+            auto instId = inst.op3.ALU_INST();
+            auto itr = sInstructionMapOP3.find(instId);
+            flags = getInstructionFlags(instId);
 
             if (itr != sInstructionMapOP3.end()) {
                func = itr->second;
             } else {
-               throw translate_exception(fmt::format("Unimplemented ALU OP3 instruction {} {}", id, name));
+               throw translate_exception(fmt::format("Unimplemented ALU OP3 instruction {} {}", instId, getInstructionName(instId)));
             }
          }
 

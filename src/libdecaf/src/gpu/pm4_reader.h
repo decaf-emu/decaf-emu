@@ -94,9 +94,9 @@ public:
    }
 
 private:
-   void checkSize(size_t size)
+   void checkSize(size_t sizeToRead)
    {
-      if (mPosition + size > mBuffer.size()) {
+      if (mPosition + sizeToRead > mBuffer.size()) {
          decaf_abort("Read past end of packet");
       }
    }

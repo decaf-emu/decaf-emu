@@ -1,3 +1,5 @@
+set(CMAKE_CXX_FLAGS "-Werror=shadow ${CMAKE_CXX_FLAGS}")
+
 include_directories(".")
 include_directories("src")
 

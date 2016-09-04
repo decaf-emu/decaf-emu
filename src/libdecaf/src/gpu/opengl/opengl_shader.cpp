@@ -256,7 +256,7 @@ bool GLDriver::checkActiveShader()
    // If the pipeline already exists, check whether any of its component
    //  shaders need to be rebuilt
    if (pipeline.object) {
-      std::unique_lock<std::mutex> mResourceMutex;
+      std::unique_lock<std::mutex> lock(mResourceMutex);
 
       if (invalidateShaderIfChanged_locked(pipeline.fetch, fsShaderKey, mFetchShaders)
        || invalidateShaderIfChanged_locked(pipeline.vertex, vsShaderKey, mVertexShaders)
@@ -278,7 +278,7 @@ bool GLDriver::checkActiveShader()
 
    // Generate shader if needed
    if (!pipeline.object) {
-      std::unique_lock<std::mutex> mResourceMutex;
+      std::unique_lock<std::mutex> lock(mResourceMutex);
 
       // Parse fetch shader if needed
       auto &fetchShader = mFetchShaders[fsShaderKey];
@@ -1070,26 +1070,26 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    out << '\n';
 
    // Transform feedback outputs
-   for (auto buffer = 0u; buffer < latte::MaxStreamOutBuffers; ++buffer) {
-      vertex.usedFeedbackBuffers[buffer] = !shader.feedbacks[buffer].empty();
+   for (auto i = 0u; i < latte::MaxStreamOutBuffers; ++i) {
+      vertex.usedFeedbackBuffers[i] = !shader.feedbacks[i].empty();
 
-      if (vertex.usedFeedbackBuffers[buffer]) {
-         auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * buffer);
+      if (vertex.usedFeedbackBuffers[i]) {
+         auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
          auto stride = vgt_strmout_vtx_stride * 4;
 
          if (NVIDIA_GLSL_WORKAROUND) {
             out
-               << "layout(xfb_buffer = " << buffer << ") out;\n"
+               << "layout(xfb_buffer = " << i << ") out;\n"
                << "layout(xfb_stride = " << stride
-               << ") out feedback_block" << buffer << " {\n";
+               << ") out feedback_block" << i << " {\n";
          } else {
             out
-               << "layout(xfb_buffer = " << buffer
+               << "layout(xfb_buffer = " << i
                << ", xfb_stride = " << stride
-               << ") out feedback_block" << buffer << " {\n";
+               << ") out feedback_block" << i << " {\n";
          }
 
-         for (auto &xfb : shader.feedbacks[buffer]) {
+         for (auto &xfb : shader.feedbacks[i]) {
             out << "   layout(xfb_offset = " << xfb.offset << ") out ";
 
             if (xfb.size == 1) {
@@ -1189,21 +1189,21 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
          auto compBits = getDataFormatComponentBits(attrib->format);
 
-         for (auto i = 0u; i < channels; ++i) {
-            auto &val = chanVal[i];
+         for (auto ch = 0u; ch < channels; ++ch) {
+            auto &val = chanVal[ch];
             val = name;
 
             if (attrib->endianSwap == latte::SQ_ENDIAN_NONE) {
                // Nothing to do except select the appropriate component.
 
                if (channels > 1) {
-                  val = val + "." + ChannelSelNorm[i];
+                  val = val + "." + ChannelSelNorm[ch];
                }
             } else {
                if (compBits == 32) {
                   if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
                      if (channels > 1) {
-                        val = val + "." + ChannelSelNorm[i];
+                        val = val + "." + ChannelSelNorm[ch];
                      }
 
                      val = "bswap32(" + val + ")";
@@ -1213,7 +1213,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
                } else if (compBits == 16) {
                   if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
                      if (channels > 1) {
-                        val = val + "." + ChannelSelNorm[i];
+                        val = val + "." + ChannelSelNorm[ch];
                      }
 
                      val = "bswap16(" + val + ")";
@@ -1226,10 +1226,10 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
                   if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
                      decaf_check(channels == 2 || channels == 4);
-                     val = val + "." + ChannelSel8In16[i];
+                     val = val + "." + ChannelSel8In16[ch];
                   } else if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
                      decaf_check(channels == 4);
-                     val = val + "." + ChannelSel8In32[i];
+                     val = val + "." + ChannelSel8In32[ch];
                   } else {
                      decaf_abort("Unexpected endian swap mode for 8-bit components");
                   }
@@ -1262,27 +1262,27 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
                }
             }
 
-            chanBitCount[i] = compBits;
+            chanBitCount[ch] = compBits;
          }
       }
 
-      for (auto i = 0u; i < channels; ++i) {
+      for (auto ch = 0u; ch < channels; ++ch) {
          if (attrib->numFormat == latte::SQ_NUM_FORMAT_NORM) {
-            uint32_t valMax = (1ul << chanBitCount[i]) - 1;
+            uint32_t valMax = (1ul << chanBitCount[ch]) - 1;
 
             if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
-               chanVal[i] = fmt::format("clamp(float({}) / {}.0, -1.0, 1.0)", chanVal[i], valMax / 2);
+               chanVal[ch] = fmt::format("clamp(float({}) / {}.0, -1.0, 1.0)", chanVal[ch], valMax / 2);
             } else {
-               chanVal[i] = fmt::format("float({}) / {}.0", chanVal[i], valMax);
+               chanVal[ch] = fmt::format("float({}) / {}.0", chanVal[ch], valMax);
             }
          } else if (attrib->numFormat == latte::SQ_NUM_FORMAT_INT) {
             if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
-               chanVal[i] = "intBitsToFloat(int(" + chanVal[i] + "))";
+               chanVal[ch] = "intBitsToFloat(int(" + chanVal[ch] + "))";
             } else {
-               chanVal[i] = "uintBitsToFloat(uint(" + chanVal[i] + "))";
+               chanVal[ch] = "uintBitsToFloat(uint(" + chanVal[ch] + "))";
             }
          } else if (attrib->numFormat == latte::SQ_NUM_FORMAT_SCALED) {
-            chanVal[i] = "float(" + chanVal[i] + ")";
+            chanVal[ch] = "float(" + chanVal[ch] + ")";
          } else {
             decaf_abort("Unexpected attribute number format");
          }

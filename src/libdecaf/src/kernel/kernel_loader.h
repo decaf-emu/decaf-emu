@@ -63,9 +63,9 @@ struct Symbol
 struct LoadedModule
 {
    ppcaddr_t
-   findExport(const std::string& name) const
+   findExport(const std::string& symName) const
    {
-      auto itr = exports.find(name);
+      auto itr = exports.find(symName);
 
       if (itr == exports.end()) {
          return 0u;
@@ -88,16 +88,16 @@ struct LoadedModule
 
    template<typename ReturnType, typename... Args>
    wfunc_ptr<ReturnType, Args...>
-   findFuncExport(const std::string& name) const
+   findFuncExport(const std::string& funcName) const
    {
-      return wfunc_ptr<ReturnType, Args...>(findExport(name));
+      return wfunc_ptr<ReturnType, Args...>(findExport(funcName));
    }
 
    template<typename Type>
    Type *
-   findDataExport(const std::string& name) const
+   findDataExport(const std::string& varName) const
    {
-      return reinterpret_cast<Type *>(mem::translate(findExport(name)));
+      return reinterpret_cast<Type *>(mem::translate(findExport(varName)));
    }
 
    LoadedSection *

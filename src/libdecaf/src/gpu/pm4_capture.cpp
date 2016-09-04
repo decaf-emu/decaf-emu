@@ -561,9 +561,9 @@ private:
 
    void
    scanType3(pm4::type3::Header header,
-             const gsl::span<uint32_t> &data)
+             const gsl::span<uint32_t> &rawData)
    {
-      pm4::PacketReader reader { data };
+      pm4::PacketReader reader { rawData };
 
       switch (header.opcode()) {
       case pm4::type3::DECAF_COPY_COLOR_TO_SCAN:

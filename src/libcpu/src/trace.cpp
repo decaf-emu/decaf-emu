@@ -523,8 +523,8 @@ traceReg(cpu::Core *state, int start, int regIdx)
       auto &trace = getTrace(tracer, i);
 
       bool wasMatchedWrite = false;
-      for (auto &i : trace.writes) {
-         if (i.type == StateField::GPR + regIdx) {
+      for (auto &j : trace.writes) {
+         if (j.type == StateField::GPR + regIdx) {
             wasMatchedWrite = true;
             break;
          }

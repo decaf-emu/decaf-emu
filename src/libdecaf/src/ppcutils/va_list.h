@@ -110,14 +110,14 @@ struct va_list
 
    iterator begin()
    {
-      return iterator(this, gpr, fpr);
+      return iterator(this, firstGpr, firstFpr);
    }
 
    //! Index of first GPR
-   uint8_t gpr;
+   uint8_t firstGpr;
 
    //! Index of first FPR
-   uint8_t fpr;
+   uint8_t firstFpr;
 
    uint8_t __padding[2];
 
@@ -127,8 +127,8 @@ struct va_list
    //! Pointer to register values r3...r10 followed by f1...f8 (if saved)
    be_ptr<be_val<uint32_t>> reg_save_area;
 };
-CHECK_OFFSET(va_list, 0x00, gpr);
-CHECK_OFFSET(va_list, 0x01, fpr);
+CHECK_OFFSET(va_list, 0x00, firstGpr);
+CHECK_OFFSET(va_list, 0x01, firstFpr);
 CHECK_OFFSET(va_list, 0x04, overflow_arg_area);
 CHECK_OFFSET(va_list, 0x08, reg_save_area);
 CHECK_SIZE(va_list, 0x0C);
@@ -166,8 +166,8 @@ make_va_list(uint8_t gpr, uint8_t fpr)
 
    // Setup the va_list structure
    auto stack_list = mem::translate<stack_va_list>(core->gpr[1] + 8);
-   stack_list->list.gpr = gpr;
-   stack_list->list.fpr = fpr;
+   stack_list->list.firstGpr = gpr;
+   stack_list->list.firstFpr = fpr;
    stack_list->list.reg_save_area = &stack_list->gpr_save_area[0];
    stack_list->list.overflow_arg_area = mem::translate<be_val<uint32_t>>(overflow);
 

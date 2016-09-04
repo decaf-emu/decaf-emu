@@ -66,12 +66,12 @@ cmpGeneric(PPCEmuAssembler& a, Instruction instr)
    // Summary Overflow
    {
       auto ppcxer = a.loadRegisterRead(a.xer);
-      auto tmp = a.allocGpTmp().r32();
-      a.mov(tmp, ppcxer);
-      a.and_(tmp, XERegisterBits::StickyOV);
-      a.shr(tmp, XERegisterBits::StickyOVShift);
-      a.shl(tmp, ConditionRegisterFlag::SummaryOverflowShift + crshift);
-      a.or_(ppccr, tmp);
+      auto soTmp = a.allocGpTmp().r32();
+      a.mov(soTmp, ppcxer);
+      a.and_(soTmp, XERegisterBits::StickyOV);
+      a.shr(soTmp, XERegisterBits::StickyOVShift);
+      a.shl(soTmp, ConditionRegisterFlag::SummaryOverflowShift + crshift);
+      a.or_(ppccr, soTmp);
    }
 
    // Perform Comparison
