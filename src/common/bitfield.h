@@ -39,6 +39,23 @@ struct BitfieldHelper
    }
 };
 
+// Specialise for float because of errors using make_unsigned on float type
+template<typename BitfieldType, unsigned Position, unsigned Bits>
+struct BitfieldHelper<BitfieldType, float, Position, Bits>
+{
+   using ValueBitfield = BitfieldHelper<BitfieldType, uint32_t, Position, Bits>;
+
+   static float get(BitfieldType bitfield)
+   {
+      return bit_cast<float>(ValueBitfield::get(bitfield));
+   }
+
+   static inline BitfieldType set(BitfieldType bitfield, float floatValue)
+   {
+      return ValueBitfield::set(bitfield, bit_cast<uint32_t>(floatValue));
+   }
+};
+
 // Specialise for bool because of compiler warnings for static_cast<bool>(int)
 template<typename BitfieldType, unsigned Position, unsigned Bits>
 struct BitfieldHelper<BitfieldType, bool, Position, Bits>
