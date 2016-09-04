@@ -109,11 +109,8 @@ struct AudioDecoder
       offsets = extras->data;
       type = extras->type;
       loopCount = extras->loopCount;
-
-      if (offsets.format == AXVoiceFormat::ADPCM) {
-         adpcm = extras->adpcm;
-         adpcmLoop = extras->adpcmLoop;
-      }
+      adpcm = extras->adpcm;
+      adpcmLoop = extras->adpcmLoop;
 
       isEof = false;
    }
@@ -122,10 +119,7 @@ struct AudioDecoder
    {
       extras->data = offsets;
       extras->loopCount = loopCount;
-
-      if (offsets.format == AXVoiceFormat::ADPCM) {
-         extras->adpcm = adpcm;
-      }
+      extras->adpcm = adpcm;
    }
 
    AudioDecoder& advance()
@@ -136,11 +130,14 @@ struct AudioDecoder
       adpcm.prevSample[0] = sample.data();
 
       if (offsets.currentOffsetAbs == offsets.endOffsetAbs) {
-         if (offsets.loopFlag) {
-            offsets.currentOffsetAbs = offsets.loopOffsetAbs;
+         // According to Dolphin, the loop back happens regardless
+         //  of whether the voice is in looping mode
+         offsets.currentOffsetAbs = offsets.loopOffsetAbs;
 
-            if (offsets.format == AXVoiceFormat::ADPCM && type != AXVoiceType::Streaming) {
-               adpcm.predScale = adpcmLoop.predScale;
+         if (offsets.loopFlag) {
+            adpcm.predScale = adpcmLoop.predScale;
+
+            if (type != AXVoiceType::Streaming) {
                adpcm.prevSample[0] = adpcmLoop.prevSample[0];
                adpcm.prevSample[1] = adpcmLoop.prevSample[1];
             }
@@ -185,12 +182,12 @@ struct AudioDecoder
 
          auto data = getMemPageAddress<uint8_t>(offsets.memPageNumber);
 
+         auto scale = 1 << (adpcm.predScale.value() & 0xF);
          auto coeffIndex = (adpcm.predScale.value() >> 4) & 7;
-         auto scale = adpcm.predScale.value() & 0xF;
-         auto yn1 = adpcm.prevSample[0].value();
-         auto yn2 = adpcm.prevSample[1].value();
          auto coeff1 = adpcm.coefficients[coeffIndex * 2 + 0].value();
          auto coeff2 = adpcm.coefficients[coeffIndex * 2 + 1].value();
+         auto yn1 = adpcm.prevSample[0].value();
+         auto yn2 = adpcm.prevSample[1].value();
 
          // Extract the 4-bit signed sample from the appropriate byte
          int sampleData = data[sampleIndex / 2];
@@ -206,8 +203,7 @@ struct AudioDecoder
          }
 
          // Calculate sample
-         auto xn = sampleData << scale;
-         auto adpcmSample = ((xn << 11) + 0x400 + (coeff1 * yn1) + (coeff2 * yn2)) >> 11;
+         auto adpcmSample = (scale * sampleData) + ((0x400 + (coeff1 * yn1) + (coeff2 * yn2)) >> 11);
 
          // Clamp the output
          auto clampedSample = std::min(std::max(adpcmSample, -32767), 32767);
