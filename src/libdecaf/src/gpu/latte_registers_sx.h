@@ -2,7 +2,6 @@
 #include "common/types.h"
 #include "common/bitfield.h"
 #include "latte_enum_common.h"
-#include "latte_enum_sx.h"
 
 namespace latte
 {

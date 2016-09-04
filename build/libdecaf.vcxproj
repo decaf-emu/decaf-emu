@@ -449,7 +449,6 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_pa.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_spi.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_sq.h" />
-    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_sx.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_vgt.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_cb.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_cp.h" />

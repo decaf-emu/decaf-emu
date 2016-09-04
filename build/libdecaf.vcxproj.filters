@@ -1256,9 +1256,6 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers_sx.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_sx.h">
-      <Filter>Header Files\gpu</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_enum_pa.h">
       <Filter>Header Files\gpu</Filter>
     </ClInclude>
