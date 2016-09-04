@@ -173,6 +173,8 @@ AXRegisterFrameCallback(AXFrameCallback callback)
 int32_t
 AXUserBegin()
 {
+   decaf_warn_stub();
+
    // TODO: Implement this properly
    return sProtectLock.fetch_add(1);
 }
@@ -180,13 +182,26 @@ AXUserBegin()
 int32_t
 AXUserEnd()
 {
+   decaf_warn_stub();
+
    // TODO: Implement this properly
    return sProtectLock.fetch_sub(1);
+}
+
+BOOL
+AXUserIsProtected()
+{
+   decaf_warn_stub();
+
+   // TODO: Implement this properly
+   return sProtectLock.load() > 0;
 }
 
 int32_t
 AXVoiceBegin(AXVoice *voice)
 {
+   decaf_warn_stub();
+
    // TODO: Implement this properly
    return AXUserBegin();
 }
@@ -194,14 +209,18 @@ AXVoiceBegin(AXVoice *voice)
 int32_t
 AXVoiceEnd(AXVoice *voice)
 {
+   decaf_warn_stub();
+
    // TODO: Implement this properly
    return AXUserEnd();
 }
 
-BOOL AXUserIsProtected()
+BOOL
+AXVoiceIsProtected(AXVoice *voice)
 {
-   // TODO: Implement this properly
-   return sProtectLock.load() > 0;
+   decaf_warn_stub();
+
+   return FALSE;
 }
 
 uint32_t
@@ -362,6 +381,7 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXVoiceBegin);
    RegisterKernelFunction(AXVoiceEnd);
    RegisterKernelFunction(AXUserIsProtected);
+   RegisterKernelFunction(AXVoiceIsProtected);
    RegisterKernelFunction(AXGetInputSamplesPerFrame);
    RegisterKernelFunction(AXGetInputSamplesPerSec);
    RegisterKernelFunction(AXRmtGetSamples);
