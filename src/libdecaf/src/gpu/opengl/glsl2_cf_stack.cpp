@@ -51,15 +51,15 @@ insertCond(State &state,
            latte::SQ_CF_COND cond)
 {
    switch (cond) {
-   case SQ_CF_COND_ACTIVE:
+   case SQ_CF_COND::ACTIVE:
       state.out << "activeMask == Active";
       break;
-   case SQ_CF_COND_FALSE:
+   case SQ_CF_COND::ALWAYS_FALSE:
       state.out << "false";
       break;
-   case SQ_CF_COND_BOOL:
+   case SQ_CF_COND::CF_BOOL:
       throw translate_exception("Unimplemented SQ_CF_COND_BOOL");
-   case SQ_CF_COND_NOT_BOOL:
+   case SQ_CF_COND::CF_NOT_BOOL:
       throw translate_exception("Unimplemented SQ_CF_COND_NOT_BOOL");
    default:
       throw translate_exception(fmt::format("Invalid SQ_CF_COND {}", cond));

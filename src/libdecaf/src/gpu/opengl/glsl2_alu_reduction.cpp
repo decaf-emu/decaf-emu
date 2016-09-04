@@ -99,13 +99,13 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
 
    {
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_X);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::X);
       insertSource0(state, state.out, cf, yInsn);
       state.out << ";";
       insertLineEnd(state);
 
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_Y);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::Y);
       state.out << "sign(";
       insertSource0(state, state.out, cf, xInsn);
       state.out << ") * ";
@@ -114,13 +114,13 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       insertLineEnd(state);
 
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_Z);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::Z);
       insertSource0(state, state.out, cf, xInsn);
       state.out << " * 2.0;";
       insertLineEnd(state);
 
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_W);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::W);
       insertSource0(state, state.out, cf, xInsn);
       state.out << " >= 0 ? 0 : 1;";
       insertLineEnd(state);
@@ -142,7 +142,7 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
 
    {
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_X);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::X);
       state.out << "sign(";
       insertSource0(state, state.out, cf, yInsn);
       state.out << ") * -(";
@@ -151,20 +151,20 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       insertLineEnd(state);
 
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_Y);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::Y);
       state.out << "-(";
       insertSource0(state, state.out, cf, zInsn);
       state.out << ");";
       insertLineEnd(state);
 
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_Z);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::Z);
       insertSource0(state, state.out, cf, yInsn);
       state.out << " * 2.0;";
       insertLineEnd(state);
 
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_W);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::W);
       state.out << "(";
       insertSource0(state, state.out, cf, yInsn);
       state.out << " >= 0) ? 2 : 3;";
@@ -179,13 +179,13 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
 
    {
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_X);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::X);
       insertSource0(state, state.out, cf, yInsn);
       state.out << ";";
       insertLineEnd(state);
 
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_Y);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::Y);
       state.out << "sign(";
       insertSource0(state, state.out, cf, zInsn);
       state.out << ") * -(";
@@ -194,13 +194,13 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       insertLineEnd(state);
 
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_Z);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::Z);
       insertSource0(state, state.out, cf, zInsn);
       state.out << " * 2.0;";
       insertLineEnd(state);
 
       insertLineStart(state);
-      insertPreviousValueUpdate(state.out, SQ_CHAN_W);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::W);
       state.out << "(";
       insertSource0(state, state.out, cf, zInsn);
       state.out << " >= 0) ? 4 : 5;";
@@ -241,14 +241,14 @@ DOT4(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       if (group[i].op2.WRITE_MASK()) {
          hasWriteMask = true;
          writeUnit = i;
-         insertDestBegin(state, cf, group[i], SQ_CHAN_X);
+         insertDestBegin(state, cf, group[i], SQ_CHAN::X);
          break;
       }
    }
 
    // If no instruction in the group has a dest, then we must still write to PV.x
    if (!hasWriteMask) {
-      insertPreviousValueUpdate(state.out, SQ_CHAN_X);
+      insertPreviousValueUpdate(state.out, SQ_CHAN::X);
    }
 
    state.out << "dot(";

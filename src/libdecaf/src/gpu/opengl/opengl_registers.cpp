@@ -272,7 +272,7 @@ GLDriver::applyRegister(latte::Register reg)
          gl::glCullFace(cullFace);
       }
 
-      auto frontFace = (pa_su_sc_mode_cntl.FACE() == latte::FACE_CW ? gl::GL_CW : gl::GL_CCW);
+      auto frontFace = (pa_su_sc_mode_cntl.FACE() == latte::PA_FACE::CW ? gl::GL_CW : gl::GL_CCW);
 
       if (mGLStateCache.frontFace != frontFace) {
          mGLStateCache.frontFace = frontFace;
@@ -361,21 +361,21 @@ gl::GLenum
 getRefFunc(latte::REF_FUNC func)
 {
    switch (func) {
-   case latte::REF_NEVER:
+   case latte::REF_FUNC::NEVER:
       return gl::GL_NEVER;
-   case latte::REF_LESS:
+   case latte::REF_FUNC::LESS:
       return gl::GL_LESS;
-   case latte::REF_EQUAL:
+   case latte::REF_FUNC::EQUAL:
       return gl::GL_EQUAL;
-   case latte::REF_LEQUAL:
+   case latte::REF_FUNC::LESS_EQUAL:
       return gl::GL_LEQUAL;
-   case latte::REF_GREATER:
+   case latte::REF_FUNC::GREATER:
       return gl::GL_GREATER;
-   case latte::REF_NOTEQUAL:
+   case latte::REF_FUNC::NOT_EQUAL:
       return gl::GL_NOTEQUAL;
-   case latte::REF_GEQUAL:
+   case latte::REF_FUNC::GREATER_EQUAL:
       return gl::GL_GEQUAL;
-   case latte::REF_ALWAYS:
+   case latte::REF_FUNC::ALWAYS:
       return gl::GL_ALWAYS;
    default:
       decaf_abort(fmt::format("Unimplemented REF_FUNC {}", func));
@@ -386,43 +386,43 @@ gl::GLenum
 getBlendFunc(latte::CB_BLEND_FUNC func)
 {
    switch (func) {
-   case latte::CB_BLEND_ZERO:
+   case latte::CB_BLEND_FUNC::ZERO:
       return gl::GL_ZERO;
-   case latte::CB_BLEND_ONE:
+   case latte::CB_BLEND_FUNC::ONE:
       return gl::GL_ONE;
-   case latte::CB_BLEND_SRC_COLOR:
+   case latte::CB_BLEND_FUNC::SRC_COLOR:
       return gl::GL_SRC_COLOR;
-   case latte::CB_BLEND_ONE_MINUS_SRC_COLOR:
+   case latte::CB_BLEND_FUNC::ONE_MINUS_SRC_COLOR:
       return gl::GL_ONE_MINUS_SRC_COLOR;
-   case latte::CB_BLEND_SRC_ALPHA:
+   case latte::CB_BLEND_FUNC::SRC_ALPHA:
       return gl::GL_SRC_ALPHA;
-   case latte::CB_BLEND_ONE_MINUS_SRC_ALPHA:
+   case latte::CB_BLEND_FUNC::ONE_MINUS_SRC_ALPHA:
       return gl::GL_ONE_MINUS_SRC_ALPHA;
-   case latte::CB_BLEND_DST_ALPHA:
+   case latte::CB_BLEND_FUNC::DST_ALPHA:
       return gl::GL_DST_ALPHA;
-   case latte::CB_BLEND_ONE_MINUS_DST_ALPHA:
+   case latte::CB_BLEND_FUNC::ONE_MINUS_DST_ALPHA:
       return gl::GL_ONE_MINUS_DST_ALPHA;
-   case latte::CB_BLEND_DST_COLOR:
+   case latte::CB_BLEND_FUNC::DST_COLOR:
       return gl::GL_DST_COLOR;
-   case latte::CB_BLEND_ONE_MINUS_DST_COLOR:
+   case latte::CB_BLEND_FUNC::ONE_MINUS_DST_COLOR:
       return gl::GL_ONE_MINUS_DST_COLOR;
-   case latte::CB_BLEND_SRC_ALPHA_SATURATE:
+   case latte::CB_BLEND_FUNC::SRC_ALPHA_SATURATE:
       return gl::GL_SRC_ALPHA_SATURATE;
-   case latte::CB_BLEND_CONSTANT_COLOR:
+   case latte::CB_BLEND_FUNC::CONSTANT_COLOR:
       return gl::GL_CONSTANT_COLOR;
-   case latte::CB_BLEND_ONE_MINUS_CONSTANT_COLOR:
+   case latte::CB_BLEND_FUNC::ONE_MINUS_CONSTANT_COLOR:
       return gl::GL_ONE_MINUS_CONSTANT_COLOR;
-   case latte::CB_BLEND_SRC1_COLOR:
+   case latte::CB_BLEND_FUNC::SRC1_COLOR:
       return gl::GL_SRC1_COLOR;
-   case latte::CB_BLEND_ONE_MINUS_SRC1_COLOR:
+   case latte::CB_BLEND_FUNC::ONE_MINUS_SRC1_COLOR:
       return gl::GL_ONE_MINUS_SRC1_COLOR;
-   case latte::CB_BLEND_SRC1_ALPHA:
+   case latte::CB_BLEND_FUNC::SRC1_ALPHA:
       return gl::GL_SRC1_ALPHA;
-   case latte::CB_BLEND_ONE_MINUS_SRC1_ALPHA:
+   case latte::CB_BLEND_FUNC::ONE_MINUS_SRC1_ALPHA:
       return gl::GL_ONE_MINUS_SRC1_ALPHA;
-   case latte::CB_BLEND_CONSTANT_ALPHA:
+   case latte::CB_BLEND_FUNC::CONSTANT_ALPHA:
       return gl::GL_CONSTANT_ALPHA;
-   case latte::CB_BLEND_ONE_MINUS_CONSTANT_ALPHA:
+   case latte::CB_BLEND_FUNC::ONE_MINUS_CONSTANT_ALPHA:
       return gl::GL_ONE_MINUS_CONSTANT_ALPHA;
    default:
       decaf_abort(fmt::format("Unimplemented CB_BLEND_FUNC {}", func));
@@ -433,15 +433,15 @@ gl::GLenum
 getBlendEquation(latte::CB_COMB_FUNC func)
 {
    switch (func) {
-   case latte::CB_COMB_DST_PLUS_SRC:
+   case latte::CB_COMB_FUNC::DST_PLUS_SRC:
       return gl::GL_FUNC_ADD;
-   case latte::CB_COMB_SRC_MINUS_DST:
+   case latte::CB_COMB_FUNC::SRC_MINUS_DST:
       return gl::GL_FUNC_SUBTRACT;
-   case latte::CB_COMB_MIN_DST_SRC:
+   case latte::CB_COMB_FUNC::MIN_DST_SRC:
       return gl::GL_MIN;
-   case latte::CB_COMB_MAX_DST_SRC:
+   case latte::CB_COMB_FUNC::MAX_DST_SRC:
       return gl::GL_MAX;
-   case latte::CB_COMB_DST_MINUS_SRC:
+   case latte::CB_COMB_FUNC::DST_MINUS_SRC:
       return gl::GL_FUNC_REVERSE_SUBTRACT;
    default:
       decaf_abort(fmt::format("Unimplemented CB_COMB_FUNC {}", func));
@@ -452,21 +452,21 @@ gl::GLenum
 getStencilFunc(latte::DB_STENCIL_FUNC func)
 {
    switch (func) {
-   case latte::DB_STENCIL_KEEP:
+   case latte::DB_STENCIL_FUNC::KEEP:
       return gl::GL_KEEP;
-   case latte::DB_STENCIL_ZERO:
+   case latte::DB_STENCIL_FUNC::ZERO:
       return gl::GL_ZERO;
-   case latte::DB_STENCIL_REPLACE:
+   case latte::DB_STENCIL_FUNC::REPLACE:
       return gl::GL_REPLACE;
-   case latte::DB_STENCIL_INCR_CLAMP:
+   case latte::DB_STENCIL_FUNC::INCR_CLAMP:
       return gl::GL_INCR;
-   case latte::DB_STENCIL_DECR_CLAMP:
+   case latte::DB_STENCIL_FUNC::DECR_CLAMP:
       return gl::GL_DECR;
-   case latte::DB_STENCIL_INVERT:
+   case latte::DB_STENCIL_FUNC::INVERT:
       return gl::GL_INVERT;
-   case latte::DB_STENCIL_INCR_WRAP:
+   case latte::DB_STENCIL_FUNC::INCR_WRAP:
       return gl::GL_INCR_WRAP;
-   case latte::DB_STENCIL_DECR_WRAP:
+   case latte::DB_STENCIL_FUNC::DECR_WRAP:
       return gl::GL_DECR_WRAP;
    default:
       decaf_abort(fmt::format("Unimplemented DB_STENCIL_FUNC {}", func));

@@ -1,53 +1,53 @@
-#pragma once
-#include "common/types.h"
+#ifndef LATTE_ENUM_DB_H
+#define LATTE_ENUM_DB_H
 
-namespace latte
-{
+#include "common/enum_start.h"
 
-enum DB_DEPTH_FORMAT : uint32_t
-{
-   DEPTH_INVALID           = 0,
-   DEPTH_16                = 1,
-   DEPTH_X8_24             = 2,
-   DEPTH_8_24              = 3,
-   DEPTH_X8_24_FLOAT       = 4,
-   DEPTH_8_24_FLOAT        = 5,
-   DEPTH_32_FLOAT          = 6,
-   DEPTH_X24_8_32_FLOAT    = 7,
-};
+ENUM_NAMESPACE_BEG(latte)
 
-enum DB_FORCE : uint32_t
-{
-   DB_FORCE_OFF        = 0,
-   DB_FORCE_ENABLE     = 1,
-   DB_FORCE_DISABLE    = 2,
-};
+ENUM_BEG(DB_FORMAT, uint32_t)
+   ENUM_VALUE(DEPTH_INVALID,              0)
+   ENUM_VALUE(DEPTH_16,                   1)
+   ENUM_VALUE(DEPTH_X8_24,                2)
+   ENUM_VALUE(DEPTH_8_24,                 3)
+   ENUM_VALUE(DEPTH_X8_24_FLOAT,          4)
+   ENUM_VALUE(DEPTH_8_24_FLOAT,           5)
+   ENUM_VALUE(DEPTH_32_FLOAT,             6)
+   ENUM_VALUE(DEPTH_X24_8_32_FLOAT,       7)
+ENUM_END(DB_FORMAT)
 
-enum DB_STENCIL_FUNC : uint32_t
-{
-   DB_STENCIL_KEEP         = 0,
-   DB_STENCIL_ZERO         = 1,
-   DB_STENCIL_REPLACE      = 2,
-   DB_STENCIL_INCR_CLAMP   = 3,
-   DB_STENCIL_DECR_CLAMP   = 4,
-   DB_STENCIL_INVERT       = 5,
-   DB_STENCIL_INCR_WRAP    = 6,
-   DB_STENCIL_DECR_WRAP    = 7,
-};
+ENUM_BEG(DB_FORCE, uint32_t)
+   ENUM_VALUE(OFF,                        0)
+   ENUM_VALUE(ENABLE,                     1)
+   ENUM_VALUE(DISABLE,                    2)
+ENUM_END(DB_FORCE)
 
-enum DB_Z_EXPORT : uint32_t
-{
-   DB_EXPORT_ANY_Z            = 0,
-   DB_EXPORT_LESS_THAN_Z      = 1,
-   DB_EXPORT_GREATER_THAN_Z   = 2,
-};
+ENUM_BEG(DB_STENCIL_FUNC, uint32_t)
+   ENUM_VALUE(KEEP,                       0)
+   ENUM_VALUE(ZERO,                       1)
+   ENUM_VALUE(REPLACE,                    2)
+   ENUM_VALUE(INCR_CLAMP,                 3)
+   ENUM_VALUE(DECR_CLAMP,                 4)
+   ENUM_VALUE(INVERT,                     5)
+   ENUM_VALUE(INCR_WRAP,                  6)
+   ENUM_VALUE(DECR_WRAP,                  7)
+ENUM_END(DB_STENCIL_FUNC)
 
-enum DB_Z_ORDER
-{
-   DB_LATE_Z               = 0,
-   DB_EARLY_Z_THEN_LATE_Z  = 1,
-   DB_RE_Z                 = 2,
-   DB_EARLY_Z_THEN_RE_Z    = 3,
-};
+ENUM_BEG(DB_Z_EXPORT, uint32_t)
+   ENUM_VALUE(ANY_Z,                      0)
+   ENUM_VALUE(LESS_THAN_Z,                1)
+   ENUM_VALUE(GREATER_THAN_Z,             2)
+ENUM_END(DB_Z_EXPORT)
 
-} // namespace latte
+ENUM_BEG(DB_Z_ORDER, uint32_t)
+   ENUM_VALUE(LATE_Z,                     0)
+   ENUM_VALUE(EARLY_Z_THEN_LATE_Z,        1)
+   ENUM_VALUE(RE_Z,                       2)
+   ENUM_VALUE(EARLY_Z_THEN_RE_Z,          3)
+ENUM_END(DB_Z_ORDER)
+
+ENUM_NAMESPACE_END(latte)
+
+#include "common/enum_end.h"
+
+#endif // ifdef LATTE_ENUM_DB_H

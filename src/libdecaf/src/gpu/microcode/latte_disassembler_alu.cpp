@@ -18,9 +18,9 @@ disassembleKcache(fmt::MemoryWriter &out,
                   uint32_t addr)
 {
    switch (mode) {
-   case SQ_CF_KCACHE_NOP:
+   case SQ_CF_KCACHE_MODE::NOP:
       break;
-   case SQ_CF_KCACHE_LOCK_1:
+   case SQ_CF_KCACHE_MODE::LOCK_1:
       out
          << " KCACHE" << id << "("
          << "cb" << bank << ", "
@@ -29,7 +29,7 @@ disassembleKcache(fmt::MemoryWriter &out,
          << (16 * addr + 15)
          << ")";
       break;
-   case SQ_CF_KCACHE_LOCK_2:
+   case SQ_CF_KCACHE_MODE::LOCK_2:
       out
          << " KCACHE" << id << "("
          << "cb" << bank << ", "
@@ -38,7 +38,7 @@ disassembleKcache(fmt::MemoryWriter &out,
          << (16 * addr + 31)
          << ")";
       break;
-   case SQ_CF_KCACHE_LOCK_LOOP_INDEX:
+   case SQ_CF_KCACHE_MODE::LOCK_LOOP_INDEX:
       out
          << " KCACHE" << id << "("
          << "cb" << bank << ", "
@@ -72,121 +72,121 @@ disassembleAluSource(fmt::MemoryWriter &out,
       out << "|";
    }
 
-   if (sel >= SQ_ALU_KCACHE_BANK0_FIRST && sel <= SQ_ALU_KCACHE_BANK0_LAST) {
-      auto id = sel - SQ_ALU_KCACHE_BANK0_FIRST;
+   if (sel >= SQ_ALU_SRC::KCACHE_BANK0_FIRST && sel <= SQ_ALU_SRC::KCACHE_BANK0_LAST) {
+      auto id = sel - SQ_ALU_SRC::KCACHE_BANK0_FIRST;
       out << "KCACHE0[" << id << "]";
-   } else if (sel >= SQ_ALU_KCACHE_BANK1_FIRST && sel <= SQ_ALU_KCACHE_BANK1_LAST) {
-      auto id = sel - SQ_ALU_KCACHE_BANK1_FIRST;
+   } else if (sel >= SQ_ALU_SRC::KCACHE_BANK1_FIRST && sel <= SQ_ALU_SRC::KCACHE_BANK1_LAST) {
+      auto id = sel - SQ_ALU_SRC::KCACHE_BANK1_FIRST;
       out << "KCACHE1[" << id << "]";
-   } else if (sel >= SQ_ALU_REGISTER_FIRST && sel <= SQ_ALU_REGISTER_LAST) {
-      out << "R" << (sel - SQ_ALU_REGISTER_FIRST);
-   } else if (sel >= SQ_ALU_SRC_CONST_FILE_FIRST && sel <= SQ_ALU_SRC_CONST_FILE_LAST) {
-      out << "C" << (sel - SQ_ALU_SRC_CONST_FILE_FIRST);
+   } else if (sel >= SQ_ALU_SRC::REGISTER_FIRST && sel <= SQ_ALU_SRC::REGISTER_LAST) {
+      out << "R" << (sel - SQ_ALU_SRC::REGISTER_FIRST);
+   } else if (sel >= SQ_ALU_SRC::CONST_FILE_FIRST && sel <= SQ_ALU_SRC::CONST_FILE_LAST) {
+      out << "C" << (sel - SQ_ALU_SRC::CONST_FILE_FIRST);
    } else {
       useChannel = false;
 
       switch (sel) {
-      case SQ_ALU_SRC_LDS_OQ_A:
+      case SQ_ALU_SRC::LDS_OQ_A:
          out << "LDS_OQ_A";
          break;
-      case SQ_ALU_SRC_LDS_OQ_B:
+      case SQ_ALU_SRC::LDS_OQ_B:
          out << "LDS_OQ_B";
          break;
-      case SQ_ALU_SRC_LDS_OQ_A_POP:
+      case SQ_ALU_SRC::LDS_OQ_A_POP:
          out << "LDS_OQ_A_POP";
          break;
-      case SQ_ALU_SRC_LDS_OQ_B_POP:
+      case SQ_ALU_SRC::LDS_OQ_B_POP:
          out << "LDS_OQ_B_POP";
          break;
-      case SQ_ALU_SRC_LDS_DIRECT_A:
+      case SQ_ALU_SRC::LDS_DIRECT_A:
          out << "LDS_DIRECT_A";
          break;
-      case SQ_ALU_SRC_LDS_DIRECT_B:
+      case SQ_ALU_SRC::LDS_DIRECT_B:
          out << "LDS_DIRECT_B";
          break;
-      case SQ_ALU_SRC_TIME_HI:
+      case SQ_ALU_SRC::TIME_HI:
          out << "TIME_HI";
          break;
-      case SQ_ALU_SRC_TIME_LO:
+      case SQ_ALU_SRC::TIME_LO:
          out << "TIME_LO";
          break;
-      case SQ_ALU_SRC_MASK_HI:
+      case SQ_ALU_SRC::MASK_HI:
          out << "MASK_HI";
          break;
-      case SQ_ALU_SRC_MASK_LO:
+      case SQ_ALU_SRC::MASK_LO:
          out << "MASK_LO";
          break;
-      case SQ_ALU_SRC_HW_WAVE_ID:
+      case SQ_ALU_SRC::HW_WAVE_ID:
          out << "HW_WAVE_ID";
          break;
-      case SQ_ALU_SRC_SIMD_ID:
+      case SQ_ALU_SRC::SIMD_ID:
          out << "SIMD_ID";
          break;
-      case SQ_ALU_SRC_SE_ID:
+      case SQ_ALU_SRC::SE_ID:
          out << "SE_ID";
          break;
-      case SQ_ALU_SRC_HW_THREADGRP_ID:
+      case SQ_ALU_SRC::HW_THREADGRP_ID:
          out << "HW_THREADGRP_ID";
          break;
-      case SQ_ALU_SRC_WAVE_ID_IN_GRP:
+      case SQ_ALU_SRC::WAVE_ID_IN_GRP:
          out << "WAVE_ID_IN_GRP";
          break;
-      case SQ_ALU_SRC_NUM_THREADGRP_WAVES:
+      case SQ_ALU_SRC::NUM_THREADGRP_WAVES:
          out << "NUM_THREADGRP_WAVES";
          break;
-      case SQ_ALU_SRC_HW_ALU_ODD:
+      case SQ_ALU_SRC::HW_ALU_ODD:
          out << "HW_ALU_ODD";
          break;
-      case SQ_ALU_SRC_LOOP_IDX:
+      case SQ_ALU_SRC::LOOP_IDX:
          out << "AL";
          break;
-      case SQ_ALU_SRC_PARAM_BASE_ADDR:
+      case SQ_ALU_SRC::PARAM_BASE_ADDR:
          out << "PARAM_BASE_ADDR";
          break;
-      case SQ_ALU_SRC_NEW_PRIM_MASK:
+      case SQ_ALU_SRC::NEW_PRIM_MASK:
          out << "NEW_PRIM_MASK";
          break;
-      case SQ_ALU_SRC_PRIM_MASK_HI:
+      case SQ_ALU_SRC::PRIM_MASK_HI:
          out << "PRIM_MASK_HI";
          break;
-      case SQ_ALU_SRC_PRIM_MASK_LO:
+      case SQ_ALU_SRC::PRIM_MASK_LO:
          out << "PRIM_MASK_LO";
          break;
-      case SQ_ALU_SRC_1_DBL_L:
+      case SQ_ALU_SRC::IMM_1_DBL_L:
          out << "1.0_L";
          break;
-      case SQ_ALU_SRC_1_DBL_M:
+      case SQ_ALU_SRC::IMM_1_DBL_M:
          out << "1.0_M";
          break;
-      case SQ_ALU_SRC_0_5_DBL_L:
+      case SQ_ALU_SRC::IMM_0_5_DBL_L:
          out << "0.5_L";
          break;
-      case SQ_ALU_SRC_0_5_DBL_M:
+      case SQ_ALU_SRC::IMM_0_5_DBL_M:
          out << "0.5_M";
          break;
-      case SQ_ALU_SRC_0:
+      case SQ_ALU_SRC::IMM_0:
          out << "0.0f";
          break;
-      case SQ_ALU_SRC_1:
+      case SQ_ALU_SRC::IMM_1:
          out << "1.0f";
          break;
-      case SQ_ALU_SRC_1_INT:
+      case SQ_ALU_SRC::IMM_1_INT:
          out << "1";
          break;
-      case SQ_ALU_SRC_M_1_INT:
+      case SQ_ALU_SRC::IMM_M_1_INT:
          out << "-1";
          break;
-      case SQ_ALU_SRC_0_5:
+      case SQ_ALU_SRC::IMM_0_5:
          out << "0.5f";
          break;
-      case SQ_ALU_SRC_LITERAL:
+      case SQ_ALU_SRC::LITERAL:
          out.write("(0x{:08X}, {})", literalValue, bit_cast<float>(literalValue));
          break;
-      case SQ_ALU_SRC_PV:
+      case SQ_ALU_SRC::PV:
          out << "PV" << (groupPC - 1);
          useChannel = true;
          break;
-      case SQ_ALU_SRC_PS:
+      case SQ_ALU_SRC::PS:
          out << "PS" << (groupPC - 1);
          break;
       default:
@@ -196,19 +196,19 @@ disassembleAluSource(fmt::MemoryWriter &out,
 
    if (rel) {
       switch (indexMode) {
-      case SQ_INDEX_AR_X:
+      case SQ_INDEX_MODE::AR_X:
          out << "[AR.x]";
          break;
-      case SQ_INDEX_AR_Y:
+      case SQ_INDEX_MODE::AR_Y:
          out << "[AR.y]";
          break;
-      case SQ_INDEX_AR_Z:
+      case SQ_INDEX_MODE::AR_Z:
          out << "[AR.z]";
          break;
-      case SQ_INDEX_AR_W:
+      case SQ_INDEX_MODE::AR_W:
          out << "[AR.w]";
          break;
-      case SQ_INDEX_LOOP:
+      case SQ_INDEX_MODE::LOOP:
          out << "[AL]";
          break;
       default:
@@ -218,16 +218,16 @@ disassembleAluSource(fmt::MemoryWriter &out,
 
    if (useChannel) {
       switch (chan) {
-      case SQ_CHAN_X:
+      case SQ_CHAN::X:
          out << ".x";
          break;
-      case SQ_CHAN_Y:
+      case SQ_CHAN::Y:
          out << ".y";
          break;
-      case SQ_CHAN_Z:
+      case SQ_CHAN::Z:
          out << ".z";
          break;
-      case SQ_CHAN_W:
+      case SQ_CHAN::W:
          out << ".w";
          break;
       default:
@@ -254,7 +254,7 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
    SQ_ALU_FLAGS flags;
    auto srcCount = 0u;
 
-   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+   if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       name = getInstructionName(inst.op2.ALU_INST());
       flags = getInstructionFlags(inst.op2.ALU_INST());
       srcCount = getInstructionNumSrcs(inst.op2.ALU_INST());
@@ -268,7 +268,7 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
 
    auto writeMask = true;
 
-   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+   if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       writeMask = inst.op2.WRITE_MASK();
    }
 
@@ -291,11 +291,11 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
       auto literal = 0u;
       auto abs = false;
 
-      if (inst.word0.SRC0_SEL() == SQ_ALU_SRC_LITERAL) {
+      if (inst.word0.SRC0_SEL() == SQ_ALU_SRC::LITERAL) {
          literal = literals[inst.word0.SRC0_CHAN()];
       }
 
-      if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+      if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
          abs = !!inst.op2.SRC0_ABS();
       }
 
@@ -316,11 +316,11 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
       auto literal = 0u;
       auto abs = false;
 
-      if (inst.word0.SRC1_SEL() == SQ_ALU_SRC_LITERAL) {
+      if (inst.word0.SRC1_SEL() == SQ_ALU_SRC::LITERAL) {
          literal = literals[inst.word0.SRC1_CHAN()];
       }
 
-      if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+      if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
          abs = !!inst.op2.SRC1_ABS();
       }
 
@@ -340,7 +340,7 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
    if (srcCount > 2) {
       auto literal = 0u;
 
-      if (inst.op3.SRC2_SEL() == SQ_ALU_SRC_LITERAL) {
+      if (inst.op3.SRC2_SEL() == SQ_ALU_SRC::LITERAL) {
          literal = literals[inst.op3.SRC2_CHAN()];
       }
 
@@ -363,16 +363,16 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
 
    if (isTranscendentalOnly(flags)) {
       switch (inst.word1.BANK_SWIZZLE()) {
-      case SQ_ALU_SCL_210:
+      case SQ_ALU_SCL_BANK_SWIZZLE::SCL_210:
          out << " SCL_210";
          break;
-      case SQ_ALU_SCL_122:
+      case SQ_ALU_SCL_BANK_SWIZZLE::SCL_122:
          out << " SCL_122";
          break;
-      case SQ_ALU_SCL_212:
+      case SQ_ALU_SCL_BANK_SWIZZLE::SCL_212:
          out << " SCL_212";
          break;
-      case SQ_ALU_SCL_221:
+      case SQ_ALU_SCL_BANK_SWIZZLE::SCL_221:
          out << " SCL_221";
          break;
       default:
@@ -380,22 +380,22 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
       }
    } else {
       switch (inst.word1.BANK_SWIZZLE()) {
-      case SQ_ALU_VEC_012:
+      case SQ_ALU_VEC_BANK_SWIZZLE::VEC_012:
          // This is default, no need to print
          break;
-      case SQ_ALU_VEC_021:
+      case SQ_ALU_VEC_BANK_SWIZZLE::VEC_021:
          out << " VEC_021";
          break;
-      case SQ_ALU_VEC_120:
+      case SQ_ALU_VEC_BANK_SWIZZLE::VEC_120:
          out << " VEC_120";
          break;
-      case SQ_ALU_VEC_102:
+      case SQ_ALU_VEC_BANK_SWIZZLE::VEC_102:
          out << " VEC_102";
          break;
-      case SQ_ALU_VEC_201:
+      case SQ_ALU_VEC_BANK_SWIZZLE::VEC_201:
          out << " VEC_201";
          break;
-      case SQ_ALU_VEC_210:
+      case SQ_ALU_VEC_BANK_SWIZZLE::VEC_210:
          out << " VEC_210";
          break;
       default:
@@ -404,33 +404,33 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
    }
 
    switch (inst.word0.PRED_SEL()) {
-   case SQ_PRED_SEL_OFF:
+   case SQ_PRED_SEL::OFF:
       break;
-   case SQ_PRED_SEL_ZERO:
+   case SQ_PRED_SEL::ZERO:
       out << " PRED_SEL_ZERO";
       break;
-   case SQ_PRED_SEL_ONE:
+   case SQ_PRED_SEL::ONE:
       out << " PRED_SEL_ONE";
       break;
    default:
       decaf_abort(fmt::format("Unexpected PRED_SEL {}", inst.word0.PRED_SEL()));
    }
 
-   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+   if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       if (inst.op2.UPDATE_EXECUTE_MASK()) {
          out << " UPDATE_EXECUTE_MASK";
 
          switch (inst.op2.EXECUTE_MASK_OP()) {
-         case SQ_ALU_EXECUTE_MASK_OP_DEACTIVATE:
+         case SQ_ALU_EXECUTE_MASK_OP::DEACTIVATE:
             out << " DEACTIVATE";
             break;
-         case SQ_ALU_EXECUTE_MASK_OP_BREAK:
+         case SQ_ALU_EXECUTE_MASK_OP::BREAK:
             out << " BREAK";
             break;
-         case SQ_ALU_EXECUTE_MASK_OP_CONTINUE:
+         case SQ_ALU_EXECUTE_MASK_OP::CONTINUE:
             out << " CONTINUE";
             break;
-         case SQ_ALU_EXECUTE_MASK_OP_KILL:
+         case SQ_ALU_EXECUTE_MASK_OP::KILL:
             out << " KILL";
             break;
          default:
@@ -438,15 +438,15 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
          }
       } else {
          switch (inst.op2.OMOD()) {
-         case SQ_ALU_OMOD_OFF:
+         case SQ_ALU_OMOD::OFF:
             break;
-         case SQ_ALU_OMOD_D2:
+         case SQ_ALU_OMOD::D2:
             out << " OMOD_D2";
             break;
-         case SQ_ALU_OMOD_M2:
+         case SQ_ALU_OMOD::M2:
             out << " OMOD_M2";
             break;
-         case SQ_ALU_OMOD_M4:
+         case SQ_ALU_OMOD::M4:
             out << " OMOD_M4";
             break;
          default:

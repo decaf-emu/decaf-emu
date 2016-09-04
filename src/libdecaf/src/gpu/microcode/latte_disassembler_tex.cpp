@@ -31,10 +31,10 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
    auto dstSelZ = tex.word1.DST_SEL_Z();
    auto dstSelW = tex.word1.DST_SEL_W();
 
-   if (dstSelX != latte::SQ_SEL_MASK || dstSelY != latte::SQ_SEL_MASK || dstSelZ != latte::SQ_SEL_MASK || dstSelW != latte::SQ_SEL_MASK) {
+   if (dstSelX != latte::SQ_SEL::SEL_MASK || dstSelY != latte::SQ_SEL::SEL_MASK || dstSelZ != latte::SQ_SEL::SEL_MASK || dstSelW != latte::SQ_SEL::SEL_MASK) {
       out << "R" << tex.word1.DST_GPR();
 
-      if (tex.word1.DST_REL() == SQ_RELATIVE) {
+      if (tex.word1.DST_REL() == SQ_REL::REL) {
          out << "[AL]";
       }
 
@@ -52,7 +52,7 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
    // src
    out << ", R" << tex.word0.SRC_GPR();
 
-   if (tex.word0.SRC_REL() == SQ_RELATIVE) {
+   if (tex.word0.SRC_REL() == SQ_REL::REL) {
       out << "[AL]";
    }
 

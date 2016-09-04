@@ -1,151 +1,145 @@
-#pragma once
-#include "common/types.h"
+#ifndef LATTE_ENUM_VGT_H
+#define LATTE_ENUM_VGT_H
 
-namespace latte
-{
+#include "common/enum_start.h"
 
-enum VGT_DI_MAJOR_MODE : uint32_t
-{
-   VGT_DI_MAJOR_MODE0               = 0,
-   VGT_DI_MAJOR_MODE1               = 1,
-};
+ENUM_NAMESPACE_BEG(latte)
 
-enum VGT_DI_PRIMITIVE_TYPE
-{
-   VGT_DI_PT_NONE                   = 0,
-   VGT_DI_PT_POINTLIST              = 1,
-   VGT_DI_PT_LINELIST               = 2,
-   VGT_DI_PT_LINESTRIP              = 3,
-   VGT_DI_PT_TRILIST                = 4,
-   VGT_DI_PT_TRIFAN                 = 5,
-   VGT_DI_PT_TRISTRIP               = 6,
-   VGT_DI_PT_UNUSED_0               = 7,
-   VGT_DI_PT_UNUSED_1               = 8,
-   VGT_DI_PT_UNUSED_2               = 9,
-   VGT_DI_PT_LINELIST_ADJ           = 10,
-   VGT_DI_PT_LINESTRIP_ADJ          = 11,
-   VGT_DI_PT_TRILIST_ADJ            = 12,
-   VGT_DI_PT_TRISTRIP_ADJ           = 13,
-   VGT_DI_PT_UNUSED_3               = 14,
-   VGT_DI_PT_UNUSED_4               = 15,
-   VGT_DI_PT_TRI_WITH_WFLAGS        = 16,
-   VGT_DI_PT_RECTLIST               = 17,
-   VGT_DI_PT_LINELOOP               = 18,
-   VGT_DI_PT_QUADLIST               = 19,
-   VGT_DI_PT_QUADSTRIP              = 20,
-   VGT_DI_PT_POLYGON                = 21,
-   VGT_DI_PT_2D_COPY_RECT_LIST_V0   = 22,
-   VGT_DI_PT_2D_COPY_RECT_LIST_V1   = 23,
-   VGT_DI_PT_2D_COPY_RECT_LIST_V2   = 24,
-   VGT_DI_PT_2D_COPY_RECT_LIST_V3   = 25,
-   VGT_DI_PT_2D_FILL_RECT_LIST      = 26,
-   VGT_DI_PT_2D_LINE_STRIP          = 27,
-   VGT_DI_PT_2D_TRI_STRIP           = 28,
-};
+ENUM_BEG(VGT_DI_MAJOR_MODE, uint32_t)
+   ENUM_VALUE(MODE0,                            0)
+   ENUM_VALUE(MODE1,                            1)
+ENUM_END(VGT_DI_MAJOR_MODE)
 
-enum VGT_DI_SRC_SEL : uint32_t
-{
-   VGT_DI_SRC_SEL_DMA               = 0,
-   VGT_DI_SRC_SEL_IMMEDIATE         = 1,
-   VGT_DI_SRC_SEL_AUTO_INDEX        = 2,
-   VGT_DI_SRC_SEL_RESERVED          = 3,
-};
+ENUM_BEG(VGT_DI_PRIMITIVE_TYPE, uint32_t)
+   ENUM_VALUE(NONE,                             0)
+   ENUM_VALUE(POINTLIST,                        1)
+   ENUM_VALUE(LINELIST,                         2)
+   ENUM_VALUE(LINESTRIP,                        3)
+   ENUM_VALUE(TRILIST,                          4)
+   ENUM_VALUE(TRIFAN,                           5)
+   ENUM_VALUE(TRISTRIP,                         6)
+   ENUM_VALUE(UNUSED_0,                         7)
+   ENUM_VALUE(UNUSED_1,                         8)
+   ENUM_VALUE(UNUSED_2,                         9)
+   ENUM_VALUE(LINELIST_ADJ,                     10)
+   ENUM_VALUE(LINESTRIP_ADJ,                    11)
+   ENUM_VALUE(TRILIST_ADJ,                      12)
+   ENUM_VALUE(TRISTRIP_ADJ,                     13)
+   ENUM_VALUE(UNUSED_3,                         14)
+   ENUM_VALUE(UNUSED_4,                         15)
+   ENUM_VALUE(TRI_WITH_WFLAGS,                  16)
+   ENUM_VALUE(RECTLIST,                         17)
+   ENUM_VALUE(LINELOOP,                         18)
+   ENUM_VALUE(QUADLIST,                         19)
+   ENUM_VALUE(QUADSTRIP,                        20)
+   ENUM_VALUE(POLYGON,                          21)
+   ENUM_VALUE(COPY_RECT_LIST_2D_V0,             22)
+   ENUM_VALUE(COPY_RECT_LIST_2D_V1,             23)
+   ENUM_VALUE(COPY_RECT_LIST_2D_V2,             24)
+   ENUM_VALUE(COPY_RECT_LIST_2D_V3,             25)
+   ENUM_VALUE(FILL_RECT_LIST_2D,                26)
+   ENUM_VALUE(LINE_STRIP_2D,                    27)
+   ENUM_VALUE(TRI_STRIP_2D,                     28)
+ENUM_END(VGT_DI_PRIMITIVE_TYPE)
 
-enum VGT_DMA_SWAP : uint32_t
-{
-   VGT_DMA_SWAP_NONE                = 0,
-   VGT_DMA_SWAP_16_BIT              = 1,
-   VGT_DMA_SWAP_32_BIT              = 2,
-   VGT_DMA_SWAP_WORD                = 3,
-};
+ENUM_BEG(VGT_DI_SRC_SEL, uint32_t)
+   ENUM_VALUE(DMA,                              0)
+   ENUM_VALUE(IMMEDIATE,                        1)
+   ENUM_VALUE(AUTO_INDEX,                       2)
+   ENUM_VALUE(RESERVED,                         3)
+ENUM_END(VGT_DI_SRC_SEL)
 
-enum VGT_GS_CUT_MODE : uint32_t
-{
-   GS_CUT_1024                      = 0,
-   GS_CUT_512                       = 1,
-   GS_CUT_256                       = 2,
-   GS_CUT_128                       = 3,
-};
+ENUM_BEG(VGT_DMA_SWAP, uint32_t)
+   ENUM_VALUE(NONE,                             0)
+   ENUM_VALUE(SWAP_16_BIT,                      1)
+   ENUM_VALUE(SWAP_32_BIT,                      2)
+   ENUM_VALUE(SWAP_WORD,                        3)
+ENUM_END(VGT_DMA_SWAP)
 
-enum VGT_GS_ENABLE_MODE : uint32_t
-{
-   GS_OFF                           = 0,
-   GS_SCENARIO_A                    = 1,
-   GS_SCENARIO_B                    = 2,
-   GS_SCENARIO_G                    = 3,
-};
+ENUM_BEG(VGT_GS_CUT_MODE, uint32_t)
+   ENUM_VALUE(CUT_1024,                         0)
+   ENUM_VALUE(CUT_512,                          1)
+   ENUM_VALUE(CUT_256,                          2)
+   ENUM_VALUE(CUT_128,                          3)
+ENUM_END(VGT_GS_CUT_MODE)
 
-enum VGT_EVENT_TYPE : uint32_t
-{
-   VGT_EVENT_TYPE_CACHE_FLUSH_TS                   = 4,
-   VGT_EVENT_TYPE_CONTEXT_DONE                     = 5,
-   VGT_EVENT_TYPE_CACHE_FLUSH                      = 6,
-   VGT_EVENT_TYPE_VIZQUERY_START                   = 7,
-   VGT_EVENT_TYPE_VIZQUERY_END                     = 8,
-   VGT_EVENT_TYPE_SC_WAIT_WC                       = 9,
-   VGT_EVENT_TYPE_MPASS_PS_CP_REFETCH              = 10,
-   VGT_EVENT_TYPE_MPASS_PS_RST_START               = 11,
-   VGT_EVENT_TYPE_MPASS_PS_INCR_START              = 12,
-   VGT_EVENT_TYPE_RST_PIX_CNT                      = 13,
-   VGT_EVENT_TYPE_RST_VTX_CNT                      = 14,
-   VGT_EVENT_TYPE_VS_PARTIAL_FLUSH                 = 15,
-   VGT_EVENT_TYPE_PS_PARTIAL_FLUSH                 = 16,
-   VGT_EVENT_TYPE_CACHE_FLUSH_AND_INV_TS_EVENT     = 20,
-   VGT_EVENT_TYPE_ZPASS_DONE                       = 21,
-   VGT_EVENT_TYPE_CACHE_FLUSH_AND_INV_EVENT        = 22,
-   VGT_EVENT_TYPE_PERFCOUNTER_START                = 23,
-   VGT_EVENT_TYPE_PERFCOUNTER_STOP                 = 24,
-   VGT_EVENT_TYPE_PIPELINESTAT_START               = 25,
-   VGT_EVENT_TYPE_PIPELINESTAT_STOP                = 26,
-   VGT_EVENT_TYPE_PERFCOUNTER_SAMPLE               = 27,
-   VGT_EVENT_TYPE_FLUSH_ES_OUTPUT                  = 28,
-   VGT_EVENT_TYPE_FLUSH_GS_OUTPUT                  = 29,
-   VGT_EVENT_TYPE_SAMPLE_PIPELINESTAT              = 30,
-   VGT_EVENT_TYPE_SO_VGTSTREAMOUT_FLUSH            = 31,
-   VGT_EVENT_TYPE_SAMPLE_STREAMOUTSTATS            = 32,
-   VGT_EVENT_TYPE_RESET_VTX_CNT                    = 33,
-   VGT_EVENT_TYPE_BLOCK_CONTEXT_DONE               = 34,
-   VGT_EVENT_TYPE_VGT_FLUSH                        = 36,
-   VGT_EVENT_TYPE_SQ_NON_EVENT                     = 38,
-   VGT_EVENT_TYPE_SC_SEND_DB_VPZ                   = 39,
-   VGT_EVENT_TYPE_BOTTOM_OF_PIPE_TS                = 40,
-   VGT_EVENT_TYPE_FLUSH_SX_TS                      = 41,
-   VGT_EVENT_TYPE_DB_CACHE_FLUSH_AND_INV           = 42,
-   VGT_EVENT_TYPE_FLUSH_AND_INV_DB_DATA_TS         = 43,
-   VGT_EVENT_TYPE_FLUSH_AND_INV_DB_META            = 44,
-   VGT_EVENT_TYPE_FLUSH_AND_INV_CB_DATA_TS         = 45,
-   VGT_EVENT_TYPE_FLUSH_AND_INV_CB_META            = 46,
-};
+ENUM_BEG(VGT_GS_ENABLE_MODE, uint32_t)
+   ENUM_VALUE(OFF,                              0)
+   ENUM_VALUE(SCENARIO_A,                       1)
+   ENUM_VALUE(SCENARIO_B,                       2)
+   ENUM_VALUE(SCENARIO_G,                       3)
+ENUM_END(VGT_GS_ENABLE_MODE)
 
-enum VGT_EVENT_INDEX : uint32_t
-{
-   VGT_EVENT_INDEX_GENERIC                = 0,
-   VGT_EVENT_INDEX_ZPASS_DONE             = 1,
-   VGT_EVENT_INDEX_SAMPLE_PIPELINESTAT    = 2,
-   VGT_EVENT_INDEX_SAMPLE_STREAMOUTSTAT   = 3,
-   VGT_EVENT_INDEX_PARTIAL_FLUSH          = 4,
-   VGT_EVENT_INDEX_CACHE_FLUSH            = 7,
-};
+ENUM_BEG(VGT_EVENT_TYPE, uint32_t)
+   ENUM_VALUE(CACHE_FLUSH_TS,                   4)
+   ENUM_VALUE(CONTEXT_DONE,                     5)
+   ENUM_VALUE(CACHE_FLUSH,                      6)
+   ENUM_VALUE(VIZQUERY_START,                   7)
+   ENUM_VALUE(VIZQUERY_END,                     8)
+   ENUM_VALUE(SC_WAIT_WC,                       9)
+   ENUM_VALUE(MPASS_PS_CP_REFETCH,              10)
+   ENUM_VALUE(MPASS_PS_RST_START,               11)
+   ENUM_VALUE(MPASS_PS_INCR_START,              12)
+   ENUM_VALUE(RST_PIX_CNT,                      13)
+   ENUM_VALUE(RST_VTX_CNT,                      14)
+   ENUM_VALUE(VS_PARTIAL_FLUSH,                 15)
+   ENUM_VALUE(PS_PARTIAL_FLUSH,                 16)
+   ENUM_VALUE(CACHE_FLUSH_AND_INV_TS_EVENT,     20)
+   ENUM_VALUE(ZPASS_DONE,                       21)
+   ENUM_VALUE(CACHE_FLUSH_AND_INV_EVENT,        22)
+   ENUM_VALUE(PERFCOUNTER_START,                23)
+   ENUM_VALUE(PERFCOUNTER_STOP,                 24)
+   ENUM_VALUE(PIPELINESTAT_START,               25)
+   ENUM_VALUE(PIPELINESTAT_STOP,                26)
+   ENUM_VALUE(PERFCOUNTER_SAMPLE,               27)
+   ENUM_VALUE(FLUSH_ES_OUTPUT,                  28)
+   ENUM_VALUE(FLUSH_GS_OUTPUT,                  29)
+   ENUM_VALUE(SAMPLE_PIPELINESTAT,              30)
+   ENUM_VALUE(SO_VGTSTREAMOUT_FLUSH,            31)
+   ENUM_VALUE(SAMPLE_STREAMOUTSTATS,            32)
+   ENUM_VALUE(RESET_VTX_CNT,                    33)
+   ENUM_VALUE(BLOCK_CONTEXT_DONE,               34)
+   ENUM_VALUE(VGT_FLUSH,                        36)
+   ENUM_VALUE(SQ_NON_EVENT,                     38)
+   ENUM_VALUE(SC_SEND_DB_VPZ,                   39)
+   ENUM_VALUE(BOTTOM_OF_PIPE_TS,                40)
+   ENUM_VALUE(FLUSH_SX_TS,                      41)
+   ENUM_VALUE(DB_CACHE_FLUSH_AND_INV,           42)
+   ENUM_VALUE(FLUSH_AND_INV_DB_DATA_TS,         43)
+   ENUM_VALUE(FLUSH_AND_INV_DB_META,            44)
+   ENUM_VALUE(FLUSH_AND_INV_CB_DATA_TS,         45)
+   ENUM_VALUE(FLUSH_AND_INV_CB_META,            46)
+ENUM_END(VGT_EVENT_TYPE)
 
-enum VGT_GS_OUT_PRIMITIVE_TYPE : uint32_t
-{
-   VGT_GS_OUT_PT_POINTLIST          = 0,
-   VGT_GS_OUT_PT_LINESTRIP          = 1,
-   VGT_GS_OUT_PT_TRISTRIP           = 2,
-};
+ENUM_BEG(VGT_EVENT_INDEX, uint32_t)
+   ENUM_VALUE(GENERIC,                          0)
+   ENUM_VALUE(ZPASS_DONE,                       1)
+   ENUM_VALUE(SAMPLE_PIPELINESTAT,              2)
+   ENUM_VALUE(SAMPLE_STREAMOUTSTAT,             3)
+   ENUM_VALUE(PARTIAL_FLUSH,                    4)
+   ENUM_VALUE(CACHE_FLUSH,                      7)
+ENUM_END(VGT_EVENT_INDEX)
 
-enum VGT_INDEX : uint32_t
-{
-   VGT_INDEX_16                     = 0,
-   VGT_INDEX_32                     = 1,
-};
+ENUM_BEG(VGT_GS_OUT_PRIMITIVE_TYPE, uint32_t)
+   ENUM_VALUE(POINTLIST,                        0)
+   ENUM_VALUE(LINESTRIP,                        1)
+   ENUM_VALUE(TRISTRIP,                         2)
+ENUM_END(VGT_GS_OUT_PRIMITIVE_TYPE)
 
-enum VGT_OUTPUT_PATH_SELECT : uint32_t
-{
-   VGT_OUTPATH_VTX_REUSE            = 0,
-   VGT_OUTPATH_TESS_EN              = 1,
-   VGT_OUTPATH_PASSTHRU             = 2,
-   VGT_OUTPATH_GS_BLOCK             = 3,
-};
+ENUM_BEG(VGT_INDEX_TYPE, uint32_t)
+   ENUM_VALUE(INDEX_16,                         0)
+   ENUM_VALUE(INDEX_32,                         1)
+ENUM_END(VGT_INDEX_TYPE)
 
-} // namespace latte
+ENUM_BEG(VGT_OUTPUT_PATH_SELECT, uint32_t)
+   ENUM_VALUE(VTX_REUSE,                        0)
+   ENUM_VALUE(TESS_EN,                          1)
+   ENUM_VALUE(PASSTHRU,                         2)
+   ENUM_VALUE(GS_BLOCK,                         3)
+ENUM_END(VGT_OUTPUT_PATH_SELECT)
+
+ENUM_NAMESPACE_END(latte)
+
+#include "common/enum_end.h"
+
+#endif // ifdef LATTE_ENUM_VGT_H

@@ -48,21 +48,21 @@ struct AluGroup
          auto &inst = group[instructionCount - 1];
          auto srcCount = 0u;
 
-         if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+         if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
             srcCount = getInstructionNumSrcs(inst.op2.ALU_INST());
          } else {
             srcCount = getInstructionNumSrcs(inst.op3.ALU_INST());
          }
 
-         if (srcCount > 0 && inst.word0.SRC0_SEL() == SQ_ALU_SRC_LITERAL) {
+         if (srcCount > 0 && inst.word0.SRC0_SEL() == SQ_ALU_SRC::LITERAL) {
             literalCount = std::max<unsigned>(literalCount, 1u + inst.word0.SRC0_CHAN());
          }
 
-         if (srcCount > 1 && inst.word0.SRC1_SEL() == SQ_ALU_SRC_LITERAL) {
+         if (srcCount > 1 && inst.word0.SRC1_SEL() == SQ_ALU_SRC::LITERAL) {
             literalCount = std::max<unsigned>(literalCount, 1u + inst.word0.SRC1_CHAN());
          }
 
-         if (srcCount > 2 && inst.op3.SRC2_SEL() == SQ_ALU_SRC_LITERAL) {
+         if (srcCount > 2 && inst.op3.SRC2_SEL() == SQ_ALU_SRC::LITERAL) {
             literalCount = std::max<unsigned>(literalCount, 1u + inst.op3.SRC2_CHAN());
          }
 
@@ -93,18 +93,18 @@ struct AluGroupUnits
       SQ_ALU_FLAGS flags;
       SQ_CHAN unit = inst.word1.DST_CHAN();
 
-      if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+      if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
          flags = getInstructionFlags(inst.op2.ALU_INST());
       } else {
          flags = getInstructionFlags(inst.op3.ALU_INST());
       }
 
       if (isTranscendentalOnly(flags)) {
-         unit = SQ_CHAN_T;
+         unit = SQ_CHAN::T;
       } else if (isVectorOnly(flags)) {
          unit = unit;
       } else if (units[unit]) {
-         unit = SQ_CHAN_T;
+         unit = SQ_CHAN::T;
       }
 
       decaf_assert(!units[unit], fmt::format("Clause instruction unit collision for unit {}", unit));

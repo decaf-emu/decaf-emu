@@ -43,52 +43,52 @@ GX2FSGetIndexGprMap(GX2FetchShaderType type,
                     GX2TessellationMode mode);
 
 static const IndexMapEntry IndexMapNoTess[] = {
-   { 0, latte::SQ_CHAN_X },
-   { 0, latte::SQ_CHAN_X },
-   { 0, latte::SQ_CHAN_X },
-   { 0, latte::SQ_CHAN_X },
+   { 0, latte::SQ_CHAN::X },
+   { 0, latte::SQ_CHAN::X },
+   { 0, latte::SQ_CHAN::X },
+   { 0, latte::SQ_CHAN::X },
 };
 
 static const IndexMapEntry IndexMapLineTess[] = {
-   { 0, latte::SQ_CHAN_Y },
-   { 0, latte::SQ_CHAN_Z },
-   { 0, latte::SQ_CHAN_Y },
-   { 0, latte::SQ_CHAN_Y },
+   { 0, latte::SQ_CHAN::Y },
+   { 0, latte::SQ_CHAN::Z },
+   { 0, latte::SQ_CHAN::Y },
+   { 0, latte::SQ_CHAN::Y },
 };
 
 static const IndexMapEntry IndexMapLineTessAdaptive[] = {
-   { 6, latte::SQ_CHAN_X },
-   { 6, latte::SQ_CHAN_Y },
-   { 6, latte::SQ_CHAN_Z },
-   { 6, latte::SQ_CHAN_X },
+   { 6, latte::SQ_CHAN::X },
+   { 6, latte::SQ_CHAN::Y },
+   { 6, latte::SQ_CHAN::Z },
+   { 6, latte::SQ_CHAN::X },
 };
 
 static const IndexMapEntry IndexMapTriTess[] = {
-   { 1, latte::SQ_CHAN_X },
-   { 1, latte::SQ_CHAN_Y },
-   { 1, latte::SQ_CHAN_Z },
-   { 1, latte::SQ_CHAN_X },
+   { 1, latte::SQ_CHAN::X },
+   { 1, latte::SQ_CHAN::Y },
+   { 1, latte::SQ_CHAN::Z },
+   { 1, latte::SQ_CHAN::X },
 };
 
 static const IndexMapEntry IndexMapTriTessAdaptive[] = {
-   { 6, latte::SQ_CHAN_X },
-   { 6, latte::SQ_CHAN_Y },
-   { 6, latte::SQ_CHAN_Z },
-   { 6, latte::SQ_CHAN_X },
+   { 6, latte::SQ_CHAN::X },
+   { 6, latte::SQ_CHAN::Y },
+   { 6, latte::SQ_CHAN::Z },
+   { 6, latte::SQ_CHAN::X },
 };
 
 static const IndexMapEntry IndexMapQuadTess[] = {
-   { 0, latte::SQ_CHAN_Z },
-   { 1, latte::SQ_CHAN_X },
-   { 1, latte::SQ_CHAN_Y },
-   { 1, latte::SQ_CHAN_Z },
+   { 0, latte::SQ_CHAN::Z },
+   { 1, latte::SQ_CHAN::X },
+   { 1, latte::SQ_CHAN::Y },
+   { 1, latte::SQ_CHAN::Z },
 };
 
 static const IndexMapEntry IndexMapQuadTessAdaptive[] = {
-   { 6, latte::SQ_CHAN_X },
-   { 6, latte::SQ_CHAN_Y },
-   { 6, latte::SQ_CHAN_Z },
-   { 6, latte::SQ_CHAN_W },
+   { 6, latte::SQ_CHAN::X },
+   { 6, latte::SQ_CHAN::Y },
+   { 6, latte::SQ_CHAN::Z },
+   { 6, latte::SQ_CHAN::W },
 };
 
 uint32_t
@@ -276,32 +276,32 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
          // Semantic vertex fetch
          vfetch.word0 = vfetch.word0
             .VTX_INST(latte::SQ_VTX_INST_SEMANTIC)
-            .BUFFER_ID(latte::SQ_VS_ATTRIB_RESOURCE_0 + attrib.buffer - latte::SQ_VS_RESOURCE_BASE);
+            .BUFFER_ID(latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + attrib.buffer - latte::SQ_RES_OFFSET::VS_TEX_RESOURCE_0);
 
          vfetch.word2 = vfetch.word2
             .OFFSET(attribs[i].offset);
 
          if (attrib.type) {
-            auto selX = latte::SQ_SEL_X;
-            auto fetchType = latte::SQ_VTX_FETCH_VERTEX_DATA;
+            auto selX = latte::SQ_SEL::SEL_X;
+            auto fetchType = latte::SQ_VTX_FETCH_TYPE::VERTEX_DATA;
 
             if (attrib.type == GX2AttribIndexType::PerInstance) {
                if (attrib.aluDivisor == 1) {
-                  fetchType = latte::SQ_VTX_FETCH_INSTANCE_DATA;
-                  selX = latte::SQ_SEL_W;
+                  fetchType = latte::SQ_VTX_FETCH_TYPE::INSTANCE_DATA;
+                  selX = latte::SQ_SEL::SEL_W;
                } else if (attrib.aluDivisor == fetchShader->divisors[0]) {
-                  fetchType = latte::SQ_VTX_FETCH_INSTANCE_DATA;
-                  selX = latte::SQ_SEL_Y;
+                  fetchType = latte::SQ_VTX_FETCH_TYPE::INSTANCE_DATA;
+                  selX = latte::SQ_SEL::SEL_Y;
                } else if (attrib.aluDivisor == fetchShader->divisors[1]) {
-                  fetchType = latte::SQ_VTX_FETCH_INSTANCE_DATA;
-                  selX = latte::SQ_SEL_Z;
+                  fetchType = latte::SQ_VTX_FETCH_TYPE::INSTANCE_DATA;
+                  selX = latte::SQ_SEL::SEL_Z;
                } else {
                   fetchShader->divisors[fetchShader->numDivisors] = attrib.aluDivisor;
 
                   if (fetchShader->numDivisors == 0) {
-                     selX = latte::SQ_SEL_Y;
+                     selX = latte::SQ_SEL::SEL_Y;
                   } else if (fetchShader->numDivisors == 1) {
-                     selX = latte::SQ_SEL_Z;
+                     selX = latte::SQ_SEL::SEL_Z;
                   }
 
                   fetchShader->numDivisors++;
@@ -336,17 +336,17 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 
          // Setup format
          auto dataFormat = internal::getAttribFormatDataFormat(attrib.format);
-         auto numFormat = latte::SQ_NUM_FORMAT_NORM;
-         auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+         auto numFormat = latte::SQ_NUM_FORMAT::NORM;
+         auto formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
 
          if (attribs[i].format & GX2AttribFormatFlags::SCALED) {
-            numFormat = latte::SQ_NUM_FORMAT_SCALED;
+            numFormat = latte::SQ_NUM_FORMAT::SCALED;
          } else if (attribs[i].format & GX2AttribFormatFlags::INTEGER) {
-            numFormat = latte::SQ_NUM_FORMAT_INT;
+            numFormat = latte::SQ_NUM_FORMAT::INT;
          }
 
          if (attribs[i].format & GX2AttribFormatFlags::SIGNED) {
-            formatComp = latte::SQ_FORMAT_COMP_SIGNED;
+            formatComp = latte::SQ_FORMAT_COMP::SIGNED;
          }
 
          vfetch.word1 = vfetch.word1
@@ -356,7 +356,7 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 
          auto swapMode = internal::getSwapModeEndian(attribs[i].endianSwap & 3);
 
-         if (attribs[i].endianSwap == latte::SQ_ENDIAN_AUTO) {
+         if (attribs[i].endianSwap == latte::SQ_ENDIAN::AUTO) {
             swapMode = internal::getAttribFormatEndian(attribs[i].format);
          }
 

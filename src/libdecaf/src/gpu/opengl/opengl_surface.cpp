@@ -21,63 +21,63 @@ static gl::GLenum
 getGlFormat(latte::SQ_DATA_FORMAT format)
 {
    switch (format) {
-   case latte::FMT_8:
-   case latte::FMT_16:
-   case latte::FMT_16_FLOAT:
-   case latte::FMT_32:
-   case latte::FMT_32_FLOAT:
-   case latte::FMT_1:
-   case latte::FMT_32_AS_8:
-   case latte::FMT_32_AS_8_8:
-   case latte::FMT_BC4:
+   case latte::SQ_DATA_FORMAT::FMT_8:
+   case latte::SQ_DATA_FORMAT::FMT_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32:
+   case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_1:
+   case latte::SQ_DATA_FORMAT::FMT_32_AS_8:
+   case latte::SQ_DATA_FORMAT::FMT_32_AS_8_8:
+   case latte::SQ_DATA_FORMAT::FMT_BC4:
       return gl::GL_RED;
 
-   case latte::FMT_4_4:
-   case latte::FMT_8_8:
-   case latte::FMT_16_16:
-   case latte::FMT_16_16_FLOAT:
-   case latte::FMT_8_24:
-   case latte::FMT_8_24_FLOAT:
-   case latte::FMT_24_8:
-   case latte::FMT_24_8_FLOAT:
-   case latte::FMT_32_32:
-   case latte::FMT_32_32_FLOAT:
-   case latte::FMT_BC5:
+   case latte::SQ_DATA_FORMAT::FMT_4_4:
+   case latte::SQ_DATA_FORMAT::FMT_8_8:
+   case latte::SQ_DATA_FORMAT::FMT_16_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_8_24:
+   case latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_24_8:
+   case latte::SQ_DATA_FORMAT::FMT_24_8_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_32:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_BC5:
       return gl::GL_RG;
 
-   case latte::FMT_3_3_2:
-   case latte::FMT_5_6_5:
-   case latte::FMT_6_5_5:
-   case latte::FMT_10_11_11:
-   case latte::FMT_10_11_11_FLOAT:
-   case latte::FMT_11_11_10:
-   case latte::FMT_11_11_10_FLOAT:
-   case latte::FMT_8_8_8:
-   case latte::FMT_16_16_16:
-   case latte::FMT_16_16_16_FLOAT:
-   case latte::FMT_32_32_32:
-   case latte::FMT_32_32_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_3_3_2:
+   case latte::SQ_DATA_FORMAT::FMT_5_6_5:
+   case latte::SQ_DATA_FORMAT::FMT_6_5_5:
+   case latte::SQ_DATA_FORMAT::FMT_10_11_11:
+   case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_11_11_10:
+   case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_8_8_8:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT:
       return gl::GL_RGB;
 
-   case latte::FMT_1_5_5_5:
-   case latte::FMT_4_4_4_4:
-   case latte::FMT_5_5_5_1:
-   case latte::FMT_2_10_10_10:
-   case latte::FMT_8_8_8_8:
-   case latte::FMT_10_10_10_2:
-   case latte::FMT_16_16_16_16:
-   case latte::FMT_16_16_16_16_FLOAT:
-   case latte::FMT_32_32_32_32:
-   case latte::FMT_32_32_32_32_FLOAT:
-   case latte::FMT_5_9_9_9_SHAREDEXP:
-   case latte::FMT_BC1:
-   case latte::FMT_BC2:
-   case latte::FMT_BC3:
+   case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
+   case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
+   case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
+   case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
+   case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
+   case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_5_9_9_9_SHAREDEXP:
+   case latte::SQ_DATA_FORMAT::FMT_BC1:
+   case latte::SQ_DATA_FORMAT::FMT_BC2:
+   case latte::SQ_DATA_FORMAT::FMT_BC3:
       return gl::GL_RGBA;
 
-      // case latte::FMT_X24_8_32_FLOAT:
-      // case latte::FMT_GB_GR:
-      // case latte::FMT_BG_RG:
+      // case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
+      // case latte::SQ_DATA_FORMAT::FMT_GB_GR:
+      // case latte::SQ_DATA_FORMAT::FMT_BG_RG:
    default:
       decaf_abort(fmt::format("Unimplemented texture format {}", format));
    }
@@ -88,66 +88,66 @@ getGlDataType(latte::SQ_DATA_FORMAT format,
               latte::SQ_FORMAT_COMP formatComp,
               uint32_t degamma)
 {
-   auto isSigned = (formatComp == latte::SQ_FORMAT_COMP_SIGNED);
+   auto isSigned = (formatComp == latte::SQ_FORMAT_COMP::SIGNED);
 
    switch (format) {
-   case latte::FMT_8:
-   case latte::FMT_8_8:
-   case latte::FMT_8_8_8:
-   case latte::FMT_8_8_8_8:
+   case latte::SQ_DATA_FORMAT::FMT_8:
+   case latte::SQ_DATA_FORMAT::FMT_8_8:
+   case latte::SQ_DATA_FORMAT::FMT_8_8_8:
+   case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
       return isSigned ? gl::GL_BYTE : gl::GL_UNSIGNED_BYTE;
 
-   case latte::FMT_16:
-   case latte::FMT_16_16:
-   case latte::FMT_16_16_16:
-   case latte::FMT_16_16_16_16:
+   case latte::SQ_DATA_FORMAT::FMT_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16:
       return isSigned ? gl::GL_SHORT : gl::GL_UNSIGNED_SHORT;
 
-   case latte::FMT_16_FLOAT:
-   case latte::FMT_16_16_FLOAT:
-   case latte::FMT_16_16_16_FLOAT:
-   case latte::FMT_16_16_16_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT:
       return gl::GL_HALF_FLOAT;
 
-   case latte::FMT_32:
-   case latte::FMT_32_32:
-   case latte::FMT_32_32_32:
-   case latte::FMT_32_32_32_32:
+   case latte::SQ_DATA_FORMAT::FMT_32:
+   case latte::SQ_DATA_FORMAT::FMT_32_32:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32:
       return isSigned ? gl::GL_INT : gl::GL_UNSIGNED_INT;
 
-   case latte::FMT_32_FLOAT:
-   case latte::FMT_32_32_FLOAT:
-   case latte::FMT_32_32_32_FLOAT:
-   case latte::FMT_32_32_32_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
       return gl::GL_FLOAT;
 
-   case latte::FMT_3_3_2:
+   case latte::SQ_DATA_FORMAT::FMT_3_3_2:
       return gl::GL_UNSIGNED_BYTE_3_3_2;
 
-   case latte::FMT_5_6_5:
+   case latte::SQ_DATA_FORMAT::FMT_5_6_5:
       return gl::GL_UNSIGNED_SHORT_5_6_5;
 
-   case latte::FMT_5_5_5_1:
+   case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
       return gl::GL_UNSIGNED_SHORT_5_5_5_1;
-   case latte::FMT_1_5_5_5:
+   case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
       return gl::GL_UNSIGNED_SHORT_1_5_5_5_REV;
 
-   case latte::FMT_4_4_4_4:
+   case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
       return gl::GL_UNSIGNED_SHORT_4_4_4_4;
 
-   case latte::FMT_10_10_10_2:
+   case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
       return gl::GL_UNSIGNED_INT_10_10_10_2;
-   case latte::FMT_2_10_10_10:
+   case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
       return gl::GL_UNSIGNED_INT_2_10_10_10_REV;
 
-   case latte::FMT_10_11_11:
-   case latte::FMT_10_11_11_FLOAT:
-   case latte::FMT_11_11_10:
-   case latte::FMT_11_11_10_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_10_11_11:
+   case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_11_11_10:
+   case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
       return gl::GL_UNSIGNED_INT_10F_11F_11F_REV;
 
-   case latte::FMT_24_8:
-   case latte::FMT_8_24:
+   case latte::SQ_DATA_FORMAT::FMT_24_8:
+   case latte::SQ_DATA_FORMAT::FMT_8_24:
       return gl::GL_UNSIGNED_INT_24_8;
 
    default:
@@ -160,22 +160,22 @@ getGlCompressedDataType(latte::SQ_DATA_FORMAT format,
                         latte::SQ_FORMAT_COMP formatComp,
                         uint32_t degamma)
 {
-   auto isSigned = formatComp == latte::SQ_FORMAT_COMP_SIGNED;
+   auto isSigned = formatComp == latte::SQ_FORMAT_COMP::SIGNED;
 
    switch (format) {
-   case latte::FMT_BC1:
+   case latte::SQ_DATA_FORMAT::FMT_BC1:
       decaf_check(!isSigned);
       return degamma ? gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT : gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-   case latte::FMT_BC2:
+   case latte::SQ_DATA_FORMAT::FMT_BC2:
       decaf_check(!isSigned);
       return degamma ? gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT : gl::GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-   case latte::FMT_BC3:
+   case latte::SQ_DATA_FORMAT::FMT_BC3:
       decaf_check(!isSigned);
       return degamma ? gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT : gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-   case latte::FMT_BC4:
+   case latte::SQ_DATA_FORMAT::FMT_BC4:
       decaf_check(!degamma);
       return isSigned ? gl::GL_COMPRESSED_SIGNED_RED_RGTC1 : gl::GL_COMPRESSED_RED_RGTC1;
-   case latte::FMT_BC5:
+   case latte::SQ_DATA_FORMAT::FMT_BC5:
       decaf_check(!degamma);
       return isSigned ? gl::GL_COMPRESSED_SIGNED_RG_RGTC2 : gl::GL_COMPRESSED_RG_RGTC2;
    default:
@@ -195,24 +195,24 @@ getGlStorageFormat(latte::SQ_NUM_FORMAT numFormat,
                    gl::GLenum scaled)
 {
    if (!degamma) {
-      if (numFormat == latte::SQ_NUM_FORMAT_NORM) {
-         if (formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+      if (numFormat == latte::SQ_NUM_FORMAT::NORM) {
+         if (formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
             return snorm;
-         } else if (formatComp == latte::SQ_FORMAT_COMP_UNSIGNED) {
+         } else if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
             return unorm;
          } else {
             return gl::GL_INVALID_ENUM;
          }
-      } else if (numFormat == latte::SQ_NUM_FORMAT_INT) {
-         if (formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+      } else if (numFormat == latte::SQ_NUM_FORMAT::INT) {
+         if (formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
             return sint;
-         } else if (formatComp == latte::SQ_FORMAT_COMP_UNSIGNED) {
+         } else if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
             return uint;
          } else {
             return gl::GL_INVALID_ENUM;
          }
-      } else if (numFormat == latte::SQ_NUM_FORMAT_SCALED) {
-         if (formatComp == latte::SQ_FORMAT_COMP_UNSIGNED) {
+      } else if (numFormat == latte::SQ_NUM_FORMAT::SCALED) {
+         if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
             return scaled;
          } else {
             return gl::GL_INVALID_ENUM;
@@ -247,109 +247,109 @@ getGlStorageFormat(latte::SQ_DATA_FORMAT format,
       };
 
    switch (format) {
-   case latte::FMT_8:
+   case latte::SQ_DATA_FORMAT::FMT_8:
       return getFormat(gl::GL_R8, gl::GL_R8_SNORM, gl::GL_R8UI, gl::GL_R8I, gl::GL_SRGB8);
-   //case latte::FMT_4_4:
-   //case latte::FMT_3_3_2:
-   case latte::FMT_16:
+   //case latte::SQ_DATA_FORMAT::FMT_4_4:
+   //case latte::SQ_DATA_FORMAT::FMT_3_3_2:
+   case latte::SQ_DATA_FORMAT::FMT_16:
       if (isDepthBuffer) {
          return gl::GL_DEPTH_COMPONENT16;
       } else {
          return getFormat(gl::GL_R16, gl::GL_R16_SNORM, gl::GL_R16UI, gl::GL_R16I, BADFMT);
       }
-   case latte::FMT_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
       return getFormatF(gl::GL_R16F);
-   case latte::FMT_8_8:
+   case latte::SQ_DATA_FORMAT::FMT_8_8:
       return getFormat(gl::GL_RG8, gl::GL_RG8_SNORM, gl::GL_RG8UI, gl::GL_RG8I, BADFMT);
-   case latte::FMT_5_6_5:
+   case latte::SQ_DATA_FORMAT::FMT_5_6_5:
       return getFormat(gl::GL_RGB565, BADFMT, BADFMT, BADFMT, BADFMT);
-   //case latte::FMT_6_5_5:
-   //case latte::FMT_1_5_5_5:
-   case latte::FMT_4_4_4_4:
+   //case latte::SQ_DATA_FORMAT::FMT_6_5_5:
+   //case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
+   case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
       return getFormat(gl::GL_RGBA4, BADFMT, BADFMT, BADFMT, BADFMT);
-   //case latte::FMT_5_5_5_1:
-   case latte::FMT_32:
+   //case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
+   case latte::SQ_DATA_FORMAT::FMT_32:
       return getFormat(BADFMT, BADFMT, gl::GL_R32UI, gl::GL_R32I, BADFMT);
-   case latte::FMT_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
       if (isDepthBuffer) {
          return gl::GL_DEPTH_COMPONENT32F;
       }
 
       return getFormatF(gl::GL_R32F);
-   case latte::FMT_16_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_16:
       return getFormat(gl::GL_RG16, gl::GL_RG16_SNORM, gl::GL_RG16UI, gl::GL_RG16I, BADFMT);
-   case latte::FMT_16_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT:
       return getFormatF(gl::GL_RG16F);
-   //case latte::FMT_24_8:
-   //case latte::FMT_24_8_FLOAT:
-   //case latte::FMT_10_11_11:
-   case latte::FMT_10_11_11_FLOAT:
+   //case latte::SQ_DATA_FORMAT::FMT_24_8:
+   //case latte::SQ_DATA_FORMAT::FMT_24_8_FLOAT:
+   //case latte::SQ_DATA_FORMAT::FMT_10_11_11:
+   case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
       return getFormatF(gl::GL_R11F_G11F_B10F);
-   //case latte::FMT_11_11_10:
-   case latte::FMT_11_11_10_FLOAT:
+   //case latte::SQ_DATA_FORMAT::FMT_11_11_10:
+   case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
       return getFormatF(gl::GL_R11F_G11F_B10F);
-   case latte::FMT_10_10_10_2:
-   case latte::FMT_2_10_10_10:
+   case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
+   case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
       return getFormat(gl::GL_RGB10_A2, BADFMT, gl::GL_RGB10_A2UI, BADFMT, BADFMT);
-   case latte::FMT_8_8_8_8:
+   case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
       return getFormat(gl::GL_RGBA8, gl::GL_RGBA8_SNORM, gl::GL_RGBA8UI, gl::GL_RGBA8I, gl::GL_SRGB8_ALPHA8);
-   case latte::FMT_32_32:
+   case latte::SQ_DATA_FORMAT::FMT_32_32:
       return getFormat(BADFMT, BADFMT, gl::GL_RG32UI, gl::GL_RG32I, BADFMT);
-   case latte::FMT_32_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT:
       return getFormatF(gl::GL_RG32F);
-   case latte::FMT_16_16_16_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16:
       return getFormat(gl::GL_RGBA16, gl::GL_RGBA16_SNORM, gl::GL_RGBA16UI, gl::GL_RGBA16I, BADFMT);
-   case latte::FMT_16_16_16_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT:
       return getFormatF(gl::GL_RGBA16F);
-   case latte::FMT_32_32_32_32:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32:
       return getFormat(BADFMT, BADFMT, gl::GL_RGBA32UI, gl::GL_RGBA32I, BADFMT);
-   case latte::FMT_32_32_32_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
       return getFormatF(gl::GL_RGBA32F);
-   //case latte::FMT_1:
-   //case latte::FMT_GB_GR:
-   //case latte::FMT_BG_RG:
-   //case latte::FMT_32_AS_8:
-   //case latte::FMT_32_AS_8_8:
-   //case latte::FMT_5_9_9_9_SHAREDEXP:
-   case latte::FMT_8_8_8:
+   //case latte::SQ_DATA_FORMAT::FMT_1:
+   //case latte::SQ_DATA_FORMAT::FMT_GB_GR:
+   //case latte::SQ_DATA_FORMAT::FMT_BG_RG:
+   //case latte::SQ_DATA_FORMAT::FMT_32_AS_8:
+   //case latte::SQ_DATA_FORMAT::FMT_32_AS_8_8:
+   //case latte::SQ_DATA_FORMAT::FMT_5_9_9_9_SHAREDEXP:
+   case latte::SQ_DATA_FORMAT::FMT_8_8_8:
       return getFormat(gl::GL_RGB8, gl::GL_RGB8_SNORM, gl::GL_RGB8UI, gl::GL_RGB8I, gl::GL_SRGB8);
-   case latte::FMT_16_16_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16:
       return getFormat(gl::GL_RGB16, gl::GL_RGB16_SNORM, gl::GL_RGB16UI, gl::GL_RGB16I, BADFMT);
-   case latte::FMT_16_16_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_FLOAT:
       return getFormatF(gl::GL_RGB16F);
-   case latte::FMT_32_32_32:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32:
       return getFormat(BADFMT, BADFMT, gl::GL_RGB32UI, gl::GL_RGB32I, BADFMT);
-   case latte::FMT_32_32_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT:
       return getFormatF(gl::GL_RGB32F);
-   case latte::FMT_BC1:
+   case latte::SQ_DATA_FORMAT::FMT_BC1:
       return getFormat(gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, BADFMT, BADFMT, BADFMT, gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT);
-   case latte::FMT_BC2:
+   case latte::SQ_DATA_FORMAT::FMT_BC2:
       return getFormat(gl::GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, BADFMT, BADFMT, BADFMT, gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT);
-   case latte::FMT_BC3:
+   case latte::SQ_DATA_FORMAT::FMT_BC3:
       return getFormat(gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, BADFMT, BADFMT, BADFMT, gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT);
-   case latte::FMT_BC4:
+   case latte::SQ_DATA_FORMAT::FMT_BC4:
       return getFormat(gl::GL_COMPRESSED_RED_RGTC1, gl::GL_COMPRESSED_SIGNED_RED_RGTC1, BADFMT, BADFMT, BADFMT);
-   case latte::FMT_BC5:
+   case latte::SQ_DATA_FORMAT::FMT_BC5:
       return getFormat(gl::GL_COMPRESSED_RG_RGTC2, gl::GL_COMPRESSED_SIGNED_RG_RGTC2, BADFMT, BADFMT, BADFMT);
-   //case latte::FMT_APC0:
-   //case latte::FMT_APC1:
-   //case latte::FMT_APC2:
-   //case latte::FMT_APC3:
-   //case latte::FMT_APC4:
-   //case latte::FMT_APC5:
-   //case latte::FMT_APC6:
-   //case latte::FMT_APC7:
-   //case latte::FMT_CTX1:
+   //case latte::SQ_DATA_FORMAT::FMT_APC0:
+   //case latte::SQ_DATA_FORMAT::FMT_APC1:
+   //case latte::SQ_DATA_FORMAT::FMT_APC2:
+   //case latte::SQ_DATA_FORMAT::FMT_APC3:
+   //case latte::SQ_DATA_FORMAT::FMT_APC4:
+   //case latte::SQ_DATA_FORMAT::FMT_APC5:
+   //case latte::SQ_DATA_FORMAT::FMT_APC6:
+   //case latte::SQ_DATA_FORMAT::FMT_APC7:
+   //case latte::SQ_DATA_FORMAT::FMT_CTX1:
 
    // Depth Types
-   case latte::FMT_8_24:
-   case latte::FMT_24_8:
+   case latte::SQ_DATA_FORMAT::FMT_8_24:
+   case latte::SQ_DATA_FORMAT::FMT_24_8:
       if (isDepthBuffer) {
          return gl::GL_DEPTH24_STENCIL8;
       }
 
       return getFormat(gl::GL_DEPTH24_STENCIL8, BADFMT, gl::GL_UNSIGNED_INT_24_8, BADFMT, BADFMT);
-   case latte::FMT_X24_8_32_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
       decaf_check(isDepthBuffer);
       return gl::GL_DEPTH32F_STENCIL8;
 
@@ -362,21 +362,21 @@ static gl::GLenum
 getGlTarget(latte::SQ_TEX_DIM dim)
 {
    switch (dim) {
-   case latte::SQ_TEX_DIM_1D:
+   case latte::SQ_TEX_DIM::DIM_1D:
       return gl::GL_TEXTURE_1D;
-   case latte::SQ_TEX_DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D:
       return gl::GL_TEXTURE_2D;
-   case latte::SQ_TEX_DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
       return gl::GL_TEXTURE_2D_MULTISAMPLE;
-   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
       return gl::GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
-   case latte::SQ_TEX_DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
       return gl::GL_TEXTURE_2D_ARRAY;
-   case latte::SQ_TEX_DIM_CUBEMAP:
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
       return gl::GL_TEXTURE_CUBE_MAP;
-   case latte::SQ_TEX_DIM_3D:
+   case latte::SQ_TEX_DIM::DIM_3D:
       return gl::GL_TEXTURE_3D;
-   case latte::SQ_TEX_DIM_1D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       return gl::GL_TEXTURE_1D_ARRAY;
    default:
       decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
@@ -414,26 +414,26 @@ createHostSurface(ppcaddr_t baseAddress,
    }
 
    switch (dim) {
-   case latte::SQ_TEX_DIM_1D:
+   case latte::SQ_TEX_DIM::DIM_1D:
       gl::glTextureStorage1D(newSurface->object, 1, storageFormat, width);
       break;
-   case latte::SQ_TEX_DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D:
       gl::glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
       break;
-   case latte::SQ_TEX_DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
       // TODO: Figure out if last parameter should be GL_TRUE or GL_FALSE
       gl::glTextureStorage2DMultisample(newSurface->object, samples, storageFormat, width, height, gl::GL_FALSE);
       break;
-   case latte::SQ_TEX_DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
       gl::glTextureStorage3D(newSurface->object, 1, storageFormat, width, height, depth);
       break;
-   case latte::SQ_TEX_DIM_CUBEMAP:
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
       gl::glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
       break;
-   case latte::SQ_TEX_DIM_3D:
+   case latte::SQ_TEX_DIM::DIM_3D:
       gl::glTextureStorage3D(newSurface->object, 1, storageFormat, width, height, depth);
       break;
-   case latte::SQ_TEX_DIM_1D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       gl::glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
       break;
    default:
@@ -480,32 +480,32 @@ getSurfaceBytes(uint32_t pitch,
    uint32_t numPixels = 0;
 
    switch (dim) {
-   case latte::SQ_TEX_DIM_1D:
+   case latte::SQ_TEX_DIM::DIM_1D:
       numPixels = pitch;
       break;
-   case latte::SQ_TEX_DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D:
       numPixels = pitch * height;
       break;
-   case latte::SQ_TEX_DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
       numPixels = pitch * height * samples;
       break;
-   case latte::SQ_TEX_DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
       numPixels = pitch * height * depth;
       break;
-   case latte::SQ_TEX_DIM_CUBEMAP:
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
       numPixels = pitch * height * 6;
       break;
-   case latte::SQ_TEX_DIM_3D:
+   case latte::SQ_TEX_DIM::DIM_3D:
       numPixels = pitch * height * depth;
       break;
-   case latte::SQ_TEX_DIM_1D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       numPixels = pitch * height;
       break;
    default:
       decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
    }
 
-   if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5) {
+   if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 && format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       numPixels /= 4 * 4;
    }
 
@@ -540,7 +540,7 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
    auto uploadPitch = width;
    auto uploadDepth = depth;
 
-   if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5) {
+   if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 && format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       srcWidth = (srcWidth + 3) / 4;
       srcHeight = (srcHeight + 3) / 4;
       srcPitch = srcPitch / 4;
@@ -549,7 +549,7 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
       uploadPitch = uploadWidth / 4;
    }
 
-   if (dim == latte::SQ_TEX_DIM_CUBEMAP) {
+   if (dim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
       uploadDepth *= 6;
    }
 
@@ -605,7 +605,7 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
       }
 
       switch (dim) {
-      case latte::SQ_TEX_DIM_1D:
+      case latte::SQ_TEX_DIM::DIM_1D:
          if (compressed) {
             gl::glCompressedTextureSubImage1D(buffer->active->object,
                0, /* level */
@@ -624,7 +624,7 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
                untiledImage.data());
          }
          break;
-      case latte::SQ_TEX_DIM_2D:
+      case latte::SQ_TEX_DIM::DIM_2D:
          if (compressed) {
             gl::glCompressedTextureSubImage2D(buffer->active->object,
                0, /* level */
@@ -644,7 +644,7 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
                untiledImage.data());
          }
          break;
-      case latte::SQ_TEX_DIM_3D:
+      case latte::SQ_TEX_DIM::DIM_3D:
          if (compressed) {
             gl::glCompressedTextureSubImage3D(buffer->active->object,
                0, /* level */
@@ -663,9 +663,9 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
                untiledImage.data());
          }
          break;
-      case latte::SQ_TEX_DIM_CUBEMAP:
+      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
          decaf_check(uploadDepth == 6);
-      case latte::SQ_TEX_DIM_2D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
          if (compressed) {
             gl::glCompressedTextureSubImage3D(buffer->active->object,
                0, /* level */
@@ -719,7 +719,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    auto swizzle = baseAddress & 0xFFF;
 
    // Align the base address according to the GPU logic
-   if (tileMode >= latte::SQ_TILE_MODE_TILED_2D_THIN1) {
+   if (tileMode >= latte::SQ_TILE_MODE::TILED_2D_THIN1) {
       baseAddress &= ~(0x800 - 1);
    } else {
       baseAddress &= ~(0x100 - 1);
@@ -732,17 +732,17 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    surfaceKey ^= format << 22 ^ numFormat << 28 ^ formatComp << 30;
 
    switch (dim) {
-   case latte::SQ_TEX_DIM_1D:
+   case latte::SQ_TEX_DIM::DIM_1D:
       break;
-   case latte::SQ_TEX_DIM_2D:
-   case latte::SQ_TEX_DIM_2D_MSAA:
-   case latte::SQ_TEX_DIM_1D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       surfaceKey ^= pitch;
       break;
-   case latte::SQ_TEX_DIM_2D_ARRAY:
-   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
-   case latte::SQ_TEX_DIM_CUBEMAP:
-   case latte::SQ_TEX_DIM_3D:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+   case latte::SQ_TEX_DIM::DIM_3D:
       surfaceKey ^= pitch ^ height<<16;
       break;
    default:

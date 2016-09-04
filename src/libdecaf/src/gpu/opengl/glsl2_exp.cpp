@@ -39,28 +39,28 @@ bool
 insertSelectValue(fmt::MemoryWriter &out, const std::string &src, SQ_SEL sel)
 {
    switch (sel) {
-   case SQ_SEL_X:
+   case SQ_SEL::SEL_X:
       out << src << ".x";
       break;
-   case SQ_SEL_Y:
+   case SQ_SEL::SEL_Y:
       out << src << ".y";
       break;
-   case SQ_SEL_Z:
+   case SQ_SEL::SEL_Z:
       out << src << ".z";
       break;
-   case SQ_SEL_W:
+   case SQ_SEL::SEL_W:
       out << src << ".w";
       break;
-   case SQ_SEL_0:
+   case SQ_SEL::SEL_0:
       out << "0";
       break;
-   case SQ_SEL_1:
+   case SQ_SEL::SEL_1:
       out << "1";
       break;
-   case SQ_SEL_MASK:
+   case SQ_SEL::SEL_MASK:
       // These should never show up since if it does, it means that need
       //  to actually do a condensing first and adjust the target swizzle.
-      throw translate_exception("Unexpected SQ_SEL_MASK");
+      throw translate_exception("Unexpected SQ_SEL::SEL_MASK");
    default:
       throw translate_exception(fmt::format("Unexpected SQ_SEL value {}", sel));
    }
@@ -79,7 +79,7 @@ insertSelectVector(fmt::MemoryWriter &out, const std::string &src, SQ_SEL selX, 
       auto isTrivialSwizzle = true;
 
       for (auto i = 0u; i < numSels; ++i) {
-         if (sels[i] != SQ_SEL_X && sels[i] != SQ_SEL_Y && sels[i] != SQ_SEL_Z && sels[i] != SQ_SEL_W) {
+         if (sels[i] != SQ_SEL::SEL_X && sels[i] != SQ_SEL::SEL_Y && sels[i] != SQ_SEL::SEL_Z && sels[i] != SQ_SEL::SEL_W) {
             isTrivialSwizzle = false;
          }
       }
@@ -89,16 +89,16 @@ insertSelectVector(fmt::MemoryWriter &out, const std::string &src, SQ_SEL selX, 
 
          for (auto i = 0u; i < numSels; ++i) {
             switch (sels[i]) {
-            case SQ_SEL_X:
+            case SQ_SEL::SEL_X:
                out << "x";
                break;
-            case SQ_SEL_Y:
+            case SQ_SEL::SEL_Y:
                out << "y";
                break;
-            case SQ_SEL_Z:
+            case SQ_SEL::SEL_Z:
                out << "z";
                break;
-            case SQ_SEL_W:
+            case SQ_SEL::SEL_W:
                out << "w";
                break;
             }
@@ -139,7 +139,7 @@ condenseSelections(SQ_SEL &selX, SQ_SEL &selY, SQ_SEL &selZ, SQ_SEL &selW, unsig
    SQ_SEL sels[4] = { selX, selY, selZ, selW };
 
    for (auto i = 0u; i < numSels; ++i) {
-      if (sels[i] != SQ_SEL_MASK) {
+      if (sels[i] != SQ_SEL::SEL_MASK) {
          sels[numSelsOut] = sels[i];
          numSelsOut++;
 
@@ -166,10 +166,10 @@ condenseSelections(SQ_SEL &selX, SQ_SEL &selY, SQ_SEL &selZ, SQ_SEL &selW, unsig
 bool
 insertMaskVector(fmt::MemoryWriter &out, const std::string &src, unsigned mask)
 {
-   SQ_SEL selX = mask & (1 << 0) ? SQ_SEL_X : SQ_SEL_MASK;
-   SQ_SEL selY = mask & (1 << 1) ? SQ_SEL_Y : SQ_SEL_MASK;
-   SQ_SEL selZ = mask & (1 << 2) ? SQ_SEL_Z : SQ_SEL_MASK;
-   SQ_SEL selW = mask & (1 << 3) ? SQ_SEL_W : SQ_SEL_MASK;
+   SQ_SEL selX = mask & (1 << 0) ? SQ_SEL::SEL_X : SQ_SEL::SEL_MASK;
+   SQ_SEL selY = mask & (1 << 1) ? SQ_SEL::SEL_Y : SQ_SEL::SEL_MASK;
+   SQ_SEL selZ = mask & (1 << 2) ? SQ_SEL::SEL_Z : SQ_SEL::SEL_MASK;
+   SQ_SEL selW = mask & (1 << 3) ? SQ_SEL::SEL_W : SQ_SEL::SEL_MASK;
 
    auto numSels = 4u;
    condenseSelections(selX, selY, selZ, selW, numSels);
@@ -183,7 +183,7 @@ registerExport(State &state, SQ_EXPORT_TYPE type, unsigned arrayBase)
    Export exp;
    exp.type = type;
 
-   if (type == SQ_EXPORT_POS) {
+   if (type == SQ_EXPORT_TYPE::POS) {
       exp.id = arrayBase - 60;
    } else {
       exp.id = arrayBase;
@@ -220,7 +220,7 @@ EXP(State &state, const ControlFlowInst &cf)
    auto selZ = cf.exp.swiz.SRC_SEL_Z();
    auto selW = cf.exp.swiz.SRC_SEL_W();
 
-   if (selX == SQ_SEL_MASK && selY == SQ_SEL_MASK && selZ == SQ_SEL_MASK && selW == SQ_SEL_MASK) {
+   if (selX == SQ_SEL::SEL_MASK && selY == SQ_SEL::SEL_MASK && selZ == SQ_SEL::SEL_MASK && selW == SQ_SEL::SEL_MASK) {
       gLog->warn("Unusual shader with a fully masked export");
       return;
    }
@@ -236,13 +236,13 @@ EXP(State &state, const ControlFlowInst &cf)
       insertLineStart(state);
 
       switch (type) {
-      case SQ_EXPORT_POS:
+      case SQ_EXPORT_TYPE::POS:
          state.out << "exp_position_" << (outIndex - 60);
          break;
-      case SQ_EXPORT_PARAM:
+      case SQ_EXPORT_TYPE::PARAM:
          state.out << "exp_param_" << outIndex;
          break;
-      case SQ_EXPORT_PIXEL:
+      case SQ_EXPORT_TYPE::PIXEL:
          state.out << "exp_pixel_" << outIndex;
          break;
       default:
@@ -264,13 +264,12 @@ MEM_STREAM(State &state, const ControlFlowInst &cf)
    auto type = cf.exp.word0.TYPE();
    auto offset = cf.exp.word0.ARRAY_BASE() * 4;
    auto valueSize = cf.exp.buf.ARRAY_SIZE() + 1;
-
    auto src = getExportRegister(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL());
 
    switch (type) {
-   case SQ_EXPORT_WRITE:
+   case SQ_MEM_EXPORT_TYPE::WRITE:
       break;
-   case SQ_EXPORT_WRITE_IND:
+   case SQ_MEM_EXPORT_TYPE::WRITE_IND:
       throw translate_exception(fmt::format("Unsupported EXPORT_WRITE_IND in MEM_STREAM{}", streamIndex));
    default:
       throw translate_exception(fmt::format("Invalid export type {} for MEM_STREAM{}", type, streamIndex));

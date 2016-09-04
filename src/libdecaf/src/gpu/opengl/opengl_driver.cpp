@@ -228,21 +228,21 @@ getTextureTarget(latte::SQ_TEX_DIM dim)
 {
    switch (dim)
    {
-   case latte::SQ_TEX_DIM_1D:
+   case latte::SQ_TEX_DIM::DIM_1D:
       return gl::GL_TEXTURE_1D;
-   case latte::SQ_TEX_DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D:
       return gl::GL_TEXTURE_2D;
-   case latte::SQ_TEX_DIM_3D:
+   case latte::SQ_TEX_DIM::DIM_3D:
       return gl::GL_TEXTURE_3D;
-   case latte::SQ_TEX_DIM_CUBEMAP:
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
       return gl::GL_TEXTURE_CUBE_MAP;
-   case latte::SQ_TEX_DIM_1D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       return gl::GL_TEXTURE_1D_ARRAY;
-   case latte::SQ_TEX_DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
       return gl::GL_TEXTURE_2D_ARRAY;
-   case latte::SQ_TEX_DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
       return gl::GL_TEXTURE_2D_MULTISAMPLE;
-   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
       return gl::GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
    default:
       decaf_abort(fmt::format("Unimplemented SQ_TEX_DIM {}", dim));
@@ -295,7 +295,7 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
    auto copyWidth = data.srcWidth;
    auto copyHeight = data.srcHeight;
    auto copyDepth = data.srcDepth;
-   if (data.srcDim == latte::SQ_TEX_DIM_CUBEMAP) {
+   if (data.srcDim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
       copyDepth *= 6;
    }
 
@@ -440,15 +440,15 @@ GLDriver::memWrite(const pm4::MemWrite &data)
 
       switch (data.addrLo.ENDIAN_SWAP())
       {
-      case latte::CB_ENDIAN_NONE:
+      case latte::CB_ENDIAN::NONE:
          break;
-      case latte::CB_ENDIAN_8IN64:
+      case latte::CB_ENDIAN::SWAP_8IN64:
          value = byte_swap(value);
          break;
-      case latte::CB_ENDIAN_8IN32:
+      case latte::CB_ENDIAN::SWAP_8IN32:
          value = byte_swap(static_cast<uint32_t>(value));
          break;
-      case latte::CB_ENDIAN_8IN16:
+      case latte::CB_ENDIAN::SWAP_8IN16:
          decaf_abort(fmt::format("Unexpected MEM_WRITE endian swap {}", data.addrLo.ENDIAN_SWAP()));
       }
 
@@ -471,23 +471,23 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
 
    auto writeData = [=](uint64_t value) {
       switch (data.addrLo.ENDIAN_SWAP()) {
-      case latte::CB_ENDIAN_NONE:
+      case latte::CB_ENDIAN::NONE:
          break;
-      case latte::CB_ENDIAN_8IN64:
+      case latte::CB_ENDIAN::SWAP_8IN64:
          value = byte_swap(value);
          break;
-      case latte::CB_ENDIAN_8IN32:
+      case latte::CB_ENDIAN::SWAP_8IN32:
          value = byte_swap(static_cast<uint32_t>(value));
          break;
-      case latte::CB_ENDIAN_8IN16:
-         decaf_abort("Unexpected EVENT_WRITE endian swap 8IN16");
+      case latte::CB_ENDIAN::SWAP_8IN16:
+         decaf_abort("Unexpected EVENT_WRITE endian SWAP_8IN16");
       }
 
       *reinterpret_cast<uint64_t *>(ptr) = value;
    };
 
    switch (type) {
-   case latte::VGT_EVENT_TYPE_ZPASS_DONE: {
+   case latte::VGT_EVENT_TYPE::ZPASS_DONE: {
       if (!mOccQuery) {
          injectFence([=]() {
             writeData(mTotalSamplesPassed);
@@ -525,14 +525,14 @@ GLDriver::eventWriteEOP(const pm4::EventWriteEOP &data)
    }
 
    injectFence([=]() {
-      auto value = uint64_t{ 0 };
+      auto value = uint64_t { 0 };
       auto addr = data.addrLo.ADDR_LO() << 2;
       auto ptr = mem::translate(addr);
 
       decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
 
       switch (data.eventInitiator.EVENT_TYPE()) {
-      case latte::VGT_EVENT_TYPE_BOTTOM_OF_PIPE_TS:
+      case latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS:
          value = getGpuClock();
          break;
       default:
@@ -540,15 +540,15 @@ GLDriver::eventWriteEOP(const pm4::EventWriteEOP &data)
       }
 
       switch (data.addrLo.ENDIAN_SWAP()) {
-      case latte::CB_ENDIAN_NONE:
+      case latte::CB_ENDIAN::NONE:
          break;
-      case latte::CB_ENDIAN_8IN64:
+      case latte::CB_ENDIAN::SWAP_8IN64:
          value = byte_swap(value);
          break;
-      case latte::CB_ENDIAN_8IN32:
+      case latte::CB_ENDIAN::SWAP_8IN32:
          value = byte_swap(static_cast<uint32_t>(value));
          break;
-      case latte::CB_ENDIAN_8IN16:
+      case latte::CB_ENDIAN::SWAP_8IN16:
          decaf_abort("Unexpected EVENT_WRITE_EOP endian swap 8IN16");
       }
 

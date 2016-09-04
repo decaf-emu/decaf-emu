@@ -347,9 +347,9 @@ initRegisters()
    pm4::write(pm4::SetContextReg {
       latte::Register::PA_SU_VTX_CNTL,
       latte::PA_SU_VTX_CNTL::get(0)
-         .PIX_CENTER(latte::PA_SU_VTX_CNTL_PIX_CENTER_OGL)
-         .ROUND_MODE(latte::PA_SU_VTX_CNTL_ROUND_TRUNCATE)
-         .QUANT_MODE(latte::PA_SU_VTX_CNTL_QUANT_1_256TH)
+         .PIX_CENTER(latte::PA_SU_VTX_CNTL_PIX_CENTER::OGL)
+         .ROUND_MODE(latte::PA_SU_VTX_CNTL_ROUND_MODE::TRUNCATE)
+         .QUANT_MODE(latte::PA_SU_VTX_CNTL_QUANT_MODE::QUANT_1_256TH)
          .value
    });
 
@@ -459,7 +459,7 @@ initRegisters()
    pm4::write(pm4::SetContextReg {
       latte::Register::VGT_OUTPUT_PATH_CNTL,
       latte::VGT_OUTPUT_PATH_CNTL::get(0)
-         .PATH_SELECT(latte::VGT_OUTPATH_TESS_EN)
+         .PATH_SELECT(latte::VGT_OUTPUT_PATH_SELECT::TESS_EN)
          .value
    });
 
@@ -607,10 +607,10 @@ initRegisters()
       latte::SPI_INTERP_CONTROL_0::get(0)
       .FLAT_SHADE_ENA(true)
       .PNT_SPRITE_ENA(false)
-      .PNT_SPRITE_OVRD_X(latte::SPI_PNT_SPRITE_SEL::SPI_PNT_SPRITE_SEL_S)
-      .PNT_SPRITE_OVRD_Y(latte::SPI_PNT_SPRITE_SEL::SPI_PNT_SPRITE_SEL_T)
-      .PNT_SPRITE_OVRD_Z(latte::SPI_PNT_SPRITE_SEL::SPI_PNT_SPRITE_SEL_0)
-      .PNT_SPRITE_OVRD_W(latte::SPI_PNT_SPRITE_SEL::SPI_PNT_SPRITE_SEL_1)
+      .PNT_SPRITE_OVRD_X(latte::SPI_PNT_SPRITE_SEL::SEL_S)
+      .PNT_SPRITE_OVRD_Y(latte::SPI_PNT_SPRITE_SEL::SEL_T)
+      .PNT_SPRITE_OVRD_Z(latte::SPI_PNT_SPRITE_SEL::SEL_0)
+      .PNT_SPRITE_OVRD_W(latte::SPI_PNT_SPRITE_SEL::SEL_1)
       .PNT_SPRITE_TOP_1(true)
       .value
    });
@@ -674,7 +674,7 @@ initRegisters()
 
    uint32_t values28C30_28C3C[] = {
       latte::CB_CLRCMP_CONTROL::get(0)
-      .CLRCMP_FCN_SEL(latte::CB_CLRCMP_SEL_SRC)
+      .CLRCMP_FCN_SEL(latte::CB_CLRCMP_SEL::SRC)
       .value,
       latte::CB_CLRCMP_SRC::get(0)
       .CLRCMP_SRC(0)

@@ -29,13 +29,13 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
    auto dstSelZ = vtx.word1.DST_SEL_Z();
    auto dstSelW = vtx.word1.DST_SEL_W();
 
-   if (dstSelX != latte::SQ_SEL_MASK || dstSelY != latte::SQ_SEL_MASK || dstSelZ != latte::SQ_SEL_MASK || dstSelW != latte::SQ_SEL_MASK) {
+   if (dstSelX != latte::SQ_SEL::SEL_MASK || dstSelY != latte::SQ_SEL::SEL_MASK || dstSelZ != latte::SQ_SEL::SEL_MASK || dstSelW != latte::SQ_SEL::SEL_MASK) {
       if (id == SQ_VTX_INST_SEMANTIC) {
          out << "SEM[" << vtx.sem.SEMANTIC_ID() << "]";
       } else {
          out << "R" << vtx.gpr.DST_GPR();
 
-         if (vtx.gpr.DST_REL() == SQ_RELATIVE) {
+         if (vtx.gpr.DST_REL() == SQ_REL::REL) {
             out << "[AL]";
          }
       }
@@ -54,7 +54,7 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
    // src
    out << ", R" << vtx.word0.SRC_GPR();
 
-   if (vtx.word0.SRC_REL() == SQ_RELATIVE) {
+   if (vtx.word0.SRC_REL() == SQ_REL::REL) {
       out << "[AL]";
    }
 
@@ -67,11 +67,11 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
 
 
    // fetch_type
-   if (vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_VERTEX_DATA) {
+   if (vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::VERTEX_DATA) {
       out << " VERTEX_DATA";
-   } else if (vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_INSTANCE_DATA) {
+   } else if (vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::INSTANCE_DATA) {
       out << " INSTANCE_DATA";
-   } else if(vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_NO_INDEX_OFFSET) {
+   } else if(vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::NO_INDEX_OFFSET) {
       out << " NO_INDEX_OFFSET";
    } else {
       out << " FETCH_TYPE(" << vtx.word0.FETCH_TYPE() << ")";
@@ -119,11 +119,11 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
       out << " WHOLE_QUAD";
    }
 
-   if (vtx.word2.ENDIAN_SWAP() == SQ_ENDIAN_8IN16) {
+   if (vtx.word2.ENDIAN_SWAP() == SQ_ENDIAN::SWAP_8IN16) {
       out << " ENDIAN_SWAP(8IN16)";
-   } else if (vtx.word2.ENDIAN_SWAP() == SQ_ENDIAN_8IN32) {
+   } else if (vtx.word2.ENDIAN_SWAP() == SQ_ENDIAN::SWAP_8IN32) {
       out << " ENDIAN_SWAP(8IN32)";
-   } else if (vtx.word2.ENDIAN_SWAP() != SQ_ENDIAN_NONE) {
+   } else if (vtx.word2.ENDIAN_SWAP() != SQ_ENDIAN::NONE) {
       out << " ENDIAN_SWAP(" << vtx.word2.ENDIAN_SWAP() << ")";
    }
 

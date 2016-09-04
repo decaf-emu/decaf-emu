@@ -10,19 +10,19 @@ char
 disassembleDestMask(SQ_SEL sel)
 {
    switch (sel) {
-   case SQ_SEL_X:
+   case SQ_SEL::SEL_X:
       return 'x';
-   case SQ_SEL_Y:
+   case SQ_SEL::SEL_Y:
       return 'y';
-   case SQ_SEL_Z:
+   case SQ_SEL::SEL_Z:
       return 'z';
-   case SQ_SEL_W:
+   case SQ_SEL::SEL_W:
       return 'w';
-   case SQ_SEL_0:
+   case SQ_SEL::SEL_0:
       return '0';
-   case SQ_SEL_1:
+   case SQ_SEL::SEL_1:
       return '1';
-   case SQ_SEL_MASK:
+   case SQ_SEL::SEL_MASK:
       return '_';
    default:
       return '?';
@@ -40,30 +40,25 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    auto arrayBase = inst.exp.word0.ARRAY_BASE();
 
    if (id == SQ_CF_INST_EXP || id == SQ_CF_INST_EXP_DONE) {
-
       switch (type) {
-      case SQ_EXPORT_PIXEL:
+      case SQ_EXPORT_TYPE::PIXEL:
          out << " PIXEL" << arrayBase;
          break;
-      case SQ_EXPORT_POS:
+      case SQ_EXPORT_TYPE::POS:
          out << " POS" << (arrayBase - 60);
          break;
-      case SQ_EXPORT_PARAM:
+      case SQ_EXPORT_TYPE::PARAM:
          out << " PARAM" << arrayBase;
          break;
       default:
          out << " INVALID" << arrayBase;
          break;
       }
-
    } else if (id >= SQ_CF_INST_MEM_STREAM0 && id <= SQ_CF_INST_MEM_STREAM3
-              && (type == SQ_EXPORT_READ || type == SQ_EXPORT_READ_IND)) {
-
+              && (type == SQ_MEM_EXPORT_TYPE::READ || type == SQ_MEM_EXPORT_TYPE::READ_IND)) {
       out << " INVALID_READ";
-
    } else {
-
-      if (type == SQ_EXPORT_WRITE || type == SQ_EXPORT_WRITE_IND) {
+      if (type == SQ_MEM_EXPORT_TYPE::WRITE || type == SQ_MEM_EXPORT_TYPE::WRITE_IND) {
          out << " WRITE(";
       } else {
          out << " READ(";
@@ -75,7 +70,7 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
          out << (arrayBase * 4);
       }
 
-      if (type == SQ_EXPORT_WRITE_IND || type == SQ_EXPORT_READ_IND) {
+      if (type == SQ_MEM_EXPORT_TYPE::WRITE_IND || type == SQ_MEM_EXPORT_TYPE::READ_IND) {
          out << " + R" << inst.exp.word0.INDEX_GPR();
       }
 
@@ -85,7 +80,7 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 
    out << ", ";
 
-   if (inst.exp.word0.RW_REL() == SQ_RELATIVE) {
+   if (inst.exp.word0.RW_REL() == SQ_REL::REL) {
       out << "R[AL + " << inst.exp.word0.RW_GPR() << "]";
    } else {
       out << "R" << inst.exp.word0.RW_GPR();

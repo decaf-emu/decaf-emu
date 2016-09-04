@@ -51,7 +51,7 @@ GX2InitTextureRegs(GX2Texture *texture)
       tileType = 1;
    }
 
-   if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5) {
+   if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 && format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       pitch *= 4;
    }
 
@@ -82,18 +82,18 @@ GX2InitTextureRegs(GX2Texture *texture)
       .DATA_FORMAT(format);
 
    // Word 4
-   auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
-   auto numFormat = latte::SQ_NUM_FORMAT_NORM;
+   auto formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+   auto numFormat = latte::SQ_NUM_FORMAT::NORM;
    auto forceDegamma = false;
 
    if (texture->surface.format & GX2AttribFormatFlags::SIGNED) {
-      formatComp = latte::SQ_FORMAT_COMP_SIGNED;
+      formatComp = latte::SQ_FORMAT_COMP::SIGNED;
    }
 
    if (texture->surface.format & GX2AttribFormatFlags::SCALED) {
-      numFormat = latte::SQ_NUM_FORMAT_SCALED;
+      numFormat = latte::SQ_NUM_FORMAT::SCALED;
    } else if (texture->surface.format & GX2AttribFormatFlags::INTEGER) {
-      numFormat = latte::SQ_NUM_FORMAT_INT;
+      numFormat = latte::SQ_NUM_FORMAT::INT;
    }
 
    if (texture->surface.format & GX2AttribFormatFlags::DEGAMMA) {
@@ -154,7 +154,7 @@ GX2InitTextureRegs(GX2Texture *texture)
    word6 = word6
       .MAX_ANISO_RATIO(4)
       .PERF_MODULATION(7)
-      .TYPE(latte::SQ_TEX_VTX_VALID_TEXTURE);
+      .TYPE(latte::SQ_TEX_VTX_TYPE::VALID_TEXTURE);
 
    // Update big endian register in texture
    texture->regs.word0 = word0;
@@ -203,21 +203,21 @@ void
 GX2SetPixelTexture(GX2Texture *texture,
                    uint32_t unit)
 {
-   setTexture(texture, latte::SQ_PS_TEX_RESOURCE_0, unit);
+   setTexture(texture, latte::SQ_RES_OFFSET::PS_TEX_RESOURCE_0, unit);
 }
 
 void
 GX2SetVertexTexture(GX2Texture *texture,
                     uint32_t unit)
 {
-   setTexture(texture, latte::SQ_VS_TEX_RESOURCE_0, unit);
+   setTexture(texture, latte::SQ_RES_OFFSET::VS_TEX_RESOURCE_0, unit);
 }
 
 void
 GX2SetGeometryTexture(GX2Texture *texture,
                       uint32_t unit)
 {
-   setTexture(texture, latte::SQ_GS_TEX_RESOURCE_0, unit);
+   setTexture(texture, latte::SQ_RES_OFFSET::GS_TEX_RESOURCE_0, unit);
 }
 
 } // namespace gx2

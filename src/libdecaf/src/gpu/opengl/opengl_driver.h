@@ -239,7 +239,7 @@ struct SamplerCache
    gl::GLenum minFilter = gl::GL_NEAREST_MIPMAP_LINEAR;
    gl::GLenum magFilter = gl::GL_LINEAR;
 
-   latte::SQ_TEX_BORDER_COLOR borderColorType = latte::SQ_TEX_BORDER_COLOR_TRANS_BLACK;
+   latte::SQ_TEX_BORDER_COLOR borderColorType = latte::SQ_TEX_BORDER_COLOR::TRANS_BLACK;
    std::array<float, 4> borderColorValue;
 
    gl::GLenum depthCompareMode = gl::GL_NONE;
@@ -504,7 +504,7 @@ private:
    void
    drawPrimitives(uint32_t count,
                   const void *indices,
-                  latte::VGT_INDEX indexFmt);
+                  latte::VGT_INDEX_TYPE indexFmt);
 
    void
    drawPrimitivesIndexed(const void *indices,

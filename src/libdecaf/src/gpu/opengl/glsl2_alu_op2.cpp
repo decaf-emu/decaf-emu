@@ -59,30 +59,30 @@ insertArDestBegin(State &state,
                   const AluInst &inst,
                   SQ_CHAN unit)
 {
-   if (unit == SQ_CHAN_T) {
+   if (unit == SQ_CHAN::T) {
       throw translate_exception("Encountered AR instruction in invalid unit");
    }
 
-   if (inst.word1.ENCODING() != SQ_ALU_OP2) {
+   if (inst.word1.ENCODING() != SQ_ALU_ENCODING::OP2) {
       throw translate_exception("Unsupported non-op2 AR instruction");
    }
 
-   if (inst.op2.OMOD() != SQ_ALU_OMOD_OFF) {
+   if (inst.op2.OMOD() != SQ_ALU_OMOD::OFF) {
       throw translate_exception("Unsupport omod encountered for AR operation");
    }
 
    std::string arDest;
    switch (unit) {
-   case SQ_CHAN_X:
+   case SQ_CHAN::X:
       arDest = "AR.x";
       break;
-   case SQ_CHAN_Y:
+   case SQ_CHAN::Y:
       arDest = "AR.y";
       break;
-   case SQ_CHAN_Z:
+   case SQ_CHAN::Z:
       arDest = "AR.z";
       break;
-   case SQ_CHAN_W:
+   case SQ_CHAN::W:
       arDest = "AR.w";
       break;
    }

@@ -1,32 +1,34 @@
-#pragma once
-#include "common/types.h"
+#ifndef LATTE_ENUM_COMMON_H
+#define LATTE_ENUM_COMMON_H
 
-namespace latte
-{
+#include "common/enum_start.h"
 
-enum CB_ARRAY_MODE : uint32_t
-{
-   ARRAY_LINEAR_GENERAL = 0,
-   ARRAY_LINEAR_ALIGNED = 1,
-   ARRAY_2D_TILED_THIN1 = 4,
-};
+ENUM_NAMESPACE_BEG(latte)
 
-enum CB_READ_SIZE : uint32_t
-{
-   READ_256_BITS        = 0,
-   READ_512_BITS        = 1,
-};
+ENUM_BEG(BUFFER_ARRAY_MODE, uint32_t)
+   ENUM_VALUE(LINEAR_GENERAL,             0)
+   ENUM_VALUE(LINEAR_ALIGNED,             1)
+   ENUM_VALUE(TILED_2D_THIN1,             4)
+ENUM_END(BUFFER_ARRAY_MODE)
 
-enum REF_FUNC : uint32_t
-{
-   REF_NEVER            = 0,
-   REF_LESS             = 1,
-   REF_EQUAL            = 2,
-   REF_LEQUAL           = 3,
-   REF_GREATER          = 4,
-   REF_NOTEQUAL         = 5,
-   REF_GEQUAL           = 6,
-   REF_ALWAYS           = 7,
-};
+ENUM_BEG(BUFFER_READ_SIZE, uint32_t)
+   ENUM_VALUE(READ_256_BITS,              0)
+   ENUM_VALUE(READ_512_BITS,              1)
+ENUM_END(BUFFER_READ_SIZE)
 
-} // namespace latte
+ENUM_BEG(REF_FUNC, uint32_t)
+   ENUM_VALUE(NEVER,                      0)
+   ENUM_VALUE(LESS,                       1)
+   ENUM_VALUE(EQUAL,                      2)
+   ENUM_VALUE(LESS_EQUAL,                 3)
+   ENUM_VALUE(GREATER,                    4)
+   ENUM_VALUE(NOT_EQUAL,                  5)
+   ENUM_VALUE(GREATER_EQUAL,              6)
+   ENUM_VALUE(ALWAYS,                     7)
+ENUM_END(REF_FUNC)
+
+ENUM_NAMESPACE_END(latte)
+
+#include "common/enum_end.h"
+
+#endif // ifdef LATTE_ENUM_COMMON_H

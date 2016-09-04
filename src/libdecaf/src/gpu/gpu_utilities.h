@@ -22,4 +22,4 @@ bool
 getDataFormatIsFloat(latte::SQ_DATA_FORMAT format);
 
 latte::SQ_TILE_MODE
-getArrayModeTileMode(latte::CB_ARRAY_MODE mode);
+getArrayModeTileMode(latte::BUFFER_ARRAY_MODE mode);

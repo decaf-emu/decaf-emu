@@ -16,7 +16,7 @@ GX2SampleTopGPUCycle(be_val<uint64_t> *result)
 
    auto addrLo = pm4::MW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(result) >> 2)
-      .ENDIAN_SWAP(latte::CB_ENDIAN_8IN64);
+      .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN64);
 
    auto addrHi = pm4::MW_ADDR_HI::get(0)
       .CNTR_SEL(pm4::MW_WRITE_CLOCK);
@@ -30,11 +30,11 @@ GX2SampleBottomGPUCycle(be_val<uint64_t> *result)
    *result = -1;
 
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE_BOTTOM_OF_PIPE_TS);
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS);
 
    auto addrLo = pm4::EW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(result) >> 2)
-      .ENDIAN_SWAP(latte::CB_ENDIAN_8IN64);
+      .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN64);
 
    auto addrHi = pm4::EWP_ADDR_HI::get(0)
       .DATA_SEL(pm4::EWP_DATA_CLOCK);
@@ -60,7 +60,9 @@ GX2SetGPUTimeout(uint32_t timeout)
    gGpuTimeout = timeout;
 }
 
-void beginOcclusionQuery(GX2QueryData *data, bool gpuMemoryWrite)
+static void
+beginOcclusionQuery(GX2QueryData *data,
+                    bool gpuMemoryWrite)
 {
    decaf_check(mem::untranslate(data) % 4 == 0);
 
@@ -108,8 +110,8 @@ void beginOcclusionQuery(GX2QueryData *data, bool gpuMemoryWrite)
 
    // EVENT_WRITE
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE_ZPASS_DONE)
-      .EVENT_INDEX(latte::VGT_EVENT_INDEX_ZPASS_DONE);
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE::ZPASS_DONE)
+      .EVENT_INDEX(latte::VGT_EVENT_INDEX::ZPASS_DONE);
 
    auto addrLo = pm4::EW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(data) >> 2);
@@ -119,12 +121,14 @@ void beginOcclusionQuery(GX2QueryData *data, bool gpuMemoryWrite)
    pm4::write(pm4::EventWrite { eventInitiator, addrLo, addrHi });
 }
 
-void endOcclusionQuery(GX2QueryData *data, bool gpuMemoryWrite)
+static void
+endOcclusionQuery(GX2QueryData *data,
+                  bool gpuMemoryWrite)
 {
    // EVENT_WRITE
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE_ZPASS_DONE)
-      .EVENT_INDEX(latte::VGT_EVENT_INDEX_ZPASS_DONE);
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE::ZPASS_DONE)
+      .EVENT_INDEX(latte::VGT_EVENT_INDEX::ZPASS_DONE);
 
    auto addrLo = pm4::EW_ADDR_LO::get(0)
       .ADDR_LO((mem::untranslate(data) + 8) >> 2);
@@ -140,14 +144,16 @@ void endOcclusionQuery(GX2QueryData *data, bool gpuMemoryWrite)
    pm4::write(pm4::SetContextReg { latte::Register::DB_RENDER_CONTROL, render_control.value });
 }
 
-void beginStreamOutStatsQuery(GX2QueryData *data, bool gpuMemoryWrite)
+static void
+beginStreamOutStatsQuery(GX2QueryData *data,
+                         bool gpuMemoryWrite)
 {
    decaf_check(mem::untranslate(data) % 4 == 0);
 
    // There is some magic number read from their global gx2 state + 0xB0C, no
    // fucking clue what it is, so let's just set it to 0?
    auto magicNumber = 0u;
-   auto endianSwap = latte::CB_ENDIAN {};
+   auto endianSwap = latte::CB_ENDIAN::NONE;
 
    if (gpuMemoryWrite) {
       coreinit::DCInvalidateRange(data, sizeof(GX2QueryData));
@@ -167,7 +173,7 @@ void beginStreamOutStatsQuery(GX2QueryData *data, bool gpuMemoryWrite)
 
       pm4::write(pm4::PfpSyncMe {});
 
-      endianSwap = latte::CB_ENDIAN_8IN32;
+      endianSwap = latte::CB_ENDIAN::SWAP_8IN32;
    } else {
       std::memset(data, 0, sizeof(GX2QueryData));
 
@@ -176,13 +182,13 @@ void beginStreamOutStatsQuery(GX2QueryData *data, bool gpuMemoryWrite)
       dataWords[magicNumber + 1] = 0;
       GX2Invalidate(GX2InvalidateMode::StreamOutBuffer, dataWords, sizeof(GX2QueryData));
 
-      endianSwap = latte::CB_ENDIAN_8IN64;
+      endianSwap = latte::CB_ENDIAN::SWAP_8IN64;
    }
 
    // EVENT_WRITE
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE_SAMPLE_STREAMOUTSTATS)
-      .EVENT_INDEX(latte::VGT_EVENT_INDEX_SAMPLE_STREAMOUTSTAT);
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE::SAMPLE_STREAMOUTSTATS)
+      .EVENT_INDEX(latte::VGT_EVENT_INDEX::SAMPLE_STREAMOUTSTAT);
 
    auto addrLo = pm4::EW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(data) >> 2)
@@ -193,20 +199,22 @@ void beginStreamOutStatsQuery(GX2QueryData *data, bool gpuMemoryWrite)
    pm4::write(pm4::EventWrite { eventInitiator, addrLo, addrHi });
 }
 
-void endStreamOutStatsQuery(GX2QueryData *data, bool gpuMemoryWrite)
+static void
+endStreamOutStatsQuery(GX2QueryData *data,
+                       bool gpuMemoryWrite)
 {
-   auto endianSwap = latte::CB_ENDIAN {};
+   auto endianSwap = latte::CB_ENDIAN::NONE;
 
    if (gpuMemoryWrite) {
-      endianSwap = latte::CB_ENDIAN_8IN32;
+      endianSwap = latte::CB_ENDIAN::SWAP_8IN32;
    } else {
-      endianSwap = latte::CB_ENDIAN_8IN64;
+      endianSwap = latte::CB_ENDIAN::SWAP_8IN64;
    }
 
    // EVENT_WRITE
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE_SAMPLE_STREAMOUTSTATS)
-      .EVENT_INDEX(latte::VGT_EVENT_INDEX_SAMPLE_STREAMOUTSTAT);
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE::SAMPLE_STREAMOUTSTATS)
+      .EVENT_INDEX(latte::VGT_EVENT_INDEX::SAMPLE_STREAMOUTSTAT);
 
    auto addrLo = pm4::EW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(data) >> 2)

@@ -65,7 +65,7 @@ getSurfaceInfo(GX2Surface *surface,
       auto numSamples = 1 << surface->aa;
       auto elemSize = 1u;
 
-      if (hwFormat >= latte::FMT_BC1 && hwFormat <= latte::FMT_BC5) {
+      if (hwFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && hwFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
          elemSize = 4;
       }
 
@@ -228,7 +228,7 @@ copySurface(GX2Surface *surfaceSrc,
    auto srcHeight = std::max<uint32_t>(1u, surfaceSrc->height >> srcLevel);
    auto hwFormatSrc = static_cast<latte::SQ_DATA_FORMAT>(surfaceSrc->format & 0x3F);
 
-   if (hwFormatSrc >= latte::FMT_BC1 && hwFormatSrc <= latte::FMT_BC5) {
+   if (hwFormatSrc >= latte::SQ_DATA_FORMAT::FMT_BC1 && hwFormatSrc <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       srcWidth = (srcWidth + 3) / 4;
       srcHeight = (srcHeight + 3) / 4;
    }
@@ -237,7 +237,7 @@ copySurface(GX2Surface *surfaceSrc,
    auto dstHeight = std::max<uint32_t>(1u, surfaceDst->height >> dstLevel);
    auto hwFormatDst = static_cast<latte::SQ_DATA_FORMAT>(surfaceDst->format & 0x3F);
 
-   if (hwFormatDst >= latte::FMT_BC1 && hwFormatDst <= latte::FMT_BC5) {
+   if (hwFormatDst >= latte::SQ_DATA_FORMAT::FMT_BC1 && hwFormatDst <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       dstWidth = (dstWidth + 3) / 4;
       dstHeight = (dstHeight + 3) / 4;
    }

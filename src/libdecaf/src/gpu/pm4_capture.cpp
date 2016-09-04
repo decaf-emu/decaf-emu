@@ -328,29 +328,29 @@ private:
       uint32_t numPixels = 0;
 
       switch (dim) {
-      case latte::SQ_TEX_DIM_1D:
+      case latte::SQ_TEX_DIM::DIM_1D:
          numPixels = pitch;
          break;
-      case latte::SQ_TEX_DIM_2D:
+      case latte::SQ_TEX_DIM::DIM_2D:
          numPixels = pitch * height;
          break;
-      case latte::SQ_TEX_DIM_2D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
          numPixels = pitch * height * depth;
          break;
-      case latte::SQ_TEX_DIM_CUBEMAP:
+      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
          numPixels = pitch * height * 6;
          break;
-      case latte::SQ_TEX_DIM_3D:
+      case latte::SQ_TEX_DIM::DIM_3D:
          numPixels = pitch * height * depth;
          break;
-      case latte::SQ_TEX_DIM_1D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
          numPixels = pitch * height;
          break;
       default:
          decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
       }
 
-      if (format >= latte::FMT_BC1 && format <= latte::FMT_BC5) {
+      if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 && format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
          numPixels /= 4 * 4;
       }
 
@@ -372,7 +372,7 @@ private:
       }
 
       // Adjust address for swizzling
-      if (tileMode >= latte::SQ_TILE_MODE_TILED_2D_THIN1) {
+      if (tileMode >= latte::SQ_TILE_MODE::TILED_2D_THIN1) {
          baseAddress &= ~(0x800 - 1);
       } else {
          baseAddress &= ~(0x100 - 1);
@@ -404,7 +404,7 @@ private:
       auto tileMode = getArrayModeTileMode(cb_color_info.ARRAY_MODE());
 
       // Disabled for now, because it's a pointless upload
-      // trackSurface(addr, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, tileMode);
+      // trackSurface(addr, pitch, height, 1, latte::SQ_TEX_DIM::DIM_2D, format, tileMode);
    }
 
    void
@@ -426,7 +426,7 @@ private:
       auto tileMode = getArrayModeTileMode(db_depth_info.ARRAY_MODE());
 
       // Disabled for now, because it's a pointless upload
-      //trackSurface(addr, pitch, height, 1, latte::SQ_TEX_DIM_2D, format, tileMode);
+      //trackSurface(addr, pitch, height, 1, latte::SQ_TEX_DIM::DIM_2D, format, tileMode);
    }
 
    void
@@ -453,7 +453,7 @@ private:
    trackActiveAttribBuffers()
    {
       for (auto i = 0u; i < latte::MaxAttributes; ++i) {
-         auto resourceOffset = (latte::SQ_VS_ATTRIB_RESOURCE_0 + i) * 7;
+         auto resourceOffset = (latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + i) * 7;
          auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
          auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
 
@@ -476,7 +476,7 @@ private:
    trackActiveTextures()
    {
       for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         auto resourceOffset = (latte::SQ_PS_TEX_RESOURCE_0 + i) * 7;
+         auto resourceOffset = (latte::SQ_RES_OFFSET::PS_TEX_RESOURCE_0 + i) * 7;
          auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
          auto sq_tex_resource_word1 = getRegister<latte::SQ_TEX_RESOURCE_WORD1_N>(latte::Register::SQ_TEX_RESOURCE_WORD1_0 + 4 * resourceOffset);
          auto sq_tex_resource_word2 = getRegister<latte::SQ_TEX_RESOURCE_WORD2_N>(latte::Register::SQ_TEX_RESOURCE_WORD2_0 + 4 * resourceOffset);
@@ -614,7 +614,7 @@ private:
          auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
          auto indexByteSize = 4u;
 
-         if (vgt_dma_index_type.INDEX_TYPE() == latte::VGT_INDEX_16) {
+         if (vgt_dma_index_type.INDEX_TYPE() == latte::VGT_INDEX_TYPE::INDEX_16) {
             indexByteSize = 2u;
          }
 

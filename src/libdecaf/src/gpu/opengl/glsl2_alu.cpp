@@ -18,20 +18,20 @@ insertIndexMode(fmt::MemoryWriter &out,
                 SQ_INDEX_MODE index)
 {
    switch (index) {
-   case SQ_INDEX_AR_X:
+   case SQ_INDEX_MODE::AR_X:
       out << "AR.x";
       break;
-   case SQ_INDEX_AR_Y:
+   case SQ_INDEX_MODE::AR_Y:
       out << "AR.y";
       break;
-   case SQ_INDEX_AR_Z:
+   case SQ_INDEX_MODE::AR_Z:
       out << "AR.z";
       break;
-   case SQ_INDEX_AR_W:
+   case SQ_INDEX_MODE::AR_W:
       out << "AR.w";
       break;
    /* TODO: We need to implement AL yet, let's throw an error for now.
-   case SQ_INDEX_LOOP:
+   case SQ_INDEX_MODE::LOOP:
       out << "AL";
       break;*/
    default:
@@ -44,16 +44,16 @@ insertChannel(fmt::MemoryWriter &out,
               SQ_CHAN channel)
 {
    switch (channel) {
-   case SQ_CHAN_X:
+   case SQ_CHAN::X:
       out << 'x';
       break;
-   case SQ_CHAN_Y:
+   case SQ_CHAN::Y:
       out << 'y';
       break;
-   case SQ_CHAN_Z:
+   case SQ_CHAN::Z:
       out << 'z';
       break;
-   case SQ_CHAN_W:
+   case SQ_CHAN::W:
       out << 'w';
       break;
    default:
@@ -69,7 +69,7 @@ insertSource0(State &state,
 {
    auto abs = false;
 
-   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+   if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       abs = inst.op2.SRC0_ABS();
    }
 
@@ -90,7 +90,7 @@ insertSource1(State &state,
 {
    auto abs = false;
 
-   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+   if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       abs = inst.op2.SRC1_ABS();
    }
 
@@ -194,7 +194,7 @@ insertSource(State &state,
    auto flags = SQ_ALU_FLAG_NONE;
    LiteralValue value;
 
-   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+   if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       flags = getInstructionFlags(inst.op2.ALU_INST());
    } else {
       flags = getInstructionFlags(inst.op3.ALU_INST());
@@ -208,10 +208,10 @@ insertSource(State &state,
       out << "-(";
    }
 
-   if ((sel >= SQ_ALU_REGISTER_FIRST && sel <= SQ_ALU_REGISTER_LAST)
-    || (sel >= SQ_ALU_KCACHE_BANK0_FIRST && sel <= SQ_ALU_KCACHE_BANK0_LAST)
-    || (sel >= SQ_ALU_KCACHE_BANK1_FIRST && sel <= SQ_ALU_KCACHE_BANK1_LAST)
-    || (sel >= SQ_ALU_SRC_CONST_FILE_FIRST && sel <= SQ_ALU_SRC_CONST_FILE_LAST)) {
+   if ((sel >= SQ_ALU_SRC::REGISTER_FIRST && sel <= SQ_ALU_SRC::REGISTER_LAST)
+    || (sel >= SQ_ALU_SRC::KCACHE_BANK0_FIRST && sel <= SQ_ALU_SRC::KCACHE_BANK0_LAST)
+    || (sel >= SQ_ALU_SRC::KCACHE_BANK1_FIRST && sel <= SQ_ALU_SRC::KCACHE_BANK1_LAST)
+    || (sel >= SQ_ALU_SRC::CONST_FILE_FIRST && sel <= SQ_ALU_SRC::CONST_FILE_LAST)) {
       // Register, Uniform Register, Uniform Block
       if (flags & SQ_ALU_FLAG_INT_IN) {
          out << "floatBitsToInt(";
@@ -222,8 +222,8 @@ insertSource(State &state,
       }
    } else {
       switch (sel) {
-      case SQ_ALU_SRC_PV:
-      case SQ_ALU_SRC_PS:
+      case SQ_ALU_SRC::PV:
+      case SQ_ALU_SRC::PS:
          // PreviousVector, PreviousScalar
          if (flags & SQ_ALU_FLAG_INT_IN) {
             out << "floatBitsToInt(";
@@ -233,13 +233,13 @@ insertSource(State &state,
             didTypeConversion = true;
          }
          break;
-      case SQ_ALU_SRC_1_DBL_L:
-      case SQ_ALU_SRC_1_DBL_M:
-      case SQ_ALU_SRC_0_5_DBL_L:
-      case SQ_ALU_SRC_0_5_DBL_M:
-      case SQ_ALU_SRC_0:
-      case SQ_ALU_SRC_1:
-      case SQ_ALU_SRC_0_5:
+      case SQ_ALU_SRC::IMM_1_DBL_L:
+      case SQ_ALU_SRC::IMM_1_DBL_M:
+      case SQ_ALU_SRC::IMM_0_5_DBL_L:
+      case SQ_ALU_SRC::IMM_0_5_DBL_M:
+      case SQ_ALU_SRC::IMM_0:
+      case SQ_ALU_SRC::IMM_1:
+      case SQ_ALU_SRC::IMM_0_5:
          // Constant values
          if (flags & SQ_ALU_FLAG_INT_IN) {
             out << "int(";
@@ -249,9 +249,9 @@ insertSource(State &state,
             didTypeConversion = true;
          }
          break;
-      case SQ_ALU_SRC_1_INT:
-      case SQ_ALU_SRC_M_1_INT:
-      case SQ_ALU_SRC_LITERAL:
+      case SQ_ALU_SRC::IMM_1_INT:
+      case SQ_ALU_SRC::IMM_M_1_INT:
+      case SQ_ALU_SRC::LITERAL:
          // No need for type conversion
          break;
       default:
@@ -260,9 +260,9 @@ insertSource(State &state,
    }
 
    // Now for actual value!
-   if (sel >= SQ_ALU_REGISTER_FIRST && sel <= SQ_ALU_REGISTER_LAST) {
+   if (sel >= SQ_ALU_SRC::REGISTER_FIRST && sel <= SQ_ALU_SRC::REGISTER_LAST) {
       // Registers
-      out << "R[" << (sel - SQ_ALU_REGISTER_FIRST);
+      out << "R[" << (sel - SQ_ALU_SRC::REGISTER_FIRST);
 
       if (rel) {
          out << " + ";
@@ -271,14 +271,14 @@ insertSource(State &state,
 
       out << ']';
       needsChannelSelect = true;
-   } else if ((sel >= SQ_ALU_KCACHE_BANK0_FIRST && sel <= SQ_ALU_KCACHE_BANK0_LAST)
-              || (sel >= SQ_ALU_KCACHE_BANK1_FIRST && sel <= SQ_ALU_KCACHE_BANK1_LAST)) {
-      auto index = (sel >= SQ_ALU_KCACHE_BANK1_FIRST) ? 1 : 0;
+   } else if ((sel >= SQ_ALU_SRC::KCACHE_BANK0_FIRST && sel <= SQ_ALU_SRC::KCACHE_BANK0_LAST)
+              || (sel >= SQ_ALU_SRC::KCACHE_BANK1_FIRST && sel <= SQ_ALU_SRC::KCACHE_BANK1_LAST)) {
+      auto index = (sel >= SQ_ALU_SRC::KCACHE_BANK1_FIRST) ? 1 : 0;
       auto addr = 0u;
       auto bank = 0u;
-      auto mode = SQ_CF_KCACHE_NOP;
+      auto mode = SQ_CF_KCACHE_MODE::NOP;
 
-      if (sel < SQ_ALU_KCACHE_BANK1_FIRST) {
+      if (sel < SQ_ALU_SRC::KCACHE_BANK1_FIRST) {
          addr = cf.alu.word1.KCACHE_ADDR0();
          bank = cf.alu.word0.KCACHE_BANK0();
          mode = cf.alu.word0.KCACHE_MODE0();
@@ -290,15 +290,15 @@ insertSource(State &state,
 
       auto id = (addr * 16);
 
-      if (sel >= SQ_ALU_KCACHE_BANK1_FIRST) {
-         id += sel - SQ_ALU_KCACHE_BANK1_FIRST;
+      if (sel >= SQ_ALU_SRC::KCACHE_BANK1_FIRST) {
+         id += sel - SQ_ALU_SRC::KCACHE_BANK1_FIRST;
       } else {
-         id += sel - SQ_ALU_KCACHE_BANK0_FIRST;
+         id += sel - SQ_ALU_SRC::KCACHE_BANK0_FIRST;
       }
 
-      if (mode == SQ_CF_KCACHE_LOCK_LOOP_INDEX) {
+      if (mode == SQ_CF_KCACHE_MODE::LOCK_LOOP_INDEX) {
          throw translate_exception("Unimplemented kcache lock mode SQ_CF_KCACHE_LOCK_LOOP_INDEX");
-      } else if (mode == SQ_CF_KCACHE_NOP) {
+      } else if (mode == SQ_CF_KCACHE_MODE::NOP) {
          throw translate_exception("Invalid kcache lock mode SQ_CF_KCACHE_NOP");
       }
 
@@ -315,7 +315,7 @@ insertSource(State &state,
 
       out << ']';
       needsChannelSelect = true;
-   } else if (sel >= SQ_ALU_SRC_CONST_FILE_FIRST && sel <= SQ_ALU_SRC_CONST_FILE_LAST) {
+   } else if (sel >= SQ_ALU_SRC::CONST_FILE_FIRST && sel <= SQ_ALU_SRC::CONST_FILE_LAST) {
       if (!state.shader) {
          out << "UR[";
       } else if (state.shader->type == Shader::PixelShader) {
@@ -326,7 +326,7 @@ insertSource(State &state,
          out << "GR[";
       }
 
-      out << (sel - SQ_ALU_SRC_CONST_FILE_FIRST);
+      out << (sel - SQ_ALU_SRC::CONST_FILE_FIRST);
 
       if (rel) {
          out << " + ";
@@ -337,29 +337,29 @@ insertSource(State &state,
       needsChannelSelect = true;
    } else {
       switch (sel) {
-      case SQ_ALU_SRC_PV:
+      case SQ_ALU_SRC::PV:
          out << "PV";
          needsChannelSelect = true;
          break;
-      case SQ_ALU_SRC_PS:
+      case SQ_ALU_SRC::PS:
          out << "PS";
          break;
-      case SQ_ALU_SRC_0:
+      case SQ_ALU_SRC::IMM_0:
          out << "0.0f";
          break;
-      case SQ_ALU_SRC_1:
+      case SQ_ALU_SRC::IMM_1:
          out << "1.0f";
          break;
-      case SQ_ALU_SRC_0_5:
+      case SQ_ALU_SRC::IMM_0_5:
          out << "0.5f";
          break;
-      case SQ_ALU_SRC_1_INT:
+      case SQ_ALU_SRC::IMM_1_INT:
          out << "1";
          break;
-      case SQ_ALU_SRC_M_1_INT:
+      case SQ_ALU_SRC::IMM_M_1_INT:
          out << "-1";
          break;
-      case SQ_ALU_SRC_LITERAL:
+      case SQ_ALU_SRC::LITERAL:
          value.asUint = state.literals[chan];
 
          if (flags & SQ_ALU_FLAG_INT_IN) {
@@ -370,32 +370,32 @@ insertSource(State &state,
             out.write("{:.6f}f", value.asFloat);
          }
          break;
-      case SQ_ALU_SRC_1_DBL_L:
-      case SQ_ALU_SRC_1_DBL_M:
-      case SQ_ALU_SRC_0_5_DBL_L:
-      case SQ_ALU_SRC_0_5_DBL_M:
-      case SQ_ALU_SRC_LDS_OQ_A:
-      case SQ_ALU_SRC_LDS_OQ_B:
-      case SQ_ALU_SRC_LDS_OQ_A_POP:
-      case SQ_ALU_SRC_LDS_OQ_B_POP:
-      case SQ_ALU_SRC_LDS_DIRECT_A:
-      case SQ_ALU_SRC_LDS_DIRECT_B:
-      case SQ_ALU_SRC_TIME_HI:
-      case SQ_ALU_SRC_TIME_LO:
-      case SQ_ALU_SRC_MASK_HI:
-      case SQ_ALU_SRC_MASK_LO:
-      case SQ_ALU_SRC_HW_WAVE_ID:
-      case SQ_ALU_SRC_SIMD_ID:
-      case SQ_ALU_SRC_SE_ID:
-      case SQ_ALU_SRC_HW_THREADGRP_ID:
-      case SQ_ALU_SRC_WAVE_ID_IN_GRP:
-      case SQ_ALU_SRC_NUM_THREADGRP_WAVES:
-      case SQ_ALU_SRC_HW_ALU_ODD:
-      case SQ_ALU_SRC_LOOP_IDX:
-      case SQ_ALU_SRC_PARAM_BASE_ADDR:
-      case SQ_ALU_SRC_NEW_PRIM_MASK:
-      case SQ_ALU_SRC_PRIM_MASK_HI:
-      case SQ_ALU_SRC_PRIM_MASK_LO:
+      case SQ_ALU_SRC::IMM_1_DBL_L:
+      case SQ_ALU_SRC::IMM_1_DBL_M:
+      case SQ_ALU_SRC::IMM_0_5_DBL_L:
+      case SQ_ALU_SRC::IMM_0_5_DBL_M:
+      case SQ_ALU_SRC::LDS_OQ_A:
+      case SQ_ALU_SRC::LDS_OQ_B:
+      case SQ_ALU_SRC::LDS_OQ_A_POP:
+      case SQ_ALU_SRC::LDS_OQ_B_POP:
+      case SQ_ALU_SRC::LDS_DIRECT_A:
+      case SQ_ALU_SRC::LDS_DIRECT_B:
+      case SQ_ALU_SRC::TIME_HI:
+      case SQ_ALU_SRC::TIME_LO:
+      case SQ_ALU_SRC::MASK_HI:
+      case SQ_ALU_SRC::MASK_LO:
+      case SQ_ALU_SRC::HW_WAVE_ID:
+      case SQ_ALU_SRC::SIMD_ID:
+      case SQ_ALU_SRC::SE_ID:
+      case SQ_ALU_SRC::HW_THREADGRP_ID:
+      case SQ_ALU_SRC::WAVE_ID_IN_GRP:
+      case SQ_ALU_SRC::NUM_THREADGRP_WAVES:
+      case SQ_ALU_SRC::HW_ALU_ODD:
+      case SQ_ALU_SRC::LOOP_IDX:
+      case SQ_ALU_SRC::PARAM_BASE_ADDR:
+      case SQ_ALU_SRC::NEW_PRIM_MASK:
+      case SQ_ALU_SRC::PRIM_MASK_HI:
+      case SQ_ALU_SRC::PRIM_MASK_LO:
       default:
          throw translate_exception(fmt::format("Unsupported ALU source sel {}", sel));
       }
@@ -403,10 +403,10 @@ insertSource(State &state,
 
    // Do a sanity check, ensure that we only use relative indexing with registers
    if (rel) {
-      if ((sel < SQ_ALU_REGISTER_FIRST || sel > SQ_ALU_REGISTER_LAST)
-       && (sel < SQ_ALU_SRC_CONST_FILE_FIRST || sel > SQ_ALU_SRC_CONST_FILE_LAST)
-       && (sel < SQ_ALU_KCACHE_BANK0_FIRST || sel > SQ_ALU_KCACHE_BANK0_LAST)
-       && (sel < SQ_ALU_KCACHE_BANK1_FIRST || sel > SQ_ALU_KCACHE_BANK1_LAST)) {
+      if ((sel < SQ_ALU_SRC::REGISTER_FIRST || sel > SQ_ALU_SRC::REGISTER_LAST)
+       && (sel < SQ_ALU_SRC::CONST_FILE_FIRST || sel > SQ_ALU_SRC::CONST_FILE_LAST)
+       && (sel < SQ_ALU_SRC::KCACHE_BANK0_FIRST || sel > SQ_ALU_SRC::KCACHE_BANK0_LAST)
+       && (sel < SQ_ALU_SRC::KCACHE_BANK1_FIRST || sel > SQ_ALU_SRC::KCACHE_BANK1_LAST)) {
          throw translate_exception(fmt::format("Relative AluSource is only supported for registers and uniforms, sel: {}", sel));
       }
    }
@@ -434,19 +434,19 @@ insertPreviousValueUpdate(fmt::MemoryWriter &out,
                           SQ_CHAN unit)
 {
    switch (unit) {
-   case SQ_CHAN_X:
+   case SQ_CHAN::X:
       out << "PVo.x = ";
       break;
-   case SQ_CHAN_Y:
+   case SQ_CHAN::Y:
       out << "PVo.y = ";
       break;
-   case SQ_CHAN_Z:
+   case SQ_CHAN::Z:
       out << "PVo.z = ";
       break;
-   case SQ_CHAN_W:
+   case SQ_CHAN::W:
       out << "PVo.w = ";
       break;
-   case SQ_CHAN_T:
+   case SQ_CHAN::T:
       out << "PSo   = ";
       break;
    }
@@ -459,12 +459,12 @@ insertDestBegin(State &state,
                 SQ_CHAN unit)
 {
    auto flags = SQ_ALU_FLAG_NONE;
-   auto omod = SQ_ALU_OMOD_OFF;
+   auto omod = SQ_ALU_OMOD::OFF;
    auto writeMask = true;
 
    insertPreviousValueUpdate(state.out, unit);
 
-   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+   if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       writeMask = inst.op2.WRITE_MASK();
       omod = inst.op2.OMOD();
       flags = getInstructionFlags(inst.op2.ALU_INST());
@@ -482,19 +482,19 @@ insertDestBegin(State &state,
       postWrite << " = ";
 
       switch (unit) {
-      case SQ_CHAN_X:
+      case SQ_CHAN::X:
          postWrite << "PVo.x";
          break;
-      case SQ_CHAN_Y:
+      case SQ_CHAN::Y:
          postWrite << "PVo.y";
          break;
-      case SQ_CHAN_Z:
+      case SQ_CHAN::Z:
          postWrite << "PVo.z";
          break;
-      case SQ_CHAN_W:
+      case SQ_CHAN::W:
          postWrite << "PVo.w";
          break;
-      case SQ_CHAN_T:
+      case SQ_CHAN::T:
          postWrite << "PSo";
          break;
       }
@@ -514,7 +514,7 @@ insertDestBegin(State &state,
       state.out << "clamp(";
    }
 
-   if (omod != SQ_ALU_OMOD_OFF) {
+   if (omod != SQ_ALU_OMOD::OFF) {
       state.out << '(';
    }
 }
@@ -524,10 +524,10 @@ insertDestEnd(State &state,
               const ControlFlowInst &cf,
               const AluInst &inst)
 {
-   auto omod = SQ_ALU_OMOD_OFF;
+   auto omod = SQ_ALU_OMOD::OFF;
    auto flags = SQ_ALU_FLAG_NONE;
 
-   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+   if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       omod = inst.op2.OMOD();
       flags = getInstructionFlags(inst.op2.ALU_INST());
    } else {
@@ -535,15 +535,15 @@ insertDestEnd(State &state,
    }
 
    switch (omod) {
-   case SQ_ALU_OMOD_OFF:
+   case SQ_ALU_OMOD::OFF:
       break;
-   case SQ_ALU_OMOD_M2:
+   case SQ_ALU_OMOD::M2:
       state.out << ") * 2";
       break;
-   case SQ_ALU_OMOD_M4:
+   case SQ_ALU_OMOD::M4:
       state.out << ") * 4";
       break;
-   case SQ_ALU_OMOD_D2:
+   case SQ_ALU_OMOD::D2:
       state.out << ") / 2";
       break;
    default:

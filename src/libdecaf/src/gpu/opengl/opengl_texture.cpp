@@ -18,17 +18,17 @@ static gl::GLenum
 getTextureSwizzle(latte::SQ_SEL sel)
 {
    switch (sel) {
-   case latte::SQ_SEL_X:
+   case latte::SQ_SEL::SEL_X:
       return gl::GL_RED;
-   case latte::SQ_SEL_Y:
+   case latte::SQ_SEL::SEL_Y:
       return gl::GL_GREEN;
-   case latte::SQ_SEL_Z:
+   case latte::SQ_SEL::SEL_Z:
       return gl::GL_BLUE;
-   case latte::SQ_SEL_W:
+   case latte::SQ_SEL::SEL_W:
       return gl::GL_ALPHA;
-   case latte::SQ_SEL_0:
+   case latte::SQ_SEL::SEL_0:
       return gl::GL_ZERO;
-   case latte::SQ_SEL_1:
+   case latte::SQ_SEL::SEL_1:
       return gl::GL_ONE;
    default:
       decaf_abort(fmt::format("Unimplemented compressed texture swizzle {}", sel));
@@ -51,7 +51,7 @@ bool GLDriver::checkActiveTextures()
          continue;
       }
 
-      auto resourceOffset = (latte::SQ_PS_TEX_RESOURCE_0 + i) * 7;
+      auto resourceOffset = (latte::SQ_RES_OFFSET::PS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
       auto sq_tex_resource_word1 = getRegister<latte::SQ_TEX_RESOURCE_WORD1_N>(latte::Register::SQ_TEX_RESOURCE_WORD1_0 + 4 * resourceOffset);
       auto sq_tex_resource_word2 = getRegister<latte::SQ_TEX_RESOURCE_WORD2_N>(latte::Register::SQ_TEX_RESOURCE_WORD2_0 + 4 * resourceOffset);
@@ -85,7 +85,7 @@ bool GLDriver::checkActiveTextures()
       auto isDepthBuffer = !!sq_tex_resource_word0.TILE_TYPE();
       auto samples = 0u;
 
-      if (dim == latte::SQ_TEX_DIM_2D_MSAA || dim == latte::SQ_TEX_DIM_2D_ARRAY_MSAA) {
+      if (dim == latte::SQ_TEX_DIM::DIM_2D_MSAA || dim == latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA) {
          samples = 1 << sq_tex_resource_word5.LAST_LEVEL();
       }
 
@@ -129,20 +129,20 @@ static gl::GLenum
 getTextureWrap(latte::SQ_TEX_CLAMP clamp)
 {
    switch (clamp) {
-   case latte::SQ_TEX_WRAP:
+   case latte::SQ_TEX_CLAMP::WRAP:
       return gl::GL_REPEAT;
-   case latte::SQ_TEX_MIRROR:
+   case latte::SQ_TEX_CLAMP::MIRROR:
       return gl::GL_MIRRORED_REPEAT;
-   case latte::SQ_TEX_CLAMP_LAST_TEXEL:
+   case latte::SQ_TEX_CLAMP::CLAMP_LAST_TEXEL:
       return gl::GL_CLAMP_TO_EDGE;
-   case latte::SQ_TEX_MIRROR_ONCE_LAST_TEXEL:
+   case latte::SQ_TEX_CLAMP::MIRROR_ONCE_LAST_TEXEL:
       return gl::GL_MIRROR_CLAMP_TO_EDGE;
-   case latte::SQ_TEX_CLAMP_BORDER:
+   case latte::SQ_TEX_CLAMP::CLAMP_BORDER:
       return gl::GL_CLAMP_TO_BORDER;
-   case latte::SQ_TEX_MIRROR_ONCE_BORDER:
+   case latte::SQ_TEX_CLAMP::MIRROR_ONCE_BORDER:
       return gl::GL_MIRROR_CLAMP_TO_BORDER_EXT;
-   case latte::SQ_TEX_CLAMP_HALF_BORDER:
-   case latte::SQ_TEX_MIRROR_ONCE_HALF_BORDER:
+   case latte::SQ_TEX_CLAMP::CLAMP_HALF_BORDER:
+   case latte::SQ_TEX_CLAMP::MIRROR_ONCE_HALF_BORDER:
    default:
       decaf_abort(fmt::format("Unimplemented texture wrap {}", clamp));
    }
@@ -152,9 +152,9 @@ static gl::GLenum
 getTextureXYFilter(latte::SQ_TEX_XY_FILTER filter)
 {
    switch (filter) {
-   case latte::SQ_TEX_XY_FILTER_POINT:
+   case latte::SQ_TEX_XY_FILTER::POINT:
       return gl::GL_NEAREST;
-   case latte::SQ_TEX_XY_FILTER_BILINEAR:
+   case latte::SQ_TEX_XY_FILTER::BILINEAR:
       return gl::GL_LINEAR;
    default:
       decaf_abort(fmt::format("Unimplemented texture xy filter {}", filter));
@@ -162,24 +162,24 @@ getTextureXYFilter(latte::SQ_TEX_XY_FILTER filter)
 }
 
 static gl::GLenum
-getTextureCompareFunction(latte::SQ_TEX_DEPTH_COMPARE func)
+getTextureCompareFunction(latte::REF_FUNC func)
 {
    switch (func) {
-   case latte::SQ_TEX_DEPTH_COMPARE_NEVER:
+   case latte::REF_FUNC::NEVER:
       return gl::GL_NEVER;
-   case latte::SQ_TEX_DEPTH_COMPARE_LESS:
+   case latte::REF_FUNC::LESS:
       return gl::GL_LESS;
-   case latte::SQ_TEX_DEPTH_COMPARE_EQUAL:
+   case latte::REF_FUNC::EQUAL:
       return gl::GL_EQUAL;
-   case latte::SQ_TEX_DEPTH_COMPARE_LESSEQUAL:
+   case latte::REF_FUNC::LESS_EQUAL:
       return gl::GL_LEQUAL;
-   case latte::SQ_TEX_DEPTH_COMPARE_GREATER:
+   case latte::REF_FUNC::GREATER:
       return gl::GL_GREATER;
-   case latte::SQ_TEX_DEPTH_COMPARE_NOTEQUAL:
+   case latte::REF_FUNC::NOT_EQUAL:
       return gl::GL_NOTEQUAL;
-   case latte::SQ_TEX_DEPTH_COMPARE_GREATEREQUAL:
+   case latte::REF_FUNC::GREATER_EQUAL:
       return gl::GL_GEQUAL;
-   case latte::SQ_TEX_DEPTH_COMPARE_ALWAYS:
+   case latte::REF_FUNC::ALWAYS:
       return gl::GL_ALWAYS;
    default:
       decaf_abort(fmt::format("Unimplemented texture compare function {}", func));
@@ -265,20 +265,20 @@ bool GLDriver::checkActiveSamplers()
       // Skip the color array setup as well as the GL call if we know we
       //  don't need it (we have to check in any case for the REGISTER type)
       if (mPixelSamplerCache[i].borderColorType != border_color_type
-       || border_color_type == latte::SQ_TEX_BORDER_COLOR_REGISTER) {
+       || border_color_type == latte::SQ_TEX_BORDER_COLOR::REGISTER) {
          std::array<float, 4> colors;
 
          switch (border_color_type) {
-         case latte::SQ_TEX_BORDER_COLOR_TRANS_BLACK:
+         case latte::SQ_TEX_BORDER_COLOR::TRANS_BLACK:
             colors = { 0.0f, 0.0f, 0.0f, 0.0f };
             break;
-         case latte::SQ_TEX_BORDER_COLOR_OPAQUE_BLACK:
+         case latte::SQ_TEX_BORDER_COLOR::OPAQUE_BLACK:
             colors = { 0.0f, 0.0f, 0.0f, 1.0f };
             break;
-         case latte::SQ_TEX_BORDER_COLOR_OPAQUE_WHITE:
+         case latte::SQ_TEX_BORDER_COLOR::OPAQUE_WHITE:
             colors = { 1.0f, 1.0f, 1.0f, 0.0f };
             break;
-         case latte::SQ_TEX_BORDER_COLOR_REGISTER:
+         case latte::SQ_TEX_BORDER_COLOR::REGISTER:
          {
             auto td_ps_sampler_border_red = getRegister<latte::TD_PS_SAMPLER_BORDERN_RED>(latte::Register::TD_PS_SAMPLER_BORDER0_RED + 4 * (i * 4));
             auto td_ps_sampler_border_green = getRegister<latte::TD_PS_SAMPLER_BORDERN_GREEN>(latte::Register::TD_PS_SAMPLER_BORDER0_GREEN + 4 * (i * 4));
@@ -299,7 +299,7 @@ bool GLDriver::checkActiveSamplers()
          }
 
          if (mPixelSamplerCache[i].borderColorType != border_color_type
-             || (border_color_type == latte::SQ_TEX_BORDER_COLOR_REGISTER
+             || (border_color_type == latte::SQ_TEX_BORDER_COLOR::REGISTER
                  && (mPixelSamplerCache[i].borderColorValue[0] != colors[0]
                   || mPixelSamplerCache[i].borderColorValue[1] != colors[1]
                   || mPixelSamplerCache[i].borderColorValue[2] != colors[2]

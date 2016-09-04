@@ -1,37 +1,38 @@
-#pragma once
-#include "common/types.h"
+#ifndef LATTE_ENUM_SPI_H
+#define LATTE_ENUM_SPI_H
 
-namespace latte
-{
+#include "common/enum_start.h"
 
-enum SPI_BARYC_CNTL
-{
-   SPI_CENTROIDS_ONLY         = 0,
-   SPI_CENTERS_ONLY           = 1,
-   SPI_CENTROIDS_AND_CENTERS  = 2,
-};
+ENUM_NAMESPACE_BEG(latte)
 
-enum SPI_FOG_FUNC
-{
-   SPI_FOG_NONE               = 0,
-   SPI_FOG_EXP                = 1,
-   SPI_FOG_EXP2               = 2,
-   SPI_FOG_LINEAR             = 3,
-};
+ENUM_BEG(SPI_BARYC_CNTL, uint32_t)
+   ENUM_VALUE(CENTROIDS_ONLY,             0)
+   ENUM_VALUE(CENTERS_ONLY,               1)
+   ENUM_VALUE(CENTROIDS_AND_CENTERS,      2)
+ENUM_END(SPI_BARYC_CNTL)
 
-enum SPI_FOG_SRC_SEL
-{
-   SPI_FOG_SRC_SEL_Z          = 0,
-   SPI_FOG_SRC_SEL_W          = 1,
-};
+ENUM_BEG(SPI_FOG_FUNC, uint32_t)
+   ENUM_VALUE(NONE,                       0)
+   ENUM_VALUE(EXP,                        1)
+   ENUM_VALUE(EXP2,                       2)
+   ENUM_VALUE(LINEAR,                     3)
+ENUM_END(SPI_FOG_FUNC)
 
-enum SPI_PNT_SPRITE_SEL
-{
-   SPI_PNT_SPRITE_SEL_0       = 0,
-   SPI_PNT_SPRITE_SEL_1       = 1,
-   SPI_PNT_SPRITE_SEL_S       = 2,
-   SPI_PNT_SPRITE_SEL_T       = 3,
-   SPI_PNT_SPRITE_SEL_NONE    = 4,
-};
+ENUM_BEG(SPI_FOG_SRC_SEL, uint32_t)
+   ENUM_VALUE(SEL_Z,                      0)
+   ENUM_VALUE(SEL_W,                      1)
+ENUM_END(SPI_FOG_SRC_SEL)
 
-} // namespace latte
+ENUM_BEG(SPI_PNT_SPRITE_SEL, uint32_t)
+   ENUM_VALUE(SEL_0,                      0)
+   ENUM_VALUE(SEL_1,                      1)
+   ENUM_VALUE(SEL_S,                      2)
+   ENUM_VALUE(SEL_T,                      3)
+   ENUM_VALUE(SEL_NONE,                   4)
+ENUM_END(SPI_PNT_SPRITE_SEL)
+
+ENUM_NAMESPACE_END(latte)
+
+#include "common/enum_end.h"
+
+#endif // ifdef LATTE_ENUM_SPI_H

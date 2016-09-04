@@ -157,7 +157,7 @@ translateALUReduction(State &state, const ControlFlowInst &cf, AluGroup &group)
       auto &inst = group.instructions[i];
       auto unit = units.addInstructionUnit(inst);
 
-      if (unit == SQ_CHAN_T) {
+      if (unit == SQ_CHAN::T) {
          continue;
       }
 
@@ -167,7 +167,7 @@ translateALUReduction(State &state, const ControlFlowInst &cf, AluGroup &group)
    // For sanity, let's ensure every instruction in this reduction group
    // has the same instruction id and the same CLAMP + OMOD values
    for (auto i = 1u; i < reduction.size(); ++i) {
-      if (reduction[0].word1.ENCODING() == SQ_ALU_OP2) {
+      if (reduction[0].word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
          if (reduction[i].op2.ALU_INST() != reduction[0].op2.ALU_INST()) {
             throw translate_exception("Expected every instruction in reduction group to be the same.");
          }
@@ -189,7 +189,7 @@ translateALUReduction(State &state, const ControlFlowInst &cf, AluGroup &group)
    // Find translate function
    auto func = TranslateFuncALUReduction { nullptr };
 
-   if (reduction[0].word1.ENCODING() == SQ_ALU_OP2) {
+   if (reduction[0].word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       auto id = reduction[0].op2.ALU_INST();
       auto itr = sInstructionMapOP2Reduction.find(id);
       auto name = getInstructionName(id);
@@ -234,7 +234,7 @@ isReductionInstruction(const AluInst &inst)
 {
    auto flags = SQ_ALU_FLAG_NONE;
 
-   if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+   if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       auto id = inst.op2.ALU_INST();
       flags = getInstructionFlags(id);
    } else {
@@ -268,7 +268,7 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       break;
    }
 
-   condStart(state, latte::SQ_CF_COND_ACTIVE);
+   condStart(state, latte::SQ_CF_COND::ACTIVE);
 
    for (size_t slot = 0u; slot < count; ) {
       auto units = AluGroupUnits {};
@@ -296,7 +296,7 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
             continue;
          }
 
-         if (inst.word1.ENCODING() == SQ_ALU_OP2) {
+         if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
             auto instId = inst.op2.ALU_INST();
             auto itr = sInstructionMapOP2.find(instId);
             flags = getInstructionFlags(instId);
@@ -318,7 +318,7 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
             }
          }
 
-         if (unit < SQ_CHAN_T) {
+         if (unit < SQ_CHAN::T) {
             updatePreviousVector = true;
          } else {
             updatePreviousScalar = true;
@@ -605,28 +605,28 @@ insertFileHeader(State &state)
 
       if (usage == SamplerUsage::Texture) {
          switch (dim) {
-         case latte::SQ_TEX_DIM_1D:
+         case latte::SQ_TEX_DIM::DIM_1D:
             out << "sampler1D";
             break;
-         case latte::SQ_TEX_DIM_2D:
+         case latte::SQ_TEX_DIM::DIM_2D:
             out << "sampler2D";
             break;
-         case latte::SQ_TEX_DIM_3D:
+         case latte::SQ_TEX_DIM::DIM_3D:
             out << "sampler3D";
             break;
-         case latte::SQ_TEX_DIM_CUBEMAP:
+         case latte::SQ_TEX_DIM::DIM_CUBEMAP:
             out << "samplerCube";
             break;
-         case latte::SQ_TEX_DIM_1D_ARRAY:
+         case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
             out << "sampler1DArray";
             break;
-         case latte::SQ_TEX_DIM_2D_ARRAY:
+         case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
             out << "sampler2DArray";
             break;
-         case latte::SQ_TEX_DIM_2D_MSAA:
+         case latte::SQ_TEX_DIM::DIM_2D_MSAA:
             out << "sampler2DMS";
             break;
-         case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+         case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
             out << "sampler2DMSArray";
             break;
          default:
@@ -634,28 +634,28 @@ insertFileHeader(State &state)
          }
       } else if (usage == SamplerUsage::Shadow) {
          switch (dim) {
-         case latte::SQ_TEX_DIM_1D:
+         case latte::SQ_TEX_DIM::DIM_1D:
             out << "sampler1DShadow";
             break;
-         case latte::SQ_TEX_DIM_2D:
+         case latte::SQ_TEX_DIM::DIM_2D:
             out << "sampler2DShadow";
             break;
-         case latte::SQ_TEX_DIM_3D:
+         case latte::SQ_TEX_DIM::DIM_3D:
             out << "sampler3DShadow";
             break;
-         case latte::SQ_TEX_DIM_CUBEMAP:
+         case latte::SQ_TEX_DIM::DIM_CUBEMAP:
             out << "samplerCubeShadow";
             break;
-         case latte::SQ_TEX_DIM_1D_ARRAY:
+         case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
             out << "sampler1DArrayShadow";
             break;
-         case latte::SQ_TEX_DIM_2D_ARRAY:
+         case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
             out << "sampler2DArrayShadow";
             break;
-         case latte::SQ_TEX_DIM_2D_MSAA:
+         case latte::SQ_TEX_DIM::DIM_2D_MSAA:
             out << "sampler2DMSShadow";
             break;
-         case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+         case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
             out << "sampler2DMSArrayShadow";
             break;
          default:
@@ -694,13 +694,13 @@ insertCodeHeader(State &state)
    if (state.shader) {
       for (auto &exp : state.shader->exports) {
          switch (exp.type) {
-         case SQ_EXPORT_POS:
+         case SQ_EXPORT_TYPE::POS:
             out << "vec4 exp_position_" << exp.id << ";\n";
             break;
-         case SQ_EXPORT_PARAM:
+         case SQ_EXPORT_TYPE::PARAM:
             out << "vec4 exp_param_" << exp.id << ";\n";
             break;
-         case SQ_EXPORT_PIXEL:
+         case SQ_EXPORT_TYPE::PIXEL:
             out << "vec4 exp_pixel_" << exp.id << ";\n";
             break;
          }

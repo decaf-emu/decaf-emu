@@ -1,45 +1,45 @@
-#pragma once
-#include "common/types.h"
+#ifndef LATTE_ENUM_PA_H
+#define LATTE_ENUM_PA_H
 
-namespace latte
-{
+#include "common/enum_start.h"
 
-enum PA_FACE : uint32_t
-{
-   FACE_CCW = 0,
-   FACE_CW  = 1
-};
+ENUM_NAMESPACE_BEG(latte)
 
-enum PA_PS_UCP_MODE : uint32_t
-{
-   PA_PS_UCP_CULL_DISTANCE       = 0,
-   PA_PS_UCP_CULL_RADIUS         = 1,
-   PA_PS_UCP_CULL_RADIUS_EXPAND  = 2,
-   PA_PS_UCP_CULL_EXPAND         = 3,
-};
+ENUM_BEG(PA_FACE, uint32_t)
+   ENUM_VALUE(CCW,                        0)
+   ENUM_VALUE(CW,                         1)
+ENUM_END(PA_FACE)
 
-enum PA_SU_VTX_CNTL_PIX_CENTER : uint32_t
-{
-   PA_SU_VTX_CNTL_PIX_CENTER_D3D = 0,
-   PA_SU_VTX_CNTL_PIX_CENTER_OGL = 0,
-};
+ENUM_BEG(PA_PS_UCP_MODE, uint32_t)
+   ENUM_VALUE(CULL_DISTANCE,              0)
+   ENUM_VALUE(CULL_RADIUS,                1)
+   ENUM_VALUE(CULL_RADIUS_EXPAND,         2)
+   ENUM_VALUE(CULL_EXPAND,                3)
+ENUM_END(PA_PS_UCP_MODE)
 
-enum PA_SU_VTX_CNTL_ROUND_MODE : uint32_t
-{
-   PA_SU_VTX_CNTL_ROUND_TRUNCATE = 0,
-   PA_SU_VTX_CNTL_ROUND          = 1,
-   PA_SU_VTX_CNTL_ROUND_TO_EVEN  = 2,
-   PA_SU_VTX_CNTL_ROUND_TO_ODD   = 3,
-};
+ENUM_BEG(PA_SU_VTX_CNTL_PIX_CENTER, uint32_t)
+   ENUM_VALUE(D3D,                        0)
+   ENUM_VALUE(OGL,                        1)
+ENUM_END(PA_SU_VTX_CNTL_PIX_CENTER)
 
-enum PA_SU_VTX_CNTL_QUANT_MODE : uint32_t
-{
-   PA_SU_VTX_CNTL_QUANT_1_16TH   = 0,
-   PA_SU_VTX_CNTL_QUANT_1_8TH    = 1,
-   PA_SU_VTX_CNTL_QUANT_1_4TH    = 2,
-   PA_SU_VTX_CNTL_QUANT_1_2ND    = 3,
-   PA_SU_VTX_CNTL_QUANT_1        = 4,
-   PA_SU_VTX_CNTL_QUANT_1_256TH  = 5,
-};
+ENUM_BEG(PA_SU_VTX_CNTL_ROUND_MODE, uint32_t)
+   ENUM_VALUE(TRUNCATE,                   0)
+   ENUM_VALUE(NEAREST,                    1)
+   ENUM_VALUE(TO_EVEN,                    2)
+   ENUM_VALUE(TO_ODD,                     3)
+ENUM_END(PA_SU_VTX_CNTL_ROUND_MODE)
 
-} // namespace latte
+ENUM_BEG(PA_SU_VTX_CNTL_QUANT_MODE, uint32_t)
+   ENUM_VALUE(QUANT_1_16TH,               0)
+   ENUM_VALUE(QUANT_1_8TH,                1)
+   ENUM_VALUE(QUANT_1_4TH,                2)
+   ENUM_VALUE(QUANT_1_2ND,                3)
+   ENUM_VALUE(QUANT_1,                    4)
+   ENUM_VALUE(QUANT_1_256TH,              5)
+ENUM_END(PA_SU_VTX_CNTL_QUANT_MODE)
+
+ENUM_NAMESPACE_END(latte)
+
+#include "common/enum_end.h"
+
+#endif // ifdef LATTE_ENUM_PA_H

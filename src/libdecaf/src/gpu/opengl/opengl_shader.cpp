@@ -83,12 +83,13 @@ getDataFormatGlType(latte::SQ_DATA_FORMAT format)
 {
    // Some Special Cases
    switch (format) {
-   case latte::FMT_10_10_10_2:
-   case latte::FMT_2_10_10_10:
+   case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
+   case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
       return gl::GL_UNSIGNED_INT;
    }
 
-   uint32_t bitCount = getDataFormatComponentBits(format);
+   auto bitCount = getDataFormatComponentBits(format);
+
    switch (bitCount) {
    case 8:
       return gl::GL_UNSIGNED_BYTE;
@@ -175,7 +176,7 @@ bool GLDriver::checkActiveShader()
    auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
    auto pa_cl_clip_cntl = getRegister<latte::PA_CL_CLIP_CNTL>(latte::Register::PA_CL_CLIP_CNTL);
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
-   bool isScreenSpace = (vgt_primitive_type.PRIM_TYPE() == latte::VGT_DI_PT_RECTLIST);
+   auto isScreenSpace = (vgt_primitive_type.PRIM_TYPE() == latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST);
 
    if (!pgm_start_fs.PGM_START()) {
       gLog->error("Fetch shader was not set");
@@ -199,11 +200,11 @@ bool GLDriver::checkActiveShader()
    auto vsPgmSize = pgm_size_vs.PGM_SIZE() << 3;
    auto psPgmSize = pgm_size_ps.PGM_SIZE() << 3;
    auto z_order = db_shader_control.Z_ORDER();
-   auto early_z = (z_order == latte::DB_EARLY_Z_THEN_LATE_Z || z_order == latte::DB_EARLY_Z_THEN_RE_Z);
+   auto early_z = (z_order == latte::DB_Z_ORDER::EARLY_Z_THEN_LATE_Z || z_order == latte::DB_Z_ORDER::EARLY_Z_THEN_RE_Z);
    auto alphaTestFunc = sx_alpha_test_control.ALPHA_FUNC();
 
    if (!sx_alpha_test_control.ALPHA_TEST_ENABLE() || sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
-      alphaTestFunc = latte::REF_ALWAYS;
+      alphaTestFunc = latte::REF_FUNC::ALWAYS;
    }
 
    // We don't currently handle offsets, so panic if any are nonzero
@@ -315,10 +316,10 @@ bool GLDriver::checkActiveShader()
          auto bufferDivisor = std::array<uint32_t, latte::MaxAttributes> { 0 };
 
          for (auto &attrib : fetchShader->attribs) {
-            auto resourceId = attrib.buffer + latte::SQ_VS_RESOURCE_BASE;
+            auto resourceId = attrib.buffer + latte::SQ_RES_OFFSET::VS_TEX_RESOURCE_0;
 
-            if (resourceId >= latte::SQ_VS_ATTRIB_RESOURCE_0 && resourceId < latte::SQ_VS_ATTRIB_RESOURCE_0 + 0x10) {
-               auto attribBufferId = resourceId - latte::SQ_VS_ATTRIB_RESOURCE_0;
+            if (resourceId >= latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 && resourceId < latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + 0x10) {
+               auto attribBufferId = resourceId - latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0;
                auto type = getDataFormatGlType(attrib.format);
                auto components = getDataFormatComponents(attrib.format);
                auto divisor = 0u;
@@ -327,12 +328,12 @@ bool GLDriver::checkActiveShader()
                gl::glVertexArrayAttribIFormat(fetchShader->object, attrib.location, components, type, attrib.offset);
                gl::glVertexArrayAttribBinding(fetchShader->object, attrib.location, attribBufferId);
 
-               if (attrib.type == latte::SQ_VTX_FETCH_TYPE::SQ_VTX_FETCH_INSTANCE_DATA) {
-                  if (attrib.srcSelX == latte::SQ_SEL_W) {
+               if (attrib.type == latte::SQ_VTX_FETCH_TYPE::INSTANCE_DATA) {
+                  if (attrib.srcSelX == latte::SQ_SEL::SEL_W) {
                      divisor = 1;
-                  } else if (attrib.srcSelX == latte::SQ_SEL_Y) {
+                  } else if (attrib.srcSelX == latte::SQ_SEL::SEL_Y) {
                      divisor = aluDivisor0;
-                  } else if (attrib.srcSelX == latte::SQ_SEL_Z) {
+                  } else if (attrib.srcSelX == latte::SQ_SEL::SEL_Z) {
                      divisor = aluDivisor1;
                   } else {
                      decaf_abort(fmt::format("Unexpected SRC_SEL_X {} for alu divisor", attrib.srcSelX));
@@ -506,7 +507,7 @@ bool GLDriver::checkActiveShader()
    mActiveShader = &pipeline;
 
    // Set alpha reference
-   if (mActiveShader->pixel && alphaTestFunc != latte::REF_ALWAYS && alphaTestFunc != latte::REF_NEVER) {
+   if (mActiveShader->pixel && alphaTestFunc != latte::REF_FUNC::ALWAYS && alphaTestFunc != latte::REF_FUNC::NEVER) {
       gl::glProgramUniform1f(mActiveShader->pixel->object, mActiveShader->pixel->uniformAlphaRef, sx_alpha_ref.ALPHA_REF());
    }
 
@@ -819,7 +820,7 @@ GLDriver::checkActiveAttribBuffers()
    auto needMemoryBarrier = false;
 
    for (auto i = 0u; i < latte::MaxAttributes; ++i) {
-      auto resourceOffset = (latte::SQ_VS_ATTRIB_RESOURCE_0 + i) * 7;
+      auto resourceOffset = (latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + i) * 7;
       auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
       auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
       auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * resourceOffset);
@@ -864,7 +865,7 @@ GLDriver::checkAttribBuffersBound()
 
    for (auto i = 0; i < mActiveShader->fetch->attribs.size(); ++i) {
       auto &attrib = mActiveShader->fetch->attribs[i];
-      auto resourceOffset = (latte::SQ_VS_RESOURCE_BASE + attrib.buffer) * 7;
+      auto resourceOffset = (latte::SQ_RES_OFFSET::VS_TEX_RESOURCE_0 + attrib.buffer) * 7;
       auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
 
       if (!sq_vtx_constant_word0.BASE_ADDRESS()) {
@@ -968,7 +969,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
    shader.type = glsl2::Shader::VertexShader;
 
    for (auto i = 0; i < latte::MaxSamplers; ++i) {
-      auto resourceOffset = (latte::SQ_VS_TEX_RESOURCE_0 + i) * 7;
+      auto resourceOffset = (latte::SQ_RES_OFFSET::VS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
 
       shader.samplerDim[i] = sq_tex_resource_word0.DIM();
@@ -1005,25 +1006,25 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
       out << "//";
       out << " " << getDataFormatName(attrib.format);
-      if (attrib.formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+      if (attrib.formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
          out << " SIGNED";
       } else {
          out << " UNSIGNED";
       }
-      if (attrib.numFormat == latte::SQ_NUM_FORMAT_INT) {
+      if (attrib.numFormat == latte::SQ_NUM_FORMAT::INT) {
          out << " INT";
-      } else if (attrib.numFormat == latte::SQ_NUM_FORMAT_NORM) {
+      } else if (attrib.numFormat == latte::SQ_NUM_FORMAT::NORM) {
          out << " NORM";
-      } else if (attrib.numFormat == latte::SQ_NUM_FORMAT_SCALED) {
+      } else if (attrib.numFormat == latte::SQ_NUM_FORMAT::SCALED) {
          out << " SCALED";
       }
-      if (attrib.endianSwap == latte::SQ_ENDIAN_NONE) {
+      if (attrib.endianSwap == latte::SQ_ENDIAN::NONE) {
          out << " SWAP_NONE";
-      } else if (attrib.endianSwap == latte::SQ_ENDIAN_8IN32) {
+      } else if (attrib.endianSwap == latte::SQ_ENDIAN::SWAP_8IN32) {
          out << " SWAP_8IN32";
-      } else if (attrib.endianSwap == latte::SQ_ENDIAN_8IN16) {
+      } else if (attrib.endianSwap == latte::SQ_ENDIAN::SWAP_8IN16) {
          out << " SWAP_8IN16";
-      } else if (attrib.endianSwap == latte::SQ_ENDIAN_AUTO) {
+      } else if (attrib.endianSwap == latte::SQ_ENDIAN::AUTO) {
          out << " SWAP_AUTO";
       }
       out << "\n";
@@ -1142,27 +1143,27 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       std::string chanVal[4];
       uint32_t chanBitCount[4];
 
-      if (attrib->format == latte::FMT_10_10_10_2 || attrib->format == latte::FMT_2_10_10_10) {
+      if (attrib->format == latte::SQ_DATA_FORMAT::FMT_10_10_10_2 || attrib->format == latte::SQ_DATA_FORMAT::FMT_2_10_10_10) {
          decaf_check(channels == 4);
 
          auto val = name;
 
-         if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
+         if (attrib->endianSwap == latte::SQ_ENDIAN::SWAP_8IN32) {
             val = "bswap32(" + val + ")";
-         } else if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
+         } else if (attrib->endianSwap == latte::SQ_ENDIAN::SWAP_8IN16) {
             decaf_abort("Unexpected 8IN16 swap for 10_10_10_2");
-         } else if (attrib->endianSwap == latte::SQ_ENDIAN_NONE) {
+         } else if (attrib->endianSwap == latte::SQ_ENDIAN::NONE) {
             // Nothing to do
          } else {
             decaf_abort("Unexpected endian swap mode");
          }
 
-         if (attrib->format == latte::FMT_10_10_10_2) {
+         if (attrib->format == latte::SQ_DATA_FORMAT::FMT_10_10_10_2) {
             chanVal[0] = std::string("((") + val + std::string(" >> 22) & 0x3ff)");
             chanVal[1] = std::string("((") + val + std::string(" >> 12) & 0x3ff)");
             chanVal[2] = std::string("((") + val + std::string(" >> 2) & 0x3ff)");
             chanVal[3] = std::string("((") + val + std::string(" >> 0) & 0x3)");
-         } else if (attrib->format == latte::FMT_2_10_10_10) {
+         } else if (attrib->format == latte::SQ_DATA_FORMAT::FMT_2_10_10_10) {
             chanVal[3] = std::string("((") + val + std::string(" >> 30) & 0x3)");
             chanVal[2] = std::string("((") + val + std::string(" >> 20) & 0x3ff)");
             chanVal[1] = std::string("((") + val + std::string(" >> 10) & 0x3ff)");
@@ -1171,7 +1172,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
             decaf_abort("Unexpected format");
          }
 
-         if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+         if (attrib->formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
             chanVal[0] = "int(signext10(" + chanVal[0] + "))";
             chanVal[1] = "int(signext10(" + chanVal[1] + "))";
             chanVal[2] = "int(signext10(" + chanVal[2] + "))";
@@ -1193,7 +1194,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
             auto &val = chanVal[ch];
             val = name;
 
-            if (attrib->endianSwap == latte::SQ_ENDIAN_NONE) {
+            if (attrib->endianSwap == latte::SQ_ENDIAN::NONE) {
                // Nothing to do except select the appropriate component.
 
                if (channels > 1) {
@@ -1201,7 +1202,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
                }
             } else {
                if (compBits == 32) {
-                  if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
+                  if (attrib->endianSwap == latte::SQ_ENDIAN::SWAP_8IN32) {
                      if (channels > 1) {
                         val = val + "." + ChannelSelNorm[ch];
                      }
@@ -1211,7 +1212,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
                      decaf_abort("Unexpected endian swap mode for 32-bit components");
                   }
                } else if (compBits == 16) {
-                  if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
+                  if (attrib->endianSwap == latte::SQ_ENDIAN::SWAP_8IN16) {
                      if (channels > 1) {
                         val = val + "." + ChannelSelNorm[ch];
                      }
@@ -1224,10 +1225,10 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
                   static const char * ChannelSel8In16[] = { "y", "x", "w", "z" };
                   static const char * ChannelSel8In32[] = { "w", "z", "y", "x" };
 
-                  if (attrib->endianSwap == latte::SQ_ENDIAN_8IN16) {
+                  if (attrib->endianSwap == latte::SQ_ENDIAN::SWAP_8IN16) {
                      decaf_check(channels == 2 || channels == 4);
                      val = val + "." + ChannelSel8In16[ch];
-                  } else if (attrib->endianSwap == latte::SQ_ENDIAN_8IN32) {
+                  } else if (attrib->endianSwap == latte::SQ_ENDIAN::SWAP_8IN32) {
                      decaf_check(channels == 4);
                      val = val + "." + ChannelSel8In32[ch];
                   } else {
@@ -1247,7 +1248,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
                   decaf_abort("Unexpected float component bit count");
                }
             } else {
-               if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+               if (attrib->formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
                   if (compBits == 8) {
                      val = "int(signext8(" + val + "))";
                   } else if (compBits == 16) {
@@ -1267,21 +1268,21 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       }
 
       for (auto ch = 0u; ch < channels; ++ch) {
-         if (attrib->numFormat == latte::SQ_NUM_FORMAT_NORM) {
+         if (attrib->numFormat == latte::SQ_NUM_FORMAT::NORM) {
             uint32_t valMax = (1ul << chanBitCount[ch]) - 1;
 
-            if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+            if (attrib->formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
                chanVal[ch] = fmt::format("clamp(float({}) / {}.0, -1.0, 1.0)", chanVal[ch], valMax / 2);
             } else {
                chanVal[ch] = fmt::format("float({}) / {}.0", chanVal[ch], valMax);
             }
-         } else if (attrib->numFormat == latte::SQ_NUM_FORMAT_INT) {
-            if (attrib->formatComp == latte::SQ_FORMAT_COMP_SIGNED) {
+         } else if (attrib->numFormat == latte::SQ_NUM_FORMAT::INT) {
+            if (attrib->formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
                chanVal[ch] = "intBitsToFloat(int(" + chanVal[ch] + "))";
             } else {
                chanVal[ch] = "uintBitsToFloat(uint(" + chanVal[ch] + "))";
             }
-         } else if (attrib->numFormat == latte::SQ_NUM_FORMAT_SCALED) {
+         } else if (attrib->numFormat == latte::SQ_NUM_FORMAT::SCALED) {
             chanVal[ch] = "float(" + chanVal[ch] + ")";
          } else {
             decaf_abort("Unexpected attribute number format");
@@ -1333,14 +1334,14 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
    for (auto &exp : shader.exports) {
       switch (exp.type) {
-      case latte::SQ_EXPORT_POS:
+      case latte::SQ_EXPORT_TYPE::POS:
          if (!isScreenSpace) {
             out << "gl_Position = exp_position_" << exp.id << ";\n";
          } else {
             out << "gl_Position = (exp_position_" << exp.id << " - vec4(uViewport.xy, 0.0, 0.0)) * vec4(uViewport.zw, 1.0, 1.0);\n";
          }
          break;
-      case latte::SQ_EXPORT_PARAM: {
+      case latte::SQ_EXPORT_TYPE::PARAM: {
          decaf_check(!spi_vs_out_config.VS_PER_COMPONENT());
 
          auto regId = exp.id / 4;
@@ -1366,7 +1367,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
             out << "// vs_out_none = exp_param_" << exp.id << ";\n";
          }
       } break;
-      case latte::SQ_EXPORT_PIXEL:
+      case latte::SQ_EXPORT_TYPE::PIXEL:
          decaf_abort("Unexpected pixel export in vertex shader.");
       }
    }
@@ -1394,7 +1395,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
 
    // Gather Samplers
    for (auto i = 0; i < latte::MaxSamplers; ++i) {
-      auto resourceOffset = (latte::SQ_PS_TEX_RESOURCE_0 + i) * 7;
+      auto resourceOffset = (latte::SQ_RES_OFFSET::PS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
 
       shader.samplerDim[i] = sq_tex_resource_word0.DIM();
@@ -1421,7 +1422,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    out << "uniform float uAlphaRef;\n";
 
    auto z_order = db_shader_control.Z_ORDER();
-   auto early_z = (z_order == latte::DB_EARLY_Z_THEN_LATE_Z || z_order == latte::DB_EARLY_Z_THEN_RE_Z);
+   auto early_z = (z_order == latte::DB_Z_ORDER::EARLY_Z_THEN_LATE_Z || z_order == latte::DB_Z_ORDER::EARLY_Z_THEN_RE_Z);
    if (early_z) {
       if (sx_alpha_test_control.ALPHA_TEST_ENABLE() && !sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
          gLog->debug("Ignoring early-Z because alpha test is enabled");
@@ -1432,7 +1433,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
       } else {
          decaf_assert(!shader.usesDiscard, "Shader uses discard but KILL_ENABLE is not set");
          for (auto &exp : shader.exports) {
-            if (exp.type == latte::SQ_EXPORT_PIXEL && exp.id == 61) {
+            if (exp.type == latte::SQ_EXPORT_TYPE::PIXEL && exp.id == 61) {
                gLog->debug("Ignoring early-Z because shader writes gl_FragDepth");
                early_z = false;
                break;
@@ -1540,7 +1541,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
 
    for (auto &exp : shader.exports) {
       switch (exp.type) {
-      case latte::SQ_EXPORT_PIXEL:
+      case latte::SQ_EXPORT_TYPE::PIXEL:
          if (exp.id == 61) {
             if (!db_shader_control.Z_EXPORT_ENABLE()) {
                gLog->warn("Depth export is masked by db_shader_control");
@@ -1575,41 +1576,41 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
                   out << "// Alpha Test ";
 
                   switch (sx_alpha_test_control.ALPHA_FUNC()) {
-                  case latte::REF_NEVER:
+                  case latte::REF_FUNC::NEVER:
                      out << "REF_NEVER\n";
                      out << "discard;\n";
                      break;
-                  case latte::REF_LESS:
+                  case latte::REF_FUNC::LESS:
                      out << "REF_LESS\n";
                      out << "if (!(exp_pixel_" << exp.id << ".w < uAlphaRef)) {\n";
                      out << "   discard;\n}\n";
                      break;
-                  case latte::REF_EQUAL:
+                  case latte::REF_FUNC::EQUAL:
                      out << "REF_EQUAL\n";
                      out << "if (!(exp_pixel_" << exp.id << ".w == uAlphaRef)) {\n";
                      out << "   discard;\n}\n";
                      break;
-                  case latte::REF_LEQUAL:
-                     out << "REF_LEQUAL\n";
+                  case latte::REF_FUNC::LESS_EQUAL:
+                     out << "REF_LESS_EQUAL\n";
                      out << "if (!(exp_pixel_" << exp.id << ".w <= uAlphaRef)) {\n";
                      out << "   discard;\n}\n";
                      break;
-                  case latte::REF_GREATER:
+                  case latte::REF_FUNC::GREATER:
                      out << "REF_GREATER\n";
                      out << "if (!(exp_pixel_" << exp.id << ".w > uAlphaRef)) {\n";
                      out << "   discard;\n}\n";
                      break;
-                  case latte::REF_NOTEQUAL:
-                     out << "REF_NOTEQUAL\n";
+                  case latte::REF_FUNC::NOT_EQUAL:
+                     out << "REF_NOT_EQUAL\n";
                      out << "if (!(exp_pixel_" << exp.id << ".w != uAlphaRef)) {\n";
                      out << "   discard;\n}\n";
                      break;
-                  case latte::REF_GEQUAL:
-                     out << "REF_GEQUAL\n";
+                  case latte::REF_FUNC::GREATER_EQUAL:
+                     out << "REF_GREATER_EQUAL\n";
                      out << "if (!(exp_pixel_" << exp.id << ".w >= uAlphaRef)) {\n";
                      out << "   discard;\n}\n";
                      break;
-                  case latte::REF_ALWAYS:
+                  case latte::REF_FUNC::ALWAYS:
                      out << "REF_ALWAYS\n";
                      break;
                   }
@@ -1623,10 +1624,10 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
             }
          }
          break;
-      case latte::SQ_EXPORT_POS:
+      case latte::SQ_EXPORT_TYPE::POS:
          decaf_abort("Unexpected position export in pixel shader.");
          break;
-      case latte::SQ_EXPORT_PARAM:
+      case latte::SQ_EXPORT_TYPE::PARAM:
          decaf_abort("Unexpected parameter export in pixel shader.");
          break;
       }

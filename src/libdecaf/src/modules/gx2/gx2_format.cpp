@@ -124,7 +124,7 @@ GX2GetSurfaceFormatBits(GX2SurfaceFormat format)
    auto latteFormat = format & 0x3F;
    auto bpp = gSurfaceFormatData[latteFormat].bpp;
 
-   if (latteFormat >= latte::FMT_BC1 && latteFormat <= latte::FMT_BC5) {
+   if (latteFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && latteFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       bpp >>= 4;
    }
 
@@ -142,7 +142,7 @@ GX2SurfaceIsCompressed(GX2SurfaceFormat format)
 {
    auto latteFormat = format & 0x3F;
 
-   if (latteFormat >= latte::FMT_BC1 && latteFormat <= latte::FMT_BC5) {
+   if (latteFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && latteFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       return TRUE;
    }
 
@@ -163,45 +163,45 @@ getAttribFormatDataFormat(GX2AttribFormat format)
 {
    switch (format & 0x1F) {
    case GX2AttribFormatType::TYPE_8:
-      return latte::FMT_8;
+      return latte::SQ_DATA_FORMAT::FMT_8;
    case GX2AttribFormatType::TYPE_4_4:
-      return latte::FMT_4_4;
+      return latte::SQ_DATA_FORMAT::FMT_4_4;
    case GX2AttribFormatType::TYPE_16:
-      return latte::FMT_16;
+      return latte::SQ_DATA_FORMAT::FMT_16;
    case GX2AttribFormatType::TYPE_16_FLOAT:
-      return latte::FMT_16_FLOAT;
+      return latte::SQ_DATA_FORMAT::FMT_16_FLOAT;
    case GX2AttribFormatType::TYPE_8_8:
-      return latte::FMT_8_8;
+      return latte::SQ_DATA_FORMAT::FMT_8_8;
    case GX2AttribFormatType::TYPE_32:
-      return latte::FMT_32;
+      return latte::SQ_DATA_FORMAT::FMT_32;
    case GX2AttribFormatType::TYPE_32_FLOAT:
-      return latte::FMT_32_FLOAT;
+      return latte::SQ_DATA_FORMAT::FMT_32_FLOAT;
    case GX2AttribFormatType::TYPE_16_16:
-      return latte::FMT_16_16;
+      return latte::SQ_DATA_FORMAT::FMT_16_16;
    case GX2AttribFormatType::TYPE_16_16_FLOAT:
-      return latte::FMT_16_16_FLOAT;
+      return latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT;
    case GX2AttribFormatType::TYPE_10_11_11_FLOAT:
-      return latte::FMT_10_11_11_FLOAT;
+      return latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT;
    case GX2AttribFormatType::TYPE_8_8_8_8:
-      return latte::FMT_8_8_8_8;
+      return latte::SQ_DATA_FORMAT::FMT_8_8_8_8;
    case GX2AttribFormatType::TYPE_10_10_10_2:
-      return latte::FMT_10_10_10_2;
+      return latte::SQ_DATA_FORMAT::FMT_10_10_10_2;
    case GX2AttribFormatType::TYPE_32_32:
-      return latte::FMT_32_32;
+      return latte::SQ_DATA_FORMAT::FMT_32_32;
    case GX2AttribFormatType::TYPE_32_32_FLOAT:
-      return latte::FMT_32_32_FLOAT;
+      return latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT;
    case GX2AttribFormatType::TYPE_16_16_16_16:
-      return latte::FMT_16_16_16_16;
+      return latte::SQ_DATA_FORMAT::FMT_16_16_16_16;
    case GX2AttribFormatType::TYPE_16_16_16_16_FLOAT:
-      return latte::FMT_16_16_16_16_FLOAT;
+      return latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT;
    case GX2AttribFormatType::TYPE_32_32_32:
-      return latte::FMT_32_32_32;
+      return latte::SQ_DATA_FORMAT::FMT_32_32_32;
    case GX2AttribFormatType::TYPE_32_32_32_FLOAT:
-      return latte::FMT_32_32_32_FLOAT;
+      return latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT;
    case GX2AttribFormatType::TYPE_32_32_32_32:
-      return latte::FMT_32_32_32_32;
+      return latte::SQ_DATA_FORMAT::FMT_32_32_32_32;
    case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
-      return latte::FMT_32_32_32_32_FLOAT;
+      return latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT;
    default:
       decaf_abort(fmt::format("Invalid GX2AttribFormat {}", enumAsString(format)));
    }
@@ -275,22 +275,22 @@ getSurfaceFormatType(GX2SurfaceFormat format)
    return static_cast<GX2SurfaceFormatType>(format >> 8);
 }
 
-latte::DB_DEPTH_FORMAT
+latte::DB_FORMAT
 getSurfaceFormatDepthFormat(GX2SurfaceFormat format)
 {
    switch (format & 0x3F) {
-   case latte::FMT_16:
-      return latte::DEPTH_16;
-   case latte::FMT_8_24:
-      return latte::DEPTH_8_24;
-   case latte::FMT_8_24_FLOAT:
-      return latte::DEPTH_8_24_FLOAT;
-   case latte::FMT_32_FLOAT:
-      return latte::DEPTH_32_FLOAT;
-   case latte::FMT_X24_8_32_FLOAT:
-      return latte::DEPTH_X24_8_32_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_16:
+      return latte::DB_FORMAT::DEPTH_16;
+   case latte::SQ_DATA_FORMAT::FMT_8_24:
+      return latte::DB_FORMAT::DEPTH_8_24;
+   case latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT:
+      return latte::DB_FORMAT::DEPTH_8_24_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
+      return latte::DB_FORMAT::DEPTH_32_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
+      return latte::DB_FORMAT::DEPTH_X24_8_32_FLOAT;
    default:
-      return latte::DEPTH_INVALID;
+      return latte::DB_FORMAT::DEPTH_INVALID;
    }
 }
 
@@ -298,72 +298,72 @@ latte::CB_FORMAT
 getSurfaceFormatColorFormat(GX2SurfaceFormat format)
 {
    switch (format & 0x3F) {
-   case latte::FMT_8:
-      return latte::COLOR_8;
-   case latte::FMT_4_4:
-      return latte::COLOR_4_4;
-   case latte::FMT_3_3_2:
-      return latte::COLOR_3_3_2;
-   case latte::FMT_16:
-      return latte::COLOR_16;
-   case latte::FMT_16_FLOAT:
-      return latte::COLOR_16_FLOAT;
-   case latte::FMT_8_8:
-      return latte::COLOR_8_8;
-   case latte::FMT_5_6_5:
-      return latte::COLOR_5_6_5;
-   case latte::FMT_6_5_5:
-      return latte::COLOR_6_5_5;
-   case latte::FMT_1_5_5_5:
-      return latte::COLOR_1_5_5_5;
-   case latte::FMT_4_4_4_4:
-      return latte::COLOR_4_4_4_4;
-   case latte::FMT_5_5_5_1:
-      return latte::COLOR_5_5_5_1;
-   case latte::FMT_32:
-      return latte::COLOR_32;
-   case latte::FMT_32_FLOAT:
-      return latte::COLOR_32_FLOAT;
-   case latte::FMT_16_16:
-      return latte::COLOR_16_16;
-   case latte::FMT_16_16_FLOAT:
-      return latte::COLOR_16_16_FLOAT;
-   case latte::FMT_8_24:
-      return latte::COLOR_8_24;
-   case latte::FMT_8_24_FLOAT:
-      return latte::COLOR_8_24_FLOAT;
-   case latte::FMT_24_8:
-      return latte::COLOR_24_8;
-   case latte::FMT_24_8_FLOAT:
-      return latte::COLOR_24_8_FLOAT;
-   case latte::FMT_10_11_11:
-      return latte::COLOR_10_11_11;
-   case latte::FMT_10_11_11_FLOAT:
-      return latte::COLOR_10_11_11_FLOAT;
-   case latte::FMT_11_11_10:
-      return latte::COLOR_11_11_10;
-   case latte::FMT_11_11_10_FLOAT:
-      return latte::COLOR_11_11_10_FLOAT;
-   case latte::FMT_2_10_10_10:
-      return latte::COLOR_2_10_10_10;
-   case latte::FMT_8_8_8_8:
-      return latte::COLOR_8_8_8_8;
-   case latte::FMT_10_10_10_2:
-      return latte::COLOR_10_10_10_2;
-   case latte::FMT_X24_8_32_FLOAT:
-      return latte::COLOR_X24_8_32_FLOAT;
-   case latte::FMT_32_32:
-      return latte::COLOR_32_32;
-   case latte::FMT_32_32_FLOAT:
-      return latte::COLOR_32_32_FLOAT;
-   case latte::FMT_16_16_16_16:
-      return latte::COLOR_16_16_16_16;
-   case latte::FMT_16_16_16_16_FLOAT:
-      return latte::COLOR_16_16_16_16_FLOAT;
-   case latte::FMT_32_32_32_32:
-      return latte::COLOR_32_32_32_32;
-   case latte::FMT_32_32_32_32_FLOAT:
-      return latte::COLOR_32_32_32_32_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_8:
+      return latte::CB_FORMAT::COLOR_8;
+   case latte::SQ_DATA_FORMAT::FMT_4_4:
+      return latte::CB_FORMAT::COLOR_4_4;
+   case latte::SQ_DATA_FORMAT::FMT_3_3_2:
+      return latte::CB_FORMAT::COLOR_3_3_2;
+   case latte::SQ_DATA_FORMAT::FMT_16:
+      return latte::CB_FORMAT::COLOR_16;
+   case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
+      return latte::CB_FORMAT::COLOR_16_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_8_8:
+      return latte::CB_FORMAT::COLOR_8_8;
+   case latte::SQ_DATA_FORMAT::FMT_5_6_5:
+      return latte::CB_FORMAT::COLOR_5_6_5;
+   case latte::SQ_DATA_FORMAT::FMT_6_5_5:
+      return latte::CB_FORMAT::COLOR_6_5_5;
+   case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
+      return latte::CB_FORMAT::COLOR_1_5_5_5;
+   case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
+      return latte::CB_FORMAT::COLOR_4_4_4_4;
+   case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
+      return latte::CB_FORMAT::COLOR_5_5_5_1;
+   case latte::SQ_DATA_FORMAT::FMT_32:
+      return latte::CB_FORMAT::COLOR_32;
+   case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
+      return latte::CB_FORMAT::COLOR_32_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_16_16:
+      return latte::CB_FORMAT::COLOR_16_16;
+   case latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT:
+      return latte::CB_FORMAT::COLOR_16_16_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_8_24:
+      return latte::CB_FORMAT::COLOR_8_24;
+   case latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT:
+      return latte::CB_FORMAT::COLOR_8_24_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_24_8:
+      return latte::CB_FORMAT::COLOR_24_8;
+   case latte::SQ_DATA_FORMAT::FMT_24_8_FLOAT:
+      return latte::CB_FORMAT::COLOR_24_8_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_10_11_11:
+      return latte::CB_FORMAT::COLOR_10_11_11;
+   case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
+      return latte::CB_FORMAT::COLOR_10_11_11_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_11_11_10:
+      return latte::CB_FORMAT::COLOR_11_11_10;
+   case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
+      return latte::CB_FORMAT::COLOR_11_11_10_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
+      return latte::CB_FORMAT::COLOR_2_10_10_10;
+   case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
+      return latte::CB_FORMAT::COLOR_8_8_8_8;
+   case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
+      return latte::CB_FORMAT::COLOR_10_10_10_2;
+   case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
+      return latte::CB_FORMAT::COLOR_X24_8_32_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_32_32:
+      return latte::CB_FORMAT::COLOR_32_32;
+   case latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT:
+      return latte::CB_FORMAT::COLOR_32_32_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16:
+      return latte::CB_FORMAT::COLOR_16_16_16_16;
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT:
+      return latte::CB_FORMAT::COLOR_16_16_16_16_FLOAT;
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32:
+      return latte::CB_FORMAT::COLOR_32_32_32_32;
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
+      return latte::CB_FORMAT::COLOR_32_32_32_32_FLOAT;
    default:
       decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
    }
@@ -374,17 +374,17 @@ getSurfaceFormatColorNumberType(GX2SurfaceFormat format)
 {
    switch (internal::getSurfaceFormatType(format)) {
    case GX2SurfaceFormatType::UNORM:
-      return latte::NUMBER_UNORM;
+      return latte::CB_NUMBER_TYPE::UNORM;
    case GX2SurfaceFormatType::UINT:
-      return latte::NUMBER_UINT;
+      return latte::CB_NUMBER_TYPE::UINT;
    case GX2SurfaceFormatType::SNORM:
-      return latte::NUMBER_SNORM;
+      return latte::CB_NUMBER_TYPE::SNORM;
    case GX2SurfaceFormatType::SINT:
-      return latte::NUMBER_SINT;
+      return latte::CB_NUMBER_TYPE::SINT;
    case GX2SurfaceFormatType::SRGB:
-      return latte::NUMBER_SRGB;
+      return latte::CB_NUMBER_TYPE::SRGB;
    case GX2SurfaceFormatType::FLOAT:
-      return latte::NUMBER_FLOAT;
+      return latte::CB_NUMBER_TYPE::FLOAT;
    default:
       decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
    }
@@ -395,13 +395,13 @@ getSwapModeEndian(GX2EndianSwapMode mode)
 {
    switch (mode) {
    case GX2EndianSwapMode::None:
-      return latte::SQ_ENDIAN_NONE;
+      return latte::SQ_ENDIAN::NONE;
    case GX2EndianSwapMode::Swap8In16:
-      return latte::SQ_ENDIAN_8IN16;
+      return latte::SQ_ENDIAN::SWAP_8IN16;
    case GX2EndianSwapMode::Swap8In32:
-      return latte::SQ_ENDIAN_8IN32;
+      return latte::SQ_ENDIAN::SWAP_8IN32;
    case GX2EndianSwapMode::Default:
-      return latte::SQ_ENDIAN_AUTO;
+      return latte::SQ_ENDIAN::AUTO;
    default:
       decaf_abort(fmt::format("Invalid GX2EndianSwapMode {}", enumAsString(mode)));
    }

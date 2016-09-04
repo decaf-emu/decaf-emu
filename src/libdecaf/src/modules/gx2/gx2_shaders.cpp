@@ -368,7 +368,7 @@ GX2SetVertexUniformBlock(uint32_t location,
 
    pm4::SetVtxResource res;
    memset(&res, 0, sizeof(pm4::SetVtxResource));
-   res.id = (latte::SQ_VS_BUF_RESOURCE_0 + location) * 7;
+   res.id = (latte::SQ_RES_OFFSET::VS_BUF_RESOURCE_0 + location) * 7;
    res.baseAddress = data;
 
    res.word1 = res.word1
@@ -376,14 +376,14 @@ GX2SetVertexUniformBlock(uint32_t location,
 
    res.word2 = res.word2
       .STRIDE(16)
-      .DATA_FORMAT(latte::FMT_32_32_32_32)
-      .FORMAT_COMP_ALL(latte::SQ_FORMAT_COMP_SIGNED);
+      .DATA_FORMAT(latte::SQ_DATA_FORMAT::FMT_32_32_32_32)
+      .FORMAT_COMP_ALL(latte::SQ_FORMAT_COMP::SIGNED);
 
    res.word3 = res.word3
       .MEM_REQUEST_SIZE(1);
 
    res.word6 = res.word6
-      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_TYPE::VALID_BUFFER);
 
    pm4::write(res);
 
@@ -405,7 +405,7 @@ GX2SetPixelUniformBlock(uint32_t location,
 
    pm4::SetVtxResource res;
    memset(&res, 0, sizeof(pm4::SetVtxResource));
-   res.id = (latte::SQ_PS_BUF_RESOURCE_0 + location) * 7;
+   res.id = (latte::SQ_RES_OFFSET::PS_BUF_RESOURCE_0 + location) * 7;
    res.baseAddress = data;
 
    res.word1 = res.word1
@@ -413,14 +413,14 @@ GX2SetPixelUniformBlock(uint32_t location,
 
    res.word2 = res.word2
       .STRIDE(16)
-      .DATA_FORMAT(latte::FMT_32_32_32_32)
-      .FORMAT_COMP_ALL(latte::SQ_FORMAT_COMP_SIGNED);
+      .DATA_FORMAT(latte::SQ_DATA_FORMAT::FMT_32_32_32_32)
+      .FORMAT_COMP_ALL(latte::SQ_FORMAT_COMP::SIGNED);
 
    res.word3 = res.word3
       .MEM_REQUEST_SIZE(1);
 
    res.word6 = res.word6
-      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_TYPE::VALID_BUFFER);
 
    pm4::write(res);
 
@@ -441,7 +441,7 @@ GX2SetGeometryUniformBlock(uint32_t location,
    decaf_check((mem::untranslate(data) & 0x000000FF) == 0);
 
    pm4::SetVtxResource res;
-   res.id = (latte::SQ_GS_BUF_RESOURCE_0 + location) * 7;
+   res.id = (latte::SQ_RES_OFFSET::GS_BUF_RESOURCE_0 + location) * 7;
    memset(&res, 0, sizeof(pm4::SetVtxResource));
    res.baseAddress = data;
 
@@ -450,14 +450,14 @@ GX2SetGeometryUniformBlock(uint32_t location,
 
    res.word2 = res.word2
       .STRIDE(16)
-      .DATA_FORMAT(latte::FMT_32_32_32_32)
-      .FORMAT_COMP_ALL(latte::SQ_FORMAT_COMP_SIGNED);
+      .DATA_FORMAT(latte::SQ_DATA_FORMAT::FMT_32_32_32_32)
+      .FORMAT_COMP_ALL(latte::SQ_FORMAT_COMP::SIGNED);
 
    res.word3 = res.word3
       .MEM_REQUEST_SIZE(1);
 
    res.word6 = res.word6
-      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_TYPE::VALID_BUFFER);
 
    pm4::write(res);
 
@@ -488,13 +488,13 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
 
       if (mode == GX2ShaderMode::ComputeShader) {
          vgt_gs_mode = vgt_gs_mode
-            .MODE(latte::GS_SCENARIO_G)
+            .MODE(latte::VGT_GS_ENABLE_MODE::SCENARIO_G)
             .COMPUTE_MODE(1)
             .FAST_COMPUTE_MODE(1)
             .PARTIAL_THD_AT_EOI(1);
       } else {
          vgt_gs_mode = vgt_gs_mode
-            .MODE(latte::GS_OFF);
+            .MODE(latte::VGT_GS_ENABLE_MODE::OFF);
       }
 
       pm4::write(pm4::SetContextReg { latte::Register::VGT_GS_MODE, vgt_gs_mode.value });
@@ -686,7 +686,7 @@ GX2SetGeometryShaderInputRingBuffer(void *buffer,
 
    pm4::SetVtxResource res;
    memset(&res, 0, sizeof(pm4::SetVtxResource));
-   res.id = latte::SQ_GS_GSIN_RESOURCE * 7;
+   res.id = latte::SQ_RES_OFFSET::GS_GSIN_RESOURCE * 7;
    res.baseAddress = buffer;
 
    res.word1 = res.word1
@@ -694,14 +694,14 @@ GX2SetGeometryShaderInputRingBuffer(void *buffer,
 
    res.word2 = res.word2
       .STRIDE(4)
-      .CLAMP_X(latte::SQ_VTX_CLAMP_NAN)
-      .DATA_FORMAT(latte::FMT_32_32_32_32_FLOAT);
+      .CLAMP_X(latte::SQ_VTX_CLAMP::TO_NAN)
+      .DATA_FORMAT(latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT);
 
    res.word3 = res.word3
       .UNCACHED(1);
 
    res.word6 = res.word6
-      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_TYPE::VALID_BUFFER);
 
    pm4::write(res);
 }
@@ -715,7 +715,7 @@ GX2SetGeometryShaderOutputRingBuffer(void *buffer,
 
    pm4::SetVtxResource res;
    memset(&res, 0, sizeof(pm4::SetVtxResource));
-   res.id = latte::SQ_VS_GSOUT_RESOURCE * 7;
+   res.id = latte::SQ_RES_OFFSET::VS_GSOUT_RESOURCE * 7;
    res.baseAddress = buffer;
 
    res.word1 = res.word1
@@ -723,14 +723,14 @@ GX2SetGeometryShaderOutputRingBuffer(void *buffer,
 
    res.word2 = res.word2
       .STRIDE(4)
-      .CLAMP_X(latte::SQ_VTX_CLAMP_NAN)
-      .DATA_FORMAT(latte::FMT_32_32_32_32_FLOAT);
+      .CLAMP_X(latte::SQ_VTX_CLAMP::TO_NAN)
+      .DATA_FORMAT(latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT);
 
    res.word3 = res.word3
       .UNCACHED(1);
 
    res.word6 = res.word6
-      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_TYPE::VALID_BUFFER);
 
    pm4::write(res);
 }

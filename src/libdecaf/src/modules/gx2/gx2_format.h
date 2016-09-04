@@ -48,7 +48,7 @@ getSurfaceFormatColorFormat(GX2SurfaceFormat format);
 latte::CB_NUMBER_TYPE
 getSurfaceFormatColorNumberType(GX2SurfaceFormat format);
 
-latte::DB_DEPTH_FORMAT
+latte::DB_FORMAT
 getSurfaceFormatDepthFormat(GX2SurfaceFormat format);
 
 latte::SQ_ENDIAN

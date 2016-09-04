@@ -37,11 +37,11 @@ bool GLDriver::checkActiveDepthBuffer()
 
    auto surfaceObject = surface ? surface->active->object : 0;
 
-   if (format != latte::DEPTH_8_24
-    && format != latte::DEPTH_8_24_FLOAT
-    && format != latte::DEPTH_X8_24
-    && format != latte::DEPTH_X8_24_FLOAT
-    && format != latte::DEPTH_X24_8_32_FLOAT) {
+   if (format != latte::DB_FORMAT::DEPTH_8_24
+    && format != latte::DB_FORMAT::DEPTH_8_24_FLOAT
+    && format != latte::DB_FORMAT::DEPTH_X8_24
+    && format != latte::DB_FORMAT::DEPTH_X8_24_FLOAT
+    && format != latte::DB_FORMAT::DEPTH_X24_8_32_FLOAT) {
       // You cannot bind a stencil buffer if the framebuffer does not support it.
       stencil_enable = false;
    }
@@ -97,40 +97,40 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
    auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * latte::MicroTileWidth);
    auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
-   auto format = latte::FMT_INVALID;
-   auto numFormat = latte::SQ_NUM_FORMAT_NORM;
-   auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   auto format = latte::SQ_DATA_FORMAT::FMT_INVALID;
+   auto numFormat = latte::SQ_NUM_FORMAT::NORM;
+   auto formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
    auto degamma = 0u;
 
    switch (dbFormat) {
-   case latte::DEPTH_16:
+   case latte::DB_FORMAT::DEPTH_16:
       format = latte::SQ_DATA_FORMAT::FMT_16;
-      numFormat = latte::SQ_NUM_FORMAT_NORM;
-      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      numFormat = latte::SQ_NUM_FORMAT::NORM;
+      formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
       degamma = 0;
       break;
-   case latte::DEPTH_8_24:
+   case latte::DB_FORMAT::DEPTH_8_24:
       format = latte::SQ_DATA_FORMAT::FMT_8_24;
-      numFormat = latte::SQ_NUM_FORMAT_NORM;
-      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      numFormat = latte::SQ_NUM_FORMAT::NORM;
+      formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
       degamma = 0;
       break;
-   case latte::DEPTH_8_24_FLOAT:
+   case latte::DB_FORMAT::DEPTH_8_24_FLOAT:
       format = latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT;
-      numFormat = latte::SQ_NUM_FORMAT_SCALED;
-      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      numFormat = latte::SQ_NUM_FORMAT::SCALED;
+      formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
       degamma = 0;
       break;
-   case latte::DEPTH_32_FLOAT:
+   case latte::DB_FORMAT::DEPTH_32_FLOAT:
       format = latte::SQ_DATA_FORMAT::FMT_32_FLOAT;
-      numFormat = latte::SQ_NUM_FORMAT_SCALED;
-      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      numFormat = latte::SQ_NUM_FORMAT::SCALED;
+      formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
       degamma = 0;
       break;
-   case latte::DEPTH_X24_8_32_FLOAT:
+   case latte::DB_FORMAT::DEPTH_X24_8_32_FLOAT:
       format = latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT;
-      numFormat = latte::SQ_NUM_FORMAT_SCALED;
-      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+      numFormat = latte::SQ_NUM_FORMAT::SCALED;
+      formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
       degamma = 0;
       break;
    // case latte::DEPTH_X8_24:
@@ -142,7 +142,7 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
 
    auto tileMode = getArrayModeTileMode(db_depth_info.ARRAY_MODE());
 
-   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, 0, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, true, tileMode, true, discardData);
+   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, 0, latte::SQ_TEX_DIM::DIM_2D, format, numFormat, formatComp, degamma, true, tileMode, true, discardData);
 
    buffer->dirtyMemory = false;
    buffer->needUpload = false;

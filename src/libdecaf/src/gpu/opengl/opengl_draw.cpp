@@ -84,21 +84,21 @@ static gl::GLenum
 getPrimitiveMode(latte::VGT_DI_PRIMITIVE_TYPE type)
 {
    switch (type) {
-   case latte::VGT_DI_PT_POINTLIST:
+   case latte::VGT_DI_PRIMITIVE_TYPE::POINTLIST:
       return gl::GL_POINTS;
-   case latte::VGT_DI_PT_LINELIST:
+   case latte::VGT_DI_PRIMITIVE_TYPE::LINELIST:
       return gl::GL_LINES;
-   case latte::VGT_DI_PT_LINESTRIP:
+   case latte::VGT_DI_PRIMITIVE_TYPE::LINESTRIP:
       return gl::GL_LINE_STRIP;
-   case latte::VGT_DI_PT_TRILIST:
-   case latte::VGT_DI_PT_QUADLIST:  // Quads are rendered as triangles
-   case latte::VGT_DI_PT_RECTLIST:  // Rects are rendered as triangles
+   case latte::VGT_DI_PRIMITIVE_TYPE::TRILIST:
+   case latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST:  // Quads are rendered as triangles
+   case latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST:  // Rects are rendered as triangles
       return gl::GL_TRIANGLES;
-   case latte::VGT_DI_PT_TRIFAN:
+   case latte::VGT_DI_PRIMITIVE_TYPE::TRIFAN:
       return gl::GL_TRIANGLE_FAN;
-   case latte::VGT_DI_PT_TRISTRIP:
+   case latte::VGT_DI_PRIMITIVE_TYPE::TRISTRIP:
       return gl::GL_TRIANGLE_STRIP;
-   case latte::VGT_DI_PT_LINELOOP:
+   case latte::VGT_DI_PRIMITIVE_TYPE::LINELOOP:
       return gl::GL_LINE_LOOP;
    default:
       decaf_abort(fmt::format("Unimplemented VGT_PRIMITIVE_TYPE {}", type));
@@ -199,7 +199,7 @@ unpackQuadRectList(uint32_t count,
 void
 GLDriver::drawPrimitives(uint32_t count,
                          const void *indices,
-                         latte::VGT_INDEX indexFmt)
+                         latte::VGT_INDEX_TYPE indexFmt)
 {
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
    auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
@@ -234,22 +234,22 @@ GLDriver::drawPrimitives(uint32_t count,
       }
    }
 
-   if (primType == latte::VGT_DI_PT_QUADLIST) {
-      if (indexFmt == latte::VGT_INDEX_16) {
+   if (primType == latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST) {
+      if (indexFmt == latte::VGT_INDEX_TYPE::INDEX_16) {
          unpackQuadRectList<false>(count, reinterpret_cast<const uint16_t*>(indices), baseVertex, numInstances, baseInstance);
-      } else if (indexFmt == latte::VGT_INDEX_32) {
+      } else if (indexFmt == latte::VGT_INDEX_TYPE::INDEX_32) {
          unpackQuadRectList<false>(count, reinterpret_cast<const uint32_t*>(indices), baseVertex, numInstances, baseInstance);
       }
-   } else if (primType == latte::VGT_DI_PT_RECTLIST) {
-      if (indexFmt == latte::VGT_INDEX_16) {
+   } else if (primType == latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST) {
+      if (indexFmt == latte::VGT_INDEX_TYPE::INDEX_16) {
          unpackQuadRectList<true>(count, reinterpret_cast<const uint16_t*>(indices), baseVertex, numInstances, baseInstance);
-      } else if (indexFmt == latte::VGT_INDEX_32) {
+      } else if (indexFmt == latte::VGT_INDEX_TYPE::INDEX_32) {
          unpackQuadRectList<true>(count, reinterpret_cast<const uint32_t*>(indices), baseVertex, numInstances, baseInstance);
       }
    } else {
-      if (indexFmt == latte::VGT_INDEX_16) {
+      if (indexFmt == latte::VGT_INDEX_TYPE::INDEX_16) {
          drawPrimitives2(mode, count, reinterpret_cast<const uint16_t*>(indices), baseVertex, numInstances, baseInstance);
-      } else if (indexFmt == latte::VGT_INDEX_32) {
+      } else if (indexFmt == latte::VGT_INDEX_TYPE::INDEX_32) {
          drawPrimitives2(mode, count, reinterpret_cast<const uint32_t*>(indices), baseVertex, numInstances, baseInstance);
       }
    }
@@ -272,11 +272,11 @@ GLDriver::drawPrimitivesIndexed(const void *buffer,
    // Swap and indexBytes are separate because you can have 32-bit swap,
    //   but 16-bit indices in some cases...  This is also why we pre-swap
    //   the data before intercepting QUAD and POLYGON draws.
-   if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_16_BIT) {
+   if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP::SWAP_16_BIT) {
       auto *src = reinterpret_cast<const uint16_t *>(buffer);
       auto indices = std::vector<uint16_t>(count);
 
-      if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_16) {
+      if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_TYPE::INDEX_16) {
          decaf_abort(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_16_BIT", vgt_dma_index_type.INDEX_TYPE()));
       }
 
@@ -287,11 +287,11 @@ GLDriver::drawPrimitivesIndexed(const void *buffer,
       drawPrimitives(count,
                      indices.data(),
                      vgt_dma_index_type.INDEX_TYPE());
-   } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_32_BIT) {
+   } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP::SWAP_32_BIT) {
       auto *src = reinterpret_cast<const uint32_t *>(buffer);
       auto indices = std::vector<uint32_t>(count);
 
-      if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_32) {
+      if (vgt_dma_index_type.INDEX_TYPE() != latte::VGT_INDEX_TYPE::INDEX_32) {
          decaf_abort(fmt::format("Unexpected INDEX_TYPE {} for VGT_DMA_SWAP_32_BIT", vgt_dma_index_type.INDEX_TYPE()));
       }
 
@@ -302,7 +302,7 @@ GLDriver::drawPrimitivesIndexed(const void *buffer,
       drawPrimitives(count,
                      indices.data(),
                      vgt_dma_index_type.INDEX_TYPE());
-   } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP_NONE) {
+   } else if (vgt_dma_index_type.SWAP_MODE() == latte::VGT_DMA_SWAP::NONE) {
       drawPrimitives(count,
                      buffer,
                      vgt_dma_index_type.INDEX_TYPE());
@@ -320,7 +320,7 @@ GLDriver::drawIndexAuto(const pm4::DrawIndexAuto &data)
 
    drawPrimitives(data.count,
                   nullptr,
-                  latte::VGT_INDEX_32);
+                  latte::VGT_INDEX_TYPE::INDEX_32);
 }
 
 void
@@ -375,9 +375,9 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
    auto db_depth_clear = getRegister<latte::DB_DEPTH_CLEAR>(latte::Register::DB_DEPTH_CLEAR);
    auto db_stencil_clear = getRegister<latte::DB_STENCIL_CLEAR>(latte::Register::DB_STENCIL_CLEAR);
    auto dbFormat = data.db_depth_info.FORMAT();
-   auto hasStencil = (dbFormat == latte::DEPTH_8_24
-                   || dbFormat == latte::DEPTH_8_24_FLOAT
-                   || dbFormat == latte::DEPTH_X24_8_32_FLOAT);
+   auto hasStencil = (dbFormat == latte::DB_FORMAT::DEPTH_8_24
+                   || dbFormat == latte::DB_FORMAT::DEPTH_8_24_FLOAT
+                   || dbFormat == latte::DB_FORMAT::DEPTH_X24_8_32_FLOAT);
 
    // Find our depthbuffer to clear
    auto buffer = getDepthBuffer(data.db_depth_base, data.db_depth_size, data.db_depth_info, true);

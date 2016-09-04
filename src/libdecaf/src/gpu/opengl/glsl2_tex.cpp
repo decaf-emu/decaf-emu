@@ -45,13 +45,13 @@ static char
 getSelectChannel(SQ_SEL sel)
 {
    switch (sel) {
-   case SQ_SEL_X:
+   case SQ_SEL::SEL_X:
       return 'x';
-   case SQ_SEL_Y:
+   case SQ_SEL::SEL_Y:
       return 'y';
-   case SQ_SEL_Z:
+   case SQ_SEL::SEL_Z:
       return 'z';
-   case SQ_SEL_W:
+   case SQ_SEL::SEL_W:
       return 'w';
    default:
       throw translate_exception(fmt::format("Unexpected SQ_SEL {}", sel));
@@ -62,20 +62,20 @@ static unsigned
 getSamplerArgCount(latte::SQ_TEX_DIM type, bool isShadowOp)
 {
    switch (type) {
-   case latte::SQ_TEX_DIM_1D:
+   case latte::SQ_TEX_DIM::DIM_1D:
       return 1 + (isShadowOp ? 1 : 0);
-   case latte::SQ_TEX_DIM_2D:
-   case latte::SQ_TEX_DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
       return 2 + (isShadowOp ? 1 : 0);
-   case latte::SQ_TEX_DIM_3D:
+   case latte::SQ_TEX_DIM::DIM_3D:
       decaf_assert(!isShadowOp, "Shadow3D samplers have special semantics we don't yet support");
       return 3;
-   case latte::SQ_TEX_DIM_1D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       return 1 + 1 + (isShadowOp ? 1 : 0);
-   case latte::SQ_TEX_DIM_2D_ARRAY:
-   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
       return 2 + 1 + (isShadowOp ? 1 : 0);
-   case latte::SQ_TEX_DIM_CUBEMAP:
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
       return 3 + (isShadowOp ? 1 : 0);
    default:
       throw translate_exception(fmt::format("Unsupported sampler type {}", static_cast<unsigned>(type)));
@@ -86,15 +86,15 @@ static bool
 getSamplerIsMsaa(latte::SQ_TEX_DIM type)
 {
    switch (type) {
-   case latte::SQ_TEX_DIM_1D:
-   case latte::SQ_TEX_DIM_2D:
-   case latte::SQ_TEX_DIM_3D:
-   case latte::SQ_TEX_DIM_1D_ARRAY:
-   case latte::SQ_TEX_DIM_2D_ARRAY:
-   case latte::SQ_TEX_DIM_CUBEMAP:
+   case latte::SQ_TEX_DIM::DIM_1D:
+   case latte::SQ_TEX_DIM::DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_3D:
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
       return false;
-   case latte::SQ_TEX_DIM_2D_MSAA:
-   case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
       return true;
    default:
       throw translate_exception(fmt::format("Unsupported sampler type {}", static_cast<unsigned>(type)));
@@ -126,7 +126,7 @@ sampleFunc(State &state,
            const std::string &func,
            const std::string &offsetFunc,
            bool isShadowOp = false,
-           latte::SQ_SEL extraArg = latte::SQ_SEL_MASK,
+           latte::SQ_SEL extraArg = latte::SQ_SEL::SEL_MASK,
            bool asInts = false)
 {
    auto dstSelX = inst.word1.DST_SEL_X();
@@ -187,7 +187,7 @@ sampleFunc(State &state,
       if (isShadowOp) {
          /* In r600 the .w channel holds the compare value whereas OpenGL
           * shadow samplers just expect it to be the last texture coordinate
-          * so we must set the last channel to SQ_SEL_W
+          * so we must set the last channel to SQ_SEL::SEL_W
           */
          if (samplerElements == 2) {
             srcSelY = srcSelW;
@@ -211,46 +211,46 @@ sampleFunc(State &state,
       }
 
       switch (extraArg) {
-      case latte::SQ_SEL_X:
+      case latte::SQ_SEL::SEL_X:
          state.out << ", ";
          insertSelectValue(state.out, src, srcSelX);
          break;
-      case latte::SQ_SEL_Y:
+      case latte::SQ_SEL::SEL_Y:
          state.out << ", ";
          insertSelectValue(state.out, src, srcSelY);
          break;
-      case latte::SQ_SEL_Z:
+      case latte::SQ_SEL::SEL_Z:
          state.out << ", ";
          insertSelectValue(state.out, src, srcSelZ);
          break;
-      case latte::SQ_SEL_W:
+      case latte::SQ_SEL::SEL_W:
          state.out << ", ";
          insertSelectValue(state.out, src, srcSelW);
          break;
-      case latte::SQ_SEL_0:
+      case latte::SQ_SEL::SEL_0:
          state.out << ", 0";
          break;
-      case latte::SQ_SEL_1:
+      case latte::SQ_SEL::SEL_1:
          state.out << ", 1";
          break;
       }
 
       if (writeOffsets) {
          switch (samplerDim) {
-         case latte::SQ_TEX_DIM_1D:
-         case latte::SQ_TEX_DIM_1D_ARRAY:
+         case latte::SQ_TEX_DIM::DIM_1D:
+         case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
             state.out << ", " << offsetX;
             break;
-         case latte::SQ_TEX_DIM_2D:
-         case latte::SQ_TEX_DIM_2D_ARRAY:
-         case latte::SQ_TEX_DIM_2D_MSAA:
-         case latte::SQ_TEX_DIM_2D_ARRAY_MSAA:
+         case latte::SQ_TEX_DIM::DIM_2D:
+         case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+         case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+         case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
             state.out << ", ivec2(" << offsetX << ", " << offsetY << ")";
             break;
-         case latte::SQ_TEX_DIM_3D:
+         case latte::SQ_TEX_DIM::DIM_3D:
             state.out << ", ivec3(" << offsetX << ", " << offsetY << ", " << offsetZ << ")";
             break;
-         case latte::SQ_TEX_DIM_CUBEMAP:
+         case latte::SQ_TEX_DIM::DIM_CUBEMAP:
          default:
             throw translate_exception(fmt::format("Unsupported sampler dim {}", static_cast<unsigned>(samplerDim)));
          }
@@ -312,7 +312,7 @@ GET_TEXTURE_INFO(State &state, const latte::ControlFlowInst &cf, const latte::Te
    //  this up into two operations.
 
    auto numDstSels = 3u;
-   SQ_SEL dummy = SQ_SEL_MASK;
+   SQ_SEL dummy = SQ_SEL::SEL_MASK;
    auto dstSelMask = condenseSelections(dstSelX, dstSelY, dstSelZ, dummy, numDstSels);
 
    if (numDstSels > 0) {
@@ -337,12 +337,12 @@ GET_TEXTURE_INFO(State &state, const latte::ControlFlowInst &cf, const latte::Te
       insertLineStart(state);
       state.out << dst << "." << dstSelMask;
       state.out << " = ";
-      insertSelectVector(state.out, "texTmp", dstSelX, dstSelY, dstSelZ, SQ_SEL::SQ_SEL_MASK, numDstSels);
+      insertSelectVector(state.out, "texTmp", dstSelX, dstSelY, dstSelZ, SQ_SEL::SEL_MASK, numDstSels);
       state.out << ";";
       insertLineEnd(state);
    }
 
-   if (dstSelW != SQ_SEL::SQ_SEL_MASK) {
+   if (dstSelW != SQ_SEL::SEL_MASK) {
       insertLineStart(state);
       insertSelectValue(state.out, dst, dstSelW);
       state.out << " = intBitsToFloat(textureQueryLevels(sampler_" << samplerID << "));";
@@ -373,21 +373,21 @@ static void
 SAMPLE_L(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // Sample with LOD srcW
-   sampleFunc(state, cf, inst, "textureLod", "textureLodOffset", false, latte::SQ_SEL_W);
+   sampleFunc(state, cf, inst, "textureLod", "textureLodOffset", false, latte::SQ_SEL::SEL_W);
 }
 
 static void
 SAMPLE_LZ(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // Sample with LOD Zero
-   sampleFunc(state, cf, inst, "textureLod", "textureLodOffset", false, latte::SQ_SEL_0);
+   sampleFunc(state, cf, inst, "textureLod", "textureLodOffset", false, latte::SQ_SEL::SEL_0);
 }
 
 static void
 LD(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // Texel Fetch
-   sampleFunc(state, cf, inst, "texelFetch", "texelFetchOffset", false, latte::SQ_SEL_MASK, true);
+   sampleFunc(state, cf, inst, "texelFetch", "texelFetchOffset", false, latte::SQ_SEL::SEL_MASK, true);
 }
 
 void

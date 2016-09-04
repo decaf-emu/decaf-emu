@@ -22,9 +22,9 @@ bool GLDriver::checkActiveColorBuffer()
 
    auto special_op = cb_color_control.SPECIAL_OP();
    switch (special_op) {
-   case latte::CB_SPECIAL_NORMAL:
+   case latte::CB_SPECIAL_OP::NORMAL:
       break;
-   case latte::CB_SPECIAL_DISABLE:
+   case latte::CB_SPECIAL_OP::DISABLE:
       mask = 0;
       break;
    default:
@@ -97,39 +97,39 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
    auto cbFormat = cb_color_info.FORMAT();
    auto format = static_cast<latte::SQ_DATA_FORMAT>(cbFormat);
 
-   auto numFormat = latte::SQ_NUM_FORMAT_NORM;
-   auto formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   auto numFormat = latte::SQ_NUM_FORMAT::NORM;
+   auto formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
    auto degamma = 0u;
 
    switch (cbNumberType) {
-   case latte::NUMBER_UNORM:
-      numFormat = latte::SQ_NUM_FORMAT_NORM;
-      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   case latte::CB_NUMBER_TYPE::UNORM:
+      numFormat = latte::SQ_NUM_FORMAT::NORM;
+      formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
       degamma = 0;
       break;
-   case latte::NUMBER_SNORM:
-      numFormat = latte::SQ_NUM_FORMAT_NORM;
-      formatComp = latte::SQ_FORMAT_COMP_SIGNED;
+   case latte::CB_NUMBER_TYPE::SNORM:
+      numFormat = latte::SQ_NUM_FORMAT::NORM;
+      formatComp = latte::SQ_FORMAT_COMP::SIGNED;
       degamma = 0;
       break;
-   case latte::NUMBER_UINT:
-      numFormat = latte::SQ_NUM_FORMAT_INT;
-      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   case latte::CB_NUMBER_TYPE::UINT:
+      numFormat = latte::SQ_NUM_FORMAT::INT;
+      formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
       degamma = 0;
       break;
-   case latte::NUMBER_SINT:
-      numFormat = latte::SQ_NUM_FORMAT_INT;
-      formatComp = latte::SQ_FORMAT_COMP_SIGNED;
+   case latte::CB_NUMBER_TYPE::SINT:
+      numFormat = latte::SQ_NUM_FORMAT::INT;
+      formatComp = latte::SQ_FORMAT_COMP::SIGNED;
       degamma = 0;
       break;
-   case latte::NUMBER_FLOAT:
-      numFormat = latte::SQ_NUM_FORMAT_SCALED;
-      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   case latte::CB_NUMBER_TYPE::FLOAT:
+      numFormat = latte::SQ_NUM_FORMAT::SCALED;
+      formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
       degamma = 0;
       break;
-   case latte::NUMBER_SRGB:
-      numFormat = latte::SQ_NUM_FORMAT_NORM;
-      formatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
+   case latte::CB_NUMBER_TYPE::SRGB:
+      numFormat = latte::SQ_NUM_FORMAT::NORM;
+      formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
       degamma = 1;
       break;
    default:
@@ -137,7 +137,7 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
    }
 
    auto tileMode = getArrayModeTileMode(cb_color_info.ARRAY_MODE());
-   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, 0, latte::SQ_TEX_DIM_2D, format, numFormat, formatComp, degamma, false, tileMode, true, discardData);
+   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, 0, latte::SQ_TEX_DIM::DIM_2D, format, numFormat, formatComp, degamma, false, tileMode, true, discardData);
    buffer->dirtyMemory = false;
    buffer->needUpload = false;
    buffer->state = SurfaceUseState::GpuWritten;

@@ -17,13 +17,13 @@ static void
 VTX_FETCH(State &state, const ControlFlowInst &cf, const VertexFetchInst &inst)
 {
    //  FETCH R4.xyzw, R0.y, b131 NO_INDEX_OFFSET FMT_FROM_FETCH_CONSTANT MEGA(16) OFFSET(0)
-   auto id = inst.word0.BUFFER_ID() + SQ_VS_RESOURCE_BASE;
+   auto id = inst.word0.BUFFER_ID() + SQ_RES_OFFSET::VS_TEX_RESOURCE_0;
 
    // For now we only support reading from vertex buffers (uniform blocks)
-   decaf_assert(id >= SQ_VS_BUF_RESOURCE_0 && id < SQ_VS_GSOUT_RESOURCE, fmt::format("Unsupported VTX_FETCH buffer id {}", id));
+   decaf_assert(id >= SQ_RES_OFFSET::VS_BUF_RESOURCE_0 && id < SQ_RES_OFFSET::VS_GSOUT_RESOURCE, fmt::format("Unsupported VTX_FETCH buffer id {}", id));
 
    // Let's only support a very expected set of values
-   decaf_check(inst.word0.FETCH_TYPE() == SQ_VTX_FETCH_NO_INDEX_OFFSET);
+   decaf_check(inst.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::NO_INDEX_OFFSET);
    decaf_check(inst.word1.USE_CONST_FIELDS() == 1);
    decaf_check(inst.word2.OFFSET() == 0);
    decaf_check(inst.word2.MEGA_FETCH() && (inst.word0.MEGA_FETCH_COUNT() + 1) == 16);
@@ -39,7 +39,7 @@ VTX_FETCH(State &state, const ControlFlowInst &cf, const VertexFetchInst &inst)
    if (numDstSels > 0) {
       auto dst = getExportRegister(inst.gpr.DST_GPR(), inst.gpr.DST_REL());
       auto src = getExportRegister(inst.word0.SRC_GPR(), inst.word0.SRC_REL());
-      auto blockID = id - SQ_VS_BUF_RESOURCE_0;
+      auto blockID = id - SQ_RES_OFFSET::VS_BUF_RESOURCE_0;
 
       if (state.shader) {
          state.shader->usedUniformBlocks[blockID] = true;

@@ -36,13 +36,13 @@ disassembleCondition(fmt::MemoryWriter &out, const ControlFlowInst &inst)
       out << " CND(";
 
       switch (inst.word1.COND()) {
-      case SQ_CF_COND_FALSE:
+      case SQ_CF_COND::ALWAYS_FALSE:
          out << "FALSE";
          break;
-      case SQ_CF_COND_BOOL:
+      case SQ_CF_COND::CF_BOOL:
          out << "BOOL";
          break;
-      case SQ_CF_COND_NOT_BOOL:
+      case SQ_CF_COND::CF_NOT_BOOL:
          out << "NOT_BOOL";
          break;
       }

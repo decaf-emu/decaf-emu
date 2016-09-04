@@ -14,7 +14,7 @@ GX2SetAttribBuffer(uint32_t index,
 {
    pm4::SetVtxResource res;
    memset(&res, 0, sizeof(pm4::SetVtxResource));
-   res.id = (latte::SQ_VS_ATTRIB_RESOURCE_0 + index) * 7;
+   res.id = (latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + index) * 7;
    res.baseAddress = buffer;
 
    res.word1 = res.word1
@@ -24,7 +24,7 @@ GX2SetAttribBuffer(uint32_t index,
       .STRIDE(stride);
 
    res.word6 = res.word6
-      .TYPE(latte::SQ_TEX_VTX_VALID_BUFFER);
+      .TYPE(latte::SQ_TEX_VTX_TYPE::VALID_BUFFER);
 
    pm4::write(res);
 }
@@ -75,25 +75,25 @@ GX2DrawIndexedEx(GX2PrimitiveMode mode,
                  uint32_t offset,
                  uint32_t numInstances)
 {
-   auto index_type = latte::VGT_INDEX::VGT_INDEX_16;
-   auto swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_NONE;
+   auto index_type = latte::VGT_INDEX_TYPE::INDEX_16;
+   auto swap_mode = latte::VGT_DMA_SWAP::NONE;
 
    switch (indexType) {
    case GX2IndexType::U16:
-      index_type = latte::VGT_INDEX::VGT_INDEX_16;
-      swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_16_BIT;
+      index_type = latte::VGT_INDEX_TYPE::INDEX_16;
+      swap_mode = latte::VGT_DMA_SWAP::SWAP_16_BIT;
       break;
    case GX2IndexType::U16_LE:
-      index_type = latte::VGT_INDEX::VGT_INDEX_16;
-      swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_NONE;
+      index_type = latte::VGT_INDEX_TYPE::INDEX_16;
+      swap_mode = latte::VGT_DMA_SWAP::NONE;
       break;
    case GX2IndexType::U32:
-      index_type = latte::VGT_INDEX::VGT_INDEX_32;
-      swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_32_BIT;
+      index_type = latte::VGT_INDEX_TYPE::INDEX_32;
+      swap_mode = latte::VGT_DMA_SWAP::SWAP_32_BIT;
       break;
    case GX2IndexType::U32_LE:
-      index_type = latte::VGT_INDEX::VGT_INDEX_32;
-      swap_mode = latte::VGT_DMA_SWAP::VGT_DMA_SWAP_NONE;
+      index_type = latte::VGT_INDEX_TYPE::INDEX_32;
+      swap_mode = latte::VGT_DMA_SWAP::NONE;
       break;
    default:
       decaf_abort(fmt::format("Invalid GX2IndexType {}", enumAsString(indexType)));
@@ -104,11 +104,11 @@ GX2DrawIndexedEx(GX2PrimitiveMode mode,
       .SWAP_MODE(swap_mode);
 
    auto vgt_draw_initiator = latte::VGT_DRAW_INITIATOR::get(0)
-      .SOURCE_SELECT(latte::VGT_DI_SRC_SEL_DMA);
+      .SOURCE_SELECT(latte::VGT_DI_SRC_SEL::DMA);
 
    if (mode & 0x80) {
       vgt_draw_initiator = vgt_draw_initiator
-         .MAJOR_MODE(latte::VGT_DI_MAJOR_MODE1);
+         .MAJOR_MODE(latte::VGT_DI_MAJOR_MODE::MODE1);
    }
 
    pm4::write(pm4::SetControlConstant { latte::Register::SQ_VTX_BASE_VTX_LOC, offset });
@@ -152,26 +152,26 @@ GX2DrawIndexedImmediateEx(GX2PrimitiveMode mode,
                           uint32_t offset,
                           uint32_t numInstances)
 {
-   auto index_type = latte::VGT_INDEX_16;
-   auto swap_mode = latte::VGT_DMA_SWAP_NONE;
+   auto index_type = latte::VGT_INDEX_TYPE::INDEX_16;
+   auto swap_mode = latte::VGT_DMA_SWAP::NONE;
    auto indexBytes = 0u;
 
    switch (indexType) {
    case GX2IndexType::U16:
-      index_type = latte::VGT_INDEX_16;
-      swap_mode = latte::VGT_DMA_SWAP_16_BIT;
+      index_type = latte::VGT_INDEX_TYPE::INDEX_16;
+      swap_mode = latte::VGT_DMA_SWAP::SWAP_16_BIT;
       break;
    case GX2IndexType::U16_LE:
-      index_type = latte::VGT_INDEX_16;
-      swap_mode = latte::VGT_DMA_SWAP_NONE;
+      index_type = latte::VGT_INDEX_TYPE::INDEX_16;
+      swap_mode = latte::VGT_DMA_SWAP::NONE;
       break;
    case GX2IndexType::U32:
-      index_type = latte::VGT_INDEX_32;
-      swap_mode = latte::VGT_DMA_SWAP_32_BIT;
+      index_type = latte::VGT_INDEX_TYPE::INDEX_32;
+      swap_mode = latte::VGT_DMA_SWAP::SWAP_32_BIT;
       break;
    case GX2IndexType::U32_LE:
-      index_type = latte::VGT_INDEX_32;
-      swap_mode = latte::VGT_DMA_SWAP_NONE;
+      index_type = latte::VGT_INDEX_TYPE::INDEX_32;
+      swap_mode = latte::VGT_DMA_SWAP::NONE;
       break;
    default:
       decaf_abort(fmt::format("Invalid GX2IndexType {}", enumAsString(indexType)));
@@ -182,7 +182,7 @@ GX2DrawIndexedImmediateEx(GX2PrimitiveMode mode,
       .SWAP_MODE(swap_mode);
 
    auto vgt_draw_initiator = latte::VGT_DRAW_INITIATOR::get(0)
-      .SOURCE_SELECT(latte::VGT_DI_SRC_SEL_IMMEDIATE);
+      .SOURCE_SELECT(latte::VGT_DI_SRC_SEL::IMMEDIATE);
 
    pm4::write(pm4::SetControlConstant { latte::Register::SQ_VTX_BASE_VTX_LOC, offset });
    pm4::write(pm4::SetConfigReg { latte::Register::VGT_PRIMITIVE_TYPE, mode });
@@ -191,9 +191,9 @@ GX2DrawIndexedImmediateEx(GX2PrimitiveMode mode,
 
    auto numWords = 0u;
 
-   if (index_type == latte::VGT_INDEX_16) {
+   if (index_type == latte::VGT_INDEX_TYPE::INDEX_16) {
       numWords = (count + 1) / 2;
-   } else if (index_type == latte::VGT_INDEX_32) {
+   } else if (index_type == latte::VGT_INDEX_TYPE::INDEX_32) {
       numWords = count;
    } else {
       decaf_abort(fmt::format("Invalid index_type {}", index_type));

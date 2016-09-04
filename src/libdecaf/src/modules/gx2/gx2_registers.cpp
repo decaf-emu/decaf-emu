@@ -365,10 +365,10 @@ GX2InitColorControlReg(GX2ColorControlReg *reg,
                        BOOL colorWriteEnable)
 {
    auto cb_color_control = reg->cb_color_control.value();
-   auto specialOp = latte::CB_SPECIAL_DISABLE;
+   auto specialOp = latte::CB_SPECIAL_OP::DISABLE;
 
    if (colorWriteEnable) {
-      specialOp = latte::CB_SPECIAL_NORMAL;
+      specialOp = latte::CB_SPECIAL_OP::NORMAL;
    }
 
    cb_color_control = cb_color_control
@@ -393,7 +393,7 @@ GX2GetColorControlReg(GX2ColorControlReg *reg,
    *targetBlendEnable = cb_color_control.TARGET_BLEND_ENABLE();
    *multiWriteEnable = cb_color_control.MULTIWRITE_ENABLE();
 
-   if (cb_color_control.SPECIAL_OP() == latte::CB_SPECIAL_DISABLE) {
+   if (cb_color_control.SPECIAL_OP() == latte::CB_SPECIAL_OP::DISABLE) {
       *colorWriteEnable = FALSE;
    } else {
       *colorWriteEnable = TRUE;

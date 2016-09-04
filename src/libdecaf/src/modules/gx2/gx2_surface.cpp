@@ -424,32 +424,32 @@ GX2CopySurface(GX2Surface *src,
    auto dstDim = static_cast<latte::SQ_TEX_DIM>(dst->dim.value());
    auto dstFormat = static_cast<latte::SQ_DATA_FORMAT>(dst->format & 0x3f);
    auto dstTileMode = static_cast<latte::SQ_TILE_MODE>(dst->tileMode.value());
-   auto dstFormatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
-   auto dstNumFormat = latte::SQ_NUM_FORMAT_NORM;
+   auto dstFormatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+   auto dstNumFormat = latte::SQ_NUM_FORMAT::NORM;
    auto dstForceDegamma = false;
    auto dstPitch = dst->pitch;
    auto dstDepth = dst->depth;
    auto dstSamples = 0u;
 
    if (dst->format & GX2AttribFormatFlags::SIGNED) {
-      dstFormatComp = latte::SQ_FORMAT_COMP_SIGNED;
+      dstFormatComp = latte::SQ_FORMAT_COMP::SIGNED;
    }
 
    if (dst->format & GX2AttribFormatFlags::SCALED) {
-      dstNumFormat = latte::SQ_NUM_FORMAT_SCALED;
+      dstNumFormat = latte::SQ_NUM_FORMAT::SCALED;
    } else if (dst->format & GX2AttribFormatFlags::INTEGER) {
-      dstNumFormat = latte::SQ_NUM_FORMAT_INT;
+      dstNumFormat = latte::SQ_NUM_FORMAT::INT;
    }
 
    if (dst->format & GX2AttribFormatFlags::DEGAMMA) {
       dstForceDegamma = true;
    }
 
-   if (dstFormat >= latte::FMT_BC1 && dstFormat <= latte::FMT_BC5) {
+   if (dstFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dstFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       dstPitch *= 4;
    }
 
-   if (dstDim == latte::SQ_TEX_DIM_CUBEMAP) {
+   if (dstDim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
       dstDepth /= 6;
    }
 
@@ -464,32 +464,32 @@ GX2CopySurface(GX2Surface *src,
    auto srcDim = static_cast<latte::SQ_TEX_DIM>(src->dim.value());
    auto srcFormat = static_cast<latte::SQ_DATA_FORMAT>(src->format & 0x3f);
    auto srcTileMode = static_cast<latte::SQ_TILE_MODE>(src->tileMode.value());
-   auto srcFormatComp = latte::SQ_FORMAT_COMP_UNSIGNED;
-   auto srcNumFormat = latte::SQ_NUM_FORMAT_NORM;
+   auto srcFormatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+   auto srcNumFormat = latte::SQ_NUM_FORMAT::NORM;
    auto srcForceDegamma = false;
    auto srcPitch = src->pitch;
    auto srcDepth = src->depth;
    auto srcSamples = 0u;
 
    if (src->format & GX2AttribFormatFlags::SIGNED) {
-      srcFormatComp = latte::SQ_FORMAT_COMP_SIGNED;
+      srcFormatComp = latte::SQ_FORMAT_COMP::SIGNED;
    }
 
    if (src->format & GX2AttribFormatFlags::SCALED) {
-      srcNumFormat = latte::SQ_NUM_FORMAT_SCALED;
+      srcNumFormat = latte::SQ_NUM_FORMAT::SCALED;
    } else if (src->format & GX2AttribFormatFlags::INTEGER) {
-      srcNumFormat = latte::SQ_NUM_FORMAT_INT;
+      srcNumFormat = latte::SQ_NUM_FORMAT::INT;
    }
 
    if (src->format & GX2AttribFormatFlags::DEGAMMA) {
       srcForceDegamma = true;
    }
 
-   if (srcFormat >= latte::FMT_BC1 && srcFormat <= latte::FMT_BC5) {
+   if (srcFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && srcFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       srcPitch *= 4;
    }
 
-   if (srcDim == latte::SQ_TEX_DIM_CUBEMAP) {
+   if (srcDim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
       srcDepth /= 6;
    }
 

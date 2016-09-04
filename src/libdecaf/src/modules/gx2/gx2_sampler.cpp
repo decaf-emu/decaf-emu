@@ -64,7 +64,7 @@ GX2InitSamplerDepthCompare(GX2Sampler *sampler,
    auto word0 = sampler->regs.word0.value();
 
    word0 = word0
-      .DEPTH_COMPARE_FUNCTION(static_cast<latte::SQ_TEX_DEPTH_COMPARE>(depthCompare));
+      .DEPTH_COMPARE_FUNCTION(static_cast<latte::REF_FUNC>(depthCompare));
 
    sampler->regs.word0 = word0;
 }
