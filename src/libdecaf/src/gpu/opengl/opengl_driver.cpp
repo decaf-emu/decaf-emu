@@ -185,7 +185,7 @@ GLDriver::decafSwapBuffers(const pm4::DecafSwapBuffers &data)
 void
 GLDriver::decafCapSyncRegisters(const pm4::DecafCapSyncRegisters &data)
 {
-   pm4::captureSyncGpuRegisters(mRegisters.data(), mRegisters.size());
+   pm4::captureSyncGpuRegisters(mRegisters.data(), static_cast<uint32_t>(mRegisters.size()));
 }
 
 void
