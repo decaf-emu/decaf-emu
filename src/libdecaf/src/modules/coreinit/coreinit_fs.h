@@ -38,7 +38,6 @@ FSFlushMultiQuota
 FSFlushMultiQuotaAsync
 FSFlushQuota
 FSFlushQuotaAsync
-FSGetAsyncResult
 FSGetCmdPriority
 FSGetCurrentCmdBlock
 FSGetCwdAsync

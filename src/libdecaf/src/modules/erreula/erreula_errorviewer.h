@@ -55,8 +55,11 @@ ErrEulaAppearError(nn::erreula::AppearArg *args);
 void
 ErrEulaCalc(nn::erreula::ControllerInfo *info);
 
-void
-ErrEulaCreate(uint8_t *unk1, nn::erreula::RegionType region, nn::erreula::LangType language, FSClient *fsClient);
+BOOL
+ErrEulaCreate(uint8_t *workMemory,
+              nn::erreula::RegionType region,
+              nn::erreula::LangType language,
+              FSClient *fsClient);
 
 void
 ErrEulaDestroy();

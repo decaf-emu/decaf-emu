@@ -19,10 +19,14 @@ ErrEulaCalc(nn::erreula::ControllerInfo *info)
    decaf_warn_stub();
 }
 
-void
-ErrEulaCreate(uint8_t *unk1, nn::erreula::RegionType region, nn::erreula::LangType language, FSClient *fsClient)
+BOOL
+ErrEulaCreate(uint8_t *workMemory,
+              nn::erreula::RegionType region,
+              nn::erreula::LangType language,
+              FSClient *fsClient)
 {
    decaf_warn_stub();
+   return TRUE;
 }
 
 void
@@ -158,10 +162,10 @@ ErrEulaPlayAppearSE(bool value)
 }
 
 bool
-ErrEulaJump(char const *, unsigned int)
+ErrEulaJump(char const *,
+            unsigned int)
 {
    decaf_warn_stub();
-
    return false;
 }
 
