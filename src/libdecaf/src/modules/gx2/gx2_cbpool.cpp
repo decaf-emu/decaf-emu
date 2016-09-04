@@ -365,9 +365,8 @@ getUserCommandBuffer(uint32_t **buffer,
 {
    auto core = coreinit::OSGetCoreId();
    auto &cb = sActiveBuffer[core];
-   decaf_check(cb);
 
-   if (!cb->displayList) {
+   if (!cb || !cb->displayList) {
       return false;
    }
 
