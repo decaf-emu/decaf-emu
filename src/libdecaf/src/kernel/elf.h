@@ -122,6 +122,7 @@ enum SectionIndex : uint16_t // st_shndx
 {
    SHN_UNDEF      = 0,        // Undefined
    SHN_LORESERVE  = 0xff00,   // Reserved range
+   SHN_HIPROC     = 0xff1f,   // Reserved range
    SHN_ABS        = 0xfff1,   // Absolute symbols
    SHN_COMMON     = 0xfff2,   // Common symbols
    SHN_XINDEX     = 0xffff,   // Escape -- index stored elsewhere

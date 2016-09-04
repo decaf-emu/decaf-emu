@@ -569,32 +569,38 @@ processRelocations(LoadedModule *loadedMod,
          auto reloAddr = rela.offset - targetBaseAddr + targetVirtAddr;
 
          auto symbol = getSymbol(symSecView, index);
-         auto &symbolSection = sections[symbol.shndx];
          auto symbolName = reinterpret_cast<const char*>(symStrTab.memory) + symbol.name;
+         const elf::XSection *symbolSection = nullptr;
 
-         // Some games relocate stuff to $UNDEF first, then to their proper location :S
-         if (!symbolSection.virtSize) {
+         if (symbol.shndx == elf::SHN_UNDEF) {
             continue;
+         } else if (symbol.shndx < elf::SHN_LORESERVE) {
+            symbolSection = &sections[symbol.shndx];
+         } else {
+            // ABS is the only supported special section index
+            decaf_check(symbol.shndx == elf::SHN_ABS);
          }
 
          // Get symbol address
          auto symAddr = symbol.value + rela.addend;
 
          // Calculate relocated symbol address except for TLS which are NOT rpl imports
-         if (symbolSection.header.type == elf::SHT_RPL_IMPORTS ||
-             (type != elf::R_PPC_DTPREL32 && type != elf::R_PPC_DTPMOD32)) {
-            symAddr = calculateRelocatedAddress(symbol.value, sections);
+         if (symbolSection) {
+            if (symbolSection->header.type == elf::SHT_RPL_IMPORTS ||
+               (type != elf::R_PPC_DTPREL32 && type != elf::R_PPC_DTPMOD32)) {
+               symAddr = calculateRelocatedAddress(symbol.value, sections);
 
-            if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
-               decaf_check(symAddr);
-               symAddr = mem::read<uint32_t>(symAddr);
+               if (symbolSection->header.type == elf::SHT_RPL_IMPORTS) {
+                  decaf_check(symAddr);
+                  symAddr = mem::read<uint32_t>(symAddr);
+               }
+
+               if (type != elf::R_PPC_DTPREL32 && type != elf::R_PPC_DTPMOD32) {
+                  decaf_check(symAddr);
+               }
+
+               symAddr += rela.addend;
             }
-
-            if (type != elf::R_PPC_DTPREL32 && type != elf::R_PPC_DTPMOD32) {
-               decaf_check(symAddr);
-            }
-
-            symAddr += rela.addend;
          }
 
          auto ptr8 = mem::translate(reloAddr);
@@ -671,11 +677,12 @@ processRelocations(LoadedModule *loadedMod,
          }
          case elf::R_PPC_DTPMOD32:
          {
+            decaf_check(symbolSection);
             auto moduleIndex = loadedMod->tlsModuleIndex;
 
             // If this is an import, we must find the correct module index
-            if (symbolSection.header.type == elf::SHT_RPL_IMPORTS) {
-               auto module = loadRPLNoLock(symbolSection.name);
+            if (symbolSection->header.type == elf::SHT_RPL_IMPORTS) {
+               auto module = loadRPLNoLock(symbolSection->name);
                moduleIndex = module->tlsModuleIndex;
             }
 
