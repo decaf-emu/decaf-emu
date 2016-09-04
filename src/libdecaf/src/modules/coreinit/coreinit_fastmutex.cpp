@@ -100,7 +100,13 @@ void
 OSFastMutex_Lock(OSFastMutex *mutex)
 {
    decaf_check(mutex);
-   decaf_check(mutex->tag == OSFastMutex::Tag);
+
+   // HACK: Naughty games not initialising mutex before using it.
+   //decaf_check(mutex->tag == OSFastMutex::Tag);
+   if (mutex->tag != OSFastMutex::Tag) {
+      OSFastMutex_Init(mutex, nullptr);
+   }
+
    auto thread = OSGetCurrentThread();
 
    while (true) {
