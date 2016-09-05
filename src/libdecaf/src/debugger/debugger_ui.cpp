@@ -1,5 +1,6 @@
 #include "debugger_ui.h"
 #include <imgui.h>
+#include <string>
 
 using namespace decaf::input;
 
@@ -27,10 +28,16 @@ sMouseWheel = 0.0f;
 static float
 sMousePosX = 0.0f, sMousePosY = 0.0f;
 
+static std::string
+sConfigPath;
+
 void
-initialise()
+initialise(const std::string &configPath)
 {
    auto &io = ImGui::GetIO();
+
+   sConfigPath = configPath;
+   io.IniFilename = sConfigPath.c_str();
 
    io.GetClipboardTextFn = []() {
       return sGetClipboardText ? sGetClipboardText() : "";

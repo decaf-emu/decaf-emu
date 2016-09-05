@@ -1,4 +1,5 @@
-#include "common/platform_dir.h"
+#ifndef DECAF_NOGL
+
 #include "debugger/debugger_ui.h"
 #include "decaf.h"
 #include "decaf_debugger.h"
@@ -32,23 +33,11 @@ struct DebugDrawData
 static DebugDrawData
 sDebugDrawData;
 
-static std::string
-sConfigPath;
-
-void
-initialise()
-{
-   ::debugger::ui::initialise();
-}
-
 void
 initialiseUiGL()
 {
    auto &data = sDebugDrawData;
    ImGuiIO& io = ImGui::GetIO();
-
-   sConfigPath = makeConfigPath("imgui.ini");
-   io.IniFilename = sConfigPath.c_str();
 
    const gl::GLchar *vertex_shader =
       "#version 330\n"
@@ -232,3 +221,5 @@ drawUiGL(uint32_t width, uint32_t height)
 } // namespace debugger
 
 } // namespace decaf
+
+#endif // DECAF_NOGL

@@ -948,6 +948,12 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\dx12\dx12_driver.cpp">
       <Filter>Source Files\gpu\dx12</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_dx12.cpp">
+      <Filter>Source Files\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\decaf_debugger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">

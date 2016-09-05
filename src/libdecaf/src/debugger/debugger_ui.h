@@ -1,5 +1,6 @@
 #pragma once
 #include "decaf_input.h"
+#include <string>
 
 namespace debugger
 {
@@ -34,7 +35,7 @@ setClipboardTextCallbacks(ClipboardTextGetCallback getter,
                           ClipboardTextSetCallback setter);
 
 void
-initialise();
+initialise(const std::string &configPath);
 
 bool
 isVisible();

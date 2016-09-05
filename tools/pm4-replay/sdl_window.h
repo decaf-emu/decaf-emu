@@ -1,6 +1,7 @@
 #pragma once
 #include <glbinding/gl/gl.h>
 #include <libdecaf/decaf.h>
+#include <libdecaf/decaf_opengl.h>
 #include <SDL.h>
 #include <string>
 

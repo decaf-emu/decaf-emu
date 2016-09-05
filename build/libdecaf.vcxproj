@@ -153,6 +153,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\libdecaf\decaf_debugger.cpp" />
     <ClCompile Include="..\src\libdecaf\decaf_graphics.cpp" />
     <ClCompile Include="..\src\libdecaf\decaf_nullgraphicsdriver.cpp" />
     <ClCompile Include="..\src\libdecaf\decaf_input.cpp" />
@@ -164,6 +165,7 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_disasmview.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_draw.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_dx12.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_infoview.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_memview.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_opengl.cpp" />

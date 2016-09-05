@@ -408,7 +408,8 @@ SDLWindow::run(const std::string &tracePath)
    auto shouldQuit = false;
 
    // Setup OpenGL graphics driver
-   mGraphicsDriver = decaf::createGLDriver();
+   auto glDriver = decaf::createGLDriver();
+   mGraphicsDriver = reinterpret_cast<decaf::OpenGLDriver *>(glDriver);
 
    // Setup rendering
    SDL_GL_MakeCurrent(mWindow, mWindowContext);
