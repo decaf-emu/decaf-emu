@@ -35,11 +35,12 @@ draw()
       return;
    }
 
-   ImGui::Columns(8, "voicesList", false);
+   ImGui::Columns(9, "voicesList", false);
 
    ImGui::Text("ID"); ImGui::NextColumn();
    ImGui::Text("State"); ImGui::NextColumn();
    ImGui::Text("Type"); ImGui::NextColumn();
+   ImGui::Text("Strm"); ImGui::NextColumn();
    ImGui::Text("Base Addr"); ImGui::NextColumn();
    ImGui::Text("Current Off"); ImGui::NextColumn();
    ImGui::Text("End Off"); ImGui::NextColumn();
@@ -50,6 +51,8 @@ draw()
    auto voices = snd_core::internal::getAcquiredVoices();
 
    for (auto &voice : voices) {
+      auto extras = snd_core::internal::getVoiceExtras(voice->index);
+
       ImGui::Text("%d", voice->index.value());
       ImGui::NextColumn();
 
@@ -66,6 +69,15 @@ draw()
          ImGui::Text("LPCM16");
       } else if (voice->offsets.dataType == snd_core::AXVoiceFormat::LPCM8) {
          ImGui::Text("LPCM8");
+      } else {
+         ImGui::Text("Unknown");
+      }
+      ImGui::NextColumn();
+
+      if (extras->type == snd_core::AXVoiceType::Default) {
+         ImGui::Text("Default");
+      } else if (extras->type == snd_core::AXVoiceType::Streaming) {
+         ImGui::Text("Stream");
       } else {
          ImGui::Text("Unknown");
       }
