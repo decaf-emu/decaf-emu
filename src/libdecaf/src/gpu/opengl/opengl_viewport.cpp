@@ -1,3 +1,5 @@
+#ifndef DECAF_NOGL
+
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>
 
@@ -83,3 +85,5 @@ GLDriver::checkViewport()
 } // namespace opengl
 
 } // namespace gpu
+
+#endif // DECAF_NOGL

@@ -1,3 +1,5 @@
+#ifndef DECAF_NOGL
+
 #include "opengl_driver.h"
 #include "gpu/pm4_reader.h"
 
@@ -459,3 +461,5 @@ void GLDriver::nopPacket(const pm4::Nop &data)
 } // namespace opengl
 
 } // namespace gpu
+
+#endif // DECAF_NOGL

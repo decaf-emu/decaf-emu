@@ -8,7 +8,7 @@
 #include "gpu/gfd.h"
 #include "gpu/microcode/latte_disassembler.h"
 #include "gpu/pm4_buffer.h"
-#include "gpu/opengl/glsl2_translate.h"
+#include "gpu/glsl2/glsl2_translate.h"
 #include "modules/gx2/gx2_addrlib.h"
 #include "modules/gx2/gx2_dds.h"
 #include "modules/gx2/gx2_texture.h"

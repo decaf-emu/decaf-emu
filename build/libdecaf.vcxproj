@@ -81,7 +81,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;DECAF_DX12;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
@@ -104,7 +104,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;DECAF_DX12;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
@@ -131,7 +131,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NOMINMAX;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;DECAF_DX12;GSL_THROWS_FOR_TESTING;SDL_MAIN_HANDLED;HAVE_LIBC;WIN32;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>false</WholeProgramOptimization>
@@ -192,6 +192,17 @@
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_filehandle.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folder.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_win_host_folderhandle.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\dx12\dx12_driver.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_alu.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_alu_op2.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_alu_op3.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_alu_reduction.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_cf.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_cf_stack.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_exp.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_tex.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_translate.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_vtx.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_commandqueue.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\gfd.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_addrlibopt.cpp" />
@@ -204,17 +215,8 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_vtx.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_instructions.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu_op2.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu_op3.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu_reduction.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_cf.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_exp.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_cf_stack.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_tex.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_translate.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_vtx.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_colorbuffer.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_constants.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_depthbuffer.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_draw.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.cpp" />
@@ -404,11 +406,13 @@
     <ClInclude Include="..\src\libdecaf\decaf.h" />
     <ClInclude Include="..\src\libdecaf\decaf_config.h" />
     <ClInclude Include="..\src\libdecaf\decaf_debugger.h" />
+    <ClInclude Include="..\src\libdecaf\decaf_dx12.h" />
     <ClInclude Include="..\src\libdecaf\decaf_eventlistener.h" />
     <ClInclude Include="..\src\libdecaf\decaf_graphics.h" />
     <ClInclude Include="..\src\libdecaf\decaf_input.h" />
     <ClInclude Include="..\src\libdecaf\decaf_nullgraphicsdriver.h" />
     <ClInclude Include="..\src\libdecaf\decaf_nullinputdriver.h" />
+    <ClInclude Include="..\src\libdecaf\decaf_opengl.h" />
     <ClInclude Include="..\src\libdecaf\decaf_pm4replay.h" />
     <ClInclude Include="..\src\libdecaf\decaf_sound.h" />
     <ClInclude Include="..\src\libdecaf\src\debugger\debugger.h" />
@@ -435,6 +439,10 @@
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_permissions.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_folderhandle.h" />
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_virtual_folder.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\dx12\dx12_driver.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\glsl2\glsl2_alu.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\glsl2\glsl2_cf.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\glsl2\glsl2_translate.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\gpu_commandqueue.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\gfd.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\gpu_flush.h" />
@@ -463,9 +471,6 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_decoders.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_instructions.h" />
-    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu.h" />
-    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_cf.h" />
-    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_translate.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_constants.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_packets.h" />

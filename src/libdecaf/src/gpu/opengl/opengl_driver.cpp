@@ -1,3 +1,5 @@
+#ifndef DECAF_NOGL
+
 #include "common/decaf_assert.h"
 #include "common/log.h"
 #include "decaf_config.h"
@@ -20,9 +22,6 @@ namespace gpu
 
 namespace opengl
 {
-
-unsigned
-MaxUniformBlockSize = 0;
 
 GLDriver::GLDriver()
 {
@@ -793,3 +792,5 @@ GLDriver::stop()
 } // namespace opengl
 
 } // namespace gpu
+
+#endif // DECAF_NOGL

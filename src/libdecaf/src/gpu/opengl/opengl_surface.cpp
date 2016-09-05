@@ -1,3 +1,5 @@
+#ifndef DECAF_NOGL
+
 #include "common/decaf_assert.h"
 #include "common/murmur3.h"
 #include "decaf_config.h"
@@ -933,3 +935,5 @@ GLDriver::setSurfaceSwizzle(SurfaceBuffer *surface,
 } // namespace opengl
 
 } // namespace gpu
+
+#endif // DECAF_NOGL

@@ -1,3 +1,5 @@
+#ifndef DECAF_NOGL
+
 #include "common/decaf_assert.h"
 #include "common/log.h"
 #include "common/murmur3.h"
@@ -356,3 +358,5 @@ bool GLDriver::checkActiveSamplers()
 } // namespace opengl
 
 } // namespace gpu
+
+#endif // DECAF_NOGL

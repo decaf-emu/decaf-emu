@@ -1,3 +1,5 @@
+#ifndef DECAF_NOGL
+
 #include "common/decaf_assert.h"
 #include "opengl_driver.h"
 #include "gpu/gpu_utilities.h"
@@ -147,3 +149,5 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
 } // namespace opengl
 
 } // namespace gpu
+
+#endif // DECAF_NOGL

@@ -27,21 +27,11 @@ public:
                                uint32_t size) = 0;
 };
 
-class OpenGLDriver : public GraphicsDriver
-{
-public:
-   using SwapFunction = std::function<void(unsigned int, unsigned int)>;
-
-   virtual ~OpenGLDriver()
-   {
-   }
-
-   virtual void getSwapBuffers(unsigned int *tv, unsigned int *drc) = 0;
-   virtual void syncPoll(const SwapFunction &swapFunc) = 0;
-};
-
-OpenGLDriver *
+GraphicsDriver *
 createGLDriver();
+
+GraphicsDriver *
+createDX12Driver();
 
 void
 setGraphicsDriver(GraphicsDriver *driver);

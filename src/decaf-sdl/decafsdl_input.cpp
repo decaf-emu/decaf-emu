@@ -470,7 +470,7 @@ DecafSDL::getTouchPosition(vpad::Channel channel, vpad::TouchPosition &position)
    // Calculate screen position
    float tvViewport[4], drcViewport[4];
    int windowWidth, windowHeight;
-   SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
+   SDL_GetWindowSize(mGraphicsDriver->getWindow(), &windowWidth, &windowHeight);
    calculateScreenViewports(tvViewport, drcViewport);
 
    auto drcWidth = drcViewport[2];

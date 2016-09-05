@@ -52,12 +52,6 @@ NullGraphicsDriver::notifyGpuFlush(void *ptr,
 {
 }
 
-OpenGLDriver *
-createGLDriver()
-{
-   return new gpu::opengl::GLDriver();
-}
-
 GraphicsDriver *
 createNullGraphicsDriver()
 {

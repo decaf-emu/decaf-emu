@@ -1,12 +1,16 @@
 #pragma once
+
+#ifndef DECAF_NOGL
+
 #include "common/log.h"
 #include "common/platform.h"
-#include "glsl2_translate.h"
+#include "gpu/glsl2/glsl2_translate.h"
 #include "gpu/latte_constants.h"
 #include "gpu/latte_contextstate.h"
 #include "gpu/pm4_buffer.h"
 #include "gpu/pm4_packets.h"
 #include "libdecaf/decaf_graphics.h"
+#include "libdecaf/decaf_opengl.h"
 #include <chrono>
 #include <condition_variable>
 #include <exception>
@@ -600,3 +604,5 @@ private:
 } // namespace opengl
 
 } // namespace gpu
+
+#endif // DECAF_NOGL

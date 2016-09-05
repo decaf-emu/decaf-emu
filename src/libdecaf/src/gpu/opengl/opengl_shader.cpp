@@ -1,10 +1,12 @@
+#ifndef DECAF_NOGL
+
 #include "common/decaf_assert.h"
 #include "common/log.h"
 #include "common/murmur3.h"
 #include "common/platform_dir.h"
 #include "common/strutils.h"
 #include "decaf_config.h"
-#include "glsl2_translate.h"
+#include "gpu/glsl2/glsl2_translate.h"
 #include "gpu/gpu_utilities.h"
 #include "gpu/latte_registers.h"
 #include "gpu/microcode/latte_disassembler.h"
@@ -1644,3 +1646,5 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
 } // namespace opengl
 
 } // namespace gpu
+
+#endif // DECAF_NOGL

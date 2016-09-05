@@ -1,92 +1,59 @@
 #include "clilog.h"
+#include "common/decaf_assert.h"
 #include "config.h"
 #include "decafsdl.h"
+#include "decafsdl_opengl.h"
+#include "decafsdl_dx12.h"
 
 void setWindowIcon(SDL_Window *window);
 
 DecafSDL::~DecafSDL()
 {
-   if (mContext) {
-      SDL_GL_DeleteContext(mContext);
-      mContext = nullptr;
-   }
-
-   if (mThreadContext) {
-      SDL_GL_DeleteContext(mThreadContext);
-      mThreadContext = nullptr;
-   }
-
-   if (mWindow) {
-      SDL_DestroyWindow(mWindow);
-      mWindow = nullptr;
-   }
 }
 
 bool
-DecafSDL::createWindow()
+DecafSDL::initCore()
 {
    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0) {
       gCliLog->error("Failed to initialize SDL: {}", SDL_GetError());
       return false;
    }
 
-   if (SDL_GL_LoadLibrary(NULL) != 0) {
-      gCliLog->error("Failed to load OpenGL library: {}", SDL_GetError());
-      return false;
-   }
-
-   SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-   SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-   SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-   // Set to OpenGL 4.5 core profile
-   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
-   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-   // Enable debug context
-   if (decaf::config::gpu::debug) {
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-   }
-
-   // Create TV window
-   mWindow = SDL_CreateWindow("Decaf",
-                              SDL_WINDOWPOS_UNDEFINED,
-                              SDL_WINDOWPOS_UNDEFINED,
-                              WindowWidth, WindowHeight,
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
-
-   if (!mWindow) {
-      gCliLog->error("Failed to create TV window: {}", SDL_GetError());
-      return false;
-   }
-
-   setWindowIcon(mWindow);
-
-   if (config::display::mode == config::display::Fullscreen) {
-       SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-   }
-
-   SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-
-   // Create OpenGL context
-   mContext = SDL_GL_CreateContext(mWindow);
-
-   if (!mContext) {
-      gCliLog->error("Failed to create Main OpenGL context: {}", SDL_GetError());
-      return false;
-   }
-
-   mThreadContext = SDL_GL_CreateContext(mWindow);
-
-   if (!mThreadContext) {
-      gCliLog->error("Failed to create GPU OpenGL context: {}", SDL_GetError());
-      return false;
-   }
-
-   SDL_GL_MakeCurrent(mWindow, mContext);
    return true;
+}
+
+bool
+DecafSDL::initGlGraphics()
+{
+#ifndef DECAF_NOGL
+   mGraphicsDriver = new DecafSDLOpenGL();
+
+   if (!mGraphicsDriver->initialise(WindowWidth, WindowHeight)) {
+      gCliLog->error("Failed to create GL graphics window");
+      return false;
+   }
+
+   return true;
+#else
+   decaf_abort("GL support was excluded from this build");
+#endif
+}
+
+bool
+DecafSDL::initDx12Graphics()
+{
+#ifdef DECAF_DX12
+   mGraphicsDriver = new DecafSDLDX12();
+
+   if (!mGraphicsDriver->initialise(WindowWidth, WindowHeight)) {
+      gCliLog->error("Failed to create DX12 graphics window");
+      return false;
+}
+
+   return true;
+#else
+   decaf_abort("DX12 support was not included in this build");
+#endif
 }
 
 bool
@@ -106,9 +73,18 @@ DecafSDL::run(const std::string &gamePath)
 {
    auto shouldQuit = false;
 
+   // Setup some basic window stuff
+   auto window = mGraphicsDriver->getWindow();
+
+   setWindowIcon(window);
+
+   if (config::display::mode == config::display::Fullscreen) {
+      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+   }
+
    // Setup OpenGL graphics driver
-   mGraphicsDriver = decaf::createGLDriver();
-   decaf::setGraphicsDriver(mGraphicsDriver);
+   auto graphicsDriver = mGraphicsDriver->getDecafDriver();
+   decaf::setGraphicsDriver(graphicsDriver);
 
    // Set input provider
    decaf::setInputDriver(this);
@@ -131,36 +107,8 @@ DecafSDL::run(const std::string &gamePath)
       return false;
    }
 
+   // Initialise the emulators debugger
    decaf::debugger::initialise();
-
-   // Setup rendering
-   SDL_GL_MakeCurrent(mWindow, mContext);
-   SDL_GL_SetSwapInterval(1);
-   initialiseContext();
-   initialiseDraw();
-   decaf::debugger::initialiseUiGL();
-
-   // Start graphics thread
-   if (!config::gpu::force_sync) {
-      mGraphicsThread = std::thread{
-         [this]() {
-            SDL_GL_MakeCurrent(mWindow, mThreadContext);
-            initialiseContext();
-            mGraphicsDriver->run();
-         } };
-   } else {
-      // Set the swap interval to 0 so that we don't slow
-      //  down the GPU system when presenting...  The game should
-      //  throttle our swapping automatically anyways.
-      SDL_GL_SetSwapInterval(0);
-
-      // Switch to the thread context, we automatically switch
-      //  back when presenting a frame.
-      SDL_GL_MakeCurrent(mWindow, mThreadContext);
-
-      // Initialise the context
-      initialiseContext();
-   }
 
    // Start emulator
    decaf::start();
@@ -215,30 +163,109 @@ DecafSDL::run(const std::string &gamePath)
          }
       }
 
-      if (!config::gpu::force_sync) {
-         gl::GLuint tvBuffer = 0;
-         gl::GLuint drcBuffer = 0;
-         mGraphicsDriver->getSwapBuffers(&tvBuffer, &drcBuffer);
-         drawScanBuffers(tvBuffer, drcBuffer);
-      } else {
-         mGraphicsDriver->syncPoll([&](unsigned int tvBuffer, unsigned int drcBuffer) {
-            SDL_GL_MakeCurrent(mWindow, mContext);
-            drawScanBuffers(tvBuffer, drcBuffer);
-            SDL_GL_MakeCurrent(mWindow, mThreadContext);
-         });
-      }
+      float tvViewport[4], drcViewport[4];
+      calculateScreenViewports(tvViewport, drcViewport);
+      mGraphicsDriver->renderFrame(tvViewport, drcViewport);
    }
 
    // Shut down decaf
    decaf::shutdown();
 
-   // Shut down the GPU
-   if (!config::gpu::force_sync) {
-      mGraphicsDriver->stop();
-      mGraphicsThread.join();
-   }
+   // Shut down graphics
+   mGraphicsDriver->shutdown();
 
    return true;
+}
+
+void
+DecafSDL::calculateScreenViewports(float(&tv)[4], float(&drc)[4])
+{
+   int TvWidth = 1280;
+   int TvHeight = 720;
+
+   int DrcWidth = 854;
+   int DrcHeight = 480;
+
+   int OuterBorder = 0;
+   int ScreenSeparation = 5;
+
+   int windowWidth, windowHeight;
+   int nativeHeight, nativeWidth;
+   int tvLeft, tvBottom, tvTop, tvRight;
+   int drcLeft, drcBottom, drcTop, drcRight;
+
+   SDL_GetWindowSize(mGraphicsDriver->getWindow(), &windowWidth, &windowHeight);
+
+   if (config::display::layout == config::display::Toggle) {
+      // For toggle mode only one screen is visible at a time, so we calculate the
+      // screen position as if only the TV exists here
+      nativeHeight = TvHeight;
+      nativeWidth = TvWidth;
+      DrcWidth = 0;
+      DrcHeight = 0;
+      ScreenSeparation = 0;
+   } else {
+      nativeHeight = DrcHeight + TvHeight + ScreenSeparation + 2 * OuterBorder;
+      nativeWidth = std::max(DrcWidth, TvWidth) + 2 * OuterBorder;
+   }
+
+   if (windowWidth * nativeHeight >= windowHeight * nativeWidth) {
+      // Align to height
+      int drcBorder = (windowWidth * nativeHeight - windowHeight * DrcWidth + nativeHeight) / nativeHeight / 2;
+      int tvBorder = config::display::stretch ? 0 : (windowWidth * nativeHeight - windowHeight * TvWidth + nativeHeight) / nativeHeight / 2;
+
+      drcBottom = OuterBorder;
+      drcTop = OuterBorder + (DrcHeight * windowHeight + nativeHeight / 2) / nativeHeight;
+      drcLeft = drcBorder;
+      drcRight = windowWidth - drcBorder;
+
+      tvBottom = windowHeight - OuterBorder - (TvHeight * windowHeight + nativeHeight / 2) / nativeHeight;
+      tvTop = windowHeight - OuterBorder;
+      tvLeft = tvBorder;
+      tvRight = windowWidth - tvBorder;
+   } else {
+      // Align to width
+      int heightBorder = (windowHeight * nativeWidth - windowWidth * (DrcHeight + TvHeight + ScreenSeparation) + nativeWidth) / nativeWidth / 2;
+      int drcBorder = (windowWidth - DrcWidth * windowWidth / nativeWidth + 1) / 2;
+      int tvBorder = (windowWidth - TvWidth * windowWidth / nativeWidth + 1) / 2;
+
+      drcBottom = heightBorder;
+      drcTop = heightBorder + (DrcHeight * windowWidth + nativeWidth / 2) / nativeWidth;
+      drcLeft = drcBorder;
+      drcRight = windowWidth - drcBorder;
+
+      tvTop = windowHeight - heightBorder;
+      tvBottom = windowHeight - heightBorder - (TvHeight * windowWidth + nativeWidth / 2) / nativeWidth;
+      tvLeft = tvBorder;
+      tvRight = windowWidth - tvBorder;
+   }
+
+   if (config::display::layout == config::display::Toggle) {
+      // Copy TV size to DRC size
+      drcLeft = tvLeft;
+      drcRight = tvRight;
+      drcTop = tvTop;
+      drcBottom = tvBottom;
+   }
+
+   tv[0] = static_cast<float>(tvLeft);
+   tv[1] = static_cast<float>(tvBottom);
+   tv[2] = static_cast<float>(tvRight - tvLeft);
+   tv[3] = static_cast<float>(tvTop - tvBottom);
+
+   drc[0] = static_cast<float>(drcLeft);
+   drc[1] = static_cast<float>(drcBottom);
+   drc[2] = static_cast<float>(drcRight - drcLeft);
+   drc[3] = static_cast<float>(drcTop - drcBottom);
+
+   decaf_check(tv[0] >= 0);
+   decaf_check(tv[1] >= 0);
+   decaf_check(tv[0] + tv[2] <= windowWidth);
+   decaf_check(tv[1] + tv[3] <= windowHeight);
+   decaf_check(drc[0] >= 0);
+   decaf_check(drc[1] >= 0);
+   decaf_check(drc[0] + drc[2] <= windowWidth);
+   decaf_check(drc[1] + drc[3] <= windowHeight);
 }
 
 void
@@ -268,5 +295,5 @@ DecafSDL::onGameLoaded(const decaf::GameInfo &info)
 
    // Update window title
    auto title = fmt::format("Decaf - {}", name);
-   SDL_SetWindowTitle(mWindow, title.c_str());
+   SDL_SetWindowTitle(mGraphicsDriver->getWindow(), title.c_str());
 }

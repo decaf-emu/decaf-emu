@@ -1,8 +1,8 @@
 #pragma once
 #include "decafsdl_sound.h"
+#include "decafsdl_graphics.h"
 #include "libdecaf/decaf.h"
 #include <SDL.h>
-#include <glbinding/gl/gl.h>
 
 using namespace decaf::input;
 
@@ -27,7 +27,13 @@ public:
    ~DecafSDL();
 
    bool
-   createWindow();
+   initCore();
+
+   bool
+   initGlGraphics();
+
+   bool
+   initDx12Graphics();
 
    bool
    initSound();
@@ -37,19 +43,7 @@ public:
 
 private:
    void
-   initialiseContext();
-
-   void
-   initialiseDraw();
-
-   void
    calculateScreenViewports(float(&tv)[4], float(&drc)[4]);
-
-   void
-   drawScanBuffer(gl::GLuint object);
-
-   void
-   drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer);
 
    void
    openInputDevices();
@@ -99,25 +93,12 @@ private:
    virtual void
    onGameLoaded(const decaf::GameInfo &info) override;
 
-private:
-   std::thread mGraphicsThread;
-   decaf::OpenGLDriver *mGraphicsDriver = nullptr;
-
+protected:
    DecafSDLSound *mSoundDriver = nullptr;
-
-   SDL_Window *mWindow = nullptr;
-   SDL_GLContext mContext = nullptr;
-   SDL_GLContext mThreadContext = nullptr;
+   DecafSDLGraphics *mGraphicsDriver = nullptr;
 
    const config::input::InputDevice *mVpad0Config = nullptr;
    SDL_GameController *mVpad0Controller = nullptr;
-
-   gl::GLuint mVertexProgram;
-   gl::GLuint mPixelProgram;
-   gl::GLuint mPipeline;
-   gl::GLuint mVertArray;
-   gl::GLuint mVertBuffer;
-   gl::GLuint mSampler;
 
    bool mToggleDRC = false;
 };

@@ -101,6 +101,8 @@ getCommandLineParser()
                   } })
       .add_option("sound",
                   description { "Enable sound output." })
+      .add_option("dx12",
+                  description { "Use DirectX 12 backend." })
       .add_option("sys-path",
                   description { "Where to locate any external system files." },
                   value<std::string> {})
@@ -330,13 +332,25 @@ start(excmd::parser &parser,
 
    DecafSDL sdl;
 
-   if (!sdl.createWindow()) {
-      gCliLog->error("Failed to start game");
+   if (!sdl.initCore()) {
+      gCliLog->error("Failed to initialise SDL");
       return -1;
    }
 
+   if (options.has("dx12")) {
+      if (!sdl.initDx12Graphics()) {
+         gCliLog->error("Failed to initialise SDL DX12 graphics");
+         return -1;
+      }
+   } else {
+      if (!sdl.initGlGraphics()) {
+         gCliLog->error("Failed to initialise SDL GL graphics");
+         return -1;
+      }
+   }
+
    if (options.has("sound") && !sdl.initSound()) {
-      gCliLog->error("Failed to start game");
+      gCliLog->error("Failed to initialise SDL sound");
       return -1;
    }
 

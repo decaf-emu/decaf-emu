@@ -199,9 +199,6 @@
     <Filter Include="Header Files\debugger">
       <UniqueIdentifier>{0f72afdf-62fc-40a7-bd0f-61221aa0173f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\gpu\opengl\glsl2">
-      <UniqueIdentifier>{9575a576-e657-4f86-8f04-60487c894634}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\modules\dmae">
       <UniqueIdentifier>{232e246a-30f6-42d9-b9d1-c732654bbabb}</UniqueIdentifier>
     </Filter>
@@ -219,6 +216,18 @@
     </Filter>
     <Filter Include="Source Files\modules\camera">
       <UniqueIdentifier>{2a41d538-968a-46b6-b2d5-76ea16c764e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gpu\glsl2">
+      <UniqueIdentifier>{8ad499aa-36ef-4669-ab37-390d6c1a40de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gpu\glsl2">
+      <UniqueIdentifier>{9575a576-e657-4f86-8f04-60487c894634}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gpu\dx12">
+      <UniqueIdentifier>{c22ce888-220c-45a4-b270-1558a46200e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gpu\dx12">
+      <UniqueIdentifier>{b8232bcc-5ec6-4313-bed9-d374861a5461}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -759,36 +768,6 @@
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_appio.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_translate.cpp">
-      <Filter>Source Files\gpu\opengl\glsl2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu.cpp">
-      <Filter>Source Files\gpu\opengl\glsl2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu_op2.cpp">
-      <Filter>Source Files\gpu\opengl\glsl2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_cf.cpp">
-      <Filter>Source Files\gpu\opengl\glsl2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu_op3.cpp">
-      <Filter>Source Files\gpu\opengl\glsl2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_exp.cpp">
-      <Filter>Source Files\gpu\opengl\glsl2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_tex.cpp">
-      <Filter>Source Files\gpu\opengl\glsl2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_vtx.cpp">
-      <Filter>Source Files\gpu\opengl\glsl2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_cf_stack.cpp">
-      <Filter>Source Files\gpu\opengl\glsl2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu_reduction.cpp">
-      <Filter>Source Files\gpu\opengl\glsl2</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\modules\dmae\dmae.cpp">
       <Filter>Source Files\modules\dmae</Filter>
     </ClCompile>
@@ -932,6 +911,42 @@
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\modules\coreinit\coreinit_overlayarena.cpp">
       <Filter>Source Files\modules\coreinit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_alu.cpp">
+      <Filter>Source Files\gpu\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_alu_op2.cpp">
+      <Filter>Source Files\gpu\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_alu_op3.cpp">
+      <Filter>Source Files\gpu\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_alu_reduction.cpp">
+      <Filter>Source Files\gpu\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_cf.cpp">
+      <Filter>Source Files\gpu\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_cf_stack.cpp">
+      <Filter>Source Files\gpu\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_exp.cpp">
+      <Filter>Source Files\gpu\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_tex.cpp">
+      <Filter>Source Files\gpu\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_translate.cpp">
+      <Filter>Source Files\gpu\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_vtx.cpp">
+      <Filter>Source Files\gpu\glsl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_constants.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\dx12\dx12_driver.cpp">
+      <Filter>Source Files\gpu\dx12</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1589,17 +1604,8 @@
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_internal_appio.h">
       <Filter>Header Files\modules\coreinit</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_translate.h">
-      <Filter>Header Files\gpu\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\gpu\microcode\latte_decoders.h">
       <Filter>Header Files\gpu\microcode</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_alu.h">
-      <Filter>Header Files\gpu\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\glsl2_cf.h">
-      <Filter>Header Files\gpu\opengl</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\vpad\vpad_enum.h">
       <Filter>Header Files\modules\vpad</Filter>
@@ -1756,6 +1762,24 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit_overlay.h">
       <Filter>Header Files\modules\coreinit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\glsl2\glsl2_alu.h">
+      <Filter>Header Files\gpu\glsl2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\glsl2\glsl2_cf.h">
+      <Filter>Header Files\gpu\glsl2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\glsl2\glsl2_translate.h">
+      <Filter>Header Files\gpu\glsl2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\decaf_opengl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\decaf_dx12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\dx12\dx12_driver.h">
+      <Filter>Header Files\gpu\dx12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

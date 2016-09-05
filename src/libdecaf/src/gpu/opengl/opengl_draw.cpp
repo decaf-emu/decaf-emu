@@ -1,3 +1,5 @@
+#ifndef DECAF_NOGL
+
 #include "common/decaf_assert.h"
 #include "decaf_config.h"
 #include "opengl_driver.h"
@@ -424,3 +426,5 @@ GLDriver::decafClearDepthStencil(const pm4::DecafClearDepthStencil &data)
 } // namespace opengl
 
 } // namespace gpu
+
+#endif // DECAF_NOGL

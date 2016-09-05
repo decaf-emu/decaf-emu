@@ -1,3 +1,5 @@
+#ifndef DECAF_NOGL
+
 #include "common/decaf_assert.h"
 #include "common/log.h"
 #include "decaf_config.h"
@@ -201,3 +203,5 @@ GLDriver::streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data)
 } // namespace opengl
 
 } // namespace gpu
+
+#endif // DECAF_NOGL
