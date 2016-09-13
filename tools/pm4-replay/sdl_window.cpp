@@ -128,7 +128,7 @@ public:
             break;
          }
          default:
-            mFile.seekg(std::ifstream::cur, packet.size);
+            mFile.seekg(packet.size, std::ifstream::cur);
          }
       }
 
