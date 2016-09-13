@@ -181,7 +181,7 @@ private:
 
       pm4::write(pm4::LoadConfigReg {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ConfigRegisterBase / 4]),
-         LoadConfigRange
+         gsl::as_span(LoadConfigRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -189,7 +189,7 @@ private:
 
       pm4::write(pm4::LoadContextReg {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ContextRegisterBase / 4]),
-         LoadContextRange
+         gsl::as_span(LoadContextRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -197,7 +197,7 @@ private:
 
       pm4::write(pm4::LoadAluConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::AluConstRegisterBase / 4]),
-         LoadAluConstRange
+         gsl::as_span(LoadAluConstRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -205,7 +205,7 @@ private:
 
       pm4::write(pm4::LoadResource {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ResourceRegisterBase / 4]),
-         LoadResourceRange
+         gsl::as_span(LoadResourceRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -213,7 +213,7 @@ private:
 
       pm4::write(pm4::LoadSampler {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::SamplerRegisterBase / 4]),
-         LoadSamplerRange
+         gsl::as_span(LoadSamplerRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -221,7 +221,7 @@ private:
 
       pm4::write(pm4::LoadControlConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ControlRegisterBase / 4]),
-         LoadControlRange
+         gsl::as_span(LoadControlRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -229,7 +229,7 @@ private:
 
       pm4::write(pm4::LoadLoopConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::LoopConstRegisterBase / 4]),
-         LoadLoopRange
+         gsl::as_span(LoadLoopRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -237,7 +237,7 @@ private:
 
       pm4::write(pm4::LoadLoopConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::BoolConstRegisterBase / 4]),
-         LoadBoolRange
+         gsl::as_span(LoadBoolRange)
       });
    }
 
