@@ -24,6 +24,8 @@ const uint32_t NONMASKABLE_INTERRUPTS = SRESET_INTERRUPT;
 const uint32_t SYSTEM_BPFLAG = 1 << 0;
 const uint32_t USER_BPFLAG = 1 << 1;
 
+const uint32_t InvalidCoreId = 0xFF;
+
 enum class jit_mode {
    disabled,
    enabled,
@@ -147,7 +149,7 @@ static uint32_t id()
    if (core) {
       return core->id;
    } else {
-      return 0xFF;
+      return InvalidCoreId;
    }
 }
 

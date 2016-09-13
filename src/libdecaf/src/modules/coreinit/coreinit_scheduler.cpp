@@ -23,6 +23,9 @@
 namespace coreinit
 {
 
+static const uint32_t
+SchedulerLockNonCpuCoreId = 1u << 31;
+
 static bool
 sSchedulerEnabled[3];
 
@@ -98,7 +101,12 @@ void
 lockScheduler()
 {
    uint32_t expected = 0;
-   auto core = 1 << cpu::this_core::id();
+   auto id = cpu::this_core::id();
+   auto core = 1 << id;
+
+   if (id == cpu::InvalidCoreId) {
+      core = SchedulerLockNonCpuCoreId;
+   }
 
    while (!sSchedulerLock.compare_exchange_weak(expected, core, std::memory_order_acquire)) {
       expected = 0;
@@ -108,14 +116,26 @@ lockScheduler()
 bool
 isSchedulerLocked()
 {
-   auto core = 1 << cpu::this_core::id();
+   auto id = cpu::this_core::id();
+   auto core = 1 << id;
+
+   if (id == cpu::InvalidCoreId) {
+      core = SchedulerLockNonCpuCoreId;
+   }
+
    return sSchedulerLock.load(std::memory_order_acquire) == core;
 }
 
 void
 unlockScheduler()
 {
-   auto core = 1 << cpu::this_core::id();
+   auto id = cpu::this_core::id();
+   auto core = 1 << id;
+
+   if (id == cpu::InvalidCoreId) {
+      core = SchedulerLockNonCpuCoreId;
+   }
+
    auto oldCore = sSchedulerLock.exchange(0, std::memory_order_release);
    decaf_check(oldCore == core);
 }
