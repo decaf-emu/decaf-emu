@@ -222,7 +222,6 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_depthbuffer.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_draw.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_driver.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_pm4.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_registers.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_shader.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_streamout.cpp" />
@@ -231,6 +230,7 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_viewport.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\pm4.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\pm4_capture.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\pm4_processor.cpp" />
     <ClCompile Include="..\src\libdecaf\src\input\input.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\elf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel.cpp" />
@@ -480,6 +480,7 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_buffer.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_capture.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_format.h" />
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_processor.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_reader.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\latte_registers.h" />
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_writer.h" />

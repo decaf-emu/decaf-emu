@@ -954,6 +954,9 @@
     <ClCompile Include="..\src\libdecaf\decaf_debugger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\pm4_processor.cpp">
+      <Filter>Source Files\gpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1789,6 +1792,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_error.h">
       <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\pm4_processor.h">
+      <Filter>Header Files\gpu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

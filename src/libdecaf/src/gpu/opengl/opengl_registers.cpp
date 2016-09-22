@@ -23,35 +23,20 @@ static gl::GLenum
 getStencilFunc(latte::DB_STENCIL_FUNC func);
 
 void
-GLDriver::setRegister(latte::Register reg,
-                      uint32_t value)
-{
-   decaf_check((reg % 4) == 0);
-   auto isChanged = (value != mRegisters[reg / 4]);
-
-   // Save to local registers
-   mRegisters[reg / 4] = value;
-
-   // Writing SQ_VTX_SEMANTIC_CLEAR has side effects, so process those
-   if (reg == latte::Register::SQ_VTX_SEMANTIC_CLEAR) {
-      for (auto i = 0u; i < 32; ++i) {
-         if (value & (1 << i)) {
-            setRegister(static_cast<latte::Register>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4), 0xffffffff);
-         }
-      }
-   }
-
-   // Apply changes directly to OpenGL state if appropriate
-   if (isChanged) {
-      applyRegister(reg);
-   }
-}
-
-void
 GLDriver::applyRegister(latte::Register reg)
 {
-   auto value = mRegisters[reg / 4];
+   auto value = getRegister<uint32_t>(reg);
 
+   // Handle optimization with uniform update generation tracking
+   if (reg >= latte::Register::AluConstRegisterBase &&
+      reg < latte::Register::AluConstRegisterEnd)
+   {
+      auto offset = (reg - latte::Register::AluConstRegisterBase) / 4 / 4;
+      mLastUniformUpdate[offset / 16] = mUniformUpdateGen;
+      return;
+   }
+
+   // Handle setting OpenGL state for anything else
    switch (reg) {
    case latte::Register::CB_BLEND0_CONTROL:
    case latte::Register::CB_BLEND1_CONTROL:
@@ -345,18 +330,6 @@ GLDriver::applyRegister(latte::Register reg)
    } break;
 
    }
-}
-
-void
-GLDriver::indexType(const pm4::IndexType &data)
-{
-   mRegisters[latte::Register::VGT_DMA_INDEX_TYPE / 4] = data.type.value;
-}
-
-void
-GLDriver::numInstances(const pm4::NumInstances &data)
-{
-   mRegisters[latte::Register::VGT_DMA_NUM_INSTANCES / 4] = data.count;
 }
 
 gl::GLenum

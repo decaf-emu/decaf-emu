@@ -624,6 +624,9 @@ GLDriver::checkSyncObjects()
 void
 GLDriver::executeBuffer(pm4::Buffer *buffer)
 {
+   // Run any remote tasks first
+   runRemoteThreadTasks();
+
    // Execute command buffer
    runCommandBuffer(buffer->buffer, buffer->curSize);
 

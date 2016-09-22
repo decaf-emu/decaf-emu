@@ -9,6 +9,7 @@
 #include "gpu/latte_contextstate.h"
 #include "gpu/pm4_buffer.h"
 #include "gpu/pm4_packets.h"
+#include "gpu/pm4_processor.h"
 #include "libdecaf/decaf_graphics.h"
 #include "libdecaf/decaf_opengl.h"
 #include <chrono>
@@ -293,7 +294,7 @@ struct RemoteThreadTask
 
 using GLContext = uint64_t;
 
-class GLDriver : public decaf::OpenGLDriver
+class GLDriver : public decaf::OpenGLDriver, public Pm4Processor
 {
 public:
    GLDriver();
@@ -328,53 +329,28 @@ private:
    void executeBuffer(pm4::Buffer *buffer);
    uint64_t getGpuClock();
 
-   void handlePacketType0(pm4::type0::Header header, const gsl::span<uint32_t> &data);
-   void handlePacketType3(pm4::type3::Header header, const gsl::span<uint32_t> &data);
-   void decafSetBuffer(const pm4::DecafSetBuffer &data);
-   void decafCopyColorToScan(const pm4::DecafCopyColorToScan &data);
-   void decafSwapBuffers(const pm4::DecafSwapBuffers &data);
-   void decafCapSyncRegisters(const pm4::DecafCapSyncRegisters &data);
-   void decafClearColor(const pm4::DecafClearColor &data);
-   void decafClearDepthStencil(const pm4::DecafClearDepthStencil &data);
-   void decafDebugMarker(const pm4::DecafDebugMarker &data);
-   void decafOSScreenFlip(const pm4::DecafOSScreenFlip &data);
-   void decafCopySurface(const pm4::DecafCopySurface &data);
-   void decafSetSwapInterval(const pm4::DecafSetSwapInterval &data);
-   void drawIndexAuto(const pm4::DrawIndexAuto &data);
-   void drawIndex2(const pm4::DrawIndex2 &data);
-   void drawIndexImmd(const pm4::DrawIndexImmd &data);
-   void indexType(const pm4::IndexType &data);
-   void indirectBufferCall(const pm4::IndirectBufferCall &data);
-   void numInstances(const pm4::NumInstances &data);
-   void memWrite(const pm4::MemWrite &data);
-   void nopPacket(const pm4::Nop &data);
-   void eventWrite(const pm4::EventWrite &data);
-   void eventWriteEOP(const pm4::EventWriteEOP &data);
-   void pfpSyncMe(const pm4::PfpSyncMe &data);
-   void streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data);
-   void streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data);
-   void surfaceSync(const pm4::SurfaceSync &data);
-   void contextControl(const pm4::ContextControl &data);
+   void decafSetBuffer(const pm4::DecafSetBuffer &data) override;
+   void decafCopyColorToScan(const pm4::DecafCopyColorToScan &data) override;
+   void decafSwapBuffers(const pm4::DecafSwapBuffers &data) override;
+   void decafCapSyncRegisters(const pm4::DecafCapSyncRegisters &data) override;
+   void decafClearColor(const pm4::DecafClearColor &data) override;
+   void decafClearDepthStencil(const pm4::DecafClearDepthStencil &data) override;
+   void decafDebugMarker(const pm4::DecafDebugMarker &data) override;
+   void decafOSScreenFlip(const pm4::DecafOSScreenFlip &data) override;
+   void decafCopySurface(const pm4::DecafCopySurface &data) override;
+   void decafSetSwapInterval(const pm4::DecafSetSwapInterval &data) override;
+   void drawIndexAuto(const pm4::DrawIndexAuto &data) override;
+   void drawIndex2(const pm4::DrawIndex2 &data) override;
+   void drawIndexImmd(const pm4::DrawIndexImmd &data) override;
+   void memWrite(const pm4::MemWrite &data) override;
+   void eventWrite(const pm4::EventWrite &data) override;
+   void eventWriteEOP(const pm4::EventWriteEOP &data) override;
+   void pfpSyncMe(const pm4::PfpSyncMe &data) override;
+   void streamOutBaseUpdate(const pm4::StreamOutBaseUpdate &data) override;
+   void streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data) override;
+   void surfaceSync(const pm4::SurfaceSync &data) override;
 
-   void setAluConsts(const pm4::SetAluConsts &data);
-   void setConfigRegs(const pm4::SetConfigRegs &data);
-   void setContextRegs(const pm4::SetContextRegs &data);
-   void setControlConstants(const pm4::SetControlConstants &data);
-   void setLoopConsts(const pm4::SetLoopConsts &data);
-   void setSamplers(const pm4::SetSamplers &data);
-   void setResources(const pm4::SetResources &data);
-
-   void loadAluConsts(const pm4::LoadAluConst &data);
-   void loadBoolConsts(const pm4::LoadBoolConst &data);
-   void loadConfigRegs(const pm4::LoadConfigReg &data);
-   void loadContextRegs(const pm4::LoadContextReg &data);
-   void loadControlConstants(const pm4::LoadControlConst &data);
-   void loadLoopConsts(const pm4::LoadLoopConst &data);
-   void loadSamplers(const pm4::LoadSampler &data);
-   void loadResources(const pm4::LoadResource &data);
-   void loadRegisters(latte::Register base,
-                      be_val<uint32_t> *src,
-                      const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
+   void applyRegister(latte::Register reg) override;
 
    void
    uploadSurface(SurfaceBuffer *surface,
@@ -461,12 +437,6 @@ private:
    void
    endTransformFeedback();
 
-   void
-   setRegister(latte::Register reg, uint32_t value);
-
-   void
-   applyRegister(latte::Register reg);
-
    int
    countModifiedUniforms(latte::Register firstReg,
                          uint32_t lastUniformUpdate);
@@ -496,10 +466,6 @@ private:
    checkSyncObjects();
 
    void
-   runCommandBuffer(uint32_t *buffer,
-                    uint32_t size);
-
-   void
    runOnGLThread(std::function<void()> func);
 
    void
@@ -513,13 +479,6 @@ private:
    void
    drawPrimitivesIndexed(const void *indices,
                          uint32_t count);
-
-   template<typename Type>
-   Type getRegister(uint32_t id)
-   {
-      static_assert(sizeof(Type) == 4, "Register storage must be a uint32_t");
-      return *reinterpret_cast<Type *>(&mRegisters[id / 4]);
-   }
 
 private:
    enum class RunState
@@ -571,8 +530,6 @@ private:
    gl::GLuint mOccQuery = 0;
    uint64_t mTotalSamplesPassed = 0;
 
-   latte::ShadowState mShadowState;
-
    GLStateCache mGLStateCache;
    bool mFramebufferChanged = false;
    std::array<ColorBufferCache, latte::MaxRenderTargets> mColorBufferCache;
@@ -593,12 +550,6 @@ private:
    std::mutex mTaskListMutex;  // Protects mTaskList
    std::list<RemoteThreadTask> mTaskList;
 
-#ifdef PLATFORM_WINDOWS
-   uint64_t mDeviceContext = 0;
-   uint64_t mOpenGLContext = 0;
-#endif
-
-   std::array<uint32_t, 0x10000> mRegisters;
 };
 
 } // namespace opengl
