@@ -25,7 +25,7 @@
     <ProjectGuid>{2808B8EB-ACC1-4EC3-B22E-8D2C16AB7DF6}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>pugixml</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

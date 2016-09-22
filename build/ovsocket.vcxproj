@@ -28,7 +28,7 @@
     <ProjectGuid>{01016351-42D4-4D49-A433-00CF4E1F7A8C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ovsocket</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

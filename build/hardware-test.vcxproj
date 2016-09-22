@@ -31,7 +31,7 @@
     <ProjectGuid>{E0E54771-6AAD-4CD4-B252-2C667F593DB8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>hardwaretest</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

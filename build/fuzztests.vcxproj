@@ -18,7 +18,7 @@
     <ProjectGuid>{5EAE0EB7-E259-4ED8-AC7B-1794E0A2D304}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>fuzztests</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

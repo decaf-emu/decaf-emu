@@ -74,7 +74,7 @@
     <ProjectGuid>{94C92AF7-B8C5-4F0B-A7F4-F80A32DCEC8E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>asmjit</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

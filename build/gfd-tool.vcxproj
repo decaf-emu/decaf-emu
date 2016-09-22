@@ -44,7 +44,7 @@
     <ProjectGuid>{7CB8D060-968B-4173-B2BF-1E29088107F2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>gshdisassemble</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
     <ProjectName>gfd-tool</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
