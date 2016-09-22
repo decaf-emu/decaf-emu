@@ -2,6 +2,7 @@
 #include "common/types.h"
 #include "common/bitfield.h"
 #include "common/fixed.h"
+#include "latte_enum_common.h"
 #include "latte_enum_sq.h"
 
 namespace latte
@@ -192,6 +193,26 @@ BITFIELD(SQ_PGM_SIZE_FS, uint32_t)
    BITFIELD_ENTRY(0, 32, uint32_t, PGM_SIZE)
 BITFIELD_END
 
+// Offset >> 3
+BITFIELD(SQ_PGM_CF_OFFSET_FS, uint32_t)
+BITFIELD_ENTRY(0, 32, uint32_t, PGM_OFFSET)
+BITFIELD_END
+
+// Memory address of the (256-byte aligned) first CF instruction of the shader code for the fetch shader(FS)
+BITFIELD(SQ_PGM_START_ES, uint32_t)
+BITFIELD_ENTRY(0, 32, uint32_t, PGM_START)
+BITFIELD_END
+
+// Size >> 3
+BITFIELD(SQ_PGM_SIZE_ES, uint32_t)
+BITFIELD_ENTRY(0, 32, uint32_t, PGM_SIZE)
+BITFIELD_END
+
+// Offset >> 3
+BITFIELD(SQ_PGM_CF_OFFSET_ES, uint32_t)
+BITFIELD_ENTRY(0, 32, uint32_t, PGM_OFFSET)
+BITFIELD_END
+
 // Memory address of the (256-byte aligned) first CF instruction of the shader code for the geometry shader(GS)
 BITFIELD(SQ_PGM_START_GS, uint32_t)
    BITFIELD_ENTRY(0, 32, uint32_t, PGM_START)
@@ -200,6 +221,11 @@ BITFIELD_END
 // Size >> 3
 BITFIELD(SQ_PGM_SIZE_GS, uint32_t)
    BITFIELD_ENTRY(0, 32, uint32_t, PGM_SIZE)
+BITFIELD_END
+
+// Offset >> 3
+BITFIELD(SQ_PGM_CF_OFFSET_GS, uint32_t)
+BITFIELD_ENTRY(0, 32, uint32_t, PGM_OFFSET)
 BITFIELD_END
 
 // Memory address of the (256-byte aligned) first CF instruction of the shader code for the fetch shader(VS)
@@ -212,6 +238,11 @@ BITFIELD(SQ_PGM_SIZE_VS, uint32_t)
    BITFIELD_ENTRY(0, 32, uint32_t, PGM_SIZE)
 BITFIELD_END
 
+// Offset >> 3
+BITFIELD(SQ_PGM_CF_OFFSET_VS, uint32_t)
+BITFIELD_ENTRY(0, 32, uint32_t, PGM_OFFSET)
+BITFIELD_END
+
 // Memory address of the (256-byte aligned) first CF instruction of the shader code for the fetch shader(PS)
 BITFIELD(SQ_PGM_START_PS, uint32_t)
    BITFIELD_ENTRY(0, 32, uint32_t, PGM_START)
@@ -220,6 +251,11 @@ BITFIELD_END
 // Size >> 3
 BITFIELD(SQ_PGM_SIZE_PS, uint32_t)
    BITFIELD_ENTRY(0, 32, uint32_t, PGM_SIZE)
+BITFIELD_END
+
+// Offset >> 3
+BITFIELD(SQ_PGM_CF_OFFSET_PS, uint32_t)
+BITFIELD_ENTRY(0, 32, uint32_t, PGM_OFFSET)
 BITFIELD_END
 
 // Defines the exports from the Pixel Shader Program.
