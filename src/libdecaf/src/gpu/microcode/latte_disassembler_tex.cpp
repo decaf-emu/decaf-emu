@@ -17,10 +17,13 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
    auto id = tex.word0.TEX_INST();
    auto name = getInstructionName(id);
 
-   if (id == SQ_TEX_INST_VTX_FETCH || id == SQ_TEX_INST_VTX_SEMANTIC || id == SQ_TEX_INST_GET_BUFFER_RESINFO) {
-      decaf_abort(fmt::format("Unexpected vertex fetch instruction in texture fetch clause {} {}", id, name));
-   } else if (id == SQ_TEX_INST_MEM) {
-      decaf_abort(fmt::format("Unexpected mem instruction in texture fetch clause {} {}", id, name));
+   if (id == SQ_TEX_INST_VTX_FETCH || id == SQ_TEX_INST_VTX_SEMANTIC) {
+      // This only works because the TEX instruction IDs precisely match the
+      //  VTX instruction IDs.  Ensure that is the case for anything else
+      //  that is added to this redirection code.
+      auto vtx = *reinterpret_cast<const VertexFetchInst*>(&tex);
+      disassembleVtxInstruction(out, parent, vtx, namePad);
+      return;
    }
 
    out << fmt::pad(name, namePad, ' ') << ' ';

@@ -64,13 +64,7 @@ translateTEX(State &state, const ControlFlowInst &cf)
       // Print disassembly
       insertLineStart(state);
       state.out.write("// {:02} ", state.groupPC);
-
-      if (id == SQ_TEX_INST_VTX_FETCH || id == SQ_TEX_INST_VTX_SEMANTIC) {
-         latte::disassembler::disassembleVtxInstruction(state.out, cf, vtx);
-      } else {
-         latte::disassembler::disassembleTexInstruction(state.out, cf, tex);
-      }
-
+      latte::disassembler::disassembleTexInstruction(state.out, cf, tex);
       insertLineEnd(state);
 
       // Translate instruction

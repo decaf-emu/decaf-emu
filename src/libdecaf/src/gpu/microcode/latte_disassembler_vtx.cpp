@@ -16,11 +16,6 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
    auto id = vtx.word0.VTX_INST();
    auto name = getInstructionName(id);
 
-   // We currently only support a subset of the valid VTX instructions.
-   if (id != SQ_VTX_INST_FETCH && id != SQ_VTX_INST_SEMANTIC && id != SQ_VTX_INST_BUFINFO) {
-      decaf_abort(fmt::format("Unexpected tex instruction in vertex fetch clause {} {}", id, name));
-   }
-
    out << fmt::pad(name, namePad, ' ') << ' ';
 
    // dst
