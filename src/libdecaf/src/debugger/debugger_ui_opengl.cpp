@@ -39,6 +39,9 @@ initialiseUiGL()
    auto &data = sDebugDrawData;
    ImGuiIO& io = ImGui::GetIO();
 
+   auto configPath = makeConfigPath("imgui.ini");
+   ::debugger::ui::initialise(configPath);
+
    const gl::GLchar *vertex_shader =
       "#version 330\n"
       "uniform mat4 ProjMtx;\n"
