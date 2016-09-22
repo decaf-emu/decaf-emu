@@ -2,6 +2,9 @@
 #include "common/log.h"
 #include "gpu_utilities.h"
 
+namespace gpu
+{
+
 uint32_t
 getDataFormatBitsPerElement(latte::SQ_DATA_FORMAT format)
 {
@@ -248,3 +251,5 @@ getArrayModeTileMode(latte::BUFFER_ARRAY_MODE mode)
       decaf_abort(fmt::format("Unimplemented  surface array mode: {}", mode));
    }
 }
+
+} // namespace gpu

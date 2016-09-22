@@ -1,7 +1,12 @@
 #pragma once
-#include <string>
+
 #include "latte_enum_sq.h"
 #include "latte_enum_common.h"
+#include <array>
+#include <string>
+
+namespace gpu
+{
 
 uint32_t
 getDataFormatBitsPerElement(latte::SQ_DATA_FORMAT format);
@@ -23,3 +28,5 @@ getDataFormatIsFloat(latte::SQ_DATA_FORMAT format);
 
 latte::SQ_TILE_MODE
 getArrayModeTileMode(latte::BUFFER_ARRAY_MODE mode);
+
+} // namespace gpu

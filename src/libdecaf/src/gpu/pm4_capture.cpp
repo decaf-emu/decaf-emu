@@ -354,7 +354,7 @@ private:
          numPixels /= 4 * 4;
       }
 
-      auto bitsPerPixel = getDataFormatBitsPerElement(format);
+      auto bitsPerPixel = gpu::getDataFormatBitsPerElement(format);
       return numPixels * bitsPerPixel / 8;
    }
 
@@ -401,7 +401,7 @@ private:
       }
 
       auto format = static_cast<latte::SQ_DATA_FORMAT>(cb_color_info.FORMAT());
-      auto tileMode = getArrayModeTileMode(cb_color_info.ARRAY_MODE());
+      auto tileMode = gpu::getArrayModeTileMode(cb_color_info.ARRAY_MODE());
 
       // Disabled for now, because it's a pointless upload
       // trackSurface(addr, pitch, height, 1, latte::SQ_TEX_DIM::DIM_2D, format, tileMode);
@@ -423,7 +423,7 @@ private:
       }
 
       auto format = static_cast<latte::SQ_DATA_FORMAT>(db_depth_info.FORMAT());
-      auto tileMode = getArrayModeTileMode(db_depth_info.ARRAY_MODE());
+      auto tileMode = gpu::getArrayModeTileMode(db_depth_info.ARRAY_MODE());
 
       // Disabled for now, because it's a pointless upload
       //trackSurface(addr, pitch, height, 1, latte::SQ_TEX_DIM::DIM_2D, format, tileMode);
