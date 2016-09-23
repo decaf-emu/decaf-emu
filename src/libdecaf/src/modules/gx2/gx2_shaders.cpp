@@ -509,6 +509,7 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
          .ES_PRIO(3);
    } else {
       sq_config = sq_config
+         .ALU_INST_PREFER_VECTOR(1)
          .PS_PRIO(3)
          .VS_PRIO(2)
          .GS_PRIO(1)
