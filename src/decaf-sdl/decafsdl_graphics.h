@@ -2,19 +2,29 @@
 #include "libdecaf/decaf_graphics.h"
 #include <SDL.h>
 
+struct Viewport
+{
+   float x;
+   float y;
+   float width;
+   float height;
+};
+
 class DecafSDLGraphics
 {
 public:
    virtual ~DecafSDLGraphics();
 
    virtual bool
-   initialise(int width, int height) = 0;
+   initialise(int width,
+              int height) = 0;
 
    virtual void
    shutdown() = 0;
 
    virtual void
-   renderFrame(float tv[4], float drc[4]) = 0;
+   renderFrame(Viewport &tv,
+               Viewport &drc) = 0;
 
    virtual decaf::GraphicsDriver *
    getDecafDriver() = 0;
@@ -24,5 +34,4 @@ public:
 
 protected:
    SDL_Window *mWindow = nullptr;
-
 };

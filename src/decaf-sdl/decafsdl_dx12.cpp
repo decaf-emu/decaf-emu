@@ -31,7 +31,7 @@ DecafSDLDX12::shutdown()
 }
 
 void
-DecafSDLDX12::renderFrame(float tv[4], float drc[4])
+DecafSDLDX12::renderFrame(Viewport &tv, Viewport &drc)
 {
 }
 

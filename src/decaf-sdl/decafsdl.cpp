@@ -149,7 +149,7 @@ DecafSDL::run(const std::string &gamePath)
             }
 
             if (event.key.keysym.sym == SDLK_ESCAPE) {
-                shouldQuit = true;
+               shouldQuit = true;
             }
 
             decaf::injectKeyInput(translateKeyCode(event.key.keysym), decaf::input::KeyboardAction::Release);
@@ -163,7 +163,7 @@ DecafSDL::run(const std::string &gamePath)
          }
       }
 
-      float tvViewport[4], drcViewport[4];
+      Viewport tvViewport, drcViewport;
       calculateScreenViewports(tvViewport, drcViewport);
       mGraphicsDriver->renderFrame(tvViewport, drcViewport);
    }
@@ -178,7 +178,7 @@ DecafSDL::run(const std::string &gamePath)
 }
 
 void
-DecafSDL::calculateScreenViewports(float(&tv)[4], float(&drc)[4])
+DecafSDL::calculateScreenViewports(Viewport &tv, Viewport &drc)
 {
    int TvWidth = 1280;
    int TvHeight = 720;
@@ -193,6 +193,9 @@ DecafSDL::calculateScreenViewports(float(&tv)[4], float(&drc)[4])
    int nativeHeight, nativeWidth;
    int tvLeft, tvBottom, tvTop, tvRight;
    int drcLeft, drcBottom, drcTop, drcRight;
+
+   auto tvVisible = true;
+   auto drcVisible = true;
 
    SDL_GetWindowSize(mGraphicsDriver->getWindow(), &windowWidth, &windowHeight);
 
@@ -241,31 +244,53 @@ DecafSDL::calculateScreenViewports(float(&tv)[4], float(&drc)[4])
    }
 
    if (config::display::layout == config::display::Toggle) {
-      // Copy TV size to DRC size
+      // In toggle mode, DRC and TV size are the same
       drcLeft = tvLeft;
       drcRight = tvRight;
       drcTop = tvTop;
       drcBottom = tvBottom;
+
+      if (mToggleDRC) {
+         drcVisible = true;
+         tvVisible = false;
+      } else {
+         drcVisible = false;
+         tvVisible = true;
+      }
    }
 
-   tv[0] = static_cast<float>(tvLeft);
-   tv[1] = static_cast<float>(tvBottom);
-   tv[2] = static_cast<float>(tvRight - tvLeft);
-   tv[3] = static_cast<float>(tvTop - tvBottom);
+   if (drcVisible) {
+      drc.x = static_cast<float>(drcLeft);
+      drc.y = static_cast<float>(drcBottom);
+      drc.width = static_cast<float>(drcRight - drcLeft);
+      drc.height = static_cast<float>(drcTop - drcBottom);
+   } else {
+      drc.x = 0.0f;
+      drc.y = 0.0f;
+      drc.width = 0.0f;
+      drc.height = 0.0f;
+   }
 
-   drc[0] = static_cast<float>(drcLeft);
-   drc[1] = static_cast<float>(drcBottom);
-   drc[2] = static_cast<float>(drcRight - drcLeft);
-   drc[3] = static_cast<float>(drcTop - drcBottom);
+   if (tvVisible) {
+      tv.x = static_cast<float>(tvLeft);
+      tv.y = static_cast<float>(tvBottom);
+      tv.width = static_cast<float>(tvRight - tvLeft);
+      tv.height = static_cast<float>(tvTop - tvBottom);
+   } else {
+      tv.x = 0.0f;
+      tv.y = 0.0f;
+      tv.width = 0.0f;
+      tv.height = 0.0f;
+   }
 
-   decaf_check(tv[0] >= 0);
-   decaf_check(tv[1] >= 0);
-   decaf_check(tv[0] + tv[2] <= windowWidth);
-   decaf_check(tv[1] + tv[3] <= windowHeight);
-   decaf_check(drc[0] >= 0);
-   decaf_check(drc[1] >= 0);
-   decaf_check(drc[0] + drc[2] <= windowWidth);
-   decaf_check(drc[1] + drc[3] <= windowHeight);
+   decaf_check(drc.x >= 0);
+   decaf_check(drc.y >= 0);
+   decaf_check(drc.x + drc.width <= windowWidth);
+   decaf_check(drc.y + drc.height <= windowHeight);
+   decaf_check(tv.x >= 0);
+   decaf_check(tv.y >= 0);
+   decaf_check(tv.x + tv.width <= windowWidth);
+   decaf_check(tv.y + tv.height <= windowHeight);
 }
 
 void

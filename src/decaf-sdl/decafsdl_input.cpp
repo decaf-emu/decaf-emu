@@ -468,22 +468,20 @@ DecafSDL::getTouchPosition(vpad::Channel channel, vpad::TouchPosition &position)
    }
 
    // Calculate screen position
-   float tvViewport[4], drcViewport[4];
+   Viewport tvViewport, drcViewport;
    int windowWidth, windowHeight;
    SDL_GetWindowSize(mGraphicsDriver->getWindow(), &windowWidth, &windowHeight);
    calculateScreenViewports(tvViewport, drcViewport);
 
-   auto drcWidth = drcViewport[2];
-   auto drcHeight = drcViewport[3];
-   auto drcLeft = drcViewport[0];
-   auto drcBottom = windowHeight - drcViewport[1];
-   auto drcRight = drcLeft + drcWidth;
-   auto drcTop = drcBottom - drcHeight;
+   auto drcLeft = drcViewport.x;
+   auto drcBottom = windowHeight - drcViewport.y;
+   auto drcRight = drcLeft + drcViewport.width;
+   auto drcTop = drcBottom - drcViewport.height;
 
    // Check that mouse is inside DRC screen
    if (mouseX >= drcLeft && mouseX <= drcRight && mouseY >= drcTop && mouseY <= drcBottom) {
-      position.x = (mouseX - drcLeft) / drcWidth;
-      position.y = (mouseY - drcTop) / drcHeight;
+      position.x = (mouseX - drcLeft) / drcViewport.width;
+      position.y = (mouseY - drcTop) / drcViewport.height;
       return true;
    }
 

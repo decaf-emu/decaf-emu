@@ -43,7 +43,7 @@ public:
 
 private:
    void
-   calculateScreenViewports(float(&tv)[4], float(&drc)[4]);
+   calculateScreenViewports(Viewport &tv, Viewport &drc);
 
    void
    openInputDevices();

@@ -249,7 +249,10 @@ DecafSDLOpenGL::drawScanBuffer(gl::GLuint object)
 }
 
 void
-DecafSDLOpenGL::drawScanBuffers(float tvViewport[4], gl::GLuint tvBuffer, float drcViewport[4], gl::GLuint drcBuffer)
+DecafSDLOpenGL::drawScanBuffers(Viewport &tvViewport,
+                                gl::GLuint tvBuffer,
+                                Viewport &drcViewport,
+                                gl::GLuint drcBuffer)
 {
    // Set up some needed GL state
    gl::glColorMaski(0, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE);
@@ -264,16 +267,26 @@ DecafSDLOpenGL::drawScanBuffers(float tvViewport[4], gl::GLuint tvBuffer, float 
    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 
    // Draw displays
-   auto drawTV = tvViewport[2] && tvViewport[3];
-   auto drawDRC = drcViewport[2] && drcViewport[3];
+   auto drawTV = tvViewport.width > 0 && tvViewport.height > 0;
+   auto drawDRC = drcViewport.width > 0 && drcViewport.height > 0;
 
    if (drawTV) {
-      gl::glViewportArrayv(0, 1, tvViewport);
+      float viewportArray[] = {
+         tvViewport.x, tvViewport.y,
+         tvViewport.width, tvViewport.height
+      };
+
+      gl::glViewportArrayv(0, 1, viewportArray);
       drawScanBuffer(tvBuffer);
    }
 
    if (drawDRC) {
-      gl::glViewportArrayv(0, 1, drcViewport);
+      float viewportArray[] = {
+         drcViewport.x, drcViewport.y,
+         drcViewport.width, drcViewport.height
+      };
+
+      gl::glViewportArrayv(0, 1, viewportArray);
       drawScanBuffer(drcBuffer);
    }
 
@@ -388,7 +401,7 @@ DecafSDLOpenGL::shutdown()
 }
 
 void
-DecafSDLOpenGL::renderFrame(float tv[4], float drc[4])
+DecafSDLOpenGL::renderFrame(Viewport &tv, Viewport &drc)
 {
    if (!config::gpu::force_sync) {
       gl::GLuint tvBuffer = 0;
