@@ -283,10 +283,10 @@ FSRenameAsync(FSClient *client,
 
    internal::queueFsWork(client, block, asyncData, [=]() {
       auto fs = kernel::getFileSystem();
-      auto src = internal::translatePath(client, block->path);
-      auto dst = internal::translatePath(client, block->path2);
+      auto srcPath = internal::translatePath(client, block->path);
+      auto dstPath = internal::translatePath(client, block->path2);
 
-      return internal::translateError(fs->move(src, dst));
+      return internal::translateError(fs->move(srcPath, dstPath));
    });
 
    return FSStatus::OK;
