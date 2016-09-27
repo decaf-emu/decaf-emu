@@ -5,6 +5,8 @@
 #include "decafsdl_opengl.h"
 #include "decafsdl_dx12.h"
 
+static std::string sActiveGfx = "NOGFX";
+
 void setWindowIcon(SDL_Window *window);
 
 DecafSDL::~DecafSDL()
@@ -33,6 +35,8 @@ DecafSDL::initGlGraphics()
       return false;
    }
 
+   sActiveGfx = "GL";
+
    return true;
 #else
    decaf_abort("GL support was excluded from this build");
@@ -48,7 +52,9 @@ DecafSDL::initDx12Graphics()
    if (!mGraphicsDriver->initialise(WindowWidth, WindowHeight)) {
       gCliLog->error("Failed to create DX12 graphics window");
       return false;
-}
+   }
+
+   sActiveGfx = "DX12";
 
    return true;
 #else
@@ -319,6 +325,6 @@ DecafSDL::onGameLoaded(const decaf::GameInfo &info)
    }
 
    // Update window title
-   auto title = fmt::format("Decaf - {}", name);
+   auto title = fmt::format("Decaf ({}) - {}", sActiveGfx, name);
    SDL_SetWindowTitle(mGraphicsDriver->getWindow(), title.c_str());
 }
