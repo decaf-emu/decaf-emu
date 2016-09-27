@@ -513,8 +513,8 @@ mixDevice(AXDeviceType type, uint32_t numSamples)
       auto &device = devices->devices[deviceId];
 
       for (auto bus = 1u; bus < numBus; ++bus) {
-         auto returnVolume = device.aux[bus].returnVolume;
-         auto subBus = busSamples[bus];
+         auto returnVolume = device.aux[bus - 1].returnVolume;
+         auto subBus = busSamples[bus - 1];
 
          for (auto channel = 0u; channel < numChannels; ++channel) {
             for (auto i = 0u; i < numSamples; ++i) {
