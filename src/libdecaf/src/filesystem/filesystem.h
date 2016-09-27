@@ -1,4 +1,5 @@
 #pragma once
+#include "filesystem_error.h"
 #include "filesystem_file.h"
 #include "filesystem_filehandle.h"
 #include "filesystem_host_folder.h"
@@ -41,6 +42,37 @@ public:
 
       auto folder = reinterpret_cast<Folder *>(parent);
       return folder->remove(path.filename());
+   }
+
+   Error move(Path src, Path dst)
+   {
+      // Find our parents
+      auto srcParent = findNode(src.parentPath());
+
+      if (!srcParent) {
+         return Error::NotFound;
+      }
+
+      auto dstParent = createPath(dst.parentPath());
+
+      if (!dstParent) {
+         return Error::NotFound;
+      }
+
+      // For now we only support moving within HostFolder
+      if (srcParent->type() != Node::FolderNode && srcParent->deviceType() != Node::HostDevice) {
+         return Error::UnsupportedOperation;
+      }
+
+      if (dstParent->type() != Node::FolderNode && dstParent->deviceType() != Node::HostDevice) {
+         return Error::UnsupportedOperation;
+      }
+
+      // Request the HostFolder to perform the move
+      auto srcFolder = reinterpret_cast<HostFolder *>(srcParent);
+      auto dstFolder = reinterpret_cast<HostFolder *>(dstParent);
+
+      return HostFolder::move(srcFolder, src.filename(), dstFolder, dst.filename());
    }
 
    Node *makeLink(Path dst, Path src)

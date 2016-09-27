@@ -85,6 +85,18 @@ HostFolder::findChild(const std::string &name)
    return child;
 }
 
+
+Error
+HostFolder::hostMove(const HostPath &src,
+                     const HostPath &dst)
+{
+   if (rename(src.path().c_str(), dst.path().c_str()) == 0) {
+      return Error::OK;
+   }
+
+   return Error::GenericError;
+}
+
 } // namespace fs
 
 #endif

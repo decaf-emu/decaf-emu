@@ -1787,6 +1787,9 @@
     <ClInclude Include="..\src\libdecaf\src\gpu\dx12\dx12_driver.h">
       <Filter>Header Files\gpu\dx12</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\filesystem\filesystem_error.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\libdecaf\src\gpu\microcode\latte_instructions_def.inl">

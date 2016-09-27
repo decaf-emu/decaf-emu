@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "filesystem_node.h"
+#include "filesystem_error.h"
 #include "filesystem_file.h"
 
 namespace fs

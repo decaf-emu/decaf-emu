@@ -103,6 +103,20 @@ HostFolder::findChild(const std::string &name)
    return child;
 }
 
+Error
+HostFolder::hostMove(const HostPath &src,
+                     const HostPath &dst)
+{
+   auto winSrcPath = platform::toWinApiString(src.path());
+   auto winDstPath = platform::toWinApiString(dst.path());
+
+   if (MoveFileW(winSrcPath.c_str(), winDstPath.c_str())) {
+      return Error::OK;
+   }
+
+   return Error::GenericError;
+}
+
 } // namespace fs
 
 #endif

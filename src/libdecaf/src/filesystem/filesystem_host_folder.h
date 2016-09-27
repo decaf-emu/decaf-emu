@@ -85,6 +85,51 @@ public:
       return handle;
    }
 
+   static Error
+   move(HostFolder *srcFolder,
+        const std::string &srcName,
+        HostFolder *dstFolder,
+        const std::string &dstName)
+   {
+      // Check our permissions
+      if (!srcFolder->checkPermission(fs::Permissions::ReadWrite)) {
+         return Error::InvalidPermission;
+      }
+
+      if (!dstFolder->checkPermission(fs::Permissions::Write)) {
+         return Error::InvalidPermission;
+      }
+
+      // Ensure src exists
+      auto srcChild = srcFolder->findChild(srcName);
+
+      if (!srcChild) {
+         return Error::NotFound;
+      }
+
+      // Ensure dst does not exist
+      auto dstChild = dstFolder->findChild(dstName);
+
+      if (dstChild) {
+         return Error::AlreadyExists;
+      }
+
+      // Get host paths
+      auto srcHostPath = srcFolder->mPath.join(srcName);
+      auto dstHostPath = dstFolder->mPath.join(dstName);
+
+      // Perform the move operation on the host device
+      auto error = hostMove(srcHostPath, dstHostPath);
+
+      if (error != Error::OK) {
+         return error;
+      }
+
+      // Unregister the child from srcFolder as it no longer exists once moved
+      srcFolder->mVirtual.deleteChild(srcChild);
+      return Error::OK;
+   }
+
 private:
    Node *
    registerFile(const HostPath &path,
@@ -123,6 +168,10 @@ private:
 
       return child;
    }
+
+   static Error
+   hostMove(const HostPath &src,
+            const HostPath &dst);
 
 private:
    HostPath mPath;
