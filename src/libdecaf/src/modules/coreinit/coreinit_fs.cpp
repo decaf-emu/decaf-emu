@@ -295,6 +295,8 @@ Module::registerFileSystemFunctions()
    RegisterKernelFunction(FSRewindDirAsync);
    RegisterKernelFunction(FSRemoveAsync);
    RegisterKernelFunction(FSRemove);
+   RegisterKernelFunction(FSRename);
+   RegisterKernelFunction(FSRenameAsync);
    RegisterKernelFunction(FSGetFreeSpaceSizeAsync);
    RegisterKernelFunction(FSGetFreeSpaceSize);
    RegisterKernelFunction(FSFlushQuotaAsync);

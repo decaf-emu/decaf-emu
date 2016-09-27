@@ -107,6 +107,9 @@ FSGetCurrentCmdBlock(FSClient *client);
 namespace internal
 {
 
+FSStatus
+translateError(fs::Error error);
+
 void
 handleAsyncCallback(FSAsyncResult *result);
 

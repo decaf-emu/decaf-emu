@@ -78,8 +78,6 @@ FSRemove
 FSRemoveAsync
 FSRemoveQuota
 FSRemoveQuotaAsync
-FSRename
-FSRenameAsync
 FSRollbackQuota
 FSRollbackQuotaAsync
 FSSetEmulatedError
@@ -135,8 +133,9 @@ struct FSCmdBlock
    OSMessage syncQueueMsgs[1];
    char path[MaxPathLength];
    char mode[MaxModeLength];
+   char path2[MaxPathLength];
    be_ptr<void> userData;
-   UNKNOWN(0x774 - sizeof(std::function<FSStatus()>));
+   UNKNOWN(0x4F4 - sizeof(std::function<FSStatus()>));
 };
 CHECK_SIZE(FSCmdBlock, 0xa80);
 

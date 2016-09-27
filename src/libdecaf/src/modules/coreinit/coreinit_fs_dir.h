@@ -35,10 +35,36 @@ FSReadDir(FSClient *client,
           uint32_t flags);
 
 FSStatus
+FSRemove(FSClient *client,
+         FSCmdBlock *block,
+         const char *path,
+         uint32_t flags);
+
+FSStatus
+FSRename(FSClient *client,
+         FSCmdBlock *block,
+         const char *src,
+         const char *dst,
+         uint32_t flags);
+
+FSStatus
 FSRewindDir(FSClient *client,
             FSCmdBlock *block,
             FSDirectoryHandle handle,
             uint32_t flags);
+
+FSStatus
+FSGetFreeSpaceSize(FSClient *client,
+                   FSCmdBlock *block,
+                   const char *path,
+                   uint64_t *freeSpace,
+                   uint32_t flags);
+
+FSStatus
+FSFlushQuota(FSClient *client,
+             FSCmdBlock *block,
+             const char *path,
+             uint32_t flags);
 
 FSStatus
 FSOpenDirAsync(FSClient *client,
@@ -85,10 +111,12 @@ FSRemoveAsync(FSClient *client,
               FSAsyncData *asyncData);
 
 FSStatus
-FSRemove(FSClient *client,
-         FSCmdBlock *block,
-         const char *path,
-         uint32_t flags);
+FSRenameAsync(FSClient *client,
+              FSCmdBlock *block,
+              const char *src,
+              const char *dst,
+              uint32_t flags,
+              FSAsyncData *asyncData);
 
 FSStatus
 FSGetFreeSpaceSizeAsync(FSClient *client,
@@ -99,24 +127,11 @@ FSGetFreeSpaceSizeAsync(FSClient *client,
                         FSAsyncData *asyncData);
 
 FSStatus
-FSGetFreeSpaceSize(FSClient *client,
-                   FSCmdBlock *block,
-                   const char *path,
-                   uint64_t *freeSpace,
-                   uint32_t flags);
-
-FSStatus
 FSFlushQuotaAsync(FSClient *client,
                   FSCmdBlock *block,
                   const char *path,
                   uint32_t flags,
                   FSAsyncData *asyncData);
-
-FSStatus
-FSFlushQuota(FSClient *client,
-             FSCmdBlock *block,
-             const char *path,
-             uint32_t flags);
 
 /** @} */
 

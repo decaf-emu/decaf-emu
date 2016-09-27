@@ -253,6 +253,58 @@ FSRemove(FSClient *client,
 }
 
 FSStatus
+FSRenameAsync(FSClient *client,
+              FSCmdBlock *block,
+              const char *src,
+              const char *dst,
+              uint32_t flags,
+              FSAsyncData *asyncData)
+{
+   if (!src || !dst) {
+      return FSStatus::FatalError;
+   }
+
+   auto srcLength = strlen(src);
+   auto dstLength = strlen(dst);
+
+   if (srcLength >= FSCmdBlock::MaxPathLength) {
+      return FSStatus::FatalError;
+   }
+
+   if (dstLength >= FSCmdBlock::MaxPathLength) {
+      return FSStatus::FatalError;
+   }
+
+   std::memcpy(block->path, src, srcLength);
+   block->path[srcLength] = 0;
+
+   std::memcpy(block->path2, dst, dstLength);
+   block->path2[dstLength] = 0;
+
+   internal::queueFsWork(client, block, asyncData, [=]() {
+      auto fs = kernel::getFileSystem();
+      auto src = internal::translatePath(client, block->path);
+      auto dst = internal::translatePath(client, block->path2);
+
+      return internal::translateError(fs->move(src, dst));
+   });
+
+   return FSStatus::OK;
+}
+
+FSStatus
+FSRename(FSClient *client,
+         FSCmdBlock *block,
+         const char *src,
+         const char *dst,
+         uint32_t flags)
+{
+   auto asyncData = internal::prepareSyncOp(client, block);
+   FSRenameAsync(client, block, src, dst, flags, asyncData);
+   return internal::resolveSyncOp(client, block);
+}
+
+FSStatus
 FSGetFreeSpaceSizeAsync(FSClient *client,
                         FSCmdBlock *block,
                         const char *path,

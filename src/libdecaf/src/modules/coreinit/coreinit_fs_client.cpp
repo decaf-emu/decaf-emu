@@ -248,6 +248,29 @@ FSGetCurrentCmdBlock(FSClient *client)
 namespace internal
 {
 
+FSStatus
+translateError(fs::Error error)
+{
+   switch (error) {
+   case fs::Error::OK:
+      return FSStatus::OK;
+   case fs::Error::AlreadyExists:
+      return FSStatus::Exists;
+   case fs::Error::InvalidPermission:
+      return FSStatus::PermissionError;
+   case fs::Error::NotFound:
+      return FSStatus::NotFound;
+   case fs::Error::NotFile:
+      return FSStatus::NotFile;
+   case fs::Error::NotDirectory:
+      return FSStatus::NotDirectory;
+   case fs::Error::GenericError:
+   case fs::Error::UnsupportedOperation:
+   default:
+      return FSStatus::FatalError;
+   }
+}
+
 void
 handleAsyncCallback(FSAsyncResult *result)
 {
