@@ -1,5 +1,6 @@
 #pragma once
 #include "modules/coreinit/coreinit_fs.h"
+#include "nn_save_core.h"
 
 namespace nn
 {
@@ -11,10 +12,9 @@ using coreinit::FSAsyncData;
 using coreinit::FSClient;
 using coreinit::FSCmdBlock;
 using coreinit::FSFileHandle;
-using coreinit::FSStatus;
 using coreinit::FSStat;
 
-FSStatus
+SaveStatus
 SAVEOpenFile(FSClient *client,
              FSCmdBlock *block,
              uint8_t account,
@@ -23,7 +23,7 @@ SAVEOpenFile(FSClient *client,
              be_val<FSFileHandle> *handle,
              uint32_t flags);
 
-FSStatus
+SaveStatus
 SAVEOpenFileAsync(FSClient *client,
                   FSCmdBlock *block,
                   uint8_t account,
@@ -33,7 +33,7 @@ SAVEOpenFileAsync(FSClient *client,
                   uint32_t flags,
                   FSAsyncData *asyncData);
 
-FSStatus
+SaveStatus
 SAVERemoveAsync(FSClient *client,
                 FSCmdBlock *block,
                 uint8_t account,
@@ -41,14 +41,14 @@ SAVERemoveAsync(FSClient *client,
                 uint32_t flags,
                 FSAsyncData *asyncData);
 
-FSStatus
+SaveStatus
 SAVERemove(FSClient *client,
            FSCmdBlock *block,
            uint8_t account,
            const char *path,
            uint32_t flags);
 
-FSStatus
+SaveStatus
 SAVEGetStatAsync(FSClient *client,
                  FSCmdBlock *block,
                  uint8_t account,
@@ -57,7 +57,7 @@ SAVEGetStatAsync(FSClient *client,
                  uint32_t flags,
                  FSAsyncData *asyncData);
 
-FSStatus
+SaveStatus
 SAVEGetStat(FSClient *client,
             FSCmdBlock *block,
             uint8_t account,

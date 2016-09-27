@@ -11,7 +11,7 @@ namespace nn
 namespace save
 {
 
-FSStatus
+SaveStatus
 SAVEOpenFile(FSClient *client,
              FSCmdBlock *block,
              uint8_t account,
@@ -24,7 +24,7 @@ SAVEOpenFile(FSClient *client,
    return FSOpenFile(client, block, fsPath.path().c_str(), mode, handle, flags);
 }
 
-FSStatus
+SaveStatus
 SAVEOpenFileAsync(FSClient *client,
                   FSCmdBlock *block,
                   uint8_t account,
@@ -38,7 +38,7 @@ SAVEOpenFileAsync(FSClient *client,
    return FSOpenFileAsync(client, block, fsPath.path().c_str(), mode, handle, flags, asyncData);
 }
 
-FSStatus
+SaveStatus
 SAVERemoveAsync(FSClient *client,
                 FSCmdBlock *block,
                 uint8_t account,
@@ -50,7 +50,7 @@ SAVERemoveAsync(FSClient *client,
    return FSRemoveAsync(client, block, fsPath.path().c_str(), flags, asyncData);
 }
 
-FSStatus
+SaveStatus
 SAVERemove(FSClient *client,
            FSCmdBlock *block,
            uint8_t account,
@@ -61,7 +61,7 @@ SAVERemove(FSClient *client,
    return FSRemove(client, block, fsPath.path().c_str(), flags);
 }
 
-FSStatus
+SaveStatus
 SAVEGetStatAsync(FSClient *client,
                  FSCmdBlock *block,
                  uint8_t account,
@@ -74,7 +74,7 @@ SAVEGetStatAsync(FSClient *client,
    return FSGetStatAsync(client, block, fsPath.path().c_str(), stat, flags, asyncData);
 }
 
-FSStatus
+SaveStatus
 SAVEGetStat(FSClient *client,
             FSCmdBlock *block,
             uint8_t account,

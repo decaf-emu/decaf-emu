@@ -1,8 +1,7 @@
 #pragma once
-#include <string>
-#include "nn_save_core.h"
 #include "filesystem/filesystem_path.h"
 #include "modules/coreinit/coreinit_fs.h"
+#include "nn_save_core.h"
 
 namespace nn
 {
@@ -14,7 +13,6 @@ using coreinit::FSAsyncData;
 using coreinit::FSClient;
 using coreinit::FSCmdBlock;
 using coreinit::FSDirectoryHandle;
-using coreinit::FSStatus;
 
 SaveStatus
 SAVEInitSaveDir(uint8_t userID);
@@ -31,14 +29,14 @@ SAVEGetSharedSaveDataPath(uint64_t titleID,
                           char *buffer,
                           uint32_t bufferSize);
 
-FSStatus
+SaveStatus
 SAVEMakeDir(FSClient *client,
             FSCmdBlock *block,
             uint8_t account,
             const char *path,
             uint32_t flags);
 
-FSStatus
+SaveStatus
 SAVEMakeDirAsync(FSClient *client,
                  FSCmdBlock *block,
                  uint8_t account,
@@ -46,7 +44,7 @@ SAVEMakeDirAsync(FSClient *client,
                  uint32_t flags,
                  FSAsyncData *asyncData);
 
-FSStatus
+SaveStatus
 SAVEOpenDir(FSClient *client,
             FSCmdBlock *block,
             uint8_t account,
@@ -54,7 +52,7 @@ SAVEOpenDir(FSClient *client,
             be_val<FSDirectoryHandle> *handle,
             uint32_t flags);
 
-FSStatus
+SaveStatus
 SAVEOpenDirAsync(FSClient *client,
                  FSCmdBlock *block,
                  uint8_t account,
@@ -63,7 +61,7 @@ SAVEOpenDirAsync(FSClient *client,
                  uint32_t flags,
                  FSAsyncData *asyncData);
 
-FSStatus
+SaveStatus
 SAVEGetFreeSpaceSizeAsync(FSClient *client,
                           FSCmdBlock *block,
                           uint8_t account,
@@ -71,25 +69,42 @@ SAVEGetFreeSpaceSizeAsync(FSClient *client,
                           uint32_t flags,
                           FSAsyncData *asyncData);
 
-FSStatus
+SaveStatus
 SAVEGetFreeSpaceSize(FSClient *client,
                      FSCmdBlock *block,
                      uint8_t account,
                      uint64_t *freeSpace,
                      uint32_t flags);
 
-FSStatus
+SaveStatus
 SAVEFlushQuotaAsync(FSClient *client,
                     FSCmdBlock *block,
                     uint8_t account,
                     uint32_t flags,
                     FSAsyncData *asyncData);
 
-FSStatus
+SaveStatus
 SAVEFlushQuota(FSClient *client,
                FSCmdBlock *block,
                uint8_t account,
                uint32_t flags);
+
+SaveStatus
+SAVERenameAsync(FSClient *client,
+                FSCmdBlock *block,
+                uint8_t account,
+                const char *src,
+                const char *dst,
+                uint32_t flags,
+                FSAsyncData *asyncData);
+
+SaveStatus
+SAVERename(FSClient *client,
+           FSCmdBlock *block,
+           uint8_t account,
+           const char *src,
+           const char *dst,
+           uint32_t flags);
 
 namespace internal
 {

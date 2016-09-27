@@ -77,7 +77,7 @@ SAVEGetSharedSaveDataPath(uint64_t titleID,
    return SaveStatus::OK;
 }
 
-FSStatus
+SaveStatus
 SAVEMakeDir(FSClient *client,
             FSCmdBlock *block,
             uint8_t account,
@@ -88,7 +88,7 @@ SAVEMakeDir(FSClient *client,
    return FSMakeDir(client, block, fsPath.path().c_str(), flags);
 }
 
-FSStatus
+SaveStatus
 SAVEOpenDir(FSClient *client,
             FSCmdBlock *block,
             uint8_t account,
@@ -100,7 +100,7 @@ SAVEOpenDir(FSClient *client,
    return FSOpenDir(client, block, fsPath.path().c_str(), handle, flags);
 }
 
-FSStatus
+SaveStatus
 SAVEMakeDirAsync(FSClient *client,
                  FSCmdBlock *block,
                  uint8_t account,
@@ -112,7 +112,7 @@ SAVEMakeDirAsync(FSClient *client,
    return FSMakeDirAsync(client, block, fsPath.path().c_str(), flags, asyncData);
 }
 
-FSStatus
+SaveStatus
 SAVEOpenDirAsync(FSClient *client,
                  FSCmdBlock *block,
                  uint8_t account,
@@ -125,7 +125,7 @@ SAVEOpenDirAsync(FSClient *client,
    return FSOpenDirAsync(client, block, fsPath.path().c_str(), handle, flags, asyncData);
 }
 
-FSStatus
+SaveStatus
 SAVEGetFreeSpaceSizeAsync(FSClient *client,
                           FSCmdBlock *block,
                           uint8_t account,
@@ -137,7 +137,7 @@ SAVEGetFreeSpaceSizeAsync(FSClient *client,
    return FSGetFreeSpaceSizeAsync(client, block, fsPath.path().c_str(), freeSpace, flags, asyncData);
 }
 
-FSStatus
+SaveStatus
 SAVEGetFreeSpaceSize(FSClient *client,
                      FSCmdBlock *block,
                      uint8_t account,
@@ -148,7 +148,7 @@ SAVEGetFreeSpaceSize(FSClient *client,
    return FSGetFreeSpaceSize(client, block, fsPath.path().c_str(), freeSpace, flags);
 }
 
-FSStatus
+SaveStatus
 SAVEFlushQuotaAsync(FSClient *client,
                     FSCmdBlock *block,
                     uint8_t account,
@@ -159,7 +159,7 @@ SAVEFlushQuotaAsync(FSClient *client,
    return FSFlushQuotaAsync(client, block, fsPath.path().c_str(), flags, asyncData);
 }
 
-FSStatus
+SaveStatus
 SAVEFlushQuota(FSClient *client,
                FSCmdBlock *block,
                uint8_t account,
@@ -167,6 +167,33 @@ SAVEFlushQuota(FSClient *client,
 {
    auto fsPath = internal::getSaveDirectory(account);
    return FSFlushQuota(client, block, fsPath.path().c_str(), flags);
+}
+
+SaveStatus
+SAVERenameAsync(FSClient *client,
+                FSCmdBlock *block,
+                uint8_t account,
+                const char *src,
+                const char *dst,
+                uint32_t flags,
+                FSAsyncData *asyncData)
+{
+   auto srcPath = internal::getSavePath(account, src);
+   auto dstPath = internal::getSavePath(account, dst);
+   return FSRenameAsync(client, block, srcPath.path().c_str(), dstPath.path().c_str(), flags, asyncData);
+}
+
+SaveStatus
+SAVERename(FSClient *client,
+           FSCmdBlock *block,
+           uint8_t account,
+           const char *src,
+           const char *dst,
+           uint32_t flags)
+{
+   auto srcPath = internal::getSavePath(account, src);
+   auto dstPath = internal::getSavePath(account, dst);
+   return FSRename(client, block, srcPath.path().c_str(), dstPath.path().c_str(), flags);
 }
 
 void
@@ -183,6 +210,8 @@ Module::registerDirFunctions()
    RegisterKernelFunction(SAVEGetFreeSpaceSize);
    RegisterKernelFunction(SAVEFlushQuotaAsync);
    RegisterKernelFunction(SAVEFlushQuota);
+   RegisterKernelFunction(SAVERenameAsync);
+   RegisterKernelFunction(SAVERename);
 }
 
 namespace internal
