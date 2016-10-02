@@ -811,6 +811,8 @@ getExtension(const std::string &filename)
 static bool
 convertTexture(const std::string &path)
 {
+// TODO: Fix texture convert
+#if 0
    gfd::File file;
    GfdData data;
    std::vector<Texture> textures;
@@ -858,7 +860,7 @@ convertTexture(const std::string &path)
       gHeap->free(image);
       gHeap->free(mipmap);
    }
-
+#endif
    return true;
 }
 
@@ -881,8 +883,9 @@ int main(int argc, char **argv)
    parser.add_command("info")
       .add_argument("file in", excmd::value<std::string> { });
 
-   parser.add_command("convert")
-      .add_argument("src", excmd::value<std::string> { });
+   // TODO: Fix texture convert
+   //parser.add_command("convert")
+   //   .add_argument("src", excmd::value<std::string> { });
 
    // Parse command line
    try {
