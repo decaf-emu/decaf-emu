@@ -90,16 +90,16 @@ Reader::relocateBlock(Block &block)
    }
 
    auto headerOffset = block.header->dataSize - sizeof(RelocationHeader);
-   auto header = reinterpret_cast<RelocationHeader *>(block.data + headerOffset);
+   auto relocationHeader = reinterpret_cast<RelocationHeader *>(block.data + headerOffset);
 
-   if (header->magic != RelocationHeader::Magic) {
+   if (relocationHeader->magic != RelocationHeader::Magic) {
       return;
    }
 
-   auto patchOffset = header->patchOffset & 0x000FFFFF;
+   auto patchOffset = relocationHeader->patchOffset & 0x000FFFFF;
    auto patches = reinterpret_cast<be_val<uint32_t> *>(block.data + patchOffset);
 
-   for (auto i = 0u; i < header->patchCount; ++i) {
+   for (auto i = 0u; i < relocationHeader->patchCount; ++i) {
       auto location = patches[i] & 0x000FFFFF;
 
       if (!location) {

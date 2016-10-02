@@ -459,7 +459,7 @@ void Pm4Processor::loadResources(const pm4::LoadResource &data)
 
 void
 Pm4Processor::setRegister(latte::Register reg,
-   uint32_t value)
+                          uint32_t value)
 {
    decaf_check((reg % 4) == 0);
    auto isChanged = (value != mRegisters[reg / 4]);
