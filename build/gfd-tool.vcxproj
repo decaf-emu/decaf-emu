@@ -27,6 +27,8 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_translate.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_vtx.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\gpu_addrlibopt.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_tiling.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_utilities.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_alu.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\microcode\latte_disassembler_export.cpp" />

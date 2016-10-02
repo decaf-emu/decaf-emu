@@ -87,5 +87,11 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\glsl2\glsl2_vtx.cpp">
       <Filter>Source Files\src\glsl2</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_utilities.cpp">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\gpu_tiling.cpp">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
