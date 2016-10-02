@@ -216,7 +216,7 @@ binaryCompareSet(State &state,
    state.out << ") ? ";
 
    if ((flags & SQ_ALU_FLAG_INT_OUT) || (flags & SQ_ALU_FLAG_UINT_OUT)) {
-      state.out << "1 : 0";
+      state.out << "0xFFFFFFFF : 0";
    } else {
       state.out << "1.0f : 0.0f";
    }
