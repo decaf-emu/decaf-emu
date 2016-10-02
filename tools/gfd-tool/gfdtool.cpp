@@ -1,7 +1,8 @@
 #include <cassert>
-#include <iostream>
 #include <excmd.h>
+#include <fstream>
 #include <gsl.h>
+#include <iostream>
 #include <spdlog/spdlog.h>
 #include "common/teenyheap.h"
 #include "libcpu/mem.h"
@@ -61,50 +62,53 @@ struct GfdData
    std::map<uint32_t, Texture> textures;
 };
 
-static void
-getGfdData(gfd::File &file, GfdData &data)
+struct HeapData
 {
-   for (auto &block : file.blocks) {
-      switch (block.header.type) {
-      case gfd::BlockType::VertexShaderHeader:
-         data.vertexShaders[block.header.index].header = reinterpret_cast<gx2::GX2VertexShader *>(block.data.data());
-         break;
-      case gfd::BlockType::VertexShaderProgram:
-         data.vertexShaders[block.header.index].program = block.data;
-         break;
+   HeapData() :
+      data(nullptr),
+      size(0)
+   {
+   }
 
-      case gfd::BlockType::PixelShaderHeader:
-         data.pixelShaders[block.header.index].header = reinterpret_cast<gx2::GX2PixelShader *>(block.data.data());
-         break;
-      case gfd::BlockType::PixelShaderProgram:
-         data.pixelShaders[block.header.index].program = block.data;
-         break;
+   HeapData(const HeapData &) = delete;
 
-      case gfd::BlockType::GeometryShaderHeader:
-         data.geometryShaders[block.header.index].header = reinterpret_cast<gx2::GX2GeometryShader *>(block.data.data());
-         break;
-      case gfd::BlockType::GeometryShaderProgram:
-         data.geometryShaders[block.header.index].program = block.data;
-         break;
+   HeapData(HeapData &&move) :
+      data(move.data),
+      size(move.size)
+   {
+      move.data = nullptr;
+      move.size = 0;
+   }
 
-      case gfd::BlockType::FetchShaderHeader:
-         data.fetchShaders[block.header.index].header = reinterpret_cast<gx2::GX2FetchShader *>(block.data.data());
-         break;
-      case gfd::BlockType::FetchShaderProgram:
-         data.fetchShaders[block.header.index].program = block.data;
-         break;
-
-      case gfd::BlockType::TextureHeader:
-         data.textures[block.header.index].header = reinterpret_cast<gx2::GX2Texture *>(block.data.data());
-      break;
-      case gfd::BlockType::TextureImage:
-         data.textures[block.header.index].imageData = block.data;
-         break;
-      case gfd::BlockType::TextureMipmap:
-         data.textures[block.header.index].mipmapData = block.data;
-         break;
+   ~HeapData()
+   {
+      if (data) {
+         gHeap->free(data);
       }
    }
+
+   HeapData &operator=(const HeapData &) = delete;
+
+   HeapData &operator=(HeapData &&move)
+   {
+      data = move.data;
+      size = move.size;
+      move.data = nullptr;
+      move.size = 0;
+      return *this;
+   }
+
+   uint8_t *data;
+   uint32_t size;
+};
+
+static HeapData
+heapAllocate(size_t size)
+{
+   HeapData data;
+   data.data = reinterpret_cast<uint8_t *>(gHeap->alloc(size));
+   data.size = static_cast<uint32_t>(size);
+   return data;
 }
 
 struct OutputState
@@ -150,30 +154,120 @@ writeField(OutputState &out, const std::string &field, const Type &value)
 static bool
 printInfo(const std::string &filename)
 {
-   gfd::File file;
+   OutputState out;
+   gfd::Reader reader;
+   std::ifstream file(filename, std::ifstream::binary | std::ifstream::in);
 
-   if (!file.read(filename)) {
+   if (!file.is_open()) {
       return false;
    }
 
-   // TODO: Before we can print full shader info we must do pointer fixup in GFD::read
-   OutputState out;
+   // Get size
+   file.seekg(0, std::ifstream::end);
+   auto fileSize = static_cast<size_t>(file.tellg());
+   file.seekg(0, std::ifstream::beg);
 
-   for (auto &block : file.blocks) {
-      switch (block.header.type) {
+   // Read data
+   auto fileData = heapAllocate(fileSize);
+   file.read(reinterpret_cast<char*>(fileData.data), fileData.size);
+
+   // Parse file
+   if (!reader.parse(fileData.data, fileData.size)) {
+      return false;
+   }
+
+   for (auto &block : reader.blocks) {
+      switch (block.header->type) {
       case gfd::BlockType::VertexShaderHeader:
          startGroup(out, "VertexShaderHeader");
          {
-            auto shader = reinterpret_cast<gx2::GX2VertexShader *>(block.data.data());
-            writeField(out, "index", block.header.index);
+            auto shader = reinterpret_cast<gx2::GX2VertexShader *>(block.data);
+            writeField(out, "index", block.header->index);
             writeField(out, "size", shader->size);
             writeField(out, "mode", gx2::enumAsString(shader->mode));
-            writeField(out, "uniformBlocks", shader->uniformBlockCount);
-            writeField(out, "uniformVars", shader->uniformVarCount);
-            writeField(out, "initVars", shader->initialValueCount);
-            writeField(out, "loopVars", shader->loopVarCount);
-            writeField(out, "samplerVars", shader->samplerVarCount);
-            writeField(out, "attribVars", shader->attribVarCount);
+
+            writeField(out, "uniformBlockCount", shader->uniformBlockCount);
+
+            for (auto i = 0u; i < shader->uniformBlockCount; ++i) {
+               startGroup(out, fmt::format("uniformBlocks[{}]", i));
+               {
+                  auto var = shader->uniformBlocks[i];
+                  writeField(out, "name", var.name.get());
+                  writeField(out, "offset", var.offset);
+                  writeField(out, "size", var.size);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "uniformVarCount", shader->uniformVarCount);
+
+            for (auto i = 0u; i < shader->uniformVarCount; ++i) {
+               startGroup(out, fmt::format("uniformVars[{}]", i));
+               {
+                  auto var = shader->uniformVars[i];
+                  writeField(out, "name", var.name.get());
+                  writeField(out, "type", gx2::enumAsString(var.type));
+                  writeField(out, "count", var.count);
+                  writeField(out, "offset", var.offset);
+                  writeField(out, "block", var.block);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "initialValueCount", shader->initialValueCount);
+
+            for (auto i = 0u; i < shader->initialValueCount; ++i) {
+               startGroup(out, fmt::format("initialValues[{}]", i));
+               {
+                  auto var = shader->initialValues[i];
+                  writeField(out, "value.x", var.value[0].value());
+                  writeField(out, "value.y", var.value[1].value());
+                  writeField(out, "value.z", var.value[2].value());
+                  writeField(out, "value.w", var.value[3].value());
+                  writeField(out, "offset", var.offset);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "loopVarCount", shader->loopVarCount);
+
+            for (auto i = 0u; i < shader->loopVarCount; ++i) {
+               startGroup(out, fmt::format("loopVars[{}]", i));
+               {
+                  auto var = shader->loopVars[i];
+                  writeField(out, "offset", var.offset);
+                  writeField(out, "value", var.value);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "samplerVarCount", shader->samplerVarCount);
+
+            for (auto i = 0u; i < shader->samplerVarCount; ++i) {
+               startGroup(out, fmt::format("samplerVars[{}]", i));
+               {
+                  auto var = shader->samplerVars[i];
+                  writeField(out, "name", var.name.get());
+                  writeField(out, "type", gx2::enumAsString(var.type));
+                  writeField(out, "location", var.location);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "attribVarCount", shader->attribVarCount);
+
+            for (auto i = 0u; i < shader->attribVarCount; ++i) {
+               startGroup(out, fmt::format("attribVars[{}]", i));
+               {
+                  auto var = shader->attribVars[i];
+                  writeField(out, "name", var.name.get());
+                  writeField(out, "type", gx2::enumAsString(var.type));
+                  writeField(out, "count", var.count);
+                  writeField(out, "location", var.location);
+               }
+               endGroup(out);
+            }
+
             writeField(out, "ringItemsize", shader->ringItemsize);
             writeField(out, "hasStreamOut", shader->hasStreamOut);
 
@@ -260,7 +354,7 @@ printInfo(const std::string &filename)
             startGroup(out, "SQ_VTX_SEMANTIC_CLEAR");
             {
                auto sq_vtx_semantic_clear = shader->regs.sq_vtx_semantic_clear.value();
-               writeField(out, "CLEAR", sq_vtx_semantic_clear.CLEAR);
+               writeField(out, "CLEAR", sq_vtx_semantic_clear.CLEAR());
             }
             endGroup(out);
 
@@ -305,15 +399,78 @@ printInfo(const std::string &filename)
       case gfd::BlockType::PixelShaderHeader:
          startGroup(out, "PixelShaderHeader");
          {
-            auto shader = reinterpret_cast<gx2::GX2PixelShader *>(block.data.data());
-            writeField(out, "index", block.header.index);
+            auto shader = reinterpret_cast<gx2::GX2PixelShader *>(block.data);
+            writeField(out, "index", block.header->index);
             writeField(out, "size", shader->size);
             writeField(out, "mode", gx2::enumAsString(shader->mode));
-            writeField(out, "uniformBlocks", shader->uniformBlockCount);
-            writeField(out, "uniformVars", shader->uniformVarCount);
-            writeField(out, "initVars", shader->initialValueCount);
-            writeField(out, "loopVars", shader->loopVarCount);
-            writeField(out, "samplerVars", shader->samplerVarCount);
+
+            writeField(out, "uniformBlockCount", shader->uniformBlockCount);
+
+            for (auto i = 0u; i < shader->uniformBlockCount; ++i) {
+               startGroup(out, fmt::format("uniformBlocks[{}]", i));
+               {
+                  auto var = shader->uniformBlocks[i];
+                  writeField(out, "name", var.name.get());
+                  writeField(out, "offset", var.offset);
+                  writeField(out, "size", var.size);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "uniformVarCount", shader->uniformVarCount);
+
+            for (auto i = 0u; i < shader->uniformVarCount; ++i) {
+               startGroup(out, fmt::format("uniformVars[{}]", i));
+               {
+                  auto var = shader->uniformVars[i];
+                  writeField(out, "name", var.name.get());
+                  writeField(out, "type", gx2::enumAsString(var.type));
+                  writeField(out, "count", var.count);
+                  writeField(out, "offset", var.offset);
+                  writeField(out, "block", var.block);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "initialValueCount", shader->initialValueCount);
+
+            for (auto i = 0u; i < shader->initialValueCount; ++i) {
+               startGroup(out, fmt::format("initialValues[{}]", i));
+               {
+                  auto var = shader->initialValues[i];
+                  writeField(out, "value.x", var.value[0].value());
+                  writeField(out, "value.y", var.value[1].value());
+                  writeField(out, "value.z", var.value[2].value());
+                  writeField(out, "value.w", var.value[3].value());
+                  writeField(out, "offset", var.offset);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "loopVarCount", shader->loopVarCount);
+
+            for (auto i = 0u; i < shader->loopVarCount; ++i) {
+               startGroup(out, fmt::format("loopVars[{}]", i));
+               {
+                  auto var = shader->loopVars[i];
+                  writeField(out, "offset", var.offset);
+                  writeField(out, "value", var.value);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "samplerVarCount", shader->samplerVarCount);
+
+            for (auto i = 0u; i < shader->samplerVarCount; ++i) {
+               startGroup(out, fmt::format("samplerVars[{}]", i));
+               {
+                  auto var = shader->samplerVars[i];
+                  writeField(out, "name", var.name.get());
+                  writeField(out, "type", gx2::enumAsString(var.type));
+                  writeField(out, "location", var.location);
+               }
+               endGroup(out);
+            }
 
             startGroup(out, "SQ_PGM_RESOURCES_PS");
             {
@@ -376,14 +533,18 @@ printInfo(const std::string &filename)
             writeField(out, "NUM_SPI_PS_INPUT_CNTL", num_spi_ps_input_cntl);
 
             for (auto i = 0u; i < std::min<size_t>(num_spi_ps_input_cntl, spi_ps_input_cntls.size()); ++i) {
-               writeField(out, "SEMANTIC", spi_ps_input_cntls[i].SEMANTIC());
-               writeField(out, "DEFAULT_VAL", spi_ps_input_cntls[i].DEFAULT_VAL());
-               writeField(out, "FLAT_SHADE", spi_ps_input_cntls[i].FLAT_SHADE());
-               writeField(out, "SEL_CENTROID", spi_ps_input_cntls[i].SEL_CENTROID());
-               writeField(out, "SEL_LINEAR", spi_ps_input_cntls[i].SEL_LINEAR());
-               writeField(out, "CYL_WRAP", spi_ps_input_cntls[i].CYL_WRAP());
-               writeField(out, "PT_SPRITE_TEX", spi_ps_input_cntls[i].PT_SPRITE_TEX());
-               writeField(out, "SEL_SAMPLE", spi_ps_input_cntls[i].SEL_SAMPLE());
+               startGroup(out, fmt::format("SPI_PS_INPUT_CNTL[{}]", i));
+               {
+                  writeField(out, "SEMANTIC", spi_ps_input_cntls[i].SEMANTIC());
+                  writeField(out, "DEFAULT_VAL", spi_ps_input_cntls[i].DEFAULT_VAL());
+                  writeField(out, "FLAT_SHADE", spi_ps_input_cntls[i].FLAT_SHADE());
+                  writeField(out, "SEL_CENTROID", spi_ps_input_cntls[i].SEL_CENTROID());
+                  writeField(out, "SEL_LINEAR", spi_ps_input_cntls[i].SEL_LINEAR());
+                  writeField(out, "CYL_WRAP", spi_ps_input_cntls[i].CYL_WRAP());
+                  writeField(out, "PT_SPRITE_TEX", spi_ps_input_cntls[i].PT_SPRITE_TEX());
+                  writeField(out, "SEL_SAMPLE", spi_ps_input_cntls[i].SEL_SAMPLE());
+               }
+               endGroup(out);
             }
 
             startGroup(out, "CB_SHADER_MASK");
@@ -442,16 +603,80 @@ printInfo(const std::string &filename)
       case gfd::BlockType::GeometryShaderHeader:
          startGroup(out, "GeometryShaderHeader");
          {
-            auto shader = reinterpret_cast<gx2::GX2GeometryShader *>(block.data.data());
-            writeField(out, "index", block.header.index);
+            auto shader = reinterpret_cast<gx2::GX2GeometryShader *>(block.data);
+            writeField(out, "index", block.header->index);
             writeField(out, "size", shader->size);
             writeField(out, "vshSize", shader->vertexShaderSize);
             writeField(out, "mode", gx2::enumAsString(shader->mode));
-            writeField(out, "uniformBlocks", shader->uniformBlockCount);
-            writeField(out, "uniformVars", shader->uniformVarCount);
-            writeField(out, "initVars", shader->initialValueCount);
-            writeField(out, "loopVars", shader->loopVarCount);
-            writeField(out, "samplerVars", shader->samplerVarCount);
+
+            writeField(out, "uniformBlockCount", shader->uniformBlockCount);
+
+            for (auto i = 0u; i < shader->uniformBlockCount; ++i) {
+               startGroup(out, fmt::format("uniformBlocks[{}]", i));
+               {
+                  auto var = shader->uniformBlocks[i];
+                  writeField(out, "name", var.name.get());
+                  writeField(out, "offset", var.offset);
+                  writeField(out, "size", var.size);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "uniformVarCount", shader->uniformVarCount);
+
+            for (auto i = 0u; i < shader->uniformVarCount; ++i) {
+               startGroup(out, fmt::format("uniformVars[{}]", i));
+               {
+                  auto var = shader->uniformVars[i];
+                  writeField(out, "name", var.name.get());
+                  writeField(out, "type", gx2::enumAsString(var.type));
+                  writeField(out, "count", var.count);
+                  writeField(out, "offset", var.offset);
+                  writeField(out, "block", var.block);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "initialValueCount", shader->initialValueCount);
+
+            for (auto i = 0u; i < shader->initialValueCount; ++i) {
+               startGroup(out, fmt::format("initialValues[{}]", i));
+               {
+                  auto var = shader->initialValues[i];
+                  writeField(out, "value.x", var.value[0].value());
+                  writeField(out, "value.y", var.value[1].value());
+                  writeField(out, "value.z", var.value[2].value());
+                  writeField(out, "value.w", var.value[3].value());
+                  writeField(out, "offset", var.offset);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "loopVarCount", shader->loopVarCount);
+
+            for (auto i = 0u; i < shader->loopVarCount; ++i) {
+               startGroup(out, fmt::format("loopVars[{}]", i));
+               {
+                  auto var = shader->loopVars[i];
+                  writeField(out, "offset", var.offset);
+                  writeField(out, "value", var.value);
+               }
+               endGroup(out);
+            }
+
+            writeField(out, "samplerVarCount", shader->samplerVarCount);
+
+            for (auto i = 0u; i < shader->samplerVarCount; ++i) {
+               startGroup(out, fmt::format("samplerVars[{}]", i));
+               {
+                  auto var = shader->samplerVars[i];
+                  writeField(out, "name", var.name.get());
+                  writeField(out, "type", gx2::enumAsString(var.type));
+                  writeField(out, "location", var.location);
+               }
+               endGroup(out);
+            }
+
             writeField(out, "ringItemSize", shader->ringItemSize);
             writeField(out, "hasStreamOut", shader->hasStreamOut);
 
@@ -591,62 +816,47 @@ printInfo(const std::string &filename)
       case gfd::BlockType::VertexShaderProgram:
          startGroup(out, "VertexShaderProgram");
          {
-            writeField(out, "index", block.header.index);
-            writeField(out, "size", block.data.size());
+            writeField(out, "index", block.header->index);
+            writeField(out, "size", block.header->dataSize);
 
             std::string disassembly;
-            disassembly = latte::disassemble(block.data);
+            disassembly = latte::disassemble(gsl::as_span(block.data, block.header->dataSize));
             out.writer << '\n' << disassembly;
-
-            glsl2::Shader shader;
-            shader.type = glsl2::Shader::VertexShader;
-            glsl2::translate(shader, block.data);
-            out.writer << '\n' << shader.codeBody;
          }
          endGroup(out);
          break;
       case gfd::BlockType::PixelShaderProgram:
          startGroup(out, "PixelShaderProgram");
          {
-            writeField(out, "index", block.header.index);
-            writeField(out, "size", block.data.size());
+            writeField(out, "index", block.header->index);
+            writeField(out, "size", block.header->dataSize);
 
             std::string disassembly;
-            disassembly = latte::disassemble(block.data);
+            disassembly = latte::disassemble(gsl::as_span(block.data, block.header->dataSize));
             out.writer << '\n' << disassembly;
-
-            glsl2::Shader shader;
-            shader.type = glsl2::Shader::PixelShader;
-            glsl2::translate(shader, block.data);
-            out.writer << '\n' << shader.codeBody;
          }
          endGroup(out);
          break;
       case gfd::BlockType::GeometryShaderProgram:
          startGroup(out, "GeometryShaderProgram");
          {
-            writeField(out, "index", block.header.index);
-            writeField(out, "size", block.data.size());
+            writeField(out, "index", block.header->index);
+            writeField(out, "size", block.header->dataSize);
 
             std::string disassembly;
-            disassembly = latte::disassemble(block.data);
+            disassembly = latte::disassemble(gsl::as_span(block.data, block.header->dataSize));
             out.writer << '\n' << disassembly;
-
-            glsl2::Shader shader;
-            shader.type = glsl2::Shader::GeometryShader;
-            glsl2::translate(shader, block.data);
-            out.writer << '\n' << shader.codeBody;
          }
          endGroup(out);
          break;
       case gfd::BlockType::TextureHeader:
       {
-         assert(block.data.size() >= sizeof(gx2::GX2Texture));
+         assert(block.header->dataSize >= sizeof(gx2::GX2Texture));
 
          startGroup(out, "TextureHeader");
          {
-            auto tex = reinterpret_cast<gx2::GX2Texture *>(block.data.data());
-            writeField(out, "index", block.header.index);
+            auto tex = reinterpret_cast<gx2::GX2Texture *>(block.data);
+            writeField(out, "index", block.header->index);
             writeField(out, "dim", gx2::enumAsString(tex->surface.dim));
             writeField(out, "width", tex->surface.width);
             writeField(out, "height", tex->surface.height);
@@ -740,14 +950,14 @@ printInfo(const std::string &filename)
       }
       case gfd::BlockType::TextureImage:
          startGroup(out, "TextureImage");
-         writeField(out, "index", block.header.index);
-         writeField(out, "size", block.data.size());
+         writeField(out, "index", block.header->index);
+         writeField(out, "size", block.header->dataSize);
          endGroup(out);
          break;
       case gfd::BlockType::TextureMipmap:
          startGroup(out, "TextureMipmap");
-         writeField(out, "index", block.header.index);
-         writeField(out, "size", block.data.size());
+         writeField(out, "index", block.header->index);
+         writeField(out, "size", block.header->dataSize);
          endGroup(out);
          break;
       case gfd::BlockType::EndOfFile:
